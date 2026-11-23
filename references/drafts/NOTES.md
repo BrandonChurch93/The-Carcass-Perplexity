@@ -2,8 +2,8 @@
 
 Reference run of 2026-11-23, round 2. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved. Round 1 was rejected and sits untouched in [`../archive/round-1/`](../archive/round-1/); nothing from it was reused.
 
-- Shots with a kept take: 6 of 7. Takes made: 20.
-- Round 2 started 21:45 UTC and was last updated 22:15 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
+- Shots with a kept take: 7 of 7. Takes made: 23.
+- Round 2 started 21:45 UTC and was last updated 22:25 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
 - `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator. `guides/` holds the layout studies drawn in code for shot 7.
 
 ## Kept takes
@@ -16,7 +16,7 @@ Reference run of 2026-11-23, round 2. These are target stills for seven moving 3
 | Shot 4: The Blood Marsh | Crimson and teal | [`04-blood-marsh-take3.jpg`](04-blood-marsh-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Without the brief the swelling is hard to read as a creature. The teal lights are spread evenly and throw almost no light on trunks or water. Foreground reflections are smeary. |
 | Shot 5: The Spine | Storm purple and white gold | [`05-spine-take3.jpg`](05-spine-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The vertebrae read as giant bones standing on cliff tops rather than as whole peaks. The waterfalls start at the very crest with nothing to feed them. The winged shapes are small in frame. Warm light on the near bone does not quite match the cold storm behind. |
 | Shot 6: The Eye | Indigo and gold, night | [`06-eye-take3.jpg`](06-eye-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | It is very literally an eye, which may be more than the film wants before the last shot. The flock over the water is a few indistinct smudges. The foreground plants are dark, repeat the same curled shape and pick up little of the gold light. Drifting lights are sparse. |
-| Shot 7: The Reveal | All six palettes on a dark sea, seen from orbit | not chosen yet | | | |
+| Shot 7: The Reveal | All six palettes on a dark sea, seen from orbit | [`07-reveal-take1.jpg`](07-reveal-take1.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Scale: single trees on the ice, the storm cloud and the ridges are too large for a view from orbit. The gold ring and the aurora look laid on top of the picture instead of lit into it. The pale ridges are thin drawn-looking lines. The headland that carries the lake is small and dim, so the figure takes a moment to read. |
 
 ## How the takes were checked
 
@@ -38,6 +38,8 @@ Only (a) passes. A judge had ten minutes and one replacement; after that the tak
 - 21:54 (0h09m): To keep the shots apart as thumbnails, each prompt fixes its own camera height, time of day and light source on top of its palette: Ribs low and sunlit, Heart high and lit only by lava, Breath ground level under aurora, Blood Marsh at water level in dim mist, Spine level with the ridge in a storm, Eye high at night lit by the lake, Reveal from orbit.
 - 22:06 (0h21m): 22:05: Breath, Blood Marsh, Spine and Eye were closed after their first three takes, since each had at least one (a) from the blind judge. A passed shot gets no further takes; the two spare takes per shot are kept for failures and for the look-alike check at the end.
 - 22:12 (0h27m): 22:03 to 22:13: Ribs take 1 was the right picture in the wrong light (green and white daylight, no gold), so take 4 re-shot that same shot at golden hour with take 1 passed in as the layout to keep. This uses a Ribs image inside the Ribs shot only; no image crosses from one shot to another. Heart take 4 was a new prompt written from the three judges' words: one fountain as the focal point, a crusted lake for scale, lavafalls as slow thick drapes, scorched growth instead of autumn trees.
+- 22:18 (0h33m): 22:10 to 22:18: The Reveal needs a body-shaped continent with six regions in the right places, which a prompt alone does not hold. So a new layout study was drawn in code from nothing (references/drafts/guides/reveal_layout.py, two camera variants, no round 1 input and no generated image in it) and passed as image 1 with the instruction to re-photograph it sharp. The prompt talks about geography only (headland, peninsulas, ridgelines, a peak range) and uses the body once, as a likeness, because anatomical wording produces a statue or a skeleton.
+- 22:24 (0h39m): 22:24: The Reveal passed on take 1, but its judge and the judges of takes 2 and 3 all named the same fault: mountains, storm, trees and aurora drawn at diorama scale for a view from orbit, and a gold ring and aurora that look pasted on. Because this is the shot the film turns on, one more take (take 4) is spent on that single fault rather than stopping at the first pass. Take 1 stays the kept take unless take 4 passes the judge and is better by eye.
 
 ## Failures and skips
 
@@ -692,6 +694,120 @@ Palette asked for: All six palettes on a dark sea, seen from orbit.
 
 Brief: Seen from orbit with the curve of the planet behind it: the whole continent is a titan lying on its side in a dark sea, overgrown with life. From here you can pick out the green jungle in the ribs, the lava glow of the heart, the aurora over the frozen forest, the red marsh, the storm on the spine and the lit eye. It reads as a real landmass shaped like a body, not a statue or a skeleton on a table. Keep the hand, foot and skull subtle.
 
+Kept: take 1. Take 1 is the only one of the first three that passed the blind judge. It holds the whole brief in one frame: the planet's curve, a green continent in a dark sea in the shape of a figure on its side, and all six regions where they belong. Faults still in it: Scale: single trees on the ice, the storm cloud and the ridges are too large for a view from orbit. The gold ring and the aurora look laid on top of the picture instead of lit into it. The pale ridges are thin drawn-looking lines. The headland that carries the lake is small and dim, so the figure takes a moment to read. Finished 22:25 (0h40m).
+
+#### 07-reveal take 1: [`07-reveal-take1.jpg`](07-reveal-take1.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Layout study A drawn in code (figure-shaped continent with each region in its place, planet curve, dusk light) passed as image 1 with the instruction to re-photograph it sharp, plus three real orbital photographs. The prompt describes geography, not anatomy: a coast that resembles a sleeping giant the way Italy resembles a boot.
+- Made: started 22:18, generation took 145 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`guides/07-reveal-layout-a.jpg`](guides/07-reveal-layout-a.jpg)
+  2. [`real/reveal-landmass-dusk-from-orbit.jpg`](real/reveal-landmass-dusk-from-orbit.jpg)
+  3. [`real/reveal-aurora-from-orbit.jpg`](real/reveal-aurora-from-orbit.jpg)
+  4. [`real/reveal-green-land-dark-sea.jpg`](real/reveal-green-land-dark-sea.jpg)
+- Eye check against the shot description: **pass**. From orbit with the planet's curve, atmosphere line and sunglint. One green overgrown continent in a dark sea shaped like a figure on its side: headland with the gold ring lake at left, an ice-covered bent arm below it, a long body, two bent legs with feet to the right. All six regions can be picked out: green jungle crossed by pale curved ridges, orange lava with branching rivers, red marsh bleeding into the bay, a storm lit from inside along the far coast, a thin aurora over the ice, the lit lake. Reads as a landmass, not a statue. The ridges are thin drawn-looking lines and the gold ring and aurora look laid on top.
+- Blind judge `still_viewer_21` (asked 22:22, answered 22:24): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The scale is inconsistent: individual trees and snowy forest on the lower-left landmass and the continent-sized storm cloud read as far too large for an orbital view. The glowing ring and aurora streak on the left also look pasted on rather than integrated with the scene's lighting.
+- Prompt ([`prompts/07-reveal-take1.txt`](prompts/07-reveal-take1.txt)):
+
+```text
+A single frame from a top-budget live-action fantasy film, 16:9 widescreen: an impossible alien world photographed for real from high orbit with a large-format cinema camera.
+
+Image 1 is a rough, out-of-focus layout study of this frame. Keep its composition: the strongly curved horizon of the planet across the top with a thin blue line of atmosphere and black space with stars above it, the dark sea, and one large continent in the same place, at the same size, with the same outline and with every coloured region where the study has it. Re-photograph that scene sharp and real. None of the study's flat colours, soft blobs, stripes or dots should survive as drawn; every one of them becomes real terrain, real cloud and real light.
+
+The continent is a single huge landmass in a dark blue-black ocean, overgrown with life from coast to coast, seen at dusk: low warm sun raking in from the right, night coming on from the left. Its coastline happens to resemble a giant asleep on its side, the way Italy resembles a boot: a rounded headland at the left, a broad main body, one bent peninsula curling back toward the headland and two long bent peninsulas trailing away to the right, each ending in a scatter of small islets. It is geography first. The coasts are ragged and fractal, with bays, capes, reefs, river mouths, turquoise shallows and offshore islands. Nothing is sculpted, smooth, symmetrical or raised like a relief.
+
+Where things are, exactly as the study places them:
+The upper middle-left of the main body is the lushest, deepest green rainforest on the continent, crossed by a row of long, parallel, gently curved pale ridgelines, half overgrown, with mist lying in the valleys between them.
+Just in front of those ridges, near the near coast, a lake of molten lava glows orange in a field of black volcanic glass, and thin glowing rivers branch away from it through the black rock toward the sea. A thread of smoke trails off it.
+The middle of the main body is a wide, low wetland of crimson-red forest cut by dark red channels. Its red water stains the bay beside it and fades out into the dark sea.
+Along the far coast, behind all of this, runs one long narrow mountain range of evenly spaced sharp pale peaks. Most of it is buried under a single long storm system: towering purple-grey thunderheads, lit white gold from inside by lightning in several places at once.
+On the rounded headland at the left lies one perfectly round lake that glows gold in a ring around a dark centre, bright enough to light the land around it in the dusk.
+Below the headland the land and the bay are frozen: pale blue-white ice forest and snow, pack ice breaking up on the water. Over it hangs a tall curtain of green and violet aurora, seen from above and curving away toward the horizon.
+Everything else is rich green jungle and river systems.
+
+Real planet detail: fields of small cumulus and thin cloud streets over the ocean, casting their own shadows; haze thickening toward the curved horizon; the thin luminous blue band of atmosphere on the limb; sunglint on the sea at the right; the soft line between day and night falling across the left of the frame. No city lights anywhere, no grid, no roads.
+
+The other attached pictures are real photographs taken from orbit. Use them only as evidence of how land, sea, cloud, aurora and the atmosphere really look from up there. Do not copy their framing or their coastlines.
+
+Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail at every size, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, a map, a diagram, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no spacecraft parts, no window frame, no text, no labels, no logos, no watermark, no border.
+```
+
+#### 07-reveal take 2: [`07-reveal-take2.png`](07-reveal-take2.png)
+
+- Model: Nano Banana Pro (`nano_banana_pro`). Output 2752x1536 PNG, kept as delivered.
+- What this take tried: Same prompt and layout study A as take 1 on the second model, with all four real orbital photographs.
+- Made: started 22:18, generation took 36 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`guides/07-reveal-layout-a.jpg`](guides/07-reveal-layout-a.jpg)
+  2. [`real/reveal-landmass-dusk-from-orbit.jpg`](real/reveal-landmass-dusk-from-orbit.jpg)
+  3. [`real/reveal-aurora-from-orbit.jpg`](real/reveal-aurora-from-orbit.jpg)
+  4. [`real/reveal-green-land-dark-sea.jpg`](real/reveal-green-land-dark-sea.jpg)
+  5. [`real/reveal-island-oblique-day.jpg`](real/reveal-island-oblique-day.jpg)
+- Eye check against the shot description: **pass**. From orbit with the planet's curve and atmosphere line. One overgrown continent in a dark sea in the shape of a figure on its side: dark headland with the gold ring lake at left, a bent arm below it under ice, a long body, two bent legs to the right. All six regions can be picked out: green ridged jungle, orange lava with branching rivers, red marsh, purple storm with lightning along the far coast, aurora over the ice, lit lake. It reads as a landmass, not a statue. It also reads as a rendered game map more than a photograph, and the red marsh fills the bay as land.
+- Blind judge `still_viewer_20` (asked 22:21, answered 22:21): **(d) amateur generated art**, so it fails. Weakest part: The scale is incoherent: mountains, a volcano, a purple storm and an aurora are rendered miniature-diorama size on a continent seen from orbit, with the aurora ribbon and glowing yellow ring on the left pasted over the surface rather than sitting in the atmosphere. The flat, saturated red region and neon lava also clash with the otherwise photoreal ocean and clouds.
+- Prompt ([`prompts/07-reveal-take2.txt`](prompts/07-reveal-take2.txt)):
+
+```text
+A single frame from a top-budget live-action fantasy film, 16:9 widescreen: an impossible alien world photographed for real from high orbit with a large-format cinema camera.
+
+Image 1 is a rough, out-of-focus layout study of this frame. Keep its composition: the strongly curved horizon of the planet across the top with a thin blue line of atmosphere and black space with stars above it, the dark sea, and one large continent in the same place, at the same size, with the same outline and with every coloured region where the study has it. Re-photograph that scene sharp and real. None of the study's flat colours, soft blobs, stripes or dots should survive as drawn; every one of them becomes real terrain, real cloud and real light.
+
+The continent is a single huge landmass in a dark blue-black ocean, overgrown with life from coast to coast, seen at dusk: low warm sun raking in from the right, night coming on from the left. Its coastline happens to resemble a giant asleep on its side, the way Italy resembles a boot: a rounded headland at the left, a broad main body, one bent peninsula curling back toward the headland and two long bent peninsulas trailing away to the right, each ending in a scatter of small islets. It is geography first. The coasts are ragged and fractal, with bays, capes, reefs, river mouths, turquoise shallows and offshore islands. Nothing is sculpted, smooth, symmetrical or raised like a relief.
+
+Where things are, exactly as the study places them:
+The upper middle-left of the main body is the lushest, deepest green rainforest on the continent, crossed by a row of long, parallel, gently curved pale ridgelines, half overgrown, with mist lying in the valleys between them.
+Just in front of those ridges, near the near coast, a lake of molten lava glows orange in a field of black volcanic glass, and thin glowing rivers branch away from it through the black rock toward the sea. A thread of smoke trails off it.
+The middle of the main body is a wide, low wetland of crimson-red forest cut by dark red channels. Its red water stains the bay beside it and fades out into the dark sea.
+Along the far coast, behind all of this, runs one long narrow mountain range of evenly spaced sharp pale peaks. Most of it is buried under a single long storm system: towering purple-grey thunderheads, lit white gold from inside by lightning in several places at once.
+On the rounded headland at the left lies one perfectly round lake that glows gold in a ring around a dark centre, bright enough to light the land around it in the dusk.
+Below the headland the land and the bay are frozen: pale blue-white ice forest and snow, pack ice breaking up on the water. Over it hangs a tall curtain of green and violet aurora, seen from above and curving away toward the horizon.
+Everything else is rich green jungle and river systems.
+
+Real planet detail: fields of small cumulus and thin cloud streets over the ocean, casting their own shadows; haze thickening toward the curved horizon; the thin luminous blue band of atmosphere on the limb; sunglint on the sea at the right; the soft line between day and night falling across the left of the frame. No city lights anywhere, no grid, no roads.
+
+The other attached pictures are real photographs taken from orbit. Use them only as evidence of how land, sea, cloud, aurora and the atmosphere really look from up there. Do not copy their framing or their coastlines.
+
+Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail at every size, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, a map, a diagram, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no spacecraft parts, no window frame, no text, no labels, no logos, no watermark, no border.
+```
+
+#### 07-reveal take 3: [`07-reveal-take3.jpg`](07-reveal-take3.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Layout study B (higher orbit, more planet curve, figure tilted the other way) and a later light: just after sunset with afterglow on the limb, so the lava, the lake, the lightning and the aurora carry the frame.
+- Made: started 22:18, generation took 131 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`guides/07-reveal-layout-b.jpg`](guides/07-reveal-layout-b.jpg)
+  2. [`real/reveal-island-oblique-day.jpg`](real/reveal-island-oblique-day.jpg)
+  3. [`real/reveal-aurora-from-orbit.jpg`](real/reveal-aurora-from-orbit.jpg)
+  4. [`real/reveal-landmass-dusk-from-orbit.jpg`](real/reveal-landmass-dusk-from-orbit.jpg)
+- Eye check against the shot description: **pass**. From orbit with a stronger planet curve and sunset afterglow on the limb. Same figure-shaped green continent in a dark sea. All six regions can be picked out: green jungle with pale curved ridges, a small erupting volcano for the lava, red forest and red bay, a large storm cell with lightning over a snow-capped range on the far coast, a small aurora over the ice, the gold ring lake. The headland at the left is dim and small, so the figure reads less clearly than in take 1, and the volcano is out of scale for an orbital view.
+- Blind judge `still_viewer_22` (asked 22:22, answered 22:24): **(d) amateur generated art**, so it fails. Weakest part: Scale and coherence break down on the left side of the island: the giant striped arches, the volcano, the glowing ring and the ground-level aurora are all rendered at toy-diorama size against a planet seen from orbit. It reads as a kitchen-sink pile of unrelated spectacle (glacier, red forest, lightning storm, portal) with no single focal point or consistent lighting logic.
+- Prompt ([`prompts/07-reveal-take3.txt`](prompts/07-reveal-take3.txt)):
+
+```text
+A single frame from a top-budget live-action fantasy film, 16:9 widescreen: an impossible alien world photographed for real from high orbit with a large-format cinema camera.
+
+Image 1 is a rough, out-of-focus layout study of this frame. Keep its composition: the strongly curved horizon of the planet across the top with a thin blue line of atmosphere and black space with stars above it, the dark sea, and one large continent in the same place, at the same size, with the same outline and with every coloured region where the study has it. Re-photograph that scene sharp and real. None of the study's flat colours, soft blobs, stripes or dots should survive as drawn; every one of them becomes real terrain, real cloud and real light.
+
+The continent is a single huge landmass in a dark blue-black ocean, overgrown with life from coast to coast, seen from a higher orbit in the last minutes of dusk. The sun has just gone below the horizon at the right and leaves a band of orange and rose afterglow in the atmosphere there; the land is still readable in deep saturated colour, and everything that glows carries the frame. Its coastline happens to resemble a giant asleep on its side, the way Italy resembles a boot: a rounded headland at the left, a broad main body, one bent peninsula curling back toward the headland and two long bent peninsulas trailing away to the right, each ending in a scatter of small islets. It is geography first. The coasts are ragged and fractal, with bays, capes, reefs, river mouths, turquoise shallows and offshore islands. Nothing is sculpted, smooth, symmetrical or raised like a relief.
+
+Where things are, exactly as the study places them:
+The upper middle-left of the main body is the lushest, deepest green rainforest on the continent, crossed by a row of long, parallel, gently curved pale ridgelines, half overgrown, with mist lying in the valleys between them.
+Just in front of those ridges, near the near coast, a lake of molten lava glows orange in a field of black volcanic glass, and thin glowing rivers branch away from it through the black rock toward the sea. A thread of smoke trails off it.
+The middle of the main body is a wide, low wetland of crimson-red forest cut by dark red channels. Its red water stains the bay beside it and fades out into the dark sea.
+Along the far coast, behind all of this, runs one long narrow mountain range of evenly spaced sharp pale peaks. Most of it is buried under a single long storm system: towering purple-grey thunderheads, lit white gold from inside by lightning in several places at once.
+On the rounded headland at the left lies one perfectly round lake that glows gold in a ring around a dark centre, bright enough to light the land around it in the dusk.
+Below the headland the land and the bay are frozen: pale blue-white ice forest and snow, pack ice breaking up on the water. Over it hangs a tall curtain of green and violet aurora, seen from above and curving away toward the horizon.
+Everything else is rich green jungle and river systems.
+
+Real planet detail: fields of small cumulus and thin cloud streets over the ocean, casting their own shadows; haze thickening toward the curved horizon; the thin luminous blue band of atmosphere on the limb; sunglint on the sea at the right; the soft line between day and night falling across the left of the frame. No city lights anywhere, no grid, no roads.
+
+The other attached pictures are real photographs taken from orbit. Use them only as evidence of how land, sea, cloud, aurora and the atmosphere really look from up there. Do not copy their framing or their coastlines.
+
+Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail at every size, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, a map, a diagram, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no spacecraft parts, no window frame, no text, no labels, no logos, no watermark, no border.
+```
+
 ## Real photographs used as references
 
 All looked up new for round 2 on Wikimedia Commons, under free licences, so they are kept in `real/` with credit. Sizes are as passed to the generator (1,280 px wide or smaller; some are crops, as noted).
@@ -723,9 +839,9 @@ All looked up new for round 2 on Wikimedia Commons, under free licences, so they
 | [`real/eye-great-blue-hole-oblique.jpg`](real/eye-great-blue-hole-oblique.jpg) | Great Blue Hole seen at an angle from the air: a round dark centre | The TerraMar Project | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Belize_Blue_Hole_(TMP)_(16912331906).jpg) |
 | [`real/eye-bioluminescent-shore.jpg`](real/eye-bioluminescent-shore.jpg) | Bioluminescent water glowing along a shore at night | Bruce Anderson (University of Stellenbosch). | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Blue_Tide-_Noctiluca.jpeg) |
 | [`real/eye-fireflies-night.jpg`](real/eye-fireflies-night.jpg) | Fireflies over a meadow at night | Tyler Savitski | [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Field-of-fireflies-wilkes-ecology-preserve-photo-by-tyler-savitski.jpg) |
-| [`real/reveal-landmass-dusk-from-orbit.jpg`](real/reveal-landmass-dusk-from-orbit.jpg) | A long landmass at dusk seen at an angle from orbit, with the curve of the planet (looked up, not passed to any take) | NASA | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:ISS-47_Italy_night_view.jpg) |
-| [`real/reveal-aurora-from-orbit.jpg`](real/reveal-aurora-from-orbit.jpg) | Aurora seen from orbit above the planet's edge Cropped to drop the spacecraft hardware on the left. (looked up, not passed to any take) | NASA -- US government agency | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:Aurora_Seen_From_Space_by_NASA.jpg) |
-| [`real/reveal-green-land-dark-sea.jpg`](real/reveal-green-land-dark-sea.jpg) | Green land and dark sea from orbit, with sediment swirls along the coast (looked up, not passed to any take) | European Space Agency | Attribution | [Commons page](https://commons.wikimedia.org/wiki/File:Earth_from_Space-_Cook_Strait,_New_Zealand_ESA24912671.jpg) |
-| [`real/reveal-island-oblique-day.jpg`](real/reveal-island-oblique-day.jpg) | An island under scattered cloud, seen at an angle from orbit (looked up, not passed to any take) | NASA | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:ISS-38_Hawaiian_Island_chain.jpg) |
+| [`real/reveal-landmass-dusk-from-orbit.jpg`](real/reveal-landmass-dusk-from-orbit.jpg) | A long landmass at dusk seen at an angle from orbit, with the curve of the planet | NASA | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:ISS-47_Italy_night_view.jpg) |
+| [`real/reveal-aurora-from-orbit.jpg`](real/reveal-aurora-from-orbit.jpg) | Aurora seen from orbit above the planet's edge Cropped to drop the spacecraft hardware on the left. | NASA -- US government agency | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:Aurora_Seen_From_Space_by_NASA.jpg) |
+| [`real/reveal-green-land-dark-sea.jpg`](real/reveal-green-land-dark-sea.jpg) | Green land and dark sea from orbit, with sediment swirls along the coast | European Space Agency | Attribution | [Commons page](https://commons.wikimedia.org/wiki/File:Earth_from_Space-_Cook_Strait,_New_Zealand_ESA24912671.jpg) |
+| [`real/reveal-island-oblique-day.jpg`](real/reveal-island-oblique-day.jpg) | An island under scattered cloud, seen at an angle from orbit | NASA | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:ISS-38_Hawaiian_Island_chain.jpg) |
 | [`real/heart-lava-lake-fountain-night.jpg`](real/heart-lava-lake-fountain-night.jpg) | Lava lake at night with a fountain and lit smoke | Nina R from Africa | [CC BY 2.0](https://creativecommons.org/licenses/by/2.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Nyiragongo_volcano_(30773789893).jpg) |
 
