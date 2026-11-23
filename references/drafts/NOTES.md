@@ -2,8 +2,8 @@
 
 Reference run of 2026-11-23, round 2. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved. Round 1 was rejected and sits untouched in [`../archive/round-1/`](../archive/round-1/); nothing from it was reused.
 
-- Shots with a kept take: 7 of 7. Takes made: 25.
-- Round 2 started 21:45 UTC and was last updated 22:31 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
+- Shots with a kept take: 7 of 7. Takes made: 27.
+- Round 2 started 21:45 UTC and was last updated 22:41 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
 - `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator. `guides/` holds the layout studies drawn in code for shot 7.
 
 ## Kept takes
@@ -11,10 +11,10 @@ Reference run of 2026-11-23, round 2. These are target stills for seven moving 3
 | Shot | Palette asked for | Kept take | Model | Blind judge | Faults still in it |
 |---|---|---|---|---|---|
 | Shot 1: The Ribs | Deep green and gold | [`01-ribs-take4.jpg`](01-ribs-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The far end of the tunnel of ribs goes soft and repetitive in the haze. The glowing flock is small yellow specks rather than creatures with a shape. Scale wavers in the distance. The waterfalls sit on the valley walls behind the ribs more than between them. |
-| Shot 2: The Heart | Orange, red and black | [`02-heart-take4.jpg`](02-heart-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered. |
+| Shot 2: The Heart | Orange, red and black | [`02-heart-take4.jpg`](02-heart-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered (take 5 shows it, but failed the judge). The lake is one lit oval in a dark surround, the layout the look-alike agent called nearest to the Eye. |
 | Shot 3: The Breath | Ice blue and violet | [`03-breath-take1.jpg`](03-breath-take1.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The big star-shaped flakes near the camera look added on. The beasts read as bison-sized against the trees, not house-sized, and the smallest ones blur. The crystal trees keep a conifer shape. |
 | Shot 4: The Blood Marsh | Crimson and teal | [`04-blood-marsh-take3.jpg`](04-blood-marsh-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Without the brief the swelling is hard to read as a creature. The teal lights are spread evenly and throw almost no light on trunks or water. Foreground reflections are smeary. |
-| Shot 5: The Spine | Storm purple and white gold | [`05-spine-take3.jpg`](05-spine-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The vertebrae read as giant bones standing on cliff tops rather than as whole peaks. The waterfalls start at the very crest with nothing to feed them. The winged shapes are small in frame. Warm light on the near bone does not quite match the cold storm behind. |
+| Shot 5: The Spine | Storm purple and white gold | [`05-spine-take4.jpg`](05-spine-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The waterfalls are huge torrents pouring off every side of small summit pools, far more water than the pools could feed. The spires repeat almost unchanged down the row. The small lightning bolt inside the sun beam on the right looks pasted on. The lightning is violet-white rather than gold. The winged shapes are still small in frame. The bone still stands on a dark rock pillar rather than being the whole peak. |
 | Shot 6: The Eye | Indigo and gold, night | [`06-eye-take3.jpg`](06-eye-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | It is very literally an eye, which may be more than the film wants before the last shot. The flock over the water is a few indistinct smudges. The foreground plants are dark, repeat the same curled shape and pick up little of the gold light. Drifting lights are sparse. |
 | Shot 7: The Reveal | All six palettes on a dark sea, seen from orbit | [`07-reveal-take5.jpg`](07-reveal-take5.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Scale still reads as a miniature: single snow-covered trees are readable on the ice arm from orbit and the rib ridges are thin drawn lines. The gold ring and the aurora ribbon sit flat on the surface like overlays. The head end is dim and the skull, hand and foot are subtle to the point that the body takes a moment to find. |
 
@@ -42,6 +42,13 @@ Only (a) passes. A judge had ten minutes and one replacement; after that the tak
 - 22:24 (0h39m): 22:24: The Reveal passed on take 1, but its judge and the judges of takes 2 and 3 all named the same fault: mountains, storm, trees and aurora drawn at diorama scale for a view from orbit, and a gold ring and aurora that look pasted on. Because this is the shot the film turns on, one more take (take 4) is spent on that single fault rather than stopping at the first pass. Take 1 stays the kept take unless take 4 passes the judge and is better by eye.
 - 22:28 (0h43m): 22:28: Reveal take 4 came back finer in scale but weaker overall (the storm slid off the far coast and lost its lightning), so the fifth and last take re-shoots take 1 itself, the way the Ribs were fixed, changing only what the judges named. The Reveal has no take left after this.
 - 22:31 (0h46m): 22:31: Reveal kept take is 5, not 1. Both passed the judge; they differ only in the storm and the red bay, and take 5 is the more believable of the two there. The Reveal is at its limit of 5 takes, so it cannot be remade if the look-alike check names it.
+- 22:35 (0h50m): 22:35: The look-alike agent answered NONE, so no remake was required. It did name the two nearest calls and the weaker shot of each: the Spine (near the Breath: violet-blue sky over blue-white; greyer and busier) and the Heart (near the Eye: one warm lit oval in a dark surround; reads as a lava lake, not a heart). Both of those kept takes also fall short of their own brief (the Spine has little white gold, the Heart has almost no artery rivers), both have takes left (Spine 3 of 5, Heart 4 of 5) and over an hour remains, so each gets one remake: Spine take 4 and Heart take 5. Both are new generations from the real photographs with a changed layout and palette balance, not re-shoots of the kept take. A remake replaces the kept take only if it passes the blind judge and is better by eye; otherwise the kept take stays.
+- 22:40 (0h55m): 22:40: Outcome of the two remakes. Spine take 4 passed the blind judge and is now the kept Spine, because it holds the purple and white-gold palette and reads cleanly at thumbnail size; take 3 stays in the folder as the more photographic alternative. Heart take 5 was judged amateur generated art, so take 4 stays the kept Heart, and the Heart has no take left. The contact sheet was rebuilt with Spine take 4. The look-alike agent was asked once, as the method says; the rebuilt sheet was not sent to a second one.
+- 22:40 (0h55m): Model record over the round: Seedream 5 Pro passed the blind judge on 13 of 19 judged takes; Nano Banana Pro on 2 of 7. Nano Banana Pro files also came back at 2752x1536 PNG rather than 2816x1584, one with black bars top and bottom (Blood Marsh take 2) and one with a smudged pseudo-signature in a corner (Spine take 2). That is why every retake and remake after the first three takes went to Seedream.
+
+## Look-alike check on the contact sheet
+
+- 22:33 (0h48m): Answer: PAIRS: NONE. WHY: No two frames match on colour, light and layout together, and all seven separate cleanly when I shrank them to 160 px thumbnails; the two nearest calls are 3 The Breath / 5 The Spine, which share a violet-blue sky glow over cool blue-white but differ in layout (symmetrical tree-framed clearing versus a diagonal ridge with waterfalls and cloud), and 2 The Heart / 6 The Eye, which share a layout of one self-lit warm oval filling the centre of a dark surround but differ in colour (orange-red on black versus yellow-gold on dark blue). WEAKER: None as true pairs; if the near-pairs had to be separated, 5 The Spine is weaker than 3 (greyer and busier, so the vertebrae read less clearly at small size) and 2 The Heart is weaker than 6 (it reads as a generic lava lake rather than a heart, while the eye is unmistakable).
 
 ## Failures and skips
 
@@ -168,7 +175,7 @@ Palette asked for: Orange, red and black.
 
 Brief: A vast sea of bright lava that fills most of the frame, with lavafalls and molten rivers branching out through black glass rock like arteries. Fire-colored plants and glowing crystal growths cling to the edges. Heat haze and embers in the air. High three-quarter camera.
 
-Kept: take 4. Takes 1 to 3 were all judged amateur generated art. Take 4 was written against what those judges named (water-like lavafalls, pasted unburnt plants, even saturation, no focal point) and is the only take that passed. The crusted lake with one fountain and smoke column gives the frame a subject and a scale. Faults still in it: The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered. Finished 22:12 (0h27m).
+Kept: take 4. Takes 1 to 3 and take 5 were all judged amateur generated art; take 4 is the only take that passed. It was written against what the first judges named (water-like lavafalls, pasted unburnt plants, even saturation, no focal point): a crusted lake with one fountain and smoke column gives the frame a subject and a scale. Take 5, the remake made after the look-alike check, has the branching artery rivers that take 4 lacks, but its judge found no focal subject and mushy unburnt plants, so it does not replace take 4. The Heart is at its limit of 5 takes. Faults still in it: The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered (take 5 shows it, but failed the judge). The lake is one lit oval in a dark surround, the layout the look-alike agent called nearest to the Eye. Finished 22:40 (0h55m).
 
 #### 02-heart take 1: [`02-heart-take1.jpg`](02-heart-take1.jpg)
 
@@ -284,6 +291,38 @@ All around its shore the sea drains outward. Dozens of molten rivers leave it th
 The land between the rivers is black glass, glossy and faceted, and it is overgrown. From this height the growth reads as dense groves and carpets in the colours of fire: ember red, deep orange and coal black, alien shapes like giant corals, cycads and plumes rather than leafy trees, lit hard from the lava side and dark on the other, the nearest ones scorched and smoking. Along the shore, clusters of huge translucent crystals stand out of the rock like shards, amber and blood red, glowing from within and catching the light of the sea. A flock of dark winged creatures circles the smoke column, tiny, which shows how big the sea is.
 
 Air: heat shimmer over the whole surface, streams of embers rising from the fountain and the lavafalls, smoke and ash in layers at different heights that soften the distance. Black sky. All light comes from the lava.
+
+Colour: orange, red and black only, with yellow-white at the hottest points.
+
+Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail on every material, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no text, no logos, no watermark, no border.
+
+The attached pictures are photographs of real lava on Earth. Use them only as evidence of how real lava lakes, lava rivers, lava fountains and volcanic glass look and move: their light, crust, texture and smoke. Do not copy their framing, and do not carry over any people, buildings or roads that appear in them.
+```
+
+#### 02-heart take 5: [`02-heart-take5.jpg`](02-heart-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Last take. Remake after the look-alike check, which named the Heart the weaker of its nearest call with the Eye (one warm lit oval in a dark surround; reads as a lava lake, not a heart). New generation from the same real photographs, not a re-shoot of take 4: the sea runs off the top and left of the frame so there is no oval, and five rivers leave its near shore and branch like arteries across the lower right, with lavafalls on the terraces.
+- Made: started 22:35, generation took 128 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`real/heart-lava-rivers-aerial.jpg`](real/heart-lava-rivers-aerial.jpg)
+  2. [`real/heart-lava-lake-night.jpg`](real/heart-lava-lake-night.jpg)
+  3. [`real/heart-lava-fountain-rivers.jpg`](real/heart-lava-fountain-rivers.jpg)
+  4. [`real/heart-lava-lake-fountain-night.jpg`](real/heart-lava-lake-fountain-night.jpg)
+- Eye check against the shot description: **pass**. Orange, red and black only. The lava sea runs off the top and left of the frame with two fountains and smoke columns, and three wide rivers leave its near shore, drop over a terrace as a lavafall and split into dozens of fine channels across the lower right, which finally gives the artery reading. A flock over the river fork gives scale; fire-coloured plants and amber crystals hold the black rock at lower left. Against the brief: the sea is mostly dark crust with glowing cracks, less bright than take 4, and the black shore takes the lower left third of the frame.
+- Blind judge `still_viewer_26` (asked 22:38, answered 22:40): **(d) amateur generated art**, so it fails. Weakest part: The foreground vegetation is a mushy hybrid of ferns and glowing crystals that sits unburnt right beside molten lava, and its scale is inconsistent with the flock of tiny birds and the lava falls at lower right. The scene also has no focal subject, just uniformly spread orange glow.
+- Prompt ([`prompts/02-heart-take5.txt`](prompts/02-heart-take5.txt)):
+
+```text
+A single frame from a top-budget live-action fantasy film, 16:9 widescreen: an impossible alien place photographed for real, on location, with a large-format cinema camera.
+
+THE HEART. A vast sea of bright molten lava and the rivers that drain it, seen at night from high in the air at a three-quarter angle, as if from an aircraft. The sea fills the upper two thirds of the frame and runs off its top and left edges, so that no far shore is seen: molten rock all the way to the horizon under smoke. Its surface behaves like the real lava lakes in the attached photographs: bright orange and yellow molten rock under a thin shifting skin of darker crust plates split by a net of white-hot cracks. Left of centre a broad upwelling domes up white-hot, the brightest point in the frame, and a second one burns far off near the horizon, each lighting a leaning column of smoke from below.
+
+Along the bottom and the right of the frame the sea meets a shore of black volcanic glass, and there it drains. Five great molten rivers leave it side by side and run toward the camera and off to the right through the black rock, each one splitting into two, then four, then dozens of thinner channels, exactly as arteries branch into veins, until the dark land is covered by a glowing red and orange net that fades into smoke at the right edge. The trunks are wide, slow and heavy, yellow-white down their centres with rafts of black crust riding on them; the finest branches are deep red. Where the land steps down in terraces of black glass the rivers go over as lavafalls: wide, thick, slow curtains of molten rock, yellow at the lip and darkening as they stretch, with no splash and no foam.
+
+The black glass between the channels is glossy and faceted, and it is overgrown. From this height the growth reads as dense groves in ember red, deep orange and coal black, alien shapes like giant corals, cycads and plumes rather than leafy trees, lit hard from the lava side and black on the other, the ones nearest the channels scorched and smoking. Clusters of huge translucent crystals stand along the banks like shards, amber and blood red, glowing from within. A flock of dark winged creatures wheels over the nearest river fork, tiny against it, which shows how large everything is.
+
+Air: heat shimmer over every channel, streams of embers rising, smoke and ash in layers at different heights that soften the distance. Black sky. All light comes from the lava.
 
 Colour: orange, red and black only, with yellow-white at the hottest points.
 
@@ -497,7 +536,7 @@ Palette asked for: Storm purple and white gold.
 
 Brief: Towering vertebra-shaped peaks with waterfalls dropping from them into a sea of cloud. A violent lightning storm lights the peaks and clouds from within. Enormous winged shapes ride the storm. Camera level with the ridge, looking down its length.
 
-Kept: take 3. Takes 1 and 3 passed the blind judge. Take 3 is kept because the storm is the event: cloud lit white gold from inside, forked lightning on several peaks, winged shapes caught against the lit cloud, and waterfalls big enough to read. Take 1 looks more squarely down the ridge but its storm sits off to one side. Faults still in it: The vertebrae read as giant bones standing on cliff tops rather than as whole peaks. The waterfalls start at the very crest with nothing to feed them. The winged shapes are small in frame. Warm light on the near bone does not quite match the cold storm behind. Finished 22:05 (0h20m).
+Kept: take 4. Takes 1, 3 and 4 passed the blind judge. Take 4, the remake made after the look-alike check, is kept: it is the one that owns the palette asked for (deep storm purple against pale gold spires, a white-gold sun beam and warm-lit cloud tops), its five peaks are clean separate silhouettes that read at thumbnail size, lightning strikes the spires themselves, and each peak holds a pool above its waterfalls. Take 3 was kept until then and stays in the folder as the alternative: its bone surface and its sense of height are more photographic, but it is greyer and busier, which is what the look-alike agent named. Faults still in it: The waterfalls are huge torrents pouring off every side of small summit pools, far more water than the pools could feed. The spires repeat almost unchanged down the row. The small lightning bolt inside the sun beam on the right looks pasted on. The lightning is violet-white rather than gold. The winged shapes are still small in frame. The bone still stands on a dark rock pillar rather than being the whole peak. Finished 22:40 (0h55m).
 
 #### 05-spine take 1: [`05-spine-take1.jpg`](05-spine-take1.jpg)
 
@@ -586,6 +625,39 @@ The storm fills the sky: enormous purple and violet thunderheads piled above and
 Enormous winged shapes ride the storm at middle distance: five or six huge dark silhouettes with long narrow wings, banking between the peaks, one caught sharply against a lightning-lit cloud, each as wide as a summit.
 
 Colour: storm purple and violet with white-gold light. Green appears only as dark accents on the rock.
+
+Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail on every material, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no text, no logos, no watermark, no border.
+
+The attached pictures are photographs of real places on Earth. Use them only as evidence of how real thunderstorms lit from within by lightning, sheer cloud-wrapped rock towers, high waterfalls and seas of cloud look: their light, texture, wetness and atmosphere. Do not copy their framing, and do not carry over any people, buildings, boats, roads or signs that appear in them.
+```
+
+#### 05-spine take 4: [`05-spine-take4.jpg`](05-spine-take4.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Remake after the look-alike check, which named the Spine the weaker of its nearest call with the Breath (violet-blue sky over blue-white, greyer and busier). New generation from the same real photographs, not a re-shoot of take 3: the palette is pushed to two colours, deep storm purple and white gold (gold lightning, cloud lit gold from within, one sun beam), only five well-separated peaks, the peaks are the vertebrae themselves rather than bones on cliff tops, each waterfall has a lake as its source, and the winged shapes are as wide as a peak.
+- Made: started 22:35, generation took 116 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`real/spine-storm-lit-within.jpg`](real/spine-storm-lit-within.jpg)
+  2. [`real/spine-lightning-web.jpg`](real/spine-lightning-web.jpg)
+  3. [`real/spine-angel-falls-cloud.jpg`](real/spine-angel-falls-cloud.jpg)
+  4. [`real/spine-tepui-cloud-sea.jpg`](real/spine-tepui-cloud-sea.jpg)
+  5. [`real/spine-jagged-peaks-storm-light.jpg`](real/spine-jagged-peaks-storm-light.jpg)
+- Eye check against the shot description: **pass**. Deep storm purple with white gold: pale gold spires, a white-gold sun beam through a tear in the storm on the right, lightning striking three spires, warm-lit cloud sea. Five well-separated vertebra peaks run down the length of the ridge from the camera, each with a tall spire, two swept wings and a hollow drum, and each holds a pool that feeds its waterfalls into the cloud. Cleaner and less grey than take 3 at small size. The lightning itself is violet-white rather than gold, the winged shapes are still small (one mid-sized near the first spire), and the bone still sits on a dark rock pillar.
+- Blind judge `still_viewer_25` (asked 22:38, answered 22:40): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The waterfalls are the least convincing element: huge torrents pour off every side of tiny summit basins with no visible source, and the receding spires repeat like near-identical clones. The small lightning bolt inside the sunbeam on the right also looks pasted on rather than lit by the scene.
+- Prompt ([`prompts/05-spine-take4.txt`](prompts/05-spine-take4.txt)):
+
+```text
+A single frame from a top-budget live-action fantasy film, 16:9 widescreen: an impossible alien place photographed for real, on location, with a large-format cinema camera.
+
+THE SPINE. A mountain ridge of towering vertebra-shaped peaks in a violent lightning storm, above a sea of cloud. The camera hangs in the air level with the crest, just off the near end of the ridge, looking down its length as it runs away in a long gentle curve from the lower left to the horizon right of centre. The mountains themselves are the vertebrae: each peak is one bone of an unimaginably large backbone, thousands of metres tall and long since turned to pale ivory rock, with a thick drum-shaped body, a tall blade-like spire standing up from it and two broad wings sweeping out to the sides. The body of each peak plunges straight down into the cloud with no separate cliff or plateau under it; bone and mountain are one mass of pale, pitted, weathered stone. Only five peaks are clearly seen, well apart, each a clean silhouette against lit cloud, the nearest filling the left third of the frame, the others smaller and hazier in turn; beyond them the line is only a hint in the storm.
+
+Water: rain streams off every spire and gathers in a dark lake held in the saddle between each peak's wings. Each lake spills over its lip as two or three great waterfalls that drop the full height of the peak as white ribbons, drift sideways in the wind and vanish into the cloud sea. Dark green hanging forest, moss and wind-bent trees cling to the ledges around the lakes.
+
+The storm: a wall of deep purple and black-violet thunderheads stands over the ridge and fills the upper half of the frame. It is lit from within by white-gold lightning, so that its cores glow like lanterns, and several forked bolts, white gold and blinding, strike the spires of three peaks at once. The cloud sea below glows white gold too, wherever lightning flickers inside it. Low on the right a tear in the storm lets the sun through as one broad white-gold beam that falls across the ridge, turning the nearest spire, its waterfalls and the cloud tops beneath it to bright gold against the purple.
+
+Enormous winged shapes ride the storm at middle distance: three vast dark silhouettes with long narrow wings, each with a wingspan nearly as wide as a peak, gliding between the second and third peaks, one crossing in front of a lit cloud core so that its whole outline is clear, and a few more far off, small as birds.
+
+Colour: two colours carry the frame, deep storm purple and white gold. No blue daylight and no grey. Green appears only as dark accents on the rock.
 
 Look: hyper-realistic live-action photography. Believable lens perspective, real atmospheric haze and scale, true-to-life surface detail on every material, fine film grain, rich saturated colour with deep blacks. It must not look like a painting, an illustration, concept art, a cartoon or a smooth plastic 3D render. No people, no buildings, no vehicles, no text, no logos, no watermark, no border.
 
