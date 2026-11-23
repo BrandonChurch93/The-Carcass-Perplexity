@@ -1,0 +1,9 @@
+Rework image 1, which is a frame from a live-action fantasy feature film: a ridge of pale rock peaks above a sea of cloud in a storm. Keep its camera position, lens, composition, the peaks in the foreground and middle distance, the cloud sea, the storm sky, colour grade, contrast, darkness and film grain exactly as they are. Change only two things.
+
+The lightning: in image 1 it is a thin web that lights nothing. Replace it with one real strike. A thick, bright, branching blue-white bolt comes out of the storm cloud, hits the top of a peak in the middle distance and crawls on sideways along the crest from peak to peak. It is a real light source: its flash lights the inside of the storm cloud above it, throws hard cold light on the near faces of the peaks beside it, puts the peaks in front of it into silhouette and glows through the cloud sea below the strike. Image 3 is real lightning: use it for the brightness, colour and branching of the bolt.
+
+The far end of the ridge: in image 1 the distant peaks are a row of identical little cones that look copied. Make them the same kind of mountain as the near ones, each a blocky peak with one tall central fin and a lower buttress on each side, evenly spaced with the same deep notch between them, but no two exactly alike, growing smaller and bluer in the haze until the ridge is lost in cloud.
+
+Image 2 is another finished frame from the same film: use it only to keep the same colour grade, haze and grain, and copy nothing else from it.
+
+The result must look like a real photograph of a real place taken for a top-budget live-action film: a thunderstorm at dusk, ash grey, bone white and cold slate blue. No fire, no orange glow, no embers. No people, no buildings, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.

@@ -1,0 +1,9 @@
+Rework image 1, which is a frame from a live-action fantasy feature film: a deep crater with a round black lake at the bottom, seen from the air. Keep its camera position, lens, composition, the depth of the pit, the layered crater walls, the round lake and its pale shoreline, the mist, the storm sky, colour grade, contrast, darkness and film grain exactly as they are. Change only two things.
+
+The rim: in image 1 the white rim around the crater is smooth, rounded and soft, like dough or melted wax. Turn it into real rock: a broken ring of jagged, fractured cliffs of pale grey-white stone with sharp edges, ledges, overhangs, cracks, rockfall scars and rubble, dusted with grey ash and old snow, with scree running down from it into the pit. It is hard, angular, weathered geology at a huge scale, and boulders the size of houses lie along it like grains of sand. Image 3 is a real crater: use it for the look of real broken crater walls.
+
+The glow: in image 1 the lake has a bright spot of light in its centre. Remove the bright spot. Instead there is only a faint, cold, blue-grey luminescence deep inside the water: a wide, soft, even glow that fills the middle of the lake and fades toward the shore, as dim as moonlight through fog, with no point of light and no rays. The water stays black, perfectly still and reflects nothing.
+
+Image 2 is another finished frame from the same film: use it only to keep the same colour grade, haze and grain, and copy nothing else from it.
+
+The result must look like a real photograph of a real place taken for a top-budget live-action film: heavy overcast at dusk, flat cold light, ash grey, bone white and cold slate blue. No fire, no orange glow, no embers. It must not look like a drawing of an eye. No people, no buildings, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
