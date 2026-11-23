@@ -2,9 +2,9 @@
 
 Reference run of 2026-11-23. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved.
 
-- Shots with a kept take: 6 of 7. Takes made: 28.
+- Shots with a kept take: 7 of 7. Takes made: 33.
 - Run started 20:38 UTC; the two-hour limit ended at 22:38 UTC. Times below are UTC, with time since the start in brackets.
-- `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator.
+- `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator. `guides/` holds the one layout study made for shot 7 take 5.
 
 ## Kept takes
 
@@ -16,7 +16,7 @@ Reference run of 2026-11-23. These are target stills for seven moving 3D scenes.
 | The Blood Marsh | [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg) | seedream_5 | PASS (a) | The swell over the shape is blue-grey and does not blend into the red water; the frame is flatter than takes 1 to 3. |
 | The Spine | [`05-spine-take3.jpg`](05-spine-take3.jpg) | seedream_5 | PASS (a) | Lightning is a thin web that lights neither rock nor cloud; the far peaks are a comb of identical cones. |
 | The Eye | [`06-eye-take4.jpg`](06-eye-take4.jpg) | seedream_5 | PASS (a) | Glow looks airbrushed; near rim at lower right is soft. |
-| The Reveal | not chosen | | | |
+| The Reveal | [`07-reveal-take1.jpg`](07-reveal-take1.jpg) | seedream_5 | PASS (a) | Weakest frame of the set. Too literal in places: a skull with a second socket and teeth, a carved hand and foot. The ice field is a spray of a few oversized spikes. Scale cues conflict: the curve of the planet says continent, while the arches, clouds and ice say something smaller. The hip and limbs on the right are lumpy and hard to read. |
 
 ## How the takes were judged
 
@@ -47,6 +47,9 @@ Only (a) passes. A failed take was made again while the shot had takes left (fiv
 - 21:10 (0h31m): Reworking a finished take with Seedream worked on shot 1 and on the Eye's rim, but barely changed the Spine and did not turn the Marsh water red. Reworks keep the frame too faithfully for large changes.
 - 21:10 (0h31m): The Spine is kept at its limit with known faults (thin lightning, copied far peaks). The Breath, the Blood Marsh and the Eye are kept from their fourth or fifth takes because those are the ones that meet the brief, not only the judge.
 - 21:10 (0h31m): Shot 7 gets the kept takes of all six places as reference images 1 to 6 (shot 1 take 5 first, as the anchor) plus three photographs from orbit. Takes 1 and 2 are on Seedream 5 Pro (steep oblique view, then a view straight down with the body curled); take 3 is the take 1 prompt on Nano Banana Pro, because this shot depends on placing many things correctly.
+- 21:15 (0h37m): Shot 7 first three takes: Seedream drew the body too literally (a skeleton statue, then a stone giant with a face); Nano Banana Pro drew an island that is not a body and wrote the reference numbers 1 to 6 on it. Take 1 has the right camera and every place in the right spot, so takes 4 and 5 rework it instead of starting again: keep the layout, turn the statue into real geography. Later prompts say 'the first image' in words and forbid numbers and labels.
+- 21:21 (0h42m): Take 4 of shot 7 showed that a model handed the sharp take 1 simply hands it back. So the last take does not rework take 1 directly. It gets a layout study instead: take 1 with the too-literal details painted out (second socket, teeth, fingers, toes, the few huge ice spikes), the limbs roughened, then blurred and halved, saved as guides/07-reveal-take5-layout.jpg. The model has to keep the camera and the layout but make every detail again, and the prompt asks for geography and for scale cues (small clouds, fine sea ice).
+- 21:25 (0h46m): The Reveal is kept at its limit with known faults, and it is the weakest frame of the set. Two judges saw almost the same picture (takes 1 and 4) and answered (a) and (d), so the blind judge is not steady on this shot. Take 1 is kept because it passed and reads most clearly as a body; take 5 is the less literal alternative if the skull, hand and foot of take 1 are too much. No sixth take was made and no takes were combined by hand, because the limit is five.
 
 ## Every image
 
@@ -902,6 +905,210 @@ The result must look like a real photograph of a real place taken for a top-budg
 
 Brief: Very high aerial view of the whole continent in a dark sea, cloud drifting over it. From here it is unmistakably the body of a fallen titan lying on its side, with the ribs, the glowing heart, the spine and the eye all visible as the places from shots 1 to 6.
 
+Kept: take 1. Limit of five takes reached. Take 1 is the only take that passed its blind judge, and it shows the body most clearly, with all six places where they belong. Take 5 is less literal (no second socket, teeth, fingers or toes) but failed its judge on the ice field and reads less clearly as a body. Take 4 is almost the same picture as take 1 and failed with a different judge, so this pass is a narrow one. Faults still in it: Weakest frame of the set. Too literal in places: a skull with a second socket and teeth, a carved hand and foot. The ice field is a spray of a few oversized spikes. Scale cues conflict: the curve of the planet says continent, while the arches, clouds and ice say something smaller. The hip and limbs on the right are lumpy and hard to read. Finished 21:25 (0h46m).
+
+#### 07-reveal take 1: [`07-reveal-take1.jpg`](07-reveal-take1.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Steep oblique view from the edge of space with the horizon in frame. Body described in words only: head at left, back along the top, legs trailing into islands at right. The six kept frames plus three photographs from orbit as references.
+- Made: started 21:09, generation took 163 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`02-heart-take3.jpg`](02-heart-take3.jpg)
+  3. [`05-spine-take3.jpg`](05-spine-take3.jpg)
+  4. [`06-eye-take4.jpg`](06-eye-take4.jpg)
+  5. [`03-breath-take5.jpg`](03-breath-take5.jpg)
+  6. [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg)
+  7. [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg)
+  8. [`real/orbital-oblique-snowy-ranges.jpg`](real/orbital-oblique-snowy-ranges.jpg)
+  9. [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg)
+- Blind judge `image_viewer_29` (asked 21:13, answered 21:15): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The anatomy of the colossal skeleton-island falls apart away from the ribcage: the limbs and pelvis on the right melt into ambiguous lumpy landforms, and the spray of ice shards under the skull reads as a pasted-on crystal cluster. The scale cues also conflict, with clouds and ice floes sized inconsistently against the planetary curvature.
+- Checked by eye against the brief: The body cannot be missed and all six places are on it where they belong: crater lake in the head, ice from the mouth, arches across the chest, caldera with lava channels and ash plume, red marsh, ridge of peaks with storm and lightning. But it is too literal: a clean skull with a nose hole and teeth, a carved hand with fingers, smooth stone legs. It reads as a giant statue of a skeleton, not as a land. The ice is a spray of a few huge spikes.
+- Prompt ([`prompts/07-reveal-take1.txt`](prompts/07-reveal-take1.txt)):
+
+```text
+A single frame from a live-action fantasy feature film: its final wide shot. A very high aerial view, from the edge of space, looking down at a steep angle on a whole continent that lies alone in a dark, cold sea. It is photographed like real high-altitude and satellite imagery, not painted.
+
+THE CONTINENT: one long landmass with the outline of a colossal giant, a titan, that fell here ages ago and now lies on its side, turned to rock, ash, ice and mountains. From this height the shape cannot be mistaken: the head at the left end of the frame, the neck, the heavy shoulder and the barrel of the chest, one arm lying in front of the body, the narrow waist, the hip, and the legs bent at the knee and trailing away at the right end into a chain of islands. The titan faces the bottom of the frame and its back is toward the top. Yet every part of it is real terrain seen from orbit: coastlines with surf, fjords, bays, river valleys, ash plains, lava fields, snowfields and glaciers. Nothing is skin, flesh, cloth or carved stone, and the head has no face, only terrain.
+
+THE PLACES, all visible from here, each in its right position on the body:
+- The Eye: in the head, where the eye socket would be, one deep round crater holding a small black lake with a faint pale blue glow. It is the crater of image 4.
+- The Breath: from the mouth, a white glacier field of ice spires fans out to the sea, combed in one direction as if breathed out. It is the ice field of image 5.
+- The Spine: along the back, on the top edge of the landmass, a long mountain ridge of evenly spaced pale peaks runs from the neck to the hip like a backbone, with storm cloud piled against it and one flicker of lightning. It is the ridge of image 3.
+- The Ribs: across the chest, a row of colossal curved white rock arches stands half buried in dark rock, one behind another, sweeping down from the ridge like a rib cage, with a canyon between them. They are the arches of image 1.
+- The Heart: inside the chest, among the arches, a volcanic caldera glows ember orange, with four small lava lakes and dark channels running out across the land like veins. It is the caldera of image 2.
+- The Blood Marsh: in the hollow of the belly, a low marsh of rust-red water spreads to the coast under fog. It is the marsh of image 6.
+
+WHAT IS MOVING: broken layers of cloud and long cloud streets drift across the continent, hiding parts of it and laying soft shadows on it. A grey ash plume trails downwind from the caldera. Snow blows off the ridge. White surf lines the coasts, and the black sea is streaked with whitecaps and drifting sea ice.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. The curve of the horizon and a thin band of atmosphere show along the top of the frame. Fine film grain, natural contrast, real atmospheric haze.
+
+REFERENCE IMAGES: images 1 to 6 are finished frames from the same film and show the six places at ground level. Build each of them into the continent, small, in the position given above, and match their colour grade. Image 7 is a real satellite photograph of a long snowy island in a dark sea: use it for how real coastlines, glaciers, surf and sea look from orbit. Image 8 is a real photograph taken from orbit: use it for the oblique camera angle, the haze and the curve of the horizon. Image 9 is a real satellite photograph of an island in winter with cloud: use it for real cloud drifting over land.
+
+It must look like a real photograph of a real place. No people, no buildings, no text, no labels, no logos, no watermark, no border. Not a painting, illustration, concept art, map, diagram or video game screenshot. Wide 16:9 frame.
+```
+
+#### 07-reveal take 2: [`07-reveal-take2.jpg`](07-reveal-take2.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Same content seen almost straight down, like a satellite frame, with the body curled like a sleeper so it fills the frame.
+- Made: started 21:09, generation took 165 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`02-heart-take3.jpg`](02-heart-take3.jpg)
+  3. [`05-spine-take3.jpg`](05-spine-take3.jpg)
+  4. [`06-eye-take4.jpg`](06-eye-take4.jpg)
+  5. [`03-breath-take5.jpg`](03-breath-take5.jpg)
+  6. [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg)
+  7. [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg)
+  8. [`real/orbital-oblique-snowy-ranges.jpg`](real/orbital-oblique-snowy-ranges.jpg)
+  9. [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg)
+- Blind judge `image_viewer_30` (asked 21:13, answered 21:15): **(d) amateur generated art**, so it fails. Weakest part: The giant's anatomy does not hold together: the ear sits on top of the skull, the ribcage runs straight into a hip and leg with no pelvis or second leg, and the arm and shoulder merge ambiguously into the torso. Scale is also inconsistent, with orbital-height clouds next to surf foam and ice spikes that read far too large.
+- Checked by eye against the brief: Fails the brief. It is a stone giant with a face, an ear, lips, a muscled arm and toes: cartoon-literal, and the scale reads as a statue, not a continent.
+- Prompt ([`prompts/07-reveal-take2.txt`](prompts/07-reveal-take2.txt)):
+
+```text
+A single frame from a live-action fantasy feature film: its final wide shot. A satellite view from orbit, looking almost straight down on a whole continent that lies alone in a dark, cold sea and fills most of the frame. It is photographed like real high-altitude and satellite imagery, not painted.
+
+THE CONTINENT: one long landmass with the outline of a colossal giant, a titan, that fell here ages ago and now lies on its side, turned to rock, ash, ice and mountains. From this height the shape cannot be mistaken: the head at the left end of the frame, the neck, the heavy shoulder and the barrel of the chest, one arm folded in front of the body, the narrow waist, the hip, and the legs drawn up and bent at the knee at the right end, so that the whole body is curled like a sleeper. The feet break up into a chain of islands. The titan faces the bottom of the frame and its back is toward the top. Yet every part of it is real terrain seen from orbit: coastlines with surf, fjords, bays, river valleys, ash plains, lava fields, snowfields and glaciers. Nothing is skin, flesh, cloth or carved stone, and the head has no face, only terrain.
+
+THE PLACES, all visible from here, each in its right position on the body:
+- The Eye: in the head, where the eye socket would be, one deep round crater holding a small black lake with a faint pale blue glow. It is the crater of image 4.
+- The Breath: from the mouth, a white glacier field of ice spires fans out to the sea, combed in one direction as if breathed out. It is the ice field of image 5.
+- The Spine: along the back, on the top edge of the landmass, a long mountain ridge of evenly spaced pale peaks runs from the neck to the hip like a backbone, with storm cloud piled against it and one flicker of lightning. It is the ridge of image 3.
+- The Ribs: across the chest, a row of colossal curved white rock arches stands half buried in dark rock, one behind another, sweeping down from the ridge like a rib cage, with a canyon between them. They are the arches of image 1.
+- The Heart: inside the chest, among the arches, a volcanic caldera glows ember orange, with four small lava lakes and dark channels running out across the land like veins. It is the caldera of image 2.
+- The Blood Marsh: in the hollow of the belly, a low marsh of rust-red water spreads to the coast under fog. It is the marsh of image 6.
+
+WHAT IS MOVING: broken layers of cloud and long cloud streets drift across the continent, hiding parts of it and laying soft shadows on it. A grey ash plume trails downwind from the caldera. Snow blows off the ridge. White surf lines the coasts, and the black sea is streaked with whitecaps and drifting sea ice.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. Fine film grain, natural contrast, real atmospheric haze.
+
+REFERENCE IMAGES: images 1 to 6 are finished frames from the same film and show the six places at ground level. Build each of them into the continent, small, in the position given above, and match their colour grade. Image 7 is a real satellite photograph of a long snowy island in a dark sea: use it for how real coastlines, glaciers, surf and sea look from orbit. Image 8 is a real photograph taken from orbit: use it for the haze and the texture of snowy mountain ranges seen from space. Image 9 is a real satellite photograph of an island in winter with cloud: use it for real cloud drifting over land.
+
+It must look like a real photograph of a real place. No people, no buildings, no text, no labels, no logos, no watermark, no border. Not a painting, illustration, concept art, map, diagram or video game screenshot. Wide 16:9 frame.
+```
+
+#### 07-reveal take 3: [`07-reveal-take3.png`](07-reveal-take3.png)
+
+- Model: Nano Banana Pro (`nano_banana_pro`). Output 2752x1536 PNG, kept as delivered.
+- What this take tried: The take 1 prompt on Nano Banana Pro, to see which model places the six places on the body more exactly.
+- Made: started 21:09, generation took 29 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`02-heart-take3.jpg`](02-heart-take3.jpg)
+  3. [`05-spine-take3.jpg`](05-spine-take3.jpg)
+  4. [`06-eye-take4.jpg`](06-eye-take4.jpg)
+  5. [`03-breath-take5.jpg`](03-breath-take5.jpg)
+  6. [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg)
+  7. [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg)
+  8. [`real/orbital-oblique-snowy-ranges.jpg`](real/orbital-oblique-snowy-ranges.jpg)
+  9. [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg)
+- Blind judge `image_viewer_31` (asked 21:13, answered 21:15): **(c) a textbook picture**, so it fails. Weakest part: The scale is incoherent: the island sits under a planetary horizon as if seen from orbit, yet its crater lake, lava streams, smoke plumes, lightning and icebergs are sized like a low aerial view. The numbered callouts 1-6 also have no leader lines or key, and some (3 in the cloud, 5 in the water) do not clearly point at any feature.
+- Checked by eye against the brief: Fails the brief. The model drew the numbers 1 to 6 on the picture, taken from the way the prompt numbers the reference images, and the land reads as a volcanic island, not a body.
+- Prompt ([`prompts/07-reveal-take3.txt`](prompts/07-reveal-take3.txt)):
+
+```text
+A single frame from a live-action fantasy feature film: its final wide shot. A very high aerial view, from the edge of space, looking down at a steep angle on a whole continent that lies alone in a dark, cold sea. It is photographed like real high-altitude and satellite imagery, not painted.
+
+THE CONTINENT: one long landmass with the outline of a colossal giant, a titan, that fell here ages ago and now lies on its side, turned to rock, ash, ice and mountains. From this height the shape cannot be mistaken: the head at the left end of the frame, the neck, the heavy shoulder and the barrel of the chest, one arm lying in front of the body, the narrow waist, the hip, and the legs bent at the knee and trailing away at the right end into a chain of islands. The titan faces the bottom of the frame and its back is toward the top. Yet every part of it is real terrain seen from orbit: coastlines with surf, fjords, bays, river valleys, ash plains, lava fields, snowfields and glaciers. Nothing is skin, flesh, cloth or carved stone, and the head has no face, only terrain.
+
+THE PLACES, all visible from here, each in its right position on the body:
+- The Eye: in the head, where the eye socket would be, one deep round crater holding a small black lake with a faint pale blue glow. It is the crater of image 4.
+- The Breath: from the mouth, a white glacier field of ice spires fans out to the sea, combed in one direction as if breathed out. It is the ice field of image 5.
+- The Spine: along the back, on the top edge of the landmass, a long mountain ridge of evenly spaced pale peaks runs from the neck to the hip like a backbone, with storm cloud piled against it and one flicker of lightning. It is the ridge of image 3.
+- The Ribs: across the chest, a row of colossal curved white rock arches stands half buried in dark rock, one behind another, sweeping down from the ridge like a rib cage, with a canyon between them. They are the arches of image 1.
+- The Heart: inside the chest, among the arches, a volcanic caldera glows ember orange, with four small lava lakes and dark channels running out across the land like veins. It is the caldera of image 2.
+- The Blood Marsh: in the hollow of the belly, a low marsh of rust-red water spreads to the coast under fog. It is the marsh of image 6.
+
+WHAT IS MOVING: broken layers of cloud and long cloud streets drift across the continent, hiding parts of it and laying soft shadows on it. A grey ash plume trails downwind from the caldera. Snow blows off the ridge. White surf lines the coasts, and the black sea is streaked with whitecaps and drifting sea ice.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. The curve of the horizon and a thin band of atmosphere show along the top of the frame. Fine film grain, natural contrast, real atmospheric haze.
+
+REFERENCE IMAGES: images 1 to 6 are finished frames from the same film and show the six places at ground level. Build each of them into the continent, small, in the position given above, and match their colour grade. Image 7 is a real satellite photograph of a long snowy island in a dark sea: use it for how real coastlines, glaciers, surf and sea look from orbit. Image 8 is a real photograph taken from orbit: use it for the oblique camera angle, the haze and the curve of the horizon. Image 9 is a real satellite photograph of an island in winter with cloud: use it for real cloud drifting over land.
+
+It must look like a real photograph of a real place. No people, no buildings, no text, no labels, no logos, no watermark, no border. Not a painting, illustration, concept art, map, diagram or video game screenshot. Wide 16:9 frame.
+```
+
+#### 07-reveal take 4: [`07-reveal-take4.png`](07-reveal-take4.png)
+
+- Model: Nano Banana Pro (`nano_banana_pro`). Output 2752x1536 PNG, kept as delivered.
+- What this take tried: Rework of take 1 on Nano Banana Pro: keep the camera and where every place is, but turn the statue-like body into real geography (domed massif for the head, mountain ranges for the limbs, peninsulas for the hand, weathered arches, a real glacier field, a broken coastline). No numbers or labels.
+- Made: started 21:15, generation took 27 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`07-reveal-take1.jpg`](07-reveal-take1.jpg)
+  2. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  3. [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg)
+  4. [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg)
+- Blind judge `image_viewer_32` (asked 21:21, answered 21:24): **(d) amateur generated art**, so it fails. Weakest part: The skull at lower left is the weakest part: its anatomy is muddled (mismatched, melted-looking eye sockets, no clear jaw) and the spray of ice shards beneath it reads like close-up crystals, breaking the continent-sized scale that the orbital view and clouds are trying to sell.
+- Checked by eye against the brief: Nano Banana Pro returned take 1 almost unchanged: same skull with two sockets and teeth, same giant ice spikes, same carved hand and foot. The instruction to turn the body into real geography was not carried out. A take spent for nothing.
+- Prompt ([`prompts/07-reveal-take4.txt`](prompts/07-reveal-take4.txt)):
+
+```text
+Rework the first image. It is the final wide shot of a live-action fantasy feature film: a view from the edge of space of a lone continent in a dark, cold sea, and the continent is the body of a titan that fell here ages ago and lies on its side.
+
+KEEP: the camera, the framing, the curve of the horizon and the thin band of atmosphere, the dark sea, and every place exactly where it is now: the round crater lake in the head, the field of white ice in front of the mouth, the row of colossal curved white arches across the chest, the glowing caldera with its lava channels and its ash plume, the rust-red marsh beside it, and the ridge of pale peaks along the back with the storm and the lightning over it. The shape of the whole body must stay as easy to read as it is now.
+
+CHANGE: the body must stop looking like a statue or a model of a skeleton. Turn it into real geography that happens to have this shape: a land hundreds of kilometres long, as a satellite would photograph it.
+- The head becomes a broad domed massif of pale weathered rock, cracked, gullied and streaked with snow. Remove the nose hole, the second socket, the teeth and every carved feature. Only the dome of a skull and the one round crater with its dark, faintly glowing lake remain.
+- The shoulder, the arm, the hip and the legs become long mountain ranges: sharp ridgelines, side valleys, glaciers and snowfields above a snow line, dark scree and ash plains below it. No smooth surfaces like skin or polished stone, no muscles. The hand becomes five long rocky peninsulas with surf and sea ice between them, not carved fingers. The feet break up into skerries and a chain of islands, with no toes.
+- The arches across the chest stay colossal and bone white, but weathered like real rock: cracked, uneven, two of them broken and fallen, snow on their crests, their feet buried in scree and dark rock, cloud caught between them.
+- The ice in front of the mouth becomes a real glacier field: thousands of fine ice spires, all leaning away from the head, breaking up into pack ice on the sea. Not a few giant spikes.
+- The coast everywhere becomes an irregular real coastline: fjords, bays, river mouths, bars of black ash, lines of white surf, shelves of sea ice.
+- More weather: broken cloud and long cloud streets drift across the land, hide parts of it and lay soft shadows on it. Snow blows off the ridge. The sea is streaked with whitecaps.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. Fine film grain, natural contrast, real atmospheric haze.
+
+OTHER IMAGES: the second image is a frame from the same film: match its colour grade only and copy nothing else from it. The third and fourth images are real satellite photographs: use them only for how real coastlines, mountains, snow, sea ice and cloud look from orbit.
+
+It must look like a real photograph of a real place taken from orbit. No people, no buildings. No text, numbers, letters, labels, markers, logos, watermark or border anywhere in the picture. Not a painting, illustration, concept art, sculpture, map, diagram or video game screenshot. Wide 16:9 frame.
+```
+
+#### 07-reveal take 5: [`07-reveal-take5.jpg`](07-reveal-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Last take. A new Seedream 5 Pro generation built on a layout study made from take 1 (guides/07-reveal-take5-layout.jpg): take 1 with the second socket, teeth, fingers and toes painted out, the few huge ice spikes replaced by a fan of fine streaks, the limbs roughened, then blurred and halved, so the model keeps the camera and the layout but has to make every detail again as real geography. Adds scale cues: small clouds, fine sea ice.
+- Made: started 21:20, generation took 165 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`guides/07-reveal-take5-layout.jpg`](guides/07-reveal-take5-layout.jpg)
+  2. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  3. [`02-heart-take3.jpg`](02-heart-take3.jpg)
+  4. [`05-spine-take3.jpg`](05-spine-take3.jpg)
+  5. [`06-eye-take4.jpg`](06-eye-take4.jpg)
+  6. [`03-breath-take5.jpg`](03-breath-take5.jpg)
+  7. [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg)
+  8. [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg)
+  9. [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg)
+- Blind judge `image_viewer_33` (asked 21:23, answered 21:25): **(d) amateur generated art**, so it fails. Weakest part: The white spiky crystal burst at lower left looks pasted on, with flat lighting and no clear relation to the ocean or the skull beside it. Scale is also incoherent: the ribs, lightning bolt and clouds read as mountain-sized while the planet's curvature implies a continent-sized creature.
+- Checked by eye against the brief: The layout study worked in part. The head is now a plain pale dome with one crater lake; the second socket, the teeth, the fingers and the toes are gone; the leg reads more like a snowy range. But the ice came out as a separate white burst of shards floating beside the head, which looks pasted on; the dome no longer reads as a skull; the arm and the foot are harder to read as limbs. Scale cues still conflict.
+- Prompt ([`prompts/07-reveal-take5.txt`](prompts/07-reveal-take5.txt)):
+
+```text
+A single frame from a live-action fantasy feature film: its final wide shot. A very high aerial view from the edge of space, looking down at a steep angle on a lone continent in a dark, cold sea. It is photographed like real high-altitude and satellite imagery, not painted.
+
+IMAGE 1 IS THE LAYOUT. It is a rough, out-of-focus layout study of this exact shot. Make the finished frame from it: the same camera, the same curved horizon with its thin band of atmosphere, the same coastline, every landform in the same place and at the same size. The study is blurred and crude. The finished frame is pin-sharp, finely detailed and real.
+
+WHAT THE LAND IS: the body of a titan that fell here ages ago and lies on its side, long since turned to rock, ash, ice and mountains. From this height the shape of the body cannot be mistaken: the head at the left, the chest, the arm along the near coast, the hip, and a leg bent at the knee at the right. But all of it is geography, as a satellite would photograph it. Nothing looks carved, sculpted, polished, like skin or like a statue.
+- The head, at the left: a broad domed massif of pale weathered rock with the outline of a skull seen from the side, cracked, gullied and streaked with snow, with scree fans at its foot and surf along its cliffs. In it is one deep round crater holding a dead-still black lake that glows faintly pale blue from below: the crater of image 5. There are no other holes in it: no nose, no teeth, no face.
+- Below the head, a white glacier field runs out into the sea like a frozen breath: thousands of fine blue-white ice spires, all leaning the same way, away from the head, as in image 6. At its edge it breaks up into pack ice.
+- Across the chest, in the middle of the land: a row of colossal curved bone-white rock arches, one behind another, half buried in dark rock, as in image 2. They are weathered like real rock: cracked, uneven, snow on their crests, their feet in scree, cloud caught between them.
+- Along the back, behind the arches: a mountain ridge of evenly spaced pale peaks, as in image 4, with dark storm cloud piled against it and one thin flicker of lightning.
+- To the right of the arches: a volcanic caldera holding four lava lakes that glow ember orange, two brighter and two dimmer, with dark channels and thin lava rivers running out across an ash plain like veins, and a grey ash plume trailing downwind. It is the caldera of image 3.
+- Below the caldera, in the hollow of the belly: a low marsh of still rust-red water under fog that reaches the coast. It is the marsh of image 7.
+- The arm along the near coast and the leg at the right are long mountain ranges: knife-edged ridgelines, deep side valleys, glaciers and snowfields above the snow line, dark scree and ash plains below it. The arm ends in five long rocky capes with surf and sea ice between them. The leg bends at a knee-shaped headland and ends in a foot-shaped cape that breaks up into skerries and a chain of islands.
+- The coast everywhere is a real, irregular coastline: fjords, bays, river mouths, bars of black ash, hairlines of white surf, shelves of sea ice.
+
+SCALE: the land is hundreds of kilometres long. Clouds are small and many against it: fine cloud streets and fields of tiny cumulus far below the camera. Sea ice is a fine speckle. Rivers and glaciers are thin threads.
+
+WHAT IS MOVING: broken cloud drifts across the continent, hides parts of it and lays soft shadows on it. The ash plume trails from the caldera. Snow blows off the ridge. The lightning flickers in the storm. The black sea is streaked with whitecaps.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. Fine film grain, natural contrast, real atmospheric haze.
+
+OTHER IMAGES: images 2 to 7 are finished frames from the same film and show the six places at ground level. Match their colour grade, above all image 2. Images 8 and 9 are real satellite photographs: use them only for how real coastlines, mountains, snow, sea ice and cloud look from orbit.
+
+It must look like a real photograph of a real place. No people, no buildings. No text, numbers, letters, labels, markers, logos, watermark or border. Not a painting, illustration, concept art, sculpture, map, diagram or video game screenshot. Wide 16:9 frame.
+```
+
 ## Real photographs used as references
 
 All from Wikimedia Commons under free licences, so they are kept in `real/` with credit. Sizes are as passed to the generator (1,920 px wide or smaller).
@@ -930,4 +1137,7 @@ All from Wikimedia Commons under free licences, so they are kept in `real/` with
 | [`real/crater-viti-askja.jpg`](real/crater-viti-askja.jpg) | Víti crater, Askja, Iceland: milky lake deep in a steep crater | Areuland | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Viti_(Askja).jpg) |
 | [`real/crater-okama-zao.jpg`](real/crater-okama-zao.jpg) | Okama crater, Mount Zaō, Japan: round lake in a grey layered crater | Jun K | [CC BY-SA 2.0](https://creativecommons.org/licenses/by-sa/2.0) | [Commons page](https://commons.wikimedia.org/wiki/File:Okama_Crater_(10205258106).jpg) |
 | [`real/crater-lake-aerial-snow.jpg`](real/crater-lake-aerial-snow.jpg) | Crater Lake, Oregon, from the air in snow | not stated | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:Aerial_Crater_Lake.jpg) |
+| [`real/satellite-south-georgia.jpg`](real/satellite-south-georgia.jpg) | South Georgia Island from Sentinel-2: a long snowy landmass in a dark sea | European Space Agency | [CC BY-SA 3.0 igo](https://creativecommons.org/licenses/by-sa/3.0/igo/deed.en) | [Commons page](https://commons.wikimedia.org/wiki/File:South_Georgia_Island_as_seen_by_Sentinel-2.jpg) |
+| [`real/orbital-oblique-snowy-ranges.jpg`](real/orbital-oblique-snowy-ranges.jpg) | Oblique view of snowy mountain ranges and the Earth's limb from the ISS (ISS046-E-3699) | Image courtesy of the Earth Science and Remote Sensing Unit, NASA Johnson Space Center | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:ISS046-E-3699.JPG) |
+| [`real/satellite-iceland-winter.jpg`](real/satellite-iceland-winter.jpg) | Iceland in winter from MODIS, with cloud | Jeff Schmaltz | Public domain | [Commons page](https://commons.wikimedia.org/wiki/File:Iceland_satellite.jpg) |
 

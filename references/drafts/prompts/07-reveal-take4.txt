@@ -1,0 +1,17 @@
+Rework the first image. It is the final wide shot of a live-action fantasy feature film: a view from the edge of space of a lone continent in a dark, cold sea, and the continent is the body of a titan that fell here ages ago and lies on its side.
+
+KEEP: the camera, the framing, the curve of the horizon and the thin band of atmosphere, the dark sea, and every place exactly where it is now: the round crater lake in the head, the field of white ice in front of the mouth, the row of colossal curved white arches across the chest, the glowing caldera with its lava channels and its ash plume, the rust-red marsh beside it, and the ridge of pale peaks along the back with the storm and the lightning over it. The shape of the whole body must stay as easy to read as it is now.
+
+CHANGE: the body must stop looking like a statue or a model of a skeleton. Turn it into real geography that happens to have this shape: a land hundreds of kilometres long, as a satellite would photograph it.
+- The head becomes a broad domed massif of pale weathered rock, cracked, gullied and streaked with snow. Remove the nose hole, the second socket, the teeth and every carved feature. Only the dome of a skull and the one round crater with its dark, faintly glowing lake remain.
+- The shoulder, the arm, the hip and the legs become long mountain ranges: sharp ridgelines, side valleys, glaciers and snowfields above a snow line, dark scree and ash plains below it. No smooth surfaces like skin or polished stone, no muscles. The hand becomes five long rocky peninsulas with surf and sea ice between them, not carved fingers. The feet break up into skerries and a chain of islands, with no toes.
+- The arches across the chest stay colossal and bone white, but weathered like real rock: cracked, uneven, two of them broken and fallen, snow on their crests, their feet buried in scree and dark rock, cloud caught between them.
+- The ice in front of the mouth becomes a real glacier field: thousands of fine ice spires, all leaning away from the head, breaking up into pack ice on the sea. Not a few giant spikes.
+- The coast everywhere becomes an irregular real coastline: fjords, bays, river mouths, bars of black ash, lines of white surf, shelves of sea ice.
+- More weather: broken cloud and long cloud streets drift across the land, hide parts of it and lay soft shadows on it. Snow blows off the ridge. The sea is streaked with whitecaps.
+
+LIGHT AND COLOUR: dusk under high overcast, cold flat light. Ash grey, bone white and cold slate blue, with the ember-orange caldera and the rust-red marsh as the only strong colours. Fine film grain, natural contrast, real atmospheric haze.
+
+OTHER IMAGES: the second image is a frame from the same film: match its colour grade only and copy nothing else from it. The third and fourth images are real satellite photographs: use them only for how real coastlines, mountains, snow, sea ice and cloud look from orbit.
+
+It must look like a real photograph of a real place taken from orbit. No people, no buildings. No text, numbers, letters, labels, markers, logos, watermark or border anywhere in the picture. Not a painting, illustration, concept art, sculpture, map, diagram or video game screenshot. Wide 16:9 frame.
