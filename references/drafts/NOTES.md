@@ -3,20 +3,20 @@
 Reference run of 2026-11-23. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved.
 
 - Shots with a kept take: 7 of 7. Takes made: 33.
-- Run started 20:38 UTC; the two-hour limit ended at 22:38 UTC. Times below are UTC, with time since the start in brackets.
+- Run started 20:38 UTC and was last updated 21:27 UTC, inside the two-hour limit (22:38 UTC). Times below are UTC, with time since the start in brackets.
 - `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator. `guides/` holds the one layout study made for shot 7 take 5.
 
 ## Kept takes
 
 | Shot | Kept take | Model | Blind judge | Faults still in it |
 |---|---|---|---|---|
-| The Ribs | [`01-ribs-take5.jpg`](01-ribs-take5.jpg) | seedream_5 | PASS (a) | Ember glow at the far end is a small smudge; near left arch reads as a cliff face; bottom-right rock is soft. |
-| The Heart | [`02-heart-take3.jpg`](02-heart-take3.jpg) | seedream_5 | PASS (a) | The two dim lakes are close in size; the foreground slope is soft; thin lava threads at the bottom have no clear path. |
-| The Breath | [`03-breath-take5.jpg`](03-breath-take5.jpg) | seedream_5 | PASS (a) | Herd animals are alike and evenly spaced; spires repeat one shape; rime fringes look like spikes. |
-| The Blood Marsh | [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg) | seedream_5 | PASS (a) | The swell over the shape is blue-grey and does not blend into the red water; the frame is flatter than takes 1 to 3. |
-| The Spine | [`05-spine-take3.jpg`](05-spine-take3.jpg) | seedream_5 | PASS (a) | Lightning is a thin web that lights neither rock nor cloud; the far peaks are a comb of identical cones. |
-| The Eye | [`06-eye-take4.jpg`](06-eye-take4.jpg) | seedream_5 | PASS (a) | Glow looks airbrushed; near rim at lower right is soft. |
-| The Reveal | [`07-reveal-take1.jpg`](07-reveal-take1.jpg) | seedream_5 | PASS (a) | Weakest frame of the set. Too literal in places: a skull with a second socket and teeth, a carved hand and foot. The ice field is a spray of a few oversized spikes. Scale cues conflict: the curve of the planet says continent, while the arches, clouds and ice say something smaller. The hip and limbs on the right are lumpy and hard to read. |
+| The Ribs | [`01-ribs-take5.jpg`](01-ribs-take5.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Ember glow at the far end is a small smudge; near left arch reads as a cliff face; bottom-right rock is soft. |
+| The Heart | [`02-heart-take3.jpg`](02-heart-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The two dim lakes are close in size; the foreground slope is soft; thin lava threads at the bottom have no clear path. |
+| The Breath | [`03-breath-take5.jpg`](03-breath-take5.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Herd animals are alike and evenly spaced; spires repeat one shape; rime fringes look like spikes. |
+| The Blood Marsh | [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The swell over the shape is blue-grey and does not blend into the red water; the frame is flatter than takes 1 to 3. |
+| The Spine | [`05-spine-take3.jpg`](05-spine-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Lightning is a thin web that lights neither rock nor cloud; the far peaks are a comb of identical cones. |
+| The Eye | [`06-eye-take4.jpg`](06-eye-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Glow looks airbrushed; near rim at lower right is soft. |
+| The Reveal | [`07-reveal-take1.jpg`](07-reveal-take1.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Weakest frame of the set. Too literal in places: a skull with a second socket and teeth, a carved hand and foot. The ice field is a spray of a few oversized spikes. Scale cues conflict: the curve of the planet says continent, while the arches, clouds and ice say something smaller. The hip and limbs on the right are lumpy and hard to read. |
 
 ## How the takes were judged
 
@@ -50,6 +50,9 @@ Only (a) passes. A failed take was made again while the shot had takes left (fiv
 - 21:15 (0h37m): Shot 7 first three takes: Seedream drew the body too literally (a skeleton statue, then a stone giant with a face); Nano Banana Pro drew an island that is not a body and wrote the reference numbers 1 to 6 on it. Take 1 has the right camera and every place in the right spot, so takes 4 and 5 rework it instead of starting again: keep the layout, turn the statue into real geography. Later prompts say 'the first image' in words and forbid numbers and labels.
 - 21:21 (0h42m): Take 4 of shot 7 showed that a model handed the sharp take 1 simply hands it back. So the last take does not rework take 1 directly. It gets a layout study instead: take 1 with the too-literal details painted out (second socket, teeth, fingers, toes, the few huge ice spikes), the limbs roughened, then blurred and halved, saved as guides/07-reveal-take5-layout.jpg. The model has to keep the camera and the layout but make every detail again, and the prompt asks for geography and for scale cues (small clouds, fine sea ice).
 - 21:25 (0h46m): The Reveal is kept at its limit with known faults, and it is the weakest frame of the set. Two judges saw almost the same picture (takes 1 and 4) and answered (a) and (d), so the blind judge is not steady on this shot. Take 1 is kept because it passed and reads most clearly as a body; take 5 is the less literal alternative if the skull, hand and foot of take 1 are too much. No sixth take was made and no takes were combined by hand, because the limit is five.
+- 21:26 (0h47m): Shots 3 to 6 reached their limits at the same moment, so they went up in one push (e5f0a74) and were shown one after another.
+- 21:26 (0h47m): Contact sheet layout: the six places in a 3 by 2 grid and the Reveal full width below, each labelled with its take, model and judge answer. It is a labelled overview, so it carries text. The kept frames carry none. One rejected take, shot 7 take 3, has the numbers 1 to 6 drawn on it by the model.
+- 21:26 (0h48m): The anchor went into all 28 generations of shots 2 to 7. In the four reworks (Blood Marsh 5, Spine 5, Eye 5, Reveal 4) and in Reveal 5 it is reference image 2, because image 1 is the frame or layout being reworked.
 
 ## Every image
 
