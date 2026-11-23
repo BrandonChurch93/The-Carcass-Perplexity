@@ -2,16 +2,16 @@
 
 Reference run of 2026-11-23, round 2. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved. Round 1 was rejected and sits untouched in [`../archive/round-1/`](../archive/round-1/); nothing from it was reused.
 
-- Shots with a kept take: 4 of 7. Takes made: 20.
-- Round 2 started 21:45 UTC and was last updated 22:06 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
+- Shots with a kept take: 6 of 7. Takes made: 20.
+- Round 2 started 21:45 UTC and was last updated 22:15 UTC, inside the two-hour limit (23:45 UTC). Times below are UTC, with time since the start in brackets.
 - `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator. `guides/` holds the layout studies drawn in code for shot 7.
 
 ## Kept takes
 
 | Shot | Palette asked for | Kept take | Model | Blind judge | Faults still in it |
 |---|---|---|---|---|---|
-| Shot 1: The Ribs | Deep green and gold | not chosen yet | | | |
-| Shot 2: The Heart | Orange, red and black | not chosen yet | | | |
+| Shot 1: The Ribs | Deep green and gold | [`01-ribs-take4.jpg`](01-ribs-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The far end of the tunnel of ribs goes soft and repetitive in the haze. The glowing flock is small yellow specks rather than creatures with a shape. Scale wavers in the distance. The waterfalls sit on the valley walls behind the ribs more than between them. |
+| Shot 2: The Heart | Orange, red and black | [`02-heart-take4.jpg`](02-heart-take4.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered. |
 | Shot 3: The Breath | Ice blue and violet | [`03-breath-take1.jpg`](03-breath-take1.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The big star-shaped flakes near the camera look added on. The beasts read as bison-sized against the trees, not house-sized, and the smallest ones blur. The crystal trees keep a conifer shape. |
 | Shot 4: The Blood Marsh | Crimson and teal | [`04-blood-marsh-take3.jpg`](04-blood-marsh-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | Without the brief the swelling is hard to read as a creature. The teal lights are spread evenly and throw almost no light on trunks or water. Foreground reflections are smeary. |
 | Shot 5: The Spine | Storm purple and white gold | [`05-spine-take3.jpg`](05-spine-take3.jpg) | Seedream 5 Pro (`seedream_5`) | PASS (a) | The vertebrae read as giant bones standing on cliff tops rather than as whole peaks. The waterfalls start at the very crest with nothing to feed them. The winged shapes are small in frame. Warm light on the near bone does not quite match the cold storm behind. |
@@ -37,6 +37,7 @@ Only (a) passes. A judge had ten minutes and one replacement; after that the tak
 - 21:54 (0h09m): No style anchor. Every take gets only its own shot's real photographs. The only thing the seven shots share is three sentences of written bar at the top and bottom of each prompt (live-action film frame, real light and material, no people or text).
 - 21:54 (0h09m): To keep the shots apart as thumbnails, each prompt fixes its own camera height, time of day and light source on top of its palette: Ribs low and sunlit, Heart high and lit only by lava, Breath ground level under aurora, Blood Marsh at water level in dim mist, Spine level with the ridge in a storm, Eye high at night lit by the lake, Reveal from orbit.
 - 22:06 (0h21m): 22:05: Breath, Blood Marsh, Spine and Eye were closed after their first three takes, since each had at least one (a) from the blind judge. A passed shot gets no further takes; the two spare takes per shot are kept for failures and for the look-alike check at the end.
+- 22:12 (0h27m): 22:03 to 22:13: Ribs take 1 was the right picture in the wrong light (green and white daylight, no gold), so take 4 re-shot that same shot at golden hour with take 1 passed in as the layout to keep. This uses a Ribs image inside the Ribs shot only; no image crosses from one shot to another. Heart take 4 was a new prompt written from the three judges' words: one fountain as the focal point, a crusted lake for scale, lavafalls as slow thick drapes, scorched growth instead of autumn trees.
 
 ## Failures and skips
 
@@ -49,6 +50,8 @@ Only (a) passes. A judge had ten minutes and one replacement; after that the tak
 Palette asked for: Deep green and gold.
 
 Brief: A jungle growing inside a colossal rib cage. The bone arches are miles high, wrapped in hanging vines and giant trees. Waterfalls pour between the ribs. Gold light shafts cut through mist. Flocks of glowing creatures drift between the arches. Low wide camera looking up through the arches.
+
+Kept: take 4. Takes 2, 3 and 4 all passed the blind judge. Take 4 is kept: it is the only one with both the miles-high scale (full-grown trees are small at the feet of the bones) and the gold light the palette asks for, and it has the low wide camera on the water looking up through the arches. Take 2 reads as generated up close and take 3 is a side view of bones a few hundred metres high. Faults still in it: The far end of the tunnel of ribs goes soft and repetitive in the haze. The glowing flock is small yellow specks rather than creatures with a shape. Scale wavers in the distance. The waterfalls sit on the valley walls behind the ribs more than between them. Finished 22:12 (0h27m).
 
 #### 01-ribs take 1: [`01-ribs-take1.jpg`](01-ribs-take1.jpg)
 
@@ -141,8 +144,8 @@ The attached pictures are photographs of real places on Earth. Use them only as 
 - Reference images, in the order passed (image 1 first):
   1. [`01-ribs-take1.jpg`](01-ribs-take1.jpg)
   2. [`real/ribs-forest-sunbeams.jpg`](real/ribs-forest-sunbeams.jpg)
-- Eye check against the shot description: not done yet.
-- Blind judge: not judged.
+- Eye check against the shot description: **pass**. Deep green and gold. Low camera on a stream looking up through a receding line of vine-hung rib arches, waterfalls down both cliff walls, gold shafts through mist, a flock of small glowing creatures in the middle arches. Matches the description.
+- Blind judge `still_viewer_19` (asked 22:07, answered 22:12): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The far end of the rib tunnel, where the receding bones blur into the haze and waterfalls as a muddy, repetitive tangle with no clear spine or anchoring structure. The scale also wobbles there, since the small trees at the ribs' bases and the scattered glowing specks do not read consistently against the giant bones.
 - Prompt ([`prompts/01-ribs-take4.txt`](prompts/01-ribs-take4.txt)):
 
 ```text
@@ -160,6 +163,8 @@ Colour: deep green and gold only. Hyper-realistic live-action photography from a
 Palette asked for: Orange, red and black.
 
 Brief: A vast sea of bright lava that fills most of the frame, with lavafalls and molten rivers branching out through black glass rock like arteries. Fire-colored plants and glowing crystal growths cling to the edges. Heat haze and embers in the air. High three-quarter camera.
+
+Kept: take 4. Takes 1 to 3 were all judged amateur generated art. Take 4 was written against what those judges named (water-like lavafalls, pasted unburnt plants, even saturation, no focal point) and is the only take that passed. The crusted lake with one fountain and smoke column gives the frame a subject and a scale. Faults still in it: The two lavafalls in front still pour thin and fast like water. The red plants and amber crystals in the foreground are soft, repeat and look unscorched next to the lava. The rivers branching out through the rock like arteries are only a few thin lines at upper left; that part of the brief is under-delivered. Finished 22:12 (0h27m).
 
 #### 02-heart take 1: [`02-heart-take1.jpg`](02-heart-take1.jpg)
 
@@ -261,8 +266,8 @@ The attached pictures are photographs of real places on Earth. Use them only as 
   2. [`real/heart-lava-rivers-aerial.jpg`](real/heart-lava-rivers-aerial.jpg)
   3. [`real/heart-lava-lake-fountain-night.jpg`](real/heart-lava-lake-fountain-night.jpg)
   4. [`real/heart-lava-fountain-rivers.jpg`](real/heart-lava-fountain-rivers.jpg)
-- Eye check against the shot description: not done yet.
-- Blind judge: not judged.
+- Eye check against the shot description: **pass**. Orange, red and black. A crusted lava lake fills most of the frame with a fountain and smoke plume as the focal point, two lavafalls pour off the near ledge, thin molten rivers branch off at upper left, red crystals and dark red plants hold the rim, a small flock circles the plume. High three-quarter view. The branching rivers are the weakest part of the match.
+- Blind judge `still_viewer_18` (asked 22:07, answered 22:12): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The foreground is the least convincing area: the red foliage and amber crystals are mushy and repetitive, sit implausibly unscorched beside the lava, and the lava falls pour thin and fast like water, which muddles the sense of scale.
 - Prompt ([`prompts/02-heart-take4.txt`](prompts/02-heart-take4.txt)):
 
 ```text
