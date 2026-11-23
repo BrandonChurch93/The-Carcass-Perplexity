@@ -2,7 +2,7 @@
 
 Reference run of 2026-11-23. These are target stills for seven moving 3D scenes. Everything here is a draft and nothing is approved.
 
-- Shots with a kept take: 2 of 7. Takes made: 20.
+- Shots with a kept take: 6 of 7. Takes made: 28.
 - Run started 20:38 UTC; the two-hour limit ended at 22:38 UTC. Times below are UTC, with time since the start in brackets.
 - `contact-sheet.jpg` shows the kept take of each shot. `prompts/` holds the exact prompt sent for every take. `real/` holds the real photographs passed to the generator.
 
@@ -12,10 +12,10 @@ Reference run of 2026-11-23. These are target stills for seven moving 3D scenes.
 |---|---|---|---|---|
 | The Ribs | [`01-ribs-take5.jpg`](01-ribs-take5.jpg) | seedream_5 | PASS (a) | Ember glow at the far end is a small smudge; near left arch reads as a cliff face; bottom-right rock is soft. |
 | The Heart | [`02-heart-take3.jpg`](02-heart-take3.jpg) | seedream_5 | PASS (a) | The two dim lakes are close in size; the foreground slope is soft; thin lava threads at the bottom have no clear path. |
-| The Breath | not chosen | | | |
-| The Blood Marsh | not chosen | | | |
-| The Spine | not chosen | | | |
-| The Eye | not chosen | | | |
+| The Breath | [`03-breath-take5.jpg`](03-breath-take5.jpg) | seedream_5 | PASS (a) | Herd animals are alike and evenly spaced; spires repeat one shape; rime fringes look like spikes. |
+| The Blood Marsh | [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg) | seedream_5 | PASS (a) | The swell over the shape is blue-grey and does not blend into the red water; the frame is flatter than takes 1 to 3. |
+| The Spine | [`05-spine-take3.jpg`](05-spine-take3.jpg) | seedream_5 | PASS (a) | Lightning is a thin web that lights neither rock nor cloud; the far peaks are a comb of identical cones. |
+| The Eye | [`06-eye-take4.jpg`](06-eye-take4.jpg) | seedream_5 | PASS (a) | Glow looks airbrushed; near rim at lower right is soft. |
 | The Reveal | not chosen | | | |
 
 ## How the takes were judged
@@ -44,6 +44,9 @@ Only (a) passes. A failed take was made again while the shot had takes left (fiv
 - 21:05 (0h26m): The Blood Marsh: all three takes passed the judge, but the red is a foreground patch and the shape is a small lump above the water. Both remaining takes are spent on fully red water and a huge shadow under the surface, one as a fresh image and one as a rework of take 3.
 - 21:05 (0h26m): The Spine and The Eye each had one take failed by its judge. Each gets a remake of the failed take plus a rework of its best passing take, fixing what the judges and the eye check found: thin lightning and copied far peaks on the Spine, the doughy rim and pupil-like bright spot on the Eye.
 - 21:05 (0h26m): The Heart is finished at three takes: all three passed and take 3 meets the brief, so its two spare takes are not used.
+- 21:10 (0h31m): Reworking a finished take with Seedream worked on shot 1 and on the Eye's rim, but barely changed the Spine and did not turn the Marsh water red. Reworks keep the frame too faithfully for large changes.
+- 21:10 (0h31m): The Spine is kept at its limit with known faults (thin lightning, copied far peaks). The Breath, the Blood Marsh and the Eye are kept from their fourth or fifth takes because those are the ones that meet the brief, not only the judge.
+- 21:10 (0h31m): Shot 7 gets the kept takes of all six places as reference images 1 to 6 (shot 1 take 5 first, as the anchor) plus three photographs from orbit. Takes 1 and 2 are on Seedream 5 Pro (steep oblique view, then a view straight down with the body curled); take 3 is the take 1 prompt on Nano Banana Pro, because this shot depends on placing many things correctly.
 
 ## Every image
 
@@ -298,6 +301,8 @@ It must look like a real photograph of a real place taken for a top-budget live-
 
 Brief: A glacier field of tall blue ice spires in a whiteout, all leaning one way as if frozen mid-exhale. A tiny herd crosses in the distance for scale. Ground level camera.
 
+Kept: take 5. Takes 4 and 5 both passed and both meet the brief; take 5 gives the clearest scale, with a thin line of small animals under spires that fill the frame. Faults still in it: Herd animals are alike and evenly spaced; spires repeat one shape; rime fringes look like spikes. Finished 21:10 (0h31m).
+
 #### 03-breath take 1: [`03-breath-take1.jpg`](03-breath-take1.jpg)
 
 - Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
@@ -382,9 +387,71 @@ LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no su
 It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
 ```
 
+#### 03-breath take 4: [`03-breath-take4.jpg`](03-breath-take4.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Remake after the eye check: spires described as straight parallel blades all tilted to the right, no arches, no orange glow; herd much smaller and further off.
+- Made: started 21:05, generation took 126 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`real/penitentes-ice-spires.jpg`](real/penitentes-ice-spires.jpg)
+  3. [`real/seracs-kennicott-glacier.jpg`](real/seracs-kennicott-glacier.jpg)
+  4. [`real/glacier-matanuska-blue-ice.jpg`](real/glacier-matanuska-blue-ice.jpg)
+- Blind judge `image_viewer_24` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The herd of animals in the mid-ground is the weakest element: they read as small, dark, mushy blobs with no clear anatomy or species, and they sit on the snow without convincing interaction with the blizzard. The ice spires are also somewhat repetitive in shape and lean, like copies of one asset.
+- Checked by eye against the brief: Meets the brief: every spire tilts the same way, in parallel, with rime trailing downwind, no arches and no orange glow. The near spire gives depth. The herd is bunched and larger than in take 5, so it gives less scale.
+- Prompt ([`prompts/03-breath-take4.txt`](prompts/03-breath-take4.txt)):
+
+```text
+A single frame from a live-action fantasy feature film, shot on location with a large-format digital cinema camera. Photographed, not painted.
+
+THE PLACE: a glacier field in a whiteout, seen from ground level. The camera sits one metre above wind-packed snow with a 24 mm lens, looking across the field, side-on to the wind. The whole field is a forest of tall, narrow blades and needles of glacial ice, like penitentes grown to the height of skyscrapers. Every one of them is tilted the same way, about 25 degrees to the right, and they are parallel to each other, like grass flattened by a gale or the teeth of a comb. None leans left. None curls, arches or bends toward another, and no two meet overhead. Each is a straight, tapering, knife-edged slab of hard blue and blue-grey ice with dark ash bands frozen into it, fluted and scalloped by wind, with white rime plastered on its left, windward face only and a frozen feathery plume of rime trailing from its tip to the right. One spire stands close at the left edge of the frame and runs out of the top. The others stand in ranks behind it, each rank paler than the one in front, until the whiteout swallows them. Sky and ground merge into the same flat grey-white with no horizon.
+
+WHAT IS MOVING: a gale blows from left to right, the same way the spires lean, as if one enormous breath crossed the field and froze it. Driven snow and spindrift stream sideways past the camera, pour off the tips of the spires in long plumes and snake across the ground in low ribbons. Far off, between the feet of the spires, a herd of about thirty large, shaggy, dark animals crosses the snow in one straggling line, heads down into the wind. They are very far away and very small, each less than a hundredth of the height of the spires behind them, and half lost in the blowing snow.
+
+There is no fire, no orange glow and no warm colour anywhere in this frame. It is entirely white, grey and cold blue.
+
+REFERENCE IMAGES: image 1 is a finished frame from the same film: use it only for colour grade, contrast, haze, grain and darkness, and copy nothing else from it: no canyon, no curved arches, no orange glow. Image 2 is a real field of penitentes: use it for the shape of the ice blades and the way they all tilt one way, in parallel. Image 3 shows real glacier seracs: use it for the dark dirt bands in real ice. Image 4 is real blue glacier ice: use it for the colour and translucency of the ice. Ignore the blue skies in these photographs.
+
+LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
+
+It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
+#### 03-breath take 5: [`03-breath-take5.jpg`](03-breath-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Same as take 4 but with no spire near the camera: open snow in front, the first rank of spires several hundred metres off, herd on the open snow.
+- Made: started 21:05, generation took 143 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`real/penitentes-ice-spires.jpg`](real/penitentes-ice-spires.jpg)
+  3. [`real/seracs-kennicott-glacier.jpg`](real/seracs-kennicott-glacier.jpg)
+  4. [`real/glacier-matanuska-blue-ice.jpg`](real/glacier-matanuska-blue-ice.jpg)
+- Blind judge `image_viewer_27` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The herd of animals along the horizon is the least convincing element: they read as near-identical dark blobs strung out in an evenly spaced line, with little individual anatomy or interaction with the blowing snow. The ice spires are also somewhat repetitive in shape and lean angle.
+- Checked by eye against the brief: Meets the brief best: every spire tilts the same way, open wind-scoured snow in front, and the herd is a thin line of small animals at the feet of the spires, which makes the spires read as enormous. Faults: the animals are alike and evenly spaced; the spires repeat one shape; the rime fringes look like spikes.
+- Prompt ([`prompts/03-breath-take5.txt`](prompts/03-breath-take5.txt)):
+
+```text
+A single frame from a live-action fantasy feature film, shot on location with a large-format digital cinema camera. Photographed, not painted.
+
+THE PLACE: a glacier field in a whiteout, seen from ground level. The camera sits one metre above wind-packed snow with a 24 mm lens, looking across the field, side-on to the wind. The whole field is a forest of tall, narrow blades and needles of glacial ice, like penitentes grown to the height of skyscrapers. Every one of them is tilted the same way, about 25 degrees to the right, and they are parallel to each other, like grass flattened by a gale or the teeth of a comb. None leans left. None curls, arches or bends toward another, and no two meet overhead. Each is a straight, tapering, knife-edged slab of hard blue and blue-grey ice with dark ash bands frozen into it, fluted and scalloped by wind, with white rime plastered on its left, windward face only and a frozen feathery plume of rime trailing from its tip to the right. No spire is close to the camera. A wide, empty plain of wind-scoured snow fills the lower third of the frame, and the spires begin beyond it: the first rank stands several hundred metres away and already fills the height of the frame, and more ranks stand behind it, each paler than the one in front, until the whiteout swallows them. Sky and ground merge into the same flat grey-white with no horizon.
+
+WHAT IS MOVING: a gale blows from left to right, the same way the spires lean, as if one enormous breath crossed the field and froze it. Driven snow and spindrift stream sideways past the camera, pour off the tips of the spires in long plumes and snake across the ground in low ribbons. On the open snow in front of the first rank of spires, a herd of about thirty large, shaggy, dark animals crosses the snow in one straggling line, heads down into the wind. They are very far away and very small, each less than a hundredth of the height of the spires behind them, and half lost in the blowing snow.
+
+There is no fire, no orange glow and no warm colour anywhere in this frame. It is entirely white, grey and cold blue.
+
+REFERENCE IMAGES: image 1 is a finished frame from the same film: use it only for colour grade, contrast, haze, grain and darkness, and copy nothing else from it: no canyon, no curved arches, no orange glow. Image 2 is a real field of penitentes: use it for the shape of the ice blades and the way they all tilt one way, in parallel. Image 3 shows real glacier seracs: use it for the dark dirt bands in real ice. Image 4 is real blue glacier ice: use it for the colour and translucency of the ice. Ignore the blue skies in these photographs.
+
+LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
+
+It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
 ### The Blood Marsh (`04-blood-marsh`)
 
 Brief: Still rust-red water, black reeds, heavy fog. One huge dark shape just under the surface with a slow ripple above it. Camera low over the water.
+
+Kept: take 4. All five passed the judge. Take 4 is the only one where the water is red throughout and the shape is huge and fully under the surface. Faults still in it: The swell over the shape is blue-grey and does not blend into the red water; the frame is flatter than takes 1 to 3. Finished 21:10 (0h31m).
 
 #### 04-blood-marsh take 1: [`04-blood-marsh-take1.jpg`](04-blood-marsh-take1.jpg)
 
@@ -476,9 +543,66 @@ LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no su
 It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
 ```
 
+#### 04-blood-marsh take 4: [`04-blood-marsh-take4.jpg`](04-blood-marsh-take4.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Remake after the eye check: all of the water rust red as its own colour, and the shape fully submerged, whale-sized, seen as a shadow with one ripple ring.
+- Made: started 21:05, generation took 153 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`real/marsh-fog-reeds-abant.jpg`](real/marsh-fog-reeds-abant.jpg)
+  3. [`real/rio-tinto-red-water.jpg`](real/rio-tinto-red-water.jpg)
+  4. [`real/reeds-and-fog.jpg`](real/reeds-and-fog.jpg)
+- Blind judge `image_viewer_28` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The central swell in the water: the smooth blue-grey bulge looks like a soft pasted patch whose ripples and colour do not blend physically into the surrounding red water. The red tint also reads as a graded overlay rather than a reflection consistent with the grey sky.
+- Checked by eye against the brief: Meets the brief best: all of the water is rust red, and the shape is fully under the surface, wide as the open water, with a smooth swell and a ripple ring. Faults: the swell is blue-grey and does not blend into the red around it; the frame is flatter and less dramatic than takes 1 to 3.
+- Prompt ([`prompts/04-blood-marsh-take4.txt`](prompts/04-blood-marsh-take4.txt)):
+
+```text
+A single frame from a live-action fantasy feature film, shot on location with a large-format digital cinema camera. Photographed, not painted.
+
+THE PLACE: a vast flooded marsh in heavy fog. The camera hangs thirty centimetres above the water with a 24 mm lens, looking out across it. The water itself is rust red: opaque, iron-stained water the colour of rust and dried blood, like a river that drains iron mines. It is red everywhere, from the foreground to the fog, and the red is the water's own colour, not a glow, a light or a reflection of anything. It is shallow and dead still, a matt red mirror with a dull grey sheen where it reflects the overcast sky. Clumps of dead black reeds and rushes stand in the water on both sides of the frame, broken and bent, with black rotten stumps and peat hummocks among them, each with its dark reflection. Fog hangs low over the whole marsh in thick layers. The reed beds fade into it rank by rank, and there is no horizon, only grey.
+
+In the open water ahead lies something huge, just under the surface: one long dark shape the size of a whale, about sixty metres long, lying across the frame. It does not break the surface and no part of it is out of the water. It is seen only as a broad, almost black shadow inside the red water, with soft edges that fade with depth, and a faint smooth swelling of the surface over its back. It is far too big for water this shallow. Its outline is vague and cannot be identified: no eyes, no fins, no head, no rock, nothing that clearly belongs to an animal.
+
+WHAT IS MOVING: over the middle of the shape, one slow, wide ripple ring spreads outward across the otherwise mirror-still water and bends the reflections of the reeds. The fog rolls slowly from left to right in banks. Nothing else moves.
+
+REFERENCE IMAGES: image 1 is a finished frame from the same film: use it only for colour grade, contrast, haze, grain and darkness, and copy nothing else from it: no canyon, no arches, no orange glow. Image 2 is a real foggy lake with reeds: use it for cold fog rolling over water and the dark bands of reeds. Image 3 is a real river that is naturally rust red: use it for the true colour and opacity of iron-red water. Image 4 shows real reed beds in fog: use it for the way reed clumps fade rank by rank, and ignore its warm golden colour.
+
+LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
+
+It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
+#### 04-blood-marsh take 5: [`04-blood-marsh-take5.jpg`](04-blood-marsh-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Rework of take 3: same frame, water made rust red throughout, the lump replaced by a huge shadow under the surface.
+- Made: started 21:05, generation took 130 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`04-blood-marsh-take3.jpg`](04-blood-marsh-take3.jpg)
+  2. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  3. [`real/rio-tinto-red-water.jpg`](real/rio-tinto-red-water.jpg)
+- Blind judge `image_viewer_25` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The red-orange glow in the foreground water has no matching light source in the uniformly grey-blue sky, so it reads as unmotivated; the dark shape at the centre of the ripples is also vague and blob-like, with reed reflections that do not consistently match the reeds above them.
+- Checked by eye against the brief: The rework kept take 3's frame and made the shape a larger shadow under the surface, but the water is still red only in the foreground, so the main fault remains.
+- Prompt ([`prompts/04-blood-marsh-take5.txt`](prompts/04-blood-marsh-take5.txt)):
+
+```text
+Rework image 1, which is a frame from a live-action fantasy feature film: a foggy marsh seen from just above the water. Keep its camera position, lens, composition, black reeds and stumps, fog, overcast sky, colour grade, contrast, darkness and film grain exactly as they are. Change only the water and the thing in it.
+
+The water: in image 1 only a patch of the foreground is orange-red, and it looks like a glow. Make all of the water rust red instead: opaque, iron-stained water the colour of rust and dried blood, from the foreground to the fog. The red is the water's own colour, not a glow, a light or a reflection. It stays shallow and dead still, a matt red mirror with a dull grey sheen where it reflects the overcast sky, and it keeps the dark reflections of the reeds. Image 3 is a real river that is naturally rust red: use it for the true colour and opacity of the water.
+
+The shape: in image 1 a small dark lump sticks out of the water like a rock. Remove it. In its place, something huge lies just under the surface: one long dark shape the size of a whale, several times wider than the old lump, lying across the open water. It does not break the surface. It is seen only as a broad, almost black shadow inside the red water, with soft edges that fade with depth, and a faint smooth swelling of the surface over its back. Its outline is vague and cannot be identified: no eyes, no fins, no head. Over its middle, one slow, wide ripple ring spreads outward across the otherwise mirror-still water.
+
+Image 2 is another finished frame from the same film: use it only to keep the same colour grade, haze and grain, and copy nothing else from it.
+
+The result must look like a real photograph of a real place taken for a top-budget live-action film: heavy overcast at dusk, flat cold light, ash grey and cold slate blue, with the rust-red water as the only strong colour. No people, no buildings, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
 ### The Spine (`05-spine`)
 
 Brief: A mountain ridge of evenly spaced vertebra-shaped peaks above a sea of cloud, lightning crawling along it. Camera level with the ridge, looking down its length.
+
+Kept: take 3. Limit of five takes reached. Take 3 is the closest to the brief: a line of matching peaks with a central fin and side buttresses above the cloud sea, camera level with the crest, lightning running along it. Take 5 is a near copy of it and take 1 has unmatched needles. Faults still in it: Lightning is a thin web that lights neither rock nor cloud; the far peaks are a comb of identical cones. Finished 21:10 (0h31m).
 
 #### 05-spine take 1: [`05-spine-take1.jpg`](05-spine-take1.jpg)
 
@@ -567,9 +691,67 @@ LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no su
 It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
 ```
 
+#### 05-spine take 4: [`05-spine-take4.jpg`](05-spine-take4.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Remake of the failed take 2: main prompt with the lightning rewritten as a real strike that lights cloud and rock, peaks alike but not copies, no embers.
+- Made: started 21:05, generation took 122 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`real/ridge-minarets-ritter-range.jpg`](real/ridge-minarets-ritter-range.jpg)
+  3. [`real/sea-of-clouds-mountains.jpg`](real/sea-of-clouds-mountains.jpg)
+  4. [`real/lightning-branching.jpg`](real/lightning-branching.jpg)
+  5. [`real/lightning-grey-storm.jpg`](real/lightning-grey-storm.jpg)
+- Blind judge `image_viewer_23` (asked 21:07, answered 21:10): **(d) amateur generated art**, so it fails. Weakest part: The lightning bolt looks pasted on: it crosses in front of the spires and fizzles into small arcs on the rock face, yet casts no matching light on the peaks or clouds, which are lit by a soft, unrelated source from the front. The repeated, near-identical spires with uniformly over-sharpened rock texture add to the generated look.
+- Checked by eye against the brief: Failed by its judge. The bolt is a vertical strike in front of the peaks, not lightning crawling along the ridge, and the peaks are needles.
+- Prompt ([`prompts/05-spine-take4.txt`](prompts/05-spine-take4.txt)):
+
+```text
+A single frame from a live-action fantasy feature film, shot on location with a large-format digital cinema camera. Photographed, not painted.
+
+THE PLACE: a mountain ridge above a sea of cloud in a thunderstorm at dusk. The camera is level with the crest of the ridge, as if standing on one of its peaks with a 35 mm lens, looking straight down the length of the ridge as it runs away in a long, gentle S-curve to the horizon. The ridge is a single line of peaks, evenly spaced and all nearly the same size and shape. Each peak is a blocky mass of pale grey-white rock with one tall central fin on top and a lower buttress jutting out on each side, and between each peak and the next is the same deep, narrow notch. The repetition is regular enough to be unsettling, but no two peaks are copies: each differs a little in height, in its cracks and in its snow. These are clearly real mountains: fractured, frost-shattered rock, ledges, scree chutes, dark staining, old snow and ice in the gullies. The nearest peak is close and large in the right half of the frame, and the line of matching peaks recedes behind it, each one smaller and bluer in the haze, at least fifteen of them before they vanish. On both sides the ridge drops steeply into an unbroken sea of dark grey cloud that fills everything below; no valley or ground is visible. Above hangs a second, higher ceiling of storm cloud.
+
+WHAT IS MOVING: lightning crawls along the ridge. One thick, bright, branching blue-white bolt comes out of the storm cloud, strikes the fin of the third peak and runs on sideways along the crest from peak to peak. It is a real light source: its flash lights the inside of the storm cloud above it, throws hard cold light on the near faces of the peaks beside it, puts the peaks in front of it into silhouette and glows through the cloud sea below the strike. A second, fainter flash glows inside the cloud sea far along the ridge. The cloud sea rolls slowly and spills through the notches like water over a weir. Snow blows off the crests in thin plumes.
+
+There is no fire, no orange glow and no drifting embers anywhere in this frame. The only light besides the dull dusk sky is the lightning.
+
+REFERENCE IMAGES: image 1 is a finished frame from the same film: use it only for colour grade, contrast, haze, grain and darkness, and copy nothing else from it: no canyon, no arches, no orange glow, no embers. Image 2 is a real serrated ridge of similar spires: use it for the true rock structure of a row of matching peaks. Image 3 shows real peaks above a sea of cloud: use it for the cloud sea and the way peaks stand out of it. Image 4 is real lightning: use it for the colour and branching of the bolt. Image 5 is a real storm over a ridge: use it for the grey storm sky. Ignore the blue skies and green trees in these photographs.
+
+LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
+
+It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
+#### 05-spine take 5: [`05-spine-take5.jpg`](05-spine-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Rework of take 3: same frame, lightning replaced by a real strike, far peaks made into the same kind of mountain as the near ones.
+- Made: started 21:05, generation took 114 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`05-spine-take3.jpg`](05-spine-take3.jpg)
+  2. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  3. [`real/lightning-branching.jpg`](real/lightning-branching.jpg)
+- Blind judge `image_viewer_22` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The lightning: it hangs as a thin horizontal web in mid-air, not clearly originating from the clouds or striking anything, and it casts no light on the nearby spires or cloud deck, so it reads as an overlay. The distant row of near-identical, evenly spaced spires behind it also looks copy-pasted like a comb.
+- Checked by eye against the brief: The rework changed almost nothing: it is take 3 again with the same thin lightning and the same row of far cones.
+- Prompt ([`prompts/05-spine-take5.txt`](prompts/05-spine-take5.txt)):
+
+```text
+Rework image 1, which is a frame from a live-action fantasy feature film: a ridge of pale rock peaks above a sea of cloud in a storm. Keep its camera position, lens, composition, the peaks in the foreground and middle distance, the cloud sea, the storm sky, colour grade, contrast, darkness and film grain exactly as they are. Change only two things.
+
+The lightning: in image 1 it is a thin web that lights nothing. Replace it with one real strike. A thick, bright, branching blue-white bolt comes out of the storm cloud, hits the top of a peak in the middle distance and crawls on sideways along the crest from peak to peak. It is a real light source: its flash lights the inside of the storm cloud above it, throws hard cold light on the near faces of the peaks beside it, puts the peaks in front of it into silhouette and glows through the cloud sea below the strike. Image 3 is real lightning: use it for the brightness, colour and branching of the bolt.
+
+The far end of the ridge: in image 1 the distant peaks are a row of identical little cones that look copied. Make them the same kind of mountain as the near ones, each a blocky peak with one tall central fin and a lower buttress on each side, evenly spaced with the same deep notch between them, but no two exactly alike, growing smaller and bluer in the haze until the ridge is lost in cloud.
+
+Image 2 is another finished frame from the same film: use it only to keep the same colour grade, haze and grain, and copy nothing else from it.
+
+The result must look like a real photograph of a real place taken for a top-budget live-action film: a thunderstorm at dusk, ash grey, bone white and cold slate blue. No fire, no orange glow, no embers. No people, no buildings, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
 ### The Eye (`06-eye`)
 
 Brief: A perfectly round, dead still lake in a deep socket-like crater, glowing faintly from below, reflecting nothing. Camera high, looking down at an angle.
+
+Kept: take 4. Takes 2 to 5 passed. Take 4 reads as a real crater lake at a large scale, with a broken rock rim and a dim glow that has no bright spot, so it is the least literal. Faults still in it: Glow looks airbrushed; near rim at lower right is soft. Finished 21:10 (0h31m).
 
 #### 06-eye take 1: [`06-eye-take1.jpg`](06-eye-take1.jpg)
 
@@ -659,6 +841,61 @@ REFERENCE IMAGES: image 1 is a finished frame from the same film: match its colo
 LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
 
 It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
+#### 06-eye take 4: [`06-eye-take4.jpg`](06-eye-take4.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Remake of the failed take 1: rim described as jagged fractured rock, glow as a wide dim luminescence with no bright spot, no embers.
+- Made: started 21:05, generation took 131 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  2. [`real/crater-viti-askja.jpg`](real/crater-viti-askja.jpg)
+  3. [`real/crater-okama-zao.jpg`](real/crater-okama-zao.jpg)
+  4. [`real/crater-lake-aerial-snow.jpg`](real/crater-lake-aerial-snow.jpg)
+- Blind judge `image_viewer_26` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The soft blue glow in the centre of the crater lake reads as an airbrushed, unmotivated light patch rather than a real reflection or depth cue, and the foreground rim at the lower right smears into mushy, low-detail rock and snow.
+- Checked by eye against the brief: Meets the brief: jagged real rock rim, steep layered walls, round black lake that reflects nothing, and a wide dim glow with no bright spot, so it reads as a crater lake and not a drawn eye. The plateau and horizon give it scale. Faults: the glow looks airbrushed; the near rim at lower right is soft.
+- Prompt ([`prompts/06-eye-take4.txt`](prompts/06-eye-take4.txt)):
+
+```text
+A single frame from a live-action fantasy feature film, shot from a helicopter with a large-format digital cinema camera. Photographed, not painted.
+
+THE PLACE: a deep crater with a lake at the bottom, seen from high above, looking down at about 50 degrees, with a strip of the surrounding ash plateau and the overcast horizon along the top of the frame. The crater is a deep, steep-sided pit more than a mile across, sunk into a plateau of grey ash and dirty snow. Its rim is a broken ring of real rock: jagged, fractured cliffs of pale grey-white stone with sharp edges, ledges, overhangs, cracks, rockfall scars and rubble, dusted with ash and old snow. It is hard, angular, weathered geology, never smooth, rounded, soft or melted. Below the rim the walls drop steeply in concentric layers and terraces of grey and white rock, streaked with dark runoff and fans of scree, so that the whole pit has the shape of a socket. Boulders the size of houses lie on the terraces and look like grains of sand from here. At the bottom lies a perfectly circular lake that fills the floor of the pit from wall to wall. The water is absolutely still, without a single ripple, and nearly black, like polished obsidian. It reflects nothing: neither the sky nor the crater walls. Deep inside the water there is a faint, cold, blue-grey luminescence: a wide, soft, even glow that fills the middle of the lake and fades toward the shore, as dim as moonlight through fog. It has no bright spot, no point of light and no rays. A narrow ring of pale mineral crust and ice runs around the shoreline.
+
+WHAT IS MOVING: thin mist slides over the rim and drains slowly down the crater walls toward the water, stopping just short of the surface. Ash blows across the plateau above the rim. The glow in the water slowly brightens and dims. The water itself does not move at all.
+
+It must read as a real crater lake, strange and menacing, and not as a drawing of an eye: no iris pattern, no pupil, no highlight, no eyelids, no lashes. There is no fire, no orange glow and no embers anywhere in this frame.
+
+REFERENCE IMAGES: image 1 is a finished frame from the same film: use it only for colour grade, contrast, haze, grain and darkness, and copy nothing else from it: no canyon, no arches, no orange glow. Image 2 is a real crater with a milky lake deep inside it: use it for the steep, broken walls and the way a lake sits at the bottom of a pit. Image 3 is a real round crater lake: use it for the layered grey walls and the round shoreline. Image 4 is a real crater lake from the air: use it for the camera height and angle. Ignore the blue skies, the bright water colours and the vegetation in these photographs.
+
+LIGHT AND COLOUR: heavy overcast at dusk. Flat, cold, directionless light, no sun and no blue sky. The palette is ash grey, bone white and cold slate blue; ember orange and blood red are the only saturated colours and they cover only a small part of the frame. Natural contrast with deep but readable shadows, haze that thickens with distance, fine film grain, a slight vignette, weathered detail at every scale. The place is enormous, hostile and dead, never pretty or inviting.
+
+It must look like a real photograph of a real place taken for a top-budget live-action film. No people, no buildings, no roads, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
+```
+
+#### 06-eye take 5: [`06-eye-take5.jpg`](06-eye-take5.jpg)
+
+- Model: Seedream 5 Pro (`seedream_5`). Output 2816x1584 JPEG, kept as delivered.
+- What this take tried: Rework of take 2: same frame, the smooth rim turned into broken rock and the bright spot in the lake replaced by a dim even glow.
+- Made: started 21:05, generation took 105 s.
+- Reference images, in the order passed (image 1 first):
+  1. [`06-eye-take2.jpg`](06-eye-take2.jpg)
+  2. [`01-ribs-take5.jpg`](01-ribs-take5.jpg)
+  3. [`real/crater-viti-askja.jpg`](real/crater-viti-askja.jpg)
+- Blind judge `image_viewer_21` (asked 21:07, answered 21:10): **(a) a frame from a top-budget film or AAA game cinematic**, so it passes. Weakest part: The soft blue glow in the centre of the crater lake looks painted on and unmotivated, since it does not match a reflection of the overcast sky above. The scene also has no scale reference, so the rock detail reads ambiguously between boulders and cliffs.
+- Checked by eye against the brief: The rework fixed the rim, and the pit is deeper and the sky darker than take 4. Faults: the glow still has a brighter core, so the lake reads more like a pupil, and the big rocks along the bottom make the scale unclear.
+- Prompt ([`prompts/06-eye-take5.txt`](prompts/06-eye-take5.txt)):
+
+```text
+Rework image 1, which is a frame from a live-action fantasy feature film: a deep crater with a round black lake at the bottom, seen from the air. Keep its camera position, lens, composition, the depth of the pit, the layered crater walls, the round lake and its pale shoreline, the mist, the storm sky, colour grade, contrast, darkness and film grain exactly as they are. Change only two things.
+
+The rim: in image 1 the white rim around the crater is smooth, rounded and soft, like dough or melted wax. Turn it into real rock: a broken ring of jagged, fractured cliffs of pale grey-white stone with sharp edges, ledges, overhangs, cracks, rockfall scars and rubble, dusted with grey ash and old snow, with scree running down from it into the pit. It is hard, angular, weathered geology at a huge scale, and boulders the size of houses lie along it like grains of sand. Image 3 is a real crater: use it for the look of real broken crater walls.
+
+The glow: in image 1 the lake has a bright spot of light in its centre. Remove the bright spot. Instead there is only a faint, cold, blue-grey luminescence deep inside the water: a wide, soft, even glow that fills the middle of the lake and fades toward the shore, as dim as moonlight through fog, with no point of light and no rays. The water stays black, perfectly still and reflects nothing.
+
+Image 2 is another finished frame from the same film: use it only to keep the same colour grade, haze and grain, and copy nothing else from it.
+
+The result must look like a real photograph of a real place taken for a top-budget live-action film: heavy overcast at dusk, flat cold light, ash grey, bone white and cold slate blue. No fire, no orange glow, no embers. It must not look like a drawing of an eye. No people, no buildings, no text, no logos, no watermark, no border. Not a painting, illustration, concept art, matte painting or video game screenshot. Wide 16:9 frame.
 ```
 
 ### The Reveal (`07-reveal`)
