@@ -1,0 +1,10 @@
+viewer: ba2
+model: claude_opus_5_5
+test: HEAD
+image: x2-f2 (full size)
+
+1. An orbital-style view of a rugged, cratered island in a dark ocean with scattered clouds.
+2. Yes, a skull/face: two crater "eye sockets" and a wide open mouth lined with tooth-like pillars along the jaw on the right, like a screaming skull or creature.
+3. It reads as roughly 100–300 km across, camera at orbital altitude (~300–400 km, ISS-like), with clouds over the ocean on the left.
+4. Closest to (a) real terrain from orbit in rendering style (ocean texture, clouds, haze, natural colors), but it's likely AI-generated/digital art, since the face is too deliberate.
+5. Yes: the "teeth" are evenly spaced, rounded pillars, which doesn't look natural; the craters/eyes are too perfectly placed; the mountain texture looks fractal and repetitive; the clouds look like flat white speckles; the straight crack lines look painted on. It doesn't look small-scale so much as synthetic.

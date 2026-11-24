@@ -1,0 +1,38 @@
+viewer: viewer_a5
+model: kimi_k3
+test: FULL
+image: rv4-t10 (full size)
+
+Image analysis of IMG_2291.jpg:
+
+1. First thought: a satellite view of a landmass shaped like a huge reclining human figure (a person lying on their back with arms and legs spread) rising out of the ocean — essentially a giant "man" made of terrain, seen from orbit.
+
+2. Size and camera position: if taken literally, the figure spans thousands of kilometers across (each limb alone would be hundreds of km long, hurricane-scale). The camera is in orbit, looking down at a curved limb of planet Earth — you can see the blue atmospheric glow and planetary curvature across the top of the frame.
+
+3. Closest to (a) a landmass seen from orbit. That's what the image depicts: Earth's curvature with atmospheric glow, sun glint on the ocean, realistic deep-blue sea with turquoise shallow-water fringing reefs, scattered clouds, and a hurricane spiral at bottom right all establish orbital scale. It is not an aircraft view (curvature is too extreme), not a tabletop model (no studio lighting, edges, or materials), and not an obvious painting (texture mimics photography). It reads as a photorealistic CGI/AI rendering meant to look like a genuine orbital photograph.
+
+4. Distinct features and locations:
+- Head/face island: far left, a rounded island with a big circular turquoise "eye" (lagoon or crater lake) in it.
+- Mouth with smoke rings: just right of the head — plumes of smoke with a line of small purple/red smoke circles drifting left-to-right.
+- Neck/chest smoke: rising smoke plumes from the center-left torso area.
+- Ribcage: center of the torso — curved, parallel striped terraces forming literal ribs across the chest.
+- Heart: red/orange-red landmass on the right-center of the chest, where the heart would be.
+- A white spiral/mandala pattern: in the chest/center between the ribs and heart, like a small whirlpool on the water.
+- Spine/terrace lines: running down the lower torso as parallel ridges.
+- Arms: upper center and upper right — long snaking landmasses ending in literal five-fingered hand-shaped island groups (palms with clearly separate digits, shoals as fingers).
+- Legs and feet: lower right and bottom center — long limb-shaped landmasses ending in hand/foot-shaped island groups with digit-like spits.
+- Turquoise lagoons/shallow seas: fringing nearly all the figure's coastlines, especially around the limbs and torso.
+- Hurricane/cyclone: bottom right — a well-formed spiral storm with a visible eye.
+- Earth's curvature: top of frame, with the thin blue atmospheric limb against black space.
+- Sun glint: upper right quadrant, a bright specular reflection zone on the ocean.
+- Reddish-tinged arid inland areas: along the limbs and torso, like high-altitude desert.
+
+5. What looks wrong/fake/small-scale:
+- A landmass shaped like a person with anatomically perfect five-fingered hands, ribcage terraces, an eye, and a heart cannot occur naturally — the whole thing is clearly synthetic.
+- The heart area's flat saturated red color looks painted rather than like real terrain.
+- The rib terraces are too evenly spaced and regular; real geology doesn't produce decorative row-programmed ridges.
+- The "eye" lake is a perfect circle of saturated turquoise.
+- The hurricane at bottom right sits implausibly close to the limb of the figure and looks slightly pasted-in; also having limb curvature, hurricane scale, and clarity of detail simultaneously is inconsistent with a real orbital photo's geometry.
+- Clouds near the figure's edges are conveniently sparse, which real weather wouldn't respect.
+- Lighting/shadows on the land are very uniform, more like terrain rendering than satellite imagery.
+- In short: it's a digital artwork/CGI or AI-generated image imitating satellite photography; the fantastical human-shaped continent gives it away immediately, so it doesn't even mislead on scale so much as on realism.

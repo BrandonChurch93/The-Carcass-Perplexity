@@ -1,0 +1,6 @@
+viewer: ar1
+model: gpt_6_2_sol
+test: PLACES
+image: master-x1 (full size)
+
+Approx. (left %, top %): 1. Yes, (39%, 44%): dark channel between curved rib rows. 2. Yes, (36%, 39%): tiny orange-red glow inside chest. 3. Yes, (30%, 42%): clustered dark round pits just beyond the mouth. 4. Yes, (64%, 49%): rusty-red patches across pale cracked flats. 5. Bright spiral cloud at (59%, 33%), just above the spine-like ridge; cloud wisps reach the ridge, but center is not visibly on it. 6. Yes, (19%, 47%): round dark blue-green pool in the lower eye socket.

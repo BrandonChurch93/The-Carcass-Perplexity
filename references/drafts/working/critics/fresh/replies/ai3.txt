@@ -1,0 +1,10 @@
+viewer: ai3
+model: gemini_4_carbon
+test: STATE
+image: cx-t2 (carcass, rags of hide) (full size)
+
+1. This is a picture of a continent-sized humanoid skeleton forming a sprawling landmass in an ocean, seen from space.
+2. The body is a colossal, fossilized skeleton lying splayed on its back with its jaw gaping open, eroded into geological terrain complete with lake-filled eye sockets, a smoking volcano in its ribcage, and red-stained flats in its pelvis.
+3. Eerie, mythic, desolate.
+4. 4 — the giant corpse imagery, gaping skull, and red runoff feel unsettling and macabre, tempered slightly by the awe of its planetary scale.
+5. Closest to (a) a landmass seen from orbit, because the curved limb of the planet and thin blue atmosphere are visible at the top left, and continental-scale weather systems—including a cyclone in the lower right and a towering thunderhead over the spine—sit well below the camera.

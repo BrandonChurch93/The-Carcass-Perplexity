@@ -1,0 +1,6 @@
+viewer: av3
+model: gemini_4_carbon
+test: GLANCE
+image: x2-f4 (400 px)
+
+It looks like a giant human skeleton lying in Earth's ocean as seen from space.

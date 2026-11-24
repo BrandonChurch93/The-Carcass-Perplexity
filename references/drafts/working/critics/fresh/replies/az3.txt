@@ -1,0 +1,12 @@
+viewer: az3
+model: gemini_4_carbon
+test: SCALE
+image: x2-f3 (full size)
+
+1. This is a digital illustration or 3D render mimicking a satellite view of a volcanic island and mountain range shaped like a giant human skull and ribcage in an ocean.
+
+2. Because it is a digital render, there is no physical camera, but the depicted scene represents an area roughly 100 to 300 km wide viewed from orbital altitude (roughly 200 to 400 km high), based on the scale of the cloud streets, volcanic calderas, and mountain ridges.
+
+3. Closest to (d) a painting or drawing (specifically digital art or CGI designed to mimic (a) orbital terrain), because the landmass forms literal human skeletal anatomy that cannot occur geologically, while the clouds, water, and procedural erosion lack the physical cues of a tabletop model or macro photograph.
+
+4. Yes, much of it looks fake and out of scale: the terrain literally forms a skull complete with cranial suture cracks, eye-socket calderas, a nasal cavity, evenly spaced tooth-like rock formations along both jaws, and parallel curved mountain ranges forming ribs; there is also an unnatural cluster of circular impact-like pits behind the skull, a forehead crack scaled like a small stone fracture rather than planetary tectonics, wispy smoke-like clouds that conflict with the surrounding cloud streets, and a few glowing orange lava or light specks between the ribs whose scale does not match the orbital perspective.

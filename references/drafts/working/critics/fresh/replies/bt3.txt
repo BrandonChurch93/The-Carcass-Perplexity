@@ -1,0 +1,22 @@
+viewer: bt3
+model: gemini_4_carbon
+test: PROPORTION
+image: x5 frame 4 (same picture as x4 frame 4) (tmp/test/IMG_9033.jpg = critic/fresh/seen/x5-f4.jpg)
+
+1. This is an orbital view from space of an ocean planet featuring an island chain shaped like a giant humanoid skeleton lying on its back.
+
+2. It is something else—a stylized, fantastical skeleton formed by landmasses—because although its rib cage, pelvis, and bony fingers look adult-like, its massive skull and short legs give it cartoonish or childlike proportions rather than those of a real adult human.
+
+3. Compared part by part with a real adult human skeleton:
+- **Head**: Too big (wider and larger than the rib cage, taking up nearly a quarter of total body length).
+- **Neck**: Too short (the skull sits almost directly against the upper ribs).
+- **Shoulders**: Looks right relative to the rib cage, though narrow compared to the oversized head.
+- **Rib cage**: Looks roughly right as the torso baseline, though broad compared to the short lower body.
+- **Waist**: Too long (an exaggerated lumbar gap separates the ribs from the pelvis).
+- **Hips**: Looks roughly right relative to the rib cage.
+- **Arms**: Too short (especially the upper-left arm; neither arm would reach mid-thigh if lowered).
+- **Hands**: Too long (the fingers are overly long and spindly relative to the forearms).
+- **Legs**: Too short (much less than half the total skeleton length).
+- **Feet**: Looks roughly right relative to the legs, though small compared to the torso and head.
+
+4. I would shrink the head to roughly half its current size so it is smaller than the rib cage.

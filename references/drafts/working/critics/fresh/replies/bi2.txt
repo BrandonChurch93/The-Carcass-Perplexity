@@ -1,0 +1,6 @@
+viewer: bi2
+model: claude_opus_5_5
+test: GLANCE
+image: x4 frame 4 at 400 px (final set) (tmp/test/IMG_1731.jpg = critic/fresh/seen/x4-f4-400px.jpg)
+
+At first glance it looks like a giant skeleton sprawled across the ocean surface, seen from orbit, with cloud and current patterns making up its bones and a hurricane swirling nearby.

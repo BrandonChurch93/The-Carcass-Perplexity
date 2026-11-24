@@ -1,0 +1,57 @@
+[
+ {
+  "id": "pb1e-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-e",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x4-crop.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 1"
+ },
+ {
+  "id": "pb1e-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-e",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x4-crop.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 2"
+ },
+ {
+  "id": "pb1e-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-e",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x4-crop.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 3"
+ },
+ {
+  "id": "pb1f-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-f",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x4-crop.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "frame 1 plate for the corrected master (master-x4): as pb1-e but with no cloud; standards orb-iss44-sinai.jpg + orb-iss47-brandberg.jpg; take 1"
+ },
+ {
+  "id": "pb1f-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-f",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x4-crop.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "frame 1 plate for the corrected master (master-x4): as pb1-e but with no cloud; standards orb-iss44-sinai.jpg + orb-iss47-brandberg.jpg; take 2"
+ }
+]

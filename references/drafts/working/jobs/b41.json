@@ -1,0 +1,79 @@
+[
+ {
+  "id": "pb2-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-h",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t17.png",
+   "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+   "/home/user/workspace/r3/real/orb-modis-popcorn.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS popcorn cumulus"
+ },
+ {
+  "id": "pb2-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-h",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t17.png",
+   "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+   "/home/user/workspace/r3/real/orb-modis-popcorn.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS popcorn cumulus, second take"
+ },
+ {
+  "id": "pb2-t23",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-h",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t17.png",
+   "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS Baja"
+ },
+ {
+  "id": "pb1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+   "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Richat"
+ },
+ {
+  "id": "pb1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+   "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Richat, second take"
+ },
+ {
+  "id": "pb1-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+   "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Brandberg"
+ },
+ {
+  "id": "pb1-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Richat + ISS Brandberg"
+ }
+]

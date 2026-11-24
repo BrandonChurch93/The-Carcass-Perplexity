@@ -1,0 +1,10 @@
+viewer: bh3
+model: gemini_4_carbon
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t5 (tmp/test/IMG_6203.jpg = critic/fresh/seen/x3t5-f2.jpg)
+
+1. An orbital satellite view of a rugged, volcanic coastal landmass with crater lakes jutting into a dark ocean beside lines of small clouds.
+2. Yes — a screaming skull or monster head tilted on its side, with the two large craters as eye sockets, the smaller central pits as nasal cavities, and the jagged bay on the lower right as a wide-open, tooth-lined mouth.
+3. If this were real terrain, the frame would span roughly 30–80 km (20–50 miles) wide, viewed from low Earth orbit at roughly 200–400 km altitude based on the tiny cumulus cloud streets and dendritic drainage scale.
+4. Closest to (d) a painting or drawing (specifically a digital/AI-rendered illustration mimicking (a) real terrain from orbit), because it lacks macro depth-of-field or physical craft textures of (b)/(c), yet its landforms are artistically composed rather than geologically real.
+5. Yes, it looks fake/synthetic: the coastline and craters intentionally form a skull-like face with teeth; Martian-like clustered impact craters on the upper right sit right beside Earth-like river valleys; a channel drains inward into the round crater lake to form a delta; and the wispy white plume on the upper right looks airbrushed with no cast shadow while the ocean cloud streets conveniently part around the island.

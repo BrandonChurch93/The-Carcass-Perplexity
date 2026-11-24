@@ -1,0 +1,25 @@
+viewer: bj3
+model: gemini_4_carbon
+test: FULL
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. It is an orbital view of an Earth-like ocean planet featuring a giant continent and archipelago shaped like a human skeleton.
+
+2. Based on the planet's curved horizon, atmospheric rim, cloud fields, and hurricane, the skeleton spans roughly 3,000 to 5,000 km from skull to foot, with the camera positioned in orbit roughly 800 to 2,000 km above the surface.
+
+3. It is closest to (a) a landmass seen from orbit, though executed as a digital render/illustration rather than a real photograph. Orbital scale is given away by the curved planetary limb with a thin blue atmosphere against black space at upper left, the full spiral hurricane at lower right, tiny cumulus cloud streets, turquoise coastal shelves, and broad ocean sun glint at right.
+
+4. Distinct features and their locations:
+- Skull (far left): a rounded cranium with two dark circular crater-lake eyes (the lower one larger and yellow-rimmed), small dark nasal lakes, and a wide jaw bay ringed by tooth-like peninsulas.
+- Neck (left-center): rust-red rugged terrain sending wispy white smoke or steam plumes upward.
+- Ribcage (center-left): parallel curved island ridges on either side of a central channel, with one tiny bright orange glowing spot on an upper rib.
+- Arms and hands (upper left-center and lower left-center): elongated highland limbs with snow-capped peaks at the shoulders, upper elbow, and wrists, each ending in five splayed finger peninsulas.
+- Spine cloud bank (center): a narrow horizontal ridge linking ribs to pelvis beneath a thick, elongated white cloud with a faint purple lightning glow.
+- Pelvis (center-right): a wide basin containing a white salt flat or ice cap cut by red branching river channels, a round dark bay on its upper rim, and a long red sediment plume streaming rightward into the sea.
+- Legs, feet, and cyclone (right): a straight upper leg and a 90-degree bent lower leg with snow-capped knee peaks and five-toed feet, framed by yellow-orange ocean swirls and a large spiral hurricane at bottom right.
+
+5. Beyond the impossible skeleton anatomy, several details look fake or small-scale blown up to planetary size:
+- Procedural heightmap ridges and erosion gullies are far too wide and coarse for continental scale, looking like small islands or 3D terrain models scaled up.
+- The red dendritic channels on the white pelvis and the colorful red/yellow ocean swirls behave like meter-scale tidal-flat creeks and paint or mud eddies rather than continental rivers and currents.
+- The cohesive smoke plumes at the neck, the single glowing orange speck on the rib, and the neat cloud tube sitting right on the spine are oversized for a daylight view from space.
+- Snow caps are placed selectively right on the anatomical joints (shoulders, elbow, wrists, and knees).

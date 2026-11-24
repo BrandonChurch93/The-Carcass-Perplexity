@@ -1,0 +1,28 @@
+viewer: ap5
+model: gemini_neon
+test: FULL
+image: master-x1 (full size)
+
+1. A colossal, continent-sized human skeleton forming a rocky landmass in a planet's ocean, seen from space.
+
+2. Depicted at roughly 2,000–4,000 km (about 1,500–2,500 miles) from head to toe—continental scale—with the camera in high orbit (thousands of kilometers up) looking obliquely across the planet toward the curved horizon.
+
+3. Closest to (a) a landmass seen from orbit (though clearly a CGI/digital artwork, so conceptually bordering on (d)). The scale is established by the planet's curvature and thin blue atmospheric limb against black space at the top left, the large spiral hurricane in the bottom right, widespread cloud cover, and sunlight glinting off the ocean at the upper right.
+
+4. Distinct features and locations:
+- Planet horizon and blue atmospheric glow: upper left edge against black space.
+- Sun glint on the ocean: upper right.
+- Large spiral hurricane/cyclone: bottom right corner.
+- Screaming skull with dark crater eye sockets, nasal cavity, and jagged teeth ridges: left-center.
+- Pockmarked/cratered neck area: just right of the skull.
+- Upper arm curving up and right with spindly finger peninsulas: upper left-center.
+- Lower arm (darker reddish-brown terrain) extending down and right: lower left-center.
+- Ribcage with curved mountain-ridge ribs and a dark chest basin containing a tiny glowing orange volcanic/lava spot: left-center.
+- Knobby mountain-chain spine: center, running horizontally.
+- Bright, dense radial white cloud/plume: upper-center, just above the lower spine and pelvis.
+- Pelvis with dark red/rust lakes, branching red veins/channels, and a dark circular crater on the upper hip: right-center.
+- Reddish-brown and yellow-green sediment/blood-like plume drifting into the sea: extending right from the pelvis between the legs.
+- Straight upper leg ending in skeletal toes: right side.
+- Bent lower leg surrounded by greenish-teal swirls/shallows: lower right-center.
+
+5. Yes, it clearly looks fake/CGI: beyond the impossible anatomical shape (complete with teeth, toes, and a red pelvic plume), the mountain relief and shadows on the bones are far too tall and crisp for orbital altitude—real mountains look nearly flat from that high up. There is also too little atmospheric haze softening the surface near the limb, and the tiny glowing lava dot in the chest and localized white puff above the pelvis feel out of scale with the planetary curvature.

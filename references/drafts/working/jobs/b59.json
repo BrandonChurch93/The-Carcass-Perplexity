@@ -1,0 +1,50 @@
+[
+ {
+  "id": "e3-HD-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD2",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "correction plate for the head of the wide carcass master: crack to rift valley, pegs to broken stacks, round pit to ragged sinkhole, drainage; take 1"
+ },
+ {
+  "id": "e3-HD-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD2",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "correction plate for the head of the wide carcass master: crack to rift valley, pegs to broken stacks, round pit to ragged sinkhole, drainage; take 2"
+ },
+ {
+  "id": "e3-ST-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-ST2",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-ST-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+  ],
+  "what": "correction plate for the storm on the backbone: ball with rays and trail to a flat anvil line with shadow and lightning; take 1"
+ },
+ {
+  "id": "e3-ST-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-ST2",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-ST-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+  ],
+  "what": "correction plate for the storm on the backbone: ball with rays and trail to a flat anvil line with shadow and lightning; take 2"
+ }
+]

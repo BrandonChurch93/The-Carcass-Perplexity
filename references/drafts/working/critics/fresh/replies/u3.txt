@@ -1,0 +1,25 @@
+viewer: u3
+model: gemini_4_carbon
+test: FULL
+image: reveal-f4-v4 (full size)
+
+1. It is an orbital view of a giant continent-sized landmass shaped like a decaying human corpse or skeleton lying face-up in the ocean.
+
+2. Judging by the planet's curved horizon and weather systems, the landmass is roughly 2,000 to 4,000 km (1,200 to 2,500 miles) long from head to toe, and the camera is in space several hundred to a couple thousand kilometers up in orbit.
+
+3. It is closest to (a) a landmass seen from orbit (rendered as digital illustration/matte art rather than a real photo). Scale cues include the curved planetary limb and blue atmospheric glow at upper left, a full spiral hurricane at lower right, vast oceanic cloud fields, and snow-capped mountain ranges along the limbs.
+
+4. Distinct features and locations:
+- Skull peninsula (far left): Two large circular craters/calderas for eyes (a tan dry or shallow basin above, a dark deep lake below) and jagged coastal inlets forming teeth toward the neck.
+- Neck isthmus (left-center): Pale pockmarked ground with small dark craters, a faint smoke plume drifting toward the upper left, and a narrow channel running into the chest.
+- Ribcage ridges (left-center torso): Curved parallel mountain ridges on both sides of the chest, with dark volcanic rock and glowing orange lava fissures on the upper-inner ribs.
+- Central inland sea and spine (mid-torso): A turquoise bay inside the ribcage crossed horizontally by a straight line of conical volcanoes (vertebrae) paired with a row of thick white cloud/ash puffs just below them.
+- Abdominal basin (center-right torso): A pale basin laced with winding blood-red rivers and lakes resembling intestines.
+- Arms and hands (extending to top-center and bottom-center): Long mountain-backed peninsulas with snow along the ridges, ending in five-fingered peninsulas ringed by turquoise reefs.
+- Legs and feet (extending to upper-right and lower-right): Twin rugged mountain peninsulas (with a small crater on the upper-right calf) ending in upturned foot-shaped capes with five toe-like tips and shallow reefs.
+- Surrounding ocean features: Earth-like curved horizon at top left and a large white cyclone/hurricane swirling at bottom right.
+
+5. Several details look fake or mismatched in scale:
+- Beyond the impossible human-skeleton geography, the four or five puffy white clouds along the central spine look like small cotton-ball smoke puffs seen from low altitude rather than flat orbital cloud decks, lined up next to ruler-straight identical volcano cones.
+- Surface features like the glowing orange lava cracks in the upper ribs, the intestinal red river meanders in the gut, and the narrow turquoise reef fringes around the fingers and toes are scaled like aerial views of a small island (meters to a few kilometers across) pasted onto a continent thousands of kilometers long.
+- Lighting and atmosphere clash slightly: the spine plumes cast heavy local shadows while surrounding planetary clouds are flat, and smeared smoke/cloud streaks near the neck and lower hip look painted on.

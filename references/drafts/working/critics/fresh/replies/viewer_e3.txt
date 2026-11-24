@@ -1,0 +1,6 @@
+viewer: viewer_e3
+model: gpt_6_2_sol
+test: FULL
+image: rv4-t17 (full size)
+
+1. First impression: a giant human skeleton turned into an island, viewed from space. 2. Continent-sized, roughly several thousand km head to toe by the depicted cues; camera in space, looking obliquely down. 3. (a) in depicted scale: curved blue atmospheric limb at upper left, spiral storm at lower right, clouds and ocean sun glint; likely an invented image, not literal orbital photography. 4. Skull at left with round blue eye-like lake and pale crags; narrow neck with small red spots and a smoke-like streak; curved rib ridges above/below the torso, dark patch and orange point inside upper ribs; segmented spine crossing turquoise central shallows and a white/purple cloud or plume; red patch on central-right pelvis; two bent arms with splayed hands at top center and bottom center; two bent legs with toe-like tips upper right and lower right; turquoise coastal fringe, tiny offshore specks, bright water glare at right, spiral cloud bottom right. 5. Limb, rib, and digit geometry is too exactly anatomical to look naturally formed; the red pelvis and crater-like eye seem stylized, but there are no obvious tabletop cues.

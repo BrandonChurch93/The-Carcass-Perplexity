@@ -1,0 +1,112 @@
+[
+ {
+  "id": "tile-T00-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T00",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T00-crop.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T00 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "tile-T10-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T10",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T10-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T10 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "tile-T20-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T20",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T20-crop.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T20 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "tile-T01-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T01",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T01-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T01 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "tile-T11-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T11",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T11-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T11 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "tile-T21-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T21",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T21-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T21 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "tile-T02-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T02",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T02-crop.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T02 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "tile-T12-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T12",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T12-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T12 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "tile-T22-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T22",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T22-crop.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-apollo17-earth.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame: window T22 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + Apollo 17"
+ },
+ {
+  "id": "tile-T11-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pbT-T11",
+  "refs": [
+   "/home/user/workspace/r3/pull/tile-T11-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "same as tile-T11-t1, second take"
+ }
+]

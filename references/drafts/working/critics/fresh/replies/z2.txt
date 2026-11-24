@@ -1,0 +1,10 @@
+viewer: z2
+model: claude_opus_5_5
+test: HEAD
+image: reveal-f2-v5 (full size)
+
+1. An orbital-style photo of an arid desert island with two big round craters (one dry, one water-filled), connected by a narrow strait to a mainland.
+2. Yes — a face/skull in profile looking left (or up): the two craters read as eyes, the dark notch between as a nose; overall also like a cartoon head/fish head joined at the neck to the landmass.
+3. Roughly 50–150 km across (craters several km wide); camera ~300–400 km up, ISS-like orbit view.
+4. (a) real terrain from orbit — cloud wisps, ocean color gradients, shallow turquoise shelf and fine erosion texture all match astronaut photography (though it may well be AI-generated in that style).
+5. Somewhat: the craters are too perfectly round and symmetrically placed (face-like arrangement feels designed); terrain texture is uniformly crinkly/painterly like a procedural/AI render; red-streaked dark spots on the right look odd; clouds are tiny relative to the island, which is consistent with orbit but slightly stamped-on looking. No tabletop/miniature cues like blur or tilt-shift.

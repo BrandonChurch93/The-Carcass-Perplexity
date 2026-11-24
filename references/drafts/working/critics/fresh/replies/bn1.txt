@@ -1,0 +1,6 @@
+viewer: bn1
+model: gpt_6_2_sol
+test: HEAD
+image: x4 frame 2 (final set) (tmp/test/IMG_7890.jpg = critic/fresh/seen/x4-f2.jpg)
+
+1. My first impression was a satellite photo of a rugged volcanic coastline dotted with crater lakes. 2. A skull tilted sideways, with dark eye sockets and a large open mouth. 3. It reads as roughly 100–300 km across from a few hundred kilometers up, though there’s no firm scale cue. 4. (a), visually: branching valleys, coastal shallows, and bands of tiny clouds sell the orbital view. 5. The near-perfect circular pits, repeated vein-like ridges, and skull-like arrangement look stylized; nothing immediately looks miniature.

@@ -1,0 +1,10 @@
+viewer: bw2
+model: claude_opus_5_5
+test: STATE
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. A giant skeleton-shaped landmass lying in the ocean, seen from orbit with Earth's curve and a hurricane visible.
+2. A human skeleton lying on its back, sprawled with arms and legs splayed; it looks dead/decayed, split at the waist, with red blood-like streaks at the pelvis and rust-colored stains bleeding into the water.
+3. Eerie, ominous, desolate.
+4. 4.
+5. (a) a landmass seen from orbit — the planet's curvature, black space, atmosphere glow, cloud fields and a cyclone give it a satellite-photo scale (though it's clearly a surreal digital render).

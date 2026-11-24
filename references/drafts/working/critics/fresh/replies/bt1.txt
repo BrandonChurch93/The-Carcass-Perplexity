@@ -1,0 +1,9 @@
+viewer: bt1
+model: gpt_6_2_sol
+test: PROPORTION
+image: x5 frame 4 (same picture as x4 frame 4) (tmp/test/IMG_9033.jpg = critic/fresh/seen/x5-f4.jpg)
+
+1. A space-view illustration shows a giant human-like skeleton formed by island-like shapes in Earth’s ocean.
+2. Something else: it’s a stylized skeleton, not an actual adult or child; the oversized skull makes it look cartoonish.
+3. Head: too big; neck: too short/indistinct; shoulders: too narrow; rib cage: too broad and flared; waist: too long and narrow; hips: roughly right, though loosely drawn; arms: roughly right after allowing for the bends; hands: too long and spidery; legs: too short relative to the torso; feet: too small.
+4. Shrink the skull first; it’s the clearest departure from adult proportions.

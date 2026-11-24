@@ -1,0 +1,6 @@
+viewer: g2
+model: claude_opus_5_5
+test: GLANCE
+image: reveal-f4-v5 (400 px)
+
+It looks like a satellite view of Earth with an island in the ocean that's shaped like a sprawling human figure or skeleton, with a skull-like head and outstretched arms and legs.

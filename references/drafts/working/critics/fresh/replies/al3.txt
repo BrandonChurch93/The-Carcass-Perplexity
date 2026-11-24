@@ -1,0 +1,6 @@
+viewer: al3
+model: gemini_4_carbon
+test: GLANCE
+image: cx-t9 (carcass re-shot as an orbital photograph) (400 px)
+
+This is a picture of a giant human skeleton formed out of landmasses and islands in the ocean on Earth as seen from space.

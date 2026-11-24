@@ -1,0 +1,46 @@
+[
+ {
+  "id": "bl-t9",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-e",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v5.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by a loose cluster of unequal thunderstorm tops over the island chain; MODIS Philippines thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-e; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t10",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-e",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v5.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by a loose cluster of unequal thunderstorm tops over the island chain; MODIS Philippines thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-e; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-f",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v5.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by island-anchored thunderstorms with parallel anvils drawn out by the wind; MODIS Hainan thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-f; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-f",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v5.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by island-anchored thunderstorms with parallel anvils drawn out by the wind; MODIS Hainan thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-f; to be used for the inland sea only"
+ }
+]

@@ -1,0 +1,14 @@
+viewer: ap4
+model: grok_4_7
+test: FULL
+image: master-x1 (full size)
+
+1. A continent-sized human skeleton made of mountains, lying in the ocean and seen from space.
+
+2. Thousands of kilometers across, on the order of a large continent. The camera is in high orbit, looking down at an angle.
+
+3. Closest to (a). The curved planetary limb and thin blue atmosphere against black space (upper left), a full spiral hurricane (lower right), and cloud fields casting shadows are geographic-scale, not an aircraft pass, a model, or a painted surface.
+
+4. Skull, center-left, face up: dark water in the eye sockets and nose, jagged rock teeth, cracks across the cranium. Neck, collarbones and sternum as ridged ranges just right of the skull, with round reddish craters in the upper chest. Ribs as long curved ranges on both sides, ocean in the gaps; a dark red vent inside the left ribs. Spine as a chain of sharp peaks down the middle, with a small ringed storm over the mid-spine. Pelvis as a cratered plateau lower center, with red cracked pools and a rusty plume trailing between the legs into the sea. Upper-left arm curves toward the limb and ends in a splayed, island-like hand. The other arm runs down the right flank and breaks into shoals. One leg stretches toward the right and tapers into ridges and toe-like islands; the lower leg bends at the knee into white ridges and turquoise shallows with green swirls. Deep blue ocean, bright shallows along the bones, sun glint upper right, wispy clouds across the scene.
+
+5. The anatomy is too exact to be real terrain: sockets, teeth, ribs, vertebrae, pelvis, hands and feet. The red vents and the pelvic plume look designed. It does not look small-scale; the limb, hurricane and clouds match orbit. It reads as CGI of an impossible landmass, not a real satellite photo.

@@ -1,0 +1,21 @@
+viewer: ap6
+model: claude_sonnet_5_5
+test: FULL
+image: master-x1 (full size)
+
+1. A skeleton-shaped landmass (skull at left, ribcage, spine, arm with a hand at right) in a dark ocean, seen from orbit.
+2. It looks continental, roughly 2,000–4,000 km across. The camera is in low Earth orbit, a few hundred km up, oblique, with the Earth's limb and blue atmosphere at top left.
+3. Closest to (a), a landmass seen from orbit, in the way it is framed. The curved horizon with a thin blue atmospheric line, black space and cloud swirls give that scale. The cloud systems (a hurricane spiral at bottom right, a storm burst at centre) are hundreds of km wide, so the land under them would be huge too. But the content is surreal, so it is almost certainly an AI-generated or digitally painted image of a fantasy "skeleton continent", not a real place.
+4. Features by position:
+- Skull: far left, with two big round eye sockets (one dark circle, one larger bay with a toothed rim), a smaller nasal hole and a crack across the forehead.
+- Spine and neck: a ridge running from the skull's top up and over to an upper curved arm at top centre, ending in finger-like branches.
+- Ribcage: centre left, curved parallel ribs around a dark basin, with a small orange glow (lava or light) at its upper edge.
+- Long ridge or spine: runs right from the ribcage through the centre to a pelvis or shoulder area at right.
+- Hand: far right, with long splayed fingers pointing right.
+- Pelvis or shoulder: right centre, with round pits and a red branching river or vein pattern.
+- Lower leg or bone: lower left, a brown ridge running diagonally down to the lower centre.
+- Wing or fin: lower right, a curved, folded ridge pointing down.
+- Red-brown plume: right of the pelvis, running off to the right through green and yellow-ochre water.
+- Storm burst: top centre, a white radial cloud. Hurricane spiral: bottom right. Sun glint: right edge.
+- Black space and blue atmosphere: top left.
+5. Yes. The anatomy is far too exact for a natural landmass: symmetric ribs, eye sockets, finger bones. The cloud swirls and sea texture are smooth and a bit repetitive, and the green-ochre water patterns look painted. The storm burst looks like a drawn-in explosion. The lighting is inconsistent: the sun glint is at right, but the land is evenly lit. The horizon curvature and the amount of the Earth visible don't quite fit an object this large, and the scale is ambiguous. It reads as AI-generated, not a photo and not a physical model.

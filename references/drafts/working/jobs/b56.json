@@ -1,0 +1,180 @@
+[
+ {
+  "id": "e2-W00-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W00",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W00-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W00 of gen/cx-e-t2.png (x 0, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W10-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W10",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W10-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W10 of gen/cx-e-t2.png (x 372, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W20-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W20",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W20-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W20 of gen/cx-e-t2.png (x 743, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W30-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W30",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W30-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W30 of gen/cx-e-t2.png (x 1115, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W01-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W01",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W01-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W01 of gen/cx-e-t2.png (x 0, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W11-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W11",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W11-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W11 of gen/cx-e-t2.png (x 372, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg + orb-modis-tstorm-phil-crop.jpg"
+ },
+ {
+  "id": "e2-W21-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W21",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W21-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W21 of gen/cx-e-t2.png (x 743, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg + orb-modis-tstorm-phil-crop.jpg"
+ },
+ {
+  "id": "e2-W31-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W31",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W31-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W31 of gen/cx-e-t2.png (x 1115, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-W02-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W02",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W02-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W02 of gen/cx-e-t2.png (x 0, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W12-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W12",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W12-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W12 of gen/cx-e-t2.png (x 372, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W22-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W22",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W22-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W22 of gen/cx-e-t2.png (x 743, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-W32-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W32",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W32-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W32 of gen/cx-e-t2.png (x 1115, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-W03-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W03",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W03-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W03 of gen/cx-e-t2.png (x 0, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W13-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W13",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W13-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W13 of gen/cx-e-t2.png (x 372, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-W23-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W23",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W23-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W23 of gen/cx-e-t2.png (x 743, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-W33-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-W33",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-W33-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window W33 of gen/cx-e-t2.png (x 1115, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ }
+]

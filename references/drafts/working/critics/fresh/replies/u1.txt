@@ -1,0 +1,10 @@
+viewer: u1
+model: gpt_6_2_sol
+test: FULL
+image: reveal-f4-v4 (full size)
+
+1. First impression: a giant human skeleton-shaped island sprawled in a blue ocean, viewed from space.
+2. Apparent continental/regional scale, very roughly hundreds to a couple thousand km head to toe, from a high, oblique orbital viewpoint; no reliable scale bar.
+3. Closest to (a) in the scene it depicts: curved blue atmospheric limb and black space at upper left, broad cloud fields and a huge spiral storm at lower right; the anatomy makes it look digitally made, not a real orbital photograph.
+4. Left: skull-like head with two large round pits (one dark water-filled, one brown), small dark central holes, jagged edges and narrow neck. Center-left: mirrored curved rib ridges around a flooded chest, dark basin with fine orange streaks by the neck, spine-like line of pale marks with cloud puffs through the center. Center-right: waist and pink-red pelvis-like patch with looping dark red marks and a narrow branching channel above it. Arms sweep to top-center and bottom-center, ending in splayed finger-like peninsulas and little offshore fragments. Two rugged bent legs spread toward upper and lower right, ending in rounded/toe-like shoals; lower leg has a fine diagonal grid-like bright patch. Turquoise shallows outline the land, with brown/gray mountain ridges, scattered wispy clouds, bright ocean glare at right and cyclone-like swirl at bottom right.
+5. Skull sockets, paired ribs, aligned spine, red pelvis, and articulated fingers/toes all coincide too neatly to be natural. It reads like intentional digital/composite art; no convincing tabletop cue.

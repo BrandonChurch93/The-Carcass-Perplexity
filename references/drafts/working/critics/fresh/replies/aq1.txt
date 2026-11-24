@@ -1,0 +1,10 @@
+viewer: aq1
+model: gpt_6_2_sol
+test: STATE
+image: master-x1 (full size)
+
+1. It looks like a giant human skeleton made of rocky islands in the ocean, seen from space.
+2. The skeleton looks lifeless, sprawled on its back with its jaw open and one knee bent.
+3. Eerie, desolate, surreal.
+4. 4/5.
+5. (a) A landmass seen from orbit: the curved blue horizon and swirling weather make it feel planetary in scale.

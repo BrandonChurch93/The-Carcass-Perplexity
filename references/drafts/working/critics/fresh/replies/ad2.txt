@@ -1,0 +1,21 @@
+viewer: ad2
+model: claude_opus_5_5
+test: FULL
+image: reveal-f4-v7 (full size)
+
+1. A desert continent shaped like a sprawled human skeleton/body, seen from space in the ocean.
+2. It looks continent-sized, roughly 2,000–4,000 km across. The camera seems to be in low Earth orbit, a few hundred km up, looking down at an angle. Earth's curved limb and black space show at top-left.
+3. (a) A landmass seen from orbit. The scale cues are the curved horizon and space at top-left, a cyclone spiral at bottom-right, sun glint on the ocean at right, and cloud streets and dust plumes that are small compared with the land.
+4. Features and where they are:
+- Skull-shaped head at far left, with two crater-like eye sockets; the lower one is dark and water-filled.
+- Neck and shoulder region left-centre, with a dust or smoke plume streaming up-left from it.
+- Rib cage centre-left: ridged mountain ranges like ribs, a dark burned or volcanic patch with orange glowing lines (lava or fires), and white smoke or cloud.
+- Turquoise shallow lagoon or inland sea in the chest/abdomen, centre.
+- Red-white patterned salt flat or playa in the belly/pelvis, centre-right.
+- Upper arm reaching to the top, with a finger-like peninsula hand at top-centre.
+- Lower arm reaching to the bottom, with a hand at bottom-centre.
+- Upper leg running to the top-right, with a foot peninsula there.
+- Lower leg running to the right, with a foot at mid-right.
+- Turquoise reef shelves along all the coasts.
+- Cyclone at bottom-right, sun glint at right, and scattered cumulus everywhere.
+5. Yes, it looks fake. A real continent would not be anatomically shaped like a skeleton, with hands, fingers, ribs and an eye-socket skull, so it is clearly AI-generated or a digital composite. The ribs are too regular and the lava glow next to a lagoon is odd. Nothing makes it look small-scale, though. It reads as a huge, convincing orbital view, not a model.

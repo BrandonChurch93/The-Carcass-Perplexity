@@ -1,0 +1,10 @@
+viewer: bf2
+model: claude_opus_5_5
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t3 (tmp/test/IMG_1392.jpg = critic/fresh/seen/x3t3-f2.jpg)
+
+1. An orbital-style view of a volcanic island with a crater lake, set in a dark ocean with scattered clouds.
+2. Yes. It looks like a face or skull in profile facing left: the round crater is the eye, the upper crater is a second eye or brow, and the large lagoon on the right is a gaping mouth or jaw. It also looks a bit like a howling ghost.
+3. It reads as roughly 50–150 km across, seen from orbit, about 400 km up (ISS height).
+4. It's closest to (a), real terrain seen from orbit, because of the cloud field, the ocean color and the haze. But it has a strong generated or fractal quality, so it could also be read as (d), digital art.
+5. Yes. The ridges are too uniform and fractal, like a procedural or AI texture, and they repeat the same branching pattern at every scale. The rust-colored area on the right is full of perfectly round holes that look like a sponge or coral. The wispy white streaks at the top right look more like brushstrokes than clouds. The clouds on the left are oddly crisp and look like popcorn. Nothing looks tabletop-sized, but overall it looks synthetic rather than real.

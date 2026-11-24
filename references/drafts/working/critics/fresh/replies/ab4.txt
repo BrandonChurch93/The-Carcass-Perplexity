@@ -1,0 +1,27 @@
+viewer: ab4
+model: grok_4_7
+test: FULL
+image: reveal-f4-v6 (full size)
+
+1. A view of Earth from space, with one landmass shaped like a person lying on their back.
+
+2. Continent-sized, on the order of hundreds to a couple thousand kilometers across. The camera is in orbit, looking down toward Earth's limb.
+
+3. Closest to (a). The curved horizon, black space, blue atmospheric glow, and a full cyclone in the corner set an orbital scale; clouds cross the figure the way they cross real land. It is not a tabletop or a drawing.
+
+4. Distinct features:
+- Earth's limb and blue atmosphere, upper left, against black space
+- Deep navy ocean with scattered clouds around the figure
+- A cyclone, cut off at the bottom-right corner
+- Head/skull, center-left: two circular "eyes" (one tan concentric crater, one dark crater lake), plus ridge lines for nose, cheek, and jaw
+- Thin smoke or cloud drifting from the head/throat toward the upper left
+- Ribcage of parallel mountain ridges in the center
+- Dark volcanic spine/sternum with orange lava and white steam plumes
+- Turquoise inland lagoon in the lower chest/abdomen
+- Reddish-pink pelvic depression with pale white crusts, center-right
+- Upper arm toward the top, ending in a fingered hand edged by turquoise shallows
+- Lower arm toward the bottom, ending in a five-digit hand with turquoise shoals
+- Two splayed legs to the right, each with thigh, knee, calf, and foot
+- Bright turquoise shallows and reefs ringing almost the whole coastline
+
+5. The anatomy is too exact to be real geography: matched eyes, rib ridges, fingers, and a visceral-looking pelvis. That is the fake part. Nothing about the lighting, horizon, or clouds reads as a small model.

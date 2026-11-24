@@ -1,0 +1,6 @@
+viewer: aa3
+model: gemini_4_carbon
+test: GLANCE
+image: reveal-f4-v6 (400 px)
+
+It looks like a giant decaying human corpse or skeleton forming an island continent in Earth's ocean as seen from space.

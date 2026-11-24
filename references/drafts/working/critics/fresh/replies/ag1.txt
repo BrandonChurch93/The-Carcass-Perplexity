@@ -1,0 +1,10 @@
+viewer: ag1
+model: gpt_6_2_sol
+test: STATE
+image: f4-v8t15 (old body, baseline) (full size)
+
+1. A giant human skeleton made of rocky islands, seen from space.
+2. It looks motionless, lying on its back with its limbs splayed and its ribs exposed.
+3. Eerie, surreal, majestic.
+4. 3/5.
+5. (a) A landmass seen from orbit: Earth’s curved horizon and the broad cloud bands give it that scale.

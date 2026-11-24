@@ -1,0 +1,31 @@
+viewer: ab6
+model: claude_sonnet_5_5
+test: FULL
+image: reveal-f4-v6 (full size)
+
+1. An orbital-style view of a huge island shaped like a spread-eagled human body with a skull-like head, in a deep blue ocean.
+2. It is drawn as roughly 1,000–2,000 km across (continental scale), seen from low Earth orbit, about 400 km up, looking obliquely. The Earth's limb and a thin atmosphere band are in the top-left corner.
+3. Closest to (a), a landmass seen from orbit. What gives the scale away is the curved horizon with a thin atmospheric band, a large cyclone spiral at lower right, and cloud streaks and plumes that are small next to the island. In reality the picture is almost certainly AI-generated or digitally painted, so (d) is the true medium. The framing is (a).
+4. Features by location:
+- Head: far left, a rounded landmass with two dark circular craters or lakes as eyes (the upper one is orange-rimmed, the lower one is black).
+- Neck: a narrow pinkish-grey strip joining the head to the torso.
+- Torso: centre, split into a pale turquoise shallow lagoon or bay (chest) and a red-pink salt-flat or lesion patch on the right-centre (belly).
+- Rib-like ridges: striped brown mountain ridges above and below the dark patch on the left of the torso.
+- Dark patch with orange glowing specks: just left of the lagoon, looks like lava, fire or city lights.
+- Arms: one upper-left arm reaching up to a hand at top centre, and one lower-left arm reaching down to a hand at bottom centre.
+- Legs: one upper-right leg ending at top-right and one lower-right leg ending at right of centre-bottom.
+- Fingers and toes: ragged, finger-like capes on all four limbs.
+- Turquoise reef halo: shallow water rings the whole coast.
+- Smoke or cloud streak: grey plume running diagonally from the neck up to the upper left.
+- White cloud wisps over the torso and below the lower-right leg.
+- Cyclone: bottom-right corner.
+- Sun glint: bright sheen on the ocean at the right edge.
+- Earth's limb and space: top-left corner.
+5. Yes, several things look wrong:
+- The island is an unnatural symmetrical human figure with a skull face.
+- The coastline and reef halo are uniform and too clean.
+- The terrain texture is a repeating smeared brown pattern with no rivers, vegetation or settlements.
+- The cloud streaks have a painterly look.
+- The lighting is inconsistent, with a sun glint on the right while the terrain looks evenly lit.
+- The perspective is oddly flat for an oblique orbital shot.
+It reads as a generated, fantasy or surreal image, not a real photo.

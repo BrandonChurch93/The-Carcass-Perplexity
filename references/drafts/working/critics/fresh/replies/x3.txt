@@ -1,0 +1,25 @@
+viewer: x3
+model: gemini_4_carbon
+test: FULL
+image: reveal-f4-v5 (full size)
+
+1. It is a continent-sized landmass shaped like a giant human skeleton or decomposing corpse lying in an ocean, viewed from space.
+
+2. As depicted, it spans roughly 2,500 to 4,000 km (1,500 to 2,500 miles) from skull to feet, with the camera positioned in high orbit hundreds to a couple thousand kilometers above the planet.
+
+3. Closest to (a) a landmass seen from orbit (created as a digital illustration/composite rather than a real photo). The orbital scale is given away by the curved planetary limb with blue atmospheric glow at the top left, the full-scale spiraling cyclone in the bottom right, tiny scattered marine clouds, and sprawling mountain chains along the limbs.
+
+4. Distinct features on the landmass:
+- **Head (far left):** Skull-shaped island/peninsula with two huge circular craters for eye sockets, the upper one dry and tan, the lower one filled with a dark crater lake.
+- **Neck (left-center):** Pale volcanic/ash plain with small dark vents and a long gray smoke plume drifting toward the upper left.
+- **Chest and sternum (center-left):** Dark volcanic basalt field with glowing orange lava fissures, split by a narrow water channel and flanked top and bottom by curved tan sandstone ridges forming ribs.
+- **Central lagoon (center):** Turquoise inland sea inside the lower ribcage containing a bright white billowing cloud or steam eruption plume with streaks trailing left.
+- **Pelvis (center-right):** Pale pink/tan basin threaded with dark blood-red branching rivers or mineral pools.
+- **Arms and hands (top and bottom):** Long mountainous peninsulas with snow-dusted ridges, elbows, and five-fingered peninsulas ringed by shallow turquoise reefs.
+- **Legs and feet (extending right):** Two long desert-and-mountain peninsulas with snow-capped ridges ending in upturned foot-shaped capes and toe islets at the upper right and lower right.
+
+5. Several details look fake or mismatched in scale:
+- **Impossible literal anatomy:** Every geological feature maps too neatly onto human bones, eye sockets, ribs, fingers, toes, and blood vessels.
+- **Small-scale features blown up to orbital size:** Glowing orange lava cracks in the chest, wide red river veins in the pelvis, and wide turquoise reef fringes around the fingers would have to be many kilometers across to read this clearly from space.
+- **Curvature vs. projection:** The tight planetary horizon curve at the top left implies a smaller globe or steeper foreshortening than the relatively flat, top-down layout of the continent.
+- **Cloud and plume oddities:** The central white cloud mass looks like a single oversized thunderhead or explosion puff with radial streaks, and the neck's smoke plume stays coherent across hundreds of kilometers.

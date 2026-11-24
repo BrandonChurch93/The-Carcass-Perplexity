@@ -1,0 +1,6 @@
+viewer: viewer_c1
+model: gemini_4_carbon
+test: GLANCE
+image: rv4-t13 (400 px)
+
+It is a satellite view from space of a giant landmass or island shaped like a decomposing human skeleton lying in the ocean.

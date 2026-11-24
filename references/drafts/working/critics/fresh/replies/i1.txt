@@ -1,0 +1,10 @@
+viewer: i1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t11 (full size)
+
+1. My first thought was a satellite view of a rocky, skull-shaped peninsula in a deep-blue sea.
+2. A sideways human skull, with two crater eyes, a triangular nose and a row of teeth.
+3. My visual guess is roughly 100 km across, viewed from a few hundred km up; there's no reliable scale cue.
+4. (a), especially orbit: the overhead view, clouds, coastal shallows and fine erosion detail read like satellite imagery.
+5. The evenly spaced tooth-like cliffs and the way the craters line up into a skull look designed, but not miniature.

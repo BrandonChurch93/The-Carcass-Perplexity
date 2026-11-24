@@ -1,0 +1,156 @@
+[
+ {
+  "id": "bl-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-a; MODIS thunderstorms Philippines + Louisiana as standards"
+ },
+ {
+  "id": "bl-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-a; MODIS thunderstorms Philippines + Louisiana as standards"
+ },
+ {
+  "id": "bl-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-b (adds a faint lightning glow); MODIS thunderstorms Philippines + Louisiana as standards"
+ },
+ {
+  "id": "bl-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-b (adds a faint lightning glow); MODIS thunderstorms Philippines + Louisiana as standards"
+ },
+ {
+  "id": "hu-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-hand",
+  "refs": [
+   "/home/user/workspace/r3/pull/handU-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+  ],
+  "what": "reveal frame 4, upper hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards"
+ },
+ {
+  "id": "hu-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-hand",
+  "refs": [
+   "/home/user/workspace/r3/pull/handU-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+  ],
+  "what": "reveal frame 4, upper hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards"
+ },
+ {
+  "id": "hl-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-hand",
+  "refs": [
+   "/home/user/workspace/r3/pull/handL-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+  ],
+  "what": "reveal frame 4, lower hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards"
+ },
+ {
+  "id": "hl-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-hand",
+  "refs": [
+   "/home/user/workspace/r3/pull/handL-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+  ],
+  "what": "reveal frame 4, lower hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards"
+ },
+ {
+  "id": "fu-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-foot",
+  "refs": [
+   "/home/user/workspace/r3/pull/footU-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 4, upper foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards"
+ },
+ {
+  "id": "fu-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-foot",
+  "refs": [
+   "/home/user/workspace/r3/pull/footU-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 4, upper foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards"
+ },
+ {
+  "id": "fl-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-foot",
+  "refs": [
+   "/home/user/workspace/r3/pull/footL-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 4, lower foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards"
+ },
+ {
+  "id": "fl-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ex-foot",
+  "refs": [
+   "/home/user/workspace/r3/pull/footL-crop.png",
+   "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 4, lower foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards"
+ },
+ {
+  "id": "pb2-t24",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-i",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-final.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 2 revision: only the floor of the dry socket (no dune ripples) and the top left corner (no streaks) changed; prompt pb2-i; ISS Richat + MODIS Arabia as standards; used as a patch source only"
+ },
+ {
+  "id": "pb2-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-i",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-final.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 2 revision: only the floor of the dry socket (no dune ripples) and the top left corner (no streaks) changed; prompt pb2-i; ISS Richat + MODIS Arabia as standards; used as a patch source only"
+ }
+]

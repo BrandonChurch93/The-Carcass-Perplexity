@@ -1,0 +1,68 @@
+[
+ {
+  "id": "rv4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt a (anatomy named), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt a, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "rv4-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-b",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt b (accident of geology), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t4",
+  "model": "nano_banana_pro",
+  "prompt": "rv4-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt a, other model"
+ },
+ {
+  "id": "rv4-t5",
+  "model": "nano_banana_pro",
+  "prompt": "rv4-b",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt b, other model"
+ },
+ {
+  "id": "rv4-t6",
+  "model": "seedream_5",
+  "prompt": "rv4-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v1.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v1, prompt a, other model"
+ }
+]

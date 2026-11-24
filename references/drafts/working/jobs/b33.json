@@ -1,0 +1,69 @@
+[
+ {
+  "id": "rv4-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v4 (uneven ribs, vents, marsh), prompt e (body not skeleton, nothing regular, cloud over land, finer place marks), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t14",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "same as t13, second take"
+ },
+ {
+  "id": "rv4-t15",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "same as t13, third take"
+ },
+ {
+  "id": "rv4-t16",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v4, prompt e, Apollo 17 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t17",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal redo, guide v4, prompt e, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "rv4-t18",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v4.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg",
+   "/home/user/workspace/r3/real/orb-natron.jpg"
+  ],
+  "what": "reveal redo, guide v4, prompt e, Gemini 11 + MODIS Arabia + ISS Lake Natron"
+ }
+]

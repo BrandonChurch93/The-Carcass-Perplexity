@@ -1,0 +1,68 @@
+[
+ {
+  "id": "cx-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-a",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a"
+ },
+ {
+  "id": "cx-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-a",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a"
+ },
+ {
+  "id": "cx-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-a",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a"
+ },
+ {
+  "id": "cx-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-a",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a"
+ },
+ {
+  "id": "cx-t5",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-b",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, hide dried onto about half of the body like a mummy, belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-b"
+ },
+ {
+  "id": "cx-t6",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-b",
+  "refs": [
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, hide dried onto about half of the body like a mummy, belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-b"
+ }
+]

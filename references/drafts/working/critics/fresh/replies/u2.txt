@@ -1,0 +1,10 @@
+viewer: u2
+model: claude_opus_5_5
+test: FULL
+image: reveal-f4-v4 (full size)
+
+1. A continent-sized island shaped like a sprawled human body/skeleton, seen from orbit (looks AI-generated/composited).
+2. Roughly 1,000–3,000 km head to foot; camera is in low Earth orbit (ISS-style oblique view, Earth's curved limb and black space visible top-left).
+3. (a) Landmass from orbit. Scale cues: Earth's curvature and space at top-left, a cyclone/hurricane spiral bottom-right, cloud fields and cloud streets drifting over the land, sun glint on ocean at right, wide turquoise continental shelves.
+4. Features: skull-shaped head at far left with two crater/caldera "eye sockets" (crater lakes); neck isthmus; rib-like ridges radiating from a central spine (upper and lower chest, center-left); a dark, possibly burned/volcanic area with orange glowing lines (lava/fires) in the upper chest; a turquoise lagoon/inland sea in the chest center with a line of small white puffy clouds/plumes across it; a reddish salt flat/pan with red veining in the "abdomen/heart" area (center); arms: upper-left arm reaching to top-center ending in finger-like peninsulas, lower-left arm reaching to bottom-center with finger peninsulas; legs: upper leg extending to top-right ending in a foot near a reef, lower leg extending to the right ending at bottom-right with a foot; mountain ridges with snow/cloud along the limbs; turquoise reefs/shallows fringing all coasts; haze/smoke plume at upper-left of the head; cyclone bottom-right; sun glint upper-right; Earth's limb upper-left corner.
+5. Yes: the anatomical shape (skull with eye-craters, ribs, fingers, feet) is impossible geology; the cloud scale is inconsistent (the white puffs in the lagoon look like small cotton balls relative to a continent, and the cyclone looks small for the scale); the land is near-uniformly desert with ridges that look sculpted/painted; the ribs are too regular; overall looks like an AI-generated or digitally composited image rather than a real photo.

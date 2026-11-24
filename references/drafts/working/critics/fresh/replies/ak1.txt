@@ -1,0 +1,10 @@
+viewer: ak1
+model: gpt_6_2_sol
+test: STATE
+image: cx-t6 (carcass, hide on about half) (full size)
+
+1. My first thought was a colossal human skeleton lying in the ocean, seen from space.
+2. It looks dead and motionless, sprawled on its back with its jaw open and limbs partly submerged.
+3. Eerie, desolate, ominous.
+4. 4/5.
+5. (a) A landmass seen from orbit: the curved horizon, thin blue atmosphere, and swirling cloud systems make it feel planetary in scale.

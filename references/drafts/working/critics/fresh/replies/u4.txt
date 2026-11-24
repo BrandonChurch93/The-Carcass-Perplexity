@@ -1,0 +1,14 @@
+viewer: u4
+model: grok_4_7
+test: FULL
+image: reveal-f4-v4 (full size)
+
+1. A human skeleton made of desert land, lying on its back in the ocean, seen from space.
+
+2. Continent-sized if the cues are real — a few thousand kilometers head to toe. The camera is in orbit, looking down; Earth’s curved limb, blue atmosphere, and black space sit in the upper left.
+
+3. Closest to (a). The limb, atmospheric glow, sun glint on the upper-right ocean, cloud shadows, and a spiral storm in the lower right are orbital scale, not a plane, tabletop, or canvas. The anatomy is impossible, so it is a composite that borrows satellite scale.
+
+4. Skull at far left, with two round eye sockets (upper one dry and terraced, lower one a dark pool). Neck just right of the skull, with haze drifting off the top of the head. Ribcage left-center: curved ridges around a turquoise inner bay, dark ground with red-orange spots in the left chest, and a dotted line of small clouds along the spine. Abdomen and pelvis center to center-right: pale red-and-white branching flats inside hip ridges. Upper arm reaches up-right and ends in a splayed hand of sandbars near the top edge. Lower arm bends down-right into a thinner hand near the bottom. Upper leg runs to the upper right and ends in a foot of spits and reefs. Lower leg runs to the lower right and ends in a heel and arch. Deep blue ocean around it; turquoise shelves on the coasts; a cyclone in the lower right.
+
+5. The skeleton is wrong: eye sockets, rib count, spine, pelvis, and both hands are too exact for any real coast. It does not look miniature — shadows, reefs, and the horizon match a satellite view — it looks generated or composited.

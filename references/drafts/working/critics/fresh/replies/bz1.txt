@@ -1,0 +1,6 @@
+viewer: bz1
+model: gpt_6_2_sol
+test: SCALE
+image: x6 frame 3 (tmp/test/IMG_1934.jpg = critic/fresh/seen/x6-f3.jpg)
+
+1. An apparent satellite view of dark ocean and rugged islands/coastal ridges arranged like a giant skull and rib cage. 2. It reads as several hundred km across from a few hundred km up, but there’s no reliable scale cue. 3. (a) in appearance: overhead perspective, cloud streaks and textured coastlines sell the orbital view, though the scene looks digitally stylized. 4. The almost round eye-like pits, tooth-like coast, very regularly spaced ribs and tiny orange glows look designed rather than natural; no clear tabletop cues.

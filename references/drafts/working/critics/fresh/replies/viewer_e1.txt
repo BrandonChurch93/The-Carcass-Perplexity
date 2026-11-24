@@ -1,0 +1,6 @@
+viewer: viewer_e1
+model: claude_opus_5_5
+test: GLANCE
+image: rv4-t17 (400 px)
+
+First impression: it looks like an orbital view of Earth with an island shaped like two human figures, one of them skeletal, lying in the ocean and seeming to touch or fight, plus a hurricane swirl in the lower right.

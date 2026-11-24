@@ -1,0 +1,11 @@
+viewer: ar3
+model: gemini_4_carbon
+test: PLACES
+image: master-x1 (full size)
+
+1. Cannot find it. Solid bone and dark volcanic rock separate the upper and lower rows of ribs rather than a through-going strait (only narrow water inlets sit between individual ribs).
+2. Found: ~36% from left, ~39% from top. A tiny bright orange-red lava spot with a faint smoke plume on dark volcanic rock in the upper chest.
+3. Found: ~30% from left, ~43% from top. A cluster of dark round holes set in reddish web-like rock right behind the open mouth.
+4. Found: ~63% from left, ~48% from top. White flats in the pelvic basin crossed by dark red pools and branching red channels.
+5. Cannot find it. The spine ridge (~43%–60% from left, ~45%–46% from top) has no storm on it (a round white storm cloud sits over ocean water north of the spine at ~59% from left, ~32% from top).
+6. Found: ~19% from left, ~46% from top (and a second at ~20% from left, ~38% from top). Smooth round dark lakes filling the skull's eye sockets.

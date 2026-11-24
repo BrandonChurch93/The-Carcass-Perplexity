@@ -1,0 +1,22 @@
+viewer: au4
+model: claude_sonnet_5_5
+test: FULL
+image: cx-e-t2 (full size)
+
+1. A giant human-like skeleton laid out as an island or landmass in the ocean, seen from orbit.
+2. Thousands of km across if read literally (a continent-sized body in an ocean). The camera is in low Earth orbit, looking obliquely at the planet with the curved horizon and atmosphere glow at upper left.
+3. Closest to (a), a landmass seen from orbit, but only in framing. The scale cues are the Earth's limb and atmosphere, a hurricane-like spiral at lower right that is hundreds of km wide, and cloud streaks at weather scale. The skeleton is far larger than the storm. It is clearly an artificial composite or digital artwork, not a real landmass, so it sits between (a) and (d).
+4. Features and where they are:
+- Skull: left, with cracked cranium, two eye-socket craters and an open jaw with teeth.
+- Torso: center-left, with a dark ribcage on top and a second ribcage below it.
+- Arms: one reaches up and to the top center with a hand at the top; the other reaches lower left with fingers at the bottom center.
+- Spine: a thin line running right from the torso to a white cloud puff or explosion at center.
+- Pelvis: right of center, a bright white patch with red blood-like veins.
+- Legs: one extends right and up to a foot at the far right; the other bends down to a foot at the lower right.
+- Red, brown and green sediment plume: streams from the pelvis to the right.
+- Shallow turquoise water: a halo around the bones.
+- Hurricane or cyclone: lower right corner.
+- Earth's limb and black space: upper left.
+- Sun glint: upper right.
+- Cloud streaks: spread across the ocean.
+5. Yes, it looks fake. The anatomy is fully articulated with a skull, individual ribs and finger bones, which no natural landmass has. The arms and legs don't join the torso correctly: the second ribcage floats and the pelvis is detached. The red veins and plume look painted. The scale is inconsistent, because the skeleton is giant but its texture detail resembles a small carved or modeled object. It looks like AI-generated or digital concept art.

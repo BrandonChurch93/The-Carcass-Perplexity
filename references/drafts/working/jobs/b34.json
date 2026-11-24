@@ -1,0 +1,69 @@
+[
+ {
+  "id": "rv4-t19",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia, second take"
+ },
+ {
+  "id": "rv4-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia, third take"
+ },
+ {
+  "id": "rv4-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "rv4-t23",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Baja, second take"
+ },
+ {
+  "id": "rv4-t24",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-f",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg",
+   "/home/user/workspace/r3/real/orb-iss35-nile-sinai.jpg"
+  ],
+  "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia + ISS Nile and Sinai"
+ }
+]

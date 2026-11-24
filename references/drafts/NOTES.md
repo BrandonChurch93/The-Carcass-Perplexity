@@ -1,11 +1,11 @@
 # The Carcass, round 3: notes on the kept images
 
-This file lists the model, the prompt and the references for every kept image of round 3. Part one is the full set of step 2: six places and the reveal from orbit, 31 pictures, in direction B (Titan-fall). Part two is step 1: the nine pictures of the three art directions for The Breath. Nothing from rounds 1 or 2 was used as an input anywhere.
+This file lists the model, the prompt and the references for every kept image of round 3. Part one is the full set of step 2 in direction B (Titan-fall): six places, 30 pictures, and the reveal, which was rejected once and redone as four key frames of one pull-back from the lake to orbit. Part two is step 1: the nine pictures of the three art directions for The Breath. Nothing from rounds 1 or 2 was used as an input anywhere.
 
 ## How the set was made
 
-- Takes generated in round 3: 312 (`gpt_image_2_6_sunburst` 254, `seedream_5` 30, `nano_banana_pro` 18, `gpt_image_2_6_flare` 7, `nano_banana_2_1` 3). Step 1 used 226. Batch 23, one revision of each step 1 detail, used 16. Step 2 used 70: 18 for the establishing views and the reveal, 44 for the details, 2 for one redo, 6 for three single-step fixes. Every kept image is from `gpt_image_2_6_sunburst`. Every take is in `working/takes/`; the take-to-prompt mapping, my notes and the critic replies are in `working/log.json`.
-- Direction. No pick of an art direction was given. After step 1 was shown, the user asked for speed and for the work not to stop, so step 2 ran in B, Titan-fall, which was my recommendation. A (Overgrowth) or C (Corpse-light) can still be picked; the full set would then be remade in that direction.
+- Takes generated in round 3: 494 (`gpt_image_2_6_sunburst` 433, `seedream_5` 31, `nano_banana_pro` 20, `gpt_image_2_6_flare` 7, `nano_banana_2_1` 3). Step 1 used 226. Batch 23, one revision of each step 1 detail, used 16. Step 2 used 70: 18 for the establishing views and the first reveal, 44 for the details, 2 for one redo, 6 for three single-step fixes. The reveal redo used 182. Every kept image is from `gpt_image_2_6_sunburst`. Every take is in `working/takes/`; the take-to-prompt mapping, my notes and the critic replies are in `working/log.json`.
+- Direction. Step 2 ran in B, Titan-fall, which was my recommendation, before any pick was given: after step 1 was shown, the user asked for speed and for the work not to stop. The user then approved direction B for all six places (message of about 02:58 UTC on 24 November: "Direction B is approved for all six places. Keep them exactly as they are. Only the reveal is rejected."). The six places have not been touched since. The reveal was started again from nothing; its section is at the end of part one.
 - Establishing views of step 2: a fresh generation from text plus one real public-domain photograph (two for The Spine), supplied only as the standard for how a camera records that kind of light and weather. Two or three takes per subject, one kept.
 - Details of step 2: a fresh generation with two references that have separate jobs. Image 1 is the establishing view of the place, supplied as the place itself ("the same place, at the same moment"). Image 2 is a real photograph, supplied only as a rendering standard: lava, surf, snow, bare hide, a wading bird. Two takes per detail, one kept. One detail was redone with a changed approach (The Eye, detail 2).
 - Three single-step fixes at the end (batch 30, two takes each), each a "re-shoot the same frame, change only this" revision: the near kite-wing in The Ribs detail 2 had an eye, the drinker in The Eye detail 2 read as a horse, and the two drinkers in The Eye detail 4 had ears and wool. The rule they broke is my own: nothing living in the film has eyes or ears; the only eye is the dead one.
@@ -1035,39 +1035,437 @@ WHAT MAKES IT REAL. The same single light source and weather as Image 1. Real ma
 No people, no buildings, no equipment, no text, no watermark, no border.
 ```
 
-### The Reveal
+### The Reveal (redone)
 
-- The shot: the camera rises straight up out of The Eye until the whole continent is in frame. An astronaut's view from about four hundred kilometres, oblique toward the horizon. The continent, about three thousand kilometres long, is the titan lying on its side.
-- What reads as the body: the skull massif with the round lake where the eye was, a hooked jaw peninsula, the spine as a snow range running the length of the land, the ribs as curved ridges that end in capes, the caldera with its fume plume (The Heart), the steaming pale shelf beside it (The Breath), the red river system and its delta (The Blood Marsh), and an arm ending in five spits.
-- What makes it read at real scale: the curved limb and the thin line of atmosphere, sunglint on the sea, fields of small cumulus with their own shadows, lee-wave cloud off the range, a frontal band across the ribs, one cyclone over the open sea.
-- Contact sheet: `step-2-full-set/7-reveal/reveal-contact-sheet.jpg`. Its lower half marks where the six places sit on the body; those positions were read off the picture and are approximate.
+The first reveal of this round was rejected: "reads as a fish with arms growing out of its head". It is in `../archive/round-3-reveal/`. Nothing of it was reused: no pixels, no prompt text, no layout. This section covers the new one.
 
-#### The Reveal: the continent from orbit
+Every claim below is labelled where it matters: MEASURED (tested or computed in this run), STATED (design intent, not tested) or UNKNOWN.
 
-- Kept image: `step-2-full-set/7-reveal/reveal-from-orbit.jpg` (take `reveal-est-t3`, generated 02:07 UTC, 34 s, 1672x941)
+#### The shot
+
+The camera leaves the surface of the lake in The Eye and rises until the whole continent is in frame, with no cut. The continent is the titan: a dead giant on its back, head at the left, feet at the right, weathered down to bone-pale mountain ranges in a dark sea. The curve of the planet shows only at the top left edge of the widest frame.
+
+The design rule, after the note that the titan "is just laying down in the ocean" and "doesn't look decomposed or creepy enough": the outline says corpse, the surface says continent. The outline is a body that has come apart: jaw fallen open, breastbone gone, belly gone, one knee bent. The surface is geology: every bone is a mountain range with drainage, every hollow is sea, shallows, salt or lava.
+
+#### How a body on its back shows both its ribs and its spine
+
+- The titan lies on its back, so the camera looks at the front of the chest.
+- The breastbone has rotted away. The sea runs down the middle of the chest between the two rows of rib ranges. That channel is the tidal strait of The Ribs. The backbone lies drowned along its floor and shows through the water as a thin pale line.
+- Below the last ribs there is no belly wall left at all. The backbone is the only thing still standing there: one knife ridge that crosses open water from the rib cage to the hips. That is The Spine, and the storm sits on it.
+- So the ribs are seen from the front because the body is face up, and the spine is seen where the front of the body is gone.
+
+#### The four key frames
+
+All four are views of one picture, the master (`step-2-full-set/7-reveal/reveal-master.jpg`, 5952 x 3348). Frames 3 and 4 are windows of it. Frames 2 and 1 are finer plates of two smaller windows, and each plate was folded back into the master, so every closer frame is an exact part of the wider one.
+
+| Key frame | File in `step-2-full-set/7-reveal/` | What it shows | Width of view, STATED | Step from the frame before | Where the lake sits (% of width, % of height) |
+|---|---|---|---|---|---|
+| 1 | `reveal-1-above-the-lake.jpg` | Just above the lake. The round shore fills the frame. | about 250 km (the lake about 97 km) | | 50, 50 |
+| 2 | `reveal-2-skull-massif.jpg` | The lake is an eye socket in a skull-shaped massif: second socket, nose pits, open jaw bay with teeth. | about 920 km | 3.65 times wider | 50, 50 |
+| 3 | `reveal-3-head-and-shoulders.jpg` | Head, neck, both shoulders and the upper rib cage. The airways in the throat and the lava glow under the ribs come into view. | about 2,150 km | 2.34 times wider | 38.8, 50 |
+| 4 | `reveal-4-titan-from-orbit.jpg` (1672 x 941) and `reveal-4-titan-from-orbit-4k.jpg` (3840 x 2160) | The whole titan from orbit. The reveal frame. | about 5,030 km | 2.34 times wider | 20.3, 46.5 |
+
+- Scale is STATED, not measured: the body is taken as 4,000 km from crown to heel, which gives 2.57 km per pixel of the wide frame. The head is about one seventh of the body length.
+- Fresh viewers put the lower frames far smaller than that (MEASURED, see the tests): frame 1 at 10 to 60 km, frame 2 at 40 to 150 km, frame 3 at 100 to 300 km or "several hundred", frame 4 at 2,000 to 5,000 km. They read the lower frames as real terrain seen from orbit, but as a smaller place than intended.
+- `step-2-full-set/7-reveal/pullback.json` holds the exact window of each frame in the master, the nesting measurements and the six place marks, for the build.
+
+#### Nesting, MEASURED
+
+Each closer frame was reduced and laid over its window in the wider frame, and the difference was measured on a scale of 0 to 255 (`working/pull/nest-x6.json`, script `working/tools/cut_frames3.py`).
+
+| Pair | Window in the wider frame (x, y of the top left corner, width, in px of 1672 x 941) | Mean difference | 99th percentile |
+|---|---|---|---|
+| 1 in 2 | 606.9, 341.5, 458.3 | 1.76 | 10.1 |
+| 2 in 3 | 291.7, 269.7, 713.7 | 1.28 | 11.4 |
+| 3 in 4 | 63.0, 236.5, 713.9 | 0.78 | 5.3 |
+| 1 in 4 | 298.1, 413.9, 83.5 | 0.56 | 2.3 |
+
+Two critics who were told the four pictures should be one move and asked to attack the joins agreed that each frame is found inside the next (`cb1`, `cb2`). What they named as different is listed under known faults.
+
+#### The camera move, for the build
+
+- It can be built as one seamless zoom through the three nested pictures: the master, the frame 2 plate and the frame 1 plate.
+- It is not a centre-locked straight rise. The lake is at the centre of frames 1 and 2, then moves left: 38.8% in frame 3 and 20.3% in frame 4. The aim has to ease from the lake toward the chest while the camera rises, so that the body ends up filling the frame. A rise that kept the lake dead centre would put the titan half out of frame at the top.
+- Frames 1 to 3 look straight down. Frame 4 is slightly oblique, with the planet's edge and black space at the top left and sunglint at the right. In a 2D zoom the edge of the planet simply arrives from the corner as the frame widens.
+- The first step is the largest (3.65 times) and has the most visible change in texture. Both critics called it the weakest step.
+- Whether the build can hold this in motion is UNKNOWN. No 3D was built in round 3, as instructed.
+
+#### Where the six places are on the body
+
+Marked copy: `step-2-full-set/7-reveal/reveal-marked.jpg`. Positions are in percent of frame 4 (width from the left, height from the top). The lake position comes from the frame geometry. The lava glow, the storm and the salt flats are centroids of the orange, white and red pixels in a box (`working/tools/reveal_sheet.py`). The strait and the airways were read off the picture by eye.
+
+| Film order | Place | What it is from orbit | Mark | Found by fresh viewers who were given only the six descriptions (MEASURED) |
+|---|---|---|---|---|
+| 1 | The Ribs | The tidal strait: dark sea between the two rows of rib ranges, with the drowned backbone as a pale line in it | 40.2, 46.4 | 3 of 3 |
+| 2 | The Heart | The lava glow: a dark lava crust under the upper ribs with one ember and a few sparks | 37.4, 38.8 | 3 of 3 |
+| 3 | The Breath | The airways: round black sinkholes in the dark red throat plateau, with thin vapour drifting toward the top of the frame | 28.6, 42.2 | 2 of 3 (one: "Not clearly found") |
+| 4 | The Blood Marsh | The red salt flats: a white salt basin in the hips with branching red channels that stain the sea beyond | 62.9, 47.7 | 3 of 3 |
+| 5 | The Spine | The storm on the spine ridge: one thunderstorm system standing on the backbone where it crosses the open belly | 53.5, 45.6 | 3 of 3 |
+| 6 | The Eye | The round lake in the eye socket: black-blue water with a narrow amber shelf | 20.3, 46.5 | 3 of 3 |
+
+The viewers' positions were all within 6% of the image width of the marks, which was the pass rule fixed beforehand.
+
+#### How each kept frame was made
+
+All generated pieces are from `gpt_image_2_6_sunburst`. No other model was used. The reveal redo used 182 takes in all (494 in round 3). Every take is in `working/takes/`, every prompt in `working/prompts/`, every input window in `working/pull/`.
+
+The method, in one line: one wide picture of the whole body, then every part of it photographed again from closer, then the closer pictures joined back into one large master.
+
+**Step 1. The wide picture: take `cx-e-t2`** (generated 06:54 UTC, 48 s, 1672x941)
+
 - Model: `gpt_image_2_6_sunburst`
-- Prompt: `working/prompts/reveal-est.txt`, full text below
+- Prompt: `working/prompts/cx-e.txt`, full text below
 - References passed to the generator, in order:
-  1. `working/real/plate-orbit-2.jpg`: real photograph, "ISS-40 Panoramic Image of South Africa.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:ISS-40_Panoramic_Image_of_South_Africa.jpg . Supplied only as a rendering standard (how a real camera records this kind of light, surface or animal); the prompt tells the model to copy nothing in it.
-- Why kept: Reads as an astronaut photograph at real scale: limb, cloud fields with shadows, a cyclone, sunglint; skull with the eye lake, spine range, ribs as curved ridges and capes, the red delta, the caldera plume, the arm.
-- Known faults: Skull and hand are very literal; ribs partly lost under cloud on the right; pelvis and legs fade into haze and barely read.
-- Critics: Not blind-tested. Chosen by my own eye from the full-size takes.
+  1. `working/guides/cx-e-guide.png`: the painted layout: where everything is
+  2. `working/real/orb-gemini11-india-crop.jpg`: real photograph, a crop of `orb-gemini11-india.jpg` that leaves out the spacecraft's boom and nose; credit as for the parent: "India and Ceylon as seen from the orbiting Gemini-11 spacecraft.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:India_and_Ceylon_as_seen_from_the_orbiting_Gemini-11_spacecraft.jpg . Rendering standard only; the prompt says to copy nothing in it.
+  3. `working/real/orb-iss23-musandam.jpg`: real photograph, "ISS023-E-33601 - View of Oman - Musandam Peninsula - Persian Gulf - Khawr ash Shamm - Khasab - Jabal Maqlab - Kubbat Ghazira - Gulf of Oman (cropped).jpg" by Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center, Public domain, https://commons.wikimedia.org/wiki/File:ISS023-E-33601_-_View_of_Oman_-_Musandam_Peninsula_-_Persian_Gulf_-_Khawr_ash_Shamm_-_Khasab_-_Jabal_Maqlab_-_Kubbat_Ghazira_-_Gulf_of_Oman_(cropped).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  4. `working/real/orb-modis-barents-bloom.jpg`: real photograph, "Phytoplankton bloom in the Barents Sea (MODIS 2017-09-14).jpg" by Jeff Schmaltz, MODIS Land Rapid Response Team, NASA GSFC, Public domain, https://commons.wikimedia.org/wiki/File:Phytoplankton_bloom_in_the_Barents_Sea_(MODIS_2017-09-14).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  5. `working/real/orb-modis-tstorm-phil-crop.jpg`: real photograph, a crop of `orb-modis-tstorm-phil.jpg` of the storm cells; credit as for the parent: "Thunderstorms-Philippines.jpg" by NASA, MODIS Rapid Response System, Public domain, https://commons.wikimedia.org/wiki/File:Thunderstorms-Philippines.jpg . Rendering standard only; the prompt says to copy nothing in it.
+- Image 1, the layout, is `working/guides/cx-e-guide.png`. It is not a generated picture as such: it is the previous master (`master-x1`) reduced to 1672 x 941 with corrections painted on by a script (`working/tools/guide_e.py`) after the blind tests: shoulder joints and collar bones, both arms and both legs redrawn as plain limb bones with hands and feet, the breastbone opened into a through-going strait between two rows of ribs, the storm moved onto the backbone, the salt pan whitened.
+- Three takes; take 2 chosen by eye. Tested before anything was built on it (`as1` to `au4`): at 400 px, 3 of 3 fresh viewers named a giant human skeleton; of three viewers given the six descriptions, two found all six places and one found five, with the airways as "possibly found".
+- None of its pixels are in the final frames directly. It fixes where everything is.
 
-Prompt `reveal-est`:
+Prompt `cx-e`:
 
 ```text
-One reference image is supplied: a real photograph taken by an astronaut from low orbit. Use it only as the standard for how the new picture is rendered: how a real camera in orbit records a planet: the thin blue line of atmosphere on the curved horizon, the black of space, haze that thickens toward the horizon, the scale and texture of real cloud fields and their shadows, sunglint on the sea. Do not copy its landmass, its coastline, its layout or anything in it.
+Image 1 is a working composite of one photograph taken from orbit. It shows a continent in a dark ocean. The continent is a carcass: the dead body of a titan of human shape that fell on its back ages ago, rotted down to the bone where it lay, dried out and weathered into land. Most of Image 1 is finished photograph. Some parts of it have been painted over as plain flat sketches, which show only where things go and what shape they are. The sketched parts are: the upper row of ribs and the black field under them, the dark channel down the middle of the chest, both collar bones and both shoulder joints, the upper bone of the raised arm, the whole of the lower arm with its hand, both legs with their knees and feet, the white cloud on the backbone, and the white pan in the hips. Images 2, 3, 4 and 5 are real photographs taken from spacecraft and satellites. They are the standard for how the whole finished picture must look. Image 2: the height of the camera, the haze and blue cast of the air, how small cloud is. Image 3: bare pale rock in a dark sea seen from orbit: ragged capes, fine valleys with thin shadows, no relief standing up. Image 4: stained sea water and a real band of cloud. Image 5: thunderstorms seen from straight above. Do not copy what Images 2 to 5 show.
 
-Make a new 16:9 photograph: a real astronaut photograph of an alien ocean world, taken from four hundred kilometres up with a wide lens, looking obliquely toward the horizon. It must be indistinguishable from a real photograph taken from orbit, and the land in it must read at its true scale: thousands of kilometres.
+Make the one finished photograph: taken from a spacecraft three thousand kilometres above an alien ocean world, looking straight down at the whole continent, late in the day. Natural colour, cold and muted, wide 16:9 frame.
 
-THE SUBJECT. One island continent, three thousand kilometres long, lies in a dark blue-black ocean and runs away from the viewer from the lower left toward the horizon at the upper right. Its landforms are the skeleton of a single gigantic creature lying on its side, half sunk in the sea and worn down by ages of weather, so that it reads first as real geology and a moment later, unmistakably, as a body. Nearest the viewer, at the lower left, is the skull: a broad rounded massif of pale rock with one perfectly round dark lake in a ring of pale cliffs where the eye was, a hooked peninsula for the lower jaw, and pale shallows around its shores. From the skull a long pale mountain range, the spine, runs the whole length of the continent in a slow curve: a knife-edged chain of evenly jointed peaks, snow on the highest, each throwing a long shadow. From the middle of the spine a series of about twelve long narrow curved ridges sweeps out and round to one side and runs into the sea as a row of curving capes with deep dark bays between them: the ribs. The outer ends of the capes break up into chains of pale islands and sea stacks with white surf lines. Inside the curve of the ribs lies a dark lowland basin; in it one volcanic caldera gives off a brown plume of fume that trails downwind for two hundred kilometres, with a small ember-orange glow at its source. Beside it a pale flat shelf steams with thin white vapour. Between the ribs and the spine a low flat country of white salt and rust-red is drained by a branching dark red river system whose delta stains the sea red-brown. Beyond the ribs the spine passes through a ring-shaped basin of highlands, the pelvis, and two long thin peninsulas, the legs, trail away into the haze near the horizon. One long peninsula jointed like an arm reaches out from below the skull and ends in five thin spits. The bare rock is ivory and pale grey; the lowlands are dark; nothing is green.
+Keep the layout of Image 1 exactly, sketched parts included. Every part stays in the same place, at the same size and at the same angle. At the first glance a viewer must see the skeleton of a huge human body lying on its back, long dead: a skull at the left, two shoulders, two arms each with an elbow and a hand, a rib cage in two rows, a backbone, hips, and two legs each with a knee and a foot. At the second glance they must believe it is a real continent photographed from space.
 
-SCALE AND WEATHER. Real weather lies over all of it and proves its size: a field of small cumulus clouds casting tiny separate shadows on the lowlands; a long band of frontal cloud lying across the ribs and hiding parts of three of them; lee-wave cloud streaming off the spine; fog filling some of the bays; one large comma-shaped storm system over the open ocean to the right. On the left the sea is silver with sunglint, with wind streaks and island wakes showing in it. Shallow water round the coast is paler; rivers push fans of sediment into the sea. The coast is ragged with thousands of small bays and islets. Every bone is a mountain range with valleys, ridges, scree, rivers and snow, slightly irregular, eroded and broken, with parts under water or under cloud. Nothing is outlined and nothing is drawn like a diagram.
+Keep the finished parts as they are: the skull with its cracked crown, its two round sockets, the round lake with an amber ring in the lower socket, the nose pit, the worn teeth and the fallen jaw; the pitted shelf at the throat; the lower row of ribs; the forearm and clawed hand of the raised arm; the hips; the rust-red plume in the sea; the stained swirls; the spiral storm in the lower right corner; the edge of the planet in the top left corner; the sunglint at the right; the fine cloud over the ocean.
 
-LIGHT. Low sun from the left, late afternoon on the ground: long relief shadows from the spine and the rib ridges, warm light on the cloud tops. Toward the upper right the land goes blue and pale with haze and dissolves into the bright curved horizon. Above the horizon a thin band of blue atmosphere, then black space with no stars visible. Natural exposure, soft contrast, fine grain, the slight softness of a photograph taken through a spacecraft window.
+Turn every sketched part into the same real ground as the finished parts. Nothing may stay smooth, flat-coloured, tube-like or drawn. In particular:
 
-No spacecraft parts in frame, no text, no labels, no grid, no border, no watermark.
+1. Limb bones. Each limb bone in the sketch is a long, narrow mountain belt of worn ivory-grey limestone, in the same place and at the same length and angle as in the sketch: a band of hundreds of fine wrinkled ridges and valleys with a little snow on the highest crests, swollen into a knot of peaks at each joint, thin in the shaft, with a ragged coast of capes, bays and spits, a fringe of pale jade shallows, and here and there a narrow gap where the sea has cut through. The two bones of the forearm and of each shin are two unequal ranges side by side. Each hand is five thin crooked chains of capes and islets, half drowned. Each foot is a short block of hills set at a right angle to the shin, ending in five short toe capes. The upper bone of the lower arm and the thigh of the bent leg still carry patches of hide: low, dark, charcoal-brown plateau cracked into polygons like dried mud.
+
+2. Shoulders. At each shoulder a round knot of peaks, with a thin collar-bone ridge running from it in toward the top of the chest. The arms hang from these shoulders, not from the skull; open water and shoals lie between the skull and each shoulder.
+
+3. Ribs and strait. The chest is open. Down its middle, where the breastbone was, runs a strait of dark slate water, straight through from the open sea of the belly at the right, between the two rows of ribs, past the throat and out to the ocean at the lower left. The rib ends stand along both banks of the strait like rows of piers. The ribs are thin curved capes of pale rock, no two alike; two in the upper row are snapped short. Tide streaks and pale shoals mark the strait, and a faint pale line of drowned backbone shows through the water along it.
+
+4. The lava. Under the upper row of ribs, between them, lies a field of matte black lava crust. In it there is one small ember-orange spot with a few hair-thin orange cracks, and one thin, flat, grey-brown streak of fume blown toward the top of the frame. Nothing billows.
+
+5. Backbone and storm. From the end of the strait to the hips the backbone stands out of the sea as a knife ridge with snow along its crest. A thunderstorm sits on the middle of that ridge, where the sketch has the white cloud, seen from straight above as in Image 5: a tight cluster of a few bright white storm tops, lumpy like cauliflower, with soft fibrous edges, piled against both sides of the ridge so that the snowy crest shows through the middle of the cluster; a blue-grey shadow thrown to its left, a faint violet glow inside it, and a thin veil of cloud blowing off toward the lower left. It is small: no wider than the hips. The ridge shows clearly on both sides of it. No drawn lightning bolt. No other large cloud near it.
+
+6. The hips. A basin of brilliant white salt flats, crossed by pools and branching channels of oxblood-red brine, which drains to the right as the rust-red plume.
+
+7. The airways at the throat. Dark round shafts of different sizes in the pale shelf beside the neck, with a wine-red stain round them. From each shaft a thin white streamer of cold vapour lies flat on the surface, all drifting the same way, toward the top of the frame.
+
+8. Where the sketch shows open sea beside these parts, make ordinary open sea with fine cloud. Add no land that is not in Image 1.
+
+The whole picture, finished parts and all, obeys these rules. The body is four thousand kilometres long; from this height land is almost flat. Nothing stands up, nothing is embossed, no bone is a rounded tube lying on the water. Shadows are thin: a hairline of dark on the side of each ridge away from the sun. No smooth, sculpted, polished or plaster surface anywhere. Nothing is as neat as an anatomy chart. All cloud is seen from above and lies flat: fine stipple, thin streets, long curved bands, each puff far smaller than a fingertip of the body. Deep water is nearly black, cold slate blue. The sunglint at the right is a smooth dull pewter sheen with faint slicks and no visible waves or ripples.
+
+The light is the light of late afternoon coming from the right through thin haze, flat and cold; the far left of the frame is dimming toward dusk.
+
+No people, no text, no labels, no borders, no spacecraft parts. Not a sculpture, not a toy, not a relief model, not an anatomy chart, not an illustration: a real photograph of a real world.
 ```
+
+**Step 2. Twenty-one closer plates: takes `e2-W00-t1` to `e2-W33-t1`, `e2-HD-t1`, `e2-ST-t1`, `e2-WA-t1`, `e2-WF-t1`, `e2-WG-t1`**
+
+- Each plate is one window of `cx-e-t2`, 557 px wide, enlarged 3 times to 1672 x 941 and passed back as Image 1 with the instruction to photograph the same view again from a lower orbit: keep everything where it is, add only what a sharper photograph would show. One take each.
+- Sixteen windows (W00 to W33) cover the frame as a 4 x 4 grid with overlaps. Five more are centred on the parts that matter most: the head (HD), the backbone, storm and hips (ST), the lower arm and hand (WA), the bent leg and foot (WF), the straight leg and foot (WG).
+- The sixteen grid prompts share one text and differ only in the list of what is in that window. `cxW-W12` is printed below as the example; the others are in `working/prompts/`.
+- The plates were tone-matched to the wide picture (low frequencies only) and joined with a multi-band blend along seams in the middle of the overlaps (`working/tools/master.py`; arguments in `working/pull/master-x2.args`). Result: `master-x2`, 5952 x 3348.
+
+| Take | Prompt | Window of `cx-e-t2` (x, y; 557 x 313 px) | Image 1 | Real photographs passed as rendering standards |
+|---|---|---|---|---|
+| `e2-W00-t1` | `cxW-W00` | 0, 0 | `working/pull/e2-W00-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W10-t1` | `cxW-W10` | 372, 0 | `working/pull/e2-W10-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W20-t1` | `cxW-W20` | 743, 0 | `working/pull/e2-W20-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W30-t1` | `cxW-W30` | 1115, 0 | `working/pull/e2-W30-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W01-t1` | `cxW-W01` | 0, 209 | `working/pull/e2-W01-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W11-t1` | `cxW-W11` | 372, 209 | `working/pull/e2-W11-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg`, `orb-modis-tstorm-phil-crop.jpg` |
+| `e2-W21-t1` | `cxW-W21` | 743, 209 | `working/pull/e2-W21-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg`, `orb-modis-tstorm-phil-crop.jpg` |
+| `e2-W31-t1` | `cxW-W31` | 1115, 209 | `working/pull/e2-W31-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-W02-t1` | `cxW-W02` | 0, 418 | `working/pull/e2-W02-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W12-t1` | `cxW-W12` | 372, 418 | `working/pull/e2-W12-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W22-t1` | `cxW-W22` | 743, 418 | `working/pull/e2-W22-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-W32-t1` | `cxW-W32` | 1115, 418 | `working/pull/e2-W32-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-W03-t1` | `cxW-W03` | 0, 627 | `working/pull/e2-W03-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W13-t1` | `cxW-W13` | 372, 627 | `working/pull/e2-W13-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-W23-t1` | `cxW-W23` | 743, 627 | `working/pull/e2-W23-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-W33-t1` | `cxW-W33` | 1115, 627 | `working/pull/e2-W33-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-HD-t1` | `cxW-HD` | 28, 276 | `working/pull/e2-HD-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-gemini11-india-crop.jpg` |
+| `e2-ST-t1` | `cxW-ST` | 790, 281 | `working/pull/e2-ST-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg`, `orb-modis-tstorm-phil-crop.jpg`, `orb-modis-tstorm-hainan.jpg` |
+| `e2-WA-t1` | `cxW-WA` | 602, 594 | `working/pull/e2-WA-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-WF-t1` | `cxW-WF` | 1040, 520 | `working/pull/e2-WF-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+| `e2-WG-t1` | `cxW-WG` | 1115, 130 | `working/pull/e2-WG-crop.jpg` | `orb-iss23-musandam.jpg`, `orb-modis-barents-bloom.jpg` |
+
+Prompt `cxW-W12` (the example of the sixteen grid plates):
+
+```text
+Image 1 is a soft, low-resolution enlargement of one part of a photograph taken from very high orbit. It shows part of a continent on an alien ocean world. The continent is the carcass of a titan of human shape that died ages ago and weathered into land: its bare bones are pale mountain belts, what is left of its dried hide is dark plateau, and a dark stained sea lies in and around it. Make the same view again as a sharp photograph taken from a lower orbit, looking straight down. This is the same camera at a lower height; nothing on the ground has moved.
+
+Keep everything exactly where it is in Image 1 and exactly the shape it is: every coastline, bay, cape and island, every ridge, basin and pit, every patch, band and bank of cloud and haze, every change of colour in the sea, the edges of the frame. Keep the colours and the light. Do not move, add or remove any landform or any large cloud. Add only what a sharper, lower photograph would show.
+
+The other images are real photographs taken from orbit. Use them only as the standard for how real land, shallows, deep water and cloud look at this height: flat, fine-grained, slightly hazy. Do not copy what they show.
+
+The frame is about sixteen hundred kilometres wide. At this scale no single hill, cliff, wave or cloud puff can be picked out.
+- Pale land is bare limestone mountain country: belts of fine wrinkled ridges cut by hair-thin branching valleys, a dusting of snow on the highest crests, grey scree and pale fans at their feet, salt and sand in the basins. Where Image 1 shows smooth, waxy, carved, scalloped, terraced, cracked or honeycombed surfaces, that is only the softness of the enlargement: replace it with this fine real terrain, keeping the same outlines. Up close nothing looks like bone: no smooth bone surface, no knuckle, no polished knob; each is a mountain range made of thousands of small ridges and valleys.
+- Dark red-brown land is low plateau, the dried hide: charcoal brown, rust and dull oxblood, finely dissected by branching dry valleys and thin washes, with dark screes, its edges breaking down into the sea in cliffs, stacks and reefs. No bold cracks and no polygon pattern.
+- Relief is flat to the eye, as it is from orbit. Nothing is embossed, carved, sculpted, polished or shiny, and nothing stands up like a model. The land shows by its colour, not by shading: a ridge is a hair of light on its sunward side and a hair of soft blue-grey shade on the other, no darker than the sea. A thin blue-grey haze of air lies over everything and lowers the contrast of the land.
+- Coasts are ragged and real, with coves, spits, lagoons, reefs and small islands, fringed with pale jade-grey shallows of uneven width that fall away into deep water that is nearly black, a cold slate blue. Stained water keeps its milky green, ochre and rust swirls, with fine filaments and eddies inside them.
+- All cloud is seen from above and lies flat: very fine white stipple, thin streets, soft bands, fog in bays, each puff tiny with a pin-prick shadow. No cloud looks like smoke, steam or a blast. The sun is low, to the right. Where the sea shines with the sun's glint, the shine is one smooth, even, soft silver-grey sheen with no ripples, bands or texture.
+
+What is in this frame:
+- Top left: the back of the jaw of the skull massif, and a channel of deep dark water running down to the left into the open ocean.
+- Across the top of the frame: the strait, a dark sea channel; at its right end the backbone, a thin pale knife ridge, and at the top right corner the lower edge of a white storm cloud and its soft shadow on the sea.
+- Centre: the lower half of the rib cage: nine or ten thin pale rib ranges side by side, slanting down to the right from the channel, with dark water and jade shallows between them, and patches of dark red-brown plateau webbing the gaps near their roots.
+- Left of centre a pale shoulder knot, and from it the second arm: a broad pale range running down toward the bottom right, with long fine parallel ridges along it.
+- Bottom and left: open dark ocean under fields and thin streets of very fine cloud.
+
+A real photograph through the window of a spacecraft: natural colour, cold, slightly muted by haze, sharp from edge to edge. No people, no text, no labels, no borders. Not a sculpture, not a relief model, not an anatomy chart, not an illustration.
+```
+
+**Step 3. The Heart lights (not generated)**
+
+- The plate had one ember in the black crust under the upper ribs. A script (`working/tools/heart_x2.py`) adds light only: a warm core and faint halo on that ember and a few much smaller sparks on the darkest spots of the crust near it. Nothing else in the picture is drawn by hand or by script. Result: `master-x2h`.
+- Reason: fresh viewers could not find "a glow of lava in the chest" in earlier versions when it was small, and called it too large for daylight when the generator drew it. This keeps it small and findable. One viewer of the final set still calls it too large for daylight.
+
+**Step 4. Two correction plates: takes `e3-HD-t4` (head) and `e3-ST-t1` (storm)**
+
+Set x2 was tested on fresh viewers (see the tests). Two things failed: the head read as carved (even peg teeth, a straight crack, a perfectly round pit), and the storm read as an eruption or explosion to 4 of 6. Each was re-photographed once more with only those things changed.
+
+`e3-HD-t4` (generated 07:32 UTC, 48 s, 1672x941): the head.
+
+- Prompt: `working/prompts/cxW-HD3.txt`, full text below
+- References, in order:
+  1. `working/pull/e3-HD-crop.jpg`: the head window of the master (`master-x2h`), enlarged: the picture being photographed again
+  2. `working/real/orb-iss23-musandam.jpg`: real photograph, "ISS023-E-33601 - View of Oman - Musandam Peninsula - Persian Gulf - Khawr ash Shamm - Khasab - Jabal Maqlab - Kubbat Ghazira - Gulf of Oman (cropped).jpg" by Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center, Public domain, https://commons.wikimedia.org/wiki/File:ISS023-E-33601_-_View_of_Oman_-_Musandam_Peninsula_-_Persian_Gulf_-_Khawr_ash_Shamm_-_Khasab_-_Jabal_Maqlab_-_Kubbat_Ghazira_-_Gulf_of_Oman_(cropped).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  3. `working/real/orb-gemini11-india-crop.jpg`: real photograph, a crop of `orb-gemini11-india.jpg` that leaves out the spacecraft's boom and nose; credit as for the parent: "India and Ceylon as seen from the orbiting Gemini-11 spacecraft.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:India_and_Ceylon_as_seen_from_the_orbiting_Gemini-11_spacecraft.jpg . Rendering standard only; the prompt says to copy nothing in it.
+- Five takes with two wordings (`cxW-HD2` for takes 1 and 2, `cxW-HD3` for takes 3 to 5). Takes 2 to 5 were each shown to three fresh viewers as frame 2 (`bd1` to `bh3`). Take 2 lost the skull for two of three (a reptile's head, a fish or bird head). Takes 3, 4 and 5 kept it for all three. Take 4 was chosen from those by eye.
+
+Prompt `cxW-HD3`:
+
+```text
+Image 1 is a photograph taken from orbit, looking straight down. It shows part of a continent on an alien ocean world. The continent is the carcass of a titan of human shape that died ages ago and weathered into land: its bare bones are pale mountain belts, what is left of its dried hide is dark plateau, and a dark stained sea lies in and around it. This part is the head: a pale massif about nine hundred kilometres long, in the shape of a skull seen from above. Make the same photograph again with four corrections, listed below. Everything else stays exactly as it is in Image 1.
+
+Keep exactly where it is and exactly the shape it is: the outline of the massif and every coast, bay, cape and island; the two eye-socket basins, both dark, the upper one a sunken basin holding a dark pool, as dark and as large as in Image 1; the perfectly round lake in the lower basin, with its narrow amber shelf, its black-blue centre, its ivory cliff rim and the tongue of amber shallows that curls in at its lower left; the dark nose pits; the open mouth as a dark bay; the dark red-brown plateau at the right with its round black sinkholes and its thin white vapour; the pale shoulder knots at the right edge; the cloud over the ocean; the colours of the sea; the light; the edges of the frame.
+
+The four corrections. In Image 1 these parts look like a small carved object. At this scale they cannot be real, so change them:
+1. The crack across the crown. In Image 1 it is a thin black line of even width, like a crack in plaster. On a massif this size a crack is a great rift valley. Replace it, along the same course, with a rift valley: a long ragged fault-walled valley, widest at the left coast, where the sea runs up it as a narrow inlet of dark water, and narrowing inland. Its floor is low pale ground with a braided dry riverbed, two or three long thin lakes and pale fans; its walls are broken by side canyons, landslips and scree. The short crack that crosses it becomes two side valleys that join it. The branch that runs down to the rim of the round lake becomes a river gorge that cuts through the rim and ends in a small pale delta in the amber shallows. Nowhere a line of even width, nowhere pure black, no sharp zigzag.
+2. The teeth. In Image 1 both jaws carry rows of rounded pegs of equal size at equal spacing, like moulded teeth. Keep both rows, with the same number of teeth in the same places, so that from this height the two jaws still read at once as rows of teeth round an open mouth. Change only what each tooth is made of: every one becomes a piece of real eroded coast, a ragged rocky headland or sea stack with its own outline, some long, some worn short, two or three broken off low to a reef, each with scree at its foot and pale shoals round it, and narrow dark channels of sea between them. None rounded, none like a peg, a pillar or a knob, no two alike.
+3. The small dark round pit just right of the round lake. Make it a small sinkhole lake with a ragged, uneven shore, not a circle.
+4. The drainage. In Image 1 the fine ridges all run the same way, like a pattern. Make the valleys drain: they run downhill from the high ground into the eye basins, into the rift and out to the coasts, joining like river systems, with pale fans where they reach a shore.
+
+Images 2 and 3 are real photographs taken from orbit. Use them only as the standard for how real land, coast, shallows and deep water look at this height: flat, fine-grained, slightly hazy. Do not copy what they show.
+
+The land of the massif stays as pale as it is in Image 1: bone ivory and grey-white, with brown only in the hollows. The frame is about sixteen hundred kilometres wide. At this scale no single hill, cliff, wave or cloud puff can be picked out. Relief is flat to the eye, as it is from orbit: nothing is embossed, carved, sculpted, polished or shiny, and nothing stands up like a model. A ridge is a hair of light on its sunward side and a hair of soft blue-grey shade on the other, no darker than the sea. A thin blue-grey haze of air lies over everything and lowers the contrast of the land. Cloud lies flat, as very fine white stipple and thin streets. The sun is low, to the right.
+
+A real photograph through the window of a spacecraft: natural colour, cold, slightly muted by haze, sharp from edge to edge. No people, no text, no labels, no borders. Not a sculpture, not a relief model, not an anatomy chart, not an illustration.
+```
+
+`e3-ST-t1` (generated 07:27 UTC, 44 s, 1672x941): the storm on the backbone.
+
+- Prompt: `working/prompts/cxW-ST2.txt`, full text below
+- References, in order:
+  1. `working/pull/e3-ST-crop.jpg`: the backbone window of the master (`master-x2h`), enlarged: the picture being photographed again
+  2. `working/real/orb-iss23-musandam.jpg`: real photograph, "ISS023-E-33601 - View of Oman - Musandam Peninsula - Persian Gulf - Khawr ash Shamm - Khasab - Jabal Maqlab - Kubbat Ghazira - Gulf of Oman (cropped).jpg" by Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center, Public domain, https://commons.wikimedia.org/wiki/File:ISS023-E-33601_-_View_of_Oman_-_Musandam_Peninsula_-_Persian_Gulf_-_Khawr_ash_Shamm_-_Khasab_-_Jabal_Maqlab_-_Kubbat_Ghazira_-_Gulf_of_Oman_(cropped).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  3. `working/real/orb-modis-barents-bloom.jpg`: real photograph, "Phytoplankton bloom in the Barents Sea (MODIS 2017-09-14).jpg" by Jeff Schmaltz, MODIS Land Rapid Response Team, NASA GSFC, Public domain, https://commons.wikimedia.org/wiki/File:Phytoplankton_bloom_in_the_Barents_Sea_(MODIS_2017-09-14).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  4. `working/real/orb-modis-tstorm-phil-crop.jpg`: real photograph, a crop of `orb-modis-tstorm-phil.jpg` of the storm cells; credit as for the parent: "Thunderstorms-Philippines.jpg" by NASA, MODIS Rapid Response System, Public domain, https://commons.wikimedia.org/wiki/File:Thunderstorms-Philippines.jpg . Rendering standard only; the prompt says to copy nothing in it.
+  5. `working/real/orb-modis-tstorm-hainan.jpg`: real photograph, "Scattered Thunderstorms over Hainan island 2012 5 21.jpg" by NASA, MODIS Rapid Response System, Public domain, https://commons.wikimedia.org/wiki/File:Scattered_Thunderstorms_over_Hainan_island_2012_5_21.jpg . Rendering standard only; the prompt says to copy nothing in it.
+- Two takes. Take 1 was kept: a flat anvil line with its shadow on the sea instead of a ball with rays.
+
+Prompt `cxW-ST2`:
+
+```text
+Image 1 is a photograph taken from orbit, looking straight down. It shows part of a continent on an alien ocean world. The continent is the carcass of a titan of human shape that died ages ago and weathered into land: its bare bones are pale mountain belts, what is left of its dried hide is dark plateau, and a dark stained sea lies in and around it. This part is the backbone and the hips. Make the same photograph again with one correction, described below. Everything else stays exactly as it is in Image 1.
+
+Keep exactly where it is and exactly the shape it is: the thin pale knife ridge of the backbone, with snow on its crest, running from the left to the hips; the thin rib ranges at the left edge, above and below it; the hips, a pale mountain mass with a round white salt flat in its middle, veined with branching channels of dark oxblood-red water, and the small round dark lake on its upper right rim; the two pale thigh ranges that leave the hips to the right; the long plume of rust-red and ochre water streaming to the right and the swirls of milky green; the fine cloud stipple over the sea; the colours; the light; the edges of the frame.
+
+The one correction is the storm on the backbone, left of centre. In Image 1 it is a round ball of puffy cloud with rays around it and a long grey streak trailing away to the lower left, and it looks like an explosion or a volcanic plume. It is a thunderstorm, and from straight above thunderstorms look like the ones in Images 4 and 5. Replace it, in the same place, with a real thunderstorm complex caught on the ridge: a line of four or five storm cells strung along the crest, their tops spread flat and merged into one long bright white anvil sheet that lies along the ridge, about twice as long as it is wide, a little longer than the cloud in Image 1 and no wider. The sheet is flat and smooth, like a slab of white cirrus with a soft clean edge. It is not a ball and it has no rays. A few small tight cauliflower domes push up through it along its middle line. Because the sun is low at the right, the whole sheet throws one shadow: a clean dark band on the sea and on the ridge all along its left side. Inside the cloud, in three places, a soft violet-white glow of lightning shows through. The ridge runs in under the cloud at its left end and comes out from under it at its right end. Remove the long grey streak that trails to the lower left in Image 1 completely, and show open dark sea with fine cloud stipple there instead. Nothing trails, streams, fans or blows away from the storm. No column, no plume, no ash, no smoke, no fire, no blast, no rays.
+
+Images 2 and 3 are real photographs taken from orbit. Use them only as the standard for how real land, shallows, deep water and cloud look at this height: flat, fine-grained, slightly hazy. Images 4 and 5 are real photographs of thunderstorms taken from orbit: use them as the standard for how the storm looks. Do not copy what any of them show.
+
+The frame is about sixteen hundred kilometres wide. At this scale no single hill, cliff, wave or cloud puff can be picked out. Relief is flat to the eye, as it is from orbit: nothing is embossed, carved, sculpted, polished or shiny, and nothing stands up like a model. A thin blue-grey haze of air lies over everything and lowers the contrast of the land. All other cloud lies flat, as very fine white stipple and thin streets. The sun is low, to the right.
+
+A real photograph through the window of a spacecraft: natural colour, cold, slightly muted by haze, sharp from edge to edge. No people, no text, no labels, no borders. Not a sculpture, not a relief model, not an anatomy chart, not an illustration.
+```
+
+Both plates were graded back to the tone of the window they were shot from (`working/tools/grade_plate.py`: one straight-line fit per colour channel on blurred copies, so only tone changes) and folded into the master (`working/tools/inset.py`). Result: `master-x4`.
+
+**Step 5. The frame 1 plate: take `pb1e-t1`** (generated 07:41 UTC, 34 s, 1672x941)
+
+- What it is: the lake window of the master (148 px of the wide frame at that stage) enlarged 3.76 times and re-photographed from lower, with a river gorge and delta, an uneven rim, wind slicks and a few streets of minute cloud.
+- Prompt: `working/prompts/pb1-e.txt`, full text below
+- References, in order:
+  1. `working/pull/f1-x4-crop.jpg`: the lake window of the master, enlarged: the picture being photographed again from closer
+  2. `working/real/orb-iss44-sinai.jpg`: real photograph, "ISS-44 Sinai Peninsula.jpg" by NASA/Scott Kelly, Public domain, https://commons.wikimedia.org/wiki/File:ISS-44_Sinai_Peninsula.jpg . Rendering standard only; the prompt says to copy nothing in it.
+  3. `working/real/orb-iss42-richat.jpg`: real photograph, "ISS-42 Richat Structure, Eye of the Sahara.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:ISS-42_Richat_Structure,_Eye_of_the_Sahara.jpg . Rendering standard only; the prompt says to copy nothing in it.
+- Three takes; take 1 kept. Two takes with a cloud-free wording (`pb1f`) were not used.
+- Graded and folded back into the master so that frame 1, reduced, equals its window (`master-x4f`). This plate is key frame 1, unchanged since.
+
+Prompt `pb1-e`:
+
+```text
+Image 1 is a soft, low-resolution enlargement of one small part of a photograph taken from orbit. It shows a round lake the size of a small sea, lying in a round basin on a bare, bone-pale massif. Make the same view again as a sharp photograph taken from a lower orbit, looking straight down. This is the same camera on its way up from the lake; nothing on the ground has moved.
+
+Keep everything exactly where it is in Image 1 and exactly the shape it is: the round outline of the lake; the shelf of amber shallows inside its shore, wide on the left and along the bottom, and the tongue of amber shallows that curls in at the lower left; the black-blue deep water; the pale rim around the lake; the river gorge that comes down from the top edge, left of centre, and meets the lake at its upper left shore; the ridges and branching valleys outside the rim; the second basin at the top right with its two dark pools; the small dark lake to the right of the round lake, lower down; the dark sea inlet at the bottom right corner; the edges of the frame. Keep the colours and the light. Do not move, add or remove any landform. Add only what a sharper photograph would show.
+
+What the sharper photograph shows:
+- The water: black-blue, almost black in the middle, calm. Across it lie a few long, faint, pale wind slicks, hair-thin and slightly curved, barely lighter than the water.
+- The shallows: just inside the shore, an uneven shelf of amber and ochre water, wide in some places and pinched in others, ending at a ragged line where the bottom drops away, with fine paler sandbars and darker weed patches in it. One colour family only, amber to ochre. Not concentric coloured rings.
+- The gorge and its delta: the gorge is a real river canyon with a thread of dull water in it. Where it reaches the lake it has cut the rim down to the water and built a small pale delta of fine branching channels into the amber shallows.
+- The rim: a belt of pale ivory cliffs and broken ground around the lake, a few kilometres wide and uneven: higher and sheer on the right, lower and broken on the left, notched by dozens of tiny gullies, with landslip scars and scree fans that reach the water in three or four places. It is not a wall of one height and one width.
+- A thin white mist lies on the water along the foot of the cliff at the upper right and trails a short way out over the lake, half transparent.
+- Outside the rim: bare pale mountain country, grey-white and ivory, stained brown in the hollows. Its valleys are whole river systems, each with hundreds of hair-fine branches, and they drain downhill: toward the lake, toward the other basins and toward the sea inlet, with small pale fans where they end.
+- The small dark lake on the right has a ragged, uneven shore with a thin pale beach. It is not a circle.
+- Over the lower right of the frame drift three or four thin, broken streets of minute white cloud dots, each dot no bigger than a grain of salt, each with its own pin-prick shadow beside it. They are the only cloud.
+
+Images 2 and 3 are real photographs taken from orbit. Use them only as the standard for how real bare mountains, drainage and water look from this height: flat, very fine-grained, slightly hazy. Do not copy what they show.
+
+The frame is about three hundred and sixty kilometres wide and the lake about a hundred and forty kilometres across. Everything is seen at that scale: the grain of the land is very fine, and single cliffs, boulders, hills and trees are far too small to see. Relief is flat to the eye, as it is from orbit: nothing is embossed, carved, sculpted or shiny, and nothing stands up like a model. A thin blue-grey haze of air lies over everything. The sun is low and to the right: the cliffs on the right-hand shore lay a thin soft shadow on the water at their foot, and the ground on the left of the lake stands in full warm light.
+
+A real photograph through the window of a spacecraft: natural colour, slightly muted by haze, sharp from edge to edge. No animals, no people, no boats, no buildings, no roads, no text, no labels, no borders. Not a volcano crater, not a hot spring, not a pool, not a model, not an illustration.
+```
+
+**Step 6. The head brought to adult proportion (not generated)**
+
+- Three fresh viewers were asked to compare the body in frame 4 with an adult human skeleton, part by part (`bt1` to `bt3`). All three said the head was too big; two said it made the figure look cartoonish or childlike.
+- One smooth warp of the whole master shrinks the head to 0.66 of its size about a point at the base of the skull and moves that point toward the crown by 18 px of a 1,429 px wide view, which lengthens the neck (`working/tools/headwarp.py`, tag c; report in `working/pull/headwarp-c.json`). No cut, no paste, no generation. Around the head the displacement falls away smoothly to zero at the shoulders, the ribs and the planet's edge.
+- MEASURED on the warp field: it does not fold anywhere (the smallest local area factor is 0.436, which is the head itself, 0.66 squared); the largest stretch outside the head is 1.58 times, in the sea beside the crown; the 95th percentile of the stretched area is 1.40. A strip slid in from outside the picture, 19 px wide at the left and 10.7 px at the top of that 1,429 px view, and is cropped off, which is why frame 4 is now a window of the master and not the whole of it.
+- The windows of frames 1 and 2 were scaled with the head (0.66 times), so those two frames show exactly what they showed before. Frame 3 was re-cut narrower (835 px of the wide frame, from 1,000) so that the head, both shoulders and the upper ribs still fill it. Frame 4 lost only the cropped strip.
+- After the warp: 2 of 3 new viewers call the head right, 1 "slightly too big", none childlike (`by1` to `by3`).
+
+**Step 7. The frame 2 plate after the warp: take `pb2g-t2`** (generated 08:12 UTC, 38 s, 1671x941)
+
+- The head in frame 2 is drawn straight from the old master through the warp, so it is pixel for pixel the head that was tested before. The sea, the throat and the corners around it had been enlarged 1.6 to 2.4 times by the warp and were soft. They were re-photographed once so that they are sharp again.
+- Prompt: `working/prompts/pb2-x6.txt`, full text below
+- References, in order:
+  1. `working/pull/f2-x6-direct.jpg`: the frame 2 window drawn from the master through the head warp: the picture being photographed again
+  2. `working/real/orb-iss23-musandam.jpg`: real photograph, "ISS023-E-33601 - View of Oman - Musandam Peninsula - Persian Gulf - Khawr ash Shamm - Khasab - Jabal Maqlab - Kubbat Ghazira - Gulf of Oman (cropped).jpg" by Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center, Public domain, https://commons.wikimedia.org/wiki/File:ISS023-E-33601_-_View_of_Oman_-_Musandam_Peninsula_-_Persian_Gulf_-_Khawr_ash_Shamm_-_Khasab_-_Jabal_Maqlab_-_Kubbat_Ghazira_-_Gulf_of_Oman_(cropped).jpg . Rendering standard only; the prompt says to copy nothing in it.
+  3. `working/real/orb-gemini11-india-crop.jpg`: real photograph, a crop of `orb-gemini11-india.jpg` that leaves out the spacecraft's boom and nose; credit as for the parent: "India and Ceylon as seen from the orbiting Gemini-11 spacecraft.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:India_and_Ceylon_as_seen_from_the_orbiting_Gemini-11_spacecraft.jpg . Rendering standard only; the prompt says to copy nothing in it.
+- Two takes; take 2 kept. Only the parts outside the head are used from it (61% of the frame). The head comes from the direct drawing inside a mask along its coast (`working/tools/f2_merge.py`, `working/pull/f2-x6-direct-headmask.png`).
+- Graded, merged and folded back into the master. Result: `master-x6`, the master of the kept set.
+
+Prompt `pb2-x6`:
+
+```text
+Image 1 is an enlargement of one part of a photograph taken from orbit. It shows the head of a continent on an alien ocean world: a bare, bone-pale massif in the shape of a skull seen from above, lying in a dark sea. The middle of Image 1 is already sharp. Its left side, its corners and its right side are soft and blurred, because they were enlarged more. Make the same view again as one sharp photograph taken from a lower orbit, looking straight down. This is the same camera at a lower height; nothing on the ground has moved.
+
+Keep everything exactly where it is in Image 1 and exactly the shape it is: the outline of the massif and every coast, bay, cape and island; the perfectly round lake with its narrow amber shelf, its black-blue centre and its pale cliff rim; the second basin above it with its dark pool; the small dark pits; the river gorge that runs down to the round lake; the open mouth as a dark bay ringed by ragged headlands; the dark red-brown plateau at the right with its round black sinkholes; the thin white vapour that curls from the plateau up to the top edge; every patch of cloud over the sea, in the same place and of the same extent; the colours of the sea; the light; the edges of the frame. Do not move, add or remove any landform or any patch of cloud. Add only what a sharper photograph would show.
+
+What the sharper photograph shows in the soft parts:
+- The sea at the left and in the corners: deep water, nearly black, a cold slate blue. The cloud over it lies in the same places as in Image 1, but in Image 1 each patch is a blurred white blob; that is only the softness of the enlargement. Each patch is really a field of hundreds of minute white cloud dots in thin broken streets, each dot no bigger than a grain of salt, each with a pin-prick shadow beside it, and dark sea showing between the dots. No big soft puff, no smooth white blob, no fog bank, no cotton wool.
+- The shallows round the massif: pale jade-grey water of uneven width with fine shoals and reefs, falling away into the deep water.
+- The plateau at the right: low dark red-brown ground, charcoal brown, rust and dull oxblood, finely dissected by branching dry valleys and thin washes. Its black sinkholes stay where they are and as large as they are; each has a ragged broken rim with scree, no two alike, and from a few of them a thread of white vapour lies flat on the wind.
+- The pale ground at the right edge and along the bottom is bare limestone mountain country: belts of fine wrinkled ridges cut by hair-thin branching valleys, with grey scree and pale fans at their feet.
+
+Images 2 and 3 are real photographs taken from orbit. Use them only as the standard for how real land, coast, shallows, deep water and cloud look at this height: flat, fine-grained, slightly hazy. Do not copy what they show.
+
+The frame is about nine hundred kilometres wide and the round lake about a hundred kilometres across. At this scale no single hill, cliff, wave or cloud puff can be picked out. Relief is flat to the eye, as it is from orbit: nothing is embossed, carved, sculpted, polished or shiny, and nothing stands up like a model. A ridge is a hair of light on its sunward side and a hair of soft blue-grey shade on the other, no darker than the sea. A thin blue-grey haze of air lies over everything and lowers the contrast of the land. The sun is low, to the right.
+
+A real photograph through the window of a spacecraft: natural colour, cold, slightly muted by haze, sharp from edge to edge. No people, no text, no labels, no borders. Not a sculpture, not a relief model, not an anatomy chart, not an illustration.
+```
+
+**What each kept frame is made of**
+
+- Key frame 1: the plate `pb1e-t1`, graded. It also sits in the master, reduced.
+- Key frame 2: head from `e3-HD-t4` (with the round lake area from `pb1e-t1` reduced into it); sea, throat and corners from `pb2g-t2`.
+- Key frame 3: a window of the master: the head, the throat and the sea round them as in frame 2; neck, shoulders and ribs from the grid plates; the Heart lights from the script. `e2-HD-t1` was replaced by `e3-HD-t4` over the same window.
+- Key frame 4: a window of the master, 98.7% of its width: all of the above, plus the storm from `e3-ST-t1` (only the box round the storm is used from it), the backbone, hips and salt flats from `e2-ST-t1`, the lower arm and both lower legs from `e2-WA-t1`, `e2-WF-t1` and `e2-WG-t1`, and everything else from the grid plates.
+- Cut and checked by `working/tools/cut_frames3.py`; windows in `working/pull/frames-x6.json`.
+
+#### The tests
+
+Protocol: `working/critics/fresh/PROTOCOL.md`, fixed before results came in. Viewers are newly started agents on separate machines, each given one image with a meaningless file name and a short brief. The kept set was tested on three models (`gpt_6_2_sol`, `claude_opus_5_5`, `gemini_4_carbon`); some earlier rounds also used `claude_sonnet_5_5`, `gemini_neon` and `grok_4_7`. The model of every viewer is in `replies.json`. They are told nothing about the film. Each sees one image once. Every reply is saved unedited in `working/critics/fresh/replies/` (one file per viewer, 263 in all) with the image it saw in `working/critics/fresh/seen/`.
+
+An agent cannot glance for two seconds. The stand-in is GLANCE: the picture at 400 px wide and one open question. **The two-second read by a person is UNKNOWN.** It has not been tested on a person.
+
+Results for the kept set (x6), MEASURED, 26 viewers (`bu1` to `cb2`):
+
+| Test | What was asked | Result |
+|---|---|---|
+| GLANCE, frame 4 at 400 px | "What is this a picture of?", one sentence | 3 of 3 name a giant human skeleton in the ocean seen from space. One of the three took it for "cloud and wave patterns" forming the skeleton, not land. |
+| FULL, frame 4 | Five questions: what, how big, which of landmass from orbit / small island from an aircraft / tabletop model / painting, features, what looks wrong | 6 of 6 pass the rule set beforehand: a human-shaped landmass, answer (a) a landmass seen from orbit, and a size of thousands of kilometres. 3 of the 6 add that it is a digital illustration and not a photograph. "Nothing suggests a tabletop scale" (`bv1`). |
+| STATE, frame 4 | What state is the body in; three mood words; 1 (calm) to 5 (disturbing) | 3 of 3: dead, sprawled on its back ("split at the waist", "mouth gaping open"). Moods: eerie, surreal, ominous / eerie, ominous, desolate / eerie, macabre, desolate. Scores 4, 4, 4. |
+| PLACES, frame 4 | The six places in the user's words; find each and give its position | 6 of 6, 5 of 6, 6 of 6. Every place found by at least 2 of 3. |
+| PROPORTION, frame 4 | Compare with an adult human skeleton, part by part | Head right 2 of 3, slightly too big 1 of 3; none childlike. Waist too long 3 of 3. Neck too short 2 of 3. Legs too short 2 of 3. Hands too big 3 of 3. Feet small 3 of 3. |
+| SCALE, frame 3 | What, how wide, which of real terrain / tabletop model / close-up of a small object / painting | (a) real terrain 2 of 3; 1 of 3 says (d) a digital picture imitating orbital terrain, "fake/synthetic rather than small-scale". None reads a fish. Widths 100 to 300 km and "several hundred". |
+| HEAD, frame 2 | What, does the land look like anything, how wide, which of the four | 3 of 3 see a skull or a screaming face with the lake as an eye. (a) 2 of 3 (one leaning to digital art), (d) 1 of 3. Widths 40 to 150 km. One names round pits and lace-like texture as "possibly artificial or miniature". |
+| SCALE, frame 1 | As above (run on the same picture in the round before, `bo1` to `bo3`) | (a) 3 of 3, one leaning to digital art. Widths 10 to 60 km. "No definitive miniature cue." |
+| PULL, frames 1 to 4 | Two critics told it is one move, asked to attack the joins | Both find every frame inside the next. `cb1`: "nested to visual precision", "no credible relocated/deleted landforms". Differences they name are under known faults. |
+
+How the creepiness moved, MEASURED on the same STATE brief, three viewers each:
+
+| Body | Disturbing, 1 to 5 | In their words |
+|---|---|---|
+| The body before the note (`f4-v8t15`): a whole figure lying in the sea | 3, 4, 4 | "motionless, lying on its back with its limbs splayed"; "majestic" among the mood words |
+| First carcass takes (`cx-t2`, `cx-t6`, `cx-t9`) | 4, 4, 4 each | "long dead and decayed", "jaw gaping open" |
+| Kept set (x6) | 4, 4, 4 | "dead/decayed, split at the waist", "contorted posture" |
+
+The change is real but modest on this scale: one viewer moved from 3 to 4 and no viewer gives 5. Viewers say the orbital distance tempers it.
+
+Earlier test rounds on the way, all MEASURED and all saved:
+
+- GLANCE at 400 px passed for every body tested in the redo, from the first (`rv4-t8`, `rv4-t10`) to the last: 45 of 45 one-sentence replies name a human body, figure or skeleton (counted by script against the words in the pass rule, and read through by me).
+- The first body (`rv4-t23`) and its sets v3 to v8: head, scale, places and pull-back tests drove six rebuilds (viewers `a1` to `ag3`). Dropped as a whole after the note of 06:03 UTC.
+- Set x2 (`av1` to `bc2`): GLANCE 3 of 3, FULL 6 of 6 on the pass rule; the head read as carved and the storm as an eruption or explosion to 4 of 6. Led to step 4.
+- Set x4 (`bi1` to `bp2`): GLANCE 3 of 3, FULL 6 of 6, STATE 4, 4, 4, PLACES 6, 5 and 6 of 6. Frame 3 drew "a giant fish skeleton" from one of three viewers, and a second said its ridges "look like fish-bone or feathers": with the head at the far left and only ribs beside it, no shoulder was in view. Three other windows for frame 3 were each shown to three new viewers (`bq1` to `bs3`). The widest (A) drew one "fishbone/ribcage" remark and two answers of "a painting or drawing". The narrowest (B) drew no fish remark but widths of only 100 to 300 km. The middle one (D), with both shoulders in view, drew no fish remark, two answers of real terrain out of three, and widths from "hundreds of kilometers" to 1,500 km. D was adopted, by my choice on those answers; no pass mark had been fixed for this comparison.
+- PROPORTION on that set (`bt1` to `bt3`): head too big 3 of 3. Led to step 6.
+
+#### Decisions, in order
+
+- 03:10 UTC. New start. Pose: on its back, head left, one arm raised, one knee bent, so that the outline reads at once and no two limbs lie alike.
+- 03:27 to 03:48. First body: 24 takes on five procedural layout maps (`rv4`). `rv4-t23` chosen.
+- 03:51 to 06:02. Pull-back built on that body by re-photographing windows from closer (masters v1 to v8; takes `pb3`, `tile`, `pb2`, `pb1`, `bl`, `fl`, `fu`, `hl`, `hu`, `cs`, `sm`). Tested six times on fresh viewers and rebuilt each time.
+- 06:03. The user's note: the titan "is just laying down in the ocean" and "doesn't look decomposed or creepy enough". Read as "decomposed". The whole first body was dropped, with its eight masters. Nothing of it is in the kept frames.
+- 06:12 to 06:20. The carcass: 14 takes from text and real orbital photographs only (`cx`). Viewers flagged the first ones as sculpted, so they were re-photographed toward real orbital photography. `cx-t9` chosen.
+- 06:24 to 06:39. Master built on `cx-t9` (`master-c1`, then `master-x1` with more ocean round it) and tested (`ao1` to `ar3`). The skeleton read at once. The corrections the tests asked for: shoulder joints and collar bones, plainer limbs with hands and feet, a through-going strait between two rows of ribs, the storm on the backbone, a whiter salt pan.
+- 06:54. Those corrections painted into a layout and the wide picture made again from it (`cx-e`, step 1 above).
+- 07:05 to 07:15. Set x2 built (steps 2 and 3) and tested.
+- 07:25 to 07:42. Head and storm corrected (step 4), new frame 1 plate (step 5): set x4. Tested.
+- 07:45 to 07:55. Frame 3 widened to bring both shoulders in, after one viewer read it as a fish skeleton (set x5).
+- 07:55 to 08:13. Head brought to adult proportion (steps 6 and 7): set x6. Tested on 26 new viewers.
+- 08:19. Decision to stop here and hand over, with the long waist left as it is. See "What was not changed".
+
+#### Known faults
+
+Named by viewers and critics, or seen by me. None is hidden.
+
+- Every viewer says "skeleton". The brief said "not a statue or a clean skeleton". Direction B (the body is the land, bare as geology) and the note asking for more decomposition both point to bare bone, and viewers also say landmass, islands, mountain ridges. Whether this is weathered enough is a judgement for the user, not a measured pass.
+- Half the FULL viewers call frame 4 digital art rather than a photograph, and all say a body-shaped coast is impossible. They accept the orbital scale; they do not take it for a real place.
+- The lower frames are read much smaller than intended: frame 3 at 100 to 300 km against 2,150 km stated, frame 2 at 40 to 150 km against 920, frame 1 at 10 to 60 km against 250. They pass "not a miniature" on the answers given, but frame 2 is the weakest: one of three chose "a painting or drawing", one said the round pits and lace-like texture were "possibly artificial or miniature", and a critic said it "risks reading as a macro shot of an object". A critic said frame 1 is "vulnerable to macro/model" reads as "stone/resin".
+- Proportions: the waist reads too long to 3 of 3 (two would fix that first). The legs read short, the hands long, the feet small. The neck reads short to two and long to one.
+- The storm covers the backbone where it stands clear, so some viewers see "no bony spine, a cloud in its place". One calls the storm plume "puffy… like local smoke seen from a plane"; a critic calls the cloud at the waist "like a cotton wad".
+- The red channels in the hips read as blood, veins or "poured dye on a miniature". That is close to the place's name, but it is also the feature most often called fake.
+- The lava glow is still called too large for daylight by one viewer.
+- Anatomy is too exact in places: five fingers, toes, teeth.
+- Terrain texture: "small procedural heightmap scaled up", "uniform crinkled texture", "lace-like". The cyclone at the bottom right is called "oddly small". Cloud wisps off the skull read "like hair".
+- The body does not foreshorten with the curve of the planet as a real coast would at this size.
+- The pull-back: frame 1 has a mist plume, a cliff wall, a brown rim and whitecaps that frame 2 shows softer, as it must at 3.65 times less detail, and the critics see it. Frame 2 has "glittery, sugar-like" specks of cloud where frame 3 shows larger clumps. Frame 3 shows several orange dots where frame 4 shows one. Frames 1 to 3 look straight down and frame 4 is oblique.
+- Around the head the sea is stretched by up to 1.58 times by the warp. It was re-photographed in frame 2; in frames 3 and 4 it is the stretched master.
+- At 400 px one viewer in three takes the body for cloud and wave patterns.
+
+#### What was not changed, and why
+
+- The waist. It reads long, and it could be shortened with the same kind of warp. It was left because the open stretch of backbone between ribs and hips is The Spine: shortening it would cost the ridge its length and squash the storm that stands on it. Viewers who were not asked about proportions did not raise it. It is the first thing to change if the user wants the figure closer to textbook anatomy.
+- Hands, feet and legs, for the same reason of time against gain: no unprompted viewer raised them.
+
+#### Unused takes of the kept chain
+
+`cx-e-t1`, `cx-e-t4` (wide picture); `e3-HD-t1`, `t2`, `t3`, `t5` (head); `e3-ST-t2` (storm); `pb1e-t2`, `t3`, `pb1f-t1`, `t2` (frame 1); `pb2g-t1` (frame 2); `pb1c`, `pb1d` (frame 1 plates of earlier sets). All are in `working/takes/`.
+
+A fallback set with the larger head, which was fully tested as x4 plus the wider frame 3, is in `working/pull/` as `f1-x5.jpg` to `f4-x5.jpg` with `frames-x5.json`.
+
+#### Record faults in this run, and how they were mended
+
+- `working/prompts/pb2-g.txt` was overwritten by mistake at 08:10 UTC with the text of the new frame 2 prompt. That text now has its own file, `pb2-x6.txt`, and the log, the batch file and the take records point to it. The original `pb2-g` text (used for the unused takes `pb2-t17` to `pb2-t20`) was restored word for word at 08:33 UTC from the session's own record of the file as it was printed at 04:15 UTC.
+- Ten replies of the x4 round (`bm2`, `bm3`, `bn1` to `bn3`, `bo1` to `bo3`, `bp1`, `bp2`) had not been saved to file before a context compaction. They were restored word for word from the session record at 08:25 UTC. One of them, `bp2`, is cut off after 4,000 characters, which is the length the record keeps; the cut is marked in the file.
+- The decisions between 03:32 and 08:19 UTC were logged in `working/log.json` after the fact, at hand-over, from the file times and the take records. Their times are to the nearest few minutes.
+
+#### Real photographs passed to the generator for the kept chain
+
+All from Wikimedia Commons and in the public domain. Each was supplied only as the standard for how real terrain, sea and cloud look from orbit; every prompt says to copy nothing in it.
+
+- `working/real/orb-gemini11-india-crop.jpg`: a crop of `orb-gemini11-india.jpg` that leaves out the spacecraft's boom and nose; credit as for the parent: "India and Ceylon as seen from the orbiting Gemini-11 spacecraft.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:India_and_Ceylon_as_seen_from_the_orbiting_Gemini-11_spacecraft.jpg . Use: rendering standard for the whole look of an orbital photograph with the planet's edge: haze, sea colour, cloud fields; content not copied. Passed to the generator with take groups `rv4` (21), `tile*` (4), `cx` (14), `cx9-T*` (3), `op` (2), `cx9-M*` (8), `cx-e` (3), `e2*` (12), `e3-HD` (5), `pb2g` (2). In the kept reveal frames through: `cx-e-t2`, `e2-W00-t1`, `e2-W01-t1`, `e2-W02-t1` and 11 more.
+- `working/real/orb-iss23-musandam.jpg`: "ISS023-E-33601 - View of Oman - Musandam Peninsula - Persian Gulf - Khawr ash Shamm - Khasab - Jabal Maqlab - Kubbat Ghazira - Gulf of Oman (cropped).jpg" by Earth Science and Remote Sensing Unit, Lyndon B. Johnson Space Center, Public domain, https://commons.wikimedia.org/wiki/File:ISS023-E-33601_-_View_of_Oman_-_Musandam_Peninsula_-_Persian_Gulf_-_Khawr_ash_Shamm_-_Khasab_-_Jabal_Maqlab_-_Kubbat_Ghazira_-_Gulf_of_Oman_(cropped).jpg . Use: rendering standard for pale bare mountain ranges and drowned valleys against dark sea; content not copied. Passed to the generator with take groups `cx` (14), `cx9-T*` (9), `cx9-M*` (12), `cx-e` (3), `e2*` (21), `e3-HD` (5), `e3-ST` (2), `pb2g` (2). In the kept reveal frames through: `cx-e-t2`, `e2-W00-t1`, `e2-W01-t1`, `e2-W02-t1` and 21 more.
+- `working/real/orb-modis-barents-bloom.jpg`: "Phytoplankton bloom in the Barents Sea (MODIS 2017-09-14).jpg" by Jeff Schmaltz, MODIS Land Rapid Response Team, NASA GSFC, Public domain, https://commons.wikimedia.org/wiki/File:Phytoplankton_bloom_in_the_Barents_Sea_(MODIS_2017-09-14).jpg . Use: rendering standard for stained, blooming sea water; content not copied. Passed to the generator with take groups `cx` (14), `cx9-T*` (4), `cx9-M*` (4), `cx-e` (3), `e2*` (9), `e3-ST` (2). In the kept reveal frames through: `cx-e-t2`, `e2-W21-t1`, `e2-W22-t1`, `e2-W23-t1` and 7 more.
+- `working/real/orb-modis-tstorm-phil-crop.jpg`: a crop of `orb-modis-tstorm-phil.jpg` of the storm cells; credit as for the parent: "Thunderstorms-Philippines.jpg" by NASA, MODIS Rapid Response System, Public domain, https://commons.wikimedia.org/wiki/File:Thunderstorms-Philippines.jpg . Use: rendering standard for thunderstorm anvils and overshooting tops seen from straight above; content not copied. Passed to the generator with take groups `bl` (10), `cx` (8), `cx9-T*` (2), `cx-e` (3), `e2*` (3), `e3-ST` (2). In the kept reveal frames through: `cx-e-t2`, `e2-W11-t1`, `e2-W21-t1`, `e2-ST-t1` and 1 more.
+- `working/real/orb-modis-tstorm-hainan.jpg`: "Scattered Thunderstorms over Hainan island 2012 5 21.jpg" by NASA, MODIS Rapid Response System, Public domain, https://commons.wikimedia.org/wiki/File:Scattered_Thunderstorms_over_Hainan_island_2012_5_21.jpg . Use: rendering standard for scattered thunderstorm cells with their shadows, seen from straight above; content not copied. Passed to the generator with take groups `bl` (2), `e2*` (1), `e3-ST` (2). In the kept reveal frames through: `e2-ST-t1`, `e3-ST-t1`.
+- `working/real/orb-iss44-sinai.jpg`: "ISS-44 Sinai Peninsula.jpg" by NASA/Scott Kelly, Public domain, https://commons.wikimedia.org/wiki/File:ISS-44_Sinai_Peninsula.jpg . Use: rendering standard for bare desert mountains and drainage seen from orbit; content not copied. Passed to the generator with take groups `pb3` (1), `pb2` (6), `sm` (2), `pb1e` (3), `pb1f` (2). In the kept reveal frames through: `pb1e-t1`.
+- `working/real/orb-iss42-richat.jpg`: "ISS-42 Richat Structure, Eye of the Sahara.jpg" by NASA, Public domain, https://commons.wikimedia.org/wiki/File:ISS-42_Richat_Structure,_Eye_of_the_Sahara.jpg . Use: rendering standard for a round landform in bare desert seen from orbit; content not copied. Passed to the generator with take groups `pb2` (7), `pb1` (3), `pb1c` (2), `pb1d` (2), `pb1e` (3). In the kept reveal frames through: `pb1e-t1`.
 
 ## Part two: step 1, three art directions for The Breath
 

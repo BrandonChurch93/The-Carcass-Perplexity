@@ -1,0 +1,6 @@
+viewer: viewer_f1
+model: claude_sonnet_5_5
+test: GLANCE
+image: rv4-t23 (400 px)
+
+It looks like an aerial view from space of a giant island shaped like a skeletal or flayed human body sprawled in the ocean, with a hurricane swirl at the lower right. It's probably a CGI or concept-art image, not a real photo.

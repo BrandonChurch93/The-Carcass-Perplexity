@@ -1,0 +1,26 @@
+viewer: u6
+model: claude_sonnet_5_5
+test: FULL
+image: reveal-f4-v4 (full size)
+
+Answers on IMG_1184.jpg:
+1. First impression: an orbital photo of an island shaped like a giant human skeleton or body, lying spread-eagle in the ocean.
+2. If taken literally, it is about 1,000–3,000 km across, roughly the size of a large island nation. The camera is in low Earth orbit, at ISS-like altitude, looking obliquely. The Earth's limb and a thin blue atmosphere show at the top-left, and a cyclone spiral sits at the bottom-right.
+3. Closest is (a), a landmass seen from orbit, because the framing, atmosphere limb, clouds and reefs all read that way. It is not really (a), though. A landmass shaped like a person is implausible, so it is almost certainly a generated or composited image. Scale cues: the curved horizon, the hurricane-sized cloud spiral, and cloud streaks and wave patterns that look like they belong to a real ocean. Turquoise shallows ring the coast like reef or shelf water, which also implies a large landmass.
+4. Features, in the image's own layout:
+- Skull-shaped head with two dark crater-like eye sockets, far left.
+- Neck and a pinkish-grey patch to the right of the head.
+- Rib-like ridges in two rows, above and below a central turquoise lagoon or bay.
+- A dark, charred or volcanic patch with orange glowing streaks, just right of the upper ribs.
+- A white cloud bank with a small purple-white glow, in the middle of the lagoon.
+- A red-veined, organ-like patch (looks like a heart or stomach) on the central torso, right of the lagoon.
+- Arms: the upper arm runs to the top-center with a hand-like set of fingers, and the lower arm runs to the bottom-center with fingers.
+- Legs: the right-hand upper leg curves up to a foot or toe at top-right, and the lower leg ends in a foot at far right.
+- A cyclone spiral at the bottom-right, a hazy smoke or cloud plume at the top-left, and sun glint on the ocean at the right.
+5. Things that look wrong:
+- The anatomical shape is the main giveaway, with a skull, ribs, fingers and organs all in one coastline.
+- The ribs and fingers are too regular for natural terrain.
+- The red vein patch looks organic rather than geological.
+- A small row of puffy clouds sits in a perfectly straight line across the lagoon.
+- The coastline and reef edges look painterly.
+- There is a possible tabletop-sculpture feel, but the atmosphere and clouds are very convincing, so I think it is AI-generated or composited.

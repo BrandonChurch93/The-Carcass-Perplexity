@@ -1,0 +1,28 @@
+viewer: au3
+model: gemini_4_carbon
+test: FULL
+image: cx-e-t2 (full size)
+
+1. It is a fantastical orbital view of a continent-sized island chain shaped like a giant human skeleton lying in an ocean.
+
+2. As depicted, the skeleton spans roughly 3,000 to 6,000 km (about 2,000 to 4,000 miles) across the planet's surface, and the camera is in space (medium-to-high orbit, hundreds to a couple thousand kilometers up) looking obliquely across the hemisphere.
+
+3. In depicted subject and scale it is closest to (a) a landmass seen from orbit, rendered as a digital illustration/3D artwork (closest to (d) in medium). The orbital scale is given away by the curved planetary horizon with a thin blue atmospheric rim against black space at upper left, a full synoptic cyclone at lower right, broad ocean sun-glint at right, and cloud decks drifting over the water.
+
+4. Distinct features and their locations:
+- Skull landmass (far left): fractured cranium with a dark fissure crack, two circular eye-socket craters/bays, nasal opening, and wide-open jaws lined with tooth islands.
+- Throat/neck Geothermal cluster (left, behind jaw): a patch of reddish-orange circular craters/lakes with wispy white vapor streaming from the mouth and neck.
+- Raised upper arm (top left): humerus ridge leading to a snow-capped volcano at the elbow and a five-fingered hand peninsula at top center-left.
+- Lower arm (bottom left to bottom center): broad shoulder/scapula plateau tapering down to a snow-capped peak at the wrist and a five-fingered hand peninsula.
+- Ribcage and dark volcanic chest (left-center): curved parallel rib islands above and below a submerged/narrow spine, with dark lava fields and a tiny bright-orange magma spot in the upper ribs.
+- Erupting spine volcano (center): a tall white billowing ash/steam plume on the lumbar spine, blowing a trail down and left.
+- Pelvis salt/ice basin and red delta (right-center): a bright white basin inside the pelvis crossed by branching blood-red river channels, bordered by a round crater lake on its upper-right rim, draining a long red sediment plume eastward between the legs.
+- Extended upper leg and upturned foot (right): thigh and shin ridges with a snow-capped knee peak stretching right to a five-toed foot near the sun-glint.
+- Bent lower leg and foot (bottom right): thigh ridge to a snow-capped knee peak, angled sharply downward to a five-toed foot surrounded by greenish-yellow coastal swirls.
+- Planetary/weather surroundings: black space and blue atmospheric limb (top left), diffuse sun-glint (top right), and a large spiraling hurricane/cyclone (bottom right).
+
+5. Several cues look fake or too small-scale for a true continent-from-orbit view:
+- The literal human skeleton anatomy (five fingers/toes, teeth, skull crack, red vein-like channels) is obviously artificial/illustrated rather than geological.
+- The volcanic puff cloud at the center spine has the cauliflower texture and height of a single few-kilometer plume, which would look tiny and flat at hemisphere scale.
+- Terrain relief, mountain ridges, dendritic gullies, and shadows have extreme vertical exaggeration like a small island or 3D heightmap miniature rather than a continent flattened by distance and atmospheric haze.
+- The single glowing orange lava dot in the upper ribcage would need to be miles wide to register like that from orbit.

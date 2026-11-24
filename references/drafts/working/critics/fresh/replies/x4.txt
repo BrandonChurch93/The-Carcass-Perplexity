@@ -1,0 +1,10 @@
+viewer: x4
+model: grok_4_7
+test: FULL
+image: reveal-f4-v5 (full size)
+
+1. An orbital view of a continent shaped like a person lying on their back in the ocean.
+2. Continent-scale, on the order of thousands of kilometers head to toe. The camera is in low orbit, looking down at an angle, with Earth’s limb in the upper left.
+3. (a) a landmass seen from orbit. The curved limb, blue atmospheric glow against black space, ocean glint, cloud shadows, and a cyclone in the lower right set the scale; nothing reads as aircraft altitude, a tabletop, or paint.
+4. Head, lower left: rounded coast, two eye-like craters (upper one dry tan, lower one dark water), a narrow ridged neck with a faint plume drifting up-left. Chest, center-left: rib-like mountain ridges, orange fissures on the upper-left chest, and a white eruption plume at the heart over a turquoise lagoon. Belly to pelvis, center to center-right: enclosed turquoise shallows, then a reddish basin with branching vessel-like channels. Right arm, top-center: bent, ending in a five-fingered reef hand. Left leg, upper right: ends in a foot-like point. Left arm, along the bottom: ends in another splayed hand. Right leg, lower right: bent at the knee. Turquoise reef fringe around the limbs; deep blue ocean with sun glint across the upper half; scattered clouds; Earth’s limb and black space, upper left; a cyclone, lower right.
+5. The body is too anatomical to be real geology: ribs, eye sockets, a pelvis, vessel patterns, and five-fingered hands. It does not look small-scale. No table edge, brushwork, or miniature blur. It reads as a digital render made to look like an orbital photo.

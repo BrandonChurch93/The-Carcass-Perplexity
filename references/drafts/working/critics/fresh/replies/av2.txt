@@ -1,0 +1,6 @@
+viewer: av2
+model: claude_opus_5_5
+test: GLANCE
+image: x2-f4 (400 px)
+
+At first glance it looks like a giant skeleton made of clouds lying across the ocean, seen from space, with a hurricane swirling in the corner.

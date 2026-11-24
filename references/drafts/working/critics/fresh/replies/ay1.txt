@@ -1,0 +1,6 @@
+viewer: ay1
+model: gpt_6_2_sol
+test: PLACES
+image: x2-f4 (full size)
+
+I can find all six (x% from left, y% from top): 1. (42%, 47%) dark teal channel between opposing curved ribs. 2. (38%, 39%) tiny orange glow among upper chest ribs. 3. (30%, 43%) cluster of dark pits just behind the open jaw, with pale wisps nearby. 4. (63%, 48%) branching rust-red markings on a pale flat. 5. (54%, 46%) compact bright cloudburst over the narrow spine ridge (not the offshore spiral). 6. (19%, 48%) round dark-blue lake in the large lower eye socket.

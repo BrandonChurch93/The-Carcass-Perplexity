@@ -1,0 +1,68 @@
+[
+ {
+  "id": "pb2-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Brandberg + MODIS Baja"
+ },
+ {
+  "id": "pb2-t8",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Richat + MODIS Baja"
+ },
+ {
+  "id": "pb2-t9",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Sinai + MODIS Arabia"
+ },
+ {
+  "id": "pb2-t10",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Brandberg + MODIS Baja"
+ },
+ {
+  "id": "pb2-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Richat + MODIS Arabia"
+ },
+ {
+  "id": "pb2-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/head-v2-f2.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Sinai + MODIS Baja"
+ }
+]

@@ -1,0 +1,6 @@
+viewer: bu2
+model: claude_opus_5_5
+test: GLANCE
+image: x6 frame 4 at 400 px (tmp/test/IMG_1057.jpg = critic/fresh/seen/x6-f4-400px.jpg)
+
+It looks like a satellite view of Earth's ocean, where the cloud and wave patterns form a giant human skeleton lying across the water, with a hurricane swirl in the corner.

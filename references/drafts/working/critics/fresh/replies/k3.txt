@@ -1,0 +1,10 @@
+viewer: k3
+model: gemini_4_carbon
+test: HEAD
+image: pb2-t13 (full size)
+
+1. It looks like a satellite or high-altitude aerial photo of an arid volcanic island with two large circular craters, one dry and sandy, one filled with water, just off a desert coast.
+2. A skull or round cartoon head lying on its side, with the two craters forming mismatched eye sockets (or a figure-8) and the narrow channel and peninsula on the right forming a neck and shoulders.
+3. Assuming real terrain, the frame looks roughly 10 to 20 km wide (about 6 to 12 miles), viewed straight down from either very high-altitude aircraft (around 15 to 25 km up) or low Earth orbit (around 300 to 500 km up with a telephoto sensor).
+4. Closest to (a) real terrain seen from an aircraft or from orbit, because it has realistic-looking desert geomorphology (erosional gullies, sand dunes, volcanic cones, and turquoise coastal shallows) rather than obvious brushstrokes, physical model seams, or macro depth-of-field.
+5. Yes, several details look synthetic, rendered, or off-scale: the white wave specks on the open water are too large and evenly scattered for a multi-kilometer orbital view, the dunes inside the upper crater are huge relative to the crater rim, the jagged strait slicing between the island and mainland looks unnaturally staged alongside the twin craters, and the overly crisp relief shading and soft red spots on the right read like a 3D heightmap render or AI-generated image rather than a real photograph.

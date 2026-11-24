@@ -1,0 +1,12 @@
+viewer: r3
+model: grok_4_7
+test: SCALE
+image: reveal-f1 (full size)
+
+1. An overhead view of a round crater lake in barren desert mountains: dark blue in the middle, a yellow-brown shallow shelf around it, a pale cracked flat to the upper right, and a sliver of another lake at the bottom right.
+
+2. Nothing in the frame gives a measured scale. It is drawn as if the crater is a few kilometers across and the framed ground is roughly 8-15 km wide, seen from high altitude or low orbit. That is only the apparent geographic scale.
+
+3. Closest to (a). The frame is all terrain, near straight down, with no sky, table edge, base, or object boundary. It is not a tabletop model, a close-up of a small object, or a painting.
+
+4. It looks fake, not small-scale. The rock is a repetitive vein-like ridge network rather than real drainage; the lake center is flat and featureless; the yellow shelf is too smooth and sharply bounded; the cloud wisps look painted. No miniature cues (no base, fingers, shallow focus, or studio light).

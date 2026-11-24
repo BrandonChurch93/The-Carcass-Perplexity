@@ -1,0 +1,10 @@
+viewer: q2
+model: claude_opus_5_5
+test: HEAD
+image: reveal-f2 (full size)
+
+1. An orbital-style photo of an arid desert island with two big round craters (one dry with dunes, one water-filled), next to a larger landmass across a narrow channel.
+2. Yes: it looks like a face or skull in profile. The two craters read as eyes and the dark notch as a nose/mouth; together with the land to the right it also looks a bit like a keyhole or a dumbbell.
+3. If it's real, the frame looks to be roughly 50-150 km wide, as seen from low orbit (~300-400 km up, like ISS photography). The small popcorn clouds support that.
+4. (a) real terrain from orbit, at least in style: sun-glint ocean, cumulus clouds, coral-blue shallows and wind-blown dust all read like an ISS photo. But it looks digitally generated or heavily processed rather than a true photo.
+5. Yes. The two craters are too perfectly round and placed too neatly, like eyes. The ridge texture is uniform and painterly, the red streaks and dots on the right look like ink blots or wounds, and the channel cliffs look like repeated blocks. It reads as AI-generated, not tabletop-small.

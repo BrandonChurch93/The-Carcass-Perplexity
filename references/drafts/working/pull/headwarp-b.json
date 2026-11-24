@@ -1,0 +1,14 @@
+{
+ "s": 0.72,
+ "n": 12.0,
+ "min_det": 0.5183998942375183,
+ "max_stretch_outside_head": 1.577481746673584,
+ "at_view_px": [
+  153.0,
+  348.0
+ ],
+ "p99_stretch_outside_head": 1.4779667854309082,
+ "min_scale_outside_head": 0.6423898339271545,
+ "area_stretched_over_1p25_view_px2": 48177.0,
+ "inverse_residual_view_px": 0.6740608215332031
+}

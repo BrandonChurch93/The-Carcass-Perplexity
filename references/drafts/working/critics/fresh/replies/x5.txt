@@ -1,0 +1,22 @@
+viewer: x5
+model: gemini_neon
+test: FULL
+image: reveal-f4-v5 (full size)
+
+1. It is a continent-sized island shaped like a giant, skeletal human body lying spread-eagled in the ocean, viewed from orbit.
+
+2. Roughly 1,500 to 3,000 km (about 1,000 to 2,000 miles) from head to toe, judging by the planet's curvature and the storm system beside it. The camera is in space (high orbit), looking down at the planet from hundreds to a few thousand kilometers up.
+
+3. Closest to (a) a landmass seen from orbit (specifically a CGI or digital artwork styled like an orbital photo). The curved planetary horizon with a thin blue atmospheric limb in the upper-left, the swirling hurricane in the lower-right, cloud decks and sun glint on the ocean, snow-capped mountain spines, and turquoise coastal shallows all signal planetary/orbital scale.
+
+4. Distinct features and locations:
+- Top-left corner: black space, curved planetary horizon, and thin blue atmosphere.
+- Head (far left): rounded landmass with two circular craters as eyes—the top one dry/brown, the bottom one a dark crater lake.
+- Neck (left of torso): pale terrain with dark vents/pits and a long smoke or haze plume drifting toward the upper-left.
+- Chest/ribcage (left-center): curved, rib-like mountain ridges framing a dark volcanic valley with faint glowing orange lava streaks.
+- Abdomen (center): a large turquoise inland lagoon/bay with a dense white cloud or eruption plume hovering over its center.
+- Pelvis/hips (right-center): a pale basin filled with branching red rivers or mineral flats resembling blood vessels.
+- Arms (extending upper-left-to-top-center and lower-left-to-bottom-center) and legs (extending right, splayed up and down): narrow mountainous peninsulas with snow-capped ridges ending in finger- and foot-shaped tips ringed by turquoise reefs/shoals.
+- Surrounding ocean: sun glint on the right side, scattered white clouds, and a large spiraling cyclone/hurricane in the bottom-right corner.
+
+5. Yes—it clearly looks fake/CGI rather than a real photo. Beyond the impossible human-body anatomy (skull, eyes, ribs, fingers, feet, and vein-like pelvic rivers), the glowing lava fissures in the chest and the sharp relief of the ribs and red waterways are too detailed and crisp for that orbital altitude, the smoke/cloud plumes look neatly staged over the neck and belly, and the turquoise shoals around every limb look slightly too uniform and painterly.

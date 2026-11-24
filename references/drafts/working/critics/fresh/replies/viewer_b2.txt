@@ -1,0 +1,6 @@
+viewer: viewer_b2
+model: gemini_neon
+test: GLANCE
+image: rv4-t8 (400 px)
+
+It is a view from space of a giant human skeleton-shaped continent or landmass lying across the ocean of an Earth-like planet.

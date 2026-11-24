@@ -1,0 +1,10 @@
+viewer: ap1
+model: gpt_6_2_sol
+test: FULL
+image: master-x1 (full size)
+
+1. A colossal human skeleton seems to form a chain of islands in an ocean seen from space.
+2. It looks roughly a few thousand kilometers from skull to far foot (very loose visual estimate), with the camera looking down obliquely from orbit.
+3. (a) for the depicted view: curved horizon, thin blue atmospheric rim, black space and huge cloud/weather systems give the apparent planetary scale. It may itself be digital artwork rather than a photo.
+4. Left: cracked skull with two dark eye sockets, nasal opening and a wide, tooth-lined open jaw; just right of it, pitted shoulder/neck region. Center-left: arcing ribs around dark-water gaps and a tiny orange-red point among the upper ribs. One arm arcs upward to a splayed hand near the upper center; the other angles down-right from the shoulder into a long tapered set of ridges along the lower center. A knobby spine runs right across the center to a broad, perforated pelvis at center-right. One leg extends upper-right to toe-like prongs at the far right; the other bends sharply toward the lower right and tapers into greenish swirls. Rust-red pools/streaks by pelvis flow right, bright cloud burst above pelvis, spiral storm at bottom right, scattered clouds, and sunlight glare along right edge.
+5. The uncanny precision of the skull, teeth, rib cage, fingers and pelvis is implausible for natural landforms; red wisps look stylized. No clear tabletop scale cues.

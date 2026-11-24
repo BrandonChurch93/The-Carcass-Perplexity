@@ -1,0 +1,10 @@
+viewer: l2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t17 (full size)
+
+1. An aerial/orbital view of an arid volcanic island with two craters (one dry, one water-filled) in a dark blue sea.
+2. Yes - a face/skull in profile looking up-left: two craters as eyes, the dark notch as a nose; overall also a bit like a head on a neck (the land strip to the right).
+3. Roughly 10-30 km wide; camera at maybe 50-400 km (high aircraft to ISS-like orbit). Wave whitecaps suggest the lower end of that scale.
+4. (a) real terrain from aircraft/orbit - ocean texture with whitecaps, shallow turquoise fringe, dust plume and erosion patterns read as real landscape at scale. Though it has an AI-generated/digitally rendered feel.
+5. Somewhat: the craters are suspiciously perfect circles and placed too neatly as "eyes"; the reddish veined spots with dark dots on the right look organic/bloody rather than geological; the terrain texture is uniformly crinkly like crumpled paper/clay, and the river channel's blocky white cliffs look sculpted. Overall feels generated rather than fake-small - no strong miniature/tilt-shift cues.

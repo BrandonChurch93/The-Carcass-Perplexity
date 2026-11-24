@@ -1,0 +1,22 @@
+[
+ {
+  "id": "op-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "op-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/ext-placeholder-1672.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "wider frame for the reveal: frame 4 of master c1 laid on a larger sheet (250 px more ocean at the left, 80 top, 94 bottom, 60 right, in frame-4 px) so the pull-back can stay centred on the lake for frames 1 to 3; the border is new ocean, cloud and planet edge; the centre is pasted back from the master afterwards; prompt op-a"
+ },
+ {
+  "id": "op-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "op-a",
+  "refs": [
+   "/home/user/workspace/r3/guide/ext-placeholder-1672.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "wider frame for the reveal: frame 4 of master c1 laid on a larger sheet (250 px more ocean at the left, 80 top, 94 bottom, 60 right, in frame-4 px) so the pull-back can stay centred on the lake for frames 1 to 3; the border is new ocean, cloud and planet edge; the centre is pasted back from the master afterwards; prompt op-a"
+ }
+]

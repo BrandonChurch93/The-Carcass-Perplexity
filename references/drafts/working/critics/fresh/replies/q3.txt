@@ -1,0 +1,10 @@
+viewer: q3
+model: gemini_4_carbon
+test: HEAD
+image: reveal-f2 (full size)
+
+1. It looks like a satellite or orbital photograph of an arid, volcanic peninsula surrounded by dark ocean water.
+2. Yes, a human skull lying on its side: the two circular craters form eye sockets, the central dark hollow is a nasal cavity, and the narrow channel to the right is lined with rock blocks shaped like interlocking teeth above a neck.
+3. At its depicted landscape scale, the frame looks roughly 30 to 60 km wide with a camera in low Earth orbit around 300 to 400 km high (though it appears to be a 2D digital creation rather than a physical scene).
+4. Closest to (d) a painting or drawing (specifically a digital or AI-rendered illustration mimicking (a) orbital terrain), because the shading and water textures look digitally rendered and the landforms are too anatomically literal to be real geology, without cues of a physical tabletop sculpture.
+5. Yes: the overt skull anatomy (eye sockets, nose pit, symmetrical tooth-like rocks along the channel, and red vein-like streaks with dark holes on the neck) looks contrived, and the scales clash - tiny orbital cloud streets at the bottom sit next to oversized, small-scale-looking water ripples in the upper left and giant sand ripples inside the top crater.

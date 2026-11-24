@@ -1,0 +1,6 @@
+viewer: ao3
+model: gemini_4_carbon
+test: GLANCE
+image: master-x1 (400 px)
+
+It is a picture of a giant continent-sized human skeleton lying across the ocean on Earth as seen from space.

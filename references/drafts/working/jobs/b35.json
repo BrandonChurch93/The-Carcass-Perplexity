@@ -1,0 +1,46 @@
+[
+ {
+  "id": "pb3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "pb3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia, second take"
+ },
+ {
+  "id": "pb3-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia, third take"
+ },
+ {
+  "id": "pb3-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + ISS Sinai"
+ }
+]

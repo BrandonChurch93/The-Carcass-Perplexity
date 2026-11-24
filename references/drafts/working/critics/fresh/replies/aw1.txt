@@ -1,0 +1,10 @@
+viewer: aw1
+model: gpt_6_2_sol
+test: FULL
+image: x2-f4 (full size)
+
+1. First impression: a gigantic human skeleton made of rocky islands sprawls across an ocean, seen from space.
+2. It reads as roughly 1,000–3,000 km head to toe, with the camera angled down from orbit; neither size nor altitude is measurable here.
+3. Closest to (a) in presentation: the curved horizon, thin blue atmosphere against black space, broad cloud bands and spiral storm give it planetary scale. It looks like fantasy artwork, not an actual satellite photo.
+4. Left: cracked skull, two dark eye sockets, nasal holes, open toothed jaw; rust-colored pitted neck/shoulder and pale wisps. Upper left/center: bent arm reaching up, splayed fingers pointing right. Center: spine with ribs curving above and below, a few orange glows, and a bright white cloud plume near the waist. Lower center: second bent arm with a splayed hand pointing right. Center-right: pale pelvis with a dark round opening and branching red marks that trail right into the water. Upper right: extended leg with an upturned foot and toes. Lower right: bent leg with a right-pointing foot and toes, above a spiral storm. Around it: turquoise shallows, cloud streaks, upper-right sun glare, blue atmospheric rim and black space at upper left.
+5. The precise anatomical outline, individual teeth and fingers, paired ribs, and bloodlike red streaks look deliberately fabricated. Nothing specifically reads as tabletop scale.

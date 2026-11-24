@@ -1,0 +1,10 @@
+viewer: bw3
+model: gemini_4_carbon
+test: STATE
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. It is a continent-sized island landmass shaped like a human skeleton lying in an Earth-like ocean as seen from space.
+2. It is a dead, skeletal corpse sprawled on its back with its mouth gaping open, limbs splayed and bent awkwardly, volcanic smoke rising from its spine, and red blood-like sediment pooling in its pelvis and trailing into the sea.
+3. Eerie, macabre, desolate.
+4. 4 — the gaping skull, contorted posture, and blood-red runoff feel grim and unsettling, slightly tempered by the clinical distance of the orbital view.
+5. (a) A landmass seen from orbit, because the curved planetary horizon, thin blue atmospheric rim against black space, tiny cloud decks, and sprawling cyclone in the corner clearly frame it at planetary scale.

@@ -1,0 +1,27 @@
+viewer: bv3
+model: gemini_4_carbon
+test: FULL
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. It is a continent-sized island archipelago shaped like a giant human skeleton lying in an ocean, viewed from orbit.
+
+2. As depicted, the skeleton landmass is roughly 2,500 to 4,000 km long, and the camera is in low-to-medium orbit several hundred to a thousand kilometers above the planet's surface looking obliquely toward the horizon.
+
+3. In depicted subject and scale it is closest to (a) a landmass seen from orbit, though clearly created as (d) a digital illustration or 3D render rather than a real photograph. Orbital scale is given away by the curved planetary limb and thin blue atmosphere against black space at top left, the synoptic-scale hurricane spiral at bottom right, global marine cloud fields, and broad sun glint at upper right.
+
+4. Distinct features across the skeleton landmass and surrounding ocean:
+- Skull island (center-left): cranium of radial mountain ridges with two dark circular crater-lake eye sockets, a dark bay for the open jaw, reddish badlands at the neck, and wispy white cloud streaks trailing upward like hair.
+- Upper left arm (top-left of torso): narrow mountain chain bending at snow-capped shoulder and elbow peaks and ending in five thin peninsula fingers.
+- Lower right arm (bottom-left of torso): broader rugged mountain ridge extending down-right to a snow-capped wrist and five long island-spit fingers.
+- Ribcage (left-center): curved parallel island ridges on both sides of a central channel, with a tiny glowing orange volcanic spot between the upper ribs.
+- Spine cloud plume (center): a narrow vertebral island chain largely covered by a dense, puffy white eruption or cloud plume over the lumbar section.
+- Pelvis basin (center-right): a bright white salt flat or ice basin etched with a vivid red branching river network, a round dark bay at the upper hip socket, and a long rust-red sediment plume streaming right into the ocean.
+- Upper leg (right): a long straight mountain peninsula stretching into the bright sun-glint haze at far right, ending in an upturned five-toed foot.
+- Lower leg (lower-right): a thigh ridge that bends sharply downward at a snowy knee peak into a turquoise-fringed shin ridge and a five-toed foot.
+- Surrounding ocean features: a large spiraling white cyclone in the bottom-right corner, turquoise shallow shelves along the coasts, and swirling yellow-brown and red offshore plumes between the legs.
+
+5. Yes, several things look fake and mis-scaled:
+- Impossible literal anatomy: a landmass with a recognizable skull, ribcage, pelvis, five-fingered hands, and five-toed feet cannot form naturally.
+- Small-scale terrain stretched to continental size: single mountain crests, erosion gullies, and coastal spits are tens of kilometers wide, looking like a small procedural heightmap scaled up to continent size.
+- Oversized volcanic and hydrologic details: the glowing orange lava spot in the upper ribs would have to be kilometers across to shine like that from orbit in daylight, and the blood-red river trunks in the pelvis and hundreds-of-kilometers-long red ocean plume are unrealistically wide and unmixed.
+- Atmosphere and perspective mismatches: the puffy lumbar cloud plume rises far too high compared with the thin atmospheric rim on the horizon, and the sharp planetary curvature at top left does not foreshorten the skeleton or the bottom-right cyclone consistently across the sphere.

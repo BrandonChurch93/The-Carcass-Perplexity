@@ -1,0 +1,35 @@
+[
+ {
+  "id": "e3-HD-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD3",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 3"
+ },
+ {
+  "id": "e3-HD-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD3",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 4"
+ },
+ {
+  "id": "e3-HD-t5",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD3",
+  "refs": [
+   "/home/user/workspace/r3/pull/e3-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 5"
+ }
+]

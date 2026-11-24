@@ -1,0 +1,22 @@
+viewer: by3
+model: gemini_4_carbon
+test: PROPORTION
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. It is a view from space of an Earth-like ocean planet whose landmasses form a giant human-like skeleton lying on its back.
+
+2. It is a stylized giant humanoid modeled more like an adult than a child, because the head is roughly one-seventh to one-eighth of the total body length and the shoulders and rib cage are broad, even though the stretched torso and short legs distort normal human proportions.
+
+3. Part-by-part comparison with a real adult human skeleton:
+- **Head**: Looks roughly right in overall size, though the open jaw is too big relative to the cranium.
+- **Neck**: Too long and too wide.
+- **Shoulders**: Looks right in overall width, though uneven between the two sides.
+- **Rib cage**: Slightly too long and too flared at the bottom.
+- **Waist**: Way too long, with an unnaturally large spinal gap between the ribs and pelvis.
+- **Hips**: Too big and blocky.
+- **Arms**: Slightly too short in the upper arms and uneven in length (the lower-left forearm is much longer than the upper-right forearm).
+- **Hands**: Too big, with fingers that are too long.
+- **Legs**: Too short relative to both the torso and total body length.
+- **Feet**: Too small and too short (smaller than the hands).
+
+4. I would shorten the huge gap at the waist by moving the pelvis much closer to the rib cage, which fixes the stretched midsection and improves the torso-to-leg ratio.

@@ -1,0 +1,68 @@
+[
+ {
+  "id": "pb2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): the frame-2 window of the master enlarged 2.13x and re-photographed from lower, prompt pb2-a (no added landforms), ISS Brandberg + MODIS Baja"
+ },
+ {
+  "id": "pb2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2, prompt pb2-a, ISS Sinai + MODIS Baja"
+ },
+ {
+  "id": "pb2-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2, prompt pb2-b (adds nose hollow, cheek ridge, tooth-like headlands, jaw, suture canyons), ISS Brandberg + MODIS Baja"
+ },
+ {
+  "id": "pb2-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2, prompt pb2-b, ISS Sinai + MODIS Baja"
+ },
+ {
+  "id": "pb2-t5",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2, prompt pb2-b, ISS Richat + MODIS Baja"
+ },
+ {
+  "id": "pb2-t6",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2, prompt pb2-b, ISS Brandberg + MODIS Baja, second take"
+ }
+]

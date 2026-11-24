@@ -1,0 +1,6 @@
+viewer: bx1
+model: gpt_6_2_sol
+test: PLACES
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. Found, ~40% left / 46% top: narrow blue channel between the rib rows. 2. Found, ~38% / 39%: pinpoint orange glow among the upper ribs. 3. Found, ~28% / 42%: small dark openings near the throat, with pale wisps nearby. 4. Found, ~63% / 48%: branching dark-red patches across a pale flat. 5. Found, ~53% / 46%: compact white cloud band with violet flashes on the central ridge. 6. Found, ~20% / 47%: round dark-blue pool with a pale rim in the skull.

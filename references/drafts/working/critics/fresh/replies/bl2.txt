@@ -1,0 +1,12 @@
+viewer: bl2
+model: claude_opus_5_5
+test: PLACES
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+Image is about 1429x804. Answers:
+1. Found (partly): a dark water channel runs along the spine between the upper and lower rows of ribs, at about 42% W, 46% H. I can't see whether it is tidal.
+2. Found: a tiny orange glowing speck among the upper ribs at about 38% W, 40% H. It's very small.
+3. Not clearly found: there are small dark holes in the skull at about 21% W, 40-44% H, but I can't tell if they are at the throat or mouth, so I'm not claiming them.
+4. Found: a white flat area with red branching veins on the pelvis at about 63% W, 48% H.
+5. Found: an elongated white cloud mass sitting on the spine between the ribs and the pelvis at about 53% W, 47% H. (The large spiral cyclone at about 90% W, 88% H is over open ocean, not on the spine.)
+6. Found: a dark round lake with an orange-brown rim in the skull's eye socket at about 19% W, 47% H.

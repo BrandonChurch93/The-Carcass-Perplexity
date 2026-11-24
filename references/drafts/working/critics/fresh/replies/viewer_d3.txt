@@ -1,0 +1,24 @@
+viewer: viewer_d3
+model: gemini_4_carbon
+test: FULL
+image: rv4-t14 (full size)
+
+1. It is a fantasy continent shaped like the skeletal corpse of a colossal giant lying in an ocean, viewed from space.
+
+2. The landmass spans roughly 3,000 to 5,000 km from head to feet, and the camera is in space at high Earth-like orbit (roughly 1,000 to 3,000 km altitude).
+
+3. As a scene it depicts (a) a landmass seen from orbit, while as an image it is (d) a digital painting/render. The intended planetary scale is given away by the curved planetary horizon with a glowing blue atmospheric limb against black space at top left, the massive spiral hurricane at bottom right, scattered cloud decks, turquoise continental shelves, and snow-capped mountain ranges.
+
+4. Distinct features on and around the landmass:
+- Circular crater lake in the eye socket of the skull on the far left, bordered by snow-capped peaks and green coast.
+- Line of four or five small craters/volcanic vents along the neck/collarbone ridge, emitting white smoke plumes.
+- Parallel curved mountain ridges forming both sides of the ribcage around the chest.
+- Glowing lava/fire field with a dark brown smoke plume in the upper chest (heart area).
+- Jagged, snow-capped spinal mountain range running horizontally through the center of the torso.
+- Massive anvil thunderstorm with purple lightning hovering over the spine in the center of the flooded abdomen.
+- Shallow turquoise inland sea/lagoon filling the hollow belly between the ribs and pelvis.
+- Red-stained basin/plain curving across the pelvic bone at the center.
+- Two outstretched arms (top-center and bottom-center) and two legs (upper-right and lower-right) made of tan desert plateaus and snowy bone-like ridges, each ending in five distinct finger or toe peninsulas.
+- Curved planetary edge at top left, ocean sun-glint at upper right, and a large white cyclone at bottom right.
+
+5. Several elements break scale and look fake or miniature: aside from the literal human skeleton anatomy, the single cumulonimbus storm cloud and visible purple lightning bolt in the midsection are hundreds of kilometers wide (scaled like a single local storm pasted onto a continent), the glowing orange embers/lava and thick smoke plume in the chest plus the evenly spaced puffing vents on the neck read like small-scale fire/model effects rather than orbital volcanism, and the ocean surface texture under the sun glint at upper right looks slightly coarse for planetary altitude.

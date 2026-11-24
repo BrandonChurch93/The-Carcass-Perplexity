@@ -1,0 +1,102 @@
+[
+ {
+  "id": "cx9-T00-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T00",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T00-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T00 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-T10-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T10",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T10-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T10 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-tstorm-phil-crop.jpg"
+ },
+ {
+  "id": "cx9-T20-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T20",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T20-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T20 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-T01-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T01",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T01-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T01 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-baja.jpg"
+ },
+ {
+  "id": "cx9-T11-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T11",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T11-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T11 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-tstorm-phil-crop.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-T21-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T21",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T21-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T21 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-T02-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T02",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T02-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T02 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-T12-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T12",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T12-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T12 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-T22-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxT-T22",
+  "refs": [
+   "/home/user/workspace/r3/pull/cx9-T22-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T22 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ }
+]

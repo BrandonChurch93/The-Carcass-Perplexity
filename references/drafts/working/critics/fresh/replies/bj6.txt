@@ -1,0 +1,30 @@
+viewer: bj6
+model: claude_sonnet_5_5
+test: FULL
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+Answers on IMG_2468.jpg:
+1. First impression: an orbital view of Earth's ocean with a giant skeleton-shaped landmass (skull, ribs, pelvis, limbs) lying in the water.
+2. Scale: if real, it would be thousands of km across, roughly 3,000-6,000 km from skull to foot. The camera is in low Earth orbit, looking obliquely at the planet. The dark curved limb with a thin blue atmosphere line is at upper left.
+3. Closest to (a), a landmass seen from orbit. The scale cues are the planetary horizon curve and atmosphere glow, the sun glint at right, a hurricane-like cyclone spiral at lower right, and cloud and whitecap streaks over the sea. The cyclone is hundreds of km wide, and the skeleton is several times bigger than it. The picture is probably an AI-generated or digitally composed image, not a real photo. The subject is surreal, but the framing is clearly orbital.
+4. Features, by location:
+- Skull and head: left-centre. It has a large dark round eye socket with a golden rim, smaller dark holes and a dark lake or hollow inside the skull.
+- Upper-left arm: runs up from the shoulder to the top centre and ends in splayed finger-like ridges.
+- Rib cage: centre, with curved ribs in two sets, upper and lower. A small orange dot (a possible fire or light) sits near the upper ribs.
+- Spine: a horizontal line running between the skull and the pelvis.
+- White cloud or plume: a small elongated white streak in the middle, between the ribs and the pelvis.
+- Pelvis: right of centre, a bright white patch with a red branching vein or river pattern and a dark hole above it.
+- Legs: the upper-right leg extends to the far right and ends in a foot at the top right edge. The lower-right leg bends down to a foot near the bottom right. A leg also runs down-left from the spine to a foot with toe-like ridges at the bottom.
+- Coloured water: rust-red, orange and teal bands in the sea around the pelvis and the lower right, like sediment or algal plumes.
+- Cyclone: a spiral storm at the bottom right corner.
+- Horizon: Earth's limb and the black space at the top left.
+- Sun glint: the bright haze at the right edge.
+5. What looks wrong or fake:
+- Anatomically ordered bones in a flat, symmetric layout can't occur naturally. The landmass looks like it has been generated or composited.
+- The ribs are too regular and evenly spaced.
+- The overall layout is unusual: arms and legs are at odd angles, and the limbs are mismatched and don't join logically at the pelvis.
+- The edge treatment is repetitive, with fractal, AI-style noise.
+- The coloured plumes look painted on.
+- Perspective is inconsistent. The whole skeleton is nearly flat-on, but the horizon and cyclone imply an oblique view.
+- The cyclone looks cut-and-pasted.
+- The sea texture is evenly speckled.

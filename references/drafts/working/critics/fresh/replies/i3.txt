@@ -1,0 +1,10 @@
+viewer: i3
+model: gemini_4_carbon
+test: HEAD
+image: pb2-t11 (full size)
+
+1. It looks like a satellite image of an arid volcanic peninsula shaped like a skull jutting into deep blue ocean water.
+2. A sideways human skull facing right, with two round craters for eye sockets, a triangular basin for a nose, a straight water-filled trench lined with rectangular cliff blocks for teeth, and a neck dotted with smoking vents.
+3. As depicted, the frame represents roughly 40 to 100 km across, viewed straight down from orbital altitude (roughly 300 to 400 km high).
+4. Closest to (d) a painting or drawing (specifically a digital or AI-generated illustration imitating (a) orbital imagery), because the geology is deliberately arranged into literal skull features while using flat, painted-looking cloud and terrain textures rather than physical model materials.
+5. Yes: the straight "mouth" trench with evenly spaced, tooth-like rectangular cliff blocks and the neat triangular "nose" basin are geologically unnatural, a river channel impossibly connects the rim of the lower crater lake straight to the mouth trench, the small clouds on the left lack ocean shadows, and the wispy smoke plumes on the right look out of scale for an orbital view.

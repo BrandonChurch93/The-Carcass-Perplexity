@@ -1,0 +1,24 @@
+viewer: aw3
+model: gemini_4_carbon
+test: FULL
+image: x2-f4 (full size)
+
+1. First impression: It is a digital illustration of a giant human-skeleton-shaped continent lying in an Earth-like ocean as seen from space.
+
+2. Size and camera position: As depicted, the skeleton landmass is roughly 3,000 to 5,000 km (2,000 to 3,000 miles) long, and the camera is in medium-to-high planetary orbit roughly 500 to 2,000 km above the ocean looking obliquely toward the horizon.
+
+3. Closest match and scale cues: It is staged as (a) a landmass seen from orbit, though clearly (d) a digital painting/render rather than a real photograph. Orbital scale is given away by the curved planetary horizon with a thin blue atmospheric limb against black space (top-left), a full spiral hurricane (bottom-right), planetary cloud bands, and broad solar glint on the ocean (right).
+
+4. Distinct features and locations:
+- **Skull island (mid-left):** Cranium cut by a branching canyon crack, two dark circular crater-lake eye sockets, a nasal lagoon, an open screaming jaw ringed with tooth islands, and reddish cratered badlands at the neck.
+- **Arms and hands (upper-left and lower-center):** Two jointed arm peninsulas with snow-capped volcano/mountain peaks at the shoulders, elbows, and wrists, ending in five-fingered coastal spits.
+- **Ribcage archipelago and upper spine (left-center):** Parallel curved mountain-island ribs flanking a central spine ridge, with a small glowing orange volcanic spot in the upper ribs.
+- **Mid-spine storm cluster (center):** A dense billowing storm system with purplish internal glow and wind-blown cloud streaks sitting over the lumbar spine.
+- **Pelvis basin (center-right):** Mountainous hip landmass holding a white salt/snow flat etched with blood-red branching river channels that discharge a long red-and-ochre sediment plume eastward between the legs, plus a dark circular bay on its upper edge.
+- **Legs and feet (right and lower-right):** An outstretched upper leg and sharply bent lower leg with snow-capped peaks at the knees and ankles, turquoise coastal shallows, and five-toed foot peninsulas.
+- **Surrounding ocean and sky:** Curved atmospheric limb and black space (top-left), spiral cyclone (bottom-right), swirling yellow-green and red ocean current plumes around the lower body, and sun glint (far right).
+
+5. What looks wrong, fake, or small-scale:
+- **Impossible anatomy:** A literal human skeleton (teeth, eye sockets, ribs, fingers, toes) formed out of tectonic landmasses.
+- **Out-of-scale terrain details:** The forehead fissure, neck craters, single volcano cones on each joint, and arterial red river delta are drawn like small-scale textures blown up to tens or hundreds of kilometers wide.
+- **Composited/painted weather and water:** The wispy mist around the neck reads like small-scale smoke rather than orbital clouds, the isolated storm ball on the spine has exaggerated height and purple glow, and the ocean texture and scattered cloud puffs look synthetically uniform.

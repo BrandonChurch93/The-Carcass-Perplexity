@@ -1,0 +1,6 @@
+One image file is attached. Open it and look at it. Do not research anything or use any tool except opening the image. Then send your answers to /root with message_agent. Keep each answer short.
+1. In one sentence, the first thing that came to mind: what is this a picture of?
+2. How big is the thing shown, roughly, in real-world units, and where is the camera?
+3. Which is it closest to, and why: (a) a landmass seen from orbit, (b) a small island or sandbar seen from an aircraft, (c) a tabletop model or sculpture, (d) a painting or drawing? Say what in the picture gives the scale away.
+4. List every distinct feature or place you can pick out on it and where each one is.
+5. Does anything in it look wrong, fake or small-scale? Say what.

@@ -1,0 +1,11 @@
+viewer: ay2
+model: claude_opus_5_5
+test: PLACES
+image: x2-f4 (full size)
+
+1. Found: ~42% W, 46% H — dark water channel along the spine between the upper and lower rib rows.
+2. Found: ~38% W, 40% H — tiny orange-red glowing dot among the upper ribs.
+3. Found: ~30% W, 41% H — cluster of small dark pits on the brown patch between the jaw and the neck. Also two small dark holes near the nose at ~21% W, 42% H.
+4. Found: ~63% W, 48% H — red branching veins on the white pelvis plateau, with reddish streaks running right of it toward ~70% W.
+5. Found: ~54% W, 47% H — bright white cloud cluster sitting on the lower spine, between the ribs and the pelvis. The big spiral storm at the bottom right (~92% W, 88% H) is over open ocean, not on the spine.
+6. Found: ~19% W, 47% H — round dark lake with an orange rim in the skull's lower eye socket.

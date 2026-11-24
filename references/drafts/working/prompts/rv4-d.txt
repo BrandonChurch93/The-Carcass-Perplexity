@@ -1,0 +1,21 @@
+Image 1 is a layout map I drew in flat colours: the plan of one continent seen from orbit. It is only a map. Keep the shape of its coast, the pose and the position of every feature exactly. Do not copy its drawing style.
+Images 2 and 3 are real photographs taken from spacecraft. The picture you make must be indistinguishable from them in kind: real ocean, real shallow banks, real fine cloud, real haze, the fine grain of terrain seen from very high. Do not copy what they show.
+
+A real photograph taken from a spacecraft three thousand kilometres above an alien ocean world, looking almost straight down at a whole desert continent. Natural colour, slightly hazed, wide 16:9 frame.
+
+The continent is four thousand kilometres long and has, beyond any doubt, the shape of a human body lying on its back: head at the left, neck, broad shoulders, two long arms ending in hands, a chest, a narrow waist, hips, and two long legs ending in feet at the right, in true human proportion. It is the body of a titan that died ages ago and turned to land. It is plainly land: arid, ochre, rust and bone-pale, old and worn, like Arabia, the Sahara or Baja California seen from orbit.
+
+At this scale nothing is big in the frame except the body itself. A finger is a peninsula two hundred kilometres long. Mountain ranges are fine wrinkled bands, snow is a pale dusting on the highest crests, rivers are hairlines, dune seas are faint combed textures, and cloud is fine white stipple, thin streets and long curved bands, each element far smaller than a finger.
+
+Read the map this way and render it as real terrain:
+- The limbs are long mountainous peninsulas. A worn, broken range runs the length of each, knotted into higher massifs at the shoulder, elbow, wrist, hip, knee and ankle, with dry plains, alluvial fans, dune seas, dark lava plains and salt pans on either side. Each hand and foot ends in five narrow rocky peninsulas crumbling into islets and reefs.
+- The head is a high pale massif with one perfectly round crater lake in it: deep blue centre, amber shallows, pale cliffs. Beside it a small bay.
+- At the throat, a pale tidal flat with a line of seven dark blue holes rimmed in crimson, each trailing a thin thread of white vapour.
+- The chest is ten pairs of long curved pale ridges with dark valleys between them, either side of a narrow grey strait.
+- Beside the strait, a black lava field with glowing orange fissures and a thin brown fume plume drifting toward the top of the frame.
+- The waist is a shallow turquoise inland sea inside the coast, crossed down the middle by one knife-edged snow-white ridge. A tight knot of storm cloud with violet lightning sits on the ridge.
+- At the hips two curved ranges enclose a blood-red salt flat, red brine veined over white salt.
+
+Every coast is irregular: capes, bays, deltas, spits, lagoons, barrier islands, reefs. Pale turquoise shallows of uneven width fringe the land and fall away into deep dark blue ocean. Fine scattered cloud over the sea, one big spiral storm far out at the lower right, a long curved frontal band beyond it, nothing hiding the land. Afternoon sun from the right, short fine shadows, a broad soft patch of sunglint on the water beyond the feet. The curved edge of the planet with its thin blue atmosphere and black space beyond cuts only the top left corner.
+
+No people, no text, no labels, no borders, no spacecraft parts. Not a sculpture, not a skeleton model, not an illustration.

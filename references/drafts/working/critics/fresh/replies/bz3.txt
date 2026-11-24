@@ -1,0 +1,15 @@
+viewer: bz3
+model: gemini_4_carbon
+test: SCALE
+image: x6 frame 3 (tmp/test/IMG_1934.jpg = critic/fresh/seen/x6-f3.jpg)
+
+1. It is a synthetic orbital-style aerial image of a coastal landmass shaped like a giant human skeleton—with crater-lake eyes, an open-jaw bay, collarbone mountains, and parallel rib-cage ridges—surrounded by dark ocean and clouds.
+
+2. As depicted, the scene spans roughly 100–250 km across as viewed from low-Earth-orbit altitude (roughly 250–500 km high), based on the cumulus cloud fields, snow-capped ridges, and drainage networks (though as a digital render/illustration, it has no literal physical size).
+
+3. Closest to (d) a painting or drawing (specifically a digital illustration or 3D procedural terrain render) designed to imitate (a) real terrain seen from orbit: it uses satellite-like cloud layers, coastal shallows, and dendritic erosion without any macro blur or tabletop material cues, yet the geography is deliberately sculpted into a skeleton.
+
+4. Yes—it looks fake/synthetic rather than small-scale:
+- The terrain clearly forms a human skull (two round crater-lake eye sockets, nasal pits, and a jagged jaw lagoon), symmetrical collarbone ranges, and sets of evenly spaced parallel curved mountain ridges forming a ribcage.
+- The "rib" mountain ranges sit in unnaturally regular, isolated parallel arcs that real tectonics do not produce, with repetitive procedural erosion textures across every ridge.
+- Several diffuse, glowing orange dots sit between the upper ribs (oversized and unnatural for orbital-scale lava vents or lights), and wispy cloud streaks flow off the skull like smoke.

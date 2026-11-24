@@ -1,0 +1,27 @@
+viewer: ap3
+model: gemini_4_carbon
+test: FULL
+image: master-x1 (full size)
+
+1. It is an orbital view of a fictional, continent-sized landmass shaped like a giant human skeleton lying across an Earth-like ocean.
+
+2. Judging by the planet's curved limb, cloud systems, and hurricane, the skeleton spans roughly 2,500–4,000 km (1,500–2,500 miles) from skull to toes, with the camera in orbit roughly 500–1,500 km above the ocean.
+
+3. It is closest to (a) a landmass seen from orbit (though synthetically rendered/illustrated rather than a real photo). Scale is given away by the curved planetary horizon with a thin blue atmosphere against black space (top left), a full synoptic spiral cyclone (bottom right), cloud decks drifting below and across the terrain, and broad solar sunglint on the ocean (top right).
+
+4. Distinct features and locations:
+- Planetary horizon and blue atmospheric rim: upper left against black space.
+- Skull landmass with fractured dome, two dark circular crater-lakes as eye sockets, and an open jaw of tooth-like islands: middle left.
+- Cluster of small circular craters/pits: at the neck/throat just right of the skull.
+- Raised upper arm ending in long finger-like peninsulas: extending up and right from the shoulder toward upper center.
+- Lower arm of reddish-brown coastal ridges: extending down and right below the ribcage.
+- Ribcage of curved mountain ridges enclosing a dark volcanic chest basin with a tiny glowing red lava vent: left-center.
+- Spine of jagged, snow-capped mountain peaks: running horizontally across the center.
+- Massive white circular volcanic/storm plume: just above the waist/pelvis in upper center-right.
+- White pelvic plateau with two dark hip-socket bays and branching blood-red rivers/lakes draining into a long red-and-ochre ocean sediment plume: center-right to right.
+- Extended straight leg ending in five long skeletal toe peninsulas: stretching right toward the sunglint.
+- Bent lower leg surrounded by greenish coastal shoals/phytoplankton swirls: bottom right-center.
+- Large spiral hurricane/cyclone: bottom right corner.
+- Ocean sunglint: upper right edge.
+
+5. Yes—beyond the impossible human-skeleton geology (complete with five-digit foot peninsulas and blood-like pelvic drainage), several scale cues look fake or miniature-like: vertical mountain relief on the skull, ribs, and bent knee is heavily exaggerated for orbital altitude (where real ranges look nearly flat); skull cracks and pelvic river channels are shaped like small-scale mud cracks or veins blown up to hundreds of kilometers wide; ocean surface ripples in the upper-right sunglint are too coarse for planetary scale; and the central white plume is nearly the size of the hurricane.

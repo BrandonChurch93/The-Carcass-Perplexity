@@ -1,0 +1,10 @@
+viewer: ag2
+model: claude_opus_5_5
+test: STATE
+image: f4-v8t15 (old body, baseline) (full size)
+
+1. A huge island shaped like a human body with a skull-like head, seen from orbit over the ocean.
+2. A gaunt, skeletal figure lying sprawled on its back, limbs splayed. It looks dead or flayed, with its chest cavity open (a lagoon with a cloud where the chest should be) and a raw red patch like exposed flesh or organs near the hips.
+3. Eerie, macabre, desolate.
+4. 4
+5. (a) A landmass seen from orbit. The curved horizon and black space at the top-left, the cloud systems and cyclone swirl, and the huge scale relative to the ocean all read as an orbital view. The surreal, AI-generated look also gives it a bit of (d).

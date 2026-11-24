@@ -1,0 +1,10 @@
+viewer: ba3
+model: gemini_4_carbon
+test: HEAD
+image: x2-f2 (full size)
+
+1. It looks like a satellite or high-altitude view of a volcanic island peninsula shaped like a giant skull.
+2. A screaming human skull tilted sideways, with crater lakes for eye sockets, a nasal cavity, a cracked forehead, and an open jaw with rows of teeth.
+3. At its depicted geographic scale, the frame looks roughly 25 to 50 km wide, viewed from orbital or near-space altitude (roughly 100 to 400 km high).
+4. Closest to (d) a painting or drawing (specifically a digital illustration or AI render imitating (a) orbital terrain), because the cloud streets, erosion ridges, and atmospheric haze mimic satellite imagery without tabletop depth-of-field cues, while the literal skull anatomy is clearly composed rather than real geology.
+5. Yes, several things look fake: the coastline forms evenly spaced upper and lower teeth around an open jaw, the forehead has a stylized branching crack above two eye-socket craters and a nasal cavity, and the upper-right landmass is covered in unnaturally uniform circular craters that look like AI or digital brushwork rather than natural terrain.

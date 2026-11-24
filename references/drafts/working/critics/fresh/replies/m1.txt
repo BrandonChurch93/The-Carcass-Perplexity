@@ -1,0 +1,10 @@
+viewer: m1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t19 (full size)
+
+1. An overhead view of a barren, cratered island or peninsula in dark blue water.
+2. A sideways skull: the two round craters read as eye sockets, the dark hollow as a nose, and the jagged channel as a mouth.
+3. My visual guess is tens of kilometers across (roughly 20-50 km), from perhaps 10-30 km up, but there's no reliable scale cue and altitude depends on the lens.
+4. (a) is the closest visual match: the shore shallows, offshore wave flecks, and broad lighting read like aerial terrain, even if stylized.
+5. The eye sockets are unusually neat and similar in size, the channel edges look like deliberate teeth, and the wrinkled terrain looks a little sculpted.

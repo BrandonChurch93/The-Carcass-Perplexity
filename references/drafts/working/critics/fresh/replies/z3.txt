@@ -1,0 +1,10 @@
+viewer: z3
+model: gemini_4_carbon
+test: HEAD
+image: reveal-f2-v5 (full size)
+
+1. It looks like a satellite photograph of an arid volcanic island or peninsula with two large circular craters surrounded by deep ocean water.
+2. Yes, a grinning skull or cartoon head turned on its side (rotated 90 degrees counterclockwise), with the two craters as eye sockets, the dark triangular basin as a nasal cavity, the narrow rock-lined channel as a row of teeth, and the landmass on the right as the neck.
+3. As depicted, the frame spans roughly 25 to 50 km (15 to 30 miles) across, seen from low Earth orbit at roughly 300 to 400 km altitude.
+4. Closest to (a) real terrain seen from orbit, because it has orbital-scale cumulus cloud streets, turquoise coastal shallows, sand-dune textures, and fine dendritic erosion channels rather than visible brushstrokes, macro blur, or physical craft materials.
+5. Yes, it looks fake or digitally synthesized: the skull pareidolia is far too anatomically complete to be natural (eyes, nose cavity, interlocking rock "teeth" along the strait, cranium, and neck), the terrain relief is way too steep and chunky compared to the tiny orbital clouds (giving the ridges a miniature, sculpted heightmap look), and the dark spots with reddish streaks on the right look unnatural.

@@ -1,0 +1,6 @@
+viewer: bb1
+model: gpt_6_2_sol
+test: SCALE
+image: x2-f1 (full size)
+
+1. It looks like an overhead view of a dark blue, nearly round crater lake in rugged gray terrain, with smaller pools nearby. 2. On an aerial reading, my rough guess is a frame around 1 km wide and a camera several hundred meters to 1 km up; there’s no reliable scale reference. 3. Closest to (a), aircraft/drone rather than orbit: the continuous ridges, shadowed slopes, and apparent water reflection give it aerial depth. 4. The unusually round, steep rim, repeated fine ridges, and large sharp cracks make it look a bit sculpted or miniature, but nothing decisively gives away its scale.

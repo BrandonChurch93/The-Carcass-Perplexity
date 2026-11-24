@@ -1,0 +1,21 @@
+viewer: ad3
+model: gemini_4_carbon
+test: FULL
+image: reveal-f4-v7 (full size)
+
+1. It looks like a continent-sized landmass shaped like a giant decaying human corpse or skeleton lying face-up in the ocean, viewed from space.
+
+2. Judging by Earth's curved horizon and weather systems, the figure is roughly 2,000 to 3,500 km (1,200 to 2,200 miles) head-to-toe, with the camera in Earth orbit roughly 800 to 2,000 km up.
+
+3. Closest to (a) a landmass seen from orbit: the curved planetary limb and thin blue atmosphere at top-left, the spiraling cyclone at bottom-right, ocean sunglint, and tiny cumulus cloud fields all establish orbital, continental scale despite it being synthetic artwork.
+
+4. Distinct features on the landmass:
+- **Head peninsula (far left):** Arid plateau with two giant circular craters as eye sockets—the upper one dry and tan, the lower one filled with a dark round lake.
+- **Neck isthmus (left):** Pale pockmarked plain with small dark craters and a faint grey plume drifting toward the upper-left.
+- **Ribcage and chest (left-center):** Curved parallel desert mountain ridges forming ribs around a black basaltic chest cavity with glowing orange lava fissures and a central turquoise channel along the spine.
+- **Abdominal sea (center):** Shallow turquoise inland bay dotted with small islands, shoals, and white cloud/steam plumes blowing right.
+- **Pelvic basin (center-right of torso):** Pale salt-flat or desert basin patterned with branching blood-red river channels resembling intestines or vessels.
+- **Left and right arms (extending toward top-center and bottom-center):** Jointed, snow-crested mountain peninsulas bending at elbows and ending in five-fingered coastal deltas ringed by turquoise reefs.
+- **Left and right legs (extending toward top-right and bottom-right):** Long mountainous peninsulas with snowy ridges along the thighs and shins, ending in upturned foot promontories with toe-like spits and reef shallows.
+
+5. Beyond the impossible human-skeleton anatomy, several scale cues clash and look fake or miniature: the turquoise fringing reefs, coastal sandbars, glowing orange lava cracks in the chest, smoke plumes, and braided red pelvic rivers are all scaled like features on a small island seen from an airplane rather than a continent spanning much of the planet's curvature, and the exaggerated terrain relief reads like a 3D heightmap render.

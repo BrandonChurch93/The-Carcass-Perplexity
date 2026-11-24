@@ -1,0 +1,10 @@
+viewer: h2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t6 (full size)
+
+1. An orbital-style view of an arid coastal landmass with a big circular blue crater lake ringed in orange, next to ocean with clouds.
+2. Yes — a fish or bird head (an eye = the round lake, the curled inlet like a mouth/gill); overall it reads like a creature's head facing left.
+3. It's styled as maybe 100–300 km across, camera ~300–400 km up (ISS-like), though the scale is internally inconsistent.
+4. Closest to (a) in intent — it mimics satellite/ISS photography of real terrain (clouds, reefs, shallow shelf water) — but it's most likely AI-generated or digitally made, not a real place.
+5. Yes: the "eye" lake has Grand Prismatic Spring-style rainbow rings, which only occur at ~100 m scale, yet it's shown kilometers wide; the dark-red craters in the gray strip look like pustules/holes; terrain texture is uniformly fractal/repetitive like crumpled paper; the clouds look like scattered specks/foam; the rivers/channels don't drain logically. Overall it looks synthetic.

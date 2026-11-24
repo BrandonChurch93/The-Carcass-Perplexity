@@ -1,0 +1,10 @@
+viewer: l3
+model: gemini_4_carbon
+test: HEAD
+image: pb2-t17 (full size)
+
+1. It looks like a satellite or high-altitude aerial photograph of an arid volcanic peninsula jutting into dark blue sea.
+2. Yes - a human skull turned sideways, with the rounded cranium on the left, two circular craters as eye sockets, a triangular depression as the nasal cavity, a jagged channel of rock blocks as teeth, and a neck extending to the right.
+3. Interpreting it as real terrain, the frame appears roughly 15-30 km wide, viewed from high altitude or low Earth orbit (roughly 50-400 km up).
+4. Closest to (a) real terrain seen from an aircraft or from orbit (or a digital/illustrated rendering imitating (d)/(a)), because the dendritic erosion channels, sand dunes, coastal turquoise shallows, and volcanic craters have the fine detail and lighting of orbital photography rather than a physical miniature or macro object - though if forced strictly between real vs. crafted among the options, it reads visually like (a) while showing signs of digital illustration/synthesis akin to (d).
+5. The skull anatomy is far too literal to be natural (matched eye craters, triangular nose pit, interlocking tooth-like rock blocks along a straight jaw cleft, and blood-vessel-like red streaks with dark pits on the neck), and the whitecaps on the open water are way too large for the apparent multi-kilometer scale of the mountains and dunes.

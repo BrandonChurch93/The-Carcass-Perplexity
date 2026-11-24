@@ -1,0 +1,6 @@
+viewer: viewer_a1
+model: gpt_6_2_sol
+test: GLANCE
+image: rv4-t10 (400 px)
+
+It looks like a giant human skeleton floating in the ocean.

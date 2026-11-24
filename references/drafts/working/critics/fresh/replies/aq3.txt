@@ -1,0 +1,10 @@
+viewer: aq3
+model: gemini_4_carbon
+test: STATE
+image: master-x1 (full size)
+
+1. It is an orbital view of a colossal human skeleton forming a continent-sized landmass in the ocean of an Earth-like planet.
+2. It is long dead and reduced to weathered rock-like bone, lying sprawled on its back with its jaw gaping open as if screaming and a dark red plume seeping from its pelvis into the water.
+3. Haunting, macabre, desolate.
+4. 4 — the gaping skull, decayed ribs, and blood-like runoff into the sea feel distinctly unsettling despite the distant space perspective.
+5. Closest to (a) a landmass seen from orbit, because the curved planetary horizon, thin blue atmospheric glow against black space, cloud cover, and large cyclone in the corner all establish a planetary orbital scale (rendered as digital illustration rather than a real photograph).

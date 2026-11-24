@@ -1,0 +1,14 @@
+viewer: bd3
+model: gemini_4_carbon
+test: HEAD
+image: x3 frame 2 (head plate e3-HD-t2) (tmp/test/IMG_2905.jpg = critic/fresh/seen/x3-f2.jpg)
+
+1. An orbital satellite view of a rugged volcanic island or peninsula with crater lakes surrounded by dark ocean and cloud streets.
+
+2. A skull or monster head turned on its side, with the two round craters as uneven eye sockets, the small dark lakes between them as nasal holes, and the jagged dark bay on the right as a gaping mouth (the wrinkled left half also resembles a brain).
+
+3. Roughly 40 to 80 km (25 to 50 miles) wide, viewed straight down from low Earth orbit at roughly 300 to 500 km (200 to 300 miles) altitude.
+
+4. Closest to (a) real terrain seen from orbit, because of the nadir perspective, oceanic cumulus cloud streets, coastal water-depth gradients, and dendritic mountain ridges—though its textures look digitally rendered or AI-illustrated, giving it traits of (d).
+
+5. Yes, several details look fake or geologically wrong: the dense cluster of round flat-floored pits on the rusty plain at right looks like lunar impact craters or bubbles in resin rather than Earth terrain; a river channel appears to run across the mountain divide and flow inward through the raised rim of the main volcanic cone; the clouds cast no clear shadows on the ocean despite strong directional lighting on the peaks; and the smeared white plume at upper right looks out of scale next to the tiny cumulus clouds on the left.

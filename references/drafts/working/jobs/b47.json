@@ -1,0 +1,22 @@
+[
+ {
+  "id": "cs-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cs-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/leg-crop-v6.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, lower-leg window of master v6 (x 1799, y 1215, 1672 px) re-photographed with only one thing changed: the band of evenly spaced white cloud dots across the knee, which one fresh viewer read as 'a straight, repetitive dotted line' and another as 'tiny popcorn clouds', replaced by a few ragged cloud patches; MODIS Lesser Sunda Islands as the standard; prompt cs-a; to be used inside a hand-drawn outline round the band only"
+ },
+ {
+  "id": "cs-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cs-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/leg-crop-v6.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, lower-leg window of master v6 (x 1799, y 1215, 1672 px) re-photographed with only one thing changed: the band of evenly spaced white cloud dots across the knee, which one fresh viewer read as 'a straight, repetitive dotted line' and another as 'tiny popcorn clouds', replaced by a few ragged cloud patches; MODIS Lesser Sunda Islands as the standard; prompt cs-a; to be used inside a hand-drawn outline round the band only"
+ }
+]

@@ -1,0 +1,6 @@
+viewer: l1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t17 (full size)
+
+1. A bird's-eye view of a rocky desert coastline with two huge craters, one filled with blue water. 2. A skull lying sideways: the craters are eyes, the middle notch is a nose, and the channel looks like a toothy mouth. 3. First impression: perhaps 10-20 km across, camera several km up; very uncertain without scale cues. 4. Closest to (a), especially an aircraft view: the turquoise shallows, water flecks, and detailed relief read like aerial photography. 5. The very round eye craters and toothlike edges of the channel look suspiciously arranged; the rock texture also looks unusually uniform.

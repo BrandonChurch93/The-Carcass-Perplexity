@@ -1,0 +1,28 @@
+viewer: viewer_f3
+model: gemini_4_carbon
+test: FULL
+image: rv4-t23 (full size)
+
+1. It is an orbital-style view of a fictional continent shaped like a giant supine human skeleton or corpse lying in an ocean.
+
+2. Roughly 2,000 to 4,000 km long (continent-sized), seen from a camera in low-to-medium orbit several hundred kilometers above the planet.
+
+3. Closest to (a) a landmass seen from orbit (rendered as digital art/matte painting): the curved planetary horizon with blue atmospheric glow and black space at upper left, plus the synoptic cyclone spiral at bottom right and cloud decks over the ocean, establish orbital scale.
+
+4. Distinct features and locations:
+- Curved planetary limb and space: upper-left corner.
+- Skull landmass with snow-capped cranium and circular blue crater-lake eye socket: far left.
+- Chain of dark red/black volcanic vents with a long gray smoke plume drifting north: along the neck and throat.
+- Ribcage of parallel curved mountain ridges surrounding a dark volcanic chest basin: upper torso.
+- Glowing orange lava fissures ("heart"): upper half of the dark chest basin.
+- Turquoise inland sea/lagoon with a narrow channel draining upward into the ocean: center torso/abdomen.
+- Giant anvil/cumulonimbus storm cloud along the central spine ridge: middle of the inland sea.
+- Pale pinkish-tan pelvic basin with winding blood-red river canyons: center-right (hips/pelvis).
+- Two arms ending in five-fingered peninsulas and two legs ending in five-toed peninsulas, all edged by turquoise shoals: upper/lower left-center and right.
+- Large swirling white cyclone/hurricane: bottom-right ocean.
+
+5. Yes—beyond the literal human anatomy, several details break orbital scale and look painted or small-scale:
+- The central anvil cloud is a single local thunderstorm scaled to look hundreds of kilometers tall and wide.
+- The neck volcano smoke plume looks like a small aerial smoke trail rather than an orbital ash cloud.
+- The turquoise shallows around the fingers and toes, the wide lava cracks in the chest, and the thick red rivers in the pelvis have the proportions of tiny sandbars and close-up aerial textures blown up to continental size.
+- The perspective mixes a strongly curved horizon in the upper-left corner with a nearly flat top-down view across the body.

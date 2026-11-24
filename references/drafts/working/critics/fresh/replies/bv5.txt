@@ -1,0 +1,19 @@
+viewer: bv5
+model: claude_opus_5_5
+test: FULL
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. A continent shaped like a giant human skeleton lying in an ocean, seen from orbit (looks like digital/AI art).
+2. Continent-scale: a few thousand km head to foot. The camera is in low Earth orbit, a few hundred km up, looking down at an angle (the curve of the Earth and black space show at top left).
+3. (a) A landmass seen from orbit. Scale cues: the curved horizon with a blue atmosphere line, a whole cyclone spiral at bottom right that is smaller than the limbs, cloud streets scattered across the ocean, and sun glint at top right.
+4. Features:
+- Skull on the far left, with a dark crater or lake as the eye socket and brown mountainous terrain.
+- Ribcage in the center-left, made of mountain ridges with brown basins between them. There's a small orange dot (volcano or fire?) among the upper ribs.
+- Arms: one runs up and to the top center, ending in finger-like ridges. The other runs down to bottom center, also ending in a fringed hand.
+- Spine/waist gap in the center: a white cloud or plume mass, maybe a smoke or volcanic plume, between the ribcage and the pelvis.
+- Pelvis center-right: a white (snowy or salt) plateau with red river-like branching veins and a dark hole like a hip socket.
+- Legs: one extends right to a foot at upper right, the other bends down to a foot at lower right.
+- Reddish-brown sediment or algae plumes stain the water right of the pelvis. Turquoise shallows outline the whole shape.
+- Hurricane/cyclone at the bottom right corner.
+- Earth's limb, atmosphere and space at top left. Sunglint at top right.
+5. Yes. The land is anatomically a skeleton, which is impossible, and the "spine" is replaced by a cloud. The red veins look like blood. The cyclone is oddly small compared to the landmass, and the clouds are uniformly textured. Overall it looks AI-generated or painted rather than a real photo, but it is drawn at orbital scale, not as a small model.

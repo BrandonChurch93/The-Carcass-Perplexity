@@ -1,0 +1,6 @@
+viewer: bi3
+model: gemini_4_carbon
+test: GLANCE
+image: x4 frame 4 at 400 px (final set) (tmp/test/IMG_1731.jpg = critic/fresh/seen/x4-f4-400px.jpg)
+
+This is a picture of a giant human skeleton lying across the Earth's ocean as seen from space.

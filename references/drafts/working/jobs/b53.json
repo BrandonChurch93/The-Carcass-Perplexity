@@ -1,0 +1,134 @@
+[
+ {
+  "id": "cx9-M00-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M00",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M00-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M00 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M10-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M10",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M10-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M10 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M20-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M20",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M20-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M20 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M30-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M30",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M30-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M30 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M01-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M01",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M01-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M01 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M02-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M02",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M02-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M02 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M03-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M03",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M03-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M03 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M13-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M13",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M13-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M13 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "cx9-M23-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M23",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M23-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M23 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-M33-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M33",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M33-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M33 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-M31-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M31",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M31-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M31 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "cx9-M32-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxM-M32",
+  "refs": [
+   "/home/user/workspace/r3/pull/ext-M32-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "finer-grain plate for the border of the wider reveal frame: window M32 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ }
+]

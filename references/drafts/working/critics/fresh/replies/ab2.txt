@@ -1,0 +1,10 @@
+viewer: ab2
+model: claude_opus_5_5
+test: FULL
+image: reveal-f4-v6 (full size)
+
+1. An orbital view of a continent shaped like a sprawled human figure/skeleton (skull with two crater "eyes", ribcage, arms and legs) in the ocean.
+2. Appears continent-scale, roughly several thousand km head to foot; camera is in low Earth orbit (ISS-like altitude, a few hundred km), looking obliquely down.
+3. (a) landmass from orbit. Scale cues: Earth's curved limb and black space at top-left, a cyclone spiral at bottom-right, cloud fields and cloud streets much smaller than the landmass, sun glint on ocean at right, mountain ranges along limbs.
+4. Features: skull at left with two circular craters/crater lakes as eyes (upper one dry, lower one dark/lava-like) and a mouth-like inlet; neck isthmus; dark burned/volcanic area with glowing orange lines (fires/lava) at upper chest left of center; a turquoise shallow lagoon/sea in the chest center with clouds/smoke over it; ridged "rib" mountain ranges radiating above and below the chest; a reddish salt-flat/playa with branching pattern (heart/organ-like) right of center; two arms going up-left (hand with finger peninsulas at top center) and down (hand at bottom center); two legs extending right, feet at upper right and lower right with reef shallows; turquoise reef fringes along coasts; smoke/dust plume trailing from the head-neck area to upper left; cyclone at bottom right; Earth limb top-left.
+5. Yes: the anthropomorphic skeleton shape is impossible naturally; it looks AI-generated. Fingers/toes as tidy peninsulas, symmetric rib ridges, perfectly round crater eyes, and the "heart" playa are too on-the-nose. Also the landmass is huge relative to the cyclone yet the surface detail looks like a small sculpted/relief model; cloud scale is inconsistent (tiny popcorn clouds vs. giant land).

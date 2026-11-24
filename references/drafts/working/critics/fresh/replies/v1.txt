@@ -1,0 +1,6 @@
+viewer: v1
+model: gpt_6_2_sol
+test: SCALE
+image: reveal-f3-v4 (full size)
+
+1. It looks like a top-down view of a volcanic coastline arranged into a human skeleton, with crater eyes and a rib cage. 2. It reads as roughly tens to perhaps 100 km wide and viewed from tens to hundreds of km up, but there’s no dependable scale or camera-height cue. 3. Closest visually to (a), an orbital terrain view, because of the ocean, clouds, coastal shallows and relief; likely a stylized image rather than an actual photograph. 4. The skull-like paired craters and jaw, regularly repeated ribs and glowing lava lines look deliberately arranged; there are no clear miniature cues.

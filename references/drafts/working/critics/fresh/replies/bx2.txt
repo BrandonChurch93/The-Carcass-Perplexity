@@ -1,0 +1,12 @@
+viewer: bx2
+model: claude_opus_5_5
+test: PLACES
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+Image is a skeleton-shaped continent lying sideways (skull left, legs right), 1429x804.
+1. Tidal strait between rib rows: Found, roughly. A dark water channel runs along the spine between the upper and lower rib rows, about 40% W, 46% H. I see no clear tidal features, just a channel.
+2. Lava glow in chest: Found. A tiny orange dot among the upper ribs, about 37.5% W, 39% H.
+3. Airways near throat/mouth: Not clearly found. The skull has some dark patches, but I can't pick out distinct breathing holes at the throat or mouth.
+4. Red salt flats: Found. Branching dark-red marks on a bright white flat in the pelvis area, about 63% W, 47% H.
+5. Storm on spine ridge: Found. A white swirling cloud mass sits on the lower spine between ribs and pelvis, about 52.5% W, 46% H. (There's a separate big hurricane over the ocean at bottom right, about 92% W, 87% H, which is not on the spine.)
+6. Round lake in eye socket: Found. A dark, round, rimmed pool in the skull, about 20% W, 47% H. (There's also a dark round hole on the pelvis at about 65% W, 42% H.)

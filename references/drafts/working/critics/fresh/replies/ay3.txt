@@ -1,0 +1,11 @@
+viewer: ay3
+model: gemini_4_carbon
+test: PLACES
+image: x2-f4 (full size)
+
+1. Found: ~41% from left, ~46% from top (spanning ~35%–46% left). A narrow ocean channel with pale turquoise tidal/current streaks running horizontally between the upper and lower rows of ribs.
+2. Found: ~38% from left, ~40% from top. A small bright orange-red glowing spot between two upper ribs in the chest (with a fainter tiny orange speck just below it at ~38% left, ~43% top).
+3. Found: ~30% from left, ~42% from top. A cluster of dark, reddish-rimmed circular pits/craters behind the open jaw in the throat area, with wispy white vapor drifting upward from them.
+4. Found: ~63% from left, ~47% from top. A bright white salt-flat basin in the pelvis cut by branching blood-red channels that trail rightward into the ocean.
+5. Found: ~54% from left, ~46% from top. A dense, billowing white storm cloud sitting directly on the narrow spinal ridge between the ribcage and pelvis, with wind streaks blowing down-left.
+6. Found: ~19% from left, ~47% from top. A dark, round lake rimmed by a brownish shore filling the skull's lower eye socket (with a second, slightly mistier dark round basin in the upper eye socket at ~20% left, ~38% top).

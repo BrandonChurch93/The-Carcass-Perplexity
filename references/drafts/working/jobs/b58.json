@@ -1,0 +1,35 @@
+[
+ {
+  "id": "pb1d-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-d",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x2-crop.png",
+   "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+  ],
+  "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss42-richat.jpg"
+ },
+ {
+  "id": "pb1d-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-d",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x2-crop.png",
+   "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss47-brandberg.jpg"
+ },
+ {
+  "id": "pb1d-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb1-d",
+  "refs": [
+   "/home/user/workspace/r3/pull/f1-x2-crop.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+  ],
+  "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss42-richat.jpg + orb-iss47-brandberg.jpg"
+ }
+]

@@ -1,0 +1,10 @@
+viewer: bg2
+model: claude_opus_5_5
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t4 (tmp/test/IMG_4756.jpg = critic/fresh/seen/x3t4-f2.jpg)
+
+1. An orbital-style view of an eroded island with crater lakes, surrounded by dark ocean and scattered clouds.
+2. Yes, a face or an eye: the round crater lake reads as an eye, and the whole landmass looks a bit like a skull or creature head facing left.
+3. It looks roughly 50–150 km across, shot from about 300–400 km up (ISS-like altitude).
+4. (a) real terrain seen from orbit. The clouds, ocean texture, dendritic drainage and crater lakes all read as satellite or ISS imagery, though the look is overly stylized.
+5. Yes. The drainage ridges are too uniform and fractal-like, almost brushstroke-textured, like a fractal render. The crater rims are suspiciously perfect, the clouds look like noise speckle, and the reddish cratered zone looks procedurally generated. Overall it reads as AI-generated or a render rather than a real photo.

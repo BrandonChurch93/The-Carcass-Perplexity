@@ -1,0 +1,11 @@
+viewer: bx3
+model: gemini_4_carbon
+test: PLACES
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. Tidal strait between two rows of ribs — Found at about 40% from left, 46% from top (spanning 33%–46% from left). A narrow horizontal water channel with pale turquoise branching tidal currents separating the upper and lower rib rows.
+2. Glow of lava in the chest — Found at about 37% from left, 39% from top. A small bright orange-red spot glowing between ridges in the upper ribcage.
+3. Airways near the throat and mouth — Found at about 29% from left, 42% from top. A cluster of dark rounded holes in reddish throat terrain next to the toothed mouth bay, with white wispy plumes streaming from the nearby nasal and throat openings (around 26% from left, 36% from top).
+4. Red salt flats — Found at about 63% from left, 48% from top. A bright white flat basin inside the pelvis laced with branching red channels that trail a reddish plume rightward into the ocean.
+5. Storm on a ridge of spine — Found at about 53% from left, 46% from top. A dense, elongated mass of billowy white storm clouds sitting directly along the narrow spinal ridge between the ribs and pelvis.
+6. Round lake in an eye socket — Found at about 20% from left, 46% from top. A dark circular lake enclosed by pale bony ridges in the lower eye socket (with a smaller dark oval lake in the upper socket at about 21% from left, 42% from top).

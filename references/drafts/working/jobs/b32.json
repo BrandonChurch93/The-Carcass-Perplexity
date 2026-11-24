@@ -1,0 +1,68 @@
+[
+ {
+  "id": "rv4-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v3 (fuller body, rougher coast), prompt c (scale stated, flesh turned to land), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t8",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "same as t7, second take"
+ },
+ {
+  "id": "rv4-t9",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-c",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v3, prompt c, Apollo 17 whole Earth + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t10",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v3, prompt d (terrain language), Gemini 11 + MODIS Arabia"
+ },
+ {
+  "id": "rv4-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal redo, guide v3, prompt d, Gemini 11 + MODIS Baja"
+ },
+ {
+  "id": "rv4-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "rv4-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/guide-f4-v3.png",
+   "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "reveal redo, guide v3, prompt d, Apollo 17 + MODIS Arabia"
+ }
+]

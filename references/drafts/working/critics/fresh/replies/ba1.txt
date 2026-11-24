@@ -1,0 +1,6 @@
+viewer: ba1
+model: gpt_6_2_sol
+test: HEAD
+image: x2-f2 (full size)
+
+1. An overhead view of a craggy, cratered island in deep blue water. 2. A skull tilted sideways, with hollow eyes and a wide-open, toothy jaw. 3. My first impression is about 100 km across, seen from roughly 300 km up; there’s no clear scale reference. 4. (a) It reads like orbital terrain because of the wispy clouds, branching ridges, and shallow-water color along the coast. 5. The two rows of evenly spaced rock ‘teeth’ and the way the craters line up as a face look designed; nothing clearly looks miniature.

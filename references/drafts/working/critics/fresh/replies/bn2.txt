@@ -1,0 +1,10 @@
+viewer: bn2
+model: claude_opus_5_5
+test: HEAD
+image: x4 frame 2 (final set) (tmp/test/IMG_7890.jpg = critic/fresh/seen/x4-f2.jpg)
+
+1. An orbital-style view of an eroded volcanic island with a dark circular crater lake, surrounded by ocean and scattered clouds.
+2. Yes — a face/eye: the round crater reads as an eye (with smaller dark pits like a second eye/nostril), and the whole landmass looks a bit like a skull or a creature's head facing left; the white streaks upper right look like swirling hair/smoke.
+3. Roughly 50–150 km across; camera at orbital altitude, ~300–400 km (ISS-like), though the clouds at left suggest it could also be a high-altitude view of a smaller ~20–40 km area.
+4. Closest to (a) real terrain from orbit in intended look — dendritic drainage, crater lake, ocean texture and clouds are satellite-like — but it reads as computer-generated/fractal rather than a real place, so arguably (d)-adjacent digital art.
+5. Yes: the ridges are uniformly fractal/self-similar (procedural-noise look) with no scale cues like roads or towns; the reddish pitted area at right has too-regular round holes like bubbles or foam; the coastline is frilly like lichen/frost; white streaks at top-right look like smeared paint; clouds at left look like grainy noise/foam on water rather than real clouds. Overall it looks AI-generated, not a real location.

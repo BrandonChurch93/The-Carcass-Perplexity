@@ -1,0 +1,10 @@
+viewer: p2
+model: claude_opus_5_5
+test: FULL
+image: reveal-f4 (full size)
+
+1. A giant skeleton/human-body-shaped continent lying spread-eagle in the ocean, seen from space (looks AI-generated).
+2. Roughly thousands of km across (continent-scale, ~2,000-4,000 km head to feet); camera is in low Earth orbit / high altitude, looking down obliquely - Earth's curved limb and black space visible top-left.
+3. (a) Landmass seen from orbit. Scale cues: Earth's curvature and space at top-left corner, a cyclone/hurricane spiral at bottom-right, large cloud fields and cloud streets over the ocean, sunglint on the sea at right, shallow turquoise shelf around the coasts.
+4. Features: skull-shaped head at far left with two crater-lake "eye sockets" (upper one dry crater, lower one dark water-filled); neck strip linking to the torso; ribcage of parallel ridges/mountain ranges above and below the center-left; dark forested/volcanic "chest cavity" in the middle of the ribs; a white smoke/steam plume (volcanic eruption) streaming from the torso center toward the right; a turquoise shallow lagoon in the mid-torso; a reddish-pink salt-flat/basin with branching dark-red channels (like a heart/organ or veins) in the pelvis/abdomen area right of center; two arms - upper-left arm reaching up to a hand at top-center, lower-left arm reaching down to a hand at bottom-center; two legs extending right - upper leg to a foot at top-right, lower leg to a foot at lower-right; snowy/white ridge lines along limbs; inland seas between the limbs; a dust/smoke haze streak at upper-left; a cloud patch between the lower arm and lower leg; hurricane at bottom-right; Earth limb top-left.
+5. Yes: the land is an anatomically shaped skeleton/body with fingers and toes, which is impossible geology; the eye-socket craters, rib ridges and red vein-like basin are too neat; the plume is oddly bright and puffy for its scale; overall it reads as a digital/AI fantasy render, not a real photo or small model.

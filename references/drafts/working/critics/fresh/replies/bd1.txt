@@ -1,0 +1,10 @@
+viewer: bd1
+model: gpt_6_2_sol
+test: HEAD
+image: x3 frame 2 (head plate e3-HD-t2) (tmp/test/IMG_2905.jpg = critic/fresh/seen/x3-f2.jpg)
+
+1. My first thought was a satellite photo of a rugged volcanic coastline with crater lakes.
+2. Loosely, a reptile’s head facing left, with the large round lake as its eye.
+3. By impression, a few hundred kilometers across, from a few hundred kilometers up; there’s no reliable scale cue.
+4. (a) Orbit: the broad coastline, branching ridges, and cloud streaks make it read like a satellite view.
+5. The near-perfect round basins and the uniformly wrinkled, almost etched texture look stylized, but not obviously miniature.

@@ -1,0 +1,10 @@
+viewer: ap2
+model: claude_opus_5_5
+test: FULL
+image: master-x1 (full size)
+
+1. An orbital view of Earth with a giant skeleton-shaped continent (skull, ribcage, spine, arm with a clawed hand) lying in the ocean.
+2. It's meant to read as continent-scale, roughly 2,000–5,000 km long. The camera is in low Earth orbit, a few hundred km up, looking obliquely across the planet (curved horizon and black space at top left).
+3. (a) Landmass from orbit. Giveaways: the curved limb with a blue atmosphere band, black space, cloud fields over the ocean, a hurricane spiral at bottom right, a towering storm/volcanic plume, and sun glint on the sea at right.
+4. Features I can pick out. Skull on the left, with two big round eye-socket craters, a nasal cavity and a toothed jaw opening into a bay. A crack across the forehead. Ribcage in the center-left: curved rib ridges around a dark enclosed basin, plus a small orange glowing spot (lava or a fire) inside. A spine/neck ridge running up from the skull at top-center, ending in branching finger-like ridges. A brown tail or limb trailing to the lower-left. Pelvis/hip region at center-right with round craters and a red branching river or vein pattern. A long arm reaching right, ending in a hand with fingers near the sun glint. A bent leg or wing-like ridge curving down at lower-right. A white explosive cloud/plume (looks like an eruption or thunderstorm) above the hip. Red/rust and green sediment or algae plumes in the water to the right and around the coasts. A hurricane at bottom right. Scattered cloud streaks everywhere and sun glare at top right.
+5. Yes, it looks fake. A skeleton-shaped continent isn't natural, and it's obviously AI-generated or digital art. The anatomy is muddled (limbs and ribs don't connect coherently). The landmass is too big relative to the visible curvature and the cloud/storm sizes don't match. The "bones" look sculpted rather than geological. It doesn't look tabletop or small-scale, though; the scale cues all say orbital.

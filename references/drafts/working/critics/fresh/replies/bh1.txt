@@ -1,0 +1,6 @@
+viewer: bh1
+model: gpt_6_2_sol
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t5 (tmp/test/IMG_6203.jpg = critic/fresh/seen/x3t5-f2.jpg)
+
+1. My first thought was a satellite view of a rocky island riddled with crater lakes. 2. A skull tipped sideways: two dark eye sockets and a wide, jagged mouth. 3. It reads as a few hundred kilometers across from a camera a few hundred kilometers up, though there’s no clear scale cue. 4. (a) Orbit, visually: the overhead view, cloud streaks, and branching ridges sell it. 5. The clustered, near-perfect circular holes and uniformly fine, etched texture make the terrain feel constructed.

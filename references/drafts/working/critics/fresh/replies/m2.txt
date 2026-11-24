@@ -1,0 +1,10 @@
+viewer: m2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t19 (full size)
+
+1. An aerial/orbital view of an arid desert island with two volcanic craters, one dry and one water-filled, next to a mainland peninsula.
+2. Yes: a skull or face. The two craters look like eyes (or a face turned sideways), and the island plus the coastline reads a bit like a head on a neck, or an owl/face looking up.
+3. Roughly 20-40 km across the frame. The camera looks like it's in high orbit or on a very high aircraft, around 10-400 km up (it feels like an ISS-style photo, about 400 km).
+4. (a) Real terrain from orbit or a high aircraft. The ocean texture with sun glints and swell, turquoise shallows along the shore, dust haze drifting off the mainland, and fractal erosion patterns all read as planetary scale.
+5. Somewhat. The craters are unusually perfect and evenly placed, which makes it look made up or AI-generated. The erosion texture looks slightly painterly or over-sharpened. The red-brown streaks and dark dots on the right look odd, almost like stains. The narrow channel looks too tidy. Nothing reads as tabletop-small, but the whole thing feels a little too composed to be real.

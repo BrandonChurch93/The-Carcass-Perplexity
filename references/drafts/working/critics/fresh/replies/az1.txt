@@ -1,0 +1,6 @@
+viewer: az1
+model: gpt_6_2_sol
+test: SCALE
+image: x2-f3 (full size)
+
+1. A top-down view of a rocky skull and rib cage shaped like an island chain in dark ocean. 2. It reads as tens of kilometers across, seen from kilometers to tens of kilometers up, but there’s no reliable scale cue or actual camera height. 3. Closest to (d), a digital illustration/render styled as an aerial terrain image; the near-perfect anatomy looks intentionally designed. 4. The round eye sockets, evenly spaced teeth and ribs, and wispy smoke/glowing spots make it look fabricated, not specifically miniature.

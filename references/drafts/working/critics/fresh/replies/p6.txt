@@ -1,0 +1,10 @@
+viewer: p6
+model: claude_sonnet_5_5
+test: FULL
+image: reveal-f4 (full size)
+
+1. A human-shaped (skeletal/corpse-like) island with a skull head, ribs and four limbs in the ocean, photographed from orbit.
+2. About 1,000+ km across if taken literally (continent-sized). The camera is in low Earth orbit (space-station-like view), with the planet's curved horizon and black space at top-left.
+3. Closest to (a) a landmass seen from orbit, in how it is rendered. It is almost certainly a fake or AI-generated image. Scale cues: the curved horizon and atmosphere limb, a hurricane-like cloud spiral at bottom-right, cloud streaks and sun glint on the ocean, and turquoise shallows around the coast. But the shape is a human body, so it is not a real place.
+4. Skull-shaped head with two hollow dark lakes/craters as eyes, at the far left. Neck at left-centre, pinkish. Ribcage with rib-like ridges in the middle-left, above and below a dark volcanic or forested spine/chest area. A white steam or smoke plume and turquoise lagoon at the centre. A reddish-pink patch with vein-like red channels on the abdomen/torso right of centre. Left arm (upper) rises to the top centre, ending in a hand with fingers at the top. Right arm (upper right) goes to a hand or foot at the top right. Lower right limb goes to a foot or hand at the right edge. Lower-left limb goes to a hand at the bottom centre. A cloud wisp over the sea below the torso. A hurricane spiral at bottom-right. Faint haze or smoke streak at upper left. Turquoise reef shallows ring the whole coast.
+5. Yes. The anatomy (skull, ribs, fingers) is far too exact for natural geology. The coastline is oddly smooth and consistent. The reddish veins look like flesh, and the proportions are symmetrical and illustrative. The textures look AI-rendered. The mix of a realistic ISS-style photo with an impossible body-shaped landmass shows it is a composite or AI image, not a real photo.

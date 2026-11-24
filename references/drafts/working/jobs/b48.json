@@ -1,0 +1,68 @@
+[
+ {
+  "id": "bl-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-g",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become one thunderstorm standing against its lower flank; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-g; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t14",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-g",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become one thunderstorm standing against its lower flank; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-g; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t15",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-h",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become a sea of cloud dammed by the range with a thunderstorm standing out of it; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-h; to be used for the inland sea only"
+ },
+ {
+  "id": "bl-t16",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-h",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become a sea of cloud dammed by the range with a thunderstorm standing out of it; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-h; to be used for the inland sea only"
+ },
+ {
+  "id": "sm-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "sm-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/seam-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frames 2 and 3: a window at frame-2 scale across the right edge of frame 2 (master x 676 to 1536, y 1145 to 1629; left half = right half of the frame-2 plate, right half = the master enlarged 1.944x) re-photographed to remove the straight vertical join that a critic found at the right edge of frame 2 inside frame 3 and to sharpen the right half; ISS Sinai + MODIS Baja as standards; prompt sm-a"
+ },
+ {
+  "id": "sm-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "sm-a",
+  "refs": [
+   "/home/user/workspace/r3/pull/seam-crop-v7.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frames 2 and 3: a window at frame-2 scale across the right edge of frame 2 (master x 676 to 1536, y 1145 to 1629; left half = right half of the frame-2 plate, right half = the master enlarged 1.944x) re-photographed to remove the straight vertical join that a critic found at the right edge of frame 2 inside frame 3 and to sharpen the right half; ISS Sinai + MODIS Baja as standards; prompt sm-a"
+ }
+]

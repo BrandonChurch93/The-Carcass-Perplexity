@@ -1,0 +1,16 @@
+viewer: bh2
+model: claude_opus_5_5
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t5 (tmp/test/IMG_6203.jpg = critic/fresh/seen/x3t5-f2.jpg)
+
+1. An orbital-style view of a pale, eroded island with crater lakes in a dark ocean, partly under cloud, though it reads as AI-generated or fractal art.
+2. It looks like a face or skull: the round crater lake is an eye, and the larger lagoon on the right is a gaping mouth or a second eye socket. It also looks a bit like a fish or bird head facing left.
+3. It's meant to look roughly 50–150 km across, as if seen from about 300–400 km up (ISS altitude), going by the cloud texture.
+4. It's closest to (a), real terrain from orbit, because of the clouds, ocean color, drainage patterns and lighting. But it has a strong rendered or fractal quality, so it may be closer to (d), a digital painting or generated image.
+5. Yes, several things look off:
+- The coastlines are fractal and self-similar, like Mandelbrot edges, with too-regular spiky fringes around the lagoon.
+- The ridges are uniformly crinkled at every scale, like an embossing filter.
+- The perfect circular holes clustered on the right look more like bubbles or a sponge than real craters.
+- The clouds sit as flat speckle with no shadows.
+- The crater lake's rim is too clean.
+Overall it looks synthetic, not small-scale.

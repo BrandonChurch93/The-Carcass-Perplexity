@@ -1,0 +1,59 @@
+[
+ {
+  "id": "e2-HD-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-HD",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-HD-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window HD of gen/cx-e-t2.png (x 28, y 276 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; head, centred on the lake; frame 2 of the pull-back lies wholly inside it; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg"
+ },
+ {
+  "id": "e2-ST-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-ST",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-ST-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window ST of gen/cx-e-t2.png (x 790, y 281 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; backbone, storm, hips and salt flat; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg + orb-modis-tstorm-phil-crop.jpg + orb-modis-tstorm-hainan.jpg"
+ },
+ {
+  "id": "e2-WG-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-WG",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-WG-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window WG of gen/cx-e-t2.png (x 1115, y 130 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; straight leg from knee to foot; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-WF-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-WF",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-WF-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window WF of gen/cx-e-t2.png (x 1040, y 520 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; bent leg from below the knee to the foot; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ },
+ {
+  "id": "e2-WA-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cxW-WA",
+  "refs": [
+   "/home/user/workspace/r3/pull/e2-WA-crop.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+  ],
+  "what": "fine plate for the second wide carcass frame: window WA of gen/cx-e-t2.png (x 602, y 594 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; lower arm from the elbow, and its hand; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg"
+ }
+]

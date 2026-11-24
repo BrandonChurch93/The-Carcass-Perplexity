@@ -1,0 +1,6 @@
+viewer: bk1
+model: gpt_6_2_sol
+test: STATE
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. It looks like a gigantic human skeleton made of islands in an ocean. 2. It lies sprawled on its back, mouth open and limbs bent at odd angles. 3. Eerie, desolate, uncanny. 4. 4/5. 5. (a) A landmass seen from orbit: the curved horizon, thin blue atmosphere and spiraling storm sell the planetary scale.

@@ -1,0 +1,10 @@
+viewer: ak2
+model: claude_opus_5_5
+test: STATE
+image: cx-t6 (carcass, hide on about half) (full size)
+
+1. A giant skeleton shaped like a continent lying in the ocean, seen from orbit with Earth's curve and a hurricane visible.
+2. A human skeleton lying sprawled on its back with its arms flung out, dead and decaying. It looks like it's being broken down into land, with a volcano glowing in its ribcage, red stains seeping into the water and clouds drifting over it.
+3. Ominous, apocalyptic, awe-inspiring.
+4. 4. It's disturbing, though the beauty of the scene softens it.
+5. (a) A landmass seen from orbit, because of the visible curve of the planet, the cloud systems, the hurricane in the corner, the sunlit ocean and the continental scale.

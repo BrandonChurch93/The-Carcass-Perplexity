@@ -1,0 +1,10 @@
+viewer: aj1
+model: gpt_6_2_sol
+test: FULL
+image: cx-t6 (carcass, hide on about half) (full size)
+
+1. My first thought was a continent-sized human skeleton made of rocky islands, lying in an ocean.
+2. It looks on the order of a few thousand kilometers from skull to feet, viewed obliquely from orbit; no exact scale is measurable.
+3. (a) in depicted scale: the curved blue atmospheric rim and black space at upper left, weather systems including a cyclone at lower right, and broad ocean/sun glint sell orbit. It still looks like digital fantasy art.
+4. Far left: cracked skull with two deep eye sockets, nasal opening, open jaw and teeth. Center-left: neck/backbone, shoulder-like ridges, curved ribs around a flooded chest, red pitted terrain and an orange lava-like crater with a plume in the upper ribs. Upper left: bent arm with paired forearm ridges and spread finger islets. Lower left to bottom center: second bent arm and a broken-looking hand/finger chain. Across center: vertebra-like rock chain into a cloud-obscured pelvis. Center-right: broad perforated pelvis with dark basins, reddish channels and green/brown swirls in the surrounding shallows. Upper right: one bent leg with a prominent knee, two shin ridges, and a toe-like island chain at the far edge. Lower right: second bent leg tapering into a fragmented foot-like chain. Around it: patches and bands of cloud, warm glint at upper right, partial cyclone at lower right.
+5. The skull, paired limbs, rib cage and joints line up too anatomically to read as accidental geology, and there are lava-like highlights inside the ribs. It looks fabricated rather than miniature: I don’t see tabletop cues.

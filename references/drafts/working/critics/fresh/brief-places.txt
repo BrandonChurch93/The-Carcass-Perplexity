@@ -1,0 +1,8 @@
+One image file is attached. Open it and look at it. Do not research anything or use any tool except opening the image. Then send your answers to /root with message_agent. Keep each answer short.
+The picture shows a continent seen from orbit. Six places are said to be on it. For each one, say whether you can find it. If you can, give its position as a percentage of the image width measured from the left edge and a percentage of the image height measured from the top edge, and say in a few words what you see there. If you cannot find one, say so. Do not guess.
+1. A tidal strait between two rows of ribs.
+2. A glow of lava in the chest.
+3. Airways (breathing holes) near the throat and mouth.
+4. Red salt flats.
+5. A storm on a ridge of spine.
+6. A round lake in an eye socket.

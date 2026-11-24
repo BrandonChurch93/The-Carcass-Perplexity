@@ -1,0 +1,6 @@
+viewer: ax1
+model: gpt_6_2_sol
+test: STATE
+image: x2-f4 (full size)
+
+1. A gigantic human skeleton made of rocky islands in a dark ocean, seen from space. 2. It lies sprawled on its back, jaw open, with one knee bent. 3. Eerie, desolate, ominous. 4. 4/5. 5. (a) A landmass seen from orbit: the curved blue horizon, cloud bands, and spiral storm make it feel planetary.

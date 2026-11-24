@@ -1,0 +1,9 @@
+viewer: bs3
+model: gemini_4_carbon
+test: SCALE
+image: x4 master, frame-3 window D (ext px x0 0, y0 238, w 1000; about 2,450 km wide STATED) = final frame 3 (set x5) (tmp/test/IMG_2716.jpg = critic/fresh/seen/x4-f3-candD.jpg = critic/fresh/seen/x5-f3.jpg)
+
+1. It is a digital or CGI orbital-style illustration of a fictional volcanic island archipelago shaped like a human skull, arms, and ribcage.
+2. There is no real physical camera because it is synthetic artwork, though the depicted planetary scene represents an area roughly 500 to 1,500 km wide seen from low orbit (around 300 to 600 km high).
+3. Closest to (d) a painting or drawing (specifically digital/CGI or AI-generated illustration), because the coastlines, craters, and mountain ranges are deliberately composed into an anatomical skeleton rather than real terrain or a photographed physical object.
+4. Yes, it looks clearly fake: the craters, jagged bay, and parallel ridges form a literal skull with teeth and symmetrical ribs, the mountain relief and drainage patterns are hugely exaggerated relative to the planetary horizon at top left, and the repetitive cloud wisps and glowing orange spots look digitally generated.

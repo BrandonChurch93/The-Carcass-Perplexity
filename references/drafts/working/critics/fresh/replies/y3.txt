@@ -1,0 +1,9 @@
+viewer: y3
+model: gemini_4_carbon
+test: SCALE
+image: reveal-f3-v5 (full size)
+
+1. It is a synthetic satellite-style overhead view of an arid volcanic peninsula and coastline shaped like a human skull, neck, and ribcage surrounded by ocean.
+2. At the depicted planetary scale, the frame is roughly 100 to 250 km (60 to 150 miles) wide from a low-Earth-orbit camera height of about 300 to 450 km (200 to 280 miles), though it is a generated image rather than a real photograph.
+3. Closest to (d) a painting or drawing—specifically a photorealistic digital/AI illustration styled to mimic (a) real terrain seen from orbit—because it uses satellite-like clouds, reefs, and mountain textures with no miniature or physical-surface cues, yet the geography is wholly invented to depict a skeleton.
+4. It looks fake rather than small-scale: the terrain forms an unmistakable skull with twin eye-socket craters, a jaw channel, and symmetrical ribcage ridges; glowing orange lava fissures are impossibly wide and bright for orbital scale; the neck area has strange reddish, bruised-looking mottling; and the clouds on the far right contain unnatural purple glowing specks.

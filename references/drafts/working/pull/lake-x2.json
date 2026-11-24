@@ -1,0 +1,10 @@
+{
+ "S": 3.003027245206862,
+ "cx_master": 1140.9686700302725,
+ "cy_master": 1579.8259664984864,
+ "diam_master": 172.0,
+ "cx_ext": 379.9395,
+ "cy_ext": 526.0778,
+ "diam_ext": 57.2755376344086,
+ "method": "master-x2.png; luminance blurred sigma 2 px; connected dark region (< 62) containing the lake centre; centroid; diameter of the equal-area circle (dark water and the inner part of the shelf; the rim crest is at about 115 master px radius)"
+}

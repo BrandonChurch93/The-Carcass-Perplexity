@@ -1,0 +1,46 @@
+[
+ {
+  "id": "pb2-t17",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-g",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t12.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Brandberg + MODIS Baja"
+ },
+ {
+  "id": "pb2-t18",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-g",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t12.png",
+   "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Sinai + MODIS Baja"
+ },
+ {
+  "id": "pb2-t19",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-g",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t12.png",
+   "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Richat + MODIS Arabia"
+ },
+ {
+  "id": "pb2-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-g",
+  "refs": [
+   "/home/user/workspace/r3/gen/pb2-t11.png",
+   "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t11 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Brandberg + MODIS Baja"
+ }
+]

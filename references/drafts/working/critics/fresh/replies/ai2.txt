@@ -1,0 +1,10 @@
+viewer: ai2
+model: claude_opus_5_5
+test: STATE
+image: cx-t2 (carcass, rags of hide) (full size)
+
+1. A giant skeleton-shaped continent lying in the ocean, seen from orbit with Earth's curvature, clouds, and a hurricane.
+2. A human skeleton lying sprawled on its back (skull at left, arms flung out overhead and to the side), long dead and decayed, fused into the land — with a smoking volcano in its ribcage and a thunderstorm over its pelvis, reddish stains spreading into the water like blood or rust.
+3. Ominous, desolate, awe-inspiring.
+4. 4.
+5. (a) a landmass seen from orbit — the planet's curvature, black space at top-left, cloud systems, a cyclone, and the sheer scale make it read as an orbital photo (though clearly digital/AI-generated art).

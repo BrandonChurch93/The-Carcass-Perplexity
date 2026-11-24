@@ -1,0 +1,23 @@
+viewer: p5
+model: gemini_neon
+test: FULL
+image: reveal-f4 (full size)
+
+1. A colossal, continent-sized landmass shaped like a spread-eagled human skeleton or corpse lying in an ocean, seen from orbit.
+
+2. Roughly 2,000-4,000 km (a few thousand miles) from head to toe, judging by the visible planetary curvature and weather systems; the camera is in high orbit thousands of kilometers above the planet looking down.
+
+3. Closest to (a) a landmass seen from orbit (rendered as CGI/digital art). Scale cues include the curved planetary horizon and thin blue atmosphere against black space at the top left, a large swirling cyclone in the bottom right, widespread cloud formations, snow-capped mountain ridges, and turquoise continental-shelf shallows around the coasts.
+
+4. Distinct features and locations:
+- Head (far left): skull-shaped landmass with two circular crater eye sockets (upper one dry/brown, lower one filled with dark water).
+- Neck (left-center): narrow land bridge with small reddish-dark pits and a wispy plume of haze drifting up-right.
+- Chest/ribcage (center-left): symmetrical curved rib-like ridges flanking a dark volcanic/charred cavity with orange-brown patches and a straight central trench/spine.
+- Abdomen (center): turquoise inland sea/lagoon with a narrow outlet channel at the top, containing a large erupting cloud/ash column topped by a white anvil-like cap.
+- Pelvis (center-right): pale basin laced with red, vein-like branching channels or mineral flats.
+- Upper arm and hand (top): stretched up-right with snow-capped mountain ridges along the shoulder/arm, ending in five finger peninsulas.
+- Lower arm and hand (bottom): stretched down-right with snow-dusted ridges and five finger peninsulas.
+- Upper and lower legs/feet (right): desert-colored landmasses with mountain ridges, ending in distinct feet with toe-like peninsulas/islets (upper foot pointing up, lower foot pointing down-right).
+- Surrounding ocean/sky: deep blue sea with turquoise reefs along all coasts, scattered clouds, curved limb at top-left, and a spiraling cyclone at bottom-right.
+
+5. Yes, it clearly looks fake/CGI rather than a real satellite photo: the human anatomy is far too literal and symmetrical for natural geology (exact five fingers and toes, neat ribs, round eye sockets, red vascular-looking pelvis), and the scale feels inconsistent - features like individual fingers, ribs, craters, coastal shallows, and the central eruption cloud appear overly large and coarse relative to the strong planetary curvature and hurricane.

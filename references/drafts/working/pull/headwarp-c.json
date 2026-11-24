@@ -1,0 +1,17 @@
+{
+ "s": 0.66,
+ "n": 18.0,
+ "min_det": 0.43559980392456055,
+ "max_stretch_outside_head": 1.5821738243103027,
+ "at_view_px": [
+  153.0,
+  348.0
+ ],
+ "p95_stretch_where_over_1p05": 1.3974695205688477,
+ "min_scale_outside_head": 0.5678247213363647,
+ "view_px2_stretched_over_1p25": 62640.0,
+ "view_px2_stretched_over_1p4": 10737.0,
+ "crop_left_view_px": 19.0,
+ "crop_top_view_px": 10.6875,
+ "inverse_residual_view_px": 2.894751105486648e-10
+}

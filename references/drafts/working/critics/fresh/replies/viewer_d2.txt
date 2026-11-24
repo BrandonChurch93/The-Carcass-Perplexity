@@ -1,0 +1,6 @@
+viewer: viewer_d2
+model: grok_4_7
+test: GLANCE
+image: rv4-t14 (400 px)
+
+A satellite view of a continent shaped like a human skeleton lying in the ocean.

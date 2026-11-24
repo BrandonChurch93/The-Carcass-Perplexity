@@ -1,0 +1,10 @@
+viewer: an3
+model: gemini_4_carbon
+test: STATE
+image: cx-t9 (carcass re-shot as an orbital photograph) (full size)
+
+1. It is a continent-sized human skeleton forming a rocky landmass in an ocean, viewed from space.
+2. It is a dead, fossilized skeleton sprawled on its back with its jaw wide open, eroded into mountain ridges, craters, a dark volcanic chest cavity, and reddish sediment spilling from the pelvis into the water.
+3. Eerie, desolate, macabre.
+4. 4 — the gaping skull, clustered craters at the throat, and blood-like runoff from the pelvis feel unsettling, softened slightly by the distant orbital view.
+5. (a) A landmass seen from orbit, because the curved planetary horizon and thin atmosphere are visible at the top left, and weather systems like cloud decks, a volcanic plume, and a cyclone sit smaller than the bones themselves.

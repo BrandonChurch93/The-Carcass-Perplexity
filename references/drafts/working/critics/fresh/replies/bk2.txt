@@ -1,0 +1,10 @@
+viewer: bk2
+model: claude_opus_5_5
+test: STATE
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. A skeleton-shaped continent lying in the ocean, seen from orbit, with Earth's curved edge and a hurricane in view.
+2. A human skeleton lying sprawled on its back with its limbs splayed, like a corpse laid out. A cloud plume drifts across its spine, and a red, blood-like stain spreads over the pelvis.
+3. Eerie, ominous, desolate.
+4. 4.
+5. (a), a landmass seen from orbit. The planet's curvature, the thin blue atmosphere, the cloud patterns and the cyclone all make it read as a satellite view at continental scale.

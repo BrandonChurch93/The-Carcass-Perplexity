@@ -1,0 +1,14 @@
+viewer: viewer_a4
+model: grok_4_7
+test: FULL
+image: rv4-t10 (full size)
+
+1. A giant human skeleton lying on its back, made of land, seen from orbit over an ocean.
+
+2. Continental: roughly several hundred to a couple thousand kilometers across, if the cyclone and the planet’s curve are taken at face value. The camera is in space, looking down; black space and the atmosphere’s edge sit in the upper left.
+
+3. Closest to (a). The limb against black space, the sun glint across open water, and the full cyclone in the lower right are orbital-scale cues. There is no table edge, brushwork, or aircraft-height detail (no trees, boats, or buildings).
+
+4. Head/skull, left, tan mountains with snow on the crest. A round concentric crater-lake for an eye in the face. A straight line of circular, purple-rimmed vents along the neck, with a thin wisp of smoke. Ribs as pale, evenly spaced curved ridges around a sunken center. Glowing orange lava fissures in the upper chest, with a dark smoke plume drifting up and right. A purple-white swirl over turquoise water at the center of the chest. A pale segmented spine running down the middle. A bright red inland basin in the pelvis/abdomen. Both arms bent outward, snowy ridges along the bones, five long fingers each, sitting in turquoise shallows. Legs to the right, slightly bent, desert mountains with snow, toes in turquoise shallows. Deep blue ocean, a bright shelf all around the body, scattered clouds and their shadows, sun glint upper right, cyclone lower right, planet limb upper left.
+
+5. Yes. The ribs, fingers, and toes are too regular to be geology. The red sea, the glowing orange “organ,” the purple chest vortex, and the lined-up neck vents are impossible. It does not look miniature or painted; it looks like a digital render dressed up as a satellite photo.

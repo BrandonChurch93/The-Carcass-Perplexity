@@ -1,0 +1,6 @@
+viewer: al1
+model: gpt_6_2_sol
+test: GLANCE
+image: cx-t9 (carcass re-shot as an orbital photograph) (400 px)
+
+It looks like a giant human skeleton floating in the ocean.

@@ -1,0 +1,9 @@
+viewer: bz2
+model: claude_opus_5_5
+test: SCALE
+image: x6 frame 3 (tmp/test/IMG_1934.jpg = critic/fresh/seen/x6-f3.jpg)
+
+1. It looks like an orbital view of a dark ocean with scattered clouds, an island with craters and lakes, and comb-like mountain ridges on land, probably fictional or AI-generated.
+2. If you read it as real, it's about 100–300 km across, seen from roughly 300–400 km up (ISS-like low orbit, oblique view).
+3. (a), terrain seen from orbit. The cloud texture, ocean, small orange lights that look like fires or towns, and the shading all look orbital. But the shapes look made up (fractal/AI), not like real geography.
+4. Yes. The ridges are unnaturally regular and look like ribs or feathers. The island looks like a face or skull, with "eyes" made of round crater lakes, and the overall shape looks organic and stylized. The cloud wisps bend in odd ways, and the scale is uncertain. It doesn't look like a tabletop model, but it does look synthetic, not real Earth.

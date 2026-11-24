@@ -1,0 +1,6 @@
+viewer: at1
+model: gpt_6_2_sol
+test: PLACES
+image: cx-e-t2 (full size)
+
+All six visible; approximate (from left, from top): 1. (41%, 47%) dark teal channel between upper and lower rib rows. 2. (38%, 40%) tiny orange glow among upper chest ribs. 3. (30%, 43%) cluster of dark round pits at the throat beside the open jaw. 4. (64%, 49%) branching red patches across a chalk-white pelvic flat. 5. (54%, 47%) bright white cloud burst directly on the spinal ridge. 6. (19%, 47%) round dark-blue pool in the lower eye socket.

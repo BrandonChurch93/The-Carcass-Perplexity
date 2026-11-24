@@ -1,0 +1,9 @@
+viewer: br2
+model: claude_opus_5_5
+test: SCALE
+image: x4 master, frame-3 window B (ext px x0 0, y0 301, w 800; about 1,960 km wide STATED) (tmp/test/IMG_8455.jpg = critic/fresh/seen/x4-f3-candB.jpg)
+
+1. A top-down, orbital-style view of a fictional island or landmass with ridged terrain, crater lakes and pits, surrounded by dark ocean with scattered clouds — it reads as AI-generated or digital art.
+2. If taken at face value: roughly 100–300 km across, camera at orbital height (~300–400 km, ISS-like). That scale is only implied by the look.
+3. Closest to (a), orbital imagery, in style: the cloud flecks, ocean color and branching drainage ridges mimic astronaut photos. But it is most likely synthetic (AI or digital render) rather than a real place.
+4. Yes. The landmass is laid out like a face or eye (a round "pupil" crater, swirling "brow" clouds), and the terrain is suspiciously symmetric and fractal-looking. The ridges at right are comb-like and repetitive. The orange glowing dots look like city lights or lava but make no sense in daylight. Cloud wisps blend into the ridges oddly. Crater lakes are too perfectly round. It doesn't look like a small-scale tabletop model; it looks generated.

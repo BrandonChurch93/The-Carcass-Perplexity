@@ -1,0 +1,12 @@
+Image 1 is a photograph taken from a spacecraft, looking straight down at a continent on an alien ocean world: the carcass of a titan of human shape, weathered into land, lying in a dark stained sea. The photograph has been laid on a larger sheet. Its sharp central part is finished. Round it runs a blurred, streaked border, wide at the left and narrower at the top, bottom and right. That border is only a placeholder: it has no real content.
+
+Make the complete photograph. Keep the central part exactly as it is: the same land, sea and cloud, in the same place, at the same size, with the same colours and light. Replace the placeholder border with what the camera would really see there:
+- Open ocean, nearly black, a cold slate blue, under very fine white cloud seen from above: stipple, thin streets and long soft bands, continuing the cloud fields of the central part with no visible join, no straight line and no change of grain where the border meets the centre.
+- At the top left corner the curved edge of the planet continues as one smooth arc: a thin bright blue line of atmosphere with black space beyond it. The sea near that corner is dim, going toward dusk.
+- At the right the dull, smooth pewter sunglint continues to the edge of the frame, with no visible waves.
+- At the bottom right corner the spiral storm continues: more of its curved bands of cloud, winding toward a centre outside the frame.
+- No new land anywhere in the border: no islands, no reefs, no coast, no shoals. Only sea, cloud, the edge of the planet and space.
+
+Image 2 is a real photograph taken from orbit. Use it only as the standard for how sea and cloud look from this height. Do not copy what it shows.
+
+A real photograph through the window of a spacecraft: natural colour, cold, slightly muted by haze, sharp from edge to edge. No people, no text, no labels, no borders, no frame lines.

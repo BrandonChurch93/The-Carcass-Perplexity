@@ -1,0 +1,10 @@
+viewer: bk3
+model: gemini_4_carbon
+test: STATE
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. It is a continent-sized human skeleton landmass lying in a planetary ocean, viewed from space.
+2. It is dead and decaying, sprawled flat on its back with its jaw gaping open as if screaming, and red fluid-like rivers bleeding out from its pelvic region into the ocean.
+3. Eerie, macabre, desolate.
+4. 4.
+5. (a) a landmass seen from orbit — it shows the curved horizon of a planet against black space with an atmospheric glow, vast cloud formations, and a large cyclone in the corner, giving the figure continental scale (though rendered like digital art).

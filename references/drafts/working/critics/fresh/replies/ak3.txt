@@ -1,0 +1,10 @@
+viewer: ak3
+model: gemini_4_carbon
+test: STATE
+image: cx-t6 (carcass, hide on about half) (full size)
+
+1. It is a continent-sized skeleton forming a weathered landmass in an ocean, viewed from space.
+2. It is long dead and decayed down to eroded rock-like bone, sprawled on its back with its jaw gaping open while geological features like a glowing volcano in its chest, red pools in its pelvis, and storm clouds overtake the remains.
+3. Eerie, mythic, desolate.
+4. 4 — the gaping skull, flesh-colored pits, and blood-like red plumes in the water feel grim and unsettling, balanced slightly by a sense of cosmic awe.
+5. (a) A landmass seen from orbit, because the curved planetary limb with atmospheric glow at the top left, massive cloud formations, and cyclone at the bottom right clearly establish orbital scale and perspective.

@@ -1,0 +1,25 @@
+viewer: ab3
+model: gemini_4_carbon
+test: FULL
+image: reveal-f4-v6 (full size)
+
+1. It is a digital illustration of a massive continent shaped like a giant decaying humanoid corpse or skeleton lying in an ocean, viewed from space.
+
+2. Based on the curved planetary horizon and weather systems, the landmass appears roughly 2,000 to 4,000 kilometers long, with the camera positioned several hundred to a few thousand kilometers up in orbit.
+
+3. It is closest to (d) a painting or drawing (specifically digital/CGI or AI artwork) depicting (a) a landmass seen from orbit. The intended orbital scale is given away by the curved atmospheric limb against black space at the top left, the large spiraling cyclone at the bottom right, broad ocean sunglint at the right, and planetary cloud decks.
+
+4. Distinct features on the landmass:
+- Head (far left): A skull-shaped arid peninsula with two large circular eye-socket craters, the lower one holding a dark lake and the upper one dry.
+- Neck (left, between skull and shoulders): Pitted terrain with dark vents and a long gray smoke plume drifting upward toward the top left.
+- Ribcage and chest (left-center): Parallel curved tan mountain ridges framing a dark black volcanic basin with glowing orange lava fissures.
+- Central lagoon (center, inside the lower ribs): A sheltered turquoise inland sea dotted with small islands and white plumes drifting rightward down a central channel.
+- Pelvis/abdomen (center-right): A pale basin laced with branching blood-red river channels resembling veins or intestines.
+- Left and right arms (top and bottom): Long mountain-ridged peninsulas with patches of snow, bending at elbows and ending in five-fingered coastal headlands fringed by turquoise shallows.
+- Left and right legs (extending right, upper and lower): Two long mountainous peninsulas with snow-dusted ridges, knees, and upturned foot-shaped tips with toe-like islets.
+
+5. Beyond the fantastical humanoid anatomy, several visual cues look fake or mis-scaled:
+- The turquoise coastal shallows around the fingers, toes, and central lagoon look like small tropical sandbar reefs scaled up to几十-kilometer continental widths.
+- Bright orange lava cracks in the black chest area are far too wide to glow visibly like that in daylight from orbit.
+- Smoke plumes on the neck and central sea look painted or composited rather than behaving like orbital-scale clouds.
+- A straight, repetitive dotted line of white cloud artifacts cuts unnaturally across the lower-right leg near the shin.

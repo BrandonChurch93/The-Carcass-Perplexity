@@ -1,0 +1,9 @@
+viewer: bq2
+model: claude_opus_5_5
+test: SCALE
+image: x4 master, frame-3 window A (ext px x0 0, y0 175, w 1150; about 2,820 km wide STATED) (tmp/test/IMG_3187.jpg = critic/fresh/seen/x4-f3-candA.jpg)
+
+1. An orbital-style view of a fantastical, Earth-like planet with a strange island/landmass (crater-pocked, rib-like ridges radiating from a spine) in a dark ocean under scattered clouds, with the curved limb and blue atmosphere at top left.
+2. Implied scale: roughly 1,000–2,000 km across the frame, camera at roughly 300–500 km altitude (ISS-like low orbit, given the visible limb curvature).
+3. Closest to (d) a painting/drawing — specifically it looks like a digital/AI-generated render styled as (a) an orbital photo. The composition mimics an ISS photo, but the landforms are not real terrain.
+4. Yes: the landmass is unnaturally symmetric and organic — fishbone/ribcage ridges and a face-or-creature-like shape with eye-like craters; ridges look like brushy fractal texture; clouds are uniform speckle; the smooth white cloud blob on the right has odd purple-gray bubbles; a tiny orange glowing dot; no recognizable real geography. It reads as synthetic rather than small-scale model.

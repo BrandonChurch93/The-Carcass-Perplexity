@@ -1,0 +1,16 @@
+viewer: br3
+model: gemini_4_carbon
+test: SCALE
+image: x4 master, frame-3 window B (ext px x0 0, y0 301, w 800; about 1,960 km wide STATED) (tmp/test/IMG_8455.jpg = critic/fresh/seen/x4-f3-candB.jpg)
+
+1. It is a synthetic orbital-style digital illustration (or 3D heightmap render) of a volcanic peninsula and mountain ranges shaped like a giant human skull and ribcage along a cloud-streaked ocean.
+
+2. At its depicted planetary scale, the frame covers roughly 100 to 250 km (60 to 150 miles) in width from an implied orbital camera altitude of roughly 250 to 400 km (150 to 250 miles), though as a digital image there is no physical scene or camera.
+
+3. It is closest to (d) a painting or drawing (specifically digital art / CGI terrain rendering designed to mimic (a) orbital imagery), because the coastline, craters, and ridges are deliberately composed into an anatomical skeleton and the clouds have flat, painted/procedural textures rather than real physical relief.
+
+4. Several details look fake and synthetic (though not small-scale/miniature):
+- The geology forms an obvious skull and skeleton, complete with two crater-lake eye sockets, smaller nasal-cavity lakes, a curved bay for a gaping mouth lined with tooth-like peaks, and symmetrical curved mountain ridges forming a ribcage on the right.
+- A dense patch of uniform circular craters behind the skull and bright glowing orange pinpoints between the upper ribs make no geological sense and are far too large for real lava vents or fires at orbital scale.
+- The ocean clouds look like flat 2D procedural noise without 3D volume or cast shadows on the water, and the white wisps above the landmass look digitally brushed.
+- The radial gullies around the peninsula have the overly uniform, repetitive signature of procedural terrain-erosion software.

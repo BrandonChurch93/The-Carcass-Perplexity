@@ -1,0 +1,9 @@
+viewer: s1
+model: gpt_6_2_sol
+test: SCALE
+image: reveal-f3 (full size)
+
+1. A top-down view of a rocky, volcanic-looking island shaped like a human skeleton, with a skull at left and ribs at right.
+2. It reads as tens of kilometers across, seen from high above (perhaps tens of kilometers up with a wide-angle view), but no landmarks or lens information fix width or altitude.
+3. Closest in appearance to (a): turquoise shallows, textured ridges, and clouds mimic aerial imagery; likely a digital illustration rather than real terrain.
+4. The crater eye sockets, zigzag row of teeth, and regularly spaced ribs look deliberately arranged; there are no clear signs of a physical miniature.

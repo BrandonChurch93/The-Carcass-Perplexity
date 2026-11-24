@@ -1,0 +1,10 @@
+viewer: aq2
+model: claude_opus_5_5
+test: STATE
+image: master-x1 (full size)
+
+1. A satellite-style view of Earth where an ocean landmass is shaped like a giant skeleton (skull, ribcage, outstretched arm).
+2. A skeletal figure lying face-up/sprawled in the sea, dead and decaying, one arm reaching outward; reddish "blood-like" sediment and a crater/explosion-like cloud near its chest suggest it's wounded or bleeding out.
+3. Eerie, ominous, awe-inspiring.
+4. 4.
+5. (a) a landmass seen from orbit — Earth's curvature, the black of space, the thin blue atmosphere, cloud bands and a hurricane spiral all put the viewpoint in orbit.

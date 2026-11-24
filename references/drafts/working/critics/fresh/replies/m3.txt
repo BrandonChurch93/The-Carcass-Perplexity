@@ -1,0 +1,10 @@
+viewer: m3
+model: grok_4_7
+test: HEAD
+image: pb2-t19 (full size)
+
+1. An overhead view of a barren, cratered island or peninsula in dark blue water.
+2. A skull or face: two round craters for eyes and a dark triangle for a nose.
+3. If the water and land are real, roughly 30-50 km across, from a few hundred kilometers up, near overhead.
+4. (a) It has the color, lighting, and framing of an orbital photo, not a painting, a tabletop, or a small-object close-up.
+5. The skull is too neat, the ridges look repetitive, and the dust and shoreline look soft and airbrushed rather than real. It looks generated, not small-scale.

@@ -1,0 +1,14 @@
+viewer: aw4
+model: grok_4_7
+test: FULL
+image: x2-f4 (full size)
+
+1. A planet seen from orbit, with a continent shaped like a human skeleton lying on its back in the ocean.
+
+2. Continental, a few thousand kilometers from skull to feet. The camera is in space, looking down at an angle; the curved limb and blue atmosphere sit in the upper left against black space.
+
+3. Closest to (a). The limb, atmospheric rim, black space, sun glint, tiny cloud cells, and a full cyclone in the lower right all read as orbital, not aircraft or tabletop. Nothing shows a table edge, shallow focus, or brushwork.
+
+4. Upper left: planetary limb and atmosphere. Left: screaming skull, open jaw with tooth-like ridges, two dark eye pits, a nasal hole, a crack across the forehead. Center-left: spine and rib ridges, a small orange glow in the upper chest, arms ending in finger-like spits (one up, one down). Center: a white eruptive plume at the waist. Center-right: pale pelvis with a red branching pattern, a dark circular hole on its upper rim, and a reddish-brown plume trailing east into the water. Right: two bent legs ending in feet and toes. Upper right: ocean sun glint. Lower right: a spiral storm.
+
+5. The skeleton is too complete and proportioned to be real geology. The red pelvic veins look stamped on, and the waist plume looks frozen. It reads as a digital render or matte painting of an orbital view, not a small physical model.

@@ -1,0 +1,6 @@
+viewer: bs1
+model: gpt_6_2_sol
+test: SCALE
+image: x4 master, frame-3 window D (ext px x0 0, y0 238, w 1000; about 2,450 km wide STATED) = final frame 3 (set x5) (tmp/test/IMG_2716.jpg = critic/fresh/seen/x4-f3-candD.jpg = critic/fresh/seen/x5-f3.jpg)
+
+1. An overhead, satellite-like view of rocky islands in dark water arranged into a giant skeleton with a skull and rib cage. 2. It suggests hundreds of kilometers across and a camera a few hundred kilometers up, but there’s no reliable scale cue. 3. Closest to (a) visually: the branching relief, blue-green shallows and streaky clouds mimic an orbital photograph, even if the scene is fabricated. 4. The eye sockets, toothlike coast and unusually regular paired ribs look deliberately arranged; nothing clearly establishes miniature scale.

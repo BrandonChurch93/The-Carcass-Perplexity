@@ -1,0 +1,9 @@
+viewer: bq3
+model: gemini_4_carbon
+test: SCALE
+image: x4 master, frame-3 window A (ext px x0 0, y0 175, w 1150; about 2,820 km wide STATED) (tmp/test/IMG_3187.jpg = critic/fresh/seen/x4-f3-candA.jpg)
+
+1. It is a synthetic orbital-view illustration of an Earth-like planet featuring a landmass shaped like a giant human skeleton in an ocean.
+2. As a digital illustration it has no literal physical size, but the depicted scene spans roughly 1,500 to 3,000 km wide as if viewed from an orbital altitude of roughly 400 to 1,000 km.
+3. Closest to (d) a painting or drawing (specifically digital art or 3D terrain rendering), because the landforms are deliberately arranged into human anatomy rather than real geology or a physical tabletop object.
+4. Yes, the geology is unmistakably fake: craters, bays, and mountain chains form a skull with eye sockets, a nasal cavity, and grinning teeth, connected to arms, a spine, and symmetrical ribcage ridges, paired with stylized clouds, glowing orange lava spots, and a CGI atmospheric limb.

@@ -1,0 +1,6 @@
+viewer: ca1
+model: gpt_6_2_sol
+test: HEAD
+image: x6 frame 2 (tmp/test/IMG_2362.jpg = critic/fresh/seen/x6-f2.jpg)
+
+1. My first thought was an overhead view of a volcanic coastline with dark crater lakes. 2. A sideways skull, with the round basins reading as eye sockets. 3. At a glance, roughly 50–100 km across, from perhaps 100–300 km up; no reliable scale cue. 4. (a), closer to orbit than aircraft: the branching ridges, shoreline and thin wisps read as terrain and clouds. 5. The almost perfectly round, dark pits and the unusually uniform, lace-like surface texture are what make it look possibly artificial or miniature.

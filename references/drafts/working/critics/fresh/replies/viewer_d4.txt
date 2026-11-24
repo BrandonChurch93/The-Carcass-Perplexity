@@ -1,0 +1,28 @@
+viewer: viewer_d4
+model: claude_sonnet_5_5
+test: FULL
+image: rv4-t14 (full size)
+
+1. First impression: an orbital view of Earth with a huge landmass shaped like a human body, with arms, legs, hands and a head, lying in the ocean.
+2. Size: thousands of km across, roughly 3,000–5,000 km. The camera is in low Earth orbit, probably 400–1,000 km up, looking obliquely. The curved horizon and atmosphere glow show in the top-left corner.
+3. Closest is (a), a landmass seen from orbit. The scale comes from the planetary limb with its blue atmospheric edge, and from the cloud systems. The big hurricane-style spiral at bottom right is hundreds of km wide, and it is much smaller than the land. The cloud layers cast shadows and the ocean has sun glint at upper right. The shallow turquoise reefs around the coast read as continental shelf.
+4. Features, by position:
+- Head: left-centre, with a round blue crater lake or caldera on its left side.
+- Upper-left arm: runs from the shoulder at upper left-centre to a hand at the top centre.
+- Lower-left limb: runs from the left body to a hand at bottom centre.
+- Ribbed, striped terrain: on the left torso and ribcage, both above and below the central river or channel.
+- Red/crimson region: centre-right, with snowy mountains around it. This may be a wound, a heart or a red desert.
+- Right-hand body mass: centre-right, with arms or legs reaching upper right to a hand at the top right, and lower right to a foot or hand at the right edge.
+- White swirling storm with a purple lightning flash: dead centre.
+- Smoke plumes and orange glowing fires or lava: upper centre, on the left torso, with brown smoke drifting up.
+- Small red dots, possibly volcanoes or lava: left-centre, near the neck.
+- Snow caps and white glaciers: along the mountain ridges across the land.
+- Large hurricane spiral: bottom right.
+- Black space and blue atmospheric limb: top-left corner.
+5. Yes, it looks wrong:
+- The body-shaped continent has hands with distinct fingers, and no natural landmass looks like that. It is stylised or fantasy.
+- It looks like an AI-generated or digitally painted image, with unnaturally clean detail.
+- The cloud and storm details are repetitive and over-sharp.
+- The ribs and finger ridges are too regular.
+- The scale is inconsistent for a body about 4,000 km long. Hands this detailed would be hundreds of km across, and fingers would be 50–100 km wide, yet the terrain texture is fine-grained, like a small sculpture or relief model.
+- The lightning and storm in the centre are oddly bright.

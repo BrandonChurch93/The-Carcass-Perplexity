@@ -1,0 +1,9 @@
+viewer: r2
+model: claude_opus_5_5
+test: SCALE
+image: reveal-f1 (full size)
+
+1. An overhead view of a round, deep-blue lake with a yellow-ochre shallow rim, sitting in a cliff-walled crater or sinkhole in dry, eroded desert terrain.
+2. If it's real, the frame looks to be about 5-20 km across, with the lake about 2-8 km wide, seen from a high aircraft or low orbit, maybe 10-400 km up. The scale is ambiguous, though.
+3. Closest to (a), real terrain from the air or orbit. The drainage channels, the layered crater walls, the wispy cloud or haze over the lake and the second body of water in the corner all read as landscape. There's a strong chance it's AI-generated or digitally painted, though, and not a real photo.
+4. A few things look off. The lighting is soft, uniform and painterly, and the ridge textures are smeared, repetitive and look procedural. The water is a flat blue with no depth gradient, and the ochre ring is unusually even. The "cloud" is a single small wisp with no shadow, and the overall look is hyper-saturated. Nothing gives a clear sense of scale: there are no roads, buildings or vegetation. None of this reads as a miniature, but it does look synthetic.

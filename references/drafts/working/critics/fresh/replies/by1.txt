@@ -1,0 +1,6 @@
+viewer: by1
+model: gpt_6_2_sol
+test: PROPORTION
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. An orbital-style view of Earth’s ocean shows a giant human skeleton shape traced by pale island- or cloud-like formations. 2. It’s a stylized skeleton, adult-like overall rather than a literal adult or child; the skull isn’t oversized in the way a young child’s is. 3. Head: slightly too big; neck: too short/indistinct; shoulders: roughly right; rib cage: too broad and flared; waist: too long and narrow; hips: roughly right; arms: a bit short; hands: too long and splayed; legs: too short relative to the torso; feet: a bit small. These are visual estimates given the bent limbs and indistinct outlines. 4. Lengthen both legs relative to the torso.

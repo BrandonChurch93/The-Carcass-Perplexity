@@ -1,0 +1,10 @@
+viewer: w2
+model: claude_opus_5_5
+test: HEAD
+image: reveal-f2-v4 (full size)
+
+1. An orbital-style view of an arid desert island with two big round craters (one dry, one water-filled), joined by a narrow channel to a larger landmass on the right.
+2. Yes: a face or skull in profile looking left. The two craters are the eyes, the dark notch between them is a nose, and the right landmass is the back of the head or the neck. It could also be a fish or a pig's snout.
+3. If it's real, the frame is roughly 50–150 km across, shot from about 300–400 km up (ISS-like oblique view). The cloud streaks and the sun glint on the ocean suggest orbit.
+4. Closest to (a), real terrain from orbit, because of the lighting, the cumulus field, the shallow turquoise shelf and the haze. But it looks AI-generated or digitally made, not like a real photo.
+5. Yes, several things. The craters are too perfectly circular and placed too neatly as "eyes". The ridge texture is uniform and brush-stroke-like, almost painterly. The red veins with dark pits on the right look organic, like blood vessels or a wound. The channel's blocky white cliffs look tiled. None of it looks like a small-scale model, but it reads as synthetic or pareidolia-bait.

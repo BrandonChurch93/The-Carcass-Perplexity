@@ -1,0 +1,10 @@
+viewer: k1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t13 (full size)
+
+1. My first impression was an aerial photo of a barren volcanic island with two huge craters, one filled with blue water.
+2. A sideways skull: the two round craters look like eye sockets.
+3. Gut estimate: roughly 10 km across, shot from several kilometers up; there's no clear scale reference.
+4. (a), especially an aircraft view: the ridges, jagged shoreline and turquoise shallows read like aerial terrain.
+5. The craters are strikingly round and neatly paired, and the rock has a slightly uniform, crumpled texture that makes it feel sculpted.

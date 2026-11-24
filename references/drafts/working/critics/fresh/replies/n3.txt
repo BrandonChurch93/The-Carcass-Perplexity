@@ -1,0 +1,6 @@
+viewer: n3
+model: gemini_4_carbon
+test: GLANCE
+image: reveal-f4 (400 px)
+
+It is an aerial view from space of a giant island or continent shaped like a decaying human skeleton lying in the ocean.

@@ -1,0 +1,9 @@
+viewer: bm2
+model: claude_opus_5_5
+test: SCALE
+image: x4 frame 3 (final set) (tmp/test/IMG_5617.jpg = critic/fresh/seen/x4-f3.jpg)
+
+1. It looks like an orbital-style view of a craggy island with crater lakes, surrounded by dark ocean and scattered clouds, with feathery ridge patterns off to the right.
+2. If it's read as an orbital view, the frame would be roughly 50–200 km across, taken from about 300–400 km up (ISS-like). If it's actually small, the scale is ambiguous.
+3. Closest to (a) in look: the cloud texture, ocean color and terrain shading mimic photos taken from orbit. But it reads as synthetic, likely AI-generated or digital art rather than a real photo.
+4. Yes. The right half has unnaturally regular, comb-like parallel ridges that look like fish-bone or feathers. The swirling ridges and craters form a face-like or creature-like pattern. There are random glowing orange dots, and the erosion texture is fractal-like and too uniform. Nothing suggests a physical tabletop model; it looks more like a digital render than a miniature.

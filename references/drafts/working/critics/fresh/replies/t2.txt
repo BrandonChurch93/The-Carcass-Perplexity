@@ -1,0 +1,6 @@
+viewer: t2
+model: claude_opus_5_5
+test: GLANCE
+image: reveal-f4-v4 (400 px)
+
+It looks like a satellite view of Earth with an island shaped like a sprawled human skeleton or body lying in the ocean.

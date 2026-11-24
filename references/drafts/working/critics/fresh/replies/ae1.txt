@@ -1,0 +1,6 @@
+viewer: ae1
+model: gpt_6_2_sol
+test: PLACES
+image: reveal-f4-v7 (full size)
+
+Visual read, x from left/y from top: 1. Yes, ~36%, 55%: narrow turquoise channel between curved rib rows. 2. Yes, ~30%, 52%: thin orange glowing lines in dark chest. 3. Yes, ~23%, 56%: cluster of dark rounded pits in throat; near ~19%, 55% a jagged mouth channel. 4. Yes, ~49%, 53%: branching dark-red patches across a pale basin. 5. Not clearly identifiable as a storm on a spine ridge: white cloud streaks cross the torso (~40%, 52%), but the unmistakable spiral storm is offshore (~98%, 92%). 6. Yes, ~15%, 60%: round dark-blue lake in lower eye socket.

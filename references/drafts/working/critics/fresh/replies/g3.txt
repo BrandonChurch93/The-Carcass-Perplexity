@@ -1,0 +1,6 @@
+viewer: g3
+model: gemini_4_carbon
+test: GLANCE
+image: reveal-f4-v5 (400 px)
+
+It is an illustration of a giant human skeleton shaped like an island or continent seen from space in the middle of an ocean.

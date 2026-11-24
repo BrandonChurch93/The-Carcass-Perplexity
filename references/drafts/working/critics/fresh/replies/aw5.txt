@@ -1,0 +1,6 @@
+viewer: aw5
+model: gemini_neon
+test: FULL
+image: x2-f4 (not seen: the attachment did not open)
+
+I tried to open the attached image at `/home/user/.perplexity/attachments/dc5f0e8e73124f6ca4/IMG_2573.jpg` (and also checked `IMG_2573.jpg` in `/home/user/workspace`), but both returned "File not found." Per your instructions not to use any other tools, I did not search the filesystem. Please re-attach or provide an accessible path to the image.

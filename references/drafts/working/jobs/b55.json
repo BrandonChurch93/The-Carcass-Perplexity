@@ -1,0 +1,54 @@
+[
+ {
+  "id": "cx-e-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-e-guide.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)"
+ },
+ {
+  "id": "cx-e-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-e-guide.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)"
+ },
+ {
+  "id": "cx-e-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-e-guide.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)"
+ },
+ {
+  "id": "cx-e-t4",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-e",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-e-guide.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)"
+ }
+]

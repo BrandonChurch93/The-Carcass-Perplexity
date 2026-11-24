@@ -1,0 +1,9 @@
+viewer: y2
+model: claude_opus_5_5
+test: SCALE
+image: reveal-f3-v5 (full size)
+
+1. An overhead, orbital-style view of a desert peninsula/island jutting into a deep-blue ocean, with two crater-like pits, dark lava fields with glowing orange fissures, smoke plumes, and small clouds.
+2. Taken at face value, roughly 50–200 km across, as seen from orbit at around 400 km (ISS-like altitude). The scale cues are inconsistent, though (see 4).
+3. Closest to (a) in style: it imitates a photo of real terrain from orbit, with ocean, reef shallows, clouds and atmospheric haze. But it looks like an AI-generated or digitally made image, not a real photograph.
+4. Yes. The landmass looks like a stylised creature or face (two "eye" craters, a skull- or fish-like shape). The ridges fan out symmetrically like wings or ribs, which is not how real geology looks. Glowing lava lines are visible from orbit, there are reddish splatter-like spots, and a purple-white glow sits inside the cloud on the right. The cloud and whitecap sizes don't match the terrain scale, and textures are smeared and painterly. It doesn't look like a small-scale model; it looks synthetic or fantastical.

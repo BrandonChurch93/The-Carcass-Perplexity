@@ -1,0 +1,10 @@
+viewer: bv2
+model: claude_opus_5_5
+test: FULL
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. A giant skeleton-shaped landmass/island chain lying in the ocean, seen from orbit (looks like a digital/AI-generated image).
+2. Continent-scale: roughly 2,000–5,000 km head to foot. Camera is in low Earth orbit (ISS-like altitude, ~400 km), looking obliquely down with the curved horizon and black space at top-left.
+3. (a) Landmass seen from orbit. Scale clues: Earth's curved limb with thin blue atmosphere at top-left, a full hurricane/cyclone spiral bottom-right that is a fraction of the figure's size, widespread cloud fields over the ocean, and sun glint on the sea at right.
+4. Features: skull at left-center with a dark crater-like eye socket/lake; brownish upper ribcage of mountain-ridge "ribs" center-left with a small orange fire/volcano point near its top; lower ribcage below center; upper arm/humerus going up to top-center ending in a hand with finger-like peninsulas at top; other arm going down-left to a hand with finger ridges at bottom-center; spine joining to the pelvis marked by a white cloud/smoke plume (like a volcanic or storm plume) at center; pelvis at center-right as a bright white (snow/salt flat) area with a red branching river/blood-like network and a dark round crater/lake at its top; one leg extending right to a foot with toes at far upper-right; other leg bent down to a foot at bottom-right; reddish-brown plume/sediment streaming right from the pelvis into the sea; turquoise shallow-water fringes around the whole figure; hurricane bottom-right; sun glare upper-right.
+5. Yes: it's obviously fake—a coastline in a perfect human skeleton shape is impossible; the "bones" are made of mountain ridges, the red vein network looks like blood, the lighting/texture is painterly and AI-like, and the cloud plume sits neatly in the spine gap. It doesn't read as small-scale (the cyclone and Earth curve sell the huge scale), just fabricated.

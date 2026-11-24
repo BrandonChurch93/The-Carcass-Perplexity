@@ -1,0 +1,10 @@
+viewer: ag3
+model: gemini_4_carbon
+test: STATE
+image: f4-v8t15 (old body, baseline) (full size)
+
+1. It is a continent-sized landmass shaped like a giant decaying human corpse floating in an ocean, seen from space.
+2. The body lies splayed on its back, dead and hollowed out, with crater eye sockets, rib-like mountain ridges, a scorched and cracked chest cavity, a flooded open abdomen under a storm cloud, and red vein-like channels across the pelvis.
+3. Eerie, desolate, uncanny.
+4. 4 — the gutted skeletal anatomy and hollow eye craters feel visceral and unsettling, tempered only slightly by the distant orbital perspective.
+5. Closest to (a) a landmass seen from orbit, because of the curved planetary horizon and atmospheric rim at the upper left, vast cloud systems including a hurricane-scale spiral at the lower right, and continental-scale mountain ranges and river deltas (rendered as digital concept art).

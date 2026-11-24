@@ -150,6 +150,89 @@
    "t": "03:10",
    "el": "3h38m",
    "text": "REVEAL REDO (user message, about 02:58 UTC). Direction B approved for all six places, kept exactly as they are. Only the reveal is rejected: 'reads as a fish with arms growing out of its head; the skull and one hand are bunched together at one end and nothing else says human'. New brief: a humanoid titan unmistakable at a glance (head, shoulders, both arms, rib cage, spine, hips, both legs, human proportions), on its back or slightly on its side, limbs spread, a landmass at continental scale and not a statue or a clean skeleton, seen from almost directly above with the curve of the planet only at the edge of frame; the six places findable and looking like themselves from orbit; a pull-back in four key frames from the same rising camera (lake, skull massif, head and shoulders, whole titan) that agree with each other and hold real scale; tested with fresh agents told nothing. Start new, reuse nothing of the old reveal but the idea. Old reveal moved to references/archive/round-3-reveal/ (kept image, sheet, three takes, prompt, the two ISS plates used for it)."
+  },
+  {
+   "t": "03:32",
+   "el": "4h00m",
+   "text": "Fresh-viewer protocol fixed before results (critic/fresh/PROTOCOL.md): viewers are new agents on separate machines, several models, one image with a meaningless file name, told nothing. GLANCE = picture at 400 px and one open question, as the stand-in for 'within two seconds' (the human two-second read itself stays UNKNOWN). FULL = five questions on size, camera, medium and features. Pass rules written down first."
+  },
+  {
+   "t": "03:10",
+   "el": "3h38m",
+   "text": "Reveal redo, new start. Pose: on its back, head left, feet right, one arm raised, one knee bent, so that the outline reads at once and no two limbs lie alike. Seen from almost straight above, the planet's edge only at the top left.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "03:48",
+   "el": "4h16m",
+   "text": "First body: 24 takes on five procedural layout maps (rv4), 03:27 to 03:48. rv4-t23 chosen.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:02",
+   "el": "6h30m",
+   "text": "Pull-back built on rv4-t23 by re-photographing windows of it from closer (masters v1 to v8; takes pb3, tile, pb2, pb1, bl, fl, fu, hl, hu, cs, sm), 03:51 to 06:02. Tested six times on fresh viewers (a1 to ag3) and rebuilt each time: side-on head read as an animal and was replaced by a face-up skull; storm, sea specks, belly and neck join reworked.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:03",
+   "el": "6h31m",
+   "text": "User note: 'One update currently it looks like the Titan is just laying down in the ocean. I don't know if I love that. He doesn't look deep composed or creepy enough.' Read as 'decomposed'; applied without asking. The whole first body is dropped with its eight masters. New rule: the outline says corpse, the surface says continent. STATE brief added so that 'creepy' is measured against the old body as baseline.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:20",
+   "el": "6h48m",
+   "text": "The carcass: 14 takes from text and real orbital photographs only (cx), 06:12 to 06:20. Viewers flagged the first ones as sculpted, so they were re-photographed toward real orbital photography. cx-t9 chosen.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:39",
+   "el": "7h07m",
+   "text": "Master built on cx-t9 (master-c1, then master-x1 with more ocean round it) and tested (ao1 to ar3). The skeleton reads at once. Corrections the tests asked for: shoulder joints and collar bones, plainer limbs with hands and feet, a through-going strait between two rows of ribs, the storm on the backbone, a whiter salt pan.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:54",
+   "el": "7h22m",
+   "text": "Those corrections painted onto master-x1 as a layout (tools/guide_e.py, guide/cx-e-guide.png) and the wide picture made again from it: cx-e, three takes. cx-e-t2 chosen by eye and tested (as1 to au4) before anything was built on it.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:15",
+   "el": "7h43m",
+   "text": "Set x2: 21 closer plates of cx-e-t2 (e2), joined into master-x2 (tools/master.py); Heart lights added by script (tools/heart_x2.py); frame 1 plate pb1d. Tested (av1 to bc2): GLANCE 3 of 3, FULL 6 of 6, but the head reads as carved and the storm as an eruption or explosion to 4 of 6.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:42",
+   "el": "8h10m",
+   "text": "Set x4: head and storm re-photographed (e3-HD, five takes, takes 2 to 5 each tested on three viewers, take 4 kept; e3-ST-t1 kept), new frame 1 plate pb1e-t1. Tested (bi1 to bp2).",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:55",
+   "el": "8h23m",
+   "text": "Set x5: frame 3 of x4 drew 'a giant fish skeleton' from one viewer of three and 'fish-bone or feathers' from a second. Three other windows tested on nine new viewers (bq1 to bs3); window D adopted, by my choice on their answers.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "08:13",
+   "el": "8h41m",
+   "text": "Set x6: PROPORTION test on x5 (bt1 to bt3) says head too big 3 of 3. Head reduced to 0.66 and neck lengthened by one smooth warp of the master (tools/headwarp.py, tag c). Frame 2 drawn through the warp so the tested head is kept pixel for pixel; the sea round it re-photographed once (pb2g-t2) and merged outside a head mask (tools/f2_merge.py). master-x6.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "08:19",
+   "el": "8h47m",
+   "text": "x6 tested on 26 new viewers (bu1 to cb2): GLANCE 3 of 3, FULL 6 of 6, STATE 4, 4, 4, PLACES 6, 5, 6 of 6, head right 2 of 3 and slightly too big 1 of 3. Decision: stop here and hand over. The waist reads too long to 3 of 3 in the PROPORTION test; it is left as it is because that stretch of backbone is The Spine and carries the storm. Offered to the user as an option.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "08:33",
+   "el": "9h01m",
+   "text": "Record faults found and mended: prompts/pb2-g.txt had been overwritten at 08:10 with the new frame 2 prompt (now prompts/pb2-x6.txt); the original text was restored word for word from the session record. Ten replies of the x4 round that had not been saved to file were restored word for word from the session record (bp2 is cut at 4,000 characters there and is marked so).",
+   "entered": "08:41, after the fact"
   }
  ],
  "status": [
@@ -207,6 +290,94 @@
    "t": "02:39",
    "el": "3h07m",
    "text": "02:39 UTC: hand-over. Full set in direction B kept and shown inline: six places (establishing view, four details, layout sketch each) and the reveal; three single-step fixes swapped in (ribs detail 2, eye details 2 and 4); seven contact sheets; NOTES.md covers all 31 kept pictures plus the nine of step 1; ART-DIRECTIONS.md records packets 12 and 13, batch 23 and the default to B. 312 takes in the round. Step 2 was chosen by eye and not blind-tested. Repo pushed."
+  },
+  {
+   "t": "03:22",
+   "el": "3h50m",
+   "text": "Reveal redo status 1 (03:24 UTC): old reveal archived and pushed (592ecae); pose and geography decided; procedural layout map v1 drawn (tools/guide.py); twelve new public-domain orbital photographs fetched as rendering standards; first reveal takes next."
+  },
+  {
+   "t": "03:41",
+   "el": "4h09m",
+   "text": "Reveal redo status 2 (03:41 UTC), posted inline in the thread with 4 pictures. Captions as posted: Candidate A for the reveal frame (take 13) | Candidate B (take 14) | Candidate C (take 17) | Layout map the takes are held to (version 4)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "04:11",
+   "el": "4h39m",
+   "text": "Reveal redo status 3 (04:11 UTC), posted inline in the thread with 4 pictures. Captions as posted: Reveal frame, work in progress: the chosen take rebuilt at 4,236 px from nine re-photographed windows (shown reduced). The body is settled. The head is being replaced, see below | Pull-back frame 3, head and shoulders, cut from the same master so it agrees with the reveal frame exactly. Throat airways, lava field and ribs come into view. Head to be replaced | Rejected: first frame 2. Three fresh viewers named a reptile, a fish or bird, and a chameleon head. A side-on head with one eye reads as an animal | New head layout (sketch only, being rendered now): the skull lies face up, crown left, chin toward the chest. Lower socket is the lake, upper socket is dry, nose hollow, teeth, airways down the throat",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "04:34",
+   "el": "5h02m",
+   "text": "Reveal redo status 4 (04:34 UTC), posted inline in the thread with 3 pictures. Captions as posted: Frame 4, the reveal (work in progress): the body with the new face-up skull folded in. Joins around the head are still being healed. | Frame 2: the skull massif, the lake in its lower eye socket (take pb2-t21). 9 of 9 fresh viewers named a skull on this head design. | Frame 1: just above the lake (take pb1-t2), re-photographed from the frame 2 window; measured within 1 px of it.",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "04:49",
+   "el": "5h17m",
+   "text": "Reveal redo status 5 (04:49 UTC), posted inline in the thread with 4 pictures. Captions as posted: Frame 4, the reveal from orbit (storm cloud is being replaced) | Frame 3, head and shoulders | Frame 2, the lake is an eye socket in a skull massif | Frame 1, just above the lake",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "05:21",
+   "el": "5h49m",
+   "text": "Reveal redo status 6 (05:21 UTC), posted inline in the thread with 4 pictures. Captions as posted: Frame 4 (reveal), fifth build: one storm system on the backbone, weathered ribs, clearer sea | Frame 3, head and shoulders: sea specks replaced by clear water and thin cloud lines | Frame 2, the skull massif: corner streaks removed | Frame 1, just above the lake (unchanged)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "05:43",
+   "el": "6h11m",
+   "text": "Reveal redo status 7 (05:43 UTC), posted inline in the thread with 4 pictures. Captions as posted: 4. The whole titan from orbit (v6) | 3. Head, shoulders, the first places | 2. The lake is an eye socket | 1. Just above the lake",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:07",
+   "el": "6h35m",
+   "text": "Reveal redo status 8 (06:07 UTC), posted inline in the thread with 2 pictures. Captions as posted: Old body, last version (v8), frame 4: backbone now a mountain range with the storm against it over a sea of cloud | Old body, last version (v8), frame 3: the straight join at the neck is gone",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:19",
+   "el": "6h47m",
+   "text": "Reveal redo status 9 (06:19 UTC), posted inline in the thread with 2 pictures. Captions as posted: First carcass take A (cx-t6): bare bone, dried hide on about half | First carcass take B (cx-t5)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "06:39",
+   "el": "7h07m",
+   "text": "Reveal redo status 10 (06:39 UTC), posted inline in the thread with 3 pictures. Captions as posted: Frame 4, the reveal (wider frame, the whole carcass) | Frame 3, head and shoulders (crop of the same master) | Frame 2, the skull massif with the lake in its socket (crop of the same master)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:04",
+   "el": "7h32m",
+   "text": "Reveal redo status 11 (07:04 UTC), posted inline in the thread with 3 pictures. Captions as posted: New whole-body frame (layout only, fine detail being re-photographed now): head left, both arms, two rows of ribs, backbone with the storm, hips with the red salt flat, both legs | Chest, backbone and hips, enlarged: black Heart crust with one ember under the upper ribs, the strait between the two rows of ribs, storm on the backbone, red-veined salt flat in the hips | Head, enlarged: the round lake in the lower eye socket, the open jaw, the pitted throat (airways)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:16",
+   "el": "7h44m",
+   "text": "Reveal redo status 12 (07:16 UTC), posted inline in the thread with 4 pictures. Captions as posted: Frame 1. Just above the lake: the round shore fills the frame. About 360 km across (STATED) | Frame 2. Higher: the lake is an eye socket in a skull-shaped massif. About 1,300 km across | Frame 3. Head and shoulders; the airways, the Heart and the strait in the ribs come into view. About 2,200 km across | Frame 4, the reveal. The whole titan from orbit, about 4,000 km head to foot",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "07:36",
+   "el": "8h04m",
+   "text": "Reveal redo status 13 (07:36 UTC), posted inline in the thread with 3 pictures. Captions as posted: Frame 4, the reveal, corrected: storm is now a flat anvil line on the backbone; head re-made as real terrain | Frame 2, corrected head: crack is a rift valley, teeth are ragged headlands | Frame 3, head and shoulders with the corrected head",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "08:11",
+   "el": "8h39m",
+   "text": "Reveal redo status 14 (08:11 UTC), posted inline in the thread with 3 pictures. Captions as posted: Frame 4 as tested at 07:43 (head too big: 3 of 3 fresh viewers) | Frame 4 now: head scaled to 0.66 by one smooth warp, neck longer (in work, not yet tested) | Frame 3 now, new window (in work)",
+   "entered": "08:41, after the fact"
+  },
+  {
+   "t": "08:28",
+   "el": "8h56m",
+   "text": "Reveal redo status 15 (08:29 UTC): the final set x6 shown inline (four key frames and the marked copy) with the results of the 26-viewer test; no more image changes planned; sheets, notes and push next."
   }
  ],
  "takes": {
@@ -6434,6 +6605,3309 @@
     }
    ],
    "crit": []
+  },
+  "rv4-t1": {
+   "id": "rv4-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "45",
+   "path": "/home/user/workspace/r3/gen/rv4-t1.png",
+   "what": "reveal redo, guide v1, prompt a (anatomy named), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t2": {
+   "id": "rv4-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/rv4-t2.png",
+   "what": "reveal redo, guide v1, prompt a, Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t3": {
+   "id": "rv4-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-b",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/rv4-t3.png",
+   "what": "reveal redo, guide v1, prompt b (accident of geology), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t4": {
+   "id": "rv4-t4",
+   "model": "nano_banana_pro",
+   "prompt": "rv4-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/rv4-t4.png",
+   "what": "reveal redo, guide v1, prompt a, other model",
+   "size": "2752x1536",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t5": {
+   "id": "rv4-t5",
+   "model": "nano_banana_pro",
+   "prompt": "rv4-b",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/rv4-t5.png",
+   "what": "reveal redo, guide v1, prompt b, other model",
+   "size": "2752x1536",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t6": {
+   "id": "rv4-t6",
+   "model": "seedream_5",
+   "prompt": "rv4-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v1.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "157",
+   "path": "/home/user/workspace/r3/gen/rv4-t6.png",
+   "what": "reveal redo, guide v1, prompt a, other model",
+   "size": "2816x1584",
+   "t": "03:27",
+   "el": "3h55m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t10": {
+   "id": "rv4-t10",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/rv4-t10.png",
+   "what": "reveal redo, guide v3, prompt d (terrain language), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t11": {
+   "id": "rv4-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/rv4-t11.png",
+   "what": "reveal redo, guide v3, prompt d, Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t12": {
+   "id": "rv4-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/rv4-t12.png",
+   "what": "reveal redo, guide v3, prompt d, Apollo 17 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t7": {
+   "id": "rv4-t7",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/rv4-t7.png",
+   "what": "reveal redo, guide v3 (fuller body, rougher coast), prompt c (scale stated, flesh turned to land), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t8": {
+   "id": "rv4-t8",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/rv4-t8.png",
+   "what": "same as t7, second take",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t9": {
+   "id": "rv4-t9",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v3.png",
+    "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/rv4-t9.png",
+   "what": "reveal redo, guide v3, prompt c, Apollo 17 whole Earth + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:31",
+   "el": "3h59m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t13": {
+   "id": "rv4-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/rv4-t13.png",
+   "what": "reveal redo, guide v4 (uneven ribs, vents, marsh), prompt e (body not skeleton, nothing regular, cloud over land, finer place marks), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t14": {
+   "id": "rv4-t14",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/rv4-t14.png",
+   "what": "same as t13, second take",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t15": {
+   "id": "rv4-t15",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/rv4-t15.png",
+   "what": "same as t13, third take",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t16": {
+   "id": "rv4-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-apollo17-earth.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/rv4-t16.png",
+   "what": "reveal redo, guide v4, prompt e, Apollo 17 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t17": {
+   "id": "rv4-t17",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/rv4-t17.png",
+   "what": "reveal redo, guide v4, prompt e, Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t18": {
+   "id": "rv4-t18",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v4.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg",
+    "/home/user/workspace/r3/real/orb-natron.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/rv4-t18.png",
+   "what": "reveal redo, guide v4, prompt e, Gemini 11 + MODIS Arabia + ISS Lake Natron",
+   "size": "1672x941",
+   "t": "03:38",
+   "el": "4h06m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t19": {
+   "id": "rv4-t19",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "53",
+   "path": "/home/user/workspace/r3/gen/rv4-t19.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t20": {
+   "id": "rv4-t20",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "50",
+   "path": "/home/user/workspace/r3/gen/rv4-t20.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia, second take",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t21": {
+   "id": "rv4-t21",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/rv4-t21.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia, third take",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t22": {
+   "id": "rv4-t22",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "52",
+   "path": "/home/user/workspace/r3/gen/rv4-t22.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t23": {
+   "id": "rv4-t23",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/rv4-t23.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Baja, second take",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "rv4-t24": {
+   "id": "rv4-t24",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "rv4-f",
+   "refs": [
+    "/home/user/workspace/r3/guide/guide-f4-v5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg",
+    "/home/user/workspace/r3/real/orb-iss35-nile-sinai.jpg"
+   ],
+   "secs": "50",
+   "path": "/home/user/workspace/r3/gen/rv4-t24.png",
+   "what": "reveal redo, guide v5 (closed trunk, ragged hands and feet, finer place marks, flatter relief), prompt f (flat relief, no bolt, no flames, closed belly sea), Gemini 11 + MODIS Arabia + ISS Nile and Sinai",
+   "size": "1672x941",
+   "t": "03:48",
+   "el": "4h16m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t1": {
+   "id": "pb3-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb3-t1.png",
+   "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:53",
+   "el": "4h21m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t2": {
+   "id": "pb3-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/pb3-t2.png",
+   "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia, second take",
+   "size": "1672x941",
+   "t": "03:53",
+   "el": "4h21m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t3": {
+   "id": "pb3-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/pb3-t3.png",
+   "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + MODIS Arabia, third take",
+   "size": "1672x941",
+   "t": "03:53",
+   "el": "4h21m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t4": {
+   "id": "pb3-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-from-t23.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/pb3-t4.png",
+   "what": "pull-back frame 3 (head and shoulders): the frame-3 window of rv4-t23 enlarged 2.5x and re-photographed from lower, prompt pb3-a, MODIS Baja + ISS Sinai",
+   "size": "1672x941",
+   "t": "03:53",
+   "el": "4h21m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T00-t1": {
+   "id": "tile-T00-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T00",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T00-crop.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/tile-T00-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T00 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja",
+   "size": "1671x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T01-t1": {
+   "id": "tile-T01-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T01",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T01-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/tile-T01-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T01 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T02-t1": {
+   "id": "tile-T02-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T02",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T02-crop.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "32",
+   "path": "/home/user/workspace/r3/gen/tile-T02-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T02 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T10-t1": {
+   "id": "tile-T10-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T10",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T10-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/tile-T10-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T10 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia",
+   "size": "1671x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T11-t1": {
+   "id": "tile-T11-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T11",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T11-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/tile-T11-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T11 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T11-t2": {
+   "id": "tile-T11-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T11",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T11-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/tile-T11-t2.png",
+   "what": "same as tile-T11-t1, second take",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T12-t1": {
+   "id": "tile-T12-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T12",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T12-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/tile-T12-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T12 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T20-t1": {
+   "id": "tile-T20-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T20",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T20-crop.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/tile-T20-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T20 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + MODIS Baja",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T21-t1": {
+   "id": "tile-T21-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T21",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T21-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/tile-T21-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T21 of rv4-t23 enlarged 2.5x and re-photographed from lower, MODIS Baja + MODIS Arabia",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "tile-T22-t1": {
+   "id": "tile-T22-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pbT-T22",
+   "refs": [
+    "/home/user/workspace/r3/pull/tile-T22-crop.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-apollo17-earth.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/tile-T22-t1.png",
+   "what": "finer-grain plate for the reveal frame: window T22 of rv4-t23 enlarged 2.5x and re-photographed from lower, Gemini 11 + Apollo 17",
+   "size": "1672x941",
+   "t": "03:57",
+   "el": "4h25m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t1": {
+   "id": "pb2-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/pb2-t1.png",
+   "what": "pull-back frame 2 (skull massif): the frame-2 window of the master enlarged 2.13x and re-photographed from lower, prompt pb2-a (no added landforms), ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t2": {
+   "id": "pb2-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/pb2-t2.png",
+   "what": "pull-back frame 2, prompt pb2-a, ISS Sinai + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t3": {
+   "id": "pb2-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb2-t3.png",
+   "what": "pull-back frame 2, prompt pb2-b (adds nose hollow, cheek ridge, tooth-like headlands, jaw, suture canyons), ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t4": {
+   "id": "pb2-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb2-t4.png",
+   "what": "pull-back frame 2, prompt pb2-b, ISS Sinai + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t5": {
+   "id": "pb2-t5",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/pb2-t5.png",
+   "what": "pull-back frame 2, prompt pb2-b, ISS Richat + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t6": {
+   "id": "pb2-t6",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-crop-from-master-v1.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/pb2-t6.png",
+   "what": "pull-back frame 2, prompt pb2-b, ISS Brandberg + MODIS Baja, second take",
+   "size": "1672x941",
+   "t": "04:01",
+   "el": "4h29m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t10": {
+   "id": "pb2-t10",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "51",
+   "path": "/home/user/workspace/r3/gen/pb2-t10.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t11": {
+   "id": "pb2-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/pb2-t11.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Richat + MODIS Arabia",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t12": {
+   "id": "pb2-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/pb2-t12.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-d, ISS Sinai + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t7": {
+   "id": "pb2-t7",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "52",
+   "path": "/home/user/workspace/r3/gen/pb2-t7.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t8": {
+   "id": "pb2-t8",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb2-t8.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Richat + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t9": {
+   "id": "pb2-t9",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-c",
+   "refs": [
+    "/home/user/workspace/r3/guide/head-v2-f2.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb2-t9.png",
+   "what": "pull-back frame 2 (skull massif), new face-up skull: layout head-v2-f2 (painted over the frame-2 window of the master), prompt pb2-c, ISS Sinai + MODIS Arabia",
+   "size": "1672x941",
+   "t": "04:12",
+   "el": "4h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t13": {
+   "id": "pb2-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-f",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/pb2-t13.png",
+   "what": "pull-back frame 2 (skull massif): one revision of pb2-t12 after the first viewer tests (teeth and mouth made irregular, dry socket broken, river removed, vapour as one haze, finer cloud), prompt pb2-f, ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:17",
+   "el": "4h46m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t14": {
+   "id": "pb2-t14",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-f",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/pb2-t14.png",
+   "what": "pull-back frame 2 (skull massif): one revision of pb2-t12 after the first viewer tests (teeth and mouth made irregular, dry socket broken, river removed, vapour as one haze, finer cloud), prompt pb2-f, ISS Sinai + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:17",
+   "el": "4h46m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t15": {
+   "id": "pb2-t15",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-f",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/pb2-t15.png",
+   "what": "pull-back frame 2 (skull massif): one revision of pb2-t12 after the first viewer tests (teeth and mouth made irregular, dry socket broken, river removed, vapour as one haze, finer cloud), prompt pb2-f, ISS Richat + MODIS Arabia",
+   "size": "1672x941",
+   "t": "04:17",
+   "el": "4h46m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t16": {
+   "id": "pb2-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-f",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t11.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "51",
+   "path": "/home/user/workspace/r3/gen/pb2-t16.png",
+   "what": "pull-back frame 2 (skull massif): one revision of pb2-t11 after the first viewer tests (teeth and mouth made irregular, dry socket broken, river removed, vapour as one haze, finer cloud), prompt pb2-f, ISS Brandberg + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:17",
+   "el": "4h46m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t17": {
+   "id": "pb2-t17",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-g",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "52",
+   "path": "/home/user/workspace/r3/gen/pb2-t17.png",
+   "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Brandberg + MODIS Baja",
+   "size": "1671x941",
+   "t": "04:20",
+   "el": "4h48m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t18": {
+   "id": "pb2-t18",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-g",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/pb2-t18.png",
+   "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Sinai + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:20",
+   "el": "4h48m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t19": {
+   "id": "pb2-t19",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-g",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t12.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/pb2-t19.png",
+   "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t12 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Richat + MODIS Arabia",
+   "size": "1671x941",
+   "t": "04:20",
+   "el": "4h48m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t20": {
+   "id": "pb2-t20",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-g",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t11.png",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/pb2-t20.png",
+   "what": "pull-back frame 2 (skull massif): one milder revision of pb2-t11 (teeth uneven but still two rows, sockets and nose kept dark, river removed, vapour as one haze, finer cloud), prompt pb2-g, ISS Brandberg + MODIS Baja",
+   "size": "1670x942",
+   "t": "04:20",
+   "el": "4h48m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1-t1": {
+   "id": "pb1-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/pb1-t1.png",
+   "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Richat",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1-t2": {
+   "id": "pb1-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/pb1-t2.png",
+   "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Richat, second take",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1-t3": {
+   "id": "pb1-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/pb1-t3.png",
+   "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Crater Lake + ISS Brandberg",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1-t4": {
+   "id": "pb1-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-crop-from-t17.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb1-t4.png",
+   "what": "pull-back frame 1 (the lake): the lake window of pb2-t17 enlarged 3.7x and re-photographed from lower, prompt pb1-a, ISS Richat + ISS Brandberg",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t21": {
+   "id": "pb2-t21",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-h",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t17.png",
+    "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+    "/home/user/workspace/r3/real/orb-modis-popcorn.jpg"
+   ],
+   "secs": "45",
+   "path": "/home/user/workspace/r3/gen/pb2-t21.png",
+   "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS popcorn cumulus",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t22": {
+   "id": "pb2-t22",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-h",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t17.png",
+    "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+    "/home/user/workspace/r3/real/orb-modis-popcorn.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/pb2-t22.png",
+   "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS popcorn cumulus, second take",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t23": {
+   "id": "pb2-t23",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-h",
+   "refs": [
+    "/home/user/workspace/r3/gen/pb2-t17.png",
+    "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/pb2-t23.png",
+   "what": "pull-back frame 2 (skull massif): pb2-t17 with only the sea and weather redone (no wave flecks; fields of tiny cumulus with shadows), prompt pb2-h, MODIS cloud streets + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:30",
+   "el": "4h58m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t5": {
+   "id": "pb3-t5",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-v2.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/pb3-t5.png",
+   "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS Baja + MODIS Arabia",
+   "size": "1671x941",
+   "t": "04:34",
+   "el": "5h03m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t6": {
+   "id": "pb3-t6",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-v2.png",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb3-t6.png",
+   "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS Baja + MODIS Arabia, second take",
+   "size": "1672x941",
+   "t": "04:34",
+   "el": "5h03m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t7": {
+   "id": "pb3-t7",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-v2.png",
+    "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "45",
+   "path": "/home/user/workspace/r3/gen/pb3-t7.png",
+   "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS cloud streets + MODIS Baja",
+   "size": "1672x941",
+   "t": "04:34",
+   "el": "5h03m",
+   "eye": [],
+   "crit": []
+  },
+  "pb3-t8": {
+   "id": "pb3-t8",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb3-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/f3-crop-v2.png",
+    "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/pb3-t8.png",
+   "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS cloud streets + MODIS Arabia",
+   "size": "1672x941",
+   "t": "04:34",
+   "el": "5h03m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t1": {
+   "id": "bl-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/bl-t1.png",
+   "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-a; MODIS thunderstorms Philippines + Louisiana as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t2": {
+   "id": "bl-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/bl-t2.png",
+   "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-a; MODIS thunderstorms Philippines + Louisiana as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t3": {
+   "id": "bl-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/bl-t3.png",
+   "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-b (adds a faint lightning glow); MODIS thunderstorms Philippines + Louisiana as standards",
+   "size": "1671x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t4": {
+   "id": "bl-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-b",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/bl-t4.png",
+   "what": "reveal frame 4, chest and belly window of master v3 (x 1000, y 760, 1672 px) re-photographed with four corrections: storm seen from above on a clear backbone island chain, wider tidal strait, lava as vents and rivers, no mist over the channel; prompt bl-b (adds a faint lightning glow); MODIS thunderstorms Philippines + Louisiana as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "fl-t1": {
+   "id": "fl-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-foot",
+   "refs": [
+    "/home/user/workspace/r3/pull/footL-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/fl-t1.png",
+   "what": "reveal frame 4, lower foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "fl-t2": {
+   "id": "fl-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-foot",
+   "refs": [
+    "/home/user/workspace/r3/pull/footL-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/fl-t2.png",
+   "what": "reveal frame 4, lower foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "fu-t1": {
+   "id": "fu-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-foot",
+   "refs": [
+    "/home/user/workspace/r3/pull/footU-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/fu-t1.png",
+   "what": "reveal frame 4, upper foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "fu-t2": {
+   "id": "fu-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-foot",
+   "refs": [
+    "/home/user/workspace/r3/pull/footU-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/fu-t2.png",
+   "what": "reveal frame 4, upper foot: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-foot; ISS Dahlak + MODIS Baja as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "hl-t1": {
+   "id": "hl-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-hand",
+   "refs": [
+    "/home/user/workspace/r3/pull/handL-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/hl-t1.png",
+   "what": "reveal frame 4, lower hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "hl-t2": {
+   "id": "hl-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-hand",
+   "refs": [
+    "/home/user/workspace/r3/pull/handL-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/hl-t2.png",
+   "what": "reveal frame 4, lower hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "hu-t1": {
+   "id": "hu-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-hand",
+   "refs": [
+    "/home/user/workspace/r3/pull/handU-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/hu-t1.png",
+   "what": "reveal frame 4, upper hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "hu-t2": {
+   "id": "hu-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ex-hand",
+   "refs": [
+    "/home/user/workspace/r3/pull/handU-crop.png",
+    "/home/user/workspace/r3/real/orb-iss39-dahlak.jpg",
+    "/home/user/workspace/r3/real/orb-modis-bahamas.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/hu-t2.png",
+   "what": "reveal frame 4, upper hand: an 836 px window of master v3 enlarged 2x and re-photographed with the fingers or toes weathered into unequal peninsulas, island chains and shoals; prompt ex-hand; ISS Dahlak + MODIS Bahamas as standards",
+   "size": "1671x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t24": {
+   "id": "pb2-t24",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-i",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-final.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/pb2-t24.png",
+   "what": "pull-back frame 2 revision: only the floor of the dry socket (no dune ripples) and the top left corner (no streaks) changed; prompt pb2-i; ISS Richat + MODIS Arabia as standards; used as a patch source only",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t25": {
+   "id": "pb2-t25",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-i",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-final.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+   ],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/pb2-t25.png",
+   "what": "pull-back frame 2 revision: only the floor of the dry socket (no dune ripples) and the top left corner (no streaks) changed; prompt pb2-i; ISS Richat + MODIS Arabia as standards; used as a patch source only",
+   "size": "1672x941",
+   "t": "04:50",
+   "el": "5h18m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t5": {
+   "id": "bl-t5",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-c",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v4.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/bl-t5.png",
+   "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain; prompt bl-c; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards",
+   "size": "1672x941",
+   "t": "05:08",
+   "el": "5h36m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t6": {
+   "id": "bl-t6",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-c",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v4.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/bl-t6.png",
+   "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain; prompt bl-c; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards",
+   "size": "1672x941",
+   "t": "05:08",
+   "el": "5h36m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t7": {
+   "id": "bl-t7",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-d",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v4.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/bl-t7.png",
+   "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain, and the rib ridges weathered unevenly; prompt bl-d; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards",
+   "size": "1671x941",
+   "t": "05:08",
+   "el": "5h36m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t8": {
+   "id": "bl-t8",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-d",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v4.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/bl-t8.png",
+   "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain, and the rib ridges weathered unevenly; prompt bl-d; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards",
+   "size": "1671x941",
+   "t": "05:08",
+   "el": "5h36m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t26": {
+   "id": "pb2-t26",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-k",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-sea-guide.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/pb2-t26.png",
+   "what": "reveal frame 2 re-photographed with only the open-sea clouds brought into focus (they come enlarged from frame 3, so that both frames show the same clouds); used for the open sea only; prompt pb2-k; MODIS Lesser Sunda Islands as the standard",
+   "size": "1672x941",
+   "t": "05:18",
+   "el": "5h46m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2-t27": {
+   "id": "pb2-t27",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-k",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-sea-guide.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "32",
+   "path": "/home/user/workspace/r3/gen/pb2-t27.png",
+   "what": "reveal frame 2 re-photographed with only the open-sea clouds brought into focus (they come enlarged from frame 3, so that both frames show the same clouds); used for the open sea only; prompt pb2-k; MODIS Lesser Sunda Islands as the standard",
+   "size": "1672x941",
+   "t": "05:18",
+   "el": "5h46m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t10": {
+   "id": "bl-t10",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-e",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v5.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/bl-t10.png",
+   "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by a loose cluster of unequal thunderstorm tops over the island chain; MODIS Philippines thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-e; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:35",
+   "el": "6h03m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t11": {
+   "id": "bl-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-f",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v5.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/bl-t11.png",
+   "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by island-anchored thunderstorms with parallel anvils drawn out by the wind; MODIS Hainan thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-f; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:35",
+   "el": "6h03m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t12": {
+   "id": "bl-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-f",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v5.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/bl-t12.png",
+   "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by island-anchored thunderstorms with parallel anvils drawn out by the wind; MODIS Hainan thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-f; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:35",
+   "el": "6h03m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t9": {
+   "id": "bl-t9",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-e",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v5.png",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/bl-t9.png",
+   "what": "reveal frame 4, chest and belly window of master v5 (x 1000, y 760, 1672 px) re-photographed with only the storm changed: the single white cloud that viewers read as an explosion puff replaced by a loose cluster of unequal thunderstorm tops over the island chain; MODIS Philippines thunderstorms + MODIS Lesser Sunda Islands as standards; prompt bl-e; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:35",
+   "el": "6h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cs-t1": {
+   "id": "cs-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cs-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/leg-crop-v6.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/cs-t1.png",
+   "what": "reveal frame 4, lower-leg window of master v6 (x 1799, y 1215, 1672 px) re-photographed with only one thing changed: the band of evenly spaced white cloud dots across the knee, which one fresh viewer read as 'a straight, repetitive dotted line' and another as 'tiny popcorn clouds', replaced by a few ragged cloud patches; MODIS Lesser Sunda Islands as the standard; prompt cs-a; to be used inside a hand-drawn outline round the band only",
+   "size": "1672x941",
+   "t": "05:44",
+   "el": "6h12m",
+   "eye": [],
+   "crit": []
+  },
+  "cs-t2": {
+   "id": "cs-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cs-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/leg-crop-v6.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/cs-t2.png",
+   "what": "reveal frame 4, lower-leg window of master v6 (x 1799, y 1215, 1672 px) re-photographed with only one thing changed: the band of evenly spaced white cloud dots across the knee, which one fresh viewer read as 'a straight, repetitive dotted line' and another as 'tiny popcorn clouds', replaced by a few ragged cloud patches; MODIS Lesser Sunda Islands as the standard; prompt cs-a; to be used inside a hand-drawn outline round the band only",
+   "size": "1672x941",
+   "t": "05:44",
+   "el": "6h12m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t13": {
+   "id": "bl-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-g",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/bl-t13.png",
+   "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become one thunderstorm standing against its lower flank; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-g; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t14": {
+   "id": "bl-t14",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-g",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/bl-t14.png",
+   "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become one thunderstorm standing against its lower flank; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-g; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t15": {
+   "id": "bl-t15",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-h",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/bl-t15.png",
+   "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become a sea of cloud dammed by the range with a thunderstorm standing out of it; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-h; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "bl-t16": {
+   "id": "bl-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "bl-h",
+   "refs": [
+    "/home/user/workspace/r3/pull/belly-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/bl-t16.png",
+   "what": "reveal frame 4, chest and belly window of master v7 (x 1000, y 760, 1672 px) re-photographed with the inland sea changed: three fresh viewers who were given the six places could not find 'a storm on a ridge of spine' (no visible spine; the cloud streaks read as smoke from the lava field). The chain of small islands becomes one narrow range of vertebra massifs across the inland sea, and the streaks become a sea of cloud dammed by the range with a thunderstorm standing out of it; MODIS Lesser Sunda Islands + MODIS Philippines thunderstorms as standards; prompt bl-h; to be used for the inland sea only",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "sm-t1": {
+   "id": "sm-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "sm-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/seam-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/sm-t1.png",
+   "what": "pull-back frames 2 and 3: a window at frame-2 scale across the right edge of frame 2 (master x 676 to 1536, y 1145 to 1629; left half = right half of the frame-2 plate, right half = the master enlarged 1.944x) re-photographed to remove the straight vertical join that a critic found at the right edge of frame 2 inside frame 3 and to sharpen the right half; ISS Sinai + MODIS Baja as standards; prompt sm-a",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "sm-t2": {
+   "id": "sm-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "sm-a",
+   "refs": [
+    "/home/user/workspace/r3/pull/seam-crop-v7.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/sm-t2.png",
+   "what": "pull-back frames 2 and 3: a window at frame-2 scale across the right edge of frame 2 (master x 676 to 1536, y 1145 to 1629; left half = right half of the frame-2 plate, right half = the master enlarged 1.944x) re-photographed to remove the straight vertical join that a critic found at the right edge of frame 2 inside frame 3 and to sharpen the right half; ISS Sinai + MODIS Baja as standards; prompt sm-a",
+   "size": "1672x941",
+   "t": "05:55",
+   "el": "6h23m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t1": {
+   "id": "cx-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-a",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/cx-t1.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t2": {
+   "id": "cx-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-a",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/cx-t2.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t3": {
+   "id": "cx-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-a",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/cx-t3.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t4": {
+   "id": "cx-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-a",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/cx-t4.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, rags of dark hide (under a third), belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-a",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t5": {
+   "id": "cx-t5",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-b",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx-t5.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, hide dried onto about half of the body like a mummy, belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-b",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t6": {
+   "id": "cx-t6",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-b",
+   "refs": [
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/cx-t6.png",
+   "what": "reveal frame 4, new body after the user's note that the titan 'is just laying down in the ocean' and 'doesn't look decomposed or creepy enough': the carcass, text only (no layout map): bare ivory bone ranges, hide dried onto about half of the body like a mummy, belly gone, jaw fallen open, one forearm and one shin broken and half drowned, stained sea, evening light; Gemini 11 India + ISS Musandam + MODIS Barents bloom as standards; prompt cx-b",
+   "size": "1672x941",
+   "t": "06:12",
+   "el": "6h40m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t10": {
+   "id": "cx-t10",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-c",
+   "refs": [
+    "/home/user/workspace/r3/gen/cx-t5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "58",
+   "path": "/home/user/workspace/r3/gen/cx-t10.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t5, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t11": {
+   "id": "cx-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-t6-soft.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "54",
+   "path": "/home/user/workspace/r3/gen/cx-t11.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t6 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t12": {
+   "id": "cx-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-t5-soft.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/cx-t12.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t5 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t13": {
+   "id": "cx-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-c",
+   "refs": [
+    "/home/user/workspace/r3/gen/cx-t2.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "49",
+   "path": "/home/user/workspace/r3/gen/cx-t13.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t2, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t14": {
+   "id": "cx-t14",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-d",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-t6-soft.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx-t14.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t6 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t7": {
+   "id": "cx-t7",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-c",
+   "refs": [
+    "/home/user/workspace/r3/gen/cx-t6.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/cx-t7.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t6, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t8": {
+   "id": "cx-t8",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-c",
+   "refs": [
+    "/home/user/workspace/r3/gen/cx-t6.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/cx-t8.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t6, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-t9": {
+   "id": "cx-t9",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-c",
+   "refs": [
+    "/home/user/workspace/r3/gen/cx-t5.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "53",
+   "path": "/home/user/workspace/r3/gen/cx-t9.png",
+   "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t5, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c",
+   "size": "1672x941",
+   "t": "06:20",
+   "el": "6h48m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T00-t1": {
+   "id": "cx9-T00-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T00",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T00-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/cx9-T00-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T00 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T01-t1": {
+   "id": "cx9-T01-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T01",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T01-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/cx9-T01-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T01 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-baja.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T02-t1": {
+   "id": "cx9-T02-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T02",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T02-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/cx9-T02-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T02 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T10-t1": {
+   "id": "cx9-T10-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T10",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T10-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/cx9-T10-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T10 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-tstorm-phil-crop.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T11-t1": {
+   "id": "cx9-T11-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T11",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T11-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/cx9-T11-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T11 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-tstorm-phil-crop.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T12-t1": {
+   "id": "cx9-T12-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T12",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T12-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/cx9-T12-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T12 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T20-t1": {
+   "id": "cx9-T20-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T20",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T20-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx9-T20-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T20 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T21-t1": {
+   "id": "cx9-T21-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T21",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T21-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/cx9-T21-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T21 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-T22-t1": {
+   "id": "cx9-T22-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxT-T22",
+   "refs": [
+    "/home/user/workspace/r3/pull/cx9-T22-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/cx9-T22-t1.png",
+   "what": "finer-grain plate for the reveal frame (carcass body cx-t9): window T22 enlarged 2.5x and re-photographed from lower with real terrain; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:26",
+   "el": "6h54m",
+   "eye": [],
+   "crit": []
+  },
+  "op-t1": {
+   "id": "op-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "op-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/ext-placeholder-1672.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/op-t1.png",
+   "what": "wider frame for the reveal: frame 4 of master c1 laid on a larger sheet (250 px more ocean at the left, 80 top, 94 bottom, 60 right, in frame-4 px) so the pull-back can stay centred on the lake for frames 1 to 3; the border is new ocean, cloud and planet edge; the centre is pasted back from the master afterwards; prompt op-a",
+   "size": "1672x941",
+   "t": "06:31",
+   "el": "6h59m",
+   "eye": [],
+   "crit": []
+  },
+  "op-t2": {
+   "id": "op-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "op-a",
+   "refs": [
+    "/home/user/workspace/r3/guide/ext-placeholder-1672.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/op-t2.png",
+   "what": "wider frame for the reveal: frame 4 of master c1 laid on a larger sheet (250 px more ocean at the left, 80 top, 94 bottom, 60 right, in frame-4 px) so the pull-back can stay centred on the lake for frames 1 to 3; the border is new ocean, cloud and planet edge; the centre is pasted back from the master afterwards; prompt op-a",
+   "size": "1672x941",
+   "t": "06:31",
+   "el": "6h59m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M00-t1": {
+   "id": "cx9-M00-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M00",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M00-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/cx9-M00-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M00 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M01-t1": {
+   "id": "cx9-M01-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M01",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M01-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx9-M01-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M01 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M02-t1": {
+   "id": "cx9-M02-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M02",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M02-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx9-M02-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M02 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M03-t1": {
+   "id": "cx9-M03-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M03",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M03-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/cx9-M03-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M03 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M10-t1": {
+   "id": "cx9-M10-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M10",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M10-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/cx9-M10-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M10 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M13-t1": {
+   "id": "cx9-M13-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M13",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M13-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/cx9-M13-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M13 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M20-t1": {
+   "id": "cx9-M20-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M20",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M20-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/cx9-M20-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M20 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M23-t1": {
+   "id": "cx9-M23-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M23",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M23-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/cx9-M23-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M23 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M30-t1": {
+   "id": "cx9-M30-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M30",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M30-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/cx9-M30-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M30 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M31-t1": {
+   "id": "cx9-M31-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M31",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M31-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/cx9-M31-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M31 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M32-t1": {
+   "id": "cx9-M32-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M32",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M32-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/cx9-M32-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M32 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "cx9-M33-t1": {
+   "id": "cx9-M33-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxM-M33",
+   "refs": [
+    "/home/user/workspace/r3/pull/ext-M33-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/cx9-M33-t1.png",
+   "what": "finer-grain plate for the border of the wider reveal frame: window M33 of pull/ext-parent.png enlarged 2.5x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "06:35",
+   "el": "7h03m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1c-t1": {
+   "id": "pb1c-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-c",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x1-crop.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/pb1c-t1.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss42-richat.jpg",
+   "size": "1672x941",
+   "t": "06:40",
+   "el": "7h08m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1c-t2": {
+   "id": "pb1c-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-c",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x1-crop.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/pb1c-t2.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss47-brandberg.jpg",
+   "size": "1672x941",
+   "t": "06:40",
+   "el": "7h08m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1c-t3": {
+   "id": "pb1c-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-c",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x1-crop.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/pb1c-t3.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower; standards orb-iss42-richat.jpg + orb-iss47-brandberg.jpg",
+   "size": "1672x941",
+   "t": "06:40",
+   "el": "7h08m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-e-t1": {
+   "id": "cx-e-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-e-guide.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/cx-e-t1.png",
+   "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)",
+   "size": "1672x941",
+   "t": "06:54",
+   "el": "7h22m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-e-t2": {
+   "id": "cx-e-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-e-guide.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/cx-e-t2.png",
+   "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)",
+   "size": "1672x941",
+   "t": "06:54",
+   "el": "7h22m",
+   "eye": [],
+   "crit": []
+  },
+  "cx-e-t4": {
+   "id": "cx-e-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cx-e",
+   "refs": [
+    "/home/user/workspace/r3/guide/cx-e-guide.png",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/cx-e-t4.png",
+   "what": "wide reveal frame re-made from the painted layout guide/cx-e-guide.png (master-x1 reduced, with shoulders, limbs, rib strait, storm and salt pan repainted after the blind tests)",
+   "size": "1672x941",
+   "t": "06:54",
+   "el": "7h22m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W00-t1": {
+   "id": "e2-W00-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W00",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W00-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/e2-W00-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W00 of gen/cx-e-t2.png (x 0, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W01-t1": {
+   "id": "e2-W01-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W01",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W01-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/e2-W01-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W01 of gen/cx-e-t2.png (x 0, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W02-t1": {
+   "id": "e2-W02-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W02",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W02-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/e2-W02-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W02 of gen/cx-e-t2.png (x 0, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W03-t1": {
+   "id": "e2-W03-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W03",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W03-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/e2-W03-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W03 of gen/cx-e-t2.png (x 0, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W10-t1": {
+   "id": "e2-W10-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W10",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W10-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/e2-W10-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W10 of gen/cx-e-t2.png (x 372, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W11-t1": {
+   "id": "e2-W11-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W11",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W11-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/e2-W11-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W11 of gen/cx-e-t2.png (x 372, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg + orb-modis-tstorm-phil-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W12-t1": {
+   "id": "e2-W12-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W12",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W12-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/e2-W12-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W12 of gen/cx-e-t2.png (x 372, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W13-t1": {
+   "id": "e2-W13-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W13",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W13-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/e2-W13-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W13 of gen/cx-e-t2.png (x 372, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W20-t1": {
+   "id": "e2-W20-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W20",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W20-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/e2-W20-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W20 of gen/cx-e-t2.png (x 743, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W21-t1": {
+   "id": "e2-W21-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W21",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W21-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/e2-W21-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W21 of gen/cx-e-t2.png (x 743, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg + orb-modis-tstorm-phil-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W22-t1": {
+   "id": "e2-W22-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W22",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W22-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/e2-W22-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W22 of gen/cx-e-t2.png (x 743, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W23-t1": {
+   "id": "e2-W23-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W23",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W23-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/e2-W23-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W23 of gen/cx-e-t2.png (x 743, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W30-t1": {
+   "id": "e2-W30-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W30",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W30-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/e2-W30-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W30 of gen/cx-e-t2.png (x 1115, y 0 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W31-t1": {
+   "id": "e2-W31-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W31",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W31-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/e2-W31-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W31 of gen/cx-e-t2.png (x 1115, y 209 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W32-t1": {
+   "id": "e2-W32-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W32",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W32-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/e2-W32-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W32 of gen/cx-e-t2.png (x 1115, y 418 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-W33-t1": {
+   "id": "e2-W33-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-W33",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-W33-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/e2-W33-t1.png",
+   "what": "fine plate for the second wide carcass frame: window W33 of gen/cx-e-t2.png (x 1115, y 627 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:05",
+   "el": "7h33m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-HD-t1": {
+   "id": "e2-HD-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/e2-HD-t1.png",
+   "what": "fine plate for the second wide carcass frame: window HD of gen/cx-e-t2.png (x 28, y 276 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; head, centred on the lake; frame 2 of the pull-back lies wholly inside it; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg",
+   "size": "1672x941",
+   "t": "07:06",
+   "el": "7h34m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-ST-t1": {
+   "id": "e2-ST-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-ST",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-ST-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/e2-ST-t1.png",
+   "what": "fine plate for the second wide carcass frame: window ST of gen/cx-e-t2.png (x 790, y 281 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; backbone, storm, hips and salt flat; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg + orb-modis-tstorm-phil-crop.jpg + orb-modis-tstorm-hainan.jpg",
+   "size": "1672x941",
+   "t": "07:06",
+   "el": "7h34m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-WA-t1": {
+   "id": "e2-WA-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-WA",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-WA-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "45",
+   "path": "/home/user/workspace/r3/gen/e2-WA-t1.png",
+   "what": "fine plate for the second wide carcass frame: window WA of gen/cx-e-t2.png (x 602, y 594 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; lower arm from the elbow, and its hand; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:06",
+   "el": "7h34m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-WF-t1": {
+   "id": "e2-WF-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-WF",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-WF-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/e2-WF-t1.png",
+   "what": "fine plate for the second wide carcass frame: window WF of gen/cx-e-t2.png (x 1040, y 520 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; bent leg from below the knee to the foot; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:06",
+   "el": "7h34m",
+   "eye": [],
+   "crit": []
+  },
+  "e2-WG-t1": {
+   "id": "e2-WG-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-WG",
+   "refs": [
+    "/home/user/workspace/r3/pull/e2-WG-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/e2-WG-t1.png",
+   "what": "fine plate for the second wide carcass frame: window WG of gen/cx-e-t2.png (x 1115, y 130 of 1672x941; 557x313 px) enlarged 3.0x and re-photographed from lower; straight leg from knee to foot; standards orb-iss23-musandam.jpg + orb-modis-barents-bloom.jpg",
+   "size": "1672x941",
+   "t": "07:06",
+   "el": "7h34m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1d-t1": {
+   "id": "pb1d-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-d",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x2-crop.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/pb1d-t1.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss42-richat.jpg",
+   "size": "1672x941",
+   "t": "07:13",
+   "el": "7h41m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1d-t2": {
+   "id": "pb1d-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-d",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x2-crop.png",
+    "/home/user/workspace/r3/real/orb-iss13-oregon.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/pb1d-t2.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss13-oregon.jpg + orb-iss47-brandberg.jpg",
+   "size": "1672x941",
+   "t": "07:13",
+   "el": "7h41m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1d-t3": {
+   "id": "pb1d-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-d",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x2-crop.png",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/pb1d-t3.png",
+   "what": "frame 1 plate for the carcass pull-back: the lake window (148 px of the wide frame, 444 px of master-x2h) enlarged 3.76x and re-photographed from lower; standards orb-iss42-richat.jpg + orb-iss47-brandberg.jpg",
+   "size": "1672x941",
+   "t": "07:13",
+   "el": "7h41m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-HD-t1": {
+   "id": "e3-HD-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD2",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/e3-HD-t1.png",
+   "what": "correction plate for the head of the wide carcass master: crack to rift valley, pegs to broken stacks, round pit to ragged sinkhole, drainage; take 1",
+   "size": "1672x941",
+   "t": "07:27",
+   "el": "7h55m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-HD-t2": {
+   "id": "e3-HD-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD2",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "43",
+   "path": "/home/user/workspace/r3/gen/e3-HD-t2.png",
+   "what": "correction plate for the head of the wide carcass master: crack to rift valley, pegs to broken stacks, round pit to ragged sinkhole, drainage; take 2",
+   "size": "1672x941",
+   "t": "07:27",
+   "el": "7h55m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-ST-t1": {
+   "id": "e3-ST-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-ST2",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-ST-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+   ],
+   "secs": "44",
+   "path": "/home/user/workspace/r3/gen/e3-ST-t1.png",
+   "what": "correction plate for the storm on the backbone: ball with rays and trail to a flat anvil line with shadow and lightning; take 1",
+   "size": "1672x941",
+   "t": "07:27",
+   "el": "7h55m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-ST-t2": {
+   "id": "e3-ST-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-ST2",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-ST-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg",
+    "/home/user/workspace/r3/real/orb-modis-tstorm-hainan.jpg"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/e3-ST-t2.png",
+   "what": "correction plate for the storm on the backbone: ball with rays and trail to a flat anvil line with shadow and lightning; take 2",
+   "size": "1672x941",
+   "t": "07:27",
+   "el": "7h55m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-HD-t3": {
+   "id": "e3-HD-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD3",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/e3-HD-t3.png",
+   "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 3",
+   "size": "1672x941",
+   "t": "07:32",
+   "el": "8h00m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-HD-t4": {
+   "id": "e3-HD-t4",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD3",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "48",
+   "path": "/home/user/workspace/r3/gen/e3-HD-t4.png",
+   "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 4",
+   "size": "1672x941",
+   "t": "07:32",
+   "el": "8h00m",
+   "eye": [],
+   "crit": []
+  },
+  "e3-HD-t5": {
+   "id": "e3-HD-t5",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "cxW-HD3",
+   "refs": [
+    "/home/user/workspace/r3/pull/e3-HD-crop.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "47",
+   "path": "/home/user/workspace/r3/gen/e3-HD-t5.png",
+   "what": "correction plate for the head, second wording: teeth kept in number and place but each made a ragged stack, both sockets kept dark; take 5",
+   "size": "1672x941",
+   "t": "07:32",
+   "el": "8h00m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1e-t1": {
+   "id": "pb1e-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-e",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x4-crop.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/pb1e-t1.png",
+   "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 1",
+   "size": "1672x941",
+   "t": "07:41",
+   "el": "8h09m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1e-t2": {
+   "id": "pb1e-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-e",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x4-crop.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "46",
+   "path": "/home/user/workspace/r3/gen/pb1e-t2.png",
+   "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 2",
+   "size": "1672x941",
+   "t": "07:41",
+   "el": "8h09m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1e-t3": {
+   "id": "pb1e-t3",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-e",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x4-crop.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-iss42-richat.jpg"
+   ],
+   "secs": "51",
+   "path": "/home/user/workspace/r3/gen/pb1e-t3.png",
+   "what": "frame 1 plate for the corrected master (master-x4): the lake window (148 px of the wide frame, 444 px of the master) enlarged 3.76x and re-photographed from lower, with a river gorge and delta, uneven rim, wind slicks and a few streets of minute cloud; standards orb-iss44-sinai.jpg + orb-iss42-richat.jpg; take 3",
+   "size": "1672x941",
+   "t": "07:41",
+   "el": "8h09m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1f-t1": {
+   "id": "pb1f-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-f",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x4-crop.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "52",
+   "path": "/home/user/workspace/r3/gen/pb1f-t1.png",
+   "what": "frame 1 plate for the corrected master (master-x4): as pb1-e but with no cloud; standards orb-iss44-sinai.jpg + orb-iss47-brandberg.jpg; take 1",
+   "size": "1672x941",
+   "t": "07:41",
+   "el": "8h09m",
+   "eye": [],
+   "crit": []
+  },
+  "pb1f-t2": {
+   "id": "pb1f-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb1-f",
+   "refs": [
+    "/home/user/workspace/r3/pull/f1-x4-crop.png",
+    "/home/user/workspace/r3/real/orb-iss44-sinai.jpg",
+    "/home/user/workspace/r3/real/orb-iss47-brandberg.jpg"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/pb1f-t2.png",
+   "what": "frame 1 plate for the corrected master (master-x4): as pb1-e but with no cloud; standards orb-iss44-sinai.jpg + orb-iss47-brandberg.jpg; take 2",
+   "size": "1672x941",
+   "t": "07:41",
+   "el": "8h09m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2g-t1": {
+   "id": "pb2g-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-x6",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-x6-direct.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "40",
+   "path": "/home/user/workspace/r3/gen/pb2g-t1.png",
+   "what": "frame 2 plate after the head was brought to adult proportion (tools/headwarp.py, s 0.66): the frame-2 window drawn straight from the old master through the warp (pull/f2-x6-direct.png; the head is pixel-identical to the tested frame 2, the sea and throat around it are enlarged 1.6 to 2.4 times and soft) re-photographed so the surroundings are sharp again; only the parts outside the head are used; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg; take 1",
+   "size": "1671x941",
+   "t": "08:12",
+   "el": "8h40m",
+   "eye": [],
+   "crit": []
+  },
+  "pb2g-t2": {
+   "id": "pb2g-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "pb2-x6",
+   "refs": [
+    "/home/user/workspace/r3/pull/f2-x6-direct.png",
+    "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+    "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/pb2g-t2.png",
+   "what": "frame 2 plate after the head was brought to adult proportion (tools/headwarp.py, s 0.66): the frame-2 window drawn straight from the old master through the warp (pull/f2-x6-direct.png; the head is pixel-identical to the tested frame 2, the sea and throat around it are enlarged 1.6 to 2.4 times and soft) re-photographed so the surroundings are sharp again; only the parts outside the head are used; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg; take 2",
+   "size": "1671x941",
+   "t": "08:12",
+   "el": "8h40m",
+   "eye": [],
+   "crit": []
   }
  },
  "kept": {
@@ -6717,6 +10191,38 @@
    "t": "02:08",
    "el": "2h36m",
    "archived": "references/archive/round-3-reveal"
+  },
+  "reveal-frame-1": {
+   "id": "pb1e-t1",
+   "reason": "Key frame 1, just above the lake: the round shore fills the frame. The plate pb1e-t1, graded to its window of the master. SCALE test (bo1 to bo3): real terrain 3 of 3.",
+   "faults": "Read as 10 to 60 km wide against 250 km stated. A critic calls it 'vulnerable to macro/model' reads. Its mist plume, cliff wall and whitecaps are softer in frame 2.",
+   "t": "08:19",
+   "el": "8h47m",
+   "entered": "08:41, after the fact"
+  },
+  "reveal-frame-2": {
+   "id": "pb2g-t2 + e3-HD-t4",
+   "reason": "Key frame 2, the skull massif: head from e3-HD-t4 drawn through the head warp, sea and throat from pb2g-t2. HEAD test (ca1 to ca3): skull or screaming face with the lake as an eye 3 of 3.",
+   "faults": "The weakest frame for scale: read as 40 to 150 km wide against 920 km stated; one of three chose 'a painting or drawing'; round pits and lace-like texture called 'possibly artificial or miniature'.",
+   "t": "08:19",
+   "el": "8h47m",
+   "entered": "08:41, after the fact"
+  },
+  "reveal-frame-3": {
+   "id": "master-x6 (window)",
+   "reason": "Key frame 3, head and shoulders: a window of master-x6. SCALE test (bz1 to bz3): real terrain 2 of 3, no fish read.",
+   "faults": "Read as 100 to 300 km wide against 2,150 km stated. Several orange dots where frame 4 shows one. Sea beside the crown stretched up to 1.58 times by the head warp.",
+   "t": "08:19",
+   "el": "8h47m",
+   "entered": "08:41, after the fact"
+  },
+  "reveal-frame-4": {
+   "id": "master-x6 (window)",
+   "reason": "Key frame 4, the reveal frame: the whole titan from orbit, a window of master-x6 (98.7% of its width). GLANCE 3 of 3, FULL 6 of 6, STATE 4, 4, 4, PLACES 6, 5 and 6 of 6 (bu1 to by3).",
+   "faults": "Every viewer says skeleton. 3 of 6 call it a digital illustration. Waist reads too long 3 of 3; legs short, hands big, feet small. Red channels read as blood or dye. Storm 'puffy'. The body does not foreshorten with the planet's curve.",
+   "t": "08:19",
+   "el": "8h47m",
+   "entered": "08:41, after the fact"
   }
  },
  "order": [
@@ -7031,6 +10537,188 @@
   "eye-d4c-t1",
   "eye-d4c-t2",
   "ribs-d3c-t1",
-  "ribs-d3c-t2"
+  "ribs-d3c-t2",
+  "rv4-t1",
+  "rv4-t2",
+  "rv4-t3",
+  "rv4-t4",
+  "rv4-t5",
+  "rv4-t6",
+  "rv4-t10",
+  "rv4-t11",
+  "rv4-t12",
+  "rv4-t7",
+  "rv4-t8",
+  "rv4-t9",
+  "rv4-t13",
+  "rv4-t14",
+  "rv4-t15",
+  "rv4-t16",
+  "rv4-t17",
+  "rv4-t18",
+  "rv4-t19",
+  "rv4-t20",
+  "rv4-t21",
+  "rv4-t22",
+  "rv4-t23",
+  "rv4-t24",
+  "pb3-t1",
+  "pb3-t2",
+  "pb3-t3",
+  "pb3-t4",
+  "tile-T00-t1",
+  "tile-T01-t1",
+  "tile-T02-t1",
+  "tile-T10-t1",
+  "tile-T11-t1",
+  "tile-T11-t2",
+  "tile-T12-t1",
+  "tile-T20-t1",
+  "tile-T21-t1",
+  "tile-T22-t1",
+  "pb2-t1",
+  "pb2-t2",
+  "pb2-t3",
+  "pb2-t4",
+  "pb2-t5",
+  "pb2-t6",
+  "pb2-t10",
+  "pb2-t11",
+  "pb2-t12",
+  "pb2-t7",
+  "pb2-t8",
+  "pb2-t9",
+  "pb2-t13",
+  "pb2-t14",
+  "pb2-t15",
+  "pb2-t16",
+  "pb2-t17",
+  "pb2-t18",
+  "pb2-t19",
+  "pb2-t20",
+  "pb1-t1",
+  "pb1-t2",
+  "pb1-t3",
+  "pb1-t4",
+  "pb2-t21",
+  "pb2-t22",
+  "pb2-t23",
+  "pb3-t5",
+  "pb3-t6",
+  "pb3-t7",
+  "pb3-t8",
+  "bl-t1",
+  "bl-t2",
+  "bl-t3",
+  "bl-t4",
+  "fl-t1",
+  "fl-t2",
+  "fu-t1",
+  "fu-t2",
+  "hl-t1",
+  "hl-t2",
+  "hu-t1",
+  "hu-t2",
+  "pb2-t24",
+  "pb2-t25",
+  "bl-t5",
+  "bl-t6",
+  "bl-t7",
+  "bl-t8",
+  "pb2-t26",
+  "pb2-t27",
+  "bl-t10",
+  "bl-t11",
+  "bl-t12",
+  "bl-t9",
+  "cs-t1",
+  "cs-t2",
+  "bl-t13",
+  "bl-t14",
+  "bl-t15",
+  "bl-t16",
+  "sm-t1",
+  "sm-t2",
+  "cx-t1",
+  "cx-t2",
+  "cx-t3",
+  "cx-t4",
+  "cx-t5",
+  "cx-t6",
+  "cx-t10",
+  "cx-t11",
+  "cx-t12",
+  "cx-t13",
+  "cx-t14",
+  "cx-t7",
+  "cx-t8",
+  "cx-t9",
+  "cx9-T00-t1",
+  "cx9-T01-t1",
+  "cx9-T02-t1",
+  "cx9-T10-t1",
+  "cx9-T11-t1",
+  "cx9-T12-t1",
+  "cx9-T20-t1",
+  "cx9-T21-t1",
+  "cx9-T22-t1",
+  "op-t1",
+  "op-t2",
+  "cx9-M00-t1",
+  "cx9-M01-t1",
+  "cx9-M02-t1",
+  "cx9-M03-t1",
+  "cx9-M10-t1",
+  "cx9-M13-t1",
+  "cx9-M20-t1",
+  "cx9-M23-t1",
+  "cx9-M30-t1",
+  "cx9-M31-t1",
+  "cx9-M32-t1",
+  "cx9-M33-t1",
+  "pb1c-t1",
+  "pb1c-t2",
+  "pb1c-t3",
+  "cx-e-t1",
+  "cx-e-t2",
+  "cx-e-t4",
+  "e2-W00-t1",
+  "e2-W01-t1",
+  "e2-W02-t1",
+  "e2-W03-t1",
+  "e2-W10-t1",
+  "e2-W11-t1",
+  "e2-W12-t1",
+  "e2-W13-t1",
+  "e2-W20-t1",
+  "e2-W21-t1",
+  "e2-W22-t1",
+  "e2-W23-t1",
+  "e2-W30-t1",
+  "e2-W31-t1",
+  "e2-W32-t1",
+  "e2-W33-t1",
+  "e2-HD-t1",
+  "e2-ST-t1",
+  "e2-WA-t1",
+  "e2-WF-t1",
+  "e2-WG-t1",
+  "pb1d-t1",
+  "pb1d-t2",
+  "pb1d-t3",
+  "e3-HD-t1",
+  "e3-HD-t2",
+  "e3-ST-t1",
+  "e3-ST-t2",
+  "e3-HD-t3",
+  "e3-HD-t4",
+  "e3-HD-t5",
+  "pb1e-t1",
+  "pb1e-t2",
+  "pb1e-t3",
+  "pb1f-t1",
+  "pb1f-t2",
+  "pb2g-t1",
+  "pb2g-t2"
  ]
 }

@@ -1,0 +1,6 @@
+viewer: bq1
+model: gpt_6_2_sol
+test: SCALE
+image: x4 master, frame-3 window A (ext px x0 0, y0 175, w 1150; about 2,820 km wide STATED) (tmp/test/IMG_3187.jpg = critic/fresh/seen/x4-f3-candA.jpg)
+
+1. It shows an Earth-like ocean from above, with islands and ridges forming a giant skull and rib cage. 2. If read as an orbital view, the frame suggests a few thousand kilometers across, from a few hundred kilometers up; no reliable scale is visible. 3. Closest visually to (a), orbital terrain, because of the curved blue horizon and scattered clouds, though it looks like (d) digital artwork rather than a literal photo. 4. The round eye sockets, jagged jaw, and evenly spaced ribs look deliberately arranged; nothing clearly suggests a physical miniature.

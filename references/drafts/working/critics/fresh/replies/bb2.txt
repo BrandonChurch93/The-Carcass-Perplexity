@@ -1,0 +1,9 @@
+viewer: bb2
+model: claude_opus_5_5
+test: SCALE
+image: x2-f1 (full size)
+
+1. A top-down view of a round, dark-water crater lake with a brownish shoreline, set in rugged, eroded grey-tan mountains, with more dark water bodies at the top right and bottom right and a small round pit to the right.
+2. It reads as roughly 10–20 km across (the crater lake maybe 5–8 km), seen from about 10–30 km up. There's no reliable scale cue, though.
+3. Closest to (a), aerial/orbital terrain. It looks like it's lit and laid out the way a satellite or high-altitude view would be, with fractal ridge erosion and a wisp of cloud over the lake. It does look somewhat synthetic, so it could be AI-generated or a digital render rather than a real photo.
+4. Yes, a few things look off. The ridge texture is too even and "procedural," repeating the same pattern everywhere. The crater rim looks like a smooth carved wall. The small round pit is unnaturally perfect. The thin black line at the top looks like a crack in a surface more than a river or road. Nothing looks like a tabletop model (no depth-of-field blur), but there are no human-made features, roads or vegetation to fix the scale, so it could be anywhere from mountain-sized down to a small textured surface.

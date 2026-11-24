@@ -1,0 +1,24 @@
+[
+ {
+  "id": "pb2g-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-x6",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-x6-direct.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "frame 2 plate after the head was brought to adult proportion (tools/headwarp.py, s 0.66): the frame-2 window drawn straight from the old master through the warp (pull/f2-x6-direct.png; the head is pixel-identical to the tested frame 2, the sea and throat around it are enlarged 1.6 to 2.4 times and soft) re-photographed so the surroundings are sharp again; only the parts outside the head are used; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg; take 1"
+ },
+ {
+  "id": "pb2g-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-x6",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-x6-direct.png",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg"
+  ],
+  "what": "frame 2 plate after the head was brought to adult proportion (tools/headwarp.py, s 0.66): the frame-2 window drawn straight from the old master through the warp (pull/f2-x6-direct.png; the head is pixel-identical to the tested frame 2, the sea and throat around it are enlarged 1.6 to 2.4 times and soft) re-photographed so the surroundings are sharp again; only the parts outside the head are used; standards orb-iss23-musandam.jpg + orb-gemini11-india-crop.jpg; take 2"
+ }
+]

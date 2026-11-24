@@ -1,0 +1,12 @@
+viewer: s3
+model: gemini_4_carbon
+test: SCALE
+image: reveal-f3 (full size)
+
+1. It is a synthetic satellite-style image of an arid volcanic peninsula and coastline shaped like the upper half of a human skeleton (skull, neck, shoulders, and ribcage).
+
+2. As depicted, the frame spans roughly 50-150 km (30-90 miles) across from an orbital camera altitude of roughly 200-400 km (120-250 miles), based on the cloud streets, reef shallows, and volcanic plumes (though as a digital/AI image, it has no physical scale).
+
+3. Closest to (d) a painting or drawing (specifically a digital or AI-generated illustration) made to imitate (a) real terrain seen from orbit: the textures, clouds, and coastal shallows mimic orbital photography rather than a physical miniature or macro object, but the landforms are deliberately composed as human anatomy.
+
+4. Nothing looks small-scale, but the geography is clearly fake: the left peninsula forms a skull with two circular crater eye sockets, a nasal depression, and a river-cut jaw line; the isthmus forms a neck with red vein-like streaks; and the mainland forms shoulders, ~7 pairs of symmetrical rib-like ridges, a ruler-straight spinal channel, and a dark lava chest cavity with glowing vessel-like cracks that would not be that bright or wide at orbital scale.

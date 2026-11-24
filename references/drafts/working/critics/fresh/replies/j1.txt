@@ -1,0 +1,6 @@
+viewer: j1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t12 (full size)
+
+1. My first impression was an overhead view of a rocky desert coast with enormous craters. 2. A sideways skull: the two round pits are eye sockets, the triangular hollow is the nose, and the rows of rocks look like teeth. 3. My visual guess is roughly 100 km across, from a few hundred km up; there's no reliable scale cue. 4. (a), closest to an orbital view, because of the clouds, ocean, and detailed coastline. 5. The toothlike rows are unnaturally even, and the craters line up almost too neatly to make the skull.

@@ -1,0 +1,10 @@
+viewer: bg3
+model: gemini_4_carbon
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t4 (tmp/test/IMG_4756.jpg = critic/fresh/seen/x3t4-f2.jpg)
+
+1. It looks like a satellite or astronaut photograph from orbit showing a rugged volcanic coast or island with crater lakes, ocean, and cloud streets.
+2. Yes — a skull or screaming face tilted slightly on its side, with the two large craters as eye sockets, the central dark pools as a nasal cavity, and the wide jagged bay at lower right as an open, screaming mouth.
+3. At the depicted orbital scale, the frame looks roughly 40–80 km (25–50 miles) wide, viewed from low Earth orbit around 300–400 km high.
+4. Closest to (a) real terrain seen from orbit in visual style (cloud streets, dendritic erosion channels, coastal shallows, and atmospheric haze), though on closer inspection it reads like a synthetic/digital rendering (closest to d if counting AI/digital illustration) designed to mimic orbital photography.
+5. Yes, it looks fake/synthetic rather than small-scale: the landforms are too cleanly composed into a skull/face (including tooth-like ridges lining the "mouth" bay), the cluster of round lunar-like craters on the right is geologically out of place on an eroded coast, and the wispy white plumes at upper right look digitally painted rather than like real clouds or steam.

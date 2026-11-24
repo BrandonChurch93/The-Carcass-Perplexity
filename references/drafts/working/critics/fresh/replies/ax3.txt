@@ -1,0 +1,10 @@
+viewer: ax3
+model: gemini_4_carbon
+test: STATE
+image: x2-f4 (full size)
+
+1. It is a picture of a colossal, continent-sized human skeleton forming a landmass in a planet's ocean as seen from space.
+2. The figure is a dead, skeletal giant sprawled on its back with its jaw gaping open as if screaming, limbs splayed outward, a storm or plume rising from its severed-looking spine, and red river-like runoff spilling from its pelvis into the sea.
+3. Eerie, macabre, monumental.
+4. 4 — unsettling due to the gaping skull, decayed remains, and blood-red runoff, moderated slightly by the distant orbital view.
+5. (a) A landmass seen from orbit, because the curved planetary limb with a thin blue atmosphere against black space, a large cyclone, cloud formations, and mountain-scale ridges and deltas clearly establish orbital scale.

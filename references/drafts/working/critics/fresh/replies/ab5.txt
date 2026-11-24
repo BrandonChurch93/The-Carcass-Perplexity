@@ -1,0 +1,27 @@
+viewer: ab5
+model: gemini_neon
+test: FULL
+image: reveal-f4-v6 (full size)
+
+1. A surreal orbital view (CGI/digital render) of a continent-sized landmass in the ocean shaped like a splayed-out human body or skeleton.
+
+2. Roughly 2,500–4,000 km long (continent-scale), with the camera in space/orbit hundreds to a few thousand kilometers above the planet, looking slightly obliquely toward the horizon.
+
+3. Closest to (a) a landmass seen from orbit (rendered rather than real). Scale cues include the curved planetary limb and thin blue atmosphere in the top left, a large spiraling cyclone in the bottom right, cloud wisps and sun glint over the ocean, snow-dusted mountain ridges along the limbs, and turquoise coastal shallows.
+
+4. Distinct features:
+- Planetary horizon with blue atmospheric glow and black space (top-left corner).
+- Spiraling cyclone/hurricane cloud system (bottom-right corner) and ocean sun glint (mid-right).
+- Head/skull (far left): tan island with two circular craters as eyes—a dry basin on top and a dark blue crater lake on the bottom.
+- Neck (left-center): narrow rocky isthmus with dark pits and a wispy cloud/smoke plume trailing toward the upper left.
+- Ribcage/chest (center-left): curving tan mountain ridges like ribs flanking a dark volcanic core with faint glowing orange lava lines on the upper dark band.
+- Mid-torso lagoon (center): turquoise inland sea with white smoke/cloud plumes streaming rightward across it.
+- Pelvis (center-right): pale pinkish-tan basin laced with a branching network of deep red/rust-colored channels or salt flats.
+- Upper arm and hand (top-center): snow-streaked mountain ridge peninsula ending in five finger-like spits and turquoise shoals.
+- Lower arm and hand (bottom-center): bent mountainous peninsula ending in a five-fingered hand with turquoise shallows.
+- Upper leg and foot (upper-right): reddish-brown and snow-dusted peninsula bending upward at the ankle into a foot with toe-like islets.
+- Lower leg and foot (lower-right): mountainous peninsula partially crossed by clouds, ending in a foot near the cyclone.
+
+5. Yes, it clearly looks fake/CGI:
+- A symmetrical, anatomically detailed human figure (five-fingered hands, crater eyes, rib ridges, blood-red pelvic channels) is geologically impossible.
+- Scale cues clash: the crisp terrain details, tiny glowing lava fissures in the chest, and narrow turquoise shoals feel too small-scale compared to the sharp planetary curvature and the full-sized hurricane sitting right beside the lower foot.

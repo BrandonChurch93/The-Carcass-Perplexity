@@ -1,0 +1,9 @@
+viewer: s2
+model: claude_opus_5_5
+test: SCALE
+image: reveal-f3 (full size)
+
+1. An orbital-style top-down view of an arid island with two craters (one water-filled) on a narrow neck joined to a larger landmass with ridges, dark lava fields, a dust plume, and clouds, set in deep blue ocean.
+2. As shown, the frame would be roughly 50-150 km wide, with the camera around 300-400 km up (like an ISS photo). The small cumulus clouds hint it could be smaller, maybe 20-50 km.
+3. Closest to (a) in look: ocean glint, cloud scatter, shallow turquoise reefs and a dust plume all mimic real orbital photos. However, the geography is so improbable that I think it's most likely AI-generated or digitally painted, not a real place.
+4. Yes. The layout is oddly symmetrical, like a body or creature: a "head" with two eye-like craters, a "neck," and a "torso" with rib-like ridges fanning out on both sides of a central spine. The orange branching vein network on the black lava looks artificial. The red speckled spots on the neck look odd too. The ridges are too regular and look sculpted. The scale cues don't agree with each other: the clouds look small next to the ridges, and the wave texture looks large. It doesn't look like a tabletop model (no depth-of-field blur, and the lighting is consistent), but it does look fabricated.

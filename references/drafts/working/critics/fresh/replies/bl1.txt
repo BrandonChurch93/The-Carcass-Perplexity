@@ -1,0 +1,6 @@
+viewer: bl1
+model: gpt_6_2_sol
+test: PLACES
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+All six have clear visual matches (approx. % from left, % from top): 1. Found (41%, 47%): dark water channel between two rows of curved ribs. 2. Found (38%, 40%): tiny orange glow among the upper chest ribs. 3. Found (29%, 43%): cluster of dark pits by the mouth/throat, with wispy plumes. 4. Found (63%, 48%): branching red patches on the pale pelvic flat. 5. Found (53%, 47%): compact white storm cloud over the narrow spinal ridge, not the larger offshore spiral. 6. Found (19%, 47%): round dark-blue lake in the skull’s lower eye socket.

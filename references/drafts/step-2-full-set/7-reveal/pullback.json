@@ -1,0 +1,144 @@
+{
+ "what": "Geometry of the pull-back from the lake in The Eye to orbit. All four key frames are views of one picture, the master. Windows are given in px of the master (top left corner, width, height) and have the aspect of the key frames, 1672 x 941. The window of frame 4 overhangs the bottom edge of the master by under 2 px, where the edge row is repeated; the 3840 x 2160 copy of frame 4 is exactly 16:9 and ends on the edge. Frames 3 and 4 are windows of the master resampled to 1672 x 941; frames 2 and 1 are finer plates of their windows, and both plates are also folded into the master, reduced.",
+ "master": {
+  "file": "reveal-master.jpg",
+  "width": 5952,
+  "height": 3348
+ },
+ "frames": {
+  "1": {
+   "file": "reveal-1-above-the-lake.jpg",
+   "window_in_master_px": {
+    "x0": 1126.18,
+    "y0": 1498.28,
+    "w": 293.34,
+    "h": 165.09
+   },
+   "width_of_view_km_STATED": 250,
+   "lake_centre_pct_of_frame": [
+    50.0,
+    50.0
+   ]
+  },
+  "2": {
+   "file": "reveal-2-skull-massif.jpg",
+   "window_in_master_px": {
+    "x0": 737.71,
+    "y0": 1279.65,
+    "w": 1070.28,
+    "h": 602.35
+   },
+   "width_of_view_km_STATED": 920,
+   "lake_centre_pct_of_frame": [
+    50.0,
+    50.0
+   ]
+  },
+  "3": {
+   "file": "reveal-3-head-and-shoulders.jpg",
+   "window_in_master_px": {
+    "x0": 300.3,
+    "y0": 875.21,
+    "w": 2507.53,
+    "h": 1411.23
+   },
+   "width_of_view_km_STATED": 2150,
+   "lake_centre_pct_of_frame": [
+    38.8,
+    50.0
+   ]
+  },
+  "4": {
+   "file": "reveal-4-titan-from-orbit.jpg",
+   "window_in_master_px": {
+    "x0": 79.14,
+    "y0": 44.52,
+    "w": 5872.86,
+    "h": 3305.24
+   },
+   "width_of_view_km_STATED": 5030,
+   "lake_centre_pct_of_frame": [
+    20.3,
+    46.5
+   ]
+  }
+ },
+ "steps_between_frames": {
+  "1_to_2": 3.65,
+  "2_to_3": 2.34,
+  "3_to_4": 2.34
+ },
+ "scale_STATED": {
+  "body_crown_to_heel_km": 4000,
+  "km_per_master_px": 0.8566,
+  "note": "Design intent, not measured. Fresh viewers read the lower frames far smaller; see NOTES.md."
+ },
+ "nesting_MEASURED": {
+  "note": "Each closer frame reduced and laid over its window in the wider frame (both 1672 x 941). x0, y0, w, h: the window in px of the wider frame. mean, p99: absolute difference on a scale of 0 to 255.",
+  "1_in_2": {
+   "x0": 606.87,
+   "y0": 341.55,
+   "w": 458.25,
+   "h": 257.9,
+   "mean": 1.76,
+   "p99": 10.06
+  },
+  "2_in_3": {
+   "x0": 291.66,
+   "y0": 269.68,
+   "w": 713.65,
+   "h": 401.64,
+   "mean": 1.28,
+   "p99": 11.43
+  },
+  "3_in_4": {
+   "x0": 62.97,
+   "y0": 236.5,
+   "w": 713.89,
+   "h": 401.78,
+   "mean": 0.78,
+   "p99": 5.31
+  },
+  "1_in_4": {
+   "x0": 298.09,
+   "y0": 413.89,
+   "w": 83.51,
+   "h": 47.0,
+   "mean": 0.56,
+   "p99": 2.34
+  }
+ },
+ "places_pct_of_frame_4": {
+  "ribs": {
+   "x_pct": 40.2,
+   "y_pct": 46.4,
+   "what": "the tidal strait between the two rows of rib ridges"
+  },
+  "heart": {
+   "x_pct": 37.45,
+   "y_pct": 38.75,
+   "what": "the lava glow in the chest"
+  },
+  "breath": {
+   "x_pct": 28.6,
+   "y_pct": 42.2,
+   "what": "the airways: sinkholes in the dark throat plateau, with vapour"
+  },
+  "marsh": {
+   "x_pct": 62.89,
+   "y_pct": 47.68,
+   "what": "the red salt flats in the hip basin"
+  },
+  "spine": {
+   "x_pct": 53.5,
+   "y_pct": 45.63,
+   "what": "the storm on the spine ridge"
+  },
+  "eye": {
+   "x_pct": 20.33,
+   "y_pct": 46.48,
+   "what": "the round lake in the eye socket"
+  }
+ },
+ "camera_note": "The lake is at the centre of frames 1 and 2 and moves left in frames 3 and 4, so the aim eases from the lake toward the chest while the camera rises. Frames 1 to 3 look straight down; frame 4 is slightly oblique, with the edge of the planet at the top left."
+}

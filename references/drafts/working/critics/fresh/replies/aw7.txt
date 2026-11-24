@@ -1,0 +1,28 @@
+viewer: aw7
+model: gemini_neon
+test: FULL
+image: x2-f4 (full size)
+
+1. A giant, continent-sized landmass shaped like a screaming human skeleton lying in the ocean, viewed from orbit.
+
+2. Roughly 2,000–4,000 km long from head to toe, based on the planet's curvature and the full-scale hurricane beside it. The camera is in medium-to-high orbit (thousands of kilometers up) looking down obliquely across the curved planet.
+
+3. Closest to (a) a landmass seen from orbit, though clearly rendered as digital art/CGI (so also close to (d)). The orbital scale is signaled by the curved horizon with a thin blue atmospheric limb against black space (top left), the spiral hurricane (bottom right), broad ocean sunglint (upper right), widespread cloud cover, and mountain/river geological textures.
+
+4. Distinct features:
+- Curved horizon and thin blue atmosphere against black space (top left).
+- Skull (far left): cracked cranium, two dark caldera-like eye sockets, nasal cavity, open screaming jaw with cliff-like teeth, and a cluster of dark sinkholes/craters at the neck/throat with wispy clouds curving over it.
+- Upper arm (top center-left): bent arm with a snow-capped mountain/volcano peak at the elbow and splayed finger peninsulas reaching right, rimmed by turquoise shallows.
+- Lower arm (bottom center-left): ridged shoulder and forearm extending down-right to splayed skeletal fingers.
+- Ribcage (center-left): curved narrow rib islands flanking a faint submerged spine, with a bright glowing orange spot (volcano/fire) on one upper rib.
+- Waist/lower spine (center): thin rocky spine covered by a dense white-and-violet cloud/storm burst with a faint trail streaming down-left.
+- Pelvis (center-right): white salt-flat/snow basin containing a branching red river/blood-like network that drains rightward into a large red plume in the ocean; a dark circular lake/crater sits on its upper-right hip rim.
+- Upper leg (upper right): straight leg with a peak at the knee, ending in a foot with upturned toes near the right edge under bright ocean sunglint.
+- Lower leg (lower right): bent leg with a bright snow-capped peak at the knee, angling down to a foot just left of the hurricane.
+- Surrounding ocean: swirling greenish-brown sediment/algae currents around the lower body and legs, scattered cloud streaks, and a tightly wound spiral hurricane in the bottom-right corner.
+
+5. Yes, it clearly looks fake/CGI:
+- An anatomically literal skeleton continent with intact teeth, fingers, and toes is geologically impossible.
+- The red branching "blood" river and red ocean plume emerging from the white pelvis are stylized rather than natural.
+- Scale mismatches: relative to the steep planetary curvature, fine details like individual teeth, toes, fingers, and single snow-capped peaks at the joints are way too crisp and oversized, while the hurricane in the bottom-right looks small next to the skeleton.
+- The cloud textures look somewhat procedural/painterly, and the glowing violet cloud burst on the spine and orange dot on the rib look art-directed.

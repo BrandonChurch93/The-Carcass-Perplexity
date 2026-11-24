@@ -1,0 +1,6 @@
+viewer: ao1
+model: gpt_6_2_sol
+test: GLANCE
+image: master-x1 (400 px)
+
+It looks like a giant human skeleton stretched out across Earth’s ocean, seen from space.

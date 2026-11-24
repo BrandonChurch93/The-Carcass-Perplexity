@@ -1,0 +1,6 @@
+viewer: br1
+model: gpt_6_2_sol
+test: SCALE
+image: x4 master, frame-3 window B (ext px x0 0, y0 301, w 800; about 1,960 km wide STATED) (tmp/test/IMG_8455.jpg = critic/fresh/seen/x4-f3-candB.jpg)
+
+1. It looks like a near-overhead view of a rugged, crater-pocked volcanic coastline or island in dark blue water, with wispy clouds or plumes. 2. Apparent scale is roughly 100–300 km across, with an orbital-style viewpoint hundreds of km up; neither is measurable from the image. 3. Closest in appearance to (a), especially orbit, because the ridges, coastline and cloud bands read as landscape-scale; it may instead be a digital rendering. 4. The nearly circular pits, repeated branching ridges, curled wisps and small orange glows look stylized; there is no obvious tabletop or macro scale cue.

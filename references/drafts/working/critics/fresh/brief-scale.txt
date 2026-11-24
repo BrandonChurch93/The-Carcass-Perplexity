@@ -1,0 +1,5 @@
+One image file is attached. Open it and look at it. Do not research anything or use any tool except opening the image. Then send your answers to /root with message_agent. Keep each answer short.
+1. In one sentence: what is this a picture of?
+2. How wide is the area in the frame, roughly, in real-world units, and how high is the camera?
+3. Which is it closest to, and why: (a) real terrain seen from an aircraft or from orbit, (b) a tabletop model, diorama or sculpture, (c) a close-up of a small object, (d) a painting or drawing?
+4. Does anything in it look wrong, fake or small-scale? Say what.

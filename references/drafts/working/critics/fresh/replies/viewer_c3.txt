@@ -1,0 +1,10 @@
+viewer: viewer_c3
+model: claude_opus_5_5
+test: FULL
+image: rv4-t13 (full size)
+
+1. A continent-sized landmass shaped like a sprawled human figure (skeletal/flayed, head at left, limbs outstretched), seen from space over an ocean.
+2. Apparent scale: thousands of km across (continent-sized, roughly 3,000–5,000 km); camera is in low Earth orbit / high altitude, looking down obliquely (ISS-style view).
+3. (a) Landmass from orbit. Scale cues: Earth's curved limb and black space at top-left corner, a full hurricane spiral at bottom-right that is comparable in size to a limb, cloud fields/cumulus streets over the ocean, sunglint on the right, shallow-shelf turquoise fringes, and mountain ranges with snow along the limbs.
+4. Features: head at far left with a round crater lake as the "eye" and snowy peaks; line of red dots (volcanic vents/beads) across the neck with a white plume trailing up-left; torso with parallel rib-like ridges/valleys (center-left); active fire/volcanic smoke with orange glow and brown smoke plume at upper chest (center-left, drifting up toward top center); arm extending up to a hand at top center; arm extending down to a hand at bottom center (with cloud over the forearm); central enclosed turquoise lagoon/inland sea in the belly with a thunderstorm cloud and purple lightning (center); dark red/crimson patterned area (salt ponds/algae or "flesh/organs") at the hip (center-right); two legs going right with snowy mountain ridges, ending in foot/hand shapes at top-right and lower-right; turquoise reef/shallow shelf rimming all coasts; small islets off the coasts; hurricane at bottom-right; Earth limb top-left; sunglint top-right.
+5. It's clearly fake/AI-generated: a landmass shaped exactly like a human body with five-fingered hands and toes; ribs as geological ridges; red organ-like patch; a thunderstorm and volcano placed neatly in anatomical spots; the "eye" crater. Scale itself is fairly consistent with orbit (not miniature), though the hurricane looks a bit small relative to the land, and the mountain texture is uniform like an overlaid rock texture.

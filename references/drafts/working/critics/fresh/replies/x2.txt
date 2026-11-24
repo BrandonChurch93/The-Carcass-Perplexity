@@ -1,0 +1,10 @@
+viewer: x2
+model: claude_opus_5_5
+test: FULL
+image: reveal-f4-v5 (full size)
+
+1. A human-skeleton/body-shaped continent or island seen from orbit, sprawled in a dark ocean (looks like a fantasy/AI render).
+2. Roughly continent-scale, thousands of km across (maybe 2,000–5,000 km head to feet); camera is in low Earth orbit, ~300–500 km up, looking down obliquely (Earth's curved limb and black space visible top-left).
+3. (a) Landmass from orbit. Scale giveaways: curved horizon with space at top-left, a spiral cyclone/hurricane at bottom-right, cloud streets and scattered cumulus over ocean, sun glint on the sea at right, mountain ranges with snow along the limbs.
+4. Features: head at far left with two round crater-lakes as eye sockets (one dark/water-filled); neck with a dust/smoke plume drifting up-left from it; ribcage at left-center made of ridged mountain ranges with dark lava-like/burned terrain and glowing orange streaks between ribs; a turquoise lagoon/bay in the chest center with a white cloud or eruption plume in it; a reddish salt-flat/dried lakebed with red veining in the pelvis/abdomen area (center-right); upper arm reaching up to top-center ending in finger-like peninsulas; lower arm reaching down to bottom-center with finger peninsulas; legs extending to the right—one up-right ending in a foot near top-right, one down-right ending at a foot/peninsula at mid-right; turquoise shallow reef shelves fringing all coasts; snow-capped ridges along limbs; cloud band crossing below the lower leg; hurricane bottom-right; sun glint top-right.
+5. Yes: the overall anatomical shape is impossible for natural geology; the eye craters are too neatly symmetric; the ribs are too regular; the glowing orange streaks and the white plume in the chest look painted-in; the island's size vs. the hurricane and Earth curvature is somewhat inconsistent (it'd be continent-sized yet coastline detail looks like a small island). Overall reads as a digital/AI-generated image, not a model—nothing looks tabletop-scale.

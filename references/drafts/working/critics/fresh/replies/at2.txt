@@ -1,0 +1,11 @@
+viewer: at2
+model: claude_opus_5_5
+test: PLACES
+image: cx-e-t2 (full size)
+
+1. Found: ~41% W, 47% H. A channel of water running along the spine, separating the upper rib rows from the lower rib rows.
+2. Found, but it's tiny: ~38% W, 40% H. One small orange-red speck on the dark upper rib cage.
+3. Possibly found: ~30% W, 40% H. A cluster of dark, rust-brown pits at the neck between the skull and the ribs. They could be the breathing holes, but I'm not sure.
+4. Found: ~63% W, 48% H. A white flat on the pelvis with red veins running through it, and reddish runoff spreading to the right.
+5. Found: ~54% W, 47% H. A white, puffy cloud sitting on the spine between the ribs and the pelvis, with a streak trailing down-left. The large spiral storm at the bottom right (~92% W, 88% H) is over open ocean, not on the spine.
+6. Found: ~19% W, 47% H. The lower-left eye socket of the skull is a dark, round pool with an orange rim.

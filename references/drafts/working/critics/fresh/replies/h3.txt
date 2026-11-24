@@ -1,0 +1,10 @@
+viewer: h3
+model: gemini_4_carbon
+test: HEAD
+image: pb2-t6 (full size)
+
+1. This looks like an AI-generated satellite or orbital image of a coastal landmass shaped like a giant creature with a volcanic crater lake for an eye.
+2. Yes, it looks unmistakably like the side profile of a chameleon's or lizard's head, with the circular blue-and-gold crater forming its eye, the curved bay forming its mouth, and the row of red-rimmed craters on the upper right looking like spots along a crest or neck.
+3. If taken at face value as satellite imagery, the frame appears roughly 30 to 80 kilometers wide from an orbital altitude of 300 to 500 kilometers; if it were a physical miniature, it looks about 50 to 100 centimeters wide photographed from about a meter above.
+4. Closest to (d) a painting or drawing (specifically synthetic/AI-generated digital imagery mimicking (a)), because while the clouds, coastlines, and braided channels imitate orbital photography, the landforms are unnaturally arranged into a coherent animal illustration.
+5. Several things look fake or mismatched in scale: the central crater lake has the exact yellow-orange microbial ring and scale of a small hot spring like Grand Prismatic Spring (~100 meters wide) pasted into a massive mountain range, the neat line of dark red-rimmed circular pits on the upper right looks anatomically/artistically placed rather than geological, the tiny offshore islets scatter like crumbs or paint flecks, and the cloud wisps on the left lack shadows on the water below.

@@ -1,0 +1,6 @@
+viewer: h1
+model: gpt_6_2_sol
+test: HEAD
+image: pb2-t6 (full size)
+
+1. It looks like an overhead view of a rugged island or peninsula with a vivid blue crater lake. 2. I first saw a reptile's head facing right, with the lake as its eye and the inlet as its open mouth. 3. On first impression, maybe 30–80 km across, from roughly 20–70 km up; no reliable scale cues. 4. (a), closest to high aerial or orbital terrain because of the branching valleys, coastal shallows and wispy clouds. 5. The almost perfectly round lake, its smooth rainbow-like rim and the smaller circular pits are unusually neat; I don't see an obvious miniature cue.

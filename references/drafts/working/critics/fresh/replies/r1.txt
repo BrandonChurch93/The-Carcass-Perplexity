@@ -1,0 +1,6 @@
+viewer: r1
+model: gpt_6_2_sol
+test: SCALE
+image: reveal-f1 (full size)
+
+1. It looks like a dark blue crater lake surrounded by steep cliffs in dry, deeply eroded terrain. 2. My first-glance guess is a few kilometers across, shot from a few kilometers up if airborne; neither is measurable without a scale or lens information. 3. Closest to (a): branching channels, rocky relief, and the wisp over the water read as an aerial landscape. 4. The basin is conspicuously round, the water unusually smooth, and the ochre band almost continuous; those look a bit stylized, but nothing clearly gives away a miniature.

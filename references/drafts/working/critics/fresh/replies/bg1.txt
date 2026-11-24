@@ -1,0 +1,6 @@
+viewer: bg1
+model: gpt_6_2_sol
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t4 (tmp/test/IMG_4756.jpg = critic/fresh/seen/x3t4-f2.jpg)
+
+1. My first thought was a satellite photo of a rugged, cratered coastline with dark lakes. 2. A tilted skull: two dark eye sockets, small holes between them, and the broad jagged bay as a gaping mouth. 3. By feel only, ~100–300 km across and a few hundred km up; no reliable scale cue. 4. (a), more like orbit than an aircraft, because of the sweeping coastline and cloud-like streaks. 5. The clustered near-perfect circular pits and uniformly fine, wrinkled ridges feel artificial; the skull layout looks unusually deliberate.

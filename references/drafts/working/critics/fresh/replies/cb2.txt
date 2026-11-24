@@ -1,0 +1,97 @@
+viewer: cb2
+model: claude_opus_5_5
+test: PULL
+image: x6 frames 1-4 (tmp/test/IMG_2811..2814.jpg = critic/fresh/seen/x6-f1..f4.jpg)
+
+Critic report on IMG_2811 to IMG_2814. I only looked at, cropped and enlarged the images.
+
+## 1. Locating each closer image inside the wider one
+Positions are given as percentages of the wider image (x across, y down).
+
+### 2811 inside 2812: found, good match
+Location: about x 35–66%, y 33–66% of 2812. It is centred on the round dark crater lake at about (49.5%, 51%). The scale step is large, about 3.5x. The crater is about 40% of the frame width in 2811 and about 11% in 2812.
+
+What matches:
+- The crater lake with its brown sediment rim.
+- The brown hook-shaped swirl inside the lake at its lower left.
+- The single river entering the lake from the north at about x 33% of 2811.
+- The small oval lake east-south-east of the crater (2811 at about 80%, 70%; 2812 at about 58%, 55%).
+- The pair of lakes to the north-east.
+
+What differs or is missing:
+- 2811 has a white wind or mist plume blowing across the north-east part of the crater. It is absent in 2812.
+- In 2811 the north-east lakes form one connected, two-lobed lake with a brown sediment rim. In 2812 they read as two or three separate dark blobs on a lighter halo, and the brown rim isn't visible.
+- In 2811 the crater's east side is a tall, steep, white cliff wall. In 2812 the rim is only a soft pale halo with no visible cliff.
+- Water in the lower right of 2811 is open sea with white whitecap streaks. The same spot in 2812 is the edge of the enclosed inner lagoon: calm, teal and with no whitecaps.
+- In 2812 the river splits into a branching network of channels just above the crater (about 46%, 30%), right at 2811's top edge. 2811 shows only a single channel there.
+
+### 2812 inside 2813: found, good match
+Location: about x 17–61%, y 28–72% of 2813. The crater sits at about (38.5%, 51%). The scale step is about 2.3x.
+
+What matches, with sizes consistent:
+- The inner lagoon with its jagged rim is about 25% of the width in 2812 and about 11% in 2813, which is correct for this zoom.
+- The large dark crater to the north-west of the main crater.
+- The two stacked blobs plus one further blob next to them.
+- The rust-coloured, pitted terrain to the east.
+- The white streaks curving down from the top.
+- Open ocean on the left.
+
+What differs:
+- The ocean on the left of 2812 has dense, glittery, sugar-like whitecap specks. In 2813 the same area shows larger clumps of cloud and less sparkle.
+- The lagoon maze of land lobes at the bottom of 2812 is simplified in 2813.
+- Along 2812's right edge, the vertical bone-like ridges (2813 x 63%+) should only just begin to appear. 2812 only shows faint ridging there. I'd call this borderline rather than a clear error.
+
+### 2813 inside 2814: found, good match
+Location: about x 4–47%, y 25–69% of 2814. The crater "eye" is at about (20%, 47%) of 2814. The scale step is about 2.3x. The head-shaped island is about 210 px wide in both predicted and actual terms.
+
+What matches:
+- The rib pattern: upper ribs slant like "/", lower ribs like "\", with similar counts.
+- The horizontal spine at y ≈ 46–48%.
+- The white star-shaped knot at the shoulder. It sits at 2813 (64%, 15%), which maps to 2814 (31%, 31%), and that is where the shoulder is.
+- The bright orange glowing dot. It sits at 2813 (79%, 32%), which maps to 2814 about (37.5%, 38.5%), and it is there.
+
+What differs:
+- 2813 has several smaller orange dots in the chest. Only one is visible in 2814.
+- 2813 is a straight-down view. 2814 is an oblique view with Earth's curvature and a blue atmospheric edge at the top left. A camera rising straight up should not tilt like that.
+- 2814 has strong sun glare at the right. There is no matching lighting change in 2813.
+- The cloud texture changes between the two images.
+- The high white streaks above the head are shorter in 2814.
+
+## 2. Does a continuous zoom hold together?
+Yes, mostly. Every step registers: the crater eye, the north-east lakes, the lagoon, the ribs and the orange dot all line up.
+
+The 2811 to 2812 step is the weakest:
+- The scale jump is larger than the others (about 3.5x against about 2.3x).
+- The mist plume and the cliff rim disappear.
+- Open sea with whitecaps turns into a calm lagoon.
+- The texture changes from realistic eroded mountains to lacy, fractal relief like frosting.
+It will still read as the same place, but these features visibly pop.
+
+The 2813 to 2814 step adds a change of camera angle. The view goes from straight down to oblique, with the horizon, curvature and glare appearing, so it will look like a tilt rather than a pure rise. It won't look like a cut to a different place.
+
+## 3. Real place or miniature?
+- 2811 is the most convincing as real aerial or orbital terrain: eroded ridges, dendritic drainage, a sediment-stained crater lake and a wind plume. The slightly glossy, plaster-like look of the ridges is the only thing that suggests a relief model.
+- 2812 is the weakest. The edges are over-sharp, lacy and fractal, like coral, frosting or a 3D-printed surface. The whitecaps look like sprinkled glitter or sugar, and the relief is exaggerated. It risks reading as a macro shot of an object.
+- 2813 reads as large because the cloud field and open sea give scale. However, the "ribs" are regular, evenly spaced, bone-like ridges, so it reads as a giant skeleton sculpture. It is deliberately uncanny rather than a model.
+- 2814 clearly reads as a view from orbit: Earth's curvature, a blue atmospheric edge, cloud fields, a hurricane at the bottom right and sun glint. The skeleton figure is plausibly continent-sized; the hurricane is about the size of a foot. Two things look small-scale: the white cloud puff at the waist looks like a cotton wad or smoke, and the red veins on the pelvis look like a stain on a small object.
+
+## 4. Shape of the land in 2814 and its most distinctive places
+The land is a human skeleton lying in the ocean, with its head at the left and its feet at the right.
+
+The parts of the figure:
+- Head: an island at about x 16–31%, y 38–55%.
+- Arms: one goes up from the shoulder (31%, 31%) to the elbow (33%, 15%), then the forearm and fingers splay right to about (47%, 12%). The other goes down to splayed fingers at about (50%, 79%).
+- Ribcage: about x 34–47%.
+- Spine: there is no bony spine between ribcage and pelvis. The gap is filled by a white cloud plume at about x 49–57%, y 46%.
+- Pelvis: a white plateau at about (62%, 47%).
+- Legs: one runs right to a foot at the top right (95%, 25%). The other bends down to a foot at about (78%, 78%).
+
+Most distinctive places:
+- The round crater-lake "eye socket" in the head at (20%, 47%). It is the only eye; there is no second one.
+- The cratered, rust-coloured skull area with the large lagoon next to the crater.
+- The ridge ribs, with an orange glowing point in the chest at about (37.5%, 38.5%).
+- The white cloud or steam plume standing in for the lower spine.
+- The white pelvic plateau with a branching dark-red vein pattern and a dark round hole (a hip socket) at about (65%, 42%).
+- A rust-orange plume of sediment trailing east from the pelvis.
+- Hand and foot "fingers" splayed like river deltas.
+- A hurricane at the bottom right, sun glare at the right, and the atmospheric edge at the top left.

@@ -1,0 +1,6 @@
+viewer: t3
+model: gemini_4_carbon
+test: GLANCE
+image: reveal-f4-v4 (400 px)
+
+This is a view from space of a giant human skeleton or decomposing corpse forming an island continent in Earth's ocean.

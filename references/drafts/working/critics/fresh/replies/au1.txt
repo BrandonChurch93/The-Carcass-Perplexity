@@ -1,0 +1,10 @@
+viewer: au1
+model: gpt_6_2_sol
+test: FULL
+image: cx-e-t2 (full size)
+
+1. My first impression was a giant human skeleton made of rocky islands, sprawled across an ocean on an Earth-like planet.
+2. It appears continent-scale, on the order of several thousand kilometers from skull to feet, in an oblique orbital view; no exact scale is recoverable.
+3. (a) in depicted scale, although it looks like fantasy digital art: the curved blue atmospheric limb against black space at upper left and the much smaller spiral storm at lower right give it away.
+4. Left: cracked skull, two flooded eye sockets, nasal opening, gaping jaw and teeth; just right of skull, rust-colored pit-dotted neck/shoulder. Center-left: open ribs arch above and below the segmented spine, with a tiny orange glow among the upper ribs. Upper left/center: bent arm, elbow, paired forearm ridges, splayed fingers. Lower left/center: second bent arm, broad striated forearm, splayed fingers. Center: bright white cloud-like plume over spine. Right of center: pale pelvis with rounded holes and red branching marks, with rusty streaks trailing right and green-brown swirls offshore. Upper right: nearly straight leg with raised foot/toes; lower right: bent leg with knee, long shin and foot/toes. Surroundings: turquoise shallows, cloud streaks, bright ocean glare at upper right, lower-right cyclone.
+5. The near-perfect articulated anatomy, tooth/finger/toe detail, cracked bone-like rock texture, and bloodlike red pattern look deliberately fabricated; the scene doesn't otherwise read as tabletop scale.

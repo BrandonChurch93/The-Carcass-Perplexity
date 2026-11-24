@@ -1,0 +1,24 @@
+viewer: p3
+model: gemini_4_carbon
+test: FULL
+image: reveal-f4 (full size)
+
+1. It is an orbital-style fantasy illustration of a giant continent shaped like a sprawled, decaying human skeleton or corpse lying in an ocean.
+
+2. Based on the planetary horizon curve and weather systems, the landmass is depicted as roughly 2,000-3,500 miles (3,000-5,500 km) long, with the camera positioned in space at low-to-medium orbital altitude (roughly 500-1,500 miles up).
+
+3. It is closest to (a) a landmass seen from orbit (created as a digital matte painting/illustration rather than a real photo). The scale is given away by the curved planetary limb and thin blue atmosphere against black space at the top left, a full synoptic cyclone spinning in the bottom right, snow-capped mountain chains along the limbs, and sprawling oceanic cloud bands.
+
+4. Distinct features and their locations:
+- Skull peninsula (far left): Head-shaped landmass with two large circular craters for eyes (the lower one filled with a dark lake, the upper one dry/brown) and rough terrain around the jaw.
+- Volcanic neck isthmus (left-center, between head and torso): Narrow neck dotted with dark/reddish volcanic cones and a faint grey plume drifting toward the upper left.
+- Ribcage ridges and dark chest basin (left-center torso): Parallel curved mountain ridges forming ribs on both sides of a dark basalt-like central chest plain split horizontally by a straight canyon/rift.
+- Central turquoise lagoon and giant plume (center torso/abdomen): Bright turquoise inland sea connected to the upper ocean by a narrow strait, topped by a massive white cumulonimbus/eruption cloud with an anvil top.
+- Reddish pelvic basin (center, right of the lagoon): Pale pink-tan basin cross-hatched with dark red, vein-like braided rivers or mineral lakes.
+- Two arms and five-fingered hands (top-center and bottom-center): Long peninsulas with snow-dusted mountain spines along the upper/outer edges, ending in splayed five-fingered headlands ringed by turquoise reefs.
+- Two legs and five-toed feet (extending right, upper-right and lower-right): Long mountainous peninsulas ending in upturned feet with five distinct island/peninsula toes.
+- Hurricane and planetary limb (corners): Black space and atmospheric glow in the upper-left corner; a large spiral storm system in the lower-right corner.
+
+5. Yes, several things look fake and out of scale:
+- Aside from the literal human-skeleton anatomy (symmetrical ribs, five fingers/toes, eye craters, blood-red pelvic rivers), the central cloud plume looks pasted in at the wrong scale and camera angle - it resembles a close-up, nearly side-on photo of a single thunderhead or volcanic plume, making individual cloud puffs tens of miles wide compared to the tiny orbital cloud wisps elsewhere.
+- Surface details like the braided red channels in the pelvis, crater rims on the neck, and turquoise reef fringes around the fingers and toes have coarse, close-up aerial textures (as if seen from an airplane a few miles up) that clash with the tight planetary curvature in the top-left corner.

@@ -1,0 +1,6 @@
+viewer: aa2
+model: claude_opus_5_5
+test: GLANCE
+image: reveal-f4-v6 (400 px)
+
+My first impression was a satellite-style view of Earth with an island in the ocean shaped like a sprawled human body or skeleton, cut open to show its ribs and insides.

@@ -1,0 +1,6 @@
+viewer: viewer_a2
+model: claude_opus_5_5
+test: GLANCE
+image: rv4-t10 (400 px)
+
+It looks like an AI-generated view from orbit of an island shaped like a sprawled human body, maybe a skeleton or an anatomical figure, lying in a blue ocean, with a hurricane in the corner.

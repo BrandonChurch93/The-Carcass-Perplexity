@@ -1,0 +1,10 @@
+viewer: an2
+model: claude_opus_5_5
+test: STATE
+image: cx-t9 (carcass re-shot as an orbital photograph) (full size)
+
+1. A giant skeleton-shaped continent lying in the ocean, seen from orbit (Earth's curvature, clouds, and a hurricane visible).
+2. A human skeleton sprawled on its back/side with arms flung outward, skull open-mouthed as if screaming; it looks long dead and decayed, with red "blood-like" sediment seeping from the pelvis area and a volcanic plume/explosion near the middle.
+3. Eerie, apocalyptic, awe-inspiring.
+4. 4.
+5. (a) a landmass seen from orbit — the planet's curved horizon with atmosphere, cloud systems, a cyclone, and ocean scale all make it read as a satellite/ISS view of a continent.

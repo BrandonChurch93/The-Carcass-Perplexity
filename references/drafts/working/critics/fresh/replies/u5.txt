@@ -1,0 +1,25 @@
+viewer: u5
+model: gemini_neon
+test: FULL
+image: reveal-f4-v4 (full size)
+
+1. A giant, continent-sized landmass shaped like a sprawling human skeleton lying in an ocean, seen from orbit.
+
+2. Depicted at continental scale—roughly 1,500 to 3,000 km (1,000 to 2,000 miles) head to toe—with the camera high in orbit (hundreds of kilometers up) looking down toward the curved horizon.
+
+3. Closest to (a) a landmass seen from orbit (though clearly CGI/digital art). Scale cues include the curved planetary horizon with thin blue atmospheric haze and black space in the top-left corner, a large cyclonic storm/hurricane spiral in the bottom-right, scattered high-altitude clouds, snow-capped mountain ridges along the limbs, and turquoise shallow-water shelves along the coasts.
+
+4. Distinct features and locations:
+- Head (far left): Skull-shaped landmass with two large round craters as eye sockets (lower one is a dark crater lake, upper one is a dry brown basin).
+- Neck (left-center): Narrow isthmus with small reddish-dark pits and a wispy plume of smoke or haze drifting up and right over the ocean.
+- Ribcage/chest (left-center torso): Symmetrical curved parallel mountain ridges like ribs, framing a dark, charred central valley with faint glowing orange lava fissures.
+- Abdomen/lagoon (center): Turquoise inland sea crossed horizontally by a straight, spine-like causeway or chain of evenly spaced white nodes, with four puffy white cloud/smoke plumes lined up along its lower edge.
+- Pelvis (right-center torso): Pale basin filled with branching crimson/red pools or salt flats resembling blood vessels.
+- Arms and hands (top-center and bottom-center): Two long peninsulas with snow-capped mountain spines, ending in splayed finger-like peninsulas and turquoise reefs.
+- Legs and feet (upper-right and lower-right): Two rugged tan/brown peninsulas ending in foot- and toe-like tips with turquoise shallows.
+- Ocean and weather (background): Deep blue sea with scattered clouds, a curved limb/atmosphere at top-left, and a swirling white cyclone at bottom-right.
+
+5. Yes—it clearly looks fake/CGI:
+- The literal, symmetrical human skeleton shape (skull, parallel ribs, splayed fingers/toes, red pelvic pools) is geologically impossible.
+- The straight, evenly spaced spine-like structures and the four neat puffy clouds along the central lagoon look artificial and wildly out of scale for orbital altitude.
+- The vertical relief of the ribs and craters looks overly sculpted, and the glowing orange lava cracks in the chest would have to be impossibly wide to show up from space.

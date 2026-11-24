@@ -1,0 +1,22 @@
+viewer: by2
+model: claude_opus_5_5
+test: PROPORTION
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. It's an orbital-style view of Earth's ocean, with a giant human-like skeleton made of land, ridges and clouds lying on the surface. A hurricane sits in the lower right and the planet's curved edge shows at top left.
+
+2. It's meant to look like an adult skeleton, but it's distorted, so it reads more as a stylized or monstrous figure than a real person. The long limbs and spread-out ribs suggest an adult, not a child. Nothing about it looks childlike: the head isn't oversized and the limbs aren't short.
+
+3. Part by part, compared with a real adult skeleton:
+- Head: about the right size, but the shape is wrong. It's a blobby, cratered landmass with one dark eye socket and doesn't look like a real skull.
+- Neck: missing or far too short. The skull merges straight into the upper chest.
+- Shoulders: badly placed. There's no clear collarbone or shoulder girdle, and the arms sprout from the middle of the rib area.
+- Rib cage: too long and too spread out. It's split into upper and lower fans of ribs, and the lower set looks like a second rib cage.
+- Waist/spine: far too long. The gap between the ribs and pelvis is huge and is filled with a cloud streak instead of lumbar vertebrae.
+- Hips/pelvis: wrong shape and roughly too big. It's a pale blob with a red vein pattern and one hole, with no recognizable pelvic bowl.
+- Arms: roughly right in length, maybe a bit long. The upper arm is placed oddly, and the lower arm comes off the lower ribs.
+- Hands: too big, and the fingers are long, thin and spread out like rays.
+- Legs: too long and thin, especially the extended right leg. The joints are vague.
+- Feet: too small and stubby compared with the legs.
+
+4. I'd shorten the torso so it's one rib cage joined to the pelvis by a short lumbar spine, removing the long gap with the cloud streak. That single fix would correct the biggest proportion error.

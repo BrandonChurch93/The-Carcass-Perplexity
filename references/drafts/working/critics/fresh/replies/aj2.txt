@@ -1,0 +1,24 @@
+viewer: aj2
+model: claude_opus_5_5
+test: FULL
+image: cx-t6 (carcass, hide on about half) (full size)
+
+1. A giant skeleton-shaped landmass lying in the ocean, seen from orbit. It looks like a fantasy or AI-generated image.
+2. It reads as continent-sized, roughly 2,000–5,000 km long. The camera seems to be in low Earth orbit, a few hundred km up, looking obliquely toward the horizon.
+3. (a), a landmass seen from orbit. The scale cues: Earth's curved limb with a thin blue atmosphere and black space at top left, a full hurricane/cyclone spiral at bottom right that's comparable in size to the skeleton's limbs, sun glint on the ocean at right, cloud fields and cumulonimbus towers sitting over the land, and ocean-colour plumes (algae/sediment swirls).
+4. Features:
+- Skull at far left, with crater-like eye sockets holding lakes and teeth along the jaw.
+- Upper arm/hand at top left, with fingers reaching toward the top edge.
+- Rib cage at left-centre, with a glowing orange volcanic vent or lava pit in the upper ribs and a smoke plume rising from it.
+- Second rib set at centre-left (lower), with clouds drifting through it.
+- Spine running across the centre to the right, broken into island chains.
+- Big thunderstorm or cumulonimbus cloud mass over the centre-right, with a faint purple glow (lightning).
+- Pelvis/hip region at centre-right, pitted with red pools and craters, with a red-brown plume bleeding into the sea to its right.
+- Right arm/leg extending to the far right, with a hand or foot near the right edge in the sun glint.
+- Lower-right limb trailing down toward the bottom right.
+- Leg at lower left extending down to a foot or hand around the bottom centre, partly under cloud.
+- Green, teal and yellow water swirls (bloom or sediment) between the bones in the centre.
+- Smoke or steam plumes over the left rib cage and skull.
+- Hurricane eye and spiral bands at bottom right.
+- Earth's limb and space at top left.
+5. Yes. A skeleton-shaped continent is impossible, and the anatomy is muddled: two rib cages, and limbs that don't clearly match arms or legs. The bone texture looks like sculpted or rendered material, not real terrain. The clouds and smoke are oddly small or puffy compared with the hurricane, so the scale is inconsistent and the plumes read as tabletop-sized. It looks like a digital composite or AI render, not a photo.

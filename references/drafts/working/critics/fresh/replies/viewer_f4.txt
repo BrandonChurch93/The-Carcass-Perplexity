@@ -1,0 +1,27 @@
+viewer: viewer_f4
+model: grok_4_7
+test: FULL
+image: rv4-t23 (full size)
+
+1. A continent shaped like a human skeleton lying in the ocean, seen from space.
+
+2. Continental — on the order of a few thousand kilometers long. The camera is in low orbit, looking down at an angle; the planet’s curve and a blue atmospheric haze sit along the top-left edge.
+
+3. Closest to (a) a landmass seen from orbit. The curved limb and atmospheric glow, a cyclonic storm at lower right, cloud shadows, and sun glint on the open ocean all read as planetary weather, not an aircraft shot or a tabletop.
+
+4. Distinct features:
+- Head, far left, in profile facing up-left: circular eye like concentric turquoise and gold rings, jaw of mountain ridges.
+- Neck/spine just right of the head: a line of small reddish craters, with a thin smoke plume drifting up-left.
+- Ribcage, center-left: paired arched tan and white mountain ridges.
+- Upper chest inside the ribs: a dark scorched basin with orange-red fissures.
+- Sternum, lower center of the ribcage: a bright eruption with a white ring and a mushroom cloud.
+- Abdomen, center: a turquoise lagoon, fed by a narrow inlet from the north.
+- Pelvis, just right of the lagoon: a reddish-pink flat cut by crimson vein-like channels.
+- Upper arm, toward top-center: ends in a five-fingered hand of coastal peninsulas and turquoise shoals.
+- Lower arm, toward bottom-center: another five-fingered hand edged in cyan shallows.
+- Two splayed legs of sunlit mountain chains across the right half.
+- Upper foot, pointing up: five toe-like coastal spits.
+- Lower foot, bottom-right: splayed toes fringed with turquoise reef.
+- Deep blue ocean all around, with turquoise shoals ringing the whole coast, clouds over the body and sea, and sun glint on the water at upper right.
+
+5. Yes. The anatomy is too literal to be a real landform — countable ribs, a spine of craters, an eye socket, and five fingers and toes on each limb. It looks like sci-fi concept art or a matte painting, not a photograph. Nothing in it reads as small-scale or tabletop.

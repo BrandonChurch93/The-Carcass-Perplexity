@@ -1,0 +1,6 @@
+viewer: viewer_b1
+model: claude_sonnet_5_5
+test: GLANCE
+image: rv4-t8 (400 px)
+
+It looks like an AI-generated image of a giant human skeleton-shaped landmass, with exposed ribs and a red wound in the chest, floating in the ocean as seen from space.

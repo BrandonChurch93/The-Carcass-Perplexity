@@ -1,0 +1,10 @@
+viewer: viewer_b4
+model: claude_opus_5_5
+test: FULL
+image: rv4-t8 (full size)
+
+1. An AI-generated / digital-art image of a giant continent shaped like a sprawled human skeleton or body, seen from orbit in Earth's ocean.
+2. Meant to look continent-sized, thousands of km across (cyclone near the feet suggests ~1,000+ km storms). The camera is in low Earth orbit, looking obliquely down; the planet's curved limb and black space show at top-left.
+3. Closest to (a), a landmass seen from orbit, though it is really a digital painting (d). Scale cues: Earth's curved horizon and space at top-left, a full spiral cyclone at bottom-right, cloud fields over the ocean, sun glint at upper right, mountain ranges with snow along the limbs, and turquoise continental shelves around the coast.
+4. Features: head at left with a round crater lake or eye-like lake in the skull and snowy peaks; neck with a row of red-dotted islands or vertebrae plus a pale bluish fan-shaped feature and wispy plumes; ribcage in the upper-left/center made of parallel ridge-and-valley ribs split by a central channel (spine), with a dark radiating crater/volcano among upper ribs; smoke/volcanic plume rising from the left shoulder toward the top; a central lagoon or inlet between ribcage and pelvis with a white-purple cloud/explosion and a white streak; a red, blood-cell-textured basin at the pelvis/abdomen (center); two arms, one reaching to the top-center, one to the bottom-center, each ending in hand-shaped peninsulas with fingers; two legs extending to the right, the upper one ending in a foot at top-right, the lower one ending at bottom-right; a cyclone at bottom-right; cloud banks along the right edge; sun glint upper right; the planet's edge at top-left.
+5. Yes: the human-skeleton shape is impossible geology, the ribs and fingers are too regular and anatomical, the red organ-like pelvis texture and puff-ball cloud look painted, and the land's relief looks like a sculpted relief texture; there is no true small-scale tabletop look, but it is clearly synthetic art.

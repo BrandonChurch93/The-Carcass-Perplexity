@@ -1,0 +1,27 @@
+viewer: viewer_c4
+model: gemini_neon
+test: FULL
+image: rv4-t13 (full size)
+
+1. A gigantic continent shaped like a sprawling human body lying in an ocean, viewed from orbit.
+
+2. Roughly continental scale—about 2,000 to 4,000 km from head to toe—with the camera in low-to-medium orbit hundreds of kilometers above the planet looking down at an angle.
+
+3. Closest to (a) a landmass seen from orbit (rendered as CGI/digital art). The scale is signaled by the curved planetary horizon and dark space in the top-left corner, a huge swirling cyclone in the bottom-right, broad cloud systems and ocean sunglint, snow-capped mountain chains, and turquoise coastal shelves along the shorelines.
+
+4. Distinct features and locations:
+- Head (far left): Snow-capped mountain peaks and a perfectly circular blue crater lake with a tan rim on its upper side.
+- Neck/throat (between head and chest): A pale strip dotted with small dark-red circular pools/spots and a wispy white vapor plume drifting up-left.
+- Chest/ribcage (left-center): Parallel rib-shaped mountain ridges on both sides, with an active glowing volcanic area near the upper chest/heart sending a brown ash plume up-right across the upper arm.
+- Abdomen (center): A hollowed-out turquoise inland sea/lagoon containing a localized swirling storm cloud with a visible purple lightning bolt and a narrow white cloud trail.
+- Pelvis (right of center lagoon): A wide basin of crimson/red pools or salt flats laced with pale white crust.
+- Upper arm (top-center): Peninsula with a snow-capped ridge along the forearm, ending in a five-fingered hand.
+- Lower arm (bottom-center): Curved peninsula with snow-capped peaks near the shoulder and elbow, ending in a five-fingered hand.
+- Upper leg (upper-right): Peninsula with a prominent snow-capped peak near the knee, ending in a five-toed foot pointing up-right.
+- Lower leg (lower-right): Peninsula with snow-capped ridges near the hip, ending in a five-toed foot pointing down-right.
+- Surrounding ocean: Turquoise shallows outlining the entire body, scattered clouds, ocean sunglint on the right, a large hurricane in the bottom-right corner, and the curved atmospheric limb in the top-left.
+
+5. Yes, it clearly looks like CGI/concept art with several scale and realism mismatches:
+- The anatomy is overtly artificial and symbolic (exact five-fingered hands and five-toed feet, rib ridges, eye-like crater lake, volcano at the heart, crimson blood-like pools in the pelvis).
+- Several details are wildly overscaled for orbit: the visible purple lightning bolt in the abdomen would span hundreds of kilometers, and the glowing orange lava/fire spots in the chest and red dots on the neck are far too crisp and huge for that altitude.
+- The planetary curvature in the top-left looks too tight relative to the size of the clouds, mountain peaks, and coastal turquoise halos, making parts of the terrain read like a smaller sculptural model composited onto a planet.

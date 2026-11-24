@@ -1,0 +1,6 @@
+viewer: y1
+model: gpt_6_2_sol
+test: SCALE
+image: reveal-f3-v5 (full size)
+
+1. A top-down view of a volcanic island landscape shaped like a human skeleton, with a crater-eyed skull, neck, and rib cage. 2. If read as terrain, it suggests a frame a few hundred kilometers wide and a viewpoint roughly hundreds of kilometers up; no reliable scale reference. 3. Closest to (d), a digital illustration/render mimicking (a): the terrain, ocean, and clouds look aerial, but the anatomy looks deliberately constructed. 4. The two round eye sockets, jagged toothlike line, and paired repeating rib ridges look too anatomically coordinated to be natural; no clear sign of physical miniature scale.

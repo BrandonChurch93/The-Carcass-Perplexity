@@ -1,0 +1,9 @@
+viewer: ac1
+model: gpt_6_2_sol
+test: SCALE
+image: reveal-f3-v6 (full size)
+
+1. An overhead view of a rocky, volcanic-looking coastline shaped like a human skeleton, with a crater-eyed skull on the left and ribs on the right.
+2. Visually it suggests tens to a few hundred kilometres across and a viewpoint tens to hundreds of kilometres up; there’s no reliable scale or camera altitude.
+3. (a) in appearance: the overhead framing, cloud wisps, and turquoise coastal shallows mimic aerial or satellite imagery, though it looks like a digital illustration rather than a real place.
+4. The paired eye craters, jaw-like ravine, evenly spaced ribs, and glowing lava lines look designed; nothing clearly indicates a physical miniature.

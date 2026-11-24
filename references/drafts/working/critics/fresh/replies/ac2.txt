@@ -1,0 +1,9 @@
+viewer: ac2
+model: claude_opus_5_5
+test: SCALE
+image: reveal-f3-v6 (full size)
+
+1. An orbital-style view of an arid volcanic island/peninsula: a rounded headland with two crater lakes, joined by an isthmus to a ridged mainland with dark lava fields, glowing lava fissures, ash/dust plumes, and reef-fringed turquoise shallows.
+2. Apparent width roughly 100–300 km (clouds and ridge scale suggest it); camera height roughly 300–400 km, as if from an ISS-like orbit.
+3. (a) real terrain seen from orbit, in style: clouds, sea color, shallow-water gradients, haze and lighting all read like an astronaut photo. But it looks digitally generated rather than a real place (closer to a rendered/AI image than a model, close-up, or hand painting).
+4. Yes: the whole layout is suspiciously symmetric and face/creature-like (two "eye" craters, a mouth-like reddish spot, wing-like mirrored ridges); ridges are overly regular, feathery and painterly; visible orange lava lines are implausibly bright and thin at that scale; crater lakes are too perfectly round; textures smear in places. Nothing looks like a tabletop miniature (no shallow depth of field), but it looks fake/synthetic rather than a real Earth location.

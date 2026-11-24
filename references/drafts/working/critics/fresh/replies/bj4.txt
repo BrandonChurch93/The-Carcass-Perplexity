@@ -1,0 +1,10 @@
+viewer: bj4
+model: grok_4_7
+test: FULL
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. A continent-sized humanoid skeleton of mountains and islands, lying on its back in an ocean, seen from space.
+2. Thousands of kilometers long, on the order of a continent. The camera is in orbit, looking down at an angle; black space and the planet’s curved limb sit in the upper left.
+3. Closest to (a). The curved horizon, thin blue atmospheric glow against black space, ocean sun-glint, cloud fields, and a full spiral storm in the lower right about the size of the skull all read as orbital scale, not an aircraft, a model, or a painting.
+4. Upper left: black space, blue atmospheric rim, curved horizon. Mid-left: skull with two hollow eye sockets, open jaw, jagged teeth. Center-left: spine and curved rib ridges, plus a small orange glow in the upper chest. Top-center: one arm reaching up, ending in long finger-like spits. Bottom-center: the other arm reaching down, also ending in finger ridges. Mid-body: a small white cloud or fog over the lower spine. Center-right: pelvic basin with a white floor, a dark circular crater on its upper rim, a branching red pattern inside, and a red-orange plume drifting right between the legs. Top-right: a straighter leg and foot with separate toe ridges, plus sun glint on the water. Lower right: a sharply bent leg and smaller foot. Bottom-right corner: a spiral storm with an eye.
+5. Nothing looks tabletop or handheld — no base, seams, or studio light. What looks wrong is the anatomy: ribs, fingers, toes, and a screaming jaw are too exact to be real geology, and the red pelvic branches and chest ember look painted on. It reads as CGI concept art dressed as a satellite view, not a real landmass.

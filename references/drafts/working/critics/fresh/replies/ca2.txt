@@ -1,0 +1,10 @@
+viewer: ca2
+model: claude_opus_5_5
+test: HEAD
+image: x6 frame 2 (tmp/test/IMG_2362.jpg = critic/fresh/seen/x6-f2.jpg)
+
+1. An orbital-style view of a volcanic island or cratered landmass with lakes in its craters, beside a dark sea with whitecaps or cloud flecks.
+2. It looks like a face or skull: the round crater is an eye, the big ragged lake to the right is a second eye or gaping mouth, and the land reads like a fur-ringed animal head (an owl or a lion) seen from above.
+3. It reads as roughly 50–150 km across, seen from about 300–400 km up (ISS-like orbit). It could also be read as roughly 10–20 km across seen from a high aircraft.
+4. (a), but it doesn't fully hold up. The lighting, ocean texture and drainage patterns are what you'd expect from orbit, yet the detail looks too uniform and fractal, so it also reads as digitally generated or painted (d) rather than a real photo.
+5. Yes. The ridges branch in a repeating fractal way with no flat ground, and the edges are oddly feathery, like a fringe. The white swirling streaks at the top right look like smoke or brush strokes rather than clouds. The crater rims are very clean, the ocean speckles are evenly spread like glitter, and the colors are painterly. None of it looks like a small tabletop model; it looks more like CGI or AI-generated art.

@@ -1,0 +1,10 @@
+viewer: p1
+model: gpt_6_2_sol
+test: FULL
+image: reveal-f4 (full size)
+
+1. First impression: a giant human skeleton-shaped island, seen in a satellite-style view of Earth.
+2. The depicted landmass reads as hundreds to perhaps over a thousand kilometers head-to-toe; the view is obliquely downward from orbit, but there's no measured scale.
+3. (a) in depicted perspective: Earth's curved blue limb and black space at upper left, broad weather bands and a spiral storm at lower right. It looks digitally made, not like a genuine satellite photo.
+4. Far left: skull-like head with two round sockets (upper looks like a dry crater, lower is dark blue), central nasal hollows, a jagged teeth/jaw-like band on its right, then a narrow neck. Center-left: shoulders and two combs of pale curved ribs flanking a dark chest basin with a fine straight central trace. Middle: clouds over the chest/abdomen, turquoise flooded-looking basin, thin plume/shaft near its upper edge, and pinkish pelvic basin with dark red branching marks on the right. Above and below the chest: two bent, ridged arms ending in splayed finger-like peninsulas at upper middle and bottom middle. Two broad, mountainous legs fork right, with bent ankles and individually separated toe-like tips at upper and lower right. Turquoise coastal shelves and scattered reef/islet flecks edge the tan terrain; deep blue sea surrounds it, with cloud streaks, bright water at far right and a large cloud vortex at lower right.
+5. The unnaturally exact skull, ribs, paired limbs, digits and reddish pelvis give away the fabrication; there are no obvious tabletop clues. Can't identify any real place from it.

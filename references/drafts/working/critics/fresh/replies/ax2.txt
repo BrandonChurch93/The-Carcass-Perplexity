@@ -1,0 +1,10 @@
+viewer: ax2
+model: claude_opus_5_5
+test: STATE
+image: x2-f4 (full size)
+
+1. A giant skeleton-shaped landmass seen from orbit over a cloudy ocean, with Earth's curved edge and a hurricane in the corner.
+2. A human skeleton lying face-up and sprawled, arms and legs splayed. It looks dead and decaying, maybe broken: the spine is cut in the middle by a white cloud or explosion, and there are red, blood-like veins on the pelvis with rusty stains running out into the water.
+3. Ominous, desolate, apocalyptic.
+4. 4.
+5. (a) A landmass seen from orbit, because of the visible curve of the Earth, the thin blue atmosphere, the space-black corner, the cloud patterns and the cyclone. The scale reads as continental, like satellite photography.

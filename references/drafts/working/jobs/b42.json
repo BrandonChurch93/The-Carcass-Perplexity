@@ -1,0 +1,46 @@
+[
+ {
+  "id": "pb3-t5",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-v2.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS Baja + MODIS Arabia"
+ },
+ {
+  "id": "pb3-t6",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-v2.png",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS Baja + MODIS Arabia, second take"
+ },
+ {
+  "id": "pb3-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-v2.png",
+   "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS cloud streets + MODIS Baja"
+ },
+ {
+  "id": "pb3-t8",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-b",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-crop-v2.png",
+   "/home/user/workspace/r3/real/orb-modis-streets.jpg",
+   "/home/user/workspace/r3/real/orb-modis-arabia.jpg"
+  ],
+  "what": "pull-back frame 3 (head and shoulders) with the new face-up skull: the frame-3 window of the master (new head folded in, old plume remnants patched) re-photographed from lower, prompt pb3-b, MODIS cloud streets + MODIS Arabia"
+ }
+]

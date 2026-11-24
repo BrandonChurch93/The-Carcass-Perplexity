@@ -1,0 +1,23 @@
+viewer: aw6
+model: claude_sonnet_5_5
+test: FULL
+image: x2-f4 (full size)
+
+1. A giant skeleton-shaped landmass or island, with skull, ribs, pelvis and limbs, floating in an ocean seen from orbit.
+2. Roughly thousands of km across, continent-sized or larger, if the picture is taken at face value. The camera is in low Earth orbit, a few hundred km up, looking obliquely at the planet's curved limb.
+3. Closest to (a), a landmass seen from orbit. The scale cues are the blue atmospheric limb and black space at the top left, a hurricane-sized cyclone spiral at the bottom right, and cloud and wave textures that look like synoptic weather. The shape is clearly artificial, though, so it reads as a digitally generated or composited image, not a real landmass. It is not a tabletop model, and not a conventional painting, though it could be digital art.
+4. Features by location:
+- Skull with dark eye sockets, a crack and an open jaw with teeth, at the left.
+- Spine and ribcage in the centre-left, with an upper rib set and a lower rib set. A small orange dot sits among the upper ribs.
+- Upper arm and hand with finger-like ridges, at the top, reaching up and to the right.
+- Lower-left leg and foot with toe-like ridges, at the bottom-centre.
+- Pelvis at the centre-right, white with a red branching vein or lava pattern.
+- Thigh and leg running up to the right and ending in a foot at the top right.
+- A second leg bent down to the lower right, ending in a foot.
+- A white cloud or steam plume between the ribcage and pelvis, at the centre.
+- Orange and red sediment or algae streaks, extending right from the pelvis.
+- Green and teal shallows around the whole landmass.
+- A cyclone spiral at the bottom right.
+- Bright sun glare at the right edge.
+- Atmosphere limb at the top left.
+5. Yes, it looks fake. The skeleton anatomy is far too regular and symmetrical for natural terrain. The ribs are evenly spaced like bones. The red vein pattern looks painted on. The textures look AI-generated. The ocean white caps are the same size across the whole frame, which does not fit a view from orbit. The sun glare and the curvature don't match. Overall it is a surreal, AI-generated or CGI image, not a real satellite photo.

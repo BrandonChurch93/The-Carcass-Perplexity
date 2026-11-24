@@ -1,0 +1,6 @@
+viewer: bm1
+model: gpt_6_2_sol
+test: SCALE
+image: x4 frame 3 (final set) (tmp/test/IMG_5617.jpg = critic/fresh/seen/x4-f3.jpg)
+
+1. It looks like a top-down view of a giant fish skeleton, with a skull at center-left and ribs trailing right, formed out of rocky terrain in a dark ocean. 2. Apparent scale: perhaps 200–500 km across, from a few hundred km up; neither is measurable from the image. 3. (d), closest to a digital painting/render mimicking (a): the cloud bands and fine terrain sell the orbital view, but the landforms resolve into deliberate anatomy. 4. The round eye socket, jaw-like opening and evenly repeated ribs look designed rather than geological; there are no clear tabletop or small-scale cues.

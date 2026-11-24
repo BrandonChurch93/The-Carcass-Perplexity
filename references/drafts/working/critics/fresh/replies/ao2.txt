@@ -1,0 +1,6 @@
+viewer: ao2
+model: claude_opus_5_5
+test: GLANCE
+image: master-x1 (400 px)
+
+It looks like a satellite view of Earth's ocean with a huge skeleton-shaped cloud or landmass formation stretched across it, plus a hurricane in the corner.

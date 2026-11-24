@@ -1,0 +1,10 @@
+viewer: q1
+model: gpt_6_2_sol
+test: HEAD
+image: reveal-f2 (full size)
+
+1. It looks like an aerial view of a rocky desert coastline with two big craters, one full of water.
+2. A sideways skull, with the craters as eye sockets and the narrow channel as a mouth.
+3. Gut estimate: about 100 km across, camera roughly 100 km up; there's no clear scale marker.
+4. (a), closer to orbit than a low aircraft: the tiny cloud-like flecks, turquoise shallows and broad terrain read as a satellite view.
+5. The two circular craters and toothlike channel look almost too neatly arranged, and some ridges have a crumpled, sculpted texture.

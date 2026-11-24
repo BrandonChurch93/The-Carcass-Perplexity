@@ -1,0 +1,32 @@
+{
+ "ribs": {
+  "x_pct": 40.2,
+  "y_pct": 46.4,
+  "what": "the tidal strait between the two rows of rib ridges"
+ },
+ "heart": {
+  "x_pct": 37.45,
+  "y_pct": 38.75,
+  "what": "the lava glow in the chest"
+ },
+ "breath": {
+  "x_pct": 28.6,
+  "y_pct": 42.2,
+  "what": "the airways: sinkholes in the dark throat plateau, with vapour"
+ },
+ "marsh": {
+  "x_pct": 62.89,
+  "y_pct": 47.68,
+  "what": "the red salt flats in the hip basin"
+ },
+ "spine": {
+  "x_pct": 53.5,
+  "y_pct": 45.63,
+  "what": "the storm on the spine ridge"
+ },
+ "eye": {
+  "x_pct": 20.33,
+  "y_pct": 46.48,
+  "what": "the round lake in the eye socket"
+ }
+}

@@ -1,0 +1,10 @@
+viewer: bf3
+model: gemini_4_carbon
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t3 (tmp/test/IMG_1392.jpg = critic/fresh/seen/x3t3-f2.jpg)
+
+1. It looks like an orbital satellite view of a rugged volcanic island or peninsula surrounded by dark ocean and scattered clouds.
+2. Yes, a human skull lying on its side: two large circular crater lakes form the eye sockets, smaller central lakes form the nasal cavity, and a jagged bay lined with tooth-like ridges forms an open jaw on the lower right.
+3. At its intended landscape scale, the frame looks roughly 30 to 60 km wide, seen from low Earth orbit or very high altitude (roughly 150 to 400 km up).
+4. Closest to (d) a painting or drawing (specifically a digital/AI illustration or 3D procedural render designed to mimic (a) orbital terrain), because the landforms are deliberately composed into a skull shape with airbrushed-looking plumes and procedural erosion textures rather than real geology.
+5. Yes: the skull anatomy (especially the evenly spaced "teeth" peninsulas around the bay) is far too deliberate to be natural, the tightly packed cluster of round pockmark craters in the upper right looks unnatural and small-scale (like bubbles or foam), the vertical relief is exaggerated for an orbital view, and the wispy smoke on the right looks painted compared with the stippled clouds on the left.

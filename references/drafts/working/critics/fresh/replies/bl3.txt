@@ -1,0 +1,11 @@
+viewer: bl3
+model: gemini_4_carbon
+test: PLACES
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. Tidal strait between two rows of ribs: Found at about 42% from left, 47% from top (spanning ~35%–48% from left). A narrow water channel running horizontally between the upper and lower rib ridges with pale turquoise tidal currents.
+2. Glow of lava in the chest: Found at about 38% from left, 40% from top. A tiny bright orange-red glowing spot nestled between ribs in the upper ribcage.
+3. Airways (breathing holes) near the throat and mouth: Found at about 29% from left, 43% from top (with smaller nasal pits near 22% from left, 44% from top). A cluster of dark circular vents in reddish-brown throat terrain trailing wispy white vapor plumes toward the open mouth.
+4. Red salt flats: Found at about 63% from left, 49% from top. A bright white basin inside the pelvis etched with branching blood-red channels and red runoff streaming rightward into the sea.
+5. Storm on a ridge of spine: Found at about 53% from left, 46% from top (spanning ~50%–57% from left). An elongated bank of thick white thunderclouds with a faint purple lightning glow sitting along the narrow spine bridge.
+6. Round lake in an eye socket: Found at about 19% from left, 47% from top (with a smaller dark basin in the upper socket near 20% from left, 38% from top). A prominent dark circular lake bordered by a thin tan rim inside the lower eye socket.

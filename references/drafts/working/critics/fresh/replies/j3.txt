@@ -1,0 +1,10 @@
+viewer: j3
+model: grok_4_7
+test: HEAD
+image: pb2-t12 (full size)
+
+1. An overhead view of a desert island in the ocean, shaped like a skull.
+2. A skull lying on its side: two crater eyes, a dark nose hollow, and a channel lined with teeth.
+3. The frame looks like a few hundred kilometers across, seen from a few hundred kilometers up — orbital height, not a low aircraft.
+4. Closest to (a). Clouds, haze, coastal shallows, and hard sunlight read as an orbital photo, not a model, close-up, or drawing.
+5. The teeth are too even and blocky to be rock, and the face is too exact. It looks generated, not small-scale.

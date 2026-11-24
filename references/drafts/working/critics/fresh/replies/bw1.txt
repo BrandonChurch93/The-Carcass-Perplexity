@@ -1,0 +1,10 @@
+viewer: bw1
+model: gpt_6_2_sol
+test: STATE
+image: x6 frame 4 (tmp/test/IMG_1290.jpg = critic/fresh/seen/x6-f4.jpg)
+
+1. It looks like a giant human skeleton made of islands in an ocean, seen from space.
+2. It’s sprawled motionless on its back, with one arm raised and one knee bent.
+3. Eerie, surreal, ominous.
+4. 4/5.
+5. (a) A landmass seen from orbit: the curved horizon, blue atmospheric rim, and huge cloud spiral sell the scale.

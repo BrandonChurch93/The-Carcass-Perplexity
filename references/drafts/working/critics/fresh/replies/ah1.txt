@@ -1,0 +1,10 @@
+viewer: ah1
+model: gpt_6_2_sol
+test: FULL
+image: cx-t2 (carcass, rags of hide) (full size)
+
+1. First impression: a colossal human skeleton lying across an ocean, with rocky bones forming islands, seen from space.
+2. Depicted scale looks thousands of kilometers end to end (order of magnitude only), from a high, oblique orbital camera above a curved planet.
+3. (a) is the closest depicted viewpoint: curved blue atmospheric rim and black space at upper left, broad cloud bands and a hurricane-like spiral lower right, plus widespread ocean sun glitter; visually likely digital artwork, not literal orbital photography.
+4. Far left: cracked skull, two craterlike eye sockets (lower one blue), nasal cavity and open toothed jaws. Left center: neck/shoulders and paired arcing ribs; small orange lava-like vent and rising smoke inside upper ribs. Upper left: bent arm with paired forearm bones and splayed fingers. Lower left/center: other arm sweeping down-right, paired forearm bones and partly submerged hand/finger islets. Across center: segmented spine, partly cloud-covered, ending at a broad right-center pelvis with two large circular basins, smaller hole, cracked white flats and branching red streaks spreading into sea. Upper right: bent leg with steep knee, paired shin bones and splayed toes at far right. Lower right: second bent leg and partly submerged narrow fragments farther right, partly obscured by clouds. Around it: pale cliff ridges and rusty slopes, turquoise shallows and sediment-like swirls, tall cloud tower with violet glow above pelvis, broad mist bands, storm spiral bottom right, sunlight on sea upper right.
+5. The perfectly articulated, near-human skeleton at planetary scale looks fantastical/CGI; anatomical ridges and holes double as topography. No convincing tabletop cues.

@@ -1,0 +1,12 @@
+viewer: ac3
+model: gemini_4_carbon
+test: SCALE
+image: reveal-f3-v6 (full size)
+
+1. It is a synthetic satellite-style overhead image of a desert and volcanic coastal landmass shaped like a horizontal skull, neck, lungs, and ribcage in the ocean.
+
+2. At the orbital scale it imitates, the frame spans roughly 50–150 km wide from an apparent altitude of about 200–400 km, though some details (like wide glowing lava streams) belong to a much smaller 2–5 km aerial scale and there is no real camera.
+
+3. Closest to **(d) a painting or drawing** (specifically a digital/AI illustration imitating **(a)** orbital terrain), because the scene has rendered, airbrushed textures and a deliberate anatomical layout rather than real geology or physical 3D miniature cues like shallow depth of field.
+
+4. Yes, much of it looks fake and scale-confused: the terrain forms an obvious skull with two eye-socket craters, a reddish pitted neck, two lung-shaped black lava fields, and symmetrical rib-like ridges; glowing orange lava rivers are far too wide for an orbital view; waterways cut unnaturally from coast to coast; and the grey haze above the neck looks smudged/painted.

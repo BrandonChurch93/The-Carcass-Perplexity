@@ -1,0 +1,6 @@
+viewer: be1
+model: gpt_6_2_sol
+test: GLANCE
+image: x3 frame 4 at 400 px (head plate e3-HD-t2, storm e3-ST-t1) (tmp/test/IMG_3760.jpg = critic/fresh/seen/x3-f4-400px.jpg)
+
+It looks like a giant human skeleton floating in the ocean, seen from space.

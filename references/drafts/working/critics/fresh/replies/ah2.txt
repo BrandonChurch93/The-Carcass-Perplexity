@@ -1,0 +1,21 @@
+viewer: ah2
+model: claude_opus_5_5
+test: FULL
+image: cx-t2 (carcass, rags of hide) (full size)
+
+1. A giant skeleton-shaped continent or island chain lying in the ocean, seen from orbit (looks like digital art/AI render).
+2. Implied to be thousands of km long (continent-scale). The camera is in low Earth orbit, a few hundred km up, looking obliquely, with Earth's curved limb and black space at top left.
+3. (a) Landmass from orbit. Scale cues: the curved horizon and space at top left, a full spiral hurricane/cyclone at bottom right, cloud streets and cumulonimbus towers casting shadows, sun glint on the ocean at right, and swirling plankton-like colored water. Overall it's a fantasy render, so (d) also partly applies as artwork, but the depicted scale is orbital.
+4. Features:
+- Skull at far left, with a crater lake in the eye socket and teeth along the jaw.
+- Spine running from the skull to the pelvis across the center.
+- Ribcage left of center, with an erupting volcano (orange lava and a smoke plume) inside.
+- Raised arm/hand upper left, fingers pointing up-left.
+- Second arm stretched to the right, hand at far right.
+- Pelvis/hip region center-right, with a crater and red/white cracked salt-flat-like terrain.
+- Thunderstorm cloud with lightning (a purple flash) above the center, near the spine/shoulder.
+- Red-brown iron-colored outflow staining the water to the right of the pelvis.
+- Leg bones running down toward the bottom right; another limb fragment at bottom center.
+- Turquoise shallow lagoons between the ribs and bones.
+- Hurricane at bottom right, Earth's limb and space at top left, sun glint at right.
+5. Yes. A coastline shaped exactly like a skeleton is impossible. The bones look like carved stone/plaster texture, sculpture-like. The scale is inconsistent: the volcano and thunderhead look large relative to a continent, and the sharp, very regular rib ridges are too uniform for real geology. It reads as AI-generated or concept art, not a photo.

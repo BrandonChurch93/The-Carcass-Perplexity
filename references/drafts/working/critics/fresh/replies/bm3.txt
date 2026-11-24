@@ -1,0 +1,12 @@
+viewer: bm3
+model: gemini_4_carbon
+test: SCALE
+image: x4 frame 3 (final set) (tmp/test/IMG_5617.jpg = critic/fresh/seen/x4-f3.jpg)
+
+1. It is a digital illustration or 3D terrain render of a fictional volcanic coastline shaped like a human skull, jaw, and ribcage seen from space.
+
+2. At the scale it depicts, the frame is roughly 80–150 km wide and the viewpoint is roughly 200–400 km high (low-Earth orbit), though there is no real physical scene.
+
+3. Closest to (d) a painting or drawing (specifically digital artwork / procedural 3D render imitating (a) orbital terrain), because the geography is deliberately composed as a skeleton with painted/procedural clouds, erosion, and emissive highlights rather than a photographed physical model or real Earth surface.
+
+4. Yes, several things look fake or off-scale: the terrain forms an unmistakable skull with eye-socket craters, nasal pools, toothed jaws, collarbones, and evenly spaced parallel rib ridges; dense clusters of uniform circular impact-like pits sit unnaturally beside river-like erosion channels; bright glowing orange lava dots between the ribs are far too large and luminous for orbital daylight; and the ocean surface streaks look slightly too coarse relative to the cloud deck and mountain scale.

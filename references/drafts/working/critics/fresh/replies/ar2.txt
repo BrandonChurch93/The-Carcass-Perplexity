@@ -1,0 +1,12 @@
+viewer: ar2
+model: claude_opus_5_5
+test: PLACES
+image: master-x1 (full size)
+
+Image IMG_2219 (skeleton-shaped continent, 1429x804):
+1. Tidal strait between rib rows: Partly. Dark green water channels run between the rib bones at about 37% W, 50% H. I can't see anything that shows it is tidal; it just looks like water in the gaps.
+2. Lava glow in chest: Yes. There is a tiny orange spot in the dark chest basin at about 36% W, 39% H.
+3. Airways near throat/mouth: Uncertain. There is a cluster of small round reddish pits in the neck/jaw area at about 30% W, 42% H. They could be holes, but nothing marks them as airways.
+4. Red salt flats: Partly. A broad rust-red flat area with red branching veins lies east of the pelvis at about 63–85% W, 45–55% H, centered around 75% W, 50% H. It doesn't look clearly like salt.
+5. Storm on spine ridge: Yes, roughly. A bright white burst of storm cloud sits just above the spine/vertebrae ridge at about 59% W, 32% H. There is also a separate spiral cyclone over the ocean at about 92% W, 87% H, but it is not on the spine.
+6. Round lake in eye socket: Yes, probably. There is a round, dark-centered basin in the skull's eye socket at about 19% W, 47% H. A second socket at about 20% W, 39% H looks similar.

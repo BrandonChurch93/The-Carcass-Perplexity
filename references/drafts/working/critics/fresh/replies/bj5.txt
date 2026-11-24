@@ -1,0 +1,31 @@
+viewer: bj5
+model: gemini_neon
+test: FULL
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. A digital illustration of a continent-sized landmass shaped like a human skeleton lying in the ocean of an Earth-like planet seen from space.
+
+2. Roughly 3,000–6,000 km (a few thousand miles) from head to toe, judging by the curved planetary horizon and the hurricane in the corner. The camera is in high orbit, a few thousand kilometers up, looking obliquely down toward the planet's limb.
+
+3. Closest to (a) a landmass seen from orbit in what it depicts, though it is clearly (d) a digital illustration/CGI render rather than a real photo. Scale cues: the curved horizon with a thin blue atmospheric limb against black space (top left), a spiral cyclone (bottom right), widespread cloud cover, ocean sun glint (top right), and snow-capped mountain chains with coastal shallow-water shelves.
+
+4. Distinct features and locations:
+- Curved planetary limb and thin blue atmosphere against black space (upper left).
+- Ocean sun glint / specular reflection (upper right).
+- Spiral hurricane/cyclone (bottom right corner) and scattered clouds over dark ocean.
+- Skull island (mid-left): mountainous ring with two dark circular eye-socket lakes (the lower one rimmed in tan/gold), small dark nasal pits, a wide jagged bay forming an open mouth, and wispy clouds curling near the upper neck.
+- Reddish-brown basin/highlands at the neck/upper chest (left of center).
+- Ribcage archipelago (center-left): curved, parallel narrow mountain-ridge islands flanking a submerged central spine, with a single bright orange glowing dot inside the upper ribcage.
+- Upper arm (top-center): mountainous limb with a snow-capped peak at the elbow and five splayed peninsula fingers pointing right.
+- Lower arm (bottom-left to bottom-center): rugged shoulder/upper arm, snow-capped shoulder peak, and five splayed peninsula fingers pointing right.
+- Lumbar spine (dead center): an elongated, dense white cloud bank (or snow-covered ridge) sitting neatly over the waist between the ribs and pelvis.
+- Pelvis landmass (center-right): a stark white basin (salt flat or snow) containing a bright red branching river/fissure network, a circular dark lake/crater on its upper-right rim, and a long reddish-brown sediment plume trailing right into the ocean.
+- Upper leg (right): straight ridge extending toward the right edge with a snow-capped knee peak and a foot with toes pointing up.
+- Lower leg (lower right-center): bent leg with a prominent snow-capped peak at the knee and a foot with toes pointing down-left above the cyclone, surrounded by yellow-green/brownish ocean sediment swirls.
+
+5. Yes, it clearly looks artificial/illustrative rather than real:
+- The anatomical accuracy (symmetrical ribs, five distinct fingers and toes, gaping skull with eye sockets and nose holes) is obviously designed rather than natural geology.
+- The bright crimson branching "blood" pattern in the white pelvis basin and its red plume bleeding into the sea look heavily stylized.
+- Snow-capped peaks sit symmetrically right on the joints (elbows, knees, shoulders), which looks deliberate rather than climatically natural.
+- A single neat white cloud sits directly over the lumbar spine, and the tiny glowing orange dot in the ribcage looks placed for visual effect.
+- The terrain detailing on the ribs, fingers, and toes has a crisp, fractal/CGI look that makes the features feel smaller-scale or sculpted despite the orbital framing.

@@ -1,0 +1,22 @@
+viewer: p4
+model: grok_4_7
+test: FULL
+image: reveal-f4 (full size)
+
+1. First thought: a satellite photo of a continent or huge island shaped exactly like a splayed human skeleton lying face-up in the ocean.
+
+2. If the picture is taken at face value, the landmass is continental, on the order of a thousand kilometers from skull to toes, and the camera is in low orbit above the atmosphere, looking down. The curved limb against black space and the thin blue haze are what set that distance.
+
+3. Closest to (a), a landmass seen from orbit. The planet's edge, black space, atmospheric rim, deep-ocean color, reef shelf, and a cyclone only make sense at that height. It is not a tabletop model or a drawing: the surface has real terrain texture, sunlit ridges, and cloud shadow.
+
+4. Features, left to right:
+- Upper left: curved horizon, black space, thin blue atmosphere.
+- Far left: oval skull; lower eye is a dark flooded crater, upper eye a dry tan crater; jagged inlets below read as nose and open mouth.
+- Center-left: dark midline ridge like a spine, flanked by curved tan ridges like ribs.
+- Between the lower ribs: a milky turquoise lagoon open to the sea through a narrow strait, with a volcanic vent and a white-gray ash plume drifting toward the head.
+- Just right of the lagoon: a pale basin of reddish branching channels, like viscera or salt flats.
+- Upper limb toward the top, lower limb angling down: elbows, wrists, and hands with five long fingers edged by reef.
+- Right side: two bent legs, the upper one longer, both ending in feet with toes.
+- All around the coast: turquoise shelf and reef against deep navy water, with scattered clouds; a spiral cyclone sits in the lower right; faint cloud or smoke crosses the neck, lower abdomen, and right knee.
+
+5. The geography is too anatomical to be real. Five distinct fingers and toes, matched eye sockets, a ribcage, a spine, and blood-colored channels are not a natural coastline. The eruption sitting in the "gut" like an organ makes it look generated or composited, not a small physical model. Lighting, ocean, and clouds otherwise look photographic.

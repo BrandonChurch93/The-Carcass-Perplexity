@@ -1,0 +1,10 @@
+viewer: bf1
+model: gpt_6_2_sol
+test: HEAD
+image: x3 frame 2, head plate e3-HD-t3 (tmp/test/IMG_1392.jpg = critic/fresh/seen/x3t3-f2.jpg)
+
+1. My first thought was a satellite view of a rugged, cratered island in a dark blue ocean.
+2. A sideways skull: two dark eye sockets, a smaller nasal opening, and a big ragged mouth.
+3. By impression alone, a few hundred kilometers across, with the camera a few hundred kilometers up; there’s no reliable scale cue.
+4. (a), closest to an orbital view because of the overhead terrain relief and cloud bands over the water, though it feels stylized.
+5. The skull-like layout, the cluster of almost perfectly circular pits at right, and the wispy swirls look a little too arranged.

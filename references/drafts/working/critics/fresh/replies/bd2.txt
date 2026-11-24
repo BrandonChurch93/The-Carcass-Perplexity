@@ -1,0 +1,10 @@
+viewer: bd2
+model: claude_opus_5_5
+test: HEAD
+image: x3 frame 2 (head plate e3-HD-t2) (tmp/test/IMG_2905.jpg = critic/fresh/seen/x3-f2.jpg)
+
+1. An orbital-style view of an alien/volcanic island with crater lakes, surrounded by dark ocean and scattered clouds.
+2. The big round crater plus smaller dark holes look like a face/eye; overall the landmass looks a bit like a fish or bird head facing left (crater = eye).
+3. Appears ~200–500 km wide, camera at orbital altitude (~300–400 km, ISS-like).
+4. Closest to (a) satellite/orbital imagery in style (clouds, ocean, haze, lighting), though it looks synthetic/AI-generated rather than a real place.
+5. Yes: ridges are uniformly fractal/feathery like a procedural render; craters are too perfectly round with odd orange rims; the cluster of perforated holes on the right looks like a lotus pod/sponge texture; clouds on the left look like stippled noise; colors and swirls feel painterly. Doesn't read as small-scale model, more as CG/AI.

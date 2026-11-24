@@ -1,0 +1,22 @@
+viewer: x6
+model: claude_sonnet_5_5
+test: FULL
+image: reveal-f4-v5 (full size)
+
+1. First impression: an orbital photo of a human-shaped (skeleton-like, four-limbed) island in the ocean, with a skull-like head.
+2. Size: it is shown as roughly continental, perhaps 1,000–3,000 km across. The camera looks like it is in low Earth orbit, ISS-style, at an oblique angle. The Earth's curved horizon and dark space are in the top-left corner.
+3. Closest to (a), a landmass seen from orbit. The cues are the horizon curvature and black space at top-left, a hurricane-like spiral cloud bottom-right at hundreds of km wide, and cloud streaks and wisps that are tiny next to the island. The island's coastline, with turquoise shallows, matches how real land looks from orbit. The humanoid shape is the only thing that argues against it being real.
+4. Features:
+- Head at far left, with two circular craters or "eye sockets" (upper one tan, lower one dark and filled).
+- Neck, a pinkish-purple strip just right of the head.
+- Torso at centre, with a dark ribcage-like patch of lava or scorched land with orange glints, striped ridges like ribs above and below it, and a turquoise lagoon in the middle.
+- A white, glowing, explosion-like cloud over the lagoon in the centre.
+- A red and white mottled patch (salt flat or lesion) at the lower-centre right of the torso.
+- Left-top arm reaching up to the upper centre, ending in finger-like peninsulas.
+- Left-bottom arm reaching down to the bottom centre, with finger-like ends.
+- Upper-right leg or arm extending to the top right, ending in a hook.
+- Lower-right leg or arm extending to the right edge, ending in a foot-like tip.
+- A smoke or ash plume drifting from the neck area up and to the upper left.
+- A large cyclone spiral at bottom right.
+- Scattered clouds and sun glint on the right.
+5. Wrong or fake: yes. The landmass is a symmetric, anatomically human figure with a skull face, ribs and limbs, which geology doesn't produce. The coast is too uniform, and the turquoise shallows form a neat halo around it. The cloud over the lagoon looks like an overlaid blast. The terrain texture looks AI-generated or composited, and the lighting on the land doesn't quite match the ocean. It looks like an AI-generated or digitally composited image, not a real photo.

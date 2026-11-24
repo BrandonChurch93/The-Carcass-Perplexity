@@ -1,0 +1,10 @@
+viewer: au2
+model: claude_opus_5_5
+test: FULL
+image: cx-e-t2 (full size)
+
+1. A giant skeleton-shaped landmass/continent lying in the ocean, seen from orbit (clearly a digital/AI-style artwork).
+2. Implied scale: continent-sized, thousands of km long (roughly 3,000–5,000 km head to foot); camera is in low/high Earth orbit, a few hundred to ~1,000+ km up, looking obliquely with the planet's curved limb and black space at top-left.
+3. (a) landmass from orbit — the curved horizon with blue atmospheric glow, black space, ocean-wide cloud streets, and a full spiral cyclone (bottom-right) about the size of a limb segment all signal planetary scale. It's rendered as a painting/digital art, but the depicted scene is (a).
+4. Features: skull at left (cracked cranium, two crater-like eye sockets, open jaw/bay with teeth-like ridges); dark rib cage center-left, upper ribs dark/volcanic with a tiny orange glowing spot (lava?) near center; lower ribs pale below; reddish-brown pitted terrain at the neck/upper chest; upper arm reaching up-center to a hand at top; lower arm reaching down to a hand at bottom-center; thin spine running right to a white cloud/smoke puff (explosion or volcanic plume) mid-image; white pelvis area right-center with red branching river-like/blood-like veins; red-brown sediment/plume streaming off to the right; upper leg extending right to a foot at far right; lower leg bent down to a foot at bottom-right; turquoise shallow-water fringe around the whole figure; cyclone/hurricane at bottom-right corner; sunglint at upper right; Earth's limb and space at top-left.
+5. Yes: a coastline shaped exactly like a human skeleton is impossible; the cyclone is too small relative to the "continent" for the implied scale of the horizon curvature (or the skeleton too big); the white puff and red veins on the pelvis look painted/symbolic (blood); textures are AI-art-like, cloud streets pass oddly; landforms have bone-like carving rather than real terrain, so it reads as a sculpted/rendered fake rather than a real photo.

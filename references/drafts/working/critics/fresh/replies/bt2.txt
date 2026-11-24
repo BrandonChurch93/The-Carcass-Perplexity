@@ -1,0 +1,22 @@
+viewer: bt2
+model: claude_opus_5_5
+test: PROPORTION
+image: x5 frame 4 (same picture as x4 frame 4) (tmp/test/IMG_9033.jpg = critic/fresh/seen/x5-f4.jpg)
+
+1. A satellite-style view of Earth's ocean (curved horizon, a cyclone at bottom right) with a huge skeleton-shaped landmass or island lying on its back, made of rocky ridges, cloud and sediment.
+
+2. It's a skeleton-shaped geographic formation, not a real body. It reads as an adult human skeleton: an adult-sized rib cage, a long spine and long limbs. It doesn't have a child's large head-to-body ratio. Its scale is planetary, though.
+
+3. Proportions compared with a real adult skeleton:
+- Head: too big. The skull is wide and blobby, with craters for eye sockets, and roughly as wide as the rib cage.
+- Neck: too short or missing. The skull merges straight into the shoulders.
+- Shoulders: too narrow and poorly defined. There are no clear clavicles, and the arms come out of the top of the rib cage.
+- Rib cage: about right in size but too long. The ribs are thin, widely spaced and look split into an upper and lower fan.
+- Waist (lumbar spine): much too long. A thin spine with a white cloud blob runs a gap roughly as long as the rib cage, where a real one is about a third of it.
+- Hips (pelvis): too small and shapeless. It's a white blob with a red mark, and there's no clear bowl or hip sockets.
+- Arms: roughly right in length, but too thin. The elbow joints are vague.
+- Hands: too big, with fingers much too long and spidery, like roots.
+- Legs: too long and too thin, especially the outstretched one. The knees are fairly clear.
+- Feet: too small. They're stubby, with short toes.
+
+4. I'd shorten the long lumbar gap between the rib cage and the pelvis, and make the pelvis a proper, larger bowl.

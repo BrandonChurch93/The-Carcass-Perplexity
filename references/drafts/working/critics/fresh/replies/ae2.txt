@@ -1,0 +1,12 @@
+viewer: ae2
+model: claude_opus_5_5
+test: PLACES
+image: reveal-f4-v7 (full size)
+
+Image: skeleton-shaped continent, skull at left, limbs spread right.
+1. Found: ~42% from left, 53% from top. A turquoise channel between the upper and lower rows of rib ridges. A tidal strait is my reading, not something I can confirm.
+2. Found (faint): ~30%, 51%. A dark chest cavity with thin orange glowing streaks.
+3. Not found. The throat and mouth area (~22-25%, 55%) has only a pinkish rough patch. I see no distinct holes.
+4. Found: ~49%, 51%. A red-and-white crusted patch in the belly/pelvis area.
+5. Not found. No storm sits on the spine. The only real storm is a cyclone over open ocean at the bottom right (~93%, 87%), off the land. There are wispy clouds over the chest lagoon (~40%, 51%), but they are not on a ridge.
+6. Found: lower eye socket, ~15%, 60%. A round, dark, water-filled crater. The upper socket (~15%, 53%) looks like a dry crater.

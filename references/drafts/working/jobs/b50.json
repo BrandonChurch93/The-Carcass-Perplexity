@@ -1,0 +1,106 @@
+[
+ {
+  "id": "cx-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-c",
+  "refs": [
+   "/home/user/workspace/r3/gen/cx-t6.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t6, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c"
+ },
+ {
+  "id": "cx-t8",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-c",
+  "refs": [
+   "/home/user/workspace/r3/gen/cx-t6.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t6, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c"
+ },
+ {
+  "id": "cx-t9",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-c",
+  "refs": [
+   "/home/user/workspace/r3/gen/cx-t5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t5, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c"
+ },
+ {
+  "id": "cx-t10",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-c",
+  "refs": [
+   "/home/user/workspace/r3/gen/cx-t5.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t5, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c"
+ },
+ {
+  "id": "cx-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-t6-soft.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t6 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d"
+ },
+ {
+  "id": "cx-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-t5-soft.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t5 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d"
+ },
+ {
+  "id": "cx-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-c",
+  "refs": [
+   "/home/user/workspace/r3/gen/cx-t2.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: re-photograph of cx-t2, layout kept; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-c"
+ },
+ {
+  "id": "cx-t14",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "cx-d",
+  "refs": [
+   "/home/user/workspace/r3/guide/cx-t6-soft.png",
+   "/home/user/workspace/r3/real/orb-gemini11-india-crop.jpg",
+   "/home/user/workspace/r3/real/orb-iss23-musandam.jpg",
+   "/home/user/workspace/r3/real/orb-modis-barents-bloom.jpg",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-phil-crop.jpg"
+  ],
+  "what": "reveal frame 4, carcass body pushed toward real orbital photography after blind viewers flagged the first carcass takes as sculpted, with a side-on thunderhead, an oversized lava glow and plume and coarse sunglint ripples: from a blurred copy of cx-t6 used as layout map only; standards Gemini 11 India + ISS Musandam + MODIS Barents bloom + MODIS Philippines storms; prompt cx-d"
+ }
+]

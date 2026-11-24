@@ -1,0 +1,22 @@
+[
+ {
+  "id": "pb2-t26",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-k",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-sea-guide.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 2 re-photographed with only the open-sea clouds brought into focus (they come enlarged from frame 3, so that both frames show the same clouds); used for the open sea only; prompt pb2-k; MODIS Lesser Sunda Islands as the standard"
+ },
+ {
+  "id": "pb2-t27",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb2-k",
+  "refs": [
+   "/home/user/workspace/r3/pull/f2-sea-guide.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 2 re-photographed with only the open-sea clouds brought into focus (they come enlarged from frame 3, so that both frames show the same clouds); used for the open sea only; prompt pb2-k; MODIS Lesser Sunda Islands as the standard"
+ }
+]

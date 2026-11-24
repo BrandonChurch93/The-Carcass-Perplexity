@@ -1,0 +1,68 @@
+[
+ {
+  "id": "bl-t5",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-c",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain; prompt bl-c; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards"
+ },
+ {
+  "id": "bl-t6",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-c",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain; prompt bl-c; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards"
+ },
+ {
+  "id": "bl-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-d",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain, and the rib ridges weathered unevenly; prompt bl-d; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards"
+ },
+ {
+  "id": "bl-t8",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "bl-d",
+  "refs": [
+   "/home/user/workspace/r3/pull/belly-crop-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-tstorm-louisiana-crop.jpg",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg"
+  ],
+  "what": "reveal frame 4, chest and belly window of master v4 (x 1000, y 760, 1672 px) re-photographed: the row of round storm puffs replaced by one thunderstorm system seen from above, the backbone islands made unequal like a real island chain, and the rib ridges weathered unevenly; prompt bl-d; MODIS Louisiana storm + MODIS Lesser Sunda Islands as standards"
+ },
+ {
+  "id": "pb3-t6",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-c",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 3 re-photographed with only the open-sea weather changed: the glitter of tiny white specks replaced by thin cloud lines and clear water; to be used for the open sea only; prompt pb3-c; MODIS Lesser Sunda Islands + MODIS Baja as standards"
+ },
+ {
+  "id": "pb3-t7",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "pb3-c",
+  "refs": [
+   "/home/user/workspace/r3/pull/f3-v4.png",
+   "/home/user/workspace/r3/real/orb-modis-sunda.jpg",
+   "/home/user/workspace/r3/real/orb-modis-baja.jpg"
+  ],
+  "what": "reveal frame 3 re-photographed with only the open-sea weather changed: the glitter of tiny white specks replaced by thin cloud lines and clear water; to be used for the open sea only; prompt pb3-c; MODIS Lesser Sunda Islands + MODIS Baja as standards"
+ }
+]

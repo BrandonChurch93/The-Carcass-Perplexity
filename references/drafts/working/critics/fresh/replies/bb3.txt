@@ -1,0 +1,12 @@
+viewer: bb3
+model: gemini_4_carbon
+test: SCALE
+image: x2-f1 (full size)
+
+1. It is a high-angle aerial view of a steep-walled circular crater lake set in barren, sharply ridged rocky terrain alongside parts of two other dark lakes and a smaller pit lake.
+
+2. The frame appears to span roughly 1.5 to 3 km (about 1 to 2 miles) across, with the camera roughly 2 to 5 km (about 7,000 to 16,000 feet) above the surface, or higher from orbit with a long focal length.
+
+3. Closest to (a) real terrain seen from an aircraft or from orbit, because the scene shows multi-scale geological detail (fine erosion rills, cliff jointing, talus slopes, and submerged mineral shelves), edge-to-edge deep focus, subtle atmospheric haze, and none of the shallow depth of field, specular room reflections, or water-edge meniscus typical of miniatures or macro close-ups.
+
+4. A few details look synthetic (like CGI or AI generation) rather than natural photography: parallel diagonal ridges run uniformly across the terrain right up to the circular crater rim instead of radiating down the slopes, a narrow dark fissure at the upper left climbs straight to the rim at nearly constant width ignoring slope drainage, the water surfaces are completely flat and glint-free with identical ochre shallow rims in every basin, and a single isolated wisp of mist sits on the upper-right crater wall.

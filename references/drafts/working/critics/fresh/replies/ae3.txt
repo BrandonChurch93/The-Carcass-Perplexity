@@ -1,0 +1,11 @@
+viewer: ae3
+model: gemini_4_carbon
+test: PLACES
+image: reveal-f4-v7 (full size)
+
+1. **Tidal strait between two rows of ribs:** Found — about **33% from left, 53% from top** (spanning roughly 27%–38% width). A narrow turquoise water channel with braided shoals running horizontally between the upper and lower rows of rib ridges.
+2. **Glow of lava in the chest:** Found — about **31% from left, 51% from top**. Small bright orange-red glowing fissures and spots in the dark volcanic rock of the upper-inner chest, with smoke plumes drifting right.
+3. **Airways (breathing holes) near the throat and mouth:** Found — about **23% from left, 54% from top**. A cluster of dark circular crater-like holes in the pale throat area just east of the jaw, with a gray vapor plume rising northward.
+4. **Red salt flats:** Found — about **49% from left, 53% from top**. A pale pinkish-white basin in the pelvis laced with vivid red branching channels and red pools.
+5. **Storm on a ridge of spine:** Cannot find it. The body-shaped continent lies face-up with no exposed spine ridge bearing a storm (the only storm visible is a white spiral cyclone over open ocean in the bottom-right corner, around 96% from left, 90% from top).
+6. **Round lake in an eye socket:** Found — about **15% from left, 60% from top**. A circular dark-blue lake filling the lower eye socket of the skull (below the dry tan upper eye socket).

@@ -1,0 +1,6 @@
+viewer: as2
+model: claude_opus_5_5
+test: GLANCE
+image: cx-e-t2 (400 px)
+
+It looks like a giant human skeleton lying in the ocean, seen from orbit as if from space, with a hurricane swirling nearby.

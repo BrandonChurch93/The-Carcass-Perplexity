@@ -1,0 +1,10 @@
+viewer: k2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t13 (full size)
+
+1. An aerial/orbital view of an arid island with two crater-like depressions (one dry, one water-filled), joined by a narrow channel to a larger landmass.
+2. Yes, it looks like a face or skull in profile (two crater "eyes" looking sideways); also a bit like a fish or a pig/animal head facing left.
+3. Roughly 20-50 km across; camera at about 100-400 km (ISS-style orbital view), though the scale is ambiguous.
+4. Closest to (a), real terrain from orbit, because of the ocean texture, turquoise shallows, dust plume and erosion detail. But it has a slightly synthetic look, so it could be AI-generated or digitally altered.
+5. Some things look off. The texture is uniformly crinkly and fractal, like crumpled paper or a procedural render. The craters are suspiciously circular and the face-like layout is too neat. The white flecks on the water look like sun glint or noise, not waves. The red streaks and dark spots on the right landmass look painted on. Overall it reads as AI-generated rather than small-scale.

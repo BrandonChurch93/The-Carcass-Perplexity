@@ -1,0 +1,10 @@
+viewer: bn3
+model: gemini_4_carbon
+test: HEAD
+image: x4 frame 2 (final set) (tmp/test/IMG_7890.jpg = critic/fresh/seen/x4-f2.jpg)
+
+1. It looks like a satellite or astronaut photograph of an arid volcanic island or peninsula with large crater lakes, though it immediately reads as synthetic or AI-generated.
+2. Yes—a tilted skull or screaming face, with the two round crater lakes as eye sockets, the small central dark lakes as a nasal cavity, and the jagged bay on the right as a wide-open mouth lined with teeth.
+3. Read as real Earth terrain, the frame spans roughly 40–80 km (25–50 miles) wide, viewed from low Earth orbit at about 350–450 km altitude.
+4. Closest to (d) a painting or drawing (specifically digital/AI illustration mimicking (a) orbital terrain), because while it imitates orbital cloud streets, dendritic drainage, and coastal shallows, the landforms are artistically composed rather than geologically real.
+5. Yes, it looks fake: the upper-right terrain is pockmarked with densely packed lunar-style craters that clash with terrestrial water erosion on the left, the bay's rim forms repetitive jagged "teeth," the wispy clouds on the upper right look airbrushed, and the overall layout is too neatly shaped like a skull.

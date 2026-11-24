@@ -1,0 +1,9 @@
+viewer: v2
+model: claude_opus_5_5
+test: SCALE
+image: reveal-f3-v4 (full size)
+
+1. An orbital-style overhead view of a desert peninsula and island in a deep blue ocean, with two craters, dark lava fields with glowing orange fissures, dust/smoke plumes, and cumulus clouds.
+2. If taken at face value: roughly 100–300 km across, camera ~300–400 km up (ISS-like orbit); the cloud sizes and sea texture suggest that scale.
+3. Closest to (a), orbital imagery in style — lighting, sunglint-like wave texture, clouds and shallow turquoise reefs all read as an astronaut photo. But it looks digitally generated (AI/CGI) rather than a real place, so arguably closer to (d) than to (b) or (c). No tabletop or macro cues (no depth-of-field blur, no visible model materials).
+4. Yes, it looks fake. The landmass is oddly symmetric, like a bird or creature shape (two "eye" craters, a head and wing-like ridges). The ridges are regular rib-like comb patterns, and the craters are too round and clean. There are glowing lava lines in the middle of a desert, a reddish-purple cloud lit as if from inside, and smoke drifting in several directions. Nothing reads as small-scale, but the whole scene looks synthetic, not a real model.

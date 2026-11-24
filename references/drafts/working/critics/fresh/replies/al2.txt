@@ -1,0 +1,6 @@
+viewer: al2
+model: claude_opus_5_5
+test: GLANCE
+image: cx-t9 (carcass re-shot as an orbital photograph) (400 px)
+
+My first impression: it looks like a satellite view of Earth from orbit, where the clouds and ocean patterns form a giant skeleton lying across the sea.

@@ -1,0 +1,10 @@
+viewer: bj2
+model: claude_opus_5_5
+test: FULL
+image: x4 frame 4 (final set) (tmp/test/IMG_2468.jpg = critic/fresh/seen/x4-f4.jpg)
+
+1. A giant skeleton-shaped continent/island lying in the ocean, seen from orbit (clearly a digital/AI-style render).
+2. Implied size: thousands of km across (continent-scale, comparable to a cyclone in the corner); camera is in low Earth orbit, a few hundred km up, looking obliquely at a curved horizon.
+3. (a) landmass from orbit. Scale giveaways: curved Earth limb with blue atmosphere line and black space at top-left; a full spiral cyclone at bottom-right; cloud streets spread over the ocean; sun glint at right.
+4. Features: skull at left with dark crater-lake eye sockets/nose and a ring-rimmed circular crater (left-center); raised arm at top-center ending in finger-like ridges; ribcage as parallel mountain ridges (center); spine as a channel running right from the skull; second arm reaching down to bottom-center with finger ridges; a white cloud/smoke plume mid-spine (center); pelvis as a white snowy/salt plateau with red branching river/vein pattern (center-right) plus a small dark crater beside it; one leg extended up-right to a foot at far right; other leg bent down to a foot at lower right; reddish-brown sediment/algae plumes streaming right from the pelvis; turquoise shallow-water fringes around the coast; cyclone at bottom-right; horizon/space top-left; sun glare top-right.
+5. Yes: a landmass shaped exactly like a human skeleton is impossible; the cyclone is out of proportion (huge relative to the "continent" yet the ribs look mountain-sized); the red "blood" veins on a white pelvis, the odd cloud-like plume floating on the spine, and textures that look painterly/AI-generated rather than photographic. It looks fake, not small-scale—no tabletop cues.

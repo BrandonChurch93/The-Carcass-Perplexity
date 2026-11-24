@@ -1,0 +1,9 @@
+viewer: az2
+model: claude_opus_5_5
+test: SCALE
+image: x2-f3 (full size)
+
+1. An orbital-style view of a skull-shaped island (crater "eye sockets", a bay "mouth" with tooth-like rocks) in a dark ocean under scattered cloud, with rib-like ridges spreading to the right, like a fish skeleton.
+2. If read as real terrain: about 200–500 km across, seen from orbit at roughly 300–400 km up (ISS-like oblique view).
+3. Closest to (a) as presented: it imitates satellite/astronaut imagery (cloud streaks, ocean texture, a few orange city-light-like dots). But it's almost certainly a digital/AI-generated image, not a real place; a sculpture or model is unlikely.
+4. Yes. The skull face and the evenly spaced rib "bones" are too neat and symmetrical to be natural geology. The "teeth" are regular blocky pillars. The crack across the forehead looks drawn on. The clouds blend into the land in a painterly way. The glowing orange dots look out of place. Nothing reads as a tabletop model; it reads as synthetic rather than small.

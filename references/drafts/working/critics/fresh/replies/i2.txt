@@ -1,0 +1,10 @@
+viewer: i2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t11 (full size)
+
+1. An orbital-style photo of a desert island in a deep blue ocean, with two big craters and smoking vents.
+2. Yes — a skull seen sideways (rotated 90°): two craters are eye sockets, the triangular depression is the nasal cavity, the ridged channel is the teeth/jaw line. (Also loosely a skull-and-crossbones / face.)
+3. Roughly 100–300 km across; camera at orbital altitude, ~300–400 km (ISS-like view), judging by cloud scale.
+4. (a) real terrain from orbit — cloud wisps, turquoise shallow reefs, fractal coastline, drainage networks and atmospheric haze all read as satellite/ISS imagery. That said, it looks digitally generated rather than a genuine photo.
+5. Yes: the skull shape is too perfect; the craters are oddly regular; the "teeth" ridge of evenly spaced blocks flanking a straight water channel looks artificial; the row of small dark smoking pits with red halos looks pasted-on and out of scale; overall it feels AI-generated/rendered rather than real or a small model.

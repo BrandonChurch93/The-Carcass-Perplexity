@@ -1,0 +1,10 @@
+viewer: w1
+model: gpt_6_2_sol
+test: HEAD
+image: reveal-f2-v4 (full size)
+
+1. It looks like an aerial view of a rugged desert island with two large craters, one filled with water.
+2. A sideways skull: the craters look like eye sockets, the dark notch like a nose, and the channel like a toothy mouth.
+3. My visual guess is about 40 km across, with the camera tens of kilometers up; there’s no reliable scale cue.
+4. Closest to (a), terrain seen from high above, because of the coastal shallows, dense drainage patterns, and wispy clouds.
+5. The near-matching round craters, toothlike channel edges, and unusually sculpted ridges look deliberately arranged or rendered.

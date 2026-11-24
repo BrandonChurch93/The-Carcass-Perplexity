@@ -1,0 +1,26 @@
+viewer: aw2
+model: claude_opus_5_5
+test: FULL
+image: x2-f4 (full size)
+
+1. First impression: a continent-sized skeleton lying in the ocean, seen from orbit. It looks like a fantasy or AI-generated Earth image.
+2. Scale: thousands of km across, roughly continent-sized, since the image shows Earth's curvature and a cyclone. The camera is in low or high Earth orbit, a few hundred km or more up, looking down at an angle.
+3. Closest to (a), a landmass seen from orbit. The scale cues are the curved limb with a blue atmosphere band at the top left, the black space above it, the hurricane spiral at the bottom right, the cloud fields spread across the ocean, and the sun glint at the right. All of these only fit an orbital view.
+4. Features I can pick out:
+- Skull at the left: eye sockets as crater-like basins, a jaw/mouth bay, and crack-like fault lines.
+- Dark reddish-brown patch with pits next to the skull, at the neck/shoulder.
+- Arm raised toward the top center, with a bright crater-like node at the elbow and a hand with finger ridges at the top.
+- Second arm at the lower left/center, with a hand and fingers near the bottom center.
+- Ribcage in the center as parallel mountain ridges, in the top and bottom halves.
+- Spine running horizontally from the ribs to the pelvis.
+- White cloud or explosion-like plume on the spine at the center, with a smoke trail toward the lower left.
+- Small orange dot (fire or volcano?) near the top ribs.
+- Pelvis at the center right: a white plateau with a red branching, river- or blood-like pattern, and a dark crater pit above it.
+- Reddish-orange stain or plume spreading right from the pelvis into the water.
+- Upper leg running right to a foot with toes at the far right.
+- Lower leg bending down to a foot at the bottom right.
+- Turquoise shallow-water fringes around the whole shape.
+- Hurricane spiral at the bottom right.
+- Sun glare at the right edge.
+- Earth's limb and space at the top left.
+5. What looks wrong or fake: a skeleton-shaped landmass is impossible. The bones are thin, ridge-like strips, which no real geology forms. The red "blood" veins on the pelvis and the red stain in the water look painted on. Cloud texture is spread too evenly over the ocean, and it doesn't look small-scale so much as AI-generated. Fingers and toes appear as fine ridges at continental scale. The overall look is a digital render or composite, not a photo.

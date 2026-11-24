@@ -1,0 +1,59 @@
+viewer: bc2
+model: claude_opus_5_5
+test: PULL
+image: x2-f1..f4 (four frames, full size)
+
+I looked at all four images and checked each pair by scaling the closer image down and laying it semi-transparently over the wider one. Positions below are percentages of the wider image (x = from left, y = from top).
+
+Q1. Where each closer image sits, and what doesn't match
+
+5201 inside 5202: it fits, about 3.7x closer, covering x 36–64%, y 37–64%. It is centred on the big round orange-rimmed crater (the skull's lower eye socket, centred at about x 50%, y 51%).
+- What matches: the crater's lower-left inner peninsula (the orange curl), the small round pit to its lower right (5202 at x 57%, y 55%), the short crack under the rim, and the crack running up from the rim toward the cross-shaped junction just above the frame.
+- Colour and light differ. 5201 is darker, flatter, cool grey-blue and muddy. 5202 is brighter, with warmer cream-white ridges and crisper shadows.
+- 5201's large upper-right lake is one broad blue lake with a wide orange-brown shore. In 5202 that spot holds the "nose" cavities: two or three smaller, darker brown-black lobes with no orange shore. The shape and colour are clearly different.
+- There is a white wisp of cloud over the upper right of 5201's crater. It is absent in 5202.
+- 5201's orange ring is wider and more ragged than 5202's thin, even rim.
+- The lower-right corner of 5201 is smooth open blue water with a rounded shore. In 5202 that area is the skull's finger-like coastal lobes with teal shallows. They are roughly in the right place but differently shaped.
+
+5202 inside 5203: it fits well, about 1.67x closer, covering x 12–72%, y 20–80%. This is the cleanest pair. The cross-shaped crack, both eye craters, the nose pits, the small pit, the brown pitted area and the curling cloud wisps all line up in the overlay.
+- 5203 has fewer, larger rounded "teeth": about 6 on the lower jaw, against about 7 in 5202. They also sit slightly further left.
+- The finger lobes on the skull's right edge are also fewer in 5203.
+- The cloud wisps reach higher in 5203, past the top of where 5202 would sit.
+- 5203 is a little more saturated and has a more orange-red tint in the pitted area.
+- 5203 shows the neck/spine ridge with a snowy peak and the ribs immediately right of the frame. 5202's right edge (teal water and a pale blob) does not clearly lead into that spine ridge.
+
+5203 inside 5204: it only roughly fits, about 2.2x closer, covering x 0–45%, y 25–70%. Its left edge sits right on 5204's left border, so a pure zoom-out barely contains it. In the overlay the skull and the ribs cannot both be aligned at once; the ribs double up, so 5204 is a looser redraw rather than the same picture.
+- Rib count differs. 5204's upper ribcage shows about 7 ribs; 5203 shows about 5, which are thicker, spaced more widely and angled differently.
+- 5203 has several glowing orange dots among the ribs (one bright, about three faint). 5204 has only one, and it is slightly displaced.
+- The pitted area is a strong red-brown in 5204 and more muted in 5203.
+- The camera angle changes. 5203 is a near-vertical view; 5204 is oblique, with Earth's curved edge and black space at top left. Even so, the skull in 5204 is not foreshortened at all.
+- The skull's outline is softer and smoother in 5204, and the lower teeth are tiny and blurred.
+
+Q2. Would a continuous zoom hold together?
+
+Mostly yes: the crater and crack anchor all four as one place. But two steps are at risk.
+- 5201 to 5202 is the most likely to read as a cut. The colour and light jump from dull grey-blue to warm bright, the upper-right lake turns into differently shaped dark nose pits, and the cloud wisp vanishes.
+- 5203 to 5204 is the second risk. The view tilts from top-down to oblique with the planet's edge, the ribs re-form (count and spacing change) and the glowing dots disappear.
+- The cloud flecks on the ocean stay roughly the same size in 5202, 5203 and 5204 even though the camera rises 2–4x. In a real ascent they would shrink, so they read as a repeated texture, not weather.
+
+Q3. Real large place, or a miniature/model?
+
+- 5201: the most convincing as real terrain seen from the air, with fine branching erosion ridges, a crater lake, haze and a cloud wisp. Giveaways: the crater rim is unnaturally even and sharp, the orange band is too uniform, and the crack is a thin black line cut across the ridges regardless of the terrain. It looks like a crack in plaster or dried mud.
+- 5202: reads as a sculpted model or clay relief. The cross-shaped crack looks like broken ceramic, and the rounded pillar "teeth" in a regular row look moulded. The whole island being a skull points to sculpture, even though the ocean and clouds look like a real view from orbit.
+- 5203: the ocean and clouds read as a view from orbit, but the land does not. The ribs are evenly spaced, parallel extruded ridges, too regular for geology, and the land looks embossed. The glowing dots read as lava or city lights, which adds a little realism.
+- 5204: the planet's edge, the blue atmosphere glow, the sun glint and a hurricane at bottom right sell orbit. But a perfectly anatomical whole skeleton reads as an object laid on the sea.
+- Scale cues in 5204: the hurricane is about a quarter of the skeleton's length, which implies a skeleton thousands of km long. That is consistent with orbit, but the skeleton shows no perspective squashing toward the horizon while the planet's edge curves strongly.
+- Further giveaways in 5204: the cloud flecks are the same size as in the closer shots, and the lighting on the skeleton is flat.
+
+Q4. 5204: shape of the land and its most distinctive places
+
+The land is a complete human skeleton lying spread-eagled in the ocean, head at the left (x 13–30%, y 35–56%) and feet to the right, as if leaping or falling. Its most distinctive places:
+- The skull island: the big round orange-rimmed crater lake as the lower eye, a second crater as the upper eye, dark nose pits, a cross-shaped crack across the forehead, and an open mouth (a lagoon) with a row of teeth.
+- A red-brown pitted area behind the skull at the back of the head and neck.
+- Shoulder peaks with snowy summits (about x 32%, y 32%).
+- One arm raised up and right to a finger-like hand (about x 45–50%, y 12–17%). The other arm goes down and right to a hand of finger-like spits (about x 50–55%, y 78–82%).
+- The ribcage as two sets of parallel ridges either side of a spine-channel (x 35–50%), with one glowing orange dot.
+- A white cloud or explosion burst with a smoke trail where the lower spine should be (about x 54%, y 47%).
+- A whitish pelvis-shaped plateau (about x 60–66%, y 40–55%) with blood-red vein-like branching streaks, a small dark hole, and a rust-red plume streaming right into the sea.
+- One leg extended up and right to a foot with toes (about x 95%, y 25–35%). The other leg is bent, with the knee at about x 79%, y 54% and the foot at about x 78–81%, y 77–80%.
+- Around it: Earth's curved edge and black space at top left, sun glint at upper right, and a hurricane spiral at bottom right (about x 90%, y 88%).

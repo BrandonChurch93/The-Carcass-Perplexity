@@ -1,0 +1,21 @@
+viewer: viewer_a6
+model: gemini_neon
+test: FULL
+image: rv4-t10 (full size)
+
+1. A continent-sized, human-shaped island landmass lying in Earth's ocean as seen from orbit, complete with a ribcage-like mountain range and fantastical geological features inside its torso.
+
+2. Roughly 2,000–4,000 km long from head to feet (continent-scale), with the camera in low-to-medium Earth orbit looking nearly straight down at a slight angle.
+
+3. Closest to (a) a landmass seen from orbit (rendered as CGI/digital art). Orbital scale is signaled by Earth's curved blue atmospheric horizon against black space in the upper left, a large spiral hurricane in the lower right, wide cloud systems, solar glint on the ocean at upper right, snow-capped mountain chains, and turquoise coastal shelves.
+
+4. Distinct features:
+- Head (left): A snow-capped peak on the lower side and a circular deep-blue crater lake/sinkhole on the upper side.
+- Neck/upper chest (left): A straight diagonal row of six dark reddish vents emitting white smoke plumes toward the upper left.
+- Ribcage (center-left torso): Symmetrical curved rocky ridges arranged like ribs along a central spine, with an active volcano on the upper ribcage showing glowing orange lava fissures and a dark ash plume drifting upper-right.
+- Abdomen (center torso): A turquoise inland sea/lagoon with a swirling purple-and-white vortex at its center, plus a straight horizontal chain of small white puffs running from the spine through the vortex into the pelvis.
+- Pelvis (right torso): A bright crimson-red basin/lake with white vein-like patterns.
+- Arms and legs (outstretched): Arid brown mountainous terrain with snow-capped peaks at the joints (shoulders, elbows, wrists, hips, knees, ankles) and splayed peninsulas forming five fingers on each hand and five toes on each foot.
+- Surroundings: Turquoise shallow reefs hugging the entire coast, deep blue ocean with scattered clouds, sunglint at upper right, Earth's curved horizon at top left, and a spiral hurricane with a distinct eye at bottom right.
+
+5. Yes, it clearly looks synthetic/fantastical rather than real. The anatomical human silhouette, symmetrical sculpted ribcage, and surreal internal features (six evenly spaced smoking pits, purple abdominal vortex, straight line of tiny white clouds, crimson pelvic basin) are geologically impossible. Its internal scales also clash: the lava cracks, neck vents, rock ridges, and reef outlines appear far too coarse relative to Earth's curvature and the hurricane next to the lower foot, giving parts of the landmass a carved-model look.

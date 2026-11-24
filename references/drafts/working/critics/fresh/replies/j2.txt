@@ -1,0 +1,10 @@
+viewer: j2
+model: claude_opus_5_5
+test: HEAD
+image: pb2-t12 (full size)
+
+1. An orbital-style view of an arid desert island with big craters, sitting in a deep blue ocean.
+2. Yes, a skull turned on its side (top of head at left): two craters are the eye sockets, the triangular pit is the nose, and the row of block-like ridges along the channel are teeth. The land to the right looks like the jaw or neck.
+3. Roughly 100–300 km across, seen from about 300–400 km up (ISS-like orbit), going by the cloud size.
+4. (a) real terrain from orbit, at first glance. Clouds, coastal shallows, erosion texture, and haze all read as a real satellite or astronaut photo. But it looks like an AI-generated or digitally made image, not a real place.
+5. Yes: the skull layout is too neat. The eye craters are perfectly round, one dry and one full of water, and the "teeth" are evenly spaced blocks on both sides of a straight channel. The row of smoking dark pits on the right looks made up, and textures look a bit smeared or painted. No known real place looks like this.

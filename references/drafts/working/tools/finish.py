@@ -107,10 +107,10 @@ if os.path.isdir(K): shutil.rmtree(K)
 N = []; files = 0
 models = Counter(L['takes'][k]['model'] for k in L['order'])
 N.append("# The Carcass, round 3: notes on the kept images\n")
-N.append("This file lists the model, the prompt and the references for every kept image of round 3. Part one is the full set of step 2: six places and the reveal from orbit, 31 pictures, in direction B (Titan-fall). Part two is step 1: the nine pictures of the three art directions for The Breath. Nothing from rounds 1 or 2 was used as an input anywhere.\n")
+N.append("This file lists the model, the prompt and the references for every kept image of round 3. Part one is the full set of step 2 in direction B (Titan-fall): six places, 30 pictures, and the reveal, which was rejected once and redone as four key frames of one pull-back from the lake to orbit. Part two is step 1: the nine pictures of the three art directions for The Breath. Nothing from rounds 1 or 2 was used as an input anywhere.\n")
 N.append("## How the set was made\n")
-N.append(f"- Takes generated in round 3: {len(L['order'])} ({', '.join(f'`{m}` {n}' for m, n in models.most_common())}). Step 1 used 226. Batch 23, one revision of each step 1 detail, used 16. Step 2 used 70: 18 for the establishing views and the reveal, 44 for the details, 2 for one redo, 6 for three single-step fixes. Every kept image is from `gpt_image_2_6_sunburst`. Every take is in `working/takes/`; the take-to-prompt mapping, my notes and the critic replies are in `working/log.json`.")
-N.append("- Direction. No pick of an art direction was given. After step 1 was shown, the user asked for speed and for the work not to stop, so step 2 ran in B, Titan-fall, which was my recommendation. A (Overgrowth) or C (Corpse-light) can still be picked; the full set would then be remade in that direction.")
+N.append(f"- Takes generated in round 3: {len(L['order'])} ({', '.join(f'`{m}` {n}' for m, n in models.most_common())}). Step 1 used 226. Batch 23, one revision of each step 1 detail, used 16. Step 2 used 70: 18 for the establishing views and the first reveal, 44 for the details, 2 for one redo, 6 for three single-step fixes. The reveal redo used {len(L['order']) - L['order'].index('rv4-t1')}. Every kept image is from `gpt_image_2_6_sunburst`. Every take is in `working/takes/`; the take-to-prompt mapping, my notes and the critic replies are in `working/log.json`.")
+N.append("- Direction. Step 2 ran in B, Titan-fall, which was my recommendation, before any pick was given: after step 1 was shown, the user asked for speed and for the work not to stop. The user then approved direction B for all six places (message of about 02:58 UTC on 24 November: \"Direction B is approved for all six places. Keep them exactly as they are. Only the reveal is rejected.\"). The six places have not been touched since. The reveal was started again from nothing; its section is at the end of part one.")
 N.append("- Establishing views of step 2: a fresh generation from text plus one real public-domain photograph (two for The Spine), supplied only as the standard for how a camera records that kind of light and weather. Two or three takes per subject, one kept.")
 N.append("- Details of step 2: a fresh generation with two references that have separate jobs. Image 1 is the establishing view of the place, supplied as the place itself (\"the same place, at the same moment\"). Image 2 is a real photograph, supplied only as a rendering standard: lava, surf, snow, bare hide, a wading bird. Two takes per detail, one kept. One detail was redone with a changed approach (The Eye, detail 2).")
 N.append("- Three single-step fixes at the end (batch 30, two takes each), each a \"re-shoot the same frame, change only this\" revision: the near kite-wing in The Ribs detail 2 had an eye, the drinker in The Eye detail 2 read as a horse, and the two drinkers in The Eye detail 4 had ears and wool. The rule they broke is my own: nothing living in the film has eyes or ears; the only eye is the dead one.")
@@ -133,14 +133,30 @@ for n, pl in enumerate(P['order'], 1):
         f = f"{pl}-{i}-{slug(name)}.jpg"; save(tid, f"{K}/{d}/{f}"); files += 1
         N += entry(f"{p['title']}: detail {i}, {name[0].lower() + name[1:]}", f"{rel}/{f}", tid, f"{pl}-detail-{i}")
     shutil.copy(f"{R}/layout2/{pl}-layout.png", f"{K}/{d}/{pl}-layout.png"); shutil.copy(f"{R}/out/contact/{pl}-contact-sheet.jpg", f"{K}/{d}/{pl}-contact-sheet.jpg")
-rel = "step-2-full-set/7-reveal"; save('reveal-est-t3', f"{K}/7-reveal/reveal-from-orbit.jpg"); files += 1
-shutil.copy(f"{R}/out/contact/reveal-contact-sheet.jpg", f"{K}/7-reveal/reveal-contact-sheet.jpg")
-N.append("### The Reveal\n")
-N.append("- The shot: the camera rises straight up out of The Eye until the whole continent is in frame. An astronaut's view from about four hundred kilometres, oblique toward the horizon. The continent, about three thousand kilometres long, is the titan lying on its side.")
-N.append("- What reads as the body: the skull massif with the round lake where the eye was, a hooked jaw peninsula, the spine as a snow range running the length of the land, the ribs as curved ridges that end in capes, the caldera with its fume plume (The Heart), the steaming pale shelf beside it (The Breath), the red river system and its delta (The Blood Marsh), and an arm ending in five spits.")
-N.append("- What makes it read at real scale: the curved limb and the thin line of atmosphere, sunglint on the sea, fields of small cumulus with their own shadows, lee-wave cloud off the range, a frontal band across the ribs, one cyclone over the open sea.")
-N.append(f"- Contact sheet: `{rel}/reveal-contact-sheet.jpg`. Its lower half marks where the six places sit on the body; those positions were read off the picture and are approximate.\n")
-N += entry("The Reveal: the continent from orbit", f"{rel}/reveal-from-orbit.jpg", 'reveal-est-t3', 'reveal')
+# The Reveal, redone: four key frames of one pull-back, the reveal frame at 4K, the master, the two sheets and the frame geometry.
+RV = f"{K}/7-reveal"; os.makedirs(RV, exist_ok=True)
+FR = json.load(open(f'{R}/pull/frames-x6.json')); NEST = json.load(open(f'{R}/pull/nest-x6.json')); PLC = json.load(open(f'{R}/pull/places-x6.json'))
+MW, MH = Image.open(f'{R}/pull/master-x6.png').size; S = MW / 1982.0; KMPX = 4000.0 / 1555.0
+NAMES = {1: 'above-the-lake', 2: 'skull-massif', 3: 'head-and-shoulders', 4: 'titan-from-orbit'}
+for n in (1, 2, 3, 4):
+    Image.open(f'{R}/pull/f{n}-x6.png').convert('RGB').save(f"{RV}/reveal-{n}-{NAMES[n]}.jpg", quality=93, optimize=True); files += 1
+shutil.copy(f'{R}/pull/f4-x6-4k.jpg', f"{RV}/reveal-4-titan-from-orbit-4k.jpg")
+Image.open(f'{R}/pull/master-x6.png').convert('RGB').save(f"{RV}/reveal-master.jpg", quality=92, optimize=True)
+shutil.copy(f"{R}/out/contact/reveal-contact-sheet.jpg", f"{RV}/reveal-contact-sheet.jpg"); shutil.copy(f"{R}/out/contact/reveal-marked.jpg", f"{RV}/reveal-marked.jpg")
+lake = dict(x=FR['f1']['x0'] + FR['f1']['w'] / 2, y=FR['f1']['y0'] + FR['f1']['h'] / 2)
+PB = {'what': "Geometry of the pull-back from the lake in The Eye to orbit. All four key frames are views of one picture, the master. Windows are given in px of the master (top left corner, width, height) and have the aspect of the key frames, 1672 x 941. The window of frame 4 overhangs the bottom edge of the master by under 2 px, where the edge row is repeated; the 3840 x 2160 copy of frame 4 is exactly 16:9 and ends on the edge. Frames 3 and 4 are windows of the master resampled to 1672 x 941; frames 2 and 1 are finer plates of their windows, and both plates are also folded into the master, reduced.",
+      'master': {'file': 'reveal-master.jpg', 'width': MW, 'height': MH},
+      'frames': {str(n): {'file': f"reveal-{n}-{NAMES[n]}.jpg", 'window_in_master_px': {k: round(FR[f'f{n}'][k] * S, 2) for k in ('x0', 'y0', 'w', 'h')},
+                          'width_of_view_km_STATED': int(round(FR[f'f{n}']['w'] * KMPX / 10.0) * 10),
+                          'lake_centre_pct_of_frame': [round((lake['x'] - FR[f'f{n}']['x0']) / FR[f'f{n}']['w'] * 100, 1), round((lake['y'] - FR[f'f{n}']['y0']) / FR[f'f{n}']['h'] * 100, 1)]} for n in (1, 2, 3, 4)},
+      'steps_between_frames': {'1_to_2': round(FR['f2']['w'] / FR['f1']['w'], 2), '2_to_3': round(FR['f3']['w'] / FR['f2']['w'], 2), '3_to_4': round(FR['f4']['w'] / FR['f3']['w'], 2)},
+      'scale_STATED': {'body_crown_to_heel_km': 4000, 'km_per_master_px': round(KMPX / S, 4), 'note': 'Design intent, not measured. Fresh viewers read the lower frames far smaller; see NOTES.md.'},
+      'nesting_MEASURED': {'note': 'Each closer frame reduced and laid over its window in the wider frame (both 1672 x 941). x0, y0, w, h: the window in px of the wider frame. mean, p99: absolute difference on a scale of 0 to 255.',
+                           **{k: {a: round(b, 2) for a, b in v.items()} for k, v in NEST.items()}},
+      'places_pct_of_frame_4': {k: {'x_pct': v['x_pct'], 'y_pct': v['y_pct'], 'what': v['what']} for k, v in PLC.items()},
+      'camera_note': 'The lake is at the centre of frames 1 and 2 and moves left in frames 3 and 4, so the aim eases from the lake toward the chest while the camera rises. Frames 1 to 3 look straight down; frame 4 is slightly oblique, with the edge of the planet at the top left.'}
+json.dump(PB, open(f"{RV}/pullback.json", 'w'), indent=1)
+N.append(open(f'{R}/out/reveal-notes.md', encoding='utf-8').read().rstrip() + '\n')
 
 old = open(f'{R}/out/NOTES-step1.md', encoding='utf-8').read() if os.path.exists(f'{R}/out/NOTES-step1.md') else None
 if old is None:
@@ -164,20 +180,23 @@ README = f"""# The Carcass: reference images, round 3
 
 Round 3 is images and layout sketches only. No 3D was built. Rounds 1 and 2 were rejected and sit untouched in `../archive/`. Nothing from them is reused as a generation input here; round 2 frames were shown to blind critics as negative controls only.
 
-The full set is ready in direction B, Titan-fall. No pick of a direction was given: after step 1 the user asked for speed and for the work not to stop, so step 2 ran in the direction I had recommended. A (Overgrowth) or C (Corpse-light) can still be picked from the step 1 material, and the set would be remade in it.
+The full set is in direction B, Titan-fall. The user approved B for all six places and rejected only the reveal (\"reads as a fish with arms growing out of its head\"). The six places are unchanged since that approval. The reveal was started again from nothing and is now four key frames of one continuous pull-back from the lake in The Eye to orbit. The rejected reveal is in `../archive/round-3-reveal/`.
 
-- `step-2-full-set/`: the deliverable. One folder per place in film order (`1-ribs`, `2-heart`, `3-breath`, `4-marsh`, `5-spine`, `6-eye`). Each holds the establishing view (`-0-establishing`), four detail views numbered in the order the camera reaches them, the top-down layout sketch with the detail positions and the camera route, and the contact sheet. `7-reveal/` holds the reveal from orbit and its sheet, which also marks where the six places sit on the body.
+- `step-2-full-set/`: the deliverable. One folder per place in film order (`1-ribs`, `2-heart`, `3-breath`, `4-marsh`, `5-spine`, `6-eye`). Each holds the establishing view (`-0-establishing`), four detail views numbered in the order the camera reaches them, the top-down layout sketch with the detail positions and the camera route, and the contact sheet. `7-reveal/` holds the redone reveal: the four key frames of the pull-back (`reveal-1-above-the-lake`, `reveal-2-skull-massif`, `reveal-3-head-and-shoulders`, `reveal-4-titan-from-orbit`, the last also at 3840 x 2160), the master picture that all four are views of (`reveal-master.jpg`, 5952 x 3348), the contact sheet, the marked copy that shows where the six places sit on the body (`reveal-marked.jpg`), and `pullback.json` with the window of each frame in the master for the build.
 - `NOTES.md`: model, prompt and references for every kept image, with why it was kept and its known faults. Part one is the full set, part two is step 1.
 - `ART-DIRECTIONS.md`: step 1. The three art directions for the hardest place, The Breath; which I would choose and why; what the blind critics said; build approach; and what happened between step 1 and step 2.
 - `step-1-kept/`: the nine step 1 images at full size and one sheet per direction.
 - `working/`: the working files.
-  - `takes/`: every take of the round as JPEG ({len(L['order'])} takes). Step 1 names are `<direction>-<view>-t<nn>`; step 2 names are `<place>-<view>-t<n>`, with `est` for the establishing view and `d1` to `d4` for details.
+  - `takes/`: every take of the round as JPEG ({len(L['order'])} takes). Step 1 names are `<direction>-<view>-t<nn>`; step 2 names are `<place>-<view>-t<n>`, with `est` for the establishing view and `d1` to `d4` for details. The takes of the reveal redo are named by batch (`rv4`, `pb1` to `pb3`, `tile`, `bl`, `cx`, `cx9`, `cx-e`, `e2`, `e3`, `pb1c` to `pb1f`, `pb2g` and a few more); NOTES.md says which of them are in the kept frames.
   - `prompts/`: the exact prompt text of every take (the take-to-prompt mapping is in `log.json`).
-  - `critics/`: the briefs given to the blind critics, the answer key of each packet and every critic reply, unedited. Step 2 was not blind-tested.
+  - `critics/`: the briefs given to the blind critics, the answer key of each packet and every critic reply, unedited. The six places of step 2 were not blind-tested.
+  - `critics/fresh/`: the fresh-viewer tests of the reveal redo: the protocol with its pass rules (`PROTOCOL.md`), the briefs, every reply unedited (`replies/`, one file per viewer, and `replies.json`) and the exact image each viewer was given (`seen/`).
+  - `pull/`: the pull-back: the master, the plates of frames 1 and 2, every window that was passed back to the generator as Image 1, the frame windows of each tested set, the nesting measurements, the head warp report and the fallback set with the larger head.
+  - `guides/`: the layout maps of the reveal redo, drawn or painted by script, including `cx-e-guide.png`, the layout of the kept body.
   - `real/`: real photographs, with credits in `CREDITS.md`. Some were shown to the critics as controls only. Others were passed to the image generator as a rendering reference (how a camera records light, a surface or an animal), never for their content.
   - `layouts/`: the small blurred layout images supplied to the generator for positions only in step 1.
   - `sheets/`: triage sheets.
-  - `tools/`, `jobs/`: the scripts and batch definitions used in the run, including `layouts.py`, which draws the layout sketches, and `places.json`, which names the kept take for every view.
+  - `tools/`, `jobs/`: the scripts and batch definitions used in the run, including `layouts.py`, which draws the layout sketches, `places.json`, which names the kept take for every view of the six places, and the scripts that built the reveal (`master.py`, `inset.py`, `grade_plate.py`, `heart_x2.py`, `headwarp.py`, `f2_merge.py`, `cut_frames3.py`, `reveal_sheet.py`).
   - `log.json`: the running log: decisions, takes, my notes on each take, critic results, statuses.
 """
 open(f'{R}/out/README.md', 'w', encoding='utf-8').write(README)

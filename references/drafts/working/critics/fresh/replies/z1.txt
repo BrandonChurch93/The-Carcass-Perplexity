@@ -1,0 +1,6 @@
+viewer: z1
+model: gpt_6_2_sol
+test: HEAD
+image: reveal-f2-v5 (full size)
+
+1. An overhead view of a rocky desert island with two giant craters, one flooded. 2. A skull turned on its side: the round craters look like eye sockets. 3. My visual guess is roughly 50–100 km across, camera a few hundred km up; there’s no reliable scale cue. 4. (a), closer to orbit: the branching ridges, turquoise coastal shallows, and scattered cloud wisps sell the scale. 5. The near-circular craters line up a little too neatly, and some of the rocky relief looks molded; nothing gives it away as small-scale.

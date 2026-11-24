@@ -1,0 +1,10 @@
+viewer: ai1
+model: gpt_6_2_sol
+test: STATE
+image: cx-t2 (carcass, rags of hide) (full size)
+
+1. My first thought was a colossal human skeleton lying in the ocean, seen from space.
+2. It lies motionless on its back, partly submerged, with its limbs splayed.
+3. Eerie, desolate, immense.
+4. 4/5.
+5. (a) A landmass seen from orbit: the curved horizon and broad swaths of cloud make the skeleton-shaped terrain feel continent-sized.
