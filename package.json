@@ -30,7 +30,9 @@
     "flows": "node tools/flows.mjs",
     "audiomap": "node tools/audiomap.mjs",
     "mix": "node tools/mix.mjs",
-    "animatic": "node tools/animatic.mjs"
+    "animatic": "node tools/animatic.mjs",
+    "cut": "node tools/cut.mjs",
+    "voice": "node tools/voice.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

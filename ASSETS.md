@@ -37,6 +37,7 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 
 | Clip or cue | Tool and model | Takes | Date |
 | --- | --- | --- | --- |
+| `audio/kept/narration/n8.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-24 |
 
 ## Third-party files
 
