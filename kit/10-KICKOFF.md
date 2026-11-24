@@ -89,7 +89,7 @@ Anything to change as you go:
 <your notes, or "Nothing">
 ```
 
-- While the repo is public, the `REVIEW` message has one archive of the voice and the sounds attached. Attach that same file to this prompt, and to any review notes prompt, so the build works with the takes you heard. Attach the music file too.
+- The repo is private, so the voice, the sounds and the music are saved in it. Nothing has to be attached to this prompt or to any later one.
 - There is no second stop. Anything in your notes that cannot be done inside the limits is listed at the end.
 
 ## The limits you have
@@ -118,7 +118,7 @@ Anything to change as you go:
 
 ## If the build reports at the budget
 
-`BUDGET REPORT` lists what is done, what is left and what it looks like now. To carry on, start a new task with this prompt, with the music file and the newest sound archive attached:
+`BUDGET REPORT` lists what is done, what is left and what it looks like now. To carry on, start a new task with this prompt:
 
 ```
 BUILD MODE.
@@ -130,7 +130,7 @@ Pull https://github.com/BrandonChurch93/The-Carcass-Perplexity and continue from
 
 ## If a task ends early for any other reason
 
-If the last thing you sent was the approval prompt or a review notes prompt, send that same prompt once more. Otherwise send the prompt below. Attach the music file and the newest sound archive either way.
+If the last thing you sent was the approval prompt or a review notes prompt, send that same prompt once more. Otherwise send the prompt below.
 
 ```
 BUILD MODE.
@@ -155,10 +155,8 @@ The first line of the block says where the 4K film is.
 Render The Carcass to a 4K video file frame by frame, so it is perfectly smooth. Do not screen record.
 
 Setup
-- Clone BrandonChurch93/The-Carcass-Perplexity, branch main, into ~/showcase-recording/the-carcass. Do not touch any other copy of the repo. Do not push anything.
-- Read README.md in the clone. It gives the exact commands and says where the sound files go.
-- The sound archive from the Computer thread is at <path on the Mac>. It holds the final mix. Unpack it where README.md says.
-- The music track is at <path on the Mac>. Copy it to audio/supplied/The-Carcass-Audio.mp3 in the clone.
+- Clone BrandonChurch93/The-Carcass-Perplexity, branch main, into ~/showcase-recording/the-carcass. The repo is private, so use my GitHub sign-in. Do not touch any other copy of the repo. Do not push anything.
+- Read README.md in the clone. It gives the exact commands. The final mix and the music are in the repo.
 
 Render
 - Run npm install.
@@ -174,7 +172,7 @@ Either way, the card still and the small web copy of the loop are in `deliver/` 
 
 ## If you want more polish after it completes
 
-Each of these buys one more bounded polish pass on the open items. Add notes under the last line if you have any, and attach the music file and the newest sound archive.
+Each of these buys one more bounded polish pass on the open items. Add notes under the last line if you have any.
 
 ```
 BUILD MODE.
@@ -184,8 +182,7 @@ Extension.
 Pull https://github.com/BrandonChurch93/The-Carcass-Perplexity. Read AGENTS.md, kit/PROGRESS.md and kit/addenda/. Run one extension as AGENTS.md and kit/08-BUILD-ORDER.md define it, and end with the BUILD COMPLETE block.
 ```
 
-## Three things only you can decide
+## Two things that are yours
 
-- The music. The kit does not know where the track came from or what its licence allows. Before the film is posted, confirm that the track is cleared for a video posted by the company.
-- The repo is public. So the build keeps every sound file out of it: the voice clips, the sound effects and the music. They live in the thread as one archive. If you make the repo private in its settings on GitHub before you start, the build saves them in the repo and you never have to attach the archive. A repo that was private during the build has to stay private, because the sound files are then in its history.
+- Keep the repo private. The voice clips, the sound effects and the music are saved in it, so they are in its history. Addendum 001 in `kit/addenda/` tells the build to do this as soon as it finds the repo private.
 - Where the 4K render happens. The build tries it in Computer and falls back to your Mac if its scenes are too heavy to finish there in the time allowed. To skip the attempt and always render on your Mac, set `deliver.sandboxMaster` to `false` in `config/showcase.json`.

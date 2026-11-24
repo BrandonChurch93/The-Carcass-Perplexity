@@ -8,4 +8,6 @@ Numbered changes made after the kit was written. Brandon's notes from the planni
 - The Builder never writes or edits an addendum. It logs how it applied each one in `kit/PROGRESS.md`.
 - If an addendum asks for changes to a unit that is already finished, the Builder makes them and runs rounds on that unit inside `quality.maxRoundsPerUnit` and the clock. There is no stop for it.
 
-There are no addenda yet.
+| No. | File | What it changes |
+| --- | --- | --- |
+| 001 | `001-private-repo-and-music.md` | The repo is private, so the voice, the sounds and the music are committed. The music's use is settled and is never raised as a question |
