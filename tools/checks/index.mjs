@@ -2,6 +2,17 @@ import { commandCheck } from './commands.mjs';
 import { runG4 } from './g4.mjs';
 import { runG10 } from './g10.mjs';
 import { checkG8, checkG9 } from './repo.mjs';
+import { runG7 } from './g7.mjs';
+import { runG11 } from './g11.mjs';
+import { runG15 } from './g15.mjs';
+import { runG16 } from './g16.mjs';
+import { runD1 } from './d1.mjs';
+import { runA1 } from './a1.mjs';
+import { runA2 } from './a2.mjs';
+import { runA3 } from './a3.mjs';
+import { runA4 } from './a4.mjs';
+import { runA5 } from './a5.mjs';
+import { runA6 } from './a6.mjs';
 
 const fromRepo = (check) => async (ctx) => {
   const r = await check({ root: ctx.root });
@@ -13,9 +24,20 @@ const BUILT = {
   G2: commandCheck(['test']),
   G3: commandCheck(['run', 'determinism']),
   G4: runG4,
+  G7: runG7,
   G8: fromRepo(checkG8),
   G9: fromRepo(checkG9),
-  G10: runG10
+  G10: runG10,
+  G11: runG11,
+  G15: runG15,
+  G16: runG16,
+  D1: (ctx) => runD1(ctx),
+  A1: runA1,
+  A2: runA2,
+  A3: (ctx) => runA3(ctx),
+  A4: runA4,
+  A5: runA5,
+  A6: runA6
 };
 
 const MACHINE = [
@@ -56,10 +78,16 @@ const SOUND = [
   ['A6', 1, 'The ducking of the music, and nothing louder than the voice']
 ];
 
+const READ_FROM_THE_CUT_LIST = ['G7', 'G11', 'G15', 'G16'];
+const CUT_LIST_PHASE = DELIVERABLE[0][1][0];
+const LAST_PHASE = Math.max(...DELIVERABLE.flatMap(([, phases]) => phases));
+const fromTheCutList = (id) =>
+  READ_FROM_THE_CUT_LIST.includes(id) ? { phases: Array.from({ length: LAST_PHASE - CUT_LIST_PHASE + 1 }, (_, i) => CUT_LIST_PHASE + i) } : {};
+
 const entry = (kind, id, phase, title, extra = {}) => ({ id, title, phase, kind, ...extra, run: BUILT[id] ?? null });
 
 export const REGISTRY = [
-  ...MACHINE.map(([id, phase, title]) => entry('machine', id, phase, title)),
+  ...MACHINE.map(([id, phase, title]) => entry('machine', id, phase, title, fromTheCutList(id))),
   ...DELIVERABLE.map(([id, phases, title]) => entry('deliverable', id, phases[0], title, { phases })),
   ...SOUND.map(([id, phase, title]) => entry('sound', id, phase, title, { advisory: true }))
 ];
