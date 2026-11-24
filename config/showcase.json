@@ -1,0 +1,711 @@
+{
+  "name": "The Carcass",
+  "slug": "the-carcass",
+  "seed": 20261124,
+  "repo": {
+    "url": "https://github.com/BrandonChurch93/The-Carcass-Perplexity",
+    "branch": "main",
+    "maxFileMb": 45,
+    "maxTreeGb": 2,
+    "maxPushGb": 1
+  },
+  "film": {
+    "fps": 60,
+    "previewFps": 30,
+    "targetSeconds": 195,
+    "minSeconds": 170,
+    "maxSeconds": 215,
+    "hookSeconds": 2,
+    "shutterDegrees": 180,
+    "cutToleranceFrames": 3,
+    "riseWindowTolerance": 0.1,
+    "minPlaceSeconds": 16,
+    "order": [
+      "ribs",
+      "heart",
+      "breath",
+      "marsh",
+      "spine",
+      "eye",
+      "reveal"
+    ]
+  },
+  "formats": {
+    "master": {
+      "id": "uhd",
+      "width": 3840,
+      "height": 2160
+    },
+    "hd": {
+      "id": "hd",
+      "width": 1920,
+      "height": 1080
+    },
+    "preview": {
+      "id": "preview",
+      "width": 960,
+      "height": 540
+    }
+  },
+  "tiers": {
+    "draft": {
+      "samplesPerFrame": 1
+    },
+    "review": {
+      "samplesPerFrame": 2
+    },
+    "final": {
+      "samplesPerFrame": 4
+    }
+  },
+  "music": {
+    "file": "The-Carcass-Audio.mp3",
+    "sha256": "eefe8765b73f35622be8410f063f327902dd0ce5b564688fade5b732afc56b1f",
+    "seconds": 233.51,
+    "bpm": 67,
+    "barSeconds": 3.58,
+    "landmarks": {
+      "preludeEnd": 16.5,
+      "firstHit": 17.4,
+      "swellPeak": 40.0,
+      "bigPeakStart": 64.0,
+      "bigPeakEnd": 68.5,
+      "midHit": 102.55,
+      "quietStart": 153.0,
+      "quietEnd": 163.5,
+      "revealHit": 167.0,
+      "tailFadeStart": 218.5,
+      "finalHit": 224.65,
+      "end": 233.5
+    }
+  },
+  "narration": {
+    "voiceName": "",
+    "maxTakesPerClip": 6,
+    "linePauseMinSeconds": 0.6,
+    "placeholderClipSeconds": 15,
+    "clips": [
+      {
+        "id": "n1",
+        "name": "opening",
+        "unit": "ribs",
+        "lines": [
+          "Listen.",
+          "There is a land the maps leave empty.",
+          "I have walked it. End to end.",
+          "I will tell you what is there."
+        ]
+      },
+      {
+        "id": "n2",
+        "name": "ribs",
+        "unit": "ribs",
+        "lines": [
+          "The strait.",
+          "Stone ribs. Taller than any wall men have built.",
+          "At low tide, the winged things come down to feed.",
+          "Look up. The drowned hang in the weed. That is how high the sea returns."
+        ]
+      },
+      {
+        "id": "n3",
+        "name": "heart",
+        "unit": "heart",
+        "lines": [
+          "The fire.",
+          "A lake of it, under a black skin.",
+          "The tall ones walk the skin, and drink from the cracks.",
+          "It burned before there were men. It will burn after."
+        ]
+      },
+      {
+        "id": "n4",
+        "name": "breath",
+        "unit": "breath",
+        "lines": [
+          "The pits.",
+          "The land breathes here. Slow. From far below.",
+          "Nothing grows near them but the red weed.",
+          "The pale herds feed, and keep their distance. They are wiser than men."
+        ]
+      },
+      {
+        "id": "n5",
+        "name": "marsh",
+        "unit": "marsh",
+        "lines": [
+          "The red flats.",
+          "It was blood once. It still seeps.",
+          "The great beasts wallow in it, and grow fat.",
+          "The salt keeps what it catches. Forever."
+        ]
+      },
+      {
+        "id": "n6",
+        "name": "spine",
+        "unit": "spine",
+        "lines": [
+          "The ridge.",
+          "Above the clouds. Above the storm.",
+          "Lightning walks it every night. Spire to spire.",
+          "The beasts sleep inside the bone, and wait for morning."
+        ]
+      },
+      {
+        "id": "n7",
+        "name": "eye",
+        "unit": "eye",
+        "lines": [
+          "The lake.",
+          "Still. Gold at the edge. Black at the center.",
+          "The herds drink there. They do not look down.",
+          "The center has no bottom. I did not find one."
+        ]
+      },
+      {
+        "id": "n8",
+        "name": "reveal",
+        "unit": "reveal",
+        "lines": [
+          "Now you see it.",
+          "This was never land.",
+          "It was a god.",
+          "Gods die slow. This one is not finished."
+        ]
+      }
+    ]
+  },
+  "audio": {
+    "sampleRate": 48000,
+    "maxTakesPerCue": 3,
+    "maxCuesPerPlace": 4,
+    "loudnessLufs": -14,
+    "truePeakDb": -1,
+    "duckMaxDb": 9
+  },
+  "units": [
+    {
+      "id": "heart",
+      "phase": 3,
+      "name": "The Heart"
+    },
+    {
+      "id": "ribs",
+      "phase": 4,
+      "name": "The Ribs, with the opening"
+    },
+    {
+      "id": "breath",
+      "phase": 4,
+      "name": "The Breath"
+    },
+    {
+      "id": "marsh",
+      "phase": 4,
+      "name": "The Blood Marsh"
+    },
+    {
+      "id": "spine",
+      "phase": 4,
+      "name": "The Spine"
+    },
+    {
+      "id": "eye",
+      "phase": 4,
+      "name": "The Eye"
+    },
+    {
+      "id": "reveal",
+      "phase": 4,
+      "name": "The Reveal, the pull-back from the lake to orbit"
+    },
+    {
+      "id": "film",
+      "phase": 5,
+      "name": "The whole film, its sound and the card loop"
+    }
+  ],
+  "lookLockUnit": "heart",
+  "buildOrderAfterLookLock": [
+    "ribs",
+    "breath",
+    "marsh",
+    "spine",
+    "eye",
+    "reveal"
+  ],
+  "keys": [
+    {
+      "id": "ribs-0",
+      "unit": "ribs",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Ribs: establishing view",
+      "image": "references/approved/1-ribs/ribs-0-establishing.jpg"
+    },
+    {
+      "id": "ribs-1",
+      "unit": "ribs",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Ribs: The drowned, hanging in the weed",
+      "image": "references/approved/1-ribs/ribs-1-the-drowned-hanging-in-the-weed.jpg"
+    },
+    {
+      "id": "ribs-2",
+      "unit": "ribs",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Ribs: Tide-pool feeders",
+      "image": "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg"
+    },
+    {
+      "id": "ribs-3",
+      "unit": "ribs",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Ribs: The colony",
+      "image": "references/approved/1-ribs/ribs-3-the-colony.jpg"
+    },
+    {
+      "id": "ribs-4",
+      "unit": "ribs",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Ribs: The bore arrives",
+      "image": "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg"
+    },
+    {
+      "id": "heart-0",
+      "unit": "heart",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Heart: establishing view",
+      "image": "references/approved/2-heart/heart-0-establishing.jpg"
+    },
+    {
+      "id": "heart-1",
+      "unit": "heart",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Heart: The lava surface at the line",
+      "image": "references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg"
+    },
+    {
+      "id": "heart-2",
+      "unit": "heart",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Heart: The one that sank",
+      "image": "references/approved/2-heart/heart-2-the-one-that-sank.jpg"
+    },
+    {
+      "id": "heart-3",
+      "unit": "heart",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Heart: Crust-walkers feeding at a seam",
+      "image": "references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg"
+    },
+    {
+      "id": "heart-4",
+      "unit": "heart",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Heart: The vessel mouth and its lava fall",
+      "image": "references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg"
+    },
+    {
+      "id": "breath-0",
+      "unit": "breath",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Breath: establishing view",
+      "image": "references/approved/3-breath/breath-0-establishing.jpg"
+    },
+    {
+      "id": "breath-1",
+      "unit": "breath",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Breath: Waders feeding in the channel",
+      "image": "references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg"
+    },
+    {
+      "id": "breath-2",
+      "unit": "breath",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Breath: The rim",
+      "image": "references/approved/3-breath/breath-2-the-rim.jpg"
+    },
+    {
+      "id": "breath-3",
+      "unit": "breath",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Breath: Gill-plumes on the lip",
+      "image": "references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg"
+    },
+    {
+      "id": "breath-4",
+      "unit": "breath",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Breath: Down the shaft",
+      "image": "references/approved/3-breath/breath-4-down-the-shaft.jpg"
+    },
+    {
+      "id": "marsh-0",
+      "unit": "marsh",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Blood Marsh: establishing view",
+      "image": "references/approved/4-marsh/marsh-0-establishing.jpg"
+    },
+    {
+      "id": "marsh-1",
+      "unit": "marsh",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Blood Marsh: The bubbling seep pool",
+      "image": "references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg"
+    },
+    {
+      "id": "marsh-2",
+      "unit": "marsh",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Blood Marsh: The stalk colony",
+      "image": "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg"
+    },
+    {
+      "id": "marsh-3",
+      "unit": "marsh",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Blood Marsh: Mud-wallowers",
+      "image": "references/approved/4-marsh/marsh-3-mud-wallowers.jpg"
+    },
+    {
+      "id": "marsh-4",
+      "unit": "marsh",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Blood Marsh: The one on the thin crust",
+      "image": "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg"
+    },
+    {
+      "id": "spine-0",
+      "unit": "spine",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Spine: establishing view",
+      "image": "references/approved/5-spine/spine-0-establishing.jpg"
+    },
+    {
+      "id": "spine-1",
+      "unit": "spine",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Spine: Where lightning came to ground",
+      "image": "references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg"
+    },
+    {
+      "id": "spine-2",
+      "unit": "spine",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Spine: Tether-kites on the first spire",
+      "image": "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg"
+    },
+    {
+      "id": "spine-3",
+      "unit": "spine",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Spine: The strike on the third spire",
+      "image": "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg"
+    },
+    {
+      "id": "spine-4",
+      "unit": "spine",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Spine: Inside the canal",
+      "image": "references/approved/5-spine/spine-4-inside-the-canal.jpg"
+    },
+    {
+      "id": "eye-0",
+      "unit": "eye",
+      "kind": "establishing",
+      "order": 0,
+      "title": "The Eye: establishing view",
+      "image": "references/approved/6-eye/eye-0-establishing.jpg"
+    },
+    {
+      "id": "eye-1",
+      "unit": "eye",
+      "kind": "detail",
+      "order": 1,
+      "title": "The Eye: Drinkers at the shore",
+      "image": "references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg"
+    },
+    {
+      "id": "eye-2",
+      "unit": "eye",
+      "kind": "detail",
+      "order": 2,
+      "title": "The Eye: The iris: amber mats",
+      "image": "references/approved/6-eye/eye-2-the-iris-amber-mats.jpg"
+    },
+    {
+      "id": "eye-3",
+      "unit": "eye",
+      "kind": "detail",
+      "order": 3,
+      "title": "The Eye: The edge, where the floor stops",
+      "image": "references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg"
+    },
+    {
+      "id": "eye-4",
+      "unit": "eye",
+      "kind": "detail",
+      "order": 4,
+      "title": "The Eye: What rises from the centre",
+      "image": "references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg"
+    },
+    {
+      "id": "reveal-1",
+      "unit": "reveal",
+      "kind": "pullback",
+      "order": 1,
+      "title": "The Reveal: Just above the lake",
+      "image": "references/approved/7-reveal/reveal-1-above-the-lake.jpg"
+    },
+    {
+      "id": "reveal-2",
+      "unit": "reveal",
+      "kind": "pullback",
+      "order": 2,
+      "title": "The Reveal: The skull massif",
+      "image": "references/approved/7-reveal/reveal-2-skull-massif.jpg"
+    },
+    {
+      "id": "reveal-3",
+      "unit": "reveal",
+      "kind": "pullback",
+      "order": 3,
+      "title": "The Reveal: Head and shoulders",
+      "image": "references/approved/7-reveal/reveal-3-head-and-shoulders.jpg"
+    },
+    {
+      "id": "reveal-4",
+      "unit": "reveal",
+      "kind": "pullback",
+      "order": 4,
+      "title": "The Reveal: The whole titan from orbit",
+      "image": "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg"
+    }
+  ],
+  "settledAll": [
+    "`-b` is a frame of a moving film. Motion blur on fast things in `-b` is intended."
+  ],
+  "settled": {
+    "ribs-4": [
+      "The wave in `-b` may be one unbroken wall of water across the whole strait, where `-a` shows broken surf."
+    ],
+    "heart-0": [
+      "The tall animals in `-b` may differ from one another in size and stance, where `-a` repeats one shape."
+    ],
+    "heart-3": [
+      "The tall animals in `-b` may differ from one another in size and stance, where `-a` repeats one shape."
+    ],
+    "marsh-2": [
+      "The stalks in `-b` may look less like palm trees than they do in `-a`."
+    ],
+    "marsh-3": [
+      "The heavy animals in `-b` may look less like walruses, or like any animal on Earth, than they do in `-a`."
+    ],
+    "marsh-4": [
+      "The heavy animals in `-b` may look less like walruses, or like any animal on Earth, than they do in `-a`."
+    ],
+    "spine-1": [
+      "The shaggy animals in `-b` may look less like dogs, or like any animal on Earth, than they do in `-a`."
+    ],
+    "spine-4": [
+      "The shaggy animals in `-b` may look less like dogs, or like any animal on Earth, than they do in `-a`."
+    ],
+    "eye-0": [
+      "The animals in `-b` may look stranger, and less like any animal on Earth, than they do in `-a`."
+    ],
+    "eye-1": [
+      "The animals in `-b` may look stranger, and less like any animal on Earth, than they do in `-a`."
+    ],
+    "reveal-1": [
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same."
+    ],
+    "reveal-2": [
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same."
+    ],
+    "reveal-3": [
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
+      "Fingers, toes and teeth may be less exact in `-b` than in `-a`."
+    ],
+    "reveal-4": [
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
+      "Fingers, toes and teeth may be less exact in `-b` than in `-a`.",
+      "The storm over the backbone in `-b` may look more like a real storm system than it does in `-a`."
+    ]
+  },
+  "settledWhenRestaged": "The animal in `-b` is further from the camera, in silhouette or partly hidden by weather, on purpose.",
+  "motion": {
+    "checkGapSeconds": 1.0,
+    "pixelThreshold": 4,
+    "minMovingAreaShare": 0.08,
+    "byUnit": {
+      "eye": 0.03
+    }
+  },
+  "detail": {
+    "minSharpnessRatio": 0.75
+  },
+  "assets": {
+    "maxTakesPerAsset": 6,
+    "maxTuningLooksPerPart": 40,
+    "maxStudySources": 12
+  },
+  "quality": {
+    "passScore": 9,
+    "blockoutPass": 7,
+    "blockoutMaxRounds": 2,
+    "lookLockMaxRounds": 5,
+    "maxRoundsPerUnit": 3,
+    "wholeFilmMaxRounds": 3,
+    "polishMaxRounds": 3,
+    "plateauRounds": 2,
+    "recordRoundMaxRuns": 2,
+    "gauntletMaxPasses": 2,
+    "gateFixMaxAttempts": 5,
+    "compressionStressMbps": 10,
+    "stressClipSeconds": 1,
+    "standInMinMeanDifference": 8,
+    "jury": {
+      "jurors": 5,
+      "maxShareGap": 0.2,
+      "stillsPerUnit": 5
+    },
+    "recognition": {
+      "viewers": 5,
+      "minShare": 0.8,
+      "widthPx": 400
+    },
+    "crossMachineMinPsnr": 45
+  },
+  "critics": {
+    "maxImageLongEdgePx": 1400,
+    "maxImageMegapixels": 1.1,
+    "contactSheetFrames": 12,
+    "phonePreviewWidthPx": 400,
+    "maxFilesPerMessage": 10
+  },
+  "status": {
+    "minGapMinutes": 10,
+    "maxPictures": 4,
+    "pictureLongEdgePx": 1200
+  },
+  "budget": {
+    "runHours": 72,
+    "phaseHours": {
+      "0": 3,
+      "1": 3,
+      "2": 6,
+      "3": 13,
+      "4": 17,
+      "5": 6,
+      "6": 24
+    },
+    "reserveHours": {
+      "6": 20
+    },
+    "finishMarginHours": 3,
+    "recordRoundHours": 3,
+    "reviewRoundHours": 4,
+    "continueHours": 24,
+    "extendHours": 12,
+    "wrapUpMinutes": 20,
+    "floorFixMinutes": 90,
+    "statusMaxGapMinutes": 30,
+    "jobOverrunFactor": 2,
+    "agentWaitMinutes": 45,
+    "buildAgentMaxHours": 4,
+    "defaultJobMinutes": 30,
+    "toolRetryMax": 3
+  },
+  "sandbox": {
+    "stepTimeoutMinutes": 10,
+    "chunkSeconds": 2,
+    "masterMaxHours": 8,
+    "hdFilmMaxHours": 3,
+    "previewFilmMaxHours": 1,
+    "reviewClipMaxHours": 2,
+    "cardLoopMaxHours": 1,
+    "maxRenderProcesses": 1,
+    "maxFramesOnDisk": 300,
+    "minFreeDiskGb": 3,
+    "maxDownloadGb": 2,
+    "maxAgents": 16,
+    "criticSlots": 6
+  },
+  "export": {
+    "master": {
+      "container": "mp4",
+      "videoCodec": "h264",
+      "pixelFormat": "yuv420p",
+      "crf": 15,
+      "audioCodec": "aac",
+      "audioKbps": 320
+    },
+    "hd": {
+      "crf": 16
+    },
+    "preview": {
+      "bitrateMbps": 3
+    },
+    "local": {
+      "container": "mov",
+      "videoCodec": "prores_422_hq",
+      "testSeconds": 10,
+      "proofSeconds": 2
+    },
+    "files": {
+      "master": "the-carcass-4k60.mp4",
+      "hd": "the-carcass-1080p60.mp4",
+      "preview": "the-carcass-preview.mp4",
+      "heartReview": "heart-review.mp4",
+      "animatic": "animatic.mp4",
+      "cardLoop": "card-loop.mp4",
+      "cardLoopWeb": "card-loop-web.mp4",
+      "cardStill": "card-still.jpg"
+    }
+  },
+  "deliver": {
+    "sandboxMaster": true,
+    "attachTestMb": [
+      20,
+      100,
+      400
+    ],
+    "cardLoop": {
+      "seconds": 8,
+      "minSeconds": 6,
+      "maxSeconds": 9,
+      "unit": "heart",
+      "pickJurors": 5,
+      "seamMaxRatio": 2,
+      "stillMinPsnr": 35,
+      "webWidth": 1280,
+      "webBitrateMbps": 4
+    }
+  }
+}
