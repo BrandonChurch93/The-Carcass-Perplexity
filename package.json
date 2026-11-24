@@ -26,7 +26,8 @@
     "gate": "node tools/gate.mjs",
     "keep": "node tools/keep.mjs",
     "review": "node tools/review.mjs",
-    "shape": "node tools/shape.mjs"
+    "shape": "node tools/shape.mjs",
+    "flows": "node tools/flows.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

@@ -1,6 +1,6 @@
-# Status 6
+# Status 7
 
-2026-11-24 22:20 UTC. Phase 0, ground truth.
+2026-11-24 22:35 UTC. Phase 1, the voice, the map and the animatic.
 
-- `01-vm1-frame-300-uhd-final.jpg`: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds. It is a cost test, not a place of the film.
-- `02-frames-296-307.jpg`: Twelve frames in a row of the same scene, to show it moves: the cracks pulse, the fume drifts, the embers rise.
+- `01-loop-hosted.jpg`: The test scene running live in the published build, through the card loop link on the review page. It is still the cost test and not a place of the film.
+- `02-review-top.jpg`: The review page as published. The newest pictures sit at the top. Films, narration, sounds and the card fill in from Phase 1 on.

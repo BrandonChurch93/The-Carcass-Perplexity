@@ -19,6 +19,10 @@ This repo holds the plan for the build and, once the build has run, the build it
 
 ## Status
 
-The build has not started. Its log will be `kit/PROGRESS.md`.
+The build is running. Its log is `kit/PROGRESS.md`, and that file is the place to look for where it stands.
 
-How to watch the film, how to render it and where the sound files are will be written here by the build.
+- Watch: [the published build](https://www.perplexity.ai/computer/a/the-carcass-xp_kROepRIapoVuOG1cmNw). It opens on the film as it stands, and the "Review page" link at its foot leads to the newest pictures, the films, every narration clip and sound, and the card. It sits behind the owner's sign-in.
+- Run it here: `npm ci`, then `npm run dev` for the player or `npm run build && npm run review` for the published form in `dist/`.
+- Render: `npm run still -- --frame N` computes one frame. The commands of the harness are listed in `tools/README.md`.
+- Sound: the music is in `audio/supplied/`, kept narration and sounds in `audio/kept/`, the mix in `audio/mix/`, and how each was made in `audio/records/`.
+- The visitor's flows that are replayed after every publish are in `FLOWS.md`.

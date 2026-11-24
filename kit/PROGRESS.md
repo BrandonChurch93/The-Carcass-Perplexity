@@ -5,7 +5,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 ## Status
 
 - Build: in progress
-- Phase: 0 · Ground truth, in progress since 2026-11-24 20:30 UTC
+- Phase: 1 · The voice, the map and the animatic, in progress since 2026-11-24 22:36 UTC
 - Review: not reached
 - Review round: none
 - Review round step: none
@@ -14,8 +14,8 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Continuations: 0
 - Extensions: 0
 - Extension step: none
-- Published address: none
-- Review page: none
+- Published address: https://www.perplexity.ai/computer/a/the-carcass-xp_kROepRIapoVuOG1cmNw (the workspace's app hosting, behind Brandon's sign-in, first published 2026-11-24 22:19 UTC)
+- Review page: the "Review page" link at the foot of the published address, which opens `review.html` beside it
 - Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The last measurement, at 20:41 UTC, read public. It is measured once at the start of each task for the record (`npm run private`), and nothing waits on it
 - Sound files: committed to the repo. The music went in on 2026-11-24 at 20:47 UTC on Brandon's word (note 3). Kept narration clips, kept sounds and the newest mix are committed like any other built asset, each inside `repo.maxFileMb`. No archive of sounds is attached anywhere
 - Large files reach Brandon by: an attachment in the thread. MEASURED 2026-11-24: 20 MB, 100 MB and 400 MB test files were all accepted by the share call. The review page carries the same films while the site stays under the hosting limit
@@ -24,34 +24,33 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 6, 2026-11-24 22:20 UTC:
+Status 7, 2026-11-24 22:35 UTC:
 
-- `01-vm1-frame-300-uhd-final.jpg`: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds. It is a cost test, not a place of the film.
-- `02-frames-296-307.jpg`: Twelve frames in a row of the same scene, to show it moves: the cracks pulse, the fume drifts, the embers rise.
+- `01-loop-hosted.jpg`: The test scene running live in the published build, through the card loop link on the review page. It is still the cost test and not a place of the film.
+- `02-review-top.jpg`: The review page as published. The newest pictures sit at the top. Films, narration, sounds and the card fill in from Phase 1 on.
 
+Status 6, 2026-11-24 22:20 UTC, showed: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds.
 Status 5, 2026-11-24 21:57 UTC, showed: The first computed frame.
 Status 4, 2026-11-24 21:30 UTC, showed: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them.
-Status 3, 2026-11-24 21:09 UTC, showed: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T22:20:01Z
-phase 0: 1.83 h used of 3.00 h
-build: 1.83 h used of 72.00 h
+2026-11-24T22:35:52Z
+phase 1: 0.00 h used of 3.00 h
+build: 2.10 h used of 72.00 h
 extra rounds: yes
-half point: reached
-minutes since the last status: 23
+minutes since the last status: 16
 ```
 
 ## Phases
 
 | Phase | State | Started | Ended | Gate evidence |
 | --- | --- | --- | --- | --- |
-| 0 · Ground truth | in progress | 2026-11-24 20:30 UTC | | |
-| 1 · The voice, the map and the animatic | not started | | | |
+| 0 · Ground truth | done | 2026-11-24 20:30 UTC | 2026-11-24 22:36 UTC | Gate closed by passing. A push has succeeded: ten pushes, the first `f361749` at 20:33 UTC. G1, G2, G3, G4, G8, G9 and G10: 7 of 7 pass at 22:35 UTC (`out/work/gate/phase-0.json`). The workspace record, the tool record with the sound tools, the voice, the audio map skill (`user:beat-sync`), the terms, the platform's limits, the pinned versions and the render budget table are in this file. Inline display: proven 20:36 UTC and used for every status. Repo: read public at 20:41 UTC and treated as private on Brandon's note 3; a large file reaches Brandon as an attachment in the thread (400 MB measured), and the hosting carried 497 MB. Polling: measured 20:40 UTC, agents answer by message while the Builder works. PSNR between VMs: infinite, the frames are byte equal on three VMs. Clock: 15 ticks; statuses 1 to 7 posted since step 4. Published 22:19 UTC, flows replayed 7 of 7 |
+| 1 · The voice, the map and the animatic | in progress | 2026-11-24 22:36 UTC | | |
 | 2 · Engine and blockout | not started | | | |
 | 3 · The look lock: the Heart | not started | | | |
 | 4 · The other places and the rise | not started | | | |
@@ -130,7 +129,7 @@ Measured 2026-11-24 20:37 to 20:44 UTC on the Builder's VM.
 Measured 2026-11-24 21:19 UTC with three test videos of moving noise with no sound, made with ffmpeg: 20, 100 and 400 megabytes (the sizes in `deliver.attachTestMb`). What they are was said in status 4.
 
 - An attachment in the thread. MEASURED: the share call accepted all three, 20 MB, 100 MB and 400 MB, each in a few seconds, and each is listed in the thread as a video. UNKNOWN from this side: how each plays or downloads for Brandon, which only he sees.
-- App hosting. STATED in `AGENTS.md`: about 500 MB a site, behind a sign-in. To be measured with the first publish in step 18, where the 400 MB test file rides along once.
+- App hosting. MEASURED 2026-11-24 22:25 UTC: a site of 497 MB was accepted in 60 seconds, with the 20, 100 and 400 MB test files in it. Through the workspace's preview address each file answered whole and in byte ranges (`accept-ranges: bytes`, `video/mp4`), and the 400 MB file was read end to end in 7 seconds. The test files were taken out again with the next publish. STATED in `AGENTS.md`: about 500 MB a site, behind a sign-in. UNKNOWN: a site larger than 497 MB, and how the published address behaves for Brandon, which cannot be opened from a VM because it needs his sign-in.
 - A download the workspace offers: the same share call. No other download route was found in the tool list.
 - So a film file reaches Brandon as an attachment in the thread, and it also plays on the review page while the site stays under the hosting limit.
 
@@ -153,7 +152,7 @@ Recorded 2026-11-24 from the tool list of this workspace. STATED means read in t
 - Image models, through `generate_image`. STATED: `gpt_image_2_6_sunburst` and `gpt_image_2_6_flare` (up to 5 reference images), `nano_banana_2_1` and `nano_banana_pro` (up to 14 reference images, the second returns up to 2K), `seedream_5` (up to 10 reference images, up to 2K). MEASURED in the reference runs: `gpt_image_2_6_sunburst` returned 3840 x 2160 for the orbit key and about two minutes a call. The largest size of the others: UNKNOWN until one is used, and then it is written in that asset's recipe.
 - A video model. STATED: `generate_video` can be called. It is used only to study motion, never for a frame.
 - An image-to-3D model. MEASURED: none in the tool list.
-- App hosting. STATED: `deploy_website` publishes a static folder and `publish_website` exists beside it. The largest site: about 500 MB as `AGENTS.md` states, measured in step 18.
+- App hosting. MEASURED: `deploy_website` publishes a static folder to one address that later publishes update, and a site of 497 MB was accepted (see "Handing over a large file"). STATED: `publish_website` exists beside it and makes a permanent public address, which this build does not use.
 - The listener. STATED: `evaluate_audio` takes a sound file of up to 20 MB and a question. MEASURED: two calls answered in 8 and 14 seconds.
 - Speech and sound effects: ElevenLabs through the saved credential, see "The sound tools". The workspace's own `text_to_speech` is not used, because the voice is Brandon's account voice.
 - Supporting agents. MEASURED: seven model families can be started and all seven see images: `claude_fable_5_2`, `claude_sonnet_5_5`, `claude_opus_5_5`, `gemini_4_carbon`, `gemini_neon`, `gpt_6_2_astra`, `gpt_6_2_sol`. See "The image limit". No model hears sound directly.
@@ -271,6 +270,26 @@ The audio features a deep, gurgling sound of rushing water.
 - MEASURED: the `file` command is not installed on this machine. `ffprobe` was used instead.
 - MEASURED: nothing outside `out/work/soundtest/` was edited in the repo. No git, npm or render was run.
 
+### Frames across VMs
+
+Measured 2026-11-24 22:00 to 22:17 UTC, step 17, at commit `59873c3`, frame 300 of the spike scene.
+
+- `formats.hd` at the `review` tier: the PNG is byte for byte the same file on the Builder's VM and on both sandbox VMs (sha256 `f56edccb…b622cd`). MEASURED.
+- `formats.master` at the `final` tier: byte for byte the same on the two sandbox VMs (sha256 `3f684872…6201fe`). MEASURED. It was not rendered a third time on the Builder's VM, which has half the cores.
+- So the PSNR of every pair is infinite, above `quality.crossMachineMinPsnr` (45 dB), and G10 holds with the widest margin there is. Frames rendered on different VMs can be joined in one film without a seam.
+- `npm run caps` gave the same WebGL record on all three machines, and `npm run determinism` passed on each.
+- A frame of the master at the `final` tier took 63 seconds on a sandbox VM, so one frame fits well inside the 10 minute step and the samples of a frame never have to be split across steps.
+
+### The hosted build
+
+Measured 2026-11-24 22:19 to 22:32 UTC, step 18.
+
+- Published with `deploy_website` from `dist/` under the name `The Carcass`. The same call updates the same address. First publish: 12 files, 0.9 MB.
+- `npm run flows` replays the visitor's flows of `FLOWS.md` in a fresh browser against the hosted copy: 7 of 7 pass. The start page answers and shows the play control and the "Review page" link; the film plays on the click; the review page shows its pictures; its two play links lead to the film and to the card loop; the card loop renders; no console error and no failed request.
+- MEASURED there: a page `fetch()` of a JSON file and of a JPEG both answered 200 with their bytes. UNKNOWN: other binary kinds at the published address. The website guide of this workspace STATES that binary files may fail to load by `fetch()` on the hosting, so the engine loads pictures as images and data as text and nothing else.
+- MEASURED: on a VM the player draws a frame in about 3 seconds in software, so the ten second test shot plays as three or four frames there. It is a real-time player for a machine with a graphics card. Films are always made by `capture`.
+- The address is behind Brandon's sign-in and cannot be opened from a VM, so the flows run on the preview address the publish call returns for the same files.
+
 ### The terms that were read
 
 Read 2026-11-24 by lookup agents. Each line is marked STATED (read in the terms, quoted), MEASURED or UNKNOWN. The full record is in `ASSETS.md`. By addendum 001 this is a record and not a list of questions.
@@ -385,6 +404,16 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. Node here is v20.20.2 on every VM. One pinned package states Node 22.12 or later in its `engines` field and runs correctly on 20.20.2 in every command used. The default reporter of the test runner crashes on Node 20 when a test fails (`Map.groupBy is not a function`), so failures are read with `npx vitest run --reporter=json --outputFile=FILE`. Node is not upgraded, so that all VMs stay alike.
 - 2026-11-24. The player (`autopilot` and `loop`) renders at the `draft` tier, in `formats.hd` when the viewport's long edge is over 1400 device pixels and in `formats.preview` otherwise. It is for looking, never for recording.
 - 2026-11-24. Config validation reads the names and types of every key with a fixed name from `src/config.shape.json`, which `npm run shape` writes from `config/showcase.json` (195 keys). The open maps `settled`, `motion.byUnit`, `budget.phaseHours` and `budget.reserveHours` are checked by their own rules. Found by the tests an agent wrote: 72 nested keys could be deleted with no error before this.
+- 2026-11-24. The build is published with `deploy_website`, which gives one address behind Brandon's sign-in that every later publish updates. No permanent public address is made unless Brandon asks for one.
+- 2026-11-24. The start page carries one quiet "Review page" link under the play control, because the hosted address cannot be edited by hand to reach `review.html`. It is page furniture and never part of a frame.
+- 2026-11-24. Every asset a page loads is a picture or a text file (JSON), because the workspace's website guide states that other binary files may fail to load by `fetch()` on the hosting. Measured on the hosted copy: JSON and a JPEG both load.
+- 2026-11-24. Frames are byte for byte equal across the Builder's VM and the sandbox VMs, so shots are split across render agents freely and joined without a seam check beyond G10.
+- 2026-11-24. The Phase 1 tool builders were started at 22:22 UTC, while the last Phase 0 steps ran, to use the wait. They touch no Phase 0 file, and nothing of theirs is merged before the Phase 0 gate is closed.
+- 2026-11-24. Render cost. The test scene at the `final` tier does not fit the limits for the master (14.7 h against 8), the film in HD (4.4 h against 3) and the card loop (2.1 h against 1) on 16 agents. So each place is built to cost no more than the test scene, costs are measured again in Phase 2 on the blockout, and a long job runs at the highest tier that fits its limit, as `AGENTS.md` says. The picture comes first: where cost must fall, the samples of far and soft things fall before anything near the camera.
+- 2026-11-24. The mix is kept as `audio/mix/mix.flac`, 16 bit, 48 kHz, stereo, with seeded dither, and its report as `audio/mix/mix.json`. A 24 bit WAV of the whole film would be about 56 MB, over `repo.maxFileMb`. FLAC loses nothing.
+- 2026-11-24. Sound folders: `audio/kept/narration/<clip>.mp3` holds each whole clip as the review page plays it, `audio/kept/lines/<clip>-<line>.wav` the same take split into its lines for the cut, `audio/kept/sounds/<unit>/<id>.wav` the sounds, `audio/records/<id>.md` how each was made. The schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json` are fixed in `tools/README.md`.
+- 2026-11-24. `npm run audiomap` does its own analysis of the track, so the build does not depend on a skill being present. The audio map skill of this workspace, `user:beat-sync`, is run beside it as the cross-check, and its proposal is used for the one cut in the music.
+- 2026-11-24. `npm run flows` replays the visitor's flows of `FLOWS.md` against the hosted copy after every publish. It counts drawn frames inside the page, because a VM draws a frame in seconds and a screenshot can miss the picture.
 
 ## Notes from Brandon
 
@@ -427,7 +456,7 @@ none
 
 ## Running jobs
 
-- `npm run budget -- --runs 3` on the Builder's VM, started 22:02 UTC, detached, log `out/work/logs/budget.log`. Expected: 15 minutes. It is a kind of job the table does not list yet, so its limit is `budget.defaultJobMinutes`, stopped at twice that.
+none
 
 ## Running agents
 
@@ -435,10 +464,16 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `render_meter_01` | render, sandbox | Step 17 on its own VM at commit `59873c3`: `caps`, one still in `formats.hd` at the `review` tier, one in `formats.master` at the `final` tier, `budget -- --measure-only --runs 3`, `determinism`. Returns the two stills and the budget file as attachments | none | 22:00 UTC | 35 min |
-| `render_meter_02` | render, sandbox | The same on a second VM | none | 22:00 UTC | 35 min |
+| `audio_map_builder` | build, sandbox | `tools/audiomap.mjs` with its core and tests, and `cut/MAP.json` made from the real track with two pictures of the map | `agent/audio-map` | 22:22 UTC | 40 min |
+| `mix_builder` | build, sandbox | `tools/mix.mjs` with its core, the loudness measures and tests, and a trial mix | `agent/mix` | 22:22 UTC | 40 min |
+| `animatic_builder` | build, sandbox | `tools/animatic.mjs` with its core and tests, six stills and two short excerpts | `agent/animatic` | 22:22 UTC | 40 min |
+| `cut_sound_checks_builder` | build, sandbox | The checks G7, G11, G15 (first sentence), G16, D1 and A1 to A6 with tests | `agent/checks-cut-sound` | 22:22 UTC | 40 min |
+
+Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json`, which is copied into `tools/README.md`. Each reports with a `git bundle` attached.
 
 Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not logged into any GitHub hosts"), and a plain `git push` then works in most of them and fails in some. Every brief says: push, and if it fails attach a `git bundle` to the report. Both routes have been used and both work.
+
+Ended with a record: `render_meter_01` and `render_meter_02` (both answered by 22:15 UTC: every step ran, G3 passed on each VM, their stills and budget files are under "Frames across VMs" and "Render budget").
 
 Ended and merged into `main`: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC), `gate_budget_builder` (`840ca75`, from its commit `44afd3d`, answered 21:36 UTC), `core_tests_writer` (`d2f5ae2`, from its commit `ced3c52`, answered 21:43 UTC after 6 minutes: 118 tests for the config, the seeded random and the sampler, which found the faults in the config validation and the sampler that are now fixed). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
@@ -475,6 +510,7 @@ none
 - 2026-11-24 21:12 UTC `b1d2a4f` pushed. The checks, the picture tools and the review page merged
 - 2026-11-24 21:32 UTC `9053446` pushed. Status 4, the status tool, the engine scaffold
 - 2026-11-24 22:00 UTC `59873c3` pushed. Status 5, the spike scene, the renderer, `still`, `caps`, `determinism`, the gate and the budget tools, the core tests
+- 2026-11-24 22:22 UTC `746cd43` pushed. Status 6, the render budget on three VMs, the review link on the start page, the play links on the review page
 
 ## Session log
 
@@ -485,3 +521,4 @@ none
 - 2026-11-24 21:12 UTC. The three build agents finished inside 14 minutes. Their branches were merged, one from a bundle. A fault in the clock found by the new tests was fixed: continuation boxes are whole seconds and a repeated `--continue N` is ignored.
 - 2026-11-24 21:32 UTC. Status 4 posted at 21:30 UTC with the tools' own pictures, since no frame exists yet. The status command is merged and made this status. Step 8: three test files of 20, 100 and 400 MB were attached and all were accepted. Step 10 and step 11 are recorded. The sound test found the voice deep and male, and not yet grim or slow (about 188 words a minute on a neutral line with the stored settings): Phase 1 steers it with the delivery tags and measures the pace of every take. The engine scaffold and the spike scene are in work.
 - 2026-11-24 22:05 UTC. Status 5 posted at 21:57 UTC with the first computed frame. Steps 15 and 16: the engine scaffold renders the spike scene through `capture` mode, and `still`, `caps`, `determinism`, `gate`, `budget`, `crops`, `compare`, `sheet`, `keep`, `status` and `review` exist. G3 failed on its first run, the cause was found in the scene pass and fixed, and it passes (see the decisions). The core tests an agent wrote were merged and the six faults they showed were fixed: 332 tests pass. Pushed as `59873c3` at 22:00 UTC. Step 17 is running: the budget on this VM, and two sandbox agents that render the same stills and measure the budget on their own VMs.
+- 2026-11-24 22:35 UTC. Status 6 posted at 22:20 UTC with the test scene in 4K at the final tier and twelve frames in a row. Step 17: the budget was measured on the Builder's VM and on two sandbox VMs, and the same frame came out byte for byte equal on all of them. The master and the film in HD do not fit their limits at the `final` tier on the test scene, so the places must cost less than it or render at the highest tier that fits (see "Render budget" and the decisions). Step 18: the build is published with its review page, the hosting carried 497 MB in a test, and `npm run flows` passes 7 of 7 on the hosted copy. Four agents started at 22:22 UTC on the Phase 1 tools while the last Phase 0 checks ran.
