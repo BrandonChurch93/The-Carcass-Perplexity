@@ -83,12 +83,13 @@ none
 - Name from the kickoff prompt: none. The line arrived as the unfilled placeholder `<the name of the voice, exactly as it appears under My Voices in ElevenLabs>`
 - Voice used, and its id on the account: `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`, category generated (voice design), created 2026-11-23 20:35 UTC
 - Chosen by: the Builder, 2026-11-24. The account lists three voices that are not stock: `Worst-Job-Application-Ever` (2026-11-24 03:37 UTC, an Australian wildlife-documentary voice made for another project), `Carcass Narrator` (2026-11-23 20:35 UTC) and `Carcass Narrator v1` (2026-11-23 20:29 UTC, described as an old man). The rule in `kit/01-FILM.md` is the most recently created voice that is not stock. Read to the letter that is the other project's voice, so the rule was read as the most recently created voice made for this film. Its description matches the kit: he lived in this ruined world and warns you. Said in status 1
-- Speech model and settings: tested in Phase 0 with `eleven_v4`, stability 0.5, similarity 0.75, `mp3_44100_192`. The settings for the film are chosen in Phase 1
+- Speech model and settings: `eleven_v4`, stability 0.5, similarity 0.75, seed 20261124, `mp3_44100_192`, the delivery tag `[slowly, gravely]` before the passage, the four lines of a clip sent as four paragraphs in one request, through `/with-timestamps` so each line can be cut out by its character times. The model test across the speech models could not be run: the account ran out of characters (see "The account's characters" under "The sound tools"). `eleven_v4` is STATED as the model for narration and it measured well on the one take made
+- The target: the voice's own preview sample (the one the account plays under My Voices), 23.48 s, median pitch 92.5 Hz, 157 words a minute while speaking, 115 with its pauses. Saved as `out/work/voice/preview.mp3`
 - Clips kept: none
 
 ## Sound
 
-- The map: not made
+- The map: made from the audio by `npm run audiomap` on 2026-11-24 at 22:41 UTC, on try 2 of 3, and nothing in it was taken from the config. `cut/MAP.json`: 67.02 beats a minute, 4 beats to a bar, a bar of 3.5809 s, 65 bar lines, 261 beats, 85 hits, 13 sections. How it compares with `music.landmarks` (map, config): preludeEnd 16.3, 16.5; firstHit 17.368, 17.4; swellPeak 39, 40; bigPeak 64.2 to 68.2, 64 to 68.5; midHit 102.626, 102.55; quiet 153.3 to 163.7, 153 to 163.5; revealHit 167.12, 167; tailFadeStart 218.4, 218.5; finalHit 224.724, 224.65; end 233, 233.5. Every landmark is within 1 s of the config and the hits within 0.1 s. The tempo estimate has low confidence (0.25) and the grid between 14 and 57 s was moved by 72 to 136 ms to follow soft attacks, so the builder of the map is refining the steady grid against the sharp low hits (asked 22:44 UTC). The workspace's skill agrees on 67 beats a minute (66.999, 2.44 ms RMS on 22 kick hits)
 - The audio map skill: found on the first try in the skills list, `user:beat-sync`. Loaded in Phase 1
 - Music file: found. Attached to Brandon's second message at 20:34 UTC, saved as `audio/supplied/The-Carcass-Audio.mp3` (7,472,274 bytes, mp3, 44.1 kHz stereo, 233.51 s)
 - Music hash matches `music.sha256`: yes, `eefe8765…afc56b1f`
@@ -160,6 +161,22 @@ Recorded 2026-11-24 from the tool list of this workspace. STATED means read in t
 ### The sound tools
 
 Each fact is marked MEASURED (seen in this test), STATED (read in `audio/records/API-REFERENCE.md`) or UNKNOWN. All test files are in `out/work/soundtest/`.
+
+#### The account's characters
+
+- MEASURED 2026-11-24 22:39 UTC: `GET /v1/user/subscription` read 130,529 of 131,000 characters used. At 22:45 UTC it read 130,947. At 22:52 UTC, after this build's one speech call of 49, it read 130,996: 4 characters are left.
+- MEASURED: `can_extend_character_limit` is false and `max_character_limit_extension` is 0. The count resets on 2026-12-23 at 20:08 UTC.
+- MEASURED 22:46 UTC, `GET /v1/usage/character-stats` by product, from 18:00 UTC today: Music 54,973 (45,153 of it in the hour from 22:00), Music stems 8,666, Sound Effects 18,775 (12,581 in the hour from 22:00), TTS 33. By model: `music_v2_5` 54,973, `six_stems_v1` 8,666, `eleven_text_to_sound_v2` 10,511, `eleven_text_to_sound_v3` 8,264, `eleven_v4` 33.
+- MEASURED: this build has made three generation calls in all: the Phase 0 speech test (33), the Phase 0 sound effect test (66, on `eleven_text_to_sound_v3`) and one take of the Reveal's clip at 22:47 UTC (49). It has never called the music endpoint or `eleven_text_to_sound_v2`. So the music and nearly all of the sound effects were made by other work on the same account.
+- What the film needs, as an estimate: the whole script is 1,131 characters, about 500 a pass on `eleven_v4` at the measured 0.44 a character, so about 3,000 for six takes of every clip. The sound effects cost 66 for 6 s in the test, so 21 cues of 20 s at three takes would be about 14,000. Around 17,000 characters in all, and more if takes are repeated.
+- What follows: seven of the eight narration clips and every sound effect wait for characters on the account. Nothing else in the build waits for them.
+
+#### The listener cannot judge a voice
+
+- MEASURED 2026-11-24 22:50 to 22:52 UTC: four calls of `evaluate_audio` on the Reveal's take, with open questions. Three of the four answers say in their own words that they cannot hear the file and are working from a transcript ("Because I am a text-based AI, I cannot hear the actual audio file", "Based on the transcript you provided"). All four wrote the words down as "This was Neverland".
+- MEASURED 22:53 UTC, a test with a known answer: the same take raised by a factor of 1.9 and played 1.9 times as fast (median pitch 166 Hz, 20 words in 6.0 s) was described as "a very low pitch" and "a slow, deliberate pace". A plain 440 Hz tone was described correctly as a steady tone.
+- So the listener hears that there is a tone or a voice and writes the words down, but what it says about how a voice sounds follows the words, not the sound. Its Phase 0 description of the test line ("deep, rich") is not evidence either.
+- What follows: a voice take is judged by the transcriber and by measures (pitch, pace, pauses, loudness, peak, clipping, gaps inside words, noise between lines). The two listener calls are still made and saved for their transcript. Nothing that can hear has judged the voice: Brandon's ears on the review page are the first.
 
 #### When and where
 
@@ -414,6 +431,12 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. Sound folders: `audio/kept/narration/<clip>.mp3` holds each whole clip as the review page plays it, `audio/kept/lines/<clip>-<line>.wav` the same take split into its lines for the cut, `audio/kept/sounds/<unit>/<id>.wav` the sounds, `audio/records/<id>.md` how each was made. The schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json` are fixed in `tools/README.md`.
 - 2026-11-24. `npm run audiomap` does its own analysis of the track, so the build does not depend on a skill being present. The audio map skill of this workspace, `user:beat-sync`, is run beside it as the cross-check, and its proposal is used for the one cut in the music.
 - 2026-11-24. `npm run flows` replays the visitor's flows of `FLOWS.md` against the hosted copy after every publish. It counts drawn frames inside the page, because a VM draws a frame in seconds and a screenshot can miss the picture.
+- 2026-11-24. The voice and the account's characters. The ElevenLabs account has 4 of 131,000 characters left (measured 22:52 UTC) and cannot be extended through the API. Music and sound effects made by other work on the account used about 73,700 today. The build goes on: the Reveal's clip was made with the last characters, the other seven clips and every sound effect are open items, the cut gives each unmade line a length from the measured pace, and `npm run voice` makes the rest in one run once the account has characters. Said in status 8.
+- 2026-11-24. No stand-in voice. A voice from another tool is not put in the animatic or the film in place of the narrator. An unmade line is silent and the animatic shows its words on the picture, so the timing can still be read. A stand-in would be heard as the film's voice and judged as it.
+- 2026-11-24. The words of a take are checked by a transcriber that runs on the Builder's machine (`faster-whisper`, model `small.en`), because the price of the account's own transcriber is unknown and the account has no characters. Two sounds that are spelled two ways are not a wrong word: `never land` heard as `Neverland`, `gods` heard as `guards`. Such a pair is listed in the take's record and passes only when every other word matches and the pair sounds alike.
+- 2026-11-24. The listener's description of a voice is not used as evidence (see "The listener cannot judge a voice"). The faults step of the method is done with measures instead: clipping, the level between the lines, a gap inside a word, a line far longer or shorter than its characters allow, a word the transcriber is unsure of. The two listener calls are still made and their transcript is kept.
+- 2026-11-24. The delivery tag `[slowly, gravely]` goes before each clip on `eleven_v4`. Measured on the Reveal's clip: median pitch 87 Hz and 125 words a minute while speaking, against 104 Hz and 188 for the untagged Phase 0 line and 92.5 Hz and 157 for the voice's own preview sample. The model test across models could not be run for lack of characters.
+- 2026-11-24. The animatic's builder kept each plate of the pull back over the wider picture until the view has left it, instead of blending to the next picture before the view leaves it as its brief said. Accepted: the key frames of the first two reveal pictures are then drawn wholly from their own plates and nothing pops (largest change between neighbouring frames 14 percent, at the ease to a stop).
 
 ## Notes from Brandon
 
@@ -464,10 +487,7 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `audio_map_builder` | build, sandbox | `tools/audiomap.mjs` with its core and tests, and `cut/MAP.json` made from the real track with two pictures of the map | `agent/audio-map` | 22:22 UTC | 40 min |
-| `mix_builder` | build, sandbox | `tools/mix.mjs` with its core, the loudness measures and tests, and a trial mix | `agent/mix` | 22:22 UTC | 40 min |
-| `animatic_builder` | build, sandbox | `tools/animatic.mjs` with its core and tests, six stills and two short excerpts | `agent/animatic` | 22:22 UTC | 40 min |
-| `cut_sound_checks_builder` | build, sandbox | The checks G7, G11, G15 (first sentence), G16, D1 and A1 to A6 with tests | `agent/checks-cut-sound` | 22:22 UTC | 40 min |
+| `audio_map_builder` | build, sandbox | A follow-up on `cut/MAP.json`: refine the steady tempo against the sharp low hits, look again at the moved grid in the first minute, mark each hit sharp or soft | `agent/audio-map` | 22:44 UTC | 15 min |
 
 Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json`, which is copied into `tools/README.md`. Each reports with a `git bundle` attached.
 
@@ -475,7 +495,9 @@ Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not
 
 Ended with a record: `render_meter_01` and `render_meter_02` (both answered by 22:15 UTC: every step ran, G3 passed on each VM, their stills and budget files are under "Frames across VMs" and "Render budget").
 
-Ended and merged into `main`: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC), `gate_budget_builder` (`840ca75`, from its commit `44afd3d`, answered 21:36 UTC), `core_tests_writer` (`d2f5ae2`, from its commit `ced3c52`, answered 21:43 UTC after 6 minutes: 118 tests for the config, the seeded random and the sampler, which found the faults in the config validation and the sampler that are now fixed). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
+Ended and merged into `main` in Phase 1: `cut_sound_checks_builder` (answered 22:33 UTC, G7, G11, G15, G16, D1 and A1 to A6), `mix_builder` (22:34 UTC, `npm run mix` and the loudness measures), `audio_map_builder` (22:41 UTC, `npm run audiomap` and the map, merged as `76f358e`), `animatic_builder` (22:47 UTC after 24 minutes, `npm run animatic`, merged as `c157999`; 446 tests pass).
+
+Ended and merged into `main` in Phase 0: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC), `gate_budget_builder` (`840ca75`, from its commit `44afd3d`, answered 21:36 UTC), `core_tests_writer` (`d2f5ae2`, from its commit `ced3c52`, answered 21:43 UTC after 6 minutes: 118 tests for the config, the seeded random and the sampler, which found the faults in the config validation and the sampler that are now fixed). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
 ## Rounds
 
@@ -511,6 +533,8 @@ none
 - 2026-11-24 21:32 UTC `9053446` pushed. Status 4, the status tool, the engine scaffold
 - 2026-11-24 22:00 UTC `59873c3` pushed. Status 5, the spike scene, the renderer, `still`, `caps`, `determinism`, the gate and the budget tools, the core tests
 - 2026-11-24 22:22 UTC `746cd43` pushed. Status 6, the render budget on three VMs, the review link on the start page, the play links on the review page
+- 2026-11-24 22:36 UTC `1523c93` pushed. Phase 0 closed, status 7, the hosted build checked
+- 2026-11-24 22:43 UTC `76f358e` pushed. The cut and sound checks, the mix tool, the audio map tool and `cut/MAP.json`
 
 ## Session log
 
