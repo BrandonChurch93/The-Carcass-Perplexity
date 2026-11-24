@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The two largest animals standing in the river are no longer alike. One has its head down, drinking, and stands square to the viewer, seen from the front at three-quarters. The other, a third smaller, has its head up and turned away, and is walking out of the water onto the gravel, seen from behind. Water breaks white around their legs and their wet hides drip.
+2. The red-crowned trees are not alike either: one tall with a broad flat crown, one small and leaning, one dead and leafless with a broken top, their crowns ragged and uneven, partly hidden by the green trees in front of them.
+3. The waterfall falls behind the forest, not in front of it: tree crowns overlap its lower half, and its spray drifts between the trunks.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

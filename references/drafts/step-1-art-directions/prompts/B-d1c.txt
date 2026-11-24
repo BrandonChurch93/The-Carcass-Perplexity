@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. At the broken lip of the nearest large shaft, the one on the right in image 1, looking along the curve of the lip and down into the shaft. 35 mm lens, deep focus.
+
+IN FOCUS. The undercut lip of pale bone-rock, wet, honeycombed where it has broken. Just inside it, a ragged band of deep crimson feathery gill-plumes, pressed flat upward against the wall by the rush of air and shedding beads of water. Below them the ivory cartilage hoops of the shaft wall, each as thick as a house, stained, cracked and dripping, one below another, curving away around the shaft and dropping into darkness. Cold white vapour wells up past them out of the dark and pours over the lip. On a ledge of the first hoop lie the pale bones and one fresh body of the small white wading animals that came too close, half grown over by plumes.
+
+BACKGROUND, recognisable from image 1. The far lip of the shaft forty metres away, the flat wet shelf beyond it with other leaning vapour columns, and the low sun as a pale glow in the fog.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

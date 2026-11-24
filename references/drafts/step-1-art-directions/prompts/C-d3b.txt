@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Beside the black stream in image 1 at knee height, looking along the side of a bunch of sacs. 85 mm lens, shallow focus, available light only.
+
+IN FOCUS. A puckered pore in the skin of a sac at the moment it exhales: a jet of faintly luminous mist rolls out and sinks toward the wet rock. Six or seven pale moth-like animals spiral into the jet; two are already stuck to the wet lip of the pore, wings spread, and the skin is slowly folding over one of them.
+
+BACKGROUND, soft but recognisable from image 1. The valley receding as scattered bunches of dim lights in low mist, the stream mirroring them, the dark cliff with its cave mouths and the last band of dull afterglow.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

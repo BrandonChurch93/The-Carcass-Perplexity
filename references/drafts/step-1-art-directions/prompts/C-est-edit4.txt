@@ -1,0 +1,10 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The sacs differ greatly from one another: from the size of a fist to the size of a house. Most are dim or dark. A few are slack and collapsed, torn open and empty. Only four or five glow strongly. Their skins differ: some thick, leathery and opaque with light leaking only at the seams; some thin and clear.
+2. Each glowing sac lights what is around it: a pool of green-white light on the wet rock, on the mist and on the flank of the animal beside it, falling off quickly with distance.
+3. The ground is not one wet gloss. It is wet only along the stream. The slopes are dry, matte, dark grey ash and broken scree with pale patches of lichen crust. The foreground slope is matte, broken and plain.
+4. The largest cave in the cliff shows its inside: a faint glow deep within outlines a rock floor and hanging sheets of tissue, and a tongue of mist pours out of its mouth and down the slope.
+5. The animal near the light is clear and solid: a heavy, dark, eyeless, long-headed animal as tall as a horse, seen from three-quarters behind, its flank lit by the sac in front of it, a long soft shadow behind it. Two more of its kind are far down the valley, small, walking toward the distant lights.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

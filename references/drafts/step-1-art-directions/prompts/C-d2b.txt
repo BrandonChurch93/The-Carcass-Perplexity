@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. On the wet rock of the valley floor, thirty metres from the large six-legged animal that walks toward a lit bunch of sacs in image 1. 200 mm lens, shallow focus, available light only.
+
+IN FOCUS. The animal from image 1, seen from the side and behind and partly cut by the edge of the frame: shoulder-high to a horse, with wet dark hide, a low heavy head without eyes, steam leaving its mouth. It has stopped one metre from the nearest glowing sac with its head lifted toward the light, lit only by the cold blue-green glow, which rims its neck and shoulder and shines in the wet on its hide. Thin wet ropes of tissue from the bunch already lie looped around two of its legs. Pale moth-like animals turn in the light between it and the sac.
+
+BACKGROUND, soft but recognisable from image 1. The black stream mirroring the lights, more bunches of sacs dimmer and bluer down the valley, mist draining along the ground, and the dark cliff with its breathing cave mouths under the last dull afterglow.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

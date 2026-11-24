@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Standing at the edge of the first forest island in image 1, looking up along the shaft of sunlight toward the skylight. 135 mm lens.
+
+IN FOCUS. Seven or eight four-winged flyers, each the size of a heron, with thin translucent membrane wings lit from behind, circling upward inside the shaft at different heights and feeding on drifting golden dust. Behind them the thin waterfall falls from the ragged edge of the skylight and breaks into spray that hangs in the beam. Roots and ribbon vines hang from the rim.
+
+BACKGROUND AND EDGES, recognisable from image 1. One pale cartilage hoop of the tunnel roof curving past the skylight in deep shadow, the tongue of cloud sliding under the roof, and at the bottom of the frame the dark red and green crowns of the island's trees.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

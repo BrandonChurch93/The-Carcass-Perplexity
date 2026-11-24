@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The sacs do not share one skin. A few are thin and clear with a net of dark veins. Others are smooth and milky with no pattern at all, or ribbed lengthwise like a gourd, or thick, brown and leathery with light leaking only from a split. Their glow differs too: some cold green-white, one or two dim amber, most dark. No two neighbours are alike in size, skin or brightness.
+2. The cliff on the right is plain weathered rock: irregular broken ledges, cracks, streaks of pale mineral stain and loose scree at its foot. No repeating scale or tile pattern anywhere on it.
+3. The mist is uneven: it pours from the largest cave as one tongue, pools in the hollows along the stream, and is absent from the slopes; it is not in flat bands.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

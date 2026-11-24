@@ -1,0 +1,7 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The carcass with the pale bladders is no longer in the lower right corner. It lies farther off and smaller, down on the wet rocks at the river's edge about twenty-five metres ahead, half in shadow, no wider than a tenth of the frame; a thin drift of golden dust leaves one of its bladders and catches a stray beam. The lower right corner is now plain mossy rock and a few ferns in shadow.
+2. The herd at the river's edge below the forest: nine animals, scattered and facing different ways: some drinking, two lying on the gravel, one wading in the shallows; none of them in a line or in clean side view.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

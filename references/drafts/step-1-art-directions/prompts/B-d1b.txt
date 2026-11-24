@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Standing on the shelf six metres from the rim of the nearest large throat, the one on the right in image 1, at the height of the rim, looking along it. 85 mm lens, shallow focus.
+
+IN FOCUS. The wet rim of the throat: stacked ivory cartilage rings, stained, chipped and dripping. Dense cold white vapour pours up out of the dark hole behind the rim and rolls over it. Crimson feathery gill-plumes crowd the rim in a ragged band, bent flat outward by the rush of air, shedding beads of water from their tips. Two small dark flyers that crossed the breath lie dead and wet among the plumes, and the nearest plumes are slowly closing over one of them. A few pale barnacle-like cones of different sizes sit on the rings, some with their lids open.
+
+BACKGROUND, soft but recognisable from image 1. The pale teal tide channel, two of the long-legged striders small in the distance, other vapour columns leaning the same way, and the low sun as a pale disc in the fog.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

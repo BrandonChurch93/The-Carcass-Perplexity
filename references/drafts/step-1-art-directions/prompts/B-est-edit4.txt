@@ -1,0 +1,10 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The big shaft on the right is no longer a clean circle with even ledges. Its mouth is ragged and lopsided. On its near side a stretch of the lip has collapsed inward, and a few fallen slabs lie tilted on a ledge inside. The hoops on its inside wall are uneven in thickness and spacing, sagging, cracked and stained by drips; one is broken through, leaving a dark gap; after the third they are lost in darkness and vapour.
+2. The crimson growth no longer follows every edge. It is now in three places only: one dense patch inside the far lip of the big shaft where the vapour wets the wall; a thin broken scatter along the downwind bank of the channel in the middle distance; and one small patch at a distant shaft. Every other edge of the channel and of the rock is bare.
+3. The cave in the far cliff is not a neat arch. It is a huge ragged opening, wider than it is tall, lopsided, with a fan of fallen rock at its foot, and the fog pours out of it and down the slope.
+4. The vapour columns differ: one big column far off, a few thin wisps, and two shafts that breathe nothing at all. They are not evenly spaced.
+5. The flock: one loose group of seven of the white stilt-legged animals stands in the shallows much nearer, about a hundred and fifty metres away, small in the frame but clear, in different postures, each with its reflection. The rest stay far off in uneven clumps, a few of them in the air.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

@@ -1,0 +1,9 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The seven white animals in the shallows are no longer in a row and no longer alike. They are scattered at different distances from the viewer: two together close to the channel, one alone much nearer, three far back, one standing off to the left. They face different ways. One feeds with its head under the water, one walks, one stands with its head high, one lies folded on the wet rock, two are smaller juveniles. Each has four clearly separate thin legs and its own reflection.
+2. The hoops inside the big shaft are less even. They are not parallel: they sag and overlap, the second has slipped down at an angle against the third, a length of the first has fallen away leaving a ragged stump, and the rock between them is rough and broken. They are still plainly rounded organic hoops of ivory cartilage, drip-stained and cracked.
+3. The crimson band inside the lip is not a continuous strip. It is ragged, in three clumps of different sizes with bare wet rock between them, thickest where the vapour is thickest.
+4. A little more cold white vapour wells up out of the big shaft on its left side and leans away to the left across the rock, thin enough that the hoops still show.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

@@ -1,0 +1,10 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. One light source only. The bright opening and its beam low on the left wall are gone; that side of the cave is dark wet rock and hanging roots. All the light comes from the one great skylight above the forest.
+2. The light from the skylight is softer and less tidy: a broad uneven glow in drifting mist with two or three faint broken shafts, not a fan of sharp rays.
+3. The pale curved hoop on the left wall is no longer a clean free-standing arch. It is half buried: only stretches of it show through flowstone, moss and roots, and it carries on across the ceiling as a low broken ridge. The farther hoops are uneven: one slumped, one almost buried, at irregular spacing, so the cave never looks built.
+4. The waterfall is broader and heavier, breaks into drifting spray halfway down and lands in a cloud of mist behind the trees.
+5. The animals are a real herd, not a row: two adults close together drinking, a small juvenile behind them, one lying down, one standing belly-deep in the river, three more far along the bank half hidden by ferns. They differ in size. Each stands in wet gravel and casts a soft shadow away from the skylight. They are heavy, long-bodied, eyeless grazers with a thick neck, a broad blunt head and a long thick tail; not tapirs, boars or any earth animal.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

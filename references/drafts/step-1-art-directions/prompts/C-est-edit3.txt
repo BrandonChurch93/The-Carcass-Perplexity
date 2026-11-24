@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The bunch of sacs in the lower left corner is no longer there. It sits farther off and smaller, down the slope at the edge of the stream about thirty metres ahead, no wider than a seventh of the frame. The lower left corner is now plain wet black rock.
+2. The cave mouths in the cliff on the right: ragged and irregular, of different sizes and at different heights, one of them only a tall crack, so they never read as a row of arches.
+3. The animal walking toward the light is seen from behind at three-quarters as it walks away from the viewer, not in side view.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

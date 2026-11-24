@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Kneeling at the edge of the tide channel in image 1, looking down and across the water at a steep angle. 50 mm lens.
+
+IN FOCUS. A drowned throat: a ring of ivory cartilage one metre across lying under thirty centimetres of clear pale teal water, breathing out. Above it the water domes up and boils with big cold silver bubbles that burst into a low white vapour which slides away across the surface. A ragged ring of crimson gill-plumes around it leans outward, swaying with each pulse. A dozen small pale shrimp-like animals float belly-up in the slick of vapour downwind, and one, still alive, kicks slowly at the edge of it. The rock under the water is pale porous bone with black-green weed.
+
+BACKGROUND, soft but recognisable from image 1. The channel running on across the shelf in its S curve, a large ringed throat with its vapour column, the long-legged striders tiny in the distance, the low sun and its glitter on the water.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

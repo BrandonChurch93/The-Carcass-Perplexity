@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The inside of the big shaft shows what it is: the windpipe of a dead giant. Around its far inside wall, one below another, run four thick hoops of ivory cartilage, like the inside of a hose seen from above. They are plainly organic, not cut steps: rounded, sagging, uneven in thickness and spacing, cracked and drip-stained; one is broken through with a dark gap. The low sun lights the upper two; the lower ones sink into darkness and vapour. The ragged broken lip and the fallen slabs stay as they are.
+2. The seven animals standing in the shallows are not birds. Each stands on four thin stilt legs, with a small pale body, an arched neck and a head that ends in a tassel of pale tendrils hanging toward the water. They stay small in the frame, in different postures, each with its reflection.
+3. The crimson growth inside the far lip of the big shaft is a little larger and runs around a third of the inside of the lip, pressed flat by the rising air. The thin crimson scatter on the channel bank stays as it is. No crimson anywhere else.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

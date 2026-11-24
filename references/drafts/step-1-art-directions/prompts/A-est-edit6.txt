@@ -1,0 +1,10 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is a closer shot from the same film. Use it only to see what the animals of this herd really look like. Do not copy its framing, its background or anything else in it.
+
+CHANGES.
+1. The animals in Image 1 look too much like elephants. They are the animals of Image 2: heavy grazers with grey-brown wrinkled hide, a thick muscular neck about as long as their legs, and a blunt rounded head with no eyes, no ears, no trunk and no tusks, only a row of dark breathing slits along each side of the snout and a wide soft mouth. Each animal of Image 1 stays in its place, at its size, facing the way it faces now, but with this body. Not one of them has a trunk, tusks or ear flaps.
+2. They are not alike. The one standing in the river facing the viewer has its neck lowered and its mouth in the water. One on the gravel holds its neck high. The one lying down has its neck laid along the ground. The calf is half hidden behind an adult. The two at the left are walking away into the ferns, seen from behind.
+3. Where an animal stands in the river, the current breaks white around its legs and leaves a short wake downstream, its hide is dark and wet below the waterline, and it has a broken reflection.
+
+It must still read as real location photography of a place you could walk into, not artwork: irregular, weathered, unposed. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

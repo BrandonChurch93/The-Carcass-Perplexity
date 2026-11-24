@@ -1,0 +1,7 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The pale hoops of the tunnel must not read as the arches of a building. They are old cartilage: unevenly spaced, of different thickness, stained, cracked, sagging, partly buried under flowstone and hanging roots. The second hoop from the viewer has broken: its upper part is gone, and its fallen lower half lies in pieces in the river with the water breaking around it.
+2. The far skylights do not line up one behind another. The second is a low ragged breach in the left wall of the tunnel, with its shaft of light falling at a different angle onto the river; the third is hidden around the curve of the tunnel and shows only as a soft light on the haze.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

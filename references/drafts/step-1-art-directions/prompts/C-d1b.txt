@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Forty centimetres from the skin of the largest air sac in the nearest bunch, the one in the lower left of image 1. 100 mm macro lens, very shallow focus, available light only.
+
+IN FOCUS. The wet leathery membrane of the sac: branching dark veins, fine wrinkles, beads of condensation, each bead holding a point of the glow. Through the skin, against the cold blue-green light inside, hangs the dark shape of a caught animal the size of a hare, with six thin limbs and a long tail, half dissolved, one limb still pressed against the inside of the skin. A pale moth-like animal walks on the outside of the membrane, and the folded skin of a collapsed dead sac sags into the corner of the frame.
+
+BACKGROUND, soft but recognisable from image 1. Other bunches as dim discs of blue-green and amber light in the mist along the black stream, and the last band of dull afterglow above the dark cliff.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain, restrained natural colour. Nothing is posed or centred: the subject is caught mid-action, partly cut by the edge of the frame, and no two things in the frame are alike. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

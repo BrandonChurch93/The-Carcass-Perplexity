@@ -1,0 +1,10 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The sacs differ from each other far more. Bunches run from two sacs to thirty. Several bunches are entirely dark and dead, collapsed into wrinkled grey folds. One sac in the middle distance is the size of a house, half deflated and sagging, dimly lit. Most living sacs are dim; only a few are bright.
+2. Each lit bunch throws a clear soft pool of blue-green light onto the wet rock, the mist and the stream around it, fading with distance, and the rock between the bunches stays dark.
+3. The animal walking toward the light: a low heavy six-legged shape, still small in the frame, rim-lit by the glow it walks toward, with its long soft shadow thrown away from the light across the wet rock.
+4. The cliff on the right: sharp wet layers of rock and fallen blocks catching the last cold light of the sky; its cave mouths are deep and breathe thin mist.
+5. The mist is uneven: thick in the hollows and along the stream, absent on the bare ridges.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.
