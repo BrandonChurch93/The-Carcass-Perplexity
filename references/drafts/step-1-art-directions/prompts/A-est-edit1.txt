@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and 24 mm lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1.
+
+CHANGES.
+1. The pale bladders on the right: much smaller and far more numerous. Hundreds of them, from the size of a fist to the size of a pumpkin, none larger than the skull of the carcass, crowded like puffball fungi over the fallen hoop and over the carcass. They are soft, matte and leathery, slightly wrinkled, each with a small dark pore on top; they are not smooth, not shiny and not shaped like eggs. Three have split open and breathe out fine golden dust that drifts across the frame toward the shaft of sunlight.
+2. The trees on the forest islands: no palms. Pale smooth trunks carrying flat umbrella crowns of dark wine-red and deep green, with long ribbon leaves hanging from them, among tree ferns.
+3. The cartilage hoops of the tunnel: weathered and uneven, cracked, water-stained, a few broken, so no two hoops look alike.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

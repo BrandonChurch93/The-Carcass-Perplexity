@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and 24 mm lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1.
+
+CHANGES.
+1. The nearest heap of sacs on the left: moved back and left so it fills no more than a quarter of the frame, leaving more wet black rock path and stream in the foreground.
+2. The sacs vary more: some are swollen tight, some have collapsed into wrinkled folds like emptied skins, a few are dark and dead; no two have the same size, shape or brightness, and many are dim.
+3. The cave mouths in the far cliff breathe out slow mist that drains down into the valley.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

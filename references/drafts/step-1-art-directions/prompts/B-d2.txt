@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Very low, just above the water of the tide channel in image 1, looking along it. 300 mm telephoto lens, shallow focus.
+
+IN FOCUS. One of the striders from image 1, seen from the height of its knees: long thin jointed ivory legs planted in the shallow teal water, the small barrel-sized body above them lowering a cluster of thin feeding arms into a bed of crimson gill-plumes on the bank, which are pulling back into their tubes around the arms. Water streams from one lifted leg. Small bubbles rise through the water around its feet.
+
+BACKGROUND, soft but recognisable from image 1. A second strider farther off, vapour drifting across the channel from a ringed throat, and far away in the haze the broken ribbed windpipe lying on the hillside under the low sun.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

@@ -1,0 +1,9 @@
+Image 1 is the wide establishing frame of a location in a big-budget natural-history film about an alien world. Make another frame from the same film: the same location at the same moment, with the same light, weather, colours, materials and living things as image 1, and the same real location-photography look. This frame is a detail found inside image 1 after moving into the scene. Output a wide 16:9 landscape frame.
+
+VIEWPOINT. Crouched low on the wet moss, one metre from the rib cage of the dead six-legged animal that lies on the bank in image 1. 100 mm macro lens, shallow focus.
+
+IN FOCUS. Three of the carcass's ribs, draped in wet moss, with a crowd of pale leathery bladders growing out from between them, from the size of a fist to the size of a melon, matte and slightly wrinkled, each with a small dark pore. One bladder has just split: a slow roll of fine golden dust is leaving it and drifting to the left, lit from behind by sunlight so every grain shows. Small four-winged insects lie dead on the bladder skins. Water drops hang from the moss.
+
+BACKGROUND, soft but recognisable from image 1. The river, and beyond it the first forest island standing in its shaft of sun with the thin waterfall, under the dark ribbed wall of the tunnel.
+
+True lens perspective and focus fall-off, fine physical surface detail, natural light only, slight film grain. It must read as a photograph of a real thing in a real place, not artwork and not a studio subject: the surroundings continue past every edge of the frame. No people, no buildings, no cameras, drones or equipment, no text, no watermark, no border.

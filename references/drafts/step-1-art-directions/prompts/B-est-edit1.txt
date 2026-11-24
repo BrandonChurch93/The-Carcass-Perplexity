@@ -1,0 +1,8 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and 24 mm lens, the same light and weather, the same composition and colours, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in image 1.
+
+CHANGES.
+1. The striders: seven of them, no longer standing in a row. They are scattered at different distances across the channel and the shelf, each in a different pose: one mid-stride with two legs lifted, one standing still, one with its body lowered to feed among the red plumes on the left bank, one half hidden in vapour, two far away and tiny near the distant throats. No two alike.
+2. The vapour columns in the middle distance: irregular. A few are large, many are small, some throats are quiet with only a wisp, and the gaps between them are uneven, so they never form an evenly spaced row.
+3. The far broken windpipe on the hillside: its rings are eroded, sagging and partly collapsed, overgrown with the same crimson and orange life, so it reads as a dead organ and not as wreckage or a building.
+
+It must still read as real location photography of a place you could walk into, not artwork. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

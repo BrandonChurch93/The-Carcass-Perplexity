@@ -1,0 +1,1597 @@
+{
+ "start": "2026-11-23T23:31:57Z",
+ "calls": [
+  {
+   "t": "23:39",
+   "el": "0h07m",
+   "text": "Round 3 started 23:31:57 UTC on 2026-11-23. No time limit this round; a status goes into the thread at least every 30 minutes."
+  },
+  {
+   "t": "23:39",
+   "el": "0h07m",
+   "text": "Round 2 was moved whole to references/archive/round-2/ and pushed (e327a49) before anything else. Nothing from rounds 1 or 2 is reused: no image, take, prompt, layout study or real photograph. Workspace tooling for this round is written new."
+  },
+  {
+   "t": "23:46",
+   "el": "0h15m",
+   "text": "Hardest place chosen for Step 1: The Breath. It is the only one of the six that is an action rather than a shape, so it has to be invented, still read as part of a body, be walkable and be deadly. The Ribs, Spine and Eye already have a silhouette to start from."
+  },
+  {
+   "t": "23:46",
+   "el": "0h15m",
+   "text": "Three film-wide directions, each a rule that generates all six places. A Overgrowth: the titan lies under rainforest, anatomy survives as landform, warm wet daylight in shafts, the forest kills. B Titan-fall: the body is still being eaten, nothing is a plant, life is animal colonies and scavengers, cold sea light, the chemistry kills. C Corpse-light: permanent dusk, the land is dark, every light is alive and is bait."
+  },
+  {
+   "t": "23:46",
+   "el": "0h15m",
+   "text": "Batch 1 (15 takes, 3 models, eye-level and low-drone variants) was a probe of first designs: A as a forest of ringed airway trees, B as a tidal shelf of exhaling throats, C as a ribbed gorge with glow threads and floating bell animals."
+  },
+  {
+   "t": "23:46",
+   "el": "0h15m",
+   "text": "Lessons from batch 1: (1) never describe the camera as an object, two takes drew it; (2) A's ringed airway trees look like hoses, so A is redesigned as the inside of the windpipe: a tunnel cave with collapsed skylights and a forest island under each shaft of sun; (3) B is the closest to a real place but drifts toward the grey of round 1, so the shelf gets broad crimson colonies, a warmer low sun and a far goal (the broken main windpipe); (4) C's ribbed gorge clashes with The Ribs and its animals are Earth jellyfish, so C is redesigned as a valley of living air sacs glowing from inside at dusk."
+  },
+  {
+   "t": "23:52",
+   "el": "0h21m",
+   "text": "Critic calibration set 1: three blind critics from three model families (GPT-6.2 Sol, Gemini 4 Carbon, Claude Opus 5.5) each get eight stills in mixed order with no context: my three first candidates, three round 2 kept images (Breath take 1, Ribs take 4, Eye take 3) as negative controls, and two real photographs (Son Doong cave, Cape Bridgewater blowholes, both Wikimedia Commons CC BY-SA) as positive anchors. The rubric is only trusted if it puts round 2 at the bottom and the photographs at the top. Round 2 images go to critics only, never to a generator."
+  },
+  {
+   "t": "23:58",
+   "el": "0h26m",
+   "text": "Calibration result: the rubric is valid. All three blind critics ranked both photographs first, my three candidates in the middle, and all three round 2 images last, in the same order (Ribs, Breath, Eye). Mean place score: photographs 9.5, round 3 candidates 6.6, round 2 images 3.4. So the critics see the fault the user saw in round 2, and they also say round 3 is not yet at the level of a real place. Shared faults to remove: cloned repeats (vents, skylights, domes), animals posed in a row, flocks pasted on, one hero prop in the foreground, far landmarks that look built. I use this rubric from here on and always include a photograph and a round 2 image as controls."
+  },
+  {
+   "t": "00:07",
+   "el": "0h35m",
+   "text": "Decision after critic rounds 2 and 3: the route and the stations now work (all critics describe a path with three stops in every round 3 frame), but the frames are crowded and repeat one object many times, and the animals are too big, which destroys scale. Change of approach for the establishing views, not another re-shoot of the same frame: (1) land first, life small: animals become the scale cue, like the caver in the Son Doong photograph, and the richness moves into the detail views; (2) fewer motifs, wide plain areas of rock, water and fog; (3) life in zones (bands at the waterline, rings at the rims) instead of dressing every surface; (4) one light source, backlit, so vapour glows and near faces fall into shadow; (5) a slightly raised viewpoint so more ground plane and route are visible; (6) every repeated thing differs in size, state and angle."
+  }
+ ],
+ "status": [
+  {
+   "t": "23:49",
+   "el": "0h17m",
+   "text": "Status 1 (23:51): archive done; 30 establishing takes made across two design passes; first candidates shown inline for A (take 8), B (take 9), C (take 9). None kept yet."
+  },
+  {
+   "t": "00:05",
+   "el": "0h33m",
+   "text": "Status 2 shown inline: current establishing candidates A take 17, B take 17, C take 16 with first detail takes. Blind critic result reported: round 3 above round 2, below photographs; fault is cloned repeats and too many motifs; next pass strips the frames back."
+  }
+ ],
+ "takes": {
+  "A-est-t01": {
+   "id": "A-est-t01",
+   "model": "seedream_5",
+   "prompt": "A-est-eye",
+   "refs": [],
+   "secs": "115",
+   "path": "/home/user/workspace/r3/gen/A-est-t01.png",
+   "what": "establishing, eye level",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Darkest and most photographic of the five, but the airway trees read as giant ribbed hoses lying in a wood; the design is the problem, not the take.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t02": {
+   "id": "A-est-t02",
+   "model": "nano_banana_pro",
+   "prompt": "A-est-eye",
+   "refs": [],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/A-est-t02.png",
+   "what": "establishing, eye level",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "A cinema camera on a tripod stands in the frame (the model drew my viewpoint sentence literally). Orange glowing fruit, illustration look.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t03": {
+   "id": "A-est-t03",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-eye",
+   "refs": [],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/A-est-t03.png",
+   "what": "establishing, eye level",
+   "size": "1672x941",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Best surface texture of the set, but golden glowing sacs and soft god rays make it fantasy key art.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t04": {
+   "id": "A-est-t04",
+   "model": "seedream_5",
+   "prompt": "A-est-drone",
+   "refs": [],
+   "secs": "89",
+   "path": "/home/user/workspace/r3/gen/A-est-t04.png",
+   "what": "establishing, low drone",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Good restraint and depth, same hose problem.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t05": {
+   "id": "A-est-t05",
+   "model": "nano_banana_pro",
+   "prompt": "A-est-drone",
+   "refs": [],
+   "secs": "25",
+   "path": "/home/user/workspace/r3/gen/A-est-t05.png",
+   "what": "establishing, low drone",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Stylised CG illustration: outsized sacs, clean ribbed tubes.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t01": {
+   "id": "B-est-t01",
+   "model": "seedream_5",
+   "prompt": "B-est-eye",
+   "refs": [],
+   "secs": "99",
+   "path": "/home/user/workspace/r3/gen/B-est-t01.png",
+   "what": "establishing, eye level",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Reads as a real place: channel, receding vents, far arch. Palette close to grey; one hero throat in the foreground.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t02": {
+   "id": "B-est-t02",
+   "model": "nano_banana_pro",
+   "prompt": "B-est-eye",
+   "refs": [],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/B-est-t02.png",
+   "what": "establishing, eye level",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Bright CG look, feather-like plumes, walkers read as people and horses.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t03": {
+   "id": "B-est-t03",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-eye",
+   "refs": [],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/B-est-t03.png",
+   "what": "establishing, eye level",
+   "size": "1672x941",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Most photographic take of the batch: wet weed, lichen, real tidal light, walkers and flock at depth. Low resolution (1672x941) and the nearest throat still dominates as a hero object.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t04": {
+   "id": "B-est-t04",
+   "model": "seedream_5",
+   "prompt": "B-est-drone",
+   "refs": [],
+   "secs": "91",
+   "path": "/home/user/workspace/r3/gen/B-est-t04.png",
+   "what": "establishing, low drone",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Best layout of the batch (winding channel, vents at many distances) but nearly monochrome grey; tall stumps read as chimneys.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t05": {
+   "id": "B-est-t05",
+   "model": "nano_banana_pro",
+   "prompt": "B-est-drone",
+   "refs": [],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/B-est-t05.png",
+   "what": "establishing, low drone",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "CG render look; stumps read as smokestacks.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t01": {
+   "id": "C-est-t01",
+   "model": "seedream_5",
+   "prompt": "C-est-eye",
+   "refs": [],
+   "secs": "110",
+   "path": "/home/user/workspace/r3/gen/C-est-t01.png",
+   "what": "establishing, eye level",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Restrained and dark, but the walls are a rib cage (clashes with The Ribs) and the animal is an Earth jellyfish.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t02": {
+   "id": "C-est-t02",
+   "model": "nano_banana_pro",
+   "prompt": "C-est-eye",
+   "refs": [],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/C-est-t02.png",
+   "what": "establishing, eye level",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Fantasy illustration; Earth jellyfish.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t03": {
+   "id": "C-est-t03",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-eye",
+   "refs": [],
+   "secs": "32",
+   "path": "/home/user/workspace/r3/gen/C-est-t03.png",
+   "what": "establishing, eye level",
+   "size": "1672x941",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Best texture, still a fantasy poster: big jellyfish, glowing bead curtain filling the right side.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t04": {
+   "id": "C-est-t04",
+   "model": "seedream_5",
+   "prompt": "C-est-drone",
+   "refs": [],
+   "secs": "75",
+   "path": "/home/user/workspace/r3/gen/C-est-t04.png",
+   "what": "establishing, low drone",
+   "size": "2816x1584",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "Too dark to read; rib-cage walls.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t05": {
+   "id": "C-est-t05",
+   "model": "nano_banana_pro",
+   "prompt": "C-est-drone",
+   "refs": [],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/C-est-t05.png",
+   "what": "establishing, low drone",
+   "size": "2752x1536",
+   "t": "23:43",
+   "el": "0h11m",
+   "eye": [
+    {
+     "t": "23:46",
+     "text": "A drone is drawn in the frame; rib-cage walls.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t06": {
+   "id": "A-est-t06",
+   "model": "seedream_5",
+   "prompt": "A-est-v2",
+   "refs": [],
+   "secs": "59",
+   "path": "/home/user/workspace/r3/gen/A-est-t06.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "A-est-t07": {
+   "id": "A-est-t07",
+   "model": "seedream_5",
+   "prompt": "A-est-v2",
+   "refs": [],
+   "secs": "72",
+   "path": "/home/user/workspace/r3/gen/A-est-t07.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "A-est-t08": {
+   "id": "A-est-t08",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-v2",
+   "refs": [],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/A-est-t08.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 2 pick for A. Ribbed tunnel, skylight island, river: reads as a place. Faults: foreground bladders are giant white eggs and a hero prop; plants and flyers are Earth plants and birds; nothing shows how it kills.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t09": {
+   "id": "A-est-t09",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-v2",
+   "refs": [],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/A-est-t09.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "A-est-t10": {
+   "id": "A-est-t10",
+   "model": "nano_banana_pro",
+   "prompt": "A-est-v2",
+   "refs": [],
+   "secs": "25",
+   "path": "/home/user/workspace/r3/gen/A-est-t10.png",
+   "what": "establishing, second design",
+   "size": "2752x1536",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "B-est-t06": {
+   "id": "B-est-t06",
+   "model": "seedream_5",
+   "prompt": "B-est-v2",
+   "refs": [],
+   "secs": "76",
+   "path": "/home/user/workspace/r3/gen/B-est-t06.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "B-est-t07": {
+   "id": "B-est-t07",
+   "model": "seedream_5",
+   "prompt": "B-est-v2",
+   "refs": [],
+   "secs": "76",
+   "path": "/home/user/workspace/r3/gen/B-est-t07.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "B-est-t08": {
+   "id": "B-est-t08",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-v2",
+   "refs": [],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/B-est-t08.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "B-est-t09": {
+   "id": "B-est-t09",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-v2",
+   "refs": [],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/B-est-t09.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 2 pick for B. Crimson masses, channel, throats exhaling: closest to a real coast. Faults: walkers are flamingos; ringed throats less clear than batch 1 take 3; far windpipe reads as a ruined stadium.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t10": {
+   "id": "B-est-t10",
+   "model": "nano_banana_pro",
+   "prompt": "B-est-v2",
+   "refs": [],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/B-est-t10.png",
+   "what": "establishing, second design",
+   "size": "2752x1536",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "C-est-t06": {
+   "id": "C-est-t06",
+   "model": "seedream_5",
+   "prompt": "C-est-v2",
+   "refs": [],
+   "secs": "92",
+   "path": "/home/user/workspace/r3/gen/C-est-t06.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "C-est-t07": {
+   "id": "C-est-t07",
+   "model": "seedream_5",
+   "prompt": "C-est-v2",
+   "refs": [],
+   "secs": "90",
+   "path": "/home/user/workspace/r3/gen/C-est-t07.png",
+   "what": "establishing, second design",
+   "size": "2816x1584",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "C-est-t08": {
+   "id": "C-est-t08",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-v2",
+   "refs": [],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/C-est-t08.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "C-est-t09": {
+   "id": "C-est-t09",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-v2",
+   "refs": [],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/C-est-t09.png",
+   "what": "establishing, second design",
+   "size": "1672x941",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 2 pick for C. Sac field in dusk works. Faults: left sac is one hero object; trapped animal reads as a bat or dragon; domes look like geodesic greenhouses; far round opening looks man-made.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t10": {
+   "id": "C-est-t10",
+   "model": "nano_banana_pro",
+   "prompt": "C-est-v2",
+   "refs": [],
+   "secs": "24",
+   "path": "/home/user/workspace/r3/gen/C-est-t10.png",
+   "what": "establishing, second design",
+   "size": "2752x1536",
+   "t": "23:48",
+   "el": "0h16m",
+   "eye": [],
+   "crit": []
+  },
+  "cal1": {
+   "id": "cal1",
+   "eye": [],
+   "crit": [
+    {
+     "t": "23:53",
+     "critic": "GPT-6.2 Sol",
+     "text": "Blind, 8 stills. Rank: real coast, real cave, A take 8, B take 9, C take 9, round 2 Ribs, round 2 Breath, round 2 Eye. Scores: photos 10 and 10; A 8, B 8, C 7; round 2 Ribs 6, Breath 5, Eye 3. Called all three candidates FILM and round 2 PAINTING or AMATEUR. Faults: B waders are one profile scaled in a row, vents repeat; A arches and skylights modular, eggs massed in a corner; C same shell and glow repeated, mist hides ground contact."
+    },
+    {
+     "t": "23:53",
+     "critic": "Claude Opus 5.5",
+     "text": "Blind, 8 stills. Rank: real cave, real coast, A take 8, B take 9, C take 9, round 2 Ribs, round 2 Breath, round 2 Eye. Scores: photos 9 and 9; A 7, B 7, C 7; round 2 Ribs 5, Breath 4, Eye 2. Faults: B creatures are flamingo/heron stickers in one pose, vents cloned at even intervals, red carpet is uniform hair with no wind logic, sun disc and flock like stock overlay, far megastructure soft and painted with unclear scale; A ribs mechanically regular, eggs oversized and too clean, spore puff a hero effect, Earth palms and tree ferns; C domes instanced and lit identically, round portal a geometric stamp, left pod a framing device, sky a flat backdrop, far field mush."
+    },
+    {
+     "t": "23:58",
+     "critic": "Gemini 4 Carbon",
+     "text": "Blind, 8 stills. Rank: real cave, real coast, B take 9, A take 8, C take 9, round 2 Ribs, round 2 Breath, round 2 Eye. Scores: photos 10 and 9; B 6, A 5, C 4; round 2 Ribs 3, Breath 2, Eye 1. The harshest of the three: called all six generated images AMATEUR. Faults: B waders in a stiff size-graded line (one with three legs), bone, barnacles and red growth melt into one texture, vent rings and 45-degree plumes are clones, flock pasted on the smoke, far arch out of scale; A hall-of-mirrors tunnel with cloned skylights, waterfall strings and centred palms, floating gold stipple, waterfalls with no rock lip, flyers pasted inside the beam; C dragon cutout in the pod, copy-pasted domes, fog erasing ground contact, path turns to mush, tunnel mouth a flat black oval."
+    }
+   ]
+  },
+  "A-est-t11": {
+   "id": "A-est-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-v3",
+   "refs": [],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/A-est-t11.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t12": {
+   "id": "A-est-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-v3",
+   "refs": [],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/A-est-t12.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3. Best A so far: three skylights receding, river route, carcass with bladders growing from its ribs (death is visible), wine-red trees, flyers, waterfall, cloud tongue under the roof. Faults: bladders on the right still large and egg-like; some palms."
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t13": {
+   "id": "A-est-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-v3",
+   "refs": [],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/A-est-t13.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t14": {
+   "id": "A-est-t14",
+   "model": "seedream_5",
+   "prompt": "A-est-v3",
+   "refs": [],
+   "secs": "76",
+   "path": "/home/user/workspace/r3/gen/A-est-t14.png",
+   "what": "establishing, third pass",
+   "size": "2816x1584",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t15": {
+   "id": "A-est-t15",
+   "model": "gpt_image_2_6_flare",
+   "prompt": "A-est-v3",
+   "refs": [],
+   "secs": "8",
+   "path": "/home/user/workspace/r3/gen/A-est-t15.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, Flare. Four skylights, smaller bladders, good depth; palms are Earth palms. Alternate."
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t11": {
+   "id": "B-est-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-v3",
+   "refs": [],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/B-est-t11.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3. Throat is more porous and organic, clear water in the foreground; far windpipe reads as an arch or hangar; striders in a line. Alternate."
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t12": {
+   "id": "B-est-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-v3",
+   "refs": [],
+   "secs": "36",
+   "path": "/home/user/workspace/r3/gen/B-est-t12.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3. Best B so far: sea-spider striders at several distances, ringed throat collars with drips, honeycombed bone, crimson carpet, barnacle cones, flock, far broken windpipe lying in the hills. Faults: striders stand in a row in one pose; middle-distance vapour columns evenly spaced like clones."
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t13": {
+   "id": "B-est-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-v3",
+   "refs": [],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/B-est-t13.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t14": {
+   "id": "B-est-t14",
+   "model": "seedream_5",
+   "prompt": "B-est-v3",
+   "refs": [],
+   "secs": "80",
+   "path": "/home/user/workspace/r3/gen/B-est-t14.png",
+   "what": "establishing, third pass",
+   "size": "2816x1584",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t15": {
+   "id": "B-est-t15",
+   "model": "gpt_image_2_6_flare",
+   "prompt": "B-est-v3",
+   "refs": [],
+   "secs": "10",
+   "path": "/home/user/workspace/r3/gen/B-est-t15.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t11": {
+   "id": "C-est-t11",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-v3",
+   "refs": [],
+   "secs": "32",
+   "path": "/home/user/workspace/r3/gen/C-est-t11.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t12": {
+   "id": "C-est-t12",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-v3",
+   "refs": [],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/C-est-t12.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3. Similar to take 13 with a wider wet rock path; sacs larger and more hero. Alternate."
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t13": {
+   "id": "C-est-t13",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-v3",
+   "refs": [],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/C-est-t13.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3. Best C so far: heaps of sagging sacs, mist jet from a pore, moths, thin-limbed shapes inside, path and stream, cliff with cave mouths, dusk band. Faults: near heap fills a third of the frame; still reads closer to fantasy art than the other two."
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t14": {
+   "id": "C-est-t14",
+   "model": "seedream_5",
+   "prompt": "C-est-v3",
+   "refs": [],
+   "secs": "67",
+   "path": "/home/user/workspace/r3/gen/C-est-t14.png",
+   "what": "establishing, third pass",
+   "size": "2816x1584",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t15": {
+   "id": "C-est-t15",
+   "model": "gpt_image_2_6_flare",
+   "prompt": "C-est-v3",
+   "refs": [],
+   "secs": "8",
+   "path": "/home/user/workspace/r3/gen/C-est-t15.png",
+   "what": "establishing, third pass",
+   "size": "1672x941",
+   "t": "23:54",
+   "el": "0h22m",
+   "eye": [
+    {
+     "t": "23:56",
+     "text": "Batch 3, weaker than the pick for this direction (see sheets/b3).",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t16": {
+   "id": "A-est-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t12.png"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/A-est-t16.png",
+   "what": "establishing, re-shoot of A-est-t12 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 12. Same gains as take 17 with more gold dust haze and larger bladders on the right. Alternate."
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t17": {
+   "id": "A-est-t17",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t12.png"
+   ],
+   "secs": "38",
+   "path": "/home/user/workspace/r3/gen/A-est-t17.png",
+   "what": "establishing, re-shoot of A-est-t12 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 12. Hundreds of small puffball bladders now cover the fallen hoop and the carcass, umbrella trees with wine-red crowns replace the palms, hoops are cracked and one is broken. Current A establishing pick."
+    }
+   ],
+   "crit": []
+  },
+  "A-est-t18": {
+   "id": "A-est-t18",
+   "model": "nano_banana_pro",
+   "prompt": "A-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t12.png"
+   ],
+   "secs": "25",
+   "path": "/home/user/workspace/r3/gen/A-est-t18.png",
+   "what": "establishing, re-shoot of A-est-t12 with listed changes",
+   "size": "2752x1536",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Nano Banana Pro re-shoot of take 12. Mushroom-like trees, bladders unchanged in size.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t16": {
+   "id": "B-est-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t12.png"
+   ],
+   "secs": "41",
+   "path": "/home/user/workspace/r3/gen/B-est-t16.png",
+   "what": "establishing, re-shoot of B-est-t12 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 12. Similar gains; mid strider pose is odd; far windpipe has dissolved into ribbed red hills. Alternate."
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t17": {
+   "id": "B-est-t17",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t12.png"
+   ],
+   "secs": "39",
+   "path": "/home/user/workspace/r3/gen/B-est-t17.png",
+   "what": "establishing, re-shoot of B-est-t12 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 12. Striders now at four distances in different poses (feeding on the left bank, mid-stride in the channel, on a throat, far off), vapour columns irregular, far windpipe is an overgrown hill with a broken ribbed arch. Current B establishing pick."
+    }
+   ],
+   "crit": []
+  },
+  "B-est-t18": {
+   "id": "B-est-t18",
+   "model": "nano_banana_pro",
+   "prompt": "B-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t12.png"
+   ],
+   "secs": "24",
+   "path": "/home/user/workspace/r3/gen/B-est-t18.png",
+   "what": "establishing, re-shoot of B-est-t12 with listed changes",
+   "size": "2752x1536",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Nano Banana Pro re-shoot of take 12. Best far windpipe (clearly a broken organic ribbed tube with red growth) but the added striders look pasted and the cloned mid-distance plumes remain.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t16": {
+   "id": "C-est-t16",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t13.png"
+   ],
+   "secs": "37",
+   "path": "/home/user/workspace/r3/gen/C-est-t16.png",
+   "what": "establishing, re-shoot of C-est-t13 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 13. Near heap pushed back to a fifth of the frame, most sacs dim, some collapsed, mist draining from the cave mouths, more wet rock and stream: reads as a night photograph of a place. Less striking than take 13. Current C establishing pick."
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t17": {
+   "id": "C-est-t17",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t13.png"
+   ],
+   "secs": "42",
+   "path": "/home/user/workspace/r3/gen/C-est-t17.png",
+   "what": "establishing, re-shoot of C-est-t13 with listed changes",
+   "size": "1672x941",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Re-shoot of take 13. Too dim and grey; the lights nearly gone.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "C-est-t18": {
+   "id": "C-est-t18",
+   "model": "nano_banana_pro",
+   "prompt": "C-est-edit1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t13.png"
+   ],
+   "secs": "27",
+   "path": "/home/user/workspace/r3/gen/C-est-t18.png",
+   "what": "establishing, re-shoot of C-est-t13 with listed changes",
+   "size": "2752x1536",
+   "t": "23:58",
+   "el": "0h26m",
+   "eye": [
+    {
+     "t": "23:59",
+     "text": "Nano Banana Pro re-shoot of take 13. Adds deflated skins in front; otherwise the source frame.",
+     "v": "drop"
+    }
+   ],
+   "crit": []
+  },
+  "cal2": {
+   "id": "cal2",
+   "eye": [],
+   "crit": [
+    {
+     "t": "00:03",
+     "critic": "Claude Opus 5.5",
+     "text": "Blind, 8 stills (A take 17, B take 17, C take 16, three photographs, round 2 Ribs and Heart). Rank: cave photo, Dallol photo, Waiotapu photo, A, C, B, round 2 Ribs, round 2 Heart. Scores: photos 9, 8, 7; A 5, C 5, B 5; round 2 4 and 3. Every generated image called AMATEUR. Faults: cloning everywhere (pods, umbrella trees, arches, striders, ringed collars, plumes, barnacle cones, red weed as one repeated texture), striders leave no wakes or shadows matching the backlit sun, 'fantasy overload kills plausibility', 'over-crowded with generic detail'; C: fog in flat bands, three light sources inconsistent, cliff a backdrop."
+    },
+    {
+     "t": "00:03",
+     "critic": "GPT-6.2 Sol",
+     "text": "Blind, same 8. Rank: cave photo, Dallol photo, A, B, Waiotapu photo, C, round 2 Ribs, round 2 Heart. Place scores: A 8, B 8, C 7 against photos 10, 9, 7 and round 2 6 and 6, but A and B labelled AMATEUR by source. Faults: same pods blanket the bank, umbrella crowns and arches repeat, gold puffs identical; vent rims stamped out, strider joints and feet do not resolve, the same red tufts dress every surface; C pods and moths repeat, fog in bands, cave mouths are cutouts."
+    },
+    {
+     "t": "00:09",
+     "critic": "Gemini 4 Carbon",
+     "text": "Blind, same 8. Rank: cave photo, Dallol photo, Waiotapu photo, B, A, C, round 2 Ribs, round 2 Heart. Scores: photos 9, 8, 6; B 5, A 4, C 3; round 2 2 and 1. All generated images AMATEUR. Faults: A cloned pods merged with a mangled skeleton, four identical dust puffs, cloned flat-topped trees, far arches repeating one skylight-and-waterfall cutout; B broken strider anatomy (a dangling unconnected leg, one fused to a rim), flock pasted in steam, cloned barnacles and vents, red texture out of scale on the far hill; C cloned domes turning to dots, moth stickers at random scales, cliff a flat card, stars through haze."
+    }
+   ]
+  },
+  "cal3": {
+   "id": "cal3",
+   "eye": [],
+   "crit": [
+    {
+     "t": "00:03",
+     "critic": "Claude Opus 5.5",
+     "text": "Blind, 8 stills (alternates: A take 16, B take 16, C take 13, three photographs, round 2 Spine and Blood Marsh). Rank: cave photo, coast photo, Dallol photo, C, B, A, round 2 Marsh, round 2 Spine. Scores: photos 9, 8, 8; C 6, B 6, A 5; round 2 4 and 3. Faults again cloning and overload: 'a crowded checklist of motifs'; B front light from the right fights the sun on the left; C glow lights nothing around it, moths one size at every depth."
+    }
+   ]
+  },
+  "A-d1-t01": {
+   "id": "A-d1-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/A-d1-t01.png",
+   "what": "detail d1, from A-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d1-t02": {
+   "id": "A-d1-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/A-d1-t02.png",
+   "what": "detail d1, from A-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d1-t03": {
+   "id": "A-d1-t03",
+   "model": "nano_banana_pro",
+   "prompt": "A-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "28",
+   "path": "/home/user/workspace/r3/gen/A-d1-t03.png",
+   "what": "detail d1, from A-est-t17",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d1-t04": {
+   "id": "A-d1-t04",
+   "model": "seedream_5",
+   "prompt": "A-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "144",
+   "path": "/home/user/workspace/r3/gen/A-d1-t04.png",
+   "what": "detail d1, from A-est-t17",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d2-t01": {
+   "id": "A-d2-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "35",
+   "path": "/home/user/workspace/r3/gen/A-d2-t01.png",
+   "what": "detail d2, from A-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d2-t02": {
+   "id": "A-d2-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "A-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/A-d2-t02.png",
+   "what": "detail d2, from A-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d2-t03": {
+   "id": "A-d2-t03",
+   "model": "nano_banana_pro",
+   "prompt": "A-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/A-d2-t03.png",
+   "what": "detail d2, from A-est-t17",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "A-d2-t04": {
+   "id": "A-d2-t04",
+   "model": "seedream_5",
+   "prompt": "A-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/A-est-t17.png"
+   ],
+   "secs": "140",
+   "path": "/home/user/workspace/r3/gen/A-d2-t04.png",
+   "what": "detail d2, from A-est-t17",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h31m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d1-t01": {
+   "id": "B-d1-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "30",
+   "path": "/home/user/workspace/r3/gen/B-d1-t01.png",
+   "what": "detail d1, from B-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d1-t02": {
+   "id": "B-d1-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/B-d1-t02.png",
+   "what": "detail d1, from B-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d1-t03": {
+   "id": "B-d1-t03",
+   "model": "nano_banana_pro",
+   "prompt": "B-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/B-d1-t03.png",
+   "what": "detail d1, from B-est-t17",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d1-t04": {
+   "id": "B-d1-t04",
+   "model": "seedream_5",
+   "prompt": "B-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "138",
+   "path": "/home/user/workspace/r3/gen/B-d1-t04.png",
+   "what": "detail d1, from B-est-t17",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d2-t01": {
+   "id": "B-d2-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/B-d2-t01.png",
+   "what": "detail d2, from B-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d2-t02": {
+   "id": "B-d2-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "B-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/B-d2-t02.png",
+   "what": "detail d2, from B-est-t17",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d2-t03": {
+   "id": "B-d2-t03",
+   "model": "nano_banana_pro",
+   "prompt": "B-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/B-d2-t03.png",
+   "what": "detail d2, from B-est-t17",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "B-d2-t04": {
+   "id": "B-d2-t04",
+   "model": "seedream_5",
+   "prompt": "B-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/B-est-t17.png"
+   ],
+   "secs": "138",
+   "path": "/home/user/workspace/r3/gen/B-d2-t04.png",
+   "what": "detail d2, from B-est-t17",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d1-t01": {
+   "id": "C-d1-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/C-d1-t01.png",
+   "what": "detail d1, from C-est-t16",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d1-t02": {
+   "id": "C-d1-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "33",
+   "path": "/home/user/workspace/r3/gen/C-d1-t02.png",
+   "what": "detail d1, from C-est-t16",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d1-t03": {
+   "id": "C-d1-t03",
+   "model": "nano_banana_pro",
+   "prompt": "C-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/C-d1-t03.png",
+   "what": "detail d1, from C-est-t16",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d1-t04": {
+   "id": "C-d1-t04",
+   "model": "seedream_5",
+   "prompt": "C-d1",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "126",
+   "path": "/home/user/workspace/r3/gen/C-d1-t04.png",
+   "what": "detail d1, from C-est-t16",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d2-t01": {
+   "id": "C-d2-t01",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "31",
+   "path": "/home/user/workspace/r3/gen/C-d2-t01.png",
+   "what": "detail d2, from C-est-t16",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d2-t02": {
+   "id": "C-d2-t02",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "C-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "34",
+   "path": "/home/user/workspace/r3/gen/C-d2-t02.png",
+   "what": "detail d2, from C-est-t16",
+   "size": "1672x941",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d2-t03": {
+   "id": "C-d2-t03",
+   "model": "nano_banana_pro",
+   "prompt": "C-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "27",
+   "path": "/home/user/workspace/r3/gen/C-d2-t03.png",
+   "what": "detail d2, from C-est-t16",
+   "size": "2752x1536",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  },
+  "C-d2-t04": {
+   "id": "C-d2-t04",
+   "model": "seedream_5",
+   "prompt": "C-d2",
+   "refs": [
+    "/home/user/workspace/r3/gen/C-est-t16.png"
+   ],
+   "secs": "110",
+   "path": "/home/user/workspace/r3/gen/C-d2-t04.png",
+   "what": "detail d2, from C-est-t16",
+   "size": "2816x1584",
+   "t": "00:03",
+   "el": "0h32m",
+   "eye": [],
+   "crit": []
+  }
+ },
+ "kept": {},
+ "order": [
+  "A-est-t01",
+  "A-est-t02",
+  "A-est-t03",
+  "A-est-t04",
+  "A-est-t05",
+  "B-est-t01",
+  "B-est-t02",
+  "B-est-t03",
+  "B-est-t04",
+  "B-est-t05",
+  "C-est-t01",
+  "C-est-t02",
+  "C-est-t03",
+  "C-est-t04",
+  "C-est-t05",
+  "A-est-t06",
+  "A-est-t07",
+  "A-est-t08",
+  "A-est-t09",
+  "A-est-t10",
+  "B-est-t06",
+  "B-est-t07",
+  "B-est-t08",
+  "B-est-t09",
+  "B-est-t10",
+  "C-est-t06",
+  "C-est-t07",
+  "C-est-t08",
+  "C-est-t09",
+  "C-est-t10",
+  "A-est-t11",
+  "A-est-t12",
+  "A-est-t13",
+  "A-est-t14",
+  "A-est-t15",
+  "B-est-t11",
+  "B-est-t12",
+  "B-est-t13",
+  "B-est-t14",
+  "B-est-t15",
+  "C-est-t11",
+  "C-est-t12",
+  "C-est-t13",
+  "C-est-t14",
+  "C-est-t15",
+  "A-est-t16",
+  "A-est-t17",
+  "A-est-t18",
+  "B-est-t16",
+  "B-est-t17",
+  "B-est-t18",
+  "C-est-t16",
+  "C-est-t17",
+  "C-est-t18",
+  "A-d1-t01",
+  "A-d1-t02",
+  "A-d1-t03",
+  "A-d1-t04",
+  "A-d2-t01",
+  "A-d2-t02",
+  "A-d2-t03",
+  "A-d2-t04",
+  "B-d1-t01",
+  "B-d1-t02",
+  "B-d1-t03",
+  "B-d1-t04",
+  "B-d2-t01",
+  "B-d2-t02",
+  "B-d2-t03",
+  "B-d2-t04",
+  "C-d1-t01",
+  "C-d1-t02",
+  "C-d1-t03",
+  "C-d1-t04",
+  "C-d2-t01",
+  "C-d2-t02",
+  "C-d2-t03",
+  "C-d2-t04"
+ ]
+}
