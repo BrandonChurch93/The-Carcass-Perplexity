@@ -15,8 +15,13 @@ const order: string[] = Object.keys(budget.phaseHours).sort((a, b) => Number(a) 
 const boxOf = (k: string) => budget.phaseHours[k] * H;
 const upTo = (k: string) => order.filter((p) => Number(p) <= Number(k)).reduce((a, p) => a + boxOf(p), 0);
 const allowed = budget.runHours * H;
-const first = order[0];
-const last = order[order.length - 1];
+const pick = (list: string[], i: number): string => {
+  const v = list.at(i);
+  if (v === undefined) throw new Error('the budget has too few phases for this test');
+  return v;
+};
+const first = pick(order, 0);
+const last = pick(order, -1);
 const reserved = Object.keys(budget.reserveHours ?? {});
 const plain = order.filter((k) => !reserved.includes(k));
 
@@ -66,7 +71,7 @@ describe('what a tick adds', () => {
     const want: Record<string, number> = {};
     gaps.forEach((g, i) => {
       t += g;
-      const k = order[i % order.length];
+      const k = pick(order, i % order.length);
       const r = core.tickPhase(s, at(t), BOOT, k, budget);
       expect(r.added).toBe(g);
       want[k] = (want[k] ?? 0) + g;
@@ -120,7 +125,7 @@ describe('review rounds and extensions', () => {
       const far = tick(started(), at(box + 2 * allowed), BOOT, 3, budget);
       const lines: string[] = core.linesSide(far.report);
       expect(lines).toContain('extra rounds: no');
-      expect(lines[0].startsWith(`${label} 3: `)).toBe(true);
+      expect(lines[0]?.startsWith(`${label} 3: `)).toBe(true);
       expect(lines.some((l) => l.includes('budget report'))).toBe(false);
     });
   }
@@ -143,7 +148,8 @@ describe('the lines of a phase tick', () => {
   }
 
   it('measures extra rounds on the time of the whole build, not of the phase', () => {
-    const [a, b] = plain;
+    const a = pick(plain, 0);
+    const b = pick(plain, 1);
     const edge = upTo(b);
     const s = core.tickPhase(started(), at(edge - 1), BOOT, a, budget).state;
     expect(core.reportPhase(s, at(edge - 1), b, budget).extraRounds).toBe(true);
@@ -193,7 +199,8 @@ describe('the lines of a phase tick', () => {
   }
 
   it('reads half point and box end from the phase itself, not from the build', () => {
-    const [a, b] = order;
+    const a = pick(order, 0);
+    const b = pick(order, 1);
     const s = core.tickPhase(started(), at(boxOf(a) + boxOf(b)), BOOT, a, budget).state;
     const r = core.reportPhase(s, at(boxOf(a) + boxOf(b)), b, budget);
     expect(r.phaseUsed).toBe(0);
@@ -244,17 +251,19 @@ describe('the lines of a phase tick', () => {
 describe('--continue', () => {
   const done = order.slice(0, 3);
   const open = order.slice(3);
+  const open0 = pick(open, 0);
+  const open1 = pick(open, 1);
   const openHours = open.reduce((a, k) => a + budget.phaseHours[k], 0);
   const factor = budget.continueHours / openHours;
   const spent = allowed + 500;
-  const before = () => core.tickPhase(started(), at(spent), BOOT, open[0], budget).state;
+  const before = () => core.tickPhase(started(), at(spent), BOOT, open0, budget).state;
   const gapToContinue = 5 * H;
   const continued = () => core.continueBuild(before(), at(spent + gapToContinue), BOOT, 1, budget, done);
 
   it('adds no time and counts nothing between the last tick and the continuation', () => {
     const s = continued();
     expect(s.phases).toEqual(before().phases);
-    const r = core.tickPhase(s, at(spent + gapToContinue + 30), BOOT, open[0], budget);
+    const r = core.tickPhase(s, at(spent + gapToContinue + 30), BOOT, open0, budget);
     expect(r.added).toBe(30);
   });
 
@@ -264,7 +273,7 @@ describe('--continue', () => {
     expect(c.allowed).toBe(budget.continueHours * H);
     for (const k of done) expect(c.box[k]).toBe(0);
     for (const k of open) expect(c.box[k]).toBeCloseTo(budget.phaseHours[k] * factor * H, 6);
-    for (const k of open) expect(c.box[k] / c.box[open[0]]).toBeCloseTo(budget.phaseHours[k] / budget.phaseHours[open[0]], 9);
+    for (const k of open) expect(c.box[k] / c.box[open0]).toBeCloseTo(budget.phaseHours[k] / budget.phaseHours[open0], 9);
     expect(total(c.box)).toBeCloseTo(budget.continueHours * H, 6);
   });
 
@@ -282,7 +291,7 @@ describe('--continue', () => {
   it('measures every line from the start of the continuation against the new boxes', () => {
     const s = continued();
     const t = spent + gapToContinue;
-    const zero = core.reportPhase(s, at(t), open[0], budget);
+    const zero = core.reportPhase(s, at(t), open0, budget);
     expect(zero.buildUsed).toBe(0);
     expect(zero.phaseUsed).toBe(0);
     expect(zero.buildUsedAll).toBe(spent);
@@ -292,7 +301,7 @@ describe('--continue', () => {
     expect(zero.boxEnd).toBe(false);
     expect(zero.budgetReportDue).toBe(false);
 
-    const k = open[0];
+    const k = open0;
     const box = budget.phaseHours[k] * factor * H;
     const tick = (seconds: number) => core.linesPhase(core.tickPhase(s, at(t + seconds), BOOT, k, budget).report) as string[];
     expect(tick(Math.floor(box / 2) - 1)).not.toContain('half point: reached');
@@ -318,11 +327,11 @@ describe('--continue', () => {
 
   it('starts a second continuation from the time used at that moment', () => {
     const t = spent + gapToContinue;
-    let s = core.tickPhase(continued(), at(t + 4000), BOOT, open[1], budget).state;
-    s = core.continueBuild(s, at(t + 9000), BOOT, 2, budget, [...done, open[0]]);
+    let s = core.tickPhase(continued(), at(t + 4000), BOOT, open1, budget).state;
+    s = core.continueBuild(s, at(t + 9000), BOOT, 2, budget, [...done, open0]);
     expect(s.continuations).toHaveLength(2);
-    expect(s.continuations[1].box[open[0]]).toBe(0);
-    const r = core.tickPhase(s, at(t + 9100), BOOT, open[1], budget).report;
+    expect(s.continuations[1].box[open0]).toBe(0);
+    const r = core.tickPhase(s, at(t + 9100), BOOT, open1, budget).report;
     expect(r.buildUsed).toBe(100);
     expect(r.phaseUsed).toBe(100);
     expect(r.buildUsedAll).toBe(spent + 4100);

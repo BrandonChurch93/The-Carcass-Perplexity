@@ -329,6 +329,40 @@ describe('G9 on a made-up tree', () => {
     expect(text).toContain('out/clips/broken.mp4 could not be read by ffprobe');
   });
 
+  it('reads every branch of the remote by name while the repo is public', async () => {
+    const origin = base('no');
+    const commit = (m: string) => git(origin, '-c', 'user.name=Test', '-c', 'user.email=test@example.org', 'commit', '-q', '-m', m);
+    git(origin, 'add', '-A');
+    commit('one');
+    git(origin, 'branch', '-M', 'main');
+    git(origin, 'checkout', '-q', '-b', 'agent/sounds');
+    put(origin, 'audio/kept/n1.wav');
+    put(origin, 'out/clips/silent.mp4');
+    git(origin, 'add', '-A');
+    commit('two');
+    git(origin, 'checkout', '-q', 'main');
+
+    const full = path.join(tempDir(), 'full');
+    git(origin, 'clone', '-q', `file://${origin}`, full);
+    const a = await repo.checkG9({ root: full });
+    const textA: string = a.lines.join('\n');
+    expect(a.pass).toBe(false);
+    expect(textA).toContain('audio/kept/n1.wav is a sound file and is tracked on origin/agent/sounds.');
+    expect(textA).not.toContain('silent.mp4');
+    expect(textA).not.toContain('tracked on the current branch');
+    expect(textA).toContain('2 remote branches read by name, 1 sound file.');
+
+    const single = path.join(tempDir(), 'single');
+    git(origin, 'clone', '-q', '--single-branch', '--branch', 'main', `file://${origin}`, single);
+    const b = await repo.checkG9({ root: single });
+    expect(b.pass).toBe(false);
+    expect(b.lines.join('\n')).toContain('origin/agent/sounds is not fetched here, so it was not read.');
+
+    git(origin, 'branch', '-q', '-D', 'agent/sounds');
+    const c = await repo.checkG9({ root: single });
+    expect(c.pass, c.lines.join('\n')).toBe(true);
+  }, 60000);
+
   it('passes a public tree that holds no sound', async () => {
     const root = base('no');
     git(root, 'add', '-A');
