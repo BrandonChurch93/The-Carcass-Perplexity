@@ -29,7 +29,8 @@
     "shape": "node tools/shape.mjs",
     "flows": "node tools/flows.mjs",
     "audiomap": "node tools/audiomap.mjs",
-    "mix": "node tools/mix.mjs"
+    "mix": "node tools/mix.mjs",
+    "animatic": "node tools/animatic.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",
