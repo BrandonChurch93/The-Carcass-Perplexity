@@ -108,14 +108,15 @@ export const tickExtension = (state, now, bootId, n, budget) =>
 
 export function continueBuild(state, now, bootId, n, budget, donePhases) {
   const s = structuredClone(state);
+  if (s.continuations.some((c) => c.n === Number(n))) return s;
   const done = new Set(donePhases.map(String));
   const open = Object.keys(budget.phaseHours).filter((k) => !done.has(k));
   const openSum = open.reduce((a, k) => a + budget.phaseHours[k], 0);
   const factor = openSum > 0 ? budget.continueHours / openSum : 0;
   const box = {};
   const reserve = {};
-  for (const k of Object.keys(budget.phaseHours)) box[k] = done.has(k) ? 0 : budget.phaseHours[k] * factor * H;
-  for (const [k, v] of Object.entries(budget.reserveHours ?? {})) if (!done.has(k)) reserve[k] = v * factor * H;
+  for (const k of Object.keys(budget.phaseHours)) box[k] = done.has(k) ? 0 : Math.round(budget.phaseHours[k] * factor * H);
+  for (const [k, v] of Object.entries(budget.reserveHours ?? {})) if (!done.has(k)) reserve[k] = Math.round(v * factor * H);
   const base = {};
   for (const k of Object.keys(budget.phaseHours)) base[k] = s.phases[k] ?? 0;
   s.continuations.push({ n: Number(n), at: now, box, reserve, allowed: budget.continueHours * H, base, baseTotal: sum(s.phases) });

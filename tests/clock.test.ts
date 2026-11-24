@@ -337,7 +337,7 @@ describe('--continue', () => {
     expect(r.buildUsedAll).toBe(spent + 4100);
   });
 
-  it.fails('switches box end on the exact second of a new box (fault: continueBuild keeps float error in its boxes)', () => {
+  it('switches box end on the exact second of a new box (fault: continueBuild keeps float error in its boxes)', () => {
     for (let n = 0; n < order.length; n++) {
       const finished = order.slice(0, n);
       const rest = order.slice(n);
