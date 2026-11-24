@@ -1,6 +1,5 @@
-# Status 8
+# Status 9
 
-2026-11-24 22:53 UTC. Phase 1, the voice, the map and the animatic.
+2026-11-24 23:22 UTC. Phase 1, the voice, the map and the animatic.
 
-- `01-map.jpg`: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks
-- `02-still-5-reveal-3-key-frame.jpg`: The animatic tool at work: one frame of the pull back, drawn from the approved pictures. Trial timing, not yet the cut
+- `01-sheet.jpg`: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet

@@ -24,25 +24,24 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 8, 2026-11-24 22:53 UTC:
+Status 9, 2026-11-24 23:22 UTC:
 
-- `01-map.jpg`: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks
-- `02-still-5-reveal-3-key-frame.jpg`: The animatic tool at work: one frame of the pull back, drawn from the approved pictures. Trial timing, not yet the cut
+- `01-sheet.jpg`: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet
 
+Status 8, 2026-11-24 22:53 UTC, showed: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks; The animatic tool at work: one frame...
 Status 7, 2026-11-24 22:35 UTC, showed: The test scene running live in the published build, through the card loop link on the review page.
 Status 6, 2026-11-24 22:20 UTC, showed: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds.
-Status 5, 2026-11-24 21:57 UTC, showed: The first computed frame.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T22:53:13Z
-phase 1: 0.29 h used of 3.00 h
-build: 2.39 h used of 72.00 h
+2026-11-24T23:22:28Z
+phase 1: 0.78 h used of 3.00 h
+build: 2.87 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 17
+minutes since the last status: 29
 ```
 
 ## Phases
@@ -85,7 +84,7 @@ none
 - Chosen by: the Builder, 2026-11-24. The account lists three voices that are not stock: `Worst-Job-Application-Ever` (2026-11-24 03:37 UTC, an Australian wildlife-documentary voice made for another project), `Carcass Narrator` (2026-11-23 20:35 UTC) and `Carcass Narrator v1` (2026-11-23 20:29 UTC, described as an old man). The rule in `kit/01-FILM.md` is the most recently created voice that is not stock. Read to the letter that is the other project's voice, so the rule was read as the most recently created voice made for this film. Its description matches the kit: he lived in this ruined world and warns you. Said in status 1
 - Speech model and settings: `eleven_v4`, stability 0.5, similarity 0.75, seed 20261124, `mp3_44100_192`, the delivery tag `[slowly, gravely]` before the passage, the four lines of a clip sent as four paragraphs in one request, through `/with-timestamps` so each line can be cut out by its character times. The model test across the speech models could not be run: the account ran out of characters (see "The account's characters" under "The sound tools"). `eleven_v4` is STATED as the model for narration and it measured well on the one take made
 - The target: the voice's own preview sample (the one the account plays under My Voices), 23.48 s, median pitch 92.5 Hz, 157 words a minute while speaking, 115 with its pauses. Saved as `out/work/voice/preview.mp3`
-- Clips kept: none
+- Clips kept: `n8` (the Reveal), take 1 of 1, kept at 23:20 UTC by `npm run voice`. 11.36 s, median pitch 87.1 Hz, 125 words a minute while speaking, -19.3 LUFS as made. Words: `sound-alike` on the two listed pairs, no fault. Its four lines are `audio/kept/lines/n8-1.wav` to `n8-4.wav` (2.01, 1.85, 1.24 and 4.50 s, 48 kHz mono, brought to -16 LUFS together), the whole clip is `audio/kept/narration/n8.mp3`, and the records are `audio/records/n8.md` and `n8-1.md` to `n8-4.md`. Clips `n1` to `n7`: not made, see "Open items"
 
 ## Sound
 
@@ -463,7 +462,10 @@ none
 
 Each with its unit, its frame, the critic's words, what was tried and what to try next.
 
-none
+- `film` · narration clips `n1` to `n7` are not made. The ElevenLabs account had 4 characters left of 131,000 at 22:52 UTC and resets on 2026-12-23 at 20:08 UTC. Tried: reading the account for a way to extend it (`can_extend_character_limit` is false). Until they exist the cut list gives each of their lines a length worked out from the pace of `n8` (see "Decisions made by the Builder"), the mix leaves them silent and the animatic prints their words. Next: when the account has characters, `npm run voice -- n1 n2 n3 n4 n5 n6 n7`, then `npm run cut`, `npm run mix` and the animatic again. If Brandon records the voice himself, the same lines go under `audio/kept/lines/`.
+- `reveal` · clip `n8` is kept from its only take. The method asks for a test line on each speech model and allows six takes a clip. Neither could be paid for. Next: with characters, the model test and the other takes, and keep the best by the method's order.
+- `film` · no sound effect is made. Sound effects are paid from the same characters. Next: with characters, the beds and spot sounds of each place inside `audio.maxTakesPerCue` and `audio.maxCuesPerPlace`. Until then the mix is music and voice.
+- `film` · nothing that can hear has judged the voice or the mix. The listener tool described a tone correctly and a voice wrongly (see "The listener cannot judge a voice"). The words are checked by a transcriber and the rest by measures. Brandon is the first to hear it, on the review page.
 
 ## Parts finished with a fallback
 
@@ -487,8 +489,7 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `cut_compiler_builder` | build, sandbox | `tools/cut.mjs` with its core and tests: compiles the hand-written `cut/PLAN.json` against the map and the kept lines into `cut/CUTLIST.json` and `cut/CUES.md`, and checks the rules | `agent/cut` | 23:01 UTC | 35 min |
-| `voice_tool_builder` | build, sandbox | `tools/voice.mjs` with its core, the calls, the transcriber and tests, built against the one saved take of n8: make, check, keep, split into lines, records, the waveform sheet | `agent/voice` | 23:01 UTC | 40 min |
+| none | | | | | |
 
 Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json`, which is copied into `tools/README.md`. Each reports with a `git bundle` attached.
 
@@ -496,7 +497,7 @@ Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not
 
 Ended with a record: `render_meter_01` and `render_meter_02` (both answered by 22:15 UTC: every step ran, G3 passed on each VM, their stills and budget files are under "Frames across VMs" and "Render budget").
 
-Ended and merged into `main` in Phase 1: `cut_sound_checks_builder` (answered 22:33 UTC, G7, G11, G15, G16, D1 and A1 to A6), `mix_builder` (22:34 UTC, `npm run mix` and the loudness measures), `audio_map_builder` (22:41 UTC, `npm run audiomap` and the map, merged as `76f358e`), `animatic_builder` (22:47 UTC after 24 minutes, `npm run animatic`, merged as `c157999`; 446 tests pass); the follow-up of `audio_map_builder` (22:53 UTC after 8 minutes, merged as `d35f84a`; 450 tests pass).
+Ended and merged into `main` in Phase 1: `cut_compiler_builder` (answered 23:11 UTC after 10 minutes, `npm run cut`, 37 tests) and `voice_tool_builder` (answered 23:13 UTC after 12 minutes, `npm run voice`, 29 tests; its calls to the account were tested against a stand-in only, its check, keep and sheet steps ran for real on the saved take), both from bundles, merged at 23:20 UTC with 516 tests passing; `cut_sound_checks_builder` (answered 22:33 UTC, G7, G11, G15, G16, D1 and A1 to A6), `mix_builder` (22:34 UTC, `npm run mix` and the loudness measures), `audio_map_builder` (22:41 UTC, `npm run audiomap` and the map, merged as `76f358e`), `animatic_builder` (22:47 UTC after 24 minutes, `npm run animatic`, merged as `c157999`; 446 tests pass); the follow-up of `audio_map_builder` (22:53 UTC after 8 minutes, merged as `d35f84a`; 450 tests pass).
 
 Ended and merged into `main` in Phase 0: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC), `gate_budget_builder` (`840ca75`, from its commit `44afd3d`, answered 21:36 UTC), `core_tests_writer` (`d2f5ae2`, from its commit `ced3c52`, answered 21:43 UTC after 6 minutes: 118 tests for the config, the seeded random and the sampler, which found the faults in the config validation and the sampler that are now fixed). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
@@ -536,6 +537,8 @@ none
 - 2026-11-24 22:22 UTC `746cd43` pushed. Status 6, the render budget on three VMs, the review link on the start page, the play links on the review page
 - 2026-11-24 22:36 UTC `1523c93` pushed. Phase 0 closed, status 7, the hosted build checked
 - 2026-11-24 22:43 UTC `76f358e` pushed. The cut and sound checks, the mix tool, the audio map tool and `cut/MAP.json`
+2026-11-24 22:54 UTC `f5b52e5` pushed. Status 8, the map and the state of the voice
+2026-11-24 22:56 UTC `d35f84a` pushed. The refined map: tempo from the clicks, sharp hits marked
 
 ## Session log
 
@@ -548,3 +551,4 @@ none
 - 2026-11-24 22:05 UTC. Status 5 posted at 21:57 UTC with the first computed frame. Steps 15 and 16: the engine scaffold renders the spike scene through `capture` mode, and `still`, `caps`, `determinism`, `gate`, `budget`, `crops`, `compare`, `sheet`, `keep`, `status` and `review` exist. G3 failed on its first run, the cause was found in the scene pass and fixed, and it passes (see the decisions). The core tests an agent wrote were merged and the six faults they showed were fixed: 332 tests pass. Pushed as `59873c3` at 22:00 UTC. Step 17 is running: the budget on this VM, and two sandbox agents that render the same stills and measure the budget on their own VMs.
 - 2026-11-24 22:35 UTC. Status 6 posted at 22:20 UTC with the test scene in 4K at the final tier and twelve frames in a row. Step 17: the budget was measured on the Builder's VM and on two sandbox VMs, and the same frame came out byte for byte equal on all of them. The master and the film in HD do not fit their limits at the `final` tier on the test scene, so the places must cost less than it or render at the highest tier that fits (see "Render budget" and the decisions). Step 18: the build is published with its review page, the hosting carried 497 MB in a test, and `npm run flows` passes 7 of 7 on the hosted copy. Four agents started at 22:22 UTC on the Phase 1 tools while the last Phase 0 checks ran.
 - 2026-11-24 22:53 UTC. Status 8 posted at 22:54 UTC with the map of the music and a frame from the animatic tool. Phase 1: the map is made from the audio and agrees with the kit's landmarks; the checks, the mix, the audio map and the animatic tools are merged and 446 tests pass. The ElevenLabs account has 4 characters left, used up by music and sound effects from other work on the account; one take of the Reveal's clip was made with the last of them; the other seven clips and the sound effects are open items and the build goes on. The listener was found unable to judge a voice.
+- 2026-11-24 23:23 UTC. Status 9 posted at 23:24 UTC with the waveform sheet of clip n8. The cut compiler and the voice tool came back in 10 and 12 minutes, were merged from bundles (516 tests pass) and are npm run cut and npm run voice. Clip n8 was checked, kept and split into its four lines by the voice tool, committed, and plays on the review page (published 23:23 UTC). Four open items written: clips n1 to n7, the single take of n8, the sound effects, and that nothing that can hear has judged the voice.
