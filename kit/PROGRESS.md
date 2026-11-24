@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 7, 2026-11-24 22:35 UTC:
+Status 8, 2026-11-24 22:53 UTC:
 
-- `01-loop-hosted.jpg`: The test scene running live in the published build, through the card loop link on the review page. It is still the cost test and not a place of the film.
-- `02-review-top.jpg`: The review page as published. The newest pictures sit at the top. Films, narration, sounds and the card fill in from Phase 1 on.
+- `01-map.jpg`: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks
+- `02-still-5-reveal-3-key-frame.jpg`: The animatic tool at work: one frame of the pull back, drawn from the approved pictures. Trial timing, not yet the cut
 
+Status 7, 2026-11-24 22:35 UTC, showed: The test scene running live in the published build, through the card loop link on the review page.
 Status 6, 2026-11-24 22:20 UTC, showed: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds.
 Status 5, 2026-11-24 21:57 UTC, showed: The first computed frame.
-Status 4, 2026-11-24 21:30 UTC, showed: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T22:35:52Z
-phase 1: 0.00 h used of 3.00 h
-build: 2.10 h used of 72.00 h
+2026-11-24T22:53:13Z
+phase 1: 0.29 h used of 3.00 h
+build: 2.39 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 17
 ```
 
 ## Phases
@@ -173,8 +173,8 @@ Each fact is marked MEASURED (seen in this test), STATED (read in `audio/records
 
 #### The listener cannot judge a voice
 
-- MEASURED 2026-11-24 22:50 to 22:52 UTC: four calls of `evaluate_audio` on the Reveal's take, with open questions. Three of the four answers say in their own words that they cannot hear the file and are working from a transcript ("Because I am a text-based AI, I cannot hear the actual audio file", "Based on the transcript you provided"). All four wrote the words down as "This was Neverland".
-- MEASURED 22:53 UTC, a test with a known answer: the same take raised by a factor of 1.9 and played 1.9 times as fast (median pitch 166 Hz, 20 words in 6.0 s) was described as "a very low pitch" and "a slow, deliberate pace". A plain 440 Hz tone was described correctly as a steady tone.
+- MEASURED 2026-11-24 22:50 to 22:51 UTC: four calls of `evaluate_audio` on the Reveal's take, with open questions. Three of the four answers say in their own words that they cannot hear the file and are working from a transcript ("Because I am a text-based AI, I cannot hear the actual audio file", "Based on the transcript you provided"). All four wrote the words down as "This was Neverland".
+- MEASURED 22:51 UTC, a test with a known answer: the same take raised by a factor of 1.9 and played 1.9 times as fast (median pitch 166 Hz, 20 words in 6.0 s) was described as "a very low pitch" and "a slow, deliberate pace". A plain 440 Hz tone was described correctly as a steady tone.
 - So the listener hears that there is a tone or a voice and writes the words down, but what it says about how a voice sounds follows the words, not the sound. Its Phase 0 description of the test line ("deep, rich") is not evidence either.
 - What follows: a voice take is judged by the transcriber and by measures (pitch, pace, pauses, loudness, peak, clipping, gaps inside words, noise between lines). The two listener calls are still made and saved for their transcript. Nothing that can hear has judged the voice: Brandon's ears on the review page are the first.
 
@@ -546,3 +546,4 @@ none
 - 2026-11-24 21:32 UTC. Status 4 posted at 21:30 UTC with the tools' own pictures, since no frame exists yet. The status command is merged and made this status. Step 8: three test files of 20, 100 and 400 MB were attached and all were accepted. Step 10 and step 11 are recorded. The sound test found the voice deep and male, and not yet grim or slow (about 188 words a minute on a neutral line with the stored settings): Phase 1 steers it with the delivery tags and measures the pace of every take. The engine scaffold and the spike scene are in work.
 - 2026-11-24 22:05 UTC. Status 5 posted at 21:57 UTC with the first computed frame. Steps 15 and 16: the engine scaffold renders the spike scene through `capture` mode, and `still`, `caps`, `determinism`, `gate`, `budget`, `crops`, `compare`, `sheet`, `keep`, `status` and `review` exist. G3 failed on its first run, the cause was found in the scene pass and fixed, and it passes (see the decisions). The core tests an agent wrote were merged and the six faults they showed were fixed: 332 tests pass. Pushed as `59873c3` at 22:00 UTC. Step 17 is running: the budget on this VM, and two sandbox agents that render the same stills and measure the budget on their own VMs.
 - 2026-11-24 22:35 UTC. Status 6 posted at 22:20 UTC with the test scene in 4K at the final tier and twelve frames in a row. Step 17: the budget was measured on the Builder's VM and on two sandbox VMs, and the same frame came out byte for byte equal on all of them. The master and the film in HD do not fit their limits at the `final` tier on the test scene, so the places must cost less than it or render at the highest tier that fits (see "Render budget" and the decisions). Step 18: the build is published with its review page, the hosting carried 497 MB in a test, and `npm run flows` passes 7 of 7 on the hosted copy. Four agents started at 22:22 UTC on the Phase 1 tools while the last Phase 0 checks ran.
+- 2026-11-24 22:53 UTC. Status 8 posted at 22:54 UTC with the map of the music and a frame from the animatic tool. Phase 1: the map is made from the audio and agrees with the kit's landmarks; the checks, the mix, the audio map and the animatic tools are merged and 446 tests pass. The ElevenLabs account has 4 characters left, used up by music and sound effects from other work on the account; one take of the Reveal's clip was made with the last of them; the other seven clips and the sound effects are open items and the build goes on. The listener was found unable to judge a voice.

@@ -1,6 +1,6 @@
-# Status 7
+# Status 8
 
-2026-11-24 22:35 UTC. Phase 1, the voice, the map and the animatic.
+2026-11-24 22:53 UTC. Phase 1, the voice, the map and the animatic.
 
-- `01-loop-hosted.jpg`: The test scene running live in the published build, through the card loop link on the review page. It is still the cost test and not a place of the film.
-- `02-review-top.jpg`: The review page as published. The newest pictures sit at the top. Films, narration, sounds and the card fill in from Phase 1 on.
+- `01-map.jpg`: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks
+- `02-still-5-reveal-3-key-frame.jpg`: The animatic tool at work: one frame of the pull back, drawn from the approved pictures. Trial timing, not yet the cut
