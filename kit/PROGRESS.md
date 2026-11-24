@@ -16,15 +16,17 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Extension step: none
 - Published address: none
 - Review page: none
-- Repo is private: not measured
-- Sound files: not decided. Phase 0 writes here where they live, as "Sound" in `AGENTS.md` says
+- Repo is private: no. Measured 2026-11-24 20:34 UTC with `gh repo view`: visibility PUBLIC
+- Sound files: the repo is public, so no sound file is committed on any branch. They live in the workspace under `audio/supplied/`, `audio/kept/` and `audio/mix/` (all git-ignored) and on the review page. Their records are committed under `audio/records/`. One archive of every kept file and the newest mix is attached to the thread with each status that follows new sounds and with the `REVIEW` block
 - Large files reach Brandon by: not measured
 
 ## Latest pictures
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-none
+Status 1, 2026-11-24 20:36 UTC:
+
+- `01-approved-contact-sheet.jpg`: the approved pictures, the six establishing views and the titan from orbit
 
 ## Clock
 
@@ -67,9 +69,9 @@ none
 
 ## Voice
 
-- Name from the kickoff prompt: none
-- Voice used, and its id on the account: none
-- Chosen by: none
+- Name from the kickoff prompt: none. The line arrived as the unfilled placeholder `<the name of the voice, exactly as it appears under My Voices in ElevenLabs>`
+- Voice used, and its id on the account: `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`, category generated (voice design), created 2026-11-23 20:35 UTC
+- Chosen by: the Builder, 2026-11-24. The account lists three voices that are not stock: `Worst-Job-Application-Ever` (2026-11-24 03:37 UTC, an Australian wildlife-documentary voice made for another project), `Carcass Narrator` (2026-11-23 20:35 UTC) and `Carcass Narrator v1` (2026-11-23 20:29 UTC, described as an old man). The rule in `kit/01-FILM.md` is the most recently created voice that is not stock. Read to the letter that is the other project's voice, so the rule was read as the most recently created voice made for this film. Its description matches the kit: he lived in this ruined world and warns you. Said in status 1
 - Speech model and settings: none
 - Clips kept: none
 
@@ -77,8 +79,8 @@ none
 
 - The map: not made
 - The audio map skill: not looked for
-- Music file: not found yet
-- Music hash matches `music.sha256`: not checked
+- Music file: found. Attached to Brandon's second message at 20:34 UTC, saved as `audio/supplied/The-Carcass-Audio.mp3` (7,472,274 bytes, mp3, 44.1 kHz stereo, 233.51 s)
+- Music hash matches `music.sha256`: yes, `eefe8765…afc56b1f`
 - Sounds kept, by place: none
 - The newest archive handed to Brandon: none
 
@@ -90,7 +92,8 @@ none
 
 ### Inline display
 
-none
+- Method, proven 2026-11-24 20:36 UTC with `references/approved/contact-sheet.jpg`: the pictures are written into one JSON file as JPEG data URLs with captions (`out/work/status/status.json`, long edge at most `status.pictureLongEdgePx`), and shown with the inline visualization tool through `tools/status/widget.html`, which makes one image for each entry and prints the status lines above them. The JSON goes in as a `sources` file, the lines as `data.note`.
+- Text written between tool calls may not reach Brandon, so the lines of every status are inside the widget, and links are written as plain text there.
 
 ### Polling, detached processes, sandbox agents
 
@@ -152,13 +155,15 @@ none
 
 One line each: the date, the decision and the reason.
 
-none
+- 2026-11-24. The start of the clock was set to 20:30 UTC, the minute the task began, with `--start --at`, so the reading done before the clock existed is counted.
+- 2026-11-24. Voice: `Carcass Narrator` chosen by the Builder because the kickoff line was a placeholder. See "Voice".
+- 2026-11-24. Harness scripts are plain Node ES modules under `tools/` and the film's code is TypeScript under `src/`. A small command, `npm run progress`, edits sections of this file so that logging is cheap.
 
 ## Notes from Brandon
 
 His words, numbered, with the date and how each was applied.
 
-none
+1. 2026-11-24 20:34 UTC, in the thread: "Sorry, I forgot to share with you the attached audio. It's here in this message." Applied: the file was saved under `audio/supplied/` and its hash matches `music.sha256`.
 
 ## Review items
 

@@ -1,0 +1,15 @@
+{
+  "name": "the-carcass",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The Carcass: a narrated film of about three minutes, every frame computed in three.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "clock": "node tools/clock.mjs",
+    "look": "node tools/look.mjs",
+    "progress": "node tools/progress.mjs"
+  }
+}
