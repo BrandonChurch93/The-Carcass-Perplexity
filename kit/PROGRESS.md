@@ -24,25 +24,26 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 5, 2026-11-24 21:57 UTC:
+Status 6, 2026-11-24 22:20 UTC:
 
-- `01-frame-300-hd-review.jpg`: The first computed frame. This is a test scene made to measure what a place will cost, not a place of the film: a displaced, lit, glowing surface under a volume of fume, with 6,000 moving embers. 1920 x 1080, two samples, 21 seconds on this machine
-- `02-frame-300-1.jpg`: The same frame through the crops tool, at native size. The tools now run on real frames
+- `01-vm1-frame-300-uhd-final.jpg`: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds. It is a cost test, not a place of the film.
+- `02-frames-296-307.jpg`: Twelve frames in a row of the same scene, to show it moves: the cracks pulse, the fume drifts, the embers rise.
 
+Status 5, 2026-11-24 21:57 UTC, showed: The first computed frame.
 Status 4, 2026-11-24 21:30 UTC, showed: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them.
 Status 3, 2026-11-24 21:09 UTC, showed: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit.
-Status 2, 2026-11-24 20:48 UTC, showed the test chart itself.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T21:57:04Z
-phase 0: 1.45 h used of 3.00 h
-build: 1.45 h used of 72.00 h
+2026-11-24T22:20:01Z
+phase 0: 1.83 h used of 3.00 h
+build: 1.83 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 27
+half point: reached
+minutes since the last status: 23
 ```
 
 ## Phases
@@ -104,6 +105,7 @@ Measured 2026-11-24 20:37 to 20:44 UTC on the Builder's VM.
 - `ffmpeg` and `ffprobe` 8.0.1-3ubuntu2, both present.
 - Browser: Chrome for Testing 147.0.7727.15, already on the machine as Playwright build 1217 under `~/.cache/ms-playwright/` (`chromium-1217` and `chromium_headless_shell-1217`). No global Playwright package. The harness drives this browser through `playwright-core` 1.59.1, the release whose own browser is build 1217, so nothing is downloaded and every VM renders with the same browser.
 - A sandbox agent's VM, measured the same hour: 4 cores, 7 GB RAM, a 25 GB disk with 18 GB free, and the same system, Node, Python, `ffmpeg` and browser.
+- WebGL, MEASURED 2026-11-24 21:46 UTC with `npm run caps` (`config/webgl-caps.json`): WebGL 2.0 in software through SwiftShader, renderer string `WebKit WebGL`, largest 2D texture 8192, largest 3D texture 2048, at most 4 samples in a multisampled buffer, 6 colour attachments, 30 extensions. The 4 extensions in `config/portable.json` are marked portable and all 4 are present here: `EXT_color_buffer_float`, `EXT_color_buffer_half_float`, `EXT_texture_filter_anisotropic`, `OES_texture_float_linear`.
 
 ## Tool record
 
@@ -326,7 +328,23 @@ Pinned 2026-11-24 in `package.json` as exact versions, with `package-lock.json` 
 
 Seconds for one sample and for one frame at each format and tier, on this VM and on a sandbox VM, with the scene they were measured on and the date. Then the wall-clock time of each long job as `npm run budget` estimates it. Add a row for every new kind of job when it ends.
 
-none
+Measured 2026-11-24 on the scene "spike: displaced lava ground, fume volume, 6000 embers", frame 300. The jobs are estimated on space-sandbox, the fastest merged machine with 4 or more cores.
+
+| Machine | Cores | Format | Seconds for one sample | Seconds for a draft frame | Seconds for a review frame | Seconds for a final frame | Start cost in seconds |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| space-sandbox | 2 | uhd | 32.207 | 35.38 | 67.58 | 132.00 | 5.6 |
+| space-sandbox | 2 | hd | 9.440 | 10.04 | 19.48 | 38.36 | 5.6 |
+| space-sandbox | 2 | preview | 3.077 | 3.26 | 6.34 | 12.49 | 5.6 |
+| space-sandbox | 4 | uhd | 15.433 | 16.68 | 32.11 | 62.98 | 3.7 |
+| space-sandbox | 4 | hd | 4.614 | 5.02 | 9.63 | 18.86 | 3.7 |
+| space-sandbox | 4 | preview | 1.576 | 1.58 | 3.16 | 6.31 | 3.7 |
+
+| Job | Format | Tier | Frames | Hours on one machine | Hours across 16 agents | Limit in hours | Fits |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| preview film | preview | draft | 5850 | 2.67 | 0.19 | 1 | fits |
+| film in hd | hd | final | 11700 | 61.39 | 4.41 | 3 | does not fit |
+| master | uhd | final | 11700 | 204.78 | 14.70 | 8 | does not fit |
+| card loop | uhd | final | 480 | 8.40 | 2.10 | 1 | does not fit |
 
 ## Judged frames
 
@@ -358,6 +376,15 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. Every render target is half float, in every mode and on every machine, so the half float path of G10 is the only path. Accumulating four samples in half float keeps about 11 bits, well under one step of the 8 bit output, and the output is dithered.
 - 2026-11-24. The page is given only the WebGL extensions listed in `config/portable.json`, on every machine: every other extension is answered as missing before three.js sees it. So G10 holds by construction and a frame cannot come to depend on an extension only one machine has.
 - 2026-11-24. The harness builds its own copy of the site under `out/work/site/` when the source hash changes, so a render never empties `dist/` with the review page in it.
+- 2026-11-24. Engine rule, from the first G3 run. MEASURED: the first run of `npm run determinism` differed in 7 to 42 pixels by one level. The scene target itself changed from run to run on one page, about 60 to 120 texels by one half float step, also with the volume and the embers off, while the depth view stayed identical. Pinning the browser to one core and moving the near plane changed nothing. Fixed by changes made together in `src/spike/shaders.ts`: every texture read inside a branch or a loop names its level (`textureLod`) or takes gradients computed before any branch (`textureGrad`), and the sky's cloud reads moved out of a branch. After that every stage hash (scene, volume, accumulation, bloom, final) repeats and G3 passes. Which single read was the cause was not isolated. The rule for every later shader: no texture read with implicit derivatives inside a branch or a loop.
+- 2026-11-24. The engine hash covers every file under `src/` outside `src/places/`, every file under `config/` except `webgl-caps.json`, every file under `public/` outside `public/assets/`, `package-lock.json`, `cut/CUTLIST.json`, `index.html` and `vite.config.ts`. A unit's hash covers `src/places/<unit>/` and `public/assets/<unit>/`. The spike lives in `src/spike/` and so is part of the engine hash until Phase 2 replaces it.
+- 2026-11-24. The tone curve is the AgX curve as the pinned three.js ships it, applied once after accumulation in `src/core/post.ts`, with exposure, grade, bloom, grain and dither around it. The look lock in Phase 3 decides whether it stays.
+- 2026-11-24. Left to Phase 2 and the look lock on purpose: multisampling inside one sample (the tiers already average jittered samples) and a depth-aware upsample of the half-size volume pass. The spike measures cost and is not tuned further.
+- 2026-11-24. `info().gl.extensions` lists the extensions the page actually obtained, which by the portable filter is a subset of `config/portable.json`. `npm run caps` records the machine's whole list with a portable flag on each.
+- 2026-11-24. The spike is a cost test, not a place: a ground of 512 x 512 vertices displaced by a baked 1024 x 1024 height and heat map, cracks that glow, one 2048 shadow map, a fume volume marched at half the frame's size in 32 steps, 6,000 embers on closed-form paths, bloom, grain and dither. It has one shot of 600 frames and a loop of 480 frames.
+- 2026-11-24. Node here is v20.20.2 on every VM. One pinned package states Node 22.12 or later in its `engines` field and runs correctly on 20.20.2 in every command used. The default reporter of the test runner crashes on Node 20 when a test fails (`Map.groupBy is not a function`), so failures are read with `npx vitest run --reporter=json --outputFile=FILE`. Node is not upgraded, so that all VMs stay alike.
+- 2026-11-24. The player (`autopilot` and `loop`) renders at the `draft` tier, in `formats.hd` when the viewport's long edge is over 1400 device pixels and in `formats.preview` otherwise. It is for looking, never for recording.
+- 2026-11-24. Config validation reads the names and types of every key with a fixed name from `src/config.shape.json`, which `npm run shape` writes from `config/showcase.json` (195 keys). The open maps `settled`, `motion.byUnit`, `budget.phaseHours` and `budget.reserveHours` are checked by their own rules. Found by the tests an agent wrote: 72 nested keys could be deleted with no error before this.
 
 ## Notes from Brandon
 
@@ -400,7 +427,7 @@ none
 
 ## Running jobs
 
-none
+- `npm run budget -- --runs 3` on the Builder's VM, started 22:02 UTC, detached, log `out/work/logs/budget.log`. Expected: 15 minutes. It is a kind of job the table does not list yet, so its limit is `budget.defaultJobMinutes`, stopped at twice that.
 
 ## Running agents
 
@@ -408,11 +435,12 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `gate_budget_builder` | build, sandbox | `gate` and `budget`, with tests, against the renderer contract | `agent/tools-gate` | 21:19 UTC | 45 min |
+| `render_meter_01` | render, sandbox | Step 17 on its own VM at commit `59873c3`: `caps`, one still in `formats.hd` at the `review` tier, one in `formats.master` at the `final` tier, `budget -- --measure-only --runs 3`, `determinism`. Returns the two stills and the budget file as attachments | none | 22:00 UTC | 35 min |
+| `render_meter_02` | render, sandbox | The same on a second VM | none | 22:00 UTC | 35 min |
 
 Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not logged into any GitHub hosts"), and a plain `git push` then works in most of them and fails in some. Every brief says: push, and if it fails attach a `git bundle` to the report. Both routes have been used and both work.
 
-Ended and merged into `main`: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
+Ended and merged into `main`: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC), `gate_budget_builder` (`840ca75`, from its commit `44afd3d`, answered 21:36 UTC), `core_tests_writer` (`d2f5ae2`, from its commit `ced3c52`, answered 21:43 UTC after 6 minutes: 118 tests for the config, the seeded random and the sampler, which found the faults in the config validation and the sampler that are now fixed). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
 ## Rounds
 
@@ -445,6 +473,8 @@ none
 - 2026-11-24 20:52 UTC `5a12389` pushed. Packages pinned, harness contract
 - 2026-11-24 21:09 UTC `1837d86` pushed. Status 3, the image limit, the sound API reference
 - 2026-11-24 21:12 UTC `b1d2a4f` pushed. The checks, the picture tools and the review page merged
+- 2026-11-24 21:32 UTC `9053446` pushed. Status 4, the status tool, the engine scaffold
+- 2026-11-24 22:00 UTC `59873c3` pushed. Status 5, the spike scene, the renderer, `still`, `caps`, `determinism`, the gate and the budget tools, the core tests
 
 ## Session log
 
@@ -454,3 +484,4 @@ none
 - 2026-11-24 21:09 UTC. Status 3 posted at 21:09 UTC with the image limit table. The image limit is recorded: 1400 x 788 arrives untouched, about 1.15 megapixels is the limit, nothing lowered. Ten reviewer agents and the sound API reader have answered. Three build agents are working on harness tools.
 - 2026-11-24 21:12 UTC. The three build agents finished inside 14 minutes. Their branches were merged, one from a bundle. A fault in the clock found by the new tests was fixed: continuation boxes are whole seconds and a repeated `--continue N` is ignored.
 - 2026-11-24 21:32 UTC. Status 4 posted at 21:30 UTC with the tools' own pictures, since no frame exists yet. The status command is merged and made this status. Step 8: three test files of 20, 100 and 400 MB were attached and all were accepted. Step 10 and step 11 are recorded. The sound test found the voice deep and male, and not yet grim or slow (about 188 words a minute on a neutral line with the stored settings): Phase 1 steers it with the delivery tags and measures the pace of every take. The engine scaffold and the spike scene are in work.
+- 2026-11-24 22:05 UTC. Status 5 posted at 21:57 UTC with the first computed frame. Steps 15 and 16: the engine scaffold renders the spike scene through `capture` mode, and `still`, `caps`, `determinism`, `gate`, `budget`, `crops`, `compare`, `sheet`, `keep`, `status` and `review` exist. G3 failed on its first run, the cause was found in the scene pass and fixed, and it passes (see the decisions). The core tests an agent wrote were merged and the six faults they showed were fixed: 332 tests pass. Pushed as `59873c3` at 22:00 UTC. Step 17 is running: the budget on this VM, and two sandbox agents that render the same stills and measure the budget on their own VMs.

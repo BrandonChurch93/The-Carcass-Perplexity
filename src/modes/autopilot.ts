@@ -23,14 +23,21 @@ control.className = styles.control as string;
 control.setAttribute('aria-label', 'Play the film');
 control.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg>';
 
+const review = document.createElement('a');
+review.className = styles.link as string;
+review.href = './review.html';
+review.textContent = 'Review page';
+
 control.addEventListener('click', () => {
   control.classList.add(styles.hidden as string);
+  review.classList.add(styles.hidden as string);
   player.canvas.classList.remove(styles.hidden as string);
   player.start(() => {
     player.canvas.classList.add(styles.hidden as string);
     control.classList.remove(styles.hidden as string);
+    review.classList.remove(styles.hidden as string);
   });
 });
 
-stage.append(player.canvas, control);
+stage.append(player.canvas, control, review);
 document.body.appendChild(stage);

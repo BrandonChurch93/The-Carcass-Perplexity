@@ -46,12 +46,36 @@
   outline-offset: 4px;
 }
 
+.link {
+  position: absolute;
+  left: 50%;
+  bottom: 40px;
+  transform: translateX(-50%);
+  padding: 10px 14px;
+  color: #80776e;
+  font: 14px/1 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+.link:hover {
+  color: #e7e0d6;
+}
+
+.link:focus-visible {
+  outline: 2px solid #c8763a;
+  outline-offset: 2px;
+  color: #e7e0d6;
+}
+
 .hidden {
   display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .control {
+  .control,
+  .link {
     transition: none;
   }
 }
