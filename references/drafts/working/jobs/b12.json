@@ -1,0 +1,20 @@
+[
+ {
+  "id": "B-est-t34",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit5",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t33.png"
+  ],
+  "what": "re-shoot of take 33: hoops back inside the shaft, waders four-legged, a little more crimson"
+ },
+ {
+  "id": "B-est-t35",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit5",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t33.png"
+  ],
+  "what": "re-shoot of take 33: hoops back inside the shaft, waders four-legged, a little more crimson"
+ }
+]

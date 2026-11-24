@@ -1,0 +1,13 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is an unrelated real photograph of a real animal's bare hide. Use it only as the standard for how real thick hide looks to a camera: matte, deeply creased, cracked, scarred, blotchy, dirty, with sparse coarse bristles, never waxy, never rubbery, never glossy all over. Do not copy the animal, its face, its tusks or its shape.
+
+CHANGES.
+1. The hide of the animal. In Image 1 it looks like a sculpted texture. It is real thick hide: dry and matte, deeply creased at the neck and joints, cracked, scarred and blotchy, with sparse coarse bristles along the spine that catch the green light, and mud caked and dried on the legs and belly. The pale band across its back is natural colouring: its edges are ragged and speckled, and it is dirty. The animal keeps its shape, its place and its pose.
+2. The threads that hold it. In Image 1 they lie in loose loops. They are under tension: several thin pale strands run taut and straight from the base of the sac to the two nearest legs, biting into the hide so that the skin creases around them; a few others hang slack and sag to the mud under their own weight, beaded with moisture; broken ones lie in mud that has been churned by the animal's feet.
+3. The animal's snout is pushed into a split in the sac. The lips of the split are stretched around the snout, and the throat and lower jaw can be seen, lit green from below. The light is strongest inside the split and falls off quickly; it reaches the animal's chest, its forelegs and the wet mud beneath it, and leaves its far side dark.
+4. The sac is cloudy living tissue, milky and uneven, with mud and grit stuck to it and only a few small wet highlights. It is not plastic.
+5. The lights inside the far cave are smaller, dimmer and partly hidden by rock and mist.
+6. The exposure holds a little more detail in the shadows, with the fine noise a camera makes at dusk, so that the surface of the hide and the mud can be read.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

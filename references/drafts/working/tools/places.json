@@ -1,0 +1,154 @@
+{
+ "order": [
+  "ribs",
+  "heart",
+  "breath",
+  "marsh",
+  "spine",
+  "eye"
+ ],
+ "ribs": {
+  "title": "The Ribs",
+  "colour": "#c8642a",
+  "line": "A tidal strait under two rows of rib blades. The tide comes back through the cage as a wall.",
+  "est": "ribs-est-t2",
+  "details": [
+   [
+    "The drowned, hanging in the weed",
+    "ribs-d2-t1"
+   ],
+   [
+    "Tide-pool feeders",
+    "ribs-d3-t2"
+   ],
+   [
+    "The colony",
+    "ribs-d1-t1"
+   ],
+   [
+    "The bore arrives",
+    "ribs-d4-t1"
+   ]
+  ]
+ },
+ "heart": {
+  "title": "The Heart",
+  "colour": "#e2531b",
+  "line": "A caldera lake of lava under a crust that things walk on. The crust looks like ground.",
+  "est": "heart-est-t1",
+  "details": [
+   [
+    "The lava surface at the line",
+    "heart-d1-t2"
+   ],
+   [
+    "The one that sank",
+    "heart-d3-t1"
+   ],
+   [
+    "Crust-walkers feeding at a seam",
+    "heart-d2-t2"
+   ],
+   [
+    "The vessel mouth and its lava fall",
+    "heart-d4-t2"
+   ]
+  ]
+ },
+ "breath": {
+  "title": "The Breath",
+  "colour": "#8e2338",
+  "line": "A tidal shelf pierced by the airways. The heavy air from the shafts has nothing in it to breathe.",
+  "est": "B-est-t60",
+  "details": [
+   [
+    "Waders feeding in the channel",
+    "B-d2-t42"
+   ],
+   [
+    "The rim",
+    "B-d1-t42"
+   ],
+   [
+    "Gill-plumes on the lip",
+    "breath-d3-t1"
+   ],
+   [
+    "Down the shaft",
+    "breath-d4-t1"
+   ]
+  ]
+ },
+ "marsh": {
+  "title": "The Blood Marsh",
+  "colour": "#a82828",
+  "line": "Salt flats where the old blood still seeps up. The mud holds what steps on it.",
+  "est": "marsh-est-t3",
+  "details": [
+   [
+    "The bubbling seep pool",
+    "marsh-d1-t1"
+   ],
+   [
+    "The stalk colony",
+    "marsh-d2-t1"
+   ],
+   [
+    "Mud-wallowers",
+    "marsh-d3-t2"
+   ],
+   [
+    "The one on the thin crust",
+    "marsh-d4-t2"
+   ]
+  ]
+ },
+ "spine": {
+  "title": "The Spine",
+  "colour": "#7b5cd6",
+  "line": "A knife ridge of vertebrae above the cloud. The lightning walks the ridge from spire to spire.",
+  "est": "spine-est-t2",
+  "details": [
+   [
+    "Where lightning came to ground",
+    "spine-d4-t2"
+   ],
+   [
+    "Tether-kites on the first spire",
+    "spine-d1-t2"
+   ],
+   [
+    "The strike on the third spire",
+    "spine-d2-t2"
+   ],
+   [
+    "Inside the canal",
+    "spine-d3-t1"
+   ]
+  ]
+ },
+ "eye": {
+  "title": "The Eye",
+  "colour": "#c9861a",
+  "line": "A round lake in a socket of cliffs. A ring of amber shallows and a centre that goes all the way down.",
+  "est": "eye-est-t1",
+  "details": [
+   [
+    "Drinkers at the shore",
+    "eye-d1-t1"
+   ],
+   [
+    "The iris: amber mats",
+    "eye-d2b-t2"
+   ],
+   [
+    "The edge, where the floor stops",
+    "eye-d3-t2"
+   ],
+   [
+    "What rises from the centre",
+    "eye-d4-t1"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,121 @@
+[
+ {
+  "id": "A-est-t50",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (proscenium frame, twin tusks, profile animals, bird specks, card trees)"
+ },
+ {
+  "id": "A-est-t51",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (proscenium frame, twin tusks, profile animals, bird specks, card trees)"
+ },
+ {
+  "id": "A-est-t52",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (proscenium frame, twin tusks, profile animals, bird specks, card trees)"
+ },
+ {
+  "id": "A-est-t53",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (same, without the layout image, to see whether the frame opens up)"
+ },
+ {
+  "id": "B-est-t60",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (smooth concentric hoops, waders in a row, stick legs with fake reflections, flat black cave, symmetrical fronds)"
+ },
+ {
+  "id": "B-est-t61",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (smooth concentric hoops, waders in a row, stick legs with fake reflections, flat black cave, symmetrical fronds)"
+ },
+ {
+  "id": "B-est-t62",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (smooth concentric hoops, waders in a row, stick legs with fake reflections, flat black cave, symmetrical fronds)"
+ },
+ {
+  "id": "B-est-t63",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (smooth concentric hoops, waders in a row, stick legs with fake reflections, flat black cave, symmetrical fronds)"
+ },
+ {
+  "id": "C-est-t50",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (sacs at staged intervals, no bounce light, speck overlay, smudged cave, soft animal)"
+ },
+ {
+  "id": "C-est-t51",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (sacs at staged intervals, no bounce light, speck overlay, smudged cave, soft animal)"
+ },
+ {
+  "id": "C-est-t52",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (sacs at staged intervals, no bounce light, speck overlay, smudged cave, soft animal)"
+ },
+ {
+  "id": "C-est-t53",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate3",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "plate v3: answers packet 9 faults (sacs at staged intervals, no bounce light, speck overlay, smudged cave, soft animal)"
+ }
+]

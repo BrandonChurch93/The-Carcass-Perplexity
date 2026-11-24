@@ -1,0 +1,110 @@
+[
+ {
+  "id": "A-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: puffball bladders on the carcass venting spores (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: puffball bladders on the carcass venting spores (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: grazers at the waterline, one sprouting bladders (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: grazers at the waterline, one sprouting bladders (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "B-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t21.png"
+  ],
+  "what": "detail: throat rim exhaling, gill-plumes, dead flyers (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "B-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t21.png"
+  ],
+  "what": "detail: throat rim exhaling, gill-plumes, dead flyers (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "B-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t21.png"
+  ],
+  "what": "detail: strider feeding in the channel (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "B-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t21.png"
+  ],
+  "what": "detail: strider feeding in the channel (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: sac skin with caught animal (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: sac skin with caught animal (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: animal drawn to the light, ropes on its legs (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: animal drawn to the light, ropes on its legs (from restraint-pass establishing pick)"
+ }
+]

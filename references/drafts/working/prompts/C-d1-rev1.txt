@@ -1,0 +1,13 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is an unrelated real photograph of a jellyfish stranded on a beach. Use it only as the standard for how real translucent living tissue looks to a camera: milky and cloudy rather than clear, thicker in some places than others, matte where it has begun to dry, with sand and grit stuck to it. Do not copy the jellyfish, the beach or the daylight.
+
+CHANGES.
+1. The wall of the big sac. In Image 1 it looks like clear plastic. It is thick, cloudy, living tissue: milky, uneven, thicker and thinner in patches, folded and scuffed, wrinkling where it has begun to dry near the top, with silt, grit and bits of dead weed stuck to its lower third. It is not glossy all over; there are only a few small wet highlights.
+2. The veins run inside the wall at different depths. A few near the surface are sharp; most are deeper, blurred, dim and brown-red, and they branch unevenly. None lies on the outside of the sac and there are no loose red strands.
+3. The light inside the sac has a source: a cluster of pale glowing nodules low down inside it, mostly hidden behind the young animal. So the wall is brightest low down and dim toward the top, the young animal is mostly a dark shape with a soft rim of light, and there are no bright pinpoint hotspots.
+4. The young animal inside is seen through cloudy tissue: soft, dim and low in contrast, clear only where its flank and one foot press flat against the inside of the wall, and lost in the murk elsewhere. It keeps its place and its curled pose.
+5. The moths. Replace the white moths with what a camera really records at dusk: two small dull grey-brown moths settled on the sac with their wings folded, each no bigger than a fingernail, and a few more in the air beside it as soft, dim, blurred specks. None is white and none is sharp.
+6. The lights inside the far cave are dimmer and partly hidden by rock and mist.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

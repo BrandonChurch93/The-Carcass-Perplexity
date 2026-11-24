@@ -1,0 +1,22 @@
+[
+ {
+  "id": "eye-d2b-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail, one changed-approach redo: eye iris mats without the thumb-sized grazers (they read as miniature lambs); scale set by an adult drinker standing in the mats"
+ },
+ {
+  "id": "eye-d2b-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail, one changed-approach redo: eye iris mats without the thumb-sized grazers (they read as miniature lambs); scale set by an adult drinker standing in the mats"
+ }
+]

@@ -1,0 +1,92 @@
+[
+ {
+  "id": "A-est-t01",
+  "model": "seedream_5",
+  "prompt": "A-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "A-est-t02",
+  "model": "nano_banana_pro",
+  "prompt": "A-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "A-est-t03",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "A-est-t04",
+  "model": "seedream_5",
+  "prompt": "A-est-drone",
+  "what": "establishing, low drone"
+ },
+ {
+  "id": "A-est-t05",
+  "model": "nano_banana_pro",
+  "prompt": "A-est-drone",
+  "what": "establishing, low drone"
+ },
+ {
+  "id": "B-est-t01",
+  "model": "seedream_5",
+  "prompt": "B-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "B-est-t02",
+  "model": "nano_banana_pro",
+  "prompt": "B-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "B-est-t03",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "B-est-t04",
+  "model": "seedream_5",
+  "prompt": "B-est-drone",
+  "what": "establishing, low drone"
+ },
+ {
+  "id": "B-est-t05",
+  "model": "nano_banana_pro",
+  "prompt": "B-est-drone",
+  "what": "establishing, low drone"
+ },
+ {
+  "id": "C-est-t01",
+  "model": "seedream_5",
+  "prompt": "C-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "C-est-t02",
+  "model": "nano_banana_pro",
+  "prompt": "C-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "C-est-t03",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-eye",
+  "what": "establishing, eye level"
+ },
+ {
+  "id": "C-est-t04",
+  "model": "seedream_5",
+  "prompt": "C-est-drone",
+  "what": "establishing, low drone"
+ },
+ {
+  "id": "C-est-t05",
+  "model": "nano_banana_pro",
+  "prompt": "C-est-drone",
+  "what": "establishing, low drone"
+ }
+]

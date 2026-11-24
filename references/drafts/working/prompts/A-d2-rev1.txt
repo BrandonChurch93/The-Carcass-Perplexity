@@ -1,0 +1,12 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is an unrelated real photograph of real animals drinking. Use it only as the standard for how real thick hide looks to a camera: mostly dry and matte, grey with pale dried mud in its creases, scuffed and scarred, wet and dark only where water has touched it, never rubbery and never glossy all over. Do not copy the animals: no trunks, no tusks, no ears, no eyes.
+
+CHANGES.
+1. The hide of the animals. In Image 1 it has an all-over wet gloss, like moulded rubber. It is real hide: mostly dry and matte grey-brown, with pale mud dried in its creases and on the backs, old scars, scuffs and rubbed patches, and sparse coarse bristles. It is wet and dark only on the lower legs, on the snouts and on the part of the neck that has been in the water. The animals keep their shape, their places and their poses.
+2. The breathing slits along the snouts are not a neat row. They are uneven in length and spacing; some are closed to a crease, some are open, wet and rimmed with mucus.
+3. The water falling from the mouth of the animal with its head raised is not lines of beads. It slobbers: heavy uneven streams and strings that break into drops of different sizes, some blurred by their fall, splashing on the gravel.
+4. There are no pale lumps on the back of the nearest animal; there are a few old scars instead. Only a few small flies remain near it, soft and blurred.
+5. The forelegs of the calf can be seen, planted in the wet gravel beside the adult's.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

@@ -1,0 +1,104 @@
+[
+ {
+  "id": "A-est-t26",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit3",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t25.png"
+  ],
+  "what": "re-shoot of take 25: carcass out of the corner and smaller, herd scattered"
+ },
+ {
+  "id": "C-est-t26",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t24.png"
+  ],
+  "what": "re-shoot of take 24: sacs out of the corner, caves irregular, animal three-quarter view"
+ },
+ {
+  "id": "A-est-t27",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit3",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t25.png"
+  ],
+  "what": "re-shoot of take 25: carcass out of the corner and smaller, herd scattered"
+ },
+ {
+  "id": "C-est-t27",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t24.png"
+  ],
+  "what": "re-shoot of take 24: sacs out of the corner, caves irregular, animal three-quarter view"
+ },
+ {
+  "id": "B-est-t28",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-est-t30",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: looking down the nearest shaft: lip, plumes, cartilage hoops, vapour, bones (from establishing take 31)"
+ },
+ {
+  "id": "B-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: looking down the nearest shaft: lip, plumes, cartilage hoops, vapour, bones (from establishing take 31)"
+ },
+ {
+  "id": "B-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: the waders close; one going down in the pooled vapour (from establishing take 31)"
+ },
+ {
+  "id": "B-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: the waders close; one going down in the pooled vapour (from establishing take 31)"
+ },
+ {
+  "id": "B-d3-t01",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d3c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: drowned shaft, water boiling with breath (from establishing take 31)"
+ },
+ {
+  "id": "B-d3-t02",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d3c",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "detail: drowned shaft, water boiling with breath (from establishing take 31)"
+ }
+]

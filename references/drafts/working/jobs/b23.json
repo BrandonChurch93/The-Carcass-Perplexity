@@ -1,0 +1,163 @@
+[
+ {
+  "id": "B-d2-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d2-t20.png",
+   "/home/user/workspace/r3/real/ref-wader-1.jpg",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d2-t20 after blind packet 13: real bare skin instead of waxy skin, real water contact, no bead-line drip, wet clumped tendrils"
+ },
+ {
+  "id": "B-d2-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d2-t20.png",
+   "/home/user/workspace/r3/real/ref-wader-1.jpg",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d2-t20 after blind packet 13: real bare skin instead of waxy skin, real water contact, no bead-line drip, wet clumped tendrils"
+ },
+ {
+  "id": "B-d2-t42",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d2-t20.png",
+   "/home/user/workspace/r3/real/ref-wader-1.jpg",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d2-t20 after blind packet 13: real bare skin instead of waxy skin, real water contact, no bead-line drip, wet clumped tendrils"
+ },
+ {
+  "id": "B-d1-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d1-t32.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d1-t32 after blind packet 12: real bare skin, carcass collapsed untidily, standing animal resting, uneven vapour, plumes rooted in cracks"
+ },
+ {
+  "id": "B-d1-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d1-t32.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d1-t32 after blind packet 12: real bare skin, carcass collapsed untidily, standing animal resting, uneven vapour, plumes rooted in cracks"
+ },
+ {
+  "id": "B-d1-t42",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-d1-t32.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail B-d1-t32 after blind packet 12: real bare skin, carcass collapsed untidily, standing animal resting, uneven vapour, plumes rooted in cracks"
+ },
+ {
+  "id": "C-d1-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d1-t21.png",
+   "/home/user/workspace/r3/real/ref-tissue-1.jpg"
+  ],
+  "what": "one-step revision of detail C-d1-t21 after blind packet 12: cloudy tissue instead of clear plastic, veins inside the wall, a light source, dull moths, dimmer cave"
+ },
+ {
+  "id": "C-d1-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d1-t21.png",
+   "/home/user/workspace/r3/real/ref-tissue-1.jpg"
+  ],
+  "what": "one-step revision of detail C-d1-t21 after blind packet 12: cloudy tissue instead of clear plastic, veins inside the wall, a light source, dull moths, dimmer cave"
+ },
+ {
+  "id": "C-d1-t42",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d1-t21.png",
+   "/home/user/workspace/r3/real/ref-tissue-1.jpg"
+  ],
+  "what": "one-step revision of detail C-d1-t21 after blind packet 12: cloudy tissue instead of clear plastic, veins inside the wall, a light source, dull moths, dimmer cave"
+ },
+ {
+  "id": "C-d2-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d2-t31.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail C-d2-t31 after blind packet 13: real hide, threads under tension, snout in a split with light falloff, cloudy sac, dimmer cave, open shadows"
+ },
+ {
+  "id": "C-d2-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d2-t31.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail C-d2-t31 after blind packet 13: real hide, threads under tension, snout in a split with light falloff, cloudy sac, dimmer cave, open shadows"
+ },
+ {
+  "id": "C-d2-t42",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-d2-t31.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "one-step revision of detail C-d2-t31 after blind packet 13: real hide, threads under tension, snout in a split with light falloff, cloudy sac, dimmer cave, open shadows"
+ },
+ {
+  "id": "A-d2-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-d2-t21.png",
+   "/home/user/workspace/r3/real/ref-hide-1.jpg"
+  ],
+  "what": "one-step revision of detail A-d2-t21 after blind packet 13: dry real hide, uneven slits, slobbering water, no lumps on the back, calf forelegs visible"
+ },
+ {
+  "id": "A-d2-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-d2-t21.png",
+   "/home/user/workspace/r3/real/ref-hide-1.jpg"
+  ],
+  "what": "one-step revision of detail A-d2-t21 after blind packet 13: dry real hide, uneven slits, slobbering water, no lumps on the back, calf forelegs visible"
+ },
+ {
+  "id": "A-d1-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-d1-t21.png"
+  ],
+  "what": "one-step revision of detail A-d1-t21 after blind packet 12: weathered bladders, drifting dust, old scattered bones, far animals as the long-necked grazers"
+ },
+ {
+  "id": "A-d1-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1-rev1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-d1-t21.png"
+  ],
+  "what": "one-step revision of detail A-d1-t21 after blind packet 12: weathered bladders, drifting dust, old scattered bones, far animals as the long-necked grazers"
+ }
+]

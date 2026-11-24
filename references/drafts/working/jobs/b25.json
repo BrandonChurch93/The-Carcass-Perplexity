@@ -1,0 +1,41 @@
+[
+ {
+  "id": "spine-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg",
+   "/home/user/workspace/r3/real/plate-storm-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of the spine, first takes from text plus two real photographs as rendering standards"
+ },
+ {
+  "id": "spine-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg",
+   "/home/user/workspace/r3/real/plate-storm-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of the spine, first takes from text plus two real photographs as rendering standards"
+ },
+ {
+  "id": "spine-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg",
+   "/home/user/workspace/r3/real/plate-storm-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of the spine, first takes from text plus two real photographs as rendering standards"
+ },
+ {
+  "id": "ribs-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of ribs (retry after a server error)"
+ }
+]

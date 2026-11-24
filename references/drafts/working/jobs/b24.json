@@ -1,0 +1,137 @@
+[
+ {
+  "id": "heart-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of heart, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "heart-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of heart, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "heart-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of heart, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "marsh-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of marsh, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "marsh-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of marsh, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "marsh-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of marsh, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "eye-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of eye, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "eye-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of eye, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "eye-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of eye, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "reveal-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "reveal-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-orbit-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of reveal, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "reveal-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "reveal-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-orbit-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of reveal, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "ribs-est-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of ribs, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "ribs-est-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of ribs, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "ribs-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2, direction B: establishing view of ribs, first takes from text plus a real photograph as rendering standard"
+ },
+ {
+  "id": "reveal-est-t3",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "reveal-est",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-orbit-2.jpg"
+  ],
+  "what": "step 2, direction B: the reveal from orbit, alternate real orbital photograph as standard"
+ }
+]

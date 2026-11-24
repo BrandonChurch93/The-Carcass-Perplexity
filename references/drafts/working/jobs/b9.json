@@ -1,0 +1,47 @@
+[
+ {
+  "id": "B-est-t28",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-est-t29",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-est-t30",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-est-t31",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5b",
+  "what": "establishing, fifth pass for B, second wording: flock scattered and not birds, ringed wall visible through the vapour"
+ },
+ {
+  "id": "B-est-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "B-est-t27",
+  "model": "gpt_image_2_6_flare",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "A-est-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit2",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "re-shoot of take 21: hoops irregular, one broken, far skylights off the line"
+ }
+]

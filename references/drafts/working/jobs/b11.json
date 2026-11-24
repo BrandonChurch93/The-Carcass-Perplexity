@@ -1,0 +1,56 @@
+[
+ {
+  "id": "B-est-t32",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "re-shoot of B-est-t31 against packet 5 and 6 faults"
+ },
+ {
+  "id": "B-est-t33",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t31.png"
+  ],
+  "what": "re-shoot of B-est-t31 against packet 5 and 6 faults"
+ },
+ {
+  "id": "A-est-t28",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t26.png"
+  ],
+  "what": "re-shoot of A-est-t26 against packet 5 and 6 faults"
+ },
+ {
+  "id": "C-est-t28",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t26.png"
+  ],
+  "what": "re-shoot of C-est-t26 against packet 5 and 6 faults"
+ },
+ {
+  "id": "A-est-t29",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t26.png"
+  ],
+  "what": "re-shoot of A-est-t26 against packet 5 and 6 faults"
+ },
+ {
+  "id": "C-est-t29",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit4",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t26.png"
+  ],
+  "what": "re-shoot of C-est-t26 against packet 5 and 6 faults"
+ }
+]

@@ -1,0 +1,119 @@
+[
+ {
+  "id": "A-est-t54",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/gen/A-d2-t21.png"
+  ],
+  "what": "one-step revision of plate A-est-t53: herd changed from elephant-like to the eyeless long-necked grazers of the detail view, wakes added"
+ },
+ {
+  "id": "C-est-t54",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png"
+  ],
+  "what": "one-step revision of plate C-est-t50: star-shaped insects replaced by small dull moths, a little more light spill, thinner mist at the cave"
+ },
+ {
+  "id": "A-est-t55",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/gen/A-d2-t21.png"
+  ],
+  "what": "one-step revision of plate A-est-t53: herd changed from elephant-like to the eyeless long-necked grazers of the detail view, wakes added"
+ },
+ {
+  "id": "C-est-t55",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png"
+  ],
+  "what": "one-step revision of plate C-est-t50: star-shaped insects replaced by small dull moths, a little more light spill, thinner mist at the cave"
+ },
+ {
+  "id": "A-est-t56",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/gen/A-d2-t21.png"
+  ],
+  "what": "one-step revision of plate A-est-t53: herd changed from elephant-like to the eyeless long-necked grazers of the detail view, wakes added"
+ },
+ {
+  "id": "C-est-t56",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit6",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png"
+  ],
+  "what": "one-step revision of plate C-est-t50: star-shaped insects replaced by small dull moths, a little more light spill, thinner mist at the cave"
+ },
+ {
+  "id": "B-d1-t30",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail re-shoot from plate B-est-t60 for continuity: carcass the same way round as the wide, standing rim wader kept"
+ },
+ {
+  "id": "C-d2-t30",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail re-shoot from plate C-est-t50 for continuity: ribbed sac as in the wide, lit cave behind"
+ },
+ {
+  "id": "B-d1-t31",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail re-shoot from plate B-est-t60 for continuity: carcass the same way round as the wide, standing rim wader kept"
+ },
+ {
+  "id": "C-d2-t31",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail re-shoot from plate C-est-t50 for continuity: ribbed sac as in the wide, lit cave behind"
+ },
+ {
+  "id": "B-d1-t32",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail re-shoot from plate B-est-t60 for continuity: carcass the same way round as the wide, standing rim wader kept"
+ },
+ {
+  "id": "C-d2-t32",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p4",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail re-shoot from plate C-est-t50 for continuity: ribbed sac as in the wide, lit cave behind"
+ }
+]

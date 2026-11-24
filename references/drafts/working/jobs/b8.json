@@ -1,0 +1,134 @@
+[
+ {
+  "id": "B-est-t24",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "B-est-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "B-est-t26",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "B-est-t27",
+  "model": "gpt_image_2_6_flare",
+  "prompt": "B-est-v5",
+  "what": "establishing, fifth pass for B: flush shafts, one accent colour, flock of small waders, sun out of frame"
+ },
+ {
+  "id": "A-est-t24",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit2",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "re-shoot of take 21: hoops irregular, one broken, far skylights off the line"
+ },
+ {
+  "id": "C-est-t24",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "re-shoot of take 22: sacs vary, light pools, animal with shadow, cliff detail, uneven mist"
+ },
+ {
+  "id": "A-est-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit2",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "re-shoot of take 21: hoops irregular, one broken, far skylights off the line"
+ },
+ {
+  "id": "C-est-t25",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "re-shoot of take 22: sacs vary, light pools, animal with shadow, cliff detail, uneven mist"
+ },
+ {
+  "id": "A-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: puffball bladders on the carcass venting spores (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: puffball bladders on the carcass venting spores (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: grazers at the waterline, one sprouting bladders (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "A-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t21.png"
+  ],
+  "what": "detail: grazers at the waterline, one sprouting bladders (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d1-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: sac skin with caught animal (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d1-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: sac skin with caught animal (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d2-t05",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: animal drawn to the light, ropes on its legs (from restraint-pass establishing pick)"
+ },
+ {
+  "id": "C-d2-t06",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2b",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t22.png"
+  ],
+  "what": "detail: animal drawn to the light, ropes on its legs (from restraint-pass establishing pick)"
+ }
+]

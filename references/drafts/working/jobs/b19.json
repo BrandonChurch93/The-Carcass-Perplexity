@@ -1,0 +1,62 @@
+[
+ {
+  "id": "B-d1-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t55.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t55 with a real photograph as rendering reference"
+ },
+ {
+  "id": "B-d1-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t55.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t55 with a real photograph as rendering reference"
+ },
+ {
+  "id": "B-d1-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t55.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t55 with a real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t55.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t55 with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t13",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41; prey changed to a four-legged young animal (take 12 read as a hand)"
+ },
+ {
+  "id": "C-d1-t14",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41; prey changed to a four-legged young animal (take 12 read as a hand)"
+ }
+]

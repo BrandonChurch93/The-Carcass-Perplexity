@@ -1,0 +1,162 @@
+[
+ {
+  "id": "A-d1-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from plate v3 A-est-t53 with the real photograph as rendering reference"
+ },
+ {
+  "id": "A-d1-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from plate v3 A-est-t53 with the real photograph as rendering reference"
+ },
+ {
+  "id": "A-d1-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from plate v3 A-est-t53 with the real photograph as rendering reference"
+ },
+ {
+  "id": "A-d2-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from plate v3 A-est-t53 with the real photograph as rendering reference"
+ },
+ {
+  "id": "A-d2-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t53.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from plate v3 A-est-t53 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d1-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d1-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d1-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from plate v3 B-est-t60 with the real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from plate v3 C-est-t50 with the real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from plate v3 C-est-t50 with the real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t22",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from plate v3 C-est-t50 with the real photograph as rendering reference"
+ },
+ {
+  "id": "C-d2-t20",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from plate v3 C-est-t50 with the real photograph as rendering reference"
+ },
+ {
+  "id": "C-d2-t21",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p3",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t50.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from plate v3 C-est-t50 with the real photograph as rendering reference"
+ }
+]

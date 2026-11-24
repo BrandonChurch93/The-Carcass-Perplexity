@@ -1,0 +1,110 @@
+[
+ {
+  "id": "A-d1-t03",
+  "model": "nano_banana_pro",
+  "prompt": "A-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t17.png"
+  ],
+  "what": "detail d1, from A-est-t17"
+ },
+ {
+  "id": "A-d1-t04",
+  "model": "seedream_5",
+  "prompt": "A-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t17.png"
+  ],
+  "what": "detail d1, from A-est-t17"
+ },
+ {
+  "id": "A-d2-t03",
+  "model": "nano_banana_pro",
+  "prompt": "A-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t17.png"
+  ],
+  "what": "detail d2, from A-est-t17"
+ },
+ {
+  "id": "A-d2-t04",
+  "model": "seedream_5",
+  "prompt": "A-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t17.png"
+  ],
+  "what": "detail d2, from A-est-t17"
+ },
+ {
+  "id": "B-d1-t03",
+  "model": "nano_banana_pro",
+  "prompt": "B-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t17.png"
+  ],
+  "what": "detail d1, from B-est-t17"
+ },
+ {
+  "id": "B-d1-t04",
+  "model": "seedream_5",
+  "prompt": "B-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t17.png"
+  ],
+  "what": "detail d1, from B-est-t17"
+ },
+ {
+  "id": "B-d2-t03",
+  "model": "nano_banana_pro",
+  "prompt": "B-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t17.png"
+  ],
+  "what": "detail d2, from B-est-t17"
+ },
+ {
+  "id": "B-d2-t04",
+  "model": "seedream_5",
+  "prompt": "B-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t17.png"
+  ],
+  "what": "detail d2, from B-est-t17"
+ },
+ {
+  "id": "C-d1-t03",
+  "model": "nano_banana_pro",
+  "prompt": "C-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t16.png"
+  ],
+  "what": "detail d1, from C-est-t16"
+ },
+ {
+  "id": "C-d1-t04",
+  "model": "seedream_5",
+  "prompt": "C-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t16.png"
+  ],
+  "what": "detail d1, from C-est-t16"
+ },
+ {
+  "id": "C-d2-t03",
+  "model": "nano_banana_pro",
+  "prompt": "C-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t16.png"
+  ],
+  "what": "detail d2, from C-est-t16"
+ },
+ {
+  "id": "C-d2-t04",
+  "model": "seedream_5",
+  "prompt": "C-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t16.png"
+  ],
+  "what": "detail d2, from C-est-t16"
+ }
+]

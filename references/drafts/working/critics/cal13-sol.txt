@@ -1,0 +1,9 @@
+v1 | FILM | REAL 7 | DEPTH 8 | FAULTS: Neck folds look molded into rubber; the glowing sacs have a plastic sheen, and the web strands wrap the ankles without convincing tension.
+v2 | PAINTING | REAL 3 | DEPTH 6 | FAULTS: The gold rays converge too neatly on a near-featureless central hole; the pool reads like a luminous graphic, and the silhouetted plants make a decorative border with little scale variation.
+v3 | FILM | REAL 7 | DEPTH 9 | FAULTS: The pale hides look waxy, the skinny joints read like model hinges, and the raised leg hangs in a posed-looking silhouette.
+v4 | PHOTO | REAL 10 | DEPTH 8 | FAULTS: none
+v5 | PHOTO | REAL 10 | DEPTH 10 | FAULTS: none
+v6 | PHOTO | REAL 10 | DEPTH 8 | FAULTS: none
+v7 | FILM | REAL 8 | DEPTH 9 | FAULTS: The slit openings are too evenly spaced and cut; the foreground hide has an all-over molded-rubber gloss.
+v8 | PAINTING | REAL 6 | DEPTH 9 | FAULTS: The giant ribs repeat in near-mirrored rows with overly consistent profiles; repeated waterfall curtains and the centered sunbeam make the valley look staged.
+RANK: v4, v6, v5, v7, v3, v1, v8, v2

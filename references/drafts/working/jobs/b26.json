@@ -1,0 +1,162 @@
+[
+ {
+  "id": "heart-d1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-2.jpg"
+  ],
+  "what": "step 2 detail: heart lava-surface, made from heart-est-t1 with plate-lava-2 as the rendering standard"
+ },
+ {
+  "id": "heart-d1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-2.jpg"
+  ],
+  "what": "step 2 detail: heart lava-surface, made from heart-est-t1 with plate-lava-2 as the rendering standard"
+ },
+ {
+  "id": "heart-d2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/ref-hide-1.jpg"
+  ],
+  "what": "step 2 detail: heart crust-walkers, made from heart-est-t1 with ref-hide-1 as the rendering standard"
+ },
+ {
+  "id": "heart-d2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/ref-hide-1.jpg"
+  ],
+  "what": "step 2 detail: heart crust-walkers, made from heart-est-t1 with ref-hide-1 as the rendering standard"
+ },
+ {
+  "id": "heart-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2 detail: heart foundered, made from heart-est-t1 with plate-lava-1 as the rendering standard"
+ },
+ {
+  "id": "heart-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2 detail: heart foundered, made from heart-est-t1 with plate-lava-1 as the rendering standard"
+ },
+ {
+  "id": "heart-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2 detail: heart vessel-mouth, made from heart-est-t1 with plate-lava-1 as the rendering standard"
+ },
+ {
+  "id": "heart-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "heart-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/heart-est-t1.png",
+   "/home/user/workspace/r3/real/plate-lava-1.jpg"
+  ],
+  "what": "step 2 detail: heart vessel-mouth, made from heart-est-t1 with plate-lava-1 as the rendering standard"
+ },
+ {
+  "id": "marsh-d1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2 detail: marsh bubbling-pool, made from marsh-est-t3 with plate-porcelain-1 as the rendering standard"
+ },
+ {
+  "id": "marsh-d1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2 detail: marsh bubbling-pool, made from marsh-est-t3 with plate-porcelain-1 as the rendering standard"
+ },
+ {
+  "id": "marsh-d2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2 detail: marsh stalk-colony, made from marsh-est-t3 with plate-porcelain-1 as the rendering standard"
+ },
+ {
+  "id": "marsh-d2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/plate-porcelain-1.jpg"
+  ],
+  "what": "step 2 detail: marsh stalk-colony, made from marsh-est-t3 with plate-porcelain-1 as the rendering standard"
+ },
+ {
+  "id": "marsh-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "step 2 detail: marsh wallowers, made from marsh-est-t3 with ref-hide-2 as the rendering standard"
+ },
+ {
+  "id": "marsh-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "step 2 detail: marsh wallowers, made from marsh-est-t3 with ref-hide-2 as the rendering standard"
+ },
+ {
+  "id": "marsh-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "step 2 detail: marsh thin-crust, made from marsh-est-t3 with ref-hide-2 as the rendering standard"
+ },
+ {
+  "id": "marsh-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "marsh-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/marsh-est-t3.png",
+   "/home/user/workspace/r3/real/ref-hide-2.jpg"
+  ],
+  "what": "step 2 detail: marsh thin-crust, made from marsh-est-t3 with ref-hide-2 as the rendering standard"
+ }
+]

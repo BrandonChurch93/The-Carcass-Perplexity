@@ -1,0 +1,162 @@
+[
+ {
+  "id": "eye-d1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/ref-dusk-1.jpg"
+  ],
+  "what": "step 2 detail: eye drinkers, made from eye-est-t1 with ref-dusk-1 as the rendering standard"
+ },
+ {
+  "id": "eye-d1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/ref-dusk-1.jpg"
+  ],
+  "what": "step 2 detail: eye drinkers, made from eye-est-t1 with ref-dusk-1 as the rendering standard"
+ },
+ {
+  "id": "eye-d2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: eye iris, made from eye-est-t1 with plate-terrace-2 as the rendering standard"
+ },
+ {
+  "id": "eye-d2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: eye iris, made from eye-est-t1 with plate-terrace-2 as the rendering standard"
+ },
+ {
+  "id": "eye-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2 detail: eye edge, made from eye-est-t1 with plate-crater-1 as the rendering standard"
+ },
+ {
+  "id": "eye-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2 detail: eye edge, made from eye-est-t1 with plate-crater-1 as the rendering standard"
+ },
+ {
+  "id": "eye-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2 detail: eye what-rises, made from eye-est-t1 with plate-crater-1 as the rendering standard"
+ },
+ {
+  "id": "eye-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-est-t1.png",
+   "/home/user/workspace/r3/real/plate-crater-1.jpg"
+  ],
+  "what": "step 2 detail: eye what-rises, made from eye-est-t1 with plate-crater-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine tether-kites, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine tether-kites, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-storm-1.jpg"
+  ],
+  "what": "step 2 detail: spine strike, made from spine-est-t2 with plate-storm-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-storm-1.jpg"
+  ],
+  "what": "step 2 detail: spine strike, made from spine-est-t2 with plate-storm-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine canal, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine canal, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine scorched, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ },
+ {
+  "id": "spine-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "spine-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/spine-est-t2.png",
+   "/home/user/workspace/r3/real/plate-ridge-1.jpg"
+  ],
+  "what": "step 2 detail: spine scorched, made from spine-est-t2 with plate-ridge-1 as the rendering standard"
+ }
+]

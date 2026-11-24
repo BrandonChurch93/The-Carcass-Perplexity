@@ -1,0 +1,9 @@
+v1 | PHOTO | REAL 10 | DEPTH 10 | FAULTS: none
+v2 | FILM | REAL 8 | DEPTH 8 | FAULTS: The shells have a waxy, varnished finish; the golden spray reads as a discrete glitter layer, and the blurred wading animals barely displace the water.
+v3 | PHOTO | REAL 10 | DEPTH 8 | FAULTS: none
+v4 | AMATEUR | REAL 5 | DEPTH 7 | FAULTS: The matching foreground trees frame the shot too neatly, with repeating splayed roots; teal dots look sprinkled over the scene, and the water has a thick, lacquered sheen.
+v5 | PAINTING | REAL 4 | DEPTH 6 | FAULTS: Matching glassy trees make a symmetrical proscenium; the bison read as rim-lit cutouts, some hooves dissolve into fog, and the aurora hangs like a painted curtain.
+v6 | FILM | REAL 7 | DEPTH 8 | FAULTS: Branching red lines look drawn on clear plastic, the creature reads as soft rubber, and the pale insects look stamped onto the sac.
+v7 | FILM | REAL 7 | DEPTH 9 | FAULTS: The standing creature balances stiffly on stick legs; the fallen one has neatly parallel limbs and waxy hide, and the giant ribs blend into the cliff like modeled set dressing.
+v8 | PHOTO | REAL 10 | DEPTH 7 | FAULTS: none
+RANK: v1, v3, v8, v2, v7, v6, v4, v5

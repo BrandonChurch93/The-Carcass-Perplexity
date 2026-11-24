@@ -1,0 +1,18 @@
+You are a visual effects supervisor reviewing eight stills. They come from different sources: some may be photographs, some may be frames from films or game cinematics, some may be paintings or generated images. You are not told which, and you have no other context.
+
+The eight files are attached to this task: v1.jpg, v2.jpg, v3.jpg, v4.jpg, v5.jpg, v6.jpg, v7.jpg, v8.jpg. Open every one with your file-reading tool and look at it carefully before you judge it. If a file is not in your working directory, search your workspace for it.
+
+For each image give:
+1. SOURCE: the single most likely source, one of PHOTO (photograph of a real place), FILM (frame from a top-budget film or AAA game cinematic), PAINTING (concept art, matte painting, illustration, poster or key art), AMATEUR (amateur generated art).
+2. REAL, a whole number 0 to 10: how strongly the subjects read as physical things with weight and surface, recorded by a camera in real light (10), as opposed to painted, composited or generated (0).
+3. DEPTH, a whole number 0 to 10: how strongly it reads as part of a larger three-dimensional place that continues behind and around the subject, which a camera could keep moving through (10), as opposed to a subject in front of a flat backdrop (0).
+4. FAULTS: the specific things that look flat, pasted, painted, posed, symmetrical, out of scale, rubbery, waxy or otherwise not real. Write "none" if nothing.
+
+Then RANK all eight from most to least convincing as something a camera really recorded.
+
+Send your answer to /root with the message_agent tool, in exactly this form and nothing else:
+v1 | SOURCE | REAL n | DEPTH n | FAULTS: ...
+(one such line for each of v1 to v8)
+RANK: v?, v?, v?, v?, v?, v?, v?, v?
+
+Be blunt and specific. Do not ask questions. Do not generate or edit images.

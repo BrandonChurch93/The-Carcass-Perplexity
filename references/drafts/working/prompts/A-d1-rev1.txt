@@ -1,0 +1,9 @@
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only the things listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+
+CHANGES.
+1. The pale bladders. In Image 1 they are too clean, like polished eggs. They are leathery fungus-like skins: matte, stained brown and green, splashed with soil, pitted and eaten in places, cracked. There are only a few rain drops on them, of different sizes, some run together. There is one small fly, not several.
+2. The split bladder leaks its gold dust as a thin, uneven smoke, not a straight plume. It hugs the ground first, then is carried sideways by the draught and thins out as it rises into the light. Some of it has already settled as a dull yellow film on the nearest leaves and bones.
+3. The bones are old: broken, cracked, greened with algae and half buried in the leaf litter, lying at odd angles. The jaw has lost most of its teeth; the few left are cracked, stained and uneven. Nothing is lined up.
+4. The animals far off in the river, out of focus, are the heavy grazers of this place: each has a thick neck about as long as its legs and a blunt head with no ears, no trunk and no tusks. They stay soft and out of focus, standing in the river with the current breaking around their legs.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

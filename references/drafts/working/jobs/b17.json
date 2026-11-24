@@ -1,0 +1,152 @@
+[
+ {
+  "id": "A-est-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-forest-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "A-est-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-forest-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "A-est-t42",
+  "model": "seedream_5",
+  "prompt": "A-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-forest-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "A-est-t43",
+  "model": "seedream_5",
+  "prompt": "A-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-forest-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "A-est-t44",
+  "model": "nano_banana_2_1",
+  "prompt": "A-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-forest-1.jpg",
+   "/home/user/workspace/r3/layout/A-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-forest-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "B-est-t50",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-terrace-2 as rendering reference + blurred layout"
+ },
+ {
+  "id": "B-est-t51",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-terrace-2 as rendering reference + blurred layout"
+ },
+ {
+  "id": "B-est-t52",
+  "model": "seedream_5",
+  "prompt": "B-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-terrace-2 as rendering reference + blurred layout"
+ },
+ {
+  "id": "B-est-t53",
+  "model": "seedream_5",
+  "prompt": "B-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-terrace-2 as rendering reference + blurred layout"
+ },
+ {
+  "id": "B-est-t54",
+  "model": "nano_banana_2_1",
+  "prompt": "B-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-terrace-2 as rendering reference + blurred layout"
+ },
+ {
+  "id": "C-est-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-dusk-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "C-est-t41",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-dusk-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "C-est-t42",
+  "model": "seedream_5",
+  "prompt": "C-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-dusk-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "C-est-t43",
+  "model": "seedream_5",
+  "prompt": "C-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-dusk-1 as rendering reference + blurred layout"
+ },
+ {
+  "id": "C-est-t44",
+  "model": "nano_banana_2_1",
+  "prompt": "C-est-plate",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg",
+   "/home/user/workspace/r3/layout/C-layout.jpg"
+  ],
+  "what": "fresh plate: real photograph plate-dusk-1 as rendering reference + blurred layout"
+ }
+]

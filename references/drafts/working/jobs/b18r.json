@@ -1,0 +1,42 @@
+[
+ {
+  "id": "B-est-t56",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate2",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate v2: hoops as windpipe rings, plumes as tube-worm gills"
+ },
+ {
+  "id": "B-est-t57",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate2",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate v2: hoops as windpipe rings, plumes as tube-worm gills"
+ },
+ {
+  "id": "A-d2-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t41.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from the new plate A-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41.png with a real photograph as rendering reference"
+ }
+]

@@ -1,0 +1,83 @@
+[
+ {
+  "id": "A-est-t16",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of A-est-t12 with listed changes"
+ },
+ {
+  "id": "A-est-t17",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of A-est-t12 with listed changes"
+ },
+ {
+  "id": "A-est-t18",
+  "model": "nano_banana_pro",
+  "prompt": "A-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of A-est-t12 with listed changes"
+ },
+ {
+  "id": "B-est-t16",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of B-est-t12 with listed changes"
+ },
+ {
+  "id": "B-est-t17",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of B-est-t12 with listed changes"
+ },
+ {
+  "id": "B-est-t18",
+  "model": "nano_banana_pro",
+  "prompt": "B-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t12.png"
+  ],
+  "what": "establishing, re-shoot of B-est-t12 with listed changes"
+ },
+ {
+  "id": "C-est-t16",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t13.png"
+  ],
+  "what": "establishing, re-shoot of C-est-t13 with listed changes"
+ },
+ {
+  "id": "C-est-t17",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t13.png"
+  ],
+  "what": "establishing, re-shoot of C-est-t13 with listed changes"
+ },
+ {
+  "id": "C-est-t18",
+  "model": "nano_banana_pro",
+  "prompt": "C-est-edit1",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t13.png"
+  ],
+  "what": "establishing, re-shoot of C-est-t13 with listed changes"
+ }
+]

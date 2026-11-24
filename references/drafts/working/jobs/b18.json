@@ -1,0 +1,141 @@
+[
+ {
+  "id": "B-est-t55",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate2",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate v2: hoops as windpipe rings, plumes as tube-worm gills"
+ },
+ {
+  "id": "B-est-t56",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate2",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate v2: hoops as windpipe rings, plumes as tube-worm gills"
+ },
+ {
+  "id": "B-est-t57",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-plate2",
+  "refs": [
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg",
+   "/home/user/workspace/r3/layout/B-layout.jpg"
+  ],
+  "what": "fresh plate v2: hoops as windpipe rings, plumes as tube-worm gills"
+ },
+ {
+  "id": "B-est-t58",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-hoops",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t51.png"
+  ],
+  "what": "single edit of B-est-t51: shaft wall only"
+ },
+ {
+  "id": "A-d1-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t41.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from the new plate A-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "A-d1-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t41.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from the new plate A-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "A-d2-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t41.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from the new plate A-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "A-d2-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "A-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/A-est-t41.png",
+   "/home/user/workspace/r3/real/plate-forest-1.jpg"
+  ],
+  "what": "detail from the new plate A-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t51.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t51.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "B-d2-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t51.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "detail from the new plate B-est-t51.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d1-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d1p",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d2-t11",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41.png with a real photograph as rendering reference"
+ },
+ {
+  "id": "C-d2-t12",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "C-d2p",
+  "refs": [
+   "/home/user/workspace/r3/gen/C-est-t41.png",
+   "/home/user/workspace/r3/real/plate-dusk-1.jpg"
+  ],
+  "what": "detail from the new plate C-est-t41.png with a real photograph as rendering reference"
+ }
+]

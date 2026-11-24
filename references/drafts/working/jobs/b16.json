@@ -1,0 +1,20 @@
+[
+ {
+  "id": "B-d1-t09",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1e",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t38.png"
+  ],
+  "what": "detail re-shot from B-est-t38"
+ },
+ {
+  "id": "B-d1-t10",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-d1e",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t38.png"
+  ],
+  "what": "detail re-shot from B-est-t38"
+ }
+]

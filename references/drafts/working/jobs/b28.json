@@ -1,0 +1,122 @@
+[
+ {
+  "id": "ribs-d1-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs colony, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d1-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d1",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs colony, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d2-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs drowned, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d2-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d2",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs drowned, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/ref-wader-1.jpg"
+  ],
+  "what": "step 2 detail: ribs tide-pool, made from ribs-est-t2 with ref-wader-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/ref-wader-1.jpg"
+  ],
+  "what": "step 2 detail: ribs tide-pool, made from ribs-est-t2 with ref-wader-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs bore, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "ribs-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-est-t2.png",
+   "/home/user/workspace/r3/real/plate-surf-1.jpg"
+  ],
+  "what": "step 2 detail: ribs bore, made from ribs-est-t2 with plate-surf-1 as the rendering standard"
+ },
+ {
+  "id": "breath-d3-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "breath-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: breath gill-plumes, made from B-est-t60 with plate-terrace-2 as the rendering standard"
+ },
+ {
+  "id": "breath-d3-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "breath-d3",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: breath gill-plumes, made from B-est-t60 with plate-terrace-2 as the rendering standard"
+ },
+ {
+  "id": "breath-d4-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "breath-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: breath down-the-shaft, made from B-est-t60 with plate-terrace-2 as the rendering standard"
+ },
+ {
+  "id": "breath-d4-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "breath-d4",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t60.png",
+   "/home/user/workspace/r3/real/plate-terrace-2.jpg"
+  ],
+  "what": "step 2 detail: breath down-the-shaft, made from B-est-t60 with plate-terrace-2 as the rendering standard"
+ }
+]

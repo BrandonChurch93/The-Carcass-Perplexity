@@ -111,7 +111,7 @@ All three critics placed all six details in the correct wide view (18 of 18). SU
 | C detail 1, the sac (C-d1-t21) | 8 | 10 | 8 |
 | C detail 2, the snare (C-d2-t31) | 7 | 9 | 8 |
 
-Asked whether each wide view and its details add up to one coherent place (YES, MOSTLY or NO): A MOSTLY, MOSTLY, MOSTLY; B YES, YES, MOSTLY; C MOSTLY, YES, MOSTLY (Opus, Sol, Carbon). Sol sent two replies a few seconds apart; the later one is used here and both are in `step-1-art-directions/critics/loc3-sol.txt`. Same-location test 2 scored the earlier set, before B detail 1 and C detail 2 were re-made: also 18 of 18, with A, B and C all MOSTLY except two YES for C.
+Asked whether each wide view and its details add up to one coherent place (YES, MOSTLY or NO): A MOSTLY, MOSTLY, MOSTLY; B YES, YES, MOSTLY; C MOSTLY, YES, MOSTLY (Opus, Sol, Carbon). Sol sent two replies a few seconds apart; the later one is used here and both are in `working/critics/loc3-sol.txt`. Same-location test 2 scored the earlier set, before B detail 1 and C detail 2 were re-made: also 18 of 18, with A, B and C all MOSTLY except two YES for C.
 
 Faults the critics still name, which I agree with and would fix in step 2:
 - A: the bone pile in the corner looks arranged; several animals share a head-down pose; the arch is too clean; the pile in detail 1 has a jaw and a venting bladder that the wide does not show; detail 2 loses the arch.
@@ -130,3 +130,29 @@ Nothing was built in this round, as instructed. Labels: MEASURED means tested; S
 ## How step 2 would run
 
 For each of the six places: one establishing view, three or four detail views, and one top-down layout sketch with the detail positions and the camera route; then the reveal. The method that worked here carries over: every picture is a fresh generation, a real photograph is supplied only as the standard for how a camera records light, and each detail is generated from its establishing view as the same place at the same moment. The change for step 2 is to lock each animal's design, each carcass position and each prop layout in the establishing view first, so that the details cannot drift.
+
+## After step 1: detail tests and the move to step 2
+
+This section was added after the step 1 hand-over. Everything above it is as it was shown.
+
+Blind packets 12 and 13 scored the six detail views for realism for the first time; until then they had only been tested for being the same place as their wide view. REAL is 0 to 10 for how real the picture looks; the label is the critic's guess at what the picture is.
+
+| Detail | GPT-6.2 Sol | Claude Opus 5.5 | Gemini 4 Carbon |
+|---|---|---|---|
+| A detail 1, spore bladders (A-d1-t21) | 8, FILM | 6, FILM | 4, PAINTING |
+| A detail 2, grazers (A-d2-t21) | 8, FILM | 6, FILM | 5, AMATEUR |
+| B detail 1, airway rim (B-d1-t32) | 7, FILM | 6, FILM | 5, FILM |
+| B detail 2, waders (B-d2-t20) | 7, FILM | 5, FILM | 4, AMATEUR |
+| C detail 1, the sac (C-d1-t21) | 7, FILM | 5, FILM | 6, FILM |
+| C detail 2, the snare (C-d2-t31) | 7, FILM | 6, FILM | 6, AMATEUR |
+
+- The real animal photographs in the same packets scored 10 from every critic. The round 2 frames scored 1 to 6.
+- The rule was fixed before the results were seen: a detail passes if at least two critics call it a photograph or a film frame and Sol and Opus average 7 or more. The two A details pass. The four B and C details are borderline at 6.0 to 6.5. None fails.
+- Tells the critics named: waxy or rubbery skin, water drips as tidy lines of beads, regular rows of slits, a staged carcass and pair, veins drawn on the surface of the sac, moths that look pasted on, threads without tension.
+- Batch 23 revised each detail once, with a real photograph of bare hide, a wading bird or soft tissue as the standard and those tells as the only changes. The two B revisions (B-d1-t42, B-d2-t42) were adopted by eye and are the ones used in the full set. They were not tested blind again. The A and C revisions were not judged.
+
+No pick of a direction was given. At about 01:56 UTC the user wrote that the quality was up to par, that the run was taking far too long, and that the work should not stop. Step 2 therefore ran in B, Titan-fall, the direction recommended above, as a default. A or C can still be picked; the full set would then be remade in that direction.
+
+Step 2 was made faster than step 1 on purpose: two or three takes per picture, chosen by my own eye from full-size views, one redo at most, and no blind tests. The method that carried over is the one that worked in step 1: every picture is a fresh generation, a real photograph is supplied only as a rendering standard, and each detail is generated from its establishing view as the same place at the same moment. The full set, its layout sketches and the faults I know of are in `step-2-full-set/` and `NOTES.md`.
+
+Build claims are unchanged by step 2. Nothing was built or measured in this round, so everything listed above as UNKNOWN is still unknown.

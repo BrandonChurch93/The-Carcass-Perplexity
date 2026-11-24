@@ -1,0 +1,29 @@
+[
+ {
+  "id": "B-est-t38",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit6b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t34.png"
+  ],
+  "what": "re-shoot of take 34: waders scattered, shaft kept deep and ringed but less even, crimson in clumps"
+ },
+ {
+  "id": "B-est-t39",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit6b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t34.png"
+  ],
+  "what": "re-shoot of take 34: waders scattered, shaft kept deep and ringed but less even, crimson in clumps"
+ },
+ {
+  "id": "B-est-t40",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "B-est-edit6b",
+  "refs": [
+   "/home/user/workspace/r3/gen/B-est-t34.png"
+  ],
+  "what": "re-shoot of take 34: waders scattered, shaft kept deep and ringed but less even, crimson in clumps"
+ }
+]
