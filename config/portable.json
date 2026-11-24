@@ -1,0 +1,9 @@
+{
+  "note": "The WebGL2 extensions every target browser has. The page is given these and no others, on every machine.",
+  "portable": [
+    "EXT_color_buffer_float",
+    "EXT_color_buffer_half_float",
+    "EXT_texture_filter_anisotropic",
+    "OES_texture_float_linear"
+  ]
+}

@@ -1,0 +1,9 @@
+export function unitIds(): string[];
+export function engineFiles(): string[];
+export function unitFiles(id: string): string[];
+export function engineHash(): string;
+export function unitHash(id: string): string;
+export function unitHashes(): Record<string, string>;
+export function state(): { engine: string; units: Record<string, string> };
+export function filesHash(files: string[]): string;
+export function approvedFiles(): string[];

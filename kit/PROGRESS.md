@@ -18,28 +18,33 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Review page: none
 - Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The last measurement, at 20:41 UTC, read public. It is measured once at the start of each task for the record (`npm run private`), and nothing waits on it
 - Sound files: committed to the repo. The music went in on 2026-11-24 at 20:47 UTC on Brandon's word (note 3). Kept narration clips, kept sounds and the newest mix are committed like any other built asset, each inside `repo.maxFileMb`. No archive of sounds is attached anywhere
-- Large files reach Brandon by: not measured
+- Large files reach Brandon by: an attachment in the thread. MEASURED 2026-11-24: 20 MB, 100 MB and 400 MB test files were all accepted by the share call. The review page carries the same films while the site stays under the hosting limit
 
 ## Latest pictures
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 3, 2026-11-24 21:09 UTC:
+Status 4, 2026-11-24 21:30 UTC:
 
-- `01-image-limit.jpg`: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit. No render existed yet
+- `01-compare-heart-2.jpg`: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them. The right side here is a test card. No frame has been computed yet
+- `02-review-820x1180-top.jpg`: The review page as it will look on a tablet, filled with test content for now. Everything that plays will be on it
+- `03-sheet-establishing.jpg`: The sheet tool: the establishing sheet, fake frames
+- `04-crops-ribs-0-1.jpg`: The crops tool: native-size crops of a fake frame
 
-Status 2, 2026-11-24 20:48 UTC, showed the test chart itself. Status 1, 2026-11-24 20:36 UTC, showed the approved contact sheet, `references/approved/contact-sheet.jpg`.
+Status 3, 2026-11-24 21:09 UTC, showed: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit.
+Status 2, 2026-11-24 20:48 UTC, showed the test chart itself.
+Status 1, 2026-11-24 20:36 UTC, showed the approved contact sheet, `references/approved/contact-sheet.jpg`.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T21:07:46Z
-phase 0: 0.63 h used of 3.00 h
-build: 0.63 h used of 72.00 h
+2026-11-24T21:30:04Z
+phase 0: 1.00 h used of 3.00 h
+build: 1.00 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 21
+minutes since the last status: 22
 ```
 
 ## Phases
@@ -80,7 +85,7 @@ none
 - Name from the kickoff prompt: none. The line arrived as the unfilled placeholder `<the name of the voice, exactly as it appears under My Voices in ElevenLabs>`
 - Voice used, and its id on the account: `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`, category generated (voice design), created 2026-11-23 20:35 UTC
 - Chosen by: the Builder, 2026-11-24. The account lists three voices that are not stock: `Worst-Job-Application-Ever` (2026-11-24 03:37 UTC, an Australian wildlife-documentary voice made for another project), `Carcass Narrator` (2026-11-23 20:35 UTC) and `Carcass Narrator v1` (2026-11-23 20:29 UTC, described as an old man). The rule in `kit/01-FILM.md` is the most recently created voice that is not stock. Read to the letter that is the other project's voice, so the rule was read as the most recently created voice made for this film. Its description matches the kit: he lived in this ruined world and warns you. Said in status 1
-- Speech model and settings: none
+- Speech model and settings: tested in Phase 0 with `eleven_v4`, stability 0.5, similarity 0.75, `mp3_44100_192`. The settings for the film are chosen in Phase 1
 - Clips kept: none
 
 ## Sound
@@ -122,7 +127,12 @@ Measured 2026-11-24 20:37 to 20:44 UTC on the Builder's VM.
 
 ### Handing over a large file
 
-none
+Measured 2026-11-24 21:19 UTC with three test videos of moving noise with no sound, made with ffmpeg: 20, 100 and 400 megabytes (the sizes in `deliver.attachTestMb`). What they are was said in status 4.
+
+- An attachment in the thread. MEASURED: the share call accepted all three, 20 MB, 100 MB and 400 MB, each in a few seconds, and each is listed in the thread as a video. UNKNOWN from this side: how each plays or downloads for Brandon, which only he sees.
+- App hosting. STATED in `AGENTS.md`: about 500 MB a site, behind a sign-in. To be measured with the first publish in step 18, where the 400 MB test file rides along once.
+- A download the workspace offers: the same share call. No other download route was found in the tool list.
+- So a film file reaches Brandon as an attachment in the thread, and it also plays on the review page while the site stays under the hosting limit.
 
 ### The image limit
 
@@ -138,11 +148,128 @@ Measured 2026-11-24 20:58 to 21:08 UTC with test charts: five four-digit numbers
 
 ### What can be called
 
-none
+Recorded 2026-11-24 from the tool list of this workspace. STATED means read in the tool's own description. Nothing here was changed by a test.
+
+- Image models, through `generate_image`. STATED: `gpt_image_2_6_sunburst` and `gpt_image_2_6_flare` (up to 5 reference images), `nano_banana_2_1` and `nano_banana_pro` (up to 14 reference images, the second returns up to 2K), `seedream_5` (up to 10 reference images, up to 2K). MEASURED in the reference runs: `gpt_image_2_6_sunburst` returned 3840 x 2160 for the orbit key and about two minutes a call. The largest size of the others: UNKNOWN until one is used, and then it is written in that asset's recipe.
+- A video model. STATED: `generate_video` can be called. It is used only to study motion, never for a frame.
+- An image-to-3D model. MEASURED: none in the tool list.
+- App hosting. STATED: `deploy_website` publishes a static folder and `publish_website` exists beside it. The largest site: about 500 MB as `AGENTS.md` states, measured in step 18.
+- The listener. STATED: `evaluate_audio` takes a sound file of up to 20 MB and a question. MEASURED: two calls answered in 8 and 14 seconds.
+- Speech and sound effects: ElevenLabs through the saved credential, see "The sound tools". The workspace's own `text_to_speech` is not used, because the voice is Brandon's account voice.
+- Supporting agents. MEASURED: seven model families can be started and all seven see images: `claude_fable_5_2`, `claude_sonnet_5_5`, `claude_opus_5_5`, `gemini_4_carbon`, `gemini_neon`, `gpt_6_2_astra`, `gpt_6_2_sol`. See "The image limit". No model hears sound directly.
 
 ### The sound tools
 
-none
+Each fact is marked MEASURED (seen in this test), STATED (read in `audio/records/API-REFERENCE.md`) or UNKNOWN. All test files are in `out/work/soundtest/`.
+
+#### When and where
+
+- MEASURED: the test ran on 2026-11-24 from 21:22:06 to 21:25 UTC, on the Builder's machine, through the credential proxy for `api.elevenlabs.io`.
+- MEASURED: `GET /v1/user/subscription` returned HTTP 200, tier `creator`, 68,854 of 131,000 characters used before the two generation calls.
+- MEASURED: `GET /v1/models` returned HTTP 200 and lists `eleven_v4` for speech with 100,000 characters a request, cost multiplier 1.0, `can_use_style` false and `can_use_speaker_boost` false.
+
+#### The voice
+
+- MEASURED: `GET /v1/voices/GSUpY5pPm1gN8Crb8gqz` returned HTTP 200 in 0.56 s at 21:22:18 UTC. The voice is found.
+- MEASURED: name `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`, category `generated`, label language `en`.
+- MEASURED: stored settings are stability 0.5, similarity_boost 0.75, style 0.0, speed 1.0, use_speaker_boost true.
+- MEASURED: `high_quality_base_model_ids` is an empty list, `fine_tuning.state` is empty and `verified_languages` is empty. The API does not say which model the voice was designed for.
+- MEASURED: the stored description asks for a voice far deeper than human, guttural, with a dry rasp, speaking extremely slowly, dark and menacing.
+
+#### The speech call
+
+- MEASURED: endpoint `POST /v1/text-to-speech/GSUpY5pPm1gN8Crb8gqz?output_format=mp3_44100_192`, sent at 21:22:36 UTC, one try, HTTP 200.
+- STATED: `eleven_v4` is the flagship model recommended for narration and takes stability and similarity only.
+- MEASURED: model sent `eleven_v4`. Settings sent: `voice_settings` stability 0.5 and similarity_boost 0.75 (the stored values), `seed` 20261124. No style, speed or speaker boost was sent.
+- MEASURED: text sent, 75 characters: "This is a test of the narrator's voice, recorded at the start of the build."
+- MEASURED: the call took 2.03 s in all. The header `tts-latency-ms` reported 773.
+- MEASURED: 116,653 bytes of `audio/mpeg`, saved as `voice-test.mp3`. The Creator plan allowed `mp3_44100_192`.
+- MEASURED: response headers `character-cost: 33`, `request-id: u4TOLjSv5rVDuquBL1US`, `history-item-id: fGY9Cp5y74ut1EZyVQxk`, `current-concurrent-requests: 1`, `maximum-concurrent-requests: 5`.
+- MEASURED: the cost reported, 33, is less than the 75 characters sent. STATED: the price of `eleven_v4` is 1x. Why the header is lower: UNKNOWN.
+- MEASURED: the request with `seed` on `eleven_v4` was accepted. UNKNOWN: whether the seed makes a second take the same, since only one take was made.
+- MEASURED: the header shows a limit of 5 requests at once for this call. STATED: the v4 limit on Creator was UNKNOWN in the reference.
+
+#### The sound effect call
+
+- MEASURED: endpoint `POST /v1/sound-generation?output_format=mp3_44100_192`, sent at 21:22:47 UTC, one try, HTTP 200.
+- STATED: `eleven_text_to_sound_v3` is the model to name. The default, `eleven_text_to_sound_v2`, is deprecated.
+- MEASURED: model sent `eleven_text_to_sound_v3`. Settings sent: `duration_seconds` 6. `prompt_influence` and `loop` were not sent. STATED: their defaults are 0.3 and false.
+- MEASURED: text sent: "Slow heavy lava bubbling and hissing in a vast volcanic crater, deep rumble, no music, no voices"
+- MEASURED: the call took 1.62 s in all.
+- MEASURED: 145,492 bytes of `audio/mpeg`, saved as `sfx-test.mp3`.
+- MEASURED: response header `character-cost: 66`. No `request-id` header came back on this endpoint.
+- STATED: 40 credits a second when the duration is given, which would be 240 for 6 s. The header says 66. Which is charged: UNKNOWN.
+- MEASURED: the account's used count rose from 68,854 to 69,105 (by 251) between a read before the two calls and a read about three minutes after. Another process shares the account, so the rise cannot be pinned on these two calls.
+
+#### Levels as returned
+
+- MEASURED: `voice-test.mp3` is MP3, 44,100 Hz, 1 channel, 192 kb/s, 4.800 s. Integrated loudness -18.48 LUFS, true peak -2.76 dBTP, loudness range 2.4 LU.
+- MEASURED: `sfx-test.mp3` is MP3, 44,100 Hz, 2 channels, 192 kb/s, 6.000 s. Integrated loudness -22.35 LUFS, true peak -5.02 dBTP, loudness range 4.2 LU.
+- MEASURED: the measures come from `ffprobe` and from the first pass of the `ffmpeg` filter `loudnorm`. The `ebur128` filter agreed on the peaks (-2.8 and -5.0 dBFS).
+
+#### Levels after levelling
+
+- MEASURED: the level chain used is `aresample=192000, volume=<gain>dB, alimiter=limit=0.8:level=false:attack=5:release=80, aresample=48000`, written as 16-bit PCM WAV at 48,000 Hz. The gain was set by measuring and correcting up to four times.
+- MEASURED: `voice-test-level.wav`, gain +2.66 dB: 48,000 Hz, 1 channel, 4.800 s, 460,878 bytes. Integrated loudness -16.01 LUFS, true peak -1.94 dBTP, loudness range 2.3 LU.
+- MEASURED: `sfx-test-level.wav`, gain +6.89 dB: 48,000 Hz, 2 channels, 6.000 s, 1,152,078 bytes. Integrated loudness -15.94 LUFS, true peak -1.94 dBTP, loudness range 4.1 LU.
+- MEASURED: both levelled files meet the target of about -16 LUFS with a true peak no higher than -1.5 dB.
+
+#### Other measures of the speech
+
+- MEASURED: 15 words in 4.800 s, which is about 188 words a minute. One pause of 0.28 s at the comma, at 2.45 s.
+- MEASURED: median pitch about 105 Hz, with the 10th to 90th percentile at 78 to 165 Hz, by a simple autocorrelation over 117 voiced frames (search range 40 to 300 Hz). This is a rough figure, not a checked pitch tracker.
+
+#### What the listener said
+
+- MEASURED: the listener is the `evaluate_audio` tool, called once for each levelled file with the default model and the one question "Describe what you hear in this recording." No answer was suggested.
+- UNKNOWN: which model the listener uses by default.
+- MEASURED: the call on `voice-test-level.wav` took 13.6 s. The call on `sfx-test-level.wav` took 8.3 s. Both succeeded on the first try.
+- MEASURED: the tool wrote its two report files to `/home/user/workspace/`, outside the repo. They were moved into `out/work/soundtest/` as `voice-test-level_evaluation.txt` and `sfx-test-level_evaluation.txt`.
+
+MEASURED: the listener's answer about `voice-test-level.wav`, word for word:
+
+```text
+Based on the audio clip provided, here is a description of what is heard:
+
+**Transcript:**
+A single sentence is spoken: *"This is a test of the narrator's voice, recorded at the start of the build."*
+
+**Vocal Characteristics:**
+*   **Tone & Pitch:** The speaker has a deep, rich, and highly resonant male voice. 
+*   **Delivery:** The delivery is deliberate, measured, and highly articulate. Every syllable is pronounced clearly. 
+*   **Style:** It sounds like a professional voiceover artist. The style is authoritative yet smooth, reminiscent of a documentary narrator, an audiobook reader, or a classic movie trailer voice. 
+*   **Accent:** The speaker uses a neutral, standard North American broadcast accent.
+
+**Audio Quality:**
+*   **Fidelity:** The recording is high-fidelity and studio-quality. 
+*   **Environment:** The audio is "dry," meaning there is no noticeable room echo, reverberation, or background noise (hissing or humming). It sounds as though it was recorded in a sound-treated booth.
+*   **Mic Technique:** There is a noticeable "proximity effect" (the enhancement of low-frequency bass sounds that occurs when a person speaks very close to a high-quality microphone), which contributes to the warmth and depth of the voice.
+
+**Overall Context:**
+As the words suggest, this is a technical audio test. It sounds like a placeholder or calibration file used by developers during the early stages (the "start of the build") of creating a video game, software application, or media project to ensure the voiceover systems are functioning correctly.
+```
+
+MEASURED: the listener's answer about `sfx-test-level.wav`, word for word:
+
+```text
+The audio features a deep, gurgling sound of rushing water.
+```
+
+#### The tester's reading, kept apart from the listener's words
+
+- Speech, deep and male: yes. The listener calls it a deep, rich, resonant male voice, close to the microphone, with no noise and no fault named. It also wrote the sentence down correctly.
+- Speech, grim: not shown. The listener's words are authoritative, smooth and warm, like a documentary or trailer voice. Nothing in its answer says grim, dark, menacing, guttural or rasping. The test sentence is neutral, so this one take cannot settle it.
+- Speech, slow: not shown by the numbers. About 188 words a minute is a brisk pace, and a median near 105 Hz is an ordinary low male pitch, not the "far deeper than human" of the stored description. The listener did call the delivery deliberate and measured.
+- Sound effect: a part match. The listener heard something deep and gurgling, which fits bubbling, but named it rushing water, not lava, and did not mention hissing, a rumble or a large space. It named no music and no voice.
+- Both readings rest on one listener call each. The method in `kit/03-METHOD.md` section 7 asks for two calls a take, so these are a first look, not a pass.
+
+#### Failures and tries
+
+- MEASURED: no API call failed. Voice lookup, speech, sound effect, models and subscription each returned HTTP 200 on the first try.
+- MEASURED: no listener call failed. Each succeeded on the first try.
+- MEASURED: one levelling method was dropped. A two-pass `loudnorm` with `linear=true` fell back to dynamic mode on both files and gave -16.72 LUFS (speech) and -16.67 LUFS (sound effect) at -1.50 dBTP when measured again. It was replaced by the gain and limiter chain above, which landed within 0.1 LU of the target.
+- MEASURED: the `file` command is not installed on this machine. `ffprobe` was used instead.
+- MEASURED: nothing outside `out/work/soundtest/` was edited in the repo. No git, npm or render was run.
 
 ### The terms that were read
 
@@ -229,6 +356,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. For everything new that appears in a frame the GPT Image models come first, because their terms are the clearest of the image models; another model is used where it makes the better picture. See `ASSETS.md`.
 - 2026-11-24. The harness drives the browser that is already on every VM (Chrome for Testing 147.0.7727.15) through `playwright-core` 1.59.1, so the Builder's VM and every sandbox VM render with one browser and nothing is downloaded.
 - 2026-11-24. Critic packs for the gemini_4_carbon family are cut to at most 1048 px on the long edge, inside the config limits: it left 11 of 60 small digits unread at 1400 x 788 and none at 1048 x 1048. Every other family gets 1400 x 788.
+- 2026-11-24. Megabytes and gigabytes are decimal in every check (45 MB is 45,000,000 bytes), the stricter reading.
+- 2026-11-24. Every render target is half float, in every mode and on every machine, so the half float path of G10 is the only path. Accumulating four samples in half float keeps about 11 bits, well under one step of the 8 bit output, and the output is dithered.
+- 2026-11-24. The page is given only the WebGL extensions listed in `config/portable.json`, on every machine: every other extension is answered as missing before three.js sees it. So G10 holds by construction and a frame cannot come to depend on an extension only one machine has.
+- 2026-11-24. The harness builds its own copy of the site under `out/work/site/` when the source hash changes, so a render never empties `dist/` with the review page in it.
 
 ## Notes from Brandon
 
@@ -279,13 +410,11 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `picture_tools_builder` | build, sandbox | `tools/lib/img.mjs`, `crops`, `compare`, `sheet` | `agent/tools-pictures` | 20:58 UTC | 60 min |
-| `review_page_builder` | build, sandbox | `review` and `keep`, and the review page | `agent/tools-review` | 20:58 UTC | 60 min |
-| `repo_checks_builder` | build, sandbox | Checks G8 and G9, and the unit tests of the clock | `agent/tools-checks` | 20:58 UTC | 50 min |
+| `gate_budget_builder` | build, sandbox | `gate` and `budget`, with tests, against the renderer contract | `agent/tools-gate` | 21:19 UTC | 45 min |
 
-`review_page_builder` reported at 21:02 UTC that `gh auth setup-git` fails in its VM ("You are not logged into any GitHub hosts"), so it cannot push. The first sandbox agent could, at 20:43 UTC. All three were told at 21:04 UTC: if the push fails, commit on the branch and attach a `git bundle` and a patch file to the report, and the Builder fetches from the bundle and pushes.
+Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not logged into any GitHub hosts"), and a plain `git push` then works in most of them and fails in some. Every brief says: push, and if it fails attach a `git bundle` to the report. Both routes have been used and both work.
 
-Ended: `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (answered 20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (answered 20:59 to 21:08 UTC); `sound_api_reader` (answered 21:03 UTC, its reference is in `audio/records/API-REFERENCE.md`). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
+Ended and merged into `main`: `repo_checks_builder` (`c695a6f`), `picture_tools_builder` (`6bcae8f`), `review_page_builder` (`b1d2a4f`, from a bundle), `status_tool_builder` (`04275dc`, answered 21:27 UTC). Ended with a record: `sound_tools_tester` (answered 21:26 UTC, see "The sound tools"); `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (20:59 to 21:08 UTC); `sound_api_reader` (21:03 UTC). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
 ## Rounds
 
@@ -316,6 +445,8 @@ none
 - 2026-11-24 20:39 UTC `a218a33` pushed. Addendum 001 applied
 - 2026-11-24 20:46 UTC `0c59181` pushed. The music, the lookups
 - 2026-11-24 20:52 UTC `5a12389` pushed. Packages pinned, harness contract
+- 2026-11-24 21:09 UTC `1837d86` pushed. Status 3, the image limit, the sound API reference
+- 2026-11-24 21:12 UTC `b1d2a4f` pushed. The checks, the picture tools and the review page merged
 
 ## Session log
 
@@ -323,3 +454,5 @@ none
 - 2026-11-24 20:39 UTC. Addendum 001 arrived on `main` as `7da7398` and was merged at 20:36 UTC. Applied: the repo was measured again (still PUBLIC, so nothing sound is committed yet and the one-time steps wait for the first private reading); the music line was taken out of "For Brandon to decide"; the music row in `ASSETS.md` now reads supplied by Brandon, royalty-free, cleared by Brandon for this project. Status 1 was posted at 20:36 UTC with the approved contact sheet shown inline.
 - 2026-11-24 20:45 UTC. Brandon's note 3 applied: the sound folders left `.gitignore` and the music was committed. The five Phase 0 agents all answered between 20:42 and 20:46 UTC: the idle test, the sandbox test (clone, push after `gh auth setup-git`, two attachments), the image terms, the sound terms and X's limits. Their findings are under "Tool record", "The terms that were read" and "Platform", and in `ASSETS.md`.
 - 2026-11-24 21:09 UTC. Status 3 posted at 21:09 UTC with the image limit table. The image limit is recorded: 1400 x 788 arrives untouched, about 1.15 megapixels is the limit, nothing lowered. Ten reviewer agents and the sound API reader have answered. Three build agents are working on harness tools.
+- 2026-11-24 21:12 UTC. The three build agents finished inside 14 minutes. Their branches were merged, one from a bundle. A fault in the clock found by the new tests was fixed: continuation boxes are whole seconds and a repeated `--continue N` is ignored.
+- 2026-11-24 21:32 UTC. Status 4 posted at 21:30 UTC with the tools' own pictures, since no frame exists yet. The status command is merged and made this status. Step 8: three test files of 20, 100 and 400 MB were attached and all were accepted. Step 10 and step 11 are recorded. The sound test found the voice deep and male, and not yet grim or slow (about 188 words a minute on a neutral line with the stored settings): Phase 1 steers it with the delivery tags and measures the pace of every take. The engine scaffold and the spike scene are in work.
