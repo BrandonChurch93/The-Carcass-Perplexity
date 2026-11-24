@@ -1,0 +1,57 @@
+.stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: #0c0b0a;
+}
+
+.picture {
+  grid-area: 1 / 1;
+  width: min(100vw, 177.78vh);
+  aspect-ratio: 16 / 9;
+}
+
+.control {
+  grid-area: 1 / 1;
+  width: 76px;
+  height: 76px;
+  padding: 0 0 0 4px;
+  border-radius: 50%;
+  border: 1px solid rgba(216, 208, 196, 0.34);
+  background: rgba(216, 208, 196, 0.05);
+  color: #d8d0c4;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease, transform 200ms ease;
+}
+
+.control svg {
+  width: 26px;
+  height: 26px;
+  display: block;
+  margin: auto;
+}
+
+.control:hover {
+  background: rgba(216, 208, 196, 0.11);
+  border-color: rgba(216, 208, 196, 0.6);
+}
+
+.control:active {
+  transform: scale(0.96);
+}
+
+.control:focus-visible {
+  outline: 2px solid #c8763a;
+  outline-offset: 4px;
+}
+
+.hidden {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control {
+    transition: none;
+  }
+}

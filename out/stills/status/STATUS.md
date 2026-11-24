@@ -1,8 +1,6 @@
-# Status 4
+# Status 5
 
-2026-11-24 21:30 UTC. Phase 0, ground truth.
+2026-11-24 21:57 UTC. Phase 0, ground truth.
 
-- `01-compare-heart-2.jpg`: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them. The right side here is a test card. No frame has been computed yet
-- `02-review-820x1180-top.jpg`: The review page as it will look on a tablet, filled with test content for now. Everything that plays will be on it
-- `03-sheet-establishing.jpg`: The sheet tool: the establishing sheet, fake frames
-- `04-crops-ribs-0-1.jpg`: The crops tool: native-size crops of a fake frame
+- `01-frame-300-hd-review.jpg`: The first computed frame. This is a test scene made to measure what a place will cost, not a place of the film: a displaced, lit, glowing surface under a volume of fume, with 6,000 moving embers. 1920 x 1080, two samples, 21 seconds on this machine
+- `02-frame-300-1.jpg`: The same frame through the crops tool, at native size. The tools now run on real frames

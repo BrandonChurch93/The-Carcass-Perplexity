@@ -139,18 +139,18 @@ describe('a missing key', () => {
     for (const input of [null, undefined, {}, [], 'showcase']) expect(isLoud(input), String(input)).toBe(true);
   });
 
-  it.fails('fails for every nested key with a fixed name', () => {
+  it('fails for every nested key with a fixed name', () => {
     const open = ['settled', 'motion.byUnit', 'budget.phaseHours', 'budget.reserveHours'];
     const quiet = pathsOf(real(), '', open).filter((p) => isLoud(without(p)) === false);
     expect(quiet).toEqual([]);
   });
 
-  it.fails('fails for a key picture with no id', () => {
+  it('fails for a key picture with no id', () => {
     const c = broken((k) => { delete (first(k.keys) as Bag).id; });
     expect(isLoud(c)).toBe(true);
   });
 
-  it.fails('fails for a unit with no id', () => {
+  it('fails for a unit with no id', () => {
     const c = real();
     const used = new Set<string>([...c.keys.map((k) => k.unit), ...c.narration.clips.map((n) => n.unit), ...c.film.order, c.lookLockUnit, c.deliver.cardLoop.unit, ...c.buildOrderAfterLookLock, ...Object.keys(c.motion.byUnit)]);
     const spare = c.units.find((u) => used.has(u.id) === false);
@@ -358,7 +358,7 @@ describe('formatById', () => {
     for (const id of ['no-such-format', '', 'master', 'UHD']) expect(() => formatById(id), id).toThrow(/no such format/);
   });
 
-  it.fails('throws on an id that is only a name every object has', () => {
+  it('throws on an id that is only a name every object has', () => {
     expect(() => formatById('constructor')).toThrow();
   });
 });
@@ -374,7 +374,7 @@ describe('samplesOf', () => {
     for (const id of ['no-such-tier', '', 'FINAL']) expect(() => samplesOf(id), id).toThrow(/no such tier/);
   });
 
-  it.fails('throws on a tier that is only a name every object has', () => {
+  it('throws on a tier that is only a name every object has', () => {
     expect(() => samplesOf('constructor')).toThrow();
   });
 });

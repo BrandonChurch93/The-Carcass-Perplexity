@@ -25,7 +25,8 @@
     "determinism": "node tools/determinism.mjs",
     "gate": "node tools/gate.mjs",
     "keep": "node tools/keep.mjs",
-    "review": "node tools/review.mjs"
+    "review": "node tools/review.mjs",
+    "shape": "node tools/shape.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

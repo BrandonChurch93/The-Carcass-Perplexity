@@ -58,7 +58,7 @@ describe('the count', () => {
     for (const count of [0, 3, 5, 6, 7, 12, 63, 65, 100, -1, -2, -4]) expect(() => frameSamples(0, count), `count ${count}`).toThrow(/power of two/);
   });
 
-  it.fails('a count that is not a whole number throws', () => {
+  it('a count that is not a whole number throws', () => {
     for (const count of [1.5, 2.5, Number.NaN]) expect(() => frameSamples(0, count), `count ${count}`).toThrow();
   });
 });

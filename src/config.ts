@@ -1,42 +1,12 @@
 import raw from '../config/showcase.json';
+import shape from './config.shape.json';
 
 export type FormatId = 'uhd' | 'hd' | 'preview';
 export type TierId = 'draft' | 'review' | 'final';
 export type Config = typeof raw;
 export interface Format { id: FormatId; width: number; height: number }
 
-const REQUIRED: Record<string, 'number' | 'string' | 'object' | 'array' | 'boolean'> = {
-  name: 'string', slug: 'string', seed: 'number',
-  'repo.url': 'string', 'repo.branch': 'string', 'repo.maxFileMb': 'number', 'repo.maxTreeGb': 'number', 'repo.maxPushGb': 'number',
-  'film.fps': 'number', 'film.previewFps': 'number', 'film.targetSeconds': 'number', 'film.minSeconds': 'number',
-  'film.maxSeconds': 'number', 'film.hookSeconds': 'number', 'film.shutterDegrees': 'number', 'film.cutToleranceFrames': 'number',
-  'film.riseWindowTolerance': 'number', 'film.minPlaceSeconds': 'number', 'film.order': 'array',
-  'formats.master.id': 'string', 'formats.master.width': 'number', 'formats.master.height': 'number',
-  'formats.hd.id': 'string', 'formats.hd.width': 'number', 'formats.hd.height': 'number',
-  'formats.preview.id': 'string', 'formats.preview.width': 'number', 'formats.preview.height': 'number',
-  'tiers.draft.samplesPerFrame': 'number', 'tiers.review.samplesPerFrame': 'number', 'tiers.final.samplesPerFrame': 'number',
-  'music.file': 'string', 'music.sha256': 'string', 'music.seconds': 'number', 'music.landmarks': 'object',
-  'narration.maxTakesPerClip': 'number', 'narration.linePauseMinSeconds': 'number', 'narration.placeholderClipSeconds': 'number',
-  'narration.clips': 'array',
-  'audio.sampleRate': 'number', 'audio.maxTakesPerCue': 'number', 'audio.maxCuesPerPlace': 'number', 'audio.loudnessLufs': 'number',
-  'audio.truePeakDb': 'number', 'audio.duckMaxDb': 'number',
-  units: 'array', lookLockUnit: 'string', buildOrderAfterLookLock: 'array', keys: 'array', settledAll: 'array', settled: 'object',
-  settledWhenRestaged: 'string',
-  'motion.checkGapSeconds': 'number', 'motion.pixelThreshold': 'number', 'motion.minMovingAreaShare': 'number', 'motion.byUnit': 'object',
-  'detail.minSharpnessRatio': 'number',
-  'assets.maxTakesPerAsset': 'number', 'assets.maxTuningLooksPerPart': 'number', 'assets.maxStudySources': 'number',
-  'quality.passScore': 'number', 'quality.standInMinMeanDifference': 'number', 'quality.crossMachineMinPsnr': 'number',
-  'quality.jury.jurors': 'number', 'quality.recognition.viewers': 'number',
-  'critics.maxImageLongEdgePx': 'number', 'critics.maxImageMegapixels': 'number', 'critics.contactSheetFrames': 'number',
-  'critics.phonePreviewWidthPx': 'number', 'critics.maxFilesPerMessage': 'number',
-  'status.minGapMinutes': 'number', 'status.maxPictures': 'number', 'status.pictureLongEdgePx': 'number',
-  'budget.runHours': 'number', 'budget.phaseHours': 'object', 'budget.reserveHours': 'object', 'budget.statusMaxGapMinutes': 'number',
-  'sandbox.stepTimeoutMinutes': 'number', 'sandbox.chunkSeconds': 'number', 'sandbox.maxRenderProcesses': 'number',
-  'sandbox.maxFramesOnDisk': 'number', 'sandbox.minFreeDiskGb': 'number', 'sandbox.maxAgents': 'number', 'sandbox.criticSlots': 'number',
-  'export.master.crf': 'number', 'export.hd.crf': 'number', 'export.preview.bitrateMbps': 'number', 'export.files': 'object',
-  'deliver.sandboxMaster': 'boolean', 'deliver.attachTestMb': 'array', 'deliver.cardLoop.seconds': 'number',
-  'deliver.cardLoop.minSeconds': 'number', 'deliver.cardLoop.maxSeconds': 'number', 'deliver.cardLoop.unit': 'string',
-};
+const REQUIRED = shape as Record<string, 'number' | 'string' | 'object' | 'array' | 'boolean' | 'any'>;
 
 const PLACES = ['ribs', 'heart', 'breath', 'marsh', 'spine', 'eye'];
 
@@ -58,10 +28,26 @@ export function validate(input: unknown, approvedFiles?: readonly string[]): str
   for (const [path, want] of Object.entries(REQUIRED)) {
     const v = at(input, path);
     if (v === undefined) problems.push(`missing key: ${path}`);
-    else if (kind(v) !== want) problems.push(`wrong type: ${path} is ${kind(v)}, expected ${want}`);
+    else if (want !== 'any' && kind(v) !== want) problems.push(`wrong type: ${path} is ${kind(v)}, expected ${want}`);
   }
   if (problems.length) return problems;
   const c = input as Config;
+
+  const named = (list: readonly unknown[], where: string, strings: readonly string[], arrays: readonly string[] = []): void => {
+    list.forEach((item, i) => {
+      if (item === null || typeof item !== 'object') {
+        problems.push(`${where}[${i}] is not an object`);
+        return;
+      }
+      const bag = item as Record<string, unknown>;
+      for (const k of strings) if (typeof bag[k] !== 'string' || bag[k] === '') problems.push(`missing key: ${where}[${i}].${k}`);
+      for (const k of arrays) if (!Array.isArray(bag[k])) problems.push(`missing key: ${where}[${i}].${k}`);
+    });
+  };
+  named(c.units, 'units', ['id']);
+  named(c.keys, 'keys', ['id', 'unit', 'image']);
+  named(c.narration.clips, 'narration.clips', ['id', 'unit'], ['lines']);
+  if (problems.length) return problems;
 
   const boxes = Object.values(c.budget.phaseHours).reduce((a, b) => a + b, 0);
   if (Math.abs(boxes - c.budget.runHours) > 1e-9) problems.push(`budget.phaseHours adds up to ${boxes}, not budget.runHours ${c.budget.runHours}`);
@@ -110,13 +96,11 @@ export const formats: Record<FormatId, Format> = {
 };
 
 export function formatById(id: string): Format {
-  const f = (formats as Record<string, Format | undefined>)[id];
-  if (!f) throw new Error(`no such format: ${id}`);
-  return f;
+  if (!Object.hasOwn(formats, id)) throw new Error(`no such format: ${id}`);
+  return formats[id as FormatId];
 }
 
 export function samplesOf(tier: string): number {
-  const t = (config.tiers as Record<string, { samplesPerFrame: number } | undefined>)[tier];
-  if (!t) throw new Error(`no such tier: ${tier}`);
-  return t.samplesPerFrame;
+  if (!Object.hasOwn(config.tiers, tier)) throw new Error(`no such tier: ${tier}`);
+  return config.tiers[tier as TierId].samplesPerFrame;
 }

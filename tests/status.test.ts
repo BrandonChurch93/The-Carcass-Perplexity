@@ -26,7 +26,7 @@ async function world() {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'carcass-status-'));
   dirs.push(root);
   const progressFile = path.join(root, 'PROGRESS.md');
-  fs.copyFileSync(paths.rel('kit', 'PROGRESS.md'), progressFile);
+  fs.copyFileSync(paths.rel('tests', 'fixtures', 'progress-at-status-3.md'), progressFile);
   await picture(path.join(root, 'references', 'approved', 'contact-sheet.jpg'), 80, 60);
   const said = [];
   const calls = [];

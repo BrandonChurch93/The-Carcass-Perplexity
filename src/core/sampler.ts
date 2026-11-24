@@ -54,7 +54,7 @@ function disk(u: number, v: number): [number, number] {
 const STREAM = hashString('sampler', config.seed);
 
 export function frameSamples(seq: number, count: number, seed: number = STREAM): Sample[] {
-  if (count < 1 || (count & (count - 1)) !== 0) throw new Error(`sample count must be a power of two, got ${count}`);
+  if (!Number.isInteger(count) || count < 1 || count > 4096 || (count & (count - 1)) !== 0) throw new Error(`sample count must be a power of two, got ${count}`);
   if (count === 1) return [{ px: 0, py: 0, lensX: 0, lensY: 0, shutter: 0.5 }];
   const key = hash2(seed, seq);
   const sx = hash2(key, 1);

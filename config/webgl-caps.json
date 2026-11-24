@@ -1,0 +1,199 @@
+{
+  "measured": "2026-11-24T21:46:44Z",
+  "machine": {
+    "host": "space-sandbox",
+    "cores": 2,
+    "memGb": 7.8
+  },
+  "browser": "147.0.7727.15",
+  "flags": [
+    "--use-angle=swiftshader",
+    "--enable-unsafe-swiftshader",
+    "--ignore-gpu-blocklist",
+    "--enable-webgl",
+    "--no-sandbox"
+  ],
+  "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+  "shadingLanguage": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)",
+  "vendor": "WebKit",
+  "renderer": "WebKit WebGL",
+  "limits": {
+    "maxTextureSize": 8192,
+    "max3dTextureSize": 2048,
+    "maxCubeMapTextureSize": 16384,
+    "maxArrayTextureLayers": 2048,
+    "maxRenderbufferSize": 8192,
+    "maxViewportDims": [
+      8192,
+      8192
+    ],
+    "maxDrawBuffers": 6,
+    "maxColorAttachments": 6,
+    "maxSamples": 4,
+    "maxTextureImageUnits": 32,
+    "maxVertexTextureImageUnits": 32,
+    "maxCombinedTextureImageUnits": 64,
+    "maxVertexAttribs": 16,
+    "maxVertexUniformVectors": 4096,
+    "maxFragmentUniformVectors": 4096,
+    "maxVaryingVectors": 31,
+    "maxUniformBufferBindings": 72,
+    "maxElementsVertices": 2147483647,
+    "maxElementsIndices": 2147483647,
+    "maxElementIndex": 1073741823,
+    "aliasedPointSizeRange": [
+      1,
+      1023
+    ],
+    "aliasedLineWidthRange": [
+      1,
+      1
+    ]
+  },
+  "precision": {
+    "fragmentHighFloat": {
+      "rangeMin": 127,
+      "rangeMax": 127,
+      "precision": 23
+    },
+    "fragmentMediumFloat": {
+      "rangeMin": 15,
+      "rangeMax": 15,
+      "precision": 10
+    },
+    "fragmentHighInt": {
+      "rangeMin": 31,
+      "rangeMax": 30,
+      "precision": 0
+    }
+  },
+  "portable": [
+    "EXT_color_buffer_float",
+    "EXT_color_buffer_half_float",
+    "EXT_texture_filter_anisotropic",
+    "OES_texture_float_linear"
+  ],
+  "portableMissingHere": [],
+  "extensions": [
+    {
+      "name": "EXT_clip_control",
+      "portable": false
+    },
+    {
+      "name": "EXT_color_buffer_float",
+      "portable": true
+    },
+    {
+      "name": "EXT_color_buffer_half_float",
+      "portable": true
+    },
+    {
+      "name": "EXT_conservative_depth",
+      "portable": false
+    },
+    {
+      "name": "EXT_depth_clamp",
+      "portable": false
+    },
+    {
+      "name": "EXT_disjoint_timer_query_webgl2",
+      "portable": false
+    },
+    {
+      "name": "EXT_float_blend",
+      "portable": false
+    },
+    {
+      "name": "EXT_polygon_offset_clamp",
+      "portable": false
+    },
+    {
+      "name": "EXT_texture_compression_bptc",
+      "portable": false
+    },
+    {
+      "name": "EXT_texture_compression_rgtc",
+      "portable": false
+    },
+    {
+      "name": "EXT_texture_filter_anisotropic",
+      "portable": true
+    },
+    {
+      "name": "EXT_texture_mirror_clamp_to_edge",
+      "portable": false
+    },
+    {
+      "name": "NV_shader_noperspective_interpolation",
+      "portable": false
+    },
+    {
+      "name": "OES_draw_buffers_indexed",
+      "portable": false
+    },
+    {
+      "name": "OES_sample_variables",
+      "portable": false
+    },
+    {
+      "name": "OES_shader_multisample_interpolation",
+      "portable": false
+    },
+    {
+      "name": "OES_texture_float_linear",
+      "portable": true
+    },
+    {
+      "name": "OVR_multiview2",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_clip_cull_distance",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_compressed_texture_astc",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_compressed_texture_etc",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_compressed_texture_etc1",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_compressed_texture_s3tc",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_compressed_texture_s3tc_srgb",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_debug_renderer_info",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_debug_shaders",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_lose_context",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_multi_draw",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_polygon_mode",
+      "portable": false
+    },
+    {
+      "name": "WEBGL_stencil_texturing",
+      "portable": false
+    }
+  ]
+}

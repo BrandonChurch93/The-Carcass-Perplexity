@@ -24,27 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 4, 2026-11-24 21:30 UTC:
+Status 5, 2026-11-24 21:57 UTC:
 
-- `01-compare-heart-2.jpg`: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them. The right side here is a test card. No frame has been computed yet
-- `02-review-820x1180-top.jpg`: The review page as it will look on a tablet, filled with test content for now. Everything that plays will be on it
-- `03-sheet-establishing.jpg`: The sheet tool: the establishing sheet, fake frames
-- `04-crops-ribs-0-1.jpg`: The crops tool: native-size crops of a fake frame
+- `01-frame-300-hd-review.jpg`: The first computed frame. This is a test scene made to measure what a place will cost, not a place of the film: a displaced, lit, glowing surface under a volume of fume, with 6,000 moving embers. 1920 x 1080, two samples, 21 seconds on this machine
+- `02-frame-300-1.jpg`: The same frame through the crops tool, at native size. The tools now run on real frames
 
+Status 4, 2026-11-24 21:30 UTC, showed: The comparison tool, built by an agent: the approved picture on the left, the frame on the right, matching crops under them.
 Status 3, 2026-11-24 21:09 UTC, showed: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit.
 Status 2, 2026-11-24 20:48 UTC, showed the test chart itself.
-Status 1, 2026-11-24 20:36 UTC, showed the approved contact sheet, `references/approved/contact-sheet.jpg`.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T21:30:04Z
-phase 0: 1.00 h used of 3.00 h
-build: 1.00 h used of 72.00 h
+2026-11-24T21:57:04Z
+phase 0: 1.45 h used of 3.00 h
+build: 1.45 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 22
+minutes since the last status: 27
 ```
 
 ## Phases

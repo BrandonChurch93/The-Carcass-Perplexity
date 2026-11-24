@@ -178,9 +178,9 @@ export class Engine {
     this.gl.readPixels(0, 0, 1, 1, this.gl.RGBA, this.gl.UNSIGNED_BYTE, new Uint8Array(4));
   }
 
-  pixels(): Uint8Array {
+  pixels(): Uint8Array<ArrayBuffer> {
     const { width, height } = this.format;
-    const out = new Uint8Array(width * height * 4);
+    const out = new Uint8Array(new ArrayBuffer(width * height * 4));
     this.renderer.setRenderTarget(null);
     this.gl.readPixels(0, 0, width, height, this.gl.RGBA, this.gl.UNSIGNED_BYTE, out);
     return out;
