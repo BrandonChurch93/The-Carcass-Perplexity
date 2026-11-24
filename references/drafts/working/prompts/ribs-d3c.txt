@@ -1,0 +1,7 @@
+One image is supplied.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only what is listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+
+CHANGE.
+1. The head of the nearest animal, the one on the right that is pulling a worm out of the pool. In Image 1 its head has a small round eye. These animals have no eyes at all. Its head is only the smooth, narrow, blind end of the neck, covered in the same pale, wet, creased bare skin as the neck, with no eye, no eye socket, no eyelid, no nostril and no dark spot where an eye would be. The long wet tendrils grow straight out of the end of it, as they do on the animal behind it. The tendrils, the worm, the splash, the neck, the body, the wings and the legs stay exactly as they are.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

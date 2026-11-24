@@ -135,6 +135,16 @@
    "t": "02:23",
    "el": "2h51m",
    "text": "02:23 Detail takes b26-b28 all returned (44). Chosen by eye from full-size views. One redo only: eye iris mats (both takes put thumb-sized grazers that read as miniature lambs beside bubbles their own size, which makes the lake read small). Changed approach: no animals on the mats, scale set by an adult drinker standing among filaments longer than it is. Marsh thin-crust: take 2 kept over take 1 because take 1 gave the wallower an eye and the establishing view has them eyeless. Eye edge: take 2 kept over take 1 because take 1 puts a skull with an eye socket in the foreground."
+  },
+  {
+   "t": "02:36",
+   "el": "3h04m",
+   "text": "02:38 Final check of the set against my own rule that nothing living in the film has eyes or ears (the only eye is the dead one). Three details break it or drift from their place's animal: ribs detail 2 (the near kite-wing has an eye), eye detail 2 (the drinker reads as a horse), eye detail 4 (the two foreground drinkers have ears and wool). One single-step fix each (batch 30, two takes each), swapped in only if better at full size; otherwise the originals stay with the fault stated."
+  },
+  {
+   "t": "02:38",
+   "el": "3h06m",
+   "text": "02:41 Batch 30 judged at full size. All three fixes swapped in: ribs-d3c-t1 (eye removed, nothing else changed), eye-d2c-t2 (horse replaced by the drinker of detail 1), eye-d4c-t2 (ears and wool removed). Remaining stated fault on eye detail 4: from behind the blunt heads read as plain stumps."
   }
  ],
  "status": [
@@ -6296,6 +6306,121 @@
    "el": "2h53m",
    "eye": [],
    "crit": []
+  },
+  "eye-d2c-t1": {
+   "id": "eye-d2c-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "eye-d2c",
+   "refs": [
+    "/home/user/workspace/r3/gen/eye-d2b-t2.png",
+    "/home/user/workspace/r3/gen/eye-d1-t1.png"
+   ],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/eye-d2c-t1.png",
+   "what": "one-step fix of eye-d2b-t2: the drinker reads as a horse; replace it with the drinker design of eye-d1-t1",
+   "size": "1672x941",
+   "t": "02:36",
+   "el": "3h04m",
+   "eye": [
+    {
+     "t": "02:38",
+     "text": "Single-step fix, same result as the kept take of this pair within small differences; not chosen."
+    }
+   ],
+   "crit": []
+  },
+  "eye-d2c-t2": {
+   "id": "eye-d2c-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "eye-d2c",
+   "refs": [
+    "/home/user/workspace/r3/gen/eye-d2b-t2.png",
+    "/home/user/workspace/r3/gen/eye-d1-t1.png"
+   ],
+   "secs": "27",
+   "path": "/home/user/workspace/r3/gen/eye-d2c-t2.png",
+   "what": "one-step fix of eye-d2b-t2: the drinker reads as a horse; replace it with the drinker design of eye-d1-t1",
+   "size": "1671x941",
+   "t": "02:36",
+   "el": "3h04m",
+   "eye": [],
+   "crit": []
+  },
+  "eye-d4c-t1": {
+   "id": "eye-d4c-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "eye-d4c",
+   "refs": [
+    "/home/user/workspace/r3/gen/eye-d4-t1.png",
+    "/home/user/workspace/r3/gen/eye-d1-t1.png"
+   ],
+   "secs": "29",
+   "path": "/home/user/workspace/r3/gen/eye-d4c-t1.png",
+   "what": "one-step fix of eye-d4-t1: the two foreground drinkers have ears and wool; make them the earless bare-skinned drinkers of eye-d1-t1",
+   "size": "1671x941",
+   "t": "02:36",
+   "el": "3h04m",
+   "eye": [
+    {
+     "t": "02:38",
+     "text": "Single-step fix, same result as the kept take of this pair within small differences; not chosen."
+    }
+   ],
+   "crit": []
+  },
+  "eye-d4c-t2": {
+   "id": "eye-d4c-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "eye-d4c",
+   "refs": [
+    "/home/user/workspace/r3/gen/eye-d4-t1.png",
+    "/home/user/workspace/r3/gen/eye-d1-t1.png"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/eye-d4c-t2.png",
+   "what": "one-step fix of eye-d4-t1: the two foreground drinkers have ears and wool; make them the earless bare-skinned drinkers of eye-d1-t1",
+   "size": "1671x941",
+   "t": "02:36",
+   "el": "3h04m",
+   "eye": [],
+   "crit": []
+  },
+  "ribs-d3c-t1": {
+   "id": "ribs-d3c-t1",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ribs-d3c",
+   "refs": [
+    "/home/user/workspace/r3/gen/ribs-d3-t2.png"
+   ],
+   "secs": "25",
+   "path": "/home/user/workspace/r3/gen/ribs-d3c-t1.png",
+   "what": "one-step fix of ribs-d3-t2: the near kite-wing must have no eye (nothing living in the film has eyes)",
+   "size": "1672x941",
+   "t": "02:36",
+   "el": "3h04m",
+   "eye": [],
+   "crit": []
+  },
+  "ribs-d3c-t2": {
+   "id": "ribs-d3c-t2",
+   "model": "gpt_image_2_6_sunburst",
+   "prompt": "ribs-d3c",
+   "refs": [
+    "/home/user/workspace/r3/gen/ribs-d3-t2.png"
+   ],
+   "secs": "26",
+   "path": "/home/user/workspace/r3/gen/ribs-d3c-t2.png",
+   "what": "one-step fix of ribs-d3-t2: the near kite-wing must have no eye (nothing living in the film has eyes)",
+   "size": "1672x941",
+   "t": "02:36",
+   "el": "3h05m",
+   "eye": [
+    {
+     "t": "02:38",
+     "text": "Single-step fix, same result as the kept take of this pair within small differences; not chosen."
+    }
+   ],
+   "crit": []
   }
  },
  "kept": {
@@ -6468,11 +6593,11 @@
    "el": "2h54m"
   },
   "eye-detail-2": {
-   "id": "eye-d2b-t2",
-   "reason": "Changed-approach redo. Amber filaments under clear water, threads of small bubbles, a full-size drinker at mid-distance so the lake reads at real scale.",
-   "faults": "The drinker here is heavier and more horse-like than in detail 1. First attempt (eye-d2-t1, t2) dropped: thumb-sized grazers read as miniature lambs.",
-   "t": "02:26",
-   "el": "2h54m"
+   "id": "eye-d2c-t2",
+   "reason": "Amber filaments under clear water, threads of small bubbles, and a full-size drinker at mid-distance so the lake reads at real scale. Single-step fix of the redo eye-d2b-t2, whose drinker read as a horse: it is now the lean, earless, eyeless drinker of detail 1.",
+   "faults": "The drinker's body is still close to a thin horse or camelid. First attempt (eye-d2-t1, t2) dropped: thumb-sized grazers read as miniature lambs.",
+   "t": "02:38",
+   "el": "3h06m"
   },
   "eye-detail-3": {
    "id": "eye-d3-t2",
@@ -6482,11 +6607,11 @@
    "el": "2h54m"
   },
   "eye-detail-4": {
-   "id": "eye-d4-t1",
-   "reason": "The water domes at the centre and thin pale spines break the surface in a ring; two drinkers watch.",
-   "faults": "What rises is only hinted at; these two drinkers have ear-like nubs the others lack.",
-   "t": "02:26",
-   "el": "2h54m"
+   "id": "eye-d4c-t2",
+   "reason": "The water domes at the centre and thin pale spines break the surface in a ring; two drinkers watch. Single-step fix of eye-d4-t1, whose drinkers had ears and wool: they are now the bare-skinned, earless drinkers of detail 1.",
+   "faults": "What rises is only hinted at. Seen from behind and out of focus, the blunt earless heads read as plain stumps.",
+   "t": "02:38",
+   "el": "3h06m"
   },
   "spine-detail-1": {
    "id": "spine-d4-t2",
@@ -6524,11 +6649,11 @@
    "el": "2h54m"
   },
   "ribs-detail-2": {
-   "id": "ribs-d3-t2",
-   "reason": "Kite-wings wading; one pulls a worm from a pool with its tendril head, another shakes off water, surf behind.",
-   "faults": "The near animal has an eye; in the establishing view they read eyeless.",
-   "t": "02:26",
-   "el": "2h54m"
+   "id": "ribs-d3c-t1",
+   "reason": "Kite-wings wading; one pulls a worm from a pool with its tendril head, another shakes off water, surf and rib blades behind. Single-step fix of ribs-d3-t2: the near animal's eye is gone, so its head is the same blind tuft of tendrils as the others.",
+   "faults": "The far flier is soft and its wing is very orange; the foreground weed takes the lower quarter of the frame.",
+   "t": "02:38",
+   "el": "3h06m"
   },
   "ribs-detail-3": {
    "id": "ribs-d1-t1",
@@ -6886,6 +7011,12 @@
   "spine-d4-t1",
   "spine-d4-t2",
   "eye-d2b-t1",
-  "eye-d2b-t2"
+  "eye-d2b-t2",
+  "eye-d2c-t1",
+  "eye-d2c-t2",
+  "eye-d4c-t1",
+  "eye-d4c-t2",
+  "ribs-d3c-t1",
+  "ribs-d3c-t2"
  ]
 }

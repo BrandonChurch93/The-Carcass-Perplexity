@@ -1,0 +1,60 @@
+[
+ {
+  "id": "ribs-d3c-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d3c",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-d3-t2.png"
+  ],
+  "what": "one-step fix of ribs-d3-t2: the near kite-wing must have no eye (nothing living in the film has eyes)"
+ },
+ {
+  "id": "ribs-d3c-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "ribs-d3c",
+  "refs": [
+   "/home/user/workspace/r3/gen/ribs-d3-t2.png"
+  ],
+  "what": "one-step fix of ribs-d3-t2: the near kite-wing must have no eye (nothing living in the film has eyes)"
+ },
+ {
+  "id": "eye-d2c-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2c",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-d2b-t2.png",
+   "/home/user/workspace/r3/gen/eye-d1-t1.png"
+  ],
+  "what": "one-step fix of eye-d2b-t2: the drinker reads as a horse; replace it with the drinker design of eye-d1-t1"
+ },
+ {
+  "id": "eye-d2c-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d2c",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-d2b-t2.png",
+   "/home/user/workspace/r3/gen/eye-d1-t1.png"
+  ],
+  "what": "one-step fix of eye-d2b-t2: the drinker reads as a horse; replace it with the drinker design of eye-d1-t1"
+ },
+ {
+  "id": "eye-d4c-t1",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d4c",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-d4-t1.png",
+   "/home/user/workspace/r3/gen/eye-d1-t1.png"
+  ],
+  "what": "one-step fix of eye-d4-t1: the two foreground drinkers have ears and wool; make them the earless bare-skinned drinkers of eye-d1-t1"
+ },
+ {
+  "id": "eye-d4c-t2",
+  "model": "gpt_image_2_6_sunburst",
+  "prompt": "eye-d4c",
+  "refs": [
+   "/home/user/workspace/r3/gen/eye-d4-t1.png",
+   "/home/user/workspace/r3/gen/eye-d1-t1.png"
+  ],
+  "what": "one-step fix of eye-d4-t1: the two foreground drinkers have ears and wool; make them the earless bare-skinned drinkers of eye-d1-t1"
+ }
+]

@@ -1,0 +1,11 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only what is listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is another frame from the same film, shot at the same lake a few minutes earlier. Use it only to see exactly what the animals of this lake look like. Do not copy its composition, its camera position, its foreground or its framing.
+
+CHANGES.
+1. The animal standing in the shallows at the left of Image 1 is wrong: it looks like a horse. Replace it with one adult of the animals in Image 2, standing on the same spot, the same size in the frame, in the same pose: all four feet in ankle-deep water, the neck lowered, the tip of the head just touching the water, rings spreading from it, its reflection broken by the ripples. It is exactly the animal of Image 2: a lean body that is higher at the shoulder than at the hip, long thin legs with knobbly joints, a long neck, and a head that is nothing but the smooth, blunt, tapering end of the neck, with no eyes, no ears, no nostrils, no mouth line, no mane, no forelock and no tail hair. Its skin is the bare, pale, pinkish-grey, creased and scarred hide of Image 2, darker with water on the legs and belly, with a few drips falling from the belly.
+2. The two small animals far off at the left edge are the same animals as in Image 2, small and soft with distance.
+
+Everything else is exactly as in Image 1: the amber filament mats under clear water in the foreground, the threads of small bubbles, the pale rock of the floor, the dark deep water beyond, the mist, the lit cliffs and the sky.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

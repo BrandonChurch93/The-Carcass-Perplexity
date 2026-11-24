@@ -1,0 +1,10 @@
+Two images are supplied, with different jobs.
+Image 1 is a frame from a big-budget natural-history film about an alien world. Re-shoot the same frame: the same location, the same camera position and lens, the same light and weather, the same composition, colours and depth of field, and the same real location-photography look with true lens perspective and fine physical surface detail. Output a wide 16:9 landscape frame. Change only what is listed below; everything else stays exactly as in Image 1, and nothing new is added anywhere else.
+Image 2 is another frame from the same film, shot at the same lake a few minutes earlier. Use it only to see exactly what the animals of this lake look like. Do not copy its composition, its camera position, its foreground or its framing.
+
+CHANGES.
+1. The two animals in the foreground, seen from behind and out of focus, are wrong: they have ears and woolly coats and look like llamas. They are the animals of Image 2. Each head is nothing but the smooth, blunt, tapering end of the long neck: a plain rounded shape with no ears, no horns, no knobs and no eyes. Their skin is the bare, pale, creased hide of Image 2, with no wool, no fur and no hair. They stay where they are in the frame, the same size, seen from behind, still out of focus, both facing the centre of the lake with their heads raised, watching.
+
+Everything else is exactly as in Image 1: the low dome of water at the centre of the lake, the ring of thin pale spines breaking the surface around it, the rings spreading across the water, the mist, the cliffs and their reflection in the water.
+
+It must still read as real location photography of a place you could walk into, not artwork and not computer graphics: irregular, weathered, dirty, unposed, with fine film grain. No people, no buildings or ruins, no cameras, drones or equipment, no text, no watermark, no border.

@@ -9,7 +9,7 @@ The full set is ready in direction B, Titan-fall. No pick of a direction was giv
 - `ART-DIRECTIONS.md`: step 1. The three art directions for the hardest place, The Breath; which I would choose and why; what the blind critics said; build approach; and what happened between step 1 and step 2.
 - `step-1-kept/`: the nine step 1 images at full size and one sheet per direction.
 - `working/`: the working files.
-  - `takes/`: every take of the round as JPEG (306 takes). Step 1 names are `<direction>-<view>-t<nn>`; step 2 names are `<place>-<view>-t<n>`, with `est` for the establishing view and `d1` to `d4` for details.
+  - `takes/`: every take of the round as JPEG (312 takes). Step 1 names are `<direction>-<view>-t<nn>`; step 2 names are `<place>-<view>-t<n>`, with `est` for the establishing view and `d1` to `d4` for details.
   - `prompts/`: the exact prompt text of every take (the take-to-prompt mapping is in `log.json`).
   - `critics/`: the briefs given to the blind critics, the answer key of each packet and every critic reply, unedited. Step 2 was not blind-tested.
   - `real/`: real photographs, with credits in `CREDITS.md`. Some were shown to the critics as controls only. Others were passed to the image generator as a rendering reference (how a camera records light, a surface or an animal), never for their content.
