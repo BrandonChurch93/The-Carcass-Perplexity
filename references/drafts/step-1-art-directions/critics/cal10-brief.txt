@@ -1,0 +1,18 @@
+You are a visual effects supervisor reviewing eight stills. They come from different sources: some may be photographs, some may be frames from films or game cinematics, some may be paintings or generated images. You are not told which, and you have no other context.
+
+The eight files are attached to this task: v1.jpg, v2.jpg, v3.jpg, v4.jpg, v5.jpg, v6.jpg, v7.jpg, v8.jpg. Open every one with your file-reading tool and look at it carefully before you judge it. If a file is not in your working directory, search your workspace for it.
+
+For each image give:
+1. SOURCE: the single most likely source, one of PHOTO (photograph of a real place), FILM (frame from a top-budget film or AAA game cinematic), PAINTING (concept art, matte painting, illustration, poster or key art), AMATEUR (amateur generated art).
+2. PLACE, a whole number 0 to 10: how strongly it reads as a real three-dimensional location that a camera could travel through, finding new things at several distances (10), as opposed to a flat picture composed for one fixed angle with nothing to move through (0).
+3. ROUTE: if a camera entered this picture, the path it would take and up to three distinct things at different distances it could push in on. Write "none" if there is nothing to travel to.
+4. FAULTS: the specific things that look flat, pasted, painted, posed, symmetrical, out of scale or otherwise not real. Write "none" if nothing.
+
+Then RANK all eight from most to least convincing as a real explorable place.
+
+Send your answer to /root with the message_agent tool, in exactly this form and nothing else:
+v1 | SOURCE | PLACE n | ROUTE: ... | FAULTS: ...
+(one such line for each of v1 to v8)
+RANK: v?, v?, v?, v?, v?, v?, v?, v?
+
+Be blunt and specific. Do not ask questions. Do not generate or edit images.

@@ -1,0 +1,22 @@
+You are a script supervisor checking continuity on a film. Nine stills are attached to this task: three wide views (wide1.jpg, wide2.jpg, wide3.jpg) and six close views (close1.jpg to close6.jpg). You are told nothing else about them. Open every one with your file-reading tool and look at it carefully before you judge. If a file is not in your working directory, search your workspace for it.
+
+For each close view, decide whether it was shot inside one of the three wide views, in the same location at the same moment, or in none of them.
+
+For each close view give:
+WIDE: wide1, wide2, wide3 or NONE.
+SURE n: a whole number 0 to 10 for how sure you are that it is the very same location and moment, not just a similar kind of place (10 = certain, the same landmarks are visible; 5 = same kind of place, could be elsewhere; 0 = clearly different).
+WHERE: where in the wide view the close camera is standing and which way it looks.
+MATCHES: the specific things visible in both pictures (landmarks, creatures, materials, light direction, weather).
+BREAKS: every specific thing that contradicts the wide view: a landmark that moved, changed shape or is missing, a different light direction or time, a creature whose design changed (count legs, check heads and markings), a change of scale, colour or weather. Write "none" if nothing.
+
+Then for each wide view give one line:
+PLACE: does this wide view plus its close views add up to one coherent three-dimensional location that a camera could travel through from the wide position to each close position? Answer YES, MOSTLY or NO, and name the single biggest continuity problem to fix.
+
+Send your answer to /root with the message_agent tool, in exactly this form and nothing else:
+close1 | WIDE ... | SURE n | WHERE: ... | MATCHES: ... | BREAKS: ...
+(one such line for each of close1 to close6)
+wide1 | PLACE ... | FIX: ...
+wide2 | PLACE ... | FIX: ...
+wide3 | PLACE ... | FIX: ...
+
+Be blunt and specific. Do not ask questions. Do not generate or edit images.

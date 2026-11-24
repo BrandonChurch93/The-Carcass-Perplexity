@@ -1,0 +1,29 @@
+You are a senior graphics engineer who builds cinematic 3D environments in three.js and renders them offline, frame by frame. Nine reference stills are attached to this task: three art directions (A, B, C) for the same film location, each with one wide establishing view and two close detail views. The files are A-wide.jpg, A-detail1.jpg, A-detail2.jpg, B-wide.jpg, B-detail1.jpg, B-detail2.jpg, C-wide.jpg, C-detail1.jpg, C-detail2.jpg. Open every one with your file-reading tool and look at it carefully before you judge. If a file is not in your working directory, search your workspace for it.
+
+What the stills are: generated reference art for a narrated dark-fantasy nature film about a land that is the body of a dead titan. They are not renders.
+A: rainforest inside a giant cave (the titan's windpipe): skylight, waterfall, river, a herd of eyeless grazers, spore bladders growing on bones.
+B: a cold tidal rock shelf with a ribbed shaft venting heavy vapour, crimson gill-plumes on its lip, stilt-legged waders with tendrils for heads, a far cliff cave pouring fog.
+C: a dusk valley with glowing membrane sacs along a stream that trap animals.
+
+The job being planned: build the place as a real 3D environment in three.js with real motion (water, vapour, vegetation, animals) and fly one camera from the wide view through the place, pushing in on the two details, in a continuous shot of about 20 seconds. Constraints:
+- Rendered offline frame by frame at 3840x2160, so frame time does not matter. Minutes per frame are acceptable.
+- Everything is made in code by one AI agent: procedural geometry, shaders, noise, instancing, ray-marched volumes, custom post-processing, and generated image textures are all available. No human artist, no purchased asset packs, no photogrammetry, no hand sculpting.
+- Rendering is headless Chromium with software WebGL and no GPU. An earlier test measured about 1.3 seconds per 1080p frame for a 200,000-triangle shadowed scene.
+
+For each direction give:
+MATCH n: a whole number 0 to 10: how close a strong three.js build under those constraints could get to these stills in a moving shot (10 = indistinguishable from the stills, 5 = recognisably the same place but clearly computer graphics, 0 = not achievable).
+BUILD: how you would build it: terrain and hero landform, water, atmosphere, vegetation, animals. Short.
+HARDEST: the two elements most likely to fall short of the stills, and why.
+CAMERA: whether the place gives a camera a real path with parallax and several things to push in on. Name the path.
+CUT: what you would simplify or drop to protect quality.
+
+Then RANK the three by the expected quality of the finished three.js shot, best first, and give your CHOICE for a film of six such locations in two sentences.
+
+Send your answer to /root with the message_agent tool, in exactly this form and nothing else:
+A | MATCH n | BUILD: ... | HARDEST: ... | CAMERA: ... | CUT: ...
+B | MATCH n | BUILD: ... | HARDEST: ... | CAMERA: ... | CUT: ...
+C | MATCH n | BUILD: ... | HARDEST: ... | CAMERA: ... | CUT: ...
+RANK: ?, ?, ?
+CHOICE: ...
+
+Be blunt and specific. Do not ask questions. Do not generate or edit images. Do not write code.
