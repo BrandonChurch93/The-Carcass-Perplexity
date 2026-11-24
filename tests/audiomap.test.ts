@@ -142,7 +142,7 @@ describe('the map of a made sound', () => {
 
   it('finds the hits on the downbeats', () => {
     const times = map.hits.map((h) => h.t);
-    for (const t of sound.downs) expect(Math.abs(near(times, t) - t)).toBeLessThan(0.015);
+    for (const t of sound.downs) expect(Math.abs(near(times, t) - t)).toBeLessThan(0.01);
     for (const h of map.hits) {
       expect(h.low).toBeGreaterThanOrEqual(0);
       expect(h.low).toBeLessThanOrEqual(1);
@@ -190,6 +190,28 @@ describe('the map of a made sound', () => {
     expect(made.usedConfigFor).toEqual(['revealHit']);
     expect(made.landmarks.revealHit).toBe(far.landmarks.revealHit);
     expect(Math.abs(made.compare.revealHit.map - QUIET_END)).toBeLessThan(0.03);
+  });
+});
+
+describe('a grid that the music leaves', () => {
+  const beat = 0.5;
+  const hits = [];
+  for (let k = 0; k < 240; k++) hits.push({ t: k * beat + (k < 80 ? 0.1 : 0.012), low: 1, full: 1 });
+  const warp = core.localOffsets(beat, 0, hits, 120);
+
+  it('follows attacks that sit 50 ms or more away and leaves a smaller drift alone', () => {
+    expect(warp.at(10)).toBeCloseTo(0.1, 2);
+    expect(warp.at(100)).toBe(0);
+    const grid = core.makeGrid(beat, 0, 4, 0, 120, warp);
+    expect(Math.abs(near(grid.beats, 10.1) - 10.1)).toBeLessThan(0.01);
+    expect(near(grid.beats, 100)).toBe(100);
+    for (let i = 1; i < grid.beats.length; i++) expect(grid.beats[i]).toBeGreaterThan(grid.beats[i - 1]);
+    const beats = new Set(grid.beats);
+    for (const b of grid.bars) expect(beats.has(b)).toBe(true);
+  });
+
+  it('keeps a steady sound on the steady grid', () => {
+    expect(an.warp.points.every((q) => q.d === 0)).toBe(true);
   });
 });
 

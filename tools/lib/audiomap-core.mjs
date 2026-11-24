@@ -600,13 +600,57 @@ export function findMeter(beatSeconds, phaseSeconds, curves, seconds) {
   return { beatsPerBar: pick.m, barPhase: pick.phase, four: four.contrast, three: three.contrast, means: pick.means };
 }
 
-export function makeGrid(beatSeconds, phaseSeconds, beatsPerBar, barPhase, seconds) {
+export function localOffsets(beatSeconds, phaseSeconds, hits, seconds, { windowBeats = 32, stepBeats = 8, sigma = 0.03, reach = 0.25, minHits = 10, contrast = 1.4, deadBand = 0.05 } = {}) {
+  const weight = (h) => Math.max(h.attackLow ?? h.low, h.attackFull ?? h.full);
+  const points = [];
+  const span = (windowBeats * beatSeconds) / 2;
+  for (let c = 0; c <= seconds; c += stepBeats * beatSeconds) {
+    const inside = hits.filter((h) => Math.abs(h.t - c) <= span);
+    if (inside.length < minHits) continue;
+    let best = { d: 0, s: -Infinity };
+    let total = 0;
+    let count = 0;
+    for (let d = -reach * beatSeconds; d <= reach * beatSeconds + 1e-9; d += 0.004) {
+      let sc = 0;
+      for (const h of inside) {
+        const x = (h.t - d - phaseSeconds) / beatSeconds;
+        const e = (x - Math.round(x)) * beatSeconds;
+        sc += weight(h) * Math.exp(-(e * e) / (2 * sigma * sigma));
+      }
+      total += sc;
+      count++;
+      if (sc > best.s) best = { d, s: sc };
+    }
+    if (best.s >= (contrast * total) / count) points.push({ t: c, d: best.d });
+  }
+  for (let i = 1; i < points.length - 1; i++) points[i].m = median([points[i - 1].d, points[i].d, points[i + 1].d]);
+  for (const q of points) {
+    q.d = q.m ?? q.d;
+    if (Math.abs(q.d) < deadBand) q.d = 0;
+  }
+  const at = (t) => {
+    if (points.length === 0) return 0;
+    if (t <= points[0].t) return points[0].d;
+    if (t >= points[points.length - 1].t) return points[points.length - 1].d;
+    let i = 1;
+    while (points[i].t < t) i++;
+    const a = points[i - 1];
+    const b = points[i];
+    return a.d + ((b.d - a.d) * (t - a.t)) / (b.t - a.t);
+  };
+  const ds = points.map((q) => q.d);
+  return { at, points: points.map((q) => ({ t: r4(q.t), d: r4(q.d) })), min: ds.length ? Math.min(...ds) : 0, max: ds.length ? Math.max(...ds) : 0 };
+}
+
+export function makeGrid(beatSeconds, phaseSeconds, beatsPerBar, barPhase, seconds, warp = null) {
   const first = phaseSeconds + barPhase * beatSeconds;
-  const k0 = -Math.floor(first / beatSeconds + 1e-9);
+  const k0 = -Math.floor(first / beatSeconds + 1e-9) - 1;
   const beats = [];
   const bars = [];
-  for (let k = k0; first + k * beatSeconds <= seconds + 1e-9; k++) {
-    const t = r4(first + k * beatSeconds);
+  for (let k = k0; first + k * beatSeconds <= seconds + beatSeconds; k++) {
+    const steady = first + k * beatSeconds;
+    const t = r4(steady + (warp ? warp.at(steady) : 0));
+    if (t < 0 || t > seconds || (beats.length && t <= beats[beats.length - 1])) continue;
     beats.push(t);
     if (((k % beatsPerBar) + beatsPerBar) % beatsPerBar === 0) bars.push(t);
   }
@@ -810,14 +854,15 @@ export function analyse(samples, sampleRate, { configBpm = null } = {}) {
   const many = findHits(curves, samples, sampleRate, { ...DEFAULTS, hitThreshold: GRID_THRESHOLD, minHits: 0, maxHits: Infinity });
   const fit = refineGrid(rough.beatSeconds, rough.phaseSeconds, many.hits);
   const meter = findMeter(fit.beatSeconds, fit.phaseSeconds, curves, seconds);
-  return { samples, sampleRate, seconds, curves, loud, rough, raw: found.hits, threshold: found.threshold, jumps: found.jumps, fit, meter };
+  const warp = localOffsets(fit.beatSeconds, fit.phaseSeconds, many.hits, seconds);
+  return { samples, sampleRate, seconds, curves, loud, rough, raw: found.hits, threshold: found.threshold, jumps: found.jumps, fit, meter, warp };
 }
 
 export function mapFromAnalysis(an, { source, music = {}, params = DEFAULTS, seconds = an.seconds }) {
   const notes = [...an.rough.notes];
   const { fit, meter, threshold } = an;
   const hits = withStrength(an.raw, params.strength);
-  const grid = makeGrid(fit.beatSeconds, fit.phaseSeconds, meter.beatsPerBar, meter.barPhase, seconds);
+  const grid = makeGrid(fit.beatSeconds, fit.phaseSeconds, meter.beatsPerBar, meter.barPhase, seconds, an.warp);
   const barSeconds = fit.beatSeconds * meter.beatsPerBar;
   const sections = findSections(an.loud, seconds, params);
   const power = (h) => Math.max(h.low, h.full);
@@ -849,7 +894,7 @@ export function mapFromAnalysis(an, { source, music = {}, params = DEFAULTS, sec
     tries: [],
     notes,
   };
-  return { map, detail: { fit, meter, threshold, quiet, strongCount: strong.length, jumps: an.jumps, strength: params.strength, raw: an.raw } };
+  return { map, detail: { fit, meter, threshold, quiet, warp: an.warp, strongCount: strong.length, jumps: an.jumps, strength: params.strength, raw: an.raw } };
 }
 
 export function buildMap(an, { source, music = {}, tries = TRIES, defaults = DEFAULTS }) {
@@ -898,8 +943,17 @@ export function buildMap(an, { source, music = {}, tries = TRIES, defaults = DEF
   }
   const fit = out.detail.fit;
   map.notes.push(
-    `The grid is one steady tempo fitted to the whole file. ${fit.used} of ${fit.of} attacks sit within 8 percent of a beat${fit.rms === null ? '' : `, ${(fit.rms * 1000).toFixed(0)} ms rms from it`}. Confidence is that share, weighted by strength, over what chance would give.`
+    `The tempo is one steady fit to the whole file. ${fit.used} of ${fit.of} attacks sit within 8 percent of a beat of it${fit.rms === null ? '' : `, ${(fit.rms * 1000).toFixed(0)} ms rms from it`}. Confidence is that share, weighted by strength, over what chance would give.`
   );
+  const warp = out.detail.warp;
+  const moved = warp ? warp.points.filter((q) => q.d !== 0) : [];
+  if (moved.length) {
+    map.notes.push(
+      `The music does not hold the steady grid everywhere. Where the attacks over 32 beats sit 50 ms or more from it, the beats and bar lines are moved to them: from ${moved[0].t} s to ${moved[moved.length - 1].t} s by ${Math.round(Math.min(...moved.map((q) => q.d)) * 1000)} to ${Math.round(Math.max(...moved.map((q) => q.d)) * 1000)} ms, joined to the steady grid by straight lines. So the gap between two beats there is not always tempo.beatSeconds. A smaller drift is left alone.`
+    );
+  } else if (warp) {
+    map.notes.push('The attacks stay within 50 ms of the steady grid wherever enough of them were found, so the beats and bar lines are the steady grid.');
+  }
   const off = STRIKES.filter((k) => typeof map.landmarks[k] === 'number').map((k) => {
     const t = map.landmarks[k];
     const beat = map.beats.reduce((a, b) => (Math.abs(b - t) < Math.abs(a - t) ? b : a));

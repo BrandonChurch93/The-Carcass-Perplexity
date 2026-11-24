@@ -54,6 +54,7 @@ export function report(map, detail = null) {
   p(`tempo ${t.bpm} beats a minute, a beat is ${t.beatSeconds} s, ${t.beatsPerBar} beats to a bar, a bar is ${t.barSeconds} s, confidence ${t.confidence}, the config says ${t.configBpm}`);
   if (detail) {
     p(`grid fitted to ${detail.fit.used} of ${detail.fit.of} attacks, ${detail.fit.rms === null ? 'no fit' : `${(detail.fit.rms * 1000).toFixed(1)} ms rms off the beat`}`);
+    if (detail.warp) p(`distance of the attacks from the steady grid, kept when 50 ms or more: ${detail.warp.points.map((q) => `${q.t.toFixed(0)} s ${Math.round(q.d * 1000)} ms`).join(', ')}`);
     p(`meter contrast, four beats ${detail.meter.four.toFixed(2)}, three beats ${detail.meter.three.toFixed(2)}. Low strength on each beat of the bar, the mean being 1: ${detail.meter.means.map((v) => v.toFixed(2)).join(', ')}`);
     p(`hit threshold ${detail.threshold.toFixed(2)}, ${detail.jumps} hits from a jump in level alone, strength read as ${detail.strength === 'rise' ? 'rise and attack' : 'attack alone'}`);
   }
