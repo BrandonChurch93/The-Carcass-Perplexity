@@ -24,20 +24,22 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 1, 2026-11-24 20:36 UTC:
+Status 3, 2026-11-24 21:09 UTC:
 
-- `01-approved-contact-sheet.jpg`: the approved pictures, the six establishing views and the titan from orbit
+- `01-image-limit.jpg`: how many digits of a test chart each model family read, at the size the critics will be sent and at a size over the limit. No render existed yet
+
+Status 2, 2026-11-24 20:48 UTC, showed the test chart itself. Status 1, 2026-11-24 20:36 UTC, showed the approved contact sheet, `references/approved/contact-sheet.jpg`.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T20:45:55Z
-phase 0: 0.27 h used of 3.00 h
-build: 0.27 h used of 72.00 h
+2026-11-24T21:07:46Z
+phase 0: 0.63 h used of 3.00 h
+build: 0.63 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 10
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -114,6 +116,7 @@ Measured 2026-11-24 20:37 to 20:44 UTC on the Builder's VM.
 - Clone: worked in 12 s while the repo read public. The working tree with `.git` is about 1 GB.
 - Push: a plain `git push` failed with "could not read Username". After `gh auth setup-git` the push worked, and the branch `agent/phase0-test-looks` is on the remote (checked by the Builder with `git ls-remote`, commit `2634947`, author Brandon, trailer present). Every agent brief therefore says: run `gh auth setup-git` once before the first push.
 - Attachments: the agent returned two video files with no sound stream as attachments to its message, 0.76 MB and 50.8 MB. Both arrived whole under `~/.perplexity/attachments/` (checked with `ffprobe`). So render chunks come back as attachments, and a branch under `out/chunks/` is the second way.
+- A detached process outlives the step that started it. MEASURED 20:50 to 20:57 UTC: a loop started with `setsid nohup` wrote a line a second to a log for its full 400 seconds, through six later steps, after the step that started it had returned at once. Long renders run detached with a log that is polled.
 - Every agent brief runs `gh auth setup-git` before the clone as well, so the clone keeps working when the repo turns private. The first sandbox agent that starts after a private reading confirms it, as addendum 001 asks, and the result is written here.
 - The idle agent answered at 20:42:59 UTC, two minutes after it started, and its message arrived in the Builder's turn while the Builder was working. MEASURED.
 
@@ -123,7 +126,15 @@ none
 
 ### The image limit
 
-none
+Measured 2026-11-24 20:58 to 21:08 UTC with test charts: five four-digit numbers in each of eight rows, the rows shrinking from A to F, row G at the bottom edge, and patches of one-pixel lines and a one-pixel checker. One sandbox agent of each model family was sent the charts as attachments, told not to open or enlarge them, and told to write `?` for a digit it could not read. The answers were scored against the truth (`out/work/imgtest/score.py`, not committed). The table is the picture of status 3, `out/stills/status/01-image-limit.jpg`.
+
+- The Builder, Claude Fable. MEASURED: 1400 x 788 (1.10 megapixels) arrived untouched, rows A to E and G read without an error and 17 of 20 digits of row F. 1568 x 882 arrived scaled to 1430 wide, about 1.15 megapixels.
+- The seven families at 1400 x 788. MEASURED: all seven read rows A to C2 in full. In rows D, E and G together, of 60 digits: Sonnet 59, Opus 60, Neon 60, Astra 60, Sol 59, Fable as an agent 54, Carbon 49. Nobody wrote a wrong digit in rows A to E or G. What was not read was marked `?`.
+- At 1568 x 882. MEASURED: the unread digits grow (Fable 41 of 60 in D, E and G, Carbon 34) and the first wrong digits appear (Sol, four in rows E and G).
+- Square pictures, three families. MEASURED: at 1048 x 1048 (1.10 megapixels) Carbon, Neon and Opus each read rows A to E and G in full. At 1200 x 1200 (1.44 megapixels) all three saw it scaled, Opus put its width at about 1072, and row F fell to between 2 and 11 of 20.
+- So a picture arrives untouched up to about 1.15 megapixels whatever its shape, as `AGENTS.md` says. `critics.maxImageLongEdgePx` and `critics.maxImageMegapixels` stand as the config has them. Nothing was lowered.
+- Carbon was the weakest reader of the wide 1400 x 788 chart and read the square 1048 chart in full, so a pack for that family is cut to at most 1048 px on the long edge. That is inside the limits.
+- Model families that can see images: all seven. `claude_fable_5_2`, `claude_sonnet_5_5`, `claude_opus_5_5`, `gemini_4_carbon`, `gemini_neon`, `gpt_6_2_astra`, `gpt_6_2_sol`. Which model wrote which answer is taken from the order the agents were started in. Four of the ten named themselves and matched.
 
 ### What can be called
 
@@ -170,7 +181,21 @@ What it means for this film, with nothing in the kit changed: the master as spec
 
 ## Pinned versions
 
-none
+Pinned 2026-11-24 in `package.json` as exact versions, with `package-lock.json` committed. Install with `npm ci`. `.npmrc` sets `legacy-peer-deps=true`, because npm 10.8.2 fails on the optional peers of the test runner with an internal error otherwise (three tries, logged).
+
+| What | Version | Why this one |
+| --- | --- | --- |
+| three | 0.187.0 (r187) | The newest stable on npm, published 2026-10-30. Migration notes that matter here: `Timer` in place of `Clock`, `PCFSoftShadowMap` deprecated, `setViewport` no longer scales by the pixel ratio when a render target is bound |
+| gsap | 3.15.1 | Easing |
+| vite | 8.3.8 | Build |
+| typescript | 7.0.2 | Strict type check |
+| vitest | 5.1.1 | Unit tests |
+| playwright-core | 1.59.1 | The release whose own browser is build 1217, the one already on every VM. It downloads nothing |
+| sharp | 0.35.5 | Every picture the harness reads or writes |
+| @types/three, @types/node | 0.187.0, 22.20.5 | Types |
+| Browser | Chrome for Testing 147.0.7727.15, headless shell, Playwright build 1217 | Already on the Builder's VM and on every sandbox VM, so all of them render with one browser |
+| Node, npm | v20.20.2, 10.8.2 | As found |
+| ffmpeg, ffprobe | 8.0.1-3ubuntu2 | As found |
 
 ## Render budget
 
@@ -203,6 +228,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. Harness scripts are plain Node ES modules under `tools/` and the film's code is TypeScript under `src/`. A small command, `npm run progress`, edits sections of this file so that logging is cheap.
 - 2026-11-24. For everything new that appears in a frame the GPT Image models come first, because their terms are the clearest of the image models; another model is used where it makes the better picture. See `ASSETS.md`.
 - 2026-11-24. The harness drives the browser that is already on every VM (Chrome for Testing 147.0.7727.15) through `playwright-core` 1.59.1, so the Builder's VM and every sandbox VM render with one browser and nothing is downloaded.
+- 2026-11-24. Critic packs for the gemini_4_carbon family are cut to at most 1048 px on the long edge, inside the config limits: it left 11 of 60 small digits unread at 1400 x 788 and none at 1048 x 1048. Every other family gets 1400 x 788.
 
 ## Notes from Brandon
 
@@ -249,7 +275,17 @@ none
 
 ## Running agents
 
-none
+Each reports by message to the Builder.
+
+| Agent | Kind | Job | Branch | Started | Limit |
+| --- | --- | --- | --- | --- | --- |
+| `picture_tools_builder` | build, sandbox | `tools/lib/img.mjs`, `crops`, `compare`, `sheet` | `agent/tools-pictures` | 20:58 UTC | 60 min |
+| `review_page_builder` | build, sandbox | `review` and `keep`, and the review page | `agent/tools-review` | 20:58 UTC | 60 min |
+| `repo_checks_builder` | build, sandbox | Checks G8 and G9, and the unit tests of the clock | `agent/tools-checks` | 20:58 UTC | 50 min |
+
+`review_page_builder` reported at 21:02 UTC that `gh auth setup-git` fails in its VM ("You are not logged into any GitHub hosts"), so it cannot push. The first sandbox agent could, at 20:43 UTC. All three were told at 21:04 UTC: if the push fails, commit on the branch and attach a `git bundle` and a patch file to the report, and the Builder fetches from the bundle and pushes.
+
+Ended: `idle_tester`, `sandbox_tester`, `image_terms_reader`, `sound_terms_reader`, `platform_reader` (answered 20:42 to 20:46 UTC); `reviewer_01` to `reviewer_10`, the image limit (answered 20:59 to 21:08 UTC); `sound_api_reader` (answered 21:03 UTC, its reference is in `audio/records/API-REFERENCE.md`). The branch `agent/phase0-test-looks` held only the push test and may be deleted.
 
 ## Rounds
 
@@ -275,10 +311,15 @@ none
 
 ## Push log
 
-none
+- 2026-11-24 20:33 UTC `f361749` pushed. Build starts
+- 2026-11-24 20:37 UTC `a559db9` pushed. Clock, look log, first status
+- 2026-11-24 20:39 UTC `a218a33` pushed. Addendum 001 applied
+- 2026-11-24 20:46 UTC `0c59181` pushed. The music, the lookups
+- 2026-11-24 20:52 UTC `5a12389` pushed. Packages pinned, harness contract
 
 ## Session log
 
 - 2026-11-24 20:30 UTC. Task 1 starts on the BUILD MODE prompt. Repo at `418cade`. Stop condition 1 checked: `MANIFEST.sha256` exists, 52 of 52 hashes match, all 34 keys exist and are in the manifest. Kit read in its reading order. No addenda.
 - 2026-11-24 20:39 UTC. Addendum 001 arrived on `main` as `7da7398` and was merged at 20:36 UTC. Applied: the repo was measured again (still PUBLIC, so nothing sound is committed yet and the one-time steps wait for the first private reading); the music line was taken out of "For Brandon to decide"; the music row in `ASSETS.md` now reads supplied by Brandon, royalty-free, cleared by Brandon for this project. Status 1 was posted at 20:36 UTC with the approved contact sheet shown inline.
 - 2026-11-24 20:45 UTC. Brandon's note 3 applied: the sound folders left `.gitignore` and the music was committed. The five Phase 0 agents all answered between 20:42 and 20:46 UTC: the idle test, the sandbox test (clone, push after `gh auth setup-git`, two attachments), the image terms, the sound terms and X's limits. Their findings are under "Tool record", "The terms that were read" and "Platform", and in `ASSETS.md`.
+- 2026-11-24 21:09 UTC. Status 3 posted at 21:09 UTC with the image limit table. The image limit is recorded: 1400 x 788 arrives untouched, about 1.15 megapixels is the limit, nothing lowered. Ten reviewer agents and the sound API reader have answered. Three build agents are working on harness tools.
