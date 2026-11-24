@@ -1,0 +1,10 @@
+[
+  {
+    "pair": ["never land", "neverland"],
+    "reason": "Two words and one word are the same sounds. The transcriber prefers the name it knows."
+  },
+  {
+    "pair": ["gods", "guards"],
+    "reason": "In this voice's accent the two words are one sound. The transcriber has written each for the other."
+  }
+]
