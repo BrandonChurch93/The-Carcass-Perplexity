@@ -10,6 +10,7 @@
   "scripts": {
     "clock": "node tools/clock.mjs",
     "look": "node tools/look.mjs",
-    "progress": "node tools/progress.mjs"
+    "progress": "node tools/progress.mjs",
+    "private": "node tools/private.mjs"
   }
 }

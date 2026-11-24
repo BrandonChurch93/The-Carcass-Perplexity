@@ -3,9 +3,6 @@ dist/
 out/work/
 references/cache/
 deliver/film/
-audio/supplied/
-audio/kept/
-audio/mix/
 *.blend
 *.blend1
 .env
