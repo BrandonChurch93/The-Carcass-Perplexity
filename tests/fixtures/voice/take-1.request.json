@@ -1,0 +1,9 @@
+{
+ "text": "[slowly, gravely] Now you see it.\n\nThis was never land.\n\nIt was a god.\n\nGods die slow. This one is not finished.",
+ "model_id": "eleven_v4",
+ "voice_settings": {
+  "stability": 0.5,
+  "similarity_boost": 0.75
+ },
+ "seed": 20261124
+}
