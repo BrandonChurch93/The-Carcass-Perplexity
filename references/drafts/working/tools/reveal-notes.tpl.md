@@ -265,6 +265,9 @@ A fallback set with the larger head, which was fully tested as x4 plus the wider
 - `working/prompts/pb2-g.txt` was overwritten by mistake at 08:10 UTC with the text of the new frame 2 prompt. That text now has its own file, `pb2-x6.txt`, and the log, the batch file and the take records point to it. The original `pb2-g` text (used for the unused takes `pb2-t17` to `pb2-t20`) was restored word for word at 08:33 UTC from the session's own record of the file as it was printed at 04:15 UTC.
 - Ten replies of the x4 round (`bm2`, `bm3`, `bn1` to `bn3`, `bo1` to `bo3`, `bp1`, `bp2`) had not been saved to file before a context compaction. They were restored word for word from the session record at 08:25 UTC. One of them, `bp2`, is cut off after 4,000 characters, which is the length the record keeps; the cut is marked in the file.
 - The decisions between 03:32 and 08:19 UTC were logged in `working/log.json` after the fact, at hand-over, from the file times and the take records. Their times are to the nearest few minutes.
+- Statuses 2 to 14 were posted in the thread on time but entered in `working/log.json` only at hand-over. Their log entries carry the picture captions exactly as posted, read back from the saved status payloads, and are marked as entered after the fact (`working/tools/log_backfill.py`).
+- Two of the sixteen gaps between statuses were longer than the 30 minutes asked for: 32 minutes (04:49 to 05:21 UTC) and 35 minutes (07:36 to 08:11 UTC).
+- "Push as you go" was not kept. After the old reveal was archived and pushed (`592ecae`, about 03:20 UTC), nothing was pushed until hand-over, when the whole redo went up in one commit (`1f30bb1`, 08:42 UTC).
 
 #### Real photographs passed to the generator for the kept chain
 
