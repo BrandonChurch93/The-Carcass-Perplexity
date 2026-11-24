@@ -215,6 +215,56 @@ describe('a grid that the music leaves', () => {
   });
 });
 
+describe('the line through the clicks', () => {
+  const beat = 60 / 67;
+  const phase = 0.31;
+  const wobble = [0.002, -0.003, 0.001, -0.001, 0.003, -0.002];
+  const clicks = [];
+  for (let k = 10; k < 200; k += 7) clicks.push({ t: phase + k * beat + wobble[k % wobble.length], rise: 2 });
+  clicks.push({ t: phase + 33 * beat + 0.09, rise: 2 }, { t: phase + 150 * beat - 0.2, rise: 2 });
+  clicks.sort((a, b) => a.t - b.t);
+
+  it('finds the tempo to a hundredth of a beat a minute from a start that is off, and drops what is far', () => {
+    const line = core.steadyLine(beat * 1.0004, phase + 0.03, clicks);
+    expect(Math.abs(60 / line.beatSeconds - 67)).toBeLessThan(0.01);
+    expect(Math.abs(line.phaseSeconds - phase)).toBeLessThan(0.003);
+    expect(line.dropped).toBe(2);
+    expect(line.worst).toBeLessThan(0.006);
+  });
+
+  it('says nothing when there are too few clicks', () => {
+    expect(core.steadyLine(beat, phase, clicks.slice(0, 4))).toBe(null);
+  });
+
+  it('times a burst above the click band within 3 ms and calls a slow swell soft', () => {
+    const n = RATE * 4;
+    const x = new Float32Array(n);
+    let seed = 7;
+    const noise = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 2 ** 31 - 1;
+    };
+    for (let i = 0; i < n; i++) {
+      const s = i / RATE;
+      x[i] = 0.01 * noise() + (s >= 1 ? 0.5 * Math.exp(-(s - 1) / 0.05) * noise() : 0) + (s >= 2.5 ? Math.min(1, (s - 2.5) / 0.4) * 0.5 * Math.sin(2 * Math.PI * 60 * s) : 0);
+    }
+    const curve = core.clickCurve(x, RATE);
+    const hard = core.clickOnset(curve, 1.01);
+    expect(Math.abs(hard.t - 1)).toBeLessThan(0.003);
+    expect(hard.rise).toBeGreaterThan(core.CLICK_RISE);
+    expect(core.clickOnset(curve, 2.6).rise).toBeLessThan(core.CLICK_RISE);
+  });
+
+  it('leaves the grid alone from the first click on the line', () => {
+    const hits = [];
+    for (let k = 0; k < 120; k++) hits.push({ t: phase + k * beat + (k < 60 ? 0.1 : 0), attackLow: 1, attackFull: 1 });
+    const warp = core.localOffsets(beat, phase, hits, 120 * beat, { until: phase + 60 * beat });
+    expect(warp.at(20)).toBeGreaterThan(0.08);
+    expect(warp.at(phase + 60 * beat)).toBe(0);
+    expect(warp.at(100)).toBe(0);
+  });
+});
+
 describe('the command', () => {
   it('writes the same bytes twice and draws nothing when told not to', async () => {
     const dir = temp();

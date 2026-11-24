@@ -9,768 +9,853 @@
     "channels": 2
   },
   "tempo": {
-    "bpm": 67.02,
-    "beatSeconds": 0.8952,
+    "bpm": 67,
+    "beatSeconds": 0.8955,
     "beatsPerBar": 4,
-    "barSeconds": 3.5809,
-    "confidence": 0.25,
+    "barSeconds": 3.5821,
+    "confidence": 0.21,
     "configBpm": 67
   },
   "beats": [
-    0.7187,
-    1.6139,
-    2.5091,
-    3.4043,
-    4.2995,
-    5.1947,
-    6.0899,
-    6.9852,
-    7.8804,
-    8.7756,
-    9.6708,
-    10.566,
-    11.4612,
-    12.3565,
-    13.2517,
-    14.1469,
-    15.0395,
-    15.9307,
-    16.8219,
-    17.7132,
-    18.6044,
-    19.4956,
-    20.3868,
-    21.278,
-    22.1715,
-    23.0662,
-    23.961,
-    24.8557,
-    25.7504,
-    26.6451,
-    27.5398,
-    28.4345,
-    29.3273,
-    30.219,
-    31.1107,
-    32.0024,
-    32.8942,
-    33.7859,
-    34.6776,
-    35.5693,
-    36.4633,
-    37.3585,
-    38.2537,
-    39.149,
-    40.0442,
-    40.9394,
-    41.8346,
-    42.7298,
-    43.6299,
-    44.5326,
-    45.4354,
-    46.3381,
-    47.2408,
-    48.1435,
-    49.0462,
-    49.9489,
-    50.8468,
-    51.742,
-    52.6372,
-    53.5324,
-    54.4276,
-    55.3229,
-    56.2181,
-    57.1133,
-    57.9978,
-    58.8764,
-    59.7551,
-    60.6338,
-    61.5125,
-    62.3912,
-    63.2699,
-    64.1486,
-    65.038,
-    65.9333,
-    66.8285,
-    67.7237,
-    68.6189,
-    69.5141,
-    70.4093,
-    71.3046,
-    72.1998,
-    73.095,
-    73.9902,
-    74.8854,
-    75.7806,
-    76.6759,
-    77.5711,
-    78.4663,
-    79.3615,
-    80.2567,
-    81.1519,
-    82.0472,
-    82.9424,
-    83.8376,
-    84.7328,
-    85.628,
-    86.5232,
-    87.4185,
-    88.3137,
-    89.2089,
-    90.1041,
-    90.9993,
-    91.8945,
-    92.7897,
-    93.685,
-    94.5802,
-    95.4754,
-    96.3706,
-    97.2658,
-    98.161,
-    99.0563,
-    99.9515,
-    100.8467,
-    101.7419,
-    102.6371,
-    103.5323,
-    104.4276,
-    105.3228,
-    106.218,
-    107.1132,
-    108.0084,
-    108.9036,
-    109.7989,
-    110.6941,
-    111.5893,
-    112.4845,
-    113.3797,
-    114.2749,
-    115.1702,
-    116.0654,
-    116.9606,
-    117.8558,
-    118.751,
-    119.6462,
-    120.5415,
-    121.4367,
-    122.3319,
-    123.2271,
-    124.1223,
-    125.0175,
-    125.9128,
-    126.808,
-    127.7032,
-    128.5984,
-    129.4936,
-    130.3888,
-    131.2841,
-    132.1793,
-    133.0745,
-    133.9697,
-    134.8649,
-    135.7601,
-    136.6554,
-    137.5506,
-    138.4458,
-    139.341,
-    140.2362,
-    141.1314,
-    142.0267,
-    142.9219,
-    143.8171,
-    144.7123,
-    145.6075,
-    146.5027,
-    147.398,
-    148.2932,
-    149.1884,
-    150.0836,
-    150.9788,
-    151.874,
-    152.7693,
-    153.6645,
-    154.5597,
-    155.4549,
-    156.3501,
-    157.2453,
-    158.1406,
-    159.0358,
-    159.931,
-    160.8262,
-    161.7214,
-    162.6166,
-    163.5118,
-    164.4071,
-    165.3023,
-    166.1975,
-    167.0927,
-    167.9879,
-    168.8831,
-    169.7784,
-    170.6736,
-    171.5688,
-    172.464,
-    173.3592,
-    174.2544,
-    175.1497,
-    176.0449,
-    176.9401,
-    177.8353,
-    178.7305,
-    179.6257,
-    180.521,
-    181.4162,
-    182.3114,
-    183.2066,
-    184.1018,
-    184.997,
-    185.8923,
-    186.7875,
-    187.6827,
-    188.5779,
-    189.4731,
-    190.3683,
-    191.2636,
-    192.1588,
-    193.054,
-    193.9492,
-    194.8444,
-    195.7396,
-    196.6349,
-    197.5301,
-    198.4253,
-    199.3205,
-    200.2157,
-    201.1109,
-    202.0062,
-    202.9014,
-    203.7966,
-    204.6918,
-    205.587,
-    206.4822,
-    207.3775,
-    208.2727,
-    209.1679,
-    210.0631,
-    210.9583,
-    211.8535,
-    212.7488,
-    213.644,
-    214.5392,
-    215.4344,
-    216.3296,
-    217.2248,
-    218.1201,
-    219.0153,
-    219.9105,
-    220.8057,
-    221.7009,
-    222.5961,
-    223.4914,
-    224.3866,
-    225.2818,
-    226.177,
-    227.0722,
-    227.9674,
-    228.8627,
-    229.7579,
-    230.6531,
-    231.5483,
-    232.4435,
-    233.3387
+    0.668,
+    1.5635,
+    2.459,
+    3.3545,
+    4.2501,
+    5.1456,
+    6.0411,
+    6.9367,
+    7.8322,
+    8.7277,
+    9.6232,
+    10.5188,
+    11.4143,
+    12.3098,
+    13.2054,
+    14.1009,
+    14.9964,
+    15.892,
+    16.7875,
+    17.683,
+    18.5785,
+    19.4741,
+    20.3696,
+    21.2651,
+    22.1604,
+    23.0554,
+    23.9504,
+    24.8455,
+    25.7405,
+    26.6355,
+    27.5305,
+    28.4256,
+    29.3203,
+    30.2149,
+    31.1094,
+    32.0039,
+    32.8984,
+    33.793,
+    34.6875,
+    35.582,
+    36.4735,
+    37.3625,
+    38.2515,
+    39.1406,
+    40.0296,
+    40.9186,
+    41.8076,
+    42.6967,
+    43.5888,
+    44.4833,
+    45.3779,
+    46.2724,
+    47.1669,
+    48.0614,
+    48.956,
+    49.8505,
+    50.7453,
+    51.6403,
+    52.5354,
+    53.4304,
+    54.3254,
+    55.2205,
+    56.1155,
+    57.0105,
+    57.8949,
+    58.7711,
+    59.6473,
+    60.5235,
+    61.3998,
+    62.2954,
+    63.1909,
+    64.0864,
+    64.9819,
+    65.8775,
+    66.773,
+    67.6685,
+    68.5641,
+    69.4596,
+    70.3551,
+    71.2506,
+    72.1462,
+    73.0417,
+    73.9372,
+    74.8328,
+    75.7283,
+    76.6238,
+    77.5194,
+    78.4149,
+    79.3104,
+    80.2059,
+    81.1015,
+    81.997,
+    82.8925,
+    83.7881,
+    84.6836,
+    85.5791,
+    86.4746,
+    87.3702,
+    88.2657,
+    89.1612,
+    90.0568,
+    90.9523,
+    91.8478,
+    92.7434,
+    93.6389,
+    94.5344,
+    95.4299,
+    96.3255,
+    97.221,
+    98.1165,
+    99.0121,
+    99.9076,
+    100.8031,
+    101.6986,
+    102.5942,
+    103.4897,
+    104.3852,
+    105.2808,
+    106.1763,
+    107.0718,
+    107.9674,
+    108.8629,
+    109.7584,
+    110.6539,
+    111.5495,
+    112.445,
+    113.3405,
+    114.2361,
+    115.1316,
+    116.0271,
+    116.9226,
+    117.8182,
+    118.7137,
+    119.6092,
+    120.5048,
+    121.4003,
+    122.2958,
+    123.1913,
+    124.0869,
+    124.9824,
+    125.8779,
+    126.7735,
+    127.669,
+    128.5645,
+    129.4601,
+    130.3556,
+    131.2511,
+    132.1466,
+    133.0422,
+    133.9377,
+    134.8332,
+    135.7288,
+    136.6243,
+    137.5198,
+    138.4153,
+    139.3109,
+    140.2064,
+    141.1019,
+    141.9975,
+    142.893,
+    143.7885,
+    144.6841,
+    145.5796,
+    146.4751,
+    147.3706,
+    148.2662,
+    149.1617,
+    150.0572,
+    150.9528,
+    151.8483,
+    152.7438,
+    153.6393,
+    154.5349,
+    155.4304,
+    156.3259,
+    157.2215,
+    158.117,
+    159.0125,
+    159.9081,
+    160.8036,
+    161.6991,
+    162.5946,
+    163.4902,
+    164.3857,
+    165.2812,
+    166.1768,
+    167.0723,
+    167.9678,
+    168.8633,
+    169.7589,
+    170.6544,
+    171.5499,
+    172.4455,
+    173.341,
+    174.2365,
+    175.132,
+    176.0276,
+    176.9231,
+    177.8186,
+    178.7142,
+    179.6097,
+    180.5052,
+    181.4008,
+    182.2963,
+    183.1918,
+    184.0873,
+    184.9829,
+    185.8784,
+    186.7739,
+    187.6695,
+    188.565,
+    189.4605,
+    190.356,
+    191.2516,
+    192.1471,
+    193.0426,
+    193.9382,
+    194.8337,
+    195.7292,
+    196.6248,
+    197.5203,
+    198.4158,
+    199.3113,
+    200.2069,
+    201.1024,
+    201.9979,
+    202.8935,
+    203.789,
+    204.6845,
+    205.58,
+    206.4756,
+    207.3711,
+    208.2666,
+    209.1622,
+    210.0577,
+    210.9532,
+    211.8487,
+    212.7443,
+    213.6398,
+    214.5353,
+    215.4309,
+    216.3264,
+    217.2219,
+    218.1175,
+    219.013,
+    219.9085,
+    220.804,
+    221.6996,
+    222.5951,
+    223.4906,
+    224.3862,
+    225.2817,
+    226.1772,
+    227.0727,
+    227.9683,
+    228.8638,
+    229.7593,
+    230.6549,
+    231.5504,
+    232.4459,
+    233.3415
   ],
   "bars": [
-    2.5091,
-    6.0899,
-    9.6708,
-    13.2517,
-    16.8219,
-    20.3868,
-    23.961,
-    27.5398,
-    31.1107,
-    34.6776,
-    38.2537,
-    41.8346,
-    45.4354,
-    49.0462,
-    52.6372,
-    56.2181,
-    59.7551,
-    63.2699,
-    66.8285,
-    70.4093,
-    73.9902,
-    77.5711,
-    81.1519,
-    84.7328,
-    88.3137,
-    91.8945,
-    95.4754,
-    99.0563,
-    102.6371,
-    106.218,
-    109.7989,
-    113.3797,
-    116.9606,
-    120.5415,
-    124.1223,
-    127.7032,
-    131.2841,
-    134.8649,
-    138.4458,
-    142.0267,
-    145.6075,
-    149.1884,
-    152.7693,
-    156.3501,
-    159.931,
-    163.5118,
-    167.0927,
-    170.6736,
-    174.2544,
-    177.8353,
-    181.4162,
-    184.997,
-    188.5779,
-    192.1588,
-    195.7396,
-    199.3205,
-    202.9014,
-    206.4822,
-    210.0631,
-    213.644,
-    217.2248,
-    220.8057,
-    224.3866,
-    227.9674,
-    231.5483
+    2.459,
+    6.0411,
+    9.6232,
+    13.2054,
+    16.7875,
+    20.3696,
+    23.9504,
+    27.5305,
+    31.1094,
+    34.6875,
+    38.2515,
+    41.8076,
+    45.3779,
+    48.956,
+    52.5354,
+    56.1155,
+    59.6473,
+    63.1909,
+    66.773,
+    70.3551,
+    73.9372,
+    77.5194,
+    81.1015,
+    84.6836,
+    88.2657,
+    91.8478,
+    95.4299,
+    99.0121,
+    102.5942,
+    106.1763,
+    109.7584,
+    113.3405,
+    116.9226,
+    120.5048,
+    124.0869,
+    127.669,
+    131.2511,
+    134.8332,
+    138.4153,
+    141.9975,
+    145.5796,
+    149.1617,
+    152.7438,
+    156.3259,
+    159.9081,
+    163.4902,
+    167.0723,
+    170.6544,
+    174.2365,
+    177.8186,
+    181.4008,
+    184.9829,
+    188.565,
+    192.1471,
+    195.7292,
+    199.3113,
+    202.8935,
+    206.4756,
+    210.0577,
+    213.6398,
+    217.2219,
+    220.804,
+    224.3862,
+    227.9683,
+    231.5504
   ],
   "hits": [
     {
       "t": 17.368,
       "low": 0.09,
-      "full": 0.85
+      "full": 0.85,
+      "sharp": false
     },
     {
       "t": 23.9933,
       "low": 0.36,
-      "full": 0.43
+      "full": 0.43,
+      "sharp": false
     },
     {
       "t": 24.4733,
       "low": 0.26,
-      "full": 0.21
+      "full": 0.21,
+      "sharp": false
     },
     {
       "t": 38.3079,
       "low": 0.38,
-      "full": 0.34
+      "full": 0.34,
+      "sharp": false
     },
     {
       "t": 39.2362,
       "low": 0.28,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 39.8171,
       "low": 0.28,
-      "full": 0.27
+      "full": 0.27,
+      "sharp": true
     },
     {
       "t": 40.0291,
       "low": 0.24,
-      "full": 0.41
+      "full": 0.41,
+      "sharp": true
     },
     {
       "t": 41.7822,
       "low": 0.07,
-      "full": 0.28
+      "full": 0.28,
+      "sharp": true
     },
     {
       "t": 45.3885,
       "low": 0.39,
-      "full": 0.22
+      "full": 0.22,
+      "sharp": false
     },
     {
       "t": 47.1097,
       "low": 0.18,
-      "full": 0.3
+      "full": 0.3,
+      "sharp": true
     },
     {
       "t": 52.6506,
       "low": 0.38,
-      "full": 0.22
+      "full": 0.22,
+      "sharp": false
     },
     {
       "t": 52.9696,
       "low": 0.29,
-      "full": 0.14
+      "full": 0.14,
+      "sharp": false
     },
     {
       "t": 53.2863,
       "low": 0.31,
-      "full": 0.16
+      "full": 0.16,
+      "sharp": false
     },
     {
       "t": 53.7711,
       "low": 0.28,
-      "full": 0.14
+      "full": 0.14,
+      "sharp": false
     },
     {
       "t": 54.2293,
       "low": 0.21,
-      "full": 0.28
+      "full": 0.28,
+      "sharp": false
     },
     {
       "t": 56.25,
       "low": 0.39,
-      "full": 0.13
+      "full": 0.13,
+      "sharp": false
     },
     {
       "t": 56.3679,
       "low": 0.28,
-      "full": 0.09
+      "full": 0.09,
+      "sharp": false
     },
     {
       "t": 63.3757,
       "low": 0.37,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 66.8375,
       "low": 0.34,
-      "full": 0.26
+      "full": 0.26,
+      "sharp": false
     },
     {
       "t": 70.4258,
       "low": 0.26,
-      "full": 0.35
+      "full": 0.35,
+      "sharp": false
     },
     {
       "t": 70.5387,
       "low": 0.36,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 73.9797,
       "low": 0.35,
-      "full": 0.45
+      "full": 0.45,
+      "sharp": false
     },
     {
       "t": 74.279,
       "low": 0.24,
-      "full": 0.33
+      "full": 0.33,
+      "sharp": false
     },
     {
       "t": 74.4389,
       "low": 0.27,
-      "full": 0.17
+      "full": 0.17,
+      "sharp": false
     },
     {
       "t": 74.642,
       "low": 0.28,
-      "full": 0.21
+      "full": 0.21,
+      "sharp": false
     },
     {
       "t": 75.268,
       "low": 0.29,
-      "full": 0.15
+      "full": 0.15,
+      "sharp": false
     },
     {
       "t": 77.5383,
       "low": 0.32,
-      "full": 0.41
+      "full": 0.41,
+      "sharp": true
     },
     {
       "t": 81.0932,
       "low": 0.24,
-      "full": 0.33
+      "full": 0.33,
+      "sharp": false
     },
     {
       "t": 81.4563,
       "low": 0.28,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 81.6633,
       "low": 0.29,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 84.769,
       "low": 0.5,
-      "full": 0.36
+      "full": 0.36,
+      "sharp": false
     },
     {
       "t": 88.3602,
       "low": 0.43,
-      "full": 0.33
+      "full": 0.33,
+      "sharp": false
     },
     {
       "t": 91.9208,
       "low": 0.33,
-      "full": 0.15
+      "full": 0.15,
+      "sharp": false
     },
     {
       "t": 95.4808,
       "low": 0.34,
-      "full": 0.35
+      "full": 0.35,
+      "sharp": false
     },
     {
       "t": 95.601,
       "low": 0.47,
-      "full": 0.13
+      "full": 0.13,
+      "sharp": false
     },
     {
       "t": 99.0543,
       "low": 0.36,
-      "full": 0.28
+      "full": 0.28,
+      "sharp": true
     },
     {
       "t": 102.6262,
       "low": 0.42,
-      "full": 0.5
+      "full": 0.5,
+      "sharp": true
     },
     {
       "t": 102.7917,
       "low": 0.35,
-      "full": 0.2
+      "full": 0.2,
+      "sharp": false
     },
     {
       "t": 109.891,
       "low": 0.28,
-      "full": 0.13
+      "full": 0.13,
+      "sharp": false
     },
     {
       "t": 115.2313,
       "low": 0.39,
-      "full": 0.17
+      "full": 0.17,
+      "sharp": false
     },
     {
       "t": 116.0944,
       "low": 0.27,
-      "full": 0.18
+      "full": 0.18,
+      "sharp": false
     },
     {
       "t": 116.9245,
       "low": 0.34,
-      "full": 0.24
+      "full": 0.24,
+      "sharp": true
     },
     {
       "t": 117.174,
       "low": 0.31,
-      "full": 0.1
+      "full": 0.1,
+      "sharp": false
     },
     {
       "t": 120.516,
       "low": 0.34,
-      "full": 0.25
+      "full": 0.25,
+      "sharp": false
     },
     {
       "t": 124.1722,
       "low": 0.36,
-      "full": 0.23
+      "full": 0.23,
+      "sharp": false
     },
     {
       "t": 127.7553,
       "low": 0.27,
-      "full": 0.13
+      "full": 0.13,
+      "sharp": false
     },
     {
       "t": 131.2393,
       "low": 0.24,
-      "full": 0.31
+      "full": 0.31,
+      "sharp": false
     },
     {
       "t": 131.4991,
       "low": 0.35,
-      "full": 0.22
+      "full": 0.22,
+      "sharp": false
     },
     {
       "t": 134.8464,
       "low": 0.32,
-      "full": 0.22
+      "full": 0.22,
+      "sharp": false
     },
     {
       "t": 138.6241,
       "low": 0.26,
-      "full": 0.15
+      "full": 0.15,
+      "sharp": false
     },
     {
       "t": 138.7531,
       "low": 0.36,
-      "full": 0.14
+      "full": 0.14,
+      "sharp": false
     },
     {
       "t": 138.9132,
       "low": 0.36,
-      "full": 0.12
+      "full": 0.12,
+      "sharp": false
     },
     {
       "t": 139.1122,
       "low": 0.29,
-      "full": 0.09
+      "full": 0.09,
+      "sharp": false
     },
     {
       "t": 139.3066,
       "low": 0.15,
-      "full": 0.26
+      "full": 0.26,
+      "sharp": false
     },
     {
       "t": 141.9456,
       "low": 0.24,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": false
     },
     {
       "t": 145.5571,
       "low": 0.24,
-      "full": 0.32
+      "full": 0.32,
+      "sharp": true
     },
     {
       "t": 145.9001,
       "low": 0.36,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 146.471,
       "low": 0.22,
-      "full": 0.3
+      "full": 0.3,
+      "sharp": true
     },
     {
       "t": 149.1639,
       "low": 0.26,
-      "full": 0.37
+      "full": 0.37,
+      "sharp": true
     },
     {
       "t": 151.0195,
       "low": 0.3,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": false
     },
     {
       "t": 167.12,
       "low": 1,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": false
     },
     {
       "t": 167.2754,
       "low": 0.33,
-      "full": 0.12
+      "full": 0.12,
+      "sharp": false
     },
     {
       "t": 168.8081,
       "low": 0.17,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": false
     },
     {
       "t": 170.7264,
       "low": 0.26,
-      "full": 0.3
+      "full": 0.3,
+      "sharp": false
     },
     {
       "t": 172.4285,
       "low": 0.16,
-      "full": 0.31
+      "full": 0.31,
+      "sharp": true
     },
     {
       "t": 174.2145,
       "low": 0.21,
-      "full": 0.27
+      "full": 0.27,
+      "sharp": false
     },
     {
       "t": 174.5596,
       "low": 0.28,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 175.9944,
       "low": 0.16,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": true
     },
     {
       "t": 177.8249,
       "low": 0.31,
-      "full": 0.34
+      "full": 0.34,
+      "sharp": true
     },
     {
       "t": 186.7812,
       "low": 0.11,
-      "full": 0.35
+      "full": 0.35,
+      "sharp": true
     },
     {
       "t": 188.7449,
       "low": 0.32,
-      "full": 0.1
+      "full": 0.1,
+      "sharp": false
     },
     {
       "t": 190.3537,
       "low": 0.12,
-      "full": 0.26
+      "full": 0.26,
+      "sharp": false
     },
     {
       "t": 193.9346,
       "low": 0.09,
-      "full": 0.32
+      "full": 0.32,
+      "sharp": true
     },
     {
       "t": 199.3229,
       "low": 0.15,
-      "full": 0.29
+      "full": 0.29,
+      "sharp": true
     },
     {
       "t": 202.9828,
       "low": 0.28,
-      "full": 0.25
+      "full": 0.25,
+      "sharp": false
     },
     {
       "t": 203.0367,
       "low": 0.28,
-      "full": 0.12
+      "full": 0.12,
+      "sharp": false
     },
     {
       "t": 203.2634,
       "low": 0.35,
-      "full": 0.11
+      "full": 0.11,
+      "sharp": false
     },
     {
       "t": 204.6714,
       "low": 0.22,
-      "full": 0.28
+      "full": 0.28,
+      "sharp": false
     },
     {
       "t": 207.3493,
       "low": 0.02,
-      "full": 0.26
+      "full": 0.26,
+      "sharp": true
     },
     {
       "t": 208.3291,
       "low": 0.25,
-      "full": 0.3
+      "full": 0.3,
+      "sharp": false
     },
     {
       "t": 210.1112,
       "low": 0.36,
-      "full": 0.27
+      "full": 0.27,
+      "sharp": false
     },
     {
       "t": 217.9817,
       "low": 0.26,
-      "full": 0.09
+      "full": 0.09,
+      "sharp": false
     },
     {
       "t": 218.2256,
       "low": 0.27,
-      "full": 0.06
+      "full": 0.06,
+      "sharp": false
     },
     {
       "t": 223.4249,
       "low": 0.13,
-      "full": 1
+      "full": 1,
+      "sharp": false
     },
     {
       "t": 224.7239,
       "low": 0.49,
-      "full": 0.47
+      "full": 0.47,
+      "sharp": false
     }
   ],
   "sections": [
@@ -958,9 +1043,11 @@
     "Tempo: 66.9 (score 0.35), 133.6 (score 0.29), 100.3 (score 0.26), 44.6 (score 0.28) beats a minute scored alike, the first of them highest. Took 66.9, the one nearest music.bpm.",
     "Hit strength is the larger of two readings. One is the rise in level, the 0.4 s after the attack against the 2 s before it, in dB, over the largest rise of the track in that band. The other is 0.5 times the size of the attack, the spectral flux over the largest of the track in that band. So a strike out of near silence can reach 1 and the sharpest drum inside a loud passage reaches 0.5.",
     "A hit is listed where the attack in either band is at least 0.52 of the sharpest attack of the track, or where the level jumps with no sharp attack, by 8 dB or more across the whole band or 12 dB or more in the low band (3 such). The threshold moves until between 36 and 90 attacks are listed.",
-    "The tempo is one steady fit to the whole file. 131 of 419 attacks sit within 8 percent of a beat of it, 36 ms rms from it. Confidence is that share, weighted by strength, over what chance would give.",
-    "The music does not hold the steady grid everywhere. Where the attacks over 32 beats sit 50 ms or more from it, the beats and bar lines are moved to them: at the points measured from 14.3235 s to 57.2939 s by 72 to 136 ms, joined to the steady grid by straight lines, and held as far as the nearer end of the file when no point was measured beyond. So the gap between two beats there is not always tempo.beatSeconds. A smaller drift is left alone.",
-    "The strikes against the grid: firstHit at 17.368 is 345 ms before the nearest beat. midHit at 102.6262 is 11 ms before the nearest beat, which is bar line 28. revealHit at 167.12 is 27 ms after the nearest beat, which is bar line 46. finalHit at 224.7239 is 337 ms after the nearest beat, which is bar line 62. A strike that is far from a beat is its own accent: cut to the hit, not to the bar line.",
+    "The tempo is a straight line, beat number against time, through the attacks that have a click: a rise of 13 dB or more above 2000 Hz within 45 ms of the attack, timed where that band crosses half of its rise. It starts from the fit to every attack (67.023 bpm). Clicks more than 25 ms from the line were dropped and the line fitted again until it held. 22 clicks are on the line and 16 were dropped, the first at 61.393 s and the last at 209.156 s, 2.66 ms rms and 6.86 ms worst from it. The line is 66.999 bpm, a beat of 0.895529 s and a bar of 3.58212 s, with a bar line at 63.1909 s. Against music.bpm it gains 0.028 ms a bar. tempo.beatSeconds and tempo.barSeconds are that line rounded to 4 decimals: count bars from the bars list, not from the rounded bar length.",
+    "124 of 419 attacks of every kind sit within 8 percent of a beat of the line, 38 ms rms from it. Confidence is that share, weighted by strength, over what chance would give. It is low because most attacks are not clicks: the low band of a drum swells after its click, and the time of a sharp hit (the steepest rise of the whole wave) was measured up to 39 ms from the click of the same drum.",
+    "A hit is sharp when it has such a click. 18 of 85 hits are sharp. A hit that is not sharp is a soft entrance or a swell of the low band, and its time is less sure.",
+    "From the first click on the line, at 61.393 s, to the end of the file the beats and bar lines are the line and nothing moves them. Before that the music does not hold the line. The 12 clicks before 61.393 s do not sit on the line or on an eighth or a sixteenth of it: they are -147 to 179 ms from the nearest beat of the line, where a sixteenth is 224 ms. Where 3 or more clicks over 32 beats sit 50 ms or more from the line, the beats and bar lines are moved to them, not to the soft attacks, which come later still: at the points measured from 21.4927 s to 57.3139 s by 88 to 164 ms, joined by straight lines, and held as far as the start of the file when no point was measured before. So the gap between two beats there is not always tempo.beatSeconds, and a bar line there is known to about 50 ms, not to 1 ms. A smaller drift is left alone.",
+    "The strikes against the grid: firstHit at 17.368 is 315 ms before the nearest beat. midHit at 102.6262 is 32 ms after the nearest beat, which is bar line 28. revealHit at 167.12 is 48 ms after the nearest beat, which is bar line 46. finalHit at 224.7239 is 338 ms after the nearest beat, which is bar line 62. A strike that is far from a beat is its own accent: cut to the hit, not to the bar line.",
     "Loudness is K-weighted (the two filters of BS.1770 worked out for 22050 Hz) on the mono fold-down, 0.4 s and 3 s windows centred on each time, no gating. It reads close to LUFS but is not a certified meter.",
     "Onsets are spectral flux on a 1024 point transform every 256 samples at 22050 Hz. The low band is everything under 150 Hz. Hit times are moved to the steepest rise of the wave within 60 ms."
   ]

@@ -53,17 +53,23 @@ export function report(map, detail = null) {
   const t = map.tempo;
   p(`tempo ${t.bpm} beats a minute, a beat is ${t.beatSeconds} s, ${t.beatsPerBar} beats to a bar, a bar is ${t.barSeconds} s, confidence ${t.confidence}, the config says ${t.configBpm}`);
   if (detail) {
-    p(`grid fitted to ${detail.fit.used} of ${detail.fit.of} attacks, ${detail.fit.rms === null ? 'no fit' : `${(detail.fit.rms * 1000).toFixed(1)} ms rms off the beat`}`);
-    if (detail.warp) p(`distance of the attacks from the steady grid, kept when 50 ms or more: ${detail.warp.points.map((q) => `${q.t.toFixed(0)} s ${Math.round(q.d * 1000)} ms`).join(', ')}`);
+    p(`${detail.fit.used} of ${detail.fit.of} attacks of every kind sit on the grid, ${detail.fit.rms === null ? 'no fit' : `${(detail.fit.rms * 1000).toFixed(1)} ms rms off the beat`}`);
+    if (detail.warp) p(`distance of the ${detail.line ? 'clicks' : 'attacks'} from the steady grid, kept when 50 ms or more: ${detail.warp.points.map((q) => `${q.t.toFixed(0)} s ${Math.round(q.d * 1000)} ms`).join(', ')}`);
     p(`meter contrast, four beats ${detail.meter.four.toFixed(2)}, three beats ${detail.meter.three.toFixed(2)}. Low strength on each beat of the bar, the mean being 1: ${detail.meter.means.map((v) => v.toFixed(2)).join(', ')}`);
     p(`hit threshold ${detail.threshold.toFixed(2)}, ${detail.jumps} hits from a jump in level alone, strength read as ${detail.strength === 'rise' ? 'rise and attack' : 'attack alone'}`);
   }
   p(`${map.beats.length} beats, ${map.bars.length} bar lines, the first eight at ${map.bars.slice(0, 8).join(', ')}`);
-  p(`${map.hits.length} hits. The twelve strongest:`);
+  if (detail && detail.line) {
+    const l = detail.line;
+    p(`the line through the clicks: ${(60 / l.beatSeconds).toFixed(3)} bpm, ${l.used} used, ${l.dropped} dropped, ${(l.rms * 1000).toFixed(2)} ms rms, ${(l.worst * 1000).toFixed(2)} ms worst, first at ${l.first.toFixed(4)} s, last at ${l.last.toFixed(4)} s`);
+    const beat = (t) => detail.fit.phaseSeconds + Math.round((t - detail.fit.phaseSeconds) / detail.fit.beatSeconds) * detail.fit.beatSeconds;
+    for (const k of detail.clicks.filter((x) => x.t < l.first)) p(`  click before the line at ${k.t.toFixed(4)} s, ${Math.round((k.t - beat(k.t)) * 1000)} ms from the nearest beat of the line`);
+  }
+  p(`${map.hits.length} hits, ${map.hits.filter((h) => h.sharp).length} of them sharp. The twelve strongest:`);
   [...map.hits]
     .sort((a, b) => Math.max(b.low, b.full) - Math.max(a.low, a.full))
     .slice(0, 12)
-    .forEach((h) => p(`  hit at ${h.t.toFixed(4)} s, low ${h.low.toFixed(2)}, full ${h.full.toFixed(2)}`));
+    .forEach((h) => p(`  hit at ${h.t.toFixed(4)} s, low ${h.low.toFixed(2)}, full ${h.full.toFixed(2)}, ${h.sharp ? 'sharp' : 'soft'}`));
   if (detail && detail.raw) {
     p('The twelve sharpest attacks, by spectral flux:');
     [...detail.raw]

@@ -16,6 +16,12 @@ export const ATTACK_SHARE = 0.5;
 export const RISE_AFTER = 0.4;
 export const RISE_BEFORE = 2;
 export const RISE_GAP = 0.1;
+export const CLICK_HZ = 2000;
+export const CLICK_RISE = 1.5;
+export const CLICK_REACH = 0.045;
+export const LINE_DROP = 0.025;
+export const GRID_TOLERANCE = 0.08;
+export const CLICK_LEAST = 3;
 
 export const DEFAULTS = {
   strength: 'attack',
@@ -414,16 +420,137 @@ export function refineGrid(beatSeconds, phaseSeconds, hits, { rounds = 4, tolera
     phase = (st - p * sk) / sw;
   }
   phase -= Math.floor(phase / period) * period;
+  return { beatSeconds: period, phaseSeconds: phase, ...gridShare(period, phase, hits, tolerance) };
+}
+
+export function gridShare(beatSeconds, phaseSeconds, hits, tolerance = GRID_TOLERANCE) {
+  const weight = (h) => Math.max(h.attackLow ?? h.low, h.attackFull ?? h.full);
   let all = 0;
   let on = 0;
+  let used = 0;
+  let sq = 0;
   for (const h of hits) {
-    const k = Math.round((h.t - phase) / period);
+    const k = Math.round((h.t - phaseSeconds) / beatSeconds);
+    const e = h.t - (phaseSeconds + k * beatSeconds);
     all += weight(h);
-    if (Math.abs(h.t - (phase + k * period)) <= tolerance * period) on += weight(h);
+    if (Math.abs(e) > tolerance * beatSeconds) continue;
+    on += weight(h);
+    used++;
+    sq += e * e;
   }
   const share = all > 0 ? on / all : 0;
   const chance = 2 * tolerance;
-  return { beatSeconds: period, phaseSeconds: phase, used, of: hits.length, rms, confidence: clamp((share - chance) / (1 - chance), 0, 1) };
+  return { used, of: hits.length, rms: used ? Math.sqrt(sq / used) : null, confidence: clamp((share - chance) / (1 - chance), 0, 1) };
+}
+
+export function clickCurve(samples, sampleRate = ANALYSIS_RATE) {
+  const w = (2 * Math.PI * CLICK_HZ) / sampleRate;
+  const al = Math.sin(w) / (2 * Math.SQRT1_2);
+  const c = Math.cos(w);
+  const b = [(1 + c) / 2, -(1 + c), (1 + c) / 2];
+  const a = [1 + al, -2 * c, 1 - al];
+  const there = biquad(samples, b, a).reverse();
+  const x = biquad(there, b, a).reverse();
+  const hop = Math.max(1, Math.round(sampleRate / 2756.25));
+  const half = hop * 8;
+  const cum = new Float64Array(x.length + 1);
+  for (let i = 0; i < x.length; i++) cum[i + 1] = cum[i] + x[i] * x[i];
+  const n = Math.floor(x.length / hop);
+  const env = new Float64Array(n);
+  for (let i = 0; i < n; i++) {
+    const from = Math.max(0, i * hop - half);
+    const to = Math.min(x.length, i * hop + half);
+    env[i] = Math.sqrt((cum[to] - cum[from]) / (to - from));
+  }
+  return { env, rate: sampleRate / hop };
+}
+
+export function clickOnset(curve, t, reach = CLICK_REACH) {
+  const { env, rate } = curve;
+  const a = Math.round((t - reach) * rate);
+  const b = Math.round((t + reach) * rate);
+  if (a < 2 || b >= env.length - 2) return null;
+  const tiny = 1e-6;
+  const lg = (i) => Math.log(env[a + i] + tiny);
+  const len = b - a;
+  let at = 4;
+  let steep = -Infinity;
+  for (let i = 4; i < len - 5; i++) {
+    const d = lg(i + 5) - lg(i - 4);
+    if (d > steep) {
+      steep = d;
+      at = i;
+    }
+  }
+  let floor = Infinity;
+  for (let i = 0; i < Math.max(3, at - 10); i++) floor = Math.min(floor, lg(i));
+  let peak = 0;
+  for (let i = at; i < Math.min(len, at + 60); i++) peak = Math.max(peak, env[a + i]);
+  let base = Infinity;
+  for (let i = Math.max(0, at - 20); i <= at; i++) base = Math.min(base, env[a + i]);
+  const mid = base + 0.5 * (peak - base);
+  let j = at;
+  while (j > 1 && env[a + j] > mid) j--;
+  while (j < len - 1 && env[a + j] < mid) j++;
+  const step = env[a + j] - env[a + j - 1];
+  const part = step > 0 ? clamp((mid - env[a + j - 1]) / step, 0, 1) : 0;
+  return { t: (a + j - 1 + part) / rate, rise: Math.log(peak + tiny) - floor };
+}
+
+export function findClicks(curve, hits) {
+  const out = [];
+  for (const h of hits) {
+    const o = clickOnset(curve, h.t);
+    if (!o || o.rise < CLICK_RISE) continue;
+    if (out.length && o.t - out[out.length - 1].t < 0.03) continue;
+    out.push(o);
+  }
+  return out;
+}
+
+export function steadyLine(beatSeconds, phaseSeconds, clicks, { start = GRID_TOLERANCE, drop = LINE_DROP, rounds = 12, least = 8 } = {}) {
+  let b = beatSeconds;
+  let p = phaseSeconds;
+  let tol = start * beatSeconds;
+  let used = [];
+  for (let r = 0; r < rounds; r++) {
+    const pick = [];
+    for (const c of clicks) {
+      const k = Math.round((c.t - p) / b);
+      if (Math.abs(c.t - (p + k * b)) <= tol) pick.push({ k, t: c.t });
+    }
+    if (pick.length < least) return null;
+    const n = pick.length;
+    let sk = 0;
+    let st = 0;
+    let skk = 0;
+    let skt = 0;
+    for (const q of pick) {
+      sk += q.k;
+      st += q.t;
+      skk += q.k * q.k;
+      skt += q.k * q.t;
+    }
+    const det = n * skk - sk * sk;
+    if (Math.abs(det) < 1e-9) return null;
+    b = (n * skt - sk * st) / det;
+    p = (st - b * sk) / n;
+    used = pick;
+    tol = drop;
+  }
+  if (Math.abs(b / beatSeconds - 1) > 0.01) return null;
+  const res = used.map((q) => q.t - (p + q.k * b));
+  p -= Math.floor(p / b) * b;
+  return {
+    beatSeconds: b,
+    phaseSeconds: p,
+    used: used.length,
+    dropped: clicks.length - used.length,
+    rms: Math.sqrt(res.reduce((x, e) => x + e * e, 0) / res.length),
+    worst: Math.max(...res.map(Math.abs)),
+    first: used[0].t,
+    last: used[used.length - 1].t,
+  };
 }
 
 function peakNear(curve, times, t, span) {
@@ -563,13 +690,14 @@ export function findHits(curves, samples, sampleRate, p = DEFAULTS, loud = null)
 }
 
 export function withStrength(raw, mode) {
-  if (mode !== 'rise') return raw.map((h) => ({ t: h.t, low: h.attackLow, full: h.attackFull }));
+  if (mode !== 'rise') return raw.map((h) => ({ t: h.t, low: h.attackLow, full: h.attackFull, sharp: Boolean(h.sharp) }));
   const topL = Math.max(1e-9, ...raw.map((h) => h.riseLow ?? 0));
   const topF = Math.max(1e-9, ...raw.map((h) => h.riseFull ?? 0));
   return raw.map((h) => ({
     t: h.t,
     low: Math.max((h.riseLow ?? 0) / topL, ATTACK_SHARE * h.attackLow),
     full: Math.max((h.riseFull ?? 0) / topF, ATTACK_SHARE * h.attackFull),
+    sharp: Boolean(h.sharp),
   }));
 }
 
@@ -600,7 +728,7 @@ export function findMeter(beatSeconds, phaseSeconds, curves, seconds) {
   return { beatsPerBar: pick.m, barPhase: pick.phase, four: four.contrast, three: three.contrast, means: pick.means };
 }
 
-export function localOffsets(beatSeconds, phaseSeconds, hits, seconds, { windowBeats = 32, stepBeats = 8, sigma = 0.03, reach = 0.25, minHits = 10, contrast = 1.4, deadBand = 0.05 } = {}) {
+export function localOffsets(beatSeconds, phaseSeconds, hits, seconds, { windowBeats = 32, stepBeats = 8, sigma = 0.03, reach = 0.25, minHits = 10, contrast = 1.4, deadBand = 0.05, until = null } = {}) {
   const weight = (h) => Math.max(h.attackLow ?? h.low, h.attackFull ?? h.full);
   const points = [];
   const span = (windowBeats * beatSeconds) / 2;
@@ -627,6 +755,10 @@ export function localOffsets(beatSeconds, phaseSeconds, hits, seconds, { windowB
   for (const q of points) {
     q.d = q.m ?? q.d;
     if (Math.abs(q.d) < deadBand) q.d = 0;
+  }
+  if (until !== null) {
+    while (points.length && points[points.length - 1].t >= until) points.pop();
+    points.push({ t: until, d: 0 });
   }
   const at = (t) => {
     if (points.length === 0) return 0;
@@ -852,10 +984,21 @@ export function analyse(samples, sampleRate, { configBpm = null } = {}) {
   const rough = findTempo(curves, { configBpm });
   const found = findHits(curves, samples, sampleRate, DEFAULTS, loud);
   const many = findHits(curves, samples, sampleRate, { ...DEFAULTS, hitThreshold: GRID_THRESHOLD, minHits: 0, maxHits: Infinity });
-  const fit = refineGrid(rough.beatSeconds, rough.phaseSeconds, many.hits);
+  const first = refineGrid(rough.beatSeconds, rough.phaseSeconds, many.hits);
+  const click = clickCurve(samples, sampleRate);
+  const clicks = findClicks(click, many.hits);
+  const line = steadyLine(first.beatSeconds, first.phaseSeconds, clicks);
+  const fit = line ? { beatSeconds: line.beatSeconds, phaseSeconds: line.phaseSeconds, ...gridShare(line.beatSeconds, line.phaseSeconds, many.hits) } : first;
+  for (const h of found.hits) {
+    const o = clickOnset(click, h.t);
+    h.sharp = Boolean(o && o.rise >= CLICK_RISE);
+    h.click = o && h.sharp ? o.t : null;
+  }
   const meter = findMeter(fit.beatSeconds, fit.phaseSeconds, curves, seconds);
-  const warp = localOffsets(fit.beatSeconds, fit.phaseSeconds, many.hits, seconds);
-  return { samples, sampleRate, seconds, curves, loud, rough, raw: found.hits, threshold: found.threshold, jumps: found.jumps, fit, meter, warp };
+  const warp = line
+    ? localOffsets(fit.beatSeconds, fit.phaseSeconds, clicks.map((c) => ({ t: c.t, attackLow: 1, attackFull: 1 })), seconds, { until: line.first, minHits: CLICK_LEAST })
+    : localOffsets(fit.beatSeconds, fit.phaseSeconds, many.hits, seconds);
+  return { samples, sampleRate, seconds, curves, loud, rough, raw: found.hits, threshold: found.threshold, jumps: found.jumps, fit, first, line, clicks, meter, warp };
 }
 
 export function mapFromAnalysis(an, { source, music = {}, params = DEFAULTS, seconds = an.seconds }) {
@@ -885,7 +1028,7 @@ export function mapFromAnalysis(an, { source, music = {}, params = DEFAULTS, sec
     },
     beats: grid.beats,
     bars: grid.bars,
-    hits: hits.map((h) => ({ t: r4(h.t), low: r2(h.low), full: r2(h.full) })),
+    hits: hits.map((h) => ({ t: r4(h.t), low: r2(h.low), full: r2(h.full), sharp: h.sharp })),
     sections,
     quiet: quiet ? { start: quiet.start, end: quiet.end } : null,
     landmarks: found,
@@ -894,7 +1037,7 @@ export function mapFromAnalysis(an, { source, music = {}, params = DEFAULTS, sec
     tries: [],
     notes,
   };
-  return { map, detail: { fit, meter, threshold, quiet, warp: an.warp, strongCount: strong.length, jumps: an.jumps, strength: params.strength, raw: an.raw } };
+  return { map, detail: { fit, first: an.first, line: an.line, clicks: an.clicks, meter, threshold, quiet, warp: an.warp, strongCount: strong.length, jumps: an.jumps, strength: params.strength, raw: an.raw } };
 }
 
 export function buildMap(an, { source, music = {}, tries = TRIES, defaults = DEFAULTS }) {
@@ -942,17 +1085,38 @@ export function buildMap(an, { source, music = {}, tries = TRIES, defaults = DEF
     );
   }
   const fit = out.detail.fit;
-  map.notes.push(
-    `The tempo is one steady fit to the whole file. ${fit.used} of ${fit.of} attacks sit within 8 percent of a beat of it${fit.rms === null ? '' : `, ${(fit.rms * 1000).toFixed(0)} ms rms from it`}. Confidence is that share, weighted by strength, over what chance would give.`
-  );
+  const line = out.detail.line;
+  const ms = (v, d = 1) => (v * 1000).toFixed(d);
+  const gap = Math.round(Math.max(0, ...out.detail.raw.filter((h) => h.sharp).map((h) => Math.abs(h.click - h.t))) * 1000);
+  if (line) {
+    const firstBar = map.bars.find((t) => t >= line.first) ?? null;
+    const perBar = music.bpm ? (line.beatSeconds - 60 / music.bpm) * map.tempo.beatsPerBar : null;
+    map.notes.push(
+      `The tempo is a straight line, beat number against time, through the attacks that have a click: a rise of ${Math.round(CLICK_RISE * 8.686)} dB or more above ${CLICK_HZ} Hz within ${Math.round(CLICK_REACH * 1000)} ms of the attack, timed where that band crosses half of its rise. It starts from the fit to every attack (${(60 / out.detail.first.beatSeconds).toFixed(3)} bpm). Clicks more than ${Math.round(LINE_DROP * 1000)} ms from the line were dropped and the line fitted again until it held. ${line.used} clicks are on the line and ${line.dropped} were dropped, the first at ${r4(line.first)} s and the last at ${r4(line.last)} s, ${ms(line.rms, 2)} ms rms and ${ms(line.worst, 2)} ms worst from it. The line is ${(60 / line.beatSeconds).toFixed(3)} bpm, a beat of ${line.beatSeconds.toFixed(6)} s and a bar of ${(line.beatSeconds * map.tempo.beatsPerBar).toFixed(5)} s${firstBar === null ? '' : `, with a bar line at ${firstBar} s`}${perBar === null ? '' : `. Against music.bpm it gains ${ms(perBar, 3)} ms a bar`}. tempo.beatSeconds and tempo.barSeconds are that line rounded to 4 decimals: count bars from the bars list, not from the rounded bar length.`
+    );
+    map.notes.push(
+      `${fit.used} of ${fit.of} attacks of every kind sit within ${Math.round(GRID_TOLERANCE * 100)} percent of a beat of the line${fit.rms === null ? '' : `, ${ms(fit.rms, 0)} ms rms from it`}. Confidence is that share, weighted by strength, over what chance would give. It is low because most attacks are not clicks: the low band of a drum swells after its click, and the time of a sharp hit (the steepest rise of the whole wave) was measured up to ${gap} ms from the click of the same drum.`
+    );
+  } else {
+    map.notes.push(
+      `Too few attacks have a click to fit a line through them, so the tempo is one steady fit to every attack. ${fit.used} of ${fit.of} attacks sit within ${Math.round(GRID_TOLERANCE * 100)} percent of a beat of it${fit.rms === null ? '' : `, ${ms(fit.rms, 0)} ms rms from it`}. Confidence is that share, weighted by strength, over what chance would give.`
+    );
+  }
+  const sharp = map.hits.filter((h) => h.sharp).length;
+  map.notes.push(`A hit is sharp when it has such a click. ${sharp} of ${map.hits.length} hits are sharp. A hit that is not sharp is a soft entrance or a swell of the low band, and its time is less sure.`);
   const warp = out.detail.warp;
   const moved = warp ? warp.points.filter((q) => q.d !== 0) : [];
+  const early = line ? out.detail.clicks.filter((c) => c.t < line.first) : [];
+  const lateBy = early.map((c) => c.t - (fit.phaseSeconds + Math.round((c.t - fit.phaseSeconds) / fit.beatSeconds) * fit.beatSeconds));
+  const earlyText = early.length
+    ? ` The ${early.length} clicks before ${r4(line.first)} s do not sit on the line or on an eighth or a sixteenth of it: they are ${Math.round(Math.min(...lateBy) * 1000)} to ${Math.round(Math.max(...lateBy) * 1000)} ms from the nearest beat of the line, where a sixteenth is ${Math.round((fit.beatSeconds / 4) * 1000)} ms.`
+    : '';
   if (moved.length) {
     map.notes.push(
-      `The music does not hold the steady grid everywhere. Where the attacks over 32 beats sit 50 ms or more from it, the beats and bar lines are moved to them: at the points measured from ${moved[0].t} s to ${moved[moved.length - 1].t} s by ${Math.round(Math.min(...moved.map((q) => q.d)) * 1000)} to ${Math.round(Math.max(...moved.map((q) => q.d)) * 1000)} ms, joined to the steady grid by straight lines, and held as far as the nearer end of the file when no point was measured beyond. So the gap between two beats there is not always tempo.beatSeconds. A smaller drift is left alone.`
+      `${line ? `From the first click on the line, at ${r4(line.first)} s, to the end of the file the beats and bar lines are the line and nothing moves them. Before that the music does not hold the line.` : 'The music does not hold the steady grid everywhere.'}${earlyText} Where ${line ? `${CLICK_LEAST} or more clicks` : 'the attacks'} over 32 beats sit 50 ms or more from the line, the beats and bar lines are moved to them${line ? ', not to the soft attacks, which come later still' : ''}: at the points measured from ${moved[0].t} s to ${moved[moved.length - 1].t} s by ${Math.round(Math.min(...moved.map((q) => q.d)) * 1000)} to ${Math.round(Math.max(...moved.map((q) => q.d)) * 1000)} ms, joined by straight lines, and held as far as the start of the file when no point was measured before. So the gap between two beats there is not always tempo.beatSeconds, and a bar line there is known to about 50 ms, not to 1 ms. A smaller drift is left alone.`
     );
   } else if (warp) {
-    map.notes.push('The attacks stay within 50 ms of the steady grid wherever enough of them were found, so the beats and bar lines are the steady grid.');
+    map.notes.push(`The attacks stay within 50 ms of the line wherever enough of them were found, so the beats and bar lines are the line.${earlyText}`);
   }
   const off = STRIKES.filter((k) => typeof map.landmarks[k] === 'number').map((k) => {
     const t = map.landmarks[k];
@@ -1000,7 +1164,7 @@ export function mapFromLandmarks(music) {
     tempo: { bpm: r2(music.bpm), beatSeconds: r4(beat), beatsPerBar: perBar, barSeconds: r4(bar), confidence: 0, configBpm: music.bpm },
     beats,
     bars,
-    hits: STRIKES.map((k) => ({ t: r4(lm[k]), low: 1, full: 1 })).sort((a, b) => a.t - b.t),
+    hits: STRIKES.map((k) => ({ t: r4(lm[k]), low: 1, full: 1, sharp: false })).sort((a, b) => a.t - b.t),
     sections: nameSections(edges.map(([name, start, end]) => ({ name, start: r4(start), end: r4(end), lufs: null }))),
     quiet: { start: r4(lm.quietStart), end: r4(lm.quietEnd) },
     landmarks: { ...lm },
@@ -1010,7 +1174,7 @@ export function mapFromLandmarks(music) {
     notes: [
       'No music file was read. This map is written from music.landmarks in the config.',
       'Bar lines stand every music.barSeconds counted from firstHit in both directions. A beat is a quarter of that bar, so every bar line is also a beat. music.bpm is reported as the tempo.',
-      'The hits are the four strikes among the landmarks. Their strengths were not measured and are written as 1.',
+      'The hits are the four strikes among the landmarks. Their strengths were not measured and are written as 1. Whether each has a click was not measured and sharp is written as false.',
       'Section loudness was not measured and is null.',
     ],
   };
@@ -1030,6 +1194,7 @@ export function checkMap(map) {
   if (!map.bars.every((b) => set.has(b))) bad.push('a bar line is not a beat');
   if (map.beats.some((b) => b < 0 || b > map.source.seconds)) bad.push('a beat lies outside the file');
   for (const h of map.hits) if (!(h.low >= 0 && h.low <= 1 && h.full >= 0 && h.full <= 1 && Number.isFinite(h.t))) bad.push(`hit at ${h.t} is out of range`);
+  if (map.hits.some((h) => typeof h.sharp !== 'boolean')) bad.push('a hit does not say whether it is sharp');
   if (!rising(map.hits.map((h) => h.t))) bad.push('hits do not ascend');
   const s = map.sections;
   if (s.length === 0 || s[0].start !== 0 || s[s.length - 1].end !== map.source.seconds) bad.push('sections do not cover the file');
