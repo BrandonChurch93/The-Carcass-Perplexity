@@ -24,24 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 9, 2026-11-24 23:22 UTC:
+Status 10, 2026-11-24 23:54 UTC:
 
-- `01-sheet.jpg`: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet
+- `01-frame-3120.jpg`: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks. The label in the corner names the shot and exists only in the animatic
+- `02-frame-9741.jpg`: Animatic, 162.35 s, the rise: skull, shoulders and the first ribs are in frame when the voice says Now you see it
+- `03-frame-10027.jpg`: Animatic, 167.12 s, the titan frame: the whole body on the strongest strike of the track
 
+Status 9, 2026-11-24 23:22 UTC, showed: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet.
 Status 8, 2026-11-24 22:53 UTC, showed: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks; The animatic tool at work: one frame...
-Status 7, 2026-11-24 22:35 UTC, showed: The test scene running live in the published build, through the card loop link on the review page.
-Status 6, 2026-11-24 22:20 UTC, showed: The spike scene, frame 300, in 4K at the final tier. Rendered on a sandbox VM in 63 seconds.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T23:22:28Z
-phase 1: 0.78 h used of 3.00 h
-build: 2.87 h used of 72.00 h
+2026-11-24T23:53:29Z
+phase 1: 1.30 h used of 3.00 h
+build: 3.39 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 29
+minutes since the last status: 1
 ```
 
 ## Phases
@@ -549,9 +550,10 @@ none
 - 2026-11-24 22:22 UTC `746cd43` pushed. Status 6, the render budget on three VMs, the review link on the start page, the play links on the review page
 - 2026-11-24 22:36 UTC `1523c93` pushed. Phase 0 closed, status 7, the hosted build checked
 - 2026-11-24 22:43 UTC `76f358e` pushed. The cut and sound checks, the mix tool, the audio map tool and `cut/MAP.json`
-2026-11-24 22:54 UTC `f5b52e5` pushed. Status 8, the map and the state of the voice
-2026-11-24 22:56 UTC `d35f84a` pushed. The refined map: tempo from the clicks, sharp hits marked
-2026-11-24 23:25 UTC `6f6a57c` pushed. Status 9, the cut compiler, the voice tool, clip n8 kept
+- 2026-11-24 22:54 UTC `f5b52e5` pushed. Status 8, the map and the state of the voice
+- 2026-11-24 22:56 UTC `d35f84a` pushed. The refined map: tempo from the clicks, sharp hits marked
+- 2026-11-24 23:25 UTC `6f6a57c` pushed. Status 9, the cut compiler, the voice tool, clip n8 kept
+- 2026-11-24 23:45 UTC `3501aeb` pushed. The first cut: `cut/PLAN.json`, `cut/CUTLIST.json`, `cut/CUES.md` and the first mix
 
 ## Session log
 
@@ -565,3 +567,4 @@ none
 - 2026-11-24 22:35 UTC. Status 6 posted at 22:20 UTC with the test scene in 4K at the final tier and twelve frames in a row. Step 17: the budget was measured on the Builder's VM and on two sandbox VMs, and the same frame came out byte for byte equal on all of them. The master and the film in HD do not fit their limits at the `final` tier on the test scene, so the places must cost less than it or render at the highest tier that fits (see "Render budget" and the decisions). Step 18: the build is published with its review page, the hosting carried 497 MB in a test, and `npm run flows` passes 7 of 7 on the hosted copy. Four agents started at 22:22 UTC on the Phase 1 tools while the last Phase 0 checks ran.
 - 2026-11-24 22:53 UTC. Status 8 posted at 22:54 UTC with the map of the music and a frame from the animatic tool. Phase 1: the map is made from the audio and agrees with the kit's landmarks; the checks, the mix, the audio map and the animatic tools are merged and 446 tests pass. The ElevenLabs account has 4 characters left, used up by music and sound effects from other work on the account; one take of the Reveal's clip was made with the last of them; the other seven clips and the sound effects are open items and the build goes on. The listener was found unable to judge a voice.
 - 2026-11-24 23:23 UTC. Status 9 posted at 23:24 UTC with the waveform sheet of clip n8. The cut compiler and the voice tool came back in 10 and 12 minutes, were merged from bundles (516 tests pass) and are npm run cut and npm run voice. Clip n8 was checked, kept and split into its four lines by the voice tool, committed, and plays on the review page (published 23:23 UTC). Four open items written: clips n1 to n7, the single take of n8, the sound effects, and that nothing that can hear has judged the voice.
+- 2026-11-24 23:54 UTC. Status 10 posted at 23:55 UTC with three frames of the animatic and the review page link (its header reads 11 because a draft of it was counted; the records say 10). Phase 1 steps 3 to 8: the plan, the cut list with no fault, the cue sheet, the first mix, the animatic (5931 frames, 197.70 s, 73.1 MB), each line checked against its picture, published at 23:54 UTC, visitor flows pass. The animatic does not yet print the silent lines, against the decision logged at 22:5x; that is being added and the animatic made again.
