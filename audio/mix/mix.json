@@ -1,0 +1,84 @@
+{
+  "schema": "carcass/mix 1",
+  "file": "audio/mix/mix.flac",
+  "seconds": 197.6833,
+  "sampleRate": 48000,
+  "channels": 2,
+  "integratedLufs": -14,
+  "truePeakDb": -1.1,
+  "gainDb": -2.45,
+  "limited": true,
+  "inputs": [
+    {
+      "file": "audio/supplied/The-Carcass-Audio.mp3",
+      "sha256": "eefe8765b73f35622be8410f063f327902dd0ce5b564688fade5b732afc56b1f"
+    },
+    {
+      "file": "audio/kept/lines/n8-1.wav",
+      "sha256": "899f4f1d2dfb0ea7e96b23f392218bef360a5a26931fdb3617132ffcacb60419"
+    },
+    {
+      "file": "audio/kept/lines/n8-2.wav",
+      "sha256": "e9b94d7bf68709a6dc8d69ec7a6cc504631aec95f8a9b190443eee5a73c35afc"
+    },
+    {
+      "file": "audio/kept/lines/n8-3.wav",
+      "sha256": "ea51bd261e1b097ddb8383568d625ffe08bd37250527972e3050f59e0f599425"
+    },
+    {
+      "file": "audio/kept/lines/n8-4.wav",
+      "sha256": "7a050532d931e469e92b2d8510a29784cb99ce5a818988b73ee406cfa0259f25"
+    }
+  ],
+  "lines": [
+    {
+      "clip": "n8",
+      "line": 1,
+      "first": 9741,
+      "frames": 121,
+      "duckDb": 4.92,
+      "voiceBandDb": -23.61,
+      "restBandDb": -29.61,
+      "marginDb": 6,
+      "voiceDb": -16.56,
+      "restDb": -29.09
+    },
+    {
+      "clip": "n8",
+      "line": 2,
+      "first": 9900,
+      "frames": 111,
+      "duckDb": 8.69,
+      "voiceBandDb": -21.06,
+      "restBandDb": -27.06,
+      "marginDb": 6,
+      "voiceDb": -15.52,
+      "restDb": -26.99
+    },
+    {
+      "clip": "n8",
+      "line": 3,
+      "first": 10075,
+      "frames": 75,
+      "duckDb": 4.27,
+      "voiceBandDb": -19.92,
+      "restBandDb": -25.94,
+      "marginDb": 6.02,
+      "voiceDb": -16.7,
+      "restDb": -20.82
+    },
+    {
+      "clip": "n8",
+      "line": 4,
+      "first": 10620,
+      "frames": 270,
+      "duckDb": 0.88,
+      "voiceBandDb": -21.36,
+      "restBandDb": -27.36,
+      "marginDb": 6,
+      "voiceDb": -17.79,
+      "restDb": -20.02
+    }
+  ],
+  "sounds": []
+}

@@ -1,0 +1,113 @@
+{
+  "schema": "carcass/plan 1",
+  "musicCut": { "outBar": 48, "inBar": 58 },
+  "end": { "music": 233.51 },
+  "titan": { "landmark": "revealHit" },
+  "estimate": { "secondsPerCharacter": 0.105, "secondsPerStop": 0.5, "secondsPerComma": 0.2, "minSeconds": 0.9 },
+  "shots": [
+    { "id": "ribs-01", "unit": "ribs", "at": { "frame": 0 }, "key": null, "picture": "ribs-0", "move": "in", "label": "The Ribs · the approach from the sea, one shot up to the first strike" },
+    { "id": "ribs-02", "unit": "ribs", "at": { "hit": 17.368 }, "key": "ribs-0", "picture": "ribs-0", "move": "in", "label": "The Ribs · the strait" },
+    { "id": "ribs-03", "unit": "ribs", "at": { "hit": 23.9933 }, "key": "ribs-3", "picture": "ribs-3", "move": "left", "label": "The Ribs · the colony" },
+    { "id": "ribs-04", "unit": "ribs", "at": { "bar": 7 }, "key": "ribs-2", "picture": "ribs-2", "move": "in", "label": "The Ribs · the feeders at low tide" },
+    { "id": "ribs-05", "unit": "ribs", "at": { "bar": 8 }, "key": "ribs-1", "picture": "ribs-1", "move": "in", "label": "The Ribs · the camera looks up at the drowned" },
+    { "id": "ribs-06", "unit": "ribs", "at": { "bar": 10 }, "key": "ribs-4", "picture": "ribs-4", "move": "hold", "label": "The Ribs · the bore comes through the cage" },
+
+    { "id": "heart-01", "unit": "heart", "at": { "hit": 41.7822 }, "key": "heart-0", "picture": "heart-0", "move": "in", "label": "The Heart · the lava lake at nightfall" },
+    { "id": "heart-02", "unit": "heart", "at": { "bar": 13 }, "key": "heart-3", "picture": "heart-3", "move": "left", "label": "The Heart · the tall ones walk the skin" },
+    { "id": "heart-03", "unit": "heart", "at": { "hit": 56.25 }, "key": "heart-1", "picture": "heart-1", "move": "in", "label": "The Heart · the fire under the skin" },
+    { "id": "heart-04", "unit": "heart", "at": { "bar": 16 }, "key": "heart-2", "picture": "heart-2", "move": "hold", "label": "The Heart · the one that sank" },
+    { "id": "heart-05", "unit": "heart", "at": { "bar": 17 }, "key": "heart-4", "picture": "heart-4", "move": "out", "label": "The Heart · the vessel mouth and the lava fall, no voice" },
+
+    { "id": "breath-01", "unit": "breath", "at": { "bar": 19 }, "key": "breath-0", "picture": "breath-0", "move": "in", "label": "The Breath · the shelf at dawn" },
+    { "id": "breath-02", "unit": "breath", "at": { "bar": 20, "beat": 4 }, "key": "breath-4", "picture": "breath-4", "move": "in", "label": "The Breath · down the shaft, it breathes out" },
+    { "id": "breath-03", "unit": "breath", "at": { "bar": 22 }, "key": "breath-3", "picture": "breath-3", "move": "out", "label": "The Breath · the red weed at the rim" },
+    { "id": "breath-04", "unit": "breath", "at": { "bar": 23 }, "key": "breath-1", "picture": "breath-1", "move": "right", "label": "The Breath · the pale herds" },
+    { "id": "breath-05", "unit": "breath", "at": { "bar": 24, "beat": 3 }, "key": "breath-2", "picture": "breath-2", "move": "in", "label": "The Breath · the one at the rim" },
+
+    { "id": "marsh-01", "unit": "marsh", "at": { "bar": 25, "beat": 3 }, "key": "marsh-0", "picture": "marsh-0", "move": "in", "label": "The Blood Marsh · the red flats" },
+    { "id": "marsh-02", "unit": "marsh", "at": { "bar": 26, "beat": 3 }, "key": "marsh-2", "picture": "marsh-2", "move": "right", "label": "The Blood Marsh · the stalks" },
+    { "id": "marsh-03", "unit": "marsh", "at": { "bar": 27, "beat": 3 }, "key": "marsh-1", "picture": "marsh-1", "move": "in", "label": "The Blood Marsh · the seep pool bursts" },
+    { "id": "marsh-04", "unit": "marsh", "at": { "bar": 28, "beat": 3 }, "key": "marsh-3", "picture": "marsh-3", "move": "left", "label": "The Blood Marsh · the wallowers" },
+    { "id": "marsh-05", "unit": "marsh", "at": { "bar": 30 }, "key": "marsh-4", "picture": "marsh-4", "move": "in", "label": "The Blood Marsh · the one on the thin crust" },
+
+    { "id": "spine-01", "unit": "spine", "at": { "bar": 32 }, "key": "spine-0", "picture": "spine-0", "move": "in", "label": "The Spine · the ridge in the storm" },
+    { "id": "spine-02", "unit": "spine", "at": { "bar": 33, "beat": 3 }, "key": "spine-2", "picture": "spine-2", "move": "right", "label": "The Spine · the kites" },
+    { "id": "spine-03", "unit": "spine", "at": { "bar": 34, "beat": 2 }, "key": "spine-1", "picture": "spine-1", "move": "in", "label": "The Spine · where lightning came to ground" },
+    { "id": "spine-04", "unit": "spine", "at": { "bar": 35 }, "key": "spine-3", "picture": "spine-3", "move": "hold", "label": "The Spine · the strike" },
+    { "id": "spine-05", "unit": "spine", "at": { "bar": 36 }, "key": "spine-4", "picture": "spine-4", "move": "out", "label": "The Spine · inside the canal" },
+
+    { "id": "eye-01", "unit": "eye", "at": { "bar": 38 }, "key": "eye-0", "picture": "eye-0", "move": "in", "label": "The Eye · the still lake" },
+    { "id": "eye-02", "unit": "eye", "at": { "bar": 39 }, "key": "eye-2", "picture": "eye-2", "move": "right", "label": "The Eye · the amber mats" },
+    { "id": "eye-03", "unit": "eye", "at": { "bar": 39, "beat": 4 }, "key": "eye-3", "picture": "eye-3", "move": "left", "label": "The Eye · the edge" },
+    { "id": "eye-04", "unit": "eye", "at": { "bar": 40, "beat": 3 }, "key": "eye-1", "picture": "eye-1", "move": "hold", "label": "The Eye · the drinkers" },
+    { "id": "eye-05", "unit": "eye", "at": { "bar": 42 }, "key": "eye-4", "picture": "eye-4", "move": "in", "label": "The Eye · the centre, in the quiet" },
+
+    { "id": "reveal-01", "unit": "reveal", "at": { "bar": 43, "beat": 4 }, "key": "reveal-4", "picture": "reveal-4", "move": "out", "label": "The Reveal · one shot, from the lake to orbit, then the hold" },
+    { "id": "reveal-02", "unit": "reveal", "at": { "bar": 64 }, "key": null, "picture": "black", "move": "hold", "label": "black" }
+  ],
+  "keyFrames": {
+    "marsh-1": { "shot": "marsh-03", "part": 0.25 },
+    "eye-4": { "shot": "eye-05", "part": 0.15 },
+    "spine-0": { "hit": 120.516, "plus": 0.05 },
+    "spine-3": { "hit": 127.7553, "plus": 0.05 },
+    "reveal-1": { "bar": 44 },
+    "reveal-2": { "music": 161.0 },
+    "reveal-3": { "music": 162.6 },
+    "reveal-4": { "landmark": "revealHit" }
+  },
+  "lines": [
+    { "clip": "n1", "line": 1, "at": { "music": 1.4 } },
+    { "clip": "n1", "line": 2, "at": { "music": 4.0 } },
+    { "clip": "n1", "line": 3, "at": { "music": 9.1 } },
+    { "clip": "n1", "line": 4, "at": { "music": 13.75 } },
+
+    { "clip": "n2", "line": 1, "at": { "music": 17.95 } },
+    { "clip": "n2", "line": 2, "at": { "music": 19.9 } },
+    { "clip": "n2", "line": 3, "at": { "music": 26.2 } },
+    { "clip": "n2", "line": 4, "at": { "music": 32.3 } },
+
+    { "clip": "n3", "line": 1, "at": { "music": 42.5 } },
+    { "clip": "n3", "line": 2, "at": { "music": 44.3 } },
+    { "clip": "n3", "line": 3, "at": { "music": 49.4 } },
+    { "clip": "n3", "line": 4, "at": { "music": 57.0 } },
+
+    { "clip": "n4", "line": 1, "at": { "music": 70.95 } },
+    { "clip": "n4", "line": 2, "at": { "music": 72.8 } },
+    { "clip": "n4", "line": 3, "at": { "music": 79.3 } },
+    { "clip": "n4", "line": 4, "at": { "music": 84.5 } },
+
+    { "clip": "n5", "line": 1, "at": { "music": 94.6 } },
+    { "clip": "n5", "line": 2, "at": { "before": { "landmark": "midHit" }, "gap": 0.35 } },
+    { "clip": "n5", "line": 3, "at": { "music": 104.75 } },
+    { "clip": "n5", "line": 4, "at": { "music": 110.6 } },
+
+    { "clip": "n6", "line": 1, "at": { "music": 117.6 } },
+    { "clip": "n6", "line": 2, "at": { "music": 119.4 } },
+    { "clip": "n6", "line": 3, "at": { "music": 124.3 } },
+    { "clip": "n6", "line": 4, "at": { "music": 131.6 } },
+
+    { "clip": "n7", "line": 1, "at": { "music": 138.95 } },
+    { "clip": "n7", "line": 2, "at": { "music": 141.1 } },
+    { "clip": "n7", "line": 3, "at": { "music": 147.45 } },
+    { "clip": "n7", "line": 4, "at": { "music": 153.4 } },
+
+    { "clip": "n8", "line": 1, "at": { "music": 162.35 } },
+    { "clip": "n8", "line": 2, "at": { "music": 165.0 } },
+    { "clip": "n8", "line": 3, "at": { "landmark": "revealHit", "plus": 0.8 } },
+    { "clip": "n8", "line": 4, "at": { "film": 177.0 } }
+  ],
+  "events": [
+    { "id": "bore", "unit": "ribs", "at": { "hit": 40.0291 }, "what": "The bore comes through the cage" },
+    { "id": "surge", "unit": "heart", "at": { "hit": 66.8375 }, "what": "The lava fall surges at the top of the big peak" },
+    { "id": "exhale", "unit": "breath", "at": { "hit": 77.5383 }, "what": "The shaft breathes out" },
+    { "id": "burst", "unit": "marsh", "at": { "landmark": "midHit" }, "what": "The seep pool bursts" },
+    { "id": "strike-1", "unit": "spine", "at": { "hit": 116.9245 }, "what": "Lightning: the place opens on it" },
+    { "id": "strike-2", "unit": "spine", "at": { "hit": 120.516 }, "what": "Lightning on the ridge" },
+    { "id": "strike-3", "unit": "spine", "at": { "hit": 124.1722 }, "what": "Lightning under the kites" },
+    { "id": "strike-4", "unit": "spine", "at": { "hit": 127.7553 }, "what": "Lightning, spire to spire" },
+    { "id": "strike-5", "unit": "spine", "at": { "hit": 131.2393 }, "what": "Lightning seen from inside the canal" },
+    { "id": "strike-6", "unit": "spine", "at": { "hit": 134.8464 }, "what": "Lightning seen from inside the canal" },
+    { "id": "heartbeat", "unit": "reveal", "at": { "landmark": "finalHit" }, "what": "From orbit, the Heart's glow beats once on the body" }
+  ],
+  "mix": { "voiceGainDb": 1.5 }
+}

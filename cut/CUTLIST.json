@@ -1,0 +1,838 @@
+{
+  "schema": "carcass/cutlist 1",
+  "fps": 60,
+  "frameCount": 11861,
+  "music": {
+    "file": "audio/supplied/The-Carcass-Audio.mp3",
+    "pieces": [
+      {
+        "from": 0,
+        "to": 174.2365,
+        "at": 0
+      },
+      {
+        "from": 210.0577,
+        "to": 233.51,
+        "at": 174.2365
+      }
+    ],
+    "cut": {
+      "outBar": 48,
+      "inBar": 58,
+      "out": 174.2365,
+      "in": 210.0577,
+      "frame": 10454
+    }
+  },
+  "places": [
+    {
+      "unit": "ribs",
+      "first": 0,
+      "last": 2506
+    },
+    {
+      "unit": "heart",
+      "first": 2507,
+      "last": 4220
+    },
+    {
+      "unit": "breath",
+      "first": 4221,
+      "last": 5617
+    },
+    {
+      "unit": "marsh",
+      "first": 5618,
+      "last": 7014
+    },
+    {
+      "unit": "spine",
+      "first": 7015,
+      "last": 8304
+    },
+    {
+      "unit": "eye",
+      "first": 8305,
+      "last": 9540
+    },
+    {
+      "unit": "reveal",
+      "first": 9541,
+      "last": 11860
+    }
+  ],
+  "shots": [
+    {
+      "id": "ribs-01",
+      "unit": "ribs",
+      "first": 0,
+      "last": 1041,
+      "key": null,
+      "picture": "ribs-0",
+      "move": "in",
+      "label": "The Ribs · the approach from the sea, one shot up to the first strike"
+    },
+    {
+      "id": "ribs-02",
+      "unit": "ribs",
+      "first": 1042,
+      "last": 1439,
+      "key": "ribs-0",
+      "picture": "ribs-0",
+      "move": "in",
+      "label": "The Ribs · the strait"
+    },
+    {
+      "id": "ribs-03",
+      "unit": "ribs",
+      "first": 1440,
+      "last": 1651,
+      "key": "ribs-3",
+      "picture": "ribs-3",
+      "move": "left",
+      "label": "The Ribs · the colony"
+    },
+    {
+      "id": "ribs-04",
+      "unit": "ribs",
+      "first": 1652,
+      "last": 1866,
+      "key": "ribs-2",
+      "picture": "ribs-2",
+      "move": "in",
+      "label": "The Ribs · the feeders at low tide"
+    },
+    {
+      "id": "ribs-05",
+      "unit": "ribs",
+      "first": 1867,
+      "last": 2294,
+      "key": "ribs-1",
+      "picture": "ribs-1",
+      "move": "in",
+      "label": "The Ribs · the camera looks up at the drowned"
+    },
+    {
+      "id": "ribs-06",
+      "unit": "ribs",
+      "first": 2295,
+      "last": 2506,
+      "key": "ribs-4",
+      "picture": "ribs-4",
+      "move": "hold",
+      "label": "The Ribs · the bore comes through the cage"
+    },
+    {
+      "id": "heart-01",
+      "unit": "heart",
+      "first": 2507,
+      "last": 2936,
+      "key": "heart-0",
+      "picture": "heart-0",
+      "move": "in",
+      "label": "The Heart · the lava lake at nightfall"
+    },
+    {
+      "id": "heart-02",
+      "unit": "heart",
+      "first": 2937,
+      "last": 3374,
+      "key": "heart-3",
+      "picture": "heart-3",
+      "move": "left",
+      "label": "The Heart · the tall ones walk the skin"
+    },
+    {
+      "id": "heart-03",
+      "unit": "heart",
+      "first": 3375,
+      "last": 3578,
+      "key": "heart-1",
+      "picture": "heart-1",
+      "move": "in",
+      "label": "The Heart · the fire under the skin"
+    },
+    {
+      "id": "heart-04",
+      "unit": "heart",
+      "first": 3579,
+      "last": 3790,
+      "key": "heart-2",
+      "picture": "heart-2",
+      "move": "hold",
+      "label": "The Heart · the one that sank"
+    },
+    {
+      "id": "heart-05",
+      "unit": "heart",
+      "first": 3791,
+      "last": 4220,
+      "key": "heart-4",
+      "picture": "heart-4",
+      "move": "out",
+      "label": "The Heart · the vessel mouth and the lava fall, no voice"
+    },
+    {
+      "id": "breath-01",
+      "unit": "breath",
+      "first": 4221,
+      "last": 4596,
+      "key": "breath-0",
+      "picture": "breath-0",
+      "move": "in",
+      "label": "The Breath · the shelf at dawn"
+    },
+    {
+      "id": "breath-02",
+      "unit": "breath",
+      "first": 4597,
+      "last": 4865,
+      "key": "breath-4",
+      "picture": "breath-4",
+      "move": "in",
+      "label": "The Breath · down the shaft, it breathes out"
+    },
+    {
+      "id": "breath-03",
+      "unit": "breath",
+      "first": 4866,
+      "last": 5080,
+      "key": "breath-3",
+      "picture": "breath-3",
+      "move": "out",
+      "label": "The Breath · the red weed at the rim"
+    },
+    {
+      "id": "breath-04",
+      "unit": "breath",
+      "first": 5081,
+      "last": 5402,
+      "key": "breath-1",
+      "picture": "breath-1",
+      "move": "right",
+      "label": "The Breath · the pale herds"
+    },
+    {
+      "id": "breath-05",
+      "unit": "breath",
+      "first": 5403,
+      "last": 5617,
+      "key": "breath-2",
+      "picture": "breath-2",
+      "move": "in",
+      "label": "The Breath · the one at the rim"
+    },
+    {
+      "id": "marsh-01",
+      "unit": "marsh",
+      "first": 5618,
+      "last": 5832,
+      "key": "marsh-0",
+      "picture": "marsh-0",
+      "move": "in",
+      "label": "The Blood Marsh · the red flats"
+    },
+    {
+      "id": "marsh-02",
+      "unit": "marsh",
+      "first": 5833,
+      "last": 6047,
+      "key": "marsh-2",
+      "picture": "marsh-2",
+      "move": "right",
+      "label": "The Blood Marsh · the stalks"
+    },
+    {
+      "id": "marsh-03",
+      "unit": "marsh",
+      "first": 6048,
+      "last": 6262,
+      "key": "marsh-1",
+      "picture": "marsh-1",
+      "move": "in",
+      "label": "The Blood Marsh · the seep pool bursts"
+    },
+    {
+      "id": "marsh-04",
+      "unit": "marsh",
+      "first": 6263,
+      "last": 6585,
+      "key": "marsh-3",
+      "picture": "marsh-3",
+      "move": "left",
+      "label": "The Blood Marsh · the wallowers"
+    },
+    {
+      "id": "marsh-05",
+      "unit": "marsh",
+      "first": 6586,
+      "last": 7014,
+      "key": "marsh-4",
+      "picture": "marsh-4",
+      "move": "in",
+      "label": "The Blood Marsh · the one on the thin crust"
+    },
+    {
+      "id": "spine-01",
+      "unit": "spine",
+      "first": 7015,
+      "last": 7337,
+      "key": "spine-0",
+      "picture": "spine-0",
+      "move": "in",
+      "label": "The Spine · the ridge in the storm"
+    },
+    {
+      "id": "spine-02",
+      "unit": "spine",
+      "first": 7338,
+      "last": 7498,
+      "key": "spine-2",
+      "picture": "spine-2",
+      "move": "right",
+      "label": "The Spine · the kites"
+    },
+    {
+      "id": "spine-03",
+      "unit": "spine",
+      "first": 7499,
+      "last": 7659,
+      "key": "spine-1",
+      "picture": "spine-1",
+      "move": "in",
+      "label": "The Spine · where lightning came to ground"
+    },
+    {
+      "id": "spine-04",
+      "unit": "spine",
+      "first": 7660,
+      "last": 7874,
+      "key": "spine-3",
+      "picture": "spine-3",
+      "move": "hold",
+      "label": "The Spine · the strike"
+    },
+    {
+      "id": "spine-05",
+      "unit": "spine",
+      "first": 7875,
+      "last": 8304,
+      "key": "spine-4",
+      "picture": "spine-4",
+      "move": "out",
+      "label": "The Spine · inside the canal"
+    },
+    {
+      "id": "eye-01",
+      "unit": "eye",
+      "first": 8305,
+      "last": 8519,
+      "key": "eye-0",
+      "picture": "eye-0",
+      "move": "in",
+      "label": "The Eye · the still lake"
+    },
+    {
+      "id": "eye-02",
+      "unit": "eye",
+      "first": 8520,
+      "last": 8680,
+      "key": "eye-2",
+      "picture": "eye-2",
+      "move": "right",
+      "label": "The Eye · the amber mats"
+    },
+    {
+      "id": "eye-03",
+      "unit": "eye",
+      "first": 8681,
+      "last": 8841,
+      "key": "eye-3",
+      "picture": "eye-3",
+      "move": "left",
+      "label": "The Eye · the edge"
+    },
+    {
+      "id": "eye-04",
+      "unit": "eye",
+      "first": 8842,
+      "last": 9164,
+      "key": "eye-1",
+      "picture": "eye-1",
+      "move": "hold",
+      "label": "The Eye · the drinkers"
+    },
+    {
+      "id": "eye-05",
+      "unit": "eye",
+      "first": 9165,
+      "last": 9540,
+      "key": "eye-4",
+      "picture": "eye-4",
+      "move": "in",
+      "label": "The Eye · the centre, in the quiet"
+    },
+    {
+      "id": "reveal-01",
+      "unit": "reveal",
+      "first": 9541,
+      "last": 11743,
+      "key": "reveal-4",
+      "picture": "reveal-4",
+      "move": "out",
+      "label": "The Reveal · one shot, from the lake to orbit, then the hold"
+    },
+    {
+      "id": "reveal-02",
+      "unit": "reveal",
+      "first": 11744,
+      "last": 11860,
+      "key": null,
+      "picture": "black",
+      "move": "hold",
+      "label": "black"
+    }
+  ],
+  "keyFrames": {
+    "ribs-0": 1241,
+    "ribs-1": 2081,
+    "ribs-2": 1759,
+    "ribs-3": 1546,
+    "ribs-4": 2401,
+    "heart-0": 2722,
+    "heart-1": 3477,
+    "heart-2": 3685,
+    "heart-3": 3156,
+    "heart-4": 4006,
+    "breath-0": 4409,
+    "breath-1": 5242,
+    "breath-2": 5510,
+    "breath-3": 4973,
+    "breath-4": 4731,
+    "marsh-0": 5725,
+    "marsh-1": 6102,
+    "marsh-2": 5940,
+    "marsh-3": 6424,
+    "marsh-4": 6800,
+    "spine-0": 7234,
+    "spine-1": 7579,
+    "spine-2": 7418,
+    "spine-3": 7668,
+    "spine-4": 8090,
+    "eye-0": 8412,
+    "eye-1": 9003,
+    "eye-2": 8600,
+    "eye-3": 8761,
+    "eye-4": 9221,
+    "reveal-1": 9594,
+    "reveal-2": 9660,
+    "reveal-3": 9756,
+    "reveal-4": 10027
+  },
+  "lines": [
+    {
+      "clip": "n1",
+      "line": 1,
+      "text": "Listen.",
+      "unit": "ribs",
+      "first": 84,
+      "frames": 54,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n1",
+      "line": 2,
+      "text": "There is a land the maps leave empty.",
+      "unit": "ribs",
+      "first": 240,
+      "frames": 234,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n1",
+      "line": 3,
+      "text": "I have walked it. End to end.",
+      "unit": "ribs",
+      "first": 546,
+      "frames": 213,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n1",
+      "line": 4,
+      "text": "I will tell you what is there.",
+      "unit": "ribs",
+      "first": 825,
+      "frames": 189,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n2",
+      "line": 1,
+      "text": "The strait.",
+      "unit": "ribs",
+      "first": 1077,
+      "frames": 70,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n2",
+      "line": 2,
+      "text": "Stone ribs. Taller than any wall men have built.",
+      "unit": "ribs",
+      "first": 1194,
+      "frames": 333,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n2",
+      "line": 3,
+      "text": "At low tide, the winged things come down to feed.",
+      "unit": "ribs",
+      "first": 1572,
+      "frames": 321,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n2",
+      "line": 4,
+      "text": "Look up. The drowned hang in the weed. That is how high the sea returns.",
+      "unit": "ribs",
+      "first": 1938,
+      "frames": 514,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n3",
+      "line": 1,
+      "text": "The fire.",
+      "unit": "heart",
+      "first": 2550,
+      "frames": 57,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n3",
+      "line": 2,
+      "text": "A lake of it, under a black skin.",
+      "unit": "heart",
+      "first": 2658,
+      "frames": 220,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n3",
+      "line": 3,
+      "text": "The tall ones walk the skin, and drink from the cracks.",
+      "unit": "heart",
+      "first": 2964,
+      "frames": 359,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n3",
+      "line": 4,
+      "text": "It burned before there were men. It will burn after.",
+      "unit": "heart",
+      "first": 3420,
+      "frames": 358,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n4",
+      "line": 1,
+      "text": "The pits.",
+      "unit": "breath",
+      "first": 4257,
+      "frames": 57,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n4",
+      "line": 2,
+      "text": "The land breathes here. Slow. From far below.",
+      "unit": "breath",
+      "first": 4368,
+      "frames": 344,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n4",
+      "line": 3,
+      "text": "Nothing grows near them but the red weed.",
+      "unit": "breath",
+      "first": 4758,
+      "frames": 259,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n4",
+      "line": 4,
+      "text": "The pale herds feed, and keep their distance. They are wiser than men.",
+      "unit": "breath",
+      "first": 5070,
+      "frames": 483,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n5",
+      "line": 1,
+      "text": "The red flats.",
+      "unit": "marsh",
+      "first": 5676,
+      "frames": 89,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n5",
+      "line": 2,
+      "text": "It was blood once. It still seeps.",
+      "unit": "marsh",
+      "first": 5892,
+      "frames": 245,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n5",
+      "line": 3,
+      "text": "The great beasts wallow in it, and grow fat.",
+      "unit": "marsh",
+      "first": 6285,
+      "frames": 290,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n5",
+      "line": 4,
+      "text": "The salt keeps what it catches. Forever.",
+      "unit": "marsh",
+      "first": 6636,
+      "frames": 282,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n6",
+      "line": 1,
+      "text": "The ridge.",
+      "unit": "spine",
+      "first": 7056,
+      "frames": 63,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n6",
+      "line": 2,
+      "text": "Above the clouds. Above the storm.",
+      "unit": "spine",
+      "first": 7164,
+      "frames": 245,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n6",
+      "line": 3,
+      "text": "Lightning walks it every night. Spire to spire.",
+      "unit": "spine",
+      "first": 7458,
+      "frames": 327,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n6",
+      "line": 4,
+      "text": "The beasts sleep inside the bone, and wait for morning.",
+      "unit": "spine",
+      "first": 7896,
+      "frames": 359,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n7",
+      "line": 1,
+      "text": "The lake.",
+      "unit": "eye",
+      "first": 8337,
+      "frames": 57,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n7",
+      "line": 2,
+      "text": "Still. Gold at the edge. Black at the center.",
+      "unit": "eye",
+      "first": 8466,
+      "frames": 344,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n7",
+      "line": 3,
+      "text": "The herds drink there. They do not look down.",
+      "unit": "eye",
+      "first": 8847,
+      "frames": 314,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n7",
+      "line": 4,
+      "text": "The center has no bottom. I did not find one.",
+      "unit": "eye",
+      "first": 9204,
+      "frames": 314,
+      "file": null,
+      "carried": false
+    },
+    {
+      "clip": "n8",
+      "line": 1,
+      "text": "Now you see it.",
+      "unit": "reveal",
+      "first": 9741,
+      "frames": 121,
+      "file": "audio/kept/lines/n8-1.wav",
+      "carried": false
+    },
+    {
+      "clip": "n8",
+      "line": 2,
+      "text": "This was never land.",
+      "unit": "reveal",
+      "first": 9900,
+      "frames": 111,
+      "file": "audio/kept/lines/n8-2.wav",
+      "carried": false
+    },
+    {
+      "clip": "n8",
+      "line": 3,
+      "text": "It was a god.",
+      "unit": "reveal",
+      "first": 10075,
+      "frames": 75,
+      "file": "audio/kept/lines/n8-3.wav",
+      "carried": false
+    },
+    {
+      "clip": "n8",
+      "line": 4,
+      "text": "Gods die slow. This one is not finished.",
+      "unit": "reveal",
+      "first": 10620,
+      "frames": 270,
+      "file": "audio/kept/lines/n8-4.wav",
+      "carried": false
+    }
+  ],
+  "events": [
+    {
+      "id": "bore",
+      "unit": "ribs",
+      "frame": 2402,
+      "accent": 40.0291,
+      "what": "The bore comes through the cage"
+    },
+    {
+      "id": "surge",
+      "unit": "heart",
+      "frame": 4010,
+      "accent": 66.8375,
+      "what": "The lava fall surges at the top of the big peak"
+    },
+    {
+      "id": "exhale",
+      "unit": "breath",
+      "frame": 4652,
+      "accent": 77.5383,
+      "what": "The shaft breathes out"
+    },
+    {
+      "id": "burst",
+      "unit": "marsh",
+      "frame": 6158,
+      "accent": 102.6262,
+      "what": "The seep pool bursts"
+    },
+    {
+      "id": "strike-1",
+      "unit": "spine",
+      "frame": 7015,
+      "accent": 116.9245,
+      "what": "Lightning: the place opens on it"
+    },
+    {
+      "id": "strike-2",
+      "unit": "spine",
+      "frame": 7231,
+      "accent": 120.516,
+      "what": "Lightning on the ridge"
+    },
+    {
+      "id": "strike-3",
+      "unit": "spine",
+      "frame": 7450,
+      "accent": 124.1722,
+      "what": "Lightning under the kites"
+    },
+    {
+      "id": "strike-4",
+      "unit": "spine",
+      "frame": 7665,
+      "accent": 127.7553,
+      "what": "Lightning, spire to spire"
+    },
+    {
+      "id": "strike-5",
+      "unit": "spine",
+      "frame": 7874,
+      "accent": 131.2393,
+      "what": "Lightning seen from inside the canal"
+    },
+    {
+      "id": "strike-6",
+      "unit": "spine",
+      "frame": 8091,
+      "accent": 134.8464,
+      "what": "Lightning seen from inside the canal"
+    },
+    {
+      "id": "heartbeat",
+      "unit": "reveal",
+      "frame": 11334,
+      "accent": 224.7239,
+      "what": "From orbit, the Heart's glow beats once on the body"
+    }
+  ],
+  "titanFrame": 10027,
+  "sounds": [],
+  "mix": {
+    "voiceGainDb": 1.5
+  }
+}
