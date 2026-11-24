@@ -16,7 +16,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Extension step: none
 - Published address: none
 - Review page: none
-- Repo is private: no. Measured 2026-11-24 20:34 UTC with `gh repo view`: visibility PUBLIC
+- Repo is private: no. Measured 2026-11-24 20:39 UTC with `gh repo view`: visibility PUBLIC. Addendum 001 says Brandon is making it private, so it is measured again at every status until it reads private, and the public rules hold until then
 - Sound files: the repo is public, so no sound file is committed on any branch. They live in the workspace under `audio/supplied/`, `audio/kept/` and `audio/mix/` (all git-ignored) and on the review page. Their records are committed under `audio/records/`. One archive of every kept file and the newest mix is attached to the thread with each status that follows new sounds and with the `REVIEW` block
 - Large files reach Brandon by: not measured
 
@@ -194,7 +194,7 @@ none
 
 ## For Brandon to decide
 
-- Where the music track came from and what its licence allows.
+none
 
 ## Running jobs
 
@@ -233,3 +233,4 @@ none
 ## Session log
 
 - 2026-11-24 20:30 UTC. Task 1 starts on the BUILD MODE prompt. Repo at `418cade`. Stop condition 1 checked: `MANIFEST.sha256` exists, 52 of 52 hashes match, all 34 keys exist and are in the manifest. Kit read in its reading order. No addenda.
+- 2026-11-24 20:39 UTC. Addendum 001 arrived on `main` as `7da7398` and was merged at 20:36 UTC. Applied: the repo was measured again (still PUBLIC, so nothing sound is committed yet and the one-time steps wait for the first private reading); the music line was taken out of "For Brandon to decide"; the music row in `ASSETS.md` now reads supplied by Brandon, royalty-free, cleared by Brandon for this project. Status 1 was posted at 20:36 UTC with the approved contact sheet shown inline.

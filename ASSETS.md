@@ -10,7 +10,7 @@ Made by the reference runs on 2026-11-24 with an image model, with real public-d
 
 | File | What it is | Source | Licence | Date added |
 | --- | --- | --- | --- | --- |
-| `The-Carcass-Audio.mp3` | The music the film is cut to. Never committed while the repo is public | Supplied by Brandon | To be confirmed by Brandon before the film is posted | 2026-11-24 |
+| `The-Carcass-Audio.mp3` | The music the film is cut to. Committed once the repo measures private, as addendum 001 says | Supplied by Brandon | Royalty-free, cleared by Brandon for this project | 2026-11-24 |
 
 ## Generated pictures
 
