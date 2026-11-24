@@ -4,8 +4,8 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 ## Status
 
-- Build: not started
-- Phase: none
+- Build: in progress
+- Phase: 0 · Ground truth, in progress since 2026-11-24 20:30 UTC
 - Review: not reached
 - Review round: none
 - Review round step: none
@@ -36,7 +36,7 @@ none
 
 | Phase | State | Started | Ended | Gate evidence |
 | --- | --- | --- | --- | --- |
-| 0 · Ground truth | not started | | | |
+| 0 · Ground truth | in progress | 2026-11-24 20:30 UTC | | |
 | 1 · The voice, the map and the animatic | not started | | | |
 | 2 · Engine and blockout | not started | | | |
 | 3 · The look lock: the Heart | not started | | | |
@@ -227,4 +227,4 @@ none
 
 ## Session log
 
-none
+- 2026-11-24 20:30 UTC. Task 1 starts on the BUILD MODE prompt. Repo at `418cade`. Stop condition 1 checked: `MANIFEST.sha256` exists, 52 of 52 hashes match, all 34 keys exist and are in the manifest. Kit read in its reading order. No addenda.
