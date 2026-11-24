@@ -8,7 +8,7 @@ import { ROOT, config, args, utc } from './lib/paths.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MB = 1e6;
 const PICTURE = /\.(jpe?g|png|webp)$/i;
-const SOUND = /\.(mp3|wav|m4a)$/i;
+const SOUND = /\.(mp3|wav|m4a|flac)$/i;
 const DEFAULT_MAX_MB = 450;
 const POSTER_AT = 0.25;
 const POSTER_WIDTH = 1280;
