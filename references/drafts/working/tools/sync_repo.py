@@ -8,11 +8,11 @@ R = '/home/user/workspace/r3'; REPO = '/home/user/workspace/repo'; D = f'{REPO}/
 OLD = f'{REPO}/references/drafts/step-1-art-directions'
 if os.path.isdir(OLD) and not os.path.isdir(D): subprocess.run(['git', 'mv', OLD, D], cwd=REPO, check=True)
 msg = sys.argv[1]
-for sub in ('takes', 'prompts', 'critics', 'real', 'sheets', 'layouts', 'jobs', 'tools'): os.makedirs(f'{D}/{sub}', exist_ok=True)
+for sub in ('takes', 'prompts', 'critics', 'real', 'sheets', 'layouts', 'jobs', 'tools', 'guides'): os.makedirs(f'{D}/{sub}', exist_ok=True)
 L = json.load(open(f'{R}/log.json')); n = 0
 for tid, t in L['takes'].items():
     out = f'{D}/takes/{tid}.jpg'
-    if 'path' not in t or os.path.exists(out) or not os.path.exists(t['path']): continue
+    if 'path' not in t or t.get('archived') or os.path.exists(out) or not os.path.exists(t['path']): continue
     Image.open(t['path']).convert('RGB').save(out, quality=90, optimize=True); n += 1
 for f in glob.glob(f'{R}/prompts/*.txt'): shutil.copy(f, f'{D}/prompts/')
 for f in glob.glob(f'{R}/critic/replies/*.txt'): shutil.copy(f, f'{D}/critics/')
@@ -23,6 +23,8 @@ for f in glob.glob(f'{R}/real/*'): shutil.copy(f, f'{D}/real/')
 for f in glob.glob(f'{R}/sheets/*.jpg'): shutil.copy(f, f'{D}/sheets/')
 for f in glob.glob(f'{R}/layout/*.jpg'): shutil.copy(f, f'{D}/layouts/')
 for f in glob.glob(f'{R}/jobs/*.json'): shutil.copy(f, f'{D}/jobs/')
+for f in glob.glob(f'{R}/guide/*.jpg') + glob.glob(f'{R}/guide/*.png') + glob.glob(f'{R}/guide/*.md') + glob.glob(f'{R}/guide/*.json'): shutil.copy(f, f'{D}/guides/')
+if os.path.isdir(f'{R}/archive'): shutil.copytree(f'{R}/archive', f'{REPO}/references/archive', dirs_exist_ok=True)
 for f in glob.glob(f'{R}/tools/*'):
     if os.path.isfile(f): shutil.copy(f, f'{D}/tools/')
 shutil.copy(f'{R}/log.json', f'{D}/log.json')
@@ -33,8 +35,8 @@ for d in glob.glob(f'{R}/out/kept/*'):
     if os.path.isdir(d): shutil.copytree(d, dst, dirs_exist_ok=True)
     else: shutil.copy(d, dst)
 run = lambda *a: subprocess.run(a, cwd=REPO, check=True, capture_output=True, text=True).stdout
-run('git', 'add', '-A', 'references/drafts')
-if not run('git', 'status', '--porcelain', 'references/drafts').strip(): print('nothing to commit'); sys.exit(0)
+run('git', 'add', '-A', 'references/drafts', 'references/archive/round-3-reveal')
+if not run('git', 'status', '--porcelain', 'references').strip(): print('nothing to commit'); sys.exit(0)
 run('git', 'commit', '-m', msg + '\n\nCo-authored-by: Perplexity <noreply@perplexity.ai>')
 subprocess.run(['git', 'push', 'origin', 'main'], cwd=REPO, check=True, capture_output=True, text=True)
 print('pushed', run('git', 'log', '--oneline', '-1').strip(), f'({n} new takes)')

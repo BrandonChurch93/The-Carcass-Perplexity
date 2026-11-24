@@ -145,6 +145,11 @@
    "t": "02:38",
    "el": "3h06m",
    "text": "02:41 Batch 30 judged at full size. All three fixes swapped in: ribs-d3c-t1 (eye removed, nothing else changed), eye-d2c-t2 (horse replaced by the drinker of detail 1), eye-d4c-t2 (ears and wool removed). Remaining stated fault on eye detail 4: from behind the blunt heads read as plain stumps."
+  },
+  {
+   "t": "03:10",
+   "el": "3h38m",
+   "text": "REVEAL REDO (user message, about 02:58 UTC). Direction B approved for all six places, kept exactly as they are. Only the reveal is rejected: 'reads as a fish with arms growing out of its head; the skull and one hand are bunched together at one end and nothing else says human'. New brief: a humanoid titan unmistakable at a glance (head, shoulders, both arms, rib cage, spine, hips, both legs, human proportions), on its back or slightly on its side, limbs spread, a landmass at continental scale and not a statue or a clean skeleton, seen from almost directly above with the curve of the planet only at the edge of frame; the six places findable and looking like themselves from orbit; a pull-back in four key frames from the same rising camera (lake, skull massif, head and shoulders, whole titan) that agree with each other and hold real scale; tested with fresh agents told nothing. Start new, reuse nothing of the old reveal but the idea. Old reveal moved to references/archive/round-3-reveal/ (kept image, sheet, three takes, prompt, the two ISS plates used for it)."
   }
  ],
  "status": [
@@ -5397,7 +5402,8 @@
    "t": "02:07",
    "el": "2h35m",
    "eye": [],
-   "crit": []
+   "crit": [],
+   "archived": "round-3-reveal"
   },
   "reveal-est-t2": {
    "id": "reveal-est-t2",
@@ -5413,7 +5419,8 @@
    "t": "02:07",
    "el": "2h35m",
    "eye": [],
-   "crit": []
+   "crit": [],
+   "archived": "round-3-reveal"
   },
   "reveal-est-t3": {
    "id": "reveal-est-t3",
@@ -5429,7 +5436,8 @@
    "t": "02:07",
    "el": "2h35m",
    "eye": [],
-   "crit": []
+   "crit": [],
+   "archived": "round-3-reveal"
   },
   "ribs-est-t1": {
    "id": "ribs-est-t1",
@@ -6527,13 +6535,6 @@
    "t": "02:08",
    "el": "2h36m"
   },
-  "reveal": {
-   "id": "reveal-est-t3",
-   "reason": "Reads as an astronaut photograph at real scale: limb, cloud fields with shadows, a cyclone, sunglint; skull with the eye lake, spine range, ribs as curved ridges and capes, the red delta, the caldera plume, the arm.",
-   "faults": "Skull and hand are very literal; ribs partly lost under cloud on the right; pelvis and legs fade into haze and barely read.",
-   "t": "02:08",
-   "el": "2h36m"
-  },
   "heart-detail-1": {
    "id": "heart-d1-t2",
    "reason": "The line itself: sulphur crack steaming on the solid bench, an open seam, a walker stepping out, the lava fall behind.",
@@ -6708,6 +6709,14 @@
    "faults": "Far waders repeat a head-down silhouette; red plumes sit slightly on top of the rock; vapour plumes a little evenly spaced; cave soft.",
    "t": "02:34",
    "el": "3h02m"
+  },
+  "reveal-rejected": {
+   "id": "reveal-est-t3",
+   "reason": "Reads as an astronaut photograph at real scale: limb, cloud fields with shadows, a cyclone, sunglint; skull with the eye lake, spine range, ribs as curved ridges and capes, the red delta, the caldera plume, the arm.",
+   "faults": "Skull and hand are very literal; ribs partly lost under cloud on the right; pelvis and legs fade into haze and barely read.",
+   "t": "02:08",
+   "el": "2h36m",
+   "archived": "references/archive/round-3-reveal"
   }
  },
  "order": [
