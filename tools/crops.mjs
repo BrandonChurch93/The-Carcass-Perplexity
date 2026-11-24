@@ -3,7 +3,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { args, readJson } from './lib/paths.mjs';
 import { addLook } from './look.mjs';
-import { criticLimits, gridFit, grid, writePng, madeRecord, cropBox, percentText, locatorOf, parseRegions, relPath, getRenderer, isMain, one, clean, SEP, fakeNote, outDir } from './lib/img.mjs';
+import { criticLimits, gridFit, grid, writePng, madeRecord, cropBox, percentText, locatorOf, parseRegions, relPath, getRenderer, isMain, one, clean, SEP, fakeNote, outDir, dropStale } from './lib/img.mjs';
 
 export const GRID = { cols: 2, rows: 2 };
 
@@ -24,9 +24,14 @@ export async function cropGrids({ file, name, regions = null, record = null, by 
   const meta = await sharp(file).metadata();
   const W = meta.width;
   const H = meta.height;
-  const list = regions && regions.length ? regions : lattice();
   const per = GRID.cols * GRID.rows;
   const cell = gridFit({ ...GRID, aspect: W / H, title: true, limits: criticLimits(), maxCell: { width: W, height: H } });
+  const seen = new Set();
+  const list = (regions && regions.length ? regions : lattice()).filter((r) => {
+    const b = cropBox(r.cx, r.cy, cell.width, cell.height, W, H);
+    const id = `${b.left},${b.top}`;
+    return seen.has(id) ? false : seen.add(id);
+  });
   const source = record ?? (fs.existsSync(file + '.json') ? readJson(file + '.json') : null);
   const total = Math.ceil(list.length / per);
   const files = [];
@@ -53,6 +58,7 @@ export async function cropGrids({ file, name, regions = null, record = null, by 
     if (look) addLook(target, `${name}: native-size crops, grid ${g + 1} of ${total}${fakeNote([source])}`, by);
     files.push(target);
   }
+  dropStale((n) => path.join(outDir(dir, 'crops'), `${name}-${n}.png`), total + 1);
   return { files };
 }
 

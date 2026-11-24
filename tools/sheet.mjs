@@ -10,6 +10,13 @@ function thin(list, count) {
   return list.length <= count ? list : spread(0, list.length - 1, count).map((i) => list[i]);
 }
 
+export function stepped(first, last, count) {
+  const step = Math.max(1, Math.ceil((last - first) / (count - 1)));
+  const frames = [];
+  for (let f = first; f <= last && frames.length < count; f += step) frames.push(f);
+  return { frames, step };
+}
+
 export async function sheet({ frames = null, loopFrames = null, name, title = null, tier = 'review', format = 'preview', renderer = null, by = 'builder', dir = null, look = true }) {
   const c = config();
   const count = c.critics.contactSheetFrames;
@@ -35,7 +42,7 @@ export async function sheet({ frames = null, loopFrames = null, name, title = nu
   const out = await grid({ cells, cols: COLS, cell, title: heading });
   const file = path.join(outDir(dir, 'sheets'), `${name}.png`);
   await writePng(file, out.buffer, madeRecord('sheet', stills, { name, title: heading, tier, format, cell, frames: shown }));
-  if (look) addLook(file, `sheet ${name}: ${heading}${fakeNote(stills)}`, by);
+  if (look) addLook(file, `sheet: ${heading}${fakeNote(stills)}`, by);
   return { file };
 }
 
@@ -70,10 +77,10 @@ export async function sheetCommand(a, renderer = null) {
     } else if (a.frames !== undefined) {
       const [first, last] = [].concat(a.frames).map(Number);
       if (!(Number.isInteger(first) && Number.isInteger(last) && last >= first)) throw new Error('give --frames A B with B not before A');
-      const list = spread(first, last, count);
-      const step = list.length > 1 ? (last - first) / (list.length - 1) : 1;
-      const stepText = step === 1 ? 'every frame' : Number.isInteger(step) ? `every ${step} frames` : `about every ${step.toFixed(1)} frames`;
-      await run({ frames: list, name: one(a.name, `frames-${first}-${last}`), title: `frames ${first} to ${last}${SEP}${stepText}` });
+      const { frames, step } = stepped(first, last, count);
+      const end = frames[frames.length - 1];
+      const title = [`frames ${first} to ${last}`, step === 1 ? 'every frame' : `step of ${step} frames`, ...(end === last ? [] : [`last shown ${end}`])].join(SEP);
+      await run({ frames, name: one(a.name, `frames-${first}-${last}`), title });
     } else if (a.establishing) {
       const keys = c.film.order.map((u) => c.keys.find((k) => k.id === `${u}-0`)).filter(Boolean);
       const list = keys.map((k) => ({ key: k.id, frame: info.keyFrames[k.id], label: k.id }));

@@ -203,6 +203,13 @@ export async function writePng(file, image, record, limits = criticLimits()) {
   return { file, width: meta.width, height: meta.height };
 }
 
+export function dropStale(pathOf, from) {
+  for (let n = from; fs.existsSync(pathOf(n)); n++) {
+    fs.rmSync(pathOf(n));
+    fs.rmSync(pathOf(n) + '.json', { force: true });
+  }
+}
+
 export function fakeNote(stills) {
   return stills.some((r) => r && r.engine === 'fake') ? ' (fake frames)' : '';
 }

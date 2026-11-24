@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -7,7 +8,7 @@ import { config } from '../tools/lib/paths.mjs';
 import { fitWithin, criticLimits, inside, gridFit, grid, textStrip, fitText, textWidth, timecode, spread, clean, writePng, madeRecord, cropBox, parseRegions, fakeRenderer, fakeFilm, formatSize, STYLE } from '../tools/lib/img.mjs';
 import { cropGrids, lattice } from '../tools/crops.mjs';
 import { compareKey, coverRect } from '../tools/compare.mjs';
-import { sheet } from '../tools/sheet.mjs';
+import { sheet, stepped } from '../tools/sheet.mjs';
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'img-test-'));
 const renderer = fakeRenderer(path.join(tmp, 'stills'));
@@ -236,6 +237,17 @@ describe('crops', () => {
     expect(first.regions[2].left + first.regions[2].width).toBe(3840);
   }, 60000);
 
+  it('shows a region once when the picture is no larger than a crop', async () => {
+    const file = path.join(tmp, 'small.png');
+    await sharp({ create: { width: 300, height: 200, channels: 3, background: '#665544' } }).png().toFile(file);
+    const { files } = await cropGrids({ file, name: 'small', dir: path.join(tmp, 'crops'), look: false });
+    expect(files).toHaveLength(1);
+    const rec = JSON.parse(fs.readFileSync(files[0] + '.json', 'utf8'));
+    expect(rec.regions).toHaveLength(1);
+    expect(rec.stills).toEqual([]);
+    expect([rec.regions[0].width, rec.regions[0].height]).toEqual([300, 200]);
+  });
+
   it('takes the regions it is given', async () => {
     const still = await renderer.renderStill({ frame: 500, format: 'hd' });
     const { files } = await cropGrids({ file: still.file, name: 'given', regions: [{ label: 'one', cx: 0.5, cy: 0.5 }], dir: path.join(tmp, 'crops'), look: false });
@@ -307,6 +319,17 @@ describe('sheet', () => {
     expect(rec.frames[1].time).toBe(timecode(frames[1], c.film.fps));
     expect(s.width).toBe(4 * rec.cell.width + 5 * STYLE.gap);
   }, 60000);
+
+  it('thins consecutive frames by a whole step', () => {
+    expect(stepped(40, 47, 12)).toEqual({ frames: [40, 41, 42, 43, 44, 45, 46, 47], step: 1 });
+    const t = stepped(100, 190, 12);
+    expect(t.step).toBe(9);
+    expect(t.frames).toEqual([100, 109, 118, 127, 136, 145, 154, 163, 172, 181, 190]);
+    const u = stepped(0, 1000, 12);
+    expect(u.frames).toHaveLength(11);
+    expect(u.frames.every((f, i) => i === 0 || f - u.frames[i - 1] === u.step)).toBe(true);
+    expect(stepped(0, 12, 12).frames).toEqual([0, 2, 4, 6, 8, 10, 12]);
+  });
 
   it('thins a longer list and takes loop frames', async () => {
     const { file } = await sheet({ loopFrames: Array.from({ length: 30 }, (_, i) => i), name: 'l', renderer, dir: path.join(tmp, 'sheets'), look: false });

@@ -2,7 +2,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { rel, args, config } from './lib/paths.mjs';
 import { addLook } from './look.mjs';
-import { STYLE, criticLimits, tile, assemble, writePng, madeRecord, cropBox, percentText, locatorOf, parseRegions, relPath, getRenderer, isMain, one, SEP, fakeNote, outDir } from './lib/img.mjs';
+import { STYLE, criticLimits, tile, assemble, writePng, madeRecord, cropBox, percentText, locatorOf, parseRegions, relPath, getRenderer, isMain, one, SEP, fakeNote, outDir, dropStale } from './lib/img.mjs';
 
 export const LATTICE = 4;
 export const PAIRS = 2;
@@ -133,6 +133,7 @@ export async function compareKey({ key, tier = 'review', format = 'uhd', regions
       files.push(extra);
     }
   }
+  dropStale((n) => path.join(outDir(dir, 'compare'), `${key}-pairs-${n}.png`), files.length);
   return { file, files };
 }
 
