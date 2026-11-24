@@ -949,7 +949,7 @@ export function buildMap(an, { source, music = {}, tries = TRIES, defaults = DEF
   const moved = warp ? warp.points.filter((q) => q.d !== 0) : [];
   if (moved.length) {
     map.notes.push(
-      `The music does not hold the steady grid everywhere. Where the attacks over 32 beats sit 50 ms or more from it, the beats and bar lines are moved to them: from ${moved[0].t} s to ${moved[moved.length - 1].t} s by ${Math.round(Math.min(...moved.map((q) => q.d)) * 1000)} to ${Math.round(Math.max(...moved.map((q) => q.d)) * 1000)} ms, joined to the steady grid by straight lines. So the gap between two beats there is not always tempo.beatSeconds. A smaller drift is left alone.`
+      `The music does not hold the steady grid everywhere. Where the attacks over 32 beats sit 50 ms or more from it, the beats and bar lines are moved to them: at the points measured from ${moved[0].t} s to ${moved[moved.length - 1].t} s by ${Math.round(Math.min(...moved.map((q) => q.d)) * 1000)} to ${Math.round(Math.max(...moved.map((q) => q.d)) * 1000)} ms, joined to the steady grid by straight lines, and held as far as the nearer end of the file when no point was measured beyond. So the gap between two beats there is not always tempo.beatSeconds. A smaller drift is left alone.`
     );
   } else if (warp) {
     map.notes.push('The attacks stay within 50 ms of the steady grid wherever enough of them were found, so the beats and bar lines are the steady grid.');
