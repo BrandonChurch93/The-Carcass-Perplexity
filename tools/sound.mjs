@@ -178,8 +178,7 @@ export function keep(cue, ctx, n) {
   ctx.print(`sound: ${cue.id}. ${core.keepWhy(kept, takes)}`);
   ctx.print(`sound: wrote ${file} and ${RECORDS}/${cue.id}.md`);
   const row = core.assetsRow({ file, takes: takesLine(takes.length, kept.take, kept.rejected), day: kept.day, source: kept.source });
-  ctx.print(`sound: the row for ${ASSETS}:`);
-  ctx.print(row);
+  ctx.print(`sound: the row for ${ASSETS}: ${row}`);
   return { cue: cue.id, file, record, row, kept };
 }
 

@@ -283,7 +283,7 @@ describe('the command, on stand-in takes', () => {
     expect(a5.takeFaults([{ id: SPOT.id, takes: '2 made, take 2 kept' }], null, cfg).faults).toEqual([]);
     expect(out.kept.row).toBe(`| \`${file}\` | A stand-in from the file crack.wav | 2 made, take 2 kept | not recorded |`);
     expect(a2.hasRow(out.kept.row, file)).toBe(true);
-    expect(d.lines).toContain(out.kept.row);
+    expect(d.lines).toContain(`sound: the row for ASSETS.md: ${out.kept.row}`);
     expect(fs.existsSync(path.join(root, sound.ASSETS))).toBe(false);
   });
 
