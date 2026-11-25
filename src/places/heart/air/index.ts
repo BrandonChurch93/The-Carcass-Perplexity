@@ -80,11 +80,11 @@ export function create(ctx: HeartContext): HeartPiece {
   const bankA = SMOKE_BANKS.map(([along, right, radius, height]) => new THREE.Vector4(GROUP[0] + along * 0.7 + right * 0.71, GROUP[2] - along * 0.71 + right * 0.7, radius, height));
   const bankB = SMOKE_BANKS.map(([, , , , dense], i) => new THREE.Vector4(BANK_LEAN[0], BANK_LEAN[1], 0.17 + 0.31 * i, dense));
   // How each is lit from below: how strongly by the lake under it, to what height (metres), and how strongly by the round lights.
-  const bankC = SMOKE_BANKS.map(() => new THREE.Vector4(1.6, 16, 0.5, 0));
+  const bankC = SMOKE_BANKS.map(() => new THREE.Vector4(0.85, 16, 0.5, 0));
   for (const [dx, dz, radius, height, dense, seed] of FALL_PLUME) {
     bankA.push(new THREE.Vector4(FALL_FOOT[0] + dx, FALL_FOOT[1] + dz, radius, height));
     bankB.push(new THREE.Vector4(PLUME_LEAN[0], PLUME_LEAN[1], seed, dense));
-    bankC.push(new THREE.Vector4(0.14, 45, 0.5, 0));
+    bankC.push(new THREE.Vector4(0.05, 45, 0.5, 0));
   }
   const bankDense = bankB.map((b) => b.w);
   // Staging by shot: the far bank of the feeding picture stands across the right edge of the long lens on the mouth, so it is not drawn for that shot.
