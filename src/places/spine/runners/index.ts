@@ -4,12 +4,12 @@
 import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
 import type { Context, Piece } from '../shared/context';
-import { CANAL_KEY, CANAL_KEY_AT, CARCASS, INSIDE_FROM, RAD, canalFar, carcassAxis, carcassBody, trail, tube } from '../shared/anchors';
+import { CANAL_KEY, CANAL_KEY_AT, CARCASS, INSIDE_FROM, RAD, canalFar, carcassAxis, trail, tube } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, first, frameAt, world } from '../ridge';
 import { flashAt } from '../strikes/bolt';
 import { BODY_FRAGMENT, BODY_VERTEX, LOCK_FRAGMENT, LOCK_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
-import { scorch } from './scorch';
+import { LIES_AT, scorch } from './scorch';
 import { FACE_AT, HIPS, LEG_TOP, NECK_AT, bodyGeometry, coat, lockGeometry, tendrilGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
@@ -105,7 +105,7 @@ export function create(ctx: Context): Piece {
       uDoorGain: { value: 3 },
     };
     const group = new THREE.Group();
-    const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared }));
+    const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared, side: THREE.DoubleSide }));
     group.add(hide);
 
     const c = coat(rng, role.locks, role.skirt, role.act === 'dead');
@@ -163,7 +163,7 @@ export function create(ctx: Context): Piece {
   const CROSSING = 4;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 5000, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
   // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.08, -1, 0.1));
+  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.2, -1, 0.15));
 
   const burned = scorch(ctx);
   burned.drape();
@@ -241,13 +241,14 @@ export function create(ctx: Context): Piece {
     a.writhe.set(1, 0, 0, 0);
   };
 
-  // The dead one does not move: its bones are set once. It lies on its right side, tipped a little so the burned flank shows to the lens:
-  // the trunk slack and flattened, the forelegs thrown out from the chest with their paws on the ground, the hind legs drawn up under the
-  // belly, the neck fallen forward and down.
-  const ROLL = 1.3;
+  // The dead one does not move: its bones are set once. It lies collapsed across the frame, long and low, half on its far side so the
+  // burned flank faces the lens and the sky: the trunk slack and flattened, the legs of the near side thrown out toward the lens with
+  // their paws on the ground, a far foreleg out from under the chest, the neck fallen forward with the face on the rock.
+  const ROLL = 0.45;
+  const SLACK = 0.72;
   /** How high the middle of its trunk lies over the ground, and so how high its own origin does, in its own metres. */
-  const REST = 0.9;
-  const LIFT = 0.27 - REST * Math.cos(ROLL);
+  const REST = 0.9 * SLACK;
+  const LIFT = 0.25 - REST * Math.cos(ROLL);
   const over = (v: [number, number, number]): number => LIFT + v[1] * Math.cos(ROLL) - v[2] * Math.sin(ROLL);
   /** A leg thrown out: swung `fore` toward the head, twisted `twist` about itself, and let fall until its paw is `paw` over the ground. */
   const thrown = (bone: number, fore: number, twist: number, long: number, paw: number, shift: [number, number, number]): void => {
@@ -256,12 +257,13 @@ export function create(ctx: Context): Piece {
     const fallen = Math.PI / 2 - ROLL + Math.asin(Math.min(1, Math.max(-1, (paw - top) / (LEG_TOP * long * Math.cos(fore)))));
     about(dead.bones[bone] as THREE.Matrix4, hip, fallen, twist, fore, shift, new THREE.Vector3(1, long, 1));
   };
-  (dead.bones[0] as THREE.Matrix4).makeScale(1.1, 0.95, 0.72);
-  thrown(1, 0.62, -0.35, 1.3, 0.07, [0.04, -0.03, 0.1]);
-  thrown(2, 0.2, 0.15, 1.3, 0.07, [0.06, 0.0, -0.05]);
-  thrown(3, 0.95, 0, 1.15, 0.07, [-0.02, 0.02, 0.12]);
-  thrown(4, 0.7, 0, 1.15, 0.07, [-0.02, 0.03, -0.06]);
-  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.45, -0.3, [0.06, -0.04, 0.03]);
+  (dead.bones[0] as THREE.Matrix4).makeScale(1.1, SLACK, 1.15);
+  const SUNK = -LEG_TOP * (1 - SLACK);
+  thrown(1, 1.0, -0.2, 1.1, 0.07, [0.02, SUNK, 0.05]);
+  thrown(2, 1.2, 0.1, 1.15, 0.07, [0.1, SUNK, -0.2]);
+  thrown(3, 0.95, 0, 1.05, 0.07, [0, SUNK, 0.05]);
+  thrown(4, 0.9, 0, 0.8, 0.07, [0, SUNK, -0.1]);
+  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0.2, 0.3, -0.12, [0.04, -NECK_AT[1] * (1 - SLACK), 0]);
   dead.coat.set(0.66, 0.45, 0.0, 0.3);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
@@ -318,8 +320,8 @@ export function create(ctx: Context): Piece {
       });
 
       // The dead one lies on the land as it is there: the slope under it turns it, so nothing of it hangs in the air or is under the snow.
-      const cx = carcassBody[0];
-      const cz = carcassBody[2];
+      const cx = LIES_AT[0];
+      const cz = LIES_AT[2];
       const E = 0.8;
       const land = ctx.rig.land;
       const sx = (land.height(cx + E, cz) - land.height(cx - E, cz)) / (2 * E);

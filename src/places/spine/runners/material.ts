@@ -48,7 +48,7 @@ float burnAt(vec3 rest) {
   float down = clamp((uBurn.y - rest.y) / 0.7, -0.2, 1.2);
   float line = uBurn.x - 0.22 * down - 0.06 * sin(down * 9.0);
   float fork = uBurn.x + 0.26 - 0.1 * down + 0.05 * sin(down * 7.0 + 2.0);
-  float across = min(abs(rest.x - line), abs(rest.x - fork) * 1.9 + 0.35 * uBurn.w);
+  float across = min(abs(rest.x - line), abs(rest.x - fork) * 3.0 + 1.6 * uBurn.w);
   float side = smoothstep(-0.16, 0.02, rest.z * sign(uBurn.z));
   float ends = smoothstep(0.0, 0.12, down + 0.1) * smoothstep(1.15, 0.85, down);
   return across / uBurn.w + (1.0 - side * ends) * 4.0;
@@ -86,6 +86,8 @@ varying float vKind;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
+  // The hide is drawn from both sides, and the side that is seen is the outside.
+  if (dot(n, toCamera) < 0.0) n = -n;
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   float fine = vnoise3(vRest * 90.0);
   // Under the coat: matted under-fur, dark because the coat stands over it.
@@ -99,7 +101,7 @@ void main() {
   albedo = mix(albedo, vec3(0.88, 0.89, 0.91), shank * smoothstep(0.35, 0.8, n.y + 0.5 * (nap - 0.5)) * 0.7);
   // The pads under the feet are bare and dark.
   float pad = 1.0 - smoothstep(0.004, 0.02, vRest.y);
-  albedo = mix(albedo, vec3(0.022, 0.018, 0.018) * (0.7 + 0.6 * fine), pad);
+  albedo = mix(albedo, vec3(0.06, 0.048, 0.044) * (0.7 + 0.6 * fine), pad);
   float rough = 0.95 + 0.05 * pad;
   float occ = 0.6;
   if (vKind > 0.5) {
@@ -124,8 +126,14 @@ void main() {
     skin = mix(skin, vec3(0.16, 0.09, 0.05) * (0.6 + 0.8 * fine), smoothstep(0.55, 0.95, ragged) * 0.8);
     // Round it, under the singed coat, the hide is scorched dark.
     albedo = mix(albedo, vec3(0.085, 0.04, 0.028) * (0.6 + 0.8 * fine), (1.0 - smoothstep(1.0, 3.4, ragged)) * 0.9);
+    // Down the middle the hide is split open to the raw flesh, wet and dark red.
+    float gash = 1.0 - smoothstep(0.12, 0.42, ragged + 0.25 * (vnoise3(vRest * vec3(4.0, 15.0, 15.0) + 7.0) - 0.5));
+    vec3 flesh = mix(vec3(0.075, 0.006, 0.006), vec3(0.3, 0.035, 0.022), clamp(0.9 * fine * grain + 0.5 * splitFine + 0.3 * torn, 0.0, 1.0));
+    // Black crust lies over it in flakes.
+    float crust = smoothstep(0.5, 0.62, vnoise3(vRest * vec3(11.0, 30.0, 30.0) + 19.0));
+    skin = mix(skin, mix(flesh, char_, 0.85 * crust), gash * 0.92);
     albedo = mix(albedo, skin, burnt);
-    rough = mix(rough, 0.8 - 0.35 * split, burnt);
+    rough = mix(rough, 0.8 - 0.35 * max(split, gash), burnt);
     occ = mix(occ, 0.9 - 0.4 * split, burnt);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
@@ -183,7 +191,7 @@ void main() {
   float singe = 0.0;
   if (uBurn.w > 0.0) {
     float d = burnAt(aRoot) + 0.3 * (vnoise3(aRoot * 7.0) - 0.5);
-    singe = 1.0 - smoothstep(0.8, 3.6, d);
+    singe = 1.0 - smoothstep(0.8, 2.6, d);
     // Round the wound the coat is not gone but burned short and matted down.
     len *= mix(1.0, 0.25 + 0.3 * fract(seed * 9.1), smoothstep(0.0, 0.7, singe));
     if (d < 0.8 + 0.25 * fract(seed * 5.3)) len = 0.0;
@@ -372,7 +380,7 @@ void main() {
   vec3 albedo = mix(vec3(0.05, 0.035, 0.035), vec3(0.17, 0.1, 0.09), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
   // Rime where it looks up, in beads.
   float crystals = vnoise3(vWorld * 520.0);
-  float rime = smoothstep(0.25, 0.75, n.y + 1.5 * uCoat.w + 1.3 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
+  float rime = smoothstep(0.25, 0.75, n.y + 0.5 * uCoat.w - 0.1 + 1.3 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, rime);
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);
