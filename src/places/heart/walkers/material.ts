@@ -101,34 +101,41 @@ void main() {
   slope *= 1.0 - pole;
   vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril));
 
-  // A dry ashen hide. Soot lies in the cracks, in the creases of the joints and under the belly; the crown and the roots are bone.
+  // A charred hide, near black, cracked like burnt wood, with pale flakes and tendon showing; the crown and the roots are bone.
   float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
   lum = mix(lum, 0.9, pole);
   float crack = mix(smoothstep(0.16, 0.48, high), 0.8, pole);
   float mottle = vnoise(vUv * 0.9 + seed * 7.0);
   float tone = clamp(pale + 0.2 * (mottle - 0.5) + 0.3 * (lum - 1.0) - 0.2 * ringAmp * (1.0 - ridge), 0.0, 1.0);
   vec3 soot = vec3(0.03, 0.029, 0.03);
-  vec3 skin = vec3(0.25, 0.24, 0.228) * (0.5 + 0.5 * mix(lum, 1.0, 0.35 * limb));
+  vec3 skin = vec3(0.105, 0.097, 0.09) * (0.5 + 0.5 * mix(lum, 1.0, 0.35 * limb));
   vec3 bone = vec3(0.45, 0.41, 0.34) * (0.5 + 0.5 * lum);
   vec3 albedo = mix(mix(soot, skin, smoothstep(0.0, 0.5, tone)), bone, smoothstep(0.5, 1.0, tone)) * (0.35 + 0.65 * crack);
+
+  float flake = smoothstep(1.22, 1.6, lum + 0.25 * (mottle - 0.5)) * (1.0 - tendril) * (1.0 - smoothstep(0.5, 0.8, tone));
+  albedo = mix(albedo, bone * 0.8, (0.5 - 0.25 * limb) * flake);
+  // The roots are clean bone: the lava keeps them scoured.
+  albedo = mix(albedo, vec3(0.58, 0.53, 0.44) * (0.75 + 0.25 * crack), 0.75 * tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
   float up = smoothstep(0.15, 0.75, ng.y);
   float ash = up * smoothstep(0.85, 0.3, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.6 + 0.4 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
-  albedo = mix(albedo, vec3(0.33, 0.325, 0.32) * (0.7 + 0.5 * grit), clamp(0.85 * ash + 0.6 * dust, 0.0, 0.9));
+  albedo = mix(albedo, vec3(0.33, 0.325, 0.32) * (0.7 + 0.5 * grit), 0.4 * ash * smoothstep(0.4, 3.0, vWorld.y));
+  // The dust is the crust's own: a foot is as dark as what it stands on.
+  albedo = mix(albedo, vec3(0.17, 0.16, 0.155) * (0.7 + 0.5 * grit), 0.5 * dust);
 
   float occ = vInfo.y * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   vec3 c = rigShade(vWorld, n, v, albedo, 0.93, occ);
   // The tendrils and the rags are thin: the heat under them shows through them.
-  float thin = tendril * 0.22 + rag * 0.15;
+  float thin = tendril * 0.4 + rag * 0.15;
   c += thin * albedo * lakeIrradiance(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;
   // Where a root lies in open lava it glows from the tip: the lake itself says where it is open.
   if (vHeat > 0.001) {
     float open = dot(lakeGlow(vWorld.xz, 0.6), vec3(0.3, 0.6, 0.1)) / (max(uCast, 0.05) * dot(blackbody(1150.0), vec3(0.3, 0.6, 0.1)));
-    float hot = vHeat * smoothstep(0.02, 0.3, open);
-    c += blackbody(mix(820.0, 1150.0, hot)) * hot * hot * 0.6;
+    float hot = min(vHeat, 1.0) * max(smoothstep(0.004, 0.08, open), clamp(vHeat - 1.0, 0.0, 1.0));
+    c += blackbody(mix(1100.0, 1400.0, hot)) * hot * hot * (0.5 + 0.5 * crack);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

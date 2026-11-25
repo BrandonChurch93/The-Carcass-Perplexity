@@ -188,11 +188,11 @@ export class Animal {
     this.bodyLocal = new Float32Array(BODY_RINGS * BODY_SIDES * 3);
     for (let i = 0; i < BODY_RINGS; i++) {
       const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (BODY_RINGS - 1));
-      const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.4);
+      const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.3);
       const x = (t - 0.5) * b.bodyLen;
-      const top = b.bodyTop * e * (1 + 0.55 * b.hump * gauss((t - 0.62) / 0.3) - 0.14 * gauss((t - 0.43) / 0.1));
+      const top = b.bodyTop * e * (1 + 0.22 * b.hump * gauss((t - 0.66) / 0.25) - 0.08 * gauss((t - 0.43) / 0.1));
       // A deep chest forward and a belly drawn up behind it.
-      const keel = b.bodyKeel * e * (0.5 + 0.78 * gauss((t - 0.66) / 0.17) - 0.1 * gauss((t - 0.3) / 0.12));
+      const keel = b.bodyKeel * e * (0.74 + 0.34 * gauss((t - 0.66) / 0.2) - 0.1 * gauss((t - 0.3) / 0.12));
       const wide = b.bodyWide * e * (1 + 0.2 * gauss((t - 0.25) / 0.1) + 0.26 * gauss((t - 0.71) / 0.12) - 0.24 * gauss((t - 0.43) / 0.1));
       for (let j = 0; j < BODY_SIDES; j++) {
         const a = (j / BODY_SIDES) * Math.PI * 2;
@@ -248,11 +248,15 @@ export class Animal {
     this.neckLocal = new Float32Array(NECK_RINGS * NECK_SIDES * 2);
     for (let i = 0; i < NECK_RINGS; i++) {
       const s = i / (NECK_RINGS - 1);
-      let r = b.neckR * (0.22 + 0.78 * Math.pow(1 - s, 1.7)) * (1 + 0.5 * gauss(s / 0.07)) + 0.07 * k * gauss((s - 0.94) / 0.045);
+      // It thickens again over its last quarter, to the crown the roots splay from.
+      let r = b.neckR * (0.26 + 0.74 * Math.pow(1 - s, 1.7)) * (1 + 0.5 * gauss(s / 0.07)) + 0.15 * k * smooth(0.7, 0.96, s);
       if (i >= NECK_RINGS - 2) r *= i === NECK_RINGS - 1 ? 0.05 : 0.7;
+      // It starts inside the shoulders, closed.
+      if (i === 0) r *= 0.3;
       for (let j = 0; j < NECK_SIDES; j++) {
         const a = (j / NECK_SIDES) * Math.PI * 2;
-        const m = 1 + 0.2 * (wrap(s * 16, a, 4, seed + 3) - 0.5) + 0.06 * Math.cos(a * 2 + s * 5) + 0.05 * Math.cos(a * 3 + 2);
+        // Ribbed lengthwise, like sinew.
+        const m = 1 + 0.16 * (wrap(s * 16, a, 4, seed + 3) - 0.5) + 0.05 * Math.cos(a * 2 + s * 5) + 0.1 * Math.cos(a * 6 + s * 2.5 + seed);
         this.neckLocal[(i * NECK_SIDES + j) * 2] = Math.cos(a) * r * m;
         this.neckLocal[(i * NECK_SIDES + j) * 2 + 1] = Math.sin(a) * r * m * (1 - 0.12 * (1 - s));
       }
@@ -280,7 +284,7 @@ export class Animal {
       const at = fork ? 3 + Math.floor(hash(i, seed + 6) * 4) : 0;
       const whole = b.tendrilLen * (0.75 + 0.5 * hash(fork ? parent : i, seed + 2)) * (!fork && (fork ? parent : i) % 3 === 2 ? 0.8 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (0.042 + 0.03 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.55 * (1 - (0.6 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (0.062 + 0.04 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.55 * (1 - (0.6 * at) / (TENDRIL_RINGS - 1)) : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
         const rad = r === TENDRIL_RINGS - 1 ? 0.006 * k : thick * (1 - 0.62 * Math.pow(u, 1.3)) * (1 + 0.35 * (hash(i * 3 + r, seed + 9) - 0.4));
@@ -454,9 +458,9 @@ export class Animal {
       }
       // Thickness: a thigh with muscle on it, then shafts that taper, with a knob at each joint.
       let r: number;
-      if (s < S1) r = lerp(0.215, 0.15, s / S1) + 0.035 * gauss((s / S1 - 0.2) / 0.22);
-      else if (s < S2) r = lerp(0.135, 0.098, (s - S1) / this.tibia);
-      else r = lerp(0.094, 0.08, Math.min(1, (s - S2) / this.meta));
+      if (s < S1) r = lerp(0.21, 0.13, s / S1) + 0.035 * gauss((s / S1 - 0.2) / 0.22);
+      else if (s < S2) r = lerp(0.108, 0.076, (s - S1) / this.tibia);
+      else r = lerp(0.072, 0.064, Math.min(1, (s - S2) / this.meta));
       // A bone widens toward its end before the knuckle itself.
       const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
       r += 0.11 * head(s - S1, 0.24) + 0.115 * head(s - S2, 0.21) + 0.07 * head(s - S3, 0.16);
@@ -495,7 +499,7 @@ export class Animal {
       }
       for (let n = 0; n <= LEG_SIDES; n++) {
         const sole = inPad && (PAD[i - pad] as [number, number])[0] <= 0.02 ? 0.6 : 1;
-        this.skin.describe(tube, i, n, s + j * 1.3, (n / LEG_SIDES) * Math.PI * 2 * Math.max(r, 0.14 * k), lerp(0.36, 0.52, smooth(0, 1.5 * k, s)) - 0.26 * knob + 0.1 * shape, sole * lerp(0.4, 1, smooth(0, 1.1 * k, s)), r, b.seed, inPad ? 4 : 3, knob);
+        this.skin.describe(tube, i, n, s + j * 1.3, (n / LEG_SIDES) * Math.PI * 2 * Math.max(r, 0.14 * k), (inPad ? 0.38 : lerp(0.36, 0.52, smooth(0, 1.5 * k, s)) - 0.26 * knob + 0.1 * shape), sole * lerp(0.4, 1, smooth(0, 1.1 * k, s)), r, b.seed, inPad ? 4 : 3, knob);
       }
     }
     // Sinew behind the two shafts below the knee: a strand from knuckle to knuckle that stands off the bone between them.
@@ -730,12 +734,12 @@ export class Animal {
 
     // Neck.
     const root: V3 = [
-      cx + f[0] * 0.41 * b.bodyLen - u[0] * 0.14 * b.bodyKeel,
-      cy + f[1] * 0.41 * b.bodyLen - u[1] * 0.14 * b.bodyKeel,
-      cz + f[2] * 0.41 * b.bodyLen - u[2] * 0.14 * b.bodyKeel,
+      cx + f[0] * 0.36 * b.bodyLen + u[0] * 0.1 * b.bodyTop,
+      cy + f[1] * 0.36 * b.bodyLen + u[1] * 0.1 * b.bodyTop,
+      cz + f[2] * 0.36 * b.bodyLen + u[2] * 0.1 * b.bodyTop,
     ];
     const fed = env.drift(aim.target[0], aim.target[1], seconds);
-    const low: V3 = [fed[0], 0.36 * b.tendrilLen, fed[1]];
+    const low: V3 = [fed[0], 0.6 * b.tendrilLen, fed[1]];
     const high: V3 = [
       root[0] + fwd[0] * aim.raised[0] + right[0] * aim.raised[2],
       Math.max(0.8 * b.tendrilLen, root[1] + aim.raised[1]),
@@ -957,7 +961,7 @@ export class Animal {
     const ox = c[crown] as number;
     const oy = c[crown + 1] as number;
     const oz = c[crown + 2] as number;
-    const rim = b.neckR * 0.3 + 0.05 * b.k;
+    const rim = b.neckR * 0.3 + 0.13 * b.k;
     const roots = this.roots;
     this.tendrils.forEach((t, index) => {
       const ca = Math.cos(t.angle);
@@ -1043,8 +1047,13 @@ export class Animal {
         const cy2 = dz * ax - dx * az;
         const cz2 = dx * ay - dy * ax;
         skin.ring(t.tube, i, px, py, pz, ax, ay, az, cx2, cy2, cz2, t.local, i * TENDRIL_SIDES * 2);
-        // The part of a root that lies on the crust: where the lake is open under it, the hide makes it glow.
-        const heat = smooth(0.25, 0.85, uu) * smooth(0.45 * b.k, 0.1 * b.k, py);
+        // A root glows from inside toward its tip and toward the crust: where the lake is open under it, the hide lets it show.
+        let heat = smooth(0.0, 0.6, uu) * smooth(1.7 * b.k, 0.2 * b.k, py);
+        // Over a seam the pictures show it is in the heat whatever the lake's coarse map of its glow says: one is added to say so.
+        if (heat > 0.01) {
+          const crust = this.env.undrift(px, pz, seconds);
+          heat += smooth(1.8, 0.6, this.env.seam(crust[0], crust[1]).d);
+        }
         skin.setHeat(t.tube, i, heat);
       }
       skin.normals(t.tube);

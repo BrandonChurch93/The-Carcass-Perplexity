@@ -32,9 +32,9 @@ interface Character {
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
 const CAST: Character[] = [
   { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55 },
-  { role: 'feeds', skater: 0.22, heavy: 1.12, neck: 1.02, wide: 1.0, hump: 0.7 },
-  { role: 'walks', skater: 0.85, heavy: 0.86, neck: 1.08, wide: 1.1, hump: 0.3 },
-  { role: 'tastes', skater: 0.4, heavy: 0.92, neck: 1.15, wide: 0.82, hump: 0.45 },
+  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 1.0, wide: 1.0, hump: 0.7 },
+  { role: 'walks', skater: 0.3, heavy: 1.04, neck: 1.0, wide: 1.0, hump: 0.45 },
+  { role: 'tastes', skater: 0.4, heavy: 0.98, neck: 1.15, wide: 0.82, hump: 0.45 },
   { role: 'turns', skater: 0.6, heavy: 1.05, neck: 0.9, wide: 0.95, hump: 0.85 },
   { role: 'shifts', skater: 0.3, heavy: 0.95, neck: 1.0, wide: 1.12, hump: 0.4 },
   { role: 'walks', skater: 0.7, heavy: 0.9, neck: 1.1, wide: 1.05, hump: 0.35 },
@@ -55,28 +55,28 @@ export function makeBuild(index: number, rng: Rng): Build {
   return {
     k,
     seed: index * 1.618 + 0.37,
-    bodyLen: 3.9 * k * v(0.92, 1.1),
-    bodyTop: 0.8 * k * c.heavy * v(0.92, 1.08),
-    bodyKeel: 1.02 * k * c.heavy * v(0.9, 1.12),
-    bodyWide: 0.92 * k * c.heavy * v(0.92, 1.08),
+    bodyLen: 5.3 * k * v(0.92, 1.1),
+    bodyTop: 1.0 * k * c.heavy * v(0.92, 1.08),
+    bodyKeel: 1.26 * k * c.heavy * v(0.9, 1.12),
+    bodyWide: 1.18 * k * c.heavy * v(0.92, 1.08),
     hump: c.hump,
-    hipFore: 1.12 * k,
-    hipSide: 0.58 * k * c.heavy,
-    hipUp: 0.22 * k,
-    femur: lerp(2.7, 2.3, c.skater) * k * v(0.95, 1.05),
-    kneeOut: lerp(0.1, 0.95, c.skater),
-    kneeUp: lerp(0.02, 0.75, c.skater),
+    hipFore: 1.85 * k,
+    hipSide: 0.98 * k * c.heavy,
+    hipUp: -0.42 * k,
+    femur: lerp(4.0, 3.5, c.skater) * k * v(0.95, 1.05),
+    kneeOut: lerp(0.1, 0.4, c.skater),
+    kneeUp: lerp(0, 0.2, c.skater),
     hock: lerp(0.46, 0.52, c.skater) * v(0.94, 1.06),
-    stanceFore: 3.9 * k * v(0.9, 1.06),
-    stanceSide: 3.2 * k * c.wide,
+    stanceFore: 3.6 * k * v(0.9, 1.06),
+    stanceSide: 2.3 * k * c.wide,
     standH: 9.0 * k * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
-    legR: lerp(0.86, 0.76, c.skater) * c.heavy,
-    padR: 0.56 * k * v(0.92, 1.1),
-    neckLen: 11.4 * k * c.neck,
-    neckR: 0.33 * k * c.heavy,
-    tendrils: 10 + (index % 4),
-    tendrilLen: 2.3 * k * v(0.9, 1.15),
+    legR: lerp(1.24, 1.08, c.skater) * c.heavy,
+    padR: 0.54 * k * v(0.92, 1.1),
+    neckLen: 11.8 * k * c.neck,
+    neckR: 0.56 * k * c.heavy,
+    tendrils: 12 + (index % 4),
+    tendrilLen: 2.9 * k * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
   };
 }
@@ -101,28 +101,31 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const staged = (w.heading * Math.PI) / 180;
   const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'tastes' && c.role !== 'turns';
   // How far ahead of its shoulders the tuft comes down when the neck is drawn out with a little slack.
-  const drop = b.standH - 0.14 * b.bodyKeel - 0.3 * k - 0.36 * b.tendrilLen;
-  const reach = Math.sqrt(Math.max(4, 0.86 * b.neckLen * (0.86 * b.neckLen) - drop * drop));
+  const drop = b.standH + 0.1 * b.bodyTop - 0.3 * k - 0.6 * b.tendrilLen;
+  const reach = Math.sqrt(Math.max(4, 0.9 * b.neckLen * (0.9 * b.neckLen) - drop * drop));
   const phase = w.phase;
 
   // The seam it can reach from where it stands, if there is one: the point of it nearest to where the tuft would come down.
   const feedAt = (x: number, zz: number, yaw: number, side: number): [number, number, number] => {
     const fx = Math.sin(yaw);
     const fz = -Math.cos(yaw);
-    const rx = x + fx * 0.41 * b.bodyLen;
-    const rz = zz + fz * 0.41 * b.bodyLen;
+    const rx = x + fx * 0.36 * b.bodyLen;
+    const rz = zz + fz * 0.36 * b.bodyLen;
     let best: [number, number, number] = [rx + fx * reach - fz * side, rz + fz * reach + fx * side, 1e9];
     let score = 1e9;
-    for (let turn = -1.2; turn <= 1.2; turn += 0.15) {
-      for (const far of [0.75, 1, 1.2]) {
+    // The near one comes to stand astride its seam: it may bring its tuft down beside its forelegs.
+    const round = index === 0 ? 2.4 : 1.2;
+    for (let turn = -round; turn <= round; turn += 0.15) {
+      for (const far of index === 0 ? [0.45, 0.75, 1, 1.2] : [0.75, 1, 1.2]) {
         const dx = Math.sin(yaw + turn) * reach * far;
         const dz = -Math.cos(yaw + turn) * reach * far;
         const s = env.seam(rx + dx, rz + dz);
         const d = Math.hypot(s.x - rx, s.z - rz);
-        if (s.d > 3 * k || d < 0.6 * reach || d > 1.12 * reach) continue;
+        if (s.d > 3 * k || d < (index === 0 ? 0.4 : 0.6) * reach || d > 1.12 * reach) continue;
         const ahead = ((s.x - rx) * fx + (s.z - rz) * fz) / d;
-        if (ahead < 0.3) continue;
-        const cost = Math.abs(d - reach) + (1 - ahead) * 3 * k + s.d * 0.5;
+        if (ahead < (index === 0 ? -0.4 : 0.3)) continue;
+        // The near one brings its tuft down on its north side, where the low camera by the one that sank can see it.
+        const cost = Math.abs(d - reach) + (1 - ahead) * 3 * k + s.d * 0.5 + (index === 0 ? 0.25 * Math.max(0, rz - s.z) : 0);
         if (cost < score) {
           score = cost;
           best = [s.x, s.z, cost];
@@ -181,7 +184,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // The near one and the one the long lens looks at have their tufts in the seam when the keys look at them.
       const beat = fract((seconds - (index === 0 ? 8 : index === 1 ? 12.2 : phase * 23)) / 23);
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : smooth(0.0, 0.1, beat) * (1 - smooth(0.2, 0.32, beat));
-      return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target, raised: carried(seconds, -0.38), shape: 0.2 * up };
+      return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target, raised: carried(seconds, -0.38), shape: lerp(0.36, 0.2, up) };
     };
     return { sigma, body, neck, fidget: turning ? 0 : c.role === 'shifts' ? 5 : 6.5 + 4 * hash(index, 3), dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 0.75 * k };
   }
@@ -201,7 +204,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - bout) < Math.abs((b.stride * per) / speed - bout)) per = q;
   const period = (b.stride * per) / speed;
   // The one that shifts its weight rests while the long lens looks at the group.
-  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
+  let shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
   const area = 1 - ramp;
   const gone = (u: number): number => ramp * (u * u * u - 0.5 * u * u * u * u);
   const ease = (f: number): number => {
@@ -210,11 +213,23 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     if (t > 1 - ramp) return 1 - gone((1 - t) / ramp) / area;
     return (ramp / 2 + t - ramp) / area;
   };
-  const sigma = (seconds: number): number => {
-    const tau = seconds / period + shift;
+  const sigmaAt = (seconds: number, lag: number): number => {
+    const tau = seconds / period + lag;
     const n = Math.floor(tau);
     return REST + per * (n + ease(tau - n));
   };
+  if (index === 2) {
+    // The second of the feeding picture has a hind pad in the air, half way through its swing, when the long lens looks.
+    let least = 1;
+    for (let q = 0; q < 240; q++) {
+      const miss = Math.abs(fract(sigmaAt(KEY_TIMES['heart-3'], q / 240) + 0.5 - 0.88 + 0.5) - 0.5);
+      if (miss < least) {
+        least = miss;
+        shift = q / 240;
+      }
+    }
+  }
+  const sigma = (seconds: number): number => sigmaAt(seconds, shift);
   // Centre the error of the stop and go against the steady staging over the key frames.
   let low = 1e9;
   let high = -1e9;
@@ -236,7 +251,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const settle = 0.7 / period;
     const depth = c.role === 'walks' ? 0.35 : 1;
     const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away);
-    return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.46 + 0.22 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, 0, down) };
+    return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.32 + 0.12 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, 0.36, down) };
   };
   void t0;
   // In a rest it may shift its weight from pad to pad: not in the last moments before it walks on.
