@@ -131,9 +131,9 @@ const MAIN: [number, number][] = [
 export const FAN_FROM = 136;
 
 /** The east arm of the fan: it runs along the shore, so the fan is a long low lobe. It leaves the main stream at `BRAID_FROM` metres from the lip. */
-export const BRAID_FROM = FAN_FROM - 6;
+export const BRAID_FROM = FAN_FROM + 2;
 const ARM_TAIL: [number, number][] = [
-  [-27, -355],
+  [-28, -353],
   [-12, -349],
   [6, -345],
   [25, -342],
@@ -155,8 +155,8 @@ const HALF: [number, number][] = [
   [100, 4.8],
   [FAN_FROM - 16, 3.6],
   [FAN_FROM - 4, 4.4],
-  [FAN_FROM + 4, 10],
-  [FAN_FROM + 9, 26],
+  [FAN_FROM + 4, 5.4],
+  [FAN_FROM + 9, 24],
   [FAN_FROM + 14, 44],
   [FAN_FROM + 22, 60],
   [FAN_FROM + 38, 76],

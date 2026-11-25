@@ -739,7 +739,7 @@ export class Animal {
         w = ff > 1 - win ? (ff - (1 - win)) / win : -1;
         unload = ff < 0.5 * win ? 1 - smooth(-0.3 * win, 0.5 * win, ff) : smooth(1 - 1.45 * win, 1 - win, ff) * (1 - smooth(1 - 0.3 * win, 1 + 0.5 * win, ff));
         land = ff < 0.45 * win ? Math.pow(Math.sin((Math.PI * ff) / (0.45 * win)), 2) : 0;
-        high = b.stepH * (0.45 + 0.4 * hash(event, j + b.seed));
+        high = b.stepH * (0.75 + 0.5 * hash(event, j + b.seed));
       }
       // One that walks and rests re-places a fore pad once in a long rest, and walks on from where it put it.
       const walking = w >= 0;
@@ -800,7 +800,7 @@ export class Animal {
     const turn = om * seconds + plan.habit.phase * 6.283;
     const idle = Math.sin(turn);
     const idle2 = Math.sin(turn * 0.62 + b.seed * 4);
-    const look = 0.055 * Math.sin(turn + 1.9) + 0.03 * idle2;
+    const look = 0.09 * Math.sin(turn + 1.9) + 0.05 * idle2;
     const fwd: V3 = [Math.sin(at.yaw + look), 0, -Math.cos(at.yaw + look)];
     const right: V3 = [-fwd[2], 0, fwd[0]];
     // The tuft works in the pool: it is lifted a little, set down beside where it was and pushed in, and the animal pulls back on it.
@@ -822,19 +822,20 @@ export class Animal {
       const r1 = 0.5 * k * (0.5 + 0.5 * hash(e + 1, b.seed + 21));
       digX = much * lerp(Math.cos(a0) * r0, Math.cos(a1) * r1, move);
       digZ = much * lerp(Math.sin(a0) * r0, Math.sin(a1) * r1, move);
-      digY = much * k * (0.45 * Math.sin(Math.PI * move) - 0.2 * smooth(0.34, 0.5, ff) * (1 - smooth(0.82, 1, ff)));
+      digY = much * k * (0.8 * Math.sin(Math.PI * move) - 0.2 * smooth(0.34, 0.5, ff) * (1 - smooth(0.82, 1, ff)));
       pull = much * smooth(0.45, 0.7, ff) * (1 - smooth(0.8, 1, ff));
       gulp = ff;
       puff = much * smooth(0.3, 0.42, ff) * (1 - smooth(0.5, 0.95, ff)) * (0.4 + 1.2 * hash(e, b.seed + 23));
     }
     // The shoulders answer the neck: the body starts to take the weight of the neck over its legs a little before the head moves.
     const lead = plan.neck(seconds + 0.6).down;
-    const sideways = shiftSide * 0.62 * k + 0.2 * k * idle2;
-    const forwards = shiftFore * 0.4 * k + 0.2 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.28 * k * pull;
+    // It is never still on its stilts: the weight goes from side to side and fore and aft by a good part of the trunk's width, in its own time.
+    const sideways = shiftSide * 0.8 * k + 0.5 * k * idle2;
+    const forwards = shiftFore * 0.4 * k + 0.45 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.6 * k * pull;
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
-    const pitch = -0.1 * lead - 0.05 * shiftFore + 0.02 * idle2 + 0.025 * pull;
-    const roll = 0.085 * shiftSide + 0.018 * idle;
+    const pitch = -0.1 * lead - 0.05 * shiftFore + 0.04 * idle2 + 0.05 * pull;
+    const roll = 0.085 * shiftSide + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -854,7 +855,7 @@ export class Animal {
     }
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
-    const cy = ride - 0.15 * k * dip - 0.13 * k * lean - plan.dip * lead - 0.05 * k * (1 - Math.sin(turn + 0.9));
+    const cy = ride - 0.15 * k * dip - 0.13 * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
     this.puff = puff;
@@ -867,18 +868,20 @@ export class Animal {
     const r: V3 = [right[0] * cr + u0[0] * sr, right[1] * cr + u0[1] * sr, right[2] * cr + u0[2] * sr];
     const u: V3 = [u0[0] * cr - right[0] * sr, u0[1] * cr - right[1] * sr, u0[2] * cr - right[2] * sr];
 
-    // Body: rigid. Local x is forward, y up, z left.
+    // Body: rigid but for its breath, which swells the middle of it. Local x is forward, y up, z left.
     {
       const p = skin.position;
       const w = BODY_SIDES + 1;
       const local = this.bodyLocal;
+      const breath = 0.045 * Math.sin(seconds * LOOP * 3 + b.seed * 2.3);
       for (let i = 0; i < BODY_RINGS; i++) {
         let o = (this.body.start + i * w) * 3;
+        const swell = 1 + breath * Math.sin((Math.PI * i) / (BODY_RINGS - 1));
         for (let j = 0; j < w; j++) {
           const q = (i * BODY_SIDES + (j === BODY_SIDES ? 0 : j)) * 3;
           const lx = local[q] as number;
-          const ly = local[q + 1] as number;
-          const lz = -(local[q + 2] as number);
+          const ly = (local[q + 1] as number) * swell;
+          const lz = -(local[q + 2] as number) * swell;
           p[o++] = cx + f[0] * lx + u[0] * ly + r[0] * lz;
           p[o++] = cy + f[1] * lx + u[1] * ly + r[1] * lz;
           p[o++] = cz + f[2] * lx + u[2] * ly + r[2] * lz;

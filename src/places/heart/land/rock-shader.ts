@@ -173,7 +173,7 @@ void main() {
   // By the vents: sulphur, as a crust that fades out, yellow going to cream where it is thick. It lies low, in the hollows and on what looks up,
   // in blots a hand or two across, and the rock between stays black.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 1.7);
-  float gas = smoothstep(3.6, 0.5, dc);
+  float gas = smoothstep(1.5, 0.3, dc);
   if (gas > 0.0) {
     float low = 1.0 - smoothstep(0.15, 0.75, lift);
     float blot = 0.45 * vnoise3(vWorld * 2.6 + 1.7) + 0.4 * vnoise3(vWorld * 7.0 + 4.1) + 0.2 * (0.5 - vCave) + 0.12 * n0.y + 0.22 * low;
@@ -182,12 +182,16 @@ void main() {
     // A boulder keeps its black top: on a large rock the sulphur lies round the foot only.
     stain *= mix(1.0, low, smoothstep(0.5, 0.9, size));
     float thick = smoothstep(0.45, 0.9, stain) * smoothstep(0.3, 0.7, height);
-    albedo = mix(albedo, mix(vec3(0.4, 0.3, 0.04), vec3(0.75, 0.6, 0.13), thick) * (0.6 + 0.8 * height), 0.92 * stain);
+    albedo = mix(albedo, mix(vec3(0.45, 0.38, 0.1), vec3(0.82, 0.76, 0.42), thick) * (0.6 + 0.8 * height), 0.92 * stain);
   }
-  // One mound of crystals at the vent of the crag's foot, with the ground's (land/shaders.ts): the small stones within reach of the short crack
-  // are crusted whole, lemon going to cream on what stands up.
-  float mound = smoothstep(1.05, 0.7, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.5, 0.9, size));
-  albedo = mix(albedo, mix(vec3(0.9, 0.7, 0.1), vec3(0.94, 0.88, 0.58), smoothstep(0.35, 0.8, height)), mound);
+  // One mound of crystals at the vent of the crag's foot, with the ground's (land/shaders.ts, the same reach, colours and blots): the small
+  // stones within half a metre of the short crack carry a pale cream crust, lemon on the knobs only, and the dark rock shows between the blots.
+  float mound = smoothstep(0.55, 0.3, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.5, 0.9, size));
+  if (mound > 0.0) {
+    float knob = smoothstep(0.62, 0.85, height);
+    float blots = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
+    albedo = mix(albedo, mix(vec3(0.84, 0.8, 0.58), vec3(0.9, 0.78, 0.3), knob) * (0.7 + 0.5 * knob), mound * blots);
+  }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
   // Undersides and the faces that lean over see the ground, not the sky.
   occ *= mix(0.25, 1.0, smoothstep(-0.6, 0.1, n0.y)) * mix(0.6, 1.0, smoothstep(0.0, 0.55, n0.y));
