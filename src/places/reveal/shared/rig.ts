@@ -1,6 +1,6 @@
 // The light rig of the rise: the uniforms every surface shares. One sun, the blue of the air, the edge of the planet, and the beat of the Heart.
 import * as THREE from 'three';
-import { BEAT, KM, LIMB, SUN, X, Z, halfHeightAt } from './anchors';
+import { BEAT, KM, LIMB, SUN, X, Z, halfHeightAt, handoff } from './anchors';
 import { COVER_RECT } from './weather';
 
 export interface Emitter {
@@ -37,6 +37,8 @@ export function createRig(): Rig {
     uAirColour: { value: new THREE.Color(0.1, 0.2, 0.42) },
     uLimb: { value: new THREE.Vector4(X(LIMB.cx), Z(LIMB.cy), LIMB.r * KM, 1 / (LIMB.r * KM)) },
     uViewKm: { value: 20 },
+    // 0 on the frame of the handoff, where only water and rings are drawn; 1 once the view is 1.7 times as wide.
+    uArrive: { value: 0 },
     // The cloud of the world (shared/weather.ts): the sky folder gives the pictures.
     uCloudTile: { value: null },
     uCloudCover: { value: null },
@@ -66,6 +68,8 @@ export function createRig(): Rig {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uBeat as THREE.IUniform<number>).value = beat(seconds);
       (uniforms.uViewKm as THREE.IUniform<number>).value = halfHeightAt(Math.max(0, seconds));
+      const wide = Math.min(1, Math.max(0, (halfHeightAt(Math.max(0, seconds)) / handoff.revealHalfHeightKm - 1) / 0.7));
+      (uniforms.uArrive as THREE.IUniform<number>).value = wide * wide * (3 - 2 * wide);
     },
     beforeSample: () => undefined,
     dispose: () => {

@@ -2,7 +2,8 @@
 // Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
 import { ground, locate } from '../ridge';
-import { DUSK, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { DUSK, INSIDE_FROM, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { stagedSeconds } from './stage';
 
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
 export const LAND = { minX: -1800, maxX: 3800, minZ: -1100, maxZ: 1700, width: 1024, height: 512 };
@@ -12,7 +13,7 @@ export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 /** The round lights the rig holds. The strikes may hold six at once; two are kept for the lead. */
 export const MAX_EMITTERS = 8;
 /** How much of a round light's power the storm cloud throws back on the ridge as uFlash: radiance times radius squared, over this many square metres. */
-export const FLASH_AREA = 1.2e8;
+export const FLASH_AREA = 3.6e8;
 
 export type Height = (x: number, z: number) => number;
 /** What lies under the ground at a point: null where it is solid, or the roof of the hollow (metres over the canal floor) and the share of the sky's light that reaches into it (0 to 1). */
@@ -366,6 +367,8 @@ export function createRig(): Rig {
     bake,
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
+      // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
+      (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();

@@ -1,6 +1,10 @@
 // The shape and the timing of a strike, both from its seed and the seconds since its frame: nothing is stepped.
 import { stream, type Rng } from '../../../core/rng';
 import type { Vec3 } from '../../../core/cameras';
+import { FPS } from '../../../config';
+import { SHUTTER } from '../../../core/time';
+import { cut, secondsInPlace } from '../../../film/cut';
+import { UNIT } from '../shared/anchors';
 import { STRIKES, type StrikeSite } from './where';
 
 export interface Line {
@@ -72,10 +76,10 @@ export function figure(rng: Rng, site: StrikeSite): Line[] {
     fork(main, at, rng.range(0.45, 1), 0, site.rise * (1 - at) * rng.range(0.25, 0.6) + 30);
   }
   if (site.branch) {
-    // The bolt forks to a second spire: a branch that comes to ground, as heavy as the main channel's lower half.
+    // The bolt forks to a second spire: a branch that comes to ground, thinner and fainter than the main channel.
     const i = Math.floor(0.42 * (main.length - 1));
     const path2 = crooked(rng, main[i] as Vec3, site.branch, 6, 0.16);
-    lines.push({ points: path2, width: 0.75, gain: 0.7, from: 0.42, to: 1, branch: 0 });
+    lines.push({ points: path2, width: 0.4, gain: 0.32, from: 0.42, to: 1, branch: 0 });
   }
   // Fine side branches near the tip: short hairs off the last hundred metres.
   for (let h = 0; h < 5; h++) fork(main, rng.range(0.82, 0.985), rng.range(0.15, 0.3), 2, rng.range(18, 60));
@@ -99,8 +103,8 @@ export function strokes(rng: Rng): Strokes {
   return { at, share };
 }
 
-/** One return stroke: it rises in 3 ms and falls by half every 14 ms. Smooth, so the four samples of a frame blur it and none of them pops. */
-const pulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * Math.exp(-age / 0.02));
+/** One return stroke: it rises in 3 ms and falls to a sixth in a frame. Smooth, so the four samples of a frame blur it and none of them pops. */
+const pulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * Math.exp(-age / 0.009));
 
 /** How bright the main channel is, the branches are, and the glow left in the channel, at seconds since the strike's frame. */
 export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number } {
@@ -109,7 +113,7 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
   let main = 0;
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(t - (s.at[i] as number));
   const last = s.at[s.at.length - 1] as number;
-  const after = t <= 0 ? 0 : 0.1 * Math.exp(-Math.max(0, t - last) / 0.16) * (1 - Math.exp(-t / 0.01));
+  const after = t <= 0 ? 0 : 0.014 * Math.exp(-Math.max(0, t - last) / 0.11) * (1 - Math.exp(-t / 0.01));
   // The leader finds its way down in the twentieth of a second before the stroke: 0 at the cloud to 1 at the ground.
   const leader = t < 0 ? Math.max(0, 1 + t / 0.05) : 1;
   return { main, branch: pulse(t), after, leader };
@@ -132,6 +136,18 @@ export function timingOf(id: string): Strokes {
   let t = TIMING.get(id);
   if (!t) {
     t = strokes(stream(`spine/strokes/${id}`));
+    // A frame the film is judged on that falls inside the flicker of a strike has a stroke of its own: the stroke nearest to it burns on that frame.
+    const site = STRIKES.find((s) => s.id === id);
+    for (const frame of Object.values(cut.keyFrames)) {
+      const age = site ? secondsInPlace(UNIT, frame) - site.seconds : -1;
+      if (age < 0.025 || age > 0.3) continue;
+      let near = 1;
+      for (let i = 1; i < t.at.length; i++) if (Math.abs((t.at[i] as number) - age) < Math.abs((t.at[near] as number) - age)) near = i;
+      t.at[near] = age;
+      t.share[near] = 1;
+      for (let i = near + 1; i < t.at.length; i++) t.at[i] = Math.max(t.at[i] as number, (t.at[i - 1] as number) + 0.05);
+      for (let i = near - 1; i >= 1; i--) t.at[i] = Math.min(t.at[i] as number, (t.at[i + 1] as number) - 0.03);
+    }
     TIMING.set(id, t);
   }
   return t;
@@ -147,3 +163,24 @@ export function flashAt(seconds: number): Flash | null {
   }
   return null;
 }
+
+/** A thing seen through by leaving pixels out compares its cover with a pattern over the screen. This moves the pattern: by where in the open shutter
+ * a sample is, so that the samples of one frame are spread evenly and add up to the true cover, and by the frame, so that it never stands still. */
+export function ditherAt(seconds: number): number {
+  const frames = seconds * FPS + 1e-6;
+  return ((frames - Math.floor(frames)) / SHUTTER + Math.floor(frames) * 0.6180339887) % 1;
+}
+
+/** The pattern itself, for a fragment shader that declares `uniform float uDither`. */
+export const GRAIN_GLSL = /* glsl */ `
+float grainAt() {
+  return fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
+}
+// What glows in the air is drawn solid, with a depth of its own, so that the air between it and the lens draws over it as over rock. Where it is
+// dimmer than \`full\` it leaves pixels out and the ones it keeps make up the difference.
+vec3 glowOut(vec3 c, float full) {
+  float most = max(c.r, max(c.g, c.b));
+  float cover = clamp(most / full, 0.0, 1.0);
+  if (cover <= grainAt()) discard;
+  return c / max(cover, 1e-3);
+}`;

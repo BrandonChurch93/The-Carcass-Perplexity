@@ -58,7 +58,7 @@ export function makeHerd(rng: Rng): Member[] {
     const d = far.range(FAR_FLOCK.distance[0], FAR_FLOCK.distance[1]);
     const anchor: Anchor = { x: Math.sin(b) * d, z: -Math.cos(b) * d, heading: far.range(0, 360), speed: far.range(0.15, 0.45), size: far.range(0.9, 1.12), up: far.next() < 0.35, phase: far.range(0, 6.28) };
     const start = far.range(-8, 20);
-    const up: [number, number][] = far.next() < 0.3 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
+    const up: [number, number][] = far.next() < 0.14 ? [[-5, 30]] : [[start, start + far.range(2.5, 6)], [start + far.range(11, 16), start + far.range(17, 22)]];
     herd.push({ build: makeBuild(anchor.size * 1.06, 301 + i * 3.77, true), plan: planOf(anchor, up, far), near: false });
   }
   return herd;

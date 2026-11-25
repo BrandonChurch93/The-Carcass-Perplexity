@@ -54,21 +54,23 @@ uniform vec3 uFill;`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 
-// How bright the fog is round the sun, toward d: a wide pale-gold glow and a tighter core. The dome, the air and every mirror read this one function.
+// The fog's glow round the sun, toward d: an orange core a quarter of a radian wide inside a pale one that reaches half the sky. Measured on the
+// approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
+vec3 sunHalo(vec3 d) {
+  float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
+  return uGlowColour * (exp(-a / 0.6) + vec3(2.3, 1.05, 0.38) * exp(-a / 0.32) + vec3(5.0, 3.4, 1.8) * exp(-a / 0.085));
+}
 float sunGlow(vec3 d) {
-  float c = 0.5 + 0.5 * dot(d, uSunDir);
-  c *= c;
-  float c2 = c * c;
-  float c8 = c2 * c2 * c2 * c2;
-  return 0.1 + 0.3 * c2 + 0.55 * c8 + 2.2 * c8 * c8 * c8 * c8;
+  float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
+  return exp(-a / 0.6) + 1.2 * exp(-a / 0.32);
 }
 
-// Radiance of the dawn sky toward d: cold grey overhead, pale toward the horizon, gold toward the sun. The sun's own disc is the dome's.
+// Radiance of the dawn sky toward d: cold grey overhead, paler toward the horizon, gold toward the sun. The sun's own disc is the dome's.
 vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
-  return c + uGlowColour * sunGlow(vec3(d.x, max(d.y, 0.0), d.z)) * smoothstep(-0.2, 0.03, up);
+  return c + sunHalo(vec3(d.x, max(d.y, 0.0), d.z)) * smoothstep(-0.2, 0.03, up);
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky. Cold from above, with the fog's gold glow on the faces
@@ -78,7 +80,9 @@ vec3 skyIrradiance(vec3 n) {
   float up = 0.5 + 0.5 * n.y;
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
   float w = 0.5 + 0.5 * dot(n, uSunDir);
-  return 3.14159 * (e + uGlowColour * (0.2 * w * w));
+  // The place is lit from behind: the bright half of the sky is the sun's. A face that stands up and looks away from it sees the dull half.
+  e *= 1.0 - 0.7 * (1.0 - max(n.y, 0.0)) * (1.0 - w);
+  return 3.14159 * (e + uGlowColour * (0.55 * w * w * w));
 }
 
 // The land under a point: r the ground's height in metres, g how much of the sky the ground there sees (0 to 1), b the height in metres above
@@ -124,21 +128,25 @@ float sunLobe(vec3 n, vec3 v, float rough) {
 }
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
-vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  vec4 land = landAt(p.xz);
+// rigShadeOn is the same for a surface that has already read the land under it (landAt costs a texture read: do not read it twice).
+vec3 rigShadeOn(vec4 land, vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float above = p.y - land.r;
   float contact = contactDrawn(p) * smoothstep(5.0, 0.0, above);
   float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - 0.85 * contact) * occ;
   float sun = sunSeen(land, p.y) * (1.0 - contact) * (0.4 + 0.6 * occ);
   float nl = max(dot(n, uSunDir), 0.0);
-  vec3 e = skyIrradiance(n) * open + uSunColour * (3.14159 * nl * sun);
+  vec3 sky = skyIrradiance(n);
+  vec3 e = sky * open + uSunColour * (3.14159 * nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
+  vec3 env = mix(skyRadiance(r), sky / 3.14159, rough * rough);
   return c + f * env * open + uSunColour * (f * sunLobe(n, v, rough) * nl * sun);
+}
+vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
+  return rigShadeOn(landAt(p.xz), p, n, v, albedo, rough, occ);
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
