@@ -1,8 +1,8 @@
-# Status 55
+# Status 56
 
-2026-11-25 15:33 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 15:51 UTC. Phase 3, the look lock: the Heart.
 
-- `01-shot-heart-02.jpg`: Shot heart-02, the feeding seam: 12 frames spread evenly through the shot, from the final build (new)
-- `02-shot-heart-03.jpg`: Shot heart-03, the lava at the line: 12 frames spread evenly (new)
-- `03-shot-heart-04.jpg`: Shot heart-04, the one that sank: 12 frames spread evenly, the vent opens beside it near the end (new)
-- `04-frame-3578-preview-review.jpg`: Film frame 3578, preview, review tier
+- `01-c02-f2807.jpg`: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine
+- `02-c14-f4091.jpg`: A frame of the review clip itself, frame 4091 (heart-05, the mouth and its fall), 1920 x 1080 at the final tier
+- `03-shot-heart-01.jpg`: Motion sheet of heart-01 from the build kept (9ac88bf): frames across the shot, read left to right, top to bottom
+- `04-shot-heart-05.jpg`: Motion sheet of heart-05 from the build kept (9ac88bf)
