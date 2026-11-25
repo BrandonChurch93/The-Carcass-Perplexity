@@ -124,6 +124,7 @@ describe('the review page with content', () => {
     put(path.join(r, 'deliver', 'film', 'big.mp4'), Buffer.alloc(3_000_000));
     put(path.join(r, 'deliver', 'film', 'mid.mp4'), Buffer.alloc(1_500_000));
     put(path.join(r, 'out', 'clips', 'heart.mp4'), Buffer.alloc(200_000));
+    put(path.join(r, 'deliver', 'film', 'mid.mp4.json'), JSON.stringify({ kind: 'film', note: 'The Heart <as it stands> & music only.' }));
     fs.utimesSync(path.join(r, 'deliver', 'film', 'big.mp4'), new Date('2026-11-25T08:00:00Z'), new Date('2026-11-25T08:00:00Z'));
     fs.utimesSync(path.join(r, 'deliver', 'film', 'mid.mp4'), new Date('2026-11-25T09:00:00Z'), new Date('2026-11-25T09:00:00Z'));
     fs.utimesSync(path.join(r, 'out', 'clips', 'heart.mp4'), new Date('2026-11-25T07:00:00Z'), new Date('2026-11-25T07:00:00Z'));
@@ -178,6 +179,12 @@ describe('the review page with content', () => {
     const part = html.split('<section id="watch">')[1].split('</section>')[0];
     const shown = [...part.matchAll(/<video controls playsinline preload="metadata" src="review\/([^"]+)"/g)].map((m) => m[1]);
     expect(shown).toEqual(['film/mid.mp4', 'clips/heart.mp4']);
+  });
+
+  it('shows the note of a film\'s record under it, and nothing where there is none', () => {
+    const part = html.split('<section id="watch">')[1].split('</section>')[0];
+    expect(part).toContain('<p class="about">The Heart &lt;as it stands&gt; &amp; music only.</p>');
+    expect(part.match(/<p class="about">/g)).toHaveLength(1);
   });
 
   it('puts each narration clip under its words, one line a row', () => {
@@ -354,5 +361,24 @@ describe('keep', () => {
     expect(fs.statSync(path.join(r, 'deliver', 'film', animatic)).mtime.toISOString()).toBe('2026-11-25T00:02:00.000Z');
     const model = review.collect(r, cfg);
     expect(model.watch.videos.map((v: any) => v.name).filter((n: string) => n === clip || n === animatic)).toEqual([clip, animatic]);
+  });
+
+  it('keeps the time a short clip was made, and the page plays a film before a clip made at the same time', async () => {
+    const film = path.join(r, 'out', 'work', 'film');
+    const clips = path.join(r, 'out', 'work', 'clips');
+    const clip = cfg.export.files.heartReview;
+    const made = new Date('2026-11-25T16:11:48Z');
+    put(path.join(film, clip), 'the clip');
+    fs.utimesSync(path.join(film, clip), made, made);
+    fs.mkdirSync(clips, { recursive: true });
+    ffmpeg('-f', 'lavfi', '-i', 'color=c=black:s=64x36:r=10:d=0.5', '-pix_fmt', 'yuv420p', path.join(clips, 'heart.mp4'));
+    fs.utimesSync(path.join(clips, 'heart.mp4'), made, made);
+    await keeper.keep({ root: r, cfg, film: true });
+    const out = await keeper.keep({ root: r, cfg, unit: 'heart' });
+    expect(out.kept.map((k: any) => k.file)).toContain('out/clips/heart.mp4');
+    expect(fs.statSync(path.join(r, 'out', 'clips', 'heart.mp4')).mtime.toISOString()).toBe('2026-11-25T16:11:48.000Z');
+    const shown = review.collect(r, cfg).watch.videos.map((v: any) => `${v.kind}/${v.name}`);
+    expect(shown.indexOf(`film/${clip}`)).toBeGreaterThanOrEqual(0);
+    expect(shown.indexOf(`film/${clip}`)).toBeLessThan(shown.indexOf('clip/heart.mp4'));
   });
 });

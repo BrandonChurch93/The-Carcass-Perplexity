@@ -1,0 +1,14 @@
+{
+  "kind": "clip",
+  "unit": "heart",
+  "name": "heart.mp4",
+  "from": "out/work/film/heart-review.mp4",
+  "format": "preview",
+  "rate": 60,
+  "first": 2507,
+  "last": 4220,
+  "frames": 1714,
+  "sound": null,
+  "made": "ffmpeg from the joined review clip: scale 960:540 lanczos, libx264 preset medium crf 18, yuv420p, a key frame every 60 frames, no sound stream",
+  "note": "The same clip, small and silent: the copy kept in the repo."
+}

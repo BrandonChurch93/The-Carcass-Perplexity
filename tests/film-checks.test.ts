@@ -7,6 +7,7 @@ import path from 'node:path';
 const tool = (name) => import(new URL(`../tools/${name}.mjs`, import.meta.url).href);
 const g5 = await tool('checks/g5');
 const d2 = await tool('checks/d2');
+const d3 = await tool('checks/d3');
 const d7 = await tool('checks/d7');
 const { config, ROOT } = await tool('lib/paths');
 
@@ -139,6 +140,72 @@ describe('D2, the film of the blockout', () => {
     expect((await d2.runD2(ctx, () => goodPreview, () => ({ ...now, engine: 'e2' }))).ok).toBe(false);
     put(root, `deliver/film/${cfg.export.files.preview}`, 'x');
     const first = await d2.runD2(ctx, () => goodPreview, () => now);
+    expect(first.ok).toBe(false);
+    expect(first.lines.join(' ')).toContain('deliver/film');
+  });
+});
+
+describe('D3, the Heart review clip', () => {
+  const unit = cfg.lookLockUnit;
+  const file = `out/work/film/${cfg.export.files.heartReview}`;
+  const shots = [
+    { id: 'ribs-01', unit: 'ribs', first: 0, last: 2506 },
+    { id: `${unit}-01`, unit, first: 2507, last: 2936 },
+    { id: `${unit}-02`, unit, first: 2937, last: 4220 },
+    { id: 'breath-01', unit: 'breath', first: 4221, last: 5000 }
+  ];
+  const cutList = { fps, frameCount: 11861, shots };
+  const state = { engine: 'e1', units: { ribs: 'r1', [unit]: 'h1' } };
+  const good = { width: cfg.formats.hd.width, height: cfg.formats.hd.height, fps, frames: 1714, sound: true };
+  const record = { tier: 'final', first: 2507, last: 4220, built: state };
+  const faults = (o = {}) => d3.reviewClipFaults({ file, probe: good, record, cut: cutList, now: state, soundExists: true, ...o }, cfg).faults;
+
+  it('reads the span of a unit from the cut list', () => {
+    expect(d3.unitFrames(cutList, unit)).toEqual({ first: 2507, last: 4220, frames: 1714 });
+    expect(d3.unitFrames(cutList, 'eye')).toBeNull();
+    expect(d3.unitFrames(null, unit)).toBeNull();
+  });
+
+  it('passes a clip of the right size, rate, span, sound and build', () => {
+    expect(faults()).toEqual([]);
+    expect(faults({ now: { engine: 'e1', units: { ribs: 'r2', [unit]: 'h1' } } })).toEqual([]);
+    expect(faults({ soundExists: false, probe: { ...good, sound: false } })).toEqual([]);
+  });
+
+  it('fails the wrong size, rate, frame count or span', () => {
+    expect(faults({ probe: { ...good, width: 960, height: 540 } })).toHaveLength(1);
+    expect(faults({ probe: { ...good, fps: 30 } })).toHaveLength(1);
+    expect(faults({ probe: { ...good, frames: 1713 } })).toHaveLength(1);
+    expect(faults({ probe: { ...good, width: null } })).toEqual([`${file} holds no picture stream.`]);
+    expect(faults({ cut: null })).toHaveLength(1);
+    expect(faults({ cut: { fps, frameCount: 11861, shots: [] } })[0]).toContain(`no shot of ${unit}`);
+    expect(faults({ record: { ...record, first: 2500 } })[0]).toContain('2500');
+  });
+
+  it('fails a clip with no sound when sound exists, with no record, or from another build', () => {
+    expect(faults({ probe: { ...good, sound: false } })[0]).toContain('no sound stream');
+    expect(faults({ record: null })[0]).toContain('no record');
+    expect(faults({ now: { engine: 'e2', units: state.units } })[0]).toContain('another build');
+    expect(faults({ now: { engine: 'e1', units: { ...state.units, [unit]: 'h2' } } })[0]).toContain('another build');
+    expect(faults({ record: {} })[0]).toContain('another build');
+  });
+
+  it('looks in deliver/film and then in out/work/film', async () => {
+    const root = path.join(tmp, 'd3');
+    const ctx = { root, config: cfg, phase: 3 };
+    const none = await d3.runD3(ctx, () => good, () => state);
+    expect(none.ok).toBe(false);
+    expect(none.lines[0]).toContain(cfg.export.files.heartReview);
+    put(root, 'cut/CUTLIST.json', cutList);
+    put(root, file, 'x');
+    put(root, `${file}.json`, record);
+    put(root, `audio/supplied/${cfg.music.file}`, 'x');
+    const found = await d3.runD3(ctx, () => good, () => state);
+    expect(found.ok).toBe(true);
+    expect(found.lines.join(' ')).toContain('final tier');
+    expect((await d3.runD3(ctx, () => ({ ...good, sound: false }), () => state)).ok).toBe(false);
+    put(root, `deliver/film/${cfg.export.files.heartReview}`, 'x');
+    const first = await d3.runD3(ctx, () => good, () => state);
     expect(first.ok).toBe(false);
     expect(first.lines.join(' ')).toContain('deliver/film');
   });

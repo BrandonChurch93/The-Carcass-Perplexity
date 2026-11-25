@@ -187,10 +187,19 @@ export function collect(root = ROOT, cfg = config()) {
     caption: p.caption
   }));
 
+  // A film's or a clip's record may carry a note, one plain line on what it is. The page shows it under the video.
+  const noteOf = (file) => {
+    try {
+      const note = JSON.parse(fs.readFileSync(`${file}.json`, 'utf8')).note;
+      return typeof note === 'string' && note.trim() ? note.trim() : null;
+    } catch {
+      return null;
+    }
+  };
   const videos = [
-    ...list(r('deliver', 'film'), /\.mp4$/i).map((n) => ({ ...item(r('deliver', 'film', n), `film/${n}`), kind: 'film' })),
-    ...list(r('out', 'clips'), /\.mp4$/i).map((n) => ({ ...item(r('out', 'clips', n), `clips/${n}`), kind: 'clip' }))
-  ].sort(newestFirst);
+    ...list(r('deliver', 'film'), /\.mp4$/i).map((n) => ({ ...item(r('deliver', 'film', n), `film/${n}`), kind: 'film', note: noteOf(r('deliver', 'film', n)) })),
+    ...list(r('out', 'clips'), /\.mp4$/i).map((n) => ({ ...item(r('out', 'clips', n), `clips/${n}`), kind: 'clip', note: noteOf(r('out', 'clips', n)) }))
+  ].sort((a, b) => b.mtime - a.mtime || Number(a.kind === 'clip') - Number(b.kind === 'clip') || a.name.localeCompare(b.name));
 
   const narrDir = r('audio', 'kept', 'narration');
   const narrFiles = list(narrDir, SOUND);
@@ -329,6 +338,7 @@ function video(v) {
     '<article class="video">',
     `  <video controls playsinline preload="metadata" src="${src}"${v.poster ? ` poster="review/${url(v.poster.to)}"` : ''}${size(v)}></video>`,
     `  <div class="under"><span class="title">${esc(v.name)}</span><span class="facts">${fmtLength(v.seconds)} · ${fmtSize(v.size)} · ${v.kind}</span></div>`,
+    ...(v.note ? [`  <p class="about">${esc(v.note)}</p>`] : []),
     '</article>'
   ].join('\n');
 }

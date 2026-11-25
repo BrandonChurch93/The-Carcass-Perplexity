@@ -96,7 +96,7 @@ export async function keep({ root = ROOT, cfg = config(), unit = null, phase = n
   const tooLarge = (bytes, dir) => inTracked(dir) && bytes > limit;
   const say = (bytes) => `${fmt(bytes)} is over repo.maxFileMb, ${cfg.repo.maxFileMb} MB`;
 
-  const copyFile = (src, to, { mustBeSilent = false } = {}) => {
+  const copyFile = (src, to, { mustBeSilent = false, keepTime = false } = {}) => {
     if (!fs.existsSync(src)) {
       missing.push(shown(src));
       return;
@@ -111,6 +111,11 @@ export async function keep({ root = ROOT, cfg = config(), unit = null, phase = n
     }
     fs.mkdirSync(dir, { recursive: true });
     fs.copyFileSync(src, to);
+    // A kept clip carries the time it was made, not the time it was copied: the review page plays newest first.
+    if (keepTime) {
+      const made = fs.statSync(src).mtime;
+      fs.utimesSync(to, made, made);
+    }
     kept.push({ file: shown(to), bytes });
   };
 
@@ -138,7 +143,10 @@ export async function keep({ root = ROOT, cfg = config(), unit = null, phase = n
         kept.push({ file: shown(to), bytes: jpeg.length });
       }
     }
-    copyFile(r('out', 'work', 'clips', `${label}.mp4`), r('out', 'clips', `${label}.mp4`), { mustBeSilent: true });
+    copyFile(r('out', 'work', 'clips', `${label}.mp4`), r('out', 'clips', `${label}.mp4`), { mustBeSilent: true, keepTime: true });
+    // The clip's record, when it has one, goes with it: it holds how the clip was made and the note the review page shows.
+    const clipRecord = r('out', 'work', 'clips', `${label}.mp4.json`);
+    if (fs.existsSync(r('out', 'clips', `${label}.mp4`)) && fs.existsSync(clipRecord)) fs.copyFileSync(clipRecord, r('out', 'clips', `${label}.mp4.json`));
   }
 
   if (film) {
