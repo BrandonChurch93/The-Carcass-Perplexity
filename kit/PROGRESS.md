@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 18, 2026-11-25 02:34 UTC:
+Status 19, 2026-11-25 02:57 UTC:
 
-- `01-shot-eye-05.jpg`: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way
-- `02-handoff-1.jpg`: The cut from the Eye to the rise, frame by frame: the same water, the same rings, the same rate of climb on both sides
-- `03-shot-reveal-01.jpg`: The rise after the fix: one move from the lake to the whole body, then a drift that never stops
-- `04-spine-0405.jpg`: The Spine after the fix: the strike, then a steady push to the far mouth of the canal with nothing crossing the lens
+- `01-set-a-01.jpg`: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart
+- `02-set-a-02.jpg`: Part 2 of 4: the Heart, the Breath, the start of the Blood Marsh
+- `03-set-a-03.jpg`: Part 3 of 4: the Blood Marsh, the Spine, the Eye
+- `04-set-a-04.jpg`: Part 4 of 4: the rise from the lake to the whole body, then the hold to the end
 
+Status 18, 2026-11-25 02:34 UTC, showed: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way; The...
 Status 17, 2026-11-25 02:07 UTC, showed: The rise as the critics saw it: the first two frames are plain navy water.
 Status 16, 2026-11-25 01:34 UTC, showed: The Ribs, the establishing key (frame 1241): the approved picture on the left, the blockout on the right; The Spine, the establishing key...
-Status 15, 2026-11-25 01:20 UTC, showed: The Heart, establishing frame: the approved picture on the left, the blockout on the right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T02:34:30Z
-phase 2: 2.33 h used of 6.00 h
-build: 6.08 h used of 72.00 h
+2026-11-25T02:57:21Z
+phase 2: 2.71 h used of 6.00 h
+build: 6.46 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 27
+minutes since the last status: 23
 ```
 
 ## Phases
@@ -78,7 +78,20 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 The register is `parts/PARTS.json`. Summarise it here after every change of state: how many parts each unit has, and how many are `stand-in`, `built` and `fallback`.
 
-none
+Written 2026-11-25 02:56 UTC from the build that round 2 judged, with a picture of every part drawn alone under `out/stills/parts/`.
+
+| Unit | Parts | `stand-in` | `built` | `fallback` |
+| --- | --- | --- | --- | --- |
+| `ribs` | 14 | 14 | 0 | 0 |
+| `heart` | 14 | 14 | 0 | 0 |
+| `breath` | 14 | 14 | 0 | 0 |
+| `marsh` | 14 | 14 | 0 | 0 |
+| `spine` | 14 | 14 | 0 | 0 |
+| `eye` | 14 | 14 | 0 | 0 |
+| `reveal` | 11 | 11 | 0 | 0 |
+| all | 95 | 95 | 0 | 0 |
+
+The Heart's 14: `sky`, `air`, `land`, `bench`, `crust`, `lava`, `lava-fall`, `vessel-mouth`, `crust-walkers`, `sunk-walker`, `foundering`, `fume`, `sulphur-crack`, `surge`.
 
 ## Voice
 
@@ -700,3 +713,4 @@ none
 - 2026-11-25 02:07 UTC. Round 1 read: scores 6, 10 and 4, merged 4, a fail. The scorecards, the key and the summary are in scorecards/round-001. Fixes sent to the Eye, Spine and Ribs builders at 02:03 UTC; the reveal's side of the handoff and the moving hold are the Builder's
 - 2026-11-25 02:08 UTC. Status 17 shown at 02:09 UTC: round 1's result, four sheets as the critics saw them, what is being fixed and what is declined
 - 2026-11-25 02:34 UTC. Status 18 shown in the thread at 02:36 UTC: the Eye's last shot, the cut to the rise, the rise and the Spine after the fixes of round 1.
+- 2026-11-25 02:57 UTC. Status 19 shown at 02:58 UTC: the whole film as a blockout in four sheets, round 2's result (5, 6, 7, merged 5, a fail at the limit), what is carried and what is declined.
