@@ -4,13 +4,13 @@ import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { shots } from '../cameras';
 import { RIBS, type Rib } from '../layout';
-import { COLONY, LEVELS, STATIONS } from '../shared/anchors';
+import { COLONY, DROWNED, LEVELS, STATIONS } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
 import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
-import { BOULDER_FRAGMENT, GROUND_FRAGMENT, ROCK_FRAGMENT, UV_VERTEX, WEED_FRAGMENT } from './shaders';
+import { BOULDER_FRAGMENT, GROUND_FRAGMENT, ROCK_FRAGMENT, UV_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { archShape, bladeShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -18,8 +18,11 @@ export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
 export { bed };
 
 const BLADE: Record<string, { around: number; fine: number }> = {
-  L1: { around: 320, fine: 1.2 },
-  R1: { around: 256, fine: 1.5 },
+  L1: { around: 400, fine: 1 },
+  R1: { around: 320, fine: 1.2 },
+  L2: { around: 224, fine: 1.5 },
+  R2: { around: 224, fine: 1.5 },
+  S: { around: 224, fine: 1.5 },
 };
 
 interface Stack {
@@ -97,17 +100,18 @@ export function create(ctx: Context): Piece {
   const rockN = tex('land/rock-nh.jpg', { kind: 'data' });
   const weedC = tex('land/weed.jpg');
   const weedN = tex('land/weed-nh.png', { kind: 'data' });
-  const sandC = tex('land/sand.jpg', { anisotropy: 4 });
-  const sandN = tex('land/sand-nh.png', { kind: 'data', anisotropy: 4 });
+  const sandC = tex('land/sand.jpg');
+  const shingleC = tex('land/shingle.jpg', { anisotropy: 2 });
+  const shingleN = tex('land/shingle-nh.jpg', { kind: 'data', anisotropy: 2 });
   const boulderC = tex('land/boulder.jpg');
   const boulderN = tex('land/boulder-nh.png', { kind: 'data' });
 
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tSand: { value: sandC }, tSandN: { value: sandN }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
   const rock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide } });
-  const weed = material(UV_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
+  const weed = material(WEED_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
@@ -127,7 +131,7 @@ export function create(ctx: Context): Piece {
   for (const rib of RIBS as Rib[]) {
     add(blades, bladeShape(rib, BLADE[rib.name] ?? { around: 160, fine: 2 }), rock);
     const phis = rib.name === 'L1' ? turns(240, { from: -0.5, to: 1.5, count: 560 }) : turns(200);
-    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 52 : 30 }), weed);
+    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 72 : 36, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), weed);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -176,13 +180,26 @@ export function create(ctx: Context): Piece {
     const size = 0.18 + 1.1 * Math.pow(scatter.next(), 3);
     placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) });
   }
+  // Cobbles and half sunk stones, in drifts: thick where the floor stands proud, thin in the pools.
+  for (let i = 0; i < 5200; i++) {
+    const near = i < 3000;
+    const x = near ? STATIONS.establish[0] + scatter.range(-170, 330) : scatter.range(-300, 380);
+    const z = near ? STATIONS.establish[1] - 420 * Math.pow(scatter.next(), 1.6) + 30 : scatter.range(-1500, 200);
+    const size = 0.07 + 0.42 * Math.pow(scatter.next(), 2.6);
+    const drift = fbm3(x / 23, 0.5, z / 23, 2);
+    const yaw = scatter.range(0, 6.283);
+    const tilt = scatter.range(-0.3, 0.3);
+    const kind = scatter.int(KINDS);
+    const sink = scatter.range(0.2, 0.55);
+    if (drift > 0.42 + 0.2 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
+  }
   const ground0 = ctx.rig.land.height;
   const kept = placed.filter((p) => !nearTrack(p.x, p.z, 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
   STATIONS.foreground.forEach(([x, z, size], i) => kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.62 }));
   const squat = [0.62, 0.8, 0.5, 0.7];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();
-  const shades = ctx.rig.contactDiscs(kept.length);
+  const shades = ctx.rig.contactDiscs(kept.filter((p) => p.size > 0.3).length);
   let shade = 0;
   for (let kind = 0; kind < KINDS; kind++) {
     const mine = kept.filter((p) => p.kind === kind);
@@ -194,7 +211,7 @@ export function create(ctx: Context): Piece {
       dummy.scale.setScalar(p.size);
       dummy.updateMatrix();
       herd.setMatrixAt(i, dummy.matrix);
-      ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.7, 0.75);
+      if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.7, 0.75);
     });
     herd.instanceMatrix.needsUpdate = true;
     rocks.add(herd);
