@@ -94,7 +94,7 @@ const hash = (n: number): number => {
 
 /** A value read off a few points (u, value), eased between them. */
 /** The trunk's half height and half width, rump (0) to chest (1), for a size of 1: an egg, the deeper end behind the middle, closed and round at both ends. */
-export const bodyHalfH = (t: number): number => 0.375 * Math.max(0, Math.sin(Math.PI * t ** 0.8)) ** 0.5;
+export const bodyHalfH = (t: number): number => 0.33 * Math.max(0, Math.sin(Math.PI * t ** 0.8)) ** 0.5;
 export const bodyHalfW = (t: number): number => 0.235 * Math.max(0, Math.sin(Math.PI * t ** 0.86)) ** 0.5;
 
 export function curve(points: readonly (readonly [number, number])[], u: number): number {
@@ -146,11 +146,11 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stanceSide: 0.16 * k * j(4, 0.85, 1.25),
     legLen: 1.006 * Math.hypot(standH - 0.02 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
-    legR: 0.023 * k,
+    legR: 0.026 * k,
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
-    neckR: 0.072 * k,
+    neckR: 0.082 * k,
     tendrils: far ? 6 : 120,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
@@ -215,12 +215,12 @@ export class Wader {
         const keel = smooth(0.35, 0.85, t);
         const tuck = smooth(0.55, 0.15, t);
         const hollow = 0.1 * Math.exp(-(((t - 0.33) / 0.12) ** 2)) * smooth(0.8, 0.1, Math.abs(sn));
-        const hip = 0.05 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
-        const blade = 0.034 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const hip = 0.055 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.95, 0.3, sn);
+        const blade = 0.045 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.95, 0.3, sn);
         const ridge = 0.028 * k * Math.exp(-(((phi - Math.PI / 2) / 0.3) ** 2)) * smooth(0.04, 0.25, t) * smooth(1, 0.8, t);
         const narrow = sn > 0 ? 1 - 0.2 * sn : 1 - 0.42 * keel * (-sn) ** 1.5;
         const x = w * c * narrow * (1 - hollow) + (hip + blade) * c;
-        const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.28 * tuck)) + ridge + 0.5 * (hip + blade);
+        const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.36 * tuck)) + ridge + 0.5 * (hip + blade);
         this.bodyLocal[(i * bodySides + s) * 2] = x;
         this.bodyLocal[(i * bodySides + s) * 2 + 1] = y;
       }
@@ -238,7 +238,7 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.55 * smooth(0.2, 0, u) ** 1.5);
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.9 * smooth(0.3, 0, u) ** 1.3);
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
@@ -255,7 +255,7 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 2.4 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 0.75 * (1 - smooth(0.02, 0.4, u)) + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
+      const thigh = 1.1 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.5 * (1 - smooth(0.0, 0.46, u)) ** 0.7 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
       const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
@@ -298,8 +298,8 @@ export class Wader {
         stiff: 0.3 + 0.7 * hash(seed + n * 9.7),
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
-        root: 1 - 0.15 * hash(seed + n * 8.9) ** 1.6,
-        thick: far ? 1 : 0.6 + 3.2 * hash(seed + n * 12.7) ** 3.0,
+        root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
+        thick: far ? 1 : 0.6 + 1.7 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
@@ -649,11 +649,11 @@ export class Wader {
       const r0 = Math.min(neck.rings - 2, Math.floor(ru));
       const rf = ru - r0;
       const back = smooth(0.985, 0.94, st.root);
-      const rad = b.neckR * (0.3 * st.out + 0.25 * back);
+      const rad = b.neckR * (0.45 * st.out + 0.4 * back);
       let x = (pts[r0 * 3] as number) * (1 - rf) + (pts[r0 * 3 + 3] as number) * rf + ox * rad;
       let y = (pts[r0 * 3 + 1] as number) * (1 - rf) + (pts[r0 * 3 + 4] as number) * rf + oy * rad;
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
-      const splay = 0.75 * st.out + 0.9 * back;
+      const splay = 1.1 * st.out + 1.3 * back;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.phase) + 0.04 * Math.sin(seconds * 3.7 + st.phase * 2.3);
       let px = x;
@@ -662,7 +662,7 @@ export class Wader {
       for (let i = 0; i < tube.rings; i++) {
         const u = i / (tube.rings - 1);
         // It leaves along the neck's end, spreads a little, and gravity takes it.
-        const g = smooth(0, 0.1 + 0.4 * st.stiff * st.stiff, u);
+        const g = smooth(0, 0.14 + 0.5 * st.stiff * st.stiff, u);
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
         const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
@@ -678,7 +678,7 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.2 + 0.8 * u) * (0.3 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.2 * Math.sin(u * 17 + st.phase * 11));
+        const curl = (0.2 + 0.8 * u) * (0.5 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.3 * Math.sin(u * 17 + st.phase * 11));
         dx += Math.cos(st.phase * 3) * curl;
         dz += Math.sin(st.phase * 3) * curl;
         dy += 0.35 * curl * Math.sin(st.phase * 7);

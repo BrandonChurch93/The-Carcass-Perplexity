@@ -49,7 +49,7 @@ export function shaftWall(): THREE.BufferGeometry {
 }
 
 /** A hoop of cartilage along part of the wall: from one bearing to another (degrees), at a depth, standing `thick` metres out of the wall. */
-export function hoop(y: number, radius: number, from: number, to: number, thick: number, seed: number): THREE.BufferGeometry {
+export function hoop(y: number, radius: number, from: number, to: number, thick: number, seed: number, follow?: (bearing: number) => [number, number]): THREE.BufferGeometry {
   const length = Math.abs(to - from) * RAD * radius;
   const columns = Math.max(30, Math.round(length / 0.55));
   return sheet(columns, 16, (u, v) => {
@@ -67,10 +67,12 @@ export function hoop(y: number, radius: number, from: number, to: number, thick:
     const swell = (0.86 + 0.26 * drift(s * 0.16, seed, 2) + 0.1 * drift(s * 0.7, seed, 5)) * (0.25 + 0.75 * end);
     const chip = 0.22 * drift(s * 1.3, a * 1.9 + seed, 3) + 0.1 * drift(s * 3.1, a * 4.1, seed);
     const wide = thick * 2.3 * swell * (1 - 0.5 * bite) + chip;
-    const tall = thick * 1.5 * swell * (1 - 0.18 * bite) + 0.6 * chip;
+    const tall = thick * 0.85 * swell * (1 - 0.18 * bite) + 0.6 * chip;
     const sag = 0.6 * Math.sin(s * 0.11 + seed) + 0.5 * drift(s * 0.05, seed, 9);
-    const rr = radius + 0.9 - cx * wide;
-    return { at: [Math.sin(b) * rr, y + sag + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
+    // The ledge at the brim follows the ragged rim and the lip's own height; the ones below are rings.
+    const [ringRadius, ringY] = follow ? follow(b) : [radius, y + sag];
+    const rr = ringRadius + 0.9 - cx * wide;
+    return { at: [Math.sin(b) * rr, ringY + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
   });
 }
 

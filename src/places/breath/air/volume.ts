@@ -318,8 +318,8 @@ void main() {
           // faces it is bright and the trough behind it is dark.
           float sunk = clamp(1.0 + min(pm.y + 1.0, 0.0) / 30.0, 0.0, 1.0);
           float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
-          vec3 light = ambient * (0.6 + 0.9 * nm.r) * sunk * sunk
-            + uSunColour * (sunAt(pm) * phase * (0.15 + 0.85 * faces) * smoothstep(-9.0, -1.0, pm.y));
+          vec3 light = ambient * (0.4 + 0.7 * nm.r) * sunk * sunk
+            + uSunColour * (sunAt(pm) * phase * (0.1 + 0.6 * faces) * smoothstep(-7.0, 0.0, pm.y));
           float gone = exp(-tau);
           colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
           through *= gone;
@@ -359,7 +359,10 @@ void main() {
     done = here;
     float tops = clamp(0.25 + 1.1 * n0.r + 0.3 * (1.0 - sunward), 0.0, 1.0);
     // Toward the sun a body burns warm; away from it it is thin and blue grey.
-    vec3 light = ambient * vec3(0.72, 0.8, 0.92) * (0.6 + 0.3 * tops) + uSunColour * (sunAt(mid) * phase * (0.2 + 0.8 * tops) * D.z);
+    // What stands down in the shaft is under its own wall: it takes the sky from a disc overhead, and no sun.
+    float sunkBody = clamp(1.0 + min(mid.y - 1.0, 0.0) / 14.0, 0.0, 1.0);
+    vec3 tint = D.x > 0.5 && D.x < 1.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
+    vec3 light = ambient * tint * (0.7 + 0.3 * tops) * (0.25 + 0.75 * sunkBody) + uSunColour * (sunAt(mid) * sunkBody * phase * (0.2 + 0.8 * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
     through *= gone;

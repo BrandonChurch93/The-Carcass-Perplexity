@@ -41,7 +41,8 @@ export function breathAt(seconds: number): [number, number, number, number] {
   // It fills from below for a second and a half, wells up over the mouth for two more, then slides off over the west lip and thins.
   const fill = smooth((u - 0.2) / 1.3);
   const over = u < 3 ? smooth((u - 1.0) / 2.0) : 0.08 + 0.92 * Math.exp(-(u - 3) / 2.2);
-  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4));
+  // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
+  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 9 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
   const apron = smooth((u - 2.2) / 2.0) * (0.25 + 0.75 * Math.exp(-Math.max(0, u - 4.5) / 6));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -117,7 +118,7 @@ export function create(ctx: Context): Piece {
     [-900, -620, 16, 900, 40, 260, 0.0026],
   ] as const) {
     const [x, z] = cliffPoint(s, p);
-    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense, repeat: 190, open: 0.46, climb: -3, sun: 1.2 });
+    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.8, repeat: 150, open: 0.68, climb: -3, sun: 1.2 });
   }
   // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
   for (const [x, z, rx, ry, rz, y] of [
@@ -125,7 +126,7 @@ export function create(ctx: Context): Piece {
     [900, -1350, 1500, 30, 200, 30],
     [1500, -1750, 1300, 38, 200, 70],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0045, repeat: 300, open: 0.48, climb: 0.3, sun: 1.3 });
+    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0022, repeat: 170, open: 0.75, climb: 0.3, sun: 1.3 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
@@ -133,7 +134,7 @@ export function create(ctx: Context): Piece {
     [-1500, -2900, 900, 90, 600],
     [-3200, 300, 800, 60, 900],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0034, repeat: 420, open: 0.44, climb: 0.4, sun: 1.3 });
+    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0026, repeat: 300, open: 0.7, climb: 0.4, sun: 1.3 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());
