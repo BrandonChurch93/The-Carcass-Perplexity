@@ -116,6 +116,14 @@ export function run(first, count, frameCount) {
 }
 
 const sheetItem = (frames, title, what) => ({ kind: 'sheet', frames, title, what });
+export const HELD_SECONDS = 6;
+// The frames of a sheet of one camera with the world moving: the hold spread evenly from nothing to HELD_SECONDS, as `npm run sheet -- --held` draws it.
+const heldItem = (frame, count, where) =>
+  sheetItem(
+    Array.from({ length: count }, (_, i) => ({ frame, held: count < 2 ? 0 : Math.round((HELD_SECONDS * i * 1000) / (count - 1)) / 1000, label: 'camera held' })),
+    `camera held at frame ${frame}${SEP}the world over ${HELD_SECONDS} s`,
+    `One sheet across ${HELD_SECONDS} seconds with the camera held still at ${where}, film frame ${frame}`,
+  );
 const span = (frames) => `frames ${frames[0]} to ${frames[frames.length - 1]}`;
 
 function wholeFilm(film, count) {
@@ -194,7 +202,9 @@ export function planR4({ cfg, cut, film, unit }) {
       const frames = run(ev.frame - 2, count, n);
       add(sheetItem(frames, `consecutive frames${SEP}${span(frames)}`, `Consecutive frames across the event ${ev.id} at frame ${ev.frame}`));
     }
-    left.push('The sheet with the camera held still was left out: the frame interface has no way to render a run of frames with the camera held.');
+    const est = keysOf(cfg, unit).find((x) => x.kind === 'establishing');
+    if (est && Number.isInteger(film.keyFrames[est.id])) add(heldItem(film.keyFrames[est.id], count, `the establishing key ${est.id}`));
+    else left.push(`The sheet with the camera held still was left out: ${unit} has no establishing key with a key frame.`);
     left.push('The sheets of each moving thing are consecutive frames from each key frame and across each event: the interface does not say where each fluid, weather or animal of kit/02-SUBJECT.md is in frame.');
   } else if (kind === 'reveal') {
     const all = spread(film.lake, film.titanFrame, 2 * count);
@@ -205,7 +215,7 @@ export function planR4({ cfg, cut, film, unit }) {
       const frames = run(Math.round((film.lake + film.keyFrames[first.id]) / 2 - count / 2), count, n);
       add(sheetItem(frames, `consecutive frames${SEP}${span(frames)}`, `Consecutive frames in the middle of the handoff, between frame ${film.lake} at the lake and the key frame of ${first.id}`));
     } else left.push('The handoff sheet was left out: the first key of the rise has no key frame.');
-    left.push('The sheet at the top with the camera held still was left out: the frame interface has no way to render a run of frames with the camera held.');
+    add(heldItem(film.titanFrame, count, 'the top of the rise'));
   } else {
     add(...wholeFilm(film, count));
     film.places.slice(1).forEach((p, i) => {
