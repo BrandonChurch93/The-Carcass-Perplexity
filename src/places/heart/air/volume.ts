@@ -155,7 +155,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float west = -(p.x - 445.0) * 0.859 - (p.z + 322.0) * 0.512;
   float bank = smoothstep(380.0, 100.0, west) * smoothstep(-260.0, -60.0, west);
   // Clear toward the bench, heavy toward the open lake in the east: and in banks with dark air between them, not as one veil.
-  float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.55 + 1.3 * east)
+  float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.55 + 1.3 * east + 0.9 * smoothstep(100.0, -450.0, p.z))
         + 0.0042 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
   float heavy = uShowAir * (0.0055 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks)
         + 0.0015 * hot * layer * (0.35 + 1.3 * banks));
