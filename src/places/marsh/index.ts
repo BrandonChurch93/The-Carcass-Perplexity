@@ -46,8 +46,8 @@ const C = {
 const BEARING = 52 * DEG;
 const F: [number, number] = [Math.sin(BEARING), -Math.cos(BEARING)];
 const R: [number, number] = [Math.cos(BEARING), Math.sin(BEARING)];
-const POOL_D = 35;
-const POOL_L = -15;
+const POOL_D = 31;
+const POOL_L = -14;
 const POOL_R = 9.5;
 const EYE: [number, number] = [-(F[0] * POOL_D + R[0] * POOL_L), -(F[1] * POOL_D + R[1] * POOL_L)];
 const EYE_HEIGHT = 8.5;
@@ -77,7 +77,7 @@ const rockHeight = (x: number, z: number): number => {
   const dz = z - EYE[1];
   const d = dx * F[0] + dz * F[1];
   const l = dx * R[0] + dz * R[1];
-  const u = ((d + 6 + 0.32 * l) / 13) ** 2 + ((l + 12) / 19) ** 2;
+  const u = ((d + 6 + 0.32 * l) / 13) ** 2 + ((l + 12.6) / 19) ** 2 + (l < -1.5 ? 0.07 * Math.sin(l * 1.3 + d * 0.5) + 0.05 * Math.sin(l * 2.9 - d * 1.7) : 0);
   const s = smooth(0.74, 1.08, u);
   const lump = 0.5 * Math.sin(d * 0.45 + 1) * Math.cos(l * 0.38) + 0.28 * Math.sin(d * 1.1 + l * 0.9);
   return (6.9 + lump) * (1 - s) - 0.6 * s;
@@ -139,9 +139,9 @@ interface Beast {
 
 const BEASTS: Beast[] = [
   { d: 34.3, l: 3, head: [0, -1], size: 1, sink: 0.05, speed: 0.22, root: 0.07 },
-  { d: 33.3, l: 4.75, head: [-0.5, -0.86], size: 0.5, sink: 0.12, speed: 0.1, root: 0.09 },
+  { d: 33, l: 5, head: [-0.3, -0.95], size: 0.34, sink: 0.1, speed: 0.1, root: 0.09 },
   { d: 32.3, l: 3.4, head: [-0.2, -1], size: 0.62, sink: 1.0, speed: 0.12, root: 0.03 },
-  { d: 44, l: 10.3, head: [0.3, 1], size: 1.05, sink: 0.75, speed: 0.15, root: 0.04 },
+  { d: 44, l: 7.9, head: [0.3, 1], size: 1.05, sink: 0.45, speed: 0.15, root: 0.04 },
   { d: 29.4, l: 6.4, head: [0.8, 0.5], size: 0.5, sink: 0.4, speed: 0.2, root: 0.06 },
   { d: 18.6, l: -3.4, head: [0.9, 0.3], size: 1, sink: 0.95, speed: 0.1, root: 0.03 },
   { d: 38.4, l: 9.6, head: [1, 0.5], size: 0.9, sink: 0.7, speed: 0.18, root: 0.05 },
@@ -172,22 +172,22 @@ const K2: Pose = {
 };
 
 const K1_DIR = bearingDir(6);
-const K1_AT: [number, number] = [0.9, 12];
+const K1_AT: [number, number] = [0.9, 11.1];
 const K1: Pose = {
   position: [K1_AT[0], 0.95, K1_AT[1]],
-  aim: [K1_AT[0] + K1_DIR[0] * 10, 0.95 - 10 * Math.tan(10.7 * DEG), K1_AT[1] + K1_DIR[1] * 10],
+  aim: [K1_AT[0] + K1_DIR[0] * 10, 0.95 - 10 * Math.tan(8.9 * DEG), K1_AT[1] + K1_DIR[1] * 10],
   fov: 35,
 };
 const HERO_DOME: [number, number] = [K1_AT[0] + bearingDir(17.5)[0] * 5, K1_AT[1] + bearingDir(17.5)[1] * 5];
 const SMALL_DOME: [number, number] = [K1_AT[0] + bearingDir(-5.4)[0] * 4.5, K1_AT[1] + bearingDir(-5.4)[1] * 4.5];
 
 const K3: Pose = { position: at(27.7, 3, 2.3), aim: at(37.7, 3.2, -0.12), fov: 30 };
-const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(28.5, 10.4, -0.39), fov: 35 };
+const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35 };
 
 const shots: Record<string, CameraPath> = {
   'marsh-01': through(K0, keyPart(shotById('marsh-01')), { forward: -9, up: 1.2 }, { forward: 12, up: 0.6 }),
   'marsh-02': through(K2, keyPart(shotById('marsh-02')), { right: -3.2, forward: -0.6 }, { right: 3.2, forward: 0.8 }),
-  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.2, up: 0.2 }, { forward: 1.3, up: 0.75, turn: 8, tilt: 7 }),
+  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.2, up: 0.2, right: 0.6 }, { forward: 1.3, up: 0.75, turn: 8, tilt: 7 }),
   'marsh-04': [
     { at: 0, pose: { position: at(26.7, 6.6, 2.7), aim: at(36.4, 4.6, -0.1), fov: 30 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
@@ -411,9 +411,14 @@ function makeStalks(pools: Pool[]): Stalk[] {
   const near = (forward: number, right: number, h: number, lean: number, kind: number): void => {
     out.push({ x: K1_AT[0] + K1_DIR[0] * forward + k1Right[0] * right, z: K1_AT[1] + K1_DIR[1] * forward + k1Right[1] * right, h, lean, yaw: yawOf(k1Right[0], k1Right[1]), kind, size: 1, phase: forward });
   };
-  near(1.5, -0.86, 3.6, 0.1, 0);
-  near(1.9, -0.9, 3.2, -0.16, 0);
-  near(2.4, -1.5, 3.4, 0.05, 1);
+  near(2.8, -1.5, 3.4, 0.05, 1);
+  const edge = stream('marsh-left');
+  for (let i = 0; i < 18; i++) {
+    const d = edge.range(15.5, 19.5);
+    const p = rel(d, -0.718 * d * edge.range(0.8, 1.02));
+    if (!free(p[0], p[1]) || Math.hypot(p[0], p[1]) < POOL_R + 0.6) continue;
+    out.push({ x: p[0], z: p[1], h: edge.range(4.6, 7.4), lean: edge.range(0, 0.16), yaw: edge.range(0, TAU), kind: i % 3 === 0 ? 1 : 0, size: edge.range(1.2, 1.7), phase: edge.range(0, TAU) });
+  }
   for (const k of [[31.8, 1.5, 4.3], [32.6, 1, 3.7], [33.2, 0.4, 3.1], [32.2, 0.2, 2.4]]) {
     const p = rel(k[0] as number, k[1] as number);
     out.push({ x: p[0], z: p[1], h: k[2] as number, lean: 0.12, yaw: (k[2] as number) * 2, kind: (k[2] as number) > 3.5 ? 0 : 1, size: 1, phase: k[2] as number });
@@ -439,7 +444,7 @@ function create(): Place {
   land.add(new THREE.Mesh(terrain(18000, 18000, 120, 120, () => 0), saltMat));
   land.add(new THREE.Mesh(scarpRing(), kit.flat(C.scarp, { band: C.scarpBand, step: 45, side: THREE.DoubleSide })));
   const rockMat = kit.flat(C.rock, { band: C.rockBand, step: 1.1 });
-  const rockCentre = rel(-6, -12);
+  const rockCentre = rel(-6, -12.6);
   land.add(new THREE.Mesh(terrain(64, 64, 80, 80, rockHeight, rockCentre), rockMat));
   const hummockMat = kit.flat(C.rock, { band: C.rockBand, step: 1.4 });
   const rustMat = lay(kit.flat(C.rust, { side: THREE.DoubleSide }), 2);
