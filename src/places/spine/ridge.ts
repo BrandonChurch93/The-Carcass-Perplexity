@@ -111,14 +111,21 @@ const smooth = (a: number, b: number, v: number): number => {
 export const MOUTH_S = first.s - 120;
 export const CANAL_L = 46;
 export const MOUTH_R = 20;
+export const EXIT = 232;
+export const EXIT_R = 13;
+export const EXIT_FLARE = 30;
+export const canalL = (d: number): number => CANAL_L + 0.0025 * Math.max(0, Math.min(d, EXIT + 40) - 140) ** 2;
 export const FLARE = 35;
 export const THROAT = 4;
 const SADDLE = 22;
 
 export function flare(d: number): number {
   if (d <= 0) return MOUTH_R;
-  if (d >= FLARE) return THROAT;
-  return THROAT + (MOUTH_R - THROAT) * Math.pow(1 - d / FLARE, 1.6);
+  if (d < FLARE) return THROAT + (MOUTH_R - THROAT) * Math.pow(1 - d / FLARE, 1.6);
+  const e = EXIT - d;
+  if (e <= 0) return EXIT_R;
+  if (e < EXIT_FLARE) return THROAT + (EXIT_R - THROAT) * Math.pow(1 - e / EXIT_FLARE, 1.6);
+  return THROAT;
 }
 
 export function crest(s: number): number {
@@ -140,15 +147,22 @@ export function ground(s: number, l: number): number {
   const massif = 70 * (1 - smooth(0.5, 1, rho));
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
   const stand = 16 * Math.exp(-(((s - first.s + 610) / 170) ** 2));
-  const width = (l > 0 ? 5 + 66 * shelf : 5 + 14 * shelf) + stand;
+  const exitShelf = Math.exp(-(((s - MOUTH_S - EXIT - 5) / 60) ** 2));
+  const width = (l > 0 ? 5 + 66 * shelf + 80 * exitShelf : 5 + 14 * shelf) + stand;
   const al = Math.max(0, Math.abs(l) - width);
   let fall = (1.3 * al * al) / (al + 12);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   let y = crest(s) + massif - fall;
+  y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
   if (d > -6 && d < FLARE + 2 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
   if (d > -60 && d <= -6) {
     const w = smooth(-60, -6, d) * (1 - smooth(MOUTH_R * 0.7, MOUTH_R * 1.9, Math.abs(l - CANAL_L)));
+    y += (Math.min(y, FLOOR - 0.4) - y) * w;
+  }
+  if (d > EXIT - EXIT_FLARE - 2 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
+  if (d >= EXIT + 6 && d < EXIT + 70) {
+    const w = (1 - smooth(EXIT + 6, EXIT + 70, d)) * (1 - smooth(EXIT_R * 0.7, EXIT_R * 1.9, Math.abs(l - canalL(d))));
     y += (Math.min(y, FLOOR - 0.4) - y) * w;
   }
   return Math.max(y, -2700);
@@ -166,7 +180,7 @@ export function on(s: number, l: number, up: number): Vec3 {
 export function heightAbove(p: Vec3): number {
   const at = locate(p[0], p[2]);
   const d = at.s - MOUTH_S;
-  if (d > -6 && d < 125 && Math.abs(at.l - CANAL_L) < flare(d) + 1.2 && p[1] < FLOOR + 2 * flare(d) + 2) return p[1] - FLOOR;
+  if (d > -6 && d < EXIT + 6 && Math.abs(at.l - canalL(d)) < flare(d) + 1.2 && p[1] < FLOOR + 2 * flare(d) + 2) return p[1] - FLOOR;
   return p[1] - ground(at.s, at.l);
 }
 

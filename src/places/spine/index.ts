@@ -1,13 +1,13 @@
 // Origin: the foot of the first spire, on its axis. The ridge runs toward +x (down the spine, called north here), the storm stands on -z, the cloud sea and the last light lie on +z. The world is about 12 km by 8 km.
 import * as THREE from 'three';
 import { createBlockout, herd, setFigure, terrain } from '../../core/blockout';
-import type { Move, Pose, Vec3 } from '../../core/cameras';
-import { through } from '../../core/cameras';
+import type { CameraPath, Move, Pose, Vec3 } from '../../core/cameras';
+import { mix, through } from '../../core/cameras';
 import { Parts, type Place, type PlaceModule } from '../../core/place';
 import { neutralLook } from '../../core/stage';
 import { stream } from '../../core/rng';
-import { cut, eventsOf, keyPart, shotById } from '../../film/cut';
-import { CANAL_L, FIRST, FLARE, FLOOR, MOUTH_S, S_MAX, S_MIN, THROAT, crest, fin, finEdge, first, flare, frameAt, ground, heightAbove, locate, on, spires, tipOf, world, type Spire } from './ridge';
+import { cut, eventsOf, keyPart, shotById, shotLength } from '../../film/cut';
+import { CANAL_L, EXIT, EXIT_FLARE, FIRST, FLARE, canalL, FLOOR, MOUTH_S, S_MAX, S_MIN, THROAT, crest, fin, finEdge, first, flare, frameAt, ground, heightAbove, locate, on, spires, tipOf, world, type Spire } from './ridge';
 
 const RAD = Math.PI / 180;
 const WIND: Vec3 = [0.2, 0, 0.98];
@@ -27,7 +27,7 @@ function aimed(position: Vec3, h: number, pitch: number, fov: number, reach = 60
 
 const trail = (s: number): number => 2.2 * Math.sin(s / 31) * (1 - Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150))) + CANAL_L * Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150)) ** 2;
 const spire = (n: number): Spire => spires[FIRST + n - 1] as Spire;
-const tube = (d: number, l: number, h: number): Vec3 => world(MOUTH_S + d, CANAL_L + l, FLOOR + h);
+const tube = (d: number, l: number, h: number): Vec3 => world(MOUTH_S + d, canalL(d) + l, FLOOR + h);
 const raised = (p: Vec3, up: number): Vec3 => [p[0], p[1] - heightAbove(p) + up, p[2]];
 const MOUTH = tube(0, 0, 8);
 
@@ -54,13 +54,21 @@ const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 5.3, KITE_PITCH
 const CARCASS = on(first.s - 655, 1.5, 0);
 const CARCASS_FOV = 48;
 const carcassView = heading(CARCASS, MOUTH) + 15;
-const carcassStand = raised(step(CARCASS, carcassView + 190, 2.1), 0.7);
+const carcassStand = raised(step(CARCASS, carcassView + 190, 2.1), 0.56);
 const keyCarcass = aimed(carcassStand, carcassView, -7.4, CARCASS_FOV, 40);
-const carcassMove: Move = [
-  { at: 0, pose: aimed(raised(step(carcassStand, carcassView + 176, 10), 3), carcassView - 2.5, -10, CARCASS_FOV, 40) },
-  { at: keyPart(shotById('spine-03')), pose: keyCarcass },
-  { at: 1, pose: aimed(raised(step(carcassStand, carcassView + 10, 0.7), 0.66), carcassView + 0.6, -7.1, CARCASS_FOV, 40) },
-];
+const carcassFrom = aimed(raised(step(carcassStand, carcassView + 176, 11), 3.2), carcassView - 2.5, -10, CARCASS_FOV, 40);
+const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.55), carcassView + 0.4, -7.3, CARCASS_FOV, 40);
+const carcassKeyAt = keyPart(shotById('spine-03'));
+const carcassMove: CameraPath = (part) => {
+  const lead = Math.max(0, 1 - part / carcassKeyAt);
+  const tail = Math.max(0, (part - carcassKeyAt) / (1 - carcassKeyAt));
+  const back = 0.93 * lead * lead + 0.07 * lead;
+  const to = part > carcassKeyAt ? carcassTo : carcassFrom;
+  const k = part > carcassKeyAt ? tail : back;
+  return { position: mix(keyCarcass.position, to.position, k), aim: mix(keyCarcass.aim, to.aim, k), fov: CARCASS_FOV };
+};
+const carcassAxis = carcassView + 80;
+const carcassBody = step(CARCASS, carcassAxis, 0.5);
 
 const STRIKE_FOV = 10;
 const STRIKE_REACH = 1650;
@@ -71,23 +79,24 @@ const strikeFlat = step(strikeTip, strikeBack, STRIKE_REACH);
 const strikeStand: Vec3 = [strikeFlat[0], strikeTip[1] - STRIKE_REACH * Math.tan(4.2 * RAD), strikeFlat[2]];
 const keyStrike = aimed(strikeStand, heading(strikeStand, strikeTip) + 2.5, 1.8, STRIKE_FOV, 1700);
 
-const canalStand = tube(FLARE + 9.5, -0.6, 0.7);
-const canalOut = tube(FLARE, 0, 2.2);
-const keyCanal = aimed(canalStand, heading(canalStand, canalOut) - 12, 1, 54, 30);
-const canalStart = tube(FLARE - 10, -0.8, 1.6);
-const canalEnd = tube(FLARE + 23, -0.4, 1.1);
-
+const CANAL_KEY = EXIT - EXIT_FLARE - 5;
+const canalFar = tube(EXIT - 6, 0, 4);
+const canalPose = (d: number, h: number, yaw: number, pitch: number): Pose => {
+  const p = tube(d, 0.6, h);
+  return aimed(p, heading(p, canalFar) + yaw, pitch, 54, 30);
+};
+const keyCanal = canalPose(CANAL_KEY, 0.7, -24, -2);
 const canalMove: Move = [
-  { at: 0, pose: aimed(canalStart, heading(canalStart, tube(0, 0, 2)) - 6, 1.5, 54, 30) },
+  { at: 0, pose: canalPose(CANAL_KEY - 6.5, 0.95, -20, -1) },
   { at: keyPart(shotById('spine-05')), pose: keyCanal },
-  { at: 1, pose: aimed(canalEnd, heading(canalEnd, canalOut) - 7, 0.5, 54, 30) },
+  { at: 1, pose: canalPose(CANAL_KEY + 6.5, 0.8, -20, -1) },
 ];
 
-const shots: Record<string, Move> = {
+const shots: Record<string, CameraPath> = {
   'spine-01': establishingMove,
-  'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -9, forward: -7, up: -2 }, { right: 9, forward: 7, up: 2 }),
+  'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -20, forward: -22, up: -4 }, { right: 20, forward: 22, up: 4 }),
   'spine-03': carcassMove,
-  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -6, right: -1 }, { forward: 170, right: 26, up: 8 }),
+  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -10, right: -5 }, { forward: 260, right: 130, up: 20, turn: -2.6 }),
   'spine-05': canalMove,
 };
 
@@ -129,10 +138,10 @@ const place: PlaceModule = {
     const sList: number[] = [];
     for (let s = S_MIN + 40; s < S_MAX - 40; ) {
       sList.push(s);
-      s += s > MOUTH_S - 30 && s < MOUTH_S + FLARE + 20 ? 2.5 : 10;
+      s += (s > MOUTH_S - 30 && s < MOUTH_S + FLARE + 20) || (s > MOUTH_S + EXIT - 45 && s < MOUTH_S + EXIT + 75) ? 2.5 : 10;
     }
     const half = [0, 2, 5, 9, 14, 20, 28, 38, 50, 65, 85, 110, 140, 180, 230, 290, 360, 440, 520];
-    const lee = [0, 2, 5, 9, 14, 19, 22, 24, 26, 28, 31, 34, 38, 42, 46, 50, 54, 58, 61, 64, 66, 68, 70, 73, 78, 85, 110, 140, 180, 230, 290, 360, 440, 520];
+    const lee = [0, 2, 5, 9, 14, 19, 22, 24, 26, 28, 31, 34, 38, 42, 46, 50, 54, 58, 61, 64, 66, 68, 70, 73, 77, 81, 85, 89, 93, 98, 110, 140, 180, 230, 290, 360, 440, 520];
     const lList = [...half.slice(1).reverse().map((v) => -v), ...lee];
     const rows = lList.length;
     const strip = new Float32Array(sList.length * rows * 3);
@@ -160,7 +169,7 @@ const place: PlaceModule = {
     land.add(new THREE.Mesh(stripGeometry, snow));
     const flank = (x: number, z: number): number => {
       const at = locate(x, z);
-      return ground(at.s, at.l) - 22 - (Math.abs(at.l) < 480 ? 30 : 0);
+      return ground(at.s, at.l) - 22 - (Math.abs(at.l) < 480 ? 70 : 0);
     };
     land.add(new THREE.Mesh(terrain(12400, 8000, 200, 130, flank, [1600, 1300]), far));
 
@@ -206,7 +215,7 @@ const place: PlaceModule = {
     const hood = kit.flat(0x7b776f, { band: 0x9aa0ae, step: 9, side: THREE.DoubleSide });
     const ice = kit.flat(0x8f9bb5, { band: 0x7f8aa6, step: 0.5, side: THREE.DoubleSide });
     const dList: number[] = [];
-    for (let d = -5; d <= 120; d += d < FLARE + 30 ? 2.5 : 10) dList.push(d);
+    for (let d = -5; d <= EXIT + 5; d += 2.5) dList.push(d);
     const SEG = 20;
     const shell = (grow: number, lip: boolean): THREE.BufferGeometry => {
       const pos: number[] = [];
@@ -216,18 +225,18 @@ const place: PlaceModule = {
         const cy = FLOOR + 0.62 * flare(d);
         for (let a = 0; a <= SEG; a++) {
           const ang = (a / SEG) * Math.PI * 2;
-          const l = CANAL_L + Math.cos(ang) * r;
+          const l = canalL(d) + Math.cos(ang) * r;
           pos.push(f.x + f.nx * l, cy + Math.sin(ang) * r, f.z + f.nz * l);
         }
       };
-      let count = 0;
+      let count = dList.length;
       if (lip) {
         ring(dList[0] as number, 0);
         count++;
       }
-      for (const d of dList) {
-        if (lip && d > FLARE + 8) break;
-        ring(d, grow);
+      for (const d of dList) ring(d, grow);
+      if (lip) {
+        ring(dList[dList.length - 1] as number, 0);
         count++;
       }
       const idx: number[] = [];
@@ -249,7 +258,8 @@ const place: PlaceModule = {
     dList.forEach((d, i) => {
       const f = frameAt(MOUTH_S + d);
       const w = 0.79 * flare(d);
-      floorPos.push(f.x + f.nx * (CANAL_L - w), FLOOR + 0.03, f.z + f.nz * (CANAL_L - w), f.x + f.nx * (CANAL_L + w), FLOOR + 0.03, f.z + f.nz * (CANAL_L + w));
+      const c = canalL(d);
+      floorPos.push(f.x + f.nx * (c - w), FLOOR + 0.03, f.z + f.nz * (c - w), f.x + f.nx * (c + w), FLOOR + 0.03, f.z + f.nz * (c + w));
       if (i > 0) floorIdx.push(2 * i - 2, 2 * i - 1, 2 * i, 2 * i - 1, 2 * i + 1, 2 * i);
     });
     const floorGeometry = new THREE.BufferGeometry();
@@ -257,11 +267,6 @@ const place: PlaceModule = {
     floorGeometry.setIndex(floorIdx);
     floorGeometry.computeBoundingSphere();
     land.add(new THREE.Mesh(floorGeometry, ice));
-    const endCap = new THREE.Mesh(new THREE.CircleGeometry(THROAT + 1, 12), wall);
-    endCap.position.set(...tube(119, 0, 2));
-    endCap.lookAt(...tube(0, 0, 2));
-    land.add(endCap);
-
     const TRACKS = 405;
     const tracks = herd(new THREE.BoxGeometry(0.5, 0.12, 0.34), kit.flat(0x7c859b), TRACKS);
     for (let i = 0; i < TRACKS; i++) {
@@ -387,7 +392,7 @@ const place: PlaceModule = {
     const CROSSING = 4;
     const body = new THREE.CapsuleGeometry(0.42, 0.7, 3, 10).rotateZ(Math.PI / 2);
     const coat = kit.flat(0xd9d4c8);
-    const animals = herd(body, coat, HERD + CROSSING + 1);
+    const animals = herd(body, coat, HERD + CROSSING + 3);
     runners.add(animals);
     const scorch = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.6, 0.1, 9), kit.flat(0x3b3a42));
     const scorchAt = step(CARCASS, carcassView + 185, 1.0);
@@ -395,27 +400,40 @@ const place: PlaceModule = {
     scorch.scale.set(1.2, 1, 0.62);
     scorch.rotation.y = -carcassView * RAD;
     runners.add(scorch);
-    const outward = Math.atan2(-frameAt(MOUTH_S + FLARE).tz, frameAt(MOUTH_S + FLARE).tx);
+    const dark = kit.flat(0x2b2523);
+    const QUILLS = 13;
+    const CLAWS = 4;
+    const quills = herd(new THREE.ConeGeometry(0.06, 1, 5).rotateZ(-Math.PI / 2).translate(0.5, 0, 0), dark, QUILLS + CLAWS);
+    const headAt = step(carcassBody, carcassAxis + 180, 1.0);
+    for (let i = 0; i < QUILLS; i++) {
+      const h = carcassAxis + 180 - 70 + (140 * i) / (QUILLS - 1) + rng.range(-5, 5);
+      setFigure(quills, i, headAt[0], CARCASS[1] + rng.range(0.08, 0.5), headAt[2], -h * RAD, [rng.range(0.4, 0.75), 1.1, 1.1]);
+    }
+    const foreAt = step(step(carcassBody, carcassAxis + 180, 0.3), carcassView + 195, 0.42);
+    const clawAt = step(foreAt, carcassView + 195, 0.3);
+    for (let i = 0; i < CLAWS; i++) setFigure(quills, QUILLS + i, clawAt[0], CARCASS[1] + 0.07, clawAt[2], -(carcassView + 160 + i * 22) * RAD, [0.26, 1.2, 1.2]);
+    const hindAt = step(step(carcassBody, carcassAxis, 0.8), carcassView + 180, 0.5);
+    runners.add(quills);
+    const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
     const huddle: { d: number; l: number; size: [number, number, number]; y: number; yaw: number }[] = [
-      { d: FLARE + 4.9, l: 0.15, size: [1, 1.6, 1], y: 0.68, yaw: outward + 1.85 },
-      { d: FLARE + 6.3, l: 1.5, size: [1.05, 0.85, 1.2], y: 0.36, yaw: outward + 0.5 },
-      { d: FLARE + 7.0, l: 2.4, size: [1, 1.6, 1.1], y: 0.68, yaw: outward - 0.4 },
-      { d: FLARE + 7.9, l: 2.2, size: [0.8, 1.7, 1.05], y: 0.72, yaw: outward + 1.2 },
-      { d: FLARE + 8.9, l: 1.8, size: [1, 1.5, 1.1], y: 0.64, yaw: outward + 0.5 },
+      { d: CANAL_KEY + 4.1, l: -0.1, size: [1, 1.2, 1], y: 0.52, yaw: along - 0.25 },
+      { d: CANAL_KEY + 3.2, l: -1.5, size: [1.05, 0.85, 1.2], y: 0.36, yaw: along + 0.3 },
+      { d: CANAL_KEY + 2.5, l: -2.4, size: [1, 1.6, 1.1], y: 0.68, yaw: along - 0.4 },
+      { d: CANAL_KEY + 1.6, l: -2.6, size: [0.8, 1.7, 1.05], y: 0.72, yaw: along + 1.2 },
+      { d: CANAL_KEY + 0.6, l: -2.6, size: [1, 1.5, 1.1], y: 0.64, yaw: along + 0.5 },
     ];
     scene.add(parts.standIn('ridge-runners', runners));
 
     const strikes: Bolt[] = [];
     const bright = kit.flat(0xf4ecff);
     const unit = new THREE.BoxGeometry(1, 1, 1);
-    const saddleHit = on(first.s - 300, 22, 0);
     const targets: { to: Vec3; thick: number; rise: number; lean: Vec3 | null; branch: Vec3 | null }[] = [
       { to: tipOf(spire(2)), thick: 7, rise: 1150, lean: null, branch: null },
       { to: tipOf(spire(3)), thick: 9, rise: 1150, lean: null, branch: null },
       { to: tipOf(spire(5)), thick: 9, rise: 1150, lean: null, branch: null },
       { to: strikeTip, thick: 2.6, rise: 420, lean: [120, 0, 60], branch: tipOf(spire(4)) },
-      { to: tipOf(spire(0)), thick: 4, rise: 1150, lean: null, branch: null },
-      { to: saddleHit, thick: 2.2, rise: 1150, lean: null, branch: null },
+      { to: tipOf(spire(3)), thick: 8, rise: 1150, lean: null, branch: null },
+      { to: tipOf(spire(4)), thick: 9, rise: 1150, lean: null, branch: null },
     ];
     eventsOf('spine').forEach((event, n) => {
       const target = targets[n % targets.length] as (typeof targets)[number];
@@ -458,6 +476,8 @@ const place: PlaceModule = {
     kit.air(AIR, DENSITY);
     const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.25, 52000);
     const insideFrom = (shotById('spine-05').first - shotById('spine-01').first) / cut.fps;
+    const canalKeyAt = insideFrom + (keyPart(shotById('spine-05')) * shotLength(shotById('spine-05'))) / cut.fps;
+    const walked = (u: number): number => (u < -0.8 ? 0 : u < 0.4 ? 0.79 * (u + 0.8) ** 2 : 1.14 + 1.9 * (u - 0.4));
     const wallColour = wall.uniforms.uColour as THREE.IUniform<THREE.Color>;
     const wallBand = wall.uniforms.uBand as THREE.IUniform<THREE.Color>;
 
@@ -506,9 +526,10 @@ const place: PlaceModule = {
         streamRibbons(seconds);
 
         huddle.forEach((h, i) => {
-          const shift = i === 0 ? 0.12 * Math.sin(seconds * 0.9) : 0.03 * Math.sin(seconds * 1.3 + i);
-          const p = tube(h.d + shift, h.l, h.y + 0.015 * Math.sin(seconds * 2.2 + i * 1.9));
-          setFigure(animals, i, p[0], p[1], p[2], h.yaw + (i === 0 ? 0.08 * Math.sin(seconds * 0.7) : 0), h.size);
+          const go = i === 0 ? walked(seconds - canalKeyAt) : 0.03 * Math.sin(seconds * 1.3 + i);
+          const bob = i === 0 ? 0.03 * Math.abs(Math.sin(go * 3.2)) : 0.015 * Math.sin(seconds * 2.2 + i * 1.9);
+          const p = tube(h.d + go, h.l, h.y + bob);
+          setFigure(animals, i, p[0], p[1], p[2], h.yaw + (i === 0 ? 0.1 * Math.sin(seconds * 0.7) : 0), h.size);
         });
         for (let i = 0; i < CROSSING; i++) {
           const s = Math.min(first.s - 330 + 4.2 * seconds - i * 7, MOUTH_S + 14 - i * 3);
@@ -516,7 +537,9 @@ const place: PlaceModule = {
           const f = frameAt(s);
           setFigure(animals, HERD + i, p[0], p[1], p[2], Math.atan2(-f.tz, f.tx), [1, 1.5, 1]);
         }
-        setFigure(animals, HERD + CROSSING, CARCASS[0], CARCASS[1] + 0.27, CARCASS[2], (-carcassView - 80) * RAD, [1.35, 0.85, 1.3]);
+setFigure(animals, HERD + CROSSING, carcassBody[0], CARCASS[1] + 0.33, carcassBody[2], -carcassAxis * RAD, [1.5, 1, 1.15]);
+        setFigure(animals, HERD + CROSSING + 1, foreAt[0], CARCASS[1] + 0.12, foreAt[2], -(carcassView + 195) * RAD, [0.4, 0.3, 0.3]);
+        setFigure(animals, HERD + CROSSING + 2, hindAt[0], CARCASS[1] + 0.12, hindAt[2], -(carcassView + 170) * RAD, [0.4, 0.3, 0.3]);
       },
       solo: (part) => kit.solo(part),
     };
