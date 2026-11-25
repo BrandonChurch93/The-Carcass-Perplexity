@@ -126,21 +126,25 @@ float sunLobe(vec3 n, vec3 v, float rough) {
 }
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
-vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  vec4 land = landAt(p.xz);
+// rigShadeOn is the same for a surface that has already read the land under it (landAt costs a texture read: do not read it twice).
+vec3 rigShadeOn(vec4 land, vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float above = p.y - land.r;
   float contact = contactDrawn(p) * smoothstep(5.0, 0.0, above);
   float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - 0.85 * contact) * occ;
   float sun = sunSeen(land, p.y) * (1.0 - contact) * (0.4 + 0.6 * occ);
   float nl = max(dot(n, uSunDir), 0.0);
-  vec3 e = skyIrradiance(n) * open + uSunColour * (3.14159 * nl * sun);
+  vec3 sky = skyIrradiance(n);
+  vec3 e = sky * open + uSunColour * (3.14159 * nl * sun);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
+  vec3 env = mix(skyRadiance(r), sky / 3.14159, rough * rough);
   return c + f * env * open + uSunColour * (f * sunLobe(n, v, rough) * nl * sun);
+}
+vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
+  return rigShadeOn(landAt(p.xz), p, n, v, albedo, rough, occ);
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.

@@ -56,14 +56,14 @@ export function hoop(y: number, radius: number, from: number, to: number, thick:
     const b = lerp(from, to, u) * RAD;
     const s = u * length;
     // Broken ends: the hoop thins to a torn stub over its last three metres. Along its run it swells and necks as a rib does.
-    const end = smooth(Math.min(s, length - s) / 3.2);
-    const swell = (0.82 + 0.3 * drift(s * 0.16, seed, 2) + 0.12 * drift(s * 0.7, seed, 5)) * (0.25 + 0.75 * end);
+    const end = smooth(Math.min(s, length - s) / 1.1);
+    const swell = (0.82 + 0.3 * drift(s * 0.16, seed, 2) + 0.12 * drift(s * 0.7, seed, 5)) * (0.6 + 0.4 * end);
     const a = v * 2 * Math.PI;
     // A flattened section, squarer than a tube: a rib seen end on.
-    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.7;
-    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.7;
-    const wide = thick * 1.7 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
-    const tall = thick * 1.45 * swell;
+    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.4;
+    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.4;
+    const wide = thick * 2.0 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
+    const tall = thick * 1.15 * swell;
     const sag = 0.6 * Math.sin(s * 0.11 + seed) + 0.5 * drift(s * 0.05, seed, 9);
     const rr = radius + 0.9 - cx * wide;
     return { at: [Math.sin(b) * rr, y + sag + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
@@ -162,18 +162,18 @@ export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
 }
 
 /** The cave: where it is on the cliff's face (metres along it, height) and its half size. */
-export const CAVE_MOUTH = { s: 0, y: 325, wide: 620, tall: 85, deep: 320 };
+export const CAVE_MOUTH = { s: 0, y: 320, wide: 640, tall: 110, deep: 340 };
 
 /** The sea cliff with its cave: 10 km of it, the scree at its foot, the face, the land behind. */
 export function cliff(): THREE.BufferGeometry {
   return sheet(340, 100, (u, v) => {
     const s = lerp(-4200, 6200, u);
     // Most of the rows are on the face, where the height is.
-    const p = v < 0.22 ? lerp(-700, -150, v / 0.22) : v < 0.82 ? lerp(-150, 45, (v - 0.22) / 0.6) : lerp(45, 1300, ((v - 0.82) / 0.18) ** 1.6);
+    const p = v < 0.22 ? lerp(-700, -150, v / 0.22) : v < 0.82 ? lerp(-150, -35, (v - 0.22) / 0.6) : lerp(-35, 1300, ((v - 0.82) / 0.18) ** 1.6);
     const taper = smooth((s + 4200) / 700) * smooth((6200 - s) / 700);
     let y = cliffHeight(s, p) * taper + 1.5 - 5 * (1 - smooth((p + 700) / 110));
     // Buttresses and gullies down the face, ledges across it.
-    const face = smooth((p + 150) / 60) * (1 - smooth((p - 45) / 200));
+    const face = smooth((p + 150) / 40) * (1 - smooth((p + 35) / 200));
     let back = face * (38 * drift(s * 0.0042, y * 0.004, 1) + 16 * drift(s * 0.013, y * 0.012, 5)) + 22 * face * Math.sin(y * 0.045 + 2 * drift(s * 0.002, 0, 3));
     y += (1 - face) * 9 * drift(s * 0.006, p * 0.006, 8);
     // The cave: a wide low arch with a level floor, cut far back into the face.

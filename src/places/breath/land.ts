@@ -22,7 +22,9 @@ export function bump(bearing: number, centreDeg: number, widthDeg: number): numb
   return d < w ? 0.5 + 0.5 * Math.cos((Math.PI * d) / w) : 0;
 }
 
-export const rimRadius = (bearing: number): number => SHAFT + 7 * bump(bearing, 112, 42) + 2.2 * bump(bearing, 215, 30);
+/** The rim of the main shaft: broken out to the east-south-east where the wall fell, bitten and ragged all round. */
+export const rimRadius = (bearing: number): number =>
+  SHAFT + 7 * bump(bearing, 112, 42) + 2.2 * bump(bearing, 215, 30) + 1.0 * Math.sin(5 * bearing + 1) + 0.5 * Math.sin(11 * bearing + 0.5);
 
 export const onRim = (bearingDeg: number, out = 0): [number, number] => {
   const b = bearingDeg * RAD;
@@ -131,8 +133,8 @@ export function cliffTop(s: number): number {
 
 export function cliffHeight(s: number, p: number): number {
   const top = cliffTop(s);
-  const scree = 0.27 * smooth((p + 700) / 560);
-  const face = 0.73 * smooth((p + 150) / 190);
+  const scree = 0.2 * smooth((p + 700) / 560);
+  const face = 0.8 * smooth((p + 150) / 110);
   const back = 0.08 * sat(p / 1300);
   return top * (scree + face + back);
 }
