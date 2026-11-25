@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import type { Look } from './stage';
 
-export const DIAGNOSTICS = ['invalid', 'depth'] as const;
+export const DIAGNOSTICS = ['invalid', 'depth', 'standins', 'motion', 'solo'] as const;
 export type Diagnostic = (typeof DIAGNOSTICS)[number] | null;
 
 const LEVELS = 6;
@@ -95,6 +95,7 @@ uniform float uNear;
 uniform float uFar;
 uniform int uSeq;
 uniform int uDiag;
+uniform float uPlain;
 varying vec2 vUv;
 ${HASH_GLSL}
 ${CLEAN_GLSL}
@@ -121,6 +122,10 @@ void main() {
     gl_FragColor = vec4(vec3(clamp(log(z / uNear) / log(uFar / uNear), 0.0, 1.0)), 1.0);
     return;
   }
+  if (uDiag == 3) {
+    gl_FragColor = vec4(clamp(clean(raw), 0.0, 1.0), 1.0);
+    return;
+  }
   vec3 c = mix(clean(raw), texture2D(tBloom, vUv).rgb / float(${LEVELS}), uBloom);
   vec2 q = (vUv - 0.5) * vec2(uSize.x / uSize.y, 1.0);
   c *= 1.0 - uVignette * smoothstep(0.25, 1.05, length(q));
@@ -130,12 +135,24 @@ void main() {
   c = mix(vec3(luma), c, uSaturation);
   c = (c - 0.5) * uContrast + 0.5;
   c *= uTint;
+  if (uPlain > 0.5) {
+    gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+    return;
+  }
   ivec2 px = ivec2(gl_FragCoord.xy);
   uint k = uint(uSeq);
   float g = grainAt(gl_FragCoord.xy * (1080.0 / uSize.y), k * 3u + 1u);
   c += g * uGrain * (1.0 - 0.6 * abs(2.0 * luma - 1.0));
   float t = rnd(px, k * 3u + 2u) + rnd(px, k * 3u + 3u) - 1.0;
   gl_FragColor = vec4(clamp(c + t / 255.0, 0.0, 1.0), 1.0);
+}`;
+
+const DIFFERENCE_FRAGMENT = /* glsl */ `
+uniform sampler2D tA;
+uniform sampler2D tB;
+varying vec2 vUv;
+void main() {
+  gl_FragColor = vec4(abs(texture2D(tA, vUv).rgb - texture2D(tB, vUv).rgb), 1.0);
 }`;
 
 function pass(fragment: string, uniforms: Record<string, THREE.IUniform>, additive = false): THREE.ShaderMaterial {
@@ -193,7 +210,9 @@ export class Post {
     uFar: { value: 1000 },
     uSeq: { value: 0 },
     uDiag: { value: 0 },
+    uPlain: { value: 0 },
   });
+  private readonly diff = plainPass(DIFFERENCE_FRAGMENT, { tA: { value: null }, tB: { value: null } });
   private levels: THREE.WebGLRenderTarget[] = [];
   private width = 0;
   private height = 0;
@@ -217,7 +236,13 @@ export class Post {
     this.quad.render(this.renderer);
   }
 
-  render(accum: THREE.Texture, depth: THREE.Texture | null, look: Look, seq: number, diag: Diagnostic, near: number, far: number): void {
+  difference(a: THREE.Texture, b: THREE.Texture): void {
+    this.diff.uniforms.tA!.value = a;
+    this.diff.uniforms.tB!.value = b;
+    this.draw(this.diff, null);
+  }
+
+  render(accum: THREE.Texture, depth: THREE.Texture | null, look: Look, seq: number, diag: Diagnostic, near: number, far: number, target: THREE.WebGLRenderTarget | null = null, plain = false): void {
     let src = accum;
     let sw = this.width;
     let sh = this.height;
@@ -255,7 +280,8 @@ export class Post {
     f.uNear!.value = near;
     f.uFar!.value = far;
     f.uSeq!.value = seq;
-    f.uDiag!.value = diag === 'invalid' ? 1 : diag === 'depth' ? 2 : 0;
-    this.draw(this.final, null);
+    f.uDiag!.value = diag === 'invalid' ? 1 : diag === 'depth' ? 2 : diag === 'standins' ? 3 : 0;
+    f.uPlain!.value = plain ? 1 : 0;
+    this.draw(this.final, target);
   }
 }

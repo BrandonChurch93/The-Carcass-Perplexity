@@ -510,7 +510,9 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| none | | | | | |
+| `film_render_builder` | sandbox | `npm run film`, `npm run loop`, `npm run render:local`, checks G5, D2, D7 | `agent/film-render` | 2026-11-25 00:25 UTC | 85 min |
+| `measure_pack_builder` | sandbox | `npm run measure`, `npm run pack`, check G6 | `agent/measure-pack` | 2026-11-25 00:25 UTC | 80 min |
+| `sound_stress_builder` | sandbox | `npm run sound`, `npm run stress` | `agent/sound-stress` | 2026-11-25 00:25 UTC | 70 min |
 
 Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json`, which is copied into `tools/README.md`. Each reports with a `git bundle` attached.
 

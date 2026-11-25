@@ -1,4 +1,5 @@
 import type * as THREE from 'three';
+import type { Parts } from './place';
 
 export interface Lens {
   aperture: number;
@@ -42,8 +43,10 @@ export interface Stage {
   readonly lens: Lens;
   readonly look: Look;
   readonly volume: THREE.ShaderMaterial | null;
+  readonly parts?: Parts;
   resize(width: number, height: number): void;
-  setTime(seconds: number): void;
+  setTime(seconds: number, worldShift?: number): void;
   cameraAt(seconds: number): CameraState;
   beforeSample(renderer: THREE.WebGLRenderer): void;
+  solo?(part: string | null): void;
 }

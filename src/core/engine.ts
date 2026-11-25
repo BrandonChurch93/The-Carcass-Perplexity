@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import portable from '../../config/portable.json';
-import { FPS, formatById, samplesOf, type Format } from '../config';
+import { FPS, config, formatById, samplesOf, type Format } from '../config';
 import { DIAGNOSTICS, Post, QUAD_VERTEX, additivePass, halfFloatTarget, type Diagnostic } from './post';
 import { frameSamples, type Sample } from './sampler';
+import { partOf, type LivePart } from './place';
 import type { Stage } from './stage';
 import { SHUTTER } from './time';
 
@@ -37,12 +38,29 @@ export { QUAD_VERTEX };
 const right = new THREE.Vector3();
 const up = new THREE.Vector3();
 
+const FLAG_SOLID = new THREE.Color().setRGB(1, 0, 1);
+const FLAG_EFFECT = new THREE.Color().setRGB(1, 160 / 255, 0);
+const CENTRE: Sample = { px: 0, py: 0, lensX: 0, lensY: 0, shutter: 0 };
+
+type Drawn = THREE.Mesh | THREE.Points | THREE.Line;
+const isDrawn = (o: THREE.Object3D): o is Drawn => (o as THREE.Mesh).isMesh === true || (o as THREE.Points).isPoints === true || (o as THREE.Line).isLine === true;
+
+function flagMaterial(source: THREE.Material, colour: THREE.Color): THREE.Material {
+  const make = source.userData.flag as ((c: THREE.Color) => THREE.Material) | undefined;
+  if (make) return make(colour);
+  const m = new THREE.MeshBasicMaterial({ color: colour, side: source.side, toneMapped: false });
+  m.depthTest = source.depthTest;
+  m.depthWrite = source.depthWrite;
+  return m;
+}
+
 export class Engine {
   readonly renderer: THREE.WebGLRenderer;
   readonly gl: WebGL2RenderingContext;
   readonly extensions: string[] = [];
   format: Format;
   diagnostic: Diagnostic = null;
+  part: string | null = null;
   private readonly post: Post;
   private readonly quad = new FullScreenQuad();
   private readonly resolve = additivePass(RESOLVE_FRAGMENT, {
@@ -54,6 +72,8 @@ export class Engine {
   private sceneTarget: THREE.WebGLRenderTarget | null = null;
   private volumeTarget: THREE.WebGLRenderTarget | null = null;
   private accumTarget: THREE.WebGLRenderTarget | null = null;
+  private shownA: THREE.WebGLRenderTarget | null = null;
+  private shownB: THREE.WebGLRenderTarget | null = null;
 
   constructor(readonly canvas: HTMLCanvasElement, formatId = 'hd') {
     const attributes: WebGLContextAttributes = {
@@ -96,10 +116,12 @@ export class Engine {
   setFormat(id: string): void {
     const f = formatById(id);
     this.format = f;
-    for (const t of [this.sceneTarget, this.volumeTarget, this.accumTarget]) {
+    for (const t of [this.sceneTarget, this.volumeTarget, this.accumTarget, this.shownA, this.shownB]) {
       t?.depthTexture?.dispose();
       t?.dispose();
     }
+    this.shownA = null;
+    this.shownB = null;
     this.renderer.setSize(f.width, f.height, false);
     this.sceneTarget = halfFloatTarget(f.width, f.height, true);
     this.volumeTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
@@ -107,9 +129,11 @@ export class Engine {
     this.post.setSize(f.width, f.height);
   }
 
-  setDiagnostic(view: string | null): void {
-    if (view !== null && !(DIAGNOSTICS as readonly string[]).includes(view)) throw new Error(`No such diagnostic view yet: ${view}`);
+  setDiagnostic(view: string | null, part: string | null = null): void {
+    if (view !== null && !(DIAGNOSTICS as readonly string[]).includes(view)) throw new Error(`No such diagnostic view: ${view}`);
+    if (view === 'solo' && !part) throw new Error('The solo view needs the name of a part');
     this.diagnostic = view as Diagnostic;
+    this.part = view === 'solo' || view === 'standins' ? part : null;
   }
 
   private aim(stage: Stage, s: Sample): void {
@@ -131,25 +155,26 @@ export class Engine {
     cam.updateMatrixWorld(true);
   }
 
-  render(stage: Stage, frame: number, seq: number, tier: string): void {
+  private accumulate(stage: Stage, frame: number, seq: number, samples: readonly Sample[], worldShift: number, withVolume: boolean, background: THREE.Color | null = null): void {
     const r = this.renderer;
     const scene = this.sceneTarget as THREE.WebGLRenderTarget;
     const volume = this.volumeTarget as THREE.WebGLRenderTarget;
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
-    const count = samplesOf(tier);
-    const samples = frameSamples(seq, count);
+    const count = samples.length;
     stage.resize(this.format.width, this.format.height);
     r.setRenderTarget(accum);
     r.clear(true, false, false);
     for (let i = 0; i < count; i++) {
       const s = samples[i] as Sample;
-      stage.setTime((frame + s.shutter * SHUTTER) / FPS);
+      stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
       this.aim(stage, s);
       stage.beforeSample(r);
       r.setRenderTarget(scene);
+      if (background) r.setClearColor(background, 1);
       r.clear(true, true, false);
+      if (background) r.setClearColor(0x000000, 0);
       r.render(stage.scene, stage.camera);
-      const fume = stage.volume;
+      const fume = withVolume ? stage.volume : null;
       if (fume) {
         const u = fume.uniforms;
         u.tDepth!.value = scene.depthTexture;
@@ -170,7 +195,100 @@ export class Engine {
       this.quad.material = this.resolve;
       this.quad.render(r);
     }
-    this.post.render(accum.texture, scene.depthTexture, stage.look, seq, this.diagnostic, stage.camera.near, stage.camera.far);
+  }
+
+  private show(stage: Stage, seq: number, diag: Diagnostic, target: THREE.WebGLRenderTarget | null = null, plain = false): void {
+    const accum = this.accumTarget as THREE.WebGLRenderTarget;
+    const scene = this.sceneTarget as THREE.WebGLRenderTarget;
+    this.post.render(accum.texture, scene.depthTexture, stage.look, seq, diag, stage.camera.near, stage.camera.far, target, plain);
+  }
+
+  private shown(): [THREE.WebGLRenderTarget, THREE.WebGLRenderTarget] {
+    const { width, height } = this.format;
+    const make = (): THREE.WebGLRenderTarget =>
+      new THREE.WebGLRenderTarget(width, height, { type: THREE.UnsignedByteType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false, depthBuffer: false, colorSpace: THREE.NoColorSpace });
+    this.shownA ??= make();
+    this.shownB ??= make();
+    return [this.shownA, this.shownB];
+  }
+
+  private flagged(stage: Stage): { parts: Map<string, LivePart>; effect: boolean } {
+    const parts = new Map<string, LivePart>();
+    let effect = false;
+    for (const p of stage.parts?.all() ?? []) {
+      if (p.state !== 'stand-in' || (this.part !== null && p.id !== this.part)) continue;
+      if (p.kind === 'effect') effect = true;
+      else parts.set(p.id, p);
+    }
+    return { parts, effect };
+  }
+
+  private renderStandIns(stage: Stage, frame: number, seq: number): void {
+    const r = this.renderer;
+    const { parts, effect } = this.flagged(stage);
+    const swapped: [Drawn, THREE.Material | THREE.Material[]][] = [];
+    const muted = new Set<THREE.Material>();
+    stage.scene.traverse((o) => {
+      if (!isDrawn(o)) return;
+      const id = partOf(o);
+      const list = Array.isArray(o.material) ? o.material : [o.material];
+      if (id !== null && parts.has(id)) {
+        swapped.push([o, o.material]);
+        const twins = list.map((m) => flagMaterial(m, FLAG_SOLID));
+        o.material = Array.isArray(o.material) ? twins : (twins[0] as THREE.Material);
+      } else {
+        for (const m of list) if (m.colorWrite) muted.add(m);
+      }
+    });
+    for (const m of muted) m.colorWrite = false;
+    try {
+      this.accumulate(stage, frame, seq, [CENTRE], 0, false, effect ? FLAG_EFFECT : null);
+    } finally {
+      for (const m of muted) m.colorWrite = true;
+      for (const [o, m] of swapped) o.material = m;
+    }
+    this.show(stage, seq, 'standins');
+  }
+
+  private renderSolo(stage: Stage, frame: number, seq: number, samples: readonly Sample[]): void {
+    const part = stage.parts?.byId(this.part ?? '');
+    const hidden: THREE.Object3D[] = [];
+    const solid = part?.kind === 'solid';
+    stage.scene.traverse((o) => {
+      if (!isDrawn(o) || !o.visible) return;
+      if (solid ? partOf(o) !== part?.id : !part) {
+        o.visible = false;
+        hidden.push(o);
+      }
+    });
+    stage.solo?.(part ? part.id : null);
+    try {
+      this.accumulate(stage, frame, seq, samples, 0, part ? part.kind === 'effect' : false);
+    } finally {
+      stage.solo?.(null);
+      for (const o of hidden) o.visible = true;
+    }
+    this.show(stage, seq, null);
+  }
+
+  private renderMotion(stage: Stage, frame: number, seq: number, samples: readonly Sample[]): void {
+    const [a, b] = this.shown();
+    this.accumulate(stage, frame, seq, samples, 0, true);
+    this.show(stage, seq, null, a, true);
+    this.accumulate(stage, frame, seq, samples, config.motion.checkGapSeconds, true);
+    this.show(stage, seq, null, b, true);
+    this.post.difference(a.texture, b.texture);
+  }
+
+  render(stage: Stage, frame: number, seq: number, tier: string): void {
+    const samples = frameSamples(seq, samplesOf(tier));
+    if (this.diagnostic === 'standins') this.renderStandIns(stage, frame, seq);
+    else if (this.diagnostic === 'solo') this.renderSolo(stage, frame, seq, samples);
+    else if (this.diagnostic === 'motion') this.renderMotion(stage, frame, seq, samples);
+    else {
+      this.accumulate(stage, frame, seq, samples, 0, true);
+      this.show(stage, seq, this.diagnostic);
+    }
     this.finish();
   }
 

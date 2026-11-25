@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import register from '../../parts/PARTS.json';
 import { FPS } from '../config';
 import { Engine } from '../core/engine';
+import type { Stage } from '../core/stage';
 import { createFilm, type FilmInfo, type FilmState } from '../film/film';
 
 declare const __ENGINE_HASH__: string;
@@ -17,7 +18,7 @@ export interface Carcass {
   ready: Promise<void>;
   info(): Record<string, unknown>;
   setFormat(id: string): void;
-  setDiagnostic(view: string | null): void;
+  setDiagnostic(view: string | null, part?: string | null): void;
   film(): FilmInfo;
   filmState(frame: number): FilmState;
   renderFilmFrame(frame: number, tier: string): Promise<void>;
@@ -37,6 +38,15 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
   const film = createFilm();
   let tier = 'review';
   const parts = (register as { parts: Part[] }).parts;
+  const live = new Map<string, { part: string; unit: string }>();
+  const note = (stage: Stage): void => {
+    for (const p of stage.parts?.all() ?? []) if (p.state === 'stand-in') live.set(p.id, { part: p.id, unit: p.unit });
+  };
+  const standIns = (): { part: string; unit: string }[] => {
+    const all = new Map(live);
+    for (const p of parts) if (p.state === 'stand-in' && !all.has(p.id)) all.set(p.id, { part: p.id, unit: p.unit });
+    return [...all.values()].sort((a, b) => (a.part < b.part ? -1 : a.part > b.part ? 1 : 0));
+  };
 
   const api: Carcass = {
     ready: Promise.resolve(),
@@ -47,7 +57,7 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
       engine: __ENGINE_HASH__,
       units: __UNIT_HASHES__,
       versions: { three: THREE.REVISION, browser: navigator.userAgent },
-      standIns: parts.filter((p) => p.state === 'stand-in').map((p) => ({ part: p.id, unit: p.unit })),
+      standIns: standIns(),
       gl: {
         renderer: engine.gl.getParameter(engine.gl.RENDERER) as string,
         vendor: engine.gl.getParameter(engine.gl.VENDOR) as string,
@@ -57,19 +67,25 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
     setFormat: (id) => {
       if (id !== engine.format.id) engine.setFormat(id);
     },
-    setDiagnostic: (view) => engine.setDiagnostic(view),
+    setDiagnostic: (view, part = null) => engine.setDiagnostic(view, part),
     film: () => film.info(),
     filmState: (frame) => film.state(frame),
     renderFilmFrame: async (frame, t) => {
       tier = t;
-      engine.render(film.stageAt(frame), frame, frame, t);
+      await film.ready(frame);
+      const stage = film.stageAt(frame);
+      note(stage);
+      engine.render(stage, frame, frame, t);
     },
     loop: () => film.info().loop,
     renderLoopFrame: async (frame, t) => {
       const count = film.info().loop.frameCount;
       if (!Number.isInteger(frame) || frame < 0 || frame > count) throw new Error(`No such loop frame: ${frame}`);
       tier = t;
-      engine.render(film.loopStage(), frame, frame % count, t);
+      await film.readyLoop();
+      const stage = film.loopStage();
+      note(stage);
+      engine.render(stage, frame, frame % count, t);
     },
     grab: async (url) => {
       const { width, height } = engine.format;

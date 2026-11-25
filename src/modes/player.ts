@@ -29,6 +29,7 @@ export function createPlayer(span: (frameCount: number, loopCount: number, shots
       engine ??= new Engine(canvas, format);
       const e = engine;
       let origin = -1;
+      const prepared = range.loop ? film.readyLoop() : film.readyAll();
       const tick = (ms: number): void => {
         if (origin < 0) origin = ms;
         let step = Math.floor(((ms - origin) / 1000) * FPS);
@@ -44,7 +45,7 @@ export function createPlayer(span: (frameCount: number, loopCount: number, shots
         else e.render(film.stageAt(frame), frame, frame, 'draft');
         requestAnimationFrame(tick);
       };
-      requestAnimationFrame(tick);
+      void prepared.then(() => requestAnimationFrame(tick));
     },
   };
 }
