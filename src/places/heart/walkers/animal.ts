@@ -56,6 +56,8 @@ export interface Plan {
   neck(seconds: number): NeckAim;
   /** Seconds between shifts of weight for one that stands. 0: none. */
   fidget: number;
+  /** One that walks and rests may shift its weight in its rests: seconds between shifts, and how much of one shows at `seconds` (0 while it walks). */
+  shifts?: { every: number; weight(seconds: number): number } | undefined;
   /** How far the body sinks toward the crust when the tuft is down, metres. */
   dip: number;
   /** How far ahead of and behind its place under the body a pad is ever planted, metres. The legs are cut to it. */
@@ -472,7 +474,7 @@ export class Animal {
       }
       const knob = Math.max(gauss((s - S1) / (0.3 * k)), gauss((s - S2) / (0.26 * k)), gauss((s - S3) / (0.2 * k)));
       for (let n = 0; n <= LEG_SIDES; n++) {
-        const sole = inPad && (PAD[i - pad] as [number, number])[0] <= 0.02 ? 0.25 : 1;
+        const sole = inPad && (PAD[i - pad] as [number, number])[0] <= 0.02 ? 0.6 : 1;
         this.skin.describe(tube, i, n, s + j * 1.3, (n / LEG_SIDES) * Math.PI * 2 * Math.max(r, 0.14 * k), lerp(0.36, 0.52, smooth(0, 1.5 * k, s)) - 0.26 * knob + 0.1 * shape, sole * lerp(0.4, 1, smooth(0, 1.1 * k, s)), r, b.seed, inPad ? 4 : 3, knob);
       }
     }
@@ -525,8 +527,9 @@ export class Animal {
       const f = cycle - n;
       let event = 0;
       let w = -1;
-      let unload = smooth(0.56, DUTY, f) * (1 - smooth(0.93, 1, f));
-      let land = f < 0.14 ? Math.sin((Math.PI * f) / 0.14) : 0;
+      // It leans off a pad before the pad lifts and comes back over it only after the pad has taken weight again.
+      let unload = f < 0.1 ? 1 - smooth(-0.08, 0.1, f) : smooth(0.52, DUTY, f) * (1 - smooth(0.92, 1.1, f));
+      let land = f < 0.16 ? Math.pow(Math.sin((Math.PI * f) / 0.16), 2) : 0;
       let high = b.stepH;
       if (f >= DUTY) w = (f - DUTY) / (1 - DUTY);
       if (plan.fidget > 0) {
@@ -536,8 +539,8 @@ export class Animal {
         const ff = beat - event;
         const win = 1.6 / (plan.fidget * 4);
         w = ff > 1 - win ? (ff - (1 - win)) / win : -1;
-        unload = smooth(1 - 2.3 * win, 1 - win, ff) * (1 - smooth(1 - 0.3 * win, 1, ff));
-        land = ff < 0.3 * win ? Math.sin((Math.PI * ff) / (0.3 * win)) : 0;
+        unload = ff < 0.7 * win ? 1 - smooth(-0.4 * win, 0.7 * win, ff) : smooth(1 - 2.6 * win, 1 - win, ff) * (1 - smooth(1 - 0.4 * win, 1 + 0.7 * win, ff));
+        land = ff < 0.4 * win ? Math.pow(Math.sin((Math.PI * ff) / (0.4 * win)), 2) : 0;
         high = b.stepH * (0.3 + 0.5 * hash(event, j + b.seed));
       }
       const from = plan.fidget > 0 ? this.plant(j, 0, event + 1) : this.plant(j, n, 0);
@@ -550,8 +553,8 @@ export class Animal {
       if (w >= 0) {
         const to = plan.fidget > 0 ? this.plant(j, 0, event + 2) : this.plant(j, n + 1, 0);
         // The heel peels first, the pad swings low and is put down toe first.
-        const e = smooth(0.1, 0.94, w);
-        const e2 = e * e * (3 - 2 * e) * 0.35 + e * 0.65;
+        const e = smooth(0.05, 0.96, w);
+        const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
         px = lerp(from[0], to[0], e2);
         pz = lerp(from[1], to[1], e2);
         lift = high * Math.pow(Math.sin(Math.PI * Math.pow(w, 0.85)), 1.3);
@@ -562,6 +565,23 @@ export class Animal {
         if (tl > 0.5) {
           fx = tx / tl;
           fz = tz / tl;
+        }
+      }
+      if (plan.shifts && w < 0) {
+        // In a rest between steps: the pad is lifted and put down where it was.
+        const much = plan.shifts.weight(seconds);
+        if (much > 0) {
+          const beat = seconds / (plan.shifts.every * 4) + leg.offset;
+          const ff = beat - Math.floor(beat);
+          const win = 1.6 / (plan.shifts.every * 4);
+          const up = ff > 1 - win ? (ff - (1 - win)) / win : -1;
+          const lean = ff < 0.7 * win ? 1 - smooth(-0.4 * win, 0.7 * win, ff) : smooth(1 - 2.6 * win, 1 - win, ff) * (1 - smooth(1 - 0.4 * win, 1 + 0.7 * win, ff));
+          unload += much * lean * (1 - unload);
+          if (ff < 0.4 * win) land += much * Math.pow(Math.sin((Math.PI * ff) / (0.4 * win)), 2) * (1 - land);
+          if (up >= 0) {
+            lift = much * b.stepH * (0.3 + 0.4 * hash(Math.floor(beat), j + b.seed)) * Math.pow(Math.sin(Math.PI * Math.pow(up, 0.85)), 1.3);
+            pitch = much * 0.6 * Math.sin(Math.PI * Math.pow(up, 0.7)) * (1 - 0.3 * up);
+          }
         }
       }
       const world = env.drift(px, pz, seconds);
@@ -792,7 +812,7 @@ export class Animal {
       let hi = 3;
       let sx = 1;
       let sy = 0;
-      for (let it = 0; it < 14; it++) {
+      for (let it = 0; it < 24; it++) {
         beta = (lo + hi) / 2;
         sx = 0;
         sy = 0;
