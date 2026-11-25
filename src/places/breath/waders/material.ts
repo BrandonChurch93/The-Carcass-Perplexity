@@ -122,8 +122,12 @@ void main() {
     float knuckle = back * pow(0.5 + 0.5 * cos(u * 120.0), 2.0);
     // Between two ribs the skin is drawn in and sees less of the sky, whatever the light.
     float between_ = cage * (1.0 - rib) * each * mid;
-    height = 0.028 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.003 * (grain - 0.5) * mid;
-    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.3 * between_);
+    height = 0.028 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.005 * (grain - 0.5) * mid;
+    // Nothing under the skin is smooth: muscle gone slack, the heads of bones, old scars.
+    float drape = fbm(q * vec2(5.0, 7.0) + 9.0) - 0.5;
+    float crease = fbm(q * vec2(17.0, 23.0) + 3.0) - 0.5;
+    height += (0.03 * drape + 0.009 * crease) * mid * (1.0 - 0.6 * cage);
+    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.3 * between_) * (1.0 + (0.4 * drape + 0.3 * crease) * mid);
     float between = between_;
     occ *= 1.0 - 0.6 * between - 0.25 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);

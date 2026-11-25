@@ -238,11 +238,11 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 1.1 * smooth(0.22, 0, u) ** 1.5);
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.55 * smooth(0.2, 0, u) ** 1.5);
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
-        const rr = r * (1 + 0.07 * Math.cos(phi * 2) + 0.05 * Math.sin(phi * 3 + u * 14 + seed) + 0.1 * Math.max(0, Math.sin(phi)) ** 3 * (0.5 + 0.5 * Math.sin(u * 62)));
+        const rr = r * (1 + 0.07 * Math.cos(phi * 2) + 0.05 * Math.sin(phi * 3 + u * 14 + seed));
         this.neckLocal[(i * neckSides + s) * 2] = rr * Math.cos(phi);
         this.neckLocal[(i * neckSides + s) * 2 + 1] = rr * Math.sin(phi);
       }
@@ -255,13 +255,13 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 3.6 * (1 - smooth(-0.1, 0.34, u)) ** 1.3 * smooth(-0.06, 0.08, u) + 0.9 * (1 - smooth(0.05, 0.44, u));
+      const thigh = 2.4 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 0.75 * (1 - smooth(0.02, 0.4, u)) + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
       const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.22 * Math.min(1, thigh / 2.4));
+        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));
         this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
       }
     }
@@ -678,7 +678,7 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.2 + 0.8 * u) * (0.16 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.14 * Math.sin(u * 17 + st.phase * 11));
+        const curl = (0.2 + 0.8 * u) * (0.3 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.2 * Math.sin(u * 17 + st.phase * 11));
         dx += Math.cos(st.phase * 3) * curl;
         dz += Math.sin(st.phase * 3) * curl;
         dy += 0.35 * curl * Math.sin(st.phase * 7);
