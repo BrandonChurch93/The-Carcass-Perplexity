@@ -465,7 +465,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const z = 250.3 + fz * ahead - rz * left;
       axis.set(rng.range(-1, 1), 0, rng.range(-1, 1)).normalize();
       const q = new THREE.Quaternion().setFromAxisAngle(axis, rng.range(-0.34, 0.34)).multiply(tilt.setFromAxisAngle(UP, rng.range(0, 6.28)));
-      set(kinds.hero, x, y, z, half * rng.range(0.9, 1.15), tall, half * rng.range(0.9, 1.15), q, rng.range(0.42, 0.62), y - tall, staged);
+      set(kinds.hero, x, y, z, half * rng.range(0.9, 1.15), tall, half * rng.range(0.9, 1.15), q, rng.range(0.5, 0.68), y - tall, staged);
     };
     for (const [ahead, left, y, half, tall] of [
       [7.2, 3.5, 2.3, 2.0, 2.7],
@@ -483,7 +483,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       [12.6, 3.4, 0.3, 1.0, 0.5],
     ] as [number, number, number, number, number][]) pile(ahead, left, y, half, tall);
     // The one that shows at the key: a boulder of clinker on the pile, 7 m from the lens, filling the bottom left corner of the frame out of focus.
-    stand(2, -454.9 + fx * 7.0 - rx * 2.25, 250.3 + fz * 7.0 - rz * 2.25, 5.87, 0.95, 1.5, 0.62, staged);
+    stand(2, -454.9 + fx * 7.0 - rx * 2.25, 250.3 + fz * 7.0 - rz * 2.25, 5.87, 0.95, 1.5, 0.74, staged);
     // Its picture's near mass is one soft dark shape: its top falls from the left edge to the bottom of the frame two fifths of the way across,
     // and the rest of the bottom edge is open floor. So five more stand to the right of the boulder, each lower than the last and each wide
     // enough to stand in its neighbours, and none right of the middle: a row along the whole edge read as a wall from the shot's first frame.
@@ -494,8 +494,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       [1, 0.58, 5.35, 0.56, 7.05],
       [4, 0.24, 5.24, 0.55, 6.95],
     ] as [number, number, number, number, number][]) {
-      // Dark and without ash (a tone under 0.5), so the lake puts no bright rim on it.
-      stand(shape, -454.9 + fx * ahead - rx * off, 250.3 + fz * ahead - rz * off, top, half, 1.5, rng.range(0.4, 0.48), staged);
+      // Dark, with ash enough on its top (a tone just over 0.5) to read as rock from the shot's first frame and not as a hole in it.
+      stand(shape, -454.9 + fx * ahead - rx * off, 250.3 + fz * ahead - rz * off, top, half, 1.5, rng.range(0.5, 0.58), staged);
     }
     // It is an island the crust breaks against: a skirt of upturned plates and rubble round its foot.
     const [ix, iz] = ISLAND;

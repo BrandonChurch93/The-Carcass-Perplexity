@@ -62,6 +62,14 @@ export const POOLS = {
 // When the surge comes down (the event `surge`; its front runs 25 t + 5 t^2 metres down the course, as in fall/index.ts), the strip behind the
 // front casts 1.3 more (in emitterIrradiance), as the fall's own strip on its bed did before the rig took that light over.
 export const STREAM = { rows: 48, open: 0.5, half: 6, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
+// The glow before the mouth: the lava on the floor of the vault and the lit fume over the lip light the cliff beside and above the mouth,
+// which no light inside the tube can reach (it stands behind that face) and which the strip, 100 m off, does not. One round light before
+// the east half of the arch, where the picture's cliff is warm (83 70 68 right of the arch against our 65 59 57; 79 65 67 above it in the wide
+// view against 63 59 58), and far from the slope west of the stream, which the picture keeps grey. All eight places in the list are taken: it
+// stands in the bank's place, which is empty outside the bank's own shot. 60 m east of the mouth's middle, 25 m over its floor, 40 m out,
+// 40 m wide, a tenth of the lava at 1400 K. With it: right of the arch 70 60 57, above it in the wide view 67 60 58, the slope west of the
+// stream 71 55 50 (70 before). Higher and stronger (45 m up, 0.14) lit the slopes beside the stream more and the cliff no more.
+export const MOUTH_GLOW = { east: 60, up: 25, out: 40, radius: 40, share: 0.1 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
 
@@ -570,8 +578,16 @@ export function createRig(t0: number): Rig {
       (uniforms.uPulse as THREE.IUniform<number>).value = 0.5 + 0.5 * Math.sin(seconds * 1.05);
       const staged = stagedSeconds();
       const banked = staged >= bankFrom && staged <= bankTo;
-      bankLight.position.y = banked ? BANK.at[1] : -1000;
-      bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]).multiplyScalar(banked ? 1 : 0);
+      if (banked) {
+        bankLight.position.set(BANK.at[0], BANK.at[1], BANK.at[2]);
+        bankLight.radius = BANK.radius;
+        bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]);
+      } else {
+        // Outside the bank's shot its place in the list holds the glow before the mouth (MOUTH_GLOW).
+        bankLight.position.set(MOUTH.x + MOUTH_GLOW.east, MOUTH.floor + MOUTH_GLOW.up, MOUTH.z + MOUTH_GLOW.out);
+        bankLight.radius = MOUTH_GLOW.radius;
+        bankLight.radiance.set(streamRadiance[0], streamRadiance[1], streamRadiance[2]).multiplyScalar(MOUTH_GLOW.share);
+      }
       (uniforms.uBank as THREE.IUniform<THREE.Vector4>).value.set(BANK.at[0], BANK.at[2], 1 / BANK.shadeRadius, banked ? BANK.shade : 0);
       // The pools ride the crust.
       POOLS.at.forEach((at, i) => {
