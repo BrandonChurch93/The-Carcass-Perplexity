@@ -37,6 +37,13 @@ const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
+/** Before it goes the crust gives twice, at these seconds: the seam jumps hotter, a breath of steam comes off it, and the slab
+ *  drops a finger's width. So something happens in each second of the near shot and not only in its last. */
+const GIVES = [SETTLE_AT - 2.25, SETTLE_AT - 1.15];
+const give = (seconds: number, at: number): number => {
+  const t = seconds - at;
+  return ramp(-0.02, 0.12, t) * Math.exp(-Math.max(0, t - 0.12) / 0.7);
+};
 function settling(seconds: number): { down: number; open: number; puff: number; flare: number; slab: number; ember: number } {
   const t = seconds - SETTLE_AT;
   const down = ramp(0, 0.55, t);
@@ -56,6 +63,10 @@ const NEAR_SHOT = ((): { from: number; to: number } => {
   return { from: secondsInPlace(UNIT, s.first) - 0.3 / 60, to: secondsInPlace(UNIT, s.last) + 0.7 / 60 };
 })();
 const LIFT = 2.0;
+const HULL_GROW = 1.3;
+const HULL_AT: [number, number, number] = [BODY.centre.x * (1 - HULL_GROW), 0.2 * (1 - HULL_GROW), BODY.centre.z * (1 - HULL_GROW)];
+/** From the wide view the heap stood as a dark blot on the lake (median 36 against the lake's 58; the picture has 45 against 51). */
+const WIDE_LIFT = 1.3;
 
 const COS = Math.cos(YAW);
 const SIN = Math.sin(YAW);
@@ -95,6 +106,7 @@ export function create(ctx: HeartContext): HeartPiece {
     uBranch: { value: new THREE.Vector4(...BREAK) },
     uSlab: { value: 0 },
     uFlare: { value: 0 },
+    uSeam: { value: 0 },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
     // for on half the frame at heart-2.
@@ -147,6 +159,12 @@ export function create(ctx: HeartContext): HeartPiece {
   const hanging = RAGS.map(([at, length, half, yaw, seed]) => carcass(ragGeometry(at, length, half, yaw, seed)));
   const near = new THREE.Group();
   const bodies = [carcass(bodyGeometry(baked, 290, 240, true)), carcass(bodyGeometry(baked, 180, 150))] as const;
+  // The hull is the subject of the near shot: it stands a third larger than the shape the skin was laid round, grown from a point
+  // low in its middle, so it comes up out of the nearest ropes and the drape as a bulk and its footprint in the field is as it was.
+  for (const body of bodies) {
+    body.scale.setScalar(HULL_GROW);
+    body.position.set(HULL_AT[0], HULL_AT[1], HULL_AT[2]);
+  }
   near.add(bodies[0], carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
   const far = new THREE.Group();
   far.add(
@@ -209,10 +227,10 @@ export function create(ctx: HeartContext): HeartPiece {
 
   // What stands over the crust hides the sky from it: the body, the feet of the two arches, the span of the first.
   const SHADES: [number, number, number, number][] = [
-    [BODY.centre.x, BODY.centre.z, 4.8, 0.55],
-    [FOOT_A[0], FOOT_A[1], 1.8, 0.5],
-    [FOOT_B[0], FOOT_B[1], 1.5, 0.45],
-    [1.0, 0.4, 3.6, 0.16],
+    [BODY.centre.x, BODY.centre.z, 3.4, 0.45],
+    [FOOT_A[0], FOOT_A[1], 1.0, 0.45],
+    [FOOT_B[0], FOOT_B[1], 0.9, 0.4],
+    [1.0, 0.4, 2.6, 0.1],
   ];
   const discs = ctx.rig.contactDiscs(SHADES.length);
 
@@ -238,7 +256,9 @@ export function create(ctx: HeartContext): HeartPiece {
     kind: 'steam' as const,
     lean: [-0.3 + 0.2 * i, 0.2] as [number, number],
   }));
-  ctx.sources.steam.push(...smokes, ...bursts);
+  // A wisp of vapour stands over the seam through the whole of the near shot, and stirs.
+  const wisp = { at: [0, 0.3, 0] as [number, number, number], radius: 0.38, strength: 0, rise: 2.0, kind: 'steam' as const, lean: [-0.35, 0.15] as [number, number] };
+  ctx.sources.steam.push(...smokes, ...bursts, wisp);
   ctx.sources.heat.push(heat);
 
   const place = (seconds: number): void => {
@@ -254,23 +274,31 @@ export function create(ctx: HeartContext): HeartPiece {
     heat.at[2] = z + tz;
     const staged = stagedSeconds();
     const nearShot = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to;
-    shared.uLift.value = nearShot ? LIFT : 1;
+    shared.uLift.value = nearShot ? LIFT : WIDE_LIFT;
     // From the wide view the smoke of the split gathered into a pale ball beside the hull: there it is thin.
     const smoky = nearShot ? 1 : 0.25;
     const now = settling(seconds);
     // The hull tips toward the split as it goes down: its far end by a hand's width, its end under the legs by half of that.
     for (const body of bodies) {
-      body.position.y = -0.5 * SETTLE_DROP * now.down;
+      body.position.y = HULL_AT[1] - 0.5 * SETTLE_DROP * now.down;
       body.rotation.z = SETTLE_TIP * now.down;
     }
-    shared.uSlab.value = now.slab;
+    const gives = GIVES.map((at) => give(seconds, at));
+    const gave = Math.max(...gives);
+    shared.uSlab.value = Math.max(now.slab, 0.1 * ramp(0, 0.15, seconds - (GIVES[0] as number)) + 0.12 * ramp(0, 0.15, seconds - (GIVES[1] as number)));
+    shared.uSeam.value = Math.min(1, 0.3 * ramp(SETTLE_AT - 2.7, SETTLE_AT, seconds) + 0.7 * gave);
     shared.uFlare.value = now.ember;
     bursts.forEach((burst, i) => {
       const [bx, bz] = toWorld((BURSTS[i] as [number, number])[0], (BURSTS[i] as [number, number])[1]);
       burst.at[0] = x + bx;
       burst.at[2] = z + bz;
-      burst.strength = 0.5 * now.puff;
+      burst.strength = 0.5 * now.puff + (i > 0 ? 0.32 * (gives[i - 1] as number) : 0);
     });
+    const [wx, wz] = toWorld((BURSTS[0] as [number, number])[0] + 0.3 * Math.sin(seconds * 0.7854 + 1.1), (BURSTS[0] as [number, number])[1]);
+    wisp.at[0] = x + wx;
+    wisp.at[2] = z + wz;
+    wisp.strength = nearShot ? 0.42 * (1 + 0.6 * waver(seconds, 3.3)) * (1 + 1.2 * gave) : 0;
+    wisp.rise = 2.0 * (1 + 0.3 * waver(seconds, 5.2));
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
     (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 3 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
