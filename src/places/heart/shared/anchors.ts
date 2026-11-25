@@ -53,10 +53,13 @@ export const WALKERS: Walker[] = [
   // The near one: it has moved 12 m east by the key of the one that sank, where it stands whole at the left of that frame with its tuft in the near seam.
   { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.75, size: 1.55, feed: 1, phase: 0.1 },
   { at: from(GROUP, 0, 0), when: T0, heading: 126, speed: 0.12, size: 1.2, feed: 1, phase: 0.33 },
-  { at: from(GROUP, 20, 8), when: T0, heading: 104, speed: 0.55, size: 1.0, feed: 1, phase: 0.62 },
-  { at: from(GROUP, 8, -19), when: T0, heading: 72, speed: 0.2, size: 0.92, feed: 0.8, phase: 0.87 },
-  { at: from(GROUP, 37, -15), when: T0, heading: 205, speed: 0.1, size: 0.84, feed: 1, phase: 0.2 },
-  { at: from(GROUP, 64, -10), when: T0, heading: 300, speed: 0.3, size: 0.97, feed: 0.6, phase: 0.48 },
+  // The second of the feeding picture: right of the hero and about 40 m beyond it from that camera, walking, trunk lifted.
+  { at: from(GROUP, 41.9, -13.6), when: T0, heading: 104, speed: 0.55, size: 1.3, feed: 1, phase: 0.62 },
+  // The third of the feeding picture: far left and about 85 m beyond the hero, in front of the fall, neck raised.
+  { at: from(GROUP, 41.3, -76.7), when: T0, heading: 125, speed: 0.2, size: 1.2, feed: 0.8, phase: 0.87 },
+  // Two more of the group, right of the feeding picture's frame for the whole of that shot.
+  { at: from(GROUP, 49.6, 5.5), when: T0, heading: 205, speed: 0.1, size: 0.84, feed: 1, phase: 0.2 },
+  { at: from(GROUP, 80.4, 8.0), when: T0, heading: 300, speed: 0.3, size: 0.97, feed: 0.6, phase: 0.48 },
   { at: from(spot(0.845, 0.447), 0, 0), when: T0, heading: 250, speed: 0.7, size: 1.05, feed: 0.3, phase: 0.7 },
   { at: from(spot(0.89, 0.446), 0, 0), when: T0, heading: 235, speed: 0.6, size: 0.9, feed: 0.8, phase: 0.05 },
   { at: from(spot(0.55, 0.437), 0, 0), when: T0, heading: 95, speed: 0.8, size: 1.1, feed: 0.2, phase: 0.55 },

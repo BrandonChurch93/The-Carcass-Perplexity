@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 26, 2026-11-25 04:54 UTC:
+Status 28, 2026-11-25 05:33 UTC:
 
-- `01-heart-0.jpg`: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier)
-- `02-pair-c.jpg`: Top: the lava at the line. Bottom: the mouth and its fall. Approved on the left, the build on the right. The lava now reads orange to yellow, no longer pale peach. The camera and the channel of the top view are being refitted next
-- `03-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
-- `04-key-heart-4-hd-draft.jpg`: The frame that answers heart-4, film frame 4006, hd, draft tier
+- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
+- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
+- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
+- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
 
+Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
+Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
 Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
-Status 24, 2026-11-25 04:22 UTC, showed: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place.
-Status 23, 2026-11-25 04:04 UTC, showed: The first-light land drawn alone, 3840 x 2160, one sample.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T04:54:55Z
-phase 3: 1.76 h used of 13.00 h
-build: 8.42 h used of 72.00 h
+2026-11-25T05:33:51Z
+phase 3: 2.41 h used of 13.00 h
+build: 9.06 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 12
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -460,7 +460,20 @@ Written 2026-11-25 01:13 UTC from `cut/CUTLIST.json` by `judgedTable(judgedList(
 
 Written in Phase 3: what the study showed, every locked setting, what worked and what did not, and the six recipes.
 
-none
+### What the study showed
+
+Nine sources of the twelve allowed: three photographs credited in `references/drafts/working/real/CREDITS.md` (`anchor-ertale-1.jpg`, `plate-dusk-1.jpg`, `plate-dusk-2.jpg`) read beside the five approved pictures, and six records of the U.S. Geological Survey, linked in the lines.
+
+1. The crust of a lava lake is plates tens of metres across with hot cracks between them, and the whole skin is carried one way across the lake, from the side where lava wells up to the side where it goes down. It moves at a walk or slower: 10 to 20 cm a second as a rule (https://www.usgs.gov/geology-and-ecology-of-national-parks/geology-hawaii-volcanoes-national-park), about 0.5 m a second where it is quick (https://www.usgs.gov/media/videos/thermal-image-sequence-summit-lava-lake-motion). The Heart's plates drift one way at 0.15 to 0.5 m a second and nothing on the lake moves at random.
+2. Where plates part, the line is narrow and zigzags, brightest where the skin has just torn and dark again within metres (https://pubs.usgs.gov/sir/2018/5008/sir20185008.pdf). A crack is a bright core with a short fall to red and then black. An even glowing band is wrong.
+3. Crust founders: a slab tilts, lava runs over its low edge, it goes under in seconds, and the fresh surface it leaves is bright and skins over (https://www.usgs.gov/media/videos/crustal-foundering-surface-halemaumau-crater-lava-lake). It is an event with a start and an end, and the fresh patch is the brightest open lava on the lake after the fountains.
+4. Spatter at the margin drags crust under, and the waves from a fountain cross the lake as arcs of glow (https://www.usgs.gov/media/videos/halemaumau-lava-lake-kilauea-summit-september-30-2021).
+5. A cascade from a vent in the wall enters the lake in several places, makes the lake slosh, drives upwelling at its foot and pulls cooled crust under (https://www.usgs.gov/media/videos/evening-views-eruption-halemaumau-12272020); one opening measured 4 to 6 m wide (https://www.usgs.gov/media/videos/halemaumau-west-vent-flowing-lava-lake-12292020). The Heart's mouth is 118 m wide and stands 96 m up, so its fall is many braided streams and its foot is open, bright and moving. One ribbon over a dark fan is wrong.
+6. Erta Ale at night (`anchor-ertale-1.jpg`): with no other light the plates read dark red and not black, the torn edges orange, and the only yellow-white is where lava wells up. Fume between the lens and the lake is a veil that is brightest near the source and thins to nothing away from it. The near rim is a black shape with no detail.
+7. Halemaʻumaʻu at dusk from far off (`plate-dusk-1.jpg`): under a blue-grey sky the glow is one small pink-orange patch at the foot of the plume. The plume is grey above and warm only in its lowest part, and the land is dark and almost without colour. At dusk the sky sets the colour of everything more than a few hundred metres from lava.
+8. The glow close by at night (`plate-dusk-2.jpg`): yellow-white to orange to deep red inside the fume within a few widths of the vent. The rock beside it is lit only on the facets that face the source, in speckles, with black between. Lava gives rim and facet light. It does not fill.
+9. The five approved pictures agree with all of that and add the Heart's own facts: the crust is near black (20 to 45 of 255) where no glow reaches, the animals are near black on the side away from the lava and lit orange from below and behind, and smoke stands in banks with dark air between them.
+10. What this changed in the build: one drift field for every plate; cracks as short lines with bright cores and spill light on the crust beside them; foundering as timed events; the fall as braided streams over black rock; the air as local banks lit from below, with an even veil kept thin; no fill light on the animals; the wide key lit by the sky and the low views lit by the lake.
 
 ## The pick
 
@@ -549,6 +562,12 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. Phase 3: the Builder wrote first-light versions of land and lake itself (rough shape with rock pictures; one sheet with the crust's skin, a drifting net of seams, the seams the pictures show, and the same heat drawn into the glow map) as the worked example for the owners and as the proof that the rig runs in the software renderer. The wall is cut back into an alcove at the mouth for the fall's owner to roof. The lava is an effect part drawn by the crust's sheet.
 - 2026-11-25. Phase 3: checks G13 and G14 have no runner in tools/checks. An agent writes it from kit/05-ARCHITECTURE.md section 3 while the place is built. Sound effects cannot be made (the account has no characters until 2026-12-23): the bed of sound recipe of the look lock is written from the music and the one kept clip, and says so.
 - 2026-11-25. The engine rejects hidden fragments itself. MEASURED: the software renderer tests depth after the fragment shader, so every layer of triangles is shaded in full, seen or not, and a shader that discards in its first line costs a fifth. So a place that sets `depthFirst` is drawn depth-first into a depth texture of its own (each opaque shader material by a twin with the same vertex shader), and every shader material of the place gets a first line that drops a 2 x 2 block when all four of its pixels lie behind that depth. MEASURED on key heart-0 at 3840 x 2160 with the first light: 13.5 s a frame of one sample against 17.7 s, and the picture is the same byte for byte (0 of 1,555,200 bytes differ at the preview size; the first try, which dropped single pixels, changed 688 pixels through their derivatives and was thrown away). Why: it is the only way found to make cost follow what is seen, it needs nothing from the owners of the parts, and it changes no picture. A material that cuts holes joins by giving its discard alone in `userData.depthFragment`.
+- 2026-11-25. Heart cameras are fixed numbers in the world and the land is built round them, not the other way: a camera that stood a height above whatever the land was that day moved every time the land owner handed back
+- 2026-11-25. The five Heart shots share one move, a push in with a slight crab to the right, slower and lower shot by shot; the cut list said left, hold and out for three of them and now says in
+- 2026-11-25. The channel of the line view was re-laid along the shore (two to four metres out) because the approved picture's channel runs across the frame beside the rocks, not out into the lake; the sulphur vent moved with it
+- 2026-11-25. The feeding shot was restaged from the approved picture's own geometry: the hero's back stands at about twice the height of the lens and its feet a third up the frame, which with a hero 11 m at the back puts the lens 66 m away and 6.3 m over the crust (it was 80 m and 3 m, which made the hero small over an empty plane). The second and third of the group were placed where the picture has them; two more stand out of that frame
+- 2026-11-25. Depth of field is built as a hybrid by a supporting agent: the kit fixes one lens point per sample and the tiers have 1, 2 and 4 samples, which draws ghost copies, so a gather blur by depth runs once after accumulation and fills between them. Until it lands every Heart lens stays at aperture 0
+- 2026-11-25. Warmth of the low views comes from the air lit by the lake (the air owner's layer), not from the grade: the grade stays neutral so the wide key keeps its measured regions
 
 ## Notes from Brandon
 
@@ -636,7 +655,11 @@ Each reports by message to the Builder.
 | `heart_air_owner` | build | The Heart's air: `sky`, `air`, `fume`, the steam and smoke of every source, the heat shimmer, in `src/places/heart/air/` | `agent/heart-air` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
 | `heart_walkers_owner` | build | The Heart's `crust-walkers`: the animal, its cycle, the herd of fourteen, in `src/places/heart/walkers/` | `agent/heart-walkers` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
 | `heart_sunk_owner` | build | The Heart's `sunk-walker` and the folded skin of lava round it, in `src/places/heart/sunk/` | `agent/heart-sunk` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
-| `gate_g13_builder` | tool | The runners of checks G13 and G14 with tests, and the stand-in reference records of every part in `parts/PARTS.json` | `agent/g13` | 03:52 UTC, 25 Nov | 90 minutes |
+| `engine_focus_builder` | tool | Depth of field in the engine: every sample stays at its own point on the lens and a gather blur by depth runs once after accumulation, with a `focus` diagnostic view and lens overrides for test stills, in `src/core/` | `agent/core-dof` | 05:22 UTC, 25 Nov | 100 minutes, hand-backs at 60 and 100 |
+
+Hand-backs of the six owners in Phase 3, each merged into `main` after a check of trailers, files touched, types and the Builder's own compare of the keys: version 1 of all six by 04:46 UTC; land v2 `17395d1` and walkers v2 `6490fd6` by 05:05 UTC; fall v2 `ec1fb3c`, air v2 `e8dc858`, lake v2 `7aa900a`, sunk v2 `e33427c` between 05:08 and 05:13 UTC. Version 3 is due from each by its 170th minute (about 06:42 UTC). Every owner got the refitted cameras at 05:05 UTC and the restaged feeding shot at 05:28 UTC.
+
+Ended with a record in Phase 3: `gate_g13_builder` (G13 merged 04:2x UTC, G14 merged as `897b62d`, 19 tests; G14 MEASURED that 13 of 14 Heart parts do not come round the loop, which is Phase 5 work).
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
@@ -731,3 +754,6 @@ none
 - 2026-11-25 04:22 UTC. 04:23 UTC: G13 merged (the register has every stand-in reference again, 799 tests green by the agent's run). The first versions of all six owners of the Heart merged: land (2cd3ff2), fall (ac59ed2), sunk (8533fa7), walkers (3743542), lake (e18921a), air (225329c). 14 of 14 parts are built parts. Compared at hd draft against the five approved pictures: all far from the bar. Status 24 sent.
 - 2026-11-25 04:49 UTC. Status 25 sent 04:42. The first tone curve alone turned every lava temperature pale peach, so a second curve for what glows was added: Look.fire [lo, hi, exposure] in src/core/stage.ts and uFire in src/core/post.ts; above lo the pixel passes to a filmic curve, fully by hi; greys stay continuous. Heart look now exposure 1.7, knee [0.6, 0.6], fire [0.35, 1.6, 0.6]; other places unchanged. Land v2 merged (rim fitted to the wide picture, bench in treads with a crag, rock faces, cool grey rock, smaller steam); build and tsc pass.
 - 2026-11-25 04:55 UTC. Status 26 sent 04:56. G14 (the loop's seam) merged from agent/g13 with 19 tests; today 13 of 14 Heart parts do not come round in 8 s, which is Phase 5 work (kit/08 Phase 2 step 4: the loop's motion does not have to close yet); the fallback of kit/03 section 9 (cross-fade with itself one loop length earlier) is always available. The gate builder has handed back both jobs and is done.
+- 2026-11-25 05:17 UTC. Status 27 sent: four compares (line, sunk, wide key, mouth) with fall, air, lake and sunk v2 merged; cameras on one grammar; tone measured per key
+- 2026-11-25 05:30 UTC. Study written under Look lock: ten lines from nine sources (three photographs, six USGS records)
+- 2026-11-25 05:34 UTC. Status 28 posted: the feeding shot restaged, its motion sheet, notes to the owners, tests 818 of 818

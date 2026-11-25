@@ -4,7 +4,7 @@
   },
   "places": {
     "marsh": "The origin is the centre of the seep pool. North is -z and east is +x. The world is a salt flat 18 km square inside a ring of escarpment that starts about 5 km out, and fog hides the far edge. The establishing eye stands 8.5 m above the flats on a rock rise about 7 m high and looks 52 degrees east of north, with the pool 35 m ahead and 15 m to its left.",
-    "heart": "The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.",
+    "heart": "The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high at the back. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.",
     "breath": "The origin is the centre of the main shaft at the level of the shelf. North is -z and east is +x. The world is 16 km square. The shaft is 60 m across and 70 m deep, with its collapse on the east and south east side. The cliff with the cave is about 3 km away to the north east and the sun is low in the north. Every key looks north to north north east, so the cliff is upper right and the sun upper left. The waders are about 3.4 m tall.",
     "eye": "The origin is the centre of the lake, on the water. North is -z and east is +x. The low sun is in the west. The world is a disc 3.4 km in radius. The shore is 1 km from the centre, so the lake is 2 km across, and the deep is a disc 480 m in radius. The cliffs stand about 200 m, lower in the west and the south, with the brow overhanging on the east. A gravel fan brings the south shore in by 180 m, and the herd stands on it. The drinkers are about 3.3 m to the head.",
     "ribs": "The origin is on the floor of the strait between the first pair of ribs, level with the drowned one. North is -z, down the strait, where the bore comes from, and east is +x. Sea level is 0. The tidal floor is a plateau 1460 m from east to west and 3430 m from north to south, about 1 m above the sea. There are 13 ribs in two rows 600 to 800 m apart, 280 to 520 m high and leaning in, with two outer ribs to seaward for the opening. The weed line is at 30 m. The bore is one wall 28 m high.",
@@ -43,29 +43,34 @@
       "focus": "On the head of the stuck one."
     },
     "heart-01": {
-      "start": "From 58 m behind the key position and 13 m above it, over the bench: the whole lake, with the vessel mouth and the lava fall upper left, the buttress and its plume on the right, the bench lower left and the tall ones on the crust.",
-      "end": "50 m ahead of the key position and 12 m above the lake, with the nearest of the tall ones large on the left of the frame and the one that sank beyond it.",
+      "start": "From 29 m behind the key position and 3 m above it, over the bench: the whole lake, with the vessel mouth and the lava fall upper left, the buttress and its plume on the right, the bench lower left and the tall ones on the crust.",
+      "end": "29 m ahead of the key position and 17 m above the lake, off the edge of the bench, with the nearest of the tall ones large on the left of the frame and the one that sank beyond it.",
+      "move": "One push of 59 m toward the mouth with a slight crab to the right, down from 28 m to 17 m, through the establishing view at the key frame. The bench falls away under the lens and the lake opens.",
       "focus": "On the nearest of the tall ones."
     },
     "heart-02": {
-      "start": "3 m over the crust, on the group of five tall ones, with the fall and the mouth at the left edge and the buttress on the right.",
-      "end": "36 m further along, turned against the move to keep the group in the frame. The fall and the mouth have slid out on the left.",
-      "focus": "On the group of five."
+      "start": "6.6 m over the crust and 74 m from the hero of the group on a long lens: the hero left of centre with its trunk down in the seam, the second of the group walking on the right, a third far off on the left in front of the fall, the mouth at the left edge.",
+      "end": "16 m closer and a little lower, the same heading, with the hero two thirds of the height of the frame.",
+      "move": "One push of 16 m toward the hero, with a metre of crab to the right. The lens stays about 6 m over the crust, so the hero's back stands at twice the height of the lens.",
+      "focus": "On the hero of the group."
     },
     "heart-03": {
-      "start": "4.6 m up on the bench side of the shore, looking along the glowing seam where the crust meets the rock, with the sulphur crack and its steam on the left.",
-      "end": "1.7 m over the shore and 5 m past the key position, still on the bench side of the seam, which runs away across the frame toward the nearest of the tall ones and the mouth.",
-      "focus": "On the seam, a few metres ahead of the lens."
+      "start": "2.7 m up on the last rocks of the shore: the crag and the steaming sulphur vent on the left, the glowing channel leaving the shore ahead and crossing the frame to the lower right, the mouth and the fall upper left, the tall ones upper right.",
+      "end": "7 m further and 1.6 m up, at the edge of the shore, with the channel just below the lens.",
+      "move": "One push of 7 m toward the mouth with a slight crab to the right, down from 2.7 m to 1.6 m, slowing onto the channel.",
+      "focus": "On the channel, a few metres ahead of the lens."
     },
     "heart-04": {
-      "start": "2.4 m over the crust: the one that sank right of centre, the nearest of the tall ones on the left, the mouth and the fall behind.",
-      "end": "About 8 m to the side, the same framing. The shot is a hold with a slow drift.",
+      "start": "4.9 m over the crust, 24 m from the one that sank: the carcass in the middle, the nearest of the tall ones feeding on the left, the mouth and the fall behind it, the buttress on the right.",
+      "end": "5.5 m closer and a little lower, the same heading.",
+      "move": "One slow push of 5.5 m toward the carcass with a slight crab to the right.",
       "focus": "On the one that sank."
     },
     "heart-05": {
-      "start": "655 m from the vessel mouth and 9 m over the crust, on a long lens: the mouth and the top of the fall fill the frame.",
-      "end": "850 m from the mouth and 24 m over the bench ledge: the mouth, the whole fall and the foot of the fall, with the surge running down it.",
-      "focus": "On the mouth and the fall, through the whole retreat."
+      "start": "777 m from the vessel mouth and 2.5 m over the crust, on the longest lens of the place: the mouth, the whole fall and its foot.",
+      "end": "34 m closer and 3.8 m over the crust, still aimed at the same point beside the mouth, with the surge running down the fall.",
+      "move": "One push of 34 m toward the mouth with a slight crab to the right and a small rise. On this lens the wall hardly grows; the near crust slides under the frame. The surge comes at frame 4010.",
+      "focus": "On the mouth and the fall, through the whole push."
     },
     "breath-01": {
       "start": "From about 34 m behind the key position and 2 m above it, over the channel: the tide channel from lower left to centre, the shaft right of centre with its fallen slabs, the wader at the rim, the cliff and its cave upper right, the sun upper left and the far herd on the flats.",
