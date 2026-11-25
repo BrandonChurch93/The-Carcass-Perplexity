@@ -39,7 +39,7 @@ void main() {
   // Thick brine hardly ripples: a slow crawl of two swells, the rings that leave the seep's mouth, and the rings of every dome that has burst.
   float closeBy = smoothstep(40.0, 6.0, dist);
   vec4 swell = texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime);
-  vec2 slope = (swell.ba - 0.5) * 0.08 + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.035 * closeBy;
+  vec2 slope = (swell.ba - 0.5) * 0.08 + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.02 * closeBy;
   // Close to, the thick brine shows a slow smooth chop: a few trains of ripples a hand to a forearm long, crossing, bent by the swell so
   // that no two crests run alike.
   if (dist < 26.0) {
@@ -47,10 +47,10 @@ void main() {
     vec4 slow = texture2D(tGrain, p.xz / 11.0 + vec2(0.002, 0.001) * uTime);
     vec2 bent = p.xz + (slow.rg - 0.5) * 0.3;
     float ph = slow.r * 5.0;
-    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 17.0 + uTime * 1.9 + ph) * 0.032 * chop;
-    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 27.0 + uTime * 2.6 - ph * 1.7) * 0.026 * chop;
-    slope += vec2(0.98, -0.2) * cos(dot(bent, vec2(0.98, -0.2)) * 33.0 - uTime * 3.3 + ph * 1.3) * 0.018 * chop;
-    slope += vec2(0.26, 0.97) * cos(dot(bent, vec2(0.26, 0.97)) * 9.0 + uTime * 1.3 + ph * 0.6) * 0.03 * chop;
+    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 17.0 + uTime * 1.9 + ph) * 0.015 * chop;
+    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 27.0 + uTime * 2.6 - ph * 1.7) * 0.011 * chop;
+    slope += vec2(0.98, -0.2) * cos(dot(bent, vec2(0.98, -0.2)) * 33.0 - uTime * 3.3 + ph * 1.3) * 0.007 * chop;
+    slope += vec2(0.26, 0.97) * cos(dot(bent, vec2(0.26, 0.97)) * 9.0 + uTime * 1.3 + ph * 0.6) * 0.02 * chop;
   }
   vec2 fromSeep = p.xz - uSeep.xy;
   float reach = length(fromSeep);
@@ -132,7 +132,7 @@ void main() {
   vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
   float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.3, 0.0, 1.0);
   // What is seen is mostly the brine behind the skin; the thin crown lets the pale air inside show.
-  vec3 albedo = mix(vec3(0.05, 0.011, 0.0095), vec3(0.15, 0.062, 0.057), thin * thin);
+  vec3 albedo = mix(vec3(0.045, 0.01, 0.0085), vec3(0.085, 0.036, 0.034), thin * thin);
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.1);
   float foot = mix(0.5, 1.0, smoothstep(0.0, 0.35, vLocal.y));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) * foot / 3.14159);
@@ -140,8 +140,8 @@ void main() {
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The overcast is not even: a brighter break in it shows on the skin as a soft window.
-  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 60.0) + 0.5 * pow(max(dot(r, normalize(vec3(0.5, 0.6, -0.4))), 0.0), 200.0);
-  lit += skyRadiance(r) * ((0.025 + 0.55 * pow(1.0 - nv, 2.5)) * foot + window * 1.4);
+  float window = 0.5 * pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 14.0) * (0.6 + 0.8 * g.g) + pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 90.0) + 0.5 * pow(max(dot(r, normalize(vec3(0.5, 0.6, -0.4))), 0.0), 200.0);
+  lit += skyRadiance(r) * ((0.03 + 0.7 * pow(1.0 - nv, 2.2)) * foot + window * 1.2);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 

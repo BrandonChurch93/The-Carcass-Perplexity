@@ -26,7 +26,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
-  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.15, rise: 16, kind: 'steam', lean });
+  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.34, rise: 16, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-4, 0, -1], radius: 6, strength: 0.022, rise: 5, kind: 'steam', lean });
   for (let i = 0; i < 5; i++) {
@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
         const radius = Math.max(0.05, s.radius);
         (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], radius);
         (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * 1.4) / radius);
-        (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.6, radius * 3.2), 0);
+        (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.3, radius * 1.5), 0);
       });
       steamCount.value = order.length;
     },

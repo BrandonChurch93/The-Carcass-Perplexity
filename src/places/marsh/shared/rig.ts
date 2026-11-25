@@ -10,7 +10,7 @@ export const LAND = { minX: -256, maxX: 256, minZ: -256, maxZ: 256, width: 1024,
 export const CONTACT = { size: 1024, minRadius: 14, maxRadius: 160 };
 export const MAX_EMITTERS = 8;
 /** The air: how much of a surface's light is lost in a metre at the ground, and how fast the air thins with height (1 / metres). The air folder draws it. */
-export const AIR = { density: 0.00024, thin: 1 / 320 };
+export const AIR = { density: 0.0003, thin: 1 / 320 };
 
 export type Height = (x: number, z: number) => number;
 
