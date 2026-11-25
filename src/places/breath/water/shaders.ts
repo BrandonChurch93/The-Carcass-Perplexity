@@ -18,6 +18,9 @@ uniform vec4 uBedNear;
 uniform vec4 uBedFar;
 uniform sampler2D tWave;
 uniform float uSea;
+uniform sampler2D tMirror;
+uniform sampler2D tRings;
+uniform vec2 uFrame;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 // The sun's path on the water: its disc is behind fog, so the path is broad and soft, with sparks where a wave face turns it to the lens.
@@ -55,6 +58,9 @@ void main() {
   // Shallow water over a bed is nearly still: the waves grow with the depth.
   float deep = smoothstep(0.0, 0.5, depth);
   vec2 slope = (g1 * 0.16 + g2 * 0.2) * (0.35 + 0.65 * deep) + g3.rg * 0.1;
+  // The rings round what stands in the water, as the waders folder drew them for this camera.
+  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
+  slope += rings.rg * 0.55;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -64,6 +70,10 @@ void main() {
   r = normalize(r);
   vec3 mirror = skyRadiance(r) * skyOpen(vWorld);
   mirror += sunGlitter(r, far) * sunAt(vWorld + vec3(0.0, 0.3, 0.0));
+  // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
+  vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.05 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.16) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
+  vec4 image = texture2D(tMirror, at);
+  mirror = mirror * (1.0 - image.a) + image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);

@@ -66,6 +66,9 @@ export interface Foot {
   lift: number;
   /** Metres of water over the bed where it stands. */
   wet: number;
+  /** Seconds since it was put down, or a large number; and 1 while it is carried forward. */
+  since: number;
+  carried: number;
 }
 
 export interface Stood {
@@ -90,6 +93,10 @@ const hash = (n: number): number => {
 };
 
 /** A value read off a few points (u, value), eased between them. */
+/** The trunk's half height and half width, rump (0) to chest (1), for a size of 1: an egg, the deeper end behind the middle, closed and round at both ends. */
+export const bodyHalfH = (t: number): number => 0.36 * Math.max(0, Math.sin(Math.PI * t ** 0.88)) ** 0.62;
+export const bodyHalfW = (t: number): number => 0.225 * Math.max(0, Math.sin(Math.PI * t ** 0.92)) ** 0.62;
+
 export function curve(points: readonly (readonly [number, number])[], u: number): number {
   const first = points[0] as readonly [number, number];
   if (u <= first[0]) return first[1];
@@ -105,14 +112,14 @@ export function curve(points: readonly (readonly [number, number])[], u: number)
 }
 
 // The trunk, rump (0) to chest (1): half height, half width, and how far the spine stands over the axis. A plucked bird's: high round rump, deep keel, narrow chest.
-export const HALF_H: [number, number][] = [[0, 0.04], [0.07, 0.22], [0.24, 0.345], [0.48, 0.36], [0.72, 0.31], [0.9, 0.225], [1, 0.17]];
-export const HALF_W: [number, number][] = [[0, 0.03], [0.07, 0.17], [0.24, 0.27], [0.48, 0.285], [0.72, 0.235], [0.9, 0.165], [1, 0.135]];
-const SPINE: [number, number][] = [[0, -0.06], [0.2, 0.05], [0.45, 0.07], [0.8, 0.0], [1, -0.02]];
+export const HALF_H: [number, number][] = [[0, 0.05], [0.06, 0.25], [0.2, 0.385], [0.42, 0.41], [0.66, 0.37], [0.86, 0.27], [1, 0.19]];
+export const HALF_W: [number, number][] = [[0, 0.03], [0.06, 0.16], [0.2, 0.25], [0.42, 0.27], [0.66, 0.24], [0.86, 0.17], [1, 0.13]];
+const SPINE: [number, number][] = [[0, -0.1], [0.2, 0.05], [0.45, 0.09], [0.8, 0.02], [1, -0.02]];
 
 // The neck's pitch along its length, degrees above level: carried up (it stands off the shoulders, arches and hooks over at the end so the tuft
 // hangs), and down (it leaves the chest level and goes down into the water).
-const NECK_UP: [number, number][] = [[0, 58], [0.35, 76], [0.62, 62], [0.82, 8], [1, -78]];
-const NECK_DOWN: [number, number][] = [[0, -8], [0.25, -42], [0.6, -68], [0.85, -80], [1, -88]];
+const NECK_UP: [number, number][] = [[0, 38], [0.22, 74], [0.52, 86], [0.72, 58], [0.87, 0], [1, -74]];
+const NECK_DOWN: [number, number][] = [[0, 16], [0.18, -14], [0.45, -66], [0.75, -84], [1, -80]];
 
 // The legs: left hind, left fore, right hind, right fore, and where in the cycle each one steps. A slow walk: one foot at a time.
 const LEGS: { side: number; fore: number; at: number }[] = [
@@ -127,36 +134,36 @@ const DUTY = 0.8;
 export function makeBuild(k: number, seed: number, far: boolean): Build {
   const j = (n: number, a: number, b: number): number => a + (b - a) * hash(seed * 7.3 + n);
   const standH = 2.28 * k * j(1, 0.95, 1.06);
-  const stride = 1.15 * k * j(2, 0.9, 1.1);
+  const stride = 0.72 * k * j(2, 0.9, 1.1);
   return {
     k,
     seed,
     far,
-    bodyLen: 1.5 * k * j(3, 0.93, 1.08),
+    bodyLen: 1.32 * k * j(3, 0.93, 1.08),
     standH,
-    hipFore: 0.46 * k,
-    hipSide: 0.17 * k,
-    stanceSide: 0.2 * k * j(4, 0.85, 1.25),
-    legLen: 1.035 * Math.hypot(standH - 0.2 * k, stride * DUTY * 0.5 + 0.08),
+    hipFore: 0.37 * k,
+    hipSide: 0.125 * k,
+    stanceSide: 0.16 * k * j(4, 0.85, 1.25),
+    legLen: 1.006 * Math.hypot(standH - 0.2 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
-    legR: 0.05 * k,
+    legR: 0.034 * k,
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
-    neckLen: 2.55 * k * j(7, 0.93, 1.08),
-    neckR: 0.135 * k,
-    tendrils: far ? 5 : 16,
-    tendrilLen: 0.78 * k * j(8, 0.85, 1.2),
+    neckLen: 2.1 * k * j(7, 0.93, 1.08),
+    neckR: 0.085 * k,
+    tendrils: far ? 8 : 84,
+    tendrilLen: 0.7 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
 }
 
-const BODY_RINGS = 15;
-const BODY_SIDES = 14;
+const BODY_RINGS = 25;
+const BODY_SIDES = 24;
 const NECK_RINGS = 22;
 const NECK_SIDES = 9;
-const LEG_RINGS = 15;
-const LEG_SIDES = 7;
-const TENDRIL_RINGS = 7;
+const LEG_RINGS = 21;
+const LEG_SIDES = 10;
+const TENDRIL_RINGS = 8;
 const TENDRIL_SIDES = 4;
 
 export class Wader {
@@ -169,6 +176,7 @@ export class Wader {
   private readonly legLocal: Float32Array;
   private readonly tendrilLocal: Float32Array;
   private readonly legAlong: number[] = [];
+  private readonly bodyT: number[] = [];
   private readonly neckPoints: Float32Array;
   private readonly strands: { angle: number; out: number; len: number; stiff: number; phase: number }[] = [];
   readonly tips: Float32Array;
@@ -193,24 +201,33 @@ export class Wader {
     this.body = skin.tube(bodyRings, bodySides);
     this.bodyLocal = new Float32Array(bodyRings * bodySides * 2);
     for (let i = 0; i < bodyRings; i++) {
-      const t = i / (bodyRings - 1);
-      const a = curve(HALF_H, t) * k;
-      const w = curve(HALF_W, t) * k;
+      // The rings stand closer at the two ends, where the trunk rounds off.
+      const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (bodyRings - 1));
+      this.bodyT[i] = t;
+      const a = bodyHalfH(t) * k;
+      const w = bodyHalfW(t) * k;
       for (let s = 0; s < bodySides; s++) {
         const phi = (s / bodySides) * Math.PI * 2;
         const c = Math.cos(phi);
         const sn = Math.sin(phi);
-        // Narrower above than below, and hollow behind the ribs toward the rump: the hips stand out.
-        const lump = 0.05 * k * Math.sin(seed + t * 9 + phi * 3) * smooth(0, 0.2, t) * smooth(1, 0.8, t);
-        const x = w * c * (1 - 0.16 * sn) * (1 + 0.1 * smooth(0.45, 0.2, t) * Math.abs(c)) + lump * 0.3;
-        const y = a * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9));
+        // Gaunt: the flank fallen in behind the last rib, the belly drawn up toward the hind legs, a keel under the chest like a bird's,
+        // the spine a low ridge, the hips and the shoulders two soft swellings under the skin.
+        const keel = smooth(0.35, 0.85, t);
+        const tuck = smooth(0.55, 0.15, t);
+        const hollow = 0.1 * Math.exp(-(((t - 0.33) / 0.12) ** 2)) * smooth(0.8, 0.1, Math.abs(sn));
+        const hip = 0.03 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const blade = 0.022 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const ridge = 0.018 * k * Math.exp(-(((phi - Math.PI / 2) / 0.3) ** 2)) * smooth(0.04, 0.25, t) * smooth(1, 0.8, t);
+        const narrow = sn > 0 ? 1 - 0.2 * sn : 1 - 0.42 * keel * (-sn) ** 1.5;
+        const x = w * c * narrow * (1 - hollow) + (hip + blade) * c;
+        const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.28 * tuck)) + ridge + 0.5 * (hip + blade);
         this.bodyLocal[(i * bodySides + s) * 2] = x;
         this.bodyLocal[(i * bodySides + s) * 2 + 1] = y;
       }
       for (let s = 0; s <= bodySides; s++) {
         const phi = (s / bodySides) * Math.PI * 2;
         // Under the trunk the skin is in its own shade.
-        const shade = 0.55 + 0.45 * smooth(-0.9, 0.3, Math.sin(phi));
+        const shade = 0.3 + 0.7 * smooth(-0.95, 0.35, Math.sin(phi));
         skin.describe(this.body, i, s, t * b.bodyLen, (s / bodySides) * 2 * Math.PI * 0.32, 0.5, shade, a, seed, 0, t);
       }
     }
@@ -221,7 +238,7 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.42 + 0.58 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.12, 0, u));
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.7 * smooth(0.16, 0, u));
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
@@ -237,13 +254,14 @@ export class Wader {
     for (let i = 0; i < legRings; i++) {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
-      const thigh = 2.3 * (1 - smooth(0, 0.3, u));
-      const knuckle = 0.75 * Math.exp(-(((u - b.knee) / 0.035) ** 2)) + 0.5 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
-      const foot = 1.1 * smooth(0.95, 1, u);
-      const r = b.legR * (0.72 + thigh + knuckle + foot);
+      // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
+      const thigh = 1.0 * (1 - smooth(0, 0.22, u)) ** 1.3 + 0.45 * (1 - smooth(0, 0.46, u));
+      const knuckle = 0.95 * Math.exp(-(((u - b.knee) / 0.032) ** 2)) + 0.7 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
+      const foot = 1.5 * smooth(0.955, 1, u);
+      const r = b.legR * (0.9 + thigh + knuckle + foot);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.25 * thigh / 2.3);
+        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.4 * thigh / 2.2);
         this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
       }
     }
@@ -259,10 +277,10 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.03 : 0.017) * k;
+    const tr = (far ? 0.04 : 0.017) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
-      const r = tr * (1 - 0.72 * u ** 1.4);
+      const r = tr * (1 - 0.6 * u ** 1.6);
       for (let s = 0; s < tSides; s++) {
         const phi = (s / tSides) * Math.PI * 2;
         this.tendrilLocal[(i * tSides + s) * 2] = r * Math.cos(phi);
@@ -272,18 +290,18 @@ export class Wader {
     for (let n = 0; n < b.tendrils; n++) {
       const tube = skin.tube(tRings, tSides);
       this.tendrils.push(tube);
-      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 5);
+      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 7);
       const strand = {
-        angle: (clump / 5) * Math.PI * 2 + (hash(seed + n * 1.7) - 0.5) * 1.3,
-        out: 0.35 + 0.65 * hash(seed + n * 2.9),
-        len: b.tendrilLen * (0.45 + 0.75 * hash(seed * 1.3 + n * 5.1) ** 1.3),
+        angle: (clump / 7) * Math.PI * 2 + (hash(seed + n * 1.7) - 0.5) * 1.1,
+        out: 0.15 + 0.85 * hash(seed + n * 2.9),
+        len: b.tendrilLen * (0.5 + 0.7 * hash(seed * 1.3 + n * 5.1) ** 1.3),
         stiff: 0.3 + 0.7 * hash(seed + n * 9.7),
         phase: hash(seed + n * 4.3) * 6.28,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
         const u = i / (tRings - 1);
-        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1), 0.9, tr * (1 - 0.72 * u ** 1.4), seed + n, 2, u);
+        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1), 0.9, tr * (1 - 0.6 * u ** 1.6), seed + n, 2, u);
       }
     }
     this.tips = new Float32Array(b.tendrils * 3);
@@ -346,6 +364,7 @@ export class Wader {
       let z = here[1];
       let lift = 0;
       let bear = 1;
+      const since = plan.speed < 0.01 ? 1e3 : f >= DUTY ? 1e3 : (f * b.stride) / Math.max(0.05, plan.speed);
       if (f >= DUTY) {
         const u = (f - DUTY) / (1 - DUTY);
         const next = plant(n + 1);
@@ -372,7 +391,7 @@ export class Wader {
       dipSum += off;
       roll += leg.side * off;
       nose += leg.fore * off;
-      feet.push({ x, y: groundY + lift, z, lift, wet: Math.max(0, env.sea - groundY) });
+      feet.push({ x, y: groundY + lift, z, lift, wet: Math.max(0, env.sea - groundY), since, carried: f >= DUTY && plan.speed >= 0.01 ? 1 : 0 });
     }
 
     const neckState = this.neckDown(seconds);
@@ -386,9 +405,9 @@ export class Wader {
     const cx = o[0] + rx * side;
     const cz = o[1] + rz * side;
     const base = (feet[0]!.y - feet[0]!.lift + feet[1]!.y - feet[1]!.lift + feet[2]!.y - feet[2]!.lift + feet[3]!.y - feet[3]!.lift) / 4;
-    const cy = base + b.standH - 0.045 * k * dipSum - 0.1 * k * down + 0.012 * k * habit2;
+    const cy = base + b.standH - 0.03 * k * dipSum - 0.025 * k * down + 0.01 * k * habit2;
     const yaw = plan.heading + b.skew + 0.035 * habit + 0.02 * shift;
-    const pitch = (9 - 19 * down) * (Math.PI / 180) + 0.035 * nose + 0.012 * habit2;
+    const pitch = (5 - 9 * down) * (Math.PI / 180) + 0.03 * nose + 0.01 * habit2;
     const lean = -0.06 * roll + 0.015 * habit;
 
     // The body's frame: F along the spine toward the chest, R to its right, U out of its back.
@@ -407,7 +426,7 @@ export class Wader {
     // The trunk.
     const body = this.body;
     for (let i = 0; i < body.rings; i++) {
-      const t = i / (body.rings - 1);
+      const t = this.bodyT[i] as number;
       const a = (t - 0.5) * b.bodyLen;
       const up = curve(SPINE, t) * k;
       // It breathes: the ribs go out and in.
@@ -429,8 +448,10 @@ export class Wader {
       let dy = footY - hy;
       let dz = foot.z - hz;
       let d = Math.hypot(dx, dy, dz);
-      const l1 = b.legLen * b.knee;
-      const l2 = b.legLen - l1;
+      // A leg that stands is all but straight: the little it has to give is taken up in the joints, not shown as a bend.
+      const long = Math.min(b.legLen, Math.max(d * 1.012, b.legLen * 0.972));
+      const l1 = long * b.knee;
+      const l2 = long - l1;
       const reach = Math.min(d, (l1 + l2) * 0.9995);
       dx /= d;
       dy /= d;
@@ -476,7 +497,7 @@ export class Wader {
           py = ky + (ey - ky) * q;
           pz = kz + (ez - kz) * q;
         }
-        const blend = smooth(b.knee - 0.08, b.knee + 0.08, u);
+        const blend = smooth(b.knee - 0.1, b.knee + 0.1, u);
         ax = (kx - hx) / l1 + ((ex - kx) / l2 - (kx - hx) / l1) * blend;
         ay = (ky - hy) / l1 + ((ey - ky) / l2 - (ky - hy) / l1) * blend;
         az = (kz - hz) / l1 + ((ez - kz) / l2 - (kz - hz) / l1) * blend;
@@ -503,9 +524,9 @@ export class Wader {
     // The neck: a chain of fixed length whose pitch along it goes from carried to down. How far down is solved, so the tuft comes to the water.
     const neck = this.neck;
     const seg = b.neckLen / (neck.rings - 1);
-    const baseX = cx + F[0] * (0.5 * b.bodyLen - 0.14 * k) + U[0] * 0.07 * k;
-    const baseY = cy + F[1] * (0.5 * b.bodyLen - 0.14 * k) + U[1] * 0.07 * k;
-    const baseZ = cz + F[2] * (0.5 * b.bodyLen - 0.14 * k) + U[2] * 0.07 * k;
+    const baseX = cx + F[0] * (0.5 * b.bodyLen - 0.2 * k) + U[0] * 0.1 * k;
+    const baseY = cy + F[1] * (0.5 * b.bodyLen - 0.2 * k) + U[1] * 0.1 * k;
+    const baseZ = cz + F[2] * (0.5 * b.bodyLen - 0.2 * k) + U[2] * 0.1 * k;
     // It works the water from side to side when it is down, and looks about slowly when it is up.
     const sweep = down * (0.42 * Math.sin(seconds * 1.15 + b.seed * 2.1) + 0.16 * Math.sin(seconds * 2.7 + b.seed)) + (1 - down) * (0.3 * habit + 0.1 * habit2);
     const dab = down * 0.03 * Math.sin(seconds * 3.3 + b.seed * 1.7);
@@ -540,7 +561,7 @@ export class Wader {
       const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea - 0.3 * k);
       const want = floor + (plan.reach >= 1 ? 0.1 * k : 0.55 * k) + dab;
       let lo = 0.3;
-      let hi = 1.45;
+      let hi = 1.3;
       for (let i = 0; i < 9; i++) {
         const mid = (lo + hi) / 2;
         if (chain(mid, false) > want) lo = mid;
@@ -595,7 +616,8 @@ export class Wader {
     const lagZ = -Math.cos(seconds * 1.15 + b.seed * 2.1 - 0.5) * 0.3 * down * sy;
     const floorY = env.ground(ex, ez);
     const wet = floorY < env.sea;
-    const rest = wet ? env.sea - 0.015 : floorY + 0.02;
+    // In water the strands do not sink to the bed: they trail just under the surface.
+    const rest = wet ? Math.max(floorY + 0.02, env.sea - 0.3) : floorY + 0.02;
     // A frame across the end of the neck.
     let ux = Rh[0];
     let uy = 0;
@@ -631,14 +653,17 @@ export class Wader {
         const u = i / (tube.rings - 1);
         // It leaves along the neck's end, spreads a little, and gravity takes it.
         const g = smooth(0, 0.55 + 0.4 * st.stiff, u);
-        let dx = (tx + ox * 0.55 * st.out) * (1 - g) + (lagX + swing * cyw + ox * 0.12) * g;
-        let dy = (ty + oy * 0.55 * st.out) * (1 - g) - g;
-        let dz = (tz + oz * 0.55 * st.out) * (1 - g) + (lagZ + swing * sy + oz * 0.12) * g;
+        // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
+        const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
+        const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
+        let dx = (tx + ox * 0.35 * st.out) * (1 - g) + (lagX + swing * cyw + ox * (0.16 + drift)) * g;
+        let dy = (ty + oy * 0.35 * st.out) * (1 - g) - g * (1 - 0.55 * under);
+        let dz = (tz + oz * 0.35 * st.out) * (1 - g) + (lagZ + swing * sy + oz * (0.16 + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
           const fan = st.angle + 0.5 * Math.sin(st.phase);
-          dx = Math.cos(fan) * 0.8 + (wet ? 0.25 : 0);
-          dz = Math.sin(fan) * 0.8 + (wet ? 0.97 : 0);
+          dx = Math.cos(fan) * 0.45 + lagX * 2;
+          dz = Math.sin(fan) * 0.45 + lagZ * 2;
           dy = (rest - y) * 4;
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
@@ -670,7 +695,7 @@ export class Wader {
         const bz = dx * ny - dy * nx;
         skin.ring(tube, i, x, y, z, nx, ny, nz, bx, by, bz, this.tendrilLocal, i * tube.sides * 2);
         // How wet: what has been in the water is dark and shines.
-        skin.setHeat(tube, i, wet ? smooth(rest + 0.5, rest, y) : 0);
+        skin.setHeat(tube, i, wet ? smooth(env.sea + 0.35, env.sea, y) : 0);
         px = x;
         py = y;
         pz = z;

@@ -5,6 +5,8 @@ import type { Context, Piece } from '../shared/context';
 import { FRAGMENT, VERTEX } from './shaders';
 import { bedMap, waveMap } from './maps';
 import { SEA_LEVEL } from '../shared/anchors';
+import { MIRROR } from '../waders/mirror';
+import { RIPPLES } from '../waders/ripples';
 
 export const PARTS: readonly string[] = ['sea'];
 
@@ -20,6 +22,7 @@ export function create(ctx: Context): Piece {
   const far = bedMap(height, SEA_LEVEL, FAR.x, FAR.z, FAR.half, FAR.cells);
   const waves = waveMap(ctx.rng('water-waves'));
 
+  const frame = new THREE.Vector2(3840, 2160);
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -31,6 +34,9 @@ export function create(ctx: Context): Piece {
       uBedFar: { value: new THREE.Vector4(FAR.x - FAR.half, FAR.z - FAR.half, 1 / (2 * FAR.half), 0) },
       tWave: { value: waves },
       uSea: { value: SEA_LEVEL },
+      tMirror: MIRROR.texture,
+      tRings: RIPPLES.texture,
+      uFrame: { value: frame },
     },
     transparent: true,
     depthWrite: true,
@@ -49,6 +55,9 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('sea', sheet));
 
   return {
+    resize: (w, h) => {
+      frame.set(w, h);
+    },
     dispose: () => {
       geometry.dispose();
       material.dispose();
