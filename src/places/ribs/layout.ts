@@ -26,7 +26,7 @@ const LEFT = 0;
 const RIGHT = Math.PI;
 
 export const RIBS: Rib[] = [
-  { name: 'L1', x: -330, z: 0, yaw: LEFT, height: 430, lean: 190, a: 120, b: 95, flare: 20, flareTop: 120 },
+  { name: 'L1', x: -330, z: 0, yaw: LEFT, height: 430, lean: 190, a: 100, b: 95, flare: 20, flareTop: 120 },
   { name: 'R1', x: 425, z: -559, yaw: RIGHT, height: 520, lean: 380, a: 125, b: 95, flare: 50, flareTop: 150, ctrl: [0.55, 0.7] },
   { name: 'L2', x: -390, z: -850, yaw: LEFT + 0.15, height: 370, lean: 115, a: 80, b: 60, flare: 30, flareTop: 60 },
   { name: 'R2', x: 393, z: -1054, yaw: RIGHT - 0.1, height: 405, lean: 277, a: 130, b: 70, flare: 50, flareTop: 50 },
@@ -206,7 +206,7 @@ export function landAt(x: number, z: number): number {
   const edge = Math.min(FLOOR.south - z, z - FLOOR.north, x - FLOOR.west, FLOOR.east - x);
   const wide = Math.sin(x * 0.03 + 1.6 * Math.sin(z * 0.006) + 0.4) * Math.cos(z * 0.011 + 0.9 * Math.sin(x * 0.008));
   const fine = Math.sin(x * 0.071 + z * 0.043 + 1.1) * Math.sin(z * 0.057 - x * 0.019);
-  const floor = 0.9 + 0.4 * wide + 0.14 * fine;
+  const floor = 0.8 + 0.4 * wide + 0.14 * fine;
   return -32 + (floor + 32) * smooth(-170, 40, edge);
 }
 

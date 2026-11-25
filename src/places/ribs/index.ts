@@ -9,7 +9,7 @@ import { eventSeconds } from '../../film/cut';
 import { shots, STATIONS } from './cameras';
 import { BUTTRESS, POOL, RIBS, TIDE, bladeGeometry, buttressRadius, groundAt, landAt, ribByName, skirtGeometry, weedPoint } from './layout';
 
-const BORE_SPEED = 80;
+const BORE_SPEED = 55;
 const BORE_HEIGHT = 28;
 const WORLD = 26000;
 const LAND = { width: 2400, depth: 4400, columns: 140, rows: 250, centre: [50, -1300] as [number, number] };
@@ -116,7 +116,7 @@ function create(): Place {
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(WORLD, WORLD, 160, 160).rotateX(-Math.PI / 2), kit.flow(0x44605f, 0x2c4648, { scale: 36, speed: 13, direction: [0.25, -1] }));
   scene.add(parts.standIn('sea', sea));
 
-  const pools = new THREE.Mesh(ribbon(POOL, (lo) => lo > 0.2), kit.flow(0xa9b6bf, 0x4f5559, { scale: 2.8, speed: 0.5, direction: [0.3, 1] }));
+  const pools = new THREE.Mesh(ribbon(POOL, (lo) => lo > 0.2), kit.flow(0xa9b6bf, 0x565b5c, { scale: 6, speed: 0.6, direction: [0.3, 1] }));
   scene.add(parts.standIn('runnels', pools));
 
   const surf = new THREE.Mesh(ribbon(0.45, (lo, hi) => hi > -7 && lo < 0.45), kit.flow(0xe9edeb, 0x9db0ad, { scale: 15, speed: 8, direction: [0.2, -1] }));
@@ -232,20 +232,20 @@ function create(): Place {
   const hangNext = weedPoint(ribByName('L1'), STATIONS.drownedPhi + 0.02, STATIONS.drownedHeight, 0.3);
   drowned.position.copy(hang);
   drowned.rotation.y = Math.atan2(hangNext.z - hang.z, -(hangNext.x - hang.x));
-  drowned.scale.setScalar(1.25);
+  drowned.scale.setScalar(1.1);
   drowned.rotation.order = 'YXZ';
   drowned.rotation.x = -0.36;
   scene.add(parts.standIn('drowned', drowned));
 
   const bore = new THREE.Group();
   const depth = 9000;
-  const flood = new THREE.Mesh(new THREE.BoxGeometry(7000, BORE_HEIGHT, depth, 40, 1, 50), kit.flow(0x4c6665, 0x314c4d, { scale: 30, speed: BORE_SPEED, direction: [0, 1] }));
+  const flood = new THREE.Mesh(new THREE.BoxGeometry(16000, BORE_HEIGHT, depth, 80, 1, 50), kit.flow(0x4c6665, 0x314c4d, { scale: 30, speed: BORE_SPEED, direction: [0, 1] }));
   flood.position.set(0, BORE_HEIGHT / 2 - 4, -depth / 2 - 14);
   const wallStuff = kit.flow(0xf6f8f6, 0xb4c2c1, { scale: 11, speed: BORE_SPEED * 1.7, direction: [0, 1] });
-  const roll = new THREE.Mesh(new THREE.CylinderGeometry(17, 17, 7000, 16, 50, true).rotateZ(Math.PI / 2), wallStuff);
+  const roll = new THREE.Mesh(new THREE.CylinderGeometry(17, 17, 16000, 16, 100, true).rotateZ(Math.PI / 2), wallStuff);
   (roll.material as THREE.Material).side = THREE.DoubleSide;
   roll.position.set(0, 12, -17);
-  const crest = new THREE.Mesh(new THREE.BoxGeometry(7000, 16, 26, 50, 1, 1), wallStuff);
+  const crest = new THREE.Mesh(new THREE.BoxGeometry(16000, 16, 26, 100, 1, 1), wallStuff);
   crest.position.set(0, BORE_HEIGHT + 2, -34);
   const plumes = herd(new THREE.SphereGeometry(1, 8, 6), kit.flat(0xeef2f0), SPRAY);
   const plumeSeed: { x: number; size: number; phase: number }[] = [];
@@ -289,7 +289,7 @@ function create(): Place {
       const x = flee[0] + side * 44 - 9 * lead + 3 * Math.sin(i * 2.4);
       const z = flee[1] - 16 * ((i * 5) % 7) / 7 + 17 * lead;
       const y = 2.6 + 2.2 * ((i * 3) % 4) / 4 + 0.5 * lead;
-      setFigure(fleeing, i, x, y, z, Math.atan2(-9, 17), [1.5, 1.5 * (0.35 + 0.65 * Math.sin(seconds * 9 + i * 1.9)), 1.5]);
+      setFigure(fleeing, i, x, y, z, Math.atan2(-9, 17), [1.6, 1.6 * (1.2 + 1.3 * Math.sin(seconds * 9 + i * 1.9)), 1.6]);
     }
   };
 

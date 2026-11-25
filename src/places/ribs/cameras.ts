@@ -14,16 +14,16 @@ function looking(position: Vec3, yaw: number, pitch: number, fov: number, reach 
   return { position, aim: add(position, scale(heading(yaw, pitch), reach)), fov };
 }
 
-const DROWNED_PHI = 0.05;
+const DROWNED_PHI = 0.35;
 const DROWNED_HEIGHT = 9.5;
 const GATE_Z = -1500;
 const GATE_X = 105;
 
-const establish = looking(onGround(-172, 85, 1.9), 8, 1.2, 48);
+const establish = looking(onGround(-180, 110, 1.9), 8, 0.2, 48);
 const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 const COLONY_HEIGHT = 44;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
-const colony = looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 20, 14, 36);
+const colony = looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36);
 const feeding = looking(onGround(-60, -420, 2), 10, -1.4, 20);
 const gate = looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170);
 
@@ -34,9 +34,9 @@ function drownedPose(): Pose {
   const l = Math.hypot(next.x - hang.x, next.z - hang.z);
   const north: Vec3 = [-(next.x - hang.x) / l, 0, -(next.z - hang.z) / l];
   const out: Vec3 = [-north[2], 0, north[0]];
-  const target: Vec3 = [hang.x, hang.y - 3, hang.z];
+  const target: Vec3 = [hang.x, hang.y - 3.5, hang.z];
   const position = add(add(target, scale(north, -15)), scale(out, 10));
-  const aim = add(add(position, scale(north, 52)), add(scale(out, -25), [0, 1.5, 0]));
+  const aim = add(add(position, scale(north, 52)), add(scale(out, -19), [0, 1.8, 0]));
   return { position, aim, fov: 35 };
 }
 
@@ -54,9 +54,9 @@ export const shots: Record<string, CameraPath> = {
   'ribs-01': approach,
   'ribs-02': through(establish, key('ribs-02'), { forward: -70, right: 12, up: 1.4 }, { forward: 45, right: 14 }),
   'ribs-03': through(colony, key('ribs-03'), { right: 12, forward: -14, up: -2 }, { right: -16, forward: 10, up: 4 }),
-  'ribs-04': through(feeding, key('ribs-04'), { forward: -22, up: 0.6 }, { forward: 9, up: -0.3 }),
-  'ribs-05': through(drowned, key('ribs-05'), { forward: -30, up: -4.4, right: 9 }, { forward: 4, up: 1.2, right: 1 }),
-  'ribs-06': through(gate, key('ribs-06'), { forward: -14, right: -3 }, { forward: 10, up: 0.5, right: 2 }),
+  'ribs-04': through(feeding, key('ribs-04'), { forward: -24, up: 0.6 }, { forward: 5, up: -0.2 }),
+  'ribs-05': through(drowned, key('ribs-05'), { forward: -30, up: -1.6, right: 9 }, { forward: 4, up: 1.2, right: 1 }),
+  'ribs-06': through(gate, key('ribs-06'), { forward: 7, right: -3 }, { forward: -5, up: 1.1, right: 2 }),
 };
 
 const feedingAt = feeding.position;
@@ -65,7 +65,7 @@ const feederYaw = Math.atan2(-Math.cos(10 * RAD), -Math.sin(10 * RAD));
 export const STATIONS = {
   establish: [establish.position[0], establish.position[2]] as [number, number],
   arch: [150, -345] as [number, number],
-  gateZ: GATE_Z,
+  gateZ: gate.position[2] - 120,
   posts: [[gate.position[0] - 52, gate.position[2] - 78], [gate.position[0] + 50, gate.position[2] - 70]] as [number, number][],
   colonySide: COLONY_SIDE,
   drownedPhi: DROWNED_PHI,
@@ -75,7 +75,7 @@ export const STATIONS = {
       const h = heading(bearing + 5, 0);
       return [establish.position[0] + h[0] * d, establish.position[2] + h[2] * d, 1.3 + i * 2.1, 1.1];
     }),
-    [feedingAt[0] + 6.1, feedingAt[2] - 15.9, feederYaw, 1.15],
+    [feedingAt[0] + 5.1, feedingAt[2] - 15.9, feederYaw, 1.15],
     [feedingAt[0] + 3.4, feedingAt[2] - 31.8, feederYaw + 0.3, 1.1],
     [feedingAt[0] - 3, feedingAt[2] - 52, feederYaw - 0.4, 1.1],
   ] as [number, number, number, number][],
