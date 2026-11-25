@@ -183,7 +183,11 @@ void main() {
       albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo * 0.8, vec3(0.2, 0.1, 0.085), 0.45 + 0.4 * hash12(vec2(seed, 4.0)));
     } else {
       float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-      albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55) * 0.78;
+      albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55) * 0.66;
+      float grime = fbm(vWorld.xz * 5.0 + vWorld.y * 7.0 + seed);
+      albedo *= 0.62 + 0.7 * grime;
+      float scale_ = kind > 0.5 && kind < 1.5 ? smoothstep(0.25, 0.6, vnoise(vUv * vec2(120.0, 90.0) + seed)) : 0.5;
+      albedo *= 0.8 + 0.4 * scale_;
       float wrinkle = vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
       float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
       // On the trunk the skin hangs in folds from the spine; on the neck it has dried in rings; the legs are bone with a little skin on.
@@ -193,9 +197,9 @@ void main() {
       albedo *= 1.0 + (0.4 * ringed * wrinkle + 0.35 * drape) * mid;
       float hollow = 1.0 - vInfo.y;
       float rot = smoothstep(0.42, 0.68, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);
-      albedo = mix(albedo, vec3(0.2, 0.085, 0.06), 0.75 * rot);
+      albedo = mix(albedo, vec3(0.17, 0.08, 0.06), 0.8 * rot);
       // The shanks and the feet have gone dark and hard.
-      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), 0.75 * smoothstep(0.4, 0.6, u));
+      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), 0.3 + 0.55 * smoothstep(0.4, 0.6, u));
       albedo = mix(albedo, vec3(0.3, 0.2, 0.15), 0.5 * hollow);
       float salt = smoothstep(0.45, 0.75, fbm(vWorld.xz * 9.0 + seed) + 0.3 * n.y - 0.15 + 0.2 * hollow);
       albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.5 * salt);

@@ -41,9 +41,9 @@ void main() {
   float fine = vnoise(vWorld.xz * 17.0);
   float d = vNear + 0.5 * (broad - 0.5) + 0.07 * (fine - 0.5);
   // What ran out of it has soaked the rock dark, darkest under it; where its edge dried there is a pale broken line of salt.
-  float stain = smoothstep(0.4, 0.02, d);
-  float salt = smoothstep(0.09, 0.0, abs(d - 0.44)) * smoothstep(0.3, 0.7, fine);
-  float alpha = max(0.82 * stain, 0.55 * salt);
+  float stain = smoothstep(0.3, 0.0, d);
+  float salt = smoothstep(0.07, 0.0, abs(d - 0.33)) * smoothstep(0.3, 0.7, fine);
+  float alpha = max(0.62 * stain * (0.6 + 0.4 * broad), 0.4 * salt);
   if (alpha < 0.004) discard;
   vec3 albedo = mix(vec3(0.62, 0.6, 0.56), mix(vec3(0.05, 0.03, 0.025), vec3(0.1, 0.032, 0.026), fine), smoothstep(0.0, 0.25, stain));
   vec3 colour = rigShade(vWorld, vec3(0.0, 1.0, 0.0), v, albedo, mix(0.9, 0.5, stain), 1.0);
@@ -74,7 +74,7 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float speck = vnoise(vWorld.xz * 160.0 + vWorld.y * 90.0);
-  vec3 albedo = mix(vec3(0.27, 0.24, 0.21), vec3(0.55, 0.51, 0.46), vTone) * (0.8 + 0.4 * speck);
+  vec3 albedo = mix(vec3(0.16, 0.14, 0.125), vec3(0.36, 0.33, 0.3), vTone) * (0.8 + 0.4 * speck);
   // Salt has dried on what faces up.
   albedo = mix(albedo, vec3(0.74, 0.72, 0.68), 0.5 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
   float occ = 0.5 + 0.5 * smoothstep(-0.4, 0.5, n.y);
@@ -147,7 +147,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
   // The grit: small broken stones, most of them close against the body where the wind and the tide have left them.
   const base = new THREE.IcosahedronGeometry(1, 1);
   const basePositions = base.getAttribute('position');
-  const count = 420;
+  const count = 300;
   const each = basePositions.count;
   const gritPositions = new Float32Array(count * each * 3);
   const gritNormals = new Float32Array(count * each * 3);
@@ -168,7 +168,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
       z = a[2] + (b[2] - a[2]) * f + Math.sin(angle) * out;
       if (toLine(x, z, trunk) > 0.4) break;
     }
-    const size = (0.007 + 0.026 * rng.next() ** 3) * k;
+    const size = (0.006 + 0.02 * rng.next() ** 3) * k;
     const sx = size * rng.range(0.7, 1.5);
     const sy = size * rng.range(0.3, 0.7);
     const sz = size * rng.range(0.7, 1.5);
@@ -190,7 +190,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
       const lz = pz * sz * bump;
       const o = (n * each + v) * 3;
       gritPositions[o] = centre[0] + lx * c + lz * s;
-      gritPositions[o + 1] = centre[1] + ly + sy * 0.35 + 0.035;
+      gritPositions[o + 1] = centre[1] + ly + 0.022;
       gritPositions[o + 2] = centre[2] - lx * s + lz * c;
       const ax = px / sx;
       const ay = py / sy;

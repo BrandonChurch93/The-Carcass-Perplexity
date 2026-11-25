@@ -75,7 +75,7 @@ export function create(ctx: Context): Piece {
   const bodySides = 30;
   const body = skin.tube(bodyRings, bodySides);
   const bodyLocal = new Float32Array(bodyRings * bodySides * 2);
-  const RIBS = 9;
+  const RIBS = 6;
   const ROLL = 0.42;
   /** The skin at a place on the trunk: how far up from the axis and how far out toward the spine, metres, and how much of the sky it sees. */
   const flank = (t: number, phi: number): [number, number, number] => {
@@ -86,8 +86,8 @@ export function create(ctx: Context): Piece {
     const top = Math.max(c, 0);
     // The cage: nine ribs that lean back as they go down from the spine; nothing of them toward the belly or near the two ends.
     const cage = smooth(0.42, 0.5, t) * smooth(0.95, 0.86, t) * smooth(0.05, 0.4, top) * smooth(-0.75, -0.2, sn) * smooth(1, 0.8, sn);
-    const at = ((t - 0.44 + 0.07 * (1 - sn) * 0.5) / 0.5) * RIBS;
-    const rib = (0.5 + 0.5 * Math.cos(at * Math.PI * 2)) ** 1.6;
+    const at = ((t - 0.44 + 0.09 * (1 - sn) * 0.5 + 0.012 * Math.sin(t * 47 + sn * 5)) / 0.5) * RIBS;
+    const rib = (0.5 + 0.5 * Math.cos(at * Math.PI * 2)) ** 3;
     // The pit between the last rib and the hip, where there is nothing under the skin at all.
     const pit = Math.exp(-(((t - 0.31) / 0.1) ** 2)) * smooth(0, 0.5, top) * smooth(0.95, 0.3, Math.abs(sn));
     // The hip: a blade of bone under the skin, and the head of the thigh below it.
@@ -99,14 +99,14 @@ export function create(ctx: Context): Piece {
     const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.02 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.6 * cage);
     let up: number;
     if (c > 0) {
-      up = tall * 2.5 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.018 * rib - 0.034 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+      up = tall * 2.2 * c ** 0.7 * (1 - 0.7 * pit) + cage * k * (0.03 * rib - 0.014) * (0.5 + 0.5 * Math.sin(t * 23 + 1.3) ** 2) * (0.6 + 0.4 * Math.sin(sn * 7 + t * 31)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
     } else {
       // What lies on the rock is flat on it.
       up = -tall * 0.42 * (-c) ** 0.45;
     }
     const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
     const out = deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.72 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.45 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
     // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
     const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
     return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
@@ -135,7 +135,7 @@ export function create(ctx: Context): Piece {
   const neckSides = 9;
   const neck = skin.tube(neckRings, neckSides);
   const neckLocal = new Float32Array(neckRings * neckSides * 2);
-  const neckLine: V3[] = [[-0.02, 0.15, half - 0.14], [-0.3, 0.11, half + 0.26], [-0.3, 0.095, half + 0.7], [0.1, 0.085, half + 0.98], [0.52, 0.075, half + 1.18], [0.76, 0.065, half + 1.5], [0.86, 0.055, half + 1.8]];
+  const neckLine: V3[] = [[-0.02, 0.15, half - 0.14], [-0.3, 0.11, half + 0.26], [-0.36, 0.095, half + 0.7], [-0.1, 0.085, half + 1.04], [0.24, 0.075, half + 1.32], [0.36, 0.065, half + 1.64], [0.3, 0.055, half + 1.94]];
   for (let i = 0; i < neckRings; i++) {
     const u = i / (neckRings - 1);
     // The skin of the neck has dried in rings on the cords inside it.
@@ -157,10 +157,10 @@ export function create(ctx: Context): Piece {
   const legRadius: number[] = [];
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
-    const thigh = 2.3 * (1 - smooth(0, 0.4, u)) ** 1.1;
-    const knuckle = 1.9 * Math.exp(-(((u - 0.5) / 0.03) ** 2)) + 1.3 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
-    const foot = 1.1 * smooth(0.95, 1, u);
-    const r = b.legR * 1.0 * (0.7 + thigh + knuckle + foot);
+    const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
+    const knuckle = 1.0 * Math.exp(-(((u - 0.5) / 0.04) ** 2)) + 0.7 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
+    const foot = 0.8 * smooth(0.95, 1, u);
+    const r = 0.03 * k * (1.0 + thigh + knuckle + foot) * (1 + 0.1 * Math.sin(u * 40));
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -171,11 +171,11 @@ export function create(ctx: Context): Piece {
   // Each leg is two straight bones: hip, joint, foot. The line through them turns sharply at the joint.
   const bones: [V3, V3, V3][] = [
     // Hind, upper: off the hip, the joint out on the rock toward the lens, the shank back along it; hind, under: beneath it.
-    [[0.2, 0.2, -0.42], [1.06, 0.1, -0.74], [1.42, 0.05, -1.72]],
-    [[0.2, 0.07, -0.5], [0.84, 0.075, -1.2], [1.24, 0.05, -2.12]],
+    [[-0.02, 0.17, -0.4], [0.98, 0.1, -0.52], [1.5, 0.05, -1.3]],
+    [[0.0, 0.07, -0.46], [0.82, 0.075, -0.98], [1.42, 0.05, -1.66]],
     // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest.
-    [[0.2, 0.2, 0.4], [0.94, 0.12, 0.06], [0.42, 0.055, -0.6]],
-    [[0.2, 0.07, 0.46], [0.8, 0.075, 0.5], [0.96, 0.05, -0.3]],
+    [[-0.02, 0.17, 0.42], [0.9, 0.12, 0.06], [0.4, 0.055, -0.6]],
+    [[0.0, 0.07, 0.48], [0.78, 0.075, 0.5], [0.94, 0.05, -0.3]],
   ];
   const mixed = (a: V3, c: V3, t: number): V3 => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, a[2] + (c[2] - a[2]) * t];
   const legLines: V3[][] = bones.map(([hip, joint, foot]) => [hip, mixed(hip, joint, 0.5), mixed(hip, joint, 0.94), mixed(joint, foot, 0.06), mixed(joint, foot, 0.5), foot]);
@@ -204,7 +204,7 @@ export function create(ctx: Context): Piece {
   }
   const end = neckLine[neckLine.length - 1] as V3;
   const before = neckLine[neckLine.length - 2] as V3;
-  const way = Math.atan2(end[2] - before[2], end[0] - before[0]) - 0.35;
+  const way = Math.atan2(end[2] - before[2], end[0] - before[0]) - 0.1;
   for (let n = 0; n < 96; n++) {
     const tube = skin.tube(tRings, tSides);
     const clump = Math.floor(rng.next() * 7);
