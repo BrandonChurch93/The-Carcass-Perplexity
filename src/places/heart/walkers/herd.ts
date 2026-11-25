@@ -40,7 +40,7 @@ interface Character {
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
 const CAST: Character[] = [
   { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
-  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
+  { role: 'feeds', skater: 0.22, heavy: 1.3, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.28, young: 1, tuft: [1.1, 1.05] },
   { role: 'walks', skater: 0.45, heavy: 0.92, neck: 0.96, wide: 1.0, hump: 0.3, tall: 1.13, bulk: 0.84, young: 1, tuft: [0.7, 0.85] },
   { role: 'tastes', skater: 0.4, heavy: 0.9, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
   { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
@@ -67,7 +67,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     // A small body hung between the shoulders and the hips, on four long legs that leave it at its upper sides and go down and out.
     bodyLen: 4.9 * k * c.bulk * v(0.92, 1.1),
     bodyTop: 0.8 * k * c.bulk * c.heavy * v(0.92, 1.08),
-    bodyKeel: 0.9 * k * c.bulk * c.heavy * v(0.9, 1.12),
+    bodyKeel: (index === 1 ? 1.05 : 0.9) * k * c.bulk * c.heavy * v(0.9, 1.12),
     bodyWide: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
     hump: c.hump,
     hipFore: 1.75 * k * c.bulk,
@@ -80,7 +80,8 @@ export function makeBuild(index: number, rng: Rng): Build {
     stanceSide: 2.9 * k * c.wide,
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
-    legR: lerp(1.08, 0.94, c.skater) * c.heavy,
+    // The hero is stout for its length: a shin is a twentieth of the leg across. The others are leaner.
+    legR: lerp(1.08, 0.94, c.skater) * c.heavy * (index === 1 ? 1.4 : 1.12),
     padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
     neckR: 0.52 * k * c.heavy,
