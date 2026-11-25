@@ -132,7 +132,9 @@ void main() {
     bump += w.z * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
   }
   // Close to: the same picture again at a quarter of the size, and the pits of scoria, one to three centimetres, in three dimensions.
-  float close = smoothstep(16.0, 5.0, far);
+  // A block of metres holds its grain further off than a stone does: at 40 m the wide view still shows 2 cm to a pixel on it.
+  float close = smoothstep(16.0, 5.0, far / clamp(size * 2.0, 1.0, 5.0));
+  float pock = 0.0;
   if (close > 0.0) {
     vec2 f = (w.y > w.x && w.y > w.z ? q.xz : (w.x > w.z ? q.zy : q.xy)) * 4.3 + 0.37;
     vec3 fine = texture2D(tBoulder, f).rgb;
@@ -142,7 +144,10 @@ void main() {
     vec2 g = (fr.rg - 0.5) * close * 0.8;
     bump += w.y > w.x && w.y > w.z ? vec3(g.x, 0.0, -g.y) : (w.x > w.z ? vec3(0.0, -g.y, g.x) : vec3(g.x, -g.y, 0.0));
     float cells = vnoise3(vObject * 52.0) * 0.65 + vnoise3(vObject * 117.0 + 7.3) * 0.35;
-    pit = smoothstep(0.56, 0.7, cells) * close;
+    pit = smoothstep(0.56, 0.7, cells) * close * smoothstep(26.0, 12.0, far);
+    // Vesicles of a thumb to a fist, which a large face needs so as not to read as one smooth skin.
+    pock = smoothstep(0.6, 0.74, vnoise3(vObject * 15.0 + 1.9) * 0.7 + vnoise3(vObject * 7.3 + 4.3) * 0.3) * close * smoothstep(90.0, 45.0, far);
+    pit = max(pit, 0.8 * pock);
   }
   #endif
   vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 2.4 * mix(0.5, 1.0, smoothstep(400.0, 60.0, far)));
