@@ -56,6 +56,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     stone: kind('bench', 0, 1),
     block: kind('bench', 0, 2.5),
     hero: kind('bench', 0, 6),
+    angular: kind('bench', 0, 10),
     slab: kind('bench', 10),
     boulder: kind('land', 0, 4),
     crag: kind('land', 0, 10),
@@ -179,6 +180,9 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   const yaw = (VIEW.yaw * Math.PI) / 180;
 
   const BOX = { x0: -598, x1: -484, z0: 184, z1: 324 };
+  // The slope the wide view looks down on, between its foreground and the shore. Its picture has angular blocks there in clusters with their
+  // rubble, and bare ground between: the scatters below leave it to the clusters further down.
+  const wideSlope = (x: number, z: number): boolean => x > -566 && x < -508 && z > 228 && z < 280 && height(x, z) > 0.25 && height(x, z) < 11;
   for (let i = 0; i < 9000; i++) {
     const x = rng.range(BOX.x0, BOX.x1);
     const z = rng.range(BOX.z0, BOX.z1);
@@ -196,7 +200,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > Math.exp(-routeDistance(x, z) / 30)) continue;
     if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.46 + 0.3 * rng.next()) continue;
     const size = sized(0.22, 0.65);
-    if (fits(x, z, size)) put(kinds.stone, x, z, size);
+    if (!wideSlope(x, z) && fits(x, z, size)) put(kinds.stone, x, z, size);
   }
   for (let i = 0; i < 9000; i++) {
     const x = rng.range(-660, -430);
@@ -208,7 +212,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > want) continue;
     if (drift(x, z, 11) + 0.3 * drift(x, z, 3) < 0.5 + 0.3 * rng.next()) continue;
     const size = sized(0.6, 1.9);
-    if (fits(x, z, size)) put(kinds.block, x, z, size);
+    if (!wideSlope(x, z) && fits(x, z, size)) put(kinds.block, x, z, size);
   }
   for (let i = 0; i < 2600; i++) {
     const x = rng.range(-640, -440);
@@ -218,7 +222,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 17) < 0.56 + 0.2 * rng.next()) continue;
     if (rng.next() > 0.3 + 0.7 * Math.exp(-d / 20)) continue;
     const size = sized(1.9, 5.5, 1.8);
-    if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
+    if (!wideSlope(x, z) && fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
   }
 
   // Nothing lies clean on a floor: what broke off a block lies round its foot, from a fist to a head.
@@ -236,7 +240,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   for (let i = 0; i < 5200; i++) {
     const x = rng.range(BOX.x0 - 10, BOX.x1 + 6);
     const z = rng.range(BOX.z0 - 20, BOX.z1 + 12);
-    if (benchDistance(x, z) < 0.8) continue;
+    if (benchDistance(x, z) < 0.8 || wideSlope(x, z)) continue;
     if (rng.next() > Math.exp(-routeDistance(x, z) / 38)) continue;
     if (drift(x, z, 13) + 0.3 * drift(x, z, 4) < 0.44 + 0.3 * rng.next()) continue;
     // The ropy sheet under the wide lens stays bare.
@@ -277,6 +281,39 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const z = cz + Math.sin(a) * r;
       const size = sized(1, 3, 1.3);
       if (benchDistance(x, z) > 1.5 && put(kinds.hero, x, z, size, { sink: rng.range(0.25, 0.36), flat: rng.range(0.6, 0.9), tone: rng.range(0.75, 1.2) })) chips(x, z, size);
+    }
+  }
+
+  // The slope below, down to the shore: a dozen clusters, each one or two blocks of two to three metres with the smaller ones that broke off
+  // them close against their feet and a spill of rubble on the low side.
+  {
+    const centres: [number, number][] = [];
+    for (let i = 0; i < 9000 && centres.length < 24; i++) {
+      const x = rng.range(-566, -508);
+      const z = rng.range(228, 280);
+      // Most of them low, along the shore, where the blocks that came down the slope stopped.
+      if (!wideSlope(x, z) || height(x, z) > 8.5 || (height(x, z) > 3.5 && rng.next() > 0.3)) continue;
+      if (centres.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 6)) continue;
+      centres.push([x, z]);
+      const bigs = 1 + rng.int(2);
+      for (let b = 0; b < bigs; b++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = b ? rng.range(1.8, 2.8) : 0;
+        const size = sized(1.8, 3.1, 1.2);
+        if (put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, size, { sink: rng.range(0.25, 0.38), flat: rng.range(0.6, 0.9), tone: rng.range(0.8, 1.2) })) chips(x + Math.cos(a) * r, z + Math.sin(a) * r, size);
+      }
+      const mids = 3 + rng.int(4);
+      for (let m = 0; m < mids; m++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = rng.range(1.3, 3.4);
+        put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, sized(0.6, 1.4, 1.3), { sink: rng.range(0.25, 0.4), flat: rng.range(0.55, 0.9), tone: rng.range(0.7, 1.15) });
+      }
+      const spill = 12 + rng.int(10);
+      for (let m = 0; m < spill; m++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = rng.range(0.8, 4.6) * Math.sqrt(rng.next());
+        put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, sized(0.14, 0.5, 1.5), { sink: rng.range(0.25, 0.4), shade: false, tone: rng.range(0.6, 1.1) });
+      }
     }
   }
 
