@@ -155,7 +155,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float west = -(p.x - 445.0) * 0.859 - (p.z + 322.0) * 0.512;
   float bank = smoothstep(380.0, 100.0, west) * smoothstep(-260.0, -60.0, west);
   // Clear toward the bench, heavy toward the open lake in the east: and in banks with dark air between them, not as one veil.
-  float thin = uShowAir * (0.00024 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.4 + 1.5 * east)
+  float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.55 + 1.3 * east)
         + 0.0042 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
   float heavy = uShowAir * (0.0055 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks)
         + 0.0015 * hot * layer * (0.35 + 1.3 * banks));
@@ -170,13 +170,16 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float veil = uShowFume * exp(-off * off) * tall;
   float smoke = 0.0;
   float shade = 1.0;
+  float deep = 1.0;
   if (veil > 0.004) {
     // The wind draws the smoke out along itself: its billows are long downwind and keep their shape across it.
     vec3 drawn = q - vec3(0.92, 0.0, -0.4) * (0.92 * dot(q.xz, vec2(0.92, -0.4)));
     vec4 m = noise(drawn * vec3(0.0017, 0.0019, 0.0017) + 0.31);
     float billow = smoothstep(0.28, 0.72, 0.7 * m.r + 0.3 * m.b);
-    smoke = mix(0.0014, 0.004, along) * (veil - 0.004) * (0.1 + 2.1 * billow);
+    smoke = mix(0.0014, 0.004, along) * (veil - 0.004) * (0.03 + 2.6 * billow * billow);
     shade = exp(-1.5 * veil) * (0.6 + 0.4 * billow);
+    // The lake lights the thin edges of a billow more than its heart.
+    deep = 1.5 - billow;
   }
   sigma = haze + smoke;
   airHaze = haze;
@@ -185,7 +188,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float low = exp(-y / 250.0);
   emit = thin * AIR_ALBEDO * ((mix(0.55, 1.0, smoothstep(80.0, 380.0, y)) * sky + airWarm * low) * open + under * low + 0.4 * lights)
        + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + (0.6 * under + 0.5 * glow) * low + 0.4 * lights)
-       + smoke * FUME_ALBEDO * (mix(0.7, 1.7, smoothstep(120.0, 380.0, y)) * sky * open * shade + 4.0 * under + 3.0 * wide * exp(-y / 380.0) + 1.3 * lights);
+       + smoke * FUME_ALBEDO * (mix(0.7, 1.7, smoothstep(120.0, 380.0, y)) * sky * open * shade + deep * (4.0 * under + 3.0 * wide * exp(-y / 380.0)) + 1.3 * lights);
 }
 
 // 0 outside the column, 1 on its axis.
@@ -253,7 +256,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
   if (t1 <= t0) return;
   vec3 albedo = C.w > 1.5 ? FUME_ALBEDO : mix(STEAM_ALBEDO, SMOKE_ALBEDO, C.w);
   // A fume stands over open lava and is seen against it: it takes far more of that light than a wisp of steam does.
-  float lit = fume ? 0.5 : mix(1.5, 0.4, kind);
+  float lit = fume ? 0.3 : mix(1.5, 0.4, kind);
   float fall = fume ? 14.0 : mix(9.0, 5.0, kind);
   float dt = (t1 - t0) / float(${STEPS.steam});
   for (int k = 0; k < ${STEPS.steam}; k++) {
