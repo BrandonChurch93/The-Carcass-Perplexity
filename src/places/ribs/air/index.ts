@@ -5,11 +5,10 @@ import * as THREE from 'three';
 import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
 import type { Context, Piece } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
-import { CLOUD } from '../shared/rig';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
 
-const MAX_SOURCES = 16;
+const MAX_SOURCES = 20;
 const STEPS = 8;
 
 const SKY_VERTEX = /* glsl */ `
@@ -23,31 +22,9 @@ void main() {
 const SKY_FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vDir;
-uniform sampler2D tSky;
-uniform vec3 uSkyMean;
-uniform float uCloudHeight;
 ${RIG_GLSL}
 void main() {
-  vec3 d = normalize(vDir);
-  vec3 c = skyRadiance(d);
-  // The cloud is one sheet at one height: the same mask that shades the ground, seen from below, so a gap overhead is a patch of sun on the sand.
-  float up = max(d.y, 0.0);
-  vec2 at = cameraPosition.xz + d.xz * (uCloudHeight / (up + 0.07));
-  vec2 m = at * uCloudShade.z - uCloudShade.xy;
-  float gap = smoothstep(0.42, 0.62, texture2D(tCloudShade, m).r);
-  vec3 wide = texture2D(tSky, m * vec2(1.0, 2.0)).rgb / uSkyMean;
-  vec3 fine = texture2D(tSky, m * vec2(2.7, 5.4) + vec2(0.31, 0.57)).rgb / uSkyMean;
-  vec3 shape = wide * mix(vec3(1.0), fine, 0.55);
-  float s = max(dot(d, uSunDir), 0.0);
-  // Cloud bases are dark slate; where the sheet is broken the lit tops and the thin edges show, most of all toward the sun.
-  vec3 body = c * shape * mix(0.62, 1.0, gap);
-  float lum = dot(shape, vec3(0.3, 0.5, 0.2));
-  vec3 lit = uSunColour * (0.5 + 2.4 * s * s * s * s) * smoothstep(0.9, 2.2, lum) * (0.35 + 0.65 * gap);
-  c = body + lit * 0.45;
-  // Toward the horizon the sheet is seen through more and more air.
-  float low = smoothstep(0.16, 0.0, d.y);
-  c = mix(c, uHaze * (1.0 + 0.5 * s * s), low);
-  gl_FragColor = vec4(rigOut(c), 1.0);
+  gl_FragColor = vec4(rigOut(skyCloud(cameraPosition, normalize(vDir))), 1.0);
 }`;
 
 const VOLUME_FRAGMENT = /* glsl */ `
@@ -98,7 +75,7 @@ void main() {
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float mu = max(dot(rd, uSunDir), 0.0);
   float mu2 = mu * mu;
-  float phase = 0.3 + 1.5 * mu2 * mu2 + 3.0 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
+  float phase = 0.45 + 1.5 * mu2 * mu2 + 3.0 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
   vec3 ambient = uHaze * uScatter.x * uShowAir;
   vec3 sunlit = uSunColour * (uScatter.y * phase) * uShowCloud;
   vec3 sum = vec3(0.0);
@@ -131,19 +108,21 @@ void main() {
     float miss = dot(o, o) - tm * tm;
     float tau = b.x * c.y * exp(-miss) * 0.886 * (erfLike(reach * dl - tm) - erfLike(-tm)) / dl;
     float cover = 1.0 - exp(-tau);
+    // The air between the lens and the column dims it; the air behind it is hidden by it.
+    float near = exp(-thickness(0.5 * (ro.y + centre.y)) * clamp(tm, 0.0, reach));
     vec3 light = (uHaze * 1.25 * uScatter.x + uSunColour * (c.x * (0.22 + 0.5 * uScatter.y * phase))) * uShowAir;
-    sum = sum * (1.0 - cover) + light * cover * trans;
+    sum = sum * (1.0 - cover * near) + light * (cover * near);
     trans *= 1.0 - cover;
   }
   gl_FragColor = vec4(sum * uScatter.z, trans);
 }`;
 
 export function create(ctx: Context): Piece {
-  const skyPicture = ctx.assets.texture('air/sky.jpg');
+  (ctx.rig.uniforms.tSky as THREE.IUniform).value = ctx.assets.texture('air/sky.jpg');
   const sky = new THREE.ShaderMaterial({
     vertexShader: SKY_VERTEX,
     fragmentShader: SKY_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, tSky: { value: skyPicture }, uSkyMean: { value: new THREE.Vector3(0.226, 0.269, 0.32) }, uCloudHeight: { value: CLOUD.height } },
+    uniforms: { ...ctx.rig.uniforms },
     side: THREE.BackSide,
     depthTest: false,
     depthWrite: false,
@@ -171,7 +150,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.00022, 420, 0.00045, 9) },
+      uAir: { value: new THREE.Vector4(0.00011, 500, 0.00024, 7) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.95, 0.2, 1) },
       uShowAir: showAir,
@@ -192,7 +171,8 @@ export function create(ctx: Context): Piece {
   return {
     volume,
     setTime: (seconds) => {
-      const list = ctx.sources.steam;
+      // The heaviest columns first: there is room for MAX_SOURCES of them.
+      const list = ctx.sources.steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
       const n = Math.min(MAX_SOURCES, list.length);
       for (let i = 0; i < n; i++) {
         const s = list[i] as (typeof list)[number];
@@ -200,7 +180,7 @@ export function create(ctx: Context): Piece {
         (sourceA[i] as THREE.Vector4).set(s.at[0], s.at[1], z, s.radius);
         (sourceB[i] as THREE.Vector4).set(s.strength, s.rise, s.lean?.[0] ?? 0, s.lean?.[1] ?? 0);
         const lit = ctx.rig.land.sun(s.at[0], z) * ctx.rig.cloudShade(s.at[0], z, seconds);
-        (sourceC[i] as THREE.Vector4).set(lit, s.kind === 'spray' ? 0.07 : 0.02, 0, 0);
+        (sourceC[i] as THREE.Vector4).set(lit, s.kind === 'spray' ? 0.045 : 0.02, 0, 0);
       }
       count.value = n;
     },

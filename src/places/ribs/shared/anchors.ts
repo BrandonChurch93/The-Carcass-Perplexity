@@ -27,16 +27,16 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
 /** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun: ahead and right of the establishing view, 40 degrees up. */
 export const SUN = {
-  toward: [0.62, 0.64, -0.45] as [number, number, number],
+  toward: [-0.5, 0.6, 0.6] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
-  colour: [1.5, 1.32, 1.05] as [number, number, number],
+  colour: [4.0, 3.5, 2.85] as [number, number, number],
 };
 
 /** The wind: where it blows to (x, z), unit length, and metres a second low over the water. Cloud shadow, spray and weed lean with it. */
 export const WIND = { to: [0.5, 0.866] as [number, number], speed: 14, cloud: 26 };
 
 /** The bore: the z of its front at the event, and its speed toward +z, metres a second. Its front at `seconds` stands at gateZ + (seconds - BORE) * speed. */
-export const BORE_FRONT = { gateZ: STATIONS.gateZ, speed: 55, height: 28 };
+export const BORE_FRONT = { gateZ: STATIONS.gateZ, speed: 45, height: 23 };
 
 /** Where the drowned one hangs in the weed of the first left rib: a point on the weed's face 9.5 m over the sea. */
 export const DROWNED = {
