@@ -64,11 +64,13 @@ uniform sampler2D tSmokeFar;
 uniform sampler2D tSmokeNearAt;
 uniform sampler2D tSmokeFarAt;
 uniform vec2 uSmokeFit;
+uniform vec4 uHang;
 
 // The air of a caldera at dusk carries smoke: it is a little rose, never neutral.
 const vec3 AIR_ALBEDO = vec3(0.95, 0.89, 0.87);
 // The heavy air low over the lake is half smoke: it is darker than the clear air and warmer.
 const vec3 HEAVY_ALBEDO = vec3(0.72, 0.64, 0.6);
+const vec3 HANG_ALBEDO = vec3(0.4, 0.33, 0.3);
 const float LAKE_WIDE = 0.75;
 const float LAYER = 12.0;
 
@@ -142,12 +144,16 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
         + 0.0014 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
   // What is left of the heavy low layer away from the banks of smoke: a trace.
   float heavy = uShowAir * 0.0012 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks);
-  float haze = thin + heavy;
+  // The smoke that hangs before the butte of the feeding shot: thin, grey-brown, lit by the sky above and by the floor below.
+  float hang = 0.0;
+  if (uHang.w > 0.0) hang = uShowAir * uHang.w * (1.0 - smoothstep(0.35, 1.0, length(p.xz - uHang.xy) / uHang.z)) * exp(-y / 45.0) * (0.6 + 0.8 * n.g);
+  float haze = thin + heavy + hang;
   sigma = haze;
   // The lake and the warm side of the sky light the low air; the high air has the colour of the sky it is seen against.
   float low = exp(-y / 250.0);
   emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
-       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low);
+       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low)
+       + hang * HANG_ALBEDO * (sky * open + 1.3 * under);
 }
 
 // One layer of smoke as it stands before this pixel's scene: its light and what it lets through, its distance, and how much of it is in front of the scene.
@@ -197,6 +203,8 @@ void main() {
   }
 
   vec3 sum = vec3(0.0);
+  // What of that light is the air's own, without the smoke laid into it: the high veil dims it where the view ends in the sky.
+  vec3 airSum = vec3(0.0);
   float trans = 1.0;
   float prev = 0.0;
   // The warm side of the rig's sky reaches the air too: it is seen when the view runs toward it.
@@ -223,6 +231,7 @@ void main() {
       float cut = max(nearFirst ? nearAt : farAt, from);
       float a = 1.0 - exp(-sigma * (cut - from));
       sum += trans * a * glowing;
+      airSum += trans * a * glowing;
       trans *= 1.0 - a;
       from = cut;
       if (nearFirst) { sum += trans * nearSum; trans *= nearTrans; nearAt = -1.0; }
@@ -230,6 +239,7 @@ void main() {
     }
     float a = 1.0 - exp(-sigma * (edge - from));
     sum += trans * a * glowing;
+    airSum += trans * a * glowing;
     trans *= 1.0 - a;
     thick += 0.9 * sigma * dt;
     prev = edge;
@@ -259,11 +269,13 @@ void main() {
     vec2 meet = ro.xz + rd.xz * min((1200.0 - ro.y) / max(rd.y, 0.02), 30000.0);
     float lumps = noise(vec3(meet.x + 2.0 * uTime, 300.0, meet.y) * 0.00021).g;
     float east = smoothstep(0.8, 1.0, dot(normalize(rd.xz), normalize(vec2(1500.0, -300.0) - ro.xz)));
-    float depth = min(0.5 + 6.0 * east, 1.5) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
+    float depth = min(0.6 + 6.0 * east, 3.2) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
     veil = 1.0 - exp(-depth);
     veilLight = veil * skyHere * vec3(0.5, 0.28, 0.17);
   }
   if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0) * (1.0 - veil);
+  // Most of the sky's level is the light the air itself sends on along such a view, and the old smoke hangs in that air, not behind it: it takes its share of that too.
+  sum -= airSum * (0.75 * veil);
   // The veil is the last thing before the sky: the air's own share of the sky's light is dimmed by it as the sky is.
   sum += trans * veilLight * (1.0 + min(thick, 1.0));
   trans *= 1.0 - veil;
