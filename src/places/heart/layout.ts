@@ -50,7 +50,7 @@ function profile(table: [number, number][], d: number): number {
   return (table[table.length - 1] as [number, number])[1];
 }
 
-export const MOUTH = { x: -30, z: -452, floor: 96, width: 118, height: 60 };
+export const MOUTH = { x: -30, z: -452, floor: 80, width: 172, height: 68 };
 
 export function wallHeight(x: number, z: number): number {
   const d = calderaDistance(x, z);
