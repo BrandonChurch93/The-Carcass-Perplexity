@@ -34,25 +34,34 @@ struct Mat {
   float strand;
   vec3 colour;
 };
+// Where the mats grow: beds with bare stone between, thin toward the shore, thick at the lip.
+float matBeds(vec3 p) {
+  float r = length(p.xz);
+  float shoreward = -landAt(p.xz).b;
+  float beds = fbm(p.xz / 41.0) + 0.3 * fbm(p.xz / 6.3 + 3.0) - 0.15;
+  return smoothstep(0.3, 0.52, beds) * smoothstep(2.0, 16.0, shoreward) * (0.6 + 0.4 * smoothstep(0.0, 9.0, r - 480.0));
+}
 Mat matsAt(vec3 p) {
   Mat m;
-  float r = length(p.xz);
-  float ang = atan(-p.x, p.z);
-  float shoreward = -landAt(p.xz).b;
-  float sway = 0.22 * sin(uTime * 0.55 + r * 0.09 + 5.0 * vnoise(p.xz / 13.0)) + 0.07 * sin(uTime * 1.3 + r * 0.6 + ang * 300.0);
-  vec2 q = vec2(ang * 700.0 + sway + 2.6 * vnoise(vec2(r / 21.0, ang * 60.0)), r);
-  float beds = fbm(p.xz / 37.0) + 0.3 * fbm(p.xz / 6.0 + 3.0) - 0.15;
-  float streaks = fbm(vec2(q.x / 9.0, q.y / 140.0));
-  // Bare stone shows in patches and along one dark channel; the mats thin toward the shore and stop at the lip.
-  m.cover = smoothstep(0.36, 0.6, beds + 0.35 * (streaks - 0.5)) * smoothstep(3.0, 14.0, shoreward) * (0.55 + 0.45 * smoothstep(0.0, 9.0, r - 480.0));
-  float fine = fbm(vec2(q.x * 5.5, q.y * 0.11));
-  float hair = fbm(vec2(q.x * 26.0, q.y * 0.4) + 11.0);
-  m.strand = smoothstep(0.3, 0.72, 0.55 * fine + 0.45 * hair + 0.25 * (m.cover - 0.5));
-  float kind = fbm(vec2(q.x / 3.1, q.y / 55.0) + 5.0);
-  vec3 rust = vec3(0.3, 0.075, 0.02);
-  vec3 amber = vec3(0.58, 0.26, 0.045);
-  vec3 honey = vec3(0.72, 0.5, 0.16);
-  m.colour = mix(mix(rust, amber, smoothstep(0.3, 0.6, kind)), honey, smoothstep(0.55, 0.85, hair) * smoothstep(0.4, 0.7, kind));
+  // The filaments lie combed along the slow drift of the water, in tresses that bend round each other, and sway where they lie.
+  vec2 w = p.xz;
+  vec2 bend = vec2(vnoise(w / 27.0), vnoise(w / 27.0 + 17.3)) - 0.5;
+  vec2 curl = vec2(vnoise(w / 5.1 + 3.1), vnoise(w / 5.1 + 9.9)) - 0.5;
+  vec2 kink = vec2(vnoise(w / 0.9 + 1.7), vnoise(w / 0.9 + 6.3)) - 0.5;
+  float sway = 0.045 * sin(uTime * 0.7 + 6.28 * vnoise(w / 1.9)) + 0.014 * sin(uTime * 1.7 + 6.28 * vnoise(w / 0.37));
+  w += 26.0 * bend + 4.2 * curl + 0.5 * kink;
+  vec2 q = vec2(0.951 * w.x + 0.309 * w.y + sway, -0.309 * w.x + 0.951 * w.y);
+  float beds = matBeds(p);
+  float tress = fbm(vec2(q.x / 1.1, q.y / 19.0));
+  m.cover = beds * smoothstep(0.26, 0.56, tress + 0.4 * (beds - 0.5));
+  float fine = fbm(vec2(q.x * 7.0, q.y * 0.3) + 2.0);
+  float hair = vnoise(vec2(q.x * 38.0, q.y * 1.1) + 11.0);
+  m.strand = smoothstep(0.26, 0.7, 0.6 * fine + 0.4 * hair + 0.3 * (m.cover - 0.5));
+  float kind = fbm(vec2(q.x / 2.3, q.y / 31.0) + 5.0);
+  vec3 rust = vec3(0.34, 0.07, 0.016);
+  vec3 amber = vec3(0.66, 0.25, 0.03);
+  vec3 honey = vec3(0.85, 0.55, 0.12);
+  m.colour = mix(mix(rust, amber, smoothstep(0.3, 0.6, kind)), honey, smoothstep(0.5, 0.85, hair) * smoothstep(0.35, 0.7, kind));
   return m;
 }`;
 
@@ -182,9 +191,11 @@ uniform vec3 uRestWater;
 uniform vec3 uRestRing;
 uniform float uRestRadius[9];
 uniform float uRestWidth;
+uniform vec3 uSkyMirror;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WATER_GLSL}
+${MATS_GLSL}
 void main() {
   vec3 p = vWorld;
   float r = length(p.xz);
@@ -208,7 +219,7 @@ void main() {
     float m = length(d);
     if (l.w > 0.0 && m < 14.0) {
       float ph = m * 7.0 - (uTime + l.z) * 6.2;
-      float env = l.w * 0.011 * exp(-m / 2.6) * smoothstep(0.05, 0.5, m);
+      float env = l.w * 0.0045 * exp(-m / 2.6) * smoothstep(0.05, 0.5, m);
       slope += d / max(m, 1e-3) * (env * 7.0 * cos(ph));
     }
   }
@@ -221,10 +232,14 @@ void main() {
   vec4 m4 = uMirrorMatrix * vec4(p.x, 0.0, p.z, 1.0);
   vec3 bent = (viewMatrix * vec4(n.x, 0.0, n.z, 0.0)).xyz;
   vec2 uv = m4.xy / m4.w + vec2(bent.x, -bent.z) * uLens * 0.9;
-  vec3 refl = texture2D(tMirror, clamp(uv, 0.001, 0.999)).rgb;
-  // From high above nothing stands in the mirror but the sky.
+  vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
+  // The sky is not drawn into the mirror: the water takes it from the rig, and darker than it is, as deep water under a low sun does.
   vec3 rd = reflect(-v, n);
-  refl = mix(refl, skyRadiance(vec3(rd.x, abs(rd.y), rd.z)), smoothstep(0.75, 0.95, v.y));
+  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror;
+  vec3 refl = seen.rgb + (1.0 - seen.a) * sky;
+  refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
+  // Where the mats have grown up to the surface it is not a mirror at all.
+  if (r > 470.0) f *= 1.0 - 0.62 * matBeds(p);
   vec4 c = vec4(refl * f, f);
   // The last second of the place: the flat picture the rise begins with.
   if (uRest > 0.0) {
@@ -398,7 +413,7 @@ export function create(ctx: Context): Piece {
   const riserMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 0 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
   const back = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), riserMaterial);
   back.frustumCulled = false;
-  const TIPS = 9;
+  const TIPS = 3;
   const tipShape = new THREE.LatheGeometry(
     [0, 0.08, 0.2, 0.35, 0.5, 0.65, 0.8, 0.92, 1].map((t) => new THREE.Vector2(0.9 * (1 - t) ** 0.7 * (1 + 0.15 * Math.sin(t * 9)) + 0.02, t * 7 - 3.5)),
     14,
@@ -407,7 +422,7 @@ export function create(ctx: Context): Piece {
   tips.frustumCulled = false;
   const tipAt: [number, number, number][] = [];
   const scatter = ctx.rng('riser');
-  for (let i = 0; i < TIPS; i++) tipAt.push([(i / TIPS) * 360 + scatter.range(-14, 14), scatter.range(48, 96), scatter.range(0.6, 1.2)]);
+  for (let i = 0; i < TIPS; i++) tipAt.push([[62, 286, 118][i] as number, scatter.range(22, 40), scatter.range(0.16, 0.3)]);
   lake.add(ctx.parts.built('riser', back, tips));
   lake.add(tips);
 
@@ -431,6 +446,7 @@ export function create(ctx: Context): Piece {
       uRestRing: { value: linear(handoff.ring) },
       uRestRadius: { value: restRadius },
       uRestWidth: { value: handoff.ringWidth },
+      uSkyMirror: { value: new THREE.Vector3(0.24, 0.3, 0.42) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
@@ -455,14 +471,14 @@ export function create(ctx: Context): Piece {
     setTime: (t) => {
       const swell = smooth(rise - 1.7, rise - 0.15, t) * (1 - smooth(rise + 0.8, rise + 2.5, t));
       const breathe = 1 + 0.04 * Math.sin(t * 2.3);
-      dome.value.x = 11 * swell * breathe;
+      dome.value.x = 5.6 * swell * breathe;
       back.visible = swell > 0.001;
-      back.scale.set(26, 9.4 * swell * breathe * smooth(0.3, 1, swell) + 0.01, 26);
+      back.scale.set(17, 3.5 * swell * breathe * smooth(0.3, 1, swell) + 0.01, 15);
       back.position.set(6, -0.8, -4);
       tipAt.forEach(([bearing, r, size], i) => {
         const up = smooth(0.25 + 0.05 * (i % 4), 0.9, swell);
         const a = bearing * DEG;
-        dummy.position.set(Math.sin(a) * r, -3.9 * size + 6.4 * size * up + 0.3 * Math.sin(t * 1.7 + i), -Math.cos(a) * r);
+        dummy.position.set(Math.sin(a) * r, -3.9 * size + 6.4 * size * up + 0.05 * Math.sin(t * 1.7 + i), -Math.cos(a) * r);
         dummy.rotation.copy(euler.set(0.2 * Math.sin(i * 2.1), i * 1.9, 0.25 * Math.cos(i * 1.3)));
         dummy.scale.setScalar(up > 0 ? size : 0);
         dummy.updateMatrix();
@@ -487,7 +503,7 @@ export function create(ctx: Context): Piece {
           const age = t - (rise - 1.2 + 0.62 * (i - 7));
           const life = 2.7;
           if (age > 0 && age < life) {
-            radius = 62 + 44 * age;
+            radius = 38 + 44 * age;
             width = 2.6;
             height = 0.16 * Math.sin((Math.PI * age) / life);
           }
@@ -511,7 +527,7 @@ export function create(ctx: Context): Piece {
     },
     beforeSample: (renderer, camera) => {
       (surfaceMaterial.uniforms.uLens as THREE.IUniform<number>).value = camera.projectionMatrix.elements[5] as number;
-      mirror.render(renderer, ctx.scene, camera, lake);
+      mirror.render(renderer, ctx.scene, camera, [lake, ...ctx.unmirrored]);
     },
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {

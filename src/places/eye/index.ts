@@ -14,7 +14,6 @@ import * as land from './land';
 import * as skeleton from './skeleton';
 import { landHeight } from './land/height';
 import { END, RISE, UNIT } from './shared/anchors';
-import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
 import { setStaged } from './shared/stage';
@@ -65,18 +64,16 @@ async function create(): Promise<Place> {
     assets: { texture },
     sources: { steam: [], heat: [] },
     laps: [],
+    unmirrored: [],
     events: { rise: RISE, end: END },
   };
 
   const pieces: Piece[] = [];
-  const owned = new Set<string>();
   for (const folder of FOLDERS) {
     pieces.push(folder.create(ctx));
-    for (const name of folder.PARTS) owned.add(name);
     // The land has told the rig its shape: bake it before the next folder reads it.
     if (folder === (land as Folder)) rig.bake();
   }
-  const standIns = createStandIns(scene, parts, owned);
   await Promise.all(waiting);
 
   const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.5, 40000);
@@ -97,7 +94,6 @@ async function create(): Promise<Place> {
       setStaged(staged ?? seconds);
       rig.setTime(seconds);
       for (const p of pieces) p.setTime?.(seconds);
-      standIns.setTime(seconds);
     },
     beforeSample: (renderer, view) => {
       rig.beforeSample(renderer, view);
@@ -108,7 +104,6 @@ async function create(): Promise<Place> {
       const effect = part !== null && parts.byId(part)?.kind === 'effect';
       (rig.uniforms.uSolo as THREE.IUniform<number>).value = effect ? 1 : 0;
       for (const p of pieces) p.solo?.(part);
-      standIns.solo(part);
     },
     dispose: () => {
       for (const p of pieces) p.dispose?.();

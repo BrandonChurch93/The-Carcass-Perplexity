@@ -9,7 +9,7 @@ export function waterUniforms(): Record<string, THREE.IUniform> {
   return {
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
     uDeep: { value: new THREE.Vector3(0.0016, 0.0058, 0.0125) },
-    uDome: { value: new THREE.Vector4(0, 54, 0, 0) },
+    uDome: { value: new THREE.Vector4(0, 34, 0, 0) },
   };
 }
 
@@ -45,7 +45,7 @@ vec3 throughWater(vec3 c, vec3 p) {
 export interface Mirror {
   readonly uniforms: { tMirror: THREE.IUniform; uMirrorMatrix: THREE.IUniform<THREE.Matrix4> };
   /** Draws the scene above the water as the water reflects it. `hide` is everything that is the lake itself. */
-  render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, hide: THREE.Object3D): void;
+  render(renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.PerspectiveCamera, hide: THREE.Object3D[]): void;
   resize(width: number, height: number): void;
   dispose(): void;
 }
@@ -72,6 +72,7 @@ export function createMirror(): Mirror {
   const place = new THREE.Vector3();
   const aim = new THREE.Vector3();
   const level = new THREE.Vector3(0, 0, 0);
+  const cleared = new THREE.Color();
   return {
     uniforms,
     render: (renderer, scene, camera, hide) => {
@@ -103,13 +104,19 @@ export function createMirror(): Mirror {
       p[10] = clip.z + 1 - 0.003;
       p[14] = clip.w;
       eye.projectionMatrixInverse.copy(eye.projectionMatrix).invert();
-      const was = hide.visible;
-      hide.visible = false;
+      const was = hide.map((o) => o.visible);
+      for (const o of hide) o.visible = false;
+      const alpha = renderer.getClearAlpha();
+      renderer.getClearColor(cleared);
+      renderer.setClearColor(0x000000, 0);
       renderer.setRenderTarget(target);
       renderer.clear(true, true, false);
       renderer.render(scene, eye);
       renderer.setRenderTarget(null);
-      hide.visible = was;
+      renderer.setClearColor(cleared, alpha);
+      hide.forEach((o, i) => {
+        o.visible = was[i] as boolean;
+      });
     },
     resize: (width, height) => {
       target.setSize(Math.max(8, Math.round(width / 2)), Math.max(8, Math.round(height / 2)));

@@ -127,6 +127,7 @@ export function create(ctx: Context): Piece {
   const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
   sky.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sky', sky));
+  ctx.unmirrored.push(sky);
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('mist', 'built');
 

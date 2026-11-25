@@ -46,7 +46,7 @@ export function wallAt(a: number): { foot: number; scree: number; top: number } 
   const south = bump(a, 182, 50);
   const foot = BROW.recess * browAt(a) + 64 + 150 * west + 470 * south - 20 * east + 22 * Math.sin(5 * a + 0.7) + 14 * Math.sin(11 * a + 2.1) + 46 * (vnoise(cx * 7 + 11, cz * 7 + 4) - 0.5) + 24 * (vnoise(cx * 23 + 2, cz * 23 + 9) - 0.5) + 9 * (vnoise(cx * 70, cz * 70 + 3) - 0.5);
   const scree = 24 + 50 * west + 76 * south - 12 * east + 9 * Math.sin(7 * a + 2) + 22 * (vnoise(cx * 16 + 5, cz * 16) - 0.5);
-  const top = 214 + 20 * Math.sin(3 * a + 0.5) + 11 * Math.sin(8 * a + 1.9) + 6 * Math.sin(17 * a + 0.3) - 62 * west - 84 * south + 44 * browAt(a) + 16 * (vnoise(cx * 26 + 8, cz * 26 + 1) - 0.5);
+  const top = 214 + 20 * Math.sin(3 * a + 0.5) + 11 * Math.sin(8 * a + 1.9) + 6 * Math.sin(17 * a + 0.3) - 62 * west - 84 * south + (44 + 90 * smooth(48, 96, a / DEG)) * browAt(a) + 16 * (vnoise(cx * 26 + 8, cz * 26 + 1) - 0.5);
   return { foot: Math.max(46, foot), scree: Math.max(3, scree), top };
 }
 
@@ -60,7 +60,7 @@ export function browAt(a: number): number {
 }
 
 /** How far the wall stands back under the brow, metres, and the profile of the brow itself: the level of the under side of its lip and how far the lip hangs out from the wall behind. */
-export const BROW = { recess: 90, lipLevel: 92, reach: 128, thick: 46 };
+export const BROW = { recess: 90, lipLevel: 168, reach: 128, thick: 36 };
 
 /** The height below which the brow hides the sun, at a point on the ground. It is baked into the rig's map with the shadows of the cliffs. */
 export function browCover(x: number, z: number): number {
@@ -109,7 +109,7 @@ export function landHeight(x: number, z: number): number {
   }
 
   // The bluff of the last shot, on the shore at x = 0.
-  if (z > 0) y += BLUFF * smooth(6, 34, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2));
+  if (z > 0) y += BLUFF * smooth(6, 56, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2));
 
   const [along, across] = axisOf(x, z);
   if (along > -40 && along < 2600 && Math.abs(across) < 400) {

@@ -16,7 +16,7 @@ export const smooth = (lo: number, hi: number, v: number): number => {
 
 // How far the south shore, where the cameras stand, lies inside the round of the lake: the shelf there is 180 m wide, so that the black centre is a broad band from the shore.
 export const FAN = 370;
-export const BLUFF = 20;
+export const BLUFF = 23.0;
 // The east shore, under the brow, stands this far inside the round of the lake.
 export const EAST_IN = 300;
 
@@ -66,7 +66,7 @@ export function landHeight(x: number, z: number): number {
   y += 8.5 * Math.exp(-((Math.hypot(x - LEDGE[0], z - LEDGE[1]) / 21) ** 2));
   const ds = r - shoreOf(x, z);
   if (ds < FAN + 60) {
-    const bluff = BLUFF * smooth(6, 34, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2)) * (z > 0 ? 1 : 0);
+    const bluff = BLUFF * smooth(6, 56, ds) * (1 - smooth(95, 150, ds)) * Math.exp(-((x / 44) ** 2)) * (z > 0 ? 1 : 0);
     y = Math.max(y, Math.min(0.03 * ds, 3 + 0.012 * ds)) + bluff;
   }
   const px = x - GAP_FROM[0];
