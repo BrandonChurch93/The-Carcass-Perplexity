@@ -94,8 +94,8 @@ const hash = (n: number): number => {
 
 /** A value read off a few points (u, value), eased between them. */
 /** The trunk's half height and half width, rump (0) to chest (1), for a size of 1: an egg, the deeper end behind the middle, closed and round at both ends. */
-export const bodyHalfH = (t: number): number => 0.42 * Math.max(0, Math.sin(Math.PI * t ** 0.88)) ** 0.62;
-export const bodyHalfW = (t: number): number => 0.275 * Math.max(0, Math.sin(Math.PI * t ** 0.92)) ** 0.62;
+export const bodyHalfH = (t: number): number => 0.36 * Math.max(0, Math.sin(Math.PI * t ** 0.88)) ** 0.62;
+export const bodyHalfW = (t: number): number => 0.225 * Math.max(0, Math.sin(Math.PI * t ** 0.92)) ** 0.62;
 
 export function curve(points: readonly (readonly [number, number])[], u: number): number {
   const first = points[0] as readonly [number, number];
@@ -142,17 +142,17 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     bodyLen: 1.32 * k * j(3, 0.93, 1.08),
     standH,
     hipFore: 0.37 * k,
-    hipSide: 0.17 * k,
-    stanceSide: 0.2 * k * j(4, 0.85, 1.25),
+    hipSide: 0.125 * k,
+    stanceSide: 0.16 * k * j(4, 0.85, 1.25),
     legLen: 1.006 * Math.hypot(standH - 0.2 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
     legR: 0.034 * k,
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
-    neckR: 0.1 * k,
-    tendrils: far ? 6 : 60,
-    tendrilLen: 0.56 * k * j(8, 0.85, 1.2),
+    neckR: 0.085 * k,
+    tendrils: far ? 8 : 84,
+    tendrilLen: 0.7 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
 }
@@ -227,7 +227,7 @@ export class Wader {
       for (let s = 0; s <= bodySides; s++) {
         const phi = (s / bodySides) * Math.PI * 2;
         // Under the trunk the skin is in its own shade.
-        const shade = 0.55 + 0.45 * smooth(-0.9, 0.3, Math.sin(phi));
+        const shade = 0.3 + 0.7 * smooth(-0.95, 0.35, Math.sin(phi));
         skin.describe(this.body, i, s, t * b.bodyLen, (s / bodySides) * 2 * Math.PI * 0.32, 0.5, shade, a, seed, 0, t);
       }
     }
@@ -255,7 +255,7 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 1.7 * (1 - smooth(0, 0.26, u)) ** 1.3 + 0.5 * (1 - smooth(0, 0.46, u));
+      const thigh = 1.0 * (1 - smooth(0, 0.22, u)) ** 1.3 + 0.45 * (1 - smooth(0, 0.46, u));
       const knuckle = 0.95 * Math.exp(-(((u - b.knee) / 0.032) ** 2)) + 0.7 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
@@ -277,7 +277,7 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.034 : 0.0105) * k;
+    const tr = (far ? 0.04 : 0.017) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * (1 - 0.6 * u ** 1.6);
@@ -616,7 +616,8 @@ export class Wader {
     const lagZ = -Math.cos(seconds * 1.15 + b.seed * 2.1 - 0.5) * 0.3 * down * sy;
     const floorY = env.ground(ex, ez);
     const wet = floorY < env.sea;
-    const rest = floorY + 0.02;
+    // In water the strands do not sink to the bed: they trail just under the surface.
+    const rest = wet ? Math.max(floorY + 0.02, env.sea - 0.3) : floorY + 0.02;
     // A frame across the end of the neck.
     let ux = Rh[0];
     let uy = 0;
@@ -654,15 +655,15 @@ export class Wader {
         const g = smooth(0, 0.55 + 0.4 * st.stiff, u);
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
-        const drift = under * (0.5 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.9 * st.out);
-        let dx = (tx + ox * 0.55 * st.out) * (1 - g) + (lagX + swing * cyw + ox * (0.16 + drift)) * g;
-        let dy = (ty + oy * 0.55 * st.out) * (1 - g) - g * (1 - 0.55 * under);
-        let dz = (tz + oz * 0.55 * st.out) * (1 - g) + (lagZ + swing * sy + oz * (0.16 + drift)) * g;
+        const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
+        let dx = (tx + ox * 0.35 * st.out) * (1 - g) + (lagX + swing * cyw + ox * (0.16 + drift)) * g;
+        let dy = (ty + oy * 0.35 * st.out) * (1 - g) - g * (1 - 0.55 * under);
+        let dz = (tz + oz * 0.35 * st.out) * (1 - g) + (lagZ + swing * sy + oz * (0.16 + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
           const fan = st.angle + 0.5 * Math.sin(st.phase);
-          dx = Math.cos(fan) * 0.8 + lagX * 2;
-          dz = Math.sin(fan) * 0.8 + lagZ * 2;
+          dx = Math.cos(fan) * 0.45 + lagX * 2;
+          dz = Math.sin(fan) * 0.45 + lagZ * 2;
           dy = (rest - y) * 4;
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
