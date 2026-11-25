@@ -342,7 +342,7 @@ export function create(ctx: Context): Piece {
         const y = H * (0.84 + 0.2 * rand(i, n + 15)) + (piled ? 14 + 14 * rand(i, n + 16) : 5 + 11 * rand(i, n + 16)) * a - 4.4 * a * a;
         const z = z0 + BORE_SPEED * (1.03 - 0.3 * a / life) * a;
         const fade = Math.min(1, a / 0.1) * Math.pow(Math.max(0, 1 - a / life), 2);
-        boreSpray.put(x, y + 1, z, (piled ? 2.0 + 2.6 * a : 1.2 + 2.0 * a) * (0.6 + 0.8 * rand(i, n + 17)), 0.95 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
+        boreSpray.put(x, y + 1, z, (piled ? 2.0 + 2.6 * a : 1.2 + 2.0 * a) * (0.6 + 0.8 * rand(i, n + 17)), 0.7 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
       }
       // White heads that tumble down the face in front of the wall.
       for (let i = 0; i < FACE; i++) {

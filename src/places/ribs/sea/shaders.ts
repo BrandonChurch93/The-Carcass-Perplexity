@@ -404,7 +404,7 @@ void main() {
   vLight *= mix(vec3(1.0), vec3(0.23, 0.26, 0.28), vMist);
   // Thrown water between the lens and the sun burns: the light comes forward through it.
   float through = pow(max(dot(normalize(aAt.xyz - cameraPosition), uSunDir), 0.0), 3.0);
-  vLight += uSunColour * through * mix(0.16, 0.012, vMist) * mix(0.35, 1.0, open);
+  vLight += uSunColour * through * mix(0.07, 0.012, vMist) * mix(0.35, 1.0, open);
   gl_Position = projectionMatrix * centre;
 }`;
 
