@@ -16,7 +16,18 @@ export const MAX_EMITTERS = 8;
 // lit smoke, on warm ground: 76 52 46 where the sky alone gives 57 50 56). It hides `shade` of the sky from what is under its middle and is a wide
 // dim round light, 25 m up: the lake's light caught by the smoke and thrown down. Its colour is paler than the lava's, as scattered light is.
 // It stands in that shot alone, so the wide view keeps its neutral lake.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [1.5, 0.66, 0.11] as const };
+// Its radiance was 1.5, 0.66, 0.11: halved when the crust's own seams began to light their banks (the crust skin), and less yellow, since
+// smoke lit from below is paler than the fire: the floor away from the seams stood mustard under it.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [0.75, 0.36, 0.12] as const };
+// The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
+// reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
+// gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
+export const POOLS = {
+  at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
+  axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
+  halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
+  radiance: [70, 9.5] as const,
+};
 
 export type Height = (x: number, z: number) => number;
 
@@ -307,6 +318,7 @@ export function createRig(t0: number): Rig {
   const emitters: Emitter[] = [bankLight];
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
+  const poolPlaces = POOLS.at.map((at, i) => new THREE.Vector4(at[0], at[1], (POOLS.axis[i] as readonly [number, number])[0], (POOLS.axis[i] as readonly [number, number])[1]));
 
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
@@ -334,6 +346,8 @@ export function createRig(t0: number): Rig {
     uEmitterCount: { value: 0 },
     uEmitters: { value: emitterPlaces },
     uEmitterRadiance: { value: emitterRadiance },
+    uRigPools: { value: poolPlaces },
+    uRigPoolSize: { value: POOLS.halves.map((h) => new THREE.Vector4(h[0], h[1], POOLS.radiance[0], POOLS.radiance[1])) },
     uFlowFoot: { value: new THREE.Vector2(FLOW.foot[0], FLOW.foot[1]) },
     uFlowT0: { value: t0 },
   };
@@ -467,6 +481,13 @@ export function createRig(t0: number): Rig {
       bankLight.position.y = banked ? BANK.at[1] : -1000;
       bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]).multiplyScalar(banked ? 1 : 0);
       (uniforms.uBank as THREE.IUniform<THREE.Vector4>).value.set(BANK.at[0], BANK.at[2], 1 / BANK.shadeRadius, banked ? BANK.shade : 0);
+      // The pools ride the crust.
+      POOLS.at.forEach((at, i) => {
+        const here = drift(at[0], at[1], seconds);
+        const place = poolPlaces[i] as THREE.Vector4;
+        place.x = here[0];
+        place.y = here[1];
+      });
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
