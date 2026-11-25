@@ -70,6 +70,8 @@ export interface Place {
   readonly camera: THREE.PerspectiveCamera;
   readonly look: Look;
   readonly volume: THREE.ShaderMaterial | null;
+  readonly warp?: THREE.ShaderMaterial | null;
+  readonly depthFirst?: boolean;
   readonly parts: Parts;
   setTime(seconds: number): void;
   resize?(width: number, height: number): void;

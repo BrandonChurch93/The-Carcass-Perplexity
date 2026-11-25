@@ -104,6 +104,8 @@ class UnitStage implements Stage {
   readonly lens: Lens = { aperture: 0, focus: 100 };
   readonly look: Look;
   readonly volume: THREE.ShaderMaterial | null;
+  readonly warp: THREE.ShaderMaterial | null;
+  readonly depthFirst: boolean;
   readonly parts: Parts;
   shot: CutShot | null = null;
   private readonly first: number;
@@ -115,6 +117,8 @@ class UnitStage implements Stage {
     this.camera = place.camera;
     this.look = place.look;
     this.volume = place.volume;
+    this.warp = place.warp ?? null;
+    this.depthFirst = place.depthFirst ?? false;
     this.parts = place.parts;
     this.first = placeOf(module.unit).first;
   }
