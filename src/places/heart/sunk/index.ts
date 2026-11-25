@@ -5,7 +5,7 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
+import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, ragGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
@@ -13,10 +13,29 @@ export const PARTS: readonly string[] = ['sunk-walker'];
 const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
 const TEAR_GAIN = 3.0;
-/** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 150 130 110 on the display. */
-const ASH_ON_HIDE: [number, number, number] = [0.55, 0.45, 0.29];
+/** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 120 105 90 on the display. */
+const ASH_ON_HIDE: [number, number, number] = [0.34, 0.28, 0.185];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
+
+/** The settling, in the seconds of a shot. Shot heart-04 starts at film frame 3579: this is film frame 3740 of it, in the last
+ *  third of the push. The hull goes down a few centimetres, the split opens with it, breathes out a pulse of light and a puff
+ *  of smoke, and stays a little wider. */
+const SETTLE_AT = (3740 - 3579) / 60;
+const SETTLE_DROP = 0.045;
+const ramp = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+function settling(seconds: number): { down: number; open: number; puff: number } {
+  const t = seconds - SETTLE_AT;
+  const down = ramp(-0.3, 0.3, t);
+  // The pulse and the puff are over before the loop of the place begins (7 s in), so the loop never holds a part of them.
+  const over = ramp(6, 4.5, seconds);
+  const pulse = ramp(-0.2, 0.15, t) * Math.exp(-Math.max(0, t - 0.15) / 0.8) * over;
+  const puff = ramp(-0.1, 0.45, t) * Math.exp(-Math.max(0, t - 0.45) / 1.5) * over;
+  return { down, open: 0.3 * down + 0.7 * pulse, puff };
+}
 
 const COS = Math.cos(YAW);
 const SIN = Math.sin(YAW);
@@ -42,17 +61,21 @@ export function create(ctx: HeartContext): HeartPiece {
     tRelief: { value: baked.relief },
     tMask: { value: baked.mask },
     tLines: { value: baked.lines },
+    tAlong: { value: baked.along },
     uField: { value: new THREE.Vector4(FIELD.cx - FIELD.half, FIELD.cz - FIELD.half, 1 / (2 * FIELD.half), SLOPE_RANGE) },
     uTurn: { value: new THREE.Vector2(COS, SIN) },
     uOrigin: { value: new THREE.Vector2(SUNK[0], SUNK[2]) },
     uTearKelvin: { value: TEAR_KELVIN },
     uTearGain: { value: TEAR_GAIN },
+    uTearOpen: { value: 0 },
     uTearColour: { value: new THREE.Vector3(...blackbody(TEAR_KELVIN)) },
     uTear: { value: baked.tear.points.map((p) => new THREE.Vector3(p[0], p[1] + 0.03, p[2])) },
     uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
-    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 2 }) },
-    tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg', anis) },
+    // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
+    // for on half the frame at heart-2.
+    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
+    tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
     tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 2 }) },
   };
 
@@ -87,12 +110,23 @@ export function create(ctx: HeartContext): HeartPiece {
   const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
-  const hanging = [padGeometry([2.45, 3.74, 0.55], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
+  // Each is [where it is held, its length, its half width, its turn, its seed].
+  const RAGS: [[number, number, number], number, number, number, number][] = [
+    [[2.45, 3.76, 0.55], 1.05, 0.085, 1.9, 1],
+    [[2.52, 3.7, 0.5], 0.55, 0.05, 0.6, 2],
+    [[2.3, 3.82, 0.6], 0.38, 0.06, 2.7, 3],
+    [[-0.55, 3.52, 0.84], 0.8, 0.07, -0.4, 4],
+    [[-0.45, 3.56, 0.8], 0.42, 0.045, 0.9, 5],
+    [[1.0, 3.19, -3.04], 0.9, 0.075, 0.9, 6],
+    [[1.12, 3.16, -3.0], 0.5, 0.05, 2.2, 7],
+  ];
+  const hanging = RAGS.map(([at, length, half, yaw, seed]) => carcass(ragGeometry(at, length, half, yaw, seed)));
   const near = new THREE.Group();
-  near.add(carcass(bodyGeometry(baked, 290, 240, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
+  const bodies = [carcass(bodyGeometry(baked, 290, 240, true)), carcass(bodyGeometry(baked, 180, 150))] as const;
+  near.add(bodies[0], carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
   const far = new THREE.Group();
   far.add(
-    carcass(bodyGeometry(baked, 180, 150)),
+    bodies[1],
     carcass(legGeometry({ ...legShapeA, rings: 350, round: 40 }, baked).geometry),
     carcass(legGeometry({ ...legShapeB, rings: 260, round: 30 }, baked).geometry),
     farSheet,
@@ -134,10 +168,11 @@ export function create(ctx: HeartContext): HeartPiece {
   glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(strip, 3));
   glowGeometry.setIndex(stripIndex);
   const hot = blackbody(TEAR_KELVIN - 40);
+  const radiance = new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar(baked.tear.area / Math.max(0.5, tearLength * 1.25));
   const glowMaterial = new THREE.ShaderMaterial({
     vertexShader: GLOW_VERTEX,
     fragmentShader: GLOW_FRAGMENT,
-    uniforms: { uRadiance: { value: new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar(baked.tear.area / Math.max(0.5, tearLength * 1.25)) } },
+    uniforms: { uRadiance: { value: radiance.clone() } },
     depthTest: false,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -159,11 +194,12 @@ export function create(ctx: HeartContext): HeartPiece {
 
   const tearMid = TEAR[1] as [number, number];
   // A faint smoke that drifts low off each length of the split, and the warm air over it. Nothing here stands as a column.
+  const smokeRest = TEAR.map((_, i) => ({ strength: 0.07 + 0.02 * ((i * 2) % 3), rise: 1.0 + 0.4 * ((i + 1) % 3) }));
   const smokes = TEAR.map((_, i) => ({
     at: [0, 0.3, 0] as [number, number, number],
     radius: 0.45 + 0.15 * i,
-    strength: 0.07 + 0.02 * ((i * 2) % 3),
-    rise: 1.0 + 0.4 * ((i + 1) % 3),
+    strength: (smokeRest[i] as (typeof smokeRest)[number]).strength,
+    rise: (smokeRest[i] as (typeof smokeRest)[number]).rise,
     kind: 'smoke' as const,
     lean: [-0.5 + 0.2 * i, 0.3 - 0.15 * i] as [number, number],
   }));
@@ -182,10 +218,19 @@ export function create(ctx: HeartContext): HeartPiece {
     const [tx, tz] = toWorld(tearMid[0], tearMid[1]);
     heat.at[0] = x + tx;
     heat.at[2] = z + tz;
+    const now = settling(seconds);
+    for (const body of bodies) body.position.y = -SETTLE_DROP * now.down;
+    shared.uTearOpen.value = now.open;
+    shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
+    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar(1 + 1.5 * now.open);
+    heat.strength = 0.25 * (1 + now.puff);
     smokes.forEach((smoke, i) => {
       const [sx, sz] = toWorld((TEAR[i] as [number, number])[0], (TEAR[i] as [number, number])[1]);
+      const rest = smokeRest[i] as (typeof smokeRest)[number];
       smoke.at[0] = x + sx;
       smoke.at[2] = z + sz;
+      smoke.strength = rest.strength * (1 + 5 * now.puff);
+      smoke.rise = rest.rise * (1 + 0.8 * now.puff);
     });
   };
   place(ctx.rig.flow.t0);
@@ -207,6 +252,7 @@ export function create(ctx: HeartContext): HeartPiece {
       baked.relief.dispose();
       baked.mask.dispose();
       baked.lines.dispose();
+      baked.along.dispose();
     },
   };
 }
