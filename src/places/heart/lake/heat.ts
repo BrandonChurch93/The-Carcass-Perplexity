@@ -79,6 +79,57 @@ vec2 gapeAt(vec2 q, vec4 n) {
   return vec2(reach * mix(widen, 1.0, max(shown, byPool)), smoothstep(0.46, 0.84, u));
 }
 
+// Signed metres from a point of the crust to the brim of the nearest gap: negative in the gap. n is netAt(q), untouched.
+// The crust cuts its wall where this is zero and the melt's skin clings there: both read this one function.
+float bankAt(vec2 q, vec4 n) {
+  return n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gapeAt(q, n).x;
+}
+
+// The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). The gaps are nearly full: a hand or two
+// below the brim. One level for a seam, so the liquid lies level: the channel at the line and its fingers lowest (0.22 m), the long
+// seam of the group at 0.17 m, the narrow near seams highest (0.08 m), the fountain lines at 0.2 m.
+float meltLevel(vec4 n) {
+  float c = n.g - 2.0;
+  return -mix(mix(0.22, 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+}
+
+// The mean heat of the melt of a wide gap, as the light it throws: kelvin. Hot spots come and go slowly along a seam.
+float meltKelvin(vec2 q, vec4 n) {
+  float c = n.g - 2.0;
+  float k = mix(mix(1335.0, 1250.0, smoothstep(0.0, 0.25, c)), 1385.0, step(1.3, c));
+  return k + 70.0 * (vnoise(q / 3.7 + vec2(uTime * 0.06, 3.0)) - 0.5) + 30.0 * (beatAt(q) - 0.5);
+}
+
+// The light a long strip of melt throws on a point, as a part of what a whole sky of it would: n2 is the normal in the plane across
+// the gap (x away from the gap, y up), a and b the near and far edge of the strip from the point in that plane.
+float stripLight(vec2 n2, vec2 a, vec2 b) {
+  float ca = dot(n2, a);
+  float cb = dot(n2, b);
+  float ta = clamp(atan(n2.x * a.y - n2.y * a.x, ca), -1.5708, 1.5708);
+  float tb = clamp(atan(n2.x * b.y - n2.y * b.x, cb), -1.5708, 1.5708);
+  return 0.5 * abs(sin(tb) - sin(ta)) * smoothstep(-0.02, 0.05, max(ca / max(length(a), 1e-3), cb / max(length(b), 1e-3)));
+}
+
+// The light of the melt in the nearest wide gap on a point of the crust beside it: irradiance, to be multiplied by albedo / pi.
+// off: metres outside the brim of the gap (negative inside it). below: metres under the brim. nrm: the normal of the face.
+// away: the unit vector on the ground from the middle of the gap to the point (zero if not known).
+// Strong within one gap width and gone within a few: the foot of a wall that faces the melt gets most, a face that looks away none,
+// and the flat crust beside the gap gets what the hot air and the far wall over the melt send back.
+vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
+  float w = gapeAt(q, n).x;
+  float wide = step(1.5, n.g) * smoothstep(0.12, 0.25, w);
+  float level = meltLevel(n);
+  vec2 n2 = vec2(dot(nrm.xz, away), nrm.y);
+  float y = -below;
+  float span = max(2.0 * w - 0.06, 0.1);
+  float direct = stripLight(n2, vec2(-0.06 - off, level - y), vec2(-span - off, level - y));
+  float lift = 0.2 + 0.5 * w;
+  float air = stripLight(n2, vec2(0.1 - off, lift - y), vec2(-span - 0.1 - off, lift - y));
+  // Nothing reaches a point far below the melt or far from it.
+  float reach = exp(-max(off, 0.0) / (1.5 + 4.0 * w));
+  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (direct * smoothstep(-0.15, 0.0, y - level) + 0.3 * air));
+}
+
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
 // is or was open (negative inside it). w: how young the skin is, 1 beside a living seam, 0 on an old plate.
 // lake is metres from the rock, n is netAt(q), least is a floor on the width a gap is drawn at (zero for the surface, a texel for the glow map).
