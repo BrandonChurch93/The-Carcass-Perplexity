@@ -89,6 +89,9 @@ void main() {
   float fpGrain = max(fpLong, steep * max(abs(dFdx(vWorld.y)), abs(dFdy(vWorld.y))));
   vec2 slope = vec2(0.0);
   float crease = 1.0;
+  // Every drawn line (where a tongue lies on the next, a fold's floor, a cord, a thread) goes into one sum, and the sum is
+  // held to a quarter under its surround: the relief is told by the light on it, not by ink.
+  float lines = 1.0;
   float foldPhase = 0.0;
   float foldOn = 0.0;
   // Round the feeding group the crust is churned: lumps of a quarter to three quarters of a metre, with hollows between
@@ -105,15 +108,14 @@ void main() {
     float a2 = vnoise(l2);
     vec2 g2 = vec2(vnoise(l2 + vec2(0.1, 0.0)) - a2, vnoise(l2 + vec2(0.0, 0.1)) - a2) / 0.1;
     float keep2 = 1.0 - smoothstep(0.12, 0.25, fpLong);
-    float soft = 0.04 + 0.9 * fpLong;
-    lumpSlope = (0.26 / 0.62) * clamp((2.0 * a1 - 1.0) / soft, -1.0, 1.0) * g1 + (0.08 / 0.27) * keep2 * clamp((2.0 * a2 - 1.0) / soft, -1.0, 1.0) * (g2 * TURN_B);
+    lumpSlope = (0.34 / 0.62) * g1 + (0.11 / 0.27) * keep2 * (g2 * TURN_B);
     lumpSlope *= churn * min(1.0, 0.65 / max(length(lumpSlope), 1e-4));
-    lumpLow = churn * (0.7 * (1.0 - smoothstep(0.0, 0.3, abs(2.0 * a1 - 1.0))) + 0.4 * keep2 * (1.0 - smoothstep(0.0, 0.3, abs(2.0 * a2 - 1.0))));
+    lumpLow = churn * (0.75 * (1.0 - smoothstep(0.22, 0.46, a1)) + 0.4 * keep2 * (1.0 - smoothstep(0.25, 0.45, a2)));
     slope += lumpSlope;
     // A hollow between two lumps sees a third of the sky, and a face that leans sees less of it than a top.
-    crease *= (1.0 - 0.85 * min(lumpLow, 1.0)) * (1.0 - 0.6 * smoothstep(0.12, 0.55, length(lumpSlope)));
+    crease *= (1.0 - 0.8 * min(lumpLow, 1.0)) * (1.0 - 0.5 * smoothstep(0.12, 0.55, length(lumpSlope)));
     // Each lump is a piece of another day: one dusted with ash, the next bare.
-    lumpTone = 1.0 + 0.4 * churn * clamp((2.0 * a1 - 1.0) / soft, -1.0, 1.0) * mix(1.0, clamp((2.0 * a2 - 1.0) / soft, -1.0, 1.0), 0.4 * keep2);
+    lumpTone = 1.0 + 0.45 * churn * (2.0 * smoothstep(0.35, 0.65, vnoise(q / 1.3 + 67.0)) - 1.0);
   }
   // Lobes and cords, as far as a pixel can tell one from the next. Beyond that the skin is a smooth sheet.
   if (fpLong < 0.7) {
@@ -125,18 +127,20 @@ void main() {
     vec2 fall = -3.0 * gLobeTall * gLobeT2 * gLobeT2 * gLobeGrad;
     slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
-    crease = mix(1.0, 0.7 + 0.3 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
+    lines = mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
     // Past this a pixel is longer than a sheaf and nothing of the folds is left to draw.
     if (fpLong < 0.4) {
       foldAt(q);
       float skinOn = calm * (1.0 - 0.85 * smoothstep(0.15, 0.5, fresh)) * (1.0 - steep) * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
-      foldOn = gFoldCover * skinOn;
+      // Ropes come in sheaves that end after a third of a metre to two metres, and broad reaches of the skin carry none.
+      float ropes = smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
+      foldOn = gFoldCover * skinOn * ropes;
       foldPhase = gFoldPhase;
       // The toes between the sheaves: what the cells do not carry of their domes, a dark line where one lies on the next,
       // and a tone of its own for each.
       float toe = step(1e-4, gToeBest) * skinOn;
       slope += gToeSlope * (1.0 - toeHeld(vAux.x)) * toe;
-      crease *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.02, gToeBest - gToeNext), toe * step(1e-4, gToeNext) * (1.0 - smoothstep(0.02, 0.1, fpShort)));
+      lines *= mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.02, gToeBest - gToeNext), toe * step(1e-4, gToeNext) * (1.0 - smoothstep(0.02, 0.1, fpShort)));
       age += 0.16 * (hash12(gToeId + 3.1) - 0.5) * toe;
     }
   }
@@ -158,17 +162,16 @@ void main() {
   foldRise += 0.1 * gFoldSpace * 4.0 * 3.14159 * cos(4.0 * turn) * sign(sin(4.0 * turn)) * cords * (0.4 + 1.2 * waver);
   // A groove is dark by its depth: a deep narrow one sees a fifth of the sky, a shallow one most of it. Where a pixel no
   // longer tells one fold from the next, what is left is the tone of the folded patch, not a row of black dashes.
-  float pitDark = mix(0.65, 0.2, smoothstep(0.2, 0.7, gFoldDeep / gFoldSpace));
-  pitDark = mix(pitDark, max(pitDark, 0.62), smoothstep(8.0, 24.0, far));
-  crease *= mix(1.0, mix(mix(pitDark, 1.0, 0.7), pitDark + (1.0 - pitDark) * smoothstep(0.0, 0.8, fold), seen), foldOn);
-  crease *= mix(1.0, 0.45 + 0.55 * smoothstep(0.0, 0.7, cord), cords);
+  float pitDark = mix(0.88, 0.75, smoothstep(0.2, 0.7, gFoldDeep / gFoldSpace));
+  lines *= mix(1.0, mix(mix(pitDark, 1.0, 0.7), pitDark + (1.0 - pitDark) * smoothstep(0.0, 0.8, fold), seen), foldOn);
+  lines *= mix(1.0, 0.85 + 0.15 * smoothstep(0.0, 0.7, cord), cords);
   float crest = 0.6 * cords * pow(cord, 3.0) + (foldSeen - 0.6 * cords) * pow(fold, 3.0);
   float det = qx.x * qy.y - qx.y * qy.x;
   det = abs(det) > 1e-12 ? det : 1e12;
 
   // The grain of the skin: grit, pits and the scales of a stretched rope, from the photograph.
   // Each reading is skipped where a pixel is too long to hold any of it.
-  float lod = log2(max(fpGrain, 1e-5) * 1024.0) - 0.7;
+  float lod = log2(max(fpGrain, 1e-5) * 1024.0) - 1.1;
   vec4 ta = vec4(0.5);
   vec4 tb = vec4(0.5);
   vec4 tc = vec4(0.5);
@@ -178,14 +181,15 @@ void main() {
   float grainA = ta.b - 0.5;
   float grainB = tb.b - 0.5;
   float grainC = tc.b - 0.5;
-  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * 0.85;
+  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * 1.1;
 
   // Threads: on every cord lie strands of two to three centimetres that run with the fold, waver, thin out and start again.
   float tturn = 3.14159 * (13.0 * foldPhase + 1.6 * waver);
   float thread = abs(sin(tturn));
   float threads = foldOn * (1.0 - smoothstep(0.006, 0.014, per)) * smoothstep(0.14, 0.28, gFoldSpace) * clamp(0.5 + 2.2 * grainA + 0.8 * (waver - 0.5), 0.0, 1.0);
   foldRise += 0.65 * gFoldSpace * cos(tturn) * sign(sin(tturn)) * threads;
-  crease *= mix(1.0, 0.4 + 0.6 * smoothstep(0.0, 0.55, thread), threads);
+  lines *= mix(1.0, 0.82 + 0.18 * smoothstep(0.0, 0.55, thread), threads);
+  crease *= max(lines, 0.75);
   slope += clamp(onCrust(phaseD, qx, qy, det), -6.0, 6.0) * clamp(foldRise, -0.8, 0.8);
   age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * grainC * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
 
@@ -206,14 +210,16 @@ void main() {
   float low = max(foldSeen * (1.0 - smoothstep(0.15, 0.7, fold)), 1.0 - smoothstep(0.38, 0.52, ta.b));
   float dust = clamp(max(hollow, smoothstep(0.7, 0.95, age)) * mix(0.15, 1.0, low) + 0.5 * spall * hollow, 0.0, 1.0) * (1.0 - young) * (1.0 - 0.7 * fresh) * (1.0 - steep);
 
+  // Pits: the low grains of the skin are holes of one to five centimetres, and a hole is dark unless dust lies in it.
+  crease *= 1.0 - 0.5 * (1.0 - smoothstep(0.3, 0.44, tb.b)) * (1.0 - smoothstep(0.34, 0.5, ta.b) * 0.5) * (1.0 - dust) - 0.3 * (1.0 - smoothstep(0.3, 0.42, ta.b)) * (1.0 - dust);
   // Old skin is grey and rough, young skin black and glassy: by patch, by plate and by lobe. Grain on all of it.
   vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.11, 0.111, 0.114), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
-  albedo *= clamp(1.0 + 1.5 * grainA + 1.3 * grainB + 1.7 * grainC, 0.3, 2.0);
+  albedo *= clamp(1.0 + 1.8 * grainA + 1.9 * grainB + 1.7 * grainC, 0.3, 2.0);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
   float mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
-  albedo *= (1.0 - 0.48 * fresh) * lumpTone;
+  albedo *= (1.0 - 0.2 * fresh) * lumpTone;
   albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * tb.b - 0.3), 0.8 * mound);
   float wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - broken) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
@@ -255,7 +261,7 @@ void main() {
   if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.2, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.1 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (mix(0.3, 0.7, torn) * toward + 0.06 * wallFace) * (0.6 * exp(-off / 0.3) + 0.4 * (1.0 - smoothstep(0.4, mix(3.0, 7.0, torn), off)))) * clear * mix(1.0, crease, 0.6));
   // The fire of the feeding seams lies low over the lake: of the churned floor it lights the faces that lean toward it.
   float tilt = length(lumpSlope);
-  if (tilt > 0.03) light += lakeGlow(p.xz - lumpSlope * (10.0 / tilt), 8.0) * (3.14159 * 11.0 * tilt * (1.0 - contactAt(p)) * mix(1.0, crease, 0.5));
+  if (tilt > 0.03) light += lakeGlow(p.xz - lumpSlope * (10.0 / tilt), 8.0) * (3.14159 * 4.5 * tilt * (1.0 - contactAt(p)) * mix(1.0, crease, 0.5));
   // The narrow seams, whose heat this sheet draws, light their own lips.
   // Only the faces that look at the seam: the flank of a fold that looks away from it stays dark.
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
@@ -285,7 +291,7 @@ void main() {
     fire += lakeGlow(p.xz + along * 2.5, 0.6) * 0.3 * (1.0 - smoothstep(0.5, 1.2, 2.5 * rise));
     fire += lakeGlow(p.xz + along * 5.0, 1.2) * 0.25 * (1.0 - smoothstep(0.5, 1.2, 5.0 * rise));
     fire += lakeGlow(p.xz + along * 9.0, 2.0) * 0.15 * (1.0 - smoothstep(0.5, 1.2, 9.0 * rise));
-    c += fire * (wet * clear * 3.0 * (0.04 + 0.6 * pow(1.0 - nv, 3.0)));
+    c += fire * (wet * clear * 3.0 * (0.04 + 0.6 * pow(1.0 - max(nv, 0.1), 3.0)) * (1.0 - smoothstep(0.25, 0.6, fpLong)));
   }
   // Over a wet patch at the feeding group stands smoke, not sky.
   c += (1.0 - 0.8 * wet) * fresnel * mirror * open * (1.0 - 0.85 * clinker) * (1.0 + 0.9 * crest);
@@ -299,14 +305,11 @@ void main() {
   vec3 hot = blackbody(heat.y) * heat.x;
   // Hairline glow: within a few metres of open melt the crust is thin, and in its grooves short cracks show dull red.
   // They fade away from the melt, and none is drawn finer than three pixels: a finer one is drawn that wide and dimmer.
+  // None follows a fold: a row of red lines side by side is a pattern, not a crack.
   float beside = net.r - gape;
   float nearMelt = live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.2, 4.0, beside)) * smoothstep(0.0, 0.06, beside) * (1.0 - broken) * calm * (1.0 - heat.x);
   if (nearMelt > 0.0) {
-    float thin = 0.006 / max(gFoldSpace, 0.03);
-    float wide = max(thin, 1.5 * per);
-    float line = (1.0 - smoothstep(0.4 * wide, wide, abs(fract(foldPhase + 0.5) - 0.5))) * (thin / wide) * foldSeen;
-    float run = smoothstep(0.56, 0.68, vnoise(q / 0.31 + 71.0)) * smoothstep(0.4, 0.6, vnoise(q / 1.7 + 83.0));
-    // And cracks of its own where the thin crust has split: crooked, a hand wide, half a metre to two metres long.
+    // Cracks where the thin crust has split: crooked, a hand wide, half a metre to two metres long.
     vec2 cq = q / 0.8 + 43.0;
     float cf = vnoise(cq);
     vec2 cg = vec2(vnoise(cq + vec2(0.12, 0.0)) - cf, vnoise(cq + vec2(0.0, 0.12)) - cf) / 0.12;
@@ -316,7 +319,7 @@ void main() {
     float cfoot = max(abs(dot(qx, cn)), abs(dot(qy, cn)));
     float cwide = max(0.035 * (0.4 + vnoise(q / 0.6 + 97.0)), 1.5 * cfoot);
     float split = (1.0 - smoothstep(0.35 * cwide, cwide, cd)) * min(1.0, 0.045 / cwide) * smoothstep(0.5, 0.62, vnoise(q / 1.1 + 59.0));
-    float ember = clamp((0.7 * line * run + split * (1.0 - steep)) * nearMelt * nearMelt, 0.0, 1.0);
+    float ember = clamp(split * (1.0 - steep) * nearMelt * nearMelt, 0.0, 1.0);
     c *= 1.0 - ember;
     hot += blackbody(1000.0 + 90.0 * nearMelt) * ember;
   }
