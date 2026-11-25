@@ -54,15 +54,20 @@ void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   // Two sizes of the same stone, the wide one sheared so that its beds do not line up with the small one's.
-  vec2 ub = vec2(vUv.x, vUv.y + 0.21 * vUv.x) / vec2(64.0, 32.0);
-  vec2 ud = vUv / vec2(12.0, 6.0);
+  vec2 ub = vec2(vUv.x, vUv.y + 0.21 * vUv.x) / 57.0;
+  vec2 ud = vUv / 12.0;
+  if (uTier > 0.0) {
+    // The colony's rock is coursed: six courses to a repeat, one to a ledge.
+    ud = vec2(vUv.x / (5.0 * uTier), vWorld.y / (6.0 * uTier) + 0.02);
+    ub = ud * 0.23 + 0.37;
+  }
   vec3 big = texture2D(tRock, ub).rgb;
   vec3 det = texture2D(tRock, ud).rgb;
   vec3 nhb = texture2D(tRockN, ub).rgb;
   vec3 nhd = texture2D(tRockN, ud).rgb;
   vec3 n = bump(n0, vWorld, ud, (nhd.xy - 0.5) * 2.2 + (nhb.xy - 0.5) * 2.6);
   float macro = vnoise(vUv * vec2(0.011, 0.017)) * 0.6 + vnoise(vUv * vec2(0.043, 0.06) + 5.0) * 0.4;
-  vec3 albedo = det * mix(vec3(0.3), big, 0.6) * 4.4 * vec3(1.05, 1.0, 0.93) * (0.7 + 0.55 * macro);
+  vec3 albedo = det * mix(vec3(1.0), big / 0.26, 0.6) * (0.7 + 0.55 * macro);
   // Beds a stride thick and a room thick, lying across the blade: the soft ones worn back and dark.
   float beds = 0.5 * vnoise(vec2(vUv.x * 0.03, vUv.y * 1.7)) + 0.5 * vnoise(vec2(vUv.x * 0.013 + 4.0, vUv.y * 0.55));
   float soft = smoothstep(0.55, 0.4, beds);
@@ -87,9 +92,6 @@ void main() {
   float white = max(smoothstep(0.36, 0.62, run + 0.3 * (nhd.z - 0.5)), smoothstep(0.35, 0.75, n0.y + 0.5 * (macro - 0.5)) * smoothstep(40.0, 90.0, y)) * (1.0 - band);
   float patches = 0.6 * vnoise(vWorld.xz * 0.021 + vWorld.y * 0.017 + 9.0) + 0.25 * vnoise(vUv * 0.13) + 0.15 * vnoise(vUv * 0.9);
   float lichen = smoothstep(0.6, 0.72, patches + 0.25 * (nhd.z - 0.5) + 0.45 * n0.y) * smoothstep(-0.3, 0.35, n0.y) * (1.0 - band);
-  // The stone's picture has lichen of its own: take most of it out, and put it where a face looks up.
-  float own = smoothstep(0.02, 0.1, det.r - det.b);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(1.02, 1.0, 0.95), 0.9 * own * (1.0 - lichen));
   albedo = mix(albedo, vec3(0.85, 0.42, 0.09) * (0.45 + det.r * 2.2), 0.7 * lichen * step(uTier, 0.0));
   if (uTier > 0.0) {
     // Dark wet grey rock; the white hangs from the edge of each ledge in runs, long under the thick roosts and short elsewhere; lichen in patches.
@@ -100,8 +102,8 @@ void main() {
     white = max(white, 0.8 * smoothstep(0.75, 0.95, n0.y) * smoothstep(0.35, 0.6, roost + 0.3 * (nhd.z - 0.5)));
     float field = vnoise(vWorld.xz * 0.07 + vWorld.y * 0.06 + 4.0) * 0.6 + vnoise(vWorld.xz * 0.41 + vWorld.y * 0.37) * 0.4;
     lichen = smoothstep(0.6, 0.68, field + 0.2 * (nhd.z - 0.5)) * (1.0 - band);
-    float grey = dot(det, vec3(0.3, 0.5, 0.2));
-    albedo = vec3(0.25, 0.235, 0.21) * (0.75 + 0.9 * grey) * (0.5 + 0.5 * smoothstep(0.3, 0.7, nhb.z)) * (0.7 + 0.6 * macro);
+    albedo = det * mix(vec3(1.0), big / 0.2, 0.4) * (1.1 + 0.7 * macro);
+    lichen *= 0.8;
     albedo = mix(albedo, vec3(0.62, 0.3, 0.06) * (0.6 + 0.8 * nhd.z), 0.85 * lichen * (1.0 - 0.7 * white));
     albedo = mix(albedo, vec3(0.8, 0.79, 0.75) * (0.75 + 0.5 * nhd.z), 0.9 * white);
   } else {
@@ -146,20 +148,20 @@ uniform sampler2D tWeedN;
 void main() {
   vec3 n0 = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  vec2 ud = vUv / 6.5;
-  vec2 ub = vUv / vec2(23.0, 31.0) + 0.37;
+  vec2 ud = vUv / 8.0;
+  vec2 ub = vUv / vec2(37.0, 43.0) + 0.37;
   vec3 det = texture2D(tWeed, ud).rgb;
   vec3 big = texture2D(tWeed, ub).rgb;
   vec3 nh = texture2D(tWeedN, ud).rgb;
   vec3 n = bump(n0, vWorld, ud, (nh.xy - 0.5) * 2.2);
-  float mass = dot(big, vec3(0.3, 0.5, 0.2)) / 0.055;
+  float mass = dot(big, vec3(0.3, 0.5, 0.2)) / 0.042;
   // Black in the hollows and low down where it is soaked, ochre on the tips that stand out and high up where it dries.
   float tip = smoothstep(0.45, 0.8, nh.z);
   float dry = smoothstep(4.0, 26.0, vWorld.y);
-  vec3 albedo = det * (0.55 + 0.55 * mass) * mix(vec3(0.36, 0.31, 0.2), vec3(2.2, 1.45, 0.45), tip * tip * (0.4 + 0.6 * dry));
+  vec3 albedo = det * (0.5 + 0.5 * mass) * mix(2.2, 4.2, tip * (0.4 + 0.6 * dry));
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
-  float rough = mix(0.42 + 0.3 * (1.0 - nh.z), 0.12, thread);
+  float rough = mix(0.62 + 0.3 * (1.0 - nh.z), 0.12, thread);
   float occ = (0.15 + 0.85 * smoothstep(0.2, 0.7, nh.z)) * vShade;
   albedo *= 0.45 + 0.55 * vShade;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
@@ -182,12 +184,15 @@ void main() {
   // Pebbles of a thumb's size, laid twice at unlike sizes and turns so that no row of them repeats; the stones of a fist's size are real ones, in the rocks.
   vec2 ud = xz / 0.57;
   vec2 uc = vec2(xz.x * 0.8 + xz.y * 0.6, xz.y * 0.8 - xz.x * 0.6) / 1.31 + 0.19;
-  vec2 ub = vec2(xz.y, -xz.x) / 23.0 + 0.37;
+  vec2 ub = vec2(xz.y, -xz.x) / 4.0 + 0.37;
+  vec2 uw = vec2(xz.x * 0.6 + xz.y * 0.8, xz.y * 0.6 - xz.x * 0.8) / 19.0;
   vec3 nhc = texture2D(tShingleN, uc).rgb;
   float cob = smoothstep(0.42, 0.58, nhc.z + 0.5 * (vnoise(xz * 0.37 + 7.0) - 0.5));
   vec3 det = mix(texture2D(tShingle, ud).rgb, texture2D(tShingle, uc).rgb, cob);
   vec3 nh = mix(texture2D(tShingleN, ud).rgb, nhc, cob);
-  vec3 big = texture2D(tSand, ub).rgb;
+  // The wet flat between the stones, at a stride and at a house, so that neither repeat shows.
+  vec3 wide = texture2D(tSand, uw).rgb / 0.128;
+  vec3 big = texture2D(tSand, ub).rgb * mix(vec3(1.0), wide, 0.6);
   float fine = bedFine(xz);
   // The bed is the rig's: the same one the sheets of water are laid on.
   float h = landAt(xz).r + fine + 0.05 * (nh.z - 0.5);
@@ -197,10 +202,9 @@ void main() {
   float bar = smoothstep(-0.02, 0.2, over + 0.14 * (lumpy - 0.5));
   float drift = vnoise(xz * 0.047 + 3.0) * 0.65 + vnoise(xz * 0.31) * 0.35;
   float wrack = smoothstep(0.57, 0.66, drift + 0.25 * (nh.z - 0.5)) * smoothstep(-0.05, 0.05, over);
-  vec3 sand = big * (0.75 + 0.5 * det / 0.1);
-  vec3 albedo = mix(sand * 0.34, det * (0.55 + 0.45 * big / 0.12) * 0.7, bar);
+  vec3 albedo = mix(big * 0.55, det * (0.55 + 0.45 * wide) * 0.7, bar);
   albedo *= 0.46 + 0.36 * lumpy;
-  albedo = mix(albedo, texture2D(tWeed, xz / 2.3).rgb * vec3(1.5, 1.2, 0.8), wrack);
+  albedo = mix(albedo, texture2D(tWeed, xz / 3.1).rgb * 1.8, wrack);
   // What lies under the sheets is dark drowned sand; what lies within a finger over them is under a film that hides the stones' shape; every stone above is wet.
   float under = smoothstep(0.01, -0.05, over);
   float wet = smoothstep(0.3, 0.1, over + 0.1 * (lumpy - 0.5));
@@ -278,7 +282,7 @@ void main() {
   // The picture is laid on the plane the face lies nearest, so that it is not drawn out on any side.
   vec3 an = abs(n0);
   vec2 flat2 = an.y > max(an.x, an.z) ? vWorld.xz : (an.x > an.z ? vWorld.zy : vWorld.xy);
-  vec2 us = flat2 / mix(0.7, 1.9, uWeedy) + 0.31;
+  vec2 us = flat2 / mix(1.1, 3.0, uWeedy) + 0.31;
   vec2 ut = flat2 / 1.7;
   vec3 side = texture2D(tBoulder, us).rgb;
   vec3 nh = texture2D(tBoulderN, us).rgb;
@@ -288,7 +292,7 @@ void main() {
   cover *= uWeedy;
   // A stone on the floor has its own tone: some slate, some nearly black, a few pale.
   float tone = vnoise(vWorld.xz * 2.3 + 0.5);
-  vec3 albedo = mix(mix(vec3(0.05, 0.052, 0.055) + side * 0.5, side, 0.4) * mix(0.9 + 2.2 * tone * tone, 2.2, uWeedy), wc * mix(vec3(1.3, 1.2, 1.0), vec3(3.6, 2.4, 0.8), smoothstep(0.08, 0.2, wc.g) * smoothstep(0.2, 0.8, n0.y)), cover);
+  vec3 albedo = mix(side * mix(0.8 + 0.8 * tone, 1.4, uWeedy), wc * 2.2, 0.6 * cover);
   float rough = mix(mix(0.3, 0.45, uWeedy), 0.35, cover);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);

@@ -386,9 +386,9 @@ export function createRig(): Rig {
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
   const breakToward = (seconds: number): void => {
-    // The break drifts with the cloud: a fifth of a degree a second, to the right. In the picture it lies 0.733 radians right of the middle.
+    // The break drifts with the cloud: a fifth of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle.
     const yaw = ((36 + 0.2 * (seconds - T0)) * Math.PI) / 180;
-    skyTurn.x = yaw - 0.733;
+    skyTurn.x = yaw - 0.786;
     skyTurn.y = 0.0021 * seconds;
     skyTurn.z = 0.0034 * seconds;
     const pitch = (21 * Math.PI) / 180;
@@ -415,7 +415,7 @@ export function createRig(): Rig {
     uSunDir: { value: sun },
     uSunColour: { value: new THREE.Vector3(...SUN.colour) },
     // The colour the air takes at the horizon: the volume pass and the dome meet in it.
-    uHaze: { value: new THREE.Vector3(0.33, 0.37, 0.415) },
+    uHaze: { value: new THREE.Vector3(0.29, 0.345, 0.42) },
     // The way to the bright break in the storm sky, as the cameras of the strait see it: up and to the right of the way in.
     uSkyBreak: { value: skyBreak },
     // The picture of the storm sky (the air folder loads it); how far it has turned round the dome (radians), how far its lumps have worked, its gain.
