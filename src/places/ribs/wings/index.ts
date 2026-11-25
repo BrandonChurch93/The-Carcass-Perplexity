@@ -27,8 +27,8 @@ const PASSERS = 6;
 const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 110;
 const FLEEING = 9;
-const COLONISTS = 460;
-const COLONY_NEAR = 120;
+const COLONISTS = 78;
+const COLONY_NEAR = 78;
 const SKEIN = 22;
 const NECK = 1.5;
 
@@ -330,10 +330,10 @@ export function create(ctx: Context): Piece {
       feederAt(f, seconds);
       for (let k = 0; k < 2; k++) {
         const ring = out[n++];
-        if (ring) Object.assign(ring, { x: foot[k * 3], z: foot[k * 3 + 1], phase: f.seed * 20 + k * 2.1, strength: (foot[k * 3 + 2] as number) * 0.7 });
+        if (ring) Object.assign(ring, { x: foot[k * 3], z: foot[k * 3 + 1], phase: f.seed * 20 + k * 2.1, strength: (foot[k * 3 + 2] as number) * 0.7, stand: [foot[k * 3], foot[k * 3 + 1], pose.y - LEVELS.pool, 0.05 * f.size] });
       }
       const ring = out[n++];
-      if (ring) Object.assign(ring, { x: tuftX, z: tuftZ, phase: f.seed * 31, strength: feeding });
+      if (ring) Object.assign(ring, { x: tuftX, z: tuftZ, phase: f.seed * 31, strength: feeding, stand: [pose.x + Math.sin(f.yaw) * 0.1 * f.size, pose.z + Math.cos(f.yaw) * 0.1 * f.size, pose.y - LEVELS.pool + 0.12 * f.size, -0.42 * f.size] });
     }
   };
 
@@ -350,14 +350,22 @@ export function create(ctx: Context): Piece {
   const colonyEye = resolve(shots['ribs-03'] as (typeof shots)[string], 0.5, shotById('ribs-03').first).position;
   const facing = Math.atan2(COLONY.side[1], COLONY.side[0]);
   const sitters: (Sitter & { d: number })[] = [];
-  for (let i = 0; i < COLONISTS; i++) {
+  // In knots of two to five along a ledge, with bare rock between the knots: animals to be read one by one.
+  while (sitters.length < COLONISTS) {
     const tier = Math.floor(scatter.range(LEVELS.tide + 2, COLONY.top - 6) / COLONY.step) * COLONY.step;
-    const r = COLONY.radiusAt(tier + COLONY.step) + scatter.range(0.5, COLONY.step * COLONY.slope - 0.4);
-    const a = facing + scatter.normal() * 0.9;
-    const x = COLONY.x + Math.cos(a) * r;
-    const z = COLONY.z + Math.sin(a) * r;
-    const out = Math.atan2(Math.cos(a), Math.sin(a));
-    sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.3, 1.3), size: scatter.range(0.85, 1.15) * 1.12, seed: scatter.next(), stands: scatter.next() < 0.14, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+    const a0 = facing + scatter.normal() * 0.8;
+    const knot = 2 + scatter.int(4);
+    let along = 0;
+    for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
+      const size = scatter.range(1.05, 1.4) * GROW;
+      const r = COLONY.radiusAt(tier + COLONY.step) + scatter.range(0.7, COLONY.step * COLONY.slope - 0.5);
+      const a = a0 + along / r;
+      along += scatter.range(1.5, 2.6) * size;
+      const x = COLONY.x + Math.cos(a) * r;
+      const z = COLONY.z + Math.sin(a) * r;
+      const out = Math.atan2(Math.cos(a), Math.sin(a));
+      sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands: scatter.next() < 0.22, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+    }
   }
   sitters.sort((a, b) => a.d - b.d);
   const colonyNear = new Flock(NEAR, material, COLONY_NEAR);
@@ -366,7 +374,7 @@ export function create(ctx: Context): Piece {
     Object.assign(pose, stand(s.seed));
     pose.size = s.size;
     pose.yaw = s.yaw;
-    const up = s.stands ? 1 : smooth(0.8, 0.95, held(t, 7 + 6 * s.seed, s.seed + 0.5, 0.3));
+    const up = s.stands ? 1 : smooth(0.86, 0.97, held(t, 7 + 6 * s.seed, s.seed + 0.5, 0.3));
     const hip = 0.36 + (STAND - 0.42) * up;
     pose.x = s.x;
     pose.z = s.z;
@@ -385,8 +393,14 @@ export function create(ctx: Context): Piece {
     pose.bend = -2.5 + 2.3 * high;
     // Now and then one opens its sails and shakes them.
     const shake = smooth(0.9, 0.97, held(t, 4.5, s.seed + 0.75, 0.25));
-    pose.spread = 0.8 * shake;
-    pose.flap = -1.25 + shake * (1.45 + 0.35 * Math.sin(t * 15 + s.seed * 9));
+    // Perched, the sails hang round it as a tent; one that stands holds them half open to the wind and the light comes through.
+    if (s.stands) {
+      pose.spread = 0.6 + 0.2 * Math.sin(t * 0.7 + s.seed * 40);
+      pose.flap = 0.3 + 0.12 * Math.sin(t * 1.9 + s.seed * 17);
+    } else {
+      pose.spread = 2 - shake;
+      pose.flap = -1.0 + 0.04 * Math.sin(t * 1.3 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
+    }
   };
 
   // ---- The flock in the air ----
@@ -596,7 +610,7 @@ export function create(ctx: Context): Piece {
   };
 
   // Thrown water where a tuft works the pool and where the runner's feet come down.
-  const SPLASH = 30;
+  const SPLASH = 60;
   const splash = new Spray((ringed.length + 2) * SPLASH + 80, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
   const wet = [...new Set([...ringed, feeders.length - 1])];
   const splashAt = (seconds: number): void => {
@@ -613,7 +627,7 @@ export function create(ctx: Context): Piece {
         const dir = rand(i * 31 + n, born) * Math.PI * 2;
         const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
         const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, (0.035 + 0.07 * rand(i * 31 + n, born + 5)) * f.size * (0.7 + 0.6 * a), 1.2 * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), dir, 2.2);
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.07 + 0.05 * rand(i * 31 + n, born + 5)) * f.size : (0.012 + 0.016 * rand(i * 31 + n, born + 5)) * f.size, (n % 5 === 0 ? 0.55 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : dir, n % 5 === 0 ? 0.45 : 1.8);
       }
     }
     if (runner >= 0) {
@@ -629,7 +643,7 @@ export function create(ctx: Context): Piece {
           const dir = f.yaw + Math.PI + (rand(stride * 2 + k, n) - 0.5) * 2.6;
           const out = (0.2 + 1.5 * rand(stride * 2 + k, n + 40) * a) * f.size;
           const up = (0.3 + 1.1 * rand(stride * 2 + k, n + 80)) * f.size;
-          splash.put((foot[k * 3] as number) + Math.sin(dir) * out, ground(foot[k * 3] as number, foot[k * 3 + 1] as number) + 0.05 + up * 2 * a * (1 - a), (foot[k * 3 + 1] as number) + Math.cos(dir) * out, (0.06 + 0.16 * rand(stride * 2 + k, n + 120)) * f.size * (0.6 + a), 0.8 * run * (1 - a), rand(stride * 2 + k, n + 160), dir, 1.4);
+          splash.put((foot[k * 3] as number) + Math.sin(dir) * out, ground(foot[k * 3] as number, foot[k * 3 + 1] as number) + 0.05 + up * 2 * a * (1 - a), (foot[k * 3 + 1] as number) + Math.cos(dir) * out, (n % 5 === 0 ? 0.1 + 0.1 * rand(stride * 2 + k, n + 120) : 0.015 + 0.03 * rand(stride * 2 + k, n + 120)) * f.size * (0.6 + a), (n % 5 === 0 ? 0.5 : 1.5) * run * (1 - a), rand(stride * 2 + k, n + 160), dir, 1.4);
         }
       }
     }

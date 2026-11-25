@@ -115,7 +115,7 @@ const float PI = 3.14159265;
 const float NECK = 1.5;
 const float THIGH = 0.8;
 const float SHANK = 0.86;
-const float SPAN = 1.75;
+const float SPAN = 2.5;
 const float SPARS = 5.0;
 
 vec3 bodyAxis() {
@@ -153,7 +153,7 @@ vec3 animalAt(float part, float s, float a, float id) {
   vec3 nb = vec3(0.0, d.z, -d.y);
   vec3 X = vec3(1.0, 0.0, 0.0);
   if (part < 0.5) {
-    float r = 0.3 * pow(max(sin(PI * pow(s, 0.8)), 0.0), 0.65);
+    float r = 0.27 * pow(max(sin(PI * pow(s, 0.8)), 0.0), 0.65);
     // The drowned one is sunk in on its ribs.
     r *= 1.0 - uDead * (0.3 + 0.1 * sin(s * 47.0) * smoothstep(0.25, 0.4, s) * (1.0 - smoothstep(0.75, 0.9, s)) * abs(cos(a)));
     float deep = 1.0 + 0.25 * max(-sin(a), 0.0) * smoothstep(0.15, 0.8, s);
@@ -163,7 +163,7 @@ vec3 animalAt(float part, float s, float a, float id) {
   if (part < 1.5) {
     vec3 t = neckDir(s);
     float ps = aNeck.z * s * s;
-    float r = mix(0.19, 0.085, pow(s, 0.7)) + 0.1 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
+    float r = mix(0.15, 0.06, pow(s, 0.7)) + 0.1 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
     r *= 1.0 - smoothstep(0.985, 1.0, s) * 0.6;
     return ring(neckAt(s, base), t, vec3(cos(ps), 0.0, -sin(ps)), r, a);
   }
@@ -215,19 +215,21 @@ vec3 animalAt(float part, float s, float a, float id) {
   }
   float sg = part < 5.5 ? -1.0 : 1.0;
   vec3 sh = d * 0.22 + nb * 0.2 + X * (sg * 0.15);
-  float spread = aBody.z;
+  // Over 1 the sails are a tent: fanned full but hung down round the body, drawn in short.
+  float tent = clamp(aBody.z - 1.0, 0.0, 1.0);
+  float spread = min(aBody.z, 1.0);
   // A folded sail hangs by its own weight, not by the tilt of the body: lean the fold back to level as the body tips.
   float lean = aBody.y * (1.0 - spread) * 0.5;
   vec3 dl = d * cos(lean) - nb * sin(lean);
   vec3 nl = nb * cos(lean) + d * sin(lean);
   float phi = mix(mix(-1.36, -0.98, a), mix(0.42, -1.3, a), spread);
-  float reach = mix(0.74, 1.0, spread) * SPAN * mix(1.0, mix(0.8, 0.62, spread), a * a);
+  float reach = mix(0.52, 1.0, spread) * SPAN * mix(1.0, mix(0.8, 0.62, spread), a * a) * mix(1.0, 0.4, tent);
   float web = abs(sin(PI * a * SPARS));
   float along = s * reach * (1.0 - 0.14 * s * s * web * mix(0.8, 1.0, spread));
   float ang = aBody.w * (0.4 + 0.6 * s) + aMore.w * s * s;
   vec3 outw = X * (sg * cos(ang)) + nl * sin(ang);
   vec3 nrm = -X * (sg * sin(ang)) + nl * cos(ang);
-  float fold = (1.0 - spread) * (0.07 * sqrt(s) * cos(2.0 * PI * a * SPARS) + 0.3 * sqrt(sin(PI * clamp(s * 1.1, 0.0, 1.0)) + 1e-4)) + spread * 0.05 * sin(PI * s) * (1.0 - a) + 0.012 * web * spread;
+  float fold = (1.0 - spread) * (0.07 * sqrt(s) * cos(2.0 * PI * a * SPARS) + 0.3 * sqrt(sin(PI * clamp(s * 1.1, 0.0, 1.0)) + 1e-4)) + spread * 0.05 * sin(PI * s) * (1.0 - a) + 0.012 * web * spread + tent * 0.05 * sqrt(s) * cos(2.0 * PI * a * SPARS);
   return sh + along * (cos(phi) * outw + sin(phi) * dl) + nrm * fold;
 }
 
@@ -248,6 +250,7 @@ varying vec3 vNormal;
 varying vec4 vSkin;
 varying vec3 vLocal;
 varying vec2 vSeed;
+varying float vOpen;
 void main() {
   float turn = aPart > 4.5 ? 0.012 : 0.07;
   vec3 p = animalAt(aPart, position.x, position.y, position.z);
@@ -263,6 +266,7 @@ void main() {
   vWorld = w;
   vSkin = vec4(aPart, position.x, position.y, position.z);
   vSeed = vec2(aNeck.w, aBody.x);
+  vOpen = aBody.z > 1.0 ? 0.0 : aBody.z;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
 
@@ -277,6 +281,7 @@ varying vec3 vNormal;
 varying vec4 vSkin;
 varying vec3 vLocal;
 varying vec2 vSeed;
+varying float vOpen;
 const float PI = 3.14159265;
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
@@ -293,7 +298,8 @@ void main() {
   float tone = clamp(0.35 + 0.65 * grain / 0.065, 0.5, 1.45);
   vec3 ivory = mix(vec3(0.5, 0.485, 0.45), vec3(0.64, 0.62, 0.575), vSeed.x);
   vec3 albedo = ivory;
-  float rough = 0.5;
+  // Wet: they live in the spray, and the sky lies along every back.
+  float rough = 0.24;
   float occ = 1.0;
   if (part < 0.5) {
     float belly = smoothstep(-0.2, -0.9, sin(a));
@@ -314,16 +320,18 @@ void main() {
   } else {
     float spar = abs(sin(PI * a * 5.0));
     float bone = 1.0 - smoothstep(0.0, 0.16, spar);
-    vec3 skin = mix(vec3(0.47, 0.45, 0.41), vec3(0.6, 0.57, 0.52), vSeed.x);
+    vec3 skin = mix(vec3(0.56, 0.54, 0.49), vec3(0.68, 0.65, 0.59), vSeed.x);
     // Each panel between two spars is a worn sheet: paler along the spar, stained toward its lower edge, veined.
     float panel = fract(a * 5.0);
     skin *= 0.78 + 0.3 * panel;
     skin *= 0.86 + 0.14 * sin(s * 90.0 + 6.0 * hide.r * 12.0);
     albedo = mix(skin, vec3(0.3, 0.27, 0.24), bone * 0.8);
-    float edge = max(smoothstep(0.8, 1.0, s), 1.0 - smoothstep(0.0, 0.035, a));
-    albedo = mix(albedo, vec3(0.56, 0.3, 0.12), edge * 0.7 * (0.5 + 0.5 * tone));
+    float edge = smoothstep(0.72, 1.0, s);
+    albedo = mix(albedo, vec3(0.6, 0.36, 0.16), edge * 0.5);
+    // Folded, the skin lies layer on layer: dull orange brown, dark, the light no longer through it.
+    albedo = mix(mix(vec3(0.4, 0.33, 0.25), vec3(0.5, 0.27, 0.1), smoothstep(0.25, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
     n = normalize(n + 0.25 * (hide - grain));
-    rough = 0.55;
+    rough = 0.4;
   }
   albedo *= tone;
   // Legs that stand in a pool are dark and wet to just over the water.
@@ -340,7 +348,7 @@ void main() {
   if (sail) {
     // Light comes through the stretched skin of a sail.
     vec4 land = landAt(vWorld.xz);
-    col += albedo * vec3(1.05, 0.9, 0.78) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.45 + skyIrradiance(-n) * 0.22) / PI;
+    col += albedo * vec3(1.1, 0.93, 0.76) * smoothstep(0.15, 0.7, vOpen) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.5) / PI;
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;

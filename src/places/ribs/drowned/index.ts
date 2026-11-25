@@ -10,7 +10,7 @@ export const PARTS: readonly string[] = ['drowned'];
 
 /** It was a big one. Metres of the hung body for one unit of its plan below: hip to the ends of the tendrils is about 7 units down the face. */
 const SIZE = 1.45;
-const STRANDS = 190;
+const STRANDS = 220;
 const CRABS = 16;
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
@@ -69,7 +69,7 @@ void main() {
   // Sodden skin: bone pale, blotched grey-green and bruised, darker in every fold.
   float blotch = fbm2(f * 1.7 + part);
   float fine = fbm2(f * 9.0);
-  vec3 pale = vec3(0.44, 0.39, 0.35);
+  vec3 pale = vec3(0.53, 0.44, 0.4);
   vec3 albedo = mix(pale, vec3(0.36, 0.38, 0.32), smoothstep(0.45, 0.75, blotch));
   albedo = mix(albedo, vec3(0.3, 0.2, 0.19), smoothstep(0.5, 0.75, fbm2(f * 3.1 + 5.0)) * 0.75);
   // Water stains run down it.
@@ -159,7 +159,7 @@ void main() {
   float alpha = across * thin * (0.16 + 0.75 * beads) * (1.0 - uSolo);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(uOut + vec3(0.0, 0.25, 0.0));
-  vec3 col = skyRadiance(reflect(-v, n)) * 0.55 + skyIrradiance(n) * 0.06;
+  vec3 col = skyRadiance(reflect(-v, n)) * 0.85 + skyIrradiance(n) * 0.08;
   gl_FragColor = vec4(rigOut(col) * alpha, alpha);
 }`;
 
@@ -260,6 +260,8 @@ void main() {
   vec3 dark = mix(vec3(0.016, 0.02, 0.011), vec3(0.075, 0.055, 0.016), fract(vStrand.z * 7.31));
   vec3 albedo = mix(dark, dark * 2.2 + vec3(0.03, 0.02, 0.0), smoothstep(0.55, 1.0, rib));
   albedo *= 0.8 + 0.4 * blister;
+  // What lies over the body is the living weed of the tide line: olive and amber, wet.
+  albedo = mix(albedo, mix(vec3(0.1, 0.085, 0.025), vec3(0.2, 0.12, 0.03), fract(vStrand.z * 3.7)) * (0.7 + 0.5 * blister + 0.4 * rib), step(1.0, vStrand.z));
   vec3 col = rigShade(vWorld, n, v, albedo, 0.24, 0.55 + 0.45 * rib);
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
@@ -546,14 +548,17 @@ export function create(ctx: Context): Piece {
 
   // Water down the face: beside it, where the approved picture has a runnel off the ledge, and off its lowest points.
   const RUNS = 22;
+  // And off it: from the end of every limb and from the muzzle the water it holds still runs.
+  const dripFrom: Point[] = [...limbs.map((l) => limbPath(l)(1)), muzzle, muzzle, shoulder];
   const runFace: number[] = [];
   const runLook: number[] = [];
   const runIndex: number[] = [];
-  for (let i = 0; i < RUNS; i++) {
+  for (let i = 0; i < RUNS + dripFrom.length * 3; i++) {
     const beside = i < 13;
-    const u0 = beside ? scatter.range(-3.4, -2.2) * K + (i % 3) * 0.1 : scatter.range(-1.2, 3.6) * K;
-    const d0 = beside ? scatter.range(-4, -2.5) * K : scatter.range(1.5, 4.5) * K;
-    const long = beside ? scatter.range(6, 9) * K : scatter.range(1.5, 3.5) * K;
+    const drip = i >= RUNS ? dripFrom[Math.floor((i - RUNS) / 3)] : undefined;
+    const u0 = drip ? drip[0] + scatter.range(-0.12, 0.12) * K : beside ? scatter.range(-3.4, -2.2) * K + (i % 3) * 0.1 : scatter.range(-1.2, 3.6) * K;
+    const d0 = drip ? drip[1] - scatter.range(0, 0.5) * K : beside ? scatter.range(-4, -2.5) * K : scatter.range(1.5, 4.5) * K;
+    const long = drip ? scatter.range(1.2, 2.8) * K : beside ? scatter.range(6, 9) * K : scatter.range(1.5, 3.5) * K;
     const wide = beside ? scatter.range(0.03, 0.1) : scatter.range(0.015, 0.035);
     const number = scatter.next();
     const first = runFace.length / 3;
@@ -561,7 +566,7 @@ export function create(ctx: Context): Piece {
     for (let k = 0; k <= N; k++) {
       const q = k / N;
       for (const side of [-1, 1]) {
-        runFace.push(u0 + side * wide, d0 + long * q, 0.2);
+        runFace.push(u0 + side * wide, d0 + long * q, drip ? Math.max(0.2, drip[2] * (1 - 1.2 * q)) + 0.06 : 0.2);
         runLook.push(side, q, number);
       }
     }
@@ -592,10 +597,10 @@ export function create(ctx: Context): Piece {
   const shapes = new Float32Array(STRANDS * 4);
   const falls = new Float32Array(STRANDS * 3);
   for (let i = 0; i < STRANDS; i++) {
-    const over = i < 34;
+    const over = i < 64;
     // Over the shoulder and the hips, where it is caught; the rest hang round it.
-    let u = over ? (i < 20 ? scatter.range(0.6, 1.7) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
-    const up = over ? (i < 20 ? scatter.range(-0.9, 0.1) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
+    let u = over ? (i < 30 ? scatter.range(0.5, 1.8) : i < 46 ? scatter.range(-0.4, 0.5) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
+    const up = over ? (i < 30 ? scatter.range(-0.9, 0.1) : i < 46 ? scatter.range(0.3, 1.2) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
     // The rest keep clear of it: nothing hangs across the body but what is draped over it.
     if (!over && u > -2 * SIZE && u < 4.6 * SIZE && up > -5) u += u < 1.3 * SIZE ? -4 * SIZE : 5 * SIZE;
     const root = toWorld(u, -up, over ? proud(u) + 0.25 * SIZE : 0);
@@ -603,7 +608,7 @@ export function create(ctx: Context): Piece {
     const fall = toWorld(u, -up + long, 0).sub(root).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
     roots.set([root.x, root.y, root.z, over ? scatter.range(0.3, 0.6) * SIZE : scatter.range(0.05, 0.2)], i * 4);
-    shapes.set([long, over ? scatter.range(0.05, 0.12) : scatter.range(0.05, 0.16), scatter.next(), scatter.range(-0.12, 0.12)], i * 4);
+    shapes.set([long, over ? scatter.range(0.1, 0.26) : scatter.range(0.05, 0.16), scatter.next() + (over ? 1 : 0), scatter.range(-0.12, 0.12)], i * 4);
   }
   weed.setAttribute('aRoot', new THREE.InstancedBufferAttribute(roots, 4));
   weed.setAttribute('aShape', new THREE.InstancedBufferAttribute(shapes, 4));
