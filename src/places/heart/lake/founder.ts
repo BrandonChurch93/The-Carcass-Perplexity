@@ -74,7 +74,7 @@ void main() {
   float thin = smoothstep(0.1, 0.62, shape);
   // It leaves the vent yellow, and cools as it flies: small and thin parts first.
   float cool = vGob.x / (0.5 + 2.6 * vGob.y) + 0.45 * thin;
-  float kelvin = mix(1460.0, 760.0, clamp(cool * 0.62, 0.0, 1.0));
+  float kelvin = mix(1430.0, 760.0, clamp(cool * 0.85 + 0.12 * ragged, 0.0, 1.0));
   vec3 c = blackbody(kelvin) + vec3(0.004, 0.0035, 0.003);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

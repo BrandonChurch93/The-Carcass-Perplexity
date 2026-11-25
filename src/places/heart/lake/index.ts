@@ -63,7 +63,8 @@ void main() {
   vec2 uvB = vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 19.0 + 0.31;
   vec2 uvC = vec2(q.x * 0.5 + q.y * 0.866, -q.x * 0.866 + q.y * 0.5) / 43.0 + 0.57;
   float near = smoothstep(140.0, 20.0, far);
-  float mid = smoothstep(700.0, 120.0, far);
+  float mid = smoothstep(420.0, 90.0, far);
+  float wide = smoothstep(1500.0, 300.0, far);
   vec4 nhA = texture2D(tSkinNh, uvA);
   vec4 nhB = texture2D(tSkinNh, uvB);
   vec4 nhC = texture2D(tRopeNh, uvC);
@@ -77,19 +78,19 @@ void main() {
   float young = heat.w;
   float age = clamp(net.b + 0.35 * (vnoise(q / 37.0 + 4.0) - 0.5), 0.0, 1.0) * (1.0 - young);
 
-  vec2 slope = (nhA.rg - 0.5) * (0.2 + 0.5 * near);
-  slope += vec2(0.8 * (nhB.r - 0.5) + 0.6 * (nhB.g - 0.5), -0.6 * (nhB.r - 0.5) + 0.8 * (nhB.g - 0.5)) * 0.45 * mid;
-  slope += vec2(0.5 * (nhC.r - 0.5) - 0.866 * (nhC.g - 0.5), 0.866 * (nhC.r - 0.5) + 0.5 * (nhC.g - 0.5)) * 0.5 * mid;
+  vec2 slope = (nhA.rg - 0.5) * 0.6 * near;
+  slope += vec2(0.8 * (nhB.r - 0.5) + 0.6 * (nhB.g - 0.5), -0.6 * (nhB.r - 0.5) + 0.8 * (nhB.g - 0.5)) * 0.4 * mid;
+  slope += vec2(0.5 * (nhC.r - 0.5) - 0.866 * (nhC.g - 0.5), 0.866 * (nhC.r - 0.5) + 0.5 * (nhC.g - 0.5)) * 0.45 * wide;
   slope *= 1.0 - 0.55 * young;
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
 
   // Old skin is grey and dull, young skin beside a seam is dark, smooth and glassy.
-  vec3 albedo = mix(skinB, skinA, 0.3 + 0.4 * near) * (1.3 + 1.9 * age);
+  vec3 albedo = mix(skinB, skinA, 0.3 + 0.4 * near) * (0.75 + 1.1 * age);
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.33))), 0.35 * age);
   float hollow = mix(1.0, 0.7 + 0.6 * nhB.b, mid) * mix(1.0, 0.8 + 0.4 * nhA.b, near);
   float lip = smoothstep(0.5, 0.0, edge);
-  float crack = 1.0 - 0.7 * smoothstep(0.05 + 0.0012 * far, 0.0, net.r) * mid;
-  float rough = clamp(0.3 + 0.55 * age + 0.25 * (nhB.b - 0.5), 0.14, 0.92);
+  float crack = 1.0 - 0.6 * smoothstep(0.05 + 0.0012 * far, 0.0, net.r) * mid * smoothstep(0.3, 0.6, vnoise(q / 23.0 + 9.0));
+  float rough = clamp(0.34 + 0.5 * age + 0.25 * (nhB.b - 0.5) * mid + 0.25 * (1.0 - mid), 0.16, 0.92);
 
   vec3 p = vec3(xz.x, 0.02, xz.y);
   float open = land.g * (1.0 - contactAt(p)) * hollow * crack * (1.0 - 0.5 * lip);
@@ -98,7 +99,7 @@ void main() {
   light += blackbody(heat.y) * heat.x * 0.0;
   vec3 c = albedo * light / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float fresnel = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.75 * rough);
+  float fresnel = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - 0.6 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   c += fresnel * lakeMirror(r, rough) * open;
