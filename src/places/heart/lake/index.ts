@@ -145,6 +145,12 @@ float gFoldPhase = 0.0;
 float gFoldSpace = 0.3;
 float gFoldDeep = 0.1;
 vec2 gFoldDir = vec2(1.0, 0.0);
+// Where ropes are at all: patches of a few metres, broken again at half a metre. The skin reads the same through gFoldCover.
+float ropeMask(vec2 q) {
+  return smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
+}
+// How broken the crust is at the point brokenAt was last asked about (0 until it is asked).
+float gBroke = 0.0;
 float gSheafBest;
 float gSheafNext;
 vec4 gSheaf;
@@ -164,7 +170,10 @@ void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
       vec2 along = vec2(cos(turn), sin(turn));
       float a = dot(rel, along);
       float s = rel.x * along.y - rel.y * along.x;
-      float d = length(vec2(a * (1.0 + fract(hr * 41.3)), s)) / R;
+      // A sheaf is a band of 3 to 9 ropes that bend together: narrow across the ropes, long along them, lying on its arc.
+      float space = mix(0.12 + 0.14 * fract(hr * 11.3), 0.055 + 0.07 * fract(hr * 11.3), small);
+      float bent = a + (0.25 + 0.7 * fract(hr * 5.7)) / R * s * s;
+      float d = length(vec2(bent / ((1.5 + 3.0 * fract(hr * 41.3)) * space), s / R));
       // One cell in five of the large ones is bare, and two in five of the small.
       float p = (1.0 - d) * (0.7 + 0.6 * fract(hr * 29.1)) * (1.0 + 0.6 * small) * step(0.2 + 0.2 * small, fract(hr * 53.7));
       if (p > gSheafBest) {
@@ -191,21 +200,25 @@ float foldAt(vec2 q) {
     gToeId = vec2(0.0);
     return 1.0;
   }
+  // The ropes a toe wears round its front: rings about its middle, on its downstream half, out to its rim.
+  float toeHigh = toeAt(q);
+  // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
+  float ropes = ropeMask(q) * (1.0 - smoothstep(0.15, 0.45, gBroke));
+  if (ropes <= 0.0) return 1.0;
   vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
   gSheafBest = 0.0;
   gSheafNext = 0.0;
   sheafAt(wq, 4.6, 2.37, flowTurn, 0.0);
   sheafAt(wq, 1.35, 61.7, flowTurn + 1.3, 1.0);
-  // The ropes a toe wears round its front: rings about its middle, on its downstream half, out to its rim.
-  float toeHigh = toeAt(q);
   float toeCover = 0.0;
   float rho = 0.0;
   if (toeHigh > 0.0) {
     rho = length(gToe.xy);
-    toeCover = smoothstep(0.25, 0.5, rho) * smoothstep(-0.8, 0.1, gToe.x / max(rho, 0.01)) * step(0.3, fract(gToe.w * 37.7)) * smoothstep(0.0, 0.012, toeHigh - gToeNext) * smoothstep(0.0, 0.008, toeHigh);
+    toeCover = smoothstep(0.25, 0.5, rho) * smoothstep(-0.8, 0.1, gToe.x / max(rho, 0.01)) * step(0.6, fract(gToe.w * 37.7)) * smoothstep(0.0, 0.012, toeHigh - gToeNext) * smoothstep(0.0, 0.008, toeHigh);
   }
-  float sheafCover = smoothstep(0.0, 0.25, min(gSheafBest, gSheafBest - gSheafNext)) * (0.55 + 0.45 * smoothstep(0.0, 0.5, gSheafBest));
+  toeCover *= ropes;
+  float sheafCover = ropes * smoothstep(0.0, 0.25, min(gSheafBest, gSheafBest - gSheafNext)) * (0.55 + 0.45 * smoothstep(0.0, 0.5, gSheafBest));
   if (max(sheafCover, toeCover) <= 0.0) return 1.0;
   if (toeCover > sheafCover) {
     float hrT = gToe.w;
@@ -269,7 +282,7 @@ float ridgeAt(vec2 q, float c) {
     if (tm < -1.0 || tm > len + 1.0 || abs(side) > 3.2 * size) continue;
     // A line of slabs, each 1.5 to 4.5 m long, pushed up on edge: a long back that leans on the crust behind it and a short
     // broken face toward the lens, each its own height, its crest a little off the line, one in five fallen flat.
-    float u = tm / (1.4 * size) + 0.8 * vnoise(vec2(tm / 5.0 + 7.0, 2.0));
+    float u = tm / (1.4 * size) + 1.3 * vnoise(vec2(tm / (2.2 * size) + 7.0, 2.0));
     float k = floor(u);
     float fu = u - k;
     vec2 hk = hash22(vec2(k, 17.0 + float(i)));
@@ -389,6 +402,7 @@ float brokenAt(vec2 q) {
   // On the lens side of the hero's pool the crust lies low, or it hides the pool.
   gLow = 1.0 - smoothstep(uPads[4].z, uPads[4].z + 3.0, length(q - uPads[4].xy));
   b *= 1.0 - 0.5 * gLow;
+  gBroke = b;
   return b;
 }
 // How broken the crust is: the heaps against the far walls and round the island, and the broken places out on the lake.
@@ -404,8 +418,9 @@ float gSlabEdge;
 float gSlabId;
 vec2 gSlabSlope;
 float gSlabRim;
-float slabHeld(float c) {
-  return 1.0 - smoothstep(0.25, 0.6, c);
+// How much of a slab of size L the cells of size c carry: it needs five cells across at the least.
+float slabHeld(float c, float L) {
+  return 1.0 - smoothstep(0.1 * L, 0.22 * L, c);
 }
 // The plane of slab k at a point that lies s (in lattice units) from the slab's middle: x is its height there, yz its slope.
 vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
@@ -433,10 +448,13 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   vec2 f = p - cell;
   float d1 = 9.0;
   float d2 = 9.0;
+  float d3 = 9.0;
   vec2 s1 = vec2(0.0);
   vec2 k1 = vec2(0.0);
   vec2 s2 = vec2(0.0);
   vec2 k2 = vec2(0.0);
+  vec2 s3 = vec2(0.0);
+  vec2 k3 = vec2(0.0);
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 g = vec2(float(i), float(j));
@@ -445,6 +463,9 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
       // A slab that rides on its neighbours reaches out over them.
       float d = length(s) - 0.22 * step(0.67, fract(r.x * 7.0 + r.y * 3.0));
       if (d < d1) {
+        d3 = d2;
+        s3 = s2;
+        k3 = k2;
         d2 = d1;
         s2 = s1;
         k2 = k1;
@@ -452,9 +473,16 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
         s1 = s;
         k1 = cell + g;
       } else if (d < d2) {
+        d3 = d2;
+        s3 = s2;
+        k3 = k2;
         d2 = d;
         s2 = s;
         k2 = cell + g;
+      } else if (d < d3) {
+        d3 = d;
+        s3 = s;
+        k3 = cell + g;
       }
     }
   }
@@ -471,9 +499,11 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
   // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
   float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.03, 0.06, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.06, 0.12, c));
-  // The floor of the gap lies under both the slabs it parts, so it is one floor from either side: a floor that jumped from
-  // slab to slab would stand as a row of teeth wherever the cells are too coarse to open the gap.
-  float bed = min(min(own.x, slabPlane(k2, -s2, broken, L, drop).x), 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
+  // The floor of the gap lies under the slabs it parts, so it is one floor from either side, and where three slabs meet it
+  // lies under all three: a floor that jumped from slab to slab would stand as a row of teeth and spikes.
+  float beside = slabPlane(k2, -s2, broken, L, drop).x;
+  if (d3 - d2 < 0.15) beside = mix(min(beside, slabPlane(k3, -s3, broken, L, drop).x), beside, smoothstep(0.0, 0.15, d3 - d2));
+  float bed = min(min(own.x, beside), 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
   // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
   float gapHalf = (0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken)) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm);
   // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
@@ -482,7 +512,7 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   float inner = gapHalf + edgeWide;
   float plane = own.x + rimHigh * exp(-max(e - inner, 0.0) / rimWide);
   gSlabEdge = 1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e);
-  return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c);
+  return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c, L);
 }
 // The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
 // is longer. Relief finer than a pixel is long would only glitter.
@@ -563,7 +593,7 @@ float heightAt(vec2 q, float c) {
     h += slabAt(q, broke, c, 1.9, 0.0) * smoothstep(0.0, 1.5, lake);
     // Low mounds of ash and rubble, 1 to 3 m across, lie on the broken crust.
     gMound = smoothstep(0.62, 0.84, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
-    h += gMound * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c) * smoothstep(0.0, 1.5, lake);
+    h += gMound * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake);
   }
 
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
@@ -578,16 +608,27 @@ float heightAt(vec2 q, float c) {
     float heatClass = n.g - 2.0;
     float trench = named * max(1.0 - smoothstep(0.01, 0.05, heatClass), step(1.3, heatClass));
     float brim = mix(-0.02, mix(max(level + 0.03, -0.05), level + 0.17 + 0.1 * vnoise(q / 1.3 + 91.0), trench), named);
+    // A seam the melt stands high in (the string the group feeds at) is an opening all the same: its bank on the far side
+    // from the lens of the shot that looks into it stands 10 to 25 cm over the melt, a broken wall the melt lights, and
+    // the bank on the near side stays low, so the lens sees over it into the gap.
+    float shallow = named * (1.0 - trench);
+    if (shallow > 0.0 && bank < 2.5) {
+      vec2 toLens = normalize(vec2(-454.9, 250.3) - q);
+      float farSide = smoothstep(0.02, 0.2, n.r - netAt(q + 0.4 * toLens).r);
+      brim = mix(brim, level + 0.1 + 0.16 * vnoise(q / 1.3 + 91.0), shallow * farSide * (1.0 - 0.6 * gPadCalm));
+    }
     h = mix(h, brim + mix(0.12, 0.18, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.5, trench)) * wide);
     // The folds end short of the broken edge: carried over it they would stand as a row of teeth on the wall.
     // The bank of the line is a broken lip: slabs of 0.3 to 1.5 m that lean in toward the melt, each its own length and
     // height, and one in three gone down to a shelf just over the melt.
     float onLine = named * (1.0 - smoothstep(0.01, 0.05, heatClass));
-    if (onLine > 0.0 && bank < 1.3 && c < 0.3) {
+    if (onLine > 0.0 && bank < 1.6 && c < 0.3) {
       lineFar(q);
       gLean = vec3(gLineAway, 0.85);
       float lipCrust = onLine * (1.0 - smoothstep(0.45, 1.2 + 0.6 * (vnoise(q / 1.9 + 44.0) - 0.5), bank));
       h += slabAt(q + 77.0, 0.5 * lipCrust, c, 0.72, 0.2) * lipCrust;
+      // The broken lip carries no fold and no toe: nothing of the skin's pattern drapes down a broken face.
+      fine *= 1.0 - lipCrust;
     }
     float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
     h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
@@ -674,7 +715,17 @@ void main() {
   vec4 atX = texelFetch(tBake, ij + sx, 0);
   vec4 atZ = texelFetch(tBake, ij + sz, 0);
   float high = here.r + here.g;
-  vec2 rise = vec2((atX.r - here.r + atX.g - here.g) * float(sx.x), (atZ.r - here.r + atZ.g - here.g) * float(sz.y));
+  // The slope is taken from the vertices on both sides. Taken from one side only it lies half a cell off, and along an
+  // edge that runs askew to the lattice every other vertex is lit as the face and the next as the top: a row of teeth.
+  ivec2 bx = ivec2(ij.x > 0 ? 1 : 0, 0);
+  ivec2 bz = ivec2(0, ij.y > 0 ? 1 : 0);
+  ivec2 fx = ivec2(ij.x < last.x ? 1 : 0, 0);
+  ivec2 fz = ivec2(0, ij.y < last.y ? 1 : 0);
+  vec4 x0 = texelFetch(tBake, ij - bx, 0);
+  vec4 x1 = texelFetch(tBake, ij + fx, 0);
+  vec4 z0 = texelFetch(tBake, ij - bz, 0);
+  vec4 z1 = texelFetch(tBake, ij + fz, 0);
+  vec2 rise = vec2((x1.r - x0.r + x1.g - x0.g) / float(bx.x + fx.x), (z1.r - z0.r + z1.g - z0.g) / float(bz.y + fz.y));
   vNormalG = normalize(vec3(-rise.x, uRing.z, -rise.y));
   // Which way is away from the nearest gap.
   vAway = vec2((atX.b - here.b) * float(sx.x), (atZ.b - here.b) * float(sz.y)) / uRing.z;
