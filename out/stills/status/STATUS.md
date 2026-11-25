@@ -1,8 +1,8 @@
-# Status 27
+# Status 30
 
-2026-11-25 05:17 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 06:13 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-1.jpg`: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right. Approved on the left of each pair, the build on the right. The channel is a flat floor with paper-red banks: the lake owner is rebuilding it as a trench with lips, islands and fingers
-- `02-heart-2.jpg`: The one that sank, second version: turned to the camera, hull with splits, the arched leg, folded skin as real geometry and no ring. Still wrong: the folds are velvet pillows where the picture has crisp cracked ropes, and the feeding walker is too near and cut by the edge
-- `03-heart-0.jpg`: The wide key with every second version merged. Tone now measures close to the approved picture region by region. Still wrong: the lake is nearly blank (about five live seams, the picture has ten), the fountain is a cloud of dark chips, the near walker is a third too small
-- `04-heart-4.jpg`: The mouth and the fall from the new long lens position. The worst of the five: a brown veil over everything, the cave lit inside, the fall thin. Owners have numbers for each of these
+- `01-v3-h3-compare.jpg`: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal. The hide still reads as a sculpted model, there is no orange light from below, and the crust and the wall behind are flat brown.
+- `02-land-v3-compare-heart-1.jpg`: Land, version 3: the bench and its lip are in and the stripes are gone. The open lava is flat tan where the picture has deep orange with white cores: the fault is in the fire's colour, now with an owner of its own.
+- `03-v3-compare-heart-0.jpg`: Air, version 3, the wide key: two kinds of air now, thin pale haze and a heavy low layer. The far lake lost its pale haze and goes back in; the animals are still too small in this frame.
+- `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view

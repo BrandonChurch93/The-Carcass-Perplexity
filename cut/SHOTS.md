@@ -68,7 +68,7 @@ Frames 0 to 2506, 41.78 s, 6 shots. The origin is on the floor of the strait bet
 
 ## The Heart
 
-Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.
+Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high at the back. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.
 
 ### `heart-01` · The Heart · the lava lake at nightfall
 
@@ -85,10 +85,10 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 - Frames: 2937 to 3374, 7.30 s.
 - Key: `heart-3` at frame 3156.
 - Lens: 76 mm for the whole shot (a vertical field of view of 18 degrees).
-- Move: in. The camera travels 22 m, from 3.2 m above the ground to 3.0 m. One push of 22 m toward the group with a slight crab to the right, level at 3 m over the crust.
-- Start framing: 3 m over the crust, 90 m from the group of five tall ones on a long lens, with the fall and the mouth at the left edge and the buttress on the right.
-- End framing: 22 m closer, the same heading, with the largest of the group a little over half the height of the frame.
-- Focus: On the group of five. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
+- Move: in. The camera travels 16 m, from 6.5 m above the ground to 6.1 m. One push of 16 m toward the hero, with a metre of crab to the right. The lens stays about 6 m over the crust, so the hero's back stands at twice the height of the lens.
+- Start framing: 6.6 m over the crust and 74 m from the hero of the group on a long lens: the hero left of centre with its trunk down in the seam, the second of the group walking on the right, a third far off on the left in front of the fall, the mouth at the left edge.
+- End framing: 16 m closer and a little lower, the same heading, with the hero two thirds of the height of the frame.
+- Focus: On the hero of the group. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-03` · The Heart · the fire under the skin
 

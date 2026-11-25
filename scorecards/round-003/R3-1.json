@@ -1,0 +1,77 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-25 06:30 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the lava channel in the foreground, right half (crop set-A-06 right)",
+        "what": "the lava is a flat orange and maroon fill with hard cut-out edges. It has no depth, no crust or cooling skin, and no heat shimmer. It lights neither the rock lip above it nor the boulders sitting in it, and the dark-red band reads as a solid paint layer",
+        "fix": "give the melt an emissive gradient running from a hot core to a dark crust, with crust plates and a glowing wet rim, and let it bounce orange light up onto the channel walls, the boulder undersides and the air above"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the lava-plain floor everywhere and the near cliff rock (crops set-A-02 TL/BR, set-A-03)",
+        "what": "the ground texture is stretched into horizontal smears, as if projected. The near rock shows streaked UV stretch on its vertical faces and faceted, clay-like blocks. The whole plain is one material with no change from near to far",
+        "fix": "use triplanar or world-space projection on steep faces, add more texture detail near the camera, and break up the plain with ash drifts, pahoehoe ropes, fresh black glass and dull old flows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the creature lying on the rippled mound in the centre foreground, and the mound itself (crop set-A-09)",
+        "what": "the mound is a smooth, uniform rippled blob that reads as a sculpted model or fabric, with no tie to the ground around it. The creature's arched limb is a smooth tube with a repeated bark-like texture. Neither carries any ash or dust from the place",
+        "fix": "blend the mound into the plain with a gradual edge and scattered debris, break up the ripple rhythm, and add ash, dust and heat discolouration to the creature"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the walking creatures on the plain, and their feet (crops set-A-03 L, set-A-05 BL)",
+        "what": "the foot pads are identical grey discs sitting on the ground like bases or stands. There is little or no contact shadow, the poses repeat across the herd, and nothing of the place is on the legs",
+        "fix": "replace the discs with feet that press into the ash, add contact shadows and dust kicked up at each step, vary the gait phase and posture, and add ash to the lower legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the burning patch on the right and the burning patch on the left near the cliff (crops set-A-03 R, set-A-05 TL)",
+        "what": "the flames and flying debris are sprite-like clumps on a thin bright line. The glow does not light the surrounding ground or the rising haze evenly, and the debris pieces look like flat cards",
+        "fix": "use volumetric fire with real ember particles, let the light fall off across the ground, and light the dust column from below"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the foreground rock at bottom left (crop set-A-05 BR)",
+        "what": "the rock texture is a noisy, blurred smear and the edge of the boulder is a smooth plastic curve with a specular rim",
+        "fix": "add sharp rock micro-detail and roughness variation, and remove the plastic sheen"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the thin lava cracks across the plain",
+        "what": "the cracks are uniform glowing lines with constant width that light nothing beside them",
+        "fix": "vary the width and brightness of the cracks, and add a faint glow onto the crust and the haze above"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the haze against the far cliffs (crop set-A-02 TR/BL, set-A-08 BL)",
+        "what": "the fog is a flat pinkish tint with no structure or depth layering. The far right reads as an empty colour field",
+        "fix": "add a volumetric, height-varying haze with drifting density, light shafts, and some contrast in the far ridges"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the cave mouth lava fall on the far cliff",
+        "what": "the cascade glow is an emissive smear that lights the arch rim strongly but spills little light onto the ground below",
+        "fix": "add a light pool and steam at the base of the fall"
+      }
+    ]
+  }
+}
