@@ -1,5 +1,6 @@
-2026-11-25 22:13 UTC
-work at 615c174 on agent/breath-life
-min 67: plumes as fronds with barbs (breath-3), waders paler and gaunter (breath-1)
-look-1.jpg = out/work/compare/breath-3.png
-look-2.jpg = out/work/compare/breath-1.png
+2026-11-25 22:33 UTC
+work at fba2518 on agent/breath-life
+min 72: wide key after sea and far-wader tone; plumes still read as palm fronds, being reworked to hang
+look-1.jpg = out/work/compare/breath-0.png
+look-2.jpg = out/work/compare/breath-3.png
+look-3.jpg = out/work/compare/breath-2.png
