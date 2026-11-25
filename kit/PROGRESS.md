@@ -598,6 +598,12 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
+| `film_chunk_renderer_1` | sandbox | Second job: share 1 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 1`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
+| `film_chunk_renderer_2` | sandbox | Second job: share 2 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 2`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
+| `film_chunk_renderer_3` | sandbox | Second job: share 3 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 3`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
+| `film_chunk_renderer_4` | sandbox | Second job: share 4 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 4`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
+| `film_chunk_renderer_5` | sandbox | Second job: share 5 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 5`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
+| `film_chunk_renderer_6` | sandbox | Second job: share 6 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 6`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
