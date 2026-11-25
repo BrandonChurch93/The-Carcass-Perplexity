@@ -156,6 +156,8 @@ void main() {
   cliff *= fineRock(vWorld, max(own, 0.6 * out_), n);
   // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
   cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
+  // The rim is the youngest rock of the wall, glazed by what has poured through it.
+  cliff *= mix(1.0, 0.6, own);
   // The face of the cliff has no skin: its distance from the arch is reckoned from the arch itself.
   vec2 q = vec2(abs(vWorld.x - uArch.x) / uArch.z, max(vWorld.y - uArch.y, 0.0) / uArch.w);
   float beyond = max((pow(pow(q.x, ${f(TUBE.power)}) + pow(q.y, ${f(TUBE.power)}), ${f(1 / TUBE.power)}) - 1.0) * 58.0, uArch.y - vWorld.y);
@@ -213,7 +215,7 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   // A thin skin over most of it, orange; open lava down the middle and wherever a cascade tears the skin; red at the margins.
   // Open lava only in threads, most of them down the middle and where a cascade pulls the skin apart. Rock in the stream chills what passes it.
   float thread = smoothstep(0.06, 0.0, abs(vnoise(vec2(s * 0.85 + 11.0, age * 0.45)) - 0.5)) + 0.6 * smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 2.1 + 5.0, age * 1.3)) - 0.5));
-  float kelvin = mix(1070.0, 1235.0, 1.0 - smoothstep(0.25, 0.97, u)) - 170.0 * (streak - 0.47) + fast * (30.0 + 30.0 * wave) + 110.0 * smoothstep(40.0, 0.0, len);
+  float kelvin = mix(1070.0, 1250.0, 1.0 - smoothstep(0.25, 0.97, u)) - 170.0 * (streak - 0.47) + fast * (30.0 + 30.0 * wave) + 110.0 * smoothstep(40.0, 0.0, len);
   kelvin = mix(kelvin, 1420.0, clamp(thread * (0.35 + 0.65 * fast + 0.5 * (1.0 - smoothstep(0.0, 0.5, u))), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
   kelvin = min(kelvin, 1450.0);
@@ -231,12 +233,12 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   float open = max(smoothstep(0.13, 0.06, lane), max(smoothstep(0.1, 0.05, rill) * (0.55 + 0.45 * vnoise(vec2(s * 0.1 + 8.0, len * 0.06))), smoothstep(0.07, 0.03, rill2) * 0.8));
   // Most of what crosses the fan does so in broad lanes drawn out down the slope, with plates of skin between them.
   float broad = vnoise(vec2(s * 0.2 + 1.3 * vnoise(vec2(len * 0.06, 5.0)), len * 0.028 + 1.0)) + 0.25 * (vnoise(vec2(s * 0.9, len * 0.12 + 4.0)) - 0.5);
-  open = max(open, smoothstep(0.45, 0.52, broad));
+  open = max(open, smoothstep(0.4, 0.47, broad));
   // Where the fan meets the lake its skin is broken by the lake's own heave and the lava shows along the shore.
   open = max(open, smoothstep(uSurge.w - 24.0, uSurge.w - 9.0, len) * smoothstep(0.35, 0.6, vnoise(vec2(s * 0.21 + 3.0, age * 0.08))));
-  float crack = smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 0.55 + 1.0 + 1.5 * vnoise(vec2(len * 0.13, 1.0)), len * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(s * 0.2, len * 0.2 + 5.0)));
-  float crack2 = smoothstep(0.035, 0.0, abs(vnoise(vec2(s * 1.7 + 6.0 + 1.2 * vnoise(vec2(len * 0.3, 7.0)), len * 0.4 + age * 0.03)) - 0.5));
-  float crust = mix(mix(700.0, 930.0, vnoise(vec2(s * 0.8, len * 0.8))), 1230.0, max(crack, 0.7 * crack2));
+  float crack = smoothstep(0.075, 0.0, abs(vnoise(vec2(s * 0.55 + 1.0 + 1.5 * vnoise(vec2(len * 0.13, 1.0)), len * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(s * 0.2, len * 0.2 + 5.0)));
+  float crack2 = smoothstep(0.06, 0.0, abs(vnoise(vec2(s * 1.7 + 6.0 + 1.2 * vnoise(vec2(len * 0.3, 7.0)), len * 0.4 + age * 0.03)) - 0.5));
+  float crust = mix(mix(760.0, 1010.0, vnoise(vec2(s * 0.8, len * 0.8))), 1270.0, max(crack, 0.8 * crack2));
   // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
   kelvin = mix(kelvin, 1265.0 - 170.0 * streak + 150.0 * thread, fan);
   kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.7 * behind));

@@ -291,8 +291,10 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
   const bank: number[] = [];
   const within: number[] = [];
   const keep: boolean[] = [];
-  for (const z of zs) {
+  for (const row of zs) {
     for (const x of xs) {
+      // Near the lip the rows of the sheet are bent to run along it, so the drop over it is not cut into a saw by the grid.
+      const z = row + (lipAt(x) - BED.lip) * smooth(45, 12, Math.abs(row - BED.lip));
       const p = at(x, z);
       const d = lipAt(x) - z;
       positions.push(x, p.y, z);
