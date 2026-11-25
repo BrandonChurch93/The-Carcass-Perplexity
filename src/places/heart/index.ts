@@ -18,6 +18,7 @@ import { LINE, SURGE, T0, UNIT, WALKERS, keySeconds, walkerPosition, type Walker
 import { createStandIns } from './shared/blockout';
 import type { HeartContext, HeartFolder, HeartPiece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
+import { setStaged } from './shared/stage';
 
 function fly(position: Vec3, heading: number, pitch: number, fov: number): Pose {
   const [hx, hz] = bearing(heading);
@@ -172,7 +173,8 @@ async function create(): Promise<Place> {
     resize: (width, height) => {
       for (const p of pieces) p.resize?.(width, height);
     },
-    setTime: (seconds) => {
+    setTime: (seconds, staged) => {
+      setStaged(staged ?? seconds);
       rig.setTime(seconds);
       for (const p of pieces) p.setTime?.(seconds);
       standIns.setTime(seconds);
@@ -199,7 +201,8 @@ async function create(): Promise<Place> {
 const place: PlaceModule = {
   unit: UNIT,
   shots,
-  loop: { path: loopPath, timeOffset: 7 },
+  // The loop keeps the staging of the wide view's key for its whole length: its world runs across two cuts of the film.
+  loop: { path: loopPath, timeOffset: 7, staged: keySeconds('heart-0') },
   heightOf: (pose) => pose.position[1] - Math.max(0, landHeight(pose.position[0], pose.position[2])),
   create,
 };
