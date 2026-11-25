@@ -104,10 +104,11 @@ function create(): Place {
   const parts = new Parts('ribs');
   const kit = createBlockout(parts);
   const scene = new THREE.Scene();
-  const boreAt = eventSeconds('ribs', 'bore') ?? 40;
+  const boreAt = eventSeconds('ribs', 'bore');
+  if (boreAt === null) throw new Error('The cut list has no bore for the ribs');
 
-  scene.add(parts.standIn('sky', kit.sky(0x434e5b, 0x9fabb2, 0x6c787c)));
-  kit.air(0xa3afb6, 0.0004);
+  scene.add(parts.standIn('sky', kit.sky(0x35404d, 0x8794a0, 0x6c787c)));
+  kit.air(0x8e9ba6, 0.00027);
 
   const sand = kit.flat(0x55595a, { band: 0x4b4f50, step: 0.5, amount: 0.5 });
   scene.add(parts.standIn('land', new THREE.Mesh(terrain(LAND.width, LAND.depth, LAND.columns, LAND.rows, landAt, LAND.centre), sand)));
@@ -115,13 +116,13 @@ function create(): Place {
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(WORLD, WORLD, 160, 160).rotateX(-Math.PI / 2), kit.flow(0x44605f, 0x2c4648, { scale: 36, speed: 13, direction: [0.25, -1] }));
   scene.add(parts.standIn('sea', sea));
 
-  const pools = new THREE.Mesh(ribbon(POOL, (lo) => lo > 0.2), kit.flow(0xaebac2, 0x5d6468, { scale: 4.5, speed: 0.5, direction: [0.3, 1] }));
+  const pools = new THREE.Mesh(ribbon(POOL, (lo) => lo > 0.2), kit.flow(0xa9b6bf, 0x4f5559, { scale: 2.8, speed: 0.5, direction: [0.3, 1] }));
   scene.add(parts.standIn('runnels', pools));
 
   const surf = new THREE.Mesh(ribbon(0.45, (lo, hi) => hi > -7 && lo < 0.45), kit.flow(0xe9edeb, 0x9db0ad, { scale: 15, speed: 8, direction: [0.2, -1] }));
-  scene.add(parts.standIn('spray', surf));
+  scene.add(parts.standIn('surf', surf));
 
-  const rock = kit.flat(0xb7b3a6, { band: 0x9c917c, step: 26, amount: 0.75, side: THREE.DoubleSide });
+  const rock = kit.flat(0xc4c0b3, { band: 0xa89c86, step: 26, amount: 0.5, side: THREE.DoubleSide });
   const weed = kit.flat(0x1e211b, { band: 0x35321f, step: 7, amount: 0.7, side: THREE.DoubleSide });
   const blades = new THREE.Group();
   const skirts = new THREE.Group();
@@ -153,7 +154,7 @@ function create(): Place {
   arch.scale.set(1, 1.45, 1.6);
   arch.position.set(STATIONS.arch[0], -6, STATIONS.arch[1]);
   arch.rotation.y = Math.atan2(STATIONS.establish[0] - STATIONS.arch[0], STATIONS.establish[1] - STATIONS.arch[1]);
-  scene.add(parts.standIn('arch', arch));
+  blades.add(arch);
 
   const scatter = stream('ribs-scatter');
   const stone = kit.flat(0x22251f, { band: 0x3a3622, step: 1.5, amount: 0.6 });
@@ -183,7 +184,7 @@ function create(): Place {
   }
   scene.add(parts.standIn('rocks', rocks));
 
-  const cloudStuff = kit.flat(0x55606c);
+  const cloudStuff = kit.flat(0x4a5562);
   const clouds = herd(new THREE.SphereGeometry(1, 12, 6), cloudStuff, CLOUDS);
   const cloudSeed: { x: number; y: number; z: number; size: [number, number, number] }[] = [];
   for (let i = 0; i < CLOUDS; i++) {
@@ -208,9 +209,9 @@ function create(): Place {
   const flierSeed: { cx: number; cz: number; radius: number; y: number; rate: number; phase: number; squash: number }[] = [];
   for (let i = 0; i < FLIERS - FLEEING; i++) {
     const rib = ribByName(homes[scatter.int(homes.length)] as string);
-    const low = i < 70;
+    const low = i < 110;
     const home = low ? { ...rib, x: BUTTRESS.x, z: BUTTRESS.z, lean: 0, height: 0, yaw: 0 } : rib;
-    const radius = low ? scatter.range(75, 150) : scatter.range(60, 330);
+    const radius = low ? scatter.range(78, 130) : scatter.range(60, 330);
     const cz = home.z + scatter.range(-60, 60);
     const cx = home.x + Math.cos(home.yaw) * home.lean * scatter.range(0, 0.6);
     flierSeed.push({ cx, cz, radius, y: low ? scatter.range(38, 80) : scatter.range(70, home.height + 60), rate: (scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 19) / radius, phase: scatter.range(0, Math.PI * 2), squash: scatter.range(0.55, 1) });
@@ -224,7 +225,7 @@ function create(): Place {
     const a = facing + scatter.normal() * 0.55;
     setFigure(colony, i, BUTTRESS.x + Math.cos(a) * r, tier, BUTTRESS.z + Math.sin(a) * r, scatter.range(0, 6), scatter.range(0.8, 1.25));
   }
-  scene.add(parts.standIn('kite-wings', feeders, fliers, fleeing, colony));
+  scene.add(parts.standIn('kite-wings', feeders, fliers, fleeing, colony), fliers, fleeing, colony);
 
   const drowned = new THREE.Mesh(drownedShape(), kit.flat(0xd9c6bd, { side: THREE.DoubleSide }));
   const hang = weedPoint(ribByName('L1'), STATIONS.drownedPhi, STATIONS.drownedHeight, 0.3);
@@ -283,7 +284,7 @@ function create(): Place {
       setFigure(fliers, i, f.cx + Math.cos(a) * f.radius, f.y + 9 * Math.sin(a * 2.3 + f.phase), f.cz + Math.sin(a) * f.radius * f.squash, (f.rate > 0 ? 0 : Math.PI) - a, [1, flap, 1]);
     }
     for (let i = 0; i < FLEEING; i++) {
-      const lead = seconds - (boreAt - 1 / 60);
+      const lead = seconds - boreAt;
       const side = (i - (FLEEING - 1) / 2) / FLEEING;
       const x = flee[0] + side * 44 - 9 * lead + 3 * Math.sin(i * 2.4);
       const z = flee[1] - 16 * ((i * 5) % 7) / 7 + 17 * lead;

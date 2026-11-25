@@ -14,6 +14,7 @@ export interface Rib {
   ledge?: number;
   cut?: number;
   bend?: [number, number, number, number];
+  ctrl?: [number, number];
 }
 
 export const TIDE = 30;
@@ -26,7 +27,7 @@ const RIGHT = Math.PI;
 
 export const RIBS: Rib[] = [
   { name: 'L1', x: -330, z: 0, yaw: LEFT, height: 430, lean: 190, a: 120, b: 95, flare: 20, flareTop: 120 },
-  { name: 'R1', x: 425, z: -559, yaw: RIGHT, height: 520, lean: 290, a: 160, b: 95, flare: 70, flareTop: 150 },
+  { name: 'R1', x: 425, z: -559, yaw: RIGHT, height: 520, lean: 380, a: 125, b: 95, flare: 50, flareTop: 150, ctrl: [0.55, 0.7] },
   { name: 'L2', x: -390, z: -850, yaw: LEFT + 0.15, height: 370, lean: 115, a: 80, b: 60, flare: 30, flareTop: 60 },
   { name: 'R2', x: 393, z: -1054, yaw: RIGHT - 0.1, height: 405, lean: 277, a: 130, b: 70, flare: 50, flareTop: 50 },
   { name: 'L3', x: -434, z: -1348, yaw: LEFT, height: 473, lean: 410, a: 50, b: 42, flare: 30, flareTop: 60, bend: [100, 740, 410, 350] },
@@ -47,7 +48,8 @@ export const ribByName = (name: string): Rib => {
 };
 
 function control(rib: Rib): [number, number, number, number] {
-  return rib.bend ?? [0.3 * rib.lean, 0.85 * rib.height, rib.lean, rib.height];
+  const [fu, fy] = rib.ctrl ?? [0.3, 0.85];
+  return rib.bend ?? [fu * rib.lean, fy * rib.height, rib.lean, rib.height];
 }
 
 function centre(rib: Rib, t: number): { u: number; y: number; nu: number; ny: number } {
@@ -57,8 +59,10 @@ function centre(rib: Rib, t: number): { u: number; y: number; nu: number; ny: nu
   const y = k * y1 + t * t * y2;
   const du = 2 * (1 - 2 * t) * u1 + 2 * t * u2;
   const dy = 2 * (1 - 2 * t) * y1 + 2 * t * y2;
+  if (!rib.bend) return { u, y, nu: 1, ny: 0 };
   const l = Math.hypot(du, dy) || 1;
-  return { u, y, nu: dy / l, ny: -du / l };
+  const turn = Math.min(1, Math.max(0, (t - 0.04) / 0.2));
+  return { u, y, nu: 1 + (dy / l - 1) * turn, ny: (-du / l) * turn };
 }
 
 export function partAtHeight(rib: Rib, y: number): number {
@@ -202,12 +206,12 @@ export function landAt(x: number, z: number): number {
   const edge = Math.min(FLOOR.south - z, z - FLOOR.north, x - FLOOR.west, FLOOR.east - x);
   const wide = Math.sin(x * 0.03 + 1.6 * Math.sin(z * 0.006) + 0.4) * Math.cos(z * 0.011 + 0.9 * Math.sin(x * 0.008));
   const fine = Math.sin(x * 0.071 + z * 0.043 + 1.1) * Math.sin(z * 0.057 - x * 0.019);
-  const floor = 1.16 + 0.4 * wide + 0.14 * fine;
+  const floor = 0.9 + 0.4 * wide + 0.14 * fine;
   return -32 + (floor + 32) * smooth(-170, 40, edge);
 }
 
 export const groundAt = (x: number, z: number): number => Math.max(landAt(x, z), POOL);
 
-export const BUTTRESS = { x: 270, z: -520, top: 84, step: 2.1, slope: 1.25, cap: 10 };
+export const BUTTRESS = { x: 196, z: -500, top: 84, step: 2.1, slope: 1, cap: 10 };
 
 export const buttressRadius = (y: number): number => BUTTRESS.cap + (BUTTRESS.top - y) * BUTTRESS.slope;
