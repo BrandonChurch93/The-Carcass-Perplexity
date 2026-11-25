@@ -89,16 +89,16 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 5) + 0.5 * drift(x, z, 1.3) < 0.62 + 0.25 * rng.next()) continue;
     put(kinds.pebble, x, z, sized(0.05, 0.24, 1.6), { shade: false });
   }
-  for (let i = 0; i < 9000; i++) {
+  for (let i = 0; i < 14000; i++) {
     const x = rng.range(BOX.x0 - 20, BOX.x1 + 6);
     const z = rng.range(BOX.z0 - 30, BOX.z1 + 20);
     if (benchDistance(x, z) < 0.3) continue;
     if (rng.next() > Math.exp(-routeDistance(x, z) / 30)) continue;
-    if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.6 + 0.3 * rng.next()) continue;
+    if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.5 + 0.3 * rng.next()) continue;
     const size = sized(0.22, 0.65);
     if (fits(x, z, size)) put(kinds.stone, x, z, size);
   }
-  for (let i = 0; i < 5200; i++) {
+  for (let i = 0; i < 9000; i++) {
     const x = rng.range(-660, -430);
     const z = rng.range(40, 400);
     const d = benchDistance(x, z);
@@ -106,16 +106,16 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     // More of them near the line and under the steep bank.
     const want = 0.25 + 0.75 * Math.exp(-d / 14);
     if (rng.next() > want) continue;
-    if (drift(x, z, 11) + 0.3 * drift(x, z, 3) < 0.62 + 0.3 * rng.next()) continue;
+    if (drift(x, z, 11) + 0.3 * drift(x, z, 3) < 0.5 + 0.3 * rng.next()) continue;
     const size = sized(0.6, 1.9);
     if (fits(x, z, size)) put(kinds.block, x, z, size);
   }
-  for (let i = 0; i < 1500; i++) {
+  for (let i = 0; i < 2600; i++) {
     const x = rng.range(-640, -440);
     const z = rng.range(60, 390);
     const d = benchDistance(x, z);
     if (d < 1) continue;
-    if (drift(x, z, 17) < 0.66 + 0.2 * rng.next()) continue;
+    if (drift(x, z, 17) < 0.56 + 0.2 * rng.next()) continue;
     if (rng.next() > 0.3 + 0.7 * Math.exp(-d / 20)) continue;
     const size = sized(1.9, 5.5, 1.8);
     if (fits(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
@@ -153,7 +153,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   }
 
   // The aprons of the north wall and the foot of the buttress: fallen blocks, larger and thicker under the gullies, none in the path of the fall.
-  for (let i = 0; i < 26000; i++) {
+  for (let i = 0; i < 40000; i++) {
     const x = rng.range(-480, 640);
     const z = rng.range(-470, 130);
     const d = calderaDistance(x, z);
@@ -169,7 +169,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const nearMouth = Math.abs(x - MOUTH.x) < 230 ? 1 : 0.4;
     if (rng.next() > nearMouth) continue;
     if (drift(x, z, 23) + 0.35 * drift(x, z, 6) < 0.56 + 0.3 * rng.next()) continue;
-    put(kinds.boulder, x, z, sized(1.3, 11, 2.6), { shade: false, sink: rng.range(0.25, 0.5) });
+    put(kinds.boulder, x, z, sized(1.0, 9, 3.4), { shade: false, sink: rng.range(0.3, 0.62), flat: rng.range(0.45, 0.8) });
   }
 
   const material = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { GLAZE: '' } });

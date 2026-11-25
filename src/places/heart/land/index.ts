@@ -44,7 +44,8 @@ function strataTexture(): THREE.DataTexture {
 
 export function create(ctx: HeartContext): HeartPiece {
   // The two cracks: the long one up on the bench, the short one by the line.
-  const along: [number, number] = [0.8, 0.6];
+  // The long one runs askew to the wide view, so it shows its length and its width.
+  const along: [number, number] = [0.451, 0.892];
   const cracks: Crack[] = [
     { ax: CRACK_TOP[0] - along[0] * 5.2, az: CRACK_TOP[2] - along[1] * 5.2, bx: CRACK_TOP[0] + along[0] * 5.2, bz: CRACK_TOP[2] + along[1] * 5.2, width: 0.3, depth: 1.3, seed: 3.1 },
     { ax: CRACK_FOOT[0] - 0.4, az: CRACK_FOOT[1] - 1.9, bx: CRACK_FOOT[0] + 0.5, bz: CRACK_FOOT[1] + 1.6, width: 0.14, depth: 0.5, seed: 8.4 },

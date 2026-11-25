@@ -130,6 +130,9 @@ export function routeDistance(x: number, z: number): number {
   return best;
 }
 
+// The crag at the left of the wide picture: the rise there breaks into sheer ledges.
+const CRAG = { x: -571, z: 268, r: 26 };
+
 /** The bench: the layout's shelf of old lava, with what a lava field has at 10 m and 1 m, and a broken edge at the line. */
 export function benchAt(x: number, z: number, d0: number): number {
   if (d0 < -3) return -8;
@@ -153,16 +156,25 @@ export function benchAt(x: number, z: number, d0: number): number {
   const broken = smooth(0.35, 0.7, noise(x / 31 + 5, z / 31 + 2));
   const slab = broken * (0.7 * tilt * smooth(0, 0.08, gap) - 0.25 * smooth(0.06, 0, gap));
   const lumps = 0.5 * (fbm(x / 5.5, z / 5.5, 3) - 0.5);
-  let h = base + in1 * (dome + slab + lumps);
-  // The steep bank north of the camera's bench is cut into flows a few metres thick, like the wall.
-  const bank = smooth(178, 128, z) * smooth(3, 9, h);
+  // Lobes: each flow of pahoehoe ends in a swollen front a forearm high, and the fronts wander like contour lines.
+  const lf = 7 * fbm(x / 17 + 3, z / 17 + 8, 2) + 0.35 * noise(x / 2.3, z / 2.3);
+  const fq = lf - Math.floor(lf);
+  const lobe = 0.36 * (smooth(0, 0.1, fq) - fq);
+  let h = base + in1 * (dome + slab + lumps + lobe);
+  // The steep bank north of the camera's bench, the crag left of the wide view and outcrops here and there on the rise are cut
+  // into flows a few metres thick, like the wall, and jointed into blocks.
+  const reach = routeDistance(x, z);
+  const crag = smooth(1, 0.55, Math.hypot(x - CRAG.x, z - CRAG.z) / CRAG.r);
+  const outcrop = Math.max(crag, 0.7 * smooth(0.52, 0.7, noise(x / 34 + 1.5, z / 34 + 6.2))) * smooth(4, 13, reach);
+  const bank = Math.max(smooth(178, 128, z), outcrop) * smooth(2.5, 7, h - 0.35 * reach * (1 - crag));
   if (bank > 0) {
-    const w = 4.6;
-    const q = (h + 1.2 * noise(x / 40, z / 40)) / w;
+    const w = 3.4 + 1.2 * smooth(178, 128, z);
+    const joint = 1.5 * hash(Math.floor(x / 2.9 + 0.31 * z), Math.floor(z / 3.3 - 0.27 * x));
+    const q = (h + 1.2 * noise(x / 40, z / 40) + joint * outcrop) / w;
     const f = q - Math.floor(q);
-    const face = 0.22 + 0.25 * noise(x / 17 + 3, z / 17);
+    const face = 0.16 + 0.25 * noise(x / 17 + 3, z / 17);
     const s = f < face ? (0.88 * f) / face : 0.88 + (0.12 * (f - face)) / (1 - face);
-    h += bank * (s - f) * w;
+    h += bank * (s - f) * w * (0.75 + 0.25 * crag);
   }
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
