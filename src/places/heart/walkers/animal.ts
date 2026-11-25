@@ -527,12 +527,14 @@ export class Animal {
       [0.27, 0.84],
       [0.17, 0.92],
       [0.08, 0.98],
-      [0.025, 1],
-      [0, 0.93],
+      // What it has pushed out from under itself: a low rim of ash round the foot, a hand high, that stays down when the foot goes up.
+      [0.07, 1.18],
+      [0.04, 1.42],
+      [0, 1.55],
       [0, 0.02],
     ];
-    // The foot is a clump caked on the end of the shin, half as wide as the ground it clears.
-    const footR = 0.6 * b.padR;
+    // The foot is a clump caked on the end of the shin, splayed wide where it takes the weight.
+    const footR = 0.7 * b.padR;
     // Three or four toes, the fore ones longer, each leg its own.
     const toeN = hash(seed, 64) < 0.5 ? 3 : 4;
     const toeAt = hash(seed, 65) * 6.283;
@@ -923,7 +925,7 @@ export class Animal {
       const [knee, hock, end] = this.bones(hip, ankle, out);
       // If the leg is at full stretch the ankle is where the bones put it, and the pad with it.
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
-      this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift));
+      this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift), 1 - 0.4 * smooth(0, 0.12 * k, foot.lift));
       // Grit leaves the pad as it swings and falls to the crust.
       for (const g of this.grit) {
         if (g.leg !== j) continue;
@@ -973,7 +975,7 @@ export class Animal {
     return { feet: feet.map((p) => ({ x: p.x, z: p.z, lift: p.lift })), body: { x: cx, z: cz, yaw: at.yaw }, tuft: { x: tuft[0], y: tuft[1], z: tuft[2] } };
   }
 
-  private writeLeg(table: LegTable, nodes: V3[], fwd: V3, spread: number): void {
+  private writeLeg(table: LegTable, nodes: V3[], fwd: V3, spread: number, rim: number): void {
     const { skin } = this;
     const tube = table.tube;
     const dirs: V3[] = [];
@@ -1034,7 +1036,7 @@ export class Animal {
       const bz = tx * ny - ty * nx;
       const b0 = table.bow[i * 2] as number;
       const b1 = table.bow[i * 2 + 1] as number;
-      skin.ring(tube, i, px + nx * b0 + bx * b1, py + ny * b0 + by * b1, pz + nz * b0 + bz * b1, nx, ny, nz, bx, by, bz, table.local, i * LEG_SIDES * 2, i >= table.pad ? spread : 1);
+      skin.ring(tube, i, px + nx * b0 + bx * b1, py + ny * b0 + by * b1, pz + nz * b0 + bz * b1, nx, ny, nz, bx, by, bz, table.local, i * LEG_SIDES * 2, i >= table.pad ? spread * (i >= table.bone.length - 4 && i < table.bone.length - 1 ? rim : 1) : 1);
     }
     skin.normals(tube);
     for (const sinew of table.sinews) {

@@ -136,12 +136,12 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   under = mix(vec3(dot(under, vec3(0.3333))), under, 0.5);
   vec3 sky = skyLight(y);
   float east = smoothstep(-150.0, 550.0, p.x);
-  // What the fume sheds settles against the buttress and east of it: a bank that stands off its west face by a few hundred metres.
+  // What the fume sheds settles against the buttress and east of it: a bank that stands off its west face by a few hundred metres. It is thin: the face of the buttress is seen dark through it.
   float west = -(p.x - 445.0) * 0.859 - (p.z + 322.0) * 0.512;
   float bank = smoothstep(380.0, 100.0, west) * smoothstep(-260.0, -60.0, west);
   // Clear toward the bench, heavy toward the open lake in the east: and in banks with dark air between them, not as one veil.
   float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.75 + 0.35 * east + 0.45 * smoothstep(100.0, -450.0, p.z))
-        + 0.0014 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
+        + 0.0008 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
   // What is left of the heavy low layer away from the banks of smoke: a trace.
   float heavy = uShowAir * 0.0012 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks);
   // The smoke that hangs before the butte of the feeding shot: thin, grey-brown, lit by the sky above and by the floor below.
@@ -275,7 +275,8 @@ void main() {
   }
   if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0) * (1.0 - veil);
   // Most of the sky's level is the light the air itself sends on along such a view, and the old smoke hangs in that air, not behind it: it takes its share of that too.
-  sum -= airSum * (0.75 * veil);
+  // Only where the view does reach the sky: behind a smoke that hides the veil the air keeps its light, so no line stands where the smoke crosses the rim.
+  sum -= airSum * (0.75 * veil * nearTrans * farTrans);
   // The veil is the last thing before the sky: the air's own share of the sky's light is dimmed by it as the sky is.
   sum += trans * veilLight * (1.0 + min(thick, 1.0));
   trans *= 1.0 - veil;

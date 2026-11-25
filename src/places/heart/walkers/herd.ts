@@ -323,7 +323,8 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // It carries its tuft while it walks, and lowers it where it comes to stand.
       const at = body(seconds < 10 ? REST : REST + 0.75);
       const fed = feedAt(at.x, at.z, yaw, 0);
-      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.7 * smooth(15.6, 19.5, seconds);
+      // It lowers its tuft over its last step, at the end of the long lens's shot: the picture at the line has it low, feeding.
+      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * smooth(12.9, 14.9, seconds);
       return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater, 0.67), shape: lerp(0.9, FEED_SHAPE, down) };
     }
     const tau = seconds / period + shift;

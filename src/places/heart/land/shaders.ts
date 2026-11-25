@@ -298,7 +298,7 @@ void main() {
   if (steep < 0.997) {
     #ifdef BENCH
     // Ropy sheets on the level treads, cinder and rubble on everything that slopes, in patches tens of metres across.
-    float ropy = smoothstep(0.42, 0.58, vnoise(vWorld.xz / 23.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.06, 0.2, slope) + 0.7 * smoothstep(19.0, 11.0, length(vWorld.xz - vec2(-573.0, 298.0))));
+    float ropy = smoothstep(0.42, 0.58, vnoise(vWorld.xz / 23.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.06, 0.2, slope) + 0.7 * smoothstep(19.0, 11.0, length(vWorld.xz - vec2(-573.0, 298.0))) * smoothstep(0.34, 0.16, slope));
     // The last metres before the line are rubble and clinker under ash, lumpy and matte: no sheet of glass lies there.
     ropy *= smoothstep(3.0, 9.0, land.b + 5.0 * (mid - 0.5));
     // Nor in the heap of clinker under the line view's lens.
@@ -467,6 +467,20 @@ void main() {
     vec3 clinker = vec3(0.048, 0.042, 0.039) * (0.5 + 0.7 * grainA + 0.8 * (grainB - 0.5) * sharp);
     albedo = mix(albedo, clinker, byLens);
   }
+  // A slope of the bench is broken rock, and no picture laid from above is drawn out down it: its grain is read on three planes,
+  // lumps of a third of a metre and pits finer than that, and half of whatever was laid there gives way to it.
+  float broken = smoothstep(0.22, 0.42, slope) * (1.0 - byLens);
+  if (broken > 0.0) {
+    float lumpTone = (vnoise(vWorld.xz / 0.37 + 2.9) + vnoise(vWorld.xy / 0.37 + 6.1) + vnoise(vWorld.zy / 0.37 + 0.7)) / 3.0;
+    float pitTone = (vnoise(vWorld.xz / 0.07 + 4.3) + vnoise(vWorld.xy / 0.07 + 1.2) + vnoise(vWorld.zy / 0.07 + 8.8)) / 3.0;
+    vec3 even = vec3(dot(albedo, vec3(0.3333)));
+    albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5) * (0.55 + 0.9 * lumpTone + 0.6 * (pitTone - 0.5) * sharp), 0.7 * broken);
+    // Under the wide view's lens the bank is a ledge of flows: its steep faces show their beds, a pale face over a dark undercut, a metre or so each.
+    float bank = smoothstep(0.2, 0.36, slope) * smoothstep(170.0, 120.0, length(vWorld.xz - vec2(-580.0, 315.0)));
+    float bedAt = vWorld.y / 1.1 + 0.8 * vnoise(vWorld.xz / 5.0 + 3.7);
+    float bedTone = smoothstep(0.25, 0.5, fract(bedAt)) * smoothstep(1.0, 0.8, fract(bedAt)) * (0.5 + vnoise(vec2(floor(bedAt) * 3.1, 7.7) + vWorld.xz / 3.3));
+    albedo *= mix(1.0, 0.5 + 1.5 * bedTone, bank);
+  }
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 4.2);
   if (dc < 9.0) {
@@ -541,10 +555,10 @@ void main() {
   // The ramp is warm brown scree, not grey rock.
   albedo *= mix(vec3(1.0), vec3(1.22, 0.98, 0.84), ramp);
   // What the long lens resolves on every slope of scree below the cliffs: pale chips a hand across and dark blocks a stride across, crisp,
-  // read through the height as well so that nothing is drawn out down the slope.
+  // read in all three axes so that nothing is drawn out down the slope.
   float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
-  float chips = smoothstep(0.63, 0.7, vnoise(vWorld.xz / 0.34 + vWorld.y * vec2(1.7, 1.3) + 1.1));
-  float clods = smoothstep(0.58, 0.64, vnoise(vWorld.xz / 1.3 + vWorld.y * vec2(0.9, 0.6) + 3.3));
+  float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
+  float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
   albedo *= mix(1.0, (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
   // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
   float behind = smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(0.3, 0.8, steep) * smoothstep(48.0, 72.0, vWorld.y) * smoothstep(200.0, 150.0, vWorld.y + 40.0 * (big - 0.5));
