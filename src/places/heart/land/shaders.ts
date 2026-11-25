@@ -490,6 +490,10 @@ void main() {
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
   #endif
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
+  #ifdef STAGED
+  // The staged butte of the feeding picture stands dark against its smoke.
+  albedo *= 0.5;
+  #endif
   // The fire lies low and its light comes in along the ground: on rough level ground the crowns of the rubble take it and the pits between them
   // lie in each other's shade. A face that stands up takes it whole.
   #ifdef BENCH
