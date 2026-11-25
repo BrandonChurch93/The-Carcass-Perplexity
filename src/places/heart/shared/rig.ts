@@ -43,7 +43,7 @@ export const POOLS = {
 // A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
 // EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
 // strip now gives. The air reads the round lights for itself and is not touched by this.
-export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 1, mouth: 0.5 };
+export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
 
