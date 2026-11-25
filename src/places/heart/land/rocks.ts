@@ -155,6 +155,17 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
   }
 
+  // Nothing lies clean on a floor: what broke off a block lies round its foot, from a fist to a head.
+  const chips = (x: number, z: number, size: number): void => {
+    const count = 4 + rng.int(7);
+    for (let c = 0; c < count; c++) {
+      const a = rng.range(0, Math.PI * 2);
+      const r = size * rng.range(0.45, 0.85);
+      const chip = sized(0.1, 0.5, 1.4);
+      put(chip > 0.28 ? kinds.block : kinds.stone, x + Math.cos(a) * r, z + Math.sin(a) * r, chip, { sink: rng.range(0.25, 0.5), shade: false });
+    }
+  };
+
   // Plates of the old flows' crust, broken and tilted, and blocks of one to four metres among them: the camera's bench is broken rock, not gravel.
   for (let i = 0; i < 5200; i++) {
     const x = rng.range(BOX.x0 - 10, BOX.x1 + 6);
@@ -167,10 +178,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() < 0.62) {
       const size = sized(1.0, 3.6, 1.6);
       const a = rng.range(0, Math.PI * 2);
-      if (fits(x, z, size) && level(x, z, size)) put(kinds.slab, x, z, size, { flat: rng.range(0.13, 0.26), sink: rng.range(0.1, 0.4), lean: [Math.cos(a), Math.sin(a), rng.range(0.08, 0.5)] });
+      if (fits(x, z, size) && level(x, z, size) && put(kinds.slab, x, z, size, { flat: rng.range(0.13, 0.26), sink: rng.range(0.1, 0.4), lean: [Math.cos(a), Math.sin(a), rng.range(0.08, 0.5)] })) chips(x, z, size);
     } else {
       const size = sized(1.0, 4.0, 1.7);
-      if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.25, 0.48), flat: rng.range(0.55, 0.9) });
+      if (fits(x, z, size) && level(x, z, size) && put(kinds.hero, x, z, size, { sink: rng.range(0.25, 0.48), flat: rng.range(0.55, 0.9) })) chips(x, z, size);
     }
   }
 
@@ -208,6 +219,9 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     put(size > 0.17 ? kinds.block : kinds.stone, x, z, size, { sink: rng.range(0.2, 0.42), shade: size > 0.2 });
   }
   // Set by hand, past every rule of the scatter: a rock given whole, by its place, its half sizes and its turn.
+  // The island of the feeding group's view: its middle and the reach of its skirt, for whoever breaks the crust round it.
+  const ISLAND: [number, number] = [-453.4, 241.2];
+  const ISLAND_RADIUS = 9.5;
   const set = (k: Kind, x: number, y: number, z: number, sx: number, sy: number, sz: number, turn: THREE.Quaternion, tone: number, foot = 0.04): void => {
     at.set(x, y, z);
     scale.set(sx, sy, sz);
@@ -268,7 +282,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const z = 250.3 + fz * ahead - rz * left;
       axis.set(rng.range(-1, 1), 0, rng.range(-1, 1)).normalize();
       const q = new THREE.Quaternion().setFromAxisAngle(axis, rng.range(-0.34, 0.34)).multiply(tilt.setFromAxisAngle(UP, rng.range(0, 6.28)));
-      set(kinds.hero, x, y, z, half * rng.range(0.9, 1.15), tall, half * rng.range(0.9, 1.15), q, rng.range(0.75, 1.05), y - tall);
+      set(kinds.hero, x, y, z, half * rng.range(0.9, 1.15), tall, half * rng.range(0.9, 1.15), q, rng.range(0.42, 0.62), y - tall);
     };
     for (const [ahead, left, y, half, tall] of [
       [7.2, 3.5, 2.3, 2.0, 2.7],
@@ -286,18 +300,28 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       [2.6, 3.9, 0.3, 1.1, 0.55],
       [12.6, 3.4, 0.3, 1.0, 0.5],
     ] as [number, number, number, number, number][]) pile(ahead, left, y, half, tall);
+    // It is an island the crust breaks against: a skirt of upturned plates and rubble round its foot.
+    const [ix, iz] = ISLAND;
+    for (let i = 0; i < 150; i++) {
+      const a = rng.range(0, Math.PI * 2);
+      const r = rng.range(5.2, ISLAND_RADIUS) * (0.9 + 0.2 * noise(Math.cos(a) * 2 + 5, Math.sin(a) * 2 + 9));
+      const x = ix + Math.cos(a) * r;
+      const z = iz + Math.sin(a) * r;
+      if (i < 46) put(kinds.slab, x, z, sized(1.2, 3.2, 1.5), { flat: rng.range(0.1, 0.2), sink: rng.range(0.2, 0.42), lean: [-Math.sin(a), Math.cos(a), rng.range(0.25, 0.75)], onLake: true, stand: true, shade: false });
+      else put(i < 90 ? kinds.block : kinds.stone, x, z, sized(0.2, 1.1, 1.6), { sink: rng.range(0.25, 0.5), onLake: true, stand: true, shade: false });
+    }
   }
 
   // The fan of fallen rock at the foot of the fall, either side of where the cascade lands: the biggest blocks have rolled to the bottom.
-  for (let i = 0; i < 2600; i++) {
+  for (let i = 0; i < 9000; i++) {
     const x = rng.range(-90, -20);
-    const z = rng.range(-350, -325);
+    const z = rng.range(-350, -322);
     if (x > -48 && x < -24) continue;
     const g = height(x, z);
     if (g < 0.05) continue;
     if (rng.next() < 0.5 * Math.max(0, (-76 - x) / 14)) continue;
     const up = Math.min(1, g / 8);
-    const size = 0.5 + 2.5 * Math.pow(rng.next(), 2.2) * (1 - 0.7 * up);
+    const size = i < 2600 ? 0.5 + 2.5 * Math.pow(rng.next(), 2.2) * (1 - 0.7 * up) : sized(0.15, 1.6, 1.8);
     put(kinds.boulder, x, z, size, { shade: false, sink: rng.range(0.2, 0.45), flat: rng.range(0.5, 0.9) });
   }
 
@@ -350,6 +374,21 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > nearMouth) continue;
     if (drift(x, z, 23) + 0.35 * drift(x, z, 6) < 0.56 + 0.3 * rng.next()) continue;
     put(kinds.boulder, x, z, sized(1.0, 9, 3.4), { shade: false, sink: rng.range(0.3, 0.62), flat: rng.range(0.45, 0.8) });
+  }
+
+  // The toe of the north wall, as the long lenses see it: rubble of every size on the lobes of talus that run out into the lake, and off them onto the crust.
+  // From a lens three metres up the shore is one level line whatever its plan, so blocks stand off it on the crust as well, thinning out over thirty metres.
+  for (let i = 0; i < 44000; i++) {
+    const x = rng.range(-330, 330);
+    const z = rng.range(-352, -296);
+    const g = height(x, z);
+    if (g > 9) continue;
+    const afloat = g < 0.05;
+    if (Math.abs(x - (MOUTH.x - 6)) < (afloat ? 22 : 13)) continue;
+    if (afloat && rng.next() > Math.exp(calderaDistance(x, z) / 13)) continue;
+    if (drift(x, z, 14) + 0.4 * drift(x, z, 3.1) < 0.3 + 0.35 * rng.next()) continue;
+    const size = afloat ? sized(0.5, 5.5, 1.4) : sized(0.25, 3.2, 2.0);
+    put(kinds.boulder, x, z, size, { shade: false, sink: rng.range(0.2, 0.5), flat: afloat ? rng.range(0.7, 1.1) : rng.range(0.45, 0.9), onLake: afloat });
   }
 
   // The ledges of the wall beside the mouth carry what has fallen onto them.

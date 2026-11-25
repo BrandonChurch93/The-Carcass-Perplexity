@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
 import { CRACK_FOOT, CRACK_TOP } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { FLOWS, crackDip, landHeight, nearCrack, noise, setCracks, type Crack } from './height';
+import { FLOWS, buttressHeight, crackDip, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -100,9 +100,9 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wall = mesh(ribs(landHeight, wallRibs(spacing, -3, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190), wallMaterial);
+  const wall = mesh(ribs(wallHeight, wallRibs(spacing, -3, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190), wallMaterial);
 
-  // The buttress: ribs across it, so its sheer faces get rows all the way up. Where it runs into the wall, the wall's ring draws it.
+  // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
   const [rx, rz] = BUTTRESS.root;
   const [tx, tz] = BUTTRESS.tip;
   const len = Math.hypot(tx - rx, tz - rz);
@@ -115,7 +115,6 @@ export function create(ctx: HeartContext): HeartPiece {
     const reach = 150;
     across.push({ x: cx - az * reach, z: cz + ax * reach, dx: az, dz: -ax, length: reach * 2, on: true });
   }
-  const buttressHeight = (x: number, z: number): number => (calderaDistance(x, z) > 0 ? -8 : landHeight(x, z));
   const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2);
   trim(buttressAll, -1.2);
   const buttress = mesh(buttressAll, wallMaterial);

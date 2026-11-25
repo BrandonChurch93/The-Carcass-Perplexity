@@ -257,7 +257,7 @@ void main() {
 
   vec3 albedo = mix(plain, cliff, steep);
   // Old lava under a dusk sky is a cool grey, not the brown of the pictures' daylight.
-  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.96, 1.0, 1.05), 0.6);
+  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.98, 1.0, 1.03), 0.88);
   float height = mix(plainNh.b, cliffNh.b, steep);
   #ifndef BENCH
   // The buttress stands in the lake: the flank that looks at the fountains is baked by them, its lower faces rusted and paler than the rest.
@@ -275,15 +275,20 @@ void main() {
   // The folds of a ropy sheet: black in the creases, the skin grey on the crests.
   albedo *= mix(1.0, 0.4 + 1.25 * smoothstep(0.25, 0.75, fold), sheet);
   // Ash settles on everything that faces up, thickest in the hollows, thin on the glass of the ropy sheets; faces and undersides keep their black.
-  float ash = smoothstep(0.38, 0.05, slope) * (1.0 - steep) * mix(0.5, 1.0, smoothstep(0.65, 0.3, height)) * mix(0.92, 0.38 + 0.24 * smoothstep(14.0, 30.0, distance(vWorld.xz, vec2(-573.0, 298.0))), sheet);
+  float ash = smoothstep(0.38, 0.05, slope) * (1.0 - steep) * mix(0.1, 1.0, smoothstep(0.66, 0.34, height)) * mix(0.6, 1.0, smoothstep(0.3, 0.6, mid)) * mix(0.92, 0.38 + 0.24 * smoothstep(14.0, 30.0, distance(vWorld.xz, vec2(-573.0, 298.0))), sheet);
   albedo = mix(albedo, vec3(0.335, 0.338, 0.338) * (0.72 + 0.56 * mid), ash);
   #else
   // Ash lies in the hollows of what faces up.
   const float ash = 0.0;
   albedo = mix(albedo, vec3(0.135, 0.13, 0.125) * (0.7 + 0.6 * mid), 0.55 * smoothstep(0.5, 0.22, height) * (1.0 - steep));
   #endif
-  vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * 0.55 + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
-  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, sharp) * (1.0 - 0.5 * ash)) * mix(1.0, ledge, steep);
+  #ifdef BENCH
+  const float TIP = 1.0;
+  #else
+  const float TIP = 0.55;
+  #endif
+  vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * TIP + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
+  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, sharp) * (1.0 - 0.25 * ash)) * mix(1.0, ledge, steep);
 
   #ifdef NEAR
   // The camera's bench: the same rock read again at the scale of a hand.
@@ -332,8 +337,8 @@ void main() {
     float crust = smoothstep(3.6, 0.4, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.2 + 0.8 * up);
     float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up);
     // Lemon where the crystals are thin, cream where they are thick, olive only in the stain round them.
-    vec3 yellow = mix(vec3(0.6, 0.5, 0.14), vec3(0.74, 0.7, 0.5), smoothstep(2.4, 0.5, dc + grain + clump));
-    albedo = mix(albedo, albedo * vec3(1.9, 1.35, 0.7) + vec3(0.03, 0.02, 0.005), stain);
+    vec3 yellow = mix(vec3(0.6, 0.5, 0.14), vec3(0.8, 0.76, 0.56), smoothstep(3.4, 0.9, dc + grain + clump));
+    albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
     albedo = mix(albedo, mix(sul * 1.4, yellow, 0.8) * (0.8 + 0.4 * grain), crust);
     rough = mix(rough, 0.95, crust);
   }
@@ -460,9 +465,9 @@ void main() {
     height = mix(height, 0.5 * (height + fh), close);
   }
   vec3 n0 = normalize(normalize(vNormal) + 1.3 * facet * smoothstep(0.004, 0.02, size / far));
-  vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 0.8 * smoothstep(400.0, 60.0, far));
+  vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 1.3 * smoothstep(400.0, 60.0, far));
   albedo *= vSeed.w * 1.35;
-  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.96, 1.0, 1.05), 0.6);
+  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.98, 1.0, 1.03), 0.88);
   vec4 land = landAt(vWorld.xz);
   // The rock sits in the ground: its foot is in its own shade, and dust lies on what faces up.
   float lift = (vWorld.y - vSeed.z) / max(size, 0.05);
@@ -473,14 +478,14 @@ void main() {
   float dust = smoothstep(0.3, 0.72, n0.y + 0.25 * (height - 0.5)) * (0.85 + 0.15 * fract(vSeed.x * 7.3)) * (1.0 - 0.75 * rind) * smoothstep(0.4, 0.6, vSeed.w);
   albedo *= mix(0.72, 1.0, smoothstep(-0.5, 0.15, n0.y));
   occ = mix(occ, 0.35 + 0.65 * foot, 0.7 * dust);
-  albedo = mix(albedo, vec3(0.375, 0.378, 0.378) * (0.75 + 0.5 * height), 0.95 * dust);
+  albedo = mix(albedo, vec3(0.375, 0.378, 0.378) * (0.75 + 0.5 * height), 0.95 * dust * mix(0.3, 1.0, smoothstep(0.72, 0.38, height)));
   albedo *= mix(1.0, 0.8, rind);
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.6);
   // By the vents: an olive stain on every face, lemon and cream crystals on the tops.
-  float gas = smoothstep(4.4, 0.8, dc + 2.4 * (height - 0.5));
+  float gas = smoothstep(6.5, 1.2, dc + 2.4 * (height - 0.5));
   albedo = mix(albedo, albedo * vec3(1.9, 1.45, 0.7) + vec3(0.03, 0.022, 0.004), 0.6 * gas);
-  float sul = gas * smoothstep(0.15, 0.65, n0.y) * step(0.25, fract(vSeed.x * 3.1));
-  albedo = mix(albedo, mix(vec3(0.58, 0.48, 0.13), vec3(0.72, 0.68, 0.46), smoothstep(0.35, 0.7, height)), sul * 0.9);
+  float sul = smoothstep(0.25, 0.75, gas) * smoothstep(0.15, 0.65, n0.y);
+  albedo = mix(albedo, mix(vec3(0.6, 0.5, 0.15), vec3(0.8, 0.76, 0.56), smoothstep(0.25, 0.6, height)), sul * 0.92);
   float rough = mix(0.9, 0.76, rind * smoothstep(0.4, 0.7, height));
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, 0.0);
   gl_FragColor = vec4(rigOut(c), 1.0);

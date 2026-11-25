@@ -323,6 +323,9 @@ export function buttressAt(x: number, z: number): number {
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
 
+// The fall lands here: the toe of the wall stays out of its way.
+const TOE_CLEAR = -36;
+
 /** The middle of the bare ropy sheet on the crag under the wide lens. */
 export const ROPY: [number, number] = [-573, 298];
 
@@ -330,13 +333,28 @@ export const ROPY: [number, number] = [-573, 298];
 export const SKERRY: [number, number] = [-518, 282.5];
 
 /** The true height of the land, metres. Zero or less is lake. */
-export function landHeight(x: number, z: number): number {
+// The land with or without the buttress. The wall's ring is drawn without it and the buttress by its own mesh:
+// two meshes of one surface show each other through their joins as dotted lines.
+function compose(x: number, z: number, spur: boolean): number {
   const d = calderaDistance(x, z);
   let g = wallAt(x, z, d);
-  const b = benchAt(x, z, benchDistance(x, z));
+  const bd = benchDistance(x, z);
+  // The toe of the wall: lobes of talus run out over the layout's shoreline into the lake, so that no straight line is left where the two meet.
+  // The land only gains on the lake, by 11 m at most; none of it by the bench, none where the cascade lands.
+  if (d > -14 && d < 26 && bd < -30) {
+    const keep = smooth(-30, -60, bd) * smooth(13, 24, Math.abs(x - TOE_CLEAR));
+    if (keep > 0) {
+      const lobe = keep * (7.5 * Math.pow(noise(x / 27 + 3.1, z / 27 + 8.7), 1.5) + 3.5 * noise(x / 8.3 + 1.7, z / 8.3));
+      const toe = 0.34 * (d + lobe) + 0.45 * (noise(x / 2.3, z / 2.3 + 6.1) - 0.5) * keep;
+      if (toe > g) g = Math.min(toe, g + 3.4);
+    }
+  }
+  const b = benchAt(x, z, bd);
   if (b > g) g = b;
-  const t = buttressAt(x, z);
-  if (t > g) g = t;
+  if (spur) {
+    const t = buttressAt(x, z);
+    if (t > g) g = t;
+  }
   // The alcove the mouth opens into: the wall is cut back to the floor of the mouth, and the fall folder roofs it.
   const ax = Math.abs(x - MOUTH.x);
   if (ax < 70 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
@@ -344,6 +362,21 @@ export function landHeight(x: number, z: number): number {
     return g + (MOUTH.floor - g) * k;
   }
   return g;
+}
+
+export function landHeight(x: number, z: number): number {
+  return compose(x, z, true);
+}
+
+/** The land as the wall's ring draws it: everything but the buttress. */
+export function wallHeight(x: number, z: number): number {
+  return compose(x, z, false);
+}
+
+/** The buttress as its own mesh draws it: the land where the buttress is the top of it, sunk out of sight below the rest. */
+export function buttressHeight(x: number, z: number): number {
+  const all = compose(x, z, true);
+  return all - 6 * smooth(0.6, 0, all - compose(x, z, false));
 }
 
 /** A fissure in the bench. Too narrow for the rig's map: only the crack's own mesh and the shader know it. */
