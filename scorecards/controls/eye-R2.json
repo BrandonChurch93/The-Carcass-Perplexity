@@ -1,0 +1,278 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "eye-0",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 89,
+      "why": "the photorealistic lighting on the clearly fantastical long-necked herd."
+    },
+    {
+      "control": "eye-0",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the herd of small pale animals at the shoreline is uniform and malformed, which points to stock or generated CG rather than a real photo or a high-end film frame."
+    },
+    {
+      "control": "eye-0",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the cinematic lighting and highly detailed environment paired with alien-looking long-necked herd animals"
+    },
+    {
+      "control": "eye-0",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 75,
+      "why": "The intricately textured cliff overhang reads like a cinematic environment built for a wide establishing shot."
+    },
+    {
+      "control": "eye-0",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "the lighting, atmosphere and landscape detail look like top-tier cinematic CG, but the small, slightly malformed animals and the oddly patterned orange water make it feel synthetic, so it isn't a real photograph."
+    },
+    {
+      "control": "eye-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 90,
+      "why": "the convincing way the fictional creatures’ reflections break up in the rippling water."
+    },
+    {
+      "control": "eye-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "imaginary hairless creatures with smooth, clay-like skin shading in an otherwise photoreal, shallow-focus scene; it reads as a polished artist's CG render rather than film-grade creature work."
+    },
+    {
+      "control": "eye-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "fictional alien creatures rendered with film-grade golden-hour lighting, shallow depth of field, and highly detailed scarred skin textures"
+    },
+    {
+      "control": "eye-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 89,
+      "why": "The grazing creature’s skin folds catch the low sunlight with convincing fine detail."
+    },
+    {
+      "control": "eye-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the invented long-necked animals are rendered with very convincing skin, water ripples, reflections and golden-hour light, which looks like a big-budget film or cinematic frame, not a photo of a real place."
+    },
+    {
+      "control": "eye-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 84,
+      "why": "The finely resolved underwater strands remain visible through the rippling surface reflections."
+    },
+    {
+      "control": "eye-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the drinking animal is a smooth, textureless, oddly shaped figure (no clear head or fur), while the water and grass look polished, which reads as a high-quality hobbyist or stock render rather than a real photo or a top-budget production."
+    },
+    {
+      "control": "eye-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "feature-film-grade photorealistic lighting and water rendering applied to an unmistakably fictional alien creature"
+    },
+    {
+      "control": "eye-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 85,
+      "why": "The creature’s detailed, sculpted skin catches the same low sunlight as the surrounding cliffs."
+    },
+    {
+      "control": "eye-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "The underwater algae strands, water refraction and mist look photoreal, but the animal's slightly off anatomy and the evenly spaced bubble columns point to a high-end CG cinematic rather than a photograph."
+    },
+    {
+      "control": "eye-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 89,
+      "why": "the water seamlessly blends cliff reflections with a visible submerged drop-off."
+    },
+    {
+      "control": "eye-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the lighting and depth of field look like a real photo, but the ripple rings are too perfectly circular and the skeleton looks placed, so it reads as high-end CG made to look like a photo."
+    },
+    {
+      "control": "eye-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the cinematic staging of the shore skeleton, concentric water ripples, and looming submerged shapes rendered with film-grade lighting and atmospheric depth."
+    },
+    {
+      "control": "eye-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 76,
+      "why": "the finely detailed skeleton staged at the edge of the dark water reads like a cinematic reveal."
+    },
+    {
+      "control": "eye-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the skeleton is a staged, cinematic focal point in a very polished scene with a surreal, too-perfect depth of field, water clarity and algae detail, which reads as a big-budget film or cinematic frame (a professional photograph is the runner-up)."
+    },
+    {
+      "control": "eye-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the convincing water simulation around the surfacing creature."
+    },
+    {
+      "control": "eye-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "photoreal creature work (dinosaur-like animals with fins in the water) composited into a cinematic, film-graded real landscape plate with fog and shallow depth of field"
+    },
+    {
+      "control": "eye-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 82,
+      "why": "the cinematic golden-hour lighting and photorealistic water reflections framing fantastical creatures"
+    },
+    {
+      "control": "eye-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 81,
+      "why": "The golden reflections break convincingly across the swell above the submerged creature."
+    },
+    {
+      "control": "eye-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "photoreal CGI dinosaur necks with believable skin, water ripples, mist and golden-hour reflections integrated into a real-looking landscape, which looks like a big-budget film or cinematic frame."
+    }
+  ],
+  "unit": "eye",
+  "collected": "2026-11-25 22:39 to 22:53 UTC",
+  "share": 0.88,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "pictures": [
+    {
+      "key": "eye-0",
+      "image": "references/approved/6-eye/eye-0-establishing.jpg",
+      "file": "out/work/jury/controls/eye-0.png",
+      "sha256": "affc432306c68dbf733326539d4a77e49731ed5acc170fd1d9acbff01829f833",
+      "bytes": 2135332,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "eye-1",
+      "image": "references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg",
+      "file": "out/work/jury/controls/eye-1.png",
+      "sha256": "af12237ea1d68b365482dba5710dcda8cf6e417899e80705b868cf4e461372a8",
+      "bytes": 2260350,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "eye-2",
+      "image": "references/approved/6-eye/eye-2-the-iris-amber-mats.jpg",
+      "file": "out/work/jury/controls/eye-2.png",
+      "sha256": "cc3786c0f940b93c74cd9db3815821c38aa5ca8e598636ca2205900e983e4c28",
+      "bytes": 2562778,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "eye-3",
+      "image": "references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg",
+      "file": "out/work/jury/controls/eye-3.png",
+      "sha256": "591ae5be1fd2c51c9e0311e2ffc6774b7a36641e8dfcc13127596f79ded98ab2",
+      "bytes": 2108804,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "eye-4",
+      "image": "references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg",
+      "file": "out/work/jury/controls/eye-4.png",
+      "sha256": "f800ea67c4b88e2303680d12aebcf4e9d82207f8b59ac51e4d344ef9ef5ccf09",
+      "bytes": 1943683,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}

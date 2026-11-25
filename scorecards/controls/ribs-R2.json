@@ -1,0 +1,279 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "ribs-0",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 87,
+      "why": "The richly textured rib-shaped rock formations recede into mist with convincingly cinematic depth."
+    },
+    {
+      "control": "ribs-0",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "photoreal fantasy matte-painting quality (giant arches, pterosaur creatures, detailed wet beach and atmospheric lighting) typical of high-end film/cinematic concept work"
+    },
+    {
+      "control": "ribs-0",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "feature-film-grade lighting and wet-surface realism depicting impossible rib-like coastal arches and alien birdlike creatures"
+    },
+    {
+      "control": "ribs-0",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the immense rib-shaped cliffs recede into sea mist with the depth and texture of a cinematic establishing shot."
+    },
+    {
+      "control": "ribs-0",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the detail and lighting are film-grade, with wet-sand reflections, seaweed texture and a huge flock of pterosaurs under fantastical rock arches, all matching a high-end VFX or concept-art frame rather than a photo, stock render or low-budget work."
+    },
+    {
+      "control": "ribs-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 93,
+      "why": "the convincing atmospheric depth around the colossal rib-like structures offshore."
+    },
+    {
+      "control": "ribs-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "photoreal fantastical creatures and giant arches with film-grade detail in the wet kelp, rock and atmospheric depth — feature-film VFX quality"
+    },
+    {
+      "control": "ribs-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "feature-film-grade photorealistic VFX lighting, wet kelp/water detail, and cinematic depth of field depicting an alien coastal scene"
+    },
+    {
+      "control": "ribs-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 96,
+      "why": "The translucent strands peeling from the creature’s flank show remarkably fine, convincing material detail."
+    },
+    {
+      "control": "ribs-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the image shows a fantastical skeletal creature and giant bone arches with very detailed wet seaweed, water and depth-of-field, which looks like top-budget film VFX or concept-quality cinematic work."
+    },
+    {
+      "control": "ribs-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the convincing interaction between the foreground creature’s tendrils and the splashing water."
+    },
+    {
+      "control": "ribs-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "photoreal fantasy creatures with detailed water splash simulation and cinematic depth of field look like a high-end film/cinematic VFX frame"
+    },
+    {
+      "control": "ribs-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "photorealistic subsurface scattering and wet-surface water physics on clearly fantastical alien creatures"
+    },
+    {
+      "control": "ribs-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the fine arcs of water trailing from the foreground creature’s feeding tendrils make it feel physically present in the shot."
+    },
+    {
+      "control": "ribs-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the alien wading creatures with detailed wet skin, water splashes, tidal-flat reflections and filmic depth of field and lighting look like high-end VFX or cinematic concept work."
+    },
+    {
+      "control": "ribs-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the realistic depth-of-field separation across the densely populated creature colony."
+    },
+    {
+      "control": "ribs-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "photoreal fantasy pterosaur-like creature colony with film-quality lichen/guano cliff detail and cinematic motion-blurred foreground creatures (looks like high-end VFX concept/film frame)"
+    },
+    {
+      "control": "ribs-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "feature-film-grade lighting, wing subsurface scattering, and cinematic motion blur on fantastical alien creatures"
+    },
+    {
+      "control": "ribs-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the daylight filtering through the creatures’ thin wing membranes makes them look physically present on the cliff."
+    },
+    {
+      "control": "ribs-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 90,
+      "why": "the rock face with guano streaks, lichen and kelp, the motion-blurred foreground creatures and the huge number of detailed fantasy pterosaur-like animals are rendered at a quality that fits a top-budget film or concept art."
+    },
+    {
+      "control": "ribs-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 92,
+      "why": "the finely detailed surf and sea spray convincingly integrated with the fantastical rib-like formations."
+    },
+    {
+      "control": "ribs-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "photoreal cinematic water spray and depth-of-field on a fantastical scene (pterosaur-like creatures, impossible curved rock spires) suggests a high-end film/cinematic frame rather than a real photo.",
+      "note": "The first agent on this seat (juror_c_ribs_4b) was sent a prompt that the Builder's own script had cut (two entries of the plan were joined when the plan was read through a window of limited size), so it may not have seen this picture and its answer (\"(b) a frame from a top-budget film or a big-budget video game cinematic\", no confidence) is void and kept in out/work/inbox/void/. This vote is from a fresh agent (juror_c_ribs_4b2) that received the picture and the question whole."
+    },
+    {
+      "control": "ribs-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "the colossal fantastical rib-like structures paired with film-grade photorealistic ocean spray, lighting, and depth of field"
+    },
+    {
+      "control": "ribs-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 93,
+      "why": "The colossal rib-like spires fade into the sea spray so convincingly that the fantastical coastline feels filmed."
+    },
+    {
+      "control": "ribs-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the impossible giant rib-like rock arches and fantastical birds combined with photoreal water spray, wet-sand reflections and cinematic lighting read as a big-budget film or cinematic frame."
+    }
+  ],
+  "unit": "ribs",
+  "collected": "2026-11-25 22:34 to 22:53 UTC",
+  "share": 1.0,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "pictures": [
+    {
+      "key": "ribs-0",
+      "image": "references/approved/1-ribs/ribs-0-establishing.jpg",
+      "file": "out/work/jury/controls/ribs-0.png",
+      "sha256": "421db38028c01e2ad13b7f14a377abec35f05d6797233201677bbccb69dadf3a",
+      "bytes": 2456883,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "ribs-1",
+      "image": "references/approved/1-ribs/ribs-1-the-drowned-hanging-in-the-weed.jpg",
+      "file": "out/work/jury/controls/ribs-1.png",
+      "sha256": "a5912524bd96a8a8ebfda98d5a03f1dcf16195d4f3d853c2b63fd399076b7583",
+      "bytes": 2440991,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "ribs-2",
+      "image": "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg",
+      "file": "out/work/jury/controls/ribs-2.png",
+      "sha256": "d9e7092e5a89797a8fc4f2f4a620eb00da81e20b804fcefff19fc8e61e11f37f",
+      "bytes": 2009313,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "ribs-3",
+      "image": "references/approved/1-ribs/ribs-3-the-colony.jpg",
+      "file": "out/work/jury/controls/ribs-3.png",
+      "sha256": "bbc8f8f9b940aa58ed4abc95f6c48b45958b3d60f724c009416a56365d52d42f",
+      "bytes": 2299805,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "ribs-4",
+      "image": "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg",
+      "file": "out/work/jury/controls/ribs-4.png",
+      "sha256": "01f94e72da785ddd74c084a5d6fb764b13e407ed1a051d4402013d136a2c580c",
+      "bytes": 1984866,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}
