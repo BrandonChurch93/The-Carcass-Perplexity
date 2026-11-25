@@ -1,8 +1,7 @@
-# Status 35
+# Status 36
 
-2026-11-25 07:57 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 08:20 UTC. Phase 3, the look lock: the Heart.
 
-- `01-mouth-test-4.jpg`: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC. The mouth is now as wide and as low as the picture's (it was a third narrower). The pale wall and the thin stream are what the new owners of the fall, the land and the light are on.
-- `02-heart-0.jpg`: The wide view on main at 07:53 UTC with the wider mouth. Still an overcast day where the picture is a dusk: the correction with measured levels is with six fresh owners.
-- `03-sunk2-a-heart-2.jpg`: First hand-back of a second owner (the one that sank, 07:55 UTC, not merged yet): the tone is now dark as in the picture. I asked for thin legs and that was my mistake: the picture has thick arched trunks with flaking bark. Corrected at 07:58 UTC.
-- `04-heart-2.jpg`: heart-2: approved beside frame, hd draft, with 2 crop pairs
+- `01-heart-3.jpg`: The feeding picture on main at 08:17 UTC with eight hand-backs merged. Gain: the animals are dark and matt as in the picture, no clay pattern, pale roots. Defect, being fixed now: the air turns the new lake's glow into one flat orange wall.
+- `02-heart-0.jpg`: The wide view on main at 08:16 UTC. Gains: the bench is as dark as the picture's (MEASURED 37 34 32 against 38 36 35), the lake is dark with a net of thin seams. Defects: the orange block over the foot of the fall (the same cause), pink smoke, the sunk one still pale here (its dark version went in two minutes later).
+- `03-heart-2.jpg`: The one that sank, main at 08:16 UTC: the near animal is now a dark silhouette. The new crust is dark but too smooth: its owner has that as the first job of its next version.
