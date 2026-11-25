@@ -14,7 +14,7 @@ import { createSky } from './sky';
 import { createSmoke, MAX_BODIES, MAX_STEAM } from './smoke';
 import { MAX_HEAT, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 
-export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
+export const PARTS: readonly string[] = ['sky', 'air', 'fume', 'ash'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
 const FUME_LIGHT = { at: [760, 25, -40] as const, radius: 150, open: 0.2 };
@@ -69,9 +69,9 @@ const BODIES: readonly Body[] = [
   { at: behind(430, 20), radius: 330, height: 34, lean: [-0.2, 0.08], dense: 0.003, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0, floor: [1.8, 26], tops: 0.6, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.009, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [0.7, 40], tops: 0.25, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
-  { at: fromFoot(-34, 34), radius: 40, height: 60, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
-  { at: fromFoot(2, 26), radius: 44, height: 90, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
-  { at: fromFoot(22, 48), radius: 34, height: 44, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(-34, 34), radius: 40, height: 45, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(2, 26), radius: 44, height: 60, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(22, 48), radius: 34, height: 38, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: it rises from behind the buttress, its source hidden by it, leans up and east, and lies out as a thin layer over the east of the sky.
   { at: [500, -200], radius: 42, height: 260, lean: [0.3, 0.3], dense: 0.03, widen: 1.7, foot: 0.55, repeat: 120, hard: 1.6, climb: 4, colour: BROWN, floor: [0.3, 120], tops: 0.35, solid: 0.45 },
   { at: [580, -40], base: 170, radius: 400, height: 170, lean: [0.1, 0.1], dense: 0.012, repeat: 260, hard: 1.3, climb: 0.6, colour: BROWN, floor: [0.18, 300], tops: 0.2, solid: 0.5 },
@@ -93,7 +93,6 @@ function standIns(ctx: HeartContext): { steam: SteamSource[]; heat: HeatSource[]
     if (p) steam.push({ at: [p[0], 0.5, p[2]], radius: 13, strength: 0.6, rise: 70, kind: 'smoke', lean: [-0.35, 0.1] });
   }
   steam.push({ at: [FALL_FOOT[0], 1, FALL_FOOT[1]], radius: 20, strength: 0.6, rise: 90, kind: 'smoke', lean: [-0.25, 0.1] });
-  steam.push({ at: [SUNK[0] + 1, 0.3, SUNK[2] - 1], radius: 1.6, strength: 0.3, rise: 6, kind: 'smoke', lean: [-0.5, 0.2] });
   const heat: HeatSource[] = [{ at: [FALL_FOOT[0], 0, FALL_FOOT[1]], radius: 60, height: 40, strength: 0.6 }];
   return { steam, heat };
 }
@@ -169,9 +168,7 @@ export function create(ctx: HeartContext): HeartPiece {
   });
 
   const ash = createAsh(ctx.rng('air/ash'), ctx.rig.uniforms, skyMean);
-  // The ash is part of the air: no part of its own.
-  ash.mesh.userData.part = 'heart/air';
-  ctx.scene.add(ash.mesh);
+  ctx.scene.add(ctx.parts.built('ash', ash.mesh));
 
   const order: { source: SteamSource; index: number; far: number; small: number }[] = [];
 
