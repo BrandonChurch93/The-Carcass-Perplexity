@@ -5,7 +5,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { FAN_FROM, TUBE, createCourse } from '../fall/path';
 import { apronSlope } from '../fall/shape';
 import { MOUTH, ground, smooth } from '../layout';
-import { GROUP, UNIT } from './anchors';
+import { GROUP, SURGE, UNIT } from './anchors';
 import { stagedSeconds } from './stage';
 
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
@@ -24,15 +24,28 @@ export const MAX_EMITTERS = 8;
 // Its green and blue were 0.36 and 0.12 and it hid a quarter of the sky: the floor of that shot stood 1.9 times as red as blue against the
 // picture's 1.5, lit by the bank more than by the sky. The smoke is pale grey lit from below and thin enough to pass the sky: the same red, more
 // green and blue, a tenth of the sky hidden. The red of the floor is then the melt's own, within a few metres of it.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.1, radiance: [0.75, 0.52, 0.38] as const };
+// Then the skin lifted the floor's own tone and the floor stood too neutral (73 62 56 against 64 48 43) and the animals cold grey: part of the
+// way back, 0.42 and 0.26 and a fifth of the sky hidden.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.2, radiance: [0.75, 0.42, 0.26] as const };
 // The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
 // reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
-// gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
+// gone 6 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K, a little yellower, and twice its level. It was three
+// and a half times (70, 9.5) when the crust at a brim was near black (albedo 0.014 to 0.05); the skin has lifted the crust since (0.05 to 0.08)
+// and the floor round the hero's pool stood as one flat saturated patch where the picture has a soft glow on a dark floor.
+// The fire's light lives with the flow: what a round light casts swells and sinks by a few per cent (6 at the most, 3 as a rule), slowly
+// (periods of 17, 10 and 6 s, which never line up inside a shot), and a swell at the mouth reaches the foot of the fall three seconds later,
+// as the lava does (a light lower down is that much behind). Lights far apart are out of step. A function of the place's seconds alone.
+export const BREATH = { deep: [0.03, 0.02, 0.012] as const, rate: [0.37, 0.61, 1.07] as const, lag: 0.05, apart: 0.019 };
+export function breath(e: { position: { x: number; y: number; z: number } }, seconds: number): number {
+  const t = seconds + BREATH.lag * e.position.y + BREATH.apart * (e.position.x + 0.7 * e.position.z);
+  return 1 + BREATH.deep[0] * Math.sin(BREATH.rate[0] * t) + BREATH.deep[1] * Math.sin(BREATH.rate[1] * t + 1.3) + BREATH.deep[2] * Math.sin(BREATH.rate[2] * t + 2.1);
+}
+
 export const POOLS = {
   at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
   axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
   halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
-  radiance: [70, 9.5] as const,
+  radiance: [40, 6.4] as const,
 };
 
 // The stream of the fall as a light: the lava from the lip of the mouth down the foot of the wall to the lake, as the fall draws it (fall/path.ts).
@@ -43,6 +56,8 @@ export const POOLS = {
 // A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
 // EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
 // strip now gives. The air reads the round lights for itself and is not touched by this.
+// When the surge comes down (the event `surge`; its front runs 25 t + 5 t^2 metres down the course, as in fall/index.ts), the strip behind the
+// front casts 1.3 more (in emitterIrradiance), as the fall's own strip on its bed did before the rig took that light over.
 export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
@@ -339,7 +354,9 @@ export function createRig(t0: number): Rig {
   const emitterCore = new Float32Array(MAX_EMITTERS);
   const streamRows = Array.from({ length: STREAM.rows }, () => new THREE.Vector4(0, 0, -1000, 0));
   const streamSpan = new THREE.Vector4(0, 1, STREAM.rows - 1, 0);
+  const streamLen = new Float32Array(STREAM.rows);
   const streamRadiance = blackbody(1400);
+  const streamLight = new THREE.Vector4(streamRadiance[0] * STREAM.share, streamRadiance[1] * STREAM.share, 1 / (STREAM.half * STREAM.half), -1e4);
   const poolPlaces = POOLS.at.map((at, i) => new THREE.Vector4(at[0], at[1], (POOLS.axis[i] as readonly [number, number])[0], (POOLS.axis[i] as readonly [number, number])[1]));
 
   const uniforms: Record<string, THREE.IUniform> = {
@@ -373,7 +390,7 @@ export function createRig(t0: number): Rig {
     uRigPoolSize: { value: POOLS.halves.map((h) => new THREE.Vector4(h[0], h[1], POOLS.radiance[0], POOLS.radiance[1])) },
     uRigStream: { value: streamRows },
     uRigStreamSpan: { value: streamSpan },
-    uRigStreamLight: { value: new THREE.Vector4(streamRadiance[0] * STREAM.share, streamRadiance[1] * STREAM.share, 1 / (STREAM.half * STREAM.half), 0) },
+    uRigStreamLight: { value: streamLight },
     uFlowFoot: { value: new THREE.Vector2(FLOW.foot[0], FLOW.foot[1]) },
     uFlowT0: { value: t0 },
   };
@@ -436,6 +453,7 @@ export function createRig(t0: number): Rig {
       const share = 1 + (STREAM.fan - 1) * smooth(FAN_FROM, FAN_FROM + 30, main.len[i] as number);
       // The last number holds two things: the lean (up to 1, on the slope, where the share is whole) and the share (from 1 up, on the fan, which runs straight).
       (streamRows[r] as THREE.Vector4).set(main.x[i] as number, (main.half[i] as number) * STREAM.open, main.y[i] as number, share < 1 ? 1 + 2 * (1 - share) : lean);
+      streamLen[r] = main.len[i] as number;
     }
   };
 
@@ -562,11 +580,23 @@ export function createRig(t0: number): Rig {
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
+      // Where the surge's front stands on the stream (its z): the strip behind it casts more.
+      const since = now - SURGE;
+      let frontZ = -1e4;
+      if (since > 0) {
+        const front = 25 * since + 5 * since * since;
+        let r = 0;
+        while (r < STREAM.rows - 2 && (streamLen[r + 1] as number) < front) r++;
+        const a = streamLen[r] as number;
+        const b = streamLen[r + 1] as number;
+        frontZ = streamSpan.x + (r + Math.min(Math.max((front - a) / Math.max(b - a, 1e-3), 0), 10)) / streamSpan.y;
+      }
+      streamLight.w = frontZ;
       const count = Math.min(MAX_EMITTERS, emitters.length);
       for (let i = 0; i < count; i++) {
         const e = emitters[i] as Emitter;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
-        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance);
+        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now));
         emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;

@@ -140,7 +140,7 @@ const LEG_SIDES = 16;
 /** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
 export const TUFT_UP = 0.85;
 /** The same for the pose itself: the crown comes down to two thirds of a root's length over the melt, and the roots are cut to it. */
-const TUFT_LOW = 0.64;
+const TUFT_LOW = 0.52;
 const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
 const RAG_RINGS = 7;
@@ -256,7 +256,7 @@ export class Animal {
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
-    const rags = 8 + Math.floor(hash(seed, 21) * 5);
+    const rags = 12 + Math.floor(hash(seed, 21) * 5);
     for (let n = 0; n < rags; n++) {
       // Two in three hang under the keel; the rest are torn loose at the shoulders and the hips.
       const joint = n % 3 === 2;
@@ -267,7 +267,7 @@ export class Animal {
       const q = (i * BODY_SIDES + j) * 3;
       // Few and short: torn hide, 0.15 to 0.9 m, never a long string under the belly.
       const strip = hash(n, seed + 25);
-      const rag = this.rag(n, (hash(n, seed + 24) < 0.12 ? 0.5 + 0.25 * hash(n, seed + 26) : 0.12 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
+      const rag = this.rag(n, (hash(n, seed + 24) < 0.3 ? 0.45 + 0.45 * hash(n, seed + 26) : 0.15 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }
@@ -342,11 +342,11 @@ export class Animal {
     }
 
     // The tendrils: pale roots that start round the crown, and some that fork from those.
-    // The crown divides into a few stout roots, as many as the build names; as many fine ones leave its under side behind them; and each
-    // stout one forks twice into rootlets on its way down.
+    // The crown divides into a few stout roots, as many as the build names, that stand together as the fingers of a hand;
+    // each forks once on its way down, and every other one twice.
     const stout = b.tendrils;
-    const mains = stout * 2;
-    const forks = stout * 2;
+    const mains = stout;
+    const forks = stout + (stout >> 1);
     for (let i = 0; i < mains + forks; i++) {
       const fork = i >= mains;
       const parent = fork ? (i - mains) % stout : -1;
@@ -354,15 +354,15 @@ export class Animal {
       const tube = skin.tube(TENDRIL_RINGS, TENDRIL_SIDES);
       const local = new Float32Array(TENDRIL_RINGS * TENDRIL_SIDES * 2);
       const inner = !fork && i % 3 === 2;
-      const at = fork ? 2 + Math.floor(hash(i, seed + 6) * 6) : 0;
+      const at = fork ? 3 + Math.floor(hash(i, seed + 6) * 5) : 0;
       // A brush of roots of every length: some reach the melt, some hang short of it.
       const whole = b.tendrilLen * (0.62 + 0.45 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (fork || big ? 0.095 + 0.04 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.55 * (1 - (0.6 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (fork || big ? 0.085 + 0.035 * hash(fork ? parent : i, seed + 1) : 0.034 + 0.022 * hash(i, seed + 1)) * k * (fork ? 0.6 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
-        // Round and fibrous: thick where it leaves the crown, a thread at its end, knotted on the way.
-        const rad = r === TENDRIL_RINGS - 1 ? 0.005 * k : thick * (1 - 0.72 * Math.pow(u, 0.9)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
+        // Round and fibrous: as thick as a wrist where it leaves the crown and half that at its end, knotted on the way.
+        const rad = r === TENDRIL_RINGS - 1 ? 0.012 * k : thick * (1 - 0.55 * Math.pow(u, 1.4)) * (1 + 0.36 * (hash(i * 3 + r, seed + 9) - 0.4));
         for (let side = 0; side < TENDRIL_SIDES; side++) {
           const a = (side / TENDRIL_SIDES) * Math.PI * 2;
           local[(r * TENDRIL_SIDES + side) * 2] = Math.cos(a) * rad;
@@ -1081,17 +1081,20 @@ export class Animal {
     const run = (tip[0] - root[0]) * gx + (tip[2] - root[2]) * gz;
     const rise = tip[1] - root[1];
     const c1 = -Math.cos(shape * Math.PI);
-    // How much it is the neck of one that feeds: one long fall from the shoulders to the crown, with no S in it.
+    // How much it is the neck of one that feeds: it leaves the shoulders steeply, bows, and sweeps out low and long to the crown.
     const feeding = smooth(0.22, 0.1, shape);
     const c2 = 0.8 * Math.sin(shape * Math.PI) * (1 - feeding);
     // A neck that hangs to a tuft that is down turns most where it leaves the shoulders: steep there, then sweeping out low and level.
     const sweep = lerp(1, 0.9, smooth(0.22, 0.1, shape));
     // It comes to the tuft still going down: it does not rise again before it turns to hang.
-    const over = lerp(2, 0.62, smooth(0.22, 0.1, shape));
+    const over = lerp(2, 0.9, smooth(0.22, 0.1, shape));
     const phi = (s: number): number => c1 * (1 - over * Math.pow(s, sweep)) + c2 * Math.sin(2 * Math.PI * s);
-    const hang = lerp(-1.42, -0.62, feeding);
-    // A neck that feeds is drawn out nearly taut: what it has to spare it takes up in itself, as a trunk does, not in a level run before the crown.
-    const TAUT = 0.972;
+    // The crown of one that feeds turns down over the pool: the roots are its ends, and they go down into the melt.
+    const hang = lerp(-1.42, -1.38, feeding);
+    // A neck that feeds hangs in a slow bow under the line from the shoulders to the crown: steep first, near level where it comes to the crown.
+    const TAUT = 0.945;
+    // A neck that is held up ends in a hook: it turns over late and tightly, and the crown hangs from the top of it.
+    const late = lerp(0.45 * smooth(0.6, 0.8, shape), 0.25, feeding);
     let dm = ds;
     // The last part of the neck turns to hang. Find where the main part must end for the tuft to arrive at the tip.
     let endRun = 0;
@@ -1101,7 +1104,8 @@ export class Animal {
     for (let pass = 0; pass < 3; pass++) {
       const mr = run - endRun;
       const my = rise - endRise;
-      dm = lerp(ds, Math.min(ds, Math.hypot(mr, my) / (TAUT * main)), feeding);
+      // One that feeds reaches: where the melt is a little too far its neck is drawn out by up to a quarter, as a trunk is.
+      dm = lerp(ds, Math.min(1.25 * ds, Math.hypot(mr, my) / (TAUT * main)), feeding);
       const chord = Math.min(0.985, Math.max(0.3, Math.hypot(mr, my) / (dm * main)));
       let lo = 0;
       let hi = 3;
@@ -1126,7 +1130,7 @@ export class Animal {
       endRun = 0;
       endRise = 0;
       for (let i = 0; i < NECK_END; i++) {
-        const a = lerp(last, hang, smooth(0, 1, (i + 0.5) / NECK_END));
+        const a = lerp(last, hang, smooth(late, 1, (i + 0.5) / NECK_END));
         endRun += Math.cos(a) * ds;
         endRise += Math.sin(a) * ds;
       }
@@ -1140,7 +1144,7 @@ export class Animal {
     let y = 0;
     for (let i = 0; i < NECK_RINGS; i++) {
       if (i > 0) {
-        const a = i <= main ? base + beta * phi((i - 0.5) / main) : lerp(last, hang, smooth(0, 1, (i - main - 0.5) / NECK_END));
+        const a = i <= main ? base + beta * phi((i - 0.5) / main) : lerp(last, hang, smooth(late, 1, (i - main - 0.5) / NECK_END));
         h += Math.cos(a) * (i <= main ? dm : ds);
         y += Math.sin(a) * (i <= main ? dm : ds);
       }
@@ -1238,9 +1242,9 @@ export class Animal {
         px = roots[q] as number;
         py = roots[q + 1] as number;
         pz = roots[q + 2] as number;
-        ex += rx * t.turn * 1.3;
-        ey += ry * t.turn * 1.3;
-        ez += rz * t.turn * 1.3;
+        ex += rx * t.turn * 0.8;
+        ey += ry * t.turn * 0.8;
+        ez += rz * t.turn * 0.8;
         const el = Math.hypot(ex, ey, ez) || 1;
         ex /= el;
         ey /= el;
@@ -1273,9 +1277,9 @@ export class Animal {
           const elbow = 0.2 + 0.6 * hash(index, b.seed + 23);
           const past = smooth(elbow - 0.08, elbow + 0.08, uu);
           const bend = 0.42 * Math.sin(uu * (5.2 + 3.6 * hash(index, b.seed + 21)) + t.phase * 5) + 1.5 * (hash(index, b.seed + 24) - 0.5) * past * (1 - 0.5 * smooth(elbow + 0.2, elbow + 0.5, uu));
-          const wind = 0.85 * Math.sin(uu * (4.4 + 3.2 * hash(index, b.seed + 22)) + t.phase * 9);
+          const wind = 0.5 * Math.sin(uu * (4.4 + 3.2 * hash(index, b.seed + 22)) + t.phase * 9);
           const sway = 0.05 * Math.sin(seconds * LOOP * 2 + t.phase + uu * 2.4) + 0.03 * Math.sin(seconds * LOOP * 3 + t.phase * 2 + uu * 4) + kink + bend;
-          const splay = t.out * lerp(0.14, t.big ? 0.95 : 0.62, near) * (1 - 0.35 * smooth(0.1, 0.85, uu)) * lerp(1, 0.3 + 1.4 * hash(index, b.seed + 25), past);
+          const splay = t.out * lerp(0.14, t.big ? 0.9 : 0.45, near) * (1 - 0.35 * smooth(0.1, 0.85, uu)) * lerp(1, 0.3 + 1.4 * hash(index, b.seed + 25), past);
           const keep = t.big && i < 3 ? 0.62 : 0.5;
           dx = dx * keep + (hx0 * splay - hz0 * wind * 0.5 + rx * sway) * (1 - keep);
           dy = dy * keep - 0.8 * (1 - keep);

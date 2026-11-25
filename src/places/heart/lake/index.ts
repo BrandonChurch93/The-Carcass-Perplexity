@@ -153,6 +153,9 @@ float ropeMask(vec2 q) {
 }
 // How broken the crust is at the point brokenAt was last asked about (0 until it is asked).
 float gBroke = 0.0;
+// How much the plates at a point are flat and level (0 to 1): the floor the group feeds on is plates nearly level, with thin
+// gaps and a few tilted rims; its relief is in the rims and the gaps.
+float gFlat = 0.0;
 float gSheafBest;
 float gSheafNext;
 vec4 gSheaf;
@@ -206,7 +209,7 @@ float foldAt(vec2 q) {
   float toeHigh = toeAt(q);
   // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
   // Round the one that sank the ropes are everywhere: its own folds join them.
-  float ropes = max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))) * (1.0 - smoothstep(0.15, 0.45, gBroke));
+  float ropes = max(max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))), 1.0 - smoothstep(15.0, 20.0, length(q - vec2(-507.0, 212.0)))) * (1.0 - gFlat) * (1.0 - smoothstep(0.5, 0.8, gBroke));
   if (ropes <= 0.0) return 1.0;
   vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
@@ -368,11 +371,20 @@ vec3 gLean;
 float gPadCalm;
 // How much a point must lie low (0 to 1): plates there are level, with no rim and no mound.
 float gLow;
-// How much the plates at a point are flat and level (0 to 1): the floor the group feeds on is plates nearly level, with thin
-// gaps and a few tilted rims; its relief is in the rims and the gaps.
-float gFlat;
+// On the banks of the line the crust lies in thin plates that overlap: more of them ride on their neighbours (a plate rides
+// when its number is over gRaftFrom) and the gaps between them are shallow (gOverlap, 0 to 1).
+float gRaftFrom;
+float gOverlap;
+// The size of the plates at the point, metres (1.9 on the broken floors, 3 on the banks of the line), and how far the gaps
+// between the plates are shut (0 to 1): on the feeding floor away from the seam the floor is one sheet.
+float gSlabSize;
+float gShut;
 float brokenAt(vec2 q) {
   gFlat = 0.0;
+  gRaftFrom = 0.67;
+  gOverlap = 0.0;
+  gSlabSize = 1.9;
+  gShut = 0.0;
   gLean = vec3(0.0);
   gPadCalm = 0.0;
   gLow = 0.0;
@@ -383,15 +395,22 @@ float brokenAt(vec2 q) {
     float patchy = vnoise(q / 8.3 + 5.0) * 0.7 + vnoise(q / 3.1 + 9.0) * 0.3;
     b = (1.0 - smoothstep(36.0, 54.0, g)) * mix(0.5, 1.0, smoothstep(0.38, 0.62, patchy));
     gFlat = 1.0 - smoothstep(36.0, 54.0, g);
+    gShut = gFlat * smoothstep(3.5, 6.0, g);
   }
+  // The banks of the line, 8 m to either side: a few large plates, 2 to 4 m across, flat on top and nearly level, one in
+  // four riding up on its neighbour, parted by narrow deep cracks. The plates there are of their own size, so the broken
+  // ground of the floor ends a metre short of them and theirs ends at 8 m: no plate is cut by the border.
   float l = lineFar(q);
-  if (l < 7.0) {
-    float band = 1.0 - smoothstep(2.0, 2.6 + 3.6 * vnoise(q / 3.3 + 2.0), l);
-    band *= 0.45;
-    if (band > b) {
-      b = band;
+  if (l < 9.0) {
+    b *= smoothstep(8.0, 9.0, l);
+    if (l < 8.0) {
+      gOverlap = 1.0;
+      b = 0.45 * (1.0 - smoothstep(6.5, 8.0, l));
       gFlat = 0.0;
-      // The slabs on the bank lean in: they go down toward the melt.
+      gShut = 0.0;
+      gSlabSize = 3.0;
+      gRaftFrom = 0.75;
+      // The plates on the bank lean in a little: they go down toward the melt.
       gLean = vec3(gLineAway, 0.5 * (1.0 - smoothstep(1.5, 3.0, l)));
     }
   }
@@ -428,13 +447,14 @@ float gRock;
 vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   vec2 r1 = hash22(k);
   vec2 r2 = hash22(k + 31.7);
-  float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
+  float raft = step(gRaftFrom, fract(r1.x * 7.0 + r1.y * 3.0));
   float a = 6.2832 * r2.x;
   vec2 dir = normalize(mix(vec2(cos(a), sin(a)), gLean.xy, gLean.z));
   // Most plates lie within a few degrees of level; one in four is tilted by 10 to 25 degrees. A large slab cannot stand as
   // steep as a small one: its high edge is never more than half a metre up.
-  float tilt = min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
-  float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
+  float tilt = min(min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, mix(1.0, 0.07, gOverlap)), 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
+  // On the banks of the line the plates lap like shingles: each lies 0 to 15 cm over or under its neighbour.
+  float level = mix(0.26 * (r1.x - 0.4) + 0.16 * raft, 0.55 * (r1.x - 0.5) + 0.16 * raft, gOverlap) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
   // On the feeding floor five plates in six lie level and the sixth keeps its tilt.
   float lies = gFlat * step(0.17, fract(r1.y * 13.0 + r2.x * 7.0));
   tilt *= 1.0 - 0.85 * lies;
@@ -442,7 +462,7 @@ vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   if (gRock > 0.0) {
     // Two slabs in three move: up to 6 degrees of tilt and 4 cm of rise, over 8 to 18 seconds.
     float moves = gRock * step(0.33, fract(r1.x * 11.0 + r2.y * 5.0));
-    tilt += moves * 0.1 * sin(uTime * (0.35 + 0.45 * r1.y) + 6.2832 * r2.x);
+    tilt += moves * mix(0.1, 0.035, gOverlap) * sin(uTime * (0.35 + 0.45 * r1.y) + 6.2832 * r2.x);
     level += moves * 0.04 * sin(uTime * (0.3 + 0.4 * r2.y) + 6.2832 * r1.x);
   }
   return vec3(level * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.85 * gLow) + dot(dir * tilt, s) * L, dir * tilt);
@@ -456,6 +476,8 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   if (broken <= 0.01) return 0.0;
   float L = size;
   vec2 p = (q + 0.58 * L * vec2(vnoise(q / (2.7 * L) + 17.0), vnoise(q / (2.7 * L) + 53.0))) / L;
+  // On the banks of the line the border between two plates is a crooked line.
+  if (gOverlap > 0.0) p += 0.12 * gOverlap * vec2(vnoise(q / (0.6 * L) + 5.0), vnoise(q / (0.6 * L) + 29.0));
   vec2 cell = floor(p);
   vec2 f = p - cell;
   float d1 = 9.0;
@@ -473,7 +495,7 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
       vec2 r = hash22(cell + g);
       vec2 s = g + 0.06 + 0.88 * r - f;
       // A slab that rides on its neighbours reaches out over them.
-      float d = length(s) - 0.22 * step(0.67, fract(r.x * 7.0 + r.y * 3.0));
+      float d = length(s) - 0.22 * step(gRaftFrom, fract(r.x * 7.0 + r.y * 3.0));
       if (d < d1) {
         d3 = d2;
         s3 = s2;
@@ -501,29 +523,32 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   float e = 0.5 * (d2 - d1) * L;
   vec2 r1 = hash22(k1);
   vec2 r2 = hash22(k1 + 31.7);
-  float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
+  float raft = step(gRaftFrom, fract(r1.x * 7.0 + r1.y * 3.0));
   vec3 own = slabPlane(k1, -s1, broken, L, drop);
   gSlabSlope = own.yz;
   gSlabId = r1.y;
   gSlabRim = e;
   // Its edge is turned up, here more and there not at all: 5 to 25 cm, wide enough for the cells to carry.
   float rimWide = max(0.1, 3.0 * c);
-  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
+  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow) * (1.0 - 0.9 * gOverlap) * (1.0 - gShut);
   // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
   float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.025, 0.04, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.05, 0.09, c));
   // The floor of the gap lies under the slabs it parts, so it is one floor from either side, and where three slabs meet it
   // lies under all three: a floor that jumped from slab to slab would stand as a row of teeth and spikes.
   float beside = slabPlane(k2, -s2, broken, L, drop).x;
   if (d3 - d2 < 0.15) beside = mix(min(beside, slabPlane(k3, -s3, broken, L, drop).x), beside, smoothstep(0.0, 0.15, d3 - d2));
-  float bed = min(min(own.x, beside), 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
+  float bed = min(min(own.x, beside), 0.0) - mix(0.06 + 0.12 * broken, 0.065 * broken, gOverlap) * (1.0 - gShut) + rubble * smoothstep(0.3, 0.7, broken) * (1.0 - gShut) * (1.0 - gOverlap);
   // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
-  float gapHalf = (0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken)) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm);
+  float gapHalf = mix(0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken), 0.012, gOverlap) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm) * (1.0 - gShut);
   // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
   // 70 degrees, or each triangle of it shades its own way and the edge stands as a row of teeth.
-  float edgeWide = max(max(0.05, 2.5 * c), 0.5 * (own.x + rimHigh - bed));
+  // Off the feeding floor a plate ends in a step onto its neighbour, seen close and askew: there the face is wider still.
+  float edgeWide = max(max(mix(0.05, 0.1, gOverlap), mix(3.5, 2.5, gFlat) * c), mix(mix(0.62, 0.5, gFlat), 1.3, gOverlap) * (own.x + rimHigh - bed));
   float inner = gapHalf + edgeWide;
   float plane = own.x + rimHigh * exp(-max(e - inner, 0.0) / rimWide);
-  gSlabEdge = 1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e);
+  // Each plate of the banks is a low pillow, 3 to 6 cm higher in its middle: the low light gives it a lit and a shaded side.
+  plane += gOverlap * (broken / 0.45) * (0.03 + 0.03 * r2.x) * smoothstep(0.0, 0.3 * L, e);
+  gSlabEdge = (1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e)) * (1.0 - gShut) * (1.0 - 0.7 * gOverlap);
   return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c, L);
 }
 // The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
@@ -546,8 +571,8 @@ float heightAt(vec2 q, float c) {
     // The torn edge is finer than the far cells: there the wall runs smooth, or it would be cut into teeth.
     float tornLow = (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5;
     // Its fine part (a decimetre in and out every 0.2 m) is a fluted wall, and seen along its length the flutes stand as a
-    // comb of spikes: the wall takes three fifths of it on the finest cells and next to none on the cells after them.
-    float torn = tornLow * (1.0 - smoothstep(0.15, 0.4, c)) + (tornAt(q) - tornLow) * 0.6 * (1.0 - smoothstep(0.02, 0.06, c));
+    // comb of spikes: the wall takes a third of it on the finest cells and next to none on the cells after them.
+    float torn = tornLow * (1.0 - smoothstep(0.15, 0.4, c)) + (tornAt(q) - tornLow) * 0.35 * (1.0 - smoothstep(0.02, 0.06, c));
     bank = n.r + torn * smoothstep(0.0, 0.3, n.a) - gape;
   }
   gBank = bank;
@@ -607,11 +632,11 @@ float heightAt(vec2 q, float c) {
   gMound = 0.0;
   if (broke > 0.01 && c < 0.6) {
     gRock = live * shown * (1.0 - smoothstep(1.0, 3.0, bank)) * (1.0 - gPadCalm) * (1.0 - gLow);
-    h += slabAt(q, broke, c, 1.9, 0.0) * smoothstep(0.0, 1.5, lake);
+    h += slabAt(q, broke, c, gSlabSize, 0.0) * smoothstep(0.0, 1.5, lake);
     gRock = 0.0;
     // Low mounds of ash and rubble, 1 to 3 m across, lie on the broken crust.
     gMound = smoothstep(0.62, 0.84, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
-    h += gMound * (1.0 - 0.75 * gFlat) * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake);
+    h += gMound * (1.0 - 0.75 * gFlat) * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake) * (1.0 - gOverlap);
   }
 
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
@@ -637,18 +662,13 @@ float heightAt(vec2 q, float c) {
     }
     h = mix(h, brim + mix(0.12, 0.18, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.5, trench)) * wide);
     // The folds end short of the broken edge: carried over it they would stand as a row of teeth on the wall.
-    // The bank of the line is a broken lip: slabs of 0.3 to 1.5 m that lean in toward the melt, each its own length and
-    // height, and one in three gone down to a shelf just over the melt.
+    // At the line the plate ends in a rounded lip, with no broken slabs on it. Within 2.5 m of the brim nothing of the crust
+    // (a crack between plates least of all) lies under a hand over the melt: under it the melt would show through.
     float onLine = named * (1.0 - smoothstep(0.01, 0.05, heatClass));
-    if (onLine > 0.0 && bank < 1.6 && c < 0.3) {
-      lineFar(q);
-      gLean = vec3(gLineAway, 0.85);
-      float lipCrust = onLine * (1.0 - smoothstep(0.45, 1.2 + 0.6 * (vnoise(q / 1.9 + 44.0) - 0.5), bank));
-      gRock = 1.0;
-      h += slabAt(q + 77.0, 0.5 * lipCrust, c, 0.72, 0.2) * lipCrust;
-      gRock = 0.0;
-      // The broken lip carries no fold and no toe: nothing of the skin's pattern drapes down a broken face.
-      fine *= 1.0 - lipCrust;
+    if (onLine > 0.0 && bank < 2.5) {
+      // Rounded, not cut: the crease of a hard floor through the wall of a crack stands as a row of small teeth.
+      float over = h - level - 0.06;
+      h = level + 0.06 + 0.5 * (over + sqrt(over * over + 0.0016));
     }
     float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
     h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);

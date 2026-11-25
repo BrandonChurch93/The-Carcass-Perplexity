@@ -1,0 +1,126 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-25 12:48 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the back wall and central-right promontory",
+        "what": "The isolated, steep-sided buttress reads as part of a series of smooth, stepped cliffs. The nearly level crater rim is also much more jagged, and the lava source looks like a rectangular notch instead of a recessed arch.",
+        "fix": "Separate the buttress from the rear wall with the lower saddle, bring back its rough sloping crown and talus, level the distant skyline, and round and recess the vent mouth."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the basin floor from midground to lower right",
+        "what": "The field looks slick and gray, with dense parallel orange stripes in the distance and thin uniform red tracers in front. The target has broad dry slabs of cooled crust cut by sparser, irregular seams that flare at intervals.",
+        "fix": "Break the sheen into dry, uneven slabs, spread the hot seams farther apart, and vary their thickness, color and local light spill."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the foreground lava channel and its right bank",
+        "what": "The flow reads as flat black patches outlined in orange inside a deep, hard-edged trench. The target shows a shallow, irregular runnel with rolling molten folds, fine incandescent threads and heat bleeding into the crust.",
+        "fix": "Lower and undercut the ledges irregularly, add coherent fluid folds and yellow-hot cores, and carry their warm light onto rim faces and nearby vapor."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the right foreground and volcanic plain behind the channel",
+        "what": "A homogeneous pebbly or smeared surface takes the place of the broad, layered, ropey coils of cooled lava that identify the field.",
+        "fix": "Model overlapping rope folds with a consistent flow direction and scale, then add fractured edges and fine dry basalt grain without flattening their relief."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the buried animal and the crust wrapped around it",
+        "what": "The raised joint looks like a light, longitudinally ridged wooden beam, and the torso and ground soften into rounded, smeared lumps. The target shows angular dark limbs with irregular warm-gray scales peeling off them, a recessed torso and overlapping solidified ropes around the base.",
+        "fix": "Break up the limb contour and uniform striations with discrete charred scales, give the torso deeper occlusion, and use crisp layered lava folds to embed it."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the caldera behind the buried animal",
+        "what": "The gray vertical smoke and broad stepped wall dominate. The target has a distinct lower right-hand buttress and a warm, glowing opening beside it that separates foreground from distance.",
+        "fix": "Restore the independent buttress silhouette and the sightline into the warm basin beyond it, and move dense gray smoke off the middle of the frame."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the central and right-hand airborne plumes",
+        "what": "A thick neutral-gray plume sits directly over the buttress and masks its outline. The target keeps more of the buttress readable, with smoke drifting above the rim and warmer vapor building near the right lava field.",
+        "fix": "Lift and disperse the central plume, preserve a clearer near-to-far view of the cliff, and build up low orange backscatter on the right."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the left foreground bank and sulfur vent",
+        "what": "The bank projects as a steep continuous slope with round scattered rocks and a broad mustard stain. The target has a broken ledge, angular blocks among ropy crust, and a tighter low white plume with pale sulfur concentrated around its source.",
+        "fix": "Pull back and break the continuous bank edge, restore layered basalt and angular talus, localize the sulfur and let the pale plume drift low over the ledge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the standing animals across the floor",
+        "what": "The herd is more widely dispersed, with a conspicuous isolated upright silhouette in the center-left instead of the tighter right-of-center feeding group. Near contact tips and legs have less convincing local lava light.",
+        "fix": "Retain varied sizes and stances, but concentrate the middle-distance animals nearer the same active seam and localize orange bounce where they approach the lava."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the low animal at lower right",
+        "what": "It reads as a separate mound sitting in a pronounced dark halo rather than as a partly submerged animal merging into cracked crust.",
+        "fix": "Break the halo, continue the basalt folds and cracks into its base, and use tighter contact shadow instead of a broad dark patch."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the eruption at the right foreground edge",
+        "what": "A nearly straight line of similar tongues of fire replaces the uneven incandescent seam and asymmetric spray of sparks.",
+        "fix": "Break the line into irregular vents and make one higher localized fountain with airborne sparks and warmer fume."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the left sulfur bank beside the runnel",
+        "what": "Diffuse brown vapor and a wide patch of mustard rocks fill much of the left; the target has a small pale vent plume and concentrated pale-yellow crust on the ledge.",
+        "fix": "Tighten and cool the vent plume, concentrate the sulfur around the emission point, and expose more of the adjacent dry rock."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the crater rim, cave and distant basin",
+        "what": "The broader exposed face, left-shifted rectangular mouth and vertically stacked gray smoke flatten the backdrop. The target has an arched entrance with warmer spill, softer lateral haze, and a brighter orange pocket behind the right-hand outcrop.",
+        "fix": "Move and round the mouth toward the target position, shape the fall into the arch and apron, and move the gray plume up while adding low warm haze on the right."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the two distant animals on the right",
+        "what": "The upright angular silhouette overlaps the far group more closely and reads much taller than the lower, separated feeding silhouettes in the target.",
+        "fix": "Space the two animals apart and lower the nearer one's body and appendage toward the hot seam."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the left standing animal and the herd beyond it",
+        "what": "The nearest standing animal is pushed farther left and higher, with a pale root-like tip but relatively little orange light up its reaching limb. An upright animal near center interrupts the line of low feeding silhouettes.",
+        "fix": "Set the nearest feeder slightly farther inward and lower in frame, light the reaching limb from the active seam, and arrange the distant group lower along it."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the base of the buried animal and the bottom-left foreground",
+        "what": "Tiny flat red chips replace a glowing fissure and its small vapor wisp, and a continuous dark floor replaces the close blurred rock that frames the left corner.",
+        "fix": "Set a fine hot seam into the surrounding crust, give it a little contact glow and vapor, and reintroduce a soft out-of-focus rock edge in the corner."
+      }
+    ]
+  }
+}

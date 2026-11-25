@@ -1,8 +1,8 @@
-# Status 47
+# Status 48
 
-2026-11-25 12:30 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 12:52 UTC. Phase 3, the look lock: the Heart.
 
-- `01-m1220-pair-3.jpg`: Heart 3 on main c0cb367, approved picture left, our frame right: the hero's legs and trunk now have the picture's mass and its feet stand on the plates. Still wrong: the floor is pale tiles where the picture is dark with orange light, the crown sweeps sideways, the sky behind the butte is grey.
-- `02-m1220-pair-4.jpg`: Heart 4: the fall is now a thin stream of strands and the fan a braid of flow lines on dark skin. Still wrong: the fan's outline is a tent, the wall has no ledges, no lit smoke stands beside the fan.
-- `03-m1220-pair-1.jpg`: Heart 1: the plates in the trench are welded but the melt still shows contour lines here. The next lava hand-back (no lines, a narrower line) is seen and waits for the running check.
-- `04-m1220-pair-2.jpg`: Heart 2: ropes run to the lens. The sunk one's hull is still striped and its knee is a sharp point where the picture has a round arch. Both are ordered.
+- `01-m1240-pair-3.jpg`: Heart, shot heart-02 (key heart-3), main fe39638 at 12:45: the approved picture left, ours right. New: the crown turned down into its pool, a lumped trunk. Still wrong: the pale floor (its cure is handed back and merges next), the black blob bottom left, the neck one straight line
+- `02-m1240-pair-1.jpg`: Heart, shot heart-03 (key heart-1), same main: the tents on the near bank are gone and the melt is one body. Still wrong: black open cracks bottom right, the crag at the left a black slab, the melt does not flow
+- `03-m1240-pair-2.jpg`: Heart, shot heart-04 (key heart-2), same main: the hull as thick dark ropes, a round knee. Still wrong: the limb reads as a pale beam, the butte and the warm opening behind it are missing
+- `04-m1240-pair-4.jpg`: Heart, shot heart-05 (key heart-4), same main: the mouth as lit ribs. Still wrong: the stream thin and winding where the picture has a broad stepped cascade, the fan a sheet with straight lanes
