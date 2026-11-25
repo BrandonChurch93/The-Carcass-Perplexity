@@ -1,5 +1,5 @@
-2026-11-25 22:35 UTC
-work at ba801f7 on agent/spine-ground
-Minute 75. Five keys at preview after camera refit (wide, kites / carcass, strike / canal). Wrong: storm reads as smooth curtains with streaky grain, not billowed cumulus; spire rock close to is a smeared texture; mouth still shows pale rings; cloud sea thin; canal walls coarse
+2026-11-25 22:48 UTC
+work at e679980 on agent/spine-ground
+Minute 88, 2571728 before the partner merge: five keys at preview and the wide beside the approved picture. Storm darker, first spire hooked on a shoulder, mouth ragged and black, sea cooled. Wrong: no violet light yet in the storm at the keys (partner bolt fix merges now), storm edge on the lee is a hard dark wedge, foreground snow still smooth, spire rock blotchy close up, far spires straight cones, canal walls coarse
 look-1.jpg = out/work/keys5.png
-look-2.jpg = out/work/compare/spine-0.png
+look-2.jpg = out/work/cmp0.png
