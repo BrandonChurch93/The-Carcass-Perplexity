@@ -1,0 +1,278 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "breath-0",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the convincing integration of backlit steam throughout the alien landscape."
+    },
+    {
+      "control": "breath-0",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "photoreal alien creatures (flamingo-like quadrupeds) in a cinematic, VFX-quality foggy landscape with film-grade lighting and atmosphere"
+    },
+    {
+      "control": "breath-0",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "cinematic volumetric lighting and photorealistic environmental detail depicting fictional alien creatures"
+    },
+    {
+      "control": "breath-0",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the low sunlight makes the alien creatures cast convincing shadows across the wet rock."
+    },
+    {
+      "control": "breath-0",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the invented long-necked creatures and red alien plants sit in a convincingly detailed, atmospheric landscape with film-quality volumetric haze, water reflections and rock detail."
+    },
+    {
+      "control": "breath-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 96,
+      "why": "the convincing water interaction around the fantastical creatures’ legs."
+    },
+    {
+      "control": "breath-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "highly detailed photoreal alien creatures with cinematic lighting, depth of field, and water/steam effects suggest high-end film/cinematic VFX quality"
+    },
+    {
+      "control": "breath-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "film-grade backlit lighting, subsurface skin scattering, and fine water/atmospheric detail on unmistakably fantastical alien creatures."
+    },
+    {
+      "control": "breath-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "The stream of backlit droplets falling from the central creature’s tendrils makes it feel physically present in the scene."
+    },
+    {
+      "control": "breath-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the fantasy creatures are rendered with film-grade realism: believable skin, wet reflections, volumetric steam and shallow depth of field."
+    },
+    {
+      "control": "breath-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 93,
+      "why": "The convincing integration of the alien creatures into the scene’s volumetric lighting."
+    },
+    {
+      "control": "breath-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "cinematic-quality creature design with volumetric fog, photoreal terrain and filmic lighting/depth of field suggests a high-end film/cinematic frame"
+    },
+    {
+      "control": "breath-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "the feature-film-grade volumetric lighting and richly detailed alien creature and environment design"
+    },
+    {
+      "control": "breath-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the low sunlight catches the creatures’ fine tendrils and the mist behind them with strikingly consistent realism."
+    },
+    {
+      "control": "breath-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the fictional alien creatures and root-like plants are rendered in highly detailed, film-quality fashion with realistic volumetric fog, lighting and surface textures, so it reads as a big-budget film or cinematic frame (it could also be AI-generated concept art)."
+    },
+    {
+      "control": "breath-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 91,
+      "why": "the intricate backlighting on the wet, translucent alien fronds."
+    },
+    {
+      "control": "breath-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the alien creature and plant set in a photoreal, cinematically lit shot with shallow depth of field and atmospheric steam look like a high-end film or game cinematic frame."
+    },
+    {
+      "control": "breath-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "feature-film-grade backlit water droplets and subsurface scattering on alien red flora with a surreal four-legged creature in the misty background"
+    },
+    {
+      "control": "breath-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 88,
+      "why": "the finely resolved backlighting through the translucent red fronds makes the imagined landscape look like a high-budget cinematic."
+    },
+    {
+      "control": "breath-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the alien red plant and white long-necked creature in steamy geothermal terrain, lit and shot like a polished cinematic frame (shallow depth of field, backlit haze, detailed dripping water), which is not a real place and is far too refined for a stock render or low-budget production."
+    },
+    {
+      "control": "breath-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 91,
+      "why": "The richly detailed, backlit mist makes the fantastical sinkhole look like a polished cinematic shot."
+    },
+    {
+      "control": "breath-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "the cinematic-quality volumetric mist, detailed wet dripping foliage and fantastical giant-ribcage canyon point to a high-end film/game cinematic."
+    },
+    {
+      "control": "breath-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "cinematic atmospheric lighting and intricate wet-surface detail in a fictional alien landscape"
+    },
+    {
+      "control": "breath-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "The rib-like rock arches recede through sunlit mist with the polish of a cinematic establishing shot."
+    },
+    {
+      "control": "breath-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the giant-ribcage fantasy scene with volumetric steam, water droplets, wet-surface detail and cinematic sunrise lighting looks like high-end film or AAA cinematic quality, and it is not a real place."
+    }
+  ],
+  "unit": "breath",
+  "collected": "2026-11-25 22:43 to 22:46 UTC",
+  "share": 1.0,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "pictures": [
+    {
+      "key": "breath-0",
+      "image": "references/approved/3-breath/breath-0-establishing.jpg",
+      "file": "out/work/jury/controls/breath-0.png",
+      "sha256": "a9577f06f91d3fab18a6e6b81282f3033aeb641c71b458c9a9ba7be30e13ea24",
+      "bytes": 2117949,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "breath-1",
+      "image": "references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg",
+      "file": "out/work/jury/controls/breath-1.png",
+      "sha256": "c71d0a5b5ef51a6c1fe36ef5ecaa9484c2572b4e80b236d2429825b4443aeec6",
+      "bytes": 2125578,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "breath-2",
+      "image": "references/approved/3-breath/breath-2-the-rim.jpg",
+      "file": "out/work/jury/controls/breath-2.png",
+      "sha256": "112734315e42717a2c0b8f77ab5fabf9dabf258388fdfdef5d971c73bcabdef1",
+      "bytes": 2189443,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "breath-3",
+      "image": "references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg",
+      "file": "out/work/jury/controls/breath-3.png",
+      "sha256": "1a8e38f4162f10e64fda7fe4c8247c94ab820fa8296463b737abb8c4f726ff71",
+      "bytes": 2102699,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "breath-4",
+      "image": "references/approved/3-breath/breath-4-down-the-shaft.jpg",
+      "file": "out/work/jury/controls/breath-4.png",
+      "sha256": "4fe823d608911463dd6988ddeb3214fa64cfd7c22f2a7b36f67d059ae63c6636",
+      "bytes": 1996184,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}
