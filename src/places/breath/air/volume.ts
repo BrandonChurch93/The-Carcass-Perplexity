@@ -310,7 +310,7 @@ void main() {
         float gathered = abs(dd) > 1e-3 ? (column(d1, soft) - column(d0, soft)) / dd : clamp(d0 / soft, 0.0, 1.0) * (mb - ma);
         if (gathered > 0.01) {
           te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
-          float tau = mix(0.03, 0.05, surge) * gathered;
+          float tau = mix(0.024, 0.045, surge) * gathered;
           // The place a little way in that most of what is seen comes from.
           float tm = te + (mb - te) * sqrt(0.5 * min(1.0, 1.0 / max(tau, 1e-3)));
           vec3 pm = ro + rd * tm;
@@ -318,7 +318,9 @@ void main() {
           // faces it is bright and the trough behind it is dark.
           float sunk = clamp(1.0 + min(pm.y + 1.0, 0.0) / 30.0, 0.0, 1.0);
           float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
-          vec3 light = ambient * (0.4 + 0.7 * nm.r) * sunk * sunk
+          // Before the breath it lies deep and takes the sky whole; what the breath leaves near the brim is seen against the light, and is dim.
+          float left = smoothstep(-15.0, -8.0, level);
+          vec3 light = ambient * mix(0.5 + 0.8 * nm.r, 0.22 + 0.5 * nm.r, left) * sunk * mix(1.0, sunk, left)
             + uSunColour * (sunAt(pm) * phase * (0.1 + 0.6 * faces) * smoothstep(-7.0, 0.0, pm.y));
           float gone = exp(-tau);
           colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;

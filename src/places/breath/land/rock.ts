@@ -198,7 +198,7 @@ void main() {
   rock = mix(rock, vec3(0.5, 0.48, 0.44) * (0.6 + 0.7 * c.a), crust * (0.45 + 0.55 * smoothstep(0.35, 0.65, c.r)));
   // Tea-brown where water has stood and dried, olive weed along the tide line.
   float stain = smoothstep(0.45, 0.7, b.a + 0.5 * (a.r - 0.5) + 0.3 * (c.r - 0.5));
-  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.6 * stain);
+  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.4 * stain);
   float tide = smoothstep(0.8, 0.0, abs(p.y + 0.05)) * smoothstep(0.4, 0.62, b.r);
   rock = mix(rock, vec3(0.085, 0.095, 0.05), 0.55 * tide);
   // A riser shows the beds it is made of: thin courses, some standing proud, broken where the plate broke.
@@ -223,7 +223,7 @@ void main() {
   // The sun's glare path: every wet face throws a little of the low sun, and the grain of the rock, too fine to draw from here, spreads it wide.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float glare = sunLobe(n, v, 0.4) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * max(dot(n, uSunDir), 0.0) * sunSeen(land, p.y);
-  colour += uSunColour * (glare * wet * (0.35 + 0.65 * film) * (0.5 + 1.5 * c.a) * occ * 1.5);
+  colour += uSunColour * (glare * wet * (0.35 + 0.65 * film) * (0.5 + 1.5 * c.a) * occ * 2.2);
   // Sparkle: in the glare path the wet grain throws the sun back in points.
   float tight = sunLobe(normalize(n + vec3(c.r - 0.5, 0.0, c.a - 0.5) * 0.25), v, 0.16) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * sunSeen(land, p.y);
   colour += uSunColour * (min(tight, 6.0) * wet * smoothstep(0.55, 0.8, c.b) * occ * 0.5);
@@ -270,7 +270,10 @@ void main() {
   float under = mod(-(p.y + 3.6), 7.0);
   float recess = smoothstep(7.0, 2.2, under) * smoothstep(-1.0, -4.0, p.y) * (1.0 - smoothstep(0.3, 0.45, uBone));
   // The hoops stand out of the wall into what light comes down: they are the pale thing in the shaft.
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * sunk * sunk * (1.0 - 0.96 * recess) * mix(1.0, 1.45, smoothstep(0.4, 0.9, uBone));
+  // A ledge's top lies open to the disc of sky overhead, tier under tier, each dimmer than the one over it; its face and the wall get the square of that.
+  float ledge = smoothstep(0.4, 0.9, uBone);
+  float open = mix(sunk * sunk, sunk * mix(sunk, 1.0, 0.75 * up), ledge);
+  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.94 * recess) * mix(1.0, 1.5 + 0.7 * up, ledge);
   // Nothing of the sun gets down there either: the shadow's top is lifted over whatever is deep.
   vec4 land = landAt(p.xz);
   land.b = mix(p.y + 1.0, land.b, sunk * sunk);

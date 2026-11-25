@@ -42,8 +42,8 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const fill = smooth((u - 0.2) / 1.3);
   const over = u < 3 ? smooth((u - 1.0) / 2.0) : 0.08 + 0.92 * Math.exp(-(u - 3) / 2.2);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 9 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
-  const apron = smooth((u - 2.2) / 2.0) * (0.25 + 0.75 * Math.exp(-Math.max(0, u - 4.5) / 6));
+  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 6.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
+  const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
 }
@@ -76,11 +76,11 @@ export function exhaleBodies(seconds: number): Body[] {
       at: [x - 0.94 * 2.6 * slide, y, z - 0.2 * 2.6 * slide],
       size: [rx * grow * (1 + 0.1 * slide), ry * (0.7 + 0.3 * up) * (1 - 0.06 * Math.min(slide, 5)), rz * grow * (1 + 0.06 * slide)],
       lean: [-0.25 * up, 0.09 * up],
-      dense: (dense * thin) / (grow * grow),
+      dense: (0.8 * dense * thin) / (grow * grow),
       repeat: 17,
-      open: 0.36,
+      open: 0.42,
       climb: 1.4,
-      sun: 1,
+      sun: 0.5,
     });
   }
   return out;
@@ -104,10 +104,10 @@ export function create(ctx: Context): Piece {
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
     [-24, 4.5, -14, 12, 5, 10, 0.016],
-    [-13, 1.5, -2, 13, 4, 14, 0.012],
+    [-13, 0.5, -2, 15, 3.2, 16, 0.006],
     [-43, 2.6, -8, 12, 2.4, 9, 0.012],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.62, climb: 0.5, sun: 1.35 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.7, climb: 0.5, sun: 1.0 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
@@ -118,7 +118,7 @@ export function create(ctx: Context): Piece {
     [-900, -620, 16, 900, 40, 260, 0.0026],
   ] as const) {
     const [x, z] = cliffPoint(s, p);
-    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.8, repeat: 150, open: 0.68, climb: -3, sun: 1.2 });
+    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.6, repeat: 150, open: 0.7, climb: -3, sun: 1.0 });
   }
   // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
   for (const [x, z, rx, ry, rz, y] of [
@@ -126,7 +126,7 @@ export function create(ctx: Context): Piece {
     [900, -1350, 1500, 30, 200, 30],
     [1500, -1750, 1300, 38, 200, 70],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0022, repeat: 170, open: 0.75, climb: 0.3, sun: 1.3 });
+    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.001, repeat: 170, open: 0.8, climb: 0.3, sun: 0.85 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
@@ -134,7 +134,7 @@ export function create(ctx: Context): Piece {
     [-1500, -2900, 900, 90, 600],
     [-3200, 300, 800, 60, 900],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0026, repeat: 300, open: 0.7, climb: 0.4, sun: 1.3 });
+    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0016, repeat: 300, open: 0.75, climb: 0.4, sun: 0.9 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());
