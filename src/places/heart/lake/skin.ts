@@ -239,7 +239,7 @@ void main() {
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
   float mound = 0.0;
   float wet = 0.0;
-  albedo *= (1.0 + 1.5 * fresh) * lumpTone * slabTone;
+  albedo *= (1.0 + 2.1 * fresh) * lumpTone * slabTone;
   if (fresh > 0.01) {
     mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
     wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - rubble) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
@@ -255,11 +255,13 @@ void main() {
   if (rubble > 0.0) {
     float pits = 0.35 + 0.65 * smoothstep(0.3, 0.65, 0.6 * vnoise(q / 0.31 + 7.0) + 0.4 * vnoise(q / 0.09 + 3.0));
     albedo = mix(albedo, vec3(0.034, 0.031, 0.03) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(max(clinker, 0.6 * heap), 0.6 * slabGap));
-    crease *= mix(1.0, pits, max(heap, clinker)) * (1.0 - 0.55 * slabGap);
+    crease *= mix(1.0, pits, max(heap, clinker)) * (1.0 - 0.35 * slabGap);
   }
   // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
   float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.03, 0.12, fpLong), 1.0, shown);
   float pit = mix(1.0, clamp(1.0 - below / max(2.5 * gape, 0.12), 0.04, 1.0), inGap);
+  // Up a standing face the shade is told by height alone: what the ground plan lays on it would hang down it in stripes.
+  pit = mix(pit, 0.3 + 0.7 * smoothstep(-0.3, 0.0, vWorld.y), steep);
   float occ = crease * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
   // A face that stands steep among folds and lobes looks at its neighbour and not at the sky.
@@ -328,6 +330,8 @@ void main() {
   float floorOnly = smoothstep(0.55, 0.85, vNormalG.y) * smoothstep(0.01, 0.03, below);
   float melt = shown * smoothstep(0.2, 0.3, gape) * smoothstep(0.0, 0.03, meltLevel(net) + below);
   heat.x *= mix(1.0, floorOnly * (1.0 - melt), held);
+  // Nor does a standing face glow, but for a finger's width at its foot.
+  heat.x *= 1.0 - steep * (1.0 - exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.04));
   heat.x *= smoothstep(900.0, 1010.0, heat.y) * (1.0 - max(heap, clinker));
   vec3 hot = blackbody(heat.y) * heat.x;
   // Hairline glow: within a few metres of open melt the crust is thin, and in its grooves short cracks show dull red.
@@ -340,9 +344,9 @@ void main() {
     float lineBrim = shown * live * (1.0 - smoothstep(0.01, 0.05, net.g - 2.0)) * smoothstep(0.2, 0.3, gape);
     float dull = max(1.0 - smoothstep(5.0, 12.0, groupFar(q)), lineBrim * (1.0 - smoothstep(1.0, 2.0, beside)));
     float byPool = max(stringOf(net) * live * smoothstep(0.3, 0.45, gape) * (1.0 - smoothstep(2.0, 4.0, beside)), lineBrim * (1.0 - smoothstep(0.5, 1.0, beside)));
-    float some = smoothstep(0.42, 0.56, vnoise(q / 1.9 + 37.0));
-    float third = smoothstep(0.6, 0.68, vnoise(q / 2.7 + 5.0));
-    float core = smoothstep(0.5, 0.9, slabGap) * (1.0 - smoothstep(0.04, 0.1, fpLong)) * (1.0 - heap);
+    float some = smoothstep(0.34, 0.48, vnoise(q / 1.9 + 37.0));
+    float third = smoothstep(0.52, 0.6, vnoise(q / 2.7 + 5.0));
+    float core = smoothstep(0.5, 0.9, slabGap) * (1.0 - smoothstep(0.04, 0.1, fpLong)) * (1.0 - heap) * (1.0 - steep);
     float lit = core * max(dull * some, byPool * third);
     c *= 1.0 - lit;
     hot += blackbody(mix(960.0, 1200.0, byPool * third) + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * lit;
