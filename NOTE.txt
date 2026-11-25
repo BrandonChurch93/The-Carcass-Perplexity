@@ -1,7 +1,7 @@
-2026-11-25 22:10 UTC
-work at 7fa6da1 on agent/marsh-life
-minute 50. marsh-3: wallower reworked (hump, hung head, plated bare hide, tusks into the mud, rings); still too loaf-like, tusks bunched. marsh-2: plumes now wet mops in locks with drops; far stalks read too much as palms. marsh-4: stuck one and dead not yet redone. marsh-0 wide for scale.
+2026-11-25 22:26 UTC
+work at d4adaee on agent/marsh-life
+marsh-3 wallower with folds in the shape, short legs and tusks still too few in view; marsh-4 stuck one grey in mud, dead mounds too slab-like; marsh-2 plumes rise and sweep but read as thick tentacles and pale; marsh-0 tufts now seen, wallowers still banded
 look-1.jpg = out/work/h-marsh-3.jpg
-look-2.jpg = out/work/h-marsh-2.jpg
-look-3.jpg = out/work/h-marsh-4.jpg
+look-2.jpg = out/work/h-marsh-4.jpg
+look-3.jpg = out/work/h-marsh-2.jpg
 look-4.jpg = out/work/h-marsh-0.jpg
