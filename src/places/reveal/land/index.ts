@@ -74,7 +74,15 @@ void main() {
   float height = clamp((shape.b - 0.56) / 0.44, 0.0, 1.0);
   float depth = clamp(1.0 - shape.b / 0.44, 0.0, 1.0);
   vec2 slope = shape.rg * 2.0 - 1.0;
+  // From far the relief is drawn up, as it is on a map, and read across the whole width of a range: a lit side and a shadow side.
+  float far = smoothstep(120.0, 900.0, uViewKm);
+  slope *= 1.0 + 0.6 * far;
+  slope *= min(1.0, 0.97 / max(length(slope), 1e-3));
   vec3 n = normalize(vec3(slope.x, sqrt(max(1.0 - dot(slope, slope), 0.04)), slope.y));
+  vec2 toSunUv = normalize(uSunDir.xz) * (9.0 / 4096.0) * uRectWide.zw / abs(uRectWide.z);
+  float ahead = texture2D(uShapeWide, clamp(uvWide + toSunUv, 0.0, 1.0), 2.5).b;
+  float behind = texture2D(uShapeWide, clamp(uvWide - toSunUv, 0.0, 1.0), 2.5).b;
+  float side = clamp((max(behind, 0.5) - max(ahead, 0.5)) * 6.0, -1.0, 1.0) * inWide * far;
 
   float shade = cloudShade(xz);
   // The storm on the spine and the cyclone stand high: their shade falls on the sea beside them, away from the sun.
@@ -86,8 +94,21 @@ void main() {
 
   // ---- the land ----
   // Seen from far, the lowlands are dark with growth and the ranges pale with bare rock.
-  ground *= mix(1.0, mix(0.75, 1.15, smoothstep(0.02, 0.4, height)), land * smoothstep(40.0, 400.0, uViewKm));
+  float fromFar = smoothstep(40.0, 400.0, uViewKm);
+  vec3 sea = ground;
+  ground *= mix(1.0, mix(0.75, 1.15, smoothstep(0.02, 0.4, height)), land * fromFar);
+  // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
+  float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
+  ground *= mix(vec3(1.0), vec3(0.84, 0.7, 0.54), bare * fromFar);
+  ground = mix(ground, vec3(0.86, 0.89, 0.93), 0.55 * smoothstep(0.64, 0.82, height) * fromFar);
+  // The plains are not one colour: dry steppe, dark growth, red earth, in provinces hundreds of km across.
+  float plain = (1.0 - smoothstep(0.05, 0.22, height)) * fromFar;
+  vec2 province = xz + 90.0 * vec2(vnoise(xz / 230.0 + 4.0), vnoise(xz / 230.0 + 31.0));
+  vec3 soil = mix(vec3(1.28, 1.04, 0.7), vec3(0.7, 0.93, 0.68), smoothstep(0.35, 0.65, vnoise(province / 420.0 + 3.1)));
+  soil = mix(soil, vec3(1.32, 0.8, 0.6), smoothstep(0.55, 0.8, vnoise(province / 290.0 + 17.0)));
+  ground *= mix(vec3(1.0), soil, 0.8 * plain);
   vec3 earth = rigShade(vWorld, n, view, ground, 0.92, shade);
+  earth *= 1.0 + 0.6 * max(side, 0.0) + 0.55 * min(side, 0.0);
   // The light the sunlit slopes throw back into the shaded ones: without it every shadow is the blue of the sky.
   earth += ground * uSunColour * 0.085 * (0.4 + 0.6 * shade);
 
@@ -96,7 +117,7 @@ void main() {
   vec2 fromLava = xz - uLava;
   float swell = 0.8 + 0.9 * uBeat;
   float d0 = dot(fromLava, fromLava);
-  float heat = exp(-d0 / 110.0) * 1.3 * swell;
+  float heat = exp(-d0 / 200.0) * 1.3 * swell;
   float halo = exp(-d0 / 1600.0) * (0.6 + 1.4 * uBeat);
   for (int i = 0; i < 6; i++) {
     vec3 vent = VENTS[i];
@@ -109,13 +130,20 @@ void main() {
   }
   float vein = cracks(xz / 7.0) * exp(-d0 / 2600.0) * (0.25 + 0.6 * uBeat);
   heat = (heat + vein) * land * (1.0 - smoothstep(0.14, 0.3, height));
-  vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.11 * smoothstep(0.03, 0.6, heat);
-  glow += vec3(1.0, 0.3, 0.06) * 0.2 * halo * land;
+  vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.15 * smoothstep(0.03, 0.6, heat);
+  glow += vec3(1.0, 0.3, 0.06) * 0.3 * halo * land;
 
   // ---- the water ----
   // What comes back from under the surface, lit by the sun and the sky.
   vec3 light = uSunColour * uSunDir.y * shade + skyIrradiance(vec3(0.0, 1.0, 0.0));
-  vec3 water = ground * light * 0.2;
+  // The sea is not one colour: pale over the shelves, stained red brown where the rivers of the pelvis run out, green and blue by turns in the deep.
+  float stain = smoothstep(0.0, 0.14, sea.r - sea.b);
+  float shelf = 1.0 - smoothstep(0.0, 0.7, depth);
+  vec2 gyre = xz + 140.0 * vec2(vnoise(xz / 520.0 + 7.0), vnoise(xz / 520.0 + 23.0));
+  float bloom = vnoise(gyre / 380.0 + 11.0);
+  sea *= mix(vec3(0.78, 0.92, 1.12), vec3(1.0, 1.22, 1.05), smoothstep(0.3, 0.75, bloom));
+  sea = mix(sea, sea * vec3(1.7, 0.75, 0.5), stain);
+  vec3 water = sea * light * (0.2 + 0.12 * shelf + 0.3 * stain);
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   vec2 wind = xz + 60.0 * vec2(vnoise(xz / 310.0), vnoise(xz / 310.0 + 9.7));
   float calm = texture2D(uCloudTile, wind / 900.0 + vec2(0.5, 0.2)).b;
@@ -126,7 +154,9 @@ void main() {
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * 0.22 * fresnel;
-  water += uSunColour * lobe * 0.0032 * shade * (0.6 + 0.4 * depth);
+  water += uSunColour * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
+  // Round the glint the low sun lies on the sea as a broad warm glare.
+  water += uSunColour * vec3(1.0, 0.8, 0.55) * 0.014 * exp(-lean * lean / 0.008) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
   water = mix(water, vec3(0.62) * light / 3.14159, 0.55 * surf);
@@ -197,7 +227,7 @@ export function create(ctx: Context): Piece {
     uLava: { value: new THREE.Vector2(X(AT.lava.x), Z(AT.lava.y)) },
     uSalt: { value: new THREE.Vector2(X(AT.salt.x), Z(AT.salt.y) + 10 * KM) },
     // Where on the sea the sun's own image lies, and the radius of the planet, km.
-    uGlint: { value: new THREE.Vector2(X(6350), Z(1150)) },
+    uGlint: { value: new THREE.Vector2(X(6300), Z(800)) },
     uPlanetKm: { value: 10183 * KM },
     // The storm: its middle and its half sizes, km. The cyclone: its middle and its radius. And how far a shade falls for a cloud 7 km up.
     uStorm: { value: new THREE.Vector4(X(AT.storm.x), Z(AT.storm.y), 215 * KM, 62 * KM) },

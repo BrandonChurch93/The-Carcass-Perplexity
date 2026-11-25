@@ -22,4 +22,4 @@ It needs python 3 with numpy, scipy and opencv. It takes under a minute.
 
 ### How
 
-All of it is noise shaped in the frequency plane (so the tile repeats without a seam), with the power put where cloud has it: cells a few kilometres across, drawn into streets along the wind, gathered into clumps. The cyclone is the same noise laid in a turning frame, so its bands wind into the eye. The storm is an anvil sheet with towers along it.
+All of it is noise shaped in the frequency plane (so the tile repeats without a seam), with the power put where cloud has it: cells a few kilometres across, drawn into streets along the wind, gathered into clumps. On the cover a few fronts are laid by hand as bent lines thousands of kilometres long, blurred and broken by the same noise: above a share of two thirds the place draws a closed deck. The cyclone is the same noise laid in a turning frame, so its bands wind into the eye. The place draws the build of the cyclone (shield, arms, eye) itself and takes only the fibres from the picture. The storm is an anvil sheet with towers along it.
