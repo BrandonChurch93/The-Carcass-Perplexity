@@ -9,6 +9,9 @@ attribute float aHeat;
 attribute float aWho;
 uniform float uPixel;
 uniform vec4 uPools[14];
+uniform highp sampler2D tFeet;
+uniform highp sampler2D tGround;
+uniform float uFeetN;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -19,6 +22,26 @@ varying float vWho;
 void main() {
   vec3 n = normalize(normal);
   vec3 p = position;
+  // A foot stands on the plate of crust it is over, whatever that plate's level: the leg below the knee goes up or down with it.
+  if (aLook.x > 2.5 && aLook.x < 4.5 && p.y < 4.0) {
+    float first = floor(aWho + 0.5) * 4.0;
+    float near = 1e9;
+    float top = 0.0;
+    float off = 0.0;
+    for (int j = 0; j < 4; j++) {
+      vec2 at = vec2((first + float(j) + 0.5) / uFeetN, 0.5);
+      vec4 foot = texture2D(tFeet, at);
+      float d = distance(foot.xy, p.xz);
+      if (d < near) {
+        near = d;
+        top = texture2D(tGround, at).r;
+        off = foot.z;
+      }
+    }
+    // A foot in the air is not on a plate: it comes down on the next one.
+    top = mix(top, 0.1, smoothstep(0.02, 0.3, off));
+    p.y += top * (1.0 - smoothstep(1.2, 4.0, p.y));
+  }
   // A leg a long way off is thinner than a pixel and would flicker: it is never drawn thinner than two pixels.
   float far = length(cameraPosition - p);
   // A leg or a neck is never thinner than three pixels, a root never thinner than two and a half.
@@ -34,6 +57,29 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   // One that is not in this shot is not drawn.
   if (uPools[int(aWho + 0.5)].w > 0.5) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
+}`;
+
+/** The top of the crust under each foot, one texel a foot. `crust` is the crust's own height function (lake/index.ts). */
+export const GROUND_VERTEX = /* glsl */ `
+void main() {
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+export const GROUND_FRAGMENT = (crust: string): string => /* glsl */ `
+precision highp float;
+${NOISE_GLSL}
+${RIG_GLSL}
+${crust}
+uniform highp sampler2D tFeet;
+uniform float uFeetN;
+void main() {
+  vec4 foot = texture2D(tFeet, vec2(gl_FragCoord.x / uFeetN, 0.5));
+  // The highest of the plates under the pad: a foot does not go down into a gap, it bears on what stands highest.
+  float top = crustAt(crustPoint(foot.xy)).y;
+  for (int i = 0; i < 4; i++) {
+    float a = 1.5708 * float(i) + 0.6;
+    top = max(top, crustAt(crustPoint(foot.xy + 0.3 * foot.w * vec2(cos(a), sin(a)))).y);
+  }
+  gl_FragColor = vec4(clamp(top, -0.5, 1.2), 0.0, 0.0, 1.0);
 }`;
 
 export const FRAGMENT = /* glsl */ `
