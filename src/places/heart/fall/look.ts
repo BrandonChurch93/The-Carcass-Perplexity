@@ -81,7 +81,7 @@ const float APRON_TONE = 0.48;
 // Albedo of the cliff picture on the rim, the face and the tube, set by measure under the frozen light.
 const float WALL_TONE = 0.6;
 // How much brighter than its plain geometry the melt lights the rim: the fume in the mouth glows and lights it too.
-const float RIM_LIGHT = 12.0;
+const float RIM_LIGHT = 10.0;
 uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
@@ -109,16 +109,21 @@ float poolLight(vec3 p, vec3 n, vec3 c, float r) {
 vec3 riverLight(vec3 p, vec3 n, float d) {
   // The rim's own edge stands between the melt and the outer face.
   if (d < 0.0) return vec3(0.0);
-  // Soot and the roof's own steps stand in the way: the lip's pool lights the bevel of the rim and little beyond it.
-  float shade = mix(1.0, 0.22, smoothstep(14.0, 40.0, d)) * exp(-d / 80.0);
-  // The pool lies under the west half of the arch. The east side and the feet of the arch stand behind the heaps on the floor and get little of it,
-  // and the brow, the first metres of the cut, looks out and not down: it stays the dark of the wall.
-  float reach = mix(1.0, 0.04, smoothstep(${f(MOUTH.x - 24)}, ${f(MOUTH.x + 46)}, p.x)) * smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor + 16)}, p.y) * smoothstep(1.5, 6.5, d);
+  // The stream leaves the mouth: it lights the cut of the arch beside and above it and not the roof 40 m over it nor the back.
+  // The pool lies under the west third of the arch, so the lit band is broad at the west and the upper west, thins over the crown
+  // and is gone along the east side, which stands behind the heaps on the floor.
+  float east = smoothstep(${f(MOUTH.x - 58)}, ${f(MOUTH.x + 34)}, p.x);
+  float deepest = mix(21.0, 4.0, east);
+  float shade = smoothstep(deepest, 0.3 * deepest, d) * smoothstep(0.6, 3.5, d);
+  float reach = mix(1.0, 0.0, smoothstep(0.15, 0.95, east)) * smoothstep(${f(TUBE.floor + 2)}, ${f(TUBE.floor + 12)}, p.y);
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
-  e += 0.014 * poolLight(p, n, vec3(${f(MOUTH.x + 22)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 24.0) * shade * smoothstep(1.5, 6.5, d);
-  // The river further in shows the ribs of the roof that face it, dull red.
-  e += 0.11 * poolLight(p, n, vec3(riverX(40.0), ${f(TUBE.floor)}, ${f(TUBE.lipZ - 40)}), 13.0) * exp(-abs(d - 40.0) / 30.0);
+  // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
+  e += 0.022 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
+}
+// What is left in the dark of the tube: the glow of the river far in, on soot. It shows the rock as rock and no more.
+vec3 tubeDark(float d) {
+  return blackbody(1250.0) * 0.011 * exp(-max(d, 0.0) / 70.0);
 }
 // The rig's shading, with the day and the lake shut out as the tube goes in.
 vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float d) {
@@ -130,7 +135,7 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   vec3 lake = lit < 0.01 ? vec3(0.0) : (p.y > 30.0 ? lakeIrradianceFar(p, n) : lakeIrradiance(p, n));
   // On the cut of the rim the east side stands behind the heaps on the floor, as it does for the pool's own light.
   if (d < 7.0) lake += emitterIrradiance(p, n) * smoothstep(7.0, 0.0, d) * mix(1.0, mix(1.0, 0.12, smoothstep(${f(MOUTH.x - 10)}, ${f(MOUTH.x + 50)}, p.x)), smoothstep(0.0, 1.5, d));
-  vec3 e = skyIrradiance(n) * open + lake * occ * lit + riverLight(p, n, d) * occ + more * occ;
+  vec3 e = skyIrradiance(n) * open + lake * occ * lit + (riverLight(p, n, d) + tubeDark(d) * smoothstep(1.0, 8.0, d)) * occ + more * occ;
   // Rock is grey: what warmth it shows is the light's.
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.2126, 0.7152, 0.0722))), 0.6);
   vec3 c = albedo * e / 3.14159;
@@ -203,10 +208,6 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   float inside = vSkin.z;
-  // The land's rock, read before anything branches. On the collar it is all there is: the same rock under the same light as the wall.
-  vec3 wn;
-  float wocc;
-  vec3 wall = wallRockAt(vWorld, n, gDx, gDy, wn, wocc);
   // The lip itself is the wall's rock too: the fall's own rock begins where the cut turns in.
   float collar = smoothstep(-1.2, 0.2, vSkin.y);
   float d = -vSkin.y;
@@ -214,34 +215,41 @@ void main() {
   bool ragged = torn(vWorld, vSkin);
   // Far inside no light reaches and there is no rock to draw; between, only the melt's light on plain dark rock.
   if (inside > 0.5 && d > 26.0) {
-    if (d < 110.0) c = vec3(0.06) * (0.25 + 0.8 * vnoise(vWorld.xy / 3.0 + vWorld.z / 4.0) + 0.7 * vnoise(vWorld.xy / 10.0 + vWorld.z / 8.0)) * riverLight(vWorld, n, d) / 3.14159;
+    if (d < 110.0) c = vec3(0.06) * (0.25 + 0.8 * vnoise(vWorld.xy / 3.0 + vWorld.z / 4.0) + 0.7 * vnoise(vWorld.xy / 10.0 + vWorld.z / 8.0)) * tubeDark(d) / 3.14159;
   } else if (!ragged) {
-    // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
-    vec3 cliff = laid(tCliff, vWorld, lieOf(n), 47.0, 0.0).rgb;
-    cliff *= fineRock(vWorld, 1.0, n);
-    // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
-    cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
-    // The cut rock of the bevel and the roof is broken in blocks: each takes the light at its own angle and the joints between them are black.
-    if (vSkin.y < 2.0) {
-      // The cut rock of the bevel and the roof is folded along the tube, as the melt that once filled it left it: ridges that go back into
-      // the dark, grooves between them that the light from below does not reach, and a break across them here and there.
+    if (collar < 1.0) {
+      // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
+      vec3 cliff = laid(tCliff, vWorld, lieOf(n), 47.0, 0.0).rgb;
+      cliff *= fineRock(vWorld, 1.0, n);
+      // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
+      cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, d) * inside);
+      // The cut of the arch is broken rock: blocks and ribs of one to four metres, each lying its own way, so one takes the light
+      // from below, the next is in its shade, and the joints between them are black.
       float broken = smoothstep(2.0, -3.0, vSkin.y);
-      float along = vSkin.x / 3.4 + 0.9 * vnoise(vec2(vSkin.y / 11.0, vSkin.x / 17.0));
-      float fold = vnoise(vec2(along, vSkin.y / 26.0)) + 0.35 * vnoise(vec2(along * 3.1 + 5.0, vSkin.y / 9.0));
-      float next = vnoise(vec2(along + 0.25, vSkin.y / 26.0)) + 0.35 * vnoise(vec2(along * 3.1 + 5.775, vSkin.y / 9.0));
-      float cross_ = smoothstep(0.07, 0.0, abs(vnoise(vec2(vSkin.x / 9.0 + 2.0, vSkin.y / 6.5 + 0.8 * vnoise(vec2(vSkin.x / 4.0, 1.0)))) - 0.5));
+      vec2 bq = vec2(vSkin.x / 4.6, vSkin.y / 3.6) + 0.9 * vec2(vnoise(vSkin.xy / 5.0), vnoise(vSkin.xy / 5.0 + 5.0));
+      vec2 big = plates(bq);
+      vec2 small = plates(bq * 2.9 + 3.0);
+      // Here the rock came away in slabs, there it is shattered small.
+      float shattered = smoothstep(0.42, 0.58, vnoise(vSkin.xy / 9.0 + 2.0));
+      vec2 tb = fract(big.y * vec2(17.3, 41.7)) - 0.5;
+      vec2 ts = fract(small.y * vec2(23.1, 37.9)) - 0.5;
       vec3 round_ = normalize(cross(n, vec3(0.0, 0.0, 1.0)) + 1e-4);
-      // And it is broken in big pieces that each lie their own way: one takes the light, the next is in its shade.
-      vec2 q = vec2(vSkin.x / 6.5, vSkin.y / 5.0);
-      float lump = vnoise(q);
-      vec2 lean = vec2(vnoise(q + vec2(0.35, 0.0)), vnoise(q + vec2(0.0, 0.35))) - lump;
-      n = normalize(n + broken * (round_ * ((next - fold) * 4.5 + lean.x * 3.2) + vec3(0.0, 0.0, 1.0) * lean.y * 3.2));
-      cliff *= 1.0 - broken * (0.6 * smoothstep(0.62, 0.36, fold) + 0.5 * cross_);
-      cliff *= mix(1.0, 0.3 + 1.1 * smoothstep(0.2, 0.75, lump), broken);
+      vec2 tilt = tb * 2.6 + ts * mix(0.5, 2.4, shattered);
+      n = normalize(n + broken * (round_ * tilt.x + vec3(0.0, 0.0, 1.0) * tilt.y));
+      float joint = max(smoothstep(0.05 + 0.12 * vnoise(vSkin.xy / 2.3), 0.0, big.x), shattered * smoothstep(0.14, 0.0, small.x));
+      cliff *= 1.0 - broken * 0.8 * joint;
+      // A block that stands back is in the shade of its neighbours, and soot lies on some of them.
+      float back = mix(big.y, small.y, 0.35 + 0.5 * shattered);
+      cliff *= mix(1.0, (0.3 + 1.7 * back * back) * (0.55 + 0.9 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
+      c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
     }
-    vec3 more = vec3(0.0);
-    c = rockShade(vWorld, n, v, cliff, 1.0, more, d);
-    if (collar > 0.0) c = mix(c, rigShade(vWorld, wn, v, wall, 0.92, wocc), collar);
+    if (collar > 0.0) {
+      // The land's rock, read with the slopes taken at the top: the same rock under the same light as the wall.
+      vec3 wn;
+      float wocc;
+      vec3 wall = wallRockAt(vWorld, normalize(vNormal), gDx, gDy, wn, wocc);
+      c = mix(c, rigShade(vWorld, wn, v, wall, 0.92, wocc), collar);
+    }
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
   // Last, so that no texture is read beside a pixel already thrown away.
