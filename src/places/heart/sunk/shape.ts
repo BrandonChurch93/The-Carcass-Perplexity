@@ -238,7 +238,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     // The tear: the lips lift, the floor is the lava under the skin.
     const [dt, at] = polyDistance(TEAR, x, z);
     const ragged = dt + 0.2 * (noise2(x * 2.6 + 8, z * 2.6) - 0.5) + 0.07 * (noise2(x * 8.1, z * 8.1 + 3) - 0.5);
-    const tearWidth = 0.13 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.7 * (0.6 + 0.85 * noise2(x * 0.9 + 14, z * 0.9 + 22));
+    const tearWidth = 0.21 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.7 * (0.6 + 0.85 * noise2(x * 0.9 + 14, z * 0.9 + 22));
     // It lies in a hollow of the folds, and its lips are low at the end the bench looks in by.
     const within = smooth(0, 0.08, tearWidth);
     h -= 0.3 * Math.exp(-Math.pow(dt / 1.1, 2)) * edge;
@@ -248,7 +248,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const lipHeight = h;
     h = mix(h, floor, open);
     // The walls are hot only toward the bottom.
-    const heat = smooth(tearWidth * 1.1, tearWidth * 0.2, ragged) * smooth(0.02, 0.1, tearWidth) * smooth(lipHeight - 0.08, floor + 0.08, h);
+    const heat = smooth(tearWidth * 1.1, tearWidth * 0.2, ragged) * smooth(0.02, 0.1, tearWidth) * smooth(lipHeight - 0.1, floor + 0.26, h);
 
     // The lake's seam runs on under the folded skin: the skin stands a little proud along it.
     const [ds] = polyDistance(lakeSeam, x, z);

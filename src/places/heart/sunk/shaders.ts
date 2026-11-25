@@ -153,7 +153,7 @@ void main() {
   float rt = abs(2.0 * fract(rp) - 1.0);
   // Where the ropes die away into the plain skin, so do their lines.
   float seen = smoothstep(0.5, 0.15, fwidth(rp)) * smoothstep(0.2, 0.55, ln.a);
-  float crease = smoothstep(0.8, 0.97, rt) * ln.a * seen;
+  float crease = smoothstep(0.8, 0.97, rt) * ln.a * seen * mix(0.4, 1.0, smoothstep(0.12, 0.24, ropeWidth(ln.r)));
   float ropeId = floor(rp);
   float ropeTone = fract(sin(ropeId * 12.9898) * 43758.5453);
   // Along each rope run strands a finger or two wide, each broken every few hands; where one is gone there is a dark groove.
@@ -215,8 +215,8 @@ void main() {
   float heat = mk.r;
   float veins = small;
   // Dull on the walls, the full heat only at the bottom.
-  float breath = 18.0 * sin(uTime * 1.5708 + 2.0 * small) * heat;
-  float kelvin = mix(1000.0, uTearKelvin, smoothstep(0.2, 0.8, heat * (0.8 + 0.4 * veins))) + breath;
+  float breath = 40.0 * (0.5 + 0.5 * sin(uTime * 1.5708 + 2.0 * small));
+  float kelvin = mix(1000.0, uTearKelvin, smoothstep(0.08, 0.5, heat * (0.8 + 0.4 * veins))) - breath;
   c *= 1.0 - 0.85 * smoothstep(0.08, 0.5, heat);
   c += blackbody(kelvin) * smoothstep(0.08, 0.4, heat);
   // What it lights is the under side of the folds that hang over it.
