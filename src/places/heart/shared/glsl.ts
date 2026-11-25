@@ -281,8 +281,8 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   aim += vec3(poolWay, 1.0) * poolLit.r;
   // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
   // width of its open lava, the height of its surface, and its lean and share in one number; uRigStreamSpan: z of the first row, rows in a metre,
-  // the last row, z of the last row). The rock beside it takes the lava's light from that strip: whole at the brim, half at 3.5 m, nothing past
-  // 18 m, and by how far the face is turned to it (a level face beside it a third, a face turned away none: the relief of the bank is what shows
+  // the last row, z of the last row). The rock beside it takes the lava's light from that strip: whole at the brim, half at 6 m, nothing past
+  // 22 m, and by how far the face is turned to it (a level face beside it a third, a face turned away none: the relief of the bank is what shows
   // the light). The fire stands a little over its bed, so a level bank sees it. No read of any map: two rows of a uniform.
   float row = clamp((p.z - uRigStreamSpan.x) * uRigStreamSpan.y, 0.0, uRigStreamSpan.z);
   int rowAt = int(row);
@@ -292,7 +292,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   float streamAway = length(toStream);
   toStream.y += 0.6;
   float streamFacing = clamp((dot(n, toStream) * inversesqrt(dot(toStream, toStream)) + 0.25) / 1.25, 0.0, 1.0);
-  float streamK = (1.0 - 0.5 * max(bank.w - 1.0, 0.0)) * streamFacing / (1.0 + streamAway * streamAway * uRigStreamLight.z) * (1.0 - smoothstep(7.0, 18.0, streamAway));
+  float streamK = (1.0 - 0.5 * max(bank.w - 1.0, 0.0)) * streamFacing / (1.0 + streamAway * streamAway * uRigStreamLight.z) * (1.0 - smoothstep(9.0, 22.0, streamAway));
   // Behind the front of the surge (uRigStreamLight.w: its z; far up the tube before it comes) the stream runs full and casts 1.3 more.
   streamK *= 2.3 - 1.3 * smoothstep(uRigStreamLight.w - 5.0, uRigStreamLight.w + 2.0, p.z);
   vec3 streamLit = vec3(uRigStreamLight.x, uRigStreamLight.y, 0.0) * (3.14159 * streamK);
