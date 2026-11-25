@@ -137,20 +137,20 @@ export function rockShape(seed: number, kind: RockKind): RockShape {
     lump = range(0.1, 0.14);
     spine = range(0.06, 0.085);
   } else if (kind === 'block') {
-    power = range(12, 18);
-    const j = 0.38;
-    plane(1, range(-j, j), range(-j, j), range(0.7, 1));
-    plane(-1, range(-j, j), range(-j, j), range(0.7, 1));
-    plane(range(-j, j), 1, range(-j, j), range(0.6, 0.9));
-    plane(range(-j, j), -1, range(-j, j), range(0.6, 0.9));
-    plane(range(-j, j), range(-j, j), 1, range(0.65, 1));
-    plane(range(-j, j), range(-j, j), -1, range(0.65, 1));
-    // Corners and edges knocked off: the faces of a break, many and none of them square to another.
-    const cuts = 7 + Math.floor(rnd() * 5);
-    for (let k = 0; k < cuts; k++) anywhere(range(0.74, 0.98));
-    swell = range(0.035, 0.055);
-    lump = range(0.03, 0.045);
-    spine = range(0.045, 0.065);
+    power = range(22, 32);
+    const j = 0.45;
+    plane(1, range(-j, j), range(-j, j), range(0.62, 1));
+    plane(-1, range(-j, j), range(-j, j), range(0.62, 1));
+    plane(range(-j, j), 1, range(-j, j), range(0.5, 0.9));
+    plane(range(-j, j), -1, range(-j, j), range(0.5, 0.9));
+    plane(range(-j, j), range(-j, j), 1, range(0.58, 1));
+    plane(range(-j, j), range(-j, j), -1, range(0.58, 1));
+    // A few corners broken off, deep: broad faces that meet in edges, none square to another. Many shallow cuts would turn it back into a ball.
+    const cuts = 2 + Math.floor(rnd() * 3);
+    for (let k = 0; k < cuts; k++) anywhere(range(0.55, 0.85));
+    swell = range(0.02, 0.035);
+    lump = range(0.02, 0.035);
+    spine = range(0.035, 0.05);
   } else {
     power = range(7, 10);
     plane(range(-0.08, 0.08), 1, range(-0.08, 0.08), range(0.42, 0.5));

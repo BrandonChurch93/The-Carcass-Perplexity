@@ -209,7 +209,8 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // The lowest metres take the least: the crust right under them is dark, and it is the smoke a little higher that sees the open lava all round.
     float up = p.y - C.w;
     // A sheet that lies on the lake is all low: it is lit through.
-    float rise = 1.0 - 0.95 * exp(-up / 10.0) * smoothstep(8.0, 20.0, A.w);
+    // A body whose floor light is held low takes it from its first metres: its glow stays under the dark of its upper smoke.
+    float rise = 1.0 - 0.95 * exp(-up / min(10.0, F.y)) * smoothstep(8.0, 20.0, A.w);
     // What of the body stands under the point is guessed from how it thickens downward: the underside of a billow takes the fire, its top is shaded from it by its own mass.
     float under = mix(1.35, 0.3, clamp(2.0 * dens - skyward, 0.0, 1.0));
     light += under * rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));

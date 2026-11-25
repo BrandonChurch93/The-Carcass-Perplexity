@@ -24,6 +24,8 @@ interface Rock {
   to: number;
   /** A stone of the carpet on the lake: its number. Its place is then a place on the crust at the reference time, and it rides the crust. */
   afloat?: number;
+  /** For a stone of the carpet: how much the place favours loose rock (0 to 1: by the seam, by the feet), or -1 for a plate that lies on a rim and nowhere else. */
+  favour?: number;
 }
 
 interface Kind {
@@ -56,6 +58,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     stone: kind('bench', 0, 1),
     block: kind('bench', 0, 2.5),
     hero: kind('bench', 0, 6),
+    angular: kind('bench', 0, 10),
     slab: kind('bench', 10),
     boulder: kind('land', 0, 4),
     crag: kind('land', 0, 10),
@@ -179,6 +182,9 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   const yaw = (VIEW.yaw * Math.PI) / 180;
 
   const BOX = { x0: -598, x1: -484, z0: 184, z1: 324 };
+  // The slope the wide view looks down on, between its foreground and the shore. Its picture has angular blocks there in clusters with their
+  // rubble, and bare ground between: the scatters below leave it to the clusters further down.
+  const wideSlope = (x: number, z: number): boolean => x > -566 && x < -508 && z > 228 && z < 280 && height(x, z) > 0.25 && height(x, z) < 11;
   for (let i = 0; i < 9000; i++) {
     const x = rng.range(BOX.x0, BOX.x1);
     const z = rng.range(BOX.z0, BOX.z1);
@@ -196,7 +202,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > Math.exp(-routeDistance(x, z) / 30)) continue;
     if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.46 + 0.3 * rng.next()) continue;
     const size = sized(0.22, 0.65);
-    if (fits(x, z, size)) put(kinds.stone, x, z, size);
+    if (!wideSlope(x, z) && fits(x, z, size)) put(kinds.stone, x, z, size);
   }
   for (let i = 0; i < 9000; i++) {
     const x = rng.range(-660, -430);
@@ -208,7 +214,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > want) continue;
     if (drift(x, z, 11) + 0.3 * drift(x, z, 3) < 0.5 + 0.3 * rng.next()) continue;
     const size = sized(0.6, 1.9);
-    if (fits(x, z, size)) put(kinds.block, x, z, size);
+    if (!wideSlope(x, z) && fits(x, z, size)) put(kinds.block, x, z, size);
   }
   for (let i = 0; i < 2600; i++) {
     const x = rng.range(-640, -440);
@@ -218,7 +224,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 17) < 0.56 + 0.2 * rng.next()) continue;
     if (rng.next() > 0.3 + 0.7 * Math.exp(-d / 20)) continue;
     const size = sized(1.9, 5.5, 1.8);
-    if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
+    if (!wideSlope(x, z) && fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
   }
 
   // Nothing lies clean on a floor: what broke off a block lies round its foot, from a fist to a head.
@@ -236,7 +242,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   for (let i = 0; i < 5200; i++) {
     const x = rng.range(BOX.x0 - 10, BOX.x1 + 6);
     const z = rng.range(BOX.z0 - 20, BOX.z1 + 12);
-    if (benchDistance(x, z) < 0.8) continue;
+    if (benchDistance(x, z) < 0.8 || wideSlope(x, z)) continue;
     if (rng.next() > Math.exp(-routeDistance(x, z) / 38)) continue;
     if (drift(x, z, 13) + 0.3 * drift(x, z, 4) < 0.44 + 0.3 * rng.next()) continue;
     // The ropy sheet under the wide lens stays bare.
@@ -277,6 +283,39 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const z = cz + Math.sin(a) * r;
       const size = sized(1, 3, 1.3);
       if (benchDistance(x, z) > 1.5 && put(kinds.hero, x, z, size, { sink: rng.range(0.25, 0.36), flat: rng.range(0.6, 0.9), tone: rng.range(0.75, 1.2) })) chips(x, z, size);
+    }
+  }
+
+  // The slope below, down to the shore: a dozen clusters, each one or two blocks of two to three metres with the smaller ones that broke off
+  // them close against their feet and a spill of rubble on the low side.
+  {
+    const centres: [number, number][] = [];
+    for (let i = 0; i < 9000 && centres.length < 24; i++) {
+      const x = rng.range(-566, -508);
+      const z = rng.range(228, 280);
+      // Most of them low, along the shore, where the blocks that came down the slope stopped.
+      if (!wideSlope(x, z) || height(x, z) > 8.5 || (height(x, z) > 3.5 && rng.next() > 0.3)) continue;
+      if (centres.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 6)) continue;
+      centres.push([x, z]);
+      const bigs = 1 + rng.int(2);
+      for (let b = 0; b < bigs; b++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = b ? rng.range(1.8, 2.8) : 0;
+        const size = sized(1.8, 3.1, 1.2);
+        if (put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, size, { sink: rng.range(0.25, 0.38), flat: rng.range(0.6, 0.9), tone: rng.range(0.8, 1.2) })) chips(x + Math.cos(a) * r, z + Math.sin(a) * r, size);
+      }
+      const mids = 3 + rng.int(4);
+      for (let m = 0; m < mids; m++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = rng.range(1.3, 3.4);
+        put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, sized(0.6, 1.4, 1.3), { sink: rng.range(0.25, 0.4), flat: rng.range(0.55, 0.9), tone: rng.range(0.7, 1.15) });
+      }
+      const spill = 12 + rng.int(10);
+      for (let m = 0; m < spill; m++) {
+        const a = rng.range(0, Math.PI * 2);
+        const r = rng.range(0.8, 4.6) * Math.sqrt(rng.next());
+        put(kinds.angular, x + Math.cos(a) * r, z + Math.sin(a) * r, sized(0.14, 0.5, 1.5), { sink: rng.range(0.25, 0.4), shade: false, tone: rng.range(0.6, 1.1) });
+      }
     }
   }
 
@@ -452,7 +491,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       return [x - v[0] * (t3 - ctx.rig.flow.t0), z - v[1] * (t3 - ctx.rig.flow.t0)];
     };
     let number = 0;
-    const strew = (slab: boolean): boolean => {
+    const strew = (sort: 'lump' | 'slab' | 'rim'): boolean => {
+      const slab = sort === 'slab';
       const d = 22 + 143 * Math.pow(rng.next(), 1.5);
       const a = yaw3 + rng.range(-0.33, 0.33);
       const x = -454.9 + Math.sin(a) * d;
@@ -461,23 +501,25 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const far = seamFar(x, z);
       if (rng.next() > 0.3 + 0.7 * Math.exp(-far / 7)) return false;
       // In patches of rubble with bare crust between, never sprinkled one by one.
-      if (!slab && 0.75 * drift(x, z, 3.2) + 0.25 * drift(x, z, 0.9) < 0.5 + 0.1 * rng.next() && rng.next() > 0.05) return false;
+      if (sort === 'lump' && 0.75 * drift(x, z, 3.2) + 0.25 * drift(x, z, 0.9) < 0.5 + 0.1 * rng.next() && rng.next() > 0.05) return false;
       // The pools, and the hero's own, stay clear; where the pads of the feet stand only small lumps lie.
       for (const [px, pz, pr] of [[-404.9, 204.0, 2.5], [-418.8, 203.8, 2.5], [-385.1, 195.4, 2.5], [-407.6, 206.5, 4.5]] as [number, number, number][]) if (Math.hypot(x - px, z - pz) < pr) return false;
-      const pad = Math.min(Math.hypot(x + 410, z - 197), Math.hypot(x + 423.5, z - 166.1)) < 7;
-      if (pad && slab) return false;
-      const size = slab ? sized(0.4, 1.2, 1.4) : sized(0.08, pad ? 0.12 : 0.35, 1.3);
+      const feet = Math.min(Math.hypot(x + 410, z - 197), Math.hypot(x + 423.5, z - 166.1));
+      const pad = feet < 7;
+      if (pad && sort !== 'lump') return false;
+      // Many crumbs, few pieces of a forearm's length.
+      const size = slab ? sized(0.4, 1.2, 1.4) : sort === 'rim' ? rng.range(0.3, 0.6) : sized(0.07, pad ? 0.12 : 0.38, 2.2);
       const half = size / 2;
       // Broken crust is angular: most of the lumps are blocks and bits of plate, the rest clinker.
       const pick = rng.next();
-      const shape = slab || pick < 0.25 ? CLINKERS + rng.int(SLABS) : pick < 0.7 ? CLINKERS + SLABS + rng.int(BLOCKS) : rng.int(CLINKERS);
+      const shape = sort !== 'lump' || pick < 0.25 ? CLINKERS + rng.int(SLABS) : pick < 0.7 ? CLINKERS + SLABS + rng.int(BLOCKS) : rng.int(CLINKERS);
       const sh = shapes[shape] as RockShape;
       let tall: number;
       if (SHAPE_KINDS[shape] === 'slab') {
         scale.set(half * rng.range(0.85, 1.3), (half * rng.range(0.14, 0.3)) / 0.42, half * rng.range(0.8, 1.15));
         q.setFromAxisAngle(UP, rng.range(0, Math.PI * 2));
         const lean = rng.range(0, Math.PI * 2);
-        const tip = rng.range(0.05, slab ? 0.55 : 0.9);
+        const tip = sort === 'rim' ? rng.range(0.03, 0.3) : rng.range(0.05, slab ? 0.55 : 0.9);
         axis.set(Math.cos(lean), 0, Math.sin(lean));
         q.premultiply(tilt.setFromAxisAngle(axis, tip));
         // A leaning plate stands as high as its thickness and the rise of its width.
@@ -490,14 +532,17 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
         tall = 0.5 * (sh.high - sh.low) * Math.hypot((e[1] as number) * scale.x, (e[5] as number) * scale.y, (e[9] as number) * scale.z);
       }
       const [qx, qz] = rest(x, z);
-      // In by a quarter to two fifths: it lies in the rubble, it was not set down on the plate.
-      at.set(qx, tall * (1 - 2 * rng.range(0.25, 0.4)), qz);
-      rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, 0, rng.range(0.22, 0.6)], shape, part: 'bench', from: staged[0], to: staged[1], afloat: number });
+      // In by a fifth to a third: it lies in the rubble, it was not set down on the plate. A plate on a rim lies on it.
+      at.set(qx, tall * (1 - 2 * (sort === 'rim' ? rng.range(0.08, 0.16) : rng.range(0.2, 0.34))), qz);
+      // Pale enough for the ash on its top to show: the top takes the sky, the sides stay dark.
+      const favour = sort === 'rim' ? -1 : sort === 'slab' ? 1 : Math.max(Math.exp(-far / 5), Math.exp(-feet / 6));
+      rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [1 + rng.next(), size, 0, rng.range(0.5, 0.95)], shape, part: 'bench', from: staged[0], to: staged[1], afloat: number, favour });
       number++;
       return true;
     };
-    for (let i = 0, got = 0; i < 200000 && got < 16000; i++) if (strew(false)) got++;
-    for (let i = 0, got = 0; i < 6000 && got < 500; i++) if (strew(true)) got++;
+    for (let i = 0, got = 0; i < 200000 && got < 14000; i++) if (strew('lump')) got++;
+    for (let i = 0, got = 0; i < 6000 && got < 300; i++) if (strew('slab')) got++;
+    for (let i = 0, got = 0; i < 40000 && got < 4000; i++) if (strew('rim')) got++;
   }
 
   // The slopes beside the fall, as the longest lens sees them: no stone lies singly there. Angular blocks of 2 to 6 m stand in rows along the slope,
@@ -815,7 +860,10 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
         // the rubble lies in its patches on the plates, on the mounds and against the rims.
         if (bank < 0.1) continue;
         const rim = 1 - Math.min(1, Math.max(0, (bank - 0.1) / 0.4));
-        const gathers = half(under[k + 2] as number) > 0.5 ? 0.2 : Math.max(0.55, 0.9 * half(under[k + 3] as number), 0.8 * rim);
+        const favour = r.favour ?? 0;
+        const gap = half(under[k + 2] as number) > 0.5;
+        // A plate of the rims lies within a hand of a brim and nowhere else. The lumps are thin on the bare plates, thicker by the seam and the feet.
+        const gathers = favour < 0 ? (gap || bank > 0.3 ? 0 : 0.7) : gap ? 0.15 : Math.max(0.16 + 0.44 * favour, 0.7 * half(under[k + 3] as number), 0.8 * rim);
         if (((r.seed[0] as number) * 7.3) % 1 > gathers) continue;
         // Carried by the crust from where it lay at the reference time, and standing on it.
         const [dx, dz] = ctx.rig.flow.drift(matrices[i * 16 + 12] as number, matrices[i * 16 + 14] as number, world.value);
