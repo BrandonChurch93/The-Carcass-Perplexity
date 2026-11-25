@@ -12,6 +12,7 @@ attribute vec4 aBlade;
 attribute vec3 aSkinNormal;
 attribute float aTint;
 varying float vTint;
+varying float vSalt;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec4 vBlade;
@@ -26,7 +27,8 @@ void main() {
   vWorld = p;
   vNormal = normalize(aSkinNormal + 0.35 * aDir);
   vBlade = aBlade;
-  vTint = aTint;
+  vTint = mod(aTint, 100.0);
+  vSalt = floor(aTint / 100.0) * 0.25;
   vAcross = aBlade.x;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
@@ -39,6 +41,7 @@ varying vec4 vBlade;
 varying float vAcross;
 varying float vAlong;
 varying float vTint;
+varying float vSalt;
 ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
@@ -48,9 +51,12 @@ void main() {
   float root = 1.0 - vAlong;
   float tone = fract(floor(vBlade.z) * 0.137);
   // Grey brown, darker in the lock, salt-pale at the dry end.
-  vec3 albedo = mix(vec3(0.105, 0.088, 0.07), vec3(0.04, 0.031, 0.025), root) * (0.7 + 0.6 * tone) * vTint;
+  vec3 albedo = mix(vec3(0.105, 0.088, 0.07), vec3(0.04, 0.031, 0.025), root * mix(1.0, 0.45, min(1.0, vSalt))) * (0.7 + 0.6 * tone) * vTint;
   float wet = 1.0 - smoothstep(vBlade.w - 0.1, vBlade.w + 0.25, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.8, 0.56, 0.48) + vec3(0.008, 0.001, 0.001), wet);
+  // Salt dries on the ends of the ropes.
+  // Salt dries on the ropes, on some whole and on others not at all: a crust, not a white point on every hair.
+  albedo = mix(albedo, vec3(0.3, 0.27, 0.245), min(1.0, vSalt) * 0.75 * smoothstep(0.08, 0.4, vAlong) * smoothstep(0.45, 0.6, tone));
   float soaked = 1.0 - smoothstep(0.03, 0.25, vWorld.y);
   albedo = mix(albedo, vec3(0.07, 0.02, 0.014), soaked * 0.8);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(1.0, 0.85, wet), 0.4 + 0.6 * (1.0 - root));
@@ -84,7 +90,7 @@ export class Hair {
   constructor(
     ctx: Context,
     private readonly skin: Skin,
-    coats: { animal: Animal; locks: number; length: number; width: number; wet: number; stand: number; tint: number; bare: number }[],
+    coats: { animal: Animal; locks: number; length: number; width: number; wet: number; stand: number; tint: number; bare: number; fall?: number; salt?: number }[],
     name: string,
   ) {
     const rng = ctx.rng(name);
@@ -119,7 +125,7 @@ export class Hair {
           const wide = coat.width * rng.range(0.7, 1.3);
           const first = blade.length / 4;
           blade.push(-1, wide, own, coat.wet, 1, wide, own, coat.wet, -0.7, wide, own + 0.5, coat.wet, 0.7, wide, own + 0.5, coat.wet, 0, wide, own + 0.99, coat.wet);
-          for (let c = 0; c < 5; c++) tint.push(coat.tint);
+          for (let c = 0; c < 5; c++) tint.push(coat.tint + (coat.salt ?? 0) * 100);
           index.push(first, first + 1, first + 2, first + 1, first + 3, first + 2, first + 2, first + 3, first + 4);
         }
         this.locks.push({
@@ -129,7 +135,7 @@ export class Hair {
           aft: start + Math.max(0, i - 4) * w + j,
           length: coat.length * rng.range(0.55, 1.35),
           stand: rng.range(0.02, 0.14) + coat.stand * rng.next(),
-          hang: rng.range(0.8, 1.4),
+          hang: rng.range(0.8, 1.4) * (coat.fall ?? 1),
           swirl: rng.range(-0.5, 0.5),
         });
       }
@@ -193,9 +199,10 @@ export class Hair {
       const gx = ny * nx * lock.hang;
       const gy = (ny * ny - 1) * lock.hang;
       const gz = ny * nz * lock.hang;
-      let dx = nx * lock.stand + bx * 0.4 + cx * lock.swirl * 0.5 + gx;
-      let dy = ny * lock.stand + by * 0.4 + cy * lock.swirl * 0.5 + gy;
-      let dz = nz * lock.stand + bz * 0.4 + cz * lock.swirl * 0.5 + gz;
+      const lie = Math.min(1, lock.hang * 4);
+      let dx = nx * lock.stand + (bx * 0.4 + cx * lock.swirl * 0.5) * lie + gx;
+      let dy = ny * lock.stand + (by * 0.4 + cy * lock.swirl * 0.5) * lie + gy;
+      let dz = nz * lock.stand + (bz * 0.4 + cz * lock.swirl * 0.5) * lie + gz;
       // It cannot hang into the hide: what points in is laid along the skin.
       const into = dx * nx + dy * ny + dz * nz;
       if (into < 0.02) {
@@ -225,11 +232,13 @@ export class Hair {
         const ex = dx;
         const ey = dy;
         const ez = dz;
-        const tx = px + dx * len;
-        const ty = py + dy * len;
-        const tz = pz + dz * len;
+        // It is limp: it follows the round of the trunk under it.
+        const round = lock.stand < 0.5 ? 0.75 * len * len : 0;
+        const tx = px + dx * len - nx * round;
+        const ty = py + dy * len - ny * round;
+        const tz = pz + dz * len - nz * round;
         // It leaves the skin, arches, and falls to the end of the lock.
-        const arch = 0.03 * len + 0.006;
+        const arch = 0.03 * len + 0.006 + 0.5 * round;
         const mx = (px + tx) / 2 + nx * arch;
         const my = (py + ty) / 2 + ny * arch;
         const mz = (pz + tz) / 2 + nz * arch;

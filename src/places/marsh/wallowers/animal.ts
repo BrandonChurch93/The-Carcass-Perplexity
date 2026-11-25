@@ -23,11 +23,11 @@ export const FEELER_SIDES = 6;
 // The trunk of an adult of size 1, rump to muzzle: how far along (0 to 1), x forward, y of the middle, half height, half width. Metres.
 // The back stands highest behind the shoulders and falls away to the rump; the belly hangs lowest behind the middle; the head hangs with no neck.
 const KNOTS: [number, number, number, number, number][] = [
-  [0.0, -2.0, 0.94, 0.02, 0.02],
-  [0.03, -1.97, 0.95, 0.3, 0.3],
-  [0.08, -1.84, 0.98, 0.5, 0.56],
-  [0.18, -1.4, 1.01, 0.59, 0.76],
-  [0.32, -0.72, 1.08, 0.67, 0.88],
+  [0.0, -2.0, 0.84, 0.02, 0.02],
+  [0.03, -1.97, 0.86, 0.24, 0.27],
+  [0.08, -1.84, 0.89, 0.41, 0.5],
+  [0.18, -1.4, 0.95, 0.55, 0.74],
+  [0.32, -0.72, 1.05, 0.66, 0.88],
   [0.46, 0.0, 1.18, 0.73, 0.9],
   [0.58, 0.6, 1.33, 0.8, 0.88],
   [0.68, 1.1, 1.24, 0.76, 0.82],
@@ -197,8 +197,8 @@ export class Animal {
         const wob = lump(along * 1.3 + 3, a * 1.1, sd) - 0.5;
         const wob2 = lump(along * 0.9 + 17, a * 1.7 + 5, sd + 3) - 0.5;
         // Rings of slack skin round the neck and the head, deepest under the throat; none alike.
-        const r1 = ridge(along / 0.2 + 1.4 * wob + 0.2 * Math.sin(a * 2 + sd), 0.55);
-        const under = 0.7 + 0.5 * smooth(0.6, -0.8, sn);
+        const r1 = ridge(along / 0.26 + 3.2 * wob + 1.5 * wob2 + 0.35 * Math.sin(a * 2 + sd), 0.55);
+        const under = (0.3 + 0.9 * smooth(0.7, -0.7, sn)) * (0.55 + 0.9 * lump(along * 0.7 + 5, a * 0.8, sd + 6));
         // Plates of hide that hang down the flank, slanting back as they fall, each sagging over the next.
         const r2 = ridge(along / 0.41 + 2.4 * wob2 + 0.5 * sn, 0.5);
         const side = smooth(0.95, 0.4, sn) * smooth(-0.98, -0.6, sn);
@@ -274,9 +274,9 @@ export class Animal {
       const angle = Math.PI * (1.04 + 0.92 * u) + 0.1 * (cell(f, 1, sd) - 0.5);
       const reach = ((f * 0.618 + cell(f, 4, sd) * 0.3) % 1) * 0.95;
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
-      const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 15) - Math.floor(3 * Math.abs(u - 0.5));
+      const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 7) - Math.floor(3 * Math.abs(u - 0.5));
       const length = k * (0.54 + 0.22 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
-      const radius = k * (0.038 + 0.012 * cell(f, 3, sd)) * (1 + 0.2 * young);
+      const radius = k * (0.029 + 0.01 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
         const v = i / (FEELER_RINGS - 1);
@@ -479,14 +479,14 @@ export class Animal {
       let y = this.cy[i] + ny * ca * hw + by * sa * hh;
       let z = this.cz[i] + nz * ca * hw + bz * sa * hh;
       // It leaves the lip downward, some reaching forward and some hanging straight, the outer ones leaning out: a rake, not a row.
-      const fore = 0.1 + 1.75 * at.reach + 0.3 * d.splay;
-      const out = at.lean * (0.75 + 0.5 * d.splay);
+      const fore = 0.45 + 1.3 * at.reach + 0.9 * d.splay;
+      const out = at.lean * (1.15 + 0.6 * d.splay);
       // Forward is where the head points on the level, whatever its hang: the tusks go down into the mud, not back under the chin.
       const hl = Math.hypot(tx, tz) || 1;
       const hx = tx / hl;
       const hz = tz / hl;
       let dx = hx * fore + nx * out;
-      let dy = -0.72 + 0.35 * d.splay;
+      let dy = -0.72 + 0.5 * d.splay;
       let dz = hz * fore + nz * out;
       let dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
