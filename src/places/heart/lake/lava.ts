@@ -209,10 +209,10 @@ vec4 meltAt(vec2 p, float ax, float push, float stir, float grain, float wide) {
   float between = d2 - d1;
 
   // The tongue of bare lava, and the thin skin that borders it.
-  float bare = max(wide, stir) * (1.0 - smoothstep(0.3, 0.5, ax + 0.5 * (big - 0.5) + 0.22 * (mid - 0.5) - 0.3 * stir));
+  float bare = max(wide, stir) * (1.0 - smoothstep(0.08, 0.26, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5) - 0.3 * stir));
   float raft = step(0.74, id) * smoothstep(0.05, 0.12, between) * (1.0 - 0.7 * stir);
   float open = bare * (1.0 - raft);
-  float near = (1.0 - smoothstep(0.5, 0.8, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5))) * max(wide, stir);
+  float near = (1.0 - smoothstep(0.26, 0.5, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5))) * max(wide, stir);
 
   // The cracks between the plates: centimetres wide, never narrower than a pixel and a half, and dimmer by as much as they are widened.
   float alive = smoothstep(0.34, 0.5, vnoise(p * vec2(0.45, 1.1) + 23.0) * 0.6 + 0.4 * mid + 0.25 * (1.0 - ax) - 0.1);
@@ -224,8 +224,11 @@ vec4 meltAt(vec2 p, float ax, float push, float stir, float grain, float wide) {
   float fold = 0.5 + 0.5 * sin(p.x * 17.0 + 7.0 * mid + 2.0 * p.y);
   float ropy = smoothstep(0.2, 0.7, push) * (1.0 - smoothstep(0.02, 0.08, grain));
   // A plate is darkest in its middle, where it is old and against the bank; it glows toward its edge, where it is thin.
-  float plate = mix(1205.0, 1050.0, smoothstep(0.45, 0.95, ax + 0.35 * (big - 0.5))) + 50.0 * (id - 0.5) + 110.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 45.0 * (fine - 0.5) + (fold - 0.5) * 70.0 * ropy;
-  plate = mix(plate, 1240.0 + 60.0 * fine, near * (1.0 - 0.8 * raft));
+  // The skin is drawn into ropes that lie along the flow, and the eddies wind them into spirals: a bright crease between two ropes.
+  float lines = 0.5 + 0.5 * sin(p.y * 38.0 + 9.0 * mid + 3.0 * big);
+  float creased = smoothstep(0.72, 1.0, lines) * (1.0 - smoothstep(0.02, 0.08, grain)) * (0.35 + 0.65 * alive);
+  float plate = mix(1140.0, 1035.0, smoothstep(0.45, 0.95, ax + 0.35 * (big - 0.5))) + 40.0 * (id - 0.5) + 100.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 30.0 * (fine - 0.5) + (fold - 0.5) * 70.0 * ropy + 130.0 * creased;
+  plate = mix(plate, 1200.0 + 60.0 * fine + 60.0 * creased, near * (1.0 - 0.8 * raft));
   float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
   vec3 c = mix(blackbody(plate), blackbody(1300.0 + 85.0 * alive + 40.0 * (fine - 0.5)), crack);
   c = mix(c, blackbody(1370.0 + 85.0 * streak * streak + 20.0 * (fine - 0.5) + 20.0 * stir), open);
