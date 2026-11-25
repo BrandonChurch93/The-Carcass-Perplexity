@@ -1,0 +1,6 @@
+2026-11-25 21:52 UTC
+work at d8e3de0 on agent/ribs-sea
+v1: every part in place, plain
+look-1.jpg = out/work/v1.png
+look-2.jpg = out/work/stills/key-ribs-2-hd-draft.png
+look-3.jpg = out/work/compare/ribs-1.png
