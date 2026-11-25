@@ -302,6 +302,8 @@ uniform vec4 uSurge;
 float gPx = 0.3;
 // Half the width of the lava here, in metres: the bed's half width as the stream has filled it.
 float gHalf = 0.0;
+// The lobe of fan crust this is on: x how far it is from the lobe's edge (in lobes), y the lobe's own number.
+vec2 gCell = vec2(0.5, 0.0);
 float seenAt(float metres) {
   return smoothstep(1.0, 2.6, metres / gPx);
 }
@@ -329,7 +331,7 @@ float channel(float fs, float fl, float r, float spacing, float seed, float widt
 float braid(float x, float fl, float r, float spacing, float seed, float width) {
   // Where neighbours run as one and where they stand apart: a slow wave down the fall line, out of step from place to place.
   // The whole braid wanders as it goes down: no strand is a ruled ray from the head.
-  x += 1.5 * (vnoise(vec2(fl * 0.06, x * 0.22 + seed)) - 0.5) + 0.45 * (vnoise(vec2(fl * 0.21, x * 0.5 + 9.0)) - 0.5);
+  x += 1.5 * (vnoise(vec2(fl * 0.06, x * 0.22 + seed)) - 0.5) + 0.8 * (vnoise(vec2(fl * 0.21, x * 0.5 + 9.0)) - 0.5) + 0.3 * (vnoise(vec2(fl * 0.55, x * 0.9 + 4.0)) - 0.5);
   float c = clamp(1.2 * cos(fl * 0.105 + 3.5 * vnoise(vec2(x * 0.13 + seed, fl * 0.05))), -1.0, 1.0);
   float k = floor(x);
   float best = 0.0;
@@ -341,7 +343,7 @@ float braid(float x, float fl, float r, float spacing, float seed, float width) 
     float m = abs(x - pos) * spacing * r / 45.0;
     // Its width is uneven, hair-thin here and swollen there, and here and there a strand is skinned over for a stretch.
     float w = width * (0.45 + 0.9 * vnoise(vec2(fl * 0.11, i * 3.1 + seed))) * clamp(r / 45.0, 0.5, 1.0);
-    float on = smoothstep(0.3, 0.42, h + 0.75 * vnoise(vec2(fl * 0.035, i * 1.7 + seed)));
+    float on = smoothstep(0.36, 0.48, h + 0.75 * vnoise(vec2(fl * 0.075, i * 1.7 + seed)));
     best = max(best, (1.0 - smoothstep(0.15 * w, 0.5 * w, m)) * on);
   }
   return best;
@@ -371,6 +373,14 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   if (cover <= 0.0) return vec2(0.0, 600.0);
   float u = abs(s) / max(half_, 0.1);
   float fast = smoothstep(2.4, 5.2, speed);
+  // Far off the fine marks are under a pixel, and what shows that the stream runs is its long stretches: the skin comes down in
+  // packs some metres long with open melt between them. They ride at the speed of the lava, so they crowd where it slows and are
+  // drawn out where it drops; the middle of each runs ahead of its margins and none ends on a line straight across.
+  float ride = flow.x - uTime + 0.5 * u * u + 0.4 * (vnoise(vec2(s * 0.45 + 3.0, (flow.x - uTime) * 0.6)) - 0.5);
+  float stretch = vnoise(vec2(ride * 0.27, 2.0)) + 0.3 * (vnoise(vec2(ride * 0.8 + 5.0, 7.0)) - 0.5);
+  float run = smoothstep(3.0, 10.0, len) * (1.0 - smoothstep(${f(FAN_FROM - 6)}, ${f(FAN_FROM + 2)}, len));
+  float dark = smoothstep(0.56, 0.74, stretch) * run;
+  float bright = smoothstep(0.47, 0.27, stretch) * run;
   float fan = smoothstep(${f(FAN_FROM - 3)}, ${f(FAN_FROM + 4)}, len);
   // The fan's own marks are laid out from its head, in metres round it and metres out from it.
   vec2 out_ = at - vec2(${f(FAN_HEAD[0])}, ${f(FAN_HEAD[1])});
@@ -394,18 +404,18 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float strandFar = 0.0;
   if (lay < 1.0) {
     float lipHot = smoothstep(-7.0, -1.0, len) * smoothstep(10.0, 3.0, len);
-    float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 2)}, ${f(FAN_FROM - 14)}, len) * smoothstep(-3.0, 2.0, len));
-    float hotAt = clamp(lipHot + 0.25 + 1.3 * smoothstep(1.6, 3.6, speed), 0.0, 1.0);
+    float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 3)}, ${f(FAN_FROM - 5)}, len) * smoothstep(-3.0, 2.0, len));
+    float hotAt = clamp(lipHot + 0.25 + 1.3 * smoothstep(1.6, 3.6, speed) + 0.7 * bright, 0.0, 1.0);
     // They are marks in the lava like the rest: they ride down with it at the speed of the flow and do not stand in place.
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
     // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
-    float wide = 0.06 + 0.075 * smoothstep(1.9, 3.4, speed) + 0.2 * lipHot;
+    float wide = (0.096 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot;
     float d1 = abs(b1 - 0.5);
     float d2 = abs(b2 - 0.47);
     core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
     core *= (1.0 - smoothstep(0.62, 0.86, u)) * hotDown;
-    kelvin = mix(kelvin, mix(1505.0, 1560.0, hotAt) + 30.0 * (streak - 0.5), core);
+    kelvin = mix(kelvin, mix(1528.0, 1560.0, hotAt) + 30.0 * (streak - 0.5), core);
     // How far this is from the nearest strand, in strand widths, its outline torn.
     strandFar = min(d1, 1.15 * d2) / wide + 0.9 * (vnoise(vec2(s * 1.7 + 9.0, age * 2.3)) - 0.5) + 0.35 * seenAt(0.2) * (vnoise(vec2(s * 5.1, age * 6.1 + 3.0)) - 0.5);
   }
@@ -429,7 +439,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     rq += 0.8 * vec2(vnoise(rq * 0.6 + 3.0), vnoise(rq * 0.6 + 11.0)) + 0.22 * vec2(vnoise(rq * 2.3 + 5.0), vnoise(rq * 2.3 + 17.0));
     vec2 cell = plates(rq);
     cell.y += 0.16 * (vnoise(rq * 3.7 + 9.0) - 0.5);
-    float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * behind;
+    float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * behind + 0.4 * dark - 0.12 * bright;
     raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
     float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1290.0, smoothstep(0.26, 0.08, cell.x));
     kelvin = mix(kelvin, skin, raft);
@@ -437,7 +447,14 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     // crack or two alight along the flow. A drop tears it up, the lip has none yet, and the surge breaks most of it.
     float skinOn = smoothstep(1.5, 2.3, strandFar) * (1.0 - 0.92 * smoothstep(1.9, 3.2, speed)) * smoothstep(3.0, 10.0, len) * (1.0 - 0.97 * behind) * (1.0 - lay);
     float crustK = mix(790.0, 1030.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 260.0 * smoothstep(3.1, 1.7, strandFar) + 190.0 * clamp(thread, 0.0, 1.0);
+    // A pack is skin from bank to bank, torn here and there, and a drop does not tear all of it up.
+    float pack = dark * (1.0 - 0.5 * fast) * (1.0 - 0.97 * behind) * smoothstep(0.2, 0.42, vnoise(vec2(s * 0.8 + 2.0, ride * 1.9)) + 0.3 * (1.0 - core));
+    // The fast threads run on through it, white in the black.
+    pack *= 0.92 * (1.0 - core);
+    kelvin = mix(kelvin, max(kelvin, 1500.0), 0.7 * bright * (1.0 - raft) * (1.0 - skinOn));
     kelvin = mix(kelvin, crustK, skinOn);
+    kelvin = mix(kelvin, mix(760.0, 990.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 200.0 * clamp(thread, 0.0, 1.0), pack);
+    skinOn = max(skinOn, pack);
     raft = max(raft, skinOn);
     // Its margins are slag: a border of cooled, ropy crust a metre or so wide that the stream has frozen against its banks,
     // ragged on its inner side and torn through where a drop quickens the melt.
@@ -465,8 +482,20 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     float laneK = mix(1130.0, 1360.0 - 70.0 * streak, smoothstep(0.05, 0.5, inLane));
     laneK = mix(laneK, 1500.0 + 45.0 * thread, smoothstep(0.62, 0.92, inLane) * (1.0 - 0.5 * smoothstep(${f(FAN_FROM + 40)}, ${f(FAN_FROM + 75)}, fl)));
     laneK = mix(laneK, mix(960.0, 1120.0, vnoise(at / 1.7 + 3.0)) + 260.0 * smoothstep(0.75, 0.95, lane) * smoothstep(0.5, 0.75, vnoise(vec2(fl * 0.3, fs * 0.2))), 0.9 * crusted);
+    // The feed comes down the lanes in pulses: one stretch runs bright, the next has dimmed under a film, and they travel at the
+    // fan's slow pace.
+    float pulse = vnoise(vec2((fl - 1.6 * uTime) / 8.0, fs / 13.0 + 3.0));
+    laneK = mix(laneK, min(laneK, 1110.0), 0.8 * smoothstep(0.5, 0.75, pulse));
     kelvin = mix(kelvin, laneK, fan);
     kelvin = mix(kelvin, crust, fan * (1.0 - open));
+    // The crust lies in lobes, toes of the flow laid one on another, longer down the fall line than across it. The melt shows in
+    // the joints between some of them: a net of short cracks, dull red for the most part and orange where a lobe is still fed.
+    vec2 fq = vec2(fs / 4.5, fl / 8.0);
+    fq += 0.7 * vec2(vnoise(fq * 0.7 + 3.0), vnoise(fq * 0.7 + 11.0)) + 0.2 * vec2(vnoise(fq * 2.3 + 5.0), vnoise(fq * 2.3 + 17.0));
+    gCell = plates(fq);
+    float fed = vnoise(at / 13.0 + 21.0) + 0.45 * gCell.y + 0.25 * behind;
+    float joint = smoothstep(0.11, 0.035, gCell.x) * smoothstep(0.42, 0.62, fed) * seenAt(0.9) * calm;
+    kelvin = mix(kelvin, max(kelvin, mix(1030.0, 1330.0, smoothstep(0.55, 0.95, fed) * vnoise(at / 3.3 + 7.0))), fan * joint);
   }
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1500.0, 0.8 * behind * (1.0 - 0.7 * raft) * (0.45 + 0.6 * streak + 0.5 * thread));
@@ -581,9 +610,11 @@ void main() {
       slope += still_ * (laid(tCrustNh, vWorld, 0, 6.0, 0.0).rg - 0.5 + 0.7 * (laid(tCrustNh, vWorld, 0, 1.3, 0.0).rg - 0.5));
     }
     n = normalize(n + vec3(slope.x, 0.0, slope.y) * 1.8);
-    // On the fan the crust lies between open rivulets and is warm with their light.
-    vec3 glow = blackbody(1300.0) * 3.14159 * (0.16 - 0.12 * still_) * (0.5 + 0.5 * n.y);
-    c += cool * rockShade(vWorld, n, normalize(cameraPosition - vWorld), skin * (0.8 - 0.45 * still_), 1.0, glow, ${f(TUBE.lipZ)} - vWorld.z);
+    // On the fan the crust lies between open rivulets and is warm with their light. On the stream it lies low in its bed between
+    // the strands and takes little light: lit as the banks are, it stood as a flat orange film.
+    // A lobe of the fan is lit at its rim by the joint beside it and is dark in its middle.
+    vec3 glow = blackbody(1300.0) * 3.14159 * (0.06 - 0.02 * still_) * (0.5 + 0.5 * n.y) * mix(1.0, 0.3 + 1.7 * smoothstep(0.38, 0.0, gCell.x), still_);
+    c += cool * rockShade(vWorld, n, normalize(cameraPosition - vWorld), skin * (0.8 - 0.45 * still_), mix(0.35, 1.0, still_), glow, ${f(TUBE.lipZ)} - vWorld.z);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
   if (hiddenByWall(vWorld, vIn.x)) discard;

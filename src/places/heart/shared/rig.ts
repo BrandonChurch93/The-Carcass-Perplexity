@@ -32,13 +32,15 @@ export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] a
 // gone 6 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K, a little yellower, and twice its level. It was three
 // and a half times (70, 9.5) when the crust at a brim was near black (albedo 0.014 to 0.05); the skin has lifted the crust since (0.05 to 0.08)
 // and the floor round the hero's pool stood as one flat saturated patch where the picture has a soft glow on a dark floor.
-// The fire's light lives with the flow: what a round light casts swells and sinks by a few per cent (6 at the most, 3 as a rule), slowly
-// (periods of 17, 10 and 6 s, which never line up inside a shot), and a swell at the mouth reaches the foot of the fall three seconds later,
-// as the lava does (a light lower down is that much behind). Lights far apart are out of step. A function of the place's seconds alone.
-export const BREATH = { deep: [0.03, 0.02, 0.012] as const, rate: [0.37, 0.61, 1.07] as const, lag: 0.05, apart: 0.019 };
-export function breath(e: { position: { x: number; y: number; z: number } }, seconds: number): number {
+// The fire's light lives with the flow: what a round light casts swells and sinks slowly (periods of 17, 10 and 6 s, which never line up inside
+// a shot), and a swell at the mouth reaches the foot of the fall three seconds later, as the lava does (a light lower down is that much behind).
+// Lights far apart are out of step. The lights of the fall, far from every lens, swing by 3 per cent as a rule and 6 at the most; the fountains
+// and the lit fume, which stand in front of the wide view, by `near` times that (9 as a rule, 19 at the most): 3 per cent is not seen between two
+// frames of a sheet. A function of the place's seconds alone.
+export const BREATH = { deep: [0.03, 0.02, 0.012] as const, rate: [0.37, 0.61, 1.07] as const, lag: 0.05, apart: 0.019, near: 3 };
+export function breath(e: { position: { x: number; y: number; z: number } }, seconds: number, deep = 1): number {
   const t = seconds + BREATH.lag * e.position.y + BREATH.apart * (e.position.x + 0.7 * e.position.z);
-  return 1 + BREATH.deep[0] * Math.sin(BREATH.rate[0] * t) + BREATH.deep[1] * Math.sin(BREATH.rate[1] * t + 1.3) + BREATH.deep[2] * Math.sin(BREATH.rate[2] * t + 2.1);
+  return 1 + deep * (BREATH.deep[0] * Math.sin(BREATH.rate[0] * t) + BREATH.deep[1] * Math.sin(BREATH.rate[1] * t + 1.3) + BREATH.deep[2] * Math.sin(BREATH.rate[2] * t + 2.1));
 }
 
 export const POOLS = {
@@ -52,13 +54,14 @@ export const POOLS = {
 // It is kept as `rows` cross sections of the main stream, evenly spaced along z from the lip to the toe of the fan: its middle at that z, half
 // the width of its open lava, and how high its surface stands. The course's own width is the bed's; the lava that shows is the middle `open` of it.
 // The rock beside it takes its light from that strip (emitterIrradiance): `share` of the lava at 1400 K at the brim, half of that `half` metres
-// out, nothing past 18 m. The fan is crust with open rivulets, not a sheet of melt: from where the stream spreads it casts `fan` of that.
+// out, nothing past 22 m (half was 3.5 and the end 18: round 6 found the faces beside each spill thin and flat grey where the picture's ledges
+// carry the fire for some fifteen metres). The fan is crust with open rivulets, not a sheet of melt: from where the stream spreads it casts `fan` of that.
 // A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
 // EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
 // strip now gives. The air reads the round lights for itself and is not touched by this.
 // When the surge comes down (the event `surge`; its front runs 25 t + 5 t^2 metres down the course, as in fall/index.ts), the strip behind the
 // front casts 1.3 more (in emitterIrradiance), as the fall's own strip on its bed did before the rig took that light over.
-export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
+export const STREAM = { rows: 48, open: 0.5, half: 6, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
 
@@ -592,11 +595,18 @@ export function createRig(t0: number): Rig {
         frontZ = streamSpan.x + (r + Math.min(Math.max((front - a) / Math.max(b - a, 1e-3), 0), 10)) / streamSpan.y;
       }
       streamLight.w = frontZ;
+      // The strip breathes with the light on the body of the stream.
+      const swell = breath({ position: { x: streamSpan.x, y: 30, z: 0 } }, now);
+      streamLight.x = streamRadiance[0] * STREAM.share * swell;
+      streamLight.y = streamRadiance[1] * STREAM.share * swell;
       const count = Math.min(MAX_EMITTERS, emitters.length);
       for (let i = 0; i < count; i++) {
         const e = emitters[i] as Emitter;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
-        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now));
+        // A light of the fall (inside the stream's span of z, within 60 m of its first row across) and the bank breathe shallow, the rest deep.
+        const at = (e.position.z - streamSpan.x) * streamSpan.y;
+        const ofFall = at > -8 && at < STREAM.rows + 4 && Math.abs(e.position.x - (streamRows[Math.min(Math.max(Math.round(at), 0), STREAM.rows - 1)] as THREE.Vector4).x) < 60;
+        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now, ofFall || e === bankLight ? 1 : BREATH.near));
         emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;

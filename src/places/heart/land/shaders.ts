@@ -378,7 +378,7 @@ void main() {
     // A butte of the darkest rock in the caldera, eroded and sooted; only the flank the fountains bake is paler.
     // Measured against the wide picture: its butte is the darkest rock of the far shore.
     albedo *= mix(1.0, 0.54, onSpur);
-    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.85 * baked);
+    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.4 * baked);
   }
   #endif
   #ifdef BENCH
@@ -500,10 +500,15 @@ void main() {
   // The crag itself, measured on the picture: weathered grey-brown rock that catches the sky, paler where a face has broken off lately.
   float broke = vnoise(vWorld.xz / 0.8 + vWorld.y * vec2(1.3, 0.7) + 3.1);
   albedo *= mix(vec3(1.0), vec3(1.0, 0.95, 0.93) * (0.9 + 0.6 * smoothstep(0.4, 0.62, broke)), onCrag);
+  // Its faces take the sky: lit grey-brown rock above a man's height, each broken face its own tone, against the black clinker at its foot.
+  float cragLit = smoothstep(3.6, 2.0, sd) * smoothstep(1.3, 2.6, vWorld.y + 0.6 * (broke - 0.5));
+  albedo *= mix(vec3(1.0), vec3(2.5, 2.3, 2.1) * (0.75 + 0.5 * smoothstep(0.3, 0.7, vnoise(vWorld.xz / 0.37 + vWorld.y * vec2(2.1, 1.3) + 5.5))), cragLit);
   // One mound of crystals at the vent itself: lemon, crusted, cream on its crown. The brightest thing of the near ground.
   float knob = vnoise(vWorld.xz / 0.16 + vWorld.y * vec2(2.3, 1.7) + 1.9);
-  float mound = smoothstep(0.95, 0.55, segmentDistance(vWorld.xz, uCrackB) + 0.3 * (knob - 0.5));
-  albedo = mix(albedo, mix(vec3(0.9, 0.7, 0.1), vec3(0.94, 0.88, 0.58), smoothstep(0.55, 0.85, knob)) * (0.7 + 0.5 * knob), mound);
+  // Small, and a crust, not a coat: half a metre round the crack, cream with a little lemon on its knobs, the dark rock showing through it.
+  float gap = smoothstep(0.38, 0.56, vnoise(vWorld.xz / 0.33 + vWorld.y * vec2(1.1, 0.8) + 6.4));
+  float mound = smoothstep(0.55, 0.3, segmentDistance(vWorld.xz, uCrackB) + 0.2 * (knob - 0.5)) * gap;
+  albedo = mix(albedo, mix(vec3(0.84, 0.8, 0.58), vec3(0.9, 0.78, 0.3), smoothstep(0.6, 0.85, knob)) * (0.7 + 0.5 * knob), mound);
   rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
@@ -533,20 +538,31 @@ void main() {
   float block = smoothstep(0.68, 0.8, vnoise(vWorld.xz / 1.9 + vWorld.y * vec2(0.4, 0.3) + 4.1)) * smoothstep(1.2, 0.4, px);
   float scree = vnoise(vWorld.xz / 0.45 + vWorld.y * vec2(0.7, 0.5) + 2.3) * smoothstep(0.5, 0.15, px);
   albedo *= mix(1.0, 0.42 + 0.45 * block + 0.16 * (mid - 0.5) + 0.12 * (scree - 0.5), ramp);
+  // The ramp is warm brown scree, not grey rock.
+  albedo *= mix(vec3(1.0), vec3(1.22, 0.98, 0.84), ramp);
+  // What the long lens resolves on every slope of scree below the cliffs: pale chips a hand across and dark blocks a stride across, crisp,
+  // read through the height as well so that nothing is drawn out down the slope.
+  float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
+  float chips = smoothstep(0.63, 0.7, vnoise(vWorld.xz / 0.34 + vWorld.y * vec2(1.7, 1.3) + 1.1));
+  float clods = smoothstep(0.58, 0.64, vnoise(vWorld.xz / 1.3 + vWorld.y * vec2(0.9, 0.6) + 3.3));
+  albedo *= mix(1.0, (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
   // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
   float behind = smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(0.3, 0.8, steep) * smoothstep(48.0, 72.0, vWorld.y) * smoothstep(200.0, 150.0, vWorld.y + 40.0 * (big - 0.5));
   albedo *= mix(vec3(1.0), vec3(1.9, 1.6, 1.2) * (0.75 + 0.5 * mid), behind);
   #endif
   #ifdef BUTTRESS
   // The buttress, measured on the wide picture: darker and warmer than the wall behind it, its table paler than its cliffs.
-  albedo *= vec3(0.8, 0.71, 0.67) * mix(1.35, 0.9, steep);
-  // Its table is the palest thing on it, and a skirt of talus lies against its near side in cones: paler than the cliffs and without their joints.
-  float table = (1.0 - steep) * smoothstep(60.0, 85.0, vWorld.y);
-  albedo *= 1.0 + 0.7 * table;
+  albedo *= vec3(0.8, 0.71, 0.67) * mix(1.15, 0.78, steep);
+  // A skirt of talus lies against its near side, in the shape and in cones of tone above it: paler than the cliffs and without their joints.
   float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
   float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);
-  float skirt = smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5)));
-  albedo = mix(albedo, vec3(0.135, 0.118, 0.104) * (0.75 + 0.5 * mid) * (0.9 + 0.2 * big), 0.8 * skirt);
+  // How far a point lies off the buttress's axis: negative is its near side, where the talus is.
+  vec4 axis = ${BUTTRESS_LINE};
+  vec2 axisRun = axis.zw - axis.xy;
+  float offAxis = ((vWorld.x - axis.x) * axisRun.y - (vWorld.z - axis.y) * axisRun.x) / length(axisRun);
+  float skirt = max(smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5))), (1.0 - steep) * smoothstep(84.0, 66.0, vWorld.y) * smoothstep(-40.0, -54.0, offAxis));
+  float grit = vnoise(vWorld.xz / 2.7 + vWorld.y * vec2(0.5, 0.3) + 8.1);
+  albedo = mix(albedo, vec3(0.1, 0.086, 0.076) * (0.7 + 0.4 * mid + 0.3 * grit) * (0.9 + 0.2 * big), 0.8 * skirt);
   #endif
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.
