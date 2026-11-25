@@ -388,7 +388,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (afloat && rng.next() > Math.exp(calderaDistance(x, z) / 13)) continue;
     if (drift(x, z, 14) + 0.4 * drift(x, z, 3.1) < 0.3 + 0.35 * rng.next()) continue;
     const size = afloat ? sized(0.5, 5.5, 1.4) : sized(0.25, 3.2, 2.0);
-    put(kinds.boulder, x, z, size, { shade: false, sink: rng.range(0.2, 0.5), flat: afloat ? rng.range(0.7, 1.1) : rng.range(0.45, 0.9), onLake: afloat });
+    put(kinds.boulder, x, z, size, { shade: false, sink: rng.range(0.2, 0.5), flat: afloat ? rng.range(0.4, 0.8) : rng.range(0.45, 0.9), onLake: afloat });
   }
 
   // The ledges of the wall beside the mouth carry what has fallen onto them.

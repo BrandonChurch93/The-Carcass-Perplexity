@@ -21,6 +21,14 @@ precision highp float;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 
+// The lake leaves a black rind on whatever stands in it, to an uneven height, so the level line where land meets
+// lake does not read as a ruled edge from the far lenses. Kept off the bench, whose shore has its own lip.
+float lakeRind(vec3 p) {
+  float top = 0.3 + 3.2 * pow(vnoise(p.xz / 23.0 + 5.0), 1.5) + 1.2 * vnoise(p.xz / 4.3);
+  float away = max(smoothstep(-440.0, -400.0, p.x), smoothstep(12.0, 9.0, distance(p.xz, vec2(-453.4, 241.2))));
+  return (1.0 - smoothstep(0.45 * top, top, p.y)) * away;
+}
+
 // rigShade with the land map already read. The lake's light is read with four taps near the lake and with one above it
 // (FAR_LIGHT: always one); only a glazed face (GLAZE) is given the sky and the lake as a mirror would see them.
 // No material asks for GLAZE now: the rock of the bench is dry and matte.
@@ -364,6 +372,7 @@ void main() {
   #else
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
   #endif
+  albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, shade);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -487,6 +496,7 @@ void main() {
   float sul = smoothstep(0.25, 0.75, gas) * smoothstep(0.15, 0.65, n0.y);
   albedo = mix(albedo, mix(vec3(0.6, 0.5, 0.15), vec3(0.8, 0.76, 0.56), smoothstep(0.25, 0.6, height)), sul * 0.92);
   float rough = mix(0.9, 0.76, rind * smoothstep(0.4, 0.7, height));
+  albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld));
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, 0.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
