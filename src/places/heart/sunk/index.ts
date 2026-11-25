@@ -234,7 +234,10 @@ export function create(ctx: HeartContext): HeartPiece {
     heat.at[0] = x + tx;
     heat.at[2] = z + tz;
     const staged = stagedSeconds();
-    shared.uLift.value = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to ? LIFT : 1;
+    const nearShot = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to;
+    shared.uLift.value = nearShot ? LIFT : 1;
+    // From the wide view the smoke of the split gathered into a pale ball beside the hull: there it is thin.
+    const smoky = nearShot ? 1 : 0.25;
     const now = settling(seconds);
     // The hull tips toward the split as it goes down: its far end by a hand's width, its end under the legs by half of that.
     for (const body of bodies) {
@@ -252,7 +255,7 @@ export function create(ctx: HeartContext): HeartPiece {
       smoke.at[2] = z + sz;
       // Each length of the split breathes its smoke out in its own time.
       const breath = waver(seconds, 1.9 * i + 0.4);
-      smoke.strength = rest.strength * (1 + 5 * now.puff) * (1 + 0.6 * breath);
+      smoke.strength = smoky * rest.strength * (1 + 5 * now.puff) * (1 + 0.6 * breath);
       smoke.rise = rest.rise * (1 + 0.8 * now.puff) * (1 + 0.25 * breath);
     });
   };
