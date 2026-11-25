@@ -168,7 +168,10 @@ void main() {
   float mottle = vnoise(vUv * 0.9 + seed * 7.0);
   float tone = clamp(pale + 0.2 * (mottle - 0.5) + 0.1 * (lum - 1.0) - 0.2 * ringAmp * (1.0 - ridge), 0.0, 1.0);
   vec3 soot = vec3(0.03, 0.029, 0.03);
-  vec3 skin = vec3(0.105, 0.097, 0.09) * (0.78 + 0.22 * lum) * (0.75 + 0.5 * plate);
+  // No two hides alike: each animal is sootier or greyer, and warmer or colder, than the next.
+  float sooty = fract(sin(vWho * 12.9898 + 4.1) * 43758.5453);
+  float warm = fract(sin(vWho * 78.233 + 1.7) * 43758.5453);
+  vec3 skin = vec3(0.105, 0.097, 0.09) * mix(vec3(1.12, 1.0, 0.86), vec3(0.9, 1.0, 1.1), warm) * (0.62 + 0.7 * sooty) * (0.78 + 0.22 * lum) * (0.75 + 0.5 * plate);
   vec3 bone = vec3(0.45, 0.41, 0.34) * (0.5 + 0.5 * lum);
   vec3 albedo = mix(mix(soot, skin, smoothstep(0.0, 0.5, tone)), bone, smoothstep(0.5, 1.0, tone)) * (0.35 + 0.65 * crack);
 
