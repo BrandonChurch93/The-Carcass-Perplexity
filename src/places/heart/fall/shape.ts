@@ -103,11 +103,11 @@ function finish(positions: number[], index: number[], extra: Record<string, { da
 
 const PHI0 = -0.13;
 const PHI1 = Math.PI + 0.13;
-const AROUND = 200;
+const AROUND = 168;
 const RIM = [1.0, 1.025, 1.06, 1.1, 1.15, 1.21, 1.28, 1.36, 1.45, 1.55];
 
 /** How far the rim stands out of the cliff, metres, by angle. The crown overhangs most. */
-const hood = (phi: number): number => 2.5 + 5 * Math.pow(Math.max(0, Math.sin(phi)), 1.5);
+const hood = (phi: number): number => 1 + 2 * Math.pow(Math.max(0, Math.sin(phi)), 1.5);
 const rimShape = (k: number): number => smooth(1.5, 1.08, k) * (0.78 + 0.22 * smooth(1.0, 1.08, k)) - 0.35 * smooth(1.4, 1.55, k);
 /** The outline of the arch is not a ruled curve: it leans, bulges and is notched, the same all the way in. `rho` is metres outward from the rim (negative inside). */
 const outline = (phi: number, rho: number): number =>
@@ -158,7 +158,7 @@ export function shell(): THREE.BufferGeometry {
   const mean = front.reduce((a, b) => a + b, 0) / front.length;
 
   const depths: number[] = [];
-  for (let d = 0; d < TUBE.depth; d += d < 112 ? 0.9 + d * 0.012 : d * 0.085) depths.push(d);
+  for (let d = 0; d < TUBE.depth; d += d < 112 ? 1.0 + d * 0.035 : d * 0.1) depths.push(d);
   depths.push(TUBE.depth);
   depths.reverse();
 
@@ -199,14 +199,25 @@ export function shell(): THREE.BufferGeometry {
   return finish(positions, index, { aSkin: { data: skin, size: 3 } });
 }
 
+/** True where (x, y) lies inside the cut of the rim, bevel and all, with a little to spare: the hole the face of the cliff leaves for it. */
+function inRim(x: number, y: number): boolean {
+  const qx = (x - MOUTH.x) / TUBE.half(0);
+  const qy = (y - TUBE.floor) / TUBE.crown(0);
+  if (qy < -0.03) return false;
+  const k = Math.pow(Math.pow(Math.abs(qx), TUBE.power) + Math.pow(Math.max(qy, 0), TUBE.power), 1 / TUBE.power);
+  const c = Math.sign(qx) * Math.pow(Math.abs(qx) / Math.max(k, 1e-6), TUBE.power / 2);
+  const s2 = Math.pow(Math.max(qy, 0) / Math.max(k, 1e-6), TUBE.power / 2);
+  return k < ragged(Math.atan2(s2, c), 0) * (1.08 + 0.06 * smooth(0.15, 0.5, qy));
+}
+
 /** The face of the cliff over the alcove, as the wall was before it was cut, with the arch left open. It lies just proud of the land and sinks under it at its edge. */
 export function face(): THREE.BufferGeometry {
   const x0 = MOUTH.x - (MOUTH.width / 2 + 15);
   const x1 = MOUTH.x + (MOUTH.width / 2 + 15);
   const z0 = MOUTH.z - 74;
   const z1 = MOUTH.z + 2;
-  const nx = Math.round((x1 - x0) / 1.4);
-  const nz = Math.round((z1 - z0) / 0.55);
+  const nx = Math.round((x1 - x0) / 2);
+  const nz = Math.round((z1 - z0) / 0.8);
   const positions: number[] = [];
   const index: number[] = [];
   const open: boolean[] = [];
@@ -222,7 +233,7 @@ export function face(): THREE.BufferGeometry {
       const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 3, edge));
       positions.push(x, y, z);
       edges.push(0, edge, 0);
-      open.push(inArch(x, y, 1.08 + 0.2 * smooth(0.15, 0.5, (y - TUBE.floor) / TUBE.crown(0))) && z > MOUTH.z - 58);
+      open.push(inRim(x, y) && z > MOUTH.z - 58);
       low.push(y < TUBE.floor - 3 && x > MOUTH.x - 45);
     }
   }
@@ -245,7 +256,7 @@ export interface Bed {
   height(x: number, z: number): number;
 }
 
-const BED = { x0: MOUTH.x - (MOUTH.width / 2 + 39), x1: MOUTH.x + (MOUTH.width / 2 + 19), z0: TUBE.lipZ - TUBE.depth - 4, z1: -312, lip: TUBE.lipZ };
+const BED = { x0: MOUTH.x - (MOUTH.width / 2 + 39), x1: MOUTH.x + (MOUTH.width / 2 + 19), z0: TUBE.lipZ - TUBE.depth - 4, z1: -262, lip: TUBE.lipZ };
 const ridged = (x: number, z: number): number => 1 - Math.abs(2 * noise2(x, z) - 1);
 /** The edge of the tube's floor is broken, not ruled. */
 const LIP_Z = new Map<number, number>();
@@ -334,9 +345,12 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const rubble = (1.4 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 0.7 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + 1.25 * blocks(x, z, 3.7, 1) + 0.6 * blocks(x + 31, z + 17, 1.9, 5)) * (1 + 0.8 * smooth(0, 12, out));
     // In the fan the stream no longer keeps a bed: it lies on the slope as a sheet of crust with channels in it.
     const sheet = smooth(FAN_FROM, FAN_FROM + 12, n.len);
-    // The toe of the fan goes into the lake in lobes: nothing of it ends on a straight line.
-    const toe = smooth(course.length - 30, course.length - 5, n.len) * (0.2 + 1.5 * fbm2(x / 8 + 1.7, z / 8 + 4.1));
-    const top = lerp(n.y, Math.max(base, ground, 0) + 0.3 - toe, sheet);
+    // The fan is a flow a man's height thick that thins to its edge and goes out on the lake in lobes: nothing of it ends on a straight line.
+    // Where the two small walkers of the fall's picture stand it is whole and level.
+    const stood = Math.min(Math.hypot(x + 51.1, z + 298.4), Math.hypot(x + 28.3, z + 282.1));
+    const lobe = u * lerp(0.74 + 0.55 * fbm2(x / 11 + 1.7, z / 11 + 4.1) + 0.12 * (noise2(x / 3.1, z / 3.1) - 0.5), 0.8, smooth(9, 4, stood));
+    const body = 0.3 + 1.0 * smooth(1.0, 0.62, lobe) - 1.0 * smooth(0.9, 1.06, lobe);
+    const top = lerp(n.y, Math.max(base, ground, 0) + body, sheet);
     // Beside the stream the rubble is what the stream has let stand: a low levee, then the slope. The bank on the lake's side is kept
     // below the stream, or from the shore the stream would hide behind it.
     const lakeward = n.len > 2 ? smooth(0.05, 0.6, n.toward[0] * 0.56 - n.toward[1] * 0.83) : 0;
@@ -354,9 +368,9 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
   };
 
   const xs: number[] = [];
-  for (let x = BED.x0; x <= BED.x1 + 1e-6; x += 0.7) xs.push(x);
+  for (let x = BED.x0; x <= BED.x1 + 1e-6; x += 0.9) xs.push(x);
   const zs: number[] = [];
-  for (let z = BED.z1; z > BED.z0; z -= z > BED.lip - 8 ? 0.6 : Math.min(1.7, 0.6 + (BED.lip - 8 - z) * 0.02)) zs.push(z);
+  for (let z = BED.z1; z > BED.z0; z -= z > -325 ? 1.3 : z > BED.lip - 8 ? 0.75 : Math.min(2.2, 0.75 + (BED.lip - 8 - z) * 0.03)) zs.push(z);
   zs.reverse();
   const positions: number[] = [];
   const flow: number[] = [];

@@ -114,11 +114,12 @@ const MAIN: [number, number][] = [
   [-38, -344],
   [-37, -335],
   [FALL_FOOT[0], FALL_FOOT[1]],
-  [FALL_FOOT[0] + 2, FALL_FOOT[1] + 14],
+  [FALL_FOOT[0] + 2, FALL_FOOT[1] + 13],
+  [FALL_FOOT[0] + 3, FALL_FOOT[1] + 23],
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 124;
+export const FAN_FROM = 108;
 
 /** The west arm of the fan. It leaves the main stream at `BRAID_FROM` metres from the lip. */
 export const BRAID_FROM = FAN_FROM - 6;
@@ -130,7 +131,7 @@ const ARM_TAIL: [number, number][] = [
 ];
 
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
-export const SPLITS = [19, 37, 55, 74, 91, 108];
+export const SPLITS = [19, 37, 55, 74, 91];
 
 /** Half the width of the stream by metres from the lip: a thread on the slope, a sheet only in the fan. */
 const HALF: [number, number][] = [
@@ -142,9 +143,10 @@ const HALF: [number, number][] = [
   [13, 5.6],
   [22, 4.8],
   [FAN_FROM - 4, 5],
-  [FAN_FROM + 8, 9],
-  [FAN_FROM + 22, 20],
-  [FAN_FROM + 40, 27],
+  [FAN_FROM + 8, 10],
+  [FAN_FROM + 20, 22],
+  [FAN_FROM + 34, 31],
+  [FAN_FROM + 49, 35],
 ];
 const halfAt = (len: number): number => {
   let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
@@ -228,8 +230,7 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
   return c;
 }
 
-/** Where the fan's marks are laid out from: the point of the main stream 15 m above the fan. */
-export const FAN_HEAD: [number, number] = ((): [number, number] => {
+const mainAt = (len: number): [number, number] => {
   const pts = spline(MAIN, SPACING);
   let lip = 0;
   let best = Infinity;
@@ -240,8 +241,12 @@ export const FAN_HEAD: [number, number] = ((): [number, number] => {
       lip = i;
     }
   });
-  return pts[Math.min(pts.length - 1, lip + Math.round((FAN_FROM - 15) / SPACING))] as [number, number];
-})();
+  return pts[Math.min(pts.length - 1, lip + Math.round(len / SPACING))] as [number, number];
+};
+/** Where the fan's marks are laid out from: the point of the main stream 15 m above the fan. */
+export const FAN_HEAD: [number, number] = mainAt(FAN_FROM - 15);
+/** Where the cascade lands on the fan and stands a moment as a pool. */
+export const FAN_POOL: [number, number] = mainAt(FAN_FROM + 9);
 
 /**
  * The side channels: each leaves the main stream, runs beside it round a mass of rock and joins it again.
@@ -252,8 +257,7 @@ const BRAIDS = [
   { from: 16, to: 47, side: -1, out: 11, half: 2.2 },
   { from: 42, to: 70, side: 1, out: 11, half: 2.4 },
   { from: 60, to: 88, side: -1, out: 12, half: 2.8 },
-  { from: 80, to: 112, side: 1, out: 14, half: 2.5 },
-  { from: 97, to: 121, side: -1, out: 10, half: 2.0 },
+  { from: 78, to: 103, side: 1, out: 13, half: 2.5 },
 ];
 
 export interface Course {
@@ -285,7 +289,7 @@ export function createCourse(height: (x: number, z: number) => number): Course {
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 20, smooth(BRAID_FROM + 6, BRAID_FROM + 34, len)), height, main.y[fork] as number, []);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 22, smooth(BRAID_FROM + 6, BRAID_FROM + 34, len)), height, main.y[fork] as number, []);
   for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 

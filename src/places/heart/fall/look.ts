@@ -1,7 +1,7 @@
 // The shaders of the fall's folder.
 import { MOUTH } from '../layout';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { FAN_FROM, FAN_HEAD, TUBE } from './path';
+import { FAN_FROM, FAN_HEAD, FAN_POOL, TUBE } from './path';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
 
@@ -116,9 +116,7 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   float deep = smoothstep(2.0, 34.0, d);
   float lit = (1.0 - deep) * (1.0 - deep);
   float open = skyOpen(p) * occ * lit;
-  // The hood of the arch stands between the melt on the floor and the face above it.
-  float hooded = mix(1.0, 0.2, smoothstep(3.0, 11.0, -d) * smoothstep(${f(TUBE.floor)}, ${f(TUBE.floor + 8)}, p.y));
-  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n) * smoothstep(14.0, 3.0, d) * hooded) * occ * lit + riverLight(p, n, d) * occ + more * occ;
+  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n) * smoothstep(14.0, 3.0, d)) * occ * lit + riverLight(p, n, d) * occ + more * occ;
   // Rock is grey: what warmth it shows is the light's.
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.2126, 0.7152, 0.0722))), 0.6);
   vec3 c = albedo * e / 3.14159;
@@ -310,6 +308,8 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float front = exp(-max(uSurge.x - len, 0.0) / 9.0) * smoothstep(uSurge.x + 4.0, uSurge.x, len) * uSurge.y;
   front = max(front, uSurge.z * smoothstep(7.0, -5.0, len));
   float ragged = 0.66 + 0.5 * vnoise(vec2(len * 0.21, s > 0.0 ? 3.0 : 11.0)) + 0.22 * vnoise(vec2(len * 1.1, s > 0.0 ? 4.0 : 12.0));
+  // The fan's edge is ragged where it lies, in lobes: on the lake the sheet itself gives it, on the shore this does.
+  ragged = mix(ragged, 0.8 + 0.45 * vnoise(at / 11.0 + 2.0) + 0.14 * vnoise(at / 3.1), smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 14)}, len));
   // The fuller stream does not widen evenly: lobes of it ride down each edge with the lava and fold over the bank.
   float lobe = vnoise(vec2(age * 1.1 + 3.0, s > 0.0 ? 5.0 : 13.0)) + 0.5 * vnoise(vec2(age * 3.1, s > 0.0 ? 7.0 : 17.0)) - 0.25;
   float half_ = flow.z * ragged * (1.0 + behind * (0.1 + 0.6 * lobe) * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 12)}, len)) + front * (0.6 + 0.6 * lobe));
@@ -346,21 +346,25 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
   float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1290.0, smoothstep(0.26, 0.08, cell.x));
   kelvin = mix(kelvin, skin, raft);
-  // Where the slope gives out the stream spreads into a fan and skins over; it goes on under the skin and in a few open lanes.
-  // The stream crosses the fan in a few thin channels that fork toward the shore; the rest is crust.
+  // Where the slope eases the stream spreads into a fan and skins over. The fan is slabs of black crust with the melt alight in the seams
+  // between them; the stream crosses it in braided channels that fork toward the shore, stands as a pool where the cascade lands,
+  // and breaks out along the fan's edge. Where the two small walkers of the fall's picture stand the crust is whole.
   float r = length(out_);
-  float open = channel(fs, fl, r, 12.0, 2.0, 1.5);
-  open = max(open, channel(fs, fl, r, 9.0, 13.0, 1.0) * smoothstep(${f(FAN_FROM + 6)}, ${f(FAN_FROM + 16)}, fl));
-  open = max(open, channel(fs, fl, r, 6.0, 29.0, 0.7) * smoothstep(${f(FAN_FROM + 20)}, ${f(FAN_FROM + 32)}, fl));
-  open = max(open, (1.0 - smoothstep(0.7, 1.3, abs(s + 1.2 * sin(len * 0.5)))) * smoothstep(${f(FAN_FROM + 16)}, ${f(FAN_FROM + 5)}, len));
-  // Where the fan meets the lake its skin is broken by the lake's own heave and the lava shows along the shore.
-  open = max(open, smoothstep(uSurge.w - 9.0, uSurge.w - 3.0, len) * smoothstep(0.5, 0.7, vnoise(vec2(fs * 0.21 + 3.0, uTime * 0.03))));
-  float crack = smoothstep(0.022, 0.0, abs(vnoise(vec2(fs * 0.55 + 1.0 + 1.5 * vnoise(vec2(fl * 0.13, 1.0)), fl * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(fs * 0.2, fl * 0.2 + 5.0)));
-  float crack2 = smoothstep(0.018, 0.0, abs(vnoise(vec2(fs * 1.7 + 6.0 + 1.2 * vnoise(vec2(fl * 0.3, 7.0)), fl * 0.4 + age * 0.03)) - 0.5));
-  float crust = mix(mix(700.0, 1060.0, pow(vnoise(vec2(fs * 0.8, fl * 0.8)), 2.0)), 1380.0, max(crack, 0.8 * crack2 * smoothstep(0.4, 0.7, vnoise(vec2(fs * 0.11 + 8.0, fl * 0.11)))));
+  float calm = smoothstep(2.5, 6.0, min(length(at - vec2(-51.1, -298.4)), length(at - vec2(-28.3, -282.1))));
+  float open = channel(fs, fl, r, 13.0, 2.0, 3.4);
+  open = max(open, channel(fs, fl, r, 9.0, 13.0, 2.6) * smoothstep(${f(FAN_FROM + 6)}, ${f(FAN_FROM + 16)}, fl));
+  open = max(open, channel(fs, fl, r, 6.0, 29.0, 2.0) * smoothstep(${f(FAN_FROM + 20)}, ${f(FAN_FROM + 32)}, fl));
+  float pool = 1.0 - smoothstep(5.0, 10.0, length(at - vec2(${f(FAN_POOL[0])}, ${f(FAN_POOL[1])})) * (0.75 + 0.5 * vnoise(at / 4.0)));
+  float rim = smoothstep(0.84, 0.95, u) * smoothstep(0.38, 0.56, vnoise(at / 6.5 + vec2(0.0, uTime * 0.02)));
+  open = max(max(open, pool), rim) * calm;
+  vec2 slab = plates(at / mix(3.6, 6.2, vnoise(at / 23.0 + 5.0)) + 0.9 * vec2(vnoise(at / 6.0), vnoise(at / 6.0 + 7.0)));
+  // The seams are widest where the fan is youngest: near the channels, down its middle and toward its edge.
+  float lively = clamp(0.9 * vnoise(at / 15.0 + 3.0) - 0.1 + 0.5 * smoothstep(0.75, 0.1, u) + 0.4 * smoothstep(0.55, 0.9, u) + 0.35 * behind, 0.0, 1.0) * (0.3 + 0.7 * calm);
+  float seam = smoothstep(0.035 + 0.13 * lively, 0.0, slab.x) * smoothstep(0.12, 0.42, lively + 0.25 * slab.y);
+  float crust = mix(mix(700.0, 1060.0, pow(vnoise(at / 1.9), 2.0)), 1385.0, seam);
   // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
-  kelvin = mix(kelvin, 1410.0 - 150.0 * streak + 90.0 * thread, fan);
-  kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.45 * behind));
+  kelvin = mix(kelvin, 1420.0 - 110.0 * streak + 60.0 * thread, fan);
+  kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.3 * behind * lively));
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1440.0, 0.45 * behind * (1.0 - 0.7 * raft) * (0.4 + 0.6 * streak + 0.5 * thread));
   kelvin = mix(kelvin, 1475.0, front * front * (0.2 + 0.8 * smoothstep(0.25, 0.7, streak)) * (1.0 - 0.55 * raft));
@@ -388,7 +392,7 @@ void main() {
   vec3 flat_ = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
-  lava.y = mix(lava.y, max(lava.y, 1390.0), smoothstep(0.5, 0.12, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * (0.35 + 0.65 * vnoise(vWorld.xz / 2.7 + uTime * 0.05)));
+  lava.y = mix(lava.y, max(lava.y, 1400.0), smoothstep(0.6, 0.15, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * smoothstep(0.25, 0.5, vnoise(vWorld.xz / 3.7 + uTime * 0.05)));
   vec3 c = blackbody(lava.y);
   // The sheet's own mark: above zero the apron the river built, below zero the skinned shelf of melt on the floor of the mouth.
   float apron = max(vApron, 0.0);
@@ -495,7 +499,7 @@ ${RIG_GLSL}
 ${PLATES_GLSL}
 ${STREAM_GLSL}
 void main() {
-  float low = mix(0.45, 1.0, smoothstep(40.0, 6.0, vWorld.y)) * smoothstep(-6.0, 2.0, vFlow.w);
+  float low = mix(0.3, 1.0, smoothstep(40.0, 6.0, vWorld.y)) * smoothstep(-6.0, 2.0, vFlow.w);
   vec2 s = stream(vFlow, vSpeed.x, vSpeed.yz, vWorld.xz);
   gl_FragColor = vec4(blackbody(s.y) * s.x * low, 1.0);
   if (low <= 0.0) discard;

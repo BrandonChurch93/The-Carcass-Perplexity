@@ -5,7 +5,7 @@ import { MOUTH, smooth } from '../layout';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { blackbody } from '../shared/rig';
 import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
-import { TUBE, WINDOW, createCourse } from './path';
+import { FAN_FROM, TUBE, WINDOW, createCourse } from './path';
 import { apronSlope, bed, face, shell } from './shape';
 
 export const PARTS: readonly string[] = ['vessel-mouth', 'lava-fall', 'surge'];
@@ -59,9 +59,9 @@ export function create(ctx: HeartContext): HeartPiece {
     return new THREE.Vector3(p.x, river.height(p.x, p.z) + lift, p.z);
   };
   const hot = (kelvin: number, share: number): THREE.Vector3 => new THREE.Vector3(...blackbody(kelvin)).multiplyScalar(share);
-  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 30, TUBE.floor + 4, TUBE.lipZ - 8), radius: 15, radiance: hot(1400, 0.3) };
-  const bodyLight = { position: spot(52, 6), radius: 18, radiance: hot(1400, 0.6) };
-  const footLight = { position: spot(course.length - 30, 5), radius: 22, radiance: hot(1380, 0.3) };
+  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 30, TUBE.floor + 4, TUBE.lipZ - 8), radius: 15, radiance: hot(1400, 0.16) };
+  const bodyLight = { position: spot(52, 6), radius: 18, radiance: hot(1400, 0.14) };
+  const footLight = { position: spot(course.length - 30, 5), radius: 22, radiance: hot(1380, 0.2) };
   const surgeLight = { position: spot(0, 4), radius: 9, radiance: new THREE.Vector3() };
   ctx.rig.emitters.push(mouthLight, bodyLight, footLight, surgeLight);
   const base = [mouthLight, bodyLight, footLight].map((l) => l.radiance.clone());
@@ -69,15 +69,18 @@ export function create(ctx: HeartContext): HeartPiece {
   const footLightAt = surgeReaches(course.length - 26);
 
   // The air over the fall: heat along it and at the mouth, fume where it meets the lake and from the mouth.
-  for (const len of [8, 40, 72, 105, 145]) {
+  for (const len of [8, 40, 72, 104, 138]) {
     const p = spot(len, 0);
     ctx.sources.heat.push({ at: [p.x, p.y, p.z], radius: 14, height: 40, strength: 0.8 });
   }
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
+  // The fume leaves the fan where it meets the lake, east of its middle, and leans east and out over the lake; smoke leaves its west edge.
   const footAt = spot(course.length - 8, 0);
-  const footFume = { at: [footAt.x + 14, 1, footAt.z + 4] as [number, number, number], radius: 34, strength: 0.6, rise: 150, kind: 'fume' as const, lean: [0.3, -0.1] as [number, number] };
+  const footFume = { at: [footAt.x + 12, 1, footAt.z + 2] as [number, number, number], radius: 24, strength: 0.32, rise: 130, kind: 'fume' as const, lean: [0.4, 0.15] as [number, number] };
+  const fanAt = spot(FAN_FROM + 24, 0);
+  const fanSmoke = { at: [fanAt.x - 20, 2, fanAt.z + 4] as [number, number, number], radius: 15, strength: 0.2, rise: 70, kind: 'smoke' as const, lean: [0.35, 0.1] as [number, number] };
   const mouthFume = { at: [MOUTH.x - 6, TUBE.floor + MOUTH.height + 6, TUBE.lipZ - 20] as [number, number, number], radius: 26, strength: 0.14, rise: 120, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
-  ctx.sources.steam.push(footFume, mouthFume);
+  ctx.sources.steam.push(footFume, fanSmoke, mouthFume);
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.
   const GOBS = 300;
