@@ -19,6 +19,7 @@ uniform vec4 uBedFar;
 uniform sampler2D tWave;
 uniform float uSea;
 uniform sampler2D tMirror;
+uniform sampler2D tRings;
 uniform vec2 uFrame;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -57,6 +58,9 @@ void main() {
   // Shallow water over a bed is nearly still: the waves grow with the depth.
   float deep = smoothstep(0.0, 0.5, depth);
   vec2 slope = (g1 * 0.16 + g2 * 0.2) * (0.35 + 0.65 * deep) + g3.rg * 0.1;
+  // The rings round what stands in the water, as the waders folder drew them for this camera.
+  vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
+  slope += rings.rg * 0.55;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
 
   float nv = clamp(dot(n, v), 0.0, 1.0);

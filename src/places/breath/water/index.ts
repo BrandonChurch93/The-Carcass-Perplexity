@@ -6,6 +6,7 @@ import { FRAGMENT, VERTEX } from './shaders';
 import { bedMap, waveMap } from './maps';
 import { SEA_LEVEL } from '../shared/anchors';
 import { MIRROR } from '../waders/mirror';
+import { RIPPLES } from '../waders/ripples';
 
 export const PARTS: readonly string[] = ['sea'];
 
@@ -34,6 +35,7 @@ export function create(ctx: Context): Piece {
       tWave: { value: waves },
       uSea: { value: SEA_LEVEL },
       tMirror: MIRROR.texture,
+      tRings: RIPPLES.texture,
       uFrame: { value: frame },
     },
     transparent: true,
