@@ -241,6 +241,39 @@
       "confidence": 84,
       "why": "The bright cascade looks like a stretched, glowing texture draped over angular ledges rather than fluid flowing around them.",
       "answered": "06:34 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the cinematic art direction. The volumetric haze, glowing lava against dim rock, lone spindly creature for scale and heavy atmospheric depth read as high-end concept or cinematic work, not a stock render. The smeared, warped lava texture and stylized cave keep me from being surer. They could point to an indie or hobbyist render (c).",
+      "answered": "06:45 UTC"
     }
-  ]
+  ],
+  "key": {
+    "R2-1": "Judged image: heart-0, film frame 2722",
+    "R2-2": "Judged image: heart-1, film frame 3477",
+    "R2-3": "Judged image: heart-2, film frame 3685",
+    "R2-4": "Judged image: heart-3, film frame 3156",
+    "R2-5": "Judged image: heart-4, film frame 4006"
+  },
+  "result": {
+    "votes": 25,
+    "for a photograph or a film frame": 4,
+    "share": 0.16,
+    "control share": 0.96,
+    "controls": "scorecards/controls/heart-R2.json",
+    "maxShareGap": 0.2,
+    "needed": 0.76,
+    "pass": false,
+    "by image": {
+      "R2-1": "cccdb",
+      "R2-2": "ccddd",
+      "R2-3": "cdcdb",
+      "R2-4": "cccdb",
+      "R2-5": "ccddb"
+    }
+  }
 }
