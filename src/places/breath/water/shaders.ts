@@ -1,6 +1,5 @@
 // The water in the light of the rig: what the sky puts on it, what shows through it, and the low sun's glitter.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { SUN_GLSL } from './sun';
 
 export const VERTEX = /* glsl */ `
 varying vec3 vWorld;
@@ -21,7 +20,16 @@ uniform sampler2D tWave;
 uniform float uSea;
 ${NOISE_GLSL}
 ${RIG_GLSL}
-${SUN_GLSL}
+// The sun's path on the water: its disc is behind fog, so the path is broad and soft, with sparks where a wave face turns it to the lens.
+vec3 sunGlitter(vec3 r, float far) {
+  float rs = max(dot(r, uSunDir), 0.0);
+  float rs2 = rs * rs;
+  float rs8 = rs2 * rs2 * rs2 * rs2;
+  float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
+  float broad = rs64 * rs8 * 3.0;
+  float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
+  return uSunColour * (broad + spark);
+}
 void main() {
   vec2 xz = vWorld.xz;
   vec2 un = (xz - uBedNear.xy) * uBedNear.z;
@@ -55,7 +63,7 @@ void main() {
   r.y = abs(r.y) + 0.02;
   r = normalize(r);
   vec3 mirror = skyRadiance(r) * skyOpen(vWorld);
-  mirror += sunGlitter(r, n, v, far, xz);
+  mirror += sunGlitter(r, far) * sunAt(vWorld + vec3(0.0, 0.3, 0.0));
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);

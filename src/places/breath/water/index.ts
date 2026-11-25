@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import type { Context, Piece } from '../shared/context';
 import { FRAGMENT, VERTEX } from './shaders';
 import { bedMap, waveMap } from './maps';
-import { SEA_LEVEL } from './level';
+import { SEA_LEVEL } from '../shared/anchors';
 
 export const PARTS: readonly string[] = ['sea'];
 

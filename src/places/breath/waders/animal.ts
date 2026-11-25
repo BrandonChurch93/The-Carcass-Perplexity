@@ -90,7 +90,7 @@ const hash = (n: number): number => {
 };
 
 /** A value read off a few points (u, value), eased between them. */
-function curve(points: readonly (readonly [number, number])[], u: number): number {
+export function curve(points: readonly (readonly [number, number])[], u: number): number {
   const first = points[0] as readonly [number, number];
   if (u <= first[0]) return first[1];
   for (let i = 1; i < points.length; i++) {
@@ -105,8 +105,8 @@ function curve(points: readonly (readonly [number, number])[], u: number): numbe
 }
 
 // The trunk, rump (0) to chest (1): half height, half width, and how far the spine stands over the axis. A plucked bird's: high round rump, deep keel, narrow chest.
-const HALF_H: [number, number][] = [[0, 0.04], [0.07, 0.22], [0.24, 0.345], [0.48, 0.36], [0.72, 0.31], [0.9, 0.225], [1, 0.17]];
-const HALF_W: [number, number][] = [[0, 0.03], [0.07, 0.17], [0.24, 0.27], [0.48, 0.285], [0.72, 0.235], [0.9, 0.165], [1, 0.135]];
+export const HALF_H: [number, number][] = [[0, 0.04], [0.07, 0.22], [0.24, 0.345], [0.48, 0.36], [0.72, 0.31], [0.9, 0.225], [1, 0.17]];
+export const HALF_W: [number, number][] = [[0, 0.03], [0.07, 0.17], [0.24, 0.27], [0.48, 0.285], [0.72, 0.235], [0.9, 0.165], [1, 0.135]];
 const SPINE: [number, number][] = [[0, -0.06], [0.2, 0.05], [0.45, 0.07], [0.8, 0.0], [1, -0.02]];
 
 // The neck's pitch along its length, degrees above level: carried up (it stands off the shoulders, arches and hooks over at the end so the tuft
@@ -211,7 +211,7 @@ export class Wader {
         const phi = (s / bodySides) * Math.PI * 2;
         // Under the trunk the skin is in its own shade.
         const shade = 0.55 + 0.45 * smooth(-0.9, 0.3, Math.sin(phi));
-        skin.describe(this.body, i, s, t * b.bodyLen, (s / bodySides) * 2 * Math.PI * 0.32 * k, 0.5, shade, a, seed, 0, t);
+        skin.describe(this.body, i, s, t * b.bodyLen, (s / bodySides) * 2 * Math.PI * 0.32, 0.5, shade, a, seed, 0, t);
       }
     }
 
