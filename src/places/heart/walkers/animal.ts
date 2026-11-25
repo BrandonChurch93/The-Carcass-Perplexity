@@ -119,15 +119,15 @@ export const REST = 0.0125;
 
 /** What sways does so in a whole number of cycles every eight seconds. */
 const LOOP = Math.PI / 4;
-const BODY_RINGS = 54;
-const BODY_SIDES = 26;
+const BODY_RINGS = 96;
+const BODY_SIDES = 32;
 const NECK_RINGS = 46;
 const NECK_SIDES = 12;
 const NECK_END = 7;
 const LEG_SIDES = 12;
 const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
-const RAG_RINGS = 5;
+const RAG_RINGS = 7;
 const RAG_SIDES = 4;
 const SINEW_RINGS = 7;
 const SINEW_SIDES = 5;
@@ -192,25 +192,28 @@ export class Animal {
       const x = (t - 0.5) * b.bodyLen;
       const top = b.bodyTop * e * (1 + 0.22 * b.hump * gauss((t - 0.66) / 0.25) - 0.08 * gauss((t - 0.43) / 0.1));
       // A deep chest forward and a belly drawn up behind it.
-      const keel = b.bodyKeel * e * (0.74 + 0.34 * gauss((t - 0.66) / 0.2) - 0.1 * gauss((t - 0.3) / 0.12));
+      const keel = b.bodyKeel * e * (0.66 + 0.46 * gauss((t - 0.67) / 0.17) - 0.12 * gauss((t - 0.34) / 0.13));
       const wide = b.bodyWide * e * (1 + 0.2 * gauss((t - 0.25) / 0.1) + 0.26 * gauss((t - 0.71) / 0.12) - 0.24 * gauss((t - 0.43) / 0.1));
       for (let j = 0; j < BODY_SIDES; j++) {
-        const a = (j / BODY_SIDES) * Math.PI * 2;
+        // The skin is sewn along the keel, where its seam is out of sight.
+        const a = (j / BODY_SIDES - 0.25) * Math.PI * 2;
         const c = Math.cos(a);
         const s = Math.sin(a);
         // A withered sack: lumps at three sizes, the ribs showing on the flanks, the skin hanging in folds along the keel.
-        let m = 1 + 0.13 * (wrap(t * 5, a, 5, seed) - 0.5) + 0.11 * (wrap(t * 10, a, 10, seed + 1) - 0.5) + 0.08 * (wrap(t * 20, a, 18, seed + 2) - 0.5);
+        let m = 1 + 0.06 * (wrap(t * 5, a, 5, seed) - 0.5) + 0.07 * (wrap(t * 10, a, 10, seed + 1) - 0.5) + 0.06 * (wrap(t * 20, a, 18, seed + 2) - 0.5);
         // The cage of the ribs shows through the hide of the chest; the flank falls in under the spine and behind the last rib.
         const fromTop = Math.acos(Math.max(-1, Math.min(1, s)));
-        const cage = gauss((t - 0.63) / 0.19) * smooth(0.45, 0.9, fromTop) * smooth(2.9, 2.3, fromTop);
-        m += 0.15 * cage * (Math.pow(0.5 + 0.5 * Math.sin(t * 50 + 0.9 * c * c), 1.6) - 0.45);
+        const cage = smooth(0.36, 0.5, t) * smooth(0.9, 0.8, t) * smooth(0.4, 0.75, fromTop) * smooth(3.0, 2.5, fromTop);
+        // Each rib stands proud of a deep hollow: this is a dried carcass that still walks.
+        const crest = Math.pow(0.5 + 0.5 * Math.sin(t * 74 + 1.1 * c * c), 2.2);
+        m += cage * (0.17 * crest - 0.085);
         m -= 0.1 * gauss((fromTop - 0.62) / 0.24) * gauss((t - 0.47) / 0.3);
         m -= 0.14 * gauss((t - 0.4) / 0.08) * gauss((fromTop - 1.75) / 0.6);
         m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
         // The blades of the shoulders and the points of the hips, high on each side.
         const up = Math.max(0, s);
         const blade = gauss((Math.abs(c) - 0.72) / 0.3) * up;
-        m += 0.3 * blade * gauss((t - 0.75) / 0.08) + 0.28 * blade * gauss((t - 0.26) / 0.08);
+        m += 0.4 * blade * gauss((t - 0.77) / 0.07) + 0.4 * blade * gauss((t - 0.25) / 0.07);
         // The ridge of the spine, a knob to each bone.
         m += 0.14 * gauss(fromTop / 0.2) * (0.6 + 0.4 * Math.sin(t * 62)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
         const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
@@ -220,18 +223,24 @@ export class Animal {
         this.bodyLocal[o + 2] = c * wide * pinch * m;
         const under = smooth(0.2, -0.9, s);
         const socket = Math.max(gauss((t - 0.75) / 0.12), gauss((t - 0.26) / 0.12)) * smooth(0.5, -0.2, s);
-        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, 1 - 0.35 * under - 0.3 * socket, Math.max(top, wide) * e, seed, 0, 1 - e);
+        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, (1 - 0.35 * under - 0.3 * socket) * (1 - 0.6 * cage * Math.pow(1 - crest, 3)), Math.max(top, wide) * e, seed, 0, 1 - e);
       }
       skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 1 - e);
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
-    const rags = 7 + Math.floor(hash(seed, 21) * 6);
+    const rags = 16 + Math.floor(hash(seed, 21) * 8);
     for (let n = 0; n < rags; n++) {
-      const i = Math.floor(lerp(0.22, 0.8, hash(n, seed + 22)) * (BODY_RINGS - 1));
-      const j = Math.floor(lerp(0.62, 0.88, hash(n, seed + 23)) * BODY_SIDES);
+      // Two in three hang under the keel; the rest are torn loose at the shoulders and the hips.
+      const joint = n % 3 === 2;
+      const along = joint ? (hash(n, seed + 22) < 0.5 ? 0.32 : 0.68) + 0.08 * (hash(n, seed + 29) - 0.5) : lerp(0.2, 0.82, hash(n, seed + 22));
+      const round = joint ? (hash(n, seed + 23) < 0.5 ? 0.2 : 0.8) + 0.06 * (hash(n, seed + 30) - 0.5) : 1 + lerp(-0.14, 0.14, hash(n, seed + 23));
+      const i = Math.floor(along * (BODY_RINGS - 1));
+      const j = Math.floor((round % 1) * BODY_SIDES) % BODY_SIDES;
       const q = (i * BODY_SIDES + j) * 3;
-      const rag = this.rag(n, (0.35 + 1.3 * Math.pow(hash(n, seed + 24), 2)) * k, (0.03 + 0.09 * Math.pow(hash(n, seed + 25), 2)) * k);
+      // Strings and flat torn strips, 0.3 to 1.8 m.
+      const strip = hash(n, seed + 25);
+      const rag = this.rag(n, (0.3 + 1.25 * Math.pow(hash(n, seed + 24), 1.6)) * k, (strip < 0.4 ? 0.02 + 0.03 * strip : 0.05 + 0.2 * Math.pow(strip - 0.4, 1.5)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }

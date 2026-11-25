@@ -37,6 +37,11 @@ const bendNoise = (x: number, z: number, s: number): number => {
 const bendX = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 1) - 0.5);
 const bendZ = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed + 2) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 3) - 0.5);
 
+const smooth = (a: number, b: number, x: number): number => {
+  const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+  return t * t * (3 - 2 * t);
+};
+
 export function seamField(): Env['seam'] {
   const lines = Object.keys(SEAMS).map((name) => {
     const points = seamLine(name, 40);
@@ -104,11 +109,14 @@ export function create(ctx: HeartContext): HeartPiece {
   const rng = ctx.rng('walkers');
   const herd = WALKERS.map((_, i) => {
     const build = makeBuild(i, rng);
+    skin.who = i;
     return new Animal(skin, build, makePlan(i, build, env, t0), env);
   });
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
+  // The pool each tuft stands in, as a light: x, z, how far it is open.
+  const pools = herd.map(() => new THREE.Vector4(0, 0, 0, 0));
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -118,6 +126,7 @@ export function create(ctx: HeartContext): HeartPiece {
       tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
+      uPools: { value: pools },
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
@@ -134,6 +143,10 @@ export function create(ctx: HeartContext): HeartPiece {
       herd.forEach((animal, i) => {
         const stood = animal.pose(seconds);
         const b = animal.b;
+        // A tuft that is down on a seam stands in a pool, and the pool lights the animal from below.
+        const crust = env.undrift(stood.tuft.x, stood.tuft.z, seconds);
+        const lit = smooth(1.3 * b.tendrilLen, 0.75 * b.tendrilLen, stood.tuft.y) * smooth(2.6, 1.0, env.seam(crust[0], crust[1]).d);
+        (pools[i] as THREE.Vector4).set(stood.tuft.x, stood.tuft.z, lit, 0);
         stood.feet.forEach((foot, j) => {
           const off = Math.min(1, foot.lift / (1.2 * b.k));
           rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (1.25 + 1.6 * off), 0.85 * (1 - 0.75 * off));
