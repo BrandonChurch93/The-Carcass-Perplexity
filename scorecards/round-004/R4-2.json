@@ -1,0 +1,29 @@
+{
+  "round": 4,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gpt_6_2_sol",
+  "answered": "2026-11-25 09:01 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the foreground animal as it lifts and curls its neck around 4.36 s",
+        "what": "The neck changes pose, but the shoulders, hips, and planted legs barely respond, so the movement reads as a neck animation on a fixed body.",
+        "fix": "Carry a small weight shift through the torso and supporting legs before the head rises."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the glowing seams and crust around the active lava pools throughout the six-second hold",
+        "what": "The smoke rolls and the pools brighten locally, but the active crust margins hold almost exactly the same shapes.",
+        "fix": "Let a few crust plates drift, buckle, or founder slowly at the active margins while the cooled ground stays fixed."
+      }
+    ]
+  },
+  "note": "The critic first answered in prose (kept in out/work/tmp/ans/r4-R4-2-first.txt: score 7, two major issues); it was asked once for the JSON object of the brief and nothing else."
+}
