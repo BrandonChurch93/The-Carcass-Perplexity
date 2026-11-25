@@ -277,7 +277,7 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.04 : 0.017) * k;
+    const tr = (far ? 0.026 : 0.017) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * (1 - 0.6 * u ** 1.6);
