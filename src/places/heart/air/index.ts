@@ -87,7 +87,7 @@ const BODIES: readonly Body[] = [
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 38, hard: 3.2, climb: 5, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 38, hard: 3.2, climb: 4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
-  { at: [505, -285], radius: 70, height: 700, lean: [-0.16, -0.18], dense: 0.02, widen: 7, foot: 0.18, repeat: 200, hard: 3, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.85, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  { at: [505, -285], radius: 70, height: 700, lean: [-0.16, -0.18], dense: 0.02, widen: 7, foot: 0.18, repeat: 130, hard: 3, climb: 14, colour: GREY, floor: [0.1, 150], tops: 1.85, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
@@ -206,8 +206,8 @@ export function create(ctx: HeartContext): HeartPiece {
       hang.w = shot === 'heart-02' ? 0.008 : 0;
       // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
       (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 60;
-      // The four offsets of the march move on with time, so that no pattern stands still over the frames.
-      phase = (((seconds * 60 + 0.5) % 1) * 61.8034) % 1;
+      // The four offsets of the march are tied to the pixel alone. Moved on with each sample they made a thin vapour flicker from frame to frame.
+      phase = 0.5;
     },
     beforeSample: (renderer, camera) => {
       // The mean of the sky the rig lights with: what a point of open air receives from above.
@@ -236,7 +236,7 @@ export function create(ctx: HeartContext): HeartPiece {
         // Smoke is held thin enough to see through across its own foot: no source stands as a dark trunk.
         (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (smoke ? Math.min(s.strength * 2.4, 1) : s.strength * 1.4) / radius);
         // Steam is quick, smoke is slow; the grain of each is set by the size of its foot.
-        const speed = s.kind === 'fume' ? 4.5 : smoke ? Math.min(4, 1 + s.rise * 0.035) : Math.min(3, 1.2 + s.rise * 0.16);
+        const speed = s.kind === 'fume' ? 4.5 : smoke ? Math.min(9, 2 + s.rise * 0.09) : Math.min(3, 1.2 + s.rise * 0.16);
         (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, speed, s.kind === 'fume' ? radius * 2.5 : smoke ? Math.max(3.5, radius * 3) : Math.max(2.2, radius * 6), s.kind === 'fume' ? 2 : smoke ? 1 : 0);
       }
       (su.uSteamCount as THREE.IUniform<number>).value = drawn;
