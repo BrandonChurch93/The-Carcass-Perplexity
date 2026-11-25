@@ -48,10 +48,10 @@ function look(position: Vec3, bearingDeg: number, pitchDeg: number, fov: number,
 const key = (id: string): number => keyPart(shotById(id));
 
 const shots: Record<string, CameraPath> = {
-  'breath-01': through(look([-44.6, 9, 51.7], 15, -10.7, 40), key('breath-01'), { forward: -34, up: 2, right: -5 }, { forward: 15, up: 0.5, right: 2 }),
+  'breath-01': through(look([-42, 9, 51.7], 18.5, -10.7, 40), key('breath-01'), { forward: -34, up: 2, right: -5 }, { forward: 15, up: 0.5, right: 2 }),
   'breath-02': through(look([-2, 4.2, 36], -14, -18, 46), key('breath-02'), { forward: -9, up: -0.5, right: -2.5 }, { forward: 8, up: 1.4, right: 1.5, tilt: -6 }),
-  'breath-03': through(look([-31.6, 5.4, 11.5], 10, -9, 32), key('breath-03'), { forward: 3.5, right: 1.2, up: 0.8 }, { forward: -7, right: -2, up: 0.4 }),
-  'breath-04': through(look([-50, 1.9, -22], 15, -10.5, 38), key('breath-04'), { right: -7, forward: -2.5 }, { right: 6, forward: 2.5 }),
+  'breath-03': through(look([-30.3, 4.3, 5], 2, -6, 32), key('breath-03'), { forward: 1, right: -0.6 }, { forward: -6, right: -1.5, up: 0.6 }),
+  'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -7, forward: -2.5 }, { right: 5, forward: 2 }),
   'breath-05': through(look([-29.5, 3.6, 33], 12, -10.3, 40), key('breath-05'), { forward: -8, up: 0.2, right: -1.5 }, { forward: 3.5, up: 0.2, right: 0.6 }),
 };
 
@@ -139,6 +139,19 @@ function create(): Place {
   const land = new THREE.Group();
   land.add(new THREE.Mesh(nearLand(250), rock));
   land.add(new THREE.Mesh(terrain(WORLD, WORLD, 160, 160, farGround), rock));
+  const boulderRock = kit.flat(0x4b433d, { band: 0x3d3632, step: 0.5, amount: 0.5 });
+  for (const [x, z, rx, ry, rz, turn] of [
+    [-45.6, 38.2, 5.5, 2.3, 3.6, 0.5],
+    [-48.8, 44.6, 4, 2.6, 3, -0.3],
+    [-26.5, 38.5, 4.5, 1.7, 3.2, -0.6],
+    [-22.5, 36, 3.5, 1.4, 2.6, 0.2],
+  ] as const) {
+    const boulder = new THREE.Mesh(new THREE.DodecahedronGeometry(1, 1), boulderRock);
+    boulder.position.set(x, ground(x, z) + 0.1, z);
+    boulder.scale.set(rx, ry, rz);
+    boulder.rotation.y = turn;
+    land.add(boulder);
+  }
   scene.add(parts.standIn('land', land));
 
   const sea = new THREE.Group();
@@ -317,7 +330,7 @@ function create(): Place {
   const weed = kit.flat(C.plume, { band: C.plumeBand, step: 0.9, amount: 0.6 });
   const frondGeo = new THREE.ConeGeometry(0.12, 1, 5).rotateX(Math.PI).translate(0, 0.5, 0);
   const bushes: [number, number, number][] = [
-    [-92, 4, 3.4],
+    [-89, 2.6, 3.4],
     [-84, 2.2, 5.6],
     [-64, 2.8, 4.8],
     [-46, 2.4, 4.2],
@@ -433,26 +446,28 @@ function create(): Place {
   const setTime = (t: number): void => {
     kit.setTime(t);
     const u = t - exhaleAt;
-    const surge = u < 0 ? 0 : u < 2.8 ? smooth(u / 2.8) : 0.14 + 0.86 * Math.exp(-(u - 2.8) / 1.2);
+    const surge = u < 3.4 ? smooth((u - 1.5) / 1.9) : 0.06 + 0.94 * Math.exp(-(u - 3.4) / 0.9);
+    const low = smooth(u / 1.3) * (1 - 0.8 * smooth((u - 3.4) / 1.5));
+    const grow = smooth(surge * 6);
     const spread = smooth((u - 1.8) / 7);
-    const body1 = u < 0 ? 0 : smooth((u - 1.5) / 1.8);
+    const body1 = smooth((u - 2.6) / 1.8);
     const sigh = Math.sin(t * 0.9);
 
-    fill.position.set(-17, -33, -4);
-    fill.scale.set(13, 20 + 1.2 * sigh + 7 * surge, 20);
-    tongue.position.set(-25.5, -2.2 + 0.5 * surge, -14);
-    tongue.scale.set(8.5, 4.2 + 0.4 * sigh + 1.2 * surge, 10.5);
-    pool.position.set(-38 + 0.6 * sigh, 0.2, -16);
-    pool.scale.set(8, 1 + 0.1 * sigh, 10);
+    fill.position.set(-24, -33, 6);
+    fill.scale.set(8, 22 + 1.2 * sigh + 6 * low, 12);
+    tongue.position.set(-26, -4 + 0.5 * surge, -8);
+    tongue.scale.set(5, 3 + 0.4 * sigh + 0.6 * surge, 7);
+    pool.position.set(-35.5 + 0.6 * sigh, 0.2, -14);
+    pool.scale.set(5.5, 1 + 0.1 * sigh, 8);
 
-    rise.position.set(-19, -12, -3);
-    rise.scale.set(7 + 3 * surge, 3 + 31 * surge, 8 + 3 * surge);
-    cap.position.set(-21 - 8 * surge, -14 + 19 * surge - 3 * spread, -5);
-    cap.scale.set(8 + 6 * surge, 2 + 6.5 * surge - 2 * spread, 11 + 5 * surge);
-    apron.position.set(-37, 0.3 - 3 * (1 - body1), -14);
-    apron.scale.set(11, 0.05 + 1.9 * body1 - 0.9 * spread, 9.5);
+    rise.position.set(-21, -12, -9);
+    rise.scale.set((6 + 3 * surge) * grow + 0.001, 3 + 31 * surge, (8 + 3 * surge) * grow + 0.001);
+    cap.position.set(-22 - 7 * surge, -14 + 19 * surge - 3 * spread, -16);
+    cap.scale.set((7 + 6 * surge) * grow + 0.001, 2 + 6.5 * surge - 2 * spread, (7 + 4 * surge) * grow + 0.001);
+    apron.position.set(-36, 0.3 - 3 * (1 - body1), -10);
+    apron.scale.set(9, 0.05 + 1.1 * body1 - 0.5 * spread, 7.5);
     pooled.position.set(-47, -0.1 - 3 * (1 - body1), -13 + 17 * spread);
-    pooled.scale.set(7.5, 0.05 + 1.1 * smooth((u - 2.4) / 2.5), 9 + 9 * spread);
+    pooled.scale.set(7.5, 0.05 + 1.1 * smooth((u - 3.4) / 2.5), 9 + 9 * spread);
 
     plumes.forEach((puffs) => {
       puffs.forEach((puff) => {
