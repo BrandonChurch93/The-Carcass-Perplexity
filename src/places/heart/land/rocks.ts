@@ -4,11 +4,12 @@
 import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
-import { UNIT } from '../shared/anchors';
+import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
+import { SEAMS, UNIT, keySeconds } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import type { HeartContext } from '../shared/context';
 import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
-import { ROCK_FRAGMENT, ROCK_VERTEX } from './rock-shader';
+import { CARPET_BAKE_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, carpetBakeFragment } from './rock-shader';
 import { ROCK_LEVELS, rockShape, type RockKind, type RockShape } from './rock-shape';
 
 type Height = (x: number, z: number) => number;
@@ -21,6 +22,8 @@ interface Rock {
   /** Seconds of the place between which the rock is on the set. */
   from: number;
   to: number;
+  /** A stone of the carpet on the lake: its number. Its place is then a place on the crust at the reference time, and it rides the crust. */
+  afloat?: number;
 }
 
 interface Kind {
@@ -430,6 +433,73 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     }
   }
 
+  // The floor of the feeding shot (staged for heart-02 only): its picture's crust is strewn with loose clinker, lumps of a hand to a forearm and
+  // broken slabs lying at angles, thickest on the banks of the seam the group feeds at. They lie on the crust and ride it: each is placed where
+  // the lens of that key sees it, then carried back to where that piece of crust was at the reference time.
+  {
+    const staged = during('heart-02');
+    const t3 = keySeconds('heart-3');
+    const yaw3 = (44.5 * Math.PI) / 180;
+    const seam = SEAMS.group as { from: [number, number]; to: [number, number] };
+    const sx = seam.to[0] - seam.from[0];
+    const sz = seam.to[1] - seam.from[1];
+    const seamFar = (x: number, z: number): number => {
+      const t = Math.min(1, Math.max(0, ((x - seam.from[0]) * sx + (z - seam.from[1]) * sz) / (sx * sx + sz * sz)));
+      return Math.hypot(x - seam.from[0] - sx * t, z - seam.from[1] - sz * t);
+    };
+    const rest = (x: number, z: number): [number, number] => {
+      const v = ctx.rig.flow.velocity(x, z);
+      return [x - v[0] * (t3 - ctx.rig.flow.t0), z - v[1] * (t3 - ctx.rig.flow.t0)];
+    };
+    let number = 0;
+    const strew = (slab: boolean): boolean => {
+      const d = 22 + 143 * Math.pow(rng.next(), 1.5);
+      const a = yaw3 + rng.range(-0.33, 0.33);
+      const x = -454.9 + Math.sin(a) * d;
+      const z = 250.3 - Math.cos(a) * d;
+      if (height(x, z) > -0.5 || Math.hypot(x - ISLAND[0], z - ISLAND[1]) < ISLAND_RADIUS + 3) return false;
+      const far = seamFar(x, z);
+      if (rng.next() > 0.3 + 0.7 * Math.exp(-far / 7)) return false;
+      // In patches of rubble with bare crust between, never sprinkled one by one.
+      if (!slab && 0.75 * drift(x, z, 3.2) + 0.25 * drift(x, z, 0.9) < 0.5 + 0.1 * rng.next() && rng.next() > 0.05) return false;
+      // The pools, and the hero's own, stay clear; where the pads of the feet stand only small lumps lie.
+      for (const [px, pz, pr] of [[-404.9, 204.0, 2.5], [-418.8, 203.8, 2.5], [-385.1, 195.4, 2.5], [-407.6, 206.5, 4.5]] as [number, number, number][]) if (Math.hypot(x - px, z - pz) < pr) return false;
+      const pad = Math.min(Math.hypot(x + 410, z - 197), Math.hypot(x + 423.5, z - 166.1)) < 7;
+      if (pad && slab) return false;
+      const size = slab ? sized(0.4, 1.2, 1.4) : sized(0.08, pad ? 0.12 : 0.35, 1.3);
+      const half = size / 2;
+      // Broken crust is angular: most of the lumps are blocks and bits of plate, the rest clinker.
+      const pick = rng.next();
+      const shape = slab || pick < 0.25 ? CLINKERS + rng.int(SLABS) : pick < 0.7 ? CLINKERS + SLABS + rng.int(BLOCKS) : rng.int(CLINKERS);
+      const sh = shapes[shape] as RockShape;
+      let tall: number;
+      if (SHAPE_KINDS[shape] === 'slab') {
+        scale.set(half * rng.range(0.85, 1.3), (half * rng.range(0.14, 0.3)) / 0.42, half * rng.range(0.8, 1.15));
+        q.setFromAxisAngle(UP, rng.range(0, Math.PI * 2));
+        const lean = rng.range(0, Math.PI * 2);
+        const tip = rng.range(0.05, slab ? 0.55 : 0.9);
+        axis.set(Math.cos(lean), 0, Math.sin(lean));
+        q.premultiply(tilt.setFromAxisAngle(axis, tip));
+        // A leaning plate stands as high as its thickness and the rise of its width.
+        tall = 0.5 * (sh.high - sh.low) * scale.y * Math.cos(tip) + half * Math.sin(tip);
+      } else {
+        scale.set(half * rng.range(0.85, 1.3), half * rng.range(0.45, 0.85), half * rng.range(0.8, 1.15));
+        q.copy(turnAny());
+        turned.makeRotationFromQuaternion(q);
+        const e = turned.elements;
+        tall = 0.5 * (sh.high - sh.low) * Math.hypot((e[1] as number) * scale.x, (e[5] as number) * scale.y, (e[9] as number) * scale.z);
+      }
+      const [qx, qz] = rest(x, z);
+      // In by a quarter to two fifths: it lies in the rubble, it was not set down on the plate.
+      at.set(qx, tall * (1 - 2 * rng.range(0.25, 0.4)), qz);
+      rocks.push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, 0, rng.range(0.22, 0.6)], shape, part: 'bench', from: staged[0], to: staged[1], afloat: number });
+      number++;
+      return true;
+    };
+    for (let i = 0, got = 0; i < 200000 && got < 16000; i++) if (strew(false)) got++;
+    for (let i = 0, got = 0; i < 6000 && got < 500; i++) if (strew(true)) got++;
+  }
+
   // The slopes beside the fall, as the longest lens sees them: no stone lies singly there. Angular blocks of 2 to 6 m stand in rows along the slope,
   // as ledges that have broken up, and in a heap at its foot, each with its rubble packed against its downhill side and black gaps between.
   const onSlope = (x: number, z: number): boolean => x > MOUTH.x - 150 && x < MOUTH.x + 120 && z > -460 && z < -324;
@@ -618,6 +688,13 @@ interface Bucket {
 function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes: RockShape[], rocks: Rock[]): { bench: THREE.Object3D[]; land: THREE.Object3D[]; beforeSample(renderer: THREE.WebGLRenderer, camera: THREE.Camera): void; dispose(): void } {
   const fine = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
   const simple = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { SIMPLE: '' } });
+  // The carpet on the lake: its stones read the crust under them from a bake of their own, one texel a stone.
+  const afloat = rocks.reduce((most, r) => Math.max(most, (r.afloat ?? -1) + 1), 0);
+  const span = new THREE.Vector2(128, Math.max(1, Math.ceil(afloat / 128)));
+  const carpet = new THREE.WebGLRenderTarget(span.x, span.y, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
+  // What the bake says, read back: for each stone the height of the crust under it, its distance from the melt, and whether it lies in a gap or on a mound.
+  const under = new Uint16Array(span.x * span.y * 4);
+  const half = THREE.DataUtils.fromHalfFloat;
   const n = rocks.length;
   const groups = 2 * shapes.length;
   const groupOf = new Uint16Array(n);
@@ -627,10 +704,13 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
   const matrices = new Float32Array(n * 16);
   const seeds = new Float32Array(n * 4);
   const inGroup = new Uint32Array(groups);
+  const most = new Int8Array(n);
   rocks.forEach((r, i) => {
     const e = r.m.elements;
     const g = (r.part === 'bench' ? 0 : shapes.length) + r.shape;
     groupOf[i] = g;
+    // A stone of the carpet is small and behind the focus: it never needs the two densest levels.
+    most[i] = r.afloat !== undefined ? (SHAPE_KINDS[r.shape] === 'slab' ? 3 : 2) : ROCK_LEVELS - 1;
     inGroup[g] = (inGroup[g] as number) + 1;
     matrices.set(e, i * 16);
     seeds.set(r.seed, i * 4);
@@ -679,19 +759,29 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
   const pixels = new Float32Array(n);
   const view = new THREE.Matrix4();
   const planes = new Float32Array(24);
-  const last = new Float32Array(33).fill(NaN);
+  const last = new Float32Array(34).fill(NaN);
 
+  const world = ctx.rig.uniforms.uTime as THREE.IUniform<number>;
+  // The span of seconds in which the carpet is on the set.
+  let carpetFrom = Infinity;
+  let carpetTo = -Infinity;
+  for (const r of rocks) {
+    if (r.afloat === undefined) continue;
+    carpetFrom = Math.min(carpetFrom, r.from);
+    carpetTo = Math.max(carpetTo, r.to);
+  }
   const choose = (camera: THREE.Camera): void => {
     // Who is on the set follows the stage clock (the camera's shot), not the world's seconds.
     const seconds = stagedSeconds();
     const cm = camera.matrixWorld.elements;
     const pm = camera.projectionMatrix.elements;
-    let same = last[32] === seconds;
+    let same = last[32] === seconds && last[33] === world.value;
     for (let i = 0; i < 16 && same; i++) same = last[i] === cm[i] && last[16 + i] === pm[i];
     if (same) return;
     last.set(cm, 0);
     last.set(pm, 16);
     last[32] = seconds;
+    last[33] = world.value;
 
     // The six planes of the view, pointing inward.
     view.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
@@ -718,6 +808,21 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
       want[i] = -1;
       const r = rocks[i] as Rock;
       if (seconds < r.from || seconds > r.to) continue;
+      if (r.afloat !== undefined) {
+        const k = r.afloat * 4;
+        const bank = half(under[k + 1] as number);
+        // None in the melt. Down in a gap between two plates a stone is hidden from so low a lens, so few are spent there:
+        // the rubble lies in its patches on the plates, on the mounds and against the rims.
+        if (bank < 0.1) continue;
+        const rim = 1 - Math.min(1, Math.max(0, (bank - 0.1) / 0.4));
+        const gathers = half(under[k + 2] as number) > 0.5 ? 0.2 : Math.max(0.55, 0.9 * half(under[k + 3] as number), 0.8 * rim);
+        if (((r.seed[0] as number) * 7.3) % 1 > gathers) continue;
+        // Carried by the crust from where it lay at the reference time, and standing on it.
+        const [dx, dz] = ctx.rig.flow.drift(matrices[i * 16 + 12] as number, matrices[i * 16 + 14] as number, world.value);
+        centre[i * 3] = dx;
+        centre[i * 3 + 1] = (matrices[i * 16 + 13] as number) + half(under[k] as number);
+        centre[i * 3 + 2] = dz;
+      }
       const x = centre[i * 3] as number;
       const y = centre[i * 3 + 1] as number;
       const z = centre[i * 3 + 2] as number;
@@ -729,7 +834,7 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
       const px = ((across[i] as number) * focal) / Math.max(0.3, Math.hypot(x - ex, y - ey, z - ez));
       if (px < (LEVEL_FROM[0] as number)) continue;
       let level = 0;
-      while (level < ROCK_LEVELS - 1 && px >= (LEVEL_FROM[level + 1] as number)) level++;
+      while (level < (most[i] as number) && px >= (LEVEL_FROM[level + 1] as number)) level++;
       want[i] = level;
       pixels[i] = px;
       if (level >= ROCK_LEVELS - 2) (crowd[level - (ROCK_LEVELS - 2)] as number[]).push(i);
@@ -755,8 +860,16 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
       // A group's densest buckets hold fewer than the group: the overflow steps down.
       while (b.count >= b.room) b = buckets[(groupOf[i] as number) * ROCK_LEVELS + --level] as Bucket;
       const at = b.count++;
-      (b.mesh.instanceMatrix.array as Float32Array).set(matrices.subarray(i * 16, i * 16 + 16), at * 16);
+      const to = b.mesh.instanceMatrix.array as Float32Array;
+      to.set(matrices.subarray(i * 16, i * 16 + 16), at * 16);
       (b.seeds.array as Float32Array).set(seeds.subarray(i * 4, i * 4 + 4), at * 4);
+      const afloat = (rocks[i] as Rock).afloat;
+      if (afloat !== undefined) {
+        to[at * 16 + 12] = centre[i * 3] as number;
+        to[at * 16 + 13] = centre[i * 3 + 1] as number;
+        to[at * 16 + 14] = centre[i * 3 + 2] as number;
+        (b.seeds.array as Float32Array)[at * 4 + 2] = half(under[afloat * 4] as number);
+      }
     }
     for (const b of buckets) {
       if (!b) continue;
@@ -771,24 +884,66 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
     }
   };
 
-  // The scene calls this at the start of every render of it, before it looks for what to draw: the one moment at which the camera
-  // of the sample is known to a part of the land. Whatever the scene did there before, it still does.
+  // The bake of the carpet: for each of its stones, the crust under it at the time of the sample.
+  const restData = new Float32Array(span.x * span.y * 4);
+  for (const r of rocks) {
+    if (r.afloat === undefined) continue;
+    restData[r.afloat * 4] = r.m.elements[12] as number;
+    restData[r.afloat * 4 + 1] = r.m.elements[14] as number;
+  }
+  const restTexture = new THREE.DataTexture(restData, span.x, span.y, THREE.RGBAFormat, THREE.FloatType);
+  restTexture.minFilter = THREE.NearestFilter;
+  restTexture.magFilter = THREE.NearestFilter;
+  restTexture.needsUpdate = true;
+  const bakeScene = new THREE.Scene();
+  const bakeCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const bakePlane = new THREE.PlaneGeometry(2, 2);
+  let bakeMaterial: THREE.ShaderMaterial | null = null;
+  const bake = (renderer: THREE.WebGLRenderer): void => {
+    if (!bakeMaterial) {
+      // Made at the first sample and not before: the lake fills the crust's uniforms when it is created, after the land.
+      bakeMaterial = new THREE.ShaderMaterial({ vertexShader: CARPET_BAKE_VERTEX, fragmentShader: carpetBakeFragment(CRUST_HEIGHT_GLSL), uniforms: { ...shared, ...crustUniforms, tRest: { value: restTexture }, uCarpetSpan: { value: span } }, depthTest: false, depthWrite: false });
+      const quad = new THREE.Mesh(bakePlane, bakeMaterial);
+      quad.frustumCulled = false;
+      bakeScene.add(quad);
+    }
+    const target = renderer.getRenderTarget();
+    renderer.setRenderTarget(carpet);
+    renderer.render(bakeScene, bakeCamera);
+    renderer.readRenderTargetPixels(carpet, 0, 0, span.x, span.y, under);
+    renderer.setRenderTarget(target);
+  };
+  // The crust's height wants what the lake sets in its own `beforeSample`, which comes after the land's. So while the carpet is on the set
+  // the bake and the choice wait for the first render of the scene in the sample, which comes after them all. Whatever the scene did there
+  // before, it still does.
+  let stale = false;
   type Before = (renderer: THREE.WebGLRenderer, scene: THREE.Scene, camera: THREE.Camera, target: unknown) => void;
   const host = ctx.scene as unknown as { onBeforeRender: Before };
   const before = host.onBeforeRender;
   host.onBeforeRender = (renderer, scene, camera, target) => {
     before.call(ctx.scene, renderer, scene, camera, target);
+    if (!stale) return;
+    stale = false;
+    bake(renderer);
     choose(camera);
   };
 
   return {
     ...out,
-    beforeSample: (_renderer: THREE.WebGLRenderer, camera: THREE.Camera) => choose(camera),
+    beforeSample: (_renderer: THREE.WebGLRenderer, camera: THREE.Camera) => {
+      const staged = stagedSeconds();
+      stale = staged >= carpetFrom && staged <= carpetTo;
+      if (!stale) choose(camera);
+    },
     dispose: () => {
       host.onBeforeRender = before;
       for (const g of geometries) g.dispose();
       fine.dispose();
       simple.dispose();
+      carpet.dispose();
+      restTexture.dispose();
+      bakePlane.dispose();
+      bakeMaterial?.dispose();
     },
   };
 }
