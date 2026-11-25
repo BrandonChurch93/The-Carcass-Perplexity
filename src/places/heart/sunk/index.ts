@@ -37,6 +37,13 @@ const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
+/** Before it goes the crust gives twice, at these seconds: the seam jumps hotter, a breath of steam comes off it, and the slab
+ *  drops a finger's width. So something happens in each second of the near shot and not only in its last. */
+const GIVES = [SETTLE_AT - 2.25, SETTLE_AT - 1.15];
+const give = (seconds: number, at: number): number => {
+  const t = seconds - at;
+  return ramp(-0.02, 0.12, t) * Math.exp(-Math.max(0, t - 0.12) / 0.7);
+};
 function settling(seconds: number): { down: number; open: number; puff: number; flare: number; slab: number; ember: number } {
   const t = seconds - SETTLE_AT;
   const down = ramp(0, 0.55, t);
@@ -95,6 +102,7 @@ export function create(ctx: HeartContext): HeartPiece {
     uBranch: { value: new THREE.Vector4(...BREAK) },
     uSlab: { value: 0 },
     uFlare: { value: 0 },
+    uSeam: { value: 0 },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
     // for on half the frame at heart-2.
@@ -239,7 +247,7 @@ export function create(ctx: HeartContext): HeartPiece {
     lean: [-0.3 + 0.2 * i, 0.2] as [number, number],
   }));
   // A wisp of vapour stands over the seam through the whole of the near shot, and stirs.
-  const wisp = { at: [0, 0.3, 0] as [number, number, number], radius: 0.3, strength: 0, rise: 1.7, kind: 'steam' as const, lean: [-0.35, 0.15] as [number, number] };
+  const wisp = { at: [0, 0.3, 0] as [number, number, number], radius: 0.38, strength: 0, rise: 2.0, kind: 'steam' as const, lean: [-0.35, 0.15] as [number, number] };
   ctx.sources.steam.push(...smokes, ...bursts, wisp);
   ctx.sources.heat.push(heat);
 
@@ -265,19 +273,22 @@ export function create(ctx: HeartContext): HeartPiece {
       body.position.y = -0.5 * SETTLE_DROP * now.down;
       body.rotation.z = SETTLE_TIP * now.down;
     }
-    shared.uSlab.value = now.slab;
+    const gives = GIVES.map((at) => give(seconds, at));
+    const gave = Math.max(...gives);
+    shared.uSlab.value = Math.max(now.slab, 0.1 * ramp(0, 0.15, seconds - (GIVES[0] as number)) + 0.12 * ramp(0, 0.15, seconds - (GIVES[1] as number)));
+    shared.uSeam.value = Math.min(1, 0.3 * ramp(SETTLE_AT - 2.7, SETTLE_AT, seconds) + 0.7 * gave);
     shared.uFlare.value = now.ember;
     bursts.forEach((burst, i) => {
       const [bx, bz] = toWorld((BURSTS[i] as [number, number])[0], (BURSTS[i] as [number, number])[1]);
       burst.at[0] = x + bx;
       burst.at[2] = z + bz;
-      burst.strength = 0.5 * now.puff;
+      burst.strength = 0.5 * now.puff + (i > 0 ? 0.32 * (gives[i - 1] as number) : 0);
     });
     const [wx, wz] = toWorld((BURSTS[0] as [number, number])[0] + 0.3 * Math.sin(seconds * 0.7854 + 1.1), (BURSTS[0] as [number, number])[1]);
     wisp.at[0] = x + wx;
     wisp.at[2] = z + wz;
-    wisp.strength = nearShot ? 0.3 * (1 + 0.6 * waver(seconds, 3.3)) : 0;
-    wisp.rise = 1.7 * (1 + 0.3 * waver(seconds, 5.2));
+    wisp.strength = nearShot ? 0.42 * (1 + 0.6 * waver(seconds, 3.3)) * (1 + 1.2 * gave) : 0;
+    wisp.rise = 2.0 * (1 + 0.3 * waver(seconds, 5.2));
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
     (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 3 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));

@@ -137,6 +137,8 @@ uniform vec4 uBranch;
 uniform float uSlab;
 // 1 as the break opens, falling to 0 as its face cools to black.
 uniform float uFlare;
+// How hot the seam stands before the slab goes: it warms through the near shot, and jumps each time the crust gives.
+uniform float uSeam;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${COMMON}
@@ -339,10 +341,10 @@ void main() {
   float fallen = 0.035 + 0.095 * uSlab;
   float onFace = smoothstep(0.1, 0.32, vBreak.x) * (1.0 - smoothstep(0.8, 0.98, vBreak.x)) * step(abs(vBreak.y), 0.09);
   // From the wide view the seam would be under a pixel and a row of red chips: it is lit for the near lens only.
-  float seamLit = smoothstep(0.38, 0.52, vnoise(l * 1.3 + 50.0)) * smoothstep(0.22, 0.42, vnoise(l * 5.5 + 20.0)) * smoothstep(40.0, 25.0, far);
+  float seamLit = smoothstep(0.38, 0.52, vnoise(l * 1.3 + 50.0) + 0.12 * uSeam) * smoothstep(0.22, 0.42, vnoise(l * 5.5 + 20.0) + 0.1 * uSeam) * smoothstep(40.0, 25.0, far);
   float standing = onFace * smoothstep(fallen - 0.036, fallen - 0.024, vBreak.x * fallen) * seamLit;
   float flaring = onFace * smoothstep(0.0, 0.25, uFlare);
-  float seamKelvin = 930.0 + 300.0 * vnoise(l * 4.0 + 33.0) + 60.0 * (small - 0.5) + 0.6 * breath;
+  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * vnoise(l * 4.0 + 33.0) + 60.0 * (small - 0.5) + 0.6 * breath;
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
   // What glows, lights: the skin within a hand or two of the seam is warmed by it.
   c += albedo * blackbody(seamKelvin) * (0.15 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
