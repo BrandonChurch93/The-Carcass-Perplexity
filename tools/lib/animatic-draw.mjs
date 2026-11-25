@@ -10,8 +10,7 @@ async function load(file) {
   return { data: new Uint8Array(data.buffer, data.byteOffset, data.length), width: info.width, height: info.height };
 }
 
-export async function labelTag(text) {
-  const L = core.LABEL;
+export async function labelTag(text, L = core.LABEL) {
   const tw = await textWidth(text, L.size);
   const edge = Math.ceil(L.soft * 2);
   const w = tw + 2 * L.padX + 2 * edge;
@@ -52,6 +51,11 @@ export function drawer({ cut, cfg, keepPlaces = 3 }) {
     if (!tags.has(text)) tags.set(text, await labelTag(text));
     return tags.get(text);
   };
+  const words = async (text) => {
+    const id = `words|${text}`;
+    if (!tags.has(id)) tags.set(id, await labelTag(text, core.WORDS));
+    return tags.get(id);
+  };
   const lay = async (acc, i, view) => {
     const levels = await source(i);
     const at = core.toSource(view, sources[i], levels[0].width, levels[0].height);
@@ -70,7 +74,8 @@ export function drawer({ cut, cfg, keepPlaces = 3 }) {
       img = await place(p.key.image);
       view = core.placeView(p.shot, f, img, { width: W, height: H }, fps);
     } else if (p.kind === 'reveal') view = p.view;
-    id = `${p.kind}|${p.shot.label}|${p.kind === 'place' ? p.key.id : ''}|${view ? [view.x, view.y, view.w, view.h].join(',') : ''}`;
+    const silent = p.kind === 'black' ? null : core.silentLine(cut, f);
+    id = `${p.kind}|${p.shot.label}|${p.kind === 'place' ? p.key.id : ''}|${view ? [view.x, view.y, view.w, view.h].join(',') : ''}|${silent ? `${silent.clip}-${silent.line}` : ''}`;
     if (held && held.id === id) return held.data;
     let data;
     if (p.kind === 'black') data = core.fill(W, H, core.BLACK);
@@ -87,9 +92,16 @@ export function drawer({ cut, cfg, keepPlaces = 3 }) {
       }
       data = core.toBytes(acc);
     }
+    let labelHeight = 0;
     if (p.shot.label) {
       const t = await tag(p.shot.label);
       const at = core.labelPlace(t, W, H);
+      core.overlay(data, W, t, at.left, at.top);
+      labelHeight = t.height;
+    }
+    if (silent) {
+      const t = await words(silent.text);
+      const at = core.wordsPlace(t, W, H, labelHeight);
       core.overlay(data, W, t, at.left, at.top);
     }
     held = { id, data };

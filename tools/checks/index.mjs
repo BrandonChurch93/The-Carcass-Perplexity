@@ -20,7 +20,7 @@ const fromRepo = (check) => async (ctx) => {
 };
 
 const BUILT = {
-  G1: commandCheck(['run', 'build']),
+  G1: commandCheck(['run', 'build'], { CARCASS_OUT_DIR: 'out/work/gate/dist' }),
   G2: commandCheck(['test']),
   G3: commandCheck(['run', 'determinism']),
   G4: runG4,

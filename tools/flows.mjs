@@ -54,10 +54,21 @@ await ctx.addInitScript(() => {
 const page = await ctx.newPage();
 const errors = [];
 const failed = [];
-page.on('console', (m) => { if (m.type() === 'error') errors.push(m.text().slice(0, 200)); });
+const late = new Set();
+const consoleErrors = [];
+page.on('console', (m) => { if (m.type() === 'error') consoleErrors.push({ text: m.text().slice(0, 200), url: m.location()?.url ?? '' }); });
 page.on('pageerror', (e) => errors.push(`page error: ${String(e.message).slice(0, 200)}`));
-page.on('requestfailed', (r) => failed.push(`${r.url().replace(base, '')} ${r.failure()?.errorText ?? ''}`));
-page.on('response', (r) => { if (r.status() >= 400) failed.push(`${r.url().replace(base, '')} ${r.status()}`); });
+const brief = (u) => u.replace(base, '').split('?')[0].split('/').slice(-3).join('/');
+page.on('requestfailed', (r) => {
+  const why = r.failure()?.errorText ?? '';
+  if (r.resourceType() === 'media' && why === 'net::ERR_ABORTED') return;
+  failed.push(`${brief(r.url())} ${why}`);
+});
+page.on('response', (r) => {
+  if (r.status() < 400) return;
+  if (r.status() >= 500 && r.request().resourceType() === 'media') late.add(r.url());
+  else failed.push(`${brief(r.url())} ${r.status()}`);
+});
 
 try {
   const res = await page.goto(url, { waitUntil: 'load', timeout: 60000 });
@@ -81,11 +92,20 @@ try {
 
   await page.goto(`${base}review.html`, { waitUntil: 'load', timeout: 60000 });
   await page.waitForTimeout(1500);
+  await page.evaluate(async () => {
+    for (const i of document.querySelectorAll('img')) {
+      i.scrollIntoView();
+      for (let n = 0; n < 40 && !i.complete; n++) await new Promise((r) => setTimeout(r, 250));
+    }
+    window.scrollTo(0, 0);
+  });
+  await page.waitForFunction(() => [...document.querySelectorAll('audio, video')].every((m) => m.readyState >= 1 || (m.error && Number(m.dataset.tries || 0) >= 3)), null, { timeout: 30000, polling: 500 }).catch(() => {});
   const rev = await page.evaluate(() => ({
     h1: document.querySelector('h1')?.textContent?.trim() ?? '',
     sections: [...document.querySelectorAll('h2')].map((h) => h.textContent.trim()),
     imgs: [...document.querySelectorAll('img')].map((i) => [i.getAttribute('src'), i.naturalWidth]),
     media: [...document.querySelectorAll('audio, video')].map((m) => m.currentSrc || m.getAttribute('src') || m.querySelector('source')?.getAttribute('src') || ''),
+    players: [...document.querySelectorAll('audio, video')].map((m) => ({ src: m.getAttribute('src') || '', ready: m.readyState, error: m.error ? m.error.code : 0, tries: Number(m.dataset.tries || 0) })),
     links: [...document.querySelectorAll('a')].map((a) => [a.textContent.trim(), a.getAttribute('href')]),
   }));
   await page.screenshot({ path: path.join(outDir, 'review.png'), fullPage: true });
@@ -104,7 +124,9 @@ try {
     if (r !== 200 && r !== 206) mediaBad += 1;
     mediaLines.push(`${src.replace(base, '')} ${r}`);
   }
-  note('4 sound and films on the review page', mediaBad === 0, rev.media.length ? `${rev.media.length} files, ${mediaBad} did not answer` : 'none on the page yet');
+  const stuck = rev.players.filter((p) => p.error || p.ready < 1);
+  const retried = rev.players.reduce((n, p) => n + p.tries, 0);
+  note('4 sound and films on the review page', mediaBad === 0 && stuck.length === 0, rev.media.length ? `${rev.media.length} files, ${mediaBad} did not answer, ${stuck.length} did not open in their player${retried ? `, ${retried} opened on a second try` : ''}` : 'none on the page yet');
 
   const film = rev.links.find((l) => l[0] === 'Play the film as it stands');
   const loop = rev.links.find((l) => l[0] === 'Play the card loop');
@@ -117,7 +139,8 @@ try {
   note('6 card loop', Boolean(looped.size) && looped.size[0] >= 960 && looped.frames >= 3 && looped.lit > 60 && !looped.error,
     `canvas ${looped.size ? `${looped.size[0]} x ${looped.size[1]}` : 'none'}, ${looped.frames} frames drawn, brightest value in the picture ${looped.lit} of 255${looped.error ? `, ${looped.error}` : ''}`);
 
-  note('7 no errors', errors.length === 0 && failed.length === 0, `${errors.length} console errors, ${failed.length} failed requests${errors.length || failed.length ? `: ${[...errors, ...failed].slice(0, 4).join(' | ')}` : ''}`);
+  for (const e of consoleErrors) if (!late.has(e.url)) errors.push(e.text);
+  note('7 no errors', errors.length === 0 && failed.length === 0, `${errors.length} console errors, ${failed.length} failed requests${late.size ? `, ${late.size} sound or film ${late.size === 1 ? 'request was' : 'requests were'} answered with a server error by the storage host and asked again by the page` : ''}${errors.length || failed.length ? `: ${[...errors, ...failed].slice(0, 4).join(' | ')}` : ''}`);
   console.log(`page fetch of a text file: ${probe.text}`);
   console.log(`page fetch of a picture: ${probe.binary ?? 'no picture on the page'}`);
   fs.writeFileSync(path.join(outDir, 'flows.json'), JSON.stringify({ at: new Date().toISOString(), base: base.replace(/\/proxy\/[^/]+\//, '/proxy/…/'), results, probe, media: mediaLines, errors, failed }, null, 2));

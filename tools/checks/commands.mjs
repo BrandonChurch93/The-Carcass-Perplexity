@@ -12,11 +12,11 @@ export function tail(text, n = TAIL_LINES) {
     .slice(-n);
 }
 
-export function exec(command, argv, { cwd, timeoutMs }) {
+export function exec(command, argv, { cwd, timeoutMs, env }) {
   return new Promise((resolve) => {
     let text = '';
     let timedOut = false;
-    const child = spawn(command, argv, { cwd, stdio: ['ignore', 'pipe', 'pipe'], env: process.env, detached: true });
+    const child = spawn(command, argv, { cwd, stdio: ['ignore', 'pipe', 'pipe'], env: env ? { ...process.env, ...env } : process.env, detached: true });
     const timer = setTimeout(() => {
       timedOut = true;
       try {
@@ -42,11 +42,11 @@ export function exec(command, argv, { cwd, timeoutMs }) {
   });
 }
 
-export function commandCheck(argv) {
+export function commandCheck(argv, env = undefined) {
   const shown = `npm ${argv.join(' ')}`;
   return async (ctx) => {
     const minutes = ctx.config.sandbox.stepTimeoutMinutes;
-    const r = await ctx.exec('npm', argv, { cwd: ctx.root, timeoutMs: minutes * 60 * 1000 });
+    const r = await ctx.exec('npm', argv, { cwd: ctx.root, timeoutMs: minutes * 60 * 1000, ...(env ? { env } : {}) });
     if (r.code === 0 && !r.timedOut) return { ok: true, lines: [`${shown} exited with code 0.`], skipped: [] };
     const head = r.timedOut ? `${shown} was stopped after ${minutes} minutes.` : `${shown} exited with code ${r.code}. Its last lines:`;
     return { ok: false, lines: [head, ...r.tail.map((l) => `| ${l}`)], skipped: [] };

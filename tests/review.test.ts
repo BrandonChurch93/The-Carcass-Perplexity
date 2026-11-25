@@ -88,9 +88,12 @@ describe('the review page with nothing to show', () => {
     expect(html).toContain(`${cfg.budget.runHours.toFixed(2)} h`);
   });
 
-  it('asks for nothing from outside and runs no script', () => {
+  it('asks for nothing from outside, and its one script only opens a sound or film again', () => {
     expect(html).not.toMatch(/https?:|\/\/[a-z]/i);
-    expect(html).not.toMatch(/<script|<link|@import|url\(/i);
+    expect(html).not.toMatch(/<script[^>]+src|<link|@import|url\(/i);
+    expect(html.match(/<script/gi)?.length).toBe(1);
+    expect(html).toContain("addEventListener('error'");
+    expect(html).not.toMatch(/fetch\(|XMLHttpRequest|import\(/);
   });
 
   it('has no em dash, exclamation point or emoji in its copy', () => {
@@ -218,7 +221,7 @@ describe('the review page with content', () => {
   });
 
   it('asks for nothing from outside', () => {
-    expect(html).not.toMatch(/https?:|<script|<link|@import|url\(/i);
+    expect(html).not.toMatch(/https?:|<script[^>]+src|<link|@import|url\(/i);
   });
 });
 

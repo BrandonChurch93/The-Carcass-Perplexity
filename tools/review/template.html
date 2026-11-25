@@ -33,5 +33,19 @@
 <footer class="wrap foot">
   <p>{{foot}}</p>
 </footer>
+<script>
+(() => {
+  const most = 3;
+  for (const m of document.querySelectorAll('audio, video')) {
+    const src = m.getAttribute('src');
+    m.addEventListener('error', () => {
+      const n = Number(m.dataset.tries || 0);
+      if (src === null || n >= most) return;
+      m.dataset.tries = String(n + 1);
+      setTimeout(() => { m.setAttribute('src', src); m.load(); }, 700 * (n + 1));
+    });
+  }
+})();
+</script>
 </body>
 </html>

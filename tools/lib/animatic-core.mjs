@@ -11,6 +11,7 @@ export const BLACK = '#070605';
 export const BLACK_PICTURE = 'black';
 export const PULLBACK_FILE = 'pullback.json';
 export const LABEL = { size: 15, ink: '#d8cfc4', inkOpacity: 0.85, plate: '#070605', plateOpacity: 0.62, padX: 9, padY: 6, margin: 14, soft: 2.5 };
+export const WORDS = { size: 19, ink: '#f1e9de', inkOpacity: 0.96, plate: '#070605', plateOpacity: 0.74, padX: 13, padY: 7, margin: 14, soft: 2.5, gap: 6 };
 export const MOVES = ['in', 'out', 'hold', 'left', 'right'];
 export const SOUND_TYPES = ['.flac', '.wav', '.m4a', '.mp3'];
 export const AUDIO_KBPS = 192;
@@ -407,6 +408,19 @@ export function overlay(frame, W, tag, left, top) {
 
 export function labelPlace(tag, W, H) {
   return { left: LABEL.margin, top: H - LABEL.margin - tag.height };
+}
+
+export function silentLine(cut, f) {
+  for (const line of cut.lines ?? []) {
+    if (line.file === null && f >= line.first && f < line.first + line.frames) return line;
+  }
+  return null;
+}
+
+export function wordsPlace(tag, W, H, labelHeight = 0) {
+  const left = Math.max(0, Math.round((W - tag.width) / 2));
+  const top = Math.max(0, H - LABEL.margin - labelHeight - WORDS.gap - tag.height);
+  return { left, top };
 }
 
 export function newestSound(files) {

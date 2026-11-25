@@ -5,7 +5,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 ## Status
 
 - Build: in progress
-- Phase: 1 · The voice, the map and the animatic, in progress since 2026-11-24 22:36 UTC
+- Phase: 2 · Engine and blockout, in progress since 2026-11-25 00:15 UTC
 - Review: not reached
 - Review round: none
 - Review round step: none
@@ -24,12 +24,12 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 10, 2026-11-24 23:54 UTC:
+Status 11, 2026-11-25 00:14 UTC:
 
-- `01-frame-3120.jpg`: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks. The label in the corner names the shot and exists only in the animatic
-- `02-frame-9741.jpg`: Animatic, 162.35 s, the rise: skull, shoulders and the first ribs are in frame when the voice says Now you see it
-- `03-frame-10027.jpg`: Animatic, 167.12 s, the titan frame: the whole body on the strongest strike of the track
+- `01-marsh-6000.jpg`: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet. The print and the label in the corner exist only in the animatic
+- `02-rise-sheet.jpg`: The rise as it is now timed, twelve frames from 158.9 s to 167.2 s: the last frame at the lake, the cut to straight above its black centre, the skull at 161.25 s, head and shoulders at 162.6 s, the whole body on the strike at 167.12 s
 
+Status 10, 2026-11-24 23:54 UTC, showed: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks.
 Status 9, 2026-11-24 23:22 UTC, showed: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet.
 Status 8, 2026-11-24 22:53 UTC, showed: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks; The animatic tool at work: one frame...
 
@@ -38,11 +38,12 @@ Status 8, 2026-11-24 22:53 UTC, showed: The map of the music, made from the audi
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-24T23:53:29Z
-phase 1: 1.30 h used of 3.00 h
-build: 3.39 h used of 72.00 h
+2026-11-25T00:14:59Z
+phase 1: 1.66 h used of 3.00 h
+build: 3.75 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 1
+half point: reached
+minutes since the last status: 22
 ```
 
 ## Phases
@@ -50,8 +51,8 @@ minutes since the last status: 1
 | Phase | State | Started | Ended | Gate evidence |
 | --- | --- | --- | --- | --- |
 | 0 · Ground truth | done | 2026-11-24 20:30 UTC | 2026-11-24 22:36 UTC | Gate closed by passing. A push has succeeded: ten pushes, the first `f361749` at 20:33 UTC. G1, G2, G3, G4, G8, G9 and G10: 7 of 7 pass at 22:35 UTC (`out/work/gate/phase-0.json`). The workspace record, the tool record with the sound tools, the voice, the audio map skill (`user:beat-sync`), the terms, the platform's limits, the pinned versions and the render budget table are in this file. Inline display: proven 20:36 UTC and used for every status. Repo: read public at 20:41 UTC and treated as private on Brandon's note 3; a large file reaches Brandon as an attachment in the thread (400 MB measured), and the hosting carried 497 MB. Polling: measured 20:40 UTC, agents answer by message while the Builder works. PSNR between VMs: infinite, the frames are byte equal on three VMs. Clock: 15 ticks; statuses 1 to 7 posted since step 4. Published 22:19 UTC, flows replayed 7 of 7 |
-| 1 · The voice, the map and the animatic | in progress | 2026-11-24 22:36 UTC | | |
-| 2 · Engine and blockout | not started | | | |
+| 1 · The voice, the map and the animatic | done | 2026-11-24 22:36 UTC | 2026-11-25 00:14 UTC | Gate closed by passing at 00:08 UTC (out/work/gate/phase-1.json): 17 of 18 checks pass, none failed, one sound check open. D1 is met: the animatic is 5931 frames, 197.70 s, 960 x 540 at 30 fps with the mix as its one sound stream, kept as deliver/film/animatic.mp4 and on the review page. cut/MAP.json was made from the audio by npm run audiomap (see Sound). Narration: n8 has a kept take, n1 to n7 are open items. G11 pass (the cut follows the music), G16 pass (the words of the narration in the cut list), G7 and G15 pass on the cut list. A2 to A6 pass. A1 is open: the transcriber hears never land as Neverland in n8, a sound-alike pair listed in its record. Status 11 posted |
+| 2 · Engine and blockout | in progress | 2026-11-25 00:15 UTC |  |  |
 | 3 · The look lock: the Heart | not started | | | |
 | 4 · The other places and the rise | not started | | | |
 | 5 · The whole film | not started | | | |
@@ -449,6 +450,12 @@ One line each: the date, the decision and the reason.
 - 2026-11-24. The voice tool, as its builder made it and the Builder accepted: the edges of each line are moved to where the sound really starts and ends, the lines of a clip are brought to -16 LUFS together and the gain is repeated until they measure that after the limiter, the limiter runs in Node with no outside tool, and every line file has its own record under `audio/records/`.
 - 2026-11-24. The rise, corrected after the first animatic was looked at frame by frame. The skull massif is reached at 161.0 s and head and shoulders at 162.6 s (the entry above says 161.3 and 163.49; those are replaced). So skull, shoulders and the first rib ranges are in frame before `Now you see it.` starts at 162.35 s, and the body then opens slowly over 4.5 s and is whole on the strike at 167.12 s. `kit/03-METHOD.md` section 6 asks for a rise that is slow at the lake, fastest in the middle and settling. This one keeps that shape but front-loads it: 0.9 s of slow lift off the lake, the fastest part from 159.9 to 161.0 s, then a long settling. Reasons: the two lines before the strike need 4.5 s of a body that can be read, the fast early part is where the handoff from the place to the continent is hidden, and the slow part is where the viewer works out what the land is.
 - 2026-11-24. Each line was checked against the picture it falls on, on sheets with one frame of every shot and its lines under it (Phase 1 step 6). Kept on purpose: `They are wiser than men.` falls on the dead wader at the rim, the one that did not keep its distance. `Gold at the edge.` falls on the amber mats and `Black at the center.` on the edge where the floor stops. `It was blood once.` falls on the stalk colony standing in the red brine and `It still seeps.` on the seep pool as it bursts on the middle strike. Changed: the key frame of `eye-4` sits early in its shot (15 percent in), so the approved framing is seen while `The center has no bottom.` is said and the camera then travels out over the centre, where the rise starts. The shot of `breath-3` is labelled the red weed at the rim, since the gill-plumes are the red weed of the narration.
+- 2026-11-24. The animatic prints each silent line on the picture for its span, centred above the shot label. Clips n1 to n7 are open items, so their words are read on the picture where they will be spoken. This makes the earlier decision on silent lines true in the file.
+- 2026-11-24. The rise is retimed a second time (key 1 at 160.45 s, key 2 at 161.25 s, key 3 at 162.6 s, the strike on frame 10027). This replaces 159.91 s and 161.0 s. The real camera has to climb off the lake inside the reveal shot: 0.5 s of ease off the water, a peak of about 5.9 e-folds of view width a second, then a decay to 0.3 at key 3 and about 0.1 at the strike. The words force the front loading: line n8-1 must start by 162.5 s and the body must read before it.
+- 2026-11-24. Shot eye-05 stays a slow push on the approved shore view. The reveal shot starts on the cut at 159.01 s directly above the lake's black centre, looking down, so the handoff needs no horizon and the climb is one shot from the lake to orbit.
+- 2026-11-25. For G12 and the handoff frames, the last frame at the lake is the first frame of the reveal shot, frame 9541, where the camera hangs just above the lake's black centre and has not begun to climb. The three handoff frames sit at the quarter points between it and the key frame of reveal-1: frames 9563, 9584 and 9606.
+- 2026-11-25. The gate's build check (G1) writes its build under out/work/gate/dist, so closing a gate never empties dist/ with the review page in it. Found at the Phase 1 gate: the check had emptied dist/ after the publish. The published copy was not touched.
+- 2026-11-25. The transcript check A1 reads the words inside the quotes of a record's Transcript line and not the note after them. On n8 it still reports the sound-alike pair (never land heard as Neverland), which stays an open sound item and does not fail the gate.
 
 ## Notes from Brandon
 
@@ -554,6 +561,7 @@ none
 - 2026-11-24 22:56 UTC `d35f84a` pushed. The refined map: tempo from the clicks, sharp hits marked
 - 2026-11-24 23:25 UTC `6f6a57c` pushed. Status 9, the cut compiler, the voice tool, clip n8 kept
 - 2026-11-24 23:45 UTC `3501aeb` pushed. The first cut: `cut/PLAN.json`, `cut/CUTLIST.json`, `cut/CUES.md` and the first mix
+- 2026-11-24 23:56 UTC `e784b81` pushed. Status 10, the animatic, the first cut and the first mix
 
 ## Session log
 
@@ -568,3 +576,4 @@ none
 - 2026-11-24 22:53 UTC. Status 8 posted at 22:54 UTC with the map of the music and a frame from the animatic tool. Phase 1: the map is made from the audio and agrees with the kit's landmarks; the checks, the mix, the audio map and the animatic tools are merged and 446 tests pass. The ElevenLabs account has 4 characters left, used up by music and sound effects from other work on the account; one take of the Reveal's clip was made with the last of them; the other seven clips and the sound effects are open items and the build goes on. The listener was found unable to judge a voice.
 - 2026-11-24 23:23 UTC. Status 9 posted at 23:24 UTC with the waveform sheet of clip n8. The cut compiler and the voice tool came back in 10 and 12 minutes, were merged from bundles (516 tests pass) and are npm run cut and npm run voice. Clip n8 was checked, kept and split into its four lines by the voice tool, committed, and plays on the review page (published 23:23 UTC). Four open items written: clips n1 to n7, the single take of n8, the sound effects, and that nothing that can hear has judged the voice.
 - 2026-11-24 23:54 UTC. Status 10 posted at 23:55 UTC with three frames of the animatic and the review page link (its header reads 11 because a draft of it was counted; the records say 10). Phase 1 steps 3 to 8: the plan, the cut list with no fault, the cue sheet, the first mix, the animatic (5931 frames, 197.70 s, 73.1 MB), each line checked against its picture, published at 23:54 UTC, visitor flows pass. The animatic does not yet print the silent lines, against the decision logged at 22:5x; that is being added and the animatic made again.
+- 2026-11-25 00:15 UTC. Status 11 posted at 00:16 UTC with a frame of the animatic that prints a silent line and the sheet of the retimed rise. Phase 1 is closed: its gate passed at 00:08 UTC with 17 of 18 checks and one sound check open (A1, the sound-alike pair in n8). The animatic was made again with the silent lines printed and the rise retimed (5931 frames, 197.70 s, 73.2 MB), kept, put on the review page and published at 00:05 UTC. Visitor flows on the published copy: 5 of 7 by the test as it stood. Looked into: all three pictures load (the test read a lazy picture before it was scrolled into view), and the storage host answered 502 to one large sound or film request in two of five page loads from the VM, a different file each time, while every file answers whole when asked again. UNKNOWN whether Brandon's tablet ever sees that. The test is being corrected to scroll the pictures into view and to tell such a 502 from a real fault. Phase 2 starts.

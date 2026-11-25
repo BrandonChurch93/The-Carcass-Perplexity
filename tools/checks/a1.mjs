@@ -27,7 +27,8 @@ export function transcriptFaults(clips, cfg) {
       faults.push(`${RECORDS}/${id}.md has no "${TRANSCRIPT}" line.`);
       continue;
     }
-    const got = plain(said).split(' ');
+    const quoted = /^"([^"]*)"/.exec(said.trim());
+    const got = plain(quoted ? quoted[1] : said).split(' ');
     const want = plain(clip.lines.join(' ')).split(' ');
     const at = want.findIndex((w, i) => w !== got[i]);
     if (at === -1 && got.length === want.length) same++;
