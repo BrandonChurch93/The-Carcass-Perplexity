@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 23, 2026-11-25 04:04 UTC:
+Status 24, 2026-11-25 04:22 UTC:
 
-- `01-key-heart-0-uhd-draft-solo.jpg`: The first-light land drawn alone, 3840 x 2160, one sample. It also draws the whole floor under the lake, which the crust then covers: this is where most of its cost goes. The land owner starts from here and is told to cut it.
-- `02-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
-- `03-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
-- `04-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
+- `01-heart-0.jpg`: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place. The bench is a plain ramp, the crust is cracked mud and the light is too dark and too red.
+- `02-heart-3.jpg`: The tall ones at the seam. They stand, step and feed, and they still read as models: smooth tubes with no hide.
+- `03-heart-2.jpg`: The one that sank. The arch and the folded skin are there, nearly black. The camera here is the old one and will be fitted again.
+- `04-heart-4.jpg`: The vessel mouth and the fall. The throat is too bright and flat, and the stream is a smooth ribbon with no steps.
 
+Status 23, 2026-11-25 04:04 UTC, showed: The first-light land drawn alone, 3840 x 2160, one sample.
 Status 22, 2026-11-25 03:41 UTC, showed: First light of the built Heart beside its approved picture.
 Status 21, 2026-11-25 03:24 UTC, showed: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide...
-Status 20, 2026-11-25 03:13 UTC, showed: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart; Sheet 2 of 4: the Heart and the Breath; Sheet 3 of 4: the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T04:04:09Z
-phase 3: 0.92 h used of 13.00 h
-build: 7.57 h used of 72.00 h
+2026-11-25T04:22:39Z
+phase 3: 1.22 h used of 13.00 h
+build: 7.88 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 22
+minutes since the last status: 19
 ```
 
 ## Phases
@@ -728,3 +728,4 @@ none
 - 2026-11-25 03:42 UTC. Status 22 posted 03:42 UTC: the first lit frame of the built Heart (lake and land on the shared rig) beside its picture
 - 2026-11-25 04:04 UTC. Status 23. Seven agents started at 03:52 UTC (six owners of the Heart's folders, one for the runners of G13 and G14). MEASURED at 3840 x 2160 on key heart-0 with the first light: 17.7 s a frame of one sample, an empty frame 3.2 s, the land alone 8.3 s above it, the crust 3.6 s, the bench 2.6 s (new tool npm run cost). MEASURED: the software renderer runs the full fragment shader for every layer of triangles, hidden or not (depth first alone: 17.7 s against 17.3 s); a shader that discards in its first line costs a fifth (0.7 s against 3.6 s). The owners were told at 04:05 UTC. Engine: the half-size air is laid over the frame by depth, a warp pass for heat shimmer, a depth-first pass (Place.depthFirst).
 - 2026-11-25 04:11 UTC. The engine rejects hidden fragments before shading them (Place.depthFirst): key heart-0 at 3840 x 2160, one sample, 13.5 s against 17.7 s, the picture identical byte for byte at the preview size. 761 tests pass. npm run cost is in tools/README.md.
+- 2026-11-25 04:22 UTC. 04:23 UTC: G13 merged (the register has every stand-in reference again, 799 tests green by the agent's run). The first versions of all six owners of the Heart merged: land (2cd3ff2), fall (ac59ed2), sunk (8533fa7), walkers (3743542), lake (e18921a), air (225329c). 14 of 14 parts are built parts. Compared at hd draft against the five approved pictures: all far from the bar. Status 24 sent.
