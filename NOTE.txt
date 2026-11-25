@@ -1,5 +1,7 @@
-2026-11-25 23:19 UTC
-work at e70cae3 on agent/reveal-place
-heartbeat 23:20 reveal-4 uhd draft at 1280 and at 400 px
-look-1.jpg = out/work/hb-frame4.jpg
-look-2.jpg = out/work/frame4-400.jpg
+2026-11-25 23:29 UTC
+work at 2f652be on agent/reveal-place
+version 2: reveal-4 uhd with 400 px beside approved, reveal-1 to 3, native crops, motion sheet
+look-1.jpg = out/work/hand/v2-reveal-4.jpg
+look-2.jpg = out/work/hand/v2-reveal-123.jpg
+look-3.jpg = out/work/hand/v2-native.jpg
+look-4.jpg = out/work/hand/v2-motion.jpg
