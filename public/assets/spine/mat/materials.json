@@ -1,0 +1,81 @@
+{
+  "recipe": {
+    "size": 1024,
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "skyWidth": 2048,
+    "skyQuality": 94
+  },
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "materials": [
+    {
+      "name": "spire",
+      "kind": "tile",
+      "metres": 30,
+      "mean": [
+        0.232,
+        0.201,
+        0.191
+      ]
+    },
+    {
+      "name": "snow",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.33,
+        0.372,
+        0.456
+      ]
+    },
+    {
+      "name": "rubble",
+      "kind": "tile",
+      "metres": 5,
+      "mean": [
+        0.288,
+        0.299,
+        0.345
+      ]
+    },
+    {
+      "name": "canal",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.288,
+        0.276,
+        0.289
+      ]
+    },
+    {
+      "name": "shag",
+      "kind": "tile",
+      "metres": 0.8,
+      "mean": [
+        0.237,
+        0.215,
+        0.232
+      ]
+    },
+    {
+      "name": "cloudsea",
+      "kind": "tile",
+      "metres": 10000,
+      "mean": [
+        0.113,
+        0.127,
+        0.201
+      ]
+    },
+    {
+      "name": "sky",
+      "kind": "sky",
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}

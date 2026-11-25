@@ -89,11 +89,12 @@ vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   float storm = stormSide(d);
-  c = mix(c, uSkyStorm, 0.85 * storm) + uFlash * storm;
+  c = mix(c, uSkyStorm * 0.45, 0.9 * storm) + uFlash * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
-  float band = exp(-up * up / 0.0036) * smoothstep(-0.06, 0.0, up);
-  return c + uWarmColour * (band * w * w);
+  float band = (exp(-up * up / 0.00011) + 0.04 * exp(-up * up / 0.002)) * smoothstep(-0.02, 0.0, up);
+  // The band is the one saturated thing in the sky: it stands in place of the grey at the horizon, not on top of it.
+  return mix(c, uWarmColour * vec3(0.42, 0.32, 0.19), clamp(band * w * w, 0.0, 1.0));
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
@@ -110,7 +111,7 @@ vec3 skyIrradiance(vec3 n) {
   open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * stormShare;
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, uWarmDir) + 0.25) / 1.25, 0.0, 1.0);
-  return 3.14159 * (e + uWarmColour * (0.16 * w * w * seen));
+  return 3.14159 * (e + uWarmColour * (0.24 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
@@ -179,8 +180,10 @@ float skyOpen(vec3 p) {
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  float open = skyOpen(p) * occ;
-  vec3 e = skyIrradiance(n) * open + emitterIrradiance(p, n) * occ;
+  float sky = skyOpen(p);
+  float open = sky * occ;
+  // The lightning reaches a hollow as the sky does: under a roof it comes in by the mouths and no other way.
+  vec3 e = skyIrradiance(n) * open + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
