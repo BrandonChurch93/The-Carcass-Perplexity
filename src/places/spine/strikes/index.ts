@@ -15,7 +15,7 @@ const CAST = 520;
 const TINT = new THREE.Vector3(0.78, 0.7, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 2.2;
-const SPARKS = 420;
+const SPARKS = 800;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -163,7 +163,7 @@ void main() {
   // The white-hot spot is solid, and so is the violet air close round it; the glow in the cloud is added.
   if (uSharp > 0.5) {
     float most = max(uColour.r, max(uColour.g, uColour.b));
-    c = uColour * exp(-r * r * 260.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.0045 * exp(-r * 5.5) * (1.0 - smoothstep(0.6, 1.0, r)));
+    c = uColour * exp(-r * r * 260.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.006 * exp(-r * 4.2) * (1.0 - smoothstep(0.6, 1.0, r)));
     c = glowOut(c, 0.7);
   }
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
@@ -272,7 +272,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(110, 520) * (rng.next() < 0.2 ? 1.8 : 1);
+      const speed = rng.range(150, 800) * (rng.next() < 0.2 ? 1.8 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
