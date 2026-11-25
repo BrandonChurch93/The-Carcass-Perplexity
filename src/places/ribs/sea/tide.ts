@@ -29,6 +29,8 @@ export interface Ring {
   z: number;
   phase: number;
   strength: number;
+  /** What stands there to be mirrored: x, z, its top over the water, its radius. A negative radius is a ball (a body) centred that high. */
+  stand?: [number, number, number, number];
 }
 /** The wings folder sets `at` when it is created: it fills the list for a time of the place, from that time alone. */
 export const RING_SOURCE: { at: ((seconds: number, out: Ring[]) => void) | null } = { at: null };

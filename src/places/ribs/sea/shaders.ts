@@ -140,10 +140,32 @@ ${RIG_GLSL}
 uniform sampler2D tChop;
 uniform vec2 uWind;
 uniform vec4 uRings[${rings}];
+uniform vec4 uStands[${rings}];
+uniform float uFront;
+uniform float uBoreHeight;
 uniform int uRingCount;
 uniform float uPoolLevel;
+uniform vec2 uDrain;
+uniform sampler2D tFeet;
+uniform float uFeetReach;
 varying vec3 vWorld;
 varying float vDepth;
+// What stands in the mirror: the blades. The mirrored ray is walked out over the plan of their feet; xyz how much of it a blade fills, and how far off.
+vec2 standing(vec2 p, vec3 r) {
+  vec2 dir = normalize(r.xz + 1e-5);
+  float rise = r.y / max(length(r.xz), 1e-3);
+  float hit = 0.0;
+  float far = 0.0;
+  float t = 14.0;
+  for (int i = 0; i < 8; i++) {
+    float feet = texture2D(tFeet, (p + dir * t - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
+    float h = (1.0 - smoothstep(-4.0, 14.0, feet - 0.06 * t * rise)) * (1.0 - smoothstep(240.0, 380.0, t * rise));
+    far = mix(far, t, step(hit, 0.02) * step(0.02, h));
+    hit = max(hit, h);
+    t *= 1.85;
+  }
+  return vec2(hit, far);
+}
 void main() {
   vec2 p = vWorld.xz;
   vec3 toEye = cameraPosition - vWorld;
@@ -154,7 +176,9 @@ void main() {
   vec4 c2 = texture2D(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3);
   float gust = smoothstep(0.38, 0.72, texture2D(tChop, p / 97.0 - uTime * uWind * 0.11).b);
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
-  float depth = uPoolLevel - (land.r + bedFine(p));
+  // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
+  float over = max(land.r - uPoolLevel, 0.0);
+  float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.045 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
   if (depth < 0.0) discard;
   float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
@@ -175,6 +199,37 @@ void main() {
   float open = land.g * (1.0 - contactDrawn(vWorld));
   float sun = sunAt(vWorld, land);
   vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
+  // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
+  float toWall = (uFront + 20.0 * sin(p.x * 0.0076 + 1.3) - p.y) / min(r.z, -1e-3);
+  if (toWall > 0.0 && toWall < 1500.0) {
+    float k = toWall * r.y / (uBoreHeight * (0.9 + 0.2 * c1.b));
+    float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall);
+    float white = max(1.0 - smoothstep(0.2, 0.4, k), smoothstep(0.7, 0.86, k));
+    vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
+    refl = mix(refl, mix(vec3(0.07, 0.085, 0.07), vec3(0.9), white) * lit, wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
+  }
+  // The blades stand in it, dark, paler with the air between.
+  vec2 stood = standing(p, r);
+  vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
+  refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 1300.0)), stood.x * 0.9);
+  // The waders stand in it too: each leg a post, each body a ball, met by the mirrored ray. Feet and mirror join at the water.
+  float rl = max(length(r.xz), 1e-3);
+  vec2 rd = r.xz / rl;
+  float mirrored = 0.0;
+  for (int i = 0; i < ${rings}; i++) {
+    if (i >= uRingCount) break;
+    vec4 st = uStands[i];
+    if (st.w == 0.0) continue;
+    vec2 to = st.xy - p;
+    float t = dot(to, rd);
+    float miss = abs(to.x * rd.y - to.y * rd.x);
+    float high = t * r.y / rl;
+    float hit = st.w > 0.0
+      ? (1.0 - smoothstep(st.w * 0.5, st.w * 1.5, miss)) * (1.0 - smoothstep(st.z - 0.15, st.z, high))
+      : 1.0 - smoothstep(-st.w * 0.7, -st.w, length(vec2(miss, (high - st.z) * 1.3)));
+    mirrored = max(mirrored, hit * step(0.0, t));
+  }
+  refl = mix(refl, vec3(0.46, 0.44, 0.4) * skyIrradiance(vec3(0.0, 0.3, 0.0) - vec3(rd.x, 0.0, rd.y)) / 3.14159, mirrored * 0.85);
   vec3 hv = normalize(v + uSunDir);
   refl += uSunColour * pow(max(dot(n, hv), 0.0), 900.0) * sun * 8.0;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
@@ -200,8 +255,9 @@ float boreHigh(float x) {
 }
 // The churn of the face: round heads of white water with sharp creases between, falling down the face as the wall runs. x: big heads, y: small.
 vec2 boreChurn(float x, float s) {
-  float a = texture2D(tFoam, vec2(x * 0.8, s + uTime * 6.0) / 64.0).g;
-  float b = texture2D(tFoam, vec2(x + 2.0 * uTime, s * 1.2 + uTime * 9.0) / 21.0).g;
+  // Read no finer than the sheet is meshed (0.7 m): finer would stand as a curtain of ridges down the face.
+  float a = textureLod(tFoam, vec2(x * 0.8, s + uTime * 6.0) / 64.0, 2.3).g;
+  float b = textureLod(tFoam, vec2(x + 2.0 * uTime, s * 1.2 + uTime * 9.0) / 21.0, 3.7).g;
   return vec2(a, b);
 }
 // A point of the bore: x across the strait, s metres behind the front along the bed. Returns the world place, w = s in wall heights.
@@ -211,10 +267,10 @@ vec4 boreAt(float x, float s) {
   float uc = clamp(u / 0.75, 0.0, 1.0);
   float rise = 1.0 - pow(1.0 - uc, 2.2);
   float back = 0.7 + 0.3 * exp(-max(u - 0.75, 0.0) / 1.5);
-  float y = u < 0.0 ? 0.3 * (1.0 + s / 16.0) - 0.08 : 0.22 + (H - 0.22) * rise * back;
+  float y = u < 0.0 ? 0.26 * (1.0 + s / 48.0) + 0.04 : 0.3 + (H - 0.3) * rise * back;
   float fwd = H * 0.26 * sin(uc * 3.14159) * step(0.0, u);
-  float lumpA = texture2D(tChop, vec2(x, s + uTime * 7.0) / 61.0).b - 0.5;
-  float lumpB = texture2D(tChop, vec2(x + 3.0 * uTime, s - uTime * 4.0) / 17.0).b - 0.5;
+  float lumpA = textureLod(tFoam, vec2(x, s + uTime * 7.0) / 83.0, 1.8).r - 0.5;
+  float lumpB = textureLod(tFoam, vec2(x + 3.0 * uTime, s - uTime * 4.0) / 31.0, 3.2).r - 0.5;
   float amp = H * smoothstep(-0.02, 0.3, u) * (0.2 * exp(-max(u - 0.75, 0.0) / 2.5) + 0.03);
   y += amp * (1.3 * lumpA + 0.7 * lumpB);
   fwd += amp * 0.9 * lumpB;
@@ -257,7 +313,10 @@ void main() {
   float u = vRide.z;
   vec2 ch = boreChurn(vRide.x, vRide.y);
   // Marks ride with the wall and tumble down its face.
-  vec2 q = vec2(vRide.x, vRide.y + vWorld.y + uTime * 8.0 * smoothstep(2.5, 0.0, u));
+  // Down the face they are laid by the height (the face is too steep for the metres along the bed to carry them: they would hang as a curtain); over the back by the bed.
+  float Hh = boreHigh(vRide.x);
+  float down = mix(-1.1 * (Hh - vWorld.y), vRide.y - 0.75 * Hh, smoothstep(0.6, 0.95, u));
+  vec2 q = vec2(vRide.x, down - uTime * 8.0 * smoothstep(2.5, 0.0, u));
   vec4 a = texture2D(tChop, q / 29.0);
   vec4 f1 = texture2D(tFoam, q / 13.0);
   vec4 f2 = texture2D(tFoam, q.yx / 3.1 + f1.rb * 0.3);
@@ -265,9 +324,16 @@ void main() {
   float lace = mix(0.5 * a.a + 0.5 * texture2D(tChop, q.yx / 3.3).a, 0.2 + 0.6 * f1.r, face);
   // Under the heads of the crest the lifted water shows dark in windows; at the foot it is all broken white.
   float big = texture2D(tFoam, vec2(vRide.x, uTime * 3.0) / 97.0).r;
-  float lifted = smoothstep(0.05, 0.15, u) * smoothstep(0.62, 0.34, u) * smoothstep(0.42, 0.56, big + 0.35 * (0.4 - ch.x));
-  float amount = mix(0.25 + 0.55 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.72 * lifted, face);
+  // The face is one dark band of lifted water from the churn at the foot to the heads of the crest; its edges are torn, strings of white run down it.
+  float tear = 0.12 * (big - 0.5) + 0.05 * (f1.r - 0.5);
+  float lifted = smoothstep(0.07 + tear, 0.14 + tear, u) * smoothstep(0.42 + tear, 0.3 + tear, u);
+  float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.9 * lifted, face);
+  // Ahead of the wall foam runs out over the wet flat in tongues, thinning to lace.
+  float ahead = clamp(-vRide.y / 48.0, 0.0, 1.0);
+  float tongue = texture2D(tFoam, vec2(vRide.x, uTime * 2.0) / 61.0).r + 0.5 * texture2D(tFoam, vec2(vRide.x, vRide.y * 0.5 + uTime * 5.0) / 23.0).r;
+  amount = mix(amount, 1.25 - 2.3 * ahead / (0.25 + tongue), step(u, 0.0));
   float foam = smoothstep(1.0 - amount, 1.2 - amount, mix(lace, 0.15 + 0.7 * f2.r + 0.25 * (f1.g - 0.3), face * lifted));
+  if (u < 0.0 && foam < 0.35) discard;
   vec2 bump = vec2(f2.g - f1.a, f2.a - f1.g) * 0.5 + (a.xy - 0.5) * (1.0 - face);
   // White water is not a skin: its light comes from all through it, so the folds of the sheet under it count for less.
   vec3 n = normalize(mix(vNormalW, vec3(0.0, 0.62, 0.78), 0.6 * foam * face) + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.3, foam));
@@ -275,12 +341,13 @@ void main() {
   float crease = smoothstep(0.02, 0.4, ch.x) * (0.5 + 0.5 * smoothstep(0.02, 0.35, ch.y));
   float pit = (0.55 + 0.45 * smoothstep(0.3, 0.62, f1.r)) * (0.7 + 0.3 * smoothstep(0.3, 0.6, f2.r)) * (0.75 + 0.25 * smoothstep(0.03, 0.3, f2.g));
   float hollow = mix(1.0, (0.5 + 0.5 * crease) * pit, face);
-  vec3 water = vec3(0.022, 0.04, 0.036);
+  // The lifted water is thick with sand: slate green, brown where it is thin at the lip.
+  vec3 water = mix(vec3(0.045, 0.07, 0.058), vec3(0.11, 0.115, 0.075), smoothstep(0.25, 0.45, u) * face);
   // White water is lit all through: it holds more light than a painted wall.
   vec3 white = vec3(0.95, 0.96, 0.96);
   vec3 albedo = mix(water, white, foam);
-  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.22, 1.0, foam), mix(1.0, hollow, foam));
-  col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.12;
+  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.45, 1.0, foam), mix(1.0, hollow, foam));
+  col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.2;
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 
@@ -291,6 +358,7 @@ attribute vec4 aLook;
 varying vec2 vUv;
 varying vec4 vLook;
 varying vec3 vLight;
+varying float vMist;
 void main() {
   vec4 centre = viewMatrix * vec4(aAt.xyz, 1.0);
   float turn = aLook.z;
@@ -299,10 +367,14 @@ void main() {
   centre.xy += corner * vec2(1.0, aLook.w);
   vUv = position.xy;
   vLook = aLook;
+  vMist = step(1.0, aLook.x);
+  vLook.x -= vMist;
   vec4 land = landAt(aAt.xz);
   float open = mix(land.g, 1.0, clamp((aAt.y - land.r) / 120.0, 0.0, 1.0));
   // Thrown water in the open air: lit from every side, the sky's light all round it.
   vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.9 * open) + uSunColour * 0.6 * sunAt(aAt.xyz, land)) / 3.14159;
+  // Mist is water too thin to be white: it holds the grey of the storm.
+  vLight *= mix(vec3(1.0), vec3(0.3, 0.33, 0.35), vMist);
   gl_Position = projectionMatrix * centre;
 }`;
 
@@ -313,13 +385,14 @@ uniform sampler2D tFoam;
 varying vec2 vUv;
 varying vec4 vLook;
 varying vec3 vLight;
+varying float vMist;
 void main() {
   float r2 = dot(vUv, vUv);
   vec4 t = texture2D(tFoam, vUv * 0.19 + vLook.y * vec2(3.1, 7.3));
   // A head of thrown water: eaten at the rim into lumps and strings, thick in the middle.
-  float eat = r2 + 1.5 * (t.r - 0.5) + 0.6 * (0.5 - t.g);
-  float body = 1.0 - smoothstep(0.1, 0.8, eat);
+  float eat = r2 + mix(1.5, 0.5, vMist) * (t.r - 0.5) + mix(0.6, 0.0, vMist) * (0.5 - t.g);
+  float body = 1.0 - smoothstep(mix(0.1, -0.1, vMist), mix(0.8, 0.95, vMist), eat);
   float alpha = body * (0.55 + 0.45 * t.a) * vLook.x * (1.0 - uSolo);
-  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.8 + 0.5 * t.g) * (0.85 + 0.2 * body + 0.2 * vUv.y);
+  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.9 + 0.6 * t.g) * (0.85 + 0.25 * body + 0.25 * vUv.y);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;

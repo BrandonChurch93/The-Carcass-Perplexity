@@ -10,7 +10,7 @@ export const PARTS: readonly string[] = ['drowned'];
 
 /** It was a big one. Metres of the hung body for one unit of its plan below: hip to the ends of the tendrils is about 7 units down the face. */
 const SIZE = 1.45;
-const STRANDS = 190;
+const STRANDS = 220;
 const CRABS = 16;
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
@@ -69,7 +69,7 @@ void main() {
   // Sodden skin: bone pale, blotched grey-green and bruised, darker in every fold.
   float blotch = fbm2(f * 1.7 + part);
   float fine = fbm2(f * 9.0);
-  vec3 pale = vec3(0.44, 0.39, 0.35);
+  vec3 pale = vec3(0.53, 0.44, 0.4);
   vec3 albedo = mix(pale, vec3(0.36, 0.38, 0.32), smoothstep(0.45, 0.75, blotch));
   albedo = mix(albedo, vec3(0.3, 0.2, 0.19), smoothstep(0.5, 0.75, fbm2(f * 3.1 + 5.0)) * 0.75);
   // Water stains run down it.
@@ -78,6 +78,7 @@ void main() {
   float rough = 0.34;
   float occ = 1.0;
   float bare = part > 2.5 && part < 3.5 ? 1.0 : vSkin.w;
+  float old = part > 3.5 && part < 4.5 ? 1.0 : 0.0;
   if (part < 0.5) {
     // The trunk: ribs standing under the skin, the skin sunk between them.
     float chest = smoothstep(0.3, 0.42, vSkin.y) * (1.0 - smoothstep(0.86, 0.95, vSkin.y));
@@ -99,8 +100,13 @@ void main() {
   float worn = smoothstep(0.35, 0.75, bare + 0.5 * (fine - 0.5));
   albedo = mix(albedo, vec3(0.6, 0.56, 0.47) * (0.8 + 0.3 * fine), worn);
   rough = mix(rough, 0.5, worn);
+  // The older one's bones: brown and green with weed slime, pale only where they are rubbed.
+  if (old > 0.5) {
+    albedo = mix(vec3(0.13, 0.12, 0.08), vec3(0.36, 0.33, 0.26), smoothstep(0.5, 0.8, fbm2(f * 6.0))) * (0.7 + 0.5 * fine);
+    rough = 0.4;
+  }
   if (part > 5.5 && part < 6.5) {
-    albedo = mix(vec3(0.5, 0.42, 0.36), vec3(0.3, 0.26, 0.2), vSkin.y) * (0.8 + 0.4 * fine);
+    albedo = mix(vec3(0.3, 0.25, 0.2), vec3(0.13, 0.11, 0.08), vSkin.y) * (0.8 + 0.4 * fine);
     rough = 0.22;
   }
 #ifdef SHEET
@@ -153,7 +159,7 @@ void main() {
   float alpha = across * thin * (0.16 + 0.75 * beads) * (1.0 - uSolo);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(uOut + vec3(0.0, 0.25, 0.0));
-  vec3 col = skyRadiance(reflect(-v, n)) * 0.55 + skyIrradiance(n) * 0.06;
+  vec3 col = skyRadiance(reflect(-v, n)) * 0.85 + skyIrradiance(n) * 0.08;
   gl_FragColor = vec4(rigOut(col) * alpha, alpha);
 }`;
 
@@ -254,6 +260,8 @@ void main() {
   vec3 dark = mix(vec3(0.016, 0.02, 0.011), vec3(0.075, 0.055, 0.016), fract(vStrand.z * 7.31));
   vec3 albedo = mix(dark, dark * 2.2 + vec3(0.03, 0.02, 0.0), smoothstep(0.55, 1.0, rib));
   albedo *= 0.8 + 0.4 * blister;
+  // What lies over the body is the living weed of the tide line: olive and amber, wet.
+  albedo = mix(albedo, mix(vec3(0.1, 0.085, 0.025), vec3(0.2, 0.12, 0.03), fract(vStrand.z * 3.7)) * (0.7 + 0.5 * blister + 0.4 * rib), step(1.0, vStrand.z));
   vec3 col = rigShade(vWorld, n, v, albedo, 0.24, 0.55 + 0.45 * rib);
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
@@ -475,14 +483,14 @@ export function create(ctx: Context): Piece {
   ];
   for (const c of cages) {
     const dir: Point = [Math.sin(c.tilt), Math.cos(c.tilt), 0];
-    tube(skinMesh, (q) => [c.at[0] + dir[0] * c.long * q, c.at[1] + dir[1] * c.long * q, c.at[2] + 0.1 * K], (q) => K * (0.07 + 0.025 * Math.sin(q * c.ribs * Math.PI * 2)), 40, 8, 3);
+    tube(skinMesh, (q) => [c.at[0] + dir[0] * c.long * q, c.at[1] + dir[1] * c.long * q, c.at[2] + 0.1 * K], (q) => K * (0.07 + 0.025 * Math.sin(q * c.ribs * Math.PI * 2)), 40, 8, 4);
     for (let r = 0; r < c.ribs; r++) {
-      const q0 = (r + 0.5) / c.ribs;
+      const q0 = (r + 0.5 + scatter.range(-0.25, 0.25)) / c.ribs;
       const root: Point = [c.at[0] + dir[0] * c.long * q0, c.at[1] + dir[1] * c.long * q0, c.at[2] + 0.1 * K];
       const reach = K * (0.62 - 0.3 * Math.abs(q0 - 0.45)) * scatter.range(0.8, 1.1);
       for (const way of [-1, 1]) {
-        if (scatter.next() < 0.18) continue;
-        const kept = scatter.range(0.55, 1);
+        if (scatter.next() < 0.3) continue;
+        const kept = scatter.range(0.35, 1);
         tube(
           skinMesh,
           (q) => {
@@ -492,7 +500,7 @@ export function create(ctx: Context): Piece {
           (q) => K * (0.04 - 0.018 * q),
           18,
           6,
-          3,
+          4,
         );
       }
     }
@@ -540,14 +548,17 @@ export function create(ctx: Context): Piece {
 
   // Water down the face: beside it, where the approved picture has a runnel off the ledge, and off its lowest points.
   const RUNS = 22;
+  // And off it: from the end of every limb and from the muzzle the water it holds still runs.
+  const dripFrom: Point[] = [...limbs.map((l) => limbPath(l)(1)), muzzle, muzzle, shoulder];
   const runFace: number[] = [];
   const runLook: number[] = [];
   const runIndex: number[] = [];
-  for (let i = 0; i < RUNS; i++) {
+  for (let i = 0; i < RUNS + dripFrom.length * 3; i++) {
     const beside = i < 13;
-    const u0 = beside ? scatter.range(-3.4, -2.2) * K + (i % 3) * 0.1 : scatter.range(-1.2, 3.6) * K;
-    const d0 = beside ? scatter.range(-4, -2.5) * K : scatter.range(1.5, 4.5) * K;
-    const long = beside ? scatter.range(6, 9) * K : scatter.range(1.5, 3.5) * K;
+    const drip = i >= RUNS ? dripFrom[Math.floor((i - RUNS) / 3)] : undefined;
+    const u0 = drip ? drip[0] + scatter.range(-0.12, 0.12) * K : beside ? scatter.range(-3.4, -2.2) * K + (i % 3) * 0.1 : scatter.range(-1.2, 3.6) * K;
+    const d0 = drip ? drip[1] - scatter.range(0, 0.5) * K : beside ? scatter.range(-4, -2.5) * K : scatter.range(1.5, 4.5) * K;
+    const long = drip ? scatter.range(1.2, 2.8) * K : beside ? scatter.range(6, 9) * K : scatter.range(1.5, 3.5) * K;
     const wide = beside ? scatter.range(0.03, 0.1) : scatter.range(0.015, 0.035);
     const number = scatter.next();
     const first = runFace.length / 3;
@@ -555,7 +566,7 @@ export function create(ctx: Context): Piece {
     for (let k = 0; k <= N; k++) {
       const q = k / N;
       for (const side of [-1, 1]) {
-        runFace.push(u0 + side * wide, d0 + long * q, 0.2);
+        runFace.push(u0 + side * wide, d0 + long * q, drip ? Math.max(0.2, drip[2] * (1 - 1.2 * q)) + 0.06 : 0.2);
         runLook.push(side, q, number);
       }
     }
@@ -586,10 +597,10 @@ export function create(ctx: Context): Piece {
   const shapes = new Float32Array(STRANDS * 4);
   const falls = new Float32Array(STRANDS * 3);
   for (let i = 0; i < STRANDS; i++) {
-    const over = i < 34;
+    const over = i < 64;
     // Over the shoulder and the hips, where it is caught; the rest hang round it.
-    let u = over ? (i < 20 ? scatter.range(0.6, 1.7) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
-    const up = over ? (i < 20 ? scatter.range(-0.9, 0.1) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
+    let u = over ? (i < 30 ? scatter.range(0.5, 1.8) : i < 46 ? scatter.range(-0.4, 0.5) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
+    const up = over ? (i < 30 ? scatter.range(-0.9, 0.1) : i < 46 ? scatter.range(0.3, 1.2) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
     // The rest keep clear of it: nothing hangs across the body but what is draped over it.
     if (!over && u > -2 * SIZE && u < 4.6 * SIZE && up > -5) u += u < 1.3 * SIZE ? -4 * SIZE : 5 * SIZE;
     const root = toWorld(u, -up, over ? proud(u) + 0.25 * SIZE : 0);
@@ -597,7 +608,7 @@ export function create(ctx: Context): Piece {
     const fall = toWorld(u, -up + long, 0).sub(root).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
     roots.set([root.x, root.y, root.z, over ? scatter.range(0.3, 0.6) * SIZE : scatter.range(0.05, 0.2)], i * 4);
-    shapes.set([long, over ? scatter.range(0.05, 0.12) : scatter.range(0.05, 0.16), scatter.next(), scatter.range(-0.12, 0.12)], i * 4);
+    shapes.set([long, over ? scatter.range(0.1, 0.26) : scatter.range(0.05, 0.16), scatter.next() + (over ? 1 : 0), scatter.range(-0.12, 0.12)], i * 4);
   }
   weed.setAttribute('aRoot', new THREE.InstancedBufferAttribute(roots, 4));
   weed.setAttribute('aShape', new THREE.InstancedBufferAttribute(shapes, 4));
