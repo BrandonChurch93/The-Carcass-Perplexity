@@ -130,7 +130,7 @@ void main() {
     #ifndef BENCH
     // Round the mouth the wall turns through every direction: there the picture is laid by world position on three axes, with no jump from flow to flow.
     float beside = abs(vWorld.x - (${MOUTH.x.toFixed(1)}));
-    float alcove = smoothstep(86.0, 66.0, beside) * smoothstep(${(MOUTH.z - 72).toFixed(1)}, ${(MOUTH.z - 58).toFixed(1)}, vWorld.z);
+    float alcove = smoothstep(${(MOUTH.width / 2 + 27).toFixed(1)}, ${(MOUTH.width / 2 + 7).toFixed(1)}, beside) * smoothstep(${(MOUTH.z - 72).toFixed(1)}, ${(MOUTH.z - 58).toFixed(1)}, vWorld.z);
     shift *= 1.0 - alcove;
     #endif
     // The low crags of the bench are the same rock seen close: the picture at a fifth of the size.
