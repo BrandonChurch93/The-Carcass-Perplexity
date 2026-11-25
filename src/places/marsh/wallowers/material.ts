@@ -143,7 +143,7 @@ void main() {
   float patchy = fbm(vUv * 2.1 + seed * 13.0);
   float flake = fbm(vUv * 9.0 + seed * 3.0);
   float up = ng.y + 0.55 * (patchy - 0.5) + 0.3 * (flake - 0.5) + 0.3 * (nhS.b - 0.5);
-  float cake = smoothstep(0.74, 0.82, up) * clamp(vInfo.x, 0.0, 1.0) * (1.0 - feeler);
+  float cake = smoothstep(0.84, 0.93, up) * clamp(vInfo.x, 0.0, 1.0) * (1.0 - feeler);
   cake = max(cake, dead * smoothstep(0.3, 0.42, patchy + 0.45 * ng.y + 0.35 * (nhS.b - 0.5) + 0.2 * (flake - 0.5)));
   // A bloom of dry salt over the upper half and in the creases: the hide dries grey.
   float dust = clamp(vInfo.x, 0.0, 1.0) * smoothstep(-0.35, 0.6, ng.y) * (0.25 + 0.3 * fold + 0.35 * patchy) * (1.0 - feeler);
@@ -160,8 +160,11 @@ void main() {
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = mix(vec3(0.125, 0.096, 0.07), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
-  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.38);
+  vec3 albedo = mix(vec3(0.088, 0.066, 0.05), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.15);
+  // Mud from the last wallow has dried on it in plates: pale where it is dry, and it has cracked off the tops of the folds.
+  float caked = smoothstep(0.4, 0.58, fbm(vUv * vec2(2.3, 1.9) + seed * 7.0) + 0.12 * (1.0 - fold)) * (0.45 + 0.55 * smoothstep(0.25, 0.5, fbm(vUv * vec2(11.0, 9.0) + seed))) * (1.0 - mudded) * (1.0 - dead) * (1.0 - feeler) * (1.0 - damp);
+  albedo = mix(albedo, vec3(0.15, 0.122, 0.098) * (0.6 + 0.4 * s0) * (0.8 + 0.4 * nhH.b), caked * 0.6);
   // The feelers: old ivory, grooved along their length, stained at the root and the tip.
   float groove = 0.8 + 0.2 * sin(vUv.y / max(vInfo.z, 0.01) * 5.0 + seed * 40.0);
   vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
@@ -171,6 +174,8 @@ void main() {
   slope = mix(slope, (nhS.rg - 0.5) * 2.4 + dead * knobSlope, cake);
   albedo = mix(albedo, albedo * (0.5 + 0.5 * knob) * mix(vec3(1.0), vec3(0.85, 0.7, 0.64), 1.0 - knob), dead * cake);
   albedo = mix(albedo, albedo * mix(vec3(0.42, 0.3, 0.25), vec3(1.0), smoothstep(0.15, 0.8, vInfo.y)), dead);
+  // Old salt is not clean: dust and the red of the flats have blown into it.
+  albedo = mix(albedo, albedo * mix(vec3(0.78, 0.7, 0.64), vec3(1.0), smoothstep(0.3, 0.7, fbm(vUv * vec2(1.9, 1.6) + seed * 3.0))), dead);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
   albedo = mix(albedo, albedo * mix(vec3(0.72, 0.5, 0.45), vec3(0.7), mudded), damp * (1.0 - wet));
   vec3 wetC = mix(albedo * vec3(0.75, 0.2, 0.12) + vec3(0.03, 0.003, 0.002), albedo * 0.6, mudded);
@@ -187,7 +192,7 @@ void main() {
   albedo = mix(albedo, mud, soaked * 0.85);
 
   vec3 n = normalize(ng - (T * slope.x + B * slope.y) * (1.0 - 0.5 * soaked));
-  float rough = mix(0.92, 0.5, max(wet, 0.8 * thread * damp));
+  float rough = mix(0.92, 0.58, max(wet, 0.8 * thread * damp));
   rough = mix(rough, 0.3, soaked);
   rough = mix(rough, 0.95, cake);
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));
@@ -200,6 +205,18 @@ void main() {
   float pit = trunk * (1.0 - dead) * smoothstep(0.99, 0.997, vLook.y);
   albedo = mix(albedo, vec3(0.03, 0.014, 0.011), 0.7 * pit);
   occ *= 1.0 - 0.45 * pit;
+  // The eyes: two small wet beads low on the head, each sunk in its own ring of hide.
+  float kk = vInfo.z / 0.58;
+  float eyeAlong = (vLook.y - 0.925) * 3.55 * kk;
+  float eyeRound = min(abs(vUv.y - 0.4 * kk), abs(vUv.y - 2.113 * kk));
+  float eyeD = length(vec2(eyeAlong, eyeRound)) / max(kk, 0.05);
+  float socket = trunk * (1.0 - dead) * (1.0 - smoothstep(0.03, 0.075, eyeD));
+  float bead = trunk * (1.0 - dead) * (1.0 - smoothstep(0.022, 0.03, eyeD));
+  albedo = mix(albedo, albedo * 0.45, socket);
+  occ *= 1.0 - 0.4 * socket;
+  albedo = mix(albedo, vec3(0.006, 0.004, 0.004), bead);
+  rough = mix(rough, 0.12, bead);
+  n = normalize(mix(n, ng, bead));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

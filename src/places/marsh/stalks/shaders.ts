@@ -64,9 +64,9 @@ vec3 stemPoint(float a, float v) {
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
-    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.19, 0.15, open);
+    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.22, 0.15, open);
     y = h - 0.06 + len * v;
-    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(0.98, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.06 * sin(a * 9.0 + v * 4.0));
+    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(1.1, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.07 * sin(a * 3.0 + v * 2.2 + seed * 30.0) + 0.03 * sin(a * 5.0 - v * 3.0));
   }
   vec3 A = vec3(aAxis.x * sin(lean), cos(lean), aAxis.y * sin(lean));
   vec3 U = vec3(aAxis.x * cos(lean), -sin(lean), aAxis.y * cos(lean));
@@ -117,12 +117,24 @@ void main() {
     vec3 nh = texture2D(tSaltNh, uv).rgb;
     float patchy = fbm(vec2(vCoord.x * 1.3, y * 3.0) + seed * 11.0);
     // Under the salt the tube is horn brown; it shows where the crust has flaked and under each lip, where the brine has run and left rust.
-    float bare = smoothstep(0.5, 0.7, patchy + 0.3 * (0.5 - nh.b));
+    float bare = smoothstep(0.42, 0.62, patchy + 0.3 * (0.5 - nh.b));
     float under = (1.0 - smoothstep(0.0, 0.3, q)) + 0.6 * smoothstep(0.9, 1.0, q);
     vec3 horn = vec3(0.15, 0.095, 0.06) * (0.6 + 0.8 * nh.b);
     vec3 rust = vec3(0.2, 0.07, 0.03);
-    vec3 albedo = salt * 1.2 + 0.03;
-    albedo = mix(albedo, horn, 0.75 * bare);
+    vec3 albedo = (salt * 1.05 + 0.03) * vec3(1.0, 0.93, 0.85);
+    albedo = mix(albedo, horn, 0.8 * bare);
+    // Some nodes still carry the sheath they grew in: brown paper, split and hanging to a ragged end. And where a plume was shed there is a scar.
+    float nodeId = floor((y + 0.045 * sin(y * 6.1 + seed * 20.0) + 0.02 * sin(y * 15.7 + seed * 50.0)) / sp + seed);
+    float has = step(hash12(vec2(nodeId, floor(seed * 977.0))), 0.34);
+    float rag = 0.25 + 0.5 * vnoise(vec2(vCoord.x * 2.6, nodeId * 3.1 + seed * 9.0));
+    float sheath = has * smoothstep(1.0 - rag - 0.06, 1.0 - rag + 0.02, q) * smoothstep(0.38, 0.5, vnoise(vec2(vCoord.x * 1.4 + nodeId, seed * 40.0)));
+    float fibre = vnoise(vec2(vCoord.x * 30.0, y * 2.0 + seed * 7.0));
+    albedo = mix(albedo, vec3(0.17, 0.105, 0.066) * (0.55 + 0.9 * fibre), 0.9 * sheath);
+    float scar = smoothstep(0.8, 0.86, vnoise(vec2(vCoord.x * 2.2, y * 9.0) + seed * 30.0));
+    albedo = mix(albedo, vec3(0.045, 0.028, 0.02), 0.85 * scar);
+    // One that is dead and broken has lost its salt: it is grey brown and stained.
+    float deadStem = step(1.5, vKind.x) * step(vKind.x, 2.5) * step(0.5, fract(seed * 57.0));
+    albedo = mix(albedo, albedo * vec3(0.5, 0.4, 0.33) + vec3(0.02, 0.012, 0.008), deadStem);
     // Far off the rings are not seen one by one: a stalk is pale with a stain here and there.
     float away = smoothstep(10.0, 34.0, distance(cameraPosition, vWorld));
     under *= 1.0 - 0.85 * away;
@@ -146,8 +158,14 @@ void main() {
     // A closed sheath: long scales that lap over each other up to the point.
     float lap = fract(vCoord.w * 3.3 + 0.35 * sin(vCoord.x * 3.0));
     float groove = (0.5 + 0.5 * pow(abs(sin(vCoord.x * 4.5 + vCoord.w * 2.6)), 0.5)) * (0.75 + 0.25 * smoothstep(0.0, 0.3, lap));
-    vec3 albedo = mix(vec3(0.03, 0.008, 0.009), vec3(0.075, 0.022, 0.02), vCoord.w) * groove;
-    c = rigShade(vWorld, n, v, albedo, 0.9, (0.5 + 0.5 * vCoord.w) * (0.6 + 0.4 * groove));
+    vec3 albedo = mix(vec3(0.035, 0.007, 0.009), vec3(0.1, 0.02, 0.024), vCoord.w) * groove;
+    albedo = mix(albedo, vec3(0.03, 0.012, 0.01), smoothstep(0.8, 1.0, vCoord.w));
+    // It is not polished: fibres run up it, and salt has dried on it in a bloom, thickest low down where the spray reaches.
+    float thread = vnoise(vec2(vCoord.x * 26.0, vCoord.w * 5.0 + seed * 9.0));
+    albedo *= 0.7 + 0.6 * thread;
+    float bloom = smoothstep(0.42, 0.7, fbm(vec2(vCoord.x * 2.3, vCoord.w * 6.0) + seed * 13.0)) * (1.0 - 0.6 * vCoord.w);
+    albedo = mix(albedo, vec3(0.2, 0.15, 0.135), 0.55 * bloom);
+    c = rigShade(vWorld, n, v, albedo, 1.0, (0.5 + 0.5 * vCoord.w) * (0.6 + 0.4 * groove));
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -167,8 +185,8 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
   float sa = aMore.y * 40.0;
   vec3 sweep = vec3(cos(sa), 0.0, sin(sa));
   // Out: it leaves the mouth along the tube in a bunch, goes over as its own weight takes it, and its wet end hangs. In: it lies along the bud.
-  vec3 d0 = normalize(axis + radial * (0.2 + 0.75 * spread) + sweep * 0.3);
-  vec3 outward = normalize(radial * (0.3 + 0.8 * spread) + sweep * 0.9);
+  vec3 d0 = normalize(axis + radial * (0.12 + 0.42 * spread) + sweep * 0.38);
+  vec3 outward = normalize(radial * (0.2 + 0.5 * spread) + sweep * 1.0);
   float heavy = 0.75 + 0.5 * fract(seed * 5.3);
   float u2 = u * u;
   // One in eight has died: it hangs brown down the stem.
@@ -177,7 +195,7 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
   vec3 outP = radialBase * R * 0.5 * (1.0 - 0.5 * u)
     + d0 * L * (0.86 - 0.3 * spread) * (2.0 * u - u2)
     + outward * L * (0.2 + 0.4 * spread) * u2
-    - vec3(0.0, 1.0, 0.0) * L * (0.06 + 0.5 * spread * spread) * heavy * u2 * u
+    - vec3(0.0, 1.0, 0.0) * L * (0.05 + 0.42 * spread * spread) * heavy * u2 * u2
     + cross(axis, radial) * L * 0.05 * sin(u * 5.0 + seed * 31.0) * u
     + radial * L * 0.035 * sin(u * 9.0 + seed * 50.0) * u;
   float bulge = sin(3.14159 * pow(mix(0.12, 1.0, u), 0.8));

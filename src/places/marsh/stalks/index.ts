@@ -31,7 +31,7 @@ function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
   };
   sheet(0, rings, (v) => v);
   sheet(1, 3, (v) => v);
-  sheet(2, 6, (v) => v);
+  sheet(2, 12, (v) => v);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
   g.setAttribute('aSkin', new THREE.Float32BufferAttribute(skin, 1));
@@ -61,6 +61,37 @@ export function create(ctx: Context): Piece {
     s.x = p[0];
     s.z = p[1];
   });
+  // TEMPORARY, until the lead's list does it: the stalks stand in clumps with open flat between, some fork from the foot, and some are dead and broken off.
+  // Every fifth one is the heart of a clump; those within reach of it are drawn in toward it. The ones the lens of the colony stands among, and the four by the hero, stay.
+  {
+    const clump = ctx.rng('stalks-clumps');
+    const own = (s: Stalk, i: number): boolean => Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 9 || i >= stalks.length - 4;
+    const hearts = stalks.filter((s, i) => !own(s, i) && i % 5 === 0).map((s) => [s.x, s.z] as [number, number]);
+    const forks: Stalk[] = [];
+    stalks.forEach((s, i) => {
+      if (own(s, i)) return;
+      let best = 1e9;
+      let heart: [number, number] | undefined;
+      for (const h of hearts) {
+        const d = Math.hypot(h[0] - s.x, h[1] - s.z);
+        if (d < best) {
+          best = d;
+          heart = h;
+        }
+      }
+      if (heart && best > 0.01 && best < 16) {
+        const keep = clump.range(0.16, 0.42);
+        s.x = heart[0] + (s.x - heart[0]) * keep;
+        s.z = heart[1] + (s.z - heart[1]) * keep;
+      }
+      if (clump.next() < 0.16) {
+        s.kind = 2;
+        s.h *= clump.range(0.3, 0.7);
+      }
+      if (clump.next() < 0.3) forks.push({ ...s, x: s.x + clump.range(-0.08, 0.08), z: s.z + clump.range(-0.08, 0.08), h: s.h * clump.range(0.45, 0.8), lean: s.lean + clump.range(0.25, 0.5), yaw: s.yaw + clump.range(1.3, 5), kind: clump.next() < 0.3 ? 2 : s.kind, size: s.size * 0.85, phase: clump.range(0, 6.28) });
+    });
+    stalks.push(...forks);
+  }
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
@@ -97,7 +128,7 @@ export function create(ctx: Context): Piece {
       // Those the lens of the colony looks through keep the place the approved picture gives them: they bow least.
       if (close) for (let n = 0; n < 60 && (seed * 91.3) % 1 > 0.12; n++) seed = rng.next();
       const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
-      const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.1);
+      const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.2);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 1 : 0.72);
       const dx = Math.cos(s.yaw);
       const dz = -Math.sin(s.yaw);
@@ -126,12 +157,12 @@ export function create(ctx: Context): Piece {
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
       const length = (s.kind === 0 ? 0.31 : s.kind === 3 ? 0.28 : 0.25) * s.size * (close ? 1 : which === 0 ? 2.8 : 3.8);
       // Wet filaments cling: they leave the mouth each by itself and go over in locks.
-      const locks = Array.from({ length: which === 0 ? 26 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7) * (close ? 1 : 0.75), rng.range(0.65, 1.15)] as [number, number, number]);
+      const locks = Array.from({ length: which === 0 ? 26 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7) * (close ? 1 : 0.9), rng.range(close ? 0.65 : 0.45, 1.2)] as [number, number, number]);
       for (let f = 0; f < count; f++) {
         const lock = locks[which === 0 ? rng.int(locks.length) : f] as [number, number, number];
         fils[0].push(top[0], top[1], top[2], R);
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
-        fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(0.85, 1.08), rng.next());
+        fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(close ? 0.8 : 0.55, 1.1), rng.next());
         fils[3].push(s.kind, seed, length, (which === 0 ? (close ? 0.004 : 0.011) : 0.036) * s.size * rng.range(0.7, 1.3));
       }
       if (which === 0) nearFils = fils[0].length / 4;

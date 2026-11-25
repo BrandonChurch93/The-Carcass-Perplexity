@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { DEAD, STUCK, rel, relYaw } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { Animal, FEELERS, newDrive, type Drive } from '../wallowers/animal';
+import { Hair } from '../wallowers/hair';
 import { hideMaterial } from '../wallowers/material';
 import { Skin } from '../wallowers/skin';
 import { mudWallow } from './mud';
@@ -29,7 +30,7 @@ export function create(ctx: Context): Piece {
     drive.oz = p[1];
     // The one that lies nearest the live one is the furthest gone: it stands no higher than a knee, and the lens of the thin crust looks over it.
     const under = d === nearest ? 1 : 0;
-    drive.oy = Math.min(0.1, ctx.rig.land.height(p[0], p[1])) - rng.range(0.34, 0.46) * k - under * 0.2 * k;
+    drive.oy = Math.min(0.1, ctx.rig.land.height(p[0], p[1])) - rng.range(0.34, 0.46) * k - under * 0.3 * k;
     drive.dir = [Math.cos(d.yaw), -Math.sin(d.yaw)];
     drive.squash = rng.range(0.66, 0.84) - under * 0.14;
     drive.cave = rng.range(0.35, 0.7);
@@ -69,7 +70,15 @@ export function create(ctx: Context): Piece {
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
-  ctx.scene.add(ctx.parts.built('dead', mesh, mud.mesh), mud.mesh);
+  // The live one is matted: hair in wet ropes, salt dried on their ends. The dead are furred with crystal that has grown out of their crust.
+  const coat = new Hair(ctx, skin, [{ animal: stuck, locks: 300, length: 0.3, width: 0.008, wet: ground + 0.3, stand: 0, tint: 1.5, bare: 0, salt: 3 }], 'dead-coat');
+  const frost = new Hair(
+    ctx,
+    skin,
+    bodies.filter((b) => b.animal !== stuck).map((b) => ({ animal: b.animal, locks: 2600, length: 0.05 * b.animal.b.k, width: 0.0045, wet: -10, stand: 1.2, tint: 5.2, bare: 0, fall: 0.05 })),
+    'dead-frost',
+  );
+  ctx.scene.add(ctx.parts.built('dead', mesh, mud.mesh, coat.mesh, frost.mesh), mud.mesh, coat.mesh, frost.mesh);
 
   const discs = ctx.rig.contactDiscs(bodies.length);
   bodies.forEach((b, i) => {
@@ -77,6 +86,8 @@ export function create(ctx: Context): Piece {
     const stood = b.animal.pose(b.drive);
     ctx.rig.setDisc(discs, i, stood.x, stood.z, 1.5 * b.animal.b.k, 0.75, 1.8, stood.yaw);
   });
+  // The dead do not move: their crystals are stood on them once.
+  frost.touch();
 
   return {
     setTime: (seconds) => {
@@ -108,17 +119,20 @@ export function create(ctx: Context): Piece {
         const fore = l % 2 === 1 ? 1 : -1;
         foot[0] = (fore > 0 ? 0.78 : -1.22) + 0.05;
         foot[1] = 0;
-        foot[2] = side * 0.52;
+        foot[2] = side * 0.68;
       });
       const stood = stuck.pose(live);
       ctx.rig.setDisc(discs, bodies.length - 1, stood.x, stood.z, 1.7, 0.8, 1.7, stood.yaw);
       mud.set(heave, seconds);
       skin.touch();
+      coat.touch();
     },
     dispose: () => {
       geometry.dispose();
       material.dispose();
       mud.dispose();
+      coat.dispose();
+      frost.dispose();
     },
   };
 }

@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { BEASTS, F, R, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { Animal, newDrive, walk, type Build, type Plan } from './animal';
+import { mudWallow } from '../dead/mud';
 import { Hair } from './hair';
 import { hideMaterial } from './material';
 import { Skin } from './skin';
@@ -15,10 +16,10 @@ const DISCS = 5;
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
   const skin = new Skin();
-  const herd: { animal: Animal; plan: Plan; wet: number }[] = [];
+  const herd: { animal: Animal; plan: Plan; wet: number; onBank: boolean }[] = [];
   const add = (x: number, z: number, when: number, dir: [number, number], size: number, sink: number, speed: number, root: number): void => {
     const young = size < 0.7 ? 1 - (size - 0.34) / 0.5 : 0;
-    const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.35, 0.6) * (sink > 0.5 ? 0.3 : 1) };
+    const b: Build = { k: size, young: Math.max(0, Math.min(1, young)), seed: rng.range(1, 60), bulk: rng.range(0.94, 1.08), salt: rng.range(0.25, 0.5) * (sink > 0.5 ? 0.3 : 1) };
     skin.who = herd.length;
     const animal = new Animal(skin, b);
     // The slower it goes the longer its cycle: a walk of about one length of the trunk in three cycles, and never two alike.
@@ -27,13 +28,15 @@ export function create(ctx: Context): Piece {
     const land = ctx.rig.land.height(x, z);
     const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     // A young one keeps to the shallows: its legs are too short for the bed.
-    const stand = size < 0.5 ? Math.max(ground, -0.07) : ground;
+    // One on a bank has sunk into it to the ankle and further: the mud is soft.
+    const stand = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.2) * b.k);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.36 * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.46 * b.k;
     const hang = Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446;
     herd.push({
       animal,
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang },
+      onBank: sink <= 0.15,
       wet: sink > 0.5 ? rng.range(0.75, 1.05) * b.k : Math.max(0.5 * b.k, stand + 1.04 * b.k) * rng.range(0.85, 1.1),
     });
   };
@@ -70,11 +73,15 @@ export function create(ctx: Context): Piece {
       if (i === 0) return { animal: h.animal, locks: 420, length: 0.15, width: 0.002, wet: h.wet, stand: 0, tint: 1.0, bare: 1 };
       if (i === 1) return { animal: h.animal, locks: 300, length: 0.05, width: 0.0016, wet: h.wet, stand: 0.1, tint: 1.3, bare: 0.3 };
       if (i === 2) return { animal: h.animal, locks: 1700, length: 0.26, width: 0.003, wet: h.wet, stand: 0, tint: 2.6, bare: 0 };
-      return { animal: h.animal, locks: 600, length: 0.2 * k, width: 0.008 * k, wet: h.wet, stand: 0.1, tint: 1.5, bare: rng.next() < 0.4 ? 0.7 : 0 };
+      return { animal: h.animal, locks: 600, length: 0.2 * k, width: 0.008 * k, wet: h.wet, stand: 0.1, tint: 1.0, bare: rng.next() < 0.4 ? 0.7 : 0 };
     }),
     'wallowers-hair',
   );
-  ctx.scene.add(ctx.parts.built('wallowers', mesh, wet.mesh, hair.mesh), wet.mesh, hair.mesh);
+  // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
+  const wallows = herd
+    .filter((h) => h.onBank)
+    .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.animal.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.animal.b.k, h.plan.dir, 1.05 * h.animal.b.k, [0.095, 0.05, 0.038], 'wallowers-mud-' + i));
+  ctx.scene.add(ctx.parts.built('wallowers', mesh, wet.mesh, hair.mesh, ...wallows.map((w) => w.mesh)), wet.mesh, hair.mesh, ...wallows.map((w) => w.mesh));
 
   const discs = ctx.rig.contactDiscs(herd.length * DISCS);
   const drive = newDrive();
@@ -104,6 +111,7 @@ export function create(ctx: Context): Piece {
       material.dispose();
       wet.dispose();
       hair.dispose();
+      for (const w of wallows) w.dispose();
     },
   };
 }
