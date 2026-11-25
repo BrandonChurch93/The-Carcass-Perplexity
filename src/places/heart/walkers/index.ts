@@ -3,8 +3,8 @@
 import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { AWAY as STAGED_AWAY, SEAMS, UNIT, WALKERS, seamLine } from '../shared/anchors';
-import type { HeartContext, HeartPiece } from '../shared/context';
-import { Animal, type Env } from './animal';
+import type { HeartContext, HeartPiece, SteamSource } from '../shared/context';
+import { Animal, TUFT_UP, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
 import { FRAGMENT, VERTEX } from './material';
 import { Skin } from './skin';
@@ -144,6 +144,13 @@ export function create(ctx: HeartContext): HeartPiece {
   ctx.scene.add(ctx.parts.built('crust-walkers', mesh));
 
   const discs = rig.contactDiscs(herd.length * DISCS);
+  // Where a tuft is in the melt, the pool gives off ash and vapour: a source for the air to draw, for the three whose pictures show them feeding.
+  const WISPS = [0, 1, 13];
+  const wisps = WISPS.map((i): SteamSource => {
+    const k = (herd[i] as Animal).b.k;
+    return { at: [0, 0.4, 0], radius: 1.3 * k, strength: 0, rise: 6 * k, kind: 'steam', lean: [0.27, -0.12] };
+  });
+  ctx.sources.steam.push(...wisps);
   let height = 0;
   const size = new THREE.Vector2();
 
@@ -155,14 +162,20 @@ export function create(ctx: HeartContext): HeartPiece {
         const here = AWAY.some((a) => seconds >= a.from && seconds <= a.to && a.who.includes(i)) ? 0 : 1;
         // A tuft that is down on a seam stands in a pool, and the pool lights the animal from below.
         const crust = env.undrift(stood.tuft.x, stood.tuft.z, seconds);
-        const lit = smooth(1.3 * b.tendrilLen, 0.75 * b.tendrilLen, stood.tuft.y) * smooth(2.6, 1.0, env.seam(crust[0], crust[1]).d);
+        const lit = smooth(1.5 * b.tendrilLen, 0.95 * b.tendrilLen, stood.tuft.y) * smooth(2.6, 1.0, env.seam(crust[0], crust[1]).d);
         (pools[i] as THREE.Vector4).set(stood.tuft.x, stood.tuft.z, lit * here, 1 - here);
+        const wisp = wisps[WISPS.indexOf(i)];
+        if (wisp) {
+          wisp.at[0] = stood.tuft.x;
+          wisp.at[2] = stood.tuft.z;
+          wisp.strength = 0.25 * lit * here;
+        }
         stood.feet.forEach((foot, j) => {
           const off = Math.min(1, foot.lift / (1.2 * b.k));
           rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (1.25 + 1.6 * off), here * 0.85 * (1 - 0.75 * off));
         });
         rig.setDisc(discs, i * DISCS + 4, stood.body.x, stood.body.z, 3.4 * b.k, here * 0.22, 1.5, -stood.body.yaw + Math.PI / 2);
-        const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - 0.6 * b.tendrilLen) / (2 * b.k)));
+        const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - TUFT_UP * b.tendrilLen) / (2 * b.k)));
         rig.setDisc(discs, i * DISCS + 5, stood.tuft.x, stood.tuft.z, 1.1 * b.k, here * 0.5 * low);
       });
       skin.touch();

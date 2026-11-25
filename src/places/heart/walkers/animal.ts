@@ -17,13 +17,15 @@ export interface Build {
   hipFore: number;
   hipSide: number;
   hipUp: number;
-  femur: number;
-  /** How far the knee is carried out and up from the line hip to pad: 0 hangs straight, 1 is a pond-skater. */
-  kneeOut: number;
-  kneeUp: number;
-  /** Part of the lower leg that is above the hock. */
+  /** Part of the leg's length that is above the knee. */
+  knee: number;
+  /** Part of the rest that is above the ankle joint. */
   hock: number;
+  /** What a leg has to spare at its farthest reach, as a part of its length: the more, the more it bows at rest. */
+  slack: number;
   stanceFore: number;
+  /** How far the pads of one side stand ahead of those of the other, metres: no animal stands square. */
+  lean: number;
   stanceSide: number;
   standH: number;
   stride: number;
@@ -125,8 +127,6 @@ export const REST = 0.0125;
 
 /** What sways does so in a whole number of cycles every eight seconds. */
 const LOOP = Math.PI / 4;
-/** The outline of a foot round its ankle, from straight ahead: toes ahead and to both sides, a spur behind. */
-const TOES = [1.4, 0.42, 1.22, 0.36, 0.32, 0.38, 0.9, 0.38, 0.32, 0.36, 1.22, 0.42];
 /** Seconds a pad is in the air when one that stands re-places it. */
 const STEP = 1.6;
 /** Crumbs a pad drops in one swing. */
@@ -137,6 +137,8 @@ const NECK_RINGS = 46;
 const NECK_SIDES = 12;
 const NECK_END = 7;
 const LEG_SIDES = 12;
+/** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
+export const TUFT_UP = 0.85;
 const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
 const RAG_RINGS = 7;
@@ -181,6 +183,7 @@ export class Animal {
   private readonly roots: Float32Array;
   private readonly ankle: number;
   private readonly fillet: [number, number, number];
+  private femur = 0;
   private tibia = 0;
   private meta = 0;
   private readonly centres = new Float32Array(Math.max(NECK_RINGS, 64) * 3);
@@ -193,50 +196,54 @@ export class Animal {
   ) {
     const k = b.k;
     const seed = b.seed;
-    this.ankle = 0.42 * k;
+    this.ankle = 0.6 * k;
     this.fillet = [0.34 * k, 0.3 * k, 0.13 * k];
 
     // The body: a keeled sack, deepest behind the shoulders, with the hips and the shoulder blades standing out of it.
     this.body = skin.tube(BODY_RINGS, BODY_SIDES);
     this.bodyLocal = new Float32Array(BODY_RINGS * BODY_SIDES * 3);
+    // Where along it the hips and the shoulders stand.
+    const tHip = 0.5 - b.hipFore / b.bodyLen;
+    const tShoulder = 0.5 + b.hipFore / b.bodyLen;
     for (let i = 0; i < BODY_RINGS; i++) {
       const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (BODY_RINGS - 1));
       const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.3);
       const x = (t - 0.5) * b.bodyLen;
-      const top = b.bodyTop * e * (1 + 0.22 * b.hump * gauss((t - 0.66) / 0.25) - 0.08 * gauss((t - 0.43) / 0.1));
-      // A deep chest forward and a belly drawn up behind it.
-      const keel = b.bodyKeel * e * (0.66 + 0.46 * gauss((t - 0.67) / 0.17) - 0.12 * gauss((t - 0.34) / 0.13));
-      const wide = b.bodyWide * e * (1 + 0.2 * gauss((t - 0.25) / 0.1) + 0.26 * gauss((t - 0.71) / 0.12) - 0.24 * gauss((t - 0.43) / 0.1));
+      // It hangs between the shoulders and the hips: the back sags between them, the belly hangs lowest a little ahead of the middle.
+      const sag = gauss((t - 0.5) / 0.2);
+      const top = b.bodyTop * e * (1 + 0.14 * sag + 0.3 * b.hump * gauss((t - tShoulder) / 0.13) + 0.1 * gauss((t - tHip) / 0.12));
+      const keel = b.bodyKeel * e * (0.68 + 0.5 * gauss((t - 0.54) / 0.2));
+      const wide = b.bodyWide * e * (1 + 0.14 * gauss((t - tHip) / 0.1) + 0.2 * gauss((t - tShoulder) / 0.1) - 0.14 * sag);
       for (let j = 0; j < BODY_SIDES; j++) {
         // The skin is sewn along the keel, where its seam is out of sight.
         const a = (j / BODY_SIDES - 0.25) * Math.PI * 2;
         const c = Math.cos(a);
         const s = Math.sin(a);
-        // A withered sack: lumps at three sizes, the ribs showing on the flanks, the skin hanging in folds along the keel.
-        let m = 1 + 0.06 * (wrap(t * 5, a, 5, seed) - 0.5) + 0.07 * (wrap(t * 10, a, 10, seed + 1) - 0.5) + 0.06 * (wrap(t * 20, a, 18, seed + 2) - 0.5);
-        // The cage of the ribs shows through the hide of the chest; the flank falls in under the spine and behind the last rib.
+        // A shrunken mass of dried flesh: lumps at three sizes and no pattern to them.
+        let m = 1 + 0.3 * (wrap(t * 3.2, a, 3, seed) - 0.5) + 0.4 * (wrap(t * 6.5, a, 6, seed + 1) - 0.5) + 0.38 * (wrap(t * 12, a, 11, seed + 2) - 0.5) + 0.2 * (wrap(t * 23, a, 19, seed + 7) - 0.5);
+        // It has shrivelled: creases where the hide has drawn in, each a narrow valley that wanders.
         const fromTop = Math.acos(Math.max(-1, Math.min(1, s)));
-        const cage = smooth(0.36, 0.5, t) * smooth(0.9, 0.8, t) * smooth(0.4, 0.75, fromTop) * smooth(3.0, 2.5, fromTop);
-        // Each rib stands proud of a deep hollow: this is a dried carcass that still walks.
-        const crest = Math.pow(0.5 + 0.5 * Math.sin(t * 74 + 1.1 * c * c), 2.2);
-        m += cage * (0.17 * crest - 0.085);
-        m -= 0.1 * gauss((fromTop - 0.62) / 0.24) * gauss((t - 0.47) / 0.3);
-        m -= 0.14 * gauss((t - 0.4) / 0.08) * gauss((fromTop - 1.75) / 0.6);
+        const fold1 = Math.pow(1 - Math.abs(2 * wrap(t * 5 + 0.5 * Math.sin(a * 2 + seed), a, 5, seed + 4) - 1), 4);
+        const fold2 = Math.pow(1 - Math.abs(2 * wrap(t * 11, a, 9, seed + 5) - 1), 4);
+        m -= 0.15 * fold1 + 0.06 * fold2;
+        // The flank has fallen in under the spine between the shoulder and the hip.
+        m -= 0.13 * gauss((fromTop - 1.05) / 0.4) * sag;
+        // What hangs under the belly is ragged.
         m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
-        // The blades of the shoulders and the points of the hips, high on each side.
+        // The shoulders and the points of the hips, high on each side: the legs leave the body there.
         const up = Math.max(0, s);
-        const blade = gauss((Math.abs(c) - 0.72) / 0.3) * up;
-        m += 0.4 * blade * gauss((t - 0.77) / 0.07) + 0.4 * blade * gauss((t - 0.25) / 0.07);
-        // The ridge of the spine, a knob to each bone.
-        m += 0.14 * gauss(fromTop / 0.2) * (0.6 + 0.4 * Math.sin(t * 62)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
+        const blade = gauss((Math.abs(c) - 0.9) / 0.26) * smooth(-0.15, 0.35, s);
+        m += 0.24 * blade * gauss((t - tShoulder) / 0.075) + 0.22 * blade * gauss((t - tHip) / 0.075);
+        // The spine: a low uneven ridge.
+        m += 0.13 * gauss(fromTop / 0.2) * (0.2 + 1.6 * lump(t * 13, 0.5, seed + 6)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
         const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
         const o = (i * BODY_SIDES + j) * 3;
         this.bodyLocal[o] = x;
         this.bodyLocal[o + 1] = s * (s > 0 ? top : keel) * m;
         this.bodyLocal[o + 2] = c * wide * pinch * m;
         const under = smooth(0.2, -0.9, s);
-        const socket = Math.max(gauss((t - 0.75) / 0.12), gauss((t - 0.26) / 0.12)) * smooth(0.5, -0.2, s);
-        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, (1 - 0.35 * under - 0.3 * socket) * (1 - 0.6 * cage * Math.pow(1 - crest, 3)), Math.max(top, wide) * e, seed, 0, 1 - e);
+        const socket = Math.max(gauss((t - tShoulder) / 0.12), gauss((t - tHip) / 0.12)) * smooth(0.5, -0.2, s);
+        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, (1 - 0.35 * under - 0.3 * socket) * (1 - 0.5 * fold1 - 0.25 * fold2), Math.max(top, wide) * e, seed, 0, 1 - e);
       }
       skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 1 - e);
     }
@@ -271,7 +278,8 @@ export class Animal {
     for (let i = 0; i < NECK_RINGS; i++) {
       const s = i / (NECK_RINGS - 1);
       // It thickens again over its last quarter, to the crown the roots splay from.
-      let r = b.neckR * (0.26 + 0.74 * Math.pow(1 - s, 1.7)) * (1 + 0.5 * gauss(s / 0.07)) + 0.15 * k * smooth(0.7, 0.96, s);
+      // As thick as a thigh where it leaves the body, and thinner all the way down; a small crown where the roots start.
+      let r = b.neckR * (0.32 + 0.68 * Math.pow(1 - s, 1.6)) * (1 + 0.25 * gauss(s / 0.08)) + 0.06 * k * smooth(0.8, 0.96, s);
       if (i >= NECK_RINGS - 2) r *= i === NECK_RINGS - 1 ? 0.05 : 0.7;
       // It starts inside the shoulders, closed.
       if (i === 0) r *= 0.3;
@@ -289,14 +297,12 @@ export class Animal {
     }
 
     // The legs.
-    // Cut to what its own steps ask of them and no longer, so that a standing leg is close to one line:
-    // the film's seconds are walked through once, without drawing, and the farthest reach of knee to ankle is kept.
-    this.dry = true;
-    for (let t = -0.5; t <= 29.5; t += 0.1) this.pose(t);
-    this.dry = false;
-    const lower = Math.min(this.lowerLeg(), this.need * 1.01 + 0.03 * k);
-    this.tibia = lower * b.hock;
-    this.meta = lower * (1 - b.hock);
+    // Cut to the stance of the build. The body is then carried as high as its straightest leg lets it (see the pose),
+    // so a standing leg is close to one line whatever the pads do.
+    const whole = Math.hypot(b.stanceFore - b.hipFore, b.standH + b.hipUp - this.ankle, b.stanceSide - b.hipSide) * (1 + b.slack);
+    this.femur = whole * b.knee;
+    this.tibia = (whole - this.femur) * b.hock;
+    this.meta = whole - this.femur - this.tibia;
     for (let j = 0; j < 4; j++) this.legs.push(this.legTable(j));
 
     // Grit: crumbs of crust that a pad takes up with it and drops as it swings.
@@ -322,7 +328,7 @@ export class Animal {
 
     // The tendrils: pale roots that start round the crown, and some that fork from those.
     const mains = b.tendrils;
-    const forks = Math.floor(mains * 0.8);
+    const forks = Math.round(mains * 1.3);
     for (let i = 0; i < mains + forks; i++) {
       const fork = i >= mains;
       const parent = fork ? Math.floor(((i - mains) * mains) / forks) : -1;
@@ -330,12 +336,14 @@ export class Animal {
       const local = new Float32Array(TENDRIL_RINGS * TENDRIL_SIDES * 2);
       const inner = !fork && i % 3 === 2;
       const at = fork ? 3 + Math.floor(hash(i, seed + 6) * 4) : 0;
-      const whole = b.tendrilLen * (0.75 + 0.5 * hash(fork ? parent : i, seed + 2)) * (!fork && (fork ? parent : i) % 3 === 2 ? 0.8 : 1);
+      // A brush of roots of every length: some reach the melt, some hang short of it.
+      const whole = b.tendrilLen * (0.78 + 0.52 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (0.062 + 0.04 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.55 * (1 - (0.6 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (0.12 + 0.07 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.6 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
-        const rad = r === TENDRIL_RINGS - 1 ? 0.006 * k : thick * (1 - 0.62 * Math.pow(u, 1.3)) * (1 + 0.35 * (hash(i * 3 + r, seed + 9) - 0.4));
+        // Round and fibrous: thick where it leaves the crown, a thread at its end, knotted on the way.
+        const rad = r === TENDRIL_RINGS - 1 ? 0.008 * k : thick * (1 - 0.62 * Math.pow(u, 0.9)) * (1 + 0.45 * (hash(i * 3 + r, seed + 9) - 0.4));
         for (let side = 0; side < TENDRIL_SIDES; side++) {
           const a = (side / TENDRIL_SIDES) * Math.PI * 2;
           local[(r * TENDRIL_SIDES + side) * 2] = Math.cos(a) * rad;
@@ -349,7 +357,7 @@ export class Animal {
         tube,
         local,
         angle: (((fork ? parent : i) + 0.5 * hash(fork ? parent : i, seed)) / mains) * Math.PI * 2,
-        out: inner ? 0.5 : 1.0 + 0.5 * hash(i, seed + 8),
+        out: inner ? 0.35 : 0.7 + 0.6 * hash(i, seed + 8),
         length,
         phase: hash(i, seed + 5) * 6.28,
         parent,
@@ -416,43 +424,56 @@ export class Animal {
     skin.normals(rag.tube);
   }
 
-  // The lower leg must reach the farthest pad of a stride with a little bend to spare: measure it over a cycle.
-  private lowerLeg(): number {
-    const b = this.b;
-    let far = 0;
-    for (const leg of LEGS) {
-      for (const along of [-this.plan.range, this.plan.range]) {
-        for (const lean of [-0.5 * b.k, 0.5 * b.k]) {
-          const hip: V3 = [leg.fore * b.hipFore, b.standH + b.hipUp + 0.08 * b.k, leg.side * b.hipSide + lean];
-          const ankle: V3 = [leg.fore * b.stanceFore + along, this.ankle, leg.side * b.stanceSide];
-          const knee = this.knee(hip, ankle, [1, 0, 0], [0, 1, 0], [0, 0, 1], leg);
-          far = Math.max(far, Math.hypot(ankle[0] - knee[0], ankle[1] - knee[1], ankle[2] - knee[2]));
-        }
-      }
+  // Three straight bones from the hip to the ankle: a long one to the knee, half way down, one to the ankle joint just above the foot,
+  // a short one to the foot. What the leg has to spare it takes up as a bow, both joints bent the same way and the knee the more:
+  // a stilt that gives a little, never a Z.
+  private bones(hip: V3, ankle: V3, out: V3): [V3, V3, V3] {
+    let ex = ankle[0] - hip[0];
+    let ey = ankle[1] - hip[1];
+    let ez = ankle[2] - hip[2];
+    const far = Math.hypot(ex, ey, ez) || 1;
+    ex /= far;
+    ey /= far;
+    ez /= far;
+    const l0 = this.femur;
+    const l1 = this.tibia;
+    const l2 = this.meta;
+    const d = Math.min(far, (l0 + l1 + l2) * 0.9992);
+    const along = out[0] * ex + out[1] * ey + out[2] * ez;
+    let qx = out[0] - ex * along;
+    let qy = out[1] - ey * along;
+    let qz = out[2] - ez * along;
+    const ql = Math.hypot(qx, qy, qz) || 1;
+    qx /= ql;
+    qy /= ql;
+    qz /= ql;
+    let lo = 0;
+    let hi = 1.3;
+    let bend = 0;
+    let first = 0;
+    for (let it = 0; it < 22; it++) {
+      bend = (lo + hi) / 2;
+      first = Math.atan2(l1 * Math.sin(bend) + l2 * Math.sin(1.6 * bend), l0 + l1 * Math.cos(bend) + l2 * Math.cos(1.6 * bend));
+      const reach = l0 * Math.cos(first) + l1 * Math.cos(first - bend) + l2 * Math.cos(first - 1.6 * bend);
+      if (reach > d) lo = bend;
+      else hi = bend;
     }
-    return far * 1.012;
-  }
-
-  private knee(hip: V3, ankle: V3, f: V3, u: V3, r: V3, leg: { fore: number; side: number }): V3 {
-    const b = this.b;
-    let dx = ankle[0] - hip[0];
-    let dy = ankle[1] - hip[1];
-    let dz = ankle[2] - hip[2];
-    const l = Math.hypot(dx, dy, dz) || 1;
-    const o = b.kneeOut * leg.side;
-    const fo = b.kneeOut * 0.35 * leg.fore;
-    dx = dx / l + r[0] * o + u[0] * b.kneeUp + f[0] * fo;
-    dy = dy / l + r[1] * o + u[1] * b.kneeUp + f[1] * fo;
-    dz = dz / l + r[2] * o + u[2] * b.kneeUp + f[2] * fo;
-    const m = b.femur / (Math.hypot(dx, dy, dz) || 1);
-    return [hip[0] + dx * m, hip[1] + dy * m, hip[2] + dz * m];
+    const node = (from: V3, length: number, angle: number): V3 => {
+      const ca = Math.cos(angle) * length;
+      const sa = Math.sin(angle) * length;
+      return [from[0] + ex * ca + qx * sa, from[1] + ey * ca + qy * sa, from[2] + ez * ca + qz * sa];
+    };
+    const knee = node(hip, l0, first);
+    const hock = node(knee, l1, first - bend);
+    const end = node(hock, l2, first - 1.6 * bend);
+    return [knee, hock, end];
   }
 
   private legTable(j: number): LegTable {
     const b = this.b;
     const k = b.k;
     const seed = b.seed + j * 3.7;
-    const S1 = b.femur;
+    const S1 = this.femur;
     const S2 = S1 + this.tibia;
     const S3 = S2 + this.meta;
     const S4 = S3 + this.ankle;
@@ -470,18 +491,19 @@ export class Animal {
     const along: number[] = [];
     for (const s of marks) if (along.length === 0 || s - (along[along.length - 1] as number) > 0.07 * k) along.push(s);
     // The pad: height above its sole and radius, in units of the pad's radius; the last rings close the sole.
+    // A flat plate, thin at its rim, with the ankle standing in the middle of it: not a stand that widens all the way down.
     const PAD: [number, number][] = [
-      [1, 0.17],
-      [0.86, 0.19],
-      [0.72, 0.24],
-      [0.58, 0.33],
-      [0.45, 0.46],
-      [0.33, 0.62],
-      [0.22, 0.79],
-      [0.12, 0.93],
-      [0.05, 1],
-      [0.015, 0.95],
-      [0, 0.72],
+      [1, 0.2],
+      [0.8, 0.23],
+      [0.62, 0.29],
+      [0.47, 0.38],
+      [0.35, 0.51],
+      [0.25, 0.67],
+      [0.17, 0.83],
+      [0.11, 0.95],
+      [0.06, 1],
+      [0.02, 0.97],
+      [0, 0.78],
       [0, 0.02],
     ];
     const pad = along.length;
@@ -508,12 +530,13 @@ export class Animal {
       }
       // Thickness: a thigh with muscle on it, then shafts that taper, with a knob at each joint.
       let r: number;
-      if (s < S1) r = lerp(0.21, 0.13, s / S1) + 0.035 * gauss((s / S1 - 0.2) / 0.22);
-      else if (s < S2) r = lerp(0.108, 0.076, (s - S1) / this.tibia);
-      else r = lerp(0.072, 0.064, Math.min(1, (s - S2) / this.meta));
+      // As thick as a thigh where it leaves the shoulder, a thin straight shaft by a third of the way to the knee.
+      if (s < S1) r = lerp(0.34, 0.118, smooth(0, 0.4, s / S1)) - 0.016 * smooth(0.4, 1, s / S1);
+      else if (s < S2) r = lerp(0.095, 0.082, (s - S1) / this.tibia);
+      else r = lerp(0.08, 0.074, Math.min(1, (s - S2) / this.meta));
       // A bone widens toward its end before the knuckle itself.
       const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
-      r += 0.11 * head(s - S1, 0.24) + 0.115 * head(s - S2, 0.21) + 0.07 * head(s - S3, 0.16);
+      r += 0.125 * head(s - S1, 0.22) + 0.11 * head(s - S2, 0.19) + 0.05 * head(s - S3, 0.16);
       r *= k * b.legR;
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
@@ -521,8 +544,8 @@ export class Animal {
         const u = (s - (starts[n] as number)) / (lens[n] as number);
         if (u > 0 && u < 1) {
           const arc = Math.pow(Math.sin(Math.PI * u), 1.5) * (lens[n] as number);
-          table.bow[i * 2] = arc * 0.05 * (hash(seed, 30 + n) - 0.35) * (n === 1 ? -1 : 1);
-          table.bow[i * 2 + 1] = arc * 0.04 * (hash(seed, 40 + n) - 0.5);
+          table.bow[i * 2] = arc * 0.022 * (hash(seed, 30 + n) - 0.5);
+          table.bow[i * 2 + 1] = arc * 0.022 * (hash(seed, 40 + n) - 0.5);
         }
       }
       const knob = Math.max(gauss((s - S1) / (0.3 * k)), gauss((s - S2) / (0.26 * k)), gauss((s - S3) / (0.2 * k)));
@@ -536,8 +559,8 @@ export class Animal {
       for (let n = 0; n < LEG_SIDES; n++) {
         const a = (n / LEG_SIDES) * Math.PI * 2;
         const tendon = 1 + 0.08 * Math.cos(2 * a + 0.4) + 0.05 * Math.cos(3 * a + p1) + 0.16 * (wrap((s * 2.4) / k, a, 3, seed) - 0.5) + 0.07 * (wrap((s * 6) / k, a, 5, seed + 1) - 0.5);
-        // The foot is no disc: three toes splayed forward and a spur behind, no two feet quite the same.
-        const toes = (TOES[n] as number) * (0.86 + 0.28 * hash(n + j * 13, seed + 60));
+        // The pad is round, more or less: its rim is ragged, broken off here and caked there, and no two are the same.
+        const toes = 0.8 + 0.36 * hash(n + j * 13, seed + 60) + 0.1 * Math.cos(2 * a + p2) - (hash(n * 3 + j, seed + 61) < 0.16 ? 0.22 : 0);
         // A shaft is flat and twists as it goes down; a knuckle is round, with two heads to it.
         const shaft = (1 - shape) * (1 - knob) * smooth(0, 0.8 * k, s);
         const heads = 1 + knob * (1 - shape) * (0.2 * Math.cos(2 * a + p2) + 0.1 * Math.cos(3 * a + p1));
@@ -568,7 +591,7 @@ export class Animal {
         }
         for (let side = 0; side <= SINEW_SIDES; side++) this.skin.describe(tube, i, side, u * length + j, (side / SINEW_SIDES) * 6.28 * 0.14 * k, 0.6, 0.85, w, b.seed, 3, 0);
       }
-      table.sinews.push({ tube, local, bone: n + 1, from: 0.06 * length, to: 0.95 * length, off: (n === 0 ? 0.2 : 0.165) * k * b.legR, angle: Math.PI + (hash(seed, 52 + n) - 0.5) * 0.9 });
+      table.sinews.push({ tube, local, bone: n + 1, from: 0.06 * length, to: 0.95 * length, off: (n === 0 ? 0.15 : 0.13) * k * b.legR, angle: Math.PI + (hash(seed, 52 + n) - 0.5) * 0.9 });
     });
     return table;
   }
@@ -583,14 +606,14 @@ export class Animal {
     const h1 = hash(j * 7.1 + n * 3.3 + shift * 1.7, b.seed) - 0.5;
     const h2 = hash(j * 2.9 + n * 5.7 + shift * 4.1, b.seed + 1) - 0.5;
     const jitter = shift === 0 ? 0.5 : 0.9;
-    let fore = leg.fore * b.stanceFore + h1 * jitter * b.k;
+    let fore = leg.fore * b.stanceFore + leg.side * b.lean * (leg.fore < 0 ? 1 : 0.45) + h1 * jitter * b.k;
     let side = leg.side * b.stanceSide + h2 * jitter * b.k;
     const size = Math.min(b.k, 1.25);
     if (shift !== 0) {
       // One that stands puts a pad down a good step from where it left: round its place, more than a third of a turn on each time.
       const turn = shift * 2.4 + hash(j, b.seed + 6) * 6.283;
       const far = size * (0.72 + 0.24 * hash(shift, j + b.seed));
-      fore = leg.fore * b.stanceFore + Math.cos(turn) * far;
+      fore = leg.fore * b.stanceFore + leg.side * b.lean * (leg.fore < 0 ? 1 : 0.45) + Math.cos(turn) * far;
       side = leg.side * b.stanceSide + Math.sin(turn) * far * 0.85;
     }
     if (out > 0) {
@@ -617,8 +640,6 @@ export class Animal {
 
   private om = 1;
   private gulp = -1;
-  private dry = false;
-  private need = 0;
 
   pose(seconds: number): Stood {
     const { b, plan, env, skin } = this;
@@ -671,7 +692,7 @@ export class Animal {
       }
       const stepsOut = half >= 0 && since >= 0 && since < 1;
       const placed = plan.fidget > 0 ? -1 : walking ? plan.halfStep(j, n) : half;
-      const from = plan.fidget > 0 ? this.plant(j, 0, event + 101) : this.plant(j, n, 0, placed >= 0 && seconds >= placed + STEP ? 1 : 0);
+      const from = plan.fidget > 0 ? this.plant(j, Math.floor(sg), event + 101) : this.plant(j, n, 0, placed >= 0 && seconds >= placed + STEP ? 1 : 0);
       let px = from[0];
       let pz = from[1];
       let lift = 0;
@@ -680,7 +701,7 @@ export class Animal {
       let fz = -Math.cos(at.yaw);
       let goes = from;
       if (w >= 0) {
-        const to = plan.fidget > 0 ? this.plant(j, 0, event + 102) : stepsOut ? this.plant(j, n, 0, 1) : this.plant(j, n + 1, 0);
+        const to = plan.fidget > 0 ? this.plant(j, Math.floor(sg), event + 102) : stepsOut ? this.plant(j, n, 0, 1) : this.plant(j, n + 1, 0);
         // The heel peels first, the pad swings low and is put down toe first.
         const e = smooth(0.05, 0.96, w);
         const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
@@ -705,7 +726,7 @@ export class Animal {
       lean = 1 - (1 - lean) * (1 - unload);
       if (plan.fidget > 0) {
         // The body of one that stands follows its pads: it rides over the middle of the four.
-        const home = this.plant(j, 0, 0);
+        const home = this.plant(j, Math.floor(sg), 0);
         followX += (px - home[0]) / 4;
         followZ += (pz - home[1]) / 4;
       }
@@ -747,9 +768,28 @@ export class Animal {
     const forwards = shiftFore * 0.25 * k + 0.2 * k * idle - 0.5 * k * aim.down * (plan.dip > 0 ? 1 : 0.3) - 0.28 * k * pull;
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
-    const cy = b.standH - 0.15 * k * dip - 0.09 * k * lean - plan.dip * aim.down + 0.09 * k * Math.sin(turn + 0.9) + 0.07 * k * pull;
     const pitch = -0.1 * aim.down - 0.035 * shiftFore + 0.02 * idle2 + 0.025 * pull;
     const roll = 0.06 * shiftSide + 0.018 * idle;
+    // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
+    // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
+    const span = (this.femur + this.tibia + this.meta) * 0.992;
+    let soft = 0;
+    let least = 1e9;
+    const tops: number[] = [];
+    for (let j = 0; j < 4; j++) {
+      const leg = LEGS[j] as (typeof LEGS)[number];
+      const foot = feet[j] as (typeof feet)[number];
+      const hx = cx + fwd[0] * leg.fore * b.hipFore + right[0] * leg.side * b.hipSide;
+      const hz = cz + fwd[2] * leg.fore * b.hipFore + right[2] * leg.side * b.hipSide;
+      const flat = Math.hypot(hx - foot.x, hz - foot.z);
+      // Height of the body's centre at which this leg is straight.
+      const top = Math.sqrt(Math.max(1, span * span - flat * flat)) + this.ankle + foot.lift - b.hipUp - leg.fore * b.hipFore * Math.sin(pitch) - leg.side * b.hipSide * Math.sin(roll);
+      tops.push(top);
+      least = Math.min(least, top);
+    }
+    for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
+    const ride = least - 0.12 * k * Math.log(soft);
+    const cy = ride - 0.15 * k * dip - 0.09 * k * lean - plan.dip * aim.down - 0.05 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
     const cp = Math.cos(pitch);
@@ -762,7 +802,7 @@ export class Animal {
     const u: V3 = [u0[0] * cr - right[0] * sr, u0[1] * cr - right[1] * sr, u0[2] * cr - right[2] * sr];
 
     // Body: rigid. Local x is forward, y up, z left.
-    if (!this.dry) {
+    {
       const p = skin.position;
       const w = BODY_SIDES + 1;
       const local = this.bodyLocal;
@@ -782,7 +822,7 @@ export class Animal {
     }
 
     // The rags hang from the body and swing a little behind it.
-    for (const rag of this.dry ? [] : this.rags) {
+    for (const rag of this.rags) {
       this.hang(rag, cx + f[0] * rag.at[0] + u[0] * rag.at[1] + r[0] * rag.at[2], cy + f[1] * rag.at[0] + u[1] * rag.at[1] + r[1] * rag.at[2], cz + f[2] * rag.at[0] + u[2] * rag.at[1] + r[2] * rag.at[2], f, r, 0.5 * roll, seconds);
     }
 
@@ -801,40 +841,18 @@ export class Animal {
       const sq = Math.sin(foot.pitch);
       const axis: V3 = [foot.fx * sq, cq, foot.fz * sq];
       // A pad that carries weight is pressed into the crust; it comes up out of it as the weight goes off it.
-      const sole: V3 = [foot.x, 0.02 - 0.05 * k * (1 - foot.unload) * (1 - smooth(0, 0.1 * k, foot.lift)) + foot.lift + b.padR * sq * 0.95, foot.z];
+      const sole: V3 = [foot.x, -0.025 * k * (1 - foot.unload) * (1 - smooth(0, 0.1 * k, foot.lift)) + foot.lift + b.padR * sq * 0.95, foot.z];
       const ankle: V3 = [sole[0] + axis[0] * this.ankle, sole[1] + axis[1] * this.ankle, sole[2] + axis[2] * this.ankle];
-      const knee = this.knee(hip, ankle, f, u, r, leg);
-      if (this.dry) {
-        this.need = Math.max(this.need, Math.hypot(ankle[0] - knee[0], ankle[1] - knee[1], ankle[2] - knee[2]));
-        continue;
-      }
-      // Two bones from the knee to the ankle; the hock bends back on a hind leg and forward on a fore leg, and a little out.
-      let ex = ankle[0] - knee[0];
-      let ey = ankle[1] - knee[1];
-      let ez = ankle[2] - knee[2];
-      let d = Math.hypot(ex, ey, ez) || 1;
-      ex /= d;
-      ey /= d;
-      ez /= d;
-      const reach = (this.tibia + this.meta) * 0.9985;
-      if (d > reach) d = reach;
-      const ca = Math.min(1, Math.max(-1, (this.tibia * this.tibia + d * d - this.meta * this.meta) / (2 * this.tibia * d)));
-      const sa = Math.sqrt(1 - ca * ca);
-      let qx = fwd[0] * leg.fore * 0.8 + right[0] * leg.side * 0.6;
-      let qy = 0.1;
-      let qz = fwd[2] * leg.fore * 0.8 + right[2] * leg.side * 0.6;
-      const along = qx * ex + qy * ey + qz * ez;
-      qx -= ex * along;
-      qy -= ey * along;
-      qz -= ez * along;
-      const ql = Math.hypot(qx, qy, qz) || 1;
-      const hock: V3 = [knee[0] + this.tibia * (ca * ex + (sa * qx) / ql), knee[1] + this.tibia * (ca * ey + (sa * qy) / ql), knee[2] + this.tibia * (ca * ez + (sa * qz) / ql)];
+      // The leg bows out and away from the body, each leg a little its own way; a lifted one bends forward at the knee.
+      const turnOut = 0.5 + 0.6 * hash(j, b.seed + 44);
+      const lifted = smooth(0, 0.5 * k, foot.lift);
+      const out: V3 = [
+        right[0] * leg.side * 0.8 + fwd[0] * (leg.fore * turnOut + 1.4 * lifted),
+        0.12,
+        right[2] * leg.side * 0.8 + fwd[2] * (leg.fore * turnOut + 1.4 * lifted),
+      ];
+      const [knee, hock, end] = this.bones(hip, ankle, out);
       // If the leg is at full stretch the ankle is where the bones put it, and the pad with it.
-      const hx = ankle[0] - hock[0];
-      const hy = ankle[1] - hock[1];
-      const hz = ankle[2] - hock[2];
-      const hl = Math.hypot(hx, hy, hz) || 1;
-      const end: V3 = [hock[0] + (hx / hl) * this.meta, hock[1] + (hy / hl) * this.meta, hock[2] + (hz / hl) * this.meta];
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
       this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift));
       // Grit leaves the pad as it swings and falls to the crust.
@@ -867,8 +885,6 @@ export class Animal {
       }
     }
 
-    if (this.dry) return { feet: [], body: { x: cx, z: cz, yaw: at.yaw }, tuft: { x: cx, y: cy, z: cz } };
-
     // Neck.
     const root: V3 = [
       cx + f[0] * 0.36 * b.bodyLen + u[0] * 0.1 * b.bodyTop,
@@ -876,10 +892,10 @@ export class Animal {
       cz + f[2] * 0.36 * b.bodyLen + u[2] * 0.1 * b.bodyTop,
     ];
     const fed = env.drift(aim.target[0], aim.target[1], seconds);
-    const low: V3 = [fed[0] + digX, 0.6 * b.tendrilLen + digY, fed[1] + digZ];
+    const low: V3 = [fed[0] + digX, TUFT_UP * b.tendrilLen + digY, fed[1] + digZ];
     const high: V3 = [
       root[0] + fwd[0] * aim.raised[0] + right[0] * aim.raised[2],
-      Math.max(0.8 * b.tendrilLen, root[1] + aim.raised[1]),
+      Math.max(1.05 * b.tendrilLen, root[1] + aim.raised[1]),
       root[2] + fwd[2] * aim.raised[0] + right[2] * aim.raised[2],
     ];
     const tip: V3 = [lerp(high[0], low[0], aim.down), lerp(high[1], low[1], aim.down), lerp(high[2], low[2], aim.down)];
@@ -1001,8 +1017,12 @@ export class Animal {
     const rise = tip[1] - root[1];
     const c1 = -Math.cos(shape * Math.PI);
     const c2 = 0.8 * Math.sin(shape * Math.PI);
-    const phi = (s: number): number => c1 * (1 - 2 * s) + c2 * Math.sin(2 * Math.PI * s);
-    const hang = -1.42;
+    // A neck that hangs to a tuft that is down turns most where it leaves the shoulders: steep there, then sweeping out low and level.
+    const sweep = lerp(1, 0.75, smooth(0.22, 0.1, shape));
+    // It comes to the tuft still going down: it does not rise again before it turns to hang.
+    const over = lerp(2, 1.1, smooth(0.22, 0.1, shape));
+    const phi = (s: number): number => c1 * (1 - over * Math.pow(s, sweep)) + c2 * Math.sin(2 * Math.PI * s);
+    const hang = lerp(-1.42, -0.85, smooth(0.22, 0.1, shape));
     // The last part of the neck turns to hang. Find where the main part must end for the tuft to arrive at the tip.
     let endRun = 0;
     let endRise = -ds * NECK_END * 0.8;
@@ -1110,6 +1130,10 @@ export class Animal {
     const oz = c[crown + 2] as number;
     const rim = b.neckR * 0.3 + 0.13 * b.k;
     const roots = this.roots;
+    const under = this.env.undrift(ox, oz, seconds);
+    const sink = smooth(2.4, 0.9, this.env.seam(under[0], under[1]).d);
+    // How near the crown is to the lake: a tuft that is down splays, one that is carried hangs as a brush.
+    const near = smooth(1.8 * b.tendrilLen, 1.0 * b.tendrilLen, oy);
     this.tendrils.forEach((t, index) => {
       const ca = Math.cos(t.angle);
       const sa = Math.sin(t.angle);
@@ -1144,15 +1168,24 @@ export class Animal {
         dz = (roots[q + 5] as number) + ez * 0.8;
       }
       const seg = t.length / (TENDRIL_RINGS - 1);
-      const floor = (0.03 + 0.02 * Math.sin(t.phase * 3)) * b.k;
+      // Outward from the crown, on the level, all the way round it.
+      const hx0 = Math.cos(t.angle + b.seed);
+      const hz0 = Math.sin(t.angle + b.seed);
+      // Over a seam the roots go down into the melt; on crust they lie on it.
+      const floor = lerp((0.03 + 0.02 * Math.sin(t.phase * 3)) * b.k, -0.4 * b.k, sink);
       for (let i = 0; i < TENDRIL_RINGS; i++) {
         const uu = i / (TENDRIL_RINGS - 1);
         if (i > 0) {
-          const kink = 1.1 * (hash(index * 7 + i, b.seed + 13) - 0.5);
-          const sway = 0.09 * Math.sin(seconds * LOOP * 2 + t.phase + uu * 2.4) + 0.05 * Math.sin(seconds * LOOP * 3 + t.phase * 2 + uu * 4) + kink;
-          dx = dx * 0.72 + ex * (0.16 * t.out + sway * 0.4) + rx * sway;
-          dy = dy * 0.72 - 0.34 - 0.3 * uu + ey * 0.1 * t.out;
-          dz = dz * 0.72 + ez * (0.16 * t.out + sway * 0.4) + rz * sway;
+          // A root is stiff: it bears down and out from the crown, near straight, with a knot here and there. One that is carried hangs closer.
+          // It grew crooked, as a root does: it wanders as it goes, each in its own way.
+          const kink = 0.34 * (hash(index * 7 + i, b.seed + 13) - 0.5);
+          const bend = 0.55 * Math.sin(uu * (5.2 + 3.6 * hash(index, b.seed + 21)) + t.phase * 5);
+          const wind = 0.5 * Math.sin(uu * (4.4 + 3.2 * hash(index, b.seed + 22)) + t.phase * 9);
+          const sway = 0.05 * Math.sin(seconds * LOOP * 2 + t.phase + uu * 2.4) + 0.03 * Math.sin(seconds * LOOP * 3 + t.phase * 2 + uu * 4) + kink + bend;
+          const splay = t.out * lerp(0.14, 0.66, near) * (1 - 0.3 * uu) * (1 + 0.5 * Math.sin(uu * 5.5 + t.phase * 3));
+          dx = dx * 0.5 + (hx0 * splay - hz0 * wind * 0.5 + rx * sway) * 0.5;
+          dy = dy * 0.5 - 0.5;
+          dz = dz * 0.5 + (hz0 * splay + hx0 * wind * 0.5 + rz * sway) * 0.5;
           const dl = Math.hypot(dx, dy, dz) || 1;
           dx /= dl;
           dy /= dl;
@@ -1195,7 +1228,7 @@ export class Animal {
         const cz2 = dx * ay - dy * ax;
         skin.ring(t.tube, i, px, py, pz, ax, ay, az, cx2, cy2, cz2, t.local, i * TENDRIL_SIDES * 2);
         // A root does not glow. Only a tip that is under the melt shows a faint heat: its end, a hand above the lake, over a seam.
-        let heat = smooth(0.55, 0.95, uu) * smooth(0.3 * b.k, 0.04 * b.k, py);
+        let heat = smooth(0.5, 0.95, uu) * smooth(0.25 * b.k, 0.0, py);
         if (heat > 0.01) {
           const crust = this.env.undrift(px, pz, seconds);
           heat *= smooth(2.0, 0.7, this.env.seam(crust[0], crust[1]).d);
