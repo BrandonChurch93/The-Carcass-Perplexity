@@ -1,18 +1,19 @@
 // The shapes of the one that sank, made once at creation: the folded crust round it as a field of heights, the body and the two legs.
-// Everything is in the local frame of the carcass: metres, y up, +x to the right and +z toward the camera of key heart-2.
+// Everything is in the local frame of the carcass: metres, y up, +x to the right and +z toward the camera of key heart-2
+// (the refitted one, 21 m off at local (0, 4.4, 21)).
 import * as THREE from 'three';
 import { cells2, fbm2, fbm3, mix, noise2, noise3, smooth } from './noise';
 
 /** The local frame is the world turned by this angle about y, at SUNK. */
-export const YAW = (26.5 * Math.PI) / 180;
-/** Where the crust came from, in the local frame. */
-const UPSTREAM: [number, number] = [0.194, -0.981];
+export const YAW = (58.6 * Math.PI) / 180;
+/** Where the crust came from, in the local frame: the world's (0.611, -0.791) turned into it. */
+const UPSTREAM: [number, number] = [0.611 * Math.cos(YAW) - 0.791 * Math.sin(YAW), -0.611 * Math.sin(YAW) - 0.791 * Math.cos(YAW)];
 
-export const FIELD = { cx: 1.0, cz: 0.2, half: 14.5, size: 1024 };
+export const FIELD = { cx: -2.0, cz: 0.5, half: 14.5, size: 1024 };
 
 export const BODY = {
-  centre: new THREE.Vector3(-1.7, 0.72, -0.25),
-  radii: new THREE.Vector3(2.6, 1.56, 1.6),
+  centre: new THREE.Vector3(-4.3, 0.85, -0.25),
+  radii: new THREE.Vector3(3.0, 1.8, 1.85),
   // Tilted: the back turned up toward the bench side, the neck end down.
   turn: new THREE.Euler(0.42, 0.24, -0.16, 'YXZ'),
 };
@@ -21,41 +22,41 @@ export type P3 = [number, number, number];
 
 /** The two legs that stand out: the hip is inside the body, the knee is the top of the arch. */
 export const LEG_A: P3[] = [
-  [-0.35, 0.45, 0.25],
-  [0.12, 0.9, 0.45],
-  [0.82, 2.15, 0.63],
-  [1.76, 3.47, 0.76],
-  [2.54, 4.04, 0.76],
-  [3.08, 3.94, 0.68],
-  [3.74, 3.12, 0.48],
-  [4.56, 1.72, 0.13],
-  [5.19, 0.43, -0.16],
-  [5.38, -0.2, -0.26],
-  [5.46, -0.7, -0.3],
+  [-2.75, 0.54, 0.25],
+  [-2.15, 1.38, 0.5],
+  [-1.25, 3.3, 0.74],
+  [-0.05, 5.34, 0.9],
+  [0.95, 6.22, 0.9],
+  [1.65, 6.06, 0.8],
+  [2.5, 4.8, 0.55],
+  [3.55, 2.64, 0.1],
+  [4.35, 0.66, -0.28],
+  [4.6, -0.25, -0.4],
+  [4.7, -0.9, -0.45],
 ];
 export const LEG_B: P3[] = [
-  [-0.6, 0.5, -0.7],
-  [-0.01, 0.97, -1.16],
-  [0.83, 1.85, -1.75],
-  [1.75, 2.54, -2.25],
-  [2.47, 2.73, -2.55],
-  [3.22, 2.6, -2.84],
-  [3.98, 2.27, -3.05],
-  [4.44, 2.06, -3.15],
-  [4.59, 1.86, -3.17],
-  [4.62, 1.72, -3.16],
+  [-3.0, 0.56, -0.7],
+  [-2.3, 1.29, -1.25],
+  [-1.3, 2.46, -1.95],
+  [-0.2, 3.38, -2.55],
+  [0.65, 3.64, -2.9],
+  [1.55, 3.47, -3.25],
+  [2.45, 3.02, -3.5],
+  [3.0, 2.74, -3.62],
+  [3.18, 2.49, -3.64],
+  [3.22, 2.3, -3.63],
 ];
-export const FOOT_A: [number, number] = [5.33, -0.23];
+export const FOOT_A: [number, number] = [4.53, -0.37];
 /** The wrist of the second leg, where its pad hangs. */
-export const WRIST_B: P3 = [4.62, 1.72, -3.16];
+export const WRIST_B: P3 = [3.22, 2.3, -3.63];
 
 /** The small tear on the side the crust left by, dull red. */
 export const TEAR: [number, number][] = [
-  [-7.3, 1.5],
-  [-6.2, 2.5],
-  [-5.3, 2.75],
-  [-4.4, 3.5],
-  [-3.7, 4.5],
+  [-6.7, 2.15],
+  [-7.5, 2.5],
+  [-8.2, 2.7],
+  [-8.8, 3.15],
+  [-9.2, 3.7],
 ];
 
 function polyDistance(line: [number, number][], x: number, z: number): [number, number] {
@@ -86,8 +87,8 @@ export function bodyDistance(x: number, z: number): number {
   const dz = z - BODY.centre.z;
   const u = dx * BC - dz * BS;
   const w = dx * BS + dz * BC;
-  const a = 2.4;
-  const b = 1.34;
+  const a = 2.77;
+  const b = 1.55;
   const k = Math.hypot(u / a, w / b);
   return (k - 1) * Math.min(a, b) * (0.75 + 0.25 * Math.min(k, 2));
 }
@@ -130,12 +131,14 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const dd = Math.max(d, 0);
 
     // The crust heaped against what stopped it, and climbing it on the side it came from.
-    let h = pile * 1.0 * Math.exp(-dd / 1.9) * smooth(-2.5, 0.4, dBody + 1.2 * up);
+    let h = pile * 1.25 * Math.exp(-dd / 2.2) * smooth(-2.5, 0.4, dBody + 1.2 * up);
     h += 0.42 * Math.exp(-Math.max(dFoot, 0) / 0.55) * smooth(9, 2, dFoot);
     if (d < 0) h += 0.35 * pile * Math.min(1.6, -d);
 
     // The folds: bundles of rope like pushed cloth, each leaning toward what stopped it, and the smaller ropes that ride on them.
-    const env = smooth(11.0, 3.5, dd);
+    const edge = smooth(11.3, 7.8, Math.hypot(x - FIELD.cx, z - FIELD.cz));
+    h *= edge;
+    const env = smooth(11.0, 3.5, dd) * edge;
     const lean = d / (1.0 + 0.5 * noise2(x * 0.21 + 50, z * 0.21)) + 1.2 * noise2(x * 0.45 + 20, z * 0.45 + 3) + 0.25 * noise2(x * 1.6 + 4, z * 1.6);
     const t1 = lean - Math.floor(lean);
     const skew = Math.pow(t1, 0.62);
@@ -144,9 +147,13 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const bigAmp = env * (0.24 + 0.3 * Math.exp(-dd / 4.5)) * (0.8 + 0.4 * up) * broken;
     h += big * bigAmp;
     const ropy = smooth(0.25, 0.6, noise2(x * 0.42 + 40.5, z * 0.42 + 1.5) + 0.3 * env);
-    const env2 = smooth(12.5, 6.0, dd);
+    const env2 = smooth(12.5, 6.0, dd) * edge;
     const small = rope(d / 0.33 + 2.2 * fbm2(x * 0.62 + 5, z * 0.62 + 9, 3) + 0.7 * big, 0.42);
     h += small * 0.14 * env2 * ropy * (0.45 + 1.1 * noise2(x * 1.3 + 2, z * 1.3));
+    // Lobes: toes of lava that broke out between the ropes and swelled, a metre or so across, a crease round each.
+    const cell = cells2(x * 0.85 + 0.5 * noise2(x * 0.6, z * 0.6 + 40), z * 0.85 + 0.5 * noise2(x * 0.6 + 17, z * 0.6), 4096);
+    const lobed = smooth(0.42, 0.7, noise2(x * 0.3 + 61, z * 0.3 + 13)) * env;
+    h += lobed * (0.12 + 0.2 * cell[1]) * (Math.sqrt(smooth(0, 0.3, cell[0])) - 0.5) * (0.7 + 0.6 * Math.exp(-dd / 3));
     // Billows where the skin did not rope.
     h += (fbm2(x * 0.9 + 70, z * 0.9, 4) - 0.45) * 0.22 * env2 * (1 - 0.5 * ropy);
 
@@ -159,11 +166,9 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     h = mix(h, -0.05 + 0.04 * noise2(x * 6, z * 6), open);
     const heat = smooth(tearWidth * 1.7, tearWidth * 0.35, ragged) * smooth(0.02, 0.1, tearWidth);
 
-    // The seam the lake draws on the flank: the relief opens over it and the lake shows through.
+    // The lake's seam runs on under the folded skin: the skin stands a little proud along it.
     const [ds] = polyDistance(lakeSeam, x, z);
-    const seam = ds + 0.16 * (noise2(x * 2.2 + 3, z * 2.2 + 17) - 0.5);
-    h += 0.16 * Math.exp(-Math.pow((seam - 0.95) / 0.5, 2));
-    h = mix(h, -0.2, smooth(0.8, 0.42, seam));
+    h += 0.08 * Math.exp(-Math.pow(ds / 0.7, 2)) * edge;
 
     return { h, heat, d: dTrue, phase: d };
   };
@@ -516,7 +521,7 @@ export function bodyGeometry(baked: Baked): THREE.BufferGeometry {
 
       o.set(0, dy * R.y, dz * R.z * (1 - 0.25 * smooth(0, 1, dy))).multiplyScalar(ring * r);
       p.set(along * R.x * (0.9 + 0.1 * r), o.y, o.z).applyQuaternion(q).add(BODY.centre);
-      const lava = lavaCoat(baked, p, 0.38, 11);
+      const lava = lavaCoat(baked, p, 0.24, 11);
       o.normalize().applyQuaternion(q);
       p.addScaledVector(o, lava.out * (1 - hole));
       const k = i * (columns + 1) + j;

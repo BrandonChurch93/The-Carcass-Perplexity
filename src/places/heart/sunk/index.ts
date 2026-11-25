@@ -55,9 +55,9 @@ export function create(ctx: HeartContext): HeartPiece {
     transparent: true,
     depthWrite: false,
   });
-  const WHOLE = FIELD.half - 4.6;
+  const WHOLE = FIELD.half - 4.7;
   const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
-  const inner = (x: number, z: number): boolean => Math.abs(x - 1.6) < 7.0 && Math.abs(z - 0.9) < 6.2;
+  const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && Math.abs(z - 0.9) < 6.2;
   const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
@@ -65,7 +65,7 @@ export function create(ctx: HeartContext): HeartPiece {
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
-    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x - 1.6) < 6.7 && Math.abs(z - 0.9) < 5.9) && radial(x, z) < WHOLE),
+    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x + 1.5) < 8.5 && Math.abs(z - 0.9) < 5.9) && radial(x, z) < WHOLE),
     fieldMaterial,
   );
   const rim = new THREE.Mesh(
@@ -86,8 +86,8 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const body = new THREE.Mesh(bodyGeometry(baked), carcassMaterial);
-  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1, seed: 1.7, rings: 900, round: 96, tendon: 0 }, baked);
-  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 0.8, seed: 4.1, rings: 560, round: 72, tendon: 0.085 }, baked);
+  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 900, round: 96, tendon: 0 }, baked);
+  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 1.1, seed: 4.1, rings: 560, round: 72, tendon: 0.085 }, baked);
   const pad = new THREE.Mesh(padGeometry(), carcassMaterial);
   const legs = [new THREE.Mesh(legA.geometry, carcassMaterial), new THREE.Mesh(legB.geometry, carcassMaterial), pad];
   group.add(body, ...legs, fine, coarse, rim);
@@ -127,10 +127,10 @@ export function create(ctx: HeartContext): HeartPiece {
 
   // What stands over the crust hides the sky from it: the body, the foot of the arch, the hanging pad, the span of the arch.
   const SHADES: [number, number, number, number][] = [
-    [-1.7, -0.25, 3.8, 0.55],
-    [FOOT_A[0], FOOT_A[1], 1.5, 0.5],
-    [WRIST_B[0], WRIST_B[2], 1.1, 0.35],
-    [2.6, 0.4, 2.8, 0.16],
+    [-4.3, -0.25, 4.4, 0.55],
+    [FOOT_A[0], FOOT_A[1], 1.8, 0.5],
+    [WRIST_B[0], WRIST_B[2], 1.3, 0.35],
+    [1.0, 0.4, 3.6, 0.16],
   ];
   const discs = ctx.rig.contactDiscs(SHADES.length);
 
