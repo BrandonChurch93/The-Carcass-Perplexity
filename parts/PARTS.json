@@ -296,6 +296,94 @@
       }
     },
     {
+      "id": "heart/land",
+      "unit": "heart",
+      "name": "land",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/land.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.6935,
+        "made": "2026-11-25T03:56:07Z"
+      }
+    },
+    {
+      "id": "heart/bench",
+      "unit": "heart",
+      "name": "bench",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/bench.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2059,
+        "made": "2026-11-25T03:56:11Z"
+      }
+    },
+    {
+      "id": "heart/crust",
+      "unit": "heart",
+      "name": "crust",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/crust.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5264,
+        "made": "2026-11-25T03:56:15Z"
+      }
+    },
+    {
+      "id": "heart/lava",
+      "unit": "heart",
+      "name": "lava",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/lava.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1304,
+        "made": "2026-11-25T03:56:19Z"
+      }
+    },
+    {
       "id": "heart/sky",
       "unit": "heart",
       "name": "sky",
@@ -303,11 +391,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/sky.png",
         "frame": 2722,
         "format": "preview",
@@ -324,101 +413,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/air.png",
         "frame": 2722,
         "format": "preview",
         "tier": "draft",
         "shown": 1,
         "made": "2026-11-25T03:56:03Z"
-      }
-    },
-    {
-      "id": "heart/land",
-      "unit": "heart",
-      "name": "land",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": "out/stills/parts/heart/land.png",
-        "frame": 4006,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.6935,
-        "made": "2026-11-25T03:56:07Z"
-      }
-    },
-    {
-      "id": "heart/bench",
-      "unit": "heart",
-      "name": "bench",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": "out/stills/parts/heart/bench.png",
-        "frame": 2722,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.2059,
-        "made": "2026-11-25T03:56:11Z"
-      }
-    },
-    {
-      "id": "heart/crust",
-      "unit": "heart",
-      "name": "crust",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": "out/stills/parts/heart/crust.png",
-        "frame": 3477,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.5264,
-        "made": "2026-11-25T03:56:15Z"
-      }
-    },
-    {
-      "id": "heart/lava",
-      "unit": "heart",
-      "name": "lava",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": "out/stills/parts/heart/lava.png",
-        "frame": 3477,
-        "format": "preview",
-        "tier": "draft",
-        "shown": 0.1304,
-        "made": "2026-11-25T03:56:19Z"
       }
     },
     {
@@ -429,11 +435,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/lava-fall.png",
         "frame": 4006,
         "format": "preview",
@@ -450,11 +457,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/vessel-mouth.png",
         "frame": 4006,
         "format": "preview",
@@ -471,11 +479,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/crust-walkers.png",
         "frame": 3156,
         "format": "preview",
@@ -492,11 +501,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/sunk-walker.png",
         "frame": 3685,
         "format": "preview",
@@ -513,11 +523,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/foundering.png",
         "frame": 2722,
         "format": "preview",
@@ -534,11 +545,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/fume.png",
         "frame": 2722,
         "format": "preview",
@@ -555,11 +567,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/sulphur-crack.png",
         "frame": 2722,
         "format": "preview",
@@ -576,11 +589,12 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
+        "hash": "3165002bb0156848",
         "picture": "out/stills/parts/heart/surge.png",
         "frame": 4055,
         "format": "preview",
