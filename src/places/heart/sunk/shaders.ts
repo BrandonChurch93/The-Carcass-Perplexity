@@ -1,7 +1,7 @@
 // The surfaces of the one that sank. Both read the relief baked in shape.ts: the crust reads its own slope and hollows from it,
 // the carcass reads how high it stands over the crust, which is where the lava that climbed it stops and where it is in shade.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { BODY, CORD } from './shape';
+import { BODY, CORD, FOOT_A, FOOT_B } from './shape';
 
 const COMMON = /* glsl */ `
 // Ash, on the skin and on the hide.
@@ -108,9 +108,13 @@ void main() {
   float span = smoothstep(0.0, 0.1, tb) * smoothstep(1.0, 0.88, tb);
   float side = step(0.0, sd) * step(0.02, tb) * step(tb, 0.98);
   float hang = smoothstep(1.15, 0.0, sd);
-  float fall = 0.13 * uSlab * span;
+  // Before it breaks off the slab already stands a thumb's width low along the line: a fine seam.
+  float fall = (0.035 + 0.095 * uSlab) * span;
   vBreak = vec3(side, sd, side * fall * step(sd, 1.15) / 1.15);
-  vec4 w = modelMatrix * vec4(position.x, position.y - fall * side * hang, position.z, 1.0);
+  // The corners of the sheet beside the line are drawn onto it, so the seam runs as the line does and not in the steps of the sheet.
+  float drawn = (1.0 - step(0.045, abs(sd))) * step(0.02, tb) * step(tb, 0.98);
+  vec2 onLine = l - vec2(-ba.y, ba.x) / bl * (sd - sign(sd) * 0.004) * drawn;
+  vec4 w = modelMatrix * vec4(onLine.x, position.y - fall * side * hang, onLine.y, 1.0);
   vWorld = w.xyz;
   #ifdef RIM
   vec3 n = vec3(0.0, 1.0, 0.0);
@@ -133,6 +137,8 @@ uniform vec4 uBranch;
 uniform float uSlab;
 // 1 as the break opens, falling to 0 as its face cools to black.
 uniform float uFlare;
+// How hot the seam stands before the slab goes: it warms through the near shot, and jumps each time the crust gives.
+uniform float uSeam;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${COMMON}
@@ -199,7 +205,9 @@ void main() {
   vec2 lean = abs(grad);
   float faces = step(lean.x, lean.y);
   vec2 wallAt = vec2(mix(l.y, l.x, faces), vWorld.y * 1.4) + 11.0;
-  vec2 uvA = mix(mix(q / 6.1, ropeAt / 1.7, onRope), wallAt / 2.2, steep);
+  // Along a rope the ropy skin is laid 1.6 times shorter than round it: its fibres run 15 to 25 cm and not half a metre, which
+  // seen from low down was one long streak across the view.
+  vec2 uvA = mix(mix(q / 6.1, ropeAt * vec2(1.6, 1.0) / 1.7, onRope), wallAt / 2.2, steep);
   vec4 nhA = texture2D(tRopyNh, uvA);
   vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
@@ -229,11 +237,20 @@ void main() {
   albedo = mix(albedo, ROPE * (0.8 + 0.4 * small), 0.9 * roped);
   // The tone of the ropy skin goes with its height closely enough to be had from it: a tap less on half the frame.
   float lum = max(3.2 * nhA.b - 0.42, 0.1);
+  // The skin is broken up at 5 to 20 cm as well, by the ground's own measure and not the rope's, so no rope is one long streak.
+  // Between the ropes, where the lake's skin is laid 6 m wide, that break-up is most of the tone when the lens is near.
+  float lumpSeen = folded * (1.0 - smoothstep(0.03, 0.09, gritSize));
+  float lumps = 0.6 * vnoise(l * 8.0 + 5.0) + 0.4 * vnoise(l * 19.0 + 2.0);
+  lum = mix(lum, 0.45 + 1.1 * (lumps - 0.5), 0.7 * lumpSeen * (1.0 - onRope));
   // A steep face that is no rope carries grit and not the lines of the ropy skin, which would run round it as contours.
   // Its grit is the same in every direction on the face, so it does not follow the height either.
   float wallGrit = 0.6 * vnoise(wallAt * 5.0 + 3.0) + 0.4 * vnoise(wallAt * 13.0);
   grainNh = mix(grainNh, vec4(0.5, 0.5, wallGrit, 0.5), steep);
   lum = mix(lum, 0.5 + 0.7 * (wallGrit - 0.5) + 0.2 * (small - 0.5), steep);
+  // A face that leans away from the lens is seen nearly edge on: the tones laid on it would be drawn out into long streaks
+  // across the view, so there they go to their mean and the relief alone speaks.
+  float graze = smoothstep(0.17, 0.07, gritSize / max(grainSize, 1e-5)) * folded;
+  lum = mix(lum, 0.42, 0.85 * graze);
   albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.2 + 0.9 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // Grit of 1 to 3 cm on all of the folded skin, and a pale fleck here and there: seen where the lens is sharp, gone where a
@@ -242,12 +259,13 @@ void main() {
   float fine = vnoise(lr * 41.0 + 3.0) + 0.6 * vnoise(lr * 89.0 + 9.0);
   albedo *= 1.0 + 0.9 * fineSeen * (fine - 0.8);
   albedo = mix(albedo, ASH_SKIN * 1.2, 0.45 * fineSeen * smoothstep(1.2, 1.42, fine) * smoothstep(0.35, 0.6, small));
+  albedo *= 1.0 + 0.8 * lumpSeen * (lumps - 0.5);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.
   float count = cordCount(ln.r + sheet * 94.0);
   float seen = smoothstep(0.7, 0.25, fwidth(count));
   // A fibre does not run the whole length of a rope: it shows for a way and is lost again.
-  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.3 + 0.7 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0)));
+  float amp = clamp(ln.a, 0.0, 1.0) * seen * (0.3 + 0.7 * smoothstep(0.3, 0.65, vnoise(lr * 2.7 + 31.0))) * (1.0 - 0.6 * lumpSeen * smoothstep(0.55, 0.35, lumps)) * (1.0 - 0.7 * graze);
   float x = 2.0 * fract(count) - 1.0;
   float k = 1.0 - x * x;
   float cordTone = fract(sin(floor(count) * 12.9898) * 43758.5453);
@@ -272,7 +290,7 @@ void main() {
   // Laid on a rope, the slopes of the texture lie along it and round it; round it they are steeper on the ground than on the rope.
   vec2 onIt = turned(vec2(-ln.b, ln.g) * nd.x + ln.gb * nd.y) * (1.0 + min(dot(grad, grad), 3.0)) * 1.3;
   vec2 onWall = turned(mix(vec2(0.0, 1.0), vec2(1.0, 0.0), faces) * nd.x + grad / max(length(grad), 1e-3) * nd.y * 2.0) * 1.5;
-  vec2 detail = mix(mix(nd, onIt, onRope), onWall * 0.1, steep) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
+  vec2 detail = mix(mix(nd * (1.0 - 0.6 * lumpSeen), onIt, onRope), onWall * 0.1, steep) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
   detail += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.35 * near;
   vec2 gl = grad + cordSlope;
   vec2 sw = turned(gl) - detail * mix(0.7, 1.0, folded);
@@ -282,6 +300,9 @@ void main() {
   vec3 ns = normalize(vec3(-ss.x, 1.0 + 0.6 * folded, -ss.y));
 
   float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.25 + 0.75 * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
+  // Where a foot stands in the skin the skin is dark against it: a rim of shade a hand wide, so the foot is in the ground.
+  float atFoot = min(length(l - vec2(${FOOT_A[0].toFixed(2)}, ${FOOT_A[1].toFixed(2)})) - 0.3, length(l - vec2(${FOOT_B[0].toFixed(2)}, ${FOOT_B[1].toFixed(2)})) - 0.2);
+  occ *= 1.0 - 0.6 * smoothstep(0.3, 0.02, atFoot);
   // Dead matte, as the lake's crust is wherever it is not fresh glass.
   float rough = 0.93;
   #endif
@@ -315,10 +336,19 @@ void main() {
   float kelvin = mix(980.0, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
   c *= 1.0 - 0.9 * smoothstep(0.05, 0.4, heat);
   c += blackbody(kelvin) * smoothstep(0.04, 0.3, heat);
-  // The face of the break: a thin dark skin at its top, the hot inside of the crust below it, which cools to black.
-  float face = smoothstep(0.1, 0.32, vBreak.x) * (1.0 - smoothstep(0.8, 0.98, vBreak.x)) * step(abs(vBreak.y), 0.09) * smoothstep(0.03, 0.3, uSlab);
+  // The face of the break. Before the slab goes it is a fine seam, hot in lengths at its foot; when the slab goes the whole
+  // face shows the hot inside of the crust, which cools to black and leaves the seam at its foot as it was.
+  float fallen = 0.035 + 0.095 * uSlab;
+  float onFace = smoothstep(0.1, 0.32, vBreak.x) * (1.0 - smoothstep(0.8, 0.98, vBreak.x)) * step(abs(vBreak.y), 0.09);
+  // From the wide view the seam would be under a pixel and a row of red chips: it is lit for the near lens only.
+  float seamLit = smoothstep(0.38, 0.52, vnoise(l * 1.3 + 50.0) + 0.12 * uSeam) * smoothstep(0.22, 0.42, vnoise(l * 5.5 + 20.0) + 0.1 * uSeam) * smoothstep(40.0, 25.0, far);
+  float standing = onFace * smoothstep(fallen - 0.036, fallen - 0.024, vBreak.x * fallen) * seamLit;
+  float flaring = onFace * smoothstep(0.0, 0.25, uFlare);
+  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * vnoise(l * 4.0 + 33.0) + 60.0 * (small - 0.5) + 0.6 * breath;
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
-  c = mix(c * (1.0 - 0.7 * face), blackbody(faceKelvin), face * smoothstep(0.0, 0.25, uFlare));
+  // What glows, lights: the skin within a hand or two of the seam is warmed by it.
+  c += albedo * blackbody(seamKelvin) * (0.15 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
+  c = mix(c * (1.0 - 0.7 * onFace), blackbody(mix(faceKelvin, max(faceKelvin, seamKelvin), standing)), max(flaring, standing));
   #endif
 
   gl_FragColor = vec4(rigOut(c), alpha);
