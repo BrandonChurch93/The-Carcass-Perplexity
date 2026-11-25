@@ -3,7 +3,7 @@ import { FPS } from '../../config';
 import { keyPart, placeOf, shotById, shotLength } from '../../film/cut';
 import { flight, type FlightPlan } from './flight';
 import handoff from './handoff.json';
-import { DEG, FAN, SHORE } from './land';
+import { DEG, FAN, SHORE } from './layout';
 
 function look(position: Vec3, bearing: number, pitch: number, fov: number): Pose {
   const c = Math.cos(pitch * DEG);
