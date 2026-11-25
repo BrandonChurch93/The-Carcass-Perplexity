@@ -5,9 +5,9 @@ export const BRINE_GLSL = /* glsl */ `
 vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, float foam) {
   float deep = clamp(-s, 0.0, 6.0);
   // Thick with iron and salt: nothing shows through it past a hand's depth.
-  vec3 shallow = vec3(0.115, 0.04, 0.034);
-  vec3 body = vec3(0.064, 0.017, 0.015);
-  vec3 pit = vec3(0.042, 0.011, 0.01);
+  vec3 shallow = vec3(0.1, 0.032, 0.027);
+  vec3 body = vec3(0.052, 0.0125, 0.011);
+  vec3 pit = vec3(0.034, 0.008, 0.0075);
   vec3 albedo = mix(shallow, body, smoothstep(0.0, 0.5, deep));
   albedo = mix(albedo, pit, smoothstep(0.6, 3.2, deep));
   // Slow clouds of paler silt carried in it.
@@ -16,12 +16,15 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, float foam) {
   // Scum gathers along the shore.
   float edge = smoothstep(-0.16, -0.02, s) * (0.3 + 0.7 * texture2D(tGrain, p.xz / 1.9).g);
   foam = max(foam, edge * 0.8);
-  albedo = mix(albedo, vec3(0.26, 0.17, 0.155), foam);
-  // It is thick and dull: it shows the sky only where the view skims it.
-  vec3 lit = rigShade(p, n, v, albedo, 1.0, 1.0);
+  albedo = mix(albedo, vec3(0.2, 0.115, 0.1), foam);
+  // It is thick and dull: a skin of iron and salt lies on it, and it gives back the sky only as a grey sheen where the view skims it.
+  float open = skyOpen(p);
+  vec3 lit = albedo * skyIrradiance(n) * (open / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  float mirror = (0.006 + 0.3 * pow(1.0 - nv, 6.0)) * (1.0 - 0.7 * foam);
-  return mix(lit, skyRadiance(r) * skyOpen(p), mirror);
+  // The seep pool is fresh from the ground and still liquid on top: it shows more of the sky than the skinned brine of the channels.
+  float fresh = smoothstep(15.0, 8.0, length(p.xz));
+  float mirror = (0.004 + (0.032 + 0.03 * fresh) * pow(1.0 - nv, 5.0)) * (0.55 + 0.9 * silt) * (1.0 - 0.8 * foam);
+  return lit + skyRadiance(r) * (open * mirror);
 }`;

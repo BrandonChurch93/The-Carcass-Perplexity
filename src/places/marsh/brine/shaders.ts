@@ -17,6 +17,8 @@ precision highp float;
 varying vec3 vWorld;
 uniform sampler2D tGrain;
 uniform int uRingCount;
+// Where the seep's mouth is, on the pool's floor.
+uniform vec2 uSeep;
 // x, z of the middle, radius of the front in metres, strength.
 uniform vec4 uRings[${MAX_RINGS}];
 ${RIG_GLSL}
@@ -34,23 +36,33 @@ void main() {
   float s = f.r + (fine.r - 0.5) * 0.1;
   if (s > 0.0) discard;
 
-  // Thick brine hardly ripples: a slow crawl of two swells, and the rings of every dome that has burst.
-  vec2 slope = (texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime).ba - 0.5) * 0.05
-    + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.035 * smoothstep(40.0, 6.0, dist);
-  for (int i = 0; i < ${MAX_RINGS}; i++) {
-    if (i >= uRingCount) break;
-    vec4 ring = uRings[i];
-    vec2 d = p.xz - ring.xy;
-    float r = length(d);
-    float q = r - ring.z;
-    float wide = 0.16 + 0.05 * ring.z;
-    float env = exp(-q * q / (wide * wide)) * ring.w;
-    if (env < 0.003) continue;
-    slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.5;
+  // Thick brine hardly ripples: a slow crawl of two swells, the rings that leave the seep's mouth, and the rings of every dome that has burst.
+  float closeBy = smoothstep(40.0, 6.0, dist);
+  vec2 slope = (texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime).ba - 0.5) * 0.09
+    + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.22 * closeBy;
+  vec2 fromSeep = p.xz - uSeep.xy;
+  float reach = length(fromSeep);
+  if (reach < 16.0) {
+    float wob = texture2D(tGrain, p.xz / 9.0).r;
+    slope += fromSeep / max(reach, 0.01) * sin(reach * 4.4 - uTime * 2.3 + wob * 5.0) * (0.05 + 0.1 * closeBy) * smoothstep(0.3, 1.5, reach) * smoothstep(13.0, 4.0, reach);
+    for (int i = 0; i < ${MAX_RINGS}; i++) {
+      if (i >= uRingCount) break;
+      vec4 ring = uRings[i];
+      vec2 d = p.xz - ring.xy;
+      float r = length(d);
+      float q = r - ring.z;
+      float wide = 0.16 + 0.05 * ring.z;
+      float env = exp(-q * q / (wide * wide)) * ring.w;
+      if (env < 0.003) continue;
+      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.5;
+    }
   }
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
-  // Scum gathers at the edge and in rafts on the still water.
-  vec3 lit = brineShade(p, n, v, s, 0.0);
+  // Scum in rafts that drift, thickest along the shores.
+  vec4 raft = texture2D(tGrain, p.xz / 6.1 + vec2(0.004, 0.0025) * uTime);
+  vec4 fleck = texture2D(tGrain, p.xz / 0.57 + vec2(0.004, 0.0025) * uTime * 10.7);
+  float foam = 0.75 * smoothstep(0.72, 0.9, raft.g * 0.35 + fleck.r * 0.65 + 0.22 * smoothstep(-1.3, -0.1, s)) * (0.3 + 0.7 * fleck.g) * smoothstep(120.0, 30.0, dist);
+  vec3 lit = brineShade(p, n, v, s, foam);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -96,13 +108,22 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
-  // The skin drains from the crown toward the foot: thin and pale on top, thick and dark where it meets the pool.
+  // The skin drains from the crown toward the foot: thin and clear on top, thick and dark where it meets the pool. Through the thin top the
+  // far wall of the dome shows, paler; across it lies the sky, as on any wet bubble.
   float top = smoothstep(0.1, 1.0, vLocal.y);
   vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
   float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.3, 0.0, 1.0);
-  vec3 albedo = mix(vec3(0.11, 0.02, 0.017), vec3(0.3, 0.11, 0.1), thin);
-  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.12);
-  vec3 lit = rigShade(vWorld, n, v, albedo, 0.25, mix(0.55, 1.0, smoothstep(0.0, 0.35, vLocal.y)));
+  // What is seen is mostly the brine behind the skin; the thin crown lets the pale air inside show.
+  vec3 albedo = mix(vec3(0.05, 0.011, 0.0095), vec3(0.15, 0.062, 0.057), thin * thin);
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.1);
+  float foot = mix(0.5, 1.0, smoothstep(0.0, 0.35, vLocal.y));
+  vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) * foot / 3.14159);
+  float nv = clamp(dot(n, v), 0.0, 1.0);
+  vec3 r = reflect(-v, n);
+  r.y = abs(r.y);
+  // The overcast is not even: a brighter break in it shows on the skin as a soft window.
+  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 60.0) + 0.5 * pow(max(dot(r, normalize(vec3(0.5, 0.6, -0.4))), 0.0), 200.0);
+  lit += skyRadiance(r) * ((0.025 + 0.55 * pow(1.0 - nv, 2.5)) * foot + window * 1.4);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -149,7 +170,15 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
-  vec3 albedo = mix(vec3(0.12, 0.022, 0.019), vec3(0.32, 0.12, 0.11), smoothstep(-0.5, 0.0, torn) * 0.8 + vLocal.y * 0.2);
-  vec3 lit = rigShade(vWorld, n, v, albedo, 0.08, 1.0);
+  // A sheet of brine: dark where it is thick at the foot, clearer and pinker toward its torn edge, wet all over.
+  float edge = smoothstep(-0.35, 0.0, torn);
+  vec3 albedo = mix(vec3(0.055, 0.012, 0.01), vec3(0.2, 0.075, 0.068), edge * edge);
+  n = normalize(n + vec3(g.b - 0.5, (g.r - 0.5) * 0.6, g.a - 0.5) * 0.9);
+  vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
+  float nv = clamp(dot(n, v), 0.0, 1.0);
+  vec3 r = reflect(-v, n);
+  r.y = abs(r.y);
+  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 40.0);
+  lit += skyRadiance(r) * (0.03 + 0.5 * pow(1.0 - nv, 3.0) + window * 1.2);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;

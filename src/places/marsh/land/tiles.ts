@@ -6,10 +6,11 @@ function finish(data: Uint8Array, n: number): THREE.DataTexture {
   const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat, THREE.UnsignedByteType);
   t.wrapS = THREE.RepeatWrapping;
   t.wrapT = THREE.RepeatWrapping;
-  t.minFilter = THREE.LinearMipmapLinearFilter;
+  // Nearest of the smaller copies, not a blend of two: the renderer is software, and a blend costs twice the reads for a grain that hides the seam.
+  t.minFilter = THREE.LinearMipmapNearestFilter;
   t.magFilter = THREE.LinearFilter;
   t.generateMipmaps = true;
-  t.anisotropy = 8;
+  t.anisotropy = 1;
   t.needsUpdate = true;
   return t;
 }

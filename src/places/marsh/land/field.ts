@@ -2,7 +2,7 @@
 // ground it is. The land's mesh, the rig's map and the shaders all read the same numbers from here, so a shoreline is in one place for all of them.
 import * as THREE from 'three';
 import {
-  CREEKS, CRUST, F, POOL_R, R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
+  CREEKS, CRUST, F, K1_AT, K1_DIR, POOL_R, R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
 } from '../shared/anchors';
 import { stream } from '../../../core/rng';
 
@@ -182,17 +182,53 @@ export function createField(): Field {
   }
   for (const g of grids) stamp(g, 0, 0, POOL_R, 0, 0, POOL_R);
   for (const p of makePools()) for (const g of grids) stamp(g, p.x, p.z, p.r, p.x, p.z, p.r);
-  // The shore wanders: no bank of a real pool is a clean arc.
+  // The shore wanders at every size, and the flats hold pools of their own: puddles a stride across near the brine, ponds further out.
+  const crustAt = rel(STUCK[0], STUCK[1]);
+  const ragged = (g: Grid, fine: boolean): void => {
+    for (let j = 0; j < g.n; j++) {
+      const z = -g.half + (j + 0.5) * g.cell;
+      for (let i = 0; i < g.n; i++) {
+        const k = j * g.n + i;
+        let d = g.d[k] as number;
+        const x = -g.half + (i + 0.5) * g.cell;
+        if (fine && d < 6 && d > -6) {
+          const fall = smooth(6, 3, Math.abs(d));
+          d += fall * (1.5 * (fbm(x / 17 + 3, z / 17, 2) - 0.5) + 1.3 * (fbm(x / 6.3, z / 6.3, 3) - 0.5) + 0.7 * (fbm(x / 2.1 + 31, z / 2.1, 2) - 0.5) + 0.25 * (vnoise(x / 0.7 + 7, z / 0.7) - 0.5));
+        }
+        if (d > 0.5) {
+          const r = Math.hypot(x, z);
+          const pond = (0.71 + 0.3 * smooth(110, 60, r) - fbm(x / 70 + 9, z / 70, 3)) * 150;
+          if (pond < d) d = pond;
+          if (fine && d > 0.5 && r < 230 && Math.hypot(x - crustAt[0], z - crustAt[1]) > 11) {
+            const th = 0.7 - 0.07 * Math.exp(-d / 4) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5);
+            const puddle = (th - fbm(x / 3.7 + 11, z / 3.7 + 5, 3)) * 9;
+            if (puddle < d) d = puddle;
+          }
+        }
+        g.d[k] = d;
+      }
+    }
+  };
+  ragged(near, true);
+  // The bank the third lens lies on: the pool's edge two strides in front of it, whatever the wander above has done there.
   for (let j = 0; j < near.n; j++) {
     const z = -near.half + (j + 0.5) * near.cell;
+    if (Math.abs(z - K1_AT[1]) > 9) continue;
     for (let i = 0; i < near.n; i++) {
-      const k = j * near.n + i;
-      const d = near.d[k] as number;
-      if (d > 3 || d < -3) continue;
       const x = -near.half + (i + 0.5) * near.cell;
-      near.d[k] = d + 0.7 * (fbm(x / 6.3, z / 6.3, 3) - 0.5) + 0.22 * (vnoise(x / 0.9 + 31, z / 0.9) - 0.5);
+      if (Math.abs(x - K1_AT[0]) > 9) continue;
+      const k = j * near.n + i;
+      const dx = x - K1_AT[0];
+      const dz = z - K1_AT[1];
+      const ahead = dx * K1_DIR[0] + dz * K1_DIR[1];
+      const across = -dx * K1_DIR[1] + dz * K1_DIR[0];
+      // Land on the lens's side of a line that bows toward the lens at the middle of the frame.
+      const want = 2.15 + 0.1 * across * across * 0.3 - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
+      const w = smooth(8, 4.5, Math.hypot(dx, dz));
+      near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
     }
   }
+  ragged(far, false);
 
   const shore = (x: number, z: number): number => {
     if (Math.abs(x) < NEAR.half - 1 && Math.abs(z) < NEAR.half - 1) return sampleGrid(near, x, z);
@@ -251,6 +287,16 @@ export function createField(): Field {
     const w = hrng.range(14, 70);
     hummocks.push({ x: Math.sin(a) * r, z: -Math.cos(a) * r, a: w, b: w * hrng.range(0.5, 0.9), h: w * hrng.range(0.16, 0.3), yaw: hrng.range(0, Math.PI) });
   }
+  // Salt mounds, a stride to a few metres across, by the hundred over the middle distance: they are what gives the flats their size.
+  for (let i = 0; i < 260; i++) {
+    const a = hrng.range(0.35, 1.55) + (hrng.next() < 0.25 ? hrng.range(-2, 2) : 0);
+    const r = 34 + 620 * Math.pow(hrng.next(), 1.7);
+    const w = hrng.range(0.7, 2.2) * (1 + r / 260);
+    const x = Math.sin(a) * r;
+    const z = -Math.cos(a) * r;
+    if (shore(x, z) < w * 0.7) continue;
+    hummocks.push({ x, z, a: w, b: w * hrng.range(0.5, 0.9), h: w * hrng.range(0.22, 0.42), yaw: hrng.range(0, Math.PI) });
+  }
   const hummockAt = (x: number, z: number): number => {
     let h = -1;
     for (const m of hummocks) {
@@ -282,9 +328,21 @@ export function createField(): Field {
     if (base < -0.45) return base;
     const warp = 0.9 * (fbm(x / 5.2 + 3, z / 5.2, 3) - 0.5);
     const beds = base + warp;
-    const stepped = Math.floor(beds / 0.7) * 0.7 + 0.7 * smooth(0.5, 1, beds / 0.7 - Math.floor(beds / 0.7));
-    const rough = 0.3 * (fbm(x / 1.7, z / 1.7, 4) - 0.5) + 0.08 * (fbm(x / 0.4, z / 0.4, 3) - 0.5);
-    return base * 0.4 + (stepped - warp) * 0.6 + rough * smooth(-0.4, 0.5, base);
+    const bed = beds / 0.34;
+    const part = bed - Math.floor(bed);
+    // Each bed has a tread that leans back a little and a riser that is nearly a wall, its line broken where blocks have come away.
+    const broken = 0.22 * (fbm(x / 0.6 + 4, z / 0.6, 3) - 0.5);
+    const stepped = (Math.floor(bed) + 0.15 * part + 0.85 * smooth(0.78 + broken, 0.97 + broken, part)) * 0.34;
+    // The beds dip, so the rock weathers into sharp ribs that run one way with broken blocks between: crests are edges, hollows are round.
+    const u = x * 0.82 + z * 0.57;
+    const w = -x * 0.57 + z * 0.82;
+    const ridge = (a: number, b: number, o: number): number => {
+      const r = 1 - Math.abs(fbm(a, b, o) - 0.5) * 2.6;
+      return r > 0 ? r * r : 0;
+    };
+    const crag = 0.5 * (ridge(u / 6.3 + 2, w / 2.1, 3) - 0.3) + 0.24 * (ridge(u / 1.9 + 8, w / 0.8 + 3, 3) - 0.3) + 0.09 * (ridge(x / 0.45, z / 0.45 + 6, 2) - 0.3);
+    const rough = 0.16 * (fbm(x / 1.7, z / 1.7, 4) - 0.5) + 0.07 * (fbm(x / 0.33, z / 0.33, 3) - 0.5) + 0.03 * (fbm(x / 0.09, z / 0.09, 2) - 0.5);
+    return base * 0.25 + (stepped - warp) * 0.75 + (rough + crag) * smooth(-0.4, 0.6, base);
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),
@@ -380,7 +438,7 @@ export function createField(): Field {
     t.generateMipmaps = false;
     t.minFilter = THREE.LinearMipmapLinearFilter;
     t.magFilter = THREE.LinearFilter;
-    t.anisotropy = 4;
+    t.anisotropy = 1;
     t.wrapS = THREE.ClampToEdgeWrapping;
     t.wrapT = THREE.ClampToEdgeWrapping;
     t.needsUpdate = true;

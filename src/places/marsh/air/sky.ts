@@ -31,13 +31,13 @@ void main() {
   float small = textureLod(tNoise, vec3(q * 0.37, 0.87), 0.0).r;
   float n = big * 0.55 + mid * 0.3 + small * 0.15;
   float seen = smoothstep(0.0, 0.12, d.y);
-  c *= 1.0 + (n - 0.5) * 0.3 * seen;
+  c *= 1.0 + (n - 0.5) * 0.42 * seen;
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
   float side = abs(az - uRain.x) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);
   float belly = smoothstep(1.6, 0.4, side + (big - 0.5) * 0.8) * smoothstep(0.08, 0.2, el) * smoothstep(0.75, 0.3, el);
-  c *= 1.0 - 0.22 * belly * uRain.w;
+  c *= 1.0 - 0.2 * belly * uRain.w;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
