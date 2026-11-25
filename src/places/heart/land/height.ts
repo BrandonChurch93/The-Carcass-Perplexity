@@ -248,7 +248,7 @@ function lineCrag(x: number, z: number): number {
   const dx = x - CRAG_A[0];
   const dz = z - CRAG_A[1];
   const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
-  if (u < -11 || u > 10.5) return 0;
+  if (u < -19 || u > 10.5) return 0;
   // Behind the foot is positive: away from the lake.
   const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
   if (v < -1.2 || v > 27) return 0;
@@ -262,8 +262,8 @@ function lineCrag(x: number, z: number): number {
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
   const fall = smooth(25, 5.5, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
   const back = fall * (0.55 + 0.45 * fall);
-  const ramp = smooth(-10.5, -3.4, uj + 1.6 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5));
-  const start = ramp * (0.4 + 0.6 * ramp);
+  const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
+  const start = ramp * ramp * (0.35 + 0.65 * ramp);
   return top * smooth(0, 0.4, vj) * back * start;
 }
 
@@ -329,7 +329,8 @@ export function benchAt(x: number, z: number, d0: number): number {
   const low = linePathDistance(x, z);
   if (low < 3.5 && h > 0.6) h = lerp(0.6, h, smooth(1.6, 3.5, low));
   if (h > 1.25 && lineOpen(x, z)) h = 1.25 + 0.12 * (1 - Math.exp(-(h - 1.25)));
-  const stand = lineCrag(x, z);
+  // Its ramp of rubble stays low beside the path of the line view's lens.
+  const stand = Math.min(lineCrag(x, z), 0.6 + 1.1 * Math.max(0, low - 3.5) + 100 * smooth(-7, -4.5, (x - CRAG_A[0]) * CRAG_ALONG[0] + (z - CRAG_A[1]) * CRAG_ALONG[1]));
   if (stand > h) h = stand;
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
