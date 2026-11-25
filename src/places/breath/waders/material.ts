@@ -122,14 +122,14 @@ void main() {
     float knuckle = back * pow(0.5 + 0.5 * cos(u * 120.0), 2.0);
     // Between two ribs the skin is drawn in and sees less of the sky, whatever the light.
     float between_ = cage * (1.0 - rib) * each * mid;
-    height = 0.028 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.005 * (grain - 0.5) * mid;
+    height = 0.017 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.005 * (grain - 0.5) * mid;
     // Nothing under the skin is smooth: muscle gone slack, the heads of bones, old scars.
     float drape = fbm(q * vec2(5.0, 7.0) + 9.0) - 0.5;
     float crease = fbm(q * vec2(17.0, 23.0) + 3.0) - 0.5;
     height += (0.03 * drape + 0.009 * crease) * mid * (1.0 - 0.6 * cage);
-    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.3 * between_) * (1.0 + (0.4 * drape + 0.3 * crease) * mid);
+    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.12 * between_) * (1.0 + (0.4 * drape + 0.3 * crease) * mid);
     float between = between_;
-    occ *= 1.0 - 0.6 * between - 0.25 * back * (1.0 - knuckle) * mid;
+    occ *= 1.0 - 0.28 * between - 0.2 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
     float sore = smoothstep(0.42, 0.66, mottle) * (0.3 + 0.5 * smoothstep(0.4, 0.65, blotch)) + 0.55 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, clamp(sore, 0.0, 0.8));
@@ -183,19 +183,23 @@ void main() {
       albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo * 0.8, vec3(0.2, 0.1, 0.085), 0.45 + 0.4 * hash12(vec2(seed, 4.0)));
     } else {
       float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-      albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55) * 0.78;
-      float wrinkle = vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
+      albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55) * 0.66;
+      float grime = fbm(vWorld.xz * 5.0 + vWorld.y * 7.0 + seed);
+      albedo *= 0.62 + 0.7 * grime;
+      float scale_ = kind > 0.5 && kind < 1.5 ? smoothstep(0.25, 0.6, vnoise(vUv * vec2(120.0, 90.0) + seed)) : 0.5;
+      albedo *= 0.8 + 0.4 * scale_;
+      float wrinkle = kind < 0.5 ? fbm(vUv * 26.0 + seed) - 0.5 : vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
       float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
       // On the trunk the skin hangs in folds from the spine; on the neck it has dried in rings; the legs are bone with a little skin on.
-      float drape = kind < 0.5 ? vnoise(vec2(vUv.x * 9.0, vUv.y * 46.0 + 4.0 * vnoise(vUv * 6.0)) + seed) - 0.5 : 0.0;
-      float ringed = kind < 0.5 ? 0.35 : kind < 1.5 ? 0.7 : 0.2;
-      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.012 * drape) * mid;
+      float drape = kind < 0.5 ? fbm(vUv * vec2(7.0, 9.0) + seed + 5.0) - 0.5 : 0.0;
+      float ringed = kind < 0.5 ? 0.9 : kind < 1.5 ? 0.7 : 0.2;
+      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.03 * drape) * mid;
       albedo *= 1.0 + (0.4 * ringed * wrinkle + 0.35 * drape) * mid;
       float hollow = 1.0 - vInfo.y;
       float rot = smoothstep(0.42, 0.68, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);
-      albedo = mix(albedo, vec3(0.2, 0.085, 0.06), 0.75 * rot);
+      albedo = mix(albedo, vec3(0.17, 0.08, 0.06), 0.8 * rot);
       // The shanks and the feet have gone dark and hard.
-      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), 0.75 * smoothstep(0.4, 0.6, u));
+      if (kind > 2.5) albedo = mix(albedo, vec3(0.13, 0.1, 0.085), 0.3 + 0.55 * smoothstep(0.4, 0.6, u));
       albedo = mix(albedo, vec3(0.3, 0.2, 0.15), 0.5 * hollow);
       float salt = smoothstep(0.45, 0.75, fbm(vWorld.xz * 9.0 + seed) + 0.3 * n.y - 0.15 + 0.2 * hollow);
       albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.5 * salt);
@@ -216,7 +220,7 @@ void main() {
   float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0), 3.0);
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.42 + 0.7 * smoothstep(30.0, 150.0, far)) * (0.45 + 0.4 * dot(n, flat_) + 0.15 * n.y);
+  float fogLight = (0.56 + 0.6 * smoothstep(30.0, 150.0, far)) * (0.45 + 0.4 * dot(n, flat_) + 0.15 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.22, 1.0, 0.8) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 1.5 * halo) + fogColour * (9.0 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
