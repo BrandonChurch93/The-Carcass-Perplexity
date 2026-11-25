@@ -178,7 +178,7 @@ void main() {
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
   // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
   float over = max(land.r - uPoolLevel, 0.0);
-  float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.045 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
+  float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.03 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
   if (depth < 0.0) discard;
   float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
@@ -199,19 +199,19 @@ void main() {
   float open = land.g * (1.0 - contactDrawn(vWorld));
   float sun = sunAt(vWorld, land);
   vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
+  // The blades stand in it, dark, paler with the air between.
+  vec2 stood = standing(p, r);
+  vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
+  refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 500.0)), stood.x * 0.9);
   // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
   float toWall = (uFront + 20.0 * sin(p.x * 0.0076 + 1.3) - p.y) / min(r.z, -1e-3);
   if (toWall > 0.0 && toWall < 1500.0) {
     float k = toWall * r.y / (uBoreHeight * (0.9 + 0.2 * c1.b));
-    float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall);
+    float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
     float white = max(1.0 - smoothstep(0.2, 0.4, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
     refl = mix(refl, mix(vec3(0.07, 0.085, 0.07), vec3(0.9), white) * lit, wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
-  // The blades stand in it, dark, paler with the air between.
-  vec2 stood = standing(p, r);
-  vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
-  refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 1300.0)), stood.x * 0.9);
   // The waders stand in it too: each leg a post, each body a ball, met by the mirrored ray. Feet and mirror join at the water.
   float rl = max(length(r.xz), 1e-3);
   vec2 rd = r.xz / rl;
@@ -315,7 +315,7 @@ void main() {
   // Marks ride with the wall and tumble down its face.
   // Down the face they are laid by the height (the face is too steep for the metres along the bed to carry them: they would hang as a curtain); over the back by the bed.
   float Hh = boreHigh(vRide.x);
-  float down = mix(-1.1 * (Hh - vWorld.y), vRide.y - 0.75 * Hh, smoothstep(0.6, 0.95, u));
+  float down = mix(-1.1 * (Hh - vWorld.y), vRide.y - 0.75 * Hh, smoothstep(0.36, 0.58, u));
   vec2 q = vec2(vRide.x, down - uTime * 8.0 * smoothstep(2.5, 0.0, u));
   vec4 a = texture2D(tChop, q / 29.0);
   vec4 f1 = texture2D(tFoam, q / 13.0);
@@ -374,7 +374,7 @@ void main() {
   // Thrown water in the open air: lit from every side, the sky's light all round it.
   vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.9 * open) + uSunColour * 0.6 * sunAt(aAt.xyz, land)) / 3.14159;
   // Mist is water too thin to be white: it holds the grey of the storm.
-  vLight *= mix(vec3(1.0), vec3(0.3, 0.33, 0.35), vMist);
+  vLight *= mix(vec3(1.0), vec3(0.23, 0.26, 0.28), vMist);
   gl_Position = projectionMatrix * centre;
 }`;
 
@@ -391,8 +391,8 @@ void main() {
   vec4 t = texture2D(tFoam, vUv * 0.19 + vLook.y * vec2(3.1, 7.3));
   // A head of thrown water: eaten at the rim into lumps and strings, thick in the middle.
   float eat = r2 + mix(1.5, 0.5, vMist) * (t.r - 0.5) + mix(0.6, 0.0, vMist) * (0.5 - t.g);
-  float body = 1.0 - smoothstep(mix(0.1, -0.1, vMist), mix(0.8, 0.95, vMist), eat);
+  float body = 1.0 - smoothstep(mix(0.22, -0.1, vMist), mix(0.72, 0.95, vMist), eat);
   float alpha = body * (0.55 + 0.45 * t.a) * vLook.x * (1.0 - uSolo);
-  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.9 + 0.6 * t.g) * (0.85 + 0.25 * body + 0.25 * vUv.y);
+  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.9 + 0.6 * t.g) * mix(0.62 + 0.3 * body + 0.42 * vUv.y + 0.25 * (t.r - 0.5), 1.0, vMist);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;

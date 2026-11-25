@@ -349,11 +349,30 @@ export function create(ctx: Context): Piece {
   }
   const colonyEye = resolve(shots['ribs-03'] as (typeof shots)[string], 0.5, shotById('ribs-03').first).position;
   const facing = Math.atan2(COLONY.side[1], COLONY.side[0]);
+  const colonyPose = resolve(shots['ribs-03'] as (typeof shots)[string], 0.5, shotById('ribs-03').first);
+  const colonyLens = new THREE.PerspectiveCamera(colonyPose.fov, 16 / 9, 0.5, 5000);
+  colonyLens.position.set(...colonyPose.position);
+  colonyLens.lookAt(...colonyPose.aim);
+  colonyLens.updateMatrixWorld();
+  colonyLens.updateProjectionMatrix();
+  const seen = new THREE.Vector3();
   const sitters: (Sitter & { d: number })[] = [];
   // In knots of two to five along a ledge, with bare rock between the knots: animals to be read one by one.
   while (sitters.length < COLONISTS) {
-    const tier = Math.floor(scatter.range(LEVELS.tide + 2, COLONY.top - 6) / COLONY.step) * COLONY.step;
-    const a0 = facing + scatter.normal() * 0.8;
+    // Most of the knots sit where the colony's own shot looks, on the ledges that face its lens; the rest anywhere on the weather side.
+    let tier = 0;
+    let a0 = 0;
+    for (let tries = 0; tries < 60; tries++) {
+      tier = Math.floor(scatter.range(LEVELS.tide + 2, COLONY.top - 6) / COLONY.step) * COLONY.step;
+      a0 = sitters.length < COLONISTS * 0.75 ? scatter.range(0, Math.PI * 2) : facing + scatter.normal() * 0.8;
+      if (sitters.length >= COLONISTS * 0.75) break;
+      const r0 = COLONY.radiusAt(tier + COLONY.step) + 1;
+      seen.set(COLONY.x + Math.cos(a0) * r0, tier + 1.5, COLONY.z + Math.sin(a0) * r0);
+      const toward = (colonyEye[0] - seen.x) * Math.cos(a0) + (colonyEye[2] - seen.z) * Math.sin(a0);
+      const far = Math.hypot(colonyEye[0] - seen.x, colonyEye[2] - seen.z);
+      seen.project(colonyLens);
+      if (toward > 0.2 * far && Math.abs(seen.x) < 0.92 && seen.y > -0.9 && seen.y < 0.8 && seen.z < 1) break;
+    }
     const knot = 2 + scatter.int(4);
     let along = 0;
     for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
@@ -610,7 +629,7 @@ export function create(ctx: Context): Piece {
   };
 
   // Thrown water where a tuft works the pool and where the runner's feet come down.
-  const SPLASH = 60;
+  const SPLASH = 90;
   const splash = new Spray((ringed.length + 2) * SPLASH + 80, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
   const wet = [...new Set([...ringed, feeders.length - 1])];
   const splashAt = (seconds: number): void => {
@@ -627,7 +646,7 @@ export function create(ctx: Context): Piece {
         const dir = rand(i * 31 + n, born) * Math.PI * 2;
         const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
         const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
-        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.07 + 0.05 * rand(i * 31 + n, born + 5)) * f.size : (0.012 + 0.016 * rand(i * 31 + n, born + 5)) * f.size, (n % 5 === 0 ? 0.55 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : dir, n % 5 === 0 ? 0.45 : 1.8);
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, n % 5 === 0 ? (0.07 + 0.05 * rand(i * 31 + n, born + 5)) * f.size : (0.007 + 0.011 * rand(i * 31 + n, born + 5)) * f.size, (n % 5 === 0 ? 0.55 : 1.6) * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), n % 5 === 0 ? 0 : dir, n % 5 === 0 ? 0.45 : 1.8);
       }
     }
     if (runner >= 0) {
