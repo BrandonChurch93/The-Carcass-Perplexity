@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
 import portable from '../../config/portable.json';
 import { FPS, config, formatById, samplesOf, type Format } from '../config';
+import { FocusBlur } from './blur';
+import { blurShare, lensPoints, maxCoc } from './focus';
 import { DIAGNOSTICS, Post, QUAD_VERTEX, additivePass, halfFloatTarget, type Diagnostic } from './post';
 import { frameSamples, type Sample } from './sampler';
 import { partOf, type LivePart } from './place';
@@ -21,6 +23,7 @@ uniform vec2 uHalf;
 uniform float uNear;
 uniform float uFar;
 uniform vec2 uKnee;
+uniform vec3 uLens;
 varying vec2 vUv;
 float viewDistance(float d) {
   return uNear * uFar / (uFar - d * (uFar - uNear));
@@ -33,7 +36,10 @@ void main() {
     // The warp pass says how far the view behind this pixel is bent, in frame heights. A thing nearer than the pixel's own surface is not pulled across it.
     vec2 bent = clamp(vUv + texture2D(tWarp, vUv).rg * vec2(uSize.y / uSize.x, 1.0), vec2(0.0), vec2(1.0));
     float z1 = viewDistance(texelFetch(tDepth, min(ivec2(bent * uSize), ivec2(uSize) - 1), 0).r);
-    if (z1 > 0.8 * z0) uv = bent;
+    if (z1 > 0.8 * z0) {
+      uv = bent;
+      z0 = z1;
+    }
   }
   vec3 c = texture2D(tScene, uv).rgb;
   if (uHasVolume > 0.5) {
@@ -61,7 +67,9 @@ void main() {
     float m = max(c.r, max(c.g, c.b));
     if (m > uKnee.x) c *= uKnee.x * (1.0 + uKnee.y * log(m / uKnee.x)) / m;
   }
-  gl_FragColor = vec4(c * uWeight, uWeight);
+  // With the lens open the alpha carries the signed circle of confusion in pixels, averaged like the colour: the blur reads the depth of the averaged picture there.
+  float a = uLens.x > 0.0 ? clamp(uLens.x * (uLens.y - 1.0 / z0), -uLens.z, uLens.z) : 1.0;
+  gl_FragColor = vec4(c * uWeight, a * uWeight);
 }`;
 
 export function volumeUniforms(): Record<string, THREE.IUniform> {
@@ -97,7 +105,7 @@ function flagMaterial(source: THREE.Material, colour: THREE.Color): THREE.Materi
 
 const DEPTH_ONLY_FRAGMENT = 'void main() { gl_FragColor = vec4(0.0); }';
 const MAIN_START = /void\s+main\s*\(\s*(?:void)?\s*\)\s*\{/;
-const SEEN_BIAS = '2.0e-7';
+const SEEN_BIAS = '3.2e-7';
 
 // The twin of an opaque shader material that writes depth only: the same vertex shader and the same uniforms, so the depth it leaves is the depth the material itself will draw.
 // A material that cuts holes has a twin only if it says how in `userData.depthFragment` (a fragment shader that does nothing but its discard).
@@ -152,8 +160,14 @@ export class Engine {
   readonly extensions: string[] = [];
   format: Format;
   diagnostic: Diagnostic = null;
+  /** Seconds the world runs ahead of the frame's camera: frame N is drawn with the camera of N and the world at N's time plus this. */
+  hold = 0;
   part: string | null = null;
   private readonly post: Post;
+  private readonly blur: FocusBlur;
+  private lens: { aperture: number | null; focus: number | null } = { aperture: null, focus: null };
+  private open = false;
+  private shares = 1;
   private readonly quad = new FullScreenQuad();
   private readonly resolve = additivePass(RESOLVE_FRAGMENT, {
     tScene: { value: null },
@@ -168,6 +182,7 @@ export class Engine {
     uNear: { value: 0.1 },
     uFar: { value: 1000 },
     uKnee: { value: new THREE.Vector2(0, 0) },
+    uLens: { value: new THREE.Vector3(0, 0, 1) },
   });
   private sceneTarget: THREE.WebGLRenderTarget | null = null;
   private volumeTarget: THREE.WebGLRenderTarget | null = null;
@@ -213,6 +228,7 @@ export class Engine {
       throw new Error(`A shader did not compile:\n${text}`);
     };
     this.post = new Post(this.renderer);
+    this.blur = new FocusBlur(this.renderer);
     this.format = formatById(formatId);
     this.setFormat(formatId);
   }
@@ -231,10 +247,11 @@ export class Engine {
     this.volumeTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.warpTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.seenTarget = new THREE.WebGLRenderTarget(f.width, f.height, { type: THREE.UnsignedByteType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false, depthBuffer: true, stencilBuffer: false, colorSpace: THREE.NoColorSpace });
-    this.seenTarget.depthTexture = new THREE.DepthTexture(f.width, f.height, THREE.FloatType);
+    this.seenTarget.depthTexture = new THREE.DepthTexture(f.width, f.height, THREE.UnsignedIntType);
     this.seen.value = this.seenTarget.depthTexture;
     this.accumTarget = halfFloatTarget(f.width, f.height);
     this.post.setSize(f.width, f.height);
+    this.blur.setSize(f.width, f.height);
   }
 
   setDiagnostic(view: string | null, part: string | null = null): void {
@@ -244,16 +261,28 @@ export class Engine {
     this.part = view === 'solo' || view === 'standins' ? part : null;
   }
 
-  private aim(stage: Stage, s: Sample): void {
+  /** Sets the lens over the place's own for test pictures: the radius of the lens in metres and the focus distance in metres. Null gives a number back to the place. */
+  setLens(aperture: number | null, focus: number | null): void {
+    if (aperture !== null && !(aperture >= 0)) throw new Error(`The aperture is a lens radius in metres, zero or more: ${aperture}`);
+    if (focus !== null && !(focus > 0)) throw new Error(`The focus is a distance in metres, more than zero: ${focus}`);
+    this.lens = { aperture, focus };
+  }
+
+  private lensOf(stage: Stage): { aperture: number; focus: number } {
+    return { aperture: this.lens.aperture ?? stage.lens.aperture, focus: this.lens.focus ?? stage.lens.focus };
+  }
+
+  private aim(stage: Stage, s: Sample, point: readonly [number, number]): void {
     const cam = stage.camera;
     const { width, height } = this.format;
+    const lens = this.lensOf(stage);
     cam.aspect = width / height;
     cam.updateProjectionMatrix();
-    const dx = s.lensX * stage.lens.aperture;
-    const dy = s.lensY * stage.lens.aperture;
+    const dx = point[0] * lens.aperture;
+    const dy = point[1] * lens.aperture;
     const m = cam.projectionMatrix.elements;
-    m[8] = -((m[0] as number) * dx) / stage.lens.focus - (2 * s.px) / width;
-    m[9] = -((m[5] as number) * dy) / stage.lens.focus - (2 * s.py) / height;
+    m[8] = -((m[0] as number) * dx) / lens.focus - (2 * s.px) / width;
+    m[9] = -((m[5] as number) * dy) / lens.focus - (2 * s.py) / height;
     cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
     if (dx !== 0 || dy !== 0) {
       right.set(1, 0, 0).applyQuaternion(cam.quaternion);
@@ -298,6 +327,9 @@ export class Engine {
     const warpTarget = this.warpTarget as THREE.WebGLRenderTarget;
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
     const count = samples.length;
+    const points = lensPoints(count);
+    this.open = false;
+    this.shares = count;
     stage.resize(this.format.width, this.format.height);
     r.setRenderTarget(accum);
     r.clear(true, false, false);
@@ -307,7 +339,9 @@ export class Engine {
     for (let i = 0; i < count; i++) {
       const s = samples[i] as Sample;
       stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
-      this.aim(stage, s);
+      this.aim(stage, s, points[i] as [number, number]);
+      const lens = this.lensOf(stage);
+      if (lens.aperture > 0) this.open = true;
       stage.beforeSample(r);
       r.setRenderTarget(scene);
       if (background) r.setClearColor(background, 1);
@@ -345,6 +379,8 @@ export class Engine {
       v.uNear!.value = stage.camera.near;
       v.uFar!.value = stage.camera.far;
       (v.uKnee!.value as THREE.Vector2).set(stage.look.knee?.[0] ?? 0, stage.look.knee?.[1] ?? 0);
+      // The focal length in pixels is the frame's half height times the projection's vertical scale.
+      (v.uLens!.value as THREE.Vector3).set(lens.aperture * (stage.camera.projectionMatrix.elements[5] as number) * 0.5 * this.format.height, 1 / lens.focus, maxCoc(this.format.height));
       r.setRenderTarget(accum);
       this.quad.material = this.resolve;
       this.quad.render(r);
@@ -354,7 +390,9 @@ export class Engine {
   private show(stage: Stage, seq: number, diag: Diagnostic, target: THREE.WebGLRenderTarget | null = null, plain = false): void {
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
     const scene = this.sceneTarget as THREE.WebGLRenderTarget;
-    this.post.render(accum.texture, scene.depthTexture, stage.look, seq, diag, stage.camera.near, stage.camera.far, target, plain);
+    // The blur by depth runs once, on the average, and only when a sample of this frame had its lens open: a closed lens draws nothing here.
+    const picture = this.open && diag !== 'standins' ? this.blur.render(accum.texture, blurShare(this.shares)) : accum.texture;
+    this.post.render(picture, scene.depthTexture, stage.look, seq, diag, stage.camera.near, stage.camera.far, target, plain, this.open ? accum.texture : null, maxCoc(this.format.height));
   }
 
   private shown(): [THREE.WebGLRenderTarget, THREE.WebGLRenderTarget] {
@@ -396,7 +434,7 @@ export class Engine {
     });
     for (const m of muted) m.colorWrite = false;
     try {
-      this.accumulate(stage, frame, seq, [CENTRE], 0, false, effect ? FLAG_EFFECT : null, false);
+      this.accumulate(stage, frame, seq, [CENTRE], this.hold, false, effect ? FLAG_EFFECT : null, false);
     } finally {
       for (const m of muted) m.colorWrite = true;
       for (const [o, m] of swapped) o.material = m;
@@ -417,7 +455,7 @@ export class Engine {
     });
     stage.solo?.(part ? part.id : null);
     try {
-      this.accumulate(stage, frame, seq, samples, 0, part ? part.kind === 'effect' : false);
+      this.accumulate(stage, frame, seq, samples, this.hold, part ? part.kind === 'effect' : false);
     } finally {
       stage.solo?.(null);
       for (const o of hidden) o.visible = true;
@@ -427,9 +465,9 @@ export class Engine {
 
   private renderMotion(stage: Stage, frame: number, seq: number, samples: readonly Sample[]): void {
     const [a, b] = this.shown();
-    this.accumulate(stage, frame, seq, samples, 0, true);
+    this.accumulate(stage, frame, seq, samples, this.hold, true);
     this.show(stage, seq, null, a, true);
-    this.accumulate(stage, frame, seq, samples, config.motion.checkGapSeconds, true);
+    this.accumulate(stage, frame, seq, samples, this.hold + config.motion.checkGapSeconds, true);
     this.show(stage, seq, null, b, true);
     this.post.difference(a.texture, b.texture);
   }
@@ -440,7 +478,7 @@ export class Engine {
     else if (this.diagnostic === 'solo') this.renderSolo(stage, frame, seq, samples);
     else if (this.diagnostic === 'motion') this.renderMotion(stage, frame, seq, samples);
     else {
-      this.accumulate(stage, frame, seq, samples, 0, true);
+      this.accumulate(stage, frame, seq, samples, this.hold, true);
       this.show(stage, seq, this.diagnostic);
     }
     this.finish();

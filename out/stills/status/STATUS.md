@@ -1,8 +1,8 @@
-# Status 31
+# Status 33
 
-2026-11-25 06:36 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 07:10 UTC. Phase 3, the look lock: the Heart.
 
-- `01-set-a-01.jpg`: Round 3, the wide view exactly as the jury saw it (built before the third versions below)
-- `02-cmp-heart-1.jpg`: The line, approved picture and frame, with the new fire colours of the light owner
-- `03-compare-heart-2.jpg`: The one that sank, third version, beside its picture
-- `04-v3-compare-heart-4.jpg`: The mouth and its fall, third version, beside its picture
+- `01-key-heart-2-hd-draft.jpg`: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier)
+- `02-key-heart-3-hd-draft.jpg`: Feeding at a seam through the long lens: the far wall and the fall go soft behind the animals (draft tier)
+- `03-heart-1.jpg`: The line beside its picture, with a slight lens. The trench and the brown crust are what the two lake owners are replacing now
+- `04-key-heart-3-hd-draft-solo.jpg`: The frame that answers heart-3, film frame 3156, hd, draft tier, solo view, lens set by hand, radius 0 m
