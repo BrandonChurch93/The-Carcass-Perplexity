@@ -329,20 +329,23 @@ void main() {
   vec2 q = vec2(vRide.x, down - uTime * 8.0);
   vec4 a = texture2D(tChop, q / 29.0);
   vec4 f1 = texture2D(tFoam, q * vec2(1.0, 0.5) / 13.0);
-  vec4 f2 = texture2D(tFoam, vec2(q.y * 0.4, q.x) / 3.1 + f1.rb * 0.3);
+  // Strings of white running down the face: long down it, a hand to a metre across.
+  vec4 f2 = texture2D(tFoam, vec2(q.y * 0.2, q.x * 1.3) / 3.1 + f1.rb * 0.35);
+  float strings = 0.6 * f2.r + 0.4 * texture2D(tFoam, vec2(q.y * 0.3, q.x * 2.9) / 3.1 + 0.37 + f1.ga * 0.2).g;
+  float fine = texture2D(tFoam, q / 4.1 + f1.rb * 0.2).r;
   float face = smoothstep(1.9, 0.7, u);
-  float lace = mix(0.5 * a.a + 0.5 * texture2D(tChop, q.yx / 3.3).a, 0.2 + 0.6 * f1.r, face);
+  float lace = mix(0.5 * a.a + 0.5 * texture2D(tChop, q.yx / 3.3).a, 0.2 + 0.35 * f1.r + 0.3 * fine, face);
   // Under the heads of the crest the lifted water shows dark in windows; at the foot it is all broken white.
   float big = texture2D(tFoam, vec2(vRide.x, uTime * 3.0) / 97.0).r;
   // The face is one dark band of lifted water from the churn at the foot to the heads of the crest; its edges are torn, strings of white run down it.
-  float tear = 0.12 * (big - 0.5) + 0.05 * (f1.r - 0.5);
-  float lifted = smoothstep(0.2 + tear, 0.28 + tear, u) * smoothstep(0.69 + tear, 0.6 + tear, u);
-  float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.78 * lifted, face);
+  float tear = 0.2 * (big - 0.5) + 0.05 * (f1.r - 0.5);
+  float lifted = smoothstep(0.36 + tear, 0.5 + tear, u) * smoothstep(0.8 + 0.5 * tear, 0.68 + 0.5 * tear, u);
+  float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.86 * lifted, face);
   // Ahead of the wall foam runs out over the wet flat in tongues, thinning to lace.
   float ahead = clamp(-vRide.y / 48.0, 0.0, 1.0);
   float tongue = texture2D(tFoam, vec2(vRide.x, uTime * 2.0) / 61.0).r + 0.5 * texture2D(tFoam, vec2(vRide.x, vRide.y * 0.5 + uTime * 5.0) / 23.0).r;
   amount = mix(amount, 1.25 - 2.3 * ahead / (0.25 + tongue), step(u, 0.0));
-  float foam = smoothstep(1.0 - amount, 1.2 - amount, mix(lace, 0.15 + 0.7 * f2.r + 0.25 * (f1.g - 0.3), face * lifted));
+  float foam = smoothstep(1.0 - amount, 1.2 - amount, mix(lace, 0.2 + 0.75 * strings + 0.12 * (f1.g - 0.3), face * smoothstep(0.0, 0.5, lifted)));
   if (u < 0.0 && foam < 0.35) discard;
   vec2 bump = vec2(f2.g - f1.a, f2.a - f1.g) * 0.5 + (a.xy - 0.5) * (1.0 - face);
   // White water is not a skin: its light comes from all through it, so the folds of the sheet under it count for less.
@@ -353,16 +356,16 @@ void main() {
   float pit = (0.55 + 0.45 * smoothstep(0.3, 0.62, f1.r)) * (0.7 + 0.3 * smoothstep(0.3, 0.6, f2.r)) * (0.75 + 0.25 * smoothstep(0.03, 0.3, f2.g));
   float hollow = mix(1.0, (0.5 + 0.5 * crease) * pit, face);
   // The lifted water is thick with sand: slate green, brown where it is thin at the lip.
-  vec3 water = mix(vec3(0.045, 0.07, 0.058), vec3(0.11, 0.115, 0.075), smoothstep(0.45, 0.68, u) * face);
+  vec3 water = mix(vec3(0.045, 0.07, 0.058), vec3(0.13, 0.115, 0.07), smoothstep(0.55, 0.85, u) * face);
   // White water is lit all through: it holds more light than a painted wall.
   vec3 white = vec3(0.95, 0.96, 0.96);
   vec3 albedo = mix(water, white, foam);
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.45, 1.0, foam), mix(1.0, hollow, foam));
   // Lit from behind: where the lifted water thins toward the lip the light comes through it green, and the crest's white burns.
   float behind = 0.35 + 0.65 * pow(max(dot(-v, uSunDir), 0.0), 2.0);
-  float thin = smoothstep(0.4, 0.68, u) * face;
+  float thin = smoothstep(0.5, 0.85, u) * face;
   col += (1.0 - foam) * vec3(0.05, 0.13, 0.095) * thin * behind * (uSunColour * 0.25 + skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.25);
-  col += foam * hollow * white * uSunColour * 0.1 * behind * smoothstep(0.3, 0.6, u);
+  col += foam * hollow * white * uSunColour * 0.2 * behind * smoothstep(0.3, 0.6, u);
   col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.2;
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
@@ -391,6 +394,9 @@ void main() {
   vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.9 * open) + uSunColour * 0.6 * sunAt(aAt.xyz, land)) / 3.14159;
   // Mist is water too thin to be white: it holds the grey of the storm.
   vLight *= mix(vec3(1.0), vec3(0.23, 0.26, 0.28), vMist);
+  // Thrown water between the lens and the sun burns: the light comes forward through it.
+  float through = pow(max(dot(normalize(aAt.xyz - cameraPosition), uSunDir), 0.0), 3.0);
+  vLight += uSunColour * through * mix(0.16, 0.012, vMist) * mix(0.35, 1.0, open);
   gl_Position = projectionMatrix * centre;
 }`;
 
