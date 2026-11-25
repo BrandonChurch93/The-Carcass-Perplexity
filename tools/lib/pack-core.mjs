@@ -261,12 +261,26 @@ export function usualFor(critic, item, cfg) {
   return { tier: USUAL.judged.tier, format: cfg.formats.master.id };
 }
 
+export const KEPT_CHUNKS = ['IHDR', 'PLTE', 'tRNS', 'IDAT', 'IEND'];
+
+export function stripPng(buffer) {
+  const parts = [buffer.subarray(0, 8)];
+  for (let p = 8; p + 12 <= buffer.length; ) {
+    const size = 12 + buffer.readUInt32BE(p);
+    if (KEPT_CHUNKS.includes(buffer.toString('latin1', p + 4, p + 8))) parts.push(buffer.subarray(p, p + size));
+    p += size;
+  }
+  return Buffer.concat(parts);
+}
+
+const encode = async (img) => stripPng(await img.png({ compressionLevel: 9, adaptiveFiltering: false, palette: false }).toBuffer());
+
 export async function plain(input, limits, width = null) {
   const m = await sharp(input).metadata();
   const fit = width && width < m.width ? { width, height: Math.max(1, Math.round((width * m.height) / m.width)) } : fitWithin(m.width, m.height, limits.maxEdge, limits.maxMegapixels);
   let img = sharp(input).removeAlpha().toColourspace('srgb');
   if (fit.width !== m.width || fit.height !== m.height) img = img.resize(fit.width, fit.height, { fit: 'fill', kernel: 'lanczos3' });
-  return img.png({ compressionLevel: 9, adaptiveFiltering: false, palette: false }).toBuffer();
+  return encode(img);
 }
 
 export function lattice() {
@@ -365,7 +379,7 @@ export async function buildItem(item, { critic, cfg, renderer, sheet, limits, ti
   }
   const b = await plain(still.file, limits);
   const size = await sharp(b).metadata();
-  const a = await sharp(approved).extract(rect).removeAlpha().toColourspace('srgb').resize(size.width, size.height, { fit: 'fill', kernel: 'lanczos3' }).png({ compressionLevel: 9, adaptiveFiltering: false, palette: false }).toBuffer();
+  const a = await encode(sharp(approved).extract(rect).removeAlpha().toColourspace('srgb').resize(size.width, size.height, { fit: 'fill', kernel: 'lanczos3' }));
   return { used, files: [{ side: 'a', buffer: a }, { side: 'b', buffer: b }] };
 }
 
