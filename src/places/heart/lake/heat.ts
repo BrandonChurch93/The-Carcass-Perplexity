@@ -40,6 +40,11 @@ float tornAt(vec2 q) {
 // wide and dimmer by the same factor, so that its light is the same and it does not crawl. Returns cover and kelvin.
 vec3 gLip;
 float gAcross;
+float gIsle;
+// Islands of dark crust stand in the stream of a wide channel, away from its banks.
+float isleAt(vec2 q, float across) {
+  return smoothstep(0.6, 0.66, vnoise(q / 1.7 + 31.0) * 0.72 + vnoise(q / 0.45 + 7.0) * 0.28) * (1.0 - smoothstep(0.4, 0.62, across));
+}
 vec2 gapHeat(float d, float wide, float core, float least) {
 #ifdef LAKE_VERTEX
   float ww = max(max(wide, 0.5 * least), 1e-4);
@@ -69,7 +74,7 @@ vec2 gapeAt(vec2 q, vec4 n) {
   float plain = smoothstep(uSunk.z - 1.0, uSunk.z + 5.0, length(q - uSunk.xy));
   float u = fract(n.g + uTime / 54.0);
   float widen = smoothstep(0.0, 0.36, u) * (1.0 - smoothstep(0.9, 1.0, u));
-  float along = smoothstep(0.25, 0.7, vnoise(q / 38.0 + 3.1)) * (0.45 + 1.1 * vnoise(q / 5.7 + 7.0));
+  float along = smoothstep(0.2, 0.6, vnoise(q / 38.0 + 3.1)) * (0.45 + 1.1 * vnoise(q / 5.7 + 7.0));
   float reach = n.a * mix(along * plain, 0.85 + 0.3 * vnoise(q / 1.7), shown);
   return vec2(reach * mix(widen, 1.0, max(shown, byPool)), smoothstep(0.46, 0.84, u));
 }
@@ -97,6 +102,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   core -= 190.0 * smoothstep(0.66, 0.44, vnoise(q / 3.3 + vec2(uTime * 0.03, 2.0)));
   core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 110.0 * skin * (1.0 - shown);
   gLip = vec3(0.0);
+  gIsle = 0.0;
   vec2 g = gapHeat(d, hotHalf, core, least);
 #ifdef LAKE_LIP
   // Seen close, a wide gap is a channel: a floor of orange under a skin that drifts and darkens in plates, and the open lava
@@ -110,18 +116,22 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     // and the open lava shows brightest in the creases where it tears and where it shears against the lip.
     float t = sqrt(texture2D(tRope, run / 2.3).g);
     float t2 = sqrt(texture2D(tRope, vec2(run.y, -run.x) / 4.7 + 0.37).g);
+    // Yellow only down the middle of the stream, an orange body, dull red against the banks.
+    float middle = 1.0 - smoothstep(0.12, 0.6, gAcross + 0.35 * (s1 - 0.5));
+    float kFloor = mix(1125.0 + 85.0 * t2, 1235.0 + 60.0 * t, middle * smoothstep(0.25, 0.45, hotHalf));
     float skinOn = smoothstep(0.2, 0.3, t * 0.45 + t2 * 0.25 + 0.3 * s1 + 0.1 * (gAcross - 0.4));
-    float kFloor = mix(1215.0 + 70.0 * s2, 990.0 + 420.0 * t2 * s1, skinOn);
+    kFloor = mix(kFloor, 990.0 + 230.0 * t2 * s1, skinOn * (1.0 - 0.8 * middle));
+    kFloor = mix(kFloor, 1055.0 + 45.0 * s2, smoothstep(0.62, 0.95, gAcross));
+    // The open lava shows palest in thin lines, where the skin tears and where the stream shears against the bank.
+    float tear = (1.0 - smoothstep(0.13, 0.2, t)) * smoothstep(0.3, 0.6, s1);
+    float rim = smoothstep(0.7, 0.8, gAcross) * (1.0 - smoothstep(0.84, 0.92, gAcross)) * smoothstep(0.45, 0.65, vnoise(q * 1.3 + 4.0));
+    kFloor = mix(kFloor, core - 60.0, tear * 0.95);
+    kFloor = mix(kFloor, 1225.0, rim);
     // Rafts of thick skin, black and cold, lie against the banks.
     float raft = smoothstep(0.5, 0.56, s2 * 0.55 + 0.45 * vnoise(run * 0.8 + 17.0) + 0.3 * (gAcross - 0.6));
-    // Down the middle of a wide channel the lava runs open, streaked along its run.
-    float openMid = smoothstep(0.7, 0.3, gAcross + 0.5 * (s1 - 0.5)) * smoothstep(0.2, 0.4, hotHalf);
-    kFloor = mix(kFloor, mix(1090.0, core - 40.0, smoothstep(0.3, 0.75, s1 * 0.55 + t * 0.45 + 0.25 * (0.5 - gAcross))), openMid);
-    float tear = (1.0 - smoothstep(0.13, 0.2, t)) * smoothstep(0.3, 0.6, s1);
-    float rim = smoothstep(0.66, 0.8, gAcross) * (1.0 - smoothstep(0.86, 0.95, gAcross)) * smoothstep(0.35, 0.6, vnoise(q * 1.3 + 4.0));
-    kFloor = mix(kFloor, core - 40.0, max(tear, rim) * 0.95);
-    kFloor = mix(kFloor, 1000.0, smoothstep(0.93, 1.0, gAcross));
-    kFloor = mix(kFloor, 840.0 + 150.0 * t, raft * (1.0 - 0.8 * rim));
+    kFloor = mix(kFloor, 850.0 + 150.0 * t, raft * (1.0 - 0.8 * rim));
+    gIsle = isleAt(q, gAcross) * big * smoothstep(0.45, 0.6, hotHalf);
+    g.x *= 1.0 - gIsle;
     g.y = mix(g.y, kFloor, big);
   }
 #endif

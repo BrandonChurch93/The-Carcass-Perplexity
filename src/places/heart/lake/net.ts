@@ -5,10 +5,10 @@
 // The plates are cells of a fine pattern joined into large and middle plates, so that a large plate has a crooked edge made of
 // short straight runs, and small plates lie between the large ones, as on a real lake.
 import * as THREE from 'three';
-import { FALL_FOOT, SEAMS, seamLine } from '../shared/anchors';
+import { FALL_FOOT, GROUP, SEAMS, seamLine } from '../shared/anchors';
 
 export const NET = { minX: -568, minZ: -352, width: 1872, height: 880, cell: 1 };
-export const NET_FINE = { minX: -560, minZ: 90, width: 1280, height: 1280, cell: 0.25 };
+export const NET_FINE = { minX: -560, minZ: 50, width: 1280, height: 1280, cell: 0.25 };
 /** The middle of the open pool at the foot of the fall, and its half axes, metres. */
 export const POOL = { x: FALL_FOOT[0] + 30, z: FALL_FOOT[1] + 20, rx: 58, rz: 26 };
 
@@ -131,7 +131,7 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
       s.kind[k] = kind;
       s.pool[k] = smooth(2.8, 1.0, pool);
       // Old plates are far from the fall and large. Young ones are small, or near the fall.
-      s.age[k] = Math.min(0.999, Math.max(0, 0.16 * (2 - kind) + 0.34 * smooth(50, 650, foot) + 0.5 * hash(label, 7, 3)));
+      s.age[k] = Math.min(0.999, Math.max(0, 0.07 * (2 - kind) + 0.2 * smooth(50, 650, foot) + 0.74 * hash(label, 7, 3)));
     }
   }
   return s;
@@ -139,8 +139,24 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
 
 // The seams the pictures show: half width in metres at the two ends and the middle, how lumpy, and the heat class (0 hottest, 0.9 dull,
 // 1.5 the open, stirred lava under a fountain).
+/** The pressure ridge in front of the camera of key heart-4, its steep side toward the lens, and the one in front of key heart-2. */
+export const RIDGES: readonly { from: [number, number]; to: [number, number]; tall: number; reach: number }[] = [
+  { from: [-404.9, 142.4], to: [-437.5, 119.2], tall: 2.3, reach: 2.2 },
+  { from: [-515.4, 277.7], to: [-515.6, 270.6], tall: 1.5, reach: 1.2 },
+];
+
+// Seams of the lake's own, beside those the pictures name: the fingers where the line channel leaves the shore, the seam
+// that crosses the view of key heart-4 beyond its ridge, the small crack beside the one that sank.
+const OWN: { line: [number, number][]; half: [number, number, number]; lumps: number; heat: number; seed: number }[] = [
+  { line: [[-497.6, 191.5], [-499.3, 188.0]], half: [0.4, 0.32, 0.1], lumps: 0.4, heat: 0.0, seed: 51 },
+  { line: [[-497.0, 190.0], [-494.6, 186.2]], half: [0.4, 0.3, 0.08], lumps: 0.4, heat: 0.0, seed: 52 },
+  { line: [[-496.5, 188.5], [-497.4, 184.6]], half: [0.4, 0.26, 0.08], lumps: 0.4, heat: 0.0, seed: 53 },
+  { line: [[-398.0, 60.0], [-344.0, 80.0]], half: [0.5, 1.3, 0.4], lumps: 0.6, heat: 0.05, seed: 55 },
+  { line: [[-517.0, 282.0], [-513.2, 284.6]], half: [0.03, 0.09, 0.02], lumps: 0.5, heat: 0.3, seed: 56 },
+];
+
 const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
-  line: { half: [0.72, 0.6, 0.22], lumps: 0.5, heat: 0.0 },
+  line: { half: [0.55, 0.85, 0.3], lumps: 0.45, heat: 0.0 },
   group: { half: [0.45, 1.05, 0.4], lumps: 0.75, heat: 0.08 },
   nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
   nearB: { half: [0.14, 0.26, 0.08], lumps: 0.55, heat: 0.25 },
@@ -170,11 +186,14 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
   const sz = sites.z;
   const label = sites.label;
   for (let tj = 0; tj < height; tj++) {
-    const z = spec.minZ + (tj + 0.5) * cell;
-    const gj = Math.floor((z - ORIGIN.z) / FINE);
+    const z0 = spec.minZ + (tj + 0.5) * cell;
     for (let ti = 0; ti < width; ti++) {
-      const x = spec.minX + (ti + 0.5) * cell;
+      // The edge of a plate is crooked at every size.
+      const tx = spec.minX + (ti + 0.5) * cell;
+      const x = tx + 3.4 * (noise(tx / 11, z0 / 11, 61) - 0.5) + 1.1 * (noise(tx / 2.9, z0 / 2.9, 62) - 0.5);
+      const z = z0 + 3.4 * (noise(tx / 11, z0 / 11, 63) - 0.5) + 1.1 * (noise(tx / 2.9, z0 / 2.9, 64) - 0.5);
       const gi = Math.floor((x - ORIGIN.x) / FINE);
+      const gj = Math.floor((z - ORIGIN.z) / FINE);
       let best = 1e18;
       let bk = 0;
       for (let dj = -1; dj <= 1; dj++) {
@@ -221,9 +240,9 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const kinds = (sites.kind[bk] as number) + (sites.kind[other] as number);
         const pool = sites.pool[bk] as number;
         // Not every edge between two plates is a seam that lives: the rest stay shut, dark cracks.
-        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.46 : kinds < 3 ? 0.2 : 0.08) + 0.6 * pool;
+        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.62 : kinds < 3 ? 0.3 : 0.1) + 0.6 * pool;
         const h = hash(lo, hi, 41);
-        reach = alive ? 0.05 + (kinds === 0 ? 0.6 : kinds < 3 ? 0.3 : 0.16) * h * h + 0.25 * pool * h : 0;
+        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.35 : 0.16) * h * h + 0.25 * pool * h : 0;
       }
       const o = (tj * width + ti) * 4;
       out[o] = edge;
@@ -234,10 +253,20 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
   }
   if (authored) {
     const reachOut = 16;
-    for (const name of Object.keys(SEAMS)) {
-      const shape = AUTHORED[name] ?? { half: [0.3, 0.5, 0.3], lumps: 0.4, heat: 0.2 };
-      const seed = Math.floor((SEAMS[name] as (typeof SEAMS)[string]).seed * 10);
-      const line = seamLine(name, 40);
+    const all = Object.keys(SEAMS).map((name) => ({
+      name,
+      shape: AUTHORED[name] ?? { half: [0.3, 0.5, 0.3] as [number, number, number], lumps: 0.4, heat: 0.2 },
+      seed: Math.floor((SEAMS[name] as (typeof SEAMS)[string]).seed * 10),
+      line: seamLine(name, 40),
+    }));
+    for (const own of OWN) {
+      const line: [number, number][] = [];
+      const a = own.line[0] as [number, number];
+      const b = own.line[1] as [number, number];
+      for (let k = 0; k <= 16; k++) line.push([a[0] + ((b[0] - a[0]) * k) / 16, a[1] + ((b[1] - a[1]) * k) / 16]);
+      all.push({ name: '', shape: { half: own.half, lumps: own.lumps, heat: own.heat }, seed: own.seed, line });
+    }
+    for (const { name, shape, seed, line } of all) {
       const count = line.length - 1;
       for (let s = 0; s < count; s++) {
         const a = line[s] as [number, number];
@@ -260,7 +289,9 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
             const d = Math.hypot(x - a[0] - ex * t, z - a[1] - ez * t);
             const u = (s + t) / count;
             const along = u < 0.5 ? (shape.half[0] as number) + ((shape.half[1] as number) - (shape.half[0] as number)) * smooth(0, 0.5, u) : (shape.half[1] as number) + ((shape.half[2] as number) - (shape.half[1] as number)) * smooth(0.5, 1, u);
-            const half = along * (1 - shape.lumps + 2 * shape.lumps * noise(wx / 3.1, wz / 3.1, seed + 4)) * smooth(0, 0.03, Math.min(u, 1 - u) + 0.012);
+            let half = along * (1 - shape.lumps + 2 * shape.lumps * noise(wx / 3.1, wz / 3.1, seed + 4)) * smooth(0, 0.03, Math.min(u, 1 - u) + 0.012);
+            // Under the tuft of the one that feeds, the seam opens into a pool.
+            if (name === 'group') half += 1.15 * Math.exp(-((wx - GROUP[0]) ** 2 + (wz - GROUP[2]) ** 2) / 6.5);
             const o = (j * width + i) * 4;
             const had = out[o] as number;
             const hadReach = out[o + 3] as number;
