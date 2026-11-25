@@ -97,7 +97,7 @@ float lobeAt(vec2 q) {
       vec2 c2 = base + vec2(float(i - 1), float(j - 1));
       vec2 hs = hash22(c2 + 0.37);
       float hr = hash12(c2 + 5.9);
-      float R = 0.5 + 0.5 * hr;
+      float R = 0.72 + 0.45 * hr;
       vec2 rel = lp - c2 - 0.1 - 0.8 * hs;
       // A tongue is longer than wide, each its own way.
       float turn = 6.2832 * fract(hr * 13.7);
@@ -105,8 +105,9 @@ float lobeAt(vec2 q) {
       vec2 loc = vec2(dot(rel, along), 1.45 * dot(rel, vec2(-along.y, along.x)));
       float t2 = dot(loc, loc) / (R * R) * (0.75 + 0.6 * vnoise(q / 0.7 + c2 * 1.3));
       if (t2 < 1.0) {
-        float tall = (0.05 + 0.22 * fract(hr * 7.1)) * (0.6 + 0.4 * R);
-        float hgt = tall * sqrt(1.0 - t2);
+        // Each tongue was poured on the ones before it: a later one lies higher and its toe stands on its neighbour.
+        float tall = 0.05 + 0.14 * fract(hr * 7.1);
+        float hgt = 0.11 * fract(hr * 29.3) + tall * sqrt(1.0 - t2);
         if (hgt > best) {
           next = best;
           best = hgt;
@@ -215,8 +216,10 @@ float heightAt(vec2 q, float c) {
   // The edge of the crust curls up a little at a living gap, and the gap is cut down: the melt lies a hand to a forearm under
   // the brim. In the seams the pictures name the melt is the lava's mesh, and the floor lies under it.
   float wide = smoothstep(0.04, 0.25, gape);
+  // Beside a gap the crust is thin and young and lies low: the melt stands a hand under its top.
+  h = mix(h, 0.3 * h + 0.02, exp(-max(bank, 0.0) / 0.8) * wide * live);
   h += (0.02 + 0.09 * vnoise(q / 1.3 + 5.0)) * exp(-max(bank, 0.0) / 0.25) * wide * (1.0 - smoothstep(0.3, 0.8, c));
-  float deep = mix(0.03 + 0.4 * min(gape, 0.5), 0.4, shown * smoothstep(0.2, 0.3, gape));
+  float deep = mix(0.03 + 0.4 * min(gape, 0.5), 0.15 - meltLevel(n), shown * smoothstep(0.2, 0.3, gape));
   float cut = (1.0 - smoothstep(-max(2.5 * c, 0.07), 0.0, bank)) * live * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
   cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - step(3.3, n.g));
   h = mix(h, -deep, cut);
@@ -245,6 +248,7 @@ varying vec3 vWorld;
 varying vec2 vQ;
 varying vec3 vNormalG;
 varying vec3 vAux;
+varying vec2 vAway;
 #define LAKE_VERTEX
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -259,9 +263,15 @@ void main() {
   float rope = gRope;
   float bank = gBank;
   float hx0 = heightAt(q - vec2(c, 0.0), c) - gRope;
+  float bx0 = gBank;
   float hx1 = heightAt(q + vec2(c, 0.0), c) - gRope;
+  float bx1 = gBank;
   float hz0 = heightAt(q - vec2(0.0, c), c) - gRope;
+  float bz0 = gBank;
   float hz1 = heightAt(q + vec2(0.0, c), c) - gRope;
+  float bz1 = gBank;
+  // Which way is away from the nearest gap.
+  vAway = vec2(bx1 - bx0, bz1 - bz0) / (2.0 * c);
   vNormalG = normalize(vec3(hx0 - hx1, 2.0 * c, hz0 - hz1));
   // A point that lies below its surroundings sees less of the sky.
   float hollow = (0.25 * (hx0 + hx1 + hz0 + hz1) - (h - rope)) / c;
@@ -280,6 +290,7 @@ varying vec3 vWorld;
 varying vec2 vQ;
 varying vec3 vNormalG;
 varying vec3 vAux;
+varying vec2 vAway;
 uniform sampler2D tRope;
 uniform float uLava;
 ${NOISE_GLSL}
@@ -355,7 +366,7 @@ void main() {
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
 
   // Old skin is grey and rough, young skin black, smooth and glassy: by slab and by plate.
-  vec3 albedo = mix(vec3(0.06, 0.058, 0.057), vec3(0.125, 0.12, 0.117), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  vec3 albedo = mix(vec3(0.07, 0.068, 0.067), vec3(0.125, 0.121, 0.118), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   float rough = clamp(0.25 + 0.4 * age + 0.2 * rope * (1.0 - seen), 0.15, 0.92);
 
   // How much sky a point sees: less in a crease, in the crack between two slabs, below the brim of a gap.
@@ -369,13 +380,17 @@ void main() {
   vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
   // The melt lights the wall of its gap, the lip above it and the crust beside it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
-  light += gLip * (0.1 + 1.6 * wallFace * (0.3 + 0.7 * smoothstep(0.0, 0.5, below))) * crease;
+  float steepAway = length(vAway);
+  vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
+  light += meltLight(q, net, bank, below, n, away) * crease * vAux.x;
+  // The narrow seams, whose heat this sheet draws, light their own lips.
+  light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace) * crease;
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.05, 0.043, 0.04) * (0.6 + 0.8 * vnoise(vec2(q.x + q.y, vWorld.y * 3.0) * 9.0)), wallFace * inGap);
   vec3 c = albedo * light / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float gloss = (1.0 - rough) * (1.0 - rough);
-  float fresnel = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (0.35 + 0.65 * gloss);
+  float fresnel = (0.05 + 0.95 * pow(1.0 - nv, 3.5)) * (0.4 + 0.6 * gloss);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   c += fresnel * lakeMirror(r, rough) * uFill / uFill.r * open;
@@ -383,7 +398,7 @@ void main() {
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
   float floorOnly = smoothstep(0.55, 0.85, vNormalG.y) * smoothstep(0.01, 0.03, below);
-  float melt = shown * smoothstep(0.33, 0.4, below);
+  float melt = shown * smoothstep(0.2, 0.3, gape) * smoothstep(0.0, 0.03, meltLevel(net) + below);
   heat.x *= mix(1.0, floorOnly * (1.0 - melt), held);
   heat.x *= smoothstep(900.0, 1010.0, heat.y);
   vec3 hot = blackbody(heat.y) * heat.x;
