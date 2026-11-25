@@ -1,8 +1,8 @@
-# Status 73
+# Status 75
 
-2026-11-25 22:28 UTC. Phase 4, the other places and the rise.
+2026-11-25 23:03 UTC. Phase 4, the other places and the rise.
 
-- `01-hb2-compare-ribs-0.jpg`: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each. Storm sky and shingle are in; the blades are smooth horns and the floor a tiled sheet
-- `02-hb3-keys-0-4.jpg`: The Breath, minute 57: wide key and the pit, approved (left) and frame (right). Plates, ledges and a ragged rim are in; the light is flat and the waders read as black hooks
-- `03-hb2-compare-spine-0.jpg`: The Spine, minute 51: approved (left) and frame (right). The lead spire is now a horn of slabs with an arch at its foot; the storm is soft and the far spires an even saw
-- `04-hb2-reveal-4.jpg`: The Reveal's last frame, minute 55: the land now reads as a continent with ranges, coasts and cloud; the body is lost and the cloud is a stamped pattern. Both sent back
+- `01-hb6-keys-0-4.jpg`: The Breath, 23:00 UTC: approved pictures left, built right (draft tier). Layout closer; the light is flat where the picture is backlit: sent back.
+- `02-look-1.jpg`: The Ribs, 22:55 UTC: approved left, built right, with crops (draft tier). The floor is a dry pebble bed, not yet the wet mirror: the owner's next job.
+- `03-look-1.jpg`: The Reveal, last frame, 23:00 UTC (draft tier): more land round the bones now. The cloud is rows of specks and the relief repeats: sent back.
+- `04-h4-spine-0.jpg`: The Spine, 22:53 UTC (draft tier): the hooked first spire, the canal mouth, the strike. The kites read as thin lines, not skins: sent back.
