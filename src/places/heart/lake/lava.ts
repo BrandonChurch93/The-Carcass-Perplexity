@@ -218,7 +218,7 @@ vec4 meltAt(vec2 p, float ax, float lean, float push, float stir, float grain, f
 
   // The cracks between the plates: centimetres wide, never narrower than a pixel and a half, and dimmer by as much as they are widened.
   float alive = smoothstep(0.34, 0.5, vnoise(p * vec2(0.45, 1.1) + 23.0) * 0.6 + 0.4 * mid + 0.25 * (1.0 - ax) - 0.1);
-  float crackHalf = 0.04 + 0.05 * alive * (1.0 - ax);
+  float crackHalf = 0.025 + 0.035 * alive * (1.0 - ax);
   float w = max(crackHalf, 5.0 * grain);
   float crack = (1.0 - smoothstep(0.7 * w, 1.4 * w, between)) * min(1.0, crackHalf / w) * (0.25 + 0.75 * alive);
 
@@ -228,7 +228,10 @@ vec4 meltAt(vec2 p, float ax, float lean, float push, float stir, float grain, f
   // A plate is darkest in its middle, where it is old and against the bank; it glows toward its edge, where it is thin.
   // The skin is drawn into ropes that lie along the flow, and the eddies wind them into spirals: a bright crease between two ropes.
   float seen = 1.0 - smoothstep(0.03, 0.08, gLong);
-  float lines = 0.5 + 0.5 * sin(p.y * 30.0 + 11.0 * vnoise(p * vec2(0.8, 1.2) + 41.0) + 4.0 * mid + 5.0 * big);
+  float roped = p.y * 30.0 + 11.0 * vnoise(p * vec2(0.8, 1.2) + 41.0) + 4.0 * mid + 5.0 * big;
+  float lines = 0.5 + 0.5 * sin(roped);
+  // Where the stream has sheared the ropes finer than a pixel they are not drawn: no rows of dots.
+  seen *= 1.0 - smoothstep(0.5, 1.4, fwidth(roped));
   float rope = (smoothstep(0.3, 0.95, lines) - 0.45) * seen;
   float creased = smoothstep(0.88, 1.0, lines) * seen * (0.25 + 0.75 * alive);
   float plate = mix(1075.0, 1000.0, smoothstep(0.45, 0.95, ax + 0.35 * (big - 0.5))) + 30.0 * (id - 0.5) + 60.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 25.0 * (fine - 0.5) + (fold - 0.5) * 60.0 * ropy + 70.0 * rope + 120.0 * creased;
@@ -292,7 +295,7 @@ void main() {
   float feeding = smoothstep(0.04, 0.07, vSeam.x) * (1.0 - stir);
   // Along a channel the tongue comes and goes: about two fifths of its length lies open.
   float reachOpen = smoothstep(0.42, 0.56, vnoise(vec2(vFlow.x / 6.5 - uTime * 0.02, vSeam.y * 3.7)));
-  float wide = max(smoothstep(0.4, 0.7, gape) * reachOpen, feeding * smoothstep(0.2, 0.45, gape) * (0.4 + 0.6 * reachOpen));
+  float wide = max(smoothstep(0.4, 0.7, gape * gWas) * reachOpen, feeding * smoothstep(0.2, 0.45, gape) * (0.4 + 0.6 * reachOpen));
   vec4 kelvin = vec4(0.0);
   vec4 first = vec4(0.0);
   float lead = 0.0;

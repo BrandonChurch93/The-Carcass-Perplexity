@@ -47,10 +47,10 @@ void main() {
   // A gob is pulled out along its path while it is soft, and shrinks as it tears.
   float pull = 1.0 + aLife.w * 1.6 + 0.09 * length(now);
   vec4 centre = viewMatrix * vec4(at, 1.0);
-  // Never a point of light: from far a gob is drawn two to three pixels wide (at 1080 lines) and dimmer by the area it gained.
+  // Never a point of light: from far a gob is drawn two to three pixels wide (at 1080 lines) and dimmer by as much as it is widened.
   float pixel = 2.0 * max(-centre.z, 0.1) / (projectionMatrix[1][1] * 1080.0);
   float drawn = max(size, 1.25 * pixel);
-  vFlight = vec2(age / max(2.0 * vel.y / 9.8, 0.2), (size * size) / (drawn * drawn));
+  vFlight = vec2(age / max(2.0 * vel.y / 9.8, 0.2), size / drawn);
   size = drawn;
   vec2 along = normalize((viewMatrix * vec4(now, 0.0)).xy + vec2(1e-4, 0.0));
   vec2 across = vec2(-along.y, along.x);
@@ -220,8 +220,8 @@ export function createFoundering(ctx: HeartContext): Foundering {
       origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8);
       origin[k * 3 + 1] = rng.next();
       origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8);
-      // A low dome: the highest gob rises a little over three metres.
-      const up = sheet ? rng.range(2.5, 4.5) : rng.range(3.5, 8);
+      // A low dome: most gobs rise two to four metres, the highest about six.
+      const up = sheet ? rng.range(3.5, 6) : rng.range(5, 11);
       thrown[k * 3] = rng.range(-2.6, 2.6);
       thrown[k * 3 + 1] = up * tall;
       thrown[k * 3 + 2] = rng.range(-2.6, 2.6);

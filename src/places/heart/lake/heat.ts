@@ -55,13 +55,16 @@ vec2 gapHeat(float d, float wide, float core, float least) {
   float foot = max(least, fwidth(d));
 #endif
   gFoot = foot;
-  float ww = max(max(wide, 0.75 * foot), 1e-4);
+  // The glow map keeps its own measure: its energy is as it was.
+  float onSheet = least > 0.5 ? 0.0 : 1.0;
+  float ww = max(max(wide, mix(0.75, 1.2, onSheet) * foot), 1e-4);
   // Seen from far, a gap of a few pixels shows the mean of its melt, not the skin at its edges: the profile across it fades out.
   float far = smoothstep(0.1, 0.55, foot / max(wide, 1e-3));
   float x = d / ww;
   float lit = step(1e-3, wide);
   gAcross = x;
-  float cover = (1.0 - smoothstep(0.82, 1.0, x)) * min(1.0, max(wide / ww, gFloor)) * lit;
+  // A gap of a pixel or two has a soft edge, two to three pixels across in all, and the same light: never a hard line one pixel wide.
+  float cover = (1.0 - smoothstep(mix(0.82, 0.25, far * onSheet), 1.0, x)) * min(1.0, max(wide / (mix(1.0, 0.65, far * onSheet) * ww), gFloor)) * lit;
 #ifdef LAKE_LIP
   // What the lava in the gap throws on the skin beside it.
   float off = max(d - wide, 0.0);
