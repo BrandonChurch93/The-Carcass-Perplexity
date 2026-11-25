@@ -6,7 +6,9 @@
     "marsh": "The origin is the centre of the seep pool. North is -z and east is +x. The world is a salt flat 18 km square inside a ring of escarpment that starts about 5 km out, and fog hides the far edge. The establishing eye stands 8.5 m above the flats on a rock rise about 7 m high and looks 52 degrees east of north, with the pool 35 m ahead and 15 m to its left.",
     "heart": "The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.",
     "breath": "The origin is the centre of the main shaft at the level of the shelf. North is -z and east is +x. The world is 16 km square. The shaft is 60 m across and 70 m deep, with its collapse on the east and south east side. The cliff with the cave is about 3 km away to the north east and the sun is low in the north. Every key looks north to north north east, so the cliff is upper right and the sun upper left. The waders are about 3.4 m tall.",
-    "eye": "The origin is the centre of the lake, on the water. North is -z and east is +x. The low sun is in the west. The world is a disc 3.4 km in radius. The shore is 1 km from the centre, so the lake is 2 km across, and the deep is a disc 480 m in radius. The cliffs stand about 200 m, lower in the west and the south, with the brow overhanging on the east. A gravel fan brings the south shore in by 180 m, and the herd stands on it. The drinkers are about 3.3 m to the head."
+    "eye": "The origin is the centre of the lake, on the water. North is -z and east is +x. The low sun is in the west. The world is a disc 3.4 km in radius. The shore is 1 km from the centre, so the lake is 2 km across, and the deep is a disc 480 m in radius. The cliffs stand about 200 m, lower in the west and the south, with the brow overhanging on the east. A gravel fan brings the south shore in by 180 m, and the herd stands on it. The drinkers are about 3.3 m to the head.",
+    "ribs": "The origin is on the floor of the strait between the first pair of ribs, level with the drowned one. North is -z, down the strait, where the bore comes from, and east is +x. Sea level is 0. The tidal floor is a plateau 1460 m from east to west and 3430 m from north to south, about 1 m above the sea. There are 13 ribs in two rows 600 to 800 m apart, 280 to 520 m high and leaning in, with two outer ribs to seaward for the opening. The weed line is at 30 m. The bore is one wall 28 m high.",
+    "spine": "The origin is the foot of the first spire, on its axis. The ridge runs toward +x. The storm is on the -z side and the cloud sea and the last light are on the +z side. There are 16 vertebrae along a curved line, with spires about 800 m apart and fins 230 to 300 m above their saddles. The cloud sea lies 2000 m below. The mouth of the canal sits 46 m to the lee of the crest and 120 m before the first spire, 20 m in radius, narrowing to a throat 8 m across."
   },
   "shots": {
     "reveal-01": {
@@ -115,6 +117,62 @@
       "end": "250 m straight above the centre of the lake, looking straight down, with north at the top of the frame. The frame holds only the dark water of the deep for about the last 1.7 s, so the cut to the rise cannot be seen.",
       "move": "It creeps forward to the key, then glides north over the water while it rises, tilts down and the lens opens from 8 to 40 degrees. The dome rises at the key and has sunk 2.5 s later.",
       "focus": "On the dome at the centre, then on the water straight below."
+    },
+    "ribs-01": {
+      "start": "2250 m out to sea and 7 m above the water: two outer ribs stand left and right, the cage fills about half the height of the frame between them, and the sea runs under the camera.",
+      "end": "395 m from the first pair of ribs and 3.2 m above the water, just short of the tidal floor, with the cage towering over the frame.",
+      "move": "It is one approach of about 1.9 km and the lens opens from 30 to 46 degrees as the cage nears. The outer ribs pass close on both sides.",
+      "focus": "On the cage."
+    },
+    "ribs-02": {
+      "start": "At head height on the floor of the strait, with the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.",
+      "end": "115 m further along the floor, past the near left rib, with the feeders on the wet sand ahead.",
+      "focus": "On the far ribs at the key, the establishing view."
+    },
+    "ribs-03": {
+      "start": "44 m up beside the colony buttress, looking up along its ledges and the nests on them.",
+      "end": "28 m to the left and 6 m higher across the face of the colony.",
+      "focus": "On the ledges at the centre of the frame."
+    },
+    "ribs-04": {
+      "start": "2 m above the floor on a long lens: three feeders on the wet sand, with the bore a white line on the horizon.",
+      "end": "29 m closer, on the nearest feeder with its head down.",
+      "focus": "On the nearest feeder."
+    },
+    "ribs-05": {
+      "start": "Low on the floor, 30 m back from the weed wall of the near left rib.",
+      "end": "Close under the drowned one, hanging head down on the weed about 10 m up, with the flat and the far ribs on the right.",
+      "focus": "On the drowned one."
+    },
+    "ribs-06": {
+      "start": "0.9 m above the floor between two weed stacks, looking down the strait: the bore comes through the gate 120 m ahead.",
+      "end": "12 m back, and the wall of water fills the frame.",
+      "focus": "On the front of the bore."
+    },
+    "spine-01": {
+      "start": "150 m back along the crest and 34 m up, in the first strike: the first spire, the mouth of the canal below it, the tracks in the snow, and the ridge curving right toward the band of last light.",
+      "end": "44 m past the key position and 6 m above the snow, closing on the mouth of the canal.",
+      "focus": "On the first spire."
+    },
+    "spine-02": {
+      "start": "78 m off the lee edge of the first spire, three quarters of the way up it and about 140 m above the slope: the rock face on the left, the holdfasts, the ribbons of the kites streaming right, the far spires lower right.",
+      "end": "18 m to the right and 14 m forward along the ribbons.",
+      "focus": "On the holdfasts and the nearest ribbons."
+    },
+    "spine-03": {
+      "start": "10 m back from the dead ridge-runner on its patch of scorched rock, 3 m up, with the tracks, the first spire and the mouth of the canal behind.",
+      "end": "0.7 m above the snow beside the carcass.",
+      "focus": "On the carcass."
+    },
+    "spine-04": {
+      "start": "1650 m from the tip of the third spire and about 200 m above the lee slope, on a 10 degree lens, looking past the fin of the second spire.",
+      "end": "170 m forward and 26 m to the right. The strike lands three frames before the key and a second on the last frame.",
+      "focus": "On the tip of the third spire."
+    },
+    "spine-05": {
+      "start": "Inside the canal, 25 m in from the mouth and 1.6 m up, looking out at the storm.",
+      "end": "About 58 m inside, 0.7 m above the ice, past the herd sheltering along the wall, with the mouth small and bright behind them.",
+      "focus": "On the herd, with the mouth beyond it soft."
     }
   }
 }

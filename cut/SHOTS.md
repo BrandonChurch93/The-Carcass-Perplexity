@@ -4,67 +4,67 @@ Written by `npm run shots` from the cut list, the cameras of the built page and 
 
 ## The Ribs, with the opening
 
-Frames 0 to 2506, 41.78 s, 6 shots.
+Frames 0 to 2506, 41.78 s, 6 shots. The origin is on the floor of the strait between the first pair of ribs, level with the drowned one. North is -z, down the strait, where the bore comes from, and east is +x. Sea level is 0. The tidal floor is a plateau 1460 m from east to west and 3430 m from north to south, about 1 m above the sea. There are 13 ribs in two rows 600 to 800 m apart, 280 to 520 m high and leaning in, with two outer ribs to seaward for the opening. The weed line is at 30 m. The bore is one wall 28 m high.
 
 ### `ribs-01` · The Ribs · the approach from the sea, one shot up to the first strike
 
 - Frames: 0 to 1041, 17.37 s.
 - Key: none of its own. It is cut from the picture `ribs-0`.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: from 45 mm to 28 mm (a vertical field of view from 30 to 46 degrees).
+- Move: in. The camera travels 1860 m, from 7.0 m above the ground to 3.2 m. It is one approach of about 1.9 km and the lens opens from 30 to 46 degrees as the cage nears. The outer ribs pass close on both sides.
+- Start framing: 2250 m out to sea and 7 m above the water: two outer ribs stand left and right, the cage fills about half the height of the frame between them, and the sea runs under the camera.
+- End framing: 395 m from the first pair of ribs and 3.2 m above the water, just short of the tidal floor, with the cage towering over the frame.
+- Focus: On the cage. The aim is 1860 m away at the start and 1130 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-02` · The Ribs · the strait
 
 - Frames: 1042 to 1439, 6.63 s.
 - Key: `ribs-0` at frame 1241.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 100 m above the ground to 50 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 27 mm for the whole shot (a vertical field of view of 48 degrees).
+- Move: in. The camera travels 120 m, from 4.2 m above the ground to 3.2 m.
+- Start framing: At head height on the floor of the strait, with the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.
+- End framing: 115 m further along the floor, past the near left rib, with the feeders on the wet sand ahead.
+- Focus: On the far ribs at the key, the establishing view. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-03` · The Ribs · the colony
 
 - Frames: 1440 to 1651, 3.53 s.
 - Key: `ribs-3` at frame 1546.
 - Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the left. The camera travels 140 m, at 40 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Move: to the left. The camera travels 39 m, from 38 m above the ground to 51 m.
+- Start framing: 44 m up beside the colony buttress, looking up along its ledges and the nests on them.
+- End framing: 28 m to the left and 6 m higher across the face of the colony.
+- Focus: On the ledges at the centre of the frame. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-04` · The Ribs · the feeders at low tide
 
 - Frames: 1652 to 1866, 3.58 s.
 - Key: `ribs-2` at frame 1759.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 99 m above the ground to 53 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 68 mm for the whole shot (a vertical field of view of 20 degrees).
+- Move: in. The camera travels 29 m, from 4.3 m above the ground to 2.8 m.
+- Start framing: 2 m above the floor on a long lens: three feeders on the wet sand, with the bore a white line on the horizon.
+- End framing: 29 m closer, on the nearest feeder with its head down.
+- Focus: On the nearest feeder. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-05` · The Ribs · the camera looks up at the drowned
 
 - Frames: 1867 to 2294, 7.13 s.
 - Key: `ribs-1` at frame 2081.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 59 m above the ground to 30 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 38 mm for the whole shot (a vertical field of view of 35 degrees).
+- Move: in. The camera travels 37 m, from 3.4 m above the ground to 7.3 m.
+- Start framing: Low on the floor, 30 m back from the weed wall of the near left rib.
+- End framing: Close under the drowned one, hanging head down on the weed about 10 m up, with the flat and the far ribs on the right.
+- Focus: On the drowned one. The aim is 55 m away at the start and 55 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-06` · The Ribs · the bore comes through the cage
 
 - Frames: 2295 to 2506, 3.53 s.
 - Key: `ribs-4` at frame 2401.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: a hold that drifts. The camera travels 40 m, from 73 m above the ground to 67 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: a hold that drifts. The camera travels 13 m, at 2.7 m above the ground.
+- Start framing: 0.9 m above the floor between two weed stacks, looking down the strait: the bore comes through the gate 120 m ahead.
+- End framing: 12 m back, and the wall of water fills the frame.
+- Focus: On the front of the bore. The aim is 170 m away at the start and 170 m at the end. Depth of field is off in the blockout.
 
 ## The Heart
 
@@ -203,7 +203,7 @@ Frames 5618 to 7014, 23.28 s, 5 shots. The origin is the centre of the seep pool
 - Frames: 6048 to 6262, 3.58 s.
 - Key: `marsh-1` at frame 6102.
 - Lens: 38 mm for the whole shot (a vertical field of view of 35 degrees).
-- Move: in. The camera travels 4.3 m, from 1.6 m above the ground to 1.5 m.
+- Move: in. The camera travels 4.5 m, at 1.5 m above the ground.
 - Start framing: On the south rim of the pool about 1 m up, 2.2 m behind the key position, looking across the surface at the largest gas dome.
 - End framing: About 3.8 m from the column of the burst and outside it, turned 8 degrees and tilted up 7, with the column and its crown filling the frame.
 - Focus: On the largest dome, then on the column that rises from it at the burst. The aim is 10 m away at the start and 10 m at the end. Depth of field is off in the blockout.
@@ -230,57 +230,57 @@ Frames 5618 to 7014, 23.28 s, 5 shots. The origin is the centre of the seep pool
 
 ## The Spine
 
-Frames 7015 to 8304, 21.50 s, 5 shots.
+Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire, on its axis. The ridge runs toward +x. The storm is on the -z side and the cloud sea and the last light are on the +z side. There are 16 vertebrae along a curved line, with spires about 800 m apart and fins 230 to 300 m above their saddles. The cloud sea lies 2000 m below. The mouth of the canal sits 46 m to the lee of the crest and 120 m before the first spire, 20 m in radius, narrowing to a throat 8 m across.
 
 ### `spine-01` · The Spine · the ridge in the storm
 
 - Frames: 7015 to 7337, 5.38 s.
 - Key: `spine-0` at frame 7234.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: 26 mm for the whole shot (a vertical field of view of 50 degrees).
+- Move: in. The camera travels 200 m, from 34 m above the ground to 6.0 m.
+- Start framing: 150 m back along the crest and 34 m up, in the first strike: the first spire, the mouth of the canal below it, the tracks in the snow, and the ridge curving right toward the band of last light.
+- End framing: 44 m past the key position and 6 m above the snow, closing on the mouth of the canal.
+- Focus: On the first spire. The aim is 600 m away at the start and 600 m at the end. Depth of field is off in the blockout.
 
 ### `spine-02` · The Spine · the kites
 
 - Frames: 7338 to 7498, 2.68 s.
 - Key: `spine-2` at frame 7418.
 - Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the right. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Move: to the right. The camera travels 23 m, from 160 m above the ground to 130 m.
+- Start framing: 78 m off the lee edge of the first spire, three quarters of the way up it and about 140 m above the slope: the rock face on the left, the holdfasts, the ribbons of the kites streaming right, the far spires lower right.
+- End framing: 18 m to the right and 14 m forward along the ribbons.
+- Focus: On the holdfasts and the nearest ribbons. The aim is 600 m away at the start and 600 m at the end. Depth of field is off in the blockout.
 
 ### `spine-03` · The Spine · where lightning came to ground
 
 - Frames: 7499 to 7659, 2.68 s.
 - Key: `spine-1` at frame 7579.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 61 m above the ground to 29 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 27 mm for the whole shot (a vertical field of view of 48 degrees).
+- Move: in. The camera travels 12 m, from 3.0 m above the ground to 0.7 m.
+- Start framing: 10 m back from the dead ridge-runner on its patch of scorched rock, 3 m up, with the tracks, the first spire and the mouth of the canal behind.
+- End framing: 0.7 m above the snow beside the carcass.
+- Focus: On the carcass. The aim is 40 m away at the start and 40 m at the end. Depth of field is off in the blockout.
 
 ### `spine-04` · The Spine · the strike
 
 - Frames: 7660 to 7874, 3.58 s.
 - Key: `spine-3` at frame 7668.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: a hold that drifts. The camera travels 220 m, from 72 m above the ground to 68 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 137 mm for the whole shot (a vertical field of view of 10 degrees).
+- Move: a hold that drifts. The camera travels 180 m, from 190 m above the ground to 340 m.
+- Start framing: 1650 m from the tip of the third spire and about 200 m above the lee slope, on a 10 degree lens, looking past the fin of the second spire.
+- End framing: 170 m forward and 26 m to the right. The strike lands three frames before the key and a second on the last frame.
+- Focus: On the tip of the third spire. The aim is 1700 m away at the start and 1700 m at the end. Depth of field is off in the blockout.
 
 ### `spine-05` · The Spine · inside the canal
 
 - Frames: 7875 to 8304, 7.17 s.
 - Key: `spine-4` at frame 8090.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: out. The camera travels 280 m, from 30 m above the ground to 59 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 24 mm for the whole shot (a vertical field of view of 54 degrees).
+- Move: out. The camera travels 30 m, from 1.6 m above the ground to 1.1 m.
+- Start framing: Inside the canal, 25 m in from the mouth and 1.6 m up, looking out at the storm.
+- End framing: About 58 m inside, 0.7 m above the ice, past the herd sheltering along the wall, with the mouth small and bright behind them.
+- Focus: On the herd, with the mouth beyond it soft. The aim is 30 m away at the start and 30 m at the end. Depth of field is off in the blockout.
 
 ## The Eye
 
