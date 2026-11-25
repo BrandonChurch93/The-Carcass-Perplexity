@@ -1,8 +1,8 @@
-# Status 38
+# Status 39
 
-2026-11-25 09:02 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 09:28 UTC. Phase 3, the look lock: the Heart.
 
-- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
-- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
-- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
-- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.
+- `01-m0927-heart-4.jpg`: heart-4 on main, the approved picture at the left. The fall's second hand-back is in: a braided cascade and a fan where there was one thread. Still wrong: the inside of the mouth is lit where the picture's is dark, the melt has no pale core, the smoke at the right is a wall.
+- `02-m0927-heart-1.jpg`: heart-1 on main with the crust's version 3: folds in bundles replace the smooth sheet and its terraces. It still reads as ribbed clay, too brown, and the bundles repeat like a stamp.
+- `03-m0927-heart-3.jpg`: heart-3 on main: the fall now shows at the upper left. The ground is arcs on a sheet where the picture has broken black basalt, and the dark cliff at the right is missing.
+- `04-m0927-heart-0.jpg`: heart-0 on main: the plume is still central and pale and the walls tall and pale. Both lists are with their owners, due back by 10:05 UTC.
