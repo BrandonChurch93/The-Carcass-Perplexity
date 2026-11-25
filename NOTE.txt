@@ -1,0 +1,5 @@
+2026-11-25 21:51 UTC
+work at ed6e64d on agent/spine-ground
+wide key first form: all parts drawn; spire still a clean triangle, mouth a snow tube, storm soft with dither, cameras unfitted
+look-1.jpg = out/work/compare/spine-0.png
+look-2.jpg = out/work/stills/key-spine-0-hd-draft-solo-spine_cloud.png
