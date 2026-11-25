@@ -13,9 +13,34 @@ export const PARTS: readonly string[] = ['crust-walkers'];
 /** Discs of contact shade for each animal: four pads, the body, the tuft. */
 const DISCS = 6;
 
+// The lake bends the ground under each seam line so that the seam is crooked at every size (lake/net.ts). The same bend,
+// so that a tuft comes down in the open lava and a pad beside it.
+const mix32 = (n: number): number => {
+  let h = n | 0;
+  h ^= h >>> 16;
+  h = Math.imul(h, 0x7feb352d);
+  h ^= h >>> 15;
+  h = Math.imul(h, 0x846ca68b);
+  h ^= h >>> 16;
+  return h >>> 0;
+};
+const cell = (i: number, j: number, s: number): number => mix32(Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(s, 0x9e3779b1)) / 4294967296;
+const bendNoise = (x: number, z: number, s: number): number => {
+  const i = Math.floor(x);
+  const j = Math.floor(z);
+  const u = x - i;
+  const v = z - j;
+  const a = u * u * (3 - 2 * u);
+  const b = v * v * (3 - 2 * v);
+  return (cell(i, j, s) * (1 - a) + cell(i + 1, j, s) * a) * (1 - b) + (cell(i, j + 1, s) * (1 - a) + cell(i + 1, j + 1, s) * a) * b;
+};
+const bendX = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 1) - 0.5);
+const bendZ = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed + 2) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 3) - 0.5);
+
 function seamField(): Env['seam'] {
   const lines = Object.keys(SEAMS).map((name) => {
-    const points = seamLine(name, 28);
+    const points = seamLine(name, 40);
+    const seed = Math.floor((SEAMS[name] as (typeof SEAMS)[string]).seed * 10);
     let minX = 1e9;
     let maxX = -1e9;
     let minZ = 1e9;
@@ -26,27 +51,36 @@ function seamField(): Env['seam'] {
       minZ = Math.min(minZ, p[1]);
       maxZ = Math.max(maxZ, p[1]);
     }
-    return { points, minX, maxX, minZ, maxZ };
+    return { points, minX, maxX, minZ, maxZ, seed };
   });
   return (x, z) => {
     let d = 60;
     let bx = x + 60;
     let bz = z;
     for (const line of lines) {
-      if (x < line.minX - d || x > line.maxX + d || z < line.minZ - d || z > line.maxZ + d) continue;
+      if (x < line.minX - d - 2 || x > line.maxX + d + 2 || z < line.minZ - d - 2 || z > line.maxZ + d + 2) continue;
+      const qx = x + bendX(x, z, line.seed);
+      const qz = z + bendZ(x, z, line.seed);
       for (let i = 0; i < line.points.length - 1; i++) {
         const a = line.points[i] as [number, number];
         const b = line.points[i + 1] as [number, number];
         const ex = b[0] - a[0];
         const ez = b[1] - a[1];
-        const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / (ex * ex + ez * ez || 1)));
+        const t = Math.min(1, Math.max(0, ((qx - a[0]) * ex + (qz - a[1]) * ez) / (ex * ex + ez * ez || 1)));
         const px = a[0] + ex * t;
         const pz = a[1] + ez * t;
-        const dd = Math.hypot(x - px, z - pz);
+        const dd = Math.hypot(qx - px, qz - pz);
         if (dd < d) {
           d = dd;
-          bx = px;
-          bz = pz;
+          // The place on the crust that the bend carries onto this point of the line.
+          bx = x + px - qx;
+          bz = z + pz - qz;
+          for (let pass = 0; pass < 3; pass++) {
+            const wx = px - bendX(bx, bz, line.seed);
+            const wz = pz - bendZ(bx, bz, line.seed);
+            bx = wx;
+            bz = wz;
+          }
         }
       }
     }
@@ -83,8 +117,8 @@ export function create(ctx: HeartContext): HeartPiece {
       uPixel: pixel,
       tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tFlake: { value: ctx.assets.texture('mat/flake.jpg') },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data' }) },
+      tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
   const mesh = new THREE.Mesh(geometry, material);
