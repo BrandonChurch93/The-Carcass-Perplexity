@@ -18,6 +18,7 @@ vec3 clean(vec3 c) {
 
 // Half size, and again from it to quarter size. The four pixels count by the square of their radius, so a texel on the edge of a sharp thing holds the blurred side only:
 // the sharp side is taken from the full-size picture when the layers are laid. The radius kept is the largest of the four.
+// The weight stops growing at 8 px: past that a single far out of focus pixel (a spark) would take its whole texel and show as a square.
 const FIELD_FRAGMENT = /* glsl */ `
 uniform sampler2D tSrc;
 uniform vec2 uSize;
@@ -30,7 +31,7 @@ void main() {
   float coc = 0.0;
   for (int k = 0; k < 4; k++) {
     vec4 s = texelFetch(tSrc, min(p + ivec2(k & 1, k >> 1), last), 0);
-    float w = s.a * s.a + 0.0001;
+    float w = min(s.a * s.a / 64.0, 1.0) + 0.0001;
     sum += clean(s.rgb) * w;
     total += w;
     if (abs(s.a) > abs(coc)) coc = s.a;
