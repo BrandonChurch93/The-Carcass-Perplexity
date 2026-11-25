@@ -270,7 +270,7 @@ void main() {
   float occ = crease * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
   // A face that stands steep among folds and lobes looks at its neighbour and not at the sky.
-  float open = land.g * (1.0 - contactAt(p)) * occ * mix(0.15, 1.0, smoothstep(0.3, 0.95, nShape.y));
+  float open = land.g * (1.0 - contactAt(p)) * occ * mix(mix(0.15, 0.45, broke), 1.0, smoothstep(0.3, 0.95, nShape.y));
   // The lake lies level with the crust: its glow from afar reaches only the faces that are turned toward it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, nShape.y);
   // The warmth of the melt stays on its banks: the open crust takes the cool sky.
@@ -298,7 +298,7 @@ void main() {
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace * facing) * crease * clear;
   // The wall of a trench is dark and broken: the melt at its foot lights a thin line of it, a hand high, and no more.
-  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live);
+  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live * (1.0 - smoothstep(0.1, 0.4, fresh)));
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.55 + 0.9 * tb.b + 1.3 * grainA + 1.0 * grainC, 0.4, 1.7), steep);
   vec3 c = albedo * light / 3.14159;
