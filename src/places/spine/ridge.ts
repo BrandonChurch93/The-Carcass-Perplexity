@@ -41,10 +41,21 @@ const curve = new THREE.CatmullRomCurve3(
 const points = curve.getSpacedPoints(SAMPLES);
 const STEP = curve.getLength() / SAMPLES;
 
+// The ridge bends gently, so the nearest point is found on every 20th sample first and then among its neighbours.
 function nearestIndex(x: number, z: number): number {
   let best = 0;
   let bestD = Infinity;
-  for (let i = 0; i <= SAMPLES; i++) {
+  for (let i = 0; i <= SAMPLES; i += 20) {
+    const p = points[i] as THREE.Vector3;
+    const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  const from = Math.max(0, best - 20);
+  const to = Math.min(SAMPLES, best + 20);
+  for (let i = from; i <= to; i++) {
     const p = points[i] as THREE.Vector3;
     const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
     if (d < bestD) {
