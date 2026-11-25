@@ -45,6 +45,10 @@ interface Body {
   /** How much brighter than its body its sky-lit top is, and how solid it is (1.4 one mass, 0.6 separate billows). */
   tops?: number;
   solid?: number;
+  /** How far its lumps are drawn out along its rise (1 round, 2.5 streaks), how fast it thins with height (0 not at all), how sparse its lumps are (0 as they come). */
+  streak?: number;
+  taper?: number;
+  sparse?: number;
   /** Staging by shot: its density in a shot, as a share; `rest` is every other shot. */
   shots?: Readonly<Record<string, number>>;
 }
@@ -78,9 +82,10 @@ const BODIES: readonly Body[] = [
   // And what lies on the lake between the lens and those banks: a thin sheet of lumps, so that the far crust goes into the smoke and no line stands where the lake ends.
   { at: behind(250, 0), radius: 230, height: 8, lean: [0, 0], dense: 0.002, repeat: 50, hard: 2.2, climb: 0.3, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
-  { at: fromFoot(-34, 34), radius: 40, height: 45, lean: [0.62, 0.43], dense: 0.0036, widen: 0.5, repeat: 38, hard: 3.2, climb: 3, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, shots: { 'heart-05': 1, rest: 0.08 } },
-  { at: fromFoot(2, 26), radius: 44, height: 60, lean: [0.55, 0.38], dense: 0.0036, widen: 0.4, repeat: 38, hard: 3.2, climb: 3.4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, shots: { 'heart-05': 1, rest: 0.08 } },
-  { at: fromFoot(22, 48), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.0042, widen: 0.3, repeat: 38, hard: 3.2, climb: 2.4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, shots: { 'heart-05': 1, rest: 0.08 } },
+  // The first is the tall lit smoke that stands over the fan: streaks that climb fast, thickest and brightest low, thinning as they rise. The two beside it are low and thin.
+  { at: fromFoot(-8, 22), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.02, widen: 0.85, repeat: 46, hard: 2.4, climb: 8, colour: ROSE, foot: 0.05, lake: [0.6, 14], floor: [0.5, 55], lights: 1.3, tops: 0.8, solid: 0.15, streak: 2.3, taper: 1.3, sparse: 0.1, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(-44, 30), radius: 36, height: 56, lean: [0.2, 0.14], dense: 0.006, widen: 0.6, repeat: 38, hard: 3.2, climb: 5, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(22, 48), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 38, hard: 3.2, climb: 4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
   { at: [505, -285], radius: 70, height: 700, lean: [-0.16, -0.18], dense: 0.02, widen: 7, foot: 0.18, repeat: 200, hard: 3, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.85, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
@@ -151,6 +156,7 @@ export function create(ctx: HeartContext): HeartPiece {
     ((su.uBodyD as THREE.IUniform<THREE.Vector4[]>).value[i] as THREE.Vector4).set(b.climb ?? 2, b.widen ?? 0, b.repeat, b.hard ?? 2);
     ((su.uBodyE as THREE.IUniform<THREE.Vector4[]>).value[i] as THREE.Vector4).set(b.colour[0], b.colour[1], b.colour[2], b.foot ?? 0);
     ((su.uBodyF as THREE.IUniform<THREE.Vector4[]>).value[i] as THREE.Vector4).set(b.floor?.[0] ?? 0, b.floor?.[1] ?? 100, b.tops ?? 2.2, b.solid ?? 1.4);
+    ((su.uBodyG as THREE.IUniform<THREE.Vector4[]>).value[i] as THREE.Vector4).set(Math.max(0.2, b.streak ?? 1), b.taper ?? 0, b.sparse ?? 0, 0);
   }
   (su.uBodyCount as THREE.IUniform<number>).value = count;
   let phase = 0;
