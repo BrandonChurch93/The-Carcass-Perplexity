@@ -285,6 +285,8 @@ export function apronBase(x: number, z: number): number {
   // No ledges at the lip, where the stream leaves the floor, and none at the lake, where the fan lies.
   return lerp(h, Math.max(stepped, 0.3 * h), smooth(0.02, 0.1, t) * smooth(0.97, 0.8, t));
 }
+/** How much the bed of the stream leans toward the lake, metres in a metre across it. */
+const LEAN_BED = 0.28;
 /** Metres from one ledge of the apron to the next. */
 const LEDGE = 7;
 
@@ -327,17 +329,21 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const stood = Math.min(Math.hypot(x + 51.1, z + 298.4), Math.hypot(x + 28.3, z + 282.1));
     const lobe = u * lerp(0.74 + 0.55 * fbm2(x / 11 + 1.7, z / 11 + 4.1) + 0.12 * (noise2(x / 3.1, z / 3.1) - 0.5), 0.8, smooth(9, 4, stood));
     const body = 0.3 + 1.0 * smooth(1.0, 0.62, lobe) - 1.0 * smooth(0.9, 1.06, lobe);
-    const top = lerp(n.y, Math.max(base, ground, 0) + body, sheet);
+    // Where the stream runs along the slope and not down it, its bed leans with the slope: the side toward the lake lies lower.
+    // Seen from the lake a level bed is a line; a leaning one is a ribbon as wide as it leans.
+    const lakeSide = n.toward[0] * 0.565 - n.toward[1] * 0.825;
+    const ny = n.y - LEAN_BED * Math.min(n.distance, n.half + 8) * lakeSide * smooth(3, 10, n.len) * smooth(FAN_FROM - 2, FAN_FROM - 10, n.len);
+    const top = lerp(ny, Math.max(base, ground, 0) + body, sheet);
     // Beside the stream the rubble is what the stream has let stand: a low levee, then the slope. The bank on the lake's side is kept
     // below the stream, or from the shore the stream would hide behind it.
     const lakeward = n.len > 2 ? smooth(0.05, 0.6, n.toward[0] * 0.56 - n.toward[1] * 0.83) : 0;
     const levee = (0.25 + 0.55 * noise2(n.len / 4 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 0.9) / 1.0, 2)) * (1 - lakeward);
     const near = smooth(1.2, 11, side);
-    const bank = lerp(n.y + levee + 0.3 * smooth(0, 1.2, side) * (1 - lakeward) + 0.35 * rubble * smooth(0.3, 3, side), base + rubble, near) - 1.5 * lakeward * smooth(12, 0.5, side) * smooth(0, 1, side);
+    const bank = lerp(ny + levee + 0.3 * smooth(0, 1.2, side) * (1 - lakeward) + 0.35 * rubble * smooth(0.3, 3, side), base + rubble, near) - 1.5 * lakeward * smooth(12, 0.5, side) * smooth(0, 1, side);
     const rock1 = lerp(bank, Math.max(base, ground) + 0.25 * rubble, sheet * smooth(1.3, 1.0, u));
     // Between the stream and the lake nothing stands higher than the stream: the ledges there fall away from it, or from the shore they would
     // hide all of it but its drops.
-    const rock0 = Math.max(lerp(rock1, Math.min(rock1, n.y + 0.4 - 0.22 * side), lakeward * smooth(28, 12, side) * (1 - sheet)), ground - 2.4);
+    const rock0 = Math.max(lerp(rock1, Math.min(rock1, ny + 0.4 - 0.22 * side), lakeward * smooth(28, 12, side) * (1 - sheet)), ground - 2.4);
     // Away from the apron the sheet does not go down the wall: it ends as a sill a little below the floor, and the wall under it is the wall.
     const far = smooth(6, 16, out);
     const rock = lerp(rock0, Math.max(rock0, TUBE.floor - 2 + 1.2 * (fbm2(x / 3.7, z / 3.7) - 0.5)), far * smooth(7, 2, -d));

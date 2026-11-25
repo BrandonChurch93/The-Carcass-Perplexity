@@ -20,7 +20,11 @@ const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-25 + Math.sqrt(6
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);
   // The stream runs on the apron and nowhere under the land's own ground: where a bench of the land stands higher, the stream is on it.
-  const course = createCourse((x, z) => (z > TUBE.lipZ + 8 ? Math.max(apronSlope(x, z), land(x, z) + 0.8) : apronSlope(x, z)));
+  const course = createCourse(
+    (x, z) => (z > TUBE.lipZ + 8 ? Math.max(apronSlope(x, z), land(x, z) + 0.8) : apronSlope(x, z)),
+    // The stream may cut into the apron, never into the land under it.
+    (x, z) => (z > TUBE.lipZ + 8 ? land(x, z) + 0.7 : -1e3),
+  );
   const river = bed(course, land);
   const surgeAt = ctx.events.surge;
 
@@ -76,12 +80,13 @@ export function create(ctx: HeartContext): HeartPiece {
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
   // The fume leaves the fan where it meets the lake, east of its middle, and leans east and out over the lake; smoke leaves its west edge.
   const footAt = spot(course.length - 8, 0);
-  const footFume = { at: [footAt.x + 12, 1, footAt.z + 2] as [number, number, number], radius: 20, strength: 0.26, rise: 90, kind: 'fume' as const, lean: [0.4, 0.15] as [number, number] };
-  const fanAt = spot(course.length - 24, 0);
-  const fanSmoke = { at: [fanAt.x - 20, 2, fanAt.z + 4] as [number, number, number], radius: 13, strength: 0.14, rise: 45, kind: 'smoke' as const, lean: [0.35, 0.1] as [number, number] };
-  const mouthFume = { at: [MOUTH.x - 6, TUBE.floor + MOUTH.height + 6, TUBE.lipZ - 20] as [number, number, number], radius: 22, strength: 0.07, rise: 70, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
-  // Vapour off the fan's young toe east of its middle, low and leaning east, for the air to light from below.
-  const toeSteam = { at: [footAt.x + 22, 1.5, footAt.z - 6] as [number, number, number], radius: 6, strength: 0.34, rise: 38, kind: 'steam' as const, lean: [0.4, 0.12] as [number, number] };
+  // All of it is smoke, low and lit from below by the melt under it. Three stand in a row down the wind over the fan's east half
+  // and make one low bank that leans east; one hangs under the lip of the mouth.
+  const lean: [number, number] = [0.65, 0.12];
+  const footFume = { at: [footAt.x + 6, 1.5, footAt.z - 12] as [number, number, number], radius: 12, strength: 0.16, rise: 26, kind: 'smoke' as const, lean };
+  const fanSmoke = { at: [footAt.x + 26, 1.5, footAt.z - 7] as [number, number, number], radius: 10, strength: 0.14, rise: 22, kind: 'smoke' as const, lean };
+  const toeSteam = { at: [footAt.x + 48, 1.5, footAt.z - 3] as [number, number, number], radius: 9, strength: 0.11, rise: 18, kind: 'smoke' as const, lean };
+  const mouthFume = { at: [MOUTH.x - 30, TUBE.floor + 6, TUBE.lipZ + 8] as [number, number, number], radius: 34, strength: 0.035, rise: 44, kind: 'smoke' as const, lean: [0.2, 0.1] as [number, number] };
   ctx.sources.steam.push(footFume, fanSmoke, mouthFume, toeSteam);
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.

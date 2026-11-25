@@ -183,7 +183,9 @@ void main() {
   // On the flank of a rope the textures, which are laid flat, would be drawn out down it: there the fibres carry the surface.
   float wall = smoothstep(0.7, 1.8, length(grad)) * (1.0 - onRope) * (1.0 - steep);
   grainNh = mix(vec4(0.5), grainNh, 1.0 - 0.6 * wall);
-  float flat2 = folded * mid * (1.0 - 0.5 * wall);
+  // On the sheer flank of a rope the fibres crowd into a few cells of the baked field and break into steps: they fade there.
+  float sheer = smoothstep(1.4, 2.6, length(grad)) * onRope;
+  float flat2 = folded * mid * (1.0 - 0.5 * wall) * (1.0 - 0.6 * sheer);
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
   float ashed = smoothstep(8.0, 3.5, length(fromBody) + 2.0 * (broad - 0.5));
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
@@ -260,8 +262,9 @@ void main() {
   // The split: open lava at the bottom, a skin that still glows on its walls.
   float heat = mk.r * (1.0 + uTearOpen);
   float hot = smoothstep(0.12, 0.6, heat * (0.8 + 0.4 * small));
-  float breath = 25.0 * sin(uTime * 1.5708 + 6.0 * small);
-  float kelvin = mix(980.0, uTearKelvin - 50.0 + 60.0 * small + 0.6 * breath + 50.0 * uTearOpen, hot);
+  // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
+  float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);
+  float kelvin = mix(980.0, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
   c *= 1.0 - 0.9 * smoothstep(0.05, 0.4, heat);
   c += blackbody(kelvin) * smoothstep(0.04, 0.3, heat);
   #endif

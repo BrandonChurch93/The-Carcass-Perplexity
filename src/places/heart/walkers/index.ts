@@ -170,7 +170,8 @@ export function create(ctx: HeartContext): HeartPiece {
         if (wisp) {
           wisp.at[0] = stood.tuft.x;
           wisp.at[2] = stood.tuft.z;
-          wisp.strength = 0.25 * lit * here;
+          // The vapour answers the tuft: a breath of it stands over the pool, and a puff goes up each time the roots are pushed in, no two alike.
+          wisp.strength = 0.25 * lit * here * (0.3 + 1.2 * animal.puff);
         }
         stood.feet.forEach((foot, j) => {
           const off = Math.min(1, foot.lift / (1.2 * b.k));
