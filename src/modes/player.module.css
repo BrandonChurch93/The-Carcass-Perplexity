@@ -69,6 +69,15 @@
   color: #e7e0d6;
 }
 
+.wait {
+  grid-area: 1 / 1;
+  margin: 0;
+  color: #a39a8e;
+  font: 15px/1.4 system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  letter-spacing: 0.08em;
+  font-variant-numeric: tabular-nums;
+}
+
 .hidden {
   display: none;
 }
