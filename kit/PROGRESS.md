@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 73, 2026-11-25 22:28 UTC:
+Status 74, 2026-11-25 22:49 UTC:
 
-- `01-hb2-compare-ribs-0.jpg`: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each. Storm sky and shingle are in; the blades are smooth horns and the floor a tiled sheet
-- `02-hb3-keys-0-4.jpg`: The Breath, minute 57: wide key and the pit, approved (left) and frame (right). Plates, ledges and a ragged rim are in; the light is flat and the waders read as black hooks
-- `03-hb2-compare-spine-0.jpg`: The Spine, minute 51: approved (left) and frame (right). The lead spire is now a horn of slabs with an arch at its foot; the storm is soft and the far spires an even saw
-- `04-hb2-reveal-4.jpg`: The Reveal's last frame, minute 55: the land now reads as a continent with ranges, coasts and cloud; the body is lost and the cloud is a stamped pattern. Both sent back
+- `01-look-1.jpg`: The Reveal, last frame, 22:35 UTC (owner's heartbeat, draft tier): the land is drawn round the bones again. Its cloud is one stamp and its ranges are chalk lines: sent back.
+- `02-hb5-keys-0-4.jpg`: The Breath, 22:47 UTC: approved pictures left, built right (draft tier). The shaft is a shallow bowl in flat light: sent back.
+- `03-look-1.jpg`: The Ribs, 22:39 UTC: approved left, built right, with crops (draft tier). The flat is dry where the picture is a wet mirror: sent back.
+- `04-h3-spine-2.jpg`: The Spine, 22:40 UTC: the tether-kites on the first spire (draft tier). Membranes near in form; holdfasts, cords and rock sent back.
 
+Status 73, 2026-11-25 22:28 UTC, showed: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each.
 Status 72, 2026-11-25 22:12 UTC, showed: The Ribs on main, version 1 of both owners: approved picture left, frame right; The Blood Marsh on main, version 1 of both owners; The...
 Status 71, 2026-11-25 21:46 UTC, showed: The Ribs, first built frame of the land at minute 20 (draft): blades, floor, arch.
-Status 70, 2026-11-25 21:23 UTC, showed: The Eye: your approved picture on the left, the blockout its owner starts from on the right; The Reveal, last frame: your approved picture...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T22:28:17Z
-phase 4: 2.29 h used of 17.00 h
-build: 22.62 h used of 72.00 h
+2026-11-25T22:49:10Z
+phase 4: 2.64 h used of 17.00 h
+build: 22.96 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -1901,3 +1901,5 @@ What happens next is yours:
 - 2026-11-25 21:47 UTC. Status 71 shown in the thread at 21:47 UTC (Phase 4, 1.60 h of 17.00 h; wave 1 at minute 25 of 240): first built parts from four second owners and the Ribs' lead on their own branches, nothing merged; direction sent to ribs_ground_owner, marsh_life_owner and spine_storm_owner (the Ribs' blades are eroded stone and not turned horns and its floor is shingle and water sheets, not ripple marks; the wallowers need folds in the shape and the feeler fringe; the scorched runner is pale with a short coat). spine_storm_owner cannot push: its version 1 bundle verified (author and trailers) and pushed as agent/spine-storm at 317dbde. All 20 sounds placed and measured; renders on this machine since status 70: 0.
 - 2026-11-25 22:13 UTC. 2026-11-25 22:13 UTC. 22:12 UTC, status 72 shown: version 1 of ten owners is in main for five places. Merges since status 71, each after a check of trailers (on the commits with authored work; merge commits made by git merge --no-edit, as the owners' sheet tells them, carry no trailer and no authored work), files inside the owner's folders, types and the build: the Spine's storm 317dbde (93cc18d), the Breath's life 01a42d0 (830311a), the Marsh's life c341987 (68ae79b) and its recipe b158f8b (bd0fbbd), the Breath's ground fa79c1b (6670324), the Ribs' sea d8e3de0 (c5e56ab), the Spine's ground ed6e64d (0f76682), the Reveal d293ddc (20f3699), the Marsh's ground 500c3db (1219809), the Ribs' ground 41ffe5e (9099551). npm run parts: 96 parts, 82 built, 14 stand-in (the Eye's), 0 fallback. The Builder's own compare of main at preview size: ribs-0, breath-0, marsh-0, spine-0, reveal-4, 5 renders in 73 s. Check G8 fails on main for 18 pictures without a recipe heading: 12 of the Reveal (its owner's later commit e764e7d names them), 3 of the Ribs (materials.json of the land, the wings' hide pair), 3 of the Spine's land; their owners were told and send the recipes with their next heartbeat. Cost a sample at uhd, draft, as the owners measured on their 4 core machines against the 7 s gate: Ribs 7.7 to 7.85 s, Breath 6.71 s before the life owner's parts, Marsh 7.75 s, Spine 10.17 s, Reveal 3.89 s; the Ribs, the Marsh and the Spine are over and their leads cut it by version 3.
 - 2026-11-25 22:28 UTC. 2026-11-25 22:28 UTC: status 73 shown (4 pictures: the Ribs, the Breath and the Spine against their approved pictures, the Reveal's last frame). Version 1 of the Eye merged at 22:18 (`efbaeaa`); the register written from `main`: 96 parts, 96 built, 0 stand-in. Heartbeats pushed as branches for the three owners that cannot push: `a27abcb` (breath ground), `e85751b` (spine storm), `ae64cff` (marsh ground). Direction sent to `eye_owner`, `ribs_ground_owner`, `breath_ground_owner`, `breath_life_owner` and `reveal_owner` (the last frame has lost the body). The whole test run on `main`: 902 tests, 901 pass; the one failing is G8, which names 25 pictures with no recipe (the Eye's 7, the Reveal's 12, the rest in the Ribs and the Spine); the owners have been told
+- 2026-11-25 22:49 UTC. Status 74 shown at 22:50 UTC, 21 minutes after status 73, with four owners' pictures at the draft tier (the Reveal's last frame, the Breath and the Ribs beside their approved pictures, the Spine's kites). Note 16 applied. Direction sent since 22:38 UTC to the owners of the Reveal, the Spine (both), the Ribs (both) and the Breath's ground, each written beside the approved picture; the Breath's ground owner answered at 22:47 that the notes are its next hour. The bundles of spine-storm (71e1761) and breath-ground (c76659d) are pushed. Control jury: 96 of 145 votes in through the clerk; one seat (ribs-4, seat b) was void because its agent got a cut prompt (the plan file was read through a 20,000 token window and one entry was joined from two) and is being asked again from a fresh agent; the plan is now read one entry at a time and checked against an index
+- 2026-11-25 22:55 UTC. 22:56 UTC: the controls of R2 and R8 for the six other units are collected and written to scorecards/controls/ (145 votes of 145 fresh agents on the fixed panel of five, one picture and the question each; 5 viewers for R8). MEASURED, the share of votes that took an approved picture for a photograph or a film frame: the Ribs 25 of 25 (1.00), the Breath 25 of 25 (1.00), the Blood Marsh 25 of 25 (1.00), the Spine 24 of 25 (0.96), the Eye 22 of 25 (0.88), the Reveal 5 of 20 (0.25: fifteen answered an ordinary 3D render, most naming a repeating erosion texture or the literal skeleton). So R2 passes at a judged share of 0.80 for the Ribs, the Breath and the Marsh, 0.76 for the Spine, 0.68 for the Eye and 0.05 for the Reveal. R8 control: all 5 viewers named a skeleton on the approved reveal-4 at 400 px (share 1.0), so the titan frame passes at 0.8. One seat was asked twice (ribs-4, seat b: the first agent got a cut prompt, its answer is void and kept; the note is in the scorecard). The votes are reused in every round of each unit
