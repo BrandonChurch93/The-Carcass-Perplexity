@@ -64,26 +64,31 @@ export function fbm3(x: number, y: number, z: number, octaves = 4): number {
   return s;
 }
 
-/** Cells in the plane: distance to the nearest seed, distance to the nearest edge, and a number for the cell. */
-export function cells2(x: number, y: number): [number, number, number] {
+/** Cells in the plane, repeating in x every `period` cells: distance to the nearest edge, a number for the cell, and where the point lies from the cell's seed. */
+export function cells2(x: number, y: number, period: number): [number, number, number, number] {
   const ix = Math.floor(x);
   const iy = Math.floor(y);
   let f1 = 9;
   let f2 = 9;
   let id = 0;
+  let ox = 0;
+  let oy = 0;
   for (let j = -1; j <= 1; j++) {
     for (let i = -1; i <= 1; i++) {
-      const cx = ix + i + 0.1 + 0.8 * h3(ix + i, iy + j, 7);
-      const cy = iy + j + 0.1 + 0.8 * h3(ix + i, iy + j, 13);
+      const wx = (((ix + i) % period) + period) % period;
+      const cx = ix + i + 0.15 + 0.7 * h3(wx, iy + j, 7);
+      const cy = iy + j + 0.15 + 0.7 * h3(wx, iy + j, 13);
       const d = Math.hypot(cx - x, cy - y);
       if (d < f1) {
         f2 = f1;
         f1 = d;
-        id = h3(ix + i, iy + j, 29);
+        id = h3(wx, iy + j, 29);
+        ox = x - cx;
+        oy = y - cy;
       } else if (d < f2) f2 = d;
     }
   }
-  return [f1, 0.5 * (f2 - f1), id];
+  return [0.5 * (f2 - f1), id, ox, oy];
 }
 
 export const smooth = (a: number, b: number, x: number): number => {
