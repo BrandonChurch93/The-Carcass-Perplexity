@@ -1,7 +1,7 @@
 // The shape of the Spine's ground: the ridge of the layout (ridge.ts) with what the weather and the rock add to it.
 // Nothing is added where the animals trod and where the cameras stand, so that everything placed on the layout's ground stands on this one.
 import { CANAL_L, EXIT, MOUTH_R, MOUTH_S, canalL, first, flare, frameAt, ground, locate } from '../ridge';
-import { trail } from '../shared/anchors';
+import { CARCASS_S, trail } from '../shared/anchors';
 
 const hash = (x: number, y: number): number => {
   let h = (Math.imul(x, 374761393) + Math.imul(y, 668265263)) | 0;
@@ -67,6 +67,8 @@ function trodden(s: number, l: number): number {
   if (d < 0.5) c = Math.max(Math.abs(l - trail(s)), first.s - 790 - s);
   // The apron before the near mouth, between the trail and the rock, is drifted snow and nothing else: the mouth is seen from far up the trail.
   if (d > -175 && d < 0.5 && l > trail(s) && l < CANAL_L + MOUTH_R + 4) c = 0;
+  // Where the lightning came to ground the snow is open: the carcass lies on a bare saddle, with the band beyond it.
+  c = Math.min(c, Math.max(0, Math.hypot(s - CARCASS_S - 14, l - 16) - 36));
   if ((d > -60 && d < 2) || (d > EXIT - 2 && d < EXIT + 90)) c = Math.min(c, Math.max(0, Math.abs(l - canalL(Math.max(0, d))) - flare(d) - 6));
   return c;
 }

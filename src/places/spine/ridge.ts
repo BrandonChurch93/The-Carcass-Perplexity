@@ -150,7 +150,9 @@ export function crest(s: number): number {
   const b = spires[k + 1] as Spire;
   const f = Math.min(1, Math.max(0, (s - a.s) / (b.s - a.s)));
   const alt = a.alt + (b.alt - a.alt) * f;
-  return alt - SADDLE * (0.5 - 0.5 * Math.cos(2 * Math.PI * Math.pow(f, 0.756)));
+  // Before the first spire the crest stands higher: the trail comes down to the mouth, and the mouth is seen from a little above.
+  const approach = 22 * (1 - smooth(MOUTH_S - 400, MOUTH_S - 90, s));
+  return alt + approach - SADDLE * (0.5 - 0.5 * Math.cos(2 * Math.PI * Math.pow(f, 0.756)));
 }
 
 export const FLOOR = crest(MOUTH_S);
@@ -161,7 +163,7 @@ export function ground(s: number, l: number): number {
   const rho = Math.hypot((s - near.s) / 150, l / 130);
   const massif = 0.25 * near.tip * (1 - smooth(0.4, 1, rho));
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
-  const stand = 16 * Math.exp(-(((s - first.s + 610) / 170) ** 2));
+  const stand = 5 * Math.exp(-(((s - first.s + 610) / 170) ** 2));
   const exitShelf = Math.exp(-(((s - MOUTH_S - EXIT - 5) / 60) ** 2));
   const width = (l > 0 ? 5 + 66 * shelf + 80 * exitShelf : 5 + 14 * shelf) + stand;
   const al = Math.max(0, Math.abs(l) - width);
