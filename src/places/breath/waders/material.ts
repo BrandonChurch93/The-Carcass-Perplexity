@@ -122,14 +122,14 @@ void main() {
     float knuckle = back * pow(0.5 + 0.5 * cos(u * 120.0), 2.0);
     // Between two ribs the skin is drawn in and sees less of the sky, whatever the light.
     float between_ = cage * (1.0 - rib) * each * mid;
-    height = 0.028 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.005 * (grain - 0.5) * mid;
+    height = 0.017 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.005 * (grain - 0.5) * mid;
     // Nothing under the skin is smooth: muscle gone slack, the heads of bones, old scars.
     float drape = fbm(q * vec2(5.0, 7.0) + 9.0) - 0.5;
     float crease = fbm(q * vec2(17.0, 23.0) + 3.0) - 0.5;
     height += (0.03 * drape + 0.009 * crease) * mid * (1.0 - 0.6 * cage);
-    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.3 * between_) * (1.0 + (0.4 * drape + 0.3 * crease) * mid);
+    albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.12 * between_) * (1.0 + (0.4 * drape + 0.3 * crease) * mid);
     float between = between_;
-    occ *= 1.0 - 0.6 * between - 0.25 * back * (1.0 - knuckle) * mid;
+    occ *= 1.0 - 0.28 * between - 0.2 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
     float sore = smoothstep(0.42, 0.66, mottle) * (0.3 + 0.5 * smoothstep(0.4, 0.65, blotch)) + 0.55 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, clamp(sore, 0.0, 0.8));
@@ -220,7 +220,7 @@ void main() {
   float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0), 3.0);
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.42 + 0.7 * smoothstep(30.0, 150.0, far)) * (0.45 + 0.4 * dot(n, flat_) + 0.15 * n.y);
+  float fogLight = (0.56 + 0.6 * smoothstep(30.0, 150.0, far)) * (0.45 + 0.4 * dot(n, flat_) + 0.15 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.22, 1.0, 0.8) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 1.5 * halo) + fogColour * (9.0 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
