@@ -415,11 +415,12 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float edge = min(d - gape, abs(lake - tear) - tearHalf);
 
   // The pool at the foot of the fall: open lava that skins over outward, in rafts that ride away from the fall.
+  // As drawn the rafts ride out at 3.8 m a second, so that the pool is seen to move from the rim of the bowl; the glow map keeps 1.5.
   float open = 1.0 - smoothstep(0.55, 1.02, pool);
   if (open > 0.0) {
     vec2 out2 = q - uFlowFoot;
     float ring = length(out2);
-    vec2 polar = vec2(atan(out2.y, out2.x) * 9.0, ring / 7.0 - uTime * 0.22);
+    vec2 polar = vec2(atan(out2.y, out2.x) * 9.0, ring / 7.0 - uTime * (least > 0.5 ? 0.22 : 0.55));
     float raft = smoothstep(0.42, 0.7, vnoise(polar) * 0.6 + vnoise(polar * 2.7 + 5.0) * 0.4 + 0.45 * (pool - 0.6));
     float k = 1440.0 - 150.0 * pool - 230.0 * raft + 50.0 * (beat - 0.5) + 40.0 * (vnoise(polar * 6.0) - 0.5);
     float c = open * (1.0 - 0.75 * raft * smoothstep(0.3, 0.8, pool));
