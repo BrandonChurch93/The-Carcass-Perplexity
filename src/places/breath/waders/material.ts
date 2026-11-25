@@ -172,14 +172,17 @@ void main() {
     // salt in every hollow and on every upward face; the weed on it is nearly black.
     wet = 0.0;
     if (tendril > 0.5) {
-      albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo, vec3(0.5, 0.33, 0.29), 0.6);
+      albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo * 0.8, vec3(0.2, 0.1, 0.085), 0.45 + 0.4 * hash12(vec2(seed, 4.0)));
     } else {
       float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
       albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55);
       float wrinkle = vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
       float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
-      height += (0.007 * wrinkle + 0.004 * crease) * mid;
-      albedo *= 1.0 + 0.4 * wrinkle * mid;
+      // On the trunk the skin hangs in folds from the spine; on the neck it has dried in rings; the legs are bone with a little skin on.
+      float drape = kind < 0.5 ? vnoise(vec2(vUv.x * 9.0, vUv.y * 46.0 + 4.0 * vnoise(vUv * 6.0)) + seed) - 0.5 : 0.0;
+      float ringed = kind < 0.5 ? 0.35 : kind < 1.5 ? 0.7 : 0.2;
+      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.012 * drape) * mid;
+      albedo *= 1.0 + (0.4 * ringed * wrinkle + 0.35 * drape) * mid;
       float hollow = 1.0 - vInfo.y;
       float rot = smoothstep(0.5, 0.72, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);
       albedo = mix(albedo, vec3(0.2, 0.085, 0.06), 0.7 * rot);
@@ -203,8 +206,8 @@ void main() {
   float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0), 3.0);
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.24 + 1.12 * smoothstep(25.0, 140.0, far)) * (0.5 + 0.34 * dot(n, flat_) + 0.16 * n.y);
-  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 1.5 * halo + fogLight * (1.0 + 1.2 * (1.0 - lit))) * occ * (0.45 + 0.55 * lit) * (1.0 - 0.5 * uDead));
+  float fogLight = (0.36 + 1.0 * smoothstep(25.0, 140.0, far)) * (0.5 + 0.34 * dot(n, flat_) + 0.16 * n.y);
+  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 1.5 * halo + fogLight * (1.0 + 1.2 * (1.0 - lit))) * occ * (0.7 + 0.3 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
