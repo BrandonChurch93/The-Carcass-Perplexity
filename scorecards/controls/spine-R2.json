@@ -1,0 +1,278 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "spine-0",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 87,
+      "why": "the lightning strike convincingly lights both the storm clouds and the snowy peak."
+    },
+    {
+      "control": "spine-0",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "physically implausible fantasy elements (floating translucent ribbons, lightning striking spire with glowing tendrils) on a polished photoreal mountain scene typical of stock CG/generated art rather than a real photo or a cinematic frame"
+    },
+    {
+      "control": "spine-0",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 82,
+      "why": "the AAA-level cinematic lighting, atmospheric depth, and narrative detail of footprints leading into a cave along a fantastical spire-ridged mountain with translucent ribbons and purple lightning"
+    },
+    {
+      "control": "spine-0",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "The lightning lights up the windblown streamers on a distant spire, making the storm feel part of a carefully staged cinematic shot."
+    },
+    {
+      "control": "spine-0",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "fantastical but highly detailed and cohesive scene (impossible ribbon-like streamers, fantasy spires, cinematic lighting) with polished rock, snow and cloud detail that reads as big-budget film or game concept art rather than a photo or cheap render."
+    },
+    {
+      "control": "spine-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 93,
+      "why": "the lifelike frost clinging to individual strands of the fantasy creature’s fur."
+    },
+    {
+      "control": "spine-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "the highly detailed frosted fur groom on a fantastical creature corpse with cinematic depth of field and dramatic lightning lighting, which looks like high-end film/cinematic VFX quality"
+    },
+    {
+      "control": "spine-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 90,
+      "why": "the high-end VFX-level fur grooming with frost accumulation, snow and ice shaders, and cinematic depth of field depicting a fantasy creature in a dramatic storm."
+    },
+    {
+      "control": "spine-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 95,
+      "why": "The frost clings to individual strands of the creature’s matted fur in convincing, irregular clumps."
+    },
+    {
+      "control": "spine-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "a fantastical frozen creature carcass and a lightning-lit alien mountain scene with film-quality detail (frost on fur, wet ice, depth of field, atmospheric snow haze) that no real photo or ordinary stock render would show"
+    },
+    {
+      "control": "spine-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 89,
+      "why": "the intricate translucent banners catching the storm light."
+    },
+    {
+      "control": "spine-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the cinematic, very detailed fantasy shot (iridescent membrane streamers, rime ice, shallow depth of field, lightning) looks like high-end film or game-cinematic concept/VFX work rather than a real photo or a cheap render."
+    },
+    {
+      "control": "spine-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "the film-grade micro-detail and cinematic lighting across the fantastical rime-crusted rock, icicle-laden tendrils, and tattered iridescent membranes."
+    },
+    {
+      "control": "spine-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 95,
+      "why": "The torn translucent streamers catch the storm light along individual veins, giving the fantasy scene a high-end cinematic finish."
+    },
+    {
+      "control": "spine-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 72,
+      "why": "fantastical subject (iridescent translucent membranes streaming off frost-covered rock with a lightning bolt) rendered with film-grade detail, depth of field and lighting, which no real photo or low-budget render would show."
+    },
+    {
+      "control": "spine-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 92,
+      "why": "the lightning strike convincingly lights the translucent streamers around the peak."
+    },
+    {
+      "control": "spine-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "cinematic VFX-quality rock detail, depth of field and lightning/sparks with fantastical tattered energy ribbons that suggest a high-end film or game cinematic and not a real photo"
+    },
+    {
+      "control": "spine-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 88,
+      "why": "cinematic depth of field, volumetric lighting, and detailed particle and rock rendering on a fantastical lightning-struck peak"
+    },
+    {
+      "control": "spine-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "The lightning casts a coherent violet glow across the fractured summit and the windblown ribbons."
+    },
+    {
+      "control": "spine-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the polished cinematic lighting and shallow depth of field with detailed rock, snow, spark and translucent-ribbon effects read as a high-budget film or cinematic frame, though the fantastical scene could also be AI or concept art."
+    },
+    {
+      "control": "spine-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the individually resolved frost-coated fur on the fantastical creatures under coherent rim lighting."
+    },
+    {
+      "control": "spine-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "highly detailed frosted fur creatures with cinematic lighting and composition in a fantasy ice cave — reads as high-end film/cinematic quality, not a real place."
+    },
+    {
+      "control": "spine-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 90,
+      "why": "the film-grade cinematic lighting, shallow depth of field, and intricate frost-caked fur and translucent ice detail on the fictional tentacle-faced creatures."
+    },
+    {
+      "control": "spine-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the cave light picks out individual frost-caked strands of the creatures’ fur."
+    },
+    {
+      "control": "spine-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the fur, frost, wet ice and lighting are very detailed and cinematic, and the creature design is fantastical, so it looks like a high-end film or game cinematic frame."
+    }
+  ],
+  "unit": "spine",
+  "collected": "2026-11-25 22:48 to 22:51 UTC",
+  "share": 0.96,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "pictures": [
+    {
+      "key": "spine-0",
+      "image": "references/approved/5-spine/spine-0-establishing.jpg",
+      "file": "out/work/jury/controls/spine-0.png",
+      "sha256": "94a7f673ef29cb4f9a0bc65dd400142d6536b79037c5bd14fe308605be6733e0",
+      "bytes": 1810056,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "spine-1",
+      "image": "references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg",
+      "file": "out/work/jury/controls/spine-1.png",
+      "sha256": "ea665ca43ccec5b9c9234bb5eeb1d6a7650bed312d3ce2855e24d524a1234270",
+      "bytes": 1939422,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "spine-2",
+      "image": "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg",
+      "file": "out/work/jury/controls/spine-2.png",
+      "sha256": "8420dc8b42ac304c3bf2b158e0450e1536ed4cc4ca2a14b9eec0f9bc2ae38866",
+      "bytes": 2085094,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "spine-3",
+      "image": "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg",
+      "file": "out/work/jury/controls/spine-3.png",
+      "sha256": "4dec4c36e72c86cda2dec8d31a3b95fe6f67906bf4d44355e32db81b514474ec",
+      "bytes": 1603088,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "spine-4",
+      "image": "references/approved/5-spine/spine-4-inside-the-canal.jpg",
+      "file": "out/work/jury/controls/spine-4.png",
+      "sha256": "34766f609d07bb465ec193953fe0e29f95d70900edf93a77cae577233e4e0bd9",
+      "bytes": 2230357,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}
