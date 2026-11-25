@@ -16,7 +16,7 @@ export const MAX_EMITTERS = 8;
 // lit smoke, on warm ground: 76 52 46 where the sky alone gives 57 50 56). It hides `shade` of the sky from what is under its middle and is a wide
 // dim round light, 25 m up: the lake's light caught by the smoke and thrown down. Its colour is paler than the lava's, as scattered light is.
 // It stands in that shot alone, so the wide view keeps its neutral lake.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.35, radiance: [1.7, 0.67, 0.09] as const };
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [1.5, 0.66, 0.11] as const };
 
 export type Height = (x: number, z: number) => number;
 
