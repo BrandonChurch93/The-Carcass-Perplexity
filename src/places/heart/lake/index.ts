@@ -192,7 +192,7 @@ float heightAt(vec2 q, float c) {
   gRidge = ridgeUp;
 
   // A plate rides the melt: it rises and sinks a finger's width, each in its own time.
-  float h = 0.015 * sin(uTime * (0.5 + 0.5 * fract(n.b * 37.0)) + n.b * 91.0) * calm;
+  float h = 0.015 * sin(uTime * 0.7 + n.b * 9.0) * calm;
   if (ridgeUp > 0.0) h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
 
   // The billow of the skin and the lobes on it. The cords are finer than the cells and go into the normal.
@@ -221,7 +221,7 @@ float heightAt(vec2 q, float c) {
     float lipAt = (bank - 0.07) / lipWide;
     h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0));
     float deep = mix(0.03 + 0.25 * min(gape, 0.3), 0.15 - meltLevel(n), named);
-    float cut = (1.0 - smoothstep(-max(2.5 * c, 0.04), 0.0, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    float cut = (1.0 - smoothstep(-max(3.5 * c, 0.05), 0.0, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
     if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape);
     h = mix(h, -deep, cut);
   }
@@ -383,10 +383,10 @@ void main() {
       float lam;
       rope = festoonAt(q, dir, u, lam) * calm * (1.0 - broken);
       float across = max(abs(dot(qx, dir)), abs(dot(qy, dir)));
-      seen = rope * (1.0 - smoothstep(0.2 * lam, 0.45 * lam, across));
+      seen = rope * (1.0 - smoothstep(0.1 * lam, 0.3 * lam, across));
       if (seen > 0.0) {
         float round2 = sqrt(max(1.0 - u * u, 0.0));
-        slope -= dir * (0.6 * u / (round2 + 0.3)) * seen;
+        slope -= dir * (0.35 * u / (round2 + 0.5)) * seen;
         crease *= mix(1.0, 0.45 + 0.55 * smoothstep(0.0, 0.5, round2), seen);
       }
     }
@@ -395,12 +395,13 @@ void main() {
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
 
   // Old skin is grey and rough, young skin black, smooth and glassy: by patch, by plate and by lobe.
-  vec3 albedo = mix(vec3(0.028, 0.031, 0.036), vec3(0.05, 0.054, 0.06), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   float rough = clamp(0.22 + 0.45 * age + 0.2 * rope * (1.0 - seen) + 0.3 * broken, 0.15, 0.92);
 
   // How much sky a point sees: less in a crease, between two lobes, below the brim of a gap.
   float below = max(-vWorld.y, 0.0);
-  float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank));
+  // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
+  float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.08, 0.35, fpLong), 1.0, shown);
   float pit = mix(1.0, clamp(1.0 - below / max(2.5 * gape, 0.12), 0.04, 1.0), inGap);
   float occ = crease * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
@@ -418,7 +419,7 @@ void main() {
   vec3 c = albedo * light / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float gloss = (1.0 - rough) * (1.0 - rough);
-  float fresnel = (0.03 + 0.97 * pow(1.0 - nv, 4.0)) * (0.07 + 0.2 * gloss);
+  float fresnel = (0.03 + 0.97 * pow(1.0 - nv, 4.0)) * (0.09 + 0.24 * gloss);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   c += fresnel * lakeMirror(r, rough) * open;
