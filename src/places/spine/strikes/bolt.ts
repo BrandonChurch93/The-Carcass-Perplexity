@@ -99,8 +99,8 @@ export function strokes(rng: Rng): Strokes {
   return { at, share };
 }
 
-/** One return stroke: it rises in 3 ms and falls by half every 14 ms. Smooth, so the four samples of a frame blur it and none of them pops. */
-const pulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * Math.exp(-age / 0.02));
+/** One return stroke: it rises in 3 ms and falls to a sixth in a frame. Smooth, so the four samples of a frame blur it and none of them pops. */
+const pulse = (age: number): number => (age <= 0 ? 0 : (1 - Math.exp(-age / 0.003)) * Math.exp(-age / 0.009));
 
 /** How bright the main channel is, the branches are, and the glow left in the channel, at seconds since the strike's frame. */
 export function envelope(s: Strokes, age: number): { main: number; branch: number; after: number; leader: number } {
@@ -109,7 +109,7 @@ export function envelope(s: Strokes, age: number): { main: number; branch: numbe
   let main = 0;
   for (let i = 0; i < s.at.length; i++) main += (s.share[i] as number) * pulse(t - (s.at[i] as number));
   const last = s.at[s.at.length - 1] as number;
-  const after = t <= 0 ? 0 : 0.1 * Math.exp(-Math.max(0, t - last) / 0.16) * (1 - Math.exp(-t / 0.01));
+  const after = t <= 0 ? 0 : 0.014 * Math.exp(-Math.max(0, t - last) / 0.11) * (1 - Math.exp(-t / 0.01));
   // The leader finds its way down in the twentieth of a second before the stroke: 0 at the cloud to 1 at the ground.
   const leader = t < 0 ? Math.max(0, 1 + t / 0.05) : 1;
   return { main, branch: pulse(t), after, leader };

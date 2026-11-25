@@ -58,10 +58,10 @@ void main() {
   float core = exp(-x * x * 1.6);
   float sheath = 0.045 * exp(-abs(x) * 0.75) * (1.0 - smoothstep(5.0, 8.0, abs(x)));
   // vInfo: radius, share, where on the leader's way down, branch or main.
-  float lit = mix(uEnv.x + uEnv.z, uEnv.y + 0.35 * uEnv.z, vInfo.w);
+  float lit = mix(uEnv.x + uEnv.z, uEnv.y + 0.2 * uEnv.z, vInfo.w);
   // After the strokes the channel does not fade evenly: it breaks into beads that hang for a moment.
   float bead = 0.55 + 0.9 * smoothstep(0.35, 0.8, fract(sin(floor(vAlong * 0.11) * 91.7) * 43758.5));
-  lit = mix(lit, lit * bead, clamp(uEnv.z * 12.0 - uEnv.x * 4.0, 0.0, 1.0));
+  lit = mix(lit, lit * bead, clamp(1.0 - uEnv.x * 30.0, 0.0, 1.0));
   // The leader: a dim thread that has come this far down.
   float lead = 0.012 * (1.0 - smoothstep(uEnv.w - 0.04, uEnv.w, vInfo.z)) * step(uEnv.w, 0.999);
   float k = (lit + lead) * vInfo.y * mix(sqrt(vWide.x), 1.0, 0.35);
@@ -222,7 +222,7 @@ export function create(ctx: Context): Piece {
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(11, 11) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, ...additive, depthTest: false }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(7, 7) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, ...additive, depthTest: false }));
     spot.frustumCulled = false;
     spot.renderOrder = 7;
     group.add(cloud, spot);
@@ -278,7 +278,7 @@ export function create(ctx: Context): Piece {
         const before = age < 0 ? 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3) : 0;
         const power = e.main + e.after;
         b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 1.6);
-        b.spotGlow.set(1, 0.93, 1).multiplyScalar(power * 60);
+        b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 220 + e.after * 400);
         if (power + before > 1e-4) {
           channelLight.position.copy(b.mid);
           channelLight.radiance.copy(TINT).multiplyScalar(CAST * power);

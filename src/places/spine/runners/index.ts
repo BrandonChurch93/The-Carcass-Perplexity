@@ -37,7 +37,7 @@ interface Animal {
   writhe: THREE.Vector4;
 }
 
-const TENDRILS = 26;
+const TENDRILS = 34;
 const SEGMENTS = 5;
 
 const m1 = new THREE.Matrix4();
@@ -99,6 +99,8 @@ export function create(ctx: Context): Piece {
       uTone: { value: new THREE.Vector4(role.tone[0], role.tone[1], role.tone[2], rng.next()) },
       uFace: { value: new THREE.Vector4(FACE_AT[0], FACE_AT[1], FACE_AT[2], 0) },
       uWrithe: { value: writhe },
+      uHairs: { value: role.locks > 3000 ? 6 : 3 },
+      uDoorGain: { value: 3 },
     };
     const group = new THREE.Group();
     const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared }));
@@ -123,7 +125,7 @@ export function create(ctx: Context): Piece {
       hang.set([r * Math.cos(a) - 0.02, r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
       // A few long thick ones, many thin ones.
       const big = rng.next() < 0.3;
-      limb.set([big ? rng.range(0.5, 0.68) : rng.range(0.28, 0.5), big ? rng.range(0.026, 0.034) : rng.range(0.013, 0.022), rng.range(0.2, 1), rng.next()], i * 4);
+      limb.set([big ? rng.range(0.5, 0.68) : rng.range(0.28, 0.5), big ? rng.range(0.016, 0.021) : rng.range(0.008, 0.014), rng.range(0.2, 1), rng.next()], i * 4);
     }
     const beard = new THREE.InstancedBufferGeometry();
     beard.index = tendril.index;
@@ -141,7 +143,7 @@ export function create(ctx: Context): Piece {
   const cream = (): [number, number, number] => {
     const k = rng.range(0.85, 1.1);
     const warm = rng.range(0, 1);
-    return [0.6 * k, (0.56 - 0.03 * warm) * k, (0.5 - 0.08 * warm) * k];
+    return [0.7 * k, (0.67 - 0.03 * warm) * k, (0.61 - 0.08 * warm) * k];
   };
 
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
@@ -153,11 +155,11 @@ export function create(ctx: Context): Piece {
     { d: CANAL_KEY + 1.6, l: -2.6, yaw: along + 1.2, act: 'stand', size: 1.2, skirt: 1.3 },
     { d: CANAL_KEY + 0.6, l: -2.6, yaw: along + 0.5, act: 'stand', size: 1.1, skirt: 1 },
   ];
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 7000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 14000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
   const CROSSING = 4;
-  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 1600, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
+  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 2500, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
   // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.4, locks: 11000, skirt: 1.15, tone: [0.62, 0.58, 0.5], phase: 0, inside: false }, new THREE.Vector4(-0.05, 0.86, -0.27, 0.42));
+  const dead = make({ act: 'dead', size: 1.4, locks: 22000, skirt: 1.0, tone: [0.74, 0.71, 0.64], phase: 0, inside: false }, new THREE.Vector4(0.02, 1.02, -1, 0.075));
 
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
@@ -229,14 +231,15 @@ export function create(ctx: Context): Piece {
     a.writhe.set(1, 0, 0, 0);
   };
 
-  // The dead one does not move: its bones are set once. Stiff legs, the upper ones lifted off the snow, the neck fallen forward.
-  (dead.bones[0] as THREE.Matrix4).makeScale(1, 0.9, 1.05);
-  leg(dead.bones[1] as THREE.Matrix4, HIPS[0], 0.34, -0.1, 0.05, 0, 0, 0);
-  leg(dead.bones[2] as THREE.Matrix4, HIPS[1], 0.22, 0.05, 0.1, 0, 0, 0);
-  leg(dead.bones[3] as THREE.Matrix4, HIPS[2], -0.3, -0.12, 0.02, 0, 0, 0);
-  leg(dead.bones[4] as THREE.Matrix4, HIPS[3], -0.18, 0.04, 0.12, 0, 0, 0);
-  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.35, -0.3);
-  dead.coat.set(1, 0.75, 0.0, 0.42);
+  // The dead one does not move: its bones are set once. It lies on its right side: the trunk slack and flattened, the forelegs thrown forward
+  // toward its head with the upper one fallen to the ground, the hind legs drawn up under the belly, the neck fallen forward and down.
+  (dead.bones[0] as THREE.Matrix4).makeScale(1, 0.92, 0.9);
+  about(dead.bones[1] as THREE.Matrix4, HIPS[0] as [number, number, number], -0.75, 0, 1.0, [0.02, -0.03, 0.1]);
+  about(dead.bones[2] as THREE.Matrix4, HIPS[1] as [number, number, number], -0.1, 0, 0.72, [0, 0.02, -0.03]);
+  about(dead.bones[3] as THREE.Matrix4, HIPS[2] as [number, number, number], -0.7, 0, 0.75, [0.05, 0.02, 0.12]);
+  about(dead.bones[4] as THREE.Matrix4, HIPS[3] as [number, number, number], -0.05, 0, 0.5, [0.03, 0.03, -0.03]);
+  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.5, -0.25, [0, -0.02, 0.05]);
+  dead.coat.set(1, 0.85, 0.0, 0.3);
   dead.writhe.set(0, 1, 0, 0);
 
   const walked = (u: number): number => (u < -0.8 ? 0 : u < 0.4 ? 0.79 * (u + 0.8) ** 2 : 1.14 + 1.9 * (u - 0.4));

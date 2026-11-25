@@ -97,9 +97,9 @@ export function bodyGeometry(): THREE.BufferGeometry {
       const claw: Ring[] = [];
       for (let i = 0; i <= 5; i++) {
         const k = i / 5;
-        const out = 0.1 + 0.11 * k;
-        const r = 0.03 * (1 - 0.9 * k);
-        claw.push({ c: [hip[0] + 0.05 + out * Math.cos(c * 0.42), 0.07 - 0.065 * k * k + 0.025 * Math.sin(k * 3.14), hip[2] + out * Math.sin(c * 0.42) + c * 0.035], a: [0, 0, r], b: [0, r * 1.3, 0] });
+        const out = 0.1 + 0.075 * k;
+        const r = 0.024 * (1 - 0.88 * k);
+        claw.push({ c: [hip[0] + 0.05 + out * Math.cos(c * 0.42), 0.06 - 0.058 * k * k + 0.02 * Math.sin(k * 3.14), hip[2] + out * Math.sin(c * 0.42) + c * 0.035], a: [0, 0, r], b: [0, r * 1.3, 0] });
       }
       b.tube(claw, 6, n + 1, 1);
     }
@@ -143,8 +143,10 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       const sy = Math.cos(ang);
       const sz = Math.sin(ang);
       const flank = Math.pow(Math.abs(sz), 1.5);
-      const length = (0.2 + 0.38 * flank * longer + 0.16 * hump(x) + (x < -0.5 ? 0.12 : 0)) * rng.range(0.7, 1.25);
-      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.035, 0.07));
+      // Short on the back, longer down the flanks, a fringe under the belly, a mane on the hump.
+      const under = Math.max(0, -sy);
+      const length = (0.1 + 0.1 * flank * longer + 0.12 * under * longer + 0.1 * hump(x) * Math.max(0, sy)) * rng.range(0.7, 1.3);
+      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.022, 0.045));
     } else if (pick < 0.82) {
       // The neck and the mane that falls over where a face would be.
       const k = rng.next();
@@ -152,15 +154,15 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       const x = NECK_AT[0] - 0.1 + (FACE_AT[0] - NECK_AT[0] + 0.1) * k;
       const y = NECK_AT[1] + 0.02 - (NECK_AT[1] - FACE_AT[1]) * k * k;
       const r = 0.25 - 0.1 * k;
-      put(i, [x, y + r * Math.cos(ang), r * Math.sin(ang)], [0.5, Math.cos(ang), Math.sin(ang)], rng.range(0.22, 0.42), 5, rng.range(0.03, 0.06));
+      put(i, [x, y + r * Math.cos(ang), r * Math.sin(ang)], [0.5, Math.cos(ang), Math.sin(ang)], rng.range(0.12, 0.24), 5, rng.range(0.022, 0.04));
     } else {
       // The legs, feathered to the foot.
       const n = Math.floor(rng.next() * 4) % 4;
       const hip = HIPS[n] as [number, number, number];
-      const y = rng.range(0.1, LEG_TOP + 0.1);
+      const y = rng.range(0.03, LEG_TOP + 0.1);
       const ang = rng.range(-Math.PI, Math.PI);
       const r = 0.1 + 0.07 * (y / LEG_TOP);
-      put(i, [hip[0] + r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.12, 0.26) * (0.7 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.03, 0.05));
+      put(i, [hip[0] + r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.07, 0.14) * (0.7 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.02, 0.035));
     }
   }
   return { root, dir, lock, count };
