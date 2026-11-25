@@ -49,10 +49,10 @@ void main() {
     vec3 pivot = vec3(${BODY.neckPivot.map((v) => v.toFixed(3)).join(', ')});
     if (part > 1.5) {
       // The head hangs from the end of the neck: level when the neck is up, turned down to the water when it is down.
-      turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.52 * smoothstep(0.5, 2.5, aPose.x));
+      turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.9 * smoothstep(0.5, 2.4, aPose.x));
     }
     float along = clamp((p.y - pivot.y) / ${BODY.neckLength.toFixed(3)}, 0.0, 1.0);
-    turn(p, n, pivot, aPose.x * mix(pow(along, 0.5), 1.0, step(1.5, part)));
+    turn(p, n, pivot, aPose.x * mix(smoothstep(-0.12, 0.34, along), 1.0, step(1.5, part)));
   } else if (part < 3.5) {
     float id = aBone.z;
     bool front = id < 1.5;
@@ -111,6 +111,10 @@ void main() {
   float rib = sin(vRest.z * 46.0 + vRest.y * 9.0);
   vec3 albedo = mix(vec3(0.6, 0.45, 0.37), vec3(0.83, 0.71, 0.61), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
   albedo *= 1.0 - 0.07 * ribs * smoothstep(0.2, 0.9, rib);
+  // Old skin: stained in patches, darker along the back, grey with dust on the legs.
+  float stain = 0.6 * vnoise(vRest.zy * 2.1 + vSeed * 13.0) + 0.4 * vnoise(vRest.zy * 7.0 + vRest.x * 3.0 + vSeed * 3.0);
+  albedo *= mix(0.62, 1.06, smoothstep(0.3, 0.62, stain));
+  albedo *= mix(vec3(0.78, 0.74, 0.72), vec3(1.0), smoothstep(0.25, 0.9, vRest.y));
   // Dark and wet to the knee where it has stood in the lake; grey with dust above that.
   vec4 land = landAt(vWorld.xz);
   float wet = smoothstep(0.55, 0.1, vWorld.y) * smoothstep(1.5, -1.5, land.b);
@@ -118,7 +122,14 @@ void main() {
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.2, 0.9, 0.35)));
   vec3 b = cross(n, t);
-  n = normalize(n + (t * d.x + b * d.y) * 0.45 + b * (0.22 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0)));
+  // The neck is creased across, deepest at its root and under the jaw; the skin hangs in folds at the elbow and the stifle.
+  float onNeck = step(0.5, vPart) * step(vPart, 1.5);
+  float crease = onNeck * cos(vRest.y * 38.0 + 3.0 * vnoise(vRest.xz * 9.0 + vSeed * 5.0)) * (0.5 + 0.5 * vnoise(vec2(vRest.y * 2.3, vSeed * 31.0)));
+  albedo *= 1.0 - 0.1 * onNeck * smoothstep(0.3, 1.0, -crease);
+  // A short pale coat: fine, lying one way, a little rough.
+  float coat = vnoise(vec2(vRest.z * 420.0 + vRest.x * 90.0, vRest.y * 60.0)) - 0.5;
+  albedo *= 1.0 + 0.16 * coat;
+  n = normalize(n + (t * d.x + b * d.y) * 0.3 + b * (0.12 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0) + 0.3 * crease) + t * (0.14 * coat));
   float under = smoothstep(0.2, -0.7, normalize(vNormal).y);
   float occ = (0.55 + 0.45 * smoothstep(0.05, 0.55, nh.b)) * mix(1.0, 0.62, under * step(vPart, 0.5));
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.72, 0.3, wet), occ);
@@ -155,7 +166,7 @@ export function create(ctx: Context): Piece {
 
   const dummy = new THREE.Object3D();
   const NECK_UP = 30 * DEG;
-  const NECK_DOWN = 156 * DEG;
+  const NECK_DOWN = 139 * DEG;
   const sun = ctx.rig.sun;
 
   return {

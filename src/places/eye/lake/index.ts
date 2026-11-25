@@ -2,7 +2,7 @@
 // the shaft that goes straight down inside the shelf, and what rises at its centre.
 import * as THREE from 'three';
 import handoff from '../handoff.json';
-import { DEG, shoreAt, smooth } from '../layout';
+import { DEEP, DEG, at, shoreAt, smooth } from '../layout';
 import { lipAt, shelfDepth } from '../land/height';
 import { ROCK_GLSL, rockUniforms } from '../land/rock';
 import type { Context, Piece } from '../shared/context';
@@ -28,43 +28,68 @@ void main() {
 }`;
 
 // The mats: where they grow, how thick, and the grain of the filaments, which lie combed toward the centre and sway.
+const EDGE_BED = at(197.6, DEEP + 2);
+
 const MATS_GLSL = /* glsl */ `
 struct Mat {
   float cover;
   float strand;
   vec3 colour;
 };
-// Where the mats grow: beds with bare stone between, thin toward the shore, thick at the lip.
+// Where the mats grow: beds drawn out toward the centre, with dark water between, thin toward the shore and gone at the lip.
 float matBeds(vec3 p) {
   float r = length(p.xz);
   float shoreward = -landAt(p.xz).b;
-  float beds = 0.62 * vnoise(p.xz / 41.0) + 0.3 * vnoise(p.xz / 17.0 + 7.0) + 0.3 * vnoise(p.xz / 6.3 + 3.0) + 0.1 * vnoise(p.xz / 2.4) - 0.2;
-  return smoothstep(0.2, 0.42, beds) * smoothstep(2.0, 16.0, shoreward) * (1.0 - 0.35 * smoothstep(6.0, 0.0, r - 478.0));
+  vec2 dir = p.xz / max(r, 1.0);
+  float rays = 0.6 * vnoise(dir * 46.0 + vec2(r, -0.7 * r) / 85.0) + 0.4 * vnoise(dir * 150.0 + vec2(-0.6 * r, r) / 34.0 + 3.0);
+  float blobs = 0.6 * vnoise(p.xz / 38.0) + 0.4 * vnoise(p.xz / 9.0 + 3.0);
+  float beds = 0.72 * rays + 0.28 * blobs + 0.08 * vnoise(p.xz / 2.4);
+  // A bed lies over the lip where the old bones are.
+  beds += 0.34 * smoothstep(34.0, 6.0, length(p.xz - vec2(${EDGE_BED[0].toFixed(1)}, ${EDGE_BED[1].toFixed(1)})));
+  return smoothstep(0.38, 0.55, beds) * smoothstep(2.0, 16.0, shoreward);
 }
 Mat matsAt(vec3 p) {
   Mat m;
-  // The filaments lie combed along the slow drift of the water, in tresses that bend round each other, and sway where they lie.
+  m.cover = 0.0;
+  m.strand = 0.0;
+  m.colour = vec3(0.0);
+  float beds = matBeds(p);
+  if (beds <= 0.0) return m;
+  // The filaments lie combed from the shore toward the centre, in tresses that bend round each other, and sway where they lie.
   float r = length(p.xz);
   vec2 w = p.xz;
   vec2 bend = vec2(vnoise(w / 31.0), vnoise(w / 31.0 + 17.3)) - 0.5;
-  vec2 curl = vec2(vnoise(w / 5.1 + 3.1), vnoise(w / 5.1 + 9.9)) - 0.5;
-  vec2 kink = vec2(vnoise(w / 0.9 + 1.7), vnoise(w / 0.9 + 6.3)) - 0.5;
-  float sway = 0.045 * sin(uTime * 0.7 + 6.28 * vnoise(w / 1.9)) + 0.014 * sin(uTime * 1.7 + 6.28 * vnoise(w / 0.37));
-  // Combed from the shore toward the centre: across is metres round the lake, along is metres out from the middle.
-  vec2 q = vec2(atan(-p.x, p.z) * 560.0 + sway, r) + vec2(20.0, 9.0) * bend + 2.4 * curl + 0.16 * kink;
-  float beds = matBeds(p);
-  float tress = fbm(vec2(q.x / 0.8, q.y / 23.0));
-  m.cover = beds * smoothstep(0.26, 0.56, tress + 0.4 * (beds - 0.5));
-  // The threads are finer than a picture point from far off: there they are let go to their mean, so that nothing glitters.
+  vec2 curl = vec2(vnoise(w / 4.3 + 3.1), vnoise(w / 4.3 + 9.9)) - 0.5;
+  vec2 kink = vec2(vnoise(w / 0.8 + 1.7), vnoise(w / 0.8 + 6.3)) - 0.5;
+  float sway = 0.05 * sin(uTime * 0.7 + 6.28 * vnoise(w / 1.9)) + 0.016 * sin(uTime * 1.7 + 6.28 * vnoise(w / 0.37));
+  // Across is metres round the lake, along is metres out from the middle. The seam of the angle lies in the east, under the brow.
+  vec2 q = vec2(atan(p.z, -p.x) * 560.0 + sway, r) + vec2(20.0, 9.0) * bend + 3.4 * curl + 0.9 * (vec2(vnoise(w / 1.9 + 7.7), vnoise(w / 1.9 + 2.2)) - 0.5) + 0.5 * kink + 0.1 * (vec2(vnoise(w / 0.19), vnoise(w / 0.19 + 5.1)) - 0.5);
+  float tress = 0.55 * vnoise(vec2(q.x / 0.3, q.y / 3.2)) + 0.45 * vnoise(vec2(q.x / 0.085, q.y / 1.5) + 4.0);
+  m.cover = beds * smoothstep(0.44, 0.58, tress + 0.3 * (beds - 0.5));
+  // On the crust of the lip, out of the water, they lie dry: thinner and darker.
+  float dry = smoothstep(-0.03, 0.04, p.y);
+  m.cover *= 1.0 - 0.45 * dry;
+  // The threads are the lines where long thin noise crosses its middle: they run, part and join as hair does.
   float grain = fwidth(q.x);
-  float fine = mix(fbm(vec2(q.x * 11.0, q.y * 0.3) + 2.0), 0.5, smoothstep(0.03, 0.12, grain));
-  float hair = mix(vnoise(vec2(q.x * 55.0, q.y * 1.1) + 11.0), 0.5, smoothstep(0.006, 0.024, grain));
-  m.strand = smoothstep(0.4, 0.58, 0.4 * fine + 0.6 * hair + 0.24 * (m.cover - 0.5));
+  float a1 = vnoise(vec2(q.x * 14.0, q.y * 0.6) + 2.0);
+  vec2 q2 = q + 0.5 * (vec2(vnoise(w / 1.1 + 4.4), vnoise(w / 1.1 + 8.8)) - 0.5);
+  float a2 = vnoise(vec2(q2.x * 37.0, q2.y * 1.3) + 11.0);
+  float l1 = 1.0 - smoothstep(0.03, 0.15, abs(a1 - 0.5));
+  float l2 = 1.0 - smoothstep(0.03, 0.17, abs(a2 - 0.5));
+  // From far off they are finer than a picture point: there they are let go to their mean, so that nothing glitters.
+  l1 = mix(l1, 0.34, smoothstep(0.012, 0.05, grain));
+  l2 = mix(l2, 0.36, smoothstep(0.005, 0.02, grain));
+  float lines = max(l1, 0.9 * l2);
+  m.strand = 0.3 + 0.7 * lines;
   float kind = 0.7 * vnoise(vec2(q.x / 3.7, q.y / 13.0) + 5.0) + 0.3 * vnoise(vec2(q.x / 1.1, q.y / 5.0));
-  vec3 rust = vec3(0.2, 0.07, 0.016);
-  vec3 amber = vec3(0.42, 0.21, 0.035);
-  vec3 honey = vec3(0.7, 0.48, 0.11);
-  m.colour = mix(mix(rust, amber, smoothstep(0.3, 0.6, kind)), honey, smoothstep(0.5, 0.85, hair) * smoothstep(0.35, 0.7, kind));
+  vec3 rust = vec3(0.17, 0.04, 0.012) * (1.0 - 0.3 * dry);
+  vec3 amber = vec3(0.36, 0.13, 0.02) * (1.0 - 0.3 * dry);
+  vec3 honey = vec3(0.6, 0.38, 0.07);
+  vec3 body = mix(rust, amber, smoothstep(0.35, 0.65, kind)) * 0.4;
+  vec3 thread = mix(mix(rust * 1.5, amber, smoothstep(0.3, 0.55, kind)), honey, l2 * smoothstep(0.48, 0.75, kind));
+  m.colour = mix(body, thread, lines);
+  // From far off the beds are amber and gold, not red.
+  m.colour *= mix(vec3(1.0), vec3(1.5, 1.6, 1.0), smoothstep(0.02, 0.2, grain));
   return m;
 }`;
 
@@ -82,11 +107,18 @@ void main() {
   Rock k = rockAt(vWorld, n, 0.0);
   // Pale stone, stained where the mats lie on it.
   float stained = matBeds(vWorld);
-  vec3 albedo = mix(k.albedo, vec3(0.6, 0.56, 0.47) * (0.6 + 0.6 * k.occ), 0.6);
-  albedo = mix(albedo, albedo * vec3(0.3, 0.15, 0.07), 0.8 * stained);
+  // Dark silt, with slabs of pale stone standing through it, pale gravel at the shore and a pale crust at the lip.
+  float shoreward = -landAt(vWorld.xz).b;
+  float slab = smoothstep(0.58, 0.68, 0.7 * vnoise(vWorld.xz / 6.3 + 2.0) + 0.3 * vnoise(vWorld.xz / 2.1));
+  slab = max(slab, max(smoothstep(5.0, 1.0, shoreward), smoothstep(-0.14, -0.02, vWorld.y)));
+  vec3 pale = mix(k.albedo, vec3(0.6, 0.56, 0.47) * (0.6 + 0.6 * k.occ), 0.6);
+  vec3 albedo = mix(vec3(0.085, 0.06, 0.045) * (0.7 + 0.5 * k.occ), pale, slab);
+  albedo = mix(albedo, albedo * vec3(0.55, 0.3, 0.14), 0.7 * stained);
   // Out of the water the rim is wet stone; under it the stone is darker than it is dry.
   float dry = smoothstep(0.0, 0.14, vWorld.y);
   albedo *= mix(0.62, 0.8, dry);
+  // Under the water the silt lies smooth.
+  k.normal = normalize(mix(n, k.normal, mix(0.3, 1.0, max(slab, dry))));
   vec3 c = rigShade(vWorld, k.normal, v, albedo, mix(0.95, 0.4, smoothstep(-0.02, 0.03, vWorld.y) * (1.0 - 0.5 * dry)), k.occ) * sunk(vWorld);
   gl_FragColor = vec4(rigOut(throughWater(c, vWorld)), 1.0);
 }`;
@@ -123,7 +155,7 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // Far down nothing of the wall comes back up: there it is only the dark of the water, and is not worked out.
   vec3 reach = sunk(vWorld);
-  if (reach.b < 0.004) {
+  if (reach.b < 0.035) {
     gl_FragColor = vec4(rigOut(throughWater(vec3(0.0), vWorld)), 1.0);
     return;
   }
@@ -248,10 +280,14 @@ void main() {
   vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
   // The sky is not drawn into the mirror: the water takes it from the rig, and darker than it is, as deep water under a low sun does.
   vec3 rd = reflect(-v, n);
-  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror;
+  vec3 sky = skyRadiance(vec3(rd.x, abs(rd.y), rd.z)) * uSkyMirror * mix(1.0, 0.4, smoothstep(0.06, 0.45, abs(rd.y)));
   // The land stands in the water darker than it stands in the air.
-  vec3 refl = seen.rgb * vec3(0.66, 0.68, 0.72) + (1.0 - seen.a) * sky;
+  vec3 refl = seen.rgb * vec3(0.56, 0.6, 0.66) + (1.0 - seen.a) * sky;
   refl = mix(refl, sky, smoothstep(0.75, 0.95, v.y));
+  // The dome is no flat mirror: its slopes throw back the dim upper sky, and it stands dark on the bright water.
+  float du = clamp(r / uDome.y, 0.0, 1.0);
+  float swell = (1.0 - du * du) * clamp(uDome.x / 2.0, 0.0, 1.0);
+  refl = mix(refl, refl * 0.3 + sky * 0.45, smoothstep(0.0, 0.45, swell));
   // Where the mats have grown up to the surface it is not a mirror at all.
   if (r > 470.0) f *= 1.0 - mix(0.5, 0.94, smoothstep(25.0, 220.0, length(cameraPosition - p))) * matBeds(p);
   vec4 c = vec4(refl * f, f);
@@ -474,7 +510,7 @@ export function create(ctx: Context): Piece {
       uRestRing: { value: linear(handoff.ring) },
       uRestRadius: { value: restRadius },
       uRestWidth: { value: handoff.ringWidth },
-      uSkyMirror: { value: new THREE.Vector3(0.24, 0.3, 0.42) },
+      uSkyMirror: { value: new THREE.Vector3(0.19, 0.26, 0.4) },
     },
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,

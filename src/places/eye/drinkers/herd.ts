@@ -43,9 +43,9 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     near(-83.6, -7.6, 78, 0.52, steady(0.9, 1.1)),
     near(-79.8, -6.6, 76, 1, steady(0.97, 2.2)),
     near(-71.4, -1.4, 283, 1, steady(0.97, 4)),
-    // The two of the last shot, on the bluff under the camera: they lift their heads as the centre swells.
-    { x: centre[0] - 1.0, z: centre[2] - 11, facing: 8, size: 0.62, down: (t) => 0.1 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
-    { x: centre[0] + 0.6, z: centre[2] - 12, facing: 354, size: 0.56, down: (t) => 0.17 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
+    // The two of the last shot, on the brow of the bluff below the camera with their backs to it: they lift their heads as the centre swells.
+    { x: centre[0] - 2.43, z: centre[2] - 29.5, facing: 7, size: 0.61, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
+    { x: centre[0] - 0.5, z: centre[2] - 28.7, facing: 351, size: 0.47, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
     // The one of the mats shot, in the shallows at its left third.
     from(KEYS.mats, -12, 17, 86, 1, steady(0.96, 0.7)),
     from(KEYS.mats, -22, 64, 250, 1, steady(0.95, 3.1)),

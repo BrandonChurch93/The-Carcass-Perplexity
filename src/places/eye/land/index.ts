@@ -1,7 +1,7 @@
 // The land of the Eye: the socket of pale cliffs with its aprons of scree, the brow that hangs over the east shore, the loose stone,
 // and the stream that leaves the lake through the rim beside the wide camera.
 import * as THREE from 'three';
-import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeVertices, toCreasedNormals } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { DEG, shoreAt, smooth } from '../layout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
@@ -145,11 +145,13 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
-  float run = 0.0;
-  for (int i = 0; i < 3; i++) run += smoothstep(7.0, 0.0, abs(vFlow.x - uFall[i]));
+  // It runs toward the lake: fast and white on the steps and down the face of the spur, slow in the pools between.
+  float run = smoothstep(108.0, 98.0, vFlow.x) * smoothstep(14.0, 24.0, vFlow.x);
+  for (int i = 0; i < 3; i++) run += smoothstep(3.0, 0.0, abs(vFlow.x - uFall[i]));
+  run = min(run, 1.0);
   float speed = 0.9 + 2.6 * run;
-  vec2 q = vec2(vFlow.x - uTime * speed, vFlow.y * 2.2);
-  vec2 q2 = vec2(vFlow.x - uTime * speed * 0.6, vFlow.y * 2.2);
+  vec2 q = vec2(vFlow.x + uTime * speed, vFlow.y * 2.2);
+  vec2 q2 = vec2(vFlow.x + uTime * speed * 0.6, vFlow.y * 2.2);
   float a = fbm(q * vec2(1.3, 2.0));
   float b = fbm(q2 * vec2(3.1, 5.0) + 7.0);
   float e = 0.12;
@@ -221,6 +223,7 @@ export function create(ctx: Context): Piece {
     const size = 0.22 + 3.4 * rng.next() ** 4;
     // The path of the wide camera is kept clear of anything it could pass through.
     if (Math.abs(across) < 3.2 + size && size > 0.45) continue;
+    if (Math.abs(across - streamAcross(along)) < 1.6 + size) continue;
     const clump = vnoise(along / 14 + 3, across / 14 + 8);
     if (clump < 0.42 && size < 1.2) continue;
     const [x, z] = onAxis(along, across);
@@ -228,16 +231,18 @@ export function create(ctx: Context): Piece {
   }
   // The blocks the wide shot looks past, at the foot of its frame.
   const near: [number, number, number][] = [
-    [108, 20, 5.5],
-    [112, 14, 3.6],
-    [104, 26, 4.4],
-    [100, 15, 2.6],
-    [109, -19, 5.2],
-    [113, -13, 3.4],
-    [103, -25, 4.6],
-    [99, -13, 2.4],
-    [92, 30, 3.4],
-    [90, -33, 4],
+    [128, 17, 4.6],
+    [121, 22, 5.6],
+    [133, 12.5, 2.6],
+    [114, 15, 3.2],
+    [109, 25, 4.2],
+    [126, -19, 4.4],
+    [119, -27, 5.2],
+    [132, -8, 2.2],
+    [113, -17, 3],
+    [107, -31, 4],
+    [137, 9, 1.5],
+    [138, -6.5, 1.3],
   ];
   for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);
@@ -261,8 +266,10 @@ export function create(ctx: Context): Piece {
     for (let k = 0; k < VARIANTS; k++) {
       const mine = list.filter((_, i) => i % VARIANTS === k);
       if (mine.length === 0) continue;
-      const geometry = mergeVertices(stoneGeometry(tier * 3 + k + 1, tier === 0 ? 3 : tier === 1 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
-      geometry.computeVertexNormals();
+      const merged = mergeVertices(stoneGeometry(tier * 3 + k + 1, tier === 0 ? 3 : tier === 1 ? 2 : 1).deleteAttribute('uv').deleteAttribute('normal'));
+      merged.computeVertexNormals();
+      // The blocks are broken stone: their faces meet in edges.
+      const geometry = tier < 2 ? toCreasedNormals(merged, 0.5) : merged;
       const tints = new Float32Array(mine.length * 3);
       const mesh = new THREE.InstancedMesh(geometry, stoneMaterial, mine.length);
       mine.forEach((s, i) => {
@@ -304,8 +311,8 @@ export function create(ctx: Context): Piece {
   const flow = new Float32Array(count * ACROSS * 2);
   for (let i = 0; i < count; i++) {
     const along = FROM + i * STEP;
-    const half = (2.2 + 1.6 * vnoise(along / 9, 3.3)) * (1 + 1.5 * smooth(18, -10, along));
-    const level = streamBed(along) + 0.36 - 0.05 * smooth(10, 40, along);
+    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 + 2.5 * smooth(18, -10, along));
+    const level = streamBed(along) + 0.3 - 0.05 * smooth(10, 40, along);
     for (let j = 0; j < ACROSS; j++) {
       const side = (j / (ACROSS - 1)) * 2 - 1;
       const [x, z] = onAxis(along, streamAcross(along) + side * half);
@@ -330,7 +337,7 @@ export function create(ctx: Context): Piece {
   streamGeometry.setAttribute('aFlow', new THREE.BufferAttribute(flow, 2));
   streamGeometry.setIndex(index);
   const streamMaterial = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, uFall: { value: [56, 101, 156] } },
+    uniforms: { ...ctx.rig.uniforms, uFall: { value: [114, 128.5, 143] } },
     vertexShader: STREAM_VERTEX,
     fragmentShader: STREAM_FRAGMENT,
     side: THREE.DoubleSide,

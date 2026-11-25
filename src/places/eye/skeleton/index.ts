@@ -24,11 +24,14 @@ void main() {
   // Old bone: chalk where the sun has had it, stained brown and amber where it lies in the water and the mats have taken it.
   float grain = fbm(vWorld.xz * 9.0 + vWorld.y * 7.0);
   float pit = vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0);
-  vec3 bone = vec3(0.66, 0.58, 0.43) * (0.6 + 0.5 * grain) * (0.84 + 0.3 * pit);
+  vec3 bone = vec3(0.6, 0.56, 0.47) * (0.6 + 0.5 * grain) * (0.84 + 0.3 * pit);
   bone = mix(bone, bone * vec3(0.8, 0.52, 0.26), smoothstep(0.4, 0.7, vnoise(vWorld.xz * 23.0 + vWorld.y * 31.0)));
   float low = smoothstep(0.26, 0.02, vWorld.y + 0.14 * (grain - 0.5));
   vec3 stain = mix(vec3(0.3, 0.17, 0.07), vec3(0.42, 0.22, 0.05), grain);
   vec3 albedo = mix(bone, stain, 0.85 * low);
+  // The mats have taken most of it: amber and brown in blotches, the chalk only on the upper sides.
+  float taken = smoothstep(0.35, 0.6, 0.6 * vnoise(vWorld.xz * 4.1 + vWorld.y * 3.0) + 0.4 * grain) * (1.0 - 0.6 * smoothstep(0.2, 0.9, n.y));
+  albedo = mix(albedo, stain * (0.55 + 0.6 * pit), 0.55 * taken);
   albedo *= mix(1.0, 0.55, smoothstep(0.5, 0.0, n.y) * 0.5);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.8, 0.35, low), 0.6 + 0.4 * smoothstep(-0.4, 0.5, n.y));
   if (vWorld.y < 0.0) c = throughWater(c * sunk(vWorld), vWorld);

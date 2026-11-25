@@ -55,9 +55,9 @@ const float TOP = 30.0;
 
 // How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
 float mistAt(vec3 p, vec4 land) {
-  float band = smoothstep(-260.0, -40.0, land.b) * (1.0 - smoothstep(40.0, 230.0, land.b));
+  float band = smoothstep(-200.0, -30.0, land.b) * (1.0 - smoothstep(30.0, 170.0, land.b));
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
-  float lift = 5.0 + 9.0 * vnoise(p.xz / 210.0 + 3.0);
+  float lift = 3.0 + 6.0 * vnoise(p.xz / 210.0 + 3.0);
   float thick = band * far * exp(-max(p.y, 0.0) / lift);
   if (thick < 0.004) return 0.0;
   vec2 q = p.xz / 150.0 + vec2(uTime * 0.012, -uTime * 0.007);
