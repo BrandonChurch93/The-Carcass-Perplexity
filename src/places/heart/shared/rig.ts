@@ -24,7 +24,9 @@ export const MAX_EMITTERS = 8;
 // Its green and blue were 0.36 and 0.12 and it hid a quarter of the sky: the floor of that shot stood 1.9 times as red as blue against the
 // picture's 1.5, lit by the bank more than by the sky. The smoke is pale grey lit from below and thin enough to pass the sky: the same red, more
 // green and blue, a tenth of the sky hidden. The red of the floor is then the melt's own, within a few metres of it.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.1, radiance: [0.75, 0.52, 0.38] as const };
+// Then the skin lifted the floor's own tone and the floor stood too neutral (73 62 56 against 64 48 43) and the animals cold grey: part of the
+// way back, 0.42 and 0.26 and a fifth of the sky hidden.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.2, radiance: [0.75, 0.42, 0.26] as const };
 // The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
 // reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
 // gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
