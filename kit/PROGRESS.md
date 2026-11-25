@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 31, 2026-11-25 06:36 UTC:
+Status 32, 2026-11-25 06:51 UTC:
 
-- `01-set-a-01.jpg`: Round 3, the wide view exactly as the jury saw it (built before the third versions below)
-- `02-cmp-heart-1.jpg`: The line, approved picture and frame, with the new fire colours of the light owner
-- `03-compare-heart-2.jpg`: The one that sank, third version, beside its picture
-- `04-v3-compare-heart-4.jpg`: The mouth and its fall, third version, beside its picture
+- `01-heart-0.jpg`: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet
+- `02-heart-3.jpg`: Feeding at a seam after the merge: the animals and the seam are the picture's, the crust is flat and the far wall ends in a square corner
+- `03-heart-1.jpg`: The line after the merge: the channel is cut as a trench, the picture's is full to the brim with a white-hot core (sent to both lake owners)
+- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
 
+Status 31, 2026-11-25 06:36 UTC, showed: Round 3, the wide view exactly as the jury saw it (built before the third versions below); The line, approved picture and frame, with the...
 Status 30, 2026-11-25 06:13 UTC, showed: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal.
 Status 29, 2026-11-25 05:53 UTC, showed: Left: the approved hero. Right: ours as it stands.
-Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T06:36:13Z
-phase 3: 3.45 h used of 13.00 h
-build: 10.10 h used of 72.00 h
+2026-11-25T06:51:21Z
+phase 3: 3.70 h used of 13.00 h
+build: 10.36 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 15
 ```
 
 ## Phases
@@ -575,6 +575,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 06:39 UTC. The lake of the Heart goes to two fresh owners at once, heart_crust_owner (the solid crust: lake/index.ts, net.ts) and heart_lava_owner (the melt, the fountains, the foundering: heat.ts, founder.ts, outline.ts, a new lava.ts), because round 3 names the lake first in every list (a flat sheet with a stretched texture, lava as paint that lights nothing, nothing flows), its first owner stopped after its third version, and one owner did not get through the list in three versions. They share one page (out/work/briefs/LAKE-SHARED-R3.md): net.ts is the one source of where the gaps are, the functions of HEAT_GLSL keep their arguments, the melt lies 0.25 to 0.9 m below the brim as the lava owner's surface and the crust owner builds the walls, create() calls createLava() once. They start from agent/base-r3, which is main with every third version, the light's first version and the determinism fix, joined in a second worktree while the round's measure still runs in the main checkout.
 - 2026-11-25. 06:41 UTC. The camera of heart-4 stays where it is (the long lens from the bench, 766 m from the mouth), although the picture reads as shot from nearer: the fall, the wall and the air are built to that lens by three owners and a move now would cost each of them a version. What changes instead is the subject, to the picture: the mouth a wide low ribbed arch lit from its floor, the course one connected zigzag ribbon that runs diagonally down to the right, a fan of braided channels with a ragged edge on the lake, clear air and charcoal rock along the view, a dark rock close to the lens at the bottom edge. If round 4 still reads as a flat backdrop, the camera of that shot is the next thing to move.
 - 2026-11-25. 06:44 UTC. The heap of rock the land owner set by the camera of heart-3, which stands in the lake 63 m from the shore and shows in the wide view, is kept: it becomes a small island of welded spatter and broken slabs with a skirt of rubble and upturned crust, and the crust owner breaks the plates round it. The picture of heart-3 has a dark rock close to the lens at lower left, and a heap set down on a flat floor would read as a prop.
+- 2026-11-25. 06:48 UTC. The lake's channel is redrawn from the picture of the line: melt 5 to 30 cm below the brim under a thin curled lip, not a trench 0.25 to 0.9 m deep between walls; crust as smooth billowy pahoehoe with a sheen. Why: beside the picture the trench of the merged build reads as a canyon in a model. Sent to both lake owners with the compare.
+- 2026-11-25. 06:53 UTC. Levels measured on the merged main against the five pictures (rock and crust only): the frame's ground is about one and a half stops too dark on the lake and near ground, redder (red over blue 1.24 to 1.55 against 1.16 to 1.27) and its blacks fall to 3 to 12 against 20 to 40; the sky matches. The light's second version must bring the ground to the picture's levels by fill and sheen, not by exposure or grade. Table sent to the light, crust, land, fall and air owners.
 
 ## Notes from Brandon
 
@@ -780,3 +782,4 @@ none
 - 2026-11-25 06:25 UTC. 06:26 UTC: round 3, the motion critic answered on both R4 packs: 4 and 4. Severe: the surge switches on in one frame (4009 to 4010); the herd reads as mechanical models; the fall shot is a still for its first three seconds and the surge slides like a mask. Major: lava patterns locked in place, the fume column frozen over seven seconds, the sunk shot a still diorama, the seam under the animals static. I looked at the sheets and agree with every line. Each owner has its lines word for word with what I want (flow in open lava, a column that rises and rolls, ash in the near air, steps with weight and travel, a surge with a lead-in and a travelling front). The determinism hunter fixed G3 (two discards ahead of derivatives in the lake's shaders; agent/determinism 1488769, MEASURED there: npm run determinism passes twice); it merges with the third versions as soon as this machine's measures end. Light v1 (f94d366): blackbody now has the display's colour plus a clip term above 1450 K, fire curve [0.12, 0.7, 0.6], knee [0.6, 0.5]; open lava must be drawn at 1320 to 1400 K to read orange, passed to all owners.
 - 2026-11-25 06:36 UTC. Status 31 shown in the thread (06:36 UTC): the judged wide frame of round 3, the line with the new fire colours, the third versions of the one that sank and of the fall; round 3 scores so far R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 3 of 24.
 - 2026-11-25 06:46 UTC. Round 3 closed at 06:45 UTC: R1 4, R3 3, R4 4, jury 4 of 25 (0.16 against 0.76 needed), M1 and M2 green, M3 red at heart-4. A floor round, failed as expected; nothing declined. Third versions of all six folders, the light's first version and the determinism fix merged at 06:44 UTC.
+- 2026-11-25 06:51 UTC. Status 32 shown in the thread (06:51 UTC): compares of the merged main at the wide view, the feeding and the line; round 3 closed (R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 4 of 25), measures M1 and M2 green and M3 red at heart-4, merge done (818 of 818 tests, determinism passes), my reading of the merged frames (red-brown cast, crust without lobes or sheen, trench where the picture has a brimming channel, mouth and fall not the picture's), and what runs next. Correction sent to both lake owners at 06:48: the melt lies 5 to 30 cm below the brim with a thin curled lip, not 0.25 to 0.9 m between walls; the crust is smooth billowy pahoehoe with a sheen.
