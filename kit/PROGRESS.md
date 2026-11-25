@@ -568,6 +568,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. The feeding shot was restaged from the approved picture's own geometry: the hero's back stands at about twice the height of the lens and its feet a third up the frame, which with a hero 11 m at the back puts the lens 66 m away and 6.3 m over the crust (it was 80 m and 3 m, which made the hero small over an empty plane). The second and third of the group were placed where the picture has them; two more stand out of that frame
 - 2026-11-25. Depth of field is built as a hybrid by a supporting agent: the kit fixes one lens point per sample and the tiers have 1, 2 and 4 samples, which draws ghost copies, so a gather blur by depth runs once after accumulation and fills between them. Until it lands every Heart lens stays at aperture 0
 - 2026-11-25. Warmth of the low views comes from the air lit by the lake (the air owner's layer), not from the grade: the grade stays neutral so the wide key keeps its measured regions
+- 2026-11-25. The jury of the Heart is one fixed panel of five (two of one family, two of another, one of the third) for the controls and for every round, so a frame is never judged by a harder panel than its control was. Jurors are fresh agents each time
 
 ## Notes from Brandon
 
@@ -757,3 +758,4 @@ none
 - 2026-11-25 05:17 UTC. Status 27 sent: four compares (line, sunk, wide key, mouth) with fall, air, lake and sunk v2 merged; cameras on one grammar; tone measured per key
 - 2026-11-25 05:30 UTC. Study written under Look lock: ten lines from nine sources (three photographs, six USGS records)
 - 2026-11-25 05:34 UTC. Status 28 posted: the feeding shot restaged, its motion sheet, notes to the owners, tests 818 of 818
+- 2026-11-25 05:42 UTC. Jury controls of the Heart collected ahead of the first round: 25 votes (5 pictures, 5 jurors on three families), 24 for a film frame and 1 for an ordinary render, control share 0.96; the judged frames must reach 0.76. Record: scorecards/controls/heart-R2.json
