@@ -43,6 +43,7 @@ float gAcross;
 float gIsle;
 // The least share of a pixel a gap fills: a far seam seen edge on shows its lit far wall and the glow over it, and never thins to nothing.
 float gFloor = 0.0;
+float gFoot = 0.0;
 // Islands of dark crust stand in the stream of a wide channel, away from its banks.
 float isleAt(vec2 q, float across) {
   return smoothstep(0.6, 0.66, vnoise(q / 1.7 + 31.0) * 0.72 + vnoise(q / 0.45 + 7.0) * 0.28) * (1.0 - smoothstep(0.4, 0.62, across));
@@ -53,6 +54,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 #else
   float foot = max(least, fwidth(d));
 #endif
+  gFoot = foot;
   float ww = max(max(wide, 0.75 * foot), 1e-4);
   // Seen from far, a gap of a few pixels shows the mean of its melt, not the skin at its edges: the profile across it fades out.
   float far = smoothstep(0.1, 0.55, foot / max(wide, 1e-3));
@@ -63,7 +65,8 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 #ifdef LAKE_LIP
   // What the lava in the gap throws on the skin beside it.
   float off = max(d - wide, 0.0);
-  gLip += blackbody(core - 90.0) * (lit * wide / (wide + 1.3 * off + 0.004) * exp(-off / 2.6));
+  // Seen close it ends within a metre; from far it is a pixel and a half of warmth beside the seam.
+  gLip += blackbody(core - 90.0) * (lit * wide / (wide + 1.3 * off + 0.004) * exp(-off / (0.3 + 1.5 * foot)) * (1.0 - smoothstep(0.6 + 3.0 * foot, 1.0 + 5.0 * foot, off)));
 #endif
   // Yellow only in the middle of a wide gap, orange over most of it, deep red where the skin begins.
   float k = mix(core, min(core, 1190.0), smoothstep(0.15, 0.6, x));
@@ -73,6 +76,9 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 
 // The half width of the gap at the nearest seam now, and in y how far its skin has grown back (0 to 1).
 // The life of a seam: it opens, widens, its skin grows in from the edges, it closes. Different seams are at different places in that life.
+const float LINE_NARROW = 0.55;
+// How much wider the net has the gap than it is drawn, as of the last call of gapeAt.
+float gWas = 1.0;
 vec2 gapeAt(vec2 q, vec4 n) {
   float shown = step(1.5, n.g);
   vec2 pr = (q - uPool.xy) * uPool.zw;
@@ -82,6 +88,11 @@ vec2 gapeAt(vec2 q, vec4 n) {
   float widen = smoothstep(0.0, 0.36, u) * (1.0 - smoothstep(0.9, 1.0, u));
   float along = smoothstep(0.2, 0.6, vnoise(q / 38.0 + 3.1)) * (0.45 + 1.1 * vnoise(q / 5.7 + 7.0));
   float reach = n.a * mix(along * plain, 0.85 + 0.3 * vnoise(q / 1.7), shown);
+  // The channel at the line is a narrow crack, half a metre to a metre and a half wide.
+  // It stays wide enough for the crust to cut it down to the melt.
+  float narrowed = mix(reach, max(LINE_NARROW * reach, min(reach, 0.32)), shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)));
+  gWas = reach / max(narrowed, 1e-3);
+  reach = narrowed;
   return vec2(reach * mix(widen, 1.0, max(shown, byPool)), smoothstep(0.46, 0.84, u));
 }
 
@@ -92,11 +103,11 @@ float bankAt(vec2 q, vec4 n) {
 }
 
 // The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). The gaps are nearly full: a hand or two
-// below the brim. One level for a seam, so the liquid lies level: the channel at the line and its fingers lowest (0.22 m), the long
+// below the brim. One level for a seam, so the liquid lies level: the channel at the line and its fingers at 0.1 m, the long
 // seam of the group at 0.17 m, the narrow near seams highest (0.08 m), the fountain lines at 0.2 m.
 float meltLevel(vec4 n) {
   float c = n.g - 2.0;
-  return -mix(mix(0.22, 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+  return -mix(mix(0.1, 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
 }
 
 // The mean heat of the melt of a wide gap, as the light it throws: kelvin. Hot spots come and go slowly along a seam.
@@ -134,7 +145,8 @@ vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
   // Nothing reaches a point far below the melt or far from it.
   // The picture shows a warm wash for about the width of the channel and little more, and a wall that glows dimly, not a lamp:
   // most of what the melt sends up is taken by the air and the skin on it.
-  float reach = exp(-max(off, 0.0) / (0.5 + 1.8 * w));
+  // Level crust more than a metre from a gap gets nothing.
+  float reach = exp(-max(off, 0.0) / (0.25 + 0.5 * w)) * (1.0 - smoothstep(0.5, 1.0, off));
   // The bank is a thin dark lip with a hair of orange at its foot: the direct light dies a hand above the melt.
   float foot = smoothstep(-0.15, 0.0, y - level) * exp(-max(y - level, 0.0) / 0.05);
   return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * foot + 0.12 * air * smoothstep(0.3, 0.8, nrm.y)));
@@ -155,6 +167,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   vec2 life = gapeAt(q, n);
   float gape = life.x;
   float skin = life.y;
+  float was = gWas;
   float hotHalf = gape * mix(1.0 - 0.8 * skin, 1.0, max(shown, byPool));
   // Far from every camera route the lake is a web of long live seams, as the wide picture has it. The net has none so long, so
   // they are drawn here: the crooked lines where a slow field crosses its middle, a main web and a finer one that branches from
@@ -186,26 +199,28 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   // A seam is brighter where it is wide, and a few are fully open. Hot spots come and go along it, slowly.
   float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
   float stirred = step(3.3, n.g);
-  float core = mix(1250.0 + 110.0 * smoothstep(0.06, 0.4, hotHalf) + 70.0 * fully, 1400.0 - 300.0 * clamp(n.g - 2.0, 0.0, 1.0) * (1.0 - stirred), shown);
+  float core = mix(1250.0 + 110.0 * smoothstep(0.06, 0.4, hotHalf) + 70.0 * fully, mix(1190.0, 1400.0 - 300.0 * clamp(n.g - 2.0, 0.0, 1.0) * (1.0 - stirred), max(smoothstep(0.12, 0.25, hotHalf), stirred)), shown);
+  // Where the line is too narrow for the crust to cut it down to the melt, this sheet draws it: skinned over, dark red, not a slab of orange.
+  core = mix(core, 1085.0, shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)) * (1.0 - smoothstep(0.26, 0.34, hotHalf)));
   float spot = vnoise(q / 5.3 + vec2(uTime * 0.05, 2.0)) * 0.7 + vnoise(q / 1.9 + vec2(3.0, uTime * 0.09)) * 0.3;
   core -= mix(150.0, 110.0, shown) * smoothstep(0.6, 0.4, spot);
   core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown);
   gLip = vec3(0.0);
   gIsle = 0.0;
   float seenFloor = least > 0.5 ? 0.0 : 1.0;
-  gFloor = 0.3 * smoothstep(0.05, 0.25, hotHalf) * (1.0 - shown) * seenFloor;
+  gFloor = 0.45 * smoothstep(0.03, 0.15, hotHalf) * (1.0 - shown) * seenFloor;
   vec2 g = gapHeat(d, hotHalf, core, least);
   gFloor = 0.0;
   if (farHalf > 0.0) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
-    gFloor = (0.25 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
+    gFloor = (0.4 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
     vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5), least);
     if (f.x > g.x) g = f;
     gFloor = 0.0;
 #ifdef LAKE_LIP
     // The warm halo on the crust beside a far seam.
     float beside = max(farD - farHalf, 0.0);
-    gLip += blackbody(1300.0) * (4.0 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / 5.0));
+    gLip += blackbody(1300.0) * (3.0 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / (0.4 + 1.5 * gFoot)));
 #endif
   }
   // The glow map lights feet, legs, ground and air beside a seam the pictures show: there the melt goes in at its true width
@@ -214,7 +229,8 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     // Most of a channel is dark skin: the map carries the share of it that shows bright, more at the seams the walkers have torn open to feed.
     float c = n.g - 2.0;
     float feeding = smoothstep(0.04, 0.07, c) * (1.0 - step(1.3, c));
-    float bright = mix(0.07 + 0.13 * max(smoothstep(0.4, 0.7, gape), stirred), 0.22, feeding);
+    // The line is drawn narrower than the net has it: its share rises by as much, and the map's energy is what it was.
+    float bright = mix(0.07 + 0.13 * max(smoothstep(0.4, 0.7, gape * was), stirred), 0.22, feeding) * was;
     g = vec2(gapHeat(d, gape, core, least).x * bright, clamp(meltKelvin(q, n), 1320.0, 1400.0));
     gLip = vec3(0.0);
   }
