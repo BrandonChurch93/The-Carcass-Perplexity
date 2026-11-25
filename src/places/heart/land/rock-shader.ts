@@ -191,13 +191,14 @@ void main() {
   }
   // One mound of crystals at the vent of the crag's foot, with the ground's (land/shaders.ts, the same reach and colours): the small
   // stones within half a metre of the short crack carry a pale cream crust, lemon on the knobs only, and the dark rock shows between the blots.
-  float mound = smoothstep(0.55, 0.3, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.5, 0.9, size));
+  // Half a coat only, and on stones under a hand's width or two: a stone wholly cream made the mound a heap of pale pebbles.
+  float mound = smoothstep(0.55, 0.3, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.2, 0.4, size));
   if (mound > 0.0) {
     float knob = smoothstep(0.62, 0.85, height);
     // The ground's blots are a third of a metre across; a stone of a hand's width needs them finer to show dark rock between,
     // and carries the crust on what looks up, not on its sides.
     float blots = smoothstep(0.4, 0.58, vnoise3(vWorld / 0.11 + 6.4)) * smoothstep(-0.25, 0.45, n0.y);
-    albedo = mix(albedo, mix(vec3(0.84, 0.8, 0.58), vec3(0.9, 0.78, 0.3), knob) * (0.7 + 0.5 * knob), mound * blots);
+    albedo = mix(albedo, mix(vec3(0.84, 0.8, 0.58), vec3(0.9, 0.78, 0.3), knob) * (0.7 + 0.5 * knob), 0.5 * mound * blots);
   }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
   // Undersides and the faces that lean over see the ground, not the sky.
