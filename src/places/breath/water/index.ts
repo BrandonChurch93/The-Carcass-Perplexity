@@ -10,15 +10,12 @@ import { RIPPLES } from '../waders/ripples';
 
 export const PARTS: readonly string[] = ['sea'];
 
-/** The square of the shelf whose bed is known to a third of a metre: the channel, the rim and what the five cameras stand on. */
-const NEAR = { x: -20, z: -40, half: 170, cells: 1024 };
-/** The rest, to the horizon. */
+/** The bed beyond the shelf, to the horizon. On the shelf the water reads the rig's own land. */
 const FAR = { x: 0, z: 0, half: 6000, cells: 512 };
 const WORLD = 16000;
 
 export function create(ctx: Context): Piece {
   const height = (x: number, z: number): number => ctx.rig.land.height(x, z);
-  const near = bedMap(height, SEA_LEVEL, NEAR.x, NEAR.z, NEAR.half, NEAR.cells);
   const far = bedMap(height, SEA_LEVEL, FAR.x, FAR.z, FAR.half, FAR.cells);
   const waves = waveMap(ctx.rng('water-waves'));
 
@@ -28,9 +25,7 @@ export function create(ctx: Context): Piece {
     fragmentShader: FRAGMENT,
     uniforms: {
       ...ctx.rig.uniforms,
-      tBedNear: { value: near },
       tBedFar: { value: far },
-      uBedNear: { value: new THREE.Vector4(NEAR.x - NEAR.half, NEAR.z - NEAR.half, 1 / (2 * NEAR.half), 0) },
       uBedFar: { value: new THREE.Vector4(FAR.x - FAR.half, FAR.z - FAR.half, 1 / (2 * FAR.half), 0) },
       tWave: { value: waves },
       uSea: { value: SEA_LEVEL },
@@ -61,7 +56,6 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       geometry.dispose();
       material.dispose();
-      near.dispose();
       far.dispose();
       waves.dispose();
     },

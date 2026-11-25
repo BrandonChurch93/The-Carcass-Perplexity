@@ -3,7 +3,8 @@
 import * as THREE from 'three';
 import { DEAD_WADER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { HALF_H, HALF_W, curve, makeBuild } from '../waders/animal';
+import { bodyHalfH, bodyHalfW, makeBuild } from '../waders/animal';
+import { makeGround } from './ground';
 import { FRAGMENT, VERTEX } from '../waders/material';
 import { Skin, type Tube } from '../waders/skin';
 
@@ -39,19 +40,22 @@ function through(points: readonly V3[], u: number): V3 {
 
 export function create(ctx: Context): Piece {
   const { rig } = ctx;
-  const k = DEAD_WADER.size;
+  // It lies nearer the lens of the rim's picture than the anchor allows: it is drawn a quarter larger than it stood, so it holds its place in the frame.
+  const k = DEAD_WADER.size * 1.12;
   const rng = ctx.rng('dead-wader');
   const seed = 41.7;
   const b = makeBuild(k, seed, false);
   const skin = new Skin();
   // The anchor's turn is that of the stand-in, whose length lay across the animal's own axis here: the spine lies across the view from the rim.
   const turn = DEAD_WADER.turn - 1.07;
+  const SHIFT = 0.9;
   const cos = Math.cos(turn);
   const sin = Math.sin(turn);
   /** From the animal's own metres (x toward its legs, y up from the rock, z toward its neck) to the world, laid on the ground. */
   const world = (p: V3): V3 => {
-    const x = DEAD_WADER.x + (p[0] * cos + p[2] * sin) * k;
-    const z = DEAD_WADER.z + (-p[0] * sin + p[2] * cos) * k;
+    // The anchor is under its chest, not its middle: the whole of it, with the fan of its tendrils, is inside the frame of the rim's picture.
+    const x = DEAD_WADER.x + (p[0] * cos + (p[2] - SHIFT) * sin) * k;
+    const z = DEAD_WADER.z + (-p[0] * sin + (p[2] - SHIFT) * cos) * k;
     return [x, rig.land.height(x, z) + p[1] * k, z];
   };
 
@@ -66,65 +70,98 @@ export function create(ctx: Context): Piece {
   }
   const laid: Laid[] = [];
 
-  // The trunk on its side: the spine away from the legs, the flank that is up fallen in between the ribs and the hip.
-  const bodyRings = 17;
-  const bodySides = 16;
+  // The trunk on its side, some days dead: what was round has gone flat, the skin has sunk between the ribs and into the pit of the flank
+  // behind them, and the hip and the spine stand out of it.
+  const bodyRings = 96;
+  const bodySides = 30;
   const body = skin.tube(bodyRings, bodySides);
   const bodyLocal = new Float32Array(bodyRings * bodySides * 2);
+  const RIBS = 9;
+  const ROLL = 0.42;
+  /** The skin at a place on the trunk: how far up from the axis and how far out toward the spine, metres, and how much of the sky it sees. */
+  const flank = (t: number, phi: number): [number, number, number] => {
+    const c = Math.cos(phi);
+    const sn = Math.sin(phi);
+    const tall = bodyHalfW(t) * k;
+    const deep = bodyHalfH(t) * k;
+    const top = Math.max(c, 0);
+    // The cage: nine ribs that lean back as they go down from the spine; nothing of them toward the belly or near the two ends.
+    const cage = smooth(0.42, 0.5, t) * smooth(0.95, 0.86, t) * smooth(0.05, 0.4, top) * smooth(-0.75, -0.2, sn) * smooth(1, 0.8, sn);
+    const at = ((t - 0.44 + 0.07 * (1 - sn) * 0.5) / 0.5) * RIBS;
+    const rib = (0.5 + 0.5 * Math.cos(at * Math.PI * 2)) ** 1.6;
+    // The pit between the last rib and the hip, where there is nothing under the skin at all.
+    const pit = Math.exp(-(((t - 0.31) / 0.1) ** 2)) * smooth(0, 0.5, top) * smooth(0.95, 0.3, Math.abs(sn));
+    // The hip: a blade of bone under the skin, and the head of the thigh below it.
+    const hip = Math.exp(-(((t - 0.17) / 0.045) ** 2)) * Math.exp(-(((sn - 0.25) / 0.45) ** 2)) * smooth(0, 0.4, top);
+    const blade = Math.exp(-(((t - 0.86) / 0.05) ** 2)) * Math.exp(-(((sn - 0.3) / 0.4) ** 2)) * smooth(0, 0.4, top);
+    // The spine: a row of knuckles along the edge that is away from the legs.
+    const spine = smooth(0.72, 0.97, sn) * smooth(0.06, 0.18, t) * smooth(0.97, 0.85, t);
+    const knuckle = spine * (0.5 + 0.5 * Math.cos(t * 26 * Math.PI * 2)) ** 2;
+    const slack = 0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) * (1 - cage);
+    let up: number;
+    if (c > 0) {
+      up = tall * 2.1 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.03 * rib - 0.04 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+    } else {
+      // What lies on the rock is flat on it.
+      up = -tall * 0.42 * (-c) ** 0.45;
+    }
+    const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
+    const out = deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.5 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
+    const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
+    return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
+  };
+  const along = (i: number): number => i / (bodyRings - 1);
   for (let i = 0; i < bodyRings; i++) {
-    const t = i / (bodyRings - 1);
-    const tall = curve(HALF_W, t) * k * 0.86;
-    const deep = curve(HALF_H, t) * k * 1.0;
-    const sunk = 0.45 * Math.exp(-(((t - 0.62) / 0.16) ** 2)) + 0.12 * Math.sin(t * 23 + 1);
+    // Closed and round at both ends, the rings even between.
+    const t = 0.004 + 0.992 * along(i);
     for (let s = 0; s < bodySides; s++) {
-      const phi = (s / bodySides) * Math.PI * 2;
-      const c = Math.cos(phi);
-      const sn = Math.sin(phi);
-      // Up is the first axis: what is above the middle sags, what is below lies flat on the rock.
-      const up = c > 0 ? tall * c ** 0.7 * (1 - sunk * smooth(0.2, 0.9, c) * (0.5 + 0.5 * smooth(0.6, -0.4, sn))) : -tall * 0.75 * (-c) ** 0.5;
-      const out = deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * (1 + 0.12 * smooth(0.3, -0.6, c));
+      const [up, out] = flank(t, (s / bodySides) * Math.PI * 2);
       bodyLocal[(i * bodySides + s) * 2] = up;
       bodyLocal[(i * bodySides + s) * 2 + 1] = out;
     }
     for (let s = 0; s <= bodySides; s++) {
       const phi = (s / bodySides) * Math.PI * 2;
-      // The around coordinate starts a quarter turn on, so that the ribs the skin draws are on the flank that is up.
-      skin.describe(body, i, s, t * b.bodyLen, (phi + Math.PI / 2) * 0.32, 0.5, 0.5 + 0.5 * smooth(-0.6, 0.3, Math.cos(phi)), tall, seed, 0, t);
+      const seen = flank(t, phi)[2];
+      skin.describe(body, i, s, t * b.bodyLen, phi * 0.32, 0.5, seen, bodyHalfW(t) * k, seed, 0, t);
     }
   }
-  const half = 0.5 * (b.bodyLen / k);
-  laid.push({ tube: body, centre: (u) => world([0, curve(HALF_W, u) * 0.86 * 0.72, -half + 2 * half * u]), local: bodyLocal, sides: bodySides, rings: bodyRings, first: [0, 1, 0] });
+  const half = 0.56 * (b.bodyLen / k);
+  const lie = (u: number): number => bodyHalfW(u) * 0.42 - 0.012;
+  laid.push({ tube: body, centre: (u) => world([0, lie(0.004 + 0.992 * u), -half + 2 * half * u]), local: bodyLocal, sides: bodySides, rings: bodyRings, first: [0, 1, 0] });
 
   // The neck: off the chest and along the rock in a slack curve, a little flattened by its own weight.
-  const neckRings = 24;
+  const neckRings = 40;
   const neckSides = 9;
   const neck = skin.tube(neckRings, neckSides);
   const neckLocal = new Float32Array(neckRings * neckSides * 2);
-  const neckLine: V3[] = [[0, 0.24, half - 0.08], [-0.1, 0.14, half + 0.5], [0.02, 0.09, half + 1.1], [0.32, 0.08, half + 1.7], [0.62, 0.07, half + 2.2], [0.8, 0.06, half + 2.55]];
+  const neckLine: V3[] = [[-0.02, 0.13, half - 0.12], [-0.2, 0.085, half + 0.42], [-0.06, 0.07, half + 0.95], [0.3, 0.062, half + 1.38], [0.42, 0.058, half + 1.86], [0.2, 0.055, half + 2.3], [0.16, 0.05, half + 2.62]];
   for (let i = 0; i < neckRings; i++) {
     const u = i / (neckRings - 1);
-    const r = b.neckR * 0.9 * (0.42 + 0.58 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.12, 0, u));
+    // The skin of the neck has dried in rings on the cords inside it.
+    const r = b.neckR * 1.5 * (0.5 + 0.5 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.6 * smooth(0.12, 0, u)) * (1 + 0.07 * Math.sin(u * 150 + 2 * Math.sin(u * 23)));
     for (let s = 0; s < neckSides; s++) {
       const phi = (s / neckSides) * Math.PI * 2;
       const rr = r * (1 + 0.1 * Math.cos(phi * 2) + 0.07 * Math.sin(phi * 3 + u * 14 + seed));
-      neckLocal[(i * neckSides + s) * 2] = rr * Math.cos(phi) * (0.6 + 0.25 * (1 - u));
-      neckLocal[(i * neckSides + s) * 2 + 1] = rr * Math.sin(phi) * 1.12;
+      neckLocal[(i * neckSides + s) * 2] = rr * Math.cos(phi) * (Math.cos(phi) > 0 ? 0.62 : 0.4);
+      neckLocal[(i * neckSides + s) * 2 + 1] = rr * Math.sin(phi) * 1.2;
     }
     for (let s = 0; s <= neckSides; s++) skin.describe(neck, i, s, u * b.neckLen, (s / neckSides) * 2 * Math.PI * r, 0.5 + 0.3 * u, 0.6 + 0.4 * smooth(-0.5, 0.5, Math.cos((s / neckSides) * Math.PI * 2)), r, seed, 1, u);
   }
   laid.push({ tube: neck, centre: (u) => world(through(neckLine, u)), local: neckLocal, sides: neckSides, rings: neckRings, first: [0, 1, 0] });
 
   // The legs: folded where they gave way, one pair across the other, the feet knobbed and stiff.
-  const legRings = 17;
-  const legSides = 7;
+  const legRings = 25;
+  const legSides = 8;
   const legLocal = new Float32Array(legRings * legSides * 2);
   const legRadius: number[] = [];
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
-    const thigh = 1.1 * (1 - smooth(0, 0.3, u));
-    const knuckle = 0.95 * Math.exp(-(((u - 0.47) / 0.035) ** 2)) + 0.6 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
-    const foot = 1.3 * smooth(0.95, 1, u);
-    const r = b.legR * (0.66 + thigh + knuckle + foot);
+    const thigh = 1.5 * (1 - smooth(0, 0.3, u)) ** 1.2;
+    const knuckle = 1.25 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.9 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
+    const foot = 0.5 * smooth(0.95, 1, u);
+    const r = b.legR * 1.05 * (0.8 + thigh + knuckle + foot);
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -133,10 +170,12 @@ export function create(ctx: Context): Piece {
     }
   }
   const legLines: V3[][] = [
-    [[0.12, 0.34, -0.42], [0.5, 0.5, -0.98], [0.76, 0.13, -1.72], [1.02, 0.08, -2.15], [1.25, 0.07, -2.58]],
-    [[0.14, 0.1, -0.5], [0.62, 0.09, -1.15], [1.06, 0.085, -1.72], [1.05, 0.07, -2.25], [0.98, 0.06, -2.78]],
-    [[0.14, 0.34, 0.4], [0.76, 0.32, 0.06], [1.2, 0.11, -0.58], [1.4, 0.08, -0.98], [1.56, 0.07, -1.36]],
-    [[0.16, 0.1, 0.42], [0.7, 0.09, 0.5], [1.26, 0.085, 0.12], [1.52, 0.07, -0.22], [1.76, 0.06, -0.56]],
+    // Hind, upper: it stands off the hip, bent, the shank down across the other; hind, under: out along the rock behind it.
+    [[0.16, 0.34, -0.5], [0.34, 0.46, -0.78], [0.5, 0.5, -1.08], [0.62, 0.24, -1.44], [0.7, 0.06, -1.78]],
+    [[0.18, 0.07, -0.56], [0.42, 0.075, -1.0], [0.56, 0.085, -1.46], [0.5, 0.07, -1.9], [0.38, 0.06, -2.3]],
+    // Fore, upper: folded at the joint, the shank back along the belly; fore, under: bent under the chest.
+    [[0.18, 0.32, 0.42], [0.46, 0.4, 0.3], [0.7, 0.36, 0.06], [0.74, 0.18, -0.3], [0.7, 0.06, -0.66]],
+    [[0.2, 0.07, 0.46], [0.56, 0.075, 0.5], [0.86, 0.085, 0.24], [0.96, 0.07, -0.14], [1.0, 0.06, -0.52]],
   ];
   legLines.forEach((line, j) => {
     const tube = skin.tube(legRings, legSides);
@@ -151,7 +190,7 @@ export function create(ctx: Context): Piece {
   const tRings = 8;
   const tSides = 4;
   const tendrilLocal = new Float32Array(tRings * tSides * 2);
-  const tr = 0.017 * k;
+  const tr = 0.015 * k;
   for (let i = 0; i < tRings; i++) {
     const u = i / (tRings - 1);
     const r = tr * (1 - 0.7 * u ** 1.4);
@@ -164,17 +203,17 @@ export function create(ctx: Context): Piece {
   const end = neckLine[neckLine.length - 1] as V3;
   const before = neckLine[neckLine.length - 2] as V3;
   const way = Math.atan2(end[2] - before[2], end[0] - before[0]);
-  for (let n = 0; n < 22; n++) {
+  for (let n = 0; n < 64; n++) {
     const tube = skin.tube(tRings, tSides);
-    const clump = Math.floor(rng.next() * 5);
-    const angle = way + (clump - 2) * 0.42 + rng.range(-0.22, 0.22);
-    const length = b.tendrilLen / k * rng.range(0.5, 1.15);
-    const bend = rng.range(-0.9, 0.9);
-    const lift = 0.012 + 0.012 * rng.next();
+    const clump = Math.floor(rng.next() * 7);
+    const angle = way + (clump - 3) * 0.3 + rng.range(-0.2, 0.2);
+    const length = b.tendrilLen / k * rng.range(0.7, 1.7);
+    const bend = rng.range(-0.8, 0.8);
+    const lift = 0.014 + 0.03 * rng.next() ** 3;
     const line: V3[] = [];
     for (let q = 0; q <= 4; q++) {
       const v = q / 4;
-      const a = angle + bend * v * v;
+      const a = angle + bend * v * v + 0.25 * Math.sin(q * 2.1 + n);
       const prev = line[q - 1] ?? [end[0], 0.04, end[2]];
       line.push(q === 0 ? [end[0], 0.04, end[2]] : [prev[0] + Math.cos(a) * length / 4, lift, prev[2] + Math.sin(a) * length / 4]);
     }
@@ -185,6 +224,39 @@ export function create(ctx: Context): Piece {
       for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * length, (s / tSides) * 0.1, tone, 0.8, tr * (1 - 0.7 * u ** 1.4), tseed, 2, u);
     }
     laid.push({ tube, centre: (u) => world(through(line, u)), local: tendrilLocal, sides: tSides, rings: tRings, first: [0, 1, 0] });
+  }
+
+  // Weed the tide left on it: dark strands over the flank and the neck, their ends on the rock.
+  const weedLocal = new Float32Array(tRings * tSides * 2);
+  for (let i = 0; i < tRings; i++) {
+    for (let s = 0; s < tSides; s++) {
+      const phi = (s / tSides) * Math.PI * 2;
+      weedLocal[(i * tSides + s) * 2] = 0.004 * k * Math.cos(phi);
+      weedLocal[(i * tSides + s) * 2 + 1] = 0.02 * k * Math.sin(phi);
+    }
+  }
+  for (let n = 0; n < 6; n++) {
+    const tube = skin.tube(tRings, tSides);
+    const t0 = rng.range(0.14, 0.9);
+    const slant = rng.range(-0.16, 0.16);
+    const from = rng.range(-1.3, -0.7);
+    const to = rng.range(0.6, 1.3);
+    const tail = rng.range(0.1, 0.45);
+    const line: V3[] = [];
+    for (let q = 0; q <= 6; q++) {
+      const phi = from + ((to - from) * q) / 6;
+      const t = Math.min(0.97, Math.max(0.03, t0 + slant * phi));
+      const [up, out] = flank(t, phi);
+      // Past the edge of the trunk it lies on the rock.
+      const off = Math.max(0, Math.abs(phi) - 1.45);
+      line.push([-(out / k) * (1 + 1.4 * off) - Math.sign(phi) * tail * off, Math.max(0.012, lie(t) + up / k + 0.012 - 0.5 * off), -half + 2 * half * t]);
+    }
+    for (let i = 0; i < tRings; i++) {
+      const u = i / (tRings - 1);
+      // A tone of 2 and over is weed to the skin's shader.
+      for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u, (s / tSides) * 0.1, 2, 0.8, 0.012 * k, seed + 100 + n, 2, u);
+    }
+    laid.push({ tube, centre: (u) => world(through(line, u)), local: weedLocal, sides: tSides, rings: tRings, first: [0, 1, 0] });
   }
 
   const geometry = skin.build();
@@ -234,7 +306,12 @@ export function create(ctx: Context): Piece {
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('dead-wader', mesh));
+  // What it has left on the rock: the stain it lies in, a line of salt where that dried, and the grit that has gathered against it.
+  const lines: V3[][] = [[[0, 0, -half], [0, 0, half]], neckLine, ...legLines];
+  const ground = makeGround(ctx, world, lines, k);
+  const group = new THREE.Group();
+  group.add(mesh, ground.group);
+  ctx.scene.add(ctx.parts.built('dead-wader', group));
 
   // It has lain here: the rock under it is in its shade and damp.
   const spots: [V3, number, number][] = [
@@ -258,6 +335,7 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      ground.dispose();
     },
   };
 }

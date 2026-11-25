@@ -21,7 +21,7 @@ void main() {
   vec3 p = position;
   // A leg or a strand a long way off is thinner than a pixel and would flicker: it is never drawn thinner than a pixel and a half.
   float far = length(cameraPosition - p);
-  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.8 : 1.3;
+  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.55 : 0.8;
   p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
@@ -109,7 +109,7 @@ void main() {
     // the points of the hips and the spine are rubbed raw, the belly is splashed grey with silt.
     float sn = sin(vUv.y / 0.32);
     float down = abs(cos(vUv.y / 0.32));
-    float cage = smoothstep(0.42, 0.56, u) * smoothstep(0.9, 0.74, u) * smoothstep(0.25, 0.75, down) * smoothstep(-0.9, -0.3, sn) * smoothstep(0.95, 0.6, sn) * (0.55 + 0.45 * smoothstep(0.3, 0.6, blotch));
+    float cage = smoothstep(0.42, 0.56, u) * smoothstep(0.9, 0.74, u) * smoothstep(0.25, 0.75, down) * smoothstep(-0.9, -0.3, sn) * smoothstep(0.95, 0.6, sn) * (0.55 + 0.45 * smoothstep(0.3, 0.6, blotch)) * (1.0 - uDead);
     // They lean back as they go down the flank, and none is quite the width of the next.
     float ribAt = (u - 0.11 * sn + 0.03 * (mottle - 0.5)) * 110.0 + 1.5 * vnoise(vec2(u * 9.0 + seed, vUv.y * 1.5));
     float rib = pow(0.5 + 0.5 * cos(ribAt), 2.0);
@@ -161,13 +161,25 @@ void main() {
     thin = 0.35;
   }
   if (uDead > 0.5) {
-    // Dead some days: the colour gone out of it, the skin dried grey and leathery, salt in every hollow and on every upward face.
+    // Dead some days: the colour gone out of it, the skin dried to parchment and drawn into wrinkles, brown where it has leaked,
+    // salt in every hollow and on every upward face; the weed on it is nearly black.
     wet = 0.0;
-    float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-    albedo = mix(albedo, grey * vec3(0.78, 0.74, 0.66), tendril > 0.5 ? 0.55 : 0.7);
-    albedo *= tendril > 0.5 ? 0.55 : 0.8 + 0.2 * blotch;
-    float salt = smoothstep(0.45, 0.75, fbm(vWorld.xz * 9.0 + seed) + 0.3 * n.y - 0.15);
-    albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.55 * salt);
+    if (tendril > 0.5) {
+      albedo = vInfo.x > 1.5 ? mix(vec3(0.13, 0.11, 0.06), vec3(0.22, 0.18, 0.1), hash12(vec2(seed, 2.0))) : mix(albedo, vec3(0.5, 0.33, 0.29), 0.6);
+    } else {
+      float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
+      albedo = mix(albedo, grey * vec3(0.98, 0.88, 0.74), 0.55);
+      float wrinkle = vnoise(vec2(vUv.x * 70.0 + 3.0 * vnoise(vUv * 9.0), vUv.y * 16.0) + seed) - 0.5;
+      float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
+      height += (0.007 * wrinkle + 0.004 * crease) * mid;
+      albedo *= 1.0 + 0.4 * wrinkle * mid;
+      float hollow = 1.0 - vInfo.y;
+      float rot = smoothstep(0.5, 0.72, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);
+      albedo = mix(albedo, vec3(0.2, 0.085, 0.06), 0.7 * rot);
+      albedo = mix(albedo, vec3(0.3, 0.2, 0.15), 0.5 * hollow);
+      float salt = smoothstep(0.45, 0.75, fbm(vWorld.xz * 9.0 + seed) + 0.3 * n.y - 0.15 + 0.2 * hollow);
+      albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.5 * salt);
+    }
     rough = 0.92;
     thin *= 0.3;
   }
@@ -176,7 +188,7 @@ void main() {
   if (mid > 0.01 && tendril < 0.5) n = relief(vWorld, n, height);
 
   // The shade an animal throws on the water under it is not on the animal: the light is asked for above the reach of that shade.
-  vec3 colour = rigShade(vWorld + vec3(0.0, uDead > 0.5 ? 2.0 : 5.0, 0.0), n, v, albedo, rough, occ);
+  vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, rough, occ);
   // The bright water and the fog all round throw the low sun back up at them, and a little of it wraps round through the thin skin.
   float lit = sunAt(vWorld);
   float wrap = clamp((dot(n, uSunDir) + 0.75) / 1.75, 0.0, 1.0);
@@ -184,7 +196,7 @@ void main() {
   float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.55, 0.0))), 0.0), 2.0);
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = 0.26 * (0.55 + 0.3 * dot(n, flat_) + 0.15 * n.y);
+  float fogLight = (0.26 + 0.5 * smoothstep(25.0, 160.0, far)) * (0.55 + 0.3 * dot(n, flat_) + 0.15 * n.y);
   colour += albedo * uSunColour * ((0.34 * wrap * wrap + 0.6 * halo + fogLight) * occ * (0.3 + 0.7 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
