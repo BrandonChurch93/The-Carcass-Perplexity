@@ -52,7 +52,7 @@ const CAST: Character[] = [
   { role: 'grazes', skater: 0.2, heavy: 1.15, neck: 0.98, wide: 1.0, hump: 0.8, tall: 0.92, bulk: 1.1, young: 1, tuft: [1.1, 0.9] },
   { role: 'walks', skater: 0.55, heavy: 0.95, neck: 1.05, wide: 0.92, hump: 0.4, tall: 1.06, bulk: 0.9, young: 1, tuft: [0.45, 0.6] },
   { role: 'grazes', skater: 0.75, heavy: 1.0, neck: 0.96, wide: 1.08, hump: 0.6, tall: 1.0, bulk: 1.0, young: 0.7, tuft: [1, 1] },
-  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 0.86, wide: 0.72, hump: 0.65, tall: 1.2, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
+  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.15, wide: 0.72, hump: 0.65, tall: 1.2, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
 ];
 
 export function makeBuild(index: number, rng: Rng): Build {
@@ -81,7 +81,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     legR: lerp(1.08, 0.94, c.skater) * c.heavy,
-    padR: 0.6 * k * v(0.9, 1.12),
+    padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
     neckR: 0.52 * k * c.heavy,
     tendrils: Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])),
