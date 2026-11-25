@@ -5,7 +5,8 @@
 import * as THREE from 'three';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { SUNK } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { SEAMS, SUNK, UNIT } from '../shared/anchors';
 import { NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
@@ -19,6 +20,8 @@ export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 // A billow, broad lobes poured on each other, festoons of cords where the skin was gathered, then the lips, the gaps cut down
 // to their floor, pressure ridges and the heaps against the rock.
 const RELIEF_GLSL = /* glsl */ `
+uniform vec4 uLens;
+uniform vec4 uHill;
 uniform vec4 uRidge[2];
 uniform vec2 uRidgeSize[2];
 uniform vec4 uGroupSeam;
@@ -178,6 +181,16 @@ void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
 float foldAt(vec2 q) {
   gFoldPhase = 0.0;
   gFoldCover = 0.0;
+  // Where a pixel is longer on the lake than a fold is wide the single fold is gone: the sheaves must not show as marks.
+  vec2 lensOff = q - uLens.xy;
+  float pixelLong = uLens.w * (dot(lensOff, lensOff) + uLens.z * uLens.z) / uLens.z;
+  if (pixelLong > 0.19) {
+    gToeBest = 0.0;
+    gToeNext = 0.0;
+    gToeSlope = vec2(0.0);
+    gToeId = vec2(0.0);
+    return 1.0;
+  }
   vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
   gSheafBest = 0.0;
@@ -206,7 +219,7 @@ float foldAt(vec2 q) {
     gFoldDir = normalize(gToe.x * gToeAlong.xy + gToe.y * gToeAlong.z * vec2(gToeAlong.y, -gToeAlong.x) + 1e-5);
     float ownT = smoothstep(0.2, 0.5, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hrT, 2.5 * atan(gToe.y, gToe.x) + 9.0 * hrT)));
     gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * vnoise(vec2(0.9 * gFoldPhase, 7.0 * hrT))), 0.01, 0.2);
-    gFoldCover = toeCover * ownT * smoothstep(0.0, 0.2, toeCover - sheafCover);
+    gFoldCover = toeCover * ownT * smoothstep(0.0, 0.2, toeCover - sheafCover) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
     return abs(sin(3.14159 * gFoldPhase));
   }
   float a = gSheaf.x;
@@ -230,7 +243,7 @@ float foldAt(vec2 q) {
   float own = smoothstep(0.2, 0.55, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hr, s / (0.45 + 0.3 * R) + 9.0 * hr)));
   float swollen = vnoise(vec2(0.8 * gFoldPhase + 3.0 * hr, s / (0.8 + 0.3 * R) + 21.0 * hr));
   gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * swollen), 0.012, 0.2);
-  gFoldCover = sheafCover * own * smoothstep(0.0, 0.2, sheafCover - toeCover);
+  gFoldCover = sheafCover * own * smoothstep(0.0, 0.2, sheafCover - toeCover) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
   return abs(sin(3.14159 * gFoldPhase));
 }
 // What the skin still reads under its old name.
@@ -245,20 +258,34 @@ float ridgeAt(vec2 q, float c) {
   float h = 0.0;
   gRidgeOn = 0.0;
   for (int i = 0; i < 2; i++) {
+    if (uRidgeSize[i].x < 0.01) continue;
     vec2 ab = uRidge[i].zw - uRidge[i].xy;
+    float len = length(ab);
     vec2 rel = q - uRidge[i].xy;
-    float t = clamp(dot(rel, ab) / dot(ab, ab), 0.0, 1.0);
-    float across = length(rel - ab * t);
+    float tm = dot(rel, ab) / len;
     float size = uRidgeSize[i].y;
-    if (across > 3.0 * size) continue;
-    float side = (rel.x * ab.y - rel.y * ab.x) / length(ab);
-    float tall = (0.55 + 0.45 * vnoise(q / (1.9 * size) + 3.0)) * pow(sin(t * 3.14159), 0.6);
-    float reach = (side > 0.0 ? 1.0 + 0.5 * vnoise(q / 1.3) : 2.1 + 0.8 * vnoise(q / 2.3 + 9.0)) * size;
-    float rise = max(0.0, 1.0 - across / reach);
-    // Clinker: a heap of broken blocks, lumpy in outline, with nothing smooth on it.
-    float blocks = 0.5 * vnoise(q / (0.45 * size) + 17.0) + 0.32 * vnoise(q / (0.17 * size) + 5.0) + 0.18 * mix(vnoise(q / (0.06 * size) + 2.0), 0.5, smoothstep(0.02, 0.05, c / size));
-    h += uRidgeSize[i].x * tall * rise * (0.4 + 1.2 * blocks);
-    gRidgeOn = max(gRidgeOn, smoothstep(0.0, 0.15, rise) * smoothstep(0.0, 0.2, tall));
+    // The line of the ridge is crooked.
+    float side = (rel.x * ab.y - rel.y * ab.x) / len + 1.3 * size * (vnoise(vec2(tm / 7.0, 3.0 + 9.0 * float(i))) - 0.5);
+    if (tm < -1.0 || tm > len + 1.0 || abs(side) > 3.2 * size) continue;
+    // A line of slabs, each 1.5 to 4.5 m long, pushed up on edge: a long back that leans on the crust behind it and a short
+    // broken face toward the lens, each its own height, its crest a little off the line, one in five fallen flat.
+    float u = tm / (1.4 * size) + 0.8 * vnoise(vec2(tm / 5.0 + 7.0, 2.0));
+    float k = floor(u);
+    float fu = u - k;
+    vec2 hk = hash22(vec2(k, 17.0 + float(i)));
+    float ends = smoothstep(0.0, 0.12 * len, tm) * (1.0 - smoothstep(0.88 * len, len, tm));
+    float tall = uRidgeSize[i].x * (0.25 + 0.75 * hk.x) * ends * mix(0.2, 1.0, step(0.2, hk.y));
+    float back = (1.6 + 1.2 * hk.y) * size;
+    float face = max(0.35 * size, 3.0 * c);
+    float s = side - (hk.y - 0.5) * 0.8 * size;
+    float profile = clamp(s > 0.0 ? 1.0 - s / face : 1.0 + s / back, 0.0, 1.0);
+    float whole = smoothstep(0.0, 0.12, fu) * (1.0 - smoothstep(0.88, 1.0, fu));
+    float slab = tall * profile * (0.35 + 0.65 * whole) * (0.75 + 0.5 * (fu - 0.5) * (hk.x > 0.5 ? 1.0 : -1.0));
+    // Rubble at its foot, on both sides.
+    float rise = max(0.0, 1.0 - abs(side) / (2.6 * size));
+    float rubble = 0.3 * size * rise * ends * (0.5 * vnoise(q / (0.45 * size) + 17.0) + 0.5 * mix(vnoise(q / (0.17 * size) + 5.0), 0.5, smoothstep(0.03, 0.07, c / size)));
+    h += slab + rubble * (1.0 - 0.7 * profile);
+    gRidgeOn = max(gRidgeOn, smoothstep(0.0, 0.15, rise) * ends);
   }
   return h;
 }
@@ -269,7 +296,7 @@ float gRidge;
 // Along the bench of the near shore, where the cameras stand, it lies flat. Returns how broken the crust is, and leaves the
 // height of the heap in gShore.
 float gShore;
-float shoreAt(vec2 q, float lake, float c) {
+float heapAt(vec2 q, float lake, float c) {
   gShore = 0.0;
   if (lake > 40.0) return 0.0;
   float onLake = smoothstep(-1.5, 1.5, lake);
@@ -298,14 +325,174 @@ float groupFar(vec2 q) {
   vec2 gab = uGroupSeam.zw - uGroupSeam.xy;
   return length(q - uGroupSeam.xy - gab * clamp(dot(q - uGroupSeam.xy, gab) / dot(gab, gab), 0.0, 1.0));
 }
+// Metres from the middle of the channel at the line (the same crooked line the net lays down), and which way is away from it.
+uniform vec4 uLineSeam;
+vec2 gLineAway;
+float lineFar(vec2 q) {
+  vec2 ab = uLineSeam.zw - uLineSeam.xy;
+  float l = length(ab);
+  float t = clamp(dot(q - uLineSeam.xy, ab) / (l * l), 0.0, 1.0);
+  float k = 0.9 * (sin(t * 9.0 + 2.1) + 0.6 * sin(t * 23.0 + 6.3)) * sin(3.14159 * t);
+  vec2 d = q - uLineSeam.xy - ab * t - vec2(-ab.y, ab.x) / l * k;
+  float far = length(d);
+  gLineAway = d / max(far, 1e-3);
+  return far;
+}
+// The mound of the one that sank: the crust lies flat under it and is itself again a few metres out (uMound: x, z, the flat radius).
+uniform vec3 uMound;
+float calmAt(vec2 q) {
+  return smoothstep(uMound.z - 0.4, uMound.z + 4.0, length(q - uMound.xy));
+}
+// Where pads stand (x, z, radius): there the crust is broken only a little, so that a pad has ground under it.
+uniform vec3 uPads[5];
+// How broken the crust is out on the lake, 0 to 1: in patches within 40 m of the seam the group feeds at, in bands along
+// the banks of the line, and in a ring round the one that sank. Leaves in gLean which way the slabs there lean (xy, a unit
+// vector up the slope) and how surely (z).
+vec3 gLean;
+// How much a point is ground a pad stands on (0 to 1): there slabs lie nearly level and their gaps are narrow.
+float gPadCalm;
+// How much a point must lie low (0 to 1): plates there are level, with no rim and no mound.
+float gLow;
+float brokenAt(vec2 q) {
+  gLean = vec3(0.0);
+  gPadCalm = 0.0;
+  gLow = 0.0;
+  float b = 0.0;
+  float g = groupFar(q);
+  if (g < 54.0) {
+    // The whole floor the group feeds on is broken, more in some places than in others.
+    float patchy = vnoise(q / 8.3 + 5.0) * 0.7 + vnoise(q / 3.1 + 9.0) * 0.3;
+    b = (1.0 - smoothstep(36.0, 54.0, g)) * mix(0.5, 1.0, smoothstep(0.38, 0.62, patchy));
+  }
+  float l = lineFar(q);
+  if (l < 7.0) {
+    float band = 1.0 - smoothstep(2.0, 2.6 + 3.6 * vnoise(q / 3.3 + 2.0), l);
+    band *= 0.45;
+    if (band > b) {
+      b = band;
+      // The slabs on the bank lean in: they go down toward the melt.
+      gLean = vec3(gLineAway, 0.5 * (1.0 - smoothstep(1.5, 3.0, l)));
+    }
+  }
+  vec2 toMound = uMound.xy - q;
+  float m = length(toMound);
+  if (m < 19.0) {
+    float ring = smoothstep(uMound.z, uMound.z + 1.5, m) * (1.0 - smoothstep(10.5, 12.0 + 6.0 * vnoise(q / 5.0 + 31.0), m));
+    if (ring > b) {
+      b = ring;
+      // Round the mound the slabs lean against its front: they go up toward it.
+      gLean = vec3(toMound / max(m, 1e-3), 0.75 * (1.0 - smoothstep(9.0, 14.0, m)));
+    }
+  }
+  for (int i = 0; i < 4; i++) gPadCalm = max(gPadCalm, 1.0 - smoothstep(uPads[i].z, uPads[i].z + 3.0, length(q - uPads[i].xy)));
+  b *= 1.0 - 0.35 * gPadCalm;
+  // On the lens side of the hero's pool the crust lies low, or it hides the pool.
+  gLow = 1.0 - smoothstep(uPads[4].z, uPads[4].z + 3.0, length(q - uPads[4].xy));
+  b *= 1.0 - 0.5 * gLow;
+  return b;
+}
+// How broken the crust is: the heaps against the far walls and round the island, and the broken places out on the lake.
+float shoreAt(vec2 q, float lake, float c) {
+  float heap = heapAt(q, lake, c);
+  return max(heap, brokenAt(q));
+}
+// Broken crust: slabs of 0.5 to 3 m, each a plane with its own tilt (to 25 degrees where the crust is most broken) and its own
+// level, one in three rafted on its neighbours, with a raised rim, and gaps of 4 to 25 cm between them with rubble in them.
+// Call brokenAt first (it leaves gLean). Returns the height to add. Leaves in gSlabEdge how much of the point is gap (0 on
+// a slab, 1 in the rubble), in gSlabId a number for the slab, in gSlabSlope the slope of its plane and in gSlabRim metres to its edge.
+float gSlabEdge;
+float gSlabId;
+vec2 gSlabSlope;
+float gSlabRim;
+float slabHeld(float c) {
+  return 1.0 - smoothstep(0.25, 0.6, c);
+}
+// The plane of slab k at a point that lies s (in lattice units) from the slab's middle: x is its height there, yz its slope.
+vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
+  vec2 r1 = hash22(k);
+  vec2 r2 = hash22(k + 31.7);
+  float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
+  float a = 6.2832 * r2.x;
+  vec2 dir = normalize(mix(vec2(cos(a), sin(a)), gLean.xy, gLean.z));
+  // Most plates lie within a few degrees of level; one in four is tilted by 10 to 25 degrees. A large slab cannot stand as
+  // steep as a small one: its high edge is never more than half a metre up.
+  float tilt = min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
+  float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
+  return vec3(level * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.85 * gLow) + dot(dir * tilt, s) * L, dir * tilt);
+}
+// size is the lattice the slabs are cut on, metres; drop is how far one slab in three has gone down, metres.
+float slabAt(vec2 q, float broken, float c, float size, float drop) {
+  gSlabEdge = 0.0;
+  gSlabId = 0.0;
+  gSlabSlope = vec2(0.0);
+  gSlabRim = 9.0;
+  if (broken <= 0.01) return 0.0;
+  float L = size;
+  vec2 p = (q + 0.58 * L * vec2(vnoise(q / (2.7 * L) + 17.0), vnoise(q / (2.7 * L) + 53.0))) / L;
+  vec2 cell = floor(p);
+  vec2 f = p - cell;
+  float d1 = 9.0;
+  float d2 = 9.0;
+  vec2 s1 = vec2(0.0);
+  vec2 k1 = vec2(0.0);
+  vec2 s2 = vec2(0.0);
+  vec2 k2 = vec2(0.0);
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 g = vec2(float(i), float(j));
+      vec2 r = hash22(cell + g);
+      vec2 s = g + 0.06 + 0.88 * r - f;
+      // A slab that rides on its neighbours reaches out over them.
+      float d = length(s) - 0.22 * step(0.67, fract(r.x * 7.0 + r.y * 3.0));
+      if (d < d1) {
+        d2 = d1;
+        s2 = s1;
+        k2 = k1;
+        d1 = d;
+        s1 = s;
+        k1 = cell + g;
+      } else if (d < d2) {
+        d2 = d;
+        s2 = s;
+        k2 = cell + g;
+      }
+    }
+  }
+  float e = 0.5 * (d2 - d1) * L;
+  vec2 r1 = hash22(k1);
+  vec2 r2 = hash22(k1 + 31.7);
+  float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
+  vec3 own = slabPlane(k1, -s1, broken, L, drop);
+  gSlabSlope = own.yz;
+  gSlabId = r1.y;
+  gSlabRim = e;
+  // Its edge is turned up, here more and there not at all: 5 to 25 cm, wide enough for the cells to carry.
+  float rimWide = max(0.1, 3.0 * c);
+  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
+  // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
+  float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.03, 0.06, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.06, 0.12, c));
+  // The floor of the gap lies under both the slabs it parts, so it is one floor from either side: a floor that jumped from
+  // slab to slab would stand as a row of teeth wherever the cells are too coarse to open the gap.
+  float bed = min(min(own.x, slabPlane(k2, -s2, broken, L, drop).x), 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
+  // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
+  float gapHalf = (0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken)) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm);
+  // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
+  // 70 degrees, or each triangle of it shades its own way and the edge stands as a row of teeth.
+  float edgeWide = max(max(0.05, 2.5 * c), 0.5 * (own.x + rimHigh - bed));
+  float inner = gapHalf + edgeWide;
+  float plane = own.x + rimHigh * exp(-max(e - inner, 0.0) / rimWide);
+  gSlabEdge = 1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e);
+  return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c);
+}
 // The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
 // is longer. Relief finer than a pixel is long would only glitter.
-uniform vec4 uLens;
 float fineAt(vec2 q, float c) {
   vec2 d = q - uLens.xy;
   return max(c, uLens.w * (dot(d, d) + uLens.z * uLens.z) / uLens.z);
 }
 float gFine;
+// How much of a mound of ash and rubble is at the point, 0 to 1 (after heightAt).
+float gMound;
 float heightAt(vec2 q, float c) {
   vec4 n = netAt(q);
   float shown = step(1.5, n.g);
@@ -322,8 +509,9 @@ float heightAt(vec2 q, float c) {
   gBank = bank;
   gRope = 0.0;
   float lake = -landAt(q).b;
-  float calm = smoothstep(uSunk.z - 5.0, uSunk.z + 5.0, length(q - uSunk.xy));
-  float shoreUp = shoreAt(q, lake, c);
+  float calm = calmAt(q);
+  float shoreUp = heapAt(q, lake, c);
+  float broke = brokenAt(q);
   // Some of the shut edges between plates are pressure ridges: slabs upturned and heaped.
   float ridgeUp = 0.0;
   if (live < 0.5 && n.g > 0.45 && c < 3.0) {
@@ -338,17 +526,22 @@ float heightAt(vec2 q, float c) {
   float fine = 0.0;
   if (ridgeUp > 0.0) h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
 
+  // Far out, where a pixel is longer than a billow, the crust still lies in long low swells: the sheet carries them everywhere.
+  float seamFar = groupFar(q);
+  h += 0.3 * (vnoise(vec2(dot(q, vec2(0.8, 0.6)) / 11.0, dot(q, vec2(-0.6, 0.8)) / 29.0) + 3.0) - 0.5) * calm * smoothstep(-1.0, 3.0, lake) * smoothstep(1.5, 8.0, seamFar);
   // The billow of the skin and the lobes on it. The cords are finer than the cells and go into the normal.
   if (c < 1.5) {
     // Nothing of the skin's relief stands above the rock where the lake runs out under the shore.
     // The relief runs to the shore and a little under the land's skirt, so that the line where crust meets rock is crooked.
     float off = smoothstep(-1.0, 0.5, lake);
     // Swells of 0.3 to 0.6 m over 2 to 5 m: from a low lens a near one hides the foot of the one behind it.
-    float swell = mix(0.42, 0.62, smoothstep(20.0, 45.0, groupFar(q)));
-    h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
+    // Along the seam the group feeds at the swell lies down: the pools of the string must be seen from a lens 5 degrees up.
+    float gFar = seamFar;
+    float swell = mix(0.42, 0.62, smoothstep(20.0, 45.0, gFar)) * mix(0.12, 1.0, smoothstep(1.5, 8.0, gFar));
+    h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * smoothstep(1.5, 8.0, gFar) * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
     h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
     if (gFine < 0.16) {
-      float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp));
+      float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
       float fold = foldAt(q);
       fine = smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
       fine += smoothSkin * gToeBest * toeHeld(gFine);
@@ -364,6 +557,14 @@ float heightAt(vec2 q, float c) {
     if (c < 0.07) h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.03, 0.07, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.012, 0.03, c)));
   }
   h += gShore;
+  // Out on the lake the broken crust lies in slabs.
+  gMound = 0.0;
+  if (broke > 0.01 && c < 0.6) {
+    h += slabAt(q, broke, c, 1.9, 0.0) * smoothstep(0.0, 1.5, lake);
+    // Low mounds of ash and rubble, 1 to 3 m across, lie on the broken crust.
+    gMound = smoothstep(0.62, 0.84, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
+    h += gMound * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c) * smoothstep(0.0, 1.5, lake);
+  }
 
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
   // The gap is cut down: in the seams the pictures name the melt is the lava's mesh, and the floor lies just under it.
@@ -376,22 +577,53 @@ float heightAt(vec2 q, float c) {
     float level = meltLevel(n);
     float heatClass = n.g - 2.0;
     float trench = named * max(1.0 - smoothstep(0.01, 0.05, heatClass), step(1.3, heatClass));
-    float brim = mix(-0.02, mix(max(level + 0.03, -0.05), max(level + 0.2, 0.12 * (vnoise(q / 1.3 + 91.0) - 0.5)), trench), named);
-    h = mix(h, brim + mix(0.12, 0.3, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.1, trench)) * wide);
+    float brim = mix(-0.02, mix(max(level + 0.03, -0.05), level + 0.17 + 0.1 * vnoise(q / 1.3 + 91.0), trench), named);
+    h = mix(h, brim + mix(0.12, 0.18, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.5, trench)) * wide);
     // The folds end short of the broken edge: carried over it they would stand as a row of teeth on the wall.
+    // The bank of the line is a broken lip: slabs of 0.3 to 1.5 m that lean in toward the melt, each its own length and
+    // height, and one in three gone down to a shelf just over the melt.
+    float onLine = named * (1.0 - smoothstep(0.01, 0.05, heatClass));
+    if (onLine > 0.0 && bank < 1.3 && c < 0.3) {
+      lineFar(q);
+      gLean = vec3(gLineAway, 0.85);
+      float lipCrust = onLine * (1.0 - smoothstep(0.45, 1.2 + 0.6 * (vnoise(q / 1.9 + 44.0) - 0.5), bank));
+      h += slabAt(q + 77.0, 0.5 * lipCrust, c, 0.72, 0.2) * lipCrust;
+    }
     float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
     h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
-    float lipWide = max(0.06, 2.5 * c);
+    float lipWide = max(0.1, 5.0 * c);
     float lipAt = (bank - 0.07) / lipWide;
     h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0)) * (1.0 - smoothstep(0.03, 0.08, c));
     float deep = mix(0.03 + 0.25 * min(gape, 0.3), 0.15 - meltLevel(n), named);
-    float cut = (1.0 - smoothstep(-max(5.0 * c - 0.035, 0.05), wallTop, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
-    if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - smoothstep(0.03, 0.08, c));
-    h = mix(h, -deep, cut);
+    // The wall is a rough fracture face, five cells wide at the least and straight in section: a wall of one or two cells
+    // shades each triangle its own way and stands as a row of teeth.
+    float wallWide = max(5.0 * c, 0.1);
+    float wallRough = 0.6 * wallWide * (vnoise(q / max(4.0 * c, 0.12) + 3.0) - 0.5);
+    float cut = clamp((wallTop - bank - wallRough) / wallWide, 0.0, 1.0) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    // An island in the stream is a raft of thin crust: it floats a hand above the melt, it does not stand as high as the banks.
+    float bed = -deep;
+    // Its outline is the lava's isleAt, with an edge three cells wide: a wall of one cell would stand as a row of teeth.
+    if (gape > 0.45 && n.g < 3.3) {
+      float isleWide = 2.2 * c;
+      float isle = smoothstep(0.6 - isleWide, 0.66 + isleWide, vnoise(q / 1.7 + 31.0) * 0.72 + vnoise(q / 0.45 + 7.0) * 0.28) * (1.0 - smoothstep(0.4, 0.62, n.r / max(gape, 1e-3)));
+      bed = mix(bed, level + 0.04 + 0.03 * vnoise(q / 0.6 + 21.0), isle * smoothstep(0.45, 0.6, gape) * (1.0 - smoothstep(0.03, 0.08, c)));
+    }
+    h = mix(h, bed, cut);
   } else {
     h += fine;
   }
   if (c < 3.0) h += ridgeAt(q, c) * (1.0 - smoothstep(1.0, 3.0, c));
+  // The swell of crust beside the lens of the long shot at the fall (uHill: x, z, how much of it stands): a tumulus 3 m high,
+  // its top level with the bottom of that frame, out of focus.
+  if (uHill.z > 0.0) {
+    vec2 dh = q - uHill.xy;
+    float hr = length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))));
+    if (hr < 7.6) {
+      float over = max(hr - 2.0, 0.0);
+      float top = 2.96 - 0.096 * over * over;
+      h = mix(h, top + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
+    }
+  }
   return h;
 }`;
 
@@ -406,13 +638,24 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
+// The size of the cells that are sure to be at a point, wherever the rings are snapped to. A ring's middle may lie ahead of the
+// focus along the view (uShift, in the ring's own cells), so that the fine cells are spent where the lens looks.
+const CELL_GLSL = /* glsl */ `
+uniform vec4 uFocus;
+uniform vec2 uShift;
+float cellAt(vec2 q) {
+  vec2 d = q - uFocus.xy;
+  vec2 m = max(d / (uFocus.w + uShift), -d / (uFocus.w - uShift));
+  return max(uFocus.z, 2.0 * max(m.x, m.y));
+}`;
+
 // One ring of cells. The cells are fixed in the crust's rest frame: a vertex is a point of the crust, lifted by the relief
 // and carried by the drift, so the lattice never slides over the relief.
 const RING_VERTEX = /* glsl */ `
 uniform vec3 uRing;
-uniform vec4 uFocus;
 uniform vec4 uLens;
 uniform highp sampler2D tBake;
+${CELL_GLSL}
 varying vec3 vWorld;
 varying vec2 vQ;
 varying vec3 vNormalG;
@@ -421,8 +664,7 @@ varying vec2 vAway;
 ${RIG_GLSL}
 void main() {
   vec2 q = uRing.xy + position.xz * uRing.z;
-  vec2 dq = abs(q - uFocus.xy);
-  float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
+  float c = cellAt(q);
   // The height was laid down for this sample in the ring's own picture: height in two parts (see the bake), metres to the brim.
   ivec2 ij = ivec2(position.xz + 0.5);
   ivec2 last = textureSize(tBake, 0) - 1;
@@ -457,8 +699,8 @@ void main() {
 const BAKE_FRAGMENT = /* glsl */ `
 precision highp float;
 uniform vec3 uRing;
-uniform vec4 uFocus;
 uniform sampler2D tRope;
+${CELL_GLSL}
 #define LAKE_VERTEX
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -466,9 +708,7 @@ ${HEAT_GLSL}
 ${RELIEF_GLSL}
 void main() {
   vec2 q = uRing.xy + floor(gl_FragCoord.xy) * uRing.z;
-  vec2 dq = abs(q - uFocus.xy);
-  // The size of the cells that are sure to be here, wherever the rings are snapped to.
-  float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
+  float c = cellAt(q);
   gFine = fineAt(q, c);
   float h = heightAt(q, c);
   // A half float holds a height of a metre to half a millimetre, which shows as steps in the slopes. So the height is laid
@@ -476,6 +716,29 @@ void main() {
   float whole = floor(h * 64.0 + 0.5) / 64.0;
   gl_FragColor = vec4(whole, h - whole, clamp(gBank, -8.0, 8.0), 1.0);
 }`;
+
+/**
+ * For whoever stands things on the crust (the loose rock). GLSL for a vertex shader; put NOISE_GLSL and RIG_GLSL before it.
+ * `vec3 crustAt(vec2 q)`: q is a point of the crust in its rest frame (where it lies at the reference time uFlowT0, which is
+ * world x and z there); the answer is where that point is now in the world: x and z carried by the drift, y the top of the crust.
+ * Its uniforms are `crustUniforms`, filled when the lake is created: hand the same objects to the material.
+ */
+export const CRUST_HEIGHT_GLSL = /* glsl */ `
+uniform sampler2D tRope;
+${CELL_GLSL}
+#define LAKE_VERTEX
+${HEAT_GLSL}
+${RELIEF_GLSL}
+vec3 crustAt(vec2 q) {
+  float c = cellAt(q);
+  gFine = fineAt(q, c);
+  float h = heightAt(q, c);
+  float dt = uTime - uFlowT0;
+  vec2 p = q + flowVelocity(q) * dt;
+  p = q + flowVelocity(p) * dt;
+  return vec3(p.x, h, p.y);
+}`;
+export const crustUniforms: Record<string, THREE.IUniform> = {};
 
 // The crust's fragment shader lives in skin.ts (the skin owner's). Only the relief is handed to it from here.
 const FRAGMENT = skinFragment(RELIEF_GLSL);
@@ -502,9 +765,14 @@ void main() {
 // the crust, and the outer row of each ring uses only the vertices the next ring has, so no gap opens between them.
 const CELL = 6;
 const RINGS = 8;
-const N = 256;
+// A ring has room for this many cells on a side. A wide lens uses 256 of them; a long lens, whose view is a narrow wedge
+// that runs far over the lake, uses them all and sets each ring ahead of the focus.
+const N = 512;
+const SPAN_WIDE = 256;
 const BLOCK = 16;
 const CELL0 = CELL / 2 ** RINGS;
+// Where the rings are set for shot heart-02: a point of the floor 54 m from the lens of key heart-3, toward the group.
+const FLOOR_FOCUS: readonly [number, number] = [-417.0, 211.8];
 const X0 = Math.floor((NET.minX - 12) / CELL) * CELL;
 const Z0 = Math.floor((NET.minZ - 12) / CELL) * CELL;
 const SHEET_NX = Math.ceil((NET.minX + NET.width * NET.cell + 12 - X0) / CELL);
@@ -592,13 +860,22 @@ export function create(ctx: HeartContext): HeartPiece {
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
     uGroupSeam: { value: new THREE.Vector4(-458.8, 221.3, -326.8, 179.3) },
+    uLineSeam: { value: new THREE.Vector4(SEAMS.line!.from[0], SEAMS.line!.from[1], SEAMS.line!.to[0], SEAMS.line!.to[1]) },
+    // The middle of the mound of the one that sank, as its owner gives it, and the radius the crust keeps flat under it.
+    uMound: { value: new THREE.Vector3(SUNK[0] - 1.48, SUNK[2] - 3.2, 5) },
+    // The hero at its pool, walker 0 in its two shots, walker 13.
+    // The swell beside the lens of key heart-4: 10.5 m ahead of it and 4 m to its left. On the set for shot heart-05 only.
+    uHill: { value: new THREE.Vector4(-455 + 10.5 * 0.582 - 4 * 0.813, 178 - 10.5 * 0.813 - 4 * 0.582, 0, 0) },
+    uPads: { value: [new THREE.Vector3(-410, 197, 7), new THREE.Vector3(-508.7, 226.8, 7), new THREE.Vector3(-494.3, 209.8, 7), new THREE.Vector3(-423.5, 166.1, 7), new THREE.Vector3(-407.6, 206.5, 4.5)] },
   };
   const foundering = createFoundering(ctx);
   Object.assign(shared, foundering.uniforms);
   const lava = { value: 1 };
-  const focus = new THREE.Vector4(0, 0, CELL0, N);
+  const focus = new THREE.Vector4(0, 0, CELL0, SPAN_WIDE / 2 - 2);
+  const shift = new THREE.Vector2(0, 0);
   // The lens in the crust's rest frame, its height over the lake, and the angle of one pixel of the largest format.
   const lens = new THREE.Vector4(0, 0, 10, 3e-4);
+  Object.assign(crustUniforms, shared, { uFocus: { value: focus }, uShift: { value: shift }, uLens: { value: lens } });
   const depthFragment = `precision highp float;\nvarying vec3 vWorld;\n${RIG_GLSL}\nvoid main() { if (landAt(vWorld.xz).b > 1.5 + 0.6 * max(length(cameraPosition - vWorld) - 150.0, 0.0)) discard; gl_FragColor = vec4(0.0); }`;
 
   const crust = new THREE.Group();
@@ -606,7 +883,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const makeRing = (nx: number, nz: number, cell: number, block: number, stitched: boolean, position: THREE.BufferAttribute): Ring => {
     const uniform = new THREE.Vector3(0, 0, cell);
     const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
-    const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus }, uLens: { value: lens } };
+    const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus }, uShift: { value: shift }, uLens: { value: lens } };
     const material = new THREE.ShaderMaterial({ vertexShader: RING_VERTEX, fragmentShader: FRAGMENT, uniforms: { ...shared, ...ringUniforms, uLava: lava, tBake: { value: target.texture } } });
     material.userData.depthFragment = depthFragment;
     const bake = new THREE.ShaderMaterial({ vertexShader: BAKE_VERTEX, fragmentShader: BAKE_FRAGMENT, uniforms: { ...shared, ...ringUniforms, uSpan: { value: new THREE.Vector2(nx + 1, nz + 1) } }, depthTest: false, depthWrite: false });
@@ -653,6 +930,12 @@ export function create(ctx: HeartContext): HeartPiece {
   bakeScene.add(baker);
 
   let now = 0;
+  const hillShot = shotById('heart-05');
+  const hillFrom = secondsInPlace(UNIT, hillShot.first) - 0.3 / 60;
+  const hillTo = secondsInPlace(UNIT, hillShot.last) + 0.7 / 60;
+  const floorShot = shotById('heart-02');
+  const floorFrom = secondsInPlace(UNIT, floorShot.first) - 0.3 / 60;
+  const floorTo = secondsInPlace(UNIT, floorShot.last) + 0.7 / 60;
   const frustum = new THREE.Frustum();
   const matrix = new THREE.Matrix4();
   const box = new THREE.Box3();
@@ -660,14 +943,17 @@ export function create(ctx: HeartContext): HeartPiece {
   const eye = new THREE.Vector3();
 
   // Where the lens meets the lake: the lowest point of the lake down the middle of the frame, in the crust's rest frame.
-  const aim = (camera: THREE.PerspectiveCamera): [number, number] => {
+  const heading = { x: 1, z: 0, slant: 1 };
+  const aim = (camera: THREE.PerspectiveCamera, further: number): [number, number] => {
     eye.setFromMatrixPosition(camera.matrixWorld);
     ray.set(0, -0.85, 0.5).unproject(camera).sub(eye).normalize();
     const along = Math.hypot(ray.x, ray.z) || 1e-6;
     const dx = ray.x / along;
     const dz = ray.z / along;
     let reach = ray.y < -1e-4 ? Math.min(900, (-eye.y / ray.y) * along) : 900;
-    reach = Math.max(reach, 0);
+    reach = Math.max(reach, 0) * further;
+    heading.x = dx;
+    heading.z = dz;
     // If that point is on the rock, go on along the view to the lake.
     const dry = (r: number): boolean => ctx.rig.land.shore(eye.x + dx * r, eye.z + dz * r) > -0.3;
     if (dry(reach)) {
@@ -686,16 +972,20 @@ export function create(ctx: HeartContext): HeartPiece {
     }
     const x = eye.x + dx * reach;
     const z = eye.z + dz * reach;
+    heading.slant = Math.hypot(reach, eye.y);
     const v = ctx.rig.flow.velocity(x, z);
     const dt = now - ctx.rig.flow.t0;
     return [x - v[0] * dt, z - v[1] * dt];
   };
 
-  const fill = (ring: Ring, hole: [number, number, number, number] | null, slack: number): void => {
-    const { nx, nz, cell, block, stitched } = ring;
+  const fill = (ring: Ring, hole: [number, number, number, number] | null, slack: number, span: number): void => {
+    const { cell, block, stitched } = ring;
+    // A ring uses the first span cells of its lattice each way; the sheet uses all of its own.
+    const nx = stitched ? span : ring.nx;
+    const nz = stitched ? span : ring.nz;
     const out = ring.index.array as Uint32Array;
     const quad = ring.corners.array as Float32Array;
-    const row = nx + 1;
+    const row = ring.nx + 1;
     let count = 0;
     let filled = 0;
     const vertex = (i: number, j: number): number => {
@@ -723,9 +1013,9 @@ export function create(ctx: HeartContext): HeartPiece {
         if (ctx.rig.land.shore(0.5 * (xa + xb), 0.5 * (za + zb)) > half + 6 + slack) continue;
         // The square that lays down this block's relief: its vertices and one more all round, for the slopes at its rim.
         const ua = Math.max(0, bi - 1);
-        const ub = Math.min(nx + 1, i1 + 2);
+        const ub = Math.min(ring.nx + 1, i1 + 2);
         const va = Math.max(0, bj - 1);
-        const vb = Math.min(nz + 1, j1 + 2);
+        const vb = Math.min(ring.nz + 1, j1 + 2);
         quad.set([ua, 0, va, ub, 0, va, ua, 0, vb, ub, 0, va, ub, 0, vb, ua, 0, vb], filled);
         filled += 18;
         const edge = stitched && (bi === 0 || bj === 0 || i1 === nx || j1 === nz);
@@ -771,16 +1061,37 @@ export function create(ctx: HeartContext): HeartPiece {
   return {
     setTime: (seconds) => {
       now = seconds;
+      shared.uHill.value.z = seconds >= hillFrom && seconds <= hillTo ? 1 : 0;
       foundering.setTime(seconds);
       molten.setTime(seconds);
     },
     beforeSample: (renderer, camera) => {
       camera.updateMatrixWorld();
-      const [fx, fz] = aim(camera);
-      focus.set(fx, fz, CELL0, N);
+      // A long lens: the focus goes a third further in, the rings use all their cells and lie ahead of it.
+      const tall = camera.projectionMatrix.elements[5] as number;
+      const long = tall > 4.5;
+      const span = long ? N : SPAN_WIDE;
+      const ahead = long ? N / 4 : 0;
+      let [fx, fz] = aim(camera, long ? 1.35 : 1);
+      // In the shot of the group at the seam the lens is sharp at the feet, 60 to 76 m out, and soft on the floor in front of
+      // them: the fine cells are spent on the floor from 45 m out to the group, at one place for the whole shot.
+      if (long && now >= floorFrom && now <= floorTo) {
+        const v = ctx.rig.flow.velocity(FLOOR_FOCUS[0], FLOOR_FOCUS[1]);
+        const dt = now - ctx.rig.flow.t0;
+        fx = FLOOR_FOCUS[0] - v[0] * dt;
+        fz = FLOOR_FOCUS[1] - v[1] * dt;
+        heading.slant = Math.hypot(FLOOR_FOCUS[0] - eye.x, eye.y, FLOOR_FOCUS[1] - eye.z);
+      }
+      const pixel = 2 / (tall * 2160);
+      // No ring finer than a pixel and a half is wide there: its cells would be spent on what the lens cannot see.
+      const least = Math.max(CELL0, 3 * pixel * heading.slant);
+      const first = Math.min(3, Math.floor(Math.log2(least / CELL0)));
+      const along = Math.max(Math.abs(heading.x), Math.abs(heading.z)) || 1;
+      shift.set((ahead * heading.x) / along, (ahead * heading.z) / along);
+      focus.set(fx, fz, least, span / 2 - 2);
       const lv = ctx.rig.flow.velocity(eye.x, eye.z);
       const ldt = now - ctx.rig.flow.t0;
-      lens.set(eye.x - lv[0] * ldt, eye.z - lv[1] * ldt, Math.max(eye.y, 0.5), 2 / ((camera.projectionMatrix.elements[5] as number) * 2160));
+      lens.set(eye.x - lv[0] * ldt, eye.z - lv[1] * ldt, Math.max(eye.y, 0.5), pixel);
       matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
       frustum.setFromProjectionMatrix(matrix);
       // The cells are placed in the rest frame and carried by the drift: a block may lie that far from where its cells say.
@@ -788,20 +1099,25 @@ export function create(ctx: HeartContext): HeartPiece {
       for (let level = 0; level < RINGS; level++) {
         const ring = rings[level] as Ring;
         const outer = ring.cell * 2;
-        ring.x0 = Math.floor(fx / outer) * outer - (N / 2) * ring.cell;
-        ring.z0 = Math.floor(fz / outer) * outer - (N / 2) * ring.cell;
+        ring.x0 = Math.floor((fx + shift.x * ring.cell) / outer) * outer - (span / 2) * ring.cell;
+        ring.z0 = Math.floor((fz + shift.y * ring.cell) / outer) * outer - (span / 2) * ring.cell;
         ring.uniform.set(ring.x0, ring.z0, ring.cell);
       }
       for (let level = 0; level <= RINGS; level++) {
         const ring = rings[level] as Ring;
+        if (level < first) {
+          ring.mesh.geometry.setDrawRange(0, 0);
+          ring.squares.setDrawRange(0, 0);
+          continue;
+        }
         let hole: [number, number, number, number] | null = null;
-        if (level > 0) {
+        if (level > first) {
           const inner = rings[level - 1] as Ring;
           const hx = Math.round((inner.x0 - ring.x0) / ring.cell);
           const hz = Math.round((inner.z0 - ring.z0) / ring.cell);
-          hole = [hx, hz, hx + N / 2, hz + N / 2];
+          hole = [hx, hz, hx + span / 2, hz + span / 2];
         }
-        fill(ring, hole, slack);
+        fill(ring, hole, slack, span);
       }
       const before = renderer.getRenderTarget();
       for (const ring of rings) {

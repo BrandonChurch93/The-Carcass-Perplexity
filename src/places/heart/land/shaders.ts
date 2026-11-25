@@ -123,6 +123,8 @@ void main() {
   // Metres of ground under one pixel: what is finer than this is left out, whatever the lens.
   float px = max(length(wx), length(wy));
   float sharp = smoothstep(0.8, 0.12, px);
+  // The rubble under the line view's lens.
+  float byLens = smoothstep(26.0, 12.0, distance(vWorld.xz, vec2(-510.5, 215.5))) * smoothstep(3.0, 1.5, vWorld.y);
   // Where the mesh steps up in a single row of faces its smoothed normal still looks at the sky: the face itself says how steep it is,
   // so no picture laid from above is drawn out down a wall.
   vec3 ng = normalize(cross(wx, wy));
@@ -262,6 +264,14 @@ void main() {
     #endif
   }
 
+  #ifdef BENCH
+  // The heap of clinker under the line view's lens has no cliff in it: the side of a lump is a broken face of the same clinker, not a face of
+  // bedded rock a hundred times its size, whose beds would ring every lump like the grain of wood.
+  bump *= 1.0 - byLens;
+  lean *= 1.0 - byLens;
+  ledge = mix(ledge, 1.0, byLens);
+  cliff = mix(cliff, vec3(0.05, 0.042, 0.037), byLens);
+  #endif
   // The flats.
   vec3 plain = vec3(0.0);
   vec3 plainNh = vec3(0.5);
@@ -275,6 +285,8 @@ void main() {
     float ropy = smoothstep(0.42, 0.58, vnoise(vWorld.xz / 23.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.06, 0.2, slope) + 0.7 * smoothstep(19.0, 11.0, length(vWorld.xz - vec2(-573.0, 298.0))));
     // The last metres before the line are rubble and clinker under ash, lumpy and matte: no sheet of glass lies there.
     ropy *= smoothstep(3.0, 9.0, land.b + 5.0 * (mid - 0.5));
+    // Nor in the heap of clinker under the line view's lens.
+    ropy *= 1.0 - byLens;
     sheet = ropy;
     const float TALUS = 5.0;
     #else
@@ -298,7 +310,8 @@ void main() {
       vec2 fall = n0.xz / max(length(n0.xz), 1e-3);
       float fan = vnoise(vec2(dot(vWorld.xz, vec2(-fall.y, fall.x)) / 9.0, vWorld.y / 55.0 + big));
       #ifdef BENCH
-      plain = mix(plain, vec3(0.15, 0.14, 0.13) * (0.5 + plainNh.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope));
+      // Not on the heap of clinker under the line view's lens: there the fall line turns round every lump and the fans would wrinkle it.
+      plain = mix(plain, vec3(0.15, 0.14, 0.13) * (0.5 + plainNh.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope) * (1.0 - byLens));
       #else
       // Under a cliff the apron is scree before it is anything else: pale against the faces above it.
       plain = mix(plain, vec3(0.15, 0.14, 0.13) * (0.5 + plainNh.b), (0.1 + 0.45 * smoothstep(0.35, 0.75, fan)) * smoothstep(0.08, 0.3, slope));
@@ -337,6 +350,8 @@ void main() {
   #endif
   float height = mix(plainNh.b, cliffNh.b, steep);
   #ifndef BENCH
+  // The wall west of the fall's cone, measured against the wide picture (60 58 62 there, where this rock gave 41 36 35): pale ash lies on it.
+  albedo *= 1.0 + 0.5 * smoothstep(-245.0, -300.0, vWorld.x) * smoothstep(-120.0, -200.0, vWorld.z);
   // The buttress stands in the lake: the flank that looks at the fountains is baked by them, its lower faces rusted and paler than the rest.
   vec4 spur = ${BUTTRESS_LINE};
   float onSpur = smoothstep(${(BUTTRESS.half * 2.4).toFixed(1)}, ${(BUTTRESS.half * 1.6).toFixed(1)}, segmentDistance(vWorld.xz, spur));
@@ -344,6 +359,9 @@ void main() {
     vec2 along = spur.zw - spur.xy;
     float toTip = clamp(dot(vWorld.xz - spur.xy, along) / dot(along, along), 0.0, 1.0);
     float baked = onSpur * smoothstep(-0.2, 0.5, dot(n0.xz, vec2(-0.97, 0.25)) + 0.3 * (big - 0.5)) * smoothstep(0.25, 0.7, toTip) * smoothstep(130.0, 20.0, vWorld.y + 40.0 * (mid - 0.5));
+    // A butte of the darkest rock in the caldera, eroded and sooted; only the flank the fountains bake is paler.
+    // Measured against the wide picture: its butte is the darkest rock of the far shore.
+    albedo *= mix(1.0, 0.54, onSpur);
     albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.85 * baked);
   }
   #endif
@@ -374,7 +392,12 @@ void main() {
   vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * TIP + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
   float occ = mix(1.0, 0.3 + 0.7 * smoothstep(0.15, 0.6, height), mix(0.5, 1.0, sharp) * (1.0 - 0.25 * ash)) * mix(1.0, ledge, steep);
   // The sky lights only what it can see: joints, gaps between slabs and the foot of every face are closed in by the ground round them.
+  #ifdef BENCH
+  // On the bench the rubble is open: a gap between two stones still sees a quarter of the sky.
+  float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.5);
+  #else
   float closedIn = clamp(vLand.x * 1.7 - 0.25 * (height - 0.5), 0.0, 0.93);
+  #endif
   occ *= (1.0 - closedIn) * (1.0 - closedIn);
 
   #ifdef NEAR
@@ -407,6 +430,15 @@ void main() {
     vec2 t2 = TURN * ((fineNh.rg - 0.5) * vec2(1.0, -1.0));
     n = normalize(n + vec3(t2.x, 0.0, t2.y) * 0.7 * close * (1.0 - steep));
     occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.2, 0.6, fineNh.b), close);
+    // Clinker by the lens is rough at the scale of a finger as well: brown, pitted, with black between its crumbs.
+    float grit = close * byLens * (1.0 - steep);
+    vec3 gritNh = PICK(tBoulderNh, TURN * ws.xz * 4.3 + 0.37, TURN * gx.xz * 4.3, TURN * gy.xz * 4.3).rgb;
+    vec2 t3 = (gritNh.rg - 0.5) * vec2(1.0, -1.0);
+    n = normalize(n + vec3(t3.x, 0.0, t3.y) * 0.9 * grit);
+    occ *= mix(1.0, 0.45 + 0.55 * smoothstep(0.2, 0.6, gritNh.b), close * byLens);
+    albedo *= mix(vec3(1.0), vec3(1.36, 1.2, 1.08) * (0.75 + 0.5 * gritNh.b), close * byLens);
+    // Ash and dust on the crowns of the clinker by the lens: small pale tops.
+    albedo = mix(albedo, vec3(0.2, 0.186, 0.172), 0.3 * close * byLens * smoothstep(0.5, 0.8, fineNh.b) * (1.0 - steep));
   }
   #endif
 
@@ -422,13 +454,16 @@ void main() {
     float clump = vnoise(sp / 2.1 + 5.0);
     float up = smoothstep(0.45, 0.12, slope);
     float crust = smoothstep(3.6, 0.4, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.2 + 0.8 * up);
-    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up);
+    // Under the line view's lens the stain is thin: the picture's rubble there is dark clinker with one bright crust, not olive ground.
+    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up) * (1.0 - 0.65 * byLens);
     // Lemon where the crystals are thin, cream where they are thick, olive only in the stain round them.
     vec3 yellow = mix(vec3(0.6, 0.5, 0.14), vec3(0.8, 0.76, 0.56), smoothstep(3.4, 0.9, dc + grain + clump));
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
     albedo = mix(albedo, mix(sul * 1.4, yellow, 0.8) * (0.8 + 0.4 * grain), crust);
     rough = mix(rough, 0.95, crust);
   }
+  // The rubble under the line view's lens, measured against the picture: ash-grey clinker, paler than the bench behind it.
+  albedo *= mix(1.0, 2.4, byLens);
   // By the line the rock is glazed black with spatter, and nothing pale survives.
   float rind = smoothstep(2.2, 0.2, land.b + 1.2 * (mid - 0.5));
   albedo *= mix(1.0, 0.85, rind);
@@ -441,9 +476,9 @@ void main() {
   albedo *= mix(1.0, 0.6, smoothstep(3.4, 1.8, sd) * steep);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
-    float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.35 + 0.65 * steep);
-    albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.25 * on);
-    albedo = mix(albedo, vec3(0.42, 0.37, 0.16) * (0.55 + 0.9 * height), 0.35 * on * smoothstep(0.62, 0.9, blot + 0.4 * (height - 0.5)));
+    float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.5 + 0.5 * steep) * smoothstep(2.4, 1.0, vWorld.y + 0.8 * (blot - 0.5));
+    albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.4 * on);
+    albedo = mix(albedo, mix(vec3(0.72, 0.6, 0.18), vec3(0.84, 0.8, 0.6), smoothstep(0.5, 0.8, blot)) * (0.6 + 0.8 * height), 0.85 * on * smoothstep(0.38, 0.66, blot + 0.4 * (height - 0.5)));
   }
   #endif
 
@@ -459,6 +494,8 @@ void main() {
   // lie in each other's shade. A face that stands up takes it whole.
   #ifdef BENCH
   float graze = mix(1.0, 0.2 + 0.8 * smoothstep(0.35, 0.8, height), (1.0 - steep) * smoothstep(0.5, 0.8, n0.y));
+  // The crag of the line view stands behind its own fallen blocks and the fume of the vent: the fire reaches its face thinly.
+  graze *= mix(1.0, 0.12, smoothstep(4.2, 2.4, sd));
   #else
   const float graze = 1.0;
   #endif
