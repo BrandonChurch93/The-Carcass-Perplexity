@@ -200,7 +200,12 @@ void main() {
   float sun = sunAt(vWorld, land);
   vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
   // The blades stand in it, dark, paler with the air between.
+  // The lead draws each blade's true image on the water after this sheet (land/, MIRROR): the walked mirror here stood as a block beside it and is off.
+#ifdef WALKED_MIRROR
   vec2 stood = standing(p, r);
+#else
+  vec2 stood = vec2(0.0, 1e6);
+#endif
   vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
   refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 500.0)), stood.x * 0.9);
   // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
@@ -208,7 +213,7 @@ void main() {
   if (toWall > 0.0 && toWall < 1500.0) {
     float k = toWall * r.y / (uBoreHeight * (0.9 + 0.2 * c1.b));
     float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
-    float white = max(1.0 - smoothstep(0.2, 0.4, k), smoothstep(0.7, 0.86, k));
+    float white = max(1.0 - smoothstep(0.1, 0.2, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
     refl = mix(refl, mix(vec3(0.07, 0.085, 0.07), vec3(0.9), white) * lit, wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
@@ -231,7 +236,8 @@ void main() {
   }
   refl = mix(refl, vec3(0.46, 0.44, 0.4) * skyIrradiance(vec3(0.0, 0.3, 0.0) - vec3(rd.x, 0.0, rd.y)) / 3.14159, mirrored * 0.85);
   vec3 hv = normalize(v + uSunDir);
-  refl += uSunColour * pow(max(dot(n, hv), 0.0), 900.0) * sun * 8.0;
+  // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
+  refl += uSunColour * (pow(max(dot(n, hv), 0.0), 900.0) * 8.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
   float murk = 1.0 - exp(-max(depth, 0.0) * 5.0);
   vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;
@@ -265,18 +271,21 @@ vec4 boreAt(float x, float s) {
   float H = boreHigh(x);
   float u = s / H;
   float uc = clamp(u / 0.75, 0.0, 1.0);
-  float rise = 1.0 - pow(1.0 - uc, 2.2);
-  float back = 0.7 + 0.3 * exp(-max(u - 0.75, 0.0) / 1.5);
+  // A breaking face: hollow at the foot, steepest under the lip, and the lip thrown forward over it.
+  float rise = pow(uc, 1.6);
+  // Behind the lip the water falls away at once: from the flat nothing of the back stands over the lip.
+  float back = 0.6 + 0.4 * exp(-max(u - 0.75, 0.0) / 0.3);
   float y = u < 0.0 ? 0.26 * (1.0 + s / 48.0) + 0.04 : 0.3 + (H - 0.3) * rise * back;
-  float fwd = H * 0.26 * sin(uc * 3.14159) * step(0.0, u);
+  float fwd = H * 0.5 * uc * uc * uc * exp(-max(u - 0.75, 0.0) / 0.25) * step(0.0, u);
   float lumpA = textureLod(tFoam, vec2(x, s + uTime * 7.0) / 83.0, 1.8).r - 0.5;
   float lumpB = textureLod(tFoam, vec2(x + 3.0 * uTime, s - uTime * 4.0) / 31.0, 3.2).r - 0.5;
-  float amp = H * smoothstep(-0.02, 0.3, u) * (0.2 * exp(-max(u - 0.75, 0.0) / 2.5) + 0.03);
+  float amp = H * smoothstep(-0.02, 0.3, u) * (0.2 * exp(-max(u - 0.75, 0.0) / 0.4) + 0.03);
   y += amp * (1.3 * lumpA + 0.7 * lumpB);
   fwd += amp * 0.9 * lumpB;
   // White water piles on the face and the crest in heads.
   vec2 ch = boreChurn(x, s);
-  float churn = smoothstep(-0.01, 0.1, u) * exp(-max(u - 0.8, 0.0) / 0.9);
+  // The heads pile at the foot and again on the lip; the hollow face between is drawn smooth.
+  float churn = smoothstep(-0.01, 0.1, u) * (1.0 - 0.75 * smoothstep(0.2, 0.3, u) * smoothstep(0.75, 0.6, u)) * exp(-max(u - 0.75, 0.0) / 0.12);
   float puff = H * churn * (0.2 * ch.x + 0.09 * ch.y);
   y += puff * 0.55;
   fwd += puff;
@@ -315,19 +324,20 @@ void main() {
   // Marks ride with the wall and tumble down its face.
   // Down the face they are laid by the height (the face is too steep for the metres along the bed to carry them: they would hang as a curtain); over the back by the bed.
   float Hh = boreHigh(vRide.x);
-  float down = mix(-1.1 * (Hh - vWorld.y), vRide.y - 0.75 * Hh, smoothstep(0.36, 0.58, u));
-  vec2 q = vec2(vRide.x, down - uTime * 8.0 * smoothstep(2.5, 0.0, u));
+  float down = mix(-1.1 * (Hh - vWorld.y), vRide.y - 0.75 * Hh, smoothstep(0.7, 0.85, u));
+  // One speed for all of it: a scroll that changed with the place on the wall sheared the marks into a curtain of lines.
+  vec2 q = vec2(vRide.x, down - uTime * 8.0);
   vec4 a = texture2D(tChop, q / 29.0);
-  vec4 f1 = texture2D(tFoam, q / 13.0);
-  vec4 f2 = texture2D(tFoam, q.yx / 3.1 + f1.rb * 0.3);
+  vec4 f1 = texture2D(tFoam, q * vec2(1.0, 0.5) / 13.0);
+  vec4 f2 = texture2D(tFoam, vec2(q.y * 0.4, q.x) / 3.1 + f1.rb * 0.3);
   float face = smoothstep(1.9, 0.7, u);
   float lace = mix(0.5 * a.a + 0.5 * texture2D(tChop, q.yx / 3.3).a, 0.2 + 0.6 * f1.r, face);
   // Under the heads of the crest the lifted water shows dark in windows; at the foot it is all broken white.
   float big = texture2D(tFoam, vec2(vRide.x, uTime * 3.0) / 97.0).r;
   // The face is one dark band of lifted water from the churn at the foot to the heads of the crest; its edges are torn, strings of white run down it.
   float tear = 0.12 * (big - 0.5) + 0.05 * (f1.r - 0.5);
-  float lifted = smoothstep(0.07 + tear, 0.14 + tear, u) * smoothstep(0.42 + tear, 0.3 + tear, u);
-  float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.9 * lifted, face);
+  float lifted = smoothstep(0.2 + tear, 0.28 + tear, u) * smoothstep(0.69 + tear, 0.6 + tear, u);
+  float amount = mix(0.5 + 0.4 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.78 * lifted, face);
   // Ahead of the wall foam runs out over the wet flat in tongues, thinning to lace.
   float ahead = clamp(-vRide.y / 48.0, 0.0, 1.0);
   float tongue = texture2D(tFoam, vec2(vRide.x, uTime * 2.0) / 61.0).r + 0.5 * texture2D(tFoam, vec2(vRide.x, vRide.y * 0.5 + uTime * 5.0) / 23.0).r;
@@ -336,17 +346,23 @@ void main() {
   if (u < 0.0 && foam < 0.35) discard;
   vec2 bump = vec2(f2.g - f1.a, f2.a - f1.g) * 0.5 + (a.xy - 0.5) * (1.0 - face);
   // White water is not a skin: its light comes from all through it, so the folds of the sheet under it count for less.
-  vec3 n = normalize(mix(vNormalW, vec3(0.0, 0.62, 0.78), 0.6 * foam * face) + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.3, foam));
+  vec3 n = normalize(mix(vNormalW, vec3(0.0, 0.62, 0.78), mix(0.6, 0.95, smoothstep(0.55, 0.7, u)) * foam * face) + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.3, foam));
+  if (dot(n, v) < 0.0) n = reflect(n, v);
   // The creases between the heads hold no light.
   float crease = smoothstep(0.02, 0.4, ch.x) * (0.5 + 0.5 * smoothstep(0.02, 0.35, ch.y));
   float pit = (0.55 + 0.45 * smoothstep(0.3, 0.62, f1.r)) * (0.7 + 0.3 * smoothstep(0.3, 0.6, f2.r)) * (0.75 + 0.25 * smoothstep(0.03, 0.3, f2.g));
   float hollow = mix(1.0, (0.5 + 0.5 * crease) * pit, face);
   // The lifted water is thick with sand: slate green, brown where it is thin at the lip.
-  vec3 water = mix(vec3(0.045, 0.07, 0.058), vec3(0.11, 0.115, 0.075), smoothstep(0.25, 0.45, u) * face);
+  vec3 water = mix(vec3(0.045, 0.07, 0.058), vec3(0.11, 0.115, 0.075), smoothstep(0.45, 0.68, u) * face);
   // White water is lit all through: it holds more light than a painted wall.
   vec3 white = vec3(0.95, 0.96, 0.96);
   vec3 albedo = mix(water, white, foam);
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.45, 1.0, foam), mix(1.0, hollow, foam));
+  // Lit from behind: where the lifted water thins toward the lip the light comes through it green, and the crest's white burns.
+  float behind = 0.35 + 0.65 * pow(max(dot(-v, uSunDir), 0.0), 2.0);
+  float thin = smoothstep(0.4, 0.68, u) * face;
+  col += (1.0 - foam) * vec3(0.05, 0.13, 0.095) * thin * behind * (uSunColour * 0.25 + skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.25);
+  col += foam * hollow * white * uSunColour * 0.1 * behind * smoothstep(0.3, 0.6, u);
   col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.2;
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;

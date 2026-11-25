@@ -316,6 +316,15 @@ void main() {
     albedo = mix(albedo, vec3(0.6, 0.45, 0.42), 0.35 * smoothstep(0.55, 0.9, s) * (0.5 + 0.5 * crease));
     albedo *= mix(0.78, 1.0, smoothstep(0.0, 0.3, s));
     occ = mix(0.62, 1.0, smoothstep(-0.8, 0.3, n.y));
+    // The frame shows through: ribs down each flank, the keel of the breast, the knobs of the spine along the back.
+    float flank = 1.0 - abs(sin(a));
+    float cage = smoothstep(0.3, 0.42, s) * smoothstep(0.88, 0.72, s);
+    float ribs = 0.5 + 0.5 * cos(s * 52.0 + 2.5 * sin(a));
+    float between = cage * (0.35 + 0.65 * flank) * (1.0 - ribs);
+    albedo *= 1.0 - 0.38 * between;
+    occ *= 1.0 - 0.45 * between;
+    float spine = smoothstep(0.93, 1.0, sin(a)) * (0.5 + 0.5 * cos(s * 90.0));
+    albedo = mix(albedo, ivory * 1.25, 0.5 * spine + 0.35 * cage * (0.35 + 0.65 * flank) * smoothstep(0.75, 1.0, ribs));
   } else if (part < 1.5) {
     albedo = mix(ivory, vec3(0.42, 0.37, 0.33), smoothstep(0.8, 1.0, s));
     albedo *= 0.9 + 0.1 * sin(s * 150.0);
@@ -339,7 +348,7 @@ void main() {
     float edge = smoothstep(0.72, 1.0, s);
     albedo = mix(albedo, vec3(0.6, 0.36, 0.16), edge * 0.5);
     // Folded, the skin lies layer on layer: dull orange brown, dark, the light no longer through it.
-    albedo = mix(mix(vec3(0.44, 0.35, 0.26), vec3(0.6, 0.3, 0.09), smoothstep(0.25, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
+    albedo = mix(mix(vec3(0.5, 0.42, 0.33), vec3(0.66, 0.27, 0.06), smoothstep(0.3, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
     n = normalize(n + 0.25 * (hide - grain));
     rough = 0.4;
   }

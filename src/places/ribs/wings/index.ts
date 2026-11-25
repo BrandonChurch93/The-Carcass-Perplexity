@@ -383,7 +383,7 @@ export function create(ctx: Context): Piece {
       const x = COLONY.x + Math.cos(a) * r;
       const z = COLONY.z + Math.sin(a) * r;
       const out = Math.atan2(Math.cos(a), Math.sin(a));
-      sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands: scatter.next() < 0.22, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+      sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands: scatter.next() < 0.45, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
     }
   }
   sitters.sort((a, b) => a.d - b.d);
@@ -414,8 +414,12 @@ export function create(ctx: Context): Piece {
     const shake = smooth(0.9, 0.97, held(t, 4.5, s.seed + 0.75, 0.25));
     // Perched, the sails hang round it as a tent; one that stands holds them half open to the wind and the light comes through.
     if (s.stands) {
-      pose.spread = 0.6 + 0.2 * Math.sin(t * 0.7 + s.seed * 40);
-      pose.flap = 0.3 + 0.12 * Math.sin(t * 1.9 + s.seed * 17);
+      // No two alike: one holds its sails wide to dry, one half shut, one beats them at its neighbour.
+      const kind = Math.floor(s.seed * 97) % 3;
+      const row = smooth(0.7, 0.85, held(t, 3.1, s.seed + 0.6, 0.3));
+      pose.spread = (kind === 0 ? 0.85 : kind === 1 ? 0.45 : 0.62) + 0.14 * Math.sin(t * 0.7 + s.seed * 40);
+      pose.flap = (kind === 0 ? 0.12 : kind === 1 ? -0.35 : 0.3) + 0.1 * Math.sin(t * 1.9 + s.seed * 17) + (kind === 2 ? row * 0.5 * Math.sin(t * 11 + s.seed * 9) : 0);
+      pose.pitch = kind === 2 ? 0.25 * row : pose.pitch;
     } else {
       pose.spread = 2 - shake;
       pose.flap = -1.0 + 0.04 * Math.sin(t * 1.3 + s.seed * 30) + shake * (1.2 + 0.35 * Math.sin(t * 15 + s.seed * 9));
