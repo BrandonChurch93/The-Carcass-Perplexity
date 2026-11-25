@@ -146,7 +146,7 @@ void main() {
   vec3 skin = texture2D(tSkin, q / 5.0).rgb * 0.6 + texture2D(tSkin, vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 19.0 + 0.31).rgb * 0.6;
   vec2 slope = (texture2D(tSkinNh, q / 5.0).rg - 0.5) * 1.2 * (1.0 - vSide);
   n = normalize(n + vec3(slope.x, 0.0, slope.y));
-  vec3 c = rigShade(vWorld, n, v, skin * 0.42 * (1.0 - 0.6 * vSide), 0.75, 1.0);
+  vec3 c = rigShade(vWorld, n, v, skin * 0.09 * (1.0 - 0.6 * vSide), 0.75, 1.0);
   // The broken edge and the underside of a plate are still hot: red rock under a thin black skin.
   float hot = vSide * (0.35 + 0.65 * vnoise(vLocal.xz * 1.7 + vLocal.y * 3.0)) * smoothstep(0.1, -0.5, vLocal.y);
   c += blackbody(mix(820.0, 1240.0, hot));
@@ -233,25 +233,63 @@ export function createFoundering(ctx: HeartContext): Foundering {
   const thrown = new Float32Array(total * 3);
   const life = new Float32Array(total * 4);
   let k = 0;
+  // The long line is an uneven seam, low, with vents of unlike strength set off it by a metre or three, and one fountain twice the
+  // height of the rest that throws its sparks to one side (along the line, away from its near end), as the wide picture has it.
+  // u: the place along the line; share: of the lumps; tall: of the throw; off: metres off the line; side: metres a second along it.
+  const VENTS = [
+    { u: 0.12, share: 0.06, tall: 0.3, off: 1.6, side: 0 },
+    { u: 0.3, share: 0.09, tall: 0.5, off: -2.4, side: 0 },
+    { u: 0.47, share: 0.07, tall: 0.36, off: 0.9, side: 0 },
+    { u: 0.62, share: 0.11, tall: 0.6, off: 2.7, side: 0.8 },
+    { u: 0.78, share: 0.59, tall: 1.5, off: -1.2, side: 2.4 },
+    { u: 0.93, share: 0.08, tall: 0.42, off: 1.9, side: 0 },
+  ];
   lines.forEach((line, which) => {
     const tall = which === 0 ? 1 : 0.72;
+    const first = line[0] as [number, number];
+    const last = line[line.length - 1] as [number, number];
+    const run = Math.hypot(last[0] - first[0], last[1] - first[1]) || 1;
+    const dir: [number, number] = [(last[0] - first[0]) / run, (last[1] - first[1]) / run];
     for (let i = 0; i < (COUNTS[which] as number); i++, k++) {
       // Spatter leaves from a few vents along the line, not evenly.
-      const vent = (rng.int(which === 0 ? 5 : 3) + 0.5) / (which === 0 ? 5 : 3);
-      const u = Math.min(0.97, Math.max(0.03, vent + rng.range(-0.11, 0.11) + 0.05 * (rng.next() - 0.5)));
+      let vent = (rng.int(which === 0 ? 5 : 3) + 0.5) / (which === 0 ? 5 : 3);
+      let strength = 1;
+      let off = 0;
+      let side = 0;
+      let spread = 0.11;
+      const pick = rng.next();
+      if (which === 0) {
+        let sum = 0;
+        let chosen = VENTS[VENTS.length - 1] as (typeof VENTS)[number];
+        for (const v of VENTS) {
+          sum += v.share;
+          if (pick < sum) {
+            chosen = v;
+            break;
+          }
+        }
+        vent = chosen.u;
+        strength = chosen.tall;
+        off = chosen.off;
+        side = chosen.side;
+        spread = chosen.tall > 1 ? 0.022 : 0.045;
+      }
+      const u = Math.min(0.97, Math.max(0.03, vent + rng.range(-spread, spread) + 0.05 * (rng.next() - 0.5) * (which === 0 ? 0.3 : 1)));
       const f = u * (line.length - 1);
       const a = line[Math.floor(f)] as [number, number];
       const b = line[Math.min(line.length - 1, Math.floor(f) + 1)] as [number, number];
       const t = f - Math.floor(f);
-      const sheet = rng.next() < 0.17 ? 1 : 0;
-      origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8);
+      // On the long line few jets stand, and low: the fountain is lumps in the air, not tongues of flame.
+      const sheet = rng.next() < (which === 0 ? 0.05 : 0.17) ? 1 : 0;
+      origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8) - dir[1] * off;
       origin[k * 3 + 1] = rng.next();
-      origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8);
+      origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8) + dir[0] * off;
       // A low dome: most gobs rise two to four metres, the highest about six.
-      const up = sheet ? rng.range(3.5, 6) : rng.range(5, 11);
-      thrown[k * 3] = rng.range(-2.6, 2.6);
+      const up = (sheet ? rng.range(3.5, 6) * (which === 0 ? 0.45 : 1) : rng.range(5, 11)) * strength;
+      const sideways = side * rng.range(0.3, 1.5);
+      thrown[k * 3] = rng.range(-2.6, 2.6) * Math.min(1, 0.4 + strength) + dir[0] * sideways;
       thrown[k * 3 + 1] = up * tall;
-      thrown[k * 3 + 2] = rng.range(-2.6, 2.6);
+      thrown[k * 3 + 2] = rng.range(-2.6, 2.6) * Math.min(1, 0.4 + strength) + dir[1] * sideways;
       life[k * 4] = rng.range(2.6, 4.0);
       life[k * 4 + 1] = rng.next();
       // Gobs of 5 to 40 cm: this is half the size.
