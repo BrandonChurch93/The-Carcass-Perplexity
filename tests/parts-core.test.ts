@@ -79,6 +79,59 @@ describe('the register', () => {
     expect(core.needsPicture(next.parts[0], true)).toBe(false);
   });
 
+  it('keeps the whole stand-in record through every change of state and of kind', () => {
+    const record = { hash: 'hash-heart', picture: 'out/stills/parts/heart/lava.png', frame: 3477, format: 'preview', tier: 'draft', shown: 0.13, made: '2026-11-25T04:00:00Z' };
+    let register = core.mergeRegister({ parts: [] }, [live('heart', 'lava'), live('heart', 'fume')], { hashes, files, order }).register;
+    for (const p of register.parts) p.standIn = { ...record, picture: core.pictureOf(p) };
+    const steps = [
+      [live('heart', 'lava', 'built', 'effect'), live('heart', 'fume', 'fallback')],
+      [live('heart', 'lava', 'fallback', 'effect'), live('heart', 'fume', 'built', 'effect')],
+      [live('heart', 'lava', 'built', 'solid'), live('heart', 'fume', 'built')],
+    ];
+    steps.forEach((now, i) => {
+      const next = core.mergeRegister(register, now, { hashes: { ...hashes, heart: `hash-${i}` }, files, order, units: ['heart'] });
+      expect(next.faults).toEqual([]);
+      register = next.register;
+      for (const p of register.parts) {
+        expect(p.standIn).toEqual({ ...record, picture: core.pictureOf(p) });
+        expect(p.hash).toBe(`hash-${i}`);
+        expect(core.needsPicture(p, true)).toBe(false);
+      }
+    });
+    expect(register.parts.map((p) => [p.kind, p.state])).toEqual([['solid', 'built'], ['solid', 'built']]);
+  });
+
+  it('leaves the units it was not asked about exactly as they were', () => {
+    const first = core.mergeRegister({ parts: [] }, [live('ribs', 'sea'), live('heart', 'lava')], { hashes, files, order }).register;
+    first.parts[0].standIn.picture = 'out/stills/parts/ribs/sea.png';
+    const moved = { ...hashes, ribs: 'hash-ribs-built', heart: 'hash-heart-built' };
+    const { register, faults } = core.mergeRegister(first, [first.parts[0], live('heart', 'lava', 'built')], { hashes: moved, files, order, units: ['heart'] });
+    expect(faults).toEqual([]);
+    expect(register.parts[0]).toEqual(first.parts[0]);
+    expect(register.parts[0].standIn.hash).toBe('hash-ribs');
+    expect(register.parts[1]).toMatchObject({ state: 'built', hash: 'hash-heart-built', standIn: { hash: 'hash-heart' } });
+  });
+
+  it('starts again only for the units it was asked about, and keeps the pictures of the others', () => {
+    const first = core.mergeRegister({ parts: [] }, [live('ribs', 'sea'), live('heart', 'lava'), live('heart', 'old')], { hashes, files, order }).register;
+    for (const p of first.parts) p.standIn = { ...p.standIn, picture: core.pictureOf(p), frame: 100 };
+    const { register, faults } = core.mergeRegister(first, [live('ribs', 'sea'), first.parts[1], first.parts[2]], { hashes, files, order, fresh: true, units: ['ribs'] });
+    expect(faults).toEqual([]);
+    expect(register.parts.map((p) => p.id)).toEqual(['ribs/sea', 'heart/lava', 'heart/old']);
+    expect(register.parts[0].standIn.picture).toBeNull();
+    expect(register.parts[1].standIn).toMatchObject({ picture: 'out/stills/parts/heart/lava.png', frame: 100 });
+  });
+
+  it('no longer calls a part missing once the page draws it again', () => {
+    const first = core.mergeRegister({ parts: [] }, [live('heart', 'lava'), live('heart', 'walkers')], { hashes, files, order }).register;
+    const gone = core.mergeRegister(first, [live('heart', 'lava')], { hashes, files, order }).register;
+    expect(gone.parts[1].missing).toBe(true);
+    const back = core.mergeRegister(gone, [live('heart', 'lava'), live('heart', 'walkers', 'built')], { hashes, files, order });
+    expect(back.faults).toEqual([]);
+    expect('missing' in back.register.parts[1]).toBe(false);
+    expect(back.register.parts[1].standIn.hash).toBe('hash-heart');
+  });
+
   it('gives a part that was built at once no stand-in record', () => {
     const { register } = core.mergeRegister({ parts: [] }, [live('eye', 'lake', 'built')], { hashes, files, order });
     expect(register.parts[0].standIn).toBeUndefined();

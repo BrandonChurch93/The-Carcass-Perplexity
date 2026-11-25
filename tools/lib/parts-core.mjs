@@ -54,9 +54,13 @@ export function entryOf(live, { hash, files }) {
   return entry;
 }
 
-export function mergeRegister(old, live, { hashes, files, order, fresh = false }) {
+// `units` names the units the page was asked about. The entries of every other unit are kept as
+// they are: their state was not read from the page, so their hashes may not move either, and
+// `fresh` does not forget them, because nothing takes their pictures again.
+export function mergeRegister(old, live, { hashes, files, order, fresh = false, units = null }) {
   const faults = [];
-  const before = new Map((fresh ? [] : (old?.parts ?? [])).map((p) => [p.id, p]));
+  const forgotten = (p) => fresh && (units === null || units.includes(p.unit));
+  const before = new Map((old?.parts ?? []).filter((p) => !forgotten(p)).map((p) => [p.id, p]));
   const seen = new Set();
   const parts = [];
   for (const l of live) {
@@ -67,11 +71,16 @@ export function mergeRegister(old, live, { hashes, files, order, fresh = false }
     seen.add(l.id);
     const now = { hash: hashes[l.unit], files: files[l.unit] };
     const was = before.get(l.id);
+    if (units !== null && !units.includes(l.unit)) {
+      parts.push(was ?? l);
+      continue;
+    }
     if (!was) {
       parts.push(entryOf(l, now));
       continue;
     }
-    const next = { ...was, kind: l.kind, state: l.state, files: now.files, hash: now.hash };
+    const { missing, ...kept } = was;
+    const next = { ...kept, kind: l.kind, state: l.state, files: now.files, hash: now.hash };
     if (l.state === 'stand-in' && was.standIn) next.standIn = { ...was.standIn, hash: now.hash };
     if (l.state === 'stand-in' && !was.standIn) faults.push(`The part ${l.id} is a stand-in on the page, and the register holds it as ${was.state} with no stand-in record.`);
     parts.push(next);
