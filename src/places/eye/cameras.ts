@@ -90,7 +90,7 @@ function arc(part: number, at: number, from: number, to: number): number {
 
 function track(part: number): Pose {
   const at = key('eye-04');
-  return moved(KEYS.shore, { right: arc(part, at, -3.6, 1.2), forward: arc(part, at, -1.2, -2), turn: arc(part, at, 8, -3) });
+  return moved(KEYS.shore, { right: arc(part, at, -3.6, 0.3), forward: arc(part, at, -1.2, -2), turn: arc(part, at, 8, -1) });
 }
 
 export const shots: Record<string, CameraPath> = {

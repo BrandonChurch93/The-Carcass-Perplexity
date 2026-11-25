@@ -219,6 +219,7 @@ const FORM_FRAGMENT = /* glsl */ `
 varying vec3 vWorld;
 varying vec3 vNormal;
 uniform float uPale;
+uniform float uMurk;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WATER_GLSL}
@@ -232,6 +233,8 @@ void main() {
   vec3 e = skyIrradiance(normalize(n + vec3(0.0, 0.6 * wet, 0.0))) * skyOpen(at) + uSunColour * (sunAt(at) * mix(max(dot(n, uSunDir), 0.0), 0.3 * max(n.y, 0.0), wet));
   vec3 c = albedo * e / 3.14159;
   c = mix(c, throughWater(c * sunk(vWorld), vWorld), wet);
+  // What rises brings the dark of the shaft up with it: under the dome it is a pale shape and no more.
+  c *= exp(-uMurk * wet * max(domeAt(vWorld.xz) - vWorld.y, 0.0) * vec3(0.62, 0.46, 0.4));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -311,6 +314,8 @@ void main() {
   float du = clamp(r / uDome.y, 0.0, 1.0);
   float swell = (1.0 - du * du) * clamp(uDome.x / 2.0, 0.0, 1.0);
   float hump = smoothstep(0.0, 0.45, swell);
+  // Seen from above it is no dome at all, only water: the dark of the shaft, and what is in it.
+  hump *= 1.0 - smoothstep(0.25, 0.7, v.y);
   refl = mix(refl, refl * 0.3 + sky * 0.1, hump);
   f = max(f, 0.8 * hump);
   // Where the mats have grown up to the surface it is not a mirror at all.
@@ -477,7 +482,7 @@ export function create(ctx: Context): Piece {
   const shaftMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...rock, ...water }, vertexShader: RIG_VERTEX, fragmentShader: SHAFT_FRAGMENT });
   const shaft = new THREE.Mesh(shaftGeometry(), shaftMaterial);
   shaft.frustumCulled = false;
-  const formMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 1 }, uPale: { value: 0.5 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
+  const formMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 1 }, uPale: { value: 0.5 }, uMurk: { value: 0 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
   // The pale forms that hang upright in the deep, far down, most of them under the lip the camera comes to.
   const rng = ctx.rng('shaft');
   const FORMS = 70;
@@ -495,11 +500,15 @@ export function create(ctx: Context): Piece {
     forms.setMatrixAt(i, dummy.matrix);
   }
   forms.frustumCulled = false;
-  lake.add(ctx.parts.built('shaft', shaft, forms));
+  // The shaft has no floor that is ever seen, but it is closed: nothing behind it shows through from above.
+  const pit = new THREE.Mesh(new THREE.CircleGeometry(DEEP, 48).rotateX(Math.PI / 2), shaftMaterial);
+  pit.position.y = -390;
+  pit.frustumCulled = false;
+  lake.add(ctx.parts.built('shaft', shaft, forms, pit));
   lake.add(forms);
 
   // What rises: a pale back under a dome of water, never the whole of it, and thin pale tips that break the surface around it.
-  const riserMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 0 }, uPale: { value: 0.8 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
+  const riserMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 0 }, uPale: { value: 0.8 }, uMurk: { value: 1 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });
   const back = new THREE.Mesh(new THREE.SphereGeometry(1, 64, 32), riserMaterial);
   back.frustumCulled = false;
   const TIPS = 9;
@@ -621,7 +630,7 @@ export function create(ctx: Context): Piece {
     resize: (width, height) => mirror.resize(width, height),
     dispose: () => {
       mirror.dispose();
-      for (const m of [floor, shaft, forms, back, tips, surface]) m.geometry.dispose();
+      for (const m of [floor, shaft, forms, pit, back, tips, surface]) m.geometry.dispose();
       for (const m of [floorMaterial, matsMaterial, shaftMaterial, formMaterial, riserMaterial, surfaceMaterial]) m.dispose();
     },
   };
