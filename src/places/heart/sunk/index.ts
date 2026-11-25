@@ -5,7 +5,7 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { FIELD, FOOT_A, LEG_A, LEG_B, SLOPE_RANGE, TEAR, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField } from './shape';
+import { FIELD, FOOT_A, LEG_A, LEG_B, SLOPE_RANGE, TEAR, WRIST_B, YAW, bakeField, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
@@ -45,27 +45,34 @@ export function create(ctx: HeartContext): HeartPiece {
     tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 4 }) },
   };
 
-  const fieldMaterial = new THREE.ShaderMaterial({
+  // The relief is opaque where it is whole, so it hides the lake under it; only its rim is laid over the lake's crust.
+  const fieldMaterial = new THREE.ShaderMaterial({ vertexShader: FIELD_VERTEX, fragmentShader: FIELD_FRAGMENT, uniforms: shared });
+  const rimMaterial = new THREE.ShaderMaterial({
     vertexShader: FIELD_VERTEX,
     fragmentShader: FIELD_FRAGMENT,
     uniforms: shared,
+    defines: { RIM: 1 },
     transparent: true,
-    depthWrite: true,
+    depthWrite: false,
   });
+  const WHOLE = FIELD.half - 4.6;
+  const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
+  const inner = (x: number, z: number): boolean => Math.abs(x - 1.6) < 7.0 && Math.abs(z - 0.9) < 6.2;
+  const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
-  const inner = (x: number, z: number): boolean => Math.abs(x - 1.6) < 7.2 && Math.abs(z - 0.6) < 6.2;
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.04, (x, z) => inner(x, z)),
+    fieldGeometry(baked, 0.04, (x, z) => inner(x, z) && !buried(x, z)),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
-    fieldGeometry(baked, 0.1, (x, z) => !inner(x, z) && Math.hypot(x - FIELD.cx, z - FIELD.cz) < FIELD.half),
+    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x - 1.6) < 6.7 && Math.abs(z - 0.9) < 5.9) && radial(x, z) < WHOLE),
     fieldMaterial,
   );
-  fine.position.y = 0.02;
-  coarse.position.y = 0.02;
-  fine.renderOrder = 1;
-  coarse.renderOrder = 1;
+  const rim = new THREE.Mesh(
+    fieldGeometry(baked, 0.25, (x, z) => radial(x, z) >= WHOLE - 0.13 && radial(x, z) < FIELD.half),
+    rimMaterial,
+  );
+  for (const m of [fine, coarse, rim]) m.position.y = 0.02;
 
   const carcassMaterial = new THREE.ShaderMaterial({
     vertexShader: CARCASS_VERTEX,
@@ -78,11 +85,12 @@ export function create(ctx: HeartContext): HeartPiece {
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
-  const body = new THREE.Mesh(bodyGeometry(), carcassMaterial);
-  const legA = legGeometry(LEG_A, 0.44, 1, 1.7);
-  const legB = legGeometry(LEG_B, 0.5, 0.78, 4.1);
-  const legs = [new THREE.Mesh(legA.geometry, carcassMaterial), new THREE.Mesh(legB.geometry, carcassMaterial)];
-  group.add(body, ...legs, fine, coarse);
+  const body = new THREE.Mesh(bodyGeometry(baked), carcassMaterial);
+  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1, seed: 1.7, rings: 900, round: 96, tendon: 0 }, baked);
+  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 0.8, seed: 4.1, rings: 560, round: 72, tendon: 0.085 }, baked);
+  const pad = new THREE.Mesh(padGeometry(), carcassMaterial);
+  const legs = [new THREE.Mesh(legA.geometry, carcassMaterial), new THREE.Mesh(legB.geometry, carcassMaterial), pad];
+  group.add(body, ...legs, fine, coarse, rim);
   for (const m of group.children) m.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('sunk-walker', group));
 
@@ -119,10 +127,10 @@ export function create(ctx: HeartContext): HeartPiece {
 
   // What stands over the crust hides the sky from it: the body, the foot of the arch, the hanging pad, the span of the arch.
   const SHADES: [number, number, number, number][] = [
-    [-1.6, -0.25, 3.6, 0.55],
+    [-1.7, -0.25, 3.8, 0.55],
     [FOOT_A[0], FOOT_A[1], 1.5, 0.5],
-    [5.4, -3.6, 1.1, 0.35],
-    [3.4, 0.6, 3.2, 0.16],
+    [WRIST_B[0], WRIST_B[2], 1.1, 0.35],
+    [2.6, 0.4, 2.8, 0.16],
   ];
   const discs = ctx.rig.contactDiscs(SHADES.length);
 
@@ -149,8 +157,9 @@ export function create(ctx: HeartContext): HeartPiece {
   return {
     setTime: place,
     dispose: () => {
-      for (const m of [body, ...legs, fine, coarse]) m.geometry.dispose();
+      for (const m of [body, ...legs, fine, coarse, rim]) m.geometry.dispose();
       fieldMaterial.dispose();
+      rimMaterial.dispose();
       carcassMaterial.dispose();
       glowGeometry.dispose();
       glowMaterial.dispose();

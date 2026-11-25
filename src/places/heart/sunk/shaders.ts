@@ -57,8 +57,11 @@ void main() {
   float halfSpan = 0.5 / uField.z;
   float r = length(l - (uField.xy + halfSpan));
   // The relief has died away well inside the rim: the last metres only hand the surface over to the lake's own crust.
-  float alpha = smoothstep(halfSpan - 0.4, halfSpan - 3.4, r + 1.6 * (vnoise(l * 0.31) - 0.5) + 0.5 * (vnoise(l * 1.7) - 0.5));
+  float alpha = 1.0;
+  #ifdef RIM
+  alpha = smoothstep(halfSpan - 0.4, halfSpan - 3.4, r + 1.6 * (vnoise(l * 0.31) - 0.5) + 0.5 * (vnoise(l * 1.7) - 0.5));
   if (alpha < 0.004) discard;
+  #endif
   vec4 rl = texture2D(tRelief, fieldUv(l));
   vec4 mk = texture2D(tMask, fieldUv(l));
   vec2 grad = (rl.rg - 0.5) * 2.0 * uField.w;
@@ -85,7 +88,7 @@ void main() {
   vec4 nhR = texture2D(tRopyNh, uvR);
   vec4 nhF = texture2D(tSkinNh, uvF);
   float crest = clamp(mk.b * 2.0 - 0.5, 0.0, 1.3);
-  vec3 old = mix(skin * 1.5, ropy * 1.9, 0.55) * (0.55 + 0.75 * crest) * (0.75 + 0.5 * nhF.b) * (0.8 + 0.4 * vnoise(l * 0.33 + 9.0));
+  vec3 old = mix(skin * (2.0 + age), ropy * 3.0, 0.5) * (0.42 + 0.9 * crest) * (0.75 + 0.5 * nhF.b) * (0.8 + 0.4 * vnoise(l * 0.33 + 9.0));
   vec3 albedo = mix(plain, old, folded);
 
   // Ash in the hollows, pale and dead flat.
@@ -97,10 +100,10 @@ void main() {
   float ph = ln.r / 0.055 + 2.5 * vnoise(l * 1.9) + 1.2 * vnoise(l * 6.3);
   float fw = fwidth(ph);
   float wt = 2.0 * fract(ph) - 1.0;
-  float wrinkle = -2.0 * wt * (0.5 + 0.9 * vnoise(l * 3.1 + 5.0)) * smoothstep(0.7, 0.2, fw) * folded;
+  float wrinkle = -2.0 * wt * (0.05 + 1.2 * smoothstep(0.35, 0.8, vnoise(l * 1.3 + 5.0))) * smoothstep(0.42, 0.1, fw) * folded;
   float ph2 = ln.r / 0.017 + 4.0 * vnoise(l * 5.0);
-  float wrinkle2 = sin(6.2832 * ph2) * smoothstep(0.6, 0.15, fwidth(ph2)) * folded;
-  vec2 wr = ln.gb * (wrinkle * 0.42 + wrinkle2 * 0.3);
+  float wrinkle2 = sin(6.2832 * ph2) * smoothstep(0.35, 0.08, fwidth(ph2)) * folded;
+  vec2 wr = ln.gb * (wrinkle * 0.3 + wrinkle2 * 0.2 * (0.3 + vnoise(l * 4.1)));
   vec2 detail = (nhA.rg - 0.5) * (0.5 + near) + (nhB.rg - 0.5) * 0.8;
   detail *= 1.0 - 0.7 * folded;
   vec2 fine = (nhR.rg - 0.5) * 0.7 * folded + (nhF.rg - 0.5) * 0.6 * close * (0.4 + 0.6 * folded);
@@ -115,24 +118,28 @@ void main() {
   // The tear: lava under a skin that has only just closed, and the little light it throws on its own lips.
   float heat = mk.r;
   float veins = smoothstep(0.62, 0.12, abs(vnoise(l * 6.5 + 3.0) - 0.5) * 2.0 + 0.6 * (vnoise(l * 19.0) - 0.5));
-  float kelvin = mix(760.0, uTearKelvin, smoothstep(0.25, 0.95, heat) * (0.35 + 0.65 * veins));
-  c += blackbody(kelvin) * smoothstep(0.05, 0.4, heat);
-  c += albedo * blackbody(uTearKelvin) * mk.a * 1.6;
+  float kelvin = mix(820.0, uTearKelvin, smoothstep(0.3, 0.9, heat) * (0.35 + 0.65 * veins));
+  c *= 1.0 - 0.85 * smoothstep(0.1, 0.6, heat);
+  c += blackbody(kelvin) * smoothstep(0.1, 0.5, heat);
+  c += albedo * blackbody(uTearKelvin) * mk.a * 0.8;
 
   gl_FragColor = vec4(rigOut(c), alpha);
 }`;
 
 export const CARCASS_VERTEX = /* glsl */ `
-attribute vec3 aMap;
+attribute vec4 aMap;
+attribute vec4 aSurf;
 varying vec3 vWorld;
 varying vec3 vLocal;
 varying vec3 vNormal;
 varying vec3 vLocalNormal;
-varying vec3 vMap;
+varying vec4 vMap;
+varying vec4 vSurf;
 void main() {
   vLocal = position;
   vLocalNormal = normal;
   vMap = aMap;
+  vSurf = aSurf;
   vec4 w = modelMatrix * vec4(position, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * normal);
@@ -145,7 +152,8 @@ varying vec3 vWorld;
 varying vec3 vLocal;
 varying vec3 vNormal;
 varying vec3 vLocalNormal;
-varying vec3 vMap;
+varying vec4 vMap;
+varying vec4 vSurf;
 uniform sampler2D tHide;
 uniform sampler2D tHideNh;
 uniform sampler2D tFlake;
@@ -159,46 +167,62 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float far = length(cameraPosition - vWorld);
   float close = smoothstep(90.0, 20.0, far);
+  float isBody = step(0.5, vMap.w) * step(vMap.w, 1.5);
+  float isLeg = step(vMap.w, 0.5);
 
-  float above = vLocal.y - texture2D(tLines, fieldUv(vLocal.xz)).a;
-
-  // The hide, dried on the frame, and the plates of it that have lifted.
   vec2 uvH = vec2(vMap.x * vMap.z, vMap.y / 0.6);
   vec2 uvP = vec2(vMap.x * vMap.z + 0.37, vMap.y / 0.52 + 0.11);
   vec3 hide = texture2D(tHide, uvH).rgb;
   vec4 hideNh = texture2D(tHideNh, uvH);
   vec3 flake = texture2D(tFlake, uvP).rgb;
   vec4 flakeNh = texture2D(tFlakeNh, uvP);
+  float grey = dot(hide, vec3(0.33));
+  // Soot and ash have taken the brown out of the hide.
+  vec3 dead = vec3(0.3, 0.255, 0.215) * (0.25 + 9.0 * grey);
+  // Caked ash and dried skin, the colour of old paper, darker where the plate is thin.
+  float tone = dot(flake, vec3(0.33));
+  vec3 pale = mix(vec3(0.2, 0.18, 0.155), vec3(0.5, 0.465, 0.41), smoothstep(0.2, 0.8, flakeNh.b)) * (1.1 + 3.5 * tone);
+
+  // On the body the hide lifts in patches; on the legs it is the plates that are left.
   float worn = vnoise3(vLocal * 1.1 + 4.0) + 0.5 * vnoise3(vLocal * 3.7) - 0.25;
-  float lifted = smoothstep(0.3, 0.5, worn + 0.35 * (flakeNh.b - 0.5));
-  // Soot black where the hide holds, ash grey where it has lifted and dried.
-  vec3 albedo = mix(hide * 1.0, flake * vec3(1.25, 1.3, 1.36) * (0.9 + 1.6 * flakeNh.b), lifted);
+  float lifted = mix(vSurf.y * smoothstep(0.1, 0.45, flakeNh.b + 0.5 * worn), smoothstep(0.3, 0.5, worn + 0.35 * (flakeNh.b - 0.5)), 1.0 - isLeg);
+  float split = isBody * smoothstep(0.35, 0.6, vSurf.y + 0.25 * (hideNh.b - 0.5));
+  lifted *= 1.0 - split;
+  vec3 albedo = mix(dead * (0.55 + 0.9 * hideNh.b), pale, lifted);
   vec2 bump = mix((hideNh.rg - 0.5) * 1.6, (flakeNh.rg - 0.5) * 2.6, lifted) * (0.35 + 0.65 * close);
   float cavity = mix(0.7 + 0.3 * hideNh.b, 0.6 + 0.4 * flakeNh.b, lifted);
 
-  // The lava that climbed it and froze: thick at the crust, ending in sagging drips.
-  float drip = vnoise(vLocal.xz * 5.0 + vLocal.y * 0.4) * 0.7 + vnoise(vLocal.xz * 13.0) * 0.3;
-  float line = 0.55 + 0.9 * vnoise(vLocal.xz * 0.9 + 3.0) + 0.75 * drip;
-  float coat = smoothstep(line, line - 0.22, above);
-  vec3 lava = texture2D(tSkin, vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9)).rgb * 1.9;
-  vec4 lavaNh = texture2D(tSkinNh, vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9));
-  albedo = mix(albedo, lava * (0.8 + 0.4 * lavaNh.b), coat);
+  // Under the hide: dried flesh, almost black, strung with pale sinew along the limb; in the splits of the body, the ribs.
+  float strand = smoothstep(0.35, 0.75, vnoise(vec2(vMap.x * vMap.z * 9.0, vMap.y * 1.3)) * 0.7 + 0.3 * vnoise(vec2(vMap.x * vMap.z * 31.0, vMap.y * 2.9)));
+  vec3 flesh = mix(vec3(0.04, 0.03, 0.026), vec3(0.13, 0.095, 0.075), hideNh.b);
+  vec3 sinew = vec3(0.4, 0.36, 0.29) * (0.55 + 0.6 * hideNh.b);
+  float bare = mix(isLeg * (1.0 - vSurf.y), split, isBody);
+  float boney = clamp(vSurf.w * (0.55 + 0.9 * strand), 0.0, 1.0);
+  albedo = mix(albedo, mix(flesh, sinew, boney), bare);
+  bump = mix(bump, (hideNh.rg - 0.5) * 0.8, bare);
+
+  // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
+  vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
+  vec4 lavaNh = texture2D(tSkinNh, uvL);
+  float coat = smoothstep(0.42, 0.58, vSurf.x + 0.22 * (lavaNh.b - 0.5));
+  vec3 lava = mix(texture2D(tSkin, uvL).rgb * 2.5, texture2D(tRopy, uvL).rgb * 3.0, 0.5) * 0.8;
+  albedo = mix(albedo, lava * (0.75 + 0.5 * lavaNh.b), coat);
   bump = mix(bump, (lavaNh.rg - 0.5) * 1.2, coat);
   cavity = mix(cavity, 0.75 + 0.25 * lavaNh.b, coat);
 
   // Ash lies on whatever faces up.
-  float dust = smoothstep(0.45, 0.95, nl.y) * (0.35 + 0.65 * vnoise3(vLocal * 2.9 + 9.0)) * (1.0 - 0.5 * coat);
-  albedo = mix(albedo, vec3(0.3, 0.285, 0.27), dust * 0.5);
+  float dust = smoothstep(0.35, 0.95, nl.y) * (0.35 + 0.65 * vnoise3(vLocal * 2.9 + 9.0)) * (1.0 - 0.5 * coat);
+  albedo = mix(albedo, vec3(0.36, 0.34, 0.315), dust * 0.6);
 
-  // The bump is laid on the surface along its own directions: round the limb and along it.
+  // The bump is laid on the surface along its own directions.
   vec3 along = normalize(cross(n, vec3(0.31, 0.9, 0.29)));
   vec3 round2 = cross(n, along);
   n = normalize(n + (along * bump.x + round2 * bump.y) * 0.9);
 
-  // Where it enters the crust the sky is hidden.
-  float occ = cavity * (0.25 + 0.75 * smoothstep(-0.05, 0.9, above));
-  float rough = mix(0.85, 0.55, coat);
+  float occ = cavity * vSurf.z;
+  float rough = mix(0.88, 0.55, coat);
   vec3 c = sunkShade(vWorld, n, v, albedo, rough, occ);
+  float above = vLocal.y - texture2D(tLines, fieldUv(vLocal.xz)).a;
   c += albedo * blackbody(uTearKelvin) * texture2D(tMask, fieldUv(vLocal.xz)).a * 1.2 * smoothstep(1.5, 0.0, above);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
