@@ -407,7 +407,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     vec2 slab = plates(at / 4.7 + 1.1 * vec2(vnoise(at / 7.0), vnoise(at / 7.0 + 7.0)));
     // The seams are widest where the fan is youngest: near the channels, down its middle and toward its edge.
     float lively = clamp(1.25 * vnoise(at / 13.0 + 3.0) - 0.22 + 0.3 * smoothstep(0.75, 0.1, u) + 0.45 * smoothstep(0.6, 0.92, u) + 0.35 * behind, 0.0, 1.0) * (0.3 + 0.7 * calm);
-    float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.42, 0.8, lively + 0.3 * slab.y + 0.35 * (vnoise(at / 3.7 + 13.0) - 0.5));
+    float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.66, 0.98, lively + 0.3 * slab.y + 0.35 * (vnoise(at / 3.7 + 13.0) - 0.5));
     float crust = mix(mix(700.0, 1060.0, pow(vnoise(at / 1.9), 2.0)), mix(1180.0, 1410.0, clamp(lively * 1.3 - 0.1 + 0.35 * (slab.y - 0.5), 0.0, 1.0)), seam);
     // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
     // A rivulet is red at its banks, orange within, and pale down its middle where it runs fastest; many have skinned over
@@ -453,13 +453,13 @@ void main() {
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
   // There the melt pools behind its own crust in a ragged band, near white where it breaks out, and small flames stand along it.
   float toeFan = smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * lava.x;
-  if (toeFan > 0.0 && vWorld.y < 10.5) {
-    float toeTop = 1.0 + 3.2 * vnoise(vec2(vWorld.x / 5.0, 3.0)) + 1.3 * vnoise(vec2(vWorld.x / 1.4, 7.0));
+  if (toeFan > 0.0 && vWorld.y < 14.5) {
+    float toeTop = 1.5 + 5.0 * vnoise(vec2(vWorld.x / 5.0, 3.0)) + 1.5 * vnoise(vec2(vWorld.x / 1.4, 7.0));
     float toeOn = smoothstep(0.22, 0.42, vnoise(vec2(vWorld.x / 7.0, 11.0)) + 0.25 * vnoise(vWorld.xz / 1.3));
     float toe = smoothstep(toeTop, 0.55 * toeTop, vWorld.y) * toeFan * toeOn;
     float toeK = 1390.0 + 150.0 * smoothstep(0.35, 0.75, vnoise(vec2(vWorld.x / 2.3, vWorld.y * 1.4 + uTime * 0.1))) - 240.0 * smoothstep(0.55, 0.8, vnoise(vWorld.xz / 1.1 + 9.0));
     lava.y = mix(lava.y, max(lava.y, toeK), toe);
-    float tongue = toeTop + 0.05 + 4.5 * pow(vnoise(vec2(vWorld.x / 0.8, uTime * 1.9)), 2.0) * smoothstep(0.4, 0.65, vnoise(vec2(vWorld.x / 6.0, uTime * 0.13 + 9.0)));
+    float tongue = toeTop + 0.05 + 6.0 * pow(vnoise(vec2(vWorld.x / 0.8, uTime * 1.9)), 2.0) * smoothstep(0.4, 0.65, vnoise(vec2(vWorld.x / 6.0, uTime * 0.13 + 9.0)));
     float flame = (1.0 - smoothstep(toeTop, tongue, vWorld.y)) * smoothstep(toeTop + 0.3, toeTop + 0.9, tongue) * toeFan * toeOn * (1.0 - toe);
     lava.y = mix(lava.y, max(lava.y, mix(1120.0, 1420.0, flame)), smoothstep(0.0, 0.25, flame));
   }
