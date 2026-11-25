@@ -192,10 +192,10 @@ export function coat(rng: Rng, count: number, longer: number, even = false): Coa
       // The legs, feathered to the foot.
       const n = Math.floor(rng.next() * 4) % 4;
       const hip = HIPS[n] as [number, number, number];
-      const y = rng.next() < 0.3 ? rng.range(0.02, 0.16) : rng.range(0.03, LEG_TOP + 0.1);
+      const y = rng.next() < (even ? 0.5 : 0.3) ? rng.range(even ? 0.0 : 0.02, 0.16) : rng.range(0.03, LEG_TOP + (even ? 0.21 : 0.1));
       const ang = rng.range(-Math.PI, Math.PI);
       const r = 1.06 * legRadius(y);
-      put(i, [hip[0] + legAhead(y) + 1.15 * r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.06, 0.12) * (0.75 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.006, 0.01));
+      put(i, [hip[0] + legAhead(y) + 1.15 * r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.06, 0.12) * (even ? 2 : 1) * (0.75 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.006, 0.01));
     }
   }
   return { root, dir, lock, count };
