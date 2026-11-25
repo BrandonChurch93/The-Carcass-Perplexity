@@ -11,13 +11,48 @@ import { SHUTTER } from './time';
 const RESOLVE_FRAGMENT = /* glsl */ `
 uniform sampler2D tScene;
 uniform sampler2D tVolume;
+uniform sampler2D tWarp;
+uniform highp sampler2D tDepth;
 uniform float uWeight;
 uniform float uHasVolume;
+uniform float uHasWarp;
+uniform vec2 uSize;
+uniform vec2 uHalf;
+uniform float uNear;
+uniform float uFar;
 varying vec2 vUv;
+float viewDistance(float d) {
+  return uNear * uFar / (uFar - d * (uFar - uNear));
+}
 void main() {
-  vec3 c = texture2D(tScene, vUv).rgb;
+  ivec2 p = ivec2(gl_FragCoord.xy);
+  float z0 = viewDistance(texelFetch(tDepth, p, 0).r);
+  vec2 uv = vUv;
+  if (uHasWarp > 0.5) {
+    // The warp pass says how far the view behind this pixel is bent, in frame heights. A thing nearer than the pixel's own surface is not pulled across it.
+    vec2 bent = clamp(vUv + texture2D(tWarp, vUv).rg * vec2(uSize.y / uSize.x, 1.0), vec2(0.0), vec2(1.0));
+    float z1 = viewDistance(texelFetch(tDepth, min(ivec2(bent * uSize), ivec2(uSize) - 1), 0).r);
+    if (z1 > 0.8 * z0) uv = bent;
+  }
+  vec3 c = texture2D(tScene, uv).rgb;
   if (uHasVolume > 0.5) {
-    vec4 v = texture2D(tVolume, vUv);
+    // The half-size volume is laid over the scene by depth: each of its texels was marched to the depth of the full-size pixel at twice its index,
+    // and counts for this pixel by how near that depth is to this pixel's own. Without this the air of the far wall leaks over a near edge.
+    vec2 h = gl_FragCoord.xy * 0.5 - 0.5;
+    ivec2 b = ivec2(floor(h));
+    vec2 f = h - floor(h);
+    vec4 sum = vec4(0.0);
+    float total = 0.0;
+    for (int k = 0; k < 4; k++) {
+      ivec2 o = ivec2(k & 1, k >> 1);
+      ivec2 t = clamp(b + o, ivec2(0), ivec2(uHalf) - 1);
+      float w = (o.x == 1 ? f.x : 1.0 - f.x) * (o.y == 1 ? f.y : 1.0 - f.y);
+      float zt = viewDistance(texelFetch(tDepth, min(t * 2, ivec2(uSize) - 1), 0).r);
+      w /= 0.02 + abs(zt - z0) / z0;
+      sum += texelFetch(tVolume, t, 0) * w;
+      total += w;
+    }
+    vec4 v = sum / total;
     c = c * v.a + v.rgb;
   }
   gl_FragColor = vec4(c * uWeight, uWeight);
@@ -54,6 +89,27 @@ function flagMaterial(source: THREE.Material, colour: THREE.Color): THREE.Materi
   return m;
 }
 
+const DEPTH_ONLY_FRAGMENT = 'void main() { gl_FragColor = vec4(0.0); }';
+
+// The twin of an opaque shader material that writes depth only: the same vertex shader and the same uniforms, so the depth it leaves is the depth the material itself will draw.
+// A material that cuts holes, writes its own depth or blends has none, and is drawn as before.
+function depthTwin(m: THREE.Material): THREE.ShaderMaterial | null {
+  const cached = m.userData.depthTwin as THREE.ShaderMaterial | null | undefined;
+  if (cached !== undefined) return cached;
+  let twin: THREE.ShaderMaterial | null = null;
+  const s = m as THREE.ShaderMaterial;
+  if (s.isShaderMaterial === true && !s.transparent && s.depthWrite && s.depthTest && s.colorWrite && s.blending === THREE.NormalBlending && !/\bdiscard\b|gl_FragDepth/.test(s.fragmentShader)) {
+    twin = new THREE.ShaderMaterial({ vertexShader: s.vertexShader, fragmentShader: DEPTH_ONLY_FRAGMENT, uniforms: s.uniforms, defines: s.defines, side: s.side, lights: s.lights, fog: s.fog, clipping: s.clipping, glslVersion: s.glslVersion });
+    twin.colorWrite = false;
+    twin.polygonOffset = s.polygonOffset;
+    twin.polygonOffsetFactor = s.polygonOffsetFactor;
+    twin.polygonOffsetUnits = s.polygonOffsetUnits;
+    twin.toneMapped = false;
+  }
+  m.userData.depthTwin = twin;
+  return twin;
+}
+
 export class Engine {
   readonly renderer: THREE.WebGLRenderer;
   readonly gl: WebGL2RenderingContext;
@@ -66,11 +122,19 @@ export class Engine {
   private readonly resolve = additivePass(RESOLVE_FRAGMENT, {
     tScene: { value: null },
     tVolume: { value: null },
+    tWarp: { value: null },
+    tDepth: { value: null },
     uWeight: { value: 1 },
     uHasVolume: { value: 0 },
+    uHasWarp: { value: 0 },
+    uSize: { value: new THREE.Vector2(1, 1) },
+    uHalf: { value: new THREE.Vector2(1, 1) },
+    uNear: { value: 0.1 },
+    uFar: { value: 1000 },
   });
   private sceneTarget: THREE.WebGLRenderTarget | null = null;
   private volumeTarget: THREE.WebGLRenderTarget | null = null;
+  private warpTarget: THREE.WebGLRenderTarget | null = null;
   private accumTarget: THREE.WebGLRenderTarget | null = null;
   private shownA: THREE.WebGLRenderTarget | null = null;
   private shownB: THREE.WebGLRenderTarget | null = null;
@@ -116,7 +180,7 @@ export class Engine {
   setFormat(id: string): void {
     const f = formatById(id);
     this.format = f;
-    for (const t of [this.sceneTarget, this.volumeTarget, this.accumTarget, this.shownA, this.shownB]) {
+    for (const t of [this.sceneTarget, this.volumeTarget, this.warpTarget, this.accumTarget, this.shownA, this.shownB]) {
       t?.depthTexture?.dispose();
       t?.dispose();
     }
@@ -125,6 +189,7 @@ export class Engine {
     this.renderer.setSize(f.width, f.height, false);
     this.sceneTarget = halfFloatTarget(f.width, f.height, true);
     this.volumeTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
+    this.warpTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.accumTarget = halfFloatTarget(f.width, f.height);
     this.post.setSize(f.width, f.height);
   }
@@ -155,15 +220,45 @@ export class Engine {
     cam.updateMatrixWorld(true);
   }
 
-  private accumulate(stage: Stage, frame: number, seq: number, samples: readonly Sample[], worldShift: number, withVolume: boolean, background: THREE.Color | null = null): void {
+  // Depth first: every opaque shader material is drawn once with nothing but its vertex shader, so that the scene's own pass shades each pixel once.
+  // In a software renderer the fragment shader is the cost, and a landscape seen at a low angle covers itself several times over.
+  private depthFirst(stage: Stage): void {
+    const swapped: [Drawn, THREE.Material | THREE.Material[]][] = [];
+    const hidden: THREE.Object3D[] = [];
+    stage.scene.traverseVisible((o) => {
+      if (!isDrawn(o)) return;
+      const twin = Array.isArray(o.material) ? null : depthTwin(o.material);
+      if (twin) {
+        swapped.push([o, o.material]);
+        o.material = twin;
+      } else {
+        hidden.push(o);
+      }
+    });
+    // Hidden by layer and not by `visible`, so that the children of a hidden object are still drawn.
+    const layers = hidden.map((o) => o.layers.mask);
+    for (const o of hidden) o.layers.mask = 0;
+    try {
+      this.renderer.render(stage.scene, stage.camera);
+    } finally {
+      hidden.forEach((o, i) => { o.layers.mask = layers[i] as number; });
+      for (const [o, m] of swapped) o.material = m;
+    }
+  }
+
+  private accumulate(stage: Stage, frame: number, seq: number, samples: readonly Sample[], worldShift: number, withVolume: boolean, background: THREE.Color | null = null, depthFirst = true): void {
     const r = this.renderer;
     const scene = this.sceneTarget as THREE.WebGLRenderTarget;
     const volume = this.volumeTarget as THREE.WebGLRenderTarget;
+    const warpTarget = this.warpTarget as THREE.WebGLRenderTarget;
     const accum = this.accumTarget as THREE.WebGLRenderTarget;
     const count = samples.length;
     stage.resize(this.format.width, this.format.height);
     r.setRenderTarget(accum);
     r.clear(true, false, false);
+    const v = this.resolve.uniforms;
+    (v.uSize!.value as THREE.Vector2).set(scene.width, scene.height);
+    (v.uHalf!.value as THREE.Vector2).set(volume.width, volume.height);
     for (let i = 0; i < count; i++) {
       const s = samples[i] as Sample;
       stage.setTime((frame + s.shutter * SHUTTER) / FPS, worldShift);
@@ -173,24 +268,31 @@ export class Engine {
       if (background) r.setClearColor(background, 1);
       r.clear(true, true, false);
       if (background) r.setClearColor(0x000000, 0);
+      if (depthFirst && stage.depthFirst) this.depthFirst(stage);
       r.render(stage.scene, stage.camera);
       const fume = withVolume ? stage.volume : null;
-      if (fume) {
-        const u = fume.uniforms;
+      const warp = withVolume ? (stage.warp ?? null) : null;
+      for (const [material, target] of [[fume, volume], [warp, warpTarget]] as const) {
+        if (!material) continue;
+        const u = material.uniforms;
         u.tDepth!.value = scene.depthTexture;
         (u.uInvProjection!.value as THREE.Matrix4).copy(stage.camera.projectionMatrixInverse);
         (u.uCameraWorld!.value as THREE.Matrix4).copy(stage.camera.matrixWorld);
         u.uSeq!.value = seq;
         u.uSampleIndex!.value = i;
-        r.setRenderTarget(volume);
-        this.quad.material = fume;
+        r.setRenderTarget(target);
+        this.quad.material = material;
         this.quad.render(r);
       }
-      const v = this.resolve.uniforms;
       v.tScene!.value = scene.texture;
       v.tVolume!.value = volume.texture;
+      v.tWarp!.value = warpTarget.texture;
+      v.tDepth!.value = scene.depthTexture;
       v.uWeight!.value = 1 / count;
       v.uHasVolume!.value = fume ? 1 : 0;
+      v.uHasWarp!.value = warp ? 1 : 0;
+      v.uNear!.value = stage.camera.near;
+      v.uFar!.value = stage.camera.far;
       r.setRenderTarget(accum);
       this.quad.material = this.resolve;
       this.quad.render(r);
@@ -242,7 +344,7 @@ export class Engine {
     });
     for (const m of muted) m.colorWrite = false;
     try {
-      this.accumulate(stage, frame, seq, [CENTRE], 0, false, effect ? FLAG_EFFECT : null);
+      this.accumulate(stage, frame, seq, [CENTRE], 0, false, effect ? FLAG_EFFECT : null, false);
     } finally {
       for (const m of muted) m.colorWrite = true;
       for (const [o, m] of swapped) o.material = m;

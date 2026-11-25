@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 22, 2026-11-25 03:41 UTC:
+Status 23, 2026-11-25 04:04 UTC:
 
-- `01-heart-0.jpg`: First light of the built Heart beside its approved picture. Built so far: the lake (crust, drifting seams) and the land (rock pictures), both lit by one shared rig. Still stand-ins: sky, fume, mouth and fall, walkers, the sunk one, the crack.
-- `02-key-heart-0-preview-draft.jpg`: The frame that answers heart-0, film frame 2722, preview, draft tier
-- `03-frame-11228-preview-review.jpg`: Film frame 11228, preview, review tier
-- `04-frame-10806-preview-review.jpg`: Film frame 10806, preview, review tier
+- `01-key-heart-0-uhd-draft-solo.jpg`: The first-light land drawn alone, 3840 x 2160, one sample. It also draws the whole floor under the lake, which the crust then covers: this is where most of its cost goes. The land owner starts from here and is told to cut it.
+- `02-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
+- `03-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
+- `04-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
 
+Status 22, 2026-11-25 03:41 UTC, showed: First light of the built Heart beside its approved picture.
 Status 21, 2026-11-25 03:24 UTC, showed: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide...
 Status 20, 2026-11-25 03:13 UTC, showed: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart; Sheet 2 of 4: the Heart and the Breath; Sheet 3 of 4: the...
-Status 19, 2026-11-25 02:57 UTC, showed: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart; Part 2 of 4: the Heart, the Breath, the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T03:41:55Z
-phase 3: 0.54 h used of 13.00 h
-build: 7.20 h used of 72.00 h
+2026-11-25T04:04:09Z
+phase 3: 0.92 h used of 13.00 h
+build: 7.57 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 18
+minutes since the last status: 22
 ```
 
 ## Phases
@@ -629,7 +629,13 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| none | | | | | |
+| `heart_lake_owner` | build | The Heart's lake to the finished standard: `crust`, `lava`, `foundering` (plates at every size, seams, upwellings, slabs that tilt and sink, fountains), in `src/places/heart/lake/` | `agent/heart-lake` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `heart_fall_owner` | build | The Heart's fall: `vessel-mouth`, `lava-fall`, `surge` (with the spatter where it lands), in `src/places/heart/fall/` | `agent/heart-fall` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `heart_land_owner` | build | The Heart's land: `land` (walls, buttress, talus, the shore), `bench`, `sulphur-crack`, in `src/places/heart/land/` | `agent/heart-land` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `heart_air_owner` | build | The Heart's air: `sky`, `air`, `fume`, the steam and smoke of every source, the heat shimmer, in `src/places/heart/air/` | `agent/heart-air` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `heart_walkers_owner` | build | The Heart's `crust-walkers`: the animal, its cycle, the herd of fourteen, in `src/places/heart/walkers/` | `agent/heart-walkers` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `heart_sunk_owner` | build | The Heart's `sunk-walker` and the folded skin of lava round it, in `src/places/heart/sunk/` | `agent/heart-sunk` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
+| `gate_g13_builder` | tool | The runners of checks G13 and G14 with tests, and the stand-in reference records of every part in `parts/PARTS.json` | `agent/g13` | 03:52 UTC, 25 Nov | 90 minutes |
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
@@ -719,3 +725,4 @@ none
 - 2026-11-25 03:14 UTC. Status 20 posted at 03:15 UTC: Phase 2 gate passed (21 of 22, A1 open), the whole film plays as a blockout from the published address, Phase 3 began at 03:11 UTC
 - 2026-11-25 03:24 UTC. Status 21 posted 03:25 UTC: the nine material pictures of the Heart, generated (take 1 of 6 each), made to tile, with recipes in assets-src/heart/RECIPE.md. G8 and G9 pass.
 - 2026-11-25 03:42 UTC. Status 22 posted 03:42 UTC: the first lit frame of the built Heart (lake and land on the shared rig) beside its picture
+- 2026-11-25 04:04 UTC. Status 23. Seven agents started at 03:52 UTC (six owners of the Heart's folders, one for the runners of G13 and G14). MEASURED at 3840 x 2160 on key heart-0 with the first light: 17.7 s a frame of one sample, an empty frame 3.2 s, the land alone 8.3 s above it, the crust 3.6 s, the bench 2.6 s (new tool npm run cost). MEASURED: the software renderer runs the full fragment shader for every layer of triangles, hidden or not (depth first alone: 17.7 s against 17.3 s); a shader that discards in its first line costs a fifth (0.7 s against 3.6 s). The owners were told at 04:05 UTC. Engine: the half-size air is laid over the frame by depth, a warp pass for heat shimmer, a depth-first pass (Place.depthFirst).
