@@ -282,8 +282,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     vec2 away = p.xz - centre;
     float most = 1.4 * r + 0.5 * sway;
     if (dot(away, away) >= most * most) continue;
-    // Puffs leave the vent unevenly and carry their sideways curl up with them: the pattern rides the flow and comes round every 8 seconds.
-    vec4 w = noise(vec3(C.x, (h - C.y * uTime) / (8.0 * C.y), C.x * 1.7 + 0.5 * u));
+    // Puffs leave the vent unevenly and carry their sideways curl up with them: the pattern rides the flow, a puff of steam every second and a half, of smoke every four.
+    vec4 w = noise(vec3(C.x, (h - C.y * uTime) / (mix(1.5, 4.0, kind) * C.y), C.x * 1.7 + 0.5 * u));
     centre += (w.ga - 0.5) * sway;
     float puff = mix(mix(0.2, 1.7, smoothstep(0.3, 0.62, w.r)), mix(0.55, 1.35, smoothstep(0.3, 0.62, w.r)), kind);
     float d = length(p.xz - centre) / r;
