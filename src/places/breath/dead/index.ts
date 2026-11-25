@@ -5,7 +5,7 @@ import { DEAD_WADER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { bodyHalfH, bodyHalfW, makeBuild } from '../waders/animal';
 import { makeGround } from './ground';
-import { FRAGMENT, VERTEX } from '../waders/material';
+import { DEPTH_FRAGMENT, FRAGMENT, VERTEX } from '../waders/material';
 import { Skin, type Tube } from '../waders/skin';
 
 export const PARTS: readonly string[] = ['dead-wader'];
@@ -304,6 +304,7 @@ export function create(ctx: Context): Piece {
       uMirror: { value: 0 },
     },
   });
+  material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   // What it has left on the rock: the stain it lies in, a line of salt where that dried, and the grit that has gathered against it.

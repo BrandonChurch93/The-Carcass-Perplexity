@@ -105,15 +105,8 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
-export const VANE_FRAGMENT = /* glsl */ `
-precision highp float;
-varying vec3 vWorld;
-varying vec4 vVane;
-varying vec4 vTint;
-uniform float uPixel;
-${NOISE_GLSL}
-${RIG_GLSL}
-void main() {
+// Which pixels of a vane are barb or bead: the same lines in the picture and in the depth the fog reads.
+const VANE_TEST = /* glsl */ `
   vec3 toEye = cameraPosition - vWorld;
   float far = length(toEye);
   vec3 v = toEye / far;
@@ -124,17 +117,17 @@ void main() {
   // The barbs do not hang straight: each lock of them wanders a little as it goes down.
   float a = vVane.x + len * b * b * (0.55 * (vnoise(vec2(vVane.x * 7.0 + seed, b * 2.0 + seed)) - 0.5) + 0.16 * (vnoise(vec2(vVane.x * 41.0 + seed, b * 7.0 - seed)) - 0.5));
   // Wet barbs gather into locks: the barbs of one lock leave the stem side by side and come together at its point.
-  float wide = 0.014 + 0.016 * hash12(vec2(seed, 3.1));
+  float wide = 0.03 + 0.035 * hash12(vec2(seed, 3.1));
   float cell = floor(a / wide);
   float h1 = hash12(vec2(cell, seed));
   float h2 = hash12(vec2(cell + 17.0, seed * 1.7));
   float centre = (cell + 0.5 + 0.5 * (h1 - 0.5)) * wide;
-  float lockLen = 0.28 + 0.72 * h2 * sqrt(h2);
+  float lockLen = 0.5 + 0.5 * h2;
   float t = b / lockLen;
   // A bead of water at the point of a lock, on most of them.
   float bead = length(vec2(a - centre, (b - lockLen) * len + 0.004));
   bool drop = h1 > 0.72 && bead < 0.0036 + 0.5 * px && vTint.z > 0.3 && px < 0.004;
-  float gather = (0.6 + 0.3 * h1) * smoothstep(0.1, 1.0, t);
+  float gather = (0.75 + 0.2 * h1) * smoothstep(0.05, 1.0, t);
   float fan = 1.0 - gather;
   float rootAt = centre + (a - centre) / fan;
   float spacing = 0.0045;
@@ -144,9 +137,20 @@ void main() {
   float thick = max(0.0013 * (1.0 - 0.45 * t), 0.75 * px);
   // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
   thick = max(thick, 0.5 * (spacing * fan - px));
-  bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.6 + 0.4 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
+  bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.72 + 0.28 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
   if (!barb && !drop) discard;
+`;
 
+export const VANE_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec4 vVane;
+varying vec4 vTint;
+uniform float uPixel;
+${NOISE_GLSL}
+${RIG_GLSL}
+void main() {
+${VANE_TEST}
   vec3 n = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(n, v) < 0.0) n = -n;
   float tone = vTint.y;
@@ -156,7 +160,7 @@ void main() {
   vec3 albedo = mix(vec3(0.07, 0.006, 0.014), vec3(0.2, 0.018, 0.032), 0.45 * tone + 0.3 * hb + 0.25 * h2);
   albedo = mix(albedo, vec3(0.36, 0.085, 0.07), 0.45 * smoothstep(0.6, 1.0, t) * h1);
   // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
-  float occ = mix(0.12, 1.0, smoothstep(0.0, 0.9, t * lockLen)) * mix(0.2, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
+  float occ = mix(0.26, 1.0, smoothstep(0.0, 0.8, t * lockLen)) * mix(0.2, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
@@ -167,4 +171,16 @@ void main() {
     colour = 0.4 * colour + uSunColour * (0.06 + 3.0 * pow(against, 8.0)) * sunAt(vWorld) + 0.35 * skyRadiance(vec3(-v.x, 0.25, -v.z));
   }
   gl_FragColor = vec4(rigOut(colour), 1.0);
+}`;
+
+/** The vanes cut holes: this is all the engine needs to lay their depth before the picture. */
+export const VANE_DEPTH = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec4 vVane;
+varying vec4 vTint;
+uniform float uPixel;
+${NOISE_GLSL}
+void main() {
+${VANE_TEST}  gl_FragColor = vec4(0.0);
 }`;

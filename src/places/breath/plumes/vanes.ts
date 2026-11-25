@@ -38,7 +38,7 @@ export class Vanes {
   add(f: Frond): void {
     const n = f.points.length;
     let along = 0;
-    // Four vanes: one to each side that hangs, and over each a shorter one that stands off the stem, so the frond is full from every side.
+    // Four vanes: one to each side that hangs, and over each a shorter one that leaves the stem higher and falls sooner, so the frond is full from every side.
     for (const [side, layer] of [[-1, 0], [1, 0], [-1, 1], [1, 1]] as const) {
       along = 0;
       const first = this.count;
@@ -67,8 +67,8 @@ export class Vanes {
         }
         sx *= side;
         sz *= side;
-        const length = (f.barb[i] as number) * (layer === 0 ? 1 : 0.72);
-        const droop = (f.droop[i] as number) * (layer === 0 ? 1 : 0.45);
+        const length = (f.barb[i] as number) * (layer === 0 ? 1 : 0.7);
+        const droop = (f.droop[i] as number) * (layer === 0 ? 1 : 1.25);
         let x = p[0];
         let y = p[1];
         let z = p[2];
@@ -77,7 +77,7 @@ export class Vanes {
           if (q > 0) {
             // A barb leaves the stem a little above level, swept toward the frond's tip, and its own wet weight takes it down.
             const vm = (q - 0.5) / ACROSS;
-            const elevation = (layer === 0 ? 0.25 : 1.0) + f.twist * side - ((layer === 0 ? 0.25 : 0.5) + droop) * vm ** 1.2;
+            const elevation = (layer === 0 ? 0.3 : 0.75) + f.twist * side - ((layer === 0 ? 0.3 : 0.75) + droop) * vm ** (layer === 0 ? 1.2 : 0.8);
             const sweep = 0.5;
             const c = Math.cos(elevation);
             const ds = length / ACROSS;

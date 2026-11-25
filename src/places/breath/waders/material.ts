@@ -34,6 +34,9 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
+/** The skin cuts no holes in the film's own picture (only in the water's mirror), so its depth can be laid before the picture, where the fog reads it. */
+export const DEPTH_FRAGMENT = 'void main() { gl_FragColor = vec4(0.0); }';
+
 export const FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
