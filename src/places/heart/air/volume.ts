@@ -251,7 +251,22 @@ void main() {
     sum += trans * (l1 * exp(-y1 / 5.0) + l2 * exp(-y2 / 5.0)) * ((1.0 - exp(-slant * 0.05)) * 0.035);
   }
   // Air seen against the sky sends some of the sky's light on toward the camera: the sky behind a haze is paler, not darker, by less than the haze takes.
-  if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0);
+  // A high thin veil of old smoke stands over the whole caldera, behind all else: it is seen only against the sky, denser toward the lava plains in the east.
+  float veil = 0.0;
+  vec3 veilLight = vec3(0.0);
+  if (uShowAir > 0.5 && far > 20000.0 && rd.y > 0.0) {
+    vec3 skyHere = mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45));
+    vec2 meet = ro.xz + rd.xz * min((1200.0 - ro.y) / max(rd.y, 0.02), 30000.0);
+    float lumps = noise(vec3(meet.x + 2.0 * uTime, 300.0, meet.y) * 0.00021).g;
+    float east = smoothstep(0.8, 1.0, dot(normalize(rd.xz), normalize(vec2(1500.0, -300.0) - ro.xz)));
+    float depth = min(0.5 + 6.0 * east, 1.5) * mix(0.8, 1.2, lumps) * smoothstep(0.0, 0.08, rd.y);
+    veil = 1.0 - exp(-depth);
+    veilLight = veil * skyHere * vec3(0.5, 0.28, 0.17);
+  }
+  if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0) * (1.0 - veil);
+  // The veil is the last thing before the sky: the air's own share of the sky's light is dimmed by it as the sky is.
+  sum += trans * veilLight * (1.0 + min(thick, 1.0));
+  trans *= 1.0 - veil;
   gl_FragColor = vec4(sum, trans);
 }`;
 
