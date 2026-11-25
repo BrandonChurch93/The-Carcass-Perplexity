@@ -103,14 +103,35 @@ function finish(positions: number[], index: number[], extra: Record<string, { da
 
 const PHI0 = -0.13;
 const PHI1 = Math.PI + 0.13;
-const AROUND = 132;
+const AROUND = 200;
 const RIM = [1.0, 1.025, 1.06, 1.1, 1.15, 1.21, 1.28, 1.36, 1.45, 1.55];
 
 /** How far the rim stands out of the cliff, metres, by angle. The crown overhangs most. */
-const hood = (phi: number): number => 4.5 + 9.5 * Math.pow(Math.max(0, Math.sin(phi)), 1.5);
+const hood = (phi: number): number => 2.5 + 5 * Math.pow(Math.max(0, Math.sin(phi)), 1.5);
 const rimShape = (k: number): number => smooth(1.5, 1.08, k) * (0.78 + 0.22 * smooth(1.0, 1.08, k)) - 0.35 * smooth(1.4, 1.55, k);
-/** The rock is ragged: the arch swells and shrinks by a few metres round its edge and along its length. `rho` is metres outward from the rim (negative inside). */
-const ragged = (phi: number, rho: number): number => 1 + 0.085 * (fbm2(phi * 5.2 + 3.1, rho / 13 + 0.7) - 0.5) * 2 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2;
+/** The outline of the arch is not a ruled curve: it leans, bulges and is notched, the same all the way in. `rho` is metres outward from the rim (negative inside). */
+const outline = (phi: number, rho: number): number =>
+  1 + 0.075 * (noise2(phi * 1.5 + 3.1, 0.7 + rho / 140) - 0.5) * 2 + 0.035 * (noise2(phi * 5 + 1.3, 2.2 + rho / 60) - 0.5) * 2 + 0.014 * blocks(phi * 62, rho, 4.5, 3);
+/** The lip is cut back most at the upper west, above the pool, and that broad bevel is what the melt lights. Metres. */
+const flare = (phi: number): number => 3 + 15 * Math.exp(-Math.pow((phi - 0.66 * Math.PI) / 0.62, 2)) + 5 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
+/** The roof goes back as a few big ribs: at each the tube steps in, more on one flank than the other, and partly opens again behind it. */
+const RIBS = [
+  { at: 13, step: 0.1 },
+  { at: 36, step: 0.09 },
+  { at: 66, step: 0.1 },
+  { at: 104, step: 0.11 },
+];
+const ribbed = (phi: number, d: number): number => {
+  let k = 1;
+  RIBS.forEach((r, i) => {
+    const at = r.at + 9 * (noise2(phi * 2.1 + i * 5.1, 0.3) - 0.5) + 3 * (noise2(phi * 9 + i * 2.3, 1.9) - 0.5);
+    const a = r.step * (0.3 + 1.4 * noise2(phi * 1.7 + i * 3.7, 4.2));
+    k -= a * smooth(at - 0.9, at + 0.9, d) - 0.55 * a * smooth(at + 3, at + 20, d);
+  });
+  return k;
+};
+const ragged = (phi: number, rho: number): number =>
+  rho > -1e-6 ? outline(phi, rho) + flare(phi) / 70 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2 * smooth(0, 3, rho) : (outline(phi, rho) + (flare(phi) / 70) * Math.exp(rho / 9)) * ribbed(phi, -rho);
 
 /**
  * The rim of the mouth and the tube behind it, as one skin: rings from the darkness at the back, forward to the rim, then outward over the cliff.
@@ -131,7 +152,7 @@ export function shell(): THREE.BufferGeometry {
   const mean = front.reduce((a, b) => a + b, 0) / front.length;
 
   const depths: number[] = [];
-  for (let d = 0; d < TUBE.depth; d += Math.max(1.1, d * 0.085)) depths.push(d);
+  for (let d = 0; d < TUBE.depth; d += d < 112 ? 0.9 + d * 0.012 : d * 0.085) depths.push(d);
   depths.push(TUBE.depth);
   depths.reverse();
 
@@ -192,7 +213,7 @@ export function face(): THREE.BufferGeometry {
       const edge = Math.min(x - x0, x1 - x, z - z0, z1 - z);
       const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 9, edge));
       positions.push(x, y, z);
-      open.push(inArch(x, y, 1.09) && z > MOUTH.z - 58);
+      open.push(inArch(x, y, 1.08 + 0.2 * smooth(0.15, 0.5, (y - TUBE.floor) / TUBE.crown(0))) && z > MOUTH.z - 58);
       low.push(y < TUBE.floor - 3 && x > MOUTH.x - 45);
     }
   }
@@ -269,7 +290,7 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const up = smooth(0.7, 1.08, off);
     const level = TUBE.floor + 0.012 * Math.max(d, 0);
     // Roof fall lies heaped on the floor each side of the river, highest against the walls, so the sill of the mouth is not a level line.
-    const heap = (12 * Math.pow(smooth(0, 42, side - 1), 1.3) + 4.5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + 1.6 * blocks(x, z, 4.2, 7) * smooth(1, 6, side)) * smooth(80, 25, d);
+    const heap = (12 * Math.pow(smooth(0, 42, side - 1), 1.3) + 4.5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + 1.6 * blocks(x, z, 4.2, 7) * smooth(1, 6, side)) * smooth(80, 25, d) * smooth(0.5, 17, d) * lerp(0.08, 1, smooth(-0.3, 0.3, n.toward[0]));
     const floor = lerp(n.y, level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), smooth(0.9, 1.06, u));
     // Outside: the apron. It is 25 m wide under the lip and spreads to the lake; beyond its edge it falls away at the angle rubble lies at.
     const ground = Math.max(land(x, z), -3);

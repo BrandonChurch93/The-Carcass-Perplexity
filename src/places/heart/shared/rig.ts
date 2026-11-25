@@ -16,6 +16,8 @@ interface Grid {
   spec: typeof LAND;
   height: Float32Array;
   open: Float32Array;
+  /** What the same look takes within 14 m alone: the fine grid replaces that share with its own. */
+  near: Float32Array;
   shore: Float32Array;
 }
 
@@ -73,27 +75,27 @@ function shoreDistance(height: Float32Array, spec: typeof LAND): Float32Array {
 }
 
 // How much of the sky each point of the ground sees over the land round it: 1 on the open lake, less under a wall.
-function skyOpen(height: Float32Array, spec: typeof LAND, step: number): Float32Array {
+// `reach` lists the distances looked at in each of eight directions, and `at` reads the land's height anywhere.
+function skyOpen(at: Height, spec: typeof LAND, step: number, reach: readonly number[]): Float32Array {
   const w = Math.ceil(spec.width / step);
   const h = Math.ceil(spec.height / step);
   const cx = (spec.maxX - spec.minX) / spec.width;
   const cz = (spec.maxZ - spec.minZ) / spec.height;
   const low = new Float32Array(w * h);
   const DIRS = 8;
-  const REACH = [6, 14, 30, 60, 110, 190, 320, 520, 800];
   for (let j = 0; j < h; j++) {
     for (let i = 0; i < w; i++) {
       const x = spec.minX + (i * step + 0.5) * cx;
       const z = spec.minZ + (j * step + 0.5) * cz;
-      const y = Math.max(0, sample(height, spec, x, z));
+      const y = Math.max(0, at(x, z));
       let sum = 0;
       for (let k = 0; k < DIRS; k++) {
         const a = ((k + 0.5) / DIRS) * Math.PI * 2;
         const ax = Math.cos(a);
         const az = Math.sin(a);
         let slope = 0;
-        for (const r of REACH) {
-          const rise = (sample(height, spec, x + ax * r, z + az * r) - y) / r;
+        for (const r of reach) {
+          const rise = (at(x + ax * r, z + az * r) - y) / r;
           if (rise > slope) slope = rise;
         }
         sum += 1 - slope / Math.hypot(1, slope);
@@ -101,6 +103,7 @@ function skyOpen(height: Float32Array, spec: typeof LAND, step: number): Float32
       low[j * w + i] = sum / DIRS;
     }
   }
+  if (step === 1) return low;
   const lowSpec = { ...spec, width: w, height: h };
   const out = new Float32Array(spec.width * spec.height);
   for (let j = 0; j < spec.height; j++) {
@@ -108,6 +111,11 @@ function skyOpen(height: Float32Array, spec: typeof LAND, step: number): Float32
   }
   return out;
 }
+
+const REACH_FAR = [6, 14, 30, 60, 110, 190, 320, 520, 800];
+// The fine grid looks at its own ground from 0.7 m out, so that a crack, the foot of a step and the hollow between two blocks lose the sky
+// on the bench the camera stands on. Beyond 14 m the coarse grid has already looked: the two are multiplied.
+const REACH_NEAR = [0.7, 1.4, 2.8, 5.5, 11];
 
 function bakeGrid(spec: typeof LAND, height: Height, openFrom: Grid | null): Grid {
   const { width: w, height: h } = spec;
@@ -117,10 +125,20 @@ function bakeGrid(spec: typeof LAND, height: Height, openFrom: Grid | null): Gri
   for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) heights[j * w + i] = height(spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
   let open: Float32Array;
   if (openFrom) {
+    const far = openFrom;
+    const near = skyOpen((x, z) => (inside(spec, x, z) ? sample(heights, spec, x, z) : sample(far.height, far.spec, x, z)), spec, 1, REACH_NEAR);
     open = new Float32Array(w * h);
-    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) open[j * w + i] = sample(openFrom.open, openFrom.spec, spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
-  } else open = skyOpen(heights, spec, 2);
-  return { spec, height: heights, open, shore: shoreDistance(heights, spec) };
+    for (let j = 0; j < h; j++) {
+      for (let i = 0; i < w; i++) {
+        const x = spec.minX + (i + 0.5) * cx;
+        const z = spec.minZ + (j + 0.5) * cz;
+        // The coarse grid saw the same ground at 6 and 14 m through cells of 5 m: what it took there is given back before the near look is taken.
+        const wide = sample(far.open, far.spec, x, z);
+        open[j * w + i] = wide * Math.min(1, (near[j * w + i] as number) / Math.max(0.05, sample(far.near, far.spec, x, z)));
+      }
+    }
+  } else open = skyOpen((x, z) => sample(heights, spec, x, z), spec, 2, REACH_FAR);
+  return { spec, height: heights, open, near: openFrom ? open : skyOpen((x, z) => sample(heights, spec, x, z), spec, 2, [6, 14]), shore: shoreDistance(heights, spec) };
 }
 
 function gridTexture(grid: Grid): THREE.DataTexture {
@@ -271,7 +289,8 @@ export function createRig(t0: number): Rig {
     // The dusk sky, measured against the approved wide view: its sky reads 0.22, 0.25, 0.35 at 13 degrees up, and bare rock under it about 0.015.
     uSkyZenith: { value: new THREE.Vector3(0.09, 0.118, 0.2) },
     uSkyHorizon: { value: new THREE.Vector3(0.175, 0.21, 0.33) },
-    uSkyGround: { value: new THREE.Vector3(0.034, 0.036, 0.045) },
+    // What dark ground throws back up at the underside of things: rock of albedo 0.1 under this sky, neutral.
+    uSkyGround: { value: new THREE.Vector3(0.012, 0.0115, 0.012) },
     uCast: { value: 0.75 },
     uFill: { value: new THREE.Vector3(0.78, 0.64, 0.4) },
     uWarmDir: { value: new THREE.Vector3(0.86, 0.22, -0.46).normalize() },
