@@ -138,6 +138,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (Math.hypot(Math.max(0, off - half * 1.3), Math.max(0, lens - top)) < 3.2) return false;
     if (linePathDistance(x, z) < 1.5 + half * 1.3 && top > 0.68) return false;
     if (!o.stand && top > 1.3 && lineOpen(x, z)) return false;
+    // Nothing of the bench's stands on the crag beside that lens: from below it would hang in the steam.
+    if (!o.stand && g > 2.2 && Math.hypot(x + 510.5, z - 215.5) < (size > 1 ? 70 : 30)) return false;
     // Round that lens the picture has boulders of 0.3 to 1.2 m and nothing larger.
     if (!o.stand && size > 1.3 && Math.hypot(x + 510.5, z - 215.5) < 18) return false;
     // The line view's channel leaves the shore just ahead of its lens: nothing of the bench's lies on the moving crust there.
@@ -413,7 +415,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       [12.6, 3.4, 0.3, 1.0, 0.5],
     ] as [number, number, number, number, number][]) pile(ahead, left, y, half, tall);
     // The one that shows at the key: a boulder of clinker on the pile, 7 m from the lens, filling the bottom left corner of the frame out of focus.
-    stand(2, -454.9 + fx * 7.0 - rx * 2.3, 250.3 + fz * 7.0 - rz * 2.3, 5.95, 0.85, 1.2, 0.36, staged);
+    stand(2, -454.9 + fx * 7.0 - rx * 2.25, 250.3 + fz * 7.0 - rz * 2.25, 5.95, 0.95, 1.2, 0.36, staged);
     stand(5, -454.9 + fx * 7.0 - rx * 1.65, 250.3 + fz * 7.0 - rz * 1.65, 5.6, 0.42, 0.9, 0.32, staged);
     // It is an island the crust breaks against: a skirt of upturned plates and rubble round its foot.
     const [ix, iz] = ISLAND;

@@ -227,11 +227,11 @@ export function rockShape(seed: number, kind: RockKind): RockShape {
     reach = Math.max(reach, Math.hypot(x, y, z));
   }
 
-  const levels: THREE.BufferGeometry[] = [];
+  const normals: Float32Array[] = [];
   for (let level = 0; level < ROCK_LEVELS; level++) {
     const count = ball.counts[level] as number;
     const index = ball.index[level] as Uint16Array;
-    // Smooth normals of the pushed surface: every corner takes the mean of the faces round it, weighed by their area.
+    // Smooth normals of the pushed surface at this level: every corner takes the mean of the faces round it, weighed by their area.
     const normal = new Float32Array(count * 3);
     for (let f = 0; f < index.length; f += 3) {
       const ia = (index[f] as number) * 3;
@@ -261,6 +261,15 @@ export function rockShape(seed: number, kind: RockKind): RockShape {
       normal[i * 3 + 1] = (normal[i * 3 + 1] as number) / l;
       normal[i * 3 + 2] = (normal[i * 3 + 2] as number) / l;
     }
+    normals.push(normal);
+  }
+  // A coarse level takes its normals from the mesh two levels finer, of which its corners are the first: a face of the rock then keeps
+  // its own direction up to its edge, and a block drawn small is still a block and not a pebble.
+  const levels: THREE.BufferGeometry[] = [];
+  for (let level = 0; level < ROCK_LEVELS; level++) {
+    const count = ball.counts[level] as number;
+    const index = ball.index[level] as Uint16Array;
+    const normal = (normals[Math.min(level + 2, ROCK_LEVELS - 1)] as Float32Array).slice(0, count * 3);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(position.slice(0, count * 3), 3));
     g.setAttribute('normal', new THREE.BufferAttribute(normal, 3));
