@@ -85,6 +85,9 @@ void main() {
   vec3 albedo = mix(flesh, vec3(0.2, 0.035, 0.04), smoothstep(0.04, 0.3, reach + 0.1 * (mottle - 0.5)));
   float occ = mix(0.6, 1.0, vTint.x) * mix(0.5, 1.0, smoothstep(0.0, 0.5, reach));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.35, occ);
+  // Wet and round against the bright fog: a thin warm edge on the side of the sun, and the fog's own light in the shade.
+  float edge_ = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0) * clamp(0.3 + dot(n, uSunDir), 0.0, 1.0);
+  colour += uSunColour * vec3(0.9, 0.35, 0.28) * (0.5 * edge_ * sunAt(vWorld)) + albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 / 3.14159) * occ;
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -159,10 +162,10 @@ ${VANE_TEST}
   float reach = vTint.z;
   float within = vTint.x;
   // Wine red, each barb a little unlike the next; darker at the stem, a little paler and clearer at the hanging end.
-  vec3 albedo = mix(vec3(0.07, 0.006, 0.014), vec3(0.2, 0.018, 0.032), 0.45 * tone + 0.3 * hb + 0.25 * h2);
+  vec3 albedo = mix(vec3(0.1, 0.012, 0.022), vec3(0.24, 0.026, 0.042), 0.45 * tone + 0.3 * hb + 0.25 * h2);
   albedo = mix(albedo, vec3(0.36, 0.07, 0.06), 0.45 * smoothstep(0.6, 1.0, t) * h1);
   // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
-  float occ = mix(0.26, 1.0, smoothstep(0.0, 0.8, t * lockLen)) * mix(0.2, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
+  float occ = mix(0.42, 1.0, smoothstep(0.0, 0.8, t * lockLen)) * mix(0.36, 1.0, within * within) * mix(0.55, 1.0, smoothstep(0.0, 0.5, reach));
   // Each barb is a round wet hair: dark where it meets the next, so a lock is strands and not a blade.
   float across = clamp(line / max(0.5 * spacing * fan, 1e-5), 0.0, 1.0);
   float strand = mix(1.0, 0.25 + 0.75 * sqrt(1.0 - across * across), smoothstep(0.7 * px, 2.2 * px, spacing * fan));
@@ -172,7 +175,9 @@ ${VANE_TEST}
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float thin = smoothstep(0.35, 1.0, t) * (0.15 + 0.85 * within);
-  colour += vec3(1.0, 0.06, 0.05) * uSunColour * (thin * (0.05 + 0.95 * against * against) * 0.4 * sunAt(vWorld));
+  colour += vec3(1.0, 0.07, 0.05) * uSunColour * (thin * (0.14 + 0.86 * against * against) * 0.62 * sunAt(vWorld));
+  // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 / 3.14159) * (0.35 + 0.65 * occ);
   if (drop && (!barb || bead < 0.0028 + 0.35 * px)) {
     // The bead: it gathers the sun and the bright fog behind it, and a little of the red it hangs from.
     colour = 0.4 * colour + uSunColour * (0.06 + 3.0 * pow(against, 8.0)) * sunAt(vWorld) + 0.35 * skyRadiance(vec3(-v.x, 0.25, -v.z));
