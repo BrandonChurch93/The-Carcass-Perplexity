@@ -1,8 +1,8 @@
-# Status 70
+# Status 71
 
-2026-11-25 21:23 UTC. Phase 4, the other places and the rise.
+2026-11-25 21:46 UTC. Phase 4, the other places and the rise.
 
-- `01-eye-0.jpg`: The Eye: your approved picture on the left, the blockout its owner starts from on the right
-- `02-reveal-4.jpg`: The Reveal, last frame: your approved picture on the left, the blockout on the right. The owner builds to your note: a continent first, the body only near the top
-- `03-key-reveal-4-preview-draft.jpg`: The frame that answers reveal-4, film frame 10027, preview, draft tier
-- `04-key-eye-0-preview-draft.jpg`: The frame that answers eye-0, film frame 8412, preview, draft tier
+- `01-look-1.jpg`: The Ribs, first built frame of the land at minute 20 (draft): blades, floor, arch. Still grey and flat; the owner has the list
+- `02-look-2.jpg`: The Blood Marsh, the wallowers, first pass at minute 19 (draft, on stand-in ground). Next: folds in the hide, the feeler fringe
+- `03-v1-spine-3.jpg`: The Spine, the strike and the kites, version 1 at minute 22: approved picture left, frame right (the spire is still a stand-in)
+- `04-look-1.jpg`: The Blood Marsh, the stalks, first pass (draft). Next: crowns that hang wet, salt collars

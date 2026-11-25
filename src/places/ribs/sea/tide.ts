@@ -23,6 +23,13 @@ export const SWELL: [number, number, number, number][] = [
 
 export const WIND_TO = WIND.to;
 
-/** Up to this many legs standing in water are ringed by the pools. The wings folder fills the list each time. x, z, phase, strength. */
+/** Up to this many legs standing in water are ringed by the pools. x, z, phase, strength. */
 export const MAX_RINGS = 24;
-export const RINGS: { x: number; z: number; phase: number; strength: number }[] = Array.from({ length: MAX_RINGS }, () => ({ x: 0, z: 0, phase: 0, strength: 0 }));
+export interface Ring {
+  x: number;
+  z: number;
+  phase: number;
+  strength: number;
+}
+/** The wings folder sets `at` when it is created: it fills the list for a time of the place, from that time alone. */
+export const RING_SOURCE: { at: ((seconds: number, out: Ring[]) => void) | null } = { at: null };
