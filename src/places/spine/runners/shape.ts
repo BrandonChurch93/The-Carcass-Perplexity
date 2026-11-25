@@ -155,8 +155,8 @@ export interface Coat {
   count: number;
 }
 
-/** Where each lock of the coat is rooted. `longer` scales the skirt of the flanks. */
-export function coat(rng: Rng, count: number, longer: number): Coat {
+/** Where each lock of the coat is rooted. `longer` scales the skirt of the flanks. `even` coats the belly as thickly as the back, for one that lies belly out. */
+export function coat(rng: Rng, count: number, longer: number, even = false): Coat {
   const root = new Float32Array(count * 3);
   const dir = new Float32Array(count * 3);
   const lock = new Float32Array(count * 4);
@@ -172,7 +172,7 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       // The trunk. More locks on the back and the flanks than under the belly.
       const x = -0.9 + 1.68 * rng.next();
       let ang = rng.range(-Math.PI, Math.PI);
-      if (Math.abs(ang) > 2.4 && rng.next() < 0.6) ang = rng.range(-2.2, 2.2);
+      if (!even && Math.abs(ang) > 2.4 && rng.next() < 0.6) ang = rng.range(-2.2, 2.2);
       const t = trunkAt(x);
       const sy = Math.cos(ang);
       const sz = Math.sin(ang);

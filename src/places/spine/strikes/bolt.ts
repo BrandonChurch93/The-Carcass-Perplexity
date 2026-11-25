@@ -76,10 +76,10 @@ export function figure(rng: Rng, site: StrikeSite): Line[] {
     fork(main, at, rng.range(0.45, 1), 0, site.rise * (1 - at) * rng.range(0.25, 0.6) + 30);
   }
   if (site.branch) {
-    // The bolt forks to a second spire: a branch that comes to ground, as heavy as the main channel's lower half.
+    // The bolt forks to a second spire: a branch that comes to ground, thinner and fainter than the main channel.
     const i = Math.floor(0.42 * (main.length - 1));
     const path2 = crooked(rng, main[i] as Vec3, site.branch, 6, 0.16);
-    lines.push({ points: path2, width: 0.75, gain: 0.7, from: 0.42, to: 1, branch: 0 });
+    lines.push({ points: path2, width: 0.4, gain: 0.32, from: 0.42, to: 1, branch: 0 });
   }
   // Fine side branches near the tip: short hairs off the last hundred metres.
   for (let h = 0; h < 5; h++) fork(main, rng.range(0.82, 0.985), rng.range(0.15, 0.3), 2, rng.range(18, 60));

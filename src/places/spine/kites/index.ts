@@ -58,7 +58,10 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   // A gust lifts or drops the whole ribbon slowly.
   float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
   float fan = (fract(more.y * 13.7) - 0.5) * 0.3;
-  float lift = fan * along * (1.0 - 0.5 * u) - more.x * len * u * u + amp * (sin(p1) + 0.45 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
+  // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
+  float held = clamp(u / more.w, 0.0, 1.0);
+  float hang = 0.3 * more.w * len * held * (1.0 - held);
+  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.45 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
   float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
@@ -80,6 +83,7 @@ varying vec4 vMore;
 varying float vThin;
 varying float vCord;
 varying float vSpine;
+varying float vHalf;
 void main() {
   float u = aAt.x;
   float e = 0.004;
@@ -101,8 +105,9 @@ void main() {
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
   float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u));
   float far = length(cameraPosition - c);
-  float cord = max(0.12, 0.9 * uPixel * far);
-  float thin = max(halfW, cord);
+  float cord = max(0.15, 0.9 * uPixel * far);
+  // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
+  float thin = max(halfW, cord + 0.95 * (1.0 - smoothstep(aMore.w + 0.02, aMore.w + 0.09, u)));
   // The blade cups across its width: its edges lift off the plane.
   float cup = 0.22 * aShape.y * blade * sin(u * 14.0 + aMore.y * 20.0 - uTime * 2.0);
   vec3 p = c + across * (aAt.y * thin) + normal_ * (cup * aAt.y * aAt.y);
@@ -112,8 +117,9 @@ void main() {
   vShape = aShape;
   vMore = aMore;
   vThin = halfW / thin;
-  vCord = min(1.0, 0.08 / cord);
+  vCord = min(1.0, 0.15 / cord);
   vSpine = cord / thin;
+  vHalf = thin;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -131,6 +137,7 @@ varying vec4 vMore;
 varying float vThin;
 varying float vCord;
 varying float vSpine;
+varying float vHalf;
 void main() {
   float u = vAt.x;
   float v = vAt.y;
@@ -149,15 +156,27 @@ void main() {
   float slit = step(0.55, fract(seed * 0.37)) * smoothstep(0.35, 0.5, u) * (1.0 - smoothstep(0.02, 0.05, abs(v - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.1 * vnoise(vec2(metres / wide, seed))));
   // Holes where the gale has gone through it, more of them toward the tail, each with a rolled rim.
   float worn = vnoise(vec2(metres / (1.3 * wide) + seed * 3.0, v * 1.7 + seed)) + 0.35 * (vnoise(vec2(metres / (0.3 * wide), v * 6.0 + seed)) - 0.5);
-  float gate = mix(0.9, 0.66, smoothstep(0.25, 0.9, u));
+  float gate = mix(0.84, 0.62, smoothstep(0.2, 0.9, u));
   float hole = smoothstep(gate, gate + 0.03, worn);
   float rim = smoothstep(gate - 0.09, gate, worn) * (1.0 - hole);
   float cut = smoothstep(fray, fray + 0.06, edge) * (1.0 - tatter) * (1.0 - slit) * (1.0 - hole);
-  // Under the widest part of the blade the cord shows through as a spine; before the blade there is only the cord.
-  float cordHere = 1.0 - smoothstep(0.6, 1.0, abs(v) / vSpine);
+  // The stalk: a cord of wet sinew, knotted where the skin grows from it and here and there along it. Under the blade it runs on as a spine.
+  float stalkAt = vMore.w * vShape.x;
+  float knots = 1.6 * exp(-pow((metres - stalkAt - 0.6) / 0.75, 2.0)) + 0.7 * smoothstep(0.72, 0.9, vnoise(vec2(metres * 0.45, seed * 3.0)));
+  float girth = vSpine * (1.0 + (0.25 * vnoise(vec2(metres * 2.2, seed)) + knots) * vCord);
+  float cordHere = 1.0 - smoothstep(0.6, 1.0, abs(v) / girth);
   cordHere *= 1.0 - smoothstep(0.45, 0.8, u);
+  // Ice hangs from the cord where its water froze as it dripped: spikes, each with a bead at its end. Only where the lens is near enough to see them.
+  float below = -v * vHalf - 0.5 * girth * vHalf;
+  float cell = metres / 0.8;
+  float h = hash12(vec2(floor(cell), seed));
+  float fx = (fract(cell) - 0.5 + 0.25 * (fract(h * 13.0) - 0.5)) * 0.8;
+  float lengthOf = 0.16 + 0.6 * fract(h * 7.3) * fract(h * 3.1);
+  float spike = step(abs(fx), 0.05 * pow(clamp(1.0 - below / lengthOf, 0.0, 1.0), 0.7)) * step(0.0, below) * step(below, lengthOf);
+  float bead = 1.0 - smoothstep(0.035, 0.05, length(vec2(fx, below - lengthOf)));
+  float ice = max(spike, bead) * step(0.4, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
   float skin = cut * blade;
-  if (max(skin, cordHere * (1.0 - blade * 0.0)) < 0.02) discard;
+  if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
   // The skin: thin and wet, pale as fish skin, with veins that run its length and creases across it.
   float vein = 1.0 - smoothstep(0.0, 0.09, abs(fract(v * (1.6 + 1.4 * fract(seed)) + 1.1 * vnoise(vec2(metres / (1.4 * wide), seed)) + 0.25 * vnoise(vec2(metres / (0.3 * wide), seed + 9.0))) - 0.5));
@@ -165,11 +184,13 @@ void main() {
   float crease = smoothstep(0.55, 0.8, vnoise(vec2(metres / (0.5 * wide) + seed, v * 1.3)));
   float rolled = 1.0 - smoothstep(fray + 0.05, fray + 0.22, edge);
   rolled = max(rolled, rim);
-  float thick = clamp(0.2 + 0.55 * rolled + 0.4 * vein + 0.22 * crease + 0.12 * fine, 0.0, 1.0);
+  // The edge that meets the wind is a thick wet welt.
+  float welt = smoothstep(0.72, 0.9, v) * blade;
+  float thick = clamp(0.2 + 0.55 * rolled + 0.4 * vein + 0.22 * crease + 0.12 * fine + 0.7 * welt, 0.0, 1.0);
 
   // Pale violet, bruised darker along the veins and in blotches where it has been beaten against itself.
   float bruise = smoothstep(0.5, 0.8, vnoise(vec2(metres / (3.0 * wide) + seed * 7.0, v * 0.9 + seed * 2.0)));
-  vec3 albedo = mix(vec3(0.8, 0.76, 0.98), vec3(0.4, 0.32, 0.62), clamp(0.3 * vein + 0.25 * crease + 0.3 * bruise, 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.8, 0.76, 0.98), vec3(0.4, 0.32, 0.62), clamp(0.45 * vein + 0.25 * crease + 0.3 * bruise + 0.5 * welt, 0.0, 1.0));
   // Light comes through it: the far side's light counts as much as the near side's, and the lightning shows through from behind.
   vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n));
   // The skin scatters what falls on it from every side: it takes the cold of the whole sky more than the warmth of the horizon's band.
@@ -178,26 +199,41 @@ void main() {
   // The sheen: a wet film, violet where it is seen flat and blue-green at a glance.
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   float fres = 0.08 + 0.92 * pow(1.0 - nv, 4.0);
-  vec3 film = 0.5 + 0.5 * cos(6.2832 * (vec3(0.0, 0.33, 0.6) + 0.9 * nv + 0.6 * fine + 0.3 * u + fract(seed)));
+  // An oil film on it: violet seen flat, rose as it turns, green at a glance, and the bands wander over the sheet.
+  float glance = pow(1.0 - nv, 1.3) + 0.5 * (vnoise(vec2(metres / (2.0 * wide) + seed, v * 1.4 + seed * 5.0)) - 0.5) + 0.12 * (fine - 0.5);
+  vec3 film = mix(vec3(0.62, 0.5, 1.0), vec3(1.0, 0.5, 0.72), smoothstep(0.12, 0.4, glance));
+  film = mix(film, vec3(0.45, 0.95, 0.68), smoothstep(0.48, 0.8, glance));
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r)) + emitterIrradiance(vWorld, n) * 0.08;
-  c += mirror * (fres * 0.9) * mix(vec3(0.85, 0.8, 1.0), film, 0.35);
+  c += mirror * (fres * 0.9) * mix(vec3(0.85, 0.8, 1.0), film, 0.7);
   // The rolled edges and the creases are wet ridges: each carries a line of the sky's light.
-  c += mirror * (1.3 * rolled + 0.9 * crease * fine + 0.5 * vein) * mix(vec3(0.92, 0.86, 1.05), film, 0.25);
-  c += albedo * e / 3.14159 * 0.25 * mix(vec3(0.75, 0.6, 1.0), film, 0.5) * (1.0 - thick);
+  c += mirror * (1.3 * rolled + 0.9 * crease * fine + 0.5 * vein + 2.4 * exp(-pow((v - 0.84) / 0.035, 2.0)) * blade) * mix(vec3(0.92, 0.86, 1.05), film, 0.3);
+  // What is behind it shows through it, stained: the band at the horizon, the storm, the bolt.
+  c += albedo * film * skyRadiance(-toCamera) * (0.45 * (1.0 - 0.7 * thick));
+  c += albedo * e / 3.14159 * 0.3 * film * (1.0 - thick);
 
   // When its spire is struck the ribbon carries the charge: its edges and veins glow dim violet-blue, and its tatters spark.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
   float charge = uStruck.y * mine * (0.8 * rolled + 0.35 * vein + 1.5 * tatter * step(0.7, fine));
   c += uGlowTint * charge;
 
-  float alpha = clamp(0.3 + 0.5 * thick + 0.45 * fres, 0.0, 0.96) * skin;
-  // The stalk and the spine: a dark wet cord, rimed on top.
-  vec3 cord = rigShade(vWorld, n, toCamera, mix(vec3(0.045, 0.035, 0.035), vec3(0.55, 0.58, 0.64), smoothstep(0.2, 0.7, n.y) * step(0.45, vnoise(vec2(metres * 3.0, seed)))), 0.7, 1.0);
+  // The small ones behind are thinner skins than the great ones.
+  float alpha = clamp(0.3 + 0.5 * thick + 0.45 * fres, 0.0, 0.96) * skin * mix(0.72, 1.0, smoothstep(4.0, 9.0, wide));
+  // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
+  float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
+  vec3 round_ = normalize(n * sqrt(1.0 - x * x) + vec3(0.0, 1.0, 0.0) * x);
+  float fibre = 0.5 + 0.5 * sin(metres * 9.0 + x * 5.0 + seed);
+  float rimed = smoothstep(0.2, 0.8, x) * smoothstep(0.35, 0.75, 0.6 * vnoise(vec2(metres * 0.9, seed)) + 0.4 * vnoise(vec2(metres * 4.5, seed + 3.0)));
+  vec3 sinew = mix(vec3(0.1, 0.055, 0.045), vec3(0.035, 0.022, 0.022), fibre) * (1.0 + 0.8 * min(knots, 1.0));
+  vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0);
   float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, vCord);
   c = mix(c, cord, corded);
   alpha = max(alpha, corded);
+  // The ice on it: clear, lit along one side.
+  vec3 hung = rigShade(vWorld, normalize(n + vec3(fx * 14.0, 0.3, 0.0)), toCamera, vec3(0.5, 0.56, 0.64), 0.12, 1.0) + 0.35 * skyRadiance(-toCamera);
+  c = mix(c, hung, ice * (1.0 - corded));
+  alpha = max(alpha, 0.85 * ice);
   // It is seen through by leaving pixels out, not by blending: every pixel it keeps has its own depth, so the air draws over it as over rock, and
   // the storm behind shows through the pixels it leaves. The pattern moves with each sample of a frame, and the samples add up to its true cover.
   float grain = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
@@ -206,13 +242,18 @@ void main() {
 }`;
 
 const KNOB_VERTEX = /* glsl */ `
+${NOISE_GLSL}
 attribute vec4 aSeed;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLocal;
 varying vec4 vSeed;
 void main() {
-  vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0);
+  // A lump of flesh, not a ball: it bulges and folds its own way.
+  vec3 at = position * 2.2 + aSeed.xyz * 30.0;
+  float bulge = 0.34 * (vnoise3(at) - 0.5) + 0.16 * (vnoise3(at * 2.7) - 0.5);
+  vec3 local = position * (1.0 + bulge);
+  vec4 w = modelMatrix * instanceMatrix * vec4(local, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
   vLocal = position;
@@ -229,19 +270,19 @@ varying vec3 vLocal;
 varying vec4 vSeed;
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
-  // Leathery scales that overlap like a cone's: rows round the knob, each row shifted, dark in the seams.
-  float around = atan(vLocal.z, vLocal.x) * 1.6;
-  float row = vLocal.y * 4.5 + vSeed.x * 10.0;
-  float shift = floor(row) * 0.5;
-  vec2 cell = vec2(fract(around + shift + vSeed.y * 6.0) - 0.5, fract(row) - 0.5);
-  float seam = smoothstep(0.28, 0.5, max(abs(cell.x), abs(cell.y) * 1.1));
-  float lump = vnoise3(vLocal * 5.0 + vSeed.xyz * 20.0);
-  vec3 n = normalize(vNormal + 0.5 * vec3(cell.x, 0.6 * cell.y, 0.0) + 0.35 * (lump - 0.5));
-  vec3 hide = mix(vec3(0.085, 0.055, 0.045), vec3(0.03, 0.02, 0.02), seam) * (0.7 + 0.6 * lump);
-  // Rime on what looks up and into the wind.
-  float rime = smoothstep(0.25, 0.7, n.y * 0.7 - dot(n, normalize(uWind.xyz)) * 0.5 + 0.5 * vnoise3(vWorld * 2.3)) * (1.0 - 0.6 * seam);
-  vec3 albedo = mix(hide, vec3(0.7, 0.74, 0.8), rime);
-  vec3 c = rigShade(vWorld, n, toCamera, albedo, mix(0.55, 0.9, rime), 1.0 - 0.7 * seam);
+  // Knotted flesh: brown, wet, creased where it has swollen into the crack and folded on itself, darker in the creases.
+  vec3 at = vLocal * 2.2 + vSeed.xyz * 30.0;
+  float e = 0.06;
+  float f0 = vnoise3(at * 2.7) + 0.5 * vnoise3(at * 6.5);
+  vec3 slope = vec3(vnoise3((at + vec3(e, 0.0, 0.0)) * 2.7) + 0.5 * vnoise3((at + vec3(e, 0.0, 0.0)) * 6.5), vnoise3((at + vec3(0.0, e, 0.0)) * 2.7) + 0.5 * vnoise3((at + vec3(0.0, e, 0.0)) * 6.5), vnoise3((at + vec3(0.0, 0.0, e)) * 2.7) + 0.5 * vnoise3((at + vec3(0.0, 0.0, e)) * 6.5)) - f0;
+  vec3 n = normalize(vNormal - 0.35 * slope / e * 0.2);
+  float crease = 1.0 - smoothstep(0.0, 0.1, abs(vnoise3(at * 1.9 + 7.0) - 0.5));
+  float sinews = 0.5 + 0.5 * sin(vLocal.y * 16.0 + 5.0 * vnoise3(at * 1.3));
+  vec3 flesh = mix(vec3(0.15, 0.085, 0.06), vec3(0.075, 0.04, 0.036), 0.6 * crease + 0.3 * sinews) * (0.75 + 0.5 * f0 * 0.66);
+  // Rime on what looks up and into the wind, in soft drifts.
+  float rime = smoothstep(0.62, 0.92, n.y * 0.6 - dot(n, normalize(uWind.xyz)) * 0.45 + 0.55 * vnoise3(vWorld * 1.7) + 0.2 * (f0 - 0.75)) * (1.0 - 0.7 * crease);
+  vec3 albedo = mix(flesh, vec3(0.68, 0.72, 0.78), rime);
+  vec3 c = rigShade(vWorld, n, toCamera, albedo, mix(0.36, 0.9, rime), 1.0 - 0.65 * crease);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -256,10 +297,15 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < count; i++) {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
+        // Over 0.86 of its height the lee prong of the split top stands lower than the storm's: the holdfast goes down with it.
+        const at = t + (i - (count - 1) / 2) * 0.006;
+        const k = Math.max(0, (at - 0.86) / 0.14);
+        const anchor = finEdge(sp, at, 0.93, rng.range(-0.25, 0.25));
+        anchor[1] -= k * k * 0.04 * sp.tip + k * 4.5;
         ribbons.push({
-          anchor: finEdge(sp, t + (i - (count - 1) / 2) * 0.006, 1.01, rng.range(-0.25, 0.25)),
+          anchor,
           length,
-          width: (near ? rng.range(4.6, 8) : rng.range(10, 15)) * (i === 0 ? 1 : 0.75),
+          width: near ? (i === 0 ? rng.range(8.5, 12) : rng.range(3, 5.5)) : rng.range(10, 15) * (i === 0 ? 1 : 0.75),
           phase: rng.range(0, 6.28),
           wave: length / rng.range(2.2, 4.2),
           sag: n === FIRST + 2 ? rng.range(0.06, 0.16) : rng.range(0.01, 0.06),
@@ -311,8 +357,8 @@ export function create(ctx: Context): Piece {
   kites.renderOrder = 4;
 
   // The holdfasts: a cluster of leathery knobs in the crack each stalk comes from.
-  const KNOBS = 6;
-  const knobGeometry = new THREE.SphereGeometry(1, 14, 10);
+  const KNOBS = 9;
+  const knobGeometry = new THREE.SphereGeometry(1, 22, 16);
   const knobs = new THREE.InstancedMesh(knobGeometry, new THREE.ShaderMaterial({ vertexShader: KNOB_VERTEX, fragmentShader: KNOB_FRAGMENT, uniforms: { ...ctx.rig.uniforms } }), ribbons.length * KNOBS);
   const seeds = new Float32Array(ribbons.length * KNOBS * 4);
   const m = new THREE.Matrix4();
@@ -321,7 +367,7 @@ export function create(ctx: Context): Piece {
   ribbons.forEach((rb, r) => {
     for (let k = 0; k < KNOBS; k++) {
       const girth = Math.min(rb.width, 4.2);
-      const size = girth * (k === 0 ? 0.42 : rng.range(0.16, 0.34));
+      const size = girth * (k === 0 ? 0.34 : rng.range(0.13, 0.28));
       const off = k === 0 ? 0 : girth * rng.range(0.25, 0.7);
       const a = rng.range(0, Math.PI * 2);
       // Each knob points out of the rock, down the wind, a little its own way.

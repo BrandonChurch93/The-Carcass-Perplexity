@@ -15,7 +15,7 @@ const CAST = 520;
 const TINT = new THREE.Vector3(0.78, 0.7, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 1.1;
-const SPARKS = 320;
+const SPARKS = 420;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -103,17 +103,17 @@ void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
   float life = 0.6 + 1.8 * aSeed.x * aSeed.x;
-  float t = max(uAge - 0.012 * aSeed.y, 0.0);
-  float drag = 1.0 - exp(-t * 3.2);
-  vec3 p = uAt + aGo * (drag / 3.2) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
-  vec3 v = aGo * exp(-t * 3.2) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
+  float t = max(uAge - 0.042 * aSeed.y * aSeed.y, 0.0);
+  float drag = 1.0 - exp(-t * 13.0);
+  vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
+  vec3 v = aGo * exp(-t * 13.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
   float size = max(0.1 + 0.16 * aSeed.z, 1.1 * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, length(along.xy) * 0.011);
+  float reach = max(size, length(along.xy) * 0.007);
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.3 / (reach / size) + 0.4);
@@ -142,6 +142,8 @@ uniform vec2 uSize;
 varying vec2 vUv;
 void main() {
   vec4 c = viewMatrix * vec4(uAt, 1.0);
+  // Brought a little toward the lens, so that the rock it sits on does not hide it.
+  c.z += 3.0;
   c.xy += position.xy * uSize;
   vUv = position.xy;
   gl_Position = projectionMatrix * c;
@@ -158,8 +160,12 @@ void main() {
   float r = length(vUv);
   float a = mix(exp(-r * r * 4.5), exp(-r * r * 11.0), uSharp) * (1.0 - smoothstep(0.7, 1.0, r));
   vec3 c = uColour * a;
-  // The white-hot spot is solid; the glow in the cloud is added.
-  if (uSharp > 0.5) c = glowOut(c, 0.7);
+  // The white-hot spot is solid, and so is the violet air close round it; the glow in the cloud is added.
+  if (uSharp > 0.5) {
+    float most = max(uColour.r, max(uColour.g, uColour.b));
+    c = uColour * exp(-r * r * 700.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.0026 * exp(-r * 5.5) * (1.0 - smoothstep(0.6, 1.0, r)));
+    c = glowOut(c, 0.7);
+  }
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
@@ -250,11 +256,11 @@ export function create(ctx: Context): Piece {
 
     // The glow where the channel enters the cloud, and the white-hot spot at the tip.
     const cloudGlow = new THREE.Vector3();
-    const cloud = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: top }, uSize: { value: new THREE.Vector2(site.rise * 0.75, site.rise * 0.42) }, uColour: { value: cloudGlow }, uSharp: { value: 0 } }, ...additive }));
+    const cloud = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: top }, uSize: { value: new THREE.Vector2(site.rise * 0.2, site.rise * 0.12) }, uColour: { value: cloudGlow }, uSharp: { value: 0 } }, ...additive }));
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(6.5, 6.5) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(44, 44) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
     spot.frustumCulled = false;
     group.add(cloud, spot);
 
@@ -266,7 +272,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(18, 110) * (rng.next() < 0.2 ? 2.2 : 1);
+      const speed = rng.range(110, 520) * (rng.next() < 0.2 ? 1.8 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
@@ -328,7 +334,7 @@ export function create(ctx: Context): Piece {
         // Sheet lightning inside the cloud in the quarter second before the stroke, then the stroke itself.
         const before = age < 0 ? 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3) : 0;
         const power = e.main + e.after;
-        b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 1.6);
+        b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 0.4);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 220 + e.after * 400);
         if (power + before > 1e-4) {
           channelLight.position.copy(b.mid);

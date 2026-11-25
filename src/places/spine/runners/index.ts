@@ -39,7 +39,7 @@ interface Animal {
 }
 
 const TENDRILS = 34;
-const TENDRILS_DEAD = 110;
+const TENDRILS_DEAD = 170;
 const SEGMENTS = 5;
 
 const m1 = new THREE.Matrix4();
@@ -108,7 +108,7 @@ export function create(ctx: Context): Piece {
     const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared }));
     group.add(hide);
 
-    const c = coat(rng, role.locks, role.skirt);
+    const c = coat(rng, role.locks, role.skirt, role.act === 'dead');
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -120,7 +120,7 @@ export function create(ctx: Context): Piece {
     group.add(new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
 
     const count = role.act === 'dead' ? TENDRILS_DEAD : TENDRILS;
-    const thin = role.act === 'dead' ? 0.55 : 1;
+    const thin = role.act === 'dead' ? 0.45 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
@@ -163,7 +163,7 @@ export function create(ctx: Context): Piece {
   const CROSSING = 4;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 5000, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
   // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 1.0, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.08, -1, 0.12));
+  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.08, -1, 0.1));
 
   const burned = scorch(ctx);
   burned.drape();
@@ -188,7 +188,7 @@ export function create(ctx: Context): Piece {
     (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.006 * breath, sway), q1.setFromEuler(e1.set(sway * 0.5, 0, 0.012 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.018 * breath, 1 + 0.03 * breath));
     HIPS.forEach((hip, i) => leg(a.bones[i + 1] as THREE.Matrix4, hip, 0, 0, 0, fore, 0, sway));
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.2 * Math.sin(t * 0.31 + ph), 0.28 * Math.sin(t * 0.41 + ph * 2) + look, 0.1 * Math.sin(t * 0.63 + ph) - 0.05, [fore, 0, sway]);
-    a.coat.set(a.role.inside ? 1.25 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? -0.05 : 0.2);
+    a.coat.set(a.role.inside ? 0.8 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? 0.14 : 0.2);
     a.writhe.set(1, 0, 0, 0);
   };
 
@@ -204,7 +204,7 @@ export function create(ctx: Context): Piece {
       m.set(1, 0, 0, i < 2 ? 0.2 : 0.12, 0, 0.36, 0, 0.0, 0, 0, 1, (hip[2] > 0 ? 1 : -1) * 0.06, 0, 0, 0, 1);
     });
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.06 * Math.sin(t * 0.37 + ph), 0.5 * Math.sin(ph * 7) + 0.1 * Math.sin(t * 0.29 + ph), -0.35 + 0.05 * Math.sin(t * 0.5 + ph), [0, down, 0]);
-    a.coat.set(1.7, 0.04, 0.012 + shiver, -0.05);
+    a.coat.set(1.25, 0.04, 0.012 + shiver, 0.14);
     a.writhe.set(0.6, 0, 0, 0);
   };
 
@@ -259,7 +259,7 @@ export function create(ctx: Context): Piece {
   thrown(3, 0.95, 0, 1.15, 0.07, [-0.02, 0.02, 0.12]);
   thrown(4, 0.7, 0, 1.15, 0.07, [-0.02, 0.03, -0.06]);
   about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.45, -0.3, [0.06, -0.04, 0.03]);
-  dead.coat.set(1, 0.6, 0.0, 0.3);
+  dead.coat.set(0.66, 0.45, 0.0, 0.3);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
   const lie3 = new THREE.Vector3();
