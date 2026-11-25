@@ -45,7 +45,6 @@ export function create(ctx: Context): Piece {
   add(flanks(), groundMaterial);
   spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i >= FIRST - 1 && i <= FIRST + 3), spireMaterial));
   add(canalShell(ctx.rng('land/canal-wall'), 0), wallMaterial);
-  add(canalShell(ctx.rng('land/canal-rock'), 6), spireMaterial);
   add(canalFloor(), iceMaterial);
   ctx.scene.add(ctx.parts.built('land', land));
 
