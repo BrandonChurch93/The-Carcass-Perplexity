@@ -1,4 +1,4 @@
-2026-11-25 22:13 UTC
-work at fced98e on agent/reveal-place
-min 55: reveal-4 with the continent land (first pass), cloud fields, new cyclone; closer levels regenerating
-look-1.jpg = out/work/hand/hb-reveal-4.jpg
+2026-11-25 22:35 UTC
+work at 2e7d4e8 on agent/reveal-place
+heartbeat min 77: reveal-4 with the land redrawn from the figure (level a only so far), cloud as torn lines
+look-1.jpg = out/work/hand/hb2-reveal-4.jpg
