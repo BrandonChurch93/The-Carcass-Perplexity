@@ -22,14 +22,17 @@ const FAR = 150;
  *  third of the push. The hull goes down a few centimetres, the split opens with it, breathes out a pulse of light and a puff
  *  of smoke, and stays a little wider. */
 const SETTLE_AT = (3740 - 3579) / 60;
-const SETTLE_DROP = 0.045;
+const SETTLE_DROP = 0.1;
+/** The split's light on what is round it wavers as its fire does. Every rate is a whole count of turns in 8 s. */
+const waver = (seconds: number, at: number): number =>
+  0.5 * Math.sin(seconds * 1.5708 + at) + 0.3 * Math.sin(seconds * 3.927 + 2.3 * at) + 0.2 * Math.sin(seconds * 8.6394 + 4.1 * at);
 const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
 function settling(seconds: number): { down: number; open: number; puff: number } {
   const t = seconds - SETTLE_AT;
-  const down = ramp(-0.3, 0.3, t);
+  const down = ramp(-0.35, 0.35, t);
   // The pulse and the puff are over before the loop of the place begins (7 s in), so the loop never holds a part of them.
   const over = ramp(6, 4.5, seconds);
   const pulse = ramp(-0.2, 0.15, t) * Math.exp(-Math.max(0, t - 0.15) / 0.8) * over;
@@ -107,8 +110,8 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0 };
-  const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0 };
+  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
+  const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   // Each is [where it is held, its length, its half width, its turn, its seed].
   const RAGS: [[number, number, number], number, number, number, number][] = [
@@ -222,15 +225,17 @@ export function create(ctx: HeartContext): HeartPiece {
     for (const body of bodies) body.position.y = -SETTLE_DROP * now.down;
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
-    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar(1 + 1.5 * now.open);
+    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 1.5 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
     heat.strength = 0.25 * (1 + now.puff);
     smokes.forEach((smoke, i) => {
       const [sx, sz] = toWorld((TEAR[i] as [number, number])[0], (TEAR[i] as [number, number])[1]);
       const rest = smokeRest[i] as (typeof smokeRest)[number];
       smoke.at[0] = x + sx;
       smoke.at[2] = z + sz;
-      smoke.strength = rest.strength * (1 + 5 * now.puff);
-      smoke.rise = rest.rise * (1 + 0.8 * now.puff);
+      // Each length of the split breathes its smoke out in its own time.
+      const breath = waver(seconds, 1.9 * i + 0.4);
+      smoke.strength = rest.strength * (1 + 5 * now.puff) * (1 + 0.6 * breath);
+      smoke.rise = rest.rise * (1 + 0.8 * now.puff) * (1 + 0.25 * breath);
     });
   };
   place(ctx.rig.flow.t0);
