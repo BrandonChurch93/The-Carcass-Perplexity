@@ -281,7 +281,12 @@ export class Animal {
       const s = i / (NECK_RINGS - 1);
       // It thickens again over its last quarter, to the crown the roots splay from.
       // As thick as a thigh where it leaves the body, and thinner all the way down; a small crown where the roots start.
-      let r = b.neckR * (0.32 + 0.68 * Math.pow(1 - s, 1.6)) * (1 + 0.25 * gauss(s / 0.08)) + 0.06 * k * smooth(0.8, 0.96, s);
+      let r = b.neckR * (0.25 + 0.75 * Math.pow(1 - s, 2.1)) * (1 + 0.25 * gauss(s / 0.08)) + 0.1 * k * smooth(0.74, 0.95, s);
+      // A few uneven swellings along its lower half, no two necks alike.
+      for (let n = 0; n < 4; n++) {
+        const at = 0.46 + 0.5 * ((n + 0.15 + 0.7 * hash(n, seed + 61)) / 4);
+        r *= 1 + (0.1 + 0.16 * hash(n, seed + 62)) * gauss((s - at) / (0.018 + 0.022 * hash(n, seed + 63)));
+      }
       if (i >= NECK_RINGS - 2) r *= i === NECK_RINGS - 1 ? 0.05 : 0.7;
       // It starts inside the shoulders, closed.
       if (i === 0) r *= 0.3;
@@ -330,7 +335,7 @@ export class Animal {
 
     // The tendrils: pale roots that start round the crown, and some that fork from those.
     const mains = b.tendrils;
-    const forks = Math.round(mains * 1.3);
+    const forks = Math.round(mains * 1.0);
     for (let i = 0; i < mains + forks; i++) {
       const fork = i >= mains;
       const parent = fork ? Math.floor(((i - mains) * mains) / forks) : -1;
@@ -339,13 +344,13 @@ export class Animal {
       const inner = !fork && i % 3 === 2;
       const at = fork ? 3 + Math.floor(hash(i, seed + 6) * 4) : 0;
       // A brush of roots of every length: some reach the melt, some hang short of it.
-      const whole = b.tendrilLen * (0.78 + 0.52 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
+      const whole = b.tendrilLen * (0.9 + 0.55 * hash(fork ? parent : i, seed + 2)) * (!fork && i % 4 === 3 ? 0.7 : 1);
       const length = fork ? whole * (1 - at / (TENDRIL_RINGS - 1)) * (0.7 + 0.5 * hash(i, seed + 7)) : whole;
-      const thick = (0.12 + 0.07 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.6 * (1 - (0.5 * at) / (TENDRIL_RINGS - 1)) : 1);
+      const thick = (0.1 + 0.06 * hash(fork ? parent : i, seed + 1)) * k * (fork ? 0.62 * (1 - (0.6 * at) / (TENDRIL_RINGS - 1)) : 1);
       for (let r = 0; r < TENDRIL_RINGS; r++) {
         const u = r / (TENDRIL_RINGS - 1);
         // Round and fibrous: thick where it leaves the crown, a thread at its end, knotted on the way.
-        const rad = r === TENDRIL_RINGS - 1 ? 0.008 * k : thick * (1 - 0.62 * Math.pow(u, 0.9)) * (1 + 0.45 * (hash(i * 3 + r, seed + 9) - 0.4));
+        const rad = r === TENDRIL_RINGS - 1 ? 0.008 * k : thick * (1 - 0.72 * Math.pow(u, 1.3)) * (1 + 0.3 * (hash(i * 3 + r, seed + 9) - 0.4));
         for (let side = 0; side < TENDRIL_SIDES; side++) {
           const a = (side / TENDRIL_SIDES) * Math.PI * 2;
           local[(r * TENDRIL_SIDES + side) * 2] = Math.cos(a) * rad;
@@ -1181,10 +1186,13 @@ export class Animal {
           // A root is stiff: it bears down and out from the crown, near straight, with a knot here and there. One that is carried hangs closer.
           // It grew crooked, as a root does: it wanders as it goes, each in its own way.
           const kink = 0.34 * (hash(index * 7 + i, b.seed + 13) - 0.5);
-          const bend = 0.55 * Math.sin(uu * (5.2 + 3.6 * hash(index, b.seed + 21)) + t.phase * 5);
+          // Each has one elbow, at its own height, where it turns in or out and to one side.
+          const elbow = 0.2 + 0.6 * hash(index, b.seed + 23);
+          const past = smooth(elbow - 0.08, elbow + 0.08, uu);
+          const bend = 0.25 * Math.sin(uu * (5.2 + 3.6 * hash(index, b.seed + 21)) + t.phase * 5) + 1.5 * (hash(index, b.seed + 24) - 0.5) * past * (1 - 0.5 * smooth(elbow + 0.2, elbow + 0.5, uu));
           const wind = 0.5 * Math.sin(uu * (4.4 + 3.2 * hash(index, b.seed + 22)) + t.phase * 9);
           const sway = 0.05 * Math.sin(seconds * LOOP * 2 + t.phase + uu * 2.4) + 0.03 * Math.sin(seconds * LOOP * 3 + t.phase * 2 + uu * 4) + kink + bend;
-          const splay = t.out * lerp(0.14, 0.66, near) * (1 - 0.3 * uu) * (1 + 0.5 * Math.sin(uu * 5.5 + t.phase * 3));
+          const splay = t.out * lerp(0.14, 1.25, near) * (1 - 0.85 * smooth(0.1, 0.85, uu)) * lerp(1, 0.3 + 1.4 * hash(index, b.seed + 25), past);
           dx = dx * 0.5 + (hx0 * splay - hz0 * wind * 0.5 + rx * sway) * 0.5;
           dy = dy * 0.5 - 0.5;
           dz = dz * 0.5 + (hz0 * splay + hx0 * wind * 0.5 + rz * sway) * 0.5;

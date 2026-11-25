@@ -80,11 +80,11 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 // The share of the round lights (the fountains, the fall) that an animal takes. A round light has no shade in it and wraps a quarter of the
 // way round whatever it lights, so a flank that faces a row of fountains 75 m off was as red as its belly. The pictures have them dark against
 // the glow: smoke and the animal's own legs stand between.
-const float FAR_FIRE = 0.12;
+const float FAR_FIRE = 0.08;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
-const float LAKE_UNDER = 0.24;
-const float CRUST_BOUNCE = 0.5;
+const float LAKE_UNDER = 0.12;
+const float CRUST_BOUNCE = 1.0;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
 const float POOL = 2.0;
 void main() {
@@ -134,9 +134,9 @@ void main() {
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
   float crown = smoothstep(0.62, 0.95, vLook.y) * neck;
-  float ringAt = vUv.x * 6.2832 / 0.24 + 4.5 * vnoise(vUv * vec2(1.1, 5.0) + seed);
+  float ringAt = vUv.x * 6.2832 / 0.42 + 11.0 * vnoise(vUv * vec2(0.9, 5.0) + seed) + 5.0 * vnoise(vUv * vec2(2.3, 11.0) + seed * 1.7);
   float crease = (1.0 - neck) * limb * (1.0 - tendril) * vLook.y * 0.55;
-  float ringAmp = (0.24 * crown + crease + 0.08 * neck) * fine;
+  float ringAmp = (0.11 * crown + crease + 0.03 * neck) * fine;
   slope.x += ringAmp * sin(ringAt) * 1.1;
   float ridge = 0.5 + 0.5 * cos(ringAt);
 
@@ -163,7 +163,7 @@ void main() {
   float strand = 1.0;
   float flesh = body * (1.0 - pole) * folds;
   if (flesh > 0.0) {
-    vec2 su = vec2(vUv.x * 0.5, vUv.y * 4.6 + 1.3 * vnoise(vUv * vec2(0.7, 1.1) + seed * 4.0)) + seed * 2.3;
+    vec2 su = vec2(vUv.x * 0.8 + 0.7 * vnoise(vUv * vec2(1.3, 2.9) + seed * 2.0), vUv.y * 3.4 + 2.6 * vnoise(vUv * vec2(1.5, 2.1) + seed * 4.0)) + seed * 2.3;
     float s0 = 1.0 - abs(2.0 * vnoise(su) - 1.0);
     float s1 = 1.0 - abs(2.0 * vnoise(su + vec2(0.0, 0.22)) - 1.0);
     float t0 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + 5.0) - 1.0);
@@ -182,7 +182,7 @@ void main() {
   float sooty = fract(sin(vWho * 12.9898 + 4.1) * 43758.5453);
   float warm = fract(sin(vWho * 78.233 + 1.7) * 43758.5453);
   // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
-  vec3 hide = vec3(0.07, 0.065, 0.061) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
+  vec3 hide = vec3(0.066, 0.069, 0.074) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
   // pale: a little lighter at the joints and where the skin is worn, never bone.
   vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
@@ -192,10 +192,11 @@ void main() {
   // The last third of the neck pales to bone and is ribbed like a spine; the roots are pale fibre, cream with brown stains. They do not glow:
   // they are pale things in the light of the pool.
   float stain = smoothstep(0.35, 0.75, vnoise(vUv * vec2(1.3, 9.0) + seed * 2.0));
-  vec3 bone = vec3(0.44, 0.415, 0.375) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
+  vec3 bone = vec3(0.43, 0.385, 0.32) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
   float crownPale = neck * smoothstep(0.6, 0.92, vLook.y);
   albedo = mix(albedo, bone * (0.8 + 0.2 * ridge) * (0.72 + 0.4 * vnoise(vUv * vec2(1.4, 34.0) + seed)), 0.8 * crownPale);
-  albedo = mix(albedo, bone * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
+  // A root is dark where it leaves the crown and tan below, where the pool finds it.
+  albedo = mix(albedo, bone * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)) * mix(0.75, 1.0, smoothstep(0.0, 0.4, vLook.y)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
