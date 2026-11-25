@@ -50,8 +50,9 @@ const from = (p: Vec3, dx: number, dz: number): [number, number] => [p[0] + dx, 
 
 /** The staging of the walkers. Each walks in a straight line: at `when` it is at `at`, heading and speed as given, metres a second. `feed` 1 means it stands and feeds. */
 export const WALKERS: Walker[] = [
-  // The near one: it has moved 12 m east by the key of the one that sank, where it stands whole at the left of that frame with its tuft in the near seam.
-  { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.75, size: 1.55, feed: 1, phase: 0.1 },
+  // The near one: by the key of the one that sank it stands 22 m north-east of where the wide view saw it, about 74 m from that camera and a seventh of the
+  // way in from the left edge of that frame, soft, a neck's reach from the pool of the near seam. It is not drawn in the two shots between (see AWAY).
+  { at: from(NEAR, 0, 0), when: T0, heading: 40.3, speed: 1.387, size: 1.55, feed: 1, phase: 0.1 },
   { at: from(GROUP, 0, 0), when: T0, heading: 126, speed: 0.12, size: 1.2, feed: 1, phase: 0.33 },
   // The second of the feeding picture: right of the hero and about 40 m beyond it from that camera, walking, trunk lifted.
   { at: from(GROUP, 41.9, -13.6), when: T0, heading: 104, speed: 0.55, size: 1.3, feed: 1, phase: 0.62 },
@@ -66,8 +67,8 @@ export const WALKERS: Walker[] = [
   { at: from(spot(0.55, 0.437), 0, 0), when: T0, heading: 95, speed: 0.8, size: 1.1, feed: 0.2, phase: 0.55 },
   // The two small ones of the picture of the fall: on the crust at the fan's right toe, about 620 m from that camera, at 70 and 81 per cent of its
   // frame's width when it looks, small against the fall and lit from behind by it.
-  { at: [-51.1, -298.4], when: KEY_TIMES['heart-4'], heading: 265, speed: 0.35, size: 0.6, feed: 0.7, phase: 0.3 },
-  { at: [-28.3, -282.1], when: KEY_TIMES['heart-4'], heading: 250, speed: 0.25, size: 0.42, feed: 1, phase: 0.8 },
+  { at: [-51.1, -298.4], when: KEY_TIMES['heart-4'], heading: 265, speed: 0.35, size: 1.05, feed: 0.7, phase: 0.3 },
+  { at: [-28.3, -282.1], when: KEY_TIMES['heart-4'], heading: 250, speed: 0.25, size: 0.74, feed: 1, phase: 0.8 },
   { at: [-250, 60], when: T0, heading: 160, speed: 0.9, size: 1.0, feed: 0.1, phase: 0.15 },
   { at: [-140, 190], when: T0, heading: 20, speed: 0.7, size: 0.88, feed: 0.5, phase: 0.92 },
   // The lead of the picture at the line: 100 m from that camera and 8 degrees right of its axis, tall at 60 per cent of the frame's width, its tuft
@@ -80,8 +81,8 @@ export const WALKERS: Walker[] = [
  *  heart-02, the feeding picture: its three only, no pair behind. Walker 13 is the lead of the line's picture and is in no other shot. */
 export const AWAY: Record<string, number[]> = {
   'heart-01': [13],
-  'heart-02': [8, 11, 13],
-  'heart-03': [1, 3, 4, 6, 7, 8, 11, 12],
+  'heart-02': [0, 8, 11, 13],
+  'heart-03': [0, 1, 3, 4, 6, 7, 8, 11, 12],
   'heart-04': [13],
   'heart-05': [13],
 };
