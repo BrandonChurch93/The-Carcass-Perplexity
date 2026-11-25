@@ -169,14 +169,14 @@ export function wallAt(x: number, z: number, d: number): number {
     }
   }
   // Here and there the rock under the talus stands out of it: in ledges beside the channel, in knobs and ribs with broken sides elsewhere.
-  const crop = apron * smooth(0.5, 0.72, noise(x / 43 + 7, z / 43 + 2)) * smooth(8, 20, h);
+  const crop = apron * smooth(0.34, 0.58, noise(x / 43 + 7, z / 43 + 2)) * smooth(6, 16, h);
   if (crop > 0) {
     const w = 7.5;
     const q = (h + 2 * noise(x / 31, z / 31 + 9) + free * (9 * noise(x / 37 + 2.2, z / 37 + 6.1) + 3 * noise(x / 11 + 8.1, z / 11)) + 1.6 * blocks(x / 5.3 + 0.3 * z, z / 6.1 - 0.2 * x)) / w;
     const f = q - Math.floor(q);
     const face = 0.14 + 0.2 * noise(x / 13 + 3, z / 13);
     const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-    h += crop * (s - f) * w * lerp(0.8, 0.3, free);
+    h += crop * (s - f) * w * lerp(0.8, 0.62, free);
   }
   const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
   if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
@@ -503,4 +503,37 @@ export function crackDip(x: number, z: number): number {
 /** The wall alone, without the bench and the buttress: what stands against the sky. Used to fit the rim to the wide picture. */
 export function wallOnly(x: number, z: number): number {
   return wallAt(x, z, calderaDistance(x, z));
+}
+
+// One size of stones: a stone in most cells of a grid, each with its own place, size and height, its outline bent by noise so it is not a dome.
+function stones(x: number, z: number, cell: number, share: number, seed: number): number {
+  const gx = x / cell;
+  const gz = z / cell;
+  const i0 = Math.floor(gx);
+  const j0 = Math.floor(gz);
+  let top = 0;
+  for (let j = j0 - 1; j <= j0 + 1; j++) {
+    for (let i = i0 - 1; i <= i0 + 1; i++) {
+      const a = hash(i + seed, j - seed);
+      if (a > share) continue;
+      const cx = (i + 0.2 + 0.6 * hash(i + 7 * seed, j + 3)) * cell;
+      const cz = (j + 0.2 + 0.6 * hash(i + 5, j + 11 * seed)) * cell;
+      const r = cell * (0.26 + 0.24 * hash(i + 13, j + 17 + seed));
+      // Each stone is longer one way than the other.
+      const t = 6.283 * hash(i + 23 + seed, j + 29);
+      const ux = (x - cx) * Math.cos(t) + (z - cz) * Math.sin(t);
+      const uz = -(x - cx) * Math.sin(t) + (z - cz) * Math.cos(t);
+      const d = Math.hypot(ux, uz * 1.5) / r + 0.5 * (noise(x / (cell * 0.23) + seed, z / (cell * 0.23)) - 0.5);
+      if (d >= 1) continue;
+      const h = r * (0.5 + 0.5 * hash(i + 31, j + 37 + seed)) * Math.pow(1 - d * d * d, 0.6);
+      if (h > top) top = h;
+    }
+  }
+  return top;
+}
+
+/** The rubble of the last metres of shore under the line view's lens, metres above `landHeight`: stones a hand to a forearm across
+ *  lying against each other. Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
+export function rubbleAt(x: number, z: number): number {
+  return Math.max(0.85 * stones(x, z, 0.66, 0.5, 1), stones(x, z, 0.34, 0.75, 4), 0.6 * stones(x, z, 0.17, 0.8, 9)) + 0.02;
 }
