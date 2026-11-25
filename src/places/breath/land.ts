@@ -31,7 +31,7 @@ export const onRim = (bearingDeg: number, out = 0): [number, number] => {
 };
 
 const soft = (v: number): number => 0.5 * (v + Math.sqrt(v * v + 64));
-export const channelX = (z: number): number => -50 + 0.45 * soft(z - 5) - 0.3 * soft(-z - 10);
+export const channelX = (z: number): number => -50 + 0.22 * soft(z - 5) - 0.3 * soft(-z - 10);
 export const channelHalf = (z: number): number => 7.5 + 14 * sat((-5 - z) / 40) + 140 * sat((z - 130) / 220);
 
 const ripple = (x: number, z: number): number => (1 - 0.8 * smooth((Math.hypot(x, z) - 120) / 70)) * (0.6 * Math.sin(x * 0.07 + 0.5 * Math.sin(z * 0.05)) * Math.sin(z * 0.09 + 1.3) + 0.4 * Math.sin(x * 0.19 + z * 0.13 + 0.7));
