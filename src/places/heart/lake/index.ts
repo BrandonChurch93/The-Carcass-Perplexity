@@ -71,7 +71,7 @@ void slabAt(vec2 q) {
   gSlabEdge = e1 * SLAB;
 }
 vec2 slabTilt(vec2 id) {
-  return (hash22(id + 3.1) - 0.5) * 0.085;
+  return (hash22(id + 3.1) - 0.5) * 0.04;
 }
 float slabPlane(vec2 id, vec2 sp, float k) {
   return (hash12(id + 9.4) - 0.5) * 0.1 * min(k, 2.0) + dot(slabTilt(id) * k, (sp - id - 0.5) * SLAB);
@@ -190,7 +190,7 @@ float heightAt(vec2 q, float c) {
   float pair = hash12(gSlabId + gSlabId2);
   float gw = 0.02 + 0.07 * pair * pair;
   float gwc = max(gw, 0.75 * c);
-  h -= (0.04 + 0.2 * pair) * (1.0 - smoothstep(0.0, gwc, e)) * (gw / gwc) * held;
+  h -= (0.03 + 0.1 * pair) * (1.0 - smoothstep(0.0, gwc, e)) * (gw / gwc) * held * step(0.45, pair);
   h += 0.09 * fract(pair * 7.3) * exp(-e / 0.25) * held * calm;
   h += (n.b - 0.5) * 0.2 * calm * (1.0 - shoreUp);
   h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
@@ -217,8 +217,8 @@ float heightAt(vec2 q, float c) {
   // the brim. In the seams the pictures name the melt is the lava's mesh, and the floor lies under it.
   float wide = smoothstep(0.04, 0.25, gape);
   // Beside a gap the crust is thin and young and lies low: the melt stands a hand under its top.
-  h = mix(h, 0.3 * h + 0.02, exp(-max(bank, 0.0) / 0.8) * wide * live);
-  h += (0.02 + 0.09 * vnoise(q / 1.3 + 5.0)) * exp(-max(bank, 0.0) / 0.25) * wide * (1.0 - smoothstep(0.3, 0.8, c));
+  h = mix(h, 0.15 * h, exp(-max(bank, 0.0) / 0.9) * wide * live);
+  h += (0.02 + 0.06 * vnoise(q / 1.3 + 5.0)) * exp(-max(bank, 0.0) / 0.2) * wide * (1.0 - smoothstep(0.3, 0.8, c));
   float deep = mix(0.03 + 0.4 * min(gape, 0.5), 0.15 - meltLevel(n), shown * smoothstep(0.2, 0.3, gape));
   float cut = (1.0 - smoothstep(-max(2.5 * c, 0.07), 0.0, bank)) * live * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
   cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - step(3.3, n.g));
@@ -361,23 +361,23 @@ void main() {
   float across = max(abs(dot(qx, dir)), abs(dot(qy, dir)));
   float seen = rope * (1.0 - smoothstep(0.2 * lam, 0.45 * lam, across));
   float round2 = sqrt(max(1.0 - u * u, 0.0));
-  slope -= dir * (0.6 * u / (round2 + 0.25)) * seen;
+  slope -= dir * (0.45 * u / (round2 + 0.3)) * seen;
   float crease = mix(1.0, 0.3 + 0.7 * smoothstep(0.0, 0.55, round2), seen) * seamL;
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
 
   // Old skin is grey and rough, young skin black, smooth and glassy: by slab and by plate.
-  vec3 albedo = mix(vec3(0.07, 0.068, 0.067), vec3(0.125, 0.121, 0.118), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  vec3 albedo = mix(vec3(0.062, 0.062, 0.063), vec3(0.11, 0.109, 0.108), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   float rough = clamp(0.25 + 0.4 * age + 0.2 * rope * (1.0 - seen), 0.15, 0.92);
 
   // How much sky a point sees: less in a crease, in the crack between two slabs, below the brim of a gap.
   float below = max(-vWorld.y, 0.0);
   float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank));
-  float crack = 1.0 - (0.85 * (1.0 - smoothstep(0.0, max(0.02 + 0.07 * pair * pair, fpShort), e)) * min(1.0, (0.03 + 0.1 * pair) / max(fpShort, 1e-4))) * (1.0 - smoothstep(1.5, 6.0, fpShort));
+  float crack = 1.0 - (0.6 * step(0.45, pair) * (1.0 - smoothstep(0.0, max(0.02 + 0.07 * pair * pair, fpShort), e)) * min(1.0, (0.03 + 0.1 * pair) / max(fpShort, 1e-4))) * (1.0 - smoothstep(1.5, 6.0, fpShort));
   float pit = mix(1.0, clamp(1.0 - below / max(2.5 * gape, 0.12), 0.04, 1.0), inGap);
   float occ = vAux.x * crease * crack * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
   float open = land.g * (1.0 - contactAt(p)) * occ;
-  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
+  vec3 light = skyIrradiance(n) * open + 0.75 * lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
   // The melt lights the wall of its gap, the lip above it and the crust beside it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
   float steepAway = length(vAway);
@@ -390,7 +390,7 @@ void main() {
   vec3 c = albedo * light / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float gloss = (1.0 - rough) * (1.0 - rough);
-  float fresnel = (0.05 + 0.95 * pow(1.0 - nv, 3.5)) * (0.4 + 0.6 * gloss);
+  float fresnel = (0.04 + 0.96 * pow(1.0 - nv, 3.5)) * (0.3 + 0.45 * gloss);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   c += fresnel * lakeMirror(r, rough) * uFill / uFill.r * open;
