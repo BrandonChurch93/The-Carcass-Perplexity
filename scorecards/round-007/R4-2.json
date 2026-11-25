@@ -1,0 +1,28 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-25 15:00 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the dark foreground crust and the branching orange seams across the middle of the basin",
+        "what": "The glow changes and the vents breathe, but the big crust patches and their bright edges keep nearly the same shapes over the six-second hold. Much of the lake reads as a fixed surface with animated glow rather than slow-moving lava.",
+        "fix": "Let a few crust plates creep at unequal speeds, buckle at their leading edges, and open or close the glowing seams as they move."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the brightest drop in the cascade and the pool at its foot",
+        "what": "The bright streak stays almost pinned to the same outline as the camera creeps past, and there is little visible bunching or spreading where it hits the pool.",
+        "fix": "Carry a thick fold down the drop and let it spread into the pool, so the motion reads through the impact rather than stopping at the slope."
+      }
+    ]
+  }
+}

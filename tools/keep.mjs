@@ -47,6 +47,40 @@ const readRecord = (file) => {
   }
 };
 
+// What `keep --unit ID` takes from a finished unit, by rule: the comparison image of each of the unit's keys, the frame that
+// comparison judged, and the sheet of each of the unit's shots. This marks their records, so `keep` copies them.
+export function mark({ root = ROOT, cfg = config(), unit } = {}) {
+  const r = (...p) => path.join(root, ...p);
+  const phase = cfg.units.find((u) => u.id === unit)?.phase ?? null;
+  const marked = [];
+  const set = (file, units) => {
+    const rec = readRecord(`${file}.json`);
+    if (!rec || !fs.existsSync(file)) return;
+    rec.keep = true;
+    rec.phase = phase;
+    rec.units = { ...(units ?? {}), ...(rec.units && !Array.isArray(rec.units) ? rec.units : {}) };
+    if (!Object.prototype.hasOwnProperty.call(rec.units, unit)) rec.units[unit] = null;
+    fs.writeFileSync(`${file}.json`, `${JSON.stringify(rec, null, 2)}\n`);
+    marked.push(path.relative(root, file).split(path.sep).join('/'));
+  };
+  const unitsOf = (rec) => Object.assign({}, ...(rec?.stills ?? []).map((s) => (s?.units && !Array.isArray(s.units) ? s.units : {})));
+  for (const key of (cfg.keys ?? []).filter((k) => k.unit === unit)) {
+    const file = r('out', 'work', 'compare', `${key.id}.png`);
+    const rec = readRecord(`${file}.json`);
+    if (!rec) continue;
+    set(file, unitsOf(rec));
+    if (typeof rec.frame === 'string') set(r(...rec.frame.split('/')), unitsOf(rec));
+  }
+  const sheets = r('out', 'work', 'sheets');
+  if (fs.existsSync(sheets)) {
+    for (const n of fs.readdirSync(sheets).filter((x) => new RegExp(`^shot-${unit}-\\d+\\.png$`).test(x)).sort()) {
+      const file = path.join(sheets, n);
+      set(file, unitsOf(readRecord(`${file}.json`)));
+    }
+  }
+  return marked;
+}
+
 export async function keep({ root = ROOT, cfg = config(), unit = null, phase = null, film = false, deliver = false } = {}) {
   const r = (...p) => path.join(root, ...p);
   const shown = (p) => path.relative(root, p).split(path.sep).join('/');
@@ -169,6 +203,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error(`keep: no phase ${phase} in the config. Phases: ${Object.keys(cfg.budget.phaseHours).join(', ')}`);
     process.exit(1);
   }
+  if (unit !== null) for (const f of mark({ cfg, unit })) console.log(`marked ${f}`);
   const result = await keep({ cfg, unit, phase: phase === null ? null : Number(phase), film: Boolean(a.film), deliver: Boolean(a.deliver) });
   for (const line of report(result)) console.log(line);
 }

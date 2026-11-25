@@ -1,0 +1,35 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-25 15:01 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the two nearest animals, frames 2937–3374",
+        "what": "The long limbs reach and bend, but the bodies stay propped at almost the same height and attitude. In the close shot the movement reads as posing the limbs rather than transferring weight between feet.",
+        "fix": "Let the torso settle onto a planted limb before another lifts; give the two animals different holds and recovery timing."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the foreground lava channel, especially frames 3523–3578",
+        "what": "The bright openings widen between nearly unchanged dark crust shapes. The crust reads as a fixed surface being lit through its seams rather than plates being pushed and turned by a thick flow.",
+        "fix": "Let individual crust edges buckle or ride downstream as the openings widen, with molten material squeezing around them."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the surge beneath the cave lip, frames 4064–4220",
+        "what": "The bright area progresses down the slope, but it largely fills the existing tracks; at the foot the surge has little separate impact or outward spread.",
+        "fix": "Give the surge a thicker leading lobe that folds over each ledge and visibly shoves outward when it reaches the basin."
+      }
+    ]
+  }
+}
