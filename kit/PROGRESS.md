@@ -24,23 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 60, 2026-11-25 17:33 UTC:
+Status 61, 2026-11-25 17:49 UTC:
 
-- `01-spots-before.jpg`: The two spots of laughter as they are in your file, before anything is changed. Spot 2 shows the laughter as upright bursts between 2:34.5 and 2:39.8 over held notes. Spot 1 is a dense patch from 1:14 to 1:16 over full music
+- `01-sheet.jpg`: The first two sounds as waveforms: the Ribs bed and the Heart bed, 20 seconds each, both kept on take 1. They go on the Listen part of the review page at the end of this round
+- `02-stems-b.jpg`: Spot 2, the child laughing, in each stem of the track. The laughter sits in the voice stem as upright bursts and the music box sits alone in the other stem, so the laughter can be taken out by itself here. The listener, asked only what it hears, named a child laughing in the track and in the voice stem, and a music box with no laughter in the other stem
+- `03-stems-a2.jpg`: Spot 1, the laughter like a witch. A patch of sound from 1:14.2 to 1:16 landed in no stem: the second row is what is left of the track when the four stems are taken away. I read that patch as most of the laughter, and the listener has not confirmed it yet. The drum stem holds some of it too. This spot needs more work, and a second separation model is running
 
+Status 60, 2026-11-25 17:33 UTC, showed: The two spots of laughter as they are in your file, before anything is changed.
 Status 59, 2026-11-25 16:51 UTC, showed: The Heart, the establishing view at frame 2722: your approved picture on the left, the frame from the build of the clip on the right, at...
 Status 58, 2026-11-25 16:30 UTC, showed: The published review page, read back from the address: the Heart review clip is the first video, with a line under it that says what it is...
-Status 57, 2026-11-25 16:10 UTC, showed: A frame of the review clip, frame 3000 (heart-02, the walkers feeding at the seam), 1920 x 1080 at the final tier; A frame of the review...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T17:33:12Z
-review round 1: 0.10 h used of 4.00 h
+2026-11-25T17:49:01Z
+review round 1: 0.36 h used of 4.00 h
 extra rounds: yes
-minutes since the last status: 63
+minutes since the last status: 0
 ```
 
 ## Phases
@@ -106,6 +108,7 @@ The Heart's 15: `land`, `bench`, `sulphur-crack`, `foundering`, `crust`, `lava`,
 - Music file: found. Attached to Brandon's second message at 20:34 UTC, saved as `audio/supplied/The-Carcass-Audio.mp3` (7,472,274 bytes, mp3, 44.1 kHz stereo, 233.51 s)
 - Music hash matches `music.sha256`: yes, `eefe8765…afc56b1f`
 - Sounds kept, by place: none
+- ElevenLabs credits: 1,540 spent of the 17,000 cap in 7 calls; sounds 1,540; 3,000 held for the narration, so 12,460 left for sounds and tests; the account read 4,005 used at 2026-11-25T17:51:58Z, 1,811 more than before the first call: 271 more than the calls cost, spent by other use of the account
 - The newest archive handed to Brandon: none
 
 ## Workspace record
@@ -1263,6 +1266,11 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 16:27 UTC, `npm run flows`: the click on "Play the film" gets its own limit of 180 s (`--start`), because the start of the live film now takes 40 s on this machine, MEASURED, and the tool's default of 30 s read a working page as a failure. The check itself is unchanged: the control hides, two frames are drawn, the picture is lit. The cost of the start is logged as an open item, not hidden by the longer limit.
 - 2026-11-25. 16:38 UTC, the budget tests: two tests of `tests/budget.test.ts` read the real "Render budget" section and held only while it had no row added by hand, so the row for the Heart review clip (the section asks for one for every kind of job that ends) made G2 fail in the gate run of 16:33. The tests now expect the rows the real file holds, and `addedRows` is exported and tested on its own. No check was loosened: 839 tests pass at 16:40. That gate run is void: the Builder ran the tests beside it to find the failure and the gate's own browser was closed under G13 and G15. Nothing runs beside the gate from here.
 - 2026-11-25. 16:50 UTC, the review stop is reached with the voice missing. `AGENTS.md` says a missing voice never stops the build and Brandon's note 5 says not to wait for the account, so the Heart goes to review with the music alone, and the block says so on its own lines: only n8 is under Listen. Nothing is set to run by itself after the stop: a task that starts on `waiting` with neither prompt line builds nothing (`kit/08-BUILD-ORDER.md`), and a page that changes while Brandon is watching it is worse than one line from him. The clips n1 to n7, the model test, the other takes of n8, the sound effects, the cut, the mix and the clip's sound are made when Brandon writes in the thread that the characters are back (note 5 is his standing order for it) or sends the review notes prompt. The clip's 16 chunks are kept, so its picture is joined to the new mix with no render.
+- 2026-11-25. Review round 1, sound checks. A take of a sound fails its check when the measure finds a fault, when the listener names a voice, music or an animal from Earth, when both listener calls name something the place is not, or when a thing Brandon's line names is in neither listener call nor the picture of the sound. Only failed sounds get a second take, at the end, and the better of the two is kept with its faults written in its record.
+- 2026-11-25. Review round 1, credits. A call is counted by the cost its answer states (the character-cost header), because the account posts a call up to half a minute late; the reading before and the reading after every call are kept in audio/records/CREDITS.json as the check. Other use of the account is written down and not counted against the 17,000. audio.maxTakesPerCue is 2 and narration.maxTakesPerClip is 3, as note 6 and note 8 say; the cap beats both.
+- 2026-11-25. Review round 1, the Reveal's thud. Note 8 allows one deep distant thud only if the ending uses the Heart's glow. The cut list has the event heartbeat at frame 11334 (3:08.90): from orbit, the Heart's glow beats once on the body. So the thud is on the list and is made, one take, as reveal-thud.
+- 2026-11-25. Review round 1, what Brandon's notes overrule. Note 7 replaces the approved script and note 9 orders two spots of the music cleaned. AGENTS.md says the Builder changes neither the words nor the music by itself; here Brandon orders both, so his notes rule. The supplied music file is never edited: the cleaned track is a new file beside it, and the words go into the config only when he writes that the script is final.
+- 2026-11-25. Review round 1, the Reveal's look (note 10). His settled line is added word for word to the settled lines of reveal-1 to reveal-4 in config/showcase.json. The older settled line 'The outline of the land is the same.' stays as written; where the two pull apart, his newer line rules. The look itself is a review item for Phase 5, which builds the Reveal: a continent first, the body coming together only near the top of the rise, and still a body in the last frame.
 
 ## Notes from Brandon
 
@@ -1805,3 +1813,4 @@ What happens next is yours:
 - 2026-11-25 16:56 UTC. 16:51 to 16:55 UTC: `npm run flows` on the published address: 7 of 7 pass. Flow 6, the card loop live, passed this time: canvas 960 x 540, 5 frames drawn in 99 s, MEASURED on this machine with no graphics card. Three sound or film requests were answered with a server error by the storage host and asked again by the page, and all six files then opened in their players. The review page was built again with status 59 and published at 16:55 UTC. Read back from the address: status 59 and its captions are on the page, the Heart review clip is the first video, then the small copy, the blockout and the animatic. The repo measured PUBLIC at 16:56 UTC, for the record (note 3).
 - 2026-11-25 16:57 UTC. 16:57 UTC: the two films of the review stop are attached in the thread: `heart-review.mp4` (1920 x 1080, 60 a second, 1714 frames, 28.57 s, 49.9 MB, the final tier, music only) as file 1 and `animatic.mp4` (960 x 540, 30 a second, 3:18, 73.2 MB) as file 2. The task ends here with the `REVIEW` block. Nothing is built until Brandon writes: the review notes prompt, the approval prompt, or a line that the ElevenLabs characters are back (note 5).
 - 2026-11-25 17:33 UTC. 17:27 to 17:34 UTC, review round 1 opened. The reference images are approved (52 of 52 hashes hold, all 34 key pictures exist). The clock was started for the task and ticks as review round 1 from here (4.00 h allowed). Step 1: the six notes are under "Notes from Brandon" as notes 6 to 11 in his words and as R1.1 to R1.6 under "Review items". The account read 129,921 characters left of 131,000 at 17:30 UTC, before any call of this round: 0 credits spent of the 17,000 cap. Step 2, the items as understood and their order: R1.1 the credit count and the cap, before any call; R1.4 the two spots of laughter in the music (a supporting agent on its own machine splits the track into stems, started 17:33 UTC); R1.3 the sounds in his order; R1.2 the script sheet, with no narration made; R1.5 the settled line for the Reveal; R1.6 the hand back, with the Heart clip joined again from its kept chunks, because no frame of the Heart changes in this round. Status 60 shown at 17:34 UTC with the picture of the two spots as supplied (pipeline/music/spots.py).
+- 2026-11-25 17:56 UTC. 17:49 UTC, status 61 shown: a second of sound costs 11 credits MEASURED (220 for a 20 second bed), the cap and the ledger are in place, the two music spots drawn stem by stem. All seven beds have one take: the Ribs, the Heart and the Spine are kept; the Breath (no dripping, reads as an engine), the Blood Marsh (reads as an aeroplane cabin or a train, no bubbling), the Eye (no laps, steady noise) and the Reveal (low, not thin and high) failed their check and wait for their second take at the end, as note 8 orders. The check of a sound: no fault by measure, two open listener calls, and a picture of the sound read by the Builder; a take fails when the listener names a voice, music or an animal from Earth, when both calls name something the place is not, or when a thing the line names is in neither call nor the picture.

@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "spine-life",
+  "unit": "spine",
+  "kind": "spot",
+  "description": "A herd of large shaggy creatures sheltering inside an echoing stone tunnel: huddled slow breathing, soft huffs, and bodies shuffling against each other and the rock, with wind muffled outside. Low and breathy, close echo. No roars, no bleating. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

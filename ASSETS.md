@@ -38,6 +38,9 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 | Clip or cue | Tool and model | Takes | Date |
 | --- | --- | --- | --- |
 | `audio/kept/narration/n8.mp3` | ElevenLabs speech, `eleven_v4` | 1 made, take 1 kept | 2026-11-24 |
+| `audio/kept/sounds/ribs/ribs-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/heart/heart-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/spine/spine-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 
 ## Third-party files
 

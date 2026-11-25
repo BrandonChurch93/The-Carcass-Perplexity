@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "ribs-event",
+  "unit": "ribs",
+  "kind": "spot",
+  "description": "A tidal bore arriving in a narrow rocky strait: a deep rumble that rises steadily into the heavy roar of one wall of water rushing in, then passes. Deep and massive, low in pitch. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

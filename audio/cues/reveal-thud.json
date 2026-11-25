@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "reveal-thud",
+  "unit": "reveal",
+  "kind": "spot",
+  "description": "One single deep distant thud, like one beat of an enormous heart heard from very far away through rock: a soft low boom with a long low tail fading to silence. One beat only. No music, no voices.",
+  "seconds": 5,
+  "promptInfluence": 0.5,
+  "loop": false
+}

@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "marsh-life",
+  "unit": "marsh",
+  "kind": "spot",
+  "description": "Huge heavy creatures wallowing in thick wet mud and brine: slow wet squelching and rolling, with deep slow breaths, long low huffs of air. Low and breathy. No roars, no grunting like pigs or cattle. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

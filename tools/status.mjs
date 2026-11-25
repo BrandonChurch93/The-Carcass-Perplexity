@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { ROOT, config, readJson, writeJson, utc } from './lib/paths.mjs';
+import { lineOf as lineOfCredits } from './lib/credits.mjs';
 import * as progress from './lib/progress.mjs';
 import * as core from './lib/clock-core.mjs';
 import { run as clockRun, load as clockLoad } from './clock.mjs';
@@ -235,9 +236,11 @@ export async function buildStatus(options = {}) {
   fs.writeFileSync(statusFile, [`# Status ${number}`, '', `${stamp(at)} UTC.${headline ? ' ' + headline : ''}`, '', ...list, ''].join('\n'));
 
   const page = (progress.getSection('Status', text).match(/^- Review page:\s*(.*)$/m)?.[1] ?? 'none').trim();
+  const creditLine = lineOfCredits(root, cfg);
   const lines = [
     `Status ${number}. ${headline}`.trim(),
     ...o.notes.map(clean).filter(Boolean),
+    ...(creditLine ? [`ElevenLabs credits: ${creditLine}.`] : []),
     ...reading.lines.filter((l) => / used of /.test(l)),
     ...chosen.map((p) => `- ${p.name}: ${p.caption}`),
   ];

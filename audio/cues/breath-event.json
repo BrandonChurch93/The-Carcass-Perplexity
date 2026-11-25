@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "breath-event",
+  "unit": "breath",
+  "kind": "spot",
+  "description": "Heavy vapour pouring over a rock rim and sliding down a slope: one long soft sliding sigh of air and mist, rising gently and then thinning out. Smooth and breathy. No water splashing. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

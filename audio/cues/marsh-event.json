@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "marsh-event",
+  "unit": "marsh",
+  "kind": "spot",
+  "description": "A large dome of gas swelling up under thick brine and mud, stretching with a low wet groan, then bursting with one heavy wet pop and a spatter of thick drops. Slow and viscous. No music, no voices.",
+  "seconds": 6,
+  "promptInfluence": 0.5,
+  "loop": false
+}

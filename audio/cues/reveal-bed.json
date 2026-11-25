@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "reveal-bed",
+  "unit": "reveal",
+  "kind": "bed",
+  "description": "Thin high wind at the top of the atmosphere, a faint airy hiss, sparse and cold, almost silent. Continuous, very quiet ambience. No gusts. No music, no voices.",
+  "seconds": 20,
+  "promptInfluence": 0.4,
+  "loop": true
+}

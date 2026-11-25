@@ -47,11 +47,13 @@ function deps(dir, extra = {}) {
   return { lines, cfg, root: dir, print: (l) => lines.push(l), env: {}, transcribe: () => heard, runner: () => { throw new Error('nothing may call out'); }, ...extra };
 }
 
+const VOICE_COST = 97;
 function fakeRunner({ left = 1000, status = '200', body = null } = {}) {
   const calls = [];
   const run = (argv) => {
     calls.push(argv);
     if (argv[argv.length - 1].endsWith('/user/subscription')) return { status: 0, stdout: JSON.stringify({ character_count: 5000 - left, character_limit: 5000, next_character_count_reset_unix: 1 }), stderr: '' };
+    if (status === '200') left -= VOICE_COST;
     fs.copyFileSync(fix('take-1.headers.txt'), argv[argv.indexOf('-D') + 1]);
     if (body === null) fs.copyFileSync(fix('take-1.response.json'), argv[argv.indexOf('-o') + 1]);
     else fs.writeFileSync(argv[argv.indexOf('-o') + 1], body);

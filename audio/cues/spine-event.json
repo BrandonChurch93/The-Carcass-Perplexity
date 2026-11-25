@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "spine-event",
+  "unit": "spine",
+  "kind": "spot",
+  "description": "A lightning strike very close on a bare mountain ridge: one flat dry crack, sharp and sudden, then long rolling thunder that rumbles away across distant peaks. No rain. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

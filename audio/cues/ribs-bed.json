@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "ribs-bed",
+  "unit": "ribs",
+  "kind": "bed",
+  "description": "Sea wind moving through huge stone arches on an open coast, a slow hollow moan of air, with slow surf breaking far off in the distance. Continuous quiet ambience, wide and empty. No birds, no gulls. No music, no voices.",
+  "seconds": 20,
+  "promptInfluence": 0.4,
+  "loop": true
+}

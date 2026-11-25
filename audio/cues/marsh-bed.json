@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "marsh-bed",
+  "unit": "marsh",
+  "kind": "bed",
+  "description": "Dead still humid air over a thick salt marsh: a faint steady drone of insects, and slow thick bubbles rising and popping in heavy brine now and then. Continuous quiet ambience, close and airless. No wind, no birds, no frogs. No music, no voices.",
+  "seconds": 20,
+  "promptInfluence": 0.4,
+  "loop": true
+}

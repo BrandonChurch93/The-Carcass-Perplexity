@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "eye-life",
+  "unit": "eye",
+  "kind": "spot",
+  "description": "Herds of large quiet creatures drinking at the edge of a still lake: slow soft steps on wet stones, gentle lapping, and drips falling back into the water. Very quiet and calm. No calls, no roars. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

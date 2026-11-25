@@ -21,7 +21,8 @@ const UNIT = cfg.film.order[1];
 const OTHER = cfg.film.order[4];
 const BED = { schema: core.CUE_SCHEMA, id: 'trial-bed', unit: UNIT, kind: 'bed', description: 'Thick lava folding and hissing, close, no music, no voices', seconds: 3, promptInfluence: 0.4, loop: true };
 const SPOT = { schema: core.CUE_SCHEMA, id: 'trial-crack', description: 'A single flat crack of thunder with no rain', seconds: 2 };
-const HEADERS = 'HTTP/2 200\r\ndate: Tue, 24 Nov 2026 21:22:47 GMT\r\ncontent-type: audio/mpeg\r\ncharacter-cost: 66\r\n\r\n';
+const HEADER_COST = 66;
+const HEADERS = `HTTP/2 200\r\ndate: Tue, 24 Nov 2026 21:22:47 GMT\r\ncontent-type: audio/mpeg\r\ncharacter-cost: ${HEADER_COST}\r\n\r\n`;
 
 let root;
 let noise;
@@ -53,6 +54,7 @@ function fakeRunner({ left = 1000, status = '200', body = null } = {}) {
   const run = (argv) => {
     calls.push(argv);
     if (argv[argv.length - 1].endsWith('/user/subscription')) return { status: 0, stdout: JSON.stringify({ character_count: 5000 - left, character_limit: 5000 }), stderr: '' };
+    if (status === '200') left -= HEADER_COST;
     fs.writeFileSync(argv[argv.indexOf('-D') + 1], HEADERS);
     if (body === null) fs.copyFileSync(noise, argv[argv.indexOf('-o') + 1]);
     else fs.writeFileSync(argv[argv.indexOf('-o') + 1], body);
@@ -211,8 +213,9 @@ describe('the limits', () => {
   it('stops at the takes a cue may have, counted from disk and from the record', () => {
     const max = cfg.audio.maxTakesPerCue;
     expect(core.nextTake([], null, max)).toEqual({ ok: true, used: 0, take: 1 });
-    expect(core.nextTake([1, 2], null, max).take).toBe(3);
-    expect(core.nextTake([2], max - 1, max).take).toBe(max);
+    expect(core.nextTake([1, 2], null, 3).take).toBe(3);
+    expect(core.nextTake([1, 2], null, 2).ok).toBe(false);
+    expect(core.nextTake([max - 1], max - 1, max).take).toBe(max);
     expect(core.nextTake(Array.from({ length: max }, (_, i) => i + 1), null, max).ok).toBe(false);
     expect(core.nextTake([], max, max).ok).toBe(false);
   });
@@ -249,7 +252,9 @@ describe('the command, on stand-in takes', () => {
     const run = fakeRunner();
     const d = deps(root, { env: { CARCASS_ELEVEN_HANDLE: HANDLE }, runner: run.run });
     const out = await sound.soundCommand({ _: [], cue: BED.id }, d);
-    expect(run.calls).toHaveLength(2);
+    expect(run.calls).toHaveLength(3);
+    expect(run.calls[0][run.calls[0].length - 1]).toMatch(/\/user\/subscription$/);
+    expect(run.calls[2][run.calls[2].length - 1]).toMatch(/\/user\/subscription$/);
     const call = run.calls[1];
     expect(call.slice(0, 4)).toEqual(['pplx', 'credentials', 'run', HANDLE]);
     expect(call).toContain(`https://api.elevenlabs.io/v1/sound-generation?output_format=${core.SOUND.outputFormat}`);
@@ -327,8 +332,7 @@ describe('the command, on stand-in takes', () => {
   });
 
   it('stops at the takes of a cue', async () => {
-    const d = deps(root);
-    await sound.soundCommand({ _: [], cue: SPOT.id, take: crack }, d);
+    while (sound.takesOnDisk(root, SPOT.id).length < cfg.audio.maxTakesPerCue) await sound.soundCommand({ _: [], cue: SPOT.id, take: crack }, deps(root));
     expect(sound.takesOnDisk(root, SPOT.id)).toHaveLength(cfg.audio.maxTakesPerCue);
     await expect(sound.soundCommand({ _: [], cue: SPOT.id, take: crack }, deps(root))).rejects.toThrow(new RegExp(`has its ${cfg.audio.maxTakesPerCue} takes, so no more are made`));
     expect(sound.takesOnDisk(root, SPOT.id)).toHaveLength(cfg.audio.maxTakesPerCue);
@@ -366,7 +370,7 @@ describe('a call that cannot be made', () => {
     expect(message).toMatch(/^trial-bed was not made\. The account refused it for quota: This request exceeds your quota/);
     expect(message).not.toContain(HANDLE);
     expect(message.split('\n')).toHaveLength(1);
-    expect(run.calls).toHaveLength(2);
+    expect(run.calls).toHaveLength(3);
     expect(filesUnder(path.join(dir, 'out'))).toEqual([]);
     fs.rmSync(dir, { recursive: true, force: true });
   });
@@ -386,7 +390,7 @@ describe('a call that cannot be made', () => {
     const dir = freshRoot();
     const d = deps(dir);
     await sound.soundCommand({ _: [], cue: BED.id, 'dry-run': true }, d);
-    expect(d.lines[0]).toMatch(/^sound: trial-bed take 1 would cost about \d+ credits\. The request: \{"text"/);
+    expect(d.lines[0]).toMatch(/^sound: trial-bed take 1 would cost about \d+ credits, and the cap leaves \d+ for sounds\. The request: \{"text"/);
     expect(filesUnder(path.join(dir, 'out'))).toEqual([]);
     fs.rmSync(dir, { recursive: true, force: true });
   });

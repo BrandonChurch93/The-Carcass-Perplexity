@@ -1,0 +1,122 @@
+{
+  "schema": "carcass/credits 1",
+  "cap": 17000,
+  "narrationHold": 3000,
+  "baseline": {
+    "at": "2026-11-25T17:42:10Z",
+    "used": 2194,
+    "limit": 131000
+  },
+  "calls": [
+    {
+      "at": "2026-11-25T17:43:50Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "ribs-bed take 1",
+      "ok": true,
+      "estimate": 800,
+      "before": 2200,
+      "after": 2426,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read",
+      "moved": 226
+    },
+    {
+      "at": "2026-11-25T17:44:09Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "heart-bed take 1",
+      "ok": true,
+      "estimate": 226,
+      "before": 2426,
+      "after": 2426,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read 4 times over 5 s, and the account had not posted the whole call yet",
+      "moved": 0
+    },
+    {
+      "at": "2026-11-25T17:47:42Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "breath-bed take 1",
+      "ok": true,
+      "estimate": 220,
+      "before": 2785,
+      "after": 3005,
+      "moved": 220,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read"
+    },
+    {
+      "at": "2026-11-25T17:48:44Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "marsh-bed take 1",
+      "ok": true,
+      "estimate": 220,
+      "before": 3005,
+      "after": 3225,
+      "moved": 220,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read"
+    },
+    {
+      "at": "2026-11-25T17:49:48Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "spine-bed take 1",
+      "ok": true,
+      "estimate": 220,
+      "before": 3225,
+      "after": 3458,
+      "moved": 233,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read"
+    },
+    {
+      "at": "2026-11-25T17:51:04Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "eye-bed take 1",
+      "ok": true,
+      "estimate": 220,
+      "before": 3458,
+      "after": 3759,
+      "moved": 301,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read"
+    },
+    {
+      "at": "2026-11-25T17:51:58Z",
+      "tool": "sound",
+      "purpose": "sound",
+      "id": "reveal-bed take 1",
+      "ok": true,
+      "estimate": 220,
+      "before": 3759,
+      "after": 4005,
+      "moved": 246,
+      "spent": 220,
+      "header": 220,
+      "seconds": 20,
+      "afterRead": "read"
+    }
+  ],
+  "spent": 1540,
+  "notes": [
+    "2026-11-25T17:30Z: the account read 1,079 used of 131,000, read by hand before this ledger existed. At 17:42:10Z it read 2,194, and the Builder made no call between the two readings, so 1,115 credits were spent by some other use of the account. They are not counted here.",
+    "2026-11-25T17:44Z: the first two calls showed that the account posts a call late. The answer to heart-bed take 1 stated 220 and the account had not moved 5 s after it. It read 2,426 at 17:44:17Z and 2,646 at 17:44:27Z, half a minute after the call. From then on a call is counted by the cost its answer states, and the two readings of the account are kept as the check."
+  ]
+}

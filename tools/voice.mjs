@@ -8,6 +8,8 @@ import { decode, writeWav } from './lib/loudness.mjs';
 import { readHandle, subscription, speak, spawnRunner, hide, HANDLE_ENV, HANDLE_FILE } from './lib/eleven.mjs';
 import { KEPT_NARRATION, KEPT_LINES, RECORDS, ASSETS } from './checks/inputs.mjs';
 import * as core from './lib/voice-core.mjs';
+import * as credits from './lib/credits.mjs';
+import * as creditsCore from './lib/credits-core.mjs';
 
 export const USAGE = 'usage: npm run voice [-- --status | --make [--takes N] [--dry-run] | --check | --keep | --sheet [--out PATH]] [n1 ... n8 | all]';
 export const WORK = 'out/work/voice';
@@ -122,18 +124,30 @@ export function make(clips, ctx, { takes = 1, dryRun = false, needHandle = true 
       const k = (have[have.length - 1] ?? 0) + 1;
       const body = core.requestBody(clip, k, ctx.cfg);
       const cost = core.costOf(body.text, newestCost(ctx.root));
-      const sub = subscription({ handle, runner: ctx.runner });
-      if (!sub.ok) throw new Error(`the account could not be read: ${sub.why}`);
       if (dryRun) {
+        const sub = subscription({ handle, runner: ctx.runner });
+        if (!sub.ok) throw new Error(`the account could not be read: ${sub.why}`);
         say(`voice: ${clip.id} take ${k}, seed ${body.seed}, would cost about ${cost} characters of the ${sub.left} left. The text: ${JSON.stringify(body.text)}`);
         break;
       }
+      let open;
+      try {
+        open = credits.begin(ctx, { tool: 'voice', purpose: 'narration', id: `${clip.id} take ${k}`, estimate: cost });
+      } catch (e) {
+        if (!(e instanceof credits.CapError)) throw e;
+        say(`voice: ${e.message}`);
+        return { made, stopped: true };
+      }
+      const sub = open.sub;
       if (sub.left < cost) {
         say(`voice: ${clip.id} not made. It needs about ${cost} characters and the account has ${sub.left} left.`);
         return { made, stopped: true };
       }
       const into = path.join(ctx.root, WORK, clip.id, `take-${k}`);
       const r = speak({ voiceId: core.VOICE.voiceId, body, into, handle, outputFormat: core.VOICE.outputFormat, runner: ctx.runner });
+      const said = r.ok && fs.existsSync(r.files.headers) ? Number(core.header(fs.readFileSync(r.files.headers, 'utf8'), 'character-cost')) : NaN;
+      const counted = credits.end(ctx, open, { ok: r.ok, header: Number.isFinite(said) && said > 0 ? said : null });
+      if (counted) say(`voice: credits for ${clip.id} take ${k}: the account read ${counted.before} used before and ${counted.after} after, and ${counted.spent} ${counted.header === null ? 'are counted, by how far it moved' : 'are counted, the cost the answer states'}. ${creditsCore.line(open.ledger)}`);
       if (!r.ok) throw new Error(`${clip.id} take ${k} failed with status ${r.status}: ${r.body.replace(/\s+/g, ' ')}`);
       made.push({ clip: clip.id, take: k });
       say(`voice: made ${path.relative(ctx.root, r.files.mp3)}, seed ${body.seed}`);

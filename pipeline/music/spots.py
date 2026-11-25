@@ -1,6 +1,8 @@
 """Pictures of short spots of a track: one row of spectrograms for each spot, one panel for each file.
 
-usage: python3 pipeline/music/spots.py --out PNG --spot "74:76:label" [--spot ...] --file "label=PATH" [--file ...] [--pad 4] [--title TEXT]
+usage: python3 pipeline/music/spots.py --out PNG --spot "74:76:label" [--spot ...] --file "label=PATH[@START]" [--file ...] [--pad 4] [--title TEXT]
+
+A file that holds only a window of the track names the track time of its first sample after an @.
 """
 import argparse
 import json
@@ -82,14 +84,34 @@ def main():
     for s in a.spot:
         start, end, label = s.split(':', 2)
         spots.append((float(start), float(end), label))
-    files = [f.split('=', 1) for f in a.file]
+    files = []
+    for f in a.file:
+        name, rest = f.split('=', 1)
+        offset = 0.0
+        if '@' in rest:
+            rest, at = rest.rsplit('@', 1)
+            offset = float(at)
+        files.append((name, rest, offset))
     pad = 20
     head = 44 if a.title else 0
     label_h = 26
     axis_h = 22
     inner = a.width - 2 * pad
     row_h = label_h + a.panel_height + axis_h
-    height = pad + head + len(spots) * (30 + len(files) * row_h + 14) + pad
+    def applies(offset, path, t0, seconds):
+        if offset > t0 + 1e-6:
+            return False
+        try:
+            total = float(subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', path], check=True, capture_output=True, text=True).stdout.strip())
+        except Exception:
+            return True
+        return offset + total >= t0 + seconds - 0.05
+    rows = 0
+    for start, end, _ in spots:
+        t0 = max(0.0, start - a.pad)
+        seconds = end - start + 2 * a.pad
+        rows += sum(1 for _, path, offset in files if applies(offset, path, t0, seconds))
+    height = pad + head + len(spots) * (30 + 14) + rows * row_h + pad + 10
     img = Image.new('RGB', (a.width, height), GROUND)
     d = ImageDraw.Draw(img)
     y = pad
@@ -102,8 +124,10 @@ def main():
         seconds = end - start + 2 * a.pad
         d.text((pad, y), f'{label}  ·  {clock(start)} to {clock(end)} of the track, shown with {a.pad:g} s on each side', font=font(18, True), fill=INK)
         y += 30
-        for name, path in files:
-            x = decode(path, t0, seconds)
+        for name, path, offset in files:
+            if not applies(offset, path, t0, seconds):
+                continue
+            x = decode(path, t0 - offset, seconds)
             d.text((pad, y + 4), name, font=font(15), fill=DIM)
             y += label_h
             img.paste(Image.fromarray(panel(x, inner, a.panel_height)), (pad, y))

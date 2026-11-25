@@ -81,7 +81,7 @@
   },
   "narration": {
     "voiceName": "",
-    "maxTakesPerClip": 6,
+    "maxTakesPerClip": 3,
     "linePauseMinSeconds": 0.6,
     "placeholderClipSeconds": 15,
     "clips": [
@@ -177,11 +177,15 @@
   },
   "audio": {
     "sampleRate": 48000,
-    "maxTakesPerCue": 3,
+    "maxTakesPerCue": 2,
     "maxCuesPerPlace": 4,
     "loudnessLufs": -14,
     "truePeakDb": -1,
     "duckMaxDb": 9
+  },
+  "credits": {
+    "cap": 17000,
+    "narrationHold": 3000
   },
   "units": [
     {
@@ -543,19 +547,23 @@
       "The animals in `-b` may look stranger, and less like any animal on Earth, than they do in `-a`."
     ],
     "reveal-1": [
-      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same."
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
+      "`-b` may read more as a continent and less as a figure than `-a`: more land around the bones and more scale."
     ],
     "reveal-2": [
-      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same."
+      "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
+      "`-b` may read more as a continent and less as a figure than `-a`: more land around the bones and more scale."
     ],
     "reveal-3": [
       "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
-      "Fingers, toes and teeth may be less exact in `-b` than in `-a`."
+      "Fingers, toes and teeth may be less exact in `-b` than in `-a`.",
+      "`-b` may read more as a continent and less as a figure than `-a`: more land around the bones and more scale."
     ],
     "reveal-4": [
       "`-b` may show more depth than `-a`: cloud at several heights with shadows on the sea, haze toward the horizon, more varied terrain. The outline of the land is the same.",
       "Fingers, toes and teeth may be less exact in `-b` than in `-a`.",
-      "The storm over the backbone in `-b` may look more like a real storm system than it does in `-a`."
+      "The storm over the backbone in `-b` may look more like a real storm system than it does in `-a`.",
+      "`-b` may read more as a continent and less as a figure than `-a`: more land around the bones and more scale."
     ]
   },
   "settledWhenRestaged": "The animal in `-b` is further from the camera, in silhouette or partly hidden by weather, on purpose.",

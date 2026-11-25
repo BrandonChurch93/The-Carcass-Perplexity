@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "ribs-life",
+  "unit": "ribs",
+  "kind": "spot",
+  "description": "A colony of small leathery winged creatures roosting on sea rock: dry chittering clicks, then many leathery wings flapping as the colony lifts off together. Low, dry and breathy. Not birdsong, no squawks, no screeches. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

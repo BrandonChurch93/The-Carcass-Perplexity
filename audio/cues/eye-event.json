@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "eye-event",
+  "unit": "eye",
+  "kind": "spot",
+  "description": "Still lake water slowly doming upward at its centre as something vast pushes from below: a deep muffled swell, a low underwater rumble that rises and then settles, with a soft wash of water at the end. Deep and soft. No splash. No music, no voices.",
+  "seconds": 7,
+  "promptInfluence": 0.5,
+  "loop": false
+}

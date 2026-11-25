@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "heart-life",
+  "unit": "heart",
+  "kind": "spot",
+  "description": "Tall stilt-legged creatures walking on a brittle crust of cooled lava: dry hollow tapping steps, slow and uneven, then one long slow hollow draw of air as they feed. Low, dry and breathy. No roars, no animal calls. No music, no voices.",
+  "seconds": 8,
+  "promptInfluence": 0.5,
+  "loop": false
+}

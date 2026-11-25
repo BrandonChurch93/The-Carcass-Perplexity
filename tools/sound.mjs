@@ -4,10 +4,12 @@ import sharp from 'sharp';
 import { ROOT, args, config, readJson, writeJson } from './lib/paths.mjs';
 import { isMain, one, STYLE, SEP, clean } from './lib/img.mjs';
 import { decode, probe, writeWav } from './lib/loudness.mjs';
-import { readHandle, subscription, spawnRunner, curl, hide, API, HANDLE_ENV, HANDLE_FILE } from './lib/eleven.mjs';
+import { spawnRunner, curl, hide, API } from './lib/eleven.mjs';
 import { headerDay, takesLine } from './lib/voice-core.mjs';
 import { KEPT_SOUNDS, RECORDS, ASSETS, CUT_LIST } from './checks/inputs.mjs';
 import * as core from './lib/sound-core.mjs';
+import * as credits from './lib/credits.mjs';
+import * as creditsCore from './lib/credits-core.mjs';
 
 export const USAGE = 'usage: npm run sound -- --cue ID [--takes N] [--dry-run] | --cue ID --take FILE | --cue ID --keep N | --cue ID --status | --sheet [--out PATH], each with [--root DIR]';
 export const WORK = 'out/work/sound';
@@ -125,22 +127,25 @@ export function make(cue, ctx, { takes = 1, dryRun = false } = {}) {
   for (let n = 0; n < takes; n++) {
     const k = room(ctx, cue);
     const body = core.requestBody(cue);
-    const cost = core.costOf(cue);
+    const ledger = credits.load(ctx.root, ctx.cfg);
+    const measured = ledger ? creditsCore.perSecond(ledger) : null;
+    const cost = measured ? Math.ceil(cue.seconds * measured.perSecond - 1e-9) : core.costOf(cue);
     if (dryRun) {
-      ctx.print(`sound: ${cue.id} take ${k} would cost about ${cost} credits. The request: ${JSON.stringify(body)}`);
+      const left = ledger ? creditsCore.room({ ledger, purpose: 'sound', estimate: cost }) : null;
+      ctx.print(`sound: ${cue.id} take ${k} would cost about ${cost} credits${measured ? `, at the ${measured.perSecond.toFixed(2)} a second measured so far` : ''}${left ? `, and the cap leaves ${left.left} for sounds` : ''}. The request: ${JSON.stringify(body)}`);
       break;
     }
-    const handle = readHandle({ env: ctx.env, root: ctx.root });
-    if (!handle) throw new Error(`no handle. Set ${HANDLE_ENV} or write it as the one line of ${HANDLE_FILE}`);
-    const sub = subscription({ handle, runner: ctx.runner });
-    if (!sub.ok) throw new Error(`the account could not be read: ${sub.why}`);
+    const open = credits.begin(ctx, { tool: 'sound', purpose: 'sound', id: `${cue.id} take ${k}`, estimate: cost, seconds: cue.seconds });
+    const { handle, sub } = open;
     if (sub.left < cost) throw new Error(`${cue.id} was not made. It needs about ${cost} credits and the account has ${sub.left} left. Nothing was written.`);
     const into = path.join(ctx.root, TAKES, cue.id, `take-${k}`);
     const r = soundEffect({ body, into, handle, runner: ctx.runner });
+    const headers = r.ok ? readIf(r.files.headers) : null;
+    const cost2 = Number(/^character-cost:\s*(\d+)/im.exec(headers ?? '')?.[1]);
+    const counted = credits.end(ctx, open, { ok: r.ok, header: Number.isFinite(cost2) ? cost2 : null });
+    if (counted) ctx.print(`sound: credits for ${cue.id} take ${k}: the account read ${counted.before} used before and ${counted.after} after, and ${counted.spent} ${counted.header === null ? 'are counted, by how far it moved' : 'are counted, the cost the answer states'}. ${creditsCore.line(open.ledger)}`);
     if (!r.ok && r.quota) throw new Error(`${cue.id} was not made. The account refused it for quota: ${r.body}. Nothing was written.`);
     if (!r.ok) throw new Error(`${cue.id} take ${k} failed with status ${r.status}: ${r.body}`);
-    const headers = readIf(r.files.headers);
-    const cost2 = Number(/^character-cost:\s*(\d+)/im.exec(headers ?? '')?.[1]);
     made.push(fileTake(ctx, cue, k, r.files.mp3, { day: headerDay(headers), characterCost: Number.isFinite(cost2) ? cost2 : null }));
   }
   return made;

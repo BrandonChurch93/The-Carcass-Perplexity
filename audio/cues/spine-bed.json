@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "spine-bed",
+  "unit": "spine",
+  "kind": "bed",
+  "description": "A high gale blowing over a knife-edged mountain ridge: strong steady wind, the hiss of blown snow, and small hail ticking on bare rock. Continuous cold ambience, high and exposed. No thunder. No music, no voices.",
+  "seconds": 20,
+  "promptInfluence": 0.4,
+  "loop": true
+}

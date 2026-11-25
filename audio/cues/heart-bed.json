@@ -1,0 +1,10 @@
+{
+  "schema": "carcass/cue 1",
+  "id": "heart-bed",
+  "unit": "heart",
+  "kind": "bed",
+  "description": "The low churn and hiss of a lava lake, close: thick molten rock slowly rolling, a steady hiss of gas, and the cooled black crust creaking and ticking as it shifts. Continuous quiet ambience. No explosions. No music, no voices.",
+  "seconds": 20,
+  "promptInfluence": 0.4,
+  "loop": true
+}
