@@ -6,16 +6,18 @@ import { Parts, type Place, type PlaceModule } from '../../core/place';
 import { stream } from '../../core/rng';
 import { neutralLook } from '../../core/stage';
 import { BEAT, FILM_ASPECT, FOV, KM, MASTER_H, MASTER_W, UNIT, poseAt, riseShots } from './shared/anchors';
+import * as land from './land';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
 import { setStaged } from './shared/stage';
+import * as sky from './sky';
 
 // The camera of the rise is one path (shared/anchors.ts, from rise.json and the windows of pullback.json): straight above its window, looking down.
 const shots: Record<string, CameraPath> = {};
 for (const s of riseShots) shots[s.id] = (_part, frame) => poseAt(frame);
 
-const FOLDERS: Folder[] = [];
+const FOLDERS: Folder[] = [land, sky];
 
 async function create(): Promise<Place> {
   const parts = new Parts(UNIT);

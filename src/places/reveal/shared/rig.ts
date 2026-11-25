@@ -1,6 +1,7 @@
 // The light rig of the rise: the uniforms every surface shares. One sun, the blue of the air, the edge of the planet, and the beat of the Heart.
 import * as THREE from 'three';
 import { BEAT, KM, LIMB, SUN, X, Z, halfHeightAt } from './anchors';
+import { COVER_RECT } from './weather';
 
 export interface Emitter {
   position: THREE.Vector3;
@@ -36,6 +37,10 @@ export function createRig(): Rig {
     uAirColour: { value: new THREE.Color(0.1, 0.2, 0.42) },
     uLimb: { value: new THREE.Vector4(X(LIMB.cx), Z(LIMB.cy), LIMB.r * KM, 1 / (LIMB.r * KM)) },
     uViewKm: { value: 20 },
+    // The cloud of the world (shared/weather.ts): the sky folder gives the pictures.
+    uCloudTile: { value: null },
+    uCloudCover: { value: null },
+    uCoverRect: { value: new THREE.Vector4(...COVER_RECT) },
   };
   let landHeight: Height = () => 0;
   const disc = new THREE.CircleGeometry(1, 8);
