@@ -37,6 +37,14 @@ export const channelHalf = (z: number): number => 5 + 2.5 * sat((5 - z) / 15) + 
 const ripple = (x: number, z: number): number => (1 - 0.8 * smooth((Math.hypot(x, z) - 120) / 70)) * (0.6 * Math.sin(x * 0.07 + 0.5 * Math.sin(z * 0.05)) * Math.sin(z * 0.09 + 1.3) + 0.4 * Math.sin(x * 0.19 + z * 0.13 + 0.7));
 const swell = (x: number, z: number): number => 0.65 * Math.sin(x * 0.021 + 1.9 * Math.sin(z * 0.013 + 0.4)) + 0.35 * Math.sin(z * 0.047 - x * 0.031 + 2.1);
 
+/** The shelf is a pavement of level plates, each a hand higher than the next, with a short riser between them: metres above the mean. */
+export function plates(x: number, z: number): number {
+  const s = 0.5 * Math.sin(x * 0.045 + 1.7 * Math.sin(z * 0.031 + 0.3)) + 0.3 * Math.sin(z * 0.083 + 1.3 * Math.sin(x * 0.052 + 2.0)) + 0.2 * Math.sin(x * 0.13 - z * 0.11 + 1.1);
+  const t = s * 2.3 + 0.35 * Math.sin(x * 0.31 + 0.6 * Math.sin(z * 0.27)) * Math.sin(z * 0.29 + 1.9);
+  const f = t - Math.floor(t);
+  return 0.2 * (Math.floor(t) + smooth((f - 0.93) / 0.07));
+}
+
 export function lipHeight(bearing: number, r: number): number {
   const out = r - rimRadius(bearing);
   const north = 3.4 * bump(bearing, 40, 95) * (1 - smooth((out - 3) / 13));
@@ -53,11 +61,11 @@ export function ground(x: number, z: number): number {
   let base: number;
   if (x < xc) {
     const flats = Math.max(smooth((-15 - z) / 60), smooth((xc - half - 45 - x) / 60));
-    base = lerp(0.35 + 0.22 * ripple(x, z), -0.2 + 0.45 * swell(x, z) + 0.1 * ripple(x, z), flats);
+    base = lerp(0.42 + 0.14 * ripple(x, z) + plates(x, z), -0.2 + 0.45 * swell(x, z) + 0.1 * ripple(x, z) + 0.5 * plates(x, z), flats);
     base -= 0.004 * Math.max(0, -x - 420);
   } else {
     const wet = smooth((r - 70) / 120) * smooth((-z - 30) / 90);
-    base = lerp(0.3 + 0.2 * ripple(x, z), -0.12 + 0.42 * swell(x, z) + 0.1 * ripple(x, z), 0.85 * wet);
+    base = lerp(0.4 + 0.13 * ripple(x, z) + plates(x, z), -0.12 + 0.42 * swell(x, z) + 0.1 * ripple(x, z) + 0.5 * plates(x, z), 0.85 * wet);
     base += lipHeight(b, r);
   }
   const south = sat((z + 5) / 12);
