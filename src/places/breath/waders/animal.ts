@@ -215,12 +215,12 @@ export class Wader {
         const keel = smooth(0.35, 0.85, t);
         const tuck = smooth(0.55, 0.15, t);
         const hollow = 0.1 * Math.exp(-(((t - 0.33) / 0.12) ** 2)) * smooth(0.8, 0.1, Math.abs(sn));
-        const hip = 0.085 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
-        const blade = 0.07 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const hip = 0.055 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.95, 0.3, sn);
+        const blade = 0.045 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.95, 0.3, sn);
         const ridge = 0.028 * k * Math.exp(-(((phi - Math.PI / 2) / 0.3) ** 2)) * smooth(0.04, 0.25, t) * smooth(1, 0.8, t);
         const narrow = sn > 0 ? 1 - 0.2 * sn : 1 - 0.42 * keel * (-sn) ** 1.5;
         const x = w * c * narrow * (1 - hollow) + (hip + blade) * c;
-        const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.48 * tuck)) + ridge + 0.5 * (hip + blade);
+        const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.36 * tuck)) + ridge + 0.5 * (hip + blade);
         this.bodyLocal[(i * bodySides + s) * 2] = x;
         this.bodyLocal[(i * bodySides + s) * 2 + 1] = y;
       }
@@ -255,7 +255,7 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 2.4 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.7 * (1 - smooth(0.0, 0.42, u)) ** 1.3 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
+      const thigh = 1.1 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.5 * (1 - smooth(0.0, 0.46, u)) ** 0.7 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
       const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
