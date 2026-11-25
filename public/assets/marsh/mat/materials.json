@@ -1,0 +1,81 @@
+{
+  "recipe": {
+    "size": 1024,
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "skyWidth": 2048,
+    "skyQuality": 94
+  },
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "materials": [
+    {
+      "name": "crust",
+      "kind": "tile",
+      "metres": 5,
+      "mean": [
+        0.413,
+        0.304,
+        0.269
+      ]
+    },
+    {
+      "name": "mud",
+      "kind": "tile",
+      "metres": 2,
+      "mean": [
+        0.318,
+        0.179,
+        0.155
+      ]
+    },
+    {
+      "name": "rock",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.439,
+        0.321,
+        0.279
+      ]
+    },
+    {
+      "name": "hide",
+      "kind": "tile",
+      "metres": 1,
+      "mean": [
+        0.165,
+        0.102,
+        0.072
+      ]
+    },
+    {
+      "name": "bark",
+      "kind": "tile",
+      "metres": 1,
+      "mean": [
+        0.496,
+        0.336,
+        0.243
+      ]
+    },
+    {
+      "name": "rime",
+      "kind": "tile",
+      "metres": 0.5,
+      "mean": [
+        0.389,
+        0.306,
+        0.282
+      ]
+    },
+    {
+      "name": "sky",
+      "kind": "sky",
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}
