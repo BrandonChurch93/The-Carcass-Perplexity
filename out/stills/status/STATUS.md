@@ -1,8 +1,8 @@
-# Status 48
+# Status 49
 
-2026-11-25 12:52 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 13:15 UTC. Phase 3, the look lock: the Heart.
 
-- `01-m1240-pair-3.jpg`: Heart, shot heart-02 (key heart-3), main fe39638 at 12:45: the approved picture left, ours right. New: the crown turned down into its pool, a lumped trunk. Still wrong: the pale floor (its cure is handed back and merges next), the black blob bottom left, the neck one straight line
-- `02-m1240-pair-1.jpg`: Heart, shot heart-03 (key heart-1), same main: the tents on the near bank are gone and the melt is one body. Still wrong: black open cracks bottom right, the crag at the left a black slab, the melt does not flow
-- `03-m1240-pair-2.jpg`: Heart, shot heart-04 (key heart-2), same main: the hull as thick dark ropes, a round knee. Still wrong: the limb reads as a pale beam, the butte and the warm opening behind it are missing
-- `04-m1240-pair-4.jpg`: Heart, shot heart-05 (key heart-4), same main: the mouth as lit ribs. Still wrong: the stream thin and winding where the picture has a broad stepped cascade, the fan a sheet with straight lanes
+- `01-m1303-pair-3.jpg`: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right. The floor is dark and warm now and the neck bows to the pool. Open: no fine hot seams on the floor, the near mass along the bottom edge runs too far right, the hero is not lit from below.
+- `02-m1303-pair-1.jpg`: The line, frame 3477. Open: the coils on the near bank read as drawn rings, the sulphur mound is too wide and too yellow, the crag is a black slab, the melt is a smooth ribbon where the picture has bright folded skin. Each point has an owner and an order.
+- `03-m1303-pair-4.jpg`: The mouth and the fall, frame 4006. Open: the mouth is boxy with a level lip, the cascade is thin, pink haze at right, the near floor is a flat dark band.
+- `04-m1303-pair-0.jpg`: The wide view, frame 2722. The composition holds. Open: the lake reads as blue-grey tiles (the skin's last hand-back, merged at 13:13, darkens and dries it: it shows in the next status), the butte is hazy and grey.
