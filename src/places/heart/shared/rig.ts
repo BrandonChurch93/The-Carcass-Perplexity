@@ -147,7 +147,8 @@ const rect = (spec: { minX: number; maxX: number; minZ: number; maxZ: number }):
 /** The colour of anything that glows by its own heat, the same numbers as `blackbody` in the shaders. */
 export function blackbody(kelvin: number): [number, number, number] {
   const r = 60 * Math.exp(-23587 * (1 / kelvin - 1 / 1500));
-  return [r, r * 1.678 * Math.exp(-2573 / kelvin), r * 3.885 * Math.exp(-7355 / kelvin)];
+  const clip = 1 / (1 + Math.exp((1540 - kelvin) / 32));
+  return [r, r * (2.87 * Math.exp(-4386 / kelvin) + 0.6 * clip), r * (0.003 + 0.12 * clip)];
 }
 
 const CONTACT_VERTEX = /* glsl */ `
