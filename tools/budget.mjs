@@ -138,7 +138,9 @@ export function budgetTables({ here, merged = [], agent, jobs, agents, cfg = con
   return { line, measurements, jobs: jobTable, text: [line, measurements, jobTable].join('\n\n') };
 }
 
-function addedRows(body, jobs) {
+// The rows under the jobs table that are not one of the estimated jobs: the Builder adds one by hand
+// for each kind of job when it ends, and a new measurement keeps them.
+export function addedRows(body, jobs) {
   const names = new Set(jobs.map((j) => j.job));
   const lines = body.split('\n');
   const head = lines.findIndex((l) => /^\|\s*Job\s*\|/.test(l));

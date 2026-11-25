@@ -250,12 +250,14 @@ describe('the section of kit/PROGRESS.md', () => {
   const jobs = budget.estimateJobs({ measurement: here, agents: 16, cfg });
   const tables = budget.budgetTables({ here, agent, jobs, agents: 16, cfg });
   const first = progress.getSection(budget.SECTION, original).split('\n\n')[0];
+  // The real file may already hold rows added by hand under the jobs table, one for each kind of job that has ended.
+  const kept = budget.addedRows(progress.getSection(budget.SECTION, original), jobs);
 
   it('keeps the first paragraph, writes the line and both tables, and touches nothing else', () => {
     const copy = path.join(temp(), 'PROGRESS.md');
     fs.writeFileSync(copy, budget.budgetSection(original, tables, jobs));
     const next = fs.readFileSync(copy, 'utf8');
-    expect(progress.getSection(budget.SECTION, next)).toBe([first, tables.line, tables.measurements, tables.jobs].join('\n\n'));
+    expect(progress.getSection(budget.SECTION, next)).toBe([first, tables.line, tables.measurements, [tables.jobs, ...kept].join('\n')].join('\n\n'));
     const cut = (text) => {
       const lines = text.split('\n');
       const a = lines.indexOf(`## ${budget.SECTION}`);
@@ -266,13 +268,21 @@ describe('the section of kit/PROGRESS.md', () => {
     expect(budget.budgetSection(next, tables, jobs)).toBe(next);
   });
 
+  it('reads the rows added by hand and none of the estimated jobs', () => {
+    const body = ['| Job | Format |', '| --- | --- |', `| ${jobs[0].job} | hd |`, '| Heart review clip | hd |', '', '| Job | later |'].join('\n');
+    expect(budget.addedRows(body, jobs)).toEqual(['| Heart review clip | hd |']);
+    expect(budget.addedRows('no table here', jobs)).toEqual([]);
+    for (const row of kept) expect(jobs.some((j) => row.split('|')[1].trim() === j.job)).toBe(false);
+  });
+
   it('keeps a row that was added to the jobs table by hand', () => {
     const once = budget.budgetSection(original, tables, jobs);
     const added = '| Heart review clip, as it ran | hd | final | 1200 | 0.90 | 0.11 | 2 | fits |';
     const edited = once.replace(tables.jobs, `${tables.jobs}\n${added}`);
     const faster = budget.budgetTables({ here: measurement({ scale: 0.5 }), agent, jobs, agents: 16, cfg });
     const again = progress.getSection(budget.SECTION, budget.budgetSection(edited, faster, jobs));
-    expect(again.endsWith(`${faster.jobs}\n${added}`)).toBe(true);
+    expect(again.endsWith([faster.jobs, added, ...kept].join('\n'))).toBe(true);
+    for (const row of kept) expect(again.split(row)).toHaveLength(2);
     expect(again.split(added)).toHaveLength(2);
     expect(again).toContain(faster.measurements);
     expect(again).not.toContain(tables.measurements);
