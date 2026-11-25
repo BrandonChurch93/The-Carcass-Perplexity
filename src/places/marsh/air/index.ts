@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(68 * DEG, 20 * DEG, 4300, 0.9);
+  const rain = new THREE.Vector4(66 * DEG, 17 * DEG, 2600, 2.1);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -26,11 +26,11 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
-  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 2.2, strength: 0.42, rise: 13, kind: 'steam', lean });
+  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.2, rise: 16, kind: 'steam', lean });
   for (let i = 0; i < 5; i++) {
     const a = rng.range(0, TAU);
     const r = rng.range(1, POOL_R * 0.75);
-    own.push({ at: [Math.sin(a) * r, 0, -Math.cos(a) * r], radius: rng.range(0.9, 1.8), strength: rng.range(0.16, 0.32), rise: rng.range(5, 10), kind: 'steam', lean });
+    own.push({ at: [Math.sin(a) * r, 0, -Math.cos(a) * r], radius: rng.range(1.2, 2.6), strength: rng.range(0.06, 0.14), rise: rng.range(6, 12), kind: 'steam', lean });
   }
   const seeds = Array.from({ length: 64 }, () => rng.next() * 7);
 

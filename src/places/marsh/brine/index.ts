@@ -49,11 +49,44 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount },
+    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeep: { value: new THREE.Vector2(-3.4, -1.6) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
-  const plane = new THREE.PlaneGeometry(500, 500, 1, 1).rotateX(-Math.PI / 2);
+  // The surface is laid only where there is brine: squares of two metres, kept where any of their ground is within a stride of a shore.
+  const cell = 2;
+  const half = 250;
+  const count = (half * 2) / cell;
+  const wetCell = new Uint8Array(count * count);
+  for (let j = 0; j < count; j++) {
+    for (let i = 0; i < count; i++) {
+      let least = 9;
+      for (let v = 0; v <= 4 && least > 0.6; v++) {
+        for (let u = 0; u <= 4; u++) least = Math.min(least, field.shore(-half + (i + u / 4) * cell, -half + (j + v / 4) * cell));
+      }
+      wetCell[j * count + i] = least < 0.6 ? 1 : 0;
+    }
+  }
+  const corners: number[] = [];
+  for (let j = 0; j < count; j++) {
+    let i = 0;
+    while (i < count) {
+      if (!wetCell[j * count + i]) {
+        i++;
+        continue;
+      }
+      let end = i;
+      while (end < count && wetCell[j * count + end]) end++;
+      const x0 = -half + i * cell;
+      const x1 = -half + end * cell;
+      const z0 = -half + j * cell;
+      const z1 = z0 + cell;
+      corners.push(x0, 0, z0, x0, 0, z1, x1, 0, z0, x1, 0, z0, x0, 0, z1, x1, 0, z1);
+      i = end;
+    }
+  }
+  const plane = new THREE.BufferGeometry();
+  plane.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
   const water = new THREE.Mesh(plane, surface);
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
