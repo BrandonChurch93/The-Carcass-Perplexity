@@ -135,12 +135,17 @@ try {
   const loop = rev.links.find((l) => l[0] === 'Play the card loop');
   note('5 play links on the review page', Boolean(film) && film[1] === './index.html' && Boolean(loop) && loop[1] === './index.html?mode=loop', `film ${film ? film[1] : 'missing'}, card loop ${loop ? loop[1] : 'missing'}`);
 
+  // The card loop plays a finished place live. On a machine with no graphics card one frame of it can
+  // take longer than a screenshot waits, so the loop gets the start limit and a slow page is a named
+  // failure of this flow, not a crash of the tool.
+  const loopStart = Date.now();
   await page.goto(`${base}index.html?mode=loop`, { waitUntil: 'load', timeout: 60000 });
-  await page.waitForFunction(() => window.__flow.frames >= 3 || window.__flow.error, null, { timeout: waitMs * 10, polling: 500 }).catch(() => {});
+  await page.waitForFunction(() => window.__flow.frames >= 3 || window.__flow.error, null, { timeout: startMs, polling: 500 }).catch(() => {});
   const looped = await page.evaluate(() => ({ ...window.__flow, size: (() => { const c = document.querySelector('canvas'); return c ? [c.width, c.height] : null; })() }));
-  await page.screenshot({ path: path.join(outDir, 'loop.png') });
-  note('6 card loop', Boolean(looped.size) && looped.size[0] >= 960 && looped.frames >= 3 && looped.lit > 60 && !looped.error,
-    `canvas ${looped.size ? `${looped.size[0]} x ${looped.size[1]}` : 'none'}, ${looped.frames} frames drawn, brightest value in the picture ${looped.lit} of 255${looped.error ? `, ${looped.error}` : ''}`);
+  const loopSeconds = Math.round((Date.now() - loopStart) / 1000);
+  const shot = await page.screenshot({ path: path.join(outDir, 'loop.png'), timeout: startMs }).then(() => '', (e) => `no screenshot: ${String(e.message).split('\n')[0]}`);
+  note('6 card loop', Boolean(looped.size) && looped.size[0] >= 960 && looped.frames >= 3 && looped.lit > 60 && !looped.error && !shot,
+    `canvas ${looped.size ? `${looped.size[0]} x ${looped.size[1]}` : 'none'}, ${looped.frames} frames drawn in ${loopSeconds} s, brightest value in the picture ${looped.lit} of 255${looped.error ? `, ${looped.error}` : ''}${shot ? `, ${shot}` : ''}`);
 
   for (const e of consoleErrors) if (!late.has(e.url)) errors.push(e.text);
   note('7 no errors', errors.length === 0 && failed.length === 0, `${errors.length} console errors, ${failed.length} failed requests${late.size ? `, ${late.size} sound or film ${late.size === 1 ? 'request was' : 'requests were'} answered with a server error by the storage host and asked again by the page` : ''}${errors.length || failed.length ? `: ${[...errors, ...failed].slice(0, 4).join(' | ')}` : ''}`);
