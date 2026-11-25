@@ -227,7 +227,9 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     if (counts && low < 0.0) low = p.y <= 0.3 ? 1.0 : smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
     if (counts && low > 0.0) {
       float flat2 = dot(d.xz, d.xz);
-      vec2 toward = d.xz * (1.4 * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
+      // 1.4 m toward a small low light; under a light as wide as it is far (the bank overhead) the shade lies where the thing stands, as under the sky.
+      float narrow = 1.0 - min(r * inversesqrt(flat2 + d.y * d.y), 1.0);
+      vec2 toward = d.xz * (1.4 * narrow * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
       thrown = low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
     }
     e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)) * (1.0 - thrown));

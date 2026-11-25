@@ -220,7 +220,8 @@ varying vec2 vUv;
 varying float vStrength;
 void main() {
   float r = length(vUv * 2.0 - 1.0);
-  float a = vStrength * (1.0 - smoothstep(0.15, 1.0, r));
+  // Full shade over the inner 0.4 of the radius (it was 0.15, a point): a disc is the foot of the thing and a rim of shade round it.
+  float a = vStrength * (1.0 - smoothstep(0.4, 1.0, r));
   gl_FragColor = vec4(a, a, a, a);
 }`;
 
