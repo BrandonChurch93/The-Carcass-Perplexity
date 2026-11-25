@@ -130,7 +130,7 @@ The check G12 is `tools/checks/g12.mjs` and the rise part of G15 is in `tools/ch
 | `npm run loop -- --format uhd|hd|preview --tier draft|review|final [--first N] [--last N] [--join]` | Renders the card loop, its web copy and `card-still.jpg` |
 | `npm run render:local -- --what film --test [--silent]`, `--what film --go [--prores] [--silent]`, `--what loop`, `--proof` | The render for a machine with a graphics card. `--proof` renders two seconds of the film and of the loop to `out/work/local/` and writes `proof.json` |
 
-A chunk is used again when its record matches the format, the tier, the rate, the frames, the engine hash, the hashes of the unit it shows and the browser version. The machine is not compared, so chunks made on other machines join. The checks G5, D2 and D7 are `tools/checks/g5.mjs`, `d2.mjs` and `d7.mjs`.
+A chunk is used again when its record matches the format, the tier, the rate, the frames, the engine hash, the hashes of the unit it shows and the browser version. The machine is not compared, so chunks made on other machines join. The engine hash reads `config/showcase.json`, `src/config.shape.json` and `cut/CUTLIST.json` without the keys no frame is drawn from (`NOT_PICTURE` in `tools/lib/hash.mjs`: the music, the narration, the sound list, the mix, the credit cap and the lines settled for the critics), so when only sound changes the kept chunks still join, with the new mix, and nothing is rendered again. `tests/hash.test.ts` fails if the page starts to read one of those keys. The checks G5, D2 and D7 are `tools/checks/g5.mjs`, `d2.mjs` and `d7.mjs`.
 
 ## The parts register and the shots file
 

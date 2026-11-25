@@ -11,6 +11,7 @@ Made by the reference runs on 2026-11-24 with an image model, with real public-d
 | File | What it is | Source | Licence | Date added |
 | --- | --- | --- | --- | --- |
 | `audio/supplied/The-Carcass-Audio.mp3` | The music the film is cut to. Committed on 2026-11-24 on Brandon's word (note 3 in `kit/PROGRESS.md`) | Supplied by Brandon | Royalty-free, cleared by Brandon for this project | 2026-11-24 |
+| `audio/cleaned/The-Carcass-Audio-cleaned.flac` | The supplied music with two spots of laughter taken out (1:14.16 to 1:16.64 and 2:34.35 to 2:40.00), same length and timing. The film plays this one. Record: `audio/records/music-cleaned.md`. What was taken out is kept in `audio/cleaned/removed/` | Made from the supplied track by `pipeline/music/clean.py` with three free separation models run on this machine | As the supplied track | 2026-11-25 |
 
 ## Generated pictures
 
@@ -41,6 +42,23 @@ ElevenLabs, Creator plan. Read 2026-11-24: Terms of Use, ElevenCreative Terms wi
 | `audio/kept/sounds/ribs/ribs-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 | `audio/kept/sounds/heart/heart-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 | `audio/kept/sounds/spine/spine-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/ribs/ribs-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/spine/spine-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/ribs/ribs-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
+| `audio/kept/sounds/heart/heart-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/breath/breath-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept | 2026-11-25 |
+| `audio/kept/sounds/marsh/marsh-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/eye/eye-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept | 2026-11-25 |
+| `audio/kept/sounds/reveal/reveal-bed.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept | 2026-11-25 |
+| `audio/kept/sounds/marsh/marsh-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept | 2026-11-25 |
+| `audio/kept/sounds/eye/eye-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept | 2026-11-25 |
+| `audio/kept/sounds/breath/breath-event.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/reveal/reveal-thud.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/heart/heart-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 1 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/breath/breath-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/marsh/marsh-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 2 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/eye/eye-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 2 made, take 1 kept with a fault | 2026-11-25 |
+| `audio/kept/sounds/spine/spine-life.wav` | ElevenLabs sound effects, `eleven_text_to_sound_v3` | 1 made, take 1 kept | 2026-11-25 |
 
 ## Third-party files
 

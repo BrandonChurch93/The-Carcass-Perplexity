@@ -64,7 +64,7 @@ describe('the fixture plan', () => {
   });
 
   it('writes the music as two pieces joined at the two bar lines', () => {
-    expect(cut.music.file).toBe(`audio/supplied/${cfg.music.file}`);
+    expect(cut.music.file).toBe(cfg.music.cleaned ? cfg.music.cleaned.file : `audio/supplied/${cfg.music.file}`);
     expect(cut.music.pieces).toEqual([
       { from: 0, to: bars[OUT_BAR], at: 0 },
       { from: bars[IN_BAR], to: map.source.seconds, at: bars[OUT_BAR] }

@@ -1,0 +1,65 @@
+{
+  "schema": "carcass/music-cleaned 1",
+  "supplied": {
+    "file": "audio/supplied/The-Carcass-Audio.mp3",
+    "sha256": "eefe8765b73f35622be8410f063f327902dd0ce5b564688fade5b732afc56b1f"
+  },
+  "cleaned": {
+    "file": "audio/cleaned/The-Carcass-Audio-cleaned.flac",
+    "sha256": "80dc10a09c645fc94b91d021050fa0d0520ea2a506d8f0dc2d16a9dd832f7b16",
+    "sampleRate": 44100,
+    "channels": 2,
+    "bits": 24,
+    "samples": 10297728,
+    "seconds": 233.5086
+  },
+  "suppliedSamples": 10297728,
+  "spots": [
+    {
+      "id": "spot-1",
+      "asked": "1:14 to 1:16 of the track: laughter that sounds like a witch",
+      "from": "1:14.163",
+      "to": "1:16.642",
+      "firstSample": 3270584,
+      "endSample": 3379918,
+      "seconds": 2.479,
+      "removedFile": "audio/cleaned/removed/spot-1.flac",
+      "removedSha256": "a0830772fcf6a5171d4070076d569e4455b8dfa9adb73789fe8ef7dc0febf4a4",
+      "removedPeak": 0.62184,
+      "removedRmsDb": -26.3,
+      "suppliedRmsDb": -13.25,
+      "cleanedRmsDb": -13.52
+    },
+    {
+      "id": "spot-2",
+      "asked": "2:34 to 2:40 of the track: a child laughing",
+      "from": "2:34.350",
+      "to": "2:40.000",
+      "firstSample": 6806835,
+      "endSample": 7056000,
+      "seconds": 5.65,
+      "removedFile": "audio/cleaned/removed/spot-2.flac",
+      "removedSha256": "ab8b4e9f7086769122b04339ed2eb5cb11f678185e7a5e9f7dfd03fec1dbd654",
+      "removedPeak": 0.26799,
+      "removedRmsDb": -29.44,
+      "suppliedRmsDb": -24.93,
+      "cleanedRmsDb": -27.07
+    }
+  ],
+  "heldAtFullScale": {
+    "samples": 1,
+    "highest": 1.00056,
+    "from": "1:14.280",
+    "to": "1:14.280",
+    "inSupplied": 10,
+    "suppliedHighest": 1.01533
+  },
+  "proof": {
+    "outsideSamples": 9939229,
+    "outsideMaxDifference": 5.960464477539063e-08,
+    "insideSamples": 358499,
+    "insideMaxDifference": 5.960464477539063e-08,
+    "step24": 1.1920928955078125e-07
+  },
+  "faults": []
+}

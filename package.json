@@ -45,7 +45,8 @@
     "loop": "node tools/loop.mjs",
     "render:local": "node tools/render-local.mjs",
     "parts": "node tools/parts.mjs",
-    "shots": "node tools/shots.mjs"
+    "shots": "node tools/shots.mjs",
+    "script": "node tools/script-sheet.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

@@ -305,6 +305,109 @@ figcaption,
   font-size: 16px;
 }
 
+.take {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  margin: -6px 0 20px;
+  color: var(--faint);
+  font-size: 14.5px;
+  line-height: 1.45;
+}
+
+.take.fault { color: var(--text); }
+
+.take .chip {
+  flex: none;
+  padding: 2px 9px;
+  border: 1px solid var(--ember);
+  border-radius: 999px;
+  color: var(--ember);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.take span:last-child { flex: 1 1 22em; }
+
+.lede {
+  max-width: 78ch;
+  margin: 0 0 18px;
+  color: var(--soft);
+}
+
+.spot {
+  margin: 0 0 28px;
+  padding: 28px 28px 8px;
+  border-radius: 8px;
+  background: var(--raise);
+}
+
+.spot header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 14px;
+  margin-bottom: 16px;
+}
+
+.spot .title { font: 400 24px/1.25 var(--serif); }
+
+.spot .words { max-width: 78ch; color: var(--text); }
+
+.measures {
+  max-width: 78ch;
+  margin: 0 0 24px;
+  padding: 0 0 0 20px;
+  color: var(--soft);
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.measures li + li { margin-top: 6px; }
+
+.ab {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px 28px;
+  margin: 0 0 28px;
+}
+
+.ab .play p { margin: 0 0 8px; color: var(--soft); font-size: 15px; line-height: 1.4; }
+
+.ab .play b { color: var(--text); font-weight: 600; }
+
+.spot figure { margin: 0 0 20px; }
+
+.scroll { overflow-x: auto; margin: 0 0 48px; }
+
+.lengths {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.lengths th {
+  padding: 0 18px 10px 0;
+  border-bottom: 1px solid var(--line);
+  color: var(--soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.lengths td { padding: 10px 18px 10px 0; border-bottom: 1px solid var(--line); }
+
+.lengths td a { color: var(--ember); font-family: var(--mono); font-size: 14px; }
+
+.lengths .all td { font-weight: 600; }
+
 audio {
   display: block;
   width: 100%;
@@ -335,6 +438,7 @@ audio {
   :root { --pad: 48px; }
   h1 { font-size: 76px; }
   .clips { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ab { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .parts .wrap { justify-content: flex-start; gap: 44px; }
 }
 

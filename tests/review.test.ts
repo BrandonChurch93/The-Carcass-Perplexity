@@ -67,15 +67,15 @@ describe('the review page with nothing to show', () => {
     expect(out.total).toBe(0);
   });
 
-  it('has the six parts in order, each with an anchor', () => {
+  it('has the seven parts in order, each with an anchor', () => {
     const ids = [...html.matchAll(/<section id="([a-z]+)">/g)].map((m) => m[1]);
-    expect(ids).toEqual(['latest', 'watch', 'listen', 'card', 'comparisons', 'motion']);
+    expect(ids).toEqual(['latest', 'watch', 'script', 'listen', 'card', 'comparisons', 'motion']);
     const anchors = [...html.matchAll(/<a href="#([a-z]+)">/g)].map((m) => m[1]);
     expect(anchors).toEqual(ids);
   });
 
   it('says one quiet line where a part is empty', () => {
-    for (const id of ['latest', 'watch', 'card', 'comparisons', 'motion']) {
+    for (const id of ['latest', 'watch', 'script', 'card', 'comparisons', 'motion']) {
       const part = html.split(`<section id="${id}">`)[1].split('</section>')[0];
       expect(part.match(/class="none"/g)).toHaveLength(1);
     }
@@ -102,8 +102,9 @@ describe('the review page with nothing to show', () => {
 
   it('prints one line for each part and the total', () => {
     const lines = review.report(out, r);
-    expect(lines).toHaveLength(7);
-    expect(lines.map((l: string) => l.split(':')[0])).toEqual(['latest', 'watch', 'listen', 'card', 'comparisons', 'motion', 'total']);
+    expect(lines).toHaveLength(8);
+    expect(lines.map((l: string) => l.split(':')[0])).toEqual(['latest', 'watch', 'script', 'listen', 'card', 'comparisons', 'motion', 'total']);
+    expect(lines[2]).toBe('script: no sheet');
   });
 });
 
@@ -132,6 +133,37 @@ describe('the review page with content', () => {
     put(path.join(r, 'audio', 'kept', 'narration', `${clip.id}.mp3`), 'x');
     put(path.join(r, 'audio', 'kept', 'sounds', cfg.units[0].id, 'low-churn.wav'), 'x');
     put(path.join(r, 'audio', 'records', 'low-churn.md'), '## low-churn\nMade by: a tool\nText or description: A slow churn under a crust.\nSettings: none\n');
+    put(path.join(r, 'audio', 'kept', 'sounds', cfg.units[0].id, 'crack.wav'), 'x');
+    put(
+      path.join(r, 'audio', 'records', 'crack.md'),
+      "## crack\nText or description: \"One crack.\"\nTakes: 2 made, take 2 kept with a fault. Take 2 was kept with a fault. The Builder's verdict names a fault: No thick fold <here> & one call hears glass..\n"
+    );
+    put(path.join(r, 'audio', 'kept', 'sounds', cfg.units[0].id, 'drip.wav'), 'x');
+    put(path.join(r, 'audio', 'records', 'drip.md'), '## drip\nText or description: "One drip."\nTakes: 1 made, take 1 kept. Take 1 was kept: the only take, with no fault by measure.\n');
+    // The music's two spots: the report of the cleaning tool, the page's list of clips, the clips and one picture.
+    put(
+      path.join(r, 'audio', 'cleaned', 'cleaned.json'),
+      JSON.stringify({ spots: [{ id: 'spot-1', asked: 'a laugh', from: '1:14.163', to: '1:16.642' }, { id: 'spot-2', asked: 'a child', from: '2:34.350', to: '2:40.000' }] })
+    );
+    put(
+      path.join(r, 'audio', 'cleaned', 'proof', 'proof.json'),
+      JSON.stringify({
+        intro: 'Two spots <of> laughter & nothing else.',
+        spots: [
+          { id: 'spot-1', name: 'The first laugh', way: 'Only the laugh.', facts: ['Fact one.', 'Fact two.'], picture: 'out/stills/music/spot-1.png', pictureCaption: 'Spot 1 drawn', clips: [{ file: 'spot-1-before.wav', label: 'Before', what: 'as supplied' }, { file: 'spot-1-after.wav', label: 'After', what: 'cleaned' }] },
+          { id: 'spot-2', name: 'The second laugh', way: 'The whole voice.', facts: [], picture: 'out/stills/music/gone.png', clips: [{ file: 'spot-2-before.wav', label: 'Before' }, { file: 'spot-2-after.wav', label: 'After' }, { file: 'gone.wav', label: 'Gone' }] }
+        ]
+      })
+    );
+    for (const n of ['spot-1-before.wav', 'spot-1-after.wav', 'spot-2-before.wav', 'spot-2-after.wav']) put(path.join(r, 'audio', 'cleaned', 'proof', n), 'x');
+    await picture(path.join(r, 'out', 'stills', 'music', 'spot-1.png'), 'png');
+    put(path.join(r, 'cut', 'CUTLIST.json'), JSON.stringify({ fps: 60, music: { pieces: [{ from: 0, to: 174, at: 0 }] }, places: [{ unit: cfg.units[1].id, first: 0, last: 9299 }, { unit: cfg.units[0].id, first: 9300, last: 11000 }] }));
+    // The script sheet as the repo has it, with a small picture standing in for each of its pictures.
+    const sheet = JSON.parse(fs.readFileSync(new URL('../cut/SCRIPT-SHEET.json', import.meta.url), 'utf8'));
+    put(path.join(r, 'cut', 'SCRIPT-SHEET.json'), JSON.stringify(sheet));
+    const small = new Set<string>([...sheet.rows.flatMap((x: any) => x.pictures.map((p: any) => p.file)), ...sheet.unnamed.map((u: any) => u.thumb.file)]);
+    const one = await picture(path.join(r, 'out', 'work', 'one.jpg'), 'jpeg');
+    for (const f of small) put(path.join(r, f), fs.readFileSync(one));
     put(path.join(r, 'audio', 'mix', 'mix-1.mp3'), 'old');
     put(path.join(r, 'audio', 'mix', 'mix-2.mp3'), 'new');
     fs.utimesSync(path.join(r, 'audio', 'mix', 'mix-1.mp3'), new Date('2026-11-25T07:00:00Z'), new Date('2026-11-25T07:00:00Z'));
@@ -190,7 +222,7 @@ describe('the review page with content', () => {
   it('puts each narration clip under its words, one line a row', () => {
     const clip = cfg.narration.clips[0];
     const part = html.split('<section id="listen">')[1].split('</section>')[0];
-    expect(part.match(/<li>/g)).toHaveLength(clip.lines.length);
+    expect(part.split('<ol class="lines">')[1].split('</ol>')[0].match(/<li>/g)).toHaveLength(clip.lines.length);
     for (const line of clip.lines) expect(part).toContain(`<li>${review.esc(line)}</li>`);
     expect(part.indexOf('<ol class="lines">')).toBeLessThan(part.indexOf(`review/narration/${clip.id}.mp3`));
   });
@@ -201,6 +233,77 @@ describe('the review page with content', () => {
     expect(part).toContain('A slow churn under a crust.');
     expect(part).toContain('review/mix/mix-2.mp3');
     expect(part).not.toContain('mix-1.mp3');
+  });
+
+  it('says under each sound which take was kept, and the fault it was kept with', () => {
+    const part = html.split('<section id="listen">')[1].split('</section>')[0];
+    const of = (id: string) => part.split(`<span class="title">${id}</span>`)[1].split('</article>')[0];
+    expect(of('crack')).toContain('<p class="take fault"><span class="chip">Kept with a fault</span><span>Take 2 of 2. No thick fold &lt;here&gt; &amp; one call hears glass.</span></p>');
+    expect(of('drip')).toContain('<p class="take"><span>Take 1 of 1, kept. No fault found by measure, by the listener or in the picture of the sound.</span></p>');
+    expect(of('low-churn')).not.toContain('class="take');
+    for (const id of ['crack', 'drip', 'low-churn']) expect(of(id).indexOf('class="words"')).toBeLessThan(of(id).indexOf('<audio'));
+  });
+
+  it('plays each of the music\'s two spots before and after, with its picture and where it falls in the film', () => {
+    const part = html.split('<section id="listen">')[1].split('</section>')[0];
+    expect(part).toContain("<h3>The music's two spots</h3>");
+    expect(part).toContain('Two spots &lt;of&gt; laughter &amp; nothing else.');
+    const spots = part.split('<article class="spot">').slice(1).map((x: string) => x.split('</article>')[0]);
+    expect(spots).toHaveLength(2);
+    expect(spots[0]).toContain('The first laugh');
+    expect(spots[0]).toContain(`1:14.163 to 1:16.642 of the track · The same time in the film, in ${cfg.units[1].name.split(',')[0].replace(/^The /, 'the ')}`);
+    expect([...spots[0].matchAll(/<audio controls preload="metadata" src="review\/music\/([^"]+)"/g)].map((m) => m[1])).toEqual(['spot-1-before.wav', 'spot-1-after.wav']);
+    expect(spots[0]).toContain('<b>Before</b> · as supplied');
+    expect(spots[0]).toMatch(/<img src="review\/music\/spot-1\.png" alt="Spot 1 drawn" width="64" height="36"/);
+    expect(spots[0].match(/<li>/g)).toHaveLength(2);
+    expect(spots[1]).toContain(`in ${cfg.units[1].name.split(',')[0].replace(/^The /, 'the ')} and ${cfg.units[0].name.split(',')[0].replace(/^The /, 'the ')}`);
+    expect([...spots[1].matchAll(/src="review\/music\/([^"]+)"/g)].map((m) => m[1])).toEqual(['spot-2-before.wav', 'spot-2-after.wav']);
+    expect(spots[1]).not.toContain('<img');
+    expect(part.indexOf("The music's two spots")).toBeLessThan(part.indexOf('The mix alone'));
+    expect(out.model.listen.music.spots.map((x: any) => x.clips.length)).toEqual([2, 2]);
+    expect(review.counts(out.model).listen).toBe(1 + 3 + 4 + 1);
+  });
+
+  it('marks a kept narration clip whose words the draft changes', () => {
+    const part = html.split('<section id="listen">')[1].split('</section>')[0];
+    const clip = part.split('<article class="clip">')[1].split('</article>')[0];
+    expect(clip).toContain('Made from the approved script.');
+    expect(clip.indexOf('Made from the approved script.')).toBeLessThan(clip.indexOf('<audio'));
+  });
+
+  it('lays the script sheet out clip by clip, with the lengths, the marks and the two closing lists', () => {
+    const part = html.split('<section id="script">')[1].split('</section>')[0];
+    const sheet = out.model.script.sheet;
+    expect(part.match(/<article class="row/g)).toHaveLength(32);
+    expect(part.match(/<article class="row marked/g)).toHaveLength(sheet.totals.marked);
+    expect([...part.matchAll(/<div class="script-clip" id="(script-n\d)">/g)].map((m) => m[1])).toEqual(sheet.clips.map((c: any) => `script-${c.id}`));
+    for (const c of sheet.clips) expect(part).toContain(`<a href="#script-${c.id}">${c.id}</a>`);
+    for (const x of sheet.rows) {
+      expect(part).toContain(`<p class="text">${review.esc(x.text)}</p>`);
+      for (const alt of x.mark?.replace ?? []) expect(part).toContain(`<span class="alt">${review.esc(alt.text)}</span>`);
+    }
+    expect(part).toContain(`<tr class="all"><td>all</td><td></td><td></td><td>${sheet.totals.seconds.toFixed(1)} s</td>`);
+    expect(part).toContain('<h3>Shown and not named</h3>');
+    expect(part).toContain('<h3>The rules of the note, checked on the draft</h3>');
+    expect(part).toContain('No narration is made from this draft');
+    expect(part).not.toContain('<section');
+    expect(review.counts(out.model).script).toBe(32);
+  });
+
+  it('shows the sheet\'s small pictures from the review folder, each copied once', () => {
+    const part = html.split('<section id="script">')[1].split('</section>')[0];
+    const shown = new Set([...part.matchAll(/<img src="(review\/script\/[^"]+)"/g)].map((m) => m[1]));
+    expect(shown.size).toBe(out.model.script.pictures.length);
+    expect(shown.size).toBeGreaterThan(30);
+    for (const f of shown) expect(fs.existsSync(path.join(r, 'dist', decodeURIComponent(f)))).toBe(true);
+    expect(fs.readdirSync(path.join(r, 'dist', 'review', 'script'))).toHaveLength(shown.size);
+  });
+
+  it('keeps the sheet\'s style from the page\'s own rules for sections and times', () => {
+    const style = html.match(/<style>([\s\S]*?)<\/style>/)![1];
+    expect(style).toContain('.script-sheet .row .when { margin: 0; color: inherit; }');
+    expect(style).toContain('.row .swap .alt');
+    expect(style).not.toMatch(/url\(|@import/);
   });
 
   it('loops the card muted and shows the still', () => {
@@ -233,6 +336,27 @@ describe('the review page with content', () => {
 });
 
 describe('the parsers', () => {
+  it('reads which take of a sound was kept and the fault it was kept with', () => {
+    expect(review.takes('Takes: 2 made, take 2 kept with a fault. Take 2 was kept with a fault. The Builder\'s verdict names a fault: Three thumps where one is asked..\n')).toEqual({ made: 2, kept: 2, fault: 'Three thumps where one is asked' });
+    expect(review.takes('x\nTakes: 2 made, take 1 kept. Take 1 was kept: the Builder chose it of the 2 made, with no fault by measure.\ny')).toEqual({ made: 2, kept: 1, fault: null });
+    expect(review.takes('Takes: 1 made, take 1 kept')).toEqual({ made: 1, kept: 1, fault: null });
+    expect(review.takes('Takes: 2 made, take 1 kept with a fault.')).toEqual({ made: 2, kept: 1, fault: 'The record does not say which' });
+    expect(review.takes('Text or description: none')).toBeNull();
+  });
+
+  it('reads every sound record of the repo', () => {
+    const dir = new URL('../audio/records/', import.meta.url);
+    const sounds = fs.readdirSync(dir).filter((n) => /-(bed|life|event|thud)\.md$/.test(n));
+    expect(sounds).toHaveLength(20);
+    const read = sounds.map((n) => review.takes(fs.readFileSync(new URL(n, dir), 'utf8')));
+    for (const t of read) {
+      expect(t).not.toBeNull();
+      expect(t.kept).toBeLessThanOrEqual(t.made);
+      expect(t.made).toBeLessThanOrEqual(2);
+    }
+    expect(read.filter((t) => t.fault).length).toBe(8);
+  });
+
   it('reads the status file in the form the progress file uses', () => {
     const s = review.parseStatus('Status 1, 2026-11-24 20:36 UTC:\n\n- `01-x.jpg`: the approved pictures: six views\n');
     expect(s.when).toBe('Status 1, 2026-11-24 20:36 UTC');

@@ -3,7 +3,7 @@
   "id": "heart-event",
   "unit": "heart",
   "kind": "spot",
-  "description": "A plate of cooled lava crust foundering into a lava lake: one sharp crack of rock, a thick heavy fold of molten rock slumping under, then a burst of hissing gas that dies away. No explosion. No music, no voices.",
+  "description": "One loud sharp crack of a stone slab splitting. Then a slow heavy thick gloop as the slab sinks into molten lava. Then a loud burst of hissing steam that fades away.",
   "seconds": 6,
   "promptInfluence": 0.5,
   "loop": false

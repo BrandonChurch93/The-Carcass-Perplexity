@@ -1,0 +1,44 @@
+{
+  "schema": "carcass/music-spots 1",
+  "cleaned": "audio/cleaned/The-Carcass-Audio-cleaned.flac",
+  "spots": [
+    {
+      "id": "spot-1",
+      "asked": "1:14 to 1:16 of the track: laughter that sounds like a witch",
+      "file": "spot-1.flac",
+      "start": 3270584,
+      "end": 3379918,
+      "what": "The voice stem of the second model between its two stretches of digital silence (1:12.722 to 1:14.163 and 1:16.642 to 1:17.122). It holds the laugh and nothing else.",
+      "way": "The first choice. Only the laugh is taken out and nothing is muted, faded or replaced."
+    },
+    {
+      "id": "spot-2",
+      "asked": "2:34 to 2:40 of the track: a child laughing",
+      "file": "spot-2.flac",
+      "start": 6806835,
+      "end": 7056000,
+      "what": "The voice stem of the first model from 2:34.350 to 2:39.780, faded in over the first 50 milliseconds, where that stem is at -75 dB. From 2:39.780 to 2:39.860, in a gap between two bursts of the laugh, it crosses over to the lead voice stem of the third model, which holds only the last burst of the laugh and stops at 2:40.000; its last 5 milliseconds are faded to zero. The music's own voice, which comes in at 2:39.88, is in neither. The music is not faded anywhere: what is faded is only the signal that is taken out.",
+      "way": "The second way. The first choice (only the lead voice stem of the third model taken out) left something the listener still called giggling in 6 of 8 answers, so the whole voice stem is taken out for these seconds. It also takes the music's breathing sound out of these 5.4 seconds and lowers two of its held notes by 1.6 and 1.9 dB."
+    }
+  ],
+  "models": [
+    {
+      "name": "first model",
+      "model": "htdemucs_ft",
+      "tool": "Demucs 4.1.0",
+      "use": "A cross check only. Nothing of it is in the removed signals."
+    },
+    {
+      "name": "second model",
+      "model": "model_bs_roformer_ep_317_sdr_12.9755.ckpt",
+      "tool": "audio-separator 0.48.0",
+      "use": "The voice stem, which is spot 1's removed signal."
+    },
+    {
+      "name": "third model",
+      "model": "mel_band_roformer_karaoke_aufr33_viperx_sdr_10.1956.ckpt",
+      "tool": "audio-separator 0.48.0",
+      "use": "Splits the second model's voice stem into lead and backing. Spot 2's removed signal is its lead stem and a part of its backing stem."
+    }
+  ]
+}

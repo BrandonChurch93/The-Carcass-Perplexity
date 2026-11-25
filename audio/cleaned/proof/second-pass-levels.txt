@@ -1,0 +1,157 @@
+SECOND PASS VOICE CHECK  model_bs_roformer_ep_317_sdr_12.9755.ckpt  (audio-separator 0.48.0, CPU)
+Levels are dB RMS re full scale, both channels together, -200 = digital silence (every sample zero).
+NOTE the tool writes stems quantised to 16 bit steps, so -200 means under about -90 dBFS peak, not proven absence.
+
+== A2 alignment ==
+raw tool output: voice 1058400 samples 44100 Hz 2 ch PCM_24; instrumental 1058400 samples 44100 Hz 2 ch PCM_24
+sample count/rate check (must be 1058400 @ 44100): PASS
+excerpt peak 1.000000; tool gain on the mix (0.9/peak if peak > 0.9) = 0.900000 (-0.915 dB); raw voice peak 0.761383; raw instrumental peak 0.899963; least-squares gain of the instrumental stem vs (g*excerpt - voice) = 0.999874 (-0.0011 dB)
+largest |voice+instrumental - excerpt|, raw files exactly as written by the tool = 1.000e-01
+largest |(voice+instrumental)/g - excerpt|, i.e. after undoing the mix gain = 9.299e-05; RMS of that difference -89.5 dB
+raw voice stem: 24 bit container but 100.0% of non-zero samples sit on the 16 bit grid, so the tool's output floor is one 16 bit step = 3.05e-05 (-90.3 dBFS); smaller voice content reads as digital zero
+saved A2-vocals-m2.flac / A2-inst-m2.flac (tool gains undone so they are on the track scale), 1058400 samples each, 44100 Hz, 24 bit
+largest |voice+instrumental - excerpt|, saved stems = 9.298e-05 (-80.6 dBFS)
+time lag of (voice+instrumental) vs excerpt, searched +-50 samples: 0 samples
+
+== B2 alignment ==
+raw tool output: voice 1058400 samples 44100 Hz 2 ch PCM_24; instrumental 1058400 samples 44100 Hz 2 ch PCM_24
+sample count/rate check (must be 1058400 @ 44100): PASS
+excerpt peak 0.800133; tool gain on the mix (0.9/peak if peak > 0.9) = 1.000000 (+0.000 dB); raw voice peak 0.764771; raw instrumental peak 0.740967; least-squares gain of the instrumental stem vs (g*excerpt - voice) = 0.999873 (-0.0011 dB)
+largest |voice+instrumental - excerpt|, raw files exactly as written by the tool = 8.047e-05
+largest |(voice+instrumental)/g - excerpt|, i.e. after undoing the mix gain = 8.047e-05; RMS of that difference -91.3 dB
+raw voice stem: 24 bit container but 100.0% of non-zero samples sit on the 16 bit grid, so the tool's output floor is one 16 bit step = 3.05e-05 (-90.3 dBFS); smaller voice content reads as digital zero
+saved B2-vocals-m2.flac / B2-inst-m2.flac (same samples as the raw tool output, no gain was applied), 1058400 samples each, 44100 Hz, 24 bit
+largest |voice+instrumental - excerpt|, saved stems = 8.047e-05 (-81.9 dBFS)
+time lag of (voice+instrumental) vs excerpt, searched +-50 samples: 0 samples
+
+== spot 1 (74.163-76.642 s), excerpt A starts 64.0 s; first pass stem is 22.0 s long ==
+       window (s)  pass2 voice  pass1 voice   cleaned   p2-p1 p2-cleaned
+  73.00- 73.25         -200.0       -200.0     -13.7     0.0     -186.3
+  73.25- 73.50         -200.0       -200.0     -14.8     0.0     -185.2
+  73.50- 73.75         -200.0       -200.0     -14.6     0.0     -185.4
+  73.75- 74.00         -200.0       -200.0     -13.0     0.0     -187.0
+  74.00- 74.25*        -200.0        -22.6     -12.0  -177.4     -188.0
+  74.25- 74.50*        -200.0        -21.8     -12.2  -178.2     -187.8
+  74.50- 74.75*        -200.0        -23.3     -12.4  -176.7     -187.6
+  74.75- 75.00*        -200.0        -32.1     -12.9  -167.9     -187.1
+  75.00- 75.25*        -107.2        -26.8     -13.6   -80.4      -93.6
+  75.25- 75.50*        -200.0        -26.0     -13.5  -174.0     -186.5
+  75.50- 75.75*        -112.8        -29.9     -14.3   -82.9      -98.4
+  75.75- 76.00*         -92.5        -36.5     -13.8   -56.0      -78.7
+  76.00- 76.25*         -98.7        -61.2     -14.6   -37.5      -84.1
+  76.25- 76.50*        -113.1        -79.2     -14.9   -33.9      -98.2
+  76.50- 76.75*        -117.0        -98.4     -13.9   -18.6     -103.1
+  76.75- 77.00         -200.0       -200.0     -14.0     0.0     -186.0
+  77.00- 77.25          -86.3        -84.8     -13.7    -1.5      -72.6
+  77.25- 77.50          -37.2        -37.4     -14.6     0.3      -22.6
+  77.50- 77.75          -17.9        -17.9     -11.5    -0.0       -6.4
+  77.75- 78.00          -15.1        -15.1     -11.7    -0.0       -3.5
+  (* = window overlaps the spot)
+WHOLE SPOT 1: pass2 voice -101.4 dB | pass1 voice -26.3 dB | pass2 minus pass1 -75.1 dB | cleaned excerpt -13.5 dB | pass2 voice minus cleaned -87.9 dB
+WHOLE SPOT 1: pass2 voice non-zero samples 4.25% of the spot; peak |sample| = 0.000068 (-83.4 dBFS, = 2.2 sixteen-bit steps); pass1 voice peak = 0.621844
+FINE 1: no pass2 voice sample inside the spot exceeds 10 sixteen-bit steps (-70.3 dBFS)
+FINE 1: stretches of the spot where the pass2 voice stem is not digital zero (gaps under 50 ms joined): 75.148-75.170 s (-96.7 dB RMS, peak -89.4 dBFS); 75.706-75.713 s (-97.0 dB RMS, peak -89.4 dBFS); 75.771-75.931 s (-90.6 dB RMS, peak -83.4 dBFS); 76.069-76.094 s (-96.9 dB RMS, peak -89.4 dBFS); 76.196-76.253 s (-92.9 dB RMS, peak -83.4 dBFS); 76.565-76.580 s (-104.7 dB RMS, peak -89.4 dBFS)
+FINE 1: spot without its last 0.25 s (74.163-76.392 s): pass2 voice -100.9 dB, peak -83.4 dBFS; pass1 voice -25.8 dB
+FINE 1: 25 ms windows, last 0.4 s of the spot to 0.2 s after it (time: pass2 voice / pass1 voice / cleaned, dB RMS):
+     76.242-  76.267*    -96.8    -72.6    -13.7
+     76.267-  76.292*   -200.0    -73.4    -14.6
+     76.292-  76.317*   -200.0    -76.7    -15.3
+     76.317-  76.342*   -200.0    -81.5    -15.8
+     76.342-  76.367*   -200.0    -85.3    -15.4
+     76.367-  76.392*   -200.0    -86.5    -15.0
+     76.392-  76.417*   -200.0    -89.6    -14.9
+     76.417-  76.442*   -200.0    -86.3    -14.5
+     76.442-  76.467*   -200.0    -91.6    -15.0
+     76.467-  76.492*   -200.0    -92.3    -15.2
+     76.492-  76.517*   -200.0    -90.5    -14.6
+     76.517-  76.542*   -200.0    -95.6    -15.2
+     76.542-  76.567*   -119.8    -98.5    -15.2
+     76.567-  76.592*   -107.3    -96.0    -15.5
+     76.592-  76.617*   -200.0   -200.0    -15.0
+     76.617-  76.642*   -200.0   -108.6    -14.0
+     76.642-  76.667    -200.0   -115.8    -12.4
+     76.667-  76.692    -200.0   -200.0    -12.6
+     76.692-  76.717    -200.0   -200.0    -12.6
+     76.717-  76.742    -200.0   -200.0    -13.6
+     76.742-  76.767    -200.0   -200.0    -13.9
+     76.767-  76.792    -200.0   -200.0    -13.7
+     76.792-  76.817    -200.0   -200.0    -14.1
+     76.817-  76.842    -200.0   -200.0    -13.7
+BASELINE outside spot 1 (0.25 s windows over the rest of the 24 s excerpt): pass2 voice median -16.0 dB, 10th-90th pct -62.3 to -11.0 dB, max -9.9 dB; pass2 voice minus cleaned median -4.0 dB; pass1 voice median -15.7 dB
+
+wrote A2-voice-spot.wav = pass2 voice stem 73.5-77.5 s, 16 bit, 176400 samples
+
+wrote spot-1-pass2.png
+
+== spot 2 (154.350-160.000 s), excerpt B starts 146.0 s; first pass stem is 24.0 s long ==
+       window (s)  pass2 voice  pass1 voice   cleaned   p2-p1 p2-cleaned  pass1 other model
+ 153.00-153.25          -56.1        -57.0     -16.5     0.9      -39.6              -34.9
+ 153.25-153.50          -66.0        -67.6     -19.9     1.7      -46.1              -44.5
+ 153.50-153.75          -52.2        -53.2     -20.5     1.0      -31.7              -27.3
+ 153.75-154.00          -48.7        -49.4     -19.0     0.7      -29.7              -25.6
+ 154.00-154.25          -67.0       -200.0     -23.3   133.0      -43.7              -52.3
+ 154.25-154.50*         -80.9        -52.5     -27.3   -28.4      -53.6              -51.6
+ 154.50-154.75*        -200.0        -27.5     -23.3  -172.5     -176.7              -27.9
+ 154.75-155.00*        -200.0        -27.6     -26.6  -172.4     -173.4              -27.7
+ 155.00-155.25*        -200.0        -27.6     -29.3  -172.4     -170.7              -27.7
+ 155.25-155.50*        -200.0        -36.9     -29.5  -163.1     -170.5              -36.8
+ 155.50-155.75*        -200.0        -36.3     -23.0  -163.7     -177.0              -32.8
+ 155.75-156.00*        -200.0        -39.4     -27.3  -160.6     -172.7              -38.5
+ 156.00-156.25*        -200.0        -29.7     -32.6  -170.3     -167.4              -29.7
+ 156.25-156.50*        -200.0        -30.6     -24.8  -169.4     -175.2              -31.5
+ 156.50-156.75*        -200.0        -36.3     -25.9  -163.7     -174.1              -36.4
+ 156.75-157.00*        -200.0        -37.3     -29.3  -162.7     -170.7              -37.5
+ 157.00-157.25*        -200.0        -56.8     -33.4  -143.2     -166.6              -44.1
+ 157.25-157.50*        -200.0        -27.8     -24.3  -172.2     -175.7              -27.6
+ 157.50-157.75*        -200.0        -30.7     -27.8  -169.3     -172.2              -30.6
+ 157.75-158.00*        -200.0        -23.0     -33.8  -177.0     -166.2              -23.0
+ 158.00-158.25*        -102.9        -26.7     -24.4   -76.2      -78.5              -26.6
+ 158.25-158.50*        -200.0        -28.4     -26.0  -171.6     -174.0              -28.4
+ 158.50-158.75*        -200.0        -32.7     -31.8  -167.3     -168.2              -32.8
+ 158.75-159.00*        -200.0        -31.9     -35.3  -168.1     -164.7              -31.8
+ 159.00-159.25*        -200.0        -36.1     -28.4  -163.9     -171.6              -36.4
+ 159.25-159.50*        -200.0        -29.1     -33.8  -170.9     -166.2              -29.2
+ 159.50-159.75*        -117.7        -24.5     -34.0   -93.2      -83.7              -24.4
+ 159.75-160.00*         -52.5        -34.4     -23.8   -18.1      -28.7              -25.3
+ 160.00-160.25          -53.3        -34.8     -22.1   -18.5      -31.2              -25.6
+ 160.25-160.50          -61.3        -40.6     -27.8   -20.6      -33.5              -39.2
+ 160.50-160.75          -73.7        -42.2     -29.7   -31.5      -44.0              -47.9
+ 160.75-161.00          -54.0        -36.3     -23.1   -17.7      -30.9              -30.4
+  (* = window overlaps the spot)
+WHOLE SPOT 2: pass2 voice -66.0 dB | pass1 voice -29.4 dB | pass2 minus pass1 -36.6 dB | cleaned excerpt -27.1 dB | pass2 voice minus cleaned -39.0 dB
+WHOLE SPOT 2: pass2 voice non-zero samples 4.60% of the spot; peak |sample| = 0.009247 (-40.7 dBFS, = 303.0 sixteen-bit steps); pass1 voice peak = 0.268280
+WHOLE SPOT 2: pass1 other-model voice stem (B-vocals.flac) -29.0 dB
+FINE 2: pass2 voice samples above 10 sixteen-bit steps (-70.3 dBFS) inside the spot: 7648 (3.07%), first at 159.801 s, last at 160.000 s
+FINE 2: stretches of the spot where the pass2 voice stem is not digital zero (gaps under 50 ms joined): 154.350-154.470 s (-89.5 dB RMS, peak -71.2 dBFS); 158.000-158.113 s (-99.5 dB RMS, peak -84.3 dBFS); 159.732-160.000 s (-52.8 dB RMS, peak -40.7 dBFS)
+FINE 2: spot without its last 0.25 s (154.350-159.750 s): pass2 voice -105.6 dB, peak -71.2 dBFS; pass1 voice -29.3 dB
+FINE 2: 25 ms windows, last 0.4 s of the spot to 0.2 s after it (time: pass2 voice / pass1 voice / cleaned, dB RMS):
+    159.600- 159.625*   -200.0    -54.3    -34.2
+    159.625- 159.650*   -200.0    -57.0    -33.2
+    159.650- 159.675*   -200.0    -42.4    -33.3
+    159.675- 159.700*   -200.0    -23.3    -33.7
+    159.700- 159.725*   -200.0    -22.1    -34.0
+    159.725- 159.750*   -107.7    -24.4    -33.1
+    159.750- 159.775*   -106.7    -47.8    -31.2
+    159.775- 159.800*    -88.8    -48.5    -31.9
+    159.800- 159.825*    -70.6    -49.5    -31.0
+    159.825- 159.850*    -59.8    -46.0    -30.1
+    159.850- 159.875*    -56.8    -47.8    -31.8
+    159.875- 159.900*    -57.2    -30.1    -33.0
+    159.900- 159.925*    -50.6    -29.2    -23.8
+    159.925- 159.950*    -48.8    -34.1    -20.0
+    159.950- 159.975*    -48.8    -33.9    -19.9
+    159.975- 160.000*    -47.9    -32.3    -18.9
+    160.000- 160.025     -49.9    -31.4    -19.2
+    160.025- 160.050     -51.7    -33.0    -20.7
+    160.050- 160.075     -53.3    -34.6    -21.9
+    160.075- 160.100     -52.5    -33.9    -21.4
+    160.100- 160.125     -52.4    -34.1    -21.5
+    160.125- 160.150     -53.7    -35.8    -22.8
+    160.150- 160.175     -55.5    -37.9    -24.8
+    160.175- 160.200     -55.9    -37.6    -24.7
+BASELINE outside spot 2 (0.25 s windows over the rest of the 24 s excerpt): pass2 voice median -26.1 dB, 10th-90th pct -66.8 to -14.8 dB, max -13.1 dB; pass2 voice minus cleaned median -9.9 dB; pass1 voice median -26.6 dB
+
+wrote B2-voice-spot.wav = pass2 voice stem 153.5-161.0 s, 16 bit, 330750 samples
+
+wrote spot-2-pass2.png
+

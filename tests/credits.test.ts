@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -226,6 +227,24 @@ describe('a call through the ledger', () => {
     const dead = () => ({ status: 7, stdout: '', stderr: 'curl: (7) could not connect' });
     expect(() => credits.begin({ root, cfg, runner: dead, env: { CARCASS_ELEVEN_HANDLE: HANDLE } }, { tool: 'sound', purpose: 'sound', id: 'x', estimate: 1 })).toThrow(/the account could not be read/);
     expect(a.calls).toHaveLength(0);
+    fs.rmSync(root, { recursive: true, force: true });
+  });
+
+  it('waits out a busy account and reads it again, and gives up plainly when it stays busy', () => {
+    const root = freshRoot();
+    const busy = JSON.stringify({ detail: { type: 'rate_limit_error', code: 'rate_limited', message: 'You have made too many requests. Please try again later.' } });
+    let reads = 0;
+    const twice = () => (++reads <= 2 ? { status: 0, stdout: busy, stderr: '' } : { status: 0, stdout: JSON.stringify({ character_count: 1200, character_limit: 131000 }), stderr: '' });
+    const open = credits.begin({ root, cfg, runner: twice, env: { CARCASS_ELEVEN_HANDLE: HANDLE }, now: () => AT, readWaitMs: 0 }, { tool: 'sound', purpose: 'sound', id: 'x take 1', estimate: 66 });
+    expect(open.before).toBe(1200);
+    expect(reads).toBe(3);
+    let asked = 0;
+    const always = () => {
+      asked++;
+      return { status: 0, stdout: busy, stderr: '' };
+    };
+    expect(() => credits.begin({ root, cfg, runner: always, env: { CARCASS_ELEVEN_HANDLE: HANDLE }, now: () => AT, readWaitMs: 0, readTries: 4 }, { tool: 'sound', purpose: 'sound', id: 'y take 1', estimate: 66 })).toThrow(/the account could not be read/);
+    expect(asked).toBe(4);
     fs.rmSync(root, { recursive: true, force: true });
   });
 });

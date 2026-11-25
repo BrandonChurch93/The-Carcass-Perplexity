@@ -3,7 +3,7 @@
   "id": "breath-life",
   "unit": "breath",
   "kind": "spot",
-  "description": "A herd of large soft-footed creatures stepping slowly through shallow water, soft splashing steps, with a few low fluting calls far apart, hollow and breathy like air across a wide pipe. Calm and distant. No roars, no birds. No music, no voices.",
+  "description": "Slow soft footsteps wading in shallow water, gentle uneven splashes. Twice, far away, a long low hollow note, like air blown across the mouth of a large bottle, hooo. Calm, wide and quiet.",
   "seconds": 8,
   "promptInfluence": 0.5,
   "loop": false

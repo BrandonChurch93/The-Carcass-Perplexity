@@ -3,7 +3,7 @@
   "id": "eye-life",
   "unit": "eye",
   "kind": "spot",
-  "description": "Herds of large quiet creatures drinking at the edge of a still lake: slow soft steps on wet stones, gentle lapping, and drips falling back into the water. Very quiet and calm. No calls, no roars. No music, no voices.",
+  "description": "A few quiet sips and gentle laps at the edge of a still lake, then single drips falling back into the water, plip, plip, and two or three slow soft steps on wet pebbles. Sparse and calm, with silence between the sounds.",
   "seconds": 8,
   "promptInfluence": 0.5,
   "loop": false

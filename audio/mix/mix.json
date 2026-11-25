@@ -6,12 +6,12 @@
   "channels": 2,
   "integratedLufs": -14,
   "truePeakDb": -1.1,
-  "gainDb": -2.45,
+  "gainDb": -2.53,
   "limited": true,
   "inputs": [
     {
-      "file": "audio/supplied/The-Carcass-Audio.mp3",
-      "sha256": "eefe8765b73f35622be8410f063f327902dd0ce5b564688fade5b732afc56b1f"
+      "file": "audio/cleaned/The-Carcass-Audio-cleaned.flac",
+      "sha256": "80dc10a09c645fc94b91d021050fa0d0520ea2a506d8f0dc2d16a9dd832f7b16"
     },
     {
       "file": "audio/kept/lines/n8-1.wav",
@@ -28,6 +28,18 @@
     {
       "file": "audio/kept/lines/n8-4.wav",
       "sha256": "7a050532d931e469e92b2d8510a29784cb99ce5a818988b73ee406cfa0259f25"
+    },
+    {
+      "file": "audio/kept/sounds/heart/heart-bed.wav",
+      "sha256": "21dc55a14e2f3cd195d8d99d806b9cc0a9846565ad3b853f4c2005ddeddf6ce5"
+    },
+    {
+      "file": "audio/kept/sounds/heart/heart-life.wav",
+      "sha256": "5242913498a063a1dc60f6718fb2cf79ef36041f3cd412e67118e4b034bc5390"
+    },
+    {
+      "file": "audio/kept/sounds/heart/heart-event.wav",
+      "sha256": "cdafab503f80d969d395887fc5fa02ce219008caef92c2fe49f441843205ed90"
     }
   ],
   "lines": [
@@ -37,11 +49,11 @@
       "first": 9741,
       "frames": 121,
       "duckDb": 4.92,
-      "voiceBandDb": -23.61,
-      "restBandDb": -29.61,
+      "voiceBandDb": -23.69,
+      "restBandDb": -29.69,
       "marginDb": 6,
-      "voiceDb": -16.56,
-      "restDb": -29.09
+      "voiceDb": -16.64,
+      "restDb": -29.17
     },
     {
       "clip": "n8",
@@ -49,11 +61,11 @@
       "first": 9900,
       "frames": 111,
       "duckDb": 8.69,
-      "voiceBandDb": -21.06,
-      "restBandDb": -27.06,
+      "voiceBandDb": -21.14,
+      "restBandDb": -27.14,
       "marginDb": 6,
-      "voiceDb": -15.52,
-      "restDb": -26.99
+      "voiceDb": -15.6,
+      "restDb": -27.07
     },
     {
       "clip": "n8",
@@ -61,11 +73,11 @@
       "first": 10075,
       "frames": 75,
       "duckDb": 4.27,
-      "voiceBandDb": -19.92,
-      "restBandDb": -25.94,
-      "marginDb": 6.02,
-      "voiceDb": -16.7,
-      "restDb": -20.82
+      "voiceBandDb": -19.99,
+      "restBandDb": -26.01,
+      "marginDb": 6.01,
+      "voiceDb": -16.77,
+      "restDb": -20.89
     },
     {
       "clip": "n8",
@@ -73,12 +85,25 @@
       "first": 10620,
       "frames": 270,
       "duckDb": 0.88,
-      "voiceBandDb": -21.36,
-      "restBandDb": -27.36,
+      "voiceBandDb": -21.44,
+      "restBandDb": -27.44,
       "marginDb": 6,
-      "voiceDb": -17.79,
-      "restDb": -20.02
+      "voiceDb": -17.87,
+      "restDb": -20.09
     }
   ],
-  "sounds": []
+  "sounds": [
+    {
+      "id": "heart-bed",
+      "gainDb": -8.5
+    },
+    {
+      "id": "heart-life",
+      "gainDb": -7
+    },
+    {
+      "id": "heart-event",
+      "gainDb": -5.5
+    }
+  ]
 }

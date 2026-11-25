@@ -1,0 +1,691 @@
+{
+  "schema": "carcass/script-draft 1",
+  "from": "Brandon's review note of 2026-11-25, item 2. The words of every line are his, unchanged. The positions, the marks, the replacement lines and the notes are the Builder's. This is a draft on the table: narration.clips in config/showcase.json still holds the approved script until he writes that the script is final.",
+  "clips": [
+    {
+      "id": "n1",
+      "name": "opening",
+      "unit": "ribs",
+      "lines": [
+        {
+          "text": "Past the last calm water, there is a shore.",
+          "at": {
+            "film": 1.4
+          },
+          "on": [
+            "ribs-01"
+          ]
+        },
+        {
+          "text": "Nothing on it has a name.",
+          "at": {
+            "film": 7.2
+          },
+          "on": [
+            "ribs-01"
+          ]
+        },
+        {
+          "text": "Nothing on it should be alive.",
+          "at": {
+            "film": 10.9
+          },
+          "on": [
+            "ribs-01"
+          ]
+        },
+        {
+          "text": "All of it is.",
+          "at": {
+            "film": 15.3
+          },
+          "on": [
+            "ribs-01"
+          ],
+          "lands": [
+            {
+              "sentence": 1,
+              "strike": "firstHit",
+              "what": "the first strike of the music, where the strait opens"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "n2",
+      "name": "ribs",
+      "unit": "ribs",
+      "lines": [
+        {
+          "text": "The strait.",
+          "at": {
+            "film": 17.9
+          },
+          "on": [
+            "ribs-02"
+          ]
+        },
+        {
+          "text": "Blades of stone, taller than the storms that break on them.",
+          "at": {
+            "film": 19.66
+          },
+          "on": [
+            "ribs-02"
+          ],
+          "mark": {
+            "kind": "length",
+            "why": "6.4 s, and the strait has 4.3 s left after \"The strait.\" and its pause. As written, its last 2 s are said over the colony, and it pushes the feeding line off the feeders.",
+            "replace": [
+              {
+                "text": "Stone blades, taller than the storms."
+              },
+              {
+                "text": "Stone blades. Storms break on them."
+              }
+            ]
+          }
+        },
+        {
+          "text": "At low tide the winged ones come down to feed. They do not have long.",
+          "at": {
+            "film": 24.36
+          },
+          "on": [
+            "ribs-03",
+            "ribs-04"
+          ],
+          "mark": {
+            "kind": "length",
+            "why": "7.8 s over two shots that last 7.1 s together, the colony and the feeders. Its last second is said over the drowned, the picture of the next line.",
+            "replace": [
+              {
+                "text": "At low tide the winged ones feed. They do not have long."
+              },
+              {
+                "text": "At low tide the winged ones come down to feed. Not for long.",
+                "note": "Keeps \"come down\", and leaves about half the room to spare that the first one leaves."
+              }
+            ]
+          }
+        },
+        {
+          "text": "High in the weed hangs one that stayed. Then the sea returns. All at once.",
+          "at": {
+            "film": 32.3
+          },
+          "on": [
+            "ribs-05",
+            "ribs-06"
+          ],
+          "lands": [
+            {
+              "sentence": 1,
+              "shot": "ribs-05"
+            },
+            {
+              "sentence": 3,
+              "event": "bore"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "n3",
+      "name": "heart",
+      "unit": "heart",
+      "lines": [
+        {
+          "text": "The fire.",
+          "at": {
+            "film": 42.5
+          },
+          "on": [
+            "heart-01"
+          ]
+        },
+        {
+          "text": "A lake of it, under a black skin.",
+          "at": {
+            "film": 44.3
+          },
+          "on": [
+            "heart-01"
+          ]
+        },
+        {
+          "text": "The tall ones walk the skin, and drink from the cracks.",
+          "at": {
+            "film": 49.4
+          },
+          "on": [
+            "heart-02"
+          ]
+        },
+        {
+          "text": "Sometimes the skin gives way. The fire beneath has never cooled.",
+          "at": {
+            "film": 56.35
+          },
+          "on": [
+            "heart-03",
+            "heart-04"
+          ],
+          "lands": [
+            {
+              "sentence": 1,
+              "shot": "heart-04"
+            },
+            {
+              "sentence": 2,
+              "shot": "heart-03"
+            }
+          ],
+          "mark": {
+            "kind": "picture",
+            "why": "Its two sentences fall on each other's pictures. The cut shows the fire under the skin first and the one that sank second; the line says the skin gives way first and the fire second. It is also tight: 7.2 s over two shots of 6.9 s.",
+            "replace": [
+              {
+                "text": "The fire has never cooled. Sometimes the skin gives way.",
+                "lands": [
+                  {
+                    "sentence": 1,
+                    "shot": "heart-03"
+                  },
+                  {
+                    "sentence": 2,
+                    "shot": "heart-04"
+                  }
+                ]
+              },
+              {
+                "text": "The fire beneath has never cooled. Sometimes the skin gives way.",
+                "at": {
+                  "film": 55.98
+                },
+                "note": "Your own words in the other order. Tight: it has to start in the last quarter second of the shot before.",
+                "lands": [
+                  {
+                    "sentence": 2,
+                    "shot": "heart-04"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "n4",
+      "name": "breath",
+      "unit": "breath",
+      "lines": [
+        {
+          "text": "The pits.",
+          "at": {
+            "film": 70.95
+          },
+          "on": [
+            "breath-01"
+          ],
+          "note": "The shot is the shelf with one pit steaming on it. The line says pits."
+        },
+        {
+          "text": "The ground breathes here. Slow. From far below.",
+          "at": {
+            "film": 72.8
+          },
+          "on": [
+            "breath-01",
+            "breath-02"
+          ],
+          "lands": [
+            {
+              "sentence": 3,
+              "shot": "breath-02"
+            },
+            {
+              "sentence": 3,
+              "event": "exhale"
+            }
+          ]
+        },
+        {
+          "text": "Red growth crowds the rim, feeding on the breath.",
+          "at": {
+            "film": 81.2
+          },
+          "on": [
+            "breath-03"
+          ],
+          "mark": {
+            "kind": "length",
+            "why": "5.3 s on a shot of 3.6 s. Whole, it fits only if it starts at 1:19.3, and then its first 1.8 s are said over the shaft, before the red growth is on screen.",
+            "replace": [
+              {
+                "text": "Red growth feeds on the breath."
+              },
+              {
+                "text": "Red growth crowds the rim."
+              }
+            ]
+          }
+        },
+        {
+          "text": "The pale herds graze the channel, and never the rim. One did.",
+          "at": {
+            "film": 85.1
+          },
+          "on": [
+            "breath-04",
+            "breath-05"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "shot": "breath-05"
+            }
+          ],
+          "mark": {
+            "kind": "picture",
+            "why": "It fits for length. But the shot it ends on shows two animals at the rim: the dead one the line means, and behind it a living one with its head down, feeding at the rim, as the line says never the rim.",
+            "replace": [
+              {
+                "text": "The pale herds graze the channel, not the rim. One did. One will.",
+                "lands": [
+                  {
+                    "sentence": 2,
+                    "shot": "breath-05"
+                  },
+                  {
+                    "sentence": 3,
+                    "shot": "breath-05"
+                  }
+                ]
+              },
+              {
+                "text": "The pale herds keep to the channel. One did not. One will not.",
+                "at": {
+                  "film": 85.6
+                },
+                "lands": [
+                  {
+                    "sentence": 2,
+                    "shot": "breath-05"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "n5",
+      "name": "marsh",
+      "unit": "marsh",
+      "lines": [
+        {
+          "text": "The red flats.",
+          "at": {
+            "film": 94.25
+          },
+          "on": [
+            "marsh-01"
+          ]
+        },
+        {
+          "text": "The ground still bleeds here. No rain made this.",
+          "at": {
+            "film": 96.35
+          },
+          "on": [
+            "marsh-01",
+            "marsh-02",
+            "marsh-03"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "shot": "marsh-03"
+            },
+            {
+              "sentence": 2,
+              "event": "burst"
+            }
+          ],
+          "mark": {
+            "kind": "picture",
+            "why": "It fits for length, and it has to end before the pool bursts on the music's strike, so it cannot sit later. But 3.6 of its 5.5 s are said over the stalks, which it does not name. The red they stand in is in view; the stalks are what the shot is about. Each replacement names them and keeps one of your two sentences.",
+            "replace": [
+              {
+                "text": "Stalks root in the red. The ground still bleeds.",
+                "at": {
+                  "film": 96.45
+                },
+                "lands": [
+                  {
+                    "sentence": 1,
+                    "shot": "marsh-02"
+                  },
+                  {
+                    "sentence": 2,
+                    "event": "burst"
+                  }
+                ]
+              },
+              {
+                "text": "Stalks root in the red. No rain made this.",
+                "at": {
+                  "film": 97.1
+                },
+                "lands": [
+                  {
+                    "sentence": 1,
+                    "shot": "marsh-02"
+                  },
+                  {
+                    "sentence": 2,
+                    "event": "burst"
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "text": "The heavy ones wallow in it, and grow fat.",
+          "at": {
+            "film": 104.5
+          },
+          "on": [
+            "marsh-04"
+          ]
+        },
+        {
+          "text": "The salt keeps whatever it catches. Forever.",
+          "at": {
+            "film": 110.6
+          },
+          "on": [
+            "marsh-05"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "n6",
+      "name": "spine",
+      "unit": "spine",
+      "lines": [
+        {
+          "text": "The ridge.",
+          "at": {
+            "film": 117.5
+          },
+          "on": [
+            "spine-01"
+          ]
+        },
+        {
+          "text": "Above the cloud. Above the storm.",
+          "at": {
+            "film": 119.15
+          },
+          "on": [
+            "spine-01",
+            "spine-02"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "shot": "spine-01"
+            }
+          ],
+          "mark": {
+            "kind": "picture",
+            "why": "It fits for length. \"Above the cloud\" matches: the cloud sea lies below. \"Above the storm\" does not: the shot is the ridge in the storm, with storm cloud around the spire and lightning on it, and the next line has the lightning walk the ridge.",
+            "replace": [
+              {
+                "text": "Above the cloud. Under the storm."
+              },
+              {
+                "text": "Above the cloud. Inside the storm."
+              }
+            ]
+          }
+        },
+        {
+          "text": "Every night the lightning walks it. Spire to spire.",
+          "at": {
+            "film": 123.8
+          },
+          "on": [
+            "spine-02",
+            "spine-03",
+            "spine-04"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "shot": "spine-04"
+            },
+            {
+              "sentence": 2,
+              "event": "strike-4"
+            }
+          ],
+          "note": "Its first sentence is said over the kites and then over the animal the lightning killed. Neither is named."
+        },
+        {
+          "text": "The herds shelter in the hollow beneath, and wait for morning.",
+          "at": {
+            "film": 131.4
+          },
+          "on": [
+            "spine-05"
+          ],
+          "mark": {
+            "kind": "tight",
+            "why": "6.7 s in a shot of 7.2 s, the last of the place. On paper it fits with 0.3 s to spare, and the estimate has been wrong by more than that. If the read comes out long, its last word is said over the lake.",
+            "replace": [
+              {
+                "text": "The herds shelter in the hollow beneath, until morning."
+              },
+              {
+                "text": "The herds wait out the night in the hollow beneath."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "n7",
+      "name": "eye",
+      "unit": "eye",
+      "lines": [
+        {
+          "text": "The lake.",
+          "at": {
+            "film": 138.95
+          },
+          "on": [
+            "eye-01"
+          ]
+        },
+        {
+          "text": "Still. Gold at the edge. Black at the center.",
+          "at": {
+            "film": 140.9
+          },
+          "on": [
+            "eye-01",
+            "eye-02",
+            "eye-03"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "shot": "eye-02"
+            },
+            {
+              "sentence": 3,
+              "shot": "eye-03"
+            }
+          ],
+          "note": "\"Black at the center.\" is said over the edge, where the black water lies behind a skeleton on the lip. The centre itself comes two shots later."
+        },
+        {
+          "text": "The herds drink at the shallows. None of them looks down.",
+          "at": {
+            "film": 147.45
+          },
+          "on": [
+            "eye-04"
+          ],
+          "mark": {
+            "kind": "length",
+            "why": "6.5 s on a shot of 5.4 s. Its last second is said over the centre, and it pushes the last line of the place past the end of the place.",
+            "replace": [
+              {
+                "text": "The herds drink. None of them looks down."
+              },
+              {
+                "text": "The herds come to drink. None looks down."
+              }
+            ]
+          }
+        },
+        {
+          "text": "The center has no floor. Something there looks back.",
+          "at": {
+            "film": 152.9
+          },
+          "on": [
+            "eye-05"
+          ],
+          "mark": {
+            "kind": "tight",
+            "why": "6.0 s in a shot of 6.3 s, the last of the place, and only if the line before it is shortened. On paper it then fits with 0.2 s to spare. If the read comes out long, its last word is said over the first frames of the Reveal.",
+            "replace": [
+              {
+                "text": "The center has no floor. Something looks back."
+              },
+              {
+                "text": "No floor at the center. Something looks back."
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "n8",
+      "name": "reveal",
+      "unit": "reveal",
+      "lines": [
+        {
+          "text": "From high enough, the land has a shape.",
+          "at": {
+            "film": 160.5
+          },
+          "on": [
+            "reveal-01"
+          ],
+          "mark": {
+            "kind": "length",
+            "why": "4.3 s where 2.8 s are free. It cannot start before the camera has left the water, about 2:40.5, and the line after it has to be out before the strike at 2:47.1. Whole, it fits only from 2:39.0, on the water, where \"from high enough\" would be said at lake level.",
+            "replace": [
+              {
+                "text": "The land has a shape."
+              },
+              {
+                "text": "From above, a shape."
+              }
+            ]
+          }
+        },
+        {
+          "text": "None of it was ever land.",
+          "at": {
+            "film": 163.35
+          },
+          "on": [
+            "reveal-01"
+          ],
+          "lands": [
+            {
+              "sentence": 1,
+              "strike": "revealHit",
+              "what": "the reveal strike of the music"
+            }
+          ]
+        },
+        {
+          "text": "It was a body.",
+          "at": {
+            "strike": "revealHit"
+          },
+          "on": [
+            "reveal-01"
+          ],
+          "onStrike": true,
+          "lands": [
+            {
+              "sentence": 1,
+              "strike": "revealHit",
+              "what": "the reveal strike of the music"
+            }
+          ],
+          "note": "Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"body\" should fall on the strike instead, the line starts about 0.6 s earlier."
+        },
+        {
+          "text": "Everything here feeds on it. And it is not finished.",
+          "at": {
+            "film": 177.0
+          },
+          "on": [
+            "reveal-01"
+          ],
+          "lands": [
+            {
+              "sentence": 2,
+              "strike": "finalHit",
+              "what": "the beat where the Heart's glow pulses once on the body"
+            }
+          ],
+          "note": "Placed where the approved script had its last line. It can sit up to 5 s later if the beat should answer \"not finished\"."
+        }
+      ]
+    }
+  ],
+  "unnamed": [
+    {
+      "shot": "heart-05",
+      "what": "The vessel mouth and the lava fall: 7.2 s with no line, under the biggest peak of the music at 1:06.8. I would leave it without words."
+    },
+    {
+      "shot": "marsh-02",
+      "what": "The stalks. Line n5.2 is said over them and no line names them. Both replacements for n5.2 do."
+    },
+    {
+      "shot": "spine-02",
+      "what": "The kites streaming from the spire. The end of n6.2 and the start of n6.3 are said over them."
+    },
+    {
+      "shot": "spine-03",
+      "what": "The animal the lightning killed. \"Every night the lightning walks it.\" is said over it, which fits in sense, and nothing names the animal."
+    },
+    {
+      "shot": "eye-03",
+      "what": "The skeleton on the lip of the lake. \"Black at the center.\" is said over it."
+    }
+  ],
+  "rules": [
+    "Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s."
+  ]
+}

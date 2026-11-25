@@ -1,0 +1,40 @@
+{
+  "schema": "carcass/music-proof 1",
+  "about": "The before and after of the two spots of laughter taken out of the music, for the Listen part of the review page. The record is audio/records/music-cleaned.md.",
+  "intro": "Two spots of laughter are taken out of the music. The cleaned track is as long as the supplied track to the sample, and outside the two spots no sample differs from it (MEASURED). The supplied file is untouched. The Builder cannot hear, so each spot is here before and after, for the ear.",
+  "spots": [
+    {
+      "id": "spot-1",
+      "name": "The laugh that sounds like a witch",
+      "way": "First choice: only the laugh is taken out. A free separation model finds one voice in this spot, the laugh, and that signal alone is subtracted. Nothing is muted, faded or replaced.",
+      "facts": [
+        "Listener, asked whether it hears laughing: before, yes in 5 of 9 answers. After, yes in 3 of 18. On untouched music beside the spot, yes in 0 of 8. The listener invents things, so this is a hint and not a proof.",
+        "Second pass, MEASURED: the same model run over the cleaned track finds a voice 75 dB lower than before. Its loudest sample is about two of the smallest steps the model can write.",
+        "The spot is 0.27 dB quieter than it was."
+      ],
+      "picture": "out/stills/music/spot-1.png",
+      "pictureCaption": "Spot 1 as a picture of the sound: the supplied track above, the cleaned track below",
+      "clips": [
+        { "file": "spot-1-before.wav", "label": "Before", "what": "the supplied track, 6 s around the spot" },
+        { "file": "spot-1-after.wav", "label": "After", "what": "the cleaned track, the same 6 s" }
+      ]
+    },
+    {
+      "id": "spot-2",
+      "name": "The child laughing",
+      "way": "Second way, because the first choice was not clean: taking out only the lead voice left something the listener still called giggling in 6 of 8 answers. So the model's whole voice signal is taken out for these seconds. The cost: the music's own breathing sound goes with it for 5.4 s, and two held notes drop by 1.6 and 1.9 dB.",
+      "facts": [
+        "Listener, asked whether it hears laughing: after, yes in 0 of 10 answers.",
+        "Second pass, MEASURED: from 2:34.35 to 2:39.75 the model finds a voice 76 dB lower than before. From 2:39.80 it finds a low held tone, the music's own hum, which is left in.",
+        "The spot is 2.1 dB quieter than it was."
+      ],
+      "picture": "out/stills/music/spot-2.png",
+      "pictureCaption": "Spot 2 as a picture of the sound: the supplied track above, the cleaned track below",
+      "clips": [
+        { "file": "spot-2-before.wav", "label": "Before", "what": "the supplied track, 9 s around the spot" },
+        { "file": "spot-2-after.wav", "label": "After", "what": "the cleaned track, the same 9 s. This is what the film plays" },
+        { "file": "spot-2-after-first-choice.wav", "label": "Set aside", "what": "the lighter cut, which keeps the music's breathing. If the laugh is gone to the ear here, say so and this one goes in" }
+      ]
+    }
+  ]
+}

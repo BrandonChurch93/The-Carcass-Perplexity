@@ -61,6 +61,10 @@
   "music": {
     "file": "The-Carcass-Audio.mp3",
     "sha256": "eefe8765b73f35622be8410f063f327902dd0ce5b564688fade5b732afc56b1f",
+    "cleaned": {
+      "file": "audio/cleaned/The-Carcass-Audio-cleaned.flac",
+      "sha256": "80dc10a09c645fc94b91d021050fa0d0520ea2a506d8f0dc2d16a9dd832f7b16"
+    },
     "seconds": 233.51,
     "bpm": 67,
     "barSeconds": 3.58,

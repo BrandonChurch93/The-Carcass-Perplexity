@@ -3,7 +3,7 @@
   "id": "marsh-event",
   "unit": "marsh",
   "kind": "spot",
-  "description": "A large dome of gas swelling up under thick brine and mud, stretching with a low wet groan, then bursting with one heavy wet pop and a spatter of thick drops. Slow and viscous. No music, no voices.",
+  "description": "One huge mud bubble: a slow wet stretching swell, then a single big deep wet blop as it bursts, then thick drops of mud spattering down. Close, wet and heavy.",
   "seconds": 6,
   "promptInfluence": 0.5,
   "loop": false

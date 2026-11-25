@@ -109,5 +109,10 @@
     { "id": "strike-6", "unit": "spine", "at": { "hit": 134.8464 }, "what": "Lightning seen from inside the canal" },
     { "id": "heartbeat", "unit": "reveal", "at": { "landmark": "finalHit" }, "what": "From orbit, the Heart's glow beats once on the body" }
   ],
+  "sounds": [
+    { "id": "heart-bed", "unit": "heart", "kind": "bed", "at": { "shot": "heart-01" }, "frames": 1714, "file": "audio/kept/sounds/heart/heart-bed.wav", "gainDb": -8.5, "fadeInSeconds": 1, "fadeOutSeconds": 1, "loop": true, "event": null },
+    { "id": "heart-life", "unit": "heart", "kind": "spot", "at": { "shot": "heart-02", "plus": 0.3 }, "frames": 420, "file": "audio/kept/sounds/heart/heart-life.wav", "gainDb": -7, "fadeInSeconds": 0.4, "fadeOutSeconds": 1, "loop": false, "event": null },
+    { "id": "heart-event", "unit": "heart", "kind": "spot", "at": { "event": "surge", "plus": -0.033 }, "frames": 213, "file": "audio/kept/sounds/heart/heart-event.wav", "gainDb": -5.5, "fadeInSeconds": 0, "fadeOutSeconds": 2, "loop": false, "event": "surge" }
+  ],
   "mix": { "voiceGainDb": 1.5 }
 }

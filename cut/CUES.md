@@ -9,7 +9,7 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 | frames | 11861 |
 | seconds | 197.68 |
 | frames a second | 60 |
-| music file | audio/supplied/The-Carcass-Audio.mp3 |
+| music file | audio/cleaned/The-Carcass-Audio-cleaned.flac |
 | titan frame | 10027 (2:47.07) |
 | cut in the music | from bar line 48 at 174.2365 s to bar line 58 at 210.0577 s |
 | cut in the music, in the film | frame 10454, 174.23 s (2:54.14) |
@@ -119,7 +119,11 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 
 ## Sounds
 
-none yet
+| id | unit | kind | first frame | time code | length s | level dB | fade in s | fade out s | loop | file |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| heart-bed | heart | bed | 2507 | 0:41.47 | 28.57 | -8.5 | 1 | 1 | yes | audio/kept/sounds/heart/heart-bed.wav |
+| heart-life | heart | spot | 2955 | 0:49.15 | 7 | -7 | 0.4 | 1 | no | audio/kept/sounds/heart/heart-life.wav |
+| heart-event | heart | spot | 4008 | 1:06.48 | 3.55 | -5.5 | 0 | 2 | no | audio/kept/sounds/heart/heart-event.wav |
 
 ## The music as placed
 

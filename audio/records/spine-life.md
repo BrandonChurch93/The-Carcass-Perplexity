@@ -1,0 +1,13 @@
+## spine-life
+Made by: tools/sound.mjs, POST https://api.elevenlabs.io/v1/sound-generation?output_format=mp3_44100_192, model eleven_text_to_sound_v3
+Text or description: "A herd of large shaggy creatures sheltering inside an echoing stone tunnel: huddled slow breathing, soft huffs, and bodies shuffling against each other and the rock, with wind muffled outside. Low and breathy, close echo. No roars, no bleating. No music, no voices."
+Settings: duration_seconds 8, prompt_influence 0.5, loop not sent (the default is false), output format mp3_44100_192, no seed (the endpoint takes none)
+Takes: 1 made, take 1 kept. Take 1 was kept: the only take, with no fault by measure.
+Measured: 8.00 s, -40.62 LUFS, true peak -23.18 dB, 2 channels, 0.14 s of silence at the head and 0.59 s at the tail, no clipping as returned. As filed: 7.31 s, gain 24.71 dB, -16.02 LUFS, true peak -1.94 dB, 48000 Hz, 16 bit
+The listener: call 1: "Based on the audio clip, here is a description of what can be heard: **Primary Sounds:** 1. **Heavy Breathing/Wind:** The clip opens with a loud, sweeping sound that resembles a deep, sharp intake of breath. It has a slightly echoing or airy quality, making it sound almost like a gust of wind. A heavy exhalation follows shortly after. 2. **Crunching Footsteps:** Immediately after the initial \"breath,\" a rhythmic crunching sound begins. It sounds exactly like heavy footsteps walking at a steady pace over a textured surface, such as packed snow, ice, or loose gravel. **Overall Atmosphere:** The combination of the heavy, wind-like breathing and the isolated crunching footsteps creates a cold, desolate, and slightly suspenseful or eerie atmosphere." call 2: "Based on the audio recording, here is a description of what can be heard: * **Heavy Breathing/Wind:** The recording begins and ends with a deep, hollow, rushing sound. It sounds like a forceful exhalation of breath close to a microphone, or a gust of wind. * **Crunching Footsteps:** Throughout the middle of the recording, there is a rhythmic, gritty crunching sound. This strongly resembles the sound of heavy footsteps walking on a loose, dry surface, such as gravel, coarse sand, or icy snow."
+Date: 2026-11-25
+
+Files: audio/kept/sounds/spine/spine-life.wav
+Cue: a spot in spine, described in audio/cues/spine-life.json
+Level chain: silence cut to 20 ms at each end with a fade of 10 ms in and 50 ms out, then a gain toward -16 LUFS and a limiter that holds the true peak at or under -1.5 dB, no dither
+Take 1: 8.00 s, -40.62 LUFS, true peak -23.18 dB, 2 channels, 0.14 s of silence at the head and 0.59 s at the tail, no clipping as returned. As filed: 7.31 s, gain 24.71 dB, -16.02 LUFS, true peak -1.94 dB. Take 1 was kept: the only take, with no fault by measure.

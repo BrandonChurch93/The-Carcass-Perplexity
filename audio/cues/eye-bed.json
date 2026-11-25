@@ -3,7 +3,7 @@
   "id": "eye-bed",
   "unit": "eye",
   "kind": "bed",
-  "description": "Near silence at the shore of a still mountain lake: a faint soft tone of open air and tiny gentle laps of water on a stony shore. Continuous, very quiet and calm ambience. No wind gusts, no birds, no insects. No music, no voices.",
+  "description": "Tiny gentle wavelets lapping on pebbles at the edge of a still lake: slow and sparse, one soft lap every few seconds, with long near silent pauses between. Very quiet, calm and close.",
   "seconds": 20,
   "promptInfluence": 0.4,
   "loop": true

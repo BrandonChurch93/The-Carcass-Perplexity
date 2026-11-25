@@ -3,7 +3,7 @@
   "id": "breath-event",
   "unit": "breath",
   "kind": "spot",
-  "description": "Heavy vapour pouring over a rock rim and sliding down a slope: one long soft sliding sigh of air and mist, rising gently and then thinning out. Smooth and breathy. No water splashing. No music, no voices.",
+  "description": "One long slow sigh of air: a giant breathing out, a dry breathy whoosh of air through a wide stone pipe that rises gently and then thins away. Airy, hollow and soft.",
   "seconds": 8,
   "promptInfluence": 0.5,
   "loop": false

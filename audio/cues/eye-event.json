@@ -3,7 +3,7 @@
   "id": "eye-event",
   "unit": "eye",
   "kind": "spot",
-  "description": "Still lake water slowly doming upward at its centre as something vast pushes from below: a deep muffled swell, a low underwater rumble that rises and then settles, with a soft wash of water at the end. Deep and soft. No splash. No music, no voices.",
+  "description": "A deep muffled swell under water: one slow, very low, soft whoomp of a huge mass moving far below the surface, rising and then settling. Dull, dark and gentle, low pitched only.",
   "seconds": 7,
   "promptInfluence": 0.5,
   "loop": false

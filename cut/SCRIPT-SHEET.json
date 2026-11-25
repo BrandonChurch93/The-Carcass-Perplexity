@@ -1,0 +1,3315 @@
+{
+  "schema": "carcass/script-sheet 1",
+  "fps": 60,
+  "pause": 0.6,
+  "estimate": {
+    "secondsPerCharacter": 0.105,
+    "secondsPerStop": 0.5,
+    "secondsPerComma": 0.2,
+    "minSeconds": 0.9
+  },
+  "miss": 0.44,
+  "spillLimit": 0.5,
+  "strikes": [
+    {
+      "name": "firstHit",
+      "film": 17.37,
+      "from": 17.22,
+      "to": 17.87
+    },
+    {
+      "name": "midHit",
+      "film": 102.63,
+      "from": 102.48,
+      "to": 103.13
+    },
+    {
+      "name": "revealHit",
+      "film": 167.12,
+      "from": 166.97,
+      "to": 167.62
+    },
+    {
+      "name": "finalHit",
+      "film": 188.9,
+      "from": 188.75,
+      "to": 189.4
+    }
+  ],
+  "clips": [
+    {
+      "id": "n1",
+      "name": "opening",
+      "unit": "ribs",
+      "place": "The Ribs, with the opening",
+      "title": "The opening",
+      "from": 0,
+      "to": 17.37,
+      "lines": 4,
+      "characters": 111,
+      "seconds": 11.87,
+      "approvedCharacters": 103,
+      "approvedSeconds": 11.48
+    },
+    {
+      "id": "n2",
+      "name": "ribs",
+      "unit": "ribs",
+      "place": "The Ribs, with the opening",
+      "title": "The Ribs",
+      "from": 17.37,
+      "to": 41.78,
+      "lines": 4,
+      "characters": 213,
+      "seconds": 24.08,
+      "approvedCharacters": 180,
+      "approvedSeconds": 20.6
+    },
+    {
+      "id": "n3",
+      "name": "heart",
+      "unit": "heart",
+      "place": "The Heart",
+      "title": "The Heart",
+      "from": 41.78,
+      "to": 70.35,
+      "lines": 4,
+      "characters": 161,
+      "seconds": 17.82,
+      "approvedCharacters": 149,
+      "approvedSeconds": 16.55
+    },
+    {
+      "id": "n4",
+      "name": "breath",
+      "unit": "breath",
+      "place": "The Breath",
+      "title": "The Breath",
+      "from": 70.35,
+      "to": 93.63,
+      "lines": 4,
+      "characters": 166,
+      "seconds": 19.35,
+      "approvedCharacters": 165,
+      "approvedSeconds": 19.02
+    },
+    {
+      "id": "n5",
+      "name": "marsh",
+      "unit": "marsh",
+      "place": "The Blood Marsh",
+      "title": "The Blood Marsh",
+      "from": 93.63,
+      "to": 116.92,
+      "lines": 4,
+      "characters": 148,
+      "seconds": 16.74,
+      "approvedCharacters": 132,
+      "approvedSeconds": 15.06
+    },
+    {
+      "id": "n6",
+      "name": "spine",
+      "unit": "spine",
+      "place": "The Spine",
+      "title": "The Spine",
+      "from": 116.92,
+      "to": 138.42,
+      "lines": 4,
+      "characters": 156,
+      "seconds": 17.59,
+      "approvedCharacters": 146,
+      "approvedSeconds": 16.53
+    },
+    {
+      "id": "n7",
+      "name": "eye",
+      "unit": "eye",
+      "place": "The Eye",
+      "title": "The Eye",
+      "from": 138.42,
+      "to": 159.02,
+      "lines": 4,
+      "characters": 163,
+      "seconds": 19.13,
+      "approvedCharacters": 144,
+      "approvedSeconds": 17.12
+    },
+    {
+      "id": "n8",
+      "name": "reveal",
+      "unit": "reveal",
+      "place": "The Reveal, the pull-back from the lake to orbit",
+      "title": "The Reveal",
+      "from": 159.02,
+      "to": 197.68,
+      "lines": 4,
+      "characters": 130,
+      "seconds": 14.36,
+      "approvedCharacters": 88,
+      "approvedSeconds": 9.74
+    }
+  ],
+  "rows": [
+    {
+      "id": "n1.1",
+      "clip": "n1",
+      "line": 1,
+      "unit": "ribs",
+      "first": 84,
+      "text": "Past the last calm water, there is a shore.",
+      "characters": 43,
+      "start": 1.4,
+      "seconds": 4.72,
+      "end": 6.12,
+      "room": 17.37,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "ribs-01",
+          "seconds": 4.72
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Past the last calm water, there is a shore.",
+          "from": 1.4,
+          "to": 6.11
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-01",
+          "label": "The Ribs · the approach from the sea, one shot up to the first strike",
+          "from": 0,
+          "to": 17.37,
+          "seconds": 4.72,
+          "picture": "ribs-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n1-1-ribs-01-0038.jpg",
+          "label": "ribs-01 at 0:03.8 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "approved key picture ribs-0, which falls at 0:20.7",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n1.2",
+      "clip": "n1",
+      "line": 2,
+      "unit": "ribs",
+      "first": 432,
+      "text": "Nothing on it has a name.",
+      "characters": 25,
+      "start": 7.2,
+      "seconds": 2.63,
+      "end": 9.82,
+      "room": 17.37,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "ribs-01",
+          "seconds": 2.62
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Nothing on it has a name.",
+          "from": 7.2,
+          "to": 9.82
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-01",
+          "label": "The Ribs · the approach from the sea, one shot up to the first strike",
+          "from": 0,
+          "to": 17.37,
+          "seconds": 2.62,
+          "picture": "ribs-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n1-2-ribs-01-0085.jpg",
+          "label": "ribs-01 at 0:08.5 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "approved key picture ribs-0, which falls at 0:20.7",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n1.3",
+      "clip": "n1",
+      "line": 3,
+      "unit": "ribs",
+      "first": 654,
+      "text": "Nothing on it should be alive.",
+      "characters": 30,
+      "start": 10.9,
+      "seconds": 3.15,
+      "end": 14.05,
+      "room": 17.37,
+      "spill": 0,
+      "spare": 1.2,
+      "parts": [
+        {
+          "id": "ribs-01",
+          "seconds": 3.15
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Nothing on it should be alive.",
+          "from": 10.9,
+          "to": 14.05
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-01",
+          "label": "The Ribs · the approach from the sea, one shot up to the first strike",
+          "from": 0,
+          "to": 17.37,
+          "seconds": 3.15,
+          "picture": "ribs-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n1-3-ribs-01-0125.jpg",
+          "label": "ribs-01 at 0:12.5 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "approved key picture ribs-0, which falls at 0:20.7",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n1.4",
+      "clip": "n1",
+      "line": 4,
+      "unit": "ribs",
+      "first": 918,
+      "text": "All of it is.",
+      "characters": 13,
+      "start": 15.3,
+      "seconds": 1.37,
+      "end": 16.67,
+      "room": 17.37,
+      "spill": 0,
+      "spare": 0.55,
+      "parts": [
+        {
+          "id": "ribs-01",
+          "seconds": 1.36
+        }
+      ],
+      "sentences": [
+        {
+          "text": "All of it is.",
+          "from": 15.3,
+          "to": 16.67
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-01",
+          "label": "The Ribs · the approach from the sea, one shot up to the first strike",
+          "from": 0,
+          "to": 17.37,
+          "seconds": 1.36,
+          "picture": "ribs-0"
+        }
+      ],
+      "lands": [
+        "\"All of it is.\" ends 0.7 s before the first strike of the music, where the strait opens at 0:17.4."
+      ],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n1-4-ribs-01-0160.jpg",
+          "label": "ribs-01 at 0:16.0 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "approved key picture ribs-0, which falls at 0:20.7",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n2.1",
+      "clip": "n2",
+      "line": 1,
+      "unit": "ribs",
+      "first": 1074,
+      "text": "The strait.",
+      "characters": 11,
+      "start": 17.9,
+      "seconds": 1.16,
+      "end": 19.06,
+      "room": 6.63,
+      "spill": 0,
+      "spare": 0.76,
+      "parts": [
+        {
+          "id": "ribs-02",
+          "seconds": 1.16
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The strait.",
+          "from": 17.9,
+          "to": 19.06
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-02"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-02",
+          "label": "The Ribs · the strait",
+          "from": 17.37,
+          "to": 24,
+          "seconds": 1.16,
+          "picture": "ribs-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "ribs-02 · approved key picture ribs-0",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n2.2",
+      "clip": "n2",
+      "line": 2,
+      "unit": "ribs",
+      "first": 1180,
+      "text": "Blades of stone, taller than the storms that break on them.",
+      "characters": 59,
+      "start": 19.66,
+      "seconds": 6.4,
+      "end": 26.06,
+      "room": 6.63,
+      "spill": 2.05,
+      "spare": null,
+      "parts": [
+        {
+          "id": "ribs-02",
+          "seconds": 4.34
+        },
+        {
+          "id": "ribs-03",
+          "seconds": 2.05
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Blades of stone, taller than the storms that break on them.",
+          "from": 19.66,
+          "to": 26.06
+        }
+      ],
+      "verdict": "too long",
+      "faults": [
+        "it has 2.1 s off its picture (2.1 s on ribs-03)",
+        "it pushes n2.3 from 0:24.4 to 0:26.7, where n2.3 has 1.9 s off its picture (1.9 s on ribs-05)",
+        "it pushes n2.4 from 0:32.3 to 0:33.6, where n2.4 ends 0.62 s after its place ends at 0:41.8 and has 0.6 s off its picture (0.6 s on heart-01)"
+      ],
+      "on": [
+        "ribs-02"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-02",
+          "label": "The Ribs · the strait",
+          "from": 17.37,
+          "to": 24,
+          "seconds": 4.34,
+          "picture": "ribs-0"
+        },
+        {
+          "id": "ribs-03",
+          "label": "The Ribs · the colony",
+          "from": 24,
+          "to": 27.53,
+          "seconds": 2.05,
+          "picture": "ribs-3"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "length",
+        "why": "6.4 s, and the strait has 4.3 s left after \"The strait.\" and its pause. As written, its last 2 s are said over the colony, and it pushes the feeding line off the feeders.",
+        "replace": [
+          {
+            "text": "Stone blades, taller than the storms.",
+            "characters": 37,
+            "start": 19.66,
+            "seconds": 4.09,
+            "end": 23.75,
+            "room": 6.63,
+            "spill": 0,
+            "spare": 0.75,
+            "parts": [
+              {
+                "id": "ribs-02",
+                "seconds": 4.09
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Stone blades, taller than the storms.",
+                "from": 19.66,
+                "to": 23.75
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "Stone blades. Storms break on them.",
+            "characters": 35,
+            "start": 19.66,
+            "seconds": 4.18,
+            "end": 23.84,
+            "room": 6.63,
+            "spill": 0,
+            "spare": 0.66,
+            "parts": [
+              {
+                "id": "ribs-02",
+                "seconds": 4.18
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Stone blades.",
+                "from": 19.66,
+                "to": 21.03
+              },
+              {
+                "text": "Storms break on them.",
+                "from": 21.63,
+                "to": 23.83
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-ribs-0.jpg",
+          "label": "ribs-02 · approved key picture ribs-0",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-3.jpg",
+          "label": "ribs-03 · approved key picture ribs-3",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n2.3",
+      "clip": "n2",
+      "line": 3,
+      "unit": "ribs",
+      "first": 1462,
+      "text": "At low tide the winged ones come down to feed. They do not have long.",
+      "characters": 69,
+      "start": 24.36,
+      "seconds": 7.75,
+      "end": 32.1,
+      "room": 7.12,
+      "spill": 0.99,
+      "spare": null,
+      "parts": [
+        {
+          "id": "ribs-03",
+          "seconds": 3.17
+        },
+        {
+          "id": "ribs-04",
+          "seconds": 3.58
+        },
+        {
+          "id": "ribs-05",
+          "seconds": 0.99
+        }
+      ],
+      "sentences": [
+        {
+          "text": "At low tide the winged ones come down to feed.",
+          "from": 24.36,
+          "to": 29.19
+        },
+        {
+          "text": "They do not have long.",
+          "from": 29.8,
+          "to": 32.1
+        }
+      ],
+      "verdict": "too long",
+      "faults": [
+        "it has 1.0 s off its picture (1.0 s on ribs-05)"
+      ],
+      "on": [
+        "ribs-03",
+        "ribs-04"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-03",
+          "label": "The Ribs · the colony",
+          "from": 24,
+          "to": 27.53,
+          "seconds": 3.17,
+          "picture": "ribs-3"
+        },
+        {
+          "id": "ribs-04",
+          "label": "The Ribs · the feeders at low tide",
+          "from": 27.53,
+          "to": 31.12,
+          "seconds": 3.58,
+          "picture": "ribs-2"
+        },
+        {
+          "id": "ribs-05",
+          "label": "The Ribs · the camera looks up at the drowned",
+          "from": 31.12,
+          "to": 38.25,
+          "seconds": 0.99,
+          "picture": "ribs-1"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "length",
+        "why": "7.8 s over two shots that last 7.1 s together, the colony and the feeders. Its last second is said over the drowned, the picture of the next line.",
+        "replace": [
+          {
+            "text": "At low tide the winged ones feed. They do not have long.",
+            "characters": 56,
+            "start": 24.36,
+            "seconds": 6.38,
+            "end": 30.74,
+            "room": 7.12,
+            "spill": 0,
+            "spare": 0.87,
+            "parts": [
+              {
+                "id": "ribs-03",
+                "seconds": 3.17
+              },
+              {
+                "id": "ribs-04",
+                "seconds": 3.21
+              }
+            ],
+            "sentences": [
+              {
+                "text": "At low tide the winged ones feed.",
+                "from": 24.36,
+                "to": 27.83
+              },
+              {
+                "text": "They do not have long.",
+                "from": 28.43,
+                "to": 30.74
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "At low tide the winged ones come down to feed. Not for long.",
+            "characters": 60,
+            "start": 24.36,
+            "seconds": 6.8,
+            "end": 31.16,
+            "room": 7.12,
+            "spill": 0.04,
+            "spare": 0.45,
+            "parts": [
+              {
+                "id": "ribs-03",
+                "seconds": 3.17
+              },
+              {
+                "id": "ribs-04",
+                "seconds": 3.58
+              },
+              {
+                "id": "ribs-05",
+                "seconds": 0.04
+              }
+            ],
+            "sentences": [
+              {
+                "text": "At low tide the winged ones come down to feed.",
+                "from": 24.36,
+                "to": 29.19
+              },
+              {
+                "text": "Not for long.",
+                "from": 29.8,
+                "to": 31.16
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "note": "Keeps \"come down\", and leaves about half the room to spare that the first one leaves.",
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-ribs-3.jpg",
+          "label": "ribs-03 · approved key picture ribs-3",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-2.jpg",
+          "label": "ribs-04 · approved key picture ribs-2",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n2.4",
+      "clip": "n2",
+      "line": 4,
+      "unit": "ribs",
+      "first": 1938,
+      "text": "High in the weed hangs one that stayed. Then the sea returns. All at once.",
+      "characters": 74,
+      "start": 32.3,
+      "seconds": 8.77,
+      "end": 41.07,
+      "room": 10.67,
+      "spill": 0,
+      "spare": 0.71,
+      "parts": [
+        {
+          "id": "ribs-05",
+          "seconds": 5.95
+        },
+        {
+          "id": "ribs-06",
+          "seconds": 2.82
+        }
+      ],
+      "sentences": [
+        {
+          "text": "High in the weed hangs one that stayed.",
+          "from": 32.3,
+          "to": 36.39
+        },
+        {
+          "text": "Then the sea returns.",
+          "from": 37,
+          "to": 39.21
+        },
+        {
+          "text": "All at once.",
+          "from": 39.81,
+          "to": 41.07
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "ribs-05",
+        "ribs-06"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "ribs-05",
+          "label": "The Ribs · the camera looks up at the drowned",
+          "from": 31.12,
+          "to": 38.25,
+          "seconds": 5.95,
+          "picture": "ribs-1"
+        },
+        {
+          "id": "ribs-06",
+          "label": "The Ribs · the bore comes through the cage",
+          "from": 38.25,
+          "to": 41.78,
+          "seconds": 2.82,
+          "picture": "ribs-4"
+        }
+      ],
+      "lands": [
+        "\"High in the weed hangs one that stayed.\" falls wholly on ribs-05, the camera looks up at the drowned.",
+        "\"All at once.\" runs from 0:39.8 to 0:41.1, across the hit where the bore comes through the cage at 0:40.0."
+      ],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-ribs-1.jpg",
+          "label": "ribs-05 · approved key picture ribs-1",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-ribs-4.jpg",
+          "label": "ribs-06 · approved key picture ribs-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n3.1",
+      "clip": "n3",
+      "line": 1,
+      "unit": "heart",
+      "first": 2550,
+      "text": "The fire.",
+      "characters": 9,
+      "start": 42.5,
+      "seconds": 0.95,
+      "end": 43.45,
+      "room": 7.17,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "heart-01",
+          "seconds": 0.95
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The fire.",
+          "from": 42.5,
+          "to": 43.45
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "heart-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "heart-01",
+          "label": "The Heart · the lava lake at nightfall",
+          "from": 41.78,
+          "to": 48.95,
+          "seconds": 0.95,
+          "picture": "heart-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n3-1-heart-01-0430.jpg",
+          "label": "heart-01 at 0:43.0 · the Heart review clip, final tier",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n3.2",
+      "clip": "n3",
+      "line": 2,
+      "unit": "heart",
+      "first": 2658,
+      "text": "A lake of it, under a black skin.",
+      "characters": 33,
+      "start": 44.3,
+      "seconds": 3.67,
+      "end": 47.97,
+      "room": 7.17,
+      "spill": 0,
+      "spare": 1.48,
+      "parts": [
+        {
+          "id": "heart-01",
+          "seconds": 3.66
+        }
+      ],
+      "sentences": [
+        {
+          "text": "A lake of it, under a black skin.",
+          "from": 44.3,
+          "to": 47.97
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "heart-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "heart-01",
+          "label": "The Heart · the lava lake at nightfall",
+          "from": 41.78,
+          "to": 48.95,
+          "seconds": 3.66,
+          "picture": "heart-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n3-2-heart-01-0461.jpg",
+          "label": "heart-01 at 0:46.1 · the Heart review clip, final tier",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n3.3",
+      "clip": "n3",
+      "line": 3,
+      "unit": "heart",
+      "first": 2964,
+      "text": "The tall ones walk the skin, and drink from the cracks.",
+      "characters": 55,
+      "start": 49.4,
+      "seconds": 5.98,
+      "end": 55.38,
+      "room": 7.3,
+      "spill": 0,
+      "spare": 1.32,
+      "parts": [
+        {
+          "id": "heart-02",
+          "seconds": 5.98
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The tall ones walk the skin, and drink from the cracks.",
+          "from": 49.4,
+          "to": 55.38
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "heart-02"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "heart-02",
+          "label": "The Heart · the tall ones walk the skin",
+          "from": 48.95,
+          "to": 56.25,
+          "seconds": 5.98,
+          "picture": "heart-3"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n3-3-heart-02-0524.jpg",
+          "label": "heart-02 at 0:52.4 · the Heart review clip, final tier",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n3.4",
+      "clip": "n3",
+      "line": 4,
+      "unit": "heart",
+      "first": 3381,
+      "text": "Sometimes the skin gives way. The fire beneath has never cooled.",
+      "characters": 64,
+      "start": 56.35,
+      "seconds": 7.22,
+      "end": 63.57,
+      "room": 6.93,
+      "spill": 0.39,
+      "spare": 0.11,
+      "parts": [
+        {
+          "id": "heart-03",
+          "seconds": 3.3
+        },
+        {
+          "id": "heart-04",
+          "seconds": 3.53
+        },
+        {
+          "id": "heart-05",
+          "seconds": 0.39
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Sometimes the skin gives way.",
+          "from": 56.35,
+          "to": 59.4
+        },
+        {
+          "text": "The fire beneath has never cooled.",
+          "from": 60,
+          "to": 63.57
+        }
+      ],
+      "verdict": "tight",
+      "faults": [],
+      "on": [
+        "heart-03",
+        "heart-04"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "heart-03",
+          "label": "The Heart · the fire under the skin",
+          "from": 56.25,
+          "to": 59.65,
+          "seconds": 3.3,
+          "picture": "heart-1"
+        },
+        {
+          "id": "heart-04",
+          "label": "The Heart · the one that sank",
+          "from": 59.65,
+          "to": 63.18,
+          "seconds": 3.53,
+          "picture": "heart-2"
+        },
+        {
+          "id": "heart-05",
+          "label": "The Heart · the vessel mouth and the lava fall, no voice",
+          "from": 63.18,
+          "to": 70.35,
+          "seconds": 0.39,
+          "picture": "heart-4"
+        }
+      ],
+      "lands": [
+        "\"Sometimes the skin gives way.\" does not fall on heart-04, the one that sank: it runs from 0:56.4 to 0:59.4 and the shot from 0:59.6 to 1:03.2.",
+        "\"The fire beneath has never cooled.\" does not fall on heart-03, the fire under the skin: it runs from 1:00.0 to 1:03.6 and the shot from 0:56.3 to 0:59.6."
+      ],
+      "mark": {
+        "kind": "picture",
+        "why": "Its two sentences fall on each other's pictures. The cut shows the fire under the skin first and the one that sank second; the line says the skin gives way first and the fire second. It is also tight: 7.2 s over two shots of 6.9 s.",
+        "replace": [
+          {
+            "text": "The fire has never cooled. Sometimes the skin gives way.",
+            "characters": 56,
+            "start": 56.35,
+            "seconds": 6.38,
+            "end": 62.73,
+            "room": 6.93,
+            "spill": 0,
+            "spare": 0.95,
+            "parts": [
+              {
+                "id": "heart-03",
+                "seconds": 3.3
+              },
+              {
+                "id": "heart-04",
+                "seconds": 3.08
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The fire has never cooled.",
+                "from": 56.35,
+                "to": 59.08
+              },
+              {
+                "text": "Sometimes the skin gives way.",
+                "from": 59.68,
+                "to": 62.73
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": [
+              "\"The fire has never cooled.\" falls wholly on heart-03, the fire under the skin.",
+              "\"Sometimes the skin gives way.\" falls wholly on heart-04, the one that sank."
+            ]
+          },
+          {
+            "text": "The fire beneath has never cooled. Sometimes the skin gives way.",
+            "characters": 64,
+            "start": 55.98,
+            "seconds": 7.22,
+            "end": 63.2,
+            "room": 6.93,
+            "spill": 0.29,
+            "spare": 0.21,
+            "parts": [
+              {
+                "id": "heart-02",
+                "seconds": 0.27
+              },
+              {
+                "id": "heart-03",
+                "seconds": 3.4
+              },
+              {
+                "id": "heart-04",
+                "seconds": 3.53
+              },
+              {
+                "id": "heart-05",
+                "seconds": 0.02
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The fire beneath has never cooled.",
+                "from": 55.98,
+                "to": 59.55
+              },
+              {
+                "text": "Sometimes the skin gives way.",
+                "from": 60.15,
+                "to": 63.2
+              }
+            ],
+            "verdict": "tight",
+            "faults": [],
+            "note": "Your own words in the other order. Tight: it has to start in the last quarter second of the shot before.",
+            "lands": [
+              "\"Sometimes the skin gives way.\" falls wholly on heart-04, the one that sank."
+            ]
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n3-4-heart-03-0580.jpg",
+          "label": "heart-03 at 0:58.0 · the Heart review clip, final tier",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/n3-4-heart-04-0614.jpg",
+          "label": "heart-04 at 1:01.4 · the Heart review clip, final tier",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n4.1",
+      "clip": "n4",
+      "line": 1,
+      "unit": "breath",
+      "first": 4257,
+      "text": "The pits.",
+      "characters": 9,
+      "start": 70.95,
+      "seconds": 0.95,
+      "end": 71.9,
+      "room": 6.27,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "breath-01",
+          "seconds": 0.94
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The pits.",
+          "from": 70.95,
+          "to": 71.9
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "breath-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "breath-01",
+          "label": "The Breath · the shelf at dawn",
+          "from": 70.35,
+          "to": 76.62,
+          "seconds": 0.94,
+          "picture": "breath-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": "The shot is the shelf with one pit steaming on it. The line says pits.",
+      "pictures": [
+        {
+          "file": "out/stills/script/key-breath-0.jpg",
+          "label": "breath-01 · approved key picture breath-0",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n4.2",
+      "clip": "n4",
+      "line": 2,
+      "unit": "breath",
+      "first": 4368,
+      "text": "The ground breathes here. Slow. From far below.",
+      "characters": 47,
+      "start": 72.8,
+      "seconds": 5.94,
+      "end": 78.74,
+      "room": 10.75,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "breath-01",
+          "seconds": 3.82
+        },
+        {
+          "id": "breath-02",
+          "seconds": 2.12
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The ground breathes here.",
+          "from": 72.8,
+          "to": 75.43
+        },
+        {
+          "text": "Slow.",
+          "from": 76.03,
+          "to": 76.55
+        },
+        {
+          "text": "From far below.",
+          "from": 77.16,
+          "to": 78.74
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "breath-01",
+        "breath-02"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "breath-01",
+          "label": "The Breath · the shelf at dawn",
+          "from": 70.35,
+          "to": 76.62,
+          "seconds": 3.82,
+          "picture": "breath-0"
+        },
+        {
+          "id": "breath-02",
+          "label": "The Breath · down the shaft, it breathes out",
+          "from": 76.62,
+          "to": 81.1,
+          "seconds": 2.12,
+          "picture": "breath-4"
+        }
+      ],
+      "lands": [
+        "\"From far below.\" falls wholly on breath-02, down the shaft, it breathes out.",
+        "\"From far below.\" runs from 1:17.2 to 1:18.7, across the hit where the shaft breathes out at 1:17.5."
+      ],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-breath-0.jpg",
+          "label": "breath-01 · approved key picture breath-0",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-breath-4.jpg",
+          "label": "breath-02 · approved key picture breath-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n4.3",
+      "clip": "n4",
+      "line": 3,
+      "unit": "breath",
+      "first": 4872,
+      "text": "Red growth crowds the rim, feeding on the breath.",
+      "characters": 49,
+      "start": 81.2,
+      "seconds": 5.35,
+      "end": 86.55,
+      "room": 3.58,
+      "spill": 1.86,
+      "spare": null,
+      "parts": [
+        {
+          "id": "breath-03",
+          "seconds": 3.48
+        },
+        {
+          "id": "breath-04",
+          "seconds": 1.86
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Red growth crowds the rim, feeding on the breath.",
+          "from": 81.2,
+          "to": 86.55
+        }
+      ],
+      "verdict": "too long",
+      "faults": [
+        "it has 1.9 s off its picture (1.9 s on breath-04)",
+        "it pushes n4.4 from 1:25.1 to 1:27.1, where n4.4 ends 1.54 s after its place ends at 1:33.6 and has 1.5 s off its picture (1.5 s on marsh-01)"
+      ],
+      "on": [
+        "breath-03"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "breath-03",
+          "label": "The Breath · the red weed at the rim",
+          "from": 81.1,
+          "to": 84.68,
+          "seconds": 3.48,
+          "picture": "breath-3"
+        },
+        {
+          "id": "breath-04",
+          "label": "The Breath · the pale herds",
+          "from": 84.68,
+          "to": 90.05,
+          "seconds": 1.86,
+          "picture": "breath-1"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "length",
+        "why": "5.3 s on a shot of 3.6 s. Whole, it fits only if it starts at 1:19.3, and then its first 1.8 s are said over the shaft, before the red growth is on screen.",
+        "replace": [
+          {
+            "text": "Red growth feeds on the breath.",
+            "characters": 31,
+            "start": 81.2,
+            "seconds": 3.26,
+            "end": 84.46,
+            "room": 3.58,
+            "spill": 0,
+            "spare": 0.55,
+            "parts": [
+              {
+                "id": "breath-03",
+                "seconds": 3.25
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Red growth feeds on the breath.",
+                "from": 81.2,
+                "to": 84.46
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "Red growth crowds the rim.",
+            "characters": 26,
+            "start": 81.2,
+            "seconds": 2.73,
+            "end": 83.93,
+            "room": 3.58,
+            "spill": 0,
+            "spare": 1.07,
+            "parts": [
+              {
+                "id": "breath-03",
+                "seconds": 2.73
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Red growth crowds the rim.",
+                "from": 81.2,
+                "to": 83.93
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-breath-3.jpg",
+          "label": "breath-03 · approved key picture breath-3",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-breath-1.jpg",
+          "label": "breath-04 · approved key picture breath-1",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n4.4",
+      "clip": "n4",
+      "line": 4,
+      "unit": "breath",
+      "first": 5106,
+      "text": "The pale herds graze the channel, and never the rim. One did.",
+      "characters": 61,
+      "start": 85.1,
+      "seconds": 7.11,
+      "end": 92.21,
+      "room": 8.95,
+      "spill": 0,
+      "spare": 1.42,
+      "parts": [
+        {
+          "id": "breath-04",
+          "seconds": 4.95
+        },
+        {
+          "id": "breath-05",
+          "seconds": 2.16
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The pale herds graze the channel, and never the rim.",
+          "from": 85.1,
+          "to": 90.76
+        },
+        {
+          "text": "One did.",
+          "from": 91.37,
+          "to": 92.2
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "breath-04",
+        "breath-05"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "breath-04",
+          "label": "The Breath · the pale herds",
+          "from": 84.68,
+          "to": 90.05,
+          "seconds": 4.95,
+          "picture": "breath-1"
+        },
+        {
+          "id": "breath-05",
+          "label": "The Breath · the one at the rim",
+          "from": 90.05,
+          "to": 93.63,
+          "seconds": 2.16,
+          "picture": "breath-2"
+        }
+      ],
+      "lands": [
+        "\"One did.\" falls wholly on breath-05, the one at the rim."
+      ],
+      "mark": {
+        "kind": "picture",
+        "why": "It fits for length. But the shot it ends on shows two animals at the rim: the dead one the line means, and behind it a living one with its head down, feeding at the rim, as the line says never the rim.",
+        "replace": [
+          {
+            "text": "The pale herds graze the channel, not the rim. One did. One will.",
+            "characters": 65,
+            "start": 85.1,
+            "seconds": 8.03,
+            "end": 93.13,
+            "room": 8.95,
+            "spill": 0,
+            "spare": 0.5,
+            "parts": [
+              {
+                "id": "breath-04",
+                "seconds": 4.95
+              },
+              {
+                "id": "breath-05",
+                "seconds": 3.08
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The pale herds graze the channel, not the rim.",
+                "from": 85.1,
+                "to": 90.13
+              },
+              {
+                "text": "One did.",
+                "from": 90.74,
+                "to": 91.57
+              },
+              {
+                "text": "One will.",
+                "from": 92.18,
+                "to": 93.12
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": [
+              "\"One did.\" falls wholly on breath-05, the one at the rim.",
+              "\"One will.\" falls wholly on breath-05, the one at the rim."
+            ]
+          },
+          {
+            "text": "The pale herds keep to the channel. One did not. One will not.",
+            "characters": 62,
+            "start": 85.6,
+            "seconds": 7.51,
+            "end": 93.11,
+            "room": 8.95,
+            "spill": 0,
+            "spare": 0.52,
+            "parts": [
+              {
+                "id": "breath-04",
+                "seconds": 4.45
+              },
+              {
+                "id": "breath-05",
+                "seconds": 3.06
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The pale herds keep to the channel.",
+                "from": 85.6,
+                "to": 89.28
+              },
+              {
+                "text": "One did not.",
+                "from": 89.88,
+                "to": 91.14
+              },
+              {
+                "text": "One will not.",
+                "from": 91.74,
+                "to": 93.11
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": [
+              "1.1 s of \"One did not.\" (1.3 s) fall on breath-05, the one at the rim."
+            ]
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-breath-1.jpg",
+          "label": "breath-04 · approved key picture breath-1",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-breath-2.jpg",
+          "label": "breath-05 · approved key picture breath-2",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n5.1",
+      "clip": "n5",
+      "line": 1,
+      "unit": "marsh",
+      "first": 5655,
+      "text": "The red flats.",
+      "characters": 14,
+      "start": 94.25,
+      "seconds": 1.47,
+      "end": 95.72,
+      "room": 3.58,
+      "spill": 0,
+      "spare": 0.61,
+      "parts": [
+        {
+          "id": "marsh-01",
+          "seconds": 1.47
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The red flats.",
+          "from": 94.25,
+          "to": 95.72
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "marsh-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "marsh-01",
+          "label": "The Blood Marsh · the red flats",
+          "from": 93.63,
+          "to": 97.22,
+          "seconds": 1.47,
+          "picture": "marsh-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-marsh-0.jpg",
+          "label": "marsh-01 · approved key picture marsh-0",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n5.2",
+      "clip": "n5",
+      "line": 2,
+      "unit": "marsh",
+      "first": 5781,
+      "text": "The ground still bleeds here. No rain made this.",
+      "characters": 48,
+      "start": 96.35,
+      "seconds": 5.54,
+      "end": 101.89,
+      "room": 10.75,
+      "spill": 0,
+      "spare": 0.58,
+      "parts": [
+        {
+          "id": "marsh-01",
+          "seconds": 0.87
+        },
+        {
+          "id": "marsh-02",
+          "seconds": 3.58
+        },
+        {
+          "id": "marsh-03",
+          "seconds": 1.09
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The ground still bleeds here.",
+          "from": 96.35,
+          "to": 99.4
+        },
+        {
+          "text": "No rain made this.",
+          "from": 100,
+          "to": 101.89
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "marsh-01",
+        "marsh-02",
+        "marsh-03"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "marsh-01",
+          "label": "The Blood Marsh · the red flats",
+          "from": 93.63,
+          "to": 97.22,
+          "seconds": 0.87,
+          "picture": "marsh-0"
+        },
+        {
+          "id": "marsh-02",
+          "label": "The Blood Marsh · the stalks",
+          "from": 97.22,
+          "to": 100.8,
+          "seconds": 3.58,
+          "picture": "marsh-2"
+        },
+        {
+          "id": "marsh-03",
+          "label": "The Blood Marsh · the seep pool bursts",
+          "from": 100.8,
+          "to": 104.38,
+          "seconds": 1.09,
+          "picture": "marsh-1"
+        }
+      ],
+      "lands": [
+        "1.1 s of \"No rain made this.\" (1.9 s) fall on marsh-03, the seep pool bursts.",
+        "\"No rain made this.\" ends 0.7 s before the hit where the seep pool bursts at 1:42.6."
+      ],
+      "mark": {
+        "kind": "picture",
+        "why": "It fits for length, and it has to end before the pool bursts on the music's strike, so it cannot sit later. But 3.6 of its 5.5 s are said over the stalks, which it does not name. The red they stand in is in view; the stalks are what the shot is about. Each replacement names them and keeps one of your two sentences.",
+        "replace": [
+          {
+            "text": "Stalks root in the red. The ground still bleeds.",
+            "characters": 48,
+            "start": 96.45,
+            "seconds": 5.54,
+            "end": 101.99,
+            "room": 10.75,
+            "spill": 0,
+            "spare": 0.48,
+            "parts": [
+              {
+                "id": "marsh-01",
+                "seconds": 0.77
+              },
+              {
+                "id": "marsh-02",
+                "seconds": 3.58
+              },
+              {
+                "id": "marsh-03",
+                "seconds": 1.19
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Stalks root in the red.",
+                "from": 96.45,
+                "to": 98.87
+              },
+              {
+                "text": "The ground still bleeds.",
+                "from": 99.47,
+                "to": 101.99
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": [
+              "1.7 s of \"Stalks root in the red.\" (2.4 s) fall on marsh-02, the stalks.",
+              "\"The ground still bleeds.\" ends 0.6 s before the hit where the seep pool bursts at 1:42.6."
+            ]
+          },
+          {
+            "text": "Stalks root in the red. No rain made this.",
+            "characters": 42,
+            "start": 97.1,
+            "seconds": 4.91,
+            "end": 102.01,
+            "room": 10.75,
+            "spill": 0,
+            "spare": 0.46,
+            "parts": [
+              {
+                "id": "marsh-01",
+                "seconds": 0.12
+              },
+              {
+                "id": "marsh-02",
+                "seconds": 3.58
+              },
+              {
+                "id": "marsh-03",
+                "seconds": 1.21
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Stalks root in the red.",
+                "from": 97.1,
+                "to": 99.52
+              },
+              {
+                "text": "No rain made this.",
+                "from": 100.12,
+                "to": 102.01
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": [
+              "2.3 s of \"Stalks root in the red.\" (2.4 s) fall on marsh-02, the stalks.",
+              "\"No rain made this.\" ends 0.6 s before the hit where the seep pool bursts at 1:42.6."
+            ]
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-marsh-2.jpg",
+          "label": "marsh-02 · approved key picture marsh-2",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-marsh-1.jpg",
+          "label": "marsh-03 · approved key picture marsh-1",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n5.3",
+      "clip": "n5",
+      "line": 3,
+      "unit": "marsh",
+      "first": 6270,
+      "text": "The heavy ones wallow in it, and grow fat.",
+      "characters": 42,
+      "start": 104.5,
+      "seconds": 4.61,
+      "end": 109.11,
+      "room": 5.38,
+      "spill": 0,
+      "spare": 1.15,
+      "parts": [
+        {
+          "id": "marsh-04",
+          "seconds": 4.61
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The heavy ones wallow in it, and grow fat.",
+          "from": 104.5,
+          "to": 109.11
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "marsh-04"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "marsh-04",
+          "label": "The Blood Marsh · the wallowers",
+          "from": 104.38,
+          "to": 109.77,
+          "seconds": 4.61,
+          "picture": "marsh-3"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-marsh-3.jpg",
+          "label": "marsh-04 · approved key picture marsh-3",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n5.4",
+      "clip": "n5",
+      "line": 4,
+      "unit": "marsh",
+      "first": 6636,
+      "text": "The salt keeps whatever it catches. Forever.",
+      "characters": 44,
+      "start": 110.6,
+      "seconds": 5.12,
+      "end": 115.72,
+      "room": 7.15,
+      "spill": 0,
+      "spare": 1.19,
+      "parts": [
+        {
+          "id": "marsh-05",
+          "seconds": 5.12
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The salt keeps whatever it catches.",
+          "from": 110.6,
+          "to": 114.28
+        },
+        {
+          "text": "Forever.",
+          "from": 114.88,
+          "to": 115.72
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "marsh-05"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "marsh-05",
+          "label": "The Blood Marsh · the one on the thin crust",
+          "from": 109.77,
+          "to": 116.92,
+          "seconds": 5.12,
+          "picture": "marsh-4"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-marsh-4.jpg",
+          "label": "marsh-05 · approved key picture marsh-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n6.1",
+      "clip": "n6",
+      "line": 1,
+      "unit": "spine",
+      "first": 7050,
+      "text": "The ridge.",
+      "characters": 10,
+      "start": 117.5,
+      "seconds": 1.05,
+      "end": 118.55,
+      "room": 5.38,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "spine-01",
+          "seconds": 1.05
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The ridge.",
+          "from": 117.5,
+          "to": 118.55
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "spine-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "spine-01",
+          "label": "The Spine · the ridge in the storm",
+          "from": 116.92,
+          "to": 122.3,
+          "seconds": 1.05,
+          "picture": "spine-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-spine-0.jpg",
+          "label": "spine-01 · approved key picture spine-0",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n6.2",
+      "clip": "n6",
+      "line": 2,
+      "unit": "spine",
+      "first": 7149,
+      "text": "Above the cloud. Above the storm.",
+      "characters": 33,
+      "start": 119.15,
+      "seconds": 3.97,
+      "end": 123.12,
+      "room": 8.07,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "spine-01",
+          "seconds": 3.15
+        },
+        {
+          "id": "spine-02",
+          "seconds": 0.82
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Above the cloud.",
+          "from": 119.15,
+          "to": 120.83
+        },
+        {
+          "text": "Above the storm.",
+          "from": 121.44,
+          "to": 123.12
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "spine-01",
+        "spine-02"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "spine-01",
+          "label": "The Spine · the ridge in the storm",
+          "from": 116.92,
+          "to": 122.3,
+          "seconds": 3.15,
+          "picture": "spine-0"
+        },
+        {
+          "id": "spine-02",
+          "label": "The Spine · the kites",
+          "from": 122.3,
+          "to": 124.98,
+          "seconds": 0.82,
+          "picture": "spine-2"
+        }
+      ],
+      "lands": [
+        "0.9 s of \"Above the storm.\" (1.7 s) fall on spine-01, the ridge in the storm."
+      ],
+      "mark": {
+        "kind": "picture",
+        "why": "It fits for length. \"Above the cloud\" matches: the cloud sea lies below. \"Above the storm\" does not: the shot is the ridge in the storm, with storm cloud around the spire and lightning on it, and the next line has the lightning walk the ridge.",
+        "replace": [
+          {
+            "text": "Above the cloud. Under the storm.",
+            "characters": 33,
+            "start": 119.15,
+            "seconds": 3.97,
+            "end": 123.12,
+            "room": 8.07,
+            "spill": 0,
+            "spare": 1.5,
+            "parts": [
+              {
+                "id": "spine-01",
+                "seconds": 3.15
+              },
+              {
+                "id": "spine-02",
+                "seconds": 0.82
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Above the cloud.",
+                "from": 119.15,
+                "to": 120.83
+              },
+              {
+                "text": "Under the storm.",
+                "from": 121.44,
+                "to": 123.12
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "Above the cloud. Inside the storm.",
+            "characters": 34,
+            "start": 119.15,
+            "seconds": 4.07,
+            "end": 123.22,
+            "room": 8.07,
+            "spill": 0,
+            "spare": 1.5,
+            "parts": [
+              {
+                "id": "spine-01",
+                "seconds": 3.15
+              },
+              {
+                "id": "spine-02",
+                "seconds": 0.92
+              }
+            ],
+            "sentences": [
+              {
+                "text": "Above the cloud.",
+                "from": 119.15,
+                "to": 120.83
+              },
+              {
+                "text": "Inside the storm.",
+                "from": 121.44,
+                "to": 123.22
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-spine-0.jpg",
+          "label": "spine-01 · approved key picture spine-0",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-spine-2.jpg",
+          "label": "spine-02 · approved key picture spine-2",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n6.3",
+      "clip": "n6",
+      "line": 3,
+      "unit": "spine",
+      "first": 7428,
+      "text": "Every night the lightning walks it. Spire to spire.",
+      "characters": 51,
+      "start": 123.8,
+      "seconds": 5.86,
+      "end": 129.66,
+      "room": 8.95,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "spine-02",
+          "seconds": 1.18
+        },
+        {
+          "id": "spine-03",
+          "seconds": 2.68
+        },
+        {
+          "id": "spine-04",
+          "seconds": 1.99
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Every night the lightning walks it.",
+          "from": 123.8,
+          "to": 127.48
+        },
+        {
+          "text": "Spire to spire.",
+          "from": 128.08,
+          "to": 129.66
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "spine-02",
+        "spine-03",
+        "spine-04"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "spine-02",
+          "label": "The Spine · the kites",
+          "from": 122.3,
+          "to": 124.98,
+          "seconds": 1.18,
+          "picture": "spine-2"
+        },
+        {
+          "id": "spine-03",
+          "label": "The Spine · where lightning came to ground",
+          "from": 124.98,
+          "to": 127.67,
+          "seconds": 2.68,
+          "picture": "spine-1"
+        },
+        {
+          "id": "spine-04",
+          "label": "The Spine · the strike",
+          "from": 127.67,
+          "to": 131.25,
+          "seconds": 1.99,
+          "picture": "spine-3"
+        }
+      ],
+      "lands": [
+        "\"Spire to spire.\" falls wholly on spine-04, the strike.",
+        "\"Spire to spire.\" starts 0.3 s after the hit where lightning, spire to spire at 2:07.8."
+      ],
+      "mark": null,
+      "note": "Its first sentence is said over the kites and then over the animal the lightning killed. Neither is named.",
+      "pictures": [
+        {
+          "file": "out/stills/script/key-spine-1.jpg",
+          "label": "spine-03 · approved key picture spine-1",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-spine-3.jpg",
+          "label": "spine-04 · approved key picture spine-3",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n6.4",
+      "clip": "n6",
+      "line": 4,
+      "unit": "spine",
+      "first": 7884,
+      "text": "The herds shelter in the hollow beneath, and wait for morning.",
+      "characters": 62,
+      "start": 131.4,
+      "seconds": 6.71,
+      "end": 138.11,
+      "room": 7.17,
+      "spill": 0,
+      "spare": 0.3,
+      "parts": [
+        {
+          "id": "spine-05",
+          "seconds": 6.71
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The herds shelter in the hollow beneath, and wait for morning.",
+          "from": 131.4,
+          "to": 138.11
+        }
+      ],
+      "verdict": "tight",
+      "faults": [],
+      "on": [
+        "spine-05"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "spine-05",
+          "label": "The Spine · inside the canal",
+          "from": 131.25,
+          "to": 138.42,
+          "seconds": 6.71,
+          "picture": "spine-4"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "tight",
+        "why": "6.7 s in a shot of 7.2 s, the last of the place. On paper it fits with 0.3 s to spare, and the estimate has been wrong by more than that. If the read comes out long, its last word is said over the lake.",
+        "replace": [
+          {
+            "text": "The herds shelter in the hollow beneath, until morning.",
+            "characters": 55,
+            "start": 131.4,
+            "seconds": 5.98,
+            "end": 137.38,
+            "room": 7.17,
+            "spill": 0,
+            "spare": 1.04,
+            "parts": [
+              {
+                "id": "spine-05",
+                "seconds": 5.97
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The herds shelter in the hollow beneath, until morning.",
+                "from": 131.4,
+                "to": 137.38
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "The herds wait out the night in the hollow beneath.",
+            "characters": 51,
+            "start": 131.4,
+            "seconds": 5.36,
+            "end": 136.76,
+            "room": 7.17,
+            "spill": 0,
+            "spare": 1.5,
+            "parts": [
+              {
+                "id": "spine-05",
+                "seconds": 5.35
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The herds wait out the night in the hollow beneath.",
+                "from": 131.4,
+                "to": 136.76
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-spine-4.jpg",
+          "label": "spine-05 · approved key picture spine-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n7.1",
+      "clip": "n7",
+      "line": 1,
+      "unit": "eye",
+      "first": 8337,
+      "text": "The lake.",
+      "characters": 9,
+      "start": 138.95,
+      "seconds": 0.95,
+      "end": 139.89,
+      "room": 3.58,
+      "spill": 0,
+      "spare": 1.46,
+      "parts": [
+        {
+          "id": "eye-01",
+          "seconds": 0.94
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The lake.",
+          "from": 138.95,
+          "to": 139.89
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "eye-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "eye-01",
+          "label": "The Eye · the still lake",
+          "from": 138.42,
+          "to": 142,
+          "seconds": 0.94,
+          "picture": "eye-0"
+        }
+      ],
+      "lands": [],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-eye-0.jpg",
+          "label": "eye-01 · approved key picture eye-0",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n7.2",
+      "clip": "n7",
+      "line": 2,
+      "unit": "eye",
+      "first": 8454,
+      "text": "Still. Gold at the edge. Black at the center.",
+      "characters": 45,
+      "start": 140.9,
+      "seconds": 5.73,
+      "end": 146.63,
+      "room": 8.95,
+      "spill": 0,
+      "spare": 1.05,
+      "parts": [
+        {
+          "id": "eye-01",
+          "seconds": 1.1
+        },
+        {
+          "id": "eye-02",
+          "seconds": 2.68
+        },
+        {
+          "id": "eye-03",
+          "seconds": 1.94
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Still.",
+          "from": 140.9,
+          "to": 141.53
+        },
+        {
+          "text": "Gold at the edge.",
+          "from": 142.14,
+          "to": 143.92
+        },
+        {
+          "text": "Black at the center.",
+          "from": 144.52,
+          "to": 146.63
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "eye-01",
+        "eye-02",
+        "eye-03"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "eye-01",
+          "label": "The Eye · the still lake",
+          "from": 138.42,
+          "to": 142,
+          "seconds": 1.1,
+          "picture": "eye-0"
+        },
+        {
+          "id": "eye-02",
+          "label": "The Eye · the amber mats",
+          "from": 142,
+          "to": 144.68,
+          "seconds": 2.68,
+          "picture": "eye-2"
+        },
+        {
+          "id": "eye-03",
+          "label": "The Eye · the edge",
+          "from": 144.68,
+          "to": 147.37,
+          "seconds": 1.94,
+          "picture": "eye-3"
+        }
+      ],
+      "lands": [
+        "\"Gold at the edge.\" falls wholly on eye-02, the amber mats.",
+        "1.9 s of \"Black at the center.\" (2.1 s) fall on eye-03, the edge."
+      ],
+      "mark": null,
+      "note": "\"Black at the center.\" is said over the edge, where the black water lies behind a skeleton on the lip. The centre itself comes two shots later.",
+      "pictures": [
+        {
+          "file": "out/stills/script/key-eye-2.jpg",
+          "label": "eye-02 · approved key picture eye-2",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-eye-3.jpg",
+          "label": "eye-03 · approved key picture eye-3",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n7.3",
+      "clip": "n7",
+      "line": 3,
+      "unit": "eye",
+      "first": 8847,
+      "text": "The herds drink at the shallows. None of them looks down.",
+      "characters": 57,
+      "start": 147.45,
+      "seconds": 6.49,
+      "end": 153.94,
+      "room": 5.38,
+      "spill": 1.18,
+      "spare": null,
+      "parts": [
+        {
+          "id": "eye-04",
+          "seconds": 5.3
+        },
+        {
+          "id": "eye-05",
+          "seconds": 1.19
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The herds drink at the shallows.",
+          "from": 147.45,
+          "to": 150.81
+        },
+        {
+          "text": "None of them looks down.",
+          "from": 151.42,
+          "to": 153.94
+        }
+      ],
+      "verdict": "too long",
+      "faults": [
+        "it has 1.2 s off its picture (1.2 s on eye-05)",
+        "it pushes n7.4 from 2:32.9 to 2:34.5, where n7.4 ends 0.85 s after its place ends at 2:39.0 and has 0.8 s off its picture (0.8 s on reveal-01)"
+      ],
+      "on": [
+        "eye-04"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "eye-04",
+          "label": "The Eye · the drinkers",
+          "from": 147.37,
+          "to": 152.75,
+          "seconds": 5.3,
+          "picture": "eye-1"
+        },
+        {
+          "id": "eye-05",
+          "label": "The Eye · the centre, in the quiet",
+          "from": 152.75,
+          "to": 159.02,
+          "seconds": 1.19,
+          "picture": "eye-4"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "length",
+        "why": "6.5 s on a shot of 5.4 s. Its last second is said over the centre, and it pushes the last line of the place past the end of the place.",
+        "replace": [
+          {
+            "text": "The herds drink. None of them looks down.",
+            "characters": 41,
+            "start": 147.45,
+            "seconds": 4.81,
+            "end": 152.26,
+            "room": 5.38,
+            "spill": 0,
+            "spare": 0.83,
+            "parts": [
+              {
+                "id": "eye-04",
+                "seconds": 4.81
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The herds drink.",
+                "from": 147.45,
+                "to": 149.13
+              },
+              {
+                "text": "None of them looks down.",
+                "from": 149.73,
+                "to": 152.26
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "The herds come to drink. None looks down.",
+            "characters": 41,
+            "start": 147.45,
+            "seconds": 4.81,
+            "end": 152.26,
+            "room": 5.38,
+            "spill": 0,
+            "spare": 0.83,
+            "parts": [
+              {
+                "id": "eye-04",
+                "seconds": 4.81
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The herds come to drink.",
+                "from": 147.45,
+                "to": 149.97
+              },
+              {
+                "text": "None looks down.",
+                "from": 150.57,
+                "to": 152.26
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-eye-1.jpg",
+          "label": "eye-04 · approved key picture eye-1",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-eye-4.jpg",
+          "label": "eye-05 · approved key picture eye-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n7.4",
+      "clip": "n7",
+      "line": 4,
+      "unit": "eye",
+      "first": 9174,
+      "text": "The center has no floor. Something there looks back.",
+      "characters": 52,
+      "start": 152.9,
+      "seconds": 5.96,
+      "end": 158.86,
+      "room": 6.27,
+      "spill": 0,
+      "spare": 0.15,
+      "parts": [
+        {
+          "id": "eye-05",
+          "seconds": 5.96
+        }
+      ],
+      "sentences": [
+        {
+          "text": "The center has no floor.",
+          "from": 152.9,
+          "to": 155.42
+        },
+        {
+          "text": "Something there looks back.",
+          "from": 156.03,
+          "to": 158.86
+        }
+      ],
+      "verdict": "tight",
+      "faults": [],
+      "on": [
+        "eye-05"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "eye-05",
+          "label": "The Eye · the centre, in the quiet",
+          "from": 152.75,
+          "to": 159.02,
+          "seconds": 5.96,
+          "picture": "eye-4"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "tight",
+        "why": "6.0 s in a shot of 6.3 s, the last of the place, and only if the line before it is shortened. On paper it then fits with 0.2 s to spare. If the read comes out long, its last word is said over the first frames of the Reveal.",
+        "replace": [
+          {
+            "text": "The center has no floor. Something looks back.",
+            "characters": 46,
+            "start": 152.9,
+            "seconds": 5.33,
+            "end": 158.23,
+            "room": 6.27,
+            "spill": 0,
+            "spare": 0.78,
+            "parts": [
+              {
+                "id": "eye-05",
+                "seconds": 5.33
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The center has no floor.",
+                "from": 152.9,
+                "to": 155.42
+              },
+              {
+                "text": "Something looks back.",
+                "from": 156.03,
+                "to": 158.23
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "No floor at the center. Something looks back.",
+            "characters": 45,
+            "start": 152.9,
+            "seconds": 5.23,
+            "end": 158.13,
+            "room": 6.27,
+            "spill": 0,
+            "spare": 0.89,
+            "parts": [
+              {
+                "id": "eye-05",
+                "seconds": 5.22
+              }
+            ],
+            "sentences": [
+              {
+                "text": "No floor at the center.",
+                "from": 152.9,
+                "to": 155.32
+              },
+              {
+                "text": "Something looks back.",
+                "from": 155.92,
+                "to": 158.13
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/key-eye-4.jpg",
+          "label": "eye-05 · approved key picture eye-4",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n8.1",
+      "clip": "n8",
+      "line": 1,
+      "unit": "reveal",
+      "first": 9630,
+      "text": "From high enough, the land has a shape.",
+      "characters": 39,
+      "start": 160.5,
+      "seconds": 4.3,
+      "end": 164.8,
+      "room": 36.72,
+      "spill": 0,
+      "spare": null,
+      "parts": [
+        {
+          "id": "reveal-01",
+          "seconds": 4.29
+        }
+      ],
+      "sentences": [
+        {
+          "text": "From high enough, the land has a shape.",
+          "from": 160.5,
+          "to": 164.8
+        }
+      ],
+      "verdict": "too long",
+      "faults": [
+        "it pushes n8.2 from 2:43.3 to 2:45.4, where n8.2 lies over the strike at 2:47.1, which is kept clear of speech from 0.15 s before it to 0.5 s after it",
+        "it pushes n8.3 from 2:47.1 to 2:48.6, off the strike it has to start on"
+      ],
+      "on": [
+        "reveal-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "reveal-01",
+          "label": "The Reveal · one shot, from the lake to orbit, then the hold",
+          "from": 159.02,
+          "to": 195.73,
+          "seconds": 4.29,
+          "picture": "reveal-4"
+        }
+      ],
+      "lands": [],
+      "mark": {
+        "kind": "length",
+        "why": "4.3 s where 2.8 s are free. It cannot start before the camera has left the water, about 2:40.5, and the line after it has to be out before the strike at 2:47.1. Whole, it fits only from 2:39.0, on the water, where \"from high enough\" would be said at lake level.",
+        "replace": [
+          {
+            "text": "The land has a shape.",
+            "characters": 21,
+            "start": 160.5,
+            "seconds": 2.21,
+            "end": 162.71,
+            "room": 36.72,
+            "spill": 0,
+            "spare": 0.59,
+            "parts": [
+              {
+                "id": "reveal-01",
+                "seconds": 2.21
+              }
+            ],
+            "sentences": [
+              {
+                "text": "The land has a shape.",
+                "from": 160.5,
+                "to": 162.71
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          },
+          {
+            "text": "From above, a shape.",
+            "characters": 20,
+            "start": 160.5,
+            "seconds": 2.3,
+            "end": 162.8,
+            "room": 36.72,
+            "spill": 0,
+            "spare": 0.49,
+            "parts": [
+              {
+                "id": "reveal-01",
+                "seconds": 2.3
+              }
+            ],
+            "sentences": [
+              {
+                "text": "From above, a shape.",
+                "from": 160.5,
+                "to": 162.8
+              }
+            ],
+            "verdict": "fits",
+            "faults": [],
+            "lands": []
+          }
+        ]
+      },
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n8-1-reveal-01-1627.jpg",
+          "label": "reveal-01 at 2:42.7 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-reveal-3.jpg",
+          "label": "approved key picture reveal-3, which falls at 2:42.6",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n8.2",
+      "clip": "n8",
+      "line": 2,
+      "unit": "reveal",
+      "first": 9801,
+      "text": "None of it was ever land.",
+      "characters": 25,
+      "start": 163.35,
+      "seconds": 2.63,
+      "end": 165.98,
+      "room": 36.72,
+      "spill": 0,
+      "spare": 0.54,
+      "parts": [
+        {
+          "id": "reveal-01",
+          "seconds": 2.63
+        }
+      ],
+      "sentences": [
+        {
+          "text": "None of it was ever land.",
+          "from": 163.35,
+          "to": 165.98
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "reveal-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "reveal-01",
+          "label": "The Reveal · one shot, from the lake to orbit, then the hold",
+          "from": 159.02,
+          "to": 195.73,
+          "seconds": 2.63,
+          "picture": "reveal-4"
+        }
+      ],
+      "lands": [
+        "\"None of it was ever land.\" ends 1.1 s before the reveal strike of the music at 2:47.1."
+      ],
+      "mark": null,
+      "note": null,
+      "pictures": [
+        {
+          "file": "out/stills/script/n8-2-reveal-01-1647.jpg",
+          "label": "reveal-01 at 2:44.7 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-reveal-3.jpg",
+          "label": "approved key picture reveal-3, which falls at 2:42.6",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n8.3",
+      "clip": "n8",
+      "line": 3,
+      "unit": "reveal",
+      "first": 10027,
+      "text": "It was a body.",
+      "characters": 14,
+      "start": 167.12,
+      "seconds": 1.47,
+      "end": 168.59,
+      "room": 36.72,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "reveal-01",
+          "seconds": 1.47
+        }
+      ],
+      "sentences": [
+        {
+          "text": "It was a body.",
+          "from": 167.12,
+          "to": 168.59
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "reveal-01"
+      ],
+      "onStrike": true,
+      "shots": [
+        {
+          "id": "reveal-01",
+          "label": "The Reveal · one shot, from the lake to orbit, then the hold",
+          "from": 159.02,
+          "to": 195.73,
+          "seconds": 1.47,
+          "picture": "reveal-4"
+        }
+      ],
+      "lands": [
+        "\"It was a body.\" runs from 2:47.1 to 2:48.6, across the reveal strike of the music at 2:47.1."
+      ],
+      "mark": null,
+      "note": "Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"body\" should fall on the strike instead, the line starts about 0.6 s earlier.",
+      "pictures": [
+        {
+          "file": "out/stills/script/n8-3-reveal-01-1679.jpg",
+          "label": "reveal-01 at 2:47.9 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-reveal-4.jpg",
+          "label": "approved key picture reveal-4, which falls at 2:47.1",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    },
+    {
+      "id": "n8.4",
+      "clip": "n8",
+      "line": 4,
+      "unit": "reveal",
+      "first": 10620,
+      "text": "Everything here feeds on it. And it is not finished.",
+      "characters": 52,
+      "start": 177,
+      "seconds": 5.96,
+      "end": 182.96,
+      "room": 36.72,
+      "spill": 0,
+      "spare": 1.5,
+      "parts": [
+        {
+          "id": "reveal-01",
+          "seconds": 5.96
+        }
+      ],
+      "sentences": [
+        {
+          "text": "Everything here feeds on it.",
+          "from": 177,
+          "to": 179.94
+        },
+        {
+          "text": "And it is not finished.",
+          "from": 180.55,
+          "to": 182.96
+        }
+      ],
+      "verdict": "fits",
+      "faults": [],
+      "on": [
+        "reveal-01"
+      ],
+      "onStrike": false,
+      "shots": [
+        {
+          "id": "reveal-01",
+          "label": "The Reveal · one shot, from the lake to orbit, then the hold",
+          "from": 159.02,
+          "to": 195.73,
+          "seconds": 5.96,
+          "picture": "reveal-4"
+        }
+      ],
+      "lands": [
+        "\"And it is not finished.\" ends 5.9 s before the beat where the Heart's glow pulses once on the body at 3:08.9."
+      ],
+      "mark": null,
+      "note": "Placed where the approved script had its last line. It can sit up to 5 s later if the beat should answer \"not finished\".",
+      "pictures": [
+        {
+          "file": "out/stills/script/n8-4-reveal-01-1800.jpg",
+          "label": "reveal-01 at 2:60.0 · blockout, framing only",
+          "width": 480,
+          "height": 270
+        },
+        {
+          "file": "out/stills/script/key-reveal-4.jpg",
+          "label": "approved key picture reveal-4, which falls at 2:47.1",
+          "width": 480,
+          "height": 270
+        }
+      ]
+    }
+  ],
+  "unnamed": [
+    {
+      "shot": "heart-05",
+      "label": "the vessel mouth and the lava fall, no voice",
+      "from": 63.18,
+      "to": 70.35,
+      "when": "1:03.2 to 1:10.3",
+      "picture": "heart-4",
+      "what": "The vessel mouth and the lava fall: 7.2 s with no line, under the biggest peak of the music at 1:06.8. I would leave it without words.",
+      "thumb": {
+        "file": "out/stills/script/shown-heart-05-0668.jpg",
+        "label": "heart-05 at 1:06.8 · the Heart review clip, final tier",
+        "width": 480,
+        "height": 270
+      }
+    },
+    {
+      "shot": "marsh-02",
+      "label": "the stalks",
+      "from": 97.22,
+      "to": 100.8,
+      "when": "1:37.2 to 1:40.8",
+      "picture": "marsh-2",
+      "what": "The stalks. Line n5.2 is said over them and no line names them. Both replacements for n5.2 do.",
+      "thumb": {
+        "file": "out/stills/script/key-marsh-2.jpg",
+        "label": "marsh-02 · approved key picture marsh-2",
+        "width": 480,
+        "height": 270
+      }
+    },
+    {
+      "shot": "spine-02",
+      "label": "the kites",
+      "from": 122.3,
+      "to": 124.98,
+      "when": "2:02.3 to 2:05.0",
+      "picture": "spine-2",
+      "what": "The kites streaming from the spire. The end of n6.2 and the start of n6.3 are said over them.",
+      "thumb": {
+        "file": "out/stills/script/key-spine-2.jpg",
+        "label": "spine-02 · approved key picture spine-2",
+        "width": 480,
+        "height": 270
+      }
+    },
+    {
+      "shot": "spine-03",
+      "label": "where lightning came to ground",
+      "from": 124.98,
+      "to": 127.67,
+      "when": "2:05.0 to 2:07.7",
+      "picture": "spine-1",
+      "what": "The animal the lightning killed. \"Every night the lightning walks it.\" is said over it, which fits in sense, and nothing names the animal.",
+      "thumb": {
+        "file": "out/stills/script/key-spine-1.jpg",
+        "label": "spine-03 · approved key picture spine-1",
+        "width": 480,
+        "height": 270
+      }
+    },
+    {
+      "shot": "eye-03",
+      "label": "the edge",
+      "from": 144.68,
+      "to": 147.37,
+      "when": "2:24.7 to 2:27.4",
+      "picture": "eye-3",
+      "what": "The skeleton on the lip of the lake. \"Black at the center.\" is said over it.",
+      "thumb": {
+        "file": "out/stills/script/key-eye-3.jpg",
+        "label": "eye-03 · approved key picture eye-3",
+        "width": 480,
+        "height": 270
+      }
+    }
+  ],
+  "rules": [
+    "No \"I\", no \"you\", no people, no maps, no god: met by every line of the draft and by every replacement line.",
+    "Nothing says outright that the land is a body before the Reveal: met. None of the 28 lines before clip n8, and none of their replacements, names a body or a part of one. \"Skin\", \"breathes\" and \"bleeds\" stand as the figures of speech the note asks for.",
+    "Eight clips, four lines each: met.",
+    "About the same length as now: the draft is 140.9 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.1 s. No shot moves either way.",
+    "Every line falls on the picture it describes: 21 of the 32 do as written. The other 11 are marked: 5 too long for their shots, 2 with too little to spare and 4 that do not match what the shot shows.",
+    "The third line of the Reveal lands on the reveal strike: it starts on frame 10027, the frame of the strike at 2:47.1.",
+    "Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s."
+  ],
+  "totals": {
+    "lines": 32,
+    "characters": 1248,
+    "seconds": 140.94,
+    "approvedCharacters": 1107,
+    "approvedSeconds": 126.1,
+    "marked": 11,
+    "byKind": {
+      "length": 5,
+      "tight": 2,
+      "picture": 4
+    }
+  },
+  "sheets": [
+    {
+      "clip": "n1",
+      "file": "out/stills/script/script-n1.jpg",
+      "width": 1200,
+      "height": 2532
+    },
+    {
+      "clip": "n2",
+      "file": "out/stills/script/script-n2.jpg",
+      "width": 1200,
+      "height": 2282
+    },
+    {
+      "clip": "n3",
+      "file": "out/stills/script/script-n3.jpg",
+      "width": 1200,
+      "height": 2295
+    },
+    {
+      "clip": "n4",
+      "file": "out/stills/script/script-n4.jpg",
+      "width": 1200,
+      "height": 2645
+    },
+    {
+      "clip": "n5",
+      "file": "out/stills/script/script-n5.jpg",
+      "width": 1200,
+      "height": 2271
+    },
+    {
+      "clip": "n6",
+      "file": "out/stills/script/script-n6.jpg",
+      "width": 1200,
+      "height": 2340
+    },
+    {
+      "clip": "n7",
+      "file": "out/stills/script/script-n7.jpg",
+      "width": 1200,
+      "height": 2274
+    },
+    {
+      "clip": "n8",
+      "file": "out/stills/script/script-n8.jpg",
+      "width": 1200,
+      "height": 2634
+    }
+  ]
+}

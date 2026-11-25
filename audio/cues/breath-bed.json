@@ -3,7 +3,7 @@
   "id": "breath-bed",
   "unit": "breath",
   "kind": "bed",
-  "description": "One vast slow exhale of air rising from deep inside a huge stone shaft, a very low breathy rush that swells and eases slowly, with scattered drips of water echoing in the shaft. Continuous quiet ambience. No music, no voices.",
+  "description": "One giant slow breath out: a long soft airy whoosh of air through a huge stone pipe, breathy and hollow, swelling and then easing. Single drips of water fall and echo in the cave, plink, plink, clearly heard. Quiet cave ambience.",
   "seconds": 20,
   "promptInfluence": 0.4,
   "loop": true

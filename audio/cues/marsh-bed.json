@@ -3,7 +3,7 @@
   "id": "marsh-bed",
   "unit": "marsh",
   "kind": "bed",
-  "description": "Dead still humid air over a thick salt marsh: a faint steady drone of insects, and slow thick bubbles rising and popping in heavy brine now and then. Continuous quiet ambience, close and airless. No wind, no birds, no frogs. No music, no voices.",
+  "description": "Thick mud bubbling slowly, close up: single heavy gloopy bubbles rise and pop one at a time with pauses between them, like a mud pot. Behind them a faint thin whine of swarming gnats. Very quiet, still and close.",
   "seconds": 20,
   "promptInfluence": 0.4,
   "loop": true

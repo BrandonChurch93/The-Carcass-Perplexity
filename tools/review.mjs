@@ -4,6 +4,7 @@ import { execFileSync } from 'node:child_process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 import { ROOT, config, args, utc } from './lib/paths.mjs';
+import { clipHtml, unnamedHtml, rulesHtml, intro, repaired, clock, SHEET_CSS } from './lib/script-sheet-core.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const MB = 1e6;
@@ -16,6 +17,7 @@ const POSTER_WIDTH = 1280;
 export const PARTS = [
   ['latest', 'Latest'],
   ['watch', 'Watch'],
+  ['script', 'Script'],
   ['listen', 'Listen'],
   ['card', 'The card'],
   ['comparisons', 'Comparisons'],
@@ -25,6 +27,7 @@ export const PARTS = [
 const NONE = {
   latest: 'No status pictures yet.',
   watch: 'No films or clips yet.',
+  script: 'No script sheet yet.',
   narration: 'No narration kept yet.',
   sounds: 'No sounds kept yet.',
   mix: 'No mix yet.',
@@ -151,6 +154,82 @@ export function description(text) {
   return m ? m[1].trim() : '';
 }
 
+// What a sound's record says of its takes: how many were made, which was kept, and the fault it was kept with.
+export function takes(text) {
+  const m = text.match(/^Takes:\s*(\d+) made, take (\d+) kept( with a fault)?\.?\s*(.*)$/m);
+  if (!m) return null;
+  const f = m[4].match(/names a fault:\s*(.*?)[.\s]*$/);
+  return { made: Number(m[1]), kept: Number(m[2]), fault: m[3] ? (f && f[1] ? f[1].trim() : 'The record does not say which') : null };
+}
+
+// The two spots of laughter taken out of the music, before and after: audio/cleaned/proof/proof.json names the clips and the pictures.
+function musicSpots(root, cfg) {
+  const r = (...p) => path.join(root, ...p);
+  const file = r('audio', 'cleaned', 'proof', 'proof.json');
+  const report = r('audio', 'cleaned', 'cleaned.json');
+  if (!fs.existsSync(file) || !fs.existsSync(report)) return null;
+  const proof = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const measured = JSON.parse(fs.readFileSync(report, 'utf8')).spots ?? [];
+  const cutFile = r('cut', 'CUTLIST.json');
+  const cut = fs.existsSync(cutFile) ? JSON.parse(fs.readFileSync(cutFile, 'utf8')) : null;
+  const seconds = (stamp) => {
+    const [m, sec] = String(stamp).split(':');
+    return Number(m) * 60 + Number(sec);
+  };
+  // A time of the track is a time of the film inside a piece of the music the film plays.
+  const film = (t) => {
+    const piece = (cut?.music?.pieces ?? []).find((x) => t >= x.from && t <= x.to);
+    return piece ? piece.at + (t - piece.from) : null;
+  };
+  const places = (from, to) => {
+    const a = film(from);
+    const b = film(to);
+    if (!cut || a === null || b === null) return [];
+    return cut.places
+      .filter((pl) => pl.first / cut.fps < b && (pl.last + 1) / cut.fps > a)
+      .map((pl) => (cfg.units.find((u) => u.id === pl.unit)?.name ?? pl.unit).split(',')[0].replace(/^The /, 'the '));
+  };
+  const spots = (proof.spots ?? []).map((sp) => {
+    const m = measured.find((x) => x.id === sp.id) ?? {};
+    const pic = sp.picture ? r(...sp.picture.split('/')) : null;
+    const from = m.from ? seconds(m.from) : null;
+    const to = m.to ? seconds(m.to) : null;
+    return {
+      id: sp.id,
+      name: sp.name ?? sp.id,
+      asked: m.asked ?? '',
+      from: m.from ?? '',
+      to: m.to ?? '',
+      where: from !== null && to !== null ? places(from, to) : [],
+      sameInFilm: from !== null && film(from) !== null && Math.abs(film(from) - from) < 0.001,
+      way: sp.way ?? '',
+      facts: sp.facts ?? [],
+      picture: pic && fs.existsSync(pic) ? { ...item(pic, `music/${path.basename(pic)}`), caption: sp.pictureCaption ?? '' } : null,
+      clips: (sp.clips ?? [])
+        .map((c) => ({ src: r('audio', 'cleaned', 'proof', c.file), ...c }))
+        .filter((c) => fs.existsSync(c.src))
+        .map((c) => ({ ...item(c.src, `music/${c.file}`), label: c.label ?? '', what: c.what ?? '' }))
+    };
+  });
+  return { intro: proof.intro ?? '', spots };
+}
+
+// The script sheet: the draft laid against the cut list by tools/script-sheet.mjs, with the small pictures it names.
+function scriptSheet(root) {
+  const file = path.join(root, 'cut', 'SCRIPT-SHEET.json');
+  if (!fs.existsSync(file)) return null;
+  const sheet = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const pictures = new Map();
+  const add = (p) => {
+    if (!p?.file || pictures.has(p.file)) return;
+    const src = path.join(root, ...p.file.split('/'));
+    if (fs.existsSync(src)) pictures.set(p.file, item(src, `script/${path.basename(p.file)}`));
+  };
+  for (const row of sheet.rows ?? []) for (const p of row.pictures ?? []) add(p);
+  for (const u of sheet.unnamed ?? []) add(u.thumb);
+  return { sheet, pictures: [...pictures.values()] };
+}
+
 const groupName = (folder, cfg) => {
   const u = cfg.units.find((x) => x.id === folder);
   if (u) return u.name;
@@ -220,7 +299,10 @@ export function collect(root = ROOT, cfg = config()) {
   for (const [id, n] of byId) narration.push({ ...item(path.join(narrDir, n), `narration/${n}`), id, title: '', place: '', lines: [] });
 
   const soundDir = r('audio', 'kept', 'sounds');
-  const order = cfg.units.map((u) => u.id);
+  // Sounds are grouped by place in the order of the film, as the cut list has it; without a cut list, in the config's order.
+  const cutFile = r('cut', 'CUTLIST.json');
+  const filmOrder = fs.existsSync(cutFile) ? (JSON.parse(fs.readFileSync(cutFile, 'utf8')).places ?? []).map((pl) => pl.unit) : [];
+  const order = filmOrder.length ? filmOrder : cfg.units.map((u) => u.id);
   const folders = fs.existsSync(soundDir)
     ? fs.readdirSync(soundDir, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name)
     : [];
@@ -233,10 +315,12 @@ export function collect(root = ROOT, cfg = config()) {
       items: list(path.join(soundDir, unit), SOUND).map((n) => {
         const id = n.replace(SOUND, '');
         const rec = r('audio', 'records', `${id}.md`);
+        const record = fs.existsSync(rec) ? fs.readFileSync(rec, 'utf8') : '';
         return {
           ...item(path.join(soundDir, unit, n), `sounds/${unit}/${n}`),
           id,
-          description: fs.existsSync(rec) ? description(fs.readFileSync(rec, 'utf8')) : ''
+          description: description(record),
+          takes: takes(record)
         };
       })
     }))
@@ -252,6 +336,14 @@ export function collect(root = ROOT, cfg = config()) {
     still: fs.existsSync(still) ? item(still, `card/${path.basename(still)}`) : null
   };
 
+  // A kept clip whose words the draft of the script changes is marked: it was made from the script before the draft.
+  const script = scriptSheet(root);
+  if (script)
+    for (const c of narration) {
+      const draft = script.sheet.rows.filter((x) => x.clip === c.id).map((x) => x.text);
+      c.replaced = draft.length > 0 && c.lines.length > 0 && draft.join('\n') !== c.lines.join('\n');
+    }
+
   const progress = r('kit', 'PROGRESS.md');
   const clock = r('kit', 'CLOCK.json');
   return {
@@ -260,7 +352,8 @@ export function collect(root = ROOT, cfg = config()) {
     clock: clockLine(fs.existsSync(clock) ? JSON.parse(fs.readFileSync(clock, 'utf8')) : null, cfg.budget),
     latest: { title: status.title, when: status.when, pictures: latestPictures },
     watch: { videos, leftOut: [] },
-    listen: { narration, sounds, mix },
+    script,
+    listen: { narration, sounds, mix, music: musicSpots(root, cfg) },
     card,
     comparisons: pictureGroups(root, cfg, 'compare-'),
     motion: pictureGroups(root, cfg, 'sheet-')
@@ -272,8 +365,10 @@ export function files(model) {
     ...model.latest.pictures,
     ...model.watch.videos,
     ...model.watch.videos.flatMap((v) => (v.poster ? [v.poster] : [])),
+    ...(model.script?.pictures ?? []),
     ...model.listen.narration,
     ...model.listen.sounds.flatMap((g) => g.items),
+    ...(model.listen.music?.spots ?? []).flatMap((sp) => [...(sp.picture ? [sp.picture] : []), ...sp.clips]),
     ...(model.listen.mix ? [model.listen.mix] : []),
     ...(model.card.loop ? [model.card.loop] : []),
     ...(model.card.still ? [model.card.still] : []),
@@ -300,6 +395,7 @@ export function fit(model, maxMb) {
 async function measure(model, work) {
   const pics = [
     ...model.latest.pictures,
+    ...(model.listen.music?.spots ?? []).flatMap((sp) => (sp.picture ? [sp.picture] : [])),
     ...(model.card.still ? [model.card.still] : []),
     ...model.comparisons.flatMap((g) => g.items),
     ...model.motion.flatMap((g) => g.items)
@@ -352,16 +448,89 @@ function groups(sets, prefix, key) {
     .join('\n');
 }
 
+const endStop = (t) => (/[.?]$/.test(t) ? t : `${t}.`);
+
+function takeLine(t) {
+  const of = `Take ${t.kept} of ${t.made}`;
+  return t.fault
+    ? `<p class="take fault"><span class="chip">Kept with a fault</span><span>${of}. ${esc(endStop(t.fault))}</span></p>`
+    : `<p class="take"><span>${of}, kept. No fault found by measure, by the listener or in the picture of the sound.</span></p>`;
+}
+
+function musicHtml(music) {
+  if (!music || !music.spots.length) return '';
+  return [
+    '<h3>The music\'s two spots</h3>',
+    music.intro ? `<p class="lede">${esc(music.intro)}</p>` : '',
+    ...music.spots.map((sp) => {
+      const where = sp.where.length ? `${sp.sameInFilm ? 'The same time in the film' : 'In the film'}, in ${sp.where.join(' and ')}` : '';
+      return [
+        '<article class="spot">',
+        `  <header><span class="title">${esc(sp.name)}</span><span class="place">${esc(sp.from)} to ${esc(sp.to)} of the track${where ? ` · ${esc(where)}` : ''}</span></header>`,
+        sp.way ? `  <p class="words">${esc(sp.way)}</p>` : '',
+        sp.facts.length ? `  <ul class="measures">\n${sp.facts.map((f) => `    <li>${esc(f)}</li>`).join('\n')}\n  </ul>` : '',
+        '  <div class="ab">',
+        ...sp.clips.map((c) => `    <div class="play"><p><b>${esc(c.label)}</b>${c.what ? ` · ${esc(c.what)}` : ''}</p>${audio(c)}</div>`),
+        '  </div>',
+        sp.picture ? picture(sp.picture, sp.picture.caption || sp.name, sp.picture.caption || sp.name) : '',
+        '</article>'
+      ]
+        .filter(Boolean)
+        .join('\n');
+    })
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+function scriptHtml(sheet) {
+  const src = (p) => `review/script/${url(path.basename(p.file))}`;
+  const [first, second] = intro(sheet);
+  const row = (c) =>
+    `    <tr><td><a href="#script-${esc(c.id)}">${esc(c.id)}</a></td><td>${esc(c.title)}</td><td>${clock(c.from)} to ${clock(c.to)}</td><td>${c.seconds.toFixed(1)} s</td><td>${repaired(sheet, c.id).toFixed(1)} s</td><td>${c.approvedSeconds === null || c.approvedSeconds === undefined ? 'none' : `${c.approvedSeconds.toFixed(1)} s`}</td><td>${sheet.rows.filter((x) => x.clip === c.id && x.mark).length} of ${sheet.rows.filter((x) => x.clip === c.id).length}</td></tr>`;
+  return [
+    '<div class="script-sheet">',
+    `<p class="lede">${esc(first)}</p>`,
+    `<p class="lede">${esc(second)} Every marked line has two replacement lines under it, A and B. No narration is made from this draft: the config keeps the approved script until the script is final.</p>`,
+    '<div class="scroll">',
+    '<table class="lengths">',
+    '  <thead><tr><th>Clip</th><th>Place</th><th>In the film</th><th>Draft</th><th>With every A</th><th>Approved script</th><th>Marked</th></tr></thead>',
+    '  <tbody>',
+    ...sheet.clips.map(row),
+    `    <tr class="all"><td>all</td><td></td><td></td><td>${sheet.totals.seconds.toFixed(1)} s</td><td>${repaired(sheet).toFixed(1)} s</td><td>${sheet.totals.approvedSeconds.toFixed(1)} s</td><td>${sheet.totals.marked} of ${sheet.totals.lines}</td></tr>`,
+    '  </tbody>',
+    '</table>',
+    '</div>',
+    ...sheet.clips.map((c) => clipHtml(sheet, c.id, { src, tag: 'div', id: `script-${c.id}` })),
+    ...(sheet.unnamed.length ? ['<h3>Shown and not named</h3>', unnamedHtml(sheet, { src })] : []),
+    ...(sheet.rules.length ? ['<h3>The rules of the note, checked on the draft</h3>', rulesHtml(sheet)] : []),
+    '</div>'
+  ].join('\n');
+}
+
 export function counts(model) {
   return {
     latest: model.latest.pictures.length,
     watch: model.watch.videos.length,
-    listen: model.listen.narration.length + model.listen.sounds.reduce((a, g) => a + g.items.length, 0) + (model.listen.mix ? 1 : 0),
+    script: model.script?.sheet.rows.length ?? 0,
+    listen:
+      model.listen.narration.length +
+      model.listen.sounds.reduce((a, g) => a + g.items.length, 0) +
+      (model.listen.music?.spots ?? []).reduce((a, sp) => a + sp.clips.length, 0) +
+      (model.listen.mix ? 1 : 0),
     card: (model.card.loop ? 1 : 0) + (model.card.still ? 1 : 0),
     comparisons: model.comparisons.reduce((a, g) => a + g.items.length, 0),
     motion: model.motion.reduce((a, g) => a + g.items.length, 0)
   };
 }
+
+// The sheet's own style sits inside the page's: these lines keep the page's rules for .when and for sections off it.
+const SHEET_FIT = [
+  '.script-sheet .script-clip { margin: 0 0 64px; scroll-margin-top: 76px; }',
+  '.script-sheet .row .when { margin: 0; color: inherit; }',
+  '.script-sheet .row .pics figcaption, .script-sheet .row .pics figure { display: block; }',
+  '.script-sheet .unnamed { margin: 0 0 24px; }'
+].join('\n');
 
 export function render(model, { date = utc(), total = 0 } = {}) {
   const n = counts(model);
@@ -393,6 +562,7 @@ export function render(model, { date = utc(), total = 0 } = {}) {
             '<article class="clip">',
             `  <header><span class="id">${esc(c.id)}</span><span class="title">${esc(c.title || c.name)}</span>${c.place ? `<span class="place">${esc(c.place)}</span>` : ''}</header>`,
             c.lines.length ? `  <ol class="lines">\n${c.lines.map((l) => `    <li>${esc(l)}</li>`).join('\n')}\n  </ol>` : '  <p class="words">No words for this clip in the script.</p>',
+            ...(c.replaced ? ['  <p class="take"><span>Made from the approved script. The draft in Script changes these words, and this clip is made again when the script is final.</span></p>'] : []),
             `  ${audio(c)}`,
             '</article>'
           ].join('\n')
@@ -411,6 +581,7 @@ export function render(model, { date = utc(), total = 0 } = {}) {
                 '<article class="sound">',
                 `  <header><span class="title">${esc(s.id)}</span></header>`,
                 `  <p class="words">${esc(s.description || 'No description on record.')}</p>`,
+                ...(s.takes ? [`  ${takeLine(s.takes)}`] : []),
                 `  ${audio(s)}`,
                 '</article>'
               ].join('\n')
@@ -423,7 +594,9 @@ export function render(model, { date = utc(), total = 0 } = {}) {
   const mix = model.listen.mix
     ? ['<article class="sound">', `  <header><span class="title">${esc(model.listen.mix.name)}</span><span class="place">${fmtSize(model.listen.mix.size)}</span></header>`, `  ${audio(model.listen.mix)}`, '</article>'].join('\n')
     : none('mix');
-  body.listen = ['<h3>Narration</h3>', narration, sounds, '<h3>The mix alone</h3>', mix].join('\n');
+  body.listen = ['<h3>Narration</h3>', narration, sounds, musicHtml(model.listen.music), '<h3>The mix alone</h3>', mix].filter(Boolean).join('\n');
+
+  body.script = model.script ? scriptHtml(model.script.sheet) : none('script');
 
   const { loop, still } = model.card;
   body.card =
@@ -444,7 +617,7 @@ export function render(model, { date = utc(), total = 0 } = {}) {
   const nav = PARTS.map(([id, label]) => `    <a href="#${id}">${label}<span class="n">${n[id]}</span></a>`).join('\n');
   const parts = PARTS.map(([id, label]) => `<section id="${id}">\n<h2>${label}</h2>\n${body[id]}\n</section>`).join('\n');
   const fill = {
-    style: fs.readFileSync(path.join(HERE, 'review', 'style.css'), 'utf8').trim(),
+    style: `${fs.readFileSync(path.join(HERE, 'review', 'style.css'), 'utf8').trim()}\n${SHEET_CSS.trim()}\n${SHEET_FIT}`,
     name: esc(model.name),
     date: esc(date),
     phase: esc(model.phase),
@@ -498,7 +671,8 @@ export function report({ model, total, over, file }, root = ROOT, maxMb = DEFAUL
   const out = [
     `latest: ${s(n.latest, 'picture')}`,
     `watch: ${s(n.watch, 'video')}${model.watch.leftOut.length ? `, ${model.watch.leftOut.length} left out for size: ${model.watch.leftOut.map((v) => v.name).join(', ')}` : ''}`,
-    `listen: ${s(l.narration.length, 'narration clip')}, ${s(sounds, 'sound')}, ${l.mix ? '1 mix' : '0 mixes'}`,
+    `script: ${model.script ? `${s(n.script, 'line')}, ${model.script.sheet.totals.marked} marked, ${s(model.script.pictures.length, 'small picture')}` : 'no sheet'}`,
+    `listen: ${s(l.narration.length, 'narration clip')}, ${s(sounds, 'sound')}, ${s((l.music?.spots ?? []).length, 'music spot')} before and after, ${l.mix ? '1 mix' : '0 mixes'}`,
     `card: ${s(n.card, 'file')}`,
     `comparisons: ${s(n.comparisons, 'picture')}`,
     `motion: ${s(n.motion, 'sheet')}`,

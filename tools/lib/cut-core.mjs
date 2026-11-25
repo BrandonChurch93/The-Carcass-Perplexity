@@ -3,6 +3,13 @@ import { lengths } from '../checks/g7.mjs';
 import { cutFollowsMusic, accentsOf, nearest, musicTime } from '../checks/g11.mjs';
 import { words, scriptLines } from '../checks/g16.mjs';
 
+// The film plays the cleaned track when the config names one: the supplied track with two spots of laughter
+// taken out, the same length to the sample, so the map made from the supplied track holds for both.
+export function musicFile(cfg) {
+  const cleaned = cfg.music && cfg.music.cleaned;
+  return cleaned && cleaned.file ? cleaned.file : `${MUSIC_DIR}/${cfg.music.file}`;
+}
+
 export const SCHEMA = 'carcass/cutlist 1';
 export const PLAN_SCHEMA = 'carcass/plan 1';
 export const HIT_REACH_SECONDS = 0.06;
@@ -355,7 +362,7 @@ export function compile({ plan, map, cfg, kept = {} }) {
     fps,
     frameCount,
     music: {
-      file: `${MUSIC_DIR}/${cfg.music.file}`,
+      file: musicFile(cfg),
       pieces,
       cut: join ? { outBar: join.outBar, inBar: join.inBar, out: r4(join.out), in: r4(join.in), frame: Math.round(join.out * fps) } : null
     },
