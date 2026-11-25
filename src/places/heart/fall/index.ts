@@ -129,7 +129,8 @@ export function create(ctx: HeartContext): HeartPiece {
       const flare = since < 0 ? 1 : 1.6 + 2.2 * Math.exp(-since / 0.9);
       shared.uFlare.value = flare;
       shared.uSurge.value.set(front, since < 0 ? 0 : 0.35 + 0.65 * smooth(0, 1, since), since < 0 ? 0 : Math.exp(-since / 0.45), course.length);
-      mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar(flare);
+      // The round light in the mouth also lights the fume before it, so it rises far less than the river's own light on the rim does.
+      mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar(since < 0 ? 1 : 1.2 + 0.5 * Math.exp(-since / 0.9));
       bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar(since < 0 ? 1 : 1 + 0.8 * smooth(0, 1, since));
       footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar(since < 0 ? 1 : 1 + 0.9 * smooth(0, 1, since));
       if (since >= 0) {

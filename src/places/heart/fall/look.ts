@@ -51,7 +51,7 @@ float riverX(float d) {
 }
 // How much of the river is open lava at depth d: it comes out from under a crust.
 float riverOpen(float d) {
-  return 0.006 + 0.85 * exp(-d / 8.0) * uFlare;
+  return 0.006 + 0.85 * exp(-d / 8.0) * mix(uFlare, 1.0, smoothstep(1.0, 9.0, d));
 }
 // d is metres into the tube from its rim, negative outside.
 vec3 riverLight(vec3 p, vec3 n, float d) {
@@ -73,7 +73,7 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   float deep = smoothstep(2.0, 34.0, d);
   float lit = (1.0 - deep) * (1.0 - deep);
   float open = skyOpen(p) * occ * lit;
-  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n)) * occ * lit + riverLight(p, n, d) * occ + more * occ;
+  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n) * smoothstep(14.0, 3.0, d)) * occ * lit + riverLight(p, n, d) * occ + more * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float fr = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * 0.28;
