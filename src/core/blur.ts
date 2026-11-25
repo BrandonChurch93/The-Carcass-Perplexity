@@ -126,6 +126,7 @@ ${field ? `  // A texel in front of the focus is seen through: what lies behind 
 void main() {
   vec4 c = texelFetch(tSrc, ivec2(gl_FragCoord.xy), 0);
   float radius = reach(${field ? 'c.a' : 'texture2D(tRadius, vUv).r'});
+${field ? '  // Under a near layer that covers in full the field is not seen, so it is not gathered.\n  if (texture2D(tRadius, vUv).a >= 0.5) radius = 0.0;' : ''}
   sum = c;
   total = 1.0;
   centre = c.a;
@@ -252,13 +253,13 @@ export class FocusBlur {
     (this.reach.uniforms.uSize!.value as THREE.Vector2).set(ta.width, ta.height);
     this.draw(this.reach, tb);
 
-    const run = (passes: THREE.ShaderMaterial[], a: THREE.WebGLRenderTarget, b: THREE.WebGLRenderTarget): THREE.WebGLRenderTarget => {
+    const run = (passes: THREE.ShaderMaterial[], a: THREE.WebGLRenderTarget, b: THREE.WebGLRenderTarget, radius: THREE.Texture): THREE.WebGLRenderTarget => {
       let from = a;
       let to = b;
       for (const m of passes) {
         const u = m.uniforms;
         u.tSrc!.value = from.texture;
-        u.tRadius!.value = tb.texture;
+        u.tRadius!.value = radius;
         (u.uTexel!.value as THREE.Vector2).set(1 / from.width, 1 / from.height);
         u.uShare!.value = share;
         u.uMax!.value = most;
@@ -267,8 +268,8 @@ export class FocusBlur {
       }
       return from;
     };
-    const fieldOut = run(this.fieldPasses, fa, fb);
-    const nearOut = run(this.nearPasses, na, nb);
+    const nearOut = run(this.nearPasses, na, nb, tb.texture);
+    const fieldOut = run(this.fieldPasses, fa, fb, nearOut.texture);
 
     const u = this.lay.uniforms;
     u.tSrc!.value = accum;
