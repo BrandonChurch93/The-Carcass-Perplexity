@@ -382,12 +382,17 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     shades.push([x, z, half * 1.5, 0.6]);
   }
   // Its picture's left edge: two dark boulders in front of the crag, one at the edge of the frame and a larger one behind the vent and its steam.
-  for (const [shape, a, r, top, half, tall] of [
-    [1, 7.5, -5.1, 1.5, 0.48, 0.95],
-    [3, 8.7, -4.4, 1.5, 0.62, 1.55],
-  ] as [number, number, number, number, number, number][]) {
+  // The crag is the land's and changes: each boulder is walked left from the shore to the crag's foot and stood there, on the ground it finds.
+  for (const [shape, a, most, half, rise] of [
+    [1, 7.5, -5.1, 0.48, 0.75],
+    [3, 8.7, -4.4, 0.62, 1.1],
+  ] as [number, number, number, number, number][]) {
+    const flat = height(...near(a, -2.8));
+    let r = -2.8;
+    while (r > most && height(...near(a, r - half - 0.1)) < flat + 0.8) r -= 0.1;
     const [x, z] = near(a, r);
-    stand(shape, x, z, top, half, tall, rng.range(0.6, 0.72));
+    const g = Math.max(height(x, z), 0.04);
+    stand(shape, x, z, g + rise, half, rise * 1.35, rng.range(0.6, 0.72));
     shades.push([x, z, half * 1.5, 0.6]);
   }
   // Set by hand, past every rule of the scatter: a rock given whole, by its place, its half sizes and its turn.
@@ -576,8 +581,18 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   const onSlope = (x: number, z: number): boolean => x > MOUTH.x - 150 && x < MOUTH.x + 120 && z > -460 && z < -324;
   {
     const e = 2;
+    // Two or three chutes of smooth dust run down the slope left of the fall, between the ledges: no stone lies in them above the heap.
+    const chute = (x: number, z: number): boolean => {
+      for (const [mid, wide, phase] of [[-58, 4.5, 1.3], [-92, 6, 5.1], [-127, 5, 8.7]] as [number, number, number][]) {
+        if (Math.abs(x - MOUTH.x - mid - 9 * (noise(z / 19 + phase, phase) - 0.5)) < wide * (0.7 + 0.6 * noise(z / 7 + phase, 3.3))) return true;
+      }
+      return false;
+    };
+    // One stone in five is pale and dusty.
+    const paled = (tone: number): number => (rng.next() < 0.2 ? rng.range(1.35, 1.9) : tone);
     const fallen = (x: number, z: number, size: number, tone: number, a: number, long = 1): boolean =>
-      put(kinds.crag, x, z, size, { shade: false, sink: rng.range(0.36, 0.5), flat: rng.range(0.45, 0.9), tone, yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
+      !(chute(x, z) && height(x, z) > 5) &&
+      put(kinds.crag, x, z, size, { shade: false, sink: rng.range(0.36, 0.5), flat: rng.range(0.45, 0.9), tone: paled(tone), yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
     for (let run = 0; run < 800; run++) {
       let x = rng.range(MOUTH.x - 150, MOUTH.x + 120);
       let z = rng.range(-456, -330);
