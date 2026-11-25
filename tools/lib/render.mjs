@@ -238,22 +238,25 @@ function unitsShown(s, at) {
 }
 
 // `lens` overrides the place's lens for a test picture: { aperture, focus }, the radius of the lens and the focus distance in metres, either one null to keep the place's own.
-async function draw(page, at, tier, format, diag, part = null, lens = null) {
+// `held` is the hold in seconds: the frame's camera with the world that many seconds on.
+async function draw(page, at, tier, format, diag, part = null, lens = null, held = 0) {
   const started = process.hrtime.bigint();
   await page.evaluate(
-    async ({ at, tier, format, diag, part, lens }) => {
+    async ({ at, tier, format, diag, part, lens, held }) => {
       const c = window.__carcass;
       c.setFormat(format);
       c.setDiagnostic(diag, part);
       c.setLens(lens?.aperture ?? null, lens?.focus ?? null);
+      c.setHold(held);
       try {
         if (at.loop !== null) await c.renderLoopFrame(at.loop, tier);
         else await c.renderFilmFrame(at.frame, tier);
       } finally {
         c.setLens(null, null);
+        c.setHold(0);
       }
     },
-    { at, tier, format, diag, part, lens },
+    { at, tier, format, diag, part, lens, held },
   );
   if (page.problems.length) throw new Error(`The page reported: ${page.problems.join(' | ')}`);
   return Number(process.hrtime.bigint() - started) / 1e9;
@@ -343,6 +346,7 @@ export async function renderStill({
   by = 'builder',
   caption = null,
   lens = null,
+  held = 0,
 } = {}) {
   const s = await open();
   const cfg = config();
@@ -351,9 +355,11 @@ export async function renderStill({
   const at = resolveFrame(s.film, { frame, key, id, loop });
   const partName = part ? `-${String(part).replace(/[^a-z0-9]+/gi, '_')}` : '';
   const over = lensOf(lens);
+  const hold = Number(held ?? 0);
+  if (!Number.isFinite(hold)) throw new Error(`The hold is a number of seconds: ${held}`);
   const lensName = over ? `${over.aperture === null ? '' : `-a${over.aperture}`}${over.focus === null ? '' : `-f${over.focus}`}` : '';
-  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}${partName}${lensName}`}.png`);
-  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, part: part ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key, ...(over ? { lens: over } : {}) };
+  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}${partName}${lensName}${hold ? `-h${hold}` : ''}`}.png`);
+  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, part: part ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key, ...(over ? { lens: over } : {}), ...(hold ? { hold } : {}) };
   if (!force && !fresh && !portableOnly && fs.existsSync(file) && fs.existsSync(`${file}.json`)) {
     const record = readJson(`${file}.json`);
     const same = Object.keys(want).every((k) => JSON.stringify(record[k]) === JSON.stringify(want[k]));
@@ -368,7 +374,7 @@ export async function renderStill({
       await s.page.close();
       s.page = page = await openPage(s);
     }
-    seconds = await draw(page, at, tier, format, diag ?? null, part ?? null, over);
+    seconds = await draw(page, at, tier, format, diag ?? null, part ?? null, over, hold);
     await grab(s, page, file);
     if (portableOnly) await page.close();
   } finally {
@@ -378,7 +384,7 @@ export async function renderStill({
   writeJson(`${file}.json`, record);
   if (look) {
     const where = at.loop !== null ? `Loop frame ${at.loop}` : at.key ? `The frame that answers ${at.key}, film frame ${at.frame}` : `Film frame ${at.frame}`;
-    addLook(file, caption ?? `${where}, ${format}, ${tier} tier${diag ? `, ${diag} view` : ''}${over ? `, lens set by hand${over.aperture === null ? '' : `, radius ${over.aperture} m`}${over.focus === null ? '' : `, focus ${over.focus} m`}` : ''}`, by);
+    addLook(file, caption ?? `${where}, ${format}, ${tier} tier${diag ? `, ${diag} view` : ''}${over ? `, lens set by hand${over.aperture === null ? '' : `, radius ${over.aperture} m`}${over.focus === null ? '' : `, focus ${over.focus} m`}` : ''}${hold ? `, camera held, the world ${hold} s on` : ''}`, by);
   }
   return { file, record, reused: false, seconds };
 }

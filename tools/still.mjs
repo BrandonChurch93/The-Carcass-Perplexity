@@ -1,7 +1,7 @@
 import { args } from './lib/paths.mjs';
 import { renderStill, closeRenderer } from './lib/render.mjs';
 
-const USAGE = 'usage: npm run still -- --frame N | --key ID | --id ID | --loop N [--tier draft|review|final] [--format uhd|hd|preview] [--diag invalid|depth|standins|motion|solo|focus] [--part UNIT/NAME] [--aperture METRES] [--focus METRES] [--force] [--caption TEXT] [--by NAME]';
+const USAGE = 'usage: npm run still -- --frame N | --key ID | --id ID | --loop N [--tier draft|review|final] [--format uhd|hd|preview] [--diag invalid|depth|standins|motion|solo|focus] [--part UNIT/NAME] [--aperture METRES] [--focus METRES] [--hold SECONDS] [--force] [--caption TEXT] [--by NAME]';
 
 const a = args();
 const one = (v) => (Array.isArray(v) ? v.join(' ') : v);
@@ -26,6 +26,7 @@ try {
     caption: a.caption === undefined ? null : one(a.caption),
     by: a.by === undefined ? 'builder' : one(a.by),
     lens: { aperture: a.aperture === true ? undefined : a.aperture, focus: a.focus === true ? undefined : a.focus },
+    held: a.hold === true || a.hold === undefined ? 0 : Number(a.hold),
   });
   console.log(`${r.reused ? 'reused' : 'rendered'}: ${r.file}${r.reused ? '' : ` in ${r.seconds.toFixed(1)} s`}`);
 } catch (e) {

@@ -189,20 +189,31 @@ describe('the plans of the other critics', () => {
     expect(items(plan).some((i) => i.frame === cut.titanFrame)).toBe(true);
   });
 
-  it('R4 for a place: a sheet for each shot, consecutive frames at each key and event, and it says what it left out', () => {
+  it('R4 for a place: a sheet for each shot, consecutive frames at each key and event, and one sheet with the camera held at the establishing key', () => {
     const plan = core.planR4({ cfg, cut, film: filled(), unit: 'ribs' });
     const shots = cut.shots.filter((s) => s.unit === 'ribs');
     const events = cut.events.filter((e) => e.unit === 'ribs');
-    expect(items(plan).length).toBe(shots.length + 5 + events.length);
-    const runs = items(plan).slice(shots.length);
+    expect(items(plan).length).toBe(shots.length + 5 + events.length + 1);
+    const runs = items(plan).slice(shots.length, -1);
     for (const r of runs) expect(r.frames).toEqual(Array.from({ length: count }, (_, i) => r.frames[0] + i));
-    expect(plan.left.join(' ')).toMatch(/camera held still was left out/);
+    const held = items(plan).at(-1);
+    expect(held.frames.length).toBe(count);
+    for (const f of held.frames) expect(f.frame).toBe(cut.keyFrames['ribs-0']);
+    expect(held.frames[0].held).toBe(0);
+    expect(held.frames.at(-1).held).toBe(core.HELD_SECONDS);
+    expect(held.frames.map((f) => f.held)).toEqual([...held.frames.map((f) => f.held)].sort((a, b) => a - b));
+    expect(held.title).toMatch(/camera held/);
+    expect(plan.left.join(' ')).not.toMatch(/camera held/);
+    expect(core.planR4({ cfg, cut, film: filled(), unit: 'ribs' })).toEqual(plan);
   });
 
-  it('R4 for the reveal: the whole rise in two sheets and consecutive frames of the handoff', () => {
+  it('R4 for the reveal: the whole rise in two sheets, consecutive frames of the handoff, and the camera held at the top', () => {
     const plan = core.planR4({ cfg, cut, film: filled(), unit: reveal });
     const all = items(plan);
-    expect(all.length).toBe(3);
+    expect(all.length).toBe(4);
+    for (const f of all[3].frames) expect(f.frame).toBe(cut.titanFrame);
+    expect(all[3].frames.at(-1).held).toBe(core.HELD_SECONDS);
+    expect(plan.left.join(' ')).not.toMatch(/camera held/);
     expect(all[0].frames[0]).toBe(riseShot(cut).first);
     expect(all[1].frames.at(-1)).toBe(cut.titanFrame);
     expect(all[2].frames[0]).toBeGreaterThan(riseShot(cut).first);

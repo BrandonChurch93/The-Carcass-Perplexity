@@ -160,6 +160,8 @@ export class Engine {
   readonly extensions: string[] = [];
   format: Format;
   diagnostic: Diagnostic = null;
+  /** Seconds the world runs ahead of the frame's camera: frame N is drawn with the camera of N and the world at N's time plus this. */
+  hold = 0;
   part: string | null = null;
   private readonly post: Post;
   private readonly blur: FocusBlur;
@@ -432,7 +434,7 @@ export class Engine {
     });
     for (const m of muted) m.colorWrite = false;
     try {
-      this.accumulate(stage, frame, seq, [CENTRE], 0, false, effect ? FLAG_EFFECT : null, false);
+      this.accumulate(stage, frame, seq, [CENTRE], this.hold, false, effect ? FLAG_EFFECT : null, false);
     } finally {
       for (const m of muted) m.colorWrite = true;
       for (const [o, m] of swapped) o.material = m;
@@ -453,7 +455,7 @@ export class Engine {
     });
     stage.solo?.(part ? part.id : null);
     try {
-      this.accumulate(stage, frame, seq, samples, 0, part ? part.kind === 'effect' : false);
+      this.accumulate(stage, frame, seq, samples, this.hold, part ? part.kind === 'effect' : false);
     } finally {
       stage.solo?.(null);
       for (const o of hidden) o.visible = true;
@@ -463,9 +465,9 @@ export class Engine {
 
   private renderMotion(stage: Stage, frame: number, seq: number, samples: readonly Sample[]): void {
     const [a, b] = this.shown();
-    this.accumulate(stage, frame, seq, samples, 0, true);
+    this.accumulate(stage, frame, seq, samples, this.hold, true);
     this.show(stage, seq, null, a, true);
-    this.accumulate(stage, frame, seq, samples, config.motion.checkGapSeconds, true);
+    this.accumulate(stage, frame, seq, samples, this.hold + config.motion.checkGapSeconds, true);
     this.show(stage, seq, null, b, true);
     this.post.difference(a.texture, b.texture);
   }
@@ -476,7 +478,7 @@ export class Engine {
     else if (this.diagnostic === 'solo') this.renderSolo(stage, frame, seq, samples);
     else if (this.diagnostic === 'motion') this.renderMotion(stage, frame, seq, samples);
     else {
-      this.accumulate(stage, frame, seq, samples, 0, true);
+      this.accumulate(stage, frame, seq, samples, this.hold, true);
       this.show(stage, seq, this.diagnostic);
     }
     this.finish();
