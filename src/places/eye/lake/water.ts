@@ -3,13 +3,13 @@
 import * as THREE from 'three';
 
 /** Per metre of water: red goes first, so that the deep is blue and then black. */
-export const ABSORB: [number, number, number] = [0.085, 0.03, 0.017];
+export const ABSORB: [number, number, number] = [0.07, 0.024, 0.014];
 
 export function waterUniforms(): Record<string, THREE.IUniform> {
   return {
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
     uDeep: { value: new THREE.Vector3(0.0016, 0.0058, 0.0125) },
-    uDome: { value: new THREE.Vector4(0, 34, 0, 0) },
+    uDome: { value: new THREE.Vector4(0, 44, 0, 0) },
   };
 }
 

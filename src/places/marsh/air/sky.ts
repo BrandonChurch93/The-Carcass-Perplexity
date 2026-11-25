@@ -26,18 +26,18 @@ void main() {
   // The underside of the overcast as a level sheet far above: lumps that close up toward the horizon as real ones do.
   vec2 q = d.xz / (max(d.y, 0.0) + 0.09);
   q += vec2(0.004, 0.0015) * uTime;
-  float big = textureLod(tNoise, vec3(q * 0.035, 0.21), 0.0).g;
-  float mid = textureLod(tNoise, vec3(q * 0.11 + 0.4, 0.63), 0.0).a;
-  float small = textureLod(tNoise, vec3(q * 0.37, 0.87), 0.0).r;
+  float big = textureLod(tNoise, vec3(q * 0.11, 0.21), 0.0).g;
+  float mid = textureLod(tNoise, vec3(q * 0.31 + 0.4, 0.63), 0.0).a;
+  float small = textureLod(tNoise, vec3(q * 0.83, 0.87), 0.0).r;
   float n = big * 0.55 + mid * 0.3 + small * 0.15;
   float seen = smoothstep(0.0, 0.12, d.y);
-  c *= 1.0 + (n - 0.5) * 0.3 * seen;
+  c *= 1.0 + (n - 0.5) * 0.9 * seen;
   // The raining cloud: a darker belly over the curtain.
   float az = atan(d.x, -d.z);
   float side = abs(az - uRain.x) / uRain.y;
   float el = d.y / max(length(d.xz), 0.05);
-  float belly = smoothstep(1.6, 0.4, side + (big - 0.5) * 0.8) * smoothstep(0.08, 0.2, el) * smoothstep(0.75, 0.3, el);
-  c *= 1.0 - 0.22 * belly * uRain.w;
+  float belly = smoothstep(2.4, 0.3, side + (big - 0.5) * 1.6) * smoothstep(0.02, 0.14, el) * smoothstep(0.75, 0.3, el);
+  c *= 1.0 - 0.3 * belly;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

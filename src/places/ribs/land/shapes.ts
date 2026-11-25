@@ -91,23 +91,24 @@ export function sheet(rows: number, cols: number, closed: boolean, hint: 'out' |
 
 const unit = (i: number, salt: number): number => hash2(i | 0, salt) / 4294967296;
 
-/** How far the rock stands out from the smooth blade at a point, metres: masses of 50 m, bites where blocks have fallen, benches of 14 m, beds of 3 m with undercut ledges, flutes and joints of 5 m, blocks of 2 m. */
+/** How far the rock stands out from the smooth blade at a point, metres: masses of 70 m, hollows where slabs have come away, benches of 13 m with a ledge on top, joints that run up the face, blocks of 2 m. The thin beds are the stone's picture. */
 export function relief(x: number, y: number, z: number): number {
-  let d = 9 * (fbm3(x / 70, y / 95, z / 70, 3) - 0.5);
-  d -= 10 * smooth(0.55, 0.7, fbm3(x / 33 + 7, y / 44, z / 33 - 3, 3));
-  const warp = 4 * (noise3(x / 45, y / 45, z / 45) - 0.5);
-  const bench = (y + warp) / 14;
-  const benchAt = Math.floor(bench);
-  const kb = bench - benchAt;
-  const hb = unit(benchAt, 11);
-  d += 2.4 * (hb + (unit(benchAt + 1, 11) - hb) * smooth(0.88, 1, kb) - 0.5);
-  const beds = (y + warp * 0.6) / 3.1;
-  const bedAt = Math.floor(beds);
-  const k = beds - bedAt;
-  const here = unit(bedAt, 23);
-  d += 1.5 * (here + (unit(bedAt + 1, 23) - here) * smooth(0.8, 1, k) - 0.5) * (0.4 + 1.2 * noise3(x / 20, y / 20, z / 20));
-  d += 2.4 * (fbm3(x / 6.5, y / 26, z / 6.5, 2) - 0.5);
-  d += 0.9 * (noise3(x / 2.1, y / 2.1, z / 2.1) - 0.5);
+  let d = 20 * (noise3(x / 75, y / 100, z / 75) - 0.5) + 9 * (noise3(x / 26, y / 34, z / 26) - 0.5);
+  // Chipped at the size of a boat: creases and spurs, sharper than they are wide.
+  d += 7 * Math.abs(noise3(x / 15 + 1.7, y / 10, z / 15) - 0.5) + 5 * (noise3(x / 6.5, y / 5, z / 6.5) - 0.5);
+  // Bites out of the blade the size of a house, where a block has gone.
+  d -= 9 * smooth(0.6, 0.78, noise3(x / 33 + 5.1, y / 27, z / 33));
+  const warp = 16 * (noise3(x / 80, y / 80, z / 80) - 0.5) + 5 * (noise3(x / 21, y / 21, z / 21) - 0.5);
+  // Where a slab has come away the face steps back, most under a bench: its top is a ledge, its foot an overhang.
+  const bench = (y + warp) / 13;
+  const k = bench - Math.floor(bench);
+  const away = smooth(0.45, 0.75, fbm3(x / 48 + 3.3, y / 30, z / 48 - 1.1, 2));
+  d -= away * (2.5 + 3.5 * smooth(0.0, 0.5, k) * smooth(1.0, 0.93, k));
+  d += 0.9 * smooth(0.86, 0.97, k) - 0.5 * smooth(0.0, 0.12, k);
+  d += 2.4 * (fbm3(x / 9, y / 4.5, z / 9, 2) - 0.5);
+  // Joints: cracks that run up the face where it will break next.
+  d -= 1.5 * (1 - smooth(0, 0.06, Math.abs(noise3(x / 12, y / 60, z / 12) - 0.5)));
+  d += 0.8 * (noise3(x / 2.1, y / 2.1, z / 2.1) - 0.5);
   return d;
 }
 
@@ -131,7 +132,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     here.copy(surface(rib, t, 0, 0, 0));
     const ahead = surface(rib, Math.min(1, t + 0.002), 0, 0, 0);
     const speed = Math.max(1, ahead.distanceTo(here) / 0.002);
-    const want = options.fine + (4.2 - options.fine) * smooth(50, 200, here.y);
+    const want = options.fine + (3 - options.fine) * smooth(60, 220, here.y);
     t += want / speed;
     run += want;
   }
@@ -157,7 +158,11 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     }
     const r = Math.min(j - 1, body - 1);
     const tr = ts[r] as number;
-    const [a, b] = radii(rib, tr);
+    const [a0r, b0r] = radii(rib, tr);
+    // Notched along its length: where a block has gone the blade is thinner, by a quarter and more.
+    const notch = 1 + smooth(0.06, 0.2, tr) * (0.34 * (noise2(tr * 8 + rib.x * 0.013, 1.5) - 0.5) + 0.24 * (noise2(tr * 23 + rib.z * 0.01, 4.5) - 0.5));
+    const a = a0r * notch;
+    const b = b0r * notch;
     const shrink = j - 1 < body ? 1 : (cap[j - 1 - body] as number);
     base.copy(surface(rib, tr, phi, a * shrink, b * shrink));
     out.copy(surface(rib, tr, phi, a * shrink + 1, b * shrink + 1)).sub(base);
@@ -167,23 +172,27 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       const top = surface(rib, Math.min(1, tr + 0.004), 0, 0, 0).sub(surface(rib, tr, 0, 0, 0)).normalize();
       base.addScaledVector(top, lift);
     }
-    const slim = Math.min(1, Math.min(a, b) / 24);
+    const slim = Math.min(1, Math.min(a, b) / 22);
     const low = 0.35 + 0.65 * smooth(22, 60, base.y);
-    const d = relief(base.x, base.y, base.z) * slim * low * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
+    // Long grooves that run the length of the blade, as the picture has them.
+    const groove = 2.2 * (noise2(phi * 9 + rib.x * 0.01, tr * 2.2) - 0.5) - 1.6 * (1 - smooth(0, 0.08, Math.abs(noise2(phi * 5 + 3.3, tr * 1.3 + rib.z * 0.01) - 0.5)));
+    const d = (relief(base.x, base.y, base.z) + groove) * slim * low * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
     p.copy(base).addScaledVector(out, d);
     return [u, (along[r] as number) + (1 - shrink) * Math.min(a, b), 0.35 + 0.65 * smooth(-7 * slim, 1.5 * slim, d)];
   });
 }
 
-/** The top of the weed over a place on the floor, metres over the sea: ragged at 13 m and at 3 m. */
+/** The top of the weed over a place on the floor, metres over the sea: ragged at 30 m, at 9 m and at 3 m, between 13 and 33 m. */
 export function weedTop(x: number, z: number): number {
-  return TIDE - 1 + 7 * (noise2(x / 13, z / 13) - 0.5) + 2.6 * (noise2(x / 2.7 + 9.1, z / 2.7) - 0.5);
+  return TIDE - 2 + 16 * (noise2(x / 31, z / 31) - 0.5) + 6 * (noise2(x / 9, z / 9) - 0.5) + 2.6 * (noise2(x / 2.7 + 9.1, z / 2.7) - 0.5);
 }
 
 export interface SkirtOptions {
   /** The angles round the blade of the columns, rising, the last one a whole turn after the first. */
   phis: number[];
   rows: number;
+  /** The angle round the blade and the height of a place where the weed keeps to its smooth skirt. */
+  calm?: [number, number];
 }
 
 /** Evenly spaced angles, with a finer run between `from` and `to`. */
@@ -199,9 +208,22 @@ export function turns(coarse: number, fine?: { from: number; to: number; count: 
   return out;
 }
 
-/** How far the weed hangs proud of its smooth skirt, metres: masses of 5 m and hanks of 1 m, longer than they are wide. */
+/** How far the weed hangs proud of its smooth skirt, metres: great hanks that hang straight down, 6 m across and 2 m across, fuller at the hem, and strands of 1 m. */
 export function weedLump(x: number, y: number, z: number): number {
-  return 1.7 * (fbm3(x / 5.5, y / 15, z / 5.5, 3) - 0.5) + 0.5 * (noise3(x / 0.9, y / 3.6, z / 0.9) - 0.5);
+  const hang = 3.4 * (fbm3(x / 7, y / 45, z / 7, 2) - 0.5) + 1.5 * (noise3(x / 2.2, y / 16, z / 2.2) - 0.5);
+  const hem = 1.2 * smooth(0.35, 0.65, noise3(x / 6, y / 7 + 0.4 * noise3(x / 3, 0, z / 3), z / 6));
+  // Straps a hand wide that stand off the mass and hang straight.
+  const strap = 0.5 * Math.abs(noise3(x / 0.42, y / 5.5, z / 0.42) - 0.5);
+  return hang + hem - 0.5 + 0.5 * (noise3(x / 0.9, y / 3.6, z / 0.9) - 0.5) + strap;
+}
+
+/** The weed hangs in tiers from ledges 7 m apart: how far a tier stands out, metres, and how open it is to the sky (dark in the gap under the ledge above it). */
+export function weedTier(x: number, y: number, z: number): [number, number] {
+  const warp = 15 * (noise3(x / 23, 0.5, z / 23) - 0.5) + 3 * (noise3(x / 5, 2.5, z / 5) - 0.5);
+  const tier = (y + warp) / 7.5;
+  const k = tier - Math.floor(tier);
+  const deep = 1.5 * smooth(0.3, 0.7, noise3(x / 9, Math.floor(tier) * 3.7, z / 9));
+  return [1.8 * deep * (smooth(0, 0.22, k) - 0.5), 1 - 0.6 * Math.min(1, deep) * smooth(0.4, 0.02, k)];
 }
 
 /** The hanging weed round the foot of a blade, from under the sand to its ragged top. u runs round it in metres, v is the height in metres. */
@@ -215,6 +237,9 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
   const t0 = partAtHeight(rib, 0);
   const tTide = partAtHeight(rib, TIDE);
   const foot = new THREE.Vector3();
+  // v runs up the weed's own face in metres, so that the picture is not drawn out where the foot spreads.
+  const last = new Float32Array(cols * 3);
+  const run = new Float32Array(cols);
   return sheet(rows, cols, true, 'out', (j, i, p) => {
     const phi = options.phis[i] as number;
     const u = ((phi - first) / (Math.PI * 2)) * uSpan;
@@ -227,10 +252,18 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
     const yy = Math.max(0, y);
     const t = yy > 0 ? partAtHeight(rib, yy) : t0;
     const [a, b] = radii(rib, t);
-    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + weedLump(foot.x, y, foot.z) * (1 - tuck) * smooth(-5, 2, y);
+    // Round the one who hangs in it the weed lies where the layout says, so that the hanging one touches it.
+    const calm = options.calm ? smooth(3, 9, Math.hypot((phi - options.calm[0]) * (a + 10), y - options.calm[1])) : 1;
+    // The foot spreads over the rock and rubble the blade stands on.
+    const plinth = 2.5 * smooth(5, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
+    const tier = weedTier(foot.x, y, foot.z);
+    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + ((weedLump(foot.x, y, foot.z) + tier[0]) * calm + plinth) * (1 - tuck) * smooth(-5, 2, y);
     p.copy(surface(rib, t, phi, a + pad, b + pad));
     if (y < 0) p.y = y;
-    return [u, y];
+    if (j > 0) run[i] = (run[i] as number) + Math.hypot(p.x - (last[i * 3] as number), p.y - (last[i * 3 + 1] as number), p.z - (last[i * 3 + 2] as number));
+    else run[i] = -5;
+    p.toArray(last, i * 3);
+    return [u, run[i] as number, 1 + (tier[1] - 1) * calm];
   });
 }
 
@@ -297,9 +330,11 @@ export function boulderShape(seed: number, detail: number, squat: number): THREE
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i).normalize();
     let r = 1 + 0.5 * (fbm3(v.x * 1.1 + o, v.y * 1.1, v.z * 1.1, 3) - 0.5) + 0.12 * (noise3(v.x * 5 + o, v.y * 5, v.z * 5) - 0.5);
+    // Knobs of a quarter of its size, so that a big rock is a heap and not a slab.
+    r += 0.3 * Math.abs(noise3(v.x * 2.6 + o, v.y * 2.6, v.z * 2.6) - 0.5);
     for (const c of cuts) {
       const along = v.dot(c.n);
-      if (along > 0) r = Math.min(r, c.d / along + 0.03 * (noise3(v.x * 7 + o, v.y * 7, v.z * 7) - 0.5));
+      if (along > 0) r = Math.min(r, c.d / along + 0.1 * (noise3(v.x * 3.1 + o, v.y * 3.1, v.z * 3.1) - 0.5) + 0.03 * (noise3(v.x * 7 + o, v.y * 7, v.z * 7) - 0.5));
     }
     v.multiplyScalar(r);
     v.y *= squat;
