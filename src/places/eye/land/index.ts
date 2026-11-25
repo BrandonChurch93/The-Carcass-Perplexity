@@ -45,8 +45,8 @@ void main() {
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
   float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
   float cave = roofed * smoothstep(40.0, 150.0, land.b) * smoothstep(176.0, 130.0, vWorld.y);
-  k.occ *= 1.0 - 0.8 * cave;
-  k.albedo *= 1.0 - 0.45 * cave;
+  k.occ *= 1.0 - 0.93 * cave;
+  k.albedo *= 1.0 - 0.6 * cave;
   vec3 c = rigShade(vWorld, k.normal, v, k.albedo, k.rough, k.occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

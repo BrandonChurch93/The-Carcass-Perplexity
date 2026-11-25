@@ -109,11 +109,13 @@ void main() {
   float lum = dot(col, vec3(0.33));
   float ribs = smoothstep(-0.18, 0.55, vRest.z) * (1.0 - smoothstep(0.55, 0.7, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
   float rib = sin(vRest.z * 46.0 + vRest.y * 9.0);
-  vec3 albedo = mix(vec3(0.6, 0.45, 0.37), vec3(0.83, 0.71, 0.61), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
+  vec3 albedo = mix(vec3(0.42, 0.33, 0.27), vec3(0.8, 0.7, 0.6), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
   albedo *= 1.0 - 0.07 * ribs * smoothstep(0.2, 0.9, rib);
   // Old skin: stained in patches, darker along the back, grey with dust on the legs.
   float stain = 0.6 * vnoise(vRest.zy * 2.1 + vSeed * 13.0) + 0.4 * vnoise(vRest.zy * 7.0 + vRest.x * 3.0 + vSeed * 3.0);
-  albedo *= mix(0.62, 1.06, smoothstep(0.3, 0.62, stain));
+  albedo *= mix(vec3(0.4, 0.42, 0.45), vec3(1.08), smoothstep(0.32, 0.6, stain));
+  float dirt = 0.6 * vnoise(vRest.zy * 0.9 + vSeed * 41.0) + 0.4 * vnoise(vRest.zy * 4.3 + vSeed * 7.0);
+  albedo *= mix(vec3(0.5, 0.47, 0.45), vec3(1.0), smoothstep(0.3, 0.55, dirt + 0.25 * smoothstep(0.7, 1.5, vRest.y)));
   albedo *= mix(vec3(0.78, 0.74, 0.72), vec3(1.0), smoothstep(0.25, 0.9, vRest.y));
   // Dark and wet to the knee where it has stood in the lake; grey with dust above that.
   vec4 land = landAt(vWorld.xz);
@@ -128,10 +130,10 @@ void main() {
   albedo *= 1.0 - 0.1 * onNeck * smoothstep(0.3, 1.0, -crease);
   // A short pale coat: fine, lying one way, a little rough.
   float coat = vnoise(vec2(vRest.z * 420.0 + vRest.x * 90.0, vRest.y * 60.0)) - 0.5;
-  albedo *= 1.0 + 0.16 * coat;
-  n = normalize(n + (t * d.x + b * d.y) * 0.3 + b * (0.12 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0) + 0.3 * crease) + t * (0.14 * coat));
+  albedo *= 1.0 + 0.22 * coat;
+  n = normalize(n + (t * d.x + b * d.y) * 0.65 + b * (0.12 * ribs * cos(vRest.z * 46.0 + vRest.y * 9.0) + 0.3 * crease) + t * (0.14 * coat));
   float under = smoothstep(0.2, -0.7, normalize(vNormal).y);
-  float occ = (0.55 + 0.45 * smoothstep(0.05, 0.55, nh.b)) * mix(1.0, 0.62, under * step(vPart, 0.5));
+  float occ = (0.55 + 0.45 * smoothstep(0.05, 0.55, nh.b)) * mix(1.0, 0.45, under);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.72, 0.3, wet), occ);
   // Thin skin: the low sun comes through the ears, the edges of the neck and the legs.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);

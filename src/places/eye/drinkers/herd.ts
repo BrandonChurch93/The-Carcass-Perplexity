@@ -1,6 +1,6 @@
 // Who stands where: the animals the close shots are about, placed from the cameras of those shots, and the herd along the south shore.
 // Every animal is a pure function of time: where it stands, how far its neck is down, whether it walks or lies.
-import { KEYS, SHORE_TURN, onShore } from '../cameras';
+import { KEYS, SHORE_HEADING, SHORE_SWING, SHORE_TURN, onShore } from '../cameras';
 import { DEG, at, shoreAt, smooth } from '../layout';
 import type { Rng } from '../../../core/rng';
 
@@ -25,7 +25,18 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const steady = (v: number, phase: number) => (t: number) => v + 0.035 * Math.sin(t * 0.9 + phase) + 0.02 * Math.sin(t * 2.3 + phase * 3);
   const near = (x: number, out: number, facing: number, size: number, down: (t: number) => number): Drinker => {
     const p = onShore(x, out, 0);
-    return { x: p[0], z: p[2], facing: facing + SHORE_TURN, size, down, walk: 0, lies: false };
+    const eye = KEYS.shore.position;
+    const c = Math.cos(SHORE_SWING * DEG);
+    const s = Math.sin(SHORE_SWING * DEG);
+    const east = p[0] - eye[0];
+    const north = eye[2] - p[2];
+    return { x: eye[0] + east * c + north * s, z: eye[2] - (north * c - east * s), facing: facing + SHORE_TURN + SHORE_SWING, size, down, walk: 0, lies: false };
+  };
+  const beside = (right: number, ahead: number, turned: number, size: number, down: (t: number) => number): Drinker => {
+    const eye = KEYS.shore.position;
+    const c = Math.cos(SHORE_HEADING * DEG);
+    const s = Math.sin(SHORE_HEADING * DEG);
+    return { x: eye[0] + right * c + ahead * s, z: eye[2] + right * s - ahead * c, facing: SHORE_HEADING + turned, size, down, walk: 0, lies: false };
   };
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number): Drinker => ({
     x: key.position[0] + Math.sin(bearing * DEG) * distance,
@@ -42,7 +53,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     near(-86.5, -9.5, 82, 1, steady(0.05, 0.3)),
     near(-83.6, -7.6, 78, 0.52, steady(0.9, 1.1)),
     near(-79.8, -6.6, 76, 1, steady(0.97, 2.2)),
-    near(-71.4, -1.4, 283, 1, steady(0.97, 4)),
+    // The near one stands off the right edge of the shore shot: only its neck comes into the frame, down to the water.
+    beside(4.3, 8.5, -120, 1, steady(0.97, 4)),
     // The two of the last shot, on the brow of the bluff below the camera with their backs to it: they lift their heads as the centre swells.
     { x: centre[0] - 2.43, z: centre[2] - 29.5, facing: 7, size: 0.61, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
     { x: centre[0] - 0.5, z: centre[2] - 28.7, facing: 351, size: 0.47, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
@@ -55,7 +67,7 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     const bearing = rng.range(187, 207);
     const walker = i % 4 === 0;
     const lies = !walker && i % 7 === 3;
-    const r = shoreAt(bearing) + (walker ? rng.range(16, 34) : lies ? rng.range(5, 16) : rng.range(-9, 2));
+    const r = shoreAt(bearing) + (walker ? rng.range(16, 34) : lies ? rng.range(5, 16) : rng.range(-15, -4));
     const [x, z] = at(bearing, r);
     const period = rng.range(9, 17);
     const phase = rng.next();

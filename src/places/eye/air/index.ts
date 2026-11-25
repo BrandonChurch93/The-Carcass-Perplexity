@@ -79,7 +79,7 @@ void main() {
   far = min(far, 20000.0);
 
   // The clear air: thickest at the water, gone by the top of the walls. Its light is the low sky it is seen against.
-  float k0 = 0.00006 * uHaze * uThin;
+  float k0 = 0.000042 * uHaze * uThin;
   float scale = 190.0;
   float y1 = ro.y + rd.y * far;
   float od = abs(rd.y) > 1e-4 ? k0 * scale * (exp(-max(ro.y, 0.0) / scale) - exp(-max(y1, 0.0) / scale)) / rd.y : k0 * exp(-max(ro.y, 0.0) / scale) * far;

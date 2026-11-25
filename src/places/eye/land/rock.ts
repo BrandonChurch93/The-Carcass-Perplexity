@@ -77,13 +77,22 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float ay = (p.y - base) / (wide * 1.15);
     float rim = length(vec2(ax, max(ay, 0.0))) + 0.14 * (thin - 0.5) + 0.1 * (na.b - 0.5);
     arch = wall * step(mix(0.5, 0.25, roofed), pick) * (1.0 - smoothstep(0.7, 1.0, rim)) * smoothstep(-0.5, -0.3, ay) * smoothstep(0.3, 0.8, face);
-    stone = mix(vec3(0.6, 0.57, 0.53), vec3(0.82, 0.73, 0.6), wall) * (0.4 + 4.9 * ca * (0.45 + 5.0 * cb));
+    stone = mix(vec3(0.56, 0.54, 0.5), vec3(0.74, 0.65, 0.52), wall) * (0.4 + 4.9 * ca * (0.45 + 5.0 * cb));
     stone *= mix(vec3(0.84, 0.81, 0.78), vec3(1.08, 1.02, 0.94), smoothstep(0.3, 0.7, beds)) * (0.93 + 0.14 * thin);
     // Rust under the ledges and in the joints.
     stone = mix(stone, stone * vec3(1.0, 0.7, 0.42), 0.5 * smoothstep(0.5, 0.2, fh) * smoothstep(0.35, 0.65, vnoise(vec2(around / 60.0, p.y / 22.0))));
     stone = mix(stone, stone * vec3(0.17, 0.16, 0.17), 0.88 * streak);
     stone *= 1.0 - 0.93 * arch;
     bentFace = (tu * fd.x + vec3(0.0, 1.0, 0.0) * fd.y) * 0.6;
+    // The wall is broken in blocks and ledges that the mesh does not have: faces turned to the sun and from it, shelves that hold shade under them.
+    float b0 = vnoise(vec2(around / 34.0, p.y / 47.0));
+    float b1 = vnoise(vec2(around / 34.0 + 0.3, p.y / 47.0));
+    float c0 = vnoise(vec2(around / 9.0 + 5.0, p.y / 13.0));
+    float c1 = vnoise(vec2(around / 9.0 + 5.3, p.y / 13.0));
+    float shelf = vnoise(vec2(around / 120.0, p.y / 4.2 + 1.5 * b0));
+    bentFace += tu * (2.6 * (b1 - b0) + 1.5 * (c1 - c0)) * wall;
+    bentFace += vec3(0.0, 1.0, 0.0) * (0.7 * (smoothstep(0.35, 0.65, shelf) - 0.5)) * wall;
+    stone *= 1.0 - 0.3 * wall * smoothstep(0.5, 0.3, shelf) * smoothstep(0.45, 0.55, c0);
   }
   vec3 gravel = vec3(0.0);
   vec3 bentFlat = vec3(0.0);
@@ -96,9 +105,19 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // The flat: gravel, at two sizes so that it does not repeat.
     vec2 gd = (ha.xy * 2.0 - 1.0) * 1.5;
     float patchy = 0.65 * vnoise(p.xz / 63.0) + 0.35 * vnoise(p.xz / 19.0 + 4.0);
-    gravel = vec3(0.4, 0.375, 0.345) * (0.62 + 3.4 * ta * (0.6 + 3.6 * tb));
-    gravel *= mix(vec3(0.78, 0.79, 0.82), vec3(1.1, 1.04, 0.94), patchy);
+    gravel = vec3(0.3, 0.285, 0.27) * (0.5 + 3.8 * ta * (0.5 + 4.0 * tb));
+    gravel *= mix(vec3(0.5, 0.52, 0.56), vec3(1.15, 1.08, 0.96), smoothstep(0.25, 0.7, patchy));
     bentFlat = vec3(gd.x, 0.0, gd.y) * 0.55;
+    // Close to the camera the gravel is pebbles, each with its own shade.
+    float close = smoothstep(26.0, 7.0, length(cameraPosition - p));
+    if (close > 0.0) {
+      vec2 gc = p.xz / 1.37 + vec2(0.4, 0.8);
+      float tc = dot(texture2D(tTalus, gc).rgb, vec3(0.33));
+      vec3 hc = texture2D(tTalusNh, gc).rgb;
+      gravel *= mix(1.0, 0.5 + 2.4 * tc, close) * mix(1.0, 0.55 + 0.6 * smoothstep(0.1, 0.6, hc.b), close);
+      bentFlat = mix(bentFlat, vec3(hc.x * 2.0 - 1.0, 0.0, hc.y * 2.0 - 1.0) * 1.1, 0.75 * close);
+      gh = mix(gh, hc.b, close);
+    }
   }
   k.albedo = clamp(mix(gravel, stone, face), 0.0, 0.92);
   vec3 bent = mix(bentFlat, bentFace, face);

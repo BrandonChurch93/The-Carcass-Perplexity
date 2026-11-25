@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot. */
-export const BONES = { ahead: 5.6, right: 27, scale: 0.86 };
+export const BONES = { ahead: 6.4, right: 21, scale: 1.05 };
 
 const FRAGMENT = /* glsl */ `
 varying vec3 vWorld;

@@ -42,8 +42,8 @@ export function lipAt(a: number): number {
   const cx = Math.cos(a);
   const cz = Math.sin(a);
   const b = (((a / DEG) % 360) + 360) % 360;
-  // A bay bitten out of the lip beside the place of the edge shot, so that the wall of the shaft is seen from the lip.
-  const bay = 9 * smooth(LIP_BAY, LIP_BAY + 1.3, b) * (1 - smooth(LIP_BAY + 1.6, LIP_BAY + 4.2, b));
+  // A tongue of the shelf stands out into the deep beside the place of the edge shot, so that the wall of the shaft under it is seen from the lip.
+  const bay = 34 * smooth(LIP_BAY + 0.1, LIP_BAY + 0.6, b) * (1 - smooth(LIP_BAY + 3.4, LIP_BAY + 4.6, b));
   return DEEP + 9 * (vnoise(cx * 9 + 3, cz * 9 + 7) - 0.5) + 5 * (vnoise(cx * 31 + 1, cz * 31 + 5) - 0.5) + 2.4 * (vnoise(cx * 110, cz * 110) - 0.5) - bay;
 }
 
