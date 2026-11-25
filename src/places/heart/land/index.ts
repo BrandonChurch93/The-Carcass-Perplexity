@@ -2,9 +2,11 @@
 // height.ts is the shape (one function of x and z, which the rig bakes), meshes.ts turns it into triangles, shaders.ts is the rock, rocks.ts scatters the loose blocks.
 import * as THREE from 'three';
 import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
-import { CRACK_FOOT, CRACK_TOP } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, wallHeight, type Crack } from './height';
+import { stagedSeconds } from '../shared/stage';
+import { BUTTE_BOX, FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -86,7 +88,8 @@ export function create(ctx: HeartContext): HeartPiece {
   const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
-  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, lipMaterial];
+  const butteMaterial = ground({ FAR_LIGHT: '', STAGED: '' });
+  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, lipMaterial, butteMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     geometries.push(g);
@@ -197,7 +200,14 @@ export function create(ctx: HeartContext): HeartPiece {
   farBench.renderOrder = -3;
   for (const r of rocks.land) r.renderOrder = -2;
   buttress.renderOrder = -1;
-  ctx.scene.add(ctx.parts.built('land', wall, buttress, ...rocks.land), buttress, ...rocks.land);
+  // Staging by shot: the butte behind the group stands in shot heart-02 alone.
+  const butte = mesh(sheet(BUTTE_BOX.x0, BUTTE_BOX.z0, BUTTE_BOX.x1, BUTTE_BOX.z1, 0.75, stagedButteHeight, (_x, _z, y) => y > -0.3), butteMaterial);
+  butte.renderOrder = -1;
+  butte.visible = false;
+  const butteShot = shotById('heart-02');
+  const butteFrom = secondsInPlace(UNIT, butteShot.first) - 0.3 / 60;
+  const butteTo = secondsInPlace(UNIT, butteShot.last) + 0.7 / 60;
+  ctx.scene.add(ctx.parts.built('land', wall, buttress, butte, ...rocks.land), buttress, butte, ...rocks.land);
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
@@ -243,6 +253,10 @@ export function create(ctx: HeartContext): HeartPiece {
   const rocksBefore = (rocks as { beforeSample?: HeartPiece['beforeSample'] }).beforeSample;
   return {
     ...(rocksBefore ? { beforeSample: rocksBefore } : {}),
+    setTime: () => {
+      const staged = stagedSeconds();
+      butte.visible = staged >= butteFrom && staged <= butteTo;
+    },
     dispose: () => {
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();

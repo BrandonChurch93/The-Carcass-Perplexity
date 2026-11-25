@@ -559,3 +559,32 @@ function stones(x: number, z: number, cell: number, share: number, seed: number)
 export function rubbleAt(x: number, z: number): number {
   return Math.max(0.85 * stones(x, z, 0.66, 0.5, 1), stones(x, z, 0.34, 0.75, 4), 0.6 * stones(x, z, 0.17, 0.8, 9)) + 0.02;
 }
+
+// The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind
+// the group. The buttress of the place is a kilometre off through that lens and lost in the smoke, so a butte is staged for that shot, 235 m ahead of
+// its camera and right of its axis. It stands in no other shot.
+const BUTTE_FROM: [number, number] = [-455.6, 249.8];
+const BUTTE_AHEAD: [number, number] = [0.701, -0.713];
+/** The box of the staged butte, world metres. */
+export const BUTTE_BOX = { x0: -322, x1: -180, z0: 52, z1: 194 };
+
+export function stagedButteHeight(x: number, z: number): number {
+  const dx = x - BUTTE_FROM[0];
+  const dz = z - BUTTE_FROM[1];
+  const a = dx * BUTTE_AHEAD[0] + dz * BUTTE_AHEAD[1];
+  const b = -dx * BUTTE_AHEAD[1] + dz * BUTTE_AHEAD[0];
+  const da = (a - 235) / 46;
+  const db = (b - 60) / 46;
+  // Its plan is a rounded block with bays and noses; its foot is a skirt of talus, its face a cliff in three beds.
+  const e = Math.pow(Math.pow(Math.abs(da), 4) + Math.pow(Math.abs(db), 4), 0.25) + 0.16 * (noise(x / 19 + 2.1, z / 19) - 0.5) + 0.07 * (noise(x / 5.3, z / 5.3 + 7.7) - 0.5) + 0.05 * (blocks(x / 6.1 + 0.3 * z, z / 7.3) - 0.5);
+  if (e > 1.45) return -2;
+  const apron = 9 * smooth(1.42, 1.0, e);
+  const up = smooth(1.02, 0.84, e);
+  const beds = 3;
+  const q = up * beds + 0.5 * (noise(x / 8.3 + 1.1, z / 8.3) - 0.5);
+  const whole = Math.floor(q);
+  const stair = Math.min(1, Math.max(0, (whole + smooth(0.25, 0.8, q - whole)) / beds));
+  // The top falls away to the right of that frame and is broken into blocks and notches against the smoke.
+  const top = 39 - 0.4 * Math.max(0, b - 22) + 4.5 * (blocks(x / 9.7 + 0.2 * z, z / 8.1 + 3.3) - 0.5) + 2.6 * (noise(x / 3.3, z / 3.3 + 1.9) - 0.5) + 1.2 * (noise(x / 1.1 + 4, z / 1.1) - 0.5);
+  return Math.max(apron + 1.5 * (noise(x / 2.7, z / 2.7) - 0.5), top * stair) - 0.4;
+}
