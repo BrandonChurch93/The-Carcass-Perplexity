@@ -9,7 +9,7 @@ attribute float aHeat;
 attribute float aWho;
 uniform float uPixel;
 uniform vec4 uPools[14];
-uniform highp sampler2D tFeet;
+uniform vec4 uFeet[56];
 uniform highp sampler2D tGround;
 uniform float uFeetN;
 varying vec3 vWorld;
@@ -30,7 +30,7 @@ void main() {
     float off = 0.0;
     for (int j = 0; j < 4; j++) {
       vec2 at = vec2((first + float(j) + 0.5) / uFeetN, 0.5);
-      vec4 foot = texture2D(tFeet, at);
+      vec4 foot = uFeet[int(first) + j];
       float d = distance(foot.xy, p.xz);
       if (d < near) {
         near = d;
@@ -69,10 +69,9 @@ precision highp float;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${crust}
-uniform highp sampler2D tFeet;
-uniform float uFeetN;
+uniform vec4 uFeet[56];
 void main() {
-  vec4 foot = texture2D(tFeet, vec2(gl_FragCoord.x / uFeetN, 0.5));
+  vec4 foot = uFeet[int(gl_FragCoord.x)];
   // The highest of the plates under the pad: a foot does not go down into a gap, it bears on what stands highest.
   float top = crustAt(crustPoint(foot.xy)).y;
   for (int i = 0; i < 4; i++) {
