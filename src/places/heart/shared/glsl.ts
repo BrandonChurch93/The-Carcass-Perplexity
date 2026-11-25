@@ -66,8 +66,12 @@ uniform vec3 uFill;
 uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];
+uniform float uEmitterCore[8];
 uniform vec4 uRigPools[3];
 uniform vec4 uRigPoolSize[3];
+uniform vec4 uRigStream[48];
+uniform vec4 uRigStreamSpan;
+uniform vec4 uRigStreamLight;
 uniform vec2 uFlowFoot;
 uniform float uFlowT0;`;
 
@@ -212,9 +216,9 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
 // A light wraps round a face by its own size as seen from there (half its radius over its distance): a quarter at two radii, nothing far away,
 // so that relief far from a fire has a lit side and a dark side. It wrapped a quarter at every distance.
 // A small light is the core of more open lava than its disc (three discs stand for a river 130 m long, one for a row of fountains), so it casts
-// EMITTER_CORE times its own share; a light wider than 60 m (the lit fume) is its true size and casts once.
+// EMITTER_CORE (4.5) times its own share; a light wider than 60 m (the lit fume) is its true size and casts once. The rig works that out for
+// each light (uEmitterCore), and gives the light on the body of the fall's stream less, since the stream lights its own banks as a strip (below).
 // The land between cuts it: one read of the coarse land half way to the light, only where the light would count.
-const float EMITTER_CORE = 4.5;
 const float EMITTER_SHADE = 0.85;
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
@@ -228,7 +232,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float c = clamp((dot(n, d) * inversesqrt(d2) + wrap) / (1.0 + wrap), 0.0, 1.0);
     float reach = max(45.0 + 1.2 * r, 3.2 * r - 110.0);
     float q = d2 / (reach * reach);
-    float k = (3.14159 * r * r / d2) * c / (1.0 + q * q) * mix(EMITTER_CORE, 1.0, smoothstep(20.0, 60.0, r));
+    float k = (3.14159 * r * r / d2) * c / (1.0 + q * q) * uEmitterCore[i];
     if (k < 0.0015) continue;
     vec3 m = p + d * 0.5;
     float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
@@ -264,6 +268,23 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 poolLit = vec3(size.z, size.w, size.w * 0.08) * (3.14159 * apron);
   e += poolLit;
   aim += vec3(-back, 1.0) * poolLit.r;
+  // The stream of the fall (uRigStream: a row every few metres of z from the lip to the toe of the fan, each the middle of the stream, half the
+  // width of its open lava, the height of its surface, and its lean and share in one number; uRigStreamSpan: z of the first row, rows in a metre,
+  // the last row, z of the last row). The rock beside it takes the lava's light from that strip: whole at the brim, half at 3.5 m, nothing past
+  // 18 m, and by how far the face is turned to it (a level face beside it a third, a face turned away none: the relief of the bank is what shows
+  // the light). The fire stands a little over its bed, so a level bank sees it. No read of any map: two rows of a uniform.
+  float row = clamp((p.z - uRigStreamSpan.x) * uRigStreamSpan.y, 0.0, uRigStreamSpan.z);
+  int rowAt = int(row);
+  vec4 bank = mix(uRigStream[rowAt], uRigStream[min(rowAt + 1, 47)], row - float(rowAt));
+  float across = bank.x - p.x;
+  vec3 toStream = vec3(sign(across) * max(abs(across) * min(bank.w, 1.0) - bank.y, 0.0), bank.z - p.y, clamp(p.z, uRigStreamSpan.x, uRigStreamSpan.w) - p.z);
+  float streamAway = length(toStream);
+  toStream.y += 0.6;
+  float streamFacing = clamp((dot(n, toStream) * inversesqrt(dot(toStream, toStream)) + 0.25) / 1.25, 0.0, 1.0);
+  float streamK = (1.0 - 0.5 * max(bank.w - 1.0, 0.0)) * streamFacing / (1.0 + streamAway * streamAway * uRigStreamLight.z) * (1.0 - smoothstep(7.0, 18.0, streamAway));
+  vec3 streamLit = vec3(uRigStreamLight.x, uRigStreamLight.y, 0.0) * (3.14159 * streamK);
+  e += streamLit;
+  aim += vec3(toStream.xz * inversesqrt(max(dot(toStream.xz, toStream.xz), 1e-4)), 1.0) * streamLit.r;
   // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the fire, on the crust of the lake
   // only (within a metre of its level). The map is read once, toward where the light comes from: a read for each light cost half a second a sample.
   if (aim.z > 0.02) {
