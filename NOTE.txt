@@ -1,0 +1,7 @@
+2026-11-25 21:46 UTC
+work at 01a42d0 on agent/breath-life
+V1 plain: all four parts built and registered, min 23
+look-1.jpg = out/work/compare/breath-1.png
+look-2.jpg = out/work/compare/breath-3.png
+look-3.jpg = out/work/compare/breath-2.png
+look-4.jpg = out/work/compare/breath-0.png
