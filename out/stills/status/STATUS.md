@@ -1,8 +1,8 @@
-# Status 26
+# Status 28
 
-2026-11-25 04:54 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 05:33 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-0.jpg`: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier)
-- `02-pair-c.jpg`: Top: the lava at the line. Bottom: the mouth and its fall. Approved on the left, the build on the right. The lava now reads orange to yellow, no longer pale peach. The camera and the channel of the top view are being refitted next
-- `03-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
-- `04-key-heart-4-hd-draft.jpg`: The frame that answers heart-4, film frame 4006, hd, draft tier
+- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
+- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
+- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
+- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
