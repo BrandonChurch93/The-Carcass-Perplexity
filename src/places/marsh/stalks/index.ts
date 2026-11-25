@@ -52,6 +52,15 @@ function instanced(base: THREE.BufferGeometry, count: number, attributes: Record
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('stalks');
   const stalks = makeStalks(makePools());
+  // TEMPORARY, until the lead moves them in the anchors: the four stalks by the hero wallower stand between the lens of marsh-3 and its head.
+  // They go behind and to the left of the muzzle, where the approved picture has them.
+  const moved: [number, number][] = [[35.4, 0.1], [35.9, -0.4], [35.2, -0.9], [34.6, -1.6]];
+  moved.forEach((m, i) => {
+    const s = stalks[stalks.length - 4 + i];
+    const p = rel(m[0], m[1]);
+    s.x = p[0];
+    s.z = p[1];
+  });
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
