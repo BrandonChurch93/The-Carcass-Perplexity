@@ -209,10 +209,10 @@ vec4 meltAt(vec2 p, float ax, float push, float stir, float grain, float wide) {
   float between = d2 - d1;
 
   // The tongue of bare lava, and the thin skin that borders it.
-  float bare = max(wide, stir) * (1.0 - smoothstep(0.12, 0.32, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5) - 0.3 * stir));
+  float bare = max(wide, stir) * (1.0 - smoothstep(0.3, 0.5, ax + 0.5 * (big - 0.5) + 0.22 * (mid - 0.5) - 0.3 * stir));
   float raft = step(0.74, id) * smoothstep(0.05, 0.12, between) * (1.0 - 0.7 * stir);
   float open = bare * (1.0 - raft);
-  float near = (1.0 - smoothstep(0.3, 0.6, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5))) * max(wide, stir);
+  float near = (1.0 - smoothstep(0.5, 0.8, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5))) * max(wide, stir);
 
   // The cracks between the plates: centimetres wide, never narrower than a pixel and a half, and dimmer by as much as they are widened.
   float alive = smoothstep(0.34, 0.5, vnoise(p * vec2(0.45, 1.1) + 23.0) * 0.6 + 0.4 * mid + 0.25 * (1.0 - ax) - 0.1);
@@ -224,11 +224,11 @@ vec4 meltAt(vec2 p, float ax, float push, float stir, float grain, float wide) {
   float fold = 0.5 + 0.5 * sin(p.x * 17.0 + 7.0 * mid + 2.0 * p.y);
   float ropy = smoothstep(0.2, 0.7, push) * (1.0 - smoothstep(0.02, 0.08, grain));
   // A plate is darkest in its middle, where it is old and against the bank; it glows toward its edge, where it is thin.
-  float plate = 1005.0 + 85.0 * id - 55.0 * smoothstep(0.5, 1.0, ax) + 110.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 45.0 * (fine - 0.5) + (fold - 0.5) * 70.0 * ropy;
-  plate = mix(plate, 1215.0 + 60.0 * fine, near * (1.0 - 0.8 * raft));
+  float plate = mix(1205.0, 1050.0, smoothstep(0.45, 0.95, ax + 0.35 * (big - 0.5))) + 50.0 * (id - 0.5) + 110.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 45.0 * (fine - 0.5) + (fold - 0.5) * 70.0 * ropy;
+  plate = mix(plate, 1240.0 + 60.0 * fine, near * (1.0 - 0.8 * raft));
   float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
-  vec3 c = mix(blackbody(plate), blackbody(1265.0 + 85.0 * alive + 40.0 * (fine - 0.5)), crack);
-  c = mix(c, blackbody(1430.0 + 50.0 * streak + 20.0 * stir), open);
+  vec3 c = mix(blackbody(plate), blackbody(1300.0 + 85.0 * alive + 40.0 * (fine - 0.5)), crack);
+  c = mix(c, blackbody(1370.0 + 85.0 * streak * streak + 20.0 * (fine - 0.5) + 20.0 * stir), open);
   return vec4(c, 1.0 - open);
 }
 
@@ -275,7 +275,7 @@ void main() {
   float phase = uTime / CYCLE + 1.7 * vnoise(q * 0.21 + vSeam.y * 3.1);
   // A wide reach keeps a tongue open, and so does a seam the walkers have torn open to feed.
   float feeding = smoothstep(0.04, 0.07, vSeam.x) * (1.0 - stir);
-  float wide = max(smoothstep(0.7, 1.0, gape), feeding * smoothstep(0.2, 0.45, gape));
+  float wide = max(smoothstep(0.4, 0.7, gape), feeding * smoothstep(0.2, 0.45, gape));
   vec4 kelvin = vec4(0.0);
   vec4 first = vec4(0.0);
   float lead = 0.0;
@@ -291,7 +291,7 @@ void main() {
       vec2 h = hash22(vec2(cell + float(e), vSeam.y * 7.0 + 1.0));
       float side = h.y < 0.5 ? -1.0 : 1.0;
       vec2 middle = vec2((cell + float(e) + 0.2 + 0.6 * h.x) * 4.2, side * (0.25 + 0.5 * fract(h.y * 7.3)) * (0.4 + vSeam.w));
-      p = wind(p, middle, 0.28 + 0.3 * fract(h.x * 5.7), side * 0.75 * run);
+      p = wind(p, middle, 0.5 + 0.9 * fract(h.x * 5.7), side * 0.75 * run);
     }
     p = wind(p, poolAt, poolReach * 0.9, 0.42 * run * step(0.01, pool));
     p.x -= slowest * uTime + (fast - slowest) * run;

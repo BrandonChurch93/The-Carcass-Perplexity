@@ -203,7 +203,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     // Most of a channel is dark skin: the map carries the share of it that shows bright, more at the seams the walkers have torn open to feed.
     float c = n.g - 2.0;
     float feeding = smoothstep(0.04, 0.07, c) * (1.0 - step(1.3, c));
-    float bright = mix(0.05 + 0.13 * max(smoothstep(0.7, 1.0, gape), stirred), 0.22, feeding);
+    float bright = mix(0.07 + 0.13 * max(smoothstep(0.4, 0.7, gape), stirred), 0.22, feeding);
     g = vec2(gapHeat(d, gape, core, least).x * bright, clamp(meltKelvin(q, n), 1320.0, 1400.0));
     gLip = vec3(0.0);
   }
