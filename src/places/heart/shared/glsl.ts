@@ -107,7 +107,9 @@ vec3 skyIrradiance(vec3 n) {
   // The gain is the light's, not uFill's, because the air reads uFill for its haze: it sets rock under the thinned air to the tone of the pictures.
   e *= 1.9 + 0.1 * max(n.y, 0.0);
   float w = 0.5 + 0.5 * dot(n, uWarmDir);
-  return 3.14159 * (e + uWarmColour * 0.35 * w * w * seen);
+  // The even warm fill is whole on a level face (as before, exactly) and falls to 0.45 of itself on an upright one: it is what tinted every far
+  // wall brown. The warmth of a wall comes from the round lights, which have a place and a reach.
+  return 3.14159 * (e + uWarmColour * 0.35 * w * w * seen * mix(0.45, 1.0, max(n.y, 0.0)));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1),
@@ -140,39 +142,48 @@ float lakeReach(float h) {
 }
 
 // Irradiance from the glowing lake on a point p with normal n.
-// A face that looks straight up at lake level still takes LAKE_GRAZE of the lava within about three metres and LAKE_WASH of the lava within about
-// fourteen: real ground is rough, its grains face the fire, and the air over open lava glows and lights what lies under it.
-const float LAKE_GRAZE = 0.55;
-const float LAKE_WASH = 0.14;
+// The lake is a plane of light BELOW. A face takes it by how far it leans over it: an underside all of it, an upright face half, a level face none.
+// So a belly, the inside of a leg and a rock face over a seam are lit from below, and a back, a plate of crust and the far lake are not.
+// The three taps weigh 1 together (0.55, 0.33, 0.12), which is what a plane of that mean radiance sends: they weighed 3.4 while the lake's map was
+// dim, and against the lake's present map (0.07 to 0.2 at a channel, 0.4 at the fall's pool) that turned every rock beside a channel orange all over.
+// A level face low over the lake takes one thing more, the lip: LAKE_LIP of the lava within about a metre of it (rough ground has grains that face
+// the fire). It is read at the map's finest level and is gone two metres from a gap and four metres above the lake. Nothing reads the lake wide for
+// a level face any more: that wash is what turned a kilometre of crust maroon.
+const float LAKE_LIP = 0.5;
+vec3 lakeLip(vec3 p, float h) {
+  if (h >= 4.0) return vec3(0.0);
+  return lakeGlow(p.xz, 0.9) * (LAKE_LIP * smoothstep(4.0, 1.0, h));
+}
 vec3 lakeIrradiance(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
   float down = 0.5 - 0.5 * n.y;
-  float side = length(n.xz);
-  vec2 dir = side > 1e-4 ? n.xz / side : vec2(0.0);
-  vec2 reach = dir * h * side;
-  // The two near taps carry five times their share: a strip of lava two metres from a leg or a rock lights it several times harder than the sky does,
-  // and uCast cannot say so, because the air reads lakeGlow with it.
-  vec3 e = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 2.0;
-  e += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 1.2;
-  e += lakeGlow(p.xz + reach * 6.5, h * 4.0) * 0.2;
-  vec3 near = lakeGlow(p.xz, max(h * 2.5, 3.0));
-  e += near * 0.1;
-  return (e * down + near * LAKE_GRAZE + lakeGlow(p.xz, max(h * 4.0, 14.0)) * LAKE_WASH) * 3.14159 * lakeReach(h);
+  vec3 e = lakeLip(p, h);
+  if (down > 0.015) {
+    vec2 reach = n.xz * h;
+    vec3 under = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 0.55;
+    under += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 0.33;
+    under += lakeGlow(p.xz + reach * 6.5, h * 4.0) * 0.12;
+    e += under * (down * lakeReach(h));
+  }
+  return e * 3.14159;
 }
 
 // The same from one tap, for things far away.
 vec3 lakeIrradianceFar(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
-  float side = length(n.xz);
-  vec2 dir = side > 1e-4 ? n.xz / side : vec2(0.0);
-  vec3 e = lakeGlow(p.xz + dir * h * side * 1.8, max(h * 2.2, 3.0)) * (0.5 - 0.5 * n.y + LAKE_GRAZE);
-  return (e + lakeGlow(p.xz, max(h * 4.0, 14.0)) * LAKE_WASH) * 3.14159 * lakeReach(h);
+  float down = 0.5 - 0.5 * n.y;
+  vec3 e = lakeLip(p, h);
+  if (down > 0.015) e += lakeGlow(p.xz + n.xz * h * 1.8, max(h * 2.2, 3.0)) * (down * lakeReach(h));
+  return e * 3.14159;
 }
 
 // Irradiance from the round lights: the fall, the mouth, the fountains, the surge.
 // Each is a disc of real size and falls off with the square of the distance, as light does. The fume takes it beyond that: half is left at a reach of
-// 70 m + 1.5 radii (the fall: 85 to 100 m) and a sixteenth at twice as far, so the cliff beside the fall is lit for a hundred metres and a wall a
-// kilometre away stays the sky's.
+// 45 m + 1.2 radii (the fall: 64 to 71 m; it was 94 to 103 m, and the slope 70 m left of the fall stood 29 too red against its picture) and a
+// sixteenth at twice as far, so the cliff beside the fall is lit for some sixty metres and a wall a kilometre away stays the sky's. The lit fume
+// (150 m wide) keeps its reach of 370 m.
+// A light wraps round a face by its own size as seen from there (half its radius over its distance): a quarter at two radii, nothing far away,
+// so that relief far from a fire has a lit side and a dark side. It wrapped a quarter at every distance.
 // A small light is the core of more open lava than its disc (three discs stand for a river 130 m long, one for a row of fountains), so it casts
 // EMITTER_CORE times its own share; a light wider than 60 m (the lit fume) is its true size and casts once.
 // The land between cuts it: one read of the coarse land half way to the light, only where the light would count.
@@ -184,8 +195,9 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     vec3 d = uEmitters[i].xyz - p;
     float r = uEmitters[i].w;
     float d2 = dot(d, d) + r * r;
-    float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
-    float reach = max(70.0 + 1.5 * r, 40.0 + 2.2 * r);
+    float wrap = 0.5 * r * inversesqrt(d2);
+    float c = clamp((dot(n, d) * inversesqrt(d2) + wrap) / (1.0 + wrap), 0.0, 1.0);
+    float reach = max(45.0 + 1.2 * r, 3.2 * r - 110.0);
     float q = d2 / (reach * reach);
     float k = (3.14159 * r * r / d2) * c / (1.0 + q * q) * mix(EMITTER_CORE, 1.0, smoothstep(20.0, 60.0, r));
     if (k < 0.0015) continue;

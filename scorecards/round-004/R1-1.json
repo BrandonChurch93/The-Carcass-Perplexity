@@ -1,0 +1,133 @@
+{
+  "round": 4,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "claude_opus_5_5",
+  "answered": "2026-11-25 09:00 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the whole caldera floor",
+        "what": "-a is a dark ropy pahoehoe crust with fine glowing seams; -b is a flat, even grey cracked-mud playa with regular polygon cracks, bright cartoon lava lines, and an evenly lit CG surface",
+        "fix": "replace the floor with a ropy, uneven basalt crust that has varied roughness, wet-black and matte-grey patches, and thin irregular glowing seams that fade under crust"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the caldera walls, the arch cave and the mesa at right",
+        "what": "-a's walls are dark, eroded basalt with talus and sulphur streaks, set low and far; -b's are tall, pale, finely layered sandstone cliffs with sharp peaks on the skyline, and the mesa is a smooth grey block lost in fog. The scale and the geology both read as a different place",
+        "fix": "lower and darken the rim, give it blocky basalt layering, talus fans and yellow fumarole staining, and model the mesa as a dark eroded butte with a lit face"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the centre, behind the main herd",
+        "what": "-b adds a large dark smoke column with a bright orange glowing base on the floor. -a has none; its plume rises from the right behind the mesa, and its strongest glow is at the far right horizon",
+        "fix": "remove the central plume and glow pool, and move the plume and the orange haze back to the right behind the mesa"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the overall light and air",
+        "what": "-b is a flat, cool, grey overcast with a blue sky and uniform haze. It lacks -a's dusk warmth, the lava underlighting the fume and rock, and the deep falloff to dark in the foreground",
+        "fix": "warm the haze, darken the foreground and sky, and let the lava cast orange bounce onto nearby rock, smoke and the animals' undersides"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the left foreground slope (see set-A-02)",
+        "what": "the rocks are sharp, faceted low-poly shards with a stretched, smeared texture and specular sheen; -a has rounded, weathered scoria and ropy crust. The fumarole sulphur in -b is a pasted pale-yellow slab",
+        "fix": "use rounded, porous rock with soft contact shadows, and blend the sulphur crust into the rock as a stain and fringe"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the ribcage carcass and debris in the right middle ground",
+        "what": "the carcass sits on a flat decal disc of different texture, and there are extra prop piles (a rubble heap and a log) that -a lacks. The right-hand lava fire throws particle sparks, where -a has a low, smoky fire line",
+        "fix": "seat the carcass into the crust without a visible footprint, remove the extra props, and make the right-hand fire a low, fume-wrapped burning seam"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the lava channel and the floor around it (see set-A-04)",
+        "what": "-a has a ropy, coiled pahoehoe crust with folded, glowing toes; -b has smooth, rubbery, extruded slabs with banded displacement stepping, and a flat, plasticky, featureless floor that reads as clay",
+        "fix": "rebuild the flow with ropy coils, crust plates that break over glowing cores, and high-frequency rough basalt detail across the floor"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the left foreground rocks and cliff",
+        "what": "the pale, square, sandstone-like blocks and the bright orange, sponge-textured cliff at upper left do not match -a's dark scoria and sulphur-crusted boulders with steam",
+        "fix": "replace them with dark, rounded volcanic boulders with sulphur patches, and let steam rise from them; drop the orange cliff tint"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the background rim, arch and horizon",
+        "what": "the rim is tall layered cliffs with a ring-lit arch and a large central smoke column; the horizon is a hard, bright orange band at a different eye level. -a has a low, hazy basalt rim, a lava fall from the arch, and pinpoint glows along the far floor",
+        "fix": "lower and darken the rim, soften it with haze, restore the lava fall, and break the horizon glow into scattered seam lights"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the far animals",
+        "what": "-a's walkers are tall, thin-legged giraffe-like figures lit by the rim; -b's main animal is a squat, insect-like body with a long drooping neck, reading as a different creature in silhouette",
+        "fix": "match -a's tall upright stance and long legs, with a hanging tendril neck and the lit, fringed mouth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the depth of field and grade",
+        "what": "-a's close macro has a shallow focus falloff and warm dusk contrast; -b is flatter and greyer, with lower contrast in the foreground",
+        "fix": "deepen the foreground shadows and warm the grade toward -a's dusk"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the foreground floor around the carcass (see set-A-06)",
+        "what": "-a has a rough, ropy crust filling the whole frame; -b has a flat, smooth, untextured grey plane with the carcass sitting on a raised disc of contour-banded displacement that ends on a visible edge",
+        "fix": "carry the ropy crust right across the floor and blend the carcass mound into it with no visible border"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the background walls, arch and plume",
+        "what": "as in 01: layered tan cliffs with peaks, a ring-glowing arch, and a central smoke column with a glowing base. -a has a low, dark basalt rim, a lava fall from the arch, and the glow at the right behind the mesa",
+        "fix": "restore the dark, low rim and the lava fall, and move the plume and glow back to the right"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the left animal",
+        "what": "-a's walker is gaunt, with a fibrous bark-like hide and lit tendrils; -b's has a heavy ribbed torso, thick legs, a glowing particle-fan mouth and a darker body that loses the rim light. A small white glowing speck floats near its legs",
+        "fix": "thin the body and legs, give it -a's weathered hide and soft lit tendrils, and remove the stray speck"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the carcass vent and steam",
+        "what": "in -b, a single straight, uniform steam column rises from a bright lava pocket. In -a, a faint, wispy smoke curls over a small ember",
+        "fix": "reduce the steam to thin, drifting wisps and shrink the ember glow"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the overall light",
+        "what": "-b's sky is cool and blue, and its light is flat; it lacks -a's warm, smoky dusk and the lava bounce on the carcass and floor",
+        "fix": "warm and darken the grade, and add an orange underlight from the seams"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "the carcass bark",
+        "what": "the bark plates are a regular, tiled scale pattern, against -a's irregular peeling bark",
+        "fix": "break up the tiling with irregular peeling plates and fibres"
+      }
+    ]
+  }
+}

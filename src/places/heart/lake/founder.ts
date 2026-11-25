@@ -25,6 +25,7 @@ attribute vec4 aLife;
 varying vec2 vUv;
 varying vec3 vWorld;
 varying vec4 vGob;
+varying vec2 vFlight;
 ${NOISE_GLSL}
 uniform float uTime;
 void main() {
@@ -46,6 +47,11 @@ void main() {
   // A gob is pulled out along its path while it is soft, and shrinks as it tears.
   float pull = 1.0 + aLife.w * 1.6 + 0.09 * length(now);
   vec4 centre = viewMatrix * vec4(at, 1.0);
+  // Never a point of light: from far a gob is drawn two to three pixels wide (at 1080 lines) and dimmer by as much as it is widened.
+  float pixel = 2.0 * max(-centre.z, 0.1) / (projectionMatrix[1][1] * 1080.0);
+  float drawn = max(size, 1.25 * pixel);
+  vFlight = vec2(age / max(2.0 * vel.y / 9.8, 0.2), size / drawn);
+  size = drawn;
   vec2 along = normalize((viewMatrix * vec4(now, 0.0)).xy + vec2(1e-4, 0.0));
   vec2 across = vec2(-along.y, along.x);
   float shown = step(0.0, at.y) * step(0.02, age);
@@ -62,6 +68,7 @@ precision highp float;
 varying vec2 vUv;
 varying vec3 vWorld;
 varying vec4 vGob;
+varying vec2 vFlight;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -72,9 +79,10 @@ void main() {
   float shape = body + (ragged - 0.5) * (0.9 + 0.7 * vGob.w);
   float thin = smoothstep(0.1, 0.62, shape);
   // It leaves the vent yellow, and cools as it flies: small and thin parts first.
-  float cool = vGob.x / (1.5 + 6.0 * vGob.y) + 0.3 * thin + 0.55 * fract(vGob.z * 3.7) - 0.25;
-  float kelvin = mix(1330.0, 780.0, clamp(cool * 0.9 + 0.25 * ragged, 0.0, 1.0));
-  vec3 c = blackbody(kelvin) + vec3(0.004, 0.0035, 0.003);
+  // About 1450 K at the vent and 1150 K where it lands. Round in its shading: hottest in its middle, a cooler rim.
+  float cool = vFlight.x * (0.75 + 0.5 * fract(vGob.z * 3.7)) + 0.12 * (ragged - 0.5);
+  float kelvin = mix(1450.0, 1150.0, clamp(cool, 0.0, 1.0)) - 130.0 * thin * thin;
+  vec3 c = blackbody(kelvin) * vFlight.y + vec3(0.004, 0.0035, 0.003) * vFlight.y;
   gl_FragColor = vec4(rigOut(c), 1.0);
   if (shape > 0.62) discard;
 }`;
@@ -212,13 +220,15 @@ export function createFoundering(ctx: HeartContext): Foundering {
       origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8);
       origin[k * 3 + 1] = rng.next();
       origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8);
-      const up = sheet ? rng.range(4, 7) : rng.range(5.5, 12.5);
+      // A low dome: most gobs rise two to four metres, the highest about six.
+      const up = sheet ? rng.range(3.5, 6) : rng.range(5, 11);
       thrown[k * 3] = rng.range(-2.6, 2.6);
       thrown[k * 3 + 1] = up * tall;
       thrown[k * 3 + 2] = rng.range(-2.6, 2.6);
       life[k * 4] = rng.range(2.6, 4.0);
       life[k * 4 + 1] = rng.next();
-      life[k * 4 + 2] = sheet ? rng.range(0.3, 0.7) : 0.07 + 0.36 * Math.pow(rng.next(), 2.2);
+      // Gobs of 5 to 40 cm: this is half the size.
+      life[k * 4 + 2] = sheet ? rng.range(0.15, 0.3) : 0.025 + 0.175 * Math.pow(rng.next(), 2.2);
       life[k * 4 + 3] = sheet;
     }
   });

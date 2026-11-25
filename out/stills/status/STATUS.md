@@ -1,7 +1,8 @@
-# Status 36
+# Status 38
 
-2026-11-25 08:20 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 09:02 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-3.jpg`: The feeding picture on main at 08:17 UTC with eight hand-backs merged. Gain: the animals are dark and matt as in the picture, no clay pattern, pale roots. Defect, being fixed now: the air turns the new lake's glow into one flat orange wall.
-- `02-heart-0.jpg`: The wide view on main at 08:16 UTC. Gains: the bench is as dark as the picture's (MEASURED 37 34 32 against 38 36 35), the lake is dark with a net of thin seams. Defects: the orange block over the foot of the fall (the same cause), pink smoke, the sunk one still pale here (its dark version went in two minutes later).
-- `03-heart-2.jpg`: The one that sank, main at 08:16 UTC: the near animal is now a dark silhouette. The new crust is dark but too smooth: its owner has that as the first job of its next version.
+- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
+- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
+- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
+- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.
