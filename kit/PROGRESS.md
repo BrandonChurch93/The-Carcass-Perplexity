@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 52, 2026-11-25 14:20 UTC:
+Status 53, 2026-11-25 14:54 UTC:
 
-- `01-m1406-pair-2.jpg`: heart-2 on the final build (9ac88bf), the picture left, ours right: thick soft ropes now lie on the floor near the lens and the zebra stripes are gone. Still wrong: the floor is greyer and flatter than the picture's wet black folds, the hull sits on a pale woolly apron, and the glow round it is small
-- `02-m1406-pair-0.jpg`: heart-0: the pale ellipse beside the fountain is gone (it was a sinking plate mirroring the sky) and each vent carries a yellow dome. Still wrong: the fall is thinner than the picture's, the far bank is rows of level orange lines, the near bank is one dark slope
-- `03-m1406-pair-1.jpg`: heart-1: cords run to the shore and the trench wall shows plate ends. Still wrong: the cords are even combed arcs and paler than the picture, and the melt is a flat bright ribbon in a hard trench
-- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
+- `01-m1454-pair-2.jpg`: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes. Still wrong: the floor is greyer and flatter than the picture's wet black folds and the hull's apron is pale
+- `02-m1454-pair-0.jpg`: heart-0 at the final tier in uhd. Still wrong: the fall is thinner than the picture's, the far bank is rows of level orange lines, the near bank is one dark slope
+- `03-m1454-pair-1.jpg`: heart-1 at the final tier in uhd. Still wrong: the cords are even combed arcs, and the melt is a flat bright ribbon in a hard trench
+- `04-heart-1.jpg`: heart-1: approved beside frame, uhd final, with 2 crop pairs
 
+Status 52, 2026-11-25 14:20 UTC, showed: heart-2 on the final build (9ac88bf), the picture left, ours right: thick soft ropes now lie on the floor near the lens and the zebra...
 Status 51, 2026-11-25 14:03 UTC, showed: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron.
 Status 50, 2026-11-25 13:36 UTC, showed: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right.
-Status 49, 2026-11-25 13:15 UTC, showed: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T14:20:46Z
-phase 3: 11.19 h used of 13.00 h
-build: 17.85 h used of 72.00 h
+2026-11-25T14:54:59Z
+phase 3: 11.76 h used of 13.00 h
+build: 18.42 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 18
+minutes since the last status: 34, status overdue
 ```
 
 ## Phases
@@ -1567,3 +1567,4 @@ none
 - 2026-11-25 14:06 UTC. 14:06 chain AH passed determinism on ee929c8 (commit fc560ae holds its parts and pictures). Merged to 0141c0c, each after the trailer check, tsc clean, G10 pass: the crust form D3 8bda667 (ropes 0.55 to 0.8 m apart and 6 to 26 cm high round the one that sank; arc centres behind the lobe) and the lava D4 ccf7bf1 (the pale ellipse beside the fountain was the top of the foundering plate mirroring the sky; found by rendering each part alone; the plate is now shaded along its normal and fully rough, albedo 0.28). The final chain AI runs on 0141c0c since 14:06:29. Every owner has now given its last code. The Look lock writer was started at 14:07 with the ten owners' blocks (limit 30 minutes).
 - 2026-11-25 14:19 UTC. 14:16 UTC: chain AI passed determinism on main 0141c0c. The snapshot for round 7 is commit 9ac88bf (0141c0c with the parts register: 96 parts, the Heart's 15 all built, none a stand-in or a fallback). Round 7, the last round of the look lock, was ordered at 14:18: the pack and the measures on two other machines, critics and jury to follow when the packs are back, with the families turned once more (R1 claude, R3 gemini, R4 gpt). No fix follows round 7; what stays wrong goes into the review stop. The Heart review clip was ordered at 14:18 at the final tier in hd from the same commit: 16 chunks of 2 s, 1714 frames, in 14 shares on 14 fresh machines (heart_clip_renderer_01 to _14), 65 to 105 minutes a share by the meter, 19.4 machine hours. The Look lock writer handed back at 14:15 after 8 minutes: Locked settings, What worked and what did not, and the six Recipes are now under Look lock (618 lines, checked against the source at 0141c0c). Rounds 6 and 7 were added to the Rounds list, and the Parts table under Units was brought up to date.
 - 2026-11-25 14:21 UTC. Status 52 shown at 14:21 UTC with three pairs of the final build 9ac88bf (heart-2, heart-0, heart-1; heart-3 and heart-4 are pixel-identical to status 51 and were not shown again). ElevenLabs read at 14:19: 1 character left of 131,000. The five keys at the final tier in uhd render locally from 14:20 for the comparison images.
+- 2026-11-25 14:56 UTC. Status 53 shown at 14:55 UTC, four minutes past the 30 minute gap (the Builder was waiting on the pack and did not look at the clock; statuses are posted by the clock from here, not by the next message). Three pairs at the final tier in uhd from 9ac88bf. Round 7: the packs came back at 14:54 (59 files, 35.5 minutes on the pack machine; the five judged frames at the final tier in uhd, 131 preview stills for the R4 sheets), unpacked, and the plan made with the families turned (R1 claude, R3 gemini, R4 gpt; reviewer_70 to reviewer_75; jurors juror_r7_1a to juror_r7_5e on the fixed panel). The first critic (reviewer_70, R1-1) was sent at 14:56. With 14 clip renderers and the measure renderer working, one agent slot of the 16 is free, so the critics and jurors go out one or two at a time until clip shares hand back. The clip, MEASURED by its renderers after ten minutes from the frames the encoder had taken in, start-up included: 37 and 38 s a frame in the wide shot (chunks 0 and 1), 44 to 47 s in the line, the sunk one and the mouth (chunks 3 and 9, 8, 10, 13, 14), 60 to 67 s in the feeding shot (chunks 4, 5, 6, 7). The feeding shot's shares will need about 2 h to 2 h 15 min where the meter of a6999eb gave 1 h 44 min; the code that reached main after the meter (the walkers' legs, trunk and roots, the seams on the feeding floor, the ropes) is the difference. The tier is not lowered: a restart at the review tier would not end sooner. ElevenLabs read at 14:54: 1 character left of 131,000.
