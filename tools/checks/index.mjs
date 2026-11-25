@@ -1,5 +1,6 @@
 import { commandCheck } from './commands.mjs';
 import { runG4 } from './g4.mjs';
+import { runG5 } from './g5.mjs';
 import { runG10 } from './g10.mjs';
 import { checkG8, checkG9 } from './repo.mjs';
 import { runG6 } from './g6.mjs';
@@ -9,6 +10,8 @@ import { runG12 } from './g12.mjs';
 import { runG15 } from './g15.mjs';
 import { runG16 } from './g16.mjs';
 import { runD1 } from './d1.mjs';
+import { runD2 } from './d2.mjs';
+import { runD7 } from './d7.mjs';
 import { runA1 } from './a1.mjs';
 import { runA2 } from './a2.mjs';
 import { runA3 } from './a3.mjs';
@@ -26,6 +29,7 @@ const BUILT = {
   G2: commandCheck(['test']),
   G3: commandCheck(['run', 'determinism']),
   G4: runG4,
+  G5: runG5,
   G6: runG6,
   G7: runG7,
   G8: fromRepo(checkG8),
@@ -36,6 +40,8 @@ const BUILT = {
   G15: runG15,
   G16: runG16,
   D1: (ctx) => runD1(ctx),
+  D2: (ctx) => runD2(ctx),
+  D7: (ctx) => runD7(ctx),
   A1: runA1,
   A2: runA2,
   A3: (ctx) => runA3(ctx),

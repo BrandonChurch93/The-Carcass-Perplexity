@@ -100,6 +100,17 @@ The check G6 is `tools/checks/g6.mjs`. It reads the table under "Judged frames" 
 
 The check G12 is `tools/checks/g12.mjs` and the rise part of G15 is in `tools/checks/g15.mjs`. Both read `filmStates` from the built page. The rule for a smooth rise is `riseFaults` in `tools/lib/rise-core.mjs`: the camera may not fall, and its climb from one frame to the next may not change by more than a quarter of itself.
 
+## The film, the loop and the local render
+
+| Command | What it does |
+| --- | --- |
+| `npm run film -- --format uhd|hd|preview --tier draft|review|final [--first N] [--last N] [--unit ID] [--fps N] [--join] [--silent] [--chunks A,B,C | --of K --part I]` | Renders the film in chunks straight into the encoder, keeps every finished chunk under `out/work/film/chunks/`, and joins them with the mix without a second encode. A run that was stopped carries on from the chunks it kept. `--of K --part I` renders one share of the chunks, for one machine of several; `--join` joins what is there |
+| `npm run film -- --format uhd|hd|preview --from FILE [--fps N]` | Makes a smaller copy of a film that is already rendered |
+| `npm run loop -- --format uhd|hd|preview --tier draft|review|final [--first N] [--last N] [--join]` | Renders the card loop, its web copy and `card-still.jpg` |
+| `npm run render:local -- --what film --test [--silent]`, `--what film --go [--prores] [--silent]`, `--what loop`, `--proof` | The render for a machine with a graphics card. `--proof` renders two seconds of the film and of the loop to `out/work/local/` and writes `proof.json` |
+
+A chunk is used again when its record matches the format, the tier, the rate, the frames, the engine hash, the hashes of the unit it shows and the browser version. The machine is not compared, so chunks made on other machines join. The checks G5, D2 and D7 are `tools/checks/g5.mjs`, `d2.mjs` and `d7.mjs`.
+
 ## The published build, `tools/flows.mjs`
 
 `npm run flows [-- --url URL]` replays the visitor's flows listed in `FLOWS.md` against the hosted copy in a fresh browser and exits 1 if one fails. Without `--url` it reads the address of `index.html` from `out/work/host/url.txt`. It counts the frames the page draws from inside the page, because a machine without a graphics card draws a frame in seconds.

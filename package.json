@@ -37,7 +37,10 @@
     "stress": "node tools/stress.mjs",
     "trace": "node tools/trace.mjs",
     "measure": "node tools/measure.mjs",
-    "pack": "node tools/pack.mjs"
+    "pack": "node tools/pack.mjs",
+    "film": "node tools/film.mjs",
+    "loop": "node tools/loop.mjs",
+    "render:local": "node tools/render-local.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",
