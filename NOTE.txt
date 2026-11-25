@@ -1,4 +1,4 @@
-2026-11-25 21:29 UTC
-work at 02fffbe on agent/eye-place
-Foundation only: the wide key through the new root and rig, still every part a stand-in, equal to the blockout. Nothing built yet.
+2026-11-25 21:56 UTC
+work at 152b497 on agent/eye-place
+eye-0 at minute 33: land, brow, lake with mirror, sky, air and mist are drawn plain; animals and bones are still stand-ins; amber shelf too pale, haze too grey, brow too small, cameras for the other keys not refitted
 look-1.jpg = out/work/compare/eye-0.png
