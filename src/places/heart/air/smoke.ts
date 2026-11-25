@@ -10,7 +10,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_STEAM = 16;
 export const MAX_BODIES = 12;
 /** March steps for each texel. Four texels with four offsets are averaged, so the march seen is four times as fine. */
-export const SMOKE_STEPS = { body: 14, steam: 10 };
+export const SMOKE_STEPS = { body: 14, most: 24, steam: 10 };
 
 export const SMOKE_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -41,7 +41,8 @@ ${RIG_GLSL}
 
 const vec3 STEAM_ALBEDO = vec3(0.88, 0.86, 0.84);
 const vec3 SMOKE_ALBEDO = vec3(0.52, 0.46, 0.4);
-const vec3 SKY_DIR = vec3(-0.38, 0.9, 0.22);
+const vec3 SKY_DIR = vec3(-0.58, 0.75, -0.29);
+const vec2 SKY_SIDE = vec2(-0.895, -0.446);
 
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
@@ -169,13 +170,27 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     t1 = min(t1, max(ya, yb));
   } else if (oy < 0.0 || oy > A.w) return;
   if (t1 <= t0) return;
+  // A body that widens upward is narrow where the view meets it low: the bounds are drawn in to the widest it is over the heights the view crosses.
+  if (D.y > 0.0 && qa > 1e-8) {
+    float top = clamp(max(oy + rd.y * t0, oy + rd.y * t1) / A.w, 0.0, 1.0);
+    float less = A.z * (1.0 + D.y * top) * 1.45;
+    float qh = qb * qb - qa * (dot(oxz, oxz) - less * less);
+    if (qh < 0.0) return;
+    qh = sqrt(qh);
+    t0 = max(t0, (-qb - qh) / qa);
+    t1 = min(t1, (-qb + qh) / qa);
+    if (t1 <= t0) return;
+  }
   float mid = 0.5 * (t0 + t1);
   bool close = mid < uSplit;
-  float dt = (t1 - t0) / float(${SMOKE_STEPS.body});
+  // A long way through a body of small lumps is taken in more paces, so that the lumps are met and not stepped over.
+  float count = clamp(ceil((t1 - t0) / (0.2 * D.z)), float(${SMOKE_STEPS.body}), float(${SMOKE_STEPS.most}));
+  float dt = (t1 - t0) / count;
   float probe = D.z * 0.09;
   float through = 1.0;
   vec3 wide = F.x > 0.0 ? 4.0 * lakeGlow(A.xy + B.xy * 0.4 * A.w, 450.0) : vec3(0.0);
-  for (int k = 0; k < ${SMOKE_STEPS.body}; k++) {
+  for (int k = 0; k < ${SMOKE_STEPS.most}; k++) {
+    if (float(k) >= count) break;
     float t = t0 + (float(k) + jitter) * dt;
     vec3 p = ro + rd * t;
     float above;
@@ -186,11 +201,15 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float skyward = bodyDensity(i, p + SKY_DIR * probe, false, over);
     float skyT = exp(-B.w * 2.0 * above);
     // The top of each billow is open to the sky and its underside is not: the lumps read as lumps.
-    vec3 light = skyLight(p.y) * F.z * (0.55 + 0.45 * skyT * (1.0 - 0.6 * skyward));
+    // And the side of the whole body that faces the brighter west of the sky is paler than the side that faces away.
+    vec2 off = (p.xz - A.xy - B.xy * (p.y - C.w)) / (A.z * (1.0 + D.y * clamp((p.y - C.w) / A.w, 0.0, 1.0)));
+    float flank = clamp(0.5 + 0.5 * dot(off, SKY_SIDE), 0.0, 1.0);
+    vec3 light = skyLight(p.y) * F.z * (0.28 + 0.5 * (1.0 - skyward) + 0.3 * skyT) * mix(0.62, 1.25, flank);
     // Lit from below: the open lava under it, the whole glowing floor round it, and the round lights where it stands by them. Its underside takes it, its top does not.
     // The lowest metres take the least: the crust right under them is dark, and it is the smoke a little higher that sees the open lava all round.
     float up = p.y - C.w;
-    float rise = 1.0 - 0.95 * exp(-up / 10.0);
+    // A sheet that lies on the lake is all low: it is lit through.
+    float rise = 1.0 - 0.95 * exp(-up / 10.0) * smoothstep(8.0, 20.0, A.w);
     light += rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
     light += F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
