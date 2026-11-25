@@ -1,8 +1,8 @@
-# Status 30
+# Status 32
 
-2026-11-25 06:13 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 06:51 UTC. Phase 3, the look lock: the Heart.
 
-- `01-v3-h3-compare.jpg`: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal. The hide still reads as a sculpted model, there is no orange light from below, and the crust and the wall behind are flat brown.
-- `02-land-v3-compare-heart-1.jpg`: Land, version 3: the bench and its lip are in and the stripes are gone. The open lava is flat tan where the picture has deep orange with white cores: the fault is in the fire's colour, now with an owner of its own.
-- `03-v3-compare-heart-0.jpg`: Air, version 3, the wide key: two kinds of air now, thin pale haze and a heavy low layer. The far lake lost its pale haze and goes back in; the animals are still too small in this frame.
-- `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
+- `01-heart-0.jpg`: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet
+- `02-heart-3.jpg`: Feeding at a seam after the merge: the animals and the seam are the picture's, the crust is flat and the far wall ends in a square corner
+- `03-heart-1.jpg`: The line after the merge: the channel is cut as a trench, the picture's is full to the brim with a white-hot core (sent to both lake owners)
+- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs

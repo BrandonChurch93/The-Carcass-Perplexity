@@ -1,8 +1,9 @@
 import * as THREE from 'three';
 import { FullScreenQuad } from 'three/examples/jsm/postprocessing/Pass.js';
+import { SHARP_PX } from './focus';
 import type { Look } from './stage';
 
-export const DIAGNOSTICS = ['invalid', 'depth', 'standins', 'motion', 'solo'] as const;
+export const DIAGNOSTICS = ['invalid', 'depth', 'standins', 'motion', 'solo', 'focus'] as const;
 export type Diagnostic = (typeof DIAGNOSTICS)[number] | null;
 
 const LEVELS = 6;
@@ -83,6 +84,8 @@ ${THREE.ShaderChunk.tonemapping_pars_fragment}
 uniform sampler2D tAccum;
 uniform sampler2D tBloom;
 uniform sampler2D tDepth;
+uniform sampler2D tCoc;
+uniform vec2 uFocus;
 uniform vec2 uSize;
 uniform float uExposure;
 uniform vec3 uFire;
@@ -142,6 +145,15 @@ void main() {
   c = mix(vec3(luma), c, uSaturation);
   c = (c - 0.5) * uContrast + 0.5;
   c *= uTint;
+  if (uDiag == 4) {
+    // The focus view: the picture in grey, green where the blur is under half a pixel, orange in front of the focus and blue behind it, deeper as the blur grows.
+    float g = clamp(dot(c, vec3(0.2126, 0.7152, 0.0722)), 0.0, 1.0);
+    float r = uFocus.x > 0.5 ? texture2D(tCoc, vUv).a : 0.0;
+    vec3 tint = abs(r) < ${SHARP_PX.toFixed(2)} ? vec3(0.1, 1.0, 0.25) : r < 0.0 ? vec3(1.0, 0.45, 0.05) : vec3(0.1, 0.45, 1.0);
+    float k = abs(r) < ${SHARP_PX.toFixed(2)} ? 0.55 : 0.2 + 0.7 * sqrt(clamp(abs(r) / uFocus.y, 0.0, 1.0));
+    gl_FragColor = vec4(mix(vec3(g), tint * (0.25 + 0.75 * g), k), 1.0);
+    return;
+  }
   if (uPlain > 0.5) {
     gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
     return;
@@ -205,6 +217,8 @@ export class Post {
     tAccum: { value: null },
     tBloom: { value: null },
     tDepth: { value: null },
+    tCoc: { value: null },
+    uFocus: { value: new THREE.Vector2(0, 1) },
     uSize: { value: new THREE.Vector2() },
     uExposure: { value: 1 },
     uFire: { value: new THREE.Vector3(0, 0, 1) },
@@ -250,7 +264,7 @@ export class Post {
     this.draw(this.diff, null);
   }
 
-  render(accum: THREE.Texture, depth: THREE.Texture | null, look: Look, seq: number, diag: Diagnostic, near: number, far: number, target: THREE.WebGLRenderTarget | null = null, plain = false): void {
+  render(accum: THREE.Texture, depth: THREE.Texture | null, look: Look, seq: number, diag: Diagnostic, near: number, far: number, target: THREE.WebGLRenderTarget | null = null, plain = false, coc: THREE.Texture | null = null, maxCoc = 1): void {
     let src = accum;
     let sw = this.width;
     let sh = this.height;
@@ -277,6 +291,8 @@ export class Post {
     f.tAccum!.value = accum;
     f.tBloom!.value = (this.levels[0] as THREE.WebGLRenderTarget).texture;
     f.tDepth!.value = depth;
+    f.tCoc!.value = coc;
+    (f.uFocus!.value as THREE.Vector2).set(coc ? 1 : 0, maxCoc);
     (f.uSize!.value as THREE.Vector2).set(this.width, this.height);
     f.uExposure!.value = look.exposure;
     (f.uFire!.value as THREE.Vector3).set(look.fire?.[0] ?? 0, look.fire?.[1] ?? 0, look.fire?.[2] ?? 1);
@@ -289,7 +305,7 @@ export class Post {
     f.uNear!.value = near;
     f.uFar!.value = far;
     f.uSeq!.value = seq;
-    f.uDiag!.value = diag === 'invalid' ? 1 : diag === 'depth' ? 2 : diag === 'standins' ? 3 : 0;
+    f.uDiag!.value = diag === 'invalid' ? 1 : diag === 'depth' ? 2 : diag === 'standins' ? 3 : diag === 'focus' ? 4 : 0;
     f.uPlain!.value = plain ? 1 : 0;
     this.draw(this.final, target);
   }
