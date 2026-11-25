@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 14, 2026-11-25 01:10 UTC:
+Status 15, 2026-11-25 01:20 UTC:
 
-- `01-reveal-4.jpg`: The reveal, titan frame: the approved picture on the left, the blockout's flat continent on the right, with two close crops below. The framing matches. The land is two plain colours on purpose
-- `02-reveal-2.jpg`: The reveal, the skull massif on the way up: approved on the left, blockout on the right
-- `03-marsh-0.jpg`: The Blood Marsh, establishing frame: approved on the left, the blockout on the right. Pool, vein, crust with the dead, rain and flock are in place. The rock rise in the foreground is too wide and will be cut back
-- `04-marsh-3.jpg`: The Blood Marsh, the wallowers: approved on the left, plain shapes standing in for the animals on the right
+- `01-heart-0.jpg`: The Heart, establishing frame: the approved picture on the left, the blockout on the right. The vessel mouth and the lava fall, the buttress with its plume, the bench, the tall ones on the crust and the one that sank all stand where the picture has them
+- `02-breath-0.jpg`: The Breath, establishing frame: approved on the left, blockout on the right. The tide channel, the shaft with its fallen slabs, the wader at the rim, the cliff with its cave and the low sun are in place. The foreground rock is still missing
+- `03-tops-heart.jpg`: The Heart's four detail keys, approved on the left and blockout on the right: the fire under the skin, the one that sank, the tall ones, the vessel mouth. The second and third are framed too far left and will be refitted in the look lock
+- `04-loop.jpg`: The card loop now runs in the engine on the Heart's stand-in: twelve frames across its 8 seconds. The camera's path closes. The world's motion is closed in Phase 5
 
+Status 14, 2026-11-25 01:10 UTC, showed: The reveal, titan frame: the approved picture on the left, the blockout's flat continent on the right, with two close crops below.
 Status 13, 2026-11-25 00:52 UTC, showed: The reveal as a blockout: six frames of the one rising shot, from the lake's dark water to the whole body with the planet's edge; How the...
 Status 12, 2026-11-25 00:36 UTC, showed: First frames from the film's own engine, one from each place, at the frames the cut list names.
-Status 11, 2026-11-25 00:14 UTC, showed: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T01:10:44Z
-phase 2: 0.93 h used of 6.00 h
-build: 4.68 h used of 72.00 h
+2026-11-25T01:20:45Z
+phase 2: 1.10 h used of 6.00 h
+build: 4.85 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 18
+minutes since the last status: 10
 ```
 
 ## Phases
@@ -656,3 +656,4 @@ none
 - 2026-11-25 00:36 UTC. 00:37 UTC: status 12 posted. Engine core pushed as `590f414`. Nine agents running: six place blockouts, three harness builders.
 - 2026-11-25 00:52 UTC. Status 13 posted: the reveal blockout (six frames of the rise) and the outline traced from the master. The sound and stress tools are merged from the first agent, 42 tests pass here.
 - 2026-11-25 01:11 UTC. Status 14 posted at 01:11 UTC: the reveal and the Blood Marsh blockouts against their approved pictures. The Blood Marsh place merged (6a6a358) and checked through the harness. The parts register, the shots file and the sound of the film on the page committed (2ec76a8).
+- 2026-11-25 01:21 UTC. Status 15 posted at 01:21 UTC: the Heart and the Breath blockouts against their pictures and the card loop on the Heart's stand-in. The Heart (e15469b) and the Breath (1f80f21) merged and checked. The Phase 2 gate run early: G1 to G12, G15, G16 pass with 754 tests; D2 and D7 open until the film is rendered. A preview draft frame of the Heart takes 0.57 s on this machine.
