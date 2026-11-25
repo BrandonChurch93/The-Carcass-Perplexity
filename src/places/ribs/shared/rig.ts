@@ -386,9 +386,9 @@ export function createRig(): Rig {
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
   const breakToward = (seconds: number): void => {
-    // The break drifts with the cloud: a fifth of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle.
+    // The break drifts with the cloud: a fifth of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle; it is laid a little left of the sun so that it shows between the blades.
     const yaw = ((36 + 0.2 * (seconds - T0)) * Math.PI) / 180;
-    skyTurn.x = yaw - 0.786;
+    skyTurn.x = yaw - 0.93;
     skyTurn.y = 0.0021 * seconds;
     skyTurn.z = 0.0034 * seconds;
     const pitch = (21 * Math.PI) / 180;
