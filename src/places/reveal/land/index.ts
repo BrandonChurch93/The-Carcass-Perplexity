@@ -89,7 +89,7 @@ void main() {
   ground *= mix(1.0, mix(0.75, 1.15, smoothstep(0.02, 0.4, height)), land * smoothstep(40.0, 400.0, uViewKm));
   vec3 earth = rigShade(vWorld, n, view, ground, 0.92, shade);
   // The light the sunlit slopes throw back into the shaded ones: without it every shadow is the blue of the sky.
-  earth += ground * uSunColour * 0.03 * (0.4 + 0.6 * shade);
+  earth += ground * uSunColour * 0.085 * (0.4 + 0.6 * shade);
 
   // The lava of the Heart: vents in the black crust of the chest. The great one is the Heart, and it swells with the beat; the heat shows
   // along the cracks round it. Each is a few kilometres of molten rock: from orbit a point of orange light with a glow in the haze over it.

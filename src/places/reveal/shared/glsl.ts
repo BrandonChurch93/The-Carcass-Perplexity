@@ -23,7 +23,8 @@ uniform vec3 uSunColour;
 uniform vec3 uSkyColour;
 uniform vec3 uAirColour;
 uniform vec4 uLimb;
-uniform float uViewKm;`;
+uniform float uViewKm;
+uniform float uArrive;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}

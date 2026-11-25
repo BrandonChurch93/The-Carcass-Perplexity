@@ -54,11 +54,11 @@ void main() {
   vec3 midColour = cloudLight(between, 0.45 + 0.25 * mid, 0.7, 0.5) * (1.0 - 0.2 * over) * 0.92;
   vec3 highColour = cloudLight(up, 0.62, 0.6, 1.0);
   float a = low.x * 0.96;
-  float m = mid * 0.24;
+  float m = mid * 0.13;
   float b = high * 0.28;
   vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + midColour * m * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - m) * (1.0 - b);
-  gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo));
+  gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
 const CYCLONE_FRAGMENT = /* glsl */ `
@@ -78,8 +78,8 @@ void main() {
   vec2 q = vec2(c * p.x - s * p.y, s * p.x + c * p.y) * 0.5 + 0.5;
   vec3 t = texture2D(uPicture, q).rgb;
   float thick = t.r * (1.0 - smoothstep(0.86, 1.0, r));
-  vec3 colour = cloudLight(vWorld.xz, t.g, 0.5 + 0.5 * t.b, 0.5 * t.b) * (0.8 + 0.3 * t.b);
-  float alpha = clamp(thick * 1.15, 0.0, 1.0);
+  vec3 colour = cloudLight(vWorld.xz, t.g, 0.5 + 0.5 * t.b, 0.5 * t.b) * (0.66 + 0.34 * t.b);
+  float alpha = clamp(thick * 1.05, 0.0, 0.96);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -103,16 +103,17 @@ vec3 flash(float cell, float rate) {
 void main() {
   vec3 t = texture2D(uPicture, vUv).rgb;
   float thick = t.r;
-  vec3 colour = cloudLight(vWorld.xz, t.g, 0.5 + 0.5 * t.b, t.b) * (0.72 + 0.5 * t.b);
+  // The sheet of the anvil is thin and grey white; the heads of the towers stand through it, bright on the side of the sun and dark on the other.
+  vec3 colour = cloudLight(vWorld.xz, 0.5, 0.6, t.b) * (0.36 + 0.34 * t.b) * mix(0.5, 1.7, smoothstep(0.25, 0.75, t.g));
   // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
     vec3 f = flash(float(i), 0.55 + 0.17 * float(i));
     vec2 d = (vUv - f.xy) * vec2(1.0, 0.36);
-    glow += vec3(0.72, 0.8, 1.0) * f.z * exp(-dot(d, d) * 420.0) * (0.5 + 0.5 * t.b);
+    glow += vec3(0.66, 0.6, 1.0) * f.z * exp(-dot(d, d) * 520.0) * (0.4 + 0.6 * t.b);
   }
   colour += glow * 1.6;
-  float alpha = clamp(thick * 1.25, 0.0, 1.0);
+  float alpha = clamp(pow(thick, 1.6) * 1.15, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -127,16 +128,16 @@ void main() {
   // v runs from the throat (0) down the wind (1). The breath leaves in a few strands, which bend with the wind, spread and thin.
   float along = vUv.y;
   float spread = 0.1 + 0.4 * pow(along, 0.7);
-  float bend = 0.24 * along * along + 0.025 * sin(along * 9.0 + uTime * 0.1);
-  float across = (vUv.x - 0.5 - bend) / spread;
+  float bend = -0.42 * along * along + 0.03 * sin(along * 7.0 + uTime * 0.1);
+  float across = (vUv.x - 0.553 - bend) / spread;
   vec2 q = vec2(across * 2.4 + 0.7 * vnoise(vec2(along * 4.0 - uTime * 0.03, 3.7)), along * 1.6 - uTime * 0.02);
   float line = abs(vnoise(q * vec2(1.0, 0.35) + 5.0) - 0.5) * 2.0;
   float strand = 1.0 - smoothstep(0.0, 0.2 + 0.35 * along, line);
   float wisp = texture2D(uCloudTile, vec2(q.x * 0.13 + 0.2, q.y * 0.2)).b;
   float body = (1.0 - smoothstep(0.5, 1.0, abs(across))) * smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.35, 1.0, along));
   float thick = body * strand * (0.4 + 0.9 * wisp);
-  vec3 colour = cloudLight(vWorld.xz, 0.6, 0.5, 0.3);
-  float alpha = clamp(thick * 0.62, 0.0, 1.0);
+  vec3 colour = cloudLight(vWorld.xz, 0.75, 0.8, 0.3);
+  float alpha = clamp(thick * 0.85, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -200,7 +201,7 @@ export function create(ctx: Context): Piece {
       .translate(X(at.x), height, Z(at.y));
 
   // The breath of the throat: it leaves the neck and is carried up the picture by the wind.
-  sheet('vapour', quad({ x: AT.throat.x + 60, y: AT.throat.y - 330 }, 260, 330, 1.5, 0), VAPOUR_FRAGMENT);
+  sheet('vapour', quad({ x: AT.throat.x - 40, y: AT.throat.y - 400 }, 380, 400, 1.5, 0), VAPOUR_FRAGMENT);
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT);
   sheet('storm', quad(AT.storm, 235, 88, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/storm.jpg', { kind: 'data', repeat: false }) } });
   sheet('cyclone', quad(AT.cyclone, 880, 880, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/cyclone.jpg', { kind: 'data', repeat: false }) } });

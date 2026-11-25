@@ -46,7 +46,7 @@ def save(name, rgb, quality=90):
 
 def tile():
     n = 1024
-    cells = spectral(n, lambda k: np.exp(-((k - 26) / 12) ** 2), stretch=(1.0, 0.55), turn=-0.5)
+    cells = spectral(n, lambda k: np.exp(-((k - 26) / 12) ** 2), stretch=(1.0, 0.8), turn=-0.5)
     clumps = spectral(n, lambda k: np.exp(-((k - 6) / 4) ** 2))
     puffs = spectral(n, lambda k: np.where(k > 30, (np.maximum(k, 1) / 30) ** -1.6, 0.0))
     billow = 1 - np.abs(spectral(n, lambda k: np.exp(-((k - 60) / 30) ** 2)))
@@ -108,12 +108,12 @@ def cyclone():
     torn = spectral(n, lambda k: np.exp(-((k - 11) / 7) ** 2))
     cells = spectral(n, lambda k: np.exp(-((k - 40) / 20) ** 2))
     out = np.clip(r * 2.0, 0, 1)
-    d = 0.5 + 0.36 * arms + 0.16 * fine + 0.26 * fibre + 0.14 * hair + 0.18 * torn * out + 0.1 * cells * out + 0.06 * fleck
+    d = 0.5 + 0.2 * arms + 0.14 * fine + 0.3 * fibre + 0.22 * hair + 0.16 * torn * out + 0.08 * cells * out + 0.05 * fleck
     core = np.exp(-(r / 0.2) ** 2)
     d = d + 0.8 * core
-    d = d * np.clip((1.0 + 0.12 * torn - r) / 0.6, 0, 1) ** 0.9
+    d = d * np.clip((1.0 + 0.12 * torn - r) / 0.75, 0, 1) ** 0.8
     eye = np.clip((r - 0.01) / 0.045, 0, 1) ** 1.5
-    dens = np.clip((d - 0.38) * 1.25, 0, 1) ** 1.3 * eye
+    dens = np.clip((d - 0.24) * 1.15, 0, 1) ** 1.25 * eye
     tall = np.clip(0.35 * dens + 0.65 * core + 0.2 * fine * dens, 0, 1)
     lit = facing(cv2.GaussianBlur(tall + 0.5 * dens, (0, 0), 1.5), 4.0, 3.0)
     save('cyclone.jpg', np.stack([dens, lit, tall], -1), 90)
@@ -124,18 +124,21 @@ def storm():
     u = (x - w / 2) / (w / 2); v = (y - h / 2) / (h / 2)
     n = 1024
     lumps = spectral(n, lambda k: np.exp(-((k - 14) / 7) ** 2))[:h, :w]
-    cauli = 1 - np.abs(spectral(n, lambda k: np.exp(-((k - 45) / 22) ** 2)))[:h, :w]
-    crumb = 1 - np.abs(spectral(n, lambda k: np.exp(-((k - 130) / 60) ** 2)))[:h, :w]
-    rag = spectral(n, lambda k: (np.maximum(k, 3) / 3) ** -1.4 * (k > 2), stretch=(0.4, 1.0))[:h, :w]
-    # an anvil: a long ragged sheet, thicker at the towers, torn at the rim and blown out to the lee
-    body = 1 - np.sqrt((u / 0.88) ** 2 + (v / (0.62 + 0.16 * u)) ** 2) + 0.16 * rag
+    cauli = 1 - np.abs(spectral(n, lambda k: np.exp(-((k - 22) / 10) ** 2)))[:h, :w]
+    crumb = 1 - np.abs(spectral(n, lambda k: np.exp(-((k - 60) / 28) ** 2)))[:h, :w]
+    rag = spectral(n, lambda k: (np.maximum(k, 3) / 3) ** -1.6 * (k > 2), stretch=(0.4, 1.0))[:h, :w]
+    fibre = spectral(n, lambda k: (np.maximum(k, 6) / 6) ** -1.2 * (k > 5), stretch=(1.0, 0.12))[:h, :w]
+    # an anvil: a long lens of ice blown out to one side, thin and fibrous at its rim, and through it the heads of the towers that feed it
+    lens = 1 - np.sqrt(((u + 0.05) / 0.9) ** 2 + (v / (0.66 - 0.2 * u)) ** 2) + 0.05 * rag
+    sheet = np.clip(lens * 1.5, 0, 1) ** 1.2 * np.clip(0.75 + 0.3 * fibre, 0, 1)
     towers = np.zeros((h, w), np.float32)
-    for cx, cy, cr in [(-0.52, 0.05, 0.2), (-0.2, -0.1, 0.24), (0.12, 0.08, 0.27), (0.42, -0.06, 0.2), (0.62, 0.12, 0.13)]:
-        towers = np.maximum(towers, np.exp(-(((u - cx) / cr) ** 2 + ((v - cy) / (cr * 2.3)) ** 2)))
-    tall = np.clip(0.25 * np.clip(body * 2, 0, 1) + towers * (0.55 + 0.3 * lumps + 0.28 * cauli + 0.12 * crumb), 0, 1)
-    dens = np.clip(body * 3.2 + 0.5 * towers - 0.18 + 0.22 * rag, 0, 1)
-    dens = dens * np.clip(0.75 + 0.5 * tall + 0.12 * crumb, 0, 1)
-    lit = facing(cv2.GaussianBlur(tall, (0, 0), 1.2), 5.0, 4.5)
+    for cx, cy, cr in [(-0.6, 0.02, 0.085), (-0.36, -0.06, 0.1), (-0.1, 0.05, 0.13), (0.22, -0.03, 0.1), (0.46, 0.1, 0.07)]:
+        d = np.sqrt(((u - cx) / cr) ** 2 + ((v - cy) / (cr * 2.67)) ** 2) + 0.22 * lumps
+        towers = np.maximum(towers, np.clip(1.25 - d, 0, 1) ** 0.8)
+    head = towers * (0.5 + 0.4 * cauli + 0.1 * crumb)
+    tall = np.clip(0.3 * sheet + 0.7 * head, 0, 1)
+    dens = np.clip(np.maximum(sheet, towers * 1.2), 0, 1)
+    lit = facing(wrapblur(tall, 2.0), 5.0, 5.5)
     save('storm.jpg', np.stack([dens, lit, tall], -1), 90)
 
 tile(); cover(); cyclone(); storm()
