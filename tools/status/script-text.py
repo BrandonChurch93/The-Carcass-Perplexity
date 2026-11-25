@@ -23,6 +23,8 @@ def clock(t):
 
 def main():
     sheet = json.load(open('cut/SCRIPT-SHEET.json'))
+    draft = json.load(open('cut/SCRIPT-DRAFT.json'))
+    stands = {f"{c['id']}.{i + 1}": l['mark']['stands'] for c in draft['clips'] for i, l in enumerate(c['lines']) if l.get('mark', {}).get('stands')}
     rows = {}
     for r in sheet['rows']:
         rows.setdefault(r['clip'], []).append(r)
@@ -34,9 +36,17 @@ def main():
             item = {'id': r['id'], 'n': r['line'], 'text': r['text']}
             if m:
                 first = m['why'].split('. ')[0].rstrip('.')
-                item['why'] = SHORT.get(r['id']) if SHORT.get(r['id']) and True else first
-                item['a'] = m['replace'][0]['text']
-                item['b'] = m['replace'][1]['text']
+                why = SHORT.get(r['id']) or first
+                pick = stands.get(r['id'])
+                if pick:
+                    # The replacement that stands is the line; his own words and the reason go under it.
+                    item['text'] = m['replace'][0 if pick == 'A' else 1]['text']
+                    item['was'] = r['text']
+                    item['reason'] = why
+                else:
+                    item['why'] = why
+                    item['a'] = m['replace'][0]['text']
+                    item['b'] = m['replace'][1]['text']
             lines.append(item)
         clips.append({'id': c['id'], 'title': c['title'], 'when': f"{clock(c['from'])} to {clock(c['to'])}", 'lines': lines})
     t = sheet['totals']
@@ -51,6 +61,8 @@ def main():
             md.append(f"{l['n']}. {l['text']}")
             if 'why' in l:
                 md.append(f"   - Marked: {l['why']}. A: \"{l['a']}\" B: \"{l['b']}\"")
+            if 'was' in l:
+                md.append(f"   - Your words: \"{l['was']}\" ({l['reason']})")
         md.append('')
     open('out/work/script/text.md', 'w').write('\n'.join(md))
     print(f"script text: {len(clips)} clips, {t['lines']} lines, {t['marked']} marked, {out['totals']['seconds']} s as written, {out['totals']['withA']} s with every A")

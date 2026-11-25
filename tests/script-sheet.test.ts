@@ -34,7 +34,7 @@ const NOTE = [
   ['n5', ['The red flats.', 'The ground still bleeds here. No rain made this.', 'The heavy ones wallow in it, and grow fat.', 'The salt keeps whatever it catches. Forever.']],
   ['n6', ['The ridge.', 'Above the cloud. Above the storm.', 'Every night the lightning walks it. Spire to spire.', 'The herds shelter in the hollow beneath, and wait for morning.']],
   ['n7', ['The lake.', 'Still. Gold at the edge. Black at the center.', 'The herds drink at the shallows. None of them looks down.', 'The center has no floor. Something there looks back.']],
-  ['n8', ['From high enough, the land has a shape.', 'None of it was ever land.', 'It was a body.', 'Everything here feeds on it. And it is not finished.']]
+  ['n8', ['From high enough, the land has a shape.', 'None of it was ever land.', 'It was a titan.', 'Everything here feeds on it. And it is not finished.']]
 ] as const;
 
 const cfg = config();
@@ -116,7 +116,7 @@ describe('the script sheet', () => {
   it('names no body before the Reveal', () => {
     const before = texts(sheet.rows.filter((r: any) => r.clip !== REVEAL_CLIP)).map((t: any) => t.text).join(' ');
     expect(before).not.toMatch(/\b(body|bodies|corpse|carcass|rib|ribs|heart|spine|eye|blood|flesh|bone|bones|skull|titan|giant)\b/i);
-    expect(row(`${REVEAL_CLIP}.3`).text).toBe('It was a body.');
+    expect(row(`${REVEAL_CLIP}.3`).text).toBe('It was a titan.');
   });
 
   it('starts the third line of the Reveal on the frame of the reveal strike', () => {
@@ -194,6 +194,6 @@ describe('the sheet that is committed', () => {
     expect(html).not.toMatch(/https?:|<script|<link/i);
     expect(html.replace(/<[^>]+>/g, ' ')).not.toMatch(/[\u2014!]/);
     expect(html.match(/<img /g)!.length).toBeGreaterThanOrEqual(32);
-    expect(html).toContain('It was a body.');
+    expect(html).toContain('It was a titan.');
   });
 });

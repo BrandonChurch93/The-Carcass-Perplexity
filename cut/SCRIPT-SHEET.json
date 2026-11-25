@@ -144,8 +144,8 @@
       "from": 159.02,
       "to": 197.68,
       "lines": 4,
-      "characters": 130,
-      "seconds": 14.36,
+      "characters": 131,
+      "seconds": 14.47,
       "approvedCharacters": 88,
       "approvedSeconds": 9.74
     }
@@ -3037,25 +3037,25 @@
       "line": 3,
       "unit": "reveal",
       "first": 10027,
-      "text": "It was a body.",
-      "characters": 14,
+      "text": "It was a titan.",
+      "characters": 15,
       "start": 167.12,
-      "seconds": 1.47,
-      "end": 168.59,
+      "seconds": 1.58,
+      "end": 168.7,
       "room": 36.72,
       "spill": 0,
       "spare": 1.5,
       "parts": [
         {
           "id": "reveal-01",
-          "seconds": 1.47
+          "seconds": 1.57
         }
       ],
       "sentences": [
         {
-          "text": "It was a body.",
+          "text": "It was a titan.",
           "from": 167.12,
-          "to": 168.59
+          "to": 168.7
         }
       ],
       "verdict": "fits",
@@ -3070,15 +3070,15 @@
           "label": "The Reveal · one shot, from the lake to orbit, then the hold",
           "from": 159.02,
           "to": 195.73,
-          "seconds": 1.47,
+          "seconds": 1.57,
           "picture": "reveal-4"
         }
       ],
       "lands": [
-        "\"It was a body.\" runs from 2:47.1 to 2:48.6, across the reveal strike of the music at 2:47.1."
+        "\"It was a titan.\" runs from 2:47.1 to 2:48.7, across the reveal strike of the music at 2:47.1."
       ],
       "mark": null,
-      "note": "Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"body\" should fall on the strike instead, the line starts about 0.6 s earlier.",
+      "note": "Brandon wrote \"It was a body.\" and on 2026-11-25 (note 15) asked for a stronger word, \"being\" or \"titan\" or the Builder's choice. \"Titan\" is chosen: it is the word the whole build uses for it, it says how large it is, and the line keeps its five syllables and its stress, so its timing does not move. Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"titan\" should fall on the strike instead, the line starts about 0.6 s earlier.",
       "pictures": [
         {
           "file": "out/stills/script/n8-3-reveal-01-1679.jpg",
@@ -3244,15 +3244,15 @@
     "No \"I\", no \"you\", no people, no maps, no god: met by every line of the draft and by every replacement line.",
     "Nothing says outright that the land is a body before the Reveal: met. None of the 28 lines before clip n8, and none of their replacements, names a body or a part of one. \"Skin\", \"breathes\" and \"bleeds\" stand as the figures of speech the note asks for.",
     "Eight clips, four lines each: met.",
-    "About the same length as now: the draft is 140.9 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.1 s. No shot moves either way.",
+    "About the same length as now: the draft is 141.1 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.2 s. No shot moves either way.",
     "Every line falls on the picture it describes: 21 of the 32 do as written. The other 11 are marked: 5 too long for their shots, 2 with too little to spare and 4 that do not match what the shot shows.",
     "The third line of the Reveal lands on the reveal strike: it starts on frame 10027, the frame of the strike at 2:47.1.",
     "Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s."
   ],
   "totals": {
     "lines": 32,
-    "characters": 1248,
-    "seconds": 140.94,
+    "characters": 1249,
+    "seconds": 141.05,
     "approvedCharacters": 1107,
     "approvedSeconds": 126.1,
     "marked": 11,
@@ -3309,7 +3309,7 @@
       "clip": "n8",
       "file": "out/stills/script/script-n8.jpg",
       "width": 1200,
-      "height": 2634
+      "height": 2663
     }
   ]
 }

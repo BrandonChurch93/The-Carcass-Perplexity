@@ -6,10 +6,12 @@ d.clips.forEach(function(c){var card=el('section','background:var(--color-backgr
 var head=el('div','display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 5px');
 head.appendChild(el('div','font-size:14px;font-weight:500',c.id+' · '+c.title));head.appendChild(el('div','font-size:12px;color:var(--color-text-secondary);white-space:nowrap',c.when));card.appendChild(head);
 c.lines.forEach(function(l){var row=el('div','display:grid;grid-template-columns:18px 1fr;column-gap:4px;align-items:baseline');
-row.appendChild(el('div','font-size:12px;color:'+(l.why?'var(--color-warning-primary)':'var(--color-text-tertiary)')+';font-weight:'+(l.why?'600':'400'),String(l.n)));
+row.appendChild(el('div','font-size:12px;color:'+((l.why||l.was||l.changed)?'var(--color-warning-primary)':'var(--color-text-tertiary)')+';font-weight:'+((l.why||l.was||l.changed)?'600':'400'),String(l.n)));
 var body=el('div','min-width:0');body.appendChild(el('div','font-size:14px;line-height:1.5',l.text));
 if(l.why){var m=el('div','font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);border-left:2px solid var(--color-warning-primary);padding:0 0 0 8px;margin:1px 0 4px');
 m.appendChild(el('span','',l.why+' · '));m.appendChild(el('span','font-weight:600;color:var(--color-text-primary)','A '));m.appendChild(el('span','color:var(--color-text-primary)',l.a));m.appendChild(el('span','',' · '));m.appendChild(el('span','font-weight:600','B '));m.appendChild(el('span','',l.b));body.appendChild(m);}
+if(l.was){var w=el('div','font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);border-left:2px solid var(--color-warning-primary);padding:0 0 0 8px;margin:1px 0 4px');w.appendChild(el('span','','Your words: '));w.appendChild(el('span','color:var(--color-text-primary)',l.was));w.appendChild(el('span','',' · '+l.reason));body.appendChild(w);}
+if(l.changed){var g=el('div','font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);border-left:2px solid var(--color-text-info, var(--color-warning-primary));padding:0 0 0 8px;margin:1px 0 4px',l.changed);body.appendChild(g);}
 row.appendChild(body);card.appendChild(row);});root.appendChild(card);});
 if(d.foot){root.appendChild(el('div','font-size:12px;line-height:1.45;color:var(--color-text-secondary);padding:0 2px 2px',d.foot));}
 })();

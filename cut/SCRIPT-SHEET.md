@@ -13,8 +13,8 @@ Marked: 11 of 32 lines (5 too long, 2 tight, 4 for the picture).
 | n5 | The Blood Marsh | 1:33.6 to 1:56.9 | 16.7 s, 148 characters | 15.1 s, 132 characters |
 | n6 | The Spine | 1:56.9 to 2:18.4 | 17.6 s, 156 characters | 16.5 s, 146 characters |
 | n7 | The Eye | 2:18.4 to 2:39.0 | 19.1 s, 163 characters | 17.1 s, 144 characters |
-| n8 | The Reveal | 2:39.0 to 3:17.7 | 14.4 s, 130 characters | 9.7 s, 88 characters |
-| all | | | 140.9 s, 1248 characters | 126.1 s, 1107 characters |
+| n8 | The Reveal | 2:39.0 to 3:17.7 | 14.5 s, 131 characters | 9.7 s, 88 characters |
+| all | | | 141.1 s, 1249 characters | 126.1 s, 1107 characters |
 
 ## n1 · The opening
 
@@ -333,15 +333,15 @@ On: reveal-01 (2:39.0 to 3:15.7). "None of it was ever land." ends 1.1 s before 
 
 ![reveal-01 at 2:44.7 · blockout, framing only](../out/stills/script/n8-2-reveal-01-1647.jpg) ![approved key picture reveal-3, which falls at 2:42.6](../out/stills/script/key-reveal-3.jpg)
 
-**n8.3** · 2:47.1 to 2:48.6 (1.5 s, over 1.5 s to spare) · Fits
+**n8.3** · 2:47.1 to 2:48.7 (1.6 s, over 1.5 s to spare) · Fits
 
-> It was a body.
+> It was a titan.
 
-On: reveal-01 (2:39.0 to 3:15.7). "It was a body." runs from 2:47.1 to 2:48.6, across the reveal strike of the music at 2:47.1.
+On: reveal-01 (2:39.0 to 3:15.7). "It was a titan." runs from 2:47.1 to 2:48.7, across the reveal strike of the music at 2:47.1.
 
 ![reveal-01 at 2:47.9 · blockout, framing only](../out/stills/script/n8-3-reveal-01-1679.jpg) ![approved key picture reveal-4, which falls at 2:47.1](../out/stills/script/key-reveal-4.jpg)
 
-Note: Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word "body" should fall on the strike instead, the line starts about 0.6 s earlier.
+Note: Brandon wrote "It was a body." and on 2026-11-25 (note 15) asked for a stronger word, "being" or "titan" or the Builder's choice. "Titan" is chosen: it is the word the whole build uses for it, it says how large it is, and the line keeps its five syllables and its stress, so its timing does not move. Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word "titan" should fall on the strike instead, the line starts about 0.6 s earlier.
 
 **n8.4** · 2:57.0 to 3:03.0 (6.0 s, over 1.5 s to spare) · Fits
 
@@ -366,7 +366,7 @@ Note: Placed where the approved script had its last line. It can sit up to 5 s l
 - No "I", no "you", no people, no maps, no god: met by every line of the draft and by every replacement line.
 - Nothing says outright that the land is a body before the Reveal: met. None of the 28 lines before clip n8, and none of their replacements, names a body or a part of one. "Skin", "breathes" and "bleeds" stand as the figures of speech the note asks for.
 - Eight clips, four lines each: met.
-- About the same length as now: the draft is 140.9 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.1 s. No shot moves either way.
+- About the same length as now: the draft is 141.1 s of speech where the approved script is 126.1 s, by the same estimate. With the first replacement of every marked line it is 130.2 s. No shot moves either way.
 - Every line falls on the picture it describes: 21 of the 32 do as written. The other 11 are marked: 5 too long for their shots, 2 with too little to spare and 4 that do not match what the shot shows.
 - The third line of the Reveal lands on the reveal strike: it starts on frame 10027, the frame of the strike at 2:47.1.
 - Short, blunt lines, and not every line about dying: by my reading 5 of the 32 lines are about dying or the dead (n2.4, n3.4, n4.4, n5.4 and n8.4). The longest line is n2.4, at 8.8 s.

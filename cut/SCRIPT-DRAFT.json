@@ -1,6 +1,6 @@
 {
   "schema": "carcass/script-draft 1",
-  "from": "Brandon's review note of 2026-11-25, item 2. The words of every line are his, unchanged. The positions, the marks, the replacement lines and the notes are the Builder's. This is a draft on the table: narration.clips in config/showcase.json still holds the approved script until he writes that the script is final.",
+  "from": "Brandon's review note of 2026-11-25, item 2, and his note 15 of the same day. The words of every line are his, unchanged, but for one: line n8.3, where he wrote \"It was a body.\" and then asked the Builder to choose a stronger word (\"being\" or \"titan\", or the Builder's own). The positions, the marks, the replacement lines and the notes are the Builder's. In note 15 he liked everything else as it was shown to him, so in every marked line the replacement named by \"stands\" is the one that will be spoken; his own words stay in \"text\" beside it. This is a draft on the table: narration.clips in config/showcase.json still holds the approved script until he writes that the script is final.",
   "clips": [
     {
       "id": "n1",
@@ -84,7 +84,8 @@
               {
                 "text": "Stone blades. Storms break on them."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -107,7 +108,8 @@
                 "text": "At low tide the winged ones come down to feed. Not for long.",
                 "note": "Keeps \"come down\", and leaves about half the room to spare that the first one leaves."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -213,7 +215,8 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stands": "A"
           }
         }
       ]
@@ -271,7 +274,8 @@
               {
                 "text": "Red growth crowds the rim."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -318,7 +322,8 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stands": "A"
           }
         }
       ]
@@ -393,7 +398,8 @@
                   }
                 ]
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -455,7 +461,8 @@
               {
                 "text": "Above the cloud. Inside the storm."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -498,7 +505,8 @@
               {
                 "text": "The herds wait out the night in the hollow beneath."
               }
-            ]
+            ],
+            "stands": "A"
           }
         }
       ]
@@ -557,7 +565,8 @@
               {
                 "text": "The herds come to drink. None looks down."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -578,7 +587,8 @@
               {
                 "text": "No floor at the center. Something looks back."
               }
-            ]
+            ],
+            "stands": "A"
           }
         }
       ]
@@ -606,7 +616,8 @@
               {
                 "text": "From above, a shape."
               }
-            ]
+            ],
+            "stands": "A"
           }
         },
         {
@@ -626,7 +637,7 @@
           ]
         },
         {
-          "text": "It was a body.",
+          "text": "It was a titan.",
           "at": {
             "strike": "revealHit"
           },
@@ -641,7 +652,7 @@
               "what": "the reveal strike of the music"
             }
           ],
-          "note": "Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"body\" should fall on the strike instead, the line starts about 0.6 s earlier."
+          "note": "Brandon wrote \"It was a body.\" and on 2026-11-25 (note 15) asked for a stronger word, \"being\" or \"titan\" or the Builder's choice. \"Titan\" is chosen: it is the word the whole build uses for it, it says how large it is, and the line keeps its five syllables and its stress, so its timing does not move. Placed so the line starts on the strike, on the frame where the whole body is in view. The cut's own rule keeps speech clear of the four strikes; it is lifted for this one line when the script is final. If the word \"titan\" should fall on the strike instead, the line starts about 0.6 s earlier."
         },
         {
           "text": "Everything here feeds on it. And it is not finished.",
