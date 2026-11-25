@@ -50,9 +50,9 @@ const POOLS: { seam: string; x: number; z: number; add: number; reach2: number }
 
 /** The level of a seam's melt, the same as meltLevel in heat.ts. */
 const levelOf = (heat: number): number => {
-  if (heat >= 1.3) return -0.5;
+  if (heat >= 1.3) return -0.2;
   const k = Math.min(1, Math.max(0, heat / 0.2));
-  return -(0.55 + (0.3 - 0.55) * k * k * (3 - 2 * k));
+  return -(0.22 + (0.08 - 0.22) * k * k * (3 - 2 * k));
 };
 
 const smooth = (a: number, b: number, x: number): number => {
@@ -100,7 +100,7 @@ function build(all: Ribbon[]): { geometry: THREE.BufferGeometry; pools: THREE.Ve
     const base = position.length / 3;
     const count = r.line.length - 1;
     // Each ribbon lies a hair above the next, so that where two cross the depth test picks one and the same every frame.
-    const y = levelOf(r.heat) - 0.002 * which;
+    const y = levelOf(r.heat) - 0.0015 * which;
     let s = 0;
     for (let i = 0; i <= count; i++) {
       const p = r.line[i] as [number, number];
@@ -194,32 +194,65 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${HEAT_GLSL}
 
-const float CYCLE = 7.0;
+const float CYCLE = 9.0;
 
 // The melt at a point of the pattern that the stream carries. p: metres along and across. ax: 0 in mid stream, 1 at the bank.
 // push: how hard the skin is pushed here (a narrows, a bank, the slack of a pool). stir: 1 under a fountain. grain: metres a pixel.
-// Returns kelvin and how much of the point is skin.
+// Three things lie on a stream: the bare core in the middle third, yellow-white, drawn out in streaks; a thin skin beside it,
+// orange, torn by a net of fine bright creases that the eddies wind into coils; and plates of thick skin, dark red, each of
+// its own age, with the melt bright in the cracks between them: rafts of a few in mid stream, a pavement toward the banks,
+// folded into ropes where they are pushed. Returns kelvin and how much of the point is skin.
 vec2 meltAt(vec2 p, float ax, float push, float stir, float grain) {
-  // The core: streaks of the hottest melt, drawn out downstream.
-  float streak = vnoise(vec2(p.x * 0.23, p.y * 2.7)) * 0.62 + vnoise(vec2(p.x * 0.8, p.y * 6.3) + 7.0) * 0.38;
-  float core = 1395.0 + 150.0 * smoothstep(0.34, 0.72, streak) - 85.0 * ax * ax + 40.0 * stir;
-  // Skin forms as plates: more of it toward the banks and where the stream is held up.
-  float form = vnoise(p * vec2(0.5, 0.95) + 3.0) * 0.56 + vnoise(p * vec2(1.5, 2.4) + 11.0) * 0.3 + vnoise(p * vec2(4.3, 6.1)) * 0.14;
-  float cover = form + 0.36 * ax * ax + 0.22 * push - 0.3 * stir;
-  float soft = 0.03 + 0.6 * grain;
-  float plate = smoothstep(0.5 - soft, 0.5 + soft, cover);
-  float thick = smoothstep(0.5, 0.74, cover);
-  // Pushed skin folds into ropes across the stream, bowed downstream.
-  float fold = 0.5 + 0.5 * sin(p.x * 15.0 + 6.0 * vnoise(p * 0.8 + 5.0) + 2.5 * p.y);
-  float ropy = smoothstep(0.25, 0.7, push + 0.5 * thick) * (1.0 - smoothstep(0.03, 0.12, grain));
-  float skin = mix(1255.0, 1085.0, thick) + (fold - 0.5) * 110.0 * ropy + 40.0 * (vnoise(p * 2.9 + 23.0) - 0.5);
-  // A plate tears open across the pull, and the core shows in the crease.
-  float split = abs(vnoise(p * vec2(1.2, 2.6) + 19.0) - 0.5);
-  float lineHalf = 0.016 + 0.5 * grain;
-  float crease = (1.0 - smoothstep(lineHalf * 0.5, lineHalf, split)) * plate * min(1.0, 0.016 / lineHalf * 2.0);
-  float k = mix(core, skin, plate);
-  k = mix(k, core + 15.0, crease * 0.92);
-  return vec2(k, plate * (1.0 - crease));
+  float big = vnoise(p * vec2(0.35, 1.3) + 3.0);
+  float mid = vnoise(p * vec2(1.1, 3.4) + 11.0);
+  float fine = vnoise(p * vec2(3.1, 9.0));
+  float h = 0.1 + 0.6 * ax * ax + 0.26 * ax + 0.5 * (big - 0.5) + 0.3 * (mid - 0.5) + 0.25 * push - 0.32 * stir;
+  float soft = 0.015 + 0.9 * grain;
+
+  // The plates: cells, longer than wide.
+  vec2 cellAt = p * vec2(1.45, 4.3) + 0.35 * vec2(mid, big);
+  vec2 base = floor(cellAt);
+  float d1 = 9.0;
+  float d2 = 9.0;
+  float id = 0.5;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 c = base + vec2(float(i), float(j));
+      vec2 r = hash22(c);
+      float dd = length(c + 0.12 + 0.76 * r - cellAt);
+      if (dd < d1) {
+        d2 = d1;
+        d1 = dd;
+        id = fract(r.x * 13.7 + r.y);
+      } else if (dd < d2) {
+        d2 = dd;
+      }
+    }
+  }
+  float between = d2 - d1;
+  float age = h + 0.55 * (id - 0.5);
+  float crackHalf = (0.02 + 0.03 * (1.0 - smoothstep(0.45, 0.9, age))) + 3.0 * grain;
+  float plateOn = smoothstep(0.52 - soft, 0.52 + soft, age) * smoothstep(crackHalf, crackHalf * 1.8, between);
+
+  float thin = smoothstep(0.3 - soft, 0.3 + soft, h + 0.12 * (fine - 0.5));
+  float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
+  float core = 1508.0 + 50.0 * streak - 60.0 * smoothstep(0.05, 0.3, h);
+  float skin = mix(1385.0, 1215.0, smoothstep(0.3, 0.75, h));
+  // The thin skin tears along fine curved lines, and the core shows in them.
+  float half1 = 0.012 + 0.6 * grain;
+  float seen = min(1.0, 0.03 / half1);
+  float c1 = 1.0 - smoothstep(1.2 * half1, 2.4 * half1, abs(vnoise(p * vec2(0.9, 2.8) + 19.0) - 0.5));
+  float c2 = 1.0 - smoothstep(3.0 * half1, 6.0 * half1, abs(fine - 0.5));
+  float crease = max(c1, 0.75 * c2) * seen;
+  // Pushed skin folds into ropes across the stream.
+  float fold = 0.5 + 0.5 * sin(p.x * 17.0 + 7.0 * mid + 2.0 * p.y);
+  float ropy = smoothstep(0.2, 0.7, push) * (1.0 - smoothstep(0.02, 0.08, grain));
+  skin += (fold - 0.5) * 60.0 * ropy;
+  skin = mix(skin, 1490.0, crease);
+  // A plate is darkest in its middle and where it is old, and glows toward the edge where it is thin.
+  float plate = mix(1170.0, 1000.0, smoothstep(0.52, 1.0, age)) + 150.0 * (1.0 - smoothstep(0.0, 0.14, between)) + (fold - 0.5) * 90.0 * ropy + 30.0 * (fine - 0.5);
+  float k = mix(mix(core, skin, thin), plate, plateOn);
+  return vec2(k, max(plateOn, 0.3 * thin * (1.0 - crease)));
 }
 
 // An eddy winds what it holds round its middle: more the longer the copy has run.
@@ -239,7 +272,7 @@ void main() {
   float bank = d - gape;
   float ax = clamp(d / gape, 0.0, 1.0);
   float stir = step(1.3, vSeam.x);
-  float grain = max(length(dFdx(q)), length(dFdy(q)));
+  float grain = 1.2 * sqrt(length(dFdx(q)) * length(dFdy(q)));
 
   // How fast the stream runs here: fastest in mid stream and in a narrows, slowest at the banks and in the slack of a pool.
   float pool = 0.0;
@@ -268,7 +301,7 @@ void main() {
   for (int copy = 0; copy < 2; copy++) {
     float ph = phase + 0.5 * float(copy);
     float run = fract(ph) * CYCLE;
-    float weight = smoothstep(0.0, 0.42, 1.0 - abs(2.0 * fract(ph) - 1.0));
+    float weight = smoothstep(0.3, 0.7, 1.0 - abs(2.0 * fract(ph) - 1.0));
     float turnOf = floor(ph);
     vec2 p = vFlow;
     // Eddies stand behind the islands and in the slack of the bends: one in every few metres of bank, turning with the stream beside it.
@@ -308,6 +341,23 @@ void main() {
   float fresnel = 0.04 + 0.5 * pow(1.0 - clamp(v.y, 0.0, 1.0), 5.0);
   vec3 sheen = skin * (0.02 * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + fresnel * 0.35 * skyRadiance(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * landAt(vWorld.xz).g * 0.6;
   gl_FragColor = vec4(rigOut(sheen) + blackbody(k) * uLavaOn, 1.0);
+  // Last, after every derivative. The ribbon is wider than the gap: under the crust there is none, so a hollow of the crust never shows it.
+  if (bank > 0.12) discard;
+}`;
+
+const DEPTH_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec2 vDrift;
+${NOISE_GLSL}
+${RIG_GLSL}
+${HEAT_GLSL}
+void main() {
+  vec2 q = vWorld.xz - vDrift;
+  vec4 n = netAt(q);
+  float bank = n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - max(gapeAt(q, n).x, 0.02);
+  gl_FragColor = vec4(0.0);
+  if (bank > 0.12) discard;
 }`;
 
 export function createLava(ctx: HeartContext, _net: Net, shared: Record<string, THREE.IUniform>): LavaPiece {
@@ -319,6 +369,7 @@ export function createLava(ctx: HeartContext, _net: Net, shared: Record<string, 
     fragmentShader: FRAGMENT,
     uniforms: { ...shared, uLavaOn: on, uPoolFlow: { value: pools } },
   });
+  material.userData.depthFragment = DEPTH_FRAGMENT;
   const melt = new THREE.Mesh(geometry, material);
   melt.frustumCulled = false;
   melt.renderOrder = 1;

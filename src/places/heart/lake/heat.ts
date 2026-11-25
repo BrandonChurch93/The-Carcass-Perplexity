@@ -85,11 +85,12 @@ float bankAt(vec2 q, vec4 n) {
   return n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gapeAt(q, n).x;
 }
 
-// The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). One level for a seam, so the liquid lies level:
-// the channel at the line and its fingers lowest, the long seam of the group a hand higher, the narrow near seams highest, the fountain lines low.
+// The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). The gaps are nearly full: a hand or two
+// below the brim. One level for a seam, so the liquid lies level: the channel at the line and its fingers lowest (0.22 m), the long
+// seam of the group at 0.17 m, the narrow near seams highest (0.08 m), the fountain lines at 0.2 m.
 float meltLevel(vec4 n) {
   float c = n.g - 2.0;
-  return -mix(mix(0.55, 0.3, smoothstep(0.0, 0.2, c)), 0.5, step(1.3, c));
+  return -mix(mix(0.22, 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
 }
 
 // The mean heat of the melt of a wide gap, as the light it throws: kelvin. Hot spots come and go slowly along a seam.
@@ -126,7 +127,7 @@ vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
   float air = stripLight(n2, vec2(0.1 - off, lift - y), vec2(-span - 0.1 - off, lift - y));
   // Nothing reaches a point far below the melt or far from it.
   float reach = exp(-max(off, 0.0) / (1.5 + 4.0 * w));
-  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (direct * smoothstep(-0.35, 0.0, y - level) + 0.3 * air));
+  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (direct * smoothstep(-0.15, 0.0, y - level) + 0.3 * air));
 }
 
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
