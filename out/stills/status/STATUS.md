@@ -1,8 +1,8 @@
-# Status 22
+# Status 23
 
-2026-11-25 03:41 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 04:04 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-0.jpg`: First light of the built Heart beside its approved picture. Built so far: the lake (crust, drifting seams) and the land (rock pictures), both lit by one shared rig. Still stand-ins: sky, fume, mouth and fall, walkers, the sunk one, the crack.
-- `02-key-heart-0-preview-draft.jpg`: The frame that answers heart-0, film frame 2722, preview, draft tier
-- `03-frame-11228-preview-review.jpg`: Film frame 11228, preview, review tier
-- `04-frame-10806-preview-review.jpg`: Film frame 10806, preview, review tier
+- `01-key-heart-0-uhd-draft-solo.jpg`: The first-light land drawn alone, 3840 x 2160, one sample. It also draws the whole floor under the lake, which the crust then covers: this is where most of its cost goes. The land owner starts from here and is told to cut it.
+- `02-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
+- `03-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
+- `04-key-heart-0-uhd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, uhd, draft tier, solo view
