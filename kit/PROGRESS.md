@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 41, 2026-11-25 10:02 UTC:
+Status 42, 2026-11-25 10:29 UTC:
 
-- `01-m1000-pair-3.jpg`: heart-3 on main 337d087, approved picture at the left. In: the air's second hand-back (the hard orange band is gone) and the new crust skin. Still wrong: the floor is one even tan field with comma marks, the smoke behind is one flat rose field, the buttress does not stand in it.
-- `02-m1000-pair-1.jpg`: heart-1 on main 337d087. In: the rocks' first hand-back (no pale square blocks) and the crust's photographed skin (neutral dark grey, no clay). Still wrong: the red lump at the upper left (the land's crag, lit red, half hidden by steam), the ribs read as machined, a bare apron and a straight ramp at the shore.
-- `03-m1000-pair-0.jpg`: heart-0 on main 337d087. In: no column at the centre. Still wrong: the plume is a red-brown smear at the top right where the picture has one grey column, a pale blue patch on the crust at the lower right, the wall's stripes.
-- `04-m1000-pair-4.jpg`: heart-4 on main 337d087. In: no dark body right of the mouth, a low haze over the fan. Still wrong: the pale wall round the mouth, the lit vault, the wide flat stream without white-hot cores, the pale slope with sprinkled stones.
+- `01-m1020-pair-0.jpg`: The establishing view, approved picture left, our frame right, on main 9e63135: darker walls, one grey smoke column, the black cavern
+- `02-m1020-pair-4.jpg`: The mouth and its fall: the wall is the land's rock now, the cavern is black, two walkers stand at the toe. The fan is still too graphic
+- `03-m1020-pair-1.jpg`: The line: lava in a trench. Wrong: the red crag at the upper left, the striped far bank, crust too brown and flat
+- `04-m1020-pair-3.jpg`: The feeding shot: the ground is still smooth sand where the picture has rough clinker. This is the worst gap
 
+Status 41, 2026-11-25 10:02 UTC, showed: heart-3 on main 337d087, approved picture at the left.
 Status 40, 2026-11-25 09:48 UTC, showed: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light.
 Status 39, 2026-11-25 09:28 UTC, showed: heart-4 on main, the approved picture at the left.
-Status 38, 2026-11-25 09:02 UTC, showed: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T10:02:31Z
-phase 3: 6.89 h used of 13.00 h
-build: 13.54 h used of 72.00 h
+2026-11-25T10:29:59Z
+phase 3: 7.35 h used of 13.00 h
+build: 14.00 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 14
+minutes since the last status: 27
 ```
 
 ## Phases
@@ -892,3 +892,6 @@ none
 - 2026-11-25 10:02 UTC. 10:03 status 41 shown (pairs on 337d087: heart-3, heart-1, heart-0, heart-4). Chain K on 337d087: determinism passes (still, late, loop). Walkers hand-back C1 merged as e691fc8 after viewing heart-3 (full and hero), heart-1 and heart-4 beside the pictures; chain L runs on it. ElevenLabs read 10:02: 1 of 131,000 characters.
 - 2026-11-25 10:18 UTC. 10:09 UTC: chain L on e691fc8 (walkers C1): the whole determinism passes. Merged the lava hand-back B1 (43fceee), the crust form hand-back A (ad13906) and the air column (3b90d0f): main 2dd2ead; chain M: the whole determinism passes on it (10:16). The air was merged before its own determinism run; the run on main covers it.
 - 2026-11-25 10:18 UTC. 10:16 UTC: merged the land hand-back B (f2fa8dd), the fall collar and the black cavern (f760990) and the two walkers at the fall (efe9f73): main 9e63135. Round 5 of the Heart ordered on 9e63135 at 10:17: packs and measures from the two render agents.
+- 2026-11-25 10:30 UTC. Status 42 shown at 10:30 UTC: four pairs on main 9e63135 (establishing, the mouth, the line, the feeding shot). Main is 11c2ac8 (the sunk one's hand-back C taken as one commit, the lava's B2a merged). ElevenLabs 1 of 131,000 characters.
+- 2026-11-25 10:30 UTC. 10:26 UTC: the first merge of the sunk one's branch brought three of its merge commits without the trailer onto main (1f24198, pushed 10:25). Main was put back to bf39a86 one minute later, the sunk one's work taken as a single commit with the trailer, the lava merged again, and main pushed with a lease on 1f24198: 11c2ac8, the same tree. From now a merge is made only if the trailer check prints nothing.
+- 2026-11-25 10:30 UTC. 10:28 UTC, MEASURED at heart-3 (hd, draft): the crust alone is 67 54 52 at the bottom middle where the picture is 55 42 38; fine contrast (luma less its 12 pixel blur, standard deviation) 3.3 to 7.1 on our floor against 9.3 to 19.4 on the picture's. Anisotropy 16 on the crust's two pictures changed nothing that can be seen in this view and cost nothing (61.3 s a key): not kept.
