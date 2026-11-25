@@ -85,7 +85,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 
 // The half width of the gap at the nearest seam now, and in y how far its skin has grown back (0 to 1).
 // The life of a seam: it opens, widens, its skin grows in from the edges, it closes. Different seams are at different places in that life.
-const float LINE_NARROW = 1.3;
+const float LINE_NARROW = 0.85;
 // How much wider the net has the gap than it is drawn, as of the last call of gapeAt.
 float gWas = 1.0;
 // The seam the walkers feed at and the cracks that run from its pool (heat classes 0.08 and 0.1) are no even channel: an uneven
