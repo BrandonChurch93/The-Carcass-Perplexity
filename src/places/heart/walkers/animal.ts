@@ -251,7 +251,7 @@ export class Animal {
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
-    const rags = 16 + Math.floor(hash(seed, 21) * 8);
+    const rags = 8 + Math.floor(hash(seed, 21) * 5);
     for (let n = 0; n < rags; n++) {
       // Two in three hang under the keel; the rest are torn loose at the shoulders and the hips.
       const joint = n % 3 === 2;
@@ -260,16 +260,16 @@ export class Animal {
       const i = Math.floor(along * (BODY_RINGS - 1));
       const j = Math.floor((round % 1) * BODY_SIDES) % BODY_SIDES;
       const q = (i * BODY_SIDES + j) * 3;
-      // Strings and flat torn strips, 0.3 to 1.8 m.
+      // Few and short: torn hide, 0.15 to 0.9 m, never a long string under the belly.
       const strip = hash(n, seed + 25);
-      const rag = this.rag(n, (hash(n, seed + 24) < 0.17 ? 1.0 + 1.1 * hash(n, seed + 26) : 0.12 + 0.45 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
+      const rag = this.rag(n, (hash(n, seed + 24) < 0.12 ? 0.5 + 0.25 * hash(n, seed + 26) : 0.12 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }
     for (let n = 0; n < 16; n++) {
-      if (hash(n, seed + 31) < 0.3) continue;
+      if (hash(n, seed + 31) < 0.6) continue;
       const node = 1 + (n & 1);
-      const rag = this.rag(40 + n, (0.25 + 0.75 * Math.pow(hash(n, seed + 32), 2)) * k, (0.025 + 0.06 * hash(n, seed + 33)) * k);
+      const rag = this.rag(40 + n, (0.15 + 0.4 * Math.pow(hash(n, seed + 32), 2)) * k, (0.025 + 0.06 * hash(n, seed + 33)) * k);
       rag.at = [(hash(n, seed + 34) - 0.5) * 0.2 * k, -(0.1 + 0.08 * hash(n, seed + 35)) * k * b.legR, (hash(n, seed + 36) - 0.5) * 0.2 * k];
       this.shreds.push({ ...rag, leg: n >> 2, node });
     }
