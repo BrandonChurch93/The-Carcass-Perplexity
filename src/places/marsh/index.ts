@@ -187,7 +187,7 @@ const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), f
 const shots: Record<string, CameraPath> = {
   'marsh-01': through(K0, keyPart(shotById('marsh-01')), { forward: -9, up: 1.2 }, { forward: 12, up: 0.6 }),
   'marsh-02': through(K2, keyPart(shotById('marsh-02')), { right: -3.2, forward: -0.6 }, { right: 3.2, forward: 0.8 }),
-  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.2, up: 0.2, right: 0.6 }, { forward: 1.3, up: 0.75, turn: 8, tilt: 7 }),
+  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.2, up: 0.2, right: 0.6 }, { forward: 0.4, up: 0.45, turn: 8, tilt: 3 }),
   'marsh-04': [
     { at: 0, pose: { position: at(26.7, 6.6, 2.7), aim: at(36.4, 4.6, -0.1), fov: 30 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
@@ -622,12 +622,16 @@ function create(): Place {
   const bigRing = new THREE.Mesh(new THREE.RingGeometry(0.8, 1, 48).rotateX(-Math.PI / 2), lay(kit.flat(C.spray, { side: THREE.DoubleSide }), 7));
   const cloud = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), steamMat);
   const drops = herd(new THREE.SphereGeometry(1, 6, 4), sprayMat, 70);
-  for (const o of [column, bigCrown, bigRing, cloud]) o.position.set(HERO_DOME[0], 0.06, HERO_DOME[1]);
-  burst.add(column, bigCrown, bigRing, cloud, drops);
-  const dropSeed = Array.from({ length: 70 }, () => {
+  const secondRing = new THREE.Mesh(bigRing.geometry, bigRing.material);
+  for (const o of [column, bigCrown, bigRing, secondRing, cloud]) o.position.set(HERO_DOME[0], 0.06, HERO_DOME[1]);
+  burst.add(column, bigCrown, bigRing, secondRing, cloud, drops);
+  const dropSeed = Array.from({ length: 70 }, (_, i) => {
     const a = rng.range(0, TAU);
-    const out = rng.range(0.3, 1.9);
-    return { vx: Math.sin(a) * out, vz: Math.cos(a) * out, vy: rng.range(5, 11.5), size: rng.range(0.05, 0.14), delay: rng.range(0, 0.12) };
+    const out = rng.range(0.4, 2.2);
+    const puff = i % 6 === 0;
+    const lift = rng.next();
+    const big = rng.next();
+    return { vx: Math.sin(a) * out, vz: Math.cos(a) * out, vy: puff ? 2.6 + 1.6 * lift : 3.2 + 4.2 * lift, size: puff ? 0.16 + 0.1 * big : 0.04 + 0.07 * big, tall: puff ? 1 : 1.8, delay: rng.range(0, 0.4) };
   });
 
   const fliers = part('fliers');
@@ -724,22 +728,25 @@ function create(): Place {
 
     const a = t - BURST;
     const on = a >= 0;
-    const rise = Math.max(0, 9.4 * a - 4.9 * a * a);
-    column.scale.set(on && rise > 0 ? 0.55 + 0.25 * a : 0, rise + 0.01, on && rise > 0 ? 0.55 + 0.25 * a : 0);
-    const crownUp = on && a < 1.3 ? 1.5 * Math.sin((Math.PI * a) / 1.3) : 0;
-    bigCrown.scale.set(crownUp > 0 ? 0.5 + 0.7 * a : 0, crownUp + 0.01, crownUp > 0 ? 0.5 + 0.7 * a : 0);
+    const rise = on && a < 0.5 ? 1.3 * Math.sin((Math.PI * a) / 0.5) : 0;
+    column.scale.set(rise > 0 ? 0.2 : 0, rise + 0.01, rise > 0 ? 0.2 : 0);
+    const crownUp = on && a < 0.6 ? 0.34 * Math.sin((Math.PI * a) / 0.6) : 0;
+    bigCrown.scale.set(crownUp > 0 ? 0.3 + 0.55 * a : 0, crownUp + 0.01, crownUp > 0 ? 0.3 + 0.55 * a : 0);
     const ringR = on ? Math.min(POOL_R - 0.5, 0.9 + 2.6 * a) : 0;
     bigRing.scale.set(ringR, 1, ringR);
     bigRing.position.y = 0.08;
-    const cloudR = on && a < 6 ? (0.4 + 0.5 * a) * Math.sqrt(Math.sin((Math.PI * a) / 6)) : 0;
+    const laterR = a > 0.55 ? Math.min(POOL_R - 0.5, 0.6 + 2.1 * (a - 0.55)) : 0;
+    secondRing.scale.set(laterR, 1, laterR);
+    secondRing.position.y = 0.08;
+    const cloudR = on && a < 4 ? (0.18 + 0.2 * a) * Math.sqrt(Math.sin((Math.PI * a) / 4)) : 0;
     cloud.scale.set(cloudR * 1.2, cloudR, cloudR * 1.2);
-    cloud.position.y = 1.4 + 2 * Math.max(0, a);
+    cloud.position.y = 0.8 + 1.1 * Math.max(0, a);
     for (let i = 0; i < dropSeed.length; i++) {
       const d = dropSeed[i] as (typeof dropSeed)[number];
       const da = a - d.delay;
       const y = d.vy * da - 4.9 * da * da;
       const live = da > 0 && y > -0.05;
-      put(drops, i, HERO_DOME[0] + d.vx * da, 0.1 + y, HERO_DOME[1] + d.vz * da, 0, 0, live ? d.size : 0, live ? d.size * 1.8 : 0, live ? d.size : 0);
+      put(drops, i, HERO_DOME[0] + d.vx * da, 0.1 + y, HERO_DOME[1] + d.vz * da, 0, 0, live ? d.size : 0, live ? d.size * d.tall : 0, live ? d.size : 0);
     }
     drops.instanceMatrix.needsUpdate = true;
 
