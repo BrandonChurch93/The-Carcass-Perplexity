@@ -10,6 +10,8 @@ const smooth = (a: number, b: number, v: number): number => {
 };
 const bell = (a: number, b: number, v: number): number => smooth(a, a + (b - a) * 0.35, v) * (1 - smooth(a + (b - a) * 0.65, b, v));
 
+/** The height the trunk turns about, for an adult of size 1. */
+export const MID = 1.3;
 export const BODY_RINGS = 120;
 export const BODY_SIDES = 48;
 export const LEG_RINGS = 20;
@@ -21,20 +23,20 @@ export const FEELER_SIDES = 6;
 // The trunk of an adult of size 1, rump to muzzle: how far along (0 to 1), x forward, y of the middle, half height, half width. Metres.
 // The back stands highest behind the shoulders and falls away to the rump; the belly hangs lowest behind the middle; the head hangs with no neck.
 const KNOTS: [number, number, number, number, number][] = [
-  [0.0, -2.0, 0.76, 0.02, 0.02],
-  [0.03, -1.97, 0.78, 0.28, 0.3],
-  [0.08, -1.82, 0.84, 0.5, 0.54],
-  [0.18, -1.4, 0.93, 0.66, 0.74],
-  [0.32, -0.72, 1.0, 0.75, 0.85],
-  [0.46, 0.0, 1.1, 0.8, 0.87],
-  [0.58, 0.6, 1.2, 0.83, 0.8],
-  [0.68, 1.1, 1.12, 0.73, 0.72],
-  [0.77, 1.5, 0.96, 0.61, 0.63],
-  [0.85, 1.82, 0.78, 0.51, 0.56],
-  [0.92, 2.1, 0.62, 0.43, 0.5],
-  [0.965, 2.27, 0.52, 0.37, 0.47],
-  [0.987, 2.35, 0.47, 0.31, 0.42],
-  [1.0, 2.38, 0.46, 0.02, 0.04],
+  [0.0, -2.0, 1.02, 0.02, 0.02],
+  [0.03, -1.97, 1.03, 0.3, 0.3],
+  [0.08, -1.84, 1.07, 0.52, 0.55],
+  [0.18, -1.4, 1.17, 0.66, 0.76],
+  [0.32, -0.72, 1.25, 0.72, 0.86],
+  [0.46, 0.0, 1.33, 0.76, 0.88],
+  [0.58, 0.6, 1.42, 0.8, 0.82],
+  [0.68, 1.1, 1.34, 0.74, 0.74],
+  [0.77, 1.5, 1.15, 0.64, 0.64],
+  [0.85, 1.82, 0.94, 0.54, 0.56],
+  [0.92, 2.1, 0.75, 0.44, 0.48],
+  [0.965, 2.27, 0.61, 0.36, 0.42],
+  [0.987, 2.35, 0.55, 0.27, 0.35],
+  [1.0, 2.38, 0.53, 0.02, 0.04],
 ];
 
 function knot(s: number, col: number): number {
@@ -133,7 +135,7 @@ const LEG_AT: [number, number][] = [
 ];
 // A leg from where it leaves the trunk to its sole: the radius down it, for an adult of size 1.
 /** The radius down a leg, 0 where it leaves the trunk to 1 at the sole, for an adult of size 1: a pillar, thick at the top, a knee, a broad pad. */
-const legRadius = (u: number): number => 0.37 - 0.1 * smooth(0, 0.62, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.06 * smooth(0.7, 0.93, u);
+const legRadius = (u: number): number => 0.34 - 0.1 * smooth(0, 0.62, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.06 * smooth(0.7, 0.93, u);
 
 export class Animal {
   readonly body: Tube;
@@ -208,7 +210,7 @@ export class Animal {
           sleeve += 0.05 * near * (r3 - 0.62);
           fold = Math.min(fold, 1 - near * (1 - r3));
           // The haunch and the shoulder stand out over the leg.
-          sleeve += 0.085 * Math.exp(-((along - lx) ** 2) / 0.22) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
+          sleeve += 0.12 * Math.exp(-((along - lx) ** 2) / 0.22) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
         let m = 1 + 0.085 * neck * (r1 - 0.62) * under + 0.05 * flank * (r2 - 0.62) * side + sleeve;
         m += 0.06 * (lump(along * 1.1 + 9, a * 0.9 + 2, sd + 1) - 0.5) + 0.025 * (lump(along * 3.1, a * 2.6, sd + 2) - 0.5);
@@ -256,10 +258,10 @@ export class Animal {
       this.feelers.push(t);
       const u = f / (FEELERS - 1);
       // A fringe round the under lip of the muzzle, from one corner to the other. Each stands at its own pitch, so that from the side they read as a rake.
-      const angle = Math.PI * (1.1 + 0.8 * u) + 0.1 * (cell(f, 1, sd) - 0.5);
-      const ring = BODY_RINGS - 5 - (f % 2) * 3 - Math.floor(9 * Math.abs(u - 0.5));
-      const length = k * (0.55 + 0.2 * cell(f, 2, sd) + 0.12 * Math.abs(u - 0.5)) * (1 - 0.25 * young);
-      const radius = k * (0.04 + 0.014 * cell(f, 3, sd)) * (1 + 0.2 * young);
+      const angle = Math.PI * (1.04 + 0.92 * u) + 0.1 * (cell(f, 1, sd) - 0.5);
+      const ring = BODY_RINGS - 3 - (f % 2) * 2 - Math.floor(5 * Math.abs(u - 0.5));
+      const length = k * (0.58 + 0.24 * cell(f, 2, sd) + 0.1 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
+      const radius = k * (0.048 + 0.016 * cell(f, 3, sd)) * (1 + 0.2 * young);
       const reach = ((f * 0.618 + cell(f, 4, sd) * 0.3) % 1) * 0.95;
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
@@ -280,7 +282,7 @@ export class Animal {
     const sr = Math.sin(d.roll);
     const cp = Math.cos(d.pitch);
     const sp = Math.sin(d.pitch);
-    const midY = 1.1 * k;
+    const midY = MID * k;
     // A point of the trunk as built, carried by the trunk's own motion (pitch about its middle, roll about the ground under it, then the shifts).
     const carry = (x: number, y: number, z: number, out: Float32Array, o: number): void => {
       const yy = y - midY;
@@ -301,11 +303,11 @@ export class Animal {
 
     // The spine.
     const px = 1.0 * k;
-    const py = 1.1 * k;
+    const py = MID * k;
     for (let i = 0; i < BODY_RINGS; i++) {
       const s = this.s[i];
       let x = knot(s, 1) * k;
-      let y = (knot(s, 2) - 1.1) * k * d.squash + 1.1 * k * (0.35 + 0.65 * d.squash);
+      let y = (knot(s, 2) - MID) * k * d.squash + MID * k * (0.35 + 0.65 * d.squash);
       let z = d.bend * k * 4 * (s - 0.42) * (s - 0.42);
       const w = smooth(0.56, 0.93, s);
       if (w > 0) {
@@ -374,7 +376,7 @@ export class Animal {
     // The legs: from under the haunch or the shoulder, a little bent, to a foot that stays where it was put down.
     for (let l = 0; l < 4; l++) {
       const [lx, side] = LEG_AT[l];
-      carry(lx * k, 0.92 * k * (0.4 + 0.6 * d.squash), side * 0.44 * k * this.b.bulk, tmp, 0);
+      carry(lx * k, 1.02 * k * (0.4 + 0.6 * d.squash), side * 0.44 * k * this.b.bulk, tmp, 0);
       const ax = tmp[0];
       const ay = tmp[1];
       const az = tmp[2];
@@ -463,19 +465,23 @@ export class Animal {
       let y = this.cy[i] + ny * ca * hw + by * sa * hh;
       let z = this.cz[i] + nz * ca * hw + bz * sa * hh;
       // It leaves the lip downward, some reaching forward and some hanging straight, the outer ones leaning out: a rake, not a row.
-      const fw = at.reach + 0.25 * d.splay;
-      const out = at.lean * (0.3 + 0.5 * d.splay);
-      let dx = tx * fw + nx * out - bx;
-      let dy = ty * fw + ny * out - by;
-      let dz = tz * fw + nz * out - bz;
+      const fore = 0.15 + 1.5 * at.reach + 0.3 * d.splay;
+      const out = at.lean * (0.55 + 0.5 * d.splay);
+      // Forward is where the head points on the level, whatever its hang: the tusks go down into the mud, not back under the chin.
+      const hl = Math.hypot(tx, tz) || 1;
+      const hx = tx / hl;
+      const hz = tz / hl;
+      let dx = hx * fore + nx * out;
+      let dy = -1 + 0.35 * d.splay;
+      let dz = hz * fore + nz * out;
       let dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
       dy /= dl;
       dz /= dl;
       // The way it curls: down and back, made square to where it starts.
-      let qx = -tx * 0.8;
-      let qy = -ty * 0.8 - 0.9;
-      let qz = -tz * 0.8;
+      let qx = -hx * 0.8;
+      let qy = -0.9;
+      let qz = -hz * 0.8;
       const along = qx * dx + qy * dy + qz * dz;
       qx -= along * dx;
       qy -= along * dy;

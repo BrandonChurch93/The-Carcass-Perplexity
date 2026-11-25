@@ -40,6 +40,29 @@ uniform float uSeconds;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 
+// Bare skin: plates a few centimetres across with a crease round each. Returns how far from a crease (0 in it) and a number of the plate's own.
+vec2 plates(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float f1 = 9.0;
+  float f2 = 9.0;
+  float id = 0.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 g = vec2(float(x), float(y));
+      vec2 o = hash22(i + g);
+      float d = length(g + o - f);
+      if (d < f1) { f2 = f1; f1 = d; id = o.x; } else if (d < f2) { f2 = d; }
+    }
+  }
+  return vec2(f2 - f1, id);
+}
+float skinHeight(vec2 uv, float seed) {
+  vec2 a = plates(uv * vec2(17.0, 30.0) + seed);
+  vec2 b = plates(uv * vec2(64.0, 80.0) + seed * 3.0);
+  return 0.65 * smoothstep(0.0, 0.22, a.x) + 0.35 * smoothstep(0.0, 0.3, b.x);
+}
+
 // The big creases: slack skin hangs in rolls round the trunk, closer and deeper at the neck. Returns how high the skin stands, 0 in a crease.
 float creases(vec2 uv, float seed, float deep) {
   float wob = vnoise(uv * vec2(2.3, 3.1) + seed * 7.0);
@@ -78,7 +101,7 @@ void main() {
   vec3 nhH = texture2D(tHideNh, uvH).rgb;
   // A second, wider reading under the first breaks the repeat and gives the hide its blotches.
   vec3 wide = texture2D(tHide, uvH * 0.23 + 0.37).rgb / vec3(0.155, 0.097, 0.067);
-  hide = mix(vec3(1.0), hide, 0.55) * mix(vec3(1.0), wide, 0.5);
+  hide = mix(vec3(1.0), hide, 0.25) * mix(vec3(1.0), wide, 0.5);
 
   // The fine wrinkles between the folds of the shape.
   float neck = smoothstep(0.52, 0.66, vLook.y) * (1.0 - smoothstep(0.9, 0.99, vLook.y));
@@ -87,7 +110,10 @@ void main() {
   float c0 = creases(vUv, seed, deep);
   float cx = creases(vUv + vec2(e, 0.0), seed, deep);
   float cy = creases(vUv + vec2(0.0, e), seed, deep);
-  vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.8 * (1.0 - 0.6 * feeler);
+  float e2 = 0.0015;
+  float s0 = skinHeight(vUv, seed);
+  vec2 skinSlope = vec2(skinHeight(vUv + vec2(e2, 0.0), seed) - s0, skinHeight(vUv + vec2(0.0, e2), seed) - s0) / e2 * 0.004 * (1.0 - feeler);
+  vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.22 + skinSlope;
   // How deep in a fold of the shape this is: 1 on the top of a fold, toward 0 in its crease.
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
@@ -101,43 +127,46 @@ void main() {
   float cake = smoothstep(0.6, 0.68, up) * clamp(vInfo.x, 0.0, 1.0) * (1.0 - feeler);
   cake = max(cake, dead * smoothstep(0.3, 0.42, patchy + 0.45 * ng.y + 0.35 * (nhS.b - 0.5) + 0.2 * (flake - 0.5)));
   // A bloom of dry salt over the upper half and in the creases: the hide dries grey.
-  float dust = clamp(vInfo.x, 0.0, 1.0) * smoothstep(-0.35, 0.6, ng.y) * (0.3 + 0.5 * (1.0 - fold) + 0.35 * patchy) * (1.0 - feeler);
+  float dust = clamp(vInfo.x, 0.0, 1.0) * smoothstep(-0.35, 0.6, ng.y) * (0.25 + 0.3 * fold + 0.35 * patchy) * (1.0 - feeler);
 
   // Wet: everything that has been under the brine is dark, red and shines. The line is ragged, and below it the brine still runs down in threads.
   float lane = mix(vUv.x, vUv.y * 2.0, leg);
   float streak = vnoise(vec2(lane * 9.0, vWorld.y * 0.6) + seed * 5.0);
   float thread = smoothstep(0.55, 0.8, vnoise(vec2(lane * 23.0, vWorld.y * 0.9 - uSeconds * 0.35) + seed * 9.0));
-  float ragged = 0.5 * (fbm(vUv * vec2(1.4, 0.8) + seed * 17.0) - 0.5) + 0.3 * (streak - 0.5);
+  float ragged = 0.6 * (fbm(vUv * vec2(1.4, 0.8) + seed * 17.0) - 0.5) + 0.1 * (streak - 0.5);
   float wet = (1.0 - smoothstep(vWet - 0.12 + ragged, vWet + 0.1 + ragged, vWorld.y)) * (1.0 - dead);
   float damp = (1.0 - smoothstep(vWet + ragged, vWet + 0.55 + ragged, vWorld.y)) * (1.0 - dead);
   float soaked = 1.0 - smoothstep(0.03, 0.28 + 0.2 * streak, vWorld.y);
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = vec3(0.2, 0.165, 0.14) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold);
-  albedo = mix(albedo, vec3(0.34, 0.31, 0.285) * (0.75 + 0.5 * nhH.b), dust * 0.7);
+  vec3 albedo = vec3(0.125, 0.104, 0.09) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold) * (0.6 + 0.4 * s0) * (0.9 + 0.2 * plates(vUv * vec2(17.0, 30.0) + seed).y);
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.6);
   // The feelers: old ivory, grooved along their length, stained at the root and the tip.
   float groove = 0.8 + 0.2 * sin(vUv.y / max(vInfo.z, 0.01) * 5.0 + seed * 40.0);
-  vec3 ivory = vec3(0.56, 0.47, 0.33) * groove * mix(vec3(1.0), hide, 0.5);
+  vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
   ivory = mix(ivory, vec3(0.21, 0.1, 0.06), 0.6 * smoothstep(0.6, 1.0, vLook.y) + 0.5 * (1.0 - smoothstep(0.0, 0.18, vLook.y)));
   albedo = mix(albedo, ivory, feeler);
-  albedo = mix(albedo, vec3(0.62, 0.59, 0.56) * salt, cake);
+  albedo = mix(albedo, vec3(0.42, 0.4, 0.38) * salt, cake);
   slope = mix(slope, (nhS.rg - 0.5) * 2.4, cake);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
   albedo = mix(albedo, albedo * vec3(0.72, 0.5, 0.45), damp * (1.0 - wet));
-  vec3 wetC = albedo * vec3(0.62, 0.2, 0.13) + vec3(0.05, 0.007, 0.004);
+  vec3 wetC = albedo * vec3(0.8, 0.25, 0.16) + vec3(0.035, 0.004, 0.002);
   albedo = mix(albedo, wetC, wet * (0.9 - 0.4 * feeler));
   albedo = mix(albedo, albedo * vec3(0.7, 0.45, 0.4), 0.6 * thread * damp);
   // Red mud, thick and smooth, on what stands in it.
-  vec3 mud = vec3(0.15, 0.04, 0.028) * (0.7 + 0.6 * streak);
+  vec3 mud = vec3(0.075, 0.02, 0.014) * (0.7 + 0.6 * streak);
   albedo = mix(albedo, mud, soaked * 0.85);
 
   vec3 n = normalize(ng - (T * slope.x + B * slope.y) * (1.0 - 0.5 * soaked));
-  float rough = mix(0.92, 0.3, max(wet, 0.8 * thread * damp));
-  rough = mix(rough, 0.2, soaked);
+  float rough = mix(0.92, 0.42, max(wet, 0.8 * thread * damp));
+  rough = mix(rough, 0.3, soaked);
   rough = mix(rough, 0.95, cake);
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));
-  float occ = vInfo.y * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b);
+  // At a grazing look a rough wet hide does not mirror the sky as a clean rim.
+  rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
+  float occ = vInfo.y * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
+  occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
   occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b), cake);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);

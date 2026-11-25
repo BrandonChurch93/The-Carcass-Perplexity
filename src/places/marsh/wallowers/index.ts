@@ -5,6 +5,7 @@ import type { Context, Piece } from '../shared/context';
 import { Animal, newDrive, walk, type Build, type Plan } from './animal';
 import { hideMaterial } from './material';
 import { Skin } from './skin';
+import { Wet } from './wet';
 
 export const PARTS: readonly string[] = ['wallowers'];
 
@@ -21,11 +22,13 @@ export function create(ctx: Context): Piece {
     const animal = new Animal(skin, b);
     // The slower it goes the longer its cycle: a walk of about one length of the trunk in three cycles, and never two alike.
     const cycle = rng.range(3.4, 4.6) * (0.75 + 0.25 * size);
-    const ground = Math.min(ctx.rig.land.height(x, z), 0) - sink * 1.0 * b.k;
+    // One that wades stands on the bed it has trodden down; one on a bank stands on the bank.
+    const land = ctx.rig.land.height(x, z);
+    const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
     herd.push({
       animal,
-      plan: { at: [x, z], when, dir, speed, ground, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang: Math.asin(Math.max(-0.9, Math.min(0.9, (1.1 - Math.max(0.62, sink + 0.3)) / 1.503))) - 0.44 },
-      wet: Math.max(0.5 * b.k, ground + 1.25 * b.k) * rng.range(0.85, 1.1),
+      plan: { at: [x, z], when, dir, speed, ground, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang: Math.asin(Math.max(-0.9, Math.min(0.9, (1.0 - Math.max(0.25, sink + 0.14)) / 1.496))) - 0.517 },
+      wet: Math.max(0.5 * b.k, ground + 1.12 * b.k) * rng.range(0.85, 1.1),
     });
   };
   for (const b of BEASTS) {
@@ -48,7 +51,8 @@ export function create(ctx: Context): Piece {
   const material = hideMaterial(ctx);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('wallowers', mesh));
+  const wet = new Wet(ctx, herd.length);
+  ctx.scene.add(ctx.parts.built('wallowers', mesh, wet.mesh), wet.mesh);
 
   const discs = ctx.rig.contactDiscs(herd.length * DISCS);
   const drive = newDrive();
@@ -65,12 +69,15 @@ export function create(ctx: Context): Piece {
           ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), 0.85 * (1 - 0.7 * off));
         }
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, 0.6, 1.9, stood.yaw);
+        wet.set(i, stood, k, seconds);
       });
       skin.touch();
+      wet.touch();
     },
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      wet.dispose();
     },
   };
 }
