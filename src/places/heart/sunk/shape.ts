@@ -192,7 +192,9 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
     const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.13, 2));
     r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
-    r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5) + 0.07 * (noise3(s * 2.6 + 13, dy * 3.2, dz * 3.2) - 0.5);
+    r += 0.045 * (noise3(s * 7, dy * 5, dz * 5) - 0.5) + 0.07 * (noise3(s * 2.6 + 13, dy * 3.2, dz * 3.2) - 0.5);
+    // The hide on the ropes is cracked across, a hand to a forearm apart.
+    r -= 0.035 * Math.pow(1 - Math.abs(2 * noise3(s * 4.6 + 40, dy * 6.5, dz * 6.5) - 1), 4) * Math.min(1, ring * 1.4);
     // The same plates as on the trunks, on the side that looks up: 20 to 60 cm, ragged, lifting at their edges.
     const cell = cells2((a / (Math.PI * 2)) * 14 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 0.95 + 0.9 * noise2(a * 2, s + 3), 14);
     const id = cell[1];
