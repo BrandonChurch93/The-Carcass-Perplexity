@@ -321,7 +321,10 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const on = smooth(9, 0, out);
     const base = apronBase(x, z) - 0.8 * out - 0.012 * out * out + 5 * (fbm2(x / 23 + 3, z / 23 + 8) - 0.5) * smooth(0, 10, out);
     // Broad heaps, and blocks big enough for the sheet to hold; the smaller rubble is the shader's.
-    const rubble = (1.4 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 0.7 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + 1.25 * blocks(x, z, 3.7, 1) + 0.6 * blocks(x + 31, z + 17, 1.9, 5)) * (1 + 0.8 * smooth(0, 12, out));
+    // Beside the stream the rubble is welded over and rounded by spatter: the blocks stand out only some metres from it, so nothing
+    // square stands before the lava.
+    const loose = smooth(3, 13, side);
+    const rubble = (1.4 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 0.7 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + loose * (1.25 * blocks(x, z, 3.7, 1) + 0.6 * blocks(x + 31, z + 17, 1.9, 5))) * (1 + 0.8 * smooth(0, 12, out));
     // In the fan the stream no longer keeps a bed: it lies on the slope as a sheet of crust with channels in it.
     const sheet = smooth(FAN_FROM, FAN_FROM + 12, n.len);
     // The fan is a flow a man's height thick that thins to its edge and goes out on the lake in lobes: nothing of it ends on a straight line.
@@ -333,7 +336,9 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     // Seen from the lake a level bed is a line; a leaning one is a ribbon as wide as it leans.
     const lakeSide = n.toward[0] * 0.565 - n.toward[1] * 0.825;
     const ny = n.y - LEAN_BED * Math.min(n.distance, n.half + 8) * lakeSide * smooth(3, 10, n.len) * smooth(FAN_FROM - 2, FAN_FROM - 10, n.len);
-    const top = lerp(ny, Math.max(base, ground, 0) + body, sheet);
+    // The fan has buried the ledges under it: it lies on the slope as one sheet, and only a trace of the steps shows through.
+    const buried = base + 0.7 * (apronSlope(x, z) - apronBase(x, z));
+    const top = lerp(ny, Math.max(buried, ground, 0) + body, sheet);
     // Beside the stream the rubble is what the stream has let stand: a low levee, then the slope. The bank on the lake's side is kept
     // below the stream, or from the shore the stream would hide behind it.
     const lakeward = n.len > 2 ? smooth(0.05, 0.6, n.toward[0] * 0.56 - n.toward[1] * 0.83) : 0;
@@ -347,11 +352,12 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     // Away from the apron the sheet does not go down the wall: it ends as a sill a little below the floor, and the wall under it is the wall.
     const far = smooth(6, 16, out);
     const rock = lerp(rock0, Math.max(rock0, TUBE.floor - 2 + 1.2 * (fbm2(x / 3.7, z / 3.7) - 0.5)), far * smooth(7, 2, -d));
-    const isle = island(n.len, n.distance * n.side, n.half) * (1 - sheet);
-    const stream = top + 0.2 * (1 - Math.min(1, u * u)) * (1 - sheet) + isle * (1.1 + 1.3 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
+    // None in the first 20 m: under the lip the stream is one body.
+    const isle = island(n.len, n.distance * n.side, n.half) * (1 - sheet) * smooth(18, 28, n.len);
+    const stream = top + 0.2 * (1 - Math.min(1, u * u)) * (1 - sheet) + isle * (0.45 + 0.6 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
     // The lip is broken: roof fall and spatter lie heaped along it either side of where the lava leaves, so its edge is no ruled line.
-    const lipHeap = (3.2 * Math.pow(noise2(x / 11 + 6.3, 1.7), 1.6) + 1.5 * noise2(x / 3.7 + 2.1, 4.4) + 1.3 * Math.max(0, blocks(x + 7, z + 3, 4.6, 13))) * smooth(-4.5, -0.5, d) * smooth(7, 1.5, d) * smooth(0.5, 6, side);
+    const lipHeap = (3.2 * Math.pow(noise2(x / 11 + 6.3, 1.7), 1.6) + 1.5 * noise2(x / 3.7 + 2.1, 4.4) + 1.3 * Math.max(0, blocks(x + 7, z + 3, 4.6, 13))) * smooth(-4.5, -0.5, d) * smooth(7, 1.5, d) * smooth(3, 11, side);
     return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)) + lipHeap, n, under: ground, isle, top, on: on * smooth(-1, 2, -d) - shelf * smooth(0.95, 1.1, u) * smooth(1.5, 4, d), far };
   };
 
