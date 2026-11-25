@@ -179,8 +179,10 @@ float skyOpen(vec3 p) {
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  float open = skyOpen(p) * occ;
-  vec3 e = skyIrradiance(n) * open + emitterIrradiance(p, n) * occ;
+  float sky = skyOpen(p);
+  float open = sky * occ;
+  // The lightning reaches a hollow as the sky does: under a roof it comes in by the mouths and no other way.
+  vec3 e = skyIrradiance(n) * open + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);

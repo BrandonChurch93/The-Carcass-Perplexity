@@ -1,5 +1,5 @@
 // The surfaces of the Spine's land: rock and snow in one shader, read by world position so that the ridge, the spires and the mouth of the canal are one body.
-import { CANAL_L, MOUTH_S, first } from '../ridge';
+import { CANAL_L, EXIT, EXIT_FLARE, EXIT_R, FLARE, MOUTH_R, MOUTH_S, THROAT, first } from '../ridge';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
 export const LAND_VERTEX = /* glsl */ `
@@ -36,6 +36,22 @@ const float CANAL_L = ${CANAL_L.toFixed(3)};
 const float TRAIL_FROM = ${(first.s - 660).toFixed(3)};
 const vec3 ROCK_MEAN = vec3(0.102, 0.084, 0.076);
 
+const float EXIT = ${EXIT.toFixed(3)};
+
+// The canal of the layout (ridge.ts): its radius d metres in from the near mouth, and the l of its axis.
+float flareAt(float d) {
+  if (d <= 0.0) return ${MOUTH_R.toFixed(1)};
+  if (d < ${FLARE.toFixed(1)}) return ${THROAT.toFixed(1)} + ${(MOUTH_R - THROAT).toFixed(1)} * pow(1.0 - d / ${FLARE.toFixed(1)}, 1.6);
+  float e = EXIT - d;
+  if (e <= 0.0) return ${EXIT_R.toFixed(1)};
+  if (e < ${EXIT_FLARE.toFixed(1)}) return ${THROAT.toFixed(1)} + ${(EXIT_R - THROAT).toFixed(1)} * pow(1.0 - e / ${EXIT_FLARE.toFixed(1)}, 1.6);
+  return ${THROAT.toFixed(1)};
+}
+float canalAt(float d) {
+  float k = max(0.0, min(d, EXIT + 40.0) - 140.0);
+  return CANAL_L + 0.0025 * k * k;
+}
+
 // The trail of the layout (anchors.ts): l at s.
 float trailAt(float s) {
   float k = clamp((s - MOUTH_S + 160.0) / 150.0, 0.0, 1.0);
@@ -59,24 +75,35 @@ vec3 prints(vec2 sl) {
 }
 
 void main() {
-  vec3 n0 = normalize(vNormal);
-  if (uKind > 1.5 && !gl_FrontFacing) n0 = -n0;
+  // The mouths of the canal: the rock wall over each stands across it, and is open where the canal passes through.
+  float dCanal = vSL.x - MOUTH_S;
+  if (uKind < 0.5 && dCanal > -1.0 && dCanal < EXIT + 1.0 && vWorld.y > CANAL_FLOOR - 0.2) {
+    float r = flareAt(dCanal);
+    if (length(vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r))) < r - 0.8) discard;
+  }
+  vec3 smoothN = normalize(vNormal);
+  if (uKind > 1.5 && !gl_FrontFacing) smoothN = -smoothN;
   vec3 toCamera = cameraPosition - vWorld;
   float far = length(toCamera);
   vec3 v = toCamera / far;
   bool spire = uKind > 0.5;
   bool inside = uKind > 1.5;
+  // Broken rock is flat faces that meet in edges: the face of the triangle itself, more than the round of the mesh.
+  vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  if (dot(facet, smoothN) < 0.0) facet = -facet;
+  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.8 : 0.55));
 
   // The rock, read on the two faces the surface is nearest to. On upright faces its beds are tipped, as the vertebrae lean.
   vec3 w = n0 * n0;
   float top = smoothstep(0.4, 0.75, w.y);
   vec2 sideAt = w.x > w.z ? vWorld.zy : vWorld.xy;
-  sideAt = mat2(0.34, 0.94, -0.94, 0.34) * sideAt;
+  // Along the beds the rock runs long: the picture is drawn out three times that way.
+  sideAt = (mat2(0.34, 0.94, -0.94, 0.34) * sideAt) * vec2(1.0, 0.36);
   vec3 across = w.x > w.z ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
-  float wide = 46.0;
+  float wide = 64.0;
   vec3 rock = mix(texture2D(tRock, sideAt / wide).rgb, texture2D(tRock, vWorld.xz / wide).rgb, top);
   vec3 nh = mix(texture2D(tRockNh, sideAt / wide).rgb, texture2D(tRockNh, vWorld.xz / wide).rgb, top);
-  vec2 t = (nh.rg - 0.5) * vec2(1.0, -1.0) * 2.2;
+  vec2 t = (nh.rg - 0.5) * vec2(1.0, -1.0) * 1.5;
   float pit = nh.b;
   float close = smoothstep(420.0, 60.0, far);
   vec3 fine = vec3(0.5);
@@ -111,12 +138,19 @@ void main() {
   // Snow lies where the face leans back, deeper in the lee and in the hollows of the rock; rime frosts what faces the gale.
   float lee = dot(n0.xz, uWind.xz);
   float lie = n0.y + 0.22 * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
-  float snow = spire ? smoothstep(0.52, 0.7, lie) : smoothstep(0.42, 0.62, lie);
+  // Rock that stands out of the snow keeps it only on its level tops.
+  float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
+  float snow = spire ? smoothstep(0.5, 0.68, lie) : smoothstep(0.42, 0.62, lie - 0.42 * bare);
   if (spire && !inside) {
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
     occ *= 0.55 + 0.45 * smoothstep(0.0, 14.0, above);
+  }
+  if (spire && !inside) {
+    float proud = smoothstep(-9.0, 5.0, vSL.x);
+    occ *= 0.3 + 0.7 * proud;
+    albedo *= 0.75 + 0.25 * proud;
   }
   snow *= 1.0 - burn;
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
@@ -127,7 +161,7 @@ void main() {
   albedo = mix(albedo, vec3(0.62, 0.66, 0.72), 0.55 * rime);
 
   // The snow's own surface: wind crust in long ripples, and the prints.
-  vec3 nSnow = n0;
+  vec3 nSnow = normalize(mix(smoothN, n0, 0.35));
   float snowOcc = 1.0;
   if (snow > 0.0 && close > 0.0) {
     vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
@@ -139,7 +173,7 @@ void main() {
     vec3 p = prints(vSL);
     g += p.yz;
     snowOcc = 1.0 + 0.45 * min(p.x, 0.0);
-    nSnow = normalize(n0 + vec3(g.x, 0.0, g.y));
+    nSnow = normalize(nSnow + vec3(g.x, 0.0, g.y));
   }
   vec3 n = normalize(mix(nRock, nSnow, snow));
   albedo = mix(albedo, vec3(0.8, 0.83, 0.88), snow);

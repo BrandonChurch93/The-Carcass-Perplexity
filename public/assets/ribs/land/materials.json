@@ -1,0 +1,77 @@
+{
+  "recipe": {
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "materials": [
+      {
+        "name": "rock",
+        "from": "land/rock-take1.jpg",
+        "to": "land",
+        "width": 2048,
+        "height": 1024,
+        "dataAs": "jpg"
+      },
+      {
+        "name": "weed",
+        "from": "land/weed-take1.jpg",
+        "to": "land",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "sand",
+        "from": "land/sand-take1.jpg",
+        "to": "land",
+        "width": 1024,
+        "height": 1024
+      },
+      {
+        "name": "sky",
+        "from": "air/sky-take1.jpg",
+        "to": "air",
+        "width": 2048,
+        "height": 1024,
+        "colourOnly": true,
+        "band": 0.2
+      }
+    ]
+  },
+  "note": "mean is the linear mean colour of each picture, 0 to 1",
+  "materials": [
+    {
+      "name": "rock",
+      "mean": [
+        0.319,
+        0.296,
+        0.263
+      ]
+    },
+    {
+      "name": "weed",
+      "mean": [
+        0.064,
+        0.053,
+        0.034
+      ]
+    },
+    {
+      "name": "sand",
+      "mean": [
+        0.135,
+        0.123,
+        0.109
+      ]
+    },
+    {
+      "name": "sky",
+      "mean": [
+        0.226,
+        0.269,
+        0.32
+      ]
+    }
+  ]
+}

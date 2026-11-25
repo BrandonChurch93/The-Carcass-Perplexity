@@ -10,25 +10,29 @@ export interface Spire {
   half: number;
   thick: number;
   lean: number;
+  /** How sharply its top hooks over: the power its lean grows by with height. */
+  hook: number;
 }
 
-const TABLE: [number, number, number, number][] = [
-  [-3900, 1300, 50, 290],
-  [-3100, 1150, 40, 300],
-  [-2330, 950, 30, 280],
-  [-1540, 740, 10, 310],
-  [-732, 451, 20, 270],
-  [0, 0, 0, 300],
-  [827, 206, -25, 270],
-  [1596, 426, -40, 270],
-  [2348, 700, -70, 230],
-  [3090, 1000, -110, 230],
-  [3821, 1325, -150, 250],
-  [4540, 1676, -190, 270],
-  [5246, 2052, -230, 250],
-  [5939, 2452, -270, 260],
-  [6617, 2876, -310, 250],
-  [7280, 3323, -350, 250],
+// Where each spire stands (x, z), the height of the crest at its foot, and its own: how tall it is, how broad for its height, how far it leans for its breadth, and its hook.
+// No two are alike and they are not evenly spaced: some are horns, some are stumps the lightning has taken down.
+const TABLE: [number, number, number, number, number, number, number][] = [
+  [-3900, 1300, 50, 232, 1.0, 0.4, 1.8],
+  [-3100, 1150, 40, 180, 0.9, 0.3, 1.6],
+  [-2330, 950, 30, 252, 1.0, 0.5, 2.0],
+  [-1540, 740, 10, 170, 0.9, 0.25, 1.5],
+  [-732, 451, 20, 230, 1.0, 0.45, 1.9],
+  [0, 0, 0, 300, 1.15, 0.42, 2.2],
+  [740, 184, -25, 195, 0.85, 0.3, 1.6],
+  [1596, 426, -40, 292, 0.95, 0.55, 2.0],
+  [2470, 745, -70, 143, 1.1, 0.22, 1.4],
+  [3010, 968, -110, 219, 0.9, 0.5, 2.3],
+  [3990, 1400, -150, 112, 1.2, 0.2, 1.5],
+  [4540, 1676, -190, 216, 0.9, 0.45, 1.9],
+  [5246, 2052, -230, 88, 1.2, 0.2, 1.5],
+  [5939, 2452, -270, 169, 1.0, 0.4, 1.8],
+  [6617, 2876, -310, 75, 1.2, 0.2, 1.5],
+  [7280, 3323, -350, 125, 1.0, 0.35, 1.7],
 ];
 
 export const FIRST = 5;
@@ -68,9 +72,9 @@ function nearestIndex(x: number, z: number): number {
 
 const origin = nearestIndex(0, 0) * STEP;
 
-export const spires: Spire[] = TABLE.map(([x, z, alt, tip]) => {
-  const half = 0.5 * tip + 50;
-  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: 1.0 * half };
+export const spires: Spire[] = TABLE.map(([x, z, alt, tip, broad, lean, hook]) => {
+  const half = (0.5 * tip + 50) * broad;
+  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: lean * half, hook };
 });
 
 export const S_MIN = -origin;
@@ -121,7 +125,7 @@ const smooth = (a: number, b: number, v: number): number => {
 
 export const MOUTH_S = first.s - 120;
 export const CANAL_L = 46;
-export const MOUTH_R = 20;
+export const MOUTH_R = 26;
 export const EXIT = 232;
 export const EXIT_R = 13;
 export const EXIT_FLARE = 30;
@@ -155,26 +159,35 @@ export function ground(s: number, l: number): number {
   let near = spires[0] as Spire;
   for (const sp of spires) if (Math.abs(sp.s - s) < Math.abs(near.s - s)) near = sp;
   const rho = Math.hypot((s - near.s) / 150, l / 130);
-  const massif = 70 * (1 - smooth(0.5, 1, rho));
+  const massif = 0.25 * near.tip * (1 - smooth(0.4, 1, rho));
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
   const stand = 16 * Math.exp(-(((s - first.s + 610) / 170) ** 2));
   const exitShelf = Math.exp(-(((s - MOUTH_S - EXIT - 5) / 60) ** 2));
   const width = (l > 0 ? 5 + 66 * shelf + 80 * exitShelf : 5 + 14 * shelf) + stand;
   const al = Math.max(0, Math.abs(l) - width);
-  let fall = (1.3 * al * al) / (al + 12);
+  // The lee side is the steeper: it falls to the cloud in walls.
+  let fall = ((1.3 + (l > 0 ? 1.0 * smooth(50, 190, al) : 0)) * al * al) / (al + 12);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   let y = crest(s) + massif - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
-  if (d > -6 && d < FLARE + 2 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
+  if (d > -6 && d < 0.6 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
   if (d > -60 && d <= -6) {
     const w = smooth(-60, -6, d) * (1 - smooth(MOUTH_R * 0.7, MOUTH_R * 1.9, Math.abs(l - CANAL_L)));
     y += (Math.min(y, FLOOR - 0.4) - y) * w;
   }
-  if (d > EXIT - EXIT_FLARE - 2 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
+  if (d > EXIT - 0.6 && d < EXIT + 6 && Math.abs(l - canalL(d)) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
   if (d >= EXIT + 6 && d < EXIT + 70) {
     const w = (1 - smooth(EXIT + 6, EXIT + 70, d)) * (1 - smooth(EXIT_R * 0.7, EXIT_R * 1.9, Math.abs(l - canalL(d))));
     y += (Math.min(y, FLOOR - 0.4) - y) * w;
+  }
+  // Over the canal the rock stands as a buttress of the spire: a wall at each mouth, with the mouth in its foot, rising to the spire behind.
+  if (d > 0 && d < EXIT) {
+    const r = flare(d);
+    const deep = Math.min(d, EXIT - d);
+    const over = FLOOR + 1.62 * r + 6 + 0.5 * Math.min(deep, 90);
+    const w = 1 - smooth(r + 5, r + 26 + 0.2 * Math.min(deep, 90), Math.abs(l - canalL(d)));
+    y += (Math.max(y, over) - y) * w * smooth(0.4, 2.2, deep);
   }
   return Math.max(y, -2700);
 }
@@ -208,10 +221,11 @@ export function fin(sp: Spire, t: number): FinPoint {
   const q = 1 - t;
   // The top is a broken edge, not a point: a blade some metres long and a few thick, where the last of it came away.
   const blunt = 1 - q * q * q * q;
+  // A horn: a broad foot that narrows fast, a slender blade above it, and a top that hooks over toward the storm.
   return {
-    centre: -sp.lean * Math.pow(t, 1.4),
-    half: sp.half * Math.pow(q, 1.15) + 4 * q + 0.03 * sp.half * blunt,
-    thick: sp.thick * Math.pow(q, 1.2) + 3 * q + 2.2 * blunt,
+    centre: -sp.lean * Math.pow(t, sp.hook),
+    half: sp.half * (0.6 * Math.pow(q, 2.5) + 0.4 * Math.pow(q, 1.05)) + 4 * q + 0.045 * sp.half * blunt,
+    thick: sp.thick * (0.6 * Math.pow(q, 2.8) + 0.4 * Math.pow(q, 1.1)) + 3 * q + 2.6 * blunt,
     y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t,
   };
 }
@@ -223,6 +237,7 @@ export function finEdge(sp: Spire, t: number, side: number, along = 0): Vec3 {
   return [sp.x + f.nx * l + f.tx * along * p.thick, p.y, sp.z + f.nz * l + f.tz * along * p.thick];
 }
 
+/** The highest point of a spire: the storm-side prong of its split top. */
 export function tipOf(sp: Spire): Vec3 {
-  return finEdge(sp, 1, 0);
+  return finEdge(sp, 1, -0.7);
 }
