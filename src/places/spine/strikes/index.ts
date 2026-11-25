@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import type { Context, Piece } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { envelope, figure, timingOf, type Line } from './bolt';
-import { STRIKES, WIND, WIND_SPEED, type StrikeSite } from './where';
+import { WIND, WIND_SPEED } from '../shared/anchors';
+import { STRIKES, type StrikeSite } from './where';
 
 export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 
@@ -74,7 +75,7 @@ attribute vec3 aGo;
 uniform vec3 uAt;
 uniform float uAge;
 uniform float uPixel;
-uniform vec3 uWind;
+uniform vec3 uGale;
 varying vec2 vUv;
 varying float vHeat;
 void main() {
@@ -82,8 +83,8 @@ void main() {
   float life = 0.5 + 1.1 * aSeed.x;
   float t = max(uAge - 0.02 * aSeed.y, 0.0);
   float drag = 1.0 - exp(-t * 1.6);
-  vec3 p = uAt + aGo * (drag / 1.6) + vec3(0.0, -4.9 * t * t, 0.0) + uWind * (t * t * 3.0);
-  vec3 v = aGo * exp(-t * 1.6) + vec3(0.0, -9.8 * t, 0.0) + uWind * (t * 6.0);
+  vec3 p = uAt + aGo * (drag / 1.6) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
+  vec3 v = aGo * exp(-t * 1.6) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
@@ -244,7 +245,7 @@ export function create(ctx: Context): Piece {
     sparkGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
     sparkGeometry.setAttribute('aGo', new THREE.InstancedBufferAttribute(go, 3));
     sparkGeometry.instanceCount = SPARKS;
-    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uWind: { value: wind }, uGlow: { value: 90 } }, ...additive }));
+    const sparks = new THREE.Mesh(sparkGeometry, new THREE.ShaderMaterial({ vertexShader: SPOT_VERTEX, fragmentShader: SPOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uAge: age, uPixel: pixel, uGale: { value: wind }, uGlow: { value: 90 } }, ...additive }));
     sparks.frustumCulled = false;
     sparks.renderOrder = 7;
     group.add(sparks);

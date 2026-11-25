@@ -1,40 +1,8 @@
-// Where the storm's things stand. TEMPORARY: every number here is the blockout root's, copied until the lead's shared/anchors.ts gives it.
+// Where the storm's things stand, read from the root's anchors: the six strikes with their targets, and the span of a shot.
 import type { Vec3 } from '../../../core/cameras';
-import { eventsOf, secondsInPlace, shotById } from '../../../film/cut';
-import { CANAL_L, EXIT, EXIT_FLARE, FIRST, FLOOR, MOUTH_S, canalL, finEdge, first, frameAt, ground, on, spires, tipOf, world, type Spire } from '../ridge';
-
-export const UNIT = 'spine';
-const RAD = Math.PI / 180;
-
-/** The gale: it blows from the storm (-z) across the ridge. */
-export const WIND: Vec3 = [0.2, 0, 0.98];
-export const WIND_SPEED = 26;
-
-export const spire = (n: number): Spire => spires[FIRST + n - 1] as Spire;
-export { FIRST, spires, finEdge, tipOf, ground, on, world, frameAt, first, type Spire };
-
-const heading = (a: Vec3, b: Vec3): number => Math.atan2(b[2] - a[2], b[0] - a[0]) / RAD;
-const stepTo = (p: Vec3, h: number, dist: number, up = 0): Vec3 => [p[0] + Math.cos(h * RAD) * dist, p[1] + up, p[2] + Math.sin(h * RAD) * dist];
-
-/** A point of the canal: metres in from the mouth, metres across, metres over its floor. */
-export const tube = (d: number, l: number, h: number): Vec3 => world(MOUTH_S + d, canalL(d) + l, FLOOR + h);
-export const MOUTH = tube(0, 0, 8);
-export const CANAL_KEY = EXIT - EXIT_FLARE - 5;
-/** Heading of the canal at the herd, radians about y as three.js turns. */
-export const CANAL_ALONG = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
-
-/** The trail the herd keeps on the saddle: metres across the crest at a place along it. */
-export const trail = (s: number): number => 2.2 * Math.sin(s / 31) * (1 - Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150))) + CANAL_L * Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150)) ** 2;
-export const MOUTH_AT = MOUTH_S;
-
-/** The scorched one. */
-export const CARCASS = on(first.s - 655, 1.5, 0);
-const carcassView = heading(CARCASS, MOUTH) + 15;
-export const CARCASS_VIEW = carcassView;
-export const CARCASS_AXIS = carcassView + 80;
-export const CARCASS_BODY = stepTo(CARCASS, CARCASS_AXIS, 0.5);
-export const SCORCH_AT = stepTo(CARCASS, carcassView + 185, 1.0);
-export { stepTo };
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { STRIKES as SECONDS, STRIKE_IDS, STRIKE_TARGETS, UNIT, spire } from '../shared/anchors';
+import { tipOf } from '../ridge';
 
 export interface StrikeSite {
   id: string;
@@ -46,22 +14,21 @@ export interface StrikeSite {
   lean: Vec3 | null;
   /** A second tip the bolt forks to, or null. */
   branch: Vec3 | null;
-  /** Which spire is struck, counted from the first. */
+  /** Which spire is struck, counted from the first, or 0 when it is none of the near six. */
   spire: number;
 }
 
-const TARGETS: { n: number; rise: number; lean: Vec3 | null; branch: number | null }[] = [
-  { n: 2, rise: 1150, lean: null, branch: null },
-  { n: 3, rise: 1150, lean: null, branch: null },
-  { n: 5, rise: 1150, lean: null, branch: null },
-  { n: 3, rise: 420, lean: [120, 0, 60], branch: 4 },
-  { n: 3, rise: 1150, lean: null, branch: null },
-  { n: 4, rise: 1150, lean: null, branch: null },
-];
+const whichSpire = (to: Vec3): number => {
+  for (let n = 1; n <= 8; n++) {
+    const t = tipOf(spire(n));
+    if (Math.hypot(t[0] - to[0], t[2] - to[2]) < 1) return n;
+  }
+  return 0;
+};
 
-export const STRIKES: StrikeSite[] = eventsOf(UNIT).map((event, i) => {
-  const t = TARGETS[i % TARGETS.length] as (typeof TARGETS)[number];
-  return { id: event.id, seconds: event.seconds, to: tipOf(spire(t.n)), rise: t.rise, lean: t.lean, branch: t.branch === null ? null : tipOf(spire(t.branch)), spire: t.n };
+export const STRIKES: StrikeSite[] = STRIKE_IDS.map((id, i) => {
+  const t = STRIKE_TARGETS[i % STRIKE_TARGETS.length] as (typeof STRIKE_TARGETS)[number];
+  return { id, seconds: SECONDS[i] as number, to: t.to, rise: t.rise, lean: t.lean, branch: t.branch, spire: whichSpire(t.to) };
 });
 
 /** The span of a shot in seconds of the place, a little wide so that every sample of its frames is inside. */
