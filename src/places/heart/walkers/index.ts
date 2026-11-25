@@ -15,7 +15,7 @@ const DISCS = 6;
 
 function seamField(): Env['seam'] {
   const lines = Object.keys(SEAMS).map((name) => {
-    const points = seamLine(name, 28);
+    const points = seamLine(name, 40);
     let minX = 1e9;
     let maxX = -1e9;
     let minZ = 1e9;
@@ -83,8 +83,8 @@ export function create(ctx: HeartContext): HeartPiece {
       uPixel: pixel,
       tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tFlake: { value: ctx.assets.texture('mat/flake.jpg') },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data' }) },
+      tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
   const mesh = new THREE.Mesh(geometry, material);
