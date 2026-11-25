@@ -192,9 +192,65 @@ void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
     }
   }
 }
+// The coils at the line: within 11 to 15 m of the lens of key heart-1 the crust is thick lobes that lap, 1.9 to 2.8 m across,
+// each a sheet 4 to 8 cm thick that is thin where it was fed and ends at its front in a step with a crease at its foot. Each
+// wears one sheaf of cords, 11 to 14 cm apart, arcs about a point behind the lobe (0.6 to 3 m radius) that bunch up toward
+// the front. Leaves gLapHigh (metres the lobes stand here) and what foldAt leaves. Returns how much of a cord is here.
+float gLapHigh = 0.0;
+// The cell the lobes are laid for: a step is four cells wide at the least.
+float gLapCell = 0.0234;
+float gLapDeep;
+float lapAt(vec2 q) {
+  const float size = 1.9;
+  vec2 wq = q + 0.5 * vec2(vnoise(q / 1.9 + 15.0), vnoise(q / 1.9 + 47.0));
+  float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
+  vec2 base = floor(wq / size - 0.5);
+  float edge = max(0.1, 4.0 * gLapCell);
+  float rough = 1.0 + 0.24 * (vnoise(q / 0.55 + 7.0) - 0.5);
+  float high = 0.0;
+  float top = -1.0;
+  float cover = 0.0;
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 c2 = base + vec2(float(i), float(j));
+      vec2 hs = hash22(c2 + 87.3);
+      float hr = hash12(c2 + 93.1);
+      float R = size * (0.5 + 0.25 * hr);
+      vec2 rel = wq - (c2 + 0.5 + 0.5 * (hs - 0.5)) * size;
+      float turn = flowTurn + 1.6 * (fract(hr * 17.3) - 0.5);
+      vec2 along = vec2(cos(turn), sin(turn));
+      float a = dot(rel, along);
+      float s = rel.x * along.y - rel.y * along.x;
+      float even = length(vec2(a, s * (1.0 + 0.4 * fract(hr * 23.1)))) / R;
+      float t = even * rough;
+      if (t < 1.3) {
+        float front = smoothstep(-0.9, 0.5, a / R);
+        float thick = (0.05 + 0.035 * fract(hr * 7.1)) * (0.15 + 0.85 * front);
+        float on = 1.0 - smoothstep(1.0 - edge / R, 1.0, t);
+        float foot = ((t - 1.0) * R - 0.3 * edge) / (0.55 * edge);
+        high += thick * on - (0.035 + 0.02 * fract(hr * 3.3)) * front * exp(-foot * foot);
+        if (t < 1.0 && hr > top) {
+          top = hr;
+          float ac = a + (0.9 + 0.4 * fract(hr * 5.7)) * R;
+          float rho = length(vec2(ac, s));
+          float space = 0.11 + 0.03 * fract(hr * 11.3);
+          float u = (rho + 0.12 * R * even * even * even) / space + 7.0 * hr + 0.5 * vnoise(vec2(1.5 * rho + 31.0 * hr, 1.5 * s / R + 5.0 * hr));
+          gFoldPhase = u;
+          gFoldSpace = space / (1.0 + 0.3 * t * t);
+          gFoldDir = (ac * along + s * vec2(along.y, -along.x)) / max(rho, 1e-3);
+          gLapDeep = (0.045 + 0.04 * smoothstep(0.3, 0.95, t)) * (0.7 + 0.6 * vnoise(vec2(0.9 * u + 3.0 * hr, 2.0 * s / R + 21.0 * hr)));
+          cover = on;
+        }
+      }
+    }
+  }
+  gLapHigh = high;
+  return cover;
+}
 float foldAt(vec2 q) {
   gFoldPhase = 0.0;
   gFoldCover = 0.0;
+  gLapHigh = 0.0;
   // Where a pixel is longer on the lake than a fold is wide the single fold is gone: the sheaves must not show as marks.
   vec2 lensOff = q - uLens.xy;
   float pixelLong = uLens.w * (dot(lensOff, lensOff) + uLens.z * uLens.z) / uLens.z;
@@ -210,6 +266,21 @@ float foldAt(vec2 q) {
   // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
   // Round the one that sank the ropes are everywhere: its own folds join them.
   float ropes = max(max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))), 1.0 - smoothstep(15.0, 20.0, length(q - vec2(-507.0, 212.0)))) * (1.0 - gFlat) * (1.0 - smoothstep(0.5, 0.8, gBroke));
+  float lapZone = (1.0 - smoothstep(11.0, 15.0, length(q - vec2(-505.0, 213.0)))) * (1.0 - gFlat);
+  if (lapZone > 0.0) {
+    float lapCover = lapAt(q);
+    gLapHigh *= lapZone;
+    gToeBest *= 1.0 - lapZone;
+    gToeNext *= 1.0 - lapZone;
+    gToeSlope *= 1.0 - lapZone;
+    if (lapZone > 0.5) {
+      gFoldDeep = gLapDeep;
+      gFoldCover = lapCover * smoothstep(0.5, 0.9, lapZone) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
+      return abs(sin(3.14159 * gFoldPhase));
+    }
+    gFoldPhase = 0.0;
+    ropes *= 1.0 - smoothstep(0.1, 0.5, lapZone);
+  }
   if (ropes <= 0.0) return 1.0;
   vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
@@ -613,9 +684,12 @@ float heightAt(vec2 q, float c) {
     h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
     if (gFine < 0.16) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
+      gLapCell = c;
       float fold = foldAt(q);
       fine = smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
       fine += smoothSkin * gToeBest * toeHeld(gFine);
+      // The lobes at the line: sheets that lap, with their steps and creases.
+      fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c));
     }
   }
 
