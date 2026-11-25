@@ -133,7 +133,8 @@ export function create(ctx: HeartContext): HeartPiece {
     warp,
     setTime: (seconds) => {
       const atMouth = seconds >= mouthFrom && seconds <= mouthTo;
-      (bankB[3] as THREE.Vector4).w = atMouth ? 0 : (bankDense[3] as number);
+      // The two far banks of the feeding picture stand across the right edge of the long lens on the mouth, 200 m from it: the nearer shows there as a dark upright streak.
+      for (const i of [2, 3]) (bankB[i] as THREE.Vector4).w = atMouth ? 0 : (bankDense[i] as number);
     },
     beforeSample: (_renderer, camera) => {
       // The mean of the sky the rig lights with: what a point of open air receives from above.
