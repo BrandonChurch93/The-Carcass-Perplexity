@@ -68,7 +68,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tStrata: { value: strataTexture() },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
-    uStain: { value: new THREE.Vector4(-505.2, 4.4, 203.6, 3.1) },
+    uStain: { value: new THREE.Vector4(-505.0, 3.0, 203.4, 3.4) },
     uCrackB: { value: new THREE.Vector4((cracks[1] as Crack).ax, (cracks[1] as Crack).az, (cracks[1] as Crack).bx, (cracks[1] as Crack).bz) },
   };
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });
@@ -83,7 +83,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tTalus: fine('mat/talus.jpg', false),
     tTalusNh: fine('mat/talus-nh.png', true),
   };
-  const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', GLAZE: '' } });
+  const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial];
   const geometries: THREE.BufferGeometry[] = [];

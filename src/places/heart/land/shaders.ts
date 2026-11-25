@@ -20,6 +20,7 @@ ${RIG_GLSL}
 
 // rigShade with the land map already read. The lake's light is read with four taps near the lake and with one above it
 // (FAR_LIGHT: always one); only a glazed face (GLAZE) is given the sky and the lake as a mirror would see them.
+// No material asks for GLAZE now: the rock of the bench is dry and matte.
 vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4 land, float shade) {
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
@@ -325,6 +326,7 @@ varying vec4 vSeed;
 uniform sampler2D tBoulder;
 uniform sampler2D tBoulderNh;
 uniform vec4 uCrackA;
+uniform vec4 uCrackB;
 
 void main() {
   vec3 toCamera = cameraPosition - vWorld;
@@ -392,8 +394,8 @@ void main() {
   float dust = smoothstep(0.45, 0.9, n0.y + 0.5 * (height - 0.5)) * (0.35 + 0.65 * fract(vSeed.x * 7.3));
   float rind = smoothstep(2.2, 0.3, land.b);
   albedo = mix(albedo, vec3(0.17, 0.165, 0.155) * (0.6 + 0.8 * height), 0.6 * dust * (1.0 - rind));
-  albedo *= mix(1.0, 0.55, rind);
-  float dc = segmentDistance(vWorld.xz, uCrackA);
+  albedo *= mix(1.0, 0.8, rind);
+  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.6);
   float sul = smoothstep(3.6, 0.6, dc + 2.4 * (height - 0.5)) * smoothstep(-0.4, 0.4, n0.y) * step(0.35, fract(vSeed.x * 3.1));
   albedo = mix(albedo, mix(vec3(0.34, 0.27, 0.08), vec3(0.55, 0.52, 0.4), smoothstep(0.5, 0.8, height)), sul * 0.85);
   float rough = mix(0.9, 0.76, rind * smoothstep(0.4, 0.7, height));

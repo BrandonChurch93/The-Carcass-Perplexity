@@ -33,6 +33,12 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     hero: kind(9, 9, 'bench'),
     slab: kind(6, 7, 'bench'),
     boulder: kind(4, 8, 'land', true),
+    // The same rocks far from every lens: a few pixels each, so few triangles and the plain reading.
+    blockFar: kind(3, 7, 'bench', true),
+    heroFar: kind(5, 8, 'bench', true),
+    slabFar: kind(3, 7, 'bench', true),
+    boulderSmall: kind(2, 7, 'land', true),
+    boulderMid: kind(3, 8, 'land', true),
   };
   const shades: [number, number, number, number][] = [];
 
@@ -52,7 +58,14 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     /** Allowed to stand up in the open part of the line view. */
     stand?: boolean;
   }
-  const put = (k: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
+  const put = (kind0: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
+    let k = kind0;
+    const reach = routeDistance(x, z);
+    if (k === kinds.block && reach > 30 + 25 * size) k = kinds.blockFar;
+    else if (k === kinds.hero && reach > 40 + 25 * size) k = kinds.heroFar;
+    else if (k === kinds.slab && reach > 40 + 20 * size) k = kinds.slabFar;
+    else if (k === kinds.stone && reach > 50) k = kinds.pebble;
+    else if (k === kinds.boulder && size < 4) k = size < 2 ? kinds.boulderSmall : kinds.boulderMid;
     const g = height(x, z);
     if (g < 0.05 && !o.onLake) return false;
     const base = Math.max(g, 0.04);
@@ -68,6 +81,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (Math.hypot(Math.max(0, off - half * 1.3), Math.max(0, lens - top)) < 3.2) return false;
     if (linePathDistance(x, z) < 1.5 + half * 1.3 && top > 0.68) return false;
     if (!o.stand && top > 1.3 && lineOpen(x, z)) return false;
+    // The line view's channel leaves the shore just ahead of its lens: nothing of the bench's lies on the moving crust there.
+    if (!o.stand && lineOpen(x, z) && benchDistance(x, z) < (size > 0.45 ? 0.7 : 0.12) + half && Math.hypot(x + 510.5, z - 215.5) < 45) return false;
     q.setFromAxisAngle(UP, rng.range(0, Math.PI * 2));
     if (o.lean) {
       axis.set(o.lean[0], 0, o.lean[1]).normalize();
@@ -164,10 +179,19 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (benchDistance(x, z) < -0.3) continue;
     if (drift(x, z, 2.3) + 0.4 * drift(x, z, 0.7) < 0.42 + 0.3 * rng.next()) continue;
     const size = sized(0.1, 0.5, 1.5);
-    put(size > 0.24 ? kinds.block : kinds.stone, x, z, size, { sink: rng.range(0.2, 0.42), onLake: true, shade: size > 0.2 });
+    put(size > 0.17 ? kinds.block : kinds.stone, x, z, size, { sink: rng.range(0.2, 0.42), shade: size > 0.2 });
   }
-  // The skerry in the crust: one block of the shore's rock, 3.2 m out of the lake.
-  put(kinds.hero, SKERRY[0], SKERRY[1], 3.7, { sink: 0.36, flat: 1.2, stand: true });
+  // The skerry is rock alone, sunk through the crust: the lake does not know it, so its foot is hidden by smaller blocks.
+  put(kinds.hero, SKERRY[0], SKERRY[1], 3.6, { sink: 0.25, flat: 1.25, onLake: true, stand: true });
+  for (const [dx, dz, size] of [
+    [-2.0, 0.7, 1.7],
+    [1.5, -1.5, 1.3],
+    [-0.7, -2.1, 1.0],
+    [1.9, 0.9, 0.9],
+    [0.4, 2.0, 1.1],
+    [-2.6, -0.9, 0.6],
+    [2.6, -0.4, 0.5],
+  ] as [number, number, number][]) put(kinds.block, SKERRY[0] + dx, SKERRY[1] + dz, size, { sink: 0.5, onLake: true, stand: true });
 
   // The line: slabs of the bench's edge that have broken off and slumped onto the crust, and the rubble between them.
   for (let s = 1; s < SHORE_POINTS.length; s++) {
@@ -220,23 +244,39 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     put(kinds.boulder, x, z, sized(1.0, 9, 3.4), { shade: false, sink: rng.range(0.3, 0.62), flat: rng.range(0.45, 0.8) });
   }
 
-  const material = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { GLAZE: '' } });
+  const material = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
   const simple = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { SIMPLE: '' } });
   const geometries: THREE.BufferGeometry[] = [];
   const out = { bench: [] as THREE.Object3D[], land: [] as THREE.Object3D[] };
   Object.values(kinds).forEach((k, ki) => {
     k.rocks.forEach((list, si) => {
       if (!list.length) return;
-      const g = rockShape(ki * 10 + si + 1, k.cells, k.planes);
-      const seeds = new Float32Array(list.length * 4);
-      list.forEach((r, i) => seeds.set(r.seed, i * 4));
-      g.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
-      geometries.push(g);
-      const mesh = new THREE.InstancedMesh(g, k.simple ? simple : material, list.length);
-      list.forEach((r, i) => mesh.setMatrixAt(i, r.m));
-      mesh.instanceMatrix.needsUpdate = true;
-      mesh.computeBoundingSphere();
-      out[k.part].push(mesh);
+      const shape = rockShape(ki * 10 + si + 1, k.cells, k.planes);
+      geometries.push(shape);
+      // One mesh for each square of ground, so that the rocks no lens can see are never sent to be drawn.
+      const cell = k.part === 'bench' ? 40 : 160;
+      const squares = new Map<string, Rock[]>();
+      for (const r of list) {
+        const key = Math.floor((r.m.elements[12] as number) / cell) + ' ' + Math.floor((r.m.elements[14] as number) / cell);
+        const square = squares.get(key);
+        if (square) square.push(r);
+        else squares.set(key, [r]);
+      }
+      for (const rocks of squares.values()) {
+        const g = new THREE.BufferGeometry();
+        g.setIndex(shape.index);
+        g.setAttribute('position', shape.getAttribute('position'));
+        g.setAttribute('normal', shape.getAttribute('normal'));
+        const seeds = new Float32Array(rocks.length * 4);
+        rocks.forEach((r, i) => seeds.set(r.seed, i * 4));
+        g.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
+        geometries.push(g);
+        const mesh = new THREE.InstancedMesh(g, k.simple ? simple : material, rocks.length);
+        rocks.forEach((r, i) => mesh.setMatrixAt(i, r.m));
+        mesh.instanceMatrix.needsUpdate = true;
+        mesh.computeBoundingSphere();
+        out[k.part].push(mesh);
+      }
     });
   });
 

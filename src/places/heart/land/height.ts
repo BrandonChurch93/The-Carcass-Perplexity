@@ -323,17 +323,14 @@ export function buttressAt(x: number, z: number): number {
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
 
-/** A skerry of shore rock that stands in the crust off the bench, dark in the foreground of the view of the one that sank. A block of rock is set on it. */
+/** Where a skerry of shore rock stands in the crust off the bench, dark in the foreground of the view of the one that sank. It is loose rock alone: the land's height does not know it. */
 export const SKERRY: [number, number] = [-518, 282.5];
 
 /** The true height of the land, metres. Zero or less is lake. */
 export function landHeight(x: number, z: number): number {
   const d = calderaDistance(x, z);
   let g = wallAt(x, z, d);
-  let b = benchAt(x, z, benchDistance(x, z));
-  const sx = x - SKERRY[0];
-  const sz = z - SKERRY[1];
-  if (sx * sx + sz * sz < 9) b = Math.max(b, 0.9 - 8.9 * smooth(1.1, 2.2, Math.hypot(sx, sz) + 0.3 * noise(x / 0.7, z / 0.7)));
+  const b = benchAt(x, z, benchDistance(x, z));
   if (b > g) g = b;
   const t = buttressAt(x, z);
   if (t > g) g = t;
