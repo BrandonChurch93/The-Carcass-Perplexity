@@ -110,7 +110,7 @@ const STAND: Record<number, [number, number, number]> = {
 /** The near one is seen in the wide view and again in the view of the one that sank, with two shots between in which it is not drawn:
  *  it stands and feeds in each, where its row puts it at each key, facing as given here in degrees; `cut` is when it changes places, unseen. */
 const TWICE: Record<number, { cut: number; key: number; first: number; second: number }> = {
-  0: { cut: 12.5, key: KEY_TIMES['heart-2'], first: 100, second: 150 },
+  0: { cut: 12.5, key: KEY_TIMES['heart-2'], first: 100, second: 178 },
 };
 
 const T1 = KEY_TIMES['heart-0'];

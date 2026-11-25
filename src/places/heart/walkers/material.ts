@@ -153,7 +153,11 @@ void main() {
     float f2 = vnoise(fu * vec2(2.3, 2.1) + 7.0);
     fold = 0.65 * f1 + 0.35 * f2;
     vec2 across = mix(vec2(1.0, 0.0), vec2(0.0, 1.0), limb);
-    slope += folds * across * ((f1 - 0.5) * 1.5 + (f2 - 0.5) * 0.9);
+    // The body is shrivelled: its folds are deeper and cross one another.
+    float f3 = vnoise(fu.yx * vec2(1.7, 1.3) + 3.0);
+    slope += folds * across * ((f1 - 0.5) * 1.5 + (f2 - 0.5) * 0.9) * (1.0 + 1.3 * body);
+    slope += folds * across.yx * (f3 - 0.5) * 1.6 * body;
+    fold = mix(fold, 0.6 * fold + 0.4 * f3, body);
   }
   vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.45 * body));
 
@@ -168,7 +172,7 @@ void main() {
   // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
   vec3 hide = vec3(0.07, 0.065, 0.061) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
   // pale: a little lighter at the joints and where the skin is worn, never bone.
-  vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold);
+  vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold));
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
   // Scab like the crust's own skin, in patches on the back and the rump.
   float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
