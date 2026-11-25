@@ -7,7 +7,8 @@ import { RIG_GLSL } from '../shared/glsl';
 
 const SIZE = 512;
 
-/** A tile that repeats: r smooth drifts, g pits (1 in a pit), b joints (0 on a joint, rising away from it), a a second smooth field. */
+/** A tile that repeats: r smooth drifts, g the level of the plate that is there (the shelf is a pavement of plates, each at its own level),
+ *  b how far it is to the edge of that plate (0 on the edge), a a second smooth field. */
 export function bakeRock(rng: Rng): THREE.DataTexture {
   const grads = (period: number): Float32Array => {
     const g = new Float32Array(period * period * 2);
@@ -34,18 +35,20 @@ export function bakeRock(rng: Rng): THREE.DataTexture {
     let sum = 0;
     for (let j = 0; j < 2; j++) {
       for (let i = 0; i < 2; i++) {
-        const c = (((yi + j) % period) * period + ((xi + i) % period)) * 2;
+        const c = ((((yi + j) % period) + period) % period) * period * 2 + ((((xi + i) % period) + period) % period) * 2;
         sum += ((g[c] as number) * (fx - i) + (g[c + 1] as number) * (fy - j)) * (i ? u : 1 - u) * (j ? v : 1 - v);
       }
     }
     return sum;
   };
-  // The two nearest feature points: [nearest, second nearest], in cells.
-  const cells = (p: Float32Array, period: number, x: number, y: number): [number, number] => {
+  // The two nearest feature points: how far each is, in cells, and which cells they are.
+  const cells = (p: Float32Array, period: number, x: number, y: number): [number, number, number, number] => {
     const xi = Math.floor(x);
     const yi = Math.floor(y);
     let a = 9;
     let b = 9;
+    let ia = 0;
+    let ib = 0;
     for (let j = -1; j <= 1; j++) {
       for (let i = -1; i <= 1; i++) {
         const c = (((yi + j + period) % period) * period + ((xi + i + period) % period)) * 2;
@@ -54,17 +57,24 @@ export function bakeRock(rng: Rng): THREE.DataTexture {
         const d = Math.sqrt(dx * dx + dy * dy);
         if (d < a) {
           b = a;
+          ib = ia;
           a = d;
-        } else if (d < b) b = d;
+          ia = c / 2;
+        } else if (d < b) {
+          b = d;
+          ib = c / 2;
+        }
       }
     }
-    return [a, b];
+    return [a, b, ia, ib];
   };
   const gA = [4, 8, 16, 32, 64].map(grads);
   const gB = [3, 6, 12, 24, 48].map(grads);
-  const pits = [9, 23].map(points);
-  const joints = points(5);
+  const PLATES = 6;
+  const joints = points(PLATES);
+  const levels = Array.from({ length: PLATES * PLATES }, () => rng.next());
   const bend = grads(6);
+  const fine = grads(24);
   const data = new Uint8Array(SIZE * SIZE * 4);
   const byte = (v: number): number => Math.round(255 * Math.min(1, Math.max(0, v)));
   for (let j = 0; j < SIZE; j++) {
@@ -81,16 +91,19 @@ export function bakeRock(rng: Rng): THREE.DataTexture {
         b += w * perlin(gB[o] as Float32Array, pb, x * pb, y * pb);
         w *= 0.55;
       }
-      const [p0] = cells(pits[0] as Float32Array, 9, x * 9, y * 9);
-      const [p1] = cells(pits[1] as Float32Array, 23, x * 23, y * 23);
-      const pit = Math.max(1 - p0 / 0.34, 0.6 * (1 - p1 / 0.3)) * (0.5 + 1.2 * Math.max(0, 0.5 + 1.1 * b));
-      const wx = x * 5 + 0.25 * perlin(bend, 6, x * 6, y * 6);
-      const wy = y * 5 + 0.25 * perlin(bend, 6, y * 6 + 2.5, x * 6 + 1.5);
-      const [j0, j1] = cells(joints, 5, wx, wy);
+      // The plates: cells with bent, scalloped edges, each at its own level. Across an edge the level goes from one to the other in a short riser.
+      const wx = x * PLATES + 0.3 * perlin(bend, 6, x * 6, y * 6) + 0.07 * perlin(fine, 24, x * 24, y * 24);
+      const wy = y * PLATES + 0.3 * perlin(bend, 6, y * 6 + 2.5, x * 6 + 1.5) + 0.07 * perlin(fine, 24, y * 24 + 0.5, x * 24 + 3.5);
+      const [j0, j1, c0, c1] = cells(joints, PLATES, wx, wy);
+      const l0 = levels[c0] as number;
+      const l1 = levels[c1] as number;
+      const edge = j1 - j0;
+      const e = Math.min(1, edge / 0.03);
+      const plate = l0 + (0.5 * (l1 + l0) - l0) * (1 - e * e * (3 - 2 * e));
       const o = (j * SIZE + i) * 4;
       data[o] = byte(0.5 + 1.1 * a);
-      data[o + 1] = byte(pit);
-      data[o + 2] = byte((j1 - j0) * 2.2);
+      data[o + 1] = byte(plate);
+      data[o + 2] = byte(edge * 2.2);
       data[o + 3] = byte(0.5 + 1.1 * b);
     }
   }
@@ -143,43 +156,75 @@ vec3 raised(vec3 p, vec3 n, float h) {
   return normalize(abs(det) * n - g);
 }`;
 
-// The shelf: ivory bone-rock in level plates, wet from the tide, pitted, cut by joints, with standing water in its low places and weed stains where the tide stands.
+// The shelf: wet bone-rock in level plates, each a hand higher than the next, with scalloped edges and a line of shade under each edge.
+// The low plates hold a film of water that mirrors the sky. Smooth and broad from far off; the grain shows only near the lens.
 export const SHELF_FRAGMENT = /* glsl */ `
 ${COMMON}
 void main() {
   vec3 p = vWorld;
-  vec3 v = normalize(cameraPosition - p);
+  vec3 toEye = cameraPosition - p;
+  float dist = length(toEye);
+  vec3 v = toEye / dist;
   vec3 n = normalize(vNormal);
   vec4 land = landAt(p.xz);
-  vec4 a = texture2D(tRock, p.xz / 37.0);
-  vec4 b = texture2D(tRock, p.xz / 6.3 + 0.37);
-  vec4 c = texture2D(tRock, p.xz / 1.1 + 0.11);
-  float near = smoothstep(90.0, 20.0, length(cameraPosition - p));
+  vec4 a = texture2D(tRock, p.xz / 71.0);
+  vec4 b = texture2D(tRock, p.xz / 13.7 + 0.37);
+  vec4 c = texture2D(tRock, p.xz / 2.3 + 0.11);
 
-  float joint = smoothstep(0.05, 0.0, a.b) * 0.5 * smoothstep(0.45, 0.65, a.r) + smoothstep(0.07, 0.0, b.b) * 0.45 * smoothstep(0.4, 0.6, a.a);
-  float pit = smoothstep(0.35, 0.8, b.g) * 0.6 + smoothstep(0.3, 0.8, c.g) * 0.5 * near;
-  // Metres: the low swells of a plate, the pits in it, the joints between plates, the grain.
-  float h = 0.1 * a.r + 0.05 * b.r - 0.045 * pit - 0.07 * joint + 0.012 * c.r * near + 0.02 * b.a;
+  // The plates, broad ones broken into smaller ones, worn into swells and hollows: metres. Under the tide line the bed is plain.
+  float dry = smoothstep(-0.7, -0.25, p.y);
+  float rel = 0.42 * a.g + 0.13 * b.g + 0.33 * a.r + 0.12 * b.r;
+  // Near the lens the plates are seen to be thin beds that flake: the same pavement again, a hand across, a finger high.
+  float near = smoothstep(55.0, 8.0, dist);
+  float flake = smoothstep(0.1, 0.0, c.b) * near;
+  float h = (0.75 * a.g + 0.22 * b.g) * dry + 0.6 * a.r + 0.2 * b.r + 0.06 * c.r + 0.03 * c.a + 0.06 * c.g * near;
+  // Where two plates meet there is a seam, open in places and closed in others.
+  float crack = max(smoothstep(0.05, 0.0, a.b), 0.6 * smoothstep(0.06, 0.0, b.b)) * dry * smoothstep(0.4, 0.6, b.a);
 
-  // How wet: the baked map (low ground), and every hollow of the surface holds a little.
-  float low = clamp(land.a + 0.5 * (0.55 - a.a) + 0.25 * (0.5 - b.r), 0.0, 1.0);
-  float wet = clamp(0.35 + 0.65 * low + 0.3 * pit, 0.0, 1.0);
-  float film = smoothstep(0.62, 0.86, low + 0.2 * pit);
-  n = raised(p, n, h * (1.0 - 0.9 * film));
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.75 * film));
+  // Water stands in the hollows: silver sheets that mirror the sky. Everything low is wet and dark.
+  float pool = land.a + 2.4 * (0.43 - rel);
+  float film = smoothstep(0.0, 0.1, pool) * (1.0 - 0.6 * crack);
+  float wet = clamp(0.5 + 2.5 * pool, 0.0, 1.0);
+  float hollow = smoothstep(0.58, 0.36, rel);
+  n = raised(p, n, h);
+  float steep = smoothstep(0.08, 0.35, 1.0 - n.y);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.92 * film));
 
-  vec3 ivory = mix(vec3(0.5, 0.44, 0.36), vec3(0.69, 0.64, 0.55), clamp(0.5 + 1.6 * (a.r - 0.5) + 0.8 * (b.a - 0.5), 0.0, 1.0));
-  // Tea-brown where water has stood and dried, olive weed along the tide line, dark in the joints and pits.
-  float stain = smoothstep(0.52, 0.72, a.a + 0.3 * (b.r - 0.5)) * 0.6;
-  vec3 albedo = mix(ivory, vec3(0.3, 0.21, 0.13), stain);
-  float tide = smoothstep(0.75, 0.0, abs(p.y + 0.15)) * smoothstep(0.35, 0.6, b.a);
-  albedo = mix(albedo, vec3(0.17, 0.18, 0.1), 0.6 * tide);
-  albedo *= 1.0 - 0.55 * joint - 0.3 * pit;
-  albedo *= mix(1.0, 0.55, wet);
-  albedo = mix(albedo, vec3(0.05, 0.065, 0.06), 0.8 * film);
-  float rough = mix(mix(0.8, 0.3, wet), 0.05, film);
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc;
-  gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo, rough, occ)), 1.0);
+  vec3 rock = mix(vec3(0.2, 0.195, 0.19), vec3(0.5, 0.485, 0.46), clamp(0.4 + 1.4 * (a.a - 0.5) + 1.5 * (b.r - 0.5) + 1.2 * (c.a - 0.5) + 0.8 * (rel - 0.5), 0.0, 1.0));
+  // Mineral crust where the vapour dries on the high plates: white, with ochre at its edge. It flakes, so it is patchy at every size.
+  float crust = smoothstep(0.5, 0.64, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5));
+  float ochre = smoothstep(0.42, 0.5, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5)) * (1.0 - crust);
+  rock = mix(rock, vec3(0.4, 0.27, 0.13), 0.7 * ochre);
+  rock = mix(rock, vec3(0.5, 0.48, 0.44) * (0.6 + 0.7 * c.a), crust * (0.45 + 0.55 * smoothstep(0.35, 0.65, c.r)));
+  // Tea-brown where water has stood and dried, olive weed along the tide line.
+  float stain = smoothstep(0.45, 0.7, b.a + 0.5 * (a.r - 0.5) + 0.3 * (c.r - 0.5));
+  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.6 * stain);
+  float tide = smoothstep(0.8, 0.0, abs(p.y + 0.05)) * smoothstep(0.4, 0.62, b.r);
+  rock = mix(rock, vec3(0.085, 0.095, 0.05), 0.55 * tide);
+  // A riser shows the beds it is made of: thin courses, some standing proud, broken where the plate broke.
+  float beds = 0.5 + 0.5 * sin((p.y + h) * 46.0 + 5.0 * b.r + 3.0 * c.r);
+  vec3 albedo = rock * mix(1.0, 0.5, wet) * (1.0 - 0.45 * crack) * (1.0 - 0.3 * hollow) * mix(1.0, 0.55 + 0.6 * beds, steep) * (1.0 - 0.45 * flake) * (0.8 + 0.4 * c.g * near);
+  albedo = mix(albedo, albedo * vec3(0.45, 0.52, 0.52), film);
+  // A riser is broken rock, dry and rough: it does not flash.
+  float rough = mix(mix(mix(0.7, 0.42, wet), 0.9, steep), 0.06, film);
+  float occ = (1.0 - 0.45 * crack) * (1.0 - 0.25 * hollow) * (1.0 - 0.35 * flake) * vOcc;
+  // The low sun throws the shadow of every step across the plate under it: the plates' own height, read again a metre and a half toward the sun.
+  float toward = texture2D(tRock, (p.xz + uSunDir.xz * 2.4) / 71.0).g;
+  float shade = 1.0 - 0.9 * smoothstep(0.0, 0.12, 0.75 * (toward - a.g) * dry - 0.04);
+  land.b = mix(p.y + 1.0, land.b, shade);
+  vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
+  // The sun's glare path: every wet face throws a little of the low sun, and the grain of the rock, too fine to draw from here, spreads it wide.
+  float nv = clamp(dot(n, v), 0.0, 1.0);
+  float glare = sunLobe(n, v, 0.4) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * max(dot(n, uSunDir), 0.0) * sunSeen(land, p.y);
+  colour += uSunColour * (glare * wet * (0.35 + 0.65 * film) * (0.5 + 1.5 * c.a) * occ * 1.5);
+  // Sparkle: in the glare path the wet grain throws the sun back in points.
+  float tight = sunLobe(normalize(n + vec3(c.r - 0.5, 0.0, c.a - 0.5) * 0.25), v, 0.16) * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * sunSeen(land, p.y);
+  colour += uSunColour * (min(tight, 6.0) * wet * smoothstep(0.55, 0.8, c.b) * occ * 0.5);
+  // The edge of every plate the sun still reaches takes a thin bright rim: the light grazes it and the lens looks into the light.
+  float rim = max(smoothstep(0.07, 0.015, a.b), 0.5 * smoothstep(0.08, 0.02, b.b)) * dry * shade * sunSeen(land, p.y) * (1.0 - film);
+  float facing = 0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0);
+  colour += uSunColour * (0.16 * rim * facing * (0.5 + c.a));
+  gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
 // The bone of the shaft: uBone 0 is the dark wet wall between the hoops, 1 the ivory cartilage of a hoop or a slab. Tea-brown stains run down it.
@@ -191,25 +236,35 @@ uniform vec3 uDark;
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
   vec4 a = texture2D(tRock, vUv / 17.0);
   vec4 b = texture2D(tRock, vUv / 3.1 + 0.23);
   // Streaks that run down the face: the same tile, drawn out along the fall line.
   vec4 run = texture2D(tRock, vec2(vUv.x / 5.3, vUv.y / 41.0) + 0.5);
-  float pit = smoothstep(0.35, 0.8, b.g);
-  float joint = smoothstep(0.08, 0.0, a.b);
-  float h = 0.22 * a.r + 0.07 * b.r - 0.06 * pit - 0.12 * joint;
+  float pit = smoothstep(0.55, 0.8, b.a) * 0.6;
+  float joint = smoothstep(0.1, 0.0, a.b) * smoothstep(0.45, 0.6, a.r) * 0.6;
+  float h = 0.22 * a.r + 0.03 * b.r - 0.03 * pit - 0.1 * joint;
   n = raised(p, n, h);
   float up = clamp(n.y, 0.0, 1.0);
   vec3 base = mix(uDark, uPale, clamp(0.5 + 1.5 * (a.r - 0.5) + 0.6 * (b.a - 0.5), 0.0, 1.0));
-  float stain = smoothstep(0.45, 0.75, run.r + 0.35 * (a.a - 0.5)) * (1.0 - 0.6 * up);
-  vec3 albedo = mix(base, base * vec3(0.5, 0.36, 0.24), 0.75 * stain * uBone + 0.3 * stain);
+  // On the wall the stains run down in streaks; on a hoop or a slab they are patches, and the top is cleaner than the sides.
+  float stain = mix(smoothstep(0.45, 0.75, run.r + 0.35 * (a.a - 0.5)), smoothstep(0.4, 0.7, a.a + 0.45 * (b.r - 0.5) + 0.12 * (run.r - 0.5)), smoothstep(0.3, 0.5, uBone)) * (1.0 - 0.6 * up);
+  vec3 albedo = mix(base, base * vec3(0.5, 0.33, 0.19), 0.85 * stain * uBone + 0.3 * stain);
   // Under water level in the rock, and wherever the vapour condenses, it is dark and wet.
   float wet = clamp(0.45 + 0.5 * smoothstep(-2.0, -14.0, p.y) + 0.3 * stain, 0.0, 1.0);
+  // Down the shaft the sky is a disc overhead and everything is wet: it goes to the dark.
+  float sunk = clamp(1.0 + min(p.y + 3.0, 0.0) / 40.0, 0.0, 1.0);
   albedo *= (1.0 - 0.5 * joint - 0.35 * pit) * mix(1.0, 0.62, wet);
   float rough = mix(0.85, 0.38, wet);
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc;
-  gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo, rough, occ)), 1.0);
+  // The wall under a hoop is in its shade: black recesses between the ribs. The hoops stand every seven metres.
+  float under = mod(-(p.y + 3.6), 7.0);
+  float recess = smoothstep(7.0, 2.2, under) * smoothstep(-1.0, -4.0, p.y) * (1.0 - smoothstep(0.3, 0.45, uBone));
+  // The hoops stand out of the wall into what light comes down: they are the pale thing in the shaft.
+  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * sunk * sunk * (1.0 - 0.96 * recess) * mix(1.0, 1.8, smoothstep(0.4, 0.9, uBone));
+  // Nothing of the sun gets down there either: the shadow's top is lifted over whatever is deep.
+  vec4 land = landAt(p.xz);
+  land.b = mix(p.y + 1.0, land.b, sunk * sunk);
+  gl_FragColor = vec4(rigOut(rigShadeOn(land, p, n, v, albedo, rough, occ)), 1.0);
 }`;
 
 // The far cliff: level strata of dark rock, pale ledges that hold scree, and the dark of the cave.
@@ -218,16 +273,18 @@ ${COMMON}
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
   vec4 a = texture2D(tRock, vec2(vUv.x / 2300.0, vUv.y / 520.0));
   vec4 b = texture2D(tRock, vec2(vUv.x / 410.0, vUv.y / 120.0) + 0.31);
   float strata = texture2D(tRock, vec2(vUv.x / 9000.0 + 0.1 * a.r, vUv.y / 260.0)).a;
-  float h = 30.0 * a.r + 9.0 * b.r + 14.0 * strata - 10.0 * smoothstep(0.1, 0.0, a.b);
+  float h = 30.0 * a.r + 9.0 * b.r + 26.0 * strata;
   n = raised(p, n, h);
-  float ledge = smoothstep(0.55, 0.85, n.y);
-  vec3 rock = mix(vec3(0.085, 0.078, 0.072), vec3(0.2, 0.18, 0.16), clamp(0.5 + 2.0 * (strata - 0.5) + 0.6 * (b.r - 0.5), 0.0, 1.0));
-  // Ledges and the scree hold pale rubble and the droppings of what nests there.
-  vec3 albedo = mix(rock, vec3(0.5, 0.48, 0.45), ledge * (0.4 + 0.6 * b.a));
+  float flat0 = normalize(vNormal).y * (gl_FrontFacing ? 1.0 : -1.0);
+  float ledge = smoothstep(0.62, 0.86, flat0 + 0.12 * (b.a - 0.5));
+  vec3 rock = mix(vec3(0.02, 0.022, 0.028), vec3(0.07, 0.068, 0.068), clamp(0.5 + 2.2 * (strata - 0.5) + 0.6 * (b.r - 0.5), 0.0, 1.0));
+  // The top holds snow, and the scree a little in its hollows; the face is too steep for it.
+  float high = smoothstep(0.6, 0.85, p.y / 700.0 + 0.2 * (a.a - 0.5));
+  vec3 albedo = mix(rock, vec3(0.62, 0.64, 0.68), ledge * mix(0.3 * smoothstep(0.45, 0.6, b.a), 1.0, high));
   float occ = vOcc * (0.6 + 0.4 * b.r);
   gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo * vOcc, 0.85, occ)), 1.0);
 }`;
