@@ -227,7 +227,7 @@ export function createFoundering(ctx: HeartContext): Foundering {
   const rng = ctx.rng('lake/foundering');
   const lines = [seamLine('spatterRight', 24), seamLine('spatterLeft', 16)];
   // Few: about seventy jets on the long line and four hundred lumps, of which a third are in the air at once.
-  const COUNTS = [470, 170];
+  const COUNTS = [470, 60];
   const total = (COUNTS[0] as number) + (COUNTS[1] as number);
   const origin = new Float32Array(total * 3);
   const thrown = new Float32Array(total * 3);
@@ -311,8 +311,8 @@ export function createFoundering(ctx: HeartContext): Foundering {
   });
 
   centres.forEach((c, i) => {
-    ctx.sources.steam.push({ at: [c.x, 0.5, c.z], radius: i === 0 ? 15 : 8, strength: i === 0 ? 0.6 : 0.42, rise: i === 0 ? 70 : 40, kind: 'smoke', lean: [0.273, -0.119] });
-    ctx.sources.heat.push({ at: [c.x, 0, c.z], radius: i === 0 ? 18 : 10, height: i === 0 ? 16 : 9, strength: i === 0 ? 0.9 : 0.7 });
+    ctx.sources.steam.push({ at: [c.x, 0.5, c.z], radius: i === 0 ? 15 : 5, strength: i === 0 ? 0.6 : 0.14, rise: i === 0 ? 70 : 22, kind: 'smoke', lean: [0.273, -0.119] });
+    ctx.sources.heat.push({ at: [c.x, 0, c.z], radius: i === 0 ? 18 : 10, height: i === 0 ? 16 : 6, strength: i === 0 ? 0.9 : 0.3 });
   });
 
   const uniforms = {
@@ -340,7 +340,8 @@ export function createFoundering(ctx: HeartContext): Foundering {
       });
       emitters.forEach((e, i) => {
         const burst = 0.72 + 0.28 * Math.sin(seconds * 2.3 + i * 2) * Math.sin(seconds * 0.9 + 1 + i);
-        e.radiance.set(hot[0], hot[1], hot[2]).multiplyScalar(0.3 * burst);
+        // A third of what it was: at 0.3 the row lit the rock at the left edge of heart-2 three times as hard as the fall's lights.
+        e.radiance.set(hot[0], hot[1], hot[2]).multiplyScalar(0.1 * burst);
         ((discs[i] as THREE.ShaderMaterial).uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.set(hot[0], hot[1], hot[2]).multiplyScalar(0.22 * burst);
       });
     },
