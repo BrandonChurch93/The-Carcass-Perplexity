@@ -90,24 +90,54 @@ function flagMaterial(source: THREE.Material, colour: THREE.Color): THREE.Materi
 }
 
 const DEPTH_ONLY_FRAGMENT = 'void main() { gl_FragColor = vec4(0.0); }';
+const MAIN_START = /void\s+main\s*\(\s*(?:void)?\s*\)\s*\{/;
+const SEEN_BIAS = '2.0e-7';
 
 // The twin of an opaque shader material that writes depth only: the same vertex shader and the same uniforms, so the depth it leaves is the depth the material itself will draw.
-// A material that cuts holes, writes its own depth or blends has none, and is drawn as before.
+// A material that cuts holes has a twin only if it says how in `userData.depthFragment` (a fragment shader that does nothing but its discard).
+// A material that blends, writes its own depth or offsets it has none, and is drawn as before.
 function depthTwin(m: THREE.Material): THREE.ShaderMaterial | null {
   const cached = m.userData.depthTwin as THREE.ShaderMaterial | null | undefined;
   if (cached !== undefined) return cached;
   let twin: THREE.ShaderMaterial | null = null;
   const s = m as THREE.ShaderMaterial;
-  if (s.isShaderMaterial === true && !s.transparent && s.depthWrite && s.depthTest && s.colorWrite && s.blending === THREE.NormalBlending && !/\bdiscard\b|gl_FragDepth/.test(s.fragmentShader)) {
-    twin = new THREE.ShaderMaterial({ vertexShader: s.vertexShader, fragmentShader: DEPTH_ONLY_FRAGMENT, uniforms: s.uniforms, defines: s.defines, side: s.side, lights: s.lights, fog: s.fog, clipping: s.clipping, glslVersion: s.glslVersion });
+  const own = m.userData.depthFragment as string | undefined;
+  const opaque = s.isShaderMaterial === true && !s.transparent && s.depthWrite && s.depthTest && s.colorWrite && s.blending === THREE.NormalBlending && !s.polygonOffset && s.depthFunc === THREE.LessEqualDepth;
+  if (opaque && !/gl_FragDepth/.test(s.fragmentShader) && (own !== undefined || !/\bdiscard\b/.test(s.fragmentShader))) {
+    twin = new THREE.ShaderMaterial({ vertexShader: s.vertexShader, fragmentShader: own ?? DEPTH_ONLY_FRAGMENT, uniforms: s.uniforms, defines: s.defines, side: s.side, lights: s.lights, fog: s.fog, clipping: s.clipping, glslVersion: s.glslVersion });
     twin.colorWrite = false;
-    twin.polygonOffset = s.polygonOffset;
-    twin.polygonOffsetFactor = s.polygonOffsetFactor;
-    twin.polygonOffsetUnits = s.polygonOffsetUnits;
     twin.toneMapped = false;
   }
   m.userData.depthTwin = twin;
   return twin;
+}
+
+// The software renderer tests depth after the fragment shader, so a hidden fragment costs as much as a seen one, unless the shader discards in its first line.
+// This puts that line into a shader material. It drops the whole 2 x 2 block the rasteriser shades together, and only when all four of its pixels lie behind
+// the depth the twins left: a block that is kept is computed exactly as before, so its derivatives and its texture levels are the same and the picture does not change.
+const REJECT_HIDDEN = /* glsl */ `
+  if (uSeen > 0.5) {
+    ivec2 seenPixel = ivec2(gl_FragCoord.xy);
+    ivec2 seenBlock = seenPixel & ivec2(-2);
+    vec2 seenSlope = vec2(dFdx(gl_FragCoord.z), dFdy(gl_FragCoord.z));
+    float seenZ = gl_FragCoord.z - dot(vec2(seenPixel - seenBlock), seenSlope) - ${SEEN_BIAS};
+    ivec2 seenLast = textureSize(tSeen, 0) - 1;
+    if (seenZ > texelFetch(tSeen, min(seenBlock, seenLast), 0).r
+      && seenZ + seenSlope.x > texelFetch(tSeen, min(seenBlock + ivec2(1, 0), seenLast), 0).r
+      && seenZ + seenSlope.y > texelFetch(tSeen, min(seenBlock + ivec2(0, 1), seenLast), 0).r
+      && seenZ + seenSlope.x + seenSlope.y > texelFetch(tSeen, min(seenBlock + ivec2(1, 1), seenLast), 0).r) discard;
+  }`;
+
+function rejectHidden(m: THREE.Material, seen: THREE.IUniform, on: THREE.IUniform): void {
+  if (m.userData.rejectsHidden !== undefined) return;
+  const s = m as THREE.ShaderMaterial;
+  const ok = s.isShaderMaterial === true && s.depthTest && !s.polygonOffset && s.depthFunc === THREE.LessEqualDepth && !/gl_FragDepth/.test(s.fragmentShader) && MAIN_START.test(s.fragmentShader);
+  m.userData.rejectsHidden = ok;
+  if (!ok) return;
+  s.fragmentShader = s.fragmentShader.replace(MAIN_START, (start) => `uniform highp sampler2D tSeen;\nuniform float uSeen;\n${start}${REJECT_HIDDEN}`);
+  s.uniforms.tSeen = seen;
+  s.uniforms.uSeen = on;
+  s.needsUpdate = true;
 }
 
 export class Engine {
@@ -135,6 +165,9 @@ export class Engine {
   private sceneTarget: THREE.WebGLRenderTarget | null = null;
   private volumeTarget: THREE.WebGLRenderTarget | null = null;
   private warpTarget: THREE.WebGLRenderTarget | null = null;
+  private seenTarget: THREE.WebGLRenderTarget | null = null;
+  private readonly seen: THREE.IUniform = { value: null };
+  private readonly seenOn: THREE.IUniform = { value: 0 };
   private accumTarget: THREE.WebGLRenderTarget | null = null;
   private shownA: THREE.WebGLRenderTarget | null = null;
   private shownB: THREE.WebGLRenderTarget | null = null;
@@ -180,7 +213,7 @@ export class Engine {
   setFormat(id: string): void {
     const f = formatById(id);
     this.format = f;
-    for (const t of [this.sceneTarget, this.volumeTarget, this.warpTarget, this.accumTarget, this.shownA, this.shownB]) {
+    for (const t of [this.sceneTarget, this.volumeTarget, this.warpTarget, this.seenTarget, this.accumTarget, this.shownA, this.shownB]) {
       t?.depthTexture?.dispose();
       t?.dispose();
     }
@@ -190,6 +223,9 @@ export class Engine {
     this.sceneTarget = halfFloatTarget(f.width, f.height, true);
     this.volumeTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.warpTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
+    this.seenTarget = new THREE.WebGLRenderTarget(f.width, f.height, { type: THREE.UnsignedByteType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false, depthBuffer: true, stencilBuffer: false, colorSpace: THREE.NoColorSpace });
+    this.seenTarget.depthTexture = new THREE.DepthTexture(f.width, f.height, THREE.FloatType);
+    this.seen.value = this.seenTarget.depthTexture;
     this.accumTarget = halfFloatTarget(f.width, f.height);
     this.post.setSize(f.width, f.height);
   }
@@ -220,26 +256,28 @@ export class Engine {
     cam.updateMatrixWorld(true);
   }
 
-  // Depth first: every opaque shader material is drawn once with nothing but its vertex shader, so that the scene's own pass shades each pixel once.
-  // In a software renderer the fragment shader is the cost, and a landscape seen at a low angle covers itself several times over.
+  // Depth first: every opaque shader material is drawn once with nothing but its vertex shader, into a depth texture of its own,
+  // and every shader material then drops the fragments that lie behind it. Each pixel is shaded about once, whatever stands behind what.
   private depthFirst(stage: Stage): void {
-    const swapped: [Drawn, THREE.Material | THREE.Material[]][] = [];
+    const r = this.renderer;
+    const swapped: [Drawn, THREE.Material][] = [];
     const hidden: THREE.Object3D[] = [];
     stage.scene.traverseVisible((o) => {
       if (!isDrawn(o)) return;
-      const twin = Array.isArray(o.material) ? null : depthTwin(o.material);
-      if (twin) {
-        swapped.push([o, o.material]);
-        o.material = twin;
-      } else {
-        hidden.push(o);
-      }
+      const m = Array.isArray(o.material) ? null : o.material;
+      const twin = m ? depthTwin(m) : null;
+      if (m) rejectHidden(m, this.seen, this.seenOn);
+      if (m && twin) swapped.push([o, m]);
+      else hidden.push(o);
     });
     // Hidden by layer and not by `visible`, so that the children of a hidden object are still drawn.
     const layers = hidden.map((o) => o.layers.mask);
     for (const o of hidden) o.layers.mask = 0;
+    for (const [o, m] of swapped) o.material = m.userData.depthTwin as THREE.Material;
     try {
-      this.renderer.render(stage.scene, stage.camera);
+      r.setRenderTarget(this.seenTarget);
+      r.clear(false, true, false);
+      r.render(stage.scene, stage.camera);
     } finally {
       hidden.forEach((o, i) => { o.layers.mask = layers[i] as number; });
       for (const [o, m] of swapped) o.material = m;
@@ -268,8 +306,14 @@ export class Engine {
       if (background) r.setClearColor(background, 1);
       r.clear(true, true, false);
       if (background) r.setClearColor(0x000000, 0);
-      if (depthFirst && stage.depthFirst) this.depthFirst(stage);
+      const first = depthFirst && stage.depthFirst === true;
+      if (first) {
+        this.depthFirst(stage);
+        r.setRenderTarget(scene);
+      }
+      this.seenOn.value = first ? 1 : 0;
       r.render(stage.scene, stage.camera);
+      this.seenOn.value = 0;
       const fume = withVolume ? stage.volume : null;
       const warp = withVolume ? (stage.warp ?? null) : null;
       for (const [material, target] of [[fume, volume], [warp, warpTarget]] as const) {
