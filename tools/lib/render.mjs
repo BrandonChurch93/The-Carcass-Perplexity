@@ -237,17 +237,23 @@ function unitsShown(s, at) {
   return shotUnit && s.built.units[shotUnit] ? { [shotUnit]: s.built.units[shotUnit] } : {};
 }
 
-async function draw(page, at, tier, format, diag, part = null) {
+// `lens` overrides the place's lens for a test picture: { aperture, focus }, the radius of the lens and the focus distance in metres, either one null to keep the place's own.
+async function draw(page, at, tier, format, diag, part = null, lens = null) {
   const started = process.hrtime.bigint();
   await page.evaluate(
-    async ({ at, tier, format, diag, part }) => {
+    async ({ at, tier, format, diag, part, lens }) => {
       const c = window.__carcass;
       c.setFormat(format);
       c.setDiagnostic(diag, part);
-      if (at.loop !== null) await c.renderLoopFrame(at.loop, tier);
-      else await c.renderFilmFrame(at.frame, tier);
+      c.setLens(lens?.aperture ?? null, lens?.focus ?? null);
+      try {
+        if (at.loop !== null) await c.renderLoopFrame(at.loop, tier);
+        else await c.renderFilmFrame(at.frame, tier);
+      } finally {
+        c.setLens(null, null);
+      }
     },
-    { at, tier, format, diag, part },
+    { at, tier, format, diag, part, lens },
   );
   if (page.problems.length) throw new Error(`The page reported: ${page.problems.join(' | ')}`);
   return Number(process.hrtime.bigint() - started) / 1e9;
@@ -278,12 +284,12 @@ export function releaseRenderer() {
   dropLock();
 }
 
-export async function renderRaw({ frame, key, id, loop, tier = 'draft', format = 'preview', diag = null, part = null, hold = false } = {}) {
+export async function renderRaw({ frame, key, id, loop, tier = 'draft', format = 'preview', diag = null, part = null, hold = false, lens = null } = {}) {
   const s = await open();
   const at = resolveFrame(s.film, { frame, key, id, loop });
   if (!hold) await takeLock();
   try {
-    const seconds = await draw(s.page, at, tier, format, diag ?? null, part ?? null);
+    const seconds = await draw(s.page, at, tier, format, diag ?? null, part ?? null, lensOf(lens));
     const { raw, size } = await grabRaw(s, s.page);
     return { data: raw, width: size.width, height: size.height, seconds, frame: at.frame, loop: at.loop };
   } finally {
@@ -307,6 +313,19 @@ export async function rendererState() {
   return { built: s.built, browser: s.version, machine: os.hostname() };
 }
 
+// A lens override as the page takes it, or null when neither number is given.
+export function lensOf(lens) {
+  const num = (v, what) => {
+    if (v === undefined || v === null) return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0 || (what === 'focus' && n === 0)) throw new Error(`The ${what} is a number of metres${what === 'focus' ? ', more than zero' : ', zero or more'}: ${v}`);
+    return n;
+  };
+  const aperture = num(lens?.aperture, 'aperture');
+  const focus = num(lens?.focus, 'focus');
+  return aperture === null && focus === null ? null : { aperture, focus };
+}
+
 export async function renderStill({
   frame,
   key,
@@ -323,6 +342,7 @@ export async function renderStill({
   look = true,
   by = 'builder',
   caption = null,
+  lens = null,
 } = {}) {
   const s = await open();
   const cfg = config();
@@ -330,8 +350,10 @@ export async function renderStill({
   if (!Object.values(cfg.formats).some((f) => f.id === format)) throw new Error(`No such format: ${format}`);
   const at = resolveFrame(s.film, { frame, key, id, loop });
   const partName = part ? `-${String(part).replace(/[^a-z0-9]+/gi, '_')}` : '';
-  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}${partName}`}.png`);
-  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, part: part ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key };
+  const over = lensOf(lens);
+  const lensName = over ? `${over.aperture === null ? '' : `-a${over.aperture}`}${over.focus === null ? '' : `-f${over.focus}`}` : '';
+  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}${partName}${lensName}`}.png`);
+  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, part: part ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key, ...(over ? { lens: over } : {}) };
   if (!force && !fresh && !portableOnly && fs.existsSync(file) && fs.existsSync(`${file}.json`)) {
     const record = readJson(`${file}.json`);
     const same = Object.keys(want).every((k) => JSON.stringify(record[k]) === JSON.stringify(want[k]));
@@ -346,7 +368,7 @@ export async function renderStill({
       await s.page.close();
       s.page = page = await openPage(s);
     }
-    seconds = await draw(page, at, tier, format, diag ?? null, part ?? null);
+    seconds = await draw(page, at, tier, format, diag ?? null, part ?? null, over);
     await grab(s, page, file);
     if (portableOnly) await page.close();
   } finally {
@@ -356,7 +378,7 @@ export async function renderStill({
   writeJson(`${file}.json`, record);
   if (look) {
     const where = at.loop !== null ? `Loop frame ${at.loop}` : at.key ? `The frame that answers ${at.key}, film frame ${at.frame}` : `Film frame ${at.frame}`;
-    addLook(file, caption ?? `${where}, ${format}, ${tier} tier${diag ? `, ${diag} view` : ''}`, by);
+    addLook(file, caption ?? `${where}, ${format}, ${tier} tier${diag ? `, ${diag} view` : ''}${over ? `, lens set by hand${over.aperture === null ? '' : `, radius ${over.aperture} m`}${over.focus === null ? '' : `, focus ${over.focus} m`}` : ''}`, by);
   }
   return { file, record, reused: false, seconds };
 }
