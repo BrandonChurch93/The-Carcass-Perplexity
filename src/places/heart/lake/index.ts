@@ -394,9 +394,12 @@ void main() {
     slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
     crease = mix(1.0, 0.7 + 0.3 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
-    foldAt(q);
-    foldOn = gFoldCover * calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake);
-    foldPhase = gFoldPhase;
+    // Past this a pixel is longer than a bundle and nothing of the folds is left to draw.
+    if (fpLong < 0.4) {
+      foldAt(q);
+      foldOn = gFoldCover * calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
+      foldPhase = gFoldPhase;
+    }
   }
   // Folds, the cords on them, four to a fold, and the bundles, three folds to a band: each is drawn as long as a pixel is
   // finer than one of it across its run, so that none can beat against the pixels. All run along the lines of equal
@@ -408,7 +411,7 @@ void main() {
   float cord = abs(sin(4.0 * turn));
   float band = abs(sin(turn / 3.0));
   float foldSeen = foldOn * (1.0 - smoothstep(0.12, 0.3, per));
-  float cords = foldOn * (1.0 - smoothstep(0.035, 0.08, per));
+  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per));
   float bands = foldOn * (1.0 - smoothstep(0.4, 0.95, per)) - foldSeen;
   // The slope of a fold where the cells are too coarse to carry it, and of the cords always.
   float foldRise = FOLD_DEEP * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * smoothstep(0.06, 0.13, cell);
@@ -453,13 +456,14 @@ void main() {
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.05, 0.043, 0.04) * (0.6 + 0.8 * vnoise(vec2(q.x + q.y, vWorld.y * 3.0) * 9.0)), wallFace * inGap);
   vec3 c = albedo * light / 3.14159;
-  float nv = clamp(dot(n, v), 0.0, 1.0);
+  // A cord's flank turned edge on would glint, one pixel wide.
+  float nv = clamp(dot(n, v), 0.35 * foldSeen, 1.0);
   float gloss = (1.0 - rough) * (1.0 - rough);
   float fresnel = (0.03 + 0.97 * pow(1.0 - nv, 4.0)) * (0.09 + 0.24 * gloss);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The crest of a cord carries a pale line of the sky.
-  c += fresnel * lakeMirror(r, rough) * open * (1.0 - 0.85 * clinker) * (1.0 + 1.6 * crest);
+  c += fresnel * lakeMirror(r, rough) * open * (1.0 - 0.85 * clinker) * (1.0 + 0.9 * crest);
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
