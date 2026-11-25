@@ -7,6 +7,9 @@ function h3(x: number, y: number, z: number): number {
   return (n >>> 0) / 4294967296;
 }
 
+/** A number from 0 to 1 for three whole numbers. */
+export const hash = (x: number, y: number, z: number): number => h3(x, y, z);
+
 const fade = (t: number): number => t * t * (3 - 2 * t);
 
 export function noise2(x: number, y: number): number {

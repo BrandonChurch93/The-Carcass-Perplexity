@@ -5,12 +5,14 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { BODY, FIELD, FOOT_A, LEG_A, LEG_B, SLOPE_RANGE, TEAR, WRIST_B, YAW, bakeField, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
+import { BODY, FIELD, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, TEAR, YAW, bakeField, bakeHide, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
-/** Kelvin of the lava that shows in the tear. Under 1100: the lake's own seam on the flank is the bright one. */
-const TEAR_KELVIN = 1085;
+/** Kelvin of the lava at the bottom of the tear, the only place it shows this hot: its walls are dull red and darker. */
+const TEAR_KELVIN = 1250;
+/** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
+const FAR = 150;
 
 const COS = Math.cos(YAW);
 const SIN = Math.sin(YAW);
@@ -75,8 +77,12 @@ export function create(ctx: HeartContext): HeartPiece {
     fieldGeometry(baked, 0.25, (x, z) => radial(x, z) >= WHOLE - 0.13 && radial(x, z) < FIELD.half - 1.9),
     rimMaterial,
   );
-  for (const m of [fine, coarse, rim]) m.position.y = 0.02;
+  const farSheet = new THREE.Mesh(
+    fieldGeometry(baked, 0.14, (x, z) => radial(x, z) < WHOLE && !buried(x, z)),
+    fieldMaterial,
+  );
 
+  const plates = bakeHide();
   const carcassMaterial = new THREE.ShaderMaterial({
     vertexShader: CARCASS_VERTEX,
     fragmentShader: CARCASS_FRAGMENT,
@@ -86,15 +92,33 @@ export function create(ctx: HeartContext): HeartPiece {
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 2 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', anis) },
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
+      tPlates: { value: plates },
     },
   });
-  const body = new THREE.Mesh(bodyGeometry(baked), carcassMaterial);
-  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 700, round: 80, tendon: 0 }, baked);
-  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 1.1, seed: 4.1, rings: 460, round: 60, tendon: 0.085 }, baked);
-  const pad = new THREE.Mesh(padGeometry(), carcassMaterial);
-  const legs = [new THREE.Mesh(legA.geometry, carcassMaterial), new THREE.Mesh(legB.geometry, carcassMaterial), pad];
-  group.add(body, ...legs, fine, coarse, rim);
-  for (const m of group.children) m.frustumCulled = false;
+  const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
+  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 700, round: 64, tendon: 0 };
+  const legShapeB = { points: LEG_B, knee: 0.34, scale: 1.1, seed: 4.1, rings: 520, round: 48, tendon: 0 };
+  // What hangs and stirs: rags of hide under the arches of the two legs.
+  const hanging = [padGeometry([2.45, 3.74, 0.55], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 2.86, -3.05], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
+  const near = new THREE.Group();
+  near.add(carcass(bodyGeometry(baked, 360, 300, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
+  const far = new THREE.Group();
+  far.add(
+    carcass(bodyGeometry(baked, 180, 150)),
+    carcass(legGeometry({ ...legShapeA, rings: 350, round: 40 }, baked).geometry),
+    carcass(legGeometry({ ...legShapeB, rings: 260, round: 30 }, baked).geometry),
+    farSheet,
+  );
+  far.visible = false;
+  for (const m of [fine, coarse, rim, farSheet]) m.position.y = 0.02;
+  group.add(near, far, ...hanging, rim);
+  const meshes: THREE.Mesh[] = [];
+  group.traverse((o) => {
+    if (o instanceof THREE.Mesh) {
+      o.frustumCulled = false;
+      meshes.push(o);
+    }
+  });
   ctx.scene.add(ctx.parts.built('sunk-walker', group));
 
   // The tear glows too dully to light much, but what it does light, it lights through the same map as the lake.
@@ -112,12 +136,12 @@ export function create(ctx: HeartContext): HeartPiece {
   const glowGeometry = new THREE.BufferGeometry();
   glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(strip, 3));
   glowGeometry.setIndex(stripIndex);
-  const hot = blackbody(TEAR_KELVIN);
-  // The tear is about 0.3 m wide and half of it is open: drawn 1.25 m wide, dimmer by that much.
+  const hot = blackbody(TEAR_KELVIN - 50);
+  // Only the bottom of the tear is this hot, a hand wide: drawn 1.25 m wide, dimmer by that much.
   const glowMaterial = new THREE.ShaderMaterial({
     vertexShader: GLOW_VERTEX,
     fragmentShader: GLOW_FRAGMENT,
-    uniforms: { uRadiance: { value: new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar((0.3 * 0.5) / 1.25) } },
+    uniforms: { uRadiance: { value: new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar(0.12 / 1.25) } },
     depthTest: false,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -128,19 +152,21 @@ export function create(ctx: HeartContext): HeartPiece {
   glow.rotation.y = -YAW;
   ctx.rig.glowScene.add(glow);
 
-  // What stands over the crust hides the sky from it: the body, the foot of the arch, the hanging pad, the span of the arch.
+  // What stands over the crust hides the sky from it: the body, the feet of the two arches, the span of the first.
   const SHADES: [number, number, number, number][] = [
     [BODY.centre.x, BODY.centre.z, 4.8, 0.55],
     [FOOT_A[0], FOOT_A[1], 1.8, 0.5],
-    [WRIST_B[0], WRIST_B[2], 1.3, 0.35],
+    [FOOT_B[0], FOOT_B[1], 1.5, 0.45],
     [1.0, 0.4, 3.6, 0.16],
   ];
   const discs = ctx.rig.contactDiscs(SHADES.length);
 
   const tearMid = TEAR[2] as [number, number];
-  const smoke = { at: [0, 0.3, 0] as [number, number, number], radius: 0.9, strength: 0.32, rise: 9, kind: 'smoke' as const, lean: [-0.1, 0.16] as [number, number] };
+  const smoke = { at: [0, 0.3, 0] as [number, number, number], radius: 0.8, strength: 0.4, rise: 10, kind: 'smoke' as const, lean: [-0.1, 0.16] as [number, number] };
   const heat = { at: [0, 0.2, 0] as [number, number, number], radius: 1.6, height: 3.5, strength: 0.35 };
-  ctx.sources.steam.push(smoke);
+  // A little steam with it, thin and quick to go.
+  const steam = { at: smoke.at, radius: 0.5, strength: 0.3, rise: 4, kind: 'steam' as const, lean: [-0.1, 0.16] as [number, number] };
+  ctx.sources.steam.push(smoke, steam);
   ctx.sources.heat.push(heat);
 
   const place = (seconds: number): void => {
@@ -157,10 +183,17 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   place(ctx.rig.flow.t0);
 
+  const here = new THREE.Vector3();
   return {
     setTime: place,
+    beforeSample: (_renderer, camera) => {
+      const close = camera.position.distanceTo(here.set(group.position.x, 2, group.position.z)) < FAR;
+      near.visible = close;
+      far.visible = !close;
+    },
     dispose: () => {
-      for (const m of [body, ...legs, fine, coarse, rim]) m.geometry.dispose();
+      for (const m of meshes) m.geometry.dispose();
+      plates.dispose();
       fieldMaterial.dispose();
       rimMaterial.dispose();
       carcassMaterial.dispose();

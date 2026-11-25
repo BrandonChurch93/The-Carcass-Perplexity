@@ -16,6 +16,15 @@ uniform sampler2D tSkinNh;
 uniform sampler2D tRopy;
 uniform sampler2D tRopyNh;
 
+// The count of the ropes outward from the body and the width of the rope there: the sums of shape.ts.
+float ropeCount(float u) {
+  float th = 1.7 * u + 0.6;
+  return 2.5 * u + 6.0 * (0.375 * u - 0.5 * cos(th) / 1.7 - sin(2.0 * th) / 27.2);
+}
+float ropeWidth(float u) {
+  float g = 0.5 + 0.5 * sin(1.7 * u + 0.6);
+  return 1.0 / (2.5 + 6.0 * g * g);
+}
 vec2 fieldUv(vec2 l) { return (l - uField.xy) * uField.z; }
 // The local frame to the world, for directions on the ground.
 vec2 turned(vec2 l) { return vec2(l.x * uTurn.x - l.y * uTurn.y, l.x * uTurn.y + l.y * uTurn.x); }
@@ -72,11 +81,10 @@ void main() {
   float alpha = 1.0;
   #ifdef RIM
   alpha = smoothstep(halfSpan - 2.3, halfSpan - 4.4, r + 1.2 * (vnoise(l * 0.31) - 0.5) + 0.4 * (vnoise(l * 1.7) - 0.5));
-  if (alpha < 0.004) discard;
   #endif
   // The rim is level, plain crust: it reads nothing of the relief, so it costs what the lake's crust costs.
   #ifdef RIM
-  vec4 rl = vec4(0.5, 0.5, 1.0, 1.0);
+  vec4 rl = vec4(0.5, 0.5, 1.0, 0.0);
   vec4 mk = vec4(0.0, 0.0, 0.5, 0.0);
   vec4 ln = vec4(20.0, 0.0, 0.0, 0.0);
   #else
@@ -128,7 +136,7 @@ void main() {
   // The folded skin: the same skin, roped. The ropes are in the relief; crests are worn paler than creases.
   float broad = vnoise(l * 0.4 + 2.0);
   float small = vnoise(l * 2.0 + 7.0);
-  float folded = smoothstep(8.8, 4.2, ln.r + 2.0 * (broad - 0.5)) * smoothstep(9.2, 6.9, r);
+  float folded = rl.a;
   // A second look at the skin, laid along the ropes (across them by their count, along them by the way round the body) and
   // drawn out ten times along, so its grain is the stretch of the skin.
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
@@ -141,35 +149,43 @@ void main() {
   float crest = clamp(mk.b * 2.0 - 0.5, 0.0, 1.3);
   vec3 old = plain * 1.3 * (0.4 + 0.95 * crest) * (0.55 + 0.9 * nhF.b) * (0.8 + 0.4 * broad);
   // Each rope is its own strip of skin, and the crease between two is a line of shade.
-  float rp = ln.r / 0.33;
+  float rp = ropeCount(ln.r);
   float rt = abs(2.0 * fract(rp) - 1.0);
-  float seen = smoothstep(0.5, 0.15, fwidth(rp));
-  float crease = smoothstep(0.72, 0.97, rt) * ln.a * seen;
+  // Where the ropes die away into the plain skin, so do their lines.
+  float seen = smoothstep(0.5, 0.15, fwidth(rp)) * smoothstep(0.2, 0.55, ln.a);
+  float crease = smoothstep(0.8, 0.97, rt) * ln.a * seen;
   float ropeId = floor(rp);
   float ropeTone = fract(sin(ropeId * 12.9898) * 43758.5453);
-  // The ropes cracked across as they cooled: each is a row of pieces, some of them parted by a black line.
-  float run = uvF.y * (3.0 + ln.r) * 1.6 + ropeTone * 17.0 + 0.6 * small + 0.25 * (nhF.b - 0.5);
-  float piece = fract(sin((floor(run) + ropeId * 31.0) * 78.233) * 43758.5453);
-  float parted = fract(sin((floor(run + 0.5) + ropeId * 17.0) * 39.425) * 43758.5453);
-  float rw = fwidth(run);
-  float crack = smoothstep(0.035 + rw, 0.01, min(fract(run), 1.0 - fract(run))) * step(0.5, parted) * smoothstep(0.35, 0.08, rw) * ln.a * seen * (1.0 - crease);
-  old *= (1.0 + ln.a * seen * (0.36 * (ropeTone - 0.5) + 0.3 * (piece - 0.5))) * (1.0 - 0.72 * crease) * (1.0 - 0.7 * crack) * vec3(1.05, 1.0, 0.95);
+  // Along each rope run strands a finger or two wide, each broken every few hands; where one is gone there is a dark groove.
+  float across = fract(rp) * ropeWidth(ln.r) / 0.024 + 1.6 * (nhF.b - 0.5) + 0.9 * small;
+  float strandId = floor(across) + ropeId * 37.0;
+  float strandTone = fract(sin(strandId * 91.345) * 47453.5453);
+  float lengthOf = 0.2 + 0.4 * strandTone;
+  float seg = atan(fromBody.x, fromBody.y) * (3.0 + max(ln.r, 0.0)) / lengthOf + strandTone * 19.0;
+  float alive = step(0.24, fract(sin((floor(seg) + strandId * 3.0) * 12.345) * 4375.85));
+  float st = 2.0 * fract(across) - 1.0;
+  float strandSeen = smoothstep(0.6, 0.2, fwidth(across)) * smoothstep(0.2, 0.55, ln.a) * folded * (1.0 - crease);
+  float ridge = (1.0 - st * st) * alive * smoothstep(0.0, 0.1, min(fract(seg), 1.0 - fract(seg)));
+  float crown = smoothstep(0.6, 0.1, rt) * ln.a * seen;
+  old *= (1.0 + ln.a * seen * 0.5 * (ropeTone - 0.5)) * (1.0 - 0.9 * crease) * mix(1.0, 0.7 + 0.5 * ridge, strandSeen) * vec3(1.05, 1.0, 0.95);
   // From far off the creases are smaller than a pixel and what is seen is the ash on the crowns.
   old *= mix(1.2, 1.0, close);
   vec3 albedo = mix(plain, old, folded);
 
   // Ash has fallen on it since: a thin grey on whatever lies level, thick in the hollows.
   float lying = smoothstep(0.55, 0.95, inversesqrt(1.0 + dot(grad, grad)));
-  albedo = mix(albedo, vec3(0.38, 0.345, 0.305), folded * lying * 0.55 * (0.3 + 0.7 * small) * (1.0 - 0.8 * max(crease, crack)));
+  albedo = mix(albedo, vec3(0.38, 0.345, 0.305), folded * lying * 0.55 * (0.3 + 0.7 * small) * (1.0 - 0.8 * crease));
+  // And it has stayed on the crowns of the ropes, on the strands that stand.
+  albedo = mix(albedo, vec3(0.4, 0.365, 0.325), folded * crown * 0.5 * (0.35 + 0.65 * small) * mix(1.0, ridge, strandSeen));
+  // Ash drifted against the edge of the pad, and the stain of the heat round the tear.
+  float fringe = smoothstep(0.0, 0.12, folded) * (1.0 - smoothstep(0.3, 0.8, folded));
+  albedo = mix(albedo, vec3(0.37, 0.34, 0.3), fringe * 0.5 * smoothstep(0.4, 0.7, vnoise(l * 1.3 + 31.0)));
+  albedo = mix(albedo, albedo * vec3(1.55, 0.8, 0.55) + vec3(0.02, 0.004, 0.0), clamp(mk.a * 1.3, 0.0, 0.65));
   float ash = mk.g * (0.35 + 0.65 * smoothstep(0.3, 0.7, 1.0 - small)) * folded;
   albedo = mix(albedo, vec3(0.36, 0.33, 0.295) * (0.7 + 0.5 * nhF.b), ash * 0.62);
 
-  // The fine wrinkles of the skin run along the ropes: they are drawn from the same count the ropes were.
-  float ph = ln.r / 0.09 + 2.5 * small + 1.5 * nhF.b;
-  float fw = fwidth(ph);
-  float wt = 2.0 * fract(ph) - 1.0;
-  float wrinkle = -2.0 * wt * (0.05 + 1.2 * smoothstep(0.35, 0.8, 0.6 * small + 0.4 * broad)) * smoothstep(0.42, 0.1, fw) * folded;
-  vec2 wr = ln.gb * wrinkle * 0.5;
+  // The strands stand off the rope: the slope of each is across the rope.
+  vec2 wr = ln.gb * (-1.0 * st * ridge * strandSeen);
   // The lake's own ropes, in the world, as the lake lays them.
   vec2 detail = ropeSlope * (0.35 + 0.55 * lakeClose) * ropy * (1.0 - 0.45 * folded);
   detail += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.3 * near * (1.0 - folded);
@@ -178,7 +194,7 @@ void main() {
   vec3 n = normalize(vec3(-sw.x, 1.0, -sw.y));
 
   float hollow = mix(1.0, 0.86 + 0.28 * ropeHigh, ropy) * mix(1.0, 0.92 + 0.16 * grainNh.b, near) * mix(1.0, 0.5 + 0.5 * smoothstep(0.15, 0.6, ropeHigh), lakeClose * ropy);
-  float occ = mix(hollow, mix(0.5 + 0.5 * rl.b, rl.b, close) * (0.72 + 0.28 * ropeHigh) * (1.0 - 0.55 * max(crease, crack)), folded);
+  float occ = mix(hollow, mix(0.5 + 0.5 * rl.b, rl.b, close) * (0.72 + 0.28 * ropeHigh) * (1.0 - 0.7 * crease), folded);
   float rough = clamp(0.3 + 0.45 * AGE - 0.3 * (ropeHigh - 0.5) * ropy + 0.25 * (1.0 - mid), 0.18, 0.92);
   rough = mix(rough, 0.95, ash);
   vec4 land = landAt(vWorld.xz);
@@ -197,13 +213,20 @@ void main() {
 
   // The tear: lava under a skin that has only just closed, and the little light it throws on its own lips.
   float heat = mk.r;
-  float veins = smoothstep(0.7, 0.15, abs(nhF.b - 0.5) * 3.0 + 0.5 * (small - 0.5));
-  float kelvin = mix(880.0, uTearKelvin, smoothstep(0.1, 0.6, heat * (0.7 + 0.6 * veins)));
-  c *= 1.0 - 0.85 * smoothstep(0.1, 0.6, heat);
-  c += blackbody(kelvin) * smoothstep(0.1, 0.5, heat);
-  c += albedo * blackbody(uTearKelvin) * mk.a * 0.8;
+  float veins = small;
+  // Dull on the walls, the full heat only at the bottom.
+  float breath = 18.0 * sin(uTime * 1.5708 + 2.0 * small) * heat;
+  float kelvin = mix(1000.0, uTearKelvin, smoothstep(0.2, 0.8, heat * (0.8 + 0.4 * veins))) + breath;
+  c *= 1.0 - 0.85 * smoothstep(0.08, 0.5, heat);
+  c += blackbody(kelvin) * smoothstep(0.08, 0.4, heat);
+  // What it lights is the under side of the folds that hang over it.
+  c += albedo * blackbody(1150.0) * mk.a * (0.2 + 1.6 * (1.0 - n.y)) * 0.5;
 
   gl_FragColor = vec4(rigOut(c), alpha);
+  // Last, so the pixels beside a dropped one still have their derivatives.
+  #ifdef RIM
+  if (alpha < 0.004) discard;
+  #endif
 }`;
 
 export const CARCASS_VERTEX = /* glsl */ `
@@ -215,12 +238,16 @@ varying vec3 vNormal;
 varying vec3 vLocalNormal;
 varying vec4 vMap;
 varying vec4 vSurf;
+uniform float uTime;
 void main() {
   vLocal = position;
   vLocalNormal = normal;
   vMap = aMap;
   vSurf = aSurf;
-  vec4 w = modelMatrix * vec4(position, 1.0);
+  // What hangs by one end stirs in the air that rises off the crust: most at its free end, never the same twice in eight seconds.
+  float hangs = step(1.5, aMap.w) * aMap.y / 1.6;
+  float stir = hangs * hangs * (0.05 * sin(uTime * 2.3562 + position.x * 1.7) + 0.025 * sin(uTime * 5.4978 + position.z * 2.3));
+  vec4 w = modelMatrix * vec4(position + vec3(0.35, 0.0, 1.0) * stir, 1.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * normal);
   gl_Position = projectionMatrix * viewMatrix * w;
@@ -238,6 +265,7 @@ uniform sampler2D tHide;
 uniform sampler2D tHideNh;
 uniform sampler2D tFlake;
 uniform sampler2D tFlakeNh;
+uniform sampler2D tPlates;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${COMMON}
@@ -248,8 +276,20 @@ void main() {
   float far = length(cameraPosition - vWorld);
   float close = smoothstep(90.0, 20.0, far);
   float isBody = step(0.5, vMap.w) * step(vMap.w, 1.5);
-  float plate = clamp((vMap.w - 1.0) / 0.45, 0.0, 1.0) * isBody;
   float isLeg = step(vMap.w, 0.5);
+  // The plates and the splits of the body, drawn finer than its mesh: r how far a plate stands off, g the shade under its
+  // lifted edge, b its tone (nothing where there is no plate), a the inside of a split.
+  vec4 pl = texture2D(tPlates, vec2(vMap.x, 0.5 - 0.5 * cos(vMap.y * 0.58178)));
+  pl = mix(vec4(0.0, 1.0, 0.0, 0.0), pl, isBody);
+  float plate = smoothstep(0.06, 0.3, pl.b);
+  // A plate has thickness: its edge is a step, and the light sees it.
+  float stands = pl.r * 0.12;
+  vec3 dpx = dFdx(vWorld);
+  vec3 dpy = dFdy(vWorld);
+  vec3 r1 = cross(dpy, n);
+  vec3 r2 = cross(n, dpx);
+  float det = dot(dpx, r1);
+  n = normalize(abs(det) * n - sign(det) * (dFdx(stands) * r1 + dFdy(stands) * r2));
 
   // On the body the pleats of the hide hang from the spine down the flank, and the pictures are laid near their true size.
   float lump = vnoise3(vLocal * 1.1 + 4.0);
@@ -261,31 +301,44 @@ void main() {
   vec4 flakeNh = texture2D(tFlakeNh, uvP);
   float grey = dot(hide, vec3(0.33));
   // Soot and ash have taken the brown out of the hide.
-  vec3 dead = vec3(0.3, 0.25, 0.2) * (0.25 + 9.0 * grey);
+  vec3 dead = mix(vec3(0.3, 0.25, 0.2), vec3(0.3, 0.215, 0.145), isBody) * (0.25 + 9.0 * grey);
   // Caked ash and dried skin, the colour of old paper, darker where the plate is thin.
   float tone = dot(flake, vec3(0.33));
-  vec3 pale = mix(vec3(0.33, 0.29, 0.24), vec3(0.58, 0.52, 0.43), smoothstep(0.2, 0.8, flakeNh.b)) * (1.1 + 3.5 * tone);
+  vec3 pale = mix(vec3(0.36, 0.295, 0.215), vec3(0.62, 0.53, 0.4), smoothstep(0.2, 0.8, flakeNh.b)) * (1.1 + 3.5 * tone);
+  // On the body: tan to bone on the upper face of each plate.
+  vec3 bodyPale = mix(vec3(0.44, 0.335, 0.21), vec3(0.68, 0.6, 0.47), smoothstep(0.4, 1.0, pl.b + 0.3 * (lump - 0.5))) * (0.55 + 2.2 * tone + 0.5 * hideNh.b);
+  pale = mix(pale, bodyPale, isBody);
 
   // On the body the hide lifts in patches; on the legs it is the plates that are left.
   float worn = lump + 0.5 * flakeNh.b - 0.25;
-  float lifted = mix(vSurf.y * smoothstep(-0.2, 0.15, flakeNh.b + 0.5 * worn), plate * smoothstep(-0.25, 0.1, flakeNh.b + 0.5 * worn), 1.0 - isLeg);
-  float split = isBody * smoothstep(0.35, 0.6, vSurf.y + 0.25 * (hideNh.b - 0.5));
-  // And the picture of peeling skin brings its own pale plates between them.
-  lifted = max(lifted, isBody * 0.85 * smoothstep(0.07, 0.17, tone + 0.05 * (lump - 0.5)));
+  float onLeg = smoothstep(0.35, 0.6, vSurf.y);
+  float lifted = mix(onLeg * smoothstep(-0.45, 0.0, flakeNh.b + 0.5 * worn), plate, 1.0 - isLeg);
+  float split = isBody * pl.a;
+  // And the picture of peeling skin brings a few small flakes of its own between them.
+  lifted = max(lifted, isBody * 0.3 * smoothstep(0.07, 0.17, tone + 0.05 * (lump - 0.5)));
   lifted *= 1.0 - split;
   // The crests of the dried cords are rubbed pale and the creases between hold the soot.
-  vec3 albedo = mix(dead * (0.5 + 1.5 * hideNh.b * hideNh.b) * mix(1.0, 1.25, isBody), pale * mix(1.0, 0.55 + 0.7 * hideNh.b, isBody), lifted);
+  vec3 albedo = mix(dead * (0.5 + 1.5 * hideNh.b * hideNh.b) * mix(1.0, 1.05, isBody), pale, lifted);
   vec2 bump = mix((hideNh.rg - 0.5) * 1.6, (flakeNh.rg - 0.5) * 2.6, lifted) * (0.35 + 0.65 * close);
   float cavity = mix(0.7 + 0.3 * hideNh.b, 0.6 + 0.4 * flakeNh.b, lifted);
 
   // Under the hide: dried flesh, almost black, strung with pale sinew along the limb; in the splits of the body, the ribs.
   float strand = smoothstep(0.35, 0.75, vnoise(vec2(vMap.x * vMap.z * 9.0, vMap.y * 1.3)) * 0.7 + 0.3 * hideNh.b);
-  vec3 flesh = mix(vec3(0.04, 0.03, 0.026), vec3(0.13, 0.095, 0.075), hideNh.b) * (0.55 + 1.3 * strand);
-  vec3 sinew = vec3(0.4, 0.36, 0.29) * (0.55 + 0.6 * hideNh.b);
-  float bare = mix(isLeg * (1.0 - vSurf.y), split, isBody);
-  float boney = clamp(vSurf.w * mix(smoothstep(0.35, 0.8, strand), 0.55 + 0.9 * strand, isBody), 0.0, 1.0);
+  // The strands of sinew: thin, long, pale, and smooth enough to carry a line of the sky.
+  float cordAt = vMap.x * vMap.z * 21.0 + 1.5 * vnoise(vec2(vMap.x * vMap.z * 3.0, vMap.y * 0.9));
+  float cordTone = fract(sin(floor(cordAt) * 78.233) * 43758.5453);
+  float cordRun = smoothstep(0.35, 0.6, vnoise(vec2(floor(cordAt) * 7.3, vMap.y * 0.8 + cordTone * 9.0)));
+  float cs = 2.0 * fract(cordAt) - 1.0;
+  float cord = (1.0 - cs * cs) * cordRun * step(0.3, cordTone) * smoothstep(1.2, 0.5, fwidth(cordAt)) * isLeg;
+  vec3 flesh = mix(vec3(0.06, 0.04, 0.03), vec3(0.2, 0.135, 0.09), hideNh.b) * (0.6 + 1.2 * strand);
+  vec3 sinew = vec3(0.42, 0.37, 0.29) * (0.55 + 0.6 * hideNh.b);
+  float bare = mix(isLeg * (1.0 - onLeg), split, isBody);
+  // In the splits of the body the ribs are barely seen.
+  float boney = clamp(max(vSurf.w * mix(smoothstep(0.35, 0.8, strand), 0.22 + 0.3 * strand, isBody), 0.85 * smoothstep(0.3, 0.9, cord)), 0.0, 1.0);
   albedo = mix(albedo, mix(flesh, sinew, boney), bare);
-  bump = mix(bump, (hideNh.rg - 0.5) * 0.8, bare);
+  bump = mix(bump, (hideNh.rg - 0.5) * 0.8 + vec2(-0.9 * cs * cord, 0.0), bare);
+  // The torn edge of a plate of the leg stands over what is under it and shades it.
+  float under = isLeg * smoothstep(0.03, 0.3, vSurf.y) * (1.0 - smoothstep(0.3, 0.62, vSurf.y));
 
   // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
@@ -298,9 +351,13 @@ void main() {
   bump = mix(bump, (lavaNh.rg - 0.5) * 1.2, coat);
   cavity = mix(cavity, 0.75 + 0.25 * lavaNh.b, coat);
 
+  // Ash has settled in the hollows of the hide, and the end of the body by the tear is stained by its heat.
+  albedo = mix(albedo, vec3(0.37, 0.345, 0.31), isBody * (1.0 - lifted) * (1.0 - split) * 0.4 * smoothstep(0.5, 0.2, hideNh.b) * (1.0 - coat));
+  float stain = isBody * exp(-dot(vLocal.xz - vec2(-8.25, 4.75), vLocal.xz - vec2(-8.25, 4.75)) / 20.0);
+  albedo *= mix(vec3(1.0), vec3(1.25, 0.82, 0.62), stain);
   // Ash lies on whatever faces up.
   float dust = smoothstep(0.35, 0.95, nl.y) * (0.35 + 0.65 * (1.0 - lump)) * (1.0 - 0.5 * coat);
-  albedo = mix(albedo, vec3(0.36, 0.34, 0.315), dust * 0.6);
+  albedo = mix(albedo, vec3(0.36, 0.34, 0.315), dust * mix(0.6, 0.25, lifted));
   albedo = mix(albedo, vec3(0.27, 0.26, 0.25), coat * 0.5 * (1.0 - lump));
 
   // The bump is laid on the surface along its own directions.
@@ -308,8 +365,8 @@ void main() {
   vec3 round2 = cross(n, along);
   n = normalize(n + (along * bump.x + round2 * bump.y) * 0.9);
 
-  float occ = cavity * vSurf.z;
-  float rough = mix(0.88, 0.78, coat);
+  float occ = cavity * vSurf.z * pl.g * (1.0 - 0.75 * under * (1.0 - coat)) * (1.0 - 0.55 * split);
+  float rough = mix(0.88 - 0.45 * cord * bare, 0.78, coat);
   vec3 c = sunkShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
