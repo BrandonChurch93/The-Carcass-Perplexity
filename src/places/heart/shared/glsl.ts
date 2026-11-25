@@ -150,9 +150,13 @@ vec3 lakeGlow(vec2 xz, float radius) {
   return textureLod(tGlow, (xz - uGlowRect.xy) * uGlowRect.zw, log2(max(radius * 2.0 * uGlowTexels, 1.0))).rgb * uCast;
 }
 
-// How much of the lake's light still arrives at a height above it: the fume between takes it, and it is gone a few tens of metres up.
-float lakeReach(float h) {
-  return 1.0 / (1.0 + h * h / 2025.0);
+// How much of the lake's light still arrives through the fume over a path of that many metres: half at 16 m, a tenth at 48 m.
+// It was taken by the height alone, half at 45 m, whatever way the light had come: so a tap that looks 65 m along the lake from a face 10 m up
+// arrived whole, and the crag of the line view (5 to 12 m over a pool of the line) stood red on every face that leans to the lake. Now each tap
+// pays for its own path, and the light falls off with the distance from the fire. A belly a metre up keeps all of it, a flank 5 m up two thirds,
+// a face 10 m up four tenths (it kept 0.95), one 20 m up a sixth.
+float lakeReach(float path) {
+  return 1.0 / (1.0 + path * path / 256.0);
 }
 
 // Irradiance from the glowing lake on a point p with normal n.
@@ -174,10 +178,11 @@ vec3 lakeIrradiance(vec3 p, vec3 n) {
   vec3 e = lakeLip(p, h);
   if (down > 0.015) {
     vec2 reach = n.xz * h;
-    vec3 under = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 0.55;
-    under += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 0.33;
-    under += lakeGlow(p.xz + reach * 6.5, h * 4.0) * 0.12;
-    e += under * (down * lakeReach(h));
+    // The paths of the three taps: 1.35, 2.8 and 6.6 heights.
+    vec3 under = lakeGlow(p.xz + reach * 0.9, h * 0.8) * (0.55 * lakeReach(h * 1.35));
+    under += lakeGlow(p.xz + reach * 2.6, h * 1.6) * (0.33 * lakeReach(h * 2.8));
+    under += lakeGlow(p.xz + reach * 6.5, h * 4.0) * (0.12 * lakeReach(h * 6.6));
+    e += under * down;
   }
   return e * 3.14159;
 }
@@ -187,7 +192,7 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
   float down = 0.5 - 0.5 * n.y;
   vec3 e = lakeLip(p, h);
-  if (down > 0.015) e += lakeGlow(p.xz + n.xz * h * 1.8, max(h * 2.2, 3.0)) * (down * lakeReach(h));
+  if (down > 0.015) e += lakeGlow(p.xz + n.xz * h * 1.8, max(h * 2.2, 3.0)) * (down * lakeReach(h * 2.06));
   return e * 3.14159;
 }
 
