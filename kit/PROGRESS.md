@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 28, 2026-11-25 05:33 UTC:
+Status 29, 2026-11-25 05:53 UTC:
 
-- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
-- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
-- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
-- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
+- `01-hero-crop.jpg`: Left: the approved hero. Right: ours as it stands. The gap is the body, the legs, the trunk and the hide, in that order
+- `02-shot-heart-01.jpg`: The opening shot of the Heart in motion: twelve frames spread across the shot
+- `03-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
+- `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
 
+Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
 Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
 Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
-Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T05:33:51Z
-phase 3: 2.41 h used of 13.00 h
-build: 9.06 h used of 72.00 h
+2026-11-25T05:53:44Z
+phase 3: 2.74 h used of 13.00 h
+build: 9.40 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -760,3 +760,4 @@ none
 - 2026-11-25 05:30 UTC. Study written under Look lock: ten lines from nine sources (three photographs, six USGS records)
 - 2026-11-25 05:34 UTC. Status 28 posted: the feeding shot restaged, its motion sheet, notes to the owners, tests 818 of 818
 - 2026-11-25 05:42 UTC. Jury controls of the Heart collected ahead of the first round: 25 votes (5 pictures, 5 jurors on three families), 24 for a film frame and 1 for an ordinary render, control share 0.96; the judged frames must reach 0.76. Record: scorecards/controls/heart-R2.json
+- 2026-11-25 05:54 UTC. Status 29 posted: G13 passes for the Heart, round 3 open on e5b7a22, jury controls 0.96, cost of the wide and the hero frame at uhd draft, the approved hero beside ours and the opening shot in motion.
