@@ -113,7 +113,7 @@ const rimShape = (k: number): number => smooth(1.5, 1.08, k) * (0.78 + 0.22 * sm
 const outline = (phi: number, rho: number): number =>
   1 + 0.075 * (noise2(phi * 1.5 + 3.1, 0.7 + rho / 140) - 0.5) * 2 + 0.035 * (noise2(phi * 5 + 1.3, 2.2 + rho / 60) - 0.5) * 2 + 0.014 * blocks(phi * 62, rho, 4.5, 3);
 /** The lip is cut back most at the upper west, above the pool, and that broad bevel is what the melt lights. Metres. */
-const flare = (phi: number): number => 3 + 15 * Math.exp(-Math.pow((phi - 0.66 * Math.PI) / 0.62, 2)) + 5 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
+const flare = (phi: number): number => 2 + 24 * Math.exp(-Math.pow((phi - 0.68 * Math.PI) / 0.6, 2)) + 5 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
 /** The roof goes back as a few big ribs: at each the tube steps in, more on one flank than the other, and partly opens again behind it. */
 const RIBS = [
   { at: 13, step: 0.1 },
@@ -130,8 +130,14 @@ const ribbed = (phi: number, d: number): number => {
   });
   return k;
 };
+/** The cut rock of the bevel and the first of the roof is broken in blocks a few metres across, some of them hanging. */
+const crag = (phi: number, rho: number): number =>
+  (0.022 * blocks(phi * 62, rho * 0.45, 9, 11) + 0.03 * (ridged(phi * 62 / 7 + 0.8 * noise2(rho / 12, 2.2), rho / 30) - 0.5) + 0.012 * (ridged(phi * 62 / 2.6, rho / 14 + 3) - 0.5)) *
+  smooth(-60, -34, rho) *
+  smooth(0, -2.5, rho) *
+  (0.35 + 0.65 * Math.max(0, Math.sin(phi)));
 const ragged = (phi: number, rho: number): number =>
-  rho > -1e-6 ? outline(phi, rho) + flare(phi) / 70 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2 * smooth(0, 3, rho) : (outline(phi, rho) + (flare(phi) / 70) * Math.exp(rho / 9)) * ribbed(phi, -rho);
+  rho > -1e-6 ? outline(phi, rho) + flare(phi) / 70 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2 * smooth(0, 3, rho) : (outline(phi, rho) + (flare(phi) / 70) * Math.exp(rho / 14) + crag(phi, rho)) * ribbed(phi, -rho);
 
 /**
  * The rim of the mouth and the tube behind it, as one skin: rings from the darkness at the back, forward to the rim, then outward over the cliff.
@@ -181,7 +187,7 @@ export function shell(): THREE.BufferGeometry {
     ring((phi) => {
       const rho = (k - 1) * 70;
       const [x, y] = arch(phi, k, 0, ragged(phi, rho));
-      const z = faceZ(x, Math.max(y, TUBE.floor - 14)) + hood(phi) * rimShape(k) + 1.4 * (noise2(x / 6, y / 6) - 0.5) * smooth(1.5, 1.2, k);
+      const z = faceZ(x, Math.max(y, TUBE.floor - 14)) + hood(phi) * rimShape(k) + (1.4 * (noise2(x / 6, y / 6) - 0.5) + 1.5 * blocks(x, y, 6.5, 4) * smooth(1.0, 1.06, k)) * smooth(1.5, 1.2, k);
       return [x, y, z, arc(phi), rho, 0];
     });
   }
@@ -206,13 +212,16 @@ export function face(): THREE.BufferGeometry {
   const open: boolean[] = [];
   // Under the sill the land's own wall shows.
   const low: boolean[] = [];
+  // How far each point is from the edge of the patch: the shader breaks the patch up there so the land shows through and no line is drawn.
+  const edges: number[] = [];
   for (let j = 0; j <= nz; j++) {
     for (let i = 0; i <= nx; i++) {
       const x = lerp(x0, x1, i / nx);
       const z = lerp(z0, z1, j / nz);
       const edge = Math.min(x - x0, x1 - x, z - z0, z1 - z);
-      const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 9, edge));
+      const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 3, edge));
       positions.push(x, y, z);
+      edges.push(0, edge, 0);
       open.push(inArch(x, y, 1.08 + 0.2 * smooth(0.15, 0.5, (y - TUBE.floor) / TUBE.crown(0))) && z > MOUTH.z - 58);
       low.push(y < TUBE.floor - 3 && x > MOUTH.x - 45);
     }
@@ -227,8 +236,7 @@ export function face(): THREE.BufferGeometry {
       index.push(a, b, a + 1, a + 1, b, b + 1);
     }
   }
-  const skin = new Array<number>((positions.length / 3) * 3).fill(0);
-  return finish(positions, index, { aSkin: { data: skin, size: 3 } });
+  return finish(positions, index, { aSkin: { data: edges, size: 3 } });
 }
 
 export interface Bed {
@@ -264,14 +272,33 @@ const LIP_X = MOUTH.x - 22;
 const down = (x: number, z: number): number => (z - lipAt(x)) / (APRON_FOOT - lipAt(x));
 /**
  * The apron: one slope of rubble from the lip to the lake, steepest under the lip and easing a little toward the water.
- * This is its smooth surface along its middle; the blocks are laid on it in `bed`.
+ * This is its smooth surface along its middle; the ledges and the blocks are laid on it in `apronBase` and `bed`.
  */
-export function apronBase(x: number, z: number): number {
+export function apronSlope(x: number, z: number): number {
   const t = down(x, z);
   if (t <= 0) return TUBE.floor;
   if (t >= 1) return -8 * (t - 1);
   return TUBE.floor * Math.pow(1 - t, 1.2);
 }
+/** The same broken into ledges: the rock either side of the stream. The stream keeps the smooth slope and makes its own drops. */
+export function apronBase(x: number, z: number): number {
+  const t = down(x, z);
+  if (t <= 0 || t >= 1) return apronSlope(x, z);
+  const h = apronSlope(x, z);
+  // The foot of the wall is old flows laid one on another: it comes down in ledges, each a tread and a riser, and their edges wander.
+  const warp = 9 * (noise2(x / 41 + 1.3, z / 41 + 7.7) - 0.5) + 3 * (noise2(x / 12 + 4.1, z / 12 + 2.2) - 0.5);
+  const v = (h + warp) / LEDGE;
+  const i = Math.floor(v);
+  const f = v - i;
+  // A tread still falls at twenty degrees: the place is seen from the lake, and a level tread would hide the stream that crosses it.
+  const tread = 0.66 + 0.14 * hash(i, 3.3);
+  const g = f < tread ? (0.42 * f) / tread : 0.42 + 0.58 * smooth(tread, 1, f);
+  const stepped = LEDGE * (i + g) - warp;
+  // No ledges at the lip, where the stream leaves the floor, and none at the lake, where the fan lies.
+  return lerp(h, Math.max(stepped, 0.3 * h), smooth(0.02, 0.1, t) * smooth(0.97, 0.8, t));
+}
+/** Metres from one ledge of the apron to the next. */
+const LEDGE = 7;
 
 /**
  * The floor of the tube and what the river has built on the foot of the wall, with the river in it, as one sheet.
@@ -291,7 +318,9 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const level = TUBE.floor + 0.012 * Math.max(d, 0);
     // Roof fall lies heaped on the floor each side of the river, highest against the walls, so the sill of the mouth is not a level line.
     const heap = (12 * Math.pow(smooth(0, 42, side - 1), 1.3) + 4.5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + 1.6 * blocks(x, z, 4.2, 7) * smooth(1, 6, side)) * smooth(80, 25, d) * smooth(0.5, 17, d) * lerp(0.08, 1, smooth(-0.3, 0.3, n.toward[0]));
-    const floor = lerp(n.y, level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), smooth(0.9, 1.06, u));
+    // East of the pool the floor is a shelf of melt that has skinned over: level, a hand lower than the open melt, as far in as the eye goes.
+    const shelf = smooth(0.3, -0.3, n.toward[0]) * smooth(0.95, 0.7, off) * smooth(70, 45, d);
+    const floor = lerp(n.y, lerp(level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), n.y - 0.15 + 0.12 * noise2(x / 2.1, z / 2.1), shelf), smooth(0.9, 1.06, u));
     // Outside: the apron. It is 25 m wide under the lip and spreads to the lake; beyond its edge it falls away at the angle rubble lies at.
     const ground = Math.max(land(x, z), -3);
     const t = Math.min(1, Math.max(0, down(x, z)));
@@ -302,7 +331,7 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const on = smooth(9, 0, out);
     const base = apronBase(x, z) - 0.8 * out - 0.012 * out * out + 5 * (fbm2(x / 23 + 3, z / 23 + 8) - 0.5) * smooth(0, 10, out);
     // Broad heaps, and blocks big enough for the sheet to hold; the smaller rubble is the shader's.
-    const rubble = (2.6 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 2.2 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + 0.8 * blocks(x, z, 4.6, 1)) * (1 + 0.8 * smooth(0, 12, out));
+    const rubble = (1.4 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 0.7 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + 1.25 * blocks(x, z, 3.7, 1) + 0.6 * blocks(x + 31, z + 17, 1.9, 5)) * (1 + 0.8 * smooth(0, 12, out));
     // In the fan the stream no longer keeps a bed: it lies on the slope as a sheet of crust with channels in it.
     const sheet = smooth(FAN_FROM, FAN_FROM + 12, n.len);
     // The toe of the fan goes into the lake in lobes: nothing of it ends on a straight line.
@@ -321,7 +350,7 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const isle = island(n.len, n.distance * n.side, n.half) * (1 - sheet);
     const stream = top + 0.2 * (1 - Math.min(1, u * u)) * (1 - sheet) + isle * (1.1 + 1.3 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
-    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle, top, on: on * smooth(-1, 2, -d), far };
+    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle, top, on: on * smooth(-1, 2, -d) - shelf * smooth(0.95, 1.1, u) * smooth(1.5, 4, d), far };
   };
 
   const xs: number[] = [];

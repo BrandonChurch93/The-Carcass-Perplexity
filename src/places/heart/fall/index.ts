@@ -6,7 +6,7 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { blackbody } from '../shared/rig';
 import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
 import { TUBE, WINDOW, createCourse } from './path';
-import { apronBase, bed, face, shell } from './shape';
+import { apronSlope, bed, face, shell } from './shape';
 
 export const PARTS: readonly string[] = ['vessel-mouth', 'lava-fall', 'surge'];
 
@@ -19,7 +19,7 @@ const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-25 + Math.sqrt(6
 
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);
-  const course = createCourse(apronBase);
+  const course = createCourse(apronSlope);
   const river = bed(course, land);
   const surgeAt = ctx.events.surge;
 
@@ -60,7 +60,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const hot = (kelvin: number, share: number): THREE.Vector3 => new THREE.Vector3(...blackbody(kelvin)).multiplyScalar(share);
   const mouthLight = { position: new THREE.Vector3(MOUTH.x - 30, TUBE.floor + 4, TUBE.lipZ - 8), radius: 15, radiance: hot(1400, 0.3) };
-  const bodyLight = { position: spot(48, 5), radius: 16, radiance: hot(1400, 0.3) };
+  const bodyLight = { position: spot(52, 6), radius: 18, radiance: hot(1400, 0.6) };
   const footLight = { position: spot(course.length - 30, 5), radius: 22, radiance: hot(1380, 0.3) };
   const surgeLight = { position: spot(0, 4), radius: 9, radiance: new THREE.Vector3() };
   ctx.rig.emitters.push(mouthLight, bodyLight, footLight, surgeLight);
