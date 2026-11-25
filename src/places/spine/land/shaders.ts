@@ -105,7 +105,7 @@ void main() {
   // Broken rock is flat faces that meet in edges: the face of the triangle itself, more than the round of the mesh.
   vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(facet, smoothN) < 0.0) facet = -facet;
-  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.8 : 0.55));
+  vec3 n0 = inside ? smoothN : normalize(mix(smoothN, facet, spire ? 0.8 : 0.15 + 0.4 * clamp(vTop, 0.0, 1.0)));
 
   // The rock, read on the two faces the surface is nearest to. On upright faces its beds are tipped, as the vertebrae lean.
   vec3 w = n0 * n0;
@@ -137,7 +137,7 @@ void main() {
   // Colour: blue-grey rock with beds of tan, paler where the weather has worked it.
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
-  vec3 tone = mix(vec3(0.25, 0.26, 0.29), vec3(0.62, 0.48, 0.34), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
+  vec3 tone = mix(vec3(0.27, 0.22, 0.19), vec3(0.66, 0.53, 0.39), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
   vec3 albedo = tone * (0.55 + 0.45 * rock / ROCK_MEAN);
   // Strata: the beds of the rock, tipped as the vertebrae lean, some dark, some pale, a few metres each.
   float tilt = dot(vWorld, vec3(0.16, 0.95, 0.27));

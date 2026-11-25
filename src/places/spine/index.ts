@@ -26,15 +26,16 @@ function aimed(position: Vec3, h: number, pitch: number, fov: number, reach = 60
   return { position, aim: [position[0] + Math.cos(h * RAD) * c * reach, position[1] + Math.sin(pitch * RAD) * reach, position[2] + Math.sin(h * RAD) * c * reach], fov };
 }
 
-const E_S = first.s - 552;
-const standE = on(E_S, trail(E_S), 3.4);
-const viewE = heading(standE, [first.x, 0, first.z]) + 17;
-const keyEstablishing = aimed(standE, viewE, 5.6, 50);
+const E_S = first.s - 500;
+// The wide is seen from above the crest, so that both flanks fall away under the lens and the first spire stands over everything.
+const standE = on(E_S, trail(E_S), 17);
+const viewE = heading(standE, [first.x, 0, first.z]) + 15;
+const keyEstablishing = aimed(standE, viewE, 4.6, 50);
 const establishingMove: Move = [
-  { at: 0, pose: aimed(on(E_S - 150, trail(E_S - 150), 22), viewE - 5, 1.2, 50) },
-  { at: 0.34, pose: aimed(on(E_S - 62, trail(E_S - 62), 10), viewE - 2, 3.4, 50) },
+  { at: 0, pose: aimed(on(E_S - 150, trail(E_S - 150), 34), viewE - 5, 0.6, 50) },
+  { at: 0.34, pose: aimed(on(E_S - 62, trail(E_S - 62), 24), viewE - 2, 2.6, 50) },
   { at: keyPart(shotById('spine-01')), pose: keyEstablishing },
-  { at: 1, pose: aimed(on(E_S + 44, trail(E_S + 44), 3), viewE + 1.5, 5, 50) },
+  { at: 1, pose: aimed(on(E_S + 44, trail(E_S + 44), 12), viewE + 1.5, 5, 50) },
 ];
 
 const KITE_FOV = 36;

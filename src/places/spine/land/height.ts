@@ -66,7 +66,7 @@ function trodden(s: number, l: number): number {
   let c = 1e4;
   if (d < 0.5) c = Math.max(Math.abs(l - trail(s)), first.s - 790 - s);
   // The apron before the near mouth, between the trail and the rock, is drifted snow and nothing else: the mouth is seen from far up the trail.
-  if (d > -175 && d < 0.5 && l > trail(s) && l < CANAL_L + MOUTH_R + 4) c = 0;
+  if (d > -175 && d < 0.5 && l > trail(s) && l < Math.min(CANAL_L + MOUTH_R + 4, 66 * Math.exp(-(((d + 20) / 85) ** 2)) + 12)) c = 0;
   // Where the lightning came to ground the snow is open: the carcass lies on a bare saddle, with the band beyond it.
   c = Math.min(c, Math.max(0, Math.hypot(s - CARCASS_S - 14, l - 16) - 36));
   if ((d > -60 && d < 2) || (d > EXIT - 2 && d < EXIT + 90)) c = Math.min(c, Math.max(0, Math.abs(l - canalL(Math.max(0, d))) - flare(d) - 6));
@@ -80,13 +80,18 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const x = f.x + f.nx * l;
   const z = f.z + f.nz * l;
   const near = trodden(s, l);
-  const free = smooth(2.5, 30, near);
+  const free = smooth(2.5, l > 0 ? 16 : 30, near);
   const out = Math.abs(l);
   // Ribs and gullies down the flanks, deeper the further down.
-  const ribs = (ridged(x / 210 + 3.1, z / 210) - 0.5) * Math.min(90, 0.2 * out) + (ridged(x / 74, z / 74 + 7.7) - 0.5) * Math.min(26, 0.09 * out);
+  // Aretes and gullies run down the fall line: the flank is not a plane but buttress after buttress, with snow in the gullies between.
+  const ribs =
+    (ridged(x / 210 + 3.1, z / 210) - 0.5) * Math.min(90, 0.2 * out) +
+    (ridged(x / 74, z / 74 + 7.7) - 0.5) * Math.min(26, 0.09 * out) +
+    (ridged(s / 64 + 1.7, l / 330 + 0.3 * vnoise(s / 90, l / 90)) - 0.45) * Math.min(60, 0.5 * Math.max(0, Math.min(near, out) - 8)) +
+    (ridged(s / 23 + 5.1, l / 140) - 0.5) * Math.min(18, 0.2 * Math.max(0, Math.min(near, out) - 5));
   // Outcrops: rock that stands out of the snow in broken slabs, here and there on the crest and over most of the steep flanks.
   const patch = smooth(0.36, 0.54, vnoise(x / 58 + 11.3, z / 58 + 4.1));
-  const steep = 0.9 * smooth(30, 110, out) * smooth(0.22, 0.48, vnoise(x / 150 + 2.2, z / 150 + 8.8));
+  const steep = 0.9 * smooth(16, 70, out) * (0.5 + 0.5 * smooth(0.22, 0.48, vnoise(x / 150 + 2.2, z / 150 + 8.8)));
   // The buttress over the canal is rock, all of it.
   const d = s - MOUTH_S;
   const over = d > 0 && d < EXIT && Math.abs(l - canalL(d)) < flare(d) + 30 ? 0.9 : 0;

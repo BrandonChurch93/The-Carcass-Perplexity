@@ -79,9 +79,11 @@ float stormIn(vec3 p, bool fine) {
   // over the ridge and the lee as a shelf whose underside rises away.
   // Down the ridge it closes in and comes lower, and beyond the last spires it lies across the ridge with the band under it.
   float along = smoothstep(2400.0, 6000.0, p.x);
-  float foot = max(2600.0 - 0.55 * max(p.x - 2400.0, 0.0), -2200.0);
+  // Down the ridge the storm keeps its own line while the ridge bends away from it into the lee: the far spires stand against open sky.
+  float foot = 2600.0 + 0.5 * max(p.x - 2400.0, 0.0);
   float shelf = mix(900.0, 330.0, along);
-  float face = max(foot - max(h - 200.0, 0.0) - 4.0 * max(h - shelf, 0.0), -2200.0);
+  // The shelf ends over the lee: beyond it the sky is open, down to the band.
+  float face = max(foot - max(h - 200.0, 0.0) - 4.0 * max(h - shelf, 0.0), -1300.0 + 0.7 * max(p.x - 2400.0, 0.0));
   // Metres, near enough: where its face lies back the field across it is steep, and is scaled to the distance.
   float d0 = (into - face) * mix(mix(1.0, 0.7, smoothstep(150.0, 350.0, h)), 0.2, smoothstep(shelf - 80.0, shelf + 250.0, h));
   if (d0 < -1800.0) return d0 + 1150.0;
@@ -91,7 +93,7 @@ float stormIn(vec3 p, bool fine) {
   // Billows are domes with creases between them: the lumps of the noise, rounded over.
   float bigR = big.r * (2.0 - big.r);
   float midR = mid.r * (2.0 - mid.r);
-  float lumps = (midR - 0.6) * 520.0;
+  float lumps = (midR - 0.6) * 640.0;
   float d = d0 + (bigR - 0.6) * 1100.0 + (big.g - 0.5) * 600.0 + lumps;
   // It never comes down on the crest itself: the trail and the lenses stand in clear air.
   d = min(d, (into - 160.0) * 2.0 + max(h - 320.0, 0.0) * 1.6);
@@ -100,8 +102,11 @@ float stormIn(vec3 p, bool fine) {
   if (fine) {
     vec4 f = noise(q / 520.0);
     float fineR = f.r * (2.0 - f.r);
-    d += (fineR - 0.6) * 190.0;
-    stormDome = 0.34 * bigR + 0.4 * midR + 0.26 * fineR;
+    // The smallest: the cauliflower on each billow, and the torn edge the wind takes off it.
+    vec4 s = noise(q / 170.0 + vec3(f.ga, 0.0) * 0.15);
+    float smallR = s.r * (2.0 - s.r);
+    d += (fineR - 0.6) * 250.0 + (smallR - 0.6) * 80.0 + (f.b - 0.5) * 90.0;
+    stormDome = 0.26 * bigR + 0.32 * midR + 0.26 * fineR + 0.16 * smallR;
   }
   return d;
 }
@@ -109,7 +114,7 @@ float stormIn(vec3 p, bool fine) {
 // The light the storm's face sends back at a point of it: slate, a little lighter on what stands out of it and looks up, darker in its clefts,
 // where the light inside shows when a strike is in it.
 vec3 stormFace(vec3 p, float t, vec3 rd) {
-  float e = 60.0 + 0.04 * t;
+  float e = 22.0 + 0.012 * t;
   float d0 = stormIn(p, true);
   float dome = stormDome;
   vec3 g = vec3(stormIn(p + vec3(e, 0.0, 0.0), true), stormIn(p + vec3(0.0, e, 0.0), true), stormIn(p + vec3(0.0, 0.0, e), true)) - d0;
@@ -119,14 +124,14 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
   // How far the face here stands out of the body: the field a little way out along the normal.
   float lump = smoothstep(-0.1, 0.9, -stormIn(p + n * 300.0, false) / 300.0);
   // Its billows: light on the round of each dome, dark in the creases between.
-  float shade = smoothstep(0.52, 0.95, dome) * mix(1.0, 0.5, smoothstep(300.0, 2600.0, h)) * (0.35 + 0.65 * lump) * (0.75 + 0.25 * max(n.y, 0.0) + 0.2 * max(dot(n, uWarmDir), 0.0));
+  float shade = smoothstep(0.52, 0.95, dome) * mix(1.0, 0.5, smoothstep(300.0, 2600.0, h)) * (0.35 + 0.65 * lump) * (0.3 + 0.7 * smoothstep(-0.35, 0.6, n.y) + 0.2 * max(dot(n, uWarmDir), 0.0));
   shade = clamp(shade, 0.0, 1.0);
   vec3 c = mix(uSkyStorm * 0.27 + vec3(0.0006, 0.0, 0.0014), mix(uSkyHorizon, uSkyZenith, 0.45) * 0.3, shade);
   // Low down it is lighter: the snow in the air under it.
   vec3 q = p - uWind.xyz * (uTime * 30.0);
   float streak = noise(vec3(q.x / 420.0, q.y / 5200.0 + q.z / 1400.0, q.z / 420.0)).g;
-  float under = smoothstep(900.0, -500.0, h);
-  c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.12 + 0.25 * streak), 0.5 * under);
+  float under = smoothstep(500.0, -500.0, h);
+  c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.14 + 0.12 * streak), 0.4 * under);
   vec3 within = uFlash * 0.3;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
@@ -147,14 +152,17 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
 
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
 // so that the flank goes down into cloud; and in the saddles the storm's cloud, which comes over the crest and falls down the lee into the bank.
+const float CLOUD_UNDER = 300.0;
 float seaTop(vec3 p, bool fine) {
   vec3 q = p - uWind.xyz * (uTime * uWind.w * 0.6);
   float n = 0.65 * noise(vec3(q.xz / 3100.0, 0.21)).r + 0.35 * noise(vec3(q.xz / 760.0, 0.63)).b;
   if (fine) n += 0.14 * (noise(vec3(q.xz / 210.0, 0.43)).r - 0.5);
   vec3 ridge = ridgeAt(p.x);
   float lee = p.z - ridge.x;
-  float bank = smoothstep(3400.0, 500.0, lee) * smoothstep(-900.0, -200.0, lee);
-  float top = mix(SEA - 170.0 + 340.0 * n, ridge.y - 560.0 + 330.0 * n, bank * bank);
+  // The sea lies close under the crest on both hands, level to the horizon, and stands a little higher against the rock:
+  // the ridge is a knife out of cloud, and its flanks go down into it.
+  float bank = smoothstep(900.0, 120.0, abs(lee));
+  float top = ridge.y - CLOUD_UNDER + 300.0 * (n - 0.5) + 70.0 * bank;
   if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
     float m = 0.6 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.4 * noise(vec3(c.xz / 140.0, 0.81)).b;
@@ -193,7 +201,7 @@ void main() {
     }
     // A ray that has not come down to it by then meets it far out, where it is level.
     if (!found && rd.y < -1e-4) {
-      t = max(t, (SEA - ro.y) / rd.y);
+      t = max(t, (ridgeAt(p.x).y - CLOUD_UNDER - ro.y) / rd.y);
       found = true;
     }
     if (found && t < far) seaAt = t;
