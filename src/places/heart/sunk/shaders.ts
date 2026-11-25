@@ -332,7 +332,7 @@ void main() {
   float grey = dot(hide, vec3(0.33));
   float tone = dot(flake, vec3(0.33));
   // A charred bark of hide: near black on the trunks, grey-brown on the hull, where the creases between its cords hold the soot.
-  vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * mix(0.6, 1.5, isBody);
+  vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * mix(0.95, 1.5, isBody);
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
   vec3 scab = vec3(0.22, 0.185, 0.135) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone * (1.0 + 0.25 * isBody);
