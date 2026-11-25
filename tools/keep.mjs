@@ -123,6 +123,9 @@ export async function keep({ root = ROOT, cfg = config(), unit = null, phase = n
       if (!newest) continue;
       any = true;
       copyFile(path.join(from, newest.n), r('deliver', 'film', name));
+      const record = path.join(from, `${newest.n}.json`);
+      if (fs.existsSync(record)) fs.copyFileSync(record, r('deliver', 'film', `${name}.json`));
+      else fs.rmSync(r('deliver', 'film', `${name}.json`), { force: true });
     }
     if (!any) missing.push(`${shown(from)}/*.mp4 with a name from export.files`);
   }

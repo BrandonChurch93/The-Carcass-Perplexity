@@ -5,7 +5,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 ## Status
 
 - Build: in progress
-- Phase: 2 · Engine and blockout, in progress since 2026-11-25 00:15 UTC
+- Phase: 3 · The look lock: the Heart, in progress since 2026-11-25 03:11 UTC
 - Review: not reached
 - Review round: none
 - Review round step: none
@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 19, 2026-11-25 02:57 UTC:
+Status 20, 2026-11-25 03:13 UTC:
 
-- `01-set-a-01.jpg`: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart
-- `02-set-a-02.jpg`: Part 2 of 4: the Heart, the Breath, the start of the Blood Marsh
-- `03-set-a-03.jpg`: Part 3 of 4: the Blood Marsh, the Spine, the Eye
-- `04-set-a-04.jpg`: Part 4 of 4: the rise from the lake to the whole body, then the hold to the end
+- `01-set-a-01.jpg`: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart
+- `02-set-a-02.jpg`: Sheet 2 of 4: the Heart and the Breath
+- `03-set-a-03.jpg`: Sheet 3 of 4: the Marsh, the Spine and the Eye
+- `04-set-a-04.jpg`: Sheet 4 of 4: the rise to the titan and the ending
 
+Status 19, 2026-11-25 02:57 UTC, showed: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart; Part 2 of 4: the Heart, the Breath, the...
 Status 18, 2026-11-25 02:34 UTC, showed: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way; The...
 Status 17, 2026-11-25 02:07 UTC, showed: The rise as the critics saw it: the first two frames are plain navy water.
-Status 16, 2026-11-25 01:34 UTC, showed: The Ribs, the establishing key (frame 1241): the approved picture on the left, the blockout on the right; The Spine, the establishing key...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T02:57:21Z
-phase 2: 2.71 h used of 6.00 h
-build: 6.46 h used of 72.00 h
+2026-11-25T03:13:52Z
+phase 3: 0.08 h used of 13.00 h
+build: 6.73 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 17
 ```
 
 ## Phases
@@ -53,8 +53,8 @@ minutes since the last status: 23
 | --- | --- | --- | --- | --- |
 | 0 · Ground truth | done | 2026-11-24 20:30 UTC | 2026-11-24 22:36 UTC | Gate closed by passing. A push has succeeded: ten pushes, the first `f361749` at 20:33 UTC. G1, G2, G3, G4, G8, G9 and G10: 7 of 7 pass at 22:35 UTC (`out/work/gate/phase-0.json`). The workspace record, the tool record with the sound tools, the voice, the audio map skill (`user:beat-sync`), the terms, the platform's limits, the pinned versions and the render budget table are in this file. Inline display: proven 20:36 UTC and used for every status. Repo: read public at 20:41 UTC and treated as private on Brandon's note 3; a large file reaches Brandon as an attachment in the thread (400 MB measured), and the hosting carried 497 MB. Polling: measured 20:40 UTC, agents answer by message while the Builder works. PSNR between VMs: infinite, the frames are byte equal on three VMs. Clock: 15 ticks; statuses 1 to 7 posted since step 4. Published 22:19 UTC, flows replayed 7 of 7 |
 | 1 · The voice, the map and the animatic | done | 2026-11-24 22:36 UTC | 2026-11-25 00:14 UTC | Gate closed by passing at 00:08 UTC (out/work/gate/phase-1.json): 17 of 18 checks pass, none failed, one sound check open. D1 is met: the animatic is 5931 frames, 197.70 s, 960 x 540 at 30 fps with the mix as its one sound stream, kept as deliver/film/animatic.mp4 and on the review page. cut/MAP.json was made from the audio by npm run audiomap (see Sound). Narration: n8 has a kept take, n1 to n7 are open items. G11 pass (the cut follows the music), G16 pass (the words of the narration in the cut list), G7 and G15 pass on the cut list. A2 to A6 pass. A1 is open: the transcriber hears never land as Neverland in n8, a sound-alike pair listed in its record. Status 11 posted |
-| 2 · Engine and blockout | in progress | 2026-11-25 00:15 UTC |  |  |
-| 3 · The look lock: the Heart | not started | | | |
+| 2 · Engine and blockout | done | 2026-11-25 00:15 UTC | 2026-11-25 03:11 UTC | Gate closed by passing at 03:10 UTC (out/work/gate/phase-2.json): 21 of 22 checks pass, none failed, one sound check open (A1, as in Phase 1). G1 to G12, G15 and G16 pass. R4 blockout reached its limit: round 1 merged 4, round 2 merged 5 against blockoutPass 7 with quality.blockoutMaxRounds 2 (scorecards/round-001, round-002); its open issues are under Open items, each carried to Phase 3 or Phase 4. The judged list is in this file and parts/PARTS.json lists 95 parts, all stand-in. D2 pass: deliver/film/the-carcass-preview.mp4, 5931 frames, 960 x 540 at 30 fps, with the mix, rendered from this build (keep now copies the film's record beside it). D7 pass: out/work/local/proof.json from npm run render:local -- --proof, the film part with the mix and the loop part silent. The film plays in autopilot from the published address: npm run flows, 7 of 7 pass at 03:02 UTC. Render budget measured on the blockout at 03:03 UTC. Statuses 12 to 20 posted |  |
+| 3 · The look lock: the Heart | in progress | 2026-11-25 03:11 UTC | | |
 | 4 · The other places and the rise | not started | | | |
 | 5 · The whole film | not started | | | |
 | 6 · Polish and deliver | not started | | | |
@@ -65,7 +65,7 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 | Unit | Phase | State | Rounds run | Best round | Commit | What ended its loop |
 | --- | --- | --- | --- | --- | --- | --- |
-| `heart` | 3 | not started | 0 | | | |
+| `heart` | 3 | in progress | 0 | | | |
 | `ribs` | 4 | not started | 0 | | | |
 | `breath` | 4 | not started | 0 | | | |
 | `marsh` | 4 | not started | 0 | | | |
@@ -379,23 +379,21 @@ Pinned 2026-11-24 in `package.json` as exact versions, with `package-lock.json` 
 
 Seconds for one sample and for one frame at each format and tier, on this VM and on a sandbox VM, with the scene they were measured on and the date. Then the wall-clock time of each long job as `npm run budget` estimates it. Add a row for every new kind of job when it ends.
 
-Measured 2026-11-24 on the scene "spike: displaced lava ground, fume volume, 6000 embers", frame 300. The jobs are estimated on space-sandbox, the fastest merged machine with 4 or more cores.
+Measured 2026-11-25 on the scene "the blockout of the whole film: every part a stand-in, the Marsh", frame 5930. The jobs are estimated on space-sandbox, this machine, because no other machine was merged.
 
 | Machine | Cores | Format | Seconds for one sample | Seconds for a draft frame | Seconds for a review frame | Seconds for a final frame | Start cost in seconds |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| space-sandbox | 2 | uhd | 32.207 | 35.38 | 67.58 | 132.00 | 5.6 |
-| space-sandbox | 2 | hd | 9.440 | 10.04 | 19.48 | 38.36 | 5.6 |
-| space-sandbox | 2 | preview | 3.077 | 3.26 | 6.34 | 12.49 | 5.6 |
-| space-sandbox | 4 | uhd | 15.433 | 16.68 | 32.11 | 62.98 | 3.7 |
-| space-sandbox | 4 | hd | 4.614 | 5.02 | 9.63 | 18.86 | 3.7 |
-| space-sandbox | 4 | preview | 1.576 | 1.58 | 3.16 | 6.31 | 3.7 |
+| space-sandbox | 2 | uhd | 1.134 | 3.81 | 4.94 | 7.21 | 1.7 |
+| space-sandbox | 2 | hd | 0.344 | 0.96 | 1.30 | 1.99 | 1.7 |
+| space-sandbox | 2 | preview | 0.131 | 0.28 | 0.41 | 0.67 | 1.7 |
 
 | Job | Format | Tier | Frames | Hours on one machine | Hours across 16 agents | Limit in hours | Fits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| preview film | preview | draft | 5850 | 2.67 | 0.19 | 1 | fits |
-| film in hd | hd | final | 11700 | 61.39 | 4.41 | 3 | does not fit |
-| master | uhd | final | 11700 | 204.78 | 14.70 | 8 | does not fit |
-| card loop | uhd | final | 480 | 8.40 | 2.10 | 1 | does not fit |
+| preview film | preview | draft | 5931 | 0.51 | 0.04 | 1 | fits |
+| film in hd | hd | final | 11861 | 6.60 | 0.47 | 3 | fits |
+| master | uhd | final | 11861 | 23.80 | 1.69 | 8 | fits |
+| card loop | uhd | final | 480 | 0.96 | 0.24 | 1 | fits |
+Kept for planning, the Phase 0 measurement on a heavier scene ("spike: displaced lava ground, fume volume, 6000 embers", frame 300, 2026-11-24): on a 4-core sandbox VM uhd 15.433 s a sample and 62.98 s a final frame, hd 4.614 s and 18.86 s, preview 1.576 s and 6.31 s. The blockout is far lighter than a built place, so the table above is a floor and this line is the working estimate until the Heart is measured in Phase 3.
 
 ## Judged frames
 
@@ -714,3 +712,4 @@ none
 - 2026-11-25 02:08 UTC. Status 17 shown at 02:09 UTC: round 1's result, four sheets as the critics saw them, what is being fixed and what is declined
 - 2026-11-25 02:34 UTC. Status 18 shown in the thread at 02:36 UTC: the Eye's last shot, the cut to the rise, the rise and the Spine after the fixes of round 1.
 - 2026-11-25 02:57 UTC. Status 19 shown at 02:58 UTC: the whole film as a blockout in four sheets, round 2's result (5, 6, 7, merged 5, a fail at the limit), what is carried and what is declined.
+- 2026-11-25 03:14 UTC. Status 20 posted at 03:15 UTC: Phase 2 gate passed (21 of 22, A1 open), the whole film plays as a blockout from the published address, Phase 3 began at 03:11 UTC
