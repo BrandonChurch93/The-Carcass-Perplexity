@@ -145,7 +145,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   // The lake and the warm side of the sky light the low air; the high air has the colour of the sky it is seen against.
   float low = exp(-y / 250.0);
   emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights + 0.6 * under)
-       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low + 0.4 * lights);
+       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low);
 }
 
 // One layer of smoke as it stands before this pixel's scene: its light and what it lets through, its distance, and how much of it is in front of the scene.

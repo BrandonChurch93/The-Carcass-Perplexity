@@ -61,12 +61,12 @@ const fromFoot = (right: number, toward: number): [number, number] => [FALL_FOOT
 
 const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
-  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
-  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
-  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
-  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
+  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.45, 8], floor: [0.9, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.45, 8], floor: [0.9, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.45, 8], floor: [0.9, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
+  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.45, 8], floor: [0.9, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
   // What stands behind them in the feeding picture: warm brown smoke over the open lake, thin enough for the buttress to stand in it. Staged for that shot.
-  { at: behind(430, 20), radius: 330, height: 34, lean: [-0.2, 0.08], dense: 0.003, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0, floor: [1.8, 26], tops: 0.6, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, -110), radius: 140, height: 34, lean: [-0.2, 0.08], dense: 0.003, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0, floor: [1.5, 26], tops: 0.6, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.009, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [0.7, 40], tops: 0.25, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   { at: fromFoot(-34, 34), radius: 40, height: 45, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
