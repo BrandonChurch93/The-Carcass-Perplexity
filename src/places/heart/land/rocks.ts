@@ -13,7 +13,8 @@ interface Rock {
 }
 
 interface Kind {
-  planes: number;
+  /** How finely the shape is split: 1 for a rock of a few pixels, 4 for one before a lens. */
+  detail: number;
   part: 'bench' | 'land';
   /** Small or far: drawn from two reads of the rock picture and no relief. */
   simple: boolean;
@@ -21,23 +22,25 @@ interface Kind {
 }
 
 const SHAPES = 5;
+// The fallen blocks of the aprons are the scree's own rock: as pale as it, told from it by their shade and not by their tone.
+const LAND_TONE = 1.9;
 
 export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUniform>, height: Height): { bench: THREE.Object3D[]; land: THREE.Object3D[]; dispose(): void } {
   const rng = ctx.rng('land/rocks');
-  const kind = (planes: number, part: 'bench' | 'land', simple = false): Kind => ({ planes, part, simple, rocks: Array.from({ length: SHAPES }, () => []) });
+  const kind = (detail: number, part: 'bench' | 'land', simple = false): Kind => ({ detail, part, simple, rocks: Array.from({ length: SHAPES }, () => []) });
   const kinds = {
-    pebble: kind(4, 'bench', true),
-    stone: kind(6, 'bench', true),
-    block: kind(8, 'bench'),
-    hero: kind(11, 'bench'),
-    slab: kind(7, 'bench'),
-    boulder: kind(8, 'land', true),
+    pebble: kind(1, 'bench', true),
+    stone: kind(2, 'bench', true),
+    block: kind(3, 'bench'),
+    hero: kind(4, 'bench'),
+    slab: kind(3, 'bench'),
+    boulder: kind(3, 'land', true),
     // The same rocks far from every lens: a few pixels each, so the plain reading.
-    blockFar: kind(6, 'bench', true),
-    heroFar: kind(8, 'bench', true),
-    slabFar: kind(5, 'bench', true),
-    boulderSmall: kind(4, 'land', true),
-    boulderMid: kind(6, 'land', true),
+    blockFar: kind(1, 'bench', true),
+    heroFar: kind(2, 'bench', true),
+    slabFar: kind(2, 'bench', true),
+    boulderSmall: kind(1, 'land', true),
+    boulderMid: kind(2, 'land', true),
   };
   const shades: [number, number, number, number][] = [];
 
@@ -94,7 +97,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       tilt.setFromAxisAngle(axis, rng.range(-0.4, 0.4));
     }
     q.premultiply(tilt);
-    (k.rocks[rng.int(SHAPES)] as Rock[]).push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, base, rng.range(0.7, 1.2)] });
+    (k.rocks[rng.int(SHAPES)] as Rock[]).push({ m: new THREE.Matrix4().compose(at, q, scale), seed: [rng.next(), size, base, rng.range(0.7, 1.2) * (k.part === 'land' ? LAND_TONE : 1)] });
     if (o.shade ?? size > 0.3) shades.push([x, z, half * 1.5, Math.min(0.75, 0.35 + 0.25 * size)]);
     return true;
   };
@@ -410,7 +413,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   Object.values(kinds).forEach((k, ki) => {
     k.rocks.forEach((list, si) => {
       if (!list.length) return;
-      const shape = rockShape(ki * 10 + si + 1, k.planes);
+      const shape = rockShape(ki * 10 + si + 1, k.detail);
       geometries.push(shape);
       // One mesh for each square of ground, so that the rocks no lens can see are never sent to be drawn.
       const cell = k.part === 'bench' ? 40 : 160;
@@ -425,6 +428,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
         const g = new THREE.BufferGeometry();
         g.setAttribute('position', shape.getAttribute('position'));
         g.setAttribute('normal', shape.getAttribute('normal'));
+        g.setIndex(shape.getIndex());
         const seeds = new Float32Array(rocks.length * 4);
         rocks.forEach((r, i) => seeds.set(r.seed, i * 4));
         g.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));

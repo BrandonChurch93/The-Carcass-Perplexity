@@ -60,12 +60,13 @@ export interface Rib {
  * A surface as ribs: each rib is a straight line on the map, and neighbouring ribs are joined by a strip.
  * Along a rib the rows are spread evenly over the length of the surface, not over the map, so a cliff gets as many as a flat.
  */
-export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5]): THREE.BufferGeometry {
+export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height): THREE.BufferGeometry {
   const tail = list[0]?.tail?.length ?? 0;
   const per = rows + tail;
   const position = new Float32Array(list.length * per * 3);
   const slope = new Float32Array(list.length * per * 3);
-  const closed = new Float32Array(list.length * per);
+  // aLand: how much of the sky the ground round the point hides, and how far the wall's flows dip there (the shader finds its flow by it).
+  const closed = new Float32Array(list.length * per * 2);
   let hs = new Float64Array(0);
   let arc = new Float64Array(0);
   list.forEach((rib, ci) => {
@@ -100,7 +101,8 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
       position[i * 3 + 1] = height(x, z);
       position[i * 3 + 2] = z;
       slopeAt(height, x, z, j < rows ? 0.7 : 30, slope, i);
-      if (j < rows) closed[i] = closedAt(height, x, position[i * 3 + 1] as number, z, slope, i, radii);
+      if (j < rows) closed[i * 2] = closedAt(height, x, position[i * 3 + 1] as number, z, slope, i, radii);
+      if (dip) closed[i * 2 + 1] = dip(x, z);
     }
   });
   const index: number[] = [];
@@ -127,7 +129,7 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(position, 3));
   g.setAttribute('aSlope', new THREE.BufferAttribute(slope, 3));
-  g.setAttribute('aClosed', new THREE.BufferAttribute(closed, 1));
+  g.setAttribute('aLand', new THREE.BufferAttribute(closed, 2));
   g.setIndex(index);
   g.computeBoundingSphere();
   return g;
@@ -192,7 +194,7 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
   }
   const position = new Float32Array(places.length * 3);
   const slope = new Float32Array(places.length * 3);
-  const closed = new Float32Array(places.length);
+  const closed = new Float32Array(places.length * 2);
   places.forEach((v, r) => {
     const i = v % (nx + 1);
     const j = Math.floor(v / (nx + 1));
@@ -202,12 +204,12 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
     position[r * 3 + 1] = (ys[v] as number) + lift;
     position[r * 3 + 2] = z;
     slopeAt(height, x, z, e, slope, r);
-    closed[r] = closedAt(height, x, ys[v] as number, z, slope, r, radii);
+    closed[r * 2] = closedAt(height, x, ys[v] as number, z, slope, r, radii);
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(position, 3));
   g.setAttribute('aSlope', new THREE.BufferAttribute(slope, 3));
-  g.setAttribute('aClosed', new THREE.BufferAttribute(closed, 1));
+  g.setAttribute('aLand', new THREE.BufferAttribute(closed, 2));
   g.setIndex(index);
   g.computeBoundingSphere();
   return g;
@@ -215,121 +217,127 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
 
 type P3 = [number, number, number];
 
+/** Value noise in three dimensions, 0 to 1. */
+function lump3(x: number, y: number, z: number): number {
+  const i = Math.floor(x);
+  const j = Math.floor(y);
+  const k = Math.floor(z);
+  const fx = x - i;
+  const fy = y - j;
+  const fz = z - k;
+  const u = fx * fx * (3 - 2 * fx);
+  const v = fy * fy * (3 - 2 * fy);
+  const w = fz * fz * (3 - 2 * fz);
+  const h = (a: number, b: number, c: number): number => {
+    let n = (Math.imul(a, 374761393) + Math.imul(b, 668265263) + Math.imul(c, 1440662683)) | 0;
+    n = Math.imul(n ^ (n >>> 13), 1274126177);
+    return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+  };
+  const x0 = h(i, j, k) + (h(i + 1, j, k) - h(i, j, k)) * u;
+  const x1 = h(i, j + 1, k) + (h(i + 1, j + 1, k) - h(i, j + 1, k)) * u;
+  const x2 = h(i, j, k + 1) + (h(i + 1, j, k + 1) - h(i, j, k + 1)) * u;
+  const x3 = h(i, j + 1, k + 1) + (h(i + 1, j + 1, k + 1) - h(i, j + 1, k + 1)) * u;
+  return x0 + (x1 - x0) * v + (x2 + (x3 - x2) * v - x0 - (x1 - x0) * v) * w;
+}
+
 /**
- * One shape of loose rock, about a metre across: a block broken out of a flow. It is a true solid with flat faces and sharp edges,
- * a box cut by `planes` planes: the first few take whole sides off it, the rest only knock off corners and edges.
- * Every face has its own corners, so the faces are lit flat.
+ * One shape of loose rock, about a metre across: a lump broken out of a flow and worn. It has no flat face and no straight edge:
+ * a body bounded by a few planes whose meetings are rounded off, then swollen and pitted by noise at two sizes. `detail` is how
+ * often the first eight faces are split in four: 1 for a rock of a few pixels, 4 for one that stands before a lens.
  */
-export function rockShape(seed: number, planes: number): THREE.BufferGeometry {
+export function rockShape(seed: number, detail: number): THREE.BufferGeometry {
   let s = seed * 7919 + 13;
   const rnd = (): number => {
     s = (s * 16807) % 2147483647;
     return s / 2147483647;
   };
-  const ex = 0.78 + 0.22 * rnd();
-  const ey = 0.78 + 0.22 * rnd();
-  const ez = 0.78 + 0.22 * rnd();
-  // Faces as loops of corners, counter-clockwise seen from outside.
-  let faces: P3[][] = [
-    [[ex, -ey, -ez], [ex, ey, -ez], [ex, ey, ez], [ex, -ey, ez]],
-    [[-ex, -ey, ez], [-ex, ey, ez], [-ex, ey, -ez], [-ex, -ey, -ez]],
-    [[-ex, ey, -ez], [-ex, ey, ez], [ex, ey, ez], [ex, ey, -ez]],
-    [[-ex, -ey, ez], [-ex, -ey, -ez], [ex, -ey, -ez], [ex, -ey, ez]],
-    [[-ex, -ey, ez], [ex, -ey, ez], [ex, ey, ez], [-ex, ey, ez]],
-    [[ex, -ey, -ez], [-ex, -ey, -ez], [-ex, ey, -ez], [ex, ey, -ez]],
-  ];
-  for (let k = 0; k < planes; k++) {
+  const planes: [number, number, number, number][] = [];
+  const count = 5 + Math.floor(rnd() * 4);
+  for (let k = 0; k < count; k++) {
     const u = rnd() * 2 - 1;
     const a = rnd() * Math.PI * 2;
     const q = Math.sqrt(1 - u * u);
-    const n: P3 = [q * Math.cos(a), u, q * Math.sin(a)];
-    const reach = Math.abs(n[0]) * ex + Math.abs(n[1]) * ey + Math.abs(n[2]) * ez;
-    const c = reach * (k < 4 ? 0.42 + 0.26 * rnd() : 0.68 + 0.24 * rnd());
-    const side = (p: P3): number => p[0] * n[0] + p[1] * n[1] + p[2] * n[2] - c;
-    const cut: P3[] = [];
-    const kept: P3[][] = [];
-    for (const f of faces) {
-      const out: P3[] = [];
-      for (let i = 0; i < f.length; i++) {
-        const p = f[i] as P3;
-        const r = f[(i + 1) % f.length] as P3;
-        const dp = side(p);
-        const dr = side(r);
-        if (dp <= 0) out.push(p);
-        if (dp <= 0 !== dr <= 0) {
-          const t = dp / (dp - dr);
-          const m: P3 = [p[0] + (r[0] - p[0]) * t, p[1] + (r[1] - p[1]) * t, p[2] + (r[2] - p[2]) * t];
-          out.push(m);
-          cut.push(m);
-        }
-      }
-      if (out.length >= 3) kept.push(out);
-    }
-    if (cut.length >= 6) {
-      // The new face: the cut points in order round the plane's normal.
-      const o: P3 = [0, 0, 0];
-      for (const p of cut) {
-        o[0] += p[0] / cut.length;
-        o[1] += p[1] / cut.length;
-        o[2] += p[2] / cut.length;
-      }
-      const h: P3 = Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
-      const e1: P3 = [n[1] * h[2] - n[2] * h[1], n[2] * h[0] - n[0] * h[2], n[0] * h[1] - n[1] * h[0]];
-      const e2: P3 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];
-      const angle = (p: P3): number => Math.atan2((p[0] - o[0]) * e2[0] + (p[1] - o[1]) * e2[1] + (p[2] - o[2]) * e2[2], (p[0] - o[0]) * e1[0] + (p[1] - o[1]) * e1[1] + (p[2] - o[2]) * e1[2]);
-      const ring = cut.map((p) => ({ p, a: angle(p) })).sort((x, y) => x.a - y.a);
-      const loop: P3[] = [];
-      for (const r of ring) {
-        const last = loop[loop.length - 1];
-        if (!last || Math.hypot(r.p[0] - last[0], r.p[1] - last[1], r.p[2] - last[2]) > 1e-5) loop.push(r.p);
-      }
-      const first = loop[0] as P3;
-      const end = loop[loop.length - 1] as P3;
-      if (loop.length > 3 && Math.hypot(first[0] - end[0], first[1] - end[1], first[2] - end[2]) < 1e-5) loop.pop();
-      if (loop.length >= 3) kept.push(loop);
-    }
-    faces = kept;
+    planes.push([q * Math.cos(a), u, q * Math.sin(a), 0.58 + 0.36 * rnd()]);
   }
-  // Sheared, so that no two faces stay square to each other: a broken block, not a cut cube. Flat faces stay flat.
-  const kxy = 0.7 * (rnd() - 0.5);
-  const kzy = 0.7 * (rnd() - 0.5);
-  const kxz = 0.6 * (rnd() - 0.5);
-  faces = faces.map((f) => f.map((p): P3 => [p[0] + kxy * p[1] + kxz * p[2], p[1], p[2] + kzy * p[1]]));
-  const position: number[] = [];
-  const normal: number[] = [];
-  for (const f of faces) {
-    // Newell's sum: the normal of a loop, whatever its number of corners.
-    let nx = 0;
-    let ny = 0;
-    let nz = 0;
-    let cx = 0;
-    let cy = 0;
-    let cz = 0;
-    for (let i = 0; i < f.length; i++) {
-      const p = f[i] as P3;
-      const r = f[(i + 1) % f.length] as P3;
-      nx += (p[1] - r[1]) * (p[2] + r[2]);
-      ny += (p[2] - r[2]) * (p[0] + r[0]);
-      nz += (p[0] - r[0]) * (p[1] + r[1]);
-      cx += p[0] / f.length;
-      cy += p[1] / f.length;
-      cz += p[2] / f.length;
+  const ox = rnd() * 40;
+  const oy = rnd() * 40;
+  const oz = rnd() * 40;
+  const kxy = 0.5 * (rnd() - 0.5);
+  const kzy = 0.5 * (rnd() - 0.5);
+  const kxz = 0.5 * (rnd() - 0.5);
+  const radius = (x: number, y: number, z: number): number => {
+    // The body: the reach of each plane, joined softly so that an edge is a rounded shoulder.
+    let sum = Math.pow(1 / 1.08, 9);
+    for (const p of planes) {
+      const d = x * p[0] + y * p[1] + z * p[2];
+      if (d > 0) sum += Math.pow(d / p[3], 9);
     }
-    const l = Math.hypot(nx, ny, nz);
-    if (l < 1e-9) continue;
-    const flip = nx * cx + ny * cy + nz * cz < 0;
-    const sign = flip ? -1 / l : 1 / l;
-    for (let i = 1; i + 1 < f.length; i++) {
-      const tri = flip ? [f[0], f[i + 1], f[i]] : [f[0], f[i], f[i + 1]];
-      for (const p of tri as P3[]) {
-        position.push(p[0], p[1], p[2]);
-        normal.push(nx * sign, ny * sign, nz * sign);
+    const body = Math.pow(sum, -1 / 9);
+    const swell = 0.34 * (lump3(x * 1.3 + ox, y * 1.3 + oy, z * 1.3 + oz) - 0.5) + 0.2 * (lump3(x * 2.9 + oy, y * 2.9 + oz, z * 2.9 + ox) - 0.5);
+    const pit = detail > 1 ? 0.09 * (lump3(x * 6.7 + oz, y * 6.7 + ox, z * 6.7 + oy) - 0.5) : 0;
+    return body * (1 + swell + pit);
+  };
+  const points: P3[] = [
+    [1, 0, 0],
+    [-1, 0, 0],
+    [0, 1, 0],
+    [0, -1, 0],
+    [0, 0, 1],
+    [0, 0, -1],
+  ];
+  let tris: P3[] = [
+    [0, 2, 4],
+    [4, 2, 1],
+    [1, 2, 5],
+    [5, 2, 0],
+    [0, 4, 3],
+    [4, 1, 3],
+    [1, 5, 3],
+    [5, 0, 3],
+  ];
+  for (let level = 0; level < detail; level++) {
+    const mids = new Map<number, number>();
+    const mid = (a: number, b: number): number => {
+      const key = a < b ? a * 65536 + b : b * 65536 + a;
+      let m = mids.get(key);
+      if (m === undefined) {
+        const p = points[a] as P3;
+        const r = points[b] as P3;
+        const x = p[0] + r[0];
+        const y = p[1] + r[1];
+        const z = p[2] + r[2];
+        const l = Math.hypot(x, y, z);
+        m = points.length;
+        points.push([x / l, y / l, z / l]);
+        mids.set(key, m);
       }
+      return m;
+    };
+    const next: P3[] = [];
+    for (const t of tris) {
+      const ab = mid(t[0], t[1]);
+      const bc = mid(t[1], t[2]);
+      const ca = mid(t[2], t[0]);
+      next.push([t[0], ab, ca], [ab, t[1], bc], [ca, bc, t[2]], [ab, bc, ca]);
     }
+    tris = next;
   }
+  const position = new Float32Array(points.length * 3);
+  points.forEach((p, i) => {
+    const r = radius(p[0], p[1], p[2]);
+    const x = p[0] * r;
+    const y = p[1] * r;
+    const z = p[2] * r;
+    position[i * 3] = x + kxy * y + kxz * z;
+    position[i * 3 + 1] = y;
+    position[i * 3 + 2] = z + kzy * y;
+  });
+  const index: number[] = [];
+  for (const t of tris) index.push(t[0], t[1], t[2]);
   const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
-  g.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3));
+  g.setAttribute('position', new THREE.BufferAttribute(position, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
   g.computeBoundingSphere();
   return g;
 }

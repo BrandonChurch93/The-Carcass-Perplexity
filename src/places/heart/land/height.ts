@@ -108,6 +108,18 @@ function rimScale(x: number, z: number): number {
   return lerp(RIM[i % 36] as number, RIM[(i + 1) % 36] as number, u);
 }
 
+// The fall comes down the wall here: beside its channel the wall keeps the shape the fall folder was built on.
+const CHANNEL_X = MOUTH.x - 3;
+
+// The crest of the cone of debris left of the fall: from the foot of the cliff to the shore, as x, z, x, z.
+const SPUR: [number, number, number, number] = [-238, -452, -116, -324];
+
+/** How far the flows of the wall dip at (x, z), metres: the ledges wander up and down by some metres over tens of metres, so that none is a level line. */
+export function flowDip(x: number, z: number): number {
+  const free = smooth(40, 75, Math.abs(x - CHANNEL_X));
+  return 5 * (noise(x / 310 + 2, z / 310) - 0.5) + free * (13 * (noise(x / 83 + 5.3, z / 83 + 1.1) - 0.5) + 4.5 * (noise(x / 21 + 0.7, z / 21 + 3.9) - 0.5));
+}
+
 /** The caldera wall and the country outside it. */
 export function wallAt(x: number, z: number, d: number): number {
   if (d < -40) return -8;
@@ -116,30 +128,52 @@ export function wallAt(x: number, z: number, d: number): number {
   const g = ridge(x / 52 + 3.1, z / 52 + 7.7);
   const gully = g * g * g * 17 * up;
   const rib = (fbm(x / 23, z / 23, 3) - 0.5) * 12 * up;
-  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 30 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib;
+  // The cliff is broken along its joints into piers some metres wide that stand forward or back of each other. Not at the rim, whose outline is the wide picture's.
+  const free = smooth(40, 75, Math.abs(x - CHANNEL_X));
+  const pier = free * up * smooth(300, 215, d) * (7 * (blocks(x / 8.3 + 0.21 * z, z / 9.1 - 0.19 * x) - 0.5) + 9 * (blocks(x / 27 + 3.3, z / 31 + 1.7) - 0.5));
+  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 30 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib + pier;
   let h = profile(ragged) + 9 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
   // The rim is set by the wide picture: lower in the west, where the wall is near that camera, higher in the east.
   if (h > 50) h = 50 + (h - 50) * rimScale(x, z);
   if (h > 50) {
     // The flows dip a little, so the bands are level but not ruled.
-    const dip = 5 * (noise(x / 310 + 2, z / 310) - 0.5);
+    const dip = flowDip(x, z);
     const face = 0.2 + 0.3 * noise(x / 37 + 11, z / 37 + 5);
     const cut = terrace(h + dip, face) - dip;
-    h = lerp(h, cut, smooth(50, 64, h));
+    // Stretches of the wall are massive: there the flows are welded and barely step.
+    const stepped = lerp(1, 0.4 + 0.6 * smooth(0.3, 0.62, noise(x / 97 + 9.1, z / 97 + 4.3)), free);
+    h = lerp(h, cut, smooth(50, 64, h) * stepped);
   }
   // Fans of talus under the gullies, and the apron's own lumps.
   const apron = smooth(4, 40, d) * smooth(150, 100, d);
   h += apron * (5 * g * g + 2.4 * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
-  // Here and there the rock under the talus stands out of it in ledges.
+  // Left of the fall a cone of debris lies against the wall: its crest runs down from the cliff to the shore, askew to the wall,
+  // and the ground east of the crest falls away toward the channel. From the fall's lens the crest is a diagonal against what lies behind it.
+  {
+    const ex = SPUR[2] - SPUR[0];
+    const ez = SPUR[3] - SPUR[1];
+    const len = Math.hypot(ex, ez);
+    const t = ((x - SPUR[0]) * ex + (z - SPUR[1]) * ez) / (len * len);
+    if (t > -0.15 && t < 1.2) {
+      // East of the crest is positive.
+      const across = ((x - SPUR[0]) * ez - (z - SPUR[1]) * ex) / len + 7 * (noise(t * 7.3, 1.7) - 0.5) + 2.5 * (noise(t * 31, 5.1) - 0.5);
+      const rise = (23 * smooth(-0.1, 0.25, t) * smooth(0.97, 0.42, t) + 3 * smooth(1.2, 0.95, t) * smooth(0.6, 0.9, t)) * (0.8 + 0.4 * noise(t * 5.1 + 3.3, 0.4)) * smooth(-12, -2, d);
+      const flank = across > 0 ? smooth(17, 0, across) : Math.exp(across / 70);
+      h += rise * flank * flank;
+    }
+  }
+  // Here and there the rock under the talus stands out of it: in ledges beside the channel, in knobs and ribs with broken sides elsewhere.
   const crop = apron * smooth(0.5, 0.72, noise(x / 43 + 7, z / 43 + 2)) * smooth(8, 20, h);
   if (crop > 0) {
     const w = 7.5;
-    const q = (h + 2 * noise(x / 31, z / 31 + 9) + 1.6 * blocks(x / 5.3 + 0.3 * z, z / 6.1 - 0.2 * x)) / w;
+    const q = (h + 2 * noise(x / 31, z / 31 + 9) + free * (9 * noise(x / 37 + 2.2, z / 37 + 6.1) + 3 * noise(x / 11 + 8.1, z / 11)) + 1.6 * blocks(x / 5.3 + 0.3 * z, z / 6.1 - 0.2 * x)) / w;
     const f = q - Math.floor(q);
     const face = 0.14 + 0.2 * noise(x / 13 + 3, z / 13);
     const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-    h += crop * (s - f) * w * 0.8;
+    h += crop * (s - f) * w * lerp(0.8, 0.3, free);
   }
+  const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
+  if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
   // The rim and the country outside: broken crags, then long low hills.
   h += smooth(400, 470, d) * (14 * (fbm(x / 70, z / 70, 3) - 0.5) + 70 * smooth(600, 3000, d) * (fbm(x / 900, z / 900, 3) - 0.35));
   return h;
@@ -214,17 +248,22 @@ function lineCrag(x: number, z: number): number {
   const dx = x - CRAG_A[0];
   const dz = z - CRAG_A[1];
   const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
-  if (u < -6 || u > 10.5) return 0;
+  if (u < -11 || u > 10.5) return 0;
   // Behind the foot is positive: away from the lake.
   const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
-  if (v < -1.2 || v > 11) return 0;
-  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is in steps.
+  if (v < -1.2 || v > 27) return 0;
+  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = blocks(u / 1.15 + 3.3, 7.7);
   const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
-  const top = uj < 6.3 ? 7.4 + 0.11 * v + 1.3 * (blocks(u / 2.3 + 9.1, v / 2.9) - 0.5) : uj < 8.1 ? 4.3 + 0.6 * column : uj < 9.5 ? 2.3 + 0.5 * column : 0;
-  const back = smooth(10.5, 6.5, v + 1.5 * noise(u / 3.1, 4.4));
-  const start = smooth(-5.5, -3.6, uj);
+  const broken = 1.5 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
+  const top = uj < 6.3 ? 7.4 + 0.11 * Math.min(v, 6) + broken * smooth(0.3, 2.5, v) : uj < 8.1 ? 4.3 + 0.6 * column : uj < 9.5 ? 2.3 + 0.5 * column : 0;
+  // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
+  // Neither shows from the line view, which sees the face alone; the wide view sees both.
+  const fall = smooth(25, 5.5, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
+  const back = fall * (0.55 + 0.45 * fall);
+  const ramp = smooth(-10.5, -3.4, uj + 1.6 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5));
+  const start = ramp * (0.4 + 0.6 * ramp);
   return top * smooth(0, 0.4, vj) * back * start;
 }
 
@@ -253,17 +292,16 @@ export function benchAt(x: number, z: number, d0: number): number {
   // Tumuli: low swollen domes.
   const t = noise(x / 13 + 40, z / 13 + 9);
   const dome = t > 0.55 ? smooth(0.55, 0.85, t) * 1.1 * smooth(2, 12, routeDistance(x, z)) : 0;
-  // Slabs: the crust broken into plates a few metres across, each tilted its own way, with gaps between.
+  // Pillows: the crust swollen into lobes a few metres across, each with its own height, sagging into the creases between them.
   const sx = x / 4.3 + 1.3 * noise(x / 9, z / 9 + 3);
   const sz = z / 4.3 + 1.3 * noise(x / 9 + 7, z / 9);
   const ci = Math.floor(sx);
   const cj = Math.floor(sz);
-  const fx = sx - ci - 0.5;
-  const fz = sz - cj - 0.5;
-  const tilt = (hash(ci, cj) - 0.5) * fx + (hash(cj + 31, ci + 17) - 0.5) * fz;
-  const gap = Math.min(0.5 - Math.abs(fx), 0.5 - Math.abs(fz));
+  const fx = Math.abs(sx - ci - 0.5) * 2;
+  const fz = Math.abs(sz - cj - 0.5) * 2;
   const broken = smooth(0.35, 0.7, noise(x / 31 + 5, z / 31 + 2));
-  const slab = broken * (0.7 * tilt * smooth(0, 0.08, gap) - 0.25 * smooth(0.06, 0, gap));
+  const pillow = Math.sqrt(Math.max(0, (1 - fx * fx * fx) * (1 - fz * fz * fz)));
+  const slab = broken * ((0.25 + 0.5 * hash(ci, cj)) * pillow - 0.3) + 0.22 * (ridge(x / 2.9 + 3.3, z / 2.9 + 0.7) - 0.5);
   const lumps = 0.5 * (fbm(x / 5.5, z / 5.5, 3) - 0.5);
   // Lobes: each flow of pahoehoe ends in a swollen front a forearm high, and the fronts wander like contour lines.
   const lf = 7 * fbm(x / 17 + 3, z / 17 + 8, 2) + 0.35 * noise(x / 2.3, z / 2.3);
@@ -274,13 +312,15 @@ export function benchAt(x: number, z: number, d0: number): number {
   // bench (z under 200) the stair becomes the crag of the wide picture: faces of eight metres and more, jointed into blocks.
   const reach = routeDistance(x, z);
   const crag = smooth(200, 150, z);
-  const joint = blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x);
+  // The fronts of the flows are swollen noses, not cut steps: a front wanders, bulges and sags, and its top is round.
+  const joint = lerp(noise(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x), blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x), 0.35 + 0.4 * crag);
   const w = lerp(2.6, 9.5, crag);
-  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9)) / w;
+  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9) + 0.5 * noise(x / 1.3 + 4.1, z / 1.3 + 2.2)) / w;
   const f = q - Math.floor(q);
   const face = lerp(0.2, 0.09, crag) + 0.12 * noise(x / 17 + 3, z / 17);
-  const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-  h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * (s - f) * w;
+  const nose = Math.min(1, f / face);
+  const s = f < face ? 0.9 * Math.sqrt(nose * (2 - nose)) : 0.9 + (0.1 * (f - face)) / (1 - face);
+  h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * lerp(0.7, 1, crag) * (s - f) * w;
   // The wide view's lens passes low over the bench: the ground keeps 3.5 m under it.
   const [off, lens] = widePath(x, z);
   if (off < 8 && h > lens - 3.7) h = lerp(lens - 3.7, h, smooth(2.5, 8, off));
