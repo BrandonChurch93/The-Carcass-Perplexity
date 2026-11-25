@@ -121,9 +121,27 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 
 | id | unit | kind | first frame | time code | length s | level dB | fade in s | fade out s | loop | file |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ribs-bed | ribs | bed | 0 | 0:00.00 | 41.78 | -14.9 | 1.5 | 1 | yes | audio/kept/sounds/ribs/ribs-bed.wav |
+| ribs-life | ribs | spot | 1452 | 0:24.12 | 7.17 | -4.4 | 0.3 | 1 | no | audio/kept/sounds/ribs/ribs-life.wav |
+| ribs-event | ribs | spot | 2210 | 0:36.50 | 5 | -6 | 0.2 | 1 | no | audio/kept/sounds/ribs/ribs-event.wav |
 | heart-bed | heart | bed | 2507 | 0:41.47 | 28.57 | -8.5 | 1 | 1 | yes | audio/kept/sounds/heart/heart-bed.wav |
 | heart-life | heart | spot | 2955 | 0:49.15 | 7 | -7 | 0.4 | 1 | no | audio/kept/sounds/heart/heart-life.wav |
 | heart-event | heart | spot | 4008 | 1:06.48 | 3.55 | -5.5 | 0 | 2 | no | audio/kept/sounds/heart/heart-event.wav |
+| breath-bed | breath | bed | 4221 | 1:10.21 | 23.28 | -11.2 | 1 | 1 | yes | audio/kept/sounds/breath/breath-bed.wav |
+| breath-event | breath | spot | 4616 | 1:16.56 | 7 | -6.2 | 0.1 | 2 | no | audio/kept/sounds/breath/breath-event.wav |
+| breath-life | breath | spot | 5099 | 1:24.59 | 5 | -4.5 | 0.2 | 1 | no | audio/kept/sounds/breath/breath-life.wav |
+| marsh-bed | marsh | bed | 5618 | 1:33.38 | 23.28 | -8.9 | 1 | 1 | yes | audio/kept/sounds/marsh/marsh-bed.wav |
+| marsh-event | marsh | spot | 5966 | 1:39.26 | 5.33 | -12.6 | 0.6 | 0.3 | no | audio/kept/sounds/marsh/marsh-event.wav |
+| marsh-life | marsh | spot | 6269 | 1:44.29 | 5.33 | -10.7 | 0.2 | 1.2 | no | audio/kept/sounds/marsh/marsh-life.wav |
+| spine-bed | spine | bed | 7015 | 1:56.55 | 21.5 | -7.7 | 0.3 | 1 | yes | audio/kept/sounds/spine/spine-bed.wav |
+| spine-event-open | spine | spot | 7012 | 1:56.52 | 5 | -11.8 | 0 | 2 | no | audio/kept/sounds/spine/spine-event.wav |
+| spine-event | spine | spot | 7662 | 2:07.42 | 6 | -10.7 | 0 | 2.5 | no | audio/kept/sounds/spine/spine-event.wav |
+| spine-life | spine | spot | 7887 | 2:11.27 | 6.67 | -4.4 | 0.2 | 1 | no | audio/kept/sounds/spine/spine-life.wav |
+| eye-bed | eye | bed | 8305 | 2:18.25 | 15.58 | -8.6 | 1 | 3 | yes | audio/kept/sounds/eye/eye-bed.wav |
+| eye-life | eye | spot | 8848 | 2:27.28 | 5.27 | -3.4 | 0.2 | 1 | no | audio/kept/sounds/eye/eye-life.wav |
+| eye-event | eye | spot | 9029 | 2:30.29 | 6.17 | -16.4 | 0.3 | 1 | no | audio/kept/sounds/eye/eye-event.wav |
+| reveal-bed | reveal | bed | 9541 | 2:39.01 | 15 | -9 | 2 | 5 | yes | audio/kept/sounds/reveal/reveal-bed.wav |
+| reveal-thud | reveal | spot | 11316 | 3:08.36 | 4.08 | -15.8 | 0 | 1 | no | audio/kept/sounds/reveal/reveal-thud.wav |
 
 ## The music as placed
 
