@@ -119,14 +119,15 @@
       "focus": "On the dome at the centre, then on the water straight below."
     },
     "ribs-01": {
-      "start": "2250 m out to sea and 7 m above the water: two outer ribs stand left and right, the cage fills about half the height of the frame between them, and the sea runs under the camera.",
-      "end": "395 m from the first pair of ribs and 3.2 m above the water, just short of the tidal floor, with the cage towering over the frame.",
-      "move": "It is one approach of about 1.9 km and the lens opens from 30 to 46 degrees as the cage nears. The outer ribs pass close on both sides.",
-      "focus": "On the cage."
+      "start": "1500 m out to sea on the axis of the establishing picture and 8.6 m above the water: the near left rib stands as the bank in the left third, the channel between the two rows of blades runs away up the middle, the arch rock sits right of centre, and the sea runs fast under the camera.",
+      "end": "71 m short of the establishing position and 1.9 m above the tidal floor, already over the wet sand, with the weed wall of the near left rib filling the left third and still travelling at 29 m a second into the strait.",
+      "move": "In. One approach of 1330 m along the line of sight of the establishing picture, heading 8 degrees east of north. It starts at 110 m a second and slows smoothly all the way; it crosses the surf line at about 12 seconds and comes down from 8.6 m to head height.",
+      "focus": "On the channel between the rows."
     },
     "ribs-02": {
-      "start": "At head height on the floor of the strait, with the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.",
-      "end": "115 m further along the floor, past the near left rib, with the feeders on the wet sand ahead.",
+      "start": "The same move as ribs-01, one frame later: 70 m short of the establishing position at head height, the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.",
+      "end": "37 m past the establishing position and 14 m to the right of it, past the near left rib, with the feeders on the wet sand ahead, travelling at 10 m a second.",
+      "move": "In. The camera travels 113 m, slowing from 29 to 10 m a second, and passes through the establishing view at the key frame.",
       "focus": "On the far ribs at the key, the establishing view."
     },
     "ribs-03": {

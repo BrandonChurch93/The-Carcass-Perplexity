@@ -10,20 +10,20 @@ Frames 0 to 2506, 41.78 s, 6 shots. The origin is on the floor of the strait bet
 
 - Frames: 0 to 1041, 17.37 s.
 - Key: none of its own. It is cut from the picture `ribs-0`.
-- Lens: from 45 mm to 28 mm (a vertical field of view from 30 to 46 degrees).
-- Move: in. The camera travels 1860 m, from 7.0 m above the ground to 3.2 m. It is one approach of about 1.9 km and the lens opens from 30 to 46 degrees as the cage nears. The outer ribs pass close on both sides.
-- Start framing: 2250 m out to sea and 7 m above the water: two outer ribs stand left and right, the cage fills about half the height of the frame between them, and the sea runs under the camera.
-- End framing: 395 m from the first pair of ribs and 3.2 m above the water, just short of the tidal floor, with the cage towering over the frame.
-- Focus: On the cage. The aim is 1860 m away at the start and 1130 m at the end. Depth of field is off in the blockout.
+- Lens: from 69 mm to 30 mm (a vertical field of view from 20 to 44 degrees).
+- Move: in. The camera travels 1330 m, from 8.6 m above the ground to 3.1 m. In. One approach of 1330 m along the line of sight of the establishing picture, heading 8 degrees east of north. It starts at 110 m a second and slows smoothly all the way; it crosses the surf line at about 12 seconds and comes down from 8.6 m to head height.
+- Start framing: 1500 m out to sea on the axis of the establishing picture and 8.6 m above the water: the near left rib stands as the bank in the left third, the channel between the two rows of blades runs away up the middle, the arch rock sits right of centre, and the sea runs fast under the camera.
+- End framing: 71 m short of the establishing position and 1.9 m above the tidal floor, already over the wet sand, with the weed wall of the near left rib filling the left third and still travelling at 29 m a second into the strait.
+- Focus: On the channel between the rows. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-02` · The Ribs · the strait
 
 - Frames: 1042 to 1439, 6.63 s.
 - Key: `ribs-0` at frame 1241.
-- Lens: 27 mm for the whole shot (a vertical field of view of 48 degrees).
-- Move: in. The camera travels 120 m, from 4.2 m above the ground to 3.2 m.
-- Start framing: At head height on the floor of the strait, with the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.
-- End framing: 115 m further along the floor, past the near left rib, with the feeders on the wet sand ahead.
+- Lens: from 30 mm to 25 mm (a vertical field of view from 44 to 50 degrees).
+- Move: in. The camera travels 110 m, from 3.1 m above the ground to 3.0 m. In. The camera travels 113 m, slowing from 29 to 10 m a second, and passes through the establishing view at the key frame.
+- Start framing: The same move as ribs-01, one frame later: 70 m short of the establishing position at head height, the weed wall of the near left rib on the left and both rows of ribs running away to the horizon.
+- End framing: 37 m past the establishing position and 14 m to the right of it, past the near left rib, with the feeders on the wet sand ahead, travelling at 10 m a second.
 - Focus: On the far ribs at the key, the establishing view. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `ribs-03` · The Ribs · the colony
