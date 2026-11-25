@@ -1,4 +1,7 @@
-2026-11-25 22:35 UTC
-work at 2e7d4e8 on agent/reveal-place
-heartbeat min 77: reveal-4 with the land redrawn from the figure (level a only so far), cloud as torn lines
-look-1.jpg = out/work/hand/hb2-reveal-4.jpg
+2026-11-25 23:00 UTC
+work at 26ee7e7 on agent/reveal-place
+min 98 heartbeat: reveal-4 uhd, then keys 3, 2, 1 against approved; known worst: lake ring flat orange, hard cloud specks from near, cells too regular
+look-1.jpg = out/work/frame4.jpg
+look-2.jpg = out/work/cmp-3.jpg
+look-3.jpg = out/work/cmp-2.jpg
+look-4.jpg = out/work/cmp-1.jpg
