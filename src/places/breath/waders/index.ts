@@ -35,8 +35,8 @@ export function create(ctx: Context): Piece {
 
   const pixel = { value: 0.001 };
   const pictures = {
-    tHide: { value: ctx.assets.texture('waders/hide.jpg') },
-    tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
+    tHide: { value: ctx.assets.texture('mat/skin.jpg') },
+    tHideNh: { value: ctx.assets.texture('mat/skin-nh.png', { kind: 'data' }) },
   };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,

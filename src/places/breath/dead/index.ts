@@ -158,9 +158,9 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
     const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
-    const knuckle = 1.0 * Math.exp(-(((u - 0.5) / 0.04) ** 2)) + 0.7 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
+    const knuckle = 0.75 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.4 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.8 * smooth(0.95, 1, u);
-    const r = 0.043 * k * (1.0 + thigh * 0.6 + knuckle * 0.75 + foot * 1.3) * (1 + 0.08 * Math.sin(u * 40));
+    const r = 0.03 * k * (1.0 + thigh * 1.1 + knuckle + foot * 0.5) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.75 * smooth(0.975, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -300,13 +300,14 @@ export function create(ctx: Context): Piece {
     fragmentShader: FRAGMENT,
     uniforms: {
       ...rig.uniforms,
-      tHide: { value: ctx.assets.texture('waders/hide.jpg') },
-      tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
+      tHide: { value: ctx.assets.texture('mat/skin.jpg') },
+      tHideNh: { value: ctx.assets.texture('mat/skin-nh.png', { kind: 'data' }) },
       uPixel: { value: 0.0005 },
       uSea: { value: -100 },
       uDead: { value: 1 },
       uMirror: { value: 0 },
     },
+    side: THREE.DoubleSide,
   });
   material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
