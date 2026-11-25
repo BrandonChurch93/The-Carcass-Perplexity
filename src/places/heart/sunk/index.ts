@@ -2,7 +2,9 @@
 // and the crust it stopped is folded round it. Everything here is made once and rides the crust; nothing else moves.
 import * as THREE from 'three';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { SUNK, seamLine } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { SUNK, UNIT, seamLine } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
 import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, ragGeometry } from './shape';
@@ -12,7 +14,7 @@ export const PARTS: readonly string[] = ['sunk-walker'];
 /** Kelvin of the hottest of the split, where the skin of a rope tore: 1100 to 1200 K along it. */
 const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
-const TEAR_GAIN = 3.0;
+const TEAR_GAIN = 1.6;
 /** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 120 105 90 on the display. */
 const ASH_ON_HIDE: [number, number, number] = [0.34, 0.28, 0.185];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
@@ -39,6 +41,14 @@ function settling(seconds: number): { down: number; open: number; puff: number }
   const puff = ramp(-0.1, 0.45, t) * Math.exp(-Math.max(0, t - 0.45) / 1.5) * over;
   return { down, open: 0.3 * down + 0.7 * pulse, puff };
 }
+
+/** Staging by shot. The picture of shot heart-04 has the carcass and its folds as a pale ashy mass seen from low down (folds 58 54 55,
+ *  hull 62 54 52), the wide view has them as dark as the crust. In heart-04 the light on them is lifted, as by a card on a set. */
+const NEAR_SHOT = ((): { from: number; to: number } => {
+  const s = shotById('heart-04');
+  return { from: secondsInPlace(UNIT, s.first) - 0.3 / 60, to: secondsInPlace(UNIT, s.last) + 0.7 / 60 };
+})();
+const LIFT = 2.0;
 
 const COS = Math.cos(YAW);
 const SIN = Math.sin(YAW);
@@ -74,6 +84,7 @@ export function create(ctx: HeartContext): HeartPiece {
     uTearColour: { value: new THREE.Vector3(...blackbody(TEAR_KELVIN)) },
     uTear: { value: baked.tear.points.map((p) => new THREE.Vector3(p[0], p[1] + 0.03, p[2])) },
     uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
+    uLift: { value: 1 },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
     // for on half the frame at heart-2.
@@ -110,16 +121,16 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
+  const legShapeA = { points: LEG_A, knee: 0.468, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   // Each is [where it is held, its length, its half width, its turn, its seed].
   const RAGS: [[number, number, number], number, number, number, number][] = [
-    [[2.45, 3.76, 0.55], 1.05, 0.085, 1.9, 1],
-    [[2.52, 3.7, 0.5], 0.55, 0.05, 0.6, 2],
-    [[2.3, 3.82, 0.6], 0.38, 0.06, 2.7, 3],
-    [[-0.55, 3.52, 0.84], 0.8, 0.07, -0.4, 4],
-    [[-0.45, 3.56, 0.8], 0.42, 0.045, 0.9, 5],
+    [[2.2, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
+    [[2.28, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
+    [[2.08, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
+    [[-0.3, 3.1, 0.86], 0.8, 0.07, -0.4, 4],
+    [[-0.2, 3.22, 0.82], 0.42, 0.045, 0.9, 5],
     [[1.0, 3.19, -3.04], 0.9, 0.075, 0.9, 6],
     [[1.12, 3.16, -3.0], 0.5, 0.05, 2.2, 7],
   ];
@@ -221,6 +232,8 @@ export function create(ctx: HeartContext): HeartPiece {
     const [tx, tz] = toWorld(tearMid[0], tearMid[1]);
     heat.at[0] = x + tx;
     heat.at[2] = z + tz;
+    const staged = stagedSeconds();
+    shared.uLift.value = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to ? LIFT : 1;
     const now = settling(seconds);
     for (const body of bodies) body.position.y = -SETTLE_DROP * now.down;
     shared.uTearOpen.value = now.open;
