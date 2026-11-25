@@ -78,6 +78,7 @@ void main() {
   float rough = 0.34;
   float occ = 1.0;
   float bare = part > 2.5 && part < 3.5 ? 1.0 : vSkin.w;
+  float old = part > 3.5 && part < 4.5 ? 1.0 : 0.0;
   if (part < 0.5) {
     // The trunk: ribs standing under the skin, the skin sunk between them.
     float chest = smoothstep(0.3, 0.42, vSkin.y) * (1.0 - smoothstep(0.86, 0.95, vSkin.y));
@@ -99,8 +100,13 @@ void main() {
   float worn = smoothstep(0.35, 0.75, bare + 0.5 * (fine - 0.5));
   albedo = mix(albedo, vec3(0.6, 0.56, 0.47) * (0.8 + 0.3 * fine), worn);
   rough = mix(rough, 0.5, worn);
+  // The older one's bones: brown and green with weed slime, pale only where they are rubbed.
+  if (old > 0.5) {
+    albedo = mix(vec3(0.13, 0.12, 0.08), vec3(0.36, 0.33, 0.26), smoothstep(0.5, 0.8, fbm2(f * 6.0))) * (0.7 + 0.5 * fine);
+    rough = 0.4;
+  }
   if (part > 5.5 && part < 6.5) {
-    albedo = mix(vec3(0.5, 0.42, 0.36), vec3(0.3, 0.26, 0.2), vSkin.y) * (0.8 + 0.4 * fine);
+    albedo = mix(vec3(0.3, 0.25, 0.2), vec3(0.13, 0.11, 0.08), vSkin.y) * (0.8 + 0.4 * fine);
     rough = 0.22;
   }
 #ifdef SHEET
@@ -475,14 +481,14 @@ export function create(ctx: Context): Piece {
   ];
   for (const c of cages) {
     const dir: Point = [Math.sin(c.tilt), Math.cos(c.tilt), 0];
-    tube(skinMesh, (q) => [c.at[0] + dir[0] * c.long * q, c.at[1] + dir[1] * c.long * q, c.at[2] + 0.1 * K], (q) => K * (0.07 + 0.025 * Math.sin(q * c.ribs * Math.PI * 2)), 40, 8, 3);
+    tube(skinMesh, (q) => [c.at[0] + dir[0] * c.long * q, c.at[1] + dir[1] * c.long * q, c.at[2] + 0.1 * K], (q) => K * (0.07 + 0.025 * Math.sin(q * c.ribs * Math.PI * 2)), 40, 8, 4);
     for (let r = 0; r < c.ribs; r++) {
-      const q0 = (r + 0.5) / c.ribs;
+      const q0 = (r + 0.5 + scatter.range(-0.25, 0.25)) / c.ribs;
       const root: Point = [c.at[0] + dir[0] * c.long * q0, c.at[1] + dir[1] * c.long * q0, c.at[2] + 0.1 * K];
       const reach = K * (0.62 - 0.3 * Math.abs(q0 - 0.45)) * scatter.range(0.8, 1.1);
       for (const way of [-1, 1]) {
-        if (scatter.next() < 0.18) continue;
-        const kept = scatter.range(0.55, 1);
+        if (scatter.next() < 0.3) continue;
+        const kept = scatter.range(0.35, 1);
         tube(
           skinMesh,
           (q) => {
@@ -492,7 +498,7 @@ export function create(ctx: Context): Piece {
           (q) => K * (0.04 - 0.018 * q),
           18,
           6,
-          3,
+          4,
         );
       }
     }

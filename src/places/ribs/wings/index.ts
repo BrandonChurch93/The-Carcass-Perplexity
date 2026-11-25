@@ -6,7 +6,7 @@ import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cu
 import { shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { ribByName } from '../layout';
+import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
 import { Spray, rand } from '../sea/spray';
 import { RING_SOURCE, boreArrives } from '../sea/tide';
@@ -417,14 +417,17 @@ export function create(ctx: Context): Piece {
     const low = i < LOW;
     if (i >= FLIERS) {
       // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
-      const colony = scatter.next() < 0.42;
+      const colony = scatter.next() < 0.45;
       const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
-      const radius = colony ? scatter.range(30, 150) : scatter.range(14, 110);
+      // Round the head of the blade itself: the blade's own middle line, near its top.
+      const high = top.height * (1 - 0.3 * scatter.next() ** 2);
+      const head = surface(top, partAtHeight(top, high), 0, 0, 0);
+      const radius = colony ? scatter.range(30, 120) * (0.4 + 0.6 * scatter.next()) : 12 + 90 * scatter.next() ** 2;
       fliers.push({
-        cx: colony ? COLONY.x + scatter.range(-30, 30) : top.x + Math.cos(top.yaw) * top.lean * scatter.range(0.5, 1),
-        cz: colony ? COLONY.z + scatter.range(-30, 30) : top.z + scatter.range(-30, 30),
+        cx: colony ? COLONY.x + scatter.range(-20, 20) : head.x + scatter.range(-12, 12),
+        cz: colony ? COLONY.z + scatter.range(-20, 20) : head.z + scatter.range(-12, 12),
         radius,
-        y: colony ? scatter.range(LEVELS.tide + 20, COLONY.top + 70) : top.height + scatter.range(-70, 40),
+        y: colony ? scatter.range(LEVELS.tide + 20, COLONY.top + 50) : high + scatter.range(-25, 35),
         rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
         phase: scatter.range(0, Math.PI * 2),
         squash: scatter.range(0.55, 1),
@@ -433,13 +436,14 @@ export function create(ctx: Context): Piece {
       });
       continue;
     }
-    const home = low ? { x: COLONY.x, z: COLONY.z, lean: 0, height: 0, yaw: 0 } : rib;
-    const radius = low ? scatter.range(78, 130) : scatter.range(60, 330);
+    const radius = low ? scatter.range(78, 130) : 50 + 190 * scatter.next() ** 2;
+    const up = low ? scatter.range(38, 80) : rib.height * scatter.range(0.3, 1.05);
+    const mid = low ? { x: COLONY.x, z: COLONY.z } : surface(rib, partAtHeight(rib, Math.min(up, rib.height)), 0, 0, 0);
     const f: Flier = {
-      cx: home.x + Math.cos(home.yaw) * home.lean * scatter.range(0, 0.6),
-      cz: home.z + scatter.range(-60, 60),
+      cx: mid.x + (low ? 0 : scatter.range(-30, 30)),
+      cz: mid.z + scatter.range(-40, 40),
       radius,
-      y: low ? scatter.range(38, 80) : scatter.range(70, home.height + 60),
+      y: up,
       rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
       phase: scatter.range(0, Math.PI * 2),
       squash: scatter.range(0.55, 1),

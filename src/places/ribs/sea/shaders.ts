@@ -142,8 +142,27 @@ uniform vec2 uWind;
 uniform vec4 uRings[${rings}];
 uniform int uRingCount;
 uniform float uPoolLevel;
+uniform vec2 uDrain;
+uniform sampler2D tFeet;
+uniform float uFeetReach;
 varying vec3 vWorld;
 varying float vDepth;
+// What stands in the mirror: the blades. The mirrored ray is walked out over the plan of their feet; xyz how much of it a blade fills, and how far off.
+vec2 standing(vec2 p, vec3 r) {
+  vec2 dir = normalize(r.xz + 1e-5);
+  float rise = r.y / max(length(r.xz), 1e-3);
+  float hit = 0.0;
+  float far = 0.0;
+  float t = 14.0;
+  for (int i = 0; i < 8; i++) {
+    float feet = texture2D(tFeet, (p + dir * t - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
+    float h = (1.0 - smoothstep(-4.0, 14.0, feet - 0.06 * t * rise)) * (1.0 - smoothstep(240.0, 380.0, t * rise));
+    far = mix(far, t, step(hit, 0.02) * step(0.02, h));
+    hit = max(hit, h);
+    t *= 1.85;
+  }
+  return vec2(hit, far);
+}
 void main() {
   vec2 p = vWorld.xz;
   vec3 toEye = cameraPosition - vWorld;
@@ -154,7 +173,9 @@ void main() {
   vec4 c2 = texture2D(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3);
   float gust = smoothstep(0.38, 0.72, texture2D(tChop, p / 97.0 - uTime * uWind * 0.11).b);
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
-  float depth = uPoolLevel - (land.r + bedFine(p));
+  // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
+  float over = max(land.r - uPoolLevel, 0.0);
+  float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.045 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
   if (depth < 0.0) discard;
   float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
@@ -175,6 +196,10 @@ void main() {
   float open = land.g * (1.0 - contactDrawn(vWorld));
   float sun = sunAt(vWorld, land);
   vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
+  // The blades stand in it, dark, paler with the air between.
+  vec2 stood = standing(p, r);
+  vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
+  refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 1300.0)), stood.x * 0.9);
   vec3 hv = normalize(v + uSunDir);
   refl += uSunColour * pow(max(dot(n, hv), 0.0), 900.0) * sun * 8.0;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);

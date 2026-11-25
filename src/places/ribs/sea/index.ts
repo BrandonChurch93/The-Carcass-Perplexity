@@ -16,6 +16,9 @@ import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreArrives, bo
 export const PARTS: readonly string[] = ['sea', 'surf', 'runnels', 'bore'];
 
 const FEET_REACH = 40;
+/** How closely a draining film follows the bed above the level of the pools (1 would be the bed itself), and how high over that level one still runs, metres. */
+const DRAIN = 0.8;
+const DRAIN_REACH = 0.7;
 
 /** A disc of rings round the lens, close where the lens is: the vertex shader carries it with the lens and lays the swell on it in the world. */
 function seaDisc(): THREE.BufferGeometry {
@@ -73,8 +76,13 @@ function poolSheet(height: (x: number, z: number) => number, tracks: [number, nu
     const d01 = depthAt(x, z + size);
     const d11 = depthAt(x + size, z + size);
     // The fine relief can dip under the level between corners: keep any cell that comes near it.
-    if (Math.max(d00, d10, d01, d11) < -0.3) return;
-    positions.push(x, LEVELS.pool, z, x, LEVELS.pool, z + size, x + size, LEVELS.pool, z, x + size, LEVELS.pool, z, x, LEVELS.pool, z + size, x + size, LEVELS.pool, z + size);
+    if (Math.max(d00, d10, d01, d11) < -DRAIN_REACH - 0.15) return;
+    // Over the level the water does not stand, it drains: a film that follows the bed down, lying in its fine lows.
+    const y00 = LEVELS.pool + DRAIN * Math.max(-d00, 0);
+    const y10 = LEVELS.pool + DRAIN * Math.max(-d10, 0);
+    const y01 = LEVELS.pool + DRAIN * Math.max(-d01, 0);
+    const y11 = LEVELS.pool + DRAIN * Math.max(-d11, 0);
+    positions.push(x, y00, z, x, y01, z + size, x + size, y10, z, x + size, y10, z, x, y01, z + size, x + size, y11, z + size);
     depths.push(d00, d01, d10, d10, d01, d11);
   };
   for (let z = FLOOR.north; z < FLOOR.south; z += ROOT) {
@@ -179,7 +187,7 @@ export function create(ctx: Context): Piece {
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool } },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
