@@ -15,7 +15,7 @@ const CAST = 520;
 const TINT = new THREE.Vector3(0.78, 0.7, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 1.1;
-const SPARKS = 320;
+const SPARKS = 420;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -113,7 +113,7 @@ void main() {
   float size = max(0.1 + 0.16 * aSeed.z, 1.1 * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, length(along.xy) * 0.011);
+  float reach = max(size, length(along.xy) * 0.018);
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.3 / (reach / size) + 0.4);
@@ -158,8 +158,12 @@ void main() {
   float r = length(vUv);
   float a = mix(exp(-r * r * 4.5), exp(-r * r * 11.0), uSharp) * (1.0 - smoothstep(0.7, 1.0, r));
   vec3 c = uColour * a;
-  // The white-hot spot is solid; the glow in the cloud is added.
-  if (uSharp > 0.5) c = glowOut(c, 0.7);
+  // The white-hot spot is solid, and so is the violet air close round it; the glow in the cloud is added.
+  if (uSharp > 0.5) {
+    float most = max(uColour.r, max(uColour.g, uColour.b));
+    c = uColour * exp(-r * r * 700.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.0026 * exp(-r * 5.5) * (1.0 - smoothstep(0.6, 1.0, r)));
+    c = glowOut(c, 0.7);
+  }
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
@@ -254,7 +258,7 @@ export function create(ctx: Context): Piece {
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(6.5, 6.5) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(44, 44) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
     spot.frustumCulled = false;
     group.add(cloud, spot);
 
@@ -266,7 +270,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(18, 110) * (rng.next() < 0.2 ? 2.2 : 1);
+      const speed = rng.range(28, 170) * (rng.next() < 0.2 ? 2 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
