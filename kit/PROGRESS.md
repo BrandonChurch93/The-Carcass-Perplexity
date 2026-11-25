@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 21, 2026-11-25 03:24 UTC:
+Status 22, 2026-11-25 03:41 UTC:
 
-- `01-materials-sheet.jpg`: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide, burnt skin, boulder, dusk sky). Take 1 of at most 6 each, all kept. Each is made to tile and gets a height and slope picture
-- `02-mat-tiles.jpg`: Four of them tiled two by two with their slope and height pictures below: lake skin, bench lava, wall strata, walker hide
-- `03-frame-11438-preview-review.jpg`: Film frame 11438, preview, review tier
-- `04-frame-11649-preview-review.jpg`: Film frame 11649, preview, review tier
+- `01-heart-0.jpg`: First light of the built Heart beside its approved picture. Built so far: the lake (crust, drifting seams) and the land (rock pictures), both lit by one shared rig. Still stand-ins: sky, fume, mouth and fall, walkers, the sunk one, the crack.
+- `02-key-heart-0-preview-draft.jpg`: The frame that answers heart-0, film frame 2722, preview, draft tier
+- `03-frame-11228-preview-review.jpg`: Film frame 11228, preview, review tier
+- `04-frame-10806-preview-review.jpg`: Film frame 10806, preview, review tier
 
+Status 21, 2026-11-25 03:24 UTC, showed: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide...
 Status 20, 2026-11-25 03:13 UTC, showed: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart; Sheet 2 of 4: the Heart and the Breath; Sheet 3 of 4: the...
 Status 19, 2026-11-25 02:57 UTC, showed: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart; Part 2 of 4: the Heart, the Breath, the...
-Status 18, 2026-11-25 02:34 UTC, showed: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way; The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T03:24:06Z
-phase 3: 0.25 h used of 13.00 h
-build: 6.90 h used of 72.00 h
+2026-11-25T03:41:55Z
+phase 3: 0.54 h used of 13.00 h
+build: 7.20 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 10
+minutes since the last status: 18
 ```
 
 ## Phases
@@ -545,6 +545,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. The Builder tuned two shots of the Eye after merging its builder's fix. Shot eye-01 glided 44 m in 3.6 s over a lake 2 km across and read as a still, which round 1 had named, so it now travels 176 m level toward the lake through the same key. Shot eye-04 ended with the near animal across 40 percent of the frame, so its track now comes to rest 1.2 m past the key. The moves of three shots in cut/PLAN.json follow what the cameras do now: spine-04 in, spine-05 in, eye-04 right.
 - 2026-11-25. Round 2 of the blockout rotates the critics so that no family judges the pack it judged in round 1: pack 1 (the whole film, the rise, the Ribs) goes to the family that scored pack 2 at 10, pack 2 (Heart, Breath, Marsh) to the family that scored pack 3 at 4, and pack 3 (Spine, Eye, reveal) to the family that scored pack 1 at 6. The two strict families then judge the pack that was never judged strictly and the pack with the most changes, and the handoff and the hold are in two packs. All three are new agents.
 - 2026-11-25. 2026-11-25. The Heart's surfaces start from nine generated material pictures (lake skin, bench lava, wall strata, scree, sulphur, hide, burnt skin, boulder, sky), each with an approved Heart picture as the place and a public-domain photograph as the standard. The generated pictures are kept under references/drafts/working/heart-materials/ so the script can make the loaded files again; the loaded files are a colour JPEG and a linear slope-and-height PNG per material. Painting detail by procedure alone reads as computer made at close range.
+- 2026-11-25. Phase 3, 03:17 to 03:50 UTC: the Heart is built on one shared foundation owned by the Builder (src/places/heart/shared: the light rig with one sky, a map of the lake's glow that lights everything, a baked land with sky openness and shore distance, a contact shade map, the crust's drift, one blackbody function for everything that glows; anchors of the staging; the blockout's stand-ins, each made only while no folder owns its name). Six folders (land, lake, fall, air, walkers, sunk) each export PARTS and create(ctx) and are built by six agents in parallel, each inside its own folder. Reason: every surface must sit in the same light or the place reads as pieces, and six owners on one file would collide.
+- 2026-11-25. Phase 3: the Builder wrote first-light versions of land and lake itself (rough shape with rock pictures; one sheet with the crust's skin, a drifting net of seams, the seams the pictures show, and the same heat drawn into the glow map) as the worked example for the owners and as the proof that the rig runs in the software renderer. The wall is cut back into an alcove at the mouth for the fall's owner to roof. The lava is an effect part drawn by the crust's sheet.
+- 2026-11-25. Phase 3: checks G13 and G14 have no runner in tools/checks. An agent writes it from kit/05-ARCHITECTURE.md section 3 while the place is built. Sound effects cannot be made (the account has no characters until 2026-12-23): the bed of sound recipe of the look lock is written from the music and the one kept clip, and says so.
 
 ## Notes from Brandon
 
@@ -715,3 +718,4 @@ none
 - 2026-11-25 02:57 UTC. Status 19 shown at 02:58 UTC: the whole film as a blockout in four sheets, round 2's result (5, 6, 7, merged 5, a fail at the limit), what is carried and what is declined.
 - 2026-11-25 03:14 UTC. Status 20 posted at 03:15 UTC: Phase 2 gate passed (21 of 22, A1 open), the whole film plays as a blockout from the published address, Phase 3 began at 03:11 UTC
 - 2026-11-25 03:24 UTC. Status 21 posted 03:25 UTC: the nine material pictures of the Heart, generated (take 1 of 6 each), made to tile, with recipes in assets-src/heart/RECIPE.md. G8 and G9 pass.
+- 2026-11-25 03:42 UTC. Status 22 posted 03:42 UTC: the first lit frame of the built Heart (lake and land on the shared rig) beside its picture

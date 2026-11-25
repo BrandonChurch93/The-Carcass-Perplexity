@@ -1,8 +1,8 @@
-# Status 21
+# Status 22
 
-2026-11-25 03:24 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 03:41 UTC. Phase 3, the look lock: the Heart.
 
-- `01-materials-sheet.jpg`: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide, burnt skin, boulder, dusk sky). Take 1 of at most 6 each, all kept. Each is made to tile and gets a height and slope picture
-- `02-mat-tiles.jpg`: Four of them tiled two by two with their slope and height pictures below: lake skin, bench lava, wall strata, walker hide
-- `03-frame-11438-preview-review.jpg`: Film frame 11438, preview, review tier
-- `04-frame-11649-preview-review.jpg`: Film frame 11649, preview, review tier
+- `01-heart-0.jpg`: First light of the built Heart beside its approved picture. Built so far: the lake (crust, drifting seams) and the land (rock pictures), both lit by one shared rig. Still stand-ins: sky, fume, mouth and fall, walkers, the sunk one, the crack.
+- `02-key-heart-0-preview-draft.jpg`: The frame that answers heart-0, film frame 2722, preview, draft tier
+- `03-frame-11228-preview-review.jpg`: Film frame 11228, preview, review tier
+- `04-frame-10806-preview-review.jpg`: Film frame 10806, preview, review tier
