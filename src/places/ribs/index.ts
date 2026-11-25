@@ -7,7 +7,7 @@ import { neutralLook } from '../../core/stage';
 import { stream } from '../../core/rng';
 import { eventSeconds } from '../../film/cut';
 import { shots, STATIONS } from './cameras';
-import { BUTTRESS, POOL, RIBS, TIDE, bladeGeometry, buttressRadius, groundAt, landAt, ribByName, skirtGeometry, weedPoint } from './layout';
+import { BUTTRESS, FLOOR, POOL, RIBS, TIDE, bladeGeometry, buttressRadius, groundAt, landAt, ribByName, skirtGeometry, weedPoint } from './layout';
 
 const BORE_SPEED = 55;
 const BORE_HEIGHT = 28;
@@ -40,6 +40,41 @@ function ribbon(y: number, keep: (lo: number, hi: number) => boolean): THREE.Buf
       positions.push(xa, y, za, xa, y, zb, xb, y, za, xb, y, za, xa, y, zb, xb, y, zb);
     }
   }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.computeBoundingSphere();
+  return g;
+}
+
+const STREAKS: [number, number][] = [[-66, 6], [-44, 8], [-23, 10], [0, 12]];
+const STREAK_STEP = 16;
+
+function shoreStreaks(y: number): THREE.BufferGeometry {
+  const positions: number[] = [];
+  STREAKS.forEach(([inset, width], n) => {
+    const w = FLOOR.west + inset;
+    const e = FLOOR.east - inset;
+    const s = FLOOR.south - inset;
+    const north = FLOOR.north + inset;
+    const sides: [number, number, number, number][] = [[w, s, e, s], [e, s, e, north], [e, north, w, north], [w, north, w, s]];
+    for (const [ax, az, bx, bz] of sides) {
+      const length = Math.hypot(bx - ax, bz - az);
+      const dx = (bx - ax) / length;
+      const dz = (bz - az) / length;
+      const steps = Math.ceil(length / STREAK_STEP);
+      let last: [number, number, number, number] | null = null;
+      for (let i = 0; i <= steps; i++) {
+        const d = (i / steps) * length;
+        const sway = 5 * Math.sin(d * 0.013 + n * 2.1) + 2.5 * Math.sin(d * 0.041 + n * 0.7);
+        const half = 0.5 * width * (0.7 + 0.3 * Math.sin(d * 0.023 + n * 1.3));
+        const x = ax + dx * d;
+        const z = az + dz * d;
+        const here: [number, number, number, number] = [x + dz * (sway - half), z - dx * (sway - half), x + dz * (sway + half), z - dx * (sway + half)];
+        if (last) positions.push(last[0], y, last[1], here[0], y, here[1], last[2], y, last[3], last[2], y, last[3], here[0], y, here[1], here[2], y, here[3]);
+        last = here;
+      }
+    }
+  });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
   g.computeBoundingSphere();
@@ -120,7 +155,7 @@ function create(): Place {
   const pools = new THREE.Mesh(ribbon(POOL, (lo) => lo > 0.2), kit.flow(0xa9b6bf, 0x565b5c, { scale: 6, speed: 0.6, direction: [0.3, 1] }));
   scene.add(parts.standIn('runnels', pools));
 
-  const surf = new THREE.Mesh(ribbon(0.45, (lo, hi) => hi > -7 && lo < 0.45), kit.flow(0xe9edeb, 0x9db0ad, { scale: 15, speed: 8, direction: [0.2, -1] }));
+  const surf = new THREE.Mesh(shoreStreaks(0.45), kit.flow(0xe9edeb, 0x9db0ad, { scale: 15, speed: 8, direction: [0.2, -1], side: THREE.DoubleSide }));
   scene.add(parts.standIn('surf', surf));
 
   const rock = kit.flat(0xc4c0b3, { band: 0xa89c86, step: 26, amount: 0.5, side: THREE.DoubleSide });
