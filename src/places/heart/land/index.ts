@@ -6,7 +6,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE_BOX, FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
+import { BUTTE, FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -201,7 +201,14 @@ export function create(ctx: HeartContext): HeartPiece {
   for (const r of rocks.land) r.renderOrder = -2;
   buttress.renderOrder = -1;
   // Staging by shot: the butte behind the group stands in shot heart-02 alone.
-  const butte = mesh(sheet(BUTTE_BOX.x0, BUTTE_BOX.z0, BUTTE_BOX.x1, BUTTE_BOX.z1, 0.75, stagedButteHeight, (_x, _z, y) => y > -0.3), butteMaterial);
+  // Ribs along that lens's axis, a stride apart: every face it sees is crossed by them and gets rows all the way up.
+  const butteRibs: Rib[] = [];
+  for (let b = BUTTE.left; b <= BUTTE.right; b += 0.6) {
+    butteRibs.push({ x: BUTTE.from[0] + BUTTE.ahead[0] * BUTTE.near - BUTTE.ahead[1] * b, z: BUTTE.from[1] + BUTTE.ahead[1] * BUTTE.near + BUTTE.ahead[0] * b, dx: BUTTE.ahead[0], dz: BUTTE.ahead[1], length: BUTTE.far - BUTTE.near, on: true });
+  }
+  const butteAll = ribs(stagedButteHeight, butteRibs, 170, 0.4, 0.25, [1.6, 5, 16]);
+  trim(butteAll, -0.25);
+  const butte = mesh(butteAll, butteMaterial);
   butte.renderOrder = -1;
   butte.visible = false;
   const butteShot = shotById('heart-02');
@@ -237,10 +244,9 @@ export function create(ctx: HeartContext): HeartPiece {
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
         radius: c.depth > 1 ? 0.4 : 0.22,
-        // The vent at the foot of the line view's crag is silent for now: vapour that crosses the crag is cut in hard-edged pieces,
-        // along its outline or level across its face. When the vapour pass no longer cuts, give it 0.3 again.
-        strength: (c.depth > 1 ? 0.45 : 0) * strong,
-        rise: (c.depth > 1 ? 6 : 2.2) * (0.7 + 0.3 * strong),
+        // The vent at the foot of the line view's crag: dense pale steam against the crag, as in the line's picture.
+        strength: (c.depth > 1 ? 0.45 : 0.3) * strong,
+        rise: (c.depth > 1 ? 6 : 4) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: c.depth > 1 ? [-0.42, 0.2] : [0.35, 0.02],
       });

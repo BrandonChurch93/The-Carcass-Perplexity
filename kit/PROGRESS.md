@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 45, 2026-11-25 11:42 UTC:
+Status 46, 2026-11-25 12:07 UTC:
 
-- `01-m1132-pair-3.jpg`: Feeding at a seam, 11:32 UTC (approved picture left, our frame right). New: a butte staged behind the group for this shot; the floor in broken plates with small loose pieces. Still wrong: the butte's top is toothed and black, the smoke is one flat peach bank with a level edge, the floor is 1.6 times too dark and too red, the hero's neck has a hump (the fix for the neck and legs was merged at 11:41 and is in the next chain).
-- `02-m1132-pair-4.jpg`: The vessel mouth and its fall. New: the tan puffs by the fan thinned, the fan's seams lit only in patches. Still wrong: the mouth is an even orange band round a flat dark shape, the fan still shows closed cells, the stream is one bright body. A third owner of the fall started at 11:36 on exactly these three.
-- `03-m1132-pair-0.jpg`: Establishing. New: a high veil of old smoke over the sky (grey mauve, was slate blue). Still wrong: the far lake is a bright net where the picture is dark and calm, the butte is a low headland, a pale sheen lies at the lower right.
-- `04-m1132-pair-1.jpg`: The lava surface at the line. New: darker plates with fewer rings, the fine crag at the left edge. Still wrong: the trench wall is striped red, the plates read as marbled sheets, no steam stands at the crag.
+- `01-m1200-pair-3.jpg`: Feeding at the seam, shot heart-02 (approved picture left, ours right, draft tier, main 45d0b7f). Better: the far butte has a flat top and a shoulder that falls to the right, the roots stand in the pool like a stool. Still wrong: the floor reads as pale tiles, the hero's body is small and its legs thin.
+- `02-m1200-pair-4.jpg`: The vessel mouth and its fall (picture left, ours right). Better: the arch is ribbed, lit on its west inner wall, dark on its east half, and the banks are lit once. Still wrong: the stream is one fat ribbon, the fan is a net of closed cells, the wall is plain, no lit smoke over the fan.
+- `03-m1200-pair-1.jpg`: The surface at the line (picture left, ours right). Better: the far trench wall is dark, steam stands at the foot of the crag, the top right of the sky sits with the picture's. Still wrong: the near bank is a plain sheet without overhanging plates, the crag is a thin spire.
+- `04-m1200-pair-2.jpg`: The one that sank (picture left, ours right). Better: roped crust runs to the lens, the ring of black slabs is gone. Still wrong: the crust is flat grey where the picture's is deep furrows, the hull is pale stripes.
 
+Status 45, 2026-11-25 11:42 UTC, showed: Feeding at a seam, 11:32 UTC (approved picture left, our frame right).
 Status 44, 2026-11-25 11:18 UTC, showed: The line on main at 11:08 UTC (609da03). Left the approved picture, right the frame. The left crag is lowered and no longer red.
 Status 43, 2026-11-25 10:53 UTC, showed: The mouth and its fall on main (ef6598c): the fall is now a narrow stream in legs. Left the approved picture, right the frame.
-Status 42, 2026-11-25 10:29 UTC, showed: The establishing view, approved picture left, our frame right, on main 9e63135: darker walls, one grey smoke column, the black cavern; The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T11:42:08Z
-phase 3: 8.55 h used of 13.00 h
-build: 15.20 h used of 72.00 h
+2026-11-25T12:07:45Z
+phase 3: 8.98 h used of 13.00 h
+build: 15.63 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 24
+minutes since the last status: 26
 ```
 
 ## Phases
@@ -610,6 +610,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 11:10 UTC · Six of the Heart's second owners (land, air, fall, light, walkers, the one that sank) reach the limit of four hours for a build agent at 11:40 UTC, with two rounds of critics still to come. Each writes a hand-over note with its last hand-back, and a fresh owner takes each folder from 11:40 to 13:25 UTC on a new branch, so that the work on the picture does not stop before the last round. The limit of 16 running agents is kept: a successor starts when its predecessor has ended.
 - 2026-11-25. Heart look lock: the butte staged behind the group for shot heart-02 (land, efb443a) is kept. It is staging by shot, like the walkers' groups, and stands in no other shot. Its toothed top, black tone and striped face go to the land's third owner.
 - 2026-11-25. Heart look lock: the sunk one's late commit bec58f0 (the event at frame 3740 made larger) is not merged by the root; the folder's third owner takes it into its own branch, so each folder keeps one owner and main takes no conflict.
+- 2026-11-25. Phase 3, 12:00 UTC: a fault found by the sunk one's third owner and fixed: the settling event of shot heart-04 was timed in the seconds of the shot (2.68 s) where the place reads the seconds of the place, so it fired near film frame 2668 in the wide shot and never in heart-04. It now sits at the place's own second for film frame 3740 (20.55 s), outside the loop of the place. Why: the kit asks for the event in heart-04; no version of it had been seen.
 
 ## Notes from Brandon
 
@@ -908,3 +909,6 @@ none
 - 2026-11-25 11:36 UTC. 11:22 to 11:36 UTC: third and last owners started for the walkers, the light, the sunk one, the land, the air and the fall (six), each with its predecessor's hand-over word for word and the root's order of work written from main beside the pictures at full size. They end at 13:25, when round 7 takes main.
 - 2026-11-25 11:36 UTC. MEASURED 11:35 UTC, heart-3 near floor (x 35 to 100, y 80 to 100 per cent, hd draft, main 8a63183), p10 / p50 / p90: ours 24 11 7 / 38 24 20 / 54 39 36, the approved picture 43 33 28 / 64 48 43 / 154 83 65. The floor is 1.6 times too dark, crushed and too red. Sent to the crust skin's, the light's and the rocks' owners with the crop.
 - 2026-11-25 11:42 UTC. Status 45 shown at 11:42 UTC (four pairs from main 8a63183, which passed determinism at 11:41; characters 1 of 131,000). Merged at 11:41 after viewing: the crust form's B2, the rocks' clusters and block shape, the walkers' C5 (legs, foot, taut neck), the lava's C2 (fountain lights at a tenth). Main 9b84e4a, chain U running. The fall's third owner started at 11:36.
+- 2026-11-25 12:01 UTC. 11:51 UTC: merged to main 0e74947, each seen beside the approved picture, trailer checks clean: the light C1 and C2 (9f8ce02: a strip light along the fall's course, the bank at heart-3), the sunk one C1 (43e34e9), the crust skin B (74876da: dark trench wall at heart-1, bare skin between the sheaves, the feeding floor lifted), the rocks (e47ca45), the air C1 (93472bc: the smoke of shot heart-02), the lava C3 (08b27c6: matte rafts). Chain U on 9b84e4a passed determinism at 11:50; chain V on 0e74947 passed at 12:00 (1241, 11386, loop 288).
+- 2026-11-25 12:01 UTC. 12:00 UTC: merged to main 45d0b7f, each seen beside the approved picture, trailer checks clean, tsc clean: the fall's third owner C1 and C2 (7792f05: the mouth as ribs with a dark east half and heaps on the lip, its own strip light out so the banks are lit once by the rig), the crust form C1 (f8803c0: the comb on the far wall top at heart-1 lowered, five plates in six level at heart-3, the ring of black slabs round the sunk one out, joints that die out), the air 2 (a6185a5: the top right of the sky at heart-0 and heart-1 within 8 of the picture), the walkers C6 (45471a5: nine stout roots that fork twice in place of the broom; cost 0.43 s a sample at heart-3, inside its share), the land's third owner 1 (19e2fd9: the staged butte with a flat top and a notched shoulder, steam at the crag foot of heart-1, level beds on the wall of heart-4), the sunk one C2 (4c3c451), the light C3 (ea928b2: the west slope at heart-4 from 79 to 73, the picture 61), the crust skin C1 (afa1164: the floor of shot heart-02 as hairline joints, median 65 54 50 against the picture's 64 48 43). Chain W runs on it. Twenty-four hand-backs merged since status 44.
+- 2026-11-25 12:08 UTC. 12:08 UTC: status 46 shown in the thread: four pairs of main 45d0b7f beside the approved pictures (heart-3, heart-4, heart-1, heart-2), with what is better and what is still wrong under each; twenty-four hand-backs merged since status 44; the fault of the sunk one's event; round 6 ordered on main at 12:10; one sample at heart-3 measured at 32.96 s (uhd draft); ElevenLabs characters 1 of 131,000 at 12:07, so no narration clips or sound effects yet.
