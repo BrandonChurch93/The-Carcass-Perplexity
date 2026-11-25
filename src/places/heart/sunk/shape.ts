@@ -677,7 +677,8 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     h += frontOf(run - 1.5 - 2.2 * (noise2(x * 0.5 + 15, z * 0.5 + 3) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.1 + 27, z * 1.1 + 44) - 1), 0.08);
     h += frontOf(run - 3.6 - 3.0 * (noise2(x * 0.42 + 52, z * 0.42 + 19) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.3 + 7, z * 1.3 + 33) - 1), 0.07);
     h = mix(UNDER, h, smooth(-0.04, 0, run));
-    return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
+    // The outer metres of the sheet are the lake's own skin in tone and grain: from above no edge of a pad shows on the plain.
+    return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet * smooth(0.2, 3.6, run), tone };
   };
 }
 

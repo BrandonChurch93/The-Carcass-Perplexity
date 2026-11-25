@@ -82,10 +82,16 @@ varying vec4 vSlow;
 // The light of the round lights, which are far off: worked out at each corner of the sheet, on the slope of the relief there, and
 // not at each pixel. It was a third of what the sheet cost. The fibres are too fine for it and take the sky and the lake only.
 varying vec3 vEmit;
+// The slab that breaks off beside the split: 1 on it, 0 off it, so the face of the break lies where this is between the two;
+// how far the point is from the line of the break; the slope the slab takes as it tilts in.
+varying vec3 vBreak;
 uniform vec2 uTurn;
 uniform vec2 uOrigin;
 uniform sampler2D tRelief;
 uniform vec4 uField;
+// The line of the break in the local frame (from x, z to x, z), and how far the slab has gone down, 0 to 1.
+uniform vec4 uBranch;
+uniform float uSlab;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -93,7 +99,18 @@ void main() {
   vec2 l = position.xz;
   vec2 q = uOrigin + vec2(l.x * uTurn.x - l.y * uTurn.y, l.x * uTurn.y + l.y * uTurn.x);
   vSlow = vec4(0.65 * vnoise(q / 110.0 + 4.0) + 0.35 * vnoise(q / 37.0 + 9.0), vnoise(q / 3.1 + 13.0), vnoise(l * 0.4 + 2.0), vnoise(l * 0.31));
-  vec4 w = modelMatrix * vec4(position, 1.0);
+  vec2 ba = uBranch.zw - uBranch.xy;
+  float bl = length(ba);
+  vec2 pa = l - uBranch.xy;
+  float tb = dot(pa, ba) / (bl * bl);
+  // A ragged line, and the slab is the side of it toward the bench: it goes down along the break and hangs by its near edge.
+  float sd = (ba.x * pa.y - ba.y * pa.x) / bl + 0.14 * (vnoise(l * 2.3 + 17.0) - 0.5) + 0.05 * (vnoise(l * 7.0 + 3.0) - 0.5);
+  float span = smoothstep(0.0, 0.1, tb) * smoothstep(1.0, 0.88, tb);
+  float side = step(0.0, sd) * step(0.02, tb) * step(tb, 0.98);
+  float hang = smoothstep(1.15, 0.0, sd);
+  float fall = 0.2 * uSlab * span;
+  vBreak = vec3(side, sd, side * fall * step(sd, 1.15) / 1.15);
+  vec4 w = modelMatrix * vec4(position.x, position.y - fall * side * hang, position.z, 1.0);
   vWorld = w.xyz;
   #ifdef RIM
   vec3 n = vec3(0.0, 1.0, 0.0);
@@ -111,6 +128,11 @@ varying vec3 vWorld;
 varying vec3 vLocal;
 varying vec4 vSlow;
 varying vec3 vEmit;
+varying vec3 vBreak;
+uniform vec4 uBranch;
+uniform float uSlab;
+// 1 as the break opens, falling to 0 as its face cools to a dull red.
+uniform float uFlare;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${COMMON}
@@ -153,6 +175,9 @@ void main() {
   vec4 mk = texture2D(tMask, fieldUv(l));
   vec4 ln = texture2D(tLines, fieldUv(l));
   vec2 grad = (rl.rg - 0.5) * 2.0 * uField.w;
+  // The slab that broke off leans down toward the break.
+  vec2 across = vec2(-(uBranch.w - uBranch.y), uBranch.z - uBranch.x);
+  grad += normalize(across) * vBreak.z;
   float far = length(cameraPosition - vWorld);
   float close = smoothstep(70.0, 18.0, far);
   float folded = rl.a;
@@ -276,6 +301,10 @@ void main() {
   float kelvin = mix(980.0, uTearKelvin - 50.0 + 60.0 * small + breath + 50.0 * uTearOpen, hot);
   c *= 1.0 - 0.9 * smoothstep(0.05, 0.4, heat);
   c += blackbody(kelvin) * smoothstep(0.04, 0.3, heat);
+  // The face of the break: a thin dark skin at its top, the hot inside of the crust below it, cooling to a dull red.
+  float face = smoothstep(0.1, 0.32, vBreak.x) * (1.0 - smoothstep(0.8, 0.98, vBreak.x)) * step(abs(vBreak.y), 0.09) * smoothstep(0.03, 0.3, uSlab);
+  float faceKelvin = mix(1015.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath;
+  c = mix(c, blackbody(faceKelvin), face * (0.75 + 0.25 * uFlare));
   #endif
 
   gl_FragColor = vec4(rigOut(c), alpha);
