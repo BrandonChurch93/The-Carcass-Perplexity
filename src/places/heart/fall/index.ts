@@ -108,7 +108,7 @@ export function create(ctx: HeartContext): HeartPiece {
       delay: 0.02 + 1.6 * Math.pow(rng.next(), 2.5) + (rng.next() < 0.3 ? rng.range(0.4, 1.5) : 0),
       at: new THREE.Vector3(p.x - p.dz * side * p.half, river.height(p.x, p.z) + 1, p.z + p.dx * side * p.half),
       velocity: new THREE.Vector3(p.dx * out + rng.range(-3, 3), rng.range(1, 5) + 6 * Math.pow(rng.next(), 2), p.dz * out + rng.range(-3, 3)),
-      size: 0.1 + 0.5 * Math.pow(rng.next(), 2.5),
+      size: 0.2 + 0.4 * Math.pow(rng.next(), 2.5),
     };
   });
   const spatter = Array.from({ length: SPATTER }, (_, i) => {
@@ -120,7 +120,7 @@ export function create(ctx: HeartContext): HeartPiece {
       phase: rng.range(0, CYCLE),
       at: new THREE.Vector3(p.x - p.dz * side * p.half, river.height(p.x, p.z) + 0.3, p.z + p.dx * side * p.half),
       velocity: new THREE.Vector3(p.dx * out + rng.range(-1.2, 1.2), rng.range(1, 4.5), p.dz * out + rng.range(-1.2, 1.2)),
-      size: 0.05 + 0.22 * Math.pow(rng.next(), 3),
+      size: 0.17 + 0.15 * Math.pow(rng.next(), 3),
     };
   });
   const dummy = new THREE.Object3D();
