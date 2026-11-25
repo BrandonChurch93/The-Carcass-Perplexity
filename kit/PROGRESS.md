@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 72, 2026-11-25 22:12 UTC:
+Status 73, 2026-11-25 22:28 UTC:
 
-- `01-m1-ribs-0.jpg`: The Ribs on main, version 1 of both owners: approved picture left, frame right
-- `02-m1-marsh-0.jpg`: The Blood Marsh on main, version 1 of both owners
-- `03-m1-spine-0.jpg`: The Spine on main, version 1 of both owners
-- `04-m1-reveal-4.jpg`: The Reveal on main, version 1, built to note R1.5
+- `01-hb2-compare-ribs-0.jpg`: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each. Storm sky and shingle are in; the blades are smooth horns and the floor a tiled sheet
+- `02-hb3-keys-0-4.jpg`: The Breath, minute 57: wide key and the pit, approved (left) and frame (right). Plates, ledges and a ragged rim are in; the light is flat and the waders read as black hooks
+- `03-hb2-compare-spine-0.jpg`: The Spine, minute 51: approved (left) and frame (right). The lead spire is now a horn of slabs with an arch at its foot; the storm is soft and the far spires an even saw
+- `04-hb2-reveal-4.jpg`: The Reveal's last frame, minute 55: the land now reads as a continent with ranges, coasts and cloud; the body is lost and the cloud is a stamped pattern. Both sent back
 
+Status 72, 2026-11-25 22:12 UTC, showed: The Ribs on main, version 1 of both owners: approved picture left, frame right; The Blood Marsh on main, version 1 of both owners; The...
 Status 71, 2026-11-25 21:46 UTC, showed: The Ribs, first built frame of the land at minute 20 (draft): blades, floor, arch.
 Status 70, 2026-11-25 21:23 UTC, showed: The Eye: your approved picture on the left, the blockout its owner starts from on the right; The Reveal, last frame: your approved picture...
-Status 69, 2026-11-25 21:02 UTC, showed: The Ribs, where it starts: your picture on the left, the stand-in on the right; The Breath, where it starts; The Blood Marsh, where it...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T22:12:11Z
-phase 4: 2.03 h used of 17.00 h
-build: 22.35 h used of 72.00 h
+2026-11-25T22:28:17Z
+phase 4: 2.29 h used of 17.00 h
+build: 22.62 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 26
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -78,18 +78,18 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 The register is `parts/PARTS.json`. Summarise it here after every change of state: how many parts each unit has, and how many are `stand-in`, `built` and `fallback`.
 
-Written 2026-11-25 14:16 UTC from `parts/PARTS.json` at commit `9ac88bf`, the build that round 7 judges (the table of 02:56 UTC had every part as a stand-in). A picture of every part drawn alone is under `out/stills/parts/`.
+Written 2026-11-25 22:28 UTC from `parts/PARTS.json` at commit `cbbbd26`, `main` with version 1 of all ten owners of Phase 4 merged (the table of 14:16 UTC had the Heart's 15 built and the other 81 as stand-ins). A part's state is the one its place declares in code (`unitParts`); it says nothing yet about how good the part is, which the rounds judge.
 
 | Unit | Parts | `stand-in` | `built` | `fallback` |
 | --- | --- | --- | --- | --- |
-| `ribs` | 14 | 14 | 0 | 0 |
+| `ribs` | 14 | 0 | 14 | 0 |
 | `heart` | 15 | 0 | 15 | 0 |
-| `breath` | 14 | 14 | 0 | 0 |
-| `marsh` | 14 | 14 | 0 | 0 |
-| `spine` | 14 | 14 | 0 | 0 |
-| `eye` | 14 | 14 | 0 | 0 |
-| `reveal` | 11 | 11 | 0 | 0 |
-| all | 96 | 81 | 15 | 0 |
+| `breath` | 14 | 0 | 14 | 0 |
+| `marsh` | 14 | 0 | 14 | 0 |
+| `spine` | 14 | 0 | 14 | 0 |
+| `eye` | 14 | 0 | 14 | 0 |
+| `reveal` | 11 | 0 | 11 | 0 |
+| all | 96 | 0 | 96 | 0 |
 
 The Heart's 15: `land`, `bench`, `sulphur-crack`, `foundering`, `crust`, `lava`, `vessel-mouth`, `lava-fall`, `surge`, `crust-walkers`, `sunk-walker`, `sky`, `air`, `fume`, `ash`. `ash` was added in Phase 3 (the dry fall of ash in the air's folder).
 
@@ -1892,3 +1892,4 @@ What happens next is yours:
 - 2026-11-25 21:24 UTC. 21:24 status 70 posted in the thread: all the scenes started with ten build agents, the script change, and where the Eye and the Reveal start (the blockout beside the approved picture; 2 new draft renders at preview).
 - 2026-11-25 21:47 UTC. Status 71 shown in the thread at 21:47 UTC (Phase 4, 1.60 h of 17.00 h; wave 1 at minute 25 of 240): first built parts from four second owners and the Ribs' lead on their own branches, nothing merged; direction sent to ribs_ground_owner, marsh_life_owner and spine_storm_owner (the Ribs' blades are eroded stone and not turned horns and its floor is shingle and water sheets, not ripple marks; the wallowers need folds in the shape and the feeler fringe; the scorched runner is pale with a short coat). spine_storm_owner cannot push: its version 1 bundle verified (author and trailers) and pushed as agent/spine-storm at 317dbde. All 20 sounds placed and measured; renders on this machine since status 70: 0.
 - 2026-11-25 22:13 UTC. 2026-11-25 22:13 UTC. 22:12 UTC, status 72 shown: version 1 of ten owners is in main for five places. Merges since status 71, each after a check of trailers (on the commits with authored work; merge commits made by git merge --no-edit, as the owners' sheet tells them, carry no trailer and no authored work), files inside the owner's folders, types and the build: the Spine's storm 317dbde (93cc18d), the Breath's life 01a42d0 (830311a), the Marsh's life c341987 (68ae79b) and its recipe b158f8b (bd0fbbd), the Breath's ground fa79c1b (6670324), the Ribs' sea d8e3de0 (c5e56ab), the Spine's ground ed6e64d (0f76682), the Reveal d293ddc (20f3699), the Marsh's ground 500c3db (1219809), the Ribs' ground 41ffe5e (9099551). npm run parts: 96 parts, 82 built, 14 stand-in (the Eye's), 0 fallback. The Builder's own compare of main at preview size: ribs-0, breath-0, marsh-0, spine-0, reveal-4, 5 renders in 73 s. Check G8 fails on main for 18 pictures without a recipe heading: 12 of the Reveal (its owner's later commit e764e7d names them), 3 of the Ribs (materials.json of the land, the wings' hide pair), 3 of the Spine's land; their owners were told and send the recipes with their next heartbeat. Cost a sample at uhd, draft, as the owners measured on their 4 core machines against the 7 s gate: Ribs 7.7 to 7.85 s, Breath 6.71 s before the life owner's parts, Marsh 7.75 s, Spine 10.17 s, Reveal 3.89 s; the Ribs, the Marsh and the Spine are over and their leads cut it by version 3.
+- 2026-11-25 22:28 UTC. 2026-11-25 22:28 UTC: status 73 shown (4 pictures: the Ribs, the Breath and the Spine against their approved pictures, the Reveal's last frame). Version 1 of the Eye merged at 22:18 (`efbaeaa`); the register written from `main`: 96 parts, 96 built, 0 stand-in. Heartbeats pushed as branches for the three owners that cannot push: `a27abcb` (breath ground), `e85751b` (spine storm), `ae64cff` (marsh ground). Direction sent to `eye_owner`, `ribs_ground_owner`, `breath_ground_owner`, `breath_life_owner` and `reveal_owner` (the last frame has lost the body). The whole test run on `main`: 902 tests, 901 pass; the one failing is G8, which names 25 pictures with no recipe (the Eye's 7, the Reveal's 12, the rest in the Ribs and the Spine); the owners have been told
