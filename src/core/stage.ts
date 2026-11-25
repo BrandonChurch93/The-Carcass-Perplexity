@@ -15,6 +15,8 @@ export interface Look {
   saturation: number;
   contrast: number;
   tint: [number, number, number];
+  /** A knee on what is brighter than its first number, laid on every sample before it is averaged: the brightest channel b becomes knee[0] * (1 + knee[1] * ln(b / knee[0])) and the colour keeps its hue. Absent: none. */
+  knee?: [number, number];
 }
 
 export const neutralLook = (): Look => ({

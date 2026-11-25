@@ -21,6 +21,7 @@
     "still": "node tools/still.mjs",
     "crops": "node tools/crops.mjs",
     "compare": "node tools/compare.mjs",
+    "regions": "node tools/regions.mjs",
     "sheet": "node tools/sheet.mjs",
     "determinism": "node tools/determinism.mjs",
     "gate": "node tools/gate.mjs",
