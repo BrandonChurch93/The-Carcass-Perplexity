@@ -16,6 +16,9 @@ export class Skin {
   private readonly uv: number[] = [];
   private readonly info: number[] = [];
   private readonly look: number[] = [];
+  private readonly whose: number[] = [];
+  /** The animal the tubes made from now on belong to. */
+  who = 0;
   position = new Float32Array(0);
   normal = new Float32Array(0);
   heat = new Float32Array(0);
@@ -25,6 +28,7 @@ export class Skin {
     const t = { start: this.total, rings, sides };
     const w = sides + 1;
     this.total += rings * w;
+    for (let v = t.start; v < this.total; v++) this.whose[v] = this.who;
     this.tubes.push(t);
     for (let i = 0; i < rings - 1; i++) {
       for (let j = 0; j < sides; j++) {
@@ -72,6 +76,7 @@ export class Skin {
     g.setAttribute('aUv', new THREE.BufferAttribute(fill(this.uv, 2), 2));
     g.setAttribute('aInfo', new THREE.BufferAttribute(fill(this.info, 4), 4));
     g.setAttribute('aLook', new THREE.BufferAttribute(fill(this.look, 2), 2));
+    g.setAttribute('aWho', new THREE.BufferAttribute(fill(this.whose, 1), 1));
     g.setIndex(this.index);
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0, 0), 4000);
     this.geometry = g;

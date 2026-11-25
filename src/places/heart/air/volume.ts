@@ -7,7 +7,8 @@ export const MAX_STEAM = 16;
 export const MAX_HEAT = 12;
 
 /** March steps. The cost of the volume is close to linear in these. */
-export const STEPS = { air: 7, column: 22, steam: 8 };
+export const STEPS = { air: 7, column: 22, steam: 8, bank: 9 };
+export const BANKS = 4;
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -63,6 +64,8 @@ uniform int uSteamCount;
 uniform vec4 uSteamA[${MAX_STEAM}];
 uniform vec4 uSteamB[${MAX_STEAM}];
 uniform vec4 uSteamC[${MAX_STEAM}];
+uniform vec4 uBankA[${BANKS}];
+uniform vec4 uBankB[${BANKS}];
 
 const vec3 AIR_ALBEDO = vec3(0.93, 0.92, 0.9);
 const vec3 FUME_ALBEDO = vec3(0.66, 0.58, 0.51);
@@ -70,6 +73,7 @@ const vec3 STEAM_ALBEDO = vec3(0.88, 0.86, 0.84);
 const vec3 SMOKE_ALBEDO = vec3(0.52, 0.46, 0.4);
 // The heavy air low over the lake is half smoke: it is darker than the clear air and warmer.
 const vec3 HEAVY_ALBEDO = vec3(0.72, 0.64, 0.6);
+const vec3 BANK_ALBEDO = vec3(0.43, 0.39, 0.36);
 const vec3 FUME_BASE = vec3(585.0, 0.0, -285.0);
 const vec3 LOW_BASE = vec3(760.0, 0.0, -40.0);
 const float LAKE_WIDE = 2.3;
@@ -144,21 +148,18 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float hi = max(max(ya, yb), lo + 0.01);
   float layer = hi - lo < 1.0 ? exp(-0.5 * (lo + hi) / LAYER) : LAYER * (exp(-lo / LAYER) - exp(-hi / LAYER)) / (hi - lo);
   // The lake lights the air over it twice: what is open right under a point, and the whole glowing floor of the caldera round it.
-  vec3 glow = vec3(0.0);
-  if (y < 60.0) glow = lakeGlow(p.xz, max(2.0 * y, 30.0));
-  float hot = clamp(lum(glow) * 0.6, 0.0, 1.0);
   vec3 wide = mix(wideNear, wideFar, part);
-  vec3 under = (0.32 + 0.6 * exp(-y / 40.0)) * glow + LAKE_WIDE * exp(-y / 110.0) * wide;
+  vec3 under = LAKE_WIDE * exp(-y / 110.0) * wide;
   vec3 sky = skyLight(y);
   float east = smoothstep(-150.0, 550.0, p.x);
   // What the fume sheds settles against the buttress and east of it: a bank that stands off its west face by a few hundred metres.
   float west = -(p.x - 445.0) * 0.859 - (p.z + 322.0) * 0.512;
   float bank = smoothstep(380.0, 100.0, west) * smoothstep(-260.0, -60.0, west);
   // Clear toward the bench, heavy toward the open lake in the east: and in banks with dark air between them, not as one veil.
-  float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.55 + 1.3 * east + 0.9 * smoothstep(100.0, -450.0, p.z))
-        + 0.0042 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
-  float heavy = uShowAir * (0.0055 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks)
-        + 0.0015 * hot * layer * (0.35 + 1.3 * banks));
+  float thin = uShowAir * (0.0003 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake) * (0.75 + 0.35 * east + 0.45 * smoothstep(100.0, -450.0, p.z))
+        + 0.003 * exp(-y / 90.0) * bank * (0.15 + 1.7 * banks));
+  // What is left of the heavy low layer away from the banks of smoke: a trace.
+  float heavy = uShowAir * 0.0012 * layer * overLake * (0.2 + 0.8 * east) * (0.05 + 2.4 * banks * banks);
   float haze = thin + heavy;
   // The smoke hangs as a curtain between the column and the lower mass: thin and narrow at the column, broad and heavy over the open lake.
   vec2 axisA = fumeAxis(p.y);
@@ -173,10 +174,11 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float deep = 1.0;
   if (veil > 0.004) {
     // The wind draws the smoke out along itself: its billows are long downwind and keep their shape across it.
-    vec3 drawn = q - vec3(0.92, 0.0, -0.4) * (0.92 * dot(q.xz, vec2(0.92, -0.4)));
-    vec4 m = noise(drawn * vec3(0.0017, 0.0019, 0.0017) + 0.31);
-    float billow = smoothstep(0.28, 0.72, 0.7 * m.r + 0.3 * m.b);
-    smoke = mix(0.0014, 0.004, along) * (veil - 0.004) * (0.03 + 2.6 * billow * billow);
+    vec3 rolled = p + vec3(2.2, -5.5, -0.8) * uTime;
+    vec3 drawn = rolled - vec3(0.92, 0.0, -0.4) * (0.92 * dot(rolled.xz, vec2(0.92, -0.4)));
+    vec4 m = noise(drawn * vec3(0.0034, 0.0038, 0.0034) + 0.31);
+    float billow = smoothstep(0.36, 0.66, 0.7 * m.r + 0.3 * m.b);
+    smoke = mix(0.0014, 0.004, along) * (veil - 0.004) * (0.01 + 3.0 * billow * billow);
     shade = exp(-1.5 * veil) * (0.6 + 0.4 * billow);
     // The lake lights the thin edges of a billow more than its heart.
     deep = 1.5 - billow;
@@ -186,9 +188,9 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   airSmoke = smoke;
   // The lake and the warm side of the sky light the low air; the high air has the colour of the sky it is seen against.
   float low = exp(-y / 250.0);
-  emit = thin * AIR_ALBEDO * ((mix(0.55, 1.0, smoothstep(80.0, 380.0, y)) * sky + airWarm * low) * open + under * low + 0.4 * lights)
-       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + (0.6 * under + 0.5 * glow) * low + 0.4 * lights)
-       + smoke * FUME_ALBEDO * (mix(0.7, 1.7, smoothstep(120.0, 380.0, y)) * sky * open * shade + deep * (4.0 * under + 3.0 * wide * exp(-y / 380.0)) + 1.3 * lights);
+  emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights)
+       + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low + 0.4 * lights)
+       + smoke * FUME_ALBEDO * (mix(1.0, 2.2, smoothstep(40.0, 300.0, y)) * sky * open * shade + deep * (3.2 * under + wide * (0.7 * exp(-y / 140.0) + 1.3 * exp(-y / 700.0))) + mix(1.3, 0.6, smoothstep(40.0, 160.0, y)) * lights);
 }
 
 // 0 outside the column, 1 on its axis.
@@ -198,9 +200,14 @@ float columnShape(vec3 p) {
   float d = length(p.xz - fumeAxis(h)) / (62.0 + 0.55 * h);
   return clamp(1.0 - d, 0.0, 1.0) * (1.0 - smoothstep(560.0, 800.0, h)) * smoothstep(-5.0, 30.0, h);
 }
-// The plume's own flow: the lumps climb and drift west as one body. One speed for the whole of it, so that the lumps are never drawn out by the time that has passed.
+// The plume's own flow. A lobe leaves the foot at 11 metres a second and slows to 4.5 aloft, growing as it climbs: the lumps are laid out in the seconds
+// a parcel has climbed, so each travels with the flow and none is drawn out by the time that has passed. The lattice is skewed, so no lobe comes round twice.
 vec3 columnFlow(vec3 p) {
-  return p + vec3(1.1, -3.4, 0.3) * uTime;
+  // The plume climbs at 11 m/s at its foot and 5 m/s aloft, so the lumps low down overtake the ones above them and the body shears and folds as it rises.
+  // Time is counted from the middle of the place, so the shear never grows past a third either way in its 28 seconds.
+  float h = clamp(p.y, 0.0, 900.0);
+  float rise = mix(11.0, 5.0, smoothstep(0.0, 420.0, h));
+  return vec3(p.x + 1.1 * uTime, p.y - rise * (uTime - 14.0), p.z + 0.3 * uTime);
 }
 // The body of a plume: lumps of three sizes cut by its shape, so that its surface is where the lumps end. Cheap: one read.
 float lumps(vec3 q, float shape) {
@@ -211,8 +218,8 @@ float fumeDensity(vec3 q, float shape) {
   float body = noise(q / 300.0).r + shape * 1.5 - 1.0;
   if (body < -0.25) return 0.0;
   if (body < 0.5) {
-    body += (noise(q / 77.0 + 0.37).r - 0.55) * 0.5;
-    if (abs(body) < 0.14) body += (noise(q / 21.0 + 0.71).b - 0.5) * 0.16;
+    body += (noise(q / 77.0 + 0.37 + vec3(0.0, 0.012, 0.004) * uTime).r - 0.55) * 0.5;
+    if (abs(body) < 0.14) body += (noise(q / 21.0 + 0.71 - vec3(0.01, 0.03, 0.0) * uTime).b - 0.5) * 0.16;
   }
   return clamp(body * 6.0, 0.0, 1.0);
 }
@@ -256,8 +263,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
   if (t1 <= t0) return;
   vec3 albedo = C.w > 1.5 ? FUME_ALBEDO : mix(STEAM_ALBEDO, SMOKE_ALBEDO, C.w);
   // A fume stands over open lava and is seen against it: it takes far more of that light than a wisp of steam does.
-  float lit = fume ? 0.3 : mix(1.5, 0.4, kind);
-  float fall = fume ? 14.0 : mix(9.0, 5.0, kind);
+  float lit = fume ? 0.2 : mix(1.5, 0.4, kind);
+  float fall = fume ? 8.0 : mix(9.0, 5.0, kind);
   float dt = (t1 - t0) / float(${STEPS.steam});
   for (int k = 0; k < ${STEPS.steam}; k++) {
     float t = t0 + (float(k) + jitter) * dt;
@@ -272,22 +279,25 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
     vec2 away = p.xz - centre;
     float most = 1.4 * r + 0.5 * sway;
     if (dot(away, away) >= most * most) continue;
-    centre += (noise(vec3(u * 0.7, uTime * 0.11, C.x)).ga - 0.5) * sway;
+    // Puffs leave the vent unevenly and carry their sideways curl up with them: the pattern rides the flow and comes round every 8 seconds.
+    vec4 w = noise(vec3(C.x, (h - C.y * uTime) / (8.0 * C.y), C.x * 1.7 + 0.5 * u));
+    centre += (w.ga - 0.5) * sway;
+    float puff = mix(mix(0.2, 1.7, smoothstep(0.3, 0.62, w.r)), 1.0, kind);
     float d = length(p.xz - centre) / r;
     if (d >= 1.4) continue;
     vec3 q = p - A.xyz;
     q -= lean * (C.y * uTime);
-    q = q / C.z + C.x;
+    q = q / C.z + C.x + vec3(0.013, 0.0, 0.007) * uTime;
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
-    float ragged = d + (n1 - 0.5) * 0.8;
+    float ragged = d + (n1 - 0.5) * mix(1.0, 0.8, kind);
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
     float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, fume ? 1.6 : mix(1.8, 2.6, kind)) * mix(1.0, thin, 0.6);
     float fine = mix(0.32, 0.12, u);
     float wisps = smoothstep(mix(0.36, 0.44, kind), 0.82, n1 * (1.0 - fine) + noise(q * 2.7).b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
-    float dens = body * mix(0.03 + 2.2 * wisps * wisps, 2.6 * wisps, kind);
+    float dens = body * puff * mix(0.03 + 2.2 * wisps * wisps, 2.6 * wisps, kind);
     if (dens <= 0.0) continue;
     float sigma = dens * B.w;
     // A fountain or a crack lights the vapour that is close over it and no more: the rest is lit by the sky, like any smoke.
@@ -298,6 +308,66 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
     sum += trans * a * albedo * light;
     trans *= 1.0 - a;
     if (first < 0.0) first = t;
+  }
+}
+
+// A bank of smoke standing on the lake: a leaning dome of lumps. 0 outside, up to 1 inside; above is the metres of the bank over the point.
+float bankDensity(vec4 A, vec4 B, vec3 p, bool fine, out float above) {
+  above = 0.0;
+  float u = p.y / A.w;
+  if (u < 0.0 || u >= 1.0) return 0.0;
+  float d = length(p.xz - A.xy - B.xy * p.y) / A.z;
+  float dome = 1.0 - d * d - u * u;
+  if (dome <= 0.0) return 0.0;
+  above = A.w * sqrt(max(1.0 - d * d, 0.0)) - p.y;
+  // The lumps climb the lean at 2.2 metres a second: higher is further downwind, so the bank shears as it rises.
+  vec3 q = vec3(p.x - B.x * p.y, p.y - 2.2 * uTime, p.z - B.y * p.y) / (A.z * 1.6) + B.z + vec3(0.011, 0.0, 0.006) * uTime;
+  float body = noise(q).r + dome * 1.4 - 0.85;
+  if (fine && body > -0.2 && body < 0.45) body += (noise(q * 3.7 + 0.37).g - 0.5) * 0.45;
+  return clamp(body * 4.0, 0.0, 1.0);
+}
+// Smoke, not vapour: dark in the body and underneath, pale where the sky reaches it, orange in its lowest metres from the lava under it.
+void bankOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, inout float trans, inout float first) {
+  vec4 A = uBankA[i];
+  vec4 B = uBankB[i];
+  vec2 oxz = ro.xz - A.xy - B.xy * ro.y;
+  vec2 dxz = rd.xz - B.xy * rd.y;
+  float qa = dot(dxz, dxz);
+  float qb = dot(oxz, dxz);
+  float qc = dot(oxz, oxz) - A.z * A.z;
+  float t0 = 0.0;
+  float t1 = far;
+  if (qa > 1e-8) {
+    float qh = qb * qb - qa * qc;
+    if (qh < 0.0) return;
+    qh = sqrt(qh);
+    t0 = max(t0, (-qb - qh) / qa);
+    t1 = min(t1, (-qb + qh) / qa);
+  } else if (qc > 0.0) return;
+  if (abs(rd.y) > 1e-5) {
+    float ya = -ro.y / rd.y;
+    float yb = (A.w - ro.y) / rd.y;
+    t0 = max(t0, min(ya, yb));
+    t1 = min(t1, max(ya, yb));
+  } else if (ro.y < 0.0 || ro.y > A.w) return;
+  if (t1 <= t0) return;
+  float dt = (t1 - t0) / float(${STEPS.bank});
+  for (int k = 0; k < ${STEPS.bank}; k++) {
+    float t = t0 + (float(k) + jitter) * dt;
+    vec3 p = ro + rd * t;
+    float above;
+    float dens = bankDensity(A, B, p, true, above);
+    if (dens <= 0.0) continue;
+    float over;
+    float skyward = bankDensity(A, B, p + SKY_DIR * 12.0, false, over);
+    float skyT = exp(-B.w * (2.0 * above + 20.0 * skyward));
+    vec3 light = skyLight(p.y) * (0.11 + 2.2 * skyT);
+    if (p.y < 40.0) light += exp(-p.y / 9.0) * (5.0 * lakeGlow(p.xz, 60.0) + 4.0 * wideNear);
+    float a = 1.0 - exp(-dens * B.w * dt);
+    sum += trans * a * BANK_ALBEDO * light;
+    trans *= 1.0 - a;
+    if (first < 0.0) first = t;
+    if (trans < 0.02) break;
   }
 }
 
@@ -326,6 +396,7 @@ void main() {
   float fumeAt = -1.0;
 
   if (uShowFume > 0.5) {
+    for (int i = 0; i < ${BANKS}; i++) bankOne(i, ro, rd, far, fract(jitter + 0.382 * float(i + 1)), steamSum, steamTrans, steamAt);
     for (int i = 0; i < ${MAX_STEAM}; i++) {
       if (i >= uSteamCount) break;
       steamOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)), steamSum, steamTrans, steamAt);
@@ -382,7 +453,7 @@ void main() {
           // The near one tells which way the lump's face looks, the far one what stands over it.
           float skyT = exp(-(fumeDensity(columnFlow(p1), columnShape(p1)) * 1.5 + lumps(columnFlow(p2), columnShape(p2)) * 0.8));
           float underT = exp(-lumps(columnFlow(p3), columnShape(p3)) * 1.6);
-          vec3 light = skyLight(p.y) * (0.2 + 1.45 * skyT) + (roundLights(p) + 0.5 * lakeGlow(p.xz, max(2.0 * p.y, 60.0)) + 1.2 * fumeUnder * exp(-p.y / 400.0)) * (0.25 + 0.75 * underT);
+          vec3 light = skyLight(p.y) * (0.2 + 1.45 * skyT) + (roundLights(p) + 0.5 * lakeGlow(p.xz, max(2.0 * p.y, 60.0)) + 2.0 * fumeUnder * exp(-p.y / 400.0)) * (0.45 + 0.55 * underT);
           float a = 1.0 - exp(-dens * 0.045 * len);
           fumeSum += fumeTrans * a * FUME_ALBEDO * light;
           weight += fumeTrans * a;
@@ -435,6 +506,13 @@ void main() {
   }
   if (steamAt >= 0.0) { sum += trans * steamSum; trans *= steamTrans; }
   if (fumeAt >= 0.0) { sum += trans * fumeSum; trans *= fumeTrans; }
+  // The first metres of air over open lava glow with it: read once, somewhere along the last of the view's way down to the lake.
+  if (uShowAir > 0.5 && far < 3000.0 && ro.y + rd.y * far < 14.0) {
+    float slant = min(min(8.0 / max(abs(rd.y), 0.03), 160.0), far);
+    vec3 g = ro + rd * (far - slant * fract(jitter + 0.71));
+    float gy = max(g.y, 0.0);
+    sum += trans * lakeGlow(g.xz, max(2.0 * gy, 8.0)) * ((1.0 - exp(-slant * 0.05)) * exp(-gy / 5.0) * 0.6);
+  }
   // Air seen against the sky sends some of the sky's light on toward the camera: the sky behind a haze is paler, not darker, by less than the haze takes.
   if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0);
   gl_FragColor = vec4(sum, trans);

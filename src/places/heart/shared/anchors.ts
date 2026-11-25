@@ -59,16 +59,32 @@ export const WALKERS: Walker[] = [
   { at: from(GROUP, 41.3, -76.7), when: T0, heading: 125, speed: 0.2, size: 1.2, feed: 0.8, phase: 0.87 },
   // Two more of the group, right of the feeding picture's frame for the whole of that shot.
   { at: from(GROUP, 49.6, 5.5), when: T0, heading: 205, speed: 0.1, size: 0.84, feed: 1, phase: 0.2 },
-  { at: from(GROUP, 80.4, 8.0), when: T0, heading: 300, speed: 0.3, size: 0.97, feed: 0.6, phase: 0.48 },
+  // The fifth stands 9 m north of where it first stood: from the camera at the line it is then clear of the frame's right edge, the smaller of the two at the right.
+  { at: from(GROUP, 79.5, -1.1), when: T0, heading: 300, speed: 0.3, size: 0.97, feed: 0.6, phase: 0.48 },
   { at: from(spot(0.845, 0.447), 0, 0), when: T0, heading: 250, speed: 0.7, size: 1.05, feed: 0.3, phase: 0.7 },
   { at: from(spot(0.89, 0.446), 0, 0), when: T0, heading: 235, speed: 0.6, size: 0.9, feed: 0.8, phase: 0.05 },
   { at: from(spot(0.55, 0.437), 0, 0), when: T0, heading: 95, speed: 0.8, size: 1.1, feed: 0.2, phase: 0.55 },
-  { at: [FALL_FOOT[0] + 92, FALL_FOOT[1] + 46], when: T0, heading: 262, speed: 0.6, size: 1.05, feed: 0.4, phase: 0.3 },
-  { at: [FALL_FOOT[0] + 148, FALL_FOOT[1] + 52], when: T0, heading: 255, speed: 0.5, size: 0.9, feed: 1, phase: 0.8 },
+  // The two small ones of the picture of the fall: on the crust at the fan's right toe, about 620 m from that camera, at 70 and 81 per cent of its
+  // frame's width when it looks, small against the fall and lit from behind by it.
+  { at: [-51.1, -298.4], when: KEY_TIMES['heart-4'], heading: 265, speed: 0.35, size: 0.6, feed: 0.7, phase: 0.3 },
+  { at: [-28.3, -282.1], when: KEY_TIMES['heart-4'], heading: 250, speed: 0.25, size: 0.42, feed: 1, phase: 0.8 },
   { at: [-250, 60], when: T0, heading: 160, speed: 0.9, size: 1.0, feed: 0.1, phase: 0.15 },
   { at: [-140, 190], when: T0, heading: 20, speed: 0.7, size: 0.88, feed: 0.5, phase: 0.92 },
-  { at: [-330, -90], when: T0, heading: 140, speed: 0.8, size: 1.12, feed: 0.2, phase: 0.4 },
+  // The lead of the picture at the line: 100 m from that camera and 8 degrees right of its axis, tall at 60 per cent of the frame's width, its tuft
+  // down in the seam named `lead`. It is in that shot only (see AWAY).
+  { at: [-423.5, 166.1], when: KEY_TIMES['heart-1'], heading: 135, speed: 0.05, size: 1.25, feed: 1, phase: 0.4 },
 ];
+
+/** Staging by shot, as on a set: each shot is staged for its own camera, and the walkers listed here are not drawn for the whole of that shot.
+ *  heart-03, the line: its picture has one tall lead (walker 13), then two smaller to its right (walkers 2 and 5), and no others near.
+ *  heart-02, the feeding picture: its three only, no pair behind. Walker 13 is the lead of the line's picture and is in no other shot. */
+export const AWAY: Record<string, number[]> = {
+  'heart-01': [13],
+  'heart-02': [8, 11, 13],
+  'heart-03': [1, 3, 4, 6, 7, 8, 11, 12],
+  'heart-04': [13],
+  'heart-05': [13],
+};
 
 /** Where walker `index` of the staging is at `seconds`, on the ground plane. The built walkers stay within about 3 m of this at the five key times. */
 export const walkerAt = (index: number, seconds: number): [number, number] => walkerPosition(WALKERS[index] as Walker, seconds);
@@ -88,6 +104,8 @@ export const SEAMS: Record<string, { from: [number, number]; to: [number, number
   /** The fountain lines. */
   spatterRight: { from: [(SPATTER_RIGHT[0] as Vec3)[0], (SPATTER_RIGHT[0] as Vec3)[2]], to: [(SPATTER_RIGHT[3] as Vec3)[0], (SPATTER_RIGHT[3] as Vec3)[2]], width: 3.4, wobble: 4, seed: 0.9 },
   spatterLeft: { from: [(SPATTER_LEFT[0] as Vec3)[0], (SPATTER_LEFT[0] as Vec3)[2]], to: [(SPATTER_LEFT[2] as Vec3)[0], (SPATTER_LEFT[2] as Vec3)[2]], width: 2.6, wobble: 2, seed: 2.9 },
+  /** The seam the lead of the line's picture feeds at: across that camera's view, from under the fall's toe to the group's seam, a lit trail at the horizon. */
+  lead: { from: [-428.9, 151.9], to: [-405.2, 193.6], width: 1.0, wobble: 2, seed: 1.7 },
   /** The small crack beside the one that sank. */
   sunk: { from: from(SUNK, -5, -4.5), to: from(SUNK, 2, -6.5), width: 0.7, wobble: 0.5, seed: 0.3 },
 };
