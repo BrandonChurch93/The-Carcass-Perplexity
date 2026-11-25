@@ -105,7 +105,7 @@ function flagMaterial(source: THREE.Material, colour: THREE.Color): THREE.Materi
 
 const DEPTH_ONLY_FRAGMENT = 'void main() { gl_FragColor = vec4(0.0); }';
 const MAIN_START = /void\s+main\s*\(\s*(?:void)?\s*\)\s*\{/;
-const SEEN_BIAS = '2.0e-7';
+const SEEN_BIAS = '3.2e-7';
 
 // The twin of an opaque shader material that writes depth only: the same vertex shader and the same uniforms, so the depth it leaves is the depth the material itself will draw.
 // A material that cuts holes has a twin only if it says how in `userData.depthFragment` (a fragment shader that does nothing but its discard).
@@ -245,7 +245,7 @@ export class Engine {
     this.volumeTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.warpTarget = halfFloatTarget(Math.ceil(f.width / 2), Math.ceil(f.height / 2));
     this.seenTarget = new THREE.WebGLRenderTarget(f.width, f.height, { type: THREE.UnsignedByteType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, generateMipmaps: false, depthBuffer: true, stencilBuffer: false, colorSpace: THREE.NoColorSpace });
-    this.seenTarget.depthTexture = new THREE.DepthTexture(f.width, f.height, THREE.FloatType);
+    this.seenTarget.depthTexture = new THREE.DepthTexture(f.width, f.height, THREE.UnsignedIntType);
     this.seen.value = this.seenTarget.depthTexture;
     this.accumTarget = halfFloatTarget(f.width, f.height);
     this.post.setSize(f.width, f.height);
