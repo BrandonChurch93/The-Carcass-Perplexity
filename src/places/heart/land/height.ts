@@ -291,10 +291,16 @@ function lineCrag(x: number, z: number): number {
   const start = ramp * ramp * (0.35 + 0.65 * ramp);
   // The face, measured on the picture: a sheer foot a man high, a shoulder of knobs a stride and a half deep that stands out toward the lake,
   // and a sheer head behind it. The lens looks along the ridge, so the outline it sees is this section, with the knobs of each metre over the next.
-  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5);
+  // Each two metres of the ridge is a block of its own that stands half a metre forward or back of the next, and its head is two blocks,
+  // one on the other, not one sheer face: the lens sees every block's edge, so the outline is broken and no ruled line.
+  const slab = 2.2 * (smooth(0.2, 0.8, noise(u / 2.6 + 3.7, 1.9)) - 0.65);
+  const upper = 1.8 * (smooth(0.2, 0.8, noise(u / 1.9 + 8.2, 5.1)) - 0.6);
+  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5) + 0.3 * slab;
   const knob = noise(u / 0.75 + 0.4, v / 0.6 + 8.8);
-  const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.13 * smooth(0.12, 0.74, p + 0.16 * (knob - 0.5)) + 0.57 * smooth(0.72, 1, p) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
-  return top * rise * back * start;
+  const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.11 * smooth(0.12, 0.6, p + 0.16 * (knob - 0.5)) + 0.26 * smooth(0.58, 0.72, p + 0.1 * (knob - 0.5)) + 0.33 * smooth(0.88, 1.04, p + 0.36 * upper) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
+  // Between two blocks the crest is notched a third of its height.
+  const notch = 1 - 0.3 * smooth(0.56, 0.74, noise(u / 2.2 + 1.3, 4.4));
+  return top * rise * back * start * notch;
 }
 
 /** Metres from (x, z) to the cameras' route on the bench. */
@@ -391,18 +397,19 @@ export function buttressAt(x: number, z: number): number {
   // Its top, measured on the wide picture: one eroded table that falls evenly from the wall to the tip, and tilts a little toward that camera,
   // so the lens sees a strip of the table over the near cliff. Positive across is the far side.
   const fallen = 0.5 * (Math.min(1, Math.max(0, u / 0.9)) + smooth(0.0, 0.9, u));
-  const tilt = 1 + 0.07 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
-  const top = lerp(194, 84, fallen) * tilt * smooth(1.12, 0.9, u) * smooth(-0.16, -0.06, u);
+  const tilt = 1 + 0.12 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
+  // Its crown is one rough slope and no stair: knolls and hollows of ten metres on it, and a ragged edge. No flow of it stands out as a table.
+  const crown = 11 * (ridge(x / 31 + 7.3, z / 31 + 2.9) - 0.55) + 5 * (fbm(x / 9, z / 9, 3) - 0.5);
+  // Its end by the wall is sheer and stands free, the highest point of it: a prow, with the saddle behind.
+  const top = (lerp(194, 84, fallen) * tilt + crown + 9 * smooth(0.14, -0.02, u)) * smooth(1.12, 0.9, u) * smooth(-0.13, -0.085, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
-  const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 9 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
+  const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 5 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
   const edge = Math.abs(across) / half;
   const cliff = smooth(1.0, 0.72, edge);
-  const scree = 0.3 * smooth(1.75, 0.95, edge);
-  let h = top * Math.max(cliff, scree * smooth(1.2, 0.95, u) * smooth(-0.3, -0.1, u)) + 6 * wave(x * 3, z * 3) * cliff;
-  if (h > 50) {
-    const face = 0.25 + 0.3 * noise(x / 29 + 11, z / 29 + 5);
-    h = lerp(h, terrace(h, face), smooth(50, 64, h) * smooth(0.55, 0.75, edge));
-  }
+  // Talus lies against its near side as a skirt two fifths of the cliff high, hollow in section like any scree; the far side keeps the layout's.
+  const lean = Math.min(1, Math.max(0, (1.85 - edge) / 0.9));
+  const scree = across < 0 ? 0.4 * (0.3 * lean + 0.7 * lean * lean) : 0.3 * smooth(1.75, 0.95, edge);
+  let h = top * Math.max(cliff, scree * smooth(1.2, 0.95, u) * smooth(-0.3, -0.1, u)) + 3 * wave(x * 3, z * 3) * cliff;
   h += smooth(0.95, 1.2, edge) * 2.2 * (fbm(x / 8, z / 8, 3) - 0.5) * smooth(0.5, 6, h);
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
