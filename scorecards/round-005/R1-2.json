@@ -1,0 +1,91 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "gemini_neon",
+  "answered": "2026-11-25 10:46 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the volcanic floor across the foreground and midground",
+        "what": "the dark, fractured basalt rock, loose rubble, and lower-left rocky ridge of -a are replaced by a smooth tan-brown surface with artificial swirling contour marks and a single clean diagonal crack",
+        "fix": "replace the smooth brown ground with rough, dark charcoal basalt crust, loose volcanic rubble, a dark out-of-focus rock ridge in the lower left, and an organic network of glowing lava fissures"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the upper-right background and midground terrain",
+        "what": "the dramatic dark volcanic cliff and craggy slope behind the creatures are missing, leaving an empty flat peach-brown fog gradient",
+        "fix": "restore the dark craggy cliff face on the upper right and the stepped volcanic ridges behind the creatures, separated by layered smoke rather than uniform fog"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the background lava cascade on the left and the lava fissure under the feeding creature",
+        "what": "the lava looks like flat, unshaded orange-yellow blobs and a sharp-edged line with no white-hot cores, dark cooling crust, bloom, rising steam, or warm bounce light on the surrounding rock",
+        "fix": "give the lava white-hot incandescent cores, broken dark crust, soft bloom, rising fume around the feeding pool, and strong warm uplight on the nearby ground and creatures"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the lava cascade pouring from the cave mouth down to the valley floor",
+        "what": "the flow reads as flat orange-yellow paint and thin uniform spiderweb lines without white-hot incandescence, chunky cooling crust, bloom, or strong warm bounce light on the flanking rock",
+        "fix": "push the lava cores to white-hot with soft bloom, break the flow into irregular braided molten channels with dark crusted edges, and cast warm orange light onto the adjacent rock faces"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the foreground plane along the bottom of the frame",
+        "what": "the rough, out-of-focus dark basalt floor with a diagonal glowing fissure is replaced by a flat, glassy surface with blurry orange reflections and a ruler-straight horizon edge",
+        "fix": "replace the flat reflective foreground with uneven, out-of-focus dark volcanic rock rising slightly on the left and cut by a natural glowing lava crack"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave mouth, ceiling arch, and overall contrast",
+        "what": "the cave interior is a lifted, flat grey-black void behind blocky, faceted arch walls and a straight horizontal lip, with washed-out contrast across the cliffs",
+        "fix": "deepen the shadow blacks inside the cave and cliffs, sculpt organic stratified basalt ribs on the arch, break up the straight cave lip, and let the molten lip cast a softer, richer glow across the rough ceiling"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "atmosphere, haze, and overall colour contrast",
+        "what": "the scene is washed out with flat peach-brown midtones and weak blacks instead of deep charcoal shadows, wispy drifting volcanic smoke, and dramatic ember glow",
+        "fix": "deepen the darks to charcoal, reduce the uniform brown fog, and add layered, wispy volcanic fume backlit by the lava"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the foreground and background creatures' skin, feet, and feeding tendrils",
+        "what": "the hides look smooth and CG with dangling shred artifacts under the foreground torso, flat triangular and spade-like feet, untextured ribbon-like tendrils, and weak rim and under-lighting from the lava",
+        "fix": "add rough fibrous-rocky hide detail and bony joint definition, remove the hanging torso shreds, sculpt organic flared feet and finely textured tendrils, and add crisp warm rim and under-lighting from the lava"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the ground around the feeding tendrils and lower-right lava fissures in the full-size crops",
+        "what": "at delivery size the ground shows smooth low-frequency bumps and dark procedural swirl striations with almost no rocky grit, molten pooling, or steam around the tendril tips",
+        "fix": "replace the swirled procedural pattern with sharp basalt fracture detail, small dark rubble, a crusted molten pool around the tendril tips, and wisps of lit steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the rocky slope beside the lava and the left talus slope in the full-size crops",
+        "what": "the fine volcanic scree, sharp basalt ledges, and hot specular lava reflections of -a are replaced by muddy, low-contrast grey-brown ground scattered with soft, oversized blobby boulders",
+        "fix": "sharpen the rock micro-detail into crisp dark basalt ledges and fine loose scree, reduce the blobby boulders, and add tighter warm specular highlights where lava light grazes the rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the smoke plume rising on the lower right and the two small creatures at the base",
+        "what": "the fume reads as a single soft pink-grey airbrushed cloud, and the creatures sit against a dim flat slope with overly bright pale tendrils instead of being backlit in warm luminous haze by a bright lava pool",
+        "fix": "break the smoke into wispy, brightly underlit volcanic fume rising from a white-hot pooling base, and silhouette the two creatures in that warm backlight and haze"
+      }
+    ]
+  }
+}

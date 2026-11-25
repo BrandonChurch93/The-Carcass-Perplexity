@@ -1,0 +1,63 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "gpt_6_2_sol",
+  "answered": "2026-11-25 10:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "left of frame, from the upper rock across the steam and down beside the foreground lava",
+        "what": "a long, straight-edged change in opacity slices through the steam, rock silhouette and background glow; the cropped view in set-A-05 confirms the seam",
+        "fix": "Remove the card or matte boundary and use a depth-integrated steam volume that occludes and picks up lava light continuously."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "both crops, in the lava channel and on its near-vertical banks",
+        "what": "The hot channel resolves into smooth solid bands and glossy swirls, while the same evenly spaced grooves drape down the banks like stretched texture. The stylized pattern dominates the foreground of set-A-04.",
+        "fix": "Break the bands with irregular cooler rafts and fractured margins, and give the banks independent rough rock texture and displacement rather than dragging the top pattern down the walls."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "both crops, the lobes around the base of the arch in set-A-07",
+        "what": "Many lobes share uniform parallel ridges, with repeated crosshatching and smeared vertical detail on the steep faces. They resemble layered molded clay rather than broken cool crust.",
+        "fix": "Vary ridge scale, shape and direction; introduce torn edges and granular relief, and project texture independently onto the steep flanks."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "central plain, especially the nearest animal's legs and the similarly planted midground silhouettes",
+        "what": "Feet taper to points with weak ground-contact shadows, and several animals repeat the same splayed stance. The combination makes the figures read like placed models rather than animals carrying weight.",
+        "fix": "Vary weight-bearing poses, plant the feet with localized contact shadows, and add ash and heat bounce to lower legs where appropriate."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop at the erupting band, and left crop immediately above the central fissure",
+        "what": "The spray breaks into many detached, bright specks above a nearly uniform orange strip, and a nearby puff reads as a soft isolated dab rather than gas rising from a fissure.",
+        "fix": "Mix irregular droplets with connected splash shapes, vary their brightness and sizes, and root the fume in the vent with depth and graded hot light."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "lower-left crop, behind the sloping cliff and above the distant lava",
+        "what": "The haze is a broad salmon wash that fills the gap almost uniformly, with little interior density or visible change in depth across it.",
+        "fix": "Build overlapping depth layers with localized plumes and let lava illuminate the lower layers, with a falloff into cooler haze farther above."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "lower-right crop, the dark ground before the foreground object",
+        "what": "Regular comb-like grooves recur across the cooled surface and stay nearly black against otherwise smooth terrain, resembling a repeated stamped pattern.",
+        "fix": "Break up groove repetition with localized folds, offset and fractured edges, and fine mineral variation that catches the skylight."
+      }
+    ]
+  }
+}

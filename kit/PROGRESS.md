@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 42, 2026-11-25 10:29 UTC:
+Status 43, 2026-11-25 10:53 UTC:
 
-- `01-m1020-pair-0.jpg`: The establishing view, approved picture left, our frame right, on main 9e63135: darker walls, one grey smoke column, the black cavern
-- `02-m1020-pair-4.jpg`: The mouth and its fall: the wall is the land's rock now, the cavern is black, two walkers stand at the toe. The fan is still too graphic
-- `03-m1020-pair-1.jpg`: The line: lava in a trench. Wrong: the red crag at the upper left, the striped far bank, crust too brown and flat
-- `04-m1020-pair-3.jpg`: The feeding shot: the ground is still smooth sand where the picture has rough clinker. This is the worst gap
+- `01-m1044-pair-4.jpg`: The mouth and its fall on main (ef6598c): the fall is now a narrow stream in legs. Left the approved picture, right the frame. Still open: the staircase of the legs, the flat cavern, the round smoke, the flat near ground.
+- `02-m1044-pair-3.jpg`: The walkers at the seam. The floor is the first fault of round 5: pale, smooth, with a groove pattern. Three owners are on it (broken plates, lumps, a carpet of clinker).
+- `03-m1044-pair-1.jpg`: The line. Open: the lava reads as flat yellow with contour lines, the trench wall is striped, the dark red crag at the upper left and the straight edge beside it.
+- `04-m1044-pair-0.jpg`: The wide view. Open: the lake's plain is smooth, the left crag is too tall, the far wall is blocky.
 
+Status 42, 2026-11-25 10:29 UTC, showed: The establishing view, approved picture left, our frame right, on main 9e63135: darker walls, one grey smoke column, the black cavern; The...
 Status 41, 2026-11-25 10:02 UTC, showed: heart-3 on main 337d087, approved picture at the left.
 Status 40, 2026-11-25 09:48 UTC, showed: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light.
-Status 39, 2026-11-25 09:28 UTC, showed: heart-4 on main, the approved picture at the left.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T10:29:59Z
-phase 3: 7.35 h used of 13.00 h
-build: 14.00 h used of 72.00 h
+2026-11-25T10:53:59Z
+phase 3: 7.75 h used of 13.00 h
+build: 14.40 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 27
+minutes since the last status: 24
 ```
 
 ## Phases
@@ -895,3 +895,4 @@ none
 - 2026-11-25 10:30 UTC. Status 42 shown at 10:30 UTC: four pairs on main 9e63135 (establishing, the mouth, the line, the feeding shot). Main is 11c2ac8 (the sunk one's hand-back C taken as one commit, the lava's B2a merged). ElevenLabs 1 of 131,000 characters.
 - 2026-11-25 10:30 UTC. 10:26 UTC: the first merge of the sunk one's branch brought three of its merge commits without the trailer onto main (1f24198, pushed 10:25). Main was put back to bf39a86 one minute later, the sunk one's work taken as a single commit with the trailer, the lava merged again, and main pushed with a lease on 1f24198: 11c2ac8, the same tree. From now a merge is made only if the trailer check prints nothing.
 - 2026-11-25 10:30 UTC. 10:28 UTC, MEASURED at heart-3 (hd, draft): the crust alone is 67 54 52 at the bottom middle where the picture is 55 42 38; fine contrast (luma less its 12 pixel blur, standard deviation) 3.3 to 7.1 on our floor against 9.3 to 19.4 on the picture's. Anisotropy 16 on the crust's two pictures changed nothing that can be seen in this view and cost nothing (61.3 s a key): not kept.
+- 2026-11-25 10:54 UTC. Status 43 shown at 10:54 UTC. Main is ef6598c: the fall's stream (004242f) merged at 10:38 after chain O passed the whole determinism on 11c2ac8; chain P passed it on ef6598c at 10:46. Round 5 (judged 9e63135; packs 25.7 min, measures 28 min on two other machines): R1 3 and 3 (gemini), R3 5 and 5 (gpt), R4 4 and 4 (claude), jury 4 of 25, M1 green, M2 green, M3 red (0.81, 0.35, 0.33, 0.29, 0.82). Fails. A fault of the sender in this round: the list of critics and jurors was read through a tool whose output is cut at 40,000 characters, and the cut fell inside it without breaking its form, so reviewer_58 was sent half of the R4 brief joined to a juror's question, with a juror's image; its answer is void, reviewer_59 judged R4-2 with the whole brief, and three jurors of the wide view were sent after the others. No juror or other critic was sent a cut text (each message was checked for its last sentence from then on; the first four critics' texts were compared with the file by length). ElevenLabs at 10:53: 1 character of 131,000.

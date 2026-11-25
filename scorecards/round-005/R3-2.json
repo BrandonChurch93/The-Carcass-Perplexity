@@ -1,0 +1,56 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "gpt_6_2_sol",
+  "answered": "2026-11-25 10:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the broad lava fan below the cave",
+        "what": "the flow reads as a bright orange wireframe painted on flat dark plates; thin lines trace the ledges and slab edges without a convincing molten surface between them",
+        "fix": "build a continuous molten channel with visible thickness at the drops, irregular crust rafts, and thicker glowing gaps where the crust splits"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "left crop, the bright curtain across the center ledge",
+        "what": "the lava forms a flat ribbon with parallel stretched streaks and a hard rectangular break partway down the face",
+        "fix": "remove the straight discontinuity and vary the curtain's thickness and streak direction as it spills over the ledge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "left cliff face in the upper-left and lower-left crops",
+        "what": "fine rock detail blurs into stretched striations across broad angular patches; several directional changes follow the patch edges rather than the strata",
+        "fix": "blend the texture projection across faces and add actual fractured relief at the larger scale"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the near ground around the lead animal's feet and the orange fissure",
+        "what": "nearly identical comb-like grooves recur across a smooth brown surface, and parts of the fissure read as a bright line on top of it rather than a recessed opening",
+        "fix": "vary the crust relief and groove spacing, recess the molten core, and show broken, heat-lit rock along its banks"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop, the foreground animal's two leg joints",
+        "what": "long straight striations flatten into angular wedges at both joints, making the legs look like rigid carved pieces",
+        "fix": "round and vary the joint silhouettes and add irregular folds that wrap around the joints rather than running straight down the limbs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "open air behind the shoulder and the rear animal's curved neck",
+        "what": "the haze reads as an almost featureless brown wash, with little visible change in density or illumination near the lava",
+        "fix": "break up the haze in depth and let nearby lava selectively light denser patches"
+      }
+    ]
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "gemini_neon",
+  "answered": "2026-11-25 10:47 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the caldera floor across the center and lower right",
+        "what": "the floor is a flat, smooth matte-grey plane with thin dark drawn crack lines, flat shiny patches, and an unintegrated pile of dark rocks instead of rugged, uneven crusted basalt",
+        "fix": "replace the flat floor with heavily displaced, granular dark pahoehoe basalt relief that catches cool skylight and warm lava bounce, and remove the stray rock pile"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the foreground lava channel and its banks (also set-A-04.png)",
+        "what": "the molten lava looks like flat procedural yellow-orange pools with crisp concentric red-and-grey stripes, and the channel walls look like sheared vertical clay with stretched vertical texture stripes",
+        "fix": "give the lava viscous, turbulent molten swirls with hot white-yellow cores and dark crust folds, and sculpt jagged, overhanging basalt banks lit warmly by the lava"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the cooled pahoehoe basalt around the lava channel (also set-A-04.png)",
+        "what": "the rock surface reads as smooth, soft clay painted with dark reddish-brown procedural stripes instead of rough, granular dark volcanic rock",
+        "fix": "replace the smooth striped surface with crisp charcoal basalt micro-relief, overlapping ropy folds, fractures, and realistic rock specular highlights"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the far-left foreground edge and rock ridge",
+        "what": "a hard-edged vertical grey-and-black clipped artifact with a floating dark rock chunk breaks the left edge, and the yellow sulfur fumarole is pushed off-frame and darkened",
+        "fix": "remove the clipped artifact and rebuild a continuous craggy basalt cliff down the left side with a prominent yellow sulfur vent releasing dense natural steam"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the buried carcass and surrounding lava folds (also set-A-06.png)",
+        "what": "the leg bends in a smooth rubbery arch covered in thick tan patches, sitting on smooth grey extruded clay-like tubes with flat red-orange paint in the left crevice and no rising steam",
+        "fix": "sculpt an angular, bony joint with thin flaking ash-grey bark-like crust embedded in rough, gritty dark basalt folds, with deep glowing embers and faint wisps of steam rising from the crevice"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the lava cave mouth in the back crater wall (also set-A-03-b.png and set-A-05-b.png)",
+        "what": "the outer rim of the cave arch has a bright, hard-edged orange painted band around a flat black interior, and the lava stream exits from a sharp flat horizontal shelf",
+        "fix": "remove the painted rim band, recess the cave mouth naturally into fractured rock, and let soft bounced orange light from the lava illuminate the inner cavern ceiling and nearby cliff"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the glowing lava cracks, right-side spatter pool, and mid-left pit",
+        "what": "foreground cracks look like flat orange lines with pale halos that light nothing around them, the right pool sits under an opaque orange fog puff with sparse dots instead of bright spatter arcs, and an extra smoking lava pit appears on the mid-left",
+        "fix": "give the cracks incandescent white-yellow cores with warm bounce onto adjacent rock, replace the opaque fog puff with bright leaping lava spatter and translucent haze, and remove the extra mid-left pit"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the tall creature on the left and the mid-ground plain behind the carcass",
+        "what": "the left creature is bulky and angular with oversized pale root-like tendrils in front of an artificial orange glow cloud, and the plain behind the carcass is flat smooth grey with drawn lines instead of textured dark basalt crisscrossed by glowing lava cracks",
+        "fix": "make the creature slender with fine golden-lit tendrils touching a real glowing crack, and restore rough dark basalt and warm glowing lava cracks across the mid-ground plain"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the foreground left rock slope, sulfur vent, and lower-left pahoehoe folds (from set-A-01-b.png)",
+        "what": "the slope is smoother and clay-like with scattered loose pebbles, the lower-left folds look smeared and glossy, and the sulfur deposit is a smooth yellow-green painted streak under soft CG smoke puffs",
+        "fix": "replace with sharp fractured volcanic rock, detailed granular ropy pahoehoe folds, craggy sulfur-encrusted stone, and denser, finely structured steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the crater rim, right-hand promontory, and rising smoke plume (also set-A-05-b.png)",
+        "what": "the crater wall is too tall and blocky with vertical striations, the right rock promontory merges into the back wall instead of jutting forward as a distinct headland, and the smoke plume is a heavy, opaque grey cloud",
+        "fix": "break up the crater rim into stratified rocky cliffs and scree slopes, separate the right headland with warm amber rim light along its base, and soften the smoke into layered translucent vapour"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the foreground tall creature's feeding tendrils and body lighting",
+        "what": "the tendrils are thick, oversized pale translucent roots hanging over a dim crack rather than fine golden-white glowing filaments, and the body is overly dark and flatly lit",
+        "fix": "make the tendrils slender and brightly illuminated by the hot crack beneath them, and add subtle warm under-lighting to the legs and torso"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the buried carcass in the lower-right foreground",
+        "what": "the carcass sits on an abrupt circular mound of smooth clay-like folds with a thick smoothly arched leg and bright tan patches",
+        "fix": "blend the carcass seamlessly into rough dark basalt folds and match the angular, muted weathered-grey silhouette of the target"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the background crater wall, distant lava plain, and tall creatures",
+        "what": "the background is noticeably sharper than in the target, the mid-ground plain is mostly empty grey without glowing lava cracks beneath the creatures, and the nearest background creature is too large and dark with thick tendrils",
+        "fix": "soften the background focus to match the shallow depth of field in the target, add glowing lava cracks across the distant plain, and refine the creature's scale, tendrils, and warm under-lighting"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the background depth of field, right headland, and lower-left foreground rock",
+        "what": "the background crater rim and cave are too sharp, the right headland is flattened into the wall, and the broad out-of-focus basalt ridge in the lower-left is replaced by a small isolated dark dirt clump",
+        "fix": "match the target's shallow depth of field on the background, restore the distinct right headland with warm haze, and frame the lower-left corner with a broad natural basalt ridge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the sky, atmospheric haze, and warm right-side glow (also set-A-03-b.png and set-A-05-b.png)",
+        "what": "the sky is a brighter uniform slate blue and the warm orange-amber glow rising from the right lava plains is weak and flat, leaving the scene muddy grey and lacking atmospheric depth",
+        "fix": "deepen the cool twilight sky on the left and build a rich warm amber-orange atmospheric glow rising from the right lava field into the haze and right horizon"
+      }
+    ]
+  }
+}
