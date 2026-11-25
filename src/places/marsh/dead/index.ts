@@ -71,14 +71,18 @@ export function create(ctx: Context): Piece {
   mesh.frustumCulled = false;
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
   // The live one is matted: hair in wet ropes, salt dried on their ends. The dead are furred with crystal that has grown out of their crust.
-  const coat = new Hair(ctx, skin, [{ animal: stuck, locks: 300, length: 0.3, width: 0.008, wet: ground + 0.3, stand: 0, tint: 1.5, bare: 0, salt: 3 }], 'dead-coat');
+  const coat = new Hair(ctx, skin, [{ animal: stuck, locks: 320, length: 0.3, width: 0.008, wet: ground + 0.3, stand: 0, tint: 2.1, bare: 0, salt: 3 }], 'dead-coat');
   const frost = new Hair(
     ctx,
     skin,
     bodies.filter((b) => b.animal !== stuck).map((b) => ({ animal: b.animal, locks: 2600, length: 0.05 * b.animal.b.k, width: 0.0045, wet: -10, stand: 1.2, tint: 5.2, bare: 0, fall: 0.05 })),
     'dead-frost',
   );
-  ctx.scene.add(ctx.parts.built('dead', mesh, mud.mesh, coat.mesh, frost.mesh), mud.mesh, coat.mesh, frost.mesh);
+  // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
+  const stains = bodies
+    .filter((b) => b.animal !== stuck)
+    .map((b, i) => mudWallow(ctx, b.drive.ox, b.drive.oz, b.drive.dir, 0.72 * b.animal.b.k, [0.03, 0.019, 0.015], 'dead-stain-' + i));
+  ctx.scene.add(ctx.parts.built('dead', mesh, mud.mesh, coat.mesh, frost.mesh, ...stains.map((w) => w.mesh)), mud.mesh, coat.mesh, frost.mesh, ...stains.map((w) => w.mesh));
 
   const discs = ctx.rig.contactDiscs(bodies.length);
   bodies.forEach((b, i) => {
@@ -112,6 +116,7 @@ export function create(ctx: Context): Piece {
       live.sway = 0;
       live.squash = 1;
       live.splay = 0.2 + 0.25 * heave;
+      live.floor = ground + 0.1;
       for (let f = 0; f < FEELERS; f++) live.curl[f] = 0.85 + 0.3 * Math.sin(seconds * (1.3 + 0.37 * f) + f * 2.1) + 0.35 * heave;
       // The feet are held by the mud: they stay where they are while the trunk strains above them.
       live.feet.forEach((foot, l) => {
@@ -132,6 +137,7 @@ export function create(ctx: Context): Piece {
       material.dispose();
       mud.dispose();
       coat.dispose();
+      for (const w of stains) w.dispose();
       frost.dispose();
     },
   };

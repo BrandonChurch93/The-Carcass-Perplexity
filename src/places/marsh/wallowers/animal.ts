@@ -26,9 +26,9 @@ const KNOTS: [number, number, number, number, number][] = [
   [0.0, -2.0, 0.84, 0.02, 0.02],
   [0.03, -1.97, 0.86, 0.24, 0.27],
   [0.08, -1.84, 0.89, 0.41, 0.5],
-  [0.18, -1.4, 0.95, 0.55, 0.74],
-  [0.32, -0.72, 1.05, 0.66, 0.88],
-  [0.46, 0.0, 1.18, 0.73, 0.9],
+  [0.18, -1.4, 1.0, 0.61, 0.77],
+  [0.32, -0.72, 1.0, 0.62, 0.89],
+  [0.46, 0.0, 1.07, 0.71, 0.92],
   [0.58, 0.6, 1.33, 0.8, 0.88],
   [0.68, 1.1, 1.24, 0.76, 0.82],
   [0.77, 1.5, 1.06, 0.69, 0.74],
@@ -120,6 +120,8 @@ export interface Drive {
   knee: number[];
   /** How thick the legs are, 1 alive: a dead one's have shrunk to the bone. */
   shrunk: number;
+  /** The level of the mud the feelers lie on, in the world: none of them goes under it. Far below when there is none. */
+  floor: number;
 }
 
 export interface Stood {
@@ -139,7 +141,7 @@ const LEG_AT: [number, number][] = [
 ];
 // A leg from where it leaves the trunk to its sole: the radius down it, for an adult of size 1.
 /** The radius down a leg, 0 where it leaves the trunk to 1 at the sole, for an adult of size 1: a pillar, thick at the top, a knee, a broad pad. */
-const legRadius = (u: number): number => 0.4 - 0.13 * smooth(0, 0.6, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.06 * smooth(0.7, 0.93, u);
+const legRadius = (u: number): number => 0.4 - 0.13 * smooth(0, 0.6, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.15 * smooth(0.62, 0.95, u);
 
 export class Animal {
   readonly body: Tube;
@@ -214,7 +216,7 @@ export class Animal {
           sleeve += 0.08 * near * (r3 - 0.62);
           fold = Math.min(fold, 1 - near * (1 - r3));
           // The haunch and the shoulder stand out over the leg.
-          sleeve += 0.19 * Math.exp(-((along - lx) ** 2) / 0.2) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
+          sleeve += 0.11 * Math.exp(-((along - lx) ** 2) / 0.3) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
         let m = 1 + 0.17 * neck * (r1 - 0.62) * under + 0.1 * flank * (r2 - 0.62) * side + sleeve;
         // Where the head joins there is one fold deeper than the rest, and the brow stands over it.
@@ -232,7 +234,9 @@ export class Animal {
         m += 0.06 * row * vent;
         // A dead one is under a crust of salt that has grown in knobs.
         // The flank is hollow between the ribs and the haunch.
-        m -= 0.06 * Math.exp(-((along + 0.25) ** 2) / 0.16) * smooth(0.25, 0.85, Math.abs(cs)) * smooth(0.75, 0.1, Math.abs(sn));
+        m -= 0.03 * Math.exp(-((along + 0.25) ** 2) / 0.16) * smooth(0.25, 0.85, Math.abs(cs)) * smooth(0.75, 0.1, Math.abs(sn));
+        // Under the crust of a dead one the hide has fallen in over the ribs.
+        if (b.salt > 1) m += 0.11 * bell(0.2, 0.66, s) * smooth(0.95, 0.2, Math.abs(sn)) * (ridge(along / 0.27 + 0.5 * wob, 0.6) - 0.6);
         if (b.salt > 1) m += 0.3 * (lump(along * 2.3 + 7, a * 2.1, sd + 13) - 0.4) + 0.22 * (lump(along * 5.5 + 31, a * 4.5, sd + 11) - 0.35) + 0.1 * (lump(along * 13, a * 11, sd + 12) - 0.5);
         this.lumps[i * BODY_SIDES + j] = m;
         // Between the knobs of a dead one's crust the light does not reach.
@@ -258,10 +262,10 @@ export class Animal {
         for (let j = 0; j <= LEG_SIDES; j++) {
           const a = ((j % LEG_SIDES) / LEG_SIDES) * TAU;
           // The hide lies in rings down the leg, deep at the top and at the knee.
-          const r = ridge((u * 1.0) / 0.105 + 0.5 * (lump(a * 1.2, u * 3 + l, sd + 7) - 0.5), 0.55);
+          const r = ridge((u * 1.0) / 0.16 + 2.2 * (lump(a * 1.2, u * 3 + l, sd + 7) - 0.5), 0.55);
           const deep = (1 - smooth(0.2, 0.75, u)) * 0.8 + 0.5 * Math.exp(-(((u - 0.5) / 0.08) ** 2));
           const toes = 0.1 * Math.cos(a * 4 + l) * smooth(0.72, 0.92, u);
-          this.legFold[(l * LEG_RINGS + i) * LEG_SIDES + (j % LEG_SIDES)] = 1 + 0.085 * deep * (r - 0.62) + toes;
+          this.legFold[(l * LEG_RINGS + i) * LEG_SIDES + (j % LEG_SIDES)] = 1 + 0.06 * deep * (r - 0.62) + toes;
           skin.describe(t, i, j, u * 1.1 * k, (j / LEG_SIDES) * TAU * 0.3 * k, b.salt, (0.45 + 0.55 * smooth(0.1, 0.6, u)) * (0.5 + 0.5 * smooth(0, 0.6, 1 - deep * (1 - r))), legRadius(u) * k, seed + 0.13 * (l + 1), 1, u);
         }
       }
@@ -275,8 +279,8 @@ export class Animal {
       const reach = ((f * 0.618 + cell(f, 4, sd) * 0.3) % 1) * 0.95;
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
       const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 7) - Math.floor(3 * Math.abs(u - 0.5));
-      const length = k * (0.54 + 0.22 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
-      const radius = k * (0.029 + 0.01 * cell(f, 3, sd)) * (1 + 0.2 * young);
+      const length = k * (0.34 + 0.5 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
+      const radius = k * (0.019 + 0.009 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
         const v = i / (FEELER_RINGS - 1);
@@ -526,6 +530,8 @@ export class Animal {
           y += ey * seg;
           z += ez * seg;
         }
+        // It does not go into the mud: it lies on it and is dragged across it.
+        y = Math.max(y, d.floor - d.oy + at.radius);
         const rad = r === FEELER_RINGS - 1 ? at.radius * 0.04 : at.radius * (1 - 0.8 * v * v) * (r === 0 ? 1.25 : 1);
         let o = (t.start + r * fw) * 3;
         for (let j = 0; j < fw; j++) {
@@ -663,5 +669,6 @@ export function newDrive(): Drive {
     splay: 0.1,
     knee: [0, 0, 0, 0],
     shrunk: 1,
+    floor: -1e9,
   };
 }

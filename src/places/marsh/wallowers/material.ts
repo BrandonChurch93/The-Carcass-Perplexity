@@ -118,7 +118,7 @@ void main() {
 
   // The fine wrinkles between the folds of the shape.
   float neck = smoothstep(0.52, 0.66, vLook.y) * (1.0 - smoothstep(0.9, 0.99, vLook.y));
-  float deep = trunk * (0.22 + 0.3 * neck) + leg * 0.3;
+  float deep = (trunk * (0.22 + 0.3 * neck) + leg * 0.3) * (1.0 + 1.3 * mudded);
   float e = 0.008;
   float c0 = creases(vUv, seed, deep);
   float cx = creases(vUv + vec2(e, 0.0), seed, deep);
@@ -178,7 +178,7 @@ void main() {
   albedo = mix(albedo, albedo * mix(vec3(0.78, 0.7, 0.64), vec3(1.0), smoothstep(0.3, 0.7, fbm(vUv * vec2(1.9, 1.6) + seed * 3.0))), dead);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
   albedo = mix(albedo, albedo * mix(vec3(0.72, 0.5, 0.45), vec3(0.7), mudded), damp * (1.0 - wet));
-  vec3 wetC = mix(albedo * vec3(0.75, 0.2, 0.12) + vec3(0.03, 0.003, 0.002), albedo * 0.6, mudded);
+  vec3 wetC = mix(albedo * vec3(0.66, 0.17, 0.1) + vec3(0.024, 0.003, 0.002), albedo * 0.6, mudded);
   albedo = mix(albedo, wetC, wet * (0.9 - 0.4 * feeler));
   albedo = mix(albedo, albedo * mix(vec3(0.7, 0.45, 0.4), vec3(0.7), mudded), 0.6 * thread * damp);
   // Red mud, thick and smooth, on what stands in it.
@@ -188,17 +188,24 @@ void main() {
   // It dries in plates of its own, and the hide shows red brown between them.
   float plate = smoothstep(0.38, 0.6, fbm(vUv * vec2(2.6, 2.1) + seed * 7.0)) * (0.5 + 0.5 * smoothstep(0.2, 0.5, fbm(vUv * vec2(9.0, 7.0) + seed)));
   vec3 greyDry = mix(vec3(0.13, 0.085, 0.066), vec3(0.24, 0.215, 0.19), plate) * (0.6 + 0.4 * s0);
+  // The dried mud is a plaster: it has cracked into plates as the animal heaved, each plate its own grey, the hide dark in the cracks.
+  vec2 slab = plates(vUv * vec2(6.5, 5.5) + seed * 5.0 + 0.25 * vec2(vnoise(vUv * 9.0), vnoise(vUv * 9.0 + 5.0)));
+  vec2 chip = plates(vUv * vec2(19.0, 16.0) + seed * 9.0);
+  float crack = max(1.0 - smoothstep(0.015, 0.085, slab.x), 0.55 * (1.0 - smoothstep(0.02, 0.14, chip.x)) * smoothstep(0.4, 0.6, fbm(vUv * 3.0 + seed)));
+  greyDry *= 0.78 + 0.45 * fract(slab.y * 7.31);
+  greyDry = mix(greyDry, vec3(0.05, 0.03, 0.024), crack);
   albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
+  float split = mudded * crack * smear * (1.0 - wet) * (1.0 - feeler);
   albedo = mix(albedo, mud, soaked * 0.85);
 
   vec3 n = normalize(ng - (T * slope.x + B * slope.y) * (1.0 - 0.5 * soaked));
-  float rough = mix(0.92, 0.58, max(wet, 0.8 * thread * damp));
+  float rough = mix(0.92, 0.47, max(wet, 0.8 * thread * damp));
   rough = mix(rough, 0.3, soaked);
   rough = mix(rough, 0.95, cake);
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));
   // At a grazing look a rough wet hide does not mirror the sky as a clean rim.
   rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
-  float occ = vInfo.y * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
+  float occ = vInfo.y * (1.0 - 0.5 * split) * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
   occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
   occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b) * mix(1.0, 0.3 + 0.7 * knob, dead), cake);
   // The mouth: a dark pit in the end of the muzzle.
@@ -210,8 +217,9 @@ void main() {
   float eyeAlong = (vLook.y - 0.925) * 3.55 * kk;
   float eyeRound = min(abs(vUv.y - 0.4 * kk), abs(vUv.y - 2.113 * kk));
   float eyeD = length(vec2(eyeAlong, eyeRound)) / max(kk, 0.05);
-  float socket = trunk * (1.0 - dead) * (1.0 - smoothstep(0.03, 0.075, eyeD));
-  float bead = trunk * (1.0 - dead) * (1.0 - smoothstep(0.022, 0.03, eyeD));
+  // They have no eyes: where one would be the hide is only a little thinner. Nothing dark, nothing that shines.
+  float socket = 0.0 * eyeD;
+  float bead = 0.0;
   albedo = mix(albedo, albedo * 0.45, socket);
   occ *= 1.0 - 0.4 * socket;
   albedo = mix(albedo, vec3(0.006, 0.004, 0.004), bead);

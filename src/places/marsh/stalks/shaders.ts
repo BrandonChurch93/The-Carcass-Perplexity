@@ -190,7 +190,7 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
   float heavy = 0.75 + 0.5 * fract(seed * 5.3);
   float u2 = u * u;
   // One in eight has died: it hangs brown down the stem.
-  float gone = step(fract(seed * 3.1), 0.04);
+  float gone = step(fract(seed * 3.1), 0.012);
   vec3 hung = radialBase * R * 0.9 + radial * (R * 0.5 + L * 0.2 * (2.0 * u - u2)) - vec3(0.0, 1.0, 0.0) * L * 0.6 * u * (0.4 + 0.6 * u) + cross(axis, radial) * L * 0.04 * sin(u * 6.0 + seed * 31.0) * u;
   vec3 outP = radialBase * R * 0.5 * (1.0 - 0.5 * u)
     + d0 * L * (0.86 - 0.3 * spread) * (2.0 * u - u2)
@@ -236,13 +236,13 @@ void main() {
   vec3 t = normalize(filamentPoint(u + 0.03, open, axis, radial, radialBase) - p);
   vec3 toCam = normalize(cameraPosition - p);
   vec3 side = normalize(cross(t, toCam));
-  float wide = aMore.w * (1.0 - 0.75 * u * u) * (0.45 + 0.55 * smoothstep(0.0, 0.12, u));
+  float wide = aMore.w * (1.0 - 0.88 * u) * (0.45 + 0.55 * smoothstep(0.0, 0.12, u)) * (0.6 + 0.8 * fract(aFil.w * 41.3));
   p += side * position.x * wide;
   vWorld = p;
   // Round across its width.
   vNormal = normalize(cross(side, t) + side * position.x * 0.9);
   vLook = vec3(u, aFil.w, open);
-  vGone = step(fract(aFil.w * 3.1), 0.04);
+  vGone = step(fract(aFil.w * 3.1), 0.012);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -258,9 +258,11 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float u = vLook.x;
   float tone = fract(vLook.y * 7.7);
-  vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.17, 0.011, 0.024), smoothstep(0.0, 0.8, u) * (0.55 + 0.45 * tone));
+  vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.17, 0.011, 0.024), smoothstep(0.0, 0.8, u) * (0.3 + 0.7 * tone));
   // The ends dry paler between two wettings.
-  albedo = mix(albedo, vec3(0.3, 0.13, 0.12), 0.4 * smoothstep(0.8, 1.0, u) * step(0.5, tone));
+  albedo = mix(albedo, vec3(0.3, 0.13, 0.12), 0.5 * smoothstep(0.55, 1.0, u) * step(0.4, tone));
+  // Pale where it leaves the mouth.
+  albedo = mix(albedo, vec3(0.2, 0.12, 0.09), 0.5 * (1.0 - smoothstep(0.03, 0.22, u)) * vLook.z);
   // Drawn in, the filaments are packed and dark: the bud is a dull sheath.
   albedo *= mix(0.4, 1.0, max(vLook.z, vGone));
   albedo = mix(albedo, vec3(0.05, 0.03, 0.02) * (0.6 + 0.8 * tone), vGone);
@@ -282,7 +284,7 @@ void main() {
   float open;
   plumeFrame(axis, radial, radialBase, open);
   float seed = aFil.w;
-  float has = step(fract(seed * 17.3), 0.2) * step(0.45, open) * (1.0 - step(fract(seed * 3.1), 0.04));
+  float has = step(fract(seed * 17.3), 0.2) * step(0.45, open) * (1.0 - step(fract(seed * 3.1), 0.012));
   float period = 2.6 + 4.4 * fract(seed * 29.1);
   float c = fract(uSeconds / period + seed * 11.0);
   vec3 tip = filamentPoint(1.0, open, axis, radial, radialBase);
