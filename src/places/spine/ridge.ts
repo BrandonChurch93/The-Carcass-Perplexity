@@ -206,10 +206,12 @@ export const FIN_ROOT = 110;
 
 export function fin(sp: Spire, t: number): FinPoint {
   const q = 1 - t;
+  // The top is a broken edge, not a point: a blade some metres long and a few thick, where the last of it came away.
+  const blunt = 1 - q * q * q * q;
   return {
     centre: -sp.lean * Math.pow(t, 1.4),
-    half: sp.half * Math.pow(q, 1.15) + 4 * q,
-    thick: sp.thick * Math.pow(q, 1.2) + 3 * q,
+    half: sp.half * Math.pow(q, 1.15) + 4 * q + 0.03 * sp.half * blunt,
+    thick: sp.thick * Math.pow(q, 1.2) + 3 * q + 2.2 * blunt,
     y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t,
   };
 }
