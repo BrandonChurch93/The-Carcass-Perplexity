@@ -17,10 +17,54 @@ export const FACE_AT: [number, number, number] = [1.0, 0.6, 0];
 
 const hump = (x: number): number => Math.exp(-(((x - 0.3) / 0.42) ** 2));
 const cap = (x: number): number => Math.pow(Math.max(0, 1 - Math.pow(Math.abs(x + 0.05) / 0.86, 3.2)), 0.42);
-/** The trunk at x: the height of its middle, its half height and its half width. A high shoulder, a low sloping rump, no waist. */
+const chest = (x: number): number => Math.exp(-(((x - 0.25) / 0.3) ** 2));
+const haunch = (x: number): number => Math.exp(-(((x + 0.58) / 0.2) ** 2));
+/**
+ * The trunk at x: the height of its middle, its half height and its half width. A high shoulder over a deep chest, the belly drawn up behind
+ * the ribs, a broad haunch, a low sloping rump. The belly clears the ground by most of a leg, so the legs show under the coat.
+ */
 export function trunkAt(x: number): { y: number; h: number; w: number } {
   const rump = Math.min(1, Math.max(0, (-0.25 - x) / 0.6));
-  return { y: 0.8 + 0.13 * hump(x) - 0.12 * rump * rump, h: (0.33 + 0.12 * hump(x)) * cap(x), w: (0.3 + 0.05 * hump(x)) * cap(x) };
+  const waist = Math.exp(-(((x + 0.22) / 0.2) ** 2));
+  return {
+    y: 0.9 + 0.12 * hump(x) - 0.1 * rump * rump + 0.02 * waist,
+    h: (0.28 + 0.12 * hump(x) + 0.03 * haunch(x) - 0.035 * waist) * cap(x),
+    w: (0.26 + 0.08 * chest(x) + 0.05 * haunch(x) - 0.02 * waist) * cap(x),
+  };
+}
+
+// A heavy shoulder or thigh that stands out of the trunk, a knee, a thin shank, a broad foot.
+const LEG_LEVELS: [number, number, number][] = [
+  [LEG_TOP + 0.2, 0.15, 0],
+  [LEG_TOP + 0.02, 0.165, 0.01],
+  [0.5, 0.125, 0.0],
+  [0.36, 0.1, -0.025],
+  [0.2, 0.08, -0.015],
+  [0.08, 0.095, 0.02],
+  [0.02, 0.125, 0.05],
+  [0.0, 0.11, 0.05],
+  [0.0, 0.01, 0.05],
+];
+/** The radius of a leg at height y, and how far ahead of the hip its middle is there. */
+function legAt(y: number): [number, number] {
+  for (let i = 0; i < LEG_LEVELS.length - 2; i++) {
+    const hi = LEG_LEVELS[i] as [number, number, number];
+    const lo = LEG_LEVELS[i + 1] as [number, number, number];
+    if (y <= hi[0] && y >= lo[0]) {
+      const k = (y - lo[0]) / Math.max(1e-6, hi[0] - lo[0]);
+      return [lo[1] + (hi[1] - lo[1]) * k, lo[2] + (hi[2] - lo[2]) * k];
+    }
+  }
+  return [0.12, 0.05];
+}
+const legRadius = (y: number): number => legAt(y)[0];
+const legAhead = (y: number): number => legAt(y)[1];
+
+/** The neck at k along it (0 at the shoulder, 1 at its blunt end): the middle (x, y) and the radius. */
+function neckAt(k: number): [number, number, number] {
+  const x = NECK_AT[0] - 0.1 + (FACE_AT[0] - NECK_AT[0] + 0.14) * k;
+  const y = NECK_AT[1] + 0.02 - (NECK_AT[1] - FACE_AT[1]) * k * k;
+  return [x, y, (0.25 - 0.09 * k) * Math.pow(Math.max(1 - k ** 5, 0.0005), 0.45)];
 }
 
 interface Ring {
@@ -68,29 +112,18 @@ export function bodyGeometry(): THREE.BufferGeometry {
     trunk.push({ c: [x, t.y, 0], a: [0, 0, Math.max(t.w, 0.004)], b: [0, Math.max(t.h, 0.004), 0] });
   }
   b.tube(trunk, 18, 0, 0);
-  // The neck: short, carried low, ending in a blunt stump with no face.
+  // The neck: short, carried low, ending in a blunt round stump with no face.
   const neck: Ring[] = [];
-  for (let i = 0; i <= 7; i++) {
-    const k = i / 7;
-    const x = NECK_AT[0] - 0.1 + (FACE_AT[0] - NECK_AT[0] + 0.14) * k;
-    const y = NECK_AT[1] + 0.02 - (NECK_AT[1] - FACE_AT[1]) * k * k;
-    const r = (0.25 - 0.1 * k) * (i === 7 ? 0.5 : 1);
+  for (let i = 0; i <= 9; i++) {
+    const k = i / 9;
+    const [x, y, r] = neckAt(k);
     neck.push({ c: [x, y, 0], a: [0, 0, r], b: [-0.45 * r * k, r, 0] });
   }
   b.tube(neck, 12, 5, 0);
   // The legs: short and thick, with a broad foot.
   HIPS.forEach((hip, n) => {
     const leg: Ring[] = [];
-    const levels: [number, number, number][] = [
-      [LEG_TOP + 0.12, 0.17, 0],
-      [0.5, 0.15, 0],
-      [0.3, 0.115, -0.02],
-      [0.14, 0.095, -0.01],
-      [0.06, 0.12, 0.03],
-      [0.0, 0.13, 0.05],
-      [0.0, 0.01, 0.05],
-    ];
-    for (const [y, r, fwd] of levels) leg.push({ c: [hip[0] + fwd, y, hip[2]], a: [0, 0, r], b: [r * 1.15, 0, 0] });
+    for (const [y, r, fwd] of LEG_LEVELS) leg.push({ c: [hip[0] + fwd, y, hip[2]], a: [0, 0, r], b: [r * 1.15, 0, 0] });
     b.tube(leg, 10, n + 1, 0);
     // Three hooked claws on each foot.
     for (let c = -1; c <= 1; c++) {
@@ -134,7 +167,7 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
   };
   for (let i = 0; i < count; i++) {
     const pick = rng.next();
-    if (pick < 0.7) {
+    if (pick < 0.64) {
       // The trunk. More locks on the back and the flanks than under the belly.
       const x = -0.9 + 1.68 * rng.next();
       let ang = rng.range(-Math.PI, Math.PI);
@@ -145,24 +178,23 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       const flank = Math.pow(Math.abs(sz), 1.5);
       // Short on the back, longer down the flanks, a fringe under the belly, a mane on the hump.
       const under = Math.max(0, -sy);
-      const length = (0.1 + 0.1 * flank * longer + 0.12 * under * longer + 0.1 * hump(x) * Math.max(0, sy)) * rng.range(0.7, 1.3);
-      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.022, 0.045));
-    } else if (pick < 0.82) {
+      const length = (0.085 + 0.07 * flank * longer + 0.09 * under * longer + 0.07 * hump(x) * Math.max(0, sy)) * rng.range(0.65, 1.35);
+      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.016, 0.034));
+    } else if (pick < 0.76) {
       // The neck and the mane that falls over where a face would be.
-      const k = rng.next();
+      const k = Math.pow(rng.next(), 0.7);
       const ang = rng.range(-Math.PI, Math.PI);
-      const x = NECK_AT[0] - 0.1 + (FACE_AT[0] - NECK_AT[0] + 0.1) * k;
-      const y = NECK_AT[1] + 0.02 - (NECK_AT[1] - FACE_AT[1]) * k * k;
-      const r = 0.25 - 0.1 * k;
-      put(i, [x, y + r * Math.cos(ang), r * Math.sin(ang)], [0.5, Math.cos(ang), Math.sin(ang)], rng.range(0.12, 0.24), 5, rng.range(0.022, 0.04));
+      const [x, y, r] = neckAt(k);
+      const fwd = 0.4 + 2.5 * k ** 4;
+      put(i, [x - 0.45 * r * k * Math.cos(ang), y + r * Math.cos(ang), r * Math.sin(ang)], [fwd, Math.cos(ang), Math.sin(ang)], rng.range(0.1, 0.2), 5, rng.range(0.016, 0.03));
     } else {
       // The legs, feathered to the foot.
       const n = Math.floor(rng.next() * 4) % 4;
       const hip = HIPS[n] as [number, number, number];
-      const y = rng.range(0.03, LEG_TOP + 0.1);
+      const y = rng.next() < 0.3 ? rng.range(0.02, 0.16) : rng.range(0.03, LEG_TOP + 0.1);
       const ang = rng.range(-Math.PI, Math.PI);
-      const r = 0.1 + 0.07 * (y / LEG_TOP);
-      put(i, [hip[0] + r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.07, 0.14) * (0.7 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.02, 0.035));
+      const r = 1.06 * legRadius(y);
+      put(i, [hip[0] + legAhead(y) + 1.15 * r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.06, 0.12) * (0.75 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.015, 0.028));
     }
   }
   return { root, dir, lock, count };
@@ -184,7 +216,7 @@ export function lockGeometry(segments: number): THREE.BufferGeometry {
 
 /** One tendril: a tube along y (0 to 1), radius 1, to be bent in the vertex shader. */
 export function tendrilGeometry(): THREE.BufferGeometry {
-  const g = new THREE.CylinderGeometry(1, 1, 1, 6, 12, true);
+  const g = new THREE.CylinderGeometry(1, 1, 1, 7, 20, true);
   g.translate(0, 0.5, 0);
   return g;
 }
