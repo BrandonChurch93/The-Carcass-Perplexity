@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { AWAY as STAGED_AWAY, SEAMS, UNIT, WALKERS, seamLine } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import type { HeartContext, HeartPiece, SteamSource } from '../shared/context';
 import { Animal, TUFT_UP, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
@@ -156,10 +157,11 @@ export function create(ctx: HeartContext): HeartPiece {
 
   return {
     setTime: (seconds) => {
+      const staged = stagedSeconds();
       herd.forEach((animal, i) => {
         const stood = animal.pose(seconds);
         const b = animal.b;
-        const here = AWAY.some((a) => seconds >= a.from && seconds <= a.to && a.who.includes(i)) ? 0 : 1;
+        const here = AWAY.some((a) => staged >= a.from && staged <= a.to && a.who.includes(i)) ? 0 : 1;
         // A tuft that is down on a seam stands in a pool, and the pool lights the animal from below.
         const crust = env.undrift(stood.tuft.x, stood.tuft.z, seconds);
         const lit = smooth(1.5 * b.tendrilLen, 0.95 * b.tendrilLen, stood.tuft.y) * smooth(2.6, 1.0, env.seam(crust[0], crust[1]).d);
