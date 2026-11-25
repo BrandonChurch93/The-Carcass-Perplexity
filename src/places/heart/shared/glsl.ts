@@ -219,10 +219,13 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     if (k < 0.0015) continue;
     vec3 m = p + d * 0.5;
     float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
-    // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the light, on ground only.
-    if (low < 0.0) low = smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
+    // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the light, on ground only,
+    // and only from a light that counts there (a twentieth of the open sky or more): the map is not read for the rest.
     float thrown = 0.0;
-    if (low > 0.0) {
+    vec3 lit = uEmitterRadiance[i] * k;
+    bool counts = max(lit.r, lit.g) > 0.03;
+    if (counts && low < 0.0) low = p.y <= 0.3 ? 1.0 : smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
+    if (counts && low > 0.0) {
       float flat2 = dot(d.xz, d.xz);
       vec2 toward = d.xz * (1.4 * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
       thrown = low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
