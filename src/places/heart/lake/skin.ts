@@ -280,6 +280,10 @@ void main() {
   slope += clamp(onCrust(phaseD, qx, qy, det), -6.0, 6.0) * clamp(foldRise, -0.8, 0.8);
   age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * grainC * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
 
+  // From afar the lake is one dark dry field: the flows and plates differ less, and a rough face seen low shadows itself.
+  float wide = smoothstep(30.0, 130.0, far);
+  age = mix(age, 0.32, 0.4 * wide);
+
   // Spall: in patches the glassy skin has flaked off. What shows is paler and rougher and lies a centimetre or two lower,
   // behind a sharp edge. The edge is never drawn finer than a pixel can hold.
   float spall = 0.0;
@@ -317,6 +321,7 @@ void main() {
     crease *= 1.0 - 0.35 * gritOn * (1.0 - smoothstep(0.22, 0.38, g1));
     slope -= clamp(onCrust(vec2(dFdx(grit), dFdy(grit)), qx, qy, det) * 0.012, -0.7, 0.7);
   }
+  albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
@@ -329,7 +334,7 @@ void main() {
   }
   albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * tb.b - 0.3), 0.8 * mound);
   // That floor is warm dark basalt and nothing on it is pale: its brights are the fire's, not ash on the tops of plates.
-  albedo *= mix(vec3(1.0), vec3(1.12, 0.97, 0.86), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
+  albedo *= mix(vec3(1.0), vec3(1.08, 0.99, 0.92), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
   float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * mix(mix(0.5, 0.0, smoothstep(0.08, 0.35, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
   // A coiled cord carries a satin line along its top.
@@ -361,19 +366,19 @@ void main() {
   // Strong within a hand of the lip, gone by three metres, most on the faces turned to the seam, and cut where a foot or a
   // body stands between.
   float off = max(bank, 0.0);
-  float byMelt = live * smoothstep(0.05, 0.3, gape) * (0.75 * exp(-off / 0.3) + 0.25 * (1.0 - smoothstep(0.4, 3.0, off)));
+  float byMelt = live * smoothstep(0.05, 0.3, gape) * (0.75 * exp(-off / 0.3) + mix(0.08, 0.25, max(fresh, stringOf(net))) * (1.0 - smoothstep(0.4, 3.0, off)));
   float steepAway = length(vAway);
   vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
   float toward = max(-dot(mix(normalize(vNormalG).xz, nShape.xz, 0.35), away) + 0.65 * dot(lumpSlope, away), 0.0);
   float clear = 1.0 - contactAt(vec3(p.x - 0.8 * away.x, p.y, p.z - 0.8 * away.y));
   vec3 skyLight = skyIrradiance(n) * open;
   vec3 light = lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace + 0.9 * toward) * mix(0.12, mix(1.6, 0.5, steep) * clear, byMelt) + emitterIrradiance(p, n) * mix(1.0, occ, mix(0.7, 1.0, churn));
-  if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, n, away) * crease * clear;
+  if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, normalize(mix(normalize(vNormalG), n, 0.3)), away) * mix(1.0, crease, 0.5) * clear;
   // A seam the walkers have torn open to feed is bare melt and lights its banks for a metre or three; the line is skinned
   // over for most of its width and lights little more than its lip.
   float torn = smoothstep(0.04, 0.07, net.g - 2.0) * (1.0 - step(3.3, net.g));
   // The wash of a wide gap on its banks: the grains that face the fire and the lit air over the melt.
-  if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.2, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.1 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (mix(0.3, 0.7, torn) * toward + 0.06 * wallFace) * (mix(0.8, 0.6, torn) * exp(-off / 0.3) + mix(0.2, 0.4, torn) * (1.0 - smoothstep(0.4, mix(3.0, 7.0, torn), off)))) * clear * mix(1.0, crease, 0.6));
+  if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.2, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.16 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (mix(0.2, 0.7, torn) * toward + 0.06 * wallFace) * (mix(0.92, 0.6, torn) * exp(-off / 0.3) + mix(0.08, 0.4, torn) * (1.0 - smoothstep(0.4, mix(3.0, 7.0, torn), off)))) * clear * mix(1.0, crease, 0.6));
   // The fire of the feeding seams lies low over the lake: of the churned floor it lights the faces that lean toward it.
   float tilt = length(lumpSlope);
   if (tilt > 0.03) light += lakeGlow(p.xz - lumpSlope * (10.0 / tilt), 8.0) * (3.14159 * 2.5 * tilt * (1.0 - contactAt(p)) * mix(1.0, crease, 0.5));
@@ -381,8 +386,8 @@ void main() {
   // Only the faces that look at the seam: the flank of a fold that looks away from it stays dark.
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace * facing) * crease * clear;
-  // The wall of a trench is dark and broken: the melt at its foot lights a thin line of it, a hand high, and no more.
-  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live * (1.0 - smoothstep(0.1, 0.4, fresh)));
+  // The wall of a trench is dark and broken: the melt at its foot lights its lowest third of a metre, and little above.
+  light = skyLight + light * mix(1.0, 0.1 + 1.4 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.25), steep * live * (1.0 - smoothstep(0.1, 0.4, fresh)));
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.55 + 0.9 * tb.b + 1.3 * grainA + 1.0 * grainC, 0.4, 1.7), steep);
   vec3 c = albedo * light / 3.14159;
@@ -395,7 +400,7 @@ void main() {
   r.y = abs(r.y);
   // The crest of a cord carries a pale line of the sky.
   // What the satin gives back is a grey sheen, not a picture of the sky: a broad dim highlight, never blue, never a glint.
-  float sheen = fresnel * open * smoothstep(0.05, 0.18, v.y) * (1.0 - fresh);
+  float sheen = fresnel * open * smoothstep(0.05, 0.18, v.y) * (1.0 - fresh) * (1.0 - wide);
   vec3 mirror = vec3(0.0);
   if (sheen > 2e-4) {
     mirror = lakeMirror(r, rough);
