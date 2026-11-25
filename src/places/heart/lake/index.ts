@@ -9,6 +9,7 @@ import { SUNK, seamLine } from '../shared/anchors';
 import { NET, NET_FINE, POOL, RIDGES, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
+import { createLava } from './lava';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
@@ -496,12 +497,18 @@ export function create(ctx: HeartContext): HeartPiece {
   glow.frustumCulled = false;
   ctx.rig.glowScene.add(glow);
 
+  // Everything molten is the lava owner's: its meshes are added after the crust, so the depth test lays the melt in the gaps.
+  const molten = createLava(ctx, net, shared);
 
   return {
-    setTime: (seconds) => foundering.setTime(seconds),
+    setTime: (seconds) => {
+      foundering.setTime(seconds);
+      molten.setTime(seconds);
+    },
     solo: (part) => {
       lava.value = part === null || part === 'heart/lava' ? 1 : 0;
       foundering.solo(part);
+      molten.solo(part);
     },
     dispose: () => {
       sheet.geometry.dispose();
@@ -512,6 +519,7 @@ export function create(ctx: HeartContext): HeartPiece {
       net.wide.dispose();
       net.fine.dispose();
       foundering.dispose();
+      molten.dispose();
     },
   };
 }
