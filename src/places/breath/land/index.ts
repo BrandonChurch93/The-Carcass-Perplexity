@@ -89,6 +89,26 @@ export function create(ctx: Context): Piece {
       pale,
     ),
   );
+  // The brim itself: the topmost bed of the shelf stands out over the drop as a ledge, thick and broken, wherever the wall has not fallen.
+  const brim = (b: number): [number, number] => {
+    const r = rimRadius(b);
+    return [r + 0.4, ground(Math.sin(b) * (r + 1.2), -Math.cos(b) * (r + 1.2)) - 1.0];
+  };
+  hoops.add(
+    mesh(
+      mergeGeometries(
+        (
+          [
+            [-178, -40],
+            [-34, 22],
+            [27, 66],
+            [158, 181],
+          ] as const
+        ).map(([from, to], i) => hoop(0, 30, from, to, 1.1 + 0.1 * (i % 3), 41 + i * 5.3, brim)),
+      ),
+      pale,
+    ),
+  );
   ctx.scene.add(ctx.parts.built('hoops', hoops));
 
   // The slabs: what the east-south-east side became. They lie from the lip down a heap of rubble to the middle of the shaft.
