@@ -290,12 +290,13 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     q.y *= mix(0.6, 1.0, kind);
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
-    float ragged = d + (n1 - 0.5) * mix(1.0, 1.1, kind) + (noise(q * 3.1 + 0.21).g - 0.5) * 0.35;
+    vec4 small = noise(q * 3.7);
+    float ragged = d + (n1 - 0.5) * mix(1.0, 1.1, kind) + (small.g - 0.5) * 0.35;
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
     float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(1.8, 1.7, kind)) * mix(1.0, thin, 0.6);
     float fine = mix(0.5, 0.25, u);
-    float wisps = smoothstep(mix(0.36, 0.48, kind), mix(0.82, 0.74, kind), n1 * (1.0 - fine) + noise(q * 3.7).b * fine);
+    float wisps = smoothstep(mix(0.36, 0.48, kind), mix(0.82, 0.74, kind), n1 * (1.0 - fine) + small.b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
     float dens = body * puff * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
