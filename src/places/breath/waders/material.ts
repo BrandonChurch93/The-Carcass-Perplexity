@@ -127,20 +127,20 @@ void main() {
     float between = between_;
     occ *= 1.0 - 0.6 * between - 0.25 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
-    float sore = smoothstep(0.46, 0.7, mottle) * (0.25 + 0.4 * smoothstep(0.4, 0.65, blotch)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
+    float sore = smoothstep(0.42, 0.66, mottle) * (0.3 + 0.5 * smoothstep(0.4, 0.65, blotch)) + 0.55 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, clamp(sore, 0.0, 0.8));
     albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.35 * pimple * smoothstep(0.4, 0.7, mottle));
     float belly = smoothstep(-0.35, -0.95, sn);
     albedo = mix(albedo, vec3(0.36, 0.34, 0.31), belly * (0.35 + 0.45 * smoothstep(0.35, 0.65, vnoise(q * 13.0))));
   } else if (kind < 1.5) {
     // The neck: slack skin in folds where it leaves the chest, tighter and pinker along it, raw at the end where the tendrils root.
-    float fold = vnoise(vec2(vUv.x * 34.0, vUv.y * 5.0) + seed) - 0.5;
-    height = 0.006 * fold * (1.0 - 0.75 * smoothstep(0.0, 0.4, u)) * mid + 0.0025 * (grain - 0.5) * mid;
+    float fold = vnoise(vec2(vUv.x * 34.0, vUv.y * 5.0) + seed) - 0.5 + 0.5 * (pow(0.5 + 0.5 * sin(vUv.x * 62.0 / 2.1 * 2.0), 2.0) - 0.4) * smoothstep(0.15, 0.4, u);
+    height = 0.006 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid + 0.0025 * (grain - 0.5) * mid;
     albedo = pale * (0.82 + 0.18 * crack);
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.16 * vein * mid);
     albedo = mix(albedo, raw, clamp(0.3 * smoothstep(0.5, 0.75, mottle) + smoothstep(0.6, 1.0, u) * (0.5 + 0.4 * blotch), 0.0, 0.85));
     albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.3 * pimple * smoothstep(0.4, 0.7, mottle));
-    albedo *= 1.0 + 0.5 * fold * (1.0 - 0.75 * smoothstep(0.0, 0.4, u)) * mid;
+    albedo *= 1.0 + 0.5 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
     thin = 0.7;
   } else if (kind < 2.5) {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
