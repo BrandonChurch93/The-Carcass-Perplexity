@@ -92,10 +92,15 @@ vec3 skyRadiance(vec3 d) {
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
-// uFill is the root's: the share of the open sky's light, band by band, that reaches the floor of the caldera through its brown fume.
+// uFill is the root's: the share of the open sky's light, band by band, that reaches the floor of the caldera through its fume.
+// A face that looks up takes the zenith and the horizon as before. A wall takes the horizon alone, and a third more of it: the band of a dusk sky
+// just over the far rim is its brightest part, and only upright faces look at it.
 vec3 skyIrradiance(vec3 n) {
   float up = 0.5 + 0.5 * n.y;
-  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55), up) * uFill;
+  vec3 band = uSkyHorizon * (1.35 - 0.35 * abs(n.y));
+  vec3 e = mix(uSkyGround, mix(band, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
+  // What faces up takes a quarter more than the two colours give: the zenith over a caldera at dusk is not as dark as its colour at 13 degrees says.
+  e *= 1.0 + 0.25 * max(n.y, 0.0);
   float w = 0.5 + 0.5 * dot(n, uWarmDir);
   return 3.14159 * (e + uWarmColour * 0.35 * w * w);
 }
@@ -124,18 +129,27 @@ vec3 lakeGlow(vec2 xz, float radius) {
   return textureLod(tGlow, (xz - uGlowRect.xy) * uGlowRect.zw, log2(max(radius * 2.0 * uGlowTexels, 1.0))).rgb * uCast;
 }
 
-// Irradiance from the glowing lake on a point p with normal n. Zero on a face that looks straight up at lake level.
+// How much of the lake's light still arrives at a height above it: the fume between takes it, and it is gone a few tens of metres up.
+float lakeReach(float h) {
+  return 1.0 / (1.0 + h * h / 2025.0);
+}
+
+// Irradiance from the glowing lake on a point p with normal n.
+// A face that looks straight up at lake level still takes LAKE_GRAZE of the lava within about three metres: real ground is rough, and its grains face the fire.
+const float LAKE_GRAZE = 0.15;
 vec3 lakeIrradiance(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
   float down = 0.5 - 0.5 * n.y;
   float side = length(n.xz);
   vec2 dir = side > 1e-4 ? n.xz / side : vec2(0.0);
   vec2 reach = dir * h * side;
-  vec3 e = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 0.4;
-  e += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 0.3;
+  // The two near taps carry more than their share: lava a few metres away lights a leg or a rock hard, and uCast stays low for the air, which reads lakeGlow.
+  vec3 e = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 0.75;
+  e += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 0.45;
   e += lakeGlow(p.xz + reach * 6.5, h * 4.0) * 0.2;
-  e += lakeGlow(p.xz, h * 2.5) * 0.1;
-  return e * 3.14159 * down;
+  vec3 near = lakeGlow(p.xz, max(h * 2.5, 3.0));
+  e += near * 0.1;
+  return (e * down + near * LAKE_GRAZE) * 3.14159 * lakeReach(h);
 }
 
 // The same from one tap, for things far away.
@@ -143,10 +157,11 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
   float side = length(n.xz);
   vec2 dir = side > 1e-4 ? n.xz / side : vec2(0.0);
-  return lakeGlow(p.xz + dir * h * side * 1.8, h * 2.2) * 3.14159 * (0.5 - 0.5 * n.y);
+  return lakeGlow(p.xz + dir * h * side * 1.8, max(h * 2.2, 3.0)) * 3.14159 * (0.5 - 0.5 * n.y + LAKE_GRAZE) * lakeReach(h);
 }
 
 // Irradiance from the round lights: the fall, the mouth, the fountains, the surge.
+// Each lights the place out to about 40 m plus twice its radius and is gone at twice that: the air takes the rest, and a wall a kilometre away stays the sky's.
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
   for (int i = 0; i < 8; i++) {
@@ -155,7 +170,9 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float r2 = uEmitters[i].w * uEmitters[i].w;
     float d2 = dot(d, d) + r2;
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
-    e += uEmitterRadiance[i] * (3.14159 * r2 / d2) * c;
+    float reach = 40.0 + 2.2 * uEmitters[i].w;
+    float q = d2 / (reach * reach);
+    e += uEmitterRadiance[i] * (3.14159 * r2 / d2) * c / (1.0 + q * q);
   }
   return e * uCast;
 }
