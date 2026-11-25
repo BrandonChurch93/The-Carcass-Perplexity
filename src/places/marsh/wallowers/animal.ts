@@ -139,7 +139,7 @@ const LEG_AT: [number, number][] = [
 ];
 // A leg from where it leaves the trunk to its sole: the radius down it, for an adult of size 1.
 /** The radius down a leg, 0 where it leaves the trunk to 1 at the sole, for an adult of size 1: a pillar, thick at the top, a knee, a broad pad. */
-const legRadius = (u: number): number => 0.34 - 0.1 * smooth(0, 0.62, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.06 * smooth(0.7, 0.93, u);
+const legRadius = (u: number): number => 0.4 - 0.13 * smooth(0, 0.6, u) + 0.03 * Math.exp(-(((u - 0.47) / 0.09) ** 2)) + 0.06 * smooth(0.7, 0.93, u);
 
 export class Animal {
   readonly body: Tube;
@@ -180,7 +180,7 @@ export class Animal {
       const z = Math.sign(c) * Math.pow(Math.abs(c), 0.78);
       let y = Math.sign(sn) * Math.pow(Math.abs(sn), 0.86);
       if (sn < 0) y *= 0.86;
-      this.shape[j * 2] = z * (1 + 0.08 * Math.exp(-((sn + 0.42) ** 2) / 0.03));
+      this.shape[j * 2] = z * (1 + 0.03 * Math.exp(-((sn + 0.42) ** 2) / 0.03));
       this.shape[j * 2 + 1] = y;
     }
     const crease = new Float32Array(BODY_RINGS * BODY_SIDES);
@@ -198,10 +198,10 @@ export class Animal {
         const wob2 = lump(along * 0.9 + 17, a * 1.7 + 5, sd + 3) - 0.5;
         // Rings of slack skin round the neck and the head, deepest under the throat; none alike.
         const r1 = ridge(along / 0.2 + 1.4 * wob + 0.2 * Math.sin(a * 2 + sd), 0.55);
-        const under = 0.4 + 0.8 * smooth(0.6, -0.8, sn);
+        const under = 0.7 + 0.5 * smooth(0.6, -0.8, sn);
         // Plates of hide that hang down the flank, slanting back as they fall, each sagging over the next.
         const r2 = ridge(along / 0.41 + 2.4 * wob2 + 0.5 * sn, 0.5);
-        const side = smooth(0.8, 0.1, sn) * smooth(-0.98, -0.6, sn);
+        const side = smooth(0.95, 0.4, sn) * smooth(-0.98, -0.6, sn);
         // Creases round the root of each leg, where the hide is gathered like a sleeve.
         let sleeve = 0;
         let fold = 1;
@@ -216,7 +216,10 @@ export class Animal {
           // The haunch and the shoulder stand out over the leg.
           sleeve += 0.19 * Math.exp(-((along - lx) ** 2) / 0.2) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
-        let m = 1 + 0.12 * neck * (r1 - 0.62) * under + 0.06 * flank * (r2 - 0.62) * side + sleeve;
+        let m = 1 + 0.17 * neck * (r1 - 0.62) * under + 0.1 * flank * (r2 - 0.62) * side + sleeve;
+        // Where the head joins there is one fold deeper than the rest, and the brow stands over it.
+        m -= 0.1 * Math.exp(-(((s - 0.79) / 0.012) ** 2)) * (0.6 + 0.4 * wob);
+        m += 0.05 * Math.exp(-(((s - 0.84) / 0.03) ** 2)) * smooth(-0.2, 0.6, sn);
         m += 0.06 * (lump(along * 1.1 + 9, a * 0.9 + 2, sd + 1) - 0.5) + 0.025 * (lump(along * 3.1, a * 2.6, sd + 2) - 0.5);
         // The belly hangs.
         m += 0.14 * flank * Math.exp(-((sn + 0.8) ** 2) / 0.1) * (0.6 + 0.8 * lump(along * 0.8, 1, sd + 4));
@@ -234,7 +237,7 @@ export class Animal {
         this.lumps[i * BODY_SIDES + j] = m;
         // Between the knobs of a dead one's crust the light does not reach.
         const pit = b.salt > 1 ? 0.2 + 0.8 * smooth(0.12, 0.5, 0.65 * lump(along * 5.5 + 31, a * 4.5, sd + 11) + 0.35 * lump(along * 13, a * 11, sd + 12)) : 1;
-        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * under * 0.8 * (1 - r1), 1 - flank * side * 0.45 * (1 - r2), fold)) * pit;
+        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * Math.min(1, under) * 0.85 * (1 - r1), 1 - flank * side * 0.7 * (1 - r2), fold, 1 - 0.8 * Math.exp(-(((s - 0.79) / 0.012) ** 2)))) * pit;
       }
     }
     const girth = TAU * 0.8 * k;
@@ -273,7 +276,7 @@ export class Animal {
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
       const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 15) - Math.floor(3 * Math.abs(u - 0.5));
       const length = k * (0.54 + 0.22 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
-      const radius = k * (0.048 + 0.014 * cell(f, 3, sd)) * (1 + 0.2 * young);
+      const radius = k * (0.038 + 0.012 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
         const v = i / (FEELER_RINGS - 1);
@@ -387,7 +390,7 @@ export class Animal {
     // The legs: from under the haunch or the shoulder, a little bent, to a foot that stays where it was put down.
     for (let l = 0; l < 4; l++) {
       const [lx, side] = LEG_AT[l];
-      carry(lx * k, 0.94 * k * (0.4 + 0.6 * d.squash), side * 0.44 * k * this.b.bulk, tmp, 0);
+      carry(lx * k, 1.0 * k * (0.4 + 0.6 * d.squash), side * 0.7 * k * this.b.bulk, tmp, 0);
       const ax = tmp[0];
       const ay = tmp[1];
       const az = tmp[2];
@@ -604,7 +607,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
     }
     out.feet[l][0] = lx * k + 0.03 * k + x;
     out.feet[l][1] = y;
-    out.feet[l][2] = side * 0.5 * k * b.bulk;
+    out.feet[l][2] = side * 0.68 * k * b.bulk;
   }
   // The left pair swings about 0.79 of the cycle and the right pair about 0.29: the trunk is over the other side a tenth of a cycle before.
   const lean = Math.cos(TAU * (c - 0.69));

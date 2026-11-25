@@ -208,6 +208,8 @@ export class Hair {
       dx /= dl;
       dy /= dl;
       dz /= dl;
+      // In a deep fold of the hide the hair is rubbed away.
+      const even = Math.min(1, Math.max(0, (((N[f] as number) * (N[r] as number) + (N[f + 1] as number) * (N[r + 1] as number) + (N[f + 2] as number) * (N[r + 2] as number)) - 0.72) / 0.2));
       const R = lock.roots;
       for (let b = 0; b < R.length; b += 6) {
         const q = (R[b] as number) * 3;
@@ -215,7 +217,7 @@ export class Hair {
         const q2 = (R[b + 2] as number) * 3;
         const fu = R[b + 3] as number;
         const fv = R[b + 4] as number;
-        const len = lock.length * (R[b + 5] as number);
+        const len = lock.length * (R[b + 5] as number) * even;
         // Every hair has its own root and lies beside the others of its lock: they do not meet at a point.
         const px = (P[q] as number) + fu * ((P[q1] as number) - (P[q] as number)) + fv * ((P[q2] as number) - (P[q] as number)) - nx * 0.004;
         const py = (P[q + 1] as number) + fu * ((P[q1 + 1] as number) - (P[q + 1] as number)) + fv * ((P[q2 + 1] as number) - (P[q + 1] as number)) - ny * 0.004;

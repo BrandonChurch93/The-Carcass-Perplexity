@@ -108,7 +108,7 @@ export function create(ctx: Context): Piece {
         const fore = l % 2 === 1 ? 1 : -1;
         foot[0] = (fore > 0 ? 0.78 : -1.22) + 0.05;
         foot[1] = 0;
-        foot[2] = side * 0.52;
+        foot[2] = side * 0.68;
       });
       const stood = stuck.pose(live);
       ctx.rig.setDisc(discs, bodies.length - 1, stood.x, stood.z, 1.7, 0.8, 1.7, stood.yaw);

@@ -160,8 +160,8 @@ void main() {
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = mix(vec3(0.125, 0.096, 0.07), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
-  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.38);
+  vec3 albedo = mix(vec3(0.125, 0.096, 0.07), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.5 + 0.5 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.24);
   // The feelers: old ivory, grooved along their length, stained at the root and the tip.
   float groove = 0.8 + 0.2 * sin(vUv.y / max(vInfo.z, 0.01) * 5.0 + seed * 40.0);
   vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
