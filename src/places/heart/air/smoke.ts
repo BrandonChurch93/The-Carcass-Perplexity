@@ -37,6 +37,7 @@ uniform vec4 uBodyC[${MAX_BODIES}];
 uniform vec4 uBodyD[${MAX_BODIES}];
 uniform vec4 uBodyE[${MAX_BODIES}];
 uniform vec4 uBodyF[${MAX_BODIES}];
+uniform vec4 uBodyG[${MAX_BODIES}];
 ${RIG_GLSL}
 
 const vec3 STEAM_ALBEDO = vec3(0.88, 0.86, 0.84);
@@ -112,6 +113,7 @@ vec3 skyLight(float y) {
 // E: its colour, and the share of its height over which it thins toward its foot.
 // F: how strongly the whole glowing floor of the caldera lights it, to what height above its base, how much brighter than its body its sky-lit top is,
 //    and how solid it is (1.4 is one mass with a lumpy skin, 0.6 is separate billows with gaps).
+// G: how far its lumps are drawn out along its rise (1 is round, 2.5 is streaks), how fast it thins with height (0 not at all), how sparse its lumps are (0 as they come).
 float bodyDensity(int i, vec3 p, bool fine, out float above) {
   vec4 A = uBodyA[i];
   vec4 B = uBodyB[i];
@@ -129,14 +131,15 @@ float bodyDensity(int i, vec3 p, bool fine, out float above) {
   if (dome <= 0.0) return 0.0;
   above = A.w * sqrt(max(1.0 - d2, 0.0)) - yy;
   // The lumps climb the lean, so the body shears as it rises; and they change slowly as they go, so that it billows and does not only slide.
-  vec3 q = vec3(rel.x, yy - D.x * uTime, rel.y) / D.z + B.z + vec3(0.011, 0.0, 0.006) * uTime;
+  vec4 G = uBodyG[i];
+  vec3 q = vec3(rel.x, (yy - D.x * uTime) / G.x, rel.y) / D.z + B.z + vec3(0.011, 0.0, 0.006) * uTime;
   float g = uBodyF[i].w;
   // A body that is less solid is more of its lumps: they are drawn out the stronger, so that its outline is billows and not the dome.
-  float body = 0.5 + (noise(q).r - 0.5) * mix(2.6, 1.0, clamp(g, 0.0, 1.0)) + dome * g - (0.25 + 0.43 * g);
+  float body = 0.5 + (noise(q).r - 0.5) * mix(2.6, 1.0, clamp(g, 0.0, 1.0)) + dome * g - (0.25 + 0.43 * g) - G.z;
   if (fine && body > -0.25 && body < 0.5) body += (noise(q * 2.3 + 0.37 + vec3(0.0, -0.02, 0.013) * uTime).r - 0.45) * 0.42;
   float foot = uBodyE[i].w;
   // A body of separate billows still ends at its dome: softly, so that no outline of the dome is seen.
-  return clamp(body * D.w, 0.0, 1.0) * smoothstep(0.0, mix(0.6, 0.22, clamp(g, 0.0, 1.0)), dome) * (foot > 0.0 ? smoothstep(0.0, foot, u) : 1.0);
+  return clamp(body * D.w, 0.0, 1.0) * smoothstep(0.0, mix(0.6, 0.22, clamp(g, 0.0, 1.0)), dome) * (foot > 0.0 ? smoothstep(0.0, foot, u) : 1.0) * (G.y > 0.0 ? pow(1.0 - u, G.y) : 1.0);
 }
 void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   vec4 A = uBodyA[i];
@@ -421,6 +424,7 @@ export function createSmoke(rig: Record<string, THREE.IUniform>, noise: THREE.Da
     uBodyD: { value: vectors(MAX_BODIES) },
     uBodyE: { value: vectors(MAX_BODIES) },
     uBodyF: { value: vectors(MAX_BODIES) },
+    uBodyG: { value: vectors(MAX_BODIES) },
   };
   const pass = (fragmentShader: string, u: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader: QUAD_VERTEX, fragmentShader, uniforms: u, glslVersion: THREE.GLSL3, depthTest: false, depthWrite: false, blending: THREE.NoBlending, toneMapped: false });

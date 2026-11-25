@@ -99,7 +99,7 @@ function terrace(h: number, face: number): number {
 }
 
 /** How tall the wall stands round the lake, as a share of the layout's profile: one number every ten degrees round the lake's centre, from west through north. */
-export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.73, 0.69, 0.96, 1, 1, 1.04, 1.13, 1.12, 1.1, 1.11, 1.13, 1.08, 0.97, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.72, 0.89, 0.9, 0.98, 1.03, 1.09, 1.13, 1.12, 1.1, 1.11, 1.13, 1.08, 0.97, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
 function rimScale(x: number, z: number): number {
   const a = (Math.atan2(z - 90, x - 190) * 18) / Math.PI + 18;
@@ -269,28 +269,29 @@ function lineCrag(x: number, z: number): number {
   // Where the line view's frame begins, 8 to 12 m ahead of that lens, a spur of the crag steps two metres out toward the lens's line.
   const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0] + 1.5 * smooth(0, 2.5, u) * smooth(8, 5.5, u);
   if (v < -1.2 || v > 27) return 0;
-  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is broken, never level.
-  const column = blocks(u / 1.15 + 3.3, 7.7);
-  const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
-  const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
+  // The face is fractured into masses of rock that stand a little forward or back of each other, and the top is broken, never level.
+  const column = noise(u / 1.15 + 3.3, 7.7);
+  const vj = v - 0.9 * (column - 0.5) - 0.3 * (noise(u / 0.4, v / 0.4) - 0.5);
+  const uj = u + 0.9 * (noise(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
-  // Its far end comes down as a broken ridge does, in a ragged fall of blocks, not in steps.
-  const end = smooth(7.0, 2.7, uj + 1.3 * (blocks(u / 1.1 + 3.1, 0.7) - 0.5) + 0.9 * (blocks(u / 0.45 + 6.7, 1.7) - 0.5) + 0.5 * (blocks(u / 0.2 + 0.3, 4.4) - 0.5) + 0.5 * (column - 0.5) + 0.4 * (noise(u / 0.3 + 1.9, v / 0.3) - 0.5));
-  // Its crest is broken blocks, a hand to a forearm proud of each other, and chipped finer than that: no ruled edge against the smoke.
-  const crest = 0.7 * (blocks(u / 0.9 + 1.1, v / 1.1 + 4.2) - 0.5) + 0.34 * (blocks(u / 0.31 + 5.3, v / 0.37 + 0.9) - 0.5) + 0.3 * (noise(u / 0.33 + 7, v / 0.33) - 0.5) + 0.12 * (noise(u / 0.11, v / 0.11 + 2.7) - 0.5);
-  const top = (4.3 + 0.6 * broken * smooth(0.3, 2.5, v) + crest) * end * (0.55 + 0.45 * end);
+  // Its far end comes down as a weathered ridge does, in lumps a stride across: not in steps and not in a ruled ramp.
+  const lump = smooth(0.25, 0.75, noise(u / 1.2 + 3.1, v / 1.0 + 0.7));
+  const ue = uj + 1.6 * (lump - 0.5) + 0.7 * (noise(u / 0.5 + 6.7, v / 0.45 + 1.7) - 0.5) + 0.5 * (column - 0.5);
+  const end = smooth(8.8, 6.6, ue);
+  // Its crest is knobs a forearm to an arm proud of each other, pitted finer than that: no ruled edge against the smoke.
+  const crest = 1.0 * (noise(u / 1.2 + 1.1, v / 1.3 + 4.2) - 0.5) + 0.5 * (noise(u / 0.47 + 5.3, v / 0.5 + 0.9) - 0.5) + 0.2 * (noise(u / 0.19 + 7, v / 0.19) - 0.5) + 0.08 * (noise(u / 0.08, v / 0.08 + 2.7) - 0.5);
+  const top = (5.3 + 0.6 * broken * smooth(0.3, 2.5, v) + crest) * end * (1 + 0.24 * (noise(u / 1.3 + 4.4, v / 1.3 + 2.6) - 0.5));
   // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
   const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
   const back = fall * (0.55 + 0.45 * fall);
   const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
   const start = ramp * ramp * (0.35 + 0.65 * ramp);
-  // The face is a broken stair of four or five short risers, each column of rock a little forward or back of the next and each tread chipped:
-  // no face over half a metre stands bare, and none is steep enough to stretch the ground's detail down it.
-  const steps = 4.5;
-  const q = ((vj + 0.8) / 2.4) * steps + 0.9 * (blocks(u / 0.7 + 5.9, 1.3) - 0.5) + 0.7 * (blocks(u / 0.33 + 2.2, v / 0.45 + 6.1) - 0.5) + 0.35 * (noise(u / 0.17, v / 0.17 + 3.3) - 0.5);
-  const whole = Math.floor(q);
-  const rise = Math.min(1, Math.max(0, (whole + smooth(0.52, 0.96, q - whole)) / steps));
+  // The face, measured on the picture: a sheer foot a man high, a shoulder of knobs a stride and a half deep that stands out toward the lake,
+  // and a sheer head behind it. The lens looks along the ridge, so the outline it sees is this section, with the knobs of each metre over the next.
+  const p = (vj + 1.1) / 2.0 + 0.34 * (smooth(0.2, 0.8, noise(u / 1.0 + 5.9, v / 0.9 + 1.3)) - 0.5) + 0.12 * (noise(u / 0.36 + 2.2, v / 0.33 + 6.1) - 0.5);
+  const knob = noise(u / 0.75 + 0.4, v / 0.6 + 8.8);
+  const rise = Math.min(1, Math.max(0, 0.3 * smooth(0, 0.15, p) + 0.13 * smooth(0.12, 0.74, p + 0.16 * (knob - 0.5)) + 0.57 * smooth(0.72, 1, p) + 0.06 * smooth(0.05, 0.3, p) * (knob - 0.5)));
   return top * rise * back * start;
 }
 
@@ -385,7 +386,11 @@ export function buttressAt(x: number, z: number): number {
   const across = ((x - rx) * ez - (z - rz) * ex) / len;
   const u = along / len;
   if (u < -0.4 || u > 1.3) return -8;
-  const top = lerp(204, 84, smooth(0.0, 0.9, u)) * smooth(1.12, 0.9, u) * smooth(-0.16, -0.06, u);
+  // Its top, measured on the wide picture: one eroded table that falls evenly from the wall to the tip, and tilts a little toward that camera,
+  // so the lens sees a strip of the table over the near cliff. Positive across is the far side.
+  const fallen = 0.5 * (Math.min(1, Math.max(0, u / 0.9)) + smooth(0.0, 0.9, u));
+  const tilt = 1 + 0.07 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
+  const top = lerp(194, 84, fallen) * tilt * smooth(1.12, 0.9, u) * smooth(-0.16, -0.06, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
   const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 9 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
   const edge = Math.abs(across) / half;
@@ -575,7 +580,10 @@ export function stagedButteHeight(x: number, z: number): number {
   const a = dx * BUTTE_AHEAD[0] + dz * BUTTE_AHEAD[1];
   const b = -dx * BUTTE_AHEAD[1] + dz * BUTTE_AHEAD[0];
   // The plan of its near face: bays and noses, and piers that stand a stride forward or back of each other.
-  const face = 205 + 7 * (noise(b / 23 + 1.3, 4.1) - 0.5) + 3.2 * (blocks(b / 5.3 + 0.7, 2.2) - 0.5) + 1.2 * (blocks(b / 1.9 + 3.1, 6.6) - 0.5);
+  // Its cliffs are fluted: narrow clefts where the rock is cut back, some strides apart, and the blunt columns between them.
+  const cleft = 1 - Math.abs(2 * noise(b / 3.3 + 2.2, 0.9) - 1);
+  const groove = 1 - Math.abs(2 * noise(b / 1.4 + 7.1, 5.3) - 1);
+  const face = 205 + 7 * (noise(b / 23 + 1.3, 4.1) - 0.5) + 3.2 * (blocks(b / 5.3 + 0.7, 2.2) - 0.5) + 1.2 * (blocks(b / 1.9 + 3.1, 6.6) - 0.5) + 2.6 * cleft * cleft * cleft + 0.8 * groove * groove * groove;
   const s = a - face;
   if (s < -50 || s > 40 || b < -30 || b > 94) return -2;
   // The top: a horn at the left end, then it falls away gently to the right and comes down in two shoulders. Its rim is broken blocks.

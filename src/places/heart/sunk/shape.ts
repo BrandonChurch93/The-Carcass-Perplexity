@@ -25,16 +25,17 @@ export type P3 = [number, number, number];
 /** The two legs that stand out: the hip is inside the body, the knee is the top of the arch. */
 export const LEG_A: P3[] = [
   [-2.75, 0.46, 0.25],
-  [-2.15, 1.17, 0.5],
-  [-1.15, 2.5, 0.72],
-  [-0.1, 3.9, 0.87],
-  [0.8, 4.95, 0.92],
-  [1.1, 5.3, 0.92],
-  [1.36, 5.4, 0.9],
-  [1.6, 5.1, 0.86],
-  [1.85, 4.6, 0.78],
-  [2.5, 3.55, 0.56],
-  [3.45, 1.85, 0.12],
+  [-2.16, 1.27, 0.5],
+  [-1.1, 2.72, 0.72],
+  [-0.3, 3.82, 0.85],
+  [0.315, 4.667, 0.9],
+  [0.653, 4.972, 0.92],
+  [1.069, 5.111, 0.92],
+  [1.506, 5.076, 0.9],
+  [1.9, 4.87, 0.86],
+  [2.179, 4.526, 0.8],
+  [2.75, 3.43, 0.58],
+  [3.5, 1.99, 0.2],
   [4.3, 0.45, -0.27],
   [4.6, -0.25, -0.4],
   [4.7, -0.9, -0.45],
@@ -177,25 +178,28 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
   let plate = 0;
   if (fine) {
     // The hide dried onto the frame in cords that run the length of the body and wind a little round it, as it twisted going down.
-    const wind = a + 2.3 * along + 0.45 * Math.sin(s * 1.3 + 0.7) + 1.1 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
-    const f1 = Math.abs(Math.sin(wind * 2.0 + 5.5 * noise3(s * 0.45 + 5, dy * 0.9, dz * 0.9)));
-    const f2 = Math.abs(Math.sin(wind * 15 + 2.4 * noise3(s * 0.8 + 5, dy * 1.7, dz * 1.7) + 1.5 * f1));
+    const wind = a + 1.3 * along + 0.45 * Math.sin(s * 1.3 + 0.7) + 1.1 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
+    // A few thick ropes of unequal girth, which wander, run into each other and part again.
+    const f1 = Math.abs(Math.sin(wind * 4.5 + 9.0 * noise3(s * 0.55 + 5, dy * 1.2, dz * 1.2) + 2.5 * noise3(s * 1.7 + 2, dy * 2.6, dz * 2.6)));
+    const f2 = Math.abs(Math.sin(wind * 13 + 6.5 * noise3(s * 1.1 + 5, dy * 2.3, dz * 2.3) + 2.2 * noise3(s * 3.1, dy * 5.0, dz * 5.0 + 3) + 1.5 * f1));
+    // The wrinkles are deep in some places and gone in others.
+    const wrinkled = 0.25 + 1.5 * smooth(0.3, 0.7, noise3(s * 0.9 + 31, dy * 1.9, dz * 1.9));
     furrow = Math.pow(1 - f1, 1.6);
     const full = Math.min(1, ring * 1.4);
-    r -= (0.21 * furrow * (0.4 + 1.2 * dry) + 0.04 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
+    r -= (0.17 * furrow * (0.4 + 1.2 * dry) + 0.008 * wrinkled * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
     // The frame under it: ribs across the flank, the spine as a keel.
     const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 6.8 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, dy * 1.3)), 3);
     r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
     const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.13, 2));
     r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
-    r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5);
+    r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5) + 0.07 * (noise3(s * 2.6 + 13, dy * 3.2, dz * 3.2) - 0.5);
     // The same plates as on the trunks, on the side that looks up: 20 to 60 cm, ragged, lifting at their edges.
-    const cell = cells2((a / (Math.PI * 2)) * 20 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 1.3 + 0.9 * noise2(a * 2, s + 3), 20);
+    const cell = cells2((a / (Math.PI * 2)) * 14 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 0.95 + 0.9 * noise2(a * 2, s + 3), 14);
     const id = cell[1];
-    const upper = smooth(0.15, 0.75, dy) * Math.min(1, ring * 1.6);
-    const gone = 1 - 0.28 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
-    const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.2 * (noise2(a * 14, s * 4) - 0.5) + 0.08 * (noise2(a * 41, s * 13 + 2) - 0.5);
-    plate = id > gone ? smooth(0, 0.03, inside) : 0;
+    const upper = smooth(0.45, 0.9, dy) * Math.min(1, ring * 1.6);
+    const gone = 1 - 0.3 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
+    const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.12 * (noise2(a * 7, s * 3) - 0.5);
+    plate = id > gone ? smooth(0, 0.07, inside) : 0;
     const toward = Math.min(1, Math.max(0, 0.5 + ((id * 711.3) % 1 > 0.5 ? 1 : -1) * cell[3] * 1.3));
     r += (plate * (0.025 + 0.06 * smooth(0.16, 0, inside) * (0.25 + 0.75 * toward))) / Math.max(0.5, ring);
     plate *= 0.72 + 0.28 * ((id * 131.7) % 1);
@@ -1063,8 +1067,8 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
     shape.round,
     KIND.leg,
     (s, a, t, up) => {
-      // A bent trunk: thick where it leaves the body, one rounded knuckle at the top, tapering as it goes down into the crust.
-      const joint = 0.13 * Math.exp(-Math.pow((t - knee) / 0.032, 2)) + 0.05 * Math.exp(-Math.pow((t - knee + 0.07) / 0.025, 2)) + 0.04 * Math.exp(-Math.pow((t - knee - 0.06) / 0.02, 2));
+      // One bent tube: thick where it leaves the body, the same thickness over the round of the bend, tapering as it goes down into the crust.
+      const joint = 0.03 * Math.exp(-Math.pow((t - knee) / 0.05, 2)) + 0.02 * Math.exp(-Math.pow((t - knee + 0.09) / 0.025, 2)) + 0.015 * Math.exp(-Math.pow((t - knee - 0.08) / 0.02, 2));
       // The shaft dried flat: broad across the bend of the limb, thin through it, and split along its broad face.
       const flat = 1 - 0.16 * Math.cos(2 * a) * (1 - 0.7 * Math.exp(-Math.pow((t - knee) / 0.05, 2)));
       const split = 0.07 * Math.exp(-Math.pow(Math.sin(a - 0.35 * Math.sin(s * 0.9 + seed)) / 0.16, 2)) * smooth(0.35, 0.6, noise2(s * 0.5 + seed * 3, 7.7));
@@ -1074,21 +1078,21 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       const thin = tendon > 0 ? smooth(1 - tendon * 0.2, 1 - tendon, t) : 1;
       const end = smooth(0, 0.03, t) * (tendon > 0 ? 1 : smooth(1, 0.985, t));
       const core = scale * end * (0.045 + thin * ((shaft + joint) * flat * (1 + cords * 0.3 + lumps) - split - 0.045));
-      // Plates of hide caked with ash, 20 to 60 cm, ragged in outline. About half of the side that looks up still has them, little
-      // of the underside. Each is shrunk from its neighbours by its own margin and curls at its edge.
+      // Flakes of hide caked with ash: few, two to four widths of the shaft long, irregular, most of them over the top of the arch,
+      // little on the underside. Each is shrunk from its neighbours by its own margin and curls at its edge.
       const bend = 0.7 * (noise2(s * 0.8 + seed * 2, Math.cos(a) * 0.9 + 4) - 0.5);
-      const fineHere = noise2(s * 0.6 + seed * 5, Math.sin(a + seed) * 0.8 + 2) > 0.62;
+      const fineHere = noise2(s * 0.6 + seed * 5, Math.sin(a + seed) * 0.8 + 2) > 0.7;
       const k = fineHere ? 2 : 1;
-      const cell = cells2(((a / (Math.PI * 2)) * 7 + 0.35 * Math.sin(s * 1.7 + seed)) * k, (s * 0.75 + seed + bend) * k, 7 * k);
+      const cell = cells2(((a / (Math.PI * 2)) * 3 + 0.3 * Math.sin(s * 1.1 + seed)) * k, (s * 0.5 + seed + bend) * k, 3 * k);
       const id = cell[1];
       const h2 = (id * 57.31) % 1;
       const h5 = (id * 711.3) % 1;
       const patch = smooth(0.35, 0.65, noise2(s * 0.7 + seed * 3, Math.cos(a + seed) * 1.1 + 1.5));
       const floor = 0.3 + 0.35 * shape.cover;
-      const bare = 1 - (0.8 + 0.3 * shape.cover) * (floor + (1 - floor) * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
-      const ragged = 0.2 * (noise2(a * 7 + seed, s * 6) - 0.5) + 0.1 * (noise2(a * 19, s * 21 + seed) - 0.5);
+      const bare = 1 - (0.66 + 0.22 * shape.cover) * (floor + (1 - floor) * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) * (0.55 + 0.6 * Math.exp(-Math.pow((t - knee) / 0.24, 2)));
+      const ragged = 0.1 * (noise2(a * 7 + seed, s * 6) - 0.5) + 0.04 * (noise2(a * 19, s * 21 + seed) - 0.5);
       const inside = (cell[0] - 0.012 - 0.06 * h2) / k + ragged / k;
-      const plate = id > bare ? smooth(0, 0.02, inside) * thin : 0;
+      const plate = id > bare ? smooth(0, 0.045, inside) * thin : 0;
       // A plate curls: its edge stands off the limb, one side of it more than the other.
       const toward = Math.min(1, Math.max(0, 0.5 + (h5 > 0.5 ? 1 : -1) * cell[3] * 1.3));
       const curl = smooth(0.16, 0.0, inside * k) * (0.25 + 0.75 * toward);

@@ -49,7 +49,8 @@ ${crust}
 uniform sampler2D tRest;
 uniform vec2 uCarpetSpan;
 void main() {
-  vec2 q = texture2D(tRest, gl_FragCoord.xy / uCarpetSpan).xy;
+  vec4 rest = texture2D(tRest, gl_FragCoord.xy / uCarpetSpan);
+  vec2 q = rest.xz + rest.yw;
   vec3 p = crustAt(q);
   gl_FragColor = vec4(p.y, clamp(gBank, -8.0, 8.0), gSlabEdge, gMound);
 }`;
@@ -178,8 +179,10 @@ void main() {
     float blot = 0.45 * vnoise3(vWorld * 2.6 + 1.7) + 0.4 * vnoise3(vWorld * 7.0 + 4.1) + 0.2 * (0.5 - vCave) + 0.12 * n0.y + 0.22 * low;
     float thin = 0.14 * gas + 0.2 * gas * gas * gas;
     float stain = smoothstep(0.84 - thin, 0.97 - thin, blot) * smoothstep(0.0, 0.35, gas) * (0.2 + 0.8 * smoothstep(-0.3, 0.4, n0.y));
+    // A boulder keeps its black top: on a large rock the sulphur lies round the foot only.
+    stain *= mix(1.0, low, smoothstep(0.5, 0.9, size));
     float thick = smoothstep(0.45, 0.9, stain) * smoothstep(0.3, 0.7, height);
-    albedo = mix(albedo, mix(vec3(0.38, 0.29, 0.05), vec3(0.72, 0.62, 0.2), thick) * (0.6 + 0.8 * height), 0.92 * stain);
+    albedo = mix(albedo, mix(vec3(0.4, 0.3, 0.04), vec3(0.75, 0.6, 0.13), thick) * (0.6 + 0.8 * height), 0.92 * stain);
   }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
   // Undersides and the faces that lean over see the ground, not the sky.
