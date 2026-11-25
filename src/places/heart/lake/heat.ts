@@ -79,7 +79,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 
 // The half width of the gap at the nearest seam now, and in y how far its skin has grown back (0 to 1).
 // The life of a seam: it opens, widens, its skin grows in from the edges, it closes. Different seams are at different places in that life.
-const float LINE_NARROW = 0.55;
+const float LINE_NARROW = 0.95;
 // How much wider the net has the gap than it is drawn, as of the last call of gapeAt.
 float gWas = 1.0;
 vec2 gapeAt(vec2 q, vec4 n) {
