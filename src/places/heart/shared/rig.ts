@@ -21,7 +21,10 @@ export const MAX_EMITTERS = 8;
 // It stands in that shot alone, so the wide view keeps its neutral lake.
 // Its radiance was 1.5, 0.66, 0.11: halved when the crust's own seams began to light their banks (the crust skin), and less yellow, since
 // smoke lit from below is paler than the fire: the floor away from the seams stood mustard under it.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [0.75, 0.36, 0.12] as const };
+// Its green and blue were 0.36 and 0.12 and it hid a quarter of the sky: the floor of that shot stood 1.9 times as red as blue against the
+// picture's 1.5, lit by the bank more than by the sky. The smoke is pale grey lit from below and thin enough to pass the sky: the same red, more
+// green and blue, a tenth of the sky hidden. The red of the floor is then the melt's own, within a few metres of it.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.1, radiance: [0.75, 0.52, 0.38] as const };
 // The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
 // reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
 // gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
@@ -40,7 +43,7 @@ export const POOLS = {
 // A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
 // EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
 // strip now gives. The air reads the round lights for itself and is not touched by this.
-export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 1 };
+export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 1, mouth: 0.5 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
 
@@ -396,7 +399,10 @@ export function createRig(t0: number): Rig {
   // 1 for a round light anywhere, less for one that stands on the stream above its fan, where the strip lights the rock.
   const onStream = (e: Emitter): number => {
     const at = (e.position.z - streamSpan.x) * streamSpan.y;
-    if (at < 1.5 || at > STREAM.rows - 1 || e.radius > 30) return 1;
+    if (e.radius > 30 || at > STREAM.rows - 1) return 1;
+    // The light inside the mouth of the tube stands for the lava under the roof, which the slope outside sees through the mouth alone: half
+    // its share (the slope 20 m west of the stream stood 83 60 53 at its median against the picture's 61 53 52).
+    if (at < 1.5) return at > -8 && Math.abs(e.position.x - (streamRows[0] as THREE.Vector4).x) < 45 ? STREAM.mouth : 1;
     const row = streamRows[Math.round(at)] as THREE.Vector4;
     if (Math.abs(e.position.x - row.x) > row.y + 15 || Math.abs(e.position.y - row.z) > 15) return 1;
     const share = 1 - Math.max(row.w - 1, 0) / 2;
