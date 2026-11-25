@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 50, 2026-11-25 13:36 UTC:
+Status 51, 2026-11-25 14:03 UTC:
 
-- `01-m1324-pair-3.jpg`: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right. The hero's trunk now sits at the picture's value and the near mass is one soft mound at the left. Open: the flank is too red (ordered), no ash rim at the feet, the far wall is darker than the picture's haze.
-- `02-m1324-pair-1.jpg`: The line, frame 3477. The lobes now carry sheaves of cords at the bank and the trench holds dark plates on the melt. Open: the nearest three metres are a grey mottle where the picture has clean fine cords (ordered at 13:36), the melt is flatter and more orange than the picture's folded skin, the crag at left stands too tall.
-- `03-m1324-pair-4.jpg`: The mouth and the fall, frame 4006. Open on this frame: the mouth is a letterbox and the pour is one ribbon from the middle of the lip. The dome is merged since (it shows in the next status); the broad pour from the lip's left third is being made.
-- `04-m1324-pair-0.jpg`: The wide view, frame 2722. The lake is dark charcoal now. Open: the far half is a dense net of orange lines (a third as many, longer and broken, is ordered), the plume stands in front of the butte (it moves behind it), the mouth is outlined in red.
+- `01-m1356-pair-2.jpg`: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron. Still wrong: the floor is paler and flatter than the picture. Thick ropes for it are handed back and go into the next chain
+- `02-m1356-pair-1.jpg`: heart-1: cords are now drawn up to the shore, so the grey mottle in the nearest 3 m is gone, and the trench wall shows lit plate ends. Still wrong: the cords are too even, like combed lines, and the far bank is hatched
+- `03-m1356-pair-3.jpg`: heart-3: hairline seams and hot pockets now cross the feeding floor. Still wrong: the seams are dull red scribbles where the picture's are yellow with a hot core
+- `04-m1356-pair-4.jpg`: heart-4: the pour leaves the lip as a broad sheet and steps down the land's new ledges. Still wrong: it leaves mid-lip, not from the left third, and a comb of lit spikes stands at the mouth's west foot
 
+Status 50, 2026-11-25 13:36 UTC, showed: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right.
 Status 49, 2026-11-25 13:15 UTC, showed: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right.
 Status 48, 2026-11-25 12:52 UTC, showed: Heart, shot heart-02 (key heart-3), main fe39638 at 12:45: the approved picture left, ours right.
-Status 47, 2026-11-25 12:30 UTC, showed: Heart 3 on main c0cb367, approved picture left, our frame right: the hero's legs and trunk now have the picture's mass and its feet stand...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T13:36:16Z
-phase 3: 10.45 h used of 13.00 h
-build: 17.10 h used of 72.00 h
+2026-11-25T14:03:16Z
+phase 3: 10.90 h used of 13.00 h
+build: 17.55 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 21
+minutes since the last status: 27
 ```
 
 ## Phases
@@ -619,6 +619,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 13:36 UTC: the lobes' cords read as black and white stripes at heart-2 from 12 m outward. Cause: the paint's dark line per cord at full strength (the form's owner's finding). The paint's owner has it as first order: fade by the cord's size on screen (full at 8 pixels, gone at 3), a third of the depth on the lobes, no pale crest. The form is not changed again.
 - 2026-11-25. 13:36 UTC: no crack is laid on the near floor of heart-4. MEASURED by the form's owner: the orange smear there did not change by a pixel when the piece thought to cause it was moved twice; it is the fall's reflection on the crust. The floor is seen at under 1.5 degrees, so a crack across the view is under a pixel high. net.ts stays.
 - 2026-11-25. 13:39 UTC: changed my call of 13:36 after seeing heart-2 on bcbefc4 at hd beside the picture. The stripes are also the form's: cords 16 to 22 cm apart are 10 pixels at 15 m, where the picture's ropes are 0.6 to 1.2 m thick. The form's owner makes the cords of the zone round the one that sank 3.5 times as far apart with three times the relief (one try, by 13:58; if it does not read as ropes, the zone goes in with no cords). The paint's owner fades its line by size on screen at the same time. Stripes must not go into round 7.
+- 2026-11-25. 13:59 heart-2's floor: the form's D3 goes into the final chain with the skin's D2 (thick ropes near the lens are what the picture has). The skin's owner has one try until 14:08 to shut the paint's own lines where the form lays ropes (the form's flag gLapRope) and hands it back only if it is plainly better at 10 to 25 m; else the round takes the form's D3 on the skin's D2 as they stand. Costs over share (walkers, fall, sunk) are left: none can be cut and measured before the round, and the clip's longest share has 15 minutes of room under its 2 h limit.
+- 2026-11-25. 13:58 one last try for the lava's owner until 14:08: find which part draws the pale grey-blue ellipse left of the fountain seam at heart-0 (solo renders), cure it only if it is the foundering slab's mirror of the sky. If it is another folder's or not found, it goes to the round as it is.
+- 2026-11-25. 14:03 the skin's owner rendered heart-2 both ways on the form's D3: with and without the paint's own lines shut by the form's flag. MEASURED: lower half mean difference 0.21 of 255, no pixel over 8. They are the same picture at hd, so main's skin stays as D2 and the gated version (1d3be30, determinism passes) is NOT merged. The form's D3 8bda667 goes in after chain AH: on the skin's D2 it gives soft dark ropes round the one that sank and no zebra.
 
 ## Notes from Brandon
 
@@ -941,3 +944,6 @@ none
 - 2026-11-25 13:36 UTC. 13:36 UTC: status 50 shown (pictures of e3672d8 beside the approved pictures; ElevenLabs read at 13:31: 1 character of 131,000). New main bcbefc4 told to all ten owners with the last hand-back at 14:05.
 - 2026-11-25 13:47 UTC. 13:45 UTC: chain AF on bcbefc4 passed determinism. Merged to e96684b: crust skin D1 47938ca (coils at the line as open festoons, the bank darker and brown), rocks D2 8ba2a29 (near mass takes ash, grain held further off), light C9 726e59e (a glow before the mouth for the cliff round it; last), lava D2 d3b95dc (far field sparse and broken with the glow sum unchanged, one fountain on an uneven seam, plates sway and turn), land 5 4158778 (flows of unlike thickness under the pour, scree grain on three axes; last), air 6 40fc575 (the plume behind the buttress, amber fume at the right, lit fume breathes), walkers C11 9edf24b (flank less red, ash rim at the feet; last). tsc clean, G10 passes, pushed. Chain AG started 13:45:27. Look lock blocks saved from rocks, light, land, air, walkers.
 - 2026-11-25 13:47 UTC. 13:46 UTC: the render meter finished on a6999eb, MEASURED on a fresh 4 core machine, hd final seconds a frame (one run each): heart-01 at frame 2722 32.65, heart-02 at 3156 52.15, heart-03 at 3477 38.31, heart-04 at 3685 37.22, heart-05 at 4006 40.66; hd draft 8.31, 13.50, 10.02, 9.55, 10.62; uhd final 86.04, 130.57, 106.14, 97.23, 95.18. The Heart review clip at the final tier is 19.5 machine hours; on 14 render machines the busiest share is 104.5 minutes, inside the 2 hour limit. Files in out/work/tmp/meter/.
+- 2026-11-25 13:58 UTC. 13:55 chain AG passed determinism on e96684b (commit dfe3927 holds its parts and pictures). Merged to ee929c8, each after the trailer check, tsc clean, G10 pass: the fall C7 70d1bd8 (pour a broad sheet for its first third, 10.5 m half width at the lip, hot core 22 to 50 m; lumps shade the lit banks; NOT moved to the lip's left third, LIP stays; the comb of lit spikes at the rim's west foot not found, it is not on the rim's skin), the crust skin D2 2406c09 (no zebra round the one that sank; cords drawn to 0.4 m from the shore at the line, which cured the mottle; the trench wall as lit plate ends; hairline seams on the feeding floor), the sunk one C8 bd5c0ac (the lava's mark taken on the grown hull, no belt), the rocks D3 6877803 (mound crust on small stones at half a coat, a part cure), the lava D3 32b79e3 (a dome of melt at each of the six vents, 1.7 to 4.2 m across; longer tails). Chain AH runs on ee929c8 since 13:56.
+- 2026-11-25 13:58 UTC. 13:50 to 13:57 closing notes. Air: no more code; corrections to its numbers saved with its Look lock block; cost at heart-0 uhd draft 26.4 s on e96684b (MEASURED). Walkers: second pair of cost numbers, 1.0 to 2.1 s a sample at heart-3 uhd draft (MEASURED, two pairs; over its share of 1 s; cause not found). Fall: 3.55 s a sample at heart-4 uhd draft against its share of 3 (MEASURED before the last merge). Sunk: 2.04 s against its cap of 2 (MEASURED). Crust form D3 8bda667 handed back at 13:57, not merged yet (a chain runs): ropes 0.55 to 0.8 m apart and 6 to 26 cm high round the one that sank, in the height; its owner's test shows the stripes at 10 to 25 m are the paint's own lines, not the height's.
+- 2026-11-25 14:03 UTC. 14:03 status 51 shown (four pairs of chain AH on ee929c8: heart-2 without zebra, heart-1 with cords to the shore, heart-3 with seams on the feeding floor, heart-4 with the broad pour). ElevenLabs characters at 13:59: 1 of 131,000, so n1 to n7, the model test, the n8 takes and the sound effects are still not made.
