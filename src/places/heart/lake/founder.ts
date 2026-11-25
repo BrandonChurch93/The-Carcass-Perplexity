@@ -44,8 +44,10 @@ void main() {
   vel.xz += (vec2(r2, fract(r2 * 7.31)) - 0.5) * 2.5;
   vec3 at = vec3(aOrigin.x, 0.1, aOrigin.z) + vel * age + vec3(0.0, -4.9 * age * age, 0.0);
   vec3 now = vel + vec3(0.0, -9.8 * age, 0.0);
-  float size = aLife.z * (0.7 + 0.6 * r2);
-  float jet = aLife.w;
+  // A foot (aLife.w = 2): the melt that stands out of the seam at a vent, a low dome that swells and sinks with the vent's strength.
+  float dome = step(1.5, aLife.w);
+  float size = aLife.z * mix(0.7 + 0.6 * r2, 1.0, dome);
+  float jet = min(aLife.w, 1.0);
   // A jet stands on the seam: a tongue of melt that rises with the burst and falls back, torn at its top.
   float jetBurst = 0.62 + 0.38 * sin(uTime * 2.3 + aOrigin.x * 0.21) * sin(uTime * 0.9 + aOrigin.z * 0.17 + 1.0);
   float jetTall = aThrow.y * 0.95 * (0.45 + 0.75 * r1) * jetBurst * pow(sin(3.14159 * fract(turn)), 0.7);
@@ -56,8 +58,8 @@ void main() {
   float drawn = max(size, 1.25 * pixel);
   vFlight = vec2(age / max(2.0 * vel.y / 9.8, 0.2), size / drawn);
   size = drawn;
-  // A gob draws a tail behind it along its path, as long as it flies in a fourteenth of a second: an arc, not a speck.
-  float pull = 1.0 + min(5.0, 0.035 * length(now) / size);
+  // A gob draws a tail behind it along its path, as long as it flies in an eighth of a second: an arc, not a speck.
+  float pull = 1.0 + min(8.0, 0.06 * length(now) / size);
   vec2 along = normalize((viewMatrix * vec4(now, 0.0)).xy + vec2(1e-4, 0.0));
   vec2 across = vec2(-along.y, along.x);
   float shown = max(step(0.0, at.y) * step(0.02, age), jet);
@@ -65,11 +67,12 @@ void main() {
   float jetUp = 0.5 * (corner.y + 1.0) * jetTall;
   vec2 flown = along * (corner.y * pull - (pull - 1.0) * shown) * size + across * corner.x * size;
   vec2 stood = vec2(corner.x * size * 2.3 + (r2 - 0.5) * 0.6 * jetUp, jetUp);
+  stood = mix(stood, vec2(corner.x * aLife.z * (0.72 + 0.28 * jetBurst), 0.5 * (corner.y + 1.0) * aLife.z * aThrow.y * (0.35 + 1.1 * jetBurst)), dome);
   centre.xy += mix(flown, stood, jet);
   vShape = vec3(pull, jet, uTime);
   vUv = position.xy;
   vWorld = at;
-  vGob = vec4(age, size, seed + launch * 0.37, aLife.w);
+  vGob = vec4(age, size, seed + launch * 0.37 * (1.0 - dome), aLife.w);
   gl_Position = projectionMatrix * centre;
 }`;
 
@@ -98,7 +101,14 @@ void main() {
   float cool = vFlight.x * (0.75 + 0.5 * fract(vGob.z * 3.7)) + 0.12 * (ragged - 0.5);
   float kelvin = mix(1480.0, 1120.0, clamp(cool, 0.0, 1.0)) - 110.0 * thin * thin - 150.0 * tail;
   float gone = shape - 0.62;
-  if (vShape.y > 0.5) {
+  if (vGob.w > 1.5) {
+    // A foot: half a round of bare melt, white-yellow in its middle (1550 K), yellow toward its edge (1450 K), its edge torn and cooler.
+    float up = 0.5 * (p.y + 1.0);
+    float rough = vnoise(vec2(p.x * 2.1 + vGob.z * 17.0, up * 2.1 - vShape.z * 0.8)) * 0.65 + vnoise(vec2(p.x * 5.5 + vGob.z * 9.0, up * 5.5 - vShape.z * 1.9)) * 0.35;
+    float r = length(vec2(p.x, up)) + 0.28 * (rough - 0.5);
+    kelvin = mix(1550.0, 1450.0, smoothstep(0.15, 0.75, r)) - 150.0 * smoothstep(0.82, 1.0, r);
+    gone = r - 0.95;
+  } else if (vShape.y > 0.5) {
     // A jet: widest and yellow at its foot, torn into shreds toward its top, where it is orange and then red.
     float up = 0.5 * (p.y + 1.0);
     float slow = vnoise(vec2(p.x * 1.6 + vGob.z * 17.0, up * 3.0 - vShape.z * 1.7 + vGob.z * 5.0));
@@ -280,7 +290,8 @@ export function createFoundering(ctx: HeartContext): Foundering {
       const b = line[Math.min(line.length - 1, Math.floor(f) + 1)] as [number, number];
       const t = f - Math.floor(f);
       // On the long line few jets stand, and low: the fountain is lumps in the air, not tongues of flame.
-      const sheet = rng.next() < (which === 0 ? 0.05 : 0.17) ? 1 : 0;
+      // The fountain has a body at its foot: a tenth of what leaves it stands as torn tongues one to three metres high.
+      const sheet = rng.next() < (which === 0 ? (strength > 1 ? 0.1 : 0.03) : 0.17) ? 1 : 0;
       origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8) - dir[1] * off;
       origin[k * 3 + 1] = rng.next();
       origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8) + dir[0] * off;
@@ -293,8 +304,24 @@ export function createFoundering(ctx: HeartContext): Foundering {
       life[k * 4] = rng.range(2.6, 4.0);
       life[k * 4 + 1] = rng.next();
       // Gobs of 5 to 40 cm: this is half the size.
-      life[k * 4 + 2] = sheet ? rng.range(0.15, 0.3) : 0.025 + 0.175 * Math.pow(rng.next(), 2.2);
+      life[k * 4 + 2] = (sheet ? rng.range(0.15, 0.3) : 0.025 + 0.175 * Math.pow(rng.next(), 2.2)) * (which === 0 && strength > 1 ? 1.4 : 1);
       life[k * 4 + 3] = sheet;
+      // The first six instances of the long line are the feet of its vents: 1.3 to 4.2 m across, by the vent's strength and its swell
+      // (at 1 to 2.5 m they were two or three pixels of the wide view at 1080 lines: the line is 100 m long).
+      const foot = which === 0 && i < VENTS.length ? (VENTS[i] as (typeof VENTS)[number]) : null;
+      if (foot) {
+        const ff = foot.u * (line.length - 1);
+        const fa = line[Math.floor(ff)] as [number, number];
+        const fb = line[Math.min(line.length - 1, Math.floor(ff) + 1)] as [number, number];
+        const ft = ff - Math.floor(ff);
+        origin[k * 3] = fa[0] + (fb[0] - fa[0]) * ft - dir[1] * foot.off;
+        origin[k * 3 + 2] = fa[1] + (fb[1] - fa[1]) * ft + dir[0] * foot.off;
+        thrown[k * 3] = 0;
+        thrown[k * 3 + 1] = 0.55 + 0.3 * foot.tall;
+        thrown[k * 3 + 2] = 0;
+        life[k * 4 + 2] = 0.85 + 1.05 * (foot.tall - 0.3);
+        life[k * 4 + 3] = 2;
+      }
     }
   });
   const quad = new THREE.InstancedBufferGeometry();
