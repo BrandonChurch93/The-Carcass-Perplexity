@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 29, 2026-11-25 05:53 UTC:
+Status 30, 2026-11-25 06:13 UTC:
 
-- `01-hero-crop.jpg`: Left: the approved hero. Right: ours as it stands. The gap is the body, the legs, the trunk and the hide, in that order
-- `02-shot-heart-01.jpg`: The opening shot of the Heart in motion: twelve frames spread across the shot
-- `03-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
+- `01-v3-h3-compare.jpg`: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal. The hide still reads as a sculpted model, there is no orange light from below, and the crust and the wall behind are flat brown.
+- `02-land-v3-compare-heart-1.jpg`: Land, version 3: the bench and its lip are in and the stripes are gone. The open lava is flat tan where the picture has deep orange with white cores: the fault is in the fire's colour, now with an owner of its own.
+- `03-v3-compare-heart-0.jpg`: Air, version 3, the wide key: two kinds of air now, thin pale haze and a heavy low layer. The far lake lost its pale haze and goes back in; the animals are still too small in this frame.
 - `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
 
+Status 29, 2026-11-25 05:53 UTC, showed: Left: the approved hero. Right: ours as it stands.
 Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
 Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
-Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T05:53:44Z
-phase 3: 2.74 h used of 13.00 h
-build: 9.40 h used of 72.00 h
+2026-11-25T06:13:37Z
+phase 3: 3.07 h used of 13.00 h
+build: 9.73 h used of 72.00 h
 extra rounds: yes
 minutes since the last status: 20
 ```
@@ -768,3 +768,4 @@ none
 - 2026-11-25 05:54 UTC. Status 29 posted: G13 passes for the Heart, round 3 open on e5b7a22, jury controls 0.96, cost of the wide and the hero frame at uhd draft, the approved hero beside ours and the opening shot in motion.
 - 2026-11-25 06:05 UTC. 06:00 UTC: land v3 handed back early (d4f4da0 on agent/heart-land, bench 2.25 s and land 1.62 s a sample at uhd on its machine, its own worst list of ten); it is merged when this machine has finished the round's renders, because the round judges e5b7a22. The land owner got its second wave at once (bench tone and form by albedo and angular blocks, the wall at 5 m scale for heart-4, the talus fan, the undercut lip, the heart-3 foreground pile, the skerry as a low ridge of tilted slabs, brighter sulphur), v4 due 07:40 UTC. The R4 sheets of round 3 are rendered by a fresh agent on its own machine while this one renders the measures and the R1, R2 and R3 packs.
 - 2026-11-25 06:08 UTC. 06:07 UTC: the determinism hunter reproduced G3 on its machine (305 pixels there) and narrowed it by part: crust and lava differ between two fresh loads (the lake folder or the rig's glow map), air, fume, bench and land inherit one level through the glow light, eight parts are identical. It reads the lake's shaders for an undefined value next.
+- 2026-11-25 06:14 UTC. 06:14 UTC: status 30 shown (third versions of walkers, land and air beside the approved pictures; machine checks 18 of 22; the fire's colour traced to the blackbody function; the light owner started). Air v3 (8c4d412) and walkers v3 (6054354) are in and wait for the merge until this machine's renders of the judged commit end.
