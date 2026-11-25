@@ -62,7 +62,6 @@ void main() {
 #ifdef SHEET
   // Wet cloth of a sail, torn: holes eaten through it and its lower edge in rags.
   float eaten = fbm2(f * 2.6 + 11.0) + 0.55 * smoothstep(0.45, 1.0, vSkin.z) * vnoise(f * 9.0) + 0.25 * vnoise(f * 21.0);
-  if (eaten > 0.66) discard;
 #endif
   vec3 hide = texture2D(tHide, q * 0.5).rgb;
   float grain = clamp(0.4 + 0.6 * dot(hide, vec3(0.3333)) / 0.065, 0.55, 1.4);
@@ -120,6 +119,10 @@ void main() {
   occ *= mix(0.5, 1.0, smoothstep(0.0, 0.45, vFace.z));
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(col), 1.0);
+#ifdef SHEET
+  // Cut at the end: a picture read after a discard has no slope to pick its level by.
+  if (eaten > 0.66) discard;
+#endif
 }`;
 
 // Water running down the face beside it and off it: thin ribbons, bright where they catch the sky, always moving down.

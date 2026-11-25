@@ -187,7 +187,8 @@ void main() {
     waded = min(waded, length(p - uRings[i].xy));
   }
   depth -= 0.16 * smoothstep(0.36, 0.62, texture2D(tChop, p / 29.0).b + 0.5 * (texture2D(tChop, p / 7.3).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
-  if (depth < 0.0) discard;
+  // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
+  bool dry = depth < 0.0;
   float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
   vec2 slope = ((c1.xy - 0.5) * 0.11 + vec2(-s2.y, s2.x) * 0.07) * (0.2 + 0.8 * gust) * smoothstep(0.0, 0.07, depth);
@@ -252,6 +253,7 @@ void main() {
   vec3 col = fres * refl + (1.0 - fres) * murk * body;
   float alpha = (fres + (1.0 - fres) * murk) * edge;
   gl_FragColor = vec4(rigOut(col * edge), alpha * (1.0 - uSolo));
+  if (dry) discard;
 }`;
 
 const BORE_SHAPE_GLSL = /* glsl */ `
@@ -354,7 +356,8 @@ void main() {
   float tongue = texture2D(tFoam, vec2(vRide.x, uTime * 2.0) / 61.0).r + 0.5 * texture2D(tFoam, vec2(vRide.x, vRide.y * 0.5 + uTime * 5.0) / 23.0).r;
   amount = mix(amount, 1.25 - 2.3 * ahead / (0.25 + tongue), step(u, 0.0));
   float foam = smoothstep(1.0 - amount, 1.2 - amount, mix(lace, 0.2 + 0.75 * strings + 0.12 * (f1.g - 0.3), face * smoothstep(0.0, 0.5, lifted)));
-  if (u < 0.0 && foam < 0.35) discard;
+  // Cut at the end, not here (see the pools).
+  bool bare = u < 0.0 && foam < 0.35;
   vec2 bump = vec2(f2.g - f1.a, f2.a - f1.g) * 0.5 + (a.xy - 0.5) * (1.0 - face);
   // White water is not a skin: its light comes from all through it, so the folds of the sheet under it count for less.
   vec3 n = normalize(mix(vNormalW, vec3(0.0, 0.62, 0.78), mix(0.6, 0.95, smoothstep(0.55, 0.7, u)) * foam * face) + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.3, foam));
@@ -376,6 +379,7 @@ void main() {
   col += foam * hollow * white * uSunColour * 0.2 * behind * smoothstep(0.3, 0.6, u);
   col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.2;
   gl_FragColor = vec4(rigOut(col), 1.0);
+  if (bare) discard;
 }`;
 
 export const SPRAY_VERTEX = /* glsl */ `
