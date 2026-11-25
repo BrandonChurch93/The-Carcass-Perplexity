@@ -89,7 +89,7 @@ vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   float storm = stormSide(d);
-  c = mix(c, uSkyStorm, 0.85 * storm) + uFlash * storm;
+  c = mix(c, uSkyStorm * 0.45, 0.9 * storm) + uFlash * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
   float band = (0.9 * exp(-up * up / 0.00028) + 0.1 * exp(-up * up / 0.003)) * smoothstep(-0.03, 0.0, up);
@@ -110,7 +110,7 @@ vec3 skyIrradiance(vec3 n) {
   open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * stormShare;
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, uWarmDir) + 0.25) / 1.25, 0.0, 1.0);
-  return 3.14159 * (e + uWarmColour * (0.16 * w * w * seen));
+  return 3.14159 * (e + uWarmColour * (0.24 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it

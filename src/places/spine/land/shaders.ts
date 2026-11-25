@@ -19,7 +19,7 @@ void main() {
 }`;
 
 // uKind: 0 the ground, 1 a spire or the rock over the mouth, 2 the inside of the canal.
-export const LAND_FRAGMENT = /* glsl */ `
+const LAND_PRELUDE = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -74,6 +74,11 @@ vec3 prints(vec2 sl) {
   return vec3(rim * 0.6 - pit, slope);
 }
 
+`;
+
+// The land is drawn twice: first its depth alone, with the mouths of the canal cut out of the ground, then its colour only where it is the
+// nearest thing. The colour is dear and a software renderer shades every fragment it is given, so nothing hidden is shaded.
+export const LAND_DEPTH_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 void main() {
   // The mouths of the canal: the rock wall over each stands across it, and is open where the canal passes through.
   float dCanal = vSL.x - MOUTH_S;
@@ -84,6 +89,12 @@ void main() {
     float ragged = 0.74 + 0.26 * vnoise(vec2(atan(across.y, across.x) * 2.3 + 5.0, 0.7)) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
     if (length(across * vec2(1.0, 1.0 + 0.25 * smoothstep(0.0, 1.0, across.y / r))) < (r - 0.8) * ragged) discard;
   }
+  gl_FragColor = vec4(rigOut(vec3(0.0)), 1.0);
+}`;
+
+export const LAND_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
+void main() {
+  float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
   if (uKind > 1.5 && !gl_FrontFacing) smoothN = -smoothN;
   vec3 toCamera = cameraPosition - vWorld;
@@ -126,7 +137,7 @@ void main() {
   // Colour: blue-grey rock with beds of tan, paler where the weather has worked it.
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
-  vec3 tone = mix(vec3(0.2, 0.215, 0.25), vec3(0.47, 0.38, 0.29), smoothstep(0.35, 0.75, 0.6 * bed + 0.4 * blotch));
+  vec3 tone = mix(vec3(0.25, 0.26, 0.29), vec3(0.62, 0.48, 0.34), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
   vec3 albedo = tone * (0.55 + 0.45 * rock / ROCK_MEAN);
   // Strata: the beds of the rock, tipped as the vertebrae lean, some dark, some pale, a few metres each.
   float tilt = dot(vWorld, vec3(0.16, 0.95, 0.27));

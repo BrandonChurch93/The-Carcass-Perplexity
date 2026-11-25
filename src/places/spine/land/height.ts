@@ -1,6 +1,6 @@
 // The shape of the Spine's ground: the ridge of the layout (ridge.ts) with what the weather and the rock add to it.
 // Nothing is added where the animals trod and where the cameras stand, so that everything placed on the layout's ground stands on this one.
-import { CANAL_L, EXIT, MOUTH_R, MOUTH_S, canalL, first, flare, frameAt, ground, locate } from '../ridge';
+import { CANAL_L, EXIT, MOUTH_R, MOUTH_S, canalL, first, flare, frameAt, ground, locate, shoulder } from '../ridge';
 import { CARCASS_S, trail } from '../shared/anchors';
 
 const hash = (x: number, y: number): number => {
@@ -91,15 +91,17 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const d = s - MOUTH_S;
   const over = d > 0 && d < EXIT && Math.abs(l - canalL(d)) < flare(d) + 30 ? 0.9 : 0;
   const small = 0.85 * smooth(0.5, 0.64, vnoise(x / 19 + 3.7, z / 19 + 9.4));
-  const where = Math.max(patch, small, steep, over);
+  // The shoulder under the first spire is broken rock with snow on its ledges, more rock than snow.
+  const broken = 0.9 * smooth(0.12, 0.5, shoulder(s, l)) * smooth(0.3, 0.5, vnoise(x / 37 + 8.1, z / 37 + 2.9));
+  const where = Math.max(patch, small, steep, over, broken);
   const u = 0.82 * x + 0.57 * z;
   const v = -0.57 * x + 0.82 * z;
   const crag = where * (9 * slab(u, v, 40, 14, 3) + 3.6 * slab(u + 0.4 * v, v, 14, 6, 5) + 3 * ridged(x / 23, z / 23) - 0.6);
   // Drifts: the snow lies in long low waves across the wind.
   const drift = 2.3 * (ridged(x / 16 + 5.5, z / 52) - 0.6) + 1.0 * (vnoise(x / 9 + 5.5, z / 31) - 0.5) + 0.3 * (vnoise(x / 2.7, z / 8.1 + 2.2) - 0.5);
   // Beside the trail the rock breaks through the snow in low stones and steps, a metre or two high.
-  const stones = smooth(2.2, 6.5, near) * (1 - 0.7 * free) * smooth(0.5, 0.66, vnoise(x / 13 + 1.3, z / 13 + 6.6)) * Math.max(0, 1.5 * slab(u, v, 7, 3, 9) + 1.1 * ridged(x / 4.7, z / 4.7) - 0.25);
-  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.1, 0.55, stones)) };
+  const stones = smooth(2.2, 6.5, near) * (1 - 0.7 * free) * smooth(0.43, 0.57, vnoise(x / 15 + 1.3, z / 15 + 6.6)) * Math.max(0, 2.6 * slab(u, v, 8, 3.5, 9) + 1.6 * ridged(x / 5.5, z / 5.5) - 0.2);
+  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.08, 0.4, stones)) };
 }
 
 export function heightAt(s: number, l: number): number {
