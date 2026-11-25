@@ -404,13 +404,13 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float strandFar = 0.0;
   if (lay < 1.0) {
     float lipHot = smoothstep(-7.0, -1.0, len) * smoothstep(10.0, 3.0, len);
-    float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 2)}, ${f(FAN_FROM - 14)}, len) * smoothstep(-3.0, 2.0, len));
+    float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 3)}, ${f(FAN_FROM - 5)}, len) * smoothstep(-3.0, 2.0, len));
     float hotAt = clamp(lipHot + 0.25 + 1.3 * smoothstep(1.6, 3.6, speed) + 0.7 * bright, 0.0, 1.0);
     // They are marks in the lava like the rest: they ride down with it at the speed of the flow and do not stand in place.
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
     // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
-    float wide = (0.086 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot;
+    float wide = (0.096 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot;
     float d1 = abs(b1 - 0.5);
     float d2 = abs(b2 - 0.47);
     core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
