@@ -72,10 +72,14 @@ export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 
 // The only colour of anything that glows by its own heat. 1500 K reads 60 in red; the sky is about 0.05.
-// Seam cores 1350 to 1450 K, a skin that still glows about 1100 K, dark below 900 K.
+// Red is Planck at 610 nm. Green over red is the black body in the display's own primaries (0.036 at 1000 K, 0.085 at 1200 K, 0.15 at 1500 K), far
+// redder than the ratio of two single wavelengths. The last term is the camera's clip: the knee of the look keeps the hue of what it compresses, so the
+// hottest cores would stay orange for ever; from about 1450 K the colour itself walks to yellow-white, as a sensor does. Nothing below 1400 K sees it.
+// On the display, with the look of the place: 1100 K dark red, 1200 K red, 1350 K deep orange, 1450 K yellow-orange, 1500 K and above yellow-white.
 vec3 blackbody(float kelvin) {
   float r = 60.0 * exp(-23587.0 * (1.0 / kelvin - 1.0 / 1500.0));
-  return vec3(r, r * 1.678 * exp(-2573.0 / kelvin), r * 3.885 * exp(-7355.0 / kelvin));
+  float clip = 1.0 / (1.0 + exp((1540.0 - kelvin) / 32.0));
+  return r * vec3(1.0, 2.87 * exp(-4386.0 / kelvin) + 0.6 * clip, 0.003 + 0.12 * clip);
 }
 
 // Radiance of the dusk sky toward d, for lighting. The warm side is the fume lit by the lake.

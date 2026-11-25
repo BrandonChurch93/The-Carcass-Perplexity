@@ -37,7 +37,7 @@ const bendNoise = (x: number, z: number, s: number): number => {
 const bendX = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 1) - 0.5);
 const bendZ = (x: number, z: number, seed: number): number => 2.2 * (bendNoise(x / 6.5, z / 6.5, seed + 2) - 0.5) + 0.9 * (bendNoise(x / 1.9, z / 1.9, seed + 3) - 0.5);
 
-function seamField(): Env['seam'] {
+export function seamField(): Env['seam'] {
   const lines = Object.keys(SEAMS).map((name) => {
     const points = seamLine(name, 40);
     const seed = Math.floor((SEAMS[name] as (typeof SEAMS)[string]).seed * 10);

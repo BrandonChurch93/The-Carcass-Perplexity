@@ -145,13 +145,88 @@ export function wallAt(x: number, z: number, d: number): number {
   return h;
 }
 
-// Where the cameras travel on the bench: from the wide view down to the line.
+// Where the cameras travel on the bench: the push of the wide view, then down to the last rocks of the shore and the push of the line view.
 const ROUTE: [number, number][] = [
-  [-630, 346],
-  [-580, 315],
-  [-542, 282],
-  [-507, 212],
+  [-606.2, 327.4],
+  [-579.8, 314.9],
+  [-553.8, 302.6],
+  [-514.2, 217.6],
+  [-508, 214.2],
 ];
+
+// The wide view's push, with the height of the lens: the ground keeps 3.5 m under it and no rock comes within 3 m of it.
+const WIDE_PATH: [number, number, number][] = [
+  [-606.2, 28.0, 327.4],
+  [-579.8, 24.9, 314.9],
+  [-553.8, 17.0, 302.6],
+];
+
+/** The nearest point of the wide view's path to (x, z): metres to it over the ground, and the height of the lens there. */
+export function widePath(x: number, z: number): [number, number] {
+  let best = Infinity;
+  let y = 0;
+  for (let i = 1; i < WIDE_PATH.length; i++) {
+    const a = WIDE_PATH[i - 1] as [number, number, number];
+    const b = WIDE_PATH[i] as [number, number, number];
+    const ex = b[0] - a[0];
+    const ez = b[2] - a[2];
+    const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[2]) * ez) / (ex * ex + ez * ez)));
+    const d = Math.hypot(x - a[0] - ex * t, z - a[2] - ez * t);
+    if (d < best) {
+      best = d;
+      y = a[1] + (b[1] - a[1]) * t;
+    }
+  }
+  return [best, y];
+}
+
+// The line view: the lens rides from LINE_PATH[0] to LINE_PATH[1], 1.6 to 2.7 m above the lake, looking 52 degrees east of north.
+const LINE_PATH: [[number, number], [number, number]] = [
+  [-514.2, 217.6],
+  [-508, 214.2],
+];
+const LINE_LENS: [number, number] = [-510.5, 215.5];
+const LINE_AHEAD: [number, number] = [0.788, -0.616];
+
+/** Metres from (x, z) to the path of the line view. */
+export function linePathDistance(x: number, z: number): number {
+  const [a, b] = LINE_PATH;
+  const ex = b[0] - a[0];
+  const ez = b[1] - a[1];
+  const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / (ex * ex + ez * ez)));
+  return Math.hypot(x - a[0] - ex * t, z - a[1] - ez * t);
+}
+
+/** Whether (x, z) lies in the part of the line view that must stay open: right of a quarter of the frame's width, ahead of the lens. */
+export function lineOpen(x: number, z: number): boolean {
+  const dx = x - LINE_LENS[0];
+  const dz = z - LINE_LENS[1];
+  const ahead = dx * LINE_AHEAD[0] + dz * LINE_AHEAD[1];
+  const right = -dx * LINE_AHEAD[1] + dz * LINE_AHEAD[0];
+  return ahead > -4 && ahead < 220 && right > -0.36 * ahead - 1.2;
+}
+
+// The crag of the line view: its foot runs from CRAG_A to CRAG_B, its face looks at the lake, its top stands out of the frame.
+const CRAG_A: [number, number] = [-510, 207];
+const CRAG_ALONG: [number, number] = [0.747, -0.664];
+
+function lineCrag(x: number, z: number): number {
+  const dx = x - CRAG_A[0];
+  const dz = z - CRAG_A[1];
+  const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
+  if (u < -6 || u > 10.5) return 0;
+  // Behind the foot is positive: away from the lake.
+  const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
+  if (v < -1.2 || v > 11) return 0;
+  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is in steps.
+  const column = blocks(u / 1.15 + 3.3, 7.7);
+  const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
+  const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
+  const top = uj < 6.3 ? 7.4 + 0.11 * v + 1.3 * (blocks(u / 2.3 + 9.1, v / 2.9) - 0.5) : uj < 8.1 ? 4.3 + 0.6 * column : uj < 9.5 ? 2.3 + 0.5 * column : 0;
+  const back = smooth(10.5, 6.5, v + 1.5 * noise(u / 3.1, 4.4));
+  const start = smooth(-5.5, -3.6, uj);
+  return top * smooth(0, 0.4, vj) * back * start;
+}
 
 /** Metres from (x, z) to the cameras' route on the bench. */
 export function routeDistance(x: number, z: number): number {
@@ -201,11 +276,21 @@ export function benchAt(x: number, z: number, d0: number): number {
   const crag = smooth(200, 150, z);
   const joint = blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x);
   const w = lerp(2.6, 9.5, crag);
-  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 1.7 * crag) * joint) / w;
+  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9)) / w;
   const f = q - Math.floor(q);
   const face = lerp(0.2, 0.09, crag) + 0.12 * noise(x / 17 + 3, z / 17);
   const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
   h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * (s - f) * w;
+  // The wide view's lens passes low over the bench: the ground keeps 3.5 m under it.
+  const [off, lens] = widePath(x, z);
+  if (off < 8 && h > lens - 3.7) h = lerp(lens - 3.7, h, smooth(2.5, 8, off));
+  // The line view: the lens rides a little over the last rocks of the shore, so the ground under it lies low, and nothing
+  // stands up in the part of that view where the mouth and the channel show. The crag stands at its left edge.
+  const low = linePathDistance(x, z);
+  if (low < 3.5 && h > 0.6) h = lerp(0.6, h, smooth(1.6, 3.5, low));
+  if (h > 1.25 && lineOpen(x, z)) h = 1.25 + 0.12 * (1 - Math.exp(-(h - 1.25)));
+  const stand = lineCrag(x, z);
+  if (stand > h) h = stand;
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
 }
@@ -237,6 +322,9 @@ export function buttressAt(x: number, z: number): number {
   h += smooth(0.95, 1.2, edge) * 2.2 * (fbm(x / 8, z / 8, 3) - 0.5) * smooth(0.5, 6, h);
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
+
+/** Where a skerry of shore rock stands in the crust off the bench, dark in the foreground of the view of the one that sank. It is loose rock alone: the land's height does not know it. */
+export const SKERRY: [number, number] = [-518, 282.5];
 
 /** The true height of the land, metres. Zero or less is lake. */
 export function landHeight(x: number, z: number): number {
