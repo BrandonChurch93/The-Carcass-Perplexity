@@ -256,7 +256,7 @@ void main() {
         float lit = clamp(slope, 0.0, 1.0);
         // How much of this step stands in the sun: the part of its height over the top of the land's shadow.
         float stepTop = min(hi, top);
-        float sun = clamp((stepTop - land.b + 0.3) / max(stepTop - max(lo, foot), 0.6), 0.0, 1.0);
+        float sun = clamp((stepTop - land.b + 0.3) / max(stepTop - max(lo, foot), 0.6), 0.0, 1.0) * smoothstep(-12.0, -1.0, p.y);
         // Down the shaft the sky closes to a disc overhead.
         float sunk = clamp(1.0 + min(p.y, 0.0) / 34.0, 0.1, 1.0);
         float depth = clamp((top - p.y) / clamp(thickness, 0.5, 14.0), 0.0, 1.0);
@@ -289,7 +289,8 @@ void main() {
     q.xz -= WINDV * (uTime * 0.6 / C.z);
     vec4 n0 = textureLod(tNoise, q, 0.0);
     vec4 n1 = textureLod(tNoise, q * 3.1 + 0.37, 0.0);
-    float lumps = 0.62 * n0.r + 0.2 * n1.b + 0.3 * n0.g;
+    // The fine lumps are for far off: near the lens they are smaller than a pixel's step along the ray and would boil.
+    float lumps = 0.62 * n0.r + 0.2 * mix(0.45, n1.b, smoothstep(2.0, 9.0, at / C.z)) + 0.3 * n0.g;
     // Billows: the body is whole in its middle and eaten by its own lumps toward its edge. sunward carries how deep the ray runs in it.
     float tau = thick * sunward * sunward * smoothstep(0.0, 0.7, sunward - (0.55 + 1.1 * C.w) * (1.0 - 1.35 * lumps));
     if (tau <= 0.002) continue;

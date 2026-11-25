@@ -30,9 +30,9 @@ void main() {
   float n = a * 0.65 + b * 0.35;
   float high = smoothstep(0.02, 0.3, d.y);
   c *= 1.0 + high * 0.34 * (n - 0.5);
-  // The sun: a disc of two degrees with a soft edge, as it is seen through fog.
+  // The sun: no disc with an edge, a glare that the fog spreads.
   float s = dot(d, uSunDir);
-  c += uSunColour * (5.0 * smoothstep(0.9996, 0.99995, s) + 1.2 * pow(max(s, 0.0), 900.0));
+  c += uSunColour * (2.2 * smoothstep(0.9988, 0.99995, s) + 1.6 * pow(max(s, 0.0), 500.0) + 0.5 * pow(max(s, 0.0), 60.0));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

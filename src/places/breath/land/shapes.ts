@@ -162,7 +162,7 @@ export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
 }
 
 /** The cave: where it is on the cliff's face (metres along it, height) and its half size. */
-export const CAVE_MOUTH = { s: 0, y: 320, wide: 640, tall: 110, deep: 340 };
+export const CAVE_MOUTH = { s: 0, y: 370, wide: 640, tall: 120, deep: 340 };
 
 /** The sea cliff with its cave: 10 km of it, the scree at its foot, the face, the land behind. */
 export function cliff(): THREE.BufferGeometry {
