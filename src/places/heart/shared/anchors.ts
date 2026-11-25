@@ -41,7 +41,7 @@ export const SPATTER_RIGHT: Vec3[] = [spot(0.8, 0.607), spot(0.86, 0.6), spot(0.
 export const SPATTER_LEFT: Vec3[] = [spot(0.205, 0.55), spot(0.24, 0.545), spot(0.27, 0.548)];
 /** The steaming sulphur crack on the bench: its upper end and its foot by the line. */
 export const CRACK_TOP: Vec3 = spot(0.1, 0.645);
-export const CRACK_FOOT: [number, number] = [LINE[0] + 5.5, LINE[1] - 14];
+export const CRACK_FOOT: [number, number] = [LINE[0] - 0.6, LINE[1] - 3];
 /** The fume rises here, behind the buttress, and leans west over the lake. */
 export const FUME_FOOT: Vec3 = [500, 150, -390];
 export const FUME_LOW: Vec3 = [760, 8, -40];
@@ -50,7 +50,8 @@ const from = (p: Vec3, dx: number, dz: number): [number, number] => [p[0] + dx, 
 
 /** The staging of the walkers. Each walks in a straight line: at `when` it is at `at`, heading and speed as given, metres a second. `feed` 1 means it stands and feeds. */
 export const WALKERS: Walker[] = [
-  { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.4, size: 1.55, feed: 1, phase: 0.1 },
+  // The near one: it has moved 12 m east by the key of the one that sank, where it stands whole at the left of that frame with its tuft in the near seam.
+  { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.75, size: 1.55, feed: 1, phase: 0.1 },
   { at: from(GROUP, 0, 0), when: T0, heading: 126, speed: 0.12, size: 1.2, feed: 1, phase: 0.33 },
   { at: from(GROUP, 20, 8), when: T0, heading: 104, speed: 0.55, size: 1.0, feed: 1, phase: 0.62 },
   { at: from(GROUP, 8, -19), when: T0, heading: 72, speed: 0.2, size: 0.92, feed: 0.8, phase: 0.87 },
@@ -73,8 +74,9 @@ export { walkerPosition, type Walker };
 
 /** The seams the pictures show, as lines on the lake at the reference time. The lake draws them hot; the walkers feed at them; the cameras look at them. */
 export const SEAMS: Record<string, { from: [number, number]; to: [number, number]; width: number; wobble: number; seed: number }> = {
-  /** The channel that runs out from the line, the glowing subject of key heart-1. */
-  line: { from: [LINE[0] + 3.7, LINE[1] + 0.5], to: [LINE[0] + 38, LINE[1] - 24.4], width: 1.5, wobble: 1.2, seed: 2.1 },
+  /** The channel at the line, the glowing subject of key heart-1: a crack that leaves the shore north of the camera and runs back along it, two to four
+   *  metres out, to pass the camera on its right and end behind it. In the frame it crosses from the left middle distance to the lower right. */
+  line: { from: [LINE[0] + 10.5, LINE[1] - 23.5], to: [LINE[0] + 1.2, LINE[1] + 9.5], width: 1.5, wobble: 0.9, seed: 2.1 },
   /** The long seam the group feeds at, key heart-3. */
   group: { from: from(GROUP, -46, 22), to: from(GROUP, 86, -20), width: 1.3, wobble: 5, seed: 1.3 },
   /** The seam under the near walker. */
