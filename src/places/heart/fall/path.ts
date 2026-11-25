@@ -12,7 +12,7 @@ export const TUBE = {
   power: 2.5,
   /** The rim flares like the bell of a horn: the first ten metres are a bevel that faces out, and it is what the river lights. */
   half: (d: number): number => lerp(MOUTH.width / 2 - 11, 39, smooth(0, 95, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
-  crown: (d: number): number => lerp(MOUTH.height - 11, 41, smooth(0, 110, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
+  crown: (d: number): number => lerp(MOUTH.height - 21, 34, smooth(0, 110, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
   /** The tube bends west as it goes in, so the east wall closes the view from the bench. */
   axis: (d: number): number => MOUTH.x - 58 * smooth(25, 200, d) * smooth(25, 200, d),
 };

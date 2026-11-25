@@ -278,7 +278,9 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const rubble = 2.6 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 1.25 * blocks(x, z, 3.4, 1) + 0.65 * blocks(x + 40, z, 1.6, 2);
     // In the fan the stream no longer keeps a bed: it lies on the slope as a sheet of crust with channels in it.
     const sheet = smooth(FAN_FROM, FAN_FROM + 12, n.len);
-    const top = lerp(n.y, Math.max(base, ground, 0) + 0.3, sheet);
+    // The toe of the fan goes into the lake in lobes: nothing of it ends on a straight line.
+    const toe = smooth(course.length - 30, course.length - 5, n.len) * (0.2 + 1.5 * fbm2(x / 8 + 1.7, z / 8 + 4.1));
+    const top = lerp(n.y, Math.max(base, ground, 0) + 0.3 - toe, sheet);
     // Beside the stream the rubble is what the stream has let stand: a low levee, then the slope. The bank on the lake's side is kept
     // below the stream, or from the shore the stream would hide behind it.
     const lakeward = n.len > 2 ? smooth(0.05, 0.6, n.toward[0] * 0.56 - n.toward[1] * 0.83) : 0;

@@ -138,35 +138,56 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   float inside = vSkin.z;
-  // The cliff, mapped as the land maps it so the two do not show a join. On the rim and in the tube that mapping has no direction
-  // (the roof, the bevel), and the picture is laid on from the three axes of the world instead.
-  vec3 t = normalize(vec3(-n.z, 0.0, n.x) + 1e-4);
-  vec2 wrap = vec2(dot(vWorld.xz, t.xz), vWorld.y);
-  float own = step(0.5, vSkin.x) * smoothstep(36.0, 18.0, vSkin.y);
-  vec3 cliff = vec3(0.0);
-  float tri = max(own, inside);
-  if (tri < 1.0) cliff += (1.0 - tri) * texture2D(tCliff, wrap / 60.0 + 0.13 * vnoise(vWorld.xz / 90.0)).rgb;
-  if (tri > 0.0) cliff += tri * threeWay(tCliff, vWorld / 47.0, n);
-  cliff *= 0.75 + 0.5 * vnoise(vec2(vWorld.y * 0.9 + 3.0 * vnoise(vWorld.xz / 25.0), 0.5));
-  // Beds and joints: the wall breaks in ledges along its beds and in cracks down its joints.
-  float bedY = vWorld.y * 0.32 + 1.8 * vnoise(vWorld.xz / 31.0) + 0.5 * vnoise(vec2(wrap.x / 7.0, vWorld.y / 5.0));
-  float ledge = vnoise(vec2(bedY, 7.0)) - vnoise(vec2(bedY + 0.25, 7.0));
-  float out_ = 1.0 - inside;
-  n = normalize(n + vec3(0.0, 1.0, 0.0) * ledge * 2.4 * out_);
-  float joint = abs(vnoise(vec2(wrap.x / 5.5 + 0.7 * vnoise(vec2(vWorld.y / 9.0, wrap.x / 30.0)), floor(bedY) * 3.7 + vWorld.y / 60.0)) - 0.5);
-  cliff *= 1.0 - out_ * (0.5 * smoothstep(0.05, 0.22, ledge) + 0.6 * smoothstep(0.03, 0.0, joint));
-  cliff *= fineRock(vWorld, max(own, 0.6 * out_), n);
-  // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
-  cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
-  // Under the sill the wall is draped with what has slopped over it, black and glazed.
-  cliff *= mix(1.0, 0.5, smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 5)}, vWorld.y) * smoothstep(${f(TUBE.floor - 70)}, ${f(TUBE.floor - 30)}, vWorld.y) * out_);
-  // The rim is the youngest rock of the wall, glazed by what has poured through it.
-  cliff *= mix(1.0, 0.6, own);
   // The face of the cliff has no skin: its distance from the arch is reckoned from the arch itself.
   vec2 q = vec2(abs(vWorld.x - uArch.x) / uArch.z, max(vWorld.y - uArch.y, 0.0) / uArch.w);
   float beyond = max((pow(pow(q.x, ${f(TUBE.power)}) + pow(q.y, ${f(TUBE.power)}), ${f(1 / TUBE.power)}) - 1.0) * 58.0, uArch.y - vWorld.y);
   float d = vSkin.x >= 0.5 ? -vSkin.y : -max(beyond, 0.0);
-  vec3 c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
+  vec3 c = vec3(0.0);
+  // Far inside no light reaches and there is no rock to draw.
+  if (inside < 0.5 || d < 90.0) {
+    // The wall, mapped as the land maps it (the picture upright on the face, sixty metres to a repeat) so the two do not show a join.
+    // On the rim and in the tube that mapping has no direction (the roof, the bevel), and the picture is laid on from the three axes.
+    float own = step(0.5, vSkin.x) * smoothstep(36.0, 18.0, vSkin.y);
+    vec3 cliff = vec3(0.0);
+    float tri = max(own, inside);
+    float out_ = 1.0 - inside;
+    if (tri < 1.0) {
+      float kx = smoothstep(0.3, 0.7, n.x * n.x / (n.x * n.x + n.z * n.z + 1e-5));
+      vec2 uv = mix(vWorld.xy, vWorld.zy, step(0.5, kx)) / 60.0;
+      vec3 relief = texture2D(tCliffNh, uv).rgb;
+      cliff += (1.0 - tri) * texture2D(tCliff, uv).rgb * (0.6 + 0.8 * relief.b);
+      n = normalize(n + (1.0 - tri) * 1.6 * (mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), step(0.5, kx)) * (relief.r - 0.5) - vec3(0.0, 1.0, 0.0) * (relief.g - 0.5)));
+    }
+    if (tri > 0.0) cliff += tri * threeWay(tCliff, vWorld / 47.0, n);
+    cliff *= 0.75 + 0.5 * vnoise(vec2(vWorld.y * 0.9 + 3.0 * vnoise(vWorld.xz / 25.0), 0.5));
+    // Beds and joints: the wall breaks in ledges along its beds and in cracks down its joints.
+    float along = vWorld.x + 0.4 * vWorld.z;
+    float bedY = vWorld.y * 0.32 + 1.8 * vnoise(vWorld.xz / 31.0) + 0.5 * vnoise(vec2(along / 7.0, vWorld.y / 5.0));
+    float ledge = vnoise(vec2(bedY, 7.0)) - vnoise(vec2(bedY + 0.25, 7.0));
+    n = normalize(n + vec3(0.0, 1.0, 0.0) * ledge * 2.4 * out_);
+    float joint = abs(vnoise(vec2(along / 5.5 + 0.7 * vnoise(vec2(vWorld.y / 9.0, along / 30.0)), floor(bedY) * 3.7 + vWorld.y / 6.5)) - 0.5);
+    cliff *= 1.0 - out_ * (0.5 * smoothstep(0.05, 0.22, ledge) + 0.5 * smoothstep(0.025, 0.0, joint));
+    cliff *= fineRock(vWorld, max(own, 0.6 * out_), n);
+    // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
+    cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
+    // Under the sill the wall is draped with what has slopped over it, black and glazed.
+    cliff *= mix(1.0, 0.5, smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 5)}, vWorld.y) * smoothstep(${f(TUBE.floor - 70)}, ${f(TUBE.floor - 30)}, vWorld.y) * out_);
+    // The rim is the youngest rock of the wall, glazed by what has poured through it.
+    cliff *= mix(1.0, 0.6, own);
+    // The roof and walls go back in ribs, one for each time the tube ran full, and the side of each rib that faces the mouth
+    // catches the light of the melt on the floor there. They go into the dark one behind another.
+    vec3 more = vec3(0.0);
+    if (inside > 0.5 && d > 2.0) {
+      float ph = d / 12.0 + 1.5 * vnoise(vec2(vWorld.x / 21.0 + vWorld.y / 27.0, d / 37.0)) + 0.35 * vnoise(vec2(vWorld.x / 4.0, vWorld.y / 4.0 + d / 9.0));
+      float rib = fract(ph);
+      float lit = smoothstep(0.0, 0.08, rib) * smoothstep(0.42, 0.1, rib);
+      vec2 to = vec2(riverX(0.0) - vWorld.x, ${f(TUBE.floor)} - vWorld.y);
+      float form = 34.0 / sqrt(34.0 * 34.0 + dot(to, to));
+      more = blackbody(1300.0) * 3.14159 * 1.5 * lit * form * exp(-d / 15.0) * smoothstep(2.0, 11.0, d) * (0.35 + 1.0 * vnoise(vec2(vWorld.x / 5.0 + vWorld.y / 7.0, d / 3.5)));
+      cliff *= 1.0 + 0.6 * lit;
+    }
+    c = rockShade(vWorld, n, v, cliff, 1.0, more, d);
+  }
   gl_FragColor = vec4(rigOut(c), 1.0);
   // Last, so that no texture is read beside a pixel already thrown away.
   if (hiddenByWall(vWorld, vSkin.z)) discard;
@@ -312,6 +333,8 @@ ${TUBE_GLSL}
 ${STREAM_GLSL}
 void main() {
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
+  // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
+  lava.y = mix(lava.y, max(lava.y, 1390.0), smoothstep(0.5, 0.12, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * (0.35 + 0.65 * vnoise(vWorld.xz / 2.7 + uTime * 0.05)));
   vec3 c = blackbody(lava.y);
   if (lava.x < 1.0) {
     vec3 v = normalize(cameraPosition - vWorld);
