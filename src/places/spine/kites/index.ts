@@ -28,12 +28,14 @@ interface Ribbon {
   stalk: number;
 }
 
-function ribbonCount(n: number): number {
-  if (n === FIRST) return 15;
-  if (n === FIRST - 1) return 7;
-  if (n === FIRST + 1) return 4;
-  if (n === FIRST + 2) return 8;
-  return 3;
+/** Where the colonies of a spire hold on, as shares of its height, and how many ribbons each has. Few and near the top: the lee of the tip is where the gale is cleanest. */
+function colonies(n: number): [number, number][] {
+  // The first spire is seen close, at two thirds of its height: three colonies there and one at its tip.
+  if (n === FIRST) return [[0.955, 3], [0.845, 2], [0.795, 3], [0.752, 2], [0.705, 3]];
+  if (n === FIRST + 2) return [[0.965, 3], [0.9, 1]];
+  if (n === FIRST + 1) return [[0.95, 2]];
+  if (n === FIRST + 3) return [[0.96, 2], [0.87, 1]];
+  return [[0.955, 2]];
 }
 
 // The shape of a ribbon at a share u of its length. Shared by the ribbons and by nothing else: the stalks are the first fifth of the same strip.
@@ -55,7 +57,8 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float amp = 0.045 * len * grow;
   // A gust lifts or drops the whole ribbon slowly.
   float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
-  float lift = -more.x * len * u * u + amp * (sin(p1) + 0.45 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
+  float fan = (fract(more.y * 13.7) - 0.5) * 0.3;
+  float lift = fan * along * (1.0 - 0.5 * u) - more.x * len * u * u + amp * (sin(p1) + 0.45 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
   float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
@@ -75,6 +78,7 @@ varying vec2 vAt;
 varying vec4 vShape;
 varying vec4 vMore;
 varying float vThin;
+varying float vCord;
 void main() {
   float u = aAt.x;
   float e = 0.004;
@@ -107,6 +111,7 @@ void main() {
   vShape = aShape;
   vMore = aMore;
   vThin = halfW / thin;
+  vCord = min(1.0, 0.022 * aShape.y / cord);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -121,6 +126,7 @@ varying vec2 vAt;
 varying vec4 vShape;
 varying vec4 vMore;
 varying float vThin;
+varying float vCord;
 void main() {
   float u = vAt.x;
   float v = vAt.y;
@@ -137,7 +143,12 @@ void main() {
   float fray = (0.05 + 0.5 * smoothstep(0.45, 1.0, u)) * (0.35 * vnoise(vec2(metres / (0.35 * wide), seed)) + 0.65 * vnoise(vec2(metres / (1.6 * wide), seed + 5.0)));
   float tatter = smoothstep(0.7, 1.0, u) * smoothstep(0.42, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, v * 2.2 + seed)));
   float slit = step(0.55, fract(seed * 0.37)) * smoothstep(0.35, 0.5, u) * (1.0 - smoothstep(0.02, 0.05, abs(v - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.1 * vnoise(vec2(metres / wide, seed))));
-  float cut = smoothstep(fray, fray + 0.06, edge) * (1.0 - tatter) * (1.0 - slit);
+  // Holes where the gale has gone through it, more of them toward the tail, each with a rolled rim.
+  float worn = vnoise(vec2(metres / (1.3 * wide) + seed * 3.0, v * 1.7 + seed)) + 0.35 * (vnoise(vec2(metres / (0.3 * wide), v * 6.0 + seed)) - 0.5);
+  float gate = mix(0.9, 0.66, smoothstep(0.25, 0.9, u));
+  float hole = smoothstep(gate, gate + 0.03, worn);
+  float rim = smoothstep(gate - 0.09, gate, worn) * (1.0 - hole);
+  float cut = smoothstep(fray, fray + 0.06, edge) * (1.0 - tatter) * (1.0 - slit) * (1.0 - hole);
   // Under the widest part of the blade the cord shows through as a spine; before the blade there is only the cord.
   float cordHere = 1.0 - smoothstep(0.6, 1.0, abs(v) * max(vThin, 0.001) / max(0.045 / max(blade, 0.02), 0.001));
   cordHere *= 1.0 - smoothstep(0.45, 0.8, u);
@@ -149,9 +160,12 @@ void main() {
   float fine = vnoise(vec2(metres / (0.12 * wide), v * 9.0 + seed));
   float crease = smoothstep(0.55, 0.8, vnoise(vec2(metres / (0.5 * wide) + seed, v * 1.3)));
   float rolled = 1.0 - smoothstep(fray + 0.05, fray + 0.22, edge);
+  rolled = max(rolled, rim);
   float thick = clamp(0.2 + 0.55 * rolled + 0.4 * vein + 0.22 * crease + 0.12 * fine, 0.0, 1.0);
 
-  vec3 albedo = mix(vec3(0.62, 0.62, 0.7), vec3(0.36, 0.33, 0.4), 0.6 * vein + 0.3 * crease);
+  // Pale violet, bruised darker along the veins and in blotches where it has been beaten against itself.
+  float bruise = smoothstep(0.5, 0.8, vnoise(vec2(metres / (3.0 * wide) + seed * 7.0, v * 0.9 + seed * 2.0)));
+  vec3 albedo = mix(vec3(0.7, 0.64, 0.86), vec3(0.3, 0.23, 0.42), clamp(0.6 * vein + 0.3 * crease + 0.35 * bruise, 0.0, 1.0));
   // Light comes through it: the far side's light counts as much as the near side's, and the lightning shows through from behind.
   vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n));
   vec3 c = albedo * e / 3.14159 * (0.55 + 0.45 * thick);
@@ -170,12 +184,14 @@ void main() {
   float charge = uStruck.y * mine * (0.8 * rolled + 0.35 * vein + 1.5 * tatter * step(0.7, fine));
   c += uGlowTint * charge;
 
-  float alpha = clamp(0.2 + 0.6 * thick + 0.5 * fres, 0.0, 0.95) * skin;
+  float alpha = clamp(0.46 + 0.45 * thick + 0.5 * fres, 0.0, 0.96) * skin;
   // The stalk and the spine: a dark wet cord, rimed on top.
   vec3 cord = rigShade(vWorld, n, toCamera, mix(vec3(0.045, 0.035, 0.035), vec3(0.55, 0.58, 0.64), smoothstep(0.2, 0.7, n.y) * step(0.45, vnoise(vec2(metres * 3.0, seed)))), 0.7, 1.0);
-  float corded = cordHere * (1.0 - 0.75 * blade);
+  float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, vCord);
   c = mix(c, cord, corded);
   alpha = max(alpha, corded);
+  // It writes its depth, so that the air between it and the lens is the air it is seen through; the faintest of its fringe does not.
+  if (alpha < 0.08) discard;
   gl_FragColor = vec4(rigOut(c), alpha * (1.0 - uSolo));
 }`;
 
@@ -223,27 +239,25 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('kites');
   const ribbons: Ribbon[] = [];
   spires.forEach((sp, n) => {
-    const count = ribbonCount(n);
-    for (let i = 0; i < count; i++) {
-      const near = n === FIRST;
-      const low = n === FIRST + 1 ? 0.42 : near ? 0.66 : 0.6;
-      const high = n === FIRST + 1 ? 0.55 : 0.965;
-      const t = low + (high - low) * ((i + rng.range(0.15, 0.85)) / count);
-      const reach = near ? 1 : n === FIRST + 2 ? 1.25 : 0.8;
-      // Colonies differ: most ribbons are of a middle length, one in five is a streamer twice as long, one in five a stub.
-      const kind = rng.next();
-      const length = rng.range(110, 230) * reach * (kind < 0.2 ? 0.55 : kind > 0.85 ? 1.35 : 1);
-      ribbons.push({
-        anchor: finEdge(sp, t, 0.9, rng.range(-0.6, 0.6)),
-        length,
-        width: (near ? rng.range(2.2, 5) : rng.range(6, 10)) * (kind < 0.2 ? 0.7 : 1),
-        phase: rng.range(0, 6.28),
-        wave: length / rng.range(2.2, 4.2),
-        sag: n === FIRST + 2 ? rng.range(0.1, 0.2) : rng.range(0.01, 0.06),
-        seed: rng.next(),
-        spire: n - FIRST + 1,
-        stalk: rng.range(9, 22) / length,
-      });
+    const near = n === FIRST;
+    const reach = near ? 1 : n === FIRST + 2 ? 1.2 : 0.85;
+    for (const [share, count] of colonies(n)) {
+      const t = share + rng.range(-0.008, 0.008);
+      for (let i = 0; i < count; i++) {
+        // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
+        const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
+        ribbons.push({
+          anchor: finEdge(sp, t + (i - (count - 1) / 2) * 0.006, 1.01, rng.range(-0.25, 0.25)),
+          length,
+          width: (near ? rng.range(2.6, 4.6) : rng.range(6, 10)) * (i === 0 ? 1 : 0.8),
+          phase: rng.range(0, 6.28),
+          wave: length / rng.range(2.2, 4.2),
+          sag: n === FIRST + 2 ? rng.range(0.06, 0.16) : rng.range(0.01, 0.06),
+          seed: rng.next(),
+          spire: n - FIRST + 1,
+          stalk: rng.range(14, 30) * (near ? 1 : 1.6) / length,
+        });
+      }
     }
   });
 
@@ -281,7 +295,7 @@ export function create(ctx: Context): Piece {
     uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(0.55, 0.45, 1.2) } },
     side: THREE.DoubleSide,
     transparent: true,
-    depthWrite: false,
+    forceSinglePass: true,
   });
   const kites = new THREE.Mesh(geometry, material);
   kites.frustumCulled = false;
