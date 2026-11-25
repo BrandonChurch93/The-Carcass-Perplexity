@@ -92,51 +92,64 @@ void main() {
     slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
     crease = mix(1.0, 0.7 + 0.3 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
-    // Past this a pixel is longer than a bundle and nothing of the folds is left to draw.
+    // Past this a pixel is longer than a sheaf and nothing of the folds is left to draw.
     if (fpLong < 0.4) {
       foldAt(q);
-      foldOn = gFoldCover * calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
+      float skinOn = calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
+      foldOn = gFoldCover * skinOn;
       foldPhase = gFoldPhase;
+      // The toes between the sheaves: what the cells do not carry of their domes, a dark line where one lies on the next,
+      // and a tone of its own for each.
+      float toe = step(1e-4, gToeBest) * skinOn;
+      slope += gToeSlope * (1.0 - toeHeld(vAux.x)) * toe;
+      crease *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.02, gToeBest - gToeNext), toe * step(1e-4, gToeNext) * (1.0 - smoothstep(0.02, 0.1, fpShort)));
+      age += 0.16 * (hash12(gToeId + 3.1) - 0.5) * toe;
     }
   }
-  // Folds, the cords on them, four to a fold, and the bundles, three folds to a band: each is drawn as long as a pixel is
-  // finer than one of it across its run, so that none can beat against the pixels. All run along the lines of equal
-  // phase, and the phase is smooth, so its slope is taken from the screen.
+  // Folds, and the cords on them, four to a fold: each is drawn as long as a pixel is finer than one of it across its run,
+  // so that none can beat against the pixels. All run along the lines of equal phase, and the phase is smooth, so its
+  // slope is taken from the screen.
   vec2 phaseD = vec2(dFdx(foldPhase), dFdy(foldPhase));
   float per = max(abs(phaseD.x), abs(phaseD.y));
   float turn = 3.14159 * foldPhase;
   float fold = abs(sin(turn));
   float cord = abs(sin(4.0 * turn));
-  float band = abs(sin(turn / 3.0));
-  float foldSeen = foldOn * (1.0 - smoothstep(0.12, 0.3, per));
-  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per));
-  float bands = foldOn * (1.0 - smoothstep(0.4, 0.95, per)) - foldSeen;
+  float waver = vnoise(q / 0.23 + 61.0);
+  float seen = 1.0 - smoothstep(0.08, 0.3, per);
+  float foldSeen = foldOn * seen;
+  // Only a fold as thick as an arm carries cords.
+  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per)) * smoothstep(0.07, 0.16, gFoldSpace);
   // The slope of a fold where the cells are too coarse to carry it, and of the cords always.
-  float foldRise = FOLD_DEEP * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * smoothstep(0.06, 0.13, cell);
-  foldRise += 0.035 * 4.0 * 3.14159 * cos(4.0 * turn) * sign(sin(4.0 * turn)) * cords;
-  // Black in the crease and the groove, by how deep a point lies below the crests beside it; a pale line on the crest.
-  crease *= mix(1.0, 0.25 + 0.75 * smoothstep(0.0, 0.8, fold), foldSeen - 0.6 * cords);
-  crease *= mix(1.0, 0.12 + 0.88 * smoothstep(0.0, 0.7, cord), cords);
-  crease *= mix(1.0, 0.72 + 0.28 * smoothstep(0.0, 0.8, band), bands);
-  float crest = cords * pow(cord, 3.0) + (foldSeen - cords) * pow(fold, 3.0) + 0.3 * bands * pow(band, 3.0);
+  float foldRise = gFoldDeep * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * (1.0 - foldHeld(vAux.x));
+  foldRise += 0.1 * gFoldSpace * 4.0 * 3.14159 * cos(4.0 * turn) * sign(sin(4.0 * turn)) * cords * (0.4 + 1.2 * waver);
+  // A groove is dark by its depth: a deep narrow one sees a fifth of the sky, a shallow one most of it. Where a pixel no
+  // longer tells one fold from the next, what is left is the tone of the folded patch, not a row of black dashes.
+  float pitDark = mix(0.65, 0.2, smoothstep(0.2, 0.7, gFoldDeep / gFoldSpace));
+  crease *= mix(1.0, mix(mix(pitDark, 1.0, 0.7), pitDark + (1.0 - pitDark) * smoothstep(0.0, 0.8, fold), seen), foldOn);
+  crease *= mix(1.0, 0.45 + 0.55 * smoothstep(0.0, 0.7, cord), cords);
+  float crest = 0.6 * cords * pow(cord, 3.0) + (foldSeen - 0.6 * cords) * pow(fold, 3.0);
   float det = qx.x * qy.y - qx.y * qy.x;
   det = abs(det) > 1e-12 ? det : 1e12;
 
   // The grain of the skin: grit, pits and the scales of a stretched rope, from the photograph.
-  vec4 ta = texture2D(tRopeNh, TURN_A * q / 1.37);
-  vec4 tb = texture2D(tRopeNh, TURN_B * q / 0.41 + 0.37);
+  // Each reading is skipped where a pixel is too long to hold any of it.
+  float lod = log2(max(fpLong, 1e-5) * 1024.0) - 0.7;
+  vec4 ta = vec4(0.5);
+  vec4 tb = vec4(0.5);
+  vec4 tc = vec4(0.5);
+  if (fpLong < 0.3) tc = mix(textureLod(tRopeNh, TURN_C * q / 4.3 + 0.61, lod - 2.1), tc, smoothstep(0.18, 0.3, fpLong));
+  if (fpLong < 0.09) ta = mix(textureLod(tRopeNh, TURN_A * q / 1.37, lod - 0.45), ta, smoothstep(0.055, 0.09, fpLong));
+  if (fpLong < 0.03) tb = mix(textureLod(tRopeNh, TURN_B * q / 0.41 + 0.37, lod + 1.29), tb, smoothstep(0.018, 0.03, fpLong));
   float grainA = ta.b - 0.5;
-  vec4 tc = texture2D(tRopeNh, TURN_C * q / 4.3 + 0.61);
   float grainB = tb.b - 0.5;
   float grainC = tc.b - 0.5;
   vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * calm;
 
   // Threads: on every cord lie strands of two to three centimetres that run with the fold, waver, thin out and start again.
-  float waver = vnoise(q / 0.23 + 61.0);
   float tturn = 3.14159 * (13.0 * foldPhase + 1.6 * waver);
   float thread = abs(sin(tturn));
-  float threads = foldOn * (1.0 - smoothstep(0.006, 0.014, per)) * clamp(0.5 + 2.2 * grainA + 0.8 * (waver - 0.5), 0.0, 1.0);
-  foldRise += 0.2 * cos(tturn) * sign(sin(tturn)) * threads;
+  float threads = foldOn * (1.0 - smoothstep(0.006, 0.014, per)) * smoothstep(0.14, 0.28, gFoldSpace) * clamp(0.5 + 2.2 * grainA + 0.8 * (waver - 0.5), 0.0, 1.0);
+  foldRise += 0.65 * gFoldSpace * cos(tturn) * sign(sin(tturn)) * threads;
   crease *= mix(1.0, 0.4 + 0.6 * smoothstep(0.0, 0.55, thread), threads);
   slope += clamp(onCrust(phaseD, qx, qy, det), -6.0, 6.0) * clamp(foldRise, -0.8, 0.8);
   age = clamp(age, 0.0, 1.0) * (1.0 - 0.8 * young) * (1.0 - 0.7 * fresh);
