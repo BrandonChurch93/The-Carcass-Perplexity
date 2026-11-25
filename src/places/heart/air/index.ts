@@ -18,6 +18,8 @@ export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
 const FUME_LIGHT = { at: [760, 25, -40] as const, radius: 150, open: 0.2 };
+/** The lit bank over the feeding group, as a wide dim light of the rig, for the shot that stands among them: how far behind them, how high, how wide, how open. */
+const BANK_LIGHT = { behind: 45, height: 14, radius: 50, open: 0.035, shot: 'heart-02' };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -49,7 +51,7 @@ interface Body {
 }
 
 const BROWN = [0.46, 0.34, 0.27] as const;
-const ROSE = [0.5, 0.39, 0.36] as const;
+const ROSE = [0.5, 0.38, 0.33] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
@@ -61,20 +63,20 @@ const fromFoot = (right: number, toward: number): [number, number] => [FALL_FOOT
 
 const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
-  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12 } },
-  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12 } },
-  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
-  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
+  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
+  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
   // What stands behind them in the feeding picture: warm brown smoke over the open lake, thin enough for the buttress to stand in it. Staged for that shot.
-  { at: behind(430, 20), radius: 330, height: 26, lean: [-0.2, 0.08], dense: 0.0022, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.2, floor: [3.0, 12], tops: 2.3, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.005, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [1.6, 40], tops: 2.2, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 20), radius: 330, height: 26, lean: [-0.2, 0.08], dense: 0.0022, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.2, floor: [2.4, 12], tops: 2.0, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.005, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [1.4, 40], tops: 2.0, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
-  { at: fromFoot(-34, 34), radius: 40, height: 60, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.14 } },
-  { at: fromFoot(2, 26), radius: 44, height: 90, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.14 } },
-  { at: fromFoot(22, 48), radius: 34, height: 44, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.14 } },
-  // The plume of the wide view: it leaves the far shore between the fall and the buttress, thin at the lake, leans up and east, and lies out as a thin layer over the east of the sky.
-  { at: [200, -345], radius: 42, height: 230, lean: [0.33, 0.38], dense: 0.03, widen: 1.7, foot: 0.55, repeat: 120, hard: 1.6, climb: 4, colour: BROWN, floor: [0.3, 120], tops: 0.35, solid: 0.45 },
-  { at: [470, -70], base: 150, radius: 400, height: 170, lean: [0.1, 0.1], dense: 0.012, repeat: 260, hard: 1.3, climb: 0.6, colour: BROWN, floor: [0.18, 300], tops: 0.2, solid: 0.5 },
+  { at: fromFoot(-34, 34), radius: 40, height: 60, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(2, 26), radius: 44, height: 90, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(22, 48), radius: 34, height: 44, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
+  // The plume of the wide view: it rises from behind the buttress, its source hidden by it, leans up and east, and lies out as a thin layer over the east of the sky.
+  { at: [500, -200], radius: 42, height: 260, lean: [0.3, 0.3], dense: 0.03, widen: 1.7, foot: 0.55, repeat: 120, hard: 1.6, climb: 4, colour: BROWN, floor: [0.3, 120], tops: 0.35, solid: 0.45 },
+  { at: [580, -40], base: 170, radius: 400, height: 170, lean: [0.1, 0.1], dense: 0.012, repeat: 260, hard: 1.3, climb: 0.6, colour: BROWN, floor: [0.18, 300], tops: 0.2, solid: 0.5 },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
   { at: [760, -40], base: -25, radius: 150, height: 150, lean: [-0.1, -0.05], dense: 0.008, widen: 0.2, repeat: 130, hard: 1.1, climb: 2, colour: BROWN, foot: 0.12, lake: [0.5, 30], floor: [2.0, 70], lights: 1, tops: 0.4, solid: 0.6 },
 ];
@@ -116,6 +118,10 @@ export function create(ctx: HeartContext): HeartPiece {
   const skyMean = new THREE.Vector3();
   const fume = { position: new THREE.Vector3(...FUME_LIGHT.at), radius: FUME_LIGHT.radius, radiance: new THREE.Vector3(...blackbody(1400)).multiplyScalar(FUME_LIGHT.open) };
   ctx.rig.emitters.push(fume);
+  const bankAt = behind(BANK_LIGHT.behind, 0);
+  const bankGlow = new THREE.Vector3(...blackbody(1400)).multiplyScalar(BANK_LIGHT.open);
+  const bank = { position: new THREE.Vector3(bankAt[0], BANK_LIGHT.height, bankAt[1]), radius: BANK_LIGHT.radius, radiance: new THREE.Vector3() };
+  ctx.rig.emitters.push(bank);
 
   const heatA = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
   const heatB = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
@@ -180,6 +186,7 @@ export function create(ctx: HeartContext): HeartPiece {
     warp,
     setTime: (seconds) => {
       const shot = shots.find((x) => seconds >= x.from && seconds <= x.to)?.id ?? '';
+      bank.radiance.copy(bankGlow).multiplyScalar(shot === BANK_LIGHT.shot ? 1 : 0);
       for (let i = 0; i < count; i++) {
         const b = BODIES[i] as Body;
         (bodyB[i] as THREE.Vector4).w = b.dense * (b.shots?.[shot] ?? b.shots?.rest ?? 1);

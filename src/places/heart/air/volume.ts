@@ -78,7 +78,7 @@ int nearCount;
 // The share of a round light that reaches a point, as the rig casts it on the ground: the square of the distance, then the fume takes it
 // (half is left at 70 m and 1.5 radii, a sixteenth at twice that); a small light is the core of more open lava than its disc.
 float lightShare(float d2, float r) {
-  float reach = max(70.0 + 1.5 * r, 40.0 + 2.2 * r);
+  float reach = max(45.0 + 1.2 * r, 3.2 * r - 110.0);
   float q = (d2 + r * r) / (reach * reach);
   return r * r / (d2 + r * r) / (1.0 + q * q) * mix(4.5, 1.0, smoothstep(20.0, 60.0, r));
 }
