@@ -260,7 +260,7 @@ void main() {
 
   #ifndef RIM
   // The split: open lava at the bottom, a skin that still glows on its walls.
-  float heat = mk.r * (1.0 + uTearOpen);
+  float heat = mk.r * (1.0 + 2.2 * uTearOpen);
   float hot = smoothstep(0.12, 0.6, heat * (0.8 + 0.4 * small));
   // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
   float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);

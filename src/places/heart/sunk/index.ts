@@ -23,6 +23,7 @@ const FAR = 150;
  *  of smoke, and stays a little wider. */
 const SETTLE_AT = (3740 - 3579) / 60;
 const SETTLE_DROP = 0.1;
+const SETTLE_TIP = 0.022;
 /** The split's light on what is round it wavers as its fire does. Every rate is a whole count of turns in 8 s. */
 const waver = (seconds: number, at: number): number =>
   0.5 * Math.sin(seconds * 1.5708 + at) + 0.3 * Math.sin(seconds * 3.927 + 2.3 * at) + 0.2 * Math.sin(seconds * 8.6394 + 4.1 * at);
@@ -222,10 +223,14 @@ export function create(ctx: HeartContext): HeartPiece {
     heat.at[0] = x + tx;
     heat.at[2] = z + tz;
     const now = settling(seconds);
-    for (const body of bodies) body.position.y = -SETTLE_DROP * now.down;
+    // The hull tips toward the split as it goes down: its far end by a hand's width, its end under the legs by half of that.
+    for (const body of bodies) {
+      body.position.y = -0.5 * SETTLE_DROP * now.down;
+      body.rotation.z = SETTLE_TIP * now.down;
+    }
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
-    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 1.5 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
+    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 3 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
     heat.strength = 0.25 * (1 + now.puff);
     smokes.forEach((smoke, i) => {
       const [sx, sz] = toWorld((TEAR[i] as [number, number])[0], (TEAR[i] as [number, number])[1]);
