@@ -189,6 +189,7 @@ const BORE_SHAPE_GLSL = /* glsl */ `
 uniform float uFront;
 uniform float uBoreHeight;
 uniform sampler2D tChop;
+uniform sampler2D tFoam;
 // How far the front runs ahead of or behind its line at x: the wall is one wall, and it is not ruled.
 float boreLine(float x) {
   return 20.0 * sin(x * 0.0076 + 1.3) + 8.0 * sin(x * 0.021 + uTime * 0.25) + 3.0 * sin(x * 0.09 - uTime * 0.6);
@@ -197,19 +198,32 @@ float boreHigh(float x) {
   float strait = smoothstep(950.0, 520.0, abs(x - 80.0));
   return uBoreHeight * (0.3 + 0.7 * strait) * (0.88 + 0.12 * sin(x * 0.021 + uTime * 0.7) + 0.08 * sin(x * 0.063 - uTime * 1.1));
 }
+// The churn of the face: round heads of white water with sharp creases between, falling down the face as the wall runs. x: big heads, y: small.
+vec2 boreChurn(float x, float s) {
+  float a = texture2D(tFoam, vec2(x * 0.8, s + uTime * 6.0) / 64.0).g;
+  float b = texture2D(tFoam, vec2(x + 2.0 * uTime, s * 1.2 + uTime * 9.0) / 21.0).g;
+  return vec2(a, b);
+}
 // A point of the bore: x across the strait, s metres behind the front along the bed. Returns the world place, w = s in wall heights.
 vec4 boreAt(float x, float s) {
   float H = boreHigh(x);
   float u = s / H;
-  float rise = 1.0 - pow(1.0 - clamp(u / 0.75, 0.0, 1.0), 2.6);
-  float back = 0.72 + 0.28 * exp(-max(u - 0.75, 0.0) / 1.5);
+  float uc = clamp(u / 0.75, 0.0, 1.0);
+  float rise = 1.0 - pow(1.0 - uc, 2.2);
+  float back = 0.7 + 0.3 * exp(-max(u - 0.75, 0.0) / 1.5);
   float y = u < 0.0 ? 0.3 * (1.0 + s / 16.0) - 0.08 : 0.22 + (H - 0.22) * rise * back;
-  float fwd = H * 0.2 * sin(clamp(u / 0.75, 0.0, 1.0) * 3.14159) * step(0.0, u);
+  float fwd = H * 0.26 * sin(uc * 3.14159) * step(0.0, u);
   float lumpA = texture2D(tChop, vec2(x, s + uTime * 7.0) / 61.0).b - 0.5;
   float lumpB = texture2D(tChop, vec2(x + 3.0 * uTime, s - uTime * 4.0) / 17.0).b - 0.5;
   float amp = H * smoothstep(-0.02, 0.3, u) * (0.2 * exp(-max(u - 0.75, 0.0) / 2.5) + 0.03);
   y += amp * (1.3 * lumpA + 0.7 * lumpB);
   fwd += amp * 0.9 * lumpB;
+  // White water piles on the face and the crest in heads.
+  vec2 ch = boreChurn(x, s);
+  float churn = smoothstep(-0.01, 0.1, u) * exp(-max(u - 0.8, 0.0) / 0.9);
+  float puff = H * churn * (0.2 * ch.x + 0.09 * ch.y);
+  y += puff * 0.55;
+  fwd += puff;
   float z = uFront + boreLine(x) - s + fwd;
   float bed = max(texture2D(tLand, (vec2(x, z) - uLandRect.xy) * uLandRect.zw).r, 0.0);
   return vec4(x, bed + y, z, u);
@@ -223,8 +237,8 @@ varying vec3 vNormalW;
 varying vec3 vRide;
 void main() {
   vec4 at = boreAt(position.x, position.y);
-  vec3 ax = boreAt(position.x + 0.8, position.y).xyz - at.xyz;
-  vec3 as = boreAt(position.x, position.y + 0.5).xyz - at.xyz;
+  vec3 ax = boreAt(position.x + 1.6, position.y).xyz - boreAt(position.x - 1.6, position.y).xyz;
+  vec3 as = boreAt(position.x, position.y + 1.0).xyz - boreAt(position.x, position.y - 1.0).xyz;
   vWorld = at.xyz;
   vNormalW = normalize(cross(ax, as));
   vRide = vec3(position.x, position.y, at.w);
@@ -234,30 +248,39 @@ void main() {
 export const BORE_FRAGMENT = /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
-uniform sampler2D tChop;
+${BORE_SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormalW;
 varying vec3 vRide;
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float u = vRide.z;
+  vec2 ch = boreChurn(vRide.x, vRide.y);
   // Marks ride with the wall and tumble down its face.
-  vec2 q = vec2(vRide.x, vRide.y + uTime * 8.0 * smoothstep(2.5, 0.0, u));
+  vec2 q = vec2(vRide.x, vRide.y + vWorld.y + uTime * 8.0 * smoothstep(2.5, 0.0, u));
   vec4 a = texture2D(tChop, q / 29.0);
-  vec4 b = texture2D(tChop, vec2(q.y, -q.x) / 6.3);
-  vec4 c = texture2D(tChop, q / 1.37);
-  float lace = 0.4 * a.a + 0.35 * b.a + 0.25 * c.a;
-  float face = smoothstep(1.7, 0.6, u);
-  float amount = mix(0.2 + 0.6 * exp(-max(u - 1.0, 0.0) * 0.1), 1.05, face);
-  float foam = smoothstep(1.0 - amount, 1.3 - amount, lace);
-  vec2 sb = b.xy - 0.5;
-  vec2 bump = (a.xy - 0.5) * 1.1 + vec2(-sb.y, sb.x) * 0.9 + (c.xy - 0.5) * 0.7;
-  vec3 n = normalize(vNormalW + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.8, foam));
-  float hollow = 0.45 + 0.55 * smoothstep(0.25, 0.7, 0.5 * a.b + 0.3 * b.b + 0.2 * c.b);
-  vec3 water = vec3(0.075, 0.08, 0.068);
-  vec3 white = mix(vec3(0.5, 0.5, 0.46), vec3(0.84, 0.85, 0.84), hollow);
+  vec4 f1 = texture2D(tFoam, q / 13.0);
+  vec4 f2 = texture2D(tFoam, q.yx / 3.1 + f1.rb * 0.3);
+  float face = smoothstep(1.9, 0.7, u);
+  float lace = mix(0.5 * a.a + 0.5 * texture2D(tChop, q.yx / 3.3).a, 0.2 + 0.6 * f1.r, face);
+  // Under the heads of the crest the lifted water shows dark in windows; at the foot it is all broken white.
+  float big = texture2D(tFoam, vec2(vRide.x, uTime * 3.0) / 97.0).r;
+  float lifted = smoothstep(0.05, 0.15, u) * smoothstep(0.62, 0.34, u) * smoothstep(0.42, 0.56, big + 0.35 * (0.4 - ch.x));
+  float amount = mix(0.25 + 0.55 * exp(-max(u - 1.0, 0.0) * 0.1), 1.2 - 0.72 * lifted, face);
+  float foam = smoothstep(1.0 - amount, 1.2 - amount, mix(lace, 0.15 + 0.7 * f2.r + 0.25 * (f1.g - 0.3), face * lifted));
+  vec2 bump = vec2(f2.g - f1.a, f2.a - f1.g) * 0.5 + (a.xy - 0.5) * (1.0 - face);
+  // White water is not a skin: its light comes from all through it, so the folds of the sheet under it count for less.
+  vec3 n = normalize(mix(vNormalW, vec3(0.0, 0.62, 0.78), 0.6 * foam * face) + vec3(bump.x, 0.0, bump.y) * mix(0.35, 0.3, foam));
+  // The creases between the heads hold no light.
+  float crease = smoothstep(0.02, 0.4, ch.x) * (0.5 + 0.5 * smoothstep(0.02, 0.35, ch.y));
+  float pit = (0.55 + 0.45 * smoothstep(0.3, 0.62, f1.r)) * (0.7 + 0.3 * smoothstep(0.3, 0.6, f2.r)) * (0.75 + 0.25 * smoothstep(0.03, 0.3, f2.g));
+  float hollow = mix(1.0, (0.5 + 0.5 * crease) * pit, face);
+  vec3 water = vec3(0.022, 0.04, 0.036);
+  // White water is lit all through: it holds more light than a painted wall.
+  vec3 white = vec3(0.95, 0.96, 0.96);
   vec3 albedo = mix(water, white, foam);
-  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.3, 1.0, foam), mix(1.0, hollow, foam));
+  vec3 col = rigShade(vWorld, n, v, albedo, mix(0.22, 1.0, foam), mix(1.0, hollow, foam));
+  col += foam * hollow * white * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.12;
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 
@@ -278,22 +301,25 @@ void main() {
   vLook = aLook;
   vec4 land = landAt(aAt.xz);
   float open = mix(land.g, 1.0, clamp((aAt.y - land.r) / 120.0, 0.0, 1.0));
-  vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.55 * sunAt(aAt.xyz, land)) / 3.14159;
+  // Thrown water in the open air: lit from every side, the sky's light all round it.
+  vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.9 * open) + uSunColour * 0.6 * sunAt(aAt.xyz, land)) / 3.14159;
   gl_Position = projectionMatrix * centre;
 }`;
 
 export const SPRAY_FRAGMENT = /* glsl */ `
 precision highp float;
 ${RIG_UNIFORMS_GLSL}
-uniform sampler2D tChop;
+uniform sampler2D tFoam;
 varying vec2 vUv;
 varying vec4 vLook;
 varying vec3 vLight;
 void main() {
   float r2 = dot(vUv, vUv);
-  vec4 t = texture2D(tChop, vUv * 0.21 + vLook.y);
-  float body = (1.0 - smoothstep(0.15, 1.0, r2 + 0.7 * (t.b - 0.5)));
-  float alpha = body * (0.35 + 0.65 * t.a) * vLook.x * (1.0 - uSolo);
-  vec3 col = vec3(0.86, 0.87, 0.86) * vLight * (0.8 + 0.4 * t.b);
+  vec4 t = texture2D(tFoam, vUv * 0.19 + vLook.y * vec2(3.1, 7.3));
+  // A head of thrown water: eaten at the rim into lumps and strings, thick in the middle.
+  float eat = r2 + 1.5 * (t.r - 0.5) + 0.6 * (0.5 - t.g);
+  float body = 1.0 - smoothstep(0.1, 0.8, eat);
+  float alpha = body * (0.55 + 0.45 * t.a) * vLook.x * (1.0 - uSolo);
+  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.8 + 0.5 * t.g) * (0.85 + 0.2 * body + 0.2 * vUv.y);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;

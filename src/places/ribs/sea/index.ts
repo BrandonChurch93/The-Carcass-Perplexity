@@ -7,7 +7,7 @@ import { FLOOR, LEVELS, RIBS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
 import { stagedSeconds } from '../shared/stage';
-import { chopTexture, feetTexture } from './chop';
+import { chopTexture, feetTexture, foamTexture } from './chop';
 import { BORE_FRAGMENT, BORE_VERTEX, POOL_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_VERTEX } from './shaders';
 import { Spray, rand } from './spray';
 import type { Ring } from './tide';
@@ -143,6 +143,7 @@ export function create(ctx: Context): Piece {
   const { rig } = ctx;
   const rng = ctx.rng('sea');
   const chop = chopTexture(rng, WIND.to);
+  const foamMap = foamTexture(rng);
 
   const feet = RIBS.map((rib) => {
     const t = partAtHeight(rib, 0);
@@ -153,7 +154,7 @@ export function create(ctx: Context): Piece {
   const feetMap = feetTexture(LAND, feet, FEET_REACH);
 
   const eye = new THREE.Vector3();
-  const shared = { tChop: { value: chop }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
+  const shared = { tChop: { value: chop }, tFoam: { value: foamMap }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
 
   const seaMaterial = new THREE.ShaderMaterial({
     vertexShader: SEA_VERTEX,
@@ -228,9 +229,12 @@ export function create(ctx: Context): Piece {
   // Where the bore breaks on a blade or a stack it bursts up white.
   const burstAt = feet.map((foot, n) => ({ x: foot.x, z: foot.z + foot.b * 0.6, reach: Math.max(foot.a, foot.b), id: n })).filter((b) => b.z > -2400 && b.z < 400);
   const BURST = 46;
-  const CREST = 150;
-  const boreSpray = new Spray(burstAt.length * BURST + CREST * 2, { ...rig.uniforms, ...shared });
-  ctx.scene.add(ctx.parts.built('bore', bore, boreSpray.mesh));
+  const CREST = 700;
+  const FACE = 340;
+  const PLUME = 130;
+  const AHEAD = 90;
+  const boreSpray = new Spray(burstAt.length * BURST + CREST + FACE + PLUME + AHEAD, { ...rig.uniforms, ...shared });
+  ctx.scene.add(ctx.parts.built('bore', bore, boreSpray.mesh), boreSpray.mesh);
   const lineAt = (x: number, seconds: number): number => 20 * Math.sin(x * 0.0076 + 1.3) + 8 * Math.sin(x * 0.021 + seconds * 0.25) + 3 * Math.sin(x * 0.09 - seconds * 0.6);
   const feeding = shotSpan('ribs-04');
 
@@ -289,20 +293,66 @@ export function create(ctx: Context): Piece {
           boreSpray.put(b.x + side, y, b.z + fwd + 4, (5 + 6 * a) * (0.7 + 0.6 * rand(seed, 5)), 0.85 * fade, rand(seed, 6), rand(seed, 7) * 6.28, 1.3);
         }
       }
-      // Water torn off the crest by its own speed: born on the crest, left behind and lifted.
-      for (let i = 0; i < CREST * 2; i++) {
-        const lane = i % CREST;
-        const x = gate[0] - 300 + lane * 4 + 3 * rand(i, 11);
-        const life = 1.4 + 1.2 * rand(i, 12);
+      // Water torn off the crest by its own speed: born on the crest in heads, thrown up and ahead, left behind as it falls.
+      const highAt = (x: number): number => BORE_HEIGHT * (0.3 + 0.7 * Math.min(1, Math.max(0, (950 - Math.abs(x - 80)) / 430)));
+      const wide = (i: number, salt: number): number => gate[0] - 330 + 660 * rand(i, salt);
+      for (let i = 0; i < CREST; i++) {
+        const x = wide(i, 11);
+        const life = 1.0 + 1.2 * rand(i, 12);
         const beat = seconds / life + rand(i, 13);
         const n = Math.floor(beat);
         const a = (beat - n) * life;
         const born = seconds - a;
-        const z0 = boreFront(born) + lineAt(x, born) - BORE_HEIGHT * (0.35 + 0.3 * rand(i, n + 14));
-        const y = BORE_HEIGHT * (0.92 + 0.2 * rand(i, n + 15)) + (5 + 5 * rand(i, n + 16)) * a - 2.5 * a * a;
-        const z = z0 + BORE_SPEED * (0.55 - 0.2 * a / life) * a;
-        const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / life);
-        boreSpray.put(x, y + 1, z, (3.5 + 5 * a) * (0.7 + 0.6 * rand(i, n + 17)), 0.6 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.2);
+        const H = highAt(x);
+        const z0 = boreFront(born) + lineAt(x, born) - H * (0.25 + 0.3 * rand(i, n + 14));
+        const y = H * (0.84 + 0.2 * rand(i, n + 15)) + (6 + 9 * rand(i, n + 16)) * a - 4.4 * a * a;
+        const z = z0 + BORE_SPEED * (1.03 - 0.3 * a / life) * a;
+        const fade = Math.min(1, a / 0.1) * Math.max(0, 1 - a / life);
+        boreSpray.put(x, y + 1, z, (1.3 + 2.6 * a) * (0.7 + 0.6 * rand(i, n + 17)), 0.95 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
+      }
+      // White heads that tumble down the face in front of the wall.
+      for (let i = 0; i < FACE; i++) {
+        const x = wide(i, 41);
+        const life = 0.9 + 0.8 * rand(i, 42);
+        const beat = seconds / life + rand(i, 43);
+        const n = Math.floor(beat);
+        const a = (beat - n) * life;
+        const H = highAt(x);
+        const uc = Math.max(0.03, 0.3 + 0.65 * rand(i, n + 44) - 0.45 * a / life);
+        const y = H * (1 - Math.pow(1 - uc, 2.2)) + 1.5 * rand(i, n + 45);
+        const z = frontZ + lineAt(x, seconds) - 0.75 * H * uc + H * (0.26 * Math.sin(Math.PI * uc) + 0.14) + 1.5 * a;
+        const fade = Math.min(1, a / 0.15) * Math.min(1, (life - a) / 0.3);
+        boreSpray.put(x, y, z, (1.7 + 1.8 * rand(i, n + 46)) * (1 + 0.5 * a), 0.9 * fade, rand(i, n + 47), rand(i, n + 48) * 6.28, 0.9);
+      }
+      // The plume: fine water that stands over the wall and hides its top, carried ahead of it by the wind.
+      for (let i = 0; i < PLUME; i++) {
+        const x = wide(i, 21);
+        const life = 3.2 + 2 * rand(i, 22);
+        const beat = seconds / life + rand(i, 23);
+        const n = Math.floor(beat);
+        const a = (beat - n) * life;
+        const born = seconds - a;
+        const H = highAt(x);
+        const z0 = boreFront(born) + lineAt(x, born) - H * (0.2 + 0.5 * rand(i, n + 24));
+        const y = H * (0.85 + 0.3 * rand(i, n + 25)) + (5 + 5 * rand(i, n + 26)) * a - 0.5 * a * a;
+        const z = z0 + BORE_SPEED * (0.96 + 0.1 * rand(i, n + 27)) * a;
+        const fade = Math.min(1, a / 0.7) * Math.max(0, 1 - a / life);
+        boreSpray.put(x, y, z, (8 + 5 * a) * (0.7 + 0.6 * rand(i, n + 28)), 0.34 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 1.15);
+      }
+      // Ahead of the wall: the air it pushes is full of water, low over the flats, and reaches the lens before the wall does.
+      for (let i = 0; i < AHEAD; i++) {
+        const x = gate[0] - 200 + 400 * rand(i, 31);
+        const life = 2.2 + 1.5 * rand(i, 32);
+        const beat = seconds / life + rand(i, 33);
+        const n = Math.floor(beat);
+        const a = (beat - n) * life;
+        const born = seconds - a;
+        const z0 = boreFront(born) + lineAt(x, born) + 2;
+        const reach = 1.25 + 0.75 * rand(i, n + 34);
+        const z = z0 + BORE_SPEED * reach * a;
+        const y = 1.5 + (2 + 5 * rand(i, n + 35)) * a + 4 * rand(i, n + 36);
+        const fade = Math.min(1, a / 0.5) * Math.max(0, 1 - a / life);
+        boreSpray.put(x, y, z, (5 + 6 * a) * (0.7 + 0.6 * rand(i, n + 37)), 0.1 * fade, rand(i, n + 38), rand(i, n + 39) * 6.28, 0.7);
       }
       boreSpray.end();
     },
@@ -311,6 +361,7 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       chop.dispose();
+      foamMap.dispose();
       feetMap.dispose();
       sea.geometry.dispose();
       seaMaterial.dispose();
