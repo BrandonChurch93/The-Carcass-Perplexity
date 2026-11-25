@@ -142,9 +142,9 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     bodyLen: 1.2 * k * j(3, 0.93, 1.08),
     standH,
     hipFore: 0.34 * k,
-    hipSide: 0.165 * k,
+    hipSide: 0.105 * k,
     stanceSide: 0.16 * k * j(4, 0.85, 1.25),
-    legLen: 1.006 * Math.hypot(standH - 0.07 * k, stride * DUTY * 0.5 + 0.06),
+    legLen: 1.006 * Math.hypot(standH - 0.02 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
     legR: 0.034 * k,
     stride,
@@ -238,7 +238,7 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.7 * smooth(0.16, 0, u));
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 1.1 * smooth(0.22, 0, u) ** 1.5);
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
@@ -255,13 +255,13 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 2.1 * Math.sin(Math.PI * Math.min(1, u / 0.46) ** 0.55) ** 1.1 + 0.5 * (1 - smooth(0, 0.47, u));
+      const thigh = 3.1 * (1 - smooth(-0.1, 0.44, u)) ** 0.9 * smooth(-0.06, 0.1, u) + 0.35 * (1 - smooth(0, 0.47, u));
       const knuckle = 1.35 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.8 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.4 * Math.min(1, thigh / 3.7));
+        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.5 * Math.min(1, thigh / 3.0));
         this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
       }
     }
@@ -442,9 +442,9 @@ export class Wader {
       const leg = LEGS[j] as (typeof LEGS)[number];
       const foot = feet[j] as Foot;
       const tube = this.legs[j] as Tube;
-      const hx = cx + F[0] * leg.fore * b.hipFore + R[0] * leg.side * b.hipSide - U[0] * 0.07 * k;
-      const hy = cy + F[1] * leg.fore * b.hipFore + R[1] * leg.side * b.hipSide - U[1] * 0.07 * k;
-      const hz = cz + F[2] * leg.fore * b.hipFore + R[2] * leg.side * b.hipSide - U[2] * 0.07 * k;
+      const hx = cx + F[0] * leg.fore * b.hipFore + R[0] * leg.side * b.hipSide - U[0] * 0.02 * k;
+      const hy = cy + F[1] * leg.fore * b.hipFore + R[1] * leg.side * b.hipSide - U[1] * 0.02 * k;
+      const hz = cz + F[2] * leg.fore * b.hipFore + R[2] * leg.side * b.hipSide - U[2] * 0.02 * k;
       const footY = foot.y + b.legR * 1.2;
       let dx = foot.x - hx;
       let dy = footY - hy;

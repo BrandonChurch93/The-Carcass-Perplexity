@@ -120,11 +120,11 @@ void main() {
     // The knuckles of the spine along the back, and the hollow of the flank behind the last rib.
     float back = smoothstep(0.9, 1.0, sn) * smoothstep(0.08, 0.2, u) * smoothstep(0.95, 0.8, u);
     float knuckle = back * pow(0.5 + 0.5 * cos(u * 120.0), 2.0);
-    height = 0.011 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.003 * (grain - 0.5) * mid;
+    height = 0.015 * rib * each * cage * mid + 0.008 * knuckle * mid + 0.003 * (grain - 0.5) * mid;
     albedo = pale * (0.82 + 0.18 * crack);
     // Between two ribs the skin is drawn in and sees less of the sky, whatever the light.
     float between = cage * (1.0 - rib) * each * mid;
-    occ *= 1.0 - 0.3 * between - 0.25 * back * (1.0 - knuckle) * mid;
+    occ *= 1.0 - 0.42 * between - 0.25 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
     float sore = smoothstep(0.46, 0.7, mottle) * (0.25 + 0.4 * smoothstep(0.4, 0.65, blotch)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, clamp(sore, 0.0, 0.8));
@@ -200,11 +200,11 @@ void main() {
   float lit = sunAt(vWorld);
   float wrap = clamp((dot(n, uSunDir) + 0.75) / 1.75, 0.0, 1.0);
   // Round the low sun the fog itself is bright: what faces up and toward it is lit by more than the disc.
-  float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.55, 0.0))), 0.0), 2.0);
+  float halo = pow(max(dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0), 3.0);
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.24 + 1.12 * smoothstep(25.0, 140.0, far)) * (0.55 + 0.3 * dot(n, flat_) + 0.15 * n.y);
-  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 0.75 * halo + fogLight * (1.0 + 1.2 * (1.0 - lit))) * occ * (0.45 + 0.55 * lit) * (1.0 - 0.5 * uDead));
+  float fogLight = (0.24 + 1.12 * smoothstep(25.0, 140.0, far)) * (0.5 + 0.34 * dot(n, flat_) + 0.16 * n.y);
+  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 1.5 * halo + fogLight * (1.0 + 1.2 * (1.0 - lit))) * occ * (0.45 + 0.55 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
