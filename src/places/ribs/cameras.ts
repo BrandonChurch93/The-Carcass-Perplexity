@@ -125,6 +125,6 @@ export const STATIONS = {
   flee: [gate.position[0] + 4, gate.position[2] - 34] as [number, number],
   foreground: [
     ...ahead(feedingAt, FEEDING_YAW, [[9, -2.1, 1.8], [13.5, -3.9, 1.3], [8.2, -0.2, 0.55], [17, -5.2, 1.6]]),
-    ...ahead(gate.position, 0, [[10.5, -5.6, 2.2], [11.2, -1.6, 1.2], [12, 3.1, 1.5], [10.2, 6.2, 1.0], [13.5, 0.8, 0.8]]),
+    ...ahead(gate.position, 0, [[12.5, -6.6, 3.0], [13.2, -2.4, 1.4], [18, -9.5, 2.2], [12.4, 7.2, 1.3], [19, 5.5, 0.8]]),
   ] as [number, number, number][],
 };

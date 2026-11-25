@@ -93,7 +93,11 @@ const unit = (i: number, salt: number): number => hash2(i | 0, salt) / 429496729
 
 /** How far the rock stands out from the smooth blade at a point, metres: masses of 70 m, hollows where slabs have come away, benches of 13 m with a ledge on top, joints that run up the face, blocks of 2 m. The thin beds are the stone's picture. */
 export function relief(x: number, y: number, z: number): number {
-  let d = 10 * (fbm3(x / 70, y / 95, z / 70, 3) - 0.5);
+  let d = 20 * (noise3(x / 75, y / 100, z / 75) - 0.5) + 9 * (noise3(x / 26, y / 34, z / 26) - 0.5);
+  // Chipped at the size of a boat: creases and spurs, sharper than they are wide.
+  d += 7 * Math.abs(noise3(x / 15 + 1.7, y / 10, z / 15) - 0.5) + 5 * (noise3(x / 6.5, y / 5, z / 6.5) - 0.5);
+  // Bites out of the blade the size of a house, where a block has gone.
+  d -= 9 * smooth(0.6, 0.78, noise3(x / 33 + 5.1, y / 27, z / 33));
   const warp = 16 * (noise3(x / 80, y / 80, z / 80) - 0.5) + 5 * (noise3(x / 21, y / 21, z / 21) - 0.5);
   // Where a slab has come away the face steps back, most under a bench: its top is a ledge, its foot an overhang.
   const bench = (y + warp) / 13;
@@ -176,7 +180,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
 
 /** The top of the weed over a place on the floor, metres over the sea: ragged at 30 m, at 9 m and at 3 m, between 13 and 33 m. */
 export function weedTop(x: number, z: number): number {
-  return TIDE - 7 + 12 * (noise2(x / 31, z / 31) - 0.5) + 6 * (noise2(x / 9, z / 9) - 0.5) + 2.6 * (noise2(x / 2.7 + 9.1, z / 2.7) - 0.5);
+  return TIDE - 2 + 16 * (noise2(x / 31, z / 31) - 0.5) + 6 * (noise2(x / 9, z / 9) - 0.5) + 2.6 * (noise2(x / 2.7 + 9.1, z / 2.7) - 0.5);
 }
 
 export interface SkirtOptions {
@@ -204,7 +208,9 @@ export function turns(coarse: number, fine?: { from: number; to: number; count: 
 export function weedLump(x: number, y: number, z: number): number {
   const hang = 3.4 * (fbm3(x / 7, y / 45, z / 7, 2) - 0.5) + 1.5 * (noise3(x / 2.2, y / 16, z / 2.2) - 0.5);
   const hem = 1.2 * smooth(0.35, 0.65, noise3(x / 6, y / 7 + 0.4 * noise3(x / 3, 0, z / 3), z / 6));
-  return hang + hem - 0.5 + 0.5 * (noise3(x / 0.9, y / 3.6, z / 0.9) - 0.5);
+  // Straps a hand wide that stand off the mass and hang straight.
+  const strap = 0.5 * Math.abs(noise3(x / 0.42, y / 5.5, z / 0.42) - 0.5);
+  return hang + hem - 0.5 + 0.5 * (noise3(x / 0.9, y / 3.6, z / 0.9) - 0.5) + strap;
 }
 
 /** The hanging weed round the foot of a blade, from under the sand to its ragged top. u runs round it in metres, v is the height in metres. */
@@ -218,6 +224,9 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
   const t0 = partAtHeight(rib, 0);
   const tTide = partAtHeight(rib, TIDE);
   const foot = new THREE.Vector3();
+  // v runs up the weed's own face in metres, so that the picture is not drawn out where the foot spreads.
+  const last = new Float32Array(cols * 3);
+  const run = new Float32Array(cols);
   return sheet(rows, cols, true, 'out', (j, i, p) => {
     const phi = options.phis[i] as number;
     const u = ((phi - first) / (Math.PI * 2)) * uSpan;
@@ -233,11 +242,14 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
     // Round the one who hangs in it the weed lies where the layout says, so that the hanging one touches it.
     const calm = options.calm ? smooth(3, 9, Math.hypot((phi - options.calm[0]) * (a + 10), y - options.calm[1])) : 1;
     // The foot spreads over the rock and rubble the blade stands on.
-    const plinth = 7 * smooth(7, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
+    const plinth = 2.5 * smooth(5, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
     const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + (weedLump(foot.x, y, foot.z) * calm + plinth) * (1 - tuck) * smooth(-5, 2, y);
     p.copy(surface(rib, t, phi, a + pad, b + pad));
     if (y < 0) p.y = y;
-    return [u, y];
+    if (j > 0) run[i] = (run[i] as number) + Math.hypot(p.x - (last[i * 3] as number), p.y - (last[i * 3 + 1] as number), p.z - (last[i * 3 + 2] as number));
+    else run[i] = -5;
+    p.toArray(last, i * 3);
+    return [u, run[i] as number];
   });
 }
 
