@@ -101,6 +101,7 @@ describe('the path of the rise in this film', () => {
     startSpeed: handoff.climbPerFrame,
     endSpeed: tuning.settlePerFrame,
     endFrames: tuning.settleFrames,
+    holdSpeed: tuning.holdPerFrame,
     hold: { ...tuning.holdCentre, frames: shot.last - cut.titanFrame },
   });
   const step = (f: number): number => Math.log(path.at(f + 1).w / path.at(f).w);
@@ -157,14 +158,17 @@ describe('the path of the rise in this film', () => {
     expect(Math.abs(best - frames[0])).toBeLessThan(20);
   });
 
-  it('never stops in the hold: the camera keeps pulling back, a little less each frame', () => {
+  it('never stops in the hold: the camera eases down to a steady crawl and keeps it to the cut to black', () => {
     for (let f = cut.titanFrame; f < shot.last; f++) {
-      expect(step(f)).toBeGreaterThan(0);
+      expect(step(f)).toBeGreaterThanOrEqual(tuning.holdPerFrame * 0.9999);
       expect(step(f)).toBeLessThanOrEqual(tuning.settlePerFrame * 1.0001);
+      if (f > cut.titanFrame) expect(step(f)).toBeLessThanOrEqual(step(f - 1) * 1.0000001);
     }
+    expect(step(shot.last - 1)).toBeLessThan(tuning.holdPerFrame * 1.01);
+    expect(tuning.holdPerFrame * cfg.film.fps).toBeGreaterThan(0.004);
     const grown = path.at(shot.last).w / path.at(cut.titanFrame).w;
-    expect(grown).toBeGreaterThan(1.1);
-    expect(grown).toBeLessThan(1.25);
+    expect(grown).toBeGreaterThan(1.15);
+    expect(grown).toBeLessThan(1.3);
   });
 
   it('ends the hold on the middle of the land, with clear space on every side', () => {

@@ -109,7 +109,8 @@ export function riseCurve(start, frames, heights, { launch = null, endSpeed = 0 
   return { at, start: zs[0], speeds: vs };
 }
 
-export function risePath({ start, frames, windows, cover = 1, creep = 0, creepFrames = 900, startWidth = null, startSpeed = 0, endSpeed = 0, endFrames = 900, hold = null }) {
+export function risePath({ start, frames, windows, cover = 1, creep = 0, creepFrames = 900, startWidth = null, startSpeed = 0, endSpeed = 0, endFrames = 900, holdSpeed = 0, hold = null }) {
+  if (holdSpeed < 0 || holdSpeed > endSpeed) throw new Error('The steady climb of the hold must lie between zero and the climb the rise ends on.');
   const launch = startWidth === null ? null : { height: Math.log(startWidth), speed: startSpeed };
   const curve = riseCurve(start, frames, windows.map((w) => Math.log(w.w * cover)), { launch, endSpeed });
   const ts = [start, ...frames];
@@ -127,7 +128,7 @@ export function risePath({ start, frames, windows, cover = 1, creep = 0, creepFr
         const u = (f - last) / creepFrames;
         z += (creep * u * u) / (1 + u * u);
       }
-      if (endSpeed > 0) z += endSpeed * endFrames * (1 - Math.exp(-(f - last) / endFrames));
+      if (endSpeed > 0) z += holdSpeed * (f - last) + (endSpeed - holdSpeed) * endFrames * (1 - Math.exp(-(f - last) / endFrames));
       if (hold) {
         const u = Math.min(1, (f - last) / hold.frames);
         const ease = u * u * (3 - 2 * u);

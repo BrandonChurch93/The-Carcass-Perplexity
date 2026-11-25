@@ -345,10 +345,10 @@ Frames 9541 to 11860, 38.67 s, 2 shots.
 - Frames: 9541 to 11743, 36.72 s.
 - Key: `reveal-4` at frame 10027.
 - Lens: 45 mm for the whole shot (a vertical field of view of 30 degrees).
-- Move: out. The camera travels 6444 km, from 74.6 km above the ground to 6161 km. It is one rise straight up, with north at the top. It leaves the lake at the rate of climb the Eye ends on, is fastest as the shore of the lake fills the frame, and slows through the skull and the shoulders to the titan frame. In the hold the clouds drift east, the cyclone turns, the storm flickers and the Heart beats once, on the music's last strike at frame 11334.
+- Move: out. The camera travels 6725 km, from 74.6 km above the ground to 6466 km. It is one rise straight up, with north at the top. It leaves the lake at the rate of climb the Eye ends on, is fastest as the shore of the lake fills the frame, and slows through the skull and the shoulders to the titan frame. In the hold the clouds drift east, the cyclone turns, the storm flickers and the Heart beats once, on the music's last strike at frame 11334.
 - Start framing: Deep water and nine pale rings, seen from straight above the centre of the lake, 20 km of water above and below the middle of the frame. The last frames of the Eye draw the same water and the same rings at the same rate of climb, so the cut cannot be seen. The amber shore enters the frame after about 0.8 s and the rings fade into the water as it does.
-- End framing: The whole body lies in the frame from the skull to the feet, with the edge of the planet across the top and the cyclone at the lower right. The window of the approved picture is reached on the titan frame, 10027. The camera does not stop there: it goes on pulling back, 17 percent wider by the cut to black and a little slower each second, and it drifts until the middle of the body is the middle of the frame, with clear sea on every side.
-- Focus: On the ground straight below, at every height. The aim is 74.6 km away at the start and 6161 km at the end. Depth of field is off in the blockout.
+- End framing: The whole body lies in the frame from the skull to the feet, with the edge of the planet across the top and the cyclone at the lower right. The window of the approved picture is reached on the titan frame, 10027. The camera does not stop there: it eases down to a steady crawl and keeps pulling back until the cut to black, 22 percent wider by then, and it drifts until the middle of the body is the middle of the frame, with clear sea on every side.
+- Focus: On the ground straight below, at every height. The aim is 74.6 km away at the start and 6466 km at the end. Depth of field is off in the blockout.
 
 ### `reveal-02` · black
 

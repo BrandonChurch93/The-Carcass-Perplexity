@@ -92,6 +92,7 @@ const rise = risePath({
   startSpeed: handoff.climbPerFrame,
   endSpeed: tuning.settlePerFrame,
   endFrames: tuning.settleFrames,
+  holdSpeed: tuning.holdPerFrame,
   hold: { ...tuning.holdCentre, frames: RISE_LAST - TITAN },
 });
 const halfHeightKm = (frame: number): number => (rise.at(frame).w * KM) / FILM_ASPECT / 2;

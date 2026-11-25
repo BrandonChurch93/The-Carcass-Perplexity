@@ -31,6 +31,7 @@ export function risePath(options: {
   startSpeed?: number;
   endSpeed?: number;
   endFrames?: number;
+  holdSpeed?: number;
   hold?: { x: number; y: number; frames: number } | null;
 }): {
   at: (frame: number) => RiseView;
