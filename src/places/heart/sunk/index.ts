@@ -2,7 +2,9 @@
 // and the crust it stopped is folded round it. Everything here is made once and rides the crust; nothing else moves.
 import * as THREE from 'three';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { SUNK, seamLine } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { SUNK, UNIT, seamLine } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
 import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, ragGeometry } from './shape';
@@ -12,17 +14,21 @@ export const PARTS: readonly string[] = ['sunk-walker'];
 /** Kelvin of the hottest of the split, where the skin of a rope tore: 1100 to 1200 K along it. */
 const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
-const TEAR_GAIN = 3.0;
+const TEAR_GAIN = 1.6;
 /** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 120 105 90 on the display. */
 const ASH_ON_HIDE: [number, number, number] = [0.34, 0.28, 0.185];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
 
-/** The settling, in the seconds of a shot. Shot heart-04 starts at film frame 3579: this is film frame 3740 of it, in the last
- *  third of the push. The hull goes down a few centimetres, the split opens with it, breathes out a pulse of light and a puff
- *  of smoke, and stays a little wider. */
-const SETTLE_AT = (3740 - 3579) / 60;
+/** The settling, at film frame 3740, in the last third of the push of shot heart-04, in the seconds of the place. A slab of the
+ *  folded skin beside the split breaks off along a ragged line and tilts in; the face of the break shows the hot inside of
+ *  the crust, flares and cools to a dull red; the hull tips toward the split; steam and smoke come out. Before it everything
+ *  is at rest, so the loop of the place (7 to 17 s) never holds a part of it. */
+const SETTLE_AT = secondsInPlace(UNIT, 3740);
 const SETTLE_DROP = 0.1;
+const SETTLE_TIP = 0.022;
+/** The line of the break, in the local frame: a second branch of the split, from its middle out across the folds toward the camera of heart-2. */
+const BREAK: [number, number, number, number] = [-7.5, 4.42, -4.7, 5.62];
 /** The split's light on what is round it wavers as its fire does. Every rate is a whole count of turns in 8 s. */
 const waver = (seconds: number, at: number): number =>
   0.5 * Math.sin(seconds * 1.5708 + at) + 0.3 * Math.sin(seconds * 3.927 + 2.3 * at) + 0.2 * Math.sin(seconds * 8.6394 + 4.1 * at);
@@ -30,15 +36,23 @@ const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-function settling(seconds: number): { down: number; open: number; puff: number } {
+function settling(seconds: number): { down: number; open: number; puff: number; flare: number; slab: number } {
   const t = seconds - SETTLE_AT;
-  const down = ramp(-0.35, 0.35, t);
-  // The pulse and the puff are over before the loop of the place begins (7 s in), so the loop never holds a part of them.
-  const over = ramp(6, 4.5, seconds);
-  const pulse = ramp(-0.2, 0.15, t) * Math.exp(-Math.max(0, t - 0.15) / 0.8) * over;
-  const puff = ramp(-0.1, 0.45, t) * Math.exp(-Math.max(0, t - 0.45) / 1.5) * over;
-  return { down, open: 0.3 * down + 0.7 * pulse, puff };
+  const down = ramp(0, 0.55, t);
+  // The slab goes fast and stops against what is under it.
+  const slab = ramp(-0.02, 0.3, t) * (1 - 0.12 * Math.exp(-Math.max(0, t - 0.3) / 0.12) * Math.cos(Math.max(0, t - 0.3) * 21));
+  const flare = ramp(-0.02, 0.1, t) * Math.exp(-Math.max(0, t - 0.1) / 1.1);
+  const puff = ramp(0.02, 0.4, t) * Math.exp(-Math.max(0, t - 0.4) / 1.6);
+  return { down, open: 0.3 * down + 0.7 * flare, puff, flare, slab };
 }
+
+/** Staging by shot. The picture of shot heart-04 has the carcass and its folds as a pale ashy mass seen from low down (folds 58 54 55,
+ *  hull 62 54 52), the wide view has them as dark as the crust. In heart-04 the light on them is lifted, as by a card on a set. */
+const NEAR_SHOT = ((): { from: number; to: number } => {
+  const s = shotById('heart-04');
+  return { from: secondsInPlace(UNIT, s.first) - 0.3 / 60, to: secondsInPlace(UNIT, s.last) + 0.7 / 60 };
+})();
+const LIFT = 2.0;
 
 const COS = Math.cos(YAW);
 const SIN = Math.sin(YAW);
@@ -74,6 +88,10 @@ export function create(ctx: HeartContext): HeartPiece {
     uTearColour: { value: new THREE.Vector3(...blackbody(TEAR_KELVIN)) },
     uTear: { value: baked.tear.points.map((p) => new THREE.Vector3(p[0], p[1] + 0.03, p[2])) },
     uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
+    uLift: { value: 1 },
+    uBranch: { value: new THREE.Vector4(...BREAK) },
+    uSlab: { value: 0 },
+    uFlare: { value: 0 },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
     // for on half the frame at heart-2.
@@ -110,16 +128,16 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
+  const legShapeA = { points: LEG_A, knee: 0.468, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   // Each is [where it is held, its length, its half width, its turn, its seed].
   const RAGS: [[number, number, number], number, number, number, number][] = [
-    [[2.45, 3.76, 0.55], 1.05, 0.085, 1.9, 1],
-    [[2.52, 3.7, 0.5], 0.55, 0.05, 0.6, 2],
-    [[2.3, 3.82, 0.6], 0.38, 0.06, 2.7, 3],
-    [[-0.55, 3.52, 0.84], 0.8, 0.07, -0.4, 4],
-    [[-0.45, 3.56, 0.8], 0.42, 0.045, 0.9, 5],
+    [[2.2, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
+    [[2.28, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
+    [[2.08, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
+    [[-0.3, 3.1, 0.86], 0.8, 0.07, -0.4, 4],
+    [[-0.2, 3.22, 0.82], 0.42, 0.045, 0.9, 5],
     [[1.0, 3.19, -3.04], 0.9, 0.075, 0.9, 6],
     [[1.12, 3.16, -3.0], 0.5, 0.05, 2.2, 7],
   ];
@@ -207,7 +225,17 @@ export function create(ctx: HeartContext): HeartPiece {
     lean: [-0.5 + 0.2 * i, 0.3 - 0.15 * i] as [number, number],
   }));
   const heat = { at: [0, 0.2, 0] as [number, number, number], radius: 1.2, height: 2.0, strength: 0.25 };
-  ctx.sources.steam.push(...smokes);
+  // The steam that comes off the break as it opens: nothing before it, gone a second or two after.
+  const BURSTS: [number, number][] = [0.22, 0.5, 0.78].map((t) => [BREAK[0] + (BREAK[2] - BREAK[0]) * t, BREAK[1] + (BREAK[3] - BREAK[1]) * t]);
+  const bursts = BURSTS.map((_, i) => ({
+    at: [0, 0.35, 0] as [number, number, number],
+    radius: 0.5 + 0.1 * i,
+    strength: 0,
+    rise: 2.4 + 0.5 * ((i + 1) % 3),
+    kind: 'steam' as const,
+    lean: [-0.3 + 0.2 * i, 0.2] as [number, number],
+  }));
+  ctx.sources.steam.push(...smokes, ...bursts);
   ctx.sources.heat.push(heat);
 
   const place = (seconds: number): void => {
@@ -221,11 +249,28 @@ export function create(ctx: HeartContext): HeartPiece {
     const [tx, tz] = toWorld(tearMid[0], tearMid[1]);
     heat.at[0] = x + tx;
     heat.at[2] = z + tz;
+    const staged = stagedSeconds();
+    const nearShot = staged >= NEAR_SHOT.from && staged <= NEAR_SHOT.to;
+    shared.uLift.value = nearShot ? LIFT : 1;
+    // From the wide view the smoke of the split gathered into a pale ball beside the hull: there it is thin.
+    const smoky = nearShot ? 1 : 0.25;
     const now = settling(seconds);
-    for (const body of bodies) body.position.y = -SETTLE_DROP * now.down;
+    // The hull tips toward the split as it goes down: its far end by a hand's width, its end under the legs by half of that.
+    for (const body of bodies) {
+      body.position.y = -0.5 * SETTLE_DROP * now.down;
+      body.rotation.z = SETTLE_TIP * now.down;
+    }
+    shared.uSlab.value = now.slab;
+    shared.uFlare.value = now.flare;
+    bursts.forEach((burst, i) => {
+      const [bx, bz] = toWorld((BURSTS[i] as [number, number])[0], (BURSTS[i] as [number, number])[1]);
+      burst.at[0] = x + bx;
+      burst.at[2] = z + bz;
+      burst.strength = 0.5 * now.puff;
+    });
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
-    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 1.5 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
+    (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 3 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
     heat.strength = 0.25 * (1 + now.puff);
     smokes.forEach((smoke, i) => {
       const [sx, sz] = toWorld((TEAR[i] as [number, number])[0], (TEAR[i] as [number, number])[1]);
@@ -234,7 +279,7 @@ export function create(ctx: HeartContext): HeartPiece {
       smoke.at[2] = z + sz;
       // Each length of the split breathes its smoke out in its own time.
       const breath = waver(seconds, 1.9 * i + 0.4);
-      smoke.strength = rest.strength * (1 + 5 * now.puff) * (1 + 0.6 * breath);
+      smoke.strength = smoky * rest.strength * (1 + 5 * now.puff) * (1 + 0.6 * breath);
       smoke.rise = rest.rise * (1 + 0.8 * now.puff) * (1 + 0.25 * breath);
     });
   };

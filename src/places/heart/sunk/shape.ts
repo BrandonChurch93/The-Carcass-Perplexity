@@ -26,13 +26,16 @@ export type P3 = [number, number, number];
 export const LEG_A: P3[] = [
   [-2.75, 0.46, 0.25],
   [-2.15, 1.17, 0.5],
-  [-1.25, 2.8, 0.74],
-  [-0.05, 4.54, 0.9],
-  [0.95, 5.29, 0.9],
-  [1.65, 5.15, 0.8],
-  [2.5, 4.08, 0.55],
-  [3.55, 2.24, 0.1],
-  [4.35, 0.56, -0.28],
+  [-1.15, 2.5, 0.72],
+  [-0.1, 3.9, 0.87],
+  [0.8, 4.95, 0.92],
+  [1.1, 5.3, 0.92],
+  [1.36, 5.4, 0.9],
+  [1.6, 5.1, 0.86],
+  [1.85, 4.6, 0.78],
+  [2.5, 3.55, 0.56],
+  [3.45, 1.85, 0.12],
+  [4.3, 0.45, -0.27],
   [4.6, -0.25, -0.4],
   [4.7, -0.9, -0.45],
 ];
@@ -179,7 +182,7 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     const f2 = Math.abs(Math.sin(wind * 15 + 2.4 * noise3(s * 0.8 + 5, dy * 1.7, dz * 1.7) + 1.5 * f1));
     furrow = Math.pow(1 - f1, 1.6);
     const full = Math.min(1, ring * 1.4);
-    r -= (0.14 * furrow * (0.4 + 1.2 * dry) + 0.03 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
+    r -= (0.21 * furrow * (0.4 + 1.2 * dry) + 0.04 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
     // The frame under it: ribs across the flank, the spine as a keel.
     const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 6.8 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, dy * 1.3)), 3);
     r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
@@ -190,7 +193,7 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     const cell = cells2((a / (Math.PI * 2)) * 20 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 1.3 + 0.9 * noise2(a * 2, s + 3), 20);
     const id = cell[1];
     const upper = smooth(0.15, 0.75, dy) * Math.min(1, ring * 1.6);
-    const gone = 1 - 0.5 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
+    const gone = 1 - 0.28 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
     const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.2 * (noise2(a * 14, s * 4) - 0.5) + 0.08 * (noise2(a * 41, s * 13 + 2) - 0.5);
     plate = id > gone ? smooth(0, 0.03, inside) : 0;
     const toward = Math.min(1, Math.max(0, 0.5 + ((id * 711.3) % 1 > 0.5 ? 1 : -1) * cell[3] * 1.3));
@@ -674,7 +677,8 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     h += frontOf(run - 1.5 - 2.2 * (noise2(x * 0.5 + 15, z * 0.5 + 3) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.1 + 27, z * 1.1 + 44) - 1), 0.08);
     h += frontOf(run - 3.6 - 3.0 * (noise2(x * 0.42 + 52, z * 0.42 + 19) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.3 + 7, z * 1.3 + 33) - 1), 0.07);
     h = mix(UNDER, h, smooth(-0.04, 0, run));
-    return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
+    // The outer metres of the sheet are the lake's own skin in tone and grain: from above no edge of a pad shows on the plain.
+    return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet * smooth(0.2, 3.6, run), tone };
   };
 }
 
@@ -1060,13 +1064,16 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
     KIND.leg,
     (s, a, t, up) => {
       // A bent trunk: thick where it leaves the body, one rounded knuckle at the top, tapering as it goes down into the crust.
-      const joint = 0.1 * Math.exp(-Math.pow((t - knee) / 0.07, 2)) + 0.05 * Math.exp(-Math.pow((t - knee + 0.09) / 0.03, 2));
+      const joint = 0.13 * Math.exp(-Math.pow((t - knee) / 0.032, 2)) + 0.05 * Math.exp(-Math.pow((t - knee + 0.07) / 0.025, 2)) + 0.04 * Math.exp(-Math.pow((t - knee - 0.06) / 0.02, 2));
+      // The shaft dried flat: broad across the bend of the limb, thin through it, and split along its broad face.
+      const flat = 1 - 0.16 * Math.cos(2 * a) * (1 - 0.7 * Math.exp(-Math.pow((t - knee) / 0.05, 2)));
+      const split = 0.07 * Math.exp(-Math.pow(Math.sin(a - 0.35 * Math.sin(s * 0.9 + seed)) / 0.16, 2)) * smooth(0.35, 0.6, noise2(s * 0.5 + seed * 3, 7.7));
       const shaft = 0.2 + 0.1 * smooth(0.5, 0.0, t) - 0.05 * smooth(0.55, 1, t);
       const cords = 0.2 * Math.cos(2 * a + s * 0.8 + seed) + 0.12 * Math.cos(3 * a - s * 1.5 + seed * 2) + 0.06 * Math.cos(5 * a + s * 2.3);
       const lumps = 0.4 * (fbm3(s * 1.6 + seed, Math.cos(a) * 0.8, Math.sin(a) * 0.8, 3) - 0.47);
       const thin = tendon > 0 ? smooth(1 - tendon * 0.2, 1 - tendon, t) : 1;
       const end = smooth(0, 0.03, t) * (tendon > 0 ? 1 : smooth(1, 0.985, t));
-      const core = scale * end * (0.045 + thin * ((shaft + joint) * (1 + cords * 0.5 + lumps) - 0.045));
+      const core = scale * end * (0.045 + thin * ((shaft + joint) * flat * (1 + cords * 0.3 + lumps) - split - 0.045));
       // Plates of hide caked with ash, 20 to 60 cm, ragged in outline. About half of the side that looks up still has them, little
       // of the underside. Each is shrunk from its neighbours by its own margin and curls at its edge.
       const bend = 0.7 * (noise2(s * 0.8 + seed * 2, Math.cos(a) * 0.9 + 4) - 0.5);
@@ -1085,7 +1092,7 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       // A plate curls: its edge stands off the limb, one side of it more than the other.
       const toward = Math.min(1, Math.max(0, 0.5 + (h5 > 0.5 ? 1 : -1) * cell[3] * 1.3));
       const curl = smooth(0.16, 0.0, inside * k) * (0.25 + 0.75 * toward);
-      const lift = plate * (0.024 + (0.07 * h2 + 0.03) * curl + 0.012 * noise2(a * 5 + seed, s * 9));
+      const lift = plate * (0.02 + (0.035 * h2 + 0.015) * curl + 0.01 * noise2(a * 5 + seed, s * 9));
       // Sinew shows pale along the cords where the hide is gone.
       const bone = (1 - plate) * smooth(-0.1, 0.25, cords) * thin + (1 - thin) * 0.6;
       // Each plate is of its own tone: the shader reads it from how far over a half the mark is.
