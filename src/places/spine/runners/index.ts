@@ -153,11 +153,11 @@ export function create(ctx: Context): Piece {
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; size: number; skirt: number }[] = [
-    { d: CANAL_KEY + 4.3, l: 0.1, yaw: along + 0.75, act: 'stand', size: 1.0, skirt: 0.8 },
-    { d: CANAL_KEY + 3.2, l: -1.5, yaw: along + 0.3, act: 'lie', size: 1.05, skirt: 1.2 },
-    { d: CANAL_KEY + 2.5, l: -2.4, yaw: along - 0.4, act: 'lie', size: 1.15, skirt: 1.1 },
-    { d: CANAL_KEY + 1.6, l: -2.6, yaw: along + 1.2, act: 'stand', size: 1.2, skirt: 1.3 },
-    { d: CANAL_KEY + 0.6, l: -2.6, yaw: along + 0.5, act: 'stand', size: 1.1, skirt: 1 },
+    { d: CANAL_KEY + 4.3, l: 0.1, yaw: along - 1.6, act: 'stand', size: 1.0, skirt: 0.8 },
+    { d: CANAL_KEY + 3.2, l: -1.5, yaw: along + 2.5, act: 'lie', size: 1.05, skirt: 1.0 },
+    { d: CANAL_KEY + 2.5, l: -2.4, yaw: along + 2.3, act: 'lie', size: 1.15, skirt: 1.0 },
+    { d: CANAL_KEY + 1.6, l: -2.6, yaw: along + 1.9, act: 'lie', size: 1.2, skirt: 1.0 },
+    { d: CANAL_KEY + 0.6, l: -2.6, yaw: along + 0.5, act: 'stand', size: 1.1, skirt: 0.7 },
   ];
   const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 36000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
   const CROSSING = 4;
@@ -200,11 +200,14 @@ export function create(ctx: Context): Piece {
     (a.bones[0] as THREE.Matrix4).compose(v1.set(0, down - 0.004 * breath, 0), q1.setFromEuler(e1.set(0.14 * Math.sin(ph * 5), 0, -0.04, 'YXZ')), new THREE.Vector3(1, 1 + 0.02 * breath, 1.06 + 0.035 * breath));
     HIPS.forEach((hip, i) => {
       const m = a.bones[i + 1] as THREE.Matrix4;
-      // Folded: the leg is a third of its height and the foot lies ahead of the hip.
-      m.set(1, 0, 0, i < 2 ? 0.2 : 0.12, 0, 0.36, 0, 0.0, 0, 0, 1, (hip[2] > 0 ? 1 : -1) * 0.06, 0, 0, 0, 1);
+      // Folded: the leg is a third of its height. A foreleg lies out ahead of the chest with its paw flat on the ground; a hind foot
+      // lies just ahead of its hip.
+      const out = i < 2 ? 0.62 : 0.12;
+      const slope = i < 2 ? -0.62 : 0;
+      m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, (hip[2] > 0 ? 1 : -1) * (i < 2 ? 0.1 : 0.06), 0, 0, 0, 1);
     });
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.06 * Math.sin(t * 0.37 + ph), 0.5 * Math.sin(ph * 7) + 0.1 * Math.sin(t * 0.29 + ph), -0.35 + 0.05 * Math.sin(t * 0.5 + ph), [0, down, 0]);
-    a.coat.set(1.25, 0.04, 0.012 + shiver, 0.14);
+    a.coat.set(0.8, 0.04, 0.012 + shiver, 0.14);
     a.writhe.set(0.6, 0, 0, 0);
   };
 
