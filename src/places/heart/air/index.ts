@@ -55,7 +55,7 @@ const ROSE = [0.5, 0.42, 0.33] as const;
 /** The smoke of the feeding shot: dark, grey-brown, a little mauve where the sky lights it. */
 const SOOT = [0.4, 0.34, 0.32] as const;
 /** The far smoke of that shot, where the last of the sky lights it: pale and a little peach. */
-const PALE = [0.5, 0.41, 0.37] as const;
+const PALE = [0.54, 0.4, 0.34] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
@@ -67,14 +67,14 @@ const fromFoot = (right: number, toward: number): [number, number] => [FALL_FOOT
 
 const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
-  { at: behind(115, -12), radius: 30, height: 18, lean: BANK_LEAN, dense: 0.08, repeat: 28, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.62, solid: 0.3, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
+  { at: behind(115, -12), radius: 30, height: 18, lean: BANK_LEAN, dense: 0.08, repeat: 28, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.9, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   // This one stands before the talus of the butte of that shot (its face is 205 m from the lens, right of the axis): lower than the butte's dark upper cliff, and the warmest of them.
-  { at: behind(97, 50), radius: 34, height: 13, lean: BANK_LEAN, dense: 0.07, repeat: 30, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.8, 5], floor: [1.9, 5], lights: 0.2, tops: 0.55, solid: 0.3, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
-  { at: behind(190, -8), radius: 44, height: 24, lean: BANK_LEAN, dense: 0.06, repeat: 36, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.62, solid: 0.3, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
-  { at: behind(240, 6), radius: 55, height: 32, lean: BANK_LEAN, dense: 0.05, repeat: 44, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.7, solid: 0.3, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
+  { at: behind(97, 50), radius: 34, height: 15, lean: BANK_LEAN, dense: 0.07, repeat: 30, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.8, 8], floor: [2.6, 9], lights: 0.2, tops: 0.8, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
+  { at: behind(190, -8), radius: 44, height: 24, lean: BANK_LEAN, dense: 0.06, repeat: 36, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.9, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
+  { at: behind(240, 6), radius: 55, height: 32, lean: BANK_LEAN, dense: 0.05, repeat: 44, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.95, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   // What stands behind them in the feeding picture: grey-brown smoke over the open lake, warm only in its lowest metres. The far one on the right stands behind the butte: it is the pale smoke its dark top is cut against. Staged for that shot.
   { at: behind(430, -110), radius: 140, height: 34, lean: [-0.2, 0.08], dense: 0.004, repeat: 60, hard: 2.6, climb: 1.2, colour: SOOT, foot: 0, floor: [0.9, 6], tops: 0.75, solid: 0.3, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.012, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [0.6, 7], tops: 1.0, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.016, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [0.6, 7], tops: 1.8, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
   // And what lies on the lake between the lens and those banks: a thin sheet of lumps, so that the far crust goes into the smoke and no line stands where the lake ends.
   { at: behind(250, 0), radius: 230, height: 8, lean: [0, 0], dense: 0.002, repeat: 50, hard: 2.2, climb: 0.3, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
@@ -167,7 +167,11 @@ export function create(ctx: HeartContext): HeartPiece {
       toneMapped: false,
     });
 
+  // The thin smoke that hangs before the butte of the feeding shot (its face is 205 m from that lens, right of its axis). It is marched with the air, to the scene's depth,
+  // so that it veils the cliff by how far in it the cliff stands: its middle (x, z), its radius, its thickness for a metre (set by shot).
+  const hang = new THREE.Vector4(...behind(99, 60), 75, 0);
   const volume = pass(VOLUME_FRAGMENT, {
+    uHang: { value: hang },
     uShowFume: show.fume,
     uSkyMean: { value: skyMean },
     ...smoke.layers,
@@ -193,6 +197,7 @@ export function create(ctx: HeartContext): HeartPiece {
         const b = BODIES[i] as Body;
         (bodyB[i] as THREE.Vector4).w = b.dense * (b.shots?.[shot] ?? b.shots?.rest ?? 1);
       }
+      hang.w = shot === 'heart-02' ? 0.008 : 0;
       // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
       (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 60;
       // The four offsets of the march move on with time, so that no pattern stands still over the frames.
