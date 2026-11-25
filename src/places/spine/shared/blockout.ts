@@ -445,8 +445,10 @@ export function createStandIns(scene: THREE.Scene, parts: Parts, skip: ReadonlyS
     strikes.push({ group, from: event.seconds });
   });
 
+  // Once the air folder draws the air, the stand-ins that are left stand in it without a fog of their own.
+  const density = has('air') ? DENSITY : 0;
   if (has('air')) kit.air(AIR, DENSITY);
-  else kit.setAir(AIR, DENSITY);
+  else kit.setAir(AIR, 0);
 
   return {
     setTime: (seconds) => {
@@ -454,7 +456,7 @@ export function createStandIns(scene: THREE.Scene, parts: Parts, skip: ReadonlyS
       const lit = (from: number): boolean => seconds - from > -1e-4 && seconds - from < STRIKE_FRAMES / cut.fps - 1e-4;
       for (const strike of strikes) strike.group.visible = lit(strike.from);
       const flash = STRIKES.some(lit);
-      kit.setAir(flash ? AIR_FLASH : AIR, flash ? DENSITY * 1.15 : DENSITY);
+      kit.setAir(flash ? AIR_FLASH : AIR, flash ? density * 1.15 : density);
       for (const tick of ticks) tick(seconds, flash);
     },
     solo: (part) => kit.solo(part),
