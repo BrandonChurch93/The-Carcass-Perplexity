@@ -156,7 +156,7 @@ void main() {
   plain = mix(plain, lava, ropy);
   plainNh = mix(talusNhA, vec3(lavaNhA.rg, lavaNhA.b * (0.5 + lavaNhB.b)), ropy);
   tip = mix(tip, lavaTip, ropy);
-  rough = mix(0.92, 0.62, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
+  rough = mix(0.92, 0.78, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
   #endif
 
   vec3 albedo = mix(plain, cliff, steep);

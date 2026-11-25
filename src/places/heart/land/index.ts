@@ -149,9 +149,9 @@ export function create(ctx: HeartContext): HeartPiece {
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: c.depth > 1 ? 0.55 : 0.28,
-        strength: (c.depth > 1 ? 0.8 : 0.6) * strong,
-        rise: (c.depth > 1 ? 14 : 6) * (0.7 + 0.3 * strong),
+        radius: c.depth > 1 ? 0.4 : 0.22,
+        strength: (c.depth > 1 ? 0.45 : 0.4) * strong,
+        rise: (c.depth > 1 ? 6 : 3.5) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: [-0.42, 0.2],
       });

@@ -307,6 +307,8 @@ export function crackDip(x: number, z: number): number {
   }
   return dip;
 }
+
+/** The wall alone, without the bench and the buttress: what stands against the sky. Used to fit the rim to the wide picture. */
 export function wallOnly(x: number, z: number): number {
   return wallAt(x, z, calderaDistance(x, z));
 }
