@@ -323,7 +323,10 @@ export function buttressAt(x: number, z: number): number {
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
 
-/** Where a skerry of shore rock stands in the crust off the bench, dark in the foreground of the view of the one that sank. It is loose rock alone: the land's height does not know it. */
+/** The middle of the bare ropy sheet on the crag under the wide lens. */
+export const ROPY: [number, number] = [-573, 298];
+
+/** Where a pressure ridge of crust stands off the bench. It is loose rock alone: the land's height does not know it. */
 export const SKERRY: [number, number] = [-518, 282.5];
 
 /** The true height of the land, metres. Zero or less is lake. */

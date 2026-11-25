@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
 import type { HeartContext } from '../shared/context';
-import { SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
+import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
 import { rockShape, type Height } from './meshes';
 import { ROCK_FRAGMENT, ROCK_VERTEX } from './shaders';
 
@@ -13,7 +13,6 @@ interface Rock {
 }
 
 interface Kind {
-  cells: number;
   planes: number;
   part: 'bench' | 'land';
   /** Small or far: drawn from two reads of the rock picture and no relief. */
@@ -25,20 +24,20 @@ const SHAPES = 5;
 
 export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUniform>, height: Height): { bench: THREE.Object3D[]; land: THREE.Object3D[]; dispose(): void } {
   const rng = ctx.rng('land/rocks');
-  const kind = (cells: number, planes: number, part: 'bench' | 'land', simple = false): Kind => ({ cells, planes, part, simple, rocks: Array.from({ length: SHAPES }, () => []) });
+  const kind = (planes: number, part: 'bench' | 'land', simple = false): Kind => ({ planes, part, simple, rocks: Array.from({ length: SHAPES }, () => []) });
   const kinds = {
-    pebble: kind(2, 6, 'bench', true),
-    stone: kind(3, 7, 'bench', true),
-    block: kind(5, 8, 'bench'),
-    hero: kind(9, 9, 'bench'),
-    slab: kind(6, 7, 'bench'),
-    boulder: kind(4, 8, 'land', true),
-    // The same rocks far from every lens: a few pixels each, so few triangles and the plain reading.
-    blockFar: kind(3, 7, 'bench', true),
-    heroFar: kind(5, 8, 'bench', true),
-    slabFar: kind(3, 7, 'bench', true),
-    boulderSmall: kind(2, 7, 'land', true),
-    boulderMid: kind(3, 8, 'land', true),
+    pebble: kind(4, 'bench', true),
+    stone: kind(6, 'bench', true),
+    block: kind(8, 'bench'),
+    hero: kind(11, 'bench'),
+    slab: kind(7, 'bench'),
+    boulder: kind(8, 'land', true),
+    // The same rocks far from every lens: a few pixels each, so the plain reading.
+    blockFar: kind(6, 'bench', true),
+    heroFar: kind(8, 'bench', true),
+    slabFar: kind(5, 'bench', true),
+    boulderSmall: kind(4, 'land', true),
+    boulderMid: kind(6, 'land', true),
   };
   const shades: [number, number, number, number][] = [];
 
@@ -83,6 +82,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (!o.stand && top > 1.3 && lineOpen(x, z)) return false;
     // The line view's channel leaves the shore just ahead of its lens: nothing of the bench's lies on the moving crust there.
     if (!o.stand && lineOpen(x, z) && benchDistance(x, z) < (size > 0.45 ? 0.7 : 0.12) + half && Math.hypot(x + 510.5, z - 215.5) < 45) return false;
+    // Nor does anything lie on the shore's rind or beyond it where that view looks down on the shore.
+    if (!o.stand && benchDistance(x, z) < 0.75 + half && Math.hypot(x + 510.5, z - 215.5) < 70) return false;
     q.setFromAxisAngle(UP, rng.range(0, Math.PI * 2));
     if (o.lean) {
       axis.set(o.lean[0], 0, o.lean[1]).normalize();
@@ -103,11 +104,16 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   const drift = (x: number, z: number, cell: number): number => noise(x / cell + 13, z / cell + 5);
   // Nothing may stand where the camera passes: the nearer the route, the smaller the rock.
   const fits = (x: number, z: number, size: number): boolean => size < 0.45 + 0.42 * routeDistance(x, z);
+  // A big block lies where the ground can carry it: not on a riser, not hung over an edge.
+  const level = (x: number, z: number, size: number): boolean => {
+    const r = 0.6 * size;
+    return Math.abs(height(x + r, z) - height(x - r, z)) + Math.abs(height(x, z + r) - height(x, z - r)) < 0.5 * size;
+  };
   const [vx, , vz] = VIEW.position;
   const yaw = (VIEW.yaw * Math.PI) / 180;
 
   const BOX = { x0: -598, x1: -484, z0: 184, z1: 324 };
-  for (let i = 0; i < 16000; i++) {
+  for (let i = 0; i < 9000; i++) {
     const x = rng.range(BOX.x0, BOX.x1);
     const z = rng.range(BOX.z0, BOX.z1);
     const d = benchDistance(x, z);
@@ -117,7 +123,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 5) + 0.5 * drift(x, z, 1.3) < 0.62 + 0.25 * rng.next()) continue;
     put(kinds.pebble, x, z, sized(0.05, 0.24, 1.6), { shade: false });
   }
-  for (let i = 0; i < 20000; i++) {
+  for (let i = 0; i < 13000; i++) {
     const x = rng.range(BOX.x0 - 20, BOX.x1 + 6);
     const z = rng.range(BOX.z0 - 30, BOX.z1 + 20);
     if (benchDistance(x, z) < 0.3) continue;
@@ -146,14 +152,34 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 17) < 0.56 + 0.2 * rng.next()) continue;
     if (rng.next() > 0.3 + 0.7 * Math.exp(-d / 20)) continue;
     const size = sized(1.9, 5.5, 1.8);
-    if (fits(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
+    if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
+  }
+
+  // Plates of the old flows' crust, broken and tilted, and blocks of one to four metres among them: the camera's bench is broken rock, not gravel.
+  for (let i = 0; i < 5200; i++) {
+    const x = rng.range(BOX.x0 - 10, BOX.x1 + 6);
+    const z = rng.range(BOX.z0 - 20, BOX.z1 + 12);
+    if (benchDistance(x, z) < 0.8) continue;
+    if (rng.next() > Math.exp(-routeDistance(x, z) / 38)) continue;
+    if (drift(x, z, 13) + 0.3 * drift(x, z, 4) < 0.44 + 0.3 * rng.next()) continue;
+    // The ropy sheet under the wide lens stays bare.
+    if (Math.hypot(x - ROPY[0], z - ROPY[1]) < 15) continue;
+    if (rng.next() < 0.62) {
+      const size = sized(1.0, 3.6, 1.6);
+      const a = rng.range(0, Math.PI * 2);
+      if (fits(x, z, size) && level(x, z, size)) put(kinds.slab, x, z, size, { flat: rng.range(0.13, 0.26), sink: rng.range(0.1, 0.4), lean: [Math.cos(a), Math.sin(a), rng.range(0.08, 0.5)] });
+    } else {
+      const size = sized(1.0, 4.0, 1.7);
+      if (fits(x, z, size) && level(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.25, 0.48), flat: rng.range(0.55, 0.9) });
+    }
   }
 
   // The foreground of the wide view: blocks of one to three metres below the camera, which passes well over them.
-  for (let i = 0; i < 90; i++) {
-    const ahead = rng.range(8, 34);
-    const side = rng.range(-14, 10);
-    const size = sized(0.9, 3, 1.2);
+  for (let i = 0; i < 60; i++) {
+    const ahead = rng.range(8, 40);
+    const side = rng.range(-14, 12);
+    const size = sized(0.9, 3, 1.5);
+    if (Math.hypot(vx + Math.sin(yaw) * ahead + Math.cos(yaw) * side - ROPY[0], vz - Math.cos(yaw) * ahead + Math.sin(yaw) * side - ROPY[1]) < 13 + size) continue;
     put(kinds.hero, vx + Math.sin(yaw) * ahead + Math.cos(yaw) * side, vz - Math.cos(yaw) * ahead + Math.sin(yaw) * side, size, { sink: rng.range(0.3, 0.5) });
   }
 
@@ -181,17 +207,99 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const size = sized(0.1, 0.5, 1.5);
     put(size > 0.17 ? kinds.block : kinds.stone, x, z, size, { sink: rng.range(0.2, 0.42), shade: size > 0.2 });
   }
-  // The skerry is rock alone, sunk through the crust: the lake does not know it, so its foot is hidden by smaller blocks.
-  put(kinds.hero, SKERRY[0], SKERRY[1], 3.6, { sink: 0.25, flat: 1.25, onLake: true, stand: true });
-  for (const [dx, dz, size] of [
-    [-2.0, 0.7, 1.7],
-    [1.5, -1.5, 1.3],
-    [-0.7, -2.1, 1.0],
-    [1.9, 0.9, 0.9],
-    [0.4, 2.0, 1.1],
-    [-2.6, -0.9, 0.6],
-    [2.6, -0.4, 0.5],
-  ] as [number, number, number][]) put(kinds.block, SKERRY[0] + dx, SKERRY[1] + dz, size, { sink: 0.5, onLake: true, stand: true });
+  // Set by hand, past every rule of the scatter: a rock given whole, by its place, its half sizes and its turn.
+  const set = (k: Kind, x: number, y: number, z: number, sx: number, sy: number, sz: number, turn: THREE.Quaternion, tone: number, foot = 0.04): void => {
+    at.set(x, y, z);
+    scale.set(sx, sy, sz);
+    (k.rocks[rng.int(SHAPES)] as Rock[]).push({ m: new THREE.Matrix4().compose(at, turn, scale), seed: [rng.next(), 2 * Math.max(sx, sz), foot, tone] });
+  };
+  const yawTo = (tx: number, tz: number): THREE.Quaternion => new THREE.Quaternion().setFromAxisAngle(UP, Math.atan2(-tz, tx));
+
+  // The skerry: a pressure ridge of the lake's own crust, plates tilted up against each other along the shore, on a thin dark rind.
+  // The lake does not know it, so the rind is rock too: one plate lying flat in the crust under the rest (tone under 0.5 keeps the ash off it).
+  {
+    const [cx, cz] = SKERRY;
+    const gx = benchDistance(cx + 1.5, cz) - benchDistance(cx - 1.5, cz);
+    const gz = benchDistance(cx, cz + 1.5) - benchDistance(cx, cz - 1.5);
+    const gl = Math.hypot(gx, gz) || 1;
+    const tx = -gz / gl;
+    const tz = gx / gl;
+    const ax = -tz;
+    const az = tx;
+    const along = yawTo(tx, tz);
+    // The rind: thin dark plates overlapping, so that its edge is broken and not a rectangle.
+    for (let i = 0; i < 7; i++) {
+      const u = -2.7 + (5.4 * i) / 6;
+      const w = 1.25 - 0.45 * Math.abs(u) / 2.7;
+      set(kinds.hero, cx + tx * u + ax * rng.range(-0.25, 0.25), 0.012 + 0.004 * i, cz + tz * u + az * rng.range(-0.25, 0.25), rng.range(0.85, 1.2), 0.05, w * rng.range(0.85, 1.15), along.clone().multiply(tilt.setFromAxisAngle(UP, rng.range(-0.6, 0.6))), 0.47);
+    }
+    // Plates 0.2 to 0.4 m thick, pushed up from both sides and leaning on each other along the crest.
+    for (let i = 0; i < 8; i++) {
+      const u = -2.3 + (4.6 * i) / 7 + rng.range(-0.2, 0.2);
+      const side = i % 2 ? 1 : -1;
+      const end = 1 - 0.4 * Math.pow(Math.abs(u) / 2.3, 2);
+      const halfAcross = rng.range(0.75, 1.05) * end;
+      const halfThick = rng.range(0.1, 0.2);
+      const lean = rng.range(0.5, 0.85);
+      const rise = halfAcross * Math.sin(lean);
+      const y = Math.min(0.08 + 0.5 * rise, 1.12 - rise - halfThick * Math.cos(lean));
+      const off = side * (halfAcross * Math.cos(lean) - 0.12 + 0.2 * rng.next());
+      axis.set(tx, 0, tz);
+      const q = new THREE.Quaternion().setFromAxisAngle(axis, side * lean).multiply(along).multiply(tilt.setFromAxisAngle(UP, rng.range(-0.28, 0.28)));
+      set(kinds.slab, cx + tx * u + ax * off, y, cz + tz * u + az * off, rng.range(0.75, 1.15) * end, halfThick, halfAcross, q, rng.range(0.85, 1.1), 0.02);
+    }
+    for (let i = 0; i < 14; i++) {
+      const u = rng.range(-3.1, 3.1);
+      const off = rng.range(-1.5, 1.5);
+      put(kinds.stone, cx + tx * u + ax * off, cz + tz * u + az * off, rng.range(0.2, 0.55), { sink: 0.45, flat: rng.range(0.3, 0.6), onLake: true, stand: true, shade: false });
+    }
+  }
+
+  // The view of the feeding group: one dark pile of blocks low in the bottom left corner of its frame, 7 m ahead of the lens and left of its axis.
+  // Only its top shows there, and the lens passes over and to the right of it.
+  {
+    const yaw3 = (44.5 * Math.PI) / 180;
+    const fx = Math.sin(yaw3);
+    const fz = -Math.cos(yaw3);
+    const rx = Math.cos(yaw3);
+    const rz = Math.sin(yaw3);
+    const pile = (ahead: number, left: number, y: number, half: number, tall: number): void => {
+      const x = -454.9 + fx * ahead - rx * left;
+      const z = 250.3 + fz * ahead - rz * left;
+      axis.set(rng.range(-1, 1), 0, rng.range(-1, 1)).normalize();
+      const q = new THREE.Quaternion().setFromAxisAngle(axis, rng.range(-0.34, 0.34)).multiply(tilt.setFromAxisAngle(UP, rng.range(0, 6.28)));
+      set(kinds.hero, x, y, z, half * rng.range(0.9, 1.15), tall, half * rng.range(0.9, 1.15), q, rng.range(0.75, 1.05), y - tall);
+    };
+    for (const [ahead, left, y, half, tall] of [
+      [7.2, 3.5, 2.3, 2.0, 2.7],
+      [7.0, 2.7, 5.28, 0.78, 0.52],
+      [8.5, 2.9, 4.5, 0.85, 0.75],
+      [5.9, 2.6, 1.7, 1.15, 1.8],
+      [9.6, 3.6, 1.4, 1.7, 1.6],
+      [4.8, 4.6, 1.0, 1.7, 1.3],
+      [7.6, 6.2, 1.2, 1.9, 1.5],
+      [6.0, 4.9, 3.3, 1.1, 0.9],
+      [11.4, 5.0, 0.5, 1.5, 0.8],
+      [3.4, 6.6, 0.4, 1.4, 0.7],
+      [6.4, 8.3, 0.4, 1.4, 0.7],
+      [9.8, 7.2, 0.5, 1.5, 0.8],
+      [2.6, 3.9, 0.3, 1.1, 0.55],
+      [12.6, 3.4, 0.3, 1.0, 0.5],
+    ] as [number, number, number, number, number][]) pile(ahead, left, y, half, tall);
+  }
+
+  // The fan of fallen rock at the foot of the fall, either side of where the cascade lands: the biggest blocks have rolled to the bottom.
+  for (let i = 0; i < 2600; i++) {
+    const x = rng.range(-90, -20);
+    const z = rng.range(-350, -325);
+    if (x > -48 && x < -24) continue;
+    const g = height(x, z);
+    if (g < 0.05) continue;
+    if (rng.next() < 0.5 * Math.max(0, (-76 - x) / 14)) continue;
+    const up = Math.min(1, g / 8);
+    const size = 0.5 + 2.5 * Math.pow(rng.next(), 2.2) * (1 - 0.7 * up);
+    put(kinds.boulder, x, z, size, { shade: false, sink: rng.range(0.2, 0.45), flat: rng.range(0.5, 0.9) });
+  }
 
   // The line: slabs of the bench's edge that have broken off and slumped onto the crust, and the rubble between them.
   for (let s = 1; s < SHORE_POINTS.length; s++) {
@@ -244,6 +352,18 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     put(kinds.boulder, x, z, sized(1.0, 9, 3.4), { shade: false, sink: rng.range(0.3, 0.62), flat: rng.range(0.45, 0.8) });
   }
 
+  // The ledges of the wall beside the mouth carry what has fallen onto them.
+  for (let i = 0; i < 9000; i++) {
+    const x = rng.range(MOUTH.x - 190, MOUTH.x + 190);
+    const z = rng.range(MOUTH.z - 30, MOUTH.z + 60);
+    const g = height(x, z);
+    if (g < 45 || g > 160) continue;
+    const e = 2;
+    const steep = Math.hypot(height(x + e, z) - height(x - e, z), height(x, z + e) - height(x, z - e)) / (2 * e);
+    if (steep > 0.55) continue;
+    put(kinds.boulder, x, z, sized(1.2, 4.5, 2.2), { shade: false, sink: rng.range(0.25, 0.5), flat: rng.range(0.5, 0.85) });
+  }
+
   const material = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
   const simple = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { SIMPLE: '' } });
   const geometries: THREE.BufferGeometry[] = [];
@@ -251,7 +371,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   Object.values(kinds).forEach((k, ki) => {
     k.rocks.forEach((list, si) => {
       if (!list.length) return;
-      const shape = rockShape(ki * 10 + si + 1, k.cells, k.planes);
+      const shape = rockShape(ki * 10 + si + 1, k.planes);
       geometries.push(shape);
       // One mesh for each square of ground, so that the rocks no lens can see are never sent to be drawn.
       const cell = k.part === 'bench' ? 40 : 160;
@@ -264,7 +384,6 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       }
       for (const rocks of squares.values()) {
         const g = new THREE.BufferGeometry();
-        g.setIndex(shape.index);
         g.setAttribute('position', shape.getAttribute('position'));
         g.setAttribute('normal', shape.getAttribute('normal'));
         const seeds = new Float32Array(rocks.length * 4);

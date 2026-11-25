@@ -185,121 +185,230 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
   return g;
 }
 
-function noise3(x: number, y: number, z: number): number {
-  // Three slices of the plane noise, enough for the skin of a rock.
-  return (noise(x + y * 0.71, z - y * 0.53) + noise(y + z * 0.67 + 19, x - z * 0.41 + 7) + noise(z + x * 0.59 + 41, y - x * 0.47 + 23)) / 3;
-}
+type P3 = [number, number, number];
 
 /**
- * One shape of loose rock, about a metre across: a block cut by a few planes, its edges worn and its faces pitted.
- * `n` is the number of cells along the edge of each of the six faces of the cube it is blown from.
+ * One shape of loose rock, about a metre across: a block broken out of a flow. It is a true solid with flat faces and sharp edges,
+ * a box cut by `planes` planes: the first few take whole sides off it, the rest only knock off corners and edges.
+ * Every face has its own corners, so the faces are lit flat.
  */
-export function rockShape(seed: number, n: number, planes: number): THREE.BufferGeometry {
+export function rockShape(seed: number, planes: number): THREE.BufferGeometry {
   let s = seed * 7919 + 13;
   const rnd = (): number => {
     s = (s * 16807) % 2147483647;
     return s / 2147483647;
   };
-  const cuts: [number, number, number, number][] = [];
+  const ex = 0.78 + 0.22 * rnd();
+  const ey = 0.78 + 0.22 * rnd();
+  const ez = 0.78 + 0.22 * rnd();
+  // Faces as loops of corners, counter-clockwise seen from outside.
+  let faces: P3[][] = [
+    [[ex, -ey, -ez], [ex, ey, -ez], [ex, ey, ez], [ex, -ey, ez]],
+    [[-ex, -ey, ez], [-ex, ey, ez], [-ex, ey, -ez], [-ex, -ey, -ez]],
+    [[-ex, ey, -ez], [-ex, ey, ez], [ex, ey, ez], [ex, ey, -ez]],
+    [[-ex, -ey, ez], [-ex, -ey, -ez], [ex, -ey, -ez], [ex, -ey, ez]],
+    [[-ex, -ey, ez], [ex, -ey, ez], [ex, ey, ez], [-ex, ey, ez]],
+    [[ex, -ey, -ez], [-ex, -ey, -ez], [-ex, ey, -ez], [ex, ey, -ez]],
+  ];
   for (let k = 0; k < planes; k++) {
     const u = rnd() * 2 - 1;
     const a = rnd() * Math.PI * 2;
     const q = Math.sqrt(1 - u * u);
-    cuts.push([q * Math.cos(a), u, q * Math.sin(a), 0.42 + 0.5 * rnd()]);
-  }
-  const radius = (x: number, y: number, z: number): number => {
-    let r = 1.5;
-    for (const c of cuts) {
-      const d = x * c[0] + y * c[1] + z * c[2];
-      if (d > 0.05) r = Math.min(r, c[3] / d);
+    const n: P3 = [q * Math.cos(a), u, q * Math.sin(a)];
+    const reach = Math.abs(n[0]) * ex + Math.abs(n[1]) * ey + Math.abs(n[2]) * ez;
+    const c = reach * (k < 4 ? 0.42 + 0.26 * rnd() : 0.68 + 0.24 * rnd());
+    const side = (p: P3): number => p[0] * n[0] + p[1] * n[1] + p[2] * n[2] - c;
+    const cut: P3[] = [];
+    const kept: P3[][] = [];
+    for (const f of faces) {
+      const out: P3[] = [];
+      for (let i = 0; i < f.length; i++) {
+        const p = f[i] as P3;
+        const r = f[(i + 1) % f.length] as P3;
+        const dp = side(p);
+        const dr = side(r);
+        if (dp <= 0) out.push(p);
+        if (dp <= 0 !== dr <= 0) {
+          const t = dp / (dp - dr);
+          const m: P3 = [p[0] + (r[0] - p[0]) * t, p[1] + (r[1] - p[1]) * t, p[2] + (r[2] - p[2]) * t];
+          out.push(m);
+          cut.push(m);
+        }
+      }
+      if (out.length >= 3) kept.push(out);
     }
-    const o = seed * 3.7;
-    return r * (0.9 + 0.14 * noise3(x * 1.7 + o, y * 1.7, z * 1.7) + 0.07 * noise3(x * 4.6 + o, y * 4.6 + 5, z * 4.6)) + 0.03 * noise3(x * 11 + o, y * 11, z * 11 + 3);
-  };
+    if (cut.length >= 6) {
+      // The new face: the cut points in order round the plane's normal.
+      const o: P3 = [0, 0, 0];
+      for (const p of cut) {
+        o[0] += p[0] / cut.length;
+        o[1] += p[1] / cut.length;
+        o[2] += p[2] / cut.length;
+      }
+      const h: P3 = Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+      const e1: P3 = [n[1] * h[2] - n[2] * h[1], n[2] * h[0] - n[0] * h[2], n[0] * h[1] - n[1] * h[0]];
+      const e2: P3 = [n[1] * e1[2] - n[2] * e1[1], n[2] * e1[0] - n[0] * e1[2], n[0] * e1[1] - n[1] * e1[0]];
+      const angle = (p: P3): number => Math.atan2((p[0] - o[0]) * e2[0] + (p[1] - o[1]) * e2[1] + (p[2] - o[2]) * e2[2], (p[0] - o[0]) * e1[0] + (p[1] - o[1]) * e1[1] + (p[2] - o[2]) * e1[2]);
+      const ring = cut.map((p) => ({ p, a: angle(p) })).sort((x, y) => x.a - y.a);
+      const loop: P3[] = [];
+      for (const r of ring) {
+        const last = loop[loop.length - 1];
+        if (!last || Math.hypot(r.p[0] - last[0], r.p[1] - last[1], r.p[2] - last[2]) > 1e-5) loop.push(r.p);
+      }
+      const first = loop[0] as P3;
+      const end = loop[loop.length - 1] as P3;
+      if (loop.length > 3 && Math.hypot(first[0] - end[0], first[1] - end[1], first[2] - end[2]) < 1e-5) loop.pop();
+      if (loop.length >= 3) kept.push(loop);
+    }
+    faces = kept;
+  }
+  // Sheared, so that no two faces stay square to each other: a broken block, not a cut cube. Flat faces stay flat.
+  const kxy = 0.7 * (rnd() - 0.5);
+  const kzy = 0.7 * (rnd() - 0.5);
+  const kxz = 0.6 * (rnd() - 0.5);
+  faces = faces.map((f) => f.map((p): P3 => [p[0] + kxy * p[1] + kxz * p[2], p[1], p[2] + kzy * p[1]]));
   const position: number[] = [];
   const normal: number[] = [];
-  const index: number[] = [];
-  const point = (x: number, y: number, z: number): [number, number, number] => {
-    const l = Math.hypot(x, y, z);
-    const r = radius(x / l, y / l, z / l) / l;
-    return [x * r, y * r, z * r];
-  };
-  const faces: [number[], number[], number[]][] = [
-    [[1, 0, 0], [0, 1, 0], [0, 0, -1]],
-    [[-1, 0, 0], [0, 1, 0], [0, 0, 1]],
-    [[0, 1, 0], [0, 0, 1], [-1, 0, 0]],
-    [[0, -1, 0], [0, 0, 1], [1, 0, 0]],
-    [[0, 0, 1], [0, 1, 0], [1, 0, 0]],
-    [[0, 0, -1], [0, 1, 0], [-1, 0, 0]],
-  ];
-  for (const [o, up, right] of faces) {
-    const base = position.length / 3;
-    for (let j = 0; j <= n; j++) {
-      for (let i = 0; i <= n; i++) {
-        // The tangent warp evens out the cells of a cube blown to a sphere.
-        const a = Math.tan(((i / n) * 2 - 1) * 0.7854);
-        const b = Math.tan(((j / n) * 2 - 1) * 0.7854);
-        const d = [0, 1, 2].map((k) => (o[k] as number) + a * (right[k] as number) + b * (up[k] as number)) as [number, number, number];
-        const p = point(d[0], d[1], d[2]);
-        const e = 0.02;
-        const pa = point(d[0] + e * (right[0] as number), d[1] + e * (right[1] as number), d[2] + e * (right[2] as number));
-        const pb = point(d[0] + e * (up[0] as number), d[1] + e * (up[1] as number), d[2] + e * (up[2] as number));
-        const ux = pa[0] - p[0];
-        const uy = pa[1] - p[1];
-        const uz = pa[2] - p[2];
-        const vx = pb[0] - p[0];
-        const vy = pb[1] - p[1];
-        const vz = pb[2] - p[2];
-        let nx = uy * vz - uz * vy;
-        let ny = uz * vx - ux * vz;
-        let nz = ux * vy - uy * vx;
-        if (nx * p[0] + ny * p[1] + nz * p[2] < 0) {
-          nx = -nx;
-          ny = -ny;
-          nz = -nz;
-        }
-        const l = Math.hypot(nx, ny, nz) || 1;
-        position.push(p[0], p[1], p[2]);
-        normal.push(nx / l, ny / l, nz / l);
-      }
+  for (const f of faces) {
+    // Newell's sum: the normal of a loop, whatever its number of corners.
+    let nx = 0;
+    let ny = 0;
+    let nz = 0;
+    let cx = 0;
+    let cy = 0;
+    let cz = 0;
+    for (let i = 0; i < f.length; i++) {
+      const p = f[i] as P3;
+      const r = f[(i + 1) % f.length] as P3;
+      nx += (p[1] - r[1]) * (p[2] + r[2]);
+      ny += (p[2] - r[2]) * (p[0] + r[0]);
+      nz += (p[0] - r[0]) * (p[1] + r[1]);
+      cx += p[0] / f.length;
+      cy += p[1] / f.length;
+      cz += p[2] / f.length;
     }
-    for (let j = 0; j < n; j++) {
-      for (let i = 0; i < n; i++) {
-        const a = base + j * (n + 1) + i;
-        const b = a + 1;
-        const c = a + n + 1;
-        const d = c + 1;
-        index.push(a, b, c, b, d, c);
+    const l = Math.hypot(nx, ny, nz);
+    if (l < 1e-9) continue;
+    const flip = nx * cx + ny * cy + nz * cz < 0;
+    const sign = flip ? -1 / l : 1 / l;
+    for (let i = 1; i + 1 < f.length; i++) {
+      const tri = flip ? [f[0], f[i + 1], f[i]] : [f[0], f[i], f[i + 1]];
+      for (const p of tri as P3[]) {
+        position.push(p[0], p[1], p[2]);
+        normal.push(nx * sign, ny * sign, nz * sign);
       }
     }
   }
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
   g.setAttribute('normal', new THREE.Float32BufferAttribute(normal, 3));
-  g.setIndex(index);
-  // The winding of a face depends on the handedness of its axes: make every triangle face outward.
-  const idx = g.getIndex() as THREE.BufferAttribute;
-  for (let t = 0; t < idx.count; t += 3) {
-    const a = idx.getX(t);
-    const b = idx.getX(t + 1);
-    const c = idx.getX(t + 2);
-    const ax = position[a * 3] as number;
-    const ay = position[a * 3 + 1] as number;
-    const az = position[a * 3 + 2] as number;
-    const ux = (position[b * 3] as number) - ax;
-    const uy = (position[b * 3 + 1] as number) - ay;
-    const uz = (position[b * 3 + 2] as number) - az;
-    const vx = (position[c * 3] as number) - ax;
-    const vy = (position[c * 3 + 1] as number) - ay;
-    const vz = (position[c * 3 + 2] as number) - az;
-    const out = (uy * vz - uz * vy) * ax + (uz * vx - ux * vz) * ay + (ux * vy - uy * vx) * az;
-    if (out < 0) {
-      idx.setX(t + 1, c);
-      idx.setX(t + 2, b);
-    }
-  }
   g.computeBoundingSphere();
   return g;
 }
 
 export { fbm };
+
+/**
+ * The spatter rind of the shore: a lip of glass that the lake has built out over itself, hung with frozen dribbles and undercut.
+ * It runs along the line where the bench meets the lake, from one end point to the other; `distance` is the layout's distance to that line
+ * (positive on the bench) and `wobble` any smooth noise of two numbers between 0 and 1.
+ */
+export function shoreLip(height: Height, distance: Height, wobble: Height, from: [number, number], length: number): THREE.BufferGeometry {
+  const gap = 0.07;
+  const count = Math.floor(length / gap);
+  let [x, z] = from;
+  const sections: { x: number; z: number; nx: number; nz: number; d0: number }[] = [];
+  for (let i = 0; i < count; i++) {
+    let nx = 0;
+    let nz = 0;
+    for (let k = 0; k < 4; k++) {
+      const d = distance(x, z);
+      const gx = (distance(x + 0.2, z) - distance(x - 0.2, z)) / 0.4;
+      const gz = (distance(x, z + 0.2) - distance(x, z - 0.2)) / 0.4;
+      const l = Math.hypot(gx, gz) || 1;
+      nx = gx / l;
+      nz = gz / l;
+      x -= (d * nx) / l;
+      z -= (d * nz) / l;
+    }
+    // Where the ground itself comes out of the lake, going inland.
+    let d0 = 1.2;
+    for (let d = -0.4; d < 1.2; d += 0.04) {
+      if (height(x + nx * d, z + nz * d) > 0.02) {
+        d0 = d;
+        break;
+      }
+    }
+    sections.push({ x, z, nx, nz, d0 });
+    // On along the shore, the lake on the left.
+    x += nz * gap;
+    z -= nx * gap;
+  }
+  const position: number[] = [];
+  const index: number[] = [];
+  const RING = 10;
+  for (let i = 0; i < count; i++) {
+    const c = sections[i] as (typeof sections)[number];
+    let d0 = 0;
+    let n = 0;
+    for (let k = Math.max(0, i - 6); k <= Math.min(count - 1, i + 6); k++) {
+      d0 += (sections[k] as (typeof sections)[number]).d0;
+      n++;
+    }
+    d0 /= n;
+    const s = i * gap;
+    const ends = Math.min(1, s / 1.5, (count - 1 - i) * gap / 1.5);
+    // Whole stretches of it have broken off and gone under.
+    const whole = Math.min(1, Math.max(0, (wobble(s / 6.3, 4.7) - 0.3) * 5)) * Math.max(0, ends);
+    const over = (0.2 + 0.32 * wobble(s / 1.9, 1.3)) * whole;
+    const ground = height(c.x + c.nx * (d0 + 0.5), c.z + c.nz * (d0 + 0.5));
+    const top = Math.min(0.5, Math.max(0.27, ground)) + 0.03 + 0.07 * (wobble(s / 0.8, 9.1) - 0.5) + 0.1 * (wobble(s / 2.7, 0.4) - 0.5);
+    const thick = 0.09 + 0.07 * wobble(s / 1.1, 5.5);
+    // Dribbles: most of the edge hangs a little, here and there a tongue runs down to the crust.
+    const tooth = wobble(s / 0.16, 2.2);
+    const tongue = wobble(s / 0.55, 7.7);
+    const drip = (0.03 + 0.1 * tooth * tooth + 0.3 * Math.pow(Math.max(0, tongue - 0.45) / 0.55, 2) * (0.4 + 0.6 * tooth)) * whole;
+    const nose = -over - 0.04 * (tooth - 0.5) * whole;
+    const under = Math.max(top - thick - drip, 0.01);
+    // Clots of spatter: the top is lumpy, and its inland edge ragged.
+    const reach = 0.2 + 0.36 * wobble(s / 0.9, 6.1) * whole + 0.22 * Math.pow(wobble(s / 0.27, 1.9), 2) * whole;
+    const lumpA = 0.15 * (wobble(s / 0.31, 3.3) - 0.5);
+    const lumpB = 0.15 * (wobble(s / 0.23, 8.3) - 0.5);
+    const ring: [number, number][] = [
+      [reach, height(c.x + c.nx * (d0 + reach), c.z + c.nz * (d0 + reach)) - 0.04],
+      [0.62 * reach, Math.max(ground, top - 0.06) + 0.01 + lumpA],
+      [0.25 * reach, top + lumpB],
+      [nose + 0.12, top - 0.008 + lumpA],
+      [nose + 0.03, top - 0.035],
+      [nose, top - 0.5 * thick],
+      [nose + 0.025, under],
+      [nose + 0.09, Math.max(top - thick - 0.2 * drip, 0.03)],
+      [-0.02, top - thick - 0.02],
+      [0.04, -0.08],
+    ];
+    for (const [d, y] of ring) position.push(c.x + c.nx * (d0 + d), y, c.z + c.nz * (d0 + d));
+    if (i > 0) {
+      const a = (i - 1) * RING;
+      const b = i * RING;
+      for (let k = 0; k + 1 < RING; k++) index.push(a + k, b + k, a + k + 1, a + k + 1, b + k, b + k + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+  g.setIndex(index);
+  g.computeVertexNormals();
+  // The winding follows the way the shore is walked: turned over if its top looks down.
+  const normal = g.getAttribute('normal') as THREE.BufferAttribute;
+  if (normal.getY(2) < 0) {
+    for (let i = 0; i < index.length; i += 3) {
+      const t = index[i + 1] as number;
+      index[i + 1] = index[i + 2] as number;
+      index[i + 2] = t;
+    }
+    g.setIndex(index);
+    g.computeVertexNormals();
+  }
+  g.setAttribute('aSlope', g.getAttribute('normal'));
+  g.computeBoundingSphere();
+  return g;
+}
