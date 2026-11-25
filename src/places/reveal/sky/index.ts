@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { AT, KM, LIMB, X, Z } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
-import { HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { FULL_SHADE, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -43,10 +43,10 @@ void main() {
   float high = highCloud(up);
   // The low cloud lies in the shade of the high cloud, and of its own neighbours toward the sun.
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
-  float over = highCloud(up + toSun * ${(HIGH_KM - LOW_KM).toFixed(1)});
+  float over = ${FULL_SHADE ? `highCloud(up + toSun * ${(HIGH_KM - LOW_KM).toFixed(1)})` : 'high'};
   vec2 between = xz + (cameraPosition.xz - xz) * 2.9 / max(cameraPosition.y - ${LOW_KM.toFixed(1)}, 1.0);
   float mid = midCloud(between);
-  float overMid = midCloud(between + toSun * 2.9);
+  float overMid = ${FULL_SHADE ? 'midCloud(between + toSun * 2.9)' : 'mid'};
   // A cloud is lit on the side toward the sun and dark on the other: its own neighbour toward the sun shades it.
   float sunward = lowCloud(xz + normalize(uSunDir.xz) * (0.9 + 0.012 * uViewKm)).x;
   float self = clamp(0.5 + 1.4 * (low.x - sunward), 0.0, 1.0);
@@ -90,9 +90,13 @@ void main() {
   float reach = pow(clamp((0.95 - r) / 0.75, 0.0, 1.0), 0.8);
   float build = max(shield * (0.92 + 0.08 * fibre), arms * reach * (0.55 + 0.45 * fibre));
   float eye = smoothstep(0.012, 0.085, r);
+  // The arms are not smooth: they are made of towers, and their outer edges are torn.
+  float towers = 0.5 * vnoise(w * 46.0 + 3.0) + 0.3 * vnoise(w * 97.0 + 8.0) + 0.2 * vnoise(w * 19.0);
+  float tear = 0.55 * (1.0 - towers) * smoothstep(0.12, 0.5, r);
+  build = mix(build, smoothstep(tear, tear + 0.55, build), smoothstep(0.1, 0.3, r));
   float thick = build * eye * (0.9 + 0.2 * (t.g - 0.5));
   float tall = clamp(0.35 * thick + 0.65 * shield * eye, 0.0, 1.0);
-  vec3 colour = cloudLight(vWorld.xz, 0.5 + 0.4 * (t.g - 0.5), 0.5 + 0.5 * tall, 0.5 * tall) * (0.72 + 0.5 * tall) * (0.9 + 0.2 * fibre);
+  vec3 colour = cloudLight(vWorld.xz, 0.5 + 0.4 * (t.g - 0.5), 0.5 + 0.5 * tall, 0.5 * tall) * (0.76 + 0.5 * tall) * (0.9 + 0.2 * fibre) * (0.86 + 0.28 * towers);
   float alpha = clamp(thick * 1.1, 0.0, 0.97);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
@@ -118,7 +122,7 @@ void main() {
   vec3 t = texture2D(uPicture, vUv).rgb;
   float thick = t.r;
   // The sheet of the anvil is thin and grey white; the heads of the towers stand through it, bright on the side of the sun and dark on the other.
-  vec3 colour = cloudLight(vWorld.xz, 0.5, 0.6, t.b) * (0.36 + 0.34 * t.b) * mix(0.5, 1.7, smoothstep(0.25, 0.75, t.g));
+  vec3 colour = cloudLight(vWorld.xz, 0.5, 0.6, t.b) * (0.5 + 0.4 * t.b) * mix(0.55, 1.6, smoothstep(0.25, 0.75, t.g));
   // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
@@ -127,7 +131,7 @@ void main() {
     glow += vec3(0.66, 0.6, 1.0) * f.z * exp(-dot(d, d) * 520.0) * (0.4 + 0.6 * t.b);
   }
   colour += glow * 1.6;
-  float alpha = clamp(pow(thick, 1.6) * 1.15, 0.0, 1.0);
+  float alpha = clamp(pow(thick, 1.25) * 1.2, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
