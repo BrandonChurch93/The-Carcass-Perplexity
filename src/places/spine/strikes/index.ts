@@ -85,8 +85,8 @@ void main() {
   if (abs(x) > 7.9) discard;
   // White where the arc is, and a violet skirt of lit air close round it that thins fast.
   float core = exp(-x * x * 3.2);
-  float skirt = 0.075 * exp(-abs(x) * 0.7) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
-  vec3 c = (uTint * (core * 0.55 + skirt) + vec3(core * core * 0.45)) * (uCore * channelLit());
+  float skirt = 0.016 * exp(-abs(x) * 0.33) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
+  vec3 c = (uTint * (core * 0.55) + vec3(0.45, 0.24, 1.0) * skirt + vec3(core * core * 0.45)) * (uCore * channelLit());
   gl_FragColor = vec4(glowOut(c, 0.7) * (1.0 - uSolo), 1.0);
 }`;
 
