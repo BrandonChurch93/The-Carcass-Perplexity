@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 69, 2026-11-25 21:02 UTC:
+Status 70, 2026-11-25 21:23 UTC:
 
-- `01-ribs-0.jpg`: The Ribs, where it starts: your picture on the left, the stand-in on the right.
-- `02-breath-0.jpg`: The Breath, where it starts.
-- `03-marsh-0.jpg`: The Blood Marsh, where it starts.
-- `04-spine-0.jpg`: The Spine, where it starts.
+- `01-eye-0.jpg`: The Eye: your approved picture on the left, the blockout its owner starts from on the right
+- `02-reveal-4.jpg`: The Reveal, last frame: your approved picture on the left, the blockout on the right. The owner builds to your note: a continent first, the body only near the top
+- `03-key-reveal-4-preview-draft.jpg`: The frame that answers reveal-4, film frame 10027, preview, draft tier
+- `04-key-eye-0-preview-draft.jpg`: The frame that answers eye-0, film frame 8412, preview, draft tier
 
+Status 69, 2026-11-25 21:02 UTC, showed: The Ribs, where it starts: your picture on the left, the stand-in on the right; The Breath, where it starts; The Blood Marsh, where it...
 Status 68, 2026-11-25 20:01 UTC, showed: The sounds of the Ribs, the Heart and the Breath as waveforms, each with its length and the take kept.
 Status 67, 2026-11-25 19:52 UTC, showed: The Heart: its three sounds under the music, as they sit in the mix. The music is the white line.
-Status 66, 2026-11-25 19:35 UTC, showed: The review page, the new Script part: the lengths and the start of the sheet; Clip n2 on the review page: two lines marked, each with two...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T21:02:47Z
-phase 4: 0.87 h used of 17.00 h
-build: 21.19 h used of 72.00 h
+2026-11-25T21:23:44Z
+phase 4: 1.22 h used of 17.00 h
+build: 21.54 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 62, status overdue
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -1883,3 +1883,4 @@ What happens next is yours:
 - 2026-11-25 21:01 UTC. 2026-11-25 21:00 UTC: After the review, steps 1 to 3. Step 1 pushed as 9ca79ce (notes 12 to 14, items A.1 to A.3 open, Review approved, Phase 4 in progress). Step 2: the clock's first tick of Phase 4 read 0.82 h, counted from the last tick of the review round at 20:10 UTC; about 5 minutes of that were the wait for his message, left as counted. Step 3: A.1 done, A.2 open (the script, in the thread), A.3 done (two decisions logged); item R1.5 corrected to Phase 4, where the unit reveal is built. Stop condition 1 checked at 20:57 UTC: 52 of 52 hashes match and all 34 key pictures exist. Disk: 2.8 GB free at 20:57 UTC, under sandbox.minFreeDiskGb; old packs of rounds 1 to 6 and four folders under out/work/tmp deleted, 3.8 GB free.
 - 2026-11-25 21:03 UTC. 2026-11-25 21:04 UTC: status 69 posted, the first of Phase 4 (After the review, step 4): the three items as understood and when each is worked, with four fresh draft compares of the stand-ins (ribs-0, breath-0, marsh-0, spine-0; 3 to 4 s each on this machine). The status tool prints the credits line itself, so it stood twice in this one; it is left out of the notes from here.
 - 2026-11-25 21:23 UTC. 21:22 the ten build agents of Phase 4, wave 1, are started, each on its own machine with the shared sheet and its own brief: ribs_ground_owner, ribs_sea_owner, breath_ground_owner, breath_life_owner, marsh_ground_owner, marsh_life_owner, spine_ground_owner, spine_storm_owner, eye_owner, reveal_owner. All six units are in progress. Their limit is 4 h, to 01:22 UTC; first looks are due by 21:52, lead foundations by 21:57, first versions by 22:42 (second owners) and 22:52 (leads).
+- 2026-11-25 21:24 UTC. 21:24 status 70 posted in the thread: all the scenes started with ten build agents, the script change, and where the Eye and the Reveal start (the blockout beside the approved picture; 2 new draft renders at preview).
