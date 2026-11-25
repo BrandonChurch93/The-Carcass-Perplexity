@@ -7,27 +7,36 @@ import { CARCASS, carcassAxis, carcassBody, carcassView, step } from '../shared/
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
 /** Half the side of the sheet, metres, and the spans along a side. */
-const HALF = 7.5;
+const HALF = 5.5;
 const SPANS = 176;
 
 const FIELD_GLSL = /* glsl */ `
 uniform vec4 uSpot;
+uniform vec4 uLie;
 uniform vec4 uHit;
-// How far out of the patch a point is: under 0.8 bare rock, 1 and over the snow. Tongues of snow reach in and tongues of rock reach out.
-float patchAt(vec2 q) {
-  float edge = 0.6 + 0.55 * vnoise(q * 0.42 + 3.0) + 0.2 * vnoise(q * 1.5 + 11.0);
-  return length(q * vec2(1.0, 1.25)) / (uSpot.z * edge);
+// A place on the sheet as the lens has it: x toward the lens, y across.
+vec2 lieOf(vec2 q) {
+  return vec2(dot(q, uLie.xy), q.x * uLie.y - q.y * uLie.x);
 }
-// The rock's relief, 0 to 1: slabs, their broken edges, grit.
+// How far out of the patch a point is: under 0.8 bare rock, 1 and over the snow. The patch runs out toward the lens, the way the melt ran, and
+// tongues of snow reach into it.
+float patchAt(vec2 q) {
+  vec2 l = lieOf(q);
+  float edge = 0.62 + 0.5 * vnoise(q * 0.9 + 3.0) + 0.24 * vnoise(q * 2.6 + 11.0);
+  l.x *= l.x > 0.0 ? 0.6 : 1.15;
+  return length(l * vec2(1.0, 1.2)) / (uSpot.z * edge);
+}
+// The rock's relief, 0 to 1. It is bedded: its slabs and the breaks between them run toward the lens.
 float rockAt(vec2 q) {
-  float slabs = vnoise(q * 1.1 + 7.0);
-  float broken = vnoise(q * 3.3 + 19.0);
-  return 0.62 * slabs + 0.3 * broken + 0.08 * vnoise(q * 12.0);
+  vec2 l = lieOf(q);
+  float beds = vnoise(vec2(l.x * 0.5, l.y * 2.7) + 7.0);
+  float broken = vnoise(vec2(l.x * 1.7, l.y * 6.5) + 19.0);
+  return 0.55 * beds + 0.3 * broken + 0.15 * vnoise(q * 12.0);
 }
 // How high the rock stands over the land at q, metres.
 float standAt(vec2 q) {
   float inside = 1.0 - smoothstep(0.45, 0.95, patchAt(q));
-  return inside * (0.01 + 0.05 * smoothstep(0.4, 0.75, rockAt(q)));
+  return inside * (0.008 + 0.075 * smoothstep(0.38, 0.75, rockAt(q)));
 }`;
 
 const VERTEX = /* glsl */ `
@@ -61,7 +70,7 @@ vec2 channelAt(vec2 d) {
     float wander = 1.1 * (vnoise(vec2(rho * 1.3 + float(k) * 9.0, floor(theta * arms / 6.2832 + 0.5) * 3.7)) - 0.5) + 0.35 * (vnoise(vec2(rho * 6.0, float(k) * 5.0)) - 0.5);
     float a = theta * arms / 6.2832 + wander * (0.25 + 0.12 * rho);
     float across = abs(fract(a) - 0.5) * 6.2832 * rho / arms;
-    float width = 0.05 * (1.0 - 0.28 * float(k)) * smoothstep(to, from, rho) * smoothstep(from - 0.25, from + 0.15, rho);
+    float width = 0.035 * (1.0 - 0.28 * float(k)) * smoothstep(to, from, rho) * smoothstep(from - 0.25, from + 0.15, rho);
     if (across - width < best.x - best.y) best = vec2(across, max(width, 0.0005));
     arms *= 2.0;
   }
@@ -69,54 +78,64 @@ vec2 channelAt(vec2 d) {
 }
 void main() {
   vec2 q = vWorld.xz - uSpot.xy;
+  vec2 l = lieOf(q);
   float m = patchAt(q);
   float grit = vnoise(q * 37.0);
-  float cover = 1.0 - smoothstep(0.82, 1.0, m + 0.1 * (vnoise(q * 7.0) - 0.5) + 0.05 * (grit - 0.5));
+  float fine = vnoise(q * 150.0);
+  float cover = 1.0 - smoothstep(0.86, 1.0, m + 0.12 * (vnoise(q * 7.0) - 0.5) + 0.06 * (grit - 0.5));
   if (cover < 0.004) discard;
   vec3 toCamera = normalize(cameraPosition - vWorld);
-  // The lie of the rock: the slope of the stones, and the grain on them.
-  float e = 0.03;
+  // The lie of the rock: the slope of the slabs, the breaks, the grain on them.
+  float e = 0.025;
   float h0 = standAt(q);
   vec3 n = normalize(vec3(h0 - standAt(q + vec2(e, 0.0)), e, h0 - standAt(q + vec2(0.0, e))));
-  n = normalize(n + 0.5 * vec3(fbm(q * 9.0) - 0.5, 0.0, fbm(q * 9.0 + 31.0) - 0.5) + 0.25 * vec3(vnoise(q * 70.0) - 0.5, 0.0, vnoise(q * 70.0 + 13.0) - 0.5));
+  n = normalize(n + 0.55 * vec3(fbm(q * 9.0) - 0.5, 0.0, fbm(q * 9.0 + 31.0) - 0.5) + 0.3 * vec3(vnoise(q * 70.0) - 0.5, 0.0, vnoise(q * 70.0 + 13.0) - 0.5));
   float relief = rockAt(q);
-  // Burned rock: black where the bolt went in, slate with rust away from it, wet all over.
+  // Burned rock: black where the bolt went in, slate away from it, rust bleeding along the beds, wet all over.
   vec2 d = vWorld.xz - uHit.xy;
-  float near = exp(-dot(d, d) / 5.0);
-  vec3 albedo = mix(vec3(0.05, 0.048, 0.05), vec3(0.11, 0.095, 0.085), vnoise(q * 5.0 + 2.0)) * (0.65 + 0.7 * grit);
-  albedo = mix(albedo, vec3(0.16, 0.075, 0.035), 0.55 * smoothstep(0.5, 0.8, vnoise(q * 2.3 + 40.0)) * (0.4 + 0.6 * near));
-  albedo = mix(albedo, vec3(0.012, 0.011, 0.012), 0.8 * near);
-  float rough = mix(0.72, 0.4, near) + 0.25 * (grit - 0.5);
-  float occ = 0.55 + 0.45 * smoothstep(0.3, 0.75, relief);
+  float near = exp(-dot(d, d) / 3.0);
+  vec3 albedo = mix(vec3(0.03, 0.03, 0.034), vec3(0.1, 0.092, 0.088), vnoise(vec2(l.x * 1.6, l.y * 10.0) + 2.0)) * (0.55 + 0.9 * grit);
+  float rust = smoothstep(0.48, 0.72, vnoise(vec2(l.x * 0.7, l.y * 3.2) + 40.0)) * (0.35 + 0.65 * smoothstep(0.3, 0.6, vnoise(q * 1.3 + 8.0)));
+  albedo = mix(albedo, vec3(0.2, 0.082, 0.032) * (0.6 + 0.8 * grit), 0.7 * rust);
+  albedo = mix(albedo, vec3(0.012, 0.011, 0.012), 0.75 * near);
+  float rough = mix(0.5, 0.34, near) + 0.3 * (grit - 0.5) + 0.2 * (fine - 0.5);
+  float occ = 0.5 + 0.5 * smoothstep(0.25, 0.7, relief);
   // The channels: grooves of black glass with a pale fused lip.
   vec2 ch = channelAt(d);
   float groove = 1.0 - smoothstep(0.55 * ch.y, ch.y, ch.x);
   float lip = (1.0 - smoothstep(ch.y, 2.1 * ch.y, ch.x)) * (1.0 - groove);
-  albedo = mix(albedo, vec3(0.3, 0.27, 0.22) * (0.6 + 0.8 * grit), 0.7 * lip);
+  albedo = mix(albedo, vec3(0.26, 0.23, 0.19) * (0.6 + 0.8 * grit), 0.6 * lip);
   albedo = mix(albedo, vec3(0.006, 0.006, 0.008), groove);
-  rough = mix(rough, 0.06, groove);
+  rough = mix(rough, 0.08, groove);
   occ *= 1.0 - 0.5 * groove;
-  // Refrozen meltwater: clear ice lying level in the hollows between the stones, thickest in a ring toward the edge, cracked white, with air in it.
-  float ring = smoothstep(0.2, 0.55, m) * (1.0 - smoothstep(0.85, 1.0, m));
-  float pool = (1.0 - smoothstep(0.34, 0.42, relief + 0.1 * (1.0 - ring))) * (0.35 + 0.65 * ring);
-  float crack = 1.0 - smoothstep(0.0, 0.025, abs(vnoise(q * 4.5 + 60.0) - 0.5));
-  crack = max(crack, 0.7 * (1.0 - smoothstep(0.0, 0.03, abs(vnoise(q * 11.0 + 80.0) - 0.5))));
-  float air = smoothstep(0.72, 0.8, vnoise(q * 55.0 + 5.0));
-  vec3 ice = mix(albedo * 0.55, vec3(0.3, 0.36, 0.42), 0.22) + vec3(0.5, 0.54, 0.58) * (0.5 * crack + 0.25 * air);
-  albedo = mix(albedo, ice, pool);
-  rough = mix(rough, 0.07 + 0.3 * crack + 0.25 * vnoise(q * 2.7 + 9.0), pool);
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0) + 0.02 * vec3(vnoise(q * 9.0) - 0.5, 0.0, vnoise(q * 9.0 + 7.0) - 0.5), pool));
-  occ = mix(occ, 1.0, pool);
-  // Spindrift caught on the stones and in the lee of them, and rime at the patch's edge.
-  float dust = smoothstep(0.5, 0.9, m + 0.35 * (vnoise(q * 3.1 + 50.0) - 0.5)) * smoothstep(0.35, 0.6, n.y * 0.6 + 0.5 * vnoise(q * 15.0)) * (1.0 - pool);
-  // Slush that froze where it lay: grey-white crusts over the rock between the pools, more of them away from the strike.
-  float crust = smoothstep(0.42, 0.56, 0.7 * fbm(q * 2.4 + 25.0) + 0.3 * vnoise(q * 9.0 + 4.0) - 0.4 * near + 0.3 * (m - 0.5)) * (1.0 - pool) * (1.0 - groove);
-  albedo = mix(albedo, vec3(0.55, 0.58, 0.63) * (0.7 + 0.5 * vnoise(q * 30.0)), 0.85 * crust);
-  rough = mix(rough, 0.75, crust);
-  dust = max(dust, 0.7 * smoothstep(0.62, 0.7, vnoise(q * 140.0) * (0.6 + 0.6 * crust)) * (1.0 - groove) * (1.0 - 0.8 * near));
-  albedo = mix(albedo, vec3(0.78, 0.8, 0.84), dust);
-  rough = mix(rough, 0.9, dust);
-  vec3 c = rigShade(vWorld, n, toCamera, albedo, clamp(rough, 0.03, 1.0), occ);
+  // Meltwater lies in the breaks between the slabs, in threads and small pools, still and dark.
+  float water = (1.0 - smoothstep(0.27, 0.33, relief)) * (1.0 - groove);
+  albedo = mix(albedo, albedo * 0.5, water);
+  rough = mix(rough, 0.05, water);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0) + 0.05 * vec3(vnoise(q * 23.0) - 0.5, 0.0, vnoise(q * 23.0 + 7.0) - 0.5), water));
+  // Toward the edge the melt froze again as it ran: plates of glaze over the rock, clear in the middle, white and broken at their rims,
+  // with air in them.
+  float ring = smoothstep(0.38, 0.7, m);
+  float plate = vnoise(q * 2.3 + 60.0) + 0.35 * vnoise(q * 6.1 + 4.0) + 0.75 * ring - 0.6 * near;
+  float glaze = smoothstep(0.82, 0.9, plate) * (1.0 - groove);
+  float rim = glaze * (1.0 - smoothstep(0.9, 1.0, plate));
+  float crack = 1.0 - smoothstep(0.0, 0.03, abs(vnoise(q * 5.5 + 60.0) - 0.5));
+  crack = max(crack, 0.7 * (1.0 - smoothstep(0.0, 0.04, abs(vnoise(q * 13.0 + 80.0) - 0.5))));
+  float air = smoothstep(0.6, 0.8, vnoise(q * 48.0 + 5.0));
+  float white = clamp(0.75 * rim + 0.55 * crack + 0.3 * air + 0.35 * smoothstep(0.75, 1.0, m), 0.0, 1.0);
+  vec3 ice = mix(mix(albedo * 0.7, vec3(0.2, 0.25, 0.3), 0.3), vec3(0.62, 0.66, 0.7), white);
+  albedo = mix(albedo, ice, glaze);
+  rough = mix(rough, 0.14 + 0.5 * white + 0.25 * (grit - 0.5), glaze);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0) + 0.16 * vec3(vnoise(q * 6.0) - 0.5, 0.0, vnoise(q * 6.0 + 7.0) - 0.5) + 0.1 * vec3(grit - 0.5, 0.0, fine - 0.5), 0.85 * glaze));
+  occ = mix(occ, 1.0, glaze);
+  // Slush that froze where it lay, in lumps, and spindrift caught on the upper sides of the stones and thick at the patch's edge.
+  float lumps = smoothstep(0.56, 0.66, 0.6 * vnoise(q * 3.4 + 25.0) + 0.4 * vnoise(q * 11.0 + 4.0) + 0.45 * (m - 0.55) - 0.5 * near) * (1.0 - groove) * (1.0 - water);
+  float dust = smoothstep(0.55, 0.92, m + 0.35 * (vnoise(q * 3.1 + 50.0) - 0.5)) * smoothstep(0.3, 0.6, n.y * 0.6 + 0.5 * vnoise(q * 15.0));
+  dust = max(dust, 0.75 * smoothstep(0.6, 0.72, fine * (0.55 + 0.5 * relief + 0.4 * m)) * (1.0 - groove) * (1.0 - water) * (1.0 - 0.8 * near));
+  float snow = max(0.9 * lumps, dust);
+  albedo = mix(albedo, vec3(0.74, 0.77, 0.81) * (0.75 + 0.4 * vnoise(q * 30.0)), snow);
+  rough = mix(rough, 0.85, snow);
+  vec3 c = rigShade(vWorld, n, toCamera, albedo, clamp(rough, 0.04, 1.0), occ);
   gl_FragColor = vec4(rigOut(c), cover * (1.0 - uSolo));
 }`;
 
@@ -130,6 +149,7 @@ export function scorch(ctx: Context): Scorch {
   // The patch lies under the animal and reaches out toward the lens and past its head.
   const head = step(carcassBody, carcassAxis + 180, 1.1);
   const centre = step(head, carcassView + 180, 0.9);
+  const toLens = step(centre, carcassView + 180, 1);
   const side = SPANS + 1;
   const position = new Float32Array(side * side * 3);
   const index: number[] = [];
@@ -153,7 +173,8 @@ export function scorch(ctx: Context): Scorch {
       fragmentShader: FRAGMENT,
       uniforms: {
         ...ctx.rig.uniforms,
-        uSpot: { value: new THREE.Vector4(centre[0], centre[2], 3.1, 0) },
+        uSpot: { value: new THREE.Vector4(centre[0], centre[2], 2.1, 0) },
+        uLie: { value: new THREE.Vector4(toLens[0] - centre[0], toLens[2] - centre[2], 0, 0) },
         uHit: { value: new THREE.Vector4(carcassBody[0], carcassBody[2], 0, 0) },
       },
       transparent: true,

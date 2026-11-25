@@ -3,13 +3,11 @@
 // a share of the wind's speed, each ribbon with its own length of wave, so no two are ever in step.
 import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
-import { FPS } from '../../../config';
-import { SHUTTER } from '../../../core/time';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WIND } from '../shared/anchors';
 import { FIRST, finEdge, spires } from '../ridge';
-import { flashAt } from '../strikes/bolt';
+import { ditherAt, flashAt } from '../strikes/bolt';
 
 export const PARTS: readonly string[] = ['tether-kites'];
 
@@ -103,7 +101,7 @@ void main() {
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
   float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u));
   float far = length(cameraPosition - c);
-  float cord = max(0.08, 0.9 * uPixel * far);
+  float cord = max(0.12, 0.9 * uPixel * far);
   float thin = max(halfW, cord);
   // The blade cups across its width: its edges lift off the plane.
   float cup = 0.22 * aShape.y * blade * sin(u * 14.0 + aMore.y * 20.0 - uTime * 2.0);
@@ -162,7 +160,7 @@ void main() {
   if (max(skin, cordHere * (1.0 - blade * 0.0)) < 0.02) discard;
 
   // The skin: thin and wet, pale as fish skin, with veins that run its length and creases across it.
-  float vein = 1.0 - smoothstep(0.0, 0.09, abs(fract(v * (3.0 + 2.0 * fract(seed)) + 0.35 * vnoise(vec2(metres / (1.2 * wide), seed)) ) - 0.5));
+  float vein = 1.0 - smoothstep(0.0, 0.09, abs(fract(v * (1.6 + 1.4 * fract(seed)) + 1.1 * vnoise(vec2(metres / (1.4 * wide), seed)) + 0.25 * vnoise(vec2(metres / (0.3 * wide), seed + 9.0))) - 0.5));
   float fine = vnoise(vec2(metres / (0.12 * wide), v * 9.0 + seed));
   float crease = smoothstep(0.55, 0.8, vnoise(vec2(metres / (0.5 * wide) + seed, v * 1.3)));
   float rolled = 1.0 - smoothstep(fray + 0.05, fray + 0.22, edge);
@@ -171,28 +169,30 @@ void main() {
 
   // Pale violet, bruised darker along the veins and in blotches where it has been beaten against itself.
   float bruise = smoothstep(0.5, 0.8, vnoise(vec2(metres / (3.0 * wide) + seed * 7.0, v * 0.9 + seed * 2.0)));
-  vec3 albedo = mix(vec3(0.6, 0.56, 0.92), vec3(0.24, 0.18, 0.42), clamp(0.6 * vein + 0.3 * crease + 0.35 * bruise, 0.0, 1.0));
+  vec3 albedo = mix(vec3(0.8, 0.76, 0.98), vec3(0.4, 0.32, 0.62), clamp(0.3 * vein + 0.25 * crease + 0.3 * bruise, 0.0, 1.0));
   // Light comes through it: the far side's light counts as much as the near side's, and the lightning shows through from behind.
   vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n));
   // The skin scatters what falls on it from every side: it takes the cold of the whole sky more than the warmth of the horizon's band.
-  e = mix(e, vec3(dot(e, vec3(0.3, 0.5, 0.2))) * vec3(0.82, 0.8, 1.12), 0.7);
-  vec3 c = albedo * e / 3.14159 * (0.55 + 0.45 * thick);
+  e = mix(e, vec3(dot(e, vec3(0.3, 0.5, 0.2))) * vec3(0.9, 0.8, 1.3), 0.7);
+  vec3 c = albedo * e / 3.14159 * (1.0 + 0.3 * thick);
   // The sheen: a wet film, violet where it is seen flat and blue-green at a glance.
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  float fres = 0.05 + 0.95 * pow(1.0 - nv, 4.0);
+  float fres = 0.08 + 0.92 * pow(1.0 - nv, 4.0);
   vec3 film = 0.5 + 0.5 * cos(6.2832 * (vec3(0.0, 0.33, 0.6) + 0.9 * nv + 0.6 * fine + 0.3 * u + fract(seed)));
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r)) + emitterIrradiance(vWorld, n) * 0.08;
   c += mirror * (fres * 0.9) * mix(vec3(0.85, 0.8, 1.0), film, 0.35);
+  // The rolled edges and the creases are wet ridges: each carries a line of the sky's light.
+  c += mirror * (1.3 * rolled + 0.9 * crease * fine + 0.5 * vein) * mix(vec3(0.92, 0.86, 1.05), film, 0.25);
   c += albedo * e / 3.14159 * 0.25 * mix(vec3(0.75, 0.6, 1.0), film, 0.5) * (1.0 - thick);
 
   // When its spire is struck the ribbon carries the charge: its edges and veins glow dim violet-blue, and its tatters spark.
-  float mine = uStruck.x == vMore.z ? 1.0 : 0.12;
+  float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
   float charge = uStruck.y * mine * (0.8 * rolled + 0.35 * vein + 1.5 * tatter * step(0.7, fine));
   c += uGlowTint * charge;
 
-  float alpha = clamp(0.46 + 0.45 * thick + 0.5 * fres, 0.0, 0.96) * skin;
+  float alpha = clamp(0.3 + 0.5 * thick + 0.45 * fres, 0.0, 0.96) * skin;
   // The stalk and the spine: a dark wet cord, rimed on top.
   vec3 cord = rigShade(vWorld, n, toCamera, mix(vec3(0.045, 0.035, 0.035), vec3(0.55, 0.58, 0.64), smoothstep(0.2, 0.7, n.y) * step(0.45, vnoise(vec2(metres * 3.0, seed)))), 0.7, 1.0);
   float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, vCord);
@@ -259,7 +259,7 @@ export function create(ctx: Context): Piece {
         ribbons.push({
           anchor: finEdge(sp, t + (i - (count - 1) / 2) * 0.006, 1.01, rng.range(-0.25, 0.25)),
           length,
-          width: (near ? rng.range(2.6, 4.6) : rng.range(9, 14)) * (i === 0 ? 1 : 0.8),
+          width: (near ? rng.range(4.6, 8) : rng.range(10, 15)) * (i === 0 ? 1 : 0.75),
           phase: rng.range(0, 6.28),
           wave: length / rng.range(2.2, 4.2),
           sag: n === FIRST + 2 ? rng.range(0.06, 0.16) : rng.range(0.01, 0.06),
@@ -303,7 +303,7 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(0.55, 0.45, 1.2) } },
+    uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) } },
     side: THREE.DoubleSide,
   });
   const kites = new THREE.Mesh(geometry, material);
@@ -344,9 +344,7 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       const flash = flashAt(seconds);
-      // Where in the open shutter this sample is, and which frame: the samples of a frame are spread evenly through it.
-      const frames = seconds * FPS + 1e-6;
-      dither.value = ((frames - Math.floor(frames)) / SHUTTER + Math.floor(frames) * 0.6180339887) % 1;
+      dither.value = ditherAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
       struck.set(flash ? flash.spire : 0, flash ? Math.min(1.5, flash.power * 1.2 + 0.5 * Math.exp(-Math.max(0, flash.age) / 0.35) * (flash.age > 0 ? 1 : 0)) : 0, 0, 0);
     },

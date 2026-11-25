@@ -17,7 +17,8 @@ float runnerOpen(vec3 p) {
   return mix(vis, min(land.b * uUnder, 1.0), under);
 }
 vec3 runnerLight(vec3 p, vec3 n) {
-  vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n);
+  // Under the roof the lightning reaches an animal as it reaches the wall beside it.
+  vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
   if (uDoor.w > 0.5) {
     // Inside the canal the mouth is a window: what faces it takes the dusk and the storm seen through it, and the flash, as a rim.
     vec3 d = uDoor.xyz - p;
@@ -34,17 +35,21 @@ vec3 runnerLight(vec3 p, vec3 n) {
 const BONES_GLSL = /* glsl */ `
 uniform mat4 uBones[6];
 uniform vec4 uBurn;
-uniform vec4 uGround;`;
+uniform vec4 uGround;
+// The ground under an animal is a plane: its height at the world's origin, and its slope along x and z.
+float groundY(vec3 p) {
+  return uGround.x + dot(uGround.yz, p.xz);
+}`;
 
 // The way of the bolt through the animal: a stripe down the flank from the spine toward the belly, a hand wide, leaning toward the rump as it
 // goes down, with a second, thinner fork. 0 on its line, 1 at its edge. uBurn: where it starts (x, y, z) and its width.
 const BURN_GLSL = /* glsl */ `
 float burnAt(vec3 rest) {
-  float down = clamp((uBurn.y - rest.y) / 0.62, -0.2, 1.2);
+  float down = clamp((uBurn.y - rest.y) / 0.7, -0.2, 1.2);
   float line = uBurn.x - 0.22 * down - 0.06 * sin(down * 9.0);
   float fork = uBurn.x + 0.26 - 0.1 * down + 0.05 * sin(down * 7.0 + 2.0);
   float across = min(abs(rest.x - line), abs(rest.x - fork) * 1.9 + 0.35 * uBurn.w);
-  float side = smoothstep(-0.02, 0.12, rest.z * sign(uBurn.z));
+  float side = smoothstep(-0.16, 0.02, rest.z * sign(uBurn.z));
   float ends = smoothstep(0.0, 0.12, down + 0.1) * smoothstep(1.15, 0.85, down);
   return across / uBurn.w + (1.0 - side * ends) * 4.0;
 }`;
@@ -131,6 +136,7 @@ ${BURN_GLSL}
 uniform float uPixel;
 uniform vec4 uCoat;
 uniform vec4 uTone;
+uniform vec4 uWrithe;
 varying vec3 vColour;
 varying vec4 vFrost;
 varying vec3 vAt;
@@ -144,7 +150,7 @@ vec3 gLock;
 // where it reaches it. Nothing hangs through the ground.
 vec3 lockAt(float t) {
   vec3 p = gRoot + gLock.x * (gOut * (t - 0.5 * t * t) + gLean * t + vec3(0.0, -1.0, 0.0) * (gLock.y * 0.5 * t * t) + gBlown * (t * t));
-  p.y = max(p.y, gLock.z);
+  p.y = max(p.y, groundY(p) + gLock.z);
   return p;
 }
 void main() {
@@ -189,7 +195,7 @@ void main() {
   gOut = n * (off * lift);
   gLean = lean;
   gBlown = wind * blow;
-  gLock = vec3(len, fall, uGround.x + 0.012 + 0.02 * fract(seed * 17.0));
+  gLock = vec3(len, fall, 0.012 + 0.02 * fract(seed * 17.0));
   vec3 p = lockAt(t);
   // The way the lock runs where it is, as it lies: a lock pressed to the ground runs along the ground.
   vec3 tangent = lockAt(t + 0.12) - p;
@@ -211,8 +217,13 @@ void main() {
   float clump = vnoise3(aRoot * 14.0 + 5.0);
   float deep = mix(0.42, 1.0, pow(t, 0.6)) * (0.72 + 0.45 * clump);
   // Close to the ground the coat is in the body's own shade.
-  deep *= mix(0.45, 1.0, smoothstep(0.0, 0.35 * size, p.y - uGround.x));
+  // A dead one lies in the open, low: only what is pressed to the ground is shaded.
+  deep *= mix(0.45, 1.0, smoothstep(0.0, mix(0.35, 0.1, uWrithe.y) * size, p.y - groundY(p)));
   vec3 e = runnerLight(p, facing) * deep;
+  // The coat's edge against the far sky takes the light that comes through it from behind: the band at the horizon, warm.
+  float edge = 1.0 - abs(dot(n, toCamera));
+  vec3 behind = normalize(vec3(-toCamera.x, 0.04, -toCamera.z));
+  e += 3.14159 * 0.55 * edge * edge * edge * smoothstep(0.2, 0.8, t) * skyRadiance(behind) * runnerOpen(p);
   // Colour: warm cream, greyer and yellower in patches, soiled at the skirt and the legs, and rime on the ends of what looks up or into the wind.
   float patch_ = vnoise3(aRoot * 2.6 + uTone.w * 31.0);
   float stain = vnoise3(aRoot * 7.0 + 9.0);
@@ -221,7 +232,7 @@ void main() {
   vec3 albedo = mix(cream * 0.62, cream, smoothstep(0.0, 0.5, t));
   float windward = n.y * 0.55 - dot(n, wind) * 0.55 + 0.6 * (stain - 0.5) + uCoat.w;
   float rime = smoothstep(0.1, 0.6, windward) * smoothstep(0.3, 0.85, t + 0.3 * fract(seed * 31.0));
-  albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * 0.45);
+  albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * min(0.45 + 1.2 * max(uCoat.w, 0.0), 0.9));
   // The singed edge of the burn: rust, then black.
   albedo = mix(albedo, vec3(0.3, 0.13, 0.05), smoothstep(0.0, 0.35, singe) * 0.8);
   albedo = mix(albedo, vec3(0.02, 0.017, 0.015), smoothstep(0.3, 0.75, singe) * (0.55 + 0.45 * t));
@@ -310,8 +321,8 @@ void main() {
   float r = aLimb.y * size * (1.0 - 0.85 * pow(t, 1.2)) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
   vec3 ahead = root + len * pathAt(t + 0.03, lead, across, seed);
-  centre.y = max(centre.y, uGround.x + r * 0.85);
-  ahead.y = max(ahead.y, uGround.x + r * 0.85);
+  centre.y = max(centre.y, groundY(centre) + r * 0.85);
+  ahead.y = max(ahead.y, groundY(ahead) + r * 0.85);
   vec3 way = normalize(ahead - centre + vec3(0.0, 1e-5, 0.0));
   vec3 u = normalize(cross(way, abs(way.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
   vec3 v = cross(way, u);

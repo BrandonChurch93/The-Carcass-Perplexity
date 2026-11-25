@@ -1,6 +1,10 @@
 // The shape and the timing of a strike, both from its seed and the seconds since its frame: nothing is stepped.
 import { stream, type Rng } from '../../../core/rng';
 import type { Vec3 } from '../../../core/cameras';
+import { FPS } from '../../../config';
+import { SHUTTER } from '../../../core/time';
+import { cut, secondsInPlace } from '../../../film/cut';
+import { UNIT } from '../shared/anchors';
 import { STRIKES, type StrikeSite } from './where';
 
 export interface Line {
@@ -132,6 +136,18 @@ export function timingOf(id: string): Strokes {
   let t = TIMING.get(id);
   if (!t) {
     t = strokes(stream(`spine/strokes/${id}`));
+    // A frame the film is judged on that falls inside the flicker of a strike has a stroke of its own: the stroke nearest to it burns on that frame.
+    const site = STRIKES.find((s) => s.id === id);
+    for (const frame of Object.values(cut.keyFrames)) {
+      const age = site ? secondsInPlace(UNIT, frame) - site.seconds : -1;
+      if (age < 0.025 || age > 0.3) continue;
+      let near = 1;
+      for (let i = 1; i < t.at.length; i++) if (Math.abs((t.at[i] as number) - age) < Math.abs((t.at[near] as number) - age)) near = i;
+      t.at[near] = age;
+      t.share[near] = 1;
+      for (let i = near + 1; i < t.at.length; i++) t.at[i] = Math.max(t.at[i] as number, (t.at[i - 1] as number) + 0.05);
+      for (let i = near - 1; i >= 1; i--) t.at[i] = Math.min(t.at[i] as number, (t.at[i + 1] as number) - 0.03);
+    }
     TIMING.set(id, t);
   }
   return t;
@@ -147,3 +163,24 @@ export function flashAt(seconds: number): Flash | null {
   }
   return null;
 }
+
+/** A thing seen through by leaving pixels out compares its cover with a pattern over the screen. This moves the pattern: by where in the open shutter
+ * a sample is, so that the samples of one frame are spread evenly and add up to the true cover, and by the frame, so that it never stands still. */
+export function ditherAt(seconds: number): number {
+  const frames = seconds * FPS + 1e-6;
+  return ((frames - Math.floor(frames)) / SHUTTER + Math.floor(frames) * 0.6180339887) % 1;
+}
+
+/** The pattern itself, for a fragment shader that declares `uniform float uDither`. */
+export const GRAIN_GLSL = /* glsl */ `
+float grainAt() {
+  return fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
+}
+// What glows in the air is drawn solid, with a depth of its own, so that the air between it and the lens draws over it as over rock. Where it is
+// dimmer than \`full\` it leaves pixels out and the ones it keeps make up the difference.
+vec3 glowOut(vec3 c, float full) {
+  float most = max(c.r, max(c.g, c.b));
+  float cover = clamp(most / full, 0.0, 1.0);
+  if (cover <= grainAt()) discard;
+  return c / max(cover, 1e-3);
+}`;
