@@ -1,4 +1,5 @@
-2026-11-25 21:56 UTC
-work at 152b497 on agent/eye-place
-eye-0 at minute 33: land, brow, lake with mirror, sky, air and mist are drawn plain; animals and bones are still stand-ins; amber shelf too pale, haze too grey, brow too small, cameras for the other keys not refitted
+2026-11-25 22:17 UTC
+work at efbaeaa on agent/eye-place
+v1: all 14 parts draw at all five keys. Wrong: cliffs pale and flat, mats too broad and washed in eye-0, animals plain with ears like horns, skeleton clean and too large, eye-4 necks too tall, grey haze, cost 9.67 s
 look-1.jpg = out/work/compare/eye-0.png
+look-2.jpg = out/work/sheet4.png
