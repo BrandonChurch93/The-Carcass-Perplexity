@@ -1,0 +1,81 @@
+{
+  "recipe": {
+    "size": 1024,
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "skyWidth": 2048,
+    "skyQuality": 94
+  },
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "materials": [
+    {
+      "name": "shelf",
+      "kind": "tile",
+      "metres": 6,
+      "mean": [
+        0.438,
+        0.363,
+        0.302
+      ]
+    },
+    {
+      "name": "strata",
+      "kind": "tile",
+      "metres": 5,
+      "mean": [
+        0.298,
+        0.223,
+        0.16
+      ]
+    },
+    {
+      "name": "hoop",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.493,
+        0.392,
+        0.288
+      ]
+    },
+    {
+      "name": "wall",
+      "kind": "tile",
+      "metres": 6,
+      "mean": [
+        0.077,
+        0.061,
+        0.033
+      ]
+    },
+    {
+      "name": "cliff",
+      "kind": "tile",
+      "metres": 200,
+      "mean": [
+        0.291,
+        0.273,
+        0.265
+      ]
+    },
+    {
+      "name": "skin",
+      "kind": "tile",
+      "metres": 0.6,
+      "mean": [
+        0.44,
+        0.308,
+        0.249
+      ]
+    },
+    {
+      "name": "sky",
+      "kind": "sky",
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}

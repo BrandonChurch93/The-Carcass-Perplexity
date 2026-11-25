@@ -1,8 +1,8 @@
-# Status 75
+# Status 77
 
-2026-11-25 23:03 UTC. Phase 4, the other places and the rise.
+2026-11-25 23:34 UTC. Phase 4, the other places and the rise.
 
-- `01-hb6-keys-0-4.jpg`: The Breath, 23:00 UTC: approved pictures left, built right (draft tier). Layout closer; the light is flat where the picture is backlit: sent back.
-- `02-look-1.jpg`: The Ribs, 22:55 UTC: approved left, built right, with crops (draft tier). The floor is a dry pebble bed, not yet the wet mirror: the owner's next job.
-- `03-look-1.jpg`: The Reveal, last frame, 23:00 UTC (draft tier): more land round the bones now. The cloud is rows of specks and the relief repeats: sent back.
-- `04-h4-spine-0.jpg`: The Spine, 22:53 UTC (draft tier): the hooked first spire, the canal mouth, the strike. The kites read as thin lines, not skins: sent back.
+- `01-all.jpg`: The 34 material and sky pictures made tonight, one row a place. Generated working pictures: they feed the build, the approved pictures stay the target
+- `02-v2-reveal-4.jpg`: The Reveal, version 2: the last frame of the rise. The strip under it shows the built frame small between two approved pictures
+- `03-v2-reveal-123.jpg`: The Reveal, version 2, from the top: just above the lake, the skull massif, head and shoulders
+- `04-hb7-five-a.jpg`: The Breath at 23:27 UTC, before the new materials: approved on the left, built on the right
