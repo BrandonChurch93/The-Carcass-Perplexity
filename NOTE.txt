@@ -1,7 +1,4 @@
-2026-11-25 22:02 UTC
-work at d293ddc on agent/reveal-place
-version 1: all eleven parts built; keys 1 to 4 against the approved pictures, hd draft
-look-1.jpg = out/work/hand/v1-reveal-1.jpg
-look-2.jpg = out/work/hand/v1-reveal-2.jpg
-look-3.jpg = out/work/hand/v1-reveal-3.jpg
-look-4.jpg = out/work/hand/v1-reveal-4.jpg
+2026-11-25 22:13 UTC
+work at fced98e on agent/reveal-place
+min 55: reveal-4 with the continent land (first pass), cloud fields, new cyclone; closer levels regenerating
+look-1.jpg = out/work/hand/hb-reveal-4.jpg
