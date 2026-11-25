@@ -7,7 +7,9 @@ const COMMON = /* glsl */ `
 // Ash, on the skin and on the hide.
 const vec3 ASH = vec3(0.15, 0.145, 0.142);
 // The back of a rope of the skin: brown-black, read about 70 60 55 where it lies open and level.
-const vec3 ROPE = vec3(0.084, 0.07, 0.059);
+const vec3 ROPE = vec3(0.058, 0.05, 0.045);
+// The ash on the skin is thin: a pale line on a crest, not a coat.
+const vec3 ASH_SKIN = vec3(0.125, 0.118, 0.112);
 uniform sampler2D tRelief;
 uniform sampler2D tMask;
 uniform sampler2D tLines;
@@ -24,6 +26,8 @@ uniform vec3 uTearColour;
 // The middles of the three lengths of the split, in the local frame.
 uniform vec3 uTear[3];
 uniform vec3 uAsh;
+// Staged by shot: 1 everywhere but in the shot of the one that sank, where the light on it is lifted.
+uniform float uLift;
 uniform sampler2D tSkin;
 uniform sampler2D tSkinNh;
 uniform sampler2D tRopy;
@@ -60,7 +64,7 @@ vec3 sunkShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   vec4 land = landAt(p.xz);
   float open = mix(land.g, 1.0, clamp((p.y - land.r) / 80.0, 0.0, 1.0)) * occ;
   vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n)) * occ;
-  vec3 c = albedo * e / 3.14159;
+  vec3 c = albedo * e * uLift / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
   vec3 r = reflect(-v, n);
@@ -138,7 +142,7 @@ void main() {
   // nothing of the relief or of the folds, so they cost what the lake's crust costs. Keep this the full sums below with the
   // folds at nought.
   float alpha = smoothstep(halfSpan - 2.3, halfSpan - 4.4, r + 1.2 * (vSlow.w - 0.5) + 0.4 * (vnoise(l * 1.7) - 0.5));
-  vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * tone;
+  vec3 albedo = mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age) * tone;
   vec3 n = vec3(0.0, 1.0, 0.0);
   vec3 ns = n;
   float occ = 1.0;
@@ -178,7 +182,7 @@ void main() {
   float small = vnoise(lr * 2.0 + 7.0);
   // Each sheet of the folded skin is of its own age.
   age = clamp(age + folded * (0.9 * (sheet - 0.5) + 0.25 * (broad - 0.5)), 0.0, 1.0);
-  vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * tone;
+  vec3 albedo = mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age) * tone;
   // The ropy skin has a grain the lake's plain plates have not.
   // On the flank of a rope the textures, which are laid flat, would be drawn out down it: there the fibres carry the surface.
   float wall = smoothstep(0.7, 1.8, length(grad)) * (1.0 - onRope) * (1.0 - steep);
@@ -192,10 +196,12 @@ void main() {
   // The skin that stands up against the hull without being a rope is of the same old brown stuff.
   float roped = max(clamp(ln.a, 0.0, 1.0), smoothstep(0.15, 0.45, vWorld.y)) * ashed * folded;
   // The skin that was pushed up is older and greyer than the lake's plates the nearer it lies to the body; at the rim it is theirs.
-  albedo *= mix(vec3(1.0), vec3(1.22, 1.08, 0.96) * (1.0 + 0.3 * ashed), folded);
+  albedo *= mix(vec3(1.0), vec3(0.92, 0.86, 0.82), folded);
   albedo = mix(albedo, ROPE * (0.8 + 0.4 * small), 0.9 * roped);
   // The tone of the ropy skin goes with its height closely enough to be had from it: a tap less on half the frame.
   float lum = max(3.2 * nhA.b - 0.42, 0.1);
+  // A steep face that is no rope carries grit and not the lines of the ropy skin, which would run round it as contours.
+  lum = mix(lum, 0.55 + 0.5 * (grainNh.b - 0.5) + 0.3 * (small - 0.5), 0.85 * steep);
   albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.13 + 1.05 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.
@@ -220,13 +226,14 @@ void main() {
   // On a rope it lies on the backs of the fibres and not between them.
   float backs = mix(1.0, 1.25 * smoothstep(0.45, 0.7, nhA.b), onRope);
   float ash = folded * ashed * (1.0 - crease) * clamp(lying * stood * backs * (0.6 + 0.4 * smoothstep(0.25, 0.7, small + 0.5 * (broad - 0.5))) + crown * 0.7 * smoothstep(0.35, 0.5, mk.b) * (0.4 + 0.6 * small), 0.0, 1.0);
-  albedo = mix(albedo, ASH * (0.75 + 0.5 * grainNh.b), ash);
+  ash *= 0.5;
+  albedo = mix(albedo, ASH_SKIN * (0.75 + 0.5 * grainNh.b), ash);
 
   vec2 nd = nhA.rg - 0.5;
   // Laid on a rope, the slopes of the texture lie along it and round it; round it they are steeper on the ground than on the rope.
   vec2 onIt = turned(vec2(-ln.b, ln.g) * nd.x + ln.gb * nd.y) * (1.0 + min(dot(grad, grad), 3.0)) * 1.3;
   vec2 onWall = turned(mix(vec2(0.0, 1.0), vec2(1.0, 0.0), faces) * nd.x + grad / max(length(grad), 1e-3) * nd.y * 2.0) * 1.5;
-  vec2 detail = mix(mix(nd, onIt, onRope), onWall, steep) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
+  vec2 detail = mix(mix(nd, onIt, onRope), onWall * 0.25, steep) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
   detail += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.35 * near;
   vec2 gl = grad + cordSlope;
   vec2 sw = turned(gl) - detail * folded;
@@ -236,8 +243,8 @@ void main() {
   vec3 ns = normalize(vec3(-ss.x, 1.0 + 0.6 * folded, -ss.y));
 
   float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, 0.25 + 0.75 * rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.45 * crease), folded);
-  float rough = clamp(0.22 + 0.45 * age + 0.15 * folded, 0.15, 0.92);
-  rough = mix(rough, 0.95, ash);
+  // Dead matte, as the lake's crust is wherever it is not fresh glass.
+  float rough = 0.93;
   #endif
 
   vec4 land = landAt(vWorld.xz);
@@ -246,21 +253,23 @@ void main() {
   float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
   vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(vWorld.x, 1.5, vWorld.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace) + vEmit * mix(1.0, occ, 0.7);
   #ifndef RIM
+  light *= mix(1.0, uLift, folded * (0.3 + 0.7 * ashed));
   light += tearLight(vLocal, normalize(vec3(-gl.x, 1.0, -gl.y))) * (0.4 + 0.6 * occ);
   #endif
   vec3 c = albedo * light / 3.14159;
   // The shine is the lake's satin one.
   float nv = clamp(dot(ns, v), 0.0, 1.0);
-  float gloss = (1.0 - rough) * (1.0 - rough);
-  float graze = (1.0 - nv) * (1.0 - nv);
-  float fresnel = (0.03 + 0.97 * graze * graze) * (0.09 + 0.24 * gloss);
+  // By the crust's own sums (lake/skin.ts): a rough face does not turn into a mirror at a grazing angle, or the folds
+  // would stand pale on the crust from the wide view.
+  float satin = 1.0 - smoothstep(0.4, 0.9, rough);
+  float fresnel = mix(0.01, 0.06, satin) + 0.1 * satin * pow(1.0 - nv, 3.0);
   vec3 rf = reflect(-v, ns);
   rf.y = abs(rf.y);
   c += fresnel * crustMirror(rf, rough) * open;
 
   #ifndef RIM
   // The split: open lava at the bottom, a skin that still glows on its walls.
-  float heat = mk.r * (1.0 + uTearOpen);
+  float heat = mk.r * (1.0 + 2.2 * uTearOpen);
   float hot = smoothstep(0.12, 0.6, heat * (0.8 + 0.4 * small));
   // The fire of the split wavers, each length of it in its own time. Every rate is a whole count of turns in 8 s.
   float breath = 22.0 * sin(uTime * 1.5708 + 6.0 * small) + 20.0 * sin(uTime * 3.927 + 4.0 * l.x) + 14.0 * sin(uTime * 8.6394 + 7.0 * l.y + 2.0);
@@ -338,7 +347,7 @@ void main() {
   vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * mix(0.95, 1.5, isBody);
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
-  vec3 scab = vec3(0.22, 0.185, 0.135) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone * (1.0 + 0.25 * isBody);
+  vec3 scab = vec3(0.22, 0.185, 0.135) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone * (1.0 - 0.45 * isBody);
 
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
@@ -359,8 +368,8 @@ void main() {
   // The torn edge of a plate stands over what is under it and shades it.
   float under = smoothstep(0.03, 0.3, vSurf.y) * (1.0 - smoothstep(0.3, 0.62, vSurf.y));
   // Between the plates the cords of the hull's hide are dry and grey-brown on their backs; the furrows between them are black.
-  float ridge = isBody * (1.0 - plated) * smoothstep(0.18, 0.5, hideNh.b * (1.0 - furrow) + 0.25 * (lump - 0.5));
-  albedo = mix(albedo * (1.0 - 0.6 * furrow), vec3(0.15, 0.125, 0.105) * (0.6 + 6.0 * grey), 0.8 * ridge);
+  float ridge = isBody * (1.0 - plated) * smoothstep(0.3, 0.55, hideNh.b * (1.0 - furrow) + 0.25 * (lump - 0.5)) * smoothstep(0.5, 0.15, furrow);
+  albedo = mix(albedo * (1.0 - 0.85 * smoothstep(0.1, 0.7, furrow)) * mix(1.0, 0.6, isBody), vec3(0.21, 0.18, 0.155) * (0.6 + 6.0 * grey), 0.85 * ridge);
 
   // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
