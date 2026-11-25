@@ -29,12 +29,14 @@ export const MAX_EMITTERS = 8;
 export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.2, radiance: [0.75, 0.42, 0.26] as const };
 // The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
 // reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
-// gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
+// gone 6 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K, a little yellower, and twice its level. It was three
+// and a half times (70, 9.5) when the crust at a brim was near black (albedo 0.014 to 0.05); the skin has lifted the crust since (0.05 to 0.08)
+// and the floor round the hero's pool stood as one flat saturated patch where the picture has a soft glow on a dark floor.
 export const POOLS = {
   at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
   axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
   halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
-  radiance: [70, 9.5] as const,
+  radiance: [40, 6.4] as const,
 };
 
 // The stream of the fall as a light: the lava from the lip of the mouth down the foot of the wall to the lake, as the fall draws it (fall/path.ts).
