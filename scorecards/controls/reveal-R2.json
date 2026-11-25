@@ -1,0 +1,226 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "reveal-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the same fine branching erosion texture repeats almost uniformly across the terrain."
+    },
+    {
+      "control": "reveal-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the uniform, repeating ridge texture across the whole terrain looks procedural or generated, not like real aerial geology"
+    },
+    {
+      "control": "reveal-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the uniform procedural hydraulic-erosion pattern and slope-based coloring across the ridges that look like a heightfield 3D terrain render rather than real geology or a cinematic shot."
+    },
+    {
+      "control": "reveal-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 75,
+      "why": "The same fine branching erosion pattern repeats across nearly every slope, giving the terrain a procedural look."
+    },
+    {
+      "control": "reveal-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 40,
+      "why": "the near-perfectly circular lake with a smeared ochre rim and a wisp of mist over dendritic terrain looks too tidy and geologically implausible for a real photo, though the very detailed terrain texture points to high-end rendering rather than a stock or low-budget image."
+    },
+    {
+      "control": "reveal-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 74,
+      "why": "the same fine branching terrain texture repeats around nearly every basin."
+    },
+    {
+      "control": "reveal-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the overly uniform fractal/procedural erosion texture across the whole terrain looks like a generated CG image rather than a real aerial photo or a hand-art-directed cinematic"
+    },
+    {
+      "control": "reveal-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the repetitive procedural craters and flat noise-based clouds look like a standard procedural 3D terrain render rather than a real photograph or high-budget cinematic"
+    },
+    {
+      "control": "reveal-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the same vein-like ridge texture repeats around craters of very different sizes."
+    },
+    {
+      "control": "reveal-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The terrain is a procedural-looking aerial view: the erosion and ridge detail repeats self-similarly, like noise-generated heightmaps, and the sea foam is scattered white specks. That is too artificial for a photograph or a top-budget cinematic, but too polished and detailed for a low-budget or web demo."
+    },
+    {
+      "control": "reveal-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the finely detailed ocean surface blends seamlessly into the skull-shaped terrain."
+    },
+    {
+      "control": "reveal-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the unreal fractal-like terrain (regular parallel feather-shaped ridges and perfectly round crater pits seen from orbit) looks like generic procedural/stock CG rather than a real satellite photo or a crafted film frame."
+    },
+    {
+      "control": "reveal-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the giant skull-and-ribcage landmass looks like a 2D mask fed into a procedural terrain generator with flat top-down lighting and repetitive noise clouds rather than a real place or a full-budget film shot."
+    },
+    {
+      "control": "reveal-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the same branching terrain texture repeats along every rib of the fish-shaped island."
+    },
+    {
+      "control": "reveal-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "The image is an aerial view of an alien-looking coastline with rich, cinematic detail and grading, but its fractal-like, repeating ridges and odd craters don't match real geology, so it reads as a high-end CG or concept-art frame and not a photograph. (c) is the close second."
+    },
+    {
+      "control": "reveal-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 78,
+      "why": "the convincing integration of the colossal skeleton into the finely detailed ocean and weather systems."
+    },
+    {
+      "control": "reveal-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "a surreal skeleton-shaped landmass seen from orbit, with generic procedural terrain and cloud textures, reads as a stock/conceptual CG image rather than a real photo or a film frame"
+    },
+    {
+      "control": "reveal-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat-lit relief of the literal skeleton landmass and uniform procedural-looking clouds read as a standalone 3D CGI render rather than a physically grounded big-budget film frame or a low-detail web demo."
+    },
+    {
+      "control": "reveal-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the mountain ridges tracing the ribs have a repeated texture that makes the skeleton look sculpted from a terrain map."
+    },
+    {
+      "control": "reveal-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "a skeleton-shaped landmass on an Earth-like ocean planet, rendered at a polish and scale that looks like a high-end film or cinematic concept shot, not a real photo or a simple 3D render."
+    }
+  ],
+  "unit": "reveal",
+  "collected": "2026-11-25 22:39 to 22:42 UTC",
+  "share": 0.25,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script. The Reveal has four approved pictures (reveal-1 to reveal-4), so 20 votes. Only 5 of the 20 took an approved picture of the Reveal for a photograph or a film frame; 15 answered an ordinary 3D render. By the rule of R2 the judged frames are held to these pictures, not to an absolute.",
+  "pictures": [
+    {
+      "key": "reveal-1",
+      "image": "references/approved/7-reveal/reveal-1-above-the-lake.jpg",
+      "file": "out/work/jury/controls/reveal-1.png",
+      "sha256": "281823506a1ca1e68fe6f9f207aa113ea296edc9deb49f16ea2f3aef1234ceb0",
+      "bytes": 2219669,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "reveal-2",
+      "image": "references/approved/7-reveal/reveal-2-skull-massif.jpg",
+      "file": "out/work/jury/controls/reveal-2.png",
+      "sha256": "5a635aa0b4e023e98f0915aae264f7044a3d64f11f65a8b7dea86b3d31b7e096",
+      "bytes": 2330637,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "reveal-3",
+      "image": "references/approved/7-reveal/reveal-3-head-and-shoulders.jpg",
+      "file": "out/work/jury/controls/reveal-3.png",
+      "sha256": "62d9141194f9ebf454ecc23f7e9d1bc9c849c7859181b36520aece2b6255ac74",
+      "bytes": 2272611,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "reveal-4",
+      "image": "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg",
+      "file": "out/work/jury/controls/reveal-4.png",
+      "sha256": "556e55eb2ce852fa40def34d49e151797e65a1e9d19d58862eb7bdbbab939280",
+      "bytes": 2331008,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}
