@@ -1,0 +1,83 @@
+{
+  "kind": "compare",
+  "made": "2026-11-25T14:24:58Z",
+  "key": "heart-2",
+  "approved": "references/approved/2-heart/heart-2-the-one-that-sank.jpg",
+  "frame": "out/work/stills/key-heart-2-uhd-final.png",
+  "frameSize": {
+    "width": 3840,
+    "height": 2160
+  },
+  "approvedPart": {
+    "left": 0,
+    "top": 0,
+    "width": 1672,
+    "height": 941
+  },
+  "regions": [
+    {
+      "label": "detail 1",
+      "cx": 0.625,
+      "cy": 0.625,
+      "detail": 18.52,
+      "frame": {
+        "left": 2230,
+        "top": 1189,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 971,
+        "top": 518,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    },
+    {
+      "label": "detail 2",
+      "cx": 0.375,
+      "cy": 0.625,
+      "detail": 11.53,
+      "frame": {
+        "left": 1270,
+        "top": 1189,
+        "width": 340,
+        "height": 322
+      },
+      "approved": {
+        "left": 553,
+        "top": 518,
+        "width": 148,
+        "height": 140
+      },
+      "scale": 2.297
+    }
+  ],
+  "stills": [
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "uhd",
+      "tier": "final",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3685,
+      "loop": null,
+      "key": "heart-2",
+      "machine": "space-sandbox",
+      "made": "2026-11-25T14:24:57Z",
+      "seconds": 275.917,
+      "portableOnly": false,
+      "id": null
+    }
+  ],
+  "keep": true,
+  "phase": 3,
+  "units": {
+    "heart": "c555aa9c875af518"
+  }
+}

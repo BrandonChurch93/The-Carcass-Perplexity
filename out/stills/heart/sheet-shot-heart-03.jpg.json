@@ -1,0 +1,297 @@
+{
+  "kind": "sheet",
+  "made": "2026-11-25T15:30:21Z",
+  "name": "shot-heart-03",
+  "title": "shot heart-03 · frames 3375 to 3578 · 12 spread evenly",
+  "tier": "review",
+  "format": "preview",
+  "cell": {
+    "width": 340,
+    "height": 191
+  },
+  "frames": [
+    {
+      "frame": 3375,
+      "time": "0:56.15"
+    },
+    {
+      "frame": 3393,
+      "time": "0:56.33"
+    },
+    {
+      "frame": 3412,
+      "time": "0:56.52"
+    },
+    {
+      "frame": 3430,
+      "time": "0:57.10"
+    },
+    {
+      "frame": 3449,
+      "time": "0:57.29"
+    },
+    {
+      "frame": 3467,
+      "time": "0:57.47"
+    },
+    {
+      "frame": 3486,
+      "time": "0:58.06"
+    },
+    {
+      "frame": 3504,
+      "time": "0:58.24"
+    },
+    {
+      "frame": 3523,
+      "time": "0:58.43"
+    },
+    {
+      "frame": 3541,
+      "time": "0:59.01"
+    },
+    {
+      "frame": 3560,
+      "time": "0:59.20"
+    },
+    {
+      "frame": 3578,
+      "time": "0:59.38"
+    }
+  ],
+  "stills": [
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3375,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:26:48Z",
+      "seconds": 71.051,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3393,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:27:09Z",
+      "seconds": 19.877,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3412,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:27:29Z",
+      "seconds": 19.832,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3430,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:27:49Z",
+      "seconds": 19.728,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3449,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:28:10Z",
+      "seconds": 20.898,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3467,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:28:30Z",
+      "seconds": 19.6,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3486,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:28:49Z",
+      "seconds": 19.15,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3504,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:29:08Z",
+      "seconds": 18.629,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3523,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:29:27Z",
+      "seconds": 18.369,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3541,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:29:45Z",
+      "seconds": 17.755,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3560,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:30:03Z",
+      "seconds": 17.647,
+      "portableOnly": false,
+      "id": null
+    },
+    {
+      "engine": "01fc9a2b137a3169",
+      "units": {
+        "heart": "c555aa9c875af518"
+      },
+      "format": "preview",
+      "tier": "review",
+      "diag": null,
+      "part": null,
+      "browser": "147.0.7727.15",
+      "frame": 3578,
+      "loop": null,
+      "key": null,
+      "machine": "space-sandbox",
+      "made": "2026-11-25T15:30:21Z",
+      "seconds": 17.547,
+      "portableOnly": false,
+      "id": null
+    }
+  ],
+  "keep": true,
+  "phase": 3,
+  "units": {
+    "heart": "c555aa9c875af518"
+  }
+}
