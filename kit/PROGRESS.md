@@ -97,6 +97,7 @@ The Heart's 14: `sky`, `air`, `land`, `bench`, `crust`, `lava`, `lava-fall`, `ve
 
 - Name from the kickoff prompt: none. The line arrived as the unfilled placeholder `<the name of the voice, exactly as it appears under My Voices in ElevenLabs>`
 - Voice used, and its id on the account: `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`, category generated (voice design), created 2026-11-23 20:35 UTC
+- Confirmed by Brandon on 2026-11-25 at 07:00 UTC (note 4 under "Notes from Brandon"): "The narrator voice is Carcass Narrator, the one you chose. Keep it."
 - Chosen by: the Builder, 2026-11-24. The account lists three voices that are not stock: `Worst-Job-Application-Ever` (2026-11-24 03:37 UTC, an Australian wildlife-documentary voice made for another project), `Carcass Narrator` (2026-11-23 20:35 UTC) and `Carcass Narrator v1` (2026-11-23 20:29 UTC, described as an old man). The rule in `kit/01-FILM.md` is the most recently created voice that is not stock. Read to the letter that is the other project's voice, so the rule was read as the most recently created voice made for this film. Its description matches the kit: he lived in this ruined world and warns you. Said in status 1
 - Speech model and settings: `eleven_v4`, stability 0.5, similarity 0.75, seed 20261124, `mp3_44100_192`, the delivery tag `[slowly, gravely]` before the passage, the four lines of a clip sent as four paragraphs in one request, through `/with-timestamps` so each line can be cut out by its character times. The model test across the speech models could not be run: the account ran out of characters (see "The account's characters" under "The sound tools"). `eleven_v4` is STATED as the model for narration and it measured well on the one take made
 - The target: the voice's own preview sample (the one the account plays under My Voices), 23.48 s, median pitch 92.5 Hz, 157 words a minute while speaking, 115 with its pauses. Saved as `out/work/voice/preview.mp3`
@@ -577,6 +578,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 06:44 UTC. The heap of rock the land owner set by the camera of heart-3, which stands in the lake 63 m from the shore and shows in the wide view, is kept: it becomes a small island of welded spatter and broken slabs with a skirt of rubble and upturned crust, and the crust owner breaks the plates round it. The picture of heart-3 has a dark rock close to the lens at lower left, and a heap set down on a flat floor would read as a prop.
 - 2026-11-25. 06:48 UTC. The lake's channel is redrawn from the picture of the line: melt 5 to 30 cm below the brim under a thin curled lip, not a trench 0.25 to 0.9 m deep between walls; crust as smooth billowy pahoehoe with a sheen. Why: beside the picture the trench of the merged build reads as a canyon in a model. Sent to both lake owners with the compare.
 - 2026-11-25. 06:53 UTC. Levels measured on the merged main against the five pictures (rock and crust only): the frame's ground is about one and a half stops too dark on the lake and near ground, redder (red over blue 1.24 to 1.55 against 1.16 to 1.27) and its blacks fall to 3 to 12 against 20 to 40; the sky matches. The light's second version must bring the ground to the picture's levels by fill and sheen, not by exposure or grade. Table sent to the light, crust, land, fall and air owners.
+- 2026-11-25. 07:03 UTC. The lens of the Heart, set in the cameras of `src/places/heart/index.ts` after a look at each key at two settings beside its picture: heart-1 radius 0.02 m focused at 6 m, heart-2 0.1 m at 21 m, heart-3 0.2 m at 68 m, heart-4 0.2 m at 760 m, the wide view closed. The focus follows the push of each shot so it stays on the same thing. Why these and not more: at 0.03 the thin legs behind the line smear and the place starts to read small; the pictures are soft behind and in front by about this much and no more.
 
 ## Notes from Brandon
 
@@ -585,6 +587,58 @@ His words, numbered, with the date and how each was applied.
 1. 2026-11-24 20:34 UTC, in the thread: "Sorry, I forgot to share with you the attached audio. It's here in this message." Applied: the file was saved under `audio/supplied/` and its hash matches `music.sha256`.
 2. 2026-11-24 20:40 UTC, in the thread: "The repo is private now. A new addendum is on main: kit/addenda/001-private-repo-and-music.md. Fetch, merge, read it and apply it now, then carry on." Applied: fetched and merged (the addendum was already in at `a218a33`), read, and applied as the session log says. The repo was measured four ways at 20:41 UTC and still read public, so by the addendum's own rule no sound file was committed then. Answered in the thread. Note 3 replaced the waiting.
 3. 2026-11-24 20:44 UTC, in the thread: "Forget about the repo being public, I'll set it to private later. Just continue working make sure the audio is in there. It's totally fine." Applied: this note beats the public rule of addendum 001. The three sound folders came out of `.gitignore`, the music was committed and pushed, "Sound files" reads committed to the repo, and from here the private rules of addendum 001 hold whatever a measurement reads. The measuring before every commit has stopped. One fact was said to him once, in status 2: ElevenLabs allows its sound effects inside a film and not as separate files in a public place, so the generated sounds are the reason for the switch to private.
+4. 2026-11-25 07:00 UTC, in the thread, the first of two notes: "The narration. This is the approved script, word for word. It is the same text as narration.clips in config/showcase.json and \"The words\" in kit/01-FILM.md. Use it exactly as written." Then the script:
+
+   > n1 · the opening
+   > Listen.
+   > There is a land the maps leave empty.
+   > I have walked it. End to end.
+   > I will tell you what is there.
+   >
+   > n2 · the Ribs
+   > The strait.
+   > Stone ribs. Taller than any wall men have built.
+   > At low tide, the winged things come down to feed.
+   > Look up. The drowned hang in the weed. That is how high the sea returns.
+   >
+   > n3 · the Heart
+   > The fire.
+   > A lake of it, under a black skin.
+   > The tall ones walk the skin, and drink from the cracks.
+   > It burned before there were men. It will burn after.
+   >
+   > n4 · the Breath
+   > The pits.
+   > The land breathes here. Slow. From far below.
+   > Nothing grows near them but the red weed.
+   > The pale herds feed, and keep their distance. They are wiser than men.
+   >
+   > n5 · the Blood Marsh
+   > The red flats.
+   > It was blood once. It still seeps.
+   > The great beasts wallow in it, and grow fat.
+   > The salt keeps what it catches. Forever.
+   >
+   > n6 · the Spine
+   > The ridge.
+   > Above the clouds. Above the storm.
+   > Lightning walks it every night. Spire to spire.
+   > The beasts sleep inside the bone, and wait for morning.
+   >
+   > n7 · the Eye
+   > The lake.
+   > Still. Gold at the edge. Black at the center.
+   > The herds drink there. They do not look down.
+   > The center has no bottom. I did not find one.
+   >
+   > n8 · the Reveal
+   > Now you see it.
+   > This was never land.
+   > It was a god.
+   > Gods die slow. This one is not finished.
+
+   And after it: "The narrator voice is Carcass Narrator, the one you chose. Keep it." Applied: the note's script was compared by script with `narration.clips` in `config/showcase.json` at 07:02 UTC (MEASURED: 8 of 8 clips and 32 of 32 lines are the same, line breaks included) and with "The words" in `kit/01-FILM.md` (all 32 lines found word for word), so nothing in the repo changes and every clip is made from exactly these lines. The kept clip `n8` was made from the same four lines. The voice stays `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`; "Voice" now says Brandon confirmed it.
+5. 2026-11-25 07:00 UTC, in the thread, the second of two notes: "ElevenLabs. The account is out of characters. I will top it up in the morning. Do not wait for it: keep building the picture. Read the account's characters each time you post a status. As soon as they are back, make clips n1 to n7, run the model test and the remaining takes for n8, and make the sound effects, all inside their limits. Then run the cut and the mix again and say so in the next status." Applied: the picture goes on without a pause. `npm run voice -- --status` reads the account's characters and runs with every status from status 33 on; the figure and its time go into the status. First reading at 07:02 UTC: 1 of 131,000 (MEASURED). When the figure is back, in this order and each inside its limit: `npm run voice -- --make` for `n1` to `n7` with check and keep (`narration.maxTakesPerClip` 6); the model test of `kit/03-METHOD.md` (the same test line on each speech model on offer, at most 6 lines in all) and the 5 takes still open for `n8`; the sound effects by `npm run sound` inside `audio.maxTakesPerCue` and `audio.maxCuesPerPlace`; then `npm run cut`, `npm run mix` and the animatic again, and the next status says so.
 
 ## Review items
 
@@ -664,7 +718,6 @@ Each reports by message to the Builder.
 | `heart_air_owner` | build | The Heart's air: `sky`, `air`, `fume`, the steam and smoke of every source, the heat shimmer, in `src/places/heart/air/` | `agent/heart-air` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
 | `heart_walkers_owner` | build | The Heart's `crust-walkers`: the animal, its cycle, the herd of fourteen, in `src/places/heart/walkers/` | `agent/heart-walkers` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
 | `heart_sunk_owner` | build | The Heart's `sunk-walker` and the folded skin of lava round it, in `src/places/heart/sunk/` | `agent/heart-sunk` | 03:52 UTC, 25 Nov | 3 h, hand-backs by 40, 100 and 170 minutes |
-| `engine_focus_builder` | tool | Depth of field in the engine: every sample stays at its own point on the lens and a gather blur by depth runs once after accumulation, with a `focus` diagnostic view and lens overrides for test stills, in `src/core/` | `agent/core-dof` | 05:22 UTC, 25 Nov | 100 minutes, hand-backs at 60 and 100 |
 | `gate_g13_builder` (second job) | tool | Hunt the cause of the G3 failure: the Heart's loop frame 288 differs between two page loads in 15 pixels; find the part or pass, fix it at the cause, add `--part` and `--only` to `npm run determinism` | `agent/determinism` | 05:58 UTC, 25 Nov (the agent itself 03:52 UTC) | 60 minutes, first message as soon as the part is known |
 | `round3_pack_renderer` | render | The R4 sheets of round 3 on its own machine from commit `ef015ca` (the same sources as `e5b7a22`), handed back as a tar; frames are byte equal across machines ("Frames across VMs") | none | 06:04 UTC, 25 Nov | one job |
 | `heart_light_owner` | build | The one light of the Heart, its fire colour and its grade: the colour of `blackbody` in the display's primaries, the knee and the fire curve, the cast light, a neutral dusk away from the fire, then exposure, contrast, saturation and bloom against the five approved pictures; only `shared/glsl.ts`, the light values in `shared/rig.ts` and the `look` line of the Heart | `agent/heart-light` | 06:09 UTC, 25 Nov | 75 minutes, hand-backs at 30, 60 and 75 |
@@ -676,6 +729,8 @@ Hand-backs of the six owners in Phase 3, each merged into `main` after a check o
 Ended with a record in Phase 3, round 3: the critics `reviewer_41` and `reviewer_42` (R4, gemini), `reviewer_43` and `reviewer_44` (R1, gpt), `reviewer_45` and `reviewer_46` (R3, claude), each a fresh agent on its own machine that received the brief word for word and its pack and nothing else; the jurors `panel_31a` to `panel_35e` (25 fresh agents, one picture and the question each; one was reminded once after ten minutes and answered). Their answers are in `scorecards/round-003/`. `heart_lake_owner` stopped after its third version (`agent/heart-lake-v3`, merged); the lake went on to `heart_crust_owner` and `heart_lava_owner`.
 
 Ended with a record in Phase 3: `gate_g13_builder` (G13 merged 04:2x UTC, G14 merged as `897b62d`, 19 tests; G14 MEASURED that 13 of 14 Heart parts do not come round the loop, which is Phase 5 work).
+
+Ended and merged into `main` in Phase 3: `engine_focus_builder` (final at 06:54 UTC after 92 minutes, `agent/core-dof` at `b171d9c`, merged as `31710fb`: depth of field as a signed circle of confusion carried in the accumulation alpha and a gather blur at quarter size before bloom, a `focus` view, `--aperture` and `--focus` on `npm run still` and `npm run compare`, the seen depth as 24 bit so G10 passes, and `--hold` and `npm run sheet -- --held` for a held camera with the world moving on. MEASURED by the agent: 830 of 830 tests, about 1.0 s added to a uhd still and 0.24 s to an hd still on 2 cores, lens closed bit-identical to before. MEASURED by the Builder after the merge: types clean, G10 pass, determinism pass, 830 of 830 tests. Still wrong, by its own list: one very bright pixel far out of focus leaves a faint pale square, thin things in front of a much more blurred wall stay a little sharp, smoke blurs as the surface behind it.)
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
@@ -783,3 +838,5 @@ none
 - 2026-11-25 06:36 UTC. Status 31 shown in the thread (06:36 UTC): the judged wide frame of round 3, the line with the new fire colours, the third versions of the one that sank and of the fall; round 3 scores so far R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 3 of 24.
 - 2026-11-25 06:46 UTC. Round 3 closed at 06:45 UTC: R1 4, R3 3, R4 4, jury 4 of 25 (0.16 against 0.76 needed), M1 and M2 green, M3 red at heart-4. A floor round, failed as expected; nothing declined. Third versions of all six folders, the light's first version and the determinism fix merged at 06:44 UTC.
 - 2026-11-25 06:51 UTC. Status 32 shown in the thread (06:51 UTC): compares of the merged main at the wide view, the feeding and the line; round 3 closed (R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 4 of 25), measures M1 and M2 green and M3 red at heart-4, merge done (818 of 818 tests, determinism passes), my reading of the merged frames (red-brown cast, crust without lobes or sheen, trench where the picture has a brimming channel, mouth and fall not the picture's), and what runs next. Correction sent to both lake owners at 06:48: the melt lies 5 to 30 cm below the brim with a thin curled lip, not 0.25 to 0.9 m between walls; the crust is smooth billowy pahoehoe with a sheen.
+- 2026-11-25 07:02 UTC. 07:00 UTC. Two notes from Brandon logged as notes 4 and 5 and applied: the approved script is the same as the config and the kit, line for line (MEASURED by script); the voice stays Carcass Narrator; the account's characters are read with every status (07:02 UTC: 1 of 131,000) and the voice, the model test, the takes for n8, the sound effects, the cut and the mix run as soon as the figure is back.
+- 2026-11-25 07:07 UTC. 07:07 UTC. Depth of field, the G10 fix and the hold merged into main as 31710fb (types clean, G10 pass, determinism pass); the lens set per key in the Heart's cameras; determinism passes with the lens open, 830 of 830 tests.
