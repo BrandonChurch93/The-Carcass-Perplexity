@@ -1,0 +1,248 @@
+{
+ "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+ "panel": [
+  "gpt_6_2_sol",
+  "claude_opus_5_5",
+  "gemini_neon",
+  "gpt_6_2_astra",
+  "claude_sonnet_5_5"
+ ],
+ "votes": [
+  {
+   "control": "heart-0",
+   "juror": "a",
+   "model": "gpt_6_2_sol",
+   "answer": "b",
+   "confidence": 94,
+   "why": "how convincingly the fantastical long-legged creatures are integrated into the lava-lit haze, with matching light and depth"
+  },
+  {
+   "control": "heart-0",
+   "juror": "b",
+   "model": "claude_opus_5_5",
+   "answer": "b",
+   "confidence": 75,
+   "why": "The fantastical stilt-legged creatures blend into a photoreal volcanic landscape with film-quality atmospheric haze, lava glow, and grading"
+  },
+  {
+   "control": "heart-0",
+   "juror": "c",
+   "model": "gemini_neon",
+   "answer": "b",
+   "confidence": 92,
+   "why": "The film-grade photorealism of the volcanic environment, the volumetric smoke lighting, natural basalt textures and cinematic color grading, combined with fantastical creatures"
+  },
+  {
+   "control": "heart-0",
+   "juror": "d",
+   "model": "gpt_6_2_astra",
+   "answer": "b",
+   "confidence": 91,
+   "why": "The lava glow lighting the nearest creature's branching tendrils makes it look convincingly present in the volcanic landscape"
+  },
+  {
+   "control": "heart-0",
+   "juror": "e",
+   "model": "claude_sonnet_5_5",
+   "answer": "b",
+   "confidence": 80,
+   "why": "a photoreal Erta Ale-style lava lake with believable atmospheric haze, holding fantastical stilt-legged creatures that blend into the scene"
+  },
+  {
+   "control": "heart-1",
+   "juror": "a",
+   "model": "gpt_6_2_sol",
+   "answer": "b",
+   "confidence": 93,
+   "why": "The towering creature silhouettes are convincingly integrated into the smoky, photorealistic lava field"
+  },
+  {
+   "control": "heart-1",
+   "juror": "b",
+   "model": "claude_opus_5_5",
+   "answer": "b",
+   "confidence": 60,
+   "why": "photoreal lava and pahoehoe textures with cinematic depth of field and atmospheric haze, combined with fantastical tall-legged creatures"
+  },
+  {
+   "control": "heart-1",
+   "juror": "c",
+   "model": "gemini_neon",
+   "answer": "b",
+   "confidence": 88,
+   "why": "photorealistic volcanic textures, cinematic shallow depth of field and atmospheric haze paired with giant alien-like creatures in the background"
+  },
+  {
+   "control": "heart-1",
+   "juror": "d",
+   "model": "gpt_6_2_astra",
+   "answer": "b",
+   "confidence": 90,
+   "why": "The distant spindly creatures blend into the volcanic heat haze as convincingly as the surrounding terrain"
+  },
+  {
+   "control": "heart-1",
+   "juror": "e",
+   "model": "claude_sonnet_5_5",
+   "answer": "b",
+   "confidence": 70,
+   "why": "the detailed ropy lava textures, atmospheric haze and shallow depth of field are cinematic, and the tall spindly creatures in the distance mean it cannot be a real-place photo; second choice c at about 15 percent"
+  },
+  {
+   "control": "heart-2",
+   "juror": "a",
+   "model": "gpt_6_2_sol",
+   "answer": "b",
+   "confidence": 95,
+   "why": "how convincingly the fantastical, long-legged creatures are integrated into the photoreal lava field"
+  },
+  {
+   "control": "heart-2",
+   "juror": "b",
+   "model": "claude_opus_5_5",
+   "answer": "b",
+   "confidence": 60,
+   "why": "photoreal lava textures, volumetric smoke and cinematic shallow depth of field combined with fantastical long-legged creatures; could also be an AI or stock CG image, which would make it c"
+  },
+  {
+   "control": "heart-2",
+   "juror": "c",
+   "model": "gemini_neon",
+   "answer": "b",
+   "confidence": 92,
+   "why": "film-grade cinematography and micro-detail: natural shallow depth of field, atmospheric haze, glowing magma lighting and intricately weathered textures on the foreground carcass and ropey lava"
+  },
+  {
+   "control": "heart-2",
+   "juror": "d",
+   "model": "gpt_6_2_astra",
+   "answer": "b",
+   "confidence": 91,
+   "why": "The foreground creature's peeling volcanic crust matches the surrounding lava so convincingly that its legs seem to emerge from the flow itself"
+  },
+  {
+   "control": "heart-2",
+   "juror": "e",
+   "model": "claude_sonnet_5_5",
+   "answer": "b",
+   "confidence": 70,
+   "why": "photographic depth of field, atmospheric smoke, convincing lava texture and cinematic colour grading look like a big-budget film frame or AI-generated concept art, not a stock render or a web demo"
+  },
+  {
+   "control": "heart-3",
+   "juror": "a",
+   "model": "gpt_6_2_sol",
+   "answer": "b",
+   "confidence": 88,
+   "why": "the localized lava light illuminating the foreground creature's thin, semitranslucent tendrils where they touch the ground"
+  },
+  {
+   "control": "heart-3",
+   "juror": "b",
+   "model": "claude_opus_5_5",
+   "answer": "b",
+   "confidence": 70,
+   "why": "detailed creature texturing, a cinematic depth of field, volumetric smoke and lighting; could also be a high-end standalone render (c)"
+  },
+  {
+   "control": "heart-3",
+   "juror": "c",
+   "model": "gemini_neon",
+   "answer": "b",
+   "confidence": 88,
+   "why": "realistic warm magma bounce light on the creature's translucent tendrils, the atmospheric haze and shallow depth of field, and fine dynamic details like debris falling from the background creature's lifted foot"
+  },
+  {
+   "control": "heart-3",
+   "juror": "d",
+   "model": "gpt_6_2_astra",
+   "answer": "b",
+   "confidence": 95,
+   "why": "The lava's glow lights the foreground creature's individual feeding tendrils exactly where they touch the fissure"
+  },
+  {
+   "control": "heart-3",
+   "juror": "e",
+   "model": "claude_sonnet_5_5",
+   "answer": "b",
+   "confidence": 70,
+   "why": "lava lighting, atmospheric haze, shallow depth of field and consistent texturing on the creatures and terrain all hold together; a high-end concept render could pass as (c)"
+  },
+  {
+   "control": "heart-4",
+   "juror": "a",
+   "model": "gpt_6_2_sol",
+   "answer": "b",
+   "confidence": 90,
+   "why": "the lava glow interacting convincingly with both the irregular cave surfaces and volumetric haze"
+  },
+  {
+   "control": "heart-4",
+   "juror": "b",
+   "model": "claude_opus_5_5",
+   "answer": "c",
+   "confidence": 55,
+   "why": "a photoreal lava cave with stylized walker creatures and a shallow depth-of-field vignette reads like an artist's standalone CG render; it lacks the compositing and plate detail of a film frame; (b) is the runner-up"
+  },
+  {
+   "control": "heart-4",
+   "juror": "c",
+   "model": "gemini_neon",
+   "answer": "b",
+   "confidence": 85,
+   "why": "the two spindly-legged creatures silhouetted against the lava, combined with photorealistic volcanic rock detail, volumetric haze, bounce lighting and cinematic depth of field"
+  },
+  {
+   "control": "heart-4",
+   "juror": "d",
+   "model": "gpt_6_2_astra",
+   "answer": "b",
+   "confidence": 83,
+   "why": "The two spindly creatures are silhouetted against the lava in a way that makes the vast cave read like a cinematic establishing shot"
+  },
+  {
+   "control": "heart-4",
+   "juror": "e",
+   "model": "claude_sonnet_5_5",
+   "answer": "b",
+   "confidence": 72,
+   "why": "the spindly, fictional creatures standing in a photoreal lava cave; the rock, lava, haze and depth of field are at the polish of a big-budget film"
+  }
+ ],
+ "unit": "heart",
+ "collected": "2026-11-25 05:38 to 05:42 UTC",
+ "share": 0.96,
+ "note": "Votes on the controls of the Heart, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the five approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata).",
+ "pictures": [
+  {
+   "control": "heart-0",
+   "image": "references/approved/2-heart/heart-0-establishing.jpg",
+   "sha256": "4ab1ffca9b33e42d0d7b03cca9297f875667f6e88e2ae7b74e13c78e62cfaa12",
+   "size": "1398x786"
+  },
+  {
+   "control": "heart-1",
+   "image": "references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg",
+   "sha256": "293221bcec36947203dc073544c6b8f08c1f0511962d698cda2c69b41fa221d1",
+   "size": "1398x786"
+  },
+  {
+   "control": "heart-2",
+   "image": "references/approved/2-heart/heart-2-the-one-that-sank.jpg",
+   "sha256": "a2ca6a325d3bcd3d5f17abee6e85379ec528ee6b3b2fd10d7945492273ec3809",
+   "size": "1398x786"
+  },
+  {
+   "control": "heart-3",
+   "image": "references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg",
+   "sha256": "56b5aa0d7fc0be6eecf0a4969becac297a0d5814fb1f98078c51971f423d1e5f",
+   "size": "1398x786"
+  },
+  {
+   "control": "heart-4",
+   "image": "references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg",
+   "sha256": "12ca3fdb80400ea43c5183b570fcb48c2da8a3a6befac34e495df66fa488641b",
+   "size": "1398x786"
+  }
+ ]
+}
