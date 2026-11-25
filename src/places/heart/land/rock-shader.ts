@@ -49,7 +49,8 @@ ${crust}
 uniform sampler2D tRest;
 uniform vec2 uCarpetSpan;
 void main() {
-  vec2 q = texture2D(tRest, gl_FragCoord.xy / uCarpetSpan).xy;
+  vec4 rest = texture2D(tRest, gl_FragCoord.xy / uCarpetSpan);
+  vec2 q = rest.xz + rest.yw;
   vec3 p = crustAt(q);
   gl_FragColor = vec4(p.y, clamp(gBank, -8.0, 8.0), gSlabEdge, gMound);
 }`;
