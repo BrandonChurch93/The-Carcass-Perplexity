@@ -55,6 +55,7 @@ uniform sampler2D tLandFine;
 uniform vec4 uLandFineRect;
 uniform sampler2D tContact;
 uniform vec4 uContactRect;
+uniform vec4 uBank;
 uniform vec3 uSkyZenith;
 uniform vec3 uSkyHorizon;
 uniform vec3 uSkyGround;
@@ -123,11 +124,24 @@ vec4 landAt(vec2 xz) {
   return mix(coarse, texture2D(tLandFine, f), k);
 }
 
-// 0 open, 1 covered: how much of the sky is hidden at the ground by something standing over it. Drawn by whoever stands there.
-float contactAt(vec3 p) {
+// A bank of smoke that stands over the ground and hides a share of the sky from everything under it (uBank: x, z, one over its radius, the
+// share at its middle). The rig sets it; it is zero where no bank stands.
+float bankAt(vec2 xz) {
+  if (uBank.w <= 0.0) return 0.0;
+  return uBank.w * (1.0 - smoothstep(0.35, 1.0, length(xz - uBank.xy) * uBank.z));
+}
+
+// What stands on the ground alone, as drawn in the contact map.
+float contactDrawn(vec3 p) {
   vec2 uv = (p.xz - uContactRect.xy) * uContactRect.zw;
   vec2 e = min(uv, 1.0 - uv);
   return texture2D(tContact, uv).r * smoothstep(0.0, 0.03, min(e.x, e.y));
+}
+
+// 0 open, 1 covered: how much of the sky is hidden at the ground by something standing over it. Drawn by whoever stands there.
+// A bank of smoke overhead hides its share as well, and the two multiply, so that a foot keeps its shade under the smoke.
+float contactAt(vec3 p) {
+  return 1.0 - (1.0 - contactDrawn(p)) * (1.0 - bankAt(p.xz));
 }
 
 // Mean radiance leaving the lake inside a disc of that radius, metres.
@@ -188,8 +202,10 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
 // EMITTER_CORE times its own share; a light wider than 60 m (the lit fume) is its true size and casts once.
 // The land between cuts it: one read of the coarse land half way to the light, only where the light would count.
 const float EMITTER_CORE = 4.5;
+const float EMITTER_SHADE = 0.85;
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
+  float low = -1.0;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
@@ -203,7 +219,15 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     if (k < 0.0015) continue;
     vec3 m = p + d * 0.5;
     float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
-    e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)));
+    // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the light, on ground only.
+    if (low < 0.0) low = smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
+    float thrown = 0.0;
+    if (low > 0.0) {
+      float flat2 = dot(d.xz, d.xz);
+      vec2 toward = d.xz * (1.4 * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
+      thrown = low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
+    }
+    e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)) * (1.0 - thrown));
   }
   return e * uCast;
 }
@@ -228,7 +252,7 @@ float skyOpen(vec3 p) {
   vec4 land = landAt(p.xz);
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
-  return vis * (1.0 - contactAt(p) * smoothstep(4.0, 0.0, above));
+  return vis * (1.0 - bankAt(p.xz)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above));
 }
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the surface's own small-scale occlusion, 1 for none.
