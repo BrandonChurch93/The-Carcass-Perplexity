@@ -6,7 +6,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE, FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
+import { BUTTE, FLOWS, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -71,6 +71,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
     uStain: { value: new THREE.Vector4(-505.0, 1.9, 203.6, 2.6) },
+    // The crest of the cone of debris left of the fall: the ground shader darkens its near flank.
+    uSpur: { value: new THREE.Vector4(SPUR[0], SPUR[1], SPUR[2], SPUR[3]) },
     uCrackB: { value: new THREE.Vector4((cracks[1] as Crack).ax, (cracks[1] as Crack).az, (cracks[1] as Crack).bx, (cracks[1] as Crack).bz) },
   };
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });

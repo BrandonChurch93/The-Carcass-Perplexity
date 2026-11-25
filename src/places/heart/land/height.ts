@@ -113,7 +113,7 @@ function rimScale(x: number, z: number): number {
 const CHANNEL_X = MOUTH.x - 3;
 
 // The crest of the cone of debris left of the fall: from the foot of the cliff to the shore, as x, z, x, z.
-const SPUR: [number, number, number, number] = [-238, -452, -116, -324];
+export const SPUR: [number, number, number, number] = [-238, -452, -116, -324];
 
 /** How far the flows of the wall dip at (x, z), metres: the ledges wander up and down by some metres over tens of metres, so that none is a level line. */
 export function flowDip(x: number, z: number): number {
@@ -147,7 +147,9 @@ export function wallAt(x: number, z: number, d: number): number {
     const face = 0.2 + 0.3 * noise(x / 37 + 11, z / 37 + 5);
     const cut = terrace(h + dip, face) - dip;
     // Stretches of the wall are massive: there the flows are welded and barely step.
-    const stepped = lerp(1, 0.4 + 0.6 * smooth(0.3, 0.62, noise(x / 97 + 9.1, z / 97 + 4.3)), free);
+    // Right of the mouth the fall's lens looks at the wall through its longest glass: there every flow keeps its ledge.
+    const byMouth = smooth(60, 95, x - CHANNEL_X) * smooth(340, 250, x - CHANNEL_X);
+    const stepped = lerp(lerp(1, 0.4 + 0.6 * smooth(0.3, 0.62, noise(x / 97 + 9.1, z / 97 + 4.3)), free), 1, byMouth);
     h = lerp(h, cut, smooth(50, 64, h) * stepped);
   }
   // Fans of talus under the gullies, and the apron's own lumps.
@@ -172,7 +174,7 @@ export function wallAt(x: number, z: number, d: number): number {
     if (t > -0.15 && t < 1.2) {
       // East of the crest is positive.
       const across = ((x - SPUR[0]) * ez - (z - SPUR[1]) * ex) / len + 7 * (noise(t * 7.3, 1.7) - 0.5) + 2.5 * (noise(t * 31, 5.1) - 0.5);
-      const rise = (23 * smooth(-0.1, 0.25, t) * smooth(0.97, 0.42, t) + 3 * smooth(1.2, 0.95, t) * smooth(0.6, 0.9, t)) * (0.8 + 0.4 * noise(t * 5.1 + 3.3, 0.4)) * smooth(-12, -2, d);
+      const rise = (40 * smooth(-0.1, 0.25, t) * smooth(0.97, 0.42, t) + 3 * smooth(1.2, 0.95, t) * smooth(0.6, 0.9, t)) * (0.8 + 0.4 * noise(t * 5.1 + 3.3, 0.4)) * smooth(-12, -2, d);
       const flank = across > 0 ? smooth(17, 0, across) : Math.exp(across / 70);
       h += rise * flank * flank;
     }

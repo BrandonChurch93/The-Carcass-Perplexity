@@ -59,7 +59,7 @@ const ROSE = [0.5, 0.42, 0.33] as const;
 /** The smoke of the feeding shot: dark, grey-brown, a little mauve where the sky lights it. */
 const SOOT = [0.4, 0.34, 0.32] as const;
 /** The far smoke of that shot, where the last of the sky lights it: pale and a little peach. */
-const PALE = [0.54, 0.4, 0.34] as const;
+const PALE = [0.64, 0.42, 0.36] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
@@ -73,18 +73,18 @@ const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
   { at: behind(115, -12), radius: 30, height: 18, lean: BANK_LEAN, dense: 0.08, repeat: 28, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.9, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   // This one stands before the talus of the butte of that shot (its face is 205 m from the lens, right of the axis): lower than the butte's dark upper cliff, and the warmest of them.
-  { at: behind(97, 50), radius: 34, height: 15, lean: BANK_LEAN, dense: 0.07, repeat: 30, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.8, 8], floor: [2.6, 9], lights: 0.2, tops: 0.8, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
+  { at: behind(97, 58), radius: 36, height: 23, lean: BANK_LEAN, dense: 0.085, repeat: 26, hard: 2.6, climb: 3, colour: SOOT, foot: 0.06, lake: [0.8, 10], floor: [4.0, 16], lights: 0.2, tops: 0.8, solid: 0.18, streak: 1.9, taper: 1.1, sparse: 0.04, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   { at: behind(190, -8), radius: 44, height: 24, lean: BANK_LEAN, dense: 0.06, repeat: 36, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.9, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   { at: behind(240, 6), radius: 55, height: 32, lean: BANK_LEAN, dense: 0.05, repeat: 44, hard: 3.2, climb: 2.2, colour: SOOT, foot: 0.06, lake: [0.6, 5], floor: [1.0, 4], lights: 0.2, tops: 0.95, solid: 0.22, shots: { 'heart-01': 0.01, 'heart-02': 1, 'heart-05': 0, rest: 0.15 } },
   // What stands behind them in the feeding picture: grey-brown smoke over the open lake, warm only in its lowest metres. The far one on the right stands behind the butte: it is the pale smoke its dark top is cut against. Staged for that shot.
   { at: behind(430, -110), radius: 140, height: 34, lean: [-0.2, 0.08], dense: 0.004, repeat: 60, hard: 2.6, climb: 1.2, colour: SOOT, foot: 0, floor: [0.9, 6], tops: 0.75, solid: 0.3, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.016, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [0.6, 7], tops: 1.8, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.022, repeat: 110, hard: 2.6, climb: 1.6, colour: PALE, foot: 0.15, floor: [3.0, 40], tops: 1.9, solid: 0.35, shots: { 'heart-02': 1, rest: 0 } },
   // And what lies on the lake between the lens and those banks: a thin sheet of lumps, so that the far crust goes into the smoke and no line stands where the lake ends.
-  { at: behind(250, 0), radius: 230, height: 8, lean: [0, 0], dense: 0.002, repeat: 50, hard: 2.2, climb: 0.3, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(250, 0), radius: 230, height: 13, lean: [0, 0], dense: 0.0032, repeat: 36, hard: 2.2, climb: 1.2, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.3, streak: 1.8, taper: 1.6, sparse: 0.08, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   // The first is the tall lit smoke that stands east of the fan and a little behind its toe, so that the face of the fan is clear of it: streaks that climb fast, thickest and brightest low, thinning as they rise. The two beside it are low and thin.
-  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.02, widen: 0.85, repeat: 46, hard: 2.4, climb: 8, colour: ROSE, foot: 0.05, lake: [0.85, 14], floor: [0.5, 55], lights: 1.3, tops: 0.8, solid: 0.15, streak: 2.3, taper: 1.3, sparse: 0.1, shots: { 'heart-05': 1, rest: 0.08 } },
-  { at: fromFoot(84, 24), radius: 36, height: 56, lean: [0.2, 0.14], dense: 0.006, widen: 0.6, repeat: 38, hard: 3.2, climb: 5, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.023, widen: 0.85, repeat: 46, hard: 2.4, climb: 8, colour: ROSE, foot: 0.05, lake: [1.25, 12], floor: [0.5, 55], lights: 1.3, tops: 0.8, solid: 0.15, streak: 2.3, taper: 1.6, sparse: 0.1, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 38, hard: 3.2, climb: 5, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 38, hard: 3.2, climb: 4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
   { at: [505, -285], radius: 70, height: 700, lean: [-0.16, -0.18], dense: 0.02, widen: 7, foot: 0.18, repeat: 200, hard: 3, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.85, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
