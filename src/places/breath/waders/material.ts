@@ -109,10 +109,10 @@ void main() {
     // the points of the hips and the spine are rubbed raw, the belly is splashed grey with silt.
     float sn = sin(vUv.y / 0.32);
     float down = abs(cos(vUv.y / 0.32));
-    float cage = smoothstep(0.3, 0.42, u) * smoothstep(0.92, 0.74, u) * smoothstep(0.15, 0.6, down) * smoothstep(-0.95, -0.5, sn);
+    float cage = smoothstep(0.34, 0.5, u) * smoothstep(0.9, 0.7, u) * smoothstep(0.2, 0.7, down) * smoothstep(-0.9, -0.3, sn) * smoothstep(0.95, 0.6, sn) * (0.55 + 0.45 * smoothstep(0.3, 0.6, blotch));
     // They lean back as they go down the flank, and none is quite the width of the next.
     float ribAt = (u - 0.11 * sn + 0.02 * (mottle - 0.5)) * 76.0 + 1.5 * vnoise(vec2(u * 9.0 + seed, vUv.y * 1.5));
-    float rib = pow(0.5 + 0.5 * cos(ribAt), 3.0);
+    float rib = pow(0.5 + 0.5 * cos(ribAt), 2.0);
     float each = 0.35 + 0.65 * vnoise(vec2(floor(ribAt / 6.2832) * 7.1 + seed, vUv.y * 3.0));
     // The knuckles of the spine along the back, and the hollow of the flank behind the last rib.
     float back = smoothstep(0.9, 1.0, sn) * smoothstep(0.08, 0.2, u) * smoothstep(0.95, 0.8, u);
@@ -121,8 +121,8 @@ void main() {
     albedo = pale * (0.82 + 0.18 * crack);
     // Between two ribs the skin is drawn in and sees less of the sky, whatever the light.
     float between = cage * (1.0 - rib) * each * mid;
-    occ *= 1.0 - 0.38 * between - 0.25 * back * (1.0 - knuckle) * mid;
-    albedo = mix(albedo, raw * 0.8, 0.22 * between);
+    occ *= 1.0 - 0.2 * between - 0.2 * back * (1.0 - knuckle) * mid;
+    albedo = mix(albedo, raw * 0.85, 0.1 * between);
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
     float sore = smoothstep(0.52, 0.78, mottle) * 0.28 + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, clamp(sore, 0.0, 0.7));
