@@ -116,18 +116,19 @@ uniform sampler2D uCloudTile;
 varying vec3 vWorld;
 varying vec2 vUv;
 void main() {
-  // v runs from the throat (0) down the wind (1). The breath leaves in strands, spreads and thins.
+  // v runs from the throat (0) down the wind (1). The breath leaves in a few strands, which bend with the wind, spread and thin.
   float along = vUv.y;
-  float spread = 0.07 + 0.43 * pow(along, 0.8);
-  float bend = 0.2 * along * along + 0.05 * sin(along * 5.0 + uTime * 0.11);
+  float spread = 0.1 + 0.4 * pow(along, 0.7);
+  float bend = 0.24 * along * along + 0.025 * sin(along * 9.0 + uTime * 0.1);
   float across = (vUv.x - 0.5 - bend) / spread;
-  vec2 flow = vec2(across * 2.2, along * 2.6 - uTime * 0.035);
-  float strands = texture2D(uCloudTile, vec2(flow.x * 0.21 + 0.3, flow.y * 0.11)).b;
-  float fine = texture2D(uCloudTile, vec2(flow.x * 0.5, flow.y * 0.33 + 0.5)).b;
-  float body = (1.0 - smoothstep(0.35, 1.0, abs(across))) * smoothstep(0.0, 0.05, along) * (1.0 - smoothstep(0.45, 1.0, along));
-  float thick = body * smoothstep(0.38, 0.86, 0.62 * strands + 0.38 * fine + 0.3 * (1.0 - along) * (1.0 - abs(across)));
+  vec2 q = vec2(across * 2.4 + 0.7 * vnoise(vec2(along * 4.0 - uTime * 0.03, 3.7)), along * 1.6 - uTime * 0.02);
+  float line = abs(vnoise(q * vec2(1.0, 0.35) + 5.0) - 0.5) * 2.0;
+  float strand = 1.0 - smoothstep(0.0, 0.2 + 0.35 * along, line);
+  float wisp = texture2D(uCloudTile, vec2(q.x * 0.13 + 0.2, q.y * 0.2)).b;
+  float body = (1.0 - smoothstep(0.5, 1.0, abs(across))) * smoothstep(0.0, 0.06, along) * (1.0 - smoothstep(0.35, 1.0, along));
+  float thick = body * strand * (0.4 + 0.9 * wisp);
   vec3 colour = cloudLight(vWorld.xz, 0.6, 0.5, 0.3);
-  float alpha = clamp(thick * 0.5, 0.0, 1.0);
+  float alpha = clamp(thick * 0.62, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 

@@ -97,7 +97,8 @@ def world():
     pad = 160
     small = cv2.copyMakeBorder(small, pad, pad, pad, pad, cv2.BORDER_CONSTANT, value=0)
     near = 0.6 * cv2.GaussianBlur(small, (0, 0), 45 / 4) + 0.8 * cv2.GaussianBlur(small, (0, 0), 110 / 4)
-    out = {'bone': cv2.GaussianBlur(b, (0, 0), 1.2), 'dist': dist, 'grey': grey * b, 'near': near, 'holes': cv2.GaussianBlur(holes.astype(np.float32) / 255, (0, 0), 2.0)}
+    far = cv2.GaussianBlur(small, (0, 0), 260 / 4)
+    out = {'bone': cv2.GaussianBlur(b, (0, 0), 1.2), 'dist': dist, 'grey': grey * b, 'near': near, 'far': far, 'holes': cv2.GaussianBlur(holes.astype(np.float32) / 255, (0, 0), 2.0)}
     np.savez(cache, **out)
     return out
 
@@ -132,7 +133,11 @@ def make(name):
     bone = np.clip(sample(G['bone'], X, Y), 0, 1)
     dist = np.maximum(sample(G['dist'], X, Y), 0)
     grey = np.clip(sample(G['grey'], X, Y), 0, 1)
-    near = np.maximum(sample(G['near'], X, Y, 4.0, 640.0), 0)
+    # the foreland does not follow the bones at one distance: it is read through a slow warp, so it is wide on one side of a range and narrow on the other
+    wx = 260 * fbm(X, Y, 1100, 81, max(texel, 60)) + 110 * fbm(X, Y, 300, 82, max(texel, 20))
+    wy = 260 * fbm(X, Y, 1100, 83, max(texel, 60)) + 110 * fbm(X, Y, 300, 84, max(texel, 20))
+    near = np.maximum(sample(G['near'], X + wx, Y + wy, 4.0, 640.0), 0)
+    far = np.maximum(sample(G['far'], X + 1.5 * wx, Y + 1.5 * wy, 4.0, 640.0), 0)
     holes = np.clip(sample(G['holes'], X, Y), 0, 1)
 
     # ---- where the land is ----
@@ -140,11 +145,11 @@ def make(name):
     n_mid = fbm(X, Y, 130, 12, max(texel, 6))
     n_fine = fbm(X, Y, 22, 13, texel, gain=0.55)
     wob = 0.25 * fbm(X, Y, 60, 21, max(texel, 2))
-    lake_d = np.sqrt(((X - LAKE[0]) / LAKE[2]) ** 2 + ((Y - LAKE[1]) / LAKE[3]) ** 2) + 0.05 * fbm(X, Y, 30, 22, texel) + 0.02 * fbm(X, Y, 4, 23, texel)
+    lake_d = np.sqrt(((X - LAKE[0]) / LAKE[2]) ** 2 + ((Y - LAKE[1]) / LAKE[3]) ** 2) + 0.2 * fbm(X, Y, 70, 22, texel) + 0.03 * fbm(X, Y, 6, 23, texel)
     lake = lake_d < 1.0
     keep = np.maximum.reduce([
         capsule(X, Y + 60 * wob, 2060, 1548, 2960, 1562, 46),
-        0.8 * blob(X, Y, 4560, 1500, 600, 150, soft=0.5, warp=wob),
+        1.0 * blob(X, Y, 4950, 1530, 820, 140, soft=0.5, warp=2 * wob),
         0.9 * blob(X, Y, 3230, 1560, 330, 250, warp=wob),
         holes,
     ])
@@ -153,14 +158,21 @@ def make(name):
     pan = blob(X, Y, SALT[0], SALT[1], 185, 215, soft=0.25, warp=wob)
     n_huge = fbm(X, Y, 900, 10, max(texel, 100))
     ribs_low = blob(X, Y, 2520, 1860, 430, 250, soft=0.5)
-    score = near * np.clip(1 + 2.2 * n_huge + 1.6 * n_big + 1.0 * n_mid, 0.05, 3) + 0.1 * n_big + 0.07 * n_mid + 0.035 * n_fine - THETA - 0.55 * keep + 0.18 * chest + 0.2 * throat - ribs_low * (0.05 + 0.25 * n_mid)
-    score = np.where(np.sqrt(near) < 0.12, np.minimum(score, -0.01), score)
+    plains = fbm(X, Y, 1500, 14, max(texel, 100))
+    isles = fbm(X, Y, 150, 15, max(texel, 4), gain=0.55)
+    score = near * np.clip(1 + 2.2 * n_huge + 1.6 * n_big + 1.0 * n_mid, 0.05, 3) + 1.5 * far * smooth(-0.12, 0.12, plains + 0.5 * n_huge) + 0.1 * n_big + 0.07 * n_mid + 0.035 * n_fine - THETA - 0.75 * keep + 0.18 * chest + 0.2 * throat - ribs_low * (0.05 + 0.25 * n_mid)
+    # islands off the coast, where the shelf is
+    score = np.maximum(score, (isles - 0.2 + 0.5 * np.minimum(far, 0.2)) * smooth(0.02, 0.08, far) * (1 - np.clip(keep * 2, 0, 1)))
+    score = np.where(far < 0.012, np.minimum(score, -0.01), score)
     land = ((score > 0) | (bone > 0.5)) & ~lake
     lowness = smooth(0.0, 0.22, score)
 
     # ---- the guide: which ground is pushed up ----
     crest = np.power(np.clip(dist / 14.0, 0, 1), 0.7)
-    guide = 0.02 + 0.09 * lowness + bone * (0.2 + 0.42 * crest + 0.5 * grey)
+    # the forelands have ranges of their own: lower than the bones, and not where the bones are, so the bones stay the high ground
+    inland = smooth(0.02, 0.45, score)
+    ranges = np.clip(fbm(X, Y, 340, 16, max(texel, 6), ridged=True) + 0.5 * fbm(X, Y, 90, 17, max(texel, 3), ridged=True) + 0.12, 0, 1)
+    guide = 0.02 + 0.07 * lowness + 0.6 * inland * ranges * ranges + bone * (0.2 + 0.42 * crest + 0.5 * grey)
     guide = guide * (1 - 0.9 * pan) + 0.03 * pan
     guide = guide * (1 - 0.75 * chest * (1 - bone)) * (1 - 0.6 * throat * (1 - bone))
     guide = np.where(land, guide, 0).astype(np.float32)
@@ -225,8 +237,10 @@ def make(name):
 
     # ---- colour of the ground ----
     tone = fbm(X, Y, 300, 51, max(texel, 4)); tone2 = fbm(X, Y, 36, 52, texel); grain = fbm(X, Y, 5, 53, texel, gain=0.6)
-    low = mixc(col(0.085, 0.066, 0.05), col(0.055, 0.068, 0.05), smooth(-0.15, 0.2, tone + 0.5 * tone2))
-    low = mixc(low, col(0.15, 0.085, 0.055), smooth(0.05, 0.3, tone2 - 0.4 * tone))
+    biome = fbm(X, Y, 800, 54, max(texel, 30))
+    low = mixc(col(0.1, 0.075, 0.052), col(0.04, 0.058, 0.036), smooth(-0.12, 0.12, biome + 0.4 * tone + 0.3 * tone2))
+    low = mixc(low, col(0.19, 0.115, 0.07), smooth(0.02, 0.2, tone2 - 0.5 * tone - 0.6 * biome))
+    low = mixc(low, col(0.26, 0.2, 0.14), smooth(0.1, 0.3, -biome + 0.3 * tone))
     low = mixc(low, col(0.035, 0.055, 0.04), 0.7 * moist)
     foot = col(0.24, 0.185, 0.14)
     pale = mixc(col(0.5, 0.445, 0.375), col(0.42, 0.40, 0.385), smooth(-0.2, 0.25, tone))
@@ -238,7 +252,8 @@ def make(name):
     c = c * (0.62 + 0.62 * hollow)[..., None] * (1 + 0.22 * tone2 + 0.16 * grain)[..., None]
     c = mixc(c, c * col(0.62, 0.6, 0.62), smooth(0.35, 0.8, slope))
     crust = mixc(col(0.02, 0.019, 0.02), col(0.045, 0.04, 0.038), smooth(-0.1, 0.25, tone2 + grain))
-    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], np.clip(chest * 1.3, 0, 1) * smooth(0.2, 0.1, e))
+    flows = smooth(-0.08, 0.06, fbm(X, Y, 170, 55, max(texel, 2)) + 0.6 * (chest - 0.6))
+    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], np.clip(chest * 1.6, 0, 1) * flows * smooth(0.2, 0.1, e))
     red = mixc(col(0.115, 0.045, 0.034), col(0.2, 0.075, 0.045), smooth(-0.1, 0.3, tone2))
     c = mixc(c, red * (0.7 + 0.6 * hollow)[..., None], np.clip(throat * 1.3, 0, 1) * smooth(0.22, 0.1, e))
     c = mixc(c, col(0.006, 0.008, 0.011), smooth(0.25, 0.7, pits))
@@ -270,12 +285,12 @@ def make(name):
     w = mixc(w, col(0.05, 0.11, 0.07), 0.45 * bloom)
     # the lake of the Eye: black-blue water inside a narrow amber shelf
     shelf_w = (1 - lake_d) * LAKE[2]
-    amber = smooth(9.0, 1.0, shelf_w + 5 * fbm(swx, swy, 40, 77, texel, gain=0.6) + 2.0)
+    amber = smooth(15.0, 2.0, shelf_w + 16 * fbm(swx, swy, 46, 77, texel, gain=0.6) + 3.0)
     lw = mixc(col(0.0037, 0.0103, 0.0252), col(0.3, 0.165, 0.03), amber)
     lw = mixc(lw, col(0.42, 0.3, 0.12), smooth(1.6, 0.0, shelf_w))
     in_lake = (lake_d < 1.06).astype(np.float32)
     w = mixc(w, lw, in_lake)
-    depth = np.where(lake_d < 1.06, np.clip(smooth(0.0, 9.0, shelf_w) * 0.9 + 0.1, 0, 1), depth)
+    depth = np.where(lake_d < 1.06, np.clip(smooth(0.0, 14.0, shelf_w) * 0.9 + 0.1, 0, 1), depth)
     # far from the land the sea is one colour, so the picture can end anywhere
     fade = smooth(0.0, 0.04, np.minimum(np.minimum(X - xs[0], xs[-1] - X) / width, np.minimum(Y - ys[0], ys[-1] - Y) / height))
     w = mixc(np.broadcast_to(deep, w.shape), w, fade)
