@@ -125,7 +125,7 @@ void main() {
     pit = smoothstep(0.56, 0.7, cells) * close;
   }
   #endif
-  vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 2.4 * smoothstep(400.0, 60.0, far));
+  vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 2.4 * mix(0.5, 1.0, smoothstep(400.0, 60.0, far)));
   // Each rock its own tone, and some gone rusty brown where the iron in them has burnt.
   float grey = dot(albedo, vec3(0.3333)) * vSeed.w * ${ROCK_TONE.toFixed(2)};
   float rust = smoothstep(0.55, 0.95, fract(rnd * 13.7)) * (0.4 + 0.6 * vnoise3(vObject * 1.3 / span));
@@ -146,14 +146,16 @@ void main() {
   float bank = (1.0 - smoothstep(0.02, 0.16, lift + 0.1 * (patch3 - 0.5))) * (1.0 - rind) * smoothstep(0.4, 0.6, vSeed.w);
   albedo = mix(albedo, vec3(0.07, 0.064, 0.06) * (0.6 + 0.8 * height), 0.7 * bank);
   albedo *= mix(1.0, 0.8, rind);
-  // By the vents: sulphur, as a stain that fades out, yellow going to cream where it is thick, on the tops and on the side that faces the vent.
-  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.6);
-  float gas = smoothstep(5.5, 0.8, dc);
+  // By the vents: sulphur, as a crust that fades out, yellow going to cream where it is thick. It lies low, in the hollows and on what looks up,
+  // in blots a hand or two across, and the rock between stays black.
+  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 1.7);
+  float gas = smoothstep(3.6, 0.5, dc);
   if (gas > 0.0) {
-    float blot = patch3 * 0.55 + 0.45 * vnoise3(vObject * 6.0 / span + 1.7);
-    float stain = smoothstep(0.66 - 0.22 * gas, 0.86 - 0.16 * gas, blot + 0.12 * n0.y) * gas * (0.3 + 0.7 * smoothstep(-0.3, 0.5, n0.y));
-    albedo = mix(albedo, albedo * vec3(1.3, 1.15, 0.8), 0.25 * gas * smoothstep(0.35, 0.7, blot));
-    albedo = mix(albedo, mix(vec3(0.2, 0.15, 0.035), vec3(0.4, 0.36, 0.14), smoothstep(0.5, 0.9, stain) * smoothstep(0.3, 0.7, height)) * (0.6 + 0.8 * height), 0.9 * stain);
+    float low = 1.0 - smoothstep(0.15, 0.75, lift);
+    float blot = 0.45 * vnoise3(vWorld * 2.6 + 1.7) + 0.4 * vnoise3(vWorld * 7.0 + 4.1) + 0.2 * (0.5 - vCave) + 0.12 * n0.y + 0.22 * low;
+    float stain = smoothstep(0.84 - 0.14 * gas, 0.97 - 0.14 * gas, blot) * smoothstep(0.0, 0.35, gas) * (0.2 + 0.8 * smoothstep(-0.3, 0.4, n0.y));
+    float thick = smoothstep(0.45, 0.9, stain) * smoothstep(0.3, 0.7, height);
+    albedo = mix(albedo, mix(vec3(0.3, 0.22, 0.04), vec3(0.55, 0.5, 0.22), thick) * (0.6 + 0.8 * height), 0.92 * stain);
   }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld));
   // Undersides and the faces that lean over see the ground, not the sky.
