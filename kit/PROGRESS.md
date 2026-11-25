@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 33, 2026-11-25 07:10 UTC:
+Status 34, 2026-11-25 07:36 UTC:
 
-- `01-key-heart-2-hd-draft.jpg`: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier)
-- `02-key-heart-3-hd-draft.jpg`: Feeding at a seam through the long lens: the far wall and the fall go soft behind the animals (draft tier)
-- `03-heart-1.jpg`: The line beside its picture, with a slight lens. The trench and the brown crust are what the two lake owners are replacing now
-- `04-key-heart-3-hd-draft-solo.jpg`: The frame that answers heart-3, film frame 3156, hd, draft tier, solo view, lens set by hand, radius 0 m
+- `01-heart-0.jpg`: The wide view, approved picture left, merged main right (07:33 UTC, hd draft). Too pale and too even: it reads as an overcast day, not dusk. The bench is light grey slabs where the picture has near-black ropy rock.
+- `02-heart-1.jpg`: The line. My new staging is in: one tall lead at centre right feeding at a lit seam, two smaller ones at the right, as in the picture. The crust and channel here are still the old lake.
+- `03-heart-3.jpg`: The feeding. Shapes and poses hold; the hide is pale cracked clay lit from above, where the picture has dark animals lit warm from below.
+- `04-heart-4.jpg`: The mouth and the fall. Still the weakest: an evenly lit grey wall, one thin stream. Two tiny walkers now stand at the fan's right toe as in the picture.
 
+Status 33, 2026-11-25 07:10 UTC, showed: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier); Feeding at a seam through the long...
 Status 32, 2026-11-25 06:51 UTC, showed: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet; Feeding...
 Status 31, 2026-11-25 06:36 UTC, showed: Round 3, the wide view exactly as the jury saw it (built before the third versions below); The line, approved picture and frame, with the...
-Status 30, 2026-11-25 06:13 UTC, showed: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T07:10:54Z
-phase 3: 4.03 h used of 13.00 h
-build: 10.68 h used of 72.00 h
+2026-11-25T07:36:21Z
+phase 3: 4.45 h used of 13.00 h
+build: 11.11 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 20
+minutes since the last status: 25
 ```
 
 ## Phases
@@ -579,6 +579,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 06:48 UTC. The lake's channel is redrawn from the picture of the line: melt 5 to 30 cm below the brim under a thin curled lip, not a trench 0.25 to 0.9 m deep between walls; crust as smooth billowy pahoehoe with a sheen. Why: beside the picture the trench of the merged build reads as a canyon in a model. Sent to both lake owners with the compare.
 - 2026-11-25. 06:53 UTC. Levels measured on the merged main against the five pictures (rock and crust only): the frame's ground is about one and a half stops too dark on the lake and near ground, redder (red over blue 1.24 to 1.55 against 1.16 to 1.27) and its blacks fall to 3 to 12 against 20 to 40; the sky matches. The light's second version must bring the ground to the picture's levels by fill and sheen, not by exposure or grade. Table sent to the light, crust, land, fall and air owners.
 - 2026-11-25. 07:03 UTC. The lens of the Heart, set in the cameras of `src/places/heart/index.ts` after a look at each key at two settings beside its picture: heart-1 radius 0.02 m focused at 6 m, heart-2 0.1 m at 21 m, heart-3 0.2 m at 68 m, heart-4 0.2 m at 760 m, the wide view closed. The focus follows the push of each shot so it stays on the same thing. Why these and not more: at 0.03 the thin legs behind the line smear and the place starts to read small; the pictures are soft behind and in front by about this much and no more.
+- 2026-11-25. 2026-11-25 07:28 UTC. Staging by shot. The five approved pictures of the Heart do not agree in one world (the line's picture has a tall lead at centre right that no other picture shows; the fall's picture has two tiny animals at the fan's right toe; the feeding picture has three and open smoke behind). Each shot is therefore staged for its own camera, as on a set: `AWAY` in `src/places/heart/shared/anchors.ts` lists who is not drawn in which shot. Walker 13 is the lead of heart-03 only, 100 m from that camera at 60 per cent of the frame's width, feeding at a new seam `lead`; walkers 9 and 10 are the two tiny ones of heart-05 at 70 and 81 per cent; walker 5 moved 9 m north so that it is the smaller of two at the right of heart-03. Round 3's R1 named all three as severe or major.
+- 2026-11-25. 2026-11-25 07:26 UTC. The first versions of the new crust (`4d1b241`) and the new lava (`c69ad7f`) are not merged. MEASURED at heart-0, uhd draft: crust 12.86 s a sample against a share of 2.5 s, whole frame 23.5 s against 15. Seen: crust too pale, plates as outlined polygons, ropes as corduroy; lava too yellow and broad at the line and most seams lost in the wide view. Both owners got direction at 07:39 UTC and hand back by 08:25 UTC; the second versions go into main only if they beat the old lake at the keys. Round 4 is held to about 08:45 UTC for them.
+- 2026-11-25. 2026-11-25 07:36 UTC. Levels after the merge of light version 2 with the fourth versions, MEASURED with the cast tool on hd draft frames against the pictures (rock and crust pixels, 8 bit): heart-0 79 73 72 against 71 61 61, its bottom band (the bench) 61 to 70 against 38 to 47; heart-2 bottom band 59 to 69 against 37 to 52; heart-4 80 71 69 against 76 62 60; red over blue 1.10 against 1.16 to 1.27. The land's paler rock and the light's stronger sky were each made against the darker frame of 06:53 and landed together. Correction: the rock, bench, hide and carcass go darker by their owners under the new light, measured not judged by eye; the light keeps its sky and gets back some warm fill near the fire.
 
 ## Notes from Brandon
 
@@ -841,3 +844,5 @@ none
 - 2026-11-25 07:02 UTC. 07:00 UTC. Two notes from Brandon logged as notes 4 and 5 and applied: the approved script is the same as the config and the kit, line for line (MEASURED by script); the voice stays Carcass Narrator; the account's characters are read with every status (07:02 UTC: 1 of 131,000) and the voice, the model test, the takes for n8, the sound effects, the cut and the mix run as soon as the figure is back.
 - 2026-11-25 07:07 UTC. 07:07 UTC. Depth of field, the G10 fix and the hold merged into main as 31710fb (types clean, G10 pass, determinism pass); the lens set per key in the Heart's cameras; determinism passes with the lens open, 830 of 830 tests.
 - 2026-11-25 07:11 UTC. Status 33 shown in the thread (07:11 UTC): the one that sank and the feeding through the new lens, the line beside its picture; notes 4 and 5 from Brandon applied (script the same as config and kit, voice kept); the account's characters read at 07:10 UTC: 1 of 131,000; the pinholes in the crust's mesh (13 at heart-3, 25 at heart-0) sent to the crust owner; the levels against the pictures sent to five owners.
+- 2026-11-25 07:38 UTC. 2026-11-25 07:38 UTC. Merged into main since status 33, each after the trailer check and types: light version 2 (`ec707d9`, final, its owner ended), land version 4 (`4ec487c`), air version 4 (`923cec1`), fall version 4 (`c61d5d8`) and its second part (`e4c75c7`, from `8110ffe`), walkers version 4 (`74b8368`), sunk version 4 (`4fead3b`), then the staging. Build, parts written (15 built), determinism passes at 07:31 and again at 07:37 UTC, the five keys compared at hd draft. The five first owners are done (3 h each); fresh owners take their folders.
+- 2026-11-25 07:38 UTC. 2026-11-25 07:37 UTC. Status 34 shown in the thread: the merged main at the wide view, the line, the feeding and the fall beside the pictures; the pale overcast read and its measured cause; the staging decision; crust and lava version 1 held back; ElevenLabs 1 character of 131,000 at 07:31 UTC.

@@ -2,7 +2,7 @@
 // Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); what each one is and does is in herd.ts.
 import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
-import { SEAMS, UNIT, WALKERS, seamLine } from '../shared/anchors';
+import { AWAY as STAGED_AWAY, SEAMS, UNIT, WALKERS, seamLine } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { Animal, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
@@ -16,8 +16,8 @@ const away = (shot: string, who: number[]): { from: number; to: number; who: num
   const s = shotById(shot);
   return { from: secondsInPlace(UNIT, s.first) - 0.3 / 60, to: secondsInPlace(UNIT, s.last) + 0.7 / 60, who };
 };
-// The feeding picture has its three only, no pair behind; the picture of the fall has none at its lower left.
-const AWAY = [away('heart-02', [8, 11]), away('heart-05', [13])];
+// Who is away in which shot is the root's staging (shared/anchors.ts).
+const AWAY = Object.entries(STAGED_AWAY).map(([shot, who]) => away(shot, who));
 
 /** Discs of contact shade for each animal: four pads, the body, the tuft. */
 const DISCS = 6;
