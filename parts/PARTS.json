@@ -2,6 +2,300 @@
   "schema": "carcass/parts 1",
   "parts": [
     {
+      "id": "breath/sky",
+      "unit": "breath",
+      "name": "sky",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/sky.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:14:51Z"
+      }
+    },
+    {
+      "id": "breath/land",
+      "unit": "breath",
+      "name": "land",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/land.png",
+        "frame": 4652,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4976,
+        "made": "2026-11-25T01:14:57Z"
+      }
+    },
+    {
+      "id": "breath/sea",
+      "unit": "breath",
+      "name": "sea",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/sea.png",
+        "frame": 5242,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5584,
+        "made": "2026-11-25T01:15:02Z"
+      }
+    },
+    {
+      "id": "breath/shaft",
+      "unit": "breath",
+      "name": "shaft",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/shaft.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1356,
+        "made": "2026-11-25T01:15:07Z"
+      }
+    },
+    {
+      "id": "breath/hoops",
+      "unit": "breath",
+      "name": "hoops",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/hoops.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.087,
+        "made": "2026-11-25T01:15:13Z"
+      }
+    },
+    {
+      "id": "breath/slabs",
+      "unit": "breath",
+      "name": "slabs",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/slabs.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.114,
+        "made": "2026-11-25T01:15:18Z"
+      }
+    },
+    {
+      "id": "breath/cliff",
+      "unit": "breath",
+      "name": "cliff",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/cliff.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1187,
+        "made": "2026-11-25T01:15:24Z"
+      }
+    },
+    {
+      "id": "breath/fog",
+      "unit": "breath",
+      "name": "fog",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/fog.png",
+        "frame": 4973,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0249,
+        "made": "2026-11-25T01:15:29Z"
+      }
+    },
+    {
+      "id": "breath/vapour",
+      "unit": "breath",
+      "name": "vapour",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/vapour.png",
+        "frame": 4973,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2163,
+        "made": "2026-11-25T01:15:35Z"
+      }
+    },
+    {
+      "id": "breath/exhale",
+      "unit": "breath",
+      "name": "exhale",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/exhale.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1484,
+        "made": "2026-11-25T01:15:40Z"
+      }
+    },
+    {
+      "id": "breath/gill-plumes",
+      "unit": "breath",
+      "name": "gill-plumes",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/gill-plumes.png",
+        "frame": 4973,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1316,
+        "made": "2026-11-25T01:15:46Z"
+      }
+    },
+    {
+      "id": "breath/waders",
+      "unit": "breath",
+      "name": "waders",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/waders.png",
+        "frame": 5242,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1531,
+        "made": "2026-11-25T01:15:52Z"
+      }
+    },
+    {
+      "id": "breath/dead-wader",
+      "unit": "breath",
+      "name": "dead-wader",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/dead-wader.png",
+        "frame": 5510,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0269,
+        "made": "2026-11-25T01:15:57Z"
+      }
+    },
+    {
+      "id": "breath/air",
+      "unit": "breath",
+      "name": "air",
+      "kind": "effect",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/breath"
+      ],
+      "hash": "15e6c717a99c0a05",
+      "standIn": {
+        "hash": "15e6c717a99c0a05",
+        "picture": "out/stills/parts/breath/air.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:16:03Z"
+      }
+    },
+    {
       "id": "marsh/sky",
       "unit": "marsh",
       "name": "sky",
