@@ -103,16 +103,18 @@ export function create(ctx: Context): Piece {
       const ax = [dx * Math.sin(s.lean), Math.cos(s.lean), dz * Math.sin(s.lean)];
       const h = s.h + 0.02;
       const top = [s.x + ax[0] * h, base[i * 4 + 1] + ax[1] * h, s.z + ax[2] * h];
-      const count = which === 0 ? 230 : 22;
-      const length = (s.kind === 0 ? 0.38 : s.kind === 3 ? 0.34 : 0.3) * s.size * (which === 0 ? 1 : 1.5);
+      const count = which === 0 ? 230 : 40;
+      // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
+      const close = Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 6.5;
+      const length = (s.kind === 0 ? 0.38 : s.kind === 3 ? 0.34 : 0.3) * s.size * (close ? 1 : which === 0 ? 1.5 : 1.7);
       // Wet filaments cling: they leave the mouth each by itself and go over in locks.
-      const locks = Array.from({ length: which === 0 ? 18 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7), rng.range(0.65, 1.15)] as [number, number, number]);
+      const locks = Array.from({ length: which === 0 ? 18 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7) * (close ? 1 : 0.6), rng.range(0.65, 1.15)] as [number, number, number]);
       for (let f = 0; f < count; f++) {
         const lock = locks[which === 0 ? rng.int(locks.length) : f] as [number, number, number];
         fils[0].push(top[0], top[1], top[2], R);
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
         fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(0.85, 1.08), rng.next());
-        fils[3].push(s.kind, seed, length, (which === 0 ? 0.0034 : 0.016) * s.size * rng.range(0.7, 1.3));
+        fils[3].push(s.kind, seed, length, (which === 0 ? (close ? 0.0034 : 0.0045) : 0.017) * s.size * rng.range(0.7, 1.3));
       }
       if (which === 0) nearFils = fils[0].length / 4;
     });

@@ -129,11 +129,11 @@ void main() {
     n = normalize(n - (T * (nh.r - 0.5) + B * (nh.g - 0.5)) * 1.6);
     float occ = (0.55 + 0.45 * smoothstep(0.0, 0.35, q)) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
     // Seen from inside, through a broken mouth: the dark of the tube.
-    if (!gl_FrontFacing) { albedo = vec3(0.05, 0.028, 0.022); occ *= 0.3; n = -n; }
     c = rigShade(vWorld, n, v, albedo, mix(0.95, 0.4, wet), occ);
+    if (!gl_FrontFacing) c = vec3(0.05, 0.028, 0.022) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.25 * skyOpen(vWorld);
   } else if (skin < 1.5) {
     float down = vCoord.w;
-    c = rigShade(vWorld, n, v, vec3(0.07, 0.035, 0.028), 0.9, 0.5 * (1.0 - smoothstep(0.0, 0.5, down)));
+    c = vec3(0.07, 0.035, 0.028) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.5 * (1.0 - smoothstep(0.0, 0.35, down)) * skyOpen(vWorld);
   } else {
     // A closed sheath: long scales that lap over each other up to the point.
     float groove = 0.45 + 0.55 * pow(abs(sin(vCoord.x * 5.5 + vCoord.w * 2.2)), 0.6);
