@@ -194,15 +194,21 @@ void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
 }
 // The coils at the line: within 11 to 15 m of the lens of key heart-1 the crust is thick lobes that lap, 1.9 to 2.8 m across,
 // each a sheet 4 to 8 cm thick that is thin where it was fed and ends at its front in a step with a crease at its foot. Each
-// wears one sheaf of cords, 11 to 14 cm apart, arcs about a point behind the lobe (0.6 to 3 m radius) that bunch up toward
+// wears one sheaf of cords, 11 to 14 cm apart, arcs about a point behind the lobe (0.5 to 4 m radius) that bunch up toward
 // the front. Leaves gLapHigh (metres the lobes stand here) and what foldAt leaves. Returns how much of a cord is here.
 float gLapHigh = 0.0;
 // The cell the lobes are laid for: a step is four cells wide at the least.
 float gLapCell = 0.0234;
 float gLapDeep;
+// Ropes (round the one that sank): 1 where the folds here are ropes the height carries whole, and their true spacing in
+// metres. There gFoldSpace is 0.06 and gFoldDeep 0, so that the paint lays no cords or threads of its own on a rope and
+// adds no slope: four painted cords to a rope of 0.65 m are stripes of 16 cm again.
+float gLapRope = 0.0;
+float gLapSpace = 0.125;
 float lapAt(vec2 q, float big) {
-  // Round the one that sank (big 1) the lobes are larger, their sheets 10 to 14 cm thick and their cords 16 to 22 cm apart:
-  // the lens there is under a metre up and looks along the floor.
+  // Round the one that sank (big 1) the lobes are larger, their sheets 10 to 14 cm thick, and they wear ropes, not cords:
+  // 4 to 7 a lobe, 0.55 to 0.8 m apart and 6 to 26 cm high. The lens there is under a metre up and looks along the floor:
+  // at 15 m a cord of 20 cm is ten pixels and a field of them is stripes.
   float size = mix(1.9, 3.3, big);
   vec2 wq = q + 0.5 * vec2(vnoise(q / 1.9 + 15.0), vnoise(q / 1.9 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
@@ -233,17 +239,20 @@ float lapAt(vec2 q, float big) {
         high += thick * on - (0.035 + 0.02 * fract(hr * 3.3)) * (1.0 + 0.6 * big) * front * exp(-foot * foot);
         if (t < 1.0 && hr > top) {
           top = hr;
-          float ac = a + (0.9 + 0.4 * fract(hr * 5.7)) * R;
+          // The point the arcs bend about lies behind the lobe, half its radius outside it at the least: no closed ring.
+          float ac = a + (1.5 + 0.5 * fract(hr * 5.7)) * R;
           float rho = length(vec2(ac, s));
           // The lobes nearest the lens of the key (their middles within 3.5 to 5 m of it) wear cords of 3.6 to 4.6 cm: finer
           // than the cells carry, so the height leaves their tops smooth (foldHeld) and the paint draws them.
           float nearLens = 1.0 - smoothstep(3.5, 5.0, length((c2 + 0.5 + 0.5 * (hs - 0.5)) * size - vec2(-510.5, 215.5)));
-          float space = mix(mix(0.11 + 0.03 * fract(hr * 11.3), 0.036 + 0.01 * fract(hr * 11.3), nearLens), 0.16 + 0.06 * fract(hr * 11.3), big);
-          float u = (rho + 0.12 * R * even * even * even) / space + 7.0 * hr + 0.5 * vnoise(vec2(1.5 * rho + 31.0 * hr, 1.5 * s / R + 5.0 * hr));
+          float space = mix(mix(0.11 + 0.03 * fract(hr * 11.3), 0.036 + 0.01 * fract(hr * 11.3), nearLens), 0.55 + 0.25 * fract(hr * 11.3), big);
+          float u = (rho + 0.12 * R * even * even * even) / space + 7.0 * hr + mix(0.5 * vnoise(vec2(1.5 * rho + 31.0 * hr, 1.5 * s / R + 5.0 * hr)), 0.8 * vnoise(vec2(0.5 * rho + 31.0 * hr, 0.8 * s / R + 5.0 * hr)), big);
           gFoldPhase = u;
           gFoldSpace = space / (1.0 + 0.3 * t * t);
           gFoldDir = (ac * along + s * vec2(along.y, -along.x)) / max(rho, 1e-3);
-          gLapDeep = (space / 0.125) * mix(1.0, 0.85, big) * (0.045 + 0.04 * smoothstep(0.3, 0.95, t)) * (0.7 + 0.6 * vnoise(vec2(0.9 * u + 3.0 * hr, 2.0 * s / R + 21.0 * hr)));
+          // Round the one that sank the ropes are uneven: very unequal in depth, some all but gone, and unequally spaced.
+          float own = vnoise(vec2(0.9 * u + 3.0 * hr, 2.0 * s / R + 21.0 * hr));
+          gLapDeep = mix((space / 0.125) * (0.045 + 0.04 * smoothstep(0.3, 0.95, t)) * (0.7 + 0.6 * own), (0.12 + 0.08 * smoothstep(0.3, 0.95, t)) * (0.5 + 0.8 * smoothstep(0.25, 0.75, own)), big);
           cover = on;
         }
       }
@@ -256,6 +265,7 @@ float foldAt(vec2 q) {
   gFoldPhase = 0.0;
   gFoldCover = 0.0;
   gLapHigh = 0.0;
+  gLapRope = 0.0;
   // Where a pixel is longer on the lake than a fold is wide the single fold is gone: the sheaves must not show as marks.
   vec2 lensOff = q - uLens.xy;
   float pixelLong = uLens.w * (dot(lensOff, lensOff) + uLens.z * uLens.z) / uLens.z;
@@ -284,8 +294,11 @@ float foldAt(vec2 q) {
     gToeNext *= 1.0 - lapZone;
     gToeSlope *= 1.0 - lapZone;
     if (lapZone > 0.5) {
-      gFoldDeep = gLapDeep;
-      gFoldCover = lapCover * smoothstep(0.5, 0.9, lapZone) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gFoldSpace));
+      gLapRope = step(lapLine, lapSunk);
+      gLapSpace = gFoldSpace;
+      gFoldDeep = mix(gLapDeep, 0.0, gLapRope);
+      gFoldSpace = mix(gFoldSpace, 0.06, gLapRope);
+      gFoldCover = lapCover * smoothstep(0.5, 0.9, lapZone) * (1.0 - smoothstep(0.3, 0.7, pixelLong / gLapSpace)) * (1.0 - smoothstep(0.09, 0.16, pixelLong));
       return abs(sin(3.14159 * gFoldPhase));
     }
     gFoldPhase = 0.0;
@@ -709,10 +722,10 @@ float heightAt(vec2 q, float c) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
       gLapCell = c;
       float fold = foldAt(q);
-      fine = smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
+      fine = smoothSkin * gFoldCover * mix(gFoldDeep * foldHeld(gFine), gLapDeep * (1.0 - smoothstep(0.16, 0.34, gFine / gLapSpace)), gLapRope) * (pow(fold, 0.7) - 0.65);
       fine += smoothSkin * gToeBest * toeHeld(gFine);
       // The lobes at the line: sheets that lap, with their steps and creases.
-      fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c));
+      fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c)) * (1.0 - smoothstep(0.09, 0.16, gFine));
     }
   }
 
