@@ -3,10 +3,11 @@ import { ROOT, rel, args, config, utc, writeJson } from './lib/paths.mjs';
 import { isMain, one, relPath } from './lib/img.mjs';
 import { REGISTRY } from './checks/index.mjs';
 import { exec } from './checks/commands.mjs';
+import { unitList } from './lib/standins-core.mjs';
 
 export { REGISTRY };
 
-export const USAGE = 'usage: npm run gate -- --phase N [--only G3,G9] [--json]';
+export const USAGE = 'usage: npm run gate -- --phase N [--only G3,G9] [--unit ID ...] [--json]';
 
 export function inPhase(check, phase) {
   return check.phases ? check.phases.includes(phase) : check.phase <= phase;
@@ -44,13 +45,14 @@ async function runOne(check, ctx) {
 
 export const counts = (r) => r.status === 'not built' || (r.status === 'fail' && !r.advisory);
 
-export async function runGate({ phase, only = null, renderer = null, registry = REGISTRY, root = ROOT, dir = null, run = exec, cfg = config(), onResult = null }) {
+export async function runGate({ phase, only = null, units = [], renderer = null, registry = REGISTRY, root = ROOT, dir = null, run = exec, cfg = config(), onResult = null }) {
   if (!Number.isInteger(phase) || phase < 0) throw new Error(USAGE);
   const picked = selectChecks(registry, phase, only);
   let loaded = renderer;
   let opened = false;
   const ctx = {
     phase,
+    units,
     root,
     config: cfg,
     exec: run,
@@ -113,6 +115,7 @@ export async function gateCommand(a, deps = {}) {
       ...deps,
       phase,
       only: parseOnly(a.only),
+      units: unitList(a.unit),
       onResult: json ? null : (r) => resultLines(r).forEach(print)
     });
   } catch (e) {
