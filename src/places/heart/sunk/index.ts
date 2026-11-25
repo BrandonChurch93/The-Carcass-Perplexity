@@ -238,7 +238,9 @@ export function create(ctx: HeartContext): HeartPiece {
     kind: 'steam' as const,
     lean: [-0.3 + 0.2 * i, 0.2] as [number, number],
   }));
-  ctx.sources.steam.push(...smokes, ...bursts);
+  // A wisp of vapour stands over the seam through the whole of the near shot, and stirs.
+  const wisp = { at: [0, 0.3, 0] as [number, number, number], radius: 0.3, strength: 0, rise: 1.7, kind: 'steam' as const, lean: [-0.35, 0.15] as [number, number] };
+  ctx.sources.steam.push(...smokes, ...bursts, wisp);
   ctx.sources.heat.push(heat);
 
   const place = (seconds: number): void => {
@@ -271,6 +273,11 @@ export function create(ctx: HeartContext): HeartPiece {
       burst.at[2] = z + bz;
       burst.strength = 0.5 * now.puff;
     });
+    const [wx, wz] = toWorld((BURSTS[0] as [number, number])[0] + 0.3 * Math.sin(seconds * 0.7854 + 1.1), (BURSTS[0] as [number, number])[1]);
+    wisp.at[0] = x + wx;
+    wisp.at[2] = z + wz;
+    wisp.strength = nearShot ? 0.3 * (1 + 0.6 * waver(seconds, 3.3)) : 0;
+    wisp.rise = 1.7 * (1 + 0.3 * waver(seconds, 5.2));
     shared.uTearOpen.value = now.open;
     shared.uTearGain.value = TEAR_GAIN * (1 + 1.5 * now.open);
     (glowMaterial.uniforms.uRadiance as THREE.IUniform<THREE.Vector3>).value.copy(radiance).multiplyScalar((1 + 3 * now.open) * (1 + 0.22 * waver(seconds, 0.7)));
