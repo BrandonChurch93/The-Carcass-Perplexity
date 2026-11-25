@@ -4,19 +4,31 @@ import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, ground, smooth } from '../layout';
 import { GROUP, UNIT } from './anchors';
+import { stagedSeconds } from './stage';
 
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
 export const LAND = { minX: -1300, maxX: 1500, minZ: -640, maxZ: 760, width: 1024, height: 512 };
 export const LAND_FINE = { minX: -700, maxX: -380, minZ: 60, maxZ: 380, width: 512, height: 512 };
-// The contact map is 2048 wide (it was 1024): a foot pad of half a metre was less than two texels of it in the wide view and had no shade.
-export const CONTACT = { size: 2048, minRadius: 30, maxRadius: 220 };
+// The contact map stays 1024 wide: at 2048 it cost half a second a sample at the wide key. For long lenses it is aimed at the ground the lens sees.
+export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 export const FLOW = { foot: [MOUTH.x - 6, -326] as [number, number], speed: 0.28, toward: [0.94, 0.34] as [number, number] };
 export const MAX_EMITTERS = 8;
 // The bank of smoke that stands over the group feeding at the seam in the shot of key heart-3 (the approved picture has the three animals inside
 // lit smoke, on warm ground: 76 52 46 where the sky alone gives 57 50 56). It hides `shade` of the sky from what is under its middle and is a wide
 // dim round light, 25 m up: the lake's light caught by the smoke and thrown down. Its colour is paler than the lava's, as scattered light is.
 // It stands in that shot alone, so the wide view keeps its neutral lake.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [1.5, 0.66, 0.11] as const };
+// Its radiance was 1.5, 0.66, 0.11: halved when the crust's own seams began to light their banks (the crust skin), and less yellow, since
+// smoke lit from below is paler than the fire: the floor away from the seams stood mustard under it.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [0.75, 0.36, 0.12] as const };
+// The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
+// reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
+// gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
+export const POOLS = {
+  at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
+  axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
+  halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
+  radiance: [70, 9.5] as const,
+};
 
 export type Height = (x: number, z: number) => number;
 
@@ -220,7 +232,8 @@ varying vec2 vUv;
 varying float vStrength;
 void main() {
   float r = length(vUv * 2.0 - 1.0);
-  float a = vStrength * (1.0 - smoothstep(0.15, 1.0, r));
+  // Full shade over the inner 0.4 of the radius (it was 0.15, a point): a disc is the foot of the thing and a rim of shade round it.
+  float a = vStrength * (1.0 - smoothstep(0.4, 1.0, r));
   gl_FragColor = vec4(a, a, a, a);
 }`;
 
@@ -306,6 +319,7 @@ export function createRig(t0: number): Rig {
   const emitters: Emitter[] = [bankLight];
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
+  const poolPlaces = POOLS.at.map((at, i) => new THREE.Vector4(at[0], at[1], (POOLS.axis[i] as readonly [number, number])[0], (POOLS.axis[i] as readonly [number, number])[1]));
 
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
@@ -333,6 +347,8 @@ export function createRig(t0: number): Rig {
     uEmitterCount: { value: 0 },
     uEmitters: { value: emitterPlaces },
     uEmitterRadiance: { value: emitterRadiance },
+    uRigPools: { value: poolPlaces },
+    uRigPoolSize: { value: POOLS.halves.map((h) => new THREE.Vector4(h[0], h[1], POOLS.radiance[0], POOLS.radiance[1])) },
     uFlowFoot: { value: new THREE.Vector2(FLOW.foot[0], FLOW.foot[1]) },
     uFlowT0: { value: t0 },
   };
@@ -462,10 +478,18 @@ export function createRig(t0: number): Rig {
       now = seconds;
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uPulse as THREE.IUniform<number>).value = 0.5 + 0.5 * Math.sin(seconds * 1.05);
-      const banked = seconds >= bankFrom && seconds <= bankTo;
+      const staged = stagedSeconds();
+      const banked = staged >= bankFrom && staged <= bankTo;
       bankLight.position.y = banked ? BANK.at[1] : -1000;
       bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]).multiplyScalar(banked ? 1 : 0);
       (uniforms.uBank as THREE.IUniform<THREE.Vector4>).value.set(BANK.at[0], BANK.at[2], 1 / BANK.shadeRadius, banked ? BANK.shade : 0);
+      // The pools ride the crust.
+      POOLS.at.forEach((at, i) => {
+        const here = drift(at[0], at[1], seconds);
+        const place = poolPlaces[i] as THREE.Vector4;
+        place.x = here[0];
+        place.y = here[1];
+      });
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
