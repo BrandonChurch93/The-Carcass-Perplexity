@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 26, 2026-11-25 04:54 UTC:
+Status 27, 2026-11-25 05:17 UTC:
 
-- `01-heart-0.jpg`: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier)
-- `02-pair-c.jpg`: Top: the lava at the line. Bottom: the mouth and its fall. Approved on the left, the build on the right. The lava now reads orange to yellow, no longer pale peach. The camera and the channel of the top view are being refitted next
-- `03-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
-- `04-key-heart-4-hd-draft.jpg`: The frame that answers heart-4, film frame 4006, hd, draft tier
+- `01-heart-1.jpg`: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right. Approved on the left of each pair, the build on the right. The channel is a flat floor with paper-red banks: the lake owner is rebuilding it as a trench with lips, islands and fingers
+- `02-heart-2.jpg`: The one that sank, second version: turned to the camera, hull with splits, the arched leg, folded skin as real geometry and no ring. Still wrong: the folds are velvet pillows where the picture has crisp cracked ropes, and the feeding walker is too near and cut by the edge
+- `03-heart-0.jpg`: The wide key with every second version merged. Tone now measures close to the approved picture region by region. Still wrong: the lake is nearly blank (about five live seams, the picture has ten), the fountain is a cloud of dark chips, the near walker is a third too small
+- `04-heart-4.jpg`: The mouth and the fall from the new long lens position. The worst of the five: a brown veil over everything, the cave lit inside, the fall thin. Owners have numbers for each of these
 
+Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
 Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
 Status 24, 2026-11-25 04:22 UTC, showed: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place.
-Status 23, 2026-11-25 04:04 UTC, showed: The first-light land drawn alone, 3840 x 2160, one sample.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T04:54:55Z
-phase 3: 1.76 h used of 13.00 h
-build: 8.42 h used of 72.00 h
+2026-11-25T05:17:31Z
+phase 3: 2.14 h used of 13.00 h
+build: 8.79 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 12
+minutes since the last status: 23
 ```
 
 ## Phases
@@ -731,3 +731,4 @@ none
 - 2026-11-25 04:22 UTC. 04:23 UTC: G13 merged (the register has every stand-in reference again, 799 tests green by the agent's run). The first versions of all six owners of the Heart merged: land (2cd3ff2), fall (ac59ed2), sunk (8533fa7), walkers (3743542), lake (e18921a), air (225329c). 14 of 14 parts are built parts. Compared at hd draft against the five approved pictures: all far from the bar. Status 24 sent.
 - 2026-11-25 04:49 UTC. Status 25 sent 04:42. The first tone curve alone turned every lava temperature pale peach, so a second curve for what glows was added: Look.fire [lo, hi, exposure] in src/core/stage.ts and uFire in src/core/post.ts; above lo the pixel passes to a filmic curve, fully by hi; greys stay continuous. Heart look now exposure 1.7, knee [0.6, 0.6], fire [0.35, 1.6, 0.6]; other places unchanged. Land v2 merged (rim fitted to the wide picture, bench in treads with a crag, rock faces, cool grey rock, smaller steam); build and tsc pass.
 - 2026-11-25 04:55 UTC. Status 26 sent 04:56. G14 (the loop's seam) merged from agent/g13 with 19 tests; today 13 of 14 Heart parts do not come round in 8 s, which is Phase 5 work (kit/08 Phase 2 step 4: the loop's motion does not have to close yet); the fallback of kit/03 section 9 (cross-fade with itself one loop length earlier) is always available. The gate builder has handed back both jobs and is done.
+- 2026-11-25 05:17 UTC. Status 27 sent: four compares (line, sunk, wide key, mouth) with fall, air, lake and sunk v2 merged; cameras on one grammar; tone measured per key
