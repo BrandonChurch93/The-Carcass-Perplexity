@@ -582,8 +582,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     for (let i = 0, got = 0; i < 40000 && got < 2000; i++) if (strew('rim')) got++;
   }
 
-  // The slopes beside the fall, as the longest lens sees them: no stone lies singly there. Angular blocks of 2 to 6 m stand in rows along the slope,
-  // as ledges that have broken up, and in a heap at its foot, each with its rubble packed against its downhill side and black gaps between.
+  // The slopes beside the fall, as the longest lens sees them: no stone lies singly there. Fine scree of 0.3 to 1.4 m lies in runs along the slope,
+  // each stone with its rubble against its downhill side, a block of 2 to 3 m sunk among them here and there, and a heap at the slope's foot.
   const onSlope = (x: number, z: number): boolean => x > MOUTH.x - 150 && x < MOUTH.x + 120 && z > -460 && z < -324;
   {
     const e = 2;
@@ -596,10 +596,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     };
     // One stone in five is pale and dusty.
     const paled = (tone: number): number => (rng.next() < 0.2 ? rng.range(1.35, 1.9) : tone);
-    const fallen = (x: number, z: number, size: number, tone: number, a: number, long = 1): boolean =>
+    const fallen = (x: number, z: number, size: number, tone: number, a: number, long = 1, sink = rng.range(0.36, 0.5)): boolean =>
       !(chute(x, z) && height(x, z) > 5) &&
-      put(kinds.crag, x, z, size, { shade: false, sink: rng.range(0.36, 0.5), flat: rng.range(0.45, 0.9), tone: paled(tone), yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
-    for (let run = 0; run < 800; run++) {
+      put(kinds.crag, x, z, size, { shade: false, sink, flat: rng.range(0.45, 0.9), tone: paled(tone), yaw: -a, long, lean: [Math.cos(a), Math.sin(a), rng.range(-0.3, 0.3)] });
+    for (let run = 0; run < 1400; run++) {
       let x = rng.range(MOUTH.x - 150, MOUTH.x + 120);
       let z = rng.range(-456, -330);
       const left = x < MOUTH.x - 28;
@@ -622,17 +622,19 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
         // Along the slope, level, and the rubble down it.
         const tx = (-gz / gl) * way;
         const tz = (gx / gl) * way;
-        // On the long lens a pixel is 8 cm there: the picture's scree is of 10 to 30 pixels, so 0.8 to 2.4 m, with few larger.
-        const size = sized(0.6, 3.2, 1.9);
-        if (fallen(x, z, size, tone * rng.range(0.7, 1.3), Math.atan2(tz, tx), rng.range(1.0, 1.35))) {
-          const count = 2 + rng.int(4);
+        // On the long lens a pixel is 8 cm there. The picture's slope is fine scree, a grain of 4 to 12 pixels, with a block of
+        // 2 to 3 m here and there sunk to its middle: one stone in forty.
+        const block = rng.next() < 0.025;
+        const size = block ? rng.range(2.2, 3.4) : sized(0.3, 1.4, 2.4);
+        if (fallen(x, z, size, tone * rng.range(0.7, 1.3), Math.atan2(tz, tx), rng.range(1.0, 1.35), block ? 0.5 : undefined)) {
+          const count = block ? 3 + rng.int(4) : 1 + rng.int(3);
           for (let c = 0; c < count; c++) {
             const along = rng.range(-0.8, 0.8) * size;
             const down = rng.range(0.3, 1.3) * size;
             fallen(x + tx * along - (gx / gl) * down, z + tz * along - (gz / gl) * down, size * sized(0.25, 0.65, 1.4), tone * rng.range(0.75, 1.2), rng.range(0, 6.28));
           }
         }
-        const pace = size * rng.range(0.7, 1.6);
+        const pace = Math.max(size, 0.45) * rng.range(0.7, 1.6);
         const off = rng.range(-0.25, 0.25) * size;
         x += tx * pace + (gx / gl) * off;
         z += tz * pace + (gz / gl) * off;
@@ -647,7 +649,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const g = height(x, z);
       if (g < 0.4 || g > 7) continue;
       if (drift(x, z, 13) + 0.3 * drift(x, z, 4) < 0.42 + 0.25 * rng.next()) continue;
-      fallen(x, z, sized(0.6, 3.4, 2.2), 0.36 + 0.9 * Math.pow(rng.next(), 2.5), rng.range(0, 6.28));
+      fallen(x, z, sized(0.4, 3.0, 2.6), 0.36 + 0.9 * Math.pow(rng.next(), 2.5), rng.range(0, 6.28));
     }
   }
 
