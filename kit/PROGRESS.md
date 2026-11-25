@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 28, 2026-11-25 05:33 UTC:
+Status 29, 2026-11-25 05:53 UTC:
 
-- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
-- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
-- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
-- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
+- `01-hero-crop.jpg`: Left: the approved hero. Right: ours as it stands. The gap is the body, the legs, the trunk and the hide, in that order
+- `02-shot-heart-01.jpg`: The opening shot of the Heart in motion: twelve frames spread across the shot
+- `03-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
+- `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
 
+Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
 Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
 Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
-Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T05:33:51Z
-phase 3: 2.41 h used of 13.00 h
-build: 9.06 h used of 72.00 h
+2026-11-25T05:53:44Z
+phase 3: 2.74 h used of 13.00 h
+build: 9.40 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -569,6 +569,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. Depth of field is built as a hybrid by a supporting agent: the kit fixes one lens point per sample and the tiers have 1, 2 and 4 samples, which draws ghost copies, so a gather blur by depth runs once after accumulation and fills between them. Until it lands every Heart lens stays at aperture 0
 - 2026-11-25. Warmth of the low views comes from the air lit by the lake (the air owner's layer), not from the grade: the grade stays neutral so the wide key keeps its measured regions
 - 2026-11-25. The jury of the Heart is one fixed panel of five (two of one family, two of another, one of the third) for the controls and for every round, so a frame is never judged by a harder panel than its control was. Jurors are fresh agents each time
+- 2026-11-25. G3 and G10 fail in round 3's machine checks. G3: the Heart's loop frame depends on what was drawn before it on the page (15 pixels, 3 levels); the idle gate builder hunts the cause on its own machine on branch agent/determinism while this machine renders the pack. G10: the depth texture of the hidden-fragment pass becomes a 24 bit depth; the depth of field builder makes that change on its branch because it is the only one editing src/core. Neither blocks the round: a floor round runs, and both must be green before the Phase 3 gate.
 
 ## Notes from Brandon
 
@@ -684,7 +685,7 @@ One line for each round: its number, the unit, the commit it judges, the parts t
 
 - Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: done at 01:42 UTC, G1 to G12, G15 and G16 pass · pack: done at 01:45 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-001/`) · critics (R4 blockout, three packs, three fresh critics on three model families, sent at 01:47 UTC): done at 01:48 UTC · issues read: done at 01:58 UTC · fix: done at 02:33 UTC · scores: 6 (pack 1, gpt), 10 (pack 2, gemini), 4 (pack 3, claude), merged 4 against a bar of 7, six severe issues · ended by: a fail; the fixes are in `scorecards/round-001/SUMMARY.md` and round 2 is the last
 - Round 2 · `film`, the blockout round of Phase 2 (a floor round, the last: `blockoutMaxRounds` is 2) · judges commit `534fff1` · started 2026-11-25 02:37 UTC · build: done · machine checks: done at 02:39 UTC, G1 to G12, G15 and G16 pass (D2 and D7, the film and the render proof, are made after the round from the same build) · pack: done at 02:43 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-002/`) · critics (R4 blockout, three packs, three fresh critics, each family on a pack it did not judge in round 1, sent at 02:44 UTC): done at 02:55 UTC · issues read: done at 02:58 UTC · fix: none in the blockout, the limit is reached · scores: 5 (pack 1, gemini), 6 (pack 2, claude), 7 (pack 3, gpt), merged 5 against a bar of 7, seven severe issues of which one is declined · ended by: a fail at the limit (`quality.blockoutMaxRounds`); the build of this round goes on, and every open severe and major issue is under "Open items" with the phase that settles it; the record is `scorecards/round-002/SUMMARY.md`
-- Round 3 · `heart`, look lock round 1 (a floor round: the unit goes to it as soon as none of it is a stand-in, G13 passes at 05:52 UTC) · judges commit `e5b7a22` · started 2026-11-25 05:52 UTC · build: done · machine checks: pending · measures: pending · pack: pending · critics: pending · jury: pending · scores: pending
+- Round 3 · `heart`, look lock round 1 (a floor round: the unit goes to it as soon as none of it is a stand-in, G13 passes at 05:52 UTC) · judges commit `e5b7a22` · started 2026-11-25 05:52 UTC · build: done · machine checks: done at 05:58 UTC, 18 of 22 pass; G3 fails (the loop frame 288 differs between two page loads in 15 of 518400 pixels by at most 3 levels, along the far edge of the lake) and G10 fails (`src/core/engine.ts` line 234, the depth texture of the hidden-fragment pass is `FloatType`); D3 is not built yet; A1 is the open sound check on clip n8 · measures: pending · pack: pending · critics: pending · jury: pending · scores: pending
 
 ## Final scores
 
@@ -760,3 +761,4 @@ none
 - 2026-11-25 05:30 UTC. Study written under Look lock: ten lines from nine sources (three photographs, six USGS records)
 - 2026-11-25 05:34 UTC. Status 28 posted: the feeding shot restaged, its motion sheet, notes to the owners, tests 818 of 818
 - 2026-11-25 05:42 UTC. Jury controls of the Heart collected ahead of the first round: 25 votes (5 pictures, 5 jurors on three families), 24 for a film frame and 1 for an ordinary render, control share 0.96; the judged frames must reach 0.76. Record: scorecards/controls/heart-R2.json
+- 2026-11-25 05:54 UTC. Status 29 posted: G13 passes for the Heart, round 3 open on e5b7a22, jury controls 0.96, cost of the wide and the hero frame at uhd draft, the approved hero beside ours and the opening shot in motion.
