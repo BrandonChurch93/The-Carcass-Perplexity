@@ -99,7 +99,7 @@ export function create(ctx: Context): Piece {
     const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.02 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.6 * cage);
     let up: number;
     if (c > 0) {
-      up = tall * 2.1 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.011 * rib - 0.02 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+      up = tall * 2.5 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.011 * rib - 0.02 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
     } else {
       // What lies on the rock is flat on it.
       up = -tall * 0.42 * (-c) ** 0.45;
@@ -126,7 +126,7 @@ export function create(ctx: Context): Piece {
       skin.describe(body, i, s, t * b.bodyLen, phi * 0.32, 0.5, seen, bodyHalfW(t) * k, seed, 0, t);
     }
   }
-  const half = 0.56 * (b.bodyLen / k);
+  const half = 0.64 * (b.bodyLen / k);
   const lie = (u: number): number => bodyHalfW(u) * 0.42 - 0.012;
   laid.push({ tube: body, centre: (u) => world([0, lie(0.004 + 0.992 * u), -half + 2 * half * u]), local: bodyLocal, sides: bodySides, rings: bodyRings, first: [0, 1, 0] });
 
@@ -157,10 +157,10 @@ export function create(ctx: Context): Piece {
   const legRadius: number[] = [];
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
-    const thigh = 2.6 * (1 - smooth(0, 0.42, u)) ** 1.1;
+    const thigh = 2.3 * (1 - smooth(0, 0.4, u)) ** 1.1;
     const knuckle = 1.25 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.9 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.5 * smooth(0.95, 1, u);
-    const r = b.legR * 1.3 * (0.8 + thigh + knuckle + foot);
+    const r = b.legR * 0.95 * (0.8 + thigh + knuckle + foot);
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -169,12 +169,12 @@ export function create(ctx: Context): Piece {
     }
   }
   const legLines: V3[][] = [
-    // Hind, upper: the thigh stands off the hip toward the belly's side, the joint up, the shank fallen back across the other; hind, under: along the rock.
-    [[0.16, 0.34, -0.5], [0.44, 0.43, -0.4], [0.7, 0.36, -0.5], [0.84, 0.14, -0.98], [0.86, 0.065, -1.5], [0.8, 0.06, -1.86]],
-    [[0.18, 0.08, -0.56], [0.52, 0.09, -0.72], [0.7, 0.085, -1.16], [0.64, 0.07, -1.66], [0.5, 0.06, -2.08]],
-    // Fore, upper: folded at the joint, the shank back along the belly and over the hind one; fore, under: bent under the chest.
-    [[0.18, 0.32, 0.42], [0.52, 0.38, 0.24], [0.8, 0.27, -0.06], [0.93, 0.15, -0.5], [0.98, 0.1, -0.98]],
-    [[0.2, 0.08, 0.46], [0.5, 0.085, 0.42], [0.72, 0.085, 0.12], [0.76, 0.07, -0.3], [0.7, 0.06, -0.66]],
+    // Hind, upper: off the hip and out across the rock toward the lens, the joint a little up; hind, under: along the rock beneath it.
+    [[0.2, 0.22, -0.42], [0.62, 0.21, -0.6], [1.0, 0.1, -0.86], [1.3, 0.07, -1.2], [1.5, 0.05, -1.62]],
+    [[0.2, 0.07, -0.5], [0.5, 0.07, -0.9], [0.9, 0.07, -1.25], [1.15, 0.06, -1.75], [1.2, 0.05, -2.15]],
+    // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest, only its foot showing.
+    [[0.2, 0.2, 0.4], [0.56, 0.21, 0.3], [0.84, 0.13, 0.02], [0.66, 0.07, -0.3], [0.44, 0.06, -0.56]],
+    [[0.2, 0.07, 0.46], [0.45, 0.07, 0.6], [0.7, 0.07, 0.5], [0.85, 0.06, 0.2], [0.9, 0.05, -0.1]],
   ];
   legLines.forEach((line, j) => {
     const tube = skin.tube(legRings, legSides);

@@ -37,7 +37,7 @@ void main() {
   // A ring that is at d now left the source d / speed seconds ago: what the source was doing then is what it carries.
   float left = vWhen.x - d / speed;
   float burst = left > 0.0 ? exp(-left / 1.4) * smoothstep(0.0, 0.12, left) : 0.0;
-  float amount = vSource.w * (0.22 + burst);
+  float amount = vSource.w * (0.5 + burst);
   float fade = smoothstep(reach, 0.3 * reach, d) * smoothstep(0.015, 0.07, d) / (1.0 + 2.5 * d);
   float slope = cos(k * d * (1.0 - 0.12 * d / reach) - k * speed * uSeconds + vWhen.z) * amount * fade;
   gl_FragColor = vec4(dir * slope, abs(slope), 1.0) * (1.0 - uSolo);
