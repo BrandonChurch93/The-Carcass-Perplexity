@@ -1,0 +1,126 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-25 06:31 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the lava basin, from the cave out to the right-hand horizon",
+        "what": "Most glowing seams and connected lava sheets are gone; the cave cascade fades into fog and the active right edge reads as isolated patches, leaving the valley colder and flatter.",
+        "fix": "Restore a bright, continuous cascade that spreads onto the floor, more layered orange seams across the basin, and warm spill into rock and fumes along the right edge."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the diagonal foreground lava channel",
+        "what": "The lava is a flat orange ribbon with hard red banks and dark boulders across it, rather than a bright, swirling current under curling crust.",
+        "fix": "Give the flow a yellow-hot core, orange eddies and incandescent veins. Break up the banks into overhanging ropey crust and let the channel light its edges."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the lower-left bank through to the distant cliff",
+        "what": "The deep, nearly uniform sharpness loses the close-focus shot: the nearest rocks are too legible and the distant cliff and animals too crisp relative to the foreground lava.",
+        "fix": "Match the shallow focus around the channel and vent, with lens defocus on the bottom-edge rocks and soft falloff across the basin and escarpment."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the left animal and the herd behind the foreground arch",
+        "what": "The nearest standing animal is larger, clipped at the left edge and near-sharp; the herd is individually outlined in the background. The warm, in-frame reaching silhouette and soft distant group are lost.",
+        "fix": "Set the left animal farther in and back, restore the orange-lit branching contact with the lava, and soften and cluster the far animals with depth of field."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the basin behind the foreground animal",
+        "what": "The background is mostly dim and brown, with a thin cave outflow, few glowing seams, an almost dark right flank and a thick gray plume dominating the scene.",
+        "fix": "Bring up the continuous cave-to-basin flow, hot lines through the plain and orange backlit haze at the right outcrop; temper the central plume and soften the distant terrain."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the rim, cave and right-hand buttress",
+        "what": "The rim has high jagged peaks; the cave is narrower and the right buttress reads as a stepped silhouette instead of a low, broad, eroded rock mass behind the basin.",
+        "fix": "Flatten the rim profile, open the cave horizontally and make the buttress broader and more weathered, with visible broken rock faces."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the left bank and its near steam vent",
+        "what": "The bank is taller and dominated by blocky rubble. The broad ropey crust, pale yellow sulfur and distinct soft white vent on the slope have little presence.",
+        "fix": "Lower and break up the bench, bring back the coiled lava surfaces and pale mineral patches, and strengthen the low white steam at the vent."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the leading animal and the midground group",
+        "what": "The animals are spread loosely over a dark floor; the lead animal's contact with the hot ground is hard to read and the group doesn't gather around a bright fissure.",
+        "fix": "Keep the intended variation in size and stance, but gather the midground group at a live seam and restore the warm branching contact detail on the lead animal."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the partly buried animal and lower-right floor",
+        "what": "The body reads as a separate object in a circular mound against a uniform fine ground texture, not as a form caught in overlapping cooled-lava sheets.",
+        "fix": "Blend the body and arch roots into irregular ropy crust and broader overlapping plates, with varied cracks leading through the basin."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the midground air and right-hand sky",
+        "what": "A uniform near-floor fog band and a dense central plume hide relief; the warm edge light in the right-side haze is weaker and more uniform.",
+        "fix": "Clear some near-floor fog, keep the central plume intermittent and let localized orange backlight pick out the right-side fumes."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the immediate left bank and vent",
+        "what": "A tall isolated rock and slick-looking pale streaks replace the irregular low sulfur-stained rock wall and fuller steam.",
+        "fix": "Restore the broken left-side bank, localize the ochre sulfur around the vent and let soft white steam drift across the stones."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the foreground and middle ground outside the channel",
+        "what": "The floor has a repeated coarse texture and long black grooves, instead of large directional coils and plates with scattered orange seams further back.",
+        "fix": "Build broader asymmetric ropes and folded crust around the channel, with a few low glowing fissures layered across the plain."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the animals along the middle-distance horizon",
+        "what": "The dominant animal is at the far right with the others overlapping close by; the center-right lead silhouette and lit contact trail are missing.",
+        "fix": "Rebalance the animals around a lead silhouette nearer center-right, increase depth and spacing of the far animals, and add its warm branching contact."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the cave, distant buttress and haze",
+        "what": "The cave outflow is weak, the right-side warm haze is muted, and the bulky stepped buttress and billowing plume feel nearer instead of receding through soft illuminated air.",
+        "fix": "Keep the distant relief low and soft, brighten the connected cascade and restore orange-lit fume along the right while thinning opaque fog across the floor."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the central-right buried animal",
+        "what": "The exposed body has tight striations and a deep vertical split. The arch has a dark smooth underside and the rear limb ends in a hanging tip; the target has rough overlapping crust, warm highlights and limbs disappearing into the flow.",
+        "fix": "Give the body and arch irregular layered flakes, pick out the upper surfaces with restrained warm light and seat the rear limb into the crust."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the crust around the buried animal and the lower-left edge",
+        "what": "A blue-gray pad of evenly ribbed crust surrounds the animal with little hot light, while the nearest left edge stays uniformly legible. The target has irregular interlocked folds, a hot steaming crack and a defocused rock at the edge.",
+        "fix": "Break up the repetitive ribs, work the folds across the body base, brighten the small fissure and faint steam, and restore a dark defocused near-edge rock."
+      }
+    ]
+  }
+}

@@ -46,6 +46,15 @@
     },
     {
       "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "The scene combines offline-style volumetric lighting and detailed foreground rock shaders with noticeably basic 3D assets and effects—especially the flat ground plane with thin uniform lava cracks, simplistic floating-debris fire patches, and a sharply bounded circular pit around the foreground creature—which points to an ordinary 3D render rather than a top-budget cinematic or a low-end real-time demo.",
+      "answered": "06:30 UTC"
+    },
+    {
+      "image": "R2-1",
       "juror": "d",
       "model": "gpt_6_2_astra",
       "answer": "d",
