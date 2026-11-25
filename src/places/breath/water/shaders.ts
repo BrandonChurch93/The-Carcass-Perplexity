@@ -27,7 +27,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs8 * 1.4;
+  float broad = rs64 * rs8 * 0.9;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   return uSunColour * (broad + spark);
 }
@@ -63,6 +63,9 @@ void main() {
   // Shallow water over a bed is nearly still: the waves grow with the depth.
   float deep = smoothstep(0.0, 0.5, depth);
   vec2 slope = (g1 * 0.3 + g2 * 0.26) * (0.4 + 0.6 * deep) + g3.rg * 0.1;
+  // Near the lens the small ripples show one by one.
+  float close = smoothstep(45.0, 6.0, far);
+  if (close > 0.0) slope += (texture2D(tWave, vec2(-xz.y, xz.x) * 0.83 + drift.yx * uTime * 0.16).rg - 0.5) * 0.34 * close * (0.5 + 0.5 * deep);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
   slope += rings.rg * 1.3;
@@ -99,7 +102,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(1.9, 0.75, 0.9));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = vec3(0.1, 0.27, 0.25) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = vec3(0.062, 0.115, 0.1) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 

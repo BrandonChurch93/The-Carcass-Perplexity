@@ -112,9 +112,9 @@ void main() {
     // the points of the hips and the spine are rubbed raw, the belly is splashed grey with silt.
     float sn = sin(vUv.y / 0.32);
     float down = abs(cos(vUv.y / 0.32));
-    float cage = smoothstep(0.36, 0.5, u) * smoothstep(0.92, 0.78, u) * smoothstep(0.35, 0.85, down) * smoothstep(-0.8, -0.2, sn) * smoothstep(0.95, 0.6, sn) * (0.55 + 0.45 * smoothstep(0.3, 0.6, blotch)) * (1.0 - uDead);
+    float cage = smoothstep(0.36, 0.5, u) * smoothstep(0.92, 0.78, u) * smoothstep(0.55, 0.95, down) * smoothstep(-0.75, -0.25, sn) * smoothstep(0.6, 0.2, sn) * (0.55 + 0.45 * smoothstep(0.3, 0.6, blotch)) * (1.0 - uDead);
     // They lean back as they go down the flank, and none is quite the width of the next.
-    float ribAt = (u - 0.11 * sn + 0.03 * (mottle - 0.5)) * 110.0 + 1.5 * vnoise(vec2(u * 9.0 + seed, vUv.y * 1.5));
+    float ribAt = (u - 0.2 * sn - 0.1 * sn * sn + 0.03 * (mottle - 0.5)) * 110.0 + 1.5 * vnoise(vec2(u * 9.0 + seed, vUv.y * 1.5));
     float rib = pow(0.5 + 0.5 * cos(ribAt), 2.0);
     float each = 0.35 + 0.65 * vnoise(vec2(floor(ribAt / 6.2832) * 7.1 + seed, vUv.y * 3.0));
     // The knuckles of the spine along the back, and the hollow of the flank behind the last rib.
@@ -145,6 +145,8 @@ void main() {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
     float tone = vInfo.x;
     albedo = mix(vec3(0.55, 0.27, 0.26), mix(vec3(0.16, 0.02, 0.03), vec3(0.4, 0.08, 0.09), tone), smoothstep(0.0, 0.3, u));
+    // A few are pale and fleshy, the pink of the neck's end carried down them.
+    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.7, hash12(vec2(seed, 9.0))) * 0.7);
     albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.07, 0.065, 0.035), step(0.82, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
