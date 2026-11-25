@@ -1,0 +1,106 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-25 12:48 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "upper-left cave, lavafall, and ridge across the right background",
+        "what": "The cave reads as a dim recess with little glowing lip, the lavafall breaks into isolated yellow blobs, and the right bluff becomes a broad rubble slope that fills the central gap. The target has a connected hot descent into the basin, a distinct steep bluff, and more atmospheric space between the landforms.",
+        "fix": "Define the underlit cave lip, reconnect the descending lava to its runout, and pull back the broad rubble apron so the steep bluff stands apart behind the haze."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground and midground lava field, from beneath the lead animal to the right edge",
+        "what": "Pale, deeply ridged slabs and pebbles dominate the floor, with the brightest lava shifted to a broad streak at front left. The target has lower, dark charcoal crust threaded with fine hot seams and active pools continuing from the lead animal's tendrils toward the lower right.",
+        "fix": "Lower and darken the crust relief, reduce scattered stones, and carry a broken network of narrow orange-yellow fissures and molten pockets across the center and lower-right floor."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "cave mouth, recessed ceiling, and enclosing far wall",
+        "what": "The cave is a boxier slot with an almost level lid in a uniformly textured vertical wall. It lacks the broad curved vault and successive curved rock faces that recede into the dark in the target.",
+        "fix": "Round and open the vault, give the interior layered curved faces that recede into shadow, and break up the vertical wall with more varied natural outcrops."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "central lavafall and lower fan",
+        "what": "The bright flow runs through squat S-shaped steps on a rubble slope, then spreads into coarse polygonal plates with thick orange outlines. The target has a wider luminous upper spill, more pronounced cliff drops with separate molten ribbons, and a lower fan threaded by finer branching veins.",
+        "fix": "Restore the broad upper spill and taller stepped falls, define the separate threads dropping over the ledges, and use finer irregular seams in the dark lower fan."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "air across the basin and behind the animals",
+        "what": "A nearly even gray-brown veil and a horizontal red fog band mute the depth and heat. The target has more localized, rising orange-lit vapour and clearer separation between the lead animal, the other animals, and the distant rock.",
+        "fix": "Break up the flat fog band, add rising warm vapour where lava contacts the crust, and retain pockets of cleaner air between the depth layers."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "cave arch and rock faces adjoining the falls",
+        "what": "The orange bounce is muted and patchy on the cave roof and thin across the surrounding rock; much of the face stays a flat gray despite the lava. The target makes the vault and nearby ledges visibly catch light from below.",
+        "fix": "Carry lava-colored bounce across the underside of the vault and onto the faces near each spill, with clear falloff into the dark stone."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "left talus and bench immediately beside the cascade",
+        "what": "Dense angular boulders cover the slope, and the bench has lost the large exposed rock faces and finer talus visible in the native crop of the target.",
+        "fix": "Use finer scree and occasional embedded stones on the slope, and restore continuous fractured bench faces with warm light on exposed facets."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "lower runout behind the two animals and air on the right",
+        "what": "The fume is a broad low brown veil, with weak lift and little luminous orange around the foot of the fall. The target has higher, patchier hot plumes behind the animals and a lighter haze rising into the right side of the basin.",
+        "fix": "Concentrate brighter orange-lit vapour above the runout, layer in taller diffuse wisps, and let the right wall recede through a lighter upper haze."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "lead animal's underside, tendrils, and lava contact",
+        "what": "The body and legs read nearly unlit, while the tendrils and their contact pool go to a fairly uniform electric orange against gray crust. In the target the warm light picks out bark-like relief, glancing edges and brighter filament tips with a softer spill through the air.",
+        "fix": "Add selective warm edge and underside bounce, maintain variation in filament brightness, and blend the light from the contact pool into nearby crust and vapour."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "right animal against the far wall and surface behind the left animal",
+        "what": "The right animal's tendril tips largely disappear into the gray backdrop instead of catching the warm light; the left animal stands in a largely dull pocket rather than against lava light that separates its legs from the ground.",
+        "fix": "Give the distant animals restrained warm edge highlights and reestablish localized lava light and haze behind them without sharpening moving limbs."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the two animals at the lower runout",
+        "what": "The left animal gets lost against a bright tangle of lava seams and foreground stones, while the right animal is a thin black outline with little separation at the feet. The target reads both bodies clearly against warm vapour with a coherent ground line.",
+        "fix": "Quiet the seams immediately behind the silhouettes, use warm fume for separation, and keep small hot accents at their contact points."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "bottom foreground nearest the camera",
+        "what": "The near crust is a broad soft black band with a diffuse, mostly horizontal orange smear. The target retains a readable soft ridge and a narrow diagonal hot crack with separated bright points.",
+        "fix": "Keep the shallow focus but restore a legible low crust ridge and a thinner, broken diagonal lava seam."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "lower-left foreground occluder",
+        "what": "The blurred near rock is a taller, harder black wedge with a strong fiery rim that competes with the animals. The target uses a lower, broader soft obstruction that blends into the dark foreground.",
+        "fix": "Lower and soften the occluder and reduce its orange edge so it frames rather than masks the scene."
+      }
+    ]
+  },
+  "note": "the answer came with a stray quotation mark and a correction line after the object; the object itself is recorded"
+}
