@@ -66,7 +66,7 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 | Unit | Phase | State | Rounds run | Best round | Commit | What ended its loop |
 | --- | --- | --- | --- | --- | --- | --- |
-| `heart` | 3 | in progress | 2 |  |  |  |
+| `heart` | 3 | in progress | 5 (rounds 3 to 7; round 7 is being judged) |  |  |  |
 | `ribs` | 4 | not started | 0 | | | |
 | `breath` | 4 | not started | 0 | | | |
 | `marsh` | 4 | not started | 0 | | | |
@@ -79,20 +79,20 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 The register is `parts/PARTS.json`. Summarise it here after every change of state: how many parts each unit has, and how many are `stand-in`, `built` and `fallback`.
 
-Written 2026-11-25 02:56 UTC from the build that round 2 judged, with a picture of every part drawn alone under `out/stills/parts/`.
+Written 2026-11-25 14:16 UTC from `parts/PARTS.json` at commit `9ac88bf`, the build that round 7 judges (the table of 02:56 UTC had every part as a stand-in). A picture of every part drawn alone is under `out/stills/parts/`.
 
 | Unit | Parts | `stand-in` | `built` | `fallback` |
 | --- | --- | --- | --- | --- |
 | `ribs` | 14 | 14 | 0 | 0 |
-| `heart` | 14 | 14 | 0 | 0 |
+| `heart` | 15 | 0 | 15 | 0 |
 | `breath` | 14 | 14 | 0 | 0 |
 | `marsh` | 14 | 14 | 0 | 0 |
 | `spine` | 14 | 14 | 0 | 0 |
 | `eye` | 14 | 14 | 0 | 0 |
 | `reveal` | 11 | 11 | 0 | 0 |
-| all | 95 | 95 | 0 | 0 |
+| all | 96 | 81 | 15 | 0 |
 
-The Heart's 14: `sky`, `air`, `land`, `bench`, `crust`, `lava`, `lava-fall`, `vessel-mouth`, `crust-walkers`, `sunk-walker`, `foundering`, `fume`, `sulphur-crack`, `surge`.
+The Heart's 15: `land`, `bench`, `sulphur-crack`, `foundering`, `crust`, `lava`, `vessel-mouth`, `lava-fall`, `surge`, `crust-walkers`, `sunk-walker`, `sky`, `air`, `fume`, `ash`. `ash` was added in Phase 3 (the dry fall of ash in the air's folder).
 
 ## Voice
 
@@ -478,6 +478,627 @@ Nine sources of the twelve allowed: three photographs credited in `references/dr
 9. The five approved pictures agree with all of that and add the Heart's own facts: the crust is near black (20 to 45 of 255) where no glow reaches, the animals are near black on the side away from the lava and lit orange from below and behind, and smoke stands in banks with dark air between them.
 10. What this changed in the build: one drift field for every plate; cracks as short lines with bright cores and spill light on the crust beside them; foundering as timed events; the fall as braided streams over black rock; the air as local banks lit from below, with an even veil kept thin; no fill light on the animals; the wide key lit by the sky and the low views lit by the lake.
 
+The three parts below were written on 2026-11-25 at 14:15 UTC against main `0141c0c` (the build that round 7 judges, commit `9ac88bf`) from the last hand-backs of the ten owners of the Heart. Every path, identifier and script they name was checked against that source. Where two hand-backs disagreed the later one holds and the line says so. What the critics and the jury make of this look is under "Rounds" and in `scorecards/round-007/SUMMARY.md` once round 7 is in.
+
+### Locked settings
+
+**Film-wide (from the Builder)**
+
+- The place's look, `src/places/heart/index.ts`: `look: { ...neutralLook(), exposure: 2.2, bloom: 0.05, vignette: 0.06, grain: 0.006, knee: [0.38, 0.61], fire: [0.2, 0.75, 0.6] }`. Frozen since round 5: the exposure, the knee, the fire ramp and the sky are not an owner's to change.
+- One fire ramp for everything that glows, by temperature (sRGB out of the post): 1000 K 67 0 0, 1100 K 167 53 31, 1200 K 238 80 22, 1300 K 255 130 40, 1400 K 255 165 61, 1500 K 252 211 121, 1600 K 246 239 193. Nothing hot is coloured by hand; it is given a temperature and reads the ramp (`blackbody` in `src/places/heart/shared/glsl.ts`).
+- One light rig for the whole place, `src/places/heart/shared/rig.ts` with its GLSL in `shared/glsl.ts`: every material ends in `rigOut(colour)` and lights itself only through the rig's functions. No part carries a light of its own.
+- The lake's glow map is frozen: a part may change what is drawn, never the sum of light the map gives the rig (within 5 per cent).
+- Staging by shot goes through `src/places/heart/shared/stage.ts`: every test of which shot the camera stands in reads `stagedSeconds()` and never the world's seconds (the rocks' `during('heart-02')` in `land/rocks.ts` is the pattern), so that nothing is swapped in front of a camera that has not cut. Where things stand is in `shared/anchors.ts` and `layout.ts`.
+- Everything that moves is a function of the place's seconds. No frame counter, no `Math.random`, no wall clock. `npm run -s determinism` must print `determinism: pass` before any hand-back.
+- One owner a folder, and an owner edits its folder only. What crosses a border is asked of the neighbour by message with world coordinates.
+- The cameras of the Heart's five shots are fitted to the five approved pictures (the keys): heart-0 at frame 2722 (shot heart-01, frames 2507 to 2936), heart-3 at frame 3156 (shot heart-02, 2937 to 3374; field of view 18 degrees, lens 0.2, focus 68 m), heart-1 at frame 3477 (shot heart-03, 3375 to 3578; lens 0.02, focus 6 m), heart-2 at frame 3685 (shot heart-04, 3579 to 3790; lens 0.1, focus 21 m), heart-4 at frame 4006 (shot heart-05, 3791 to 4220; field of view 13.2 degrees, focus 760 m). 60 frames a second.
+- The one that sank goes under at frame 3740; the fall's surge is at frame 4010.
+- The mouth: `MOUTH = { x: -30, z: -452, floor: 80, width: 172, height: 68 }`.
+- Tiers: draft 1 sample a frame, review 2, final 4. Look at a change in `draft`, judge at `final`.
+- A look is judged beside its approved picture at native size (`npm run compare -- --key KEY --tier draft --format uhd`, then a crop), never at preview size alone, and motion on a sheet (`npm run sheet -- --shot ID` or `--held KEY --seconds 6`).
+
+**The light, the lens and the grade (`shared/`)**
+
+Source: the light's third owner, last hand-back C9, 13:40 UTC, 25 Nov, commit 726e59e on main bcbefc4. Files `src/places/heart/shared/rig.ts` and `src/places/heart/shared/glsl.ts`.
+
+- Exposure, knee, sky and its irradiance, fire ramp (`blackbody`), bloom, `uCast` 0.75: frozen by the root; the rig only reads them.
+- `MAX_EMITTERS` 8 (all taken) (`rig.ts`).
+- `EMITTER_CORE` 4.5 for a round light under 20 m radius, 1 from 60 m (`rig.ts`).
+- Reach of a round light: max(45 + 1.2 r, 3.2 r - 110) m (`glsl.ts`, `emitterIrradiance`).
+- `STREAM { rows 48, open 0.5, half 6, share 2.4, fan 0.1, core 0.4, mouth 0.15 }` (`rig.ts`): the strip light of the fall, gone at 22 m; 1.3 more behind the surge front (`glsl.ts`).
+- `BANK { shot heart-02, radius 60, shadeRadius 110, shade 0.2, radiance 0.75 0.42 0.26 }` (`rig.ts`). It stands in that shot alone.
+- `POOLS` radiance 40 6.4 (`rig.ts`).
+- `poolApron(p, n, reach, out toward)`: half at 2 m, gone at the reach (crust 6, animals 14), climbs 2.2 times as far as it runs (`glsl.ts`).
+- `BREATH { deep 0.03 0.02 0.012, rate 0.37 0.61 1.07, lag 0.05, apart 0.019, near 3 }` (`rig.ts`): round lights swell with the flow, the fall's shallow, fountains and fume 3 times deeper.
+- `MOUTH_GLOW { east 60, up 25, out 40, radius 40, share 0.1 }` (`rig.ts`): a round light before the mouth for the cliff round it; it uses the bank's place in the list outside the bank's shot.
+- `EMITTER_SHADE` 0.85; thrown shade read at 1.4 m and at 3 m at half strength (`glsl.ts`).
+- `CONTACT` size 1024 (`rig.ts`; 2048 cost 0.5 s a sample, the second owner's measure).
+- Names and arguments of `RIG_GLSL`: six folders call them, so they do not change.
+- Land takes fire at pow(occ, 0.75), rocks at sqrt(occ); the walkers take round lights at 0.08; the air reads the lights itself.
+
+**The lake's melt**
+
+Source: the lava's owner 3, last hand-back C7, 13:02 UTC, commit 0160fd0; then the lava's owner 4, D3, 13:55 UTC, 25 Nov, on 32b79e3 (holds main 0838a2a), and D4, 14:04 UTC, commit ccf7bf1 on main ee929c8. Where they differ the later one holds. Files `src/places/heart/lake/heat.ts`, `lake/lava.ts`, `lake/founder.ts`, `lake/outline.ts`.
+
+- `bankAt(q, n)`, `lake/heat.ts` = n.r + tornAt(q) * smoothstep(0, 0.3, n.a) - gapeAt(q, n).x; zero is the brim; crust wall, crust paint and melt read this one function.
+- `tornAt` = (vnoise(q*1.7+11)-0.5)*0.5 + (vnoise(q*5.3+3)-0.5)*0.07, `heat.ts`.
+- `LINE_NARROW` = 0.85, `heat.ts`.
+- Melt levels under the brim, `heat.ts`: line 0.30 m, group's string 0.045 m, near seams 0.08 m, fountain lines 0.2 m.
+- Ribbon drawn to bank 0.12 under the crust, glows to bank 0.08, `discard` last in main, `lava.ts`.
+- Kelvin, `lava.ts`, all through `blackbody()`: core 1250 edge, 1490 mid flow, 1575 tongue; raft skin 780; raft rim 1270 to 1380; skin at the bank 880 to 1050; raft sky albedo 0.022.
+- `RAFT_SPEED` 0.6, `CORE_SPEED` 0.9 m/s; `RAFT` = 0.85 by 0.6 m; `ROPE` = 0.066 m, not drawn under 3 pixels; `lava.ts`.
+- `founder.ts`: emitters 0.1 * burst of blackbody 1370; instances 470 and 60; spatter 1480 K to 1120 K; glow discs 0.22 * burst.
+- Drawn surface moves by `creepAt(q)`; the glow map keeps `beatAt`, so its sum is as it was; `heat.ts`.
+- (D3) The predecessor's eight items above stand as they were.
+- (D3) The drawn surface and the light are split by one flag, `drawnOnly`; everything in the D3 lines below is drawn only and the glow map takes none of it.
+- (D3) `surgeAt`: two noises, 70 m lumps moving at about 22 m/s (weight 0.62) and 23 m lumps at about 10 m/s (weight 0.38), gain 2.1; flare = smoothstep(0.22, 0.78, surge).
+- (D3) Unshown seams: half width times mix(0.15, 1.85, flare), cover times mix(0.1, 1, flare), core +170 K times (surge - 0.5).
+- (D3) `drawAt`: sin(2.0 t + 0.8 times the distance to the hero pool at (-404.9, 204.0) + 4 noise): pulses 8 m long, 3 s apart. Pool kelvin +150 times (drawn - 0.45).
+- (D3) Far field: thinning from 70 to 170 m from (-505, 245), lanes at 90 m with breaks at 27 m, unlike brightness of plus or minus 75 K at 41 m.
+- (D3) Fountain vents on the long line, u / share / tall: 0.12/0.06/0.3, 0.3/0.09/0.5, 0.47/0.07/0.36, 0.62/0.11/0.6, 0.78/0.59/1.5 (the main one), 0.93/0.08/0.42.
+- (D3) Jets 10 per cent at the main vent, 3 per cent elsewhere. Counts 470 and 60.
+- (D3) Feet (a half-round dome of bare melt at each of the six vents, the first six instances of the long line, swelling in width and height with that vent's own burst; the lumps leave from its top): half width 0.85 + 1.05 (tall - 0.3) m (1.7 to 4.2 m across), 1550 K at the top to 1450 K at the skirt, rim 150 K cooler.
+- (D3) Tails behind the lumps: pull up to 8 (was 5; the later number, 8, holds).
+- (D3) Pool at the foot of the fall: rafts at 0.55 drawn, 0.22 in the glow map.
+- (D3) `founder.ts` only was changed in D3; the glow map is untouched and its sum holds.
+- (D4) The foundering plates (part `heart/foundering`; the plate at (-408.8, 267.8), 13 by 8.5 m, and the second on the left line, 7 by 4.6 m) take no mirror of the sky: the plate's shade is asked along its normal and fully rough, `rigShade(vWorld, n, n, skin * 0.28 * ..., 1.0, 1.0)`.
+- (D4) Plate albedo 0.28 (the predecessor had 0.42; the later number, 0.28, holds), reckoned to sit a little under the crust; it could go up to 0.35 if it reads as a hole.
+
+**The crust's form**
+
+Source: the crust form's owner, last hand-back 13:04 UTC, commit ea31a46; then crust form owner 2, D3, 13:57 UTC, 25 Nov, on 8bda667 (holds main e96684b; `lake/index.ts` only, `net.ts` untouched). Where a number differs the D3 one holds. Files `src/places/heart/lake/index.ts` without FRAGMENT, and `src/places/heart/lake/net.ts`.
+
+- Sheet: `CELL` 6 m, `RINGS` 8, `CELL0` 2.34 cm, `N` 512, `SPAN_WIDE` 256, `BLOCK` 16 (`index.ts`).
+- Height baked per ring in a HalfFloat picture (r + g the height in two parts, b metres to the brim); normals from central differences of the bake.
+- Sizes the cells can carry (`RELIEF_GLSL` in `index.ts`): a step face 3.5 cells wide at the least, a wall 5 cells (`wallWide = max(5.0 * c, 0.1)`), a lump 4 cells, a plate fades out between 0.1 and 0.22 of its size in cells (`slabHeld`). (D3 says nothing narrower than 4 cells and a step at a lobe's edge of max(0.1 m, 4 cells); the later one holds for the step face.)
+- Wall of a gap: follows all of the 0.6 m part of `tornAt` and 0.35 of its fine part on cells under 2 to 6 cm; `tornAt` fine part 0.07 (`heat.ts`, the lava's).
+- Plates: `gSlabSize` 1.9 m on broken floors, 3.0 m within 8 m of the line; on the banks of the line `gOverlap` 1: tilt cap 0.07, one plate in four rides up, laps of 0 to 15 cm, crease 2.4 cm wide and 3 cm deep, edge 1.3 times its height wide, pillow 3 to 6 cm. (D3 gives the line zone a lattice of 1.9 m, sheets of 5 to 8.5 cm and a crease at the foot of 3.5 to 5.5 cm; where these describe the same thing the D3 numbers hold.)
+- Feeding floor: `gFlat` (five plates in six level); `gShut`: gaps shut beyond 3.5 to 6 m of the group seam.
+- Rope mask forced on within 13 to 19 m of `uMound` and 15 to 20 m of (-507, 212) (`foldAt`). (D3 gives the line zone as centre (-505, 213), full to 11 m, out by 15 m, and the sunk zone as in at 5 to 7 m of `uMound`, out at 24 to 28 m; the D3 numbers hold.)
+- Nothing within 1.7 m of the line's brim under melt level + 0.06 m (rounded floor, fades out by 2.5 m). (D3 gives the brim as melt - 0.3 + 0.08 to 0.15 m in stretches and 0.20 to 0.30 m in others; the D3 numbers hold.)
+- `gRock`: rocking plates at the live margins, slope 0.1 (0.035 on the line), periods 8 to 18 s, from `uTime` alone.
+- `net.ts`: joints die out (noise 21 m and 6.5 m, shut under 0.004 m); no open joint within 14 to 20 m of (-505, 213); `RIDGES` two entries.
+- (D3) Line zone: centre (-505, 213), full to 11 m, out by 15 m. Lattice 1.9 m, 2 by 2 search, sheets 5 to 8.5 cm, thinner where fed (0.15 + 0.85 front).
+- (D3) Step at a lobe's edge max(0.1 m, 4 cells). Crease at the foot 3.5 to 5.5 cm (1.6 times in the sunk zone).
+- (D3) Cords at the line 11 to 14 cm apart (8.5 at the front), 2 to 4 cm high, on the top lobe only. Arc centre 1.5 to 2 R behind the lobe (no closed rings, both zones).
+- (D3) Lobes within 3.5 to 5 m of (-510.5, 215.5): 3.6 to 4.6 cm spacing, left to the paint.
+- (D3) Sunk zone: in at 5 to 7 m of `uMound`, out at 24 to 28 m. Lattice 3.3 m, sheets 10 to 14 cm, ropes 0.55 to 0.8 m apart (one hash a lobe), 6 to 26 cm high, uneven in depth, all in the height; a rope fades out where it is under 12 to 5 pixels long on the ground.
+- (D3) In the sunk zone `gFoldSpace` is 0.06 and `gFoldDeep` 0, the true spacing is in the global `gLapSpace` and the flag `gLapRope` is 1 (the paint lays four strands a fold, and four on a 0.65 m rope is 16 cm stripes again).
+- (D3) Lobes fade where a pixel is longer than 9 to 16 cm on the ground, so nothing pops at the `gFine` gate.
+- (D3) Bank at the line: fall exp(-(lineFar - 1)/3) laid from the line; the net's own fall ends 1.6 m from the brim.
+- (D3) Brim: melt - 0.3 + 0.08 to 0.15 m in stretches, 0.20 to 0.30 m in others, noise 3.1 m. No undercut mesh.
+- (D3) Hill knob 0.22 m. Bake `HalfFloatType`. Nothing narrower than 4 cells.
+- (D3) The predecessor's list stands (`CELL` 6 m, 8 rings, first cell 2.34 cm, 512).
+
+**The crust's skin**
+
+Source: the crust's skin owner (first block, no hand-back time given), then the crust's skin D2, 13:53 UTC, 25 Nov, on 2406c09 (holds main e96684b; `skin.ts` only). Where a number differs the D2 one holds. File `src/places/heart/lake/skin.ts`, the fragment of the baked lake sheet.
+
+- Base albedo mix(0.034 0.035 0.037, 0.125 0.126 0.129, age): age in patches of 110 m, 37 m and 11 m, flows of 4.1 m and 1.4 m with a hard edge. Matte rough 0.93, satin 0.4 only on rope tops, wet 0.2.
+- Sheen: fresnel 0.012 to 0.07, zero when the eye is under 3 degrees over the lake (v.y 0.05 to 0.18), half grey, never a picture of the sky; none on the feeding floor; none in the wide view.
+- Wide view (30 m, full by 130 m from the lens): albedo times 0.86 0.8 0.77, ages drawn together by 0.4.
+- Lines: every drawn line goes into one product, floored at 0.75 of its surround.
+- First block: only a furrow of coiled rope seen close (fold wider than about 11 pixels) may go to 0.34 at the line, 0.2 round the one that sank, and only one furrow in two. REPLACED by D2 (the later hand-back holds): a deep furrow 0.55 at the line, 0.74 round the one that sank, one in three, only on folds wider than 20 to 50 pixels.
+- (D2) Line per cord 0.8 at the line, 0.9 round the one that sank; crease between two coil patches 0.5.
+- (D2) Round the one that sank (the lobes round `uMound`): no pale crest in albedo, no satin line on the crest, the painted slope of a fold times 0.4; all of it fades by the fold's size on screen through the screen slope of `gFoldPhase` (full at 20 pixels a fold, gone at 6), so it holds for any `gFoldSpace`.
+- Fade by pixel: a fold is drawn while it is wider than 6 to 20 pixels (1 - smoothstep(0.05, 0.17, folds per pixel)), cords under 0.02 to 0.05, threads under 0.006 to 0.014.
+- The photographed grain (`tRopeNh` at 4.3 m, 1.37 m, 0.41 m, turned against itself) by `textureLod` with lod = log2(footprint * 1024) - 1.1; grit of 2.7 cm and 1.1 cm gone by a footprint of 6 to 14 mm.
+- Standing faces (1 - smoothstep(0.7, 0.85, normal.y)): fracture albedo 0.042 0.038 0.036, grain laid by height, fire light times 0.1 + 1.4 exp(-height over the melt / 0.25): a wall is dark, lit by the melt on its lowest third of a metre.
+- Feeding floor (12 to 55 m from the group, not within 20 to 42 m of the line): albedo times 1.5, tint 1.08 0.99 0.92, luminance capped at 0.115, no dust, no sheen. Joints are hairlines of 2 cm or 1.5 pixels at 0.35, lit 960 K by the seam, 1200 K by a pool. (D2 says hot lines are never under 2.5 pixels; the later number holds.)
+- What is painted on a lip or wall is keyed to the relief's own distance to the brim (`vAux.z`) or to height, never to the finer tear of the heat. `discard` is the last statement.
+- (D2) Base albedo mix(0.034 0.035 0.037, 0.125 0.126 0.129, age); banks of the line (12 to 20 m of `LINE`) times 0.66 0.6 0.59; wide view (30 to 130 m) times 0.86 0.8 0.77; feeding floor times 1.5, tint 1.08 0.99 0.92, luminance cap 0.115.
+- (D2) Fade by pixel: folds 1 - smoothstep(0.05, 0.17, folds per pixel); cords 0.02 to 0.05; threads 0.006 to 0.014; photographed grain by `textureLod` with lod = log2(footprint * 1024) - 1.1; grit gone by 6 to 14 mm.
+- (D2) On coils the photograph is read along the cord: uv = (0.7 * dot(q, (0.8, 0.6)), 0.11 * gFoldPhase) on the form's lobes; never across.
+- (D2) On the banks of the line no albedo noise between 3 and 30 cm over 5 per cent: grain A 0.06, C 0.08 of full weight, pits 0.07, spall off, grit of 1 to 3 cm from 0.35 to 0.1. Cords are drawn to 0.4 m from the shore at the line.
+- (D2) Melt on a bank: the face's direction from the plate and the wall (`nPlate`), never from the folds.
+- (D2) Wall (everything inside the brim of the line, not only faces steeper than 45 degrees): fracture albedo, the melt's light times 0.1 + 1.4 exp(-height / 0.25) times broken faces of about 0.25 by 0.1 m (0.12 to 1.3 by face); `gLip`'s wall share 2.0.
+- (D2) Hot lines: never under 2.5 pixels; widened ones dimmer by sqrt(own width / drawn width); 960 K seam, 1200 K pocket.
+- (D2) Feeding floor's own seams where the form shut the gaps: crooked lines 3 to 6 m apart (level line of two noises), in runs (noise of 7.9 m), 2.5 to 6.5 cm wide, pockets up to 15 cm more at 1200 K, within 8 to 48 m of the group's seam; the crust beside a seam is warmed for a hand or two. They do not go into the glow map.
+- (D2) `discard` last; no derivative after the first statements beyond the ones that were there.
+
+**The land**
+
+Source: the land's third owner (land, bench, sulphur crack), last hand-back 5, 13:45 UTC, 25 Nov, head 4158778 on main bcbefc4. Files `src/places/heart/land/height.ts`, `land/index.ts`, `land/shaders.ts`.
+
+- Staged far mass: built in world coordinates in its key's lens frame, shown only in its shot by `stagedSeconds()` and `.visible`; butte `BUTTE_FROM [-455.6, 249.8]`, `BUTTE_AHEAD [0.701, -0.713]`, face at 205 m, top 38.5 m, ribs every 0.6 m (`land/height.ts`, `land/index.ts`).
+- Wall: flows by the tables `FLOWS` and `TIERS` (tops 3, 8, 24, 30, 51, 58, 80, 88, 112 m under the pour), rim scale `RIM` entries 6 to 11 = 0.72, 0.89, 0.9, 0.98, 1.03, 1.09, debris cone `SPUR` rise 40 m (`land/height.ts`).
+- Cliff pictures laid by the smooth normal, crossover `smoothstep(0.26, 0.74, ...)`, wander 0 (`land/shaders.ts`).
+- Far tones: buttress `vec3(0.8, 0.71, 0.67) * mix(1.15, 0.78, steep)`, talus `vec3(0.1, 0.086, 0.076)`, ramp albedo times 0.42 with tint `vec3(1.22, 0.98, 0.84)` (`land/shaders.ts`).
+- Scree and broken ground: three-axis grain, chips `vnoise3(vWorld / 0.34)`, clods `vnoise3(vWorld / 1.3)`, bench lumps 0.37 m and pits 0.07 m on three planes (`land/shaders.ts`).
+- Sulphur crust: full within 0.3 m of the crack, gone by 0.55 m, cream `vec3(0.84, 0.8, 0.58)`, lemon `vec3(0.9, 0.78, 0.3)` on knobs, half cover (`land/shaders.ts`).
+- Vents are pushed sources only: top crack strength 0.45, rise 6, lean [-0.42, 0.2]; foot vent 0.2, 3, [-0.3, -0.35] (`land/index.ts`).
+
+**The loose rocks**
+
+Source: the rocks' first owner (parts `heart/bench` and the loose rock of `heart/land`), with hand-back F at 13:01 UTC; then the second owner of the loose rocks, 13:39 UTC, 25 Nov, on main bcbefc4; then rocks owner 2, D3, 13:54 UTC, 25 Nov, on 6877803 (holds main 0838a2a; `rock-shader.ts` only). Later holds. Files `src/places/heart/land/rocks.ts`, `land/rock-shape.ts`, `land/rock-shader.ts`.
+
+- Shapes: 12 instanced shapes (6 clinker, 3 slabs, 3 blocks), 6 levels each of 20, 80, 320, 1280, 5120, 20480 triangles; `ROCK_LEVELS` = 6 (`rock-shape.ts`).
+- Level by size on screen, not distance: `LEVEL_FROM` = [0.9, 6, 14, 40, 90, 200] px of a 2160 frame; `LEVEL_MOST` = [.., 300, 40] at the two densest (`rocks.ts`). Under 0.9 px a rock is not drawn.
+- Skin: triplanar read of the boulder picture in object space, `ROCK_TONE` = 1.5, per-rock tone about 0.35 to 1.3 in `aSeed.w` (under 0.5: no ash); ash on up faces vec3(0.15, 0.141, 0.13) in specks; upright faces take 0.6 of the sky; no sheen (`rock-shader.ts`). (The second owner gives: under 0.4 no ash at all, 0.5 to 0.6 a trace; the later one holds.)
+- Sulphur: within 3.6 m of the two vent cracks only, vec3(0.4, 0.3, 0.04) to vec3(0.75, 0.6, 0.13); on rocks over 0.9 m at the foot only (`rock-shader.ts`). (The second owner gives a stain within 1.5 m of the long crack and 0.9 m of the short; the later one holds.)
+- Seating: sunk 0.2 to 0.36 of the height on the bench, to 0.5 in scree; grit bank on the lowest 0.16 of the rock; contact shade through `ctx.rig.contactDiscs` for rocks over 0.3 m (`rocks.ts`).
+- Staged by shot: pile, skirt, near boulders and carpet on set for heart-02 only; skerry for heart-04 only (`during('heart-02')`, `stagedSeconds()`).
+- Light: rig functions only, `gl_FragColor = vec4(rigOut(colour), 1.0)`.
+- (Hand-back F) Mound: small stones (under 0.9 m) within 0.9 m of `uCrackB` are whole lemon vec3(0.9, 0.7, 0.1) to cream vec3(0.94, 0.88, 0.58) (`rock-shader.ts`). (D3 later cut this to a half coat with blots on stones under 0.2 m; see "What worked and what did not". The later one holds.)
+- (Second owner) Tone scale `ROCK_TONE` 1.5. A rock's tone: under 0.4 no ash at all, 0.5 to 0.6 a trace, 1.0 and over pale tops. Floor stones of the feeding shot 0.36 to 0.56; scree 0.38 to 1.28, one stone in five 1.35 to 1.9.
+- (Second owner) Levels of detail by pixels across at a height of 2160: from 0.9, 6, 14, 40, 90, 200; nothing under 0.9 px is drawn; at most 300 and 40 rocks in the two densest. The fine skin from level 3 (40 px).
+- (Second owner) Skin: read in the rock's own metres, three projections by its smooth normal, one repeat = clamp(0.9 x size, 0.3, 1.9) m; close read out to 16 m x clamp(2 x size, 1, 5).
+- (Second owner) Feeding shot (on set for heart-02 only): boulder 7.0 m ahead and 2.25 m left of the key lens, top 5.87 m, half 0.95; five stones at 1.72, 1.32, 0.94, 0.58, 0.24 m left, tops 5.72, 5.60, 5.47, 5.35, 5.24 m, halves 0.62 to 0.55, tall 1.5; nothing right of the middle.
+- (Second owner) Feeding shot floor: 3600 lumps of 0.10 to 0.42 m, 150 slabs, 2000 rim plates.
+- (Second owner) Tones of the feeding shot's near mass after the second hand-back: the boulder 0.74, the five stones beside it 0.50 to 0.58, the pile under them 0.50 to 0.68.
+- (Second owner) Slope by the fall: 1400 runs, stones 0.3 to 1.4 m (power 2.4), one in forty 2.2 to 3.4 m sunk 0.5, three chutes clear above 5 m.
+- (Second owner) Sulphur on stones: stain within 1.5 m of the long crack and 0.9 m of the short; crust full inside 0.3 m of the short crack, gone by 0.55 m, cream 0.84 0.80 0.58, lemon 0.90 0.78 0.30 on knobs.
+- (Second owner) Staging: pile, skirt, boulder, bank, carpet for heart-02 only; skerry for heart-04 only; both by `stagedSeconds`.
+- (Second owner) Rock skin (`rock-shader.ts`) after the second hand-back: the close read reaches 16 m times twice the rock's size (2 m block: 64 m, capped at 80 m); vesicles of 7 to 14 cm, faded out between 45 and 90 m; the 1 to 3 cm pits fade between 12 and 26 m so they cannot shimmer.
+- (D3) All slope stones are set by the land's height function, none at fixed heights.
+
+**The fall and the mouth**
+
+Source: the fall's owner, hand-back C7, 13:52 UTC, 25 Nov, on 70d1bd8 (main e96684b merged). Folder `src/places/heart/fall/` (`path.ts`, `shape.ts`, `look.ts`, `index.ts`).
+
+- `MOUTH { x -30, z -452, floor 80, width 172, height 68 }`, `shared/anchors.ts` (the root's).
+- `TUBE` power 2.5, lip at MOUTH.z - 4, depth 190 m, `fall/path.ts`.
+- The opening's outline: `dome(phi)` in `fall/shape.ts`, 14 per cent in at 0.25 pi, 7 per cent down at 0.4 pi, never under 0.84 (the collar, 14 m, must reach the land's hole at 1.03).
+- The course: `FAN_FROM` 136 m, `BRAID_FROM` FAN_FROM + 2, `HALF` table (10.5 m at the lip, 9.5 at 14 m, 8.5 at 26 m, 6.6 at 46 m, 5.2 at 70 m, 4.8 at 100 m, 5.4 at FAN_FROM + 4, 86 at FAN_FROM + 57), all `fall/path.ts`.
+- Flow 1.4 to 4 m/s.
+- `LIP` stays at MOUTH.x - 22 (the bed, the floor heaps, the pool's light and the rig's strip all hang on it).
+- Kelvin on the fire ramp, `fall/look.ts`: core 1528 to 1560 K, cap 1560 K (the core sits at the top of the ramp for the first 22 to 50 m and is wider there); skin on the stream 760 to 990 K; fan joints 1030 to 1330 K; hot brim 1110 K one metre from the lava's edge.
+- `RIM_LIGHT` 5.0, `APRON_TONE` 0.48, `WALL_TONE` 0.6, `fall/look.ts`.
+- White share at heart-4 hd: luma over 200 in 0.4 to 0.6 per cent of the frame (0.49 per cent on 70d1bd8).
+- Every mark is drawn in the stream's own coordinates (metres across, seconds since the lip, minus `uTime`); fine octaves fade by `seenAt(metres)`, from metres a pixel.
+- The melt's light on the cut at the rim's west foot starts 3 m over the floor, the rig's strip on the cut 1 m over it.
+
+**The air and the sky**
+
+Source: the air's third owner, hand-back 6, 13:44 UTC, 25 Nov, head 40fc575 on main bcbefc4; then the air's closing note, 13:50 UTC, 25 Nov, on main e96684b (corrections that replace the numbers above them where they differ). Folder `src/places/heart/air/` (`index.ts`, `volume.ts`, `smoke.ts`, `sky.ts`, `noise.ts`, `ash.ts`).
+
+- Sky: `uSkyZenith` (0.09, 0.118, 0.2), `uSkyHorizon` (0.175, 0.21, 0.33), `uFill` (0.78, 0.64, 0.4) in `shared/rig.ts`; the dome (`air/sky.ts`) draws mix(horizon, zenith, pow(up, 0.45)).
+- Sky light on smoke: `skyMean` = 0.45 horizon + 0.55 zenith + 0.12 warm (`air/index.ts`); times `uFill` low in the caldera, full above 380 m (`skyLight`, `air/smoke.ts`).
+- Air (`air/volume.ts`): `AIR_ALBEDO` (0.95, 0.89, 0.87), `HEAVY_ALBEDO` (0.72, 0.64, 0.6), `HANG_ALBEDO` (0.4, 0.33, 0.3), `LAYER` 12 m, `LAKE_WIDE` 0.75, `STEPS.air` 8, reach 3400 m, top 900 m; the bank at the buttress 0.0008.
+- High veil on the sky (`volume.ts`): depth min(0.6 + 6 east, 3.2), light sky times (0.5, 0.28, 0.17); the air's light less 0.75 veil times what the smoke lets through.
+- Smoke (`air/smoke.ts`): `STEAM_ALBEDO` (0.88, 0.86, 0.84), `SMOKE_ALBEDO` (0.52, 0.46, 0.4), `SKY_DIR` (-0.58, 0.75, -0.29), `SMOKE_STEPS` body 14, most 24, steam 10, `MAX_BODIES` 13, `MAX_STEAM` 16; two sheets split at 60 m (110 in heart-02, 450 in heart-05).
+- Body colours (`air/index.ts`): `SOOT` (0.4, 0.34, 0.32), `PALE` (0.64, 0.42, 0.36), `ROSE` (0.5, 0.42, 0.33), `UMBER` (0.4, 0.31, 0.27), `AMBER` (0.55, 0.45, 0.2).
+- Motion: plume billows climb 14 m/s, lumps 130 m; smoke columns min(9, 2 + 0.09 rise) m/s; a puff of steam each 1.5 s, of smoke each 4 s; march offsets fixed to the pixel; lake and floor light of each body times `breath()` of `shared/rig.ts`.
+- The plume of the wide view (hand-back 6): the column's source on the far side of the buttress as seen from the heart-0 lens (at 530, -262), base radius 70, umber (0.4, 0.31, 0.27), leaning right, off in heart-02 and heart-05.
+- The lit fume at the right end: amber (0.55, 0.45, 0.2) under the lake and floor light, height 250, thinning upward.
+- Horizon and top: the dome and the volume pass use the same mix(horizon, zenith, pow(up, 0.45)); where a view reaches the sky the volume adds that sky times what the air lets through, less the veil, so air and sky meet at the horizon in one colour; at the top of the frame the smoke's tops are lit by the same `skyMean`.
+
+**The crust-walkers**
+
+Source: the walkers' third owner, last hand-back C11, 13:47 UTC, 25 Nov, head 9edf24b on main bcbefc4; then a second pair of cost numbers, 13:51 UTC (no code changed). Folder `src/places/heart/walkers/` (`index.ts`, `animal.ts`, `herd.ts`, `material.ts`, `skin.ts`).
+
+- Kinds of part in attribute `aLook.x`: body 0, neck 1, root 2, leg 3, pad 4, rag 5; `aWho` is the animal's index (`skin.ts`, `material.ts`).
+- Light shares of an animal (`material.ts`): `FAR_FIRE` 0.08, `LAKE_UNDER` 0.25, `LEG_RIM` 0.8, `CRUST_BOUNCE` 1.0, `POOL` 2.0; the rig's `poolApron` at reach 14: 0.15 on the belly, 0.10 on legs and neck, 0.015 on back and flanks. On the trunk 'under' starts at normal y -0.45.
+- Least half-width on screen (`material.ts`, vertex): legs and neck 1.5 px, roots 1.9 px, the rest 1.25 px.
+- Gait (`animal.ts`): `DUTY` 0.8, `REST` 0.0125, `STEP` 1.6 s, legs a quarter cycle apart (left hind, left fore, right hind, right fore).
+- Build for a size k (`herd.ts` `makeBuild`): standH 9.3 k, neckLen 10.6 k, stride 4.3 k, padR 0.8 k, tendrilLen 3.5 k, 7 to 9 stout roots, each forked once or twice.
+- Feeding neck (`animal.ts`): `TAUT` 0.945, crown hangs at -1.42 rad, `TUFT_LOW` 0.52, `TUFT_UP` 0.85, drawn out by 1.25 at most; `FEED_SHAPE` 0.1 (`herd.ts`).
+- Foot (`animal.ts`): footR 0.7 padR, a rim of ash to 1.55 footR that draws in to 0.6 when the foot lifts.
+- Feet to the shaders (`index.ts`): `uniform vec4 uFeet[56]` (x, z, lift / k, pad radius) and `tGround`, 56 x 1, `HalfFloatType`. No `FloatType` (gate G10).
+- Staging (`herd.ts`): `STAND {1: [1.82, -1.73, 28]}`, `POOLS[0]` = (-403.4, 202.6); `WALKERS` and `AWAY` in `shared/anchors.ts`.
+
+**The one that sank**
+
+Source: the owner of the one that sank (part `heart/sunk-walker`), last hand-back C8, 13:53 UTC, 25 Nov, on bd5c0ac (main 0838a2a merged). Folder `src/places/heart/sunk/` (`index.ts`, `shape.ts`, `shaders.ts`, `noise.ts`).
+
+- Field sheet (`shaders.ts`, `FIELD_FRAGMENT`): dead matte, rough 0.93, fresnel by the lake crust's own sums.
+- `ROPE` vec3(0.058, 0.05, 0.045); `ASH_SKIN` vec3(0.125, 0.118, 0.112); unfolded outer sheet = the lake's plain crust mix(vec3(0.066, 0.067, 0.07), vec3(0.128, 0.129, 0.133), age). (The crust's skin gives its base albedo as mix(0.034 0.035 0.037, 0.125 0.126 0.129, age); the two blocks differ and both hand-backs are timed 13:53 UTC, so neither is later. Both are kept here.)
+- The baked `folded` mask fades over the outer 3.6 m (`shape.ts`, `folded: sheet * smooth(0.2, 3.6, run)`): no edge of a pad from above.
+- Staging by shot (`index.ts`): `LIFT` 2.0 on folded skin and carcass inside shot heart-04, `WIDE_LIFT` 1.3 elsewhere; `TEAR_GAIN` 1.6.
+- Wide view (`shaders.ts`): wideView = smoothstep(30, 130, distance to the camera); there the sheet does the lake's own wide sums and folded skin between ropes is plain crust.
+- Contact shade (`index.ts`): body 3.4 m at 0.45, feet 1.0 m at 0.45 and 0.9 m at 0.4, span 2.6 m at 0.1.
+- Ropes: ropy texture laid 1.6 times shorter along a rope (`ropeAt * vec2(1.6, 1.0) / 1.7`); between ropes a break-up of 5 to 20 cm by ground coordinates.
+- Hull (`shape.ts`): `HULL_GROW` 1.3 about `HULL_PIVOT` (centre x, 0.2, centre z); the lava coat's mark and the cull under the skin are taken at the GROWN point.
+- Hull tone vec3(0.084, 0.074, 0.068); flakes vec3(0.275, 0.235, 0.18). Leg A: one tube, bend radius 1.1 m, knee 0.455.
+- Event (`index.ts`): `SETTLE_AT = secondsInPlace(UNIT, 3740)`; `GIVES` at SETTLE_AT - 2.25 and - 1.15 (each a jump of `uSeam`, a breath of steam, a slab drop of 0.1 and 0.12); `BREAK` [-7.6, 5.42, -4.6, 5.62]; slab drop 0.13 m; face 1310 K cooling with a time of 0.9 s, black by 3.6 s; hull tip 0.022 rad, drop 0.05 m.
+- Standing seam (`shaders.ts`): slab 3.5 cm low before the break, lower 2.4 cm of its face lit in lengths at 900 + 190 uSeam + up to 300 K, off beyond 40 m (smoothstep(40, 25, distance)); lit where its threshold passes 0.26.
+- Cost cap of the part: 2 s a sample at key heart-2, uhd draft (MEASURED 2.04 s; see the next part).
+
+### What worked and what did not
+
+Labels: MEASURED is a cost a block measured, written as the block gives it. STATED is a figure or claim a block gives without a measurement. `cost not measured` is written where a block gives no cost.
+
+**The light, the lens and the grade (`shared/`)**
+
+Cost base (MEASURED): whole frame, wide key, uhd draft, one sample, best of three, noise about 0.4 s; whole frame 22.5 s on main e3672d8.
+
+- Worked: strip light from the stream's own course, 48 rows in a uniform, no map read: rock beside the stream 2.2 times as red as rock 20 m away. About 0.5 s a sample, uhd draft, wide key (by difference only, STATED as not measured alone).
+- Worked: cutting the round lights that stood for the same lava (one number a light): the flat wash on the slope went. No cost (STATED).
+- Worked: pools as three ellipses in uniforms, nearest one only, as a call of its own so that animals take it at their own share. 0.5 s a sample, uhd draft, wide key (MEASURED).
+- Worked: thrown shade as one read of the contact map toward the weighted mean of the lights; second read at 3 m. No measurable cost: 20.93 against 20.87 s (MEASURED); the second read apart from the first, cost not measured.
+- Worked: a bank of smoke, and a glow before a cave mouth, each as one wide round light in the same place of the list. The glow: 22.50 against 22.24 s, inside the noise (MEASURED); the bank, cost not measured.
+- Worked: breath of the lights on the processor side (a multiply a light a frame). Cost not measured; nothing in the shader.
+- Did not: the union of all the stream's arms as the strip's width (the direction to it went vertical: no light). Cost not measured.
+- Did not: a wider or stronger strip on the fan, three tries: plates inside blazed, the rock beside did not change. Reverted. Cost not measured.
+- Did not: skipping a light block for fragments far from it (20.96 s, MEASURED) or leaving dark lights out of the list (20.91 s, MEASURED): this renderer works every block out for every fragment.
+- Did not, for the cliff round the mouth: more from the fall's own lights on what stands over them (no change: they stand behind that face), a far tail on the strip (it lit the wrong slope). Reverted. Cost not measured.
+- Did not: lighting a belly 8 m up from the lake's glow map (red 22 to 31 at four times the share, blotches on the legs); the pool's own call did it (22 to 57). STATED: the "22 to 57" was a try on the owner's machine in the walkers' file with `LAKE_UNDER` 0.25, not a commit. Cost not measured.
+- MEASURED for the glow before the mouth, p50 of a patch: heart-4 right of the arch (x 68 to 80, y 15 to 30 per cent) 65 59 57 to 70 59 57 (picture 83 70 68); heart-0 above the arch 63 59 58 to 67 60 58 (picture 79 65 67), right of the fall 71 64 62 to 76 66 63 (picture 88 72 73). It goes a third of the way; the rest of the picture's warmth there is lit haze over the cliff, which is the air's.
+- Cost (MEASURED, heart-0, uhd draft, whole frame, best of three, on main e3672d8): with C9 22.50 s, the same tree with the rig of C8 22.24 s: 0.26 s, inside the noise of 0.4 s, so not shown to be free. The three blocks the light's owner owns cost about 1 s together.
+- Cost (MEASURED, the second owner's measure): `CONTACT` at 2048 cost 0.5 s a sample; kept at 1024.
+- Not measured in the light's text: the strip alone (by difference only), the bank, the breath, the cost of the second shade read apart from the first.
+- Trap: a round light that stands for a long source washes everything evenly: cut its core and give the source its own strip.
+- Trap: no branch or loop saves time here, only fewer operations; and a surface that sums its light by itself (walkers, crust skin) gets nothing from a new rig block until its owner calls it.
+- Still wrong: 1. the cliff round the mouth is still two thirds short of the picture's warmth; the lit haze must do the rest. 2. the breath is in the lights and hardly in the picture. 3. heart-3: the floor is paler than the picture and the hero is unlit from below until the walkers' line is in.
+
+**The lake's melt**
+
+Cost base of the first block (MEASURED): ribbons and foundering together 0.2 s of 72.5 s a still at uhd draft; parts not measured apart.
+
+- Worked: one bank function read by three parts. Cost not measured apart.
+- Worked: plates as cells of a warped lattice riding the stream whole, welded, lapped at rims (over or under by a hash). Cost not measured apart.
+- Worked: ropes dropped where finer than 3 pixels (screen derivatives of the rope count): cured rings. Cost not measured apart.
+- Worked: core as one smooth body: heat by distance from mid flow plus long folds. Cost not measured apart.
+- Worked: width cut in metres with brightness given back to the glow map (`gWas`): glow sum holds by construction, not measured (STATED).
+- Did not: cracks between plates as a net, then as level curves of a slow noise: read as marble, then as a contour map. Cost not measured.
+- Did not: crease fire on raft ropes with a warp that could fold: bright rings. Cost not measured.
+- Did not: thin tearing skin with cross ropes on the core: hard bands. Cost not measured.
+- Did not: flutes of 0.2 m, 10 cm deep, on the bank line: a comb of teeth on the wall. Cost not measured.
+- Did not: `npm run measure` hung for 8 minutes: time the still with the part hidden instead.
+- Trap: shader errors show only at render: grep the output for ERROR (a name such as rim may be taken already).
+- Trap: after merging main the crust may have moved off the brim: render main alone before blaming your change.
+- (D3) Worked: changing cover and width with the surge (not kelvin). STATED, not measured with the cost tool: about 8 noise reads a lake pixel in the crust skin and 2 in the lava mesh; a 12-frame preview sheet took about 115 s before and after, so no cost seen.
+- (D3) Worked: a sparse far field by large lanes times a break field, on the drawn surface only. No added cost seen (STATED).
+- (D3) Worked: a table of vents with one dominant. No added cost (same instances) (STATED).
+- (D3) Worked a little: the feet (six yellow knots of unlike size along the line at heart-0 in hd, the largest under the main fountain; small at the size of the whole frame; the seam between them still orange and even). No added instances (STATED).
+- (D3) Did not: kelvin alone. It is lost in clipped orange and under the cover floor; the sheet's neighbour difference went from 3.81 to 3.94 and nothing was seen. Cost not measured.
+- (D3) Did not: creep at 6 m and 2.3 m. It is under a pixel from the rim. Cost not measured.
+- (D3) Did not: feet at 1 to 2.5 m (2 to 3 pixels at hd). Cost not measured.
+- (D3) Did not: slab albedo (0.42 to 0.09) against the pale grey-blue ellipse left of the fountain seam at heart-0. D3 says the cause was not found and that it may not be the slab at all; D4, the later hand-back, found the cause (the next lines), and D4 holds.
+- (D3) For scale, the predecessor's figure: the lava parts are 0.2 s of 72.5 s a sample at uhd draft. Not repeated (STATED).
+- (D4) Worked: finding a stray pale shape by rendering each part alone (`--diag solo --part`). The pale grey-blue ellipse left of the fountain seam at heart-0 was the top of the foundering plate, level about (73, 72, 79) alone. Cause: the sky mirror in `rigShade`. Under 2 degrees the fresnel term is about 0.36 even at roughness 0.75. Cost not measured (one line of shade changed).
+- (D4) Did not: lowering the plate's albedo (0.42 to 0.09) against a mirror of the sky: the mirror does not read the albedo. Cost not measured.
+- Trap (D4): any flat, smooth, level face seen under 2 degrees mirrors the sky through the rig's fresnel term whatever its albedo or roughness; shade it along its normal and fully rough, or it reads as a pale lens.
+- Still wrong (D3): (1) the fountain is still sparks over a flat seam with small knots; the fume above it is not lit by it, and the pale ellipse sits beside it (the pale ellipse was cured later, in D4). (2) The melt at the line is one flat level with painted plates; no thickness, no edge. (3) The surge is brightness changing in place, not flow; the near seams of the wide view hardly change at sheet size.
+- Still wrong (D3), not done: thickness at the line; cost by the cost tool; plate turn and jostle at heart-03 never judged on a held sheet; the halo on the crust round the feeding pools does not pulse with the pools; the feet were looked at only at heart-0.
+
+**The crust's form**
+
+- Worked: central-difference normals from the bake: removed lit and unlit alternate vertices on edges askew to the lattice. Cost not measured.
+- Worked: a `--diag depth` still to tell teeth in the height from teeth in the paint: 72 s a frame at uhd draft (MEASURED).
+- Worked: large flat plates (3 m) that lap with a rounded step: read as lobes. One `slabAt` call; cost not measured apart.
+- Worked: two plate lattices kept a metre apart by unbroken ground: no plate cut by the border. Cost not measured.
+- Worked: gaps shut on the floor away from the seam: the floor reads as one sheet, not tiles. Cost not measured.
+- Did not: a wall that follows noise finer than 4 cells: a fluted wall, a comb of spikes seen along its length. Cost not measured.
+- Did not: step faces 2.5 cells wide (comb) and 4.5 cells (soft clay). Cost not measured.
+- Did not: small tilted slabs (0.7 m, 25 degrees) at a brim: tents and triangles. Cost not measured.
+- Did not: many small plates riding up with shallow gaps (1.9 m lattice): moved away from the picture. Cost not measured.
+- Did not: open joints of the net near a low lens: black ribbons. Cost not measured.
+- Did not: cost targets (5 s and 4 s) not met. MEASURED, uhd draft, one sample, crust above the empty frame: 11.82 s at heart-1 and 8.30 s at heart-0 on commit 242aa87; 9.58 s and 6.51 s on 4f92e80, where a flat fragment left the form alone at 0.56 s and 1.22 s; `foldAt` about 1.0 s at heart-1. Far-field cuts: not done, not measured. Last commit: not measured.
+- Trap: a quantity used by the height and by the paint or the melt, written twice (plate size 1.9 in `skin.ts`, the tear of the brim in three files): one lattice painted on another, or a melt edge beside the wall. Keep one global and name it to the others.
+- Trap: teeth. Anything narrower than 3 to 5 cells, a hard `max` or `step` on the height, or a threshold in the fragment on a value carried per vertex stands as a row of teeth at uhd and is invisible at preview size. The owner blamed the height twice and the paint once before taking a depth picture.
+- (D3) Worked: lobes as summed sheets with a step and a crease; cords as arcs about a point outside the lobe. Cost not measured apart.
+- (D3) Worked: a bank's fall laid from the analytic line, not from the net (the net's fall ends where the nearest joint stops being the line: a toothed second bank). Cost not measured apart.
+- (D3) Worked: a second centre through one parameter of `lapAt`, no second function. Cost not measured apart.
+- (D3) Did not: cords 16 to 22 cm seen from under 1 m up at 15 m: 10 pixels, stripes.
+- (D3) Did not: arc centre inside the lobe: closed rings.
+- (D3) Did not: a crack 0.25 to 0.6 m wide on a floor seen under 1.5 degrees: under a pixel.
+- (D3) Did not: hill knobs at 10 m through aperture 0.2: one soft mound; 0.4 m was too tall.
+- (D3) Did not: telling the paint a spacing and trusting it: it lays its own lines where the form's cover is low and floors its strands in its own zone. (Test: the form's ropes faded out entirely and the stripes at heart-2 stayed: the stripes at 10 to 25 m are the paint's, not the height's.)
+- (D3) Did not: shutting the paint from the form (`gFoldCover` 1 across the zone, `gFoldSpace` 0.005): little change, discarded.
+- (D3) Cost (MEASURED, whole frame only): 27.34 s a sample at heart-2 uhd draft on e96684b (25.79 s before D3 and before seven other merges; the form's share is not separated; the crust alone was not measured before and after).
+- Still wrong (D3): (1) heart-2, 10 to 25 m: stripes (paint lines on lobes without cover, strands on ropes). (2) The ropes of one lobe are evenly spaced parallel arcs; where they are 12 to 25 pixels they read as ripples in sand, not as twisted ropes; they want uneven thickness and a break along their length. (3) heart-1: lobe fronts are not lit and creases not black; walker 0's ground near (-508.7, 226.8) and (-494.3, 209.8) carries lobes up to 20 cm, and the brim at the line is down to melt + 0.08 m in places.
+
+**The crust's skin**
+
+Cost base of the first block (MEASURED): crust alone at heart-1, hd draft, seconds a sample, by leaving parts out; uhd per technique not measured; whole crust at uhd draft 12.41 s above the empty frame at heart-1 at commit 64d27c4, measured once. (The crust's form gives 11.82 s and 9.58 s for the crust at heart-1 uhd draft on two other commits; the measures are on different commits and all are kept.)
+
+- Worked (W1): pixel footprint (long and short axis from dFdx, dFdy of the rest position) as the one fade for every band: no shimmer. Cost with the rest of the set-up 0.2 s a sample, hd draft, heart-1 (MEASURED).
+- Worked (W2): photographed normal and height texture read three times at three scales with explicit lod: grain everywhere. 0.35 s a sample with spall and albedo, hd draft, heart-1 (MEASURED).
+- Worked (W3): one product for all lines with a floor: ended the "ink" look. Free (STATED).
+- Worked (W4): coils: arcs about a centre off the patch (3 by 3 cell search), phase noise, one furrow in two deep. Cost not measured. (D2, the later hand-back, replaced the rings with parabolas and one deep furrow in three; D2 holds.)
+- Worked (W5): fracture faces by height: ended stripes hanging down walls. Free (STATED).
+- Worked (W6): hairline joints from the distance to the plate's edge. Cost not measured.
+- Did not (D1 of the first block): rope sheaves and grooves as dark lines at full strength: read as a zebra pattern from 5 m on. Cost not measured.
+- Did not (D2 of the first block): sky mirror on satin at grazing angles: blue-white glare on the lake. Cost not measured.
+- Did not (D3 of the first block): pale ash dust and a luminance cap alone on the feeding floor: pale tiles, then flat clay; scale the albedo instead. Cost not measured.
+- Did not (D4 of the first block): keying wall paint to the heat's fine brim: a comb down the wall. Cost not measured.
+- Did not (D5 of the first block): own coils beyond a footprint of 1 cm: fields of even stripes. Cost not measured.
+- Did not (D6 of the first block): photographed grain at full weight on rope: a felt of short strokes. Cost not measured.
+- Cost by part (MEASURED, hd draft, heart-1, seconds a sample): mesh, bake and landAt 2.68; net 0.21; heat and gape 0.30; heaps, slabs, ridge 0.08; lobes and folds 0.21; grain, spall, albedo 0.35; lights 0.06; mirror, wet, cracks, glow 0.40; whole 4.29.
+- Trap: a compile error of the fragment shows only in the render's output and the frame comes out without the surface: read the output of every render, and re-check the relief's function signatures after every merge.
+- Trap: any hard function of a per-vertex quantity (the mesh normal, a per-vertex distance) draws the lattice as teeth or a comb: key paint to analytic per-pixel quantities and soften over two or three cells.
+- (D2) Worked: parabolas in place of rings for coils (no arc can close). Cost not measured.
+- (D2) Worked: grain along the cord. Cost not measured.
+- (D2) Worked: drawing the cords up to the shore (that, not weights, cured the mottle in the nearest 3 m at heart-1: the cords were not drawn within 2.5 m of the shore because `skinOn` was gated by the distance to the shore, so the bare photograph showed). Cost not measured.
+- (D2) Worked: plate normal for the melt's light (stripes on fold flanks gone). Cost not measured.
+- (D2) Worked: wall by brim distance and not by steepness. Cost not measured.
+- (D2) Did not: rings about a centre near the patch (bullseyes).
+- (D2) Did not: furrows at 0.34 and 0.2 (zebra from 5 m on). These were the first block's locked numbers; D2 is later and holds.
+- (D2) Did not: the grain stretched 3 times along the cord (smeared blotches; 1.4 times holds).
+- (D2) Did not: raising `gLip`'s wall share to 3.0 (an even red band).
+- (D2) Did not: broken faces keyed to steepness (the wall is not steep in the cells, nothing showed).
+- (D2) Cost: `heart/crust` was 12.41 s a sample above the empty frame at heart-1 uhd before this owner (the predecessor's measure, MEASURED). STATED, not measured after D2: this owner adds, per pixel on coils, nothing (the two reads moved, none added), on the feeding floor 9 value noises where seamOn > 0.02, on a wall 1. MEASURED, whole key renders: heart-1 uhd draft 87 s before and 88 s after, heart-3 hd draft about 40 s.
+- Still wrong (D2): (1) heart-1, the cords on the lobes are too even: every lobe carries the same dense parallel lines, the picture's sheaves differ in width and die out; the mid field behind the far bank still shows rings. (2) heart-1 wall: the dark faces are too square, like stamps; no glowing cracks in it. (3) heart-3: the thin seams are dull dark red scribbles between orange pockets, the picture's are yellow-orange with a hot core; and the pockets are all of one size.
+- Still wrong (D2), not done: cost cures; pinhole count; twelve consecutive frames after D2; the dark crease at each lobe's foot from `gLapHigh` and the lobe fronts catching the melt; the density of seams from the hero's crown toward the lower right.
+
+**The land**
+
+- Worked: a far mass staged by shot on ribs along the view axis, three beds in its profile, flutes in the shape and beds in the tone. Land at heart-3: 3.82 s a sample above the empty frame (MEASURED, hand-back 3).
+- Worked: taking the terrace off a far mass to end a stair of steps; talus in the shape and tone keyed to slope and to the side of the axis. Cost not measured.
+- Worked: a table of unlike flow tops where one lens looks at a wall, in place of even steps. No cost measured (8.88 s before and after within noise, MEASURED).
+- Worked: ramp, ledges and buff patches for the long lens: land at heart-4 from 7.75 to 8.96 s a sample (MEASURED); one relief read instead of two saved 0.3 s (MEASURED).
+- Worked: three-plane grain for near and sloping ground; blocks along a ridge the lens looks along. Cost not measured.
+- Did not: tone alone to part a far mass from the wall behind it; a paint-only talus skirt and paler table (too weak). Cost not measured.
+- Did not: two-axis noise for scree (dashes down the slope); a second lower mass behind the crag (read as a fin). Cost not measured.
+- Did not: cliff pictures switched hard by the triangle normal (slanted hatching); a paint mound away from its crack (hidden). Cost not measured.
+- Did not: beds in tone alone on a near bank (faint; the shape decides). Cost not measured.
+- Cost (MEASURED, uhd draft, heart-4, `--parts land bench`, on 4158778): whole frame 25.15 s; land 13.89 s alone, 8.88 s a sample above the empty frame; bench 5.01 s alone, taken as the empty frame. Hand-back 3 was 24.43 / 13.80 / 8.96 / 4.85, so the last hand-back cost nothing measurable. heart-0 and heart-3 not measured again (hand-back 3: land 0.51 s and 3.82 s above the empty frame).
+- Not measured: any technique's cost by itself except where a figure is given.
+- Trap: the ground's vertex shader ignores the model matrix, so a moved or rotated mesh draws where it was built.
+- Trap: masks by world x set by eye were wrong by 65 m, and hd stills do not show uhd detail; probe first, check at uhd.
+- Still wrong: 1. heart-0 near bank: one steep dark continuous slope with a round boulder on its crest; the picture's blocky ledge with pale faces and its low shelf are not there. It needs `benchAt` reshaped, which carries the cameras' route; not risked. 2. heart-4 wall: the tiers under the pour read as steps, but their faces are the same grey rubble as the slope, not dark sheer rock with warm lit facets; the upper left of the frame is darker and flatter than the picture. 3. heart-1 crag: the middle block juts as one tooth (frame x 20, y 22 per cent), the stain under it is olive. And heart-3: the bluff still stands on a broad apron.
+
+**The loose rocks**
+
+- Worked: displaced ball with three noise scales, smooth normals taken two levels finer than the mesh. Bench at heart-0: 2.32 s a sample above the empty frame (6.62 s alone; MEASURED, uhd draft).
+- Worked: clusters (1 to 2 blocks, 3 to 6 smaller, chips, 12 to 21 rubble pieces) with bare ground between, in place of an even sprinkle. Its cost is inside the heart-0 figure above, not measured apart.
+- Worked: scree on the long lens as runs along level lines, stones 0.6 to 3.2 m (10 to 30 px). heart-4 land part 8.38 s a sample above the empty frame (13.13 s alone, MEASURED) with the ground in it; the scree's share not measured apart. (The second owner later set the slope's stones to 0.3 to 1.4 m with one in forty 2.2 to 3.4 m; the later one holds.)
+- Worked: carpet on the moving crust: one texel a stone, the crust's own height function baked into a half float target each frame, read back, culled on the CPU. Bench at heart-3 0.78 s above the empty frame (MEASURED once at 98f3f52, before the thinning; not measured since).
+- Did not: even scatter of lone pebbles (read as sprinkled). Cost not measured.
+- Did not: blocks made as a ball with facets (read as blobs). Cost not measured.
+- Did not: small lumps on the floor at a low lens (hidden behind plate rims, two thirds removed). Cost not measured.
+- Did not: `FloatType` data texture (gate G10 fails; use half float, whole part and fraction).
+- Did not: reading the floor's albedo for the stones' tops (the skin does not export it); tone set by eye. Not measured.
+- Cost (MEASURED, hand-back F, uhd draft, 1 sample, about 12:20): heart-0 whole 21.25 s, bench 6.62 alone (2.32 above the empty frame), land 7.98; heart-4 whole 24.41, land 13.13 (8.38 above empty), bench 4.75. Before the rocks' work (6e5ed77): heart-0 16.28 / 3.75 / 4.38; heart-4 15.31 / land 6.81 / bench 2.38.
+- Trap: hand-placed stones silently fail `put()`'s camera keep-outs, and a new keep-out removes hand-placed stones too: draw the part alone after every rule change.
+- Trap: the ground under the rocks changes under you (crag, aprons): take every height from the height function at build time, never a number.
+- Trap (hand-back F): a still at hd is 1920x1080: resize before pairing with a 1280 px reference.
+- (Second owner; cost in seconds a sample at 3840 x 2160) Worked: a foreground mass made of 6 hand-stood stones that overlap (spacing 0.35 to 0.4 m, halves 0.55 to 0.6): one top line, free (STATED).
+- (Second owner) Worked: fine scree as many small instances at the lowest level: land part at heart-4 13.4 s with 1400 runs, against 13.1 s with 800 runs of boulders (MEASURED): small stones cost almost nothing, the ground under them is the cost.
+- (Second owner) Worked: cutting a carpet of 14000 crumbs to 3600 larger ones: reads as stones, not pepper. Cost not measured.
+- (Second owner) Worked: sulphur kept to half a metre of the vent. Cost not measured.
+- (Second owner) Cost (MEASURED by this owner): the land part alone at heart-4, uhd draft, after the scree change: 13.42 s a sample (the predecessor's number before it: 13.1 s, on another machine, so the difference of 0.3 s is inside what two machines differ by). The whole frame there: 25.0 and 26.0 s in two runs.
+- (Second owner) Did not: a row of stones along the whole bottom edge (a wall at the shot's first frame, because a push of 16 m puts whatever fills the corner at the key into the middle at the start, as high).
+- (Second owner) Did not: pale tones (0.5 to 0.95) on a floor of albedo 0.08: salt and pepper.
+- (Second owner) Did not: judging a staged rock at the key only.
+- (Second owner) Did not: trying to cure the wide view's "marble" in the rock skin: it was the ground.
+- (D3) Worked in part: crust on small stones at half a coat with 11 cm blots (0.5 * mound * blots, only on stones under 0.2 m, gone by 0.4 m, on up-facing parts only): part cure only, no measurable cost expected (STATED), not measured.
+- (D3) What it does at heart-1: the larger stones at the vent read as dark olive rock with cream blots; the smallest stones at the left of the mound are still pale all over, so the mound still reads more as pale pebbles than as the picture's one low yellow crust on dark ground. The mound term was not the only source of the pale: the older gas stain (cream where thick, within about 0.3 m of the short crack) and the land's own cream ground lie under the same stones.
+- (D3) The cure the owner would try next (not run): cut the gas stain's thick cream (0.82, 0.76, 0.42) inside 0.55 m of `uCrackB` on stones under 0.4 m, so only the half coat is left there.
+- (D3) Worked: all slope stones set by the land's height function, none at fixed heights: after the land's `TIERS` changed the ledges under the pour, the scree followed, nothing floats or sinks (seen at hd on a trial merge). Cost not measured.
+- Still wrong (second owner, 13:39): 1. heart-02, first third: the mass stands in the bottom middle over the hero's hind feet (kept by the Builder's ruling); it reads wider (x 10 to 65 per cent at frame 2937). 2. heart-1: the small stones inside the sulphur mound all carry the cream crust, so the mound reads as a little heap of pale pebbles rather than crust on dark rock; a cure not rendered: multiply the crust on stones by 0.5, or keep it to stones under 0.2 m (D3 then ran this cure in part). 3. heart-4 slope: the scree is one material with only tone between stones, the smallest are drawn with a few triangles, and it cannot be drawn alone (it shares the part `heart/land` with the ground).
+- Still wrong (D3, the later one): heart-1 sulphur mound still a small heap of pale stones, too white and too lumpy; heart-02 first second, the near mass a large dark shape at the bottom middle (ruled: keep); heart-0 stones in the first 10 m smoother and more even in size than the picture's clinker.
+
+**The fall and the mouth**
+
+Cost base (MEASURED on ee6a840, the same source before the e96684b merge): seconds a sample at uhd draft, frame 4006; lava-fall whole 2.00, vessel-mouth whole 1.55, surge 0.00 above an empty frame of 4.99 s; sum 3.55 s against the share of 3.
+
+- Worked: marks in flow coordinates, so they ride at the flow's speed. Not measured apart.
+- Worked: stretches of skin and of open melt 5 to 15 m long riding the stream, seen on the held sheet. Not measured apart.
+- Worked: `seenAt` fade of fine octaves, against crawl far off. Not measured apart.
+- Worked: hot brim counted from the lava's edge, not the bed's (a flat panel went). Not measured apart.
+- Worked: `dome(phi)` on the arch and the east cut dark within 3 m. Not measured apart.
+- Worked: lumps that shade the banks (occlusion from noise and plates, within 18 m): breaks the lit bank; with the wider pour lava-fall rose 1.87 to 2.00 s a sample, uhd draft, frame 4006 (MEASURED).
+- Did not: an own strip of light along the course: lit the banks twice with the rig's strip; taken out. Cost not measured.
+- Did not: a fume source in the mouth: a pale blob at the wide view; taken out. Cost not measured.
+- Did not: side channels on the upper stream: their curtain stood as a flat pale rectangle; three taken out. Cost not measured.
+- Did not: smoke sources in front of the fan: lifted the black crust to orange; moved behind, to the east arm. Cost not measured.
+- Did not: a fan head 10 m wide at FAN_FROM + 4: a flat orange band; narrowed to 5.4 m. Cost not measured.
+- Did not: the surge: fuller stream and a head, but no front seen to travel between frames 4006 and 4017. 0.00 s a sample, uhd draft (MEASURED).
+- Did not: moving the pour to the lip's left third: not done, could not be proved in the time.
+- Did not: the comb of lit spikes at the west foot of the mouth: a test showed it is not on the rim's skin there (darkening that skin changed nothing in the frame); it is the bed's or the land's rock meeting the cut; not found.
+- Trap: haze in front of the lava (the air's smoke or your own sources) makes black crust read orange: look at the part solo before you retune the crust.
+- Trap: once marks ride the stream the white share moves with time and with each mark: measure it after every change, at the key's frame.
+- Still wrong: (1) the pour leaves mid-lip and its upper spill is still narrower and dimmer than the picture's sheet, with a red outline round the strands; (2) the comb of lit spikes at the west foot of the mouth and the rim's outer edge as a line you can trace; (3) the fan at the wide view is dots, and the surge does not travel.
+- Still wrong, not checked: heart-0 and the held sheet after the pour widened; shot heart-05 not re-made since C4; the owner's own check of foreshortened stretches names 11.5 m of the course between 26 and 38 m (0 before the widening), not looked into.
+
+**The air and the sky**
+
+Cost base: the whole frame at uhd draft, one sample, second of two runs.
+
+- Worked (W1): bodies staged by shot (`shots` on a body, tested with `stagedSeconds()`); a body at 0 is skipped. Cost body by body not measured.
+- Worked (W2): streak, taper, sparse on a body (`uBodyG`) for a tall lit smoke of streaks: heart-4 26.9 s with, 26.6 to 27.1 s without (MEASURED, whole frame, uhd draft).
+- Worked (W3): a local thickening of the marched air (`uHang`) veils a rock at its true depth: heart-3 36.8 s whole frame (MEASURED), its own share not measured.
+- Worked (W4): floor light held to the lowest metres, glow under dark upper smoke; puffs that travel; fixed offsets: no cost seen (STATED, not measured apart).
+- Worked (W5): the veil takes the air's own light on sky views (`airSum`): heart-0 24.5 s with, 24.8 s without (MEASURED).
+- Worked (W6): a thin bank and the plume set behind the land clear a rock face: heart-0 25.9 s, same as before within 0.3 s (MEASURED).
+- Did not (D1): a far body of smoke to veil or back a rock: the far sheet lies at one mean distance, so it shows through the rock in ragged holes or hides whole. Not measured.
+- Did not (D2): a body 44 m by 175 m at the fall: plus 0.9 s (MEASURED); cut to 42 by 152. Lumps of 110 m in the east haze: plus 1 s at heart-0 (MEASURED); kept at 130 m.
+- Did not (D3): march offsets moved on with each sample: thin vapours flicker. Cost not measured.
+- Did not: `npm run cost -- --parts` gave an empty list: cost was taken by rendering with and without.
+- MEASURED at heart-0 after hand-back 6, ours (picture): buttress face x 64 to 82, y 22 to 36 per cent: 83 76 74 (96 76 77); the first text said it was washed to grey "near 105" before, and the closing note, which is later and holds, says that was wrong: before air 6 it was 94 87 85 (darkest 80, spread 6), now 83 76 74 (darkest 70, spread 7), picture 96 76 77 (darkest 64, spread 11). The grey wash is off (green and blue match the picture), but the face is 13 short in red against the picture: its warmth is the land's and the light's, the air only adds neutral grey there.
+- MEASURED at heart-0, ours (picture): plume on the sky x 55 to 75, y 0 to 14: 123 116 123 (119 112 123); left of the buttress 81 77 76 (88 78 82); top right 122 112 117 (124 110 116); lit fume x 88 to 100, y 22 to 40: 143 100 91 (picture 144 99 93); the closing note adds the right fume before: 128 104 99.
+- Cost (MEASURED, whole frame at uhd draft, second of two runs, before the merge of d3fe097): heart-0 25.9 s (main at e3672d8 was 25.8 s; runs differ by 0.3 s), heart-4 27.8 s (27.5 s at hand-back 4; no body of heart-4 changed). (The light's block gives the whole frame at heart-0 on the same main e3672d8 as 22.5 s, best of three; the two blocks differ, the air's is the later hand-back, and both are kept.)
+- Cost after the merge (MEASURED, the closing note, later, holds; heart-0 whole frame at uhd draft, second of two runs): the air's head 40fc575 26.6 s; main e96684b (which holds air 6) 26.4 s. The same code within the 0.3 s between runs. The rise from 25.9 s since is from other folders' merges, not measured part by part.
+- Did not (closing note, weighed and left out): a darker column by less sky light on it (the top right of heart-0 already matches the picture, 122 112 117 against 124 110 116, and would fall below it).
+- Did not (closing note, weighed and left out): the orange fume back onto the buttress' right slope for heart-2 (at that place it shows through the buttress tip in ragged holes at heart-0, because the far sheet hides by one mean distance; bodies can be staged by strength, not by place, and all 13 are used).
+- Trap: the smoke pass has no scene depth; each sheet hides by one mean distance. Veil a rock with the marched air; keep a far body clear of the rock on screen.
+- Trap: a tone is often another part's. The pale sheet on the buttress was the air's bank, not the plume; found only by drawing parts alone.
+- Still wrong (hand-back 6): 1. heart-0: the column is paler and softer than the picture's dark grey brown column (spread of tone in the plume 9 against 17) and it rises from above the middle of the buttress, not from behind its left shoulder; the right plains are still short of the picture, 113 89 81 (132 91 85). 2. heart-2: the orange fume sits right of frame; the picture has orange on the buttress' right slope. 3. heart-3: the level red band and the even veil are untouched.
+- Still wrong (closing note, later): heart-3 level red band and even veil; heart-4 haze behind the two animals and over the cliff (73 64 61 against 84 73 73 at the upper right); heart-0 column paler and softer than the picture and rising from above the middle of the buttress, not its left shoulder; heart-2 without orange on the buttress' right slope; the far sheet of smoke hides by one mean distance.
+
+**The crust-walkers**
+
+- Worked: tubes of rings posed on the processor each frame by a pure function of seconds, one draw for 14 animals. The first cost line said 2.12 s a sample at uhd draft (heart-3: 35.41 s with, 33.29 s without, one run each; it was 0.43 at 11:56). REPLACED by the later hand-back (13:51 UTC), which holds: MEASURED 1.0 to 2.1 s a sample at uhd draft (heart-3, two pairs: 34.33 and 35.41 s with, 33.31 and 33.29 s without; it was 0.43 at 11:56). The two runs without agree to 0.02 s; the two runs with differ by 1.08 s, on different mains, so the spread of a single run is about as large as the number itself. At or over the share of 1 s either way. Which change added it: not measured (suspects named by the owner: the `poolApron` line of C10, or the lake's loop over the 84 contact discs).
+- Worked: feet on a moving floor (see the animal recipe, the step on feet). Cost not measured apart from the whole.
+- Worked: few stout roots (9, forked, splayed in world directions): read as fingers with gaps. Not measured.
+- Did not: 36 thin threads for roots: a fan of ribbons. Not measured.
+- Worked: trunk as lumps that run no one way with pale ash on up-facing ridges. Not measured.
+- Did not: long hanging folds on the trunk: draped cloth. Not measured.
+- Worked: cords along the neck from noise at 0.3 cells a metre along, 60 round. Not measured.
+- Did not: cords at 1.3 a metre: zigzag bands. Not measured.
+- Worked: motion that reads at preview size: necks lifted 0.85 of the way to a carried place, weight shifted 0.5 k each way. No cost (STATED).
+- Did not: sways of 0.2 k did not read. No cost (STATED).
+- Did not: a float DataTexture for the feet: gate G10 fails. A uniform array does the same.
+- Did not: a longer reach of the animal's own pool light for the belly: +3 of 255 only (the light owner's measure); the rig's `poolApron` did it.
+- Trap: reach in `herd.ts` hangs on `TUFT_UP` and neckLen: change either and every tuft comes down elsewhere and a key changes.
+- Trap: a GLSL name the fragment has already (ash, dust, fold, high) fails only in the render's log; and a jpg rewritten under an old name is shown stale.
+- Still wrong: 1. Cost 2.12 s a sample against a share of 1 s, cause not found (the later hand-back gives 1.0 to 2.1 s; it holds). 2. Feet: the rim reads as a pale cone under a dark hoof, not as dark displaced ash, and nothing is cast on the floor. 3. Far animals: at sheet size nothing but the nearest necks is seen to move; heart-4's two are flat outlines.
+
+**The one that sank**
+
+Cost (MEASURED on the merge of bcbefc4 level main, not on bd5c0ac): the whole part at key heart-2, uhd draft, two runs: 2.04 s a sample above the empty frame (cap 2 s; the measure swings about 0.1 s; 6.42 s alone, empty frame 4.38 s, whole frame 25.93 s). Only the whole part was measured, 1.97 to 2.04 s; single techniques NOT measured apart.
+
+- Worked: matte field with the crust's fresnel; tone staged by shot with `stagedSeconds()`, not by camera distance. Cost not measured apart.
+- Worked: an event as a line in the vertex stage (distance to a segment, one side drops on a hinge), its face lit by `blackbody`, with two small gives before it so that a sheet at preview size changes in every cell. Cost not measured apart.
+- Did not: one drop alone at frame 3740 (not seen at preview size).
+- Worked: gating a bright seam by distance. Cost not measured apart.
+- Did not: the same seam in the wide view (under a pixel, reads as chips).
+- Worked: texture laid shorter along a rope plus ground-measure break-up against streaks at a low camera. Cost not measured apart.
+- Did not: the texture at its own scale (long features foreshorten into streaks); ropy texture laid by height on steep skin (contour lines).
+- Worked: grit of 1 to 3 cm switched by the NARROW side of a pixel. Cost not measured apart.
+- Did not: switching grit by the long side of a pixel.
+- Worked: few large flakes with ragged curled edges; a round fillet for the knee. Cost not measured apart.
+- Did not: many small cells (tan strips); a sharp V knee (two sticks).
+- Worked for the wide view's halo: smaller contact discs, the lake's wide sums in the sheet. Cost not measured apart.
+- Did not: broad discs over young black folded skin (a dark halo).
+- Did not: growing the hull by mesh scale while its lava coat stayed marked on the small shape (a smooth dark belt on the lower third).
+- Did not: thicker, fewer apron ropes by a higher pile (the seam broke into chips).
+- Did not save cost: swapping value noises for sines or dropping one texture tap (2.04 s before and after, MEASURED). Likely cost (STATED): pixel count of the larger hull and texture taps on the sheet, not measured apart.
+- Trap: the cost tool needs two parts named or it reports 0.
+- Trap, the clock (the fault found): `setTime(seconds)` gets the seconds of the PLACE, counted from the place's first frame, not of the shot and not of the film. An event timed as (frame - shot's first frame) / 60 fires in an earlier shot and is never seen where it was meant. Use `secondsInPlace(UNIT, frame)`.
+- Trap, two views of one thing: what makes the close key right makes the wide key wrong. Render both keys after every change.
+- Still wrong: (1) the apron is low soft swells with a woolly texture; the picture has thick distinct cords with black gaps and the hull sits in them. (2) The leg's flakes are large flat pale ribbed plates; the picture has small layered tan scales that peel, and scorch toward the melt. (3) The seam is three or four short bright lengths and a soft wisp; the picture's hot seam is one fine continuous line with vapour all along it. And the cost stands 0.04 s over the cap.
+
+### Recipes
+
+In every recipe: PLACE is the new place's folder under `src/places/`, KEY is one of its approved pictures, SHOT is one of its shots, PART is a part's name. The shared functions are called and never copied into a part: the rig's light (`RIG_UNIFORMS_GLSL`, `RIG_GLSL`, `rigShade`, `rigOut`, `poolApron`, `breath()` and `ctx.rig.contactDiscs` from the place's `shared/rig.ts` and `shared/glsl.ts`), the fire ramp (`blackbody` in `shared/glsl.ts`) and staging by shot (`stagedSeconds()` in `shared/stage.ts`). The place's own `shared/` folder is made once by the light's owner (recipe 5); every other owner only calls it.
+
+**1. One more landform (from the land, the loose rocks and the crust's form)**
+
+1. Copy as the pattern for the ground: `src/places/heart/land/height.ts`, `src/places/heart/land/index.ts`, `src/places/heart/land/shaders.ts` into `src/places/PLACE/land/`; keep the part names and `ctx.parts.built(name, ...)` once a part (the land's owner).
+2. Copy as the pattern for loose rock: `src/places/heart/land/rock-shape.ts` and `src/places/heart/land/rock-shader.ts` unchanged; copy `src/places/heart/land/rocks.ts` and delete every block from "The line view" down that names a heart camera or anchor (the rocks' first owner).
+3. Copy as the pattern for a baked, close-seen height sheet: `src/places/heart/lake/index.ts` (rings, bake, `RELIEF_GLSL`), `src/places/heart/lake/net.ts` (joints and named seams), `src/places/heart/lake/skin.ts` (the fragment), `src/places/heart/lake/heat.ts` (`gapeAt`, `tornAt`, `meltLevel`) (the crust form's owner).
+4. Change first, ground: the layout numbers in `height.ts`: the wall's profile, `FLOWS`, `RIM`, the channel x, then one landform function (`buttressAt`, `lineCrag`, the staged butte).
+5. Change first, rocks: the height function passed to `scatterRocks`, the keep-outs along the camera paths (in `put()`), and the kinds table at the top of `rocks.ts`.
+6. Change first, height sheet: in `net.ts` `AUTHORED`, `OWN`, `RIDGES` and the anchors of the seams; then in `index.ts` the places given as uniforms (`uGroupSeam`, `uLineSeam`, `uMound`, `uPads`) and `FLOOR_FOCUS`.
+7. Before any paint, find where each key's frame meets the land: write a vitest file that casts rays from the key's lens into `landHeight`, run it with `npx vitest run tests/<file>`, and delete it before committing.
+8. Call, never copy: end every material in `gl_FragColor = vec4(rigOut(colour), 1.0)`; take contact shade through `ctx.rig.contactDiscs` for rocks over 0.3 m; give anything hot a temperature and read `blackbody`; test the shot only with `stagedSeconds()` (pattern: `during('heart-02')` in `src/places/heart/land/rocks.ts`).
+9. For a staged far mass, write it in world coordinates in the key's lens frame, hide it with `.visible` from `stagedSeconds()`, and name the shot in the report. Stage foreground rocks per shot with the stage clock and stand them by hand: place, top height, half width.
+10. Rocks, the second owner's way: make a dozen shapes once (rounded lump, angular block as a soft meet of 6 planes with 2 to 4 corners cut, plate), each in 6 levels that share corners; one scatter function, seeded at creation, sizes by a power law, placed in drifts with bare ground between, never one by one; each larger stone gets 1 to 5 chips on its downhill side.
+11. Sink every rock 20 to 50 per cent, bank grit against its foot in the skin, darken the foot, and put a contact shade under anything over 0.3 m. Pick the level per sample from pixels across; cull under a pixel; cap the densest levels. Skin in the rock's own metres (never stretched), tone per rock, ash only on what looks up and only on paler rocks. Set tone against the measured albedo of the ground it lies on, not by eye on an older floor.
+12. Size scree in pixels of the lens that sees it: a grain of 4 to 18 px with one block in forty, sunk to its middle. For a long lens, a near mass is a few overlapping stones 7 m out, tops 0.4 to 1 m under the lens, falling to the frame's bottom before the middle.
+13. For a carpet of stones on a moving floor: import the floor's height GLSL and uniforms, keep the bake after the floor's own `beforeSample` (`scene.onBeforeRender`), take drift from `ctx.rig.uniforms.uTime` and who is on set from `stagedSeconds()`. Use a half float target, never `FloatType`.
+14. Lobes and ropes in a height sheet (crust form owner 2): lay a lattice of lobes (cell about 3 lobes a view width), search 2 by 2; each lobe a sheet with a hashed radius, summed so later ones lie on earlier ones; edge of a sheet a step at least four cells wide with a crease at its foot; the lobe with the highest hash wears the cords; cords are arcs about a point 1.5 to 2 R behind the lobe, phase warped by smooth noise, never by the roughened outline.
+15. Size ropes on screen first: at the shot's distance a rope must be 3 to 6 per cent of the frame's width, else leave it out; fade a rope out under 12 pixels along the ground. Publish phase, direction, spacing, cover, and one flag a zone for the paint, and agree with the paint which of the two draws lines there: never both. Lay falls and brims from analytic lines, not from the net.
+16. Build: `npx tsc --noEmit -p .` then `npm run -s build`; never build while a render or the determinism runs.
+17. Look: see the shape without air with `npm run -s still -- --key KEY --tier draft --format hd --diag solo --part PLACE/land --force` (rocks: `--part PLACE/bench`, at `--format uhd`); silhouettes of the height alone with `npm run -s still -- --key KEY --tier draft --format uhd --diag depth --force`; beside the picture with `npm run -s compare -- --key KEY --tier draft --format hd` (45 s, the land's owner) and `--format uhd` (90 s by the land's owner, 65 s by the crust form's owner) for anything gated by pixel size; then `npm run crops -- --key KEY` for native crops; `npm run sheet -- --shot SHOT --tier draft --format preview` and look at the first, middle and last frame of the shot before keeping any staged rock.
+18. Cost: `npm run -s cost -- --key KEY --format uhd --tier draft --parts land bench` (the land's owner; the "alone" figure holds the empty frame, read the figure above it); `npm run cost -- --key KEY --tier draft --format uhd --parts bench land sky` (the rocks' owner: part names without the unit; with the unit the tool lists no parts).
+19. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, merge main, both again, `npm run -s determinism` (whole; 2 min by the land's owner, 85 s by the crust form's owner, it reads the built dist; must print `determinism: pass`), `npm run -s gate -- --phase 1 --only G10`, push.
+20. Traps: the ground's vertex shader ignores the model matrix, so a moved or rotated mesh draws where it was built. Masks by world x set by eye were wrong by 65 m, and hd stills do not show uhd detail: probe first, check at uhd. Hand-placed stones silently fail `put()`'s camera keep-outs, and a new keep-out removes hand-placed stones too: draw the part alone after every rule change. Take every height from the height function at build time, never a number. A still at hd is 1920x1080: resize before pairing with a 1280 px reference. A quantity used by the height and by the paint, written twice, paints one lattice on another: keep one global and name it to the others. Teeth: anything narrower than 3 to 5 cells, a hard `max` or `step` on the height, or a threshold in the fragment on a per-vertex value stands as a row of teeth at uhd and is invisible at preview size; take a depth picture first.
+
+Where the owners disagree: the land's owner judges first at hd and goes to uhd only for what is gated by pixel size; the crust form's owner and the rocks' owner judge at uhd from the start and say never to judge at preview size. The rocks' first owner copies `rocks.ts` and cuts it down; the second owner gives the ten general lines of steps 10 to 12 for building loose rock from nothing. Both ways are kept.
+
+**2. One more fluid (from the lake's melt, the crust's skin and the fall)**
+
+1. Copy as the pattern for molten ground: `src/places/heart/lake/heat.ts`, `src/places/heart/lake/lava.ts`, `src/places/heart/lake/outline.ts` (`src/places/heart/lake/founder.ts` only for fountains) (the lava's owner 3).
+2. Copy as the pattern for a stream that falls: `src/places/heart/fall/path.ts`, `shape.ts`, `look.ts`, `index.ts`; keep the three parts (mouth, fall, surge; at COMMIT their names are `vessel-mouth`, `lava-fall`, `surge`) (the fall's owner).
+3. Copy as the pattern for the cooled skin on the fluid: `src/places/heart/lake/skin.ts`; keep its header (varyings `vWorld`, `vQ` = rest position, `vNormalG`, `vAux` = fold carried, cell, metres to brim) and make the relief hand you its quantities as globals set by named functions (`foldAt`, `slabAt`, `brokenAt`); never edit the relief (the crust's skin owner).
+4. Change first, molten ground: set the seams in the place's `shared/anchors.ts`, then `gapeAt` widths and the level. Change first, the fall: in `path.ts` the mouth's anchor, `LIP`, the `MAIN` points (legs down the ledges), `HALF`, `FAN_FROM`, `ARM_TAIL`. Change first, the skin: base albedo and the age patches.
+5. Give the neighbour who owns the crust `bankAt` before any look work; agree that the brim is bank 0. Keep one heat function, shared by the paint, the mesh and the glow map.
+6. Call, never copy: every hot thing gets a kelvin and reads `blackbody`; every material ends in `rigOut(colour)`; the stream's light is the rig's strip (an own strip lit the banks twice); shot tests read `stagedSeconds()`.
+7. Split drawn from light with one flag (`drawnOnly` in `src/places/heart/lake/heat.ts`), so that motion never moves the light sum; the glow map's sum must hold within 5 per cent.
+8. For a wide view, move cover and width, not kelvin, over lumps 25 to 70 m travelling 10 to 20 m/s. For a close view, send pulses along a seam toward an anchor: sin(w t + k distance + noise). Thin a far field by large lanes times a break field, with unlike brightness on a third scale.
+9. Fountains: build from a table of vents of unlike share, height and offset, with one dominant; give each vent a body, a half-round of bare melt that swells with the vent's burst, at least 4 pixels wide at the widest view; give the lumps tails that lengthen with speed over size.
+10. The fall: draw every mark in the stream's own coordinates (metres across, seconds since the lip, minus `uTime`) so marks ride at the flow's speed; fade fine octaves by `seenAt(metres)`; count a hot brim from the fluid's edge, not the bed's.
+11. The skin, first owner's way: add bands one at a time, each with its footprint fade; measure tone in boxes against the picture (p10, p50, p90 and R over B), not by eye alone.
+12. The skin, the D2 owner's way (ropy crust painted on a height field): let the form give phase, direction, spacing, depth and cover per lobe, the paint only reads them; draw a fold by abs(sin(pi * phase)), 2 to 4 cords to a fold by a hash of floor(phase); fade each band by its size on screen from the screen slope of the phase, taken once at the top of main; where the form lays nothing, make open festoons (Voronoi patches, each with a flow direction; phase = along + k * across^2, bent slightly to bunch toward the front, plus a slow noise under the base slope so no line can close).
+13. The skin, continued (D2): read the photograph in (along, across) of the cord, with explicit lod from the footprint, and cut its 5 to 60 cm content on rope tops to under 5 per cent; keep every dark line in one product with a floor (0.75; 0.55 for one furrow in three seen close); tone by place, not by noise; light from the melt by the plate's and the wall's direction, never by fold normals; walls by height over the melt times broken faces; hot hairlines as level lines of noise, at least 2.5 pixels wide, dimmer when widened, and let them warm the crust beside them.
+14. Build: `npx tsc --noEmit -p .` then `npm run -s build`.
+15. Look: `npm run compare -- --key KEY --tier draft --format uhd` and judge native crops (`npm run crops -- --key KEY`) beside the approved picture (the lava's and the skin's owners); the fall's owner uses `npm run -s compare -- --key KEY --tier draft --format hd`. The part alone: `npm run -s still -- --key KEY --tier draft --format uhd --diag solo --part PLACE/lava --force` (the fall: `--format hd --part PLACE/lava-fall`).
+16. Motion: `npm run -s sheet -- --shot SHOT --tier draft --format preview` and `npm run -s sheet -- --held KEY --seconds 6 --tier draft --format preview`; judge motion on a held sheet at 0.5 s steps, and every change at hd beside the picture (the lava's owner 4); render twelve frames in a row before handing back (the skin's D2 owner).
+17. Cost: `npm run -s cost -- --key KEY --format uhd --tier draft --parts vessel-mouth lava-fall surge` (the fall's owner); `npm run -s cost -- --key KEY --tier draft --format uhd --parts PART` (the skin's owner). The lava's owner 3 found `npm run measure` hung for 8 minutes and timed the still with the part hidden instead.
+18. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, `npm run -s determinism` (must end `determinism: pass`; the skin's owner also runs `npm run -s determinism -- --part PART` for still, late, loop), `npm run -s gate -- --phase 1 --only G10`.
+19. Traps: shader errors show only at render, and the frame comes out without the surface: grep the output of every render for ERROR (a name such as rim may be taken already) and re-check the relief's function signatures after every merge. After merging main the crust may have moved off the brim: render main alone before blaming your change. Any flat, smooth, level face seen under 2 degrees mirrors the sky through the rig's fresnel term whatever its albedo or roughness: shade it along its normal and fully rough. Any hard function of a per-vertex quantity draws the lattice as teeth or a comb: key paint to analytic per-pixel quantities and soften over two or three cells.
+20. Traps, the fall: haze in front of the fluid (the air's smoke or your own sources) makes black crust read orange: look at the part solo before you retune the crust. Once marks ride the stream the white share moves with time and with each mark: measure it after every change, at the key's frame.
+
+Where the owners disagree: the lava's owner 3 gives a copy-and-change recipe (steps 1, 4, 5) and owner 4 gives ten general lines (steps 7 to 9, 16); the skin's first owner gives a copy-and-change recipe (steps 3, 11) and the D2 owner ten lines for ropy crust (steps 12, 13). The lava's and the skin's owners compare at uhd, the fall's owner at hd. All are kept.
+
+**3. One more volume of weather (from the air)**
+
+1. Copy `src/places/heart/air/` whole (`index.ts`, `volume.ts`, `smoke.ts`, `sky.ts`, `noise.ts`, `ash.ts`) into `src/places/PLACE/air/`, and the rig's sky uniforms (`uSkyZenith`, `uSkyHorizon`, `uFill` in the place's `shared/rig.ts`, which the light's owner holds; ask, do not edit).
+2. Keep the part names `sky`, `air`, `fume`, `ash`.
+3. Change first the three sky uniforms (through the light's owner; in the Heart the sky is frozen), then `skyMean` in `index.ts`, then the `BODIES` list in `index.ts` (at, radius, height, lean, dense, colour, lake, floor, shots).
+4. Call, never copy: the air reads the rig's lights itself; multiply each body's lake and floor light by `breath()` of `shared/rig.ts`; give a glowing fume a temperature through `blackbody`; stage bodies by shot with `shots` on a body, tested with `stagedSeconds()` (a body at 0 is skipped).
+5. Keep the dome and the volume pass on the same mix(horizon, zenith, pow(up, 0.45)), so air and sky meet at the horizon in one colour, and light the smoke's tops with the same `skyMean`.
+6. Keep march offsets fixed to the pixel; offsets moved on with each sample make thin vapours flicker.
+7. To veil a rock at its true depth, thicken the marched air locally (`uHang` in `volume.ts`); do not use a far body of smoke for it.
+8. For a tall lit smoke of streaks use streak, taper, sparse on a body (`uBodyG`).
+9. Build: `npx tsc --noEmit -p .` and `npm run -s build`.
+10. Look: a still of each key beside its approved picture at full size: `npm run compare -- --key KEY --tier draft --format uhd`, then `npm run crops -- --key KEY`.
+11. Draw one part alone to see which part makes a tone: `npm run -s still -- --key KEY --tier draft --format uhd --diag solo --part PLACE/fume --force`, and the same with `--part PLACE/air`.
+12. Measure regions as numbers against the picture before and after each change (the same patch in both, by x and y per cent of the frame); stage by shot what hurts another key.
+13. Motion: `npm run -s sheet -- --held KEY --seconds 6`; a lump must travel about its own size in 6 s to be seen. Also `npm run sheet -- --shot SHOT`.
+14. Cost: render the key at uhd draft twice, with and without the change (runs differ by 0.3 s). In the Heart `npm run cost -- --parts` gave an empty list for the air, so cost was taken by rendering with and without.
+15. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, `npm run -s determinism` whole (must print `determinism: pass`), `npm run -s gate -- --phase 1 --only G10`.
+16. Trap: the smoke pass has no scene depth; each sheet hides by one mean distance. Veil a rock with the marched air; keep a far body clear of the rock on screen.
+17. Trap: a tone is often another part's. The pale sheet on the Heart's buttress was the air's bank, not the plume; found only by drawing parts alone.
+18. Trap (from the fall's owner): smoke sources in front of a glowing fluid lift black crust to orange; put them behind it.
+
+**4. One more kind of animal with its cycle and its herd (from the crust-walkers and the one that sank)**
+
+1. Copy `src/places/heart/walkers/` (`index.ts`, `animal.ts`, `herd.ts`, `material.ts`, `skin.ts`) to `src/places/PLACE/walkers/`; `skin.ts` as it is.
+2. `herd.ts` first: `CAST` (one line an animal: role, heavy, neck, wide, tall, bulk, young, tuft) and `makeBuild`. Places and headings come from the place's shared anchors (`WALKERS` in `shared/anchors.ts`); its list `AWAY` names who is not drawn in which shot, and `index.ts` tests it against `stagedSeconds()`, never the world's seconds.
+3. `animal.ts`: the trunk's profile, `LEGS` and `DUTY` (the cycle), `plant()` (where a pad goes down), `pose()` (sway, steps, neck). All of it a function of seconds: no state.
+4. Feet on a moving floor: `setTime` writes each foot to `uFeet`; `beforeSample` (after the floor owner's) renders the 56 x 1 target with the floor's own height function, the highest of 5 points under the pad; the vertex shader moves leg and pad below 4 m by it; a lifted foot fades to 0.1 m. Use a uniform array and `HalfFloatType`; a `FloatType` data texture fails gate G10.
+5. Call, never copy: the animal's material ends in `rigOut(colour)`; it takes the rig's `poolApron` at its own share (the Heart: reach 14) and round lights at its own share; a surface that sums its light by itself gets nothing from a new rig block until its owner calls it.
+6. Keep one draw for the herd: tubes of rings posed on the processor each frame by a pure function of seconds.
+7. Make motion that reads at preview size: in the Heart necks lifted 0.85 of the way to a carried place and weight shifted 0.5 k each way read; sways of 0.2 k did not.
+8. For one more dead animal set into a surface, with a small timed event: copy `src/places/heart/sunk/` (`index.ts`, `shape.ts`, `shaders.ts`, `noise.ts`) into the new place's folder; rename the part; set UNIT, the site, `BODY`, `LEG_A`, `LEG_B`, `FIELD` in `shape.ts` first (`UNIT` in `sunk/shape.ts`: (not found at COMMIT); at COMMIT `UNIT` is exported by `src/places/heart/shared/anchors.ts` and imported by `sunk/index.ts`).
+9. Event: put it at `secondsInPlace(UNIT, FILM_FRAME)` (`secondsInPlace` is in `src/film/cut.ts`), at rest before it; give it two small gives before it so that a sheet at preview size changes in every cell.
+10. Stage the dead animal's tone by shot with `stagedSeconds()`, not by camera distance; gate a bright seam by distance.
+11. Build: `npx tsc --noEmit -p . && npm run -s build`.
+12. Look, the walkers' owner: `npm run -s compare -- --key KEY --tier draft --format uhd` (still beside picture; without `--tier draft` it renders the review tier under another file name), then `npm run crops -- --key KEY`.
+13. Look, the sunk one's owner: `npm run -s compare -- --key KEY --tier draft --format hd` for EVERY key that sees it, after every change; for grain `--format uhd` and unscaled crops.
+14. Motion: `npm run sheet -- --shot SHOT` and `npm run sheet -- --held KEY --seconds 6`; for an event `npm run sheet -- --shot SHOT --tier draft --format preview` and `npm run sheet -- --frames A B --tier draft --format hd`.
+15. Cost, the walkers' owner: `npm run -s cost -- --key KEY --parts sky` with and without `create()`. Cost, the sunk one's owner: `npm run -s cost -- --key KEY --format uhd --tier draft --runs 2 --parts PART OTHER` (the cost tool needs two parts named or it reports 0).
+16. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, `npm run -s determinism` (must print `determinism: pass`), `npm run -s gate -- --phase 1 --only G10`.
+17. Trap: reach in `herd.ts` hangs on `TUFT_UP` and neckLen: change either and every tuft comes down elsewhere and a key changes.
+18. Trap: a GLSL name the fragment has already (ash, dust, fold, high) fails only in the render's log; and a jpg rewritten under an old name is shown stale.
+19. Trap, the clock: `setTime(seconds)` gets the seconds of the PLACE, counted from the place's first frame, not of the shot and not of the film. An event timed as (frame - shot's first frame) / 60 fires in an earlier shot and is never seen where it was meant. Use `secondsInPlace(UNIT, frame)`.
+20. Trap, two views of one thing: what makes the close key right makes the wide key wrong. Render both keys after every change.
+
+Where the owners disagree: the walkers' owner compares at uhd; the sunk one's owner compares at hd for every key and goes to uhd only for grain. The walkers' owner takes cost by rendering with and without `create()` beside `--parts sky`; the sunk one's owner names two parts with `--runs 2`. Both ways are kept.
+
+**5. One more sky with its light (from the light owner and the air's sky)**
+
+1. Copy `src/places/heart/shared/rig.ts` and `src/places/heart/shared/glsl.ts` into `src/places/PLACE/shared/`; keep `RIG_UNIFORMS_GLSL`, `RIG_GLSL`, `rigShade`, `rigOut`. Copy `src/places/heart/shared/stage.ts` beside them for `stagedSeconds()`. This is the one copy; every other folder of the place calls these and never copies them.
+2. Every surface of the place ends with `gl_FragColor = vec4(rigOut(colour), 1.0)`.
+3. Copy `src/places/heart/air/sky.ts` (the dome) with the rest of `air/` as recipe 3 says; keep the part name `sky`.
+4. Change first: `skyRadiance` and `skyIrradiance` (`glsl.ts`), and the three sky uniforms `uSkyZenith`, `uSkyHorizon`, `uFill` (`rig.ts`); the dome draws mix(horizon, zenith, pow(up, 0.45)) and the volume pass must use the same mix.
+5. Then `skyMean` in `air/index.ts` (the Heart: 0.45 horizon + 0.55 zenith + 0.12 warm), so the smoke's tops are lit by the same sky.
+6. Then the rects `GLOW`, `LAND`, `LAND_FINE`, `CONTACT` (`rig.ts`) to the new ground.
+7. Then the lights the parts push into `rig.emitters` (the Heart holds `MAX_EMITTERS` 8, all taken).
+8. Then strips for long sources and pools for small ones (`STREAM`, `POOLS`, `poolApron`); a round light that stands for a long source washes everything evenly.
+9. Keep the fire ramp as it is: nothing hot is coloured by hand, it reads `blackbody`. Keep the names and arguments of `RIG_GLSL`; the other folders call them.
+10. Stage a light that belongs to one shot by `stagedSeconds()` (the Heart's `BANK` stands in heart-02 alone and `MOUTH_GLOW` uses its place in the list outside that shot).
+11. Build: `npx tsc --noEmit -p . && npm run -s build`.
+12. Still: `npm run -s still -- --key KEY --tier draft --format hd --force` (check the file's time: a shader error keeps the old frame).
+13. Look: `npm run compare -- --key KEY --tier draft --format hd`: read the frame beside the approved picture, then measure the same patch in both (p10, p50, p90), on the same main. Then `npm run compare -- --key KEY --tier draft --format uhd` and `npm run crops -- --key KEY` for native size (the Builder's rule).
+14. Motion: a held sheet for anything that moves: `npm run sheet -- --held KEY --seconds 6`, and `npm run sheet -- --shot SHOT`.
+15. Cost: `npm run -s cost -- --key WIDEKEY --parts none --runs 3` before and after every block added to `emitterIrradiance` (the light's owner). The air's owner takes cost by rendering the key at uhd draft twice, with and without the change (runs differ by 0.3 s).
+16. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, `npm run -s determinism` (must print `determinism: pass`), `npm run -s gate -- --phase 1 --only G10`.
+17. Trap: a round light that stands for a long source washes everything evenly: cut its core and give the source its own strip.
+18. Trap: no branch or loop saves time here, only fewer operations; and a surface that sums its light by itself (walkers, crust skin) gets nothing from a new rig block until its owner calls it.
+19. Trap (the lava's D4): a flat, smooth, level face seen under 2 degrees mirrors the sky through the rig's fresnel term whatever its albedo or roughness.
+20. Trap (the air): where a view reaches the sky the volume adds that sky times what the air lets through, less the veil; change the dome and the volume together or a line shows at the horizon.
+
+Where the owners disagree: the light's owner measures cost with the cost tool (`--parts none --runs 3`), the air's owner by two whole renders with and without. Both ways are kept.
+
+**6. One more bed of sound**
+
+1. STATED, not run: no Heart sound has been made, so this recipe is written from `kit/06-ASSETS.md`, `kit/03-METHOD.md` (section 7) and `tools/README.md`, and no step of it has been tried on the Heart.
+2. Read "Sound" in `AGENTS.md`: sound never blocks a gate, a round or a phase, and never changes a pixel. A sound that fails after its take limit becomes an open item and that moment plays without it.
+3. Give the bed an id of lower case letters, digits and hyphens (the README's example is `ribs-bed`).
+4. Write the cue file `audio/cues/<id>.json` (the folder `audio/cues/` is named by `tools/README.md`; it does not exist yet at COMMIT, so make it). As `tools/lib/sound-core.mjs` reads it: `schema` `carcass/cue 1`, `id`, `description`, `seconds`, optional `promptInfluence` (0 to 1), optional `loop` (true or false), and `unit` and `kind` (`bed` or `spot`) unless the cut list already lists the cue.
+5. Write the description as `kit/03-METHOD.md` says: describe the source and the space plainly (its examples: "slow surf breaking inside a huge stone arch, distant", "Thick lava folding and hissing, close").
+6. Check the request without spending: `npm run sound -- --cue ID --dry-run`.
+7. Make the takes: `npm run sound -- --cue ID` (optionally `--takes N`). Each cue gets at most `audio.maxTakesPerCue` takes (the key is in `config/showcase.json`). Takes wait under `out/work/sound/takes/<id>/`.
+8. The tool puts each take through the level chain first, because a quiet take makes the listener invent things; then the listener is asked, twice, what it hears. Keep the take that both calls describe as the thing you asked for, with no voice and no music in it.
+9. See where the cue stands: `npm run sound -- --cue ID --status`; keep one take: `npm run sound -- --cue ID --keep N`. It is kept as `audio/kept/sounds/<unit>/<id>.wav` with its record `audio/records/<id>.md`. (`npm run sound -- --cue ID --take FILE` takes one sound file in place of a made take; without `--takes N` the tool makes one take.)
+10. A bed that has to run longer than one take is looped with a crossfade at a point where it measures alike on both sides.
+11. Check the record against "Records of sounds" in `kit/06-ASSETS.md`: Made by, Text or description, Settings, Takes, Measured (length, loudness, peak), The listener (its answers, word for word, for the kept take), Date.
+12. The command prints the row for `ASSETS.md` and does not write it: add the row to `ASSETS.md` by hand.
+13. Place the bed in the cut: add an entry under `sounds` in `cut/PLAN.json` (at COMMIT `cut/PLAN.json` has no `sounds` list yet; `tools/lib/cut-core.mjs` reads `plan.sounds`), then run `npm run cut`, which writes `cut/CUTLIST.json` and `cut/CUES.md`. The README's example entry in the cut list: `{ "id": "ribs-bed", "unit": "ribs", "kind": "bed", "first": 0, "frames": 2400, "file": "audio/kept/sounds/ribs/ribs-bed.wav", "gainDb": -20, "fadeInSeconds": 1, "fadeOutSeconds": 1, "loop": true, "event": null }`.
+14. Build the soundtrack: `npm run mix`. It writes `audio/mix/mix.flac` and its report `audio/mix/mix.json`. A mix made twice from the same inputs is byte for byte the same.
+15. Read `audio/mix/mix.json`, do not listen: the beds sit well under the music; the music and the beds drop under every line by up to `audio.duckMaxDb`; nothing is ever louder than the voice while the voice is speaking; integrated loudness at `audio.loudnessLufs`, peaks at or under `audio.truePeakDb`; for every line `marginDb` is the level of the voice above everything else in the band where speech lives.
+16. Look at the sounds as one picture: `npm run sound -- --sheet` (a waveform for each with its name and length); a status that follows new kept sounds shows that picture and says the sounds can be heard on the review page (`npm run status -- --phase N --sounds`).
+17. Checks before a hand-back: `npx tsc --noEmit -p .`, `npm run -s build`, `npm run -s determinism` (sound changes no pixel, so it must still print `determinism: pass`), `npm run -s gate -- --phase 1 --only G10`; the gate's sound checks are advisory.
+18. Trap: where the files live depends on the repo. While the repo is public no sound file, mix or music file is committed on any branch: commit only the cue file and the record as text, and return the sound files to the root as attachments. `.gitignore` keeps `audio/supplied/`, `audio/kept/` and `audio/mix/` out.
+19. Trap: the listener invents things on a very quiet clip and agrees easily with a line it is shown (`AGENTS.md`): ask open questions first, on clips that have been through the level chain, and believe a fault only when a second call hears it too.
+20. Trap: the sound effect tool takes no seed (the tool's settings line says so), so a lost take cannot be made again the same; keep the kept file and its record. The earlier reading of the tool's terms (`kit/06-ASSETS.md`, November 23) was that sound effects may be used inside a film and may not be made available as isolated files.
+
 ## The pick
 
 none
@@ -755,9 +1376,11 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `round3_pack_renderer` | render | The R4 sheets of round 3 on its own machine from commit `ef015ca` (the same sources as `e5b7a22`), handed back as a tar; frames are byte equal across machines ("Frames across VMs"); from 08:26 UTC the whole pack of round 4 (R1, R2, R3 at final tier uhd, R4 at review tier preview) from commit `fdcac34` | none | 06:04 UTC, 25 Nov | one job |
-| `round4_measure_renderer` | render | The measures of round 4 (`npm run measure -- --unit heart`) on its own machine from commit `fdcac34`, handed back as `out/work/measure/heart.json` | none | 08:26 UTC, 25 Nov | until 10:00 UTC |
-| `look_lock_writer` | write | Writes "Locked settings", "What worked and what did not" and "Recipes" of the Look lock from the ten owners' blocks, checked against the source at `0141c0c`; changes no code | none | 14:07 UTC, 25 Nov | 30 minutes |
+| `round3_pack_renderer` | render | The whole pack of round 7 (R1, R2 and R3 at the final tier in uhd, R4 at the review tier in preview) on its own machine from commit `9ac88bf`, handed back as tars; it made the packs of rounds 3 to 6 the same way, and frames are byte equal across machines ("Frames across VMs") | none | 06:04 UTC, 25 Nov; this job 14:18 UTC | one job |
+| `round4_measure_renderer` | render | The measures of round 7 (`npm run measure -- --unit heart`) on its own machine from commit `9ac88bf`, handed back as `out/work/measure/heart.json`; it made the measures of rounds 4 to 6 the same way | none | 08:26 UTC, 25 Nov; this job 14:18 UTC | one job |
+| `heart_clip_renderer_01` to `heart_clip_renderer_14` | render | The Heart review clip at the final tier in hd from commit `9ac88bf`: 16 chunks of 2 s (1714 frames, 2507 to 4220) in 14 shares on 14 fresh machines, each share handed back as a tar of its chunks and joined by the Builder; the shares are 65 to 105 minutes by the meter of `a6999eb` | none | 14:18 UTC, 25 Nov | 2 h (`sandbox.reviewClipMaxHours`) |
+
+Ended with a record in Phase 3: `look_lock_writer` (14:07 to 14:15 UTC, 8 minutes of its 30; no code changed). It wrote "Locked settings", "What worked and what did not" and "Recipes" from the ten owners' blocks and checked every path, identifier and script it cites against the source at `0141c0c`; one identifier was not where a block said (`UNIT` is in `src/places/heart/shared/anchors.ts`), and it lists thirteen places where two blocks disagreed, with the later hand-back holding. Its text is under "Look lock".
 
 Ended and merged into `main` in Phase 3, the last owners of the Heart, each with its blocks for the Look lock (in `out/work/tmp/looklock/`, handed to the Look lock writer): `heart_light_owner_3` (`agent/heart-light-c`, last merged `726e59e`), `heart_land_owner_3` (`agent/heart-land-c`, `4158778`), `heart_walkers_owner_3` (`agent/heart-walkers-c`, `9edf24b`; a last pair of cost numbers at 13:51 UTC), `heart_air_owner_3` (`agent/heart-air-c`, `40fc575`; closing note 13:50 UTC), `heart_fall_owner_3` (`agent/heart-fall-c`, `70d1bd8`, 13:52 UTC), `heart_crust_skin_owner_2` (`agent/heart-crust-skin-d`, `2406c09`, 13:53 UTC; its later commit `1d3be30` is NOT merged, by decision), `heart_sunk_owner_3` (`agent/heart-sunk-c`, `bd5c0ac`, 13:53 UTC), `heart_rocks_owner_2` (`agent/heart-rocks-d`, `6877803`, 13:54 UTC), `heart_crust_form_owner_2` (`agent/heart-crust-form-d`, `8bda667`, 13:57 UTC), `heart_lava_owner_4` (`agent/heart-lava-d`, `32b79e3` at 13:55 and `ccf7bf1` at 14:04 UTC). Main with all of them: `0141c0c`. Ended with a record: `render_meter_r7` (13:19 to 13:45 UTC; its numbers are under "Render budget").
 
@@ -806,6 +1429,8 @@ One line for each round: its number, the unit, the commit it judges, the parts t
 - Round 3 · `heart`, look lock round 1 (a floor round: the unit goes to it as soon as none of it is a stand-in, G13 passes at 05:52 UTC) · judges commit `e5b7a22` · started 2026-11-25 05:52 UTC · build: done · machine checks: done at 05:58 UTC, 18 of 22 pass; G3 fails (the loop frame 288 differs between two page loads in 15 of 518400 pixels by at most 3 levels, along the far edge of the lake) and G10 fails (`src/core/engine.ts` line 234, the depth texture of the hidden-fragment pass is `FloatType`); D3 is not built yet; A1 is the open sound check on clip n8 · measures: done at 06:43 UTC at the final tier in uhd on the five keys: M1 green (no invalid pixel), M2 green (10.3, 10.6, 32.5, 34.7 and 60.5 per cent of the picture moves, the floor is 8), M3 red (fine detail against the approved picture 0.83, 1.58, 2.04, 1.09 and, at heart-4, 0.26; the floor is 0.75: the long lens on the mouth is veiled) · pack: done at 06:28 UTC on a second machine (R4 at 06:18, R1, R2 and R3 at 06:28; the manifest and the keys are in `scorecards/round-003/`) · critics: done at 06:33 UTC. R4, two packs, both gemini, 4 and 4, answered 06:21 and 06:23; R1, two packs, both gpt, 4 and 4, answered 06:31 and 06:32 (the second first in prose, then as the JSON of the brief with the same content); R3, two packs, both claude, 3 and 4, answered 06:30 · jury: done at 06:45 UTC, 25 fresh jurors on the fixed panel, 4 of 25 for a photograph or a film frame, share 0.16 against 0.76 needed (controls 0.96) · scores: R1 4, R2 fail (0.16), R3 3, R4 4, M1 green, M2 green, M3 red · ended: failed as a floor round at 06:45 UTC; nothing declined; every issue sent to the owner of its part; `scorecards/round-003/SUMMARY.md`
 - Round 4 · `heart`, look lock round 2 · judges commit `fdcac34` · started 2026-11-25 08:26 UTC · build: done · machine checks: determinism passed on `fdcac34` before the packs were ordered; the whole gate was run on main (`6e5ed77`) at 09:15 UTC after the round, its result is in the session log · measures: done before 08:59 UTC on another machine at the final tier in uhd on the five keys: M1 green, M2 green (12.9, 24.0, 17.7, 44.3 and 35.0 per cent of the picture moves, the floor is 8), M3 red (fine detail against the approved picture 0.79, 0.36, 0.29, 0.25 and 0.55; the floor is 0.75) · pack: done before 08:59 UTC on another machine (the manifest is in `scorecards/round-004/`) · critics (six fresh critics on three families, each family on a critic it did not judge in round 3: R1 claude, R3 gemini, R4 gpt; sent 08:59 UTC): done at 09:02 UTC · jury (25 fresh jurors, sent 09:01 to 09:05 UTC): done at 09:15 UTC, 2 of 25 for a photograph or a film frame (0.08; 0.76 passes) · issues read: done at 09:11 UTC, each owner has its part word for word · scores: R1 3 and 3, R3 3 and 4, R4 6 and 7; merged R1 3, R3 3, R4 6 against a bar of 9; 26 severe issues, none declined · ended by: a fail; what changes is in `scorecards/round-004/SUMMARY.md`; round 5 judges main at about 10:30 UTC
 - Round 5 · `heart`, look lock round 3 · judges commit `9e63135` · ordered 2026-11-25 10:17 UTC · build: done · machine checks: determinism passed on `9e63135` before the packs were ordered; the whole gate of Phase 3 was run on main (`ef6598c`) from 10:46 to 10:54 UTC: 20 of 22 pass, none fails, D3 is not built yet (the review clip), A1 is the open sound check on clip n8; G3, G10 and G13 pass · measures: done before 10:46 UTC on another machine at the final tier in uhd on the five keys: M1 green, M2 green (11.9, 30.1, 13.6, 42.3 and 19.5 per cent of the picture moves, the floor is 8), M3 red (fine detail against the approved picture 0.81, 0.35, 0.33, 0.29 and 0.82; the floor is 0.75) · pack: done before 10:46 UTC on another machine (the manifest is in `scorecards/round-005/`) · critics (six packs, six fresh critics, each family on a critic it did not judge in round 4; one answer void by the sender's fault and judged again by a fresh critic): done at 10:49 UTC · jury (25 fresh jurors): done at 10:53 UTC, 4 of 25 for a photograph or a film frame (0.16; 0.76 passes) · issues read: done at 11:04 UTC, each owner has its part word for word with an order of work · scores: R1 3 and 3, R3 5 and 5, R4 4 and 4; merged R1 3, R3 5, R4 4 against a bar of 9; 23 severe issues, one declined in part (the sky's own colour stays frozen, a smoke veil closes the gap) · ended by: a fail; what changes is in `scorecards/round-005/SUMMARY.md`; round 6 judges main as it stands at 12:10 UTC, round 7 (the last) at 13:25 UTC
+- Round 6 · `heart`, look lock round 4 · judges commit `197686c` · ordered 2026-11-25 12:10 UTC · build: done · machine checks: determinism passed on `197686c` (chain X) before the packs were ordered; a fault against G10 was on main from 12:20 to 12:40 UTC (the walkers' feet in a float texture, fixed in `104d6f3`) and G10 passes on `fe39638` · measures: done before 12:45 UTC on another machine at the final tier in uhd on the five keys: M1 green, M2 green (14.5, 29.5, 14.9, 42.2 and 12.2 per cent of the picture moves, the floor is 8), M3 red (fine detail against the approved picture 0.97, 0.48, 0.59, 0.68 and 0.83; the floor is 0.75) · pack: done before 12:45 UTC on another machine (the manifest is in `scorecards/round-006/`) · critics (six packs, six fresh critics, each family on a critic it did not judge in round 5: R1 gpt, R3 claude, R4 gemini; sent 12:45 UTC): done at 12:50 UTC · jury (25 fresh jurors): done at 12:56 UTC, 3 of 25 for a photograph or a film frame (0.12; 0.76 passes) · issues read: done at 12:51 UTC, each owner has its part word for word with an order of work · scores: R1 6 and 6, R3 3 and 4, R4 6 and 3; merged R1 6, R3 3, R4 3 against a bar of 9; 61 issues, 20 severe, two declined in part (a reflecting pool on the near floor of the mouth's view; a sharp folded knee for the one that sank) · ended by: a fail; what changes is in `scorecards/round-006/SUMMARY.md`; round 7 is the last of the look lock
+- Round 7 · `heart`, look lock round 5 (the last: `quality.lookLockMaxRounds` is 5) · judges commit `9ac88bf` (main `0141c0c` with the parts register; the last hand-back of every one of the ten owners is in it) · ordered 2026-11-25 14:18 UTC · build: done · machine checks: determinism passed on `0141c0c` (chain AI, 14:16 UTC) before the packs were ordered; the whole gate of Phase 3 runs after the round · measures: ordered 14:18 UTC on another machine · pack: ordered 14:18 UTC on another machine · critics (six packs, six fresh critics, each family on a critic it did not judge in round 6: R1 claude, R3 gemini, R4 gpt): to be sent when the packs are back · jury (25 fresh jurors): to be sent when the packs are back · issues read: not yet · fix: none, the limit is reached; what stays wrong goes into the review stop · scores: not yet · ended by: not yet
 
 ## Final scores
 
@@ -940,3 +1565,4 @@ none
 - 2026-11-25 13:58 UTC. 13:50 to 13:57 closing notes. Air: no more code; corrections to its numbers saved with its Look lock block; cost at heart-0 uhd draft 26.4 s on e96684b (MEASURED). Walkers: second pair of cost numbers, 1.0 to 2.1 s a sample at heart-3 uhd draft (MEASURED, two pairs; over its share of 1 s; cause not found). Fall: 3.55 s a sample at heart-4 uhd draft against its share of 3 (MEASURED before the last merge). Sunk: 2.04 s against its cap of 2 (MEASURED). Crust form D3 8bda667 handed back at 13:57, not merged yet (a chain runs): ropes 0.55 to 0.8 m apart and 6 to 26 cm high round the one that sank, in the height; its owner's test shows the stripes at 10 to 25 m are the paint's own lines, not the height's.
 - 2026-11-25 14:03 UTC. 14:03 status 51 shown (four pairs of chain AH on ee929c8: heart-2 without zebra, heart-1 with cords to the shore, heart-3 with seams on the feeding floor, heart-4 with the broad pour). ElevenLabs characters at 13:59: 1 of 131,000, so n1 to n7, the model test, the n8 takes and the sound effects are still not made.
 - 2026-11-25 14:06 UTC. 14:06 chain AH passed determinism on ee929c8 (commit fc560ae holds its parts and pictures). Merged to 0141c0c, each after the trailer check, tsc clean, G10 pass: the crust form D3 8bda667 (ropes 0.55 to 0.8 m apart and 6 to 26 cm high round the one that sank; arc centres behind the lobe) and the lava D4 ccf7bf1 (the pale ellipse beside the fountain was the top of the foundering plate mirroring the sky; found by rendering each part alone; the plate is now shaded along its normal and fully rough, albedo 0.28). The final chain AI runs on 0141c0c since 14:06:29. Every owner has now given its last code. The Look lock writer was started at 14:07 with the ten owners' blocks (limit 30 minutes).
+- 2026-11-25 14:19 UTC. 14:16 UTC: chain AI passed determinism on main 0141c0c. The snapshot for round 7 is commit 9ac88bf (0141c0c with the parts register: 96 parts, the Heart's 15 all built, none a stand-in or a fallback). Round 7, the last round of the look lock, was ordered at 14:18: the pack and the measures on two other machines, critics and jury to follow when the packs are back, with the families turned once more (R1 claude, R3 gemini, R4 gpt). No fix follows round 7; what stays wrong goes into the review stop. The Heart review clip was ordered at 14:18 at the final tier in hd from the same commit: 16 chunks of 2 s, 1714 frames, in 14 shares on 14 fresh machines (heart_clip_renderer_01 to _14), 65 to 105 minutes a share by the meter, 19.4 machine hours. The Look lock writer handed back at 14:15 after 8 minutes: Locked settings, What worked and what did not, and the six Recipes are now under Look lock (618 lines, checked against the source at 0141c0c). Rounds 6 and 7 were added to the Rounds list, and the Parts table under Units was brought up to date.
