@@ -7,7 +7,7 @@ import { SUNK, UNIT, seamLine } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, ragGeometry } from './shape';
+import { BODY, FIELD, HULL_GROW, HULL_PIVOT, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, ragGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
@@ -63,8 +63,7 @@ const NEAR_SHOT = ((): { from: number; to: number } => {
   return { from: secondsInPlace(UNIT, s.first) - 0.3 / 60, to: secondsInPlace(UNIT, s.last) + 0.7 / 60 };
 })();
 const LIFT = 2.0;
-const HULL_GROW = 1.3;
-const HULL_AT: [number, number, number] = [BODY.centre.x * (1 - HULL_GROW), 0.2 * (1 - HULL_GROW), BODY.centre.z * (1 - HULL_GROW)];
+const HULL_AT: [number, number, number] = [HULL_PIVOT[0] * (1 - HULL_GROW), HULL_PIVOT[1] * (1 - HULL_GROW), HULL_PIVOT[2] * (1 - HULL_GROW)];
 /** From the wide view the heap stood as a dark blot on the lake (median 36 against the lake's 58; the picture has 45 against 51). */
 const WIDE_LIFT = 1.3;
 
