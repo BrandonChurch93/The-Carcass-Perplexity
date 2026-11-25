@@ -11,7 +11,9 @@ import { bed, face, shell } from './shape';
 export const PARTS: readonly string[] = ['vessel-mouth', 'lava-fall', 'surge'];
 
 /** Metres from the lip of the front of the surge, `since` seconds after it starts. It leaves at 20 m/s and gathers speed down the slope. */
-const surgeFront = (since: number): number => (since <= 0 ? -1000 : -8 + 20 * since + 4.5 * since * since);
+const surgeFront = (since: number): number => (since < 0 ? -1000 : 6 + 20 * since + 4.5 * since * since);
+/** The second after its start at which the front is `len` metres down the course. */
+const surgeReaches = (len: number): number => (len <= 6 ? 0 : (-20 + Math.sqrt(400 + 18 * (len - 6))) / 9);
 
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);
@@ -26,7 +28,11 @@ export function create(ctx: HeartContext): HeartPiece {
     uFlare: { value: 1 },
     uSurge: { value: new THREE.Vector4(-1000, 0, 0, 0) },
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
+    tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
     tTalus: { value: ctx.assets.texture('mat/talus.jpg') },
+    tCrust: { value: ctx.assets.texture('mat/crust-skin.jpg') },
+    tCrustNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
+    tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
   };
 
   const rockMaterial = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
@@ -51,7 +57,7 @@ export function create(ctx: HeartContext): HeartPiece {
     return new THREE.Vector3(p.x, river.height(p.x, p.z) + lift, p.z);
   };
   const hot = (kelvin: number, share: number): THREE.Vector3 => new THREE.Vector3(...blackbody(kelvin)).multiplyScalar(share);
-  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 20, TUBE.floor + 5, TUBE.lipZ - 12), radius: 15, radiance: hot(1400, 0.5) };
+  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 22, TUBE.floor + 3, TUBE.lipZ - 5), radius: 12, radiance: hot(1400, 0.4) };
   const bodyLight = { position: spot(52, 3), radius: 11, radiance: hot(1420, 0.55) };
   const footLight = { position: spot(course.length - 26, 3), radius: 20, radiance: hot(1330, 0.4) };
   const surgeLight = { position: spot(0, 4), radius: 9, radiance: new THREE.Vector3() };
@@ -66,11 +72,11 @@ export function create(ctx: HeartContext): HeartPiece {
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
   const footAt = spot(course.length - 8, 0);
   const footFume = { at: [footAt.x + 14, 1, footAt.z + 4] as [number, number, number], radius: 34, strength: 0.6, rise: 150, kind: 'fume' as const, lean: [0.3, -0.1] as [number, number] };
-  const mouthFume = { at: [MOUTH.x - 4, TUBE.floor + 30, TUBE.lipZ - 4] as [number, number, number], radius: 30, strength: 0.35, rise: 120, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
+  const mouthFume = { at: [MOUTH.x - 6, TUBE.floor + MOUTH.height + 6, TUBE.lipZ - 20] as [number, number, number], radius: 26, strength: 0.14, rise: 120, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
   ctx.sources.steam.push(footFume, mouthFume);
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.
-  const GOBS = 220;
+  const GOBS = 420;
   const rng = ctx.rng('fall/surge');
   const gobGeometry = new THREE.IcosahedronGeometry(1, 1);
   const seed = new THREE.InstancedBufferAttribute(new Float32Array(GOBS * 4), 4);
@@ -79,55 +85,61 @@ export function create(ctx: HeartContext): HeartPiece {
   const gobs = new THREE.InstancedMesh(gobGeometry, gobMaterial, GOBS);
   gobs.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('surge', gobs));
-  const CASCADES = [0, 14, 40, 70, 100];
+  const CASCADES = [0, ...course.falls];
   const throws = Array.from({ length: GOBS }, (_, i) => {
-    const from = i < 90 ? 0 : (CASCADES[1 + (i % 4)] as number);
+    const from = i < 170 ? 0 : (CASCADES[1 + (i % (CASCADES.length - 1))] as number);
     const p = course.at(from + rng.range(-3, 3));
     const side = rng.range(-1, 1);
-    const out = rng.range(3, 16);
+    const out = rng.range(7, 24);
     return {
       from,
-      delay: rng.range(0, i < 90 ? 0.9 : 1.6) * rng.next(),
+      delay: rng.range(0, i < 170 ? 0.9 : 1.6) * rng.next() - (i < 170 ? 0.14 : 0.05),
       at: new THREE.Vector3(p.x - p.dz * side * p.half, river.height(p.x, p.z) + 1, p.z + p.dx * side * p.half),
-      velocity: new THREE.Vector3(p.dx * out + rng.range(-7, 7), rng.range(9, 30), p.dz * out + rng.range(-7, 7)),
-      size: 0.25 + 1.1 * Math.pow(rng.next(), 2.5),
+      velocity: new THREE.Vector3(p.dx * out + rng.range(-6, 6), rng.range(1, 8) + 10 * Math.pow(rng.next(), 2), p.dz * out + rng.range(-6, 6)),
+      size: 0.09 + 0.5 * Math.pow(rng.next(), 3),
     };
   });
   const dummy = new THREE.Object3D();
+  const way = new THREE.Vector3();
+  const UP = new THREE.Vector3(0, 1, 0);
 
   return {
     setTime: (seconds) => {
       const since = seconds - surgeAt;
       const front = surgeFront(since);
       // The flare: at once, then it settles to a fall that runs fuller than before.
-      const flare = since < 0 ? 1 : 1 + 2.2 * Math.exp(-since / 0.9) * smooth(0, 0.05, since) + 0.55 * smooth(0, 0.3, since);
+      const flare = since < 0 ? 1 : 1.55 + 2.6 * Math.exp(-since / 0.9);
       shared.uFlare.value = flare;
-      shared.uSurge.value.set(front, since < 0 ? 0 : smooth(0, 0.08, since), 0, 0);
+      shared.uSurge.value.set(front, since < 0 ? 0 : 1, since < 0 ? 0 : Math.exp(-since / 0.45), course.length);
       mouthLight.radiance.copy(base[0] as THREE.Vector3).multiplyScalar(flare);
       bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar(1 + 0.6 * smooth(40, 64, front));
       footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar(1 + 0.5 * smooth(course.length - 60, course.length - 20, front));
-      if (since > 0) {
+      if (since >= 0) {
         const p = course.at(Math.min(course.length - 10, Math.max(0, front)));
         surgeLight.position.set(p.x, river.height(p.x, p.z) + 5, p.z);
-        surgeLight.radius = 10;
-        surgeLight.radiance.set(...blackbody(1470)).multiplyScalar(0.9 * smooth(0, 0.06, since) * smooth(course.length + 20, course.length - 30, front));
+        surgeLight.radius = 10 + 5 * Math.exp(-since / 0.5);
+        surgeLight.radiance.set(...blackbody(1470)).multiplyScalar((0.9 + 0.8 * Math.exp(-since / 0.5)) * smooth(course.length + 20, course.length - 30, front));
       } else surgeLight.radiance.set(0, 0, 0);
 
       for (let i = 0; i < GOBS; i++) {
         const t = throws[i] as (typeof throws)[number];
         // Each gob leaves when the front reaches the place it is thrown from.
-        const arrive = t.from <= 0 ? 0 : (-20 + Math.sqrt(400 + 18 * (t.from + 8))) / 9;
-        const age = since - arrive - t.delay;
+        const age = since - surgeReaches(t.from) - t.delay;
         const y = t.at.y + t.velocity.y * age - 4.9 * age * age;
         const x = t.at.x + t.velocity.x * age;
         const z = t.at.z + t.velocity.z * age;
-        const live = age > 0 && y > Math.max(0, land(x, z)) - 0.5;
+        const live = since >= 0 && age > 0 && y > Math.max(0, land(x, z)) - 0.5;
         const size = live ? t.size : 0;
+        // A gob is drawn out along its flight, the more the faster it goes.
+        way.set(t.velocity.x, t.velocity.y - 9.8 * age, t.velocity.z);
+        const speed = way.length();
         dummy.position.set(x, live ? y : -500, z);
-        dummy.scale.set(size, size * 1.5, size);
+        dummy.quaternion.setFromUnitVectors(UP, way.divideScalar(Math.max(speed, 0.001)));
+        dummy.scale.set(size, size * (1.2 + 0.045 * speed), size);
         dummy.updateMatrix();
         gobs.setMatrixAt(i, dummy.matrix);
-        seed.setX(i, 1460 - 95 * Math.max(0, age));
+        // Small ones chill in a second, big ones stay yellow to the ground.
+        seed.setX(i, Math.max(900, 1470 - (38 / Math.pow(t.size, 0.9)) * Math.max(0, age)));
       }
       gobs.instanceMatrix.needsUpdate = true;
       seed.needsUpdate = true;

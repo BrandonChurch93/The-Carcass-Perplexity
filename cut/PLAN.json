@@ -13,10 +13,10 @@
     { "id": "ribs-06", "unit": "ribs", "at": { "bar": 10 }, "key": "ribs-4", "picture": "ribs-4", "move": "hold", "label": "The Ribs · the bore comes through the cage" },
 
     { "id": "heart-01", "unit": "heart", "at": { "hit": 41.7822 }, "key": "heart-0", "picture": "heart-0", "move": "in", "label": "The Heart · the lava lake at nightfall" },
-    { "id": "heart-02", "unit": "heart", "at": { "bar": 13 }, "key": "heart-3", "picture": "heart-3", "move": "left", "label": "The Heart · the tall ones walk the skin" },
+    { "id": "heart-02", "unit": "heart", "at": { "bar": 13 }, "key": "heart-3", "picture": "heart-3", "move": "in", "label": "The Heart · the tall ones walk the skin" },
     { "id": "heart-03", "unit": "heart", "at": { "hit": 56.25 }, "key": "heart-1", "picture": "heart-1", "move": "in", "label": "The Heart · the fire under the skin" },
-    { "id": "heart-04", "unit": "heart", "at": { "bar": 16 }, "key": "heart-2", "picture": "heart-2", "move": "hold", "label": "The Heart · the one that sank" },
-    { "id": "heart-05", "unit": "heart", "at": { "bar": 17 }, "key": "heart-4", "picture": "heart-4", "move": "out", "label": "The Heart · the vessel mouth and the lava fall, no voice" },
+    { "id": "heart-04", "unit": "heart", "at": { "bar": 16 }, "key": "heart-2", "picture": "heart-2", "move": "in", "label": "The Heart · the one that sank" },
+    { "id": "heart-05", "unit": "heart", "at": { "bar": 17 }, "key": "heart-4", "picture": "heart-4", "move": "in", "label": "The Heart · the vessel mouth and the lava fall, no voice" },
 
     { "id": "breath-01", "unit": "breath", "at": { "bar": 19 }, "key": "breath-0", "picture": "breath-0", "move": "in", "label": "The Breath · the shelf at dawn" },
     { "id": "breath-02", "unit": "breath", "at": { "bar": 20, "beat": 4 }, "key": "breath-4", "picture": "breath-4", "move": "in", "label": "The Breath · down the shaft, it breathes out" },
