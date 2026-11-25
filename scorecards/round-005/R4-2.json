@@ -1,0 +1,57 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "claude_opus_5_5",
+  "answered": "2026-11-25 10:49 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the smoke plume above the cave and the sky behind it, between 3.27 s and 3.82 s",
+        "what": "the tall grey plume disappears between two samples and is swapped for a flat orange haze lying across the far cliff. It does not thin out or drift off. At playing speed this reads as a pop or a state change",
+        "fix": "keep one smoke simulation running the whole time. Let the plume shear, thin and spread into the haze over several seconds instead of cutting between two smoke states"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the walking creatures on the lava plain in the middle distance, from 3.27 s to 3.82 s",
+        "what": "the herd jumps to new positions and a new layout between samples, and some animals appear on the right where there were none. Before that, from 0 to 3.27 s, they hardly move at all, so they read as placed models",
+        "fix": "give each animal its own continuous path and gait phase. Keep them shifting, pausing and turning across the hold, with no re-spawn or repositioning"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the lava fall from the cave lip down to the bench, over frames 4008 to 4019",
+        "what": "the branching bright channels change shape from frame to frame at 1/100 s steps without any downhill travel. They boil and shimmer like a swapped crack texture rather than thick lava sliding down, and they never get a folding, crusting skin",
+        "fix": "drive the flow with a slow, coherent downhill advection. Let the crust plates ride and fold on the surface, and lock fine detail so it does not re-randomise each frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the lava fall and the lava channels across the plain, for the whole 6 s hold",
+        "what": "the cave-mouth fall and the glowing cracks are almost frozen. Only the glow of the right-hand pool pulses brighter and dimmer, so the floor reads as a still picture with lighting changes",
+        "fix": "give the channels a visible slow creep and crusting, and let the fall spill and break. Tie the glow changes to the moving lava, not to an even pulse"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the dust or fume cloud to the right of the lava fall",
+        "what": "the cloud is almost the same in every frame and does not billow or rise. It sits as a soft sprite that the lava does not disturb",
+        "fix": "have the fume rise and roll off the hot flow, lit from below by the lava, and keep it moving"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "the steam vent on the left rock and the waterline at the lower right",
+        "what": "the steam shifts very little and the shore water stays fixed for 6 s",
+        "fix": "add a gentle, varied puffing to the vent and a small lapping motion at the waterline"
+      }
+    ]
+  },
+  "note": "reviewer_58 was sent a cut brief and a wrong image by a fault of the sender (a tool output cut at 40,000 characters); its answer is void and reviewer_59 judged the pack with the whole brief"
+}

@@ -1,0 +1,77 @@
+{
+  "round": 5,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "claude_opus_5_5",
+  "answered": "2026-11-25 10:48 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the lava fall pouring from the cave mouth down the cliff",
+        "what": "the fall reads as flat, evenly bright orange strands that shift like an animated texture; it has no thickness, no slowing, no crusting skin, and the dark cave above stays a dead flat patch over 7 seconds",
+        "fix": "simulate the fall as a thick, slow fluid with a cooling dark skin that folds and tears, varied speed along the channel, and glow that lights the cave lip and the fume"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "the lava strands and glowing blocks on the cliff face, frames 4006 to 4017",
+        "what": "the bright shapes in the fall change outline from one frame to the next with no coherent flow direction, so the fall boils and shimmers instead of moving downhill",
+        "fix": "make the lava motion temporally coherent (advected, not re-noised per frame) and filter fine glow detail so it does not crawl"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the large creature in the centre over 7 seconds",
+        "what": "the near creature holds the same pose for the whole shot except its head; body, legs and weight never shift, so it reads as a posed model beside the only moving part",
+        "fix": "give it breathing, weight shifts between legs, a step or turn, and small secondary motion in the hanging fronds"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the herd of creatures across the lava plain and the lava flows",
+        "what": "the camera slides across the plain while the creatures and the lava channels stay essentially unchanged; the place reads as a still picture being tracked across, with only the plume drifting",
+        "fix": "animate the distant herd walking out of step, let the lava channels creep and crust, and let the surface pools flare and dim irregularly"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the lava channel in the foreground and the push in toward it",
+        "what": "the crust carries regular swirling stripe patterns that look like a texture map rather than folded ropy skin, and the move pushes in to end on a frame filled by this patterned surface and a vague orange glow blob at left",
+        "fix": "replace the striped crust with sculpted ropy pahoehoe folds that buckle as the channel moves, and end the push on a composed picture with a clear subject"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the whole shot, the arch, plain and distant creatures",
+        "what": "over almost 4 seconds nearly nothing changes; only the plume drifts slightly and the camera barely moves, so the shot reads as a held still",
+        "fix": "add life to the frame: creatures moving in the distance, lava flickering and creeping at the plain edge, heat haze and fume from the vents"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the glowing fan-shaped plant the creature feeds from",
+        "what": "its glow and puff of vapour pulse evenly rather than reacting to the creature, and the vapour fills in as a soft overlay",
+        "fix": "tie the vapour bursts to the creature's contact and let them rise and disperse with varied rhythm"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "the stripe patterns on the lava crust, frames 3477 to 3488",
+        "what": "the fine stripe detail on the crust swims slightly from frame to frame as the camera moves",
+        "fix": "stabilise the crust texture to the surface and add mip filtering to stop crawling"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "the steam vent on the left slope, frames 2722 to 2733",
+        "what": "the small steam puff shifts and jitters slightly between consecutive frames rather than rising smoothly",
+        "fix": "smooth the vapour simulation so it rises and thins continuously"
+      }
+    ]
+  }
+}
