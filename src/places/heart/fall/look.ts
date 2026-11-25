@@ -41,6 +41,7 @@ bool hiddenByWall(vec3 world, float inside) {
 
 // The river inside the tube, for the light it throws on the walls and the roof, and the light common to all the rock of this folder.
 const TUBE_GLSL = /* glsl */ `
+uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
   return ${f(MOUTH.x)} - 58.0 * k * k;
@@ -50,9 +51,8 @@ float riverX(float d) {
 }
 // How much of the river is open lava at depth d: it comes out from under a crust.
 float riverOpen(float d) {
-  return 0.006 + 0.85 * exp(-d / 8.0);
+  return 0.006 + 0.85 * exp(-d / 8.0) * uFlare;
 }
-uniform float uFlare;
 // d is metres into the tube from its rim, negative outside.
 vec3 riverLight(vec3 p, vec3 n, float d) {
   if (d < -38.0) return vec3(0.0);
@@ -66,7 +66,7 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float reach = exp(-outside / 5.0) * smoothstep(38.0, 24.0, -d);
   // The lip hides the river from the cliff below it.
   if (d < 0.0) reach *= smoothstep(${f(TUBE.floor - 5)}, ${f(TUBE.floor + 1)}, p.y);
-  return blackbody(1390.0) * riverOpen(max(d, 0.0)) * uFlare * 3.14159 * form * facing * reach;
+  return blackbody(1390.0) * riverOpen(max(d, 0.0)) * 3.14159 * form * facing * reach;
 }
 // The rig's shading, with the day and the lake shut out as the tube goes in.
 vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float d) {
@@ -190,9 +190,15 @@ void main() {
 // so a mark keeps its place in the lava, rides down at the speed of the flow and is drawn out where the flow quickens.
 const STREAM_GLSL = /* glsl */ `
 uniform vec4 uSurge;
+// x: streaks drawn out down the flow, y: threads of open lava. s is metres across, age the second the lava left the lip.
+vec2 marks(float s, float age) {
+  float streak = 0.5 * vnoise(vec2(s * 0.7, age * 1.1)) + 0.3 * vnoise(vec2(s * 2.3 + 7.0, age * 2.7)) + 0.2 * vnoise(vec2(s * 6.5 + 3.0, age * 6.0));
+  float thread = smoothstep(0.06, 0.0, abs(vnoise(vec2(s * 0.85 + 11.0, age * 0.45)) - 0.5)) + 0.6 * smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 2.1 + 5.0, age * 1.3)) - 0.5));
+  return vec2(streak, thread);
+}
 // x: cover 0 to 1, y: kelvin.
 // away: x metres from the middle of the stream, y how much of an island of rock stands here.
-vec2 stream(vec4 flow, float speed, vec2 away) {
+vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float len = flow.w;
   float s = flow.y;
   float age = flow.x - uTime;
@@ -210,12 +216,22 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   float u = abs(s) / max(half_, 0.1);
   float fast = smoothstep(5.5, 11.0, speed);
   float fan = smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, len);
-  float streak = 0.5 * vnoise(vec2(s * 0.7, age * 1.1)) + 0.3 * vnoise(vec2(s * 2.3 + 7.0, age * 2.7)) + 0.2 * vnoise(vec2(s * 6.5 + 3.0, age * 6.0));
+  // The fan's own marks are laid out from its head, in metres round it and metres out from it.
+  vec2 out_ = at - vec2(-48.0, -385.0);
+  float fl = ${f(FAN_FROM - 15)} + length(out_);
+  float fs = atan(out_.x, out_.y) * 45.0;
+  // On the fan the moving marks go over to the fan's lay, so nothing is drawn across the grain of the mesh.
+  vec2 mk = fan < 1.0 ? marks(s, age) : vec2(0.0);
+  if (fan > 0.0) mk = mix(mk, marks(fs, fl / 8.0 - uTime), fan);
+  float streak = mk.x;
   float wave = sin(len * 2.3 + 2.5 * vnoise(vec2(s * 0.6, len * 0.4)) + 0.7 * sin(uTime * 6.0 + s * 1.7));
   // A thin skin over most of it, orange; open lava down the middle and wherever a cascade tears the skin; red at the margins.
   // Open lava only in threads, most of them down the middle and where a cascade pulls the skin apart. Rock in the stream chills what passes it.
-  float thread = smoothstep(0.06, 0.0, abs(vnoise(vec2(s * 0.85 + 11.0, age * 0.45)) - 0.5)) + 0.6 * smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 2.1 + 5.0, age * 1.3)) - 0.5));
+  float thread = mk.y;
   float kelvin = mix(1070.0, 1250.0, 1.0 - smoothstep(0.25, 0.97, u)) - 170.0 * (streak - 0.47) + fast * (30.0 + 30.0 * wave) + 110.0 * smoothstep(40.0, 0.0, len);
+  // Down a cascade the sheet parts into strands, and what runs between them is thinner and cooler.
+  float strand = smoothstep(0.5, 0.68, 0.7 * vnoise(vec2(s * 0.8 + 2.0, age * 0.22)) + 0.3 * vnoise(vec2(s * 2.6, age * 0.9 + 4.0)));
+  kelvin -= 170.0 * strand * fast * smoothstep(1.0, 7.0, len);
   kelvin = mix(kelvin, 1420.0, clamp(thread * (0.35 + 0.65 * fast + 0.5 * (1.0 - smoothstep(0.0, 0.5, u))), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
   kelvin = min(kelvin, 1450.0);
@@ -227,18 +243,18 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   float skin = mix(830.0, 1080.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0));
   kelvin = mix(kelvin, mix(skin, 1260.0, tear), raft);
   // Where the slope gives out the stream spreads into a fan and skins over; it goes on under the skin and in a few open lanes.
-  float lane = abs(vnoise(vec2(s * 0.17 + 1.6 * vnoise(vec2(len * 0.07, 2.0)), len * 0.03 + 9.0)) - 0.5);
-  float rill = abs(vnoise(vec2(s * 0.3 + 2.2 * vnoise(vec2(len * 0.11, s * 0.08 + 4.0)), len * 0.045 + 3.0)) - 0.5);
-  float rill2 = abs(vnoise(vec2(s * 0.7 + 1.8 * vnoise(vec2(len * 0.19, s * 0.2 + 9.0)), len * 0.08 + 6.0)) - 0.5);
-  float open = max(smoothstep(0.13, 0.06, lane), max(smoothstep(0.1, 0.05, rill) * (0.55 + 0.45 * vnoise(vec2(s * 0.1 + 8.0, len * 0.06))), smoothstep(0.07, 0.03, rill2) * 0.8));
+  float lane = abs(vnoise(vec2(fs * 0.17 + 1.6 * vnoise(vec2(fl * 0.07, 2.0)), fl * 0.03 + 9.0)) - 0.5);
+  float rill = abs(vnoise(vec2(fs * 0.3 + 2.2 * vnoise(vec2(fl * 0.11, fs * 0.08 + 4.0)), fl * 0.045 + 3.0)) - 0.5);
+  float rill2 = abs(vnoise(vec2(fs * 0.7 + 1.8 * vnoise(vec2(fl * 0.19, fs * 0.2 + 9.0)), fl * 0.08 + 6.0)) - 0.5);
+  float open = max(smoothstep(0.13, 0.06, lane), max(smoothstep(0.1, 0.05, rill) * (0.55 + 0.45 * vnoise(vec2(fs * 0.1 + 8.0, fl * 0.06))), smoothstep(0.07, 0.03, rill2) * 0.8));
   // Most of what crosses the fan does so in broad lanes drawn out down the slope, with plates of skin between them.
-  float broad = vnoise(vec2(s * 0.2 + 1.3 * vnoise(vec2(len * 0.06, 5.0)), len * 0.028 + 1.0)) + 0.25 * (vnoise(vec2(s * 0.9, len * 0.12 + 4.0)) - 0.5);
+  float broad = vnoise(vec2(fs * 0.2 + 1.3 * vnoise(vec2(fl * 0.06, 5.0)), fl * 0.028 + 1.0)) + 0.25 * (vnoise(vec2(fs * 0.9, fl * 0.12 + 4.0)) - 0.5);
   open = max(open, smoothstep(0.4, 0.47, broad));
   // Where the fan meets the lake its skin is broken by the lake's own heave and the lava shows along the shore.
   open = max(open, smoothstep(uSurge.w - 24.0, uSurge.w - 9.0, len) * smoothstep(0.35, 0.6, vnoise(vec2(s * 0.21 + 3.0, age * 0.08))));
-  float crack = smoothstep(0.075, 0.0, abs(vnoise(vec2(s * 0.55 + 1.0 + 1.5 * vnoise(vec2(len * 0.13, 1.0)), len * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(s * 0.2, len * 0.2 + 5.0)));
-  float crack2 = smoothstep(0.06, 0.0, abs(vnoise(vec2(s * 1.7 + 6.0 + 1.2 * vnoise(vec2(len * 0.3, 7.0)), len * 0.4 + age * 0.03)) - 0.5));
-  float crust = mix(mix(760.0, 1010.0, vnoise(vec2(s * 0.8, len * 0.8))), 1270.0, max(crack, 0.8 * crack2));
+  float crack = smoothstep(0.075, 0.0, abs(vnoise(vec2(fs * 0.55 + 1.0 + 1.5 * vnoise(vec2(fl * 0.13, 1.0)), fl * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(fs * 0.2, fl * 0.2 + 5.0)));
+  float crack2 = smoothstep(0.06, 0.0, abs(vnoise(vec2(fs * 1.7 + 6.0 + 1.2 * vnoise(vec2(fl * 0.3, 7.0)), fl * 0.4 + age * 0.03)) - 0.5));
+  float crust = mix(mix(760.0, 1010.0, vnoise(vec2(fs * 0.8, fl * 0.8))), 1270.0, max(crack, 0.8 * crack2));
   // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
   kelvin = mix(kelvin, 1265.0 - 170.0 * streak + 150.0 * thread, fan);
   kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.7 * behind));
@@ -265,7 +281,7 @@ ${TUBE_GLSL}
 ${STREAM_GLSL}
 void main() {
   if (hiddenByWall(vWorld, vIn.x)) discard;
-  vec2 lava = stream(vFlow, vBank.w, vIn.yz);
+  vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
   vec3 c = blackbody(lava.y);
   if (lava.x < 1.0) {
     vec3 v = normalize(cameraPosition - vWorld);
@@ -284,10 +300,10 @@ void main() {
     vec3 albedo = mix(rock, fresh, 0.9 * young);
     float own = max(smoothstep(30.0, 14.0, side), vIn.x);
     // Flows laid one on another: the flanks of the benches break in ledges, not in columns.
-    float bedY = vWorld.y * 0.55 + 2.6 * vnoise(vWorld.xz / 6.5) + 0.8 * vnoise(vWorld.xz / 1.7);
+    float bedY = vWorld.y * 0.55 + 0.9 * vnoise(vWorld.xz / 9.5) + 0.5 * vnoise(vWorld.xz / 1.7);
     float ledge = vnoise(vec2(bedY, 3.0)) - vnoise(vec2(bedY + 0.22, 3.0));
     n = normalize(n + vec3(0.0, 1.0, 0.0) * ledge * 3.2 * steep * own);
-    albedo *= 1.0 - 0.45 * steep * own * smoothstep(0.06, 0.2, ledge);
+    albedo *= 1.0 - 0.22 * steep * own * smoothstep(0.06, 0.2, ledge);
     albedo *= fineRock(vWorld, own, n);
     // The stream's own light on its banks: it is a long bright strip, and what faces it glows.
     vec3 to = vec3(vBank.x * max(side, 0.0), vBank.z - vWorld.y + 0.4, vBank.y * max(side, 0.0));
@@ -352,7 +368,7 @@ ${STREAM_GLSL}
 void main() {
   float low = smoothstep(16.0, 5.0, vWorld.y);
   if (low <= 0.0) discard;
-  vec2 s = stream(vFlow, vSpeed.x, vSpeed.yz);
+  vec2 s = stream(vFlow, vSpeed.x, vSpeed.yz, vWorld.xz);
   gl_FragColor = vec4(blackbody(s.y) * s.x * low, 1.0);
 }`;
 
