@@ -41,13 +41,6 @@ bool hiddenByWall(vec3 world, float inside) {
   return pow(q.x, ${f(TUBE.power)}) + pow(max(q.y, 0.0), ${f(TUBE.power)}) > 1.0;
 }`;
 
-// The land's rock for the collar, as the land draws its wall. Its pictures are read here with slopes made from `px`, which is taken
-// first thing in main, so the read cannot take a slope of its own inside one of the function's branches.
-const COLLAR_ROCK_GLSL = WALL_ROCK_GLSL.replace(/texture2D\((\w+), (\w+)\)/g, (_all: string, map: string, uv: string): string => {
-  const scale = map === 'tBoulderNh' ? '17.0' : 'CLIFF';
-  return `textureGrad(${map}, ${uv}, vec2(px / ${scale}, 0.0), vec2(0.0, px / ${scale}))`;
-});
-
 // The collar ends in a broken edge, the land's own wall showing between its last pieces, so no line is drawn where the two meet.
 const TORN_GLSL = /* glsl */ `
 bool torn(vec3 world, vec3 skin) {
@@ -202,7 +195,7 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WINDOW_FRAGMENT}
 ${TUBE_GLSL}
-${COLLAR_ROCK_GLSL}
+${WALL_ROCK_GLSL}
 ${TORN_GLSL}
 void main() {
   gDx = dFdx(vWorld);
@@ -213,7 +206,7 @@ void main() {
   // The land's rock, read before anything branches. On the collar it is all there is: the same rock under the same light as the wall.
   vec3 wn;
   float wocc;
-  vec3 wall = wallRock(vWorld, n, max(length(gDx), length(gDy)), wn, wocc);
+  vec3 wall = wallRockAt(vWorld, n, gDx, gDy, wn, wocc);
   // The lip itself is the wall's rock too: the fall's own rock begins where the cut turns in.
   float collar = smoothstep(-1.2, 0.2, vSkin.y);
   float d = -vSkin.y;
