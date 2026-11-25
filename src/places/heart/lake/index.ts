@@ -74,47 +74,171 @@ float lobeAt(vec2 q) {
   gLobeNext = next;
   return best;
 }
-// Folds: where the skin was pushed while it was soft it lies in ropes as thick as an arm, 20 to 60 cm from crest to crest,
-// in swirls metres across, with smooth skin between the swirls, and they swell and die along their length. Returns the
-// profile across one fold, 0 in the crease and 1 on the crest; the cover and depth go to gFoldCover, the count of folds
-// crossed to gFoldPhase. On each fold lie cords as thick as a wrist, which only the normal can carry.
-float gFoldCover;
-float gFoldPhase;
-#define BUNDLE 2.4
-float foldAt(vec2 q) {
-  gFoldPhase = 0.0;
-  gFoldCover = 0.0;
-  vec2 base = floor(q / BUNDLE);
-  vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0));
-  float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
-  float best = 1.0;
-  float next = 1.0;
-  for (int j = 0; j < 3; j++) {
-    for (int i = 0; i < 3; i++) {
-      vec2 c2 = base + vec2(float(i - 1), float(j - 1));
-      float hr = hash12(c2 + 8.1);
-      vec2 rel = wq - (c2 + 0.15 + 0.7 * hash22(c2 + 2.37)) * BUNDLE;
-      float d = length(rel) / (0.8 + 1.3 * hr);
-      if (d < best) {
-        next = best;
-        best = d;
-        // A bundle is a sheaf of arcs that bulge downstream.
-        float turn = flowTurn + 2.6 * (fract(hr * 17.3) - 0.5);
-        vec2 along = vec2(cos(turn), sin(turn));
-        float side = rel.x * along.y - rel.y * along.x;
-        gFoldPhase = (dot(rel, along) + (0.2 + 0.5 * fract(hr * 5.7)) * side * side) / (0.28 + 0.14 * fract(hr * 11.3)) + 7.0 * hr;
-      } else if (d < next) {
-        next = d;
+// Toes: between the sheaves the skin is not blank. It was laid in low rounded toes, 0.3 to 1.1 m across, each thin where it
+// was fed and thick at its soft front, each lying on the ones before it like a tile. Two sizes; the highest wins.
+// Leaves gToeNext (the height of the one under the winner), gToeSlope (the slope of the winner, metres a metre), gToeId.
+float gToeNext;
+vec2 gToeSlope;
+vec2 gToeId;
+float gToeBest;
+vec4 gToe;
+vec4 gToeAlong;
+void toesOf(vec2 wq, float size, float seed, float flowTurn) {
+  vec2 base = floor(wq / size - 0.5);
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 c2 = base + vec2(float(i), float(j));
+      vec2 hs = hash22(c2 + seed);
+      float hr = hash12(c2 + seed + 3.7);
+      float R = size * (0.42 + 0.33 * hr);
+      vec2 rel = wq - (c2 + 0.5 + 0.5 * (hs - 0.5)) * size;
+      float turn = flowTurn + 2.4 * (fract(hr * 13.7) - 0.5);
+      vec2 along = vec2(cos(turn), sin(turn));
+      vec2 side = vec2(along.y, -along.x);
+      float a = dot(rel, along) / R;
+      float s = dot(rel, side) / R * (1.0 + 0.5 * fract(hr * 23.1));
+      float t2 = a * a + s * s;
+      if (t2 < 1.0) {
+        float tall = R * (0.14 + 0.12 * fract(hr * 7.1)) * (0.45 + 0.55 * smoothstep(-1.0, 0.4, a));
+        float hgt = tall * (1.0 - t2 * t2);
+        if (hgt > gToeBest) {
+          gToeNext = gToeBest;
+          gToeBest = hgt;
+          gToeId = c2 + seed;
+          gToe = vec4(a, s, R, hr);
+          gToeAlong = vec4(along, 1.0 + 0.5 * fract(hr * 23.1), 0.0);
+          gToeSlope = -4.0 * tall * t2 * (a * along + s * (1.0 + 0.5 * fract(hr * 23.1)) * side) / R;
+        } else if (hgt > gToeNext) {
+          gToeNext = hgt;
+        }
       }
     }
   }
-  if (best >= 1.0) return 1.0;
-  // A fold swells and dies along its length, and none runs true.
-  gFoldCover = smoothstep(0.0, 0.22, min(1.0 - best, next - best)) * (0.3 + 0.7 * smoothstep(0.2, 0.65, vnoise(q / 0.9 + 19.0)));
-  gFoldPhase += 0.45 * vnoise(q / 0.57 + 3.0);
+}
+float toeAt(vec2 q) {
+  vec2 wq = q + 0.4 * vec2(vnoise(q / 1.3 + 41.0), vnoise(q / 1.3 + 57.0));
+  float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
+  gToeBest = 0.0;
+  gToeNext = 0.0;
+  gToeSlope = vec2(0.0);
+  gToeId = vec2(0.0);
+  toesOf(wq, 1.0, 71.3, flowTurn);
+  toesOf(wq + 0.37, 0.52, 13.9, flowTurn + 0.7);
+  return gToeBest;
+}
+// How much of a toe the cells of size c carry.
+float toeHeld(float c) {
+  return 1.0 - smoothstep(0.07, 0.16, c);
+}
+// Folds: where a lobe's skin was pushed against something while it was soft it lies in ropes, in sheaves of arcs that bulge
+// downstream. Sheaves come in two sizes (3 to 7 m and 0.5 to 2 m across), the small lying across the large; inside one the
+// spacing is very uneven (the phase is warped across the sheaf), each fold has its own depth, swells and thins along its
+// length and ends. The toes wear ropes of their own round their fronts, 4 to 9 cm apart, and foldAt leaves the toes as toeAt
+// does. Returns the profile across one fold, 0 in the crease and 1 on the crest. Leaves: gFoldCover (0 to 1, how
+// much of a fold is here), gFoldPhase (creases at whole numbers), gFoldSpace (metres from crest to crest here), gFoldDeep
+// (metres from crease to crest here), gFoldDir (unit, across the folds, downstream).
+float gFoldCover = 0.0;
+float gFoldPhase = 0.0;
+float gFoldSpace = 0.3;
+float gFoldDeep = 0.1;
+vec2 gFoldDir = vec2(1.0, 0.0);
+float gSheafBest;
+float gSheafNext;
+vec4 gSheaf;
+vec3 gSheafAlong;
+void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
+  vec2 base = floor(wq / size - 0.5);
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 c2 = base + vec2(float(i), float(j));
+      vec2 hs = hash22(c2 + seed);
+      float hr = hash12(c2 + seed + 8.1);
+      // The middle of a sheaf lies in the middle half of its cell and it reaches at most three quarters of a cell:
+      // so four cells are enough to look in.
+      vec2 rel = wq - (c2 + 0.5 + 0.5 * (hs - 0.5)) * size;
+      float R = size * (0.22 + 0.53 * hr);
+      float turn = flowTurn + 2.6 * (fract(hr * 17.3) - 0.5);
+      vec2 along = vec2(cos(turn), sin(turn));
+      float a = dot(rel, along);
+      float s = rel.x * along.y - rel.y * along.x;
+      float d = length(vec2(a * (1.0 + fract(hr * 41.3)), s)) / R;
+      // One cell in five of the large ones is bare, and two in five of the small.
+      float p = (1.0 - d) * (0.7 + 0.6 * fract(hr * 29.1)) * (1.0 + 0.6 * small) * step(0.2 + 0.2 * small, fract(hr * 53.7));
+      if (p > gSheafBest) {
+        gSheafNext = gSheafBest;
+        gSheafBest = p;
+        gSheaf = vec4(a, s, R, hr);
+        gSheafAlong = vec3(along, small);
+      } else if (p > gSheafNext) {
+        gSheafNext = p;
+      }
+    }
+  }
+}
+float foldAt(vec2 q) {
+  gFoldPhase = 0.0;
+  gFoldCover = 0.0;
+  vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
+  float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
+  gSheafBest = 0.0;
+  gSheafNext = 0.0;
+  sheafAt(wq, 4.6, 2.37, flowTurn, 0.0);
+  sheafAt(wq, 1.35, 61.7, flowTurn + 1.3, 1.0);
+  // The ropes a toe wears round its front: rings about its middle, on its downstream half, out to its rim.
+  float toeHigh = toeAt(q);
+  float toeCover = 0.0;
+  float rho = 0.0;
+  if (toeHigh > 0.0) {
+    rho = length(gToe.xy);
+    toeCover = smoothstep(0.25, 0.5, rho) * smoothstep(-0.8, 0.1, gToe.x / max(rho, 0.01)) * step(0.3, fract(gToe.w * 37.7)) * smoothstep(0.0, 0.012, toeHigh - gToeNext) * smoothstep(0.0, 0.008, toeHigh);
+  }
+  float sheafCover = smoothstep(0.0, 0.25, min(gSheafBest, gSheafBest - gSheafNext)) * (0.55 + 0.45 * smoothstep(0.0, 0.5, gSheafBest));
+  if (max(sheafCover, toeCover) <= 0.0) return 1.0;
+  if (toeCover > sheafCover) {
+    float hrT = gToe.w;
+    float spaceT = 0.04 + 0.05 * fract(hrT * 11.3);
+    float uT = rho * gToe.z / spaceT + 5.0 * hrT;
+    vec2 wpT = vec2(0.6 * uT + 31.0 * hrT, 2.0 * gToe.y + 5.0 * hrT);
+    float t0 = vnoise(wpT);
+    float t1 = vnoise(wpT + vec2(0.18, 0.0));
+    gFoldSpace = spaceT / max(abs(1.0 + 1.5 * (t1 - t0) / 0.3), 0.25);
+    gFoldPhase = uT + 1.5 * t0 + 0.25 * vnoise(q / 0.31 + 3.0);
+    gFoldDir = normalize(gToe.x * gToeAlong.xy + gToe.y * gToeAlong.z * vec2(gToeAlong.y, -gToeAlong.x) + 1e-5);
+    float ownT = smoothstep(0.2, 0.5, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hrT, 2.5 * atan(gToe.y, gToe.x) + 9.0 * hrT)));
+    gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * vnoise(vec2(0.9 * gFoldPhase, 7.0 * hrT))), 0.01, 0.2);
+    gFoldCover = toeCover * ownT * smoothstep(0.0, 0.2, toeCover - sheafCover);
+    return abs(sin(3.14159 * gFoldPhase));
+  }
+  float a = gSheaf.x;
+  float s = gSheaf.y;
+  float R = gSheaf.z;
+  float hr = gSheaf.w;
+  vec2 along = gSheafAlong.xy;
+  float space = mix(0.12 + 0.14 * fract(hr * 11.3), 0.055 + 0.07 * fract(hr * 11.3), gSheafAlong.z);
+  float bulge = (0.25 + 0.7 * fract(hr * 5.7)) / R;
+  float u = (a + bulge * s * s) / space + 7.0 * hr;
+  // The spacing: the count of folds runs ahead and falls behind across the sheaf, and not the same along it.
+  vec2 wp = vec2(0.6 * u + 31.0 * hr, 1.3 * s / (0.5 * R + 0.4) + 5.0 * hr);
+  float w0 = vnoise(wp);
+  float w1 = vnoise(wp + vec2(0.18, 0.0));
+  float rate = max(abs(1.0 + 1.5 * (w1 - w0) / 0.3), 0.25);
+  gFoldSpace = space / rate;
+  
+  gFoldPhase = u + 1.5 * w0 + 0.3 * vnoise(q / 0.57 + 3.0);
+  gFoldDir = normalize(along + 2.0 * bulge * s * vec2(along.y, -along.x));
+  // Each fold has its own depth, swells and thins along its run, and ends.
+  float own = smoothstep(0.2, 0.55, vnoise(vec2(0.7 * gFoldPhase + 17.0 * hr, s / (0.45 + 0.3 * R) + 9.0 * hr)));
+  float swollen = vnoise(vec2(0.8 * gFoldPhase + 3.0 * hr, s / (0.8 + 0.3 * R) + 21.0 * hr));
+  gFoldDeep = clamp(gFoldSpace * (0.25 + 0.5 * swollen), 0.012, 0.2);
+  gFoldCover = sheafCover * own * smoothstep(0.0, 0.2, sheafCover - toeCover);
   return abs(sin(3.14159 * gFoldPhase));
 }
-#define FOLD_DEEP 0.2
+// What the skin still reads under its old name.
+#define FOLD_DEEP gFoldDeep
+// How much of a fold the cells of size c carry. What they do not carry is for the normal.
+float foldHeld(float c) {
+  return 1.0 - smoothstep(0.16, 0.34, c / gFoldSpace);
+}
 // The two pressure ridges the pictures name.
 float gRidgeOn;
 float ridgeAt(vec2 q, float c) {
@@ -174,6 +298,14 @@ float groupFar(vec2 q) {
   vec2 gab = uGroupSeam.zw - uGroupSeam.xy;
   return length(q - uGroupSeam.xy - gab * clamp(dot(q - uGroupSeam.xy, gab) / dot(gab, gab), 0.0, 1.0));
 }
+// The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
+// is longer. Relief finer than a pixel is long would only glitter.
+uniform vec4 uLens;
+float fineAt(vec2 q, float c) {
+  vec2 d = q - uLens.xy;
+  return max(c, uLens.w * (dot(d, d) + uLens.z * uLens.z) / uLens.z);
+}
+float gFine;
 float heightAt(vec2 q, float c) {
   vec4 n = netAt(q);
   float shown = step(1.5, n.g);
@@ -208,11 +340,15 @@ float heightAt(vec2 q, float c) {
   if (c < 1.5) {
     // Nothing of the skin's relief stands above the rock where the lake runs out under the shore.
     float off = smoothstep(0.0, 2.5, lake);
-    h += off * (0.42 * (vnoise(q / 2.6 + 1.0) - 0.5) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
+    // Swells of 0.3 to 0.6 m over 2 to 5 m: from a low lens a near one hides the foot of the one behind it.
+    float swell = mix(0.42, 0.62, smoothstep(20.0, 45.0, groupFar(q)));
+    h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
     h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
-    if (c < 0.13) {
+    if (gFine < 0.16) {
+      float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp));
       float fold = foldAt(q);
-      h += off * gFoldCover * FOLD_DEEP * (pow(fold, 0.7) - 0.65) * (1.0 - smoothstep(0.06, 0.13, c)) * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp));
+      h += smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
+      h += smoothSkin * gToeBest * toeHeld(gFine);
     }
   }
 
@@ -262,6 +398,7 @@ void main() {
 const RING_VERTEX = /* glsl */ `
 uniform vec3 uRing;
 uniform vec4 uFocus;
+uniform vec4 uLens;
 uniform highp sampler2D tBake;
 varying vec3 vWorld;
 varying vec2 vQ;
@@ -273,7 +410,7 @@ void main() {
   vec2 q = uRing.xy + position.xz * uRing.z;
   vec2 dq = abs(q - uFocus.xy);
   float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
-  // The height was laid down for this sample in the ring's own picture: height, the ropes' part of it, metres to the brim.
+  // The height was laid down for this sample in the ring's own picture: height in two parts (see the bake), metres to the brim.
   ivec2 ij = ivec2(position.xz + 0.5);
   ivec2 last = textureSize(tBake, 0) - 1;
   ivec2 sx = ivec2(ij.x < last.x ? 1 : -1, 0);
@@ -281,16 +418,17 @@ void main() {
   vec4 here = texelFetch(tBake, ij, 0);
   vec4 atX = texelFetch(tBake, ij + sx, 0);
   vec4 atZ = texelFetch(tBake, ij + sz, 0);
-  float smoothH = here.r - here.g;
-  vec2 rise = vec2((atX.r - atX.g - smoothH) * float(sx.x), (atZ.r - atZ.g - smoothH) * float(sz.y));
+  float high = here.r + here.g;
+  vec2 rise = vec2((atX.r - here.r + atX.g - here.g) * float(sx.x), (atZ.r - here.r + atZ.g - here.g) * float(sz.y));
   vNormalG = normalize(vec3(-rise.x, uRing.z, -rise.y));
   // Which way is away from the nearest gap.
   vAway = vec2((atX.b - here.b) * float(sx.x), (atZ.b - here.b) * float(sz.y)) / uRing.z;
-  vAux = vec3(1.0, c, here.b);
+  vec2 dl = q - uLens.xy;
+  vAux = vec3(max(c, uLens.w * (dot(dl, dl) + uLens.z * uLens.z) / uLens.z), c, here.b);
   float dt = uTime - uFlowT0;
   vec2 p = q + flowVelocity(q) * dt;
   p = q + flowVelocity(p) * dt;
-  vWorld = vec3(p.x, here.r, p.y);
+  vWorld = vec3(p.x, high, p.y);
   vQ = q;
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -318,8 +456,12 @@ void main() {
   vec2 dq = abs(q - uFocus.xy);
   // The size of the cells that are sure to be here, wherever the rings are snapped to.
   float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
+  gFine = fineAt(q, c);
   float h = heightAt(q, c);
-  gl_FragColor = vec4(h, gRope, clamp(gBank, -8.0, 8.0), 1.0);
+  // A half float holds a height of a metre to half a millimetre, which shows as steps in the slopes. So the height is laid
+  // down in two parts: a whole number of 64ths of a metre, which a half float holds exactly, and what is left over.
+  float whole = floor(h * 64.0 + 0.5) / 64.0;
+  gl_FragColor = vec4(whole, h - whole, clamp(gBank, -8.0, 8.0), 1.0);
 }`;
 
 // The crust's fragment shader lives in skin.ts (the skin owner's). Only the relief is handed to it from here.
@@ -442,14 +584,16 @@ export function create(ctx: HeartContext): HeartPiece {
   Object.assign(shared, foundering.uniforms);
   const lava = { value: 1 };
   const focus = new THREE.Vector4(0, 0, CELL0, N);
+  // The lens in the crust's rest frame, its height over the lake, and the angle of one pixel of the largest format.
+  const lens = new THREE.Vector4(0, 0, 10, 3e-4);
   const depthFragment = `precision highp float;\nvarying vec3 vWorld;\n${RIG_GLSL}\nvoid main() { if (landAt(vWorld.xz).b > 1.5 + 0.6 * max(length(cameraPosition - vWorld) - 150.0, 0.0)) discard; gl_FragColor = vec4(0.0); }`;
 
   const crust = new THREE.Group();
   const ringLattice = lattice(N, N);
   const makeRing = (nx: number, nz: number, cell: number, block: number, stitched: boolean, position: THREE.BufferAttribute): Ring => {
     const uniform = new THREE.Vector3(0, 0, cell);
-    const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
-    const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus } };
+    const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
+    const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus }, uLens: { value: lens } };
     const material = new THREE.ShaderMaterial({ vertexShader: RING_VERTEX, fragmentShader: FRAGMENT, uniforms: { ...shared, ...ringUniforms, uLava: lava, tBake: { value: target.texture } } });
     material.userData.depthFragment = depthFragment;
     const bake = new THREE.ShaderMaterial({ vertexShader: BAKE_VERTEX, fragmentShader: BAKE_FRAGMENT, uniforms: { ...shared, ...ringUniforms, uSpan: { value: new THREE.Vector2(nx + 1, nz + 1) } }, depthTest: false, depthWrite: false });
@@ -621,6 +765,9 @@ export function create(ctx: HeartContext): HeartPiece {
       camera.updateMatrixWorld();
       const [fx, fz] = aim(camera);
       focus.set(fx, fz, CELL0, N);
+      const lv = ctx.rig.flow.velocity(eye.x, eye.z);
+      const ldt = now - ctx.rig.flow.t0;
+      lens.set(eye.x - lv[0] * ldt, eye.z - lv[1] * ldt, Math.max(eye.y, 0.5), 2 / ((camera.projectionMatrix.elements[5] as number) * 2160));
       matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
       frustum.setFromProjectionMatrix(matrix);
       // The cells are placed in the rest frame and carried by the drift: a block may lie that far from where its cells say.
