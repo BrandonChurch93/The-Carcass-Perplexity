@@ -296,7 +296,7 @@ export function fakeFilm() {
 export function fakeRenderer(dir = rel('out', 'work', 'stills', 'fake')) {
   const film = fakeFilm();
   return {
-    async renderStill({ frame, key, id, loop, tier = 'review', format = 'hd', diag = null }) {
+    async renderStill({ frame, key, id, loop, tier = 'review', format = 'hd', diag = null, held = 0 }) {
       const size = formatSize(format);
       let what;
       let label;
@@ -320,7 +320,7 @@ export function fakeRenderer(dir = rel('out', 'work', 'stills', 'fake')) {
         what = `frame-${n}`;
         label = String(n);
       }
-      const file = path.join(dir, `${what}-${format}-${tier}.png`);
+      const file = path.join(dir, `${what}-${format}-${tier}${held ? `-h${held}` : ''}.png`);
       const reused = fs.existsSync(file) && fs.existsSync(file + '.json');
       if (reused) return { file, record: JSON.parse(fs.readFileSync(file + '.json', 'utf8')), reused };
       await fakeStill(file, { ...size, label, seed: n });
@@ -335,6 +335,7 @@ export function fakeRenderer(dir = rel('out', 'work', 'stills', 'fake')) {
         frame: loop !== undefined && loop !== null ? null : n,
         loop: loop !== undefined && loop !== null ? n : null,
         key: key ?? null,
+        ...(held ? { hold: held } : {}),
         made: utc(),
       };
       writeJson(file + '.json', record);
