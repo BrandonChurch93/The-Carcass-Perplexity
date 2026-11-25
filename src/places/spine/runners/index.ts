@@ -96,6 +96,7 @@ export function create(ctx: Context): Piece {
       uBones: { value: bones },
       uBurn: { value: burn },
       uGround: { value: ground },
+      uAnkle: { value: role.act === 'dead' ? -Math.PI / 2 : 0 },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
       uPixel: pixel,
@@ -124,7 +125,7 @@ export function create(ctx: Context): Piece {
     group.add(new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
 
     const count = role.act === 'dead' ? TENDRILS_DEAD : TENDRILS;
-    const thin = role.act === 'dead' ? 0.45 : 1;
+    const thin = role.act === 'dead' ? 0.85 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
@@ -151,7 +152,7 @@ export function create(ctx: Context): Piece {
   const cream = (): [number, number, number] => {
     const k = rng.range(0.85, 1.1);
     const warm = rng.range(0, 1);
-    return [0.8 * k, (0.73 - 0.03 * warm) * k, (0.6 - 0.08 * warm) * k];
+    return [0.84 * k, (0.71 - 0.03 * warm) * k, (0.5 - 0.07 * warm) * k];
   };
 
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
@@ -167,7 +168,7 @@ export function create(ctx: Context): Piece {
   const CROSSING = 4;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 5000, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
   // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.2, -1, 0.15));
+  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.92, 0.77, 0.52], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.2, -1, 0.15));
 
   const burned = scorch(ctx);
   burned.drape();
@@ -208,7 +209,9 @@ export function create(ctx: Context): Piece {
       // lies just ahead of its hip.
       const out = i < 2 ? 0.62 : 0.12;
       const slope = i < 2 ? -0.62 : 0;
-      m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, (hip[2] > 0 ? 1 : -1) * (i < 2 ? 0.1 : 0.06), 0, 0, 0, 1);
+      const side = hip[2] > 0 ? 1 : -1;
+      if (i < 2) about(m, hip, -0.2 * side, 0, 1.3 + 0.08 * Math.sin(ph * 9 + i), [0.02, down, 0.06 * side]);
+      else m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, side * 0.06, 0, 0, 0, 1);
     });
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.06 * Math.sin(t * 0.37 + ph), 0.5 * Math.sin(ph * 7) + 0.1 * Math.sin(t * 0.29 + ph), -0.35 + 0.05 * Math.sin(t * 0.5 + ph), [0, down, 0]);
     a.coat.set(0.8, 0.04, 0.012 + shiver, 0.14);
@@ -263,12 +266,12 @@ export function create(ctx: Context): Piece {
   };
   (dead.bones[0] as THREE.Matrix4).makeScale(1.1, SLACK, 1.15);
   const SUNK = -LEG_TOP * (1 - SLACK);
-  thrown(1, 1.0, -0.2, 1.1, 0.07, [0.02, SUNK, 0.05]);
-  thrown(2, 1.2, 0.1, 1.15, 0.07, [0.1, SUNK, -0.2]);
-  thrown(3, 0.95, 0, 1.05, 0.07, [0, SUNK, 0.05]);
-  thrown(4, 0.9, 0, 0.8, 0.07, [0, SUNK, -0.1]);
+  thrown(1, 0.5, -0.2, 1.15, 0.2, [0.02, SUNK, 0.05]);
+  thrown(2, 0.9, 0.1, 1.2, 0.2, [0.1, SUNK, -0.2]);
+  thrown(3, 0.25, 0, 1.1, 0.2, [0, SUNK, 0.05]);
+  thrown(4, 0.7, 0, 0.9, 0.2, [0, SUNK, -0.1]);
   about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0.2, 0.3, -0.12, [0.04, -NECK_AT[1] * (1 - SLACK), 0]);
-  dead.coat.set(0.66, 0.45, 0.0, 0.3);
+  dead.coat.set(0.66, 0.45, 0.0, 0.1);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
   const lie3 = new THREE.Vector3();
