@@ -144,8 +144,9 @@ void main() {
     float sheets = textureLod(tNoise, vec3(az * 1.7, 0.2, 0.4 + uTime * 0.002), 0.0).g;
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.01, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.02, 0.13), 0.0).b * 0.45;
     float edge = smoothstep(1.5, 0.0, side + (sheets - 0.5) * 1.6);
+    edge *= edge;
     float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(-0.004, 0.012, el);
-    rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.25 + 1.5 * streaks);
+    rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.55 + 0.9 * streaks);
   }
   float show = uShow.x;
   // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.

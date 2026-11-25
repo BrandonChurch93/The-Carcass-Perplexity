@@ -38,14 +38,25 @@ void main() {
 
   // Thick brine hardly ripples: a slow crawl of two swells, the rings that leave the seep's mouth, and the rings of every dome that has burst.
   float closeBy = smoothstep(40.0, 6.0, dist);
-  vec2 slope = (texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime).ba - 0.5) * 0.08
-    + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.14 * closeBy;
-  if (dist < 14.0) slope += (texture2D(tGrain, p.xz / 0.23 + vec2(0.017, -0.009) * uTime).ba - 0.5) * 0.12 * smoothstep(14.0, 5.0, dist);
+  vec4 swell = texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime);
+  vec2 slope = (swell.ba - 0.5) * 0.08 + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.035 * closeBy;
+  // Close to, the thick brine shows a slow smooth chop: a few trains of ripples a hand to a forearm long, crossing, bent by the swell so
+  // that no two crests run alike.
+  if (dist < 26.0) {
+    float chop = smoothstep(26.0, 8.0, dist);
+    vec4 slow = texture2D(tGrain, p.xz / 11.0 + vec2(0.002, 0.001) * uTime);
+    vec2 bent = p.xz + (slow.rg - 0.5) * 0.3;
+    float ph = slow.r * 5.0;
+    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 17.0 + uTime * 1.9 + ph) * 0.032 * chop;
+    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 27.0 + uTime * 2.6 - ph * 1.7) * 0.026 * chop;
+    slope += vec2(0.98, -0.2) * cos(dot(bent, vec2(0.98, -0.2)) * 33.0 - uTime * 3.3 + ph * 1.3) * 0.018 * chop;
+    slope += vec2(0.26, 0.97) * cos(dot(bent, vec2(0.26, 0.97)) * 9.0 + uTime * 1.3 + ph * 0.6) * 0.03 * chop;
+  }
   vec2 fromSeep = p.xz - uSeep.xy;
   float reach = length(fromSeep);
   if (reach < 16.0) {
     float wob = texture2D(tGrain, p.xz / 9.0).r;
-    slope += fromSeep / max(reach, 0.01) * sin(reach * 4.4 - uTime * 2.3 + wob * 5.0) * (0.05 + 0.1 * closeBy) * smoothstep(0.3, 1.5, reach) * smoothstep(13.0, 4.0, reach);
+    slope += fromSeep / max(reach, 0.01) * sin(reach * 4.4 - uTime * 2.3 + wob * 5.0) * (0.012 + 0.05 * closeBy) * smoothstep(0.3, 1.5, reach) * smoothstep(13.0, 4.0, reach);
     for (int i = 0; i < ${MAX_RINGS}; i++) {
       if (i >= uRingCount) break;
       vec4 ring = uRings[i];
@@ -66,8 +77,10 @@ void main() {
   float nearShore = smoothstep(-1.6, -0.1, s);
   // Small rafts of bubbles, gathered where the slow turn of the pool leaves them.
   vec4 bubble = texture2D(tGrain, p.xz / 0.21 + drift * 31.0);
-  float foam = smoothstep(0.6, 0.66, bubble.g * 0.5 + raft.g * 0.35 + fleck.r * 0.15) * smoothstep(-0.9, -0.15, s) * smoothstep(60.0, 15.0, dist);
-  vec3 lit = brineShade(p, n, v, s, foam);
+  float foam = smoothstep(0.58, 0.68, fleck.r * 0.55 + raft.g * 0.35 + bubble.g * 0.1) * smoothstep(-0.9, -0.15, s) * smoothstep(60.0, 15.0, dist);
+  // Dark clots carried on the slow drift.
+  float clot = smoothstep(0.7, 0.76, bubble.r * 0.5 + fleck.g * 0.5) * smoothstep(0.5, 0.65, raft.r) * smoothstep(14.0, 6.0, dist);
+  vec3 lit = brineShade(p, n, v, s, foam) * (1.0 - 0.5 * clot * (1.0 - foam));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 

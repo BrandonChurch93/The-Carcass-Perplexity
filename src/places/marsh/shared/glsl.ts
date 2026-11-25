@@ -159,7 +159,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   if (uEmitterCount > 0) e += emitterIrradiance(p, n) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  // A rough dry surface has next to no sheen even where the view skims it: only what is wet and smooth gives back the sky.
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.94 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
