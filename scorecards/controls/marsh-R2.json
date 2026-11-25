@@ -1,0 +1,278 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    "gpt_6_2_sol",
+    "claude_opus_5_5",
+    "gemini_neon",
+    "gpt_6_2_astra",
+    "claude_sonnet_5_5"
+  ],
+  "votes": [
+    {
+      "control": "marsh-0",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 86,
+      "why": "the alien creatures blend convincingly into the shallow water through contact shadows and ripples."
+    },
+    {
+      "control": "marsh-0",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "photoreal alien creatures and flora integrated into a naturalistic misty landscape with film-quality lighting, atmosphere and compositing, typical of high-end VFX documentary/film work."
+    },
+    {
+      "control": "marsh-0",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 85,
+      "why": "fictional alien creatures and flora rendered with feature-film-grade overcast lighting, atmospheric haze, and wet-surface material detail"
+    },
+    {
+      "control": "marsh-0",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 85,
+      "why": "The alien creatures’ wrinkled hides blend convincingly into the wet mud where their bodies break the surface."
+    },
+    {
+      "control": "marsh-0",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the alien creatures and plants are rendered with detailed, realistic skin, fog and water, in a painterly cinematic composition that looks like a high-end film or documentary-style concept frame, not a photo of a real place."
+    },
+    {
+      "control": "marsh-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 90,
+      "why": "the detailed fluid simulation in the translucent mud bubbles and splashes."
+    },
+    {
+      "control": "marsh-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "photoreal fluid simulation (splashes, bubbles, steam) combined with a fantastical prehistoric creature and alien red flora — high-end VFX rather than a real place."
+    },
+    {
+      "control": "marsh-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "photorealistic fluid simulation and shallow depth of field combined with an extinct or alien creature in the background"
+    },
+    {
+      "control": "marsh-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 89,
+      "why": "The bursting bubble breaks into delicate liquid sheets and droplets that look convincing even in close-up."
+    },
+    {
+      "control": "marsh-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 80,
+      "why": "the stylized red alien-looking plants and the distant animal (a prehistoric-documentary style creature) combined with very convincing water, bubble, splash and steam simulation with filmic depth of field point to a high-budget CGI production rather than a real photo."
+    },
+    {
+      "control": "marsh-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 90,
+      "why": "The exceptionally lifelike wet surface detail on the clearly fantastical foreground plants."
+    },
+    {
+      "control": "marsh-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "Photoreal alien/speculative ecosystem (fantasy plants, creature in steaming red pool) with high-end detail, atmosphere and depth of field typical of a top-budget VFX/cinematic frame rather than a real photo."
+    },
+    {
+      "control": "marsh-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 92,
+      "why": "the non-real alien-like stalks and wading creature rendered with film-grade photorealistic lighting, water droplets, and atmospheric mist"
+    },
+    {
+      "control": "marsh-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 89,
+      "why": "the tiny water droplets clinging to individual strands of the alien plant make the creature-filled scene feel like cinematic VFX."
+    },
+    {
+      "control": "marsh-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "The thing that most influenced me was the cinematic look: shallow depth of field, atmospheric mist, water droplets and tiny insects, and a prehistoric creature, which is a scene no photographer could have captured. It reads as a high-end paleo-documentary or film frame rather than an ordinary render."
+    },
+    {
+      "control": "marsh-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the convincing wet-mud interaction along the fantastical creature’s skin."
+    },
+    {
+      "control": "marsh-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 75,
+      "why": "photoreal invented creatures with film-grade skin detail, wet drips and atmospheric depth, like a high-end speculative-biology documentary VFX frame"
+    },
+    {
+      "control": "marsh-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 85,
+      "why": "film-grade wet mud and skin micro-detail with realistic dripping strands and telephoto depth of field on clearly fictional alien creatures"
+    },
+    {
+      "control": "marsh-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 93,
+      "why": "The mud clinging to and dripping from the creature’s wrinkled hide makes it look convincingly present in the marsh."
+    },
+    {
+      "control": "marsh-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "The imaginary creatures (walrus-like with fingered claws) have very detailed skin, wet fur and dripping fluid, and they sit in a convincing hazy lit red-water scene with natural depth of field, which looks like high-end film or cinematic VFX, not a photo or low-budget CG."
+    },
+    {
+      "control": "marsh-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the convincing wet mud on the fantastical creature’s finely wrinkled skin."
+    },
+    {
+      "control": "marsh-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "The fantasy creatures are photoreal and fully integrated into the scene, with realistic depth of field, atmospheric haze and wet salt-crust textures, which points to high-end film or documentary-style VFX."
+    },
+    {
+      "control": "marsh-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 85,
+      "why": "the fictional alien creatures rendered with feature-film-grade photorealistic mud textures and natural overcast lighting"
+    },
+    {
+      "control": "marsh-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "b",
+      "confidence": 94,
+      "why": "the caked mud on the foreground creature breaks along its skin folds with convincing physical detail."
+    },
+    {
+      "control": "marsh-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 85,
+      "why": "a fantastical walrus-like creature with convincing wet skin, salt crust, atmospheric haze and shallow depth of field, which is photoreal at a quality only a top-budget film VFX or documentary-style CG production would reach."
+    }
+  ],
+  "unit": "marsh",
+  "collected": "2026-11-25 22:46 to 22:49 UTC",
+  "share": 1.0,
+  "note": "Votes on the controls of the unit, collected once and reused in every round of the unit. Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures are the approved pictures of the unit, resized and encoded like the judged images (1398 x 786 PNG, no metadata). Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "pictures": [
+    {
+      "key": "marsh-0",
+      "image": "references/approved/4-marsh/marsh-0-establishing.jpg",
+      "file": "out/work/jury/controls/marsh-0.png",
+      "sha256": "1b17b4c555ad3c7c1248b40f21b55c3c1d2eb663bbfdf4d4e4dce1b6e73c28be",
+      "bytes": 2076591,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "marsh-1",
+      "image": "references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg",
+      "file": "out/work/jury/controls/marsh-1.png",
+      "sha256": "57e88d94b2ea1f37c20333db0c98be7d38d23560db3a5f60147959f07ed48771",
+      "bytes": 2327263,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "marsh-2",
+      "image": "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg",
+      "file": "out/work/jury/controls/marsh-2.png",
+      "sha256": "51f3a668a0a0f7b63cdf778d2546e818d2ba5c947813a834876619cccdaf1cac",
+      "bytes": 2129620,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "marsh-3",
+      "image": "references/approved/4-marsh/marsh-3-mud-wallowers.jpg",
+      "file": "out/work/jury/controls/marsh-3.png",
+      "sha256": "a1475502b1636fd837c30d4c57e7f9bf75c99e0d879e260948f58430ccf830ad",
+      "bytes": 2332235,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    },
+    {
+      "key": "marsh-4",
+      "image": "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg",
+      "file": "out/work/jury/controls/marsh-4.png",
+      "sha256": "bafdbf42ab36459aa365c6928d29f8022032a68e39e31f1af709a4ec991de9b2",
+      "bytes": 2226201,
+      "fit": {
+        "width": 1398,
+        "height": 786,
+        "scale": 0.3640625
+      }
+    }
+  ]
+}
