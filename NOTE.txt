@@ -1,5 +1,6 @@
-2026-11-25 22:48 UTC
-work at e679980 on agent/spine-ground
-Minute 88, 2571728 before the partner merge: five keys at preview and the wide beside the approved picture. Storm darker, first spire hooked on a shoulder, mouth ragged and black, sea cooled. Wrong: no violet light yet in the storm at the keys (partner bolt fix merges now), storm edge on the lee is a hard dark wedge, foreground snow still smooth, spire rock blotchy close up, far spires straight cones, canal walls coarse
-look-1.jpg = out/work/keys5.png
-look-2.jpg = out/work/cmp0.png
+2026-11-25 23:10 UTC
+work at 0191a73 on agent/spine-ground
+Minute 108: wide beside the approved picture (before the last glow change), the five keys, wide and strike keys now. Storm dark, glow round the bolt, hooked spires. Wrong, worst first: flat snowfield beside the crest and spires small (reads as a model), no cloud sea filling below the crest, rock a blotchy noise, storm folds smooth as cloth, canal wall stretched. Whole frame 9.77 s a sample at 4K
+look-1.jpg = out/work/cmp0.png
+look-2.jpg = out/work/keys5.png
+look-3.jpg = out/work/solo2.png
