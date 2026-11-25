@@ -18,8 +18,6 @@ export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
 const FUME_LIGHT = { at: [760, 25, -40] as const, radius: 150, open: 0.2 };
-/** The lit bank over the feeding group, as a wide dim light of the rig, for the shot that stands among them: how far behind them, how high, how wide, how open. */
-const BANK_LIGHT = { behind: 45, height: 14, radius: 50, open: 0.035, shot: 'heart-02' };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -51,7 +49,7 @@ interface Body {
 }
 
 const BROWN = [0.46, 0.34, 0.27] as const;
-const ROSE = [0.5, 0.38, 0.33] as const;
+const ROSE = [0.5, 0.42, 0.33] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
 const RIGHT = [0.71, 0.7] as const;
@@ -63,13 +61,13 @@ const fromFoot = (right: number, toward: number): [number, number] => [FALL_FOOT
 
 const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
-  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
-  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
-  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
-  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.0, 12], floor: [1.8, 12], lights: 0.2, tops: 1.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
+  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08 } },
+  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
+  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.06, lake: [0.65, 8], floor: [1.4, 7], lights: 0.2, tops: 0.9, solid: 0.6, shots: { 'heart-01': 0.08, 'heart-05': 0 } },
   // What stands behind them in the feeding picture: warm brown smoke over the open lake, thin enough for the buttress to stand in it. Staged for that shot.
-  { at: behind(430, 20), radius: 330, height: 26, lean: [-0.2, 0.08], dense: 0.0022, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.2, floor: [2.4, 12], tops: 2.0, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.005, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [1.4, 40], tops: 2.0, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 20), radius: 330, height: 34, lean: [-0.2, 0.08], dense: 0.003, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0, floor: [1.8, 26], tops: 0.6, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.009, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [0.7, 40], tops: 0.25, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   { at: fromFoot(-34, 34), radius: 40, height: 60, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(2, 26), radius: 44, height: 90, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
@@ -118,10 +116,6 @@ export function create(ctx: HeartContext): HeartPiece {
   const skyMean = new THREE.Vector3();
   const fume = { position: new THREE.Vector3(...FUME_LIGHT.at), radius: FUME_LIGHT.radius, radiance: new THREE.Vector3(...blackbody(1400)).multiplyScalar(FUME_LIGHT.open) };
   ctx.rig.emitters.push(fume);
-  const bankAt = behind(BANK_LIGHT.behind, 0);
-  const bankGlow = new THREE.Vector3(...blackbody(1400)).multiplyScalar(BANK_LIGHT.open);
-  const bank = { position: new THREE.Vector3(bankAt[0], BANK_LIGHT.height, bankAt[1]), radius: BANK_LIGHT.radius, radiance: new THREE.Vector3() };
-  ctx.rig.emitters.push(bank);
 
   const heatA = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
   const heatB = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
@@ -186,7 +180,6 @@ export function create(ctx: HeartContext): HeartPiece {
     warp,
     setTime: (seconds) => {
       const shot = shots.find((x) => seconds >= x.from && seconds <= x.to)?.id ?? '';
-      bank.radiance.copy(bankGlow).multiplyScalar(shot === BANK_LIGHT.shot ? 1 : 0);
       for (let i = 0; i < count; i++) {
         const b = BODIES[i] as Body;
         (bodyB[i] as THREE.Vector4).w = b.dense * (b.shots?.[shot] ?? b.shots?.rest ?? 1);
