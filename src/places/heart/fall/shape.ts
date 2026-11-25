@@ -252,17 +252,19 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const ground = Math.max(land(x, z), -3);
     const shelf = 2.5 + 7 * noise2(x / 13 + 1.3, z / 13 + 4.1) + 3 * noise2(n.len / 9, n.arm ? 3.5 : 9.5);
     const levee = (0.3 + 1.1 * noise2(n.len / 5 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 1.1) / 1.3, 2)) + 0.35 * smooth(0, 1.0, side);
-    const flank = Math.max(0, side - shelf);
+    // Seen from the lake the river must not hide behind its own bank: on that side the bench breaks off at the stream's edge.
+    const lakeward = n.len > 4 ? smooth(0.05, 0.6, n.toward[0] * 0.56 - n.toward[1] * 0.83) * (1 - smooth(FAN_FROM - 10, FAN_FROM, n.len)) : 0;
+    const flank = Math.max(0, side - shelf * (1 - 0.9 * lakeward));
     // The flank comes down in ledges. Fine relief is kept off the steep parts, where a height field would rule it into ribs.
     const drop = 1.25 * flank + 0.6 * Math.min(flank, 3);
     const beat = drop * 0.19 + 1.6 * noise2(x / 15, z / 15) + 0.5 * noise2(x / 4.1 + 8, z / 4.1);
     const tread = beat - Math.floor(beat);
     const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9));
-    const crag = 1.6 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + 2.3 * blocks(x, z, 5.2, 1) + 0.8 * blocks(x + 40, z, 1.9, 2);
+    const crag = 1.6 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + 1.4 * blocks(x, z, 5.2, 1) + 0.9 * blocks(x + 40, z, 1.9, 2);
     // In the fan the stream no longer stands on a bench: it lies on the slope as a sheet.
     const sheet = smooth(FAN_FROM, FAN_FROM + 16, n.len);
     const top = lerp(n.y, Math.max(ground, 0) + 0.45, sheet);
-    const bench = top + levee * (1 - 0.6 * sheet) + Math.min(crag * smooth(0.3, 3.5, side), 0.5 + 0.12 * side) - fall;
+    const bench = top + levee * (1 - 0.6 * sheet) * (1 - 0.8 * lakeward) + Math.min(crag * smooth(0.3, 3.5, side), (0.5 + 0.12 * side) * (1 - lakeward)) - fall;
     const cover = 0.9 + 0.5 * smooth(16, 4, side) + (fbm2(x / 5.5, z / 5.5) - 0.5) * 1.2 + (0.9 * blocks(x, z, 3.4, 3) + 0.45 * blocks(x + 20, z, 1.3, 4)) * smooth(26, 10, side);
     const skirt = ground + lerp(-2.4, cover, smooth(30, 15, side) * smooth(-0.6, 0.6, ground + 0.8 * smooth(6, 0, side)));
     const rock = Math.max(bench, skirt);

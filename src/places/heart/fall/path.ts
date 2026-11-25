@@ -10,8 +10,9 @@ export const TUBE = {
   floor: MOUTH.floor + 0.7,
   /** The arch is a superellipse of this power: flatter than a circle, as a drained lava tube is. */
   power: 2.5,
-  half: (d: number): number => lerp(MOUTH.width / 2, 39, smooth(0, 95, d)),
-  crown: (d: number): number => lerp(MOUTH.height, 41, smooth(0, 110, d)),
+  /** The rim flares like the bell of a horn: the first ten metres are a bevel that faces out, and it is what the river lights. */
+  half: (d: number): number => lerp(MOUTH.width / 2 - 11, 39, smooth(0, 95, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
+  crown: (d: number): number => lerp(MOUTH.height - 11, 41, smooth(0, 110, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
   /** The tube bends west as it goes in, so the east wall closes the view from the bench. */
   axis: (d: number): number => MOUTH.x - 58 * smooth(25, 200, d) * smooth(25, 200, d),
 };
@@ -154,8 +155,9 @@ const HALF: [number, number][] = [
   [60, 6.5],
   [100, 7],
   [FAN_FROM, 8.5],
-  [FAN_FROM + 20, 17],
-  [FAN_FROM + 56, 30],
+  [FAN_FROM + 12, 17],
+  [FAN_FROM + 30, 29],
+  [FAN_FROM + 56, 38],
 ];
 
 /** Metres the stream stands above the ground it has built on, at the head of a bench. */
@@ -175,7 +177,17 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
     c.z[i] = (p[i] as [number, number])[1];
     c.len[i] = len0 + (i - lip) * SPACING;
     c.half[i] = half(c.len[i] as number);
-    ground[i] = Math.max(height(c.x[i] as number, c.z[i] as number), -0.4);
+  }
+  // The ground under the stream is the highest ground under its whole width, or the slope would bury its uphill half.
+  for (let i = 0; i < n; i++) {
+    const a = p[Math.max(0, i - 1)] as [number, number];
+    const b = p[Math.min(n - 1, i + 1)] as [number, number];
+    const run = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ax = -(b[1] - a[1]) / run;
+    const az = (b[0] - a[0]) / run;
+    let top = -0.4;
+    for (const k of i < lip ? [0] : [-1, -0.5, 0, 0.5, 1]) top = Math.max(top, height((c.x[i] as number) + ax * k * (c.half[i] as number), (c.z[i] as number) + az * k * (c.half[i] as number)));
+    ground[i] = top;
   }
   for (let i = lip; i >= 0; i--) c.y[i] = y0 + 0.012 * (lip - i) * SPACING;
   let i = lip;
@@ -257,7 +269,7 @@ export function createCourse(height: (x: number, z: number) => number): Course {
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 15, smooth(BRAID_FROM + 14, BRAID_FROM + 50, len)), height, main.y[fork] as number, ARM_STEPS, []);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 22, smooth(BRAID_FROM + 12, BRAID_FROM + 42, len)), height, main.y[fork] as number, ARM_STEPS, []);
   for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 
