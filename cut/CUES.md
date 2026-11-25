@@ -54,12 +54,12 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 | spine-01 | spine | 7015 | 1:56.55 | 5.38 | spine-0 | spine-0 | in | The Spine · the ridge in the storm | bar at 116.9226 s | 0.36 |
 | spine-02 | spine | 7338 | 2:02.18 | 2.68 | spine-2 | spine-2 | right | The Spine · the kites | beat at 122.2958 s | 0.25 |
 | spine-03 | spine | 7499 | 2:04.59 | 2.68 | spine-1 | spine-1 | in | The Spine · where lightning came to ground | beat at 124.9824 s | 0.06 |
-| spine-04 | spine | 7660 | 2:07.40 | 3.58 | spine-3 | spine-3 | hold | The Spine · the strike | bar at 127.669 s | 0.14 |
-| spine-05 | spine | 7875 | 2:11.15 | 7.17 | spine-4 | spine-4 | out | The Spine · inside the canal | bar at 131.2511 s | 0.07 |
+| spine-04 | spine | 7660 | 2:07.40 | 3.58 | spine-3 | spine-3 | in | The Spine · the strike | bar at 127.669 s | 0.14 |
+| spine-05 | spine | 7875 | 2:11.15 | 7.17 | spine-4 | spine-4 | in | The Spine · inside the canal | bar at 131.2511 s | 0.07 |
 | eye-01 | eye | 8305 | 2:18.25 | 3.58 | eye-0 | eye-0 | in | The Eye · the still lake | bar at 138.4153 s | 0.08 |
 | eye-02 | eye | 8520 | 2:22.00 | 2.68 | eye-2 | eye-2 | right | The Eye · the amber mats | bar at 141.9975 s | 0.15 |
 | eye-03 | eye | 8681 | 2:24.41 | 2.68 | eye-3 | eye-3 | left | The Eye · the edge | beat at 144.6841 s | 0.05 |
-| eye-04 | eye | 8842 | 2:27.22 | 5.38 | eye-1 | eye-1 | hold | The Eye · the drinkers | beat at 147.3706 s | 0.24 |
+| eye-04 | eye | 8842 | 2:27.22 | 5.38 | eye-1 | eye-1 | right | The Eye · the drinkers | beat at 147.3706 s | 0.24 |
 | eye-05 | eye | 9165 | 2:32.45 | 6.27 | eye-4 | eye-4 | in | The Eye · the centre, in the quiet | bar at 152.7438 s | 0.37 |
 | reveal-01 | reveal | 9541 | 2:39.01 | 36.72 | reveal-4 | reveal-4 | out | The Reveal · one shot, from the lake to orbit, then the hold | beat at 159.0125 s | 0.25 |
 | reveal-02 | reveal | 11744 | 3:15.44 | 1.95 | none | black | hold | black | bar at 231.5504 s | 0.25 |

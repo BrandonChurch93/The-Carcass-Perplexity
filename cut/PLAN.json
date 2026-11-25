@@ -33,13 +33,13 @@
     { "id": "spine-01", "unit": "spine", "at": { "bar": 32 }, "key": "spine-0", "picture": "spine-0", "move": "in", "label": "The Spine · the ridge in the storm" },
     { "id": "spine-02", "unit": "spine", "at": { "bar": 33, "beat": 3 }, "key": "spine-2", "picture": "spine-2", "move": "right", "label": "The Spine · the kites" },
     { "id": "spine-03", "unit": "spine", "at": { "bar": 34, "beat": 2 }, "key": "spine-1", "picture": "spine-1", "move": "in", "label": "The Spine · where lightning came to ground" },
-    { "id": "spine-04", "unit": "spine", "at": { "bar": 35 }, "key": "spine-3", "picture": "spine-3", "move": "hold", "label": "The Spine · the strike" },
-    { "id": "spine-05", "unit": "spine", "at": { "bar": 36 }, "key": "spine-4", "picture": "spine-4", "move": "out", "label": "The Spine · inside the canal" },
+    { "id": "spine-04", "unit": "spine", "at": { "bar": 35 }, "key": "spine-3", "picture": "spine-3", "move": "in", "label": "The Spine · the strike" },
+    { "id": "spine-05", "unit": "spine", "at": { "bar": 36 }, "key": "spine-4", "picture": "spine-4", "move": "in", "label": "The Spine · inside the canal" },
 
     { "id": "eye-01", "unit": "eye", "at": { "bar": 38 }, "key": "eye-0", "picture": "eye-0", "move": "in", "label": "The Eye · the still lake" },
     { "id": "eye-02", "unit": "eye", "at": { "bar": 39 }, "key": "eye-2", "picture": "eye-2", "move": "right", "label": "The Eye · the amber mats" },
     { "id": "eye-03", "unit": "eye", "at": { "bar": 39, "beat": 4 }, "key": "eye-3", "picture": "eye-3", "move": "left", "label": "The Eye · the edge" },
-    { "id": "eye-04", "unit": "eye", "at": { "bar": 40, "beat": 3 }, "key": "eye-1", "picture": "eye-1", "move": "hold", "label": "The Eye · the drinkers" },
+    { "id": "eye-04", "unit": "eye", "at": { "bar": 40, "beat": 3 }, "key": "eye-1", "picture": "eye-1", "move": "right", "label": "The Eye · the drinkers" },
     { "id": "eye-05", "unit": "eye", "at": { "bar": 42 }, "key": "eye-4", "picture": "eye-4", "move": "in", "label": "The Eye · the centre, in the quiet" },
 
     { "id": "reveal-01", "unit": "reveal", "at": { "bar": 43, "beat": 4 }, "key": "reveal-4", "picture": "reveal-4", "move": "out", "label": "The Reveal · one shot, from the lake to orbit, then the hold" },

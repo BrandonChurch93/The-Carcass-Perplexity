@@ -203,7 +203,7 @@ Frames 5618 to 7014, 23.28 s, 5 shots. The origin is the centre of the seep pool
 - Frames: 6048 to 6262, 3.58 s.
 - Key: `marsh-1` at frame 6102.
 - Lens: 38 mm for the whole shot (a vertical field of view of 35 degrees).
-- Move: in. The camera travels 4.5 m, at 1.5 m above the ground.
+- Move: in. The camera travels 4.4 m, from 1.5 m above the ground to 1.3 m.
 - Start framing: On the south rim of the pool about 1 m up, 2.2 m behind the key position, looking across the surface at the largest gas dome.
 - End framing: About 3.8 m from the column of the burst and outside it, turned 8 degrees and tilted up 7, with the column and its crown filling the frame.
 - Focus: On the largest dome, then on the column that rises from it at the burst. The aim is 10 m away at the start and 10 m at the end. Depth of field is off in the blockout.
@@ -230,7 +230,7 @@ Frames 5618 to 7014, 23.28 s, 5 shots. The origin is the centre of the seep pool
 
 ## The Spine
 
-Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire, on its axis. The ridge runs toward +x. The storm is on the -z side and the cloud sea and the last light are on the +z side. There are 16 vertebrae along a curved line, with spires about 800 m apart and fins 230 to 300 m above their saddles. The cloud sea lies 2000 m below. The mouth of the canal sits 46 m to the lee of the crest and 120 m before the first spire, 20 m in radius, narrowing to a throat 8 m across.
+Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire, on its axis. The ridge runs toward +x. The storm is on the -z side and the cloud sea and the last light are on the +z side. There are 16 vertebrae along a curved line, with spires about 800 m apart and fins 230 to 300 m above their saddles. The cloud sea lies 2000 m below. The mouth of the canal sits 46 m to the lee of the crest and 120 m before the first spire, 20 m in radius, narrowing to a throat 8 m across. The canal runs through the first vertebra: it enters at the mouth seen from outside, 46 m to the lee of the crest and 120 m before the first spire, and leaves 232 m further along the ridge, on the lee side past the first spire, by a far mouth 13 m in radius. Shot spine-05 is filmed near that far mouth.
 
 ### `spine-01` · The Spine · the ridge in the storm
 
@@ -247,9 +247,9 @@ Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire
 - Frames: 7338 to 7498, 2.68 s.
 - Key: `spine-2` at frame 7418.
 - Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the right. The camera travels 23 m, from 160 m above the ground to 130 m.
-- Start framing: 78 m off the lee edge of the first spire, three quarters of the way up it and about 140 m above the slope: the rock face on the left, the holdfasts, the ribbons of the kites streaming right, the far spires lower right.
-- End framing: 18 m to the right and 14 m forward along the ribbons.
+- Move: to the right. The camera travels 60 m, from 200 m above the ground to 120 m.
+- Start framing: 102 m off the lee edge of the first spire, three quarters of the way up it: the rock face fills the left half, the holdfasts sit on its edge, the ribbons of the kites stream right, the band of last light shows between them.
+- End framing: 62 m from the edge, 40 m to the right and 44 m forward along the ribbons. The rock face has slid off to the left edge, the holdfasts are 1.6 times larger, and the far spires and the storm show through the ribbons.
 - Focus: On the holdfasts and the nearest ribbons. The aim is 600 m away at the start and 600 m at the end. Depth of field is off in the blockout.
 
 ### `spine-03` · The Spine · where lightning came to ground
@@ -257,9 +257,9 @@ Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire
 - Frames: 7499 to 7659, 2.68 s.
 - Key: `spine-1` at frame 7579.
 - Lens: 27 mm for the whole shot (a vertical field of view of 48 degrees).
-- Move: in. The camera travels 12 m, from 3.0 m above the ground to 0.7 m.
-- Start framing: 10 m back from the dead ridge-runner on its patch of scorched rock, 3 m up, with the tracks, the first spire and the mouth of the canal behind.
-- End framing: 0.7 m above the snow beside the carcass.
+- Move: in. The camera travels 12 m, from 3.2 m above the ground to 0.6 m. It reaches the key and then creeps 0.2 m further: it stops short of the carcass, which never grows past its size at the key.
+- Start framing: 11 m back from the dead ridge-runner, 3.2 m up: the carcass small in the middle, the tracks leading to the mouth of the canal, the first spire and the ridge behind.
+- End framing: The key framing, held: the carcass low in the middle and right of the frame, its quills at the left end and a clawed foreleg toward the lens, the mouth of the canal and the ridge above it.
 - Focus: On the carcass. The aim is 40 m away at the start and 40 m at the end. Depth of field is off in the blockout.
 
 ### `spine-04` · The Spine · the strike
@@ -267,9 +267,9 @@ Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire
 - Frames: 7660 to 7874, 3.58 s.
 - Key: `spine-3` at frame 7668.
 - Lens: 137 mm for the whole shot (a vertical field of view of 10 degrees).
-- Move: a hold that drifts. The camera travels 180 m, from 190 m above the ground to 340 m.
-- Start framing: 1650 m from the tip of the third spire and about 200 m above the lee slope, on a 10 degree lens, looking past the fin of the second spire.
-- End framing: 170 m forward and 26 m to the right. The strike lands three frames before the key and a second on the last frame.
+- Move: in. The camera travels 300 m, from 180 m above the ground to 520 m.
+- Start framing: 1664 m from the tip of the third spire, past the fin of the second spire, which fills the left third. The strike lands three frames before the key.
+- End framing: 1407 m from the tip. The third spire and its ribbons are 1.18 times larger, and the fin of the second spire has slid against them toward the left edge. A second strike on the last frame.
 - Focus: On the tip of the third spire. The aim is 1700 m away at the start and 1700 m at the end. Depth of field is off in the blockout.
 
 ### `spine-05` · The Spine · inside the canal
@@ -277,9 +277,9 @@ Frames 7015 to 8304, 21.50 s, 5 shots. The origin is the foot of the first spire
 - Frames: 7875 to 8304, 7.17 s.
 - Key: `spine-4` at frame 8090.
 - Lens: 24 mm for the whole shot (a vertical field of view of 54 degrees).
-- Move: out. The camera travels 30 m, from 1.6 m above the ground to 1.1 m.
-- Start framing: Inside the canal, 25 m in from the mouth and 1.6 m up, looking out at the storm.
-- End framing: About 58 m inside, 0.7 m above the ice, past the herd sheltering along the wall, with the mouth small and bright behind them.
+- Move: in. The camera travels 13 m, from 0.9 m above the ground to 0.8 m. A steady push along the canal toward its far mouth. Nothing crosses the lens.
+- Start framing: Inside the canal, 35 m from its far mouth and facing it: the sleepers small on the left wall, one animal standing ahead near the mouth, and through the opening the storm, the band of last light and the far spires.
+- End framing: 22 m from the far mouth. The sleepers have slid off the left edge, the opening is 1.6 times larger, and the standing animal has walked 4 m away from the camera toward the mouth.
 - Focus: On the herd, with the mouth beyond it soft. The aim is 30 m away at the start and 30 m at the end. Depth of field is off in the blockout.
 
 ## The Eye
@@ -291,9 +291,9 @@ Frames 8305 to 9540, 20.60 s, 5 shots. The origin is the centre of the lake, on 
 - Frames: 8305 to 8519, 3.58 s.
 - Key: `eye-0` at frame 8412.
 - Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
-- Move: in. The camera travels 230 m, from 31 m above the ground to 40 m.
-- Start framing: From 90 m behind the key position and 34 m above it, over the knoll on the south west rim: the whole lake looking north north east, with the brow on the right and the herd on the gravel below.
-- End framing: 120 m further on and 30 m lower, toward the shore, with the near rocks of the knoll passing below.
+- Move: in. The camera travels 170 m, from 31 m above the ground to 30 m. A level glide toward the lake, 176 m in 3.6 s, drifting 44 m to the right, through the establishing view at frame 8412.
+- Start framing: 88 m behind the key position and 37 m above the water, over the gravel fan behind the south shore: the whole lake across the frame, the herd along the waterline below, the far cliffs and caves, the brow rising to the top right.
+- End framing: 88 m past the key position and 31 m above the water, over the amber shallows: the herd has passed under the frame and the deep water is nearer and wider.
 - Focus: On the far edge of the deep. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-02` · The Eye · the amber mats
@@ -321,19 +321,19 @@ Frames 8305 to 9540, 20.60 s, 5 shots. The origin is the centre of the lake, on 
 - Frames: 8842 to 9164, 5.38 s.
 - Key: `eye-1` at frame 9003.
 - Lens: 54 mm for the whole shot (a vertical field of view of 25 degrees).
-- Move: a hold that drifts. The camera travels 5.7 m, from 1.8 m above the ground to 1.9 m.
-- Start framing: 1.9 m up on the south shore, on a long lens: three drinkers and a calf on the left, one near on the right, rings on the water at their mouths.
-- End framing: 5 m forward and 2.5 m to the right. The shot is a hold with a slow drift.
+- Move: to the right. The camera travels 6.4 m, from 1.8 m above the ground to 1.9 m. A lateral track along the waterline that slows all the way and is at rest on the last frame, through the key at frame 9003, with the near animals sliding against the far shore.
+- Start framing: 1.9 m up on the south shore, on a long lens, 3.6 m left of the key position and panned 8 degrees right of it: three drinkers and a calf on the left, rings on the water at their mouths.
+- End framing: 1.2 m right of the key position and 2 m back, panned 3 degrees left of it, with the track at rest. A nearer animal has come in at the right edge as a foreground shape.
 - Focus: On the nearest of the three on the left. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-05` · The Eye · the centre, in the quiet
 
 - Frames: 9165 to 9540, 6.27 s.
 - Key: `eye-4` at frame 9221.
-- Lens: from 172 mm to 33 mm (a vertical field of view from 8 to 40 degrees).
-- Move: in. The camera travels 940 m, from 3.2 m above the ground to 250 m. It creeps forward to the key, then glides north over the water while it rises, tilts down and the lens opens from 8 to 40 degrees. The dome rises at the key and has sunk 2.5 s later.
+- Lens: from 171 mm to 26 mm (a vertical field of view from 8 to 50 degrees).
+- Move: in. The camera travels 1090 m, from 3.5 m above the ground to 450 m. It holds on the key, then makes one flight in the plane through the centre of the lake: out over the water, climbing while it tilts from 1.9 degrees down to straight down and the lens opens from 8 to 50 degrees. Peak speed 292 m a second at frame 9420. The dome sinks and nine rings grow out of the centre, at rest from frame 9481. The far shore leaves by the top of the frame near frame 9400. From frame 9517 the camera is on the vertical and climbs 0.6 percent a frame, the rate the rise starts on.
 - Start framing: On a bluff on the south shore, 25.75 m up and 900 m from the centre, on a very long lens: over the necks of two drinkers, the dome of water that rises at the centre of the lake.
-- End framing: 250 m straight above the centre of the lake, looking straight down, with north at the top of the frame. The frame holds only the dark water of the deep for about the last 1.7 s, so the cut to the rise cannot be seen.
+- End framing: 452 m straight above the centre of the lake, looking straight down with north at the top: deep water and the nine rings of the handoff, with 211 m of water above and below the middle of the frame. The first frame of the rise draws the same water and the same rings, so the cut cannot be seen.
 - Focus: On the dome at the centre, then on the water straight below. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ## The Reveal, the pull-back from the lake to orbit

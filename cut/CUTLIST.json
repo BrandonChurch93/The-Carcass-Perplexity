@@ -309,7 +309,7 @@
       "last": 7874,
       "key": "spine-3",
       "picture": "spine-3",
-      "move": "hold",
+      "move": "in",
       "label": "The Spine · the strike"
     },
     {
@@ -319,7 +319,7 @@
       "last": 8304,
       "key": "spine-4",
       "picture": "spine-4",
-      "move": "out",
+      "move": "in",
       "label": "The Spine · inside the canal"
     },
     {
@@ -359,7 +359,7 @@
       "last": 9164,
       "key": "eye-1",
       "picture": "eye-1",
-      "move": "hold",
+      "move": "right",
       "label": "The Eye · the drinkers"
     },
     {
