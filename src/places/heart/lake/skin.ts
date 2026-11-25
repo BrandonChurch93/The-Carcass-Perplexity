@@ -79,7 +79,7 @@ void main() {
     float onLake = smoothstep(0.0, 1.5, lake);
     // A gap is drawn while a pixel is finer than it: from afar the broken ground is a tone, not a net of black lines.
     slabGap = gSlabEdge * onLake * (1.0 - smoothstep(0.06, 0.25, fpLong));
-    slabSlope = gSlabSlope * ((1.0 - slabHeld(cell)) * (1.0 - gSlabEdge) * onLake);
+    slabSlope = gSlabSlope * ((1.0 - slabHeld(cell, 1.9)) * (1.0 - gSlabEdge) * onLake);
     slabTone = 0.78 + 0.44 * fract(gSlabId * 7.31 + 0.17);
   }
   ridgeAt(q, cell);
@@ -149,9 +149,9 @@ void main() {
     if (fpLong < 0.4) {
       foldAt(q);
       float skinOn = calm * (1.0 - 0.85 * smoothstep(0.15, 0.5, fresh)) * (1.0 - steep) * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
-      // Ropes come in sheaves that end after a third of a metre to two metres, and broad reaches of the skin carry none.
-      float ropes = smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
-      foldOn = gFoldCover * skinOn * ropes;
+      // Ropes come in sheaves that end after a third of a metre to two metres, and broad reaches of the skin carry none:
+      // the relief lays that mask into the cover of its folds.
+      foldOn = gFoldCover * skinOn;
       foldPhase = gFoldPhase;
       // The toes between the sheaves: what the cells do not carry of their domes, a dark line where one lies on the next,
       // and a tone of its own for each.
