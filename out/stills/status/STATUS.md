@@ -1,8 +1,8 @@
-# Status 38
+# Status 40
 
-2026-11-25 09:02 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 09:48 UTC. Phase 3, the look lock: the Heart.
 
-- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
-- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
-- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
-- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.
+- `01-m0945-pair-3.jpg`: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light. Still wrong: the level orange band behind the animals, the stamped whorls on the ground, the tan tone.
+- `02-m0945-pair-1.jpg`: heart-1 on main 67a933a. In: the line's first hand-back from the third lava owner. Still wrong: the ground reads as ribbed clay, the orange band at the horizon, the mouth's pale wall.
+- `03-m0945-pair-2.jpg`: heart-2 on main 67a933a. In: the sunk animal's second hand-back. Still wrong: contour lines on the sunk mass, the flat brown patch in front, pale grey where the picture is dark brown.
+- `04-m0945-pair-4.jpg`: heart-4 on main 67a933a. Still wrong: the pale striped wall round the mouth, the lit vault inside it, the wide flat stream, the orange streaks in the near field.

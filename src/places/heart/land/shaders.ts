@@ -24,7 +24,6 @@ void main() {
 // charcoal basalt at dusk. Albedo of the wall near 0.1, of the ropy bench 0.05 to 0.09, ash in hollows 0.2 at most.
 const BENCH_TONE = 0.62;
 const BENCH_FACE_TONE = 0.58;
-const ROCK_TONE = 0.95;
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -105,8 +104,9 @@ uniform vec4 uCrackA;
 uniform vec4 uCrackB;
 uniform vec4 uStain;
 
-// The software renderer reads a picture a little faster with its own gradients than with given ones, and gives the same picture inside a branch.
-#define PICK(t, uv, gx, gy) texture2D(t, uv)
+// Every picture is read with slopes taken from the world position at the top of main: a read inside a branch that took its own slope
+// would take it from a neighbour that never computed the coordinate, and the frame would differ from one page load to the next.
+#define PICK(t, uv, gx, gy) textureGrad(t, uv, gx, gy)
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
 
 void main() {
@@ -144,13 +144,13 @@ void main() {
   if (steep > 0.003) {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
     #ifdef BENCH
-    vec4 flow = texture2D(tStrata, vec2((vWorld.y + 3.0 * (big - 0.5)) / 340.0, 0.5));
+    vec4 flow = PICK(tStrata, vec2((vWorld.y + 3.0 * (big - 0.5)) / 340.0, 0.5), vec2(wx.y / 340.0, 0.0), vec2(wy.y / 340.0, 0.0));
     float shift = flow.r * 7.0;
     const float wander = 0.0;
     #else
     // The wall's flows dip and wander (vLand.y, the same number the shape was cut with), and the cliff picture wanders with them:
     // no band of it is a level line, and no flow starts the picture afresh.
-    vec4 flow = texture2D(tStrata, vec2((vWorld.y + vLand.y) / 340.0, 0.5));
+    vec4 flow = PICK(tStrata, vec2((vWorld.y + vLand.y) / 340.0, 0.5), vec2(wx.y / 340.0, 0.0), vec2(wy.y / 340.0, 0.0));
     float shift = 0.0;
     float wander = (vLand.y + 26.0 * (vnoise(vec2((vWorld.x + vWorld.z) / 57.0, vWorld.y / 90.0)) - 0.5)) / 140.0;
     #endif
@@ -201,7 +201,7 @@ void main() {
     cliff = mix(vec3(dot(cliff, vec3(0.3333))), cliff, 0.6) * 0.5 + 0.5 * vec3(0.105, 0.096, 0.088);
     if (px < 0.7) {
       vec2 fq = (kx > 0.5 ? vWorld.zy : vWorld.xy) / 17.0 + vec2(0.37, 0.11);
-      vec3 fr = texture2D(tBoulderNh, fq).rgb;
+      vec3 fr = PICK(tBoulderNh, fq, (kx > 0.5 ? wx.zy : wx.xy) / 17.0, (kx > 0.5 ? wy.zy : wy.xy) / 17.0).rgb;
       float on = smoothstep(0.7, 0.3, px);
       cliff *= mix(1.0, 0.5 + 1.0 * fr.b, on);
       cliffNh.b = mix(cliffNh.b, cliffNh.b * (0.4 + 1.2 * fr.b), on);
@@ -311,8 +311,8 @@ void main() {
       vec2 q1 = vWorld.xz / 11.0;
       vec2 q2 = TURN * vWorld.xz / 29.0 + 0.71;
       // The fine ropes are read a level and a half down the picture's pyramid: they are there, faintly, at the fronts of the billows, and never as stripes.
-      vec3 lavaA = texture2D(tLava, q1, 1.5).rgb;
-      vec3 lavaNhA = texture2D(tLavaNh, q1, 1.5).rgb;
+      vec3 lavaA = PICK(tLava, q1, 2.83 * wx.xz / 11.0, 2.83 * wy.xz / 11.0).rgb;
+      vec3 lavaNhA = PICK(tLavaNh, q1, 2.83 * wx.xz / 11.0, 2.83 * wy.xz / 11.0).rgb;
       vec3 lavaNhB = PICK(tLavaNh, q2, TURN * wx.xz / 29.0, TURN * wy.xz / 29.0).rgb;
       vec3 lava = lavaA * (0.6 + 0.9 * lavaNhB.b) * (0.8 + 0.4 * big);
       vec2 lavaTip = 0.4 * (lavaNhA.rg - 0.5) * vec2(1.0, -1.0) + 0.9 * (TURN * ((lavaNhB.rg - 0.5) * vec2(1.0, -1.0)));
@@ -463,132 +463,6 @@ void main() {
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, shade, graze);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
-
-export const ROCK_VERTEX = /* glsl */ `
-attribute vec4 aSeed;
-varying vec3 vWorld;
-varying vec3 vNormal;
-varying vec3 vObject;
-varying vec3 vObjectNormal;
-varying vec3 vAxisX;
-varying vec3 vAxisY;
-varying vec3 vAxisZ;
-varying vec4 vSeed;
-void main() {
-  mat3 m = mat3(instanceMatrix);
-  vec3 scale = vec3(length(m[0]), length(m[1]), length(m[2]));
-  vAxisX = m[0] / scale.x;
-  vAxisY = m[1] / scale.y;
-  vAxisZ = m[2] / scale.z;
-  vec3 on = normalize(normal / scale);
-  vObjectNormal = on;
-  vObject = position * scale + aSeed.x * 37.0;
-  vNormal = vAxisX * on.x + vAxisY * on.y + vAxisZ * on.z;
-  vec4 w = instanceMatrix * vec4(position, 1.0);
-  vWorld = w.xyz;
-  vSeed = aSeed;
-  gl_Position = projectionMatrix * viewMatrix * w;
-}`;
-
-// aSeed: x a random number, y the size of the rock in metres, z the height of its foot (where the ground meets it), w its tone.
-export const ROCK_FRAGMENT = /* glsl */ `
-${COMMON}
-varying vec3 vWorld;
-varying vec3 vNormal;
-varying vec3 vObject;
-varying vec3 vObjectNormal;
-varying vec3 vAxisX;
-varying vec3 vAxisY;
-varying vec3 vAxisZ;
-varying vec4 vSeed;
-uniform sampler2D tBoulder;
-uniform sampler2D tBoulderNh;
-uniform vec4 uCrackA;
-uniform vec4 uCrackB;
-
-void main() {
-  vec3 toCamera = cameraPosition - vWorld;
-  float far = length(toCamera);
-  vec3 v = toCamera / far;
-  vec3 on = normalize(vObjectNormal);
-  vec3 w = on * on;
-  w *= w;
-  w /= w.x + w.y + w.z;
-  float size = vSeed.y;
-  // Big blocks carry the rock picture at its true size and again coarser; pebbles carry it small.
-  float span = clamp(size * 0.9, 0.35, 2.2);
-  vec3 q = vObject / span;
-  vec3 albedo = vec3(0.0);
-  vec3 bump = vec3(0.0);
-  float height = 0.0;
-  #ifdef SIMPLE
-  vec3 cx = texture2D(tBoulder, q.zy).rgb;
-  vec3 cy = texture2D(tBoulder, q.xz).rgb;
-  albedo = mix(cx, cy, w.y);
-  height = 0.5;
-  #else
-  if (w.x > 0.02) {
-    vec3 c = texture2D(tBoulder, q.zy).rgb;
-    vec3 r = texture2D(tBoulderNh, q.zy).rgb;
-    albedo += c * w.x;
-    height += r.b * w.x;
-    bump += w.x * (vec3(0.0, 0.0, 1.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
-  }
-  if (w.y > 0.02) {
-    vec3 c = texture2D(tBoulder, q.xz).rgb;
-    vec3 r = texture2D(tBoulderNh, q.xz).rgb;
-    albedo += c * w.y;
-    height += r.b * w.y;
-    bump += w.y * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 0.0, 1.0) * (r.g - 0.5));
-  }
-  if (w.z > 0.02) {
-    vec3 c = texture2D(tBoulder, q.xy).rgb;
-    vec3 r = texture2D(tBoulderNh, q.xy).rgb;
-    albedo += c * w.z;
-    height += r.b * w.z;
-    bump += w.z * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
-  }
-  #endif
-  // Close to, the same picture again at a quarter of the size: grain at the scale of a finger.
-  float close = smoothstep(14.0, 4.0, far) * smoothstep(0.3, 0.8, size);
-  if (close > 0.0) {
-    vec2 f = (w.y > w.x && w.y > w.z ? q.xz : (w.x > w.z ? q.zy : q.xy)) * 4.3 + 0.37;
-    vec3 fine = texture2D(tBoulder, f).rgb;
-    float fh = texture2D(tBoulderNh, f).b;
-    albedo *= mix(vec3(1.0), fine * 20.0, 0.55 * close);
-    height = mix(height, 0.5 * (height + fh), close);
-  }
-  // A broken block is lit by its faces: the facet under the pixel, eased toward the round normal so that an edge is a worn edge.
-  vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)) + 1e-9);
-  if (dot(facet, toCamera) < 0.0) facet = -facet;
-  vec3 n0 = normalize(mix(normalize(vNormal), facet, 0.72));
-  vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 1.3 * smoothstep(400.0, 60.0, far));
-  albedo *= vSeed.w * ${ROCK_TONE.toFixed(2)};
-  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(1.07, 0.99, 0.92), 0.8);
-  vec4 land = landAt(vWorld.xz);
-  // The rock sits in the ground: its foot is in its own shade, and dust lies on what faces up.
-  float lift = (vWorld.y - vSeed.z) / max(size, 0.05);
-  float foot = smoothstep(-0.06, 0.14, lift);
-  float occ = (0.1 + 0.9 * foot) * (0.35 + 0.65 * smoothstep(0.15, 0.6, height));
-  float rind = smoothstep(2.2, 0.3, land.b);
-  // Ash on every face that looks up, none on the sides and undersides, none on a rock just out of the lake.
-  float dust = smoothstep(0.3, 0.72, n0.y + 0.25 * (height - 0.5)) * (0.85 + 0.15 * fract(vSeed.x * 7.3)) * (1.0 - 0.75 * rind) * smoothstep(0.4, 0.6, vSeed.w);
-  // Undersides and the faces that lean over see the ground, not the sky.
-  occ *= mix(0.12, 1.0, smoothstep(-0.55, 0.25, n0.y));
-  albedo = mix(albedo, vec3(0.165, 0.155, 0.145) * (0.75 + 0.5 * height), 0.7 * dust * (0.35 + 0.65 * smoothstep(0.7, 0.3, height)));
-  albedo *= mix(1.0, 0.8, rind);
-  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.6);
-  // By the vents: an olive stain on the faces, and lemon crystals in the pits of the tops within arm's reach of the gas. No rock is a cream plate.
-  float gas = smoothstep(4.2, 0.8, dc + 2.4 * (height - 0.5));
-  albedo = mix(albedo, albedo * vec3(1.7, 1.35, 0.7) + vec3(0.012, 0.009, 0.002), 0.5 * gas);
-  float sul = smoothstep(0.6, 0.95, gas) * smoothstep(0.3, 0.75, n0.y) * smoothstep(0.62, 0.4, height);
-  albedo = mix(albedo, mix(vec3(0.42, 0.35, 0.1), vec3(0.6, 0.55, 0.3), smoothstep(0.9, 1.0, gas)), sul * 0.7);
-  const float rough = 0.9;
-  albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld));
-  vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, 0.0, 1.0);
-  gl_FragColor = vec4(rigOut(c), 1.0);
-}`;
-
 
 // The spatter rind of the shore: black glass, read by world position on three axes so that nothing is stretched down its face,
 // ash only on the part of its top that lies back on the bench.

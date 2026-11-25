@@ -114,38 +114,44 @@ const MAIN: [number, number][] = [
   [-38, -344],
   [-37, -335],
   [FALL_FOOT[0], FALL_FOOT[1]],
-  [FALL_FOOT[0] + 2, FALL_FOOT[1] + 14],
+  [FALL_FOOT[0] + 2, FALL_FOOT[1] + 13],
+  [FALL_FOOT[0] + 3, FALL_FOOT[1] + 23],
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 124;
+export const FAN_FROM = 76;
 
 /** The west arm of the fan. It leaves the main stream at `BRAID_FROM` metres from the lip. */
 export const BRAID_FROM = FAN_FROM - 6;
 const ARM_TAIL: [number, number][] = [
-  [-50, -344],
-  [-57, -337],
-  [-62, -329],
-  [-64, -321],
+  [-52, -370],
+  [-57, -356],
+  [-61, -343],
+  [-64, -331],
+  [-65, -321],
 ];
 
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
-export const SPLITS = [37, 74, 108];
+export const SPLITS = [18, 29, 41, 53, 65];
 
 /** Half the width of the stream by metres from the lip: a thread on the slope, a sheet only in the fan. */
 const HALF: [number, number][] = [
-  [-200, 7],
-  [-40, 7],
-  [-6, 4.6],
-  [3, 5.2],
-  [10, 4.2],
-  [FAN_FROM - 4, 4.4],
-  [FAN_FROM + 8, 9],
-  [FAN_FROM + 22, 20],
-  [FAN_FROM + 40, 27],
+  [-200, 6],
+  [-70, 7],
+  [-30, 17],
+  [-3, 21],
+  [5, 11],
+  [13, 8.5],
+  [22, 9.2],
+  [FAN_FROM - 4, 10],
+  [FAN_FROM + 8, 16],
+  [FAN_FROM + 20, 30],
+  [FAN_FROM + 36, 52],
+  [FAN_FROM + 56, 76],
+  [FAN_FROM + 72, 84],
 ];
 const halfAt = (len: number): number => {
-  let h = table(HALF, len) * (len > 6 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
+  let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
   for (const at of SPLITS) h += 2.5 * Math.exp(-Math.pow((len - at) / 4.6, 2));
   return h;
 };
@@ -226,8 +232,7 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
   return c;
 }
 
-/** Where the fan's marks are laid out from: the point of the main stream 15 m above the fan. */
-export const FAN_HEAD: [number, number] = ((): [number, number] => {
+const mainAt = (len: number): [number, number] => {
   const pts = spline(MAIN, SPACING);
   let lip = 0;
   let best = Infinity;
@@ -238,8 +243,24 @@ export const FAN_HEAD: [number, number] = ((): [number, number] => {
       lip = i;
     }
   });
-  return pts[Math.min(pts.length - 1, lip + Math.round((FAN_FROM - 15) / SPACING))] as [number, number];
-})();
+  return pts[Math.min(pts.length - 1, lip + Math.round(len / SPACING))] as [number, number];
+};
+/** Where the fan's marks are laid out from: the point of the main stream 15 m above the fan. */
+export const FAN_HEAD: [number, number] = mainAt(FAN_FROM - 15);
+/** Where the cascade lands on the fan and stands a moment as a pool. */
+export const FAN_POOL: [number, number] = mainAt(FAN_FROM + 9);
+
+/**
+ * The side channels: each leaves the main stream, runs beside it round a mass of rock and joins it again.
+ * `from` and `to` are metres from the lip, `side` is +1 east of the stream and -1 west, `out` how many metres it stands off at its widest.
+ */
+const BRAIDS = [
+  { from: 9, to: 33, side: 1, out: 18, half: 2.6 },
+  { from: 16, to: 47, side: -1, out: 17, half: 2.4 },
+  { from: 42, to: 70, side: 1, out: 17, half: 2.6 },
+  { from: 60, to: 88, side: -1, out: 12, half: 2.8 },
+  { from: 78, to: 103, side: 1, out: 13, half: 2.5 },
+];
 
 export interface Course {
   readonly main: Channel;
@@ -248,7 +269,7 @@ export interface Course {
   readonly length: number;
   /** Metres from the lip of the middle of each cascade of the main stream. */
   readonly falls: number[];
-  /** The nearest point of either stream. `toward` is the unit vector on the ground from the point to the stream. */
+  /** The nearest point of any stream. `toward` is the unit vector on the ground from the point to the stream. */
   nearest(x: number, z: number): { distance: number; len: number; tau: number; half: number; speed: number; side: number; arm: boolean; y: number; toward: [number, number] };
   /** A point of the main stream by metres from the lip: position on the ground plane, direction, speed. */
   at(len: number): { x: number; z: number; dx: number; dz: number; speed: number; tau: number; half: number };
@@ -270,10 +291,34 @@ export function createCourse(height: (x: number, z: number) => number): Course {
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 20, smooth(BRAID_FROM + 6, BRAID_FROM + 34, len)), height, main.y[fork] as number, []);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 17, smooth(BRAID_FROM + 6, BRAID_FROM + 40, len)), height, main.y[fork] as number, []);
   for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 
+  // The side channels. Each starts 12 samples up the main stream so that it leaves along it, and its last metres come down to the main stream's level.
+  const sides: Channel[] = [arm];
+  BRAIDS.filter((b) => b.to < FAN_FROM - 2).forEach((b, k) => {
+    const i0 = lip + Math.round(b.from / SPACING);
+    const i1 = Math.min(main.n - 14, lip + Math.round(b.to / SPACING));
+    const pts: [number, number][] = [[main.x[i0 - 12] as number, main.z[i0 - 12] as number]];
+    const steps = Math.max(4, Math.round((b.to - b.from) / 4));
+    for (let j = 0; j <= steps; j++) {
+      const t = j / steps;
+      const i = Math.round(lerp(i0, i1, t));
+      const tx = (main.x[i + 2] as number) - (main.x[i - 2] as number);
+      const tz = (main.z[i + 2] as number) - (main.z[i - 2] as number);
+      const l = Math.hypot(tx, tz) || 1;
+      const off = b.side * b.out * Math.pow(Math.sin(Math.PI * t), 0.7) * (0.85 + 0.3 * hash1(k * 13 + j, 5));
+      pts.push([(main.x[i] as number) - (tz / l) * off, (main.z[i] as number) + (tx / l) * off]);
+    }
+    pts.push([main.x[i1 + 12] as number, main.z[i1 + 12] as number]);
+    const c = build(pts, 12, b.from, main.tau[i0] as number, (len) => b.half * (0.75 + 0.5 * lerp(hash1(Math.floor(len / 5), k + 0.5), hash1(Math.floor(len / 5) + 1, k + 0.5), len / 5 - Math.floor(len / 5))), height, main.y[i0] as number, []);
+    for (let i = 0; i < 12; i++) c.y[i] = main.y[i0 - 12 + i] as number;
+    const end = main.y[i1] as number;
+    const last = c.n - 1 - Math.round(12 / SPACING / 2);
+    for (let i = 12; i < c.n; i++) c.y[i] = lerp(Math.max(c.y[i] as number, end + 0.02 * (last - i) * SPACING * (i < last ? 1 : 0)), end, smooth(last - 10, last, i));
+    sides.push(c);
+  });
   const scan = (c: Channel, x: number, z: number, from: number): { i: number; d2: number } => {
     let bi = from;
     let bd = Infinity;
@@ -305,13 +350,21 @@ export function createCourse(height: (x: number, z: number) => number): Course {
     falls,
     nearest: (x, z) => {
       const a = scan(main, x, z, 0);
-      const b = scan(arm, x, z, 12);
-      // Compare by how far outside each stream the point is, so the narrow arm is not swallowed by the wide one.
-      const da = Math.sqrt(a.d2) - (main.half[a.i] as number);
-      const db = Math.sqrt(b.d2) - (arm.half[b.i] as number);
-      const useArm = db < da;
-      const c = useArm ? arm : main;
-      const near = useArm ? b.i : a.i;
+      // Compare by how far outside each stream the point is, so a narrow side channel is not swallowed by the wide one.
+      let c = main;
+      let near = a.i;
+      let least = Math.sqrt(a.d2) - (main.half[a.i] as number);
+      let useArm = false;
+      for (const side of sides) {
+        const b = scan(side, x, z, 12);
+        const db = Math.sqrt(b.d2) - (side.half[b.i] as number);
+        if (db < least) {
+          least = db;
+          c = side;
+          near = b.i;
+          useArm = side === arm;
+        }
+      }
       // Between the samples: the foot of the perpendicular on the nearer of the two segments that meet at the nearest sample.
       let i = near;
       let f = 0;

@@ -63,6 +63,16 @@
       "answered": "09:02 UTC"
     },
     {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 45,
+      "why": "The surface detail. The foreground rock has smeared, stretched textures, the lava lake floor is a flat tiled crack pattern, and the spindly creatures are simple, low-detail models. The smoke and haze are well done, but the asset quality looks like an indie game, a mod or a tech demo rather than a top-budget cinematic. Second choice is (b).",
+      "answered": "09:15 UTC",
+      "note": "The juror answered on its machine and did not send the answer; it was asked once at 09:14 UTC to send it as given, without looking again."
+    },
+    {
       "image": "R2-2",
       "juror": "a",
       "model": "gpt_6_2_sol",
@@ -97,6 +107,16 @@
       "confidence": 95,
       "why": "The lava crust in the foreground breaks into visibly stepped, repeating ridges that expose the terrain mesh.",
       "answered": "09:02 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 40,
+      "why": "The quality gap within the image. The depth of field, smoke and glowing lava light are polished, but the lava crust and ground have smeared, terraced, wavy textures and simple geometry, and the walking creatures are plain silhouettes. That reads as a competent hobbyist or stock-style render, not a top-budget film or cinematic frame, and it is clearly not a photograph. (Option (d) is close behind.)",
+      "answered": "09:15 UTC",
+      "note": "The juror answered on its machine and did not send the answer; it was asked once at 09:14 UTC to send it as given, without looking again."
     },
     {
       "image": "R2-3",
@@ -160,6 +180,78 @@
       "confidence": 70,
       "why": "It looks like a single artist's CG render, probably made in Blender. The creature models and depth of field are well done, but the ground is a simple flat cracked texture with lava seams, and the background rock forms are plain and blocky. That points to one person's render rather than a film or cinematic production.",
       "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "The biggest tell is the mismatch between decent offline-render lighting (soft depth of field, volumetric fog, and warm bounce light from the lava) and very simple, clay-like procedural surfaces, especially the bare, flat Voronoi-cracked ground with no rocks, ash, or fine surface detail, which looks like an ordinary standalone 3D render rather than a top-budget cinematic or a real-time mobile/web engine.",
+      "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 85,
+      "why": "The foreground creature's legs have conspicuously simple, angular joints beneath an otherwise smoothly shaded body, suggesting an ordinary 3D render.",
+      "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 55,
+      "why": "The polished cinematic look: believable depth of field, atmospheric haze, and lava glow lighting the creatures' tendrils and the cracked ground, all in a coherent teal-and-orange grade. The creature design is detailed and original, which points to a high-end concept render or film frame. Option (c), an ordinary 3D render, is the main alternative.",
+      "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "The scattered rocks have conspicuously flat polygonal faces, especially where the ground texture otherwise looks detailed.",
+      "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "Clean procedural-looking rock geometry with repeated scattered boulders and uniform CG lava/fog lighting; looks like a hobbyist/artist Blender-style render, not a photo or film-grade frame.",
+      "answered": "09:04 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "The combination of offline-render lighting effects (soft orange bounce light, volumetric haze, and foreground depth-of-field) with visibly faceted, low-poly scattered rocks and stretched procedural cliff geometry, which looks typical of an ordinary 3D render rather than a real photo, AAA cinematic, or real-time mobile/web demo.",
+      "answered": "09:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "The loose rocks across the foreground slope have conspicuously flat polygon faces, like low-poly game assets.",
+      "answered": "09:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "The cliff and slope look like a procedural CG terrain. The rock texture is smeared, repeating and blurry, and the lava glow and fog look like a one-off render without the fine detail of a film frame. The tiny creature on the right is a hint that it is a render, but it did not decide the answer. The art direction is polished, so (b) is the runner-up at about 25 and (d) is about 15.",
+      "answered": "09:05 UTC"
     }
   ]
 }
