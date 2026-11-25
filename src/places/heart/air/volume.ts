@@ -176,7 +176,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
     // The wind draws the smoke out along itself: its billows are long downwind and keep their shape across it.
     vec3 rolled = p + vec3(2.2, -5.5, -0.8) * uTime;
     vec3 drawn = rolled - vec3(0.92, 0.0, -0.4) * (0.92 * dot(rolled.xz, vec2(0.92, -0.4)));
-    vec4 m = noise(drawn * vec3(0.0017, 0.0019, 0.0017) + 0.31);
+    vec4 m = noise(drawn * vec3(0.0034, 0.0038, 0.0034) + 0.31);
     float billow = smoothstep(0.36, 0.66, 0.7 * m.r + 0.3 * m.b);
     smoke = mix(0.0014, 0.004, along) * (veil - 0.004) * (0.01 + 3.0 * billow * billow);
     shade = exp(-1.5 * veil) * (0.6 + 0.4 * billow);
@@ -202,16 +202,12 @@ float columnShape(vec3 p) {
 }
 // The plume's own flow. A lobe leaves the foot at 11 metres a second and slows to 4.5 aloft, growing as it climbs: the lumps are laid out in the seconds
 // a parcel has climbed, so each travels with the flow and none is drawn out by the time that has passed. The lattice is skewed, so no lobe comes round twice.
-float columnPick = 0.5;
 vec3 columnFlow(vec3 p) {
+  // The plume climbs at 11 m/s at its foot and 5 m/s aloft, so the lumps low down overtake the ones above them and the body shears and folds as it rises.
+  // Time is counted from the middle of the place, so the shear never grows past a third either way in its 28 seconds.
   float h = clamp(p.y, 0.0, 900.0);
-  float age = 40.0 * log((4.5 * exp(h / 180.0) + 6.5) / 11.0);
-  // The flow slows as it climbs, so one layout of lumps would be pressed flat aloft. There are two, each carried exactly by the flow:
-  // a close-packed one near the foot and a looser one aloft, and a lump passing from one to the other is remade on the way.
-  float high = step(columnPick, smoothstep(170.0, 470.0, h));
-  float travel = (age - uTime) * mix(6.5, 2.7, high);
-  vec2 rel = (p.xz - fumeAxis(p.y)) * (150.0 / (100.0 + 0.3 * h));
-  return vec3(rel.x + 0.37 * travel + 585.0 + 211.0 * high, travel, rel.y + 0.21 * travel - 285.0);
+  float rise = mix(11.0, 5.0, smoothstep(0.0, 420.0, h));
+  return vec3(p.x + 1.1 * uTime, p.y - rise * (uTime - 14.0), p.z + 0.3 * uTime);
 }
 // The body of a plume: lumps of three sizes cut by its shape, so that its surface is where the lumps end. Cheap: one read.
 float lumps(vec3 q, float shape) {
@@ -267,8 +263,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
   if (t1 <= t0) return;
   vec3 albedo = C.w > 1.5 ? FUME_ALBEDO : mix(STEAM_ALBEDO, SMOKE_ALBEDO, C.w);
   // A fume stands over open lava and is seen against it: it takes far more of that light than a wisp of steam does.
-  float lit = fume ? 0.12 : mix(1.5, 0.4, kind);
-  float fall = fume ? 14.0 : mix(9.0, 5.0, kind);
+  float lit = fume ? 0.2 : mix(1.5, 0.4, kind);
+  float fall = fume ? 8.0 : mix(9.0, 5.0, kind);
   float dt = (t1 - t0) / float(${STEPS.steam});
   for (int k = 0; k < ${STEPS.steam}; k++) {
     float t = t0 + (float(k) + jitter) * dt;
@@ -294,7 +290,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
     q = q / C.z + C.x + vec3(0.013, 0.0, 0.007) * uTime;
     // Its outline is ragged by the same lumps that fill it; it is thick at the vent, thinned by its own widening, and gone well before the top.
     float n1 = noise(q).r;
-    float ragged = d * mix(0.75, 1.0, kind) + (n1 - 0.5) * mix(1.5, 0.8, kind);
+    float ragged = d + (n1 - 0.5) * mix(1.0, 0.8, kind);
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
     float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, fume ? 1.6 : mix(1.8, 2.6, kind)) * mix(1.0, thin, 0.6);
@@ -365,8 +361,8 @@ void bankOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, i
     float over;
     float skyward = bankDensity(A, B, p + SKY_DIR * 12.0, false, over);
     float skyT = exp(-B.w * (2.0 * above + 20.0 * skyward));
-    vec3 light = skyLight(p.y) * (0.06 + 2.2 * skyT);
-    if (p.y < 40.0) light += exp(-p.y / 9.0) * (5.0 * lakeGlow(p.xz, 60.0) + 12.0 * wideNear);
+    vec3 light = skyLight(p.y) * (0.11 + 2.2 * skyT);
+    if (p.y < 40.0) light += exp(-p.y / 9.0) * (5.0 * lakeGlow(p.xz, 60.0) + 4.0 * wideNear);
     float a = 1.0 - exp(-dens * B.w * dt);
     sum += trans * a * BANK_ALBEDO * light;
     trans *= 1.0 - a;
@@ -382,7 +378,6 @@ void main() {
   viewRay(ro, rd, far);
   // One draw of chance for the pixel and the frame, moved on by the golden ratio for each sample: the samples of a frame fall between each other, so four of them march four times as finely.
   float jitter = fract(rnd(ivec2(gl_FragCoord.xy), uint(uSeq)) + 0.61803399 * float(uSampleIndex));
-  columnPick = fract(jitter + 0.53);
 
   float reach = min(far, 3400.0);
   if (rd.y > 0.0) reach = min(reach, max((900.0 - ro.y) / rd.y, 0.0));
