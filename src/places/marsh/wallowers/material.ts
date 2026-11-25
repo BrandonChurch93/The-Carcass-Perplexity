@@ -58,9 +58,12 @@ vec2 plates(vec2 p) {
   return vec2(f2 - f1, id);
 }
 float skinHeight(vec2 uv, float seed) {
-  vec2 a = plates(uv * vec2(17.0, 30.0) + seed);
-  vec2 b = plates(uv * vec2(64.0, 80.0) + seed * 3.0);
-  return 0.65 * smoothstep(0.0, 0.22, a.x) + 0.35 * smoothstep(0.0, 0.3, b.x);
+  // Wrinkles lie round the body, not along it: the cells are long across the spine and short along it.
+  vec2 w = uv + 0.035 * vec2(vnoise(uv * 4.3 + seed), vnoise(uv * 3.7 + seed + 9.0));
+  float a = abs(vnoise(w * vec2(44.0, 8.0) + seed) - 0.5) * 2.0;
+  float c = abs(vnoise(w * vec2(100.0, 21.0) + seed * 2.0) - 0.5) * 2.0;
+  vec2 b = plates(w * vec2(95.0, 38.0) + seed * 3.0);
+  return 0.45 * smoothstep(0.0, 0.22, a) + 0.3 * smoothstep(0.0, 0.3, c) + 0.25 * smoothstep(0.0, 0.3, b.x);
 }
 
 // The big creases: slack skin hangs in rolls round the trunk, closer and deeper at the neck. Returns how high the skin stands, 0 in a crease.
@@ -72,6 +75,13 @@ float creases(vec2 uv, float seed, float deep) {
   return 1.0 - deep * (1.0 - smoothstep(0.0, 0.45, a)) - 0.6 * deep * gate * (1.0 - smoothstep(0.0, 0.5, b));
 }
 
+// Crystals grown into each other: round lumps the size of a fist with smaller ones on them.
+float knobHeight(vec2 uv, float seed) {
+  float a = sqrt(clamp(plates(uv * vec2(15.0, 16.0) + seed).x * 2.2, 0.0, 1.0));
+  float b = sqrt(clamp(plates(uv * vec2(47.0, 51.0) + seed * 2.0).x * 2.2, 0.0, 1.0));
+  return 0.65 * a + 0.35 * b;
+}
+
 void main() {
   vec3 ng = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
@@ -81,6 +91,8 @@ void main() {
   float trunk = 1.0 - step(0.5, kind);
   float seed = vInfo.w;
   float dead = smoothstep(1.0, 1.4, vInfo.x);
+  // The one that is stuck is smeared with the grey mud it is in.
+  float mudded = step(vInfo.x, -0.5);
 
   // A frame on the skin from the picture's own coordinates.
   vec3 dpx = dFdx(vWorld);
@@ -114,6 +126,10 @@ void main() {
   float s0 = skinHeight(vUv, seed);
   vec2 skinSlope = vec2(skinHeight(vUv + vec2(e2, 0.0), seed) - s0, skinHeight(vUv + vec2(0.0, e2), seed) - s0) / e2 * 0.004 * (1.0 - feeler);
   vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.22 + skinSlope;
+  // The crust of a dead one: crystals as big as a fist, grown into each other.
+  float k0 = plates(vUv * vec2(19.0, 21.0) + seed).x;
+  float knob = knobHeight(vUv, seed);
+  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.07;
   // How deep in a fold of the shape this is: 1 on the top of a fold, toward 0 in its crease.
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
@@ -124,7 +140,7 @@ void main() {
   float patchy = fbm(vUv * 2.1 + seed * 13.0);
   float flake = fbm(vUv * 9.0 + seed * 3.0);
   float up = ng.y + 0.55 * (patchy - 0.5) + 0.3 * (flake - 0.5) + 0.3 * (nhS.b - 0.5);
-  float cake = smoothstep(0.6, 0.68, up) * clamp(vInfo.x, 0.0, 1.0) * (1.0 - feeler);
+  float cake = smoothstep(0.74, 0.82, up) * clamp(vInfo.x, 0.0, 1.0) * (1.0 - feeler);
   cake = max(cake, dead * smoothstep(0.3, 0.42, patchy + 0.45 * ng.y + 0.35 * (nhS.b - 0.5) + 0.2 * (flake - 0.5)));
   // A bloom of dry salt over the upper half and in the creases: the hide dries grey.
   float dust = clamp(vInfo.x, 0.0, 1.0) * smoothstep(-0.35, 0.6, ng.y) * (0.25 + 0.3 * fold + 0.35 * patchy) * (1.0 - feeler);
@@ -135,31 +151,37 @@ void main() {
   float thread = smoothstep(0.55, 0.8, vnoise(vec2(lane * 23.0, vWorld.y * 0.9 - uSeconds * 0.35) + seed * 9.0));
   float ragged = 0.6 * (fbm(vUv * vec2(1.4, 0.8) + seed * 17.0) - 0.5) + 0.1 * (streak - 0.5);
   float wet = (1.0 - smoothstep(vWet - 0.12 + ragged, vWet + 0.1 + ragged, vWorld.y)) * (1.0 - dead);
+  float smear = mudded * smoothstep(0.42, 0.62, fbm(vUv * vec2(1.7, 1.2) + seed * 5.0) + 0.55 * (1.0 - smoothstep(vWet - 0.2, vWet + 0.9, vWorld.y)) + 0.25 * (1.0 - fold));
   float damp = (1.0 - smoothstep(vWet + ragged, vWet + 0.55 + ragged, vWorld.y)) * (1.0 - dead);
   float soaked = 1.0 - smoothstep(0.03, 0.28 + 0.2 * streak, vWorld.y);
   cake *= 1.0 - damp;
   dust *= 1.0 - damp;
 
-  vec3 albedo = vec3(0.125, 0.104, 0.09) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold) * (0.6 + 0.4 * s0) * (0.9 + 0.2 * plates(vUv * vec2(17.0, 30.0) + seed).y);
-  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.6);
+  vec3 albedo = mix(vec3(0.125, 0.096, 0.07), vec3(0.17, 0.125, 0.11), mudded) * hide * (0.72 + 0.28 * c0) * (0.8 + 0.2 * fold) * (0.72 + 0.28 * s0) * (0.88 + 0.24 * fbm(vUv * vec2(6.0, 3.0) + seed));
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.75 + 0.5 * nhH.b), dust * 0.38);
   // The feelers: old ivory, grooved along their length, stained at the root and the tip.
   float groove = 0.8 + 0.2 * sin(vUv.y / max(vInfo.z, 0.01) * 5.0 + seed * 40.0);
   vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
-  ivory = mix(ivory, vec3(0.21, 0.1, 0.06), 0.6 * smoothstep(0.6, 1.0, vLook.y) + 0.5 * (1.0 - smoothstep(0.0, 0.18, vLook.y)));
+  ivory = mix(ivory, vec3(0.2, 0.12, 0.08), 0.45 * smoothstep(0.7, 1.0, vLook.y) + 0.5 * (1.0 - smoothstep(0.0, 0.14, vLook.y)));
   albedo = mix(albedo, ivory, feeler);
-  albedo = mix(albedo, vec3(0.42, 0.4, 0.38) * salt, cake);
-  slope = mix(slope, (nhS.rg - 0.5) * 2.4, cake);
+  albedo = mix(albedo, mix(vec3(0.42, 0.4, 0.38), vec3(0.56, 0.54, 0.52), dead) * mix(salt, vec3(1.0), 0.5 * dead), cake);
+  slope = mix(slope, (nhS.rg - 0.5) * 2.4 + dead * knobSlope, cake);
+  albedo = mix(albedo, albedo * (0.34 + 0.66 * knob) * mix(vec3(1.0), vec3(0.85, 0.7, 0.64), 1.0 - knob), dead * cake);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
-  albedo = mix(albedo, albedo * vec3(0.72, 0.5, 0.45), damp * (1.0 - wet));
-  vec3 wetC = albedo * vec3(0.8, 0.25, 0.16) + vec3(0.035, 0.004, 0.002);
+  albedo = mix(albedo, albedo * mix(vec3(0.72, 0.5, 0.45), vec3(0.7), mudded), damp * (1.0 - wet));
+  vec3 wetC = mix(albedo * vec3(0.75, 0.2, 0.12) + vec3(0.03, 0.003, 0.002), albedo * 0.6, mudded);
   albedo = mix(albedo, wetC, wet * (0.9 - 0.4 * feeler));
-  albedo = mix(albedo, albedo * vec3(0.7, 0.45, 0.4), 0.6 * thread * damp);
+  albedo = mix(albedo, albedo * mix(vec3(0.7, 0.45, 0.4), vec3(0.7), mudded), 0.6 * thread * damp);
   // Red mud, thick and smooth, on what stands in it.
-  vec3 mud = vec3(0.075, 0.02, 0.014) * (0.7 + 0.6 * streak);
+  vec3 mud = mix(vec3(0.075, 0.02, 0.014), vec3(0.085, 0.074, 0.066), mudded) * (0.7 + 0.6 * streak);
+  // Grey mud: wet and dark where it is fresh, paler and cracked where it has dried on the back.
+  vec3 greyWet = vec3(0.085, 0.074, 0.066);
+  vec3 greyDry = vec3(0.19, 0.172, 0.155) * (0.6 + 0.4 * s0);
+  albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
   albedo = mix(albedo, mud, soaked * 0.85);
 
   vec3 n = normalize(ng - (T * slope.x + B * slope.y) * (1.0 - 0.5 * soaked));
-  float rough = mix(0.92, 0.42, max(wet, 0.8 * thread * damp));
+  float rough = mix(0.92, 0.5, max(wet, 0.8 * thread * damp));
   rough = mix(rough, 0.3, soaked);
   rough = mix(rough, 0.95, cake);
   rough = mix(rough, 0.5, feeler * (1.0 - soaked));

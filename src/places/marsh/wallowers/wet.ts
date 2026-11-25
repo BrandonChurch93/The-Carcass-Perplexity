@@ -74,8 +74,8 @@ void main() {
   float trough = exp(-pow((r - 0.86 + wob + 2.1 * w) / (1.3 * w), 2.0));
   float skim = pow(1.0 - clamp(v.y, 0.0, 1.0), 3.0);
   vec3 sky = skyRadiance(normalize(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * skyOpen(vWorld);
-  vec3 c = mix(vec3(0.02, 0.006, 0.005), sky * (0.14 + 0.3 * skim), crest / max(crest + trough, 1e-4));
-  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.4 + trough * 0.4, 0.0, 1.0) * (1.0 - uSolo);
+  vec3 c = mix(vec3(0.04, 0.013, 0.011), sky * (0.14 + 0.3 * skim), crest / max(crest + trough, 1e-4));
+  float a = clamp(vB.y, 0.0, 1.0) * clamp(crest * 0.4 + trough * 0.12, 0.0, 1.0) * (1.0 - uSolo);
   if (a < 0.004) discard;
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
 }`;
@@ -181,7 +181,7 @@ export class Wet {
         } else {
           const age = Math.min(1, (t - hit) / Math.max(0.2, (1 - SWELL) * period - hit));
           this.put(o, 0, -1000, 0, 0, 0, 0, 0, 0);
-          if (brine) this.put(o + 4, x, level + 0.004, z, 0.03 + 0.3 * Math.sqrt(age), 1, 0.8 * (1 - age) * (1 - age), 0.1, j);
+          if (brine) this.put(o + 4, x, level + 0.004, z, 0.03 + 0.3 * Math.sqrt(age), 1, 0.45 * (1 - age) * (1 - age), 0.06, j);
           else this.put(o + 4, 0, -1000, 0, 0, 1, 0, 0.05, 0);
         }
       }
