@@ -9,73 +9,67 @@ export const YAW = (58.6 * Math.PI) / 180;
 /** Where the crust came from, in the local frame: the world's (0.611, -0.791) turned into it. */
 const UPSTREAM: [number, number] = [0.611 * Math.cos(YAW) - 0.791 * Math.sin(YAW), -0.611 * Math.sin(YAW) - 0.791 * Math.cos(YAW)];
 
-export const FIELD = { cx: -3.0, cz: 0.5, half: 14.5, size: 1024 };
+export const FIELD = { cx: -3.5, cz: 0.3, half: 14.5, size: 1024 };
 
 export const BODY = {
-  centre: new THREE.Vector3(-4.9, 0.85, -0.25),
-  radii: new THREE.Vector3(3.6, 1.85, 1.9),
-  // Tilted: the back turned up toward the bench side, the neck end down.
-  turn: new THREE.Euler(0.42, 0.24, -0.16, 'YXZ'),
+  centre: new THREE.Vector3(-3.5, 0.72, -0.4),
+  radii: new THREE.Vector3(2.3, 1.5, 1.55),
+  // Tilted: the back turned up toward the bench side, the neck end down in the crust.
+  turn: new THREE.Euler(0.3, 0.2, 0.2, 'YXZ'),
 };
 
 export type P3 = [number, number, number];
 
 /** The two legs that stand out: the hip is inside the body, the knee is the top of the arch. */
-// Each leg is three bones as on the living ones: thigh from the hip up to the knee, shank down to the hock, cannon into the crust.
-// The points crowd at a joint so the curve turns there and runs nearly straight between.
-const bones = (nodes: P3[], bow: number): P3[] => {
-  const out: P3[] = [];
-  for (let n = 0; n < nodes.length - 1; n++) {
-    const a = nodes[n] as P3;
-    const b = nodes[n + 1] as P3;
-    const steps = [0, 0.08, 0.3, 0.5, 0.7, 0.92];
-    for (const u of steps) {
-      const k = Math.sin(Math.PI * u) * bow * (n === 1 ? -1 : 1);
-      out.push([a[0] + (b[0] - a[0]) * u + k * 0.4, a[1] + (b[1] - a[1]) * u + k, a[2] + (b[2] - a[2]) * u - k * 0.5]);
-    }
-  }
-  out.push(nodes[nodes.length - 1] as P3);
-  return out;
-};
-const NODES_A: P3[] = [
+export const LEG_A: P3[] = [
   [-2.75, 0.46, 0.25],
-  [0.95, 5.3, 0.9],
-  [4.05, 1.25, -0.12],
+  [-2.15, 1.17, 0.5],
+  [-1.25, 2.8, 0.74],
+  [-0.05, 4.54, 0.9],
+  [0.95, 5.29, 0.9],
+  [1.65, 5.15, 0.8],
+  [2.5, 4.08, 0.55],
+  [3.55, 2.24, 0.1],
+  [4.35, 0.56, -0.28],
+  [4.6, -0.25, -0.4],
   [4.7, -0.9, -0.45],
 ];
-const NODES_B: P3[] = [
+export const LEG_B: P3[] = [
   [-3, 0.49, -0.7],
-  [0.85, 3.25, -2.95],
-  [3.5, 1.15, -3.72],
+  [-2.3, 1.14, -1.25],
+  [-1.3, 2.16, -1.95],
+  [-0.2, 2.97, -2.55],
+  [0.65, 3.2, -2.9],
+  [1.55, 3.05, -3.25],
+  [2.45, 2.66, -3.5],
+  [3, 2.41, -3.62],
+  [3.45, 1.75, -3.72],
+  [3.75, 0.9, -3.82],
+  [3.92, 0.1, -3.88],
+  [4.0, -0.5, -3.9],
   [4.02, -0.95, -3.9],
 ];
-export const LEG_A: P3[] = bones(NODES_A, 0.16);
-export const LEG_B: P3[] = bones(NODES_B, 0.12);
 export const FOOT_A: [number, number] = [4.53, -0.37];
 /** The second leg goes down into the crust too, behind the first. */
 export const FOOT_B: [number, number] = [3.95, -3.89];
 /** The wrist of the second leg, where its pad hangs. */
 export const WRIST_B: P3 = [3.22, 2.02, -3.63];
 
-/** The small tear on the side the crust left by, dull red. */
-// It runs away from the bench of key heart-2, so that camera looks down its length and sees the bottom of its far end.
+/** The tear on the side the crust left by: a rent of open lava, a crescent about two metres long. */
+// Its first half runs away from the bench of key heart-2, so that camera looks down its length and sees its floor.
 export const TEAR: [number, number][] = [
-  [-7.2, 6.1],
-  [-7.55, 5.3],
-  [-8.25, 4.75],
-  [-8.4, 4.0],
-  [-9.0, 3.4],
+  [-6.35, 4.5],
+  [-6.6, 3.85],
+  [-6.95, 3.3],
+  [-7.5, 2.95],
+  [-8.1, 2.85],
 ];
 
-/** The ropes are counted outward from the body and their width swings between 12 and 40 cm. The shader does the same sums. */
-export const ROPE = { turn: 1.7, start: 0.6 };
-export function ropeCount(u: number): number {
-  const th = ROPE.turn * u + ROPE.start;
-  return 2.5 * u + 6 * (0.375 * u - (0.5 * Math.cos(th)) / ROPE.turn - Math.sin(2 * th) / (16 * ROPE.turn));
-}
-export function ropeWidth(u: number): number {
-  const g = 0.5 + 0.5 * Math.sin(ROPE.turn * u + ROPE.start);
-  return 1 / (2.5 + 6 * g * g);
+/** The cords of the skin are counted along a phase in metres and their width swings between 3 and 10 cm. The shader does the same sums. */
+export const CORD = { turn: 9, base: 10, swing: 23 };
+export function cordCount(u: number): number {
+  const th = CORD.turn * u;
+  return CORD.base * u + CORD.swing * (0.375 * u - (0.5 * Math.cos(th)) / CORD.turn - Math.sin(2 * th) / (16 * CORD.turn));
 }
 
 // How far from the body the folded skin reaches, by the direction from the middle of the field: one broad lobe toward the bench,
@@ -96,7 +90,7 @@ function reach(x: number, z: number): number {
     const off = ((((phi - at) % 360) + 540) % 360) - 180;
     best = Math.max(best, far * Math.exp(-(off * off) / (wide * wide)));
   }
-  return 1.5 + best;
+  return 1.5 + 0.72 * best;
 }
 
 function polyDistance(line: [number, number][], x: number, z: number): [number, number] {
@@ -127,8 +121,8 @@ export function bodyDistance(x: number, z: number): number {
   const dz = z - BODY.centre.z;
   const u = dx * BC - dz * BS;
   const w = dx * BS + dz * BC;
-  const a = 3.3;
-  const b = 1.55;
+  const a = BODY.radii.x * 0.93;
+  const b = BODY.radii.z * 0.95;
   const k = Math.hypot(u / a, w / b);
   return (k - 1) * Math.min(a, b) * (0.75 + 0.25 * Math.min(k, 2));
 }
@@ -138,10 +132,200 @@ const smin = (a: number, b: number, k: number): number => {
   return Math.min(a, b) - h * h * k * 0.25;
 };
 
-const rope = (phase: number, sharp: number): number => {
-  const t = 2 * (phase - Math.floor(phase)) - 1;
-  return Math.pow(Math.max(0, 1 - t * t), sharp);
-};
+const BQ = new THREE.Quaternion().setFromEuler(BODY.turn);
+
+/** A point of the body's hull, `v` along it and `a` round it from the spine. With `fine` it has the cords and furrows of the dried hide; without, it is
+ *  the smooth shape those are cut into, which is what the skin of the lava lies on. `o` comes back as the way out of the hull there. */
+function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Vector3): { ring: number; s: number; furrow: number } {
+  const R = BODY.radii;
+  const along = -Math.cos(v * Math.PI);
+  const ring = Math.pow(Math.sin(v * Math.PI), 0.8);
+  const s = along * R.x;
+  const dy = Math.cos(a);
+  const dz = Math.sin(a);
+  const dry = fbm3(along * 2.1 + 3, dy * 1.4, dz * 1.4, 4);
+  let r = 1 + 0.18 * (dry - 0.47);
+  // One side fell in.
+  r -= 0.2 * smooth(0.45, 0.8, noise3(along * 1.3 + 7, dy * 1.1 + 2, dz * 1.1)) * ring;
+  let furrow = 0;
+  if (fine) {
+    // The hide dried onto the frame in cords that run the length of the body and wind a little round it, as it twisted going down.
+    const wind = a + 1.1 * along + 0.3 * Math.sin(s * 1.3 + 0.7) + 0.5 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
+    const f1 = Math.abs(Math.sin(wind * 4.5 + 2.6 * noise3(s * 0.5 + 5, dy * 1.2, dz * 1.2)));
+    const f2 = Math.abs(Math.sin(wind * 15 + 2.4 * noise3(s * 0.8 + 5, dy * 1.7, dz * 1.7) + 1.5 * f1));
+    furrow = Math.pow(1 - f1, 1.6);
+    const full = Math.min(1, ring * 1.4);
+    r -= (0.1 * furrow * (0.4 + 1.2 * dry) + 0.035 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
+    // The frame under it: ribs across the flank, the spine as a keel.
+    const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 6.8 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, dy * 1.3)), 3);
+    r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
+    const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.13, 2));
+    r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
+    r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5);
+  }
+  o.set(0, dy * R.y, dz * R.z).multiplyScalar(ring * r);
+  p.set(along * R.x * (0.9 + 0.1 * r), o.y, o.z).applyQuaternion(BQ).add(BODY.centre);
+  o.normalize().applyQuaternion(BQ);
+  return { ring, s, furrow };
+}
+
+function legCurve(points: P3[]): THREE.CatmullRomCurve3 {
+  return new THREE.CatmullRomCurve3(
+    points.map((p) => new THREE.Vector3(p[0], p[1], p[2])),
+    false,
+    'centripetal',
+  );
+}
+
+/** What the skin of the lava is draped over: the height of the top of the body, and of the base of each leg where it leaves the body and where it
+ *  enters the crust, with the skin hanging off them like a cloth off a table. Metres; far below zero away from them. */
+function makeTent(): (x: number, z: number) => number {
+  const cell = 0.1;
+  const n = Math.round((2 * FIELD.half) / cell);
+  const x0 = FIELD.cx - FIELD.half;
+  const z0 = FIELD.cz - FIELD.half;
+  const top = new Float32Array(n * n).fill(-9);
+  const put = (x: number, z: number, y: number): void => {
+    const i = Math.floor((x - x0) / cell);
+    const j = Math.floor((z - z0) / cell);
+    if (i < 0 || j < 0 || i >= n || j >= n) return;
+    if (y > (top[j * n + i] as number)) top[j * n + i] = y;
+  };
+  const p = new THREE.Vector3();
+  const o = new THREE.Vector3();
+  for (let i = 0; i <= 260; i++) {
+    for (let j = 0; j < 400; j++) {
+      hull(i / 260, (j / 400) * Math.PI * 2, false, p, o);
+      put(p.x, p.z, p.y);
+    }
+  }
+  // The skin climbed each leg a little: where it leaves the body, and where it goes into the crust.
+  for (const [points, radius] of [
+    [LEG_A, 0.42],
+    [LEG_B, 0.28],
+  ] as [P3[], number][]) {
+    const curve = legCurve(points);
+    for (let i = 0; i <= 600; i++) {
+      const t = i / 600;
+      curve.getPointAt(t, p);
+      const limit = t < 0.5 ? 0.0 : 0.45;
+      if (p.y > limit) continue;
+      for (let a = 0; a < 16; a++) {
+        for (const rr of [0.5, 1]) put(p.x + Math.cos(a * 0.3927) * radius * rr, p.z + Math.sin(a * 0.3927) * radius * rr, p.y + 0.1);
+      }
+      put(p.x, p.z, p.y + 0.1);
+    }
+  }
+  // Hang the cloth: every point is at least as high as its neighbour less the fall of the cloth over the step between them.
+  const fall = 1.7;
+  const s1 = fall * cell;
+  const s2 = s1 * Math.SQRT2;
+  const relax = (k: number, m: number, s: number): void => {
+    const v = (top[m] as number) - s;
+    if (v > (top[k] as number)) top[k] = v;
+  };
+  for (let pass = 0; pass < 2; pass++) {
+    for (let j = 1; j < n - 1; j++) {
+      for (let i = 1; i < n - 1; i++) {
+        const k = j * n + i;
+        relax(k, k - 1, s1);
+        relax(k, k - n, s1);
+        relax(k, k - n - 1, s2);
+        relax(k, k - n + 1, s2);
+      }
+    }
+    for (let j = n - 2; j > 0; j--) {
+      for (let i = n - 2; i > 0; i--) {
+        const k = j * n + i;
+        relax(k, k + 1, s1);
+        relax(k, k + n, s1);
+        relax(k, k + n + 1, s2);
+        relax(k, k + n - 1, s2);
+      }
+    }
+  }
+  const soft = blur(top, n, 1);
+  return (x, z) => {
+    const fx = Math.min(n - 1.001, Math.max(0, (x - x0) / cell - 0.5));
+    const fz = Math.min(n - 1.001, Math.max(0, (z - z0) / cell - 0.5));
+    const i = Math.floor(fx);
+    const j = Math.floor(fz);
+    const u = fx - i;
+    const v = fz - j;
+    const a = j * n + i;
+    return ((soft[a] as number) * (1 - u) + (soft[a + 1] as number) * u) * (1 - v) + ((soft[a + n] as number) * (1 - u) + (soft[a + n + 1] as number) * u) * v;
+  };
+}
+
+/** A festoon: a bundle of cords bent in an arc across the way the skin was pushed. */
+interface Festoon {
+  x: number;
+  z: number;
+  cos: number;
+  sin: number;
+  /** Half the width of the arc, metres. */
+  half: number;
+  /** How far the bundle runs along the push, metres: its cords times their width. */
+  length: number;
+  /** How far the ends of the arc trail behind its middle, as a part of the half width. */
+  bow: number;
+  rank: number;
+  tone: number;
+}
+
+const FESTOON_CELL = 2.2;
+
+function makeFestoons(): { cells: Festoon[][]; count: number; at: (x: number, z: number) => Festoon[] } {
+  const span = 2 * FIELD.half;
+  const count = Math.ceil(span / FESTOON_CELL);
+  const cells: Festoon[][] = Array.from({ length: count * count }, () => []);
+  const x0 = FIELD.cx - FIELD.half;
+  const z0 = FIELD.cz - FIELD.half;
+  const step = 1.55;
+  const m = Math.ceil(span / step);
+  const all: Festoon[] = [];
+  for (let j = 0; j < m; j++) {
+    for (let i = 0; i < m; i++) {
+      if (hash(i, j, 101) > 0.82) continue;
+      const x = x0 + (i + hash(i, j, 102)) * step;
+      const z = z0 + (j + hash(i, j, 103)) * step;
+      // The skin was pushed outward from where the body went down, and each sheet of it turned a little as it went.
+      const away = Math.atan2(z - BODY.centre.z, x - BODY.centre.x) + 2.2 * (hash(i, j, 104) - 0.5);
+      const big = hash(i, j, 105);
+      const long = hash(i, j, 106);
+      all.push({
+        x,
+        z,
+        cos: Math.cos(away),
+        sin: Math.sin(away),
+        half: 0.5 + 1.5 * big * big,
+        length: 0.3 + 0.7 * long + 1.6 * long * long * long,
+        bow: 0.25 + 0.5 * hash(i, j, 107),
+        rank: hash(i, j, 108),
+        tone: hash(i, j, 110),
+      });
+    }
+  }
+  all.sort((a, b) => b.rank - a.rank);
+  for (const f of all) {
+    const r = Math.hypot(f.half * 1.15, f.length + f.bow * f.half) + 0.4;
+    const i0 = Math.max(0, Math.floor((f.x - r - x0) / FESTOON_CELL));
+    const i1 = Math.min(count - 1, Math.floor((f.x + r - x0) / FESTOON_CELL));
+    const j0 = Math.max(0, Math.floor((f.z - r - z0) / FESTOON_CELL));
+    const j1 = Math.min(count - 1, Math.floor((f.z + r - z0) / FESTOON_CELL));
+    for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) (cells[j * count + i] as Festoon[]).push(f);
+  }
+  const none: Festoon[] = [];
+  return {
+    cells,
+    count,
+    at: (x, z) => {
+      const i = Math.floor((x - x0) / FESTOON_CELL);
+      const j = Math.floor((z - z0) / FESTOON_CELL);
+      return i < 0 || j < 0 || i >= count || j >= count ? none : (cells[j * count + i] as Festoon[]);
+    },
+  };
+}
 
 export interface FieldPoint {
   /** Metres above the flat crust. */
@@ -150,113 +334,175 @@ export interface FieldPoint {
   heat: number;
   /** Metres to the body or the foot of the leg. */
   d: number;
-  /** The bent distance from the body the ropes are counted by, metres: the creases and strands of the skin are drawn from it. */
+  /** The phase the cords are counted along, metres. */
   phase: number;
-  /** 0 to 1: how strongly the skin is roped here. */
-  ropes: number;
+  /** 0 to 1: how strongly the skin is corded here. */
+  cords: number;
   /** 0 to 1: the skin is the folded one here. */
   folded: number;
-  /** 0 to 1: inside a break across a rope. */
-  cut: number;
+  /** 0 to 1: the tone of the sheet of skin the point is on. */
+  tone: number;
 }
 
+/** Folds to the turn of the swirl: how far out a fold moves in one turn round the body, metres. */
+const SWIRL = { arms: 14, seam: [0.35, -0.94] as [number, number] };
+
 export function makeField(lakeSeam: [number, number][]): (x: number, z: number) => FieldPoint {
+  const tent = makeTent();
+  const festoons = makeFestoons();
+  const R = BODY.radii;
   return (x, z) => {
-    const wx = x + 1.3 * (noise2(x * 0.27 + 3.1, z * 0.27) - 0.5) + 0.34 * (noise2(x * 1.07, z * 1.07 + 7.3) - 0.5);
-    const wz = z + 1.3 * (noise2(x * 0.27 + 11.7, z * 0.27 + 5.2) - 0.5) + 0.34 * (noise2(x * 1.07 + 9.9, z * 1.07) - 0.5);
+    const n1 = noise2(x * 0.27 + 3.1, z * 0.27);
+    const n2 = noise2(x * 0.27 + 11.7, z * 0.27 + 5.2);
+    const wx = x + 1.3 * (n1 - 0.5) + 0.34 * (noise2(x * 1.07, z * 1.07 + 7.3) - 0.5);
+    const wz = z + 1.3 * (n2 - 0.5) + 0.34 * (noise2(x * 1.07 + 9.9, z * 1.07) - 0.5);
     const dBody = bodyDistance(wx, wz);
-    const dFoot = Math.hypot(wx - FOOT_A[0], wz - FOOT_A[1]) - 0.3;
-    const dFootB = Math.hypot(wx - FOOT_B[0], wz - FOOT_B[1]) - 0.25;
-    const d = smin(smin(dBody, dFoot + 0.9, 1.4), dFootB + 0.9, 1.4);
-    const dTrue = Math.min(bodyDistance(x, z), Math.hypot(x - FOOT_A[0], z - FOOT_A[1]) - 0.3, Math.hypot(x - FOOT_B[0], z - FOOT_B[1]) - 0.25);
+    const dFootA = Math.hypot(wx - FOOT_A[0], wz - FOOT_A[1]) - 0.3;
+    const dFootB = Math.hypot(wx - FOOT_B[0], wz - FOOT_B[1]) - 0.2;
+    // The folds turn round the body and round the foot of each leg as one shape.
+    // The tear is in the eye of it: the innermost folds go round the rent as they go round the body.
+    const d = smin(smin(smin(dBody, dFootA + 0.5, 1.6), dFootB + 0.5, 1.6), polyDistance(TEAR, wx, wz)[0] + 0.25, 2.2);
+    const dTrue = Math.min(bodyDistance(x, z), Math.hypot(x - FOOT_A[0], z - FOOT_A[1]) - 0.3, Math.hypot(x - FOOT_B[0], z - FOOT_B[1]) - 0.2);
+    const dd = Math.max(d, 0);
 
     const ox = x - BODY.centre.x;
     const oz = z - BODY.centre.z;
     const ol = Math.hypot(ox, oz) || 1;
     const up = 0.5 + (0.5 * (ox * UPSTREAM[0] + oz * UPSTREAM[1])) / ol;
-    const pile = 0.22 + 0.78 * up * up;
-    const dd = Math.max(d, 0);
 
-    // The crust heaped against what stopped it, and climbing it on the side it came from.
-    let h = pile * 1.25 * Math.exp(-dd / 2.2) * smooth(-2.5, 0.4, dBody + 1.2 * up);
-    h += 0.3 * Math.exp(-Math.max(dFoot, 0) / 0.55) * smooth(9, 2, dFoot);
-    h += 0.26 * Math.exp(-Math.max(dFootB, 0) / 0.5) * smooth(9, 2, dFootB);
-    // The end of the body that went under first: the skin rode up over it and lies on it in a hump.
-    const hump = Math.exp(-(Math.pow((wx - BODY.centre.x + 3.5) / 2.0, 2) + Math.pow((wz - BODY.centre.z - 0.3) / 2.2, 2)));
-    h += 0.95 * hump;
-    if (d < 0) h += 0.35 * pile * Math.min(1.6, -d);
-
-    // The folds: bundles of rope like pushed cloth, each leaning toward what stopped it, and the smaller ropes that ride on them.
+    // Where the folded skin ends: in toes of different reach, each a sheet that lies on the lake's plates.
     const out = reach(x, z);
-    const wobble = 1.1 * (noise2(x * 0.45 + 33, z * 0.45 + 2) - 0.5) + 0.35 * (noise2(x * 1.9 + 3, z * 1.9 + 41) - 0.5);
-    const edge = smooth(out, out - 2.2, dd + wobble) * smooth(9.3, 8.3, Math.hypot(x - FIELD.cx, z - FIELD.cz));
-    h *= edge;
-    const env = smooth(out + 1.0, 0.35 * out, dd) * edge;
-    const lean = d / (1.0 + 0.5 * noise2(x * 0.21 + 50, z * 0.21)) + 2.5 * noise2(x * 0.34 + 20, z * 0.34 + 3) + 0.25 * noise2(x * 1.6 + 4, z * 1.6);
-    const t1 = lean - Math.floor(lean);
-    const skew = Math.pow(t1, 0.62);
-    const big = Math.pow(Math.max(0, 1 - (2 * skew - 1) * (2 * skew - 1)), 0.62);
-    const broken = 0.3 + 1.25 * smooth(0.2, 0.7, noise2(x * 0.37 + 31, z * 0.37 + 8));
-    const bigAmp = env * (0.24 + 0.3 * Math.exp(-dd / 4.5)) * (0.8 + 0.4 * up) * broken;
-    h += big * bigAmp;
-    const ropy = smooth(0.25, 0.6, noise2(x * 0.42 + 40.5, z * 0.42 + 1.5) + 0.3 * env);
-    const env2 = smooth(out + 1.5, 0.5 * out, dd) * edge;
-    // The pad is toes of lava of different ages, a few metres across. Some kept the ropes that run round the body; the others
-    // have their own, arcing round where each came from, and each lies a little over the next with a groove between.
-    const lobeAt = cells2(x * 0.3 + 0.6 * (noise2(x * 0.25 + 71, z * 0.25 + 5) - 0.5), z * 0.3 + 0.6 * (noise2(x * 0.25 + 13, z * 0.25 + 88) - 0.5), 4096);
-    const lobe = Math.floor(lobeAt[1] * 4096);
-    const bend = 1.12 * fbm2(x * 0.62 + 5, z * 0.62 + 9, 3);
-    const turn = hash(lobe, 2, 9) * Math.PI * 2;
-    const back = 1.6 + 2.5 * hash(lobe, 3, 9);
-    const own = Math.hypot(lobeAt[2] / 0.3 - back * Math.cos(turn), lobeAt[3] / 0.3 - back * Math.sin(turn)) + 9 * hash(lobe, 4, 9) + 0.6 * bend;
-    const bent = hash(lobe, 1, 9) < 0.6 ? own : d + bend + 0.23 * big;
-    h += 0.17 * hash(lobe, 5, 9) * smooth(0, 0.05, lobeAt[0]) * env;
-    const count = ropeCount(bent);
-    const width = ropeWidth(bent);
-    const small = rope(count, 0.42);
-    const ropes = env2 * ropy * (0.45 + 1.1 * noise2(x * 1.3 + 2, z * 1.3));
-    const ropeHigh = Math.min(0.15, 0.44 * width) * Math.min(1, ropes);
-    // The ropes broke across as they cooled and were pushed on: a ragged notch nearly to the crease, every few hands along.
-    const id = Math.floor(count);
-    const piece = 0.5 + 1.1 * hash(id, 3, 1);
-    const run = (Math.atan2(ox, oz) * (3 + Math.max(bent, 0))) / piece + 9 * hash(id, 5, 2);
-    const nearest = Math.round(run);
-    const parted = hash(nearest, id, 7) > 0.66 ? 1 : 0;
-    const toBreak = Math.abs(run - nearest) * piece + 0.05 * (noise2(x * 13 + 1, z * 13) - 0.5) + 0.02 * (noise2(x * 31, z * 31 + 5) - 0.5);
-    const cut = parted * smooth(0.05 + 0.04 * hash(nearest, id, 11), 0.012, toBreak) * smooth(0.15, 0.5, ropes);
-    h += small * ropeHigh * (1 - 0.8 * cut);
-    // Lobes: toes of lava that broke out between the ropes and swelled, a metre or so across, a crease round each.
-    const cell = cells2(x * 0.85 + 0.5 * noise2(x * 0.6, z * 0.6 + 40), z * 0.85 + 0.5 * noise2(x * 0.6 + 17, z * 0.6), 4096);
-    const lobed = smooth(0.32, 0.62, noise2(x * 0.3 + 61, z * 0.3 + 13)) * env;
-    h += lobed * (0.12 + 0.2 * cell[1]) * (Math.sqrt(smooth(0, 0.3, cell[0])) - 0.5) * (0.7 + 0.6 * Math.exp(-dd / 3));
-    // Rubble at the edge: bits of broken skin the pad pushed ahead of it, lying on the lake's plates past where the folds end.
-    const fringe = smooth(out + 1.6, out - 0.6, dd + wobble) * (1 - smooth(0.25, 0.8, edge)) * smooth(9.3, 8.3, Math.hypot(x - FIELD.cx, z - FIELD.cz));
-    const bit = cells2(x * 3.1 + 0.4 * noise2(x * 1.1, z * 1.1 + 9), z * 3.1 + 0.4 * noise2(x * 1.1 + 5, z * 1.1), 4096);
-    const bitSize = (bit[1] * 977) % 1;
-    if (bit[1] > 0.6) h += fringe * (0.03 + 0.1 * bitSize) * Math.sqrt(Math.max(0, 1 - Math.pow(Math.hypot(bit[2], bit[3]) / (0.16 + 0.3 * bitSize), 2)));
-    // Billows where the skin did not rope.
-    h += (fbm2(x * 0.9 + 70, z * 0.9, 4) - 0.45) * 0.22 * env2 * (1 - 0.5 * ropy);
+    const toe = cells2(x * 0.42 + 0.7 * (n1 - 0.5), z * 0.42 + 0.7 * (n2 - 0.5), 4096);
+    const wobble = 1.1 * (noise2(x * 0.45 + 33, z * 0.45 + 2) - 0.5) + 0.35 * (noise2(x * 1.9 + 3, z * 1.9 + 41) - 0.5) + 1.3 * (toe[1] - 0.5);
+    const radial = Math.hypot(x - FIELD.cx, z - FIELD.cz);
+    const inside = out - dd - wobble;
+    const edge = smooth(0, 2.4, inside) * smooth(9.0, 7.8, radial);
+    const sheet = smooth(-2.6, -0.4, inside) * smooth(9.15, 8.0, radial);
 
-    // The tear: the lips lift, the floor is the lava under the skin.
+    // The swirl: the skin turned round the body as it went down, and its folds run out from it in a slow spiral, thick near the
+    // body and lower outward, each leaning on the next. They are arcs, not rings: a fold dies away and another takes up beside it.
+    // The angle wraps behind the body, where the bench does not see.
+    const theta = Math.atan2(-(ox * SWIRL.seam[0] + oz * SWIRL.seam[1]), ox * SWIRL.seam[1] - oz * SWIRL.seam[0]);
+    const turn = (theta / (2 * Math.PI)) * SWIRL.arms;
+    const bend = 1.7 * noise2(x * 0.23 + 20, z * 0.23 + 3) + 0.7 * noise2(x * 0.55 + 4, z * 0.55 + 31) + 0.25 * noise2(x * 1.3 + 4, z * 1.3);
+    // The folds are thick against the body, about a metre, and thin away from it.
+    const u = d + bend;
+    const wp = u / 0.58 - 2.4 * (1 - Math.exp(-Math.max(u, -0.6) / 3)) + turn;
+    const gap = 1 / (1 / 0.58 - 0.8 * Math.exp(-Math.max(u, -0.6) / 3));
+    const fold = Math.floor(wp);
+    const t1 = wp - fold;
+    // A fold is a bundle of two to five ropes of unequal girth, each of them round, with a tight crease between it and the next.
+    const ropes = 2 + Math.floor(hash(fold, 3, 71) * 3.99);
+    const lean = 0.65 + 0.7 * hash(fold, 5, 71);
+    const tr = Math.pow(t1, lean) * ropes;
+    const rope = Math.floor(tr);
+    const e2 = 2 * (tr - rope) - 1;
+    // How wide the rope is on the ground: the bundle's share, by where in the leaning bundle it lies.
+    const wide = (gap / ropes / lean) * Math.pow(Math.max(t1, 0.02), 1 - lean);
+    const girth = 0.5 + 0.5 * hash(fold, rope, 73);
+    const e1 = 2 * t1 - 1;
+    const bundle = Math.pow(Math.max(0, 1 - e1 * e1), 0.8);
+    const ropeUp = Math.pow(Math.max(0, 1 - e2 * e2), 0.9);
+    const big = bundle * ropeUp;
+    const alive = smooth(0.2, 0.55, noise2(x * 0.3 + fold * 13.7, z * 0.3 + 5) + 0.45 * Math.exp(-dd / 3.0));
+    const lively = edge * alive * (0.55 + 0.45 * Math.exp(-dd / 4.5));
+    const weltAmp = lively * (0.05 + 0.36 * Math.exp(-dd / 3.2)) * (0.7 + 0.6 * up) * (0.5 + hash(fold, 9, 71));
+    const ropeAmp = lively * 0.8 * Math.min(wide, 0.5) * (0.6 + 0.4 * girth);
+    let h = -0.1 * Math.exp(-Math.pow(dd / 2.4, 2)) * edge;
+    h += bundle * weltAmp + ropeUp * ropeAmp * Math.sqrt(bundle);
+    // The skin rode up against the body and the legs: highest on the side it came from and at the end that went under first.
+    const climb = (0.25 + 0.2 * up + 0.3 * (noise2(x * 0.5 + 44, z * 0.5 + 12) - 0.5)) * edge;
+    h += climb * Math.exp(-Math.pow(dd / 2.6, 1.5));
+    // Billows of the skin where it did not fold.
+    h += ((fbm2(x * 0.6 + 70, z * 0.6, 4) - 0.47) * 0.26 + (noise2(x * 2.3 + 9, z * 2.3) - 0.5) * 0.05) * edge;
+    // The front of each toe is a rounded step onto the lake's plates.
+    h += 0.07 * Math.sqrt(smooth(0, 0.3, inside)) * smooth(9.0, 7.8, radial);
+
+    // Rings of the skin round the foot of each leg.
+    for (const [fx, fz] of [FOOT_A, FOOT_B]) {
+      const r = Math.hypot(x - fx, z - fz) + 0.3 * (noise2(x * 1.3 + fx, z * 1.3) - 0.5);
+      const ring = r / 0.27 + 2.5 * noise2(x * 0.8 + 5, z * 0.8 + fz);
+      h += (0.1 * Math.pow(0.5 + 0.5 * Math.cos(ring * 6.2832), 0.6) + 0.22) * Math.exp(-Math.pow(r / 0.75, 2));
+    }
+
+    // The drape: the skin rode up over the body from the side it came from and from the end that went under first, and round
+    // the base of each leg. Where it stops it stops in a thick rounded lip; past that the hide is bare.
+    const top = tent(x, z);
+    const bu = ((ox * BC - oz * BS) / R.x) * 1.0;
+    const bw = (ox * BS + oz * BC) / R.z;
+    const rag = fbm2(x * 0.9 + 14, z * 0.9 + 51, 3) - 0.5;
+    const lobe = cells2(x * 1.6 + 3 * rag, z * 1.6, 4096);
+    let cover = 0.2 + 0.85 * bw - 0.7 * bu + 1.1 * rag + 0.3 * (lobe[1] - 0.5) + 0.12 * Math.sqrt(lobe[0]);
+    // Outside the body there is nothing to be bare.
+    cover = Math.max(cover, smooth(-0.15, 0.25, bodyDistance(x, z)));
+    let near = 9;
+    for (const [lx, lz] of [
+      [-2.2, 0.45],
+      [-2.4, -1.2],
+    ] as [number, number][]) near = Math.min(near, Math.hypot(x - lx, z - lz));
+    cover = Math.max(cover, 0.6 - near * 0.75 + 0.5 * rag);
+    const lip = smooth(0, 0.22, cover);
+    // On the body the skin lies in the same ropes, thinner.
+    const thick = 0.07 + 0.11 * big * (0.4 + 0.6 * alive);
+    const draped = top + thick;
+    // Where the body stands higher than the skin climbed, it stands out of it bare: the skin ends against it.
+    const rode = h + 0.25 + 1.1 * smooth(0.1, 0.9, cover) * (0.5 + 0.5 * up);
+    if (draped > h) h = mix(h, Math.min(draped, rode), Math.sqrt(lip) * smooth(0, 0.12, draped - h));
+
+    // The cords. On a fold of the swirl they run along it, a bundle to each fold; elsewhere the skin is smooth or lies in festoons.
+    // The phase is kept small, within a fold or a festoon, because half floats carry it: the shader moves each sheet along by its tone.
+    let phase = t1 * gap;
+    let cords = alive * smooth(0.2, 0.6, big) * sheet * (0.5 + 0.5 * smooth(6.5, 3.5, dd));
+    let tone = 0.15 + 0.7 * hash(fold, 2, 77);
+    const fxw = x + 0.3 * (noise2(x * 0.9 + 60, z * 0.9) - 0.5);
+    const fzw = z + 0.3 * (noise2(x * 0.9, z * 0.9 + 60) - 0.5);
+    let block = 1;
+    let chosen = false;
+    for (const f of festoons.at(x, z)) {
+      const ex = fxw - f.x;
+      const ez = fzw - f.z;
+      const s = (-ex * f.sin + ez * f.cos) / f.half;
+      const as = Math.abs(s);
+      if (as > 1.2) continue;
+      // The cords crowd together toward the ends of the arc.
+      const ph = (ex * f.cos + ez * f.sin + f.bow * f.half * s * s) / (1 - 0.45 * s * s);
+      if (ph < -0.12 || ph > f.length + 0.12) continue;
+      const halo = smooth(1.2, 1.0, as) * smooth(-0.12, 0, ph) * smooth(f.length + 0.12, f.length, ph);
+      const amp = smooth(1.0, 0.72, as) * smooth(0, 0.08, ph) * smooth(f.length, f.length - 0.08, ph);
+      h += 0.035 * halo * block * sheet;
+      if (!chosen && amp * block > 0.002) {
+        // A festoon lies over the folds of the swirl only where they are low.
+        const over = block * (1 - 0.85 * smooth(0.08, 0.2, bundle * weltAmp + ropeAmp));
+        if (over > 0.05) {
+          chosen = true;
+          cords = Math.min(1, amp * 1.3) * over * sheet;
+          phase = ph;
+          tone = f.tone;
+        }
+      }
+      block *= 1 - halo;
+      if (!chosen) cords *= 1 - halo;
+    }
+
+    // The tear: the lips lift, the floor is open lava.
     const [dt, at] = polyDistance(TEAR, x, z);
-    const ragged = dt + 0.2 * (noise2(x * 2.6 + 8, z * 2.6) - 0.5) + 0.07 * (noise2(x * 8.1, z * 8.1 + 3) - 0.5);
-    const tearWidth = 0.21 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.7 * (0.6 + 0.85 * noise2(x * 0.9 + 14, z * 0.9 + 22));
-    // It lies in a hollow of the folds, and its lips are low at the end the bench looks in by.
+    const ragged = dt + 0.16 * (noise2(x * 2.6 + 8, z * 2.6) - 0.5) + 0.06 * (noise2(x * 8.1, z * 8.1 + 3) - 0.5);
+    const tearWidth = 0.2 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.6 * (0.7 + 0.6 * noise2(x * 0.9 + 14, z * 0.9 + 22));
     const within = smooth(0, 0.08, tearWidth);
-    h -= 0.3 * Math.exp(-Math.pow(dt / 1.1, 2)) * edge;
-    h += (0.02 + 0.09 * at) * Math.exp(-Math.pow(Math.max(ragged - tearWidth, 0) / 0.4, 2)) * within * edge;
-    const open = smooth(tearWidth, tearWidth * 0.3, ragged) * smooth(0.02, 0.1, tearWidth);
-    const floor = -0.62 + 0.05 * noise2(x * 6, z * 6);
+    h -= 0.22 * Math.exp(-Math.pow(dt / 1.0, 2)) * edge;
+    h += 0.07 * Math.exp(-Math.pow(Math.max(ragged - tearWidth, 0) / 0.3, 2)) * within * edge;
+    const open = smooth(tearWidth, tearWidth * 0.45, ragged) * smooth(0.02, 0.1, tearWidth);
+    const floor = Math.min(h - 0.2, -0.16) + 0.04 * noise2(x * 6, z * 6);
     const lipHeight = h;
     h = mix(h, floor, open);
-    // The walls are hot only toward the bottom.
-    const heat = smooth(tearWidth * 1.1, tearWidth * 0.2, ragged) * smooth(0.02, 0.1, tearWidth) * smooth(lipHeight - 0.1, floor + 0.26, h);
+    const heat = smooth(tearWidth * 1.05, tearWidth * 0.3, ragged) * smooth(0.02, 0.1, tearWidth) * smooth(lipHeight - 0.03, floor + 0.08, h);
+    cords *= 1 - smooth(tearWidth + 0.25, tearWidth, ragged);
 
     // The lake's seam runs on under the folded skin: the skin stands a little proud along it.
     const [ds] = polyDistance(lakeSeam, x, z);
     h += 0.08 * Math.exp(-Math.pow(ds / 0.7, 2)) * edge;
 
-    return { h, heat, d: dTrue + 3 * hump, phase: bent, ropes: Math.min(1, ropes) * (1 - open), folded: edge, cut: cut * (1 - open) };
+    return { h, heat, d: dTrue, phase, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
   };
 }
 
@@ -265,9 +511,9 @@ export interface Baked {
   height: Float32Array;
   /** rg: slope in x and z (0.5 is level, the range is plus or minus 3); b: how open the sky is over the point; a: the folded skin. */
   relief: THREE.DataTexture;
-  /** r: heat of the tear; g: ash; b: how far the point stands over the ground round it, 0.5 is level; a: the reach of the tear's light. */
+  /** r: heat of the tear; g: ash; b: how far the point stands over the ground round it, 0.5 is level; a: the tone of the sheet of skin. */
   mask: THREE.DataTexture;
-  /** r: the bent distance the folds follow, metres; gb: its direction on the ground; a: height in metres. Half float. */
+  /** r: the phase the cords are counted along, metres; gb: its direction on the ground; a: how strongly the skin is corded. Half float. */
   lines: THREE.DataTexture;
   at(x: number, z: number): number;
 }
@@ -317,9 +563,9 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
   const heat = new Float32Array(n * n);
   const dist = new Float32Array(n * n);
   const phase = new Float32Array(n * n);
-  const ropes = new Float32Array(n * n);
+  const cords = new Float32Array(n * n);
   const folded = new Float32Array(n * n);
-  const cut = new Float32Array(n * n);
+  const tone = new Float32Array(n * n);
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const p = field(FIELD.cx - FIELD.half + (i + 0.5) * cell, FIELD.cz - FIELD.half + (j + 0.5) * cell);
@@ -327,16 +573,15 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       heat[j * n + i] = p.heat;
       dist[j * n + i] = p.d;
       phase[j * n + i] = p.phase;
-      ropes[j * n + i] = p.ropes;
+      cords[j * n + i] = p.cords;
       folded[j * n + i] = p.folded;
-      cut[j * n + i] = p.cut;
+      tone[j * n + i] = p.tone;
     }
   }
   // A hollow is a place lower than the ground round it, at the width of a rope and at the width of a fold.
   const near = blur(height, n, 3);
   const mid = blur(height, n, 10);
   const wide = blur(mid, n, 22);
-  const warm = blur(blur(heat, n, 10), n, 10);
   const relief = new Uint8Array(n * n * 4);
   const mask = new Uint8Array(n * n * 4);
   const lines = new Uint16Array(n * n * 4);
@@ -347,11 +592,11 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       const hx = ((height[j * n + Math.min(n - 1, i + 1)] as number) - (height[j * n + Math.max(0, i - 1)] as number)) / (2 * cell);
       const hz = ((height[Math.min(n - 1, j + 1) * n + i] as number) - (height[Math.max(0, j - 1) * n + i] as number)) / (2 * cell);
       const h = height[k] as number;
-      const hollow = Math.max(0, (near[k] as number) - h) * 9 + Math.max(0, (mid[k] as number) - h) * 3.2 + Math.max(0, (wide[k] as number) - h) * 1.3;
+      const hollow = Math.max(0, (near[k] as number) - h) * 16 + Math.max(0, (mid[k] as number) - h) * 5 + Math.max(0, (wide[k] as number) - h) * 1.3;
       const d = dist[k] as number;
       // What stands over the crust hides the sky from it.
-      const under = 0.62 * Math.exp(-Math.max(d, 0) / 0.55) + 0.25 * Math.exp(-Math.max(d, 0) / 2.2);
-      const open = Math.max(0.04, ((1 - under) * (1 - 0.8 * (cut[k] as number))) / (1 + hollow));
+      const under = 0.45 * Math.exp(-Math.max(d, 0) / 0.4) + 0.1 * Math.exp(-Math.max(d, 0) / 1.5);
+      const open = Math.max(0.04, (1 - under) / (1 + hollow));
       relief[k * 4] = byte(0.5 + hx / (2 * SLOPE_RANGE));
       relief[k * 4 + 1] = byte(0.5 + hz / (2 * SLOPE_RANGE));
       relief[k * 4 + 2] = byte(open);
@@ -363,15 +608,15 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       const ash = smooth(0.012, 0.07, (mid[k] as number) - h + 0.03 * (noise2(x * 1.7, z * 1.7) - 0.5)) * level;
       mask[k * 4] = byte(heat[k] as number);
       mask[k * 4 + 1] = byte(ash);
-      mask[k * 4 + 2] = byte(0.5 + 2.2 * (h - (mid[k] as number)));
+      mask[k * 4 + 2] = byte(0.5 + 4 * (h - (near[k] as number)) + 1.5 * (h - (mid[k] as number)));
       const px = ((phase[j * n + Math.min(n - 1, i + 1)] as number) - (phase[j * n + Math.max(0, i - 1)] as number)) / (2 * cell);
       const pz = ((phase[Math.min(n - 1, j + 1) * n + i] as number) - (phase[Math.max(0, j - 1) * n + i] as number)) / (2 * cell);
       const pl = Math.hypot(px, pz) || 1;
       lines[k * 4] = THREE.DataUtils.toHalfFloat(phase[k] as number);
       lines[k * 4 + 1] = THREE.DataUtils.toHalfFloat(px / pl);
       lines[k * 4 + 2] = THREE.DataUtils.toHalfFloat(pz / pl);
-      lines[k * 4 + 3] = THREE.DataUtils.toHalfFloat(ropes[k] as number);
-      mask[k * 4 + 3] = byte((warm[k] as number) * 5.0);
+      lines[k * 4 + 3] = THREE.DataUtils.toHalfFloat(cords[k] as number);
+      mask[k * 4 + 3] = byte(tone[k] as number);
     }
   }
   const at = (x: number, z: number): number => {
@@ -403,15 +648,7 @@ export function fieldGeometry(baked: Baked, cellSize: number, keep: (x: number, 
   for (let i = 0; i < p.count; i++) {
     const x = p.getX(i);
     const z = p.getZ(i);
-    let y = baked.at(x, z);
-    // Where the lava heaped onto the back, the sheet stays under the hide: a strip of it came out over the spine as a black hoop.
-    const d = bodyDistance(x, z);
-    if (d < -0.3 && x > BODY.centre.x - 2.2) {
-      const inward = Math.min(1, -d / 1.55);
-      const roof = BODY.centre.y + BODY.radii.y * 0.7 * Math.sqrt(1 - (1 - inward) * (1 - inward)) - 0.2;
-      y = mix(y, Math.min(y, roof), smooth(BODY.centre.x - 2.2, BODY.centre.x - 1.3, x));
-    }
-    p.setY(i, y);
+    p.setY(i, baked.at(x, z));
   }
   const index = g.getIndex() as THREE.BufferAttribute;
   const kept: number[] = [];
@@ -553,189 +790,35 @@ function lavaCoat(baked: Baked, p: THREE.Vector3, reach: number, seed: number): 
   return { coat, out, above };
 }
 
-/** The splits of the hide: where along the body (metres), where round it (radians from the spine), half width and half length in metres, slant, bend. Long, narrow and no two alike. */
-const SPLITS: [number, number, number, number, number, number][] = [
-  [-0.55, 0.8, 0.085, 1.0, 0.38, 0.09],
-  [1.15, 0.52, 0.06, 0.55, -0.8, -0.05],
-  [-2.15, 1.05, 0.045, 0.4, 1.35, 0.03],
-];
-const HIDE_ROUND = 26;
-/** Metres round the body for one radian, near enough. */
-const GIRTH = 1.87;
-
-export interface HidePoint {
-  /** Metres a plate of dried hide stands off the hide under it here. */
-  lift: number;
-  /** 1 in the open, less under the lifted edge of a plate. */
-  shade: number;
-  /** 0 where there is no plate, else its tone from tan (0.4) to bone (1). */
-  plate: number;
-  /** 0 to 1: inside a split. */
-  hole: number;
-  /** Metres inside the nearest split, negative outside. */
-  gap: number;
-}
-
-/** The hide at an angle round the body (from the spine) and a place along it, metres. Both the mesh and the map of the plates are made from it. */
-export function hideAt(a: number, s: number, sharp: number): HidePoint {
-  const ca = Math.cos(a);
-  const sa = Math.sin(a);
-  // The splits first: nothing lies across them.
-  let gap = -9;
-  const ragged = 0.035 * (noise3(ca * 9, sa * 9, s * 5.1) - 0.5) + 0.014 * (noise3(ca * 31, sa * 31, s * 17) - 0.5);
-  for (const [ss, at, w, l, slant, bend] of SPLITS) {
-    const du = s - ss;
-    const dm = ((a > Math.PI ? a - Math.PI * 2 : a) - at) * GIRTH;
-    const cs = Math.cos(slant);
-    const sn = Math.sin(slant);
-    const along = (dm * cs - du * sn) / l;
-    const across = du * cs + dm * sn - bend * Math.sin(along * 2.6 + ss);
-    const wide = Math.abs(along) < 1 ? w * Math.pow(1 - along * along, 0.75) * (0.65 + 0.7 * noise2(along * 2.3 + ss * 3, 1.5)) : -0.05 * (Math.abs(along) - 1);
-    const e = wide - Math.abs(across) + ragged;
-    if (e > gap) gap = e;
-  }
-  const hole = smooth(0, sharp, gap);
-  // The lips of a split curl back and stand off.
-  const lip = gap < 0 ? 0.035 * Math.exp(gap / 0.045) : 0.035 * (1 - hole);
-  const rim = smooth(-0.04, -0.012, gap) * (1 - hole);
-
-  // The plates: cells of two sizes, each shrunk from its neighbours by its own margin, so none fits the next.
-  const wx = 0.9 * (noise3(ca * 2.2 + 5, sa * 2.2, s * 0.55) - 0.5);
-  const wy = 0.9 * (noise3(ca * 2.2, sa * 2.2 + 9, s * 0.55 + 3) - 0.5);
-  const A = (a / (Math.PI * 2)) * HIDE_ROUND;
-  const S = s * 2.25;
-  const fineHere = noise3(ca * 1.3 + 2, sa * 1.3, s * 0.5 + 11) > 0.56;
-  const k = fineHere ? 2 : 1;
-  const cell = cells2(A * k + wx * k, S * k + wy * k, HIDE_ROUND * k);
-  const metres = 0.45 / k;
-  const id = cell[1];
-  const h2 = (id * 57.31) % 1;
-  const h4 = (id * 131.7) % 1;
-  const h5 = (id * 711.3) % 1;
-  // They are left in patches, thicker on the back than low on the flank.
-  const patch = smooth(0.3, 0.7, noise3(ca * 0.9 + 7, sa * 0.9 + 1, s * 0.42 + 7));
-  const present = id > 0.42 + 0.5 * patch && gap < -0.06;
-  const edgeNoise = 0.11 * (noise3(ca * 6.5, sa * 6.5, s * 3.4) - 0.5) + 0.04 * (noise3(ca * 19, sa * 19, s * 10) - 0.5) + 0.014 * (noise3(ca * 47, sa * 47, s * 25) - 0.5);
-  const inside = (cell[0] - 0.02 - 0.08 * h2) * metres + edgeNoise;
-  let lift = lip;
-  let shade = 1;
-  let plate = 0.75 * rim;
-  if (present) {
-    // Each curls most at one edge, as a dried leaf does.
-    const way = h4 * Math.PI * 2;
-    const toward = Math.max(0, (cell[2] * Math.cos(way) + cell[3] * Math.sin(way)) * 2);
-    const curl = 0.015 + 0.1 * h5 * toward * toward;
-    if (inside > 0) {
-      const on = smooth(0, sharp, inside);
-      lift = Math.max(lift, on * (0.02 + 0.02 * h2 + curl * Math.exp(-inside / 0.07) + 0.006 * noise3(ca * 23, sa * 23, s * 12)));
-      // The curled edge stands in the light of the sky.
-      plate = Math.max(plate, on * Math.min(1, (0.4 + 0.5 * ((id * 37.7) % 1)) * (1 + 4 * curl * Math.exp(-inside / 0.05))));
-    } else {
-      // The dark line a plate throws under itself, widest on its low side.
-      shade = 1 - (0.6 + 4 * curl) * (0.5 + 0.9 * smooth(-0.15, 0.35, a < Math.PI ? cell[2] : -cell[2])) * Math.exp(inside / (0.022 + 0.6 * curl));
-    }
-  }
-  return { lift, shade: Math.max(0.12, shade), plate, hole, gap };
-}
-
-/** The map of the plates and splits of the body: across is the way round, up is the way along (in metres, not in rows). */
-export function bakeHide(): THREE.DataTexture {
-  const w = 2048;
-  const h = 1024;
-  const data = new Uint8Array(w * h * 4);
-  const byte = (v: number): number => Math.min(255, Math.max(0, Math.round(v * 255)));
-  for (let j = 0; j < h; j++) {
-    const s = ((j + 0.5) / h - 0.5) * 2 * BODY.radii.x;
-    for (let i = 0; i < w; i++) {
-      const p = hideAt(((i + 0.5) / w) * Math.PI * 2, s, 0.007);
-      const k = (j * w + i) * 4;
-      data[k] = byte(p.lift / 0.12);
-      data[k + 1] = byte(p.shade);
-      data[k + 2] = byte(p.plate);
-      data[k + 3] = byte(p.hole);
-    }
-  }
-  const t = new THREE.DataTexture(data, w, h, THREE.RGBAFormat, THREE.UnsignedByteType);
-  t.minFilter = THREE.LinearMipmapLinearFilter;
-  t.magFilter = THREE.LinearFilter;
-  t.wrapS = THREE.RepeatWrapping;
-  t.wrapT = THREE.ClampToEdgeWrapping;
-  t.generateMipmaps = true;
-  t.anisotropy = 2;
-  t.colorSpace = THREE.NoColorSpace;
-  t.needsUpdate = true;
-  return t;
-}
-
-/** The body: a deep small hull, its hide sunk between the ribs of the frame and split open over them, tilted in the crust. */
+/** The body: a deep rounded hull, its hide dried onto the frame in long cords, tilted in the crust and more than half under the skin of the lava. */
 export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly = false): THREE.BufferGeometry {
-  // Rows 3 cm apart at the most, so the lips of the splits and the edges of the plates are not stairs.
   const count = (rows + 1) * (columns + 1);
   const position = new Float32Array(count * 3);
   const map = new Float32Array(count * 4);
   const surf = new Float32Array(count * 4);
-  const q = new THREE.Quaternion().setFromEuler(BODY.turn);
   const p = new THREE.Vector3();
   const o = new THREE.Vector3();
-  const R = BODY.radii;
   for (let i = 0; i <= rows; i++) {
-    // The poles lie on the long axis, so the rings are the ribs.
+    // The poles lie on the long axis.
     const v = i / rows;
-    const along = -Math.cos(v * Math.PI);
-    const ring = Math.sin(v * Math.PI);
-    const s = along * R.x;
     for (let j = 0; j <= columns; j++) {
       const a = ((j % columns) / columns) * Math.PI * 2;
-      const dy = Math.cos(a);
-      const dz = Math.sin(a);
-      const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 8.4 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, a * 0.7)), 3);
-      const flank = smooth(0.15, 0.75, Math.abs(dz));
-      const dry = fbm3(along * 2.1 + 3, dy * 1.4, dz * 1.4, 4);
-      // A hull deeper than it is wide, the hide sunk between the ribs, a keel of spine along the back.
-      let r = 1;
-      r -= 0.11 * (1 - ribs) * flank * ring * (0.2 + 1.5 * dry);
-      r += 0.03 * ribs * flank * ring;
-      // Plates of hide that have dried and lifted at an edge. Only on the flank that is seen: a plate standing off the far
-      // side shows over the back as a black hoop.
-      const hp = hideAt(a, s, 0.03);
-      r += (hp.lift / GIRTH) * smooth(-0.1, 0.3, dz);
-      const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.15, 2));
-      r += 0.08 * spine * (0.7 + 0.3 * Math.cos(s * 14));
-      r += 0.16 * (dry - 0.47);
-      // One side fell in.
-      r -= 0.2 * smooth(0.45, 0.8, noise3(along * 1.3 + 7, dy * 1.1 + 2, dz * 1.1)) * ring;
-      // The wrinkles of dried hide run round the body, finer than the ribs.
-      // No two alike: a regular ripple here turns the grain of the hide into chevrons.
-      r += 0.03 * (noise2(s * 8.5 + 3, a * 2.6) - 0.5) * (0.4 + 0.6 * noise2(s * 1.1, a * 1.3 + 7)) * flank;
-      // And the hide hangs in long pleats from the spine where the flesh under it has gone.
-      // They are cords of several widths, and they wind a little round the body as it twisted when it went down.
-      const wind = a + 0.16 * s + 0.1 * Math.sin(s * 1.3 + 0.7);
-      const cord = Math.abs(Math.sin(wind * 5 + 2.2 * noise2(s * 0.55 + 5, a * 1.1) + 0.5 * Math.sin(s * 1.7)));
-      const pleat = Math.abs(Math.sin(wind * 18 + 2.4 * noise2(s * 0.8 + 5, a * 1.6) + 2.0 * cord));
-      r -= (0.1 * Math.pow(1 - cord, 1.6) * (0.3 + 1.4 * dry) + 0.032 * Math.pow(1 - pleat, 2.2) * (0.4 + 1.2 * dry)) * ring;
-
-      // The splits: the hide parted between two ribs, the ribs bare across the gap.
-      const hole = smooth(-0.01, 0.05, hp.gap);
-      const bar = hole * smooth(0.35, 0.7, ribs);
-      r -= 0.15 * hole * (1 - 0.5 * bar) - 0.012 * hole * (noise3(along * 23, dy * 19, dz * 19) - 0.5);
-
-      o.set(0, dy * R.y, dz * R.z * (1 - 0.25 * smooth(0, 1, dy))).multiplyScalar(ring * r);
-      p.set(along * R.x * (0.9 + 0.1 * r), o.y, o.z).applyQuaternion(q).add(BODY.centre);
-      const lava = lavaCoat(baked, p, 0.24, 11);
-      o.normalize().applyQuaternion(q);
-      p.addScaledVector(o, lava.out * (1 - hole));
+      const at = hull(v, a, true, p, o);
+      const lava = lavaCoat(baked, p, 0.2, 11);
+      p.addScaledVector(o, lava.out * 0.6);
       const k = i * (columns + 1) + j;
       position[k * 3] = p.x;
       position[k * 3 + 1] = p.y;
       position[k * 3 + 2] = p.z;
       map[k * 4] = j / columns;
-      map[k * 4 + 1] = v * 5.4;
+      map[k * 4 + 1] = at.s;
       map[k * 4 + 2] = 12;
       map[k * 4 + 3] = KIND.body;
-      surf[k * 4] = lava.coat * (1 - hole);
-      surf[k * 4 + 1] = hole;
-      surf[k * 4 + 2] = (0.34 + 0.66 * smooth(-0.1, 0.8, lava.above)) * (1 - 0.72 * hole * (1 - bar)) * (0.75 + 0.25 * smooth(0.0, 0.4, ribs + 1 - flank));
-      surf[k * 4 + 3] = bar;
+      surf[k * 4] = lava.coat;
+      // How deep in a furrow between two cords of the hide the point is.
+      surf[k * 4 + 1] = at.furrow;
+      surf[k * 4 + 2] = (0.45 + 0.55 * smooth(-0.05, 0.5, lava.above)) * (1 - 0.5 * at.furrow);
+      surf[k * 4 + 3] = 0;
     }
   }
   const index: number[] = [];
@@ -746,8 +829,8 @@ export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly =
       // The near mesh is only ever seen from the bench side: its far flank, below the back, is left out.
       const round = (j / columns) * Math.PI * 2;
       if (seenOnly && round > Math.PI * 1.08 && round < Math.PI * 2 - 0.7) continue;
-      // Nothing is drawn of what lies well under the crust.
-      if (position[a * 3 + 1]! < baked.at(position[a * 3]!, position[a * 3 + 2]!) - 0.35 && position[(b + 1) * 3 + 1]! < baked.at(position[(b + 1) * 3]!, position[(b + 1) * 3 + 2]!) - 0.35) continue;
+      // Nothing is drawn of what lies well under the skin.
+      if (position[a * 3 + 1]! < baked.at(position[a * 3]!, position[a * 3 + 2]!) - 0.3 && position[(b + 1) * 3 + 1]! < baked.at(position[(b + 1) * 3]!, position[(b + 1) * 3 + 2]!) - 0.3) continue;
       index.push(a, a + 1, b, a + 1, b + 1, b);
     }
   }
@@ -756,9 +839,8 @@ export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly =
 
 export interface LegShape {
   points: P3[];
-  /** Part of the length where the knee is, and the hock. */
+  /** Part of the length where the knee is. */
   knee: number;
-  hock: number;
   scale: number;
   seed: number;
   rings: number;
@@ -776,10 +858,9 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
     shape.round,
     KIND.leg,
     (s, a, t) => {
-      // A thigh with a little left on it, then shafts that taper, and a knuckle at the knee and at the hock.
-      const head = (d: number, w: number): number => 0.5 * Math.exp(-Math.pow(d / w, 2)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w));
-      const joint = 0.12 * head(t - knee, 0.022) + 0.1 * head(t - shape.hock, 0.018);
-      const shaft = t < knee ? mix(0.2, 0.125, t / knee) : t < shape.hock ? mix(0.105, 0.078, (t - knee) / (shape.hock - knee)) : 0.07;
+      // A bent trunk: thick where it leaves the body, one rounded knuckle at the top, tapering as it goes down into the crust.
+      const joint = 0.1 * Math.exp(-Math.pow((t - knee) / 0.07, 2)) + 0.05 * Math.exp(-Math.pow((t - knee + 0.09) / 0.03, 2));
+      const shaft = 0.2 + 0.1 * smooth(0.5, 0.0, t) - 0.05 * smooth(0.55, 1, t);
       const cords = 0.2 * Math.cos(2 * a + s * 0.8 + seed) + 0.12 * Math.cos(3 * a - s * 1.5 + seed * 2) + 0.06 * Math.cos(5 * a + s * 2.3);
       const lumps = 0.4 * (fbm3(s * 1.6 + seed, Math.cos(a) * 0.8, Math.sin(a) * 0.8, 3) - 0.47);
       const thin = tendon > 0 ? smooth(1 - tendon * 0.2, 1 - tendon, t) : 1;
@@ -790,16 +871,18 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       const bend = 0.7 * (noise2(s * 0.8 + seed * 2, Math.cos(a) * 0.9 + 4) - 0.5);
       const fineHere = noise2(s * 0.6 + seed * 5, Math.sin(a + seed) * 0.8 + 2) > 0.55;
       const k = fineHere ? 2 : 1;
-      const cell = cells2(((a / (Math.PI * 2)) * 5 + 0.35 * Math.sin(s * 1.7 + seed)) * k, (s * 1.25 + seed + bend) * k, 5 * k);
+      const cell = cells2(((a / (Math.PI * 2)) * 6 + 0.35 * Math.sin(s * 1.7 + seed)) * k, (s * 2.3 + seed + bend) * k, 6 * k);
       const id = cell[1];
       const h2 = (id * 57.31) % 1;
       const h5 = (id * 711.3) % 1;
-      // They went in patches: whole stretches of the limb are bare, with a flake or two left on them.
-      const bare = 0.1 + 0.62 * smooth(0.36, 0.6, noise2(s * 0.75 + seed * 3, Math.cos(a + seed) * 1.1 + 1.5)) + 0.2 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
-      const inside = (cell[0] - 0.04 - 0.13 * h2) / k + 0.04 * (noise2(a * 9 + seed, s * 14) - 0.5) + 0.015 * (noise2(a * 23, s * 37 + seed) - 0.5);
-      const plate = id > bare ? smooth(0, 0.02, inside) * thin : 0;
+      // They went in patches: stretches of the limb are bare bark, with a scab or two left on them.
+      const bare = 0.1 + 0.55 * smooth(0.4, 0.64, noise2(s * 0.9 + seed * 3, Math.cos(a + seed) * 1.3 + 1.5)) + 0.2 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
+      const inside = (cell[0] - 0.035 - 0.1 * h2) / k + 0.03 * (noise2(a * 9 + seed, s * 14) - 0.5) + 0.012 * (noise2(a * 23, s * 37 + seed) - 0.5);
+      const plate = id > bare ? smooth(0, 0.015, inside) * thin : 0;
+      // A plate curls: its edge stands off the limb, one side of it more than the other.
       const toward = Math.min(1, Math.max(0, 0.5 + (h5 > 0.5 ? 1 : -1) * cell[3] * 1.3));
-      const lift = plate * (0.018 + 0.085 * h2 * h5 * 2 * toward * toward + 0.015 * noise2(a * 5 + seed, s * 9));
+      const curl = smooth(0.16, 0.0, inside * k) * (0.25 + 0.75 * toward);
+      const lift = plate * (0.016 + (0.03 * h2 + 0.008) * curl + 0.008 * noise2(a * 5 + seed, s * 9));
       // Sinew shows pale along the cords where the hide is gone.
       const bone = (1 - plate) * smooth(-0.1, 0.25, cords) * thin + (1 - thin) * 0.6;
       return [core + scale * lift, plate, bone];
