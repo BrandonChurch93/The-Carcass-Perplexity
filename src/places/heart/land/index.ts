@@ -247,10 +247,10 @@ export function create(ctx: HeartContext): HeartPiece {
         at: [x, landHeight(x, z) + 0.1, z],
         radius: c.depth > 1 ? 0.4 : 0.22,
         // The vent at the foot of the line view's crag: dense pale steam against the crag, as in the line's picture.
-        strength: (c.depth > 1 ? 0.45 : 0.3) * strong,
-        rise: (c.depth > 1 ? 6 : 4) * (0.7 + 0.3 * strong),
+        strength: (c.depth > 1 ? 0.45 : 0.2) * strong,
+        rise: (c.depth > 1 ? 6 : 3) * (0.7 + 0.3 * strong),
         kind: 'steam',
-        lean: c.depth > 1 ? [-0.42, 0.2] : [0.35, 0.02],
+        lean: c.depth > 1 ? [-0.42, 0.2] : [-0.3, -0.35],
       });
     }
   }
