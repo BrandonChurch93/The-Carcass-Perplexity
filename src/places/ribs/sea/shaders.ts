@@ -37,7 +37,7 @@ void main() {
   float bed = texture2D(tLand, (p - uLandRect.xy) * uLandRect.zw).r;
   float calm = smoothstep(0.3, 9.0, -bed);
   vec2 g;
-  float h = swellAt(p, uTime, r * 0.05, 0.5, 1.3, g) * calm;
+  float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;
   vWorld = vec3(p.x, h, p.y);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -60,7 +60,8 @@ void main() {
   float depth = -land.r;
   float feet = texture2D(tFeet, (p - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
   // Water shoals toward the sand and toward the foot of a blade alike.
-  float shoal = min(depth, 0.2 + feet * 0.4);
+  float ragged = (texture2D(tChop, p / 173.0).b - 0.5) * 5.0 + (texture2D(tChop, p.yx / 39.0).b - 0.5) * 2.0;
+  float shoal = min(depth + ragged * smoothstep(0.0, 3.0, depth), 0.2 + feet * 0.4);
   float calm = smoothstep(0.3, 9.0, depth);
   float px = length(fwidth(p));
   vec2 g;
@@ -72,24 +73,33 @@ void main() {
   vec4 c3 = texture2D(tChop, (p + (c1.xy - 0.5) * 2.0) / 3.9 - uTime * uWind * 0.23);
   vec2 s2 = c2.xy - 0.5;
   float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);
-  vec2 chop = ((c1.xy - 0.5) * 0.5 + vec2(-s2.y, s2.x) * 0.42 + (c3.xy - 0.5) * 0.36) * lively;
+  // The smallest faces only where the lens can hold them.
+  vec4 c4 = texture2D(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31);
+  float fineKeep = 1.0 - smoothstep(0.004, 0.03, px);
+  vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.45 + (c4.xy - 0.5) * 0.4 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
 
+  // What the lens cannot resolve it still sees: of all the small faces of a wind sea, the ones turned to it. Their mean leans to the eye,
+  // by the rms slope when the view grazes and less as it steepens. So the far sea is no mirror: it shows the sky well over the horizon, dimly.
   float far = smoothstep(150.0, 2600.0, dist);
+  float graze = max(v.y, 0.0);
+  float sigma = 0.21 * lively;
+  float lean = sigma * sigma / (graze + 1.25 * sigma);
+  n = normalize(n + vec3(v.x, 0.0, v.z) / max(length(v.xz), 1e-4) * lean);
   float nv = max(dot(n, v), 0.0);
-  float fres = (0.02 + 0.98 * pow(1.0 - nv, 5.0)) * (1.0 - 0.3 * far);
+  float fres = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
-  r.y = abs(r.y) + 0.02 + 0.14 * far;
+  r.y = abs(r.y) + 0.02;
   r = normalize(r);
   float open = land.g;
   float sun = sunAt(vWorld, land);
   vec3 refl = skyRadiance(r) * mix(1.0, open, 0.6);
   vec3 hv = normalize(v + uSunDir);
-  float gl = pow(max(dot(n, hv), 0.0), mix(700.0, 90.0, far));
-  refl += uSunColour * gl * sun * mix(6.0, 1.2, far);
+  float gl = pow(max(dot(n, hv), 0.0), mix(700.0, 60.0, far));
+  refl += uSunColour * gl * sun * mix(6.0, 0.8, far);
 
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
-  vec3 deep = vec3(0.017, 0.043, 0.041);
+  vec3 deep = vec3(0.024, 0.056, 0.052);
   vec3 shallow = vec3(0.095, 0.105, 0.088);
   vec3 body = mix(shallow, deep, smoothstep(0.0, 5.0, depth));
   // Light comes through the thin top of a wave that faces the lens.
@@ -97,7 +107,7 @@ void main() {
   vec3 col = mix(body * e / 3.14159, refl, fres);
 
   float lace = 0.55 * texture2D(tChop, p / 7.3 - uTime * uWind * 0.08).a + 0.45 * texture2D(tChop, p.yx / 1.9 + uTime * 0.05).a;
-  float cap = smoothstep(0.74, 0.92, c1.b * 0.55 + c2.b * 0.35 + 0.12 * h) * calm;
+  float cap = smoothstep(0.6, 0.76, c1.b * 0.55 + c2.b * 0.35 + 0.1 * h) * calm;
   vec2 across = vec2(-uWind.y, uWind.x);
   float lane = texture2D(tChop, vec2(dot(p, across) / 31.0, dot(p, uWind) / 330.0 - uTime * 0.012)).b;
   lane = smoothstep(0.66, 0.9, lane) * calm * 0.55;

@@ -19,12 +19,12 @@ const FEET_REACH = 40;
 
 /** A disc of rings round the lens, close where the lens is: the vertex shader carries it with the lens and lays the swell on it in the world. */
 function seaDisc(): THREE.BufferGeometry {
-  const AROUND = 224;
+  const AROUND = 320;
   const radii: number[] = [0];
   let r = 0.6;
   while (r < 45000) {
     radii.push(r);
-    r = r * 1.05 + 0.12;
+    r = r * 1.016 + 0.1;
   }
   const positions: number[] = [];
   const index: number[] = [];
@@ -41,7 +41,7 @@ function seaDisc(): THREE.BufferGeometry {
       const b = ring * AROUND + j;
       const c = (ring + 1) * AROUND + i;
       const d = (ring + 1) * AROUND + j;
-      index.push(a, c, b, b, c, d);
+      index.push(a, b, c, b, d, c);
     }
   }
   const g = new THREE.BufferGeometry();
@@ -230,11 +230,6 @@ export function create(ctx: Context): Piece {
   const CREST = 150;
   const boreSpray = new Spray(burstAt.length * BURST + CREST * 2, { ...rig.uniforms, ...shared });
   ctx.scene.add(ctx.parts.built('bore', bore, boreSpray.mesh));
-  // The smoke off the crest belongs to the air: a row of sources that travels with the front.
-  for (let i = 0; i < 9; i++) {
-    ctx.sources.steam.push({ at: [gate[0] - 280 + i * 70, BORE_HEIGHT * 0.8, boreFront(ctx.events.bore) - 14], radius: 46, strength: 0.6, rise: 34, kind: 'spray', lean: [0, -0.9], speed: BORE_SPEED, since: ctx.events.bore });
-  }
-
   const lineAt = (x: number, seconds: number): number => 20 * Math.sin(x * 0.0076 + 1.3) + 8 * Math.sin(x * 0.021 + seconds * 0.25) + 3 * Math.sin(x * 0.09 - seconds * 0.6);
   const feeding = shotSpan('ribs-04');
 
