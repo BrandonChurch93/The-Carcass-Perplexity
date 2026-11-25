@@ -1,8 +1,8 @@
-# Status 75
+# Status 76
 
-2026-11-25 23:03 UTC. Phase 4, the other places and the rise.
+2026-11-25 23:20 UTC. Phase 4, the other places and the rise.
 
-- `01-hb6-keys-0-4.jpg`: The Breath, 23:00 UTC: approved pictures left, built right (draft tier). Layout closer; the light is flat where the picture is backlit: sent back.
-- `02-look-1.jpg`: The Ribs, 22:55 UTC: approved left, built right, with crops (draft tier). The floor is a dry pebble bed, not yet the wet mirror: the owner's next job.
-- `03-look-1.jpg`: The Reveal, last frame, 23:00 UTC (draft tier): more land round the bones now. The cloud is rows of specks and the relief repeats: sent back.
-- `04-h4-spine-0.jpg`: The Spine, 22:53 UTC (draft tier): the hooked first spire, the canal mouth, the strike. The kites read as thin lines, not skins: sent back.
+- `01-v2-keys-0-4.jpg`: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right
+- `02-hb5-marsh-0.jpg`: The Blood Marsh at minute 117 · the establishing key · approved, the frame, and two crops at native size
+- `03-look-1.jpg`: The Spine at minute 108 · the establishing key · approved, the frame, and two crops at native size
+- `04-look-1.jpg`: The Eye at minute 111 · four of its keys as they stand

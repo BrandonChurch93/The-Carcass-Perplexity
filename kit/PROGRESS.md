@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 75, 2026-11-25 23:03 UTC:
+Status 76, 2026-11-25 23:20 UTC:
 
-- `01-hb6-keys-0-4.jpg`: The Breath, 23:00 UTC: approved pictures left, built right (draft tier). Layout closer; the light is flat where the picture is backlit: sent back.
-- `02-look-1.jpg`: The Ribs, 22:55 UTC: approved left, built right, with crops (draft tier). The floor is a dry pebble bed, not yet the wet mirror: the owner's next job.
-- `03-look-1.jpg`: The Reveal, last frame, 23:00 UTC (draft tier): more land round the bones now. The cloud is rows of specks and the relief repeats: sent back.
-- `04-h4-spine-0.jpg`: The Spine, 22:53 UTC (draft tier): the hooked first spire, the canal mouth, the strike. The kites read as thin lines, not skins: sent back.
+- `01-v2-keys-0-4.jpg`: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right
+- `02-hb5-marsh-0.jpg`: The Blood Marsh at minute 117 · the establishing key · approved, the frame, and two crops at native size
+- `03-look-1.jpg`: The Spine at minute 108 · the establishing key · approved, the frame, and two crops at native size
+- `04-look-1.jpg`: The Eye at minute 111 · four of its keys as they stand
 
+Status 75, 2026-11-25 23:03 UTC, showed: The Breath, 23:00 UTC: approved pictures left, built right (draft tier).
 Status 74, 2026-11-25 22:49 UTC, showed: The Reveal, last frame, 22:35 UTC (owner's heartbeat, draft tier): the land is drawn round the bones again.
 Status 73, 2026-11-25 22:28 UTC, showed: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each.
-Status 72, 2026-11-25 22:12 UTC, showed: The Ribs on main, version 1 of both owners: approved picture left, frame right; The Blood Marsh on main, version 1 of both owners; The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T23:03:25Z
-phase 4: 2.88 h used of 17.00 h
-build: 23.20 h used of 72.00 h
+2026-11-25T23:20:32Z
+phase 4: 3.16 h used of 17.00 h
+build: 23.49 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 14
+minutes since the last status: 17
 ```
 
 ## Phases
@@ -1906,3 +1906,4 @@ What happens next is yours:
 - 2026-11-25 22:49 UTC. Status 74 shown at 22:50 UTC, 21 minutes after status 73, with four owners' pictures at the draft tier (the Reveal's last frame, the Breath and the Ribs beside their approved pictures, the Spine's kites). Note 16 applied. Direction sent since 22:38 UTC to the owners of the Reveal, the Spine (both), the Ribs (both) and the Breath's ground, each written beside the approved picture; the Breath's ground owner answered at 22:47 that the notes are its next hour. The bundles of spine-storm (71e1761) and breath-ground (c76659d) are pushed. Control jury: 96 of 145 votes in through the clerk; one seat (ribs-4, seat b) was void because its agent got a cut prompt (the plan file was read through a 20,000 token window and one entry was joined from two) and is being asked again from a fresh agent; the plan is now read one entry at a time and checked against an index
 - 2026-11-25 22:55 UTC. 22:56 UTC: the controls of R2 and R8 for the six other units are collected and written to scorecards/controls/ (145 votes of 145 fresh agents on the fixed panel of five, one picture and the question each; 5 viewers for R8). MEASURED, the share of votes that took an approved picture for a photograph or a film frame: the Ribs 25 of 25 (1.00), the Breath 25 of 25 (1.00), the Blood Marsh 25 of 25 (1.00), the Spine 24 of 25 (0.96), the Eye 22 of 25 (0.88), the Reveal 5 of 20 (0.25: fifteen answered an ordinary 3D render, most naming a repeating erosion texture or the literal skeleton). So R2 passes at a judged share of 0.80 for the Ribs, the Breath and the Marsh, 0.76 for the Spine, 0.68 for the Eye and 0.05 for the Reveal. R8 control: all 5 viewers named a skeleton on the approved reveal-4 at 400 px (share 1.0), so the titan frame passes at 0.8. One seat was asked twice (ribs-4, seat b: the first agent got a cut prompt, its answer is void and kept; the note is in the scorecard). The votes are reused in every round of each unit
 - 2026-11-25 23:03 UTC. 23:04 UTC: status 75 shown inline (the Breath hb6, the Ribs 22:55, the Reveal's last frame 23:00, the Spine's wide key 22:53). Since 22:56: direction on light, fog and two framings to breath_ground_owner and on the waders to breath_life_owner; all ten owners asked for a hand-over file with version 3 and told that the cost budget is an aim and no longer a wall (decision of 23:02); the round tools were run end to end on a fake pack of the Reveal (R1 2 packs, R2 5 judged and 4 controls, R3 3, R4 1, R8 2: 36 entries planned) and the fake files removed
+- 2026-11-25 23:20 UTC. 23:21 UTC: status 76 shown in the thread (the Breath's version 2, the Marsh, the Spine and the Eye beside their approved pictures; the decision on the first rounds; the live page's start)
