@@ -8,7 +8,7 @@
 import { HASH_GLSL } from '../../../core/post';
 import { RIG_GLSL } from '../shared/glsl';
 
-export const MAX_BODIES = 24;
+export const MAX_BODIES = 32;
 
 /** March steps of the heavy vapour. The cost of the pass is close to linear in this wherever the vapour is in view. */
 export const STEPS = 12;
@@ -204,7 +204,9 @@ void main() {
       t1 = -1.0;
     }
     if (t1 > t0) {
-      float jitter = rnd(ivec2(gl_FragCoord.xy), 11u);
+      // One sample a frame at the low tier, four at the best: a jitter would never average out, it would stay as speckle. The steps are
+      // even, and each one gathers its own height of the column in closed form, so that they do not band.
+      float jitter = 0.5;
       // Where the ray ends on something, the vapour lies near that end: the steps close up toward it.
       bool ends = t1 >= far - 0.01;
       float before = t0;
@@ -289,24 +291,35 @@ void main() {
       float mb = min((-h2 + s2) / a2, far);
       if (mb > ma) {
         float surge = uBreath.y * uShow.w;
-        float level = mix(-9.0, uBreath.x, uShow.w) + 3.5 + 1.5 * surge;
-        vec2 g = WINDV * 0.2;
-        float soft = mix(18.0, 11.0, surge);
-        float d0 = level + dot(g, ro.xz + rd.xz * ma) - (ro.y + rd.y * ma);
+        float level = mix(-9.0, uBreath.x, uShow.w) - 1.0 + 1.5 * surge;
+        vec2 g = WINDV * 0.3;
+        // It has a surface: thin only through its top few metres, then a body. Under that it thickens until nothing of the bottom is seen.
+        float soft = mix(15.0, 9.0, surge);
+        vec3 pa = ro + rd * ma;
         float dd = dot(g, rd.xz) - rd.y;
+        float d0 = level + dot(g, pa.xz) - pa.y;
+        // The surface is folded: the folds are read where the ray meets the level plane, and lift or drop the top there.
+        float te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
+        vec3 pe = ro + rd * te;
+        vec3 qe = vec3((pe.xz - WINDV * (uTime * 0.55)) / 27.0, uTime * 0.017 + 0.3).xzy;
+        vec4 nm = textureLod(tNoise, qe, 0.0);
+        vec4 nt = textureLod(tNoise, qe + vec3(uSunDir.x, 0.0, uSunDir.z) * 0.11, 0.0);
+        float lift = 5.0 * (nm.r - 0.42);
+        d0 += lift;
         float d1 = d0 + dd * (mb - ma);
         float gathered = abs(dd) > 1e-3 ? (column(d1, soft) - column(d0, soft)) / dd : clamp(d0 / soft, 0.0, 1.0) * (mb - ma);
         if (gathered > 0.01) {
-          // Where the ray goes in under the top, and the place a little way in that most of what is seen comes from.
-          float te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
-          vec3 pe = ro + rd * te;
-          vec4 nm = textureLod(tNoise, vec3((pe.xz - WINDV * (uTime * 0.55)) / 31.0, uTime * 0.017 + 0.3).xzy, 0.0);
-          float tau = mix(0.05, 0.075, surge) * gathered * (0.55 + 0.9 * nm.r);
+          te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
+          float tau = mix(0.04, 0.085, surge) * gathered;
+          // The place a little way in that most of what is seen comes from.
           float tm = te + (mb - te) * sqrt(0.5 * min(1.0, 1.0 / max(tau, 1e-3)));
           vec3 pm = ro + rd * tm;
-          // Down the shaft the sky closes to a disc overhead; the sun reaches only what stands near the brim.
-          float sunk = clamp(1.0 + min(pm.y, 0.0) / 24.0, 0.07, 1.0);
-          vec3 light = ambient * (0.75 + 0.25 * nm.r) * sunk * sunk + uSunColour * (sunAt(pm) * phase * 0.7 * smoothstep(-10.0, -1.0, pm.y));
+          // Down the shaft the sky closes to a disc overhead; the sun reaches only what stands near the brim, and there a fold that
+          // faces it is bright and the trough behind it is dark.
+          float sunk = clamp(1.0 + min(pm.y + 1.0, 0.0) / 30.0, 0.0, 1.0);
+          float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
+          vec3 light = ambient * (0.45 + 0.55 * nm.r) * sunk * sunk
+            + uSunColour * (sunAt(pm) * phase * (0.15 + 0.85 * faces) * smoothstep(-9.0, -1.0, pm.y));
           float gone = exp(-tau);
           colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
           through *= gone;

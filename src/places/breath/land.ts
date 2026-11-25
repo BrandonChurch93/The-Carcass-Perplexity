@@ -129,7 +129,7 @@ export const cliffPoint = (s: number, p: number): [number, number] => [CAVE[0] +
 
 export function cliffTop(s: number): number {
   const fall = 1 - 0.5 * smooth((s - 2600) / 3200) - 0.35 * smooth((-s - 1800) / 2500);
-  return (620 + 36 * Math.sin(s * 0.0031 + 0.6) + 22 * Math.sin(s * 0.0083 + 2)) * fall;
+  return (410 + 26 * Math.sin(s * 0.0031 + 0.6) + 16 * Math.sin(s * 0.0083 + 2)) * fall;
 }
 
 export function cliffHeight(s: number, p: number): number {

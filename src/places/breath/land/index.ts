@@ -26,16 +26,18 @@ const LEVELS: [number, number, number][] = [
  *  down: no hoop is whole across it, and everywhere else they are broken into lengths. */
 const HOOPS: [number, number, number][] = [
   [0, -176, -62],
-  [0, -54, 66],
+  [0, -53, 66],
   [0, 156, 186],
-  [1, -150, -22],
-  [1, -14, 58],
+  [1, -150, -90],
+  [1, -81, 58],
   [1, 162, 204],
   [2, -178, -84],
-  [2, -76, 74],
-  [3, -140, 48],
+  [2, -75, 74],
+  [3, -140, -61],
+  [3, -52, 48],
   [3, 150, 214],
-  [4, -166, 82],
+  [4, -166, 18],
+  [4, 28, 82],
   [5, -120, 60],
   [5, 140, 232],
 ];
@@ -66,7 +68,7 @@ export function create(ctx: Context): Piece {
 
   // The main shaft's wall and the mouths of the smaller ones.
   const shaft = new THREE.Group();
-  const wall = rock.bone(0.25, [0.17, 0.15, 0.13], [0.075, 0.066, 0.06], THREE.DoubleSide);
+  const wall = rock.bone(0.25, [0.12, 0.115, 0.105], [0.05, 0.048, 0.045], THREE.DoubleSide);
   shaft.add(mesh(shaftWall(), wall));
   const rubble = rock.bone(0.5, [0.3, 0.265, 0.215], [0.14, 0.12, 0.1], THREE.DoubleSide);
   const fallen = rock.bone(0.8, [0.38, 0.34, 0.275], [0.2, 0.175, 0.14], THREE.DoubleSide);
