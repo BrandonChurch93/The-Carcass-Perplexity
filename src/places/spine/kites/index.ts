@@ -186,7 +186,7 @@ void main() {
   c += albedo * e / 3.14159 * 0.25 * mix(vec3(0.75, 0.6, 1.0), film, 0.5) * (1.0 - thick);
 
   // When its spire is struck the ribbon carries the charge: its edges and veins glow dim violet-blue, and its tatters spark.
-  float mine = uStruck.x == vMore.z ? 1.0 : 0.12;
+  float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
   float charge = uStruck.y * mine * (0.8 * rolled + 0.35 * vein + 1.5 * tatter * step(0.7, fine));
   c += uGlowTint * charge;
 
