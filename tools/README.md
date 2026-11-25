@@ -79,6 +79,15 @@ Commands that sit directly on the renderer:
 - Test 4 renders the `solo` view at the frame, format and tier recorded in `standIn`, and takes the mean difference from `standIn.picture` over the pixels lit in either picture, in levels out of 255, mean of the three channels. A pixel is lit when a channel is above `GROUND_LEVEL` (6): the solo view draws on black, and grain lifts black by 2 levels at most. The picture of now is kept as `out/work/gate/g13/<unit>/<name>.png`, and every number as `out/work/gate/g13/g13.json`.
 - A part with no `standIn` skips tests 2 and 4. A part with a `standIn` and no picture fails test 4, unless the register says it was looked for and never seen (`shown` 0), which is printed as not checked. A part the page draws and the register does not list, or the other way round, is red.
 
+### G14, the loop's seam, `tools/checks/g14.mjs`
+
+`npm run gate -- --phase 5 --only G14` makes the two tests of G14 on the loop of `deliver.cardLoop.unit`, in `preview`. The pure half is `tools/lib/seam-core.mjs`.
+
+- The frame one past the last. `renderRaw({ loop: N })`, with N the loop's frame count, draws every motion at frame N and counts grain, dither and the sample sequences round the loop, so from index 0 again: that is what the page does with a loop frame, and the check does not wrap the index itself. It must equal loop frame 0 in every pixel, in red, green and blue, at every tier of the config, because the sample sequences differ by tier.
+- When it does not, the two frames and their difference times 8 are kept in `out/work/gate/g14`, and every part of the unit is drawn alone (`solo`) at both ends to name the parts whose motion does not come round.
+- The step across the seam. Every frame of the loop is rendered at the `draft` tier, which takes about ten minutes for 480 frames on four cores. The mean difference between frames N - 1 and 0 may be at most `deliver.cardLoop.seamMaxRatio` times the largest mean difference between frames i and i + 1 for i from 0 to N - 2. The mean is over every pixel and the three channels, in levels out of 255.
+- The steps are kept in `out/work/gate/g14/g14.json` with the hashes of the build that drew them, and read from there for as long as the engine hash, every unit hash, the browser and the loop's length are the same. The frame one past the last is rendered on every run.
+
 ## The status, `tools/status.mjs`
 
 `npm run status -- --phase N [--unit ID] [--key ID] [--review-round N | --extension N] [--sounds] [--no-render] [--no-tick] [--note "one line" ...] [--pick "FILE=caption" ...] [--number N] [--max N]` ticks the clock, picks the pictures, writes them to `out/stills/status/` with `STATUS.md`, updates "Latest pictures" in `kit/PROGRESS.md`, and writes `out/work/status/status.json` and `note.txt` for the inline widget in `tools/status/widget.html`.

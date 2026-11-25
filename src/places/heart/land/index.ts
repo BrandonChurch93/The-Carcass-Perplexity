@@ -44,7 +44,8 @@ function strataTexture(): THREE.DataTexture {
 
 export function create(ctx: HeartContext): HeartPiece {
   // The two cracks: the long one up on the bench, the short one by the line.
-  const along: [number, number] = [0.8, 0.6];
+  // The long one runs askew to the wide view, so it shows its length and its width.
+  const along: [number, number] = [0.451, 0.892];
   const cracks: Crack[] = [
     { ax: CRACK_TOP[0] - along[0] * 5.2, az: CRACK_TOP[2] - along[1] * 5.2, bx: CRACK_TOP[0] + along[0] * 5.2, bz: CRACK_TOP[2] + along[1] * 5.2, width: 0.3, depth: 1.3, seed: 3.1 },
     { ax: CRACK_FOOT[0] - 0.4, az: CRACK_FOOT[1] - 1.9, bx: CRACK_FOOT[0] + 0.5, bz: CRACK_FOOT[1] + 1.6, width: 0.14, depth: 0.5, seed: 8.4 },
@@ -107,7 +108,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const buttress = mesh(buttressAll, wallMaterial);
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
-  const NEAR = { x0: -592, x1: -486, z0: 186, z1: 322 };
+  const NEAR = { x0: -592, x1: -486, z0: 172, z1: 322 };
   const MID = { x0: -660, x1: -430, z0: 40, z1: 400 };
   const inside = (r: typeof NEAR, x: number, z: number, margin: number): boolean => x > r.x0 + margin && x < r.x1 - margin && z > r.z0 + margin && z < r.z1 - margin;
   const onBench = (x: number, z: number, y: number): boolean => y > -1.2 && calderaDistance(x, z) < -2 && benchDistance(x, z) > -4;
@@ -148,9 +149,9 @@ export function create(ctx: HeartContext): HeartPiece {
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: c.depth > 1 ? 0.55 : 0.28,
-        strength: (c.depth > 1 ? 0.8 : 0.6) * strong,
-        rise: (c.depth > 1 ? 14 : 6) * (0.7 + 0.3 * strong),
+        radius: c.depth > 1 ? 0.4 : 0.22,
+        strength: (c.depth > 1 ? 0.45 : 0.4) * strong,
+        rise: (c.depth > 1 ? 6 : 3.5) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: [-0.42, 0.2],
       });

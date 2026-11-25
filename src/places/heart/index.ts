@@ -6,14 +6,15 @@ import { Parts, type Place, type PlaceModule } from '../../core/place';
 import { neutralLook } from '../../core/stage';
 import { stream } from '../../core/rng';
 import { keyPart, shotById } from '../../film/cut';
-import { MOUTH, bearing, establishing, floor } from './layout';
+import { MOUTH, bearing, establishing } from './layout';
 import * as air from './air';
 import * as fall from './fall';
 import * as lake from './lake';
 import * as land from './land';
 import * as sunk from './sunk';
 import * as walkers from './walkers';
-import { LINE, SUNK, SURGE, T0, UNIT, WALKERS, keySeconds, walkerPosition, type Walker } from './shared/anchors';
+import { landHeight } from './land/height';
+import { LINE, SURGE, T0, UNIT, WALKERS, keySeconds, walkerPosition, type Walker } from './shared/anchors';
 import { createStandIns } from './shared/blockout';
 import type { HeartContext, HeartFolder, HeartPiece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
@@ -25,44 +26,48 @@ function fly(position: Vec3, heading: number, pitch: number, fov: number): Pose 
   return { position, aim: [position[0] + hx * c * 200, position[1] + s * 200, position[2] + hz * c * 200], fov };
 }
 
-const over = (x: number, z: number, height: number): Vec3 => [x, floor(x, z) + height, z];
+/** A point at a height above the built ground: the land where there is land, the lake where there is none. */
+const over = (x: number, z: number, height: number): Vec3 => [x, Math.max(0, landHeight(x, z)) + height, z];
 
+// The five cameras. Every key looks toward the vessel mouth, and every move is the same kind of move: a push forward with a slight crab to the
+// right, slower and lower shot by shot, so the five shots read as one passage down from the bench to the crust and out toward the fall.
+// Positions are fixed numbers in the world, not heights above whatever the land is today: the land is built round the cameras, not the other way.
+
+/** heart-0, the establishing view: the pose the wide picture was fitted to. */
 const KEY0 = establishing();
 
+/** heart-3, the group feeding at the seam, through a long lens from the crust. */
 const groupAt = walkerPosition(WALKERS[1] as Walker, keySeconds('heart-3'));
-const KEY3 = fly(over(groupAt[0] - 53.5, groupAt[1] + 59.5, 3), 44.5, 2.3, 18);
+const KEY3 = fly([groupAt[0] - 53.5, 3, groupAt[1] + 59.5], 44.5, 2.3, 18);
 
-const KEY1 = fly(over(LINE[0], LINE[1], 1.6), 61, -7.5, 45);
-const LINE_DIR = bearing(61);
+/** heart-1, the lava at the line: on the last rocks of the shore, with the channel leaving the shore ahead on the left and passing on the right. */
+const KEY1 = fly([LINE[0] - 3.5, 1.7, LINE[1] + 3.5], 52, -7.5, 45);
 
-const KEY2 = fly(over(SUNK[0] - 14.6, SUNK[2] + 21.4, 2.4), 26.5, -1.5, 33);
+/** heart-2, the one that sank: from the shore, the carcass in the middle distance and the mouth behind it on the left. */
+const KEY2 = fly(over(-520, 287, 4.4), 43, -4.5, 40);
 
+/** heart-4, the mouth and its fall, through the longest lens of the place, from the crust. */
 const MOUTH_AIM: Vec3 = [MOUTH.x + 26, 68, MOUTH.z];
-const RETREAT = bearing(214);
-const back = (distance: number, height: number, side = 0): Vec3 => {
-  const x = MOUTH.x + RETREAT[0] * distance - RETREAT[1] * side;
-  const z = MOUTH.z + RETREAT[1] * distance + RETREAT[0] * side;
-  return over(x, z, height);
-};
-const KEY4: Pose = { position: back(760, 5), aim: MOUTH_AIM, fov: 15 };
+const KEY4: Pose = { position: [-455, 3, 178], aim: MOUTH_AIM, fov: 13.2 };
+/** A push that keeps looking at one point. */
+const toward = (pose: Pose, forward: number, right: number, up: number): Pose => ({ ...moved(pose, { forward, right, up }), aim: pose.aim });
+
+const key = (id: string): number => keyPart(shotById(id));
 
 const shots: Record<string, CameraPath> = {
-  'heart-01': through(KEY0, keyPart(shotById('heart-01')), { forward: -58, up: 13, right: -9, turn: 1.5 }, { forward: 50, up: -8, turn: 2.5 }),
-  'heart-02': through(KEY3, keyPart(shotById('heart-02')), { right: 13, forward: -14, turn: -6, up: 0.8 }, { right: -13, forward: 12, turn: 6.5, up: -0.4 }),
-  'heart-03': [
-    { at: 0, pose: fly(over(LINE[0] - LINE_DIR[0] * 13, LINE[1] - LINE_DIR[1] * 13, 4.2), 58, -11, 45) },
-    { at: keyPart(shotById('heart-03')), pose: KEY1 },
-    { at: 1, pose: fly(over(LINE[0] + LINE_DIR[0] * 4.5 - 1.5, LINE[1] + LINE_DIR[1] * 4.5 - 1, 1.7), 63.5, -8.5, 45) },
-  ] satisfies Move,
-  'heart-04': [
-    { at: 0, pose: moved(KEY2, { right: -3.2, forward: -2.6, up: 0.5, turn: 1.5 }) },
-    { at: keyPart(shotById('heart-04')), pose: KEY2 },
-    { at: 1, pose: moved(KEY2, { right: 3.2, forward: 3, up: 0.1, turn: -1.5 }) },
-  ] satisfies Move,
+  // 60 m down off the bench, from 28 m to 17 m, and the lake opens under the lens.
+  'heart-01': through(KEY0, key('heart-01'), { forward: -28, right: -7.8, up: 0.5, turn: -3 }, { forward: 28, right: 7.8, up: -5.5, turn: 4.8 }),
+  // 22 m toward the group at 3 m above the crust.
+  'heart-02': through(KEY3, key('heart-02'), { forward: -10.4, right: -3.7, up: 0.6, turn: -1 }, { forward: 10.4, right: 3.7, up: -0.4, turn: 1 }),
+  // 7 m down to the edge of the shore, from 2.7 m to 1.6 m, slowing onto the channel.
+  'heart-03': through(KEY1, key('heart-03'), { forward: -4.2, right: -0.6, up: 0.5 }, { forward: 2.8, right: 0.5, up: 0.25 }),
+  // 5 m toward the carcass.
+  'heart-04': through(KEY2, key('heart-04'), { forward: -2.6, right: -0.8, up: 0.3 }, { forward: 2.6, right: 0.8, up: -0.1 }),
+  // 34 m toward the mouth on the long lens: the near crust slides, the wall hardly grows, and the surge comes at the key.
   'heart-05': [
-    { at: 0, pose: { position: back(655, 9), aim: MOUTH_AIM, fov: 15 } },
-    { at: keyPart(shotById('heart-05')), pose: KEY4 },
-    { at: 1, pose: { position: back(850, 24, 62), aim: [MOUTH_AIM[0], MOUTH_AIM[1] - 8, MOUTH_AIM[2]], fov: 15 } },
+    { at: 0, pose: toward(KEY4, -17, -3, 0.9) },
+    { at: key('heart-05'), pose: KEY4 },
+    { at: 1, pose: toward(KEY4, 17, 3, -0.6) },
   ] satisfies Move,
 };
 
@@ -140,7 +145,7 @@ async function create(): Promise<Place> {
     unit: UNIT,
     scene,
     camera,
-    look: { ...neutralLook(), exposure: 1.7, bloom: 0.05, vignette: 0.1, grain: 0.006, knee: [0.6, 0.3] },
+    look: { ...neutralLook(), exposure: 1.7, bloom: 0.05, vignette: 0.1, grain: 0.006, knee: [0.6, 0.6], fire: [0.35, 1.6, 0.6] },
     volume,
     warp,
     depthFirst: true,
@@ -176,7 +181,7 @@ const place: PlaceModule = {
   unit: UNIT,
   shots,
   loop: { path: loopPath, timeOffset: 7 },
-  heightOf: (pose) => pose.position[1] - floor(pose.position[0], pose.position[2]),
+  heightOf: (pose) => pose.position[1] - Math.max(0, landHeight(pose.position[0], pose.position[2])),
   create,
 };
 
