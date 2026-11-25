@@ -66,12 +66,12 @@ vec3 wallRock(vec3 p, vec3 n0, float px, out vec3 n, out float occ) {
   vec3 fp = vec3(p.x, p.y * 0.17, p.z);
   float f1 = vnoise3(fp / 7.5 + 3.1);
   vec3 along = normalize(vec3(-n0.z, 0.0, n0.x) + 1e-4);
-  float w1 = 0.035 + px / 7.5;
+  float w1 = 0.022 + px / 7.5;
   float crack = (1.0 - smoothstep(0.4 * w1, w1, abs(f1 - 0.5))) * smoothstep(1.6, 0.5, px);
   float f2 = vnoise3(fp / 2.3 + 9.7);
   float w2 = 0.03 + px / 2.3;
   float fineCrack = (1.0 - smoothstep(0.4 * w2, w2, abs(f2 - 0.5))) * smoothstep(0.5, 0.12, px);
-  float ledge = (1.0 - 0.88 * crack) * (1.0 - 0.6 * fineCrack);
+  float ledge = (1.0 - 0.7 * crack) * (1.0 - 0.6 * fineCrack);
   vec3 lean = along * (f1 - 0.5) * 1.5 * smoothstep(1.6, 0.5, px);
   cliff *= mix(0.84, 1.14, smoothstep(0.42, 0.58, f2));
   // A few fresh breaks, buff against the soot.

@@ -227,12 +227,12 @@ void main() {
     vec3 fp = vec3(vWorld.x, vWorld.y * 0.17, vWorld.z);
     float f1 = vnoise3(fp / 7.5 + 3.1);
     vec3 along = normalize(vec3(-n0.z, 0.0, n0.x) + 1e-4);
-    float w1 = 0.035 + px / 7.5;
+    float w1 = 0.022 + px / 7.5;
     float crack = (1.0 - smoothstep(0.4 * w1, w1, abs(f1 - 0.5))) * smoothstep(1.6, 0.5, px);
     float f2 = vnoise3(fp / 2.3 + 9.7);
     float w2 = 0.03 + px / 2.3;
     float fineCrack = (1.0 - smoothstep(0.4 * w2, w2, abs(f2 - 0.5))) * smoothstep(0.5, 0.12, px);
-    ledge *= (1.0 - 0.88 * crack) * (1.0 - 0.6 * fineCrack);
+    ledge *= (1.0 - 0.7 * crack) * (1.0 - 0.6 * fineCrack);
     lean += along * (f1 - 0.5) * 1.5 * smoothstep(1.6, 0.5, px);
     cliff *= mix(0.84, 1.14, smoothstep(0.42, 0.58, f2));
     // A thick flow cools into columns: upright prisms two or three metres across in its lower two thirds, each face leaning its own way,
@@ -292,7 +292,7 @@ void main() {
       plain *= (0.5 + 1.0 * coarse.b) * (0.62 + 0.76 * vnoise(vWorld.xz / 29.0 + 4.1));
       plainNh = vec3(plainNh.rg + 1.6 * (TURN * (coarse.rg - 0.5)), plainNh.b * (0.35 + 1.3 * coarse.b));
       // The ledges up the wall are the black tops of flows under a little rubble, not pale scree.
-      plain *= mix(1.0, 0.6, smoothstep(48.0, 85.0, vWorld.y));
+      plain *= mix(0.78, 0.6, smoothstep(48.0, 85.0, vWorld.y));
       #endif
       // Fans of fine pale scree run down the fall line between the coarse dark rubble.
       vec2 fall = n0.xz / max(length(n0.xz), 1e-3);
