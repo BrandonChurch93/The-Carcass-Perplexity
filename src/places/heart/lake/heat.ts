@@ -39,7 +39,7 @@ float creepAt(vec2 q) {
 
 // The edge of a gap is torn: metres to add to the distance from its middle.
 float tornAt(vec2 q) {
-  return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.2;
+  return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.07;
 }
 
 // One gap in the crust: d metres from its middle, half width, kelvin in its core. A gap narrower than a pixel is drawn a pixel

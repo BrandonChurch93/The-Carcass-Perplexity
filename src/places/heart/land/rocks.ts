@@ -149,6 +149,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (!o.stand && g > 2.2 && Math.hypot(x + 510.5, z - 215.5) < (size > 1 ? 70 : 30)) return false;
     // Round that lens the picture has boulders of 0.3 to 1.2 m and nothing larger.
     if (!o.stand && size > 1.3 && Math.hypot(x + 510.5, z - 215.5) < 18) return false;
+    // Five metres ahead of it and to the left its picture has flat ground with broken blocks under 0.6 m: no boulder stands there.
+    if (!o.stand && size > 0.65 && Math.hypot(x + 507.9, z - 210.7) < 2.1) return false;
     // The line view's channel leaves the shore just ahead of its lens: nothing of the bench's lies on the moving crust there.
     if (!o.stand && lineOpen(x, z) && benchDistance(x, z) < (size > 0.45 ? 0.7 : 0.12) + half && Math.hypot(x + 510.5, z - 215.5) < 45) return false;
     // Nor does anything lie on the shore's rind or beyond it where that view looks down on the shore.
@@ -350,7 +352,13 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const r = rng.range(-3.8, 1.1);
     const [x, z] = near(a, r);
     if (benchDistance(x, z) < 0.3) continue;
-    put(kinds.lump, x, z, sized(0.18, 0.5, 1.4), { sink: rng.range(0.24, 0.33), flat: rng.range(0.6, 0.9) });
+    // Its picture's middle ground is a huddle of broken blocks with flat tops, 0.3 to 0.6 m, not round lumps.
+    put(i % 5 < 3 ? kinds.angular : kinds.lump, x, z, sized(0.18, 0.5, 1.4), { sink: rng.range(0.24, 0.33), flat: rng.range(0.5, 0.8) });
+  }
+  // The vent at the crag's foot: small stones huddled round it, for the sulphur to lie on as a crust and not on one face of one boulder.
+  for (let i = 0; i < 46; i++) {
+    const [x, z] = near(rng.range(5.9, 8.4), rng.range(-4.7, -2.9));
+    put(kinds.lump, x, z, sized(0.12, 0.38, 1.2), { sink: rng.range(0.28, 0.36), flat: rng.range(0.5, 0.8), shade: false });
   }
   for (let i = 0; i < 700; i++) {
     const a = rng.range(0.6, 12);
@@ -387,7 +395,10 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
 
   // The skerry: a pressure ridge of the lake's own crust, plates tilted up against each other along the shore, on a thin dark rind.
   // The lake does not know it, so the rind is rock too: one plate lying flat in the crust under the rest (tone under 0.5 keeps the ash off it).
+  // It belongs to the shot of the one that sank (heart-04), whose lens passes over it. From the bench of the wide view it read as one pale lump
+  // lying alone on the lake, so it is on the set for that shot only.
   {
+    const staged = during('heart-04');
     const [cx, cz] = SKERRY;
     const gx = benchDistance(cx + 1.5, cz) - benchDistance(cx - 1.5, cz);
     const gz = benchDistance(cx, cz + 1.5) - benchDistance(cx, cz - 1.5);
@@ -401,7 +412,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     for (let i = 0; i < 7; i++) {
       const u = -2.7 + (5.4 * i) / 6;
       const w = 1.25 - 0.45 * Math.abs(u) / 2.7;
-      set(kinds.hero, cx + tx * u + ax * rng.range(-0.25, 0.25), 0.012 + 0.004 * i, cz + tz * u + az * rng.range(-0.25, 0.25), rng.range(0.85, 1.2), 0.05, w * rng.range(0.85, 1.15), along.clone().multiply(tilt.setFromAxisAngle(UP, rng.range(-0.6, 0.6))), 0.47);
+      set(kinds.hero, cx + tx * u + ax * rng.range(-0.25, 0.25), 0.012 + 0.004 * i, cz + tz * u + az * rng.range(-0.25, 0.25), rng.range(0.85, 1.2), 0.05, w * rng.range(0.85, 1.15), along.clone().multiply(tilt.setFromAxisAngle(UP, rng.range(-0.6, 0.6))), 0.47, 0.04, staged);
     }
     // Plates 0.2 to 0.4 m thick, pushed up from both sides and leaning on each other along the crest.
     for (let i = 0; i < 8; i++) {
@@ -416,12 +427,12 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       const off = side * (halfAcross * Math.cos(lean) - 0.12 + 0.2 * rng.next());
       axis.set(tx, 0, tz);
       const q = new THREE.Quaternion().setFromAxisAngle(axis, side * lean).multiply(along).multiply(tilt.setFromAxisAngle(UP, rng.range(-0.28, 0.28)));
-      set(kinds.slab, cx + tx * u + ax * off, y, cz + tz * u + az * off, rng.range(0.75, 1.15) * end, halfThick, halfAcross, q, rng.range(0.85, 1.1), 0.02);
+      set(kinds.slab, cx + tx * u + ax * off, y, cz + tz * u + az * off, rng.range(0.75, 1.15) * end, halfThick, halfAcross, q, rng.range(0.85, 1.1), 0.02, staged);
     }
     for (let i = 0; i < 14; i++) {
       const u = rng.range(-3.1, 3.1);
       const off = rng.range(-1.5, 1.5);
-      put(kinds.stone, cx + tx * u + ax * off, cz + tz * u + az * off, rng.range(0.2, 0.55), { sink: 0.45, flat: rng.range(0.3, 0.6), onLake: true, stand: true, shade: false });
+      put(kinds.stone, cx + tx * u + ax * off, cz + tz * u + az * off, rng.range(0.2, 0.55), { sink: 0.45, flat: rng.range(0.3, 0.6), onLake: true, stand: true, shade: false, only: staged });
     }
   }
 

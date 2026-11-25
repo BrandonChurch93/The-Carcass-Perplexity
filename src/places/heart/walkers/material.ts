@@ -9,6 +9,9 @@ attribute float aHeat;
 attribute float aWho;
 uniform float uPixel;
 uniform vec4 uPools[14];
+uniform highp sampler2D tFeet;
+uniform highp sampler2D tGround;
+uniform float uFeetN;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -19,9 +22,31 @@ varying float vWho;
 void main() {
   vec3 n = normalize(normal);
   vec3 p = position;
+  // A foot stands on the plate of crust it is over, whatever that plate's level: the leg below the knee goes up or down with it.
+  if (aLook.x > 2.5 && aLook.x < 4.5 && p.y < 4.0) {
+    float first = floor(aWho + 0.5) * 4.0;
+    float near = 1e9;
+    float top = 0.0;
+    float off = 0.0;
+    for (int j = 0; j < 4; j++) {
+      vec2 at = vec2((first + float(j) + 0.5) / uFeetN, 0.5);
+      vec4 foot = texture2D(tFeet, at);
+      float d = distance(foot.xy, p.xz);
+      if (d < near) {
+        near = d;
+        top = texture2D(tGround, at).r;
+        off = foot.z;
+      }
+    }
+    // A foot in the air is not on a plate: it comes down on the next one.
+    top = mix(top, 0.1, smoothstep(0.02, 0.3, off));
+    p.y += top * (1.0 - smoothstep(1.2, 4.0, p.y));
+  }
   // A leg a long way off is thinner than a pixel and would flicker: it is never drawn thinner than two pixels.
   float far = length(cameraPosition - p);
-  p += n * max(0.0, 1.0 * uPixel * far - aInfo.z);
+  // A leg or a neck is never thinner than three pixels, a root never thinner than two and a half.
+  float least = aLook.x > 2.5 && aLook.x < 3.5 || aLook.x > 0.5 && aLook.x < 1.5 ? 1.5 : 1.25;
+  p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
   vUv = aUv;
@@ -32,6 +57,29 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   // One that is not in this shot is not drawn.
   if (uPools[int(aWho + 0.5)].w > 0.5) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
+}`;
+
+/** The top of the crust under each foot, one texel a foot. `crust` is the crust's own height function (lake/index.ts). */
+export const GROUND_VERTEX = /* glsl */ `
+void main() {
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+export const GROUND_FRAGMENT = (crust: string): string => /* glsl */ `
+precision highp float;
+${NOISE_GLSL}
+${RIG_GLSL}
+${crust}
+uniform highp sampler2D tFeet;
+uniform float uFeetN;
+void main() {
+  vec4 foot = texture2D(tFeet, vec2(gl_FragCoord.x / uFeetN, 0.5));
+  // The highest of the plates under the pad: a foot does not go down into a gap, it bears on what stands highest.
+  float top = crustAt(crustPoint(foot.xy)).y;
+  for (int i = 0; i < 4; i++) {
+    float a = 1.5708 * float(i) + 0.6;
+    top = max(top, crustAt(crustPoint(foot.xy + 0.3 * foot.w * vec2(cos(a), sin(a)))).y);
+  }
+  gl_FragColor = vec4(clamp(top, -0.5, 1.2), 0.0, 0.0, 1.0);
 }`;
 
 export const FRAGMENT = /* glsl */ `
@@ -140,6 +188,7 @@ void main() {
   float crease = (1.0 - neck) * limb * (1.0 - tendril) * vLook.y * 0.55;
   float ringAmp = (0.11 * crown + crease + 0.03 * neck) * fine;
   slope.x += ringAmp * sin(ringAt) * 1.1;
+  slope.y += 0.9 * neck * smoothstep(0.3, 0.8, vLook.y) * fine * (vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0 + 0.25) + seed * 1.3) - vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0 - 0.25) + seed * 1.3));
   float ridge = 0.5 + 0.5 * cos(ringAt);
 
   // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
@@ -206,12 +255,17 @@ void main() {
   float stain = smoothstep(0.35, 0.75, vnoise(vUv * vec2(1.3, 9.0) + seed * 2.0));
   vec3 bone = vec3(0.38, 0.33, 0.265) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
   float crownPale = neck * mix(0.04, 1.0, smoothstep(0.28, 0.93, vLook.y));
-  albedo = mix(albedo, bone * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)), 0.8 * crownPale);
+  // The lower neck and the crown are dry wood, brown, with pale worn cords that run down them into the roots and dark gaps between.
+  float cord = 0.5 * vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0) + seed * 1.3) + 0.5 * vnoise(vec2(vUv.x * 3.1, vUv.y * 140.0) + seed * 2.1);
+  vec3 wood = vec3(0.2, 0.158, 0.122) * mix(1.0, 0.6, stain) * (0.6 + 0.4 * crack);
+  albedo = mix(albedo, wood * mix(0.6, 1.4, smoothstep(0.3, 0.7, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)), 0.85 * crownPale);
   // A root is dark where it leaves the crown and tan below, where the pool finds it.
   // A tuft that is not over a pool has nothing to light it from below: its roots are dull and brown there, not pale specks under the sky.
   float fed = uPools[int(vWho + 0.5)].z;
   vec3 fibre = bone * mix(vec3(0.5, 0.4, 0.3), vec3(1.0, 0.95, 0.85), fed);
-  albedo = mix(albedo, fibre * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)) * mix(0.9, 1.0, smoothstep(0.0, 0.4, vLook.y)), tendril);
+  // A root is brown wood where it leaves the crown and pale fibre lower down, streaked along its length.
+  float streak = vnoise(vec2(vUv.x * 2.0, vUv.y * 55.0) + seed);
+  albedo = mix(albedo, mix(vec3(0.2, 0.158, 0.122), fibre, smoothstep(0.1, 0.7, vLook.y)) * (0.55 + 0.7 * streak) * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
@@ -252,7 +306,7 @@ void main() {
   }
   // The pool under its tuft lights what faces it: the roots, the lower neck, the inside of the legs, the belly.
   vec4 pool = uPools[int(vWho + 0.5)];
-  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.5 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril);
+  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.25 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril);
   // The roots are thin: the heat under them shows through them.
   float thin = tendril * 0.4 * smoothstep(2.5, 0.3, vWorld.y);
   if (thin > 0.01) c += thin * albedo * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;

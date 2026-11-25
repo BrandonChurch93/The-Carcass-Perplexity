@@ -145,6 +145,8 @@ float gFoldPhase = 0.0;
 float gFoldSpace = 0.3;
 float gFoldDeep = 0.1;
 vec2 gFoldDir = vec2(1.0, 0.0);
+// The mound of the one that sank (x, z, the flat radius).
+uniform vec3 uMound;
 // Where ropes are at all: patches of a few metres, broken again at half a metre. The skin reads the same through gFoldCover.
 float ropeMask(vec2 q) {
   return smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
@@ -203,7 +205,8 @@ float foldAt(vec2 q) {
   // The ropes a toe wears round its front: rings about its middle, on its downstream half, out to its rim.
   float toeHigh = toeAt(q);
   // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
-  float ropes = ropeMask(q) * (1.0 - smoothstep(0.15, 0.45, gBroke));
+  // Round the one that sank the ropes are everywhere: its own folds join them.
+  float ropes = max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))) * (1.0 - smoothstep(0.15, 0.45, gBroke));
   if (ropes <= 0.0) return 1.0;
   vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0)) + 2.2 * vec2(vnoise(q / 6.3 + 15.0), vnoise(q / 6.3 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
@@ -352,7 +355,6 @@ float lineFar(vec2 q) {
   return far;
 }
 // The mound of the one that sank: the crust lies flat under it and is itself again a few metres out (uMound: x, z, the flat radius).
-uniform vec3 uMound;
 float calmAt(vec2 q) {
   return smoothstep(uMound.z - 0.4, uMound.z + 4.0, length(q - uMound.xy));
 }
@@ -366,7 +368,11 @@ vec3 gLean;
 float gPadCalm;
 // How much a point must lie low (0 to 1): plates there are level, with no rim and no mound.
 float gLow;
+// How much the plates at a point are flat and level (0 to 1): the floor the group feeds on is plates nearly level, with thin
+// gaps and a few tilted rims; its relief is in the rims and the gaps.
+float gFlat;
 float brokenAt(vec2 q) {
+  gFlat = 0.0;
   gLean = vec3(0.0);
   gPadCalm = 0.0;
   gLow = 0.0;
@@ -376,6 +382,7 @@ float brokenAt(vec2 q) {
     // The whole floor the group feeds on is broken, more in some places than in others.
     float patchy = vnoise(q / 8.3 + 5.0) * 0.7 + vnoise(q / 3.1 + 9.0) * 0.3;
     b = (1.0 - smoothstep(36.0, 54.0, g)) * mix(0.5, 1.0, smoothstep(0.38, 0.62, patchy));
+    gFlat = 1.0 - smoothstep(36.0, 54.0, g);
   }
   float l = lineFar(q);
   if (l < 7.0) {
@@ -383,20 +390,12 @@ float brokenAt(vec2 q) {
     band *= 0.45;
     if (band > b) {
       b = band;
+      gFlat = 0.0;
       // The slabs on the bank lean in: they go down toward the melt.
       gLean = vec3(gLineAway, 0.5 * (1.0 - smoothstep(1.5, 3.0, l)));
     }
   }
-  vec2 toMound = uMound.xy - q;
-  float m = length(toMound);
-  if (m < 19.0) {
-    float ring = smoothstep(uMound.z, uMound.z + 1.5, m) * (1.0 - smoothstep(10.5, 12.0 + 6.0 * vnoise(q / 5.0 + 31.0), m));
-    if (ring > b) {
-      b = ring;
-      // Round the mound the slabs lean against its front: they go up toward it.
-      gLean = vec3(toMound / max(m, 1e-3), 0.75 * (1.0 - smoothstep(9.0, 14.0, m)));
-    }
-  }
+  // Round the one that sank the crust is whole: ropy folds run from it to the lens, no broken slabs.
   for (int i = 0; i < 4; i++) gPadCalm = max(gPadCalm, 1.0 - smoothstep(uPads[i].z, uPads[i].z + 3.0, length(q - uPads[i].xy)));
   b *= 1.0 - 0.35 * gPadCalm;
   // On the lens side of the hero's pool the crust lies low, or it hides the pool.
@@ -423,6 +422,9 @@ float slabHeld(float c, float L) {
   return 1.0 - smoothstep(0.1 * L, 0.22 * L, c);
 }
 // The plane of slab k at a point that lies s (in lattice units) from the slab's middle: x is its height there, yz its slope.
+// How much the slabs at the point move in time, 0 to 1: at the active margins (the lip of the line, the brim of the string
+// outside the pads) a slab rocks and rides up and down slowly, each in its own time; cooled ground stays fixed.
+float gRock;
 vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   vec2 r1 = hash22(k);
   vec2 r2 = hash22(k + 31.7);
@@ -433,6 +435,16 @@ vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   // steep as a small one: its high edge is never more than half a metre up.
   float tilt = min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
   float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
+  // On the feeding floor five plates in six lie level and the sixth keeps its tilt.
+  float lies = gFlat * step(0.17, fract(r1.y * 13.0 + r2.x * 7.0));
+  tilt *= 1.0 - 0.85 * lies;
+  level *= 1.0 - 0.8 * gFlat;
+  if (gRock > 0.0) {
+    // Two slabs in three move: up to 6 degrees of tilt and 4 cm of rise, over 8 to 18 seconds.
+    float moves = gRock * step(0.33, fract(r1.x * 11.0 + r2.y * 5.0));
+    tilt += moves * 0.1 * sin(uTime * (0.35 + 0.45 * r1.y) + 6.2832 * r2.x);
+    level += moves * 0.04 * sin(uTime * (0.3 + 0.4 * r2.y) + 6.2832 * r1.x);
+  }
   return vec3(level * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.85 * gLow) + dot(dir * tilt, s) * L, dir * tilt);
 }
 // size is the lattice the slabs are cut on, metres; drop is how far one slab in three has gone down, metres.
@@ -498,7 +510,7 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   float rimWide = max(0.1, 3.0 * c);
   float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
   // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
-  float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.03, 0.06, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.06, 0.12, c));
+  float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.025, 0.04, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.05, 0.09, c));
   // The floor of the gap lies under the slabs it parts, so it is one floor from either side, and where three slabs meet it
   // lies under all three: a floor that jumped from slab to slab would stand as a row of teeth and spikes.
   float beside = slabPlane(k2, -s2, broken, L, drop).x;
@@ -533,7 +545,9 @@ float heightAt(vec2 q, float c) {
     gape = gapeAt(q, n).x;
     // The torn edge is finer than the far cells: there the wall runs smooth, or it would be cut into teeth.
     float tornLow = (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5;
-    float torn = tornLow * (1.0 - smoothstep(0.15, 0.4, c)) + (tornAt(q) - tornLow) * (1.0 - smoothstep(0.03, 0.08, c));
+    // Its fine part (a decimetre in and out every 0.2 m) is a fluted wall, and seen along its length the flutes stand as a
+    // comb of spikes: the wall takes three fifths of it on the finest cells and next to none on the cells after them.
+    float torn = tornLow * (1.0 - smoothstep(0.15, 0.4, c)) + (tornAt(q) - tornLow) * 0.6 * (1.0 - smoothstep(0.02, 0.06, c));
     bank = n.r + torn * smoothstep(0.0, 0.3, n.a) - gape;
   }
   gBank = bank;
@@ -567,8 +581,10 @@ float heightAt(vec2 q, float c) {
     // Swells of 0.3 to 0.6 m over 2 to 5 m: from a low lens a near one hides the foot of the one behind it.
     // Along the seam the group feeds at the swell lies down: the pools of the string must be seen from a lens 5 degrees up.
     float gFar = seamFar;
-    float swell = mix(0.42, 0.62, smoothstep(20.0, 45.0, gFar)) * mix(0.12, 1.0, smoothstep(1.5, 8.0, gFar));
-    h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * smoothstep(1.5, 8.0, gFar) * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
+    // On the floor the group feeds on the plates are nearly level: the swell is a fifth of what it is out on the lake.
+    float floorLevel = mix(0.2, 1.0, smoothstep(36.0, 54.0, gFar));
+    float swell = floorLevel * mix(0.42, 0.62, smoothstep(20.0, 45.0, gFar)) * mix(0.12, 1.0, smoothstep(1.5, 8.0, gFar));
+    h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * floorLevel * smoothstep(1.5, 8.0, gFar) * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
     h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
     if (gFine < 0.16) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
@@ -584,16 +600,18 @@ float heightAt(vec2 q, float c) {
     float saw = fract(dot(q, vec2(0.41, 0.33)) + 1.7 * vnoise(q / 3.7 + 3.0));
     saw = min(saw / 0.8, (1.0 - saw) / 0.2);
     h += rub * calm * 0.45 * saw * (0.3 + 0.7 * vnoise(q / 2.9 + 5.0)) * (1.0 - smoothstep(0.3, 0.7, c));
-    if (c < 0.07) h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.03, 0.07, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.012, 0.03, c)));
+    if (c < 0.045) h += rub * calm * 0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.025, 0.045, c));
   }
   h += gShore;
   // Out on the lake the broken crust lies in slabs.
   gMound = 0.0;
   if (broke > 0.01 && c < 0.6) {
+    gRock = live * shown * (1.0 - smoothstep(1.0, 3.0, bank)) * (1.0 - gPadCalm) * (1.0 - gLow);
     h += slabAt(q, broke, c, 1.9, 0.0) * smoothstep(0.0, 1.5, lake);
+    gRock = 0.0;
     // Low mounds of ash and rubble, 1 to 3 m across, lie on the broken crust.
     gMound = smoothstep(0.62, 0.84, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
-    h += gMound * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake);
+    h += gMound * (1.0 - 0.75 * gFlat) * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake);
   }
 
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
@@ -626,7 +644,9 @@ float heightAt(vec2 q, float c) {
       lineFar(q);
       gLean = vec3(gLineAway, 0.85);
       float lipCrust = onLine * (1.0 - smoothstep(0.45, 1.2 + 0.6 * (vnoise(q / 1.9 + 44.0) - 0.5), bank));
+      gRock = 1.0;
       h += slabAt(q + 77.0, 0.5 * lipCrust, c, 0.72, 0.2) * lipCrust;
+      gRock = 0.0;
       // The broken lip carries no fold and no toe: nothing of the skin's pattern drapes down a broken face.
       fine *= 1.0 - lipCrust;
     }
@@ -639,8 +659,9 @@ float heightAt(vec2 q, float c) {
     // The wall is a rough fracture face, five cells wide at the least and straight in section: a wall of one or two cells
     // shades each triangle its own way and stands as a row of teeth.
     float wallWide = max(5.0 * c, 0.1);
-    float wallRough = 0.6 * wallWide * (vnoise(q / max(4.0 * c, 0.12) + 3.0) - 0.5);
-    float cut = clamp((wallTop - bank - wallRough) / wallWide, 0.0, 1.0) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    float wallRough = 0.35 * wallWide * (vnoise(q / max(8.0 * c, 0.25) + 3.0) - 0.5);
+    // Its top and its foot are rounded over a cell and a half: a sharp crease askew to the lattice stands as a saw.
+    float cut = smoothstep(0.0, 1.0, (wallTop - bank - wallRough) / wallWide) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
     // An island in the stream is a raft of thin crust: it floats a hand above the melt, it does not stand as high as the banks.
     float bed = -deep;
     // Its outline is the lava's isleAt, with an edge three cells wide: a wall of one cell would stand as a row of teeth.
