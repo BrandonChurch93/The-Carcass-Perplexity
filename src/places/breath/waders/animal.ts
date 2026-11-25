@@ -227,7 +227,7 @@ export class Wader {
       for (let s = 0; s <= bodySides; s++) {
         const phi = (s / bodySides) * Math.PI * 2;
         // Under the trunk the skin is in its own shade.
-        const shade = 0.3 + 0.7 * smooth(-0.95, 0.35, Math.sin(phi));
+        const shade = 0.55 + 0.45 * smooth(-0.95, 0.35, Math.sin(phi));
         skin.describe(this.body, i, s, t * b.bodyLen, (s / bodySides) * 2 * Math.PI * 0.32, 0.5, shade, a, seed, 0, t);
       }
     }
@@ -238,7 +238,7 @@ export class Wader {
     for (let i = 0; i < neckRings; i++) {
       const u = i / (neckRings - 1);
       // Thick where it leaves the chest, thin along its length, a small swelling at the end where the tendrils root.
-      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.9 * smooth(0.3, 0, u) ** 1.3);
+      const r = b.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.1 * smooth(0.88, 0.97, u) - 0.25 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.3, 0, u) ** 1.3);
       for (let s = 0; s < neckSides; s++) {
         const phi = (s / neckSides) * Math.PI * 2;
         // The windpipe and the cords stand a little off the round.
@@ -258,7 +258,8 @@ export class Wader {
       const thigh = 1.1 * (1 - smooth(-0.1, 0.2, u)) ** 1.3 + 1.5 * (1 - smooth(0.0, 0.46, u)) ** 0.7 + 0.35 * Math.exp(-(((u - b.knee + 0.07) / 0.045) ** 2));
       const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
-      const r = b.legR * (0.9 + thigh + knuckle + foot);
+      // The head of the thigh is inside the trunk: it narrows to the hip, so no end of it shows.
+      const r = b.legR * (0.9 + thigh + knuckle + foot) * (0.4 + 0.6 * smooth(0, 0.1, u));
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
         this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.15 * Math.min(1, thigh / 2.4));
@@ -434,7 +435,7 @@ export class Wader {
       const up = curve(SPINE, t) * k;
       // It breathes: the ribs go out and in.
       const breathe = 1 + 0.018 * Math.sin(seconds * 1.9 + b.seed) * smooth(0.2, 0.5, t) * smooth(0.95, 0.6, t);
-      skin.ring(body, i, cx + F[0] * a + U[0] * up, cy + F[1] * a + U[1] * up, cz + F[2] * a + U[2] * up, R[0], R[1], R[2], U[0], U[1], U[2], this.bodyLocal, i * body.sides * 2, breathe);
+      skin.ring(body, i, cx + F[0] * a + U[0] * up, cy + F[1] * a + U[1] * up, cz + F[2] * a + U[2] * up, -R[0], -R[1], -R[2], U[0], U[1], U[2], this.bodyLocal, i * body.sides * 2, breathe);
     }
     skin.normals(body);
 
@@ -500,6 +501,10 @@ export class Wader {
           py = ky + (ey - ky) * q;
           pz = kz + (ez - kz) * q;
         }
+        const rise = (1 - smooth(0, 0.1, u)) * 0.12 * k;
+        px += U[0] * rise;
+        py += U[1] * rise;
+        pz += U[2] * rise;
         const blend = smooth(b.knee - 0.1, b.knee + 0.1, u);
         ax = (kx - hx) / l1 + ((ex - kx) / l2 - (kx - hx) / l1) * blend;
         ay = (ky - hy) / l1 + ((ey - ky) / l2 - (ky - hy) / l1) * blend;

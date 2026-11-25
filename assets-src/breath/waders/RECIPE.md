@@ -1,5 +1,5 @@
 # Pictures of the waders
 
-`public/assets/breath/waders/hide.jpg` and `hide-nh.png` are the Heart's material pictures `public/assets/heart/mat/hide.jpg` and `hide-nh.png`, copied as they are (the sheet allows it). No picture was generated for this folder.
+This folder keeps no picture of its own. The skin of the waders, alive and dead, reads `public/assets/breath/mat/skin.jpg` and `public/assets/breath/mat/skin-nh.png`, the Builder's material pictures: their recipe is in `assets-src/breath/mat/RECIPE.md`.
 
-They are read as a pattern of fine cracks and wrinkles only: the colour of the skin is set in the shader, the picture gives its grain.
+The copies of the Heart's hide that stood here until version 2 are deleted and no longer loaded.
