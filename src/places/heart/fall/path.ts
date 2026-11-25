@@ -144,10 +144,11 @@ const HALF: [number, number][] = [
   [13, 8.5],
   [22, 9.2],
   [FAN_FROM - 4, 10],
-  [FAN_FROM + 8, 14],
-  [FAN_FROM + 20, 19],
-  [FAN_FROM + 36, 27],
-  [FAN_FROM + 56, 32],
+  [FAN_FROM + 8, 16],
+  [FAN_FROM + 20, 30],
+  [FAN_FROM + 36, 52],
+  [FAN_FROM + 56, 76],
+  [FAN_FROM + 72, 84],
 ];
 const halfAt = (len: number): number => {
   let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);

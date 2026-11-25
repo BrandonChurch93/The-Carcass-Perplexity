@@ -333,15 +333,15 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const up = smooth(0.7, 1.08, off);
     const level = TUBE.floor + 0.012 * Math.max(d, 0);
     // Roof fall lies heaped on the floor each side of the river, highest against the walls, so the sill of the mouth is not a level line.
-    const heap = (12 * Math.pow(smooth(0, 42, side - 1), 1.3) + 4.5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + 1.6 * blocks(x, z, 4.2, 7) * smooth(1, 6, side)) * smooth(80, 25, d) * smooth(0.5, 17, d) * lerp(0.08, 1, smooth(-0.3, 0.3, n.toward[0]));
+    const heap = (7 * Math.pow(smooth(0, 42, side - 1), 1.3) + 5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + (3.4 * blocks(x + 13, z + 5, 6.5, 3) + 1.8 * blocks(x, z, 4.2, 7)) * smooth(1, 6, side)) * smooth(80, 25, d) * smooth(0.5, 17, d) * lerp(0.08, 1, smooth(-0.3, 0.3, n.toward[0]));
     // East of the pool the floor is a shelf of melt that has skinned over: level, a hand lower than the open melt, as far in as the eye goes.
     const shelf = smooth(0.3, -0.3, n.toward[0]) * smooth(0.95, 0.7, off) * smooth(70, 45, d);
-    const floor = lerp(n.y, lerp(level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), n.y - 0.15 + 0.12 * noise2(x / 2.1, z / 2.1), shelf), smooth(0.9, 1.06, u));
+    const floor = lerp(n.y, lerp(level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up * smooth(1, 16, d) + 0.9 * (fbm2(x / 7, z / 7) - 0.5), n.y - 0.15 + 0.12 * noise2(x / 2.1, z / 2.1), shelf), smooth(0.9, 1.06, u));
     // Outside: the apron. It is 25 m wide under the lip and spreads to the lake; beyond its edge it falls away at the angle rubble lies at.
     const ground = Math.max(land(x, z), -3);
     const t = Math.min(1, Math.max(0, down(x, z)));
     const middle = lerp(LIP_X, FALL_FOOT[0] - 8, t);
-    const reach = lerp(12.5, 41, Math.pow(t, 0.85)) + (13 * (noise2(z / 15 + (x < middle ? 0 : 7.7), 3.3) - 0.5) + 6 * (noise2(z / 5.5 + (x < middle ? 3 : 11.1), 6.1) - 0.5)) * smooth(0, 0.15, t);
+    const reach = lerp(12.5, 41, Math.pow(t, 0.85)) + 52 * smooth(0.5, 0.92, t) + (13 * (noise2(z / 15 + (x < middle ? 0 : 7.7), 3.3) - 0.5) + 6 * (noise2(z / 5.5 + (x < middle ? 3 : 11.1), 6.1) - 0.5)) * smooth(0, 0.15, t);
     // Under the sill to the east the rubble leans on the wall as a shoulder, and the wall's bare panel there is under it.
     const out = Math.max(0, Math.abs(x - middle) - reach - (x > middle ? 26 * smooth(0.32, 0.04, t) : 0));
     const on = smooth(9, 0, out);

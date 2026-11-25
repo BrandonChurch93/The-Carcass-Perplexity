@@ -101,7 +101,7 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   // The rim's own edge stands between the melt and the outer face.
   if (d < 0.0) return vec3(0.0);
   // Soot and the roof's own steps stand in the way: the lip's pool lights the bevel of the rim and little beyond it.
-  float shade = mix(1.0, 0.12, smoothstep(14.0, 40.0, d)) * exp(-d / 48.0);
+  float shade = mix(1.0, 0.2, smoothstep(14.0, 40.0, d)) * exp(-d / 80.0);
   // The pool lies under the west half of the arch. The east side and the feet of the arch stand behind the heaps on the floor and get little of it,
   // and the brow, the first metres of the cut, looks out and not down: it stays the dark of the wall.
   float reach = mix(1.0, 0.04, smoothstep(${f(MOUTH.x - 24)}, ${f(MOUTH.x + 46)}, p.x)) * smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor + 16)}, p.y) * smoothstep(1.5, 6.5, d);
