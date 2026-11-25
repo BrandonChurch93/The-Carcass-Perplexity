@@ -134,7 +134,7 @@ const VANE_TEST = /* glsl */ `
   float id = floor(rootAt / spacing);
   // Barbs finer than a pixel are not told apart: there the lock has one length and one colour.
   float whole = smoothstep(3.5 * px, 1.5 * px, spacing * fan);
-  float hb = mix(hash12(vec2(id, seed)), 0.55, whole);
+  float hb = mix(hash12(vec2(id, seed)), 0.55, smoothstep(1.6 * px, 0.6 * px, spacing * fan));
   float line = abs(fract(rootAt / spacing) - 0.5) * spacing * fan;
   float thick = max(0.0013 * (1.0 - 0.45 * t), 0.75 * px);
   // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
@@ -163,6 +163,11 @@ ${VANE_TEST}
   albedo = mix(albedo, vec3(0.36, 0.07, 0.06), 0.45 * smoothstep(0.6, 1.0, t) * h1);
   // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
   float occ = mix(0.26, 1.0, smoothstep(0.0, 0.8, t * lockLen)) * mix(0.2, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
+  // Each barb is a round wet hair: dark where it meets the next, so a lock is strands and not a blade.
+  float across = clamp(line / max(0.5 * spacing * fan, 1e-5), 0.0, 1.0);
+  float strand = mix(1.0, 0.25 + 0.75 * sqrt(1.0 - across * across), smoothstep(0.7 * px, 2.2 * px, spacing * fan));
+  occ *= strand;
+  albedo *= 0.75 + 0.5 * hb;
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
