@@ -51,7 +51,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 #else
   float foot = max(least, fwidth(d));
 #endif
-  float ww = max(max(wide, 0.5 * foot), 1e-4);
+  float ww = max(max(wide, 0.75 * foot), 1e-4);
   // Seen from far, a gap of a few pixels shows the mean of its melt, not the skin at its edges: the profile across it fades out.
   float far = smoothstep(0.1, 0.55, foot / max(wide, 1e-3));
   float x = d / ww;
@@ -133,7 +133,9 @@ vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
   // The picture shows a warm wash for about the width of the channel and little more, and a wall that glows dimly, not a lamp:
   // most of what the melt sends up is taken by the air and the skin on it.
   float reach = exp(-max(off, 0.0) / (0.5 + 1.8 * w));
-  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * smoothstep(-0.15, 0.0, y - level) + 0.3 * air));
+  // The bank is a thin dark lip with a hair of orange at its foot: the direct light dies a hand above the melt.
+  float foot = smoothstep(-0.15, 0.0, y - level) * exp(-max(y - level, 0.0) / 0.05);
+  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * foot + 0.12 * air * smoothstep(0.3, 0.8, nrm.y)));
 }
 
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
@@ -189,11 +191,16 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
     vec2 f = gapHeat(farD, farHalf, 1290.0 + 90.0 * smoothstep(0.15, 0.9, farHalf) + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5), least);
     if (f.x > g.x) g = f;
+#ifdef LAKE_LIP
+    // The warm halo on the crust beside a far seam.
+    float beside = max(farD - farHalf, 0.0);
+    gLip += blackbody(1300.0) * (2.5 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / 5.0));
+#endif
   }
   // The glow map lights feet, legs, ground and air beside a seam the pictures show: there the melt goes in at its true width
   // and at the mean heat of the open melt, not at the heat of its skin. A seam narrower than a texel keeps its power.
   if (least > 0.5 && shown > 0.5) {
-    g = vec2(gapHeat(d, gape, core, least).x, clamp(meltKelvin(q, n) + 55.0, 1320.0, 1400.0));
+    g = vec2(gapHeat(d, gape, core, least).x, clamp(meltKelvin(q, n), 1320.0, 1400.0));
     gLip = vec3(0.0);
   }
 #ifdef LAKE_LIP

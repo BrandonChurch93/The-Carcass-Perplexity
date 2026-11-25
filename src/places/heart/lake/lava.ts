@@ -176,19 +176,18 @@ const float CYCLE = 9.0;
 
 // The melt at a point of the pattern that the stream carries. p: metres along and across. ax: 0 in mid stream, 1 at the bank.
 // push: how hard the skin is pushed here (a narrows, a bank, the slack of a pool). stir: 1 under a fountain. grain: metres a pixel.
-// Three things lie on a stream: the bare core in the middle third, yellow-white, drawn out in streaks; a thin skin beside it,
-// orange, torn by a net of fine bright creases that the eddies wind into coils; and plates of thick skin, dark red, each of
-// its own age, with the melt bright in the cracks between them: rafts of a few in mid stream, a pavement toward the banks,
-// folded into ropes where they are pushed. Returns kelvin and how much of the point is skin.
-vec2 meltAt(vec2 p, float ax, float push, float stir, float grain) {
+// wide: 1 where the channel is wide enough to keep a tongue of lava open.
+// Most of a stream is skin that still glows dark red, in plates longer than wide, each of its own age, torn by a fine net of
+// bright cracks along their edges. Only down the middle of a wide reach does a tongue of bare lava show, yellow-white, drawn out
+// in streaks, with a few thin plates adrift on it and a band of thin orange skin beside it. Pushed skin folds into ropes.
+// Returns radiance, and how much of the point is skin.
+vec4 meltAt(vec2 p, float ax, float push, float stir, float grain, float wide) {
   float big = vnoise(p * vec2(0.35, 1.3) + 3.0);
   float mid = vnoise(p * vec2(1.1, 3.4) + 11.0);
   float fine = vnoise(p * vec2(3.1, 9.0));
-  float h = 0.1 + 0.6 * ax * ax + 0.26 * ax + 0.5 * (big - 0.5) + 0.3 * (mid - 0.5) + 0.25 * push - 0.32 * stir;
-  float soft = 0.015 + 0.9 * grain;
 
   // The plates: cells, longer than wide.
-  vec2 cellAt = p * vec2(1.45, 4.3) + 0.35 * vec2(mid, big);
+  vec2 cellAt = p * vec2(1.3, 3.7) + 0.45 * vec2(mid, big);
   vec2 base = floor(cellAt);
   float d1 = 9.0;
   float d2 = 9.0;
@@ -208,29 +207,29 @@ vec2 meltAt(vec2 p, float ax, float push, float stir, float grain) {
     }
   }
   float between = d2 - d1;
-  float age = h + 0.7 * (id - 0.5);
-  float crackHalf = (0.02 + 0.03 * (1.0 - smoothstep(0.45, 0.9, age))) + 3.0 * grain;
-  float plateOn = smoothstep(0.45 - soft, 0.45 + soft, age) * smoothstep(crackHalf, crackHalf * 1.8, between);
 
-  float thin = smoothstep(0.3 - soft, 0.3 + soft, h + 0.12 * (fine - 0.5));
-  float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
-  float core = 1508.0 + 50.0 * streak - 60.0 * smoothstep(0.05, 0.3, h);
-  float skin = mix(1345.0, 1150.0, smoothstep(0.3, 0.7, h));
-  // The thin skin tears along fine curved lines, and the core shows in them.
-  float half1 = 0.012 + 0.6 * grain;
-  float seen = min(1.0, 0.03 / half1);
-  float c1 = 1.0 - smoothstep(1.2 * half1, 2.4 * half1, abs(vnoise(p * vec2(0.9, 2.8) + 19.0) - 0.5));
-  float c2 = 1.0 - smoothstep(3.0 * half1, 6.0 * half1, abs(fine - 0.5));
-  float crease = max(c1, 0.75 * c2) * seen;
+  // The tongue of bare lava, and the thin skin that borders it.
+  float bare = max(wide, stir) * (1.0 - smoothstep(0.12, 0.32, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5) - 0.3 * stir));
+  float raft = step(0.74, id) * smoothstep(0.05, 0.12, between) * (1.0 - 0.7 * stir);
+  float open = bare * (1.0 - raft);
+  float near = (1.0 - smoothstep(0.3, 0.6, ax + 0.4 * (big - 0.5) + 0.22 * (mid - 0.5))) * max(wide, stir);
+
+  // The cracks between the plates: centimetres wide, never narrower than a pixel and a half, and dimmer by as much as they are widened.
+  float alive = smoothstep(0.34, 0.5, vnoise(p * vec2(0.45, 1.1) + 23.0) * 0.6 + 0.4 * mid + 0.25 * (1.0 - ax) - 0.1);
+  float crackHalf = 0.04 + 0.05 * alive * (1.0 - ax);
+  float w = max(crackHalf, 5.0 * grain);
+  float crack = (1.0 - smoothstep(0.7 * w, 1.4 * w, between)) * min(1.0, crackHalf / w) * (0.25 + 0.75 * alive);
+
   // Pushed skin folds into ropes across the stream.
   float fold = 0.5 + 0.5 * sin(p.x * 17.0 + 7.0 * mid + 2.0 * p.y);
   float ropy = smoothstep(0.2, 0.7, push) * (1.0 - smoothstep(0.02, 0.08, grain));
-  skin += (fold - 0.5) * 60.0 * ropy;
-  skin = mix(skin, 1490.0, crease);
-  // A plate is darkest in its middle and where it is old, and glows toward the edge where it is thin.
-  float plate = mix(1150.0, 980.0, smoothstep(0.45, 0.95, age)) + 150.0 * (1.0 - smoothstep(0.0, 0.14, between)) + (fold - 0.5) * 90.0 * ropy + 30.0 * (fine - 0.5);
-  float k = mix(mix(core, skin, thin), plate, plateOn);
-  return vec2(k, max(plateOn, 0.3 * thin * (1.0 - crease)));
+  // A plate is darkest in its middle, where it is old and against the bank; it glows toward its edge, where it is thin.
+  float plate = 1005.0 + 85.0 * id - 55.0 * smoothstep(0.5, 1.0, ax) + 110.0 * (1.0 - smoothstep(0.0, 0.22, between)) + 45.0 * (fine - 0.5) + (fold - 0.5) * 70.0 * ropy;
+  plate = mix(plate, 1215.0 + 60.0 * fine, near * (1.0 - 0.8 * raft));
+  float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
+  vec3 c = mix(blackbody(plate), blackbody(1265.0 + 85.0 * alive + 40.0 * (fine - 0.5)), crack);
+  c = mix(c, blackbody(1430.0 + 50.0 * streak + 20.0 * stir), open);
+  return vec4(c, 1.0 - open);
 }
 
 // An eddy winds what it holds round its middle: more the longer the copy has run.
@@ -274,8 +273,9 @@ void main() {
   // Two copies of the pattern, half a cycle apart. Each starts unsheared and is carried for a cycle; it is at full weight in
   // the middle of its run and at none when it starts again. The cycle is out of step from place to place, so the lake never pulses as one.
   float phase = uTime / CYCLE + 1.7 * vnoise(q * 0.21 + vSeam.y * 3.1);
-  vec2 kelvin = vec2(0.0);
-  vec2 first = vec2(0.0);
+  float wide = smoothstep(0.7, 1.0, gape);
+  vec4 kelvin = vec4(0.0);
+  vec4 first = vec4(0.0);
   float lead = 0.0;
   for (int copy = 0; copy < 2; copy++) {
     float ph = phase + 0.5 * float(copy);
@@ -294,39 +294,38 @@ void main() {
     p = wind(p, poolAt, poolReach * 0.9, 0.42 * run * step(0.01, pool));
     p.x -= slowest * uTime + (fast - slowest) * run;
     p += vec2(turnOf * 17.31 + vSeam.y * 9.7, turnOf * 5.17 + float(copy) * 31.0);
-    vec2 got = meltAt(p, ax, push, stir, grain);
+    vec4 got = meltAt(p, ax, push, stir, grain, wide);
     if (copy == 0) {
       first = got;
       lead = weight;
     } else {
       // One copy gives way to the other in patches that ride the stream, not as a mist over the whole of it: the pattern stays
       // sharp, and a patch changes hands only while both copies are far from their start.
-      float patch = vnoise((vFlow - vec2(slowest * uTime, 0.0)) * vec2(0.7, 2.1) + 5.0 + vSeam.y) - 0.5;
-      kelvin = mix(got, first, smoothstep(-0.14, 0.14, lead - weight + 0.9 * patch));
+      float hand = vnoise((vFlow - vec2(slowest * uTime, 0.0)) * vec2(0.7, 2.1) + 5.0 + vSeam.y) - 0.5;
+      kelvin = mix(got, first, smoothstep(-0.14, 0.14, lead - weight + 0.9 * hand));
     }
   }
-  float k = kelvin.x;
-  float skin = kelvin.y;
   // The melt breathes with the lake.
-  k += 35.0 * (beatAt(q) - 0.5) * (0.4 + 0.6 * pool);
+  vec3 hot = kelvin.rgb * (1.0 + 0.3 * (beatAt(q) - 0.5) * (0.4 + 0.6 * pool));
+  float skin = kelvin.a;
 
   // Against the bank a thin dark skin clings, torn, and the glow shows through the tears. Where the stream shears past it a bright line opens.
   float inside = -bank;
   float reach = 0.16 + 0.42 * vnoise(q * 0.9 + 4.0) + 0.14 * vnoise(q * 3.7 + 1.0);
   float torn = smoothstep(0.5, 0.66, vnoise(q * 3.3 + vec2(9.0, uTime * 0.04)) * 0.62 + vnoise(q * 9.5) * 0.38);
   float cling = (1.0 - smoothstep(reach * 0.55, reach, inside + 0.06 * (vnoise(q * 14.0) - 0.5))) * (1.0 - torn * smoothstep(0.02, 0.09, inside));
-  float shear = (1.0 - smoothstep(0.0, 0.03 + grain, abs(inside - reach))) * smoothstep(0.42, 0.62, vnoise(q * 1.4 + vec2(uTime * 0.11, 0.0))) * (1.0 - pool);
-  k = mix(k, 880.0 + 170.0 * vnoise(q * 6.1 + 2.0), cling);
+  float shear = (1.0 - smoothstep(0.0, 0.03 + 2.0 * grain, abs(inside - reach))) * smoothstep(0.42, 0.62, vnoise(q * 1.4 + vec2(uTime * 0.11, 0.0))) * (1.0 - pool) * min(1.0, 0.03 / (0.03 + 2.0 * grain));
+  hot = mix(hot, blackbody(880.0 + 170.0 * vnoise(q * 6.1 + 2.0)), cling);
   skin = max(skin, cling);
-  k = mix(k, 1430.0, shear * 0.85 * (1.0 - cling));
+  hot = mix(hot, blackbody(1330.0), shear * 0.85 * (1.0 - cling));
   // Under the crust nothing glows.
-  k = mix(k, 820.0, smoothstep(0.0, 0.08, bank));
+  hot *= 1.0 - smoothstep(0.0, 0.08, bank);
 
   // The skin has a sheen of the sky; the open melt shows nothing but its own heat.
   vec3 v = normalize(cameraPosition - vWorld);
   float fresnel = 0.04 + 0.5 * pow(1.0 - clamp(v.y, 0.0, 1.0), 5.0);
   vec3 sheen = skin * (0.02 * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + fresnel * 0.35 * skyRadiance(vec3(-v.x, abs(v.y) + 0.25, -v.z))) * landAt(vWorld.xz).g * 0.6;
-  gl_FragColor = vec4(rigOut(sheen) + blackbody(k) * uLavaOn, 1.0);
+  gl_FragColor = vec4(rigOut(sheen) + hot * uLavaOn, 1.0);
   // Last, after every derivative. The ribbon is wider than the gap: under the crust there is none, so a hollow of the crust never shows it.
   if (bank > 0.12) discard;
 }`;
