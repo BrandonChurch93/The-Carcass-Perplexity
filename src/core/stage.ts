@@ -17,6 +17,8 @@ export interface Look {
   tint: [number, number, number];
   /** A knee on what is brighter than its first number, laid on every sample before it is averaged: the brightest channel b becomes knee[0] * (1 + knee[1] * ln(b / knee[0])) and the colour keeps its hue. Absent: none. */
   knee?: [number, number];
+  /** The curve of what glows. A pixel whose brightest channel, after exposure, lies above the first number passes to a filmic curve laid on each channel, fully by the second number; the third is that curve's exposure against the look's. Absent: one curve for everything. */
+  fire?: [number, number, number];
 }
 
 export const neutralLook = (): Look => ({
