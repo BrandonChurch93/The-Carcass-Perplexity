@@ -1,8 +1,8 @@
-# Status 37
+# Status 38
 
-2026-11-25 08:37 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 09:02 UTC. Phase 3, the look lock: the Heart.
 
-- `01-merged-0835-heart-2.jpg`: heart-2, the one that sank. Picture, then the frame on main. New since status 36: the sunk walker's second build is in, thick arched trunks with flaking bark and a skin of ropes. Open: the lake round it is a featureless sheet, the ropes are too thin and even, the near ridge is a pale pillow, the big animal still has the old build.
-- `02-merged-0835-heart-0.jpg`: heart-0, the wide view. The orange block behind the group is weaker after the air's third hand-back (MEASURED 132 83 71 against the picture's 106 81 79). Open: its hard lower edge, speckled smoke, glossy ropes on the bench, a lake without relief.
-- `03-merged-0835-heart-3.jpg`: heart-3, the animals at the seam. Still the old build (barrel body, bent legs); the new one is due by 10:05 UTC. Open: an orange wall of haze where the picture has smoke, smooth blue ground where the picture has broken brown crust.
-- `04-merged-0835-heart-4.jpg`: heart-4, the mouth and its fall: the key furthest from its picture. Flat wall with level ledges, an even salmon rim, a thin cascade, a dark column of smoke. It is the first line of five owners' current orders.
+- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
+- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
+- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
+- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.

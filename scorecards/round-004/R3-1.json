@@ -1,0 +1,98 @@
+{
+  "round": 4,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "gemini_neon",
+  "answered": "2026-11-25 09:01 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the cooled lava crust flanking the lava river across the lower half and right side (also set-A-06.png)",
+        "what": "the crust looks like completely smooth, untextured matte grey clay or plastic with uniform extruded folds and visible dotted seam lines running along the ridges",
+        "fix": "replace the smooth clay shader with high-frequency rough basalt micro-detail, varied roughness and specular breakup, and eliminate the mesh/displacement dotted seams"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the flat lava lake surface across the middle and lower right (also set-A-03.png and set-A-07.png)",
+        "what": "the entire lake crust reads as a flat, matte grey plastic sheet stamped with uniform Voronoi crack lines, with no rock grain, thickness, roughness variation, or real depth",
+        "fix": "break up the crust with multi-scale basaltic relief, fractured slab edges, varied sheen from glassy cooled lava to dusty ash, and irregular cracking"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the molten lava channel in the foreground and midground (also set-A-06.png)",
+        "what": "the lava looks like a flat glossy procedural orange-yellow pattern with jagged polygonal bank intersections, distorted mirror reflections, and spiky corrugated displacement along the far edge, with no incandescent bloom",
+        "fix": "give the molten flow physical depth, floating dark crust plates, softer glowing emissive bloom, and clean physical contact where lava meets cooled rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the foreground rocky shore and cliff face on the left (also set-A-05.png top-left and bottom-right crops)",
+        "what": "razor-sharp rectangular geometric blocks sit on heavily blurred, stretched, low-resolution ground texture close to the camera, while the rock face above has blotchy painted-on orange noise instead of real bounced lava light",
+        "fix": "use high-resolution displaced rock geometry and crisp close-up textures on the foreground bank, replace the boxy slabs with natural fractured rock, and light the cliff physically from the lava"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the base of the foreground ropy-lava mound where it meets the lake floor (also set-A-09.png right crop)",
+        "what": "the detailed dark ropy mound fades out via a soft feathered blend straight into a completely smooth, blank grey plane, exposing it as a pasted-in asset",
+        "fix": "match the surrounding lake floor's rock detail to the mound and integrate the transition with physical lava folds, crust fractures, and scattered debris"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the splashing lava patch on the right side of the lake (also set-A-03.png right crop)",
+        "what": "the spatter reads as flat 2D spiky orange-and-grey cutouts hovering over an orange strip, with no bloom and almost no light cast onto the surrounding crust",
+        "fix": "simulate volumetric 3D lava droplets and hot gas with motion blur, bright core bloom, and warm falloff lighting the adjacent crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the close foreground rocky slope on the left (bottom-right and top-left crops of set-A-01.png)",
+        "what": "sharp-edged, flat-shaded polygonal rock wedges and boxes poke out of smeared, stretched, low-resolution ground textures right where the camera is close",
+        "fix": "increase foreground mesh density and texture resolution, bevel and fracture the blocky facets, and eliminate UV stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the midground creature legs and the bright orange horizon line (also set-A-05.png top-right crop)",
+        "what": "a bright glowing orange halo outlines the creature's legs against the background fog, and the horizon glow forms an unnaturally flat straight orange band that does not light the lake surface in front of it",
+        "fix": "fix the depth-of-field/compositing edge halo on the legs and let the distant lava glow vary naturally in height while casting grazed light across the lake crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the tall four-legged creatures in the foreground and midground (also set-A-03.png left crop and set-A-07.png)",
+        "what": "the creatures look like smooth, uniform CG models in stiff, nearly identical poses, with feet meeting the crust with weak or missing contact shadows, no ash or heat weathering on their legs, and glowing tendril tips that have no bloom and cast almost no light onto the ground directly below them",
+        "fix": "vary posture and silhouette, add surface wear and dust/ash near the feet, ground each foot with crisp contact shadows, and let the glowing tendrils bloom and illuminate the crust underneath"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the small steam vents above the foreground crack, on the foreground mound in set-A-07.png, and near the left rocks in set-A-04.png (also set-A-03.png left crop)",
+        "what": "the vapour reads as small, soft-edged flat grey smudges or sprite dabs with no internal structure and no warm orange under-lighting from the glowing lava directly beneath them",
+        "fix": "use wispy volumetric vapour with fine turbulence and strong warm scattering from the lava vents below"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the out-of-focus foreground rock in the bottom-left corner",
+        "what": "the rock silhouette is visibly faceted with straight low-poly edges",
+        "fix": "subdivide and displace the foreground rock silhouette so it reads as natural fractured basalt even when blurred"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the distant cliff edge on the right (bottom-left crop of set-A-01.png)",
+        "what": "the cliff reads as a flat grey cutout silhouette with a blocky geometric chunk jutting from its slope against a flat hazy gradient",
+        "fix": "add subtle atmospheric relief, layered ridges, and natural rock erosion to the distant cliff silhouette"
+      }
+    ]
+  }
+}

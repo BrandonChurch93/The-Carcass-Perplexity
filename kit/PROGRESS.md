@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 37, 2026-11-25 08:37 UTC:
+Status 38, 2026-11-25 09:02 UTC:
 
-- `01-merged-0835-heart-2.jpg`: heart-2, the one that sank. Picture, then the frame on main. New since status 36: the sunk walker's second build is in, thick arched trunks with flaking bark and a skin of ropes. Open: the lake round it is a featureless sheet, the ropes are too thin and even, the near ridge is a pale pillow, the big animal still has the old build.
-- `02-merged-0835-heart-0.jpg`: heart-0, the wide view. The orange block behind the group is weaker after the air's third hand-back (MEASURED 132 83 71 against the picture's 106 81 79). Open: its hard lower edge, speckled smoke, glossy ropes on the bench, a lake without relief.
-- `03-merged-0835-heart-3.jpg`: heart-3, the animals at the seam. Still the old build (barrel body, bent legs); the new one is due by 10:05 UTC. Open: an orange wall of haze where the picture has smoke, smooth blue ground where the picture has broken brown crust.
-- `04-merged-0835-heart-4.jpg`: heart-4, the mouth and its fall: the key furthest from its picture. Flat wall with level ledges, an even salmon rim, a thin cascade, a dark column of smoke. It is the first line of five owners' current orders.
+- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
+- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
+- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
+- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.
 
+Status 37, 2026-11-25 08:37 UTC, showed: heart-2, the one that sank. Picture, then the frame on main.
 Status 36, 2026-11-25 08:20 UTC, showed: The feeding picture on main at 08:17 UTC with eight hand-backs merged.
 Status 35, 2026-11-25 07:57 UTC, showed: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC.
-Status 34, 2026-11-25 07:36 UTC, showed: The wide view, approved picture left, merged main right (07:33 UTC, hd draft).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T08:37:11Z
-phase 3: 5.47 h used of 13.00 h
-build: 12.12 h used of 72.00 h
+2026-11-25T09:02:32Z
+phase 3: 5.89 h used of 13.00 h
+build: 12.54 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 25
 ```
 
 ## Phases
@@ -860,3 +860,4 @@ none
 - 2026-11-25 08:30 UTC. Air hand-back A3 (5c69ba5) merged as 7535c68 and pushed: every term of the air that reads the lake's glow map retuned against the stronger map; the orange block at the fall's foot is gone at heart-1 and heart-2 and weaker at heart-0 (MEASURED there, picture then frame: 106 81 79 against 132 83 71). Determinism passes on 7535c68.
 - 2026-11-25 08:31 UTC. Sunk walker hand-back A2 (eda8df6) merged as fdcac34 and pushed 08:30 UTC; tsc clean; keys and determinism running. Cost not remeasured by its owner (2.86 s a sample at heart-2 at A); it is the first line of its B.
 - 2026-11-25 08:37 UTC. Status 37 shown at 08:37 UTC: the five keys on fdcac34 beside their pictures, round 4 under way, ElevenLabs at 1 of 131,000 characters. Determinism passes on fdcac34.
+- 2026-11-25 09:04 UTC. Status 38 shown at 09:03 UTC: the four judged frames of round 4 (final tier, uhd, fdcac34). All six critics in: R1 3 and 3, R3 3 and 4, R4 6 and 7 (round 3: 4 and 4, 3 and 4, 4 and 4). Measures: M1 green, M2 green, M3 red (0.79, 0.36, 0.29, 0.25, 0.55 against a floor of 0.75). Jury at 15 votes of 25: 1 for a photograph or a film frame. Lava hand-back 3 (the owner's last, a90c5e8) arrived 09:01 and is being looked at. ElevenLabs at 08:59: 1 of 131,000 characters, nothing made.
