@@ -164,13 +164,17 @@ void main() {
   float age = clamp(0.5 + 1.6 * (vSlow.x - 0.5), 0.0, 1.0);
   float tone = 0.9 + 0.2 * vSlow.y;
   float broad = vSlow.z;
+  // From afar the lake is one dark dry field (lake/skin.ts): the sheet does the same sums, or it stands on the lake as a pale disc.
+  float wideView = smoothstep(30.0, 130.0, length(cameraPosition - vWorld));
+  age = mix(age, 0.32, 0.4 * wideView);
+  vec3 dry = mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wideView);
 
   #ifdef RIM
   // The relief has died away well inside the rim: the last metres only hand the surface over to the lake's own crust, and read
   // nothing of the relief or of the folds, so they cost what the lake's crust costs. Keep this the full sums below with the
   // folds at nought.
   float alpha = smoothstep(halfSpan - 2.3, halfSpan - 4.4, r + 1.2 * (vSlow.w - 0.5) + 0.4 * (vnoise(l * 1.7) - 0.5));
-  vec3 albedo = mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age) * tone;
+  vec3 albedo = mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age) * tone * dry;
   vec3 n = vec3(0.0, 1.0, 0.0);
   vec3 ns = n;
   float occ = 1.0;
@@ -219,7 +223,9 @@ void main() {
   age = clamp(age + folded * (0.9 * (sheet - 0.5) + 0.25 * (broad - 0.5)), 0.0, 1.0);
   // Where the skin is not folded it is the plain crust of the lake as the lake draws it now: grey, and grained all over.
   vec3 plain = mix(vec3(0.066, 0.067, 0.07), vec3(0.128, 0.129, 0.133), age) * clamp(1.0 + 1.5 * (nhA.b - 0.5) + 0.5 * (small - 0.5) + 0.8 * (grainNh.b - 0.5), 0.4, 1.8);
-  vec3 albedo = mix(plain, mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age), folded) * tone;
+  // Seen close the folded skin between the ropes is the lake's young black skin; from afar that was a dark apron round the heap,
+  // which the picture has not: there it stays the plain crust.
+  vec3 albedo = mix(plain * dry, mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age), folded * (1.0 - 0.8 * wideView)) * tone;
   // The ropy skin has a grain the lake's plain plates have not.
   // On the flank of a rope the textures, which are laid flat, would be drawn out down it: there the fibres carry the surface.
   float wall = smoothstep(0.7, 1.8, length(grad)) * (1.0 - onRope) * (1.0 - steep);
@@ -347,7 +353,7 @@ void main() {
   float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * vnoise(l * 4.0 + 33.0) + 60.0 * (small - 0.5) + 0.6 * breath;
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
   // What glows, lights: the skin within a hand or two of the seam is warmed by it.
-  c += albedo * blackbody(seamKelvin) * (0.15 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
+  c += albedo * blackbody(seamKelvin) * (0.08 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
   c = mix(c * (1.0 - 0.7 * onFace), blackbody(mix(faceKelvin, max(faceKelvin, seamKelvin), standing)), max(flaring, standing));
   #endif
 
