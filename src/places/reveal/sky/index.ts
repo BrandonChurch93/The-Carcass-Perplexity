@@ -24,7 +24,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.42 + 1.16 * clamp(facing, 0.0, 1.0)) * (0.55 + 0.45 * thick);
-  vec3 c = 1.7 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  vec3 c = 1.5 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
   float air = 1.0 - exp(-0.015 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour, air);
 }`;

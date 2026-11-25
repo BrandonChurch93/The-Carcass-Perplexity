@@ -131,7 +131,7 @@ void main() {
   // (The picture of the bones is the traced outline of the ranges, on the rectangle of the widest level.)
   vec2 uvA = (read - uRectA.xy) * uRectA.zw;
   float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
-  float top = smoothstep(520.0, 1300.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
+  float top = smoothstep(680.0, 1380.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
   ground = mix(ground, vec3(0.66, 0.6, 0.5), 0.44 * skeleton * top);
   ground *= mix(1.0, 0.72, (1.0 - skeleton) * top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
