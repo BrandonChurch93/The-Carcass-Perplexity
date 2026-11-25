@@ -35,7 +35,7 @@ const C = {
   arch: 0x9a4a22,
   walker: 0x120e0d,
   tuft: 0xf0a04a,
-  sunk: 0x4c4846,
+  sunk: 0x1c1918,
   fold: 0x454040,
   fume: 0x5a443a,
   fumeLow: 0x8f4c2c,
@@ -58,8 +58,8 @@ const from = (p: Vec3, dx: number, dz: number): [number, number] => [p[0] + dx, 
 const WALKERS: Walker[] = [
   { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.4, size: 1.55, feed: 1, phase: 0.1 },
   { at: from(GROUP, 0, 0), when: T0, heading: 126, speed: 0.12, size: 1.2, feed: 1, phase: 0.33 },
-  { at: from(GROUP, 20, 8), when: T0, heading: 104, speed: 0.55, size: 1.0, feed: 0.25, phase: 0.62 },
-  { at: from(GROUP, 8, -19), when: T0, heading: 72, speed: 0.2, size: 0.92, feed: 0, phase: 0.87 },
+  { at: from(GROUP, 20, 8), when: T0, heading: 104, speed: 0.55, size: 1.0, feed: 1, phase: 0.62 },
+  { at: from(GROUP, 8, -19), when: T0, heading: 72, speed: 0.2, size: 0.92, feed: 0.8, phase: 0.87 },
   { at: from(GROUP, 37, -15), when: T0, heading: 205, speed: 0.1, size: 0.84, feed: 1, phase: 0.2 },
   { at: from(GROUP, 64, -10), when: T0, heading: 300, speed: 0.3, size: 0.97, feed: 0.6, phase: 0.48 },
   { at: from(spot(0.845, 0.447), 0, 0), when: T0, heading: 250, speed: 0.7, size: 1.05, feed: 0.3, phase: 0.7 },
@@ -155,13 +155,13 @@ const over = (x: number, z: number, height: number): Vec3 => [x, floor(x, z) + h
 const KEY0 = establishing();
 
 const groupAt = walkerPosition(WALKERS[1] as Walker, keySeconds('heart-3'));
-const KEY3: Pose = { position: over(groupAt[0] - 53.5, groupAt[1] + 59.5, 3), aim: [groupAt[0] + 6.5, 8.6, groupAt[1] + 2.5], fov: 17 };
+const KEY3 = fly(over(groupAt[0] - 53.5, groupAt[1] + 59.5, 3), 44.5, 2.3, 18);
 
-const LINE: [number, number] = [-538, 300];
-const KEY1 = fly(over(LINE[0], LINE[1], 1.5), 44, -9, 45);
-const LINE_DIR = bearing(44);
+const LINE: [number, number] = [-507, 212];
+const KEY1 = fly(over(LINE[0], LINE[1], 1.6), 61, -7.5, 45);
+const LINE_DIR = bearing(61);
 
-const KEY2 = fly(over(SUNK[0] - 19, SUNK[2] + 14, 2.4), 44, -2.4, 31);
+const KEY2 = fly(over(SUNK[0] - 14.6, SUNK[2] + 21.4, 2.4), 26.5, -1.5, 33);
 
 const MOUTH_AIM: Vec3 = [MOUTH.x + 26, 68, MOUTH.z];
 const RETREAT = bearing(214);
@@ -176,9 +176,9 @@ const shots: Record<string, CameraPath> = {
   'heart-01': through(KEY0, keyPart(shotById('heart-01')), { forward: -58, up: 13, right: -9, turn: 1.5 }, { forward: 50, up: -8, turn: 2.5 }),
   'heart-02': through(KEY3, keyPart(shotById('heart-02')), { right: 13, forward: -14, turn: -6, up: 0.8 }, { right: -13, forward: 12, turn: 6.5, up: -0.4 }),
   'heart-03': [
-    { at: 0, pose: fly(over(LINE[0] - LINE_DIR[0] * 15, LINE[1] - LINE_DIR[1] * 15, 4.6), 40.5, -11, 45) },
+    { at: 0, pose: fly(over(LINE[0] - LINE_DIR[0] * 13, LINE[1] - LINE_DIR[1] * 13, 4.2), 58, -11, 45) },
     { at: keyPart(shotById('heart-03')), pose: KEY1 },
-    { at: 1, pose: fly(over(LINE[0] + LINE_DIR[0] * 4.5 - 1.5, LINE[1] + LINE_DIR[1] * 4.5 - 1, 1.7), 47, -8.5, 45) },
+    { at: 1, pose: fly(over(LINE[0] + LINE_DIR[0] * 4.5 - 1.5, LINE[1] + LINE_DIR[1] * 4.5 - 1, 1.7), 63.5, -8.5, 45) },
   ] satisfies Move,
   'heart-04': [
     { at: 0, pose: moved(KEY2, { right: -3.2, forward: -2.6, up: 0.5, turn: 1.5 }) },
@@ -266,7 +266,8 @@ function create(): Place {
       shore.push([lerp(a[0], b[0], t) + 0.9 + k, lerp(a[1], b[1], t) + k * 0.4]);
     }
   }
-  seams.add(shore, (i) => 0.3 + 0.18 * Math.abs(Math.sin(i * 0.9)) + 0.25 * smooth(60, 12, Math.hypot((shore[i] as [number, number])[0] - LINE[0], (shore[i] as [number, number])[1] - LINE[1])), 0.42);
+  seams.add(shore, (i) => 0.3 + 0.18 * Math.abs(Math.sin(i * 0.9)), 0.42);
+  seams.add(crooked([LINE[0] + 3.7, LINE[1] + 0.5], [LINE[0] + 38, LINE[1] - 24.4], 14, 1.2, 2.1), (i) => 1.5 - 0.06 * i, 0.3);
   seams.add(crooked(from(GROUP, -46, 22), from(GROUP, 86, -20), 22, 5, 1.3), (i) => 0.8 + 0.9 * Math.abs(Math.sin(i * 0.7)), 0.2);
   seams.add(crooked(xz(spot(0.37, 0.61)), xz(spot(0.47, 0.682)), 10, 2, 0.4), 1.3, 0.2);
   seams.add(crooked(xz(spot(0.47, 0.682)), xz(spot(0.71, 0.668)), 14, 3, 2.1), 1.1, 0.2);
@@ -279,7 +280,10 @@ function create(): Place {
   const fan = new THREE.Mesh(new THREE.CircleGeometry(1, 28).rotateX(-Math.PI / 2), kit.flow(C.fallA, C.fallB, { scale: 9, speed: 3, direction: [0.25, 0.97] }));
   fan.scale.set(104, 1, 40);
   fan.position.set(FALL_FOOT[0] + 34, 0.3, FALL_FOOT[1] + 22);
-  lava.add(fan);
+  const pool = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 10), kit.flow(C.fallA, C.fallB, { scale: 9, speed: 3, direction: [0.25, 0.97] }));
+  pool.scale.set(96, 11, 42);
+  pool.position.set(FALL_FOOT[0] + 34, 0, FALL_FOOT[1] + 22);
+  lava.add(fan, pool);
   scene.add(parts.standIn('lava', lava));
 
   const fallMaterial = kit.flow(C.fallA, C.fallB, { scale: 7, speed: 16, direction: [0.1, 1], side: THREE.DoubleSide });
@@ -328,11 +332,12 @@ function create(): Place {
   const lump = new THREE.Mesh(new THREE.SphereGeometry(1, 14, 10), sunkMaterial);
   lump.scale.set(3.2, 1.5, 2.3);
   lump.position.set(-1.5, 0.3, 0);
-  const limbs = herd(new THREE.CylinderGeometry(1, 1, 1, 7), sunkMaterial, 4);
-  setSegment(limbs, 0, [0, 1.2, 0.4], [2.6, 6.6, 1], 0.5);
-  setSegment(limbs, 1, [2.6, 6.6, 1], [5.2, 0, 1.8], 0.42);
-  setSegment(limbs, 2, [0.3, 1, -1], [2.8, 3.7, -2.4], 0.44);
-  setSegment(limbs, 3, [2.8, 3.7, -2.4], [5.6, 0, -3], 0.36);
+  const ARCH = 9;
+  const limbs = herd(new THREE.CylinderGeometry(1, 1, 1, 7), sunkMaterial, ARCH + 3);
+  const archAt = (t: number): Vec3 => [0.2 + 6.4 * t - 1.1 * Math.sin(Math.PI * t), 0.6 + 7.4 * Math.sin(Math.PI * Math.pow(t, 0.8)), 0.4 + 1.4 * t];
+  for (let i = 0; i < ARCH; i++) setSegment(limbs, i, archAt(i / ARCH), archAt((i + 1) / ARCH), 0.56 - 0.02 * i);
+  const lowAt = (t: number): Vec3 => [0.3 + 5 * t, 0.8 + 3.2 * Math.sin(Math.PI * t), -1 - 2 * t];
+  for (let i = 0; i < 3; i++) setSegment(limbs, ARCH + i, lowAt(i / 3), lowAt((i + 1) / 3), 0.4);
   const folds = herd(new THREE.TorusGeometry(1, 0.07, 6, 20).rotateX(Math.PI / 2), kit.flat(C.fold), 3);
   setBlob(folds, 0, [-1.5, 0.2, 0], [4.6, 2.4, 3.4]);
   setBlob(folds, 1, [-1.2, 0.15, 0.3], [6, 2, 4.6], 0.4);
@@ -370,7 +375,7 @@ function create(): Place {
 
   const crack = new THREE.Group();
   const crackTop = spot(0.1, 0.645);
-  const crackFoot: Vec3 = [LINE[0] + 0.5, benchHeight(LINE[0] + 0.5, LINE[1] - 8) + 0.1, LINE[1] - 8];
+  const crackFoot: Vec3 = [LINE[0] + 5.5, Math.max(0.3, benchHeight(LINE[0] + 5.5, LINE[1] - 14)) + 0.1, LINE[1] - 14];
   const patches = herd(new THREE.CylinderGeometry(1, 1.15, 0.5, 9), kit.flat(C.sulphur), 2);
   setBlob(patches, 0, crackTop, [5.5, 1, 3.4], 0.6);
   setBlob(patches, 1, crackFoot, [1.5, 0.6, 0.9], 1.9);
