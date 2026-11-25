@@ -561,30 +561,45 @@ export function rubbleAt(x: number, z: number): number {
 }
 
 // The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind
-// the group. The buttress of the place is a kilometre off through that lens and lost in the smoke, so a butte is staged for that shot, 235 m ahead of
-// its camera and right of its axis. It stands in no other shot.
+// the group. The buttress of the place is a kilometre off through that lens and lost in the smoke, so a butte is staged for that shot as a piece of
+// set is: built for that one lens, in the lens's own frame (a: metres ahead of the key's lens, b: metres right of its axis).
+// Its near face stands 205 m ahead. Frame x of the key is 50 + 177.6 * b / a per cent; a point h metres up at 205 m stands at frame y 52 - 1.54 * (h - 6.3) per cent.
 const BUTTE_FROM: [number, number] = [-455.6, 249.8];
 const BUTTE_AHEAD: [number, number] = [0.701, -0.713];
-/** The box of the staged butte, world metres. */
-export const BUTTE_BOX = { x0: -322, x1: -180, z0: 52, z1: 194 };
+/** Where the staged butte is meshed, in the frame of the lens of key heart-3: metres ahead and metres right. */
+export const BUTTE = { from: BUTTE_FROM, ahead: BUTTE_AHEAD, near: 158, far: 246, left: -30, right: 92 };
 
 export function stagedButteHeight(x: number, z: number): number {
   const dx = x - BUTTE_FROM[0];
   const dz = z - BUTTE_FROM[1];
   const a = dx * BUTTE_AHEAD[0] + dz * BUTTE_AHEAD[1];
   const b = -dx * BUTTE_AHEAD[1] + dz * BUTTE_AHEAD[0];
-  const da = (a - 235) / 46;
-  const db = (b - 60) / 46;
-  // Its plan is a rounded block with bays and noses; its foot is a skirt of talus, its face a cliff in three beds.
-  const e = Math.pow(Math.pow(Math.abs(da), 4) + Math.pow(Math.abs(db), 4), 0.25) + 0.16 * (noise(x / 19 + 2.1, z / 19) - 0.5) + 0.07 * (noise(x / 5.3, z / 5.3 + 7.7) - 0.5) + 0.05 * (blocks(x / 6.1 + 0.3 * z, z / 7.3) - 0.5);
-  if (e > 1.45) return -2;
-  const apron = 9 * smooth(1.42, 1.0, e);
-  const up = smooth(1.02, 0.84, e);
-  const beds = 3;
-  const q = up * beds + 0.5 * (noise(x / 8.3 + 1.1, z / 8.3) - 0.5);
-  const whole = Math.floor(q);
-  const stair = Math.min(1, Math.max(0, (whole + smooth(0.25, 0.8, q - whole)) / beds));
-  // The top falls away to the right of that frame and is broken into blocks and notches against the smoke.
-  const top = 39 - 0.4 * Math.max(0, b - 22) + 4.5 * (blocks(x / 9.7 + 0.2 * z, z / 8.1 + 3.3) - 0.5) + 2.6 * (noise(x / 3.3, z / 3.3 + 1.9) - 0.5) + 1.2 * (noise(x / 1.1 + 4, z / 1.1) - 0.5);
-  return Math.max(apron + 1.5 * (noise(x / 2.7, z / 2.7) - 0.5), top * stair) - 0.4;
+  // The plan of its near face: bays and noses, and piers that stand a stride forward or back of each other.
+  const face = 205 + 7 * (noise(b / 23 + 1.3, 4.1) - 0.5) + 3.2 * (blocks(b / 5.3 + 0.7, 2.2) - 0.5) + 1.2 * (blocks(b / 1.9 + 3.1, 6.6) - 0.5);
+  const s = a - face;
+  if (s < -50 || s > 40 || b < -30 || b > 94) return -2;
+  // The top: a horn at the left end, then it falls away gently to the right and comes down in two shoulders. Its rim is broken blocks.
+  const fall = b < 24 ? 0 : b < 43 ? (b - 24) * 0.3 : 5.7 + (b - 43) * 0.16;
+  const shoulders = 1.7 * smooth(45.5, 47, b + 0.5 * noise(s / 2.3, 1.7)) + 1.9 * smooth(55, 56.3, b + 0.5 * noise(s / 2.3, 5.1)) + 3 * smooth(68, 70, b);
+  const horn = 1.3 * smooth(14.5, 16.5, b) * smooth(23, 19, b);
+  const crest = 2.0 * (blocks(b / 3.7 + 0.4, s / 9 + 1.1) - 0.5) + 1.1 * (blocks(b / 1.3 + 5.2, s / 3.1 + 0.3) - 0.5) + 0.5 * (noise(b / 0.45, s / 0.45 + 2.7) - 0.5);
+  const top = 38.5 - fall - shoulders + horn + crest;
+  // Three beds: a low band on its talus, a ledge under rubble that leans back, and the sheer upper cliff, in places with a narrow ledge half way up.
+  const foot = 13 + 5 * (noise(b / 31 + 7.7, 0.3) - 0.5);
+  const lower = foot + 11 + 2.4 * (blocks(b / 6.1 + 2.9, 5.5) - 0.5);
+  const d1 = 4 + 5 * noise(b / 11 + 3.3, 9.2) + 2.2 * (blocks(b / 4.3 + 9.1, 1.7) - 0.5);
+  const d2 = 4.5 * Math.max(0, blocks(b / 7.3 + 1.9, 3.3) - 0.4);
+  const t = Math.min(1, Math.max(0, (s + 34) / 34));
+  const apron = foot * Math.pow(t, 1.25) + 1.3 * t * (noise(x / 2.7, z / 2.7) - 0.5) + 0.5 * t * (noise(x / 0.9 + 3, z / 0.9) - 0.5);
+  const ledge = 2.5 * Math.min(1, Math.max(0, s / d1)) + 0.8 * (noise(x / 1.7 + 5, z / 1.7) - 0.5) * smooth(0, 2, s);
+  const low = apron + (lower - foot) * smooth(0, 1.3, s + 0.5 * (noise(b / 0.7, 3.9) - 0.5)) + ledge;
+  const mid = lower + 2.5 + (0.45 + 0.2 * (blocks(b / 9.1 + 4.4, 8.8) - 0.5)) * (top - lower - 2.5);
+  let upper = (mid - lower - 2.5) * smooth(d1, d1 + 1.5, s + 0.5 * (noise(b / 0.6 + 2, 1.1) - 0.5)) + (top - mid) * smooth(d1 + d2, d1 + d2 + 1.4, s + 0.4 * (noise(b / 0.5, 6.3) - 0.5));
+  // The left end of the cliff is sheer, and seen edge on by that lens. Left of it the low band comes down as a ridge of crags and talus.
+  const end = 14 + 0.1 * Math.max(0, s) + 1.6 * (noise(s / 3 + 1.1, 7.7) - 0.5);
+  const lean = (b - end + 0.6) * 22 + 6 * (blocks(s / 2.1 + 3.3, b / 1.7) - 0.5) + 2 * (noise(s / 0.6, b / 0.6 + 4.2) - 0.5);
+  upper = Math.max(0, Math.min(upper, lean));
+  const ridge = Math.min(1, Math.max(0, 1 - (end - b) / 38 + 0.12 * (blocks(b / 3.1 + 6.2, s / 4.7) - 0.5) * smooth(end, end - 6, b)));
+  const out = smooth(93, 82, b) * smooth(38, 30, s);
+  return (low * ridge + upper) * out - 0.5;
 }

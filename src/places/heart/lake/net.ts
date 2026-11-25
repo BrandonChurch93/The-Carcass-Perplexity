@@ -259,8 +259,20 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.6 * pool;
         const h = hash(lo, hi, 41);
         reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.25 * pool * h : 0;
+        // A joint dies out: along its length it narrows and shuts here and there, so the joints do not close into polygons.
+        // Round the pool at the foot of the fall they stay open.
+        let shut = false;
+        if (alive && pool < 0.3) {
+          const die = 0.7 * noise(tx / 21, z0 / 21, 71) + 0.3 * noise(tx / 6.5, z0 / 6.5, 72);
+          reach *= smooth(0.43, 0.57, die + 0.2 * pool);
+          if (reach < 0.004) {
+            reach = 0;
+            shut = true;
+          }
+        }
         // A shut edge between two large plates may be a pressure ridge: its number then says how tall, 0.5 to 1. Other shut edges stay under 0.25.
         if (!alive) phase = kinds === 0 && hash(lo, hi, 43) < 0.4 ? 0.5 + 0.5 * hash(lo, hi, 47) : 0.25 * phase;
+        else if (shut) phase = 0.25 * phase;
       }
       const o = (tj * width + ti) * 4;
       out[o] = edge;
