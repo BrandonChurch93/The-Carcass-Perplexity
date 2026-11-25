@@ -1,5 +1,5 @@
-2026-11-25 22:00 UTC
-work at 67f9e2c on agent/ribs-ground
-minute 40: ribs-0 compare and five keys. Light now models the blades (sun behind left, break upper right); blades still read as smooth horns with dents, floor too dry and brown with one flat pool, sky too pale, weed stretched, ribs-2 and ribs-4 floors are flat water
-look-1.jpg = out/work/look-ribs-0.png
+2026-11-25 22:18 UTC
+work at eb925b1 on agent/ribs-ground
+ribs-0 compare and four keys: storm sky and shingle in; floor stones too large and flat, blades smooth horns, weed in ribs-1 streaked, far blades too clear, ribs-4 flat
+look-1.jpg = out/work/look-compare-0.jpg
 look-2.jpg = out/work/keys.jpg
