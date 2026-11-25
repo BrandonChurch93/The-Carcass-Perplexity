@@ -78,21 +78,23 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float rim = length(vec2(ax, max(ay, 0.0))) + 0.14 * (thin - 0.5) + 0.1 * (na.b - 0.5);
     arch = wall * step(mix(0.5, 0.25, roofed), pick) * (1.0 - smoothstep(0.7, 1.0, rim)) * smoothstep(-0.5, -0.3, ay) * smoothstep(0.3, 0.8, face);
     stone = mix(vec3(0.56, 0.54, 0.5), vec3(0.74, 0.65, 0.52), wall) * (0.4 + 4.9 * ca * (0.45 + 5.0 * cb));
-    stone *= mix(vec3(0.84, 0.81, 0.78), vec3(1.08, 1.02, 0.94), smoothstep(0.3, 0.7, beds)) * (0.93 + 0.14 * thin);
+    stone *= mix(vec3(0.7, 0.71, 0.73), vec3(1.12, 0.98, 0.8), smoothstep(0.3, 0.7, beds)) * (0.9 + 0.2 * thin);
     // Rust under the ledges and in the joints.
     stone = mix(stone, stone * vec3(1.0, 0.7, 0.42), 0.5 * smoothstep(0.5, 0.2, fh) * smoothstep(0.35, 0.65, vnoise(vec2(around / 60.0, p.y / 22.0))));
     stone = mix(stone, stone * vec3(0.17, 0.16, 0.17), 0.88 * streak);
     stone *= 1.0 - 0.93 * arch;
     bentFace = (tu * fd.x + vec3(0.0, 1.0, 0.0) * fd.y) * 0.6;
     // The wall is broken in blocks and ledges that the mesh does not have: faces turned to the sun and from it, shelves that hold shade under them.
-    float b0 = vnoise(vec2(around / 34.0, p.y / 47.0));
-    float b1 = vnoise(vec2(around / 34.0 + 0.3, p.y / 47.0));
-    float c0 = vnoise(vec2(around / 9.0 + 5.0, p.y / 13.0));
-    float c1 = vnoise(vec2(around / 9.0 + 5.3, p.y / 13.0));
+    float b0 = vnoise(vec2(around / 34.0, p.y / 23.0));
+    float b1 = vnoise(vec2(around / 34.0 + 0.3, p.y / 23.0));
+    float c0 = vnoise(vec2(around / 9.0 + 5.0, p.y / 7.5));
+    float c1 = vnoise(vec2(around / 9.0 + 5.3, p.y / 7.5));
     float shelf = vnoise(vec2(around / 120.0, p.y / 4.2 + 1.5 * b0));
     bentFace += tu * (2.6 * (b1 - b0) + 1.5 * (c1 - c0)) * wall;
     bentFace += vec3(0.0, 1.0, 0.0) * (0.7 * (smoothstep(0.35, 0.65, shelf) - 0.5)) * wall;
-    stone *= 1.0 - 0.3 * wall * smoothstep(0.5, 0.3, shelf) * smoothstep(0.45, 0.55, c0);
+    stone *= 1.0 - wall * smoothstep(0.5, 0.3, shelf) * (0.22 + 0.33 * smoothstep(0.45, 0.55, c0));
+    // Under each ledge a dark line of shade and stain, broken along its length.
+    stone *= 1.0 - 0.6 * wall * smoothstep(0.44, 0.5, shelf) * (1.0 - smoothstep(0.5, 0.53, shelf)) * smoothstep(0.3, 0.6, c0 + 0.3 * b0);
   }
   vec3 gravel = vec3(0.0);
   vec3 bentFlat = vec3(0.0);

@@ -311,7 +311,7 @@ void main() {
   float du = clamp(r / uDome.y, 0.0, 1.0);
   float swell = (1.0 - du * du) * clamp(uDome.x / 2.0, 0.0, 1.0);
   float hump = smoothstep(0.0, 0.45, swell);
-  refl = mix(refl, refl * 0.22 + sky * 0.3, hump);
+  refl = mix(refl, refl * 0.3 + sky * 0.1, hump);
   f = max(f, 0.8 * hump);
   // Where the mats have grown up to the surface it is not a mirror at all.
   if (r > 470.0) f *= 1.0 - mix(0.5, 0.94, smoothstep(25.0, 220.0, length(cameraPosition - p))) * matBeds(p);
@@ -488,7 +488,7 @@ export function create(ctx: Context): Piece {
     const a = b * DEG;
     const r = lipAt(a) - rng.range(22, 150);
     const size = rng.range(1.1, 2.6);
-    dummy.position.set(Math.sin(a) * r, -rng.range(26, 62), -Math.cos(a) * r);
+    dummy.position.set(Math.sin(a) * r, -rng.range(38, 80), -Math.cos(a) * r);
     dummy.rotation.set(rng.range(-0.12, 0.12), rng.range(0, 6.28), rng.range(-0.12, 0.12));
     dummy.scale.set(size * 0.34, size * rng.range(2.2, 4.2), size * 0.34 * rng.range(0.7, 1));
     dummy.updateMatrix();

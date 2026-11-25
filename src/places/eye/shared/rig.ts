@@ -241,10 +241,10 @@ export function createRig(): Rig {
     uSkyHorizon: { value: new THREE.Vector3(0.52, 0.52, 0.56) },
     uSkyGround: { value: new THREE.Vector3(0.1, 0.09, 0.085) },
     uSunDir: { value: sunDirection },
-    uSunColour: { value: new THREE.Vector3(8.4, 4.4, 1.75) },
+    uSunColour: { value: new THREE.Vector3(9.0, 4.3, 1.5) },
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
     uGlowColour: { value: new THREE.Vector3(3.2, 1.9, 0.8) },
-    uFill: { value: new THREE.Vector3(0.7, 0.77, 0.9) },
+    uFill: { value: new THREE.Vector3(0.58, 0.66, 0.82) },
   };
 
   const bake = (): void => {

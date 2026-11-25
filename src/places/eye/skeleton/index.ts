@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot. */
-export const BONES = { ahead: 6.4, right: 21, scale: 1.05 };
+export const BONES = { ahead: 6.4, right: 21, scale: 0.88 };
 
 const FRAGMENT = /* glsl */ `
 varying vec3 vWorld;
@@ -24,14 +24,14 @@ void main() {
   // Old bone: chalk where the sun has had it, stained brown and amber where it lies in the water and the mats have taken it.
   float grain = fbm(vWorld.xz * 9.0 + vWorld.y * 7.0);
   float pit = vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0);
-  vec3 bone = vec3(0.6, 0.56, 0.47) * (0.6 + 0.5 * grain) * (0.84 + 0.3 * pit);
+  vec3 bone = vec3(0.5, 0.44, 0.33) * (0.6 + 0.5 * grain) * (0.84 + 0.3 * pit);
   bone = mix(bone, bone * vec3(0.8, 0.52, 0.26), smoothstep(0.4, 0.7, vnoise(vWorld.xz * 23.0 + vWorld.y * 31.0)));
   float low = smoothstep(0.26, 0.02, vWorld.y + 0.14 * (grain - 0.5));
   vec3 stain = mix(vec3(0.3, 0.17, 0.07), vec3(0.42, 0.22, 0.05), grain);
   vec3 albedo = mix(bone, stain, 0.85 * low);
   // The mats have taken most of it: amber and brown in blotches, the chalk only on the upper sides.
   float taken = smoothstep(0.35, 0.6, 0.6 * vnoise(vWorld.xz * 4.1 + vWorld.y * 3.0) + 0.4 * grain) * (1.0 - 0.6 * smoothstep(0.2, 0.9, n.y));
-  albedo = mix(albedo, stain * (0.55 + 0.6 * pit), 0.55 * taken);
+  albedo = mix(albedo, stain * (0.4 + 0.6 * pit), 0.8 * taken);
   albedo *= mix(1.0, 0.55, smoothstep(0.5, 0.0, n.y) * 0.5);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.8, 0.35, low), 0.6 + 0.4 * smoothstep(-0.4, 0.5, n.y));
   if (vWorld.y < 0.0) c = throughWater(c * sunk(vWorld), vWorld);
@@ -41,9 +41,14 @@ void main() {
 class Bones {
   readonly position: number[] = [];
   readonly index: number[] = [];
+  /** The roll of what is built next about the long axis, radians: the cage has fallen on its side. */
+  roll = 0;
 
   /** A tube through the points, each with its radius. */
-  tube(points: [number, number, number, number][], sides = 7): void {
+  tube(raw: [number, number, number, number][], sides = 7): void {
+    const cr = Math.cos(this.roll);
+    const sr = Math.sin(this.roll);
+    const points = raw.map(([x, y, z, r]) => [x * cr + y * sr, y * cr - x * sr, z, r] as [number, number, number, number]);
     const base = this.position.length / 3;
     const n = points.length;
     const t = new THREE.Vector3();
@@ -96,6 +101,7 @@ function skeletonGeometry(): THREE.BufferGeometry {
   const spineY = (z: number): number => 0.34 - 0.2 * Math.max(0, z - 0.7) - 0.14 * Math.max(0, -z - 0.7) + 0.03 * Math.sin(z * 3);
   const spineX = (z: number): number => 0.1 * Math.sin(z * 1.3) + 0.3 * Math.max(0, z - 1.1) ** 2;
   // The spine: vertebrae as knots on a cord, from the tail to the skull.
+  b.roll = 62 * DEG;
   const spine: [number, number, number, number][] = [];
   for (let i = 0; i <= 150; i++) {
     const z = -0.95 + (2.3 * i) / 150;
@@ -109,13 +115,15 @@ function skeletonGeometry(): THREE.BufferGeometry {
     const z = -0.2 + i * 0.105;
     const size = 0.36 * (0.72 + 0.28 * Math.sin((i / 10) * Math.PI));
     for (const side of [-1, 1]) {
-      const broken = [1, 0.5, 0.9, 1, 0.3, 0.8, 1, 0.62, 1, 0.45, 0.85][(i * 7 + (side > 0 ? 3 : 0)) % 11] as number;
+      const broken = [1, 0.5, 0.9, 0, 0.3, 0.8, 1, 0.62, 0, 0.45, 0.85][(i * 7 + (side > 0 ? 3 : 0)) % 11] as number;
+      if (broken === 0) continue;
+      const splay = 0.16 * Math.sin(i * 12.9898 + side * 4.1);
       const rib: [number, number, number, number][] = [];
       for (let k = 0; k <= 12; k++) {
         const u = (k / 12) * broken;
         const a = u * 2.5;
         const lean = side > 0 ? 0.32 : -0.12;
-        rib.push([spineX(z) + side * size * Math.sin(a) + lean * size * (1 - Math.cos(a)), spineY(z) - size * (1 - Math.cos(a)) * 0.82, z - 0.1 * u, 0.017 * (1 - 0.45 * u) * (k === 12 ? 0.3 : 1)]);
+        rib.push([spineX(z) + side * size * Math.sin(a) + lean * size * (1 - Math.cos(a)), spineY(z) - size * (1 - Math.cos(a)) * 0.82, z - (0.1 + splay) * u * 2.2, 0.017 * (1 - 0.45 * u) * (k === 12 ? 0.3 : 1)]);
       }
       b.tube(rib, 6);
     }
@@ -141,6 +149,20 @@ function skeletonGeometry(): THREE.BufferGeometry {
   // The pelvis and the shoulder blades: flat plates, as short thick tubes.
   b.tube([[-0.24, 0.2, -0.86, 0.02], [-0.2, 0.3, -0.8, 0.07], [-0.08, 0.36, -0.74, 0.085], [0.08, 0.36, -0.74, 0.085], [0.2, 0.3, -0.8, 0.07], [0.24, 0.2, -0.86, 0.02]], 7);
   b.tube([[0.3, 0.08, 0.5, 0.02], [0.4, 0.1, 0.62, 0.075], [0.5, 0.08, 0.8, 0.06], [0.56, 0.06, 0.95, 0.02]], 7);
+  b.roll = 0;
+  // Ribs and vertebrae that have come away and lie about, some of them over the lip and under the water.
+  for (let i = 0; i < 9; i++) {
+    const cx = 0.5 + 1.5 * Math.abs(Math.sin(i * 7.31 + 1.0)) * (i % 3 === 0 ? -1 : 1);
+    const cz = -1.2 + 2.9 * Math.abs(Math.sin(i * 3.77 + 2.0));
+    const turn = i * 2.4;
+    const len = 0.22 + 0.2 * Math.abs(Math.sin(i * 5.1));
+    const piece: [number, number, number, number][] = [];
+    for (let k = 0; k <= 8; k++) {
+      const u = k / 8 - 0.5;
+      piece.push([cx + len * (u * Math.cos(turn) - 0.6 * u * u * Math.sin(turn)), 0.03 + 0.02 * Math.sin(i * 1.7) - (cx < -0.4 ? 0.3 : 0), cz + len * (u * Math.sin(turn) + 0.6 * u * u * Math.cos(turn)), 0.016 * (k === 0 || k === 8 ? 0.3 : 1)]);
+    }
+    b.tube(piece, 6);
+  }
   // The long bones of the legs, fallen apart and lying where they fell; one hind leg hangs over the lip.
   b.long([0.35, 0.07, 0.95], [0.95, 0.06, 1.45], 0.03);
   b.long([0.98, 0.05, 1.5], [1.25, 0.04, 2.2], 0.024);
@@ -164,14 +186,14 @@ export function create(ctx: Context): Piece {
   const r = lipAt(a) + 0.75;
   const x = Math.sin(a) * r;
   const z = -Math.cos(a) * r;
-  mesh.position.set(x, landHeight(x, z) - 0.07, z);
+  mesh.position.set(x, landHeight(x, z) - 0.13, z);
   // Along the lip, the skull toward the left of the edge shot.
   const heading = Math.atan2(KEYS.edge.aim[0] - KEYS.edge.position[0], -(KEYS.edge.aim[2] - KEYS.edge.position[2]));
   mesh.rotation.y = Math.PI - (heading - 78 * DEG);
   mesh.scale.setScalar(BONES.scale);
   ctx.scene.add(ctx.parts.built('skeleton', mesh));
   const shade = ctx.rig.contactDiscs(1);
-  ctx.rig.setDisc(shade, 0, x, z, 1.5, 0.45, 1.6, ctx.rig.sun.shadowYaw);
+  ctx.rig.setDisc(shade, 0, x, z, 1.0, 0.3, 1.0, ctx.rig.sun.shadowYaw);
   return {
     dispose: () => {
       mesh.geometry.dispose();

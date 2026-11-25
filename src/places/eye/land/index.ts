@@ -39,7 +39,7 @@ void main() {
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
   float damp = smoothstep(0.42, 0.03, vWorld.y + 0.1 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
-  k.albedo *= mix(1.0, 0.5, damp);
+  k.albedo *= mix(1.0, 0.5, damp) * mix(1.0, 0.55, smoothstep(0.0, -0.12, vWorld.y) * (1.0 - face));
   k.rough = mix(k.rough, 0.35, damp * 0.8);
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
