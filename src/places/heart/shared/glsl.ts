@@ -60,6 +60,8 @@ uniform vec3 uSkyHorizon;
 uniform vec3 uSkyGround;
 uniform vec3 uWarmDir;
 uniform vec3 uWarmColour;
+uniform float uCast;
+uniform vec3 uFill;
 uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];
@@ -86,9 +88,10 @@ vec3 skyRadiance(vec3 d) {
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
+// uFill is the root's: the share of the open sky's light, band by band, that reaches the floor of the caldera through its brown fume.
 vec3 skyIrradiance(vec3 n) {
   float up = 0.5 + 0.5 * n.y;
-  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55), up);
+  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55), up) * uFill;
   float w = 0.5 + 0.5 * dot(n, uWarmDir);
   return 3.14159 * (e + uWarmColour * 0.35 * w * w);
 }
@@ -112,8 +115,9 @@ float contactAt(vec3 p) {
 }
 
 // Mean radiance leaving the lake inside a disc of that radius, metres.
+// uCast is the root's: how much of the lava's light is cast on the place. The lava as seen is tamed by the knee of the place's look, so its cast light is tamed here.
 vec3 lakeGlow(vec2 xz, float radius) {
-  return textureLod(tGlow, (xz - uGlowRect.xy) * uGlowRect.zw, log2(max(radius * 2.0 * uGlowTexels, 1.0))).rgb;
+  return textureLod(tGlow, (xz - uGlowRect.xy) * uGlowRect.zw, log2(max(radius * 2.0 * uGlowTexels, 1.0))).rgb * uCast;
 }
 
 // Irradiance from the glowing lake on a point p with normal n. Zero on a face that looks straight up at lake level.
@@ -149,7 +153,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
     e += uEmitterRadiance[i] * (3.14159 * r2 / d2) * c;
   }
-  return e;
+  return e * uCast;
 }
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.

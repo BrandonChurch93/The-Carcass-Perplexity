@@ -20,6 +20,7 @@ uniform vec2 uSize;
 uniform vec2 uHalf;
 uniform float uNear;
 uniform float uFar;
+uniform vec2 uKnee;
 varying vec2 vUv;
 float viewDistance(float d) {
   return uNear * uFar / (uFar - d * (uFar - uNear));
@@ -54,6 +55,11 @@ void main() {
     }
     vec4 v = sum / total;
     c = c * v.a + v.rgb;
+  }
+  if (uKnee.x > 0.0) {
+    // The knee of the place's look, on each sample before the average, so a thin bright line is averaged as the eye will see it.
+    float m = max(c.r, max(c.g, c.b));
+    if (m > uKnee.x) c *= uKnee.x * (1.0 + uKnee.y * log(m / uKnee.x)) / m;
   }
   gl_FragColor = vec4(c * uWeight, uWeight);
 }`;
@@ -161,6 +167,7 @@ export class Engine {
     uHalf: { value: new THREE.Vector2(1, 1) },
     uNear: { value: 0.1 },
     uFar: { value: 1000 },
+    uKnee: { value: new THREE.Vector2(0, 0) },
   });
   private sceneTarget: THREE.WebGLRenderTarget | null = null;
   private volumeTarget: THREE.WebGLRenderTarget | null = null;
@@ -337,6 +344,7 @@ export class Engine {
       v.uHasWarp!.value = warp ? 1 : 0;
       v.uNear!.value = stage.camera.near;
       v.uFar!.value = stage.camera.far;
+      (v.uKnee!.value as THREE.Vector2).set(stage.look.knee?.[0] ?? 0, stage.look.knee?.[1] ?? 0);
       r.setRenderTarget(accum);
       this.quad.material = this.resolve;
       this.quad.render(r);
