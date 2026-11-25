@@ -125,6 +125,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
   const NEAR = { x0: -592, x1: -486, z0: 172, z1: 322 };
   const MID = { x0: -660, x1: -430, z0: 40, z1: 400 };
+  const CRAG = { x0: -512.5, x1: -501, z0: 196, z1: 207.5 };
   const inside = (r: typeof NEAR, x: number, z: number, margin: number): boolean => x > r.x0 + margin && x < r.x1 - margin && z > r.z0 + margin && z < r.z1 - margin;
   const onBench = (x: number, z: number, y: number): boolean => y > -1.2 && calderaDistance(x, z) < -2 && benchDistance(x, z) > -4;
   const farBench = mesh(
@@ -136,9 +137,14 @@ export function create(ctx: HeartContext): HeartPiece {
     benchMaterial,
   );
   const nearBench = mesh(
-    sheet(NEAR.x0, NEAR.z0, NEAR.x1, NEAR.z1, 0.35, landHeight, (x, z, y) => onBench(x, z, y) && !nearCrack(x, z, 1.7), 0, 0.3),
+    sheet(NEAR.x0, NEAR.z0, NEAR.x1, NEAR.z1, 0.35, landHeight, (x, z, y) => onBench(x, z, y) && !nearCrack(x, z, 1.7) && !inside(CRAG, x, z, 1.0), 0, 0.3),
     nearMaterial,
   );
+  // The crag that stands at the left edge of the line view, 8 to 14 m from that lens: cut at 0.12 m, so that its outline breaks at a hand's width.
+  // It sinks a little under the bench at its border, where the bench's own sheet takes over.
+  const cragHeight = (x: number, z: number): number => landHeight(x, z) - 0.06 * (1 - Math.min(1, Math.max(0, Math.min(x - CRAG.x0, CRAG.x1 - x, z - CRAG.z0, CRAG.z1 - z) / 0.6)));
+  const cragFine = mesh(sheet(CRAG.x0, CRAG.z0, CRAG.x1, CRAG.z1, 0.12, cragHeight, onBench, 0, 0.1), nearMaterial);
+  cragFine.renderOrder = -5;
   // The last metres before the line view's lens: rubble a hand to a forearm across, cut far finer than the bench under it.
   const AHEAD: [number, number] = [0.788, -0.616];
   const RUBBLE = { back: -7, front: 15, left: -10, right: 4, x0: -523, z0: 199, x1: -494, z1: 229 };
@@ -195,7 +201,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, rubble, lip, ...rocks.bench), midBench, nearBench, rubble, lip, ...rocks.bench);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, cragFine, rubble, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];
@@ -221,9 +227,9 @@ export function create(ctx: HeartContext): HeartPiece {
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
         radius: c.depth > 1 ? 0.4 : 0.22,
-        // The vent at the foot of the line view's crag breathes thinly and leans out over the shore, clear of the crag's outline:
-        // vapour that crosses that outline is cut along it in hard-edged pieces.
-        strength: (c.depth > 1 ? 0.45 : 0.12) * strong,
+        // The vent at the foot of the line view's crag is silent for now: vapour that crosses the crag is cut in hard-edged pieces,
+        // along its outline or level across its face. When the vapour pass no longer cuts, give it 0.3 again.
+        strength: (c.depth > 1 ? 0.45 : 0) * strong,
         rise: (c.depth > 1 ? 6 : 2.2) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: c.depth > 1 ? [-0.42, 0.2] : [0.35, 0.02],
