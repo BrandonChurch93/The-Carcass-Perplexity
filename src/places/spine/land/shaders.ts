@@ -142,9 +142,33 @@ void main() {
   // Strata: the beds of the rock, tipped as the vertebrae lean, some dark, some pale, a few metres each.
   float tilt = dot(vWorld, vec3(0.16, 0.95, 0.27));
   float strata = vnoise(vec2(tilt * 0.37, 1.7)) * 0.6 + vnoise(vec2(tilt * 0.09, 7.3)) * 0.4;
-  if (spire) albedo *= 0.62 + 0.76 * strata;
+  albedo *= spire ? 0.62 + 0.76 * strata : 0.8 + 0.4 * strata;
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
+  // Slabs: the rock is jointed along the lean of the vertebrae and broken across it, each slab with its own tone and its own tilt,
+  // a dark crack between it and the next, and a ledge at its foot where the snow lies.
+  float ledgeSnow = 0.0;
+  if (!inside) {
+    vec2 j = top > 0.5 ? vec2(dot(vWorld.xz, vec2(0.82, 0.57)), dot(vWorld.xz, vec2(-0.57, 0.82))) : vec2(dot(vWorld, vec3(0.1, 0.94, -0.33)), (w.x > w.z ? vWorld.z : vWorld.x) + 0.35 * vWorld.y);
+    float cv = j.y / 5.5 + 1.7 * vnoise(vec2(j.y * 0.06, j.x * 0.017)) + 0.5 * vnoise(vec2(j.y * 0.23, j.x * 0.03));
+    float col = floor(cv);
+    float hc = hash12(vec2(col, 7.0));
+    float cu = j.x / (11.0 + 16.0 * hc) + hc * 17.0 + 0.6 * vnoise(vec2(j.y * 0.21, j.x * 0.05));
+    float row = floor(cu);
+    vec2 own = hash22(vec2(col, row));
+    float span = 11.0 + 16.0 * hc;
+    float dv = min(fract(cv), 1.0 - fract(cv)) * 5.5;
+    float du = min(fract(cu), 1.0 - fract(cu)) * span;
+    float thin = 0.14 + 0.0011 * far;
+    // Far off the slabs go into the mass of the rock: what is left is its beds and the snow on its ledges.
+    float near = smoothstep(1300.0, 220.0, far);
+    float crack = (1.0 - smoothstep(0.0, thin, min(dv, du * 0.8))) * near;
+    float mass = hash12(vec2(floor(cv * 0.23 + 0.4 * own.y), floor(cu * 0.4)));
+    albedo *= mix(1.0, 0.66 + 0.68 * own.x, 0.3 + 0.7 * near) * (0.8 + 0.4 * mass) * (1.0 - 0.7 * crack);
+    occ *= 1.0 - 0.6 * crack;
+    nRock = normalize(nRock + (across * (own.y - 0.5) + vec3(0.0, own.x - 0.5, 0.0)) * 0.34);
+    ledgeSnow = top > 0.5 ? 0.0 : smoothstep(0.9 + 1.6 * own.y + 0.004 * far, 0.2, fract(cu) * span) * smoothstep(0.25, 0.5, own.x + 0.3 * pit);
+  }
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -157,7 +181,7 @@ void main() {
 
   // Snow lies where the face leans back, deeper in the lee and in the hollows of the rock; rime frosts what faces the gale.
   float lee = dot(n0.xz, uWind.xz);
-  float lie = n0.y + (spire ? 0.1 : 0.22) * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
+  float lie = mix(smoothN.y, n0.y, spire ? 1.0 : 0.35) + (spire ? 0.1 : 0.14) * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
   // Rock that stands out of the snow keeps it only on its level tops.
   float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
   float snow = smoothstep(0.42, 0.62, lie - 0.42 * bare);
@@ -169,6 +193,7 @@ void main() {
     float ledge = smoothstep(0.66, 0.8, vnoise(vec2(tilt * 0.14, 3.1))) * smoothstep(0.38, 0.6, vnoise(vWorld.xz * 0.045 + vWorld.y * 0.02)) * smoothstep(-0.3, 0.25, n0.y);
     snow = max(snow, 0.92 * ledge);
   }
+  snow = max(snow, 0.9 * ledgeSnow * (spire ? 1.0 : bare));
   if (spire && !inside) {
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;

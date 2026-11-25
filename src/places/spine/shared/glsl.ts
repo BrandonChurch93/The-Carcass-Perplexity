@@ -92,8 +92,9 @@ vec3 skyRadiance(vec3 d) {
   c = mix(c, uSkyStorm * 0.45, 0.9 * storm) + uFlash * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
-  float band = (0.9 * exp(-up * up / 0.00028) + 0.1 * exp(-up * up / 0.003)) * smoothstep(-0.03, 0.0, up);
-  return c + uWarmColour * (band * w * w);
+  float band = (exp(-up * up / 0.00011) + 0.04 * exp(-up * up / 0.002)) * smoothstep(-0.02, 0.0, up);
+  // The band is the one saturated thing in the sky: it stands in place of the grey at the horizon, not on top of it.
+  return mix(c, uWarmColour * vec3(0.42, 0.32, 0.19), clamp(band * w * w, 0.0, 1.0));
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
