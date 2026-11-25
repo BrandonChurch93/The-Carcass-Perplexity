@@ -1,0 +1,75 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "The repeated, lightly varied spider-like creatures read as copies of a single 3D asset scattered across the scene.",
+      "answered": "06:29 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "it looks like a well-lit but ordinary CG scene, probably a personal or stock render. The volumetric fog and lava glow are competent. But the walker creatures are simple and lack detail, the cracked ground texture repeats, and the cliffs are generic. It lacks the density and finish of a top-budget film or cinematic, and its lighting is too sophisticated for a web demo or mobile game.",
+      "answered": "06:30 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "The distant mountains have conspicuously angular, sparsely faceted silhouettes characteristic of a low-budget real-time scene.",
+      "answered": "06:30 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the image has film-quality atmospheric depth. Layered haze and smoke, glowing lava cracks, and detailed rock and ground textures all hold up at this scale, and the shot is composed like a cinematic still of an alien landscape with spindly creatures. Two things keep me from being more sure. The creatures are small and slightly stiff, and this could pass as a high-end artist render, which would make it (c).",
+      "answered": "06:30 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 86,
+      "why": "The strongest cue is the lava's hard, uniformly glowing edge: it looks like an emissive material laid into textured terrain rather than convincingly lighting the surrounding rock.",
+      "answered": "06:30 UTC"
+    }
+  ]
+}
