@@ -70,7 +70,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tStrata: { value: strataTexture() },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
-    uStain: { value: new THREE.Vector4(-505.0, 0.9, 203.6, 2.6) },
+    uStain: { value: new THREE.Vector4(-505.0, 1.9, 203.6, 2.6) },
     uCrackB: { value: new THREE.Vector4((cracks[1] as Crack).ax, (cracks[1] as Crack).az, (cracks[1] as Crack).bx, (cracks[1] as Crack).bz) },
   };
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });
@@ -123,7 +123,7 @@ export function create(ctx: HeartContext): HeartPiece {
   }
   const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2, [1.6, 5, 16]);
   trim(buttressAll, -1.2);
-  const buttress = mesh(buttressAll, wallMaterial);
+  const buttress = mesh(buttressAll, ground({ FAR_LIGHT: '', BUTTRESS: '' }));
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
   const NEAR = { x0: -592, x1: -486, z0: 172, z1: 322 };
