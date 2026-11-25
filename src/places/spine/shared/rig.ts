@@ -7,14 +7,16 @@ import { DUSK, STRIKES, WIND, WIND_SPEED } from './anchors';
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
 export const LAND = { minX: -1800, maxX: 3800, minZ: -1100, maxZ: 1700, width: 1024, height: 512 };
 // The fine map holds the saddle before the first spire, where three of the five cameras stand, and the near mouth of the canal.
-export const LAND_FINE = { minX: -780, maxX: 60, minZ: -180, maxZ: 660, width: 512, height: 512 };
+export const LAND_FINE = { minX: -700, maxX: 140, minZ: -180, maxZ: 660, width: 512, height: 512 };
 export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 /** The round lights the rig holds. The strikes may hold six at once; two are kept for the lead. */
 export const MAX_EMITTERS = 8;
 /** How much of a round light's power the storm cloud throws back on the ridge as uFlash: radiance times radius squared, over this many square metres. */
-export const FLASH_AREA = 2.4e6;
+export const FLASH_AREA = 1.2e8;
 
 export type Height = (x: number, z: number) => number;
+/** What lies under the ground at a point: null where it is solid, or the roof of the hollow (metres over the canal floor) and the share of the sky's light that reaches into it (0 to 1). */
+export type Hollow = (x: number, z: number) => { roof: number; light: number } | null;
 
 interface Grid {
   spec: typeof LAND;
@@ -22,6 +24,8 @@ interface Grid {
   open: Float32Array;
   /** What the same look takes within 14 m alone: the fine grid replaces that share with its own. */
   near: Float32Array;
+  roof: Float32Array;
+  light: Float32Array;
 }
 
 function sample(data: Float32Array, spec: typeof LAND, x: number, z: number): number {
@@ -101,7 +105,7 @@ function soften(data: Float32Array, w: number, h: number): Float32Array {
 const REACH_FAR = [6, 14, 30, 60, 110, 190, 320, 520];
 const REACH_NEAR = [0.8, 1.6, 3.2, 6, 11];
 
-function bakeGrid(spec: typeof LAND, height: Height, openFrom: Grid | null): Grid {
+function bakeGrid(spec: typeof LAND, height: Height, hollow: Hollow | null, openFrom: Grid | null): Grid {
   const { width: w, height: h } = spec;
   const cx = (spec.maxX - spec.minX) / w;
   const cz = (spec.maxZ - spec.minZ) / h;
@@ -121,7 +125,20 @@ function bakeGrid(spec: typeof LAND, height: Height, openFrom: Grid | null): Gri
       }
     }
   } else open = skyOpen((x, z) => sample(heights, spec, x, z), spec, 2, REACH_FAR);
-  return { spec, height: heights, open, near: openFrom ? open : skyOpen((x, z) => sample(heights, spec, x, z), spec, 2, [6, 14]) };
+  const roof = new Float32Array(w * h);
+  const light = new Float32Array(w * h);
+  if (hollow) {
+    for (let j = 0; j < h; j++) {
+      for (let i = 0; i < w; i++) {
+        const under = hollow(spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
+        if (under) {
+          roof[j * w + i] = under.roof;
+          light[j * w + i] = under.light;
+        }
+      }
+    }
+  }
+  return { spec, height: heights, open, near: openFrom ? open : skyOpen((x, z) => sample(heights, spec, x, z), spec, 2, [6, 14]), roof, light };
 }
 
 function gridTexture(grid: Grid): THREE.DataTexture {
@@ -130,8 +147,8 @@ function gridTexture(grid: Grid): THREE.DataTexture {
   for (let i = 0; i < n; i++) {
     data[i * 4] = THREE.DataUtils.toHalfFloat(grid.height[i] as number);
     data[i * 4 + 1] = THREE.DataUtils.toHalfFloat(grid.open[i] as number);
-    data[i * 4 + 2] = THREE.DataUtils.toHalfFloat(0);
-    data[i * 4 + 3] = THREE.DataUtils.toHalfFloat(1);
+    data[i * 4 + 2] = THREE.DataUtils.toHalfFloat(grid.light[i] as number);
+    data[i * 4 + 3] = THREE.DataUtils.toHalfFloat(grid.roof[i] as number);
   }
   const t = new THREE.DataTexture(data, grid.spec.width, grid.spec.height, THREE.RGBAFormat, THREE.HalfFloatType);
   t.minFilter = THREE.LinearFilter;
@@ -193,8 +210,8 @@ export interface Rig {
   };
   /** Seconds of the six strikes, in the time of the place. */
   readonly strikes: readonly number[];
-  /** Called by the land folder, once, at creation: the true height of the land everywhere. */
-  setLand(height: Height): void;
+  /** Called by the land folder, once, at creation: the true height of the land everywhere, and the hollow under it (the canal). */
+  setLand(height: Height, hollow?: Hollow): void;
   /** `count` soft round shades for the contact map. Place each with `setDisc`. */
   contactDiscs(count: number): THREE.InstancedMesh;
   /** Centre on the ground, radius in metres, strength 0 to 1. */
@@ -248,6 +265,8 @@ export function createRig(): Rig {
     uWarmDir: { value: new THREE.Vector3(DUSK[0], 0.04, DUSK[2]).normalize() },
     uWarmColour: { value: new THREE.Vector3(1.5, 0.62, 0.2) },
     uFill: { value: new THREE.Vector3(1, 1, 1) },
+    // How much of the light that reaches into the canal is kept: staged by shot (see setTime).
+    uUnder: { value: 1 },
     uFlash: { value: flash },
     uWind: { value: new THREE.Vector4(WIND[0], WIND[1], WIND[2], WIND_SPEED) },
     uEmitterCount: { value: 0 },
@@ -259,14 +278,15 @@ export function createRig(): Rig {
     const at = locate(x, z);
     return ground(at.s, at.l);
   };
+  let landHollow: Hollow | null = null;
   let coarse: Grid | null = null;
   let fine: Grid | null = null;
   let coarseTexture: THREE.DataTexture | null = null;
   let fineTexture: THREE.DataTexture | null = null;
 
   const bake = (): void => {
-    coarse = bakeGrid(LAND, landHeight, null);
-    fine = bakeGrid(LAND_FINE, landHeight, coarse);
+    coarse = bakeGrid(LAND, landHeight, landHollow, null);
+    fine = bakeGrid(LAND_FINE, landHeight, landHollow, coarse);
     coarseTexture?.dispose();
     fineTexture?.dispose();
     coarseTexture = gridTexture(coarse);
@@ -314,8 +334,9 @@ export function createRig(): Rig {
     emitters,
     land,
     strikes: STRIKES,
-    setLand: (height) => {
+    setLand: (height, hollow) => {
       landHeight = height;
+      landHollow = hollow ?? null;
       coarse = null;
       fine = null;
     },

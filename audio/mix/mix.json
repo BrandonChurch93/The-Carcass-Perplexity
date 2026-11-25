@@ -5,9 +5,9 @@
   "sampleRate": 48000,
   "channels": 2,
   "integratedLufs": -14,
-  "truePeakDb": -1.14,
-  "gainDb": -2.7,
-  "limited": false,
+  "truePeakDb": -1.1,
+  "gainDb": -2.72,
+  "limited": true,
   "inputs": [
     {
       "file": "audio/cleaned/The-Carcass-Audio-cleaned.flac",
@@ -117,11 +117,11 @@
       "first": 9741,
       "frames": 121,
       "duckDb": 5.18,
-      "voiceBandDb": -23.86,
-      "restBandDb": -29.86,
+      "voiceBandDb": -23.88,
+      "restBandDb": -29.88,
       "marginDb": 6,
-      "voiceDb": -16.81,
-      "restDb": -29.06
+      "voiceDb": -16.82,
+      "restDb": -29.07
     },
     {
       "clip": "n8",
@@ -129,11 +129,11 @@
       "first": 9900,
       "frames": 111,
       "duckDb": 8.78,
-      "voiceBandDb": -21.31,
-      "restBandDb": -27.31,
+      "voiceBandDb": -21.33,
+      "restBandDb": -27.33,
       "marginDb": 6,
-      "voiceDb": -15.77,
-      "restDb": -27.14
+      "voiceDb": -15.79,
+      "restDb": -27.16
     },
     {
       "clip": "n8",
@@ -141,11 +141,11 @@
       "first": 10075,
       "frames": 75,
       "duckDb": 4.43,
-      "voiceBandDb": -20.14,
-      "restBandDb": -26.14,
+      "voiceBandDb": -20.16,
+      "restBandDb": -26.16,
       "marginDb": 6,
-      "voiceDb": -16.91,
-      "restDb": -21.08
+      "voiceDb": -16.92,
+      "restDb": -21.1
     },
     {
       "clip": "n8",
@@ -153,11 +153,11 @@
       "first": 10620,
       "frames": 270,
       "duckDb": 0.88,
-      "voiceBandDb": -21.61,
-      "restBandDb": -27.61,
+      "voiceBandDb": -21.62,
+      "restBandDb": -27.62,
       "marginDb": 6,
-      "voiceDb": -18.04,
-      "restDb": -20.26
+      "voiceDb": -18.05,
+      "restDb": -20.28
     }
   ],
   "sounds": [
@@ -195,7 +195,7 @@
     },
     {
       "id": "breath-life",
-      "gainDb": -4.5
+      "gainDb": -1.5
     },
     {
       "id": "marsh-bed",
@@ -223,7 +223,7 @@
     },
     {
       "id": "spine-life",
-      "gainDb": -4.4
+      "gainDb": -1.4
     },
     {
       "id": "eye-bed",
@@ -231,11 +231,11 @@
     },
     {
       "id": "eye-life",
-      "gainDb": -3.4
+      "gainDb": -15.4
     },
     {
       "id": "eye-event",
-      "gainDb": -16.4
+      "gainDb": -13.4
     },
     {
       "id": "reveal-bed",
