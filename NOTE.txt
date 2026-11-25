@@ -1,6 +1,6 @@
-2026-11-25 22:46 UTC
-work at 0e8120e on agent/marsh-life
-minute 86: marsh-3 hero nearly bald with hanging hair, sunk one shaggy; marsh-4 stuck one head up in grey mud; marsh-0 wide; marsh-2 stalks. Wrong: wallowers still loaf-like with stem legs, dead read as grey rock not crystal mounds, stuck one has no face
+2026-11-25 23:04 UTC
+work at ce729a5 on agent/marsh-life
+Minute 102. marsh-3: hide darker, tusk fan, wallow; still box-backed and legs are plain pillars. marsh-4: stuck one has sparse dark ropes on a too-smooth hide; dead furred white. marsh-0: stalks now in clumps; wallowers still pale bales. marsh-2: bud matte, stems thick.
 look-1.jpg = out/work/h-marsh-3.jpg
 look-2.jpg = out/work/h-marsh-4.jpg
 look-3.jpg = out/work/h-marsh-0.jpg
