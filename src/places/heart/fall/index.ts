@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { MOUTH, smooth } from '../layout';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { blackbody } from '../shared/rig';
-import { BED_FRAGMENT, BED_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
+import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
 import { TUBE, WINDOW, createCourse } from './path';
 import { bed, face, shell } from './shape';
 
@@ -30,11 +30,13 @@ export function create(ctx: HeartContext): HeartPiece {
   };
 
   const rockMaterial = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
+  rockMaterial.userData.depthFragment = ROCK_DEPTH;
   const tube = new THREE.Mesh(shell(), rockMaterial);
   const cliff = new THREE.Mesh(face(), rockMaterial);
   ctx.scene.add(ctx.parts.built('vessel-mouth', tube, cliff), cliff);
 
   const bedMaterial = new THREE.ShaderMaterial({ vertexShader: BED_VERTEX, fragmentShader: BED_FRAGMENT, uniforms: shared });
+  bedMaterial.userData.depthFragment = BED_DEPTH;
   const stream = new THREE.Mesh(river.geometry, bedMaterial);
   ctx.scene.add(ctx.parts.built('lava-fall', stream));
 

@@ -218,3 +218,24 @@ ${RIG_GLSL}
 void main() {
   gl_FragColor = vec4(rigOut(blackbody(vHeat)), 1.0);
 }`;
+
+// The discards alone, for the engine's depth pass.
+export const ROCK_DEPTH = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vSkin;
+${WINDOW_FRAGMENT}
+void main() {
+  if (hiddenByWall(vWorld, vSkin.z)) discard;
+  gl_FragColor = vec4(0.0);
+}`;
+
+export const BED_DEPTH = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying float vIn;
+${WINDOW_FRAGMENT}
+void main() {
+  if (hiddenByWall(vWorld, vIn)) discard;
+  gl_FragColor = vec4(0.0);
+}`;
