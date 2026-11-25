@@ -222,7 +222,7 @@ export function create(ctx: Context): Piece {
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(26, 26) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, ...additive, depthTest: false }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uAt: { value: tip }, uSize: { value: new THREE.Vector2(11, 11) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, ...additive, depthTest: false }));
     spot.frustumCulled = false;
     spot.renderOrder = 7;
     group.add(cloud, spot);
