@@ -7,7 +7,7 @@ const COMMON = /* glsl */ `
 // Ash, on the skin and on the hide.
 const vec3 ASH = vec3(0.15, 0.145, 0.142);
 // The back of a rope of the skin: brown-black, read about 70 60 55 where it lies open and level.
-const vec3 ROPE = vec3(0.09, 0.07, 0.056);
+const vec3 ROPE = vec3(0.084, 0.07, 0.059);
 uniform sampler2D tRelief;
 uniform sampler2D tMask;
 uniform sampler2D tLines;
