@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 25, 2026-11-25 04:42 UTC:
+Status 26, 2026-11-25 04:54 UTC:
 
-- `01-heart-0.jpg`: Wide key after the light fix: approved picture left, joined frame right. Sky and near bench now measure close; the far air is still too blue (the air owner is rebalancing it toward the lake's warm glow)
-- `02-pair-a.jpg`: Walkers and the line, approved left, frame right: the animals are still dark and heavy, the channel is flat and pale. Both owners have their directions
-- `03-pair-b.jpg`: The one that sank and the fall, approved left, frame right: the mouth is broken from this angle and the lava reads pale peach; the tone curve is being changed so lava keeps a fiery orange
-- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
+- `01-heart-0.jpg`: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier)
+- `02-pair-c.jpg`: Top: the lava at the line. Bottom: the mouth and its fall. Approved on the left, the build on the right. The lava now reads orange to yellow, no longer pale peach. The camera and the channel of the top view are being refitted next
+- `03-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
+- `04-key-heart-4-hd-draft.jpg`: The frame that answers heart-4, film frame 4006, hd, draft tier
 
+Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
 Status 24, 2026-11-25 04:22 UTC, showed: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place.
 Status 23, 2026-11-25 04:04 UTC, showed: The first-light land drawn alone, 3840 x 2160, one sample.
-Status 22, 2026-11-25 03:41 UTC, showed: First light of the built Heart beside its approved picture.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T04:42:28Z
-phase 3: 1.55 h used of 13.00 h
-build: 8.21 h used of 72.00 h
+2026-11-25T04:54:55Z
+phase 3: 1.76 h used of 13.00 h
+build: 8.42 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 20
+minutes since the last status: 12
 ```
 
 ## Phases
@@ -730,3 +730,4 @@ none
 - 2026-11-25 04:11 UTC. The engine rejects hidden fragments before shading them (Place.depthFirst): key heart-0 at 3840 x 2160, one sample, 13.5 s against 17.7 s, the picture identical byte for byte at the preview size. 761 tests pass. npm run cost is in tools/README.md.
 - 2026-11-25 04:22 UTC. 04:23 UTC: G13 merged (the register has every stand-in reference again, 799 tests green by the agent's run). The first versions of all six owners of the Heart merged: land (2cd3ff2), fall (ac59ed2), sunk (8533fa7), walkers (3743542), lake (e18921a), air (225329c). 14 of 14 parts are built parts. Compared at hd draft against the five approved pictures: all far from the bar. Status 24 sent.
 - 2026-11-25 04:49 UTC. Status 25 sent 04:42. The first tone curve alone turned every lava temperature pale peach, so a second curve for what glows was added: Look.fire [lo, hi, exposure] in src/core/stage.ts and uFire in src/core/post.ts; above lo the pixel passes to a filmic curve, fully by hi; greys stay continuous. Heart look now exposure 1.7, knee [0.6, 0.6], fire [0.35, 1.6, 0.6]; other places unchanged. Land v2 merged (rim fitted to the wide picture, bench in treads with a crag, rock faces, cool grey rock, smaller steam); build and tsc pass.
+- 2026-11-25 04:55 UTC. Status 26 sent 05:06. G14 (the loop's seam) merged from agent/g13 with 19 tests; today 13 of 14 Heart parts do not come round in 8 s, which is Phase 5 work (kit/08 Phase 2 step 4: the loop's motion does not have to close yet); the fallback of kit/03 section 9 (cross-fade with itself one loop length earlier) is always available. The gate builder has handed back both jobs and is done.
