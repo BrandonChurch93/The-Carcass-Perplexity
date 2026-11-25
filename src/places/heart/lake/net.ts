@@ -174,6 +174,7 @@ export const AUTHORED: Record<string, { half: [number, number, number]; lumps: n
   spatterRight: { half: [0.5, 2.3, 0.5], lumps: 0.5, heat: 1.5 },
   spatterLeft: { half: [0.4, 1.7, 0.4], lumps: 0.5, heat: 1.5 },
   sunk: { half: [0.05, 0.16, 0.04], lumps: 0.4, heat: 0.75 },
+  lead: { half: [0.3, 0.6, 0.3], lumps: 0.6, heat: 0.1 },
 };
 
 function toTexture(data: Float32Array, width: number, height: number): THREE.DataTexture {
