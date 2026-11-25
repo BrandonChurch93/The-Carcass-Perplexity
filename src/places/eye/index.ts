@@ -8,9 +8,10 @@ import { stream } from '../../core/rng';
 import { neutralLook } from '../../core/stage';
 import { cut, placeOf, secondsInPlace } from '../../film/cut';
 import { KEYS, SHORE_TURN, onShore, shots } from './cameras';
+import handoff from './handoff.json';
 import { DEEP, DEG, FAN, apronWidth, GAP_DIR, GAP_FROM, KNOLL, SHORE, at, gapFloor, landGeometry, landHeight, ringSector, shoreAt, shoreOf, sweep } from './land';
 
-export const DEEP_COLOUR = '#0c1a2c';
+export const DEEP_COLOUR = handoff.water;
 const AIR = '#b9b4b6';
 const HAZE = 0.000035;
 
@@ -359,7 +360,7 @@ const place: PlaceModule = {
     const lap = herd(new THREE.RingGeometry(0.95, 1, 28).rotateX(-Math.PI / 2), kit.flat('#d3a36c', { side: two }), animals.length * 2);
     ripples.add(lap);
     const CENTRE_RINGS = 12;
-    const ringMaterial = kit.flat('#31465c', { side: two });
+    const ringMaterial = kit.flat(handoff.ring, { side: two });
     const centreRings: THREE.Mesh[] = [];
     for (let i = 0; i < CENTRE_RINGS; i++) {
       const ring = new THREE.Mesh(ringGeometry(96), ringMaterial);
@@ -368,6 +369,13 @@ const place: PlaceModule = {
       centreRings.push(ring);
       ripples.add(ring);
     }
+    const restRings = handoff.ringRadii.map((ratio) => {
+      const ring = new THREE.Mesh(ringGeometry(192), ringMaterial);
+      ring.position.y = 0.25;
+      ring.frustumCulled = false;
+      ripples.add(ring);
+      return { ring, radius: ratio * handoff.eyeHalfHeightMetres };
+    });
     lake.add(ripples);
 
     const riser = new THREE.Group();
@@ -399,6 +407,7 @@ const place: PlaceModule = {
 
     const riseKey = secondsInPlace('eye', cut.keyFrames['eye-4'] as number);
     const endSeconds = secondsInPlace('eye', placeOf('eye').last + 1);
+    const ringRest = endSeconds - 1;
     const yAxis = new THREE.Vector3(0, 1, 0);
     const qYaw = new THREE.Quaternion();
     const qPitch = new THREE.Quaternion();
@@ -475,6 +484,14 @@ const place: PlaceModule = {
           }
           ring.visible = width > 0;
           if (ring.visible) writeRing(ring.geometry, radius, width);
+        });
+
+        restRings.forEach(({ ring, radius }, i) => {
+          const from = riseKey + 0.3 + 0.1 * (restRings.length - 1 - i);
+          const grown = smooth(from, from + ringRest - riseKey - 1.1, t);
+          const u = grown * grown * (3 - 2 * grown);
+          ring.visible = u > 0;
+          if (ring.visible) writeRing(ring.geometry, radius * u, radius * u * handoff.ringWidth);
         });
 
         const swell = smooth(riseKey - 1.7, riseKey - 0.15, t) * (1 - smooth(riseKey + 0.8, riseKey + 2.5, t));
