@@ -9,6 +9,7 @@ import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, first, frameAt, world } from '../ridge';
 import { flashAt } from '../strikes/bolt';
 import { BODY_FRAGMENT, BODY_VERTEX, LOCK_FRAGMENT, LOCK_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
+import { scorch } from './scorch';
 import { FACE_AT, HIPS, LEG_TOP, NECK_AT, bodyGeometry, coat, lockGeometry, tendrilGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
@@ -38,6 +39,7 @@ interface Animal {
 }
 
 const TENDRILS = 34;
+const TENDRILS_DEAD = 110;
 const SEGMENTS = 5;
 
 const m1 = new THREE.Matrix4();
@@ -48,9 +50,9 @@ const v1 = new THREE.Vector3();
 const ONE = new THREE.Vector3(1, 1, 1);
 
 /** A turn about a point of the animal. */
-function about(out: THREE.Matrix4, pivot: [number, number, number], rx: number, ry: number, rz: number, shift?: [number, number, number]): THREE.Matrix4 {
+function about(out: THREE.Matrix4, pivot: [number, number, number], rx: number, ry: number, rz: number, shift?: [number, number, number], scale: THREE.Vector3 = ONE): THREE.Matrix4 {
   q1.setFromEuler(e1.set(rx, ry, rz, 'YXZ'));
-  out.compose(v1.set(pivot[0] + (shift ? shift[0] : 0), pivot[1] + (shift ? shift[1] : 0), pivot[2] + (shift ? shift[2] : 0)), q1, ONE);
+  out.compose(v1.set(pivot[0] + (shift ? shift[0] : 0), pivot[1] + (shift ? shift[1] : 0), pivot[2] + (shift ? shift[2] : 0)), q1, scale);
   m2.makeTranslation(-pivot[0], -pivot[1], -pivot[2]);
   return out.multiply(m2);
 }
@@ -99,8 +101,8 @@ export function create(ctx: Context): Piece {
       uTone: { value: new THREE.Vector4(role.tone[0], role.tone[1], role.tone[2], rng.next()) },
       uFace: { value: new THREE.Vector4(FACE_AT[0], FACE_AT[1], FACE_AT[2], 0) },
       uWrithe: { value: writhe },
-      uHairs: { value: role.locks > 3000 ? 6 : 3 },
-      uDoorGain: { value: 1.5 },
+      uHairs: { value: role.locks > 3000 ? 3 : 2 },
+      uDoorGain: { value: 3 },
     };
     const group = new THREE.Group();
     const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared }));
@@ -117,22 +119,24 @@ export function create(ctx: Context): Piece {
     locks.boundingSphere = body.boundingSphere;
     group.add(new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
 
-    const hang = new Float32Array(TENDRILS * 4);
-    const limb = new Float32Array(TENDRILS * 4);
-    for (let i = 0; i < TENDRILS; i++) {
+    const count = role.act === 'dead' ? TENDRILS_DEAD : TENDRILS;
+    const thin = role.act === 'dead' ? 0.55 : 1;
+    const hang = new Float32Array(count * 4);
+    const limb = new Float32Array(count * 4);
+    for (let i = 0; i < count; i++) {
       const a = rng.range(0, Math.PI * 2);
       const r = 0.11 * Math.sqrt(rng.next());
       hang.set([r * Math.cos(a) - 0.02, r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
       // A few long thick ones, many thin ones.
       const big = rng.next() < 0.3;
-      limb.set([big ? rng.range(0.55, 0.75) : rng.range(0.3, 0.55), big ? rng.range(0.024, 0.032) : rng.range(0.012, 0.02), rng.range(0.2, 1), rng.next()], i * 4);
+      limb.set([big ? rng.range(0.55, 0.75) : rng.range(0.3, 0.55), thin * (big ? rng.range(0.024, 0.032) : rng.range(0.012, 0.02)), rng.range(0.2, 1), rng.next()], i * 4);
     }
     const beard = new THREE.InstancedBufferGeometry();
     beard.index = tendril.index;
     beard.setAttribute('position', tendril.getAttribute('position'));
     beard.setAttribute('aHang', new THREE.InstancedBufferAttribute(hang, 4));
     beard.setAttribute('aLimb', new THREE.InstancedBufferAttribute(limb, 4));
-    beard.instanceCount = TENDRILS;
+    beard.instanceCount = count;
     beard.boundingSphere = body.boundingSphere;
     group.add(new THREE.Mesh(beard, new THREE.ShaderMaterial({ vertexShader: TENDRIL_VERTEX, fragmentShader: TENDRIL_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
     part.add(group);
@@ -149,18 +153,21 @@ export function create(ctx: Context): Piece {
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; size: number; skirt: number }[] = [
-    { d: CANAL_KEY + 4.1, l: -0.1, yaw: along - 0.25, act: 'stand', size: 1.0, skirt: 1 },
+    { d: CANAL_KEY + 4.3, l: 0.1, yaw: along + 0.75, act: 'stand', size: 1.0, skirt: 0.8 },
     { d: CANAL_KEY + 3.2, l: -1.5, yaw: along + 0.3, act: 'lie', size: 1.05, skirt: 1.2 },
     { d: CANAL_KEY + 2.5, l: -2.4, yaw: along - 0.4, act: 'lie', size: 1.15, skirt: 1.1 },
     { d: CANAL_KEY + 1.6, l: -2.6, yaw: along + 1.2, act: 'stand', size: 1.2, skirt: 1.3 },
     { d: CANAL_KEY + 0.6, l: -2.6, yaw: along + 0.5, act: 'stand', size: 1.1, skirt: 1 },
   ];
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 14000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 36000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
   const CROSSING = 4;
-  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 2500, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
+  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 5000, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
   // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.15, locks: 40000, skirt: 1.0, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(0.0, 1.05, -1, 0.1));
+  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 1.0, tone: [0.86, 0.8, 0.68], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.08, -1, 0.12));
 
+  const burned = scorch(ctx);
+  burned.drape();
+  part.add(burned.mesh);
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
   const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1);
@@ -181,7 +188,7 @@ export function create(ctx: Context): Piece {
     (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.006 * breath, sway), q1.setFromEuler(e1.set(sway * 0.5, 0, 0.012 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.018 * breath, 1 + 0.03 * breath));
     HIPS.forEach((hip, i) => leg(a.bones[i + 1] as THREE.Matrix4, hip, 0, 0, 0, fore, 0, sway));
     about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.2 * Math.sin(t * 0.31 + ph), 0.28 * Math.sin(t * 0.41 + ph * 2) + look, 0.1 * Math.sin(t * 0.63 + ph) - 0.05, [fore, 0, sway]);
-    a.coat.set(a.role.inside ? 1.7 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? -0.05 : 0.2);
+    a.coat.set(a.role.inside ? 1.25 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? -0.05 : 0.2);
     a.writhe.set(1, 0, 0, 0);
   };
 
@@ -233,12 +240,13 @@ export function create(ctx: Context): Piece {
 
   // The dead one does not move: its bones are set once. It lies on its right side: the trunk slack and flattened, the forelegs thrown forward
   // toward its head with the upper one fallen to the ground, the hind legs drawn up under the belly, the neck fallen forward and down.
-  (dead.bones[0] as THREE.Matrix4).makeScale(1, 0.92, 0.88);
-  about(dead.bones[1] as THREE.Matrix4, HIPS[0] as [number, number, number], -0.6, 0, 0.7, [0.02, -0.03, 0.08]);
-  about(dead.bones[2] as THREE.Matrix4, HIPS[1] as [number, number, number], -0.12, 0, 0.25, [0, 0.02, -0.03]);
-  about(dead.bones[3] as THREE.Matrix4, HIPS[2] as [number, number, number], -0.65, 0, 0.35, [0.05, 0.02, 0.1]);
-  about(dead.bones[4] as THREE.Matrix4, HIPS[3] as [number, number, number], -0.08, 0, 0.6, [0.03, 0.03, -0.03]);
-  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.5, -0.25, [0, -0.02, 0.05]);
+  (dead.bones[0] as THREE.Matrix4).makeScale(1.1, 0.95, 0.72);
+  const LONG = new THREE.Vector3(1, 1.3, 1);
+  about(dead.bones[1] as THREE.Matrix4, HIPS[0] as [number, number, number], -0.55, 0, 0.5, [0.06, -0.03, 0.12], LONG);
+  about(dead.bones[2] as THREE.Matrix4, HIPS[1] as [number, number, number], -0.1, 0, 0.3, [0.04, 0.02, -0.06], LONG);
+  about(dead.bones[3] as THREE.Matrix4, HIPS[2] as [number, number, number], -0.55, 0, 0.3, [-0.02, 0.02, 0.13], LONG);
+  about(dead.bones[4] as THREE.Matrix4, HIPS[3] as [number, number, number], -0.08, 0, 0.65, [-0.02, 0.03, -0.06], LONG);
+  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.45, -0.3, [0.06, -0.04, 0.03]);
   dead.coat.set(1, 0.6, 0.0, 0.12);
   dead.writhe.set(0, 1, 0, 0);
 
@@ -262,7 +270,8 @@ export function create(ctx: Context): Piece {
         const gone = i === 0 ? walked(seconds - CANAL_KEY_AT) : 0;
         const at = tube(h.d + gone, h.l, 0);
         a.ground.x = FLOOR;
-        place(a, [at[0], FLOOR, at[2]], h.yaw + (i === 0 ? 0.25 : 0));
+        // As it sets off it turns to the way it goes.
+        place(a, [at[0], FLOOR, at[2]], i === 0 ? h.yaw + (along - h.yaw) * smooth(-0.8, 1.4, seconds - CANAL_KEY_AT) : h.yaw);
         if (h.act === 'lie') lie(a, seconds, 0.05 * start);
         else if (i === 0 && gone > 0.002) {
           const u = seconds - CANAL_KEY_AT;
@@ -293,7 +302,7 @@ export function create(ctx: Context): Piece {
       // The dead one: on its side across the scorched rock, sunk a little into the drift.
       const gy = ctx.rig.land.height(carcassBody[0], carcassBody[2]);
       dead.ground.x = gy;
-      place(dead, [carcassBody[0], gy + 0.22 * dead.role.size, carcassBody[2]], -(carcassAxis + 180) * RAD, 1.36, 0);
+      place(dead, [carcassBody[0], gy + 0.19 * dead.role.size, carcassBody[2]], -(carcassAxis + 180) * RAD, 1.48, 0);
       ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, carcassBody[0], carcassBody[2], 1.5 * dead.role.size, 0.8);
       void CARCASS;
     },

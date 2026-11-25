@@ -86,7 +86,7 @@ void main() {
   // Under the coat: matted under-fur, dark because the coat stands over it.
   vec3 albedo = uTone.rgb * mix(0.4, 0.62, grain) * (0.75 + 0.5 * fine);
   // The pads under the feet are bare and dark.
-  if (vRest.y < 0.015) albedo = vec3(0.045, 0.036, 0.034);
+  albedo = mix(vec3(0.045, 0.036, 0.034), albedo, smoothstep(0.004, 0.02, vRest.y));
   float rough = 0.95;
   float occ = 0.6;
   if (vKind > 0.5) {
@@ -132,8 +132,21 @@ uniform float uPixel;
 uniform vec4 uCoat;
 uniform vec4 uTone;
 varying vec3 vColour;
+varying vec4 vFrost;
 varying vec3 vAt;
 varying float vSeed;
+vec3 gRoot;
+vec3 gOut;
+vec3 gLean;
+vec3 gBlown;
+vec3 gLock;
+// A lock at t along it: it leaves the hide standing, bends over with its lean and its weight, is carried by the wind, and lies on the ground
+// where it reaches it. Nothing hangs through the ground.
+vec3 lockAt(float t) {
+  vec3 p = gRoot + gLock.x * (gOut * (t - 0.5 * t * t) + gLean * t + vec3(0.0, -1.0, 0.0) * (gLock.y * 0.5 * t * t) + gBlown * (t * t));
+  p.y = max(p.y, gLock.z);
+  return p;
+}
 void main() {
   int which = int(aLock.z + 0.5);
   mat4 bone = uBones[which];
@@ -156,8 +169,10 @@ void main() {
 
   // A lock leaves the hide at a slant toward the rump, bends under its own weight, and narrows to a point: a wet spike of hair, not a curtain.
   vec3 comb = normalize(mat3(modelMatrix) * vec3(-1.0, 0.0, 0.0));
-  float off = 0.4 + 0.45 * fract(seed * 13.7);
-  float fall = 0.45 + 0.5 * fract(seed * 3.3);
+  // A long coat hangs: it stands off the hide less and falls more.
+  float droop = smoothstep(1.0, 1.8, uCoat.x);
+  float off = (0.4 + 0.45 * fract(seed * 13.7)) * (1.0 - 0.65 * droop);
+  float fall = 0.45 + 0.5 * fract(seed * 3.3) + 1.1 * droop;
   vec3 wind = normalize(uWind.xyz);
   // The gale takes the loose end: a steady lean and a flutter that runs through the coat as gusts pass over the animal.
   float gust = 0.5 + 0.5 * sin(uTime * (4.0 + 5.0 * fract(seed * 7.1)) + seed * 40.0 - dot(root, wind) * 3.0);
@@ -170,17 +185,24 @@ void main() {
   tuft = mat3(modelMatrix) * mat3(bone) * tuft / size;
   vec3 own = normalize(cross(n, comb) + vec3(1e-4)) * (0.6 * (fract(seed * 41.0) - 0.5)) + tuft * 1.5;
   vec3 lean = comb * 0.4 + own + vec3(0.0, -1.0, 0.0) * (fall * 0.35);
-  vec3 p = root + len * (n * (off * lift * (t - 0.5 * t * t)) + lean * t + vec3(0.0, -1.0, 0.0) * (fall * 0.5 * t * t) + wind * (blow * t * t));
-  vec3 tangent = n * (off * lift * (1.0 - t)) + lean + vec3(0.0, -1.0, 0.0) * (fall * t) + wind * (blow * 2.0 * t);
-  // Nothing hangs through the ground: a lock that reaches it lies on it.
-  p.y = max(p.y, uGround.x + 0.012 + 0.02 * fract(seed * 17.0));
+  gRoot = root;
+  gOut = n * (off * lift);
+  gLean = lean;
+  gBlown = wind * blow;
+  gLock = vec3(len, fall, uGround.x + 0.012 + 0.02 * fract(seed * 17.0));
+  vec3 p = lockAt(t);
+  // The way the lock runs where it is, as it lies: a lock pressed to the ground runs along the ground.
+  vec3 tangent = lockAt(t + 0.12) - p;
+  tangent = dot(tangent, tangent) > 1e-10 ? tangent : lean;
+  vec3 chord = lockAt(1.0) - root;
   vec3 toCamera = cameraPosition - p;
   float far = length(toCamera);
   toCamera /= far;
   vec3 side = normalize(cross(tangent, toCamera));
   // A lock seen end on is a point, not a card.
   float edgeOn = clamp(2.2 * length(cross(normalize(tangent), toCamera)) - 0.15, 0.04, 1.0);
-  float w = max(wide * edgeOn * (1.0 - 0.88 * t), 0.75 * uPixel * far);
+  // And it is never wider than a third of what the lens sees of its length.
+  float w = max(min(wide * edgeOn * (1.0 - 0.88 * t), 0.1 * length(cross(chord, toCamera))), 0.75 * uPixel * far);
   p += side * (position.x * w);
 
   // Light at the lock: the hide's way of facing, turned a little to the lens, darker toward the root where the coat stands over it and in the
@@ -199,11 +221,13 @@ void main() {
   vec3 albedo = mix(cream * 0.62, cream, smoothstep(0.0, 0.5, t));
   float windward = n.y * 0.55 - dot(n, wind) * 0.55 + 0.6 * (stain - 0.5) + uCoat.w;
   float rime = smoothstep(0.1, 0.6, windward) * smoothstep(0.3, 0.85, t + 0.3 * fract(seed * 31.0));
-  albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * 0.85);
+  albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * 0.45);
   // The singed edge of the burn: rust, then black.
   albedo = mix(albedo, vec3(0.3, 0.13, 0.05), smoothstep(0.0, 0.35, singe) * 0.8);
   albedo = mix(albedo, vec3(0.02, 0.017, 0.015), smoothstep(0.3, 0.75, singe) * (0.55 + 0.45 * t));
   vColour = albedo * e / 3.14159;
+  // Rime in a clump on the end of the lock, in the light of the open end.
+  vFrost = vec4(vec3(0.9, 0.91, 0.93) * runnerLight(p, normalize(facing + vec3(0.0, 0.6, 0.0))) / 3.14159, rime * (1.0 - smoothstep(0.0, 0.3, singe)));
   vAt = vec3(position.x, t, w / max(uPixel * far, 1e-6));
   vSeed = seed;
   if (len <= 0.0) p = vec3(0.0, -1e5, 0.0);
@@ -213,23 +237,27 @@ void main() {
 export const LOCK_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 varying vec3 vColour;
+varying vec4 vFrost;
 varying vec3 vAt;
 uniform float uHairs;
 varying float vSeed;
 void main() {
-  // One lock is a few hairs: each wanders a little and ends at its own length. Far off, where a hair is thinner than a pixel, the lock is whole.
+  // One lock is a few hairs: each wanders a little and ends at its own length, and where the lock is rimed each ends in a clump of frost.
+  // Far off, where a hair is thinner than a pixel, the lock is whole.
   float t = vAt.y;
   float count = uHairs;
   float across = (vAt.x * 0.5 + 0.5) * count;
   float id = floor(across);
   float h = fract(sin((id + 1.0) * 12.9898 + vSeed * 78.233) * 43758.5453);
   float f = fract(across) - 0.5 + 0.22 * sin(t * (4.0 + 7.0 * h) + h * 40.0);
-  float ends = 0.55 + 0.45 * h;
+  float ends = 0.6 + 0.4 * h;
   float through_ = t / ends;
-  float hair = step(abs(f), (0.24 + 0.14 * t) * (1.0 - through_ * through_ * through_)) * step(t, ends);
+  float clump = vFrost.w * smoothstep(0.62, 0.9, through_) * step(0.35, h);
+  float hair = step(abs(f), mix((0.24 + 0.14 * t) * (1.0 - through_ * through_ * through_), 0.5, clump)) * step(t, ends);
   float near = smoothstep(0.8, 2.2, vAt.z * 2.0 / count);
   if (mix(1.0, hair, near) < 0.5) discard;
-  gl_FragColor = vec4(vColour * (mix(1.0, 0.72 + 0.56 * h, near) * (1.0 - uSolo)), 1.0);
+  vec3 c = mix(vColour * mix(1.0, 0.72 + 0.56 * h, near), vFrost.rgb, mix(vFrost.w * smoothstep(0.5, 0.9, t) * 0.6, clump, near));
+  gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
 export const TENDRIL_VERTEX = /* glsl */ `
@@ -263,8 +291,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   vec3 sideways = vec3(-dir.z, 0.0, dir.x);
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
-  vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.3 * bend * t * t + 0.07 * sin(t * 9.0 + seed * 20.0) + 0.035 * sin(t * 23.0 + seed * 31.0) + 0.3 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.1 * abs(sin(t * 5.0 + seed * 44.0)) * step(0.3, t) + 0.45 * hook * hook * step(0.45, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.45 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.3 * hook * hook * sign(bend))
+    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.05 * abs(sin(t * 5.0 + seed * 44.0)) * step(0.3, t) * fract(seed * 3.1) + 0.2 * hook * hook * step(0.7, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -312,7 +340,8 @@ void main() {
   float blotch = vnoise3(vec3(t * 9.0, vAt.y * 1.5, vAt.z * 40.0));
   vec3 albedo = mix(vec3(0.05, 0.035, 0.035), vec3(0.17, 0.1, 0.09), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
   // Rime where it looks up, in beads.
-  float rime = smoothstep(0.45, 0.75, n.y * 0.6 + 0.4 * uCoat.w + 0.9 * (vnoise3(vWorld * 70.0) - 0.5)) * smoothstep(0.35, 0.6, vnoise3(vWorld * 13.0) + 0.4 * uCoat.w);
+  float crystals = vnoise3(vWorld * 520.0);
+  float rime = smoothstep(0.25, 0.75, n.y + 1.5 * uCoat.w + 1.3 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, rime);
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

@@ -40,10 +40,11 @@ const LEG_LEVELS: [number, number, number][] = [
   [0.5, 0.125, 0.0],
   [0.36, 0.1, -0.025],
   [0.2, 0.08, -0.015],
-  [0.08, 0.095, 0.02],
-  [0.02, 0.125, 0.05],
-  [0.0, 0.11, 0.05],
-  [0.0, 0.01, 0.05],
+  [0.09, 0.09, 0.02],
+  [0.045, 0.112, 0.045],
+  [0.012, 0.1, 0.05],
+  [0.0, 0.06, 0.05],
+  [0.0, 0.005, 0.05],
 ];
 /** The radius of a leg at height y, and how far ahead of the hip its middle is there. */
 function legAt(y: number): [number, number] {
@@ -64,7 +65,7 @@ const legAhead = (y: number): number => legAt(y)[1];
 function neckAt(k: number): [number, number, number] {
   const x = NECK_AT[0] - 0.1 + (FACE_AT[0] - NECK_AT[0] + 0.14) * k;
   const y = NECK_AT[1] + 0.02 - (NECK_AT[1] - FACE_AT[1]) * k * k;
-  return [x, y, (0.25 - 0.09 * k) * Math.pow(Math.max(1 - k ** 5, 0.0005), 0.45)];
+  return [x, y, (0.25 - 0.07 * k) * Math.pow(Math.max(1 - k ** 3, 0.0005), 0.5)];
 }
 
 interface Ring {
@@ -179,14 +180,14 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       // Short on the back, longer down the flanks, a fringe under the belly, a mane on the hump.
       const under = Math.max(0, -sy);
       const length = (0.085 + 0.07 * flank * longer + 0.09 * under * longer + 0.07 * hump(x) * Math.max(0, sy)) * rng.range(0.65, 1.35);
-      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.016, 0.034));
+      put(i, [x, t.y + t.h * sy, t.w * sz], [0.25 * (x + 0.05), sy / Math.max(t.h, 0.05), sz / Math.max(t.w, 0.05)], length, 0, rng.range(0.006, 0.012));
     } else if (pick < 0.76) {
       // The neck and the mane that falls over where a face would be.
-      const k = Math.pow(rng.next(), 0.7);
+      const k = rng.next() < 0.4 ? 1 - 0.3 * rng.next() ** 2 : rng.next();
       const ang = rng.range(-Math.PI, Math.PI);
       const [x, y, r] = neckAt(k);
       const fwd = 0.4 + 2.5 * k ** 4;
-      put(i, [x - 0.45 * r * k * Math.cos(ang), y + r * Math.cos(ang), r * Math.sin(ang)], [fwd, Math.cos(ang), Math.sin(ang)], rng.range(0.1, 0.2), 5, rng.range(0.016, 0.03));
+      put(i, [x - 0.45 * r * k * Math.cos(ang), y + r * Math.cos(ang), r * Math.sin(ang)], [fwd, Math.cos(ang), Math.sin(ang)], rng.range(0.1, 0.2), 5, rng.range(0.006, 0.011));
     } else {
       // The legs, feathered to the foot.
       const n = Math.floor(rng.next() * 4) % 4;
@@ -194,7 +195,7 @@ export function coat(rng: Rng, count: number, longer: number): Coat {
       const y = rng.next() < 0.3 ? rng.range(0.02, 0.16) : rng.range(0.03, LEG_TOP + 0.1);
       const ang = rng.range(-Math.PI, Math.PI);
       const r = 1.06 * legRadius(y);
-      put(i, [hip[0] + legAhead(y) + 1.15 * r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.06, 0.12) * (0.75 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.015, 0.028));
+      put(i, [hip[0] + legAhead(y) + 1.15 * r * Math.cos(ang), y, hip[2] + r * Math.sin(ang)], [Math.cos(ang), 0.1, Math.sin(ang)], rng.range(0.06, 0.12) * (0.75 + 0.5 * (y / LEG_TOP)), n + 1, rng.range(0.006, 0.01));
     }
   }
   return { root, dir, lock, count };
