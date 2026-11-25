@@ -612,13 +612,14 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
             const gap = Math.max(0, soft - hard);
             if (round > 0.001) {
               hard += gap * settle + stands * round;
-              // The fibres are counted round the girth of the rope, so they are as wide on its flank as on its back.
+              // The fibres are counted round the girth of the rope, so they are as wide on its flank as on its back: the first
+              // two terms are the way over its back from its middle, which is 1.6 r at its edge.
               // Both are counted on the surface and not on the ground: where the rope climbs what is under it, or comes down onto
               // the rope under it, the height is part of the way. Without it the fibres are drawn out down every steep place.
               along = (a - 0.5 * (k.a0 + k.a1)) * k.mean + 0.7 * lying + 0.8 * gap * settle;
               // Round the body what is under a rope falls away outward, as the girth is counted: the fall is added to the way and
               // not taken from it, or the two cancel and the fibres stand upright on every flank that looks away from the body.
-              phase = 1.25 * r * Math.asin(e / r) + Math.sign(e) * gap * (1 - settle) + (k.about === 0 ? -0.9 : 0.7) * lying + 0.05 * Math.sin(a * 6.1 + k.seed) + k.twist * along;
+              phase = e + 0.6 * r * Math.sign(e) * Math.pow(ae / r, 2.2) + Math.sign(e) * gap * (1 - settle) + (k.about === 0 ? -0.9 : 0.7) * lying + 0.05 * Math.sin(a * 6.1 + k.seed) + k.twist * along;
               // Round the eye the ropes turn so tightly that strong fibres would read as rings.
               // Never nought on a rope: the shader knows a rope by it, and lays its textures by the rope there.
               cords = Math.max(0.06, smooth(0.04, 0.3, round) * (k.main ? 1 : 0.7) * (k.about === 1 ? 0.8 : 1));
@@ -1045,6 +1046,8 @@ export interface LegShape {
   round: number;
   /** The last part of the length thins to the tendon the pad hangs by. */
   tendon: number;
+  /** How much of the hide is left on it: 0 about half of the side that looks up, 1 most of the limb with dark gaps. */
+  cover: number;
 }
 
 /** A leg dried to tendon and joint: thin shafts, a swollen knee, cords standing out along it, plates of caked hide lifting off it. */
@@ -1074,7 +1077,8 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       const h2 = (id * 57.31) % 1;
       const h5 = (id * 711.3) % 1;
       const patch = smooth(0.35, 0.65, noise2(s * 0.7 + seed * 3, Math.cos(a + seed) * 1.1 + 1.5));
-      const bare = 1 - 0.8 * (0.3 + 0.7 * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
+      const floor = 0.3 + 0.35 * shape.cover;
+      const bare = 1 - (0.8 + 0.3 * shape.cover) * (floor + (1 - floor) * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
       const ragged = 0.2 * (noise2(a * 7 + seed, s * 6) - 0.5) + 0.1 * (noise2(a * 19, s * 21 + seed) - 0.5);
       const inside = (cell[0] - 0.012 - 0.06 * h2) / k + ragged / k;
       const plate = id > bare ? smooth(0, 0.02, inside) * thin : 0;
