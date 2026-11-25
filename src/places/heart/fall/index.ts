@@ -26,7 +26,10 @@ export function create(ctx: HeartContext): HeartPiece {
     uFlare: { value: 1 },
     uSurge: { value: new THREE.Vector4(-1000, 0, 0, 0) },
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
+    tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
     tTalus: { value: ctx.assets.texture('mat/talus.jpg') },
+    tBoulder: { value: ctx.assets.texture('mat/boulder.jpg') },
+    tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
   };
 
   const rockMaterial = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
@@ -79,9 +82,9 @@ export function create(ctx: HeartContext): HeartPiece {
   const gobs = new THREE.InstancedMesh(gobGeometry, gobMaterial, GOBS);
   gobs.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('surge', gobs));
-  const CASCADES = [0, 14, 40, 70, 100];
+  const CASCADES = [0, ...course.falls];
   const throws = Array.from({ length: GOBS }, (_, i) => {
-    const from = i < 90 ? 0 : (CASCADES[1 + (i % 4)] as number);
+    const from = i < 90 ? 0 : (CASCADES[1 + (i % (CASCADES.length - 1))] as number);
     const p = course.at(from + rng.range(-3, 3));
     const side = rng.range(-1, 1);
     const out = rng.range(3, 16);

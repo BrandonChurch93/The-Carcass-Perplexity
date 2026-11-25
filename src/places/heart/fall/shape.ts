@@ -48,7 +48,7 @@ function arch(phi: number, k: number, d: number, swell: number): [number, number
 export function inArch(x: number, y: number, k: number): boolean {
   const qx = Math.abs(x - MOUTH.x) / (TUBE.half(0) * k);
   const qy = (y - TUBE.floor) / (TUBE.crown(0) * k);
-  if (qy < -0.25) return false;
+  if (qy < -0.03) return false;
   return Math.pow(qx, TUBE.power) + Math.pow(Math.max(qy, 0), TUBE.power) < 1;
 }
 
@@ -110,7 +110,7 @@ export function shell(): THREE.BufferGeometry {
     });
     rings.push(row);
   };
-  const arc = (phi: number): number => phi * 62;
+  const arc = (phi: number): number => (phi - PHI0) * 62 + 1;
 
   for (const d of depths) {
     ring((phi, j) => {
@@ -176,52 +176,83 @@ export interface Bed {
   height(x: number, z: number): number;
 }
 
-const BED = { x0: MOUTH.x - 98, x1: MOUTH.x + 78, z0: TUBE.lipZ - TUBE.depth - 4, z1: -314, lip: TUBE.lipZ };
+const BED = { x0: MOUTH.x - 98, x1: MOUTH.x + 78, z0: TUBE.lipZ - TUBE.depth - 4, z1: -312, lip: TUBE.lipZ };
+const ridged = (x: number, z: number): number => 1 - Math.abs(2 * noise2(x, z) - 1);
+/** The edge of the tube's floor is broken, not ruled. */
+const LIP_Z = new Map<number, number>();
+const lipAt = (x: number): number => {
+  const key = Math.round(x * 4);
+  let z = LIP_Z.get(key);
+  if (z === undefined) {
+    z = Math.max(BED.lip - 6, Math.min(BED.lip + 12, faceZ(key / 4, TUBE.floor - 1.5))) + 2.5 * (noise2(x / 9 + 3.7, 0.5) - 0.5) + 1.6 * (noise2(x / 2.7, 7.5) - 0.5);
+    LIP_Z.set(key, z);
+  }
+  return z;
+};
+/** Rock that stands in the stream and parts it: 0 none, 1 an island. Long with the flow, on the benches and in the fan. */
+const island = (len: number, across: number, half: number, speed: number): number => {
+  if (len < 14) return 0;
+  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.25 * smooth(110, 135, len) - 0.3 * smooth(6, 10, speed);
+  return smooth(0.6, 0.72, field) * smooth(0.95, 0.6, Math.abs(across) / half);
+};
 
 /**
- * The floor of the tube and the foot of the wall under the fall, with the river in it, as one sheet.
- * `aFlow`: x seconds from the lip, y metres from the middle of the stream, z half the stream's width, w metres from the lip.
+ * The floor of the tube and what the river has built on the foot of the wall, with the river in it, as one sheet.
+ * `aFlow`: x seconds from the lip, y metres from the middle of the stream (signed), z half the stream's width, w metres from the lip.
+ * `aBank`: xy the unit vector on the ground toward the stream, z the height of the stream there, w its speed.
  */
 export function bed(course: Course, land: (x: number, z: number) => number): Bed {
-  const height = (x: number, z: number): number => {
+  const at = (x: number, z: number): { y: number; n: ReturnType<Course['nearest']>; under: number; isle: number } => {
     const n = course.nearest(x, z);
     const u = n.distance / n.half;
-    const d = BED.lip - z;
+    const side = n.distance - n.half;
+    const lip = lipAt(x);
+    const d = lip - z;
     // Inside: a floor that rises a little going in, turned up at the walls.
-    const off = Math.abs(x - TUBE.axis(d)) / TUBE.half(d);
+    const off = Math.abs(x - TUBE.axis(Math.max(d, 0))) / TUBE.half(Math.max(d, 0));
     const up = smooth(0.7, 1.08, off);
-    const floor = TUBE.floor - 0.6 + 0.012 * Math.max(0, d) + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5) * smooth(0.9, 1.25, u) + 0.9 * smooth(1.0, 1.2, u);
-    // Outside: the land, with what the river has built on it. Levees beside the stream, spatter and lobes further out.
-    const levee = 2.5 * Math.exp(-Math.pow((n.distance - n.half - 1.6) / 2.3, 2));
-    const apron = 0.7 + 1.0 * smooth(n.half + 24, n.half + 4, n.distance);
-    const bumps = (fbm2(x / 6.5, z / 6.5) - 0.5) * 2.2 * smooth(n.half, n.half + 7, n.distance) + (noise2(x / 1.5 + 7, z / 1.5) - 0.5) * 0.6;
-    const rock = (apron + levee + bumps) * smooth(0.82, 1.08, u);
-    const stream = u < 1.08 ? 1.1 + 0.6 * (1 - Math.min(1, u * u)) : 0;
-    const edge = Math.min(x - BED.x0, BED.x1 - x, BED.z1 - z);
-    const lift = lerp(-2.5, Math.max(rock, stream), smooth(0, 8, edge));
-    const outside = Math.max(land(x, z), -3) + lift;
-    return lerp(floor, outside, smooth(BED.lip - 5, BED.lip + 3, z));
+    const floor = n.y - 0.5 + 0.9 * smooth(1.0, 1.25, u) + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5) * smooth(0.9, 1.25, u);
+    // Outside: the benches the river has built, a levee each side of it, their broken flanks, and its spatter on the ground beyond.
+    const ground = Math.max(land(x, z), -3);
+    const shelf = 2.5 + 7 * noise2(x / 13 + 1.3, z / 13 + 4.1) + 3 * noise2(n.len / 9, n.arm ? 3.5 : 9.5);
+    const levee = (0.3 + 1.1 * noise2(n.len / 5 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 1.1) / 1.3, 2)) + 0.35 * smooth(0, 1.0, side);
+    const flank = Math.max(0, side - shelf);
+    // The flank comes down in ledges. Fine relief is kept off the steep parts, where a height field would rule it into ribs.
+    const drop = 1.25 * flank + 0.6 * Math.min(flank, 3);
+    const beat = drop * 0.19 + 1.6 * noise2(x / 15, z / 15) + 0.5 * noise2(x / 4.1 + 8, z / 4.1);
+    const tread = beat - Math.floor(beat);
+    const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9));
+    const crag = 2.4 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + (1.1 * (ridged(x / 2.1, z / 2.1 + 5.5) - 0.5) + 0.4 * (noise2(x / 0.8, z / 0.8) - 0.5)) * smooth(2.5, 0, flank);
+    const bench = n.y + levee + crag * smooth(0.3, 3.5, side) - fall;
+    const cover = 0.5 + 0.5 * smooth(16, 4, side) + (fbm2(x / 5.5, z / 5.5) - 0.5) * 1.6 + (noise2(x / 1.4 + 7, z / 1.4) - 0.5) * 0.5;
+    const skirt = ground + lerp(-2.4, cover, smooth(30, 15, side) * smooth(-0.6, 0.6, ground + 0.8 * smooth(6, 0, side)));
+    const rock = Math.max(bench, skirt);
+    const isle = island(n.len, n.distance * n.side, n.half, n.speed);
+    const stream = n.y + 0.25 * (1 - Math.min(1, u * u)) + isle * (0.9 + 1.4 * noise2(x / 2.3, z / 2.3));
+    const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
+    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle };
   };
 
   const xs: number[] = [];
   for (let x = BED.x0; x <= BED.x1 + 1e-6; x += 0.7) xs.push(x);
   const zs: number[] = [];
-  for (let z = BED.z1; z > BED.z0; z -= z > BED.lip - 4 ? 0.6 : Math.min(1.7, 0.6 + (BED.lip - 4 - z) * 0.02)) zs.push(z);
+  for (let z = BED.z1; z > BED.z0; z -= z > BED.lip - 8 ? 0.6 : Math.min(1.7, 0.6 + (BED.lip - 8 - z) * 0.02)) zs.push(z);
   zs.reverse();
   const positions: number[] = [];
   const flow: number[] = [];
+  const bank: number[] = [];
   const within: number[] = [];
   const keep: boolean[] = [];
   for (const z of zs) {
-    const d = BED.lip - z;
     for (const x of xs) {
-      const n = course.nearest(x, z);
-      const y = height(x, z);
-      positions.push(x, y, z);
-      flow.push(n.tau, n.distance, n.half, n.len);
-      within.push(smooth(BED.lip + 2, BED.lip - 3, z));
-      const inTube = Math.abs(x - TUBE.axis(d)) < TUBE.half(d) * 1.1 + 3;
-      keep.push((z > BED.lip - 3 || inTube) && y > -2.2);
+      const p = at(x, z);
+      const d = lipAt(x) - z;
+      positions.push(x, p.y, z);
+      flow.push(p.n.tau, p.n.distance * p.n.side, p.n.half, p.n.len);
+      bank.push(p.n.toward[0], p.n.toward[1], p.n.y, p.n.speed);
+      within.push(smooth(-2, 3, d), p.n.distance, p.isle);
+      const inTube = Math.abs(x - TUBE.axis(Math.max(d, 0))) < TUBE.half(Math.max(d, 0)) * 1.1 + 3;
+      keep.push((d < -2.5 || inTube) && (d > 2 || (p.y > p.under - 1.6 && p.y > -0.6)));
     }
   }
   const w = xs.length;
@@ -234,5 +265,6 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
       index.push(a, b, a + 1, a + 1, b, b + 1);
     }
   }
-  return { geometry: finish(positions, index, { aFlow: { data: flow, size: 4 }, aIn: { data: within, size: 1 } }), height };
+  const extra = { aFlow: { data: flow, size: 4 }, aBank: { data: bank, size: 4 }, aIn: { data: within, size: 3 } };
+  return { geometry: finish(positions, index, extra), height: (x, z) => at(x, z).y };
 }
