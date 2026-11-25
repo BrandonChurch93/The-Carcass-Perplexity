@@ -20,7 +20,11 @@ const surgeReaches = (len: number): number => (len <= 0 ? 0 : (-25 + Math.sqrt(6
 export function create(ctx: HeartContext): HeartPiece {
   const land = (x: number, z: number): number => ctx.rig.land.height(x, z);
   // The stream runs on the apron and nowhere under the land's own ground: where a bench of the land stands higher, the stream is on it.
-  const course = createCourse((x, z) => (z > TUBE.lipZ + 8 ? Math.max(apronSlope(x, z), land(x, z) + 0.8) : apronSlope(x, z)));
+  const course = createCourse(
+    (x, z) => (z > TUBE.lipZ + 8 ? Math.max(apronSlope(x, z), land(x, z) + 0.8) : apronSlope(x, z)),
+    // The stream may cut into the apron, never into the land under it.
+    (x, z) => (z > TUBE.lipZ + 8 ? land(x, z) + 0.7 : -1e3),
+  );
   const river = bed(course, land);
   const surgeAt = ctx.events.surge;
 
