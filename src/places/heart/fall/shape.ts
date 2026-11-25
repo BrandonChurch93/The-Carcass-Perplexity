@@ -116,10 +116,10 @@ const outline = (phi: number, rho: number): number =>
 const flare = (phi: number): number => 2 + 24 * Math.exp(-Math.pow((phi - 0.68 * Math.PI) / 0.6, 2)) + 5 * Math.exp(-Math.pow((phi - 0.3 * Math.PI) / 0.5, 2));
 /** The roof goes back as a few big ribs: at each the tube steps in, more on one flank than the other, and partly opens again behind it. */
 const RIBS = [
-  { at: 13, step: 0.1 },
-  { at: 36, step: 0.09 },
-  { at: 66, step: 0.1 },
-  { at: 104, step: 0.11 },
+  { at: 13, step: 0.15 },
+  { at: 34, step: 0.14 },
+  { at: 60, step: 0.15 },
+  { at: 96, step: 0.15 },
 ];
 const ribbed = (phi: number, d: number): number => {
   let k = 1;
