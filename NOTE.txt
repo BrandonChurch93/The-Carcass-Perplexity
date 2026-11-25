@@ -1,6 +1,5 @@
-2026-11-25 21:52 UTC
-work at d8e3de0 on agent/ribs-sea
-v1: every part in place, plain
-look-1.jpg = out/work/v1.png
-look-2.jpg = out/work/stills/key-ribs-2-hd-draft.png
-look-3.jpg = out/work/compare/ribs-1.png
+2026-11-25 22:03 UTC
+work at 7523a3a on agent/ribs-sea
+min 55: sea disc was culled, now drawn (opening frame 600); four keys after merging the lead's bed and light
+look-1.jpg = out/work/open.png
+look-2.jpg = out/work/keys.png
