@@ -182,7 +182,7 @@ void main() {
   float sooty = fract(sin(vWho * 12.9898 + 4.1) * 43758.5453);
   float warm = fract(sin(vWho * 78.233 + 1.7) * 43758.5453);
   // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
-  vec3 hide = vec3(0.066, 0.069, 0.074) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
+  vec3 hide = vec3(0.079, 0.083, 0.089) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
   // pale: a little lighter at the joints and where the skin is worn, never bone.
   vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
