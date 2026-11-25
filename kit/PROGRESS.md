@@ -65,7 +65,7 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 | Unit | Phase | State | Rounds run | Best round | Commit | What ended its loop |
 | --- | --- | --- | --- | --- | --- | --- |
-| `heart` | 3 | in progress | 0 | | | |
+| `heart` | 3 | in progress | 1 |  |  |  |
 | `ribs` | 4 | not started | 0 | | | |
 | `breath` | 4 | not started | 0 | | | |
 | `marsh` | 4 | not started | 0 | | | |
@@ -684,6 +684,7 @@ One line for each round: its number, the unit, the commit it judges, the parts t
 
 - Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: done at 01:42 UTC, G1 to G12, G15 and G16 pass · pack: done at 01:45 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-001/`) · critics (R4 blockout, three packs, three fresh critics on three model families, sent at 01:47 UTC): done at 01:48 UTC · issues read: done at 01:58 UTC · fix: done at 02:33 UTC · scores: 6 (pack 1, gpt), 10 (pack 2, gemini), 4 (pack 3, claude), merged 4 against a bar of 7, six severe issues · ended by: a fail; the fixes are in `scorecards/round-001/SUMMARY.md` and round 2 is the last
 - Round 2 · `film`, the blockout round of Phase 2 (a floor round, the last: `blockoutMaxRounds` is 2) · judges commit `534fff1` · started 2026-11-25 02:37 UTC · build: done · machine checks: done at 02:39 UTC, G1 to G12, G15 and G16 pass (D2 and D7, the film and the render proof, are made after the round from the same build) · pack: done at 02:43 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-002/`) · critics (R4 blockout, three packs, three fresh critics, each family on a pack it did not judge in round 1, sent at 02:44 UTC): done at 02:55 UTC · issues read: done at 02:58 UTC · fix: none in the blockout, the limit is reached · scores: 5 (pack 1, gemini), 6 (pack 2, claude), 7 (pack 3, gpt), merged 5 against a bar of 7, seven severe issues of which one is declined · ended by: a fail at the limit (`quality.blockoutMaxRounds`); the build of this round goes on, and every open severe and major issue is under "Open items" with the phase that settles it; the record is `scorecards/round-002/SUMMARY.md`
+- Round 3 · `heart`, look lock round 1 (a floor round: the unit goes to it as soon as none of it is a stand-in, G13 passes at 05:52 UTC) · judges commit `e5b7a22` · started 2026-11-25 05:52 UTC · build: done · machine checks: pending · measures: pending · pack: pending · critics: pending · jury: pending · scores: pending
 
 ## Final scores
 
