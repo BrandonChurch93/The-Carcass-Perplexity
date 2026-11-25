@@ -1,5 +1,4 @@
-2026-11-25 22:03 UTC
-work at 7523a3a on agent/ribs-sea
-min 55: sea disc was culled, now drawn (opening frame 600); four keys after merging the lead's bed and light
-look-1.jpg = out/work/open.png
-look-2.jpg = out/work/keys.png
+2026-11-25 22:12 UTC
+work at 114a507 on agent/ribs-sea
+bore at its key after the rewrite: white wall, plume, heads; soft and low in contrast still
+look-1.jpg = out/work/bore.png
