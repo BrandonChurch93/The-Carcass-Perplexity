@@ -1,0 +1,35 @@
+{
+  "round": 2,
+  "unit": "film",
+  "pack": "R4b-3",
+  "family": "gpt",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-05.png",
+        "where": "the orbital reveal, from about 2:49 to 3:14",
+        "what": "Once the whole body is readable, the camera drifts through nearly the same composition for roughly 25 seconds, making the ending linger and pushing the runtime to about 3:18.",
+        "fix": "Keep the uninterrupted rise and full-body reveal, then hold the settled wide briefly and end closer to three minutes."
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "the ridge traversal, around 2:02 to 2:12",
+        "what": "After the opening push, the view jumps from the near spire to a wider look back at the approach, then to the next spires and inside the cave. The route into the cave stops reading as one camera journey.",
+        "fix": "Keep the cave as the destination through the push and carry the camera across the threshold without resetting to a different viewpoint."
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04-b.png",
+        "where": "the lake establishing wide",
+        "what": "The lake is framed as a thin horizontal strip and too much of the image is given to flat foreground. The target gives the basin substantially more depth in frame.",
+        "fix": "Raise the opening viewpoint and angle it down enough to give the lake more vertical room while retaining the right overhang and foreground shore."
+      }
+    ]
+  }
+}

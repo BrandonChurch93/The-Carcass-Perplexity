@@ -1,0 +1,70 @@
+{
+  "round": 2,
+  "unit": "film",
+  "pack": "R4b-2",
+  "family": "claude",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "frames 4729 to 4982, the push into the crater and past the red plant",
+        "what": "the camera drives into the crater rim and then through the red plant, so for about four seconds the frame is a wall of rim stripes, a large pale blob and red blades with nothing legible to look at",
+        "fix": "keep the push on a path that clears the rim and passes beside the plant, stopping with the crater and the animal at its edge framed rather than grazing the geometry"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "frames 2818 to 2974, and again 3286 to 3441 to 3597 to 3909",
+        "what": "the travel is broken by jumps: the camera leaps from mid-distance to right under the tall animals in under three seconds, then shows a low view along a lava channel on a different heading, then the drinking animal, then a close view of the lava fall; these read as cuts between fixed set-ups, not one move through the place",
+        "fix": "either make it one continuous path (bank, across the flat past the herd, low over the channel, ending on the fall) with steady speed, or commit to clean cuts and hold each set-up long enough to read"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "frames 6506 to 6633",
+        "what": "the camera jumps from among the plant stalks beside the red pool to the open grey salt flat on another heading with no travel between them; it plays as a cut in the middle of a move",
+        "fix": "carry the camera out of the pool area over the channel bank onto the salt flat, or place a deliberate cut and start the new set-up wide"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "frames 5872 and 6506, the plant stalks",
+        "what": "thick stalks cross the foreground and cover large parts of the frame as the camera passes through the plant stand",
+        "fix": "route the camera so the stalks stay at the frame edges or thin them along the camera path"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06-b.png",
+        "where": "the grey mass at the lower left",
+        "what": "the foreground mass covers about a quarter of the frame and is larger and higher than the near rock in set-B-06-a, and the camera sits higher looking down, so the pool and channel with the animals are pushed back and smaller than in the target",
+        "fix": "lower the camera and bring it forward a little so the near rock sits only in the lower-left corner and the steaming pool and the animals in the channel fill the middle as in the target"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04-b.png",
+        "where": "the upper right of the frame",
+        "what": "the target frames a tall cliff with a cave mouth across the upper right; the blockout frame shows a low soft ridge and sky there, and the camera is lower and nearer the crater, so the opening wide does not frame what the target frames",
+        "fix": "pull the camera back and up to match the target's height and heading so the cliff and cave fill the upper right and the river, herd, crater and lone animal sit where the target puts them"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "frames 6887 to 7014",
+        "what": "the camera stops dead on a close animal shape for the last two seconds, nearly identical frames, ending the place on a stalled push",
+        "fix": "keep a slow drift through to the end of the place, or end the push earlier on a wider frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "whole pack",
+        "what": "only places 2 to 4 are in the pack, so the first two seconds of the film and the rise from the lake to orbit cannot be checked; places 2 to 4 run about 28, 23 and 23 seconds, which fits a film of about three minutes over seven places",
+        "fix": "send contact sheets for place 1 and places 5 to 7, including the full lake-to-orbit rise"
+      }
+    ]
+  }
+}
