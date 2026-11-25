@@ -103,17 +103,17 @@ void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
   float life = 0.6 + 1.8 * aSeed.x * aSeed.x;
-  float t = max(uAge - 0.012 * aSeed.y, 0.0);
-  float drag = 1.0 - exp(-t * 3.2);
-  vec3 p = uAt + aGo * (drag / 3.2) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
-  vec3 v = aGo * exp(-t * 3.2) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
+  float t = max(uAge - 0.042 * aSeed.y * aSeed.y, 0.0);
+  float drag = 1.0 - exp(-t * 13.0);
+  vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
+  vec3 v = aGo * exp(-t * 13.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
   float size = max(0.1 + 0.16 * aSeed.z, 1.1 * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, length(along.xy) * 0.018);
+  float reach = max(size, length(along.xy) * 0.007);
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.3 / (reach / size) + 0.4);
@@ -270,7 +270,7 @@ export function create(ctx: Context): Piece {
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], i * 4);
       const az = rng.range(0, Math.PI * 2);
       const up = rng.range(-0.35, 1);
-      const speed = rng.range(28, 170) * (rng.next() < 0.2 ? 2 : 1);
+      const speed = rng.range(110, 520) * (rng.next() < 0.2 ? 1.8 : 1);
       const flat = Math.sqrt(Math.max(0, 1 - up * up));
       go.set([Math.cos(az) * flat * speed, up * speed, Math.sin(az) * flat * speed], i * 3);
     }
