@@ -179,6 +179,14 @@ void main() {
   // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
   float over = max(land.r - uPoolLevel, 0.0);
   float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.03 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
+  // The sheet is not one sheet: bars of bare wet sand break it wherever the bed comes within a hand of the level.
+  // Round a wader's legs the water stays: its rings and its mirror need it.
+  float waded = 1e3;
+  for (int i = 0; i < ${rings}; i++) {
+    if (i >= uRingCount) break;
+    waded = min(waded, length(p - uRings[i].xy));
+  }
+  depth -= 0.16 * smoothstep(0.36, 0.62, texture2D(tChop, p / 29.0).b + 0.5 * (texture2D(tChop, p / 7.3).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
   if (depth < 0.0) discard;
   float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
@@ -239,7 +247,7 @@ void main() {
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 900.0) * 8.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
-  float murk = 1.0 - exp(-max(depth, 0.0) * 5.0);
+  float murk = 1.0 - exp(-max(depth, 0.0) * 2.2);
   vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;
   vec3 col = fres * refl + (1.0 - fres) * murk * body;
   float alpha = (fres + (1.0 - fres) * murk) * edge;

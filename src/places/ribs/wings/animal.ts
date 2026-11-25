@@ -153,7 +153,7 @@ vec3 animalAt(float part, float s, float a, float id) {
   vec3 nb = vec3(0.0, d.z, -d.y);
   vec3 X = vec3(1.0, 0.0, 0.0);
   if (part < 0.5) {
-    float r = 0.27 * pow(max(sin(PI * pow(s, 0.8)), 0.0), 0.65);
+    float r = 0.235 * pow(max(sin(PI * pow(s, 0.8)), 0.0), 0.65);
     // The drowned one is sunk in on its ribs.
     r *= 1.0 - uDead * (0.3 + 0.1 * sin(s * 47.0) * smoothstep(0.25, 0.4, s) * (1.0 - smoothstep(0.75, 0.9, s)) * abs(cos(a)));
     float deep = 1.0 + 0.25 * max(-sin(a), 0.0) * smoothstep(0.15, 0.8, s);
@@ -163,7 +163,9 @@ vec3 animalAt(float part, float s, float a, float id) {
   if (part < 1.5) {
     vec3 t = neckDir(s);
     float ps = aNeck.z * s * s;
-    float r = mix(0.15, 0.06, pow(s, 0.7)) + 0.1 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
+    // A thin neck, the bones of it standing through the skin.
+    float r = mix(0.1, 0.042, pow(s, 0.7)) + 0.075 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
+    r *= 1.0 + 0.16 * pow(abs(sin(s * 34.0)), 5.0) * smoothstep(0.08, 0.2, s);
     r *= 1.0 - smoothstep(0.985, 1.0, s) * 0.6;
     return ring(neckAt(s, base), t, vec3(cos(ps), 0.0, -sin(ps)), r, a);
   }
