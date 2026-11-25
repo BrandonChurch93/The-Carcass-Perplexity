@@ -8,7 +8,7 @@ export const MAX_HEAT = 12;
 
 /** March steps. The cost of the volume is close to linear in these. */
 export const STEPS = { air: 7, column: 22, steam: 8, bank: 9 };
-export const BANKS = 4;
+export const BANKS = 6;
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -66,6 +66,7 @@ uniform vec4 uSteamB[${MAX_STEAM}];
 uniform vec4 uSteamC[${MAX_STEAM}];
 uniform vec4 uBankA[${BANKS}];
 uniform vec4 uBankB[${BANKS}];
+uniform vec4 uBankC[${BANKS}];
 
 const vec3 AIR_ALBEDO = vec3(0.93, 0.92, 0.9);
 const vec3 FUME_ALBEDO = vec3(0.66, 0.58, 0.51);
@@ -330,6 +331,7 @@ float bankDensity(vec4 A, vec4 B, vec3 p, bool fine, out float above) {
 void bankOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, inout float trans, inout float first) {
   vec4 A = uBankA[i];
   vec4 B = uBankB[i];
+  if (B.w <= 0.0) return;
   vec2 oxz = ro.xz - A.xy - B.xy * ro.y;
   vec2 dxz = rd.xz - B.xy * rd.y;
   float qa = dot(dxz, dxz);
@@ -362,7 +364,11 @@ void bankOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, i
     float skyward = bankDensity(A, B, p + SKY_DIR * 12.0, false, over);
     float skyT = exp(-B.w * (2.0 * above + 20.0 * skyward));
     vec3 light = skyLight(p.y) * (0.11 + 2.2 * skyT);
-    if (p.y < 40.0) light += exp(-p.y / 9.0) * (5.0 * lakeGlow(p.xz, 60.0) + 4.0 * wideNear);
+    vec4 C = uBankC[i];
+    // Lit from below: the open lava under and beside it, and the round lights of the fall where it stands by them.
+    float low = exp(-p.y / C.y);
+    if (low > 0.02) light += low * C.x * (5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y)) + 4.0 * wideNear);
+    if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
     float a = 1.0 - exp(-dens * B.w * dt);
     sum += trans * a * BANK_ALBEDO * light;
     trans *= 1.0 - a;
