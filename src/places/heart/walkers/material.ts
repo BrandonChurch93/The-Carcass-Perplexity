@@ -291,10 +291,13 @@ void main() {
   // on what faces up and the lake on what faces down: the belly, the inside of the legs, the under side of the neck.
   float open = skyOpen(vWorld) * occ;
   float ny = mix(ng.y, n.y, 0.3);
-  float under = smoothstep(0.05, -0.7, ny);
+  // On the trunk only what looks well down counts as under: a flank that leans in a little is still a flank.
+  float under = mix(smoothstep(0.05, -0.7, ny), smoothstep(-0.45, -0.9, ny), body);
   // The fire's rim: a leg near a seam takes its light on the faces turned to it, low down, where a flank high over the lake does not.
   float rim = LEG_RIM * smoothstep(0.55, -0.25, ny) * smoothstep(8.0, 1.5, vWorld.y) * (1.0 - body) * (1.0 - 0.85 * tendril * smoothstep(0.3, 1.8, vWorld.y));
-  vec3 e = skyIrradiance(n) * open + ((LAKE_UNDER * under + rim) * lakeBelow(vWorld, mix(ng, n, 0.3)) + FAR_FIRE * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
+  // The flank and the back of the trunk are dark grey brown with ash on them: the warm light belongs under the belly and on the inner legs.
+  float flank = body * (1.0 - under);
+  vec3 e = skyIrradiance(n) * open + ((LAKE_UNDER * under + rim) * lakeBelow(vWorld, mix(ng, n, 0.3)) + FAR_FIRE * (1.0 - 0.6 * flank) * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
   // The pool it feeds at lights it from below at any reach (the rig's apron): the belly takes it, the legs and the neck a little less, the back and the flanks next to none.
   // The roots and the crown have the pool's own glare already (poolLight below).
   vec2 poolWay;
@@ -315,7 +318,7 @@ void main() {
   }
   // The pool under its tuft lights what faces it: the roots, the lower neck, the inside of the legs, the belly.
   vec4 pool = uPools[int(vWho + 0.5)];
-  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.25 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril);
+  if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.25 * tendril, tendril) * own * POOL * (1.0 - 0.2 * tendril) * (1.0 - 0.75 * flank);
   // The roots are thin: the heat under them shows through them.
   float thin = tendril * 0.4 * smoothstep(2.5, 0.3, vWorld.y);
   if (thin > 0.01) c += thin * albedo * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;
