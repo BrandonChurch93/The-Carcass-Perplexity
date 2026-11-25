@@ -11,8 +11,12 @@ export interface Span {
 
 export interface Player {
   canvas: HTMLCanvasElement;
-  start(onEnd: () => void): void;
+  /** Builds what the span shows, one place after another, then plays. `onStep` is told how many places are built. */
+  start(onEnd: () => void, onStep?: (done: number, total: number) => void): void;
 }
+
+/** Lets the browser draw once before the next piece of work blocks it. */
+const breathe = (): Promise<void> => new Promise((resolve) => requestAnimationFrame(() => setTimeout(resolve, 0)));
 
 const DRIFT_SECONDS = 0.05;
 
@@ -29,13 +33,30 @@ export function createPlayer(span: (frameCount: number, loopCount: number, shots
 
   return {
     canvas,
-    start(onEnd) {
+    start(onEnd, onStep) {
       engine ??= new Engine(canvas, format);
       const e = engine;
       let origin = -1;
       let heard = false;
       const offset = range.first / FPS;
-      const prepared = range.loop ? film.readyLoop() : film.readyAll();
+      // Every place the span shows is built and drawn once before the first frame plays, so that no cut
+      // of the film waits for a place: a cut that lands late is off its accent in the music.
+      const prepare = async (): Promise<void> => {
+        if (range.loop) {
+          await film.readyLoop();
+          return;
+        }
+        const firsts = info.places.filter((p) => p.last >= range.first && p.first <= range.last).map((p) => Math.max(p.first, range.first));
+        for (let i = 0; i < firsts.length; i += 1) {
+          onStep?.(i, firsts.length);
+          await breathe();
+          const frame = firsts[i] as number;
+          await film.ready(frame);
+          e.render(film.stageAt(frame), frame, frame, 'draft');
+        }
+        onStep?.(firsts.length, firsts.length);
+        await breathe();
+      };
       const tick = (ms: number): void => {
         if (origin < 0) {
           origin = ms;
@@ -73,7 +94,7 @@ export function createPlayer(span: (frameCount: number, loopCount: number, shots
         else e.render(film.stageAt(frame), frame, frame, 'draft');
         requestAnimationFrame(tick);
       };
-      void prepared.then(() => requestAnimationFrame(tick));
+      void prepare().then(() => requestAnimationFrame(tick));
     },
   };
 }

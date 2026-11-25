@@ -29,16 +29,15 @@ export function bedMap(height: (x: number, z: number) => number, sea: number, cx
 }
 
 /** A square of small waves that repeats without a seam: r and g the slope on x and z, b the height. Sines of whole wave numbers, so the edges meet. */
-export function waveMap(rng: Rng): THREE.DataTexture {
-  const size = 256;
+export function waveMap(rng: Rng, size = 256, least = 2, most = 24, fall = 1.15, count = 40): THREE.DataTexture {
   const waves: { kx: number; kz: number; amp: number; phase: number }[] = [];
-  for (let i = 0; i < 40; i++) {
-    const k = 2 + Math.floor(22 * rng.next() ** 1.6);
+  for (let i = 0; i < count; i++) {
+    const k = least + Math.floor((most - least) * rng.next() ** 1.6);
     const a = rng.range(0, Math.PI * 2);
     const kx = Math.round(k * Math.cos(a));
     const kz = Math.round(k * Math.sin(a));
     const len = Math.hypot(kx, kz) || 1;
-    waves.push({ kx, kz, amp: rng.range(0.5, 1) / len ** 1.15, phase: rng.range(0, Math.PI * 2) });
+    waves.push({ kx, kz, amp: rng.range(0.5, 1) / len ** fall, phase: rng.range(0, Math.PI * 2) });
   }
   const gx = new Float32Array(size * size);
   const gz = new Float32Array(size * size);

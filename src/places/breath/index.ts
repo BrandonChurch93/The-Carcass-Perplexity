@@ -28,12 +28,14 @@ function look(position: Vec3, bearingDeg: number, pitchDeg: number, fov: number,
 
 const key = (id: string): number => keyPart(shotById(id));
 
+// One way through the place: in over the shelf toward the pit, up to its south lip and out over the drop, along the west lip past the plumes,
+// down to the channel where the waders feed, and back to the lip where the dead one lies. No shot pulls back: each one travels the way it looks.
 const shots: Record<string, CameraPath> = {
-  'breath-01': through(look([-42, 9, 51.7], 18.5, -10.7, 40), key('breath-01'), { forward: -34, up: 2, right: -5 }, { forward: 15, up: 0.5, right: 2 }),
-  'breath-02': through(look([-2, 4.2, 36], -14, -18, 46), key('breath-02'), { forward: -9, up: -0.5, right: -2.5 }, { forward: 8, up: 1.4, right: 1.5, tilt: -6 }),
-  'breath-03': through(look([-30.3, 4.3, 5], 2, -6, 32), key('breath-03'), { forward: 1, right: -0.6 }, { forward: -6, right: -1.5, up: 0.6 }),
-  'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -7, forward: -2.5 }, { right: 5, forward: 2 }),
-  'breath-05': through(look([-29.5, 3.6, 33], 12, -10.3, 40), key('breath-05'), { forward: -8, up: 0.2, right: -1.5 }, { forward: 3.5, up: 0.2, right: 0.6 }),
+  'breath-01': through(look([-36, 11, 44], 18, -13, 50), key('breath-01'), { forward: -24, up: 4, right: -3 }, { forward: 14, up: -3, right: 10, turn: -8 }),
+  'breath-02': through(look([-2, 5.8, 32.3], -34, -27, 50), key('breath-02'), { forward: -7, up: -1.5, right: 3, turn: 14, tilt: 8 }, { forward: 16, up: 5, right: -2, turn: -30, tilt: 10 }),
+  'breath-03': through(look([-27.4, 4.4, 7.3], -1, -8, 38), key('breath-03'), { forward: -11, up: 0.8, right: 1.5, turn: -4 }, { forward: 2.2, right: 0.3 }),
+  'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
+  'breath-05': through(look([-28.5, 2.6, 28.3], 12, -10.3, 40), key('breath-05'), { forward: -6, up: 0.6, right: -1 }, { forward: 2.5, up: -0.1, right: 0.4 }),
 };
 
 // The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.
