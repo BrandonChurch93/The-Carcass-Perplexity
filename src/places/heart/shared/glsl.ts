@@ -243,21 +243,27 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   // The pools of the seam the walkers feed at (uRigPools: x, z and the long axis; uRigPoolSize: half length, half width, radiance red and green).
   // Each stands brimful and lights an apron round itself: all of it at the brim, two thirds a metre out, a quarter two metres out, nothing at three.
   // A level face beside it takes a third (the grains of rough ground that face the fire), a face turned to it all. No read of any map.
-  for (int i = 0; i < 3; i++) {
-    vec2 rel = p.xz - uRigPools[i].xy;
-    float far = length(rel);
-    vec2 ax = uRigPools[i].zw;
-    float inside = length(vec2(dot(rel, ax), dot(rel, vec2(-ax.y, ax.x))) / uRigPoolSize[i].xy);
-    float gap = far * max(1.0 - 1.0 / max(inside, 1e-3), 0.0);
-    vec2 back = rel / max(far, 1e-3);
-    vec3 d = vec3(-back.x * (gap + 0.3), -max(p.y, 0.0) - 0.05, -back.y * (gap + 0.3));
-    float away = length(d) - 0.3;
-    float c = clamp((dot(n, d) / length(d) + 0.5) / 1.5, 0.0, 1.0);
-    float k = c / (1.0 + away * away / 2.25) * (1.0 - smoothstep(1.5, 3.0, away));
-    vec3 lit = vec3(uRigPoolSize[i].z, uRigPoolSize[i].w, uRigPoolSize[i].w * 0.08) * (3.14159 * k);
-    e += lit;
-    aim += vec3(-back, 1.0) * lit.r;
-  }
+  // The pools lie 14 m and more apart and reach 3 m, so only the nearest can count: it is picked first and the light worked out once.
+  vec2 rel = p.xz - uRigPools[0].xy;
+  vec2 ax = uRigPools[0].zw;
+  vec4 size = uRigPoolSize[0];
+  float near2 = dot(rel, rel);
+  vec2 rel1 = p.xz - uRigPools[1].xy;
+  if (dot(rel1, rel1) < near2) { rel = rel1; ax = uRigPools[1].zw; size = uRigPoolSize[1]; near2 = dot(rel1, rel1); }
+  vec2 rel2 = p.xz - uRigPools[2].xy;
+  if (dot(rel2, rel2) < near2) { rel = rel2; ax = uRigPools[2].zw; size = uRigPoolSize[2]; near2 = dot(rel2, rel2); }
+  float far = sqrt(near2);
+  float inside = length(vec2(dot(rel, ax), dot(rel, vec2(-ax.y, ax.x))) / size.xy);
+  float gap = far * max(1.0 - 1.0 / max(inside, 1e-3), 0.0);
+  vec2 back = rel / max(far, 1e-3);
+  vec3 toPool = vec3(-back.x * (gap + 0.3), -max(p.y, 0.0) - 0.05, -back.y * (gap + 0.3));
+  float span = length(toPool);
+  float away = span - 0.3;
+  float facing = clamp((dot(n, toPool) / span + 0.5) / 1.5, 0.0, 1.0);
+  float apron = facing / (1.0 + away * away / 2.25) * (1.0 - smoothstep(1.5, 3.0, away));
+  vec3 poolLit = vec3(size.z, size.w, size.w * 0.08) * (3.14159 * apron);
+  e += poolLit;
+  aim += vec3(-back, 1.0) * poolLit.r;
   // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the fire, on the crust of the lake
   // only (within a metre of its level). The map is read once, toward where the light comes from: a read for each light cost half a second a sample.
   if (aim.z > 0.02) {
