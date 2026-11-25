@@ -62,8 +62,8 @@ vec3 skyIrradiance(vec3 n) {
   float lean = 1.0 + min(n.y, 0.0);
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
-  // The bright side of the overcast is the sun's: a face turned to it takes a fifth more of the sky, one turned away a fifth less.
-  float side = 1.0 + 0.45 * dot(n.xz, uSunDir.xz);
+  // The bright side of the overcast is the sun's: a face turned to it takes a sixth more of the sky, one turned away a sixth less.
+  float side = 1.0 + 0.2 * dot(n.xz, uSunDir.xz);
   return 3.14159 * side * mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up);
 }
 

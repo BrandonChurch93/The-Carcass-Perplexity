@@ -75,7 +75,7 @@ void main() {
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float mu = max(dot(rd, uSunDir), 0.0);
   float mu2 = mu * mu;
-  float phase = 0.45 + 1.5 * mu2 * mu2 + 3.0 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
+  float phase = 0.45 + 1.1 * mu2 * mu2 + 2.2 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
   vec3 ambient = uHaze * uScatter.x * uShowAir;
   vec3 sunlit = uSunColour * (uScatter.y * phase) * uShowCloud;
   vec3 sum = vec3(0.0);
@@ -154,9 +154,9 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.00046, 150, 0.00022, 12) },
+      uAir: { value: new THREE.Vector4(0.0004, 150, 0.00022, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
-      uScatter: { value: new THREE.Vector3(0.95, 0.2, 1) },
+      uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,
       uShowCloud: showCloud,
       uSourceCount: count,
