@@ -80,13 +80,17 @@ try {
     `status ${res.status()}, title "${await page.title()}", play control ${await control.count()}, review link ${await link.count()}`);
   await page.screenshot({ path: path.join(outDir, 'start.png') });
 
-  // Starting the film builds every place before the first frame. MEASURED on 2 cores with a software
-  // renderer, 2026-11-25: 40 s for the click to return, so the click gets its own, longer limit.
+  // Starting the film builds every place the film shows, one after another, and draws each once before
+  // the first frame plays, with a line on the start page that counts them. On a machine with no graphics
+  // card that takes minutes, so the first frames get the start limit (--start, in ms).
+  const clicked = Date.now();
   await control.click({ timeout: startMs });
-  await page.waitForFunction(() => window.__flow.frames >= 2 || window.__flow.error, null, { timeout: waitMs * 10, polling: 500 }).catch(() => {});
+  const line = await page.locator('p[role="status"]').first().textContent({ timeout: 5000 }).catch(() => '');
+  await page.waitForFunction(() => window.__flow.frames >= 2 || window.__flow.error, null, { timeout: startMs, polling: 500 }).catch(() => {});
+  const startSeconds = Math.round((Date.now() - clicked) / 1000);
   const played = await page.evaluate(() => ({ ...window.__flow, size: (() => { const c = document.querySelector('canvas'); return c ? [c.width, c.height] : null; })() }));
-  note('2 play the film', played.controlHidden && Boolean(played.size) && played.size[0] >= 960 && played.frames >= 2 && played.lit > 60 && !played.error,
-    `the control hides while it plays: ${played.controlHidden ? 'yes' : 'no'}, canvas ${played.size ? `${played.size[0]} x ${played.size[1]}` : 'none'}, ${played.frames} frames drawn, brightest value in the picture ${played.lit} of 255${played.error ? `, ${played.error}` : ''}`);
+  note('2 play the film', played.controlHidden && Boolean(played.size) && played.size[0] >= 960 && played.frames >= 2 && played.lit > 60 && !played.error && /^Preparing the film/.test(line ?? ''),
+    `the control hides while it plays: ${played.controlHidden ? 'yes' : 'no'}, the line while the places are built: "${line ?? ''}", canvas ${played.size ? `${played.size[0]} x ${played.size[1]}` : 'none'}, ${played.frames} frames drawn ${startSeconds} s after the click, brightest value in the picture ${played.lit} of 255${played.error ? `, ${played.error}` : ''}`);
 
   const probe = await page.evaluate(async () => {
     const one = async (u) => { try { const r = await fetch(u); const b = (await r.arrayBuffer()).byteLength; return `${r.status}, ${b} bytes`; } catch (e) { return `failed, ${String(e.message).slice(0, 80)}`; } };
