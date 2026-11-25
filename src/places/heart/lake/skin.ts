@@ -64,12 +64,28 @@ void main() {
   float gape = gapeAt(q, net).x;
   float bank = heat.z;
   float young = heat.w;
-  float calm = smoothstep(uSunk.z - 5.0, uSunk.z + 5.0, length(q - uSunk.xy));
+  float calm = calmAt(q);
 
-  float broken = shoreAt(q, lake, cell);
+  // Heaps at the shore, and out on the lake the crust broken into slabs: a slab is a plate of skin with a tilt of its own,
+  // and between two slabs lies a gap with rubble in it.
+  float heap = heapAt(q, lake, cell);
+  float broke = brokenAt(q);
+  float broken = max(heap, broke);
+  float slabGap = 0.0;
+  float slabTone = 1.0;
+  vec2 slabSlope = vec2(0.0);
+  if (broke > 0.01 && cell < 0.6) {
+    slabAt(q, broke, cell, 1.9, 0.0);
+    float onLake = smoothstep(0.0, 1.5, lake);
+    slabGap = gSlabEdge * onLake;
+    slabSlope = gSlabSlope * ((1.0 - slabHeld(cell)) * (1.0 - gSlabEdge) * onLake);
+    slabTone = 0.78 + 0.44 * fract(gSlabId * 7.31 + 0.17);
+  }
   ridgeAt(q, cell);
   float clinker = gRidgeOn;
   broken = max(broken, clinker);
+  // Loose rubble: the heaps, the ridges and the gaps between slabs.
+  float rubble = max(max(heap, clinker), slabGap);
   // The crust the group feeds on is the youngest of the lake: dark, glassy, hardly a day old.
   // It does not reach the line at the shore, which has the old ropy skin of the picture taken there.
   float fresh = (1.0 - smoothstep(12.0, 55.0, groupFar(q) + 14.0 * (vnoise(q / 17.0 + 8.0) - 0.5))) * smoothstep(20.0, 42.0, length(q - vec2(${LINE[0].toFixed(1)}, ${LINE[1].toFixed(1)})));
@@ -87,7 +103,7 @@ void main() {
   float lean = length(n.xz);
   vec2 qg = q - (steep * vWorld.y * (1.0 - n.y) / max(lean * lean, 1e-3)) * n.xz;
   float fpGrain = max(fpLong, steep * max(abs(dFdx(vWorld.y)), abs(dFdy(vWorld.y))));
-  vec2 slope = vec2(0.0);
+  vec2 slope = slabSlope;
   float crease = 1.0;
   // Every drawn line (where a tongue lies on the next, a fold's floor, a cord, a thread) goes into one sum, and the sum is
   // held to a quarter under its surround: the relief is told by the light on it, not by ink.
@@ -96,7 +112,7 @@ void main() {
   float foldOn = 0.0;
   // Round the feeding group the crust is churned: lumps of a quarter to three quarters of a metre, with hollows between
   // them, so that the light of the seam shades it. A face turned to the seam is lit, a face turned to the lens is dark.
-  float churn = smoothstep(0.0, 0.35, fresh) * (1.0 - steep) * mix(0.55, 1.0, smoothstep(0.3, 0.6, vnoise(q / 5.7 + 3.0))) * (1.0 - smoothstep(0.3, 0.6, fpLong));
+  float churn = smoothstep(0.0, 0.35, fresh) * (1.0 - steep) * mix(0.55, 1.0, smoothstep(0.3, 0.6, vnoise(q / 5.7 + 3.0))) * (1.0 - smoothstep(0.3, 0.6, fpLong)) * (1.0 - 0.6 * broke) * (1.0 - slabGap);
   vec2 lumpSlope = vec2(0.0);
   float lumpLow = 0.0;
   float lumpTone = 1.0;
@@ -125,9 +141,9 @@ void main() {
     age += 0.1 * (hash12(gLobeId + 5.3) - 0.5) * detail * has;
     // Where the cells are too coarse to carry a lobe, its dome goes into the normal.
     vec2 fall = -3.0 * gLobeTall * gLobeT2 * gLobeT2 * gLobeGrad;
-    slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * smoothstep(0.5, 1.2, cell) * detail * has;
+    slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * (1.0 - steep) * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
-    lines = mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
+    lines = mix(1.0, 0.8 + 0.2 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * (1.0 - steep) * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
     // Past this a pixel is longer than a sheaf and nothing of the folds is left to draw.
     if (fpLong < 0.4) {
       foldAt(q);
@@ -195,10 +211,12 @@ void main() {
 
   // Spall: in patches the glassy skin has flaked off. What shows is paler and rougher and lies a centimetre or two lower,
   // behind a sharp edge. The edge is never drawn finer than a pixel can hold.
-  float spallAt = 0.6 * vnoise(q / 0.41 + 51.0) + 0.4 * vnoise(q / 0.14 + 7.0) + 0.35 * grainA;
-  float spallPatch = vnoise(q / 3.3 + 91.0);
-  float spallFrom = mix(0.8, 0.56, smoothstep(0.35, 0.8, spallPatch) * (0.35 + 0.65 * age));
-  float spall = smoothstep(spallFrom, spallFrom + max(0.03, 5.0 * fpLong), spallAt) * (1.0 - smoothstep(0.15, 0.4, fpLong)) * (1.0 - steep);
+  float spall = 0.0;
+  if (fpLong < 0.4 && steep < 0.99) {
+    float spallAt = 0.6 * vnoise(q / 0.41 + 51.0) + 0.4 * vnoise(q / 0.14 + 7.0) + 0.35 * grainA;
+    float spallFrom = mix(0.8, 0.56, smoothstep(0.35, 0.8, vnoise(q / 3.3 + 91.0)) * (0.35 + 0.65 * age));
+    spall = smoothstep(spallFrom, spallFrom + max(0.03, 5.0 * fpLong), spallAt) * (1.0 - smoothstep(0.15, 0.4, fpLong)) * (1.0 - steep);
+  }
   fine -= clamp(onCrust(vec2(dFdx(spall), dFdy(spall)), qx, qy, det) * 0.016, -1.3, 1.3) * (1.0 - smoothstep(0.03, 0.08, fpLong));
   // The shape decides what a face looks at (its neighbour, the sky, the melt); the grain only turns the light on it.
   vec3 nShape = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
@@ -218,21 +236,25 @@ void main() {
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
-  float mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
-  albedo *= (1.0 - 0.2 * fresh) * lumpTone;
+  float mound = 0.0;
+  float wet = 0.0;
+  albedo *= (1.0 + 1.5 * fresh) * lumpTone * slabTone;
+  if (fresh > 0.01) {
+    mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
+    wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - rubble) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
+  }
   albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * tb.b - 0.3), 0.8 * mound);
-  float wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - broken) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
-  float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - broken) * mix(mix(0.5, 0.25, smoothstep(0.1, 0.4, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
+  float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * mix(mix(0.5, 0.0, smoothstep(0.08, 0.35, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
   float rough = mix(mix(0.93, 0.4, clamp(glass * (1.0 - mound), 0.0, 1.0)), 0.2, wet);
 
   // How much sky a point sees: less in a crease, between two lobes, below the brim of a gap.
   float below = max(-vWorld.y, 0.0);
   // Broken crust is dark, dull clinker, pitted between its blocks.
-  if (broken > 0.0) {
+  if (rubble > 0.0) {
     float pits = 0.35 + 0.65 * smoothstep(0.3, 0.65, 0.6 * vnoise(q / 0.31 + 7.0) + 0.4 * vnoise(q / 0.09 + 3.0));
-    albedo = mix(albedo, vec3(0.034, 0.031, 0.03) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(clinker, 0.6 * broken));
-    crease *= mix(1.0, pits, max(clinker, broken));
+    albedo = mix(albedo, vec3(0.034, 0.031, 0.03) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(max(clinker, 0.6 * heap), 0.6 * slabGap));
+    crease *= mix(1.0, pits, max(heap, clinker)) * (1.0 - 0.55 * slabGap);
   }
   // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
   float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.03, 0.12, fpLong), 1.0, shown);
@@ -252,7 +274,8 @@ void main() {
   vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
   float toward = max(-dot(mix(normalize(vNormalG).xz, nShape.xz, 0.35), away) + 0.65 * dot(lumpSlope, away), 0.0);
   float clear = 1.0 - contactAt(vec3(p.x - 0.8 * away.x, p.y, p.z - 0.8 * away.y));
-  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace + 0.9 * toward) * mix(0.12, mix(1.6, 0.5, steep) * clear, byMelt) + emitterIrradiance(p, n) * mix(1.0, occ, mix(0.7, 1.0, churn));
+  vec3 skyLight = skyIrradiance(n) * open;
+  vec3 light = lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace + 0.9 * toward) * mix(0.12, mix(1.6, 0.5, steep) * clear, byMelt) + emitterIrradiance(p, n) * mix(1.0, occ, mix(0.7, 1.0, churn));
   if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, n, away) * crease * clear;
   // A seam the walkers have torn open to feed is bare melt and lights its banks for a metre or three; the line is skinned
   // over for most of its width and lights little more than its lip.
@@ -261,11 +284,13 @@ void main() {
   if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.2, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.1 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (mix(0.3, 0.7, torn) * toward + 0.06 * wallFace) * (0.6 * exp(-off / 0.3) + 0.4 * (1.0 - smoothstep(0.4, mix(3.0, 7.0, torn), off)))) * clear * mix(1.0, crease, 0.6));
   // The fire of the feeding seams lies low over the lake: of the churned floor it lights the faces that lean toward it.
   float tilt = length(lumpSlope);
-  if (tilt > 0.03) light += lakeGlow(p.xz - lumpSlope * (10.0 / tilt), 8.0) * (3.14159 * 4.5 * tilt * (1.0 - contactAt(p)) * mix(1.0, crease, 0.5));
+  if (tilt > 0.03) light += lakeGlow(p.xz - lumpSlope * (10.0 / tilt), 8.0) * (3.14159 * 2.5 * tilt * (1.0 - contactAt(p)) * mix(1.0, crease, 0.5));
   // The narrow seams, whose heat this sheet draws, light their own lips.
   // Only the faces that look at the seam: the flank of a fold that looks away from it stays dark.
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace * facing) * crease * clear;
+  // The wall of a trench is dark and broken: the melt at its foot lights a thin line of it, a hand high, and no more.
+  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live);
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.55 + 0.9 * tb.b + 1.3 * grainA + 1.0 * grainC, 0.4, 1.7), steep);
   vec3 c = albedo * light / 3.14159;
@@ -273,7 +298,7 @@ void main() {
   float nv = clamp(dot(n, v), 0.35 * foldSeen, 1.0);
   // A rough face does not turn into a mirror at a grazing angle.
   float satin = 1.0 - smoothstep(0.4, 0.9, rough);
-  float fresnel = mix(0.012, 0.09, satin) + 0.12 * satin * pow(1.0 - nv, 3.0);
+  float fresnel = mix(0.012, 0.07, satin) + 0.04 * satin * pow(1.0 - nv, 3.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The crest of a cord carries a pale line of the sky.
@@ -294,20 +319,34 @@ void main() {
     c += fire * (wet * clear * 3.0 * (0.04 + 0.6 * pow(1.0 - max(nv, 0.1), 3.0)) * (1.0 - smoothstep(0.25, 0.6, fpLong)));
   }
   // Over a wet patch at the feeding group stands smoke, not sky.
-  c += (1.0 - 0.8 * wet) * fresnel * mirror * open * (1.0 - 0.85 * clinker) * (1.0 + 0.9 * crest);
+  // Seen from low over the lake the crust gives back nothing of the sky: it is rough, and a rough face shadows itself.
+  c += (1.0 - 0.8 * wet) * fresnel * mirror * open * (1.0 - 0.85 * rubble) * (1.0 + 0.9 * crest) * smoothstep(0.07, 0.26, v.y);
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
   float floorOnly = smoothstep(0.55, 0.85, vNormalG.y) * smoothstep(0.01, 0.03, below);
   float melt = shown * smoothstep(0.2, 0.3, gape) * smoothstep(0.0, 0.03, meltLevel(net) + below);
   heat.x *= mix(1.0, floorOnly * (1.0 - melt), held);
-  heat.x *= smoothstep(900.0, 1010.0, heat.y) * (1.0 - broken);
+  heat.x *= smoothstep(900.0, 1010.0, heat.y) * (1.0 - max(heap, clinker));
   vec3 hot = blackbody(heat.y) * heat.x;
   // Hairline glow: within a few metres of open melt the crust is thin, and in its grooves short cracks show dull red.
   // They fade away from the melt, and none is drawn finer than three pixels: a finer one is drawn that wide and dimmer.
   // None follows a fold: a row of red lines side by side is a pattern, not a crack.
   float beside = net.r - gape;
-  float nearMelt = live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.2, 4.0, beside)) * smoothstep(0.0, 0.06, beside) * (1.0 - broken) * calm * (1.0 - heat.x);
+  // The gaps between slabs: near the seam the group feeds at, and at the brim of the line, some of them show the melt under
+  // the crust, dull red; one in three beside a pool is hotter. Away from the melt all are cold. None is lit finer than a pixel holds.
+  if (slabGap > 0.3) {
+    float lineBrim = shown * live * (1.0 - smoothstep(0.01, 0.05, net.g - 2.0)) * smoothstep(0.2, 0.3, gape);
+    float dull = max(1.0 - smoothstep(5.0, 12.0, groupFar(q)), lineBrim * (1.0 - smoothstep(1.0, 2.0, beside)));
+    float byPool = max(stringOf(net) * live * smoothstep(0.3, 0.45, gape) * (1.0 - smoothstep(2.0, 4.0, beside)), lineBrim * (1.0 - smoothstep(0.5, 1.0, beside)));
+    float some = smoothstep(0.42, 0.56, vnoise(q / 1.9 + 37.0));
+    float third = smoothstep(0.6, 0.68, vnoise(q / 2.7 + 5.0));
+    float core = smoothstep(0.5, 0.9, slabGap) * (1.0 - smoothstep(0.04, 0.1, fpLong)) * (1.0 - heap);
+    float lit = core * max(dull * some, byPool * third);
+    c *= 1.0 - lit;
+    hot += blackbody(mix(960.0, 1200.0, byPool * third) + 40.0 * (2.0 * vnoise(q / 0.4 + 3.0) - 1.0)) * lit;
+  }
+  float nearMelt = live * smoothstep(0.05, 0.25, gape) * (1.0 - smoothstep(0.2, 4.0, beside)) * smoothstep(0.0, 0.06, beside) * (1.0 - rubble) * calm * (1.0 - heat.x);
   if (nearMelt > 0.0) {
     // Cracks where the thin crust has split: crooked, a hand wide, half a metre to two metres long.
     vec2 cq = q / 0.8 + 43.0;
