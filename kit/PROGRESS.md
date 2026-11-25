@@ -526,6 +526,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. Ribs: the bore is one wall 28 m high. It is a white line on the horizon about 2.5 km off at the establishing key and in ribs-04, and at its event frame (2402) it comes through the gate stacks 120 m in front of the ribs-06 camera, as the picture shows, reaching the camera by the end of the shot at 55 m/s. The colony is a separate stepped buttress 84 m high, so the camera can stand beside it.
 - 2026-11-25. Spine: the lenses of keys spine-2 and spine-3 are wider than the 300 and 600 mm the notes give (36 and 10 degrees), because the pictures show more of the spire than those lenses would. The mouth of the canal is 46 m to the lee of the crest and 120 m before the first spire, 20 m in radius, narrowing to a throat, 125 m deep. Its walls are dark before spine-05 and lighter from that shot on, so the inside reads.
 - 2026-11-25. Marsh, shot marsh-02: the camera opens inside the stand of tall stalks and comes out of it at about frame 5930. Nothing crosses the lens. Kept, because it gives the shot a foreground the picture has; to be judged again in the blockout film.
+- 2026-11-25. The blockout film is rendered in six shares by six sandbox agents, started at the same time as round 1. A chunk is kept by the hashes of the engine and of the units it shows, so a chunk rendered now is the final build's chunk unless the round changes that unit, and then only that unit's chunks are rendered again. Rendered alone on this machine the film takes about 56 minutes (MEASURED 0.57 s a frame), against a limit of 1 hour for a job.
 
 ## Notes from Brandon
 
@@ -587,6 +588,12 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
+| `film_chunk_renderer_1` | sandbox | Share 1 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 1`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
+| `film_chunk_renderer_2` | sandbox | Share 2 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 2`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
+| `film_chunk_renderer_3` | sandbox | Share 3 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 3`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
+| `film_chunk_renderer_4` | sandbox | Share 4 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 4`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
+| `film_chunk_renderer_5` | sandbox | Share 5 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 5`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
+| `film_chunk_renderer_6` | sandbox | Share 6 of 6 of the blockout film's chunks, at commit `30d8128`: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 6`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 01:42 UTC | 40 min |
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
@@ -606,7 +613,7 @@ Ended and merged into `main` in Phase 0: `repo_checks_builder` (`c695a6f`), `pic
 
 One line for each round: its number, the unit, the commit it judges, the parts ticked off, the scores and what ended it.
 
-- Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: running · pack: not yet · critics (R4 blockout, three packs, three fresh critics): not yet · issues read: not yet · fix: not yet · scores: none yet
+- Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: done at 01:42 UTC, G1 to G12, G15 and G16 pass · pack: running · critics (R4 blockout, three packs, three fresh critics): not yet · issues read: not yet · fix: not yet · scores: none yet
 
 ## Final scores
 
