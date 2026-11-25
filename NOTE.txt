@@ -1,5 +1,7 @@
-2026-11-25 23:26 UTC
-work at 8524781 on agent/eye-place
-eye-0, eye-1, eye-3 and eye-2 at minute 123. Wrong: cliffs smooth pale quarry wall with no shaded flank; animals still clay with no joints; bones clean sticks; shaft wall a hard teal panel; eye-0 shoulders are smooth lumps and the herd is thin and small; water pale behind the drinkers
-look-1.jpg = out/work/sheet8.png
-look-2.jpg = out/work/sheet9.png
+2026-11-25 23:50 UTC
+work at 12557ee on agent/eye-place
+Version 2 at minute 147. eye-0 compare at uhd, native crops, keys 1 to 4, eye-05 frames 9380 to 9480. Wrong: grey disc at the centre from above in eye-05; mats marbled from far; cliffs soft bedded bands; animals clay; brow interior flat; blocks facetted
+look-1.jpg = out/work/compare/eye-0.png
+look-2.jpg = out/work/crops-v2.png
+look-3.jpg = out/work/keys-v2.png
+look-4.jpg = out/work/sheets/frames-9380-9480.png
