@@ -205,7 +205,7 @@ const float EMITTER_CORE = 4.5;
 const float EMITTER_SHADE = 0.85;
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
-  float low = -1.0;
+  vec3 aim = vec3(0.0);
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
@@ -219,20 +219,20 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     if (k < 0.0015) continue;
     vec3 m = p + d * 0.5;
     float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
-    // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the light, on ground only,
-    // and only from a light that counts there (a twentieth of the open sky or more): the map is not read for the rest.
-    float thrown = 0.0;
-    vec3 lit = uEmitterRadiance[i] * k;
-    bool counts = max(lit.r, lit.g) > 0.03;
-    if (counts && low < 0.0) low = p.y <= 0.3 ? 1.0 : smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
-    if (counts && low > 0.0) {
-      float flat2 = dot(d.xz, d.xz);
-      // 1.4 m toward a small low light; under a light as wide as it is far (the bank overhead) the shade lies where the thing stands, as under the sky.
-      float narrow = 1.0 - min(r * inversesqrt(flat2 + d.y * d.y), 1.0);
-      vec2 toward = d.xz * (1.4 * narrow * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
-      thrown = low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
-    }
-    e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)) * (1.0 - thrown));
+    vec3 lit = uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)));
+    e += lit;
+    // Where the light of all of them comes from along the ground, each by its weight: 1.4 m toward a small low light; a light as wide as it is
+    // far (the bank overhead, the lit fume) pulls nowhere, and its shade lies where the thing stands, as under the sky.
+    float far2 = dot(d, d);
+    float narrow = 1.0 - min(r * inversesqrt(far2), 1.0);
+    aim += vec3(d.xz * (narrow * inversesqrt(max(far2, 1e-4))), 1.0) * lit.r;
+  }
+  // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the fire, on the crust of the lake
+  // only (within a metre of its level). The map is read once, toward where the light comes from: a read for each light cost half a second a sample.
+  if (aim.z > 0.02) {
+    float low = smoothstep(1.2, 0.3, p.y);
+    vec2 toward = aim.xy * (1.4 / aim.z);
+    e *= 1.0 - low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
   }
   return e * uCast;
 }

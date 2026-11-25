@@ -8,8 +8,8 @@ import { GROUP, UNIT } from './anchors';
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
 export const LAND = { minX: -1300, maxX: 1500, minZ: -640, maxZ: 760, width: 1024, height: 512 };
 export const LAND_FINE = { minX: -700, maxX: -380, minZ: 60, maxZ: 380, width: 512, height: 512 };
-// The contact map is 2048 wide (it was 1024): a foot pad of half a metre was less than two texels of it in the wide view and had no shade.
-export const CONTACT = { size: 2048, minRadius: 30, maxRadius: 220 };
+// The contact map stays 1024 wide: at 2048 it cost half a second a sample at the wide key. For long lenses it is aimed at the ground the lens sees.
+export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 export const FLOW = { foot: [MOUTH.x - 6, -326] as [number, number], speed: 0.28, toward: [0.94, 0.34] as [number, number] };
 export const MAX_EMITTERS = 8;
 // The bank of smoke that stands over the group feeding at the seam in the shot of key heart-3 (the approved picture has the three animals inside
