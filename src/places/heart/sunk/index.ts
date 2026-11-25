@@ -66,7 +66,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8 && x > BODY.centre.x - 1.3;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.05, (x, z) => inner(x, z) && radial(x, z) < WHOLE && !buried(x, z)),
+    fieldGeometry(baked, 0.06, (x, z) => inner(x, z) && radial(x, z) < WHOLE && !buried(x, z)),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
@@ -96,12 +96,12 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 700, round: 64, tendon: 0 };
-  const legShapeB = { points: LEG_B, knee: 0.34, scale: 1.1, seed: 4.1, rings: 520, round: 48, tendon: 0 };
+  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 480, round: 52, tendon: 0 };
+  const legShapeB = { points: LEG_B, knee: 0.34, scale: 1.1, seed: 4.1, rings: 360, round: 40, tendon: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   const hanging = [padGeometry([2.45, 3.74, 0.55], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
   const near = new THREE.Group();
-  near.add(carcass(bodyGeometry(baked, 360, 300, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
+  near.add(carcass(bodyGeometry(baked, 290, 240, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
   const far = new THREE.Group();
   far.add(
     carcass(bodyGeometry(baked, 180, 150)),
