@@ -65,10 +65,10 @@ export const WALKERS: Walker[] = [
   { at: from(spot(0.845, 0.447), 0, 0), when: T0, heading: 250, speed: 0.7, size: 1.05, feed: 0.3, phase: 0.7 },
   { at: from(spot(0.89, 0.446), 0, 0), when: T0, heading: 235, speed: 0.6, size: 0.9, feed: 0.8, phase: 0.05 },
   { at: from(spot(0.55, 0.437), 0, 0), when: T0, heading: 95, speed: 0.8, size: 1.1, feed: 0.2, phase: 0.55 },
-  // The two small ones of the picture of the fall: on the crust at the fan's right toe, about 620 m from that camera, at 70 and 81 per cent of its
-  // frame's width when it looks, small against the fall and lit from behind by it.
-  { at: [-51.1, -298.4], when: KEY_TIMES['heart-4'], heading: 265, speed: 0.35, size: 1.05, feed: 0.7, phase: 0.3 },
-  { at: [-28.3, -282.1], when: KEY_TIMES['heart-4'], heading: 250, speed: 0.25, size: 0.74, feed: 1, phase: 0.8 },
+  // The two small ones of the picture of the fall: on the crust in front of the fan's right toe, about 530 m from that camera and clear of the
+  // fume that stands over the fan, at 70 and 80 per cent of its frame's width when it looks, small and dark against the fall.
+  { at: [-109.3, -229.7], when: KEY_TIMES['heart-4'], heading: 265, speed: 0.35, size: 1.15, feed: 0.7, phase: 0.3 },
+  { at: [-92.4, -218.4], when: KEY_TIMES['heart-4'], heading: 250, speed: 0.25, size: 0.79, feed: 1, phase: 0.8 },
   { at: [-250, 60], when: T0, heading: 160, speed: 0.9, size: 1.0, feed: 0.1, phase: 0.15 },
   { at: [-140, 190], when: T0, heading: 20, speed: 0.7, size: 0.88, feed: 0.5, phase: 0.92 },
   // The lead of the picture at the line: 100 m from that camera and 8 degrees right of its axis, tall at 60 per cent of the frame's width, its tuft
