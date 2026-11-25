@@ -48,7 +48,7 @@ float limbCos(vec2 xz) {
 
 // Irradiance of the blue sky on a face: the air's scattered light, from above.
 vec3 skyIrradiance(vec3 n) {
-  return uSkyColour * (0.6 + 0.4 * n.y);
+  return uSkyColour * (0.45 + 0.4 * n.y);
 }
 
 // From orbit nothing stands over the ground but cloud, and the surface that draws the cloud's shade passes it as occlusion.

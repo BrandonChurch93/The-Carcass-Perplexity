@@ -3,7 +3,7 @@
 // The light is the rig's: one sun, the blue of the air, the shade of the cloud (shared/weather.ts) and the edge of the planet.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, KM, RING_FADE, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
+import { AT, KM, RING_FADE, RISE_FIRST, SUN, X, Z, handoff, rise } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
@@ -33,9 +33,14 @@ uniform vec2 uLava;
 uniform vec2 uSalt;
 uniform vec2 uGlint;
 uniform float uPlanetKm;
+uniform vec4 uStorm;
+uniform vec3 uCyclone;
+uniform vec2 uShadeOff;
 varying vec3 vWorld;
 
 const vec3 DEEP = vec3(0.006, 0.017, 0.04);
+// The lesser vents: x and z from the Heart, km, and their size beside it.
+const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
 float inside(vec2 uv) {
   vec2 m = min(uv, 1.0 - uv);
@@ -72,19 +77,40 @@ void main() {
   vec3 n = normalize(vec3(slope.x, sqrt(max(1.0 - dot(slope, slope), 0.04)), slope.y));
 
   float shade = cloudShade(xz);
+  // The storm on the spine and the cyclone stand high: their shade falls on the sea beside them, away from the sun.
+  vec2 underStorm = (xz - uStorm.xy - uShadeOff * 1.0) / uStorm.zw;
+  shade *= 1.0 - 0.72 * (1.0 - smoothstep(0.55, 1.05, length(underStorm)));
+  vec2 underCyclone = (xz - uCyclone.xy - uShadeOff * 0.8) / uCyclone.z;
+  shade *= 1.0 - 0.45 * (1.0 - smoothstep(0.1, 0.75, length(underCyclone)));
   float mu = limbCos(xz);
 
   // ---- the land ----
+  // Seen from far, the lowlands are dark with growth and the ranges pale with bare rock.
+  ground *= mix(1.0, mix(0.75, 1.15, smoothstep(0.02, 0.4, height)), land * smoothstep(40.0, 400.0, uViewKm));
   vec3 earth = rigShade(vWorld, n, view, ground, 0.92, shade);
+  // The light the sunlit slopes throw back into the shaded ones: without it every shadow is the blue of the sky.
+  earth += ground * uSunColour * 0.03 * (0.4 + 0.6 * shade);
 
-  // The lava of the Heart: the chest is a black crust, and the heat shows along its cracks. It swells with the beat.
-  vec2 fromLava = (xz - uLava) / 86.0;
-  float field = exp(-dot(fromLava * vec2(0.8, 1.25), fromLava * vec2(0.8, 1.25)));
-  float vein = cracks(xz / 9.0) * smoothstep(0.25, 0.7, field + 0.25 * (vnoise(xz / 30.0) - 0.5));
-  float core = exp(-dot(fromLava, fromLava) * 36.0);
-  float heat = (vein * (0.5 + 0.5 * field) + core) * (0.75 + 0.9 * uBeat) * land * (1.0 - smoothstep(0.12, 0.3, height));
-  vec3 glow = blackbody(1050.0 + 520.0 * clamp(heat, 0.0, 1.3)) * 0.085 * smoothstep(0.05, 0.5, heat);
-  glow += vec3(1.0, 0.24, 0.05) * 0.05 * field * uBeat * land;
+  // The lava of the Heart: vents in the black crust of the chest. The great one is the Heart, and it swells with the beat; the heat shows
+  // along the cracks round it. Each is a few kilometres of molten rock: from orbit a point of orange light with a glow in the haze over it.
+  vec2 fromLava = xz - uLava;
+  float swell = 0.8 + 0.9 * uBeat;
+  float d0 = dot(fromLava, fromLava);
+  float heat = exp(-d0 / 110.0) * 1.3 * swell;
+  float halo = exp(-d0 / 1600.0) * (0.6 + 1.4 * uBeat);
+  for (int i = 0; i < 6; i++) {
+    vec3 vent = VENTS[i];
+    vec2 q = fromLava - vent.xy;
+    float dd = dot(q, q);
+    // The lesser vents answer the beat a little late, each in its turn.
+    float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
+    heat += exp(-dd / (60.0 * vent.z)) * 1.6 * vent.z * answer;
+    halo += exp(-dd / (500.0 * vent.z)) * 0.3 * vent.z * answer;
+  }
+  float vein = cracks(xz / 7.0) * exp(-d0 / 2600.0) * (0.25 + 0.6 * uBeat);
+  heat = (heat + vein) * land * (1.0 - smoothstep(0.14, 0.3, height));
+  vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.11 * smoothstep(0.03, 0.6, heat);
+  glow += vec3(1.0, 0.3, 0.06) * 0.2 * halo * land;
 
   // ---- the water ----
   // What comes back from under the surface, lit by the sun and the sky.
@@ -99,7 +125,7 @@ void main() {
   float t2 = lean * lean / (rough * rough);
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
-  water += uSkyColour * 0.32 * fresnel;
+  water += uSkyColour * 0.22 * fresnel;
   water += uSunColour * lobe * 0.0032 * shade * (0.6 + 0.4 * depth);
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
@@ -109,8 +135,11 @@ void main() {
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet ----
   float path = 1.0 / max(mu, 0.12);
-  float air = 1.0 - exp(-0.022 * path * (1.0 - 0.45 * height * land));
+  float air = 1.0 - exp(-0.015 * path * (1.0 - 0.45 * height * land));
   colour = mix(colour, uAirColour * (0.55 + 0.45 * shade), air);
+  // Haze lies in the valleys and over the plains, and thins up the ranges.
+  float low = land * (1.0 - smoothstep(0.0, 0.3, height)) * (0.6 + 0.8 * vnoise(xz / 70.0));
+  colour = mix(colour, (uAirColour * 1.2 + vec3(0.03)) * (0.55 + 0.45 * shade), 0.012 * low * path);
   colour += glow * (1.0 - 0.5 * air);
 
   // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
@@ -170,6 +199,10 @@ export function create(ctx: Context): Piece {
     // Where on the sea the sun's own image lies, and the radius of the planet, km.
     uGlint: { value: new THREE.Vector2(X(6350), Z(1150)) },
     uPlanetKm: { value: 10183 * KM },
+    // The storm: its middle and its half sizes, km. The cyclone: its middle and its radius. And how far a shade falls for a cloud 7 km up.
+    uStorm: { value: new THREE.Vector4(X(AT.storm.x), Z(AT.storm.y), 215 * KM, 62 * KM) },
+    uCyclone: { value: new THREE.Vector3(X(AT.cyclone.x), Z(AT.cyclone.y), 880 * KM) },
+    uShadeOff: { value: new THREE.Vector2((-SUN[0] / SUN[1]) * 7, (-SUN[2] / SUN[1]) * 7) },
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT });
   const sheet = new THREE.Mesh(new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2), material);

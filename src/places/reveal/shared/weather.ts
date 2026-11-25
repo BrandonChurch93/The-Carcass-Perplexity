@@ -29,11 +29,15 @@ vec3 lowCloud(vec2 xz) {
   vec3 other = texture2D(uCloudTile, turned / 109.0 + vec2(0.71, 0.18)).rgb;
   float close = 1.0 - smoothstep(60.0, 420.0, uViewKm);
   vec3 near = texture2D(uCloudTile, (xz - drift * 1.2) / 41.0 + vec2(0.13, 0.77)).rgb;
-  float field = 0.3 * wide.r + 0.4 * mid.r + 0.3 * other.r + close * 0.14 * (near.r - 0.5);
-  float share = 0.72 * cover.r + 0.5 * cover.b;
-  float edge = mix(0.07, 0.045, close);
-  float least = 0.5 + (0.5 - share) * 0.55 + 0.3 * (1.0 - smoothstep(0.0, 0.08, share));
-  float thick = smoothstep(least, least + edge, field);
+  float share = 0.74 * smoothstep(0.2, 0.62, cover.r) + 0.4 * cover.b;
+  // Where the fields of cloud are, and in them the cells: the fuller the field, the more of its cells have grown.
+  float fieldOf = smoothstep(0.9 - 1.25 * share, 1.45 - 1.25 * share, 0.8 * wide.r + 0.2 * mid.r) * smoothstep(0.0, 0.06, share);
+  float cells = 0.42 * mid.r + 0.38 * other.r + 0.2 * wide.r + close * 0.16 * (near.r - 0.5);
+  float least = mix(0.82, 0.5, fieldOf);
+  float thick = smoothstep(least, least + mix(0.1, 0.06, close), cells);
+  // Past the size a pixel can show, the cells are seen as their share of the field.
+  float coarse = smoothstep(2.0, 8.0, fwidth(xz.x) + fwidth(xz.y));
+  thick = mix(thick, 0.5 * fieldOf * fieldOf, coarse);
   float facing = 0.5 + (wide.g - 0.5) * 0.3 + (mid.g - 0.5) * 0.8 + (other.g - 0.5) * 0.6 + close * (near.g - 0.5) * 0.6;
   return vec3(thick, facing, mid.r);
 }
@@ -48,10 +52,22 @@ float highCloud(vec2 xz) {
   return smoothstep(1.0 - cover.g, 1.0 - cover.g + 0.35, field);
 }
 
+// The middle cloud: wide thin sheets, rippled, between the two.
+float midCloud(vec2 xz) {
+  vec2 drift = uTime * vec2(1.9, -0.6);
+  vec3 cover = coverAt(xz);
+  float sheet = texture2D(uCloudTile, (xz - drift) / 3300.0 + vec2(0.55, 0.12)).r;
+  float ripple = texture2D(uCloudTile, (xz - drift) / 290.0 + vec2(0.4, 0.9)).r;
+  float fine = texture2D(uCloudTile, (xz - drift * 1.1) / 67.0).r;
+  float streaks = texture2D(uCloudTile, (xz - drift) / 900.0 + vec2(0.1, 0.3)).b;
+  return smoothstep(0.62, 1.15, sheet) * smoothstep(0.12, 0.3, cover.g) * smoothstep(0.2, 0.9, 0.5 * ripple + 0.2 * fine + 0.5 * streaks);
+}
+
 // The share of the sun that reaches a point of the ground under the cloud.
 float cloudShade(vec2 xz) {
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
   float low = lowCloud(xz + toSun * ${LOW_KM.toFixed(1)}).x;
   float high = highCloud(xz + toSun * ${HIGH_KM.toFixed(1)});
-  return (1.0 - 0.78 * low) * (1.0 - 0.3 * high);
+  float mid = midCloud(xz + toSun * 5.5);
+  return (1.0 - 0.78 * low) * (1.0 - 0.3 * high) * (1.0 - 0.4 * mid);
 }`;

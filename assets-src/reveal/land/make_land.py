@@ -149,13 +149,15 @@ def make(name):
     lake = lake_d < 1.0
     keep = np.maximum.reduce([
         capsule(X, Y + 60 * wob, 2060, 1548, 2960, 1562, 46),
-        1.0 * blob(X, Y, 4950, 1530, 820, 140, soft=0.5, warp=2 * wob),
+        1.3 * blob(X, Y, 4980, 1480, 800, 200, soft=0.5, warp=2.5 * wob),
+        1.1 * blob(X, Y, 4560, 2080, 250, 210, soft=0.5, warp=2.5 * wob),
+        0.9 * blob(X, Y, 1850, 2200, 330, 260, soft=0.5, warp=2.5 * wob),
         0.9 * blob(X, Y, 3230, 1560, 330, 250, warp=wob),
         holes,
     ])
     chest = blob(X, Y, 2440, 1290, 400, 215, warp=wob)
     throat = blob(X, Y, THROAT[0] + 20, THROAT[1] + 10, 175, 140, warp=wob)
-    pan = blob(X, Y, SALT[0], SALT[1], 185, 215, soft=0.25, warp=wob)
+    pan = blob(X, Y, SALT[0], SALT[1], 185, 215, soft=0.25, warp=2.2 * wob + 0.6 * n_mid)
     n_huge = fbm(X, Y, 900, 10, max(texel, 100))
     ribs_low = blob(X, Y, 2520, 1860, 430, 250, soft=0.5)
     plains = fbm(X, Y, 1500, 14, max(texel, 100))
@@ -173,7 +175,7 @@ def make(name):
     inland = smooth(0.02, 0.45, score)
     ranges = np.clip(fbm(X, Y, 340, 16, max(texel, 6), ridged=True) + 0.5 * fbm(X, Y, 90, 17, max(texel, 3), ridged=True) + 0.12, 0, 1)
     guide = 0.02 + 0.07 * lowness + 0.6 * inland * ranges * ranges + bone * (0.2 + 0.42 * crest + 0.5 * grey)
-    guide = guide * (1 - 0.9 * pan) + 0.03 * pan
+    guide = guide * (1 - 0.9 * pan) + pan * (0.03 + 0.05 * (fbm(X, Y, 70, 18, max(texel, 2)) + 0.5))
     guide = guide * (1 - 0.75 * chest * (1 - bone)) * (1 - 0.6 * throat * (1 - bone))
     guide = np.where(land, guide, 0).astype(np.float32)
     fixed = ~land
@@ -232,6 +234,9 @@ def make(name):
     depth = 1 - np.exp(-to_land / np.maximum(shelf, 3))
     bars = smooth(0.1, 0.35, fbm(X, Y, 26, 41, texel, ridged=True)) * np.exp(-to_land / 9)
     depth = np.clip(depth - 0.25 * bars, 0, 1)
+    # the sockets and the hollows of the skull are deep: dark water inside pale rock
+    depth = np.maximum(depth, smooth(0.3, 0.9, holes) * (0.75 + 0.5 * n_mid))
+    depth = np.clip(depth, 0, 1)
     # the drowned backbone: a pale line along the floor of the strait
     depth = depth * (1 - 0.55 * capsule(X, Y + 10 * wob, 2080, 1552, 2990, 1560, 5, soft=0.9))
 
@@ -240,20 +245,21 @@ def make(name):
     biome = fbm(X, Y, 800, 54, max(texel, 30))
     low = mixc(col(0.1, 0.075, 0.052), col(0.04, 0.058, 0.036), smooth(-0.12, 0.12, biome + 0.4 * tone + 0.3 * tone2))
     low = mixc(low, col(0.19, 0.115, 0.07), smooth(0.02, 0.2, tone2 - 0.5 * tone - 0.6 * biome))
-    low = mixc(low, col(0.26, 0.2, 0.14), smooth(0.1, 0.3, -biome + 0.3 * tone))
+    low = mixc(low, col(0.2, 0.15, 0.1), smooth(0.14, 0.34, -biome + 0.3 * tone))
     low = mixc(low, col(0.035, 0.055, 0.04), 0.7 * moist)
     foot = col(0.24, 0.185, 0.14)
     pale = mixc(col(0.5, 0.445, 0.375), col(0.42, 0.40, 0.385), smooth(-0.2, 0.25, tone))
     white = col(0.82, 0.8, 0.77)
     e = h / 1.3
     c = mixc(low, foot, smooth(0.05, 0.16, e))
-    c = mixc(c, pale, smooth(0.13, 0.33, e))
+    c = mixc(c, pale, smooth(0.16, 0.42, e))
     c = mixc(c, white, smooth(0.62, 0.9, e + 0.12 * tone2) * smooth(0.9, 0.3, slope))
     c = c * (0.62 + 0.62 * hollow)[..., None] * (1 + 0.22 * tone2 + 0.16 * grain)[..., None]
     c = mixc(c, c * col(0.62, 0.6, 0.62), smooth(0.35, 0.8, slope))
     crust = mixc(col(0.02, 0.019, 0.02), col(0.045, 0.04, 0.038), smooth(-0.1, 0.25, tone2 + grain))
-    flows = smooth(-0.08, 0.06, fbm(X, Y, 170, 55, max(texel, 2)) + 0.6 * (chest - 0.6))
-    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], np.clip(chest * 1.6, 0, 1) * flows * smooth(0.2, 0.1, e))
+    flows = smooth(0.4, 0.62, chest + 1.5 * fbm(X, Y, 170, 55, max(texel, 2)) + 0.5 * tone2)
+    crust = crust * (1 + 1.5 * smooth(0.0, 0.2, fbm(X, Y, 60, 56, texel)))[..., None]
+    c = mixc(c, crust * (0.7 + 0.6 * hollow)[..., None], 0.93 * flows * smooth(0.24, 0.1, e))
     red = mixc(col(0.115, 0.045, 0.034), col(0.2, 0.075, 0.045), smooth(-0.1, 0.3, tone2))
     c = mixc(c, red * (0.7 + 0.6 * hollow)[..., None], np.clip(throat * 1.3, 0, 1) * smooth(0.22, 0.1, e))
     c = mixc(c, col(0.006, 0.008, 0.011), smooth(0.25, 0.7, pits))
@@ -262,8 +268,8 @@ def make(name):
     salt = mixc(col(0.72, 0.7, 0.68), col(0.8, 0.74, 0.72), smooth(0, 0.25, tone2)) * (0.9 + 0.5 * cells)[..., None]
     in_pan = np.clip(pan * 1.25, 0, 1) * smooth(0.16, 0.08, e)
     c = mixc(c, salt, in_pan)
-    brine = np.clip(cv2.GaussianBlur((smooth(1.9, 3.1, np.log10(np.maximum(area_km, 1))) * land).astype(np.float32), (0, 0), max(1.2, 1.6 / texel)) * 2.2, 0, 1)
-    pools = smooth(0.12, 0.2, fbm(X, Y, 48, 62, texel)) * smooth(0.3, 0.8, pan)
+    brine = np.clip(cv2.GaussianBlur((smooth(1.5, 2.7, np.log10(np.maximum(area_km, 1))) * land).astype(np.float32), (0, 0), max(1.2, 2.4 / texel)) * 2.6, 0, 1)
+    pools = smooth(0.16, 0.22, fbm(X, Y, 48, 62, texel)) * smooth(0.3, 0.8, pan)
     c = mixc(c, mixc(col(0.36, 0.022, 0.03), col(0.2, 0.012, 0.02), smooth(0.4, 1, brine)), np.clip(np.maximum(brine, pools) * in_pan * 1.2, 0, 1))
     c = mixc(c, col(0.03, 0.075, 0.09), river * (1 - in_pan))
     c = mixc(c, col(0.42, 0.37, 0.29), 0.6 * np.exp(-to_sea / max(1.2, 1.5 * texel)) * smooth(0.6, 0.1, slope) * (1 - in_pan))

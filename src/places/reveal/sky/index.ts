@@ -24,8 +24,8 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.42 + 1.16 * clamp(facing, 0.0, 1.0)) * (0.55 + 0.45 * thick);
-  vec3 c = 1.15 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
-  float air = 1.0 - exp(-0.022 * (1.0 - 0.6 * high) / max(mu, 0.12));
+  vec3 c = 1.7 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  float air = 1.0 - exp(-0.015 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour, air);
 }`;
 
@@ -44,12 +44,20 @@ void main() {
   // The low cloud lies in the shade of the high cloud, and of its own neighbours toward the sun.
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
   float over = highCloud(up + toSun * ${(HIGH_KM - LOW_KM).toFixed(1)});
-  vec3 lowColour = cloudLight(xz, low.y, low.x, 0.0) * (1.0 - 0.25 * over);
+  vec2 between = xz + (cameraPosition.xz - xz) * 2.9 / max(cameraPosition.y - ${LOW_KM.toFixed(1)}, 1.0);
+  float mid = midCloud(between);
+  float overMid = midCloud(between + toSun * 2.9);
+  // A cloud is lit on the side toward the sun and dark on the other: its own neighbour toward the sun shades it.
+  float sunward = lowCloud(xz + normalize(uSunDir.xz) * (0.9 + 0.012 * uViewKm)).x;
+  float self = clamp(0.5 + 1.4 * (low.x - sunward), 0.0, 1.0);
+  vec3 lowColour = cloudLight(xz, 0.6 * low.y + 0.4 * self, low.x, 0.0) * (1.0 - 0.25 * over) * (1.0 - 0.35 * overMid);
+  vec3 midColour = cloudLight(between, 0.45 + 0.25 * mid, 0.7, 0.5) * (1.0 - 0.2 * over) * 0.92;
   vec3 highColour = cloudLight(up, 0.62, 0.6, 1.0);
   float a = low.x * 0.96;
+  float m = mid * 0.24;
   float b = high * 0.28;
-  vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
-  float alpha = 1.0 - (1.0 - a) * (1.0 - b);
+  vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + midColour * m * (1.0 - b) + highColour * b;
+  float alpha = 1.0 - (1.0 - a) * (1.0 - m) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 

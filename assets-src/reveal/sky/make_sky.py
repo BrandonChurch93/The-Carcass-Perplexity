@@ -93,7 +93,8 @@ def cyclone():
     y, x = np.mgrid[0:n, 0:n].astype(np.float32)
     u = (x - n / 2) / (n / 2); v = (y - n / 2) / (n / 2)
     r = np.sqrt(u * u + v * v) + 1e-4; a = np.arctan2(v, u)
-    turn = a + 3.4 * np.log(r + 0.03)
+    bent = spectral(n, lambda k: np.exp(-((k - 4) / 3) ** 2))
+    turn = a + 3.4 * np.log(r + 0.03) + 0.16 * bent
     def polar(seed_scale, bands, radial):
         # noise in the turning frame: repeats round the circle
         px = (turn / (2 * np.pi) * bands) % 1.0; py = (np.log(r + 0.03) * radial) % 1.0
@@ -101,13 +102,18 @@ def cyclone():
         from scipy import ndimage
         return ndimage.map_coordinates(base.astype(np.float32), [py * 512, px * 512], order=1, mode='grid-wrap')
     arms = polar(1.8, 2.0, 0.6); fine = polar(1.2, 5.0, 2.2)
+    # the fibres of the bands: long along the turn, fine across it
+    fibre = polar(1.0, 9.0, 0.45); hair = polar(0.8, 26.0, 0.9)
     fleck = spectral(n, lambda k: np.exp(-((k - 90) / 50) ** 2))
-    d = 0.55 + 0.42 * arms + 0.22 * fine + 0.1 * fleck
+    torn = spectral(n, lambda k: np.exp(-((k - 11) / 7) ** 2))
+    cells = spectral(n, lambda k: np.exp(-((k - 40) / 20) ** 2))
+    out = np.clip(r * 2.0, 0, 1)
+    d = 0.5 + 0.36 * arms + 0.16 * fine + 0.26 * fibre + 0.14 * hair + 0.18 * torn * out + 0.1 * cells * out + 0.06 * fleck
     core = np.exp(-(r / 0.2) ** 2)
-    d = d + 0.9 * core
-    d = d * np.clip((1.02 - r) / 0.5, 0, 1) ** 0.8
-    eye = np.clip((r - 0.016) / 0.02, 0, 1)
-    dens = np.clip((d - 0.45) * 2.6, 0, 1) * eye
+    d = d + 0.8 * core
+    d = d * np.clip((1.0 + 0.12 * torn - r) / 0.6, 0, 1) ** 0.9
+    eye = np.clip((r - 0.01) / 0.045, 0, 1) ** 1.5
+    dens = np.clip((d - 0.38) * 1.25, 0, 1) ** 1.3 * eye
     tall = np.clip(0.35 * dens + 0.65 * core + 0.2 * fine * dens, 0, 1)
     lit = facing(cv2.GaussianBlur(tall + 0.5 * dens, (0, 0), 1.5), 4.0, 3.0)
     save('cyclone.jpg', np.stack([dens, lit, tall], -1), 90)
