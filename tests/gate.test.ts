@@ -98,7 +98,7 @@ describe('the registry', () => {
   });
 
   it('has code for the checks of this task and for no other', () => {
-    expect(gate.REGISTRY.filter((c) => typeof c.run === 'function').map((c) => c.id)).toEqual(['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G15', 'G16', 'D1', 'D2', 'D7', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
+    expect(gate.REGISTRY.filter((c) => typeof c.run === 'function').map((c) => c.id)).toEqual(['G1', 'G2', 'G3', 'G4', 'G5', 'G6', 'G7', 'G8', 'G9', 'G10', 'G11', 'G12', 'G13', 'G15', 'G16', 'D1', 'D2', 'D7', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6']);
   });
 
   it('picks the checks of a phase', () => {
@@ -143,6 +143,17 @@ describe('runGate', () => {
     expect(gate.parseOnly(true)).toBe(null);
     await expect(gate.runGate({ ...o, phase: 2, only: ['X9'] })).rejects.toThrow('no check X9');
     await expect(gate.runGate({ ...o, phase: 0, only: ['X3'] })).rejects.toThrow('not a check of phase 0');
+  });
+
+  it('hands the units named with --unit to every check', async () => {
+    const seen = [];
+    const registry = [check('X1', 0, async (ctx) => (seen.push(ctx.units), pass))];
+    await gate.runGate({ ...quiet({ registry }), phase: 0 });
+    await gate.runGate({ ...quiet({ registry }), phase: 0, units: ['heart'] });
+    const lines = [];
+    await gate.gateCommand({ _: [], phase: '0', unit: ['heart', 'ribs,eye'] }, { ...quiet({ registry }), print: (l) => lines.push(l) });
+    expect(seen).toEqual([[], ['heart'], ['heart', 'ribs', 'eye']]);
+    expect(gate.USAGE).toContain('[--unit ID ...]');
   });
 
   it('counts a check with no code as a failure and never prints it as a pass', async () => {

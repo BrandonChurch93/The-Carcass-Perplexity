@@ -19,7 +19,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 1,
-        "made": "2026-11-25T02:53:22Z"
+        "made": "2026-11-25T03:53:31Z"
       }
     },
     {
@@ -40,7 +40,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 1,
-        "made": "2026-11-25T02:53:28Z"
+        "made": "2026-11-25T03:53:36Z"
       }
     },
     {
@@ -61,7 +61,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.0134,
-        "made": "2026-11-25T02:53:33Z"
+        "made": "2026-11-25T03:53:40Z"
       }
     },
     {
@@ -82,7 +82,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.4501,
-        "made": "2026-11-25T02:54:36Z"
+        "made": "2026-11-25T03:54:28Z"
       }
     },
     {
@@ -103,7 +103,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.5197,
-        "made": "2026-11-25T02:54:41Z"
+        "made": "2026-11-25T03:54:33Z"
       }
     },
     {
@@ -124,7 +124,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.1355,
-        "made": "2026-11-25T02:55:45Z"
+        "made": "2026-11-25T03:55:20Z"
       }
     },
     {
@@ -145,7 +145,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.2284,
-        "made": "2026-11-25T02:55:51Z"
+        "made": "2026-11-25T03:55:24Z"
       }
     },
     {
@@ -166,7 +166,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.4959,
-        "made": "2026-11-25T02:55:56Z"
+        "made": "2026-11-25T03:55:28Z"
       }
     },
     {
@@ -187,7 +187,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.4135,
-        "made": "2026-11-25T02:56:02Z"
+        "made": "2026-11-25T03:55:33Z"
       }
     },
     {
@@ -208,7 +208,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.0176,
-        "made": "2026-11-25T02:56:08Z"
+        "made": "2026-11-25T03:55:37Z"
       }
     },
     {
@@ -229,7 +229,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.08,
-        "made": "2026-11-25T02:56:13Z"
+        "made": "2026-11-25T03:55:41Z"
       }
     },
     {
@@ -250,7 +250,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.2421,
-        "made": "2026-11-25T02:56:19Z"
+        "made": "2026-11-25T03:55:45Z"
       }
     },
     {
@@ -271,7 +271,7 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.0578,
-        "made": "2026-11-25T02:56:25Z"
+        "made": "2026-11-25T03:55:50Z"
       }
     },
     {
@@ -292,7 +292,95 @@
         "format": "preview",
         "tier": "draft",
         "shown": 0.3565,
-        "made": "2026-11-25T02:56:30Z"
+        "made": "2026-11-25T03:55:54Z"
+      }
+    },
+    {
+      "id": "heart/land",
+      "unit": "heart",
+      "name": "land",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/land.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.6935,
+        "made": "2026-11-25T03:56:07Z"
+      }
+    },
+    {
+      "id": "heart/bench",
+      "unit": "heart",
+      "name": "bench",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/bench.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2059,
+        "made": "2026-11-25T03:56:11Z"
+      }
+    },
+    {
+      "id": "heart/crust",
+      "unit": "heart",
+      "name": "crust",
+      "kind": "solid",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/crust.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5264,
+        "made": "2026-11-25T03:56:15Z"
+      }
+    },
+    {
+      "id": "heart/lava",
+      "unit": "heart",
+      "name": "lava",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "public/assets/heart",
+        "src/places/heart"
+      ],
+      "hash": "3165002bb0156848",
+      "standIn": {
+        "hash": "3ceb23ca1e5afd38",
+        "picture": "out/stills/parts/heart/lava.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1304,
+        "made": "2026-11-25T03:56:19Z"
       }
     },
     {
@@ -303,16 +391,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/sky.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:55:58Z"
       }
     },
     {
@@ -323,96 +413,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
-      }
-    },
-    {
-      "id": "heart/land",
-      "unit": "heart",
-      "name": "land",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
-      }
-    },
-    {
-      "id": "heart/bench",
-      "unit": "heart",
-      "name": "bench",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
-      }
-    },
-    {
-      "id": "heart/crust",
-      "unit": "heart",
-      "name": "crust",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
-      }
-    },
-    {
-      "id": "heart/lava",
-      "unit": "heart",
-      "name": "lava",
-      "kind": "solid",
-      "state": "stand-in",
-      "fallbackStep": null,
-      "files": [
-        "src/places/heart"
-      ],
-      "hash": "3ceb23ca1e5afd38",
-      "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/air.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:56:03Z"
       }
     },
     {
@@ -423,16 +435,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/lava-fall.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0183,
+        "made": "2026-11-25T03:56:24Z"
       }
     },
     {
@@ -443,16 +457,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/vessel-mouth.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0918,
+        "made": "2026-11-25T03:56:28Z"
       }
     },
     {
@@ -463,16 +479,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/crust-walkers.png",
+        "frame": 3156,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0595,
+        "made": "2026-11-25T03:56:33Z"
       }
     },
     {
@@ -483,16 +501,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/sunk-walker.png",
+        "frame": 3685,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0674,
+        "made": "2026-11-25T03:56:37Z"
       }
     },
     {
@@ -503,16 +523,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/foundering.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0054,
+        "made": "2026-11-25T03:56:41Z"
       }
     },
     {
@@ -523,16 +545,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/fume.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0398,
+        "made": "2026-11-25T03:56:46Z"
       }
     },
     {
@@ -543,16 +567,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/sulphur-crack.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0087,
+        "made": "2026-11-25T03:56:50Z"
       }
     },
     {
@@ -563,16 +589,18 @@
       "state": "stand-in",
       "fallbackStep": null,
       "files": [
+        "public/assets/heart",
         "src/places/heart"
       ],
-      "hash": "3ceb23ca1e5afd38",
+      "hash": "3165002bb0156848",
       "standIn": {
-        "hash": "3ceb23ca1e5afd38",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "hash": "3165002bb0156848",
+        "picture": "out/stills/parts/heart/surge.png",
+        "frame": 4055,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0277,
+        "made": "2026-11-25T03:56:54Z"
       }
     },
     {
@@ -588,11 +616,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/sky.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:56:58Z"
       }
     },
     {
@@ -608,11 +637,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/land.png",
+        "frame": 4652,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.501,
+        "made": "2026-11-25T03:57:03Z"
       }
     },
     {
@@ -628,11 +658,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/sea.png",
+        "frame": 5242,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5413,
+        "made": "2026-11-25T03:57:07Z"
       }
     },
     {
@@ -648,11 +679,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/shaft.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2143,
+        "made": "2026-11-25T03:57:11Z"
       }
     },
     {
@@ -668,11 +700,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/hoops.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1331,
+        "made": "2026-11-25T03:57:15Z"
       }
     },
     {
@@ -688,11 +721,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/slabs.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.114,
+        "made": "2026-11-25T03:57:20Z"
       }
     },
     {
@@ -708,11 +742,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/cliff.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1309,
+        "made": "2026-11-25T03:57:24Z"
       }
     },
     {
@@ -728,11 +763,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/fog.png",
+        "frame": 4652,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0209,
+        "made": "2026-11-25T03:57:29Z"
       }
     },
     {
@@ -748,11 +784,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/vapour.png",
+        "frame": 4731,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0458,
+        "made": "2026-11-25T03:57:33Z"
       }
     },
     {
@@ -768,11 +805,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/exhale.png",
+        "frame": 4973,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0074,
+        "made": "2026-11-25T03:57:37Z"
       }
     },
     {
@@ -788,11 +826,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/gill-plumes.png",
+        "frame": 4973,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.3342,
+        "made": "2026-11-25T03:57:41Z"
       }
     },
     {
@@ -808,11 +847,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/waders.png",
+        "frame": 5242,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1126,
+        "made": "2026-11-25T03:57:45Z"
       }
     },
     {
@@ -828,11 +868,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/dead-wader.png",
+        "frame": 5510,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0269,
+        "made": "2026-11-25T03:57:50Z"
       }
     },
     {
@@ -848,11 +889,12 @@
       "hash": "f783222679be7776",
       "standIn": {
         "hash": "f783222679be7776",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/breath/air.png",
+        "frame": 4409,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:57:54Z"
       }
     },
     {
@@ -868,11 +910,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/sky.png",
+        "frame": 5725,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:57:58Z"
       }
     },
     {
@@ -888,11 +931,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/air.png",
+        "frame": 5725,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:58:03Z"
       }
     },
     {
@@ -908,11 +952,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/land.png",
+        "frame": 5725,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.3708,
+        "made": "2026-11-25T03:58:07Z"
       }
     },
     {
@@ -928,11 +973,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/crust.png",
+        "frame": 6800,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1632,
+        "made": "2026-11-25T03:58:12Z"
       }
     },
     {
@@ -948,11 +994,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/brine.png",
+        "frame": 6158,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4323,
+        "made": "2026-11-25T03:58:16Z"
       }
     },
     {
@@ -968,11 +1015,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/rain.png",
+        "frame": 5725,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0707,
+        "made": "2026-11-25T03:58:20Z"
       }
     },
     {
@@ -988,11 +1036,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/steam.png",
+        "frame": 5940,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.047,
+        "made": "2026-11-25T03:58:25Z"
       }
     },
     {
@@ -1008,11 +1057,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/stalks.png",
+        "frame": 5940,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.3187,
+        "made": "2026-11-25T03:58:29Z"
       }
     },
     {
@@ -1028,11 +1078,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/insects.png",
+        "frame": 5940,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0037,
+        "made": "2026-11-25T03:58:33Z"
       }
     },
     {
@@ -1048,11 +1099,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/wallowers.png",
+        "frame": 6424,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4803,
+        "made": "2026-11-25T03:58:37Z"
       }
     },
     {
@@ -1068,11 +1120,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/dead.png",
+        "frame": 6800,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.3187,
+        "made": "2026-11-25T03:58:42Z"
       }
     },
     {
@@ -1088,11 +1141,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/domes.png",
+        "frame": 6158,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1301,
+        "made": "2026-11-25T03:58:46Z"
       }
     },
     {
@@ -1108,11 +1162,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/burst.png",
+        "frame": 6203,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2309,
+        "made": "2026-11-25T03:58:50Z"
       }
     },
     {
@@ -1128,11 +1183,12 @@
       "hash": "c8fb76f3a586694b",
       "standIn": {
         "hash": "c8fb76f3a586694b",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/marsh/fliers.png",
+        "frame": 5725,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0002,
+        "made": "2026-11-25T03:58:55Z"
       }
     },
     {
@@ -1148,11 +1204,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/sky.png",
+        "frame": 7015,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T03:59:06Z"
       }
     },
     {
@@ -1168,11 +1225,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/land.png",
+        "frame": 7889,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.8721,
+        "made": "2026-11-25T03:59:17Z"
       }
     },
     {
@@ -1188,11 +1246,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/cloud-sea.png",
+        "frame": 7450,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0173,
+        "made": "2026-11-25T03:59:29Z"
       }
     },
     {
@@ -1208,11 +1267,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/cloud.png",
+        "frame": 7874,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4983,
+        "made": "2026-11-25T03:59:40Z"
       }
     },
     {
@@ -1228,11 +1288,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/spindrift.png",
+        "frame": 7234,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0029,
+        "made": "2026-11-25T03:59:52Z"
       }
     },
     {
@@ -1248,11 +1309,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/tether-kites.png",
+        "frame": 7495,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.346,
+        "made": "2026-11-25T04:00:03Z"
       }
     },
     {
@@ -1268,11 +1330,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/ridge-runners.png",
+        "frame": 7579,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4495,
+        "made": "2026-11-25T04:00:15Z"
       }
     },
     {
@@ -1288,11 +1351,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-1.png",
+        "frame": 7015,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:00:26Z"
       }
     },
     {
@@ -1308,11 +1372,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-2.png",
+        "frame": 7231,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:00:38Z"
       }
     },
     {
@@ -1328,11 +1393,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-3.png",
+        "frame": 7450,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:00:49Z"
       }
     },
     {
@@ -1348,11 +1414,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-4.png",
+        "frame": 7665,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:01Z"
       }
     },
     {
@@ -1368,11 +1435,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-5.png",
+        "frame": 7874,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:12Z"
       }
     },
     {
@@ -1388,11 +1456,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/strike-6.png",
+        "frame": 8091,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:24Z"
       }
     },
     {
@@ -1408,11 +1477,12 @@
       "hash": "1ace18b8f42222fd",
       "standIn": {
         "hash": "1ace18b8f42222fd",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/spine/air.png",
+        "frame": 7015,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:35Z"
       }
     },
     {
@@ -1428,11 +1498,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/sky.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:38Z"
       }
     },
     {
@@ -1448,11 +1519,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/air.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:01:41Z"
       }
     },
     {
@@ -1468,11 +1540,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/land.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.326,
+        "made": "2026-11-25T04:01:44Z"
       }
     },
     {
@@ -1488,11 +1561,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/lake.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.248,
+        "made": "2026-11-25T04:01:46Z"
       }
     },
     {
@@ -1508,11 +1582,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/shallows.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2699,
+        "made": "2026-11-25T04:01:49Z"
       }
     },
     {
@@ -1528,11 +1603,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/shaft.png",
+        "frame": 8761,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2955,
+        "made": "2026-11-25T04:01:52Z"
       }
     },
     {
@@ -1548,11 +1624,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/brow.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0979,
+        "made": "2026-11-25T04:01:55Z"
       }
     },
     {
@@ -1568,11 +1645,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/scree.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1809,
+        "made": "2026-11-25T04:01:58Z"
       }
     },
     {
@@ -1592,7 +1670,7 @@
         "frame": null,
         "format": null,
         "tier": null,
-        "shown": null
+        "shown": 0
       }
     },
     {
@@ -1608,11 +1686,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/mats.png",
+        "frame": 8600,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5178,
+        "made": "2026-11-25T04:02:26Z"
       }
     },
     {
@@ -1628,11 +1707,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/skeleton.png",
+        "frame": 8761,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0316,
+        "made": "2026-11-25T04:02:29Z"
       }
     },
     {
@@ -1648,11 +1728,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/drinkers.png",
+        "frame": 9003,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2132,
+        "made": "2026-11-25T04:02:32Z"
       }
     },
     {
@@ -1668,11 +1749,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/riser.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0389,
+        "made": "2026-11-25T04:02:35Z"
       }
     },
     {
@@ -1688,11 +1770,12 @@
       "hash": "896e9e2d5eb42cac",
       "standIn": {
         "hash": "896e9e2d5eb42cac",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/eye/mist.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0313,
+        "made": "2026-11-25T04:02:38Z"
       }
     },
     {
@@ -1708,11 +1791,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/sea.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T04:02:41Z"
       }
     },
     {
@@ -1728,11 +1812,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/continent.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5499,
+        "made": "2026-11-25T04:02:45Z"
       }
     },
     {
@@ -1748,11 +1833,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/salt.png",
+        "frame": 10027,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0028,
+        "made": "2026-11-25T04:02:49Z"
       }
     },
     {
@@ -1768,11 +1854,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/lake.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2165,
+        "made": "2026-11-25T04:02:52Z"
       }
     },
     {
@@ -1788,11 +1875,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/lava.png",
+        "frame": 9756,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0017,
+        "made": "2026-11-25T04:02:56Z"
       }
     },
     {
@@ -1808,11 +1896,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/vapour.png",
+        "frame": 9675,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0175,
+        "made": "2026-11-25T04:02:59Z"
       }
     },
     {
@@ -1828,11 +1917,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/storm.png",
+        "frame": 10027,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0018,
+        "made": "2026-11-25T04:03:03Z"
       }
     },
     {
@@ -1848,11 +1938,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/cloud.png",
+        "frame": 9756,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.022,
+        "made": "2026-11-25T04:03:07Z"
       }
     },
     {
@@ -1868,11 +1959,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/cyclone.png",
+        "frame": 10027,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0162,
+        "made": "2026-11-25T04:03:10Z"
       }
     },
     {
@@ -1888,11 +1980,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/space.png",
+        "frame": 11379,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.098,
+        "made": "2026-11-25T04:03:14Z"
       }
     },
     {
@@ -1908,11 +2001,12 @@
       "hash": "41173928c314d275",
       "standIn": {
         "hash": "41173928c314d275",
-        "picture": null,
-        "frame": null,
-        "format": null,
-        "tier": null,
-        "shown": null
+        "picture": "out/stills/parts/reveal/atmosphere.png",
+        "frame": 11349,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0048,
+        "made": "2026-11-25T04:03:18Z"
       }
     }
   ]
