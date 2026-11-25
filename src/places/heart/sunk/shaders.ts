@@ -377,10 +377,10 @@ void main() {
   float isBody = step(0.5, vMap.w) * step(vMap.w, 1.5);
   float isLeg = step(vMap.w, 0.5);
 
-  // On the body the hide is drawn out along the cords it dried in; on a limb along the limb.
+  // On the body the streaks of the hide run with the cords it dried in, and wind round the hull as they do; on a limb along the limb.
   float lump = vnoise3(vLocal * 1.1 + 4.0);
   float lump2 = vnoise3(vLocal * 2.7 + 11.0);
-  vec2 uvH = mix(vec2(vMap.x * vMap.z, vMap.y / 0.6), vec2(vMap.y * 1.1 + 0.3 * lump, vMap.x * 5.0 + 0.35 * lump2), isBody);
+  vec2 uvH = mix(vec2(vMap.x * vMap.z, vMap.y / 0.6), vec2(vMap.x * 6.0 + 0.86 * vMap.y + 0.25 * lump, vMap.y * 0.55 + 0.2 * lump2), isBody);
   vec2 uvP = mix(vec2(vMap.x * vMap.z + 0.37, vMap.y / 0.52 + 0.11), vec2(vMap.y * 1.4 + 0.37, vMap.x * 11.0 + 0.11), isBody);
   vec3 hide = texture2D(tHide, uvH).rgb;
   vec4 hideNh = texture2D(tHideNh, uvH);
@@ -389,16 +389,18 @@ void main() {
   float grey = dot(hide, vec3(0.33));
   float tone = dot(flake, vec3(0.33));
   // A charred bark of hide: near black on the trunks, grey-brown on the hull, where the creases between its cords hold the soot.
-  vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * mix(0.5, 1.8, isBody);
+  vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * 0.5;
+  // The hull is one dark mass, as dark as the crust round it: its ropes carry the form and the hide only mottles them.
+  bark = mix(bark, vec3(0.07, 0.062, 0.057) * (0.55 + 0.9 * hideNh.b) * (0.45 + 1.1 * flakeNh.b) * (0.8 + 0.4 * lump2), isBody);
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
   // On a limb they are pale and grey, as ash caked on hide; on the hull darker.
-  vec3 scab = mix(vec3(0.275, 0.235, 0.18), vec3(0.22, 0.185, 0.135) * 0.55, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
+  vec3 scab = mix(vec3(0.275, 0.235, 0.18), vec3(0.24, 0.215, 0.18) * 0.8, isBody) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
 
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
   vec3 albedo = mix(bark, scab, plated);
-  vec2 bump = mix((hideNh.rg - 0.5) * 2.6, (flakeNh.rg - 0.5) * 2.6, plated) * (0.35 + 0.65 * close);
+  vec2 bump = mix((hideNh.rg - 0.5) * mix(2.6, 1.4, isBody) + (flakeNh.rg - 0.5) * 2.2 * isBody, (flakeNh.rg - 0.5) * 2.6, plated) * (0.35 + 0.65 * close);
   float cavity = mix(0.6 + 0.4 * hideNh.b, 0.6 + 0.4 * flakeNh.b, plated);
 
   // Where a plate has gone from a leg: dried flesh, almost black, strung with sinew along the limb.
@@ -414,9 +416,9 @@ void main() {
   // The torn edge of a plate stands over what is under it and shades it.
   float under = smoothstep(0.03, 0.3, vSurf.y) * (1.0 - smoothstep(0.3, 0.62, vSurf.y));
   // Between the plates the cords of the hull's hide are dry and grey-brown on their backs; the furrows between them are black.
-  // They show in patches, where the soot has rubbed off, and not as an even stripe.
-  float ridge = isBody * (1.0 - plated) * smoothstep(0.38, 0.6, hideNh.b * (1.0 - furrow) + 0.25 * (lump - 0.5)) * smoothstep(0.5, 0.15, furrow) * smoothstep(0.3, 0.62, lump2 + 0.3 * (lump - 0.5));
-  albedo = mix(albedo * (1.0 - 0.85 * smoothstep(0.1, 0.7, furrow)) * mix(1.0, 0.6, isBody), vec3(0.2, 0.178, 0.16) * (0.7 + 6.5 * grey), 0.7 * ridge);
+  // No stripe on the cords: only a thin pale line along the top of a rope here and there, where the low light catches it.
+  float ridge = isBody * (1.0 - plated) * smoothstep(0.02, 0.003, furrow) * smoothstep(0.1, 0.5, nl.y) * smoothstep(0.42, 0.6, lump2 + 0.4 * (lump - 0.5));
+  albedo = mix(albedo * (1.0 - 0.85 * smoothstep(0.1, 0.7, furrow)), vec3(0.26, 0.235, 0.215) * (0.8 + 0.4 * hideNh.b), 0.6 * ridge);
 
   // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
@@ -434,9 +436,9 @@ void main() {
   float grit = vnoise3(vLocal * 9.0);
   // Grit of 1 to 3 cm on all of it, seen where the lens is sharp.
   float fine = vnoise3(vLocal * 43.0) + 0.6 * vnoise3(vLocal * 91.0 + 5.0) - 0.8;
-  albedo *= 1.0 + 0.55 * close * fine;
+  albedo *= 1.0 + mix(0.55, 0.85, isBody) * close * fine;
   float up = mix(smoothstep(0.1, 0.7, nl.y), smoothstep(-0.1, 0.45, nl.y), isLeg);
-  float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat);
+  float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat) * (1.0 - 0.6 * isBody * (1.0 - plated));
   albedo = mix(albedo, mix(ASH, uAsh * plateTone, plated) * (0.7 + 0.5 * grit) * (0.7 + 0.6 * mix(hideNh.b, flakeNh.b, plated)), dust * mix(0.5, 0.92, plated));
 
   // The bump is laid on the surface along its own directions.
