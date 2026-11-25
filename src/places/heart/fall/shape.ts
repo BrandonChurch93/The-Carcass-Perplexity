@@ -1,5 +1,6 @@
 // The shapes of the fall's folder: the cliff rebuilt round the mouth, the rim and the tube, and the bed the river runs in.
 import * as THREE from 'three';
+import { wallHeight } from '../land/height';
 import { MOUTH, ground, lerp, smooth } from '../layout';
 import { FALL_FOOT } from '../shared/anchors';
 import { FAN_FROM, SPLITS, TUBE, type Course } from './path';
@@ -70,6 +71,21 @@ export function faceZ(x: number, y: number): number {
   return 0.5 * (a + b);
 }
 
+/** The z at which the land's drawn wall, which stands whole over the mouth, reaches height y. The collar goes back to it. */
+function wallZ(x: number, y: number): number {
+  let z = -430;
+  const step = 1.5;
+  while (z > -560 && wallHeight(x, z - step) < y) z -= step;
+  let a = z;
+  let b = z - step;
+  for (let i = 0; i < 12; i++) {
+    const m = 0.5 * (a + b);
+    if (wallHeight(x, m) < y) a = m;
+    else b = m;
+  }
+  return 0.5 * (a + b);
+}
+
 /** A point of the arch at angle phi (0 at the east foot, pi at the west foot), scaled by k, at depth d behind the lip. */
 function arch(phi: number, k: number, d: number, swell: number): [number, number] {
   const c = Math.cos(phi);
@@ -104,7 +120,9 @@ function finish(positions: number[], index: number[], extra: Record<string, { da
 const PHI0 = -0.13;
 const PHI1 = Math.PI + 0.13;
 const AROUND = 168;
-const RIM = [1.0, 1.025, 1.06, 1.1, 1.15, 1.21, 1.28, 1.36, 1.45, 1.55];
+const RIM = [1.0, 1.015, 1.03, 1.045, 1.06, 1.09, 1.125, 1.16, 1.2];
+/** Metres of the cliff round the arch that this folder draws: a collar. Beyond it the wall is the land's own. */
+export const COLLAR = ((RIM[RIM.length - 1] as number) - 1) * 70;
 
 /** How far the rim stands out of the cliff, metres, by angle. The crown overhangs most. */
 const hood = (phi: number): number => 1 + 2 * Math.pow(Math.max(0, Math.sin(phi)), 1.5);
@@ -187,7 +205,12 @@ export function shell(): THREE.BufferGeometry {
     ring((phi) => {
       const rho = (k - 1) * 70;
       const [x, y] = arch(phi, k, 0, ragged(phi, rho));
-      const z = faceZ(x, Math.max(y, TUBE.floor - 14)) + hood(phi) * rimShape(k) + (1.4 * (noise2(x / 6, y / 6) - 0.5) + 1.5 * blocks(x, y, 6.5, 4) * smooth(1.0, 1.06, k)) * smooth(1.5, 1.2, k);
+      const own = faceZ(x, Math.max(y, TUBE.floor - 14)) + hood(phi) * rimShape(k) + (1.4 * (noise2(x / 6, y / 6) - 0.5) + 1.5 * blocks(x, y, 6.5, 4) * smooth(1.0, 1.06, k)) * smooth(1.5, 1.2, k);
+      // The land's wall stands some metres behind the rim, most at the crown. The collar turns back to it at once, as the flank of a brow
+      // (a flank that sloped would look up at the sky and show pale from below), lies on it, and sinks into it at its outer edge, which
+      // the shader breaks up.
+      const land = wallZ(x, Math.max(y, TUBE.floor - 14)) + lerp(0.8, -3, smooth(1.12, 1.2, k));
+      const z = lerp(own, land, smooth(1.012, 1.06, k));
       return [x, y, z, arc(phi), rho, 0];
     });
   }
@@ -197,57 +220,6 @@ export function shell(): THREE.BufferGeometry {
     for (let j = 0; j < AROUND; j++) index.push(a[j] as number, b[j] as number, a[j + 1] as number, a[j + 1] as number, b[j] as number, b[j + 1] as number);
   }
   return finish(positions, index, { aSkin: { data: skin, size: 3 } });
-}
-
-/** True where (x, y) lies inside the cut of the rim, bevel and all, with a little to spare: the hole the face of the cliff leaves for it. */
-function inRim(x: number, y: number): boolean {
-  const qx = (x - MOUTH.x) / TUBE.half(0);
-  const qy = (y - TUBE.floor) / TUBE.crown(0);
-  if (qy < -0.03) return false;
-  const k = Math.pow(Math.pow(Math.abs(qx), TUBE.power) + Math.pow(Math.max(qy, 0), TUBE.power), 1 / TUBE.power);
-  const c = Math.sign(qx) * Math.pow(Math.abs(qx) / Math.max(k, 1e-6), TUBE.power / 2);
-  const s2 = Math.pow(Math.max(qy, 0) / Math.max(k, 1e-6), TUBE.power / 2);
-  return k < ragged(Math.atan2(s2, c), 0) * (1.08 + 0.06 * smooth(0.15, 0.5, qy));
-}
-
-/** The face of the cliff over the alcove, as the wall was before it was cut, with the arch left open. It lies just proud of the land and sinks under it at its edge. */
-export function face(): THREE.BufferGeometry {
-  const x0 = MOUTH.x - (MOUTH.width / 2 + 15);
-  const x1 = MOUTH.x + (MOUTH.width / 2 + 15);
-  const z0 = MOUTH.z - 67;
-  const z1 = MOUTH.z + 2;
-  const nx = Math.round((x1 - x0) / 2);
-  const nz = Math.round((z1 - z0) / 0.8);
-  const positions: number[] = [];
-  const index: number[] = [];
-  const open: boolean[] = [];
-  // Under the sill the land's own wall shows.
-  const low: boolean[] = [];
-  // How far each point is from the edge of the patch: the shader breaks the patch up there so the land shows through and no line is drawn.
-  const edges: number[] = [];
-  for (let j = 0; j <= nz; j++) {
-    for (let i = 0; i <= nx; i++) {
-      const x = lerp(x0, x1, i / nx);
-      const z = lerp(z0, z1, j / nz);
-      const edge = Math.min(x - x0, x1 - x, z - z0, z1 - z);
-      const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 3, edge));
-      positions.push(x, y, z);
-      edges.push(0, edge, 0);
-      open.push(inRim(x, y) && z > MOUTH.z - 58);
-      low.push(y < TUBE.floor - 3 && x > MOUTH.x - 45);
-    }
-  }
-  const w = nx + 1;
-  for (let j = 0; j < nz; j++) {
-    for (let i = 0; i < nx; i++) {
-      const a = j * w + i;
-      const b = a + w;
-      if (open[a] || open[a + 1] || open[b] || open[b + 1]) continue;
-      if (low[a] && low[a + 1] && low[b] && low[b + 1]) continue;
-      index.push(a, b, a + 1, a + 1, b, b + 1);
-    }
-  }
-  return finish(positions, index, { aSkin: { data: edges, size: 3 } });
 }
 
 export interface Bed {
