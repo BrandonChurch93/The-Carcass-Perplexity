@@ -157,6 +157,13 @@ export function crest(s: number): number {
 
 export const FLOOR = crest(MOUTH_S);
 
+/** The shoulder the first spire stands on, 0 to 1: on the storm side of the trail the ground climbs to the spire's foot in broken rock. */
+export function shoulder(s: number, l: number): number {
+  const toMouth = Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150));
+  const path = CANAL_L * toMouth * toMouth;
+  return smooth(first.s - 400, first.s - 70, s) * (1 - smooth(first.s + 60, first.s + 230, s)) * (1 - smooth(path - 52, path - 9, l));
+}
+
 export function ground(s: number, l: number): number {
   let near = spires[0] as Spire;
   for (const sp of spires) if (Math.abs(sp.s - s) < Math.abs(near.s - s)) near = sp;
@@ -171,10 +178,7 @@ export function ground(s: number, l: number): number {
   let fall = ((1.3 + (l > 0 ? 1.0 * smooth(50, 190, al) : 0)) * al * al) / (al + 12);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   // The first spire stands on a shoulder: on the storm side of the trail the ground climbs to its foot in broken rock.
-  const toMouth = Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150));
-  const path = CANAL_L * toMouth * toMouth;
-  const shoulder = 58 * smooth(first.s - 400, first.s - 70, s) * (1 - smooth(first.s + 60, first.s + 230, s)) * (1 - smooth(path - 52, path - 9, l));
-  let y = crest(s) + massif + shoulder - fall;
+  let y = crest(s) + massif + 58 * shoulder(s, l) - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
   if (d > -6 && d < 0.6 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);

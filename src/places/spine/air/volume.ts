@@ -79,9 +79,9 @@ float stormIn(vec3 p, bool fine) {
   // over the ridge and the lee as a shelf whose underside rises away.
   // Down the ridge it closes in and comes lower, and beyond the last spires it lies across the ridge with the band under it.
   float along = smoothstep(2400.0, 6000.0, p.x);
-  float foot = max(2600.0 - 0.55 * max(p.x - 2400.0, 0.0), 500.0);
+  float foot = max(2600.0 - 0.55 * max(p.x - 2400.0, 0.0), -2200.0);
   float shelf = mix(900.0, 330.0, along);
-  float face = max(foot - max(h - 200.0, 0.0) - 4.0 * max(h - shelf, 0.0), -1300.0);
+  float face = max(foot - max(h - 200.0, 0.0) - 4.0 * max(h - shelf, 0.0), -2200.0);
   // Metres, near enough: where its face lies back the field across it is steep, and is scaled to the distance.
   float d0 = (into - face) * mix(mix(1.0, 0.7, smoothstep(150.0, 350.0, h)), 0.2, smoothstep(shelf - 80.0, shelf + 250.0, h));
   if (d0 < -1800.0) return d0 + 1150.0;
@@ -139,10 +139,10 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
     // The bolt is in the cloud: the cloud behind it glows from inside, most in its creases, a pool of light about the channel as it is seen.
     vec3 off = d - rd * dot(d, rd);
     // The pool keeps its size in the frame, so a long lens does not turn it into a veil.
-    float reach = min(1.7 * r + 120.0, 0.09 * max(t + dot(d, rd), 0.0) + 20.0);
-    within += uEmitterRadiance[i] * (r / 260.0) * (0.007 * exp(-dot(off, off) / (reach * reach)) + 0.0006 * exp(-dot(off, off) / (9.0 * reach * reach)));
+    float reach = min(1.7 * r + 120.0, 0.25 * uInvProjection[1][1] * max(t + dot(d, rd), 0.0) + 20.0);
+    within += uEmitterRadiance[i] * (r / 260.0) * (0.008 * exp(-dot(off, off) / (reach * reach)) + 0.0006 * exp(-dot(off, off) / (9.0 * reach * reach)));
   }
-  return c + within * (0.3 + 0.7 * smoothstep(0.82, 0.38, dome)) * (0.6 + 0.4 * lump);
+  return c + within * (0.15 + 0.85 * smoothstep(0.82, 0.38, dome)) * (0.6 + 0.4 * lump);
 }
 
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
@@ -217,8 +217,27 @@ void main() {
       last = t;
       t += max(-d * 0.45, 14.0 + 0.012 * t);
     }
-    if (hit) {
+    // A ray that runs along its face for kilometres has not met it yet: it is looked for further on in a few long strides, since far down
+    // the ridge the storm lies across it.
+    bool strode = false;
+    if (!hit && t < reach) {
       for (int k = 0; k < 4; k++) {
+        float at = min(t + 700.0 * float((k + 1) * (k + 1)), reach);
+        float d = stormIn(ro + rd * at, false);
+        nearest = max(nearest, d);
+        if (d > 0.0) {
+          hit = true;
+          strode = true;
+          t = at;
+          break;
+        }
+        last = at;
+        if (at >= reach) break;
+      }
+    }
+    if (hit) {
+      for (int k = 0; k < 8; k++) {
+        if (k >= 4 && !strode) break;
         float m = 0.5 * (last + t);
         if (stormIn(ro + rd * m, false) > 0.0) t = m; else last = m;
       }
@@ -248,7 +267,7 @@ void main() {
     float hollowed = smoothstep(-0.25, 0.5, (seaTop(p + vec3(n.x, 0.0, n.z) * 500.0, false) - h0) / 500.0);
     float w = max(dot(n, uWarmDir), 0.0);
     float wn = clamp((w + 0.25) / 1.25, 0.0, 1.0);
-    vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.115 * wn * wn)) * (1.0 - 0.7 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
+    vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.7 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
     sea = mix(sea, uSkyGround, gone);
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     float lap = clamp((far - t) / 160.0, 0.0, 1.0);
