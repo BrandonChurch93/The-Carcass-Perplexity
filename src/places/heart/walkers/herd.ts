@@ -250,7 +250,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target: twice && seconds >= twice.cut ? second.target : target, raised: carried(seconds, -0.38), shape: lerp(FEED_SHAPE, 0.2, up) };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
-    const fidget = turning ? 0 : index === 1 ? 8 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
+    const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
     const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
     return { sigma, body, neck, fidget, lag, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
   }

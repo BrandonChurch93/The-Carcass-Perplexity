@@ -654,6 +654,8 @@ export class Animal {
 
   private om = 1;
   private gulp = -1;
+  /** How hard the tuft is being pushed into the melt at the time of the last pose: the vapour over the pool answers it. */
+  puff = 0;
 
   pose(seconds: number): Stood {
     const { b, plan, env, skin } = this;
@@ -762,6 +764,7 @@ export class Animal {
     let digY = 0;
     let pull = 0;
     let gulp = -1;
+    let puff = 0;
     if (plan.dig > 0 && aim.down > 0.5) {
       const much = smooth(0.5, 0.95, aim.down);
       const beat = seconds / plan.dig + b.seed;
@@ -777,6 +780,7 @@ export class Animal {
       digY = much * k * (0.45 * Math.sin(Math.PI * move) - 0.2 * smooth(0.34, 0.5, ff) * (1 - smooth(0.82, 1, ff)));
       pull = much * smooth(0.45, 0.7, ff) * (1 - smooth(0.8, 1, ff));
       gulp = ff;
+      puff = much * smooth(0.3, 0.42, ff) * (1 - smooth(0.5, 0.95, ff)) * (0.4 + 1.2 * hash(e, b.seed + 23));
     }
     // The shoulders answer the neck: the body starts to take the weight of the neck over its legs a little before the head moves.
     const lead = plan.neck(seconds + 0.6).down;
@@ -808,6 +812,7 @@ export class Animal {
     const cy = ride - 0.15 * k * dip - 0.13 * k * lean - plan.dip * lead - 0.05 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
+    this.puff = puff;
     const cp = Math.cos(pitch);
     const sp = Math.sin(pitch);
     const f: V3 = [fwd[0] * cp, sp, fwd[2] * cp];
