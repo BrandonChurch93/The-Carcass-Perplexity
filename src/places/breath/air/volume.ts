@@ -320,7 +320,8 @@ void main() {
           float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
           // Before the breath it lies deep and takes the sky whole; what the breath leaves near the brim is seen against the light, and is dim.
           float left = smoothstep(-15.0, -8.0, level);
-          vec3 light = ambient * mix(0.5 + 0.8 * nm.r, 0.22 + 0.5 * nm.r, left) * sunk * mix(1.0, sunk, left)
+          left *= 1.0 - surge;
+          vec3 light = ambient * mix(mix(0.5 + 0.8 * nm.r, 0.22 + 0.5 * nm.r, left), 0.55 + 0.95 * nm.r, surge) * sunk * mix(1.0, sunk, left)
             + uSunColour * (sunAt(pm) * phase * (0.1 + 0.6 * faces) * smoothstep(-7.0, 0.0, pm.y));
           float gone = exp(-tau);
           colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
@@ -363,7 +364,7 @@ void main() {
     // Toward the sun a body burns warm; away from it it is thin and blue grey.
     // What stands down in the shaft is under its own wall: it takes the sky from a disc overhead, and no sun.
     float sunkBody = clamp(1.0 + min(mid.y - 1.0, 0.0) / 14.0, 0.0, 1.0);
-    vec3 tint = D.x > 0.5 && D.x < 1.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
+    vec3 tint = D.x > 1.5 ? vec3(0.62) : D.x > 0.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
     vec3 light = ambient * tint * (0.7 + 0.3 * tops) * (0.25 + 0.75 * sunkBody) + uSunColour * (sunAt(mid) * sunkBody * phase * (0.2 + 0.8 * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;

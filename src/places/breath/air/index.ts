@@ -40,9 +40,9 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const swell = 0.5 * Math.sin(seconds * 0.9) + 0.3 * Math.sin(seconds * 0.37 + 1);
   // It fills from below for a second and a half, wells up over the mouth for two more, then slides off over the west lip and thins.
   const fill = smooth((u - 0.2) / 1.3);
-  const over = u < 3 ? smooth((u - 1.0) / 2.0) : 0.08 + 0.92 * Math.exp(-(u - 3) / 2.2);
+  const over = u < 3 ? smooth((u - 0.4) / 2.4) : 0.08 + 0.92 * Math.exp(-(u - 3) / 1.3);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 6.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
+  const level = -9 + swell + 7 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 6.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
   const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -64,12 +64,12 @@ export function exhaleBodies(seconds: number): Body[] {
   for (const [delay, x, z, rx, ry, rz, dense] of BILLOWS) {
     const a = seconds - EXHALE - delay;
     if (a <= 0.05) continue;
-    const up = smooth((a + 0.5) / 2.2);
-    const slide = Math.max(0, a - 1.4);
+    const up = smooth((a + 0.3) / 3.2);
+    const slide = Math.max(0, a - 2.6);
     const grow = 0.55 + 0.45 * smooth(a / 1.6) + 0.07 * slide;
     // It sinks back on the rock as it slides: heavier than the air it came into.
     const y = -11 + 14.5 * up - 0.35 * Math.min(slide, 4);
-    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 2.1) / 1.15);
+    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 3.2) / 1.15);
     if (thin < 0.02) continue;
     out.push({
       part: 'exhale',
@@ -80,7 +80,7 @@ export function exhaleBodies(seconds: number): Body[] {
       repeat: 17,
       open: 0.42,
       climb: 1.4,
-      sun: 0.5,
+      sun: 0.35,
     });
   }
   return out;
@@ -103,8 +103,8 @@ export function create(ctx: Context): Piece {
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
-    [-24, 4.5, -14, 12, 5, 10, 0.016],
-    [-13, 0.5, -2, 15, 3.2, 16, 0.006],
+    [-24, 4.5, -14, 12, 5, 10, 0.008],
+    [-13, 0.5, -2, 17, 3.2, 18, 0.004],
     [-43, 2.6, -8, 12, 2.4, 9, 0.012],
   ] as const) {
     bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.7, climb: 0.5, sun: 1.0 });
