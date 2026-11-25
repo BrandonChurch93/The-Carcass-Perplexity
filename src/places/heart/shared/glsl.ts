@@ -282,6 +282,8 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   toStream.y += 0.6;
   float streamFacing = clamp((dot(n, toStream) * inversesqrt(dot(toStream, toStream)) + 0.25) / 1.25, 0.0, 1.0);
   float streamK = (1.0 - 0.5 * max(bank.w - 1.0, 0.0)) * streamFacing / (1.0 + streamAway * streamAway * uRigStreamLight.z) * (1.0 - smoothstep(7.0, 18.0, streamAway));
+  // Behind the front of the surge (uRigStreamLight.w: its z; far up the tube before it comes) the stream runs full and casts 1.3 more.
+  streamK *= 2.3 - 1.3 * smoothstep(uRigStreamLight.w - 5.0, uRigStreamLight.w + 2.0, p.z);
   vec3 streamLit = vec3(uRigStreamLight.x, uRigStreamLight.y, 0.0) * (3.14159 * streamK);
   e += streamLit;
   aim += vec3(toStream.xz * inversesqrt(max(dot(toStream.xz, toStream.xz), 1e-4)), 1.0) * streamLit.r;

@@ -5,7 +5,7 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { FAN_FROM, TUBE, createCourse } from '../fall/path';
 import { apronSlope } from '../fall/shape';
 import { MOUTH, ground, smooth } from '../layout';
-import { GROUP, UNIT } from './anchors';
+import { GROUP, SURGE, UNIT } from './anchors';
 import { stagedSeconds } from './stage';
 
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
@@ -43,6 +43,8 @@ export const POOLS = {
 // A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
 // EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
 // strip now gives. The air reads the round lights for itself and is not touched by this.
+// When the surge comes down (the event `surge`; its front runs 25 t + 5 t^2 metres down the course, as in fall/index.ts), the strip behind the
+// front casts 1.3 more (in emitterIrradiance), as the fall's own strip on its bed did before the rig took that light over.
 export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 0.4, mouth: 0.15 };
 /** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
 export const EMITTER_CORE = 4.5;
@@ -339,7 +341,9 @@ export function createRig(t0: number): Rig {
   const emitterCore = new Float32Array(MAX_EMITTERS);
   const streamRows = Array.from({ length: STREAM.rows }, () => new THREE.Vector4(0, 0, -1000, 0));
   const streamSpan = new THREE.Vector4(0, 1, STREAM.rows - 1, 0);
+  const streamLen = new Float32Array(STREAM.rows);
   const streamRadiance = blackbody(1400);
+  const streamLight = new THREE.Vector4(streamRadiance[0] * STREAM.share, streamRadiance[1] * STREAM.share, 1 / (STREAM.half * STREAM.half), -1e4);
   const poolPlaces = POOLS.at.map((at, i) => new THREE.Vector4(at[0], at[1], (POOLS.axis[i] as readonly [number, number])[0], (POOLS.axis[i] as readonly [number, number])[1]));
 
   const uniforms: Record<string, THREE.IUniform> = {
@@ -373,7 +377,7 @@ export function createRig(t0: number): Rig {
     uRigPoolSize: { value: POOLS.halves.map((h) => new THREE.Vector4(h[0], h[1], POOLS.radiance[0], POOLS.radiance[1])) },
     uRigStream: { value: streamRows },
     uRigStreamSpan: { value: streamSpan },
-    uRigStreamLight: { value: new THREE.Vector4(streamRadiance[0] * STREAM.share, streamRadiance[1] * STREAM.share, 1 / (STREAM.half * STREAM.half), 0) },
+    uRigStreamLight: { value: streamLight },
     uFlowFoot: { value: new THREE.Vector2(FLOW.foot[0], FLOW.foot[1]) },
     uFlowT0: { value: t0 },
   };
@@ -436,6 +440,7 @@ export function createRig(t0: number): Rig {
       const share = 1 + (STREAM.fan - 1) * smooth(FAN_FROM, FAN_FROM + 30, main.len[i] as number);
       // The last number holds two things: the lean (up to 1, on the slope, where the share is whole) and the share (from 1 up, on the fan, which runs straight).
       (streamRows[r] as THREE.Vector4).set(main.x[i] as number, (main.half[i] as number) * STREAM.open, main.y[i] as number, share < 1 ? 1 + 2 * (1 - share) : lean);
+      streamLen[r] = main.len[i] as number;
     }
   };
 
@@ -562,6 +567,18 @@ export function createRig(t0: number): Rig {
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
+      // Where the surge's front stands on the stream (its z): the strip behind it casts more.
+      const since = now - SURGE;
+      let frontZ = -1e4;
+      if (since > 0) {
+        const front = 25 * since + 5 * since * since;
+        let r = 0;
+        while (r < STREAM.rows - 2 && (streamLen[r + 1] as number) < front) r++;
+        const a = streamLen[r] as number;
+        const b = streamLen[r + 1] as number;
+        frontZ = streamSpan.x + (r + Math.min(Math.max((front - a) / Math.max(b - a, 1e-3), 0), 10)) / streamSpan.y;
+      }
+      streamLight.w = frontZ;
       const count = Math.min(MAX_EMITTERS, emitters.length);
       for (let i = 0; i < count; i++) {
         const e = emitters[i] as Emitter;
