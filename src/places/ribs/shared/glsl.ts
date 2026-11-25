@@ -119,7 +119,7 @@ vec3 skyCloud(vec3 from, vec3 d) {
   // Toward the horizon the cloud is seen through more and more air.
   float s = max(dot(d, uSkyBreak), 0.0);
   float s2 = s * s;
-  float low = smoothstep(0.17, 0.0, d.y);
+  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
   return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
 }
 

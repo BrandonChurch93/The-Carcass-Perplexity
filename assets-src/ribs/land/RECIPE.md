@@ -26,7 +26,7 @@ A seamless, tileable texture photograph: a straight-on, orthographic view of a r
 
 Why this one: hanging hanks with ochre tips, as on the first left rib of the establishing picture.
 
-## `public/assets/ribs/land/sand.jpg` and `sand-nh.png`
+## `public/assets/ribs/land/sand.jpg`
 
 From: `assets-src/ribs/land/sand-take1.jpg`. Takes: 1 made, take 1 kept.
 
@@ -40,10 +40,16 @@ Why this one: wet sand with shingle, shell and weed scraps at the scale of a ste
 
 Copied as they are from `public/assets/heart/mat/boulder.jpg` and `boulder-nh.png` (recipe in `assets-src/heart/RECIPE.md`).
 
-## shingle (the floor)
+## `public/assets/ribs/land/shingle.jpg` and `public/assets/ribs/land/shingle-nh.jpg`
 
-One take, kept: `shingle-take1.jpg`.
+From: `assets-src/ribs/land/shingle-take1.jpg`. Takes: 1 made, take 1 kept. The floor of the strait.
 
 Prompt: "A seamless, tileable texture photograph taken straight down from above (orthographic, top-down): a wet shingle beach at low tide filling the whole frame edge to edge. Densely packed rounded pebbles and cobbles of unlike size, from 1 to 12 centimetres, in dark slate grey, blue-grey, charcoal and a few pale stones, all wet and glistening, with coarse dark wet sand and grit between them, a few broken shells and scraps of dark brown seaweed. About 2 metres across, so every pebble is sharp. Flat even overcast light, no cast shadows from outside the frame, no horizon, no feet, no people. Real photography, natural restrained colour, no sharpening."
 
 Recipe: `node assets-src/ribs/land/make-materials.mjs` makes `shingle.jpg` (seam folded, levelled) and `shingle-nh.jpg` (slope and height from luminance). `sand.jpg` stays as the wide variation over it; `sand-nh.png` is gone.
+
+## `public/assets/ribs/land/materials.json`
+
+Made by: `assets-src/ribs/land/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: the takes kept in `assets-src/ribs/land/` (`rock-take1.jpg`, `weed-take1.jpg`, `sand-take1.jpg`, `shingle-take1.jpg`).
+Prompt or command: `node assets-src/ribs/land/make-materials.mjs`. It writes the colour and data pictures of each material and this list of them, with the mean colour of each.

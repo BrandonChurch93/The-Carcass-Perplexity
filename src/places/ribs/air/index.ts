@@ -70,7 +70,7 @@ void main() {
   vec3 rd;
   float reach;
   viewRay(ro, rd, reach);
-  float span = min(reach, 9000.0);
+  float span = min(reach, 3200.0);
   // The offset of the march is fixed to the pixel: it does not crawl from sample to sample.
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
   float mu = max(dot(rd, uSunDir), 0.0);
@@ -154,7 +154,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.00011, 500, 0.00024, 7) },
+      uAir: { value: new THREE.Vector4(0.00032, 150, 0.00022, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.95, 0.2, 1) },
       uShowAir: showAir,
