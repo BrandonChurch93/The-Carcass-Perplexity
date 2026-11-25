@@ -1,0 +1,99 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-25 06:32 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "upper-left cascade and upper-center/right skyline",
+        "what": "Narrow vertical spills on an enclosing, striated wall with sheer slabs replace the broad diagonal flow from a broken rocky opening and separate rugged right-hand outcrop with hazy space behind it.",
+        "fix": "Restore the broad diagonal flow and separate irregular rock silhouettes with space receding between them."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground to right midground",
+        "what": "One tight diagonal molten seam on nearly level striated ground replaces branching hot pools and cracks among raised black crust.",
+        "fix": "Break up the seam into irregular connected pools and secondary cracks through the lower right and midground."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "near animal’s lava contact",
+        "what": "The tendrils stay dull, with weak spill on the animal and crust and almost no warm steam.",
+        "fix": "Brighten the contact into a hot pool, light the tendrils, lower neck, nearby legs and crust from below, and add a localized warm vapor curl."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "basin air and background",
+        "what": "An even gray-brown veil and flat low-contrast illumination replace patchy smoke and stronger orange rim lighting on dark charcoal silhouettes.",
+        "fix": "Break up the veil and localize the orange rim light and bounce."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "cave mouth and top of cascade",
+        "what": "The opening is smaller and narrower, an opaque dark hole with a nearly horizontal sill instead of a broad, receding ribbed arch above an exposed molten shelf.",
+        "fix": "Widen and deepen the opening, reveal the curved inner rock, and make the upper lip a broad irregular lava-fed shelf."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "cascade benches and runout",
+        "what": "Thin, dull honey-colored ribbons on separate ledges end in a tiny horizontal line instead of a bright branching cascade spreading into a broad incandescent fan with dark crust islands.",
+        "fix": "Join the spills across the ledges, widen the lower fan, and restore yellow-white cores with orange spill on nearby rock."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "lower flank and flow margin",
+        "what": "One enlarged animal at lower left replaces two tiny silhouettes at lower right along the lava toe.",
+        "fix": "Restore two small, distant, lava-backlit animals along the right-hand runout."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "frame-wide atmosphere, especially lower/right",
+        "what": "A widespread brown veil obscures rock and compresses contrast, with an isolated soft orange cloud at right.",
+        "fix": "Clear the left slope and mouth, put patchier warm fume along the active flow, and keep the shadows charcoal."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "back of basin between lead and right animals",
+        "what": "Two distant silhouettes occupy what is open smoky space in the target.",
+        "fix": "Remove the background pair while keeping the main three."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "nearest ground and planted and lifted feet",
+        "what": "Continuous ripples replace broken volcanic relief and the dark defocused rock at lower left; feet have weak surface contact and the lifted foot drops no grit.",
+        "fix": "Add the near occluding rock, patchy crust and contact occlusion, and falling grit under the lifted foot."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "very near bottom edge",
+        "what": "The flat, almost featureless floor loses the defocused dark rocky lip and warm diagonal fissure.",
+        "fix": "Bring back both as a separate near plane."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "left talus and cascade-side benches",
+        "what": "A smooth slope, spaced blocky boulders, and uniform bands replace dense, varied scree and fractured rock faces.",
+        "fix": "Add angular rubble in a range of sizes and break up the faces and edges of the benches."
+      }
+    ]
+  },
+  "note": "The critic first answered in prose with the same score and the same twelve issues; asked for the one JSON object of the brief, it sent this."
+}

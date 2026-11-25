@@ -1,0 +1,63 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-25 06:23 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "the cavern mouth and upper lava fall between frame 4009 and frame 4010",
+        "what": "the lava surge and cavern lighting snap on in a single frame—from a thin trickle in frame 4009 to a full-width bright yellow curtain, brightly lit arch walls, and a burst of sparks in frame 4010—with no physical build-up or rolling crest",
+        "fix": "animate the surge over multiple frames so molten lava swells, breaches the lip, pours downward under gravity, and ramps the bounce light onto the cavern walls progressively"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the right-side, center, and background creatures across frames 2937 to 3374",
+        "what": "the herd reads as mechanical models rather than living animals: the right creature lifts a dangling foot up and down in place with no torso weight shift or forward travel, the center creature keeps its legs rigidly planted while only rocking and waving its trailing limb, and the background creatures stay frozen",
+        "fix": "drive each creature with independent, asynchronous weight shifts before steps, grounded foot placement without hovering in place, and subtle head, neck, and posture motion across the background herd"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the cavern wall, plume, and lava channel across frames 3791 to 4220",
+        "what": "for the first three seconds (frames 3791 to 3986) the frame reads nearly as a still image with a slow push-in, and once the surge begins (frames 4025 to 4220) it travels down the S-channel like a sliding bright texture mask with loose confetti-like yellow spark dots rather than thick, heavy lava folding and pouring",
+        "fix": "keep the plume, haze, and distant creature subtly alive before the eruption, and replace the glow-mask surge and scattered dot sparks with heavy, viscous fluid displacement that thickens, crusts, and splashes with weight"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the foreground lava channel and steam vents beside the basalt ridge across frames 3375 to 3578",
+        "what": "the glowing lava crust patterns stay locked in place relative to the rocks as the camera glides past, and the twin steam wisps near the boulder hold a static cone shape, making the landscape feel frozen rather than alive",
+        "fix": "advect the lava surface slowly downstream with folding crust deformation and animate the vent vapour so it rises, curls, and dissipates into the air"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the grey smoke column above the cliff and the distant cavern lava across frames 2507 to 2936",
+        "what": "every lobe of the smoke plume and the distant lava stream stay completely frozen over seven seconds, reading as a static painted backdrop that the camera rises past",
+        "fix": "animate continuous upward billowing and drift in the cliff smoke column and slow downward flow in the distant lava fall so the background stays alive"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the background living creature on the left, distant herd, and cliff smoke across frames 3579 to 3790",
+        "what": "aside from a brief weightless leg lift on the left creature around frame 3675, the entire scene is frozen while the camera pushes in on the static carcass, reading as a still diorama",
+        "fix": "add ambient life—drifting ash, rising heat haze, billowing background smoke, and natural weight-shifted movement in the background creatures—so the world continues living during the push-in"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the foreground glowing lava fissure running beneath the creatures across frames 2937 to 3374",
+        "what": "the bright molten veins inside the crack remain static for over seven seconds, shifting only from camera parallax instead of flowing or crusting",
+        "fix": "add slow viscous flow, subtle crust cracking, and heat-driven brightness variation along the fissure"
+      }
+    ]
+  }
+}
