@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
 import type { HeartContext } from '../shared/context';
-import { noise, routeDistance } from './height';
+import { SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
 import { rockShape, type Height } from './meshes';
 import { ROCK_FRAGMENT, ROCK_VERTEX } from './shaders';
 
@@ -49,6 +49,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     lean?: [number, number, number];
     onLake?: boolean;
     shade?: boolean;
+    /** Allowed to stand up in the open part of the line view. */
+    stand?: boolean;
   }
   const put = (k: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
     const g = height(x, z);
@@ -59,6 +61,13 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     scale.set(half * rng.range(0.85, 1.3), half * flat, half * rng.range(0.8, 1.15));
     const sink = o.sink ?? rng.range(0.22, 0.55);
     at.set(x, base + 0.75 * scale.y * (1 - 2 * sink), z);
+    // The cameras' room: nothing within 3 m of the wide view's lens, nothing over 0.7 m under the line view's lens,
+    // nothing standing up where the line view shows the mouth and the channel.
+    const top = at.y + scale.y;
+    const [off, lens] = widePath(x, z);
+    if (Math.hypot(Math.max(0, off - half * 1.3), Math.max(0, lens - top)) < 3.2) return false;
+    if (linePathDistance(x, z) < 1.5 + half * 1.3 && top > 0.68) return false;
+    if (!o.stand && top > 1.3 && lineOpen(x, z)) return false;
     q.setFromAxisAngle(UP, rng.range(0, Math.PI * 2));
     if (o.lean) {
       axis.set(o.lean[0], 0, o.lean[1]).normalize();
@@ -93,12 +102,12 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (drift(x, z, 5) + 0.5 * drift(x, z, 1.3) < 0.62 + 0.25 * rng.next()) continue;
     put(kinds.pebble, x, z, sized(0.05, 0.24, 1.6), { shade: false });
   }
-  for (let i = 0; i < 14000; i++) {
+  for (let i = 0; i < 20000; i++) {
     const x = rng.range(BOX.x0 - 20, BOX.x1 + 6);
     const z = rng.range(BOX.z0 - 30, BOX.z1 + 20);
     if (benchDistance(x, z) < 0.3) continue;
     if (rng.next() > Math.exp(-routeDistance(x, z) / 30)) continue;
-    if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.5 + 0.3 * rng.next()) continue;
+    if (drift(x, z, 7) + 0.4 * drift(x, z, 2.1) < 0.46 + 0.3 * rng.next()) continue;
     const size = sized(0.22, 0.65);
     if (fits(x, z, size)) put(kinds.stone, x, z, size);
   }
@@ -130,9 +139,35 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const ahead = rng.range(8, 34);
     const side = rng.range(-14, 10);
     const size = sized(0.9, 3, 1.2);
-    if (Math.abs(side) < 2.5 && size > 1.6) continue;
     put(kinds.hero, vx + Math.sin(yaw) * ahead + Math.cos(yaw) * side, vz - Math.cos(yaw) * ahead + Math.sin(yaw) * side, size, { sink: rng.range(0.3, 0.5) });
   }
+
+  // The line view, from the last rocks of the shore: two or three boulders between the crag and the lens at the left edge of the frame,
+  // and rubble on the last metres of shore before the lens.
+  const lx = -510.5;
+  const lz = 215.5;
+  const ahead: [number, number] = [0.788, -0.616];
+  const right: [number, number] = [0.616, 0.788];
+  const near = (a: number, r: number): [number, number] => [lx + ahead[0] * a + right[0] * r, lz + ahead[1] * a + right[1] * r];
+  for (const [a, r, size] of [
+    [4.1, -3.3, 1.45],
+    [6.2, -4.7, 1.2],
+    [8.6, -5.6, 1.05],
+  ] as [number, number, number][]) {
+    const [x, z] = near(a, r);
+    put(kinds.hero, x, z, size, { sink: rng.range(0.22, 0.32), flat: rng.range(0.75, 0.95) });
+  }
+  for (let i = 0; i < 520; i++) {
+    const a = rng.range(0.6, 9);
+    const r = rng.range(-5.5, 3.2);
+    const [x, z] = near(a, r);
+    if (benchDistance(x, z) < -0.3) continue;
+    if (drift(x, z, 2.3) + 0.4 * drift(x, z, 0.7) < 0.42 + 0.3 * rng.next()) continue;
+    const size = sized(0.1, 0.5, 1.5);
+    put(size > 0.24 ? kinds.block : kinds.stone, x, z, size, { sink: rng.range(0.2, 0.42), onLake: true, shade: size > 0.2 });
+  }
+  // The skerry in the crust: one block of the shore's rock, 3.2 m out of the lake.
+  put(kinds.hero, SKERRY[0], SKERRY[1], 3.7, { sink: 0.36, flat: 1.2, stand: true });
 
   // The line: slabs of the bench's edge that have broken off and slumped onto the crust, and the rubble between them.
   for (let s = 1; s < SHORE_POINTS.length; s++) {

@@ -36,7 +36,8 @@ vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4
   vec3 e = sky * open + (lake + emitterIrradiance(p, n)) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  // Clinker and ash are matte: a rough face keeps no sheen even seen along itself.
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * 2.0 * (1.0 - rough) * (1.0 - rough);
   #ifdef GLAZE
   vec3 r = reflect(-v, n);
   // A glazed face that looks down at the lake carries the lake in it.
@@ -77,6 +78,7 @@ uniform sampler2D tSulphur;
 uniform sampler2D tStrata;
 uniform vec4 uCrackA;
 uniform vec4 uCrackB;
+uniform vec4 uStain;
 
 // The software renderer reads a picture a little faster with its own gradients than with given ones, and gives the same picture inside a branch.
 #define PICK(t, uv, gx, gy) texture2D(t, uv)
@@ -165,7 +167,7 @@ void main() {
   if (steep < 0.997) {
     #ifdef BENCH
     // Ropy sheets on the level treads, cinder and rubble on everything that slopes, in patches tens of metres across.
-    float ropy = smoothstep(0.4, 0.6, vnoise(vWorld.xz / 19.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.05, 0.18, slope));
+    float ropy = smoothstep(0.5, 0.68, vnoise(vWorld.xz / 19.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.05, 0.18, slope));
     const float TALUS = 5.0;
     #else
     const float ropy = 0.0;
@@ -194,7 +196,7 @@ void main() {
       plain = mix(plain, lava, ropy);
       plainNh = mix(plainNh, vec3(lavaNhA.rg, lavaNhA.b * (0.5 + lavaNhB.b)), ropy);
       tip = mix(tip, lavaTip, ropy);
-      rough = mix(0.92, 0.78, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
+      rough = mix(0.92, 0.86, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
     }
     #endif
   }
@@ -203,6 +205,8 @@ void main() {
   // Old lava under a dusk sky is a cool grey, not the brown of the pictures' daylight.
   albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.96, 1.0, 1.05), 0.6);
   float height = mix(plainNh.b, cliffNh.b, steep);
+  // Ash lies in the hollows of what faces up.
+  albedo = mix(albedo, vec3(0.135, 0.13, 0.125) * (0.7 + 0.6 * mid), 0.55 * smoothstep(0.5, 0.22, height) * (1.0 - steep));
   vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * 0.55 + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
   float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, sharp)) * mix(1.0, ledge, steep);
 
@@ -239,7 +243,7 @@ void main() {
 
   #ifdef BENCH
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
-  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.2);
+  float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 4.2);
   if (dc < 9.0) {
     // Read through the height as well, or a riser carries the stain in stripes.
     vec2 sp = vWorld.xz + vWorld.y * vec2(0.83, 0.61);
@@ -256,9 +260,18 @@ void main() {
     rough = mix(rough, 0.95, crust);
   }
   // By the line the rock is glazed black with spatter, and nothing pale survives.
-  float rind = smoothstep(3.5, 0.2, land.b + 1.5 * (mid - 0.5));
-  albedo *= mix(1.0, 0.5, rind);
-  rough = mix(rough, 0.45, rind * smoothstep(0.35, 0.7, height));
+  float rind = smoothstep(2.2, 0.2, land.b + 1.2 * (mid - 0.5));
+  albedo *= mix(1.0, 0.55, rind);
+  rough = mix(rough, 0.74, rind * smoothstep(0.35, 0.7, height));
+  // The crag of the line view carries the vent's stain high on its face.
+  vec3 toStain = vWorld - uStain.xyz;
+  float sd = length(toStain * vec3(1.0, 0.75, 1.0)) / uStain.w;
+  if (sd < 1.6) {
+    float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
+    float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.35 + 0.65 * steep);
+    albedo = mix(albedo, albedo * vec3(1.9, 1.4, 0.7) + vec3(0.03, 0.022, 0.005), 0.7 * on);
+    albedo = mix(albedo, vec3(0.5, 0.45, 0.24) * (0.55 + 0.9 * height), 0.75 * on * smoothstep(0.55, 0.85, blot + 0.4 * (height - 0.5)));
+  }
   #endif
 
   // Under an overhang of rock, or deep in a gap, less of everything arrives.
@@ -377,13 +390,13 @@ void main() {
   float foot = smoothstep(-0.08, 0.3, lift);
   float occ = (0.35 + 0.65 * foot) * (0.6 + 0.4 * smoothstep(0.15, 0.6, height));
   float dust = smoothstep(0.45, 0.9, n0.y + 0.5 * (height - 0.5)) * (0.35 + 0.65 * fract(vSeed.x * 7.3));
-  float rind = smoothstep(3.0, 0.3, land.b);
+  float rind = smoothstep(2.2, 0.3, land.b);
   albedo = mix(albedo, vec3(0.17, 0.165, 0.155) * (0.6 + 0.8 * height), 0.6 * dust * (1.0 - rind));
   albedo *= mix(1.0, 0.55, rind);
   float dc = segmentDistance(vWorld.xz, uCrackA);
   float sul = smoothstep(3.6, 0.6, dc + 2.4 * (height - 0.5)) * smoothstep(-0.4, 0.4, n0.y) * step(0.35, fract(vSeed.x * 3.1));
   albedo = mix(albedo, mix(vec3(0.34, 0.27, 0.08), vec3(0.55, 0.52, 0.4), smoothstep(0.5, 0.8, height)), sul * 0.85);
-  float rough = mix(0.78, 0.5, rind * smoothstep(0.4, 0.7, height));
+  float rough = mix(0.9, 0.76, rind * smoothstep(0.4, 0.7, height));
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, 0.0);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
