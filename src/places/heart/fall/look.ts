@@ -55,7 +55,8 @@ float riverOpen(float d) {
 }
 // d is metres into the tube from its rim, negative outside.
 vec3 riverLight(vec3 p, vec3 n, float d) {
-  if (d < -16.0) return vec3(0.0);
+  // The rim's own edge stands between the river and the outer face.
+  if (d < 0.0) return vec3(0.0);
   vec2 to = vec2(riverX(max(d, 0.0)) - p.x, ${f(TUBE.floor)} - p.y);
   float far = length(to);
   float w = 15.0;
