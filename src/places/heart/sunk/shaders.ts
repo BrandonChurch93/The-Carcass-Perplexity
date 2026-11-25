@@ -246,7 +246,7 @@ void main() {
   // The skin is broken up at 5 to 20 cm as well, by the ground's own measure and not the rope's, so no rope is one long streak.
   // Between the ropes, where the lake's skin is laid 6 m wide, that break-up is most of the tone when the lens is near.
   float lumpSeen = folded * (1.0 - smoothstep(0.03, 0.09, gritSize));
-  float lumps = 0.6 * vnoise(l * 8.0 + 5.0) + 0.4 * vnoise(l * 19.0 + 2.0);
+  float lumps = vnoise(l * 11.0 + 5.0);
   lum = mix(lum, 0.45 + 1.1 * (lumps - 0.5), 0.7 * lumpSeen * (1.0 - onRope));
   // A steep face that is no rope carries grit and not the lines of the ropy skin, which would run round it as contours.
   // Its grit is the same in every direction on the face, so it does not follow the height either.
@@ -262,7 +262,7 @@ void main() {
   // Grit of 1 to 3 cm on all of the folded skin, and a pale fleck here and there: seen where the lens is sharp, gone where a
   // pixel is wider than a grain.
   float fineSeen = folded * (1.0 - smoothstep(0.007, 0.022, gritSize));
-  float fine = vnoise(lr * 41.0 + 3.0) + 0.6 * vnoise(lr * 89.0 + 9.0);
+  float fine = 1.6 * vnoise(lr * 55.0 + 3.0);
   albedo *= 1.0 + 0.9 * fineSeen * (fine - 0.8);
   albedo = mix(albedo, ASH_SKIN * 1.2, 0.45 * fineSeen * smoothstep(1.2, 1.42, fine) * smoothstep(0.35, 0.6, small));
   albedo *= 1.0 + 0.8 * lumpSeen * (lumps - 0.5);
@@ -347,10 +347,10 @@ void main() {
   float fallen = 0.035 + 0.095 * uSlab;
   float onFace = smoothstep(0.1, 0.32, vBreak.x) * (1.0 - smoothstep(0.8, 0.98, vBreak.x)) * step(abs(vBreak.y), 0.09);
   // From the wide view the seam would be under a pixel and a row of red chips: it is lit for the near lens only.
-  float seamLit = smoothstep(0.38, 0.52, vnoise(l * 1.3 + 50.0) + 0.12 * uSeam) * smoothstep(0.22, 0.42, vnoise(l * 5.5 + 20.0) + 0.1 * uSeam) * smoothstep(40.0, 25.0, far);
+  float seamLit = smoothstep(0.26, 0.4, 0.5 + 0.3 * sin(l.x * 2.1 + 1.0) + 0.2 * sin(l.x * 3.7 + 4.0) + 0.12 * uSeam) * smoothstep(0.22, 0.42, 0.5 + 0.3 * sin(l.x * 9.3 + 2.0) + 0.2 * sin(l.x * 15.1 + l.y * 4.0) + 0.1 * uSeam) * smoothstep(40.0, 25.0, far);
   float standing = onFace * smoothstep(fallen - 0.036, fallen - 0.024, vBreak.x * fallen) * seamLit;
   float flaring = onFace * smoothstep(0.0, 0.25, uFlare);
-  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * vnoise(l * 4.0 + 33.0) + 60.0 * (small - 0.5) + 0.6 * breath;
+  float seamKelvin = 900.0 + 190.0 * uSeam + 300.0 * (0.5 + 0.3 * sin(l.x * 6.7 + 5.0) + 0.2 * sin(l.x * 11.9 + 1.0)) + 60.0 * (small - 0.5) + 0.6 * breath;
   float faceKelvin = mix(760.0, 1310.0, uFlare) + 70.0 * (small - 0.5) + 60.0 * (grainNh.b - 0.5) + 0.5 * breath * uFlare;
   // What glows, lights: the skin within a hand or two of the seam is warmed by it.
   c += albedo * blackbody(seamKelvin) * (0.08 * seamLit * (1.0 + 3.0 * uFlare)) * exp(-abs(vBreak.y) / 0.15) * (1.0 - onFace) * step(0.02, vBreak.z + vBreak.x + step(vBreak.y, 0.0));
@@ -462,7 +462,8 @@ void main() {
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
   vec4 lavaNh = texture2D(tRopyNh, uvL);
   float coat = smoothstep(0.36, 0.64, vSurf.x + 0.3 * (lavaNh.b - 0.5));
-  vec3 lava = vec3(0.045, 0.045, 0.047) * (0.35 + 0.65 * dot(texture2D(tRopy, uvL).rgb, vec3(5.7)));
+  // Its tone is had from its height: a tap less on every pixel of the carcass.
+  vec3 lava = vec3(0.045, 0.045, 0.047) * (0.35 + 1.3 * lavaNh.b);
   albedo = mix(albedo, lava * (0.75 + 0.5 * lavaNh.b), coat);
   bump = mix(bump, (lavaNh.rg - 0.5) * 1.2, coat);
   cavity = mix(cavity, 0.75 + 0.25 * lavaNh.b, coat);
@@ -473,7 +474,7 @@ void main() {
   // Ash lies on whatever faces up: thick on the tops of the plates and the cords, none underneath.
   float grit = vnoise3(vLocal * 9.0);
   // Grit of 1 to 3 cm on all of it, seen where the lens is sharp.
-  float fine = vnoise3(vLocal * 43.0) + 0.6 * vnoise3(vLocal * 91.0 + 5.0) - 0.8;
+  float fine = 1.6 * vnoise3(vLocal * 55.0) - 0.8;
   albedo *= 1.0 + mix(0.55, 0.85, isBody) * close * fine;
   float up = mix(smoothstep(0.1, 0.7, nl.y), smoothstep(-0.1, 0.45, nl.y), isLeg);
   float dust = up * (0.2 + 0.8 * smoothstep(0.3, 0.65, 1.0 - lump + 0.4 * (grit - 0.5) + 0.5 * (flakeNh.b - 0.5))) * mix(0.3, 1.0, plated) * (1.0 - 0.7 * furrow) * (1.0 - 0.5 * coat) * (1.0 - 0.6 * isBody * (1.0 - plated));

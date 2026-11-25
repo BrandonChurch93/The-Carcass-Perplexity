@@ -20,6 +20,12 @@ export const BODY = {
   turn: new THREE.Euler(0.3, 0.2, 0.2, 'YXZ'),
 };
 
+/** The hull is drawn this much larger than the shape the skin was laid round, grown from a point low in its middle. */
+export const HULL_GROW = 1.3;
+export const HULL_PIVOT: [number, number, number] = [BODY.centre.x, 0.2, BODY.centre.z];
+const grown = (p: THREE.Vector3, into: THREE.Vector3): THREE.Vector3 =>
+  into.set(HULL_PIVOT[0] + (p.x - HULL_PIVOT[0]) * HULL_GROW, HULL_PIVOT[1] + (p.y - HULL_PIVOT[1]) * HULL_GROW, HULL_PIVOT[2] + (p.z - HULL_PIVOT[2]) * HULL_GROW);
+
 export type P3 = [number, number, number];
 
 /** The two legs that stand out: the hip is inside the body, the knee is the top of the arch. */
@@ -1006,17 +1012,22 @@ export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly =
   const position = new Float32Array(count * 3);
   const map = new Float32Array(count * 4);
   const surf = new Float32Array(count * 4);
+  const under = new Uint8Array(count);
   const p = new THREE.Vector3();
   const o = new THREE.Vector3();
+  const g = new THREE.Vector3();
   for (let i = 0; i <= rows; i++) {
     // The poles lie on the long axis.
     const v = i / rows;
     for (let j = 0; j <= columns; j++) {
       const a = ((j % columns) / columns) * Math.PI * 2;
       const at = hull(v, a, true, p, o);
-      const lava = lavaCoat(baked, p, 0.2, 11);
+      // The lava's mark is taken where the point stands once the hull is grown, or its coat would ride up the hull as a belt.
+      const lava = lavaCoat(baked, grown(p, g), 0.2, 11);
       p.addScaledVector(o, lava.out * 0.6);
       const k = i * (columns + 1) + j;
+      grown(p, g);
+      under[k] = g.y < baked.at(g.x, g.z) - 0.3 ? 1 : 0;
       position[k * 3] = p.x;
       position[k * 3 + 1] = p.y;
       position[k * 3 + 2] = p.z;
@@ -1040,7 +1051,7 @@ export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly =
       const round = (j / columns) * Math.PI * 2;
       if (seenOnly && round > Math.PI * 1.08 && round < Math.PI * 2 - 0.7) continue;
       // Nothing is drawn of what lies well under the skin.
-      if (position[a * 3 + 1]! < baked.at(position[a * 3]!, position[a * 3 + 2]!) - 0.3 && position[(b + 1) * 3 + 1]! < baked.at(position[(b + 1) * 3]!, position[(b + 1) * 3 + 2]!) - 0.3) continue;
+      if (under[a] === 1 && under[b + 1] === 1) continue;
       index.push(a, a + 1, b, a + 1, b + 1, b);
     }
   }
