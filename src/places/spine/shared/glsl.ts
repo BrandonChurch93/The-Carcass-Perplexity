@@ -92,7 +92,7 @@ vec3 skyRadiance(vec3 d) {
   c = mix(c, uSkyStorm, 0.85 * storm) + uFlash * storm;
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
   float w = max(dot(d.xz, uWarmDir.xz) * inversesqrt(max(dot(d.xz, d.xz), 1e-6)), 0.0);
-  float band = (0.75 * exp(-up * up / 0.0007) + 0.25 * exp(-up * up / 0.006)) * smoothstep(-0.03, 0.0, up);
+  float band = (0.9 * exp(-up * up / 0.00028) + 0.1 * exp(-up * up / 0.003)) * smoothstep(-0.03, 0.0, up);
   return c + uWarmColour * (band * w * w);
 }
 

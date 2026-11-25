@@ -79,7 +79,10 @@ void main() {
   float dCanal = vSL.x - MOUTH_S;
   if (uKind < 0.5 && dCanal > -1.0 && dCanal < EXIT + 1.0 && vWorld.y > CANAL_FLOOR - 0.2) {
     float r = flareAt(dCanal);
-    if (length(vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r))) < r - 0.8) discard;
+    // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds.
+    vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
+    float ragged = 0.74 + 0.26 * vnoise(vec2(atan(across.y, across.x) * 2.3 + 5.0, 0.7)) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
+    if (length(across * vec2(1.0, 1.0 + 0.25 * smoothstep(0.0, 1.0, across.y / r))) < (r - 0.8) * ragged) discard;
   }
   vec3 smoothN = normalize(vNormal);
   if (uKind > 1.5 && !gl_FrontFacing) smoothN = -smoothN;
@@ -98,7 +101,7 @@ void main() {
   float top = smoothstep(0.4, 0.75, w.y);
   vec2 sideAt = w.x > w.z ? vWorld.zy : vWorld.xy;
   // Along the beds the rock runs long: the picture is drawn out three times that way.
-  sideAt = (mat2(0.34, 0.94, -0.94, 0.34) * sideAt) * vec2(1.0, spire ? 0.36 : 0.8);
+  sideAt = (mat2(0.34, 0.94, -0.94, 0.34) * sideAt) * vec2(1.0, spire ? 0.55 : 0.8);
   vec3 across = w.x > w.z ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
   float wide = 64.0;
   vec3 rock = mix(texture2D(tRock, sideAt / wide).rgb, texture2D(tRock, vWorld.xz / wide).rgb, top);
@@ -125,6 +128,10 @@ void main() {
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
   vec3 tone = mix(vec3(0.2, 0.215, 0.25), vec3(0.47, 0.38, 0.29), smoothstep(0.35, 0.75, 0.6 * bed + 0.4 * blotch));
   vec3 albedo = tone * (0.55 + 0.45 * rock / ROCK_MEAN);
+  // Strata: the beds of the rock, tipped as the vertebrae lean, some dark, some pale, a few metres each.
+  float tilt = dot(vWorld, vec3(0.16, 0.95, 0.27));
+  float strata = vnoise(vec2(tilt * 0.37, 1.7)) * 0.6 + vnoise(vec2(tilt * 0.09, 7.3)) * 0.4;
+  if (spire) albedo *= 0.62 + 0.76 * strata;
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
 
@@ -147,6 +154,9 @@ void main() {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vSL.x) + 0.1 * (pit - 0.5) + 0.1 * lee;
     snow = smoothstep(0.5, 0.66, held);
+    // Ledges: where a hard bed stands out the snow lies along it, in broken lines.
+    float ledge = smoothstep(0.66, 0.8, vnoise(vec2(tilt * 0.14, 3.1))) * smoothstep(0.38, 0.6, vnoise(vWorld.xz * 0.045 + vWorld.y * 0.02)) * smoothstep(-0.3, 0.25, n0.y);
+    snow = max(snow, 0.92 * ledge);
   }
   if (spire && !inside) {
     // A spire stands in the drift at its foot.
@@ -181,15 +191,21 @@ void main() {
     float h0 = vnoise(q * vec2(1.1, 0.33)) + 0.4 * vnoise(q * vec2(4.3, 1.4));
     float hx = vnoise((q + vec2(e, 0.0)) * vec2(1.1, 0.33)) + 0.4 * vnoise((q + vec2(e, 0.0)) * vec2(4.3, 1.4));
     float hz = vnoise((q + vec2(0.0, e)) * vec2(1.1, 0.33)) + 0.4 * vnoise((q + vec2(0.0, e)) * vec2(4.3, 1.4));
-    vec2 g = vec2(h0 - hx, h0 - hz) / e * 0.11 * close;
+    vec2 g = vec2(h0 - hx, h0 - hz) / e * 0.2 * close;
     vec3 p = prints(vSL);
-    g += p.yz;
-    snowOcc = 1.0 + 0.45 * min(p.x, 0.0);
+    g += 1.6 * p.yz;
+    snowOcc = 1.0 + 0.8 * min(p.x, 0.0);
+    // Wind crust: the troughs between the ripples are scoured hard and lie darker than the soft snow on their crests.
+    snowOcc *= 1.0 - 0.3 * close * smoothstep(0.85, 0.3, h0);
     nSnow = normalize(nSnow + vec3(g.x, 0.0, g.y));
   }
+  // Under a sky without a sun a drift shows by which way its faces lean: the lean of the snow is drawn out for the light.
+  nSnow = normalize(vec3(nSnow.x * 2.4, nSnow.y, nSnow.z * 2.4));
   vec3 n = normalize(mix(nRock, nSnow, snow));
-  albedo = mix(albedo, vec3(0.8, 0.83, 0.88), snow);
-  rough = mix(rough, 0.7, snow);
+  // Packed by the wind in long plates, the snow is glazed and blue-grey; between them it lies soft and white.
+  float plate = smoothstep(0.4, 0.62, vnoise(vec2(dot(vWorld.xz, vec2(0.98, -0.2)) * 0.19, dot(vWorld.xz, vec2(0.2, 0.98)) * 0.045)));
+  albedo = mix(albedo, mix(vec3(0.84, 0.87, 0.91), vec3(0.6, 0.66, 0.76), 0.55 * plate), snow);
+  rough = mix(rough, 0.7 - 0.3 * plate, snow);
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
 

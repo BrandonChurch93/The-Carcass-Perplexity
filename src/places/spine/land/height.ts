@@ -80,7 +80,7 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const x = f.x + f.nx * l;
   const z = f.z + f.nz * l;
   const near = trodden(s, l);
-  const free = smooth(3, 16, near);
+  const free = smooth(2.5, 30, near);
   const out = Math.abs(l);
   // Ribs and gullies down the flanks, deeper the further down.
   const ribs = (ridged(x / 210 + 3.1, z / 210) - 0.5) * Math.min(90, 0.2 * out) + (ridged(x / 74, z / 74 + 7.7) - 0.5) * Math.min(26, 0.09 * out);
@@ -96,8 +96,10 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const v = -0.57 * x + 0.82 * z;
   const crag = where * (9 * slab(u, v, 40, 14, 3) + 3.6 * slab(u + 0.4 * v, v, 14, 6, 5) + 3 * ridged(x / 23, z / 23) - 0.6);
   // Drifts: the snow lies in long low waves across the wind.
-  const drift = 1.5 * (ridged(x / 16 + 5.5, z / 52) - 0.6) + 0.7 * (vnoise(x / 9 + 5.5, z / 31) - 0.5) + 0.25 * (vnoise(x / 2.7, z / 8.1 + 2.2) - 0.5);
-  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * drift, rock: free * smooth(0.2, 1.6, crag) };
+  const drift = 2.3 * (ridged(x / 16 + 5.5, z / 52) - 0.6) + 1.0 * (vnoise(x / 9 + 5.5, z / 31) - 0.5) + 0.3 * (vnoise(x / 2.7, z / 8.1 + 2.2) - 0.5);
+  // Beside the trail the rock breaks through the snow in low stones and steps, a metre or two high.
+  const stones = smooth(2.2, 6.5, near) * (1 - 0.7 * free) * smooth(0.5, 0.66, vnoise(x / 13 + 1.3, z / 13 + 6.6)) * Math.max(0, 1.5 * slab(u, v, 7, 3, 9) + 1.1 * ridged(x / 4.7, z / 4.7) - 0.25);
+  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.1, 0.55, stones)) };
 }
 
 export function heightAt(s: number, l: number): number {
