@@ -81,7 +81,7 @@ const float APRON_TONE = 0.48;
 // Albedo of the cliff picture on the rim, the face and the tube, set by measure under the frozen light.
 const float WALL_TONE = 0.6;
 // How much brighter than its plain geometry the melt lights the rim: the fume in the mouth glows and lights it too.
-const float RIM_LIGHT = 8.0;
+const float RIM_LIGHT = 5.0;
 uniform float uFlare;
 float tubeAxis(float d) {
   float k = smoothstep(25.0, 200.0, d);
@@ -116,10 +116,12 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float deepest = mix(21.0, 4.0, east);
   // Past the cut the light falls away into the dark over a few metres more; it does not stop at an edge.
   float shade = max(smoothstep(deepest, 0.3 * deepest, d), 0.22 * smoothstep(64.0, 20.0, d)) * smoothstep(0.6, 3.5, d);
-  float reach = mix(1.0, 0.0, smoothstep(0.15, 0.95, east)) * smoothstep(${f(TUBE.floor + 2)}, ${f(TUBE.floor + 12)}, p.y);
+  // The light is strongest low, on the wall beside the pool, and thins as it climbs: at the crown a third of it is left. East of the
+  // stream's side it is gone within the first third of the arch.
+  float reach = mix(1.0, 0.0, smoothstep(0.08, 0.62, east)) * smoothstep(${f(TUBE.floor - 1)}, ${f(TUBE.floor + 4)}, p.y) * mix(1.0, 0.33, smoothstep(${f(TUBE.floor + 8)}, ${f(TUBE.floor + 62)}, p.y));
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
-  e += 0.022 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
+  e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
 }
 // What is left in the dark of the tube: the glow of the river far in, on soot. It shows the rock as rock and no more.
@@ -135,7 +137,7 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   // Nothing is read that would be multiplied by nothing: past the bevel the round lights are shut out, and far in the lake is too.
   vec3 lake = lit < 0.01 ? vec3(0.0) : (p.y > 30.0 ? lakeIrradianceFar(p, n) : lakeIrradiance(p, n));
   // On the cut of the rim the east side stands behind the heaps on the floor, as it does for the pool's own light.
-  if (d < 7.0) lake += emitterIrradiance(p, n) * smoothstep(7.0, 0.0, d) * mix(1.0, mix(1.0, 0.12, smoothstep(${f(MOUTH.x - 10)}, ${f(MOUTH.x + 50)}, p.x)), smoothstep(0.0, 1.5, d));
+  if (d < 7.0) lake += emitterIrradiance(p, n) * smoothstep(7.0, 0.0, d) * mix(1.0, mix(1.0, 0.05, smoothstep(${f(MOUTH.x - 30)}, ${f(MOUTH.x + 30)}, p.x)), smoothstep(0.0, 1.5, d));
   vec3 e = skyIrradiance(n) * open + lake * occ * lit + (riverLight(p, n, d) + tubeDark(d) * smoothstep(1.0, 8.0, d)) * occ + more * occ;
   // Rock is grey: what warmth it shows is the light's.
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.2126, 0.7152, 0.0722))), 0.6);
@@ -218,7 +220,11 @@ void main() {
   bool hidden = hiddenByWall(vWorld, vSkin.z);
   // Far inside no light reaches and there is no rock to draw; between, only the melt's light on plain dark rock.
   if (inside > 0.5 && d > 26.0) {
-    if (d < 110.0 && !hidden) c = vec3(0.06) * (0.25 + 0.8 * vnoise(vWorld.xy / 3.0 + vWorld.z / 4.0) + 0.7 * vnoise(vWorld.xy / 10.0 + vWorld.z / 8.0)) * (tubeDark(d) + (d < 64.0 ? riverLight(vWorld, n, d) : vec3(0.0))) / 3.14159;
+    // The same ribs go on round the tube, and only their fronts show.
+    if (d < 110.0 && !hidden) {
+      float deepRib = vnoise(vec2(vSkin.x / 17.0, vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0)));
+      c = vec3(0.06) * (0.12 + 1.6 * smoothstep(0.3, 0.72, deepRib)) * (tubeDark(d) + (d < 64.0 ? riverLight(vWorld, n, d) : vec3(0.0))) / 3.14159;
+    }
   } else if (!ragged && !hidden) {
     if (collar < 1.0) {
       // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
@@ -229,21 +235,20 @@ void main() {
       // The cut of the arch is broken rock: blocks and ribs of one to four metres, each lying its own way, so one takes the light
       // from below, the next is in its shade, and the joints between them are black.
       float broken = smoothstep(2.0, -3.0, vSkin.y);
-      vec2 bq = vec2(vSkin.x / 4.6, vSkin.y / 3.6) + 0.9 * vec2(vnoise(vSkin.xy / 5.0), vnoise(vSkin.xy / 5.0 + 5.0));
-      vec2 big = plates(bq);
-      vec2 small = plates(bq * 2.9 + 3.0);
-      // Here the rock came away in slabs, there it is shattered small.
-      float shattered = smoothstep(0.42, 0.58, vnoise(vSkin.xy / 9.0 + 2.0));
-      vec2 tb = fract(big.y * vec2(17.3, 41.7)) - 0.5;
-      vec2 ts = fract(small.y * vec2(23.1, 37.9)) - 0.5;
+      // It came away in layers that follow the opening: ribs a metre or two deep that run round the arch, each standing a little
+      // proud of the one behind it, uneven in depth and broken here and there along their length.
+      float lay = vSkin.y / 2.1 + 2.4 * vnoise(vSkin.xy / 13.0) + 0.6 * vnoise(vSkin.xy / 3.3 + 4.0);
+      float along = vSkin.x / 17.0;
+      float rib = 0.7 * vnoise(vec2(along, lay)) + 0.3 * vnoise(vec2(along * 3.1 + 3.0, lay * 2.6));
+      float ribIn = 0.7 * vnoise(vec2(along, lay + 0.22)) + 0.3 * vnoise(vec2(along * 3.1 + 3.0, (lay + 0.22) * 2.6));
+      float ribBy = 0.7 * vnoise(vec2(along + 0.09, lay)) + 0.3 * vnoise(vec2(along * 3.1 + 3.28, lay * 2.6));
       vec3 round_ = normalize(cross(n, vec3(0.0, 0.0, 1.0)) + 1e-4);
-      vec2 tilt = tb * 1.3 + ts * mix(0.4, 1.5, shattered);
-      n = normalize(n + broken * (round_ * tilt.x + vec3(0.0, 0.0, 1.0) * tilt.y));
-      float joint = max(smoothstep(0.05 + 0.12 * vnoise(vSkin.xy / 2.3), 0.0, big.x), shattered * smoothstep(0.14, 0.0, small.x));
-      cliff *= 1.0 - broken * 0.8 * joint;
-      // A block that stands back is in the shade of its neighbours, and soot lies on some of them.
-      float back = mix(big.y, small.y, 0.35 + 0.5 * shattered);
-      cliff *= mix(1.0, (0.5 + 1.1 * back) * (0.55 + 0.9 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
+      n = normalize(n + broken * (vec3(0.0, 0.0, 1.0) * (ribIn - rib) * 12.0 + round_ * (ribBy - rib) * 8.0));
+      // The hollow under a rib is in its shade, and soot lies in it; here and there a rib is cracked through.
+      float hollow = smoothstep(0.52, 0.34, rib);
+      float crack = smoothstep(0.03, 0.0, abs(vnoise(vec2(vSkin.x / 4.3, lay * 0.9 + 7.0)) - 0.5)) * smoothstep(0.35, 0.6, vnoise(vSkin.xy / 8.0 + 21.0));
+      cliff *= 1.0 - broken * max(0.8 * hollow, 0.7 * crack);
+      cliff *= mix(1.0, (0.62 + 0.8 * rib) * (0.6 + 0.8 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
       c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
     }
     if (collar > 0.0) {
@@ -499,15 +504,8 @@ void main() {
       vec2 tilt = laid(tCrustNh, vWorld, 0, 6.0, 0.0).rg - 0.5;
       n = normalize(mix(n, vec3(tilt.x * 1.6 + 0.2 * (slab.y - 0.5), 1.0, tilt.y * 1.6), shelf));
     }
-    // The stream's own light on its banks: it is a long bright strip, and what faces it glows.
-    vec3 to = vec3(vBank.x * max(side, 0.0), vBank.z - vWorld.y + 0.4, vBank.y * max(side, 0.0));
-    float far = length(to);
-    float form = vFlow.z / sqrt(vFlow.z * vFlow.z + far * far);
-    float behind = smoothstep(uSurge.x + 4.0, uSurge.x - 8.0, vFlow.w) * uSurge.y;
-    float fan = smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, vFlow.w);
-    float seen = smoothstep(2.5, 0.0, to.y);
-    vec3 strip = blackbody(1400.0) * 3.14159 * (0.3 + 0.4 * behind) * (1.0 - 0.75 * fan) * form * form * form * seen * clamp(dot(n, to / far), 0.0, 1.0) * (1.0 - vIn.x);
-    vec3 r = rockShade(vWorld, n, v, albedo, 1.0, strip, ${f(TUBE.lipZ)} - vWorld.z);
+    // The stream's light on its banks is the rig's: it lays a strip of light along the course, and nothing is lit twice here.
+    vec3 r = rockShade(vWorld, n, v, albedo, 1.0, vec3(0.0), ${f(TUBE.lipZ)} - vWorld.z);
     // The rock the lava touches is itself hot for a hand's breadth.
     r += blackbody(max(1110.0 - 420.0 * max(side, 0.0), 500.0)) * smoothstep(1.0, 0.0, side) * (0.5 + 0.5 * vnoise(vWorld.xz * 2.3)) * (1.0 - shelf);
     if (shelf > 0.0) {

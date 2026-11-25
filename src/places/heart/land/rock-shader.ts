@@ -162,7 +162,9 @@ void main() {
   float patch3 = vnoise3(vObject * 2.3 / span + 3.1);
   // Ash settles on what looks up, thickest in the hollows and thin on the knobs, in patches. None on a rock just out of the lake.
   float dust = smoothstep(0.25, 0.8, n0.y + 0.3 * (0.5 - vCave)) * smoothstep(0.25, 0.65, patch3 + 0.5 * (0.5 - vCave)) * (1.0 - 0.75 * rind) * smoothstep(0.4, 0.6, vSeed.w);
-  albedo = mix(albedo, vec3(0.12, 0.114, 0.108) * (0.55 + 0.9 * height), (0.65 - 0.2 * afloat) * dust);
+  // The ash lies in specks a centimetre or two across, paler than the rock: a speckled top over a black side.
+  float speck = smoothstep(0.42, 0.62, vnoise3(vObject * 31.0 + 2.7));
+  albedo = mix(albedo, vec3(0.15, 0.141, 0.13) * (0.5 + 0.9 * height) * (0.72 + 0.5 * speck), (0.7 - 0.25 * afloat) * dust);
   // Grit and scree banked against the foot, with a ragged top: the rock goes into the ground, it does not stand on it.
   float bank = (1.0 - smoothstep(0.02, 0.16, lift + 0.1 * (patch3 - 0.5))) * (1.0 - rind) * smoothstep(0.4, 0.6, vSeed.w);
   albedo = mix(albedo, vec3(0.07, 0.064, 0.06) * (0.6 + 0.8 * height), 0.7 * bank);
@@ -174,13 +176,14 @@ void main() {
   if (gas > 0.0) {
     float low = 1.0 - smoothstep(0.15, 0.75, lift);
     float blot = 0.45 * vnoise3(vWorld * 2.6 + 1.7) + 0.4 * vnoise3(vWorld * 7.0 + 4.1) + 0.2 * (0.5 - vCave) + 0.12 * n0.y + 0.22 * low;
-    float stain = smoothstep(0.84 - 0.14 * gas, 0.97 - 0.14 * gas, blot) * smoothstep(0.0, 0.35, gas) * (0.2 + 0.8 * smoothstep(-0.3, 0.4, n0.y));
+    float thin = 0.14 * gas + 0.2 * gas * gas * gas;
+    float stain = smoothstep(0.84 - thin, 0.97 - thin, blot) * smoothstep(0.0, 0.35, gas) * (0.2 + 0.8 * smoothstep(-0.3, 0.4, n0.y));
     float thick = smoothstep(0.45, 0.9, stain) * smoothstep(0.3, 0.7, height);
-    albedo = mix(albedo, mix(vec3(0.3, 0.22, 0.04), vec3(0.55, 0.5, 0.22), thick) * (0.6 + 0.8 * height), 0.92 * stain);
+    albedo = mix(albedo, mix(vec3(0.38, 0.29, 0.05), vec3(0.72, 0.62, 0.2), thick) * (0.6 + 0.8 * height), 0.92 * stain);
   }
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
   // Undersides and the faces that lean over see the ground, not the sky.
-  occ *= mix(0.25, 1.0, smoothstep(-0.6, 0.1, n0.y));
+  occ *= mix(0.25, 1.0, smoothstep(-0.6, 0.1, n0.y)) * mix(0.6, 1.0, smoothstep(0.0, 0.55, n0.y));
   // The light, as the land takes it (land/shaders.ts), and nothing thrown back as a sheen: clinker and ash are matte.
   float above = vWorld.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
