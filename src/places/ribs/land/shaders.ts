@@ -62,11 +62,16 @@ void main() {
   vec3 nhd = texture2D(tRockN, ud).rgb;
   vec3 n = bump(n0, vWorld, ud, (nhd.xy - 0.5) * 2.2 + (nhb.xy - 0.5) * 2.6);
   float macro = vnoise(vUv * vec2(0.011, 0.017)) * 0.6 + vnoise(vUv * vec2(0.043, 0.06) + 5.0) * 0.4;
-  vec3 albedo = det * mix(vec3(0.3), big, 0.6) * 4.3 * vec3(0.9, 0.97, 1.05) * (0.7 + 0.55 * macro);
+  vec3 albedo = det * mix(vec3(0.3), big, 0.6) * 3.5 * vec3(0.9, 0.97, 1.05) * (0.7 + 0.55 * macro);
   // Beds a stride thick and a room thick, lying across the blade: the soft ones worn back and dark.
   float beds = 0.5 * vnoise(vec2(vUv.x * 0.03, vUv.y * 1.7)) + 0.5 * vnoise(vec2(vUv.x * 0.013 + 4.0, vUv.y * 0.55));
   float soft = smoothstep(0.55, 0.4, beds);
-  albedo *= 1.0 - 0.35 * soft;
+  // Beds in courses of a storey and of a house: the partings between them are dark lines that waver and break.
+  float c1 = vnoise(vec2(vUv.x * 0.007, vUv.y * 0.26 + 0.6 * macro));
+  float c2 = vnoise(vec2(vUv.x * 0.0035 + 7.0, vUv.y * 0.075));
+  float part = max(smoothstep(0.07, 0.0, abs(c1 - 0.5)), smoothstep(0.05, 0.0, abs(c2 - 0.5))) * smoothstep(0.25, 0.6, vnoise(vUv * vec2(0.05, 0.4) + 2.0));
+  soft = max(soft, part);
+  albedo *= (1.0 - 0.35 * soft) * (0.78 + 0.44 * c2);
   // Stains of damp the size of a room, grey-brown.
   float stain = smoothstep(0.3, 0.7, vnoise(vWorld.xz * 0.09 + vWorld.y * 0.13) * 0.6 + vnoise(vWorld.xz * 0.37 + vWorld.y * 0.29) * 0.4);
   albedo *= mix(vec3(0.62, 0.61, 0.6), vec3(1.0), stain);
@@ -75,8 +80,8 @@ void main() {
   float y = vWorld.y;
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (nhd.z - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
-  float band = smoothstep(tide + 9.0, tide + 1.0, y);
-  float damp = smoothstep(tide + 40.0, tide, y);
+  float band = smoothstep(tide + 4.0, tide + 0.5, y);
+  float damp = smoothstep(tide + 22.0, tide + 2.0, y);
   // White under the roosts: long runs down the face, thicker in some places than others.
   float run = vnoise(vec2(vUv.x * 0.8, vUv.y * 0.03)) * (0.4 + 0.6 * vnoise(vUv * vec2(0.06, 0.04) + 3.0));
   float white = max(smoothstep(0.36, 0.62, run + 0.3 * (nhd.z - 0.5)), smoothstep(0.35, 0.75, n0.y + 0.5 * (macro - 0.5)) * smoothstep(40.0, 90.0, y)) * (1.0 - band);
@@ -151,7 +156,7 @@ void main() {
   // Black in the hollows and low down where it is soaked, ochre on the tips that stand out and high up where it dries.
   float tip = smoothstep(0.45, 0.8, nh.z);
   float dry = smoothstep(4.0, 26.0, vWorld.y);
-  vec3 albedo = det * (0.55 + 0.55 * mass) * mix(vec3(0.7, 0.62, 0.5), vec3(2.1, 1.6, 0.75), tip * (0.5 + 0.5 * dry));
+  vec3 albedo = det * (0.55 + 0.55 * mass) * mix(vec3(0.26, 0.24, 0.2), vec3(1.2, 0.9, 0.4), tip * tip * (0.3 + 0.7 * dry));
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
   float rough = mix(0.42 + 0.3 * (1.0 - nh.z), 0.12, thread);
@@ -191,26 +196,33 @@ void main() {
   // Stones where the floor stands proud, grit and sand where it lies low.
   float bar = smoothstep(-0.02, 0.2, over + 0.14 * (lumpy - 0.5));
   float drift = vnoise(xz * 0.047 + 3.0) * 0.65 + vnoise(xz * 0.31) * 0.35;
-  float wrack = smoothstep(0.6, 0.7, drift + 0.25 * (nh.z - 0.5)) * smoothstep(-0.05, 0.05, over);
-  vec3 sand = big * (0.6 + 0.8 * det / 0.1);
-  vec3 albedo = mix(sand * 0.3, det * (0.55 + 0.45 * big / 0.12) * 0.8, bar);
+  float wrack = smoothstep(0.57, 0.66, drift + 0.25 * (nh.z - 0.5)) * smoothstep(-0.05, 0.05, over);
+  vec3 sand = big * (0.75 + 0.5 * det / 0.1);
+  vec3 albedo = mix(sand * 0.3, det * (0.55 + 0.45 * big / 0.12) * 0.5, bar);
   albedo *= 0.46 + 0.36 * lumpy;
-  albedo = mix(albedo, texture2D(tWeed, xz / 2.3).rgb * 1.3, wrack);
-  // Every stone is wet and shines a little; what lies within a finger of the pools is under a film of water that hides the stones' shape.
-  float wet = smoothstep(0.16, 0.05, over + 0.05 * (lumpy - 0.5)) * (1.0 - wrack);
+  albedo = mix(albedo, texture2D(tWeed, xz / 2.3).rgb * 0.75, wrack);
+  // What lies under the sheets is dark drowned sand; what lies within a finger over them is under a film that hides the stones' shape; every stone above is wet.
+  float under = smoothstep(0.01, -0.05, over);
+  float wet = smoothstep(0.3, 0.1, over + 0.1 * (lumpy - 0.5));
+  // On the bars the last of the tide stands in the low places between the stones, in patches a stride or two across.
+  float puddle = smoothstep(0.47, 0.33, vnoise(xz * 0.21 + 1.7) * 0.6 + vnoise(xz * 0.83) * 0.4) * smoothstep(0.62, 0.4, nh.z);
+  wet = max(wet, 0.9 * puddle) * (1.0 - wrack);
+  float film = wet * (1.0 - under);
   float damp = smoothstep(0.34, 0.1, over);
-  float rough = mix(mix(0.46, 0.3, damp), 0.06, wet);
-  albedo *= mix(1.0, 0.7, damp);
+  float rough = mix(mix(0.46, 0.3, damp), 0.06, film);
+  rough = mix(rough, 0.9, under);
+  albedo *= mix(1.0, 0.6, damp) * mix(1.0, 0.55, under);
   vec2 g = (nh.xy - 0.5) * 5.0;
   vec3 n = normalize(vNormal + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
   float occ = mix(0.35 + 0.65 * smoothstep(0.1, 0.55, nh.z), 1.0, wet);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
-  // The film of water shows the cloud, not only the smooth sky.
-  if (wet > 0.02) {
+  // The film of water shows the cloud, not only the smooth sky; ruffled, it shows the sky a hand higher than a still one would.
+  if (film > 0.02) {
     vec3 r = reflect(-v, n);
-    r.y = abs(r.y);
+    r.y = abs(r.y) + 0.06;
+    r = normalize(r);
     float f = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
-    c += wet * f * (skyCloud(vWorld, r) - skyRadiance(r)) * skyOpen(vWorld);
+    c += film * f * (skyCloud(vWorld, r) - skyRadiance(r)) * skyOpen(vWorld);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -245,12 +257,12 @@ void main() {
   vec3 toEye = cameraPosition - vAt;
   float f = 0.04 + 0.96 * pow(1.0 - clamp(toEye.y / length(toEye), 0.0, 1.0), 5.0);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5);
-  vec3 albedo = mix(vec3(0.17, 0.175, 0.18), vec3(0.02, 0.018, 0.013), smoothstep(tide + 3.0, tide - 3.0, vWorld.y));
+  vec3 albedo = mix(vec3(0.17, 0.175, 0.18), vec3(0.045, 0.042, 0.035), smoothstep(tide + 3.0, tide - 3.0, vWorld.y));
   vec3 c = rigShade(vWorld, normalize(vNormal), normalize(vAt - vWorld), albedo, 1.0, 0.8);
   c = mix(uHaze * 0.9, c, exp(-length(vWorld - vAt) * 0.0006));
   // The wind's ripple breaks the image into streaks that lie across the line of sight.
   float streak = 0.72 + 0.28 * vnoise(vec2(dot(vAt.xz, normalize(toEye.xz)) * 1.7, dot(vAt.xz, normalize(toEye.zx * vec2(1.0, -1.0))) * 0.3) + uTime * 0.5);
-  gl_FragColor = vec4(rigOut(c), wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
+  gl_FragColor = vec4(rigOut(c), 0.9 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
 }`;
 
 // Loose rock on the floor: dark and wet, weed on what faces up.
