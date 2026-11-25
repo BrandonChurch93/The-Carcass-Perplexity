@@ -284,7 +284,12 @@ def make(name):
     code = np.where(land, 0.56 + 0.44 * np.clip(h / 1.4, 0, 1), 0.44 * (1 - depth))
     data = np.stack([0.5 + 0.5 * nx, 0.5 + 0.5 * nz, code], -1)
     cv2.imwrite(os.path.join(OUT, f'ground-{name}.jpg'), cv2.cvtColor((srgb(rgb) * 255 + 0.5).astype(np.uint8), cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 86])
-    cv2.imwrite(os.path.join(OUT, f'shape-{name}.jpg'), cv2.cvtColor((np.clip(data, 0, 1) * 255 + 0.5).astype(np.uint8), cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 88, cv2.IMWRITE_JPEG_SAMPLING_FACTOR, cv2.IMWRITE_JPEG_SAMPLING_FACTOR_444])
+    quality = 88
+    while True:
+        # no picture of the film may be over 3 MB
+        cv2.imwrite(os.path.join(OUT, f'shape-{name}.jpg'), cv2.cvtColor((np.clip(data, 0, 1) * 255 + 0.5).astype(np.uint8), cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, quality, cv2.IMWRITE_JPEG_SAMPLING_FACTOR, cv2.IMWRITE_JPEG_SAMPLING_FACTOR_444])
+        if os.path.getsize(os.path.join(OUT, f'shape-{name}.jpg')) < 2_800_000: break
+        quality -= 4
     # a lit look at it, for the maker only
     lit = np.clip(0.25 + 0.9 * (nx * 0.45 + inv * 0.83 + nz * -0.2), 0, 2)
     look = np.where(land[..., None], rgb * lit[..., None] * 1.3, rgb * 2.0)

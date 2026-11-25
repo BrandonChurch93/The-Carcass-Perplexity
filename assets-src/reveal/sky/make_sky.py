@@ -53,9 +53,10 @@ def tile():
     field = 0.55 * cells + 0.5 * clumps + 0.4 * puffs + 0.25 * billow
     r = ranked(field)
     g = facing(wrapblur(r, 1.0), 3.0, 2.2)
-    streak = spectral(n, lambda k: (np.maximum(k, 2) / 2) ** -1.25 * (k > 1.5), stretch=(0.09, 1.0), turn=-0.42)
-    wisp = spectral(n, lambda k: np.exp(-((k - 40) / 26) ** 2), stretch=(0.2, 1.0), turn=-0.3)
-    b = ranked(streak + 0.35 * wisp)
+    streak = spectral(n, lambda k: (np.maximum(k, 2) / 2) ** -1.5 * (k > 1.5), stretch=(0.32, 1.0), turn=-0.42)
+    wisp = spectral(n, lambda k: np.exp(-((k - 30) / 22) ** 2), stretch=(0.3, 1.0), turn=-0.2)
+    curl = spectral(n, lambda k: np.exp(-((k - 12) / 8) ** 2), stretch=(0.5, 1.0), turn=-0.7)
+    b = ranked(streak + 0.35 * wisp + 0.25 * curl)
     save('cloud-tile.jpg', np.stack([r, g, b], -1), 90)
 
 def cover():

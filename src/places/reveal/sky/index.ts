@@ -24,9 +24,9 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.42 + 1.16 * clamp(facing, 0.0, 1.0)) * (0.55 + 0.45 * thick);
-  vec3 c = 0.86 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
-  float air = 1.0 - exp(-0.075 * (1.0 - 0.6 * high) / max(mu, 0.12));
-  return mix(c, uAirColour * 1.25, air);
+  vec3 c = 1.15 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  float air = 1.0 - exp(-0.022 * (1.0 - 0.6 * high) / max(mu, 0.12));
+  return mix(c, uAirColour, air);
 }`;
 
 const CLOUD_FRAGMENT = /* glsl */ `
@@ -47,7 +47,7 @@ void main() {
   vec3 lowColour = cloudLight(xz, low.y, low.x, 0.0) * (1.0 - 0.25 * over);
   vec3 highColour = cloudLight(up, 0.62, 0.6, 1.0);
   float a = low.x * 0.96;
-  float b = high * 0.5;
+  float b = high * 0.28;
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo));
@@ -112,6 +112,7 @@ const VAPOUR_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${CLOUD_LIGHT_GLSL}
+uniform sampler2D uCloudTile;
 varying vec3 vWorld;
 varying vec2 vUv;
 void main() {
@@ -126,7 +127,7 @@ void main() {
   float body = (1.0 - smoothstep(0.35, 1.0, abs(across))) * smoothstep(0.0, 0.05, along) * (1.0 - smoothstep(0.45, 1.0, along));
   float thick = body * smoothstep(0.38, 0.86, 0.62 * strands + 0.38 * fine + 0.3 * (1.0 - along) * (1.0 - abs(across)));
   vec3 colour = cloudLight(vWorld.xz, 0.6, 0.5, 0.3);
-  float alpha = clamp(thick * 0.7, 0.0, 1.0);
+  float alpha = clamp(thick * 0.5, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -190,7 +191,7 @@ export function create(ctx: Context): Piece {
       .translate(X(at.x), height, Z(at.y));
 
   // The breath of the throat: it leaves the neck and is carried up the picture by the wind.
-  sheet('vapour', quad({ x: AT.throat.x + 60, y: AT.throat.y - 330 }, 260, 330, 1.5, Math.PI), VAPOUR_FRAGMENT);
+  sheet('vapour', quad({ x: AT.throat.x + 60, y: AT.throat.y - 330 }, 260, 330, 1.5, 0), VAPOUR_FRAGMENT);
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT);
   sheet('storm', quad(AT.storm, 235, 88, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/storm.jpg', { kind: 'data', repeat: false }) } });
   sheet('cyclone', quad(AT.cyclone, 880, 880, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/cyclone.jpg', { kind: 'data', repeat: false }) } });

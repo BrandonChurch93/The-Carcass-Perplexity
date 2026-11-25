@@ -24,13 +24,17 @@ vec3 lowCloud(vec2 xz) {
   vec3 cover = coverAt(xz);
   vec3 wide = texture2D(uCloudTile, (xz - drift) / 760.0).rgb;
   vec3 mid = texture2D(uCloudTile, (xz - drift * 1.15) / 173.0 + vec2(0.37, 0.61)).rgb;
+  // The same cells again, turned and at another size, so no street of them is seen twice.
+  vec2 turned = mat2(0.8, 0.6, -0.6, 0.8) * (xz - drift * 1.1);
+  vec3 other = texture2D(uCloudTile, turned / 109.0 + vec2(0.71, 0.18)).rgb;
   float close = 1.0 - smoothstep(60.0, 420.0, uViewKm);
   vec3 near = texture2D(uCloudTile, (xz - drift * 1.2) / 41.0 + vec2(0.13, 0.77)).rgb;
-  float field = 0.56 * wide.r + 0.44 * mid.r + close * 0.16 * (near.r - 0.5);
-  float share = cover.r + 0.55 * cover.b;
-  float edge = mix(0.1, 0.05, close);
-  float thick = smoothstep(1.0 - share, 1.0 - share + edge + 0.2 * share, field);
-  float facing = 0.5 + (wide.g - 0.5) * 0.5 + (mid.g - 0.5) * 0.9 + close * (near.g - 0.5) * 0.6;
+  float field = 0.3 * wide.r + 0.4 * mid.r + 0.3 * other.r + close * 0.14 * (near.r - 0.5);
+  float share = 0.72 * cover.r + 0.5 * cover.b;
+  float edge = mix(0.07, 0.045, close);
+  float least = 0.5 + (0.5 - share) * 0.55 + 0.3 * (1.0 - smoothstep(0.0, 0.08, share));
+  float thick = smoothstep(least, least + edge, field);
+  float facing = 0.5 + (wide.g - 0.5) * 0.3 + (mid.g - 0.5) * 0.8 + (other.g - 0.5) * 0.6 + close * (near.g - 0.5) * 0.6;
   return vec3(thick, facing, mid.r);
 }
 

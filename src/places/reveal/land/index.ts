@@ -89,18 +89,18 @@ void main() {
   // ---- the water ----
   // What comes back from under the surface, lit by the sun and the sky.
   vec3 light = uSunColour * uSunDir.y * shade + skyIrradiance(vec3(0.0, 1.0, 0.0));
-  vec3 water = ground * light / 3.14159;
+  vec3 water = ground * light * 0.2;
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   vec2 wind = xz + 60.0 * vec2(vnoise(xz / 310.0), vnoise(xz / 310.0 + 9.7));
   float calm = texture2D(uCloudTile, wind / 900.0 + vec2(0.5, 0.2)).b;
   float ruffle = texture2D(uCloudTile, wind / 140.0).b;
-  float rough = mix(0.13, 0.27, clamp(0.25 + 0.6 * calm + 0.35 * (ruffle - 0.5) + 0.25 * depth, 0.0, 1.0));
+  float rough = mix(0.085, 0.15, clamp(0.3 + 0.5 * (calm - 0.5) + 0.3 * (ruffle - 0.5) + 0.3 * depth, 0.0, 1.0));
   float lean = length(xz - uGlint) / uPlanetKm;
   float t2 = lean * lean / (rough * rough);
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * 0.32 * fresnel;
-  water += uSunColour * lobe * 0.012 * shade * (0.6 + 0.4 * depth);
+  water += uSunColour * lobe * 0.0032 * shade * (0.6 + 0.4 * depth);
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
   water = mix(water, vec3(0.62) * light / 3.14159, 0.55 * surf);
@@ -109,8 +109,8 @@ void main() {
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet ----
   float path = 1.0 / max(mu, 0.12);
-  float air = 1.0 - exp(-0.075 * path * (1.0 - 0.45 * height * land));
-  colour = mix(colour, uAirColour * (0.55 + 0.45 * shade) * 1.25, air);
+  float air = 1.0 - exp(-0.022 * path * (1.0 - 0.45 * height * land));
+  colour = mix(colour, uAirColour * (0.55 + 0.45 * shade), air);
   colour += glow * (1.0 - 0.5 * air);
 
   // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
