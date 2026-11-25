@@ -1194,12 +1194,11 @@ export class Animal {
         const cy2 = dz * ax - dx * az;
         const cz2 = dx * ay - dy * ax;
         skin.ring(t.tube, i, px, py, pz, ax, ay, az, cx2, cy2, cz2, t.local, i * TENDRIL_SIDES * 2);
-        // A root glows from inside toward its tip and toward the crust: where the lake is open under it, the hide lets it show.
-        let heat = smooth(0.0, 0.6, uu) * smooth(1.7 * b.k, 0.2 * b.k, py);
-        // Over a seam the pictures show it is in the heat whatever the lake's coarse map of its glow says: one is added to say so.
+        // A root does not glow. Only a tip that is under the melt shows a faint heat: its end, a hand above the lake, over a seam.
+        let heat = smooth(0.55, 0.95, uu) * smooth(0.3 * b.k, 0.04 * b.k, py);
         if (heat > 0.01) {
           const crust = this.env.undrift(px, pz, seconds);
-          heat += smooth(1.8, 0.6, this.env.seam(crust[0], crust[1]).d);
+          heat *= smooth(2.0, 0.7, this.env.seam(crust[0], crust[1]).d);
         }
         skin.setHeat(t.tube, i, heat);
       }
