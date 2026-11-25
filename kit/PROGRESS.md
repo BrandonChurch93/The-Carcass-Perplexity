@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 53, 2026-11-25 14:54 UTC:
+Status 54, 2026-11-25 15:12 UTC:
 
-- `01-m1454-pair-2.jpg`: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes. Still wrong: the floor is greyer and flatter than the picture's wet black folds and the hull's apron is pale
-- `02-m1454-pair-0.jpg`: heart-0 at the final tier in uhd. Still wrong: the fall is thinner than the picture's, the far bank is rows of level orange lines, the near bank is one dark slope
-- `03-m1454-pair-1.jpg`: heart-1 at the final tier in uhd. Still wrong: the cords are even combed arcs, and the melt is a flat bright ribbon in a hard trench
-- `04-heart-1.jpg`: heart-1: approved beside frame, uhd final, with 2 crop pairs
+- `01-m1454-pair-3.jpg`: The walkers at the seam at the final tier: the approved picture left, the frame right. The critic: no stream and pool behind the animals, and pale ground
+- `02-m1454-pair-4.jpg`: The mouth and its fall at the final tier: the approved picture left, the frame right. The critic: one thin channel where the picture has a broad cascade, and the wall as level strata
+- `03-r7-h0-right.jpg`: The wide view at native size, far right: a pink block of glow with a hard edge behind the mesa. New in this round, and open
+- `04-r7-h0-animal.jpg`: The wide view at native size: the dark bar behind the mid-ground animal is a foundering plate seen edge-on. Open
 
+Status 53, 2026-11-25 14:54 UTC, showed: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes.
 Status 52, 2026-11-25 14:20 UTC, showed: heart-2 on the final build (9ac88bf), the picture left, ours right: thick soft ropes now lie on the floor near the lens and the zebra...
 Status 51, 2026-11-25 14:03 UTC, showed: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron.
-Status 50, 2026-11-25 13:36 UTC, showed: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T14:54:59Z
-phase 3: 11.76 h used of 13.00 h
-build: 18.42 h used of 72.00 h
+2026-11-25T15:12:52Z
+phase 3: 12.06 h used of 13.00 h
+build: 18.71 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 34, status overdue
+minutes since the last status: 18
 ```
 
 ## Phases
@@ -1581,3 +1581,4 @@ none
 - 2026-11-25 14:21 UTC. Status 52 shown at 14:21 UTC with three pairs of the final build 9ac88bf (heart-2, heart-0, heart-1; heart-3 and heart-4 are pixel-identical to status 51 and were not shown again). ElevenLabs read at 14:19: 1 character left of 131,000. The five keys at the final tier in uhd render locally from 14:20 for the comparison images.
 - 2026-11-25 14:56 UTC. Status 53 shown at 14:55 UTC, four minutes past the 30 minute gap (the Builder was waiting on the pack and did not look at the clock; statuses are posted by the clock from here, not by the next message). Three pairs at the final tier in uhd from 9ac88bf. Round 7: the packs came back at 14:54 (59 files, 35.5 minutes on the pack machine; the five judged frames at the final tier in uhd, 131 preview stills for the R4 sheets), unpacked, and the plan made with the families turned (R1 claude, R3 gemini, R4 gpt; reviewer_70 to reviewer_75; jurors juror_r7_1a to juror_r7_5e on the fixed panel). The first critic (reviewer_70, R1-1) was sent at 14:56. With 14 clip renderers and the measure renderer working, one agent slot of the 16 is free, so the critics and jurors go out one or two at a time until clip shares hand back. The clip, MEASURED by its renderers after ten minutes from the frames the encoder had taken in, start-up included: 37 and 38 s a frame in the wide shot (chunks 0 and 1), 44 to 47 s in the line, the sunk one and the mouth (chunks 3 and 9, 8, 10, 13, 14), 60 to 67 s in the feeding shot (chunks 4, 5, 6, 7). The feeding shot's shares will need about 2 h to 2 h 15 min where the meter of a6999eb gave 1 h 44 min; the code that reached main after the meter (the walkers' legs, trunk and roots, the seams on the feeding floor, the ropes) is the difference. The tier is not lowered: a restart at the review tier would not end sooner. ElevenLabs read at 14:54: 1 character left of 131,000.
 - 2026-11-25 15:12 UTC. Round 7 is complete. Six critics (reviewer_70 to reviewer_75, each a fresh agent on its own machine): R1-1 4, R1-2 4 (claude), R3-1 4, R3-2 5 (gemini), R4-1 7, R4-2 7 (gpt); merged R1 4, R3 4, R4 7 against 9; 55 issues, 13 severe, 36 major, 6 minor, none declined. Jury, 25 fresh jurors between 15:01 and 15:08: 3 of 25 for a photograph or a film frame (0.12; 19 are needed), all three from the same seat of the panel as in round 6. Of the other 22 by first reason: the crust as a repeating or procedural pattern 9, the lava as a flat emissive or drawn lines that light nothing 6, the animals as copies of one simple model or with faceted joints 4, faceted rock and mesh seams round the mouth 2, flat ambient light on a sparse mid-ground 1. Measures: M1 green, M2 green, M3 red (0.90, 0.25, 0.54, 0.42, 1.03; the floor is 0.75). The round fails at the limit; scorecards/round-007/SUMMARY.md is written and the 49 open severe and major issues are under Open items. The five keys were rendered at the final tier in uhd on this machine between 14:25 and 15:00 for the comparison images; the five shot sheets are rendering for the keep.
+- 2026-11-25 15:13 UTC. Status 54 shown at 15:13 with the walkers at the seam and the mouth and its fall at the final tier beside their pictures, and two native crops of the wide view (the pink block of glow at the far right, the dark bar behind the mid-ground animal). Round 7: R1 4, R3 4, R4 7 against 9; jury 3 of 25; M3 red. ElevenLabs at 15:12: 1 character of 131,000, so clips n1 to n7, the model test, the other takes of n8 and the sound effects are not made and the cut and the mix have not been run again.

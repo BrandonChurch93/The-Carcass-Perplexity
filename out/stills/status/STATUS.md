@@ -1,8 +1,8 @@
-# Status 53
+# Status 54
 
-2026-11-25 14:54 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 15:12 UTC. Phase 3, the look lock: the Heart.
 
-- `01-m1454-pair-2.jpg`: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes. Still wrong: the floor is greyer and flatter than the picture's wet black folds and the hull's apron is pale
-- `02-m1454-pair-0.jpg`: heart-0 at the final tier in uhd. Still wrong: the fall is thinner than the picture's, the far bank is rows of level orange lines, the near bank is one dark slope
-- `03-m1454-pair-1.jpg`: heart-1 at the final tier in uhd. Still wrong: the cords are even combed arcs, and the melt is a flat bright ribbon in a hard trench
-- `04-heart-1.jpg`: heart-1: approved beside frame, uhd final, with 2 crop pairs
+- `01-m1454-pair-3.jpg`: The walkers at the seam at the final tier: the approved picture left, the frame right. The critic: no stream and pool behind the animals, and pale ground
+- `02-m1454-pair-4.jpg`: The mouth and its fall at the final tier: the approved picture left, the frame right. The critic: one thin channel where the picture has a broad cascade, and the wall as level strata
+- `03-r7-h0-right.jpg`: The wide view at native size, far right: a pink block of glow with a hard edge behind the mesa. New in this round, and open
+- `04-r7-h0-animal.jpg`: The wide view at native size: the dark bar behind the mid-ground animal is a foundering plate seen edge-on. Open
