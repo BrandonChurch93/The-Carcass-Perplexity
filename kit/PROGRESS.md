@@ -598,6 +598,9 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
+| `blockout_critic_r2_a` | sandbox, critic | R4 blockout, round 2, pack 1 of 3 (the whole film sheets, the rise, the Ribs), attachments only | none | 2026-11-25 02:45 UTC | 20 min |
+| `blockout_critic_r2_b` | sandbox, critic | R4 blockout, round 2, pack 2 of 3 (the Heart, the Breath, the Marsh), attachments only | none | 2026-11-25 02:45 UTC | 20 min |
+| `blockout_critic_r2_c` | sandbox, critic | R4 blockout, round 2, pack 3 of 3 (the Spine, the Eye, the reveal), attachments only | none | 2026-11-25 02:45 UTC | 20 min |
 | `film_chunk_renderer_1` | sandbox | Second job: share 1 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 1`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
 | `film_chunk_renderer_2` | sandbox | Second job: share 2 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 2`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
 | `film_chunk_renderer_3` | sandbox | Second job: share 3 of 6 of the blockout film's chunks, at commit `c8792c5`, the build that round 2 judges: `npm run film -- --format preview --tier draft --fps 30 --of 6 --part 3`; hands back a tar of its chunks | none, it changes no code | 2026-11-25 02:38 UTC | 40 min |
@@ -624,7 +627,7 @@ Ended and merged into `main` in Phase 0: `repo_checks_builder` (`c695a6f`), `pic
 One line for each round: its number, the unit, the commit it judges, the parts ticked off, the scores and what ended it.
 
 - Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: done at 01:42 UTC, G1 to G12, G15 and G16 pass · pack: done at 01:45 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-001/`) · critics (R4 blockout, three packs, three fresh critics on three model families, sent at 01:47 UTC): done at 01:48 UTC · issues read: done at 01:58 UTC · fix: done at 02:33 UTC · scores: 6 (pack 1, gpt), 10 (pack 2, gemini), 4 (pack 3, claude), merged 4 against a bar of 7, six severe issues · ended by: a fail; the fixes are in `scorecards/round-001/SUMMARY.md` and round 2 is the last
-- Round 2 · `film`, the blockout round of Phase 2 (a floor round, the last: `blockoutMaxRounds` is 2) · judges commit `534fff1` · started 2026-11-25 02:37 UTC · build: done · machine checks: done at 02:39 UTC, G1 to G12, G15 and G16 pass (D2 and D7, the film and the render proof, are made after the round from the same build) · pack: in progress · critics (R4 blockout, three packs, three fresh critics, each family on a pack it did not judge in round 1): not started · issues read: not started · scores: none yet · ended by: not ended
+- Round 2 · `film`, the blockout round of Phase 2 (a floor round, the last: `blockoutMaxRounds` is 2) · judges commit `534fff1` · started 2026-11-25 02:37 UTC · build: done · machine checks: done at 02:39 UTC, G1 to G12, G15 and G16 pass (D2 and D7, the film and the render proof, are made after the round from the same build) · pack: done at 02:43 UTC, three packs of 8, 9 and 9 pictures (the manifest is in `scorecards/round-002/`) · critics (R4 blockout, three packs, three fresh critics, each family on a pack it did not judge in round 1, sent at 02:45 UTC): in progress · issues read: not started · scores: none yet · ended by: not ended
 
 ## Final scores
 
