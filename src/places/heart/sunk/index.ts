@@ -72,8 +72,10 @@ export function create(ctx: HeartContext): HeartPiece {
     uTear: { value: baked.tear.points.map((p) => new THREE.Vector3(p[0], p[1] + 0.03, p[2])) },
     uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
-    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 2 }) },
-    tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg', anis) },
+    // Only the normal of the ropy skin is read along the view: the two others are a tone and a grit, and each tap is paid
+    // for on half the frame at heart-2.
+    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
+    tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
     tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 2 }) },
   };
 

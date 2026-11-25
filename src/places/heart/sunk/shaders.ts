@@ -182,7 +182,8 @@ void main() {
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
   float ashed = smoothstep(8.0, 3.5, length(fromBody) + 2.0 * (broad - 0.5));
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
-  float roped = clamp(ln.a, 0.0, 1.0) * ashed * folded;
+  // The skin that stands up against the hull without being a rope is of the same old brown stuff.
+  float roped = max(clamp(ln.a, 0.0, 1.0), smoothstep(0.15, 0.45, vWorld.y)) * ashed * folded;
   // The skin that was pushed up is older and greyer than the lake's plates the nearer it lies to the body; at the rim it is theirs.
   albedo *= mix(vec3(1.0), vec3(1.22, 1.08, 0.96) * (1.0 + 0.3 * ashed), folded);
   albedo = mix(albedo, ROPE * (0.8 + 0.4 * small), 0.9 * roped);
