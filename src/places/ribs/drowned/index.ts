@@ -249,7 +249,7 @@ export function create(ctx: Context): Piece {
   const crabMesh = new THREE.Mesh(crabs, crabMaterial);
   crabMesh.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('drowned', body.mesh, strands, crabMesh));
+  ctx.scene.add(ctx.parts.built('drowned', body.mesh, strands, crabMesh), strands, crabMesh);
 
   return {
     dispose: () => {
