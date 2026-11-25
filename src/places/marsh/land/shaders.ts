@@ -68,16 +68,16 @@ void main() {
   float t = max(s, 0.0) + (mid.r - 0.5) * 2.6 * smoothstep(0.0, 2.0, s) + (wide.r - 0.5) * 5.0 * smoothstep(1.0, 6.0, s);
   float halo = exp(-max(t, 0.0) / 2.2);
   float lump = mix(fine.r, tiny.r, 0.35);
-  float high = smoothstep(0.5, 0.75, lump * 0.5 + mid.g * 0.5) * 0.6;
+  float high = smoothstep(0.42, 0.7, wide.r * 0.55 + mid.g * 0.3 + lump * 0.15) * 0.6;
 
   // Wet ground and dry: wet near every shore and in the low places, dry and white on the lumps that stand out of it.
   float low = wide.g * 0.6 + mid.g * 0.25 + 0.3 * stain + 0.5 * (vast.r - 0.5);
   float wet = clamp(max(halo * 1.15, smoothstep(0.38, 0.6, low)), 0.0, 1.0);
   float film = wet * smoothstep(0.55, 0.4, lump);
-  vec3 dry = mix(vec3(0.135, 0.12, 0.108), vec3(0.245, 0.226, 0.21), high * (0.25 + 0.5 * vast.r));
+  vec3 dry = mix(vec3(0.155, 0.138, 0.126), vec3(0.265, 0.245, 0.23), high * (0.25 + 0.5 * vast.r));
   dry = mix(dry, vec3(0.13, 0.09, 0.08), (0.1 + 0.3 * stain) * (1.0 - high));
   float bloom = smoothstep(0.5, 0.75, stain * 0.5 + mid.r * 0.6 + halo * 0.35 - 0.1);
-  vec3 damp = mix(vec3(0.095, 0.083, 0.075), vec3(0.13, 0.042, 0.034), bloom);
+  vec3 damp = mix(vec3(0.118, 0.104, 0.095), vec3(0.13, 0.042, 0.034), bloom);
   damp = mix(damp, vec3(0.2, 0.1, 0.06), smoothstep(0.6, 0.8, wide.g * 0.5 + fine.g * 0.5) * 0.2);
   vec3 colour = mix(dry, damp, wet * (1.0 - 0.6 * high * (1.0 - halo)));
   float rough = mix(1.0, 0.85, film);
@@ -85,8 +85,8 @@ void main() {
 
   // Sheets of brine a finger deep lie on the crust beside every channel and pool, braided round the lumps that stand out of them. Their
   // edges are feathered, and seen low they give back the sky.
-  float lie = mid.g * 0.55 + fine.r * 0.3 + wide.r * 0.15 + (tiny.r - 0.5) * 0.12;
-  float brim = 0.3 + 0.14 * exp(-max(t, 0.0) / 3.2) + 0.1 * (vast.g - 0.5) + 0.08 * smoothstep(0.4, 0.65, low) + 0.03 * smoothstep(60.0, 300.0, dist);
+  float lie = mid.g * 0.42 + fine.r * 0.25 + wide.r * 0.33 + (tiny.r - 0.5) * 0.12;
+  float brim = 0.35 + 0.14 * exp(-max(t, 0.0) / 3.2) + 0.1 * (vast.g - 0.5) + 0.08 * smoothstep(0.4, 0.65, low) + 0.09 * smoothstep(60.0, 300.0, dist);
   float sheet = smoothstep(brim, brim - 0.07, lie) * smoothstep(0.02, 0.2, s);
   colour = mix(colour, mix(vec3(0.1, 0.04, 0.033), vec3(0.075, 0.02, 0.017), smoothstep(brim - 0.07, brim - 0.2, lie)), sheet * 0.9);
   rough = mix(rough, 0.45, sheet);
@@ -96,16 +96,16 @@ void main() {
   float pans = smoothstep(420.0, 160.0, dist) * (1.0 - sheet) * smoothstep(0.15, 0.6, s);
   if (pans > 0.0) {
     vec4 pl2 = texture2D(tPlates, (p.xz + (wide.ba - 0.5) * 9.0 + (mid.ba - 0.5) * 2.4) / 37.0);
-    float rim2 = smoothstep(0.6, 0.86, pl2.r + (fine.r - 0.5) * 0.2);
+    float rim2 = smoothstep(0.72, 0.9, pl2.r + (fine.r - 0.5) * 0.2) * smoothstep(0.35, 0.6, mid.r * 0.6 + fine.g * 0.4);
     float id2 = fract(pl2.g * 7.7);
     colour *= mix(1.0, 0.7 + 0.6 * id2, pans);
-    float held = smoothstep(0.74, 0.8, id2 + 0.2 * halo + 0.2 * (stain - 0.3)) * (1.0 - rim2) * pans;
+    float held = smoothstep(0.66, 0.72, id2 + 0.2 * halo + 0.2 * (stain - 0.3) + 0.15 * smoothstep(40.0, 200.0, dist)) * (1.0 - rim2) * pans;
     colour = mix(colour, vec3(0.08, 0.022, 0.018), held * 0.85);
     rough = mix(rough, 0.45, held);
     sheet = max(sheet, held);
     // Inside each rim a line of dried red, then the rim itself: pale crystal, a hand wide.
     colour = mix(colour, vec3(0.12, 0.035, 0.026), smoothstep(0.3, 0.6, pl2.r) * (1.0 - rim2) * (1.0 - held) * 0.6 * pans * smoothstep(0.3, 0.55, mid.r));
-    colour = mix(colour, vec3(0.34, 0.315, 0.3), rim2 * 0.85 * pans);
+    colour = mix(colour, vec3(0.3, 0.278, 0.265), rim2 * 0.8 * pans);
   }
   // The crust is a thin salt skin over mud, cracked into plates whose edges have curled up pale as they dried; red stands in the cracks.
   float occGap = 1.0;
@@ -116,13 +116,13 @@ void main() {
     float gap = smoothstep(0.6, 0.85, pl.r + (tiny.r - 0.5) * 0.25) * patchy;
     float curl = smoothstep(0.2, 0.6, pl.r) * (1.0 - gap) * patchy;
     colour *= 1.0 + 0.3 * (fract(pl.g * 5.3) - 0.5) * patchy;
-    colour = mix(colour, vec3(0.3, 0.27, 0.255), curl * 0.4 * (1.0 - 0.6 * wet));
+    colour = mix(colour, vec3(0.28, 0.255, 0.24), curl * 0.3 * (1.0 - 0.6 * wet));
     colour = mix(colour, vec3(0.05, 0.03, 0.026), gap * 0.9);
     rough = mix(rough, 0.5, gap);
     occGap = 1.0 - 0.5 * gap;
   }
   // Far off, the red of stalks and growth too small to draw lies on the flats as a haze of colour.
-  colour = mix(colour, vec3(0.13, 0.05, 0.048), smoothstep(0.5, 0.68, wide.g * 0.5 + vast.g * 0.5) * smoothstep(150.0, 500.0, dist) * 0.45);
+  colour = mix(colour, vec3(0.13, 0.05, 0.048), smoothstep(0.44, 0.6, wide.g * 0.5 + vast.g * 0.5) * smoothstep(150.0, 500.0, dist) * 0.6);
 
   // Red growth in bands that follow the shore, and the thin white lips the brine left each time it stood higher.
   float band = smoothstep(0.35, 0.85, sin(t * 1.9 + mid.r * 5.0 + wide.r * 9.0)) * smoothstep(0.6, 1.4, t) * exp(-t / 7.0);
@@ -133,7 +133,8 @@ void main() {
   colour = mix(colour, vec3(0.105, 0.028, 0.021), line * 0.85);
   float tr = abs(fract(t * 1.3 + fine.r * 1.4) - 0.5) * 2.0;
   float lip = smoothstep(0.72, 0.95, tr) * smoothstep(4.5, 1.5, t) * smoothstep(0.5, 0.9, s) * smoothstep(0.35, 0.55, tiny.r * 0.5 + fine.g * 0.5);
-  colour = mix(colour, vec3(0.33, 0.29, 0.272), lip * 0.75);
+  float thinFar = 0.3 + 0.7 * smoothstep(170.0, 50.0, dist);
+  colour = mix(colour, vec3(0.33, 0.29, 0.272), lip * 0.75 * thinFar);
 
   // The shore itself: wet red ground at the brine, then the white frill of salt.
   float s2 = s + (fine.g - 0.5) * 0.3 + (tiny.r - 0.5) * 0.14;
@@ -149,7 +150,7 @@ void main() {
   float grains = smoothstep(0.56, 0.7, tiny.r * 0.5 + fine.g * 0.5) * smoothstep(0.2, 1.2, s) * 0.6;
   soaked = mix(soaked, crystal * 0.85, grains);
   colour = mix(colour, soaked, wetBand);
-  colour = mix(colour, crystal * (0.75 + 0.5 * lump), frill * 0.92);
+  colour = mix(colour, crystal * (0.75 + 0.5 * lump), frill * 0.92 * thinFar);
   rough = mix(rough, 1.0, max(frill, lip));
   rough = mix(rough, mix(0.8, 1.0, grains), wetBand);
 
@@ -157,7 +158,7 @@ void main() {
   float pan = smoothstep(5.0, 10.0, t) * smoothstep(0.52, 0.66, vast.r * 0.6 + wide.r * 0.4) * (1.0 - wet) * smoothstep(70.0, 150.0, dist) * smoothstep(700.0, 350.0, dist);
   vec4 small = vec4(0.0, 0.5, 0.5, 0.5);
   if (pan > 0.0) small = texture2D(tPlates, p.xz / 23.0);
-  colour = mix(colour, vec3(0.4, 0.385, 0.37), small.r * pan * 0.22);
+  colour = mix(colour, vec3(0.3, 0.285, 0.27), small.r * pan * 0.15);
   vec2 bend = (fine.ba - 0.5) * 1.3 * smoothstep(70.0, 10.0, dist) + (tiny.ba - 0.5) * 0.9 * close + (mid.ba - 0.5) * 0.15;
   bend *= (1.0 - 0.9 * film) * (1.0 - 0.8 * wetBand) * (1.0 - 0.95 * sheet);
   bend += (small.ba - 0.5) * 0.5 * pan;
@@ -181,14 +182,14 @@ void main() {
     float under = smoothstep(0.3, 0.05, edge);
 #endif
     // A slab is old crust: grey-pink, mottled, stained where the damp has come through it.
-    vec3 top = mix(vec3(0.1, 0.083, 0.074), vec3(0.2, 0.176, 0.162), shade * 0.6 + lump * 0.4) * (0.75 + 0.5 * tiny.r);
+    vec3 top = mix(vec3(0.125, 0.108, 0.098), vec3(0.235, 0.212, 0.198), shade * 0.6 + lump * 0.4) * (0.75 + 0.5 * tiny.r);
     top = mix(top, vec3(0.14, 0.075, 0.062), smoothstep(0.3, 0.8, mid.r * 0.5 + fine.g * 0.5) * 0.3);
     top = mix(top, vec3(0.11, 0.06, 0.05), under * 0.7);
     vec3 mud = mix(vec3(0.06, 0.047, 0.04), vec3(0.125, 0.1, 0.085), fine.r * 0.5 + tiny.r * 0.5);
     float pooled = smoothstep(0.5, 0.58, mid.g * 0.45 + fine.r * 0.25 + wide.r * 0.3);
-    mud = mix(mud, vec3(0.085, 0.02, 0.017), pooled * 0.9);
+    mud = mix(mud, vec3(0.085, 0.03, 0.025), pooled * 0.6);
     // Far enough off, the gaps between slabs close to the eye.
-    kept = max(kept, smoothstep(14.0, 32.0, dist) * 0.8);
+    kept = max(kept, smoothstep(9.0, 22.0, dist));
     vec3 c = mix(mud, top, kept);
     float k = smoothstep(0.0, 0.5, thin) * (1.0 - wetBand * (1.0 - thin));
     colour = mix(colour, c, k);
@@ -210,7 +211,10 @@ void main() {
     vec4 rt = tiny;
     if (close > 0.0) rt = mix(tiny, texture2D(tGrain, q / 0.37 + 0.3), steep * close);
     float tone = mix(mid.g, mid.g * 0.35 + rf.g * 0.4 + rt.r * 0.25, seen);
-    vec3 stone = mix(vec3(0.075, 0.056, 0.045), vec3(0.19, 0.148, 0.118), smoothstep(0.25, 0.75, tone));
+    vec3 stone = mix(vec3(0.06, 0.044, 0.035), vec3(0.2, 0.152, 0.118), smoothstep(0.25, 0.75, tone));
+    // Beds of unlike stone, level, seen as bands on every mound however far.
+    float strata = texture2D(tGrain, vec2(dot(p.xz, vec2(0.62, 0.79)) / 53.0, p.y / 1.9 + mid.r * 0.15)).r;
+    stone *= 0.62 + 0.76 * strata;
     float joint = smoothstep(0.6, 0.95, abs(fract(beds / 0.26 + (rf.r - 0.5) * 0.9) - 0.5) * 2.0) * seen * smoothstep(0.4, 0.6, mid.g);
     stone *= 1.0 - 0.35 * joint * steep;
     // Cracks, painted: thin, dark, wet and red.
@@ -225,13 +229,13 @@ void main() {
     float pits = mix(1.0, 0.7 + 0.4 * smoothstep(0.25, 0.6, rt.r), close) * (0.88 + 0.24 * rf.r);
     stone *= pits;
     // Rust and red where water gathers: in the clefts and under each ledge.
-    stone = mix(stone, vec3(0.26, 0.085, 0.04), clamp(vPaint.y * 1.1, 0.0, 0.85) * (0.5 + 0.5 * mid.g));
+    stone = mix(stone, vec3(0.24, 0.085, 0.045), clamp(vPaint.y * 1.1, 0.0, 0.85) * smoothstep(0.35, 0.65, mid.g) * 0.8);
     // Whatever looks at the sky wears a crust of salt, pale against the dark of the faces under it.
-    float crusted = smoothstep(0.72, 0.93, ng.y + (rf.r - 0.5) * 0.12) * mix(0.9, 0.55 + 0.45 * smoothstep(0.3, 0.6, rt.g), seen) * (1.0 - 0.8 * crack) * mix(1.0, 0.45 + 0.55 * smoothstep(0.25, 0.75, mid.g * 0.6 + wide.r * 0.4), seen);
-    stone = mix(stone, vec3(0.34, 0.315, 0.295) * (0.8 + 0.4 * lump), crusted * 0.9);
+    float crusted = smoothstep(0.72, 0.93, ng.y + (rf.r - 0.5) * 0.12) * mix(0.25 + 0.7 * smoothstep(0.4, 0.6, strata * 0.5 + mid.g * 0.5), 0.55 + 0.45 * smoothstep(0.3, 0.6, rt.g), seen) * (1.0 - 0.8 * crack) * mix(1.0, smoothstep(0.3, 0.55, rf.r * 0.45 + rt.g * 0.3 + mid.g * 0.25), seen);
+    stone = mix(stone, mix(vec3(0.25, 0.228, 0.212), vec3(0.34, 0.315, 0.295), seen) * (0.8 + 0.4 * lump), crusted * 0.9);
     colour = mix(colour, stone, rock);
     rough = mix(rough, mix(0.95, 0.35, crack * (1.0 - crusted)), rock);
-    float pit = (1.0 - 0.2 * joint * steep) * (1.0 - 0.8 * vPaint.x) * (1.0 - 0.75 * vPaint.y) * (1.0 - 0.5 * painted) * (1.0 - 0.4 * steep);
+    float pit = (1.0 - 0.2 * joint * steep) * (1.0 - 0.55 * vPaint.x) * (1.0 - 0.55 * vPaint.y) * (1.0 - 0.5 * painted) * (1.0 - 0.35 * steep);
     occ = mix(occ, pit, rock);
     bend = mix(bend, (rf.ba - 0.5) * 1.6 + (rt.ba - 0.5) * 1.8 * close, rock);
   }

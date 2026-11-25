@@ -362,27 +362,18 @@ export function createField(): Field {
     const q = ((dx * F[0] + dz * F[1]) / 7.5) ** 2 + ((dx * R[0] + dz * R[1]) / 6) ** 2 + 0.5 * (fbm(x / 3.1 + 9, z / 3.1, 3) - 0.5);
     base = Math.max(base, 2.9 * (1 - smooth(0.15, 1.05, q)) - 0.5 * smooth(0.6, 1.05, q));
     if (base < -0.45) return base;
-    const warp = 0.9 * (fbm(x / 5.2 + 3, z / 5.2, 3) - 0.5);
-    const beds = base + warp;
-    const bed = beds / 0.78;
+    // Hard rock in thin beds, eaten by salt: sharp crests and broken ledges at every size down to a hand, never a round lump.
+    const ridge = (u: number, v: number): number => {
+      const r = 1 - Math.abs(2 * fbm(u, v, 3) - 1);
+      return r * r;
+    };
+    const on = smooth(-0.4, 0.6, base);
+    const raw = base + on * (0.9 * (ridge(x / 3.7 + 1, z / 3.7) - 0.4) + 0.2 * (ridge(x / 1.1 + 5, z / 1.1) - 0.45));
+    const bed = raw / 0.24 + 1.1 * (fbm(x / 1.7 + 3, z / 1.7, 2) - 0.5);
     const part = bed - Math.floor(bed);
-    // Each bed has a tread that leans back a little and a riser that is nearly a wall, its line broken where blocks have come away.
-    const broken = 0.22 * (fbm(x / 0.6 + 4, z / 0.6, 3) - 0.5);
-    const stepped = (Math.floor(bed) + 0.12 * part + 0.88 * smooth(0.8 + broken, 0.96 + broken, part)) * 0.78;
-    // The beds dip and are jointed, so the rock breaks into blocks longer along the strike than across it, each settled and tipped its own
-    // way, with an open crack between each and the next; smaller blocks ride on the larger.
-    const wu = x + 0.6 * (fbm(x / 1.3, z / 1.3 + 4, 2) - 0.5);
-    const wz = z + 0.6 * (fbm(x / 1.3 + 9, z / 1.3, 2) - 0.5);
-    const u = wu * 0.82 + wz * 0.57;
-    const w = -wu * 0.57 + wz * 0.82;
-    const big = blocks(u / 1.6, w, 3.0, 1);
-    const small = blocks(u / 1.5 + 3.1, w, 0.47, 7);
-    const crag = (big[1] - 0.5) * 0.6 + (big[3] - 0.5) * 0.1 * big[2] - 0.55 * smooth(0.4, 0, big[0]) ** 2
-      + (small[1] - 0.5) * 0.05 + (small[3] - 0.5) * 0.08 * small[2] - 0.04 * smooth(0.06, 0, small[0]);
-    // Weathered round between the cracks: lumps on lumps.
-    const lumps = 0.5 * (fbm(x / 4.3 + 1, z / 4.3, 2) - 0.5) + 0.05 * (Math.abs(fbm(x / 1.2, z / 1.2 + 3, 2) - 0.5) * 2) ** 0.8;
-    const rough = lumps + 0.07 * (fbm(x / 0.33, z / 0.33, 3) - 0.5) + 0.04 * (fbm(x / 0.09, z / 0.09, 2) - 0.5);
-    return base * 0.25 + (stepped - warp) * 0.75 + (rough + crag) * smooth(-0.4, 0.6, base);
+    const broken = 0.3 * (fbm(x / 0.5 + 4, z / 0.5, 2) - 0.5);
+    const stepped = (0.25 * part + 0.75 * smooth(0.6 + broken, 0.9 + broken, part) - part) * 0.24;
+    return raw + on * (stepped * 0.8 + 0.06 * (ridge(x / 0.31, z / 0.31 + 2) - 0.45) + 0.03 * (fbm(x / 0.11, z / 0.11, 2) - 0.5));
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),

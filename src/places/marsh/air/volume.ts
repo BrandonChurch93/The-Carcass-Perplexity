@@ -77,7 +77,8 @@ float steamAt(vec3 p, int i) {
   vec3 q = (p - vec3(B.x, 1.0, B.y) * C.y * uTime) / C.z + C.x;
   q.y *= 0.45;
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
-  float shape = smoothstep(0.22 + 0.25 * h, 0.95, lumps * (0.7 + 0.6 * body));
+  // Torn: there is clear air between the strands, more of it the higher they are.
+  float shape = smoothstep(0.4 + 0.22 * h, 0.82, lumps * (0.75 + 0.6 * body));
   return B.w * shape * body * pow(1.0 - h, 1.2) * smoothstep(-0.02, 0.1, h + 0.02);
 }
 
