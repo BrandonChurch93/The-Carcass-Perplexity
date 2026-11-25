@@ -408,10 +408,10 @@ export function createRig(): Rig {
     uCloudBreak: { value: breakAt },
     uCloudShade: { value: cloudShade },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
-    uSkyZenith: { value: new THREE.Vector3(0.049, 0.059, 0.078) },
-    uSkyHorizon: { value: new THREE.Vector3(0.145, 0.168, 0.2) },
+    uSkyZenith: { value: new THREE.Vector3(0.115, 0.14, 0.185) },
+    uSkyHorizon: { value: new THREE.Vector3(0.33, 0.38, 0.45) },
     // What wet sand and sea throw back up at the underside of things.
-    uSkyGround: { value: new THREE.Vector3(0.036, 0.04, 0.044) },
+    uSkyGround: { value: new THREE.Vector3(0.08, 0.088, 0.097) },
     uSunDir: { value: sun },
     uSunColour: { value: new THREE.Vector3(...SUN.colour) },
     // The colour the air takes at the horizon: the volume pass and the dome meet in it.
