@@ -5,14 +5,61 @@
 import * as THREE from 'three';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { SUNK } from '../shared/anchors';
+import { SUNK, seamLine } from '../shared/anchors';
 import { NET, NET_FINE, POOL, bakeNet } from './net';
 import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
+// The ropes of the skin, and the height of the crust in metres where it is close enough to the camera to be built:
+// ropes, the lip that rides up at a channel, the channel's floor a hand under the skin, a pressure ridge.
+const RELIEF_GLSL = /* glsl */ `
+uniform sampler2D tRopeNh;
+uniform vec4 uRidge;
+vec4 ropeAt(vec2 q, float bias) {
+  vec2 ua = q / 6.1;
+  vec2 ub = vec2(q.x * 0.391 - q.y * 0.921, q.x * 0.921 + q.y * 0.391) / 7.7 + 0.31;
+  float pick = smoothstep(0.38, 0.62, vnoise(q / 19.0 + 6.0));
+#ifdef LAKE_VERTEX
+  vec4 nhA = textureLod(tRopeNh, ua, 4.6);
+  vec4 nhB = textureLod(tRopeNh, ub, 4.6);
+#else
+  vec4 nhA = texture2D(tRopeNh, ua, bias);
+  vec4 nhB = texture2D(tRopeNh, ub, bias);
+#endif
+  vec2 slope = mix(nhA.rg - 0.5, vec2(0.391 * (nhB.r - 0.5) + 0.921 * (nhB.g - 0.5), -0.921 * (nhB.r - 0.5) + 0.391 * (nhB.g - 0.5)), pick);
+  return vec4(slope, mix(nhA.b, nhB.b, pick), pick);
+}
+float ridgeAt(vec2 q) {
+  vec2 ab = uRidge.zw - uRidge.xy;
+  vec2 rel = q - uRidge.xy;
+  float t = clamp(dot(rel, ab) / dot(ab, ab), 0.0, 1.0);
+  float side = (rel.x * ab.y - rel.y * ab.x) / length(ab);
+  float across = length(rel - ab * t);
+  float tall = (0.38 + 0.6 * vnoise(q / 1.9 + 3.0)) * pow(sin(t * 3.14159), 0.6);
+  float reach = side > 0.0 ? 1.0 + 0.5 * vnoise(q / 1.3) : 2.1 + 0.8 * vnoise(q / 2.3 + 9.0);
+  return tall * max(0.0, 1.0 - across / reach);
+}
+float gDeep;
+float reliefAt(vec2 q) {
+  vec4 n = netAt(q);
+  float rope = ropeAt(q, 0.0).b;
+  float gape = gapeAt(q, n).x;
+  float edge = n.r + (rope - 0.5) * 0.3 + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gape;
+  float channel = smoothstep(0.04, 0.25, gape);
+  // A narrow gap is full to the brim. Only a wide channel lies low between its banks.
+  // The long seam the group feeds at is full to the brim too, and its lips lie flat, so a low camera sees into it.
+  float low = 1.0 - smoothstep(2.02, 2.06, n.g);
+  float deep = 0.03 + 0.115 * smoothstep(0.4, 0.7, gape) * low;
+  float h = (rope - 0.5) * 0.16 * (1.0 - 0.7 * (1.0 - low) * exp(-max(edge, 0.0) / 1.5)) + 0.1 * exp(-max(edge, 0.0) / 0.5) * channel * (0.15 + 0.85 * low) + ridgeAt(q);
+  gDeep = smoothstep(0.02, -0.12, edge) * step(1e-3, n.a);
+  return mix(h, -deep * channel + 0.012 * rope, gDeep);
+}`;
+
 const VERTEX = /* glsl */ `
+varying vec3 vNormalG;
+varying float vDeep;
 varying vec3 vWorld;
 varying vec2 vDrift;
 ${RIG_GLSL}
@@ -21,6 +68,35 @@ void main() {
   vWorld = w.xyz;
   // The drift is smooth over tens of metres: it is found at the corners and carried across the face.
   vDrift = flowVelocity(w.xz) * (uTime - uFlowT0);
+  vNormalG = vec3(0.0, 1.0, 0.0);
+  vDeep = 1.0;
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+
+// The crust near the camera, built: the same sheet in cells of a hand, lifted by its relief.
+const PATCH_VERTEX = /* glsl */ `
+attribute float aLift;
+varying vec3 vWorld;
+varying vec2 vDrift;
+varying vec3 vNormalG;
+varying float vDeep;
+#define LAKE_VERTEX
+${NOISE_GLSL}
+${RIG_GLSL}
+${HEAT_GLSL}
+${RELIEF_GLSL}
+void main() {
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  vDrift = flowVelocity(w.xz) * (uTime - uFlowT0);
+  vec2 q = w.xz - vDrift;
+  float e = 0.1;
+  float h = reliefAt(q);
+  vDeep = mix(1.0, gDeep, aLift);
+  float hx = reliefAt(q + vec2(e, 0.0));
+  float hz = reliefAt(q + vec2(0.0, e));
+  w.y += h * aLift;
+  vWorld = w.xyz;
+  vNormalG = normalize(vec3((h - hx) * aLift, e, (h - hz) * aLift));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -28,14 +104,19 @@ const FRAGMENT = /* glsl */ `
 precision highp float;
 varying vec3 vWorld;
 varying vec2 vDrift;
+varying vec3 vNormalG;
+varying float vDeep;
 uniform sampler2D tSkin;
 uniform sampler2D tSkinNh;
 uniform sampler2D tRope;
-uniform sampler2D tRopeNh;
+uniform sampler2D tRopeWide;
+uniform sampler2D tRopeNhWide;
 uniform float uLava;
 ${NOISE_GLSL}
 ${RIG_GLSL}
+#define LAKE_LIP
 ${HEAT_GLSL}
+${RELIEF_GLSL}
 
 // What a mirror on the lake sees toward r: the sky above the walls, the walls and the haze under it, the fume lit by the lake.
 vec3 lakeMirror(vec3 r, float rough) {
@@ -58,55 +139,91 @@ void main() {
   vec2 q = xz - vDrift;
   vec4 net = netAt(q);
 
-  // The skin at three sizes, turned against each other so that no repeat shows: folds of metres, wrinkles of a hand, grain.
-  vec2 uvA = q / 5.0;
-  vec2 uvB = vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 19.0 + 0.31;
-  vec2 uvC = vec2(q.x * 0.5 + q.y * 0.866, -q.x * 0.866 + q.y * 0.5) / 43.0 + 0.57;
-  float near = smoothstep(140.0, 20.0, far);
-  float mid = smoothstep(420.0, 90.0, far);
-  float wide = smoothstep(1500.0, 300.0, far);
-  vec4 nhA = texture2D(tSkinNh, uvA);
-  vec4 nhB = texture2D(tSkinNh, uvB);
-  vec4 nhC = texture2D(tRopeNh, uvC);
-  vec3 skinA = texture2D(tSkin, uvA).rgb;
-  vec3 skinB = texture2D(tSkin, uvB).rgb;
+  // Which way is away from the nearest seam, from how its distance changes across the picture.
+  vec2 qx = dFdx(q);
+  vec2 qy = dFdy(q);
+  float det = qx.x * qy.y - qx.y * qy.x;
+  float rx = dFdx(net.r);
+  float ry = dFdy(net.r);
+  vec2 away = vec2(rx * qy.y - ry * qx.y, ry * qx.x - rx * qy.x) / (abs(det) > 1e-10 ? det : 1e-10);
+  float steep = length(away);
+  away = steep > 0.35 && steep < 3.0 ? away / steep : vec2(0.0);
 
-  // The edge of a gap follows the wrinkles of the skin.
-  net.r += ((nhB.b - 0.5) * 0.5 + (nhA.b - 0.5) * 0.12) * mid;
+  // The skin: ropes of a hand to an arm across, twice and turned so that no repeat shows, wrinkles under them close to the
+  // camera, and the same two pictures many times larger for the far lake, where a rope is smaller than a pixel.
+  float near = smoothstep(55.0, 12.0, far);
+  float close = smoothstep(150.0, 15.0, far);
+  float mid = smoothstep(380.0, 60.0, far);
+  float wide = smoothstep(1500.0, 300.0, far);
+  vec2 uvA = q / 6.1;
+  vec2 uvB = vec2(q.x * 0.391 - q.y * 0.921, q.x * 0.921 + q.y * 0.391) / 7.7 + 0.31;
+  // The folds of tens of metres lie differently on every plate, so the lake never shows the same fold twice.
+  vec2 uvC = vec2(q.x * 0.5 + q.y * 0.866, -q.x * 0.866 + q.y * 0.5) / 47.0 + net.b * vec2(37.0, 61.0);
+  vec2 uvD = vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 1.37 + 0.13;
+  vec4 ropes = ropeAt(q, 0.6);
+  vec2 ropeSlope = ropes.xy;
+  float ropeHigh = ropes.z;
+  vec4 nhC = texture2D(tRopeNhWide, uvC);
+  vec3 rope = mix(texture2D(tRope, uvA).rgb, texture2D(tRope, uvB).rgb, ropes.w);
+  vec3 skinC = texture2D(tRopeWide, uvC).rgb;
+  vec4 grainNh = texture2D(tSkinNh, uvD);
+  vec3 grain = texture2D(tSkin, uvD).rgb;
+
+  // The edge of a gap follows the ropes.
+  net.r += (ropeHigh - 0.5) * 0.3 * mid + tornAt(q) * smoothstep(0.0, 0.3, net.a);
   vec4 heat = heatAt(q, lake, net, 0.0);
   float edge = heat.z;
   float young = heat.w;
-  float age = clamp(net.b + 0.35 * (vnoise(q / 37.0 + 4.0) - 0.5), 0.0, 1.0) * (1.0 - young);
+  float plain = smoothstep(uSunk.z - 1.0, uSunk.z + 5.0, length(q - uSunk.xy));
+  float age = mix(0.55, clamp(net.b + 0.35 * (vnoise(q / 37.0 + 4.0) - 0.5), 0.0, 1.0) * (1.0 - young), plain);
 
-  vec2 slope = (nhA.rg - 0.5) * 0.6 * near;
-  slope += vec2(0.8 * (nhB.r - 0.5) + 0.6 * (nhB.g - 0.5), -0.6 * (nhB.r - 0.5) + 0.8 * (nhB.g - 0.5)) * 0.4 * mid;
-  slope += vec2(0.5 * (nhC.r - 0.5) - 0.866 * (nhC.g - 0.5), 0.866 * (nhC.r - 0.5) + 0.5 * (nhC.g - 0.5)) * 0.45 * wide;
-  slope *= 1.0 - 0.55 * young;
-  vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
+  // The crust rides up at the edge of a gap: a lip a hand high that leans away from the lava.
+  float off = max(edge, 0.0);
+  float lip = exp(-off / 0.3);
+  vec2 slope = ropeSlope * (0.35 + 0.55 * close) * mid;
+  slope += vec2(0.5 * (nhC.r - 0.5) - 0.866 * (nhC.g - 0.5), 0.866 * (nhC.r - 0.5) + 0.5 * (nhC.g - 0.5)) * 0.5 * wide;
+  slope *= 1.0 - 0.5 * young;
+  slope += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.12 * near;
+  slope += away * (0.45 * lip * mid * step(1e-3, net.a)) * step(0.999, vNormalG.y);
+  vec3 n = normalize(vNormalG + vec3(slope.x, 0.0, slope.y));
 
   // Old skin is grey and dull, young skin beside a seam is dark, smooth and glassy.
-  vec3 albedo = mix(skinB, skinA, 0.3 + 0.4 * near) * (0.75 + 1.1 * age);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.33))), 0.35 * age);
-  float hollow = mix(1.0, 0.7 + 0.6 * nhB.b, mid) * mix(1.0, 0.8 + 0.4 * nhA.b, near);
-  float lip = smoothstep(0.5, 0.0, edge);
-  float crack = 1.0 - 0.6 * smoothstep(0.05 + 0.0012 * far, 0.0, net.r) * mid * smoothstep(0.3, 0.6, vnoise(q / 23.0 + 9.0));
-  float rough = clamp(0.34 + 0.5 * age + 0.25 * (nhB.b - 0.5) * mid + 0.25 * (1.0 - mid), 0.16, 0.92);
+  vec3 albedo = mix(vec3(0.057), mix(vec3(0.057), rope, 0.8), mid) * mix(vec3(1.0), grain * 17.0, near * 0.22);
+  albedo *= mix(vec3(1.0), min(skinC * 17.0, 2.2), 0.6) * vec3(1.02, 1.0, 0.98);
+  albedo *= (0.5 + 1.5 * age) * (0.78 + 0.44 * vnoise(q / 21.0 + 13.0));
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.33))), 0.4 * age);
+  albedo *= 1.0 - 0.45 * young;
+  float hollow = mix(1.0, 0.86 + 0.28 * ropeHigh, mid) * mix(1.0, 0.92 + 0.16 * grainNh.b, near);
+  // The creases between ropes see little of the sky.
+  hollow *= mix(1.0, 0.5 + 0.5 * smoothstep(0.15, 0.6, ropeHigh), close);
+  float hair = smoothstep(0.02 + 0.0015 * far, 0.0, net.r) * smoothstep(700.0, 60.0, far) * smoothstep(0.3, 0.6, vnoise(q / 23.0 + 9.0));
+  float crack = 1.0 - 0.55 * hair * plain;
+  float rough = clamp(0.3 + 0.45 * age - 0.3 * (ropeHigh - 0.5) * mid + 0.25 * (1.0 - mid), 0.18, 0.92);
 
   vec3 p = vec3(xz.x, 0.02, xz.y);
-  float open = land.g * (1.0 - contactAt(p)) * hollow * crack * (1.0 - 0.5 * lip);
+  float open = land.g * (1.0 - contactAt(p)) * hollow * crack;
   vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(xz.x, 1.5, xz.y), n) + emitterIrradiance(p, n);
-  // The lava in a gap lights the lip of the crust beside it.
-  light += blackbody(heat.y) * heat.x * 0.0;
+  // The lava in a gap lights the lip of the crust beside it, most where the lip leans toward it.
+  light += gLip * (0.06 + 0.6 * max(dot(n.xz, -away), 0.0)) * crack;
   vec3 c = albedo * light / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float fresnel = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - rough) * (1.0 - 0.6 * rough);
-  vec3 r = reflect(-v, n);
+  float fresnel = 0.04 + 0.9 * (1.0 - rough) * (1.0 - rough) * pow(1.0 - nv, 5.0);
+  vec3 r = reflect(-v, normalize(n + vec3(0.0, 1.5 - 1.1 * close, 0.0)));
   r.y = abs(r.y);
-  c += fresnel * lakeMirror(r, rough) * open;
+  c += fresnel * lakeMirror(r, rough) * mix(vec3(1.0), uFill / uFill.r, 0.75) * open;
 
+  // The bank of a channel is crust seen on edge: dark, lit hard by the lava at its foot, glowing where it meets it.
+  float bank = (1.0 - smoothstep(0.82, 0.98, vDeep)) * step(edge, 0.03);
+  float torn = vnoise(vec2(q.x + q.y, vWorld.y * 3.0) * 7.0) * 0.6 + vnoise(q * 23.0) * 0.4;
+  float kelvin = mix(heat.y, 880.0 + 230.0 * vDeep * vDeep * (0.4 + ropeHigh), bank);
+  heat.x = mix(heat.x, smoothstep(0.84, 1.0, vDeep + 0.2 * (torn - 0.5)) * 0.75, bank);
+  c = mix(c, albedo * (0.25 * light / 3.14159 + gLip * 0.3 * vDeep * vDeep * torn * torn), bank);
+
+  // Skin too cold to glow is seen by the light that falls on it.
+  heat.x *= smoothstep(900.0, 1010.0, kelvin);
   // Open lava hides the crust. The skin beside it still glows.
-  vec3 hot = blackbody(heat.y) * heat.x;
-  hot += blackbody(mix(760.0, 1060.0, lip * lip)) * 0.5 * step(1e-3, heat.x + young) * young;
+  vec3 hot = blackbody(kelvin) * heat.x;
+  hot += blackbody(mix(760.0, 1040.0, lip * lip)) * 0.5 * step(1e-3, heat.x + young) * young;
   gl_FragColor = vec4(rigOut(c * (1.0 - heat.x)) + hot * uLava, 1.0);
 }`;
 
@@ -128,9 +245,83 @@ void main() {
 
 // The sheet of the lake, cut to the lake's outline: a face that lies wholly under the land is left out, because this renderer
 // pays for every fragment drawn, seen or not.
-function lakeSheet(ctx: HeartContext, cell: number): THREE.BufferGeometry {
-  const x0 = NET.minX - 12;
-  const z0 = NET.minZ - 12;
+const CELL = 6;
+const X0 = NET.minX - 12;
+const Z0 = NET.minZ - 12;
+// A pressure ridge in front of the camera of key heart-2: two slabs shoved against each other.
+const RIDGE: readonly [number, number, number, number] = [-517.9, 283.0, -523.0, 277.1];
+
+// The cells of the sheet that are built in relief, with the size of their squares: fine along the channels of the near
+// shore and at the ridge, coarser along the long seam the group feeds at.
+function builtCells(): Map<string, number> {
+  const cells = new Map<string, number>();
+  const mark = (x: number, z: number, reach: number, fine: number): void => {
+    for (let i = Math.floor((x - reach - X0) / CELL); i <= Math.floor((x + reach - X0) / CELL); i++) {
+      for (let j = Math.floor((z - reach - Z0) / CELL); j <= Math.floor((z + reach - Z0) / CELL); j++) {
+        const key = `${i},${j}`;
+        cells.set(key, Math.min(cells.get(key) ?? 1e9, fine));
+      }
+    }
+  };
+  for (const name of ['line', 'nearA', 'nearB']) for (const p of seamLine(name, 60)) mark(p[0], p[1], 2.6, 0.1);
+  for (let k = 0; k <= 12; k++) mark(RIDGE[0] + ((RIDGE[2] - RIDGE[0]) * k) / 12, RIDGE[1] + ((RIDGE[3] - RIDGE[1]) * k) / 12, 3.6, 0.1);
+  for (const p of seamLine('group', 120)) mark(p[0], p[1], 2.6, 0.2);
+  return cells;
+}
+
+// The built cells. The lift falls to nothing at the edge of the patch and where squares of two sizes meet, so no gap opens.
+function patchSheet(cells: Map<string, number>): THREE.BufferGeometry {
+  const position: number[] = [];
+  const lift: number[] = [];
+  const faces: number[] = [];
+  for (const [key, fine] of cells) {
+    const n = Math.round(CELL / fine);
+    const has = (i: number, j: number): boolean => cells.get(`${i},${j}`) === fine;
+    const [ci, cj] = key.split(',').map(Number) as [number, number];
+    const base = position.length / 3;
+    const west = has(ci - 1, cj);
+    const east = has(ci + 1, cj);
+    const north = has(ci, cj - 1);
+    const south = has(ci, cj + 1);
+    const nw = has(ci - 1, cj - 1);
+    const ne = has(ci + 1, cj - 1);
+    const sw = has(ci - 1, cj + 1);
+    const se = has(ci + 1, cj + 1);
+    for (let b = 0; b <= n; b++) {
+      for (let a = 0; a <= n; a++) {
+        const u = a * fine;
+        const v = b * fine;
+        let edge = 1e9;
+        if (!west) edge = Math.min(edge, u);
+        if (!east) edge = Math.min(edge, CELL - u);
+        if (!north) edge = Math.min(edge, v);
+        if (!south) edge = Math.min(edge, CELL - v);
+        if (!nw) edge = Math.min(edge, Math.hypot(u, v));
+        if (!ne) edge = Math.min(edge, Math.hypot(CELL - u, v));
+        if (!sw) edge = Math.min(edge, Math.hypot(u, CELL - v));
+        if (!se) edge = Math.min(edge, Math.hypot(CELL - u, CELL - v));
+        position.push(X0 + ci * CELL + u, 0, Z0 + cj * CELL + v);
+        const k = Math.min(1, edge / 1.2);
+        lift.push(k * k * (3 - 2 * k));
+      }
+    }
+    for (let b = 0; b < n; b++) {
+      for (let a = 0; a < n; a++) {
+        const p = base + b * (n + 1) + a;
+        faces.push(p, p + n + 1, p + 1, p + 1, p + n + 1, p + n + 2);
+      }
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
+  g.setAttribute('aLift', new THREE.Float32BufferAttribute(lift, 1));
+  g.setIndex(faces);
+  return g;
+}
+
+function lakeSheet(ctx: HeartContext, cell: number, skip: Map<string, number>): THREE.BufferGeometry {
+  const x0 = X0;
+  const z0 = Z0;
   const nx = Math.ceil((NET.width * NET.cell + 24) / cell);
   const nz = Math.ceil((NET.height * NET.cell + 24) / cell);
   const wet = new Uint8Array((nx + 1) * (nz + 1));
@@ -151,7 +342,7 @@ function lakeSheet(ctx: HeartContext, cell: number): THREE.BufferGeometry {
   for (let j = 0; j < nz; j++) {
     for (let i = 0; i < nx; i++) {
       const k = j * (nx + 1) + i;
-      if (!(wet[k] || wet[k + 1] || wet[k + nx + 1] || wet[k + nx + 2])) continue;
+      if (!(wet[k] || wet[k + 1] || wet[k + nx + 1] || wet[k + nx + 2]) || skip.has(`${i},${j}`)) continue;
       const a = corner(i, j);
       const b = corner(i + 1, j);
       const c = corner(i, j + 1);
@@ -175,6 +366,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uNetFineRect: { value: new THREE.Vector4(NET_FINE.minX, NET_FINE.minZ, 1 / (NET_FINE.width * NET_FINE.cell), 1 / (NET_FINE.height * NET_FINE.cell)) },
     uPool: { value: new THREE.Vector4(POOL.x, POOL.z, 1 / POOL.rx, 1 / POOL.rz) },
     uSunk: { value: new THREE.Vector3(SUNK[0], SUNK[2], 14) },
+    tRopeNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 2 }) },
+    uRidge: { value: new THREE.Vector4(RIDGE[0], RIDGE[1], RIDGE[2], RIDGE[3]) },
   };
   const foundering = createFoundering(ctx);
   Object.assign(shared, foundering.uniforms);
@@ -184,16 +377,24 @@ export function create(ctx: HeartContext): HeartPiece {
     fragmentShader: FRAGMENT,
     uniforms: {
       ...shared,
-      tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', { anisotropy: 4 }) },
-      tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg', { anisotropy: 4 }) },
-      tRopeNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg') },
+      tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
+      tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg', { anisotropy: 2 }) },
+      tRopeWide: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
+      tRopeNhWide: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data' }) },
       uLava: lava,
     },
   });
   material.userData.depthFragment = `precision highp float;\nvarying vec3 vWorld;\n${RIG_GLSL}\nvoid main() { if (landAt(vWorld.xz).b > 1.5) discard; gl_FragColor = vec4(0.0); }`;
-  const sheet = new THREE.Mesh(lakeSheet(ctx, 12), material);
-  ctx.scene.add(ctx.parts.built('crust', sheet));
+  const built = builtCells();
+  const sheet = new THREE.Mesh(lakeSheet(ctx, CELL, built), material);
+  const patchMaterial = new THREE.ShaderMaterial({ vertexShader: PATCH_VERTEX, fragmentShader: FRAGMENT, uniforms: material.uniforms });
+  patchMaterial.userData.depthFragment = material.userData.depthFragment;
+  const patch = new THREE.Mesh(patchSheet(built), patchMaterial);
+  patch.frustumCulled = false;
+  const crust = new THREE.Group();
+  crust.add(sheet, patch);
+  ctx.scene.add(ctx.parts.built('crust', crust));
   // The lava is drawn by the same sheet: it is an effect of the crust, and alone it is the sheet with everything but its heat blacked.
   ctx.parts.effect('lava', 'built');
 
@@ -211,6 +412,8 @@ export function create(ctx: HeartContext): HeartPiece {
     },
     dispose: () => {
       sheet.geometry.dispose();
+      patch.geometry.dispose();
+      patchMaterial.dispose();
       material.dispose();
       glowMaterial.dispose();
       net.wide.dispose();
