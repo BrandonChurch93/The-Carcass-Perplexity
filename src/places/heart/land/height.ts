@@ -153,6 +153,15 @@ export function wallAt(x: number, z: number, d: number): number {
   // Fans of talus under the gullies, and the apron's own lumps.
   const apron = smooth(4, 40, d) * smooth(150, 100, d);
   h += apron * (5 * g * g + 2.4 * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
+  // West of that cone the wide view looks along the wall's foot: fans of talus lean against the cliff there, each with its apex up a gully,
+  // and bury the lower flows. No other key sees them.
+  const west = smooth(-245, -300, x) * smooth(-120, -200, z) * smooth(2, 30, d) * smooth(170, 120, d);
+  if (west > 0) {
+    const apex = noise(x / 57 + 1.7, z / 57 + 9.2);
+    const crest = 46 + 62 * apex * apex + 14 * g * g;
+    const fan = Math.min(0.66 * (d - 3) + 2.2 * (fbm(x / 7, z / 7, 2) - 0.5), crest + 0.12 * (d - 3));
+    if (fan > h) h = lerp(h, fan, west);
+  }
   // Left of the fall a cone of debris lies against the wall: its crest runs down from the cliff to the shore, askew to the wall,
   // and the ground east of the crest falls away toward the channel. From the fall's lens the crest is a diagonal against what lies behind it.
   {
@@ -266,7 +275,9 @@ function lineCrag(x: number, z: number): number {
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
   // Its far end comes down as a broken ridge does, in a ragged fall of blocks, not in steps.
   const end = smooth(13.0, 4.5, uj + 1.0 * (noise(u / 2.3 + 3.1, 0.7) - 0.5) + 0.5 * (column - 0.5));
-  const top = (4.3 + 0.6 * broken * smooth(0.3, 2.5, v)) * end * (0.55 + 0.45 * end);
+  // Its crest is broken blocks, a stride across and a hand to a forearm proud of each other: no ruled edge against the smoke.
+  const crest = 0.7 * (blocks(u / 0.9 + 1.1, v / 1.1 + 4.2) - 0.5) + 0.3 * (noise(u / 0.33 + 7, v / 0.33) - 0.5);
+  const top = (3.8 + 0.6 * broken * smooth(0.3, 2.5, v) + crest) * end * (0.55 + 0.45 * end);
   // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
   const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));

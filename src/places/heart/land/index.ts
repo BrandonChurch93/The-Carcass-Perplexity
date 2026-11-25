@@ -221,11 +221,12 @@ export function create(ctx: HeartContext): HeartPiece {
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
         radius: c.depth > 1 ? 0.4 : 0.22,
-        // The vent at the foot of the line view's crag breathes thinly: the crag is seen through it.
-        strength: (c.depth > 1 ? 0.45 : 0.2) * strong,
-        rise: (c.depth > 1 ? 6 : 3.5) * (0.7 + 0.3 * strong),
+        // The vent at the foot of the line view's crag breathes thinly and leans out over the shore, clear of the crag's outline:
+        // vapour that crosses that outline is cut along it in hard-edged pieces.
+        strength: (c.depth > 1 ? 0.45 : 0.12) * strong,
+        rise: (c.depth > 1 ? 6 : 2.2) * (0.7 + 0.3 * strong),
         kind: 'steam',
-        lean: [-0.42, 0.2],
+        lean: c.depth > 1 ? [-0.42, 0.2] : [0.35, 0.02],
       });
     }
   }

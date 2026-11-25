@@ -337,6 +337,8 @@ void main() {
   #endif
   float height = mix(plainNh.b, cliffNh.b, steep);
   #ifndef BENCH
+  // The wall west of the fall's cone, measured against the wide picture (60 58 62 there, where this rock gave 41 36 35): pale ash lies on it.
+  albedo *= 1.0 + 0.5 * smoothstep(-245.0, -300.0, vWorld.x) * smoothstep(-120.0, -200.0, vWorld.z);
   // The buttress stands in the lake: the flank that looks at the fountains is baked by them, its lower faces rusted and paler than the rest.
   vec4 spur = ${BUTTRESS_LINE};
   float onSpur = smoothstep(${(BUTTRESS.half * 2.4).toFixed(1)}, ${(BUTTRESS.half * 1.6).toFixed(1)}, segmentDistance(vWorld.xz, spur));
@@ -345,7 +347,8 @@ void main() {
     float toTip = clamp(dot(vWorld.xz - spur.xy, along) / dot(along, along), 0.0, 1.0);
     float baked = onSpur * smoothstep(-0.2, 0.5, dot(n0.xz, vec2(-0.97, 0.25)) + 0.3 * (big - 0.5)) * smoothstep(0.25, 0.7, toTip) * smoothstep(130.0, 20.0, vWorld.y + 40.0 * (mid - 0.5));
     // A butte of the darkest rock in the caldera, eroded and sooted; only the flank the fountains bake is paler.
-    albedo *= mix(1.0, 0.62, onSpur);
+    // Measured against the wide picture: its butte is the darkest rock of the far shore.
+    albedo *= mix(1.0, 0.54, onSpur);
     albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.85 * baked);
   }
   #endif
@@ -432,7 +435,8 @@ void main() {
     float clump = vnoise(sp / 2.1 + 5.0);
     float up = smoothstep(0.45, 0.12, slope);
     float crust = smoothstep(3.6, 0.4, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.2 + 0.8 * up);
-    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up);
+    // Under the line view's lens the stain is thin: the picture's rubble there is dark clinker with one bright crust, not olive ground.
+    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up) * (1.0 - 0.65 * byLens);
     // Lemon where the crystals are thin, cream where they are thick, olive only in the stain round them.
     vec3 yellow = mix(vec3(0.6, 0.5, 0.14), vec3(0.8, 0.76, 0.56), smoothstep(3.4, 0.9, dc + grain + clump));
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
@@ -455,7 +459,7 @@ void main() {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
     float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.5 + 0.5 * steep) * smoothstep(2.4, 1.0, vWorld.y + 0.8 * (blot - 0.5));
     albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.4 * on);
-    albedo = mix(albedo, mix(vec3(0.42, 0.37, 0.16), vec3(0.5, 0.48, 0.38), smoothstep(0.55, 0.85, blot)) * (0.55 + 0.9 * height), 0.7 * on * smoothstep(0.5, 0.8, blot + 0.4 * (height - 0.5)));
+    albedo = mix(albedo, mix(vec3(0.72, 0.6, 0.18), vec3(0.84, 0.8, 0.6), smoothstep(0.5, 0.8, blot)) * (0.6 + 0.8 * height), 0.85 * on * smoothstep(0.38, 0.66, blot + 0.4 * (height - 0.5)));
   }
   #endif
 
