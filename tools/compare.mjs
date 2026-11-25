@@ -66,12 +66,12 @@ async function pairCells({ approved, rect, frame, W, H, region, cell }) {
   };
 }
 
-export async function compareKey({ key, tier = 'review', format = 'uhd', regions = null, renderer = null, by = 'builder', dir = null, look = true }) {
+export async function compareKey({ key, tier = 'review', format = 'uhd', regions = null, renderer = null, by = 'builder', dir = null, look = true, lens = null }) {
   const k = config().keys.find((x) => x.id === key);
   if (!k) throw new Error(`no key ${key}`);
   const approved = rel(k.image);
   const r = renderer ?? (await getRenderer(false));
-  const still = await r.renderStill({ key, tier, format });
+  const still = await r.renderStill({ key, tier, format, ...(lens ? { lens } : {}) });
   const fm = await sharp(still.file).metadata();
   const am = await sharp(approved).metadata();
   const W = fm.width;
@@ -138,10 +138,10 @@ export async function compareKey({ key, tier = 'review', format = 'uhd', regions
 }
 
 export async function compareCommand(a, renderer = null) {
-  if (a.key === undefined || a.key === true) throw new Error('usage: npm run compare -- --key ID [--tier T] [--format F] [--regions "cx,cy cx,cy"] [--fake]');
+  if (a.key === undefined || a.key === true) throw new Error('usage: npm run compare -- --key ID [--tier T] [--format F] [--regions "cx,cy cx,cy"] [--aperture METRES] [--focus METRES] [--fake]');
   const r = renderer ?? (await getRenderer(Boolean(a.fake)));
   try {
-    return await compareKey({ key: one(a.key), tier: one(a.tier, 'review'), format: one(a.format, 'uhd'), regions: parseRegions(a.regions), renderer: r });
+    return await compareKey({ key: one(a.key), tier: one(a.tier, 'review'), format: one(a.format, 'uhd'), regions: parseRegions(a.regions), renderer: r, lens: a.aperture === undefined && a.focus === undefined ? null : { aperture: a.aperture === true ? undefined : a.aperture, focus: a.focus === true ? undefined : a.focus } });
   } finally {
     await r.closeRenderer();
   }

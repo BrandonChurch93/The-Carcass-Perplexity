@@ -19,8 +19,10 @@ export interface Carcass {
   info(): Record<string, unknown>;
   setFormat(id: string): void;
   setDiagnostic(view: string | null, part?: string | null): void;
+  setLens(aperture: number | null, focus: number | null): void;
+  setHold(seconds: number): void;
   film(): FilmInfo;
-  filmState(frame: number): FilmState;
+  filmState(frame: number): FilmState & { hold?: number };
   partsOf(unit: string): Promise<PartInfo[]>;
   renderFilmFrame(frame: number, tier: string): Promise<void>;
   loop(): FilmInfo['loop'];
@@ -69,8 +71,13 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
       if (id !== engine.format.id) engine.setFormat(id);
     },
     setDiagnostic: (view, part = null) => engine.setDiagnostic(view, part),
+    setLens: (aperture, focus) => engine.setLens(aperture, focus),
+    setHold: (seconds) => {
+      if (!Number.isFinite(seconds)) throw new Error(`The hold is a number of seconds: ${seconds}`);
+      engine.hold = seconds;
+    },
     film: () => film.info(),
-    filmState: (frame) => film.state(frame),
+    filmState: (frame) => (engine.hold === 0 ? film.state(frame) : { ...film.state(frame), hold: engine.hold }),
     partsOf: (unit) => film.partsOf(unit),
     renderFilmFrame: async (frame, t) => {
       tier = t;
