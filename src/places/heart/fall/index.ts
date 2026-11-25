@@ -81,13 +81,13 @@ export function create(ctx: HeartContext): HeartPiece {
   // The fume leaves the fan where it meets the lake, east of its middle, and leans east and out over the lake; smoke leaves its west edge.
   const footAt = spot(course.length - 8, 0);
   // All of it is smoke, low and lit from below by the melt under it. Three stand in a row down the wind over the fan's east half
-  // and make one low bank that leans east; one hangs under the lip of the mouth.
+  // and make one low bank that leans east.
   const lean: [number, number] = [0.65, 0.12];
   const footFume = { at: [footAt.x + 6, 1.5, footAt.z - 12] as [number, number, number], radius: 12, strength: 0.16, rise: 26, kind: 'smoke' as const, lean };
   const fanSmoke = { at: [footAt.x + 26, 1.5, footAt.z - 7] as [number, number, number], radius: 10, strength: 0.14, rise: 22, kind: 'smoke' as const, lean };
   const toeSteam = { at: [footAt.x + 48, 1.5, footAt.z - 3] as [number, number, number], radius: 9, strength: 0.11, rise: 18, kind: 'smoke' as const, lean };
-  const mouthFume = { at: [MOUTH.x - 30, TUBE.floor + 6, TUBE.lipZ + 8] as [number, number, number], radius: 30, strength: 0.02, rise: 44, kind: 'smoke' as const, lean: [0.2, 0.1] as [number, number] };
-  ctx.sources.steam.push(footFume, fanSmoke, mouthFume, toeSteam);
+  // No smoke source stands in the opening: lit by the surge it drew as a pale round blob in the dark.
+  ctx.sources.steam.push(footFume, fanSmoke, toeSteam);
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.
   const GOBS = 300;
