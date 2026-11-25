@@ -99,30 +99,30 @@ const MAIN: [number, number][] = [
   inside(16),
   LIP,
   [-50, -447],
-  [-42, -439],
-  [-31, -432],
-  [-24, -423],
-  [-27, -413],
-  [-38, -404],
-  [-52, -396],
-  [-63, -386],
-  [-66, -375],
-  [-60, -365],
-  [-50, -357],
-  [-42, -348],
-  [-38, -338],
+  [-46, -437],
+  [-38, -428],
+  [-32, -418],
+  [-35, -408],
+  [-44, -399],
+  [-51, -389],
+  [-50, -379],
+  [-43, -370],
+  [-37, -360],
+  [-36, -349],
+  [-36, -338],
   [FALL_FOOT[0], FALL_FOOT[1]],
   [FALL_FOOT[0] + 2, FALL_FOOT[1] + 14],
 ];
 
 /** The west arm of the braid. It leaves the main stream at `BRAID_FROM` metres from the lip. */
-export const BRAID_FROM = 112;
+export const BRAID_FROM = 80;
 const ARM_TAIL: [number, number][] = [
-  [-76, -372],
-  [-84, -361],
-  [-87, -349],
-  [-84, -337],
-  [-80, -325],
+  [-58, -381],
+  [-63, -370],
+  [-63, -358],
+  [-60, -346],
+  [-59, -334],
+  [-58, -322],
 ];
 
 /** The benches of the main stream and of the arm: the run of each, and of the cascade off its end, metres. */
@@ -144,7 +144,7 @@ const ARM_STEPS: [number, number][] = [
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 128;
+export const FAN_FROM = 100;
 
 /** Width of the stream by metres from the lip. */
 const HALF: [number, number][] = [
