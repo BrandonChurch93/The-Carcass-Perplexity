@@ -41,10 +41,21 @@ const curve = new THREE.CatmullRomCurve3(
 const points = curve.getSpacedPoints(SAMPLES);
 const STEP = curve.getLength() / SAMPLES;
 
+// The ridge bends gently, so the nearest point is found on every 20th sample first and then among its neighbours.
 function nearestIndex(x: number, z: number): number {
   let best = 0;
   let bestD = Infinity;
-  for (let i = 0; i <= SAMPLES; i++) {
+  for (let i = 0; i <= SAMPLES; i += 20) {
+    const p = points[i] as THREE.Vector3;
+    const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  const from = Math.max(0, best - 20);
+  const to = Math.min(SAMPLES, best + 20);
+  for (let i = from; i <= to; i++) {
     const p = points[i] as THREE.Vector3;
     const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
     if (d < bestD) {
@@ -59,7 +70,7 @@ const origin = nearestIndex(0, 0) * STEP;
 
 export const spires: Spire[] = TABLE.map(([x, z, alt, tip]) => {
   const half = 0.5 * tip + 50;
-  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: 0.52 * half };
+  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: 1.0 * half };
 });
 
 export const S_MIN = -origin;
@@ -195,10 +206,12 @@ export const FIN_ROOT = 110;
 
 export function fin(sp: Spire, t: number): FinPoint {
   const q = 1 - t;
+  // The top is a broken edge, not a point: a blade some metres long and a few thick, where the last of it came away.
+  const blunt = 1 - q * q * q * q;
   return {
     centre: -sp.lean * Math.pow(t, 1.4),
-    half: sp.half * Math.pow(q, 1.15) + 4 * q,
-    thick: sp.thick * Math.pow(q, 1.2) + 3 * q,
+    half: sp.half * Math.pow(q, 1.15) + 4 * q + 0.03 * sp.half * blunt,
+    thick: sp.thick * Math.pow(q, 1.2) + 3 * q + 2.2 * blunt,
     y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t,
   };
 }

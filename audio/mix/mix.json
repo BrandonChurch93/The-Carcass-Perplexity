@@ -6,7 +6,7 @@
   "channels": 2,
   "integratedLufs": -14,
   "truePeakDb": -1.1,
-  "gainDb": -2.53,
+  "gainDb": -2.72,
   "limited": true,
   "inputs": [
     {
@@ -30,6 +30,18 @@
       "sha256": "7a050532d931e469e92b2d8510a29784cb99ce5a818988b73ee406cfa0259f25"
     },
     {
+      "file": "audio/kept/sounds/ribs/ribs-bed.wav",
+      "sha256": "ff1802c4d8e82c9c54c00b9fd14990a5e43cc35e0caa3da5f47d7ec674bfc21e"
+    },
+    {
+      "file": "audio/kept/sounds/ribs/ribs-life.wav",
+      "sha256": "b45b8b73b3dc0c1270281b8ad4453d7dd392d579208dcec1b0d032c00bac25bf"
+    },
+    {
+      "file": "audio/kept/sounds/ribs/ribs-event.wav",
+      "sha256": "c71ce5df1d4b248c2f4c8d1ca49ede40afca1f21dd15d2f4607bab342d09641a"
+    },
+    {
       "file": "audio/kept/sounds/heart/heart-bed.wav",
       "sha256": "21dc55a14e2f3cd195d8d99d806b9cc0a9846565ad3b853f4c2005ddeddf6ce5"
     },
@@ -40,6 +52,62 @@
     {
       "file": "audio/kept/sounds/heart/heart-event.wav",
       "sha256": "cdafab503f80d969d395887fc5fa02ce219008caef92c2fe49f441843205ed90"
+    },
+    {
+      "file": "audio/kept/sounds/breath/breath-bed.wav",
+      "sha256": "23d79cb5dc450b5451cf718ab1cccb1a29b3aa18d0e0c6851bc2ef2a66673f33"
+    },
+    {
+      "file": "audio/kept/sounds/breath/breath-event.wav",
+      "sha256": "f544a98bdcd91d8f7b6f0b4781debd0abd6c9aa47993ecb1767163e3bf4b1afc"
+    },
+    {
+      "file": "audio/kept/sounds/breath/breath-life.wav",
+      "sha256": "dbde8615ebe2fdbee6563fb64e77a4768b9c05b2fa6f483f1b1935997b3a823d"
+    },
+    {
+      "file": "audio/kept/sounds/marsh/marsh-bed.wav",
+      "sha256": "7413ab79dc1ec4dec3a28852b8decb1499b1665bcfc1d608daf75f586e60cf46"
+    },
+    {
+      "file": "audio/kept/sounds/marsh/marsh-event.wav",
+      "sha256": "c1394497db01cb1096b966b064158396ce4b520c0224e7d1137b8adfb7e40a5d"
+    },
+    {
+      "file": "audio/kept/sounds/marsh/marsh-life.wav",
+      "sha256": "9c7ee283b02094d9699526f25793c3c777dbb4b3f666849867b49e3e35ecddfe"
+    },
+    {
+      "file": "audio/kept/sounds/spine/spine-bed.wav",
+      "sha256": "55a61d0fcb600e3ae2e012503199c9e38159da83a20d5233a5e515f3400a8fb8"
+    },
+    {
+      "file": "audio/kept/sounds/spine/spine-event.wav",
+      "sha256": "2b0c5b2c0aa230b11ecc3df9ab875f7d11d87f87ea005649cf4483abc30de1d9"
+    },
+    {
+      "file": "audio/kept/sounds/spine/spine-life.wav",
+      "sha256": "1ed02bbb576ac6d0b95406cdcb1e28e75b6287c97e352932883041e24e67e5f4"
+    },
+    {
+      "file": "audio/kept/sounds/eye/eye-bed.wav",
+      "sha256": "2e7d45901df049a2a7fa8602e5f4b78164f9994c38b546edc83b3be59167aabf"
+    },
+    {
+      "file": "audio/kept/sounds/eye/eye-life.wav",
+      "sha256": "092be6080228fe63cdd5fe1277a1461c4ccf4707217e486edbe2f5e8574a1f52"
+    },
+    {
+      "file": "audio/kept/sounds/eye/eye-event.wav",
+      "sha256": "ff79941e43469db066438284cc3d8fd373ee3eb9996d796567fdf724886101da"
+    },
+    {
+      "file": "audio/kept/sounds/reveal/reveal-bed.wav",
+      "sha256": "1c7a6e4e17fdf32053b109778feee81fbcb2a35e6d79ffa26f48bd8c8c1a4eef"
+    },
+    {
+      "file": "audio/kept/sounds/reveal/reveal-thud.wav",
+      "sha256": "ef0b9d040e56e2eae7ba440a5509161858af60eb920feff240e9ba36e2e0ed0d"
     }
   ],
   "lines": [
@@ -48,36 +116,36 @@
       "line": 1,
       "first": 9741,
       "frames": 121,
-      "duckDb": 4.92,
-      "voiceBandDb": -23.69,
-      "restBandDb": -29.69,
+      "duckDb": 5.18,
+      "voiceBandDb": -23.88,
+      "restBandDb": -29.88,
       "marginDb": 6,
-      "voiceDb": -16.64,
-      "restDb": -29.17
+      "voiceDb": -16.82,
+      "restDb": -29.07
     },
     {
       "clip": "n8",
       "line": 2,
       "first": 9900,
       "frames": 111,
-      "duckDb": 8.69,
-      "voiceBandDb": -21.14,
-      "restBandDb": -27.14,
+      "duckDb": 8.78,
+      "voiceBandDb": -21.33,
+      "restBandDb": -27.33,
       "marginDb": 6,
-      "voiceDb": -15.6,
-      "restDb": -27.07
+      "voiceDb": -15.79,
+      "restDb": -27.16
     },
     {
       "clip": "n8",
       "line": 3,
       "first": 10075,
       "frames": 75,
-      "duckDb": 4.27,
-      "voiceBandDb": -19.99,
-      "restBandDb": -26.01,
-      "marginDb": 6.01,
-      "voiceDb": -16.77,
-      "restDb": -20.89
+      "duckDb": 4.43,
+      "voiceBandDb": -20.16,
+      "restBandDb": -26.16,
+      "marginDb": 6,
+      "voiceDb": -16.92,
+      "restDb": -21.1
     },
     {
       "clip": "n8",
@@ -85,14 +153,26 @@
       "first": 10620,
       "frames": 270,
       "duckDb": 0.88,
-      "voiceBandDb": -21.44,
-      "restBandDb": -27.44,
+      "voiceBandDb": -21.62,
+      "restBandDb": -27.62,
       "marginDb": 6,
-      "voiceDb": -17.87,
-      "restDb": -20.09
+      "voiceDb": -18.05,
+      "restDb": -20.28
     }
   ],
   "sounds": [
+    {
+      "id": "ribs-bed",
+      "gainDb": -14.9
+    },
+    {
+      "id": "ribs-life",
+      "gainDb": -4.4
+    },
+    {
+      "id": "ribs-event",
+      "gainDb": -6
+    },
     {
       "id": "heart-bed",
       "gainDb": -8.5
@@ -104,6 +184,66 @@
     {
       "id": "heart-event",
       "gainDb": -5.5
+    },
+    {
+      "id": "breath-bed",
+      "gainDb": -11.2
+    },
+    {
+      "id": "breath-event",
+      "gainDb": -6.2
+    },
+    {
+      "id": "breath-life",
+      "gainDb": -1.5
+    },
+    {
+      "id": "marsh-bed",
+      "gainDb": -8.9
+    },
+    {
+      "id": "marsh-event",
+      "gainDb": -12.6
+    },
+    {
+      "id": "marsh-life",
+      "gainDb": -10.7
+    },
+    {
+      "id": "spine-bed",
+      "gainDb": -7.7
+    },
+    {
+      "id": "spine-event-open",
+      "gainDb": -11.8
+    },
+    {
+      "id": "spine-event",
+      "gainDb": -10.7
+    },
+    {
+      "id": "spine-life",
+      "gainDb": -1.4
+    },
+    {
+      "id": "eye-bed",
+      "gainDb": -8.6
+    },
+    {
+      "id": "eye-life",
+      "gainDb": -15.4
+    },
+    {
+      "id": "eye-event",
+      "gainDb": -13.4
+    },
+    {
+      "id": "reveal-bed",
+      "gainDb": -9
+    },
+    {
+      "id": "reveal-thud",
+      "gainDb": -15.8
     }
   ]
 }

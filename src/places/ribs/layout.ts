@@ -65,6 +65,19 @@ function centre(rib: Rib, t: number): { u: number; y: number; nu: number; ny: nu
   return { u, y, nu: 1 + (dy / l - 1) * turn, ny: (-du / l) * turn };
 }
 
+/** The spine of a blade as `count` balls from its foot to its tip: centre in the world and the mean radius there. The rig marches the sun against them. */
+export function bladeSpine(rib: Rib, count: number): { x: number; y: number; z: number; radius: number }[] {
+  const out: { x: number; y: number; z: number; radius: number }[] = [];
+  const tTop = rib.cut === undefined ? 1 : partAtHeight(rib, rib.cut);
+  for (let k = 0; k < count; k++) {
+    const t = (k / (count - 1)) * tTop;
+    const [a, b] = radii(rib, t);
+    const p = surface(rib, t, 0, 0, 0);
+    out.push({ x: p.x, y: p.y, z: p.z, radius: Math.min(a, b) + 0.3 * Math.abs(a - b) });
+  }
+  return out;
+}
+
 export function partAtHeight(rib: Rib, y: number): number {
   let lo = 0;
   let hi = rib.bend ? 0.6 : 1;
