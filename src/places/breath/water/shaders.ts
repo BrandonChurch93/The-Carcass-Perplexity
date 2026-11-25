@@ -81,7 +81,7 @@ void main() {
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 1.1 * tanh(3.4 * tip);
+  float drawn = 1.0 - 0.85 * tanh(3.0 * tip);
   mirror *= drawn;
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
@@ -100,7 +100,7 @@ void main() {
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);
   // The image is of things in the shade of their own bodies, seen from below: darker than what stands over it.
-  mirror = mirror * (1.0 - image.a) + 0.34 * image.rgb;
+  mirror = mirror * (1.0 - 0.8 * image.a) + 0.16 * image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);

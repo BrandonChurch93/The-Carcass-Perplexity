@@ -134,7 +134,7 @@ const DUTY = 0.8;
 export function makeBuild(k: number, seed: number, far: boolean): Build {
   const j = (n: number, a: number, b: number): number => a + (b - a) * hash(seed * 7.3 + n);
   const standH = 2.28 * k * j(1, 0.95, 1.06);
-  const stride = 0.5 * k * j(2, 0.9, 1.1);
+  const stride = 0.36 * k * j(2, 0.9, 1.1);
   return {
     k,
     seed,
@@ -146,13 +146,13 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stanceSide: 0.16 * k * j(4, 0.85, 1.25),
     legLen: 1.006 * Math.hypot(standH - 0.02 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
-    legR: 0.03 * k,
+    legR: 0.023 * k,
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
     neckR: 0.085 * k,
     tendrils: far ? 6 : 120,
-    tendrilLen: 0.5 * k * j(8, 0.85, 1.2),
+    tendrilLen: 0.56 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
 }
@@ -215,9 +215,9 @@ export class Wader {
         const keel = smooth(0.35, 0.85, t);
         const tuck = smooth(0.55, 0.15, t);
         const hollow = 0.1 * Math.exp(-(((t - 0.33) / 0.12) ** 2)) * smooth(0.8, 0.1, Math.abs(sn));
-        const hip = 0.03 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
-        const blade = 0.022 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
-        const ridge = 0.018 * k * Math.exp(-(((phi - Math.PI / 2) / 0.3) ** 2)) * smooth(0.04, 0.25, t) * smooth(1, 0.8, t);
+        const hip = 0.05 * k * Math.exp(-(((t - 0.2) / 0.11) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const blade = 0.034 * k * Math.exp(-(((t - 0.78) / 0.1) ** 2)) * Math.exp(-(((Math.abs(c) - 0.6) / 0.4) ** 2)) * smooth(-0.2, 0.5, sn);
+        const ridge = 0.028 * k * Math.exp(-(((phi - Math.PI / 2) / 0.3) ** 2)) * smooth(0.04, 0.25, t) * smooth(1, 0.8, t);
         const narrow = sn > 0 ? 1 - 0.2 * sn : 1 - 0.42 * keel * (-sn) ** 1.5;
         const x = w * c * narrow * (1 - hollow) + (hip + blade) * c;
         const y = a * (sn > 0 ? sn ** 0.85 : -((-sn) ** (0.9 + 0.2 * keel)) * (1 - 0.28 * tuck)) + ridge + 0.5 * (hip + blade);
@@ -255,13 +255,13 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 2.7 * (1 - smooth(-0.08, 0.24, u)) * smooth(-0.06, 0.08, u) + 0.6 * (1 - smooth(0.05, 0.47, u));
-      const knuckle = 1.3 * Math.exp(-(((u - b.knee) / 0.036) ** 2)) + 0.8 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
+      const thigh = 4.6 * (1 - smooth(-0.1, 0.3, u)) ** 1.5 * smooth(-0.06, 0.08, u) + 0.7 * (1 - smooth(0.05, 0.42, u));
+      const knuckle = 1.7 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.5 * Math.exp(-(((u - b.knee - 0.05) / 0.05) ** 2)) + 1.0 * Math.exp(-(((u - 0.93) / 0.022) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.4 * Math.min(1, thigh / 2.4));
+        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.45 * Math.min(1, thigh / 2.4));
         this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
       }
     }
@@ -299,7 +299,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.15 * hash(seed + n * 8.9) ** 1.6,
-        thick: far ? 1 : 0.55 + 1.6 * hash(seed + n * 12.7) ** 2.2,
+        thick: far ? 1 : 0.6 + 2.4 * hash(seed + n * 12.7) ** 2.6,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
@@ -653,7 +653,7 @@ export class Wader {
       let x = (pts[r0 * 3] as number) * (1 - rf) + (pts[r0 * 3 + 3] as number) * rf + ox * rad;
       let y = (pts[r0 * 3 + 1] as number) * (1 - rf) + (pts[r0 * 3 + 4] as number) * rf + oy * rad;
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
-      const splay = 0.35 * st.out + 0.9 * back;
+      const splay = 0.5 * st.out + 0.8 * back;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.phase) + 0.04 * Math.sin(seconds * 3.7 + st.phase * 2.3);
       let px = x;
@@ -662,13 +662,13 @@ export class Wader {
       for (let i = 0; i < tube.rings; i++) {
         const u = i / (tube.rings - 1);
         // It leaves along the neck's end, spreads a little, and gravity takes it.
-        const g = smooth(0, 0.3 + 0.5 * st.stiff, u);
+        const g = smooth(0, 0.1 + 0.4 * st.stiff * st.stiff, u);
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
         const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
-        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.07 + drift)) * g;
+        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.03 + drift)) * g;
         let dy = (ty + oy * splay) * (1 - g) - g * (1 - 0.55 * under);
-        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.07 + drift)) * g;
+        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.03 + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
           const fan = st.angle + 0.5 * Math.sin(st.phase);
@@ -678,7 +678,7 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.2 + 0.8 * u) * (0.2 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.22 * Math.sin(u * 17 + st.phase * 11));
+        const curl = (0.2 + 0.8 * u) * (0.16 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.14 * Math.sin(u * 17 + st.phase * 11));
         dx += Math.cos(st.phase * 3) * curl;
         dz += Math.sin(st.phase * 3) * curl;
         dy += 0.35 * curl * Math.sin(st.phase * 7);
