@@ -60,12 +60,13 @@ export interface Rib {
  * A surface as ribs: each rib is a straight line on the map, and neighbouring ribs are joined by a strip.
  * Along a rib the rows are spread evenly over the length of the surface, not over the map, so a cliff gets as many as a flat.
  */
-export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5]): THREE.BufferGeometry {
+export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, flat = 0.3, radii: readonly number[] = [1.6, 5], dip?: Height): THREE.BufferGeometry {
   const tail = list[0]?.tail?.length ?? 0;
   const per = rows + tail;
   const position = new Float32Array(list.length * per * 3);
   const slope = new Float32Array(list.length * per * 3);
-  const closed = new Float32Array(list.length * per);
+  // aLand: how much of the sky the ground round the point hides, and how far the wall's flows dip there (the shader finds its flow by it).
+  const closed = new Float32Array(list.length * per * 2);
   let hs = new Float64Array(0);
   let arc = new Float64Array(0);
   list.forEach((rib, ci) => {
@@ -100,7 +101,8 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
       position[i * 3 + 1] = height(x, z);
       position[i * 3 + 2] = z;
       slopeAt(height, x, z, j < rows ? 0.7 : 30, slope, i);
-      if (j < rows) closed[i] = closedAt(height, x, position[i * 3 + 1] as number, z, slope, i, radii);
+      if (j < rows) closed[i * 2] = closedAt(height, x, position[i * 3 + 1] as number, z, slope, i, radii);
+      if (dip) closed[i * 2 + 1] = dip(x, z);
     }
   });
   const index: number[] = [];
@@ -127,7 +129,7 @@ export function ribs(height: Height, list: Rib[], rows: number, grain = 0.8, fla
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(position, 3));
   g.setAttribute('aSlope', new THREE.BufferAttribute(slope, 3));
-  g.setAttribute('aClosed', new THREE.BufferAttribute(closed, 1));
+  g.setAttribute('aLand', new THREE.BufferAttribute(closed, 2));
   g.setIndex(index);
   g.computeBoundingSphere();
   return g;
@@ -192,7 +194,7 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
   }
   const position = new Float32Array(places.length * 3);
   const slope = new Float32Array(places.length * 3);
-  const closed = new Float32Array(places.length);
+  const closed = new Float32Array(places.length * 2);
   places.forEach((v, r) => {
     const i = v % (nx + 1);
     const j = Math.floor(v / (nx + 1));
@@ -202,12 +204,12 @@ export function sheet(x0: number, z0: number, x1: number, z1: number, cell: numb
     position[r * 3 + 1] = (ys[v] as number) + lift;
     position[r * 3 + 2] = z;
     slopeAt(height, x, z, e, slope, r);
-    closed[r] = closedAt(height, x, ys[v] as number, z, slope, r, radii);
+    closed[r * 2] = closedAt(height, x, ys[v] as number, z, slope, r, radii);
   });
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.BufferAttribute(position, 3));
   g.setAttribute('aSlope', new THREE.BufferAttribute(slope, 3));
-  g.setAttribute('aClosed', new THREE.BufferAttribute(closed, 1));
+  g.setAttribute('aLand', new THREE.BufferAttribute(closed, 2));
   g.setIndex(index);
   g.computeBoundingSphere();
   return g;
