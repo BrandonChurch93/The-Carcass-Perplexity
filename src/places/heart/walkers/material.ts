@@ -19,9 +19,9 @@ varying float vWho;
 void main() {
   vec3 n = normalize(normal);
   vec3 p = position;
-  // A leg a long way off is thinner than a pixel and would flicker: it is never drawn thinner than about a pixel.
+  // A leg a long way off is thinner than a pixel and would flicker: it is never drawn thinner than two pixels.
   float far = length(cameraPosition - p);
-  p += n * max(0.0, 0.5 * uPixel * far - aInfo.z);
+  p += n * max(0.0, 1.0 * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
   vUv = aUv;
@@ -83,8 +83,8 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 const float FAR_FIRE = 0.12;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
-const float LAKE_UNDER = 0.45;
-const float CRUST_BOUNCE = 0.2;
+const float LAKE_UNDER = 0.36;
+const float CRUST_BOUNCE = 0.38;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
 const float POOL = 2.0;
 void main() {
