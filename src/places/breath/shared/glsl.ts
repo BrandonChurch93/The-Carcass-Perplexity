@@ -56,10 +56,11 @@ ${RIG_UNIFORMS_GLSL}
 
 // How bright the fog is round the sun, toward d: a wide pale-gold glow and a tighter core. The dome, the air and every mirror read this one function.
 float sunGlow(vec3 d) {
-  float c = max(dot(d, uSunDir), 0.0);
+  float c = 0.5 + 0.5 * dot(d, uSunDir);
+  c *= c;
   float c2 = c * c;
   float c8 = c2 * c2 * c2 * c2;
-  return 0.16 * c2 + 0.5 * c8 + 2.2 * c8 * c8 * c8 * c8;
+  return 0.1 + 0.3 * c2 + 0.55 * c8 + 2.2 * c8 * c8 * c8 * c8;
 }
 
 // Radiance of the dawn sky toward d: cold grey overhead, pale toward the horizon, gold toward the sun. The sun's own disc is the dome's.
