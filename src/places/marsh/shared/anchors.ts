@@ -180,6 +180,9 @@ export function makeStalks(pools: Pool[]): Stalk[] {
     { a: [K2_AT[0] - K2_RIGHT[0] * 4.2 - K2_DIR[0], K2_AT[1] - K2_RIGHT[1] * 4.2 - K2_DIR[1]], b: [K2_AT[0] + K2_RIGHT[0] * 4.2 + K2_DIR[0], K2_AT[1] + K2_RIGHT[1] * 4.2 + K2_DIR[1]], r: 2.6 },
     { a: [K1_AT[0] - K1_DIR[0] * 3.5, K1_AT[1] - K1_DIR[1] * 3.5], b: [K1_AT[0] + K1_DIR[0] * 4, K1_AT[1] + K1_DIR[1] * 4], r: 1.5 },
     { a: [K1_AT[0], K1_AT[1]], b: [K1_AT[0] + K1_DIR[0] * 2, K1_AT[1] + K1_DIR[1] * 2], r: 2.6 },
+    // The start of the walk along the bank (marsh-02) and the last of the walk past the wallowers (marsh-04).
+    { a: [K2_AT[0] - K2_RIGHT[0] * 2.2 - K2_DIR[0] * 2.6, K2_AT[1] - K2_RIGHT[1] * 2.2 - K2_DIR[1] * 2.6], b: [K2_AT[0], K2_AT[1]], r: 2.8 },
+    { a: rel(26.9, 6.3), b: rel(28.3, 1.5), r: 2.4 },
   ];
   const free = (x: number, z: number): boolean => keepOut.every((k) => distToSegment(x, z, k.a, k.b) > k.r);
   const one = (x: number, z: number, tall = 1): void => {
