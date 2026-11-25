@@ -71,11 +71,15 @@ export function create(ctx: Context): Piece {
   mesh.frustumCulled = false;
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)]);
   // The live one is matted: hair in wet ropes, salt dried on their ends. The dead are furred with crystal that has grown out of their crust.
+  // TEMPORARY, until the anchors give it: where the lens of the stuck one stands. The dead it looks across carry all their crystals, the others a quarter (all at 2600 costs about 0.3 s a sample more at the wide key).
+  const lens = rel(24.6, 19.6);
+  const FROST_NEAR = 2400;
+  const FROST_FAR = 600;
   const coat = new Hair(ctx, skin, [{ animal: stuck, locks: 320, length: 0.3, width: 0.008, wet: ground + 0.3, stand: 0, tint: 2.1, bare: 0, salt: 3 }], 'dead-coat');
   const frost = new Hair(
     ctx,
     skin,
-    bodies.filter((b) => b.animal !== stuck).map((b) => ({ animal: b.animal, locks: 2600, length: 0.05 * b.animal.b.k, width: 0.0045, wet: -10, stand: 1.2, tint: 5.2, bare: 0, fall: 0.05 })),
+    bodies.filter((b) => b.animal !== stuck).map((b) => ({ animal: b.animal, locks: Math.hypot(b.drive.ox - lens[0], b.drive.oz - lens[1]) < 9 ? FROST_NEAR : FROST_FAR, length: 0.05 * b.animal.b.k, width: 0.0045, wet: -10, stand: 1.2, tint: 5.2, bare: 0, fall: 0.05 })),
     'dead-frost',
   );
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.

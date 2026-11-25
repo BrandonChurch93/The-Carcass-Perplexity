@@ -128,11 +128,15 @@ void main() {
   vec2 skinSlope = vec2(skinHeight(vUv + vec2(e2, 0.0), seed) - s0, skinHeight(vUv + vec2(0.0, e2), seed) - s0) / e2 * 0.004 * (1.0 - feeler);
   vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.22 + skinSlope;
   // The crust of a dead one: crystals as big as a fist, grown into each other.
-  float k0 = plates(vUv * vec2(19.0, 21.0) + seed).x;
   // Far off the crystals are smaller than a pixel: what is left of them is their mean.
   float afar = smoothstep(9.0, 30.0, length(cameraPosition - vWorld));
-  float knob = mix(knobHeight(vUv, seed), 0.72, afar);
-  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.3 * (1.0 - afar);
+  // Only a dead one has them, and only near: the living are not made to pay for crystals they do not carry.
+  float knob = 0.72;
+  vec2 knobSlope = vec2(0.0);
+  if (dead > 0.01 && afar < 0.99) {
+    knob = mix(knobHeight(vUv, seed), 0.72, afar);
+    knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.3 * (1.0 - afar);
+  }
   // How deep in a fold of the shape this is: 1 on the top of a fold, toward 0 in its crease.
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
@@ -189,10 +193,13 @@ void main() {
   float plate = smoothstep(0.38, 0.6, fbm(vUv * vec2(2.6, 2.1) + seed * 7.0)) * (0.5 + 0.5 * smoothstep(0.2, 0.5, fbm(vUv * vec2(9.0, 7.0) + seed)));
   vec3 greyDry = mix(vec3(0.13, 0.085, 0.066), vec3(0.24, 0.215, 0.19), plate) * (0.6 + 0.4 * s0);
   // The dried mud is a plaster: it has cracked into plates as the animal heaved, each plate its own grey, the hide dark in the cracks.
-  vec2 slab = plates(vUv * vec2(6.5, 5.5) + seed * 5.0 + 0.25 * vec2(vnoise(vUv * 9.0), vnoise(vUv * 9.0 + 5.0)));
-  vec2 chip = plates(vUv * vec2(19.0, 16.0) + seed * 9.0);
-  float crack = max(1.0 - smoothstep(0.015, 0.085, slab.x), 0.55 * (1.0 - smoothstep(0.02, 0.14, chip.x)) * smoothstep(0.4, 0.6, fbm(vUv * 3.0 + seed)));
-  greyDry *= 0.78 + 0.45 * fract(slab.y * 7.31);
+  float crack = 0.0;
+  if (mudded > 0.5) {
+    vec2 slab = plates(vUv * vec2(6.5, 5.5) + seed * 5.0 + 0.25 * vec2(vnoise(vUv * 9.0), vnoise(vUv * 9.0 + 5.0)));
+    vec2 chip = plates(vUv * vec2(19.0, 16.0) + seed * 9.0);
+    crack = max(1.0 - smoothstep(0.015, 0.085, slab.x), 0.55 * (1.0 - smoothstep(0.02, 0.14, chip.x)) * smoothstep(0.4, 0.6, fbm(vUv * 3.0 + seed)));
+    greyDry *= 0.78 + 0.45 * fract(slab.y * 7.31);
+  }
   greyDry = mix(greyDry, vec3(0.05, 0.03, 0.024), crack);
   albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
   float split = mudded * crack * smear * (1.0 - wet) * (1.0 - feeler);

@@ -10,6 +10,11 @@ export const PARTS: readonly string[] = ['stalks', 'insects'];
 const NEAR = 14;
 
 /** A tube in (angle, along) with its mouth and the body of the plume: the vertex shader gives it its shape. */
+// How many filaments a plume is drawn with: by the lens of the colony, near a lens, and far off. The dearer set (520, 200, 44) costs about 0.5 s a sample more at the wide key.
+const PLUME_CLOSE = 520;
+const PLUME_NEAR = 130;
+const PLUME_FAR = 30;
+
 function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
   const position: number[] = [];
   const skin: number[] = [];
@@ -114,6 +119,7 @@ export function create(ctx: Context): Piece {
   const group = new THREE.Group();
   const sets = [stalks.filter(near), stalks.filter((s) => !near(s))];
   const fils: number[][] = [[], [], [], []];
+  const drops: number[][] = [[], [], [], []];
   const perches: [number, number, number][] = [];
   let nearFils = 0;
   const discs = ctx.rig.contactDiscs(sets[0].length);
@@ -153,7 +159,8 @@ export function create(ctx: Context): Piece {
       const axl = [0, 1, 2].map((c) => (A[c] as number) * hh + 2 * (B[c] as number) * t);
       const an = Math.hypot(axl[0] as number, axl[1] as number, axl[2] as number);
       const ax = axl.map((c) => c / an);
-      const count = which === 0 ? (close ? 520 : 200) : 44;
+      // A bud keeps its filaments inside its sheath and a broken one has none: neither is given any to draw.
+      const count = s.kind === 1 || s.kind === 2 ? 0 : which === 0 ? (close ? PLUME_CLOSE : PLUME_NEAR) : PLUME_FAR;
       if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
       const length = (s.kind === 0 ? (close ? 0.5 : 0.31) : s.kind === 3 ? 0.3 : 0.25) * s.size * (close ? 1 : which === 0 ? 2.8 : 3.8);
@@ -166,7 +173,14 @@ export function create(ctx: Context): Piece {
         fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(close ? 0.8 : 0.55, 1.1), rng.next());
         fils[3].push(s.kind, seed, length, (which === 0 ? (close ? 0.0055 : 0.011) : 0.036) * s.size * rng.range(0.7, 1.3));
       }
-      if (which === 0) nearFils = fils[0].length / 4;
+      // A drop hangs from one filament in five of the near ones: only those are given one.
+      if (which === 0) {
+        for (let f = fils[0].length / 4 - count; f < fils[0].length / 4; f++) {
+          if (((fils[2][f * 4 + 3] as number) * 17.3) % 1 > 0.22) continue;
+          for (let c = 0; c < 4; c++) for (let q = 0; q < 4; q++) (drops[c] as number[]).push(fils[c]?.[f * 4 + q] as number);
+        }
+        nearFils = (drops[0] as number[]).length / 4;
+      }
     });
     const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 14 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
     const mesh = new THREE.Mesh(g, stemMaterial);
@@ -194,7 +208,7 @@ export function create(ctx: Context): Piece {
   quad.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
   quad.setIndex([0, 1, 2, 0, 2, 3]);
   const beads = new THREE.Mesh(
-    instanced(quad, nearFils, { aTop: new Float32Array(fils[0]), aAx: new Float32Array(fils[1]), aFil: new Float32Array(fils[2]), aMore: new Float32Array(fils[3]) }),
+    instanced(quad, nearFils, { aTop: new Float32Array(drops[0]), aAx: new Float32Array(drops[1]), aFil: new Float32Array(drops[2]), aMore: new Float32Array(drops[3]) }),
     new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, uSeconds }, vertexShader: BEAD_VERTEX, fragmentShader: BEAD_FRAGMENT, side: THREE.DoubleSide }),
   );
   beads.frustumCulled = false;
