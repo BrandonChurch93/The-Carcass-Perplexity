@@ -199,14 +199,15 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
     r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5);
     // The same plates as on the trunks, on the side that looks up: 20 to 60 cm, ragged, lifting at their edges.
-    const cell = cells2((a / (Math.PI * 2)) * 22 + 0.5 * Math.sin(s * 1.9), s * 2.4 + 0.6 * noise2(a * 2, s + 3), 22);
+    const cell = cells2((a / (Math.PI * 2)) * 30 + 0.5 * Math.sin(s * 1.9), s * 0.8 + 0.6 * noise2(a * 2, s + 3), 30);
     const id = cell[1];
     const upper = smooth(-0.1, 0.55, dy) * Math.min(1, ring * 1.6);
-    const gone = 1 - 0.62 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
-    const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.14 * (noise2(a * 14, s * 5) - 0.5) + 0.05 * (noise2(a * 41, s * 15 + 2) - 0.5);
+    const gone = 1 - 0.5 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
+    const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.2 * (noise2(a * 14, s * 4) - 0.5) + 0.08 * (noise2(a * 41, s * 13 + 2) - 0.5);
     plate = id > gone ? smooth(0, 0.03, inside) : 0;
     const toward = Math.min(1, Math.max(0, 0.5 + ((id * 711.3) % 1 > 0.5 ? 1 : -1) * cell[3] * 1.3));
-    r += (plate * (0.022 + 0.035 * smooth(0.16, 0, inside) * (0.25 + 0.75 * toward))) / Math.max(0.5, ring);
+    r += (plate * (0.025 + 0.06 * smooth(0.16, 0, inside) * (0.25 + 0.75 * toward))) / Math.max(0.5, ring);
+    plate *= 0.72 + 0.28 * ((id * 131.7) % 1);
   }
   o.set(0, dy * R.y, dz * R.z).multiplyScalar(ring * r);
   p.set(along * R.x * (0.9 + 0.1 * r), o.y, o.z).applyQuaternion(BQ).add(BODY.centre);
@@ -379,8 +380,10 @@ export interface FieldPoint {
   heat: number;
   /** Metres to the body or the foot of the leg. */
   d: number;
-  /** The phase the cords are counted along, metres. */
+  /** The phase the cords are counted along, metres: round the girth of a rope, and turning round it along its length. */
   phase: number;
+  /** Metres along the rope the point is on, from its middle. */
+  along: number;
   /** 0 to 1: how strongly the skin is corded here. */
   cords: number;
   /** 0 to 1: the skin is the folded one here. */
@@ -409,6 +412,10 @@ interface Rope {
   seed: number;
   tone: number;
   main: boolean;
+  /** Metres of girth the fibres turn round the rope for each metre of its length: a rope is wrung, not combed. */
+  twist: number;
+  /** Metres of length for a radian of its angle. */
+  mean: number;
   /** A small rope keeps to a main one: it is this far across from the middle of it at its two ends. */
   parent?: Rope;
   /** The skin of this one is split along its flank and glows there, between these angles. */
@@ -422,17 +429,17 @@ export const EYE: [number, number] = [-7.3, 3.2];
 function makeRopes(): Rope[] {
   // The main ones, six to ten of them seen from the bench: 0.4 to 0.9 m thick.
   const main: [number, number, number, number, number, number, number][] = [
-    [0, 115, -65, 0.0, 0.5, 0.4, 5],
-    [0, 175, 5, 0.25, 0.95, 0.45, 4],
-    [0, 65, -125, 0.7, 1.5, 0.42, 3],
-    [0, 150, -25, 2.0, 1.2, 0.38, 3.5],
-    [0, 35, -175, 1.9, 2.9, 0.36, 2],
-    [0, 140, -60, 2.5, 3.6, 0.34, 1.5],
-    [0, 85, -115, 3.8, 3.1, 0.3, 1.7],
-    [0, 165, 15, 4.0, 4.9, 0.28, 1],
-    [0, 25, -150, 4.5, 5.5, 0.25, 0.8],
-    [1, -70, 290, 0.55, 1.25, 0.32, 4.5],
-    [1, 80, 400, 1.55, 2.2, 0.27, 2.5],
+    [0, 115, -65, 0.0, 0.5, 0.36, 5],
+    [0, 175, 5, 0.25, 0.95, 0.52, 4],
+    [0, 65, -125, 0.7, 1.5, 0.3, 3],
+    [0, 150, -25, 2.0, 1.2, 0.46, 3.5],
+    [0, 35, -175, 1.9, 2.9, 0.24, 2],
+    [0, 140, -60, 2.5, 3.6, 0.42, 1.5],
+    [0, 85, -115, 3.8, 3.1, 0.2, 1.7],
+    [0, 165, 15, 4.0, 4.9, 0.34, 1],
+    [0, 25, -150, 4.5, 5.5, 0.18, 0.8],
+    [1, -70, 290, 0.55, 1.25, 0.36, 4.5],
+    [1, 80, 400, 1.55, 2.2, 0.22, 2.5],
   ];
   const ropes: Rope[] = main.map(([about, a0, a1, d0, d1, r, level], i) => ({
     about,
@@ -447,6 +454,8 @@ function makeRopes(): Rope[] {
     seed: 6.28 * hash(i, 3, 201),
     tone: 0.1 + 0.8 * hash(i, 4, 201),
     main: true,
+    twist: (hash(i, 15, 201) < 0.5 ? -1 : 1) * (0.14 + 0.3 * hash(i, 16, 201)),
+    mean: about === 0 ? 2.4 + 0.5 * (d0 + d1) : Math.max(0.6, 0.5 * (d0 + d1)),
   }));
   (ropes[9] as Rope).split = [-95 * DEG, 55 * DEG];
   // The second size, 0.1 to 0.2 m, only on the main ones and in the gaps beside them.
@@ -462,13 +471,15 @@ function makeRopes(): Rope[] {
       a1: parent.a0 + span * (from + length),
       d0: parent.r * 3.0 * (hash(i, 8, 202) - 0.5),
       d1: parent.r * 3.0 * (hash(i, 9, 202) - 0.5),
-      r: 0.05 + 0.05 * hash(i, 10, 202),
+      r: 0.03 + 0.08 * Math.pow(hash(i, 10, 202), 1.6),
       level: parent.level + 0.2 + 0.2 * hash(i, 11, 202),
       sway: 0.03,
       beat: 7 + 5 * hash(i, 12, 202),
       seed: 6.28 * hash(i, 13, 202),
       tone: 0.1 + 0.8 * hash(i, 14, 202),
       main: false,
+      twist: (hash(i, 15, 202) < 0.5 ? -1 : 1) * (0.2 + 0.5 * hash(i, 16, 202)),
+      mean: parent.mean,
       parent,
     });
   }
@@ -614,6 +625,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     let hard = 0;
     let soft = 0;
     let phase = 0;
+    let along = 0;
     let cords = 0;
     let tone = 0.5;
     let heat = 0;
@@ -631,21 +643,27 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
           const rho = k.about === 0 ? rhoBody : Math.max(0.3, rhoEye);
           const e = ((k.about === 0 ? d : rhoEye) - middle[0]) / Math.hypot(1, middle[1] / rho);
           // It thins to nothing at each end, where it goes under, and is not of one girth between.
-          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.82 + 0.18 * Math.sin(a * 5.3 + k.seed * 3)) * (0.55 + 0.45 * fade);
+          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.55 + 0.45 * fade);
           const ae = Math.abs(e);
           if (ae > 1.6 * r || r < 0.01) continue;
           const stands = 1.25 * r * (0.3 + 0.7 * fade);
           const wide = smooth(1.7 * r, 0.5 * r, ae);
           if (ae < r) {
-            const round = Math.pow(Math.cos((0.5 * Math.PI * ae) / r), 0.85);
-            // Where it lies on another it comes down to that one at its edge, not to a step.
-            const here = soft * smooth(0, 0.35, round) + stands * round;
-            if (here > hard) {
-              hard = here;
+            const round = Math.cos((0.5 * Math.PI * ae) / r);
+            // Its middle rides on the pile under it; its edges come down to the surface that is really there, so it has no wall
+            // of its own. A small rope has no pile: it lies on the flank of its main one wherever that is.
+            const settle = k.main ? smooth(0, 0.7, round) : 0;
+            const gap = Math.max(0, soft - hard);
+            if (round > 0.001) {
+              hard += gap * settle + stands * round;
               // The fibres are counted round the girth of the rope, so they are as wide on its flank as on its back.
-              phase = 1.25 * r * Math.asin(e / r) + 0.05 * Math.sin(a * 6.1 + k.seed);
+              // Both are counted on the surface and not on the ground: where the rope climbs what is under it, or comes down onto
+              // the rope under it, the height is part of the way. Without it the fibres are drawn out down every steep place.
+              along = (a - 0.5 * (k.a0 + k.a1)) * k.mean + 0.7 * lying;
+              phase = 1.25 * r * Math.asin(e / r) + Math.sign(e) * gap * (1 - settle) + 0.7 * lying + 0.05 * Math.sin(a * 6.1 + k.seed) + k.twist * along;
               // Round the eye the ropes turn so tightly that strong fibres would read as rings.
-              cords = smooth(0.04, 0.3, round) * (k.main ? 1 : 0.7) * (k.about === 1 ? 0.45 : 1);
+              // Never nought on a rope: the shader knows a rope by it, and lays its textures by the rope there.
+              cords = Math.max(0.06, smooth(0.04, 0.3, round) * (k.main ? 1 : 0.7) * (k.about === 1 ? 0.8 : 1));
               tone = k.tone;
               onRope = smooth(0, 0.25, round);
               heat = 0;
@@ -712,7 +730,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
       }
     }
 
-    return { h, heat, d: dTrue, phase, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
+    return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
   };
 }
 
@@ -725,6 +743,8 @@ export interface Baked {
   mask: THREE.DataTexture;
   /** r: the phase the cords are counted along, metres; gb: its direction on the ground; a: how strongly the skin is corded. Half float. */
   lines: THREE.DataTexture;
+  /** r: metres along the rope the point is on. Half float. */
+  along: THREE.DataTexture;
   /** The glowing split in three lengths: the middle of each, and the area of all of it, square metres. */
   tear: { points: P3[]; area: number };
   at(x: number, z: number): number;
@@ -775,6 +795,7 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
   const heat = new Float32Array(n * n);
   const dist = new Float32Array(n * n);
   const phase = new Float32Array(n * n);
+  const along = new Uint16Array(n * n);
   const cords = new Float32Array(n * n);
   const folded = new Float32Array(n * n);
   const tone = new Float32Array(n * n);
@@ -785,6 +806,7 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
       heat[j * n + i] = p.heat;
       dist[j * n + i] = p.d;
       phase[j * n + i] = p.phase;
+      along[j * n + i] = THREE.DataUtils.toHalfFloat(p.along);
       cords[j * n + i] = p.cords;
       folded[j * n + i] = p.folded;
       tone[j * n + i] = p.tone;
@@ -860,7 +882,12 @@ export function bakeField(field: (x: number, z: number) => FieldPoint): Baked {
   linesTexture.magFilter = THREE.LinearFilter;
   linesTexture.colorSpace = THREE.NoColorSpace;
   linesTexture.needsUpdate = true;
-  return { height, relief: dataTexture(relief, n), mask: dataTexture(mask, n), lines: linesTexture, tear: { points: tearPoints, area: hotAt.length * cell * cell }, at };
+  const alongTexture = new THREE.DataTexture(along, n, n, THREE.RedFormat, THREE.HalfFloatType);
+  alongTexture.minFilter = THREE.LinearFilter;
+  alongTexture.magFilter = THREE.LinearFilter;
+  alongTexture.colorSpace = THREE.NoColorSpace;
+  alongTexture.needsUpdate = true;
+  return { height, relief: dataTexture(relief, n), mask: dataTexture(mask, n), lines: linesTexture, along: alongTexture, tear: { points: tearPoints, area: hotAt.length * cell * cell }, at };
 }
 
 /** The relief as a sheet: fine round the carcass and on the side the bench sees, coarser at the rim. */
@@ -1099,22 +1126,23 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       const bend = 0.7 * (noise2(s * 0.8 + seed * 2, Math.cos(a) * 0.9 + 4) - 0.5);
       const fineHere = noise2(s * 0.6 + seed * 5, Math.sin(a + seed) * 0.8 + 2) > 0.62;
       const k = fineHere ? 2 : 1;
-      const cell = cells2(((a / (Math.PI * 2)) * 4 + 0.35 * Math.sin(s * 1.7 + seed)) * k, (s * 1.9 + seed + bend) * k, 4 * k);
+      const cell = cells2(((a / (Math.PI * 2)) * 7 + 0.35 * Math.sin(s * 1.7 + seed)) * k, (s * 0.75 + seed + bend) * k, 7 * k);
       const id = cell[1];
       const h2 = (id * 57.31) % 1;
       const h5 = (id * 711.3) % 1;
       const patch = smooth(0.35, 0.65, noise2(s * 0.7 + seed * 3, Math.cos(a + seed) * 1.1 + 1.5));
-      const bare = 1 - (0.3 + 0.7 * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
-      const ragged = 0.13 * (noise2(a * 7 + seed, s * 9) - 0.5) + 0.06 * (noise2(a * 19, s * 27 + seed) - 0.5);
+      const bare = 1 - 0.8 * (0.3 + 0.7 * smooth(-0.35, 0.5, up)) * (0.7 + 0.6 * patch) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
+      const ragged = 0.2 * (noise2(a * 7 + seed, s * 6) - 0.5) + 0.1 * (noise2(a * 19, s * 21 + seed) - 0.5);
       const inside = (cell[0] - 0.012 - 0.06 * h2) / k + ragged / k;
       const plate = id > bare ? smooth(0, 0.02, inside) * thin : 0;
       // A plate curls: its edge stands off the limb, one side of it more than the other.
       const toward = Math.min(1, Math.max(0, 0.5 + (h5 > 0.5 ? 1 : -1) * cell[3] * 1.3));
       const curl = smooth(0.16, 0.0, inside * k) * (0.25 + 0.75 * toward);
-      const lift = plate * (0.018 + (0.035 * h2 + 0.01) * curl + 0.008 * noise2(a * 5 + seed, s * 9));
+      const lift = plate * (0.024 + (0.07 * h2 + 0.03) * curl + 0.012 * noise2(a * 5 + seed, s * 9));
       // Sinew shows pale along the cords where the hide is gone.
       const bone = (1 - plate) * smooth(-0.1, 0.25, cords) * thin + (1 - thin) * 0.6;
-      return [core + scale * lift, plate, bone];
+      // Each plate is of its own tone: the shader reads it from how far over a half the mark is.
+      return [core + scale * lift, plate * (0.72 + 0.28 * ((id * 131.7) % 1)), bone];
     },
     (p, s, a, t) => {
       const lava = lavaCoat(baked, p, t > 0.5 ? 0.5 : 0.55, seed * 7);
@@ -1123,6 +1151,65 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
     },
     (c) => c.y < baked.at(c.x, c.z) - 0.55,
   );
+}
+
+/** A rag of hide that hangs from a limb: a strip torn off along the limb and held by one end, shrunk by the heat, so it is
+ *  narrow, of uneven width with pieces torn out of its edges, cupped across, twisted along its length and frayed to a point. */
+export function ragGeometry(at: P3, length: number, half: number, yaw: number, seed: number, rows = 56, columns = 14): THREE.BufferGeometry {
+  const count = (rows + 1) * (columns + 1);
+  const position = new Float32Array(count * 3);
+  const map = new Float32Array(count * 4);
+  const surf = new Float32Array(count * 4);
+  const p = new THREE.Vector3();
+  const turn = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.1, yaw, 0.08));
+  const top = new THREE.Vector3(at[0], at[1], at[2]);
+  for (let i = 0; i <= rows; i++) {
+    const v = i / rows;
+    // Width: uneven, a bite out of one edge here and there, and the last third frayed down to a thread.
+    const wide = half * (0.4 + 0.9 * noise2(v * 3.7 + seed * 7.1, 1.3)) * smooth(0, 0.05, v) * (1 - 0.9 * smooth(0.6, 1, v)) + 0.008;
+    const biteA = 0.75 * smooth(0.55, 0.7, noise2(v * 7.3 + seed * 3.3, 5.1));
+    const biteB = 0.75 * smooth(0.6, 0.75, noise2(v * 6.1 + seed * 9.7, 8.4));
+    const twist = 1.4 * v * (seed % 2 === 0 ? 1 : -1) + 0.7 * Math.sin(v * 5.2 + seed);
+    const ct = Math.cos(twist);
+    const st = Math.sin(twist);
+    // It does not hang straight: it dried with a bend and a kink in it.
+    const offX = length * (0.1 * Math.sin(v * 2.4 + seed * 1.7) + 0.035 * Math.sin(v * 9 + seed));
+    const offZ = length * 0.08 * Math.sin(v * 3.1 + seed * 2.9);
+    const drop = v * length * (1 - 0.06 * Math.sin(v * 7 + seed));
+    for (let j = 0; j <= columns; j++) {
+      const a = ((j % columns) / columns) * Math.PI * 2;
+      const side = Math.cos(a);
+      const face = Math.sin(a);
+      const x = side * wide * (side > 0 ? 1 - biteA : 1 - biteB);
+      const thick = 0.012 + 0.01 * noise2(x * 30 + seed, v * 9);
+      // Cupped across as it shrank, with small wrinkles across the cup.
+      const z = face * thick + 0.9 * (x * x) / Math.max(0.02, wide) + 0.006 * Math.sin(v * length * 55 + 4 * side);
+      p.set(x * ct - z * st + offX, -drop, x * st + z * ct + offZ);
+      p.applyQuaternion(turn).add(top);
+      const k = i * (columns + 1) + j;
+      position[k * 3] = p.x;
+      position[k * 3 + 1] = p.y;
+      position[k * 3 + 2] = p.z;
+      map[k * 4] = (j / columns) * 0.5;
+      map[k * 4 + 1] = v * 1.6;
+      map[k * 4 + 2] = 2;
+      map[k * 4 + 3] = KIND.pad;
+      surf[k * 4] = 0;
+      // Mostly the dark inner side of the hide; the outer side keeps patches of its pale crust.
+      surf[k * 4 + 1] = 0.85 * smooth(0.45, 0.65, noise2(v * 4 + seed * 5, side * 1.5 + 3)) * smooth(-0.2, 0.5, face);
+      surf[k * 4 + 2] = 0.6 + 0.4 * smooth(-0.3, 0.6, face);
+      surf[k * 4 + 3] = 0.35 * smooth(0.12, 0.0, v);
+    }
+  }
+  const index: number[] = [];
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < columns; j++) {
+      const a = i * (columns + 1) + j;
+      const b = a + columns + 1;
+      index.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  }
+  return finishGeometry(position, map, surf, index, rows + 1, columns + 1);
 }
 
 /** The pad of the second leg: a broad flat foot dried to a curled leaf, hanging from the wrist by its tendon. The rags of hide that hang under the arch are the same leaf, smaller and narrower. */

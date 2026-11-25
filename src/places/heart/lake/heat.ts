@@ -82,6 +82,28 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 const float LINE_NARROW = 1.3;
 // How much wider the net has the gap than it is drawn, as of the last call of gapeAt.
 float gWas = 1.0;
+// The seam the walkers feed at and the cracks that run from its pool (heat classes 0.08 and 0.1) are no even channel: an uneven
+// string of small pools joined by narrow cracks.
+float stringOf(vec4 n) {
+  float c = n.g - 2.0;
+  return step(1.5, n.g) * smoothstep(0.06, 0.075, c) * (1.0 - smoothstep(0.105, 0.115, c));
+}
+// A pool of the string that has its place: metres inside its brim (0 outside). at: its middle on the crust at the reference time.
+float poolIn(vec2 q, vec2 at, vec2 axis, vec2 halves) {
+  vec2 rel = q - at;
+  vec2 e = vec2(dot(rel, axis), dot(rel, vec2(-axis.y, axis.x))) / halves;
+  return max(1.0 - length(e) - 0.45 * (vnoise(q / 0.8 + 3.0) - 0.5) - 0.25 * (vnoise(q / 0.27 + 8.0) - 0.5), 0.0) * halves.y;
+}
+// The pool under the tuft of the one that feeds is long toward the lens of the feeding picture (about 1.8 m by 6 m); two more
+// lie along the seam left and right of it in that picture.
+float heroPool(vec2 q) {
+  return poolIn(q, vec2(-404.9, 204.0), vec2(0.734, -0.679), vec2(3.0, 0.9));
+}
+float stringPools(vec2 q) {
+  float a = heroPool(q);
+  a = max(a, poolIn(q, vec2(-418.8, 203.8), vec2(0.95, -0.3), vec2(1.2, 0.7)));
+  return max(a, poolIn(q, vec2(-385.1, 195.4), vec2(0.9, -0.44), vec2(1.5, 0.6)));
+}
 vec2 gapeAt(vec2 q, vec4 n) {
   float shown = step(1.5, n.g);
   vec2 pr = (q - uPool.xy) * uPool.zw;
@@ -96,6 +118,17 @@ vec2 gapeAt(vec2 q, vec4 n) {
   float narrowed = mix(reach, max(LINE_NARROW * reach, min(reach, 0.32)), shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)));
   gWas = reach / max(narrowed, 1e-3);
   reach = narrowed;
+  float strung = stringOf(n);
+  if (strung > 0.0) {
+    float bead = smoothstep(0.42, 0.64, vnoise(q / 2.6 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2);
+    float beaded = min(max(reach * mix(0.2, 1.3, bead), 0.08), 1.4);
+    float inPool = stringPools(q);
+    if (inPool > 0.0) beaded = max(beaded, n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) + inPool);
+    beaded = mix(reach, beaded, strung);
+    // The glow map keeps the seam's power: what the string takes from its width it gives back in brightness.
+    gWas *= reach / max(beaded, 1e-3);
+    reach = beaded;
+  }
   return vec2(reach * mix(widen, 1.0, max(shown, byPool)), smoothstep(0.46, 0.84, u));
 }
 
@@ -107,11 +140,13 @@ float bankAt(vec2 q, vec4 n) {
 
 // The height of the melt in the gap of a seam the pictures show, metres (the brim is zero). One level for a seam, so the liquid
 // lies level. The channel at the line and its fingers lie in a trench, 0.3 m down: the near bank hides the near edge of the melt
-// and the far bank stands over it as a wall. The other gaps are nearly full: the long seam of the group at 0.09 m, the narrow
+// and the far bank stands over it as a wall. The other gaps are nearly full: the long seam of the group at 0.045 m, the narrow
 // near seams highest (0.08 m), the fountain lines at 0.2 m.
 float meltLevel(vec4 n) {
   float c = n.g - 2.0;
-  return -mix(mix(mix(0.3, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+  float level = mix(mix(mix(0.3, 0.1, smoothstep(0.01, 0.04, c)), 0.08, smoothstep(0.0, 0.2, c)), 0.2, step(1.3, c));
+  // The pools of the string stand brimful: a long lens five degrees over the crust sees into them.
+  return -mix(level, 0.045, smoothstep(0.06, 0.075, c) * (1.0 - smoothstep(0.105, 0.115, c)));
 }
 
 // The mean heat of the melt of a wide gap, as the light it throws: kelvin. Hot spots come and go slowly along a seam.
@@ -236,6 +271,8 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
 #ifdef LAKE_LIP
   // The fountains stand above their brim and are seen from anywhere.
   float sight = mix(seenOver(q, 2.0 * hotHalf, mix(0.04, -meltLevel(n), shown), 1.0), 1.0, stirred);
+  // The narrow cracks that join the pools of the feeding seam glow along their far wall, which stands in sight.
+  sight = max(sight, 0.85 * stringOf(n) * (1.0 - smoothstep(0.1, 0.2, hotHalf)));
   g.x *= sight;
   // The lip of a hidden gap still shows a little of the glow on it.
   gLip *= 0.3 + 0.7 * sight;
@@ -257,6 +294,23 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     gLip += blackbody(1300.0) * ((0.3 + 0.7 * farSight) * 3.0 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / (0.4 + 1.5 * gFoot)));
 #endif
   }
+#ifdef LAKE_LIP
+  // Round the seam the walkers feed at the crust is crazed: short hairline cracks within five metres of it glow dull red.
+  float crazed = stringOf(n) * (1.0 - smoothstep(2.5, 5.5, n.r));
+  if (crazed > 0.0) {
+    vec2 w = q + 0.8 * vec2(vnoise(q / 1.3 + 3.0), vnoise(q / 1.3 + 13.0));
+    float f = vnoise(w / 2.1 + 57.0);
+    vec2 gr = vec2(vnoise((w + vec2(0.15, 0.0)) / 2.1 + 57.0), vnoise((w + vec2(0.0, 0.15)) / 2.1 + 57.0)) - f;
+    float dh = abs(f - 0.5) * 0.15 / max(length(gr), 0.004);
+    float lane = smoothstep(0.52, 0.68, vnoise(q / 1.7 + 9.0)) * crazed;
+    vec3 lipWas = gLip;
+    // Off the pool under the tuft they are wider and brighter for a few metres.
+    float byHero = 1.0 - smoothstep(2.0, 6.0, length(q - vec2(-404.9, 204.0)));
+    vec2 hair = gapHeat(dh, (0.014 + 0.02 * byHero) * lane, 1070.0 + 120.0 * byHero + 70.0 * vnoise(q / 0.8 + 2.0), least);
+    gLip = lipWas;
+    if (hair.x > g.x) g = hair;
+  }
+#endif
   // The glow map lights feet, legs, ground and air beside a seam the pictures show: there the melt goes in at its true width
   // and at the mean heat of the open melt, not at the heat of its skin. A seam narrower than a texel keeps its power.
   if (least > 0.5 && shown > 0.5) {
