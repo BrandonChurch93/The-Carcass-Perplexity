@@ -131,7 +131,6 @@ vec3 lakeMirror(vec3 r, float rough) {
 void main() {
   vec2 xz = vWorld.xz;
   vec4 land = landAt(xz);
-  if (land.b > 1.5) discard;
   float lake = -land.b;
   vec3 toCamera = cameraPosition - vWorld;
   float far = length(toCamera);
@@ -225,6 +224,7 @@ void main() {
   vec3 hot = blackbody(kelvin) * heat.x;
   hot += blackbody(mix(760.0, 1040.0, lip * lip)) * 0.5 * step(1e-3, heat.x + young) * young;
   gl_FragColor = vec4(rigOut(c * (1.0 - heat.x)) + hot * uLava, 1.0);
+  if (land.b > 1.5) discard;
 }`;
 
 const GLOW_FRAGMENT = /* glsl */ `
@@ -237,10 +237,10 @@ ${HEAT_GLSL}
 void main() {
   vec2 xz = vWorld.xz;
   float shore = landAt(xz).b;
-  if (shore > 1.5) discard;
   vec2 q = xz - vDrift;
   vec4 heat = heatAt(q, -shore, netAt(q), 1.0 / uGlowTexels);
   gl_FragColor = vec4(blackbody(heat.y) * heat.x, 1.0);
+  if (shore > 1.5) discard;
 }`;
 
 // The sheet of the lake, cut to the lake's outline: a face that lies wholly under the land is left out, because this renderer
