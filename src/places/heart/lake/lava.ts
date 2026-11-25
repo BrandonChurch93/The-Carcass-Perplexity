@@ -26,17 +26,20 @@ const POOLS: { seam: string; x: number; z: number; add: number; reach2: number }
   { seam: 'nearB', x: -491.6, z: 241.0, add: 1.1, reach2: 4.0 },
 ];
 
-/** The level of a seam's melt, the same as meltLevel in heat.ts. */
-const levelOf = (heat: number): number => {
-  if (heat >= 1.3) return -0.2;
-  const k = Math.min(1, Math.max(0, heat / 0.2));
-  return -(0.1 + (0.08 - 0.1) * k * k * (3 - 2 * k));
-};
-
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
+
+/** The level of a seam's melt, the same as meltLevel in heat.ts. */
+const levelOf = (heat: number): number => {
+  if (heat >= 1.3) return -0.2;
+  const full = smooth(0.01, 0.04, heat);
+  const k = smooth(0, 0.2, heat);
+  const low = 0.3 + (0.1 - 0.3) * full;
+  return -(low + (0.08 - low) * k);
+};
+
 
 interface Ribbon {
   name: string;
@@ -67,7 +70,7 @@ function ribbons(): Ribbon[] {
 }
 
 const MAX_POOLS = 4;
-const TONGUE = { at: 23.2, half: 1.1 };
+const TONGUE = { at: 23.4, half: 1.9 };
 
 function build(all: Ribbon[]): { geometry: THREE.BufferGeometry; pools: THREE.Vector4[] } {
   const position: number[] = [];
@@ -185,8 +188,8 @@ const float CYCLE = 12.0;
 // One coil in so many metres of stream.
 const float COIL = 2.4;
 // A rope of the skin, crest to crest, and how high it stands, metres.
-const float ROPE = 0.046;
-const float ROPE_TALL = 0.018;
+const float ROPE = 0.066;
+const float ROPE_TALL = 0.03;
 
 // What the stream carries, at a point of the pattern: how the ropes are pushed out of line, how alive the creases are, where the skin is stretched thin.
 vec3 carriedAt(vec2 p) {
@@ -215,7 +218,7 @@ void main() {
   float grain = 1.2 * sqrt(length(dqx) * length(dqy));
   float longest = max(length(dqx), length(dqy));
   // Ropes finer than two pixels are not drawn: the skin shows the mean of crest and crease.
-  float seen = 1.0 - smoothstep(0.016, 0.034, longest);
+  float seen = 1.0 - smoothstep(0.022, 0.046, longest);
 
   // The hottest tongue does not run down the middle: it lies against one bank, and wanders a little along the channel.
   vec2 up = vec2(netAt(q + vec2(0.25, 0.0)).r, netAt(q + vec2(0.0, 0.25)).r) - n.r;
@@ -306,19 +309,23 @@ void main() {
   float feeding = smoothstep(0.04, 0.07, vSeam.x) * (1.0 - stir);
   float reachOpen = smoothstep(0.5, 0.62, vnoise(vec2(vFlow.x / 6.5 - uTime * 0.02, vSeam.y * 3.7)));
   if (abs(vSeam.y - uTongue.w) < 0.5) reachOpen = 1.0 - smoothstep(0.6, 1.0, abs(vFlow.x - uTongue.x - 0.3 * sin(uTime * 0.21)) / uTongue.y);
+  float onLine = abs(vSeam.y - uTongue.w) < 0.5 ? 1.0 : 0.0;
   float wide = max(smoothstep(0.4, 0.7, gape) * reachOpen, feeding * smoothstep(0.2, 0.45, gape) * (0.4 + 0.6 * reachOpen));
   wide = max(wide, stir);
   float edgeNoise = 0.3 * (fixedBig - 0.5) + 0.2 * (carried.z - 0.5);
-  float open = wide * (1.0 - smoothstep(0.2, 0.3, lean + edgeNoise - 0.3 * stir)) * (1.0 - 0.9 * held * (1.0 - stir));
-  float thin = wide * (1.0 - smoothstep(0.3, 0.6, lean + edgeNoise));
+  // The line's tongue is 0.8 m across; the others are narrower.
+  float openTo = 0.2 + 0.2 * onLine * reachOpen;
+  float open = wide * (1.0 - smoothstep(openTo, openTo + 0.1, lean + edgeNoise - 0.3 * stir)) * (1.0 - 0.9 * held * (1.0 - stir) * (1.0 - 0.6 * onLine));
+  float thin = wide * (1.0 - smoothstep(openTo + 0.08, openTo + 0.3, lean + edgeNoise));
 
   // How hot the skin is here: hot beside the tongue and down the fast side of the stream, where the stream has stretched it thin,
   // and where it has torn; cold in the heart of a coil, in the slack, and against the banks.
-  float fastSide = 1.0 - smoothstep(0.1, 0.9, lean);
-  float torn = smoothstep(0.62, 0.74, carried.z + 0.2 * fastSide - 0.15 * core);
+  // Most of the skin is cold and dark. The fire gathers in three places: beside the tongue, in a strip down the fast side, and on the rims of the coils.
+  float fastSide = 1.0 - smoothstep(0.05, 0.45, lean);
+  float torn = smoothstep(0.66, 0.76, carried.z + 0.2 * fastSide - 0.15 * core);
   // The rim of a coil shears against the stream that passes it.
   float rim = 4.0 * held * (1.0 - held) * (1.0 - smoothstep(0.5, 1.0, ax));
-  float hotness = clamp(0.03 + 0.26 * fastSide * fastSide + 0.7 * (alive - 0.5) + 0.45 * thin + 0.4 * torn + 0.22 * rim - 0.2 * core - 0.3 * smoothstep(0.6, 1.0, ax), 0.0, 1.0);
+  float hotness = clamp(0.02 + (0.3 * fastSide + 0.34 * rim) * (0.45 + 1.1 * alive) + 0.3 * (alive - 0.62) + 0.55 * thin + 0.3 * torn * (0.3 + 0.7 * fastSide) - 0.2 * core - 0.3 * smoothstep(0.6, 1.0, ax), 0.0, 1.0);
 
   // The ropes: uneven in width, bundled, each of its own height.
   float ropes = 6.28318 / ROPE;
@@ -345,16 +352,17 @@ void main() {
   vec3 nrm = normalize(vec3(-rise * grad.x, 1.0, -rise * grad.y));
 
   // The crease glows: wide and yellow where the skin is hot, a hair of dark red where it is cold, and in cold skin only one crease in a few glows at all.
-  float lives = smoothstep(-0.15, 0.15, hash12(vec2(creaseId, vSeam.y + 3.0)) - 1.0 + 1.5 * hotness);
+  // Along its length a living crease comes and goes.
+  float lives = smoothstep(-0.12, 0.12, hash12(vec2(creaseId, vSeam.y + 3.0)) - 0.72 + 1.5 * hotness + 0.5 * (carried.z - 0.5) + 0.25 * (alive - 0.5));
   // A crease keeps its width in metres where the ropes run wide.
-  float creaseWide = mix(0.08, 0.36, hotness) * (0.35 + 0.65 * lives) * clamp(steep / ropes, 0.25, 1.4);
+  float creaseWide = mix(0.16, 0.4, hotness) * (0.3 + 0.7 * lives) * clamp(steep / ropes, 0.25, 1.4);
   float crease = 1.0 - smoothstep(0.45 * creaseWide, creaseWide, crest);
   crease = mix(0.55 * creaseWide, crease * ropedHere, seen);
   // Where the skin is pulled apart a vein of bare melt runs across the ropes.
   float vein = (1.0 - smoothstep(0.012, 0.03, abs(carried.z - 0.56))) * smoothstep(0.25, 0.6, fastSide + 0.6 * (alive - 0.5)) * seen;
   crease = max(crease, vein);
-  float kCrest = mix(940.0, 1090.0, hotness) + 85.0 * thin + 25.0 * (carried.z - 0.5);
-  float kCrease = mix(1000.0, 1340.0, hotness) * mix(0.93, 1.0, lives) + 60.0 * torn;
+  float kCrest = mix(870.0, 1010.0, hotness) + 50.0 * thin + 25.0 * (carried.z - 0.5);
+  float kCrease = mix(1130.0, 1350.0, hotness) * mix(0.82, 1.0, lives) + 60.0 * torn;
   kCrease = mix(kCrease, max(kCrease, 1330.0), vein);
   vec3 hot = mix(blackbody(kCrest), blackbody(kCrease), crease);
 
@@ -362,7 +370,7 @@ void main() {
   float heart = 1.0 - smoothstep(0.0, 0.2, lean + edgeNoise);
   float streak = vnoise(vec2(vFlow.x * 0.4 - uTime * 0.25, vFlow.y * 7.0) + 7.0);
   float thread = smoothstep(0.62, 0.8, vnoise(vec2(vFlow.x * 0.5 - uTime * 0.3, vFlow.y * 16.0) + 19.0)) * seen;
-  hot = mix(hot, blackbody(1440.0 + 100.0 * heart + 70.0 * (streak - 0.5) + 20.0 * stir - 190.0 * thread * (1.0 - 0.6 * heart)), open);
+  hot = mix(hot, blackbody(1490.0 + 60.0 * heart + 60.0 * (streak - 0.5) + 20.0 * stir - 190.0 * thread * (1.0 - 0.6 * heart)), open);
   // The melt breathes with the lake.
   hot *= 1.0 + 0.3 * (beatAt(q) - 0.5) * (0.4 + 0.6 * pool);
   float skin = 1.0 - open;
@@ -382,12 +390,14 @@ void main() {
   // The skin is a surface: the sky lights the crests and leaves the creases dark, and its sheen lies on every rope that faces it.
   vec3 v = normalize(cameraPosition - vWorld);
   float openSky = landAt(vWorld.xz).g;
-  float shade = mix(1.0, 0.25 + 0.75 * smoothstep(0.0, 0.6, crest), roped);
+  float shade = mix(1.0, 0.12 + 0.88 * smoothstep(0.0, 0.85, crest), roped);
   float nv = clamp(dot(nrm, v), 0.0, 1.0);
-  float fresnel = 0.04 + 0.22 * pow(1.0 - nv, 5.0);
+  float fresnel = 0.02 + 0.07 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, nrm);
   r.y = abs(r.y) + 0.05;
-  vec3 lit = skin * shade * openSky * (0.075 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r)))
+  vec3 lit = skin * shade * openSky * (0.06 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r)))
+    // The open melt of the channel lights the skin beside it: brown, never grey.
+    + skin * shade * 0.012 * blackbody(1300.0) * (0.4 + 0.6 * wide) * uLavaOn
     // The glow of the creases lies on the flanks of the ropes beside them: the skin is brown, not grey.
     + skin * 0.1 * blackbody(kCrease) * (1.0 - crease) * (0.25 + 0.75 * (1.0 - crest)) * uLavaOn;
   gl_FragColor = vec4(rigOut(lit) + hot * uLavaOn, 1.0);
