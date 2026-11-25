@@ -64,11 +64,11 @@ const WALL: [number, number][] = [
   [125, 74],
   [150, 150],
   [172, 206],
-  [380, 232],
-  [408, 284],
-  [432, 300],
-  [900, 330],
-  [6000, 380],
+  [372, 232],
+  [386, 286],
+  [432, 298],
+  [900, 292],
+  [6000, 250],
 ];
 
 function profile(d: number): number {
@@ -83,7 +83,8 @@ function profile(d: number): number {
 }
 
 /** The tops of the lava flows the wall is built of, metres above the lake. Thick hard flows stand as cliffs, thin ones as steps. */
-export const FLOWS = [58, 66, 83, 91, 97, 118, 126, 131, 152, 161, 167, 188, 195, 206, 212, 233, 241, 262, 269, 277, 296, 304, 330, 338, 356, 364, 385, 393, 414];
+// Thick flows of basalt, 9 to 36 m each, with a thin bed of rubble between some of them: a few tiers, not fine strata.
+export const FLOWS = [58, 83, 97, 131, 140, 176, 206, 219, 252, 277, 304, 338, 351, 385, 414];
 
 // A smooth height cut into flows: most of each flow's thickness is climbed in the first part of its run (the cliff), the rest is its ledge.
 function terrace(h: number, face: number): number {
@@ -98,7 +99,7 @@ function terrace(h: number, face: number): number {
 }
 
 /** How tall the wall stands round the lake, as a share of the layout's profile: one number every ten degrees round the lake's centre, from west through north. */
-export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.73, 0.69, 1, 1, 1, 1, 1.27, 1.2, 1.15, 1.23, 1.3, 1.17, 0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.73, 0.69, 0.96, 1, 1, 1.04, 1.13, 1.12, 1.1, 1.11, 1.13, 1.08, 0.97, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
 function rimScale(x: number, z: number): number {
   const a = (Math.atan2(z - 90, x - 190) * 18) / Math.PI + 18;
@@ -131,8 +132,13 @@ export function wallAt(x: number, z: number, d: number): number {
   // The cliff is broken along its joints into piers some metres wide that stand forward or back of each other. Not at the rim, whose outline is the wide picture's.
   const free = smooth(40, 75, Math.abs(x - CHANNEL_X));
   const pier = free * up * smooth(300, 215, d) * (7 * (blocks(x / 8.3 + 0.21 * z, z / 9.1 - 0.19 * x) - 0.5) + 9 * (blocks(x / 27 + 3.3, z / 31 + 1.7) - 0.5));
-  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 30 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib + pier;
-  let h = profile(ragged) + 9 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
+  // Away from the fall the wall is broken into masses ten to thirty metres across that stand forward of the crevices between them.
+  const wide = smooth(95, 130, Math.abs(x - CHANNEL_X));
+  const m1 = ridge(x / 33 + 0.31 * z / 33 + 5.5, z / 41 - 0.2 * x / 41 + 1.9);
+  const m2 = ridge(x / 13 + 2.2, z / 15 + 8.4);
+  const mass = wide * up * smooth(330, 240, d) * (15 * (0.55 - m1 * m1 * m1) + 5 * (0.5 - m2 * m2));
+  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 14 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib + pier + mass;
+  let h = profile(ragged) + 3.5 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
   // The rim is set by the wide picture: lower in the west, where the wall is near that camera, higher in the east.
   if (h > 50) h = 50 + (h - 50) * rimScale(x, z);
   if (h > 50) {
@@ -175,7 +181,8 @@ export function wallAt(x: number, z: number, d: number): number {
   const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
   if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
   // The rim and the country outside: broken crags, then long low hills.
-  h += smooth(400, 470, d) * (14 * (fbm(x / 70, z / 70, 3) - 0.5) + 70 * smooth(600, 3000, d) * (fbm(x / 900, z / 900, 3) - 0.35));
+  // The rim is a table of flows broken at its edge into blocks: a level skyline with notches, and nothing behind it stands higher.
+  h += smooth(400, 470, d) * (5 * (fbm(x / 70, z / 70, 3) - 0.5) + 7 * (blocks(x / 31 + 0.2 * z, z / 37 - 0.15 * x) - 0.5) * smooth(700, 480, d));
   return h;
 }
 
@@ -332,6 +339,13 @@ export function benchAt(x: number, z: number, d0: number): number {
   // Its ramp of rubble stays low beside the path of the line view's lens.
   const stand = Math.min(lineCrag(x, z), 0.6 + 1.1 * Math.max(0, low - 3.5) + 100 * smooth(-7, -4.5, (x - CRAG_A[0]) * CRAG_ALONG[0] + (z - CRAG_A[1]) * CRAG_ALONG[1]));
   if (stand > h) h = stand;
+  // The last metres of shore are rubble under ash, not a ramp: lumps a stride across and blocks half buried, a hand to a forearm high.
+  // Under the line view's lens they stay low.
+  const near = smooth(34, 22, Math.hypot(x - LINE_LENS[0], z - LINE_LENS[1]));
+  if (near > 0) {
+    const lump = 0.34 * (blocks(x / 1.15 + 0.37 * z, z / 1.3 - 0.29 * x) - 0.5) + 0.3 * (noise(x / 2.7 + 6.3, z / 2.7 + 1.1) - 0.5) + 0.16 * (noise(x / 0.75, z / 0.75 + 4.4) - 0.5);
+    h += near * lump * (0.35 + 0.65 * smooth(0.6, 2.6, low)) * smooth(0.3, 1.5, d);
+  }
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
 }
