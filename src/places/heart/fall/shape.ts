@@ -226,9 +226,9 @@ const lipAt = (x: number): number => {
 };
 /** Rock that stands in the stream and parts it: 0 none, 1 an island. Long with the flow, on the benches and in the fan. */
 const island = (len: number, across: number, half: number, speed: number): number => {
-  if (len < 14) return 0;
-  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.3 * smooth(FAN_FROM, FAN_FROM + 16, len) - 0.3 * smooth(6, 10, speed);
-  return smooth(0.6, 0.72, field) * smooth(0.95, 0.6, Math.abs(across) / half);
+  if (len < 3) return 0;
+  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.06 * smooth(FAN_FROM, FAN_FROM + 16, len) - 0.1 * smooth(6, 10, speed);
+  return smooth(0.55, 0.67, field) * smooth(0.95, 0.6, Math.abs(across) / half);
 };
 
 /**
@@ -247,9 +247,14 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const off = Math.abs(x - TUBE.axis(Math.max(d, 0))) / TUBE.half(Math.max(d, 0));
     const up = smooth(0.7, 1.08, off);
     const level = TUBE.floor + 0.012 * Math.max(d, 0);
-    const floor = lerp(n.y, level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), smooth(0.9, 1.06, u));
+    // Roof fall lies heaped on the floor each side of the river, highest against the walls, so the sill of the mouth is not a level line.
+    const heap = (12 * Math.pow(smooth(0, 42, side - 1), 1.3) + 4.5 * (fbm2(x / 9 + 2, z / 9 + 3) - 0.5) * smooth(0, 8, side) + 1.6 * blocks(x, z, 4.2, 7) * smooth(1, 6, side)) * smooth(80, 25, d);
+    const floor = lerp(n.y, level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + heap + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), smooth(0.9, 1.06, u));
     // Outside: the benches the river has built, a levee each side of it, their broken flanks, and its spatter on the ground beyond.
     const ground = Math.max(land(x, z), -3);
+    // On the cliff a height field can only rule its relief into ribs: there the small relief is left to the shader.
+    const tilt = Math.hypot(land(x + 1.5, z) - land(x - 1.5, z), land(x, z + 1.5) - land(x, z - 1.5)) / 3;
+    const gentle = smooth(1.5, 0.8, tilt);
     const shelf = 2.5 + 7 * noise2(x / 13 + 1.3, z / 13 + 4.1) + 3 * noise2(n.len / 9, n.arm ? 3.5 : 9.5);
     const levee = (0.3 + 1.1 * noise2(n.len / 5 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 1.1) / 1.3, 2)) + 0.35 * smooth(0, 1.0, side);
     // Seen from the lake the river must not hide behind its own bank: on that side the bench breaks off at the stream's edge.
@@ -259,13 +264,15 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const drop = 1.25 * flank + 0.6 * Math.min(flank, 3);
     const beat = drop * 0.19 + 1.6 * noise2(x / 15, z / 15) + 0.5 * noise2(x / 4.1 + 8, z / 4.1);
     const tread = beat - Math.floor(beat);
-    const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9));
+    // Beside the first cascade the bench leans on the cliff, and is left plain.
+    const calm = smooth(8, 18, n.len);
+    const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9)) * calm;
     const crag = 1.6 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + 1.4 * blocks(x, z, 5.2, 1) + 0.9 * blocks(x + 40, z, 1.9, 2);
     // In the fan the stream no longer stands on a bench: it lies on the slope as a sheet.
     const sheet = smooth(FAN_FROM, FAN_FROM + 16, n.len);
     const top = lerp(n.y, Math.max(ground, 0) + 0.45, sheet);
-    const bench = top + levee * (1 - 0.6 * sheet) * (1 - 0.8 * lakeward) + Math.min(crag * smooth(0.3, 3.5, side), (0.5 + 0.12 * side) * (1 - lakeward)) - fall;
-    const cover = 0.9 + 0.5 * smooth(16, 4, side) + (fbm2(x / 5.5, z / 5.5) - 0.5) * 1.2 + (0.9 * blocks(x, z, 3.4, 3) + 0.45 * blocks(x + 20, z, 1.3, 4)) * smooth(26, 10, side);
+    const bench = top + levee * (1 - 0.6 * sheet) * (1 - 0.8 * lakeward) + Math.min(crag * (0.25 + 0.75 * gentle) * calm * smooth(0.3, 3.5, side), (0.5 + 0.12 * side) * (1 - lakeward)) - fall;
+    const cover = 0.9 + 0.5 * smooth(16, 4, side) + ((fbm2(x / 5.5, z / 5.5) - 0.5) * 1.2 + (0.9 * blocks(x, z, 3.4, 3) + 0.45 * blocks(x + 20, z, 1.3, 4)) * smooth(26, 10, side)) * (0.15 + 0.85 * gentle);
     const skirt = ground + lerp(-2.4, cover, smooth(30, 15, side) * smooth(-0.6, 0.6, ground + 0.8 * smooth(6, 0, side)));
     const rock = Math.max(bench, skirt);
     const isle = island(n.len, n.distance * n.side, n.half, n.speed);
@@ -284,8 +291,10 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
   const bank: number[] = [];
   const within: number[] = [];
   const keep: boolean[] = [];
-  for (const z of zs) {
+  for (const row of zs) {
     for (const x of xs) {
+      // Near the lip the rows of the sheet are bent to run along it, so the drop over it is not cut into a saw by the grid.
+      const z = row + (lipAt(x) - BED.lip) * smooth(45, 12, Math.abs(row - BED.lip));
       const p = at(x, z);
       const d = lipAt(x) - z;
       positions.push(x, p.y, z);

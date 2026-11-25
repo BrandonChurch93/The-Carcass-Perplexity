@@ -10,6 +10,13 @@ function thin(list, count) {
   return list.length <= count ? list : spread(0, list.length - 1, count).map((i) => list[i]);
 }
 
+export const HELD_SECONDS = 6;
+
+// One camera, the world moving: `count` stills of one frame with the hold spread evenly from nothing to `seconds`.
+export function heldFrames(frame, seconds, count) {
+  return Array.from({ length: count }, (_, i) => ({ frame, held: count < 2 ? 0 : Math.round((seconds * i * 1000) / (count - 1)) / 1000, label: 'camera held' }));
+}
+
 export function stepped(first, last, count) {
   const step = Math.max(1, Math.ceil((last - first) / (count - 1)));
   const frames = [];
@@ -17,9 +24,9 @@ export function stepped(first, last, count) {
   return { frames, step };
 }
 
-export async function sheet({ frames = null, loopFrames = null, name, title = null, tier = 'review', format = 'preview', renderer = null, by = 'builder', dir = null, look = true }) {
+export async function sheet({ frames = null, loopFrames = null, name, title = null, tier = 'review', format = 'preview', renderer = null, by = 'builder', dir = null, look = true, count = null }) {
   const c = config();
-  const count = c.critics.contactSheetFrames;
+  count = count ?? c.critics.contactSheetFrames;
   const asked = frames ? frames.map((f) => (typeof f === 'object' ? f : { frame: f })) : (loopFrames ?? []).map((n) => ({ loop: n }));
   const list = thin(asked, count);
   if (!list.length) throw new Error('sheet: no frames');
@@ -30,11 +37,11 @@ export async function sheet({ frames = null, loopFrames = null, name, title = nu
   const stills = [];
   const shown = [];
   for (const f of list) {
-    const still = await r.renderStill({ ...(f.key ? { key: f.key } : f.loop !== undefined ? { loop: f.loop } : { frame: f.frame }), tier, format });
+    const still = await r.renderStill({ ...(f.key ? { key: f.key } : f.loop !== undefined ? { loop: f.loop } : { frame: f.frame }), tier, format, ...(f.held !== undefined ? { held: f.held } : {}) });
     const n = f.loop !== undefined ? f.loop : f.frame ?? still.record?.frame;
     const lead = f.label ? `${f.label}${SEP}` : '';
     const what = f.loop !== undefined ? `loop ${n}` : `frame ${n}`;
-    cells.push({ input: await sharp(still.file).resize(cell.width, cell.height, { fit: 'fill' }).png().toBuffer(), caption: `${lead}${what}${SEP}${timecode(n, c.film.fps)}` });
+    cells.push({ input: await sharp(still.file).resize(cell.width, cell.height, { fit: 'fill' }).png().toBuffer(), caption: `${lead}${what}${SEP}${f.held !== undefined ? `the world ${f.held.toFixed(2)} s on` : timecode(n, c.film.fps)}` });
     stills.push(still.record);
     shown.push({ ...f, time: timecode(n, c.film.fps) });
   }
@@ -81,13 +88,22 @@ export async function sheetCommand(a, renderer = null) {
       const end = frames[frames.length - 1];
       const title = [`frames ${first} to ${last}`, step === 1 ? 'every frame' : `step of ${step} frames`, ...(end === last ? [] : [`last shown ${end}`])].join(SEP);
       await run({ frames, name: one(a.name, `frames-${first}-${last}`), title });
+    } else if (a.held !== undefined) {
+      const at = String(one(a.held));
+      const frame = /^\d+$/.test(at) ? Number(at) : info.keyFrames[at];
+      if (!Number.isInteger(frame) || frame < 0 || frame >= info.frameCount) throw new Error(`no key or film frame ${at}`);
+      const seconds = Number(one(a.seconds, HELD_SECONDS));
+      const n = Number(one(a.count, count));
+      if (!(Number.isFinite(seconds) && seconds > 0)) throw new Error('give --seconds as a number over zero');
+      if (!(Number.isInteger(n) && n >= 2)) throw new Error('give --count as a whole number of two or more');
+      await run({ frames: heldFrames(frame, seconds, n), count: n, name: one(a.name, `held-${at}`), title: `camera held at ${/^\d+$/.test(at) ? `frame ${frame}` : `${at}, frame ${frame}`}${SEP}the world over ${seconds} s${SEP}${n} spread evenly` });
     } else if (a.establishing) {
       const keys = c.film.order.map((u) => c.keys.find((k) => k.id === `${u}-0`)).filter(Boolean);
       const list = keys.map((k) => ({ key: k.id, frame: info.keyFrames[k.id], label: k.id }));
       list.push({ frame: info.titanFrame, label: 'titan' });
       await run({ frames: list, name: one(a.name, 'establishing'), title: 'establishing frame of every place, then the titan frame' });
     } else {
-      throw new Error('usage: npm run sheet -- --shot ID | --film [--sheets N] | --loop | --frames A B | --establishing [--tier T] [--format F] [--name NAME] [--fake]');
+      throw new Error('usage: npm run sheet -- --shot ID | --film [--sheets N] | --loop | --frames A B | --establishing | --held KEY_OR_FRAME [--seconds S] [--count N] [--tier T] [--format F] [--name NAME] [--fake]');
     }
     return { files };
   } finally {

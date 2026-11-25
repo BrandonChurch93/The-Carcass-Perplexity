@@ -1,0 +1,35 @@
+{
+  "round": 3,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-25 06:21 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "lava fall and cave arch lighting between frame 4009 and frame 4010",
+        "what": "in a single frame the narrow lava stream snaps into a wide bright yellow-white cone with sparks along the rim and the whole cave arch, cliff, and slope jump to a much brighter lit state, then stay locked at that level through frame 4019",
+        "fix": "ramp the surge and its bounce light smoothly over multiple frames, starting from the upper lip and cascading down to the bench rather than switching on in one frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "upper lava curtain from frame 4010 to frame 4019",
+        "what": "after popping in, the widened lava pour holds rigid straight diagonal edges with only flat internal texture shifting inside, and the surge never propagates down from the mouth to the lower channels",
+        "fix": "give the pouring lava thick, folding edges and downward volume travel so the surge visibly falls from the vent and feeds the lower rivulets"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "lower-right vapour plume and lower-left tripod creature across frames 4008 to 4019",
+        "what": "the vapour cloud on the right holds the same shape without rolling or drifting and the long-legged creature on the left stays frozen like a static model even as the cave lights up",
+        "fix": "add slow rolling drift to the heavy vapour and subtle weight shift or leg motion to the creature so the wider scene feels alive"
+      }
+    ]
+  }
+}
