@@ -357,8 +357,9 @@ function compose(x: number, z: number, spur: boolean): number {
   }
   // The alcove the mouth opens into: the wall is cut back to the floor of the mouth, and the fall folder roofs it.
   const ax = Math.abs(x - MOUTH.x);
-  if (ax < 70 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
-    const k = smooth(62, 50, ax) * smooth(MOUTH.z - 56, MOUTH.z - 44, z) * smooth(MOUTH.z + 14, MOUTH.z + 4, z);
+  const half = MOUTH.width / 2;
+  if (ax < half + 11 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
+    const k = smooth(half + 3, half - 9, ax) * smooth(MOUTH.z - 56, MOUTH.z - 44, z) * smooth(MOUTH.z + 14, MOUTH.z + 4, z);
     return g + (MOUTH.floor - g) * k;
   }
   return g;

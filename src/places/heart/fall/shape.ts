@@ -174,8 +174,8 @@ export function shell(): THREE.BufferGeometry {
 
 /** The face of the cliff over the alcove, as the wall was before it was cut, with the arch left open. It lies just proud of the land and sinks under it at its edge. */
 export function face(): THREE.BufferGeometry {
-  const x0 = MOUTH.x - 74;
-  const x1 = MOUTH.x + 74;
+  const x0 = MOUTH.x - (MOUTH.width / 2 + 15);
+  const x1 = MOUTH.x + (MOUTH.width / 2 + 15);
   const z0 = MOUTH.z - 74;
   const z1 = MOUTH.z + 2;
   const nx = Math.round((x1 - x0) / 1.4);
@@ -216,7 +216,7 @@ export interface Bed {
   height(x: number, z: number): number;
 }
 
-const BED = { x0: MOUTH.x - 98, x1: MOUTH.x + 78, z0: TUBE.lipZ - TUBE.depth - 4, z1: -312, lip: TUBE.lipZ };
+const BED = { x0: MOUTH.x - (MOUTH.width / 2 + 39), x1: MOUTH.x + (MOUTH.width / 2 + 19), z0: TUBE.lipZ - TUBE.depth - 4, z1: -312, lip: TUBE.lipZ };
 const ridged = (x: number, z: number): number => 1 - Math.abs(2 * noise2(x, z) - 1);
 /** The edge of the tube's floor is broken, not ruled. */
 const LIP_Z = new Map<number, number>();
