@@ -16,7 +16,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Extension step: none
 - Published address: https://www.perplexity.ai/computer/a/the-carcass-xp_kROepRIapoVuOG1cmNw (the workspace's app hosting, behind Brandon's sign-in, first published 2026-11-24 22:19 UTC)
 - Review page: the "Review page" link at the foot of the published address, which opens `review.html` beside it
-- Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The last measurement, on 2026-11-25 at 16:31 UTC, read public. It is measured once at the start of each task and at the review stop for the record, and nothing waits on it
+- Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The measurement at the review stop, on 2026-11-25 at 16:56 UTC, read public. It is measured once at the start of each task and at the review stop for the record, and nothing waits on it
 - Sound files: committed to the repo. The music went in on 2026-11-24 at 20:47 UTC on Brandon's word (note 3). Kept narration clips, kept sounds and the newest mix are committed like any other built asset, each inside `repo.maxFileMb`. No archive of sounds is attached anywhere
 - Large files reach Brandon by: an attachment in the thread. MEASURED 2026-11-24: 20 MB, 100 MB and 400 MB test files were all accepted by the share call. The review page carries the same films while the site stays under the hosting limit
 
@@ -24,14 +24,16 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 58, 2026-11-25 16:30 UTC:
+Status 59, 2026-11-25 16:51 UTC:
 
-- `01-review-watch-first.jpg`: The published review page, read back from the address: the Heart review clip is the first video, with a line under it that says what it is
-- `02-c06-f3240.jpg`: A frame of the review clip not shown before, frame 3240 (heart-02, the nearest walker with its crown in the pool), 1920 x 1080 at the final tier
+- `01-heart-0.jpg`: The Heart, the establishing view at frame 2722: your approved picture on the left, the frame from the build of the clip on the right, at the final tier
+- `02-shot-heart-01.jpg`: The Heart in motion: shot heart-01, twelve frames spread evenly through the opening move, at the review tier, from the same build as the clip
+- `03-heart-3.jpg`: A detail, the walkers feeding at the seam (frame 3156): your approved picture on the left, the frame on the right, at the final tier
+- `04-sheet.jpg`: The narration as it stands: n8 is kept and drawn as a waveform with its four lines, and n1 to n7 are not made yet
 
+Status 58, 2026-11-25 16:30 UTC, showed: The published review page, read back from the address: the Heart review clip is the first video, with a line under it that says what it is...
 Status 57, 2026-11-25 16:10 UTC, showed: A frame of the review clip, frame 3000 (heart-02, the walkers feeding at the seam), 1920 x 1080 at the final tier; A frame of the review...
 Status 56, 2026-11-25 15:51 UTC, showed: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine; A...
-Status 55, 2026-11-25 15:33 UTC, showed: Shot heart-02, the feeding seam: 12 frames spread evenly through the shot, from the final build (new); Shot heart-03, the lava at the line...
 
 ## Clock
 
@@ -1640,3 +1642,5 @@ What happens next is yours:
 - 2026-11-25 16:12 UTC. 16:12 UTC status 57 shown: three frames of the review clip (3000, 3540, 3745, from parts rendered on other machines). All 16 parts of the clip back by 16:11 UTC and each read back whole (1,714 frames); MEASURED 34 to 56 s a frame on 14 machines of 4 cores, 113 minutes from the order to the last part. The status tool added a fourth picture of its own, a preview frame of 15:30 UTC from the early gate; it was dropped from the status because it is not new. The clock printed `box end: reached` for Phase 3 (13.03 h of 13.00): the Heart has no stand-in left, so no fallback is due. ElevenLabs 1 character of 131,000 at 16:10 UTC.
 - 2026-11-25 16:31 UTC. Status 58 shown at 16:31 UTC: the published review page with the Heart clip first, and frame 3240 of the clip. Published at 16:24 UTC from c63fa8c. `npm run flows` on the published address at 16:27: flows 1 to 5 pass (start page, the film plays, the review page with 13 pictures and 6 players, every sound and film answers, the play links); flow 6, the card loop live, did not finish on this machine: the page was too busy drawing the Heart to give a screenshot inside 30 s. ElevenLabs at 16:27: 1 character of 131,000.
 - 2026-11-25 16:50 UTC. 16:49 UTC: `npm run gate -- --phase 3` on 3763734: pass. 21 of 22 passed, none failed, none not built, one sound check open (A1). D3 passes. The last tick of Phase 3: 13.67 h of 13.00 in the phase, 20.32 h of 72.00 in the build, and no budget report is due. Phase 3 is marked done, "Review" is `waiting`, and the `REVIEW` block is under "Last report block". ElevenLabs at 16:49 UTC: 1 character of 131,000, so clips n1 to n7, the model test, the other takes of n8 and the sound effects are not made and the cut and the mix have not been run again. From here the clock is not ticked and no budget report is filed until the Heart is approved.
+- 2026-11-25 16:56 UTC. 16:51 UTC: status 59 shown in the thread at the review stop, with the four pictures the stop asks for: the Heart's establishing comparison (frame 2722, final tier), the motion sheet of shot heart-01 (review tier, the build of the clip), the feeding seam comparison (frame 3156, final tier) and the narration sheet (n8 kept, n1 to n7 not made). No render since status 58. The first caption of the motion sheet said "from the final build" and read like the final tier, so it was written again before it was shown: the sheet is at the review tier.
+- 2026-11-25 16:56 UTC. 16:51 to 16:55 UTC: `npm run flows` on the published address: 7 of 7 pass. Flow 6, the card loop live, passed this time: canvas 960 x 540, 5 frames drawn in 99 s, MEASURED on this machine with no graphics card. Three sound or film requests were answered with a server error by the storage host and asked again by the page, and all six files then opened in their players. The review page was built again with status 59 and published at 16:55 UTC. Read back from the address: status 59 and its captions are on the page, the Heart review clip is the first video, then the small copy, the blockout and the animatic. The repo measured PUBLIC at 16:56 UTC, for the record (note 3).
