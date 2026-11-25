@@ -98,49 +98,50 @@ const MAIN: [number, number][] = [
   inside(34),
   inside(16),
   LIP,
-  // Down the ledges in legs, the whole height of the wall's foot: it drops over an edge straight toward the lake, then runs
-  // east and down along the ledge under it to the next edge. Seen from the lake the drops fall straight and the runs go to the right.
+  // Down the ledges in legs: it drops over an edge straight toward the lake, then runs east and down along the ledge under it
+  // to the next edge. No two legs are alike: a short drop and a long run, a long drop and a short run, and two of the bends are slow curves.
   [-55, -454],
-  [-60, -446],
-  [-55, -441],
-  [-50, -436],
-  [-54, -430],
-  [-58, -424],
-  [-53, -419],
-  [-48, -414],
-  [-52, -408],
-  [-56, -402],
-  [-51, -397],
-  [-46, -392],
-  [-50, -386],
-  [-54, -380],
-  [-49, -375],
-  [-44, -370],
-  [-47, -364],
-  [-49, -358],
-  [-46, -350],
-  [-41, -342],
-  [-38, -334],
+  [-57, -450],
+  [-50, -446.5],
+  [-43, -443],
+  [-38, -439],
+  [-41, -432],
+  [-46, -425],
+  [-51, -418],
+  [-47, -414],
+  [-46, -410],
+  [-50, -404],
+  [-48, -399],
+  [-41, -396],
+  [-33, -393],
+  [-29, -388],
+  [-31, -382],
+  [-35, -376],
+  // From here it is the fan, and its middle runs straight to the foot.
+  [-37, -368],
+  [-38, -358],
+  [-38, -348],
+  [-37, -337],
   [FALL_FOOT[0], FALL_FOOT[1]],
   [FALL_FOOT[0] + 2, FALL_FOOT[1] + 13],
   [FALL_FOOT[0] + 3, FALL_FOOT[1] + 23],
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 146;
+export const FAN_FROM = 118;
 
 /** The west arm of the fan. It leaves the main stream at `BRAID_FROM` metres from the lip. */
 export const BRAID_FROM = FAN_FROM - 6;
 const ARM_TAIL: [number, number][] = [
-  [-58, -350],
-  [-64, -341],
-  [-68, -333],
-  [-70, -326],
-  [-71, -320],
+  [-46, -366],
+  [-56, -354],
+  [-63, -342],
+  [-67, -331],
+  [-69, -321],
 ];
 
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
-export const SPLITS = [20, 36, 52, 66, 82, 98, 112, 128];
+export const SPLITS = [16, 30, 47, 63, 77, 92];
 
 /** Half the width of the stream by metres from the lip: a thread on the slope, a sheet only in the fan. */
 const HALF: [number, number][] = [
@@ -152,11 +153,11 @@ const HALF: [number, number][] = [
   [13, 5.4],
   [22, 5],
   [FAN_FROM - 4, 5.6],
-  [FAN_FROM + 6, 14],
-  [FAN_FROM + 16, 34],
-  [FAN_FROM + 28, 58],
-  [FAN_FROM + 42, 78],
-  [FAN_FROM + 56, 84],
+  [FAN_FROM + 8, 14],
+  [FAN_FROM + 22, 28],
+  [FAN_FROM + 40, 50],
+  [FAN_FROM + 60, 74],
+  [FAN_FROM + 78, 84],
 ];
 const halfAt = (len: number): number => {
   let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
@@ -263,11 +264,11 @@ export const FAN_POOL: [number, number] = mainAt(FAN_FROM + 9);
  * `from` and `to` are metres from the lip, `side` is +1 east of the stream and -1 west, `out` how many metres it stands off at its widest.
  */
 const BRAIDS = [
-  { from: 8, to: 30, side: 1, out: 10, half: 2.0 },
-  { from: 38, to: 60, side: -1, out: 10, half: 1.9 },
-  { from: 68, to: 92, side: 1, out: 11, half: 2.1 },
-  { from: 100, to: 122, side: -1, out: 10, half: 1.9 },
-  { from: 126, to: 142, side: 1, out: 8, half: 1.7 },
+  { from: 8, to: 26, side: 1, out: 6, half: 1.6 },
+  { from: 30, to: 56, side: -1, out: 9, half: 1.9 },
+  { from: 34, to: 52, side: 1, out: 6, half: 1.5 },
+  { from: 60, to: 80, side: 1, out: 7, half: 1.7 },
+  { from: 88, to: 106, side: -1, out: 7, half: 1.7 },
 ];
 
 export interface Course {
