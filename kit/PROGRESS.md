@@ -606,7 +606,7 @@ Ended and merged into `main` in Phase 0: `repo_checks_builder` (`c695a6f`), `pic
 
 One line for each round: its number, the unit, the commit it judges, the parts ticked off, the scores and what ended it.
 
-none
+- Round 1 · `film`, the blockout round of Phase 2 (a floor round) · judges commit `3431598` · started 2026-11-25 01:41 UTC · build: done · machine checks: running · pack: not yet · critics (R4 blockout, three packs, three fresh critics): not yet · issues read: not yet · fix: not yet · scores: none yet
 
 ## Final scores
 
