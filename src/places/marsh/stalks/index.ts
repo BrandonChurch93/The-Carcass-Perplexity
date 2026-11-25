@@ -93,14 +93,14 @@ export function create(ctx: Context): Piece {
       const ax = [dx * Math.sin(s.lean), Math.cos(s.lean), dz * Math.sin(s.lean)];
       const h = s.h + 0.02;
       const top = [s.x + ax[0] * h, base[i * 4 + 1] + ax[1] * h, s.z + ax[2] * h];
-      const count = which === 0 ? 96 : 14;
-      const length = (s.kind === 0 ? 0.62 : s.kind === 3 ? 0.5 : 0.42) * s.size;
+      const count = which === 0 ? 140 : 14;
+      const length = (s.kind === 0 ? 0.6 : s.kind === 3 ? 0.5 : 0.44) * s.size;
       for (let f = 0; f < count; f++) {
         const spread = Math.pow(rng.next(), 0.7);
         fils[0].push(top[0], top[1], top[2], R);
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
         fils[2].push(rng.range(0, TAU), spread, length * rng.range(0.6, 1.15), rng.next());
-        fils[3].push(s.kind, seed, length, (which === 0 ? 0.0055 : 0.02) * s.size * rng.range(0.7, 1.3));
+        fils[3].push(s.kind, seed, length, (which === 0 ? 0.0045 : 0.02) * s.size * rng.range(0.7, 1.3));
       }
     });
     const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 14 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });

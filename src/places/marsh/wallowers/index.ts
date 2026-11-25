@@ -24,7 +24,7 @@ export function create(ctx: Context): Piece {
     const ground = Math.min(ctx.rig.land.height(x, z), 0) - sink * 1.0 * b.k;
     herd.push({
       animal,
-      plan: { at: [x, z], when, dir, speed, ground, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang: Math.asin(Math.max(-0.9, Math.min(0.9, (1.1 - Math.max(0.28, sink + 0.14)) / 1.503))) - 0.44 },
+      plan: { at: [x, z], when, dir, speed, ground, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang: Math.asin(Math.max(-0.9, Math.min(0.9, (1.1 - Math.max(0.62, sink + 0.3)) / 1.503))) - 0.44 },
       wet: Math.max(0.5 * b.k, ground + 1.25 * b.k) * rng.range(0.85, 1.1),
     });
   };

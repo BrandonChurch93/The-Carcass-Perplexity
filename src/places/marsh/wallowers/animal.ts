@@ -105,6 +105,8 @@ export interface Drive {
   sway: number;
   /** The trunk's height, 1 as built: a dead one has fallen in. */
   squash: number;
+  /** 0 alive. A dead one has fallen in between its ribs: how far, 0 to 1. */
+  cave: number;
   /** Feet, in the frame of the path about the origin: LH, LF, RH, RF. y is the lift above oy. */
   feet: [number, number, number][];
   /** For each feeler: how far it is curled, radians over its length. */
@@ -318,13 +320,15 @@ export class Animal {
       const s = this.s[i];
       const chest = bell(0.12, 0.66, s);
       const breathe = 1 + 0.028 * d.breath * chest;
-      const hh = this.half[i * 2] * d.squash * breathe;
+      const fallen = d.cave > 0 ? 1 - d.cave * 0.55 * lump(s * 9, this.b.seed, 5) * chest : 1;
+      const hh = this.half[i * 2] * d.squash * breathe * fallen;
       const hw = this.half[i * 2 + 1] * (1 + 0.5 * (1 - d.squash)) * breathe;
       let o = (this.body.start + i * w) * 3;
       for (let j = 0; j < w; j++) {
         const jj = j === BODY_SIDES ? 0 : j;
         const m = this.lumps[i * BODY_SIDES + jj];
-        const sy = this.shape[jj * 2 + 1];
+        let sy = this.shape[jj * 2 + 1];
+        if (d.cave > 0 && sy > 0) sy *= 1 - d.cave * 0.6 * lump(s * 14 + 3, jj * 0.45, 9) * chest;
         const lz = this.shape[jj * 2] * hw * m + d.sway * chest * Math.max(0, -sy);
         const ly = sy * hh * m;
         world(this.cx[i] + nx * lz + bx * ly, this.cy[i] + ny * lz + by * ly, this.cz[i] + nz * lz + bz * ly, o);
@@ -569,6 +573,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   out.headYaw = plan.root * (0.3 * Math.sin(seconds * 0.52 + b.seed * 11) + 0.12 * Math.sin(seconds * 1.17 + b.seed * 3));
   out.breath = Math.sin(seconds * (1.05 + 0.3 * Math.sin(b.seed * 17)) + b.seed * 9);
   out.squash = 1;
+  out.cave = 0;
   out.splay = 0.1 + 0.25 * shove;
   for (let f = 0; f < FEELERS; f++) {
     const w = 2.1 + 1.9 * cell(f, 7, Math.floor(b.seed * 9973));
@@ -596,6 +601,7 @@ export function newDrive(): Drive {
     breath: 0,
     sway: 0,
     squash: 1,
+    cave: 0,
     feet: LEG_AT.map(([x, s]) => [x, 0, s * 0.6] as [number, number, number]),
     curl: Array.from({ length: FEELERS }, () => 1.2),
     splay: 0.1,

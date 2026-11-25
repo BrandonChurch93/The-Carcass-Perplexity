@@ -56,9 +56,9 @@ vec3 stemPoint(float a, float v) {
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
-    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.5, 0.22, open);
+    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.34, 0.16, open);
     y = h - 0.06 + len * v;
-    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(1.45, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.06 * sin(a * 9.0 + v * 4.0));
+    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(1.2, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.06 * sin(a * 9.0 + v * 4.0));
   }
   vec3 A = vec3(aAxis.x * sin(lean), cos(lean), aAxis.y * sin(lean));
   vec3 U = vec3(aAxis.x * cos(lean), -sin(lean), aAxis.y * cos(lean));
@@ -147,11 +147,12 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial) {
   float spread = aFil.y;
   float seed = aFil.w;
   // Out: it leaves the mouth along the tube, arches over and hangs. In: it lies along the bud.
-  vec3 d0 = normalize(axis * (1.0 - 0.45 * spread) + radial * (0.2 + 1.1 * spread));
-  float droop = (0.22 + 0.7 * spread) * (0.8 + 0.4 * fract(seed * 5.3));
-  vec3 outP = radial * R * 0.55 + d0 * L * u - vec3(0.0, 1.0, 0.0) * L * droop * u * u + radial * L * 0.12 * spread * u * u * u;
+  vec3 d0 = normalize(axis * (1.0 - 0.3 * spread) + radial * (0.25 + 0.85 * spread));
+  float droop = (0.3 + 1.0 * spread) * (0.75 + 0.5 * fract(seed * 5.3));
+  float kink = 0.07 * sin(u * 9.0 + seed * 50.0) * u;
+  vec3 outP = radial * R * 0.55 + d0 * L * u * (1.0 - 0.3 * u) - vec3(0.0, 1.0, 0.0) * L * droop * pow(u, 2.2) + radial * L * (0.1 * spread * u * u + kink) + cross(axis, radial) * L * 0.1 * sin(u * 5.0 + seed * 31.0) * u;
   float bulge = sin(3.14159 * pow(mix(0.12, 1.0, u), 0.8));
-  vec3 inP = axis * (0.5 * aMore.z * u - 0.05) + radial * R * 1.5 * bulge;
+  vec3 inP = axis * (0.55 * aMore.z * u - 0.05) + radial * R * 1.3 * bulge;
   vec3 p = mix(inP, outP, open);
   // The air moves it: the whole plume leans and comes back, and each tip shivers by itself.
   float reach = open * u * u;
