@@ -18,7 +18,8 @@ precision highp float;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 
-// rigShade with the land map already read. lit: 1 reads the lake's light with four taps, 0 with one.
+// rigShade with the land map already read. The lake's light is read with four taps near the lake and with one above it
+// (FAR_LIGHT: always one); only a glazed face (GLAZE) is given the sky and the lake as a mirror would see them.
 vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4 land, float shade) {
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
@@ -26,24 +27,30 @@ vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4
   #ifdef FAR_LIGHT
   vec3 lake = lakeIrradianceFar(p, n);
   #else
-  vec3 lake = lakeIrradiance(p, n);
+  vec3 lake;
+  if (p.y > 8.0) lake = lakeIrradianceFar(p, n);
+  else if (p.y < 5.0) lake = lakeIrradiance(p, n);
+  else lake = mix(lakeIrradiance(p, n), lakeIrradianceFar(p, n), (p.y - 5.0) / 3.0);
   #endif
-  vec3 e = skyIrradiance(n) * open + (lake + emitterIrradiance(p, n)) * occ;
+  vec3 sky = skyIrradiance(n);
+  vec3 e = sky * open + (lake + emitterIrradiance(p, n)) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  #ifdef GLAZE
   vec3 r = reflect(-v, n);
   // A glazed face that looks down at the lake carries the lake in it.
   vec3 glint = vec3(0.0);
-  #ifdef GLAZE
   if (r.y < 0.0 && rough < 0.8) {
     float reach = min(max(p.y, 0.3) / max(-r.y, 0.08), 60.0);
     glint = lakeGlow(p.xz + r.xz * reach, 0.6 + reach * rough) * occ;
   }
-  #endif
   r.y = abs(r.y);
-  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
+  vec3 env = mix(skyRadiance(r), sky / 3.14159, rough * rough);
   return c + f * (env * open + glint);
+  #else
+  return c + f * sky * (open / 3.14159);
+  #endif
 }
 
 float segmentDistance(vec2 p, vec4 s) {
@@ -71,6 +78,8 @@ uniform sampler2D tStrata;
 uniform vec4 uCrackA;
 uniform vec4 uCrackB;
 
+// The software renderer reads a picture a little faster with its own gradients than with given ones, and gives the same picture inside a branch.
+#define PICK(t, uv, gx, gy) texture2D(t, uv)
 const mat2 TURN = mat2(0.7986, -0.6018, 0.6018, 0.7986);
 
 void main() {
@@ -82,40 +91,47 @@ void main() {
   float slope = 1.0 - n0.y;
   float big = vnoise(vWorld.xz / 47.0 + 3.0);
   float mid = vnoise(vWorld.xz / 6.1);
-  float steep = smoothstep(0.3, 0.52, slope + 0.12 * (mid - 0.5));
-
-  // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
-  vec4 flow = texture2D(tStrata, vec2((vWorld.y + 5.0 * (vnoise(vWorld.xz / 310.0 + vec2(2.0, 0.0)) - 0.5)) / 340.0, 0.5));
-  float wx = n0.x * n0.x;
-  float wz = n0.z * n0.z;
-  float kx = smoothstep(0.3, 0.7, wx / (wx + wz + 1e-5));
-  float shift = flow.r * 7.0 + 0.2 * big;
-  // The low crags of the bench are the same rock seen close: the picture at a fifth of the size.
+  // Every picture is read with its own gradients, so a read inside a branch is as well defined as one outside.
+  vec3 wx = dFdx(vWorld);
+  vec3 wy = dFdy(vWorld);
+  // Metres of ground under one pixel: what is finer than this is left out, whatever the lens.
+  float px = max(length(wx), length(wy));
+  float sharp = smoothstep(0.8, 0.12, px);
   #ifdef BENCH
-  const float CLIFF = 13.0;
+  float steep = smoothstep(0.2, 0.42, slope + 0.1 * (mid - 0.5));
   #else
-  const float CLIFF = 60.0;
+  float steep = smoothstep(0.3, 0.52, slope + 0.12 * (mid - 0.5));
   #endif
-  vec2 uvA = vec2(vWorld.z, vWorld.y) / CLIFF;
-  vec2 uvB = vec2(vWorld.x, vWorld.y) / CLIFF;
+
   vec3 cliff = vec3(0.0);
-  vec3 cliffNh = vec3(0.0);
+  vec3 cliffNh = vec3(0.5);
   vec3 bump = vec3(0.0);
+  vec3 lean = vec3(0.0);
+  float ledge = 1.0;
+  float kx = smoothstep(0.4, 0.6, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
   if (steep > 0.003) {
+    // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
+    vec4 flow = texture2D(tStrata, vec2((vWorld.y + 3.0 * (big - 0.5)) / 340.0, 0.5));
+    float shift = flow.r * 7.0;
+    // The low crags of the bench are the same rock seen close: the picture at a fifth of the size.
+    #ifdef BENCH
+    const float CLIFF = 13.0;
+    #else
+    const float CLIFF = 60.0;
+    #endif
+    cliffNh = vec3(0.0);
     if (kx > 0.003) {
-      vec2 gx = dFdx(uvA);
-      vec2 gy = dFdy(uvA);
-      vec3 c = textureGrad(tCliff, uvA + vec2(shift, 0.0), gx, gy).rgb;
-      vec3 r = textureGrad(tCliffNh, uvA + vec2(shift, 0.0), gx, gy).rgb;
+      vec2 uv = vWorld.zy / CLIFF + vec2(shift, 0.0);
+      vec3 c = PICK(tCliff, uv, wx.zy / CLIFF, wy.zy / CLIFF).rgb;
+      vec3 r = PICK(tCliffNh, uv, wx.zy / CLIFF, wy.zy / CLIFF).rgb;
       cliff += c * kx;
       cliffNh += r * kx;
       bump += kx * (vec3(0.0, 0.0, 1.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
     }
     if (kx < 0.997) {
-      vec2 gx = dFdx(uvB);
-      vec2 gy = dFdy(uvB);
-      vec3 c = textureGrad(tCliff, uvB + vec2(shift, 0.0), gx, gy).rgb;
-      vec3 r = textureGrad(tCliffNh, uvB + vec2(shift, 0.0), gx, gy).rgb;
+      vec2 uv = vWorld.xy / CLIFF + vec2(shift, 0.0);
+      vec3 c = PICK(tCliff, uv, wx.xy / CLIFF, wy.xy / CLIFF).rgb;
+      vec3 r = PICK(tCliffNh, uv, wx.xy / CLIFF, wy.xy / CLIFF).rgb;
       cliff += c * (1.0 - kx);
       cliffNh += r * (1.0 - kx);
       bump += (1.0 - kx) * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
@@ -124,58 +140,97 @@ void main() {
     float streak = vnoise(vec2((vWorld.x + vWorld.z) * 0.21, vWorld.y * 0.018 + big * 2.0));
     cliff *= (0.7 + 0.8 * flow.g) * (0.75 + 0.5 * streak);
     cliff = mix(cliff, vec3(0.26, 0.25, 0.23) * (0.5 + cliffNh.b), 0.6 * smoothstep(0.5, 0.85, flow.b * (0.4 + 0.9 * big)) * smoothstep(0.4, 0.7, streak));
+    // Each flow sits on the rubble of the one below and overhangs it a little: a line of shade at its foot.
+    ledge = 0.55 + 0.45 * smoothstep(0.0, 0.09, flow.b);
+    #ifndef BENCH
+    // Thick flows cooled into columns: a joint every two metres or so, each column a face of its own, the tops broken off unevenly.
+    float h = kx > 0.5 ? vWorld.z : vWorld.x;
+    float width = 1.7 + 1.5 * flow.r;
+    float col = h / width + 1.3 * vnoise(vec2(h / 11.0, flow.r * 40.0));
+    float f = fract(col);
+    float id = hash12(vec2(floor(col), floor(flow.r * 255.0)));
+    float aa = px / width;
+    float show = smoothstep(0.3, 0.7, flow.a) * step(0.4, fract(flow.r * 7.3)) * smoothstep(0.45, 0.15, aa) * smoothstep(0.1, 0.22, flow.b) * smoothstep(1.0, 0.82, flow.b + 0.14 * id);
+    float joint = (1.0 - smoothstep(0.5 * aa, 0.07 + 2.0 * aa, min(f, 1.0 - f))) * smoothstep(0.3, 0.04, aa);
+    cliff *= mix(1.0, (0.78 + 0.44 * id) * (1.0 - 0.5 * joint), show);
+    lean = (kx > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)) * (f - 0.5) * 0.9 * show;
+    #endif
   }
 
   // The flats.
-  vec2 p1 = vWorld.xz / 8.0;
-  vec2 p2 = TURN * vWorld.xz / 37.0 + 0.37;
-  vec3 talusA = texture2D(tTalus, p1).rgb;
-  vec3 talusNhA = texture2D(tTalusNh, p1).rgb;
-  vec3 talusB = texture2D(tTalus, p2).rgb;
-  vec3 plain = mix(talusA, talusB, 0.5) * (0.85 + 0.6 * big);
-  // Fans of fine pale scree run down the fall line between the coarse dark rubble.
-  vec2 fall = n0.xz / max(length(n0.xz), 1e-3);
-  float fan = vnoise(vec2(dot(vWorld.xz, vec2(-fall.y, fall.x)) / 9.0, vWorld.y / 55.0 + big));
-  plain = mix(plain, vec3(0.2, 0.195, 0.185) * (0.5 + talusNhA.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope));
-  vec3 plainNh = talusNhA;
-  vec2 tip = (talusNhA.rg - 0.5) * vec2(1.0, -1.0);
+  vec3 plain = vec3(0.0);
+  vec3 plainNh = vec3(0.5);
+  vec2 tip = vec2(0.0);
   float rough = 0.92;
-  #ifdef BENCH
-  vec2 q1 = vWorld.xz / 6.0 + 0.11 * vec2(big, mid);
-  vec2 q2 = TURN * vWorld.xz / 29.0 + 0.71;
-  // Seen along the ground the picture is blurred by its long axis: near the camera take it a mip finer, far away a little coarser so no rope thinner than two pixels crawls.
-  float lod = mix(-1.0, 0.5, smoothstep(12.0, 90.0, far));
-  vec3 lavaA = texture2D(tLava, q1, lod).rgb;
-  vec3 lavaNhA = texture2D(tLavaNh, q1, lod).rgb;
-  vec3 lavaB = texture2D(tLava, q2).rgb;
-  vec3 lavaNhB = texture2D(tLavaNh, q2).rgb;
-  // Ropy sheets and fields of cinder and rubble, in patches tens of metres across.
-  float ropy = smoothstep(0.38, 0.62, vnoise(vWorld.xz / 19.0 + 11.0) + 0.3 * (lavaNhB.b - 0.5) - 0.9 * smoothstep(0.1, 0.3, slope));
-  vec3 lava = lavaA * (0.55 + 7.0 * lavaB.g) * (0.8 + 0.4 * big);
-  vec2 lavaTip = (lavaNhA.rg - 0.5) * vec2(1.0, -1.0) + 1.2 * (TURN * ((lavaNhB.rg - 0.5) * vec2(1.0, -1.0)));
-  plain = mix(plain, lava, ropy);
-  plainNh = mix(talusNhA, vec3(lavaNhA.rg, lavaNhA.b * (0.5 + lavaNhB.b)), ropy);
-  tip = mix(tip, lavaTip, ropy);
-  rough = mix(0.92, 0.78, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
-  #endif
+  if (steep < 0.997) {
+    #ifdef BENCH
+    // Ropy sheets on the level treads, cinder and rubble on everything that slopes, in patches tens of metres across.
+    float ropy = smoothstep(0.4, 0.6, vnoise(vWorld.xz / 19.0 + 11.0) + 0.3 * (mid - 0.5) - 0.9 * smoothstep(0.05, 0.18, slope));
+    const float TALUS = 5.0;
+    #else
+    const float ropy = 0.0;
+    const float TALUS = 8.0;
+    #endif
+    if (ropy < 0.997) {
+      vec2 p1 = vWorld.xz / TALUS;
+      vec3 talus = PICK(tTalus, p1, wx.xz / TALUS, wy.xz / TALUS).rgb;
+      plainNh = PICK(tTalusNh, p1, wx.xz / TALUS, wy.xz / TALUS).rgb;
+      plain = talus * (0.8 + 0.7 * big) * (0.85 + 0.3 * mid);
+      // Fans of fine pale scree run down the fall line between the coarse dark rubble.
+      vec2 fall = n0.xz / max(length(n0.xz), 1e-3);
+      float fan = vnoise(vec2(dot(vWorld.xz, vec2(-fall.y, fall.x)) / 9.0, vWorld.y / 55.0 + big));
+      plain = mix(plain, vec3(0.2, 0.195, 0.185) * (0.5 + plainNh.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope));
+      tip = (plainNh.rg - 0.5) * vec2(1.0, -1.0);
+    }
+    #ifdef BENCH
+    if (ropy > 0.003) {
+      vec2 q1 = vWorld.xz / 6.0;
+      vec2 q2 = TURN * vWorld.xz / 29.0 + 0.71;
+      vec3 lavaA = PICK(tLava, q1, wx.xz / 6.0, wy.xz / 6.0).rgb;
+      vec3 lavaNhA = PICK(tLavaNh, q1, wx.xz / 6.0, wy.xz / 6.0).rgb;
+      vec3 lavaNhB = PICK(tLavaNh, q2, TURN * wx.xz / 29.0, TURN * wy.xz / 29.0).rgb;
+      vec3 lava = lavaA * (0.6 + 0.9 * lavaNhB.b) * (0.8 + 0.4 * big);
+      vec2 lavaTip = (lavaNhA.rg - 0.5) * vec2(1.0, -1.0) + 0.5 * (TURN * ((lavaNhB.rg - 0.5) * vec2(1.0, -1.0)));
+      plain = mix(plain, lava, ropy);
+      plainNh = mix(plainNh, vec3(lavaNhA.rg, lavaNhA.b * (0.5 + lavaNhB.b)), ropy);
+      tip = mix(tip, lavaTip, ropy);
+      rough = mix(0.92, 0.78, ropy * smoothstep(0.45, 0.8, lavaNhA.b));
+    }
+    #endif
+  }
 
   vec3 albedo = mix(plain, cliff, steep);
   // Old lava under a dusk sky is a cool grey, not the brown of the pictures' daylight.
   albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.96, 1.0, 1.05), 0.6);
   float height = mix(plainNh.b, cliffNh.b, steep);
-  float fade = smoothstep(900.0, 250.0, far);
-  vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * 0.55 + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.35, 1.0, fade) * (0.3 + 0.7 * smoothstep(170.0, 30.0, far)));
-  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, fade));
+  vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * 0.55 + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
+  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, sharp)) * mix(1.0, ledge, steep);
 
   #ifdef NEAR
   // The camera's bench: the same rock read again at the scale of a hand.
-  float close = smoothstep(26.0, 6.0, far);
+  float close = smoothstep(32.0, 9.0, far);
   if (close > 0.0) {
-    vec2 f0 = steep > 0.5 ? (kx > 0.5 ? vWorld.zy : vWorld.xy) : TURN * vWorld.xz;
-    vec2 f1 = f0 / 1.3 + vec2(mid, big) * 0.4;
-    vec3 fine = texture2D(tBoulder, f1, -0.7).rgb;
-    vec3 fineNh = texture2D(tBoulderNh, f1, -0.7).rgb;
-    albedo *= mix(vec3(1.0), fine * 20.0, 0.65 * close);
+    // On a face the picture is read larger and counts for less, or its pits repeat up the riser.
+    float tile = steep > 0.5 ? 2.3 : 1.3;
+    vec3 ws = vWorld / tile;
+    vec3 gx = wx / tile;
+    vec3 gy = wy / tile;
+    vec2 jog = vec2(mid, big) * 0.4;
+    vec3 fine;
+    vec3 fineNh;
+    if (steep > 0.5) {
+      if (kx > 0.5) {
+        fine = PICK(tBoulder, ws.zy + jog, gx.zy, gy.zy).rgb;
+        fineNh = PICK(tBoulderNh, ws.zy + jog, gx.zy, gy.zy).rgb;
+      } else {
+        fine = PICK(tBoulder, ws.xy + jog, gx.xy, gy.xy).rgb;
+        fineNh = PICK(tBoulderNh, ws.xy + jog, gx.xy, gy.xy).rgb;
+      }
+    } else {
+      fine = PICK(tBoulder, TURN * ws.xz + jog, TURN * gx.xz, TURN * gy.xz).rgb;
+      fineNh = PICK(tBoulderNh, TURN * ws.xz + jog, TURN * gx.xz, TURN * gy.xz).rgb;
+    }
+    albedo *= mix(vec3(1.0), fine * 20.0, (steep > 0.5 ? 0.4 : 0.65) * close);
     vec2 t2 = TURN * ((fineNh.rg - 0.5) * vec2(1.0, -1.0));
     n = normalize(n + vec3(t2.x, 0.0, t2.y) * 0.7 * close * (1.0 - steep));
     occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.2, 0.6, fineNh.b), close);
@@ -183,19 +238,21 @@ void main() {
   #endif
 
   #ifdef BENCH
-  // The sulphur of the crack: white crystals on the lips, yellow round them, orange-brown stain fading out over metres.
+  // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.2);
   if (dc < 9.0) {
-    vec2 s1 = vWorld.xz / 2.0;
-    vec3 sul = texture2D(tSulphur, s1).rgb;
-    float grain = 0.6 * vnoise(vWorld.xz / 0.7) + 0.4 * vnoise(vWorld.xz / 0.13);
+    // Read through the height as well, or a riser carries the stain in stripes.
+    vec2 sp = vWorld.xz + vWorld.y * vec2(0.83, 0.61);
+    vec3 sul = PICK(tSulphur, sp / 2.0, (wx.xz + wx.y * vec2(0.83, 0.61)) / 2.0, (wy.xz + wy.y * vec2(0.83, 0.61)) / 2.0).rgb;
+    float grain = 0.6 * vnoise(sp / 0.7) + 0.4 * vnoise(sp / 0.13) * sharp;
     // Crystals grow where the gas comes out: in clumps along the lips, not in a band.
-    float clump = vnoise(vWorld.xz / 2.1 + 5.0);
-    float crust = smoothstep(2.9, 0.3, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5));
-    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * 0.5;
-    vec3 yellow = mix(vec3(0.36, 0.28, 0.07), vec3(0.6, 0.57, 0.45), smoothstep(1.1, 0.2, dc + grain + clump));
-    albedo = mix(albedo, albedo * vec3(2.1, 1.3, 0.6) + vec3(0.035, 0.02, 0.004), stain);
-    albedo = mix(albedo, mix(sul, yellow, 0.6) * (0.6 + 0.8 * grain), crust);
+    float clump = vnoise(sp / 2.1 + 5.0);
+    float up = smoothstep(0.45, 0.12, slope);
+    float crust = smoothstep(3.6, 0.4, dc + 3.4 * (clump - 0.45) + 1.6 * (grain - 0.5) - 1.2 * (height - 0.5)) * (0.4 + 0.6 * up);
+    float stain = smoothstep(8.0, 1.0, dc + 9.0 * (mid - 0.5) + 4.0 * (clump - 0.5)) * (0.2 + 0.3 * up);
+    vec3 yellow = mix(vec3(0.42, 0.35, 0.11), vec3(0.62, 0.6, 0.5), smoothstep(1.9, 0.3, dc + grain + clump));
+    albedo = mix(albedo, albedo * vec3(1.9, 1.35, 0.7) + vec3(0.03, 0.02, 0.005), stain);
+    albedo = mix(albedo, mix(sul, yellow, 0.65) * (0.65 + 0.7 * grain), crust);
     rough = mix(rough, 0.95, crust);
   }
   // By the line the rock is glazed black with spatter, and nothing pale survives.
@@ -205,7 +262,12 @@ void main() {
   #endif
 
   // Under an overhang of rock, or deep in a gap, less of everything arrives.
+  #ifdef FAR_LIGHT
+  // Nothing stands over the wall.
+  const float shade = 0.0;
+  #else
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
+  #endif
   vec3 c = landShade(vWorld, n, v, albedo, rough, occ, land, shade);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -255,7 +317,9 @@ void main() {
   vec3 toCamera = cameraPosition - vWorld;
   float far = length(toCamera);
   vec3 v = toCamera / far;
-  vec3 on = normalize(vObjectNormal);
+  // Broken rock has faces: the triangle's own normal chooses which way the picture is laid on it, and is most of the normal it is lit by.
+  vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
+  vec3 on = normalize(normalize(vObjectNormal) + 1.5 * vec3(dot(facet, vAxisX), dot(facet, vAxisY), dot(facet, vAxisZ)));
   vec3 w = on * on;
   w *= w;
   w /= w.x + w.y + w.z;
@@ -303,9 +367,7 @@ void main() {
     albedo *= mix(vec3(1.0), fine * 20.0, 0.55 * close);
     height = mix(height, 0.5 * (height + fh), close);
   }
-  // Broken rock has faces: half the normal is the triangle's own.
-  vec3 facet = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
-  vec3 n0 = normalize(normalize(vNormal) + 0.8 * facet * smoothstep(0.004, 0.02, size / far));
+  vec3 n0 = normalize(normalize(vNormal) + 1.3 * facet * smoothstep(0.004, 0.02, size / far));
   vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 0.8 * smoothstep(400.0, 60.0, far));
   albedo *= vSeed.w * 1.6;
   albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.96, 1.0, 1.05), 0.6);

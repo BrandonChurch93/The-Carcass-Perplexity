@@ -16,6 +16,8 @@ interface Kind {
   cells: number;
   planes: number;
   part: 'bench' | 'land';
+  /** Small or far: drawn from two reads of the rock picture and no relief. */
+  simple: boolean;
   rocks: Rock[][];
 }
 
@@ -23,14 +25,14 @@ const SHAPES = 5;
 
 export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUniform>, height: Height): { bench: THREE.Object3D[]; land: THREE.Object3D[]; dispose(): void } {
   const rng = ctx.rng('land/rocks');
-  const kind = (cells: number, planes: number, part: 'bench' | 'land'): Kind => ({ cells, planes, part, rocks: Array.from({ length: SHAPES }, () => []) });
+  const kind = (cells: number, planes: number, part: 'bench' | 'land', simple = false): Kind => ({ cells, planes, part, simple, rocks: Array.from({ length: SHAPES }, () => []) });
   const kinds = {
-    pebble: kind(2, 6, 'bench'),
-    stone: kind(4, 7, 'bench'),
-    block: kind(7, 8, 'bench'),
-    hero: kind(12, 9, 'bench'),
+    pebble: kind(2, 6, 'bench', true),
+    stone: kind(3, 7, 'bench', true),
+    block: kind(5, 8, 'bench'),
+    hero: kind(9, 9, 'bench'),
     slab: kind(6, 7, 'bench'),
-    boulder: kind(6, 8, 'land'),
+    boulder: kind(4, 8, 'land', true),
   };
   const shades: [number, number, number, number][] = [];
 
@@ -184,6 +186,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   }
 
   const material = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { GLAZE: '' } });
+  const simple = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared, defines: { SIMPLE: '' } });
   const geometries: THREE.BufferGeometry[] = [];
   const out = { bench: [] as THREE.Object3D[], land: [] as THREE.Object3D[] };
   Object.values(kinds).forEach((k, ki) => {
@@ -194,7 +197,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       list.forEach((r, i) => seeds.set(r.seed, i * 4));
       g.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
       geometries.push(g);
-      const mesh = new THREE.InstancedMesh(g, material, list.length);
+      const mesh = new THREE.InstancedMesh(g, k.simple ? simple : material, list.length);
       list.forEach((r, i) => mesh.setMatrixAt(i, r.m));
       mesh.instanceMatrix.needsUpdate = true;
       mesh.computeBoundingSphere();
@@ -210,6 +213,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     dispose: () => {
       for (const g of geometries) g.dispose();
       material.dispose();
+      simple.dispose();
     },
   };
 }

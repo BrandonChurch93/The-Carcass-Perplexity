@@ -71,8 +71,17 @@ export function create(ctx: HeartContext): HeartPiece {
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });
   const wallMaterial = ground({ FAR_LIGHT: '' });
   const benchMaterial = ground({ BENCH: '' });
-  const nearMaterial = ground({ BENCH: '', NEAR: '', GLAZE: '' });
-  const crackMaterial = ground({ BENCH: '', NEAR: '', CRACK: '' });
+  // The camera's bench is seen along itself from a few metres up: without anisotropic reads its pictures smear along the view.
+  const fine = (file: string, data: boolean): THREE.IUniform => ({ value: ctx.assets.texture(file, data ? { kind: 'data', anisotropy: 4 } : { anisotropy: 4 }) });
+  const near = {
+    ...shared,
+    tLava: fine('mat/pahoehoe.jpg', false),
+    tLavaNh: fine('mat/pahoehoe-nh.png', true),
+    tTalus: fine('mat/talus.jpg', false),
+    tTalusNh: fine('mat/talus-nh.png', true),
+  };
+  const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', GLAZE: '' } });
+  const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {

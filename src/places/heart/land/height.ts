@@ -201,7 +201,7 @@ export function benchAt(x: number, z: number, d0: number): number {
   const crag = smooth(200, 150, z);
   const joint = blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x);
   const w = lerp(2.6, 9.5, crag);
-  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 1.7 * crag) * joint) / w;
+  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9)) / w;
   const f = q - Math.floor(q);
   const face = lerp(0.2, 0.09, crag) + 0.12 * noise(x / 17 + 3, z / 17);
   const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
