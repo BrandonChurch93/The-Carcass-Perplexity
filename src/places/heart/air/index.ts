@@ -75,8 +75,8 @@ const BODIES: readonly Body[] = [
   { at: fromFoot(-34, 34), radius: 40, height: 45, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(2, 26), radius: 44, height: 60, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(22, 48), radius: 34, height: 38, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
-  // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture.
-  { at: [505, -285], radius: 62, height: 520, lean: [-0.16, -0.18], dense: 0.03, widen: 4, foot: 0.12, repeat: 200, hard: 2.4, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.4, solid: 0.5 },
+  // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
+  { at: [505, -285], radius: 70, height: 700, lean: [-0.16, -0.18], dense: 0.02, widen: 7, foot: 0.08, repeat: 200, hard: 2.4, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.8, solid: 0.6, shots: { 'heart-02': 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
   { at: [760, -40], base: -25, radius: 150, height: 150, lean: [-0.1, -0.05], dense: 0.008, widen: 0.2, repeat: 130, hard: 1.1, climb: 2, colour: BROWN, foot: 0.12, lake: [0.5, 30], floor: [2.6, 70], lights: 1, tops: 0.4, solid: 0.6 },
 ];
