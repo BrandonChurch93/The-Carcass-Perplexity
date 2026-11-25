@@ -77,7 +77,8 @@ void main() {
   if (broke > 0.01 && cell < 0.6) {
     slabAt(q, broke, cell, 1.9, 0.0);
     float onLake = smoothstep(0.0, 1.5, lake);
-    slabGap = gSlabEdge * onLake;
+    // A gap is drawn while a pixel is finer than it: from afar the broken ground is a tone, not a net of black lines.
+    slabGap = gSlabEdge * onLake * (1.0 - smoothstep(0.06, 0.25, fpLong));
     slabSlope = gSlabSlope * ((1.0 - slabHeld(cell)) * (1.0 - gSlabEdge) * onLake);
     slabTone = 0.78 + 0.44 * fract(gSlabId * 7.31 + 0.17);
   }
