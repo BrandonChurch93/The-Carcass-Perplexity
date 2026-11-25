@@ -1,8 +1,8 @@
-# Status 33
+# Status 34
 
-2026-11-25 07:10 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 07:36 UTC. Phase 3, the look lock: the Heart.
 
-- `01-key-heart-2-hd-draft.jpg`: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier)
-- `02-key-heart-3-hd-draft.jpg`: Feeding at a seam through the long lens: the far wall and the fall go soft behind the animals (draft tier)
-- `03-heart-1.jpg`: The line beside its picture, with a slight lens. The trench and the brown crust are what the two lake owners are replacing now
-- `04-key-heart-3-hd-draft-solo.jpg`: The frame that answers heart-3, film frame 3156, hd, draft tier, solo view, lens set by hand, radius 0 m
+- `01-heart-0.jpg`: The wide view, approved picture left, merged main right (07:33 UTC, hd draft). Too pale and too even: it reads as an overcast day, not dusk. The bench is light grey slabs where the picture has near-black ropy rock.
+- `02-heart-1.jpg`: The line. My new staging is in: one tall lead at centre right feeding at a lit seam, two smaller ones at the right, as in the picture. The crust and channel here are still the old lake.
+- `03-heart-3.jpg`: The feeding. Shapes and poses hold; the hide is pale cracked clay lit from above, where the picture has dark animals lit warm from below.
+- `04-heart-4.jpg`: The mouth and the fall. Still the weakest: an evenly lit grey wall, one thin stream. Two tiny walkers now stand at the fan's right toe as in the picture.

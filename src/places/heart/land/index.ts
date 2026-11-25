@@ -4,10 +4,10 @@ import * as THREE from 'three';
 import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
 import { CRACK_FOOT, CRACK_TOP } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { FLOWS, crackDip, landHeight, nearCrack, setCracks, type Crack } from './height';
-import { ribs, sheet, wallRibs, type Rib } from './meshes';
+import { FLOWS, buttressHeight, crackDip, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
+import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
-import { GROUND_FRAGMENT, GROUND_VERTEX } from './shaders';
+import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
 
 export const PARTS: readonly string[] = ['land', 'bench', 'sulphur-crack'];
 
@@ -85,7 +85,8 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
-  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial];
+  const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
+  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, lipMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     geometries.push(g);
@@ -99,9 +100,9 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wall = mesh(ribs(landHeight, wallRibs(spacing, -3, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190), wallMaterial);
+  const wall = mesh(ribs(wallHeight, wallRibs(spacing, -3, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190), wallMaterial);
 
-  // The buttress: ribs across it, so its sheer faces get rows all the way up. Where it runs into the wall, the wall's ring draws it.
+  // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
   const [rx, rz] = BUTTRESS.root;
   const [tx, tz] = BUTTRESS.tip;
   const len = Math.hypot(tx - rx, tz - rz);
@@ -114,7 +115,6 @@ export function create(ctx: HeartContext): HeartPiece {
     const reach = 150;
     across.push({ x: cx - az * reach, z: cz + ax * reach, dx: az, dz: -ax, length: reach * 2, on: true });
   }
-  const buttressHeight = (x: number, z: number): number => (calderaDistance(x, z) > 0 ? -8 : landHeight(x, z));
   const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2);
   trim(buttressAll, -1.2);
   const buttress = mesh(buttressAll, wallMaterial);
@@ -138,7 +138,9 @@ export function create(ctx: HeartContext): HeartPiece {
   );
   const rocks = scatterRocks(ctx, shared, landHeight);
   ctx.scene.add(ctx.parts.built('land', wall, buttress, ...rocks.land), buttress, ...rocks.land);
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, ...rocks.bench), midBench, nearBench, ...rocks.bench);
+  // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
+  const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80), lipMaterial);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, lip, ...rocks.bench), midBench, nearBench, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];
