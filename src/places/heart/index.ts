@@ -36,9 +36,10 @@ const over = (x: number, z: number, height: number): Vec3 => [x, Math.max(0, lan
 /** heart-0, the establishing view: the pose the wide picture was fitted to. */
 const KEY0 = establishing();
 
-/** heart-3, the group feeding at the seam, through a long lens from the crust. */
+/** heart-3, the group feeding at the seam, through a long lens: 66 m from the hero and 6.3 m over the crust, so its back stands at about twice the
+ *  height of the lens and its feet a third of the way up the frame, as in the approved picture. The hero stands left of the axis. */
 const groupAt = walkerPosition(WALKERS[1] as Walker, keySeconds('heart-3'));
-const KEY3 = fly([groupAt[0] - 53.5, 3, groupAt[1] + 59.5], 44.5, 2.3, 18);
+const KEY3 = fly([groupAt[0] - 42.8, 6.3, groupAt[1] + 50.5], 44.5, 0.4, 18);
 
 /** heart-1, the lava at the line: on the last rocks of the shore, with the channel leaving the shore ahead on the left and passing on the right. */
 const KEY1 = fly([LINE[0] - 3.5, 1.7, LINE[1] + 3.5], 52, -7.5, 45);
@@ -57,8 +58,8 @@ const key = (id: string): number => keyPart(shotById(id));
 const shots: Record<string, CameraPath> = {
   // 60 m down off the bench, from 28 m to 17 m, and the lake opens under the lens.
   'heart-01': through(KEY0, key('heart-01'), { forward: -28, right: -7.8, up: 0.5, turn: -3 }, { forward: 28, right: 7.8, up: -5.5, turn: 4.8 }),
-  // 22 m toward the group at 3 m above the crust.
-  'heart-02': through(KEY3, key('heart-02'), { forward: -10.4, right: -3.7, up: 0.6, turn: -1 }, { forward: 10.4, right: 3.7, up: -0.4, turn: 1 }),
+  // 16 m toward the group, 6 m above the crust, with the least crab of the five: on this lens a metre sideways slides the hero a tenth of the frame.
+  'heart-02': through(KEY3, key('heart-02'), { forward: -8, right: -1, up: 0.3, turn: -0.3 }, { forward: 8, right: 1, up: -0.3, turn: 0.3 }),
   // 7 m down to the edge of the shore, from 2.7 m to 1.6 m, slowing onto the channel.
   'heart-03': through(KEY1, key('heart-03'), { forward: -4.2, right: -0.6, up: 0.5 }, { forward: 2.8, right: 0.5, up: 0.25 }),
   // 5 m toward the carcass.
