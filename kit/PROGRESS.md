@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 35, 2026-11-25 07:57 UTC:
+Status 37, 2026-11-25 08:37 UTC:
 
-- `01-mouth-test-4.jpg`: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC. The mouth is now as wide and as low as the picture's (it was a third narrower). The pale wall and the thin stream are what the new owners of the fall, the land and the light are on.
-- `02-heart-0.jpg`: The wide view on main at 07:53 UTC with the wider mouth. Still an overcast day where the picture is a dusk: the correction with measured levels is with six fresh owners.
-- `03-sunk2-a-heart-2.jpg`: First hand-back of a second owner (the one that sank, 07:55 UTC, not merged yet): the tone is now dark as in the picture. I asked for thin legs and that was my mistake: the picture has thick arched trunks with flaking bark. Corrected at 07:58 UTC.
-- `04-heart-2.jpg`: heart-2: approved beside frame, hd draft, with 2 crop pairs
+- `01-merged-0835-heart-2.jpg`: heart-2, the one that sank. Picture, then the frame on main. New since status 36: the sunk walker's second build is in, thick arched trunks with flaking bark and a skin of ropes. Open: the lake round it is a featureless sheet, the ropes are too thin and even, the near ridge is a pale pillow, the big animal still has the old build.
+- `02-merged-0835-heart-0.jpg`: heart-0, the wide view. The orange block behind the group is weaker after the air's third hand-back (MEASURED 132 83 71 against the picture's 106 81 79). Open: its hard lower edge, speckled smoke, glossy ropes on the bench, a lake without relief.
+- `03-merged-0835-heart-3.jpg`: heart-3, the animals at the seam. Still the old build (barrel body, bent legs); the new one is due by 10:05 UTC. Open: an orange wall of haze where the picture has smoke, smooth blue ground where the picture has broken brown crust.
+- `04-merged-0835-heart-4.jpg`: heart-4, the mouth and its fall: the key furthest from its picture. Flat wall with level ledges, an even salmon rim, a thin cascade, a dark column of smoke. It is the first line of five owners' current orders.
 
+Status 36, 2026-11-25 08:20 UTC, showed: The feeding picture on main at 08:17 UTC with eight hand-backs merged.
+Status 35, 2026-11-25 07:57 UTC, showed: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC.
 Status 34, 2026-11-25 07:36 UTC, showed: The wide view, approved picture left, merged main right (07:33 UTC, hd draft).
-Status 33, 2026-11-25 07:10 UTC, showed: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier); Feeding at a seam through the long...
-Status 32, 2026-11-25 06:51 UTC, showed: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet; Feeding...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T07:57:08Z
-phase 3: 4.80 h used of 13.00 h
-build: 11.45 h used of 72.00 h
+2026-11-25T08:37:11Z
+phase 3: 5.47 h used of 13.00 h
+build: 12.12 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 21
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -584,6 +584,11 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 2026-11-25 07:36 UTC. Levels after the merge of light version 2 with the fourth versions, MEASURED with the cast tool on hd draft frames against the pictures (rock and crust pixels, 8 bit): heart-0 79 73 72 against 71 61 61, its bottom band (the bench) 61 to 70 against 38 to 47; heart-2 bottom band 59 to 69 against 37 to 52; heart-4 80 71 69 against 76 62 60; red over blue 1.10 against 1.16 to 1.27. The land's paler rock and the light's stronger sky were each made against the darker frame of 06:53 and landed together. Correction: the rock, bench, hide and carcass go darker by their owners under the new light, measured not judged by eye; the light keeps its sky and gets back some warm fill near the fire.
 - 2026-11-25. 2026-11-25 07:50 UTC. The vessel mouth is wider and lower: `MOUTH` in `src/places/heart/layout.ts` goes from floor 96, width 118, height 60 to floor 80, width 172, height 68. MEASURED on the fall's picture: its mouth spans 20 to 65 per cent of the frame's width and 10 to 42 per cent of its height; main's spanned 27 to 57 and 8 to 33, and round 3's R1 called it severe ("The opening is smaller and narrower") at heart-4 and asked for a wider cave at the wide view too. After the change it spans 20 to 63 and 10 to 41 at heart-4, and 25.5 to 36.5 per cent at the wide view against the picture's 25.5 to 38.5. The land's cut and the fall's face patch and bed now follow `MOUTH.width` (a check before the change: 0 of 2,073,600 pixels differ at heart-4). The fall's second owner may tune that one line.
 - 2026-11-25. Directions to owners are written only after the approved picture has been looked at beside main at 1500 px. Reason: four directions written from memory were wrong and cost one owner a hand-back.
+- 2026-11-25. The new lake (crust and lava, version 2) is on main although its owners call the line picture unfinished. Reason: at the wide view it beats the old lake clearly (dark crust with a net of seams against a pale sheet), the old lake has no owner, and the light, the air and the animals must be tuned against the lake that will be in the film.
+- 2026-11-25. The lake's glow map is frozen at the levels of lava d9a4bfd (0.07 to 0.20 of radiance at the line's channel, 0.22 at feeding seams, 0.4 at the fall's pool, the far web as it is). Receivers (air, light, animals) are tuned against it. Reason: the air's banks, tuned to the old weak map, turned the new one into a flat orange block at three keys; a source that keeps moving cannot be tuned against.
+- 2026-11-25. The sunk walker's hand-back A went in with its thin legs. Reason: on the new dark crust the old pale body and apron read as a pale island at the wide view, which is worse than thin legs; thick arched legs are asked for as A2 or B.
+- 2026-11-25. Round 4 is judged on fdcac34, not on 7535c68: the sunk walker's hand-back A2 (thick arched trunks, rope skin) arrived four minutes after the pack and the measure run were ordered, heart-2 is its key, and a round that spends its lines on legs already rebuilt is a wasted round. Both render agents were told to start again on fdcac34 at 08:31 UTC; cost about six minutes.
+- 2026-11-25. Round 4 critic families, rotated from round 3 so no critic family sees the same question twice running: R1 claude_opus_5_5 (round 3: gpt_6_2_sol), R3 gemini_neon (round 3: claude_opus_5_5), R4 gpt_6_2_sol (round 3: gemini_neon). The jury's panel of five stays fixed, as config asks.
 
 ## Notes from Brandon
 
@@ -717,7 +722,7 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| `round3_pack_renderer` | render | The R4 sheets of round 3 on its own machine from commit `ef015ca` (the same sources as `e5b7a22`), handed back as a tar; frames are byte equal across machines ("Frames across VMs") | none | 06:04 UTC, 25 Nov | one job |
+| `round3_pack_renderer` | render | The R4 sheets of round 3 on its own machine from commit `ef015ca` (the same sources as `e5b7a22`), handed back as a tar; frames are byte equal across machines ("Frames across VMs"); from 08:26 UTC the whole pack of round 4 (R1, R2, R3 at final tier uhd, R4 at review tier preview) from commit `fdcac34` | none | 06:04 UTC, 25 Nov | one job |
 | `heart_land_owner_2` | build | The Heart's land, taken over from the first owner: dark basalt with darks under the frozen light, the bench as ropy lobes and rubble, the wall of the fall with relief that shades itself, no level line at the shore, a dark lip for shot heart-05 only, silhouettes, cost | `agent/heart-land-b` | 07:50 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
 | `heart_fall_owner_2` | build | The Heart's fall, taken over: the mouth at its new size with a broken rim lit from inside, a broad bright cascade that lights the cliff, the fan, the surge | `agent/heart-fall-b` | 07:50 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
 | `heart_light_owner_2` | build | The Heart's light, taken over: the fire lights what is near it with a physical reach, and what the sky does not reach goes dark; exposure, knee, fire ramp and open sky level frozen | `agent/heart-light-b` | 07:50 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
@@ -726,6 +731,7 @@ Each reports by message to the Builder.
 | `heart_air_owner_2` | build | The Heart's air, taken over: depth and dusk carried by the air, a lit plume off the fall at heart-4, no grain, the column, motion that is seen, cost | `agent/heart-air-b` | 07:44 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
 | `heart_crust_owner` | build | The solid crust of the Heart's lake, taken over from the first lake owner: relief built as geometry wherever a camera is close (ropes, tilted plates, pressure ridges, gaps with walls), no smear at grazing angles, cool tone and sheen by plate, the crust lit by the melt beside it, a crooked far shore, drift that is seen; `src/places/heart/lake/index.ts` and `net.ts` | `agent/heart-crust` (from `agent/base-r3`) | 06:39 UTC, 25 Nov | 3 h, hand-backs by 50, 110 and 170 minutes |
 | `heart_lava_owner` | build | Everything molten in the Heart's lake, taken over from the first lake owner: open lava as its own surface below the brim, flow that is seen, the light it casts on what is beside it, the seams of the wide view, fountains as arcs of gobs, the foundering slabs; `src/places/heart/lake/heat.ts`, `founder.ts`, `outline.ts` and a new `lava.ts` | `agent/heart-lava` (from `agent/base-r3`) | 06:39 UTC, 25 Nov | 3 h, hand-backs by 50, 110 and 170 minutes |
+| `round4_measure_renderer` | render | The measures of round 4 (`npm run measure -- --unit heart`) on its own machine from commit `fdcac34`, handed back as `out/work/measure/heart.json` | none | 08:26 UTC, 25 Nov | until 10:00 UTC |
 
 Hand-backs of the six owners in Phase 3, each merged into `main` after a check of trailers, files touched, types and the Builder's own compare of the keys: version 1 of all six by 04:46 UTC; land v2 `17395d1` and walkers v2 `6490fd6` by 05:05 UTC; fall v2 `ec1fb3c`, air v2 `e8dc858`, lake v2 `7aa900a`, sunk v2 `e33427c` between 05:08 and 05:13 UTC. Version 3 is due from each by its 170th minute (about 06:42 UTC). Every owner got the refitted cameras at 05:05 UTC and the restaged feeding shot at 05:28 UTC.
 
@@ -850,3 +856,7 @@ none
 - 2026-11-25 07:38 UTC. 2026-11-25 07:37 UTC. Status 34 shown in the thread: the merged main at the wide view, the line, the feeding and the fall beside the pictures; the pale overcast read and its measured cause; the staging decision; crust and lava version 1 held back; ElevenLabs 1 character of 131,000 at 07:31 UTC.
 - 2026-11-25 07:54 UTC. 2026-11-25 07:54 UTC. Six second owners started between 07:44 and 07:50 UTC (land, fall, light, walkers, sunk, air), each on its own machine with the shared sheet, a sheet of what is different now (the frozen light, the measured levels, the lens, staging by shot), its folder's brief, round 3's list for its folder, its predecessor's own worst list and my direction in order. The vessel mouth change is on main as `6794613`; determinism passes on it (07:52 UTC). Direction went to the crust and lava owners at 07:39 UTC.
 - 2026-11-25 07:57 UTC. Status 35 shown at 07:57 UTC (mouth pair, wide view on main, sunk hand-back A of the second owner). ElevenLabs: 1 of 131,000 characters. Four of my directions corrected against the approved pictures at full size: walkers (legs go down and out from the shoulders, pale root tendrils lit from below, ragged pads), the sunk one (thick arched trunks), the line channel (two fifths bright melt, swirled skin, lit undersides of the banks, a band of orange dashes at the horizon), the wide view's smoke (a broad translucent plume from the far shore, not a dark column).
+- 2026-11-25 08:22 UTC. Status 36 shown at 08:21 UTC. Eight hand-backs merged into main as 6cb954c and pushed: land A 60610bb, fall A 8db1f0b, air A and A2 0d1dba8, light A 6123cd7, walkers A 633e5c4, sunk A 124d09f, crust version 2 3e4148f, lava version 2 d9a4bfd. Types and build pass, determinism passes on 6cb954c. ElevenLabs: 1 of 131,000 characters.
+- 2026-11-25 08:30 UTC. Air hand-back A3 (5c69ba5) merged as 7535c68 and pushed: every term of the air that reads the lake's glow map retuned against the stronger map; the orange block at the fall's foot is gone at heart-1 and heart-2 and weaker at heart-0 (MEASURED there, picture then frame: 106 81 79 against 132 83 71). Determinism passes on 7535c68.
+- 2026-11-25 08:31 UTC. Sunk walker hand-back A2 (eda8df6) merged as fdcac34 and pushed 08:30 UTC; tsc clean; keys and determinism running. Cost not remeasured by its owner (2.86 s a sample at heart-2 at A); it is the first line of its B.
+- 2026-11-25 08:37 UTC. Status 37 shown at 08:37 UTC: the five keys on fdcac34 beside their pictures, round 4 under way, ElevenLabs at 1 of 131,000 characters. Determinism passes on fdcac34.

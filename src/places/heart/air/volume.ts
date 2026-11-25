@@ -77,7 +77,7 @@ const vec3 HEAVY_ALBEDO = vec3(0.72, 0.64, 0.6);
 const vec3 BANK_ALBEDO = vec3(0.43, 0.39, 0.36);
 const vec3 FUME_BASE = vec3(585.0, 0.0, -285.0);
 const vec3 LOW_BASE = vec3(760.0, 0.0, -40.0);
-const float LAKE_WIDE = 2.3;
+const float LAKE_WIDE = 0.75;
 const float LAYER = 12.0;
 const vec3 SKY_DIR = vec3(-0.38, 0.9, 0.22);
 
@@ -150,7 +150,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float layer = hi - lo < 1.0 ? exp(-0.5 * (lo + hi) / LAYER) : LAYER * (exp(-lo / LAYER) - exp(-hi / LAYER)) / (hi - lo);
   // The lake lights the air over it twice: what is open right under a point, and the whole glowing floor of the caldera round it.
   vec3 wide = mix(wideNear, wideFar, part);
-  vec3 under = LAKE_WIDE * exp(-y / 110.0) * wide;
+  vec3 under = LAKE_WIDE * (0.3 * exp(-y / 110.0) + 0.7 * exp(-y / 14.0)) * wide;
   vec3 sky = skyLight(y);
   float east = smoothstep(-150.0, 550.0, p.x);
   // What the fume sheds settles against the buttress and east of it: a bank that stands off its west face by a few hundred metres.
@@ -191,7 +191,7 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   float low = exp(-y / 250.0);
   emit = thin * AIR_ALBEDO * ((sky + airWarm * low) * open + 0.25 * lights)
        + heavy * HEAVY_ALBEDO * ((0.9 * sky * exp(-2.8 * exp(-y / LAYER)) + airWarm * low) * open + 0.6 * under * low + 0.4 * lights)
-       + smoke * FUME_ALBEDO * (mix(1.0, 2.2, smoothstep(40.0, 300.0, y)) * sky * open * shade + deep * (3.2 * under + wide * (0.7 * exp(-y / 140.0) + 1.3 * exp(-y / 700.0))) + mix(1.3, 0.6, smoothstep(40.0, 160.0, y)) * lights);
+       + smoke * FUME_ALBEDO * (mix(1.0, 2.2, smoothstep(40.0, 300.0, y)) * sky * open * shade + deep * (3.2 * under + wide * (0.2 * exp(-y / 140.0) + 0.3 * exp(-y / 700.0))) + mix(1.3, 0.6, smoothstep(40.0, 160.0, y)) * lights);
 }
 
 // 0 outside the column, 1 on its axis.
@@ -304,7 +304,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
     // A fountain or a crack lights the vapour that is close over it and no more: the rest is lit by the sky, like any smoke.
     vec3 light = mix(1.25, 0.7, kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0));
     float close = lit * exp(-h / fall);
-    if (close > 0.03) light += close * (0.3 * lakeGlow(p.xz, max(1.5 * h, 6.0)) + roundLights(p));
+    if (close > 0.03) light += close * (0.1 * lakeGlow(p.xz, max(1.5 * h, 6.0)) + roundLights(p));
     float a = 1.0 - exp(-sigma * dt);
     sum += trans * a * albedo * light;
     trans *= 1.0 - a;
@@ -367,7 +367,7 @@ void bankOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, i
     vec4 C = uBankC[i];
     // Lit from below: the open lava under and beside it, and the round lights of the fall where it stands by them.
     float low = exp(-p.y / C.y);
-    if (low > 0.02) light += low * C.x * (5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y)) + 4.0 * wideNear);
+    light += C.x * (0.25 * low + 0.75 * low * low * low * low) * (5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y)) + 4.0 * wideNear);
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
     float a = 1.0 - exp(-dens * B.w * dt);
     sum += trans * a * BANK_ALBEDO * light;
@@ -459,7 +459,7 @@ void main() {
           // The near one tells which way the lump's face looks, the far one what stands over it.
           float skyT = exp(-(fumeDensity(columnFlow(p1), columnShape(p1)) * 1.5 + lumps(columnFlow(p2), columnShape(p2)) * 0.8));
           float underT = exp(-lumps(columnFlow(p3), columnShape(p3)) * 1.6);
-          vec3 light = skyLight(p.y) * (0.2 + 1.45 * skyT) + (roundLights(p) + 0.5 * lakeGlow(p.xz, max(2.0 * p.y, 60.0)) + 2.0 * fumeUnder * exp(-p.y / 400.0)) * (0.45 + 0.55 * underT);
+          vec3 light = skyLight(p.y) * (0.2 + 1.45 * skyT) + (roundLights(p) + 0.17 * lakeGlow(p.xz, max(2.0 * p.y, 60.0)) + 0.6 * fumeUnder * exp(-p.y / 400.0)) * (0.45 + 0.55 * underT);
           float a = 1.0 - exp(-dens * 0.045 * len);
           fumeSum += fumeTrans * a * FUME_ALBEDO * light;
           weight += fumeTrans * a;
@@ -517,7 +517,7 @@ void main() {
     float slant = min(min(8.0 / max(abs(rd.y), 0.03), 160.0), far);
     vec3 g = ro + rd * (far - slant * fract(jitter + 0.71));
     float gy = max(g.y, 0.0);
-    sum += trans * lakeGlow(g.xz, max(2.0 * gy, 8.0)) * ((1.0 - exp(-slant * 0.05)) * exp(-gy / 5.0) * 0.6);
+    sum += trans * lakeGlow(g.xz, max(2.0 * gy, 8.0)) * ((1.0 - exp(-slant * 0.05)) * exp(-gy / 5.0) * 0.2);
   }
   // Air seen against the sky sends some of the sky's light on toward the camera: the sky behind a haze is paler, not darker, by less than the haze takes.
   if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0);
