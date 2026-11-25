@@ -51,19 +51,23 @@ export function shaftWall(): THREE.BufferGeometry {
 /** A hoop of cartilage along part of the wall: from one bearing to another (degrees), at a depth, standing `thick` metres out of the wall. */
 export function hoop(y: number, radius: number, from: number, to: number, thick: number, seed: number): THREE.BufferGeometry {
   const length = Math.abs(to - from) * RAD * radius;
-  const columns = Math.max(24, Math.round(length / 0.9));
-  return sheet(columns, 14, (u, v) => {
+  const columns = Math.max(30, Math.round(length / 0.55));
+  return sheet(columns, 16, (u, v) => {
     const b = lerp(from, to, u) * RAD;
     const s = u * length;
-    // Broken ends: the hoop thins to a torn stub over its last three metres. Along its run it swells and necks as a rib does.
-    const end = smooth(Math.min(s, length - s) / 1.1);
-    const swell = (0.82 + 0.3 * drift(s * 0.16, seed, 2) + 0.12 * drift(s * 0.7, seed, 5)) * (0.6 + 0.4 * end);
     const a = v * 2 * Math.PI;
-    // A flattened section, squarer than a tube: a rib seen end on.
-    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.4;
-    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.4;
-    const wide = thick * 2.0 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
-    const tall = thick * 1.15 * swell;
+    // A squared section: a rib of bedded cartilage seen end on, not a tube.
+    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.3;
+    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.3;
+    // Broken ends: it is snapped off on a slant, the top reaching further than the underside, with a ragged face.
+    const reach = 0.9 * cy + 0.7 * drift(a * 1.7, seed, 11) + 0.5 * cx;
+    const end = smooth((Math.min(s, length - s) + reach - 0.5) / 0.7);
+    // Along its run it swells and necks, and in places a piece has come away from its face and left a bite.
+    const bite = smooth((drift(s * 0.21, seed, 7) - 0.22) / 0.06) * smooth((cx + 0.2) / 0.5);
+    const swell = (0.86 + 0.26 * drift(s * 0.16, seed, 2) + 0.1 * drift(s * 0.7, seed, 5)) * (0.25 + 0.75 * end);
+    const chip = 0.22 * drift(s * 1.3, a * 1.9 + seed, 3) + 0.1 * drift(s * 3.1, a * 4.1, seed);
+    const wide = thick * 2.3 * swell * (1 - 0.5 * bite) + chip;
+    const tall = thick * 1.5 * swell * (1 - 0.18 * bite) + 0.6 * chip;
     const sag = 0.6 * Math.sin(s * 0.11 + seed) + 0.5 * drift(s * 0.05, seed, 9);
     const rr = radius + 0.9 - cx * wide;
     return { at: [Math.sin(b) * rr, y + sag + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
@@ -162,7 +166,7 @@ export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
 }
 
 /** The cave: where it is on the cliff's face (metres along it, height) and its half size. */
-export const CAVE_MOUTH = { s: 0, y: 370, wide: 640, tall: 120, deep: 340 };
+export const CAVE_MOUTH = { s: 0, y: 235, wide: 640, tall: 85, deep: 340 };
 
 /** The sea cliff with its cave: 10 km of it, the scree at its foot, the face, the land behind. */
 export function cliff(): THREE.BufferGeometry {

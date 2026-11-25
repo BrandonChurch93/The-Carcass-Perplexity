@@ -94,8 +94,11 @@ export function create(ctx: Context): Piece {
   const bodies: Body[] = [];
   // The vapour that stands over the smaller shafts: a column that leans with the wind and widens.
   for (const [x, z, r, tall] of SMALLER) {
-    const rise = r * (2 + 3 * tall);
-    bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.3 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
+    // A column that climbs, leans with the wind as it climbs and opens into a plume that trails off down the wind.
+    const rise = r * (3.5 + 6 * tall);
+    const lean: [number, number] = [-0.4, 0.14];
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.3 / r, repeat: r * 3.4, open: 0.34, climb: 2.4 + r * 0.14, sun: 1.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.11 / r, repeat: r * 5.5, open: 0.44, climb: 1.2, sun: 1.5 });
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
@@ -103,7 +106,7 @@ export function create(ctx: Context): Piece {
     [-17, 3, 6, 15, 3.5, 13, 0.012],
     [-40, 3.2, -4, 12, 2.6, 9, 0.012],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 26, open: 0.42, climb: 0.5, sun: 1 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 26, open: 0.42, climb: 0.5, sun: 1.35 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
@@ -115,6 +118,14 @@ export function create(ctx: Context): Piece {
   ] as const) {
     const [x, z] = cliffPoint(s, p);
     bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense, repeat: 260, open: 0.3, climb: -3, sun: 0.7 });
+  }
+  // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
+  for (const [x, z, rx, ry, rz, y] of [
+    [500, -820, 1300, 30, 160, 22],
+    [900, -1350, 1500, 40, 200, 48],
+    [1500, -1750, 1300, 50, 200, 100],
+  ] as const) {
+    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0032, repeat: 420, open: 0.22, climb: 0.3, sun: 0.9 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
