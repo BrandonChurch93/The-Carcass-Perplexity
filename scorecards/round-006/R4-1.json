@@ -1,0 +1,56 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-25 12:48 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the foreground lava river channel",
+        "what": "the glowing veins and dark crust islands stay nearly locked in place across 3.4 seconds as the camera pushes in, reading like a static glowing surface rather than flowing lava",
+        "fix": "animate slow viscous flow and folding crust plates moving downstream through the channel"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the lava cascade on the far left cliff and the foreground lava fissure",
+        "what": "both lava features stay completely frozen in the exact same bright pattern across 7.3 seconds, reading as static emissive textures",
+        "fix": "add slow downward flow to the cliff cascade and subtle crust movement in the foreground fissure"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the strider herd and lava plain beyond the foreground ridge",
+        "what": "none of the striders step or shift posture and the distant lava pools stay static across 7.15 seconds, so the wide shot reads like a camera gliding past a still model",
+        "fix": "give the herd staggered subtle motion such as weight shifts, slow steps, and dipping necks, and animate slow movement in the lava pools and cascade"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the background striders, distant lava cascade, and cliff smoke",
+        "what": "with the camera nearly still, the entire background remains frozen for 3.5 seconds until a tiny smoke wisp appears at the carcass base in the last few frames, making the shot read like a still picture",
+        "fix": "keep the distant lava, cliff smoke, and background striders subtly moving throughout the shot"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the hero strider and the strider on the right",
+        "what": "the hero strider's body and four legs remain rigidly locked for 7.3 seconds, and the right strider swings its front leg around frames 3096 to 3215 without a visible torso weight shift before the step",
+        "fix": "add a torso weight shift before the right strider steps and subtle settling or balance motion on the hero strider"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the smoke plumes along the far cliff rim",
+        "what": "the large background smoke wall barely drifts across 7.15 seconds, reading like a painted backdrop",
+        "fix": "give the high smoke slow, continuous lateral drift and billow at its own altitude"
+      }
+    ]
+  }
+}

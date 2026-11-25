@@ -184,6 +184,10 @@ void main() {
     float thick = smoothstep(0.45, 0.9, stain) * smoothstep(0.3, 0.7, height);
     albedo = mix(albedo, mix(vec3(0.4, 0.3, 0.04), vec3(0.75, 0.6, 0.13), thick) * (0.6 + 0.8 * height), 0.92 * stain);
   }
+  // One mound of crystals at the vent of the crag's foot, with the ground's (land/shaders.ts): the small stones within reach of the short crack
+  // are crusted whole, lemon going to cream on what stands up.
+  float mound = smoothstep(1.05, 0.7, segmentDistance(vWorld.xz, uCrackB)) * (1.0 - smoothstep(0.5, 0.9, size));
+  albedo = mix(albedo, mix(vec3(0.9, 0.7, 0.1), vec3(0.94, 0.88, 0.58), smoothstep(0.35, 0.8, height)), mound);
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * height), 0.92 * lakeRind(vWorld) * (1.0 - afloat));
   // Undersides and the faces that lean over see the ground, not the sky.
   occ *= mix(0.25, 1.0, smoothstep(-0.6, 0.1, n0.y)) * mix(0.6, 1.0, smoothstep(0.0, 0.55, n0.y));

@@ -24,15 +24,28 @@ export const MAX_EMITTERS = 8;
 // Its green and blue were 0.36 and 0.12 and it hid a quarter of the sky: the floor of that shot stood 1.9 times as red as blue against the
 // picture's 1.5, lit by the bank more than by the sky. The smoke is pale grey lit from below and thin enough to pass the sky: the same red, more
 // green and blue, a tenth of the sky hidden. The red of the floor is then the melt's own, within a few metres of it.
-export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.1, radiance: [0.75, 0.52, 0.38] as const };
+// Then the skin lifted the floor's own tone and the floor stood too neutral (73 62 56 against 64 48 43) and the animals cold grey: part of the
+// way back, 0.42 and 0.26 and a fifth of the sky hidden.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.2, radiance: [0.75, 0.42, 0.26] as const };
 // The pools of the seam the walkers feed at, as the lava draws them (lake/heat.ts, heroPool and stringPools): where each lies on the crust at the
 // reference time, its long axis, its half length and half width in metres. Each lights an apron of crust round itself, bright at the brim and
-// gone 3 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K and three and a half times its level: the crust at a brim is near black (albedo 0.014 to 0.05).
+// gone 6 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K, a little yellower, and twice its level. It was three
+// and a half times (70, 9.5) when the crust at a brim was near black (albedo 0.014 to 0.05); the skin has lifted the crust since (0.05 to 0.08)
+// and the floor round the hero's pool stood as one flat saturated patch where the picture has a soft glow on a dark floor.
+// The fire's light lives with the flow: what a round light casts swells and sinks by a few per cent (6 at the most, 3 as a rule), slowly
+// (periods of 17, 10 and 6 s, which never line up inside a shot), and a swell at the mouth reaches the foot of the fall three seconds later,
+// as the lava does (a light lower down is that much behind). Lights far apart are out of step. A function of the place's seconds alone.
+export const BREATH = { deep: [0.03, 0.02, 0.012] as const, rate: [0.37, 0.61, 1.07] as const, lag: 0.05, apart: 0.019 };
+export function breath(e: { position: { x: number; y: number; z: number } }, seconds: number): number {
+  const t = seconds + BREATH.lag * e.position.y + BREATH.apart * (e.position.x + 0.7 * e.position.z);
+  return 1 + BREATH.deep[0] * Math.sin(BREATH.rate[0] * t) + BREATH.deep[1] * Math.sin(BREATH.rate[1] * t + 1.3) + BREATH.deep[2] * Math.sin(BREATH.rate[2] * t + 2.1);
+}
+
 export const POOLS = {
   at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
   axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
   halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
-  radiance: [70, 9.5] as const,
+  radiance: [40, 6.4] as const,
 };
 
 // The stream of the fall as a light: the lava from the lip of the mouth down the foot of the wall to the lake, as the fall draws it (fall/path.ts).
@@ -583,7 +596,7 @@ export function createRig(t0: number): Rig {
       for (let i = 0; i < count; i++) {
         const e = emitters[i] as Emitter;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
-        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance);
+        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now));
         emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;

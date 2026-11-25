@@ -128,16 +128,16 @@ const MAIN: [number, number][] = [
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 118;
+export const FAN_FROM = 136;
 
-/** The west arm of the fan. It leaves the main stream at `BRAID_FROM` metres from the lip. */
+/** The east arm of the fan: it runs along the shore, so the fan is a long low lobe. It leaves the main stream at `BRAID_FROM` metres from the lip. */
 export const BRAID_FROM = FAN_FROM - 6;
 const ARM_TAIL: [number, number][] = [
-  [-46, -366],
-  [-56, -354],
-  [-63, -342],
-  [-67, -331],
-  [-69, -321],
+  [-27, -355],
+  [-12, -349],
+  [6, -345],
+  [25, -342],
+  [44, -340],
 ];
 
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
@@ -152,12 +152,15 @@ const HALF: [number, number][] = [
   [5, 8],
   [13, 5.4],
   [22, 5],
-  [FAN_FROM - 4, 5.6],
-  [FAN_FROM + 8, 14],
-  [FAN_FROM + 22, 28],
-  [FAN_FROM + 40, 50],
-  [FAN_FROM + 60, 74],
-  [FAN_FROM + 78, 84],
+  [100, 4.8],
+  [FAN_FROM - 16, 3.6],
+  [FAN_FROM - 4, 4.4],
+  [FAN_FROM + 4, 10],
+  [FAN_FROM + 9, 26],
+  [FAN_FROM + 14, 44],
+  [FAN_FROM + 22, 60],
+  [FAN_FROM + 38, 76],
+  [FAN_FROM + 57, 86],
 ];
 const halfAt = (len: number): number => {
   let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
@@ -273,9 +276,6 @@ export const FAN_POOL: [number, number] = mainAt(FAN_FROM + 9);
  * `from` and `to` are metres from the lip, `side` is +1 east of the stream and -1 west, `out` how many metres it stands off at its widest.
  */
 const BRAIDS = [
-  { from: 8, to: 26, side: 1, out: 6, half: 1.6 },
-  { from: 30, to: 56, side: -1, out: 9, half: 1.9 },
-  { from: 34, to: 52, side: 1, out: 6, half: 1.5 },
   { from: 60, to: 80, side: 1, out: 7, half: 1.7 },
   { from: 88, to: 106, side: -1, out: 7, half: 1.7 },
 ];
@@ -316,7 +316,9 @@ export function createCourse(height: (x: number, z: number) => number, under: (x
 
   // The side channels. Each starts 12 samples up the main stream so that it leaves along it, and its last metres come down to the main stream's level.
   const sides: Channel[] = [arm];
-  BRAIDS.filter((b) => b.to < FAN_FROM - 2).forEach((b, k) => {
+  BRAIDS.filter((b) => b.to < FAN_FROM - 2).forEach((b, at) => {
+    // The seeds are those these two had when there were five: the three on the upper slope each fell down a ledge as a flat panel, and are gone.
+    const k = at + 3;
     const i0 = lip + Math.round(b.from / SPACING);
     const i1 = Math.min(main.n - 14, lip + Math.round(b.to / SPACING));
     const pts: [number, number][] = [[main.x[i0 - 12] as number, main.z[i0 - 12] as number]];
@@ -412,7 +414,10 @@ export function createCourse(height: (x: number, z: number) => number, under: (x
       const far = Math.max(distance, 1e-3);
       const toward: [number, number] = [(px - x) / far, (pz - z) / far];
       const mixed = (v: Float32Array): number => lerp(v[i] as number, v[j] as number, f);
-      return { distance, len: mixed(c.len), tau: mixed(c.tau), half: mixed(c.half), speed: mixed(c.speed), side, arm: useArm, y: mixed(c.y), toward };
+      // The fan lies to the east: west of its middle the main sheet reaches little more than half as far.
+      const len = mixed(c.len);
+      const west = c === main && x < px ? lerp(1, 0.58, smooth(FAN_FROM, FAN_FROM + 10, len)) : 1;
+      return { distance, len, tau: mixed(c.tau), half: mixed(c.half) * west, speed: mixed(c.speed), side, arm: useArm, y: mixed(c.y), toward };
     },
     at: (len) => {
       const f = Math.min(main.n - 1.001, Math.max(0, lip + len / SPACING));

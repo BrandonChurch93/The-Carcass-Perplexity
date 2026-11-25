@@ -195,8 +195,8 @@ const float ROPE_TALL = 0.03;
 // A raft of skin, metres along and across the stream.
 const vec2 RAFT = vec2(0.85, 0.6);
 // Metres a second the rafts ride down the stream, and the thin skin of the core.
-const float RAFT_SPEED = 0.22;
-const float CORE_SPEED = 0.36;
+const float RAFT_SPEED = 0.6;
+const float CORE_SPEED = 0.9;
 
 // What the stream carries, at a point of the pattern: how the ropes are pushed out of line, how alive the creases are, where the skin is stretched thin.
 vec3 carriedAt(vec2 p) {
@@ -481,6 +481,9 @@ void main() {
   float kCrest = mix(870.0, 1010.0, hotness) + 50.0 * thin + 25.0 * (carried.z - 0.5);
   // A raft does not glow of itself: no red in its tone.
   kCrest = mix(kCrest, 780.0, onRafts);
+  // The melt beside a raft heats its edge: red-orange at the rim, dark a hand and a half in.
+  float edgeGlow = present * (1.0 - presentOther) * (1.0 - smoothstep(0.0, 0.18, border));
+  kCrest += 340.0 * edgeGlow * edgeGlow * onRafts;
   float kCrease = mix(1130.0, 1350.0, hotness) * mix(0.82, 1.0, lives) + 60.0 * torn;
   kCrease = mix(kCrease, max(kCrease, 1330.0), vein);
   vec3 hot = mix(blackbody(kCrest), blackbody(kCrease), crease);
@@ -500,9 +503,9 @@ void main() {
   // drawn out along the flow. No bands across it.
   float acrossCore = (bankSide * ax - strays) * gape;
   float drawn = here.x - CORE_SPEED * uTime;
-  float mid = 1.0 - smoothstep(0.25, 1.05, lean / max(coreTo, 1e-3));
+  float mid = 1.0 - smoothstep(0.15, 0.9, lean / max(coreTo, 1e-3));
   float folds = vnoise(vec2(drawn * 0.16, acrossCore * 4.5 + 0.5 * vnoise(vec2(drawn * 0.5, 3.0))) + 3.0) * 0.65 + vnoise(vec2(drawn * 0.5, acrossCore * 12.0) + 7.0) * 0.35;
-  float kBody = mix(1250.0, mix(1480.0, 1530.0, reachOpen) - 40.0 * farAway, mid) + 100.0 * (folds - 0.5);
+  float kBody = mix(1250.0, mix(1490.0, 1575.0, reachOpen) - 40.0 * farAway, mid) + 100.0 * (folds - 0.5);
   // Between the rafts the melt is orange.
   float inCore = 1.0 - smoothstep(coreTo * 0.9, coreTo * 1.3, lean);
   float kStream = mix(1200.0, kBody, inCore);
@@ -527,8 +530,8 @@ void main() {
   vec2 toBank = up / max(length(up), 1e-4);
   vec2 sightAt = normalize(vWorld.xz - cameraPosition.xz);
   float foot = (1.0 - smoothstep(0.12 + 0.03 * vnoise(q * 5.0) + grain, 0.14 + 0.03 * vnoise(q * 5.0) + 2.0 * grain, inside)) * smoothstep(0.1, 0.4, dot(toBank, sightAt))
-    * smoothstep(0.34, 0.46, vnoise(vec2(vFlow.x * 1.6 + uTime * 0.05, 5.0))) * (1.0 - feeding) * (1.0 - stir);
-  hot = mix(hot, blackbody(1310.0 + 140.0 * vnoise(q * 3.1 + 7.0)), foot);
+    * smoothstep(0.5, 0.58, vnoise(vec2(vFlow.x * 2.6 + uTime * 0.05, 5.0)) * 0.7 + vnoise(vec2(vFlow.x * 9.0, 11.0)) * 0.3) * (1.0 - feeding) * (1.0 - stir);
+  hot = mix(hot, blackbody(1400.0 + 170.0 * vnoise(q * 3.1 + 7.0)), foot);
   skin *= 1.0 - foot;
   // Under the crust nothing glows.
   hot *= 1.0 - smoothstep(0.0, 0.08, bank);
@@ -551,12 +554,12 @@ void main() {
   float fresnel = (0.02 + 0.07 * pow(1.0 - nv, 5.0)) * (1.0 - 0.7 * onRafts);
   vec3 r = reflect(-v, nrm);
   r.y = abs(r.y) + 0.05;
-  // A raft is old skin: matte dark grey under the sky, as the crust beside the channel is.
-  vec3 lit = skin * shade * mix(openSky, max(openSky, 0.7), onRafts) * (mix(0.06, 0.17, onRafts) * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r)))
+  // A raft is old skin, as dark as the crust: the sky hardly lights it, and what light it has is the glow of the melt at its edge.
+  vec3 lit = skin * shade * mix(openSky, max(openSky, 0.7), onRafts) * (mix(0.06, 0.022, onRafts) * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r)))
     // The open melt of the channel lights the skin beside it: brown, never grey.
     + skin * shade * 0.012 * (1.0 - onRafts) * blackbody(1300.0) * (0.4 + 0.6 * wide) * uLavaOn
     // A raft is lit from the side by the core: the flanks of its ropes that face the fire are red-brown, the others black.
-    + skin * onRafts * (0.45 + 1.1 * pitted) * blackbody(1280.0) * 0.02 * fireLit * uLavaOn
+    + skin * onRafts * (0.45 + 1.1 * pitted) * blackbody(1280.0) * 0.012 * fireLit * uLavaOn
     // The glow of the creases lies on the flanks of the ropes beside them: the skin is brown, not grey.
     + skin * 0.1 * (1.0 - 0.9 * onRafts) * blackbody(kCrease) * (1.0 - crease) * (0.25 + 0.75 * (1.0 - crest)) * uLavaOn;
   gl_FragColor = vec4(rigOut(lit) + hot * uLavaOn, 1.0);
