@@ -238,7 +238,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
   vec3 o = ro - A.xyz;
   vec2 oxz = o.xz - B.xy * shear * o.y;
   vec2 dxz = rd.xz - B.xy * shear * rd.y;
-  float tower = 1.4 * (A.w + top * spread) + rise * mix(0.1, 0.16, kind) * length(B.xy) + (A.w * 0.3 + top * 0.125);
+  // The tower is wider than anything the column does, and the column thins to nothing well inside it: no view shows the side of the tower as a straight edge.
+  float tower = 1.25 * (1.4 * (A.w + top * spread) + rise * mix(0.12, 0.16, kind) * length(B.xy) + (A.w * 0.3 + top * 0.125));
   float qa = dot(dxz, dxz);
   float qb = dot(oxz, dxz);
   float qc = dot(oxz, oxz) - tower * tower;
@@ -298,7 +299,9 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     float fine = mix(0.5, 0.25, u);
     float wisps = smoothstep(mix(0.36, 0.48, kind), mix(0.82, 0.74, kind), n1 * (1.0 - fine) + small.b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
-    float dens = body * puff * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
+    vec2 off = (p.xz - A.xz) - B.xy * shear * h;
+    float inside = (1.0 - smoothstep(0.55, 0.9, length(off) / tower)) * (1.0 - smoothstep(0.75 * top, 0.97 * top, h));
+    float dens = body * puff * inside * mix(0.03 + 2.2 * wisps * wisps, 4.0 * wisps, kind);
     if (dens <= 0.0) continue;
     float sigma = dens * B.w;
     // A fountain, a pool or a crack lights the vapour that is close over it; the rest is lit by the sky, like any smoke.
