@@ -12,7 +12,7 @@ export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 /** The round lights the rig holds. The strikes may hold six at once; two are kept for the lead. */
 export const MAX_EMITTERS = 8;
 /** How much of a round light's power the storm cloud throws back on the ridge as uFlash: radiance times radius squared, over this many square metres. */
-export const FLASH_AREA = 2.4e6;
+export const FLASH_AREA = 1.2e8;
 
 export type Height = (x: number, z: number) => number;
 /** What lies under the ground at a point: null where it is solid, or the roof of the hollow (metres over the canal floor) and the share of the sky's light that reaches into it (0 to 1). */

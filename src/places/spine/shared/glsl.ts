@@ -74,6 +74,9 @@ uniform vec3 uEmitterRadiance[8];`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
+// The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
+// ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
+const float EMITTER_CAST = 0.04;
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {
@@ -148,7 +151,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
     e += uEmitterRadiance[i] * (3.14159 * r * r / d2 * c);
   }
-  return e;
+  return e * EMITTER_CAST;
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,
