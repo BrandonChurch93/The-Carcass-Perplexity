@@ -1,0 +1,5 @@
+2026-11-25 21:41 UTC
+work at bed8a1e on agent/marsh-life
+min 19: first pass of wallowers (posed tube skins, walk) and stalks (ringed tubes, filament plumes, insects) on the lead's foundation. Wrong: plumes read as palm spikes, tusk fringe barely shows, hide reads as fur, dead and fliers still stand-ins
+look-1.jpg = out/work/stills/key-marsh-2-hd-draft.png
+look-2.jpg = out/work/stills/key-marsh-3-hd-draft.png
