@@ -1,0 +1,70 @@
+{
+  "round": 4,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "gemini_neon",
+  "answered": "2026-11-25 09:01 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the lava stream cascading down the rocky slope (x 42 to 58%, y 58 to 75%, also visible in set-B-04.png)",
+        "what": "the lava reads as a flat bright orange-yellow painted ribbon with sharp cutout holes and scattered glowing orange dots on the rock, with no molten thickness, dark cooling crust, slag border, or rising vapour",
+        "fix": "give the lava physical volume and dark ropy cooled crust along its edges, add heat haze and vapour rising from it, and replace the flat orange tint halo with physically grounded bounce light and bloom"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "the scattered dark boulders on the left talus slope (x 0 to 17%, y 58 to 75%, also visible across the lower left of set-B-04.png)",
+        "what": "the boulders are visibly low-poly, flat-shaded geometric chunks with sharp planar facets, one uniform dark material, and no embedded scree or dust around their bases",
+        "fix": "replace the low-poly rock instances with high-detail fractured rock meshes, embed their bases into the slope with dirt and smaller rubble, and vary their shaders and dust coating"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the cracked ground plane and lava fissure across the foreground",
+        "what": "even close to the camera, the ground looks like smooth plastic or clay with uniform procedural polygonal cracks and no rock grit, ash, or micro-roughness, while the lava crack stops on a hard edge without lighting the adjacent slabs or showing a cooled crust",
+        "fix": "add high-frequency basalt displacement, ash, pebbles, and varied roughness to the ground plates, build a jagged cooled slag lip along the fissure, and let the lava cast warm bounce light and subtle bloom onto the surrounding rock"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "the left lip and rim of the cave mouth (x 0 to 17%, y 25 to 42%, also visible in set-B-04.png)",
+        "what": "the rock texture below the left cave lip is severely stretched into vertical smears, and in set-B-04.png the cave arch looks like a smooth carved tunnel with a flat uniform orange glow band that stops cleanly at the rim while the interior stays a flat dark void",
+        "fix": "eliminate the vertical UV stretching with proper UVs or triplanar rock displacement, break up the cave mouth with fractured rock overhangs, and drive the cave glow physically from the lava so light falls off naturally across both the interior walls and outer cliff"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the foreground creature's body, legs, feet, and lower neck (also seen in set-B-02.png top-right and set-B-03.png left)",
+        "what": "the creature reads as a smooth sculpted 3D model with pinched joint seams, a synthetic repeating grid pattern on the lower neck above the tendrils, no ash or dust on its hide or legs, no shadow under its body or feet, and flat triangular foot pads sitting pasted on the ground with the front-right pad bridging over the lava crack",
+        "fix": "add fine organic hide texture and environmental ash and soot to the limbs, replace the regular neck grid with irregular organic ridges, smooth the joint meshes, plant the feet solidly on the rock beside the crack, and add grounded contact shadows and ambient occlusion"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the right-hand creature's neck and tendrils (x 83 to 100%, y 25 to 42%)",
+        "what": "a tendril is visibly detached and floating away from the tip of the neck, and the curved neck shows an abrupt dark-to-light shading seam along its bend",
+        "fix": "connect all tendrils cleanly to the neck geometry and fix the normal and shading discontinuity along the neck"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the smoke and haze across the right side of the frame (also seen in set-B-05.png bottom-left and set-B-06.png right)",
+        "what": "the air reads as a flat grey-brown tint with a faint card-like diagonal light streak and no volumetric plume structure or warm under-lighting from the lava below",
+        "fix": "replace the flat haze tint and streak with true volumetric smoke and vapour that has depth layers and catches warm scatter from the lava below"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the background mist behind the creatures and the right creature's lifted foot",
+        "what": "the background mist reads as a flat muddy gradient above a hard orange horizon band with little volumetric scatter, and the lifted foot on the right creature has stray floating dark specks beneath it",
+        "fix": "add layered volumetric density to the background volcanic mist so the horizon glow diffuses naturally through it, and remove the stray floating artifacts under the lifted foot"
+      }
+    ]
+  }
+}

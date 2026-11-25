@@ -1,0 +1,36 @@
+{
+  "round": 4,
+  "unit": "heart",
+  "pack": "R4-1",
+  "family": "gpt_6_2_sol",
+  "answered": "2026-11-25 09:02 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the central animal at the fissure and the tall animal behind it on the right",
+        "what": "The central animal repeatedly flexes its long appendage while its torso barely transfers weight over its planted legs. The animal at right cycles through leg poses with little travel, making the group look rigged rather than alive.",
+        "fix": "Lock supporting feet to the ground, shift the torso over each supporting leg before lifting the next foot, and give the animals distinct timing and pauses."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the crust edging the foreground lava channel in frames 3523–3578",
+        "what": "The orange surface changes quickly, but the evenly ribbed crust at its edge holds its shape, making the flow read as a moving texture inside a fixed strip.",
+        "fix": "Break up the parallel ribs and let irregular crust plates drift, buckle and overlap at different rates, exposing hot seams where they separate."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the push toward the dark foreground arch and vent in frames 3579–3790",
+        "what": "The push enlarges the arch, but the shot ends on essentially the same silhouette and a small wisp, with no clear change to reward the approach.",
+        "fix": "Time the push to a localized sag or shift that widens the vent and drives a visible release, or end on the strongest reveal before the move runs out of information."
+      }
+    ]
+  },
+  "note": "The critic first answered in prose (kept in out/work/tmp/ans/r4-R4-1-first.txt: 6 of 10, one severe and two major named); it was asked once for the JSON object of the brief and nothing else."
+}
