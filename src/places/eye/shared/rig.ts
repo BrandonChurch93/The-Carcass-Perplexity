@@ -49,7 +49,7 @@ interface Grid {
   shade: Float32Array;
 }
 
-function bakeGrid(spec: typeof LAND, height: Height): Grid {
+function bakeGrid(spec: typeof LAND, height: Height, cover: Height | null): Grid {
   const { width: w, height: h } = spec;
   const cx = (spec.maxX - spec.minX) / w;
   const cz = (spec.maxZ - spec.minZ) / h;
@@ -100,6 +100,13 @@ function bakeGrid(spec: typeof LAND, height: Height): Grid {
       for (let d = 5; d < 2700; d += Math.max(4, d * 0.045)) {
         const c = at(x + hx * d, z + hz * d) - d * fall;
         if (c > top) top = c;
+      }
+      if (cover) {
+        const c = cover(x, z);
+        if (c > top) {
+          top = c;
+          open[j * w + i] = (open[j * w + i] as number) * (1 - 0.55 * Math.min(1, Math.max(0, (c - (heights[j * w + i] as number)) / 40)));
+        }
       }
       shade[j * w + i] = top;
     }
@@ -182,7 +189,8 @@ export interface Rig {
     sunlit(x: number, y: number, z: number): boolean;
   };
   /** Called by the land folder, once, at creation: the true height of the land everywhere. Negative or zero means lake. */
-  setLand(height: Height): void;
+  /** `cover` is the height below which something that is not ground (the brow) hides the sun and part of the sky at that point. */
+  setLand(height: Height, cover?: Height): void;
   /** `count` soft round shades for the contact map. Place each with `setDisc`. */
   contactDiscs(count: number): THREE.InstancedMesh;
   /** Centre on the ground, radius in metres, strength 0 to 1. `stretch` lengthens it along its own x, `yaw` turns it: `rig.sun.shadowYaw` lays it along the sun. */
@@ -215,6 +223,7 @@ export function createRig(): Rig {
   const contactScene = new THREE.Scene();
 
   let landHeight: Height = layoutHeight;
+  let landCover: Height | null = null;
   let grid: Grid | null = null;
   let texture: THREE.DataTexture | null = null;
 
@@ -228,18 +237,18 @@ export function createRig(): Rig {
     uLandRect: { value: new THREE.Vector4(LAND.minX, LAND.minZ, 1 / (LAND.maxX - LAND.minX), 1 / (LAND.maxZ - LAND.minZ)) },
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
-    uSkyZenith: { value: new THREE.Vector3(0.2, 0.3, 0.47) },
-    uSkyHorizon: { value: new THREE.Vector3(0.62, 0.6, 0.62) },
-    uSkyGround: { value: new THREE.Vector3(0.16, 0.14, 0.13) },
+    uSkyZenith: { value: new THREE.Vector3(0.1, 0.18, 0.36) },
+    uSkyHorizon: { value: new THREE.Vector3(0.5, 0.53, 0.58) },
+    uSkyGround: { value: new THREE.Vector3(0.1, 0.09, 0.085) },
     uSunDir: { value: sunDirection },
-    uSunColour: { value: new THREE.Vector3(5.2, 3.3, 1.75) },
+    uSunColour: { value: new THREE.Vector3(7.6, 4.4, 2.0) },
     uGlowDir: { value: new THREE.Vector3(Math.sin(glowBearing), 0, -Math.cos(glowBearing)) },
-    uGlowColour: { value: new THREE.Vector3(1.5, 1.05, 0.6) },
+    uGlowColour: { value: new THREE.Vector3(2.3, 1.55, 0.75) },
     uFill: { value: new THREE.Vector3(1, 1, 1) },
   };
 
   const bake = (): void => {
-    grid = bakeGrid(LAND, landHeight);
+    grid = bakeGrid(LAND, landHeight, landCover);
     texture?.dispose();
     texture = gridTexture(grid, LAND);
     (uniforms.tLand as THREE.IUniform).value = texture;
@@ -282,8 +291,9 @@ export function createRig(): Rig {
       shore: (x, z) => Math.hypot(x, z) - shoreOf(x, z),
       sunlit: (x, y, z) => y > sample(ready().shade, LAND, x, z),
     },
-    setLand: (height) => {
+    setLand: (height, cover) => {
       landHeight = height;
+      landCover = cover ?? null;
       grid = null;
     },
     contactDiscs: (count) => {

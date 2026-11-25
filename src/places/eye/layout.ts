@@ -8,18 +8,21 @@ export const WORLD = 3400;
 export const at = (bearing: number, r: number): [number, number] => [Math.sin(bearing * DEG) * r, -Math.cos(bearing * DEG) * r];
 
 const wrap = (d: number): number => Math.atan2(Math.sin(d), Math.cos(d));
-const bump = (a: number, centre: number, width: number): number => Math.exp(-((wrap(a - centre * DEG) / (width * DEG)) ** 2));
-const smooth = (lo: number, hi: number, v: number): number => {
+export const bump = (a: number, centre: number, width: number): number => Math.exp(-((wrap(a - centre * DEG) / (width * DEG)) ** 2));
+export const smooth = (lo: number, hi: number, v: number): number => {
   const t = Math.min(1, Math.max(0, (v - lo) / (hi - lo)));
   return t * t * (3 - 2 * t);
 };
 
-export const FAN = 180;
+// How far the south shore, where the cameras stand, lies inside the round of the lake: the shelf there is 180 m wide, so that the black centre is a broad band from the shore.
+export const FAN = 370;
 export const BLUFF = 20;
+// The east shore, under the brow, stands this far inside the round of the lake.
+export const EAST_IN = 300;
 
 export function shoreAt(bearing: number): number {
   const b = ((bearing % 360) + 360) % 360;
-  return SHORE - FAN * smooth(150, 172, b) * (1 - smooth(204, 228, b));
+  return SHORE - FAN * smooth(134, 172, b) * (1 - smooth(206, 244, b)) - EAST_IN * smooth(6, 52, b) * (1 - smooth(106, 150, b));
 }
 
 export const shoreOf = (x: number, z: number): number => shoreAt(Math.atan2(x, -z) / DEG);

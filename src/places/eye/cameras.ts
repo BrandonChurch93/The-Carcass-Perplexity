@@ -3,6 +3,7 @@ import { FPS } from '../../config';
 import { keyPart, placeOf, shotById, shotLength } from '../../film/cut';
 import { flight, type FlightPlan } from './flight';
 import handoff from './handoff.json';
+import { landHeight, onAxis } from './land/height';
 import { DEG, FAN, SHORE } from './layout';
 
 function look(position: Vec3, bearing: number, pitch: number, fov: number): Pose {
@@ -15,6 +16,11 @@ function look(position: Vec3, bearing: number, pitch: number, fov: number): Pose
   };
 }
 
+function standOn(along: number, across: number, above: number): Vec3 {
+  const [x, z] = onAxis(along, across);
+  return [x, landHeight(x, z) + above, z];
+}
+
 export const SHORE_TURN = -5;
 const CENTRE_PITCH = -1.94;
 
@@ -25,7 +31,7 @@ export function onShore(x: number, out: number, y: number): Vec3 {
 }
 
 export const KEYS = {
-  wide: look([-289, 34, 889], 18, -4.5, 40),
+  wide: look(standOn(150, 0, 6.2), 18, -5.06, 40),
   mats: look([-150, 1.1, 760], 8, -11.2, 45),
   edge: look([-372.3, 1.7, 312.4], 12, -13.6, 40),
   shore: look(onShore(25, 4.5, 1.9), 338 + SHORE_TURN, -5.5, 25),
@@ -77,7 +83,7 @@ function track(part: number): Pose {
 }
 
 export const shots: Record<string, CameraPath> = {
-  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -85, up: -4, right: -22 }, { forward: 85, up: 4, right: 22 }),
+  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -52, up: 5.5, right: 0 }, { forward: 52, up: -9, right: 0 }),
   'eye-02': through(KEYS.mats, key('eye-02'), { right: -5, forward: -8, up: -0.3, turn: 4 }, { right: 5, forward: 3.5, up: 1.2, turn: -13 }),
   'eye-03': through(KEYS.edge, key('eye-03'), { right: 4, forward: -5, up: 0.7, turn: -6 }, { right: -2.6, forward: 1, up: 0.4, turn: 7 }),
   'eye-04': (part) => track(part),

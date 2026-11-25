@@ -24,6 +24,15 @@ export interface HeatSource {
   strength: number;
 }
 
+export interface Lap {
+  x: number;
+  z: number;
+  /** 0 to 1: 0 is still water. */
+  strength: number;
+  /** Seconds: shifts the train of rings so that no two sources beat together. */
+  offset: number;
+}
+
 export interface TextureOptions {
   /** `colour` pictures are decoded from sRGB. `data` pictures are read as they are. */
   kind?: 'colour' | 'data';
@@ -42,6 +51,8 @@ export interface Context {
     texture(file: string, options?: TextureOptions): THREE.Texture;
   };
   readonly sources: { steam: SteamSource[]; heat: HeatSource[] };
+  /** Where a mouth or a leg stirs the water, now. Whoever stands in the lake writes its slots in `setTime`; the lake reads them after and draws the rings. */
+  readonly laps: Lap[];
   /** Seconds, in the time of the place: `rise` is the crest of the dome at the centre (key eye-4), `end` the first frame of the rise to orbit. */
   readonly events: { rise: number; end: number };
 }

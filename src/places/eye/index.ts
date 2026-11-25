@@ -12,15 +12,15 @@ import * as drinkers from './drinkers';
 import * as lake from './lake';
 import * as land from './land';
 import * as skeleton from './skeleton';
-import { landHeight } from './layout';
+import { landHeight } from './land/height';
 import { END, RISE, UNIT } from './shared/anchors';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
 import { createRig } from './shared/rig';
 import { setStaged } from './shared/stage';
 
-// The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.
-const FOLDERS: Folder[] = [land, lake, drinkers, skeleton, air];
+// The order matters: the land tells the rig its shape before anything reads it, the lake comes after whatever stirs it, and the air comes last because it draws over everything.
+const FOLDERS: Folder[] = [land, drinkers, skeleton, lake, air];
 
 async function create(): Promise<Place> {
   const parts = new Parts(UNIT);
@@ -64,6 +64,7 @@ async function create(): Promise<Place> {
     rng: (name) => stream(`eye/${name}`),
     assets: { texture },
     sources: { steam: [], heat: [] },
+    laps: [],
     events: { rise: RISE, end: END },
   };
 
