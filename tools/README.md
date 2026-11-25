@@ -86,6 +86,20 @@ Commands that sit directly on the renderer:
 
 Each of them appends a look.
 
+## Measures, packs, sound effects, the stress test and the trace
+
+| Command | What it does |
+| --- | --- |
+| `npm run measure -- --unit ID [--tier T] [--format F] [--frames N ...]` | Takes the three measures of `kit/07-QUALITY-BAR.md` on the built page and writes `out/work/measure/<unit>.json`. M1 counts the pixels that are exactly 255, 0, 255 in the `invalid` view. M2 is the share of pixels over `motion.pixelThreshold` in the `motion` view. M3 is the fine detail of a still against its approved picture, judged at the default tier and format |
+| `npm run pack -- --round R --unit ID [--critic R4b] [--tier T] [--format F] [--family carbon] [--record] [--fake]` | Builds what one critic is sent, under `out/work/packs/round-<R>/<unit>/<critic>/`, with a `manifest.json`. The files have neutral names, `set-<letter>-<nn>.png`, and the key that says which is which stays in `out/work/packs-keys/`. `--critic R4b` with the unit `film` builds the blockout packs. `--family carbon` keeps every picture inside 1048 px for that family |
+| `npm run sound -- --cue ID [--takes N] [--dry-run]`, `--take FILE`, `--keep N`, `--status`, `--sheet` | Makes the takes of one sound effect from its cue file `audio/cues/<id>.json`, checks each, and keeps one as `audio/kept/sounds/<unit>/<id>.wav` with its record. Takes wait under `out/work/sound/takes/<id>/`. The command prints the row for `ASSETS.md` and does not write it |
+| `npm run stress [-- --tier T] [--format ID] [--moments heart,spine,marsh,titan] [--force]` | Renders four short moments, encodes each as delivered and again at a platform's bit rate, and lays the two side by side under `out/work/stress/`. The encode uses one thread, so it repeats byte for byte. If the final export settings change, change `ENCODE` and `encodeArgs` in `tools/lib/stress-core.mjs` with them |
+| `npm run trace` | Traces the outline of the continent from the approved master of the reveal into `src/places/reveal/continent.json`, and writes the outline over the master to `out/work/trace/overlay.jpg`. The numbers it uses are in `RECIPE` at the top of `tools/trace.mjs`; the recipe is in `assets-src/reveal/RECIPE.md` |
+
+The check G6 is `tools/checks/g6.mjs`. It reads the table under "Judged frames" in `kit/PROGRESS.md` and fails while that table is missing or differs from the list the cut list gives.
+
+The check G12 is `tools/checks/g12.mjs` and the rise part of G15 is in `tools/checks/g15.mjs`. Both read `filmStates` from the built page. The rule for a smooth rise is `riseFaults` in `tools/lib/rise-core.mjs`: the camera may not fall, and its climb from one frame to the next may not change by more than a quarter of itself.
+
 ## The published build, `tools/flows.mjs`
 
 `npm run flows [-- --url URL]` replays the visitor's flows listed in `FLOWS.md` against the hosted copy in a fresh browser and exits 1 if one fails. Without `--url` it reads the address of `index.html` from `out/work/host/url.txt`. It counts the frames the page draws from inside the page, because a machine without a graphics card draws a frame in seconds.

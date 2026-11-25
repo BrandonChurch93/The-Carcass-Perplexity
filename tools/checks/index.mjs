@@ -2,6 +2,7 @@ import { commandCheck } from './commands.mjs';
 import { runG4 } from './g4.mjs';
 import { runG10 } from './g10.mjs';
 import { checkG8, checkG9 } from './repo.mjs';
+import { runG6 } from './g6.mjs';
 import { runG7 } from './g7.mjs';
 import { runG11 } from './g11.mjs';
 import { runG12 } from './g12.mjs';
@@ -25,6 +26,7 @@ const BUILT = {
   G2: commandCheck(['test']),
   G3: commandCheck(['run', 'determinism']),
   G4: runG4,
+  G6: runG6,
   G7: runG7,
   G8: fromRepo(checkG8),
   G9: fromRepo(checkG9),

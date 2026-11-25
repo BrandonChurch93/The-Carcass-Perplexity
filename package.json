@@ -35,7 +35,9 @@
     "voice": "node tools/voice.mjs",
     "sound": "node tools/sound.mjs",
     "stress": "node tools/stress.mjs",
-    "trace": "node tools/trace.mjs"
+    "trace": "node tools/trace.mjs",
+    "measure": "node tools/measure.mjs",
+    "pack": "node tools/pack.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

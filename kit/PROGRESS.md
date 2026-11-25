@@ -456,6 +456,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. The gate's build check (G1) writes its build under out/work/gate/dist, so closing a gate never empties dist/ with the review page in it. Found at the Phase 1 gate: the check had emptied dist/ after the publish. The published copy was not touched.
 - 2026-11-25. The transcript check A1 reads the words inside the quotes of a record's Transcript line and not the note after them. On n8 it still reports the sound-alike pair (never land heard as Neverland), which stays an open sound item and does not fail the gate.
 - 2026-11-25. The review page carries one small inline script that opens a sound or a film once more after the storage host fails on it. MEASURED from the VM: the host answered 502 to one large sound or film request in two of five page loads, a different file each time. UNKNOWN on Brandon's tablet. The tests allow exactly that one script and nothing else inline.
+- 2026-11-25. The continent of the blockout is traced by a command, not drawn by hand: tools/trace.mjs reads the approved master, takes warm and light pixels as land, drops the cyclone and the cloud, and writes the outline as points in master pixels. 50 pieces of land, 90 seas, 7062 points. Hand tracing would not repeat and a generated outline would not match the keys. The red plume east of the hips is traced as land and the fingers and toes are not traced; both are stand-in faults that the built continent of Phase 4 replaces.
+- 2026-11-25. The rise is one curve in the logarithm of the view's width, through the four windows of pullback.json at their key frames, with zero speed at the lake and on the titan frame. Its speeds at the keys come from one rule (each stretch's mean speed is the mean of the speeds at its ends, worked back from the titan frame), which gives a rise that starts still, is fastest at the first key and slows all the way to the whole body. After the titan frame the camera creeps out 3 percent to the cut to black so the hold is not a frozen frame.
+- 2026-11-25. G12 is measured as: the rise is every frame from the first frame of the last place to the titan frame; it must be one shot of the cut list; the camera's height may never fall; and its climb from one frame to the next may not change by more than a quarter of itself (0.002 where it is nearly still). The kit says 'one move with no cut'; this is the number the Builder put on it.
 
 ## Notes from Brandon
 
@@ -510,8 +513,6 @@ Each reports by message to the Builder.
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
 | `film_render_builder` | sandbox | `npm run film`, `npm run loop`, `npm run render:local`, checks G5, D2, D7 | `agent/film-render` | 2026-11-25 00:25 UTC | 85 min |
-| `measure_pack_builder` | sandbox | `npm run measure`, `npm run pack`, check G6 | `agent/measure-pack` | 2026-11-25 00:25 UTC | 80 min |
-| `sound_stress_builder` | sandbox | `npm run sound`, `npm run stress` | `agent/sound-stress` | 2026-11-25 00:25 UTC | 70 min |
 | `place_ribs_builder` | sandbox | The blockout of `ribs`: layout, parts, cameras fitted to its five keys | `agent/place-ribs` | 2026-11-25 00:36 UTC | 75 min |
 | `place_heart_builder` | sandbox | The blockout of `heart`: layout, parts, cameras fitted to its five keys | `agent/place-heart` | 2026-11-25 00:36 UTC | 75 min |
 | `place_breath_builder` | sandbox | The blockout of `breath`: layout, parts, cameras fitted to its five keys | `agent/place-breath` | 2026-11-25 00:36 UTC | 75 min |
@@ -524,6 +525,8 @@ Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `
 Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not logged into any GitHub hosts"), and a plain `git push` then works in most of them and fails in some. Every brief says: push, and if it fails attach a `git bundle` to the report. Both routes have been used and both work.
 
 Ended with a record: `render_meter_01` and `render_meter_02` (both answered by 22:15 UTC: every step ran, G3 passed on each VM, their stills and budget files are under "Frames across VMs" and "Render budget").
+
+Ended and merged into `main` in Phase 2: `sound_stress_builder` (answered before 00:52 UTC, `npm run sound` and `npm run stress`, merged from a bundle as `6bdb100`, 42 tests; no call to the account was made, so the shape of a quota refusal in its code is UNKNOWN, and the stress test ran only at the `draft` tier on the test scene); `measure_pack_builder` (answered before 00:53 UTC, `npm run measure`, `npm run pack` and check G6, merged from a bundle as `b34d8ae`, 70 tests; its page had no `motion` view, so M2 and M3 first ran for real after the merge).
 
 Ended and merged into `main` in Phase 1: `cut_compiler_builder` (answered 23:11 UTC after 10 minutes, `npm run cut`, 37 tests) and `voice_tool_builder` (answered 23:13 UTC after 12 minutes, `npm run voice`, 29 tests; its calls to the account were tested against a stand-in only, its check, keep and sheet steps ran for real on the saved take), both from bundles, merged at 23:20 UTC with 516 tests passing; `cut_sound_checks_builder` (answered 22:33 UTC, G7, G11, G15, G16, D1 and A1 to A6), `mix_builder` (22:34 UTC, `npm run mix` and the loudness measures), `audio_map_builder` (22:41 UTC, `npm run audiomap` and the map, merged as `76f358e`), `animatic_builder` (22:47 UTC after 24 minutes, `npm run animatic`, merged as `c157999`; 446 tests pass); the follow-up of `audio_map_builder` (22:53 UTC after 8 minutes, merged as `d35f84a`; 450 tests pass).
 
