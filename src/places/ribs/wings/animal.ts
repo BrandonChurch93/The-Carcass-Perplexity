@@ -62,8 +62,8 @@ export interface Detail {
   sail: [number, number];
 }
 
-export const NEAR: Detail = { around: 14, along: 1, tendrils: 26, toes: true, sail: [12, 30] };
-export const FAR: Detail = { around: 5, along: 0.34, tendrils: 6, toes: false, sail: [3, 10] };
+export const NEAR: Detail = { around: 14, along: 1, tendrils: 44, toes: true, sail: [12, 30] };
+export const FAR: Detail = { around: 5, along: 0.34, tendrils: 9, toes: false, sail: [3, 10] };
 
 /** The parts of one animal as grids of (along, around, which), with the part number beside. */
 export function animalGeometry(detail: Detail): THREE.BufferGeometry {
@@ -163,7 +163,7 @@ vec3 animalAt(float part, float s, float a, float id) {
   if (part < 1.5) {
     vec3 t = neckDir(s);
     float ps = aNeck.z * s * s;
-    float r = mix(0.15, 0.062, pow(s, 0.7)) + 0.09 * exp(-s * 9.0) + 0.012 * knob(s, 0.965, 0.035);
+    float r = mix(0.19, 0.085, pow(s, 0.7)) + 0.1 * exp(-s * 9.0) + 0.02 * knob(s, 0.965, 0.05);
     r *= 1.0 - smoothstep(0.985, 1.0, s) * 0.6;
     return ring(neckAt(s, base), t, vec3(cos(ps), 0.0, -sin(ps)), r, a);
   }
@@ -173,13 +173,13 @@ vec3 animalAt(float part, float s, float a, float id) {
     vec3 sideN = vec3(cos(aNeck.z), 0.0, -sin(aNeck.z));
     vec3 upN = normalize(cross(t1, sideN));
     float az = id * 2.39996 + aNeck.w * 6.28;
-    float fan = 0.08 + 0.5 * fract(id * 0.618 + aNeck.w);
+    float fan = 0.06 + 0.42 * fract(id * 0.618 + aNeck.w);
     vec3 dir = normalize(t1 + fan * (cos(az) * sideN + sin(az) * upN));
-    float len = 0.55 + 0.45 * fract(id * 0.381 + aNeck.w * 3.0);
+    float len = 0.7 + 0.6 * fract(id * 0.381 + aNeck.w * 3.0);
     float sway = 0.09 * sin(uTime * 1.7 + id * 2.1 + aNeck.w * 40.0) + 0.05 * sin(uTime * 4.1 + id * 3.7);
-    vec3 c = tip + len * (dir * s + vec3(sway * s * s, -0.5 * s * s, 0.6 * sway * s * s));
-    vec3 t = normalize(dir + vec3(2.0 * sway * s, -1.0 * s, 1.2 * sway * s));
-    float r = mix(0.024, 0.006, s) + 0.005 * knob(s, 0.94, 0.05);
+    vec3 c = tip + len * (dir * s + vec3(sway * s * s, -0.75 * s * s, 0.6 * sway * s * s));
+    vec3 t = normalize(dir + vec3(2.0 * sway * s, -1.5 * s, 1.2 * sway * s));
+    float r = mix(0.03, 0.008, s) + 0.006 * knob(s, 0.94, 0.05);
     return ring(c, t, anySide(t), r, a);
   }
   if (part < 4.5) {
@@ -216,15 +216,19 @@ vec3 animalAt(float part, float s, float a, float id) {
   float sg = part < 5.5 ? -1.0 : 1.0;
   vec3 sh = d * 0.22 + nb * 0.2 + X * (sg * 0.15);
   float spread = aBody.z;
-  float phi = mix(mix(-0.8, -1.72, a), mix(0.42, -1.3, a), spread);
-  float reach = mix(0.7, 1.0, spread) * SPAN * mix(1.0, 0.62, a * a);
+  // A folded sail hangs by its own weight, not by the tilt of the body: lean the fold back to level as the body tips.
+  float lean = aBody.y * (1.0 - spread) * 0.5;
+  vec3 dl = d * cos(lean) - nb * sin(lean);
+  vec3 nl = nb * cos(lean) + d * sin(lean);
+  float phi = mix(mix(-1.36, -0.98, a), mix(0.42, -1.3, a), spread);
+  float reach = mix(0.74, 1.0, spread) * SPAN * mix(1.0, mix(0.8, 0.62, spread), a * a);
   float web = abs(sin(PI * a * SPARS));
-  float along = s * reach * (1.0 - 0.14 * s * s * web * spread);
+  float along = s * reach * (1.0 - 0.14 * s * s * web * mix(0.8, 1.0, spread));
   float ang = aBody.w * (0.4 + 0.6 * s) + aMore.w * s * s;
-  vec3 outw = X * (sg * cos(ang)) + nb * sin(ang);
-  vec3 nrm = -X * (sg * sin(ang)) + nb * cos(ang);
-  float fold = (1.0 - spread) * (0.04 * sqrt(s) * cos(PI * a * SPARS) + 0.2 * sqrt(sin(PI * clamp(s * 1.15, 0.0, 1.0)) + 1e-4)) + spread * 0.05 * sin(PI * s) * (1.0 - a) + 0.012 * web * spread;
-  return sh + along * (cos(phi) * outw + sin(phi) * d) + nrm * fold;
+  vec3 outw = X * (sg * cos(ang)) + nl * sin(ang);
+  vec3 nrm = -X * (sg * sin(ang)) + nl * cos(ang);
+  float fold = (1.0 - spread) * (0.07 * sqrt(s) * cos(2.0 * PI * a * SPARS) + 0.3 * sqrt(sin(PI * clamp(s * 1.1, 0.0, 1.0)) + 1e-4)) + spread * 0.05 * sin(PI * s) * (1.0 - a) + 0.012 * web * spread;
+  return sh + along * (cos(phi) * outw + sin(phi) * dl) + nrm * fold;
 }
 
 vec3 animalToWorld(vec3 p) {
@@ -287,9 +291,9 @@ void main() {
   vec3 hide = texture2D(tHide, uv + vSeed.x * 7.0).rgb;
   float grain = dot(hide, vec3(0.3333));
   float tone = clamp(0.35 + 0.65 * grain / 0.065, 0.5, 1.45);
-  vec3 ivory = mix(vec3(0.58, 0.5, 0.455), vec3(0.66, 0.6, 0.55), vSeed.x);
+  vec3 ivory = mix(vec3(0.5, 0.485, 0.45), vec3(0.64, 0.62, 0.575), vSeed.x);
   vec3 albedo = ivory;
-  float rough = 0.62;
+  float rough = 0.5;
   float occ = 1.0;
   if (part < 0.5) {
     float belly = smoothstep(-0.2, -0.9, sin(a));
@@ -297,23 +301,27 @@ void main() {
     albedo *= mix(0.78, 1.0, smoothstep(0.0, 0.3, s));
     occ = mix(0.62, 1.0, smoothstep(-0.8, 0.3, n.y));
   } else if (part < 1.5) {
-    albedo = mix(ivory, vec3(0.5, 0.33, 0.3), smoothstep(0.8, 1.0, s));
+    albedo = mix(ivory, vec3(0.42, 0.37, 0.33), smoothstep(0.8, 1.0, s));
     albedo *= 0.9 + 0.1 * sin(s * 150.0);
   } else if (part < 2.5) {
-    albedo = mix(vec3(0.42, 0.22, 0.2), vec3(0.74, 0.6, 0.52), smoothstep(0.1, 1.0, s));
+    albedo = mix(vec3(0.4, 0.34, 0.3), vec3(0.72, 0.68, 0.6), smoothstep(0.05, 0.9, s));
     rough = 0.4;
   } else if (part < 4.5) {
     float scale = 0.85 + 0.15 * sin(s * (vSkin.w < 0.5 ? 60.0 : 110.0));
-    albedo = mix(vec3(0.4, 0.3, 0.27), vec3(0.3, 0.23, 0.21), vSkin.w < 1.5 ? smoothstep(0.2, 1.0, s) * step(0.5, vSkin.w) : 1.0) * scale;
+    albedo = mix(vec3(0.42, 0.39, 0.35), vec3(0.3, 0.27, 0.24), vSkin.w < 1.5 ? smoothstep(0.2, 1.0, s) * step(0.5, vSkin.w) : 1.0) * scale;
     occ = mix(0.7, 1.0, smoothstep(0.0, 0.5, s + vSkin.w));
     rough = 0.5;
   } else {
     float spar = abs(sin(PI * a * 5.0));
     float bone = 1.0 - smoothstep(0.0, 0.16, spar);
-    vec3 skin = mix(vec3(0.5, 0.43, 0.4), vec3(0.6, 0.52, 0.47), vSeed.x);
-    albedo = mix(skin, vec3(0.34, 0.26, 0.23), bone * 0.8);
-    float edge = max(smoothstep(0.7, 0.99, s), 1.0 - smoothstep(0.0, 0.05, a));
-    albedo = mix(albedo, vec3(0.56, 0.2, 0.06), edge * 0.9);
+    vec3 skin = mix(vec3(0.47, 0.45, 0.41), vec3(0.6, 0.57, 0.52), vSeed.x);
+    // Each panel between two spars is a worn sheet: paler along the spar, stained toward its lower edge, veined.
+    float panel = fract(a * 5.0);
+    skin *= 0.78 + 0.3 * panel;
+    skin *= 0.86 + 0.14 * sin(s * 90.0 + 6.0 * hide.r * 12.0);
+    albedo = mix(skin, vec3(0.3, 0.27, 0.24), bone * 0.8);
+    float edge = max(smoothstep(0.8, 1.0, s), 1.0 - smoothstep(0.0, 0.035, a));
+    albedo = mix(albedo, vec3(0.56, 0.3, 0.12), edge * 0.7 * (0.5 + 0.5 * tone));
     n = normalize(n + 0.25 * (hide - grain));
     rough = 0.55;
   }
@@ -332,7 +340,7 @@ void main() {
   if (sail) {
     // Light comes through the stretched skin of a sail.
     vec4 land = landAt(vWorld.xz);
-    col += albedo * vec3(1.15, 0.8, 0.6) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.45 + skyIrradiance(-n) * 0.22) / PI;
+    col += albedo * vec3(1.05, 0.9, 0.78) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.45 + skyIrradiance(-n) * 0.22) / PI;
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;

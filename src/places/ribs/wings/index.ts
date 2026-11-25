@@ -4,18 +4,27 @@ import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
 import { shots } from '../cameras';
-import { BORE, COLONY, LEVELS, STATIONS, T0, UNIT } from '../shared/anchors';
+import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { ribByName } from '../layout';
+import { foamTexture } from '../sea/chop';
+import { Spray, rand } from '../sea/spray';
 import { RING_SOURCE, boreArrives } from '../sea/tide';
 import type { Ring } from '../sea/tide';
 import { FAR, Flock, NEAR, STAND, animalMaterial, blend, stand } from './animal';
 import type { Pose } from './animal';
 
+/** The kite-wing of the approved pictures stands twice a man at the back: every free animal is this much larger than the animal of size 1. */
+const GROW = 1.35;
+
 export const PARTS: readonly string[] = ['kite-wings'];
 
 const FEEDERS = 44;
 const FLIERS = 451;
+const SPECKS = 560;
+const PASSERS = 6;
+/** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
+const RUN = { seconds: 9, speed: 3.7 };
 const LOW = 110;
 const FLEEING = 9;
 const COLONISTS = 460;
@@ -91,12 +100,16 @@ interface Feeder {
   seed: number;
   leave: number;
   away: number;
+  /** What it does in its pauses: under 0.55 it feeds, under 0.75 it looks about, over that both. Under 0 it varies pause by pause. */
+  habit: number;
+  runs: boolean;
 }
 
 export function create(ctx: Context): Piece {
   const rig = ctx.rig;
   const scatter = ctx.rng('kite-wings');
-  const ground = (x: number, z: number): number => rig.land.height(x, z);
+  // What a foot stands on. Where the bed lies deep under a pool the water is murky and the wader keeps to what bears it a hand under the surface.
+  const ground = (x: number, z: number): number => Math.max(rig.land.height(x, z), LEVELS.pool - 0.2);
   const material = animalMaterial(ctx, LEVELS.pool);
 
   // Where the cameras go: nothing flies through a lens, nothing stands on a track.
@@ -113,13 +126,15 @@ export function create(ctx: Context): Piece {
   // ---- Feeders ----
   const feeders: Feeder[] = [];
   const gait = (f: Feeder, t: number): number => {
+    if (f.runs) return f.cycles * smooth(T0 - RUN.seconds / 2, T0 + RUN.seconds / 2, t);
     const u = (t + f.offset) / f.period;
     const m = Math.floor(u);
     const tau = (u - m) * f.period;
     const walk = f.cycles * f.cycle;
     return (m + (tau < walk ? ease(tau / walk) : 1)) * f.cycles;
   };
-  const addFeeder = (x: number, z: number, yaw: number, size: number, stationed: boolean): void => {
+  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false): void => {
+    const size = small * GROW;
     const f: Feeder = {
       x0: x,
       z0: z,
@@ -133,15 +148,35 @@ export function create(ctx: Context): Piece {
       seed: scatter.next(),
       leave: boreArrives(z) - scatter.range(5, 13),
       away: scatter.range(-0.5, 0.5),
+      habit,
+      runs,
     };
+    if (runs) {
+      f.stride = 1.5 * size;
+      f.cycles = (RUN.speed * RUN.seconds) / f.stride;
+    }
     // A stationed feeder is at its station on the establishing key, in the middle of a pause.
-    if (stationed) f.offset = f.period * (0.45 + 0.35 * f.seed) - T0;
-    const p = gait(f, T0);
+    if (stationed) f.offset = f.period * (0.45 + 0.35 * f.seed) - at;
+    const p = gait(f, at);
     f.x0 = x - Math.sin(yaw) * f.stride * p;
     f.z0 = z - Math.cos(yaw) * f.stride * p;
     feeders.push(f);
   };
-  for (const s of STATIONS.feeders) addFeeder(s[0], s[1], s[2], s[3], true);
+  // The stations: the eight of the wide picture stand tall more than they feed, and the nearest runs with its sails half up;
+  // the three before the feeding camera are at their stations on that key, the nearest with its tuft in the water.
+  const HABITS = [0.6, 0.62, 0.9, 0.64, 0.66, 0.3, 0.68, 0.9];
+  const feedKey = keySeconds('ribs-2');
+  STATIONS.feeders.forEach((s, i) => {
+    if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
+    else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
+    else addFeeder(s[0], s[1], s[2], s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey);
+  });
+  {
+    // The second hero of the wide picture: walking tall, right of centre, 47 m out.
+    const from = STATIONS.establish;
+    const bearing = (24 * Math.PI) / 180;
+    addFeeder(from[0] + Math.sin(bearing) * 47, from[1] - Math.cos(bearing) * 47, -1.9, 1.12, true, 0.6, T0);
+  }
   for (let tries = 0; feeders.length < FEEDERS && tries < 4000; tries++) {
     const x = scatter.range(-200, 300);
     const z = scatter.range(-1250, 90);
@@ -152,9 +187,11 @@ export function create(ctx: Context): Piece {
   }
   const feederFlock = new Flock(NEAR, material, feeders.length);
   const discs = rig.contactDiscs(feeders.length + 4);
+  const runner = feeders.findIndex((f) => f.runs);
 
   const pose = stand();
   const foot = [0, 0, 0, 0, 0, 0];
+  const stance = [0, 0];
   let feeding = 0;
   let tuftX = 0;
   let tuftZ = 0;
@@ -172,11 +209,14 @@ export function create(ctx: Context): Piece {
     const tau = (u - m) * f.period;
     const walk = f.cycles * f.cycle;
     const q = (tau - walk) / (f.period - walk);
-    const kind = hash(m, f.seed * 91);
-    const going = 1 - smooth(walk - 0.3, walk + 0.5, tau) + smooth(f.period - 0.6, f.period, tau);
+    const kind = f.habit >= 0 ? f.habit : hash(m, f.seed * 91);
+    const ru = clamp01((tg - T0) / RUN.seconds + 0.5);
+    const run = f.runs ? Math.min(1, 6 * ru * (1 - ru)) : 0;
+    const going = f.runs ? run : 1 - smooth(walk - 0.3, walk + 0.5, tau) + smooth(f.period - 0.6, f.period, tau);
     let feed = 0;
     let alert = 0;
-    if (q > 0) {
+    if (f.runs) alert = 0.7 * (1 - run);
+    else if (q > 0) {
       if (kind < 0.55) feed = smooth(0.06, 0.24, q) * (1 - smooth(0.74, 0.92, q));
       else if (kind < 0.75) alert = smooth(0.05, 0.16, q) * (1 - smooth(0.7, 0.9, q));
       else {
@@ -193,10 +233,10 @@ export function create(ctx: Context): Piece {
     let hip = STAND - 0.05 - dip;
     if (feed > 0) {
       // Reach for the water: tip the body, lower the hip, and bend the neck until the tuft trails in the pool.
-      const reach: Pose = { ...pose, pitch: -0.62, rise: 0.3, tuck: 0.05, bend: -1.6 };
-      const want = (LEVELS.pool - ground(bx, bz)) / f.size - (hip - 0.16) + 0.42;
-      let lo = -2.6;
-      let hi = -0.6;
+      const reach: Pose = { ...pose, pitch: -0.34, rise: -0.6, tuck: 0.0, bend: -0.6 };
+      const want = (LEVELS.pool - ground(bx, bz)) / f.size - (hip - 0.07) + 0.5;
+      let lo = -1.7;
+      let hi = 0.5;
       for (let i = 0; i < 12; i++) {
         reach.bend = (lo + hi) / 2;
         if (neckTip(reach)[0] > want) hi = reach.bend;
@@ -204,8 +244,10 @@ export function create(ctx: Context): Piece {
       }
       reach.bend += 0.05 * Math.sin(t * 2.3 + f.seed * 30);
       blend(pose, { pitch: reach.pitch, rise: reach.rise, tuck: reach.tuck, bend: reach.bend, sweep: 0.55 * Math.sin(t * 0.8 + f.seed * 50) }, feed);
-      hip -= 0.16 * feed;
+      hip -= 0.07 * feed;
     }
+    // Running: body forward, sails half up and working, the stride long and high.
+    if (run > 0) blend(pose, { spread: 0.5, flap: 0.42 + 0.16 * Math.sin(p * Math.PI * 2 + 0.6), pitch: -0.24, rise: 0.82, bend: -0.1, tuck: 0.36, lag: -0.1 * Math.cos(p * Math.PI * 2 + 0.6) }, run);
     if (alert > 0) blend(pose, { rise: 1.46, bend: -0.12, tuck: 0.12, pitch: 0.06, sweep: (held(t, 1.9, f.seed) - 0.5) * 2.2 }, alert);
     feeding = feed;
     const tip = neckTip(pose);
@@ -223,7 +265,7 @@ export function create(ctx: Context): Piece {
       if (fr >= 0.6) {
         const e = (fr - 0.6) / 0.4;
         rel = -0.3 + 0.6 * (e * e * (3 - 2 * e));
-        lift = 0.24 * Math.sin(Math.PI * e);
+        lift = (0.24 + 0.3 * run) * Math.sin(Math.PI * e);
       }
       const side = (k === 0 ? -1 : 1) * 0.13 * f.size;
       const wx = bx + fx * f.stride * rel + Math.cos(f.yaw) * side;
@@ -241,6 +283,7 @@ export function create(ctx: Context): Piece {
       foot[k * 3] = wx;
       foot[k * 3 + 1] = wz;
       foot[k * 3 + 2] = under < LEVELS.pool - 0.01 && lift < 0.05 ? 1 : 0;
+      stance[k] = fr < 0.6 ? fr / 0.6 : -1;
     }
     // The bore is coming: crouch, throw the sails open, go.
     const tl = t - f.leave;
@@ -314,7 +357,7 @@ export function create(ctx: Context): Piece {
     const x = COLONY.x + Math.cos(a) * r;
     const z = COLONY.z + Math.sin(a) * r;
     const out = Math.atan2(Math.cos(a), Math.sin(a));
-    sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.3, 1.3), size: scatter.range(0.85, 1.15), seed: scatter.next(), stands: scatter.next() < 0.14, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+    sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.3, 1.3), size: scatter.range(0.85, 1.15) * 1.12, seed: scatter.next(), stands: scatter.next() < 0.14, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
   }
   sitters.sort((a, b) => a.d - b.d);
   const colonyNear = new Flock(NEAR, material, COLONY_NEAR);
@@ -369,9 +412,27 @@ export function create(ctx: Context): Piece {
     out.yaw = Math.atan2(-Math.sin(a) * way, Math.cos(a) * f.squash * way);
     out.roll = -way * 0.32;
   };
-  for (let i = 0; i < FLIERS; i++) {
+  for (let i = 0; i < FLIERS + SPECKS; i++) {
     const rib = ribByName(homes[scatter.int(homes.length)] as string);
     const low = i < LOW;
+    if (i >= FLIERS) {
+      // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
+      const colony = scatter.next() < 0.42;
+      const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
+      const radius = colony ? scatter.range(30, 150) : scatter.range(14, 110);
+      fliers.push({
+        cx: colony ? COLONY.x + scatter.range(-30, 30) : top.x + Math.cos(top.yaw) * top.lean * scatter.range(0.5, 1),
+        cz: colony ? COLONY.z + scatter.range(-30, 30) : top.z + scatter.range(-30, 30),
+        radius,
+        y: colony ? scatter.range(LEVELS.tide + 20, COLONY.top + 70) : top.height + scatter.range(-70, 40),
+        rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
+        phase: scatter.range(0, Math.PI * 2),
+        squash: scatter.range(0.55, 1),
+        size: scatter.range(0.9, 1.2) * GROW,
+        seed: scatter.next(),
+      });
+      continue;
+    }
     const home = low ? { x: COLONY.x, z: COLONY.z, lean: 0, height: 0, yaw: 0 } : rib;
     const radius = low ? scatter.range(78, 130) : scatter.range(60, 330);
     const f: Flier = {
@@ -382,7 +443,7 @@ export function create(ctx: Context): Piece {
       rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
       phase: scatter.range(0, Math.PI * 2),
       squash: scatter.range(0.55, 1),
-      size: scatter.range(0.9, 1.2),
+      size: scatter.range(0.9, 1.2) * GROW,
       seed: scatter.next(),
     };
     // Keep clear of every lens.
@@ -397,7 +458,7 @@ export function create(ctx: Context): Piece {
     fliers.push(f);
   }
   const lowFlock = new Flock(NEAR, material, LOW);
-  const highFlock = new Flock(FAR, material, FLIERS - LOW);
+  const highFlock = new Flock(FAR, material, FLIERS + SPECKS - LOW);
   const flierAt = (f: Flier, t: number): void => {
     Object.assign(pose, stand(f.seed));
     pose.size = f.size;
@@ -438,11 +499,28 @@ export function create(ctx: Context): Piece {
       vx: (dx / l) * speed,
       vz: (dz / l) * speed,
       t: secondsInPlace(UNIT, frame),
-      size: scatter.range(0.95, 1.2),
+      size: scatter.range(0.95, 1.2) * GROW,
       seed: scatter.next(),
     });
   }
-  const skeinFlock = new Flock(NEAR, material, SKEIN);
+  // And the ones that cross close before the colony camera: large in its picture at the key, and one more before and after.
+  {
+    const shot = shotById('ribs-03');
+    const key = keySeconds('ribs-3');
+    const eye = resolve(shots['ribs-03'] as (typeof shots)[string], 0.5, shot.first + Math.round((shot.last - shot.first) / 2));
+    const dx = eye.aim[0] - eye.position[0];
+    const dz = eye.aim[2] - eye.position[2];
+    const l = Math.hypot(dx, dz) || 1;
+    const fx = dx / l;
+    const fz = dz / l;
+    // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
+    const cross: [number, number, number, number, number][] = [[17, -6, 5.5, 0, 12], [29, 4, 10, 0.2, -13], [44, -16, 14, -0.4, 14], [23, 0, 7, 1.5, -12], [36, -6, 12, -1.3, 13], [58, -24, 20, 0.6, 15]];
+    for (let i = 0; i < PASSERS; i++) {
+      const c = cross[i] as [number, number, number, number, number];
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: 1.1 * GROW, seed: scatter.next() });
+    }
+  }
+  const skeinFlock = new Flock(NEAR, material, SKEIN + PASSERS);
 
   // ---- The ones that run from the bore ----
   const fleeFlock = new Flock(NEAR, material, FLEEING);
@@ -467,14 +545,14 @@ export function create(ctx: Context): Piece {
   const landers: Lander[] = [];
   {
     const a = ahead(34, 15);
-    landers.push({ x: a[0], z: a[1], y: null, yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1.12, seed: 0.37 });
+    landers.push({ x: a[0], z: a[1], y: null, yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1.12 * GROW, seed: 0.37 });
     const b = ahead(120, -22);
-    landers.push({ x: b[0], z: b[1], y: null, yaw: 2.2, t: T0 - 2.1, size: 1.05, seed: 0.81 });
+    landers.push({ x: b[0], z: b[1], y: null, yaw: 2.2, t: T0 - 2.1, size: 1.05 * GROW, seed: 0.81 });
   }
   // Two come in to the ledges past the colony camera.
   for (let k = 0; k < 2; k++) {
     const s = sitters[6 + k * 9] as Sitter;
-    landers.push({ x: s.x, z: s.z, y: s.y, yaw: s.yaw + Math.PI * 0.6, t: secondsInPlace(UNIT, shotById('ribs-03').first) + 1.3 + k * 1.2, size: 1.08, seed: 0.2 + 0.5 * k });
+    landers.push({ x: s.x, z: s.z, y: s.y, yaw: s.yaw + Math.PI * 0.6, t: secondsInPlace(UNIT, shotById('ribs-03').first) + 1.3 + k * 1.2, size: 1.08 * GROW, seed: 0.2 + 0.5 * k });
     s.size = 0;
   }
   const landerAt = (l: Lander, t: number): void => {
@@ -513,9 +591,50 @@ export function create(ctx: Context): Piece {
     }
   };
 
+  // Thrown water where a tuft works the pool and where the runner's feet come down.
+  const SPLASH = 30;
+  const splash = new Spray((ringed.length + 2) * SPLASH + 80, { ...rig.uniforms, tFoam: { value: foamTexture(ctx.rng('kite-wings-splash')) } });
+  const wet = [...new Set([...ringed, feeders.length - 1])];
+  const splashAt = (seconds: number): void => {
+    splash.begin();
+    for (const i of wet) {
+      const f = feeders[i] as Feeder;
+      feederAt(f, seconds);
+      if (feeding < 0.3) continue;
+      for (let n = 0; n < SPLASH; n++) {
+        const every = 0.55 + 0.5 * rand(i * 31 + n, 1);
+        const u = seconds / every + rand(i * 31 + n, 2);
+        const born = Math.floor(u);
+        const a = u - born;
+        const dir = rand(i * 31 + n, born) * Math.PI * 2;
+        const out = (0.12 + 0.5 * rand(i * 31 + n, born + 7) * a) * f.size;
+        const up = (0.35 + 0.75 * rand(i * 31 + n, born + 3)) * f.size;
+        splash.put(tuftX + Math.cos(dir) * out, LEVELS.pool + 0.04 + up * 4 * a * (1 - a) * 0.5, tuftZ + Math.sin(dir) * out, (0.035 + 0.07 * rand(i * 31 + n, born + 5)) * f.size * (0.7 + 0.6 * a), 1.2 * (feeding - 0.3) * (1 - a * a), rand(i * 31 + n, born + 9), dir, 2.2);
+      }
+    }
+    if (runner >= 0) {
+      const f = feeders[runner] as Feeder;
+      feederAt(f, seconds);
+      const ru = clamp01((seconds - T0) / RUN.seconds + 0.5);
+      const run = Math.min(1, 6 * ru * (1 - ru));
+      for (let k = 0; k < 2; k++) {
+        const a = stance[k] as number;
+        if (a < 0 || run < 0.2) continue;
+        const stride = Math.floor(gait(f, seconds) + 0.5 * k);
+        for (let n = 0; n < 40; n++) {
+          const dir = f.yaw + Math.PI + (rand(stride * 2 + k, n) - 0.5) * 2.6;
+          const out = (0.2 + 1.5 * rand(stride * 2 + k, n + 40) * a) * f.size;
+          const up = (0.3 + 1.1 * rand(stride * 2 + k, n + 80)) * f.size;
+          splash.put((foot[k * 3] as number) + Math.sin(dir) * out, ground(foot[k * 3] as number, foot[k * 3 + 1] as number) + 0.05 + up * 2 * a * (1 - a), (foot[k * 3 + 1] as number) + Math.cos(dir) * out, (0.06 + 0.16 * rand(stride * 2 + k, n + 120)) * f.size * (0.6 + a), 0.8 * run * (1 - a), rand(stride * 2 + k, n + 160), dir, 1.4);
+        }
+      }
+    }
+    splash.end();
+  };
+
   const group = new THREE.Group();
   group.add(feederFlock.mesh, colonyNear.mesh, colonyFar.mesh, lowFlock.mesh, highFlock.mesh, skeinFlock.mesh, fleeFlock.mesh, landFlock.mesh);
-  ctx.scene.add(ctx.parts.built('kite-wings', group));
+  ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
 
   return {
     setTime: (seconds) => {
@@ -527,6 +646,7 @@ export function create(ctx: Context): Piece {
         rig.setDisc(discs, i, pose.x, pose.z, 1.1 * f.size, 0.3 * down);
       }
       feederFlock.commit();
+      splashAt(seconds);
       for (let i = 0; i < sitters.length; i++) {
         const s = sitters[i] as Sitter;
         const flock = i < COLONY_NEAR ? colonyNear : colonyFar;
@@ -566,7 +686,7 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         Object.assign(pose, stand(hash(i, 3)));
-        pose.size = 1.25;
+        pose.size = 1.25 * GROW;
         pose.x = flee[0] + side * 44 - 9 * lead + 3 * Math.sin(i * 2.4);
         pose.z = flee[1] - (16 * ((i * 5) % 7)) / 7 + 17 * lead;
         pose.y = 2.9 + (2.4 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
