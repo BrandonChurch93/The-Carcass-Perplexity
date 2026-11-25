@@ -1,5 +1,5 @@
-2026-11-25 22:17 UTC
-work at efbaeaa on agent/eye-place
-v1: all 14 parts draw at all five keys. Wrong: cliffs pale and flat, mats too broad and washed in eye-0, animals plain with ears like horns, skeleton clean and too large, eye-4 necks too tall, grey haze, cost 9.67 s
-look-1.jpg = out/work/compare/eye-0.png
-look-2.jpg = out/work/sheet4.png
+2026-11-25 22:51 UTC
+work at e0e6b22 on agent/eye-place
+minute 88, mid version 2: eye-0 cliffs striped like cake, shelf peach and marbled, no foreground rock; eye-3 lip slab grey, skeleton small; eye-4 necks fill the foot, no backs
+look-1.jpg = out/work/look-eye-0.png
+look-2.jpg = out/work/sheet3.png
