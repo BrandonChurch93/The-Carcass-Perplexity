@@ -110,15 +110,15 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
       const pool = Math.hypot((x - POOL.x) / POOL.rx, (z - POOL.z) / POOL.rz);
       const foot = Math.hypot(x - FALL_FOOT[0], z - FALL_FOOT[1]);
       // How far inside a large plate a cell must lie to belong to it. Against the rock and round the pool the crust is all small plates.
-      const margin = 3.5 + 7 * noise(x / 70, z / 70, 5) + 16 * smooth(16, 2, lake) + 300 * smooth(2.6, 1.3, pool);
-      const big = cellular(x + 14 * (noise(x / 120, z / 120, 8) - 0.5), z + 14 * (noise(x / 120, z / 120, 9) - 0.5), 47, 11);
+      const margin = 1.5 + 5 * smooth(0.45, 0.8, noise(x / 90, z / 90, 5)) + 12 * smooth(12, 2, lake) + 300 * smooth(2.6, 1.3, pool);
+      const big = cellular(x + 14 * (noise(x / 120, z / 120, 8) - 0.5), z + 14 * (noise(x / 120, z / 120, 9) - 0.5), 66, 11);
       let label: number;
       let kind: number;
       if (big.edge > margin) {
         label = 0x100000 + (big.id & 0xfffff);
         kind = 0;
       } else {
-        const mid = cellular(x, z, 17, 23);
+        const mid = cellular(x, z, 26, 23);
         if (mid.edge > 2.0 + 30 * smooth(1.9, 1.2, pool)) {
           label = 0x200000 + (mid.id & 0xfffff);
           kind = 1;
@@ -137,14 +137,15 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
   return s;
 }
 
-// The seams the pictures show: half width in metres at the two ends and the middle, how lumpy, and the heat class (0 hottest, 0.9 dull).
+// The seams the pictures show: half width in metres at the two ends and the middle, how lumpy, and the heat class (0 hottest, 0.9 dull,
+// 1.5 the open, stirred lava under a fountain).
 const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
   line: { half: [0.72, 0.6, 0.22], lumps: 0.5, heat: 0.0 },
-  group: { half: [0.14, 0.4, 0.14], lumps: 0.6, heat: 0.08 },
+  group: { half: [0.45, 1.05, 0.4], lumps: 0.75, heat: 0.08 },
   nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
   nearB: { half: [0.14, 0.26, 0.08], lumps: 0.55, heat: 0.25 },
-  spatterRight: { half: [0.5, 2.3, 0.5], lumps: 0.5, heat: 0.0 },
-  spatterLeft: { half: [0.4, 1.7, 0.4], lumps: 0.5, heat: 0.0 },
+  spatterRight: { half: [0.5, 2.3, 0.5], lumps: 0.5, heat: 1.5 },
+  spatterLeft: { half: [0.4, 1.7, 0.4], lumps: 0.5, heat: 1.5 },
   sunk: { half: [0.05, 0.16, 0.04], lumps: 0.4, heat: 0.75 },
 };
 
@@ -220,9 +221,9 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const kinds = (sites.kind[bk] as number) + (sites.kind[other] as number);
         const pool = sites.pool[bk] as number;
         // Not every edge between two plates is a seam that lives: the rest stay shut, dark cracks.
-        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.62 : kinds < 3 ? 0.46 : 0.3) + 0.6 * pool;
+        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.46 : kinds < 3 ? 0.2 : 0.08) + 0.6 * pool;
         const h = hash(lo, hi, 41);
-        reach = alive ? 0.035 + (kinds === 0 ? 0.5 : kinds < 3 ? 0.3 : 0.16) * h * h * h + 0.25 * pool * h : 0;
+        reach = alive ? 0.05 + (kinds === 0 ? 0.6 : kinds < 3 ? 0.3 : 0.16) * h * h + 0.25 * pool * h : 0;
       }
       const o = (tj * width + ti) * 4;
       out[o] = edge;
