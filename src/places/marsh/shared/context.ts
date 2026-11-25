@@ -1,0 +1,70 @@
+import type * as THREE from 'three';
+import type { Parts } from '../../../core/place';
+import type { Rng } from '../../../core/rng';
+import type { Rig } from './rig';
+
+/** A place where vapour leaves the ground. The air folder draws every source in its volume. */
+export interface SteamSource {
+  /** Where it leaves the ground, world metres. */
+  at: [number, number, number];
+  /** Radius of the source at the ground, metres. */
+  radius: number;
+  /** 0 to 1: how thick it is at the ground. */
+  strength: number;
+  /** How high it stays visible, metres. */
+  rise: number;
+  /** `steam` is pale and thin. The other two kinds are the Heart's and are drawn here as steam. */
+  kind: 'steam' | 'smoke' | 'fume';
+  /** Lean of the column, metres sideways for each metre of rise, on x and z. */
+  lean?: [number, number];
+}
+
+/** A place where hot air makes the view behind it shimmer. The air folder draws it in the warp pass. */
+export interface HeatSource {
+  at: [number, number, number];
+  radius: number;
+  height: number;
+  strength: number;
+}
+
+export interface TextureOptions {
+  /** `colour` pictures are decoded from sRGB. `data` pictures are read as they are. */
+  kind?: 'colour' | 'data';
+  /** Repeat in both directions. The default. */
+  repeat?: boolean;
+  anisotropy?: number;
+}
+
+export interface Context {
+  readonly scene: THREE.Scene;
+  readonly parts: Parts;
+  readonly rig: Rig;
+  /** A seeded stream. Never use Math.random. */
+  rng(name: string): Rng;
+  readonly assets: {
+    /** A picture under `public/assets/marsh/`, for example `land/salt.png`. The place waits for every picture before its first frame. */
+    texture(file: string, options?: TextureOptions): THREE.Texture;
+  };
+  readonly sources: { steam: SteamSource[]; heat: HeatSource[] };
+  /** Seconds, in the time of the place, of the events the cut list marks. */
+  readonly events: { burst: number };
+}
+
+export interface Piece {
+  setTime?(seconds: number): void;
+  beforeSample?(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera): void;
+  resize?(width: number, height: number): void;
+  /** Only the air folder: the half-size volume pass of the place. */
+  volume?: THREE.ShaderMaterial;
+  /** Only the air folder: the half-size pass that writes how far each pixel's view is bent by hot air. */
+  warp?: THREE.ShaderMaterial;
+  /** `part` is the id of an effect drawn alone (`marsh/air`), or null. */
+  solo?(part: string | null): void;
+  dispose?(): void;
+}
+
+export interface Folder {
+  /** The names of the parts this folder draws. A name listed here gets no stand-in. */
+  readonly PARTS: readonly string[];
+  create(ctx: Context): Piece;
+}
