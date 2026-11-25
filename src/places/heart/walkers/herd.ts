@@ -189,11 +189,25 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const om = (2 * Math.PI) / habit.period;
   const dig = index === 1 ? 2.5 : 2.7 + 1.6 * hash(index, 11);
   const none = (): number => -1;
+  // A carried tuft is never still: it rises and sinks by a quarter of the neck's length and swings across, in the animal's own time.
   const carried = (seconds: number, low: number, far = 0.56): V3 => [
-    b.neckLen * (far + 0.05 * Math.sin(seconds * om + phase * 9)),
-    b.neckLen * (low + 0.06 * Math.sin(seconds * om * 0.8 + phase * 5)),
-    b.neckLen * 0.17 * Math.sin(seconds * om * 0.6 + phase * 7),
+    b.neckLen * (far + 0.06 * Math.sin(seconds * om + phase * 9)),
+    b.neckLen * (low + 0.13 * Math.sin(seconds * om * 0.8 + phase * 5)),
+    b.neckLen * 0.2 * Math.sin(seconds * om * 0.6 + phase * 7),
   ];
+  // One that feeds lifts its tuft out of the heat and lowers it again, each in a time of its own (5 to 10 s), the tuft out for a third of it.
+  const lifts = 5 + 5 * hash(index, 31);
+  const pulse = (seconds: number, t0: number, t1: number, t2: number, t3: number): number => smooth(t0, t1, seconds) * (1 - smooth(t2, t3, seconds));
+  const working = (seconds: number): number => {
+    const beat = fract(seconds / lifts + hash(index, 33));
+    return smooth(0, 0.16, beat) * (1 - smooth(0.3, 0.46, beat));
+  };
+  // The three whose pictures show them feeding have their tufts in the melt when a key looks.
+  const atKey = (seconds: number): number => {
+    let least = 1e9;
+    for (const t of Object.values(KEY_TIMES)) least = Math.min(least, Math.abs(seconds - t));
+    return smooth(0.5, 1.7, least);
+  };
 
   if (!walksOn) {
     const x = (a[0] + z[0]) / 2;
@@ -240,15 +254,16 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
         return {
           down: 0,
           target,
-          raised: [b.neckLen * (0.27 + 0.05 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.74 + 0.05 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.2 * Math.sin(seconds * om + phase * 6)],
+          raised: [b.neckLen * (0.27 + 0.1 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.72 + 0.07 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.3 * Math.sin(seconds * om + phase * 6)],
           shape: 0.8,
         };
       }
       // It feeds, and now and then lifts its tuft out of the heat for a moment.
       // The near one and the one the long lens looks at have their tufts in the seam when the keys look at them.
-      const beat = fract((seconds - (index === 0 ? 8 : index === 1 ? 12.9 : phase * 23)) / 23);
-      const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : smooth(0.0, 0.1, beat) * (1 - smooth(0.2, 0.32, beat));
-      return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target: twice && seconds >= twice.cut ? second.target : target, raised: carried(seconds, -0.38), shape: lerp(FEED_SHAPE, 0.2, up) };
+      // The one the long lens looks at feeds through its shot, pulls its tuft out near the end of it and puts it back after.
+      const hero = Math.max(pulse(seconds, 12.3, 13.4, 14.7, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
+      const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1);
+      return { down: 1 - (turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, target: twice && seconds >= twice.cut ? second.target : target, raised: carried(seconds, index === 1 ? -0.38 : -0.24), shape: lerp(FEED_SHAPE, index === 1 ? 0.2 : 0.4, up) };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
     const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
