@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 72, 2026-11-25 22:12 UTC:
+Status 73, 2026-11-25 22:28 UTC:
 
-- `01-m1-ribs-0.jpg`: The Ribs on main, version 1 of both owners: approved picture left, frame right
-- `02-m1-marsh-0.jpg`: The Blood Marsh on main, version 1 of both owners
-- `03-m1-spine-0.jpg`: The Spine on main, version 1 of both owners
-- `04-m1-reveal-4.jpg`: The Reveal on main, version 1, built to note R1.5
+- `01-hb2-compare-ribs-0.jpg`: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each. Storm sky and shingle are in; the blades are smooth horns and the floor a tiled sheet
+- `02-hb3-keys-0-4.jpg`: The Breath, minute 57: wide key and the pit, approved (left) and frame (right). Plates, ledges and a ragged rim are in; the light is flat and the waders read as black hooks
+- `03-hb2-compare-spine-0.jpg`: The Spine, minute 51: approved (left) and frame (right). The lead spire is now a horn of slabs with an arch at its foot; the storm is soft and the far spires an even saw
+- `04-hb2-reveal-4.jpg`: The Reveal's last frame, minute 55: the land now reads as a continent with ranges, coasts and cloud; the body is lost and the cloud is a stamped pattern. Both sent back
 
+Status 72, 2026-11-25 22:12 UTC, showed: The Ribs on main, version 1 of both owners: approved picture left, frame right; The Blood Marsh on main, version 1 of both owners; The...
 Status 71, 2026-11-25 21:46 UTC, showed: The Ribs, first built frame of the land at minute 20 (draft): blades, floor, arch.
 Status 70, 2026-11-25 21:23 UTC, showed: The Eye: your approved picture on the left, the blockout its owner starts from on the right; The Reveal, last frame: your approved picture...
-Status 69, 2026-11-25 21:02 UTC, showed: The Ribs, where it starts: your picture on the left, the stand-in on the right; The Breath, where it starts; The Blood Marsh, where it...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T22:12:11Z
-phase 4: 2.03 h used of 17.00 h
-build: 22.35 h used of 72.00 h
+2026-11-25T22:28:17Z
+phase 4: 2.29 h used of 17.00 h
+build: 22.62 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 26
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -78,18 +78,18 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 The register is `parts/PARTS.json`. Summarise it here after every change of state: how many parts each unit has, and how many are `stand-in`, `built` and `fallback`.
 
-Written 2026-11-25 14:16 UTC from `parts/PARTS.json` at commit `9ac88bf`, the build that round 7 judges (the table of 02:56 UTC had every part as a stand-in). A picture of every part drawn alone is under `out/stills/parts/`.
+Written 2026-11-25 22:28 UTC from `parts/PARTS.json` at commit `cbbbd26`, `main` with version 1 of all ten owners of Phase 4 merged (the table of 14:16 UTC had the Heart's 15 built and the other 81 as stand-ins). A part's state is the one its place declares in code (`unitParts`); it says nothing yet about how good the part is, which the rounds judge.
 
 | Unit | Parts | `stand-in` | `built` | `fallback` |
 | --- | --- | --- | --- | --- |
-| `ribs` | 14 | 14 | 0 | 0 |
+| `ribs` | 14 | 0 | 14 | 0 |
 | `heart` | 15 | 0 | 15 | 0 |
-| `breath` | 14 | 14 | 0 | 0 |
-| `marsh` | 14 | 14 | 0 | 0 |
-| `spine` | 14 | 14 | 0 | 0 |
-| `eye` | 14 | 14 | 0 | 0 |
-| `reveal` | 11 | 11 | 0 | 0 |
-| all | 96 | 81 | 15 | 0 |
+| `breath` | 14 | 0 | 14 | 0 |
+| `marsh` | 14 | 0 | 14 | 0 |
+| `spine` | 14 | 0 | 14 | 0 |
+| `eye` | 14 | 0 | 14 | 0 |
+| `reveal` | 11 | 0 | 11 | 0 |
+| all | 96 | 0 | 96 | 0 |
 
 The Heart's 15: `land`, `bench`, `sulphur-crack`, `foundering`, `crust`, `lava`, `vessel-mouth`, `lava-fall`, `surge`, `crust-walkers`, `sunk-walker`, `sky`, `air`, `fume`, `ash`. `ash` was added in Phase 3 (the dry fall of ash in the air's folder).
 
@@ -1298,6 +1298,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 21:47 UTC. The other 17 sounds are placed in cut/PLAN.json (21 lines with the Heart's three; npm run cut, 0 faults): each bed under its whole place, each event on its event frame (the bore's roar peaks on frame 2402, the vapour starts 0.6 s before the exhale at 4652, the dome bursts on 6158, the thunder on strikes 1 and 4, the swell peaks at frame 9209, 0.2 s before key eye-4, the thud on the heartbeat at 11334), each life sound under the shot that shows its animals (ribs-03, breath-04, marsh-04, spine-05, eye-04). The Eye's bed fades out by frame 9239 as the music falls quiet; the Reveal's wind runs the first 15 s of the rise and fades over 5 s. Gains set by measure: each sound's loud part (its 100 ms windows within 10 dB of its loudest one) sits as far under the music of the same windows as the Heart's same kind does, beds 13.9 dB, life sounds 8.9 dB, events 11.6 dB; after one correction all 17 measure within 0.05 dB (out/work/soundlevels/levels-run2.json). This measure is new. By it the Heart's event is 11.6 dB under the music; the 9 dB of the 21:00 entry is the crack over its first half second (8.8 dB, the 19:52 entry). Both are true of the same file at the same gain, and the Heart's gains are unchanged. Three judgments. One: the thunder plays on strikes 1 and 4 only, since the bed, the life sound and two strikes are the 4 cues audio.maxCuesPerPlace allows; Brandon's list says the same sound serves every strike, so all six is his to allow (For Brandon to decide). Two: the Reveal's wind stays at its first gain, 18 dB under by this measure, because matching it against the loud music after the strike would put it level with the music in the six quiet seconds before the strike, and the kit says to let the quiet be quiet. Three: the Eye's swell and the Reveal's thud follow the rule though the music falls away under them: the swell's loudest half second sits 9 dB under the music of that moment and so does the thud's first half second, as the Heart's crack does. The thud stays only if the finished Reveal shows the Heart's glow on frame 11334, as his list says. Not done: the listener's check at these levels (open item).
 - 2026-11-25. 2026-11-25. 22:13 UTC. When a place goes to its first round. By the register (npm run parts on main at 22:08 UTC: 96 parts, 82 built, 14 stand-in, all 14 the Eye's) the Ribs, the Breath, the Blood Marsh, the Spine and the Reveal have had no stand-in since their owners' version 1 was merged. kit/08-BUILD-ORDER.md Phase 4 orders each place in steps: 1 build its parts, 2 integrate it (fit the camera of every shot to its key, set its light and weather against its establishing picture, make its sounds), 3 send it to its first round as soon as nothing in its frames is a stand-in. Clock rule 3 forbids polishing before that round from the half point on (8.5 h of the phase, about 04:40 UTC; the phase stands at 2.0 h). At version 1 step 2 is open in every place: the Spine's five cameras and four of the Breath's are still the blockout's, and in all five the light and the weather are a first pass that the owners themselves list as wrong against the establishing picture, so a round now would set frames beside keys they are not yet framed to. Decision: each place goes to its first round on its owners' version 2 (the look and the cameras, due by 00:02 UTC), as it stands then and with no further wait; a place whose version 2 has not come by 00:15 UTC goes as main stands. The Reveal's first round follows the Eye's, as the kit says. The cost, stated: the first rounds start about two hours later than the earliest moment the first sentence of rule 3 would allow. No threshold, judged frame, critic or count changes; each first round stays a floor round and counts in quality.maxRoundsPerUnit.
 - 2026-11-25. 2026-11-25 22:24 UTC: four sound levels moved after the listener heard the six other places, as the open item asked (a sound named unasked goes down, one not found when pointed at goes up). `eye-life` goes down 12 dB because at the Heart's level 7 of 10 open answers heard a person in it and the film has none; the take stays, as note 14 decided. `breath-life`, `spine-life` and `eye-event` go up 3 dB. Only `gainDb` of those four lines of `cut/PLAN.json` changed. The open item is closed
+- 2026-11-25. 2026-11-25 22:38 UTC: how Brandon's note 16 is applied. He lifts the restrictions on time and gives leave to work until the project is finished. What changes: (1) stop condition 2, the budget report, is off: when the clock prints `budget report: due` the line is logged, `npm run clock -- --continue N` is run on his standing word so the clock keeps counting, and the build carries on; (2) the clock's rules 1 to 4 of AGENTS.md end and force nothing; (3) the hour boxes of the phases, `budget.floorFixMinutes` and `budget.reserveHours` are records. What does not change, because it is not a limit of time: every count limit of the table in kit/07-QUALITY-BAR.md, the credits cap, the pass bar, the judged frames, the critics and their families, the status rhythm, and the limits that guard against a stalled agent or job (`budget.buildAgentMaxHours`, `budget.agentWaitMinutes`, the tool retries), which stay as the rhythm of a wave. No value in the config is changed: the note is applied here and the numbers stay as he wrote them. A count that ends a loop below the bar is still reported as a limit reached, never as a pass
+- 2026-11-25. 2026-11-25 22:39 UTC: the first rounds of Phase 4 judge the last hand-back of wave 1 (version 3, due by 01:07 UTC) and not version 2. This replaces the timing in the decision of 22:13 UTC and nothing else in it. Reason: with note 16 time no longer ends a loop, so the scarce thing is the count, three rounds a place (`quality.maxRoundsPerUnit`), the first of them counted like the others. A round on version 2 would be answered at about 01:00 UTC, when the owners have minutes left and the frames it judged are already an hour old; a round on version 3 judges the state that the next wave starts from, so every issue the critics write is one the next owners can act on, and no counted round is spent on faults the owners already list themselves. It also lets all six rounds render side by side: at 01:22 UTC the ten build agents end and their slots are free. Order: packs and measures are ordered for each place as soon as its version 3 is merged and determinism passes on that commit, in `buildOrderAfterLookLock`; the Reveal's follows the Eye's, as the kit says. Clock rule 3 (no polishing before the first round once the half point is reached) would not have been touched by this even before note 16: the half point of the phase is at about 04:40 UTC. Until then the Builder's own compares of every wide key go on, and direction goes to the owners worst first
 
 ## Notes from Brandon
 
@@ -1524,6 +1526,8 @@ Review round 1. Sent on 2026-11-25 at 17:26 UTC in the thread, under the lines `
 
 14. The same message: "Sound effects sound really good I also like to cut out the parts of the track. I did not like good work." Applied: read as two decisions on things that were his to decide. The sounds: all 20 stay as kept, the eight kept with a fault among them, no third take is made of any, and the way their level was set in the Heart clip is used for the other 17. The music: the cleaned track stays as the film plays it, with the second spot cleaned the second way. The lighter cut of that spot stays on the Listen part of the review page, set aside.
 15. 2026-11-25 about 21:09 UTC, in the thread, while the owners' briefs of Phase 4 were being written: "I like everything except for it was a body. I think something more cooler like being or tighten or something would fit better. You don't necessarily have to go with those two I'm open for you to make that decision based on what you think is fitting in this project." Applied: "tighten" is read as "titan", a slip of dictation. Line n8.3 is now "It was a titan." (see the decision of 21:11 UTC). "I like everything" is read as the script as it was shown to him, with the 11 marked lines spoken in the form marked A; his own words stay beside each in `cut/SCRIPT-DRAFT.json` and each is his to put back. The script went into the thread again at 21:12 UTC as three inline blocks, as it will be spoken. Note 7 stands: no narration is made until he writes "The script is final."
+16. 2026-11-25 about 22:35 UTC, in the thread, after status 73: "Looks great! You're doing a great job if there are any restrictions on time I wanna relieve them of you now you have my permission to keep working until you are finished with this project" Applied: read as his word on the limits of time and on nothing else (see the decision of 22:38 UTC). The budget report no longer stops the build, which carries on to `BUILD COMPLETE`. The clock's four rules end and force nothing from here: no extra round is refused for time, no fix work is closed for time, the half point forbids nothing and the box end forces no fallback. The clock is still ticked and printed in every status, as a record of what the work costs. Every count stands (rounds a unit, takes, looks, tries), and so do the cap of 17,000 credits, every threshold, the judged list, the critics, the statuses at their rhythm, and the stops at `BUILD COMPLETE` and at a blocker.
+
 
 ## Review items
 
@@ -1637,6 +1641,10 @@ Each reports by message to the Builder.
 | `reveal_owner` | build, own machine | The Reveal, alone for now: the one shot from the lake to orbit, the continent to Brandon's item R1.5, the six places from orbit, cloud, sea, atmosphere, space | `agent/reveal-place`, looks on `agent/reveal-place-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
 
 Wave 1 of Phase 4: ten build agents, each on its own machine of 4 cores, all six units at once. Their briefs are `out/work/briefs/PLACE-OWNERS.md` (one sheet for all) and `out/work/briefs/p4/<agent>.md`, written by `out/work/briefs/p4/make.py` from the cut list and the carried items, and kept as sent on the branch `agent/briefs` (`1357cf0`). Each pushes its branch and its looks every 30 minutes and hands back three versions by message.
+
+`jury_clerk` (started 2026-11-25 22:35 UTC, in the Builder's workspace, no limit set, ends with the phase): it saves every message a juror, a viewer or a critic sends it, unchanged, into `out/work/inbox/` with `out/work/tmp/clerk/save.py`, so that 145 control votes and the answers of the rounds reach the scorecards without passing through the Builder's hands. It judges nothing and sees no picture. Its brief: `out/work/tmp/clerk/BRIEF.md`.
+
+The control jurors of Phase 4 (from 22:33 UTC): `juror_c_<key><seat>`, 145 fresh agents, one for each of the 29 approved pictures of the Ribs, the Breath, the Blood Marsh, the Spine, the Eye and the Reveal on each of the five seats of the fixed panel. Each gets one picture (the approved picture, resized and encoded as the pack tool does it, hashes in `out/work/jury/controls/controls-<unit>.json`) and the question of R2 word for word. Their votes are collected once and reused, as R2 says; they need no build, so they are collected while the owners work, five at a time. Five viewers of R8 on the approved `reveal-4` at 400 px follow them.
 
 Hand-backs of wave 1, each merged into `main` after a check of trailers, files touched, types, the build and the Builder's own compare of the wide key: version 1 of `spine_storm_owner` (`317dbde`, 21:44 UTC), `breath_life_owner` (`01a42d0`), `marsh_life_owner` (`c341987`, recipe `b158f8b`), `breath_ground_owner` (`fa79c1b`), `ribs_sea_owner` (`d8e3de0`, 21:55 UTC), `spine_ground_owner` (`ed6e64d`, 22:01 UTC), `reveal_owner` (`d293ddc`, 22:06 UTC), `marsh_ground_owner` (`500c3db`, 22:06 UTC), `ribs_ground_owner` (`41ffe5e`, 22:10 UTC) and `eye_owner` (`efbaeaa`, merged 22:18 UTC, all 14 of its parts built, 9.67 s a sample at UHD draft by its own measure against the gate's 7 s). All ten owners have handed back version 1. Three owners cannot push from their machines and send bundles, which the Builder verifies and pushes as their branches: `breath_ground_owner`, `marsh_ground_owner`, `spine_storm_owner`. Version 2 is due from each by 00:02 UTC and version 3 by 01:07 UTC.
 
@@ -1892,3 +1900,4 @@ What happens next is yours:
 - 2026-11-25 21:24 UTC. 21:24 status 70 posted in the thread: all the scenes started with ten build agents, the script change, and where the Eye and the Reveal start (the blockout beside the approved picture; 2 new draft renders at preview).
 - 2026-11-25 21:47 UTC. Status 71 shown in the thread at 21:47 UTC (Phase 4, 1.60 h of 17.00 h; wave 1 at minute 25 of 240): first built parts from four second owners and the Ribs' lead on their own branches, nothing merged; direction sent to ribs_ground_owner, marsh_life_owner and spine_storm_owner (the Ribs' blades are eroded stone and not turned horns and its floor is shingle and water sheets, not ripple marks; the wallowers need folds in the shape and the feeler fringe; the scorched runner is pale with a short coat). spine_storm_owner cannot push: its version 1 bundle verified (author and trailers) and pushed as agent/spine-storm at 317dbde. All 20 sounds placed and measured; renders on this machine since status 70: 0.
 - 2026-11-25 22:13 UTC. 2026-11-25 22:13 UTC. 22:12 UTC, status 72 shown: version 1 of ten owners is in main for five places. Merges since status 71, each after a check of trailers (on the commits with authored work; merge commits made by git merge --no-edit, as the owners' sheet tells them, carry no trailer and no authored work), files inside the owner's folders, types and the build: the Spine's storm 317dbde (93cc18d), the Breath's life 01a42d0 (830311a), the Marsh's life c341987 (68ae79b) and its recipe b158f8b (bd0fbbd), the Breath's ground fa79c1b (6670324), the Ribs' sea d8e3de0 (c5e56ab), the Spine's ground ed6e64d (0f76682), the Reveal d293ddc (20f3699), the Marsh's ground 500c3db (1219809), the Ribs' ground 41ffe5e (9099551). npm run parts: 96 parts, 82 built, 14 stand-in (the Eye's), 0 fallback. The Builder's own compare of main at preview size: ribs-0, breath-0, marsh-0, spine-0, reveal-4, 5 renders in 73 s. Check G8 fails on main for 18 pictures without a recipe heading: 12 of the Reveal (its owner's later commit e764e7d names them), 3 of the Ribs (materials.json of the land, the wings' hide pair), 3 of the Spine's land; their owners were told and send the recipes with their next heartbeat. Cost a sample at uhd, draft, as the owners measured on their 4 core machines against the 7 s gate: Ribs 7.7 to 7.85 s, Breath 6.71 s before the life owner's parts, Marsh 7.75 s, Spine 10.17 s, Reveal 3.89 s; the Ribs, the Marsh and the Spine are over and their leads cut it by version 3.
+- 2026-11-25 22:28 UTC. 2026-11-25 22:28 UTC: status 73 shown (4 pictures: the Ribs, the Breath and the Spine against their approved pictures, the Reveal's last frame). Version 1 of the Eye merged at 22:18 (`efbaeaa`); the register written from `main`: 96 parts, 96 built, 0 stand-in. Heartbeats pushed as branches for the three owners that cannot push: `a27abcb` (breath ground), `e85751b` (spine storm), `ae64cff` (marsh ground). Direction sent to `eye_owner`, `ribs_ground_owner`, `breath_ground_owner`, `breath_life_owner` and `reveal_owner` (the last frame has lost the body). The whole test run on `main`: 902 tests, 901 pass; the one failing is G8, which names 25 pictures with no recipe (the Eye's 7, the Reveal's 12, the rest in the Ribs and the Spine); the owners have been told
