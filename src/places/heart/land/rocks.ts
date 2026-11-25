@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
 import { UNIT } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import type { HeartContext } from '../shared/context';
 import { ROPY, SKERRY, lineOpen, linePathDistance, noise, routeDistance, widePath } from './height';
 import { ROCK_FRAGMENT, ROCK_VERTEX } from './rock-shader';
@@ -679,10 +680,10 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
   const view = new THREE.Matrix4();
   const planes = new Float32Array(24);
   const last = new Float32Array(33).fill(NaN);
-  const time = ctx.rig.uniforms.uTime as THREE.IUniform<number>;
 
   const choose = (camera: THREE.Camera): void => {
-    const seconds = time.value;
+    // Who is on the set follows the stage clock (the camera's shot), not the world's seconds.
+    const seconds = stagedSeconds();
     const cm = camera.matrixWorld.elements;
     const pm = camera.projectionMatrix.elements;
     let same = last[32] === seconds;
