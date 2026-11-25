@@ -170,7 +170,6 @@ void main() {
   vec2 wallAt = vec2(mix(l.y, l.x, faces), vWorld.y * 1.4) + 11.0;
   vec2 uvA = mix(mix(q / 6.1, ropeAt / 1.7, onRope), wallAt / 2.2, steep);
   vec4 nhA = texture2D(tRopyNh, uvA);
-  vec3 rope = texture2D(tRopy, uvA, -0.3).rgb;
   vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
   vec4 grainNh = vec4(0.5);
@@ -193,7 +192,8 @@ void main() {
   // The skin that was pushed up is older and greyer than the lake's plates the nearer it lies to the body; at the rim it is theirs.
   albedo *= mix(vec3(1.0), vec3(1.22, 1.08, 0.96) * (1.0 + 0.3 * ashed), folded);
   albedo = mix(albedo, ROPE * (0.8 + 0.4 * small), 0.9 * roped);
-  float lum = dot(rope, vec3(5.7));
+  // The tone of the ropy skin goes with its height closely enough to be had from it: a tap less on half the frame.
+  float lum = max(3.2 * nhA.b - 0.42, 0.1);
   albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.13 + 1.05 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.
