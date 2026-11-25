@@ -156,7 +156,8 @@ void main() {
   vec3 skin = texture2D(tSkin, q / 5.0).rgb * 0.6 + texture2D(tSkin, vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 19.0 + 0.31).rgb * 0.6;
   vec2 slope = (texture2D(tSkinNh, q / 5.0).rg - 0.5) * 1.2 * (1.0 - vSide);
   n = normalize(n + vec3(slope.x, 0.0, slope.y));
-  vec3 c = rigShade(vWorld, n, v, skin * 0.09 * (1.0 - 0.6 * vSide), 0.75, 1.0);
+  // No mirror of the sky on the plate: seen under two degrees its top turned pale grey-blue. The shade is asked along the normal, fully rough.
+  vec3 c = rigShade(vWorld, n, n, skin * 0.28 * (1.0 - 0.6 * vSide), 1.0, 1.0);
   // The broken edge and the underside of a plate are still hot: red rock under a thin black skin.
   float hot = vSide * (0.35 + 0.65 * vnoise(vLocal.xz * 1.7 + vLocal.y * 3.0)) * smoothstep(0.1, -0.5, vLocal.y);
   c += blackbody(mix(820.0, 1240.0, hot));
