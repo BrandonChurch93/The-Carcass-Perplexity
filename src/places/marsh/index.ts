@@ -191,7 +191,7 @@ const shots: Record<string, CameraPath> = {
   'marsh-04': [
     { at: 0, pose: { position: at(26.7, 6.6, 2.7), aim: at(36.4, 4.6, -0.1), fov: 30 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
-    { at: 1, pose: { position: at(28.7, -0.4, 2.1), aim: at(38.4, 1.8, -0.1), fov: 30 } },
+    { at: 1, pose: { position: at(28.9, 0.7, 2.05), aim: at(38.4, 2.2, -0.1), fov: 30 } },
   ],
   'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -12, up: -0.6, right: -1.5 }, { forward: 1.7, up: 0.15, right: 0.5 }),
 };
@@ -682,9 +682,9 @@ function create(): Place {
       const pitch = -b.root * (0.6 + 0.4 * Math.sin(t * 1.3 + i * 1.7));
       put(beasts, i, p[0], -b.sink * b.size + 0.03 * Math.sin(t * 2.2 + i), p[1], relYaw(hd, hl) + 0.05 * Math.sin(t * 0.7 + i), pitch, b.size);
     }
-    const bank = bearingDir(20);
+    const bank = bearingDir(37);
     const walk = 0.2 * (t - keyTime('marsh-2'));
-    put(beasts, BEASTS.length, bank[0] * 6 - walk, -0.35 + 0.03 * Math.sin(t * 2.1), bank[1] * 6 - walk * 0.12, yawOf(-1, -0.12), -0.06 - 0.03 * Math.sin(t * 1.4), 1);
+    put(beasts, BEASTS.length, bank[0] * 13.8 - walk, -0.12 + 0.03 * Math.sin(t * 2.1), bank[1] * 13.8 - walk * 0.12, yawOf(-1, -0.12), -0.06 - 0.03 * Math.sin(t * 1.4), 1);
     put(beasts, BEASTS.length + 1, stuckAt[0], -0.92 + 0.07 * Math.sin(t * 1.9) + 0.03 * Math.sin(t * 4.3), stuckAt[1], relYaw(-0.97, -0.03) + 0.07 * Math.sin(t * 1.1), 0.25 + 0.07 * Math.sin(t * 1.9 + 0.8), 1);
     beasts.instanceMatrix.needsUpdate = true;
 
