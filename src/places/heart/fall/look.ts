@@ -131,9 +131,12 @@ vec3 tubeDark(float d) {
 // The rig's shading, with the day and the lake shut out as the tube goes in.
 vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float d) {
   // The cut of the rim looks in and down: a few metres in, the day no longer reaches it.
-  float deep = smoothstep(0.5, 13.0, d);
+  // East of the pool the cut goes dark at once: that end of the mouth sinks into the cliff in shadow and shows no lit outline.
+  float eastCut = smoothstep(${f(MOUTH.x - 40)}, ${f(MOUTH.x + 10)}, p.x);
+  float deep = smoothstep(0.5, mix(13.0, 3.0, eastCut), d);
   float lit = (1.0 - deep) * (1.0 - deep);
-  float open = skyOpen(p) * occ * lit;
+  // The cut looks down and in: it has less of the sky than the face has, so the melt's orange is what shows on it.
+  float open = skyOpen(p) * occ * lit * mix(1.0, 0.45, smoothstep(0.5, 3.0, d));
   // Nothing is read that would be multiplied by nothing: past the bevel the round lights are shut out, and far in the lake is too.
   vec3 lake = lit < 0.01 ? vec3(0.0) : (p.y > 30.0 ? lakeIrradianceFar(p, n) : lakeIrradiance(p, n));
   // On the cut of the rim the east side stands behind the heaps on the floor, as it does for the pool's own light.

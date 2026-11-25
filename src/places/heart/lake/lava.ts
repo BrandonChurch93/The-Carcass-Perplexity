@@ -235,11 +235,13 @@ void main() {
   float feeding = stringOf(n);
   // The skin reaches in from the brim in ragged lobes, a hand to most of a metre; a small pool is skinned over whole.
   float hero = step(0.001, heroPool(q));
-  float skinEdge = (0.1 + 0.4 * vnoise(q / 0.9 + 31.0) + 0.15 * vnoise(q / 0.31 + 7.0)) * (1.0 - 0.5 * hero);
+  // The skin grows in while the pool is slack and is eaten back when the heat of the seam comes through: it folds and drifts.
+  float drawnIn = drawAt(q);
+  float skinEdge = (0.1 + 0.4 * vnoise(q / 0.9 + 31.0 + vec2(uTime * 0.13, -uTime * 0.05)) + 0.15 * vnoise(q / 0.31 + 7.0)) * (1.0 - 0.5 * hero) * mix(1.5, 0.5, drawnIn);
   float inFrom = clamp(0.4 + skinEdge + bank, 0.0, 1.0);
   // Rafts of the same skin, torn from the rim, lie on the open melt and drift along it.
-  vec2 rafted = q + vec2(0.95, -0.3) * (0.015 * uTime);
-  float raft = feeding * smoothstep(0.5, 0.58, vnoise(rafted / 0.55 + 47.0) * 0.72 + vnoise(rafted / 0.19 + 3.0) * 0.28);
+  vec2 rafted = q + vec2(0.95, -0.3) * (0.2 * uTime);
+  float raft = feeding * smoothstep(0.5, 0.58, vnoise(rafted / 0.55 + 47.0) * 0.72 + vnoise(rafted / 0.19 + 3.0 + vec2(0.0, uTime * 0.2)) * 0.28 - 0.12 * (drawnIn - 0.5));
   float strays = 0.5 + 0.2 * vnoise(vec2(vFlow.x / 5.0, vSeam.y * 1.9));
   float lean = mix(abs(bankSide * ax - strays), mix(ax, inFrom, feeding), max(stir, feeding));
   // Metres across the stream from the middle of the gap as the net has it, signed, and smooth through the middle: the ribbon's own
@@ -510,9 +512,11 @@ void main() {
   float inCore = 1.0 - smoothstep(coreTo * 0.9, coreTo * 1.3, lean);
   float kStream = mix(1200.0, kBody, inCore);
   kStream = mix(kStream, 1490.0 + 60.0 * heart + 20.0, stir);
-  hot = mix(hot, blackbody(mix(kStream, 1300.0 + 230.0 * poolHeart, feeding) + 60.0 * (streak - 0.5) - 90.0 * thread * (1.0 - 0.6 * heart)), open);
+  hot = mix(hot, blackbody(mix(kStream, 1300.0 + 230.0 * poolHeart + 150.0 * (drawnIn - 0.45), feeding) + 60.0 * (streak - 0.5) - 90.0 * thread * (1.0 - 0.6 * heart)), open);
   // The heat of the melt creeps along it: no even pulse.
   hot *= 1.0 + 0.12 * (creepAt(q) - 0.5) * (0.4 + 0.6 * pool);
+  // From the rim of the bowl whole reaches of it flare and dim as the heat travels through the lake.
+  hot *= mix(1.0, mix(0.3, 1.5, smoothstep(0.22, 0.78, surgeAt(q))), smoothstep(50.0, 140.0, length(vWorld.xz - cameraPosition.xz)));
   float skin = 1.0 - open;
   hot = mix(hot, blackbody(1270.0 + 110.0 * plateHash.x), burnt * onRafts);
   skin *= 1.0 - burnt * onRafts;

@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 49, 2026-11-25 13:15 UTC:
+Status 50, 2026-11-25 13:36 UTC:
 
-- `01-m1303-pair-3.jpg`: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right. The floor is dark and warm now and the neck bows to the pool. Open: no fine hot seams on the floor, the near mass along the bottom edge runs too far right, the hero is not lit from below.
-- `02-m1303-pair-1.jpg`: The line, frame 3477. Open: the coils on the near bank read as drawn rings, the sulphur mound is too wide and too yellow, the crag is a black slab, the melt is a smooth ribbon where the picture has bright folded skin. Each point has an owner and an order.
-- `03-m1303-pair-4.jpg`: The mouth and the fall, frame 4006. Open: the mouth is boxy with a level lip, the cascade is thin, pink haze at right, the near floor is a flat dark band.
-- `04-m1303-pair-0.jpg`: The wide view, frame 2722. The composition holds. Open: the lake reads as blue-grey tiles (the skin's last hand-back, merged at 13:13, darkens and dries it: it shows in the next status), the butte is hazy and grey.
+- `01-m1324-pair-3.jpg`: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right. The hero's trunk now sits at the picture's value and the near mass is one soft mound at the left. Open: the flank is too red (ordered), no ash rim at the feet, the far wall is darker than the picture's haze.
+- `02-m1324-pair-1.jpg`: The line, frame 3477. The lobes now carry sheaves of cords at the bank and the trench holds dark plates on the melt. Open: the nearest three metres are a grey mottle where the picture has clean fine cords (ordered at 13:36), the melt is flatter and more orange than the picture's folded skin, the crag at left stands too tall.
+- `03-m1324-pair-4.jpg`: The mouth and the fall, frame 4006. Open on this frame: the mouth is a letterbox and the pour is one ribbon from the middle of the lip. The dome is merged since (it shows in the next status); the broad pour from the lip's left third is being made.
+- `04-m1324-pair-0.jpg`: The wide view, frame 2722. The lake is dark charcoal now. Open: the far half is a dense net of orange lines (a third as many, longer and broken, is ordered), the plume stands in front of the butte (it moves behind it), the mouth is outlined in red.
 
+Status 49, 2026-11-25 13:15 UTC, showed: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right.
 Status 48, 2026-11-25 12:52 UTC, showed: Heart, shot heart-02 (key heart-3), main fe39638 at 12:45: the approved picture left, ours right.
 Status 47, 2026-11-25 12:30 UTC, showed: Heart 3 on main c0cb367, approved picture left, our frame right: the hero's legs and trunk now have the picture's mass and its feet stand...
-Status 46, 2026-11-25 12:07 UTC, showed: Feeding at the seam, shot heart-02 (approved picture left, ours right, draft tier, main 45d0b7f).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T13:15:43Z
-phase 3: 10.11 h used of 13.00 h
-build: 16.76 h used of 72.00 h
+2026-11-25T13:36:16Z
+phase 3: 10.45 h used of 13.00 h
+build: 17.10 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 23
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -616,6 +616,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. Heart look lock, 12:53 UTC: the decision of 12:38 not to start fourth owners is changed. Round 6 names the folders of the four early owners 42 times (lava 14, crust form 11, crust skin 9, rocks 8), with the frozen melt and the pale floor among its severe lines, and with round 7 at 14:15 those folders would stand without an owner for an hour. So a successor takes each of the four folders when its owner reaches the 4 h limit (lava and rocks at 13:13, crust form and crust skin at 13:25), with the predecessor's hand-over word for word, the round 6 lines of its folder and the root's order of work, until 14:05 UTC. The count of agents stays at ten owners.
 - 2026-11-25. 13:06 UTC, rulings sent to the owners. (1) The trench wall at the line may take the melt's light on the faces that look at it for about a third of a metre above the melt: the approved picture shows plate edges and undersides lit orange beside the melt, and the skin's line that cut all fire light on a trench wall to 8 per cent is opened; the light's owner supplies the numbers. (2) The trench itself: shallower in stretches (the brim 8 to 15 cm above the melt upstream, 20 to 30 cm downstream), no undercut mesh, there is no time for new geometry. (3) The sulphur mound at the line: half as wide and paler; the picture has a pale cream crust on dark rock. (4) The walkers take the light owner's line for the light from below, gated so that only what faces down or sideways is warmed.
 - 2026-11-25. 13:26 UTC, from the keys of a6999eb beside the approved pictures at full size. (1) The feeding shot's near mass is kept as the rocks' owner has it: it matches the picture at the key and gives the push its parallax; it is not lowered. (2) The rim behind the buttress is not lowered: the picture separates buttress and wall by haze (the land owner measured the skyline column by column). The plume that stands in front of the buttress is the air's: it moves to the far side of the buttress, darker and narrower. (3) The one that sank: its hull is half the picture's size; the sunk owner doubles its width, one try. The floor between the lens and its mound takes the crust form's new lobes with coarse ropes (from 7 m out, so the sunk owner's apron is untouched). (4) The mouth is a letterbox with a lit outline: the fall's owner makes the roof a dome, sinks the right end in shadow and keeps glow only on the inner upper left rim; then the pour as a broad sheet from the lip's left third. (5) The round 7 snapshot is taken when the chain that holds the 14:05 hand-backs has passed determinism, about 14:18 UTC.
+- 2026-11-25. 13:36 UTC: the lobes' cords read as black and white stripes at heart-2 from 12 m outward. Cause: the paint's dark line per cord at full strength (the form's owner's finding). The paint's owner has it as first order: fade by the cord's size on screen (full at 8 pixels, gone at 3), a third of the depth on the lobes, no pale crest. The form is not changed again.
+- 2026-11-25. 13:36 UTC: no crack is laid on the near floor of heart-4. MEASURED by the form's owner: the orange smear there did not change by a pixel when the piece thought to cause it was moved twice; it is the fall's reflection on the crust. The floor is seen at under 1.5 degrees, so a crack across the view is under a pixel high. net.ts stays.
 
 ## Notes from Brandon
 
@@ -934,3 +936,5 @@ none
 - 2026-11-25 13:08 UTC. 13:06 to 13:08 UTC: three early owners handed back last with a hand-over and their Look lock blocks (lava 13:02, rocks 13:01, crust form 13:04) and three successors started, each on its own machine with the hand-over word for word, the round 6 lines of its folder and an order of work: heart_lava_owner_4 (motion first: the far pools, the pools under the hero's crown, plates that turn), heart_rocks_owner_2 (the feeding shot's near mass seen across the whole shot first), heart_crust_form_owner_2 (coils in the height at the line first). Last hand-backs 14:05 UTC. The crust skin's owner hands over by 13:15.
 - 2026-11-25 13:16 UTC. 13:16 UTC: status 49 shown (main ea1ea7e beside the four pictures; characters read 13:15: 1 of 131,000, still out). Main is a6999eb: crust form's last ea31a46, crust skin C3 0c889a6 and air 5 f24b203 merged at 13:13 after the trailer check, types clean, G10 passes; chain AD runs on it. heart_crust_skin_owner ended at its limit with a hand-over; heart_crust_skin_owner_2 spawned at 13:15 with the hand-over word for word, the locked list and the light owner's finding on the trench wall. Its cost numbers for C3 (MEASURED, uhd draft, one sample): the crust 12.43 s above the empty frame at the line, 8.40 s in the wide view. Received and viewed, to merge when the chain ends: walkers C10 8f6cd4f, light C8 7810bb0.
 - 2026-11-25 13:25 UTC. 13:24 UTC: chain AD on a6999eb passed determinism (13:23). Seven hand-backs merged after the trailer check, types clean, G10 passes: walkers C10 8f6cd4f, light C8 7810bb0, crust form D1 5431567, sunk C6 bad25f5, land 4 55e22f9, rocks D1 a3bd796, fall C5 d406119. Main is e3672d8, pushed; chain AE runs on it. A fresh render meter (render_meter_r7) measures five Heart frames on a6999eb for the review clip's tier. Lapse: 'npm run budget -- --help' has no help and began a measurement while the chain rendered; killed within a minute, nothing written.
+- 2026-11-25 13:36 UTC. 13:34 UTC: chain AE on e3672d8 passed determinism. Merged to bcbefc4: lava D1 c02d5bb (drawn heat surges across the lake, the feeding seam pulses), fall C6 c238aea (the mouth as a dome that comes down to the east, the east cut dark), sunk C7 6e6403c (hull a third larger, thicker apron ropes, no dark blot from the wide view), crust form D2 3279513 (one far bank at the line laid from the line and not from the net, an uneven brim 8 to 30 cm, lobes round the one that sank). tsc clean, G10 passes, pushed. Chain AF started 13:34:50.
+- 2026-11-25 13:36 UTC. 13:36 UTC: status 50 shown (pictures of e3672d8 beside the approved pictures; ElevenLabs read at 13:31: 1 character of 131,000). New main bcbefc4 told to all ten owners with the last hand-back at 14:05.
