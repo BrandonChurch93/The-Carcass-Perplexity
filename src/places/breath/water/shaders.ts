@@ -70,9 +70,9 @@ void main() {
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water with small waves on it never mirrors whole, however low the eye: seen far off it shows the tilted faces, and they show more of the water's own colour.
-  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), 0.62);
+  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.34, smoothstep(10.0, 90.0, far)));
   vec3 r = reflect(-v, n);
-  r.y = abs(r.y) + 0.02 + 0.1 * smoothstep(8.0, 80.0, far);
+  r.y = abs(r.y) + 0.02 + 0.3 * smoothstep(8.0, 100.0, far);
   r = normalize(r);
   vec3 mirror = skyRadiance(r) * skyOpen(vWorld);
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
@@ -97,7 +97,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(1.9, 0.75, 0.9));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = vec3(0.07, 0.2, 0.19) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = vec3(0.13, 0.36, 0.34) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 

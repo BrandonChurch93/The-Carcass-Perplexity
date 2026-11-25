@@ -115,14 +115,14 @@ const VANE_TEST = /* glsl */ `
   float len = max(vVane.w, 0.001);
   float b = vVane.y;
   // The barbs do not hang straight: each lock of them wanders a little as it goes down.
-  float a = vVane.x + len * b * b * (0.55 * (vnoise(vec2(vVane.x * 7.0 + seed, b * 2.0 + seed)) - 0.5) + 0.16 * (vnoise(vec2(vVane.x * 41.0 + seed, b * 7.0 - seed)) - 0.5));
+  float a = vVane.x + len * b * b * (0.9 * (vnoise(vec2(vVane.x * 5.0 + seed, b * 1.6 + seed)) - 0.5) + 0.22 * (vnoise(vec2(vVane.x * 33.0 + seed, b * 6.0 - seed)) - 0.5));
   // Wet barbs gather into locks: the barbs of one lock leave the stem side by side and come together at its point.
   float wide = 0.03 + 0.035 * hash12(vec2(seed, 3.1));
   float cell = floor(a / wide);
   float h1 = hash12(vec2(cell, seed));
   float h2 = hash12(vec2(cell + 17.0, seed * 1.7));
   float centre = (cell + 0.5 + 0.5 * (h1 - 0.5)) * wide;
-  float lockLen = 0.5 + 0.5 * h2;
+  float lockLen = 0.3 + 0.7 * h2;
   float t = b / lockLen;
   // A bead of water at the point of a lock, on most of them.
   float bead = length(vec2(a - centre, (b - lockLen) * len + 0.004));
@@ -136,7 +136,7 @@ const VANE_TEST = /* glsl */ `
   float line = abs(fract(rootAt / spacing) - 0.5) * spacing * fan;
   float thick = max(0.0013 * (1.0 - 0.45 * t), 0.75 * px);
   // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
-  thick = max(thick, 0.5 * (spacing * fan - px));
+  thick = max(thick, 0.5 * spacing * fan - 0.5 * px + 1.6 * px * smoothstep(3.5 * px, 1.5 * px, spacing * fan));
   bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.72 + 0.28 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
   if (!barb && !drop) discard;
 `;
