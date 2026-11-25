@@ -6,6 +6,7 @@ import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, GROUP, SPATTER_LEFT, SPATTER_RIGHT, SUNK, UNIT } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import type { HeartContext, HeartPiece, HeatSource, SteamSource } from '../shared/context';
 import { blackbody } from '../shared/rig';
 import { bakeNoise } from './noise';
@@ -125,7 +126,8 @@ export function create(ctx: HeartContext): HeartPiece {
   // Staging by shot: what each body's density is in each shot of the place.
   const shots = ['heart-01', 'heart-02', 'heart-03', 'heart-04', 'heart-05'].map((id) => {
     const shot = shotById(id);
-    return { id, from: secondsInPlace(UNIT, shot.first), to: secondsInPlace(UNIT, shot.last) };
+    // The span holds the open shutter of its first and last frame.
+    return { id, from: secondsInPlace(UNIT, shot.first) - 0.3 / 60, to: secondsInPlace(UNIT, shot.last) + 0.7 / 60 };
   });
   const smoke = createSmoke(ctx.rig.uniforms, noise, skyMean);
   const su = smoke.uniforms;
@@ -180,7 +182,8 @@ export function create(ctx: HeartContext): HeartPiece {
     volume,
     warp,
     setTime: (seconds) => {
-      const shot = shots.find((x) => seconds >= x.from && seconds <= x.to)?.id ?? '';
+      const staged = stagedSeconds();
+      const shot = shots.find((x) => staged >= x.from && staged <= x.to)?.id ?? '';
       for (let i = 0; i < count; i++) {
         const b = BODIES[i] as Body;
         (bodyB[i] as THREE.Vector4).w = b.dense * (b.shots?.[shot] ?? b.shots?.rest ?? 1);
