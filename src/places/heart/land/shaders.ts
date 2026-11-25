@@ -378,7 +378,7 @@ void main() {
     // A butte of the darkest rock in the caldera, eroded and sooted; only the flank the fountains bake is paler.
     // Measured against the wide picture: its butte is the darkest rock of the far shore.
     albedo *= mix(1.0, 0.54, onSpur);
-    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.85 * baked);
+    albedo = mix(albedo, (albedo + 0.015) * vec3(2.9, 1.7, 1.15), 0.4 * baked);
   }
   #endif
   #ifdef BENCH
@@ -539,14 +539,17 @@ void main() {
   #endif
   #ifdef BUTTRESS
   // The buttress, measured on the wide picture: darker and warmer than the wall behind it, its table paler than its cliffs.
-  albedo *= vec3(0.8, 0.71, 0.67) * mix(1.35, 0.9, steep);
-  // Its table is the palest thing on it, and a skirt of talus lies against its near side in cones: paler than the cliffs and without their joints.
-  float table = (1.0 - steep) * smoothstep(60.0, 85.0, vWorld.y);
-  albedo *= 1.0 + 0.7 * table;
+  albedo *= vec3(0.8, 0.71, 0.67) * mix(1.15, 0.78, steep);
+  // A skirt of talus lies against its near side, in the shape and in cones of tone above it: paler than the cliffs and without their joints.
   float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
   float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);
-  float skirt = smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5)));
-  albedo = mix(albedo, vec3(0.135, 0.118, 0.104) * (0.75 + 0.5 * mid) * (0.9 + 0.2 * big), 0.8 * skirt);
+  // How far a point lies off the buttress's axis: negative is its near side, where the talus is.
+  vec4 axis = ${BUTTRESS_LINE};
+  vec2 axisRun = axis.zw - axis.xy;
+  float offAxis = ((vWorld.x - axis.x) * axisRun.y - (vWorld.z - axis.y) * axisRun.x) / length(axisRun);
+  float skirt = max(smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5))), (1.0 - steep) * smoothstep(84.0, 66.0, vWorld.y) * smoothstep(-40.0, -54.0, offAxis));
+  float grit = vnoise(vWorld.xz / 2.7 + vWorld.y * vec2(0.5, 0.3) + 8.1);
+  albedo = mix(albedo, vec3(0.1, 0.086, 0.076) * (0.7 + 0.4 * mid + 0.3 * grit) * (0.9 + 0.2 * big), 0.8 * skirt);
   #endif
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.

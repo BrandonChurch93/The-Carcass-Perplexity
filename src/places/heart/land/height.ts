@@ -391,18 +391,18 @@ export function buttressAt(x: number, z: number): number {
   // Its top, measured on the wide picture: one eroded table that falls evenly from the wall to the tip, and tilts a little toward that camera,
   // so the lens sees a strip of the table over the near cliff. Positive across is the far side.
   const fallen = 0.5 * (Math.min(1, Math.max(0, u / 0.9)) + smooth(0.0, 0.9, u));
-  const tilt = 1 + 0.07 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
-  const top = lerp(194, 84, fallen) * tilt * smooth(1.12, 0.9, u) * smooth(-0.16, -0.06, u);
+  const tilt = 1 + 0.12 * Math.max(-1.2, Math.min(1.2, across / BUTTRESS.half));
+  // Its crown is one rough slope and no stair: knolls and hollows of ten metres on it, and a ragged edge. No flow of it stands out as a table.
+  const crown = 11 * (ridge(x / 31 + 7.3, z / 31 + 2.9) - 0.55) + 5 * (fbm(x / 9, z / 9, 3) - 0.5);
+  const top = (lerp(194, 84, fallen) * tilt + crown) * smooth(1.12, 0.9, u) * smooth(-0.16, -0.06, u);
   const g = ridge(x / 38 + 1.3, z / 38 + 4.1);
-  const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 9 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
+  const half = BUTTRESS.half * (1 - 0.35 * smooth(0.5, 1.1, u)) + 5 * wave(x * 2 + 40, z * 2) - 9 * g * g * g + 5 * (fbm(x / 17, z / 17, 2) - 0.5);
   const edge = Math.abs(across) / half;
   const cliff = smooth(1.0, 0.72, edge);
-  const scree = 0.3 * smooth(1.75, 0.95, edge);
-  let h = top * Math.max(cliff, scree * smooth(1.2, 0.95, u) * smooth(-0.3, -0.1, u)) + 6 * wave(x * 3, z * 3) * cliff;
-  if (h > 50) {
-    const face = 0.25 + 0.3 * noise(x / 29 + 11, z / 29 + 5);
-    h = lerp(h, terrace(h, face), smooth(50, 64, h) * smooth(0.55, 0.75, edge));
-  }
+  // Talus lies against its near side as a skirt two fifths of the cliff high, hollow in section like any scree; the far side keeps the layout's.
+  const lean = Math.min(1, Math.max(0, (1.85 - edge) / 0.9));
+  const scree = across < 0 ? 0.4 * (0.3 * lean + 0.7 * lean * lean) : 0.3 * smooth(1.75, 0.95, edge);
+  let h = top * Math.max(cliff, scree * smooth(1.2, 0.95, u) * smooth(-0.3, -0.1, u)) + 3 * wave(x * 3, z * 3) * cliff;
   h += smooth(0.95, 1.2, edge) * 2.2 * (fbm(x / 8, z / 8, 3) - 0.5) * smooth(0.5, 6, h);
   return h < 0.5 ? Math.max(-8, 0.5 - (0.5 - h) * 5) : h;
 }
