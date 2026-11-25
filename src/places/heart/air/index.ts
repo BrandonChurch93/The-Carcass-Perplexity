@@ -13,7 +13,7 @@ import { MAX_HEAT, MAX_STEAM, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
 
 /** Until the lake is open under the fume, the fume is lit from below by this much open lava (a part of the lake's face, at 1400 K). Zero turns it off. */
-const VENT_OPEN = 0.03;
+const VENT_OPEN = 0.06;
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */
 function standIns(ctx: HeartContext): { steam: SteamSource[]; heat: HeatSource[] } {
@@ -23,7 +23,7 @@ function standIns(ctx: HeartContext): { steam: SteamSource[]; heat: HeatSource[]
     const k = i / 3;
     const x = CRACK_FOOT[0] + (CRACK_TOP[0] - CRACK_FOOT[0]) * k;
     const z = CRACK_FOOT[1] + (CRACK_TOP[2] - CRACK_FOOT[1]) * k;
-    steam.push({ at: on(x, z), radius: 1.1 + 0.5 * k, strength: 0.5 + 0.3 * k, rise: 7 + 5 * k, kind: 'steam', lean: [-0.55, 0.2] });
+    steam.push({ at: on(x, z), radius: 1.5 + 0.6 * k, strength: 0.7 + 0.3 * k, rise: 8 + 5 * k, kind: 'steam', lean: [-0.55, 0.2] });
   }
   for (const p of [SPATTER_RIGHT[1], SPATTER_RIGHT[2], SPATTER_LEFT[1]]) {
     if (p) steam.push({ at: [p[0], 0.5, p[2]], radius: 13, strength: 0.6, rise: 70, kind: 'smoke', lean: [-0.35, 0.1] });
@@ -109,7 +109,7 @@ export function create(ctx: HeartContext): HeartPiece {
         const radius = Math.max(0.05, s.radius);
         (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], radius);
         // Thickness for a metre of path: a source of strength 1 is all but opaque across its own foot.
-        (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * (smoke ? 1.5 : 1.3)) / radius);
+        (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * (smoke ? 1.6 : 2.2)) / radius);
         // Steam is quick, smoke is slow; the grain of each is set by the size of its foot.
         const speed = smoke ? Math.min(4, 1 + s.rise * 0.035) : Math.min(3.2, 1.2 + s.rise * 0.16);
         (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, speed, Math.max(2.5, radius * (smoke ? 5 : 4.2)), smoke ? 1 : 0);
