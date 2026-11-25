@@ -6,6 +6,7 @@ import type { Context, Piece } from '../shared/context';
 import { Wader, type Env } from './animal';
 import { makeHerd } from './herd';
 import { FRAGMENT, VERTEX } from './material';
+import { MIRROR } from './mirror';
 import { Skin } from './skin';
 
 export const PARTS: readonly string[] = ['waders'];
@@ -25,14 +26,34 @@ export function create(ctx: Context): Piece {
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
+  const pictures = {
+    tHide: { value: ctx.assets.texture('waders/hide.jpg') },
+    tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
+  };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 } },
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 } },
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('waders', mesh));
+
+  // The same herd for the water's mirror: drawn upside down under the water's level into a picture of its own, which the water reads.
+  const mirrored = new THREE.ShaderMaterial({
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 1 } },
+    side: THREE.DoubleSide,
+  });
+  const image = new THREE.Mesh(geometry, mirrored);
+  image.frustumCulled = false;
+  const mirrorScene = new THREE.Scene();
+  mirrorScene.add(image);
+  const target = new THREE.WebGLRenderTarget(8, 8, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
+  target.texture.generateMipmaps = false;
+  MIRROR.texture.value = target.texture;
+  const clear = new THREE.Color();
 
   // Only those near the cameras shade the ground: the far flock is smaller than a cell of the contact map.
   const shading = members.map((m, i) => (m.build.far ? -1 : i)).filter((i) => i >= 0);
@@ -61,13 +82,25 @@ export function create(ctx: Context): Piece {
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
       pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
+      const before = renderer.getRenderTarget();
+      renderer.getClearColor(clear);
+      const alpha = renderer.getClearAlpha();
+      renderer.setRenderTarget(target);
+      renderer.setClearColor(0x000000, 0);
+      renderer.clear(true, true, false);
+      renderer.render(mirrorScene, camera);
+      renderer.setClearColor(clear, alpha);
+      renderer.setRenderTarget(before);
     },
-    resize: (_width, h) => {
+    resize: (w, h) => {
       height = h;
+      target.setSize(Math.max(8, Math.round(w / 2)), Math.max(8, Math.round(h / 2)));
     },
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      mirrored.dispose();
+      target.dispose();
     },
   };
 }

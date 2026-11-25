@@ -222,7 +222,15 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...rig.uniforms, uPixel: { value: 0.0005 }, uSea: { value: -100 }, uDead: { value: 1 } },
+    uniforms: {
+      ...rig.uniforms,
+      tHide: { value: ctx.assets.texture('waders/hide.jpg') },
+      tHideNh: { value: ctx.assets.texture('waders/hide-nh.png', { kind: 'data' }) },
+      uPixel: { value: 0.0005 },
+      uSea: { value: -100 },
+      uDead: { value: 1 },
+      uMirror: { value: 0 },
+    },
   });
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
