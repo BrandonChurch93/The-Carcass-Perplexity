@@ -722,7 +722,7 @@ float heightAt(vec2 q, float c) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp)) * (1.0 - 0.7 * broke);
       gLapCell = c;
       float fold = foldAt(q);
-      fine = smoothSkin * gFoldCover * mix(gFoldDeep * foldHeld(gFine), gLapDeep * (1.0 - smoothstep(0.16, 0.34, gFine / gLapSpace)), gLapRope) * (pow(fold, 0.7) - 0.65);
+      fine = smoothSkin * gFoldCover * mix(gFoldDeep * foldHeld(gFine), gLapDeep * (1.0 - smoothstep(0.08, 0.2, gFine / gLapSpace)), gLapRope) * (pow(fold, 0.7) - 0.65);
       fine += smoothSkin * gToeBest * toeHeld(gFine);
       // The lobes at the line: sheets that lap, with their steps and creases.
       fine += off * calm * (1.0 - shoreUp) * gLapHigh * (1.0 - smoothstep(0.1, 0.3, c)) * (1.0 - smoothstep(0.09, 0.16, gFine));
