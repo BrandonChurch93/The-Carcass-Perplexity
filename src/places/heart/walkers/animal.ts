@@ -135,7 +135,7 @@ const BODY_RINGS = 96;
 const BODY_SIDES = 32;
 const NECK_RINGS = 46;
 const NECK_SIDES = 12;
-const NECK_END = 7;
+const NECK_END = 14;
 const LEG_SIDES = 12;
 /** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
 export const TUFT_UP = 0.85;
@@ -211,7 +211,7 @@ export class Animal {
       const x = (t - 0.5) * b.bodyLen;
       // It hangs between the shoulders and the hips: the back sags between them, the belly hangs lowest a little ahead of the middle.
       const sag = gauss((t - 0.5) / 0.2);
-      const top = b.bodyTop * e * (1 + 0.14 * sag + 0.3 * b.hump * gauss((t - tShoulder) / 0.13) + 0.1 * gauss((t - tHip) / 0.12));
+      const top = b.bodyTop * e * (1 - 0.1 * sag + 0.5 * b.hump * gauss((t - tShoulder) / 0.12) + 0.2 * gauss((t - tHip) / 0.1));
       const keel = b.bodyKeel * e * (0.72 + 0.34 * gauss((t - 0.56) / 0.22));
       const wide = b.bodyWide * e * (1 + 0.14 * gauss((t - tHip) / 0.1) + 0.2 * gauss((t - tShoulder) / 0.1) - 0.14 * sag);
       for (let j = 0; j < BODY_SIDES; j++) {
@@ -227,7 +227,7 @@ export class Animal {
         const fold2 = Math.pow(1 - Math.abs(2 * wrap(t * 11, a, 9, seed + 5) - 1), 4);
         m -= 0.15 * fold1 + 0.06 * fold2;
         // The flank has fallen in under the spine between the shoulder and the hip.
-        m -= 0.13 * gauss((fromTop - 1.05) / 0.4) * sag;
+        m -= 0.3 * gauss((fromTop - 1.15) / 0.4) * sag * (0.6 + 0.8 * wrap(t * 7, a, 2, seed + 8));
         // What hangs under the belly is ragged.
         m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
         // The shoulders and the points of the hips, high on each side: the legs leave the body there.
@@ -262,7 +262,7 @@ export class Animal {
       const q = (i * BODY_SIDES + j) * 3;
       // Strings and flat torn strips, 0.3 to 1.8 m.
       const strip = hash(n, seed + 25);
-      const rag = this.rag(n, (0.3 + 1.25 * Math.pow(hash(n, seed + 24), 1.6)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
+      const rag = this.rag(n, (hash(n, seed + 24) < 0.17 ? 1.0 + 1.1 * hash(n, seed + 26) : 0.12 + 0.45 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }
@@ -281,7 +281,7 @@ export class Animal {
       const s = i / (NECK_RINGS - 1);
       // It thickens again over its last quarter, to the crown the roots splay from.
       // As thick as a thigh where it leaves the body, and thinner all the way down; a small crown where the roots start.
-      let r = b.neckR * (0.25 + 0.75 * Math.pow(1 - s, 2.1)) * (1 + 0.25 * gauss(s / 0.08)) + 0.1 * k * smooth(0.74, 0.95, s);
+      let r = b.neckR * (0.25 + 0.75 * Math.pow(1 - s, 2.1)) * (1 + 0.25 * gauss(s / 0.08)) + 0.2 * k * smooth(0.56, 0.93, s);
       // A few uneven swellings along its lower half, no two necks alike.
       for (let n = 0; n < 4; n++) {
         const at = 0.46 + 0.5 * ((n + 0.15 + 0.7 * hash(n, seed + 61)) / 4);
@@ -543,7 +543,14 @@ export class Animal {
       else r = lerp(0.08, 0.074, Math.min(1, (s - S2) / this.meta));
       // A bone widens toward its end before the knuckle itself.
       const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
-      r += 0.105 * head(s - S1, 0.34) + 0.1 * head(s - S2, 0.24) + 0.05 * head(s - S3, 0.16);
+      r += 0.105 * head(s - S1, 0.34) + 0.125 * head(s - S2, 0.26) + 0.05 * head(s - S3, 0.16);
+      // Dead wood: knots along each shaft, where it pleases, and a slow swell and waist between them.
+      let knot = 0;
+      for (let n = 0; n < 7; n++) {
+        const at = (n + 0.2 + 0.6 * hash(n + j * 11, seed + 81)) / 7 * S3;
+        knot += (0.1 + 0.3 * hash(n + j * 5, seed + 82)) * gauss((s - at) / ((0.07 + 0.1 * hash(n, seed + 83)) * k));
+      }
+      r *= 1 + (s < S1 ? 0.4 : 1) * knot + 0.1 * Math.sin((s * 3.1) / k + p1 * 3);
       r *= k * b.legR;
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
@@ -565,16 +572,16 @@ export class Animal {
       }
       for (let n = 0; n < LEG_SIDES; n++) {
         const a = (n / LEG_SIDES) * Math.PI * 2;
-        const tendon = 1 + 0.08 * Math.cos(2 * a + 0.4) + 0.05 * Math.cos(3 * a + p1) + 0.16 * (wrap((s * 2.4) / k, a, 3, seed) - 0.5) + 0.07 * (wrap((s * 6) / k, a, 5, seed + 1) - 0.5);
+        const tendon = 1 + 0.08 * Math.cos(2 * a + 0.4) + 0.05 * Math.cos(3 * a + p1) + 0.3 * (wrap((s * 1.1) / k, a, 4, seed) - 0.5) + 0.16 * (wrap((s * 3.4) / k, a, 7, seed + 1) - 0.5);
         // The pad is round, more or less: its rim is ragged, broken off here and caked there, and no two are the same.
         const toes = 0.8 + 0.36 * hash(n + j * 13, seed + 60) + 0.1 * Math.cos(2 * a + p2) - (hash(n * 3 + j, seed + 61) < 0.16 ? 0.22 : 0);
         // A shaft is flat and twists as it goes down; a knuckle is round, with two heads to it.
         const shaft = (1 - shape) * (1 - knob) * smooth(0, 0.8 * k, s);
         const heads = 1 + knob * (1 - shape) * (0.2 * Math.cos(2 * a + p2) + 0.1 * Math.cos(3 * a + p1));
         const m = lerp(tendon, toes, shape) * heads;
-        const lx = Math.cos(a) * r * m * lerp(1, 1.2, shaft);
-        const ly = Math.sin(a) * r * m * lerp(1, 0.78, shaft);
-        const twist = (p1 + (0.34 * s) / k) * (1 - shape);
+        const lx = Math.cos(a) * r * m * lerp(1, 1.1, shaft);
+        const ly = Math.sin(a) * r * m * lerp(1, 0.9, shaft);
+        const twist = (p1 + (0.1 * s) / k) * (1 - shape);
         table.local[(i * LEG_SIDES + n) * 2] = lx * Math.cos(twist) - ly * Math.sin(twist);
         table.local[(i * LEG_SIDES + n) * 2 + 1] = lx * Math.sin(twist) + ly * Math.cos(twist);
       }
@@ -771,12 +778,14 @@ export class Animal {
       pull = much * smooth(0.45, 0.7, ff) * (1 - smooth(0.8, 1, ff));
       gulp = ff;
     }
-    const sideways = shiftSide * 0.4 * k + 0.2 * k * idle2;
-    const forwards = shiftFore * 0.25 * k + 0.2 * k * idle - 0.5 * k * aim.down * (plan.dip > 0 ? 1 : 0.3) - 0.28 * k * pull;
+    // The shoulders answer the neck: the body starts to take the weight of the neck over its legs a little before the head moves.
+    const lead = plan.neck(seconds + 0.6).down;
+    const sideways = shiftSide * 0.62 * k + 0.2 * k * idle2;
+    const forwards = shiftFore * 0.4 * k + 0.2 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.28 * k * pull;
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
-    const pitch = -0.1 * aim.down - 0.035 * shiftFore + 0.02 * idle2 + 0.025 * pull;
-    const roll = 0.06 * shiftSide + 0.018 * idle;
+    const pitch = -0.1 * lead - 0.05 * shiftFore + 0.02 * idle2 + 0.025 * pull;
+    const roll = 0.085 * shiftSide + 0.018 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -796,7 +805,7 @@ export class Animal {
     }
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
-    const cy = ride - 0.15 * k * dip - 0.09 * k * lean - plan.dip * aim.down - 0.05 * k * (1 - Math.sin(turn + 0.9));
+    const cy = ride - 0.15 * k * dip - 0.13 * k * lean - plan.dip * lead - 0.05 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
     const cp = Math.cos(pitch);
@@ -1025,9 +1034,9 @@ export class Animal {
     const c1 = -Math.cos(shape * Math.PI);
     const c2 = 0.8 * Math.sin(shape * Math.PI);
     // A neck that hangs to a tuft that is down turns most where it leaves the shoulders: steep there, then sweeping out low and level.
-    const sweep = lerp(1, 0.75, smooth(0.22, 0.1, shape));
+    const sweep = lerp(1, 0.9, smooth(0.22, 0.1, shape));
     // It comes to the tuft still going down: it does not rise again before it turns to hang.
-    const over = lerp(2, 1.1, smooth(0.22, 0.1, shape));
+    const over = lerp(2, 0.62, smooth(0.22, 0.1, shape));
     const phi = (s: number): number => c1 * (1 - over * Math.pow(s, sweep)) + c2 * Math.sin(2 * Math.PI * s);
     const hang = lerp(-1.42, -0.85, smooth(0.22, 0.1, shape));
     // The last part of the neck turns to hang. Find where the main part must end for the tuft to arrive at the tip.
