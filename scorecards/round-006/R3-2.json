@@ -1,0 +1,77 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-25 12:49 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the lava fan at the foot of the slope, lower centre-right",
+        "what": "the lava reads as flat orange sheets cut by hard, straight, polygonal crack lines, with planar triangular facets and no crust, no surface relief and no rolling front. It looks like a shader on low-poly geometry rather than molten rock",
+        "fix": "give the fan a dark cooled crust broken into rounded plates with glowing seams, thickness and lobed toes, and break up the straight facet edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "lava channel, crop x 42-58% y 58-75%",
+        "what": "the lava is a flat bright orange fill with cut-out edges and sharp-edged floating flakes. The fill has no depth and no wet edge, and it lights only a thin rim of the rock next to it",
+        "fix": "add surface flow detail and a cooled skin, and let the glow fall off softly onto the banks and the fume above the channel"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the dark pool in the foreground",
+        "what": "the fluid is a flat dark plane with one soft orange smear for a reflection. It shows no detail of the cliff and the lava, and it has no edge where it meets the shore",
+        "fix": "reflect the lit lava and the cliff with ripples that break the reflection up, and add a wet, crusted edge where it meets the rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "rock slope and cliff, crops x 0-17% y 58-75% and x 83-100% (set-B-06 x 83-100% y 58-75%)",
+        "what": "the rock texture is smeared and stretched into streaks along the slope, the same grey material is used everywhere, and the boulders look like soft clay",
+        "fix": "use a higher-resolution triplanar rock material with variation between scree, bedrock and ash, and sharpen the boulder edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the near creature's legs and tail, crop x 42-58% y 58-75%",
+        "what": "the wood-grain texture is stretched into zigzag bands along the tail, and the legs have a smooth modelled look with knotted joints. The ankles are faceted, and nothing of the place shows on them, such as ash or heat staining",
+        "fix": "fix the UVs on the tail and legs, add ash dust and heat discolouration near the feet, and add micro-detail at the joints"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the feet of all three creatures on the cracked ground",
+        "what": "the leg tips are needle points with almost no contact shadow, so the creatures look stood on the ground rather than bearing weight. The tail strands glow but light almost nothing on the ground next to them",
+        "fix": "add contact shadows and slight sinking or displaced ash at each foot, and let the glowing strands light the ground and legs near them"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "background lava, crop x 0-17% y 25-42%",
+        "what": "the distant lava is a soft blob of orange paint with no structure and no light cast into the smoke around it, so it reads as a flat card",
+        "fix": "give the far lava flow structure and let it light the fume above it with a volumetric glow"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the two small creatures on the lava fan",
+        "what": "the creatures are silhouettes on glowing lava with no rim light from below and no shadow",
+        "fix": "light the creatures from below with the lava and give them shadows on the lava surface"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "haze over the cliff, crop x 83-100% y 25-42%",
+        "what": "the fog is a uniform grey tint over the cliff, with no variation and no light in it",
+        "fix": "vary the fog density with height and distance, and tint it warm near the lava"
+      }
+    ]
+  }
+}

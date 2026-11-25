@@ -27,8 +27,9 @@ const FAR = 150;
 const SETTLE_AT = secondsInPlace(UNIT, 3740);
 const SETTLE_DROP = 0.1;
 const SETTLE_TIP = 0.022;
-/** The line of the break, in the local frame: a second branch of the split, from its middle out across the folds toward the camera of heart-2. */
-const BREAK: [number, number, number, number] = [-7.5, 4.42, -4.7, 5.62];
+/** The line of the break, in the local frame: a second branch of the split, a pace in front of its middle, on the level skin
+ *  before the folds, where no rope stands between it and the camera of heart-2: it is seen as one line. */
+const BREAK: [number, number, number, number] = [-7.6, 5.42, -4.6, 5.62];
 /** The split's light on what is round it wavers as its fire does. Every rate is a whole count of turns in 8 s. */
 const waver = (seconds: number, at: number): number =>
   0.5 * Math.sin(seconds * 1.5708 + at) + 0.3 * Math.sin(seconds * 3.927 + 2.3 * at) + 0.2 * Math.sin(seconds * 8.6394 + 4.1 * at);
@@ -36,14 +37,16 @@ const ramp = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
   return t * t * (3 - 2 * t);
 };
-function settling(seconds: number): { down: number; open: number; puff: number; flare: number; slab: number } {
+function settling(seconds: number): { down: number; open: number; puff: number; flare: number; slab: number; ember: number } {
   const t = seconds - SETTLE_AT;
   const down = ramp(0, 0.55, t);
   // The slab goes fast and stops against what is under it.
   const slab = ramp(-0.02, 0.3, t) * (1 - 0.12 * Math.exp(-Math.max(0, t - 0.3) / 0.12) * Math.cos(Math.max(0, t - 0.3) * 21));
   const flare = ramp(-0.02, 0.1, t) * Math.exp(-Math.max(0, t - 0.1) / 1.1);
   const puff = ramp(0.02, 0.4, t) * Math.exp(-Math.max(0, t - 0.4) / 1.6);
-  return { down, open: 0.3 * down + 0.7 * flare, puff, flare, slab };
+  // The face of the break is black again inside four seconds: nothing of it glows to the end of the shot.
+  const ember = ramp(-0.02, 0.1, t) * Math.exp(-Math.max(0, t - 0.1) / 0.9) * (1 - ramp(1.5, 3.6, t));
+  return { down, open: 0.3 * down + 0.7 * flare, puff, flare, slab, ember };
 }
 
 /** Staging by shot. The picture of shot heart-04 has the carcass and its folds as a pale ashy mass seen from low down (folds 58 54 55,
@@ -128,14 +131,14 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.468, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
+  const legShapeA = { points: LEG_A, knee: 0.455, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   // Each is [where it is held, its length, its half width, its turn, its seed].
   const RAGS: [[number, number, number], number, number, number, number][] = [
-    [[2.2, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
-    [[2.28, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
-    [[2.08, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
+    [[2.4, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
+    [[2.48, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
+    [[2.28, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
     [[-0.3, 3.1, 0.86], 0.8, 0.07, -0.4, 4],
     [[-0.2, 3.22, 0.82], 0.42, 0.045, 0.9, 5],
     [[1.0, 3.19, -3.04], 0.9, 0.075, 0.9, 6],
@@ -261,7 +264,7 @@ export function create(ctx: HeartContext): HeartPiece {
       body.rotation.z = SETTLE_TIP * now.down;
     }
     shared.uSlab.value = now.slab;
-    shared.uFlare.value = now.flare;
+    shared.uFlare.value = now.ember;
     bursts.forEach((burst, i) => {
       const [bx, bz] = toWorld((BURSTS[i] as [number, number])[0], (BURSTS[i] as [number, number])[1]);
       burst.at[0] = x + bx;

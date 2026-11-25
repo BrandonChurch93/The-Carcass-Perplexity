@@ -245,9 +245,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     aim += vec3(d.xz * (narrow * inversesqrt(max(far2, 1e-4))), 1.0) * lit.r;
   }
   // The pools of the seam the walkers feed at (uRigPools: x, z and the long axis; uRigPoolSize: half length, half width, radiance red and green).
-  // Each stands brimful and lights an apron round itself: all of it at the brim, two thirds a metre out, a quarter two metres out, nothing at three.
+  // Each stands brimful and lights an apron round itself: all of it at the brim, half two metres out, a fifth four metres out, nothing at six
+  // (it was nothing at three: the picture's floor carries the orange of its pools for some five metres and is dark beyond).
   // A level face beside it takes a third (the grains of rough ground that face the fire), a face turned to it all. No read of any map.
-  // The pools lie 14 m and more apart and reach 3 m, so only the nearest can count: it is picked first and the light worked out once.
+  // The pools lie 14 m and more apart and reach 6 m, so only the nearest can count: it is picked first and the light worked out once.
   vec2 rel = p.xz - uRigPools[0].xy;
   vec2 ax = uRigPools[0].zw;
   vec4 size = uRigPoolSize[0];
@@ -262,9 +263,11 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec2 back = rel / max(far, 1e-3);
   vec3 toPool = vec3(-back.x * (gap + 0.3), -max(p.y, 0.0) - 0.05, -back.y * (gap + 0.3));
   float span = length(toPool);
-  float away = span - 0.3;
+  // A pool shines most straight up: its light climbs a little over twice as far as it runs along the ground, so the legs, the belly and the
+  // underside of the neck of what stands over it take it from below (the crust, at the pool's own level, is lit as by the distance alone).
+  float away = length(vec2(gap, 0.45 * max(p.y, 0.0)));
   float facing = clamp((dot(n, toPool) / span + 0.5) / 1.5, 0.0, 1.0);
-  float apron = facing / (1.0 + away * away / 2.25) * (1.0 - smoothstep(1.5, 3.0, away));
+  float apron = facing / (1.0 + away * away / 4.0) * (1.0 - smoothstep(2.5, 6.0, away));
   vec3 poolLit = vec3(size.z, size.w, size.w * 0.08) * (3.14159 * apron);
   e += poolLit;
   aim += vec3(-back, 1.0) * poolLit.r;
@@ -282,6 +285,8 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   toStream.y += 0.6;
   float streamFacing = clamp((dot(n, toStream) * inversesqrt(dot(toStream, toStream)) + 0.25) / 1.25, 0.0, 1.0);
   float streamK = (1.0 - 0.5 * max(bank.w - 1.0, 0.0)) * streamFacing / (1.0 + streamAway * streamAway * uRigStreamLight.z) * (1.0 - smoothstep(7.0, 18.0, streamAway));
+  // Behind the front of the surge (uRigStreamLight.w: its z; far up the tube before it comes) the stream runs full and casts 1.3 more.
+  streamK *= 2.3 - 1.3 * smoothstep(uRigStreamLight.w - 5.0, uRigStreamLight.w + 2.0, p.z);
   vec3 streamLit = vec3(uRigStreamLight.x, uRigStreamLight.y, 0.0) * (3.14159 * streamK);
   e += streamLit;
   aim += vec3(toStream.xz * inversesqrt(max(dot(toStream.xz, toStream.xz), 1e-4)), 1.0) * streamLit.r;
@@ -290,7 +295,10 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   if (aim.z > 0.02) {
     float low = smoothstep(1.2, 0.3, p.y);
     vec2 toward = aim.xy * (1.4 / aim.z);
-    e *= 1.0 - low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
+    // A second read at 3 m, at half strength: the shade of a leg or a boulder runs on past its first metre and thins, as a thrown shade does.
+    // The read costs nothing that can be measured (the whole frame at the wide key with and without the first: 20.87 and 20.93 s).
+    float thrown = max(contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y)), 0.5 * contactDrawn(vec3(p.x + 2.15 * toward.x, p.y, p.z + 2.15 * toward.y)));
+    e *= 1.0 - low * EMITTER_SHADE * thrown;
   }
   return e * uCast;
 }

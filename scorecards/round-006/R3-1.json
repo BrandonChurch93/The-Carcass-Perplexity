@@ -1,0 +1,105 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-25 12:46 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the lava channel in the foreground, right half",
+        "what": "the lava is a flat sheet with a mirror-like marbled shader. It sits under the crust like a flat plane, has no thickness, no crust skin, no wet rind where it meets the rock, and lights almost none of the rock walls beside it",
+        "fix": "give the flow depth and a cooled crust with glowing cracks, bevel the edges where it meets rock, and let it light the overhanging rock and the air above it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "lava at x 42-58%, y 58-75% and x 83-100%, y 58-75%",
+        "what": "at native size the lava is a smooth plastic plane with swirl striping, and it ends on hard polygon edges against the rock. The rock beside it is stretched, faceted displacement with smeared texture",
+        "fix": "raise displacement resolution, put triplanar texture on the rock, and model a crusted, viscous lava edge"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the collapsed creature and the mound under it, centre",
+        "what": "the mound reads as draped clay or cloth with one bark texture wrapped over everything, creature and ground alike. Nothing separates the animal from the lava. The legs look like carved wood",
+        "fix": "give the animal its own skin material with ash, dust and heat-scorch, and make the ground a distinct ropy pahoehoe crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the mound at x 42-58% and the foot at x 83-100%, y 58-75%",
+        "what": "the texture is badly stretched and smeared along the folds (UV stretching), and there are soft blurry patches. The foot sinks into a smeared plane",
+        "fix": "re-UV or use triplanar projection, raise texture resolution, and add a contact rim or displacement where the foot meets the ground"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the near rock at x 0-17%, y 25-42% and y 58-75%",
+        "what": "the close rock has a smeared, swirled marble texture that looks like a stretched procedural noise, not basalt. The boulder reads as a smooth blob",
+        "fix": "use a high-frequency vesicular basalt texture with real displacement close to the camera"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the lava-lake crust at x 42-58%, y 58-75%",
+        "what": "the crust has a wavy watery noise pattern and the glowing cracks are thin painted lines that light nothing next to them. The plate surface has no relief",
+        "fix": "model the crust plates with raised edges and let the cracks emit light onto the adjacent crust and the fume"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "flames at x 83-100%, y 58-75%, and the far right of set-A-01",
+        "what": "the lava-lake fires are cartoon flame sprites standing on a flat line. Real lava lakes do not burn with flames like this, and they cast no light on the crust in front of them",
+        "fix": "replace with fountaining spatter or glowing degassing vents with heat haze and fume, and light the ground"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the lava lake surface across the frame",
+        "what": "the surface is one grey material with a visible repeating dark blotch pattern. Away from the crack lines it is uniformly lit, and the sky's warm glow does not reach it",
+        "fix": "vary the crust's albedo and roughness, break up the tiling, and add the red underglow from the fume onto the crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the cave mouth on the cliff, upper left, and the lava fall below it",
+        "what": "the glowing cave rim is an orange outline with a dark flat interior. The lava fall lights none of the cliff face around it",
+        "fix": "fill the cave with emissive lava and glow, and let it light the cliff and the steam"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the walking creatures",
+        "what": "the stilt creatures cast no visible shadows or glow reflections on the crust despite lava light below them, and several share near-identical poses",
+        "fix": "add contact shadows and lava under-lighting on the legs, and vary the poses"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the fume on the right, x 83-100%, y 25-42%",
+        "what": "the pink haze is a flat uniform tint. The cliff edge against it is a hard, clean triangle with a blotchy texture",
+        "fix": "add volumetric density variation and light shafts, and soften and detail the cliff edge"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the far crust and the creatures, top row",
+        "what": "the depth of field blur is uniform and smeary, and the far lava reads as a flat orange smear",
+        "fix": "use a physically based bokeh and keep the far lava texture under the blur"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-08.png",
+        "where": "the crust at x 0-17%, y 58-75%",
+        "what": "the crust swirl pattern repeats with the same marbled noise as the other frames",
+        "fix": "add layered detail and break up the repetition"
+      }
+    ]
+  }
+}
