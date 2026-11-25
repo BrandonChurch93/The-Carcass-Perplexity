@@ -105,7 +105,7 @@ export function create(ctx: Context): Piece {
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tSand: { value: sandC }, tSandN: { value: sandN }, uPool: { value: LEVELS.pool } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tSand: { value: sandC }, tSandN: { value: sandN }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
   const rock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide } });
   const weed = material(UV_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC } });
@@ -113,7 +113,8 @@ export function create(ctx: Context): Piece {
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 3, 60);
   const zs = lines(LAND.minZ, LAND.maxZ, -1560, 260, 3, 60);
-  const floor = new THREE.Mesh(floorShape(xs, zs, bed), ground);
+  // The mesh lies under the lowest the fine relief can go, so that no sheet of water is cut by a triangle: the shader draws the bed where it is.
+  const floor = new THREE.Mesh(floorShape(xs, zs, (x, z) => bed(x, z) - 0.14), ground);
   ctx.scene.add(ctx.parts.built('land', floor));
 
   const blades = new THREE.Group();
@@ -175,7 +176,9 @@ export function create(ctx: Context): Piece {
     const size = 0.18 + 1.1 * Math.pow(scatter.next(), 3);
     placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) });
   }
+  const ground0 = ctx.rig.land.height;
   const kept = placed.filter((p) => !nearTrack(p.x, p.z, 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
+  STATIONS.foreground.forEach(([x, z, size], i) => kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.62 }));
   const squat = [0.62, 0.8, 0.5, 0.7];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();
@@ -186,7 +189,7 @@ export function create(ctx: Context): Piece {
     const herd = new THREE.InstancedMesh(boulderShape(kind + 1, 4, squat[kind] as number), boulder, mine.length);
     herd.frustumCulled = false;
     mine.forEach((p, i) => {
-      dummy.position.set(p.x, bed(p.x, p.z) + p.size * (squat[kind] as number) * (1 - 2 * p.sink) * 0.5, p.z);
+      dummy.position.set(p.x, ground0(p.x, p.z) + p.size * (squat[kind] as number) * (1 - 2 * p.sink) * 0.5, p.z);
       dummy.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
       dummy.scale.setScalar(p.size);
       dummy.updateMatrix();

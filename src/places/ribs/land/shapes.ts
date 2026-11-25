@@ -4,13 +4,15 @@ import { hash2 } from '../../../core/rng';
 import { TIDE, partAtHeight, radii, skirtPad, surface, type Rib } from '../layout';
 import { fbm3, noise2, noise3, smooth } from './noise';
 
-type At = (j: number, i: number, out: THREE.Vector3) => [number, number];
+/** Sets the point and returns u, v and, if it has one, how open the point is to the sky (1 open, 0 deep in a hollow). */
+type At = (j: number, i: number, out: THREE.Vector3) => [number, number] | [number, number, number];
 
 /** A sheet of rows x cols vertices. A closed sheet repeats its first column as its last. Normals are smooth across the seam and point out of a tube or up from a floor. */
 export function sheet(rows: number, cols: number, closed: boolean, hint: 'out' | 'up', at: At): THREE.BufferGeometry {
   const positions = new Float32Array(rows * cols * 3);
   const uvs = new Float32Array(rows * cols * 2);
   const normals = new Float32Array(rows * cols * 3);
+  const shades = new Float32Array(rows * cols);
   const p = new THREE.Vector3();
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
@@ -21,6 +23,7 @@ export function sheet(rows: number, cols: number, closed: boolean, hint: 'out' |
       positions[k * 3 + 2] = p.z;
       uvs[k * 2] = uv[0];
       uvs[k * 2 + 1] = uv[1];
+      shades[k] = uv[2] ?? 1;
     }
   }
   const get = (j: number, i: number, out: THREE.Vector3): THREE.Vector3 => out.fromArray(positions, (j * cols + i) * 3);
@@ -80,6 +83,7 @@ export function sheet(rows: number, cols: number, closed: boolean, hint: 'out' |
   g.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   g.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
   g.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+  g.setAttribute('aShade', new THREE.BufferAttribute(shades, 1));
   g.setIndex(new THREE.BufferAttribute(index, 1));
   g.computeBoundingSphere();
   return g;
@@ -87,23 +91,23 @@ export function sheet(rows: number, cols: number, closed: boolean, hint: 'out' |
 
 const unit = (i: number, salt: number): number => hash2(i | 0, salt) / 4294967296;
 
-/** How far the rock stands out from the smooth blade at a point, metres: masses of 50 m, beds of 10 m with undercut ledges, flutes and joints of 5 m, blocks of 2 m. */
+/** How far the rock stands out from the smooth blade at a point, metres: masses of 50 m, bites where blocks have fallen, benches of 14 m, beds of 3 m with undercut ledges, flutes and joints of 5 m, blocks of 2 m. */
 export function relief(x: number, y: number, z: number): number {
-  let d = 10 * (fbm3(x / 70, y / 95, z / 70, 3) - 0.5);
+  let d = 9 * (fbm3(x / 70, y / 95, z / 70, 3) - 0.5);
+  d -= 10 * smooth(0.55, 0.7, fbm3(x / 33 + 7, y / 44, z / 33 - 3, 3));
   const warp = 4 * (noise3(x / 45, y / 45, z / 45) - 0.5);
-  const beds = (y + warp) / 9.5;
+  const bench = (y + warp) / 14;
+  const benchAt = Math.floor(bench);
+  const kb = bench - benchAt;
+  const hb = unit(benchAt, 11);
+  d += 2.4 * (hb + (unit(benchAt + 1, 11) - hb) * smooth(0.88, 1, kb) - 0.5);
+  const beds = (y + warp * 0.6) / 3.1;
   const bedAt = Math.floor(beds);
   const k = beds - bedAt;
-  const here = unit(bedAt, 11);
-  const above = unit(bedAt + 1, 11);
-  d += 3.2 * (here + (above - here) * smooth(0.82, 1, k) - 0.5);
-  const thin = (y + warp * 0.5) / 2.3;
-  const thinAt = Math.floor(thin);
-  const kt = thin - thinAt;
-  const th = unit(thinAt, 23);
-  d += 0.8 * (th + (unit(thinAt + 1, 23) - th) * smooth(0.75, 1, kt) - 0.5);
-  d += 2.2 * (fbm3(x / 6.5, y / 26, z / 6.5, 2) - 0.5);
-  d += 0.8 * (noise3(x / 2.1, y / 2.1, z / 2.1) - 0.5);
+  const here = unit(bedAt, 23);
+  d += 1.5 * (here + (unit(bedAt + 1, 23) - here) * smooth(0.8, 1, k) - 0.5) * (0.4 + 1.2 * noise3(x / 20, y / 20, z / 20));
+  d += 2.4 * (fbm3(x / 6.5, y / 26, z / 6.5, 2) - 0.5);
+  d += 0.9 * (noise3(x / 2.1, y / 2.1, z / 2.1) - 0.5);
   return d;
 }
 
@@ -127,7 +131,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
     here.copy(surface(rib, t, 0, 0, 0));
     const ahead = surface(rib, Math.min(1, t + 0.002), 0, 0, 0);
     const speed = Math.max(1, ahead.distanceTo(here) / 0.002);
-    const want = options.fine + (6 - options.fine) * smooth(50, 180, here.y);
+    const want = options.fine + (4.2 - options.fine) * smooth(50, 200, here.y);
     t += want / speed;
     run += want;
   }
@@ -139,7 +143,7 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
   const cols = options.around + 1;
   const [a0, b0] = radii(rib, 0);
   const girth = Math.PI * (3 * (a0 + b0) - Math.sqrt((3 * a0 + b0) * (a0 + 3 * b0)));
-  const uSpan = Math.max(1, Math.round(girth / 96)) * 96;
+  const uSpan = Math.max(1, Math.round(girth / 192)) * 192;
   const base = new THREE.Vector3();
   const out = new THREE.Vector3();
   return sheet(rows, cols, true, 'out', (j, i, p) => {
@@ -163,11 +167,11 @@ export function bladeShape(rib: Rib, options: BladeOptions): THREE.BufferGeometr
       const top = surface(rib, Math.min(1, tr + 0.004), 0, 0, 0).sub(surface(rib, tr, 0, 0, 0)).normalize();
       base.addScaledVector(top, lift);
     }
-    const slim = Math.min(1, Math.min(a, b) / 28);
+    const slim = Math.min(1, Math.min(a, b) / 24);
     const low = 0.35 + 0.65 * smooth(22, 60, base.y);
     const d = relief(base.x, base.y, base.z) * slim * low * (shrink < 1 ? 0.5 + 0.5 * shrink : 1);
     p.copy(base).addScaledVector(out, d);
-    return [u, (along[r] as number) + (1 - shrink) * Math.min(a, b)];
+    return [u, (along[r] as number) + (1 - shrink) * Math.min(a, b), 0.35 + 0.65 * smooth(-7 * slim, 1.5 * slim, d)];
   });
 }
 
@@ -240,7 +244,7 @@ export function lathe(cx: number, cz: number, profile: [number, number][], aroun
   }
   let widest = 0;
   for (const row of profile) widest = Math.max(widest, row[1]);
-  const uSpan = Math.max(1, Math.round((widest * Math.PI * 2) / 96)) * 96;
+  const uSpan = Math.max(1, Math.round((widest * Math.PI * 2) / 192)) * 192;
   return sheet(profile.length, around + 1, true, 'out', (j, i, p) => {
     const row = profile[j] as [number, number];
     const angle = ((i % around) / around) * Math.PI * 2;
@@ -273,7 +277,7 @@ export function archShape(span: number, height: number, thick: number, deep: num
     cy += (ny / nl) * ro;
     const d = 0.3 * relief(cx * 1.7 + 40, cy * 1.7, rz * 1.7 - 20);
     p.set(cx + (nx / nl) * Math.cos(psi) * d, cy + (ny / nl) * Math.cos(psi) * d, rz + Math.sin(psi) * d);
-    return [(i / aroundCount) * 96, f * 192];
+    return [(i / aroundCount) * 192, f * 192];
   });
 }
 
