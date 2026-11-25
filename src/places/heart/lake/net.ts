@@ -147,7 +147,7 @@ export const RIDGES: readonly { from: [number, number]; to: [number, number]; ta
 
 // Seams of the lake's own, beside those the pictures name: the fingers where the line channel leaves the shore, the seam
 // that crosses the view of key heart-4 beyond its ridge, the small crack beside the one that sank.
-const OWN: { line: [number, number][]; half: [number, number, number]; lumps: number; heat: number; seed: number }[] = [
+export const OWN: { line: [number, number][]; half: [number, number, number]; lumps: number; heat: number; seed: number }[] = [
   { line: [[-497.6, 191.5], [-499.3, 188.0]], half: [0.4, 0.32, 0.1], lumps: 0.4, heat: 0.0, seed: 51 },
   { line: [[-497.0, 190.0], [-494.6, 186.2]], half: [0.4, 0.3, 0.08], lumps: 0.4, heat: 0.0, seed: 52 },
   { line: [[-496.5, 188.5], [-497.4, 184.6]], half: [0.4, 0.26, 0.08], lumps: 0.4, heat: 0.0, seed: 53 },
@@ -166,7 +166,7 @@ const OWN: { line: [number, number][]; half: [number, number, number]; lumps: nu
   { line: [[-402.4, 203.2], [-397.8, 205.6]], half: [0.1, 0.05, 0.02], lumps: 0.6, heat: 0.1, seed: 72 },
 ];
 
-const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
+export const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
   line: { half: [0.55, 0.85, 0.3], lumps: 0.45, heat: 0.0 },
   group: { half: [0.45, 1.05, 0.4], lumps: 0.75, heat: 0.08 },
   nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
@@ -174,6 +174,7 @@ const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; 
   spatterRight: { half: [0.5, 2.3, 0.5], lumps: 0.5, heat: 1.5 },
   spatterLeft: { half: [0.4, 1.7, 0.4], lumps: 0.5, heat: 1.5 },
   sunk: { half: [0.05, 0.16, 0.04], lumps: 0.4, heat: 0.75 },
+  lead: { half: [0.3, 0.6, 0.3], lumps: 0.6, heat: 0.1 },
 };
 
 function toTexture(data: Float32Array, width: number, height: number): THREE.DataTexture {
@@ -254,6 +255,8 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.6 * pool;
         const h = hash(lo, hi, 41);
         reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.25 * pool * h : 0;
+        // A shut edge between two large plates may be a pressure ridge: its number then says how tall, 0.5 to 1. Other shut edges stay under 0.25.
+        if (!alive) phase = kinds === 0 && hash(lo, hi, 43) < 0.4 ? 0.5 + 0.5 * hash(lo, hi, 47) : 0.25 * phase;
       }
       const o = (tj * width + ti) * 4;
       out[o] = edge;
