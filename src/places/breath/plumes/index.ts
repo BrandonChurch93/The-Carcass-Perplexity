@@ -10,6 +10,7 @@ import { growBush, type Bush } from './bush';
 import { Ribbons } from './ribbons';
 import { STEM_FRAGMENT, STEM_VERTEX, VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
 import { Vanes } from './vanes';
+import { makeDrips } from '../waders/drips';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
 
@@ -37,14 +38,31 @@ export function create(ctx: Context): Piece {
   const bushes: Bush[] = [];
   BUSHES.forEach(([, , tall], i) => {
     const [x, z] = bushAt(i);
-    // The first two stand in front of the camera of the lip: every frond is grown. The others are seen from far off.
-    bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: i < 2 ? 1 : 0.5 });
+    // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
+    bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5 });
   });
   for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
   const stems = new Ribbons();
   const vanes = new Vanes();
-  for (const bush of bushes) growBush(stems, vanes, bush, rng, floor);
+  // The wet tips drip: the ends of the barbs of the bushes that a camera comes close to, each with its own slow beat.
+  interface Tip { x: number; y: number; z: number; h: number; phase: number; tall: number; ax: number; az: number; every: number; offset: number; ground: number }
+  const tips: Tip[] = [];
+  const drops = ctx.rng('gill-plume-drops');
+  for (const bush of bushes) {
+    const before = vanes.ends.length;
+    growBush(stems, vanes, bush, rng, floor);
+    if (bush.detail < 1) continue;
+    for (let e = before; e < vanes.ends.length; e++) {
+      const end = vanes.ends[e] as (typeof vanes.ends)[number];
+      const keep = drops.next() < 0.12;
+      const every = drops.range(2.6, 9);
+      const offset = drops.range(0, 9);
+      if (!keep) continue;
+      const rl = Math.hypot(end.root[0], end.root[2]) || 1;
+      tips.push({ x: end.at[0], y: end.at[1], z: end.at[2], h: end.stemAt, phase: end.phase, tall: end.tall, ax: end.root[0] / rl, az: end.root[2] / rl, every, offset, ground: floor(end.at[0], end.at[2]) });
+    }
+  }
   const stemGeometry = stems.build();
   const vaneGeometry = vanes.build();
 
@@ -86,6 +104,8 @@ export function create(ctx: Context): Piece {
     group.add(m);
   }
   lump.dispose();
+  const drips = makeDrips(Math.max(1, tips.length), uniforms);
+  group.add(drips.mesh);
   ctx.scene.add(ctx.parts.built('gill-plumes', group));
 
   // Each bush stands in its own shade on the rock, and throws a long one away from the sun.
@@ -101,6 +121,26 @@ export function create(ctx: Context): Piece {
     setTime: (t) => {
       seconds.value = t;
       surge.value = surgeAt(t);
+      drips.begin();
+      for (const tip of tips) {
+        const fallen = (((t + tip.offset) % tip.every) + tip.every) % tip.every;
+        if (fallen > 1.3) continue;
+        // It left the tip where the sway had the tip then (the stem's part of the sway in shaders.ts), and falls from there.
+        const then = t - fallen;
+        const a = tip.h * tip.h * tip.tall;
+        const slow = Math.sin(then * 1.25 - tip.h * 2.6 + tip.phase) + 0.45 * Math.sin(then * 0.53 + tip.phase * 1.7);
+        const quick = Math.sin(then * 3.1 - tip.h * 5 + tip.phase * 2.3);
+        const shake = 0.6 + 0.4 * Math.sin(then * 6.3 - tip.h * 7 + tip.phase * 3.1);
+        const blown = surgeAt(then);
+        const push = (0.035 * slow + 0.012 * quick) * a;
+        const x = tip.x + WIND[0] * push + tip.ax * 0.2 * blown * shake * a;
+        const z = tip.z + WIND[1] * push + tip.az * 0.2 * blown * shake * a;
+        const y = tip.y + (0.11 * blown * shake - 0.02 * slow) * a - 4.9 * fallen * fallen;
+        if (y < tip.ground) continue;
+        // The shutter is open a fiftieth of a second: a drop that has fallen a while is a short streak.
+        drips.add(x, y, z, Math.min(0.045, Math.max(0.006, 9.8 * fallen * 0.01)));
+      }
+      drips.end();
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
@@ -115,6 +155,7 @@ export function create(ctx: Context): Piece {
       stemMaterial.dispose();
       vaneMaterial.dispose();
       holdfastMaterial.dispose();
+      drips.dispose();
       for (const g of lumps) g.dispose();
     },
   };
