@@ -440,13 +440,14 @@ function makeRopes(): Rope[] {
     [1, -70, 290, 0.55, 1.25, 0.36, 4.5],
     [1, 80, 400, 1.55, 2.2, 0.22, 2.5],
   ];
+  // The ropes of the apron, from two metres out, are thick dark cords that stand well out of the floor, with gaps between them.
   const ropes: Rope[] = main.map(([about, a0, a1, d0, d1, r, level], i) => ({
     about,
     a0: a0 * DEG,
     a1: a1 * DEG,
     d0,
     d1,
-    r,
+    r: about === 0 && i >= 3 ? r * 1.5 : r,
     level,
     sway: 0.16 + 0.22 * hash(i, 1, 201),
     beat: 1.7 + 2.2 * hash(i, 2, 201),
@@ -459,7 +460,7 @@ function makeRopes(): Rope[] {
   (ropes[9] as Rope).split = [-95 * DEG, 55 * DEG];
   // The second size, 0.1 to 0.2 m, only on the main ones and in the gaps beside them.
   const count = ropes.length;
-  for (let i = 0; i < 44; i++) {
+  for (let i = 0; i < 24; i++) {
     const parent = ropes[Math.floor(hash(i, 5, 202) * count * 0.999)] as Rope;
     const span = parent.a1 - parent.a0;
     const from = 0.05 + 0.75 * hash(i, 6, 202);
@@ -608,10 +609,10 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
           const rho = k.about === 0 ? rhoBody : Math.max(0.3, rhoEye);
           const e = ((k.about === 0 ? d : rhoEye) - middle[0]) / Math.hypot(1, middle[1] / rho);
           // It thins to nothing at each end, where it goes under, and is not of one girth between.
-          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.55 + 0.45 * fade);
+          const r = k.r * Math.sqrt(smooth(0, 0.1, t) * smooth(1, 0.9, t)) * (0.78 + 0.22 * Math.sin(a * 5.3 + k.seed * 3) + 0.2 * Math.sin(a * 2.1 + k.seed * 5)) * (0.7 + 0.3 * fade);
           const ae = Math.abs(e);
           if (ae > 1.6 * r || r < 0.01) continue;
-          const stands = 1.25 * r * (0.3 + 0.7 * fade);
+          const stands = 1.25 * r * (0.5 + 0.5 * fade);
           const wide = smooth(1.7 * r, 0.5 * r, ae);
           if (ae < r) {
             const round = Math.cos((0.5 * Math.PI * ae) / r);
