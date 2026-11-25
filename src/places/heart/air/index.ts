@@ -3,13 +3,14 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, GROUP, SPATTER_LEFT, SPATTER_RIGHT, SUNK } from '../shared/anchors';
+import { secondsInPlace, shotById } from '../../../film/cut';
+import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, GROUP, SPATTER_LEFT, SPATTER_RIGHT, SUNK, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece, HeatSource, SteamSource } from '../shared/context';
 import { blackbody } from '../shared/rig';
 import { bakeNoise } from './noise';
 import { createAsh } from './ash';
 import { createSky } from './sky';
-import { BANKS, MAX_HEAT, MAX_STEAM, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
+import { MAX_HEAT, MAX_STEAM, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
 
@@ -23,6 +24,13 @@ const SMOKE_BANKS: readonly (readonly [number, number, number, number, number])[
   [190, -8, 44, 66, 0.034],
   [240, 6, 55, 44, 0.03],
 ];
+/** The smoke off the fan and the foot of the fall: metres east and south of the foot, radius of the base, height, how dense (per metre), and a seed. */
+const FALL_PLUME: readonly (readonly [number, number, number, number, number, number])[] = [
+  [-16, 2, 56, 190, 0.026, 1.31],
+  [64, 40, 74, 140, 0.014, 2.07],
+];
+/** It leans to the right of the long lens on the mouth, along the wall and a little off it. */
+const PLUME_LEAN = [0.55, 0.3] as const;
 /** They lean with the low wind: metres sideways for each metre of height. */
 const BANK_LEAN = [-0.35, 0.12] as const;
 
@@ -69,8 +77,20 @@ export function create(ctx: HeartContext): HeartPiece {
   const steamC = Array.from({ length: MAX_STEAM }, () => new THREE.Vector4());
   const heatA = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
   const heatB = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
-  const bankA = SMOKE_BANKS.slice(0, BANKS).map(([along, right, radius, height]) => new THREE.Vector4(GROUP[0] + along * 0.7 + right * 0.71, GROUP[2] - along * 0.71 + right * 0.7, radius, height));
-  const bankB = SMOKE_BANKS.slice(0, BANKS).map(([, , , , dense], i) => new THREE.Vector4(BANK_LEAN[0], BANK_LEAN[1], 0.17 + 0.31 * i, dense));
+  const bankA = SMOKE_BANKS.map(([along, right, radius, height]) => new THREE.Vector4(GROUP[0] + along * 0.7 + right * 0.71, GROUP[2] - along * 0.71 + right * 0.7, radius, height));
+  const bankB = SMOKE_BANKS.map(([, , , , dense], i) => new THREE.Vector4(BANK_LEAN[0], BANK_LEAN[1], 0.17 + 0.31 * i, dense));
+  // How each is lit from below: how strongly by the lake under it, to what height (metres), and how strongly by the round lights.
+  const bankC = SMOKE_BANKS.map(() => new THREE.Vector4(1.6, 16, 0.5, 0));
+  for (const [dx, dz, radius, height, dense, seed] of FALL_PLUME) {
+    bankA.push(new THREE.Vector4(FALL_FOOT[0] + dx, FALL_FOOT[1] + dz, radius, height));
+    bankB.push(new THREE.Vector4(PLUME_LEAN[0], PLUME_LEAN[1], seed, dense));
+    bankC.push(new THREE.Vector4(0.14, 45, 0.5, 0));
+  }
+  const bankDense = bankB.map((b) => b.w);
+  // Staging by shot: the far bank of the feeding picture stands across the right edge of the long lens on the mouth, so it is not drawn for that shot.
+  const mouthShot = shotById('heart-05');
+  const mouthFrom = secondsInPlace(UNIT, mouthShot.first);
+  const mouthTo = secondsInPlace(UNIT, mouthShot.last);
   const show = { air: { value: 1 }, fume: { value: 1 } };
 
   const pass = (fragmentShader: string, uniforms: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
@@ -93,6 +113,7 @@ export function create(ctx: HeartContext): HeartPiece {
     uSteamC: { value: steamC },
     uBankA: { value: bankA },
     uBankB: { value: bankB },
+    uBankC: { value: bankC },
   });
   const warp = pass(WARP_FRAGMENT, {
     uHeatCount: { value: 0 },
@@ -101,13 +122,19 @@ export function create(ctx: HeartContext): HeartPiece {
   });
 
   const ash = createAsh(ctx.rng('air/ash'), ctx.rig.uniforms, skyMean);
-  ctx.scene.add(ctx.parts.built('ash', ash.mesh));
+  // The ash is part of the air: no part of its own.
+  ash.mesh.userData.part = 'heart/air';
+  ctx.scene.add(ash.mesh);
 
   const order: { source: SteamSource; index: number; far: number; small: number }[] = [];
 
   return {
     volume,
     warp,
+    setTime: (seconds) => {
+      const atMouth = seconds >= mouthFrom && seconds <= mouthTo;
+      (bankB[3] as THREE.Vector4).w = atMouth ? 0 : (bankDense[3] as number);
+    },
     beforeSample: (_renderer, camera) => {
       // The mean of the sky the rig lights with: what a point of open air receives from above.
       skyMean.copy(horizon).multiplyScalar(0.45).addScaledVector(zenith, 0.55).addScaledVector(warm, 0.12);
@@ -116,7 +143,8 @@ export function create(ctx: HeartContext): HeartPiece {
       const steam = ctx.sources.steam.length > 0 ? ctx.sources.steam : local.steam;
       order.length = 0;
       steam.forEach((source, index) => {
-        if (source.strength <= 0 || source.rise <= 0) return;
+        // A fume is drawn as a plume of its own (the fall's foot), not as a column of vapour.
+        if (source.strength <= 0 || source.rise <= 0 || source.kind === 'fume') return;
         const far = Math.hypot(source.at[0] - camera.position.x, source.at[1] - camera.position.y, source.at[2] - camera.position.z);
         order.push({ source, index, far, small: far / (source.rise + source.radius) });
       });
