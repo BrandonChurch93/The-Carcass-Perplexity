@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, ground, smooth } from '../layout';
 import { GROUP, UNIT } from './anchors';
+import { stagedSeconds } from './stage';
 
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
 export const LAND = { minX: -1300, maxX: 1500, minZ: -640, maxZ: 760, width: 1024, height: 512 };
@@ -477,7 +478,8 @@ export function createRig(t0: number): Rig {
       now = seconds;
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uPulse as THREE.IUniform<number>).value = 0.5 + 0.5 * Math.sin(seconds * 1.05);
-      const banked = seconds >= bankFrom && seconds <= bankTo;
+      const staged = stagedSeconds();
+      const banked = staged >= bankFrom && staged <= bankTo;
       bankLight.position.y = banked ? BANK.at[1] : -1000;
       bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]).multiplyScalar(banked ? 1 : 0);
       (uniforms.uBank as THREE.IUniform<THREE.Vector4>).value.set(BANK.at[0], BANK.at[2], 1 / BANK.shadeRadius, banked ? BANK.shade : 0);

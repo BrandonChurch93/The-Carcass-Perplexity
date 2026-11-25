@@ -141,7 +141,9 @@ class UnitStage implements Stage {
     this.lens.aperture = pose.aperture ?? 0;
     this.lens.focus = focusOf(pose);
     const world = this.shot ? seconds - this.first / FPS : (this.module.loop?.timeOffset ?? 0) + seconds;
-    this.place.setTime(world + worldShift);
+    // Staging by shot follows the camera: a held camera keeps the staging of its frame while the world runs on, the loop that of the moment its place names.
+    const staged = this.shot ? world : (this.module.loop?.staged ?? world);
+    this.place.setTime(world + worldShift, staged);
   }
 
   cameraAt(seconds: number): CameraState {
