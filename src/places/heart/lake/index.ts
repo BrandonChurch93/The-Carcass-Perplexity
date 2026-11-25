@@ -76,20 +76,25 @@ vec2 slabTilt(vec2 id) {
 float slabPlane(vec2 id, vec2 sp, float k) {
   return (hash12(id + 9.4) - 0.5) * 0.1 * min(k, 2.0) + dot(slabTilt(id) * k, (sp - id - 0.5) * SLAB);
 }
-// Lobes: the skin is poured in overlapping tongues 1 to 3 m across, each a low dome with a steep rounded rim. The highest one wins.
+// Lobes: the skin is poured in overlapping tongues 1 to 4 m long, each a low dome with a rounded rim, each lying on the ones
+// poured before it. The tongues of one stretch of crust run one way. The highest one wins.
 #define LOBE 1.9
 vec2 gLobeId;
 vec2 gLobeRel;
+vec2 gLobeAlong;
 float gLobeR;
 float gLobeTall;
 float gLobeNext;
 float lobeAt(vec2 q) {
-  vec2 lp = q / LOBE + 0.25 * vec2(vnoise(q / 1.9 + 23.0), vnoise(q / 1.9 + 31.0));
+  vec2 lp = q / LOBE + 0.35 * vec2(vnoise(q / 2.3 + 23.0), vnoise(q / 2.3 + 31.0));
   vec2 base = floor(lp);
   float best = 0.0;
   float next = 0.0;
+  float flowTurn = 9.4 * vnoise(q / 23.0 + 3.0);
+  float wobble = 0.75 + 0.6 * vnoise(q / 0.7 + 1.3);
   gLobeId = base;
   gLobeRel = vec2(1.0, 0.0);
+  gLobeAlong = vec2(1.0, 0.0);
   gLobeR = 1.0;
   gLobeTall = 0.0;
   for (int j = 0; j < 3; j++) {
@@ -97,22 +102,21 @@ float lobeAt(vec2 q) {
       vec2 c2 = base + vec2(float(i - 1), float(j - 1));
       vec2 hs = hash22(c2 + 0.37);
       float hr = hash12(c2 + 5.9);
-      float R = 0.72 + 0.45 * hr;
+      float R = 0.6 + 0.5 * hr;
       vec2 rel = lp - c2 - 0.1 - 0.8 * hs;
-      // A tongue is longer than wide, each its own way.
-      float turn = 6.2832 * fract(hr * 13.7);
+      float turn = flowTurn + 1.5 * (fract(hr * 13.7) - 0.5);
       vec2 along = vec2(cos(turn), sin(turn));
-      vec2 loc = vec2(dot(rel, along), 1.45 * dot(rel, vec2(-along.y, along.x)));
-      float t2 = dot(loc, loc) / (R * R) * (0.75 + 0.6 * vnoise(q / 0.7 + c2 * 1.3));
+      vec2 loc = vec2(dot(rel, along), (1.25 + 0.5 * fract(hr * 3.3)) * dot(rel, vec2(-along.y, along.x)));
+      float t2 = dot(loc, loc) / (R * R) * wobble;
       if (t2 < 1.0) {
-        // Each tongue was poured on the ones before it: a later one lies higher and its toe stands on its neighbour.
-        float tall = 0.05 + 0.14 * fract(hr * 7.1);
-        float hgt = 0.11 * fract(hr * 29.3) + tall * sqrt(1.0 - t2);
+        float tall = 0.05 + 0.13 * fract(hr * 7.1);
+        float hgt = 0.02 + 0.1 * fract(hr * 29.3) + tall * sqrt(1.0 - t2);
         if (hgt > best) {
           next = best;
           best = hgt;
           gLobeId = c2;
           gLobeRel = rel;
+          gLobeAlong = along;
           gLobeR = R;
           gLobeTall = tall;
         } else if (hgt > next) {
@@ -124,20 +128,20 @@ float lobeAt(vec2 q) {
   gLobeNext = next;
   return best;
 }
-// Ropes follow the curve of their lobe: arcs round a point behind it, crowded toward its rim, none on its smooth crown.
-// Returns the cover of the bundle; dir is across the ropes, u runs -1 to 1 across one rope.
+// Ropes follow the curve of their lobe: festoons round a point upstream of it, crowded toward its front, none on its smooth crown.
+// They come in bundles and die out along their length. Returns the cover; dir is across the ropes, u runs -1 to 1 across one.
 float ropeAt(vec2 q, out vec2 dir, out float u, out float lam) {
   vec2 hh = hash22(gLobeId + 1.7);
-  float a = 6.2832 * hh.x;
-  vec2 rel = (gLobeRel + vec2(cos(a), sin(a)) * gLobeR * (0.5 + 0.9 * hh.y)) * LOBE;
+  vec2 rel = (gLobeRel + gLobeAlong * gLobeR * (0.7 + 1.3 * hh.y) + vec2(-gLobeAlong.y, gLobeAlong.x) * gLobeR * (hh.x - 0.5)) * LOBE;
   float far = max(length(rel), 1e-3);
   dir = rel / far;
   float hl = hash12(gLobeId + 4.2);
-  lam = mix(0.05, 0.22, hl * hl);
-  float r = far + 0.55 * vnoise(q / 1.3 + 4.0) + 0.14 * vnoise(q / 0.4 + 9.0);
+  lam = mix(0.06, 0.24, hl * hl);
+  float r = far + 0.6 * vnoise(q / 1.3 + 4.0) + 0.16 * vnoise(q / 0.4 + 9.0);
   u = 2.0 * fract(r / lam) - 1.0;
   float t = length(gLobeRel) / gLobeR;
-  return smoothstep(0.1, 0.5, t + 0.9 * (vnoise(q / 0.9 + gLobeId * 0.37) - 0.5)) * (1.0 - smoothstep(0.94, 1.0, t)) * step(0.12, hash12(gLobeId + 6.1)) * step(1e-4, gLobeTall);
+  float bundle = smoothstep(0.3, 0.62, vnoise(q / 0.55 + gLobeId * 0.37));
+  return bundle * smoothstep(0.05, 0.4, t) * (1.0 - smoothstep(0.94, 1.0, t)) * step(0.1, hash12(gLobeId + 6.1)) * step(1e-4, gLobeTall);
 }
 // The two pressure ridges the pictures name.
 float ridgeAt(vec2 q) {
@@ -160,6 +164,29 @@ float ridgeAt(vec2 q) {
 float gRope;
 float gBank;
 float gRidge;
+// Against the far walls the crust is buckled and heaped: slabs upturned and rafted on each other in a crooked band.
+// Along the bench of the near shore, where the cameras stand, it lies flat. Returns how broken the crust is, and leaves the
+// height of the heap in gShore.
+float gShore;
+float shoreAt(vec2 q, float lake, float c) {
+  gShore = 0.0;
+  if (lake > 40.0) return 0.0;
+  float farSide = smoothstep(160.0, 320.0, length(q - vec2(-500.0, 250.0)));
+  if (farSide <= 0.0) return 0.0;
+  // The band is 10 to 30 m wide, and here and there the lake comes through to the rock.
+  float wideBand = 10.0 + 20.0 * vnoise(q / 47.0 + 61.0);
+  float breach = smoothstep(0.22, 0.34, vnoise(q / 31.0 + 71.0));
+  float into = clamp(1.0 - lake / wideBand, 0.0, 1.0) * farSide * breach;
+  if (into <= 0.0) return 0.0;
+  // Heaps: long ridges that lie along the shore, uneven in height, and upturned slabs on them.
+  float heap = 0.35 + 0.65 * vnoise(q / 17.0 + 83.0);
+  float crest = 0.5 + 0.5 * sin(lake / (2.5 + 2.5 * vnoise(q / 21.0 + 5.0)) * 3.1 + 5.0 * vnoise(q / 9.0 + 12.0));
+  float tall = smoothstep(0.0, 0.35, into) * (0.25 + 0.75 * into) * heap * (0.5 + 0.9 * crest * crest) * 1.9;
+  float blocks = vnoise(q / 3.1 + 33.0) * 0.7 + vnoise(q / 1.3 + 9.0) * 0.3 * (1.0 - smoothstep(0.5, 1.2, c));
+  tall *= 0.55 + 0.9 * blocks;
+  gShore = tall * (1.0 - smoothstep(4.0, 9.0, c));
+  return smoothstep(0.0, 0.3, into);
+}
 // How far from the seam the group feeds at, metres.
 float groupFar(vec2 q) {
   vec2 gab = uGroupSeam.zw - uGroupSeam.xy;
@@ -167,64 +194,81 @@ float groupFar(vec2 q) {
 }
 float heightAt(vec2 q, float c) {
   vec4 n = netAt(q);
-  float gape = gapeAt(q, n).x;
   float shown = step(1.5, n.g);
   float live = step(1e-3, n.a);
-  float bank = n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gape;
+  float gape = 0.0;
+  float bank = n.r;
+  if (live > 0.5) {
+    gape = gapeAt(q, n).x;
+    bank = n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gape;
+  }
+  gBank = bank;
+  gRope = 0.0;
   float lake = -landAt(q).b;
   float calm = smoothstep(uSunk.z - 5.0, uSunk.z + 5.0, length(q - uSunk.xy));
-  // Against the walls the crust is buckled and heaped. Along the bench of the near shore, where the cameras stand, it lies flat.
-  float shoreUp = smoothstep(9.0, 1.0, lake) * smoothstep(160.0, 320.0, length(q - vec2(-500.0, 250.0)));
+  float shoreUp = shoreAt(q, lake, c);
   // Some of the shut edges between plates are pressure ridges: slabs upturned and heaped.
-  float ridgeUp = (1.0 - live) * smoothstep(0.45, 0.6, n.g) * (1.0 - shown) * (0.4 + 1.2 * (n.g - 0.5)) * max(0.0, 1.0 - n.r / (1.0 + 1.5 * vnoise(q / 6.0 + 2.0)));
-  ridgeUp *= smoothstep(25.0, 45.0, groupFar(q)) * calm * (1.0 - smoothstep(1.0, 3.0, c)) * smoothstep(14.0, 30.0, lake) * smoothstep(0.3, 0.6, vnoise(q / 13.0 + 40.0));
+  float ridgeUp = 0.0;
+  if (live < 0.5 && n.g > 0.45 && c < 3.0) {
+    ridgeUp = smoothstep(0.45, 0.6, n.g) * (1.0 - shown) * (0.4 + 1.2 * (n.g - 0.5)) * max(0.0, 1.0 - n.r / (1.0 + 1.5 * vnoise(q / 6.0 + 2.0)));
+    ridgeUp *= smoothstep(25.0, 45.0, groupFar(q)) * calm * (1.0 - smoothstep(1.0, 3.0, c)) * smoothstep(14.0, 30.0, lake) * smoothstep(0.3, 0.6, vnoise(q / 13.0 + 40.0));
+  }
   gRidge = ridgeUp;
 
-  slabAt(q);
-  float k = (1.0 + 3.5 * ridgeUp + 2.0 * shoreUp) * calm;
-  float held = 1.0 - smoothstep(0.6, 1.6, c);
-  float hA = slabPlane(gSlabId, gSlabP, k);
-  float hB = slabPlane(gSlabId2, gSlabP, k);
-  float e = gSlabEdge;
-  float h = (hA + (hB - hA) * 0.5 * (1.0 - smoothstep(0.0, max(1.3 * c, 0.025), e))) * held;
-  float pair = hash12(gSlabId + gSlabId2);
-  float gw = 0.02 + 0.07 * pair * pair;
-  float gwc = max(gw, 0.75 * c);
-  h -= (0.03 + 0.1 * pair) * (1.0 - smoothstep(0.0, gwc, e)) * (gw / gwc) * held * step(0.45, pair);
-  h += 0.09 * fract(pair * 7.3) * exp(-e / 0.25) * held * calm;
-  h += (n.b - 0.5) * 0.2 * calm * (1.0 - shoreUp);
-  h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
-  h += 0.08 * (vnoise(q / 2.6 + 1.0) - 0.5) * (1.0 - smoothstep(0.6, 1.3, c)) * calm;
+  // A plate rides the melt: it rises and sinks a finger's width and tips a little, each in its own time.
+  float ride = 0.012 * sin(uTime * (0.5 + 0.5 * fract(n.b * 37.0)) + n.b * 91.0) * calm;
+  float h = (n.b - 0.5) * 0.2 * calm * (1.0 - shoreUp) + ride;
+  float e = 1.0;
+  float pair = 0.0;
+  if (c < 1.6) {
+    slabAt(q);
+    float k = (1.0 + 3.5 * ridgeUp + 4.0 * shoreUp) * calm;
+    float held = 1.0 - smoothstep(0.6, 1.6, c);
+    float hA = slabPlane(gSlabId, gSlabP, k);
+    float hB = slabPlane(gSlabId2, gSlabP, k);
+    e = gSlabEdge;
+    h += (hA + (hB - hA) * 0.5 * (1.0 - smoothstep(0.0, max(1.3 * c, 0.025), e))) * held;
+    pair = hash12(gSlabId + gSlabId2);
+    float gw = 0.02 + 0.07 * pair * pair;
+    float gwc = max(gw, 0.75 * c);
+    h -= (0.03 + 0.1 * pair) * (1.0 - smoothstep(0.0, gwc, e)) * (gw / gwc) * held * step(0.7, pair);
+    h += 0.08 * (vnoise(q / 2.6 + 1.0) - 0.5) * held * calm;
+  }
+  if (ridgeUp > 0.0) h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
 
   // The lobes and their ropes.
-  float lobes = lobeAt(q);
-  lobes = (lobes + 0.035 * (vnoise(q / 0.42 + 19.0) - 0.5) * (1.0 - smoothstep(0.1, 0.2, c))) * (1.0 - smoothstep(0.2, 0.5, c)) * calm;
-  h += lobes * (1.0 - 0.6 * (1.0 - smoothstep(0.0, 0.25, e)));
-  vec2 dir;
-  float u;
-  float lam;
-  float rope = ropeAt(q, dir, u, lam) * (1.0 - smoothstep(lam / 5.0, lam / 2.5, c)) * calm * smoothstep(0.0, 0.1, e);
-  gRope = 0.3 * lam * sqrt(max(1.0 - u * u, 0.0)) * rope;
-  h += gRope;
+  if (c < 0.5) {
+    float lobes = lobeAt(q);
+    lobes = (lobes + 0.03 * (vnoise(q / 0.42 + 19.0) - 0.5) * (1.0 - smoothstep(0.1, 0.2, c))) * (1.0 - smoothstep(0.2, 0.5, c)) * calm;
+    h += lobes * (1.0 - 0.5 * shoreUp);
+    if (c < 0.1) {
+      vec2 dir;
+      float u;
+      float lam;
+      float rope = ropeAt(q, dir, u, lam) * (1.0 - smoothstep(lam / 5.0, lam / 2.5, c)) * calm;
+      gRope = 0.3 * lam * sqrt(max(1.0 - u * u, 0.0)) * rope;
+      h += gRope;
+    }
+  }
 
   // Rubble of broken crust: only where crust has been broken, at the ridges, the shore and a few slab edges.
   float rub = max(shoreUp, 0.8 * ridgeUp);
-  rub = max(rub, 0.6 * smoothstep(0.3, 0.0, e) * step(0.8, pair));
-  h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.07, 0.14, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.03, 0.055, c)));
-  h += shoreUp * shoreUp * (0.2 + 0.7 * vnoise(q / 4.1 + 7.0)) * (1.0 - smoothstep(2.0, 6.0, c));
+  rub = max(rub, 0.6 * smoothstep(0.3, 0.0, e) * step(0.85, pair));
+  if (rub > 0.0 && c < 0.14) h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.07, 0.14, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.03, 0.055, c)));
+  h += gShore;
 
-  // The edge of the crust curls up a little at a living gap, and the gap is cut down: the melt lies a hand to a forearm under
-  // the brim. In the seams the pictures name the melt is the lava's mesh, and the floor lies under it.
-  float wide = smoothstep(0.04, 0.25, gape);
-  // Beside a gap the crust is thin and young and lies low: the melt stands a hand under its top.
-  h = mix(h, 0.15 * h, exp(-max(bank, 0.0) / 0.9) * wide * live);
-  h += (0.02 + 0.06 * vnoise(q / 1.3 + 5.0)) * exp(-max(bank, 0.0) / 0.2) * wide * (1.0 - smoothstep(0.3, 0.8, c));
-  float deep = mix(0.03 + 0.4 * min(gape, 0.5), 0.15 - meltLevel(n), shown * smoothstep(0.2, 0.3, gape));
-  float cut = (1.0 - smoothstep(-max(2.5 * c, 0.07), 0.0, bank)) * live * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
-  cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - step(3.3, n.g));
-  h = mix(h, -deep, cut);
-  h += ridgeAt(q) * (1.0 - smoothstep(1.0, 3.0, c));
-  gBank = bank;
+  // Beside a gap the crust is thin and young and sags toward the melt, its edge curled up a finger or two. The gap is cut down:
+  // in the seams the pictures name the melt is the lava's mesh, a hand under the brim, and the floor lies just under it.
+  if (live > 0.5) {
+    float wide = smoothstep(0.04, 0.25, gape);
+    h = mix(h, 0.15 * h - 0.07 * shown, exp(-max(bank, 0.0) / 0.9) * wide);
+    h += (0.015 + 0.05 * vnoise(q / 1.3 + 5.0)) * exp(-max(bank, 0.0) / 0.12) * wide * (1.0 - smoothstep(0.3, 0.8, c));
+    float deep = mix(0.03 + 0.4 * min(gape, 0.5), 0.15 - meltLevel(n), shown * smoothstep(0.2, 0.3, gape));
+    float cut = (1.0 - smoothstep(-max(2.5 * c, 0.05), 0.0, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape);
+    h = mix(h, -deep, cut);
+  }
+  if (c < 3.0) h += ridgeAt(q) * (1.0 - smoothstep(1.0, 3.0, c));
   return h;
 }`;
 
@@ -244,44 +288,64 @@ void main() {
 const RING_VERTEX = /* glsl */ `
 uniform vec3 uRing;
 uniform vec4 uFocus;
+uniform highp sampler2D tBake;
 varying vec3 vWorld;
 varying vec2 vQ;
 varying vec3 vNormalG;
 varying vec3 vAux;
 varying vec2 vAway;
+${RIG_GLSL}
+void main() {
+  vec2 q = uRing.xy + position.xz * uRing.z;
+  vec2 dq = abs(q - uFocus.xy);
+  float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
+  // The height was laid down for this sample in the ring's own picture: height, the ropes' part of it, metres to the brim.
+  ivec2 ij = ivec2(position.xz + 0.5);
+  ivec2 last = textureSize(tBake, 0) - 1;
+  ivec2 sx = ivec2(ij.x < last.x ? 1 : -1, 0);
+  ivec2 sz = ivec2(0, ij.y < last.y ? 1 : -1);
+  vec4 here = texelFetch(tBake, ij, 0);
+  vec4 atX = texelFetch(tBake, ij + sx, 0);
+  vec4 atZ = texelFetch(tBake, ij + sz, 0);
+  float smoothH = here.r - here.g;
+  vec2 rise = vec2((atX.r - atX.g - smoothH) * float(sx.x), (atZ.r - atZ.g - smoothH) * float(sz.y));
+  vNormalG = normalize(vec3(-rise.x, uRing.z, -rise.y));
+  // Which way is away from the nearest gap.
+  vAway = vec2((atX.b - here.b) * float(sx.x), (atZ.b - here.b) * float(sz.y)) / uRing.z;
+  vAux = vec3(1.0, c, here.b);
+  float dt = uTime - uFlowT0;
+  vec2 p = q + flowVelocity(q) * dt;
+  p = q + flowVelocity(p) * dt;
+  vWorld = vec3(p.x, here.r, p.y);
+  vQ = q;
+  gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
+}`;
+
+// The relief of a ring is worked out once a sample, a point for each vertex, by the part of the machine that is fast at it:
+// the blocks of the ring that are in view are drawn as squares into a small picture, one texel a vertex.
+const BAKE_VERTEX = /* glsl */ `
+uniform vec2 uSpan;
+void main() {
+  gl_Position = vec4(position.xz / uSpan * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+const BAKE_FRAGMENT = /* glsl */ `
+precision highp float;
+uniform vec3 uRing;
+uniform vec4 uFocus;
+uniform sampler2D tRope;
 #define LAKE_VERTEX
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${HEAT_GLSL}
 ${RELIEF_GLSL}
 void main() {
-  vec2 q = uRing.xy + position.xz * uRing.z;
+  vec2 q = uRing.xy + floor(gl_FragCoord.xy) * uRing.z;
   vec2 dq = abs(q - uFocus.xy);
   // The size of the cells that are sure to be here, wherever the rings are snapped to.
   float c = max(uFocus.z, 4.0 * max(dq.x, dq.y) / (uFocus.w - 4.0));
   float h = heightAt(q, c);
-  float rope = gRope;
-  float bank = gBank;
-  float hx0 = heightAt(q - vec2(c, 0.0), c) - gRope;
-  float bx0 = gBank;
-  float hx1 = heightAt(q + vec2(c, 0.0), c) - gRope;
-  float bx1 = gBank;
-  float hz0 = heightAt(q - vec2(0.0, c), c) - gRope;
-  float bz0 = gBank;
-  float hz1 = heightAt(q + vec2(0.0, c), c) - gRope;
-  float bz1 = gBank;
-  // Which way is away from the nearest gap.
-  vAway = vec2(bx1 - bx0, bz1 - bz0) / (2.0 * c);
-  vNormalG = normalize(vec3(hx0 - hx1, 2.0 * c, hz0 - hz1));
-  // A point that lies below its surroundings sees less of the sky.
-  float hollow = (0.25 * (hx0 + hx1 + hz0 + hz1) - (h - rope)) / c;
-  vAux = vec3(clamp(1.0 - 1.3 * hollow, 0.2, 1.1), c, bank);
-  float dt = uTime - uFlowT0;
-  vec2 p = q + flowVelocity(q) * dt;
-  p = q + flowVelocity(p) * dt;
-  vWorld = vec3(p.x, h, p.y);
-  vQ = q;
-  gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
+  gl_FragColor = vec4(h, gRope, clamp(gBank, -8.0, 8.0), 1.0);
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -305,7 +369,7 @@ vec3 lakeMirror(vec3 r, float rough) {
   float soft = 0.05 + 0.5 * rough;
   float sky = smoothstep(wall - soft, wall + soft, r.y);
   float w = max(dot(normalize(vec3(r.x, max(r.y, 0.0), r.z)), uWarmDir), 0.0);
-  vec3 low = uSkyHorizon * 0.5 + uWarmColour * w * w * w * 0.8;
+  vec3 low = uSkyHorizon * 0.5 + uWarmColour * w * w * w * 3.0;
   return mix(low, skyRadiance(vec3(r.x, max(r.y, wall), r.z)), sky);
 }
 
@@ -336,53 +400,62 @@ void main() {
   float e = gSlabEdge;
   float pair = hash12(gSlabId + gSlabId2);
   float slabAge = hash12(gSlabId + 5.3);
+  float broken = shoreAt(q, lake, cell);
   // The crust the group feeds on is the youngest of the lake: dark, glassy, hardly a day old.
   float fresh = 1.0 - smoothstep(12.0, 55.0, groupFar(q) + 14.0 * (vnoise(q / 17.0 + 8.0) - 0.5));
-  float age = clamp(0.5 * net.b + 0.75 * slabAge - 0.12 + 0.3 * (vnoise(q / 37.0 + 4.0) - 0.5), 0.0, 1.0) * (1.0 - 0.8 * young) * (1.0 - 0.7 * fresh);
+  float age = clamp(0.45 * net.b + 0.85 * slabAge - 0.15 + 0.3 * (vnoise(q / 37.0 + 4.0) - 0.5), 0.0, 1.0) * (1.0 - 0.8 * young) * (1.0 - 0.7 * fresh);
 
   // The mesh carries the slabs where its cells are small. Where they are not, the slab's tilt goes into the normal.
   vec3 n = normalize(vNormalG);
   vec2 slope = slabTilt(gSlabId) * calm * smoothstep(0.6, 1.6, cell) * (1.0 - smoothstep(1.5, 6.0, fpShort));
-  // Lobes: where the cells are too coarse to carry them, the dome goes into the normal.
-  float lobeHigh = lobeAt(q);
-  float lobeFar = length(gLobeRel);
-  float t = lobeFar / gLobeR;
-  vec2 lobeDir = gLobeRel / max(lobeFar, 1e-3);
-  float lobeSeen = calm * smoothstep(0.2, 0.5, cell) * (1.0 - smoothstep(0.3, 0.8, max(abs(dot(qx, lobeDir)), abs(dot(qy, lobeDir))) / (gLobeR * LOBE)));
-  slope -= lobeDir * (min(gLobeTall * t / sqrt(max(1.0 - t * t, 0.03)), 1.0) / (gLobeR * LOBE)) * lobeSeen * step(1e-4, gLobeTall);
-  // Near black between lobes: where one tongue meets the next, or the bare sag between them.
-  float seamL = mix(1.0, 0.3 + 0.7 * smoothstep(0.0, 0.04, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.12, fpShort)));
-  // Ropes: the mesh lifts them, the normal is theirs here. A rope is kept as long as a pixel is narrower than it across
-  // the rope, whatever the pixel's length along it: ropes that run away from the lens stay, ropes that lie across it melt into roughness.
-  vec2 dir;
-  float u;
-  float lam;
-  float rope = ropeAt(q, dir, u, lam) * calm * smoothstep(0.0, 0.1, e);
-  float across = max(abs(dot(qx, dir)), abs(dot(qy, dir)));
-  float seen = rope * (1.0 - smoothstep(0.2 * lam, 0.45 * lam, across));
-  float round2 = sqrt(max(1.0 - u * u, 0.0));
-  slope -= dir * (0.45 * u / (round2 + 0.3)) * seen;
-  float crease = mix(1.0, 0.3 + 0.7 * smoothstep(0.0, 0.55, round2), seen) * seamL;
+  float crease = 1.0;
+  float rope = 0.0;
+  float seen = 0.0;
+  // Lobes and ropes, as far as a pixel can tell one lobe from the next.
+  if (fpShort < 1.2) {
+    // Where the cells are too coarse to carry a lobe, its dome goes into the normal.
+    float lobeHigh = lobeAt(q);
+    float lobeFar = length(gLobeRel);
+    float t = lobeFar / gLobeR;
+    vec2 lobeDir = gLobeRel / max(lobeFar, 1e-3);
+    float lobeSeen = calm * smoothstep(0.2, 0.5, cell) * (1.0 - smoothstep(0.3, 0.8, max(abs(dot(qx, lobeDir)), abs(dot(qy, lobeDir))) / (gLobeR * LOBE)));
+    slope -= lobeDir * (min(gLobeTall * t / sqrt(max(1.0 - t * t, 0.03)), 1.0) / (gLobeR * LOBE)) * lobeSeen * step(1e-4, gLobeTall);
+    // Near black between lobes: where one tongue meets the next.
+    crease = mix(1.0, 0.25 + 0.75 * smoothstep(0.0, 0.05, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.15, fpShort)));
+    // Ropes: the mesh lifts them, the normal is theirs here. A rope is kept as long as a pixel is narrower than it across
+    // the rope, whatever the pixel's length along it: ropes that run away from the lens stay, ropes that lie across it melt into roughness.
+    vec2 dir;
+    float u;
+    float lam;
+    rope = ropeAt(q, dir, u, lam) * calm;
+    float across = max(abs(dot(qx, dir)), abs(dot(qy, dir)));
+    seen = rope * (1.0 - smoothstep(0.2 * lam, 0.45 * lam, across));
+    if (seen > 0.0) {
+      float round2 = sqrt(max(1.0 - u * u, 0.0));
+      slope -= dir * (0.5 * u / (round2 + 0.35)) * seen;
+      crease *= mix(1.0, 0.5 + 0.5 * smoothstep(0.0, 0.5, round2), seen);
+    }
+  }
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
 
   // Old skin is grey and rough, young skin black, smooth and glassy: by slab and by plate.
-  vec3 albedo = mix(vec3(0.062, 0.062, 0.063), vec3(0.11, 0.109, 0.108), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
-  float rough = clamp(0.25 + 0.4 * age + 0.2 * rope * (1.0 - seen), 0.15, 0.92);
+  vec3 albedo = mix(vec3(0.05, 0.05, 0.052), vec3(0.12, 0.117, 0.114), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  float rough = clamp(0.22 + 0.45 * age + 0.2 * rope * (1.0 - seen) + 0.3 * broken, 0.15, 0.92);
 
   // How much sky a point sees: less in a crease, in the crack between two slabs, below the brim of a gap.
   float below = max(-vWorld.y, 0.0);
   float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank));
-  float crack = 1.0 - (0.6 * step(0.45, pair) * (1.0 - smoothstep(0.0, max(0.02 + 0.07 * pair * pair, fpShort), e)) * min(1.0, (0.03 + 0.1 * pair) / max(fpShort, 1e-4))) * (1.0 - smoothstep(1.5, 6.0, fpShort));
+  float crack = 1.0 - (0.6 * step(0.7, pair) * (1.0 - smoothstep(0.0, max(0.02 + 0.07 * pair * pair, fpShort), e)) * min(1.0, (0.03 + 0.1 * pair) / max(fpShort, 1e-4))) * (1.0 - smoothstep(1.5, 6.0, fpShort));
   float pit = mix(1.0, clamp(1.0 - below / max(2.5 * gape, 0.12), 0.04, 1.0), inGap);
   float occ = vAux.x * crease * crack * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
   float open = land.g * (1.0 - contactAt(p)) * occ;
-  vec3 light = skyIrradiance(n) * open + 0.75 * lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
+  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
   // The melt lights the wall of its gap, the lip above it and the crust beside it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
   float steepAway = length(vAway);
   vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
-  light += meltLight(q, net, bank, below, n, away) * crease * vAux.x;
+  if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, n, away) * crease;
   // The narrow seams, whose heat this sheet draws, light their own lips.
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace) * crease;
   // A broken face is duller and browner than the skin.
@@ -400,7 +473,7 @@ void main() {
   float floorOnly = smoothstep(0.55, 0.85, vNormalG.y) * smoothstep(0.01, 0.03, below);
   float melt = shown * smoothstep(0.2, 0.3, gape) * smoothstep(0.0, 0.03, meltLevel(net) + below);
   heat.x *= mix(1.0, floorOnly * (1.0 - melt), held);
-  heat.x *= smoothstep(900.0, 1010.0, heat.y);
+  heat.x *= smoothstep(900.0, 1010.0, heat.y) * (1.0 - broken);
   vec3 hot = blackbody(heat.y) * heat.x;
   gl_FragColor = vec4(rigOut(c * (1.0 - heat.x)) + hot * uLava, 1.0);
   // Last, after every derivative is taken. Far off the crust runs on under the rock, which hides it.
@@ -451,6 +524,11 @@ function lattice(nx: number, nz: number): THREE.Float32BufferAttribute {
 interface Ring {
   mesh: THREE.Mesh;
   material: THREE.ShaderMaterial;
+  /** The picture the relief is laid down in, a texel a vertex, and what draws it. */
+  target: THREE.WebGLRenderTarget;
+  bake: THREE.ShaderMaterial;
+  squares: THREE.BufferGeometry;
+  corners: THREE.BufferAttribute;
   index: THREE.BufferAttribute;
   uniform: THREE.Vector3;
   nx: number;
@@ -525,8 +603,11 @@ export function create(ctx: HeartContext): HeartPiece {
   const ringLattice = lattice(N, N);
   const makeRing = (nx: number, nz: number, cell: number, block: number, stitched: boolean, position: THREE.BufferAttribute): Ring => {
     const uniform = new THREE.Vector3(0, 0, cell);
-    const material = new THREE.ShaderMaterial({ vertexShader: RING_VERTEX, fragmentShader: FRAGMENT, uniforms: { ...shared, uLava: lava, uRing: { value: uniform }, uFocus: { value: focus } } });
+    const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
+    const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus } };
+    const material = new THREE.ShaderMaterial({ vertexShader: RING_VERTEX, fragmentShader: FRAGMENT, uniforms: { ...shared, ...ringUniforms, uLava: lava, tBake: { value: target.texture } } });
     material.userData.depthFragment = depthFragment;
+    const bake = new THREE.ShaderMaterial({ vertexShader: BAKE_VERTEX, fragmentShader: BAKE_FRAGMENT, uniforms: { ...shared, ...ringUniforms, uSpan: { value: new THREE.Vector2(nx + 1, nz + 1) } }, depthTest: false, depthWrite: false });
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', position);
     const index = new THREE.BufferAttribute(new Uint32Array(nx * nz * 6), 1);
@@ -536,7 +617,13 @@ export function create(ctx: HeartContext): HeartPiece {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.frustumCulled = false;
     crust.add(mesh);
-    return { mesh, material, index, uniform, nx, nz, cell, block, stitched, x0: 0, z0: 0 };
+    const blocks = Math.ceil(nx / block) * Math.ceil(nz / block);
+    const corners = new THREE.BufferAttribute(new Float32Array(blocks * 18), 3);
+    corners.setUsage(THREE.DynamicDrawUsage);
+    const squares = new THREE.BufferGeometry();
+    squares.setAttribute('position', corners);
+    squares.setDrawRange(0, 0);
+    return { mesh, material, target, bake, squares, corners, index, uniform, nx, nz, cell, block, stitched, x0: 0, z0: 0 };
   };
   const rings: Ring[] = [];
   for (let level = 0; level < RINGS; level++) rings.push(makeRing(N, N, CELL0 * 2 ** level, BLOCK, true, ringLattice));
@@ -556,6 +643,12 @@ export function create(ctx: HeartContext): HeartPiece {
 
   // Everything molten is the lava owner's: its meshes are added after the crust, so the depth test lays the melt in the gaps.
   const molten = createLava(ctx, net, shared);
+
+  const bakeScene = new THREE.Scene();
+  const bakeCamera = new THREE.Camera();
+  const baker: THREE.Mesh<THREE.BufferGeometry, THREE.Material> = new THREE.Mesh(new THREE.BufferGeometry(), new THREE.MeshBasicMaterial());
+  baker.frustumCulled = false;
+  bakeScene.add(baker);
 
   let now = 0;
   const frustum = new THREE.Frustum();
@@ -599,8 +692,10 @@ export function create(ctx: HeartContext): HeartPiece {
   const fill = (ring: Ring, hole: [number, number, number, number] | null, slack: number): void => {
     const { nx, nz, cell, block, stitched } = ring;
     const out = ring.index.array as Uint32Array;
+    const quad = ring.corners.array as Float32Array;
     const row = nx + 1;
     let count = 0;
+    let filled = 0;
     const vertex = (i: number, j: number): number => {
       if (stitched) {
         if ((j === 0 || j === nz) && (i & 1) === 1) i += 1;
@@ -624,6 +719,13 @@ export function create(ctx: HeartContext): HeartPiece {
         // Crust that lies well under the rock is never seen.
         const half = 0.71 * (i1 - bi) * cell;
         if (ctx.rig.land.shore(0.5 * (xa + xb), 0.5 * (za + zb)) > half + 6 + slack) continue;
+        // The square that lays down this block's relief: its vertices and one more all round, for the slopes at its rim.
+        const ua = Math.max(0, bi - 1);
+        const ub = Math.min(nx + 1, i1 + 2);
+        const va = Math.max(0, bj - 1);
+        const vb = Math.min(nz + 1, j1 + 2);
+        quad.set([ua, 0, va, ub, 0, va, ua, 0, vb, ub, 0, va, ub, 0, vb, ua, 0, vb], filled);
+        filled += 18;
         const edge = stitched && (bi === 0 || bj === 0 || i1 === nx || j1 === nz);
         const cutByHole = hole !== null && bi < hole[2] && i1 > hole[0] && bj < hole[3] && j1 > hole[1];
         for (let j = bj; j < j1; j++) {
@@ -660,7 +762,8 @@ export function create(ctx: HeartContext): HeartPiece {
     }
     ring.index.needsUpdate = true;
     ring.mesh.geometry.setDrawRange(0, count);
-    ring.mesh.visible = count > 0;
+    ring.corners.needsUpdate = true;
+    ring.squares.setDrawRange(0, filled / 3);
   };
 
   return {
@@ -669,7 +772,7 @@ export function create(ctx: HeartContext): HeartPiece {
       foundering.setTime(seconds);
       molten.setTime(seconds);
     },
-    beforeSample: (_renderer, camera) => {
+    beforeSample: (renderer, camera) => {
       camera.updateMatrixWorld();
       const [fx, fz] = aim(camera);
       focus.set(fx, fz, CELL0, N);
@@ -695,6 +798,15 @@ export function create(ctx: HeartContext): HeartPiece {
         }
         fill(ring, hole, slack);
       }
+      const before = renderer.getRenderTarget();
+      for (const ring of rings) {
+        if (ring.squares.drawRange.count === 0) continue;
+        baker.geometry = ring.squares;
+        baker.material = ring.bake;
+        renderer.setRenderTarget(ring.target);
+        renderer.render(bakeScene, bakeCamera);
+      }
+      renderer.setRenderTarget(before);
     },
     solo: (part) => {
       lava.value = part === null || part === 'heart/lava' ? 1 : 0;
@@ -705,6 +817,9 @@ export function create(ctx: HeartContext): HeartPiece {
       for (const ring of rings) {
         ring.mesh.geometry.dispose();
         ring.material.dispose();
+        ring.squares.dispose();
+        ring.bake.dispose();
+        ring.target.dispose();
       }
       glow.geometry.dispose();
       glowMaterial.dispose();
