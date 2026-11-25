@@ -416,11 +416,11 @@ const place: PlaceModule = {
     runners.add(quills);
     const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
     const huddle: { d: number; l: number; size: [number, number, number]; y: number; yaw: number }[] = [
-      { d: CANAL_KEY + 4.1, l: -0.1, size: [1, 1.35, 1], y: 0.58, yaw: along - 0.25 },
+      { d: CANAL_KEY + 4.1, l: -0.1, size: [1, 1.2, 1], y: 0.52, yaw: along - 0.25 },
       { d: CANAL_KEY + 3.2, l: -1.5, size: [1.05, 0.85, 1.2], y: 0.36, yaw: along + 0.3 },
       { d: CANAL_KEY + 2.5, l: -2.4, size: [1, 1.6, 1.1], y: 0.68, yaw: along - 0.4 },
-      { d: CANAL_KEY + 1.6, l: -2.2, size: [0.8, 1.7, 1.05], y: 0.72, yaw: along + 1.2 },
-      { d: CANAL_KEY + 0.6, l: -1.8, size: [1, 1.5, 1.1], y: 0.64, yaw: along + 0.5 },
+      { d: CANAL_KEY + 1.6, l: -2.6, size: [0.8, 1.7, 1.05], y: 0.72, yaw: along + 1.2 },
+      { d: CANAL_KEY + 0.6, l: -2.6, size: [1, 1.5, 1.1], y: 0.64, yaw: along + 0.5 },
     ];
     scene.add(parts.standIn('ridge-runners', runners));
 
