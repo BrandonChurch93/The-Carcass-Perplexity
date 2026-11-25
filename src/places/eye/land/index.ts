@@ -41,6 +41,12 @@ void main() {
   float damp = smoothstep(0.42, 0.03, vWorld.y + 0.1 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
   k.albedo *= mix(1.0, 0.5, damp);
   k.rough = mix(k.rough, 0.35, damp * 0.8);
+  // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
+  float bearing = degrees(atan(vWorld.x, -vWorld.z));
+  float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
+  float cave = roofed * smoothstep(40.0, 150.0, land.b) * smoothstep(176.0, 130.0, vWorld.y);
+  k.occ *= 1.0 - 0.8 * cave;
+  k.albedo *= 1.0 - 0.45 * cave;
   vec3 c = rigShade(vWorld, k.normal, v, k.albedo, k.rough, k.occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -65,7 +71,7 @@ void main() {
   Rock k = rockAt(vWorld, n, 1.0);
   // The under side holds its own dark: the roof sees the ground and not the sky.
   float under = smoothstep(0.1, -0.5, n.y);
-  vec3 c = rigShade(vWorld, k.normal, v, k.albedo * mix(1.0, 0.72, under), k.rough, k.occ * mix(1.0, 0.6, under));
+  vec3 c = rigShade(vWorld, k.normal, v, k.albedo * mix(1.0, 0.5, under), k.rough, k.occ * mix(1.0, 0.3, under));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -105,7 +111,7 @@ void main() {
   vec2 uz = vLocal.xy / size;
   vec3 col = texture2D(tBoulder, ux).rgb * w.x + texture2D(tBoulder, uy).rgb * w.y + texture2D(tBoulder, uz).rgb * w.z;
   vec3 nh = texture2D(tBoulderNh, ux).rgb * w.x + texture2D(tBoulderNh, uy).rgb * w.y + texture2D(tBoulderNh, uz).rgb * w.z;
-  vec3 albedo = vec3(0.56, 0.52, 0.46) * (0.35 + 9.5 * dot(col, vec3(0.33))) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
+  vec3 albedo = vec3(0.4, 0.375, 0.34) * (0.35 + 9.5 * dot(col, vec3(0.33))) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -214,9 +220,26 @@ export function create(ctx: Context): Piece {
     const across = rng.range(PATCH.across0 + 3, PATCH.across1 - 3);
     const size = 0.22 + 3.4 * rng.next() ** 4;
     // The path of the wide camera is kept clear of anything it could pass through.
-    if (Math.abs(across) < 5.5 + size && size > 0.45) continue;
+    if (Math.abs(across) < 3.2 + size && size > 0.45) continue;
     const clump = vnoise(along / 14 + 3, across / 14 + 8);
     if (clump < 0.42 && size < 1.2) continue;
+    const [x, z] = onAxis(along, across);
+    put(x, z, size);
+  }
+  // The blocks the wide shot looks past, at the foot of its frame.
+  const near: [number, number, number][] = [
+    [108, 20, 5.5],
+    [112, 14, 3.6],
+    [104, 26, 4.4],
+    [100, 15, 2.6],
+    [109, -19, 5.2],
+    [113, -13, 3.4],
+    [103, -25, 4.6],
+    [99, -13, 2.4],
+    [92, 30, 3.4],
+    [90, -33, 4],
+  ];
+  for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);
     put(x, z, size);
   }
@@ -225,7 +248,7 @@ export function create(ctx: Context): Piece {
     const out = -0.6 + 26 * rng.next() ** 1.7;
     const r = shoreAt(b) + out;
     const a = b * DEG;
-    put(Math.sin(a) * r, -Math.cos(a) * r, 0.07 + 0.5 * rng.next() ** 3);
+    put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
   }
 
   const boulder = { tBoulder: { value: ctx.assets.texture('land/boulder.jpg', { anisotropy: 2 }) }, tBoulderNh: { value: ctx.assets.texture('land/boulder-nh.png', { kind: 'data', anisotropy: 2 }) } };

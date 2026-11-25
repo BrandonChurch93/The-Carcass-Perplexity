@@ -229,7 +229,7 @@ export function createRig(): Rig {
 
   const sunDirection = new THREE.Vector3(...SUN_DIR);
   // The glow of the low sky stands to the north of the sun, where the establishing picture has it: on the left of a camera that looks north.
-  const glowBearing = (312 * Math.PI) / 180;
+  const glowBearing = (300 * Math.PI) / 180;
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
     uSolo: { value: 0 },

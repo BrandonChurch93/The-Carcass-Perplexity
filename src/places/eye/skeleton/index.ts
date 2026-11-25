@@ -10,7 +10,7 @@ import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot. */
-export const BONES = { bearing: 196.75, scale: 1.75 };
+export const BONES = { ahead: 5.6, right: 27, scale: 0.86 };
 
 const FRAGMENT = /* glsl */ `
 varying vec3 vWorld;
@@ -24,10 +24,11 @@ void main() {
   // Old bone: chalk where the sun has had it, stained brown and amber where it lies in the water and the mats have taken it.
   float grain = fbm(vWorld.xz * 9.0 + vWorld.y * 7.0);
   float pit = vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0);
-  vec3 bone = vec3(0.74, 0.69, 0.57) * (0.72 + 0.4 * grain) * (0.9 + 0.2 * pit);
-  float low = smoothstep(0.22, -0.08, vWorld.y + 0.1 * (grain - 0.5));
+  vec3 bone = vec3(0.66, 0.58, 0.43) * (0.6 + 0.5 * grain) * (0.84 + 0.3 * pit);
+  bone = mix(bone, bone * vec3(0.8, 0.52, 0.26), smoothstep(0.4, 0.7, vnoise(vWorld.xz * 23.0 + vWorld.y * 31.0)));
+  float low = smoothstep(0.26, 0.02, vWorld.y + 0.14 * (grain - 0.5));
   vec3 stain = mix(vec3(0.3, 0.17, 0.07), vec3(0.42, 0.22, 0.05), grain);
-  vec3 albedo = mix(bone, stain, 0.75 * low);
+  vec3 albedo = mix(bone, stain, 0.85 * low);
   albedo *= mix(1.0, 0.55, smoothstep(0.5, 0.0, n.y) * 0.5);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.8, 0.35, low), 0.6 + 0.4 * smoothstep(-0.4, 0.5, n.y));
   if (vWorld.y < 0.0) c = throughWater(c * sunk(vWorld), vWorld);
@@ -94,7 +95,7 @@ function skeletonGeometry(): THREE.BufferGeometry {
   // The spine: vertebrae as knots on a cord, from the tail to the skull.
   const spine: [number, number, number, number][] = [];
   for (let i = 0; i <= 150; i++) {
-    const z = -1.3 + (3.6 * i) / 150;
+    const z = -0.95 + (2.3 * i) / 150;
     const knot = 0.5 + 0.5 * Math.cos((z * Math.PI * 2) / 0.115);
     const r = (z > 1.0 ? 0.03 : 0.04) * (0.62 + 0.55 * knot ** 2) * (i === 0 || i === 150 ? 0.2 : 1);
     spine.push([spineX(z), spineY(z), z, r]);
@@ -105,7 +106,7 @@ function skeletonGeometry(): THREE.BufferGeometry {
     const z = -0.2 + i * 0.105;
     const size = 0.36 * (0.72 + 0.28 * Math.sin((i / 10) * Math.PI));
     for (const side of [-1, 1]) {
-      const broken = (i * 7 + (side > 0 ? 3 : 0)) % 5 === 0 ? 0.55 : 1;
+      const broken = [1, 0.5, 0.9, 1, 0.3, 0.8, 1, 0.62, 1, 0.45, 0.85][(i * 7 + (side > 0 ? 3 : 0)) % 11] as number;
       const rib: [number, number, number, number][] = [];
       for (let k = 0; k <= 12; k++) {
         const u = (k / 12) * broken;
@@ -117,8 +118,8 @@ function skeletonGeometry(): THREE.BufferGeometry {
     }
   }
   // The skull: long, tapering, no sockets for eyes.
-  const sx = spineX(2.3);
-  const sy = spineY(2.3) + 0.03;
+  const sx = spineX(1.35) - 0.12;
+  const sy = 0.11;
   const skull: [number, number, number, number][] = [];
   const profile: [number, number][] = [
     [0, 0.02],
@@ -131,9 +132,9 @@ function skeletonGeometry(): THREE.BufferGeometry {
     [0.6, 0.036],
     [0.65, 0.012],
   ];
-  for (const [along, r] of profile) skull.push([sx + 0.45 * along, sy - 0.1 * along, 2.3 + 0.9 * along, r]);
+  for (const [along, r] of profile) skull.push([sx + 0.45 * along, sy - 0.06 * along, 1.5 + 0.9 * along, r]);
   b.tube(skull, 10);
-  b.tube(profile.slice(3).map(([along, r]) => [sx + 0.45 * along + 0.03, sy - 0.1 - 0.12 * along, 2.3 + 0.9 * along, r * 0.5] as [number, number, number, number]), 6);
+  b.tube(profile.slice(3).map(([along, r]) => [sx + 0.45 * along + 0.13, sy - 0.06 - 0.04 * along, 1.46 + 0.9 * along, r * 0.5] as [number, number, number, number]), 6);
   // The pelvis and the shoulder blades: flat plates, as short thick tubes.
   b.tube([[-0.24, 0.2, -0.86, 0.02], [-0.2, 0.3, -0.8, 0.07], [-0.08, 0.36, -0.74, 0.085], [0.08, 0.36, -0.74, 0.085], [0.2, 0.3, -0.8, 0.07], [0.24, 0.2, -0.86, 0.02]], 7);
   b.tube([[0.3, 0.08, 0.5, 0.02], [0.4, 0.1, 0.62, 0.075], [0.5, 0.08, 0.8, 0.06], [0.56, 0.06, 0.95, 0.02]], 7);
@@ -152,18 +153,22 @@ function skeletonGeometry(): THREE.BufferGeometry {
 export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...waterUniforms() }, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT });
   const mesh = new THREE.Mesh(skeletonGeometry(), material);
-  const a = BONES.bearing * DEG;
-  const r = lipAt(a) + 1.1;
+  // Ahead and to the right of the camera of the edge shot, then out to the rim of the lip from there.
+  const from = KEYS.edge.position;
+  const px = from[0] + Math.sin(BONES.right * DEG) * BONES.ahead;
+  const pz = from[2] - Math.cos(BONES.right * DEG) * BONES.ahead;
+  const a = Math.atan2(px, -pz);
+  const r = lipAt(a) + 0.75;
   const x = Math.sin(a) * r;
   const z = -Math.cos(a) * r;
-  mesh.position.set(x, Math.max(landHeight(x, z), landHeight(x * 1.004, z * 1.004)) + 0.01, z);
+  mesh.position.set(x, landHeight(x, z) - 0.07, z);
   // Along the lip, the skull toward the left of the edge shot.
   const heading = Math.atan2(KEYS.edge.aim[0] - KEYS.edge.position[0], -(KEYS.edge.aim[2] - KEYS.edge.position[2]));
-  mesh.rotation.y = Math.PI - (heading - 100 * DEG);
+  mesh.rotation.y = Math.PI - (heading - 78 * DEG);
   mesh.scale.setScalar(BONES.scale);
   ctx.scene.add(ctx.parts.built('skeleton', mesh));
   const shade = ctx.rig.contactDiscs(1);
-  ctx.rig.setDisc(shade, 0, x, z, 2.2, 0.5, 1.6, ctx.rig.sun.shadowYaw);
+  ctx.rig.setDisc(shade, 0, x, z, 1.5, 0.45, 1.6, ctx.rig.sun.shadowYaw);
   return {
     dispose: () => {
       mesh.geometry.dispose();

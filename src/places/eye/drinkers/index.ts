@@ -52,7 +52,7 @@ void main() {
       turn(p, n, pivot + vec3(0.0, ${BODY.neckLength.toFixed(3)}, 0.0), -0.3 - 0.52 * smoothstep(0.5, 2.5, aPose.x));
     }
     float along = clamp((p.y - pivot.y) / ${BODY.neckLength.toFixed(3)}, 0.0, 1.0);
-    turn(p, n, pivot, aPose.x * mix(pow(along, 0.8), 1.0, step(1.5, part)));
+    turn(p, n, pivot, aPose.x * mix(pow(along, 0.5), 1.0, step(1.5, part)));
   } else if (part < 3.5) {
     float id = aBone.z;
     bool front = id < 1.5;
@@ -74,7 +74,7 @@ void main() {
     turn(p, n, hip, hipTurn * smoothstep(-0.1, 0.12, aBone.y));
     p.x += sign(p.x) * 0.1 * lie * smoothstep(0.1, 0.5, aBone.y);
   } else {
-    turn(p, n, vec3(0.0, 1.5, -1.1), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(0.2, 0.9, sin(uTime * 0.37 + aLife.x * 17.0)));
+    turn(p, n, vec3(0.0, 1.5, -0.82), 0.25 * aBone.y * sin(uTime * 1.9 + aLife.x * 40.0) * smoothstep(0.2, 0.9, sin(uTime * 0.37 + aLife.x * 17.0)));
   }
   vRest = position;
   vRestNormal = normal;
@@ -107,7 +107,7 @@ void main() {
   vec3 col = texture2D(tHide, q.zy).rgb * w.x + texture2D(tHide, q.xz).rgb * w.y + texture2D(tHide, q.xy).rgb * w.z;
   vec3 nh = texture2D(tHideNh, q.zy).rgb * w.x + texture2D(tHideNh, q.xz).rgb * w.y + texture2D(tHideNh, q.xy).rgb * w.z;
   float lum = dot(col, vec3(0.33));
-  float ribs = smoothstep(-0.25, 0.75, vRest.z) * (1.0 - smoothstep(0.75, 0.95, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
+  float ribs = smoothstep(-0.18, 0.55, vRest.z) * (1.0 - smoothstep(0.55, 0.7, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
   float rib = sin(vRest.z * 46.0 + vRest.y * 9.0);
   vec3 albedo = mix(vec3(0.6, 0.45, 0.37), vec3(0.83, 0.71, 0.61), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
   albedo *= 1.0 - 0.07 * ribs * smoothstep(0.2, 0.9, rib);
@@ -154,8 +154,8 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < 12; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
 
   const dummy = new THREE.Object3D();
-  const NECK_UP = 24 * DEG;
-  const NECK_DOWN = 150 * DEG;
+  const NECK_UP = 30 * DEG;
+  const NECK_DOWN = 156 * DEG;
   const sun = ctx.rig.sun;
 
   return {

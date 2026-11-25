@@ -39,13 +39,13 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const centre = KEYS.centre.position;
   const list: Drinker[] = [
     // The four of the shore shot: one with its head up, a calf, and two that drink.
-    near(13.5, -9.5, 82, 1, steady(0.05, 0.3)),
-    near(16.4, -7.6, 78, 0.52, steady(0.9, 1.1)),
-    near(20.2, -6.6, 76, 1, steady(0.97, 2.2)),
-    near(28.6, -1.4, 283, 1, steady(0.97, 4)),
+    near(-86.5, -9.5, 82, 1, steady(0.05, 0.3)),
+    near(-83.6, -7.6, 78, 0.52, steady(0.9, 1.1)),
+    near(-79.8, -6.6, 76, 1, steady(0.97, 2.2)),
+    near(-71.4, -1.4, 283, 1, steady(0.97, 4)),
     // The two of the last shot, on the bluff under the camera: they lift their heads as the centre swells.
-    { x: centre[0] - 2.5, z: centre[2] - 27, facing: 32, size: 1, down: (t) => 0.55 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
-    { x: centre[0] + 2.0, z: centre[2] - 28.5, facing: 335, size: 0.94, down: (t) => 0.5 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
+    { x: centre[0] - 1.0, z: centre[2] - 11, facing: 8, size: 0.62, down: (t) => 0.1 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0, lies: false },
+    { x: centre[0] + 0.6, z: centre[2] - 12, facing: 354, size: 0.56, down: (t) => 0.17 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0, lies: false },
     // The one of the mats shot, in the shallows at its left third.
     from(KEYS.mats, -12, 17, 86, 1, steady(0.96, 0.7)),
     from(KEYS.mats, -22, 64, 250, 1, steady(0.95, 3.1)),

@@ -10,7 +10,7 @@ export const UNIT = 'eye';
 export const SEA = 0;
 
 /** The low sun: where it stands (bearing from the centre, degrees) and how high. It does not move in the 21 seconds of the place. */
-export const SUN = { bearing: 240, elevation: 8.5 };
+export const SUN = { bearing: 240, elevation: 12.5 };
 /** The unit vector toward the sun. */
 export const SUN_DIR: [number, number, number] = [
   Math.sin(SUN.bearing * DEG) * Math.cos(SUN.elevation * DEG),

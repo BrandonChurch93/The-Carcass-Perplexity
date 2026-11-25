@@ -3,7 +3,7 @@ import { FPS } from '../../config';
 import { keyPart, placeOf, shotById, shotLength } from '../../film/cut';
 import { flight, type FlightPlan } from './flight';
 import handoff from './handoff.json';
-import { landHeight, onAxis } from './land/height';
+import { landHeight, lipAt, onAxis } from './land/height';
 import { DEG, FAN, SHORE, at } from './layout';
 
 function look(position: Vec3, bearing: number, pitch: number, fov: number): Pose {
@@ -36,14 +36,14 @@ function above(x: number, z: number, y: number): Vec3 {
 
 const front = SHORE - FAN;
 const matsAt = at(196, front - 42);
-const edgeAt = at(197, 487);
+const edgeAt = at(197, lipAt(197 * DEG) + 7.5);
 
 export const KEYS = {
   wide: look(standOn(150, 0, 6.2), 18, -5.06, 40),
   mats: look([matsAt[0], 1.1, matsAt[1]], 8, -11.2, 45),
   edge: look([edgeAt[0], 2.6, edgeAt[1]], 12, -13.6, 40),
-  shore: look(onShore(25, 4.5, 1.9), 338 + SHORE_TURN, -5.5, 25),
-  centre: look(above(0, front + 80, 4.0), 0, CENTRE_PITCH, 8),
+  shore: look(onShore(-75, 4.5, 1.9), 338 + SHORE_TURN, -5.5, 25),
+  centre: look(above(0, front + 80, 2.3), 0, CENTRE_PITCH, 8),
 };
 
 const last = shotById('eye-05');

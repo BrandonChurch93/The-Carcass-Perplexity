@@ -4,11 +4,11 @@ import * as THREE from 'three';
 
 /** Metres, at size 1. The shader has the same numbers. */
 export const BODY = {
-  neckPivot: [0, 1.62, 0.85] as [number, number, number],
-  neckLength: 1.45,
-  headLength: 0.62,
-  hipFront: [0.21, 1.2, 0.74] as [number, number, number],
-  hipRear: [0.21, 1.26, -0.78] as [number, number, number],
+  neckPivot: [0, 1.56, 0.66] as [number, number, number],
+  neckLength: 1.22,
+  headLength: 0.46,
+  hipFront: [0.21, 1.2, 0.55] as [number, number, number],
+  hipRear: [0.21, 1.26, -0.58] as [number, number, number],
   knee: 0.6,
   leg: 1.2,
 };
@@ -88,42 +88,35 @@ export function drinkerGeometry(): THREE.BufferGeometry {
     [1.06, 1.55, 0.04, 0.05],
   ];
   b.tube(
-    trunk.map(([z, y, rx, ry], i) => ({ at: [0, y, z], rx: rx * (i > 5 && i < 12 && i % 2 === 0 ? 0.985 : 1), ry, bone: [0, (z + 1.14) / 2.2, 0, 0] })),
+    trunk.map(([z, y, rx, ry], i) => ({ at: [0, y, z * 0.74], rx: rx * (i > 5 && i < 12 && i % 2 === 0 ? 0.985 : 1), ry, bone: [0, (z + 1.14) / 2.2, 0, 0] })),
     20,
   );
-  // The neck, straight up from its root, and the head: a long snout that tapers to nothing, with no eyes.
+  // The neck, straight up from its root, and the head: a short blunt snout, with no eyes and no ears.
   const [px, py, pz] = BODY.neckPivot;
   const neck: Ring[] = [];
   const NECK = 12;
   for (let i = 0; i <= NECK; i++) {
     const s = i / NECK;
-    const r = 0.2 - 0.09 * s ** 0.7 + 0.06 * Math.exp(-((s / 0.12) ** 2));
-    neck.push({ at: [px, py - 0.12 + (BODY.neckLength + 0.12) * s, pz - 0.05 * (1 - s)], rx: r * 0.86, ry: r * 1.08, bone: [1, s, 0, 0] });
+    const r = 0.3 - 0.16 * s ** 0.8 + 0.05 * Math.exp(-((s / 0.15) ** 2));
+    neck.push({ at: [px, py - 0.12 + (BODY.neckLength + 0.12) * s, pz - 0.05 * (1 - s)], rx: r * 0.8, ry: r * 1.12, bone: [1, s, 0, 0] });
   }
   b.tube(neck, 14);
   const top = py + BODY.neckLength;
   const head: Ring[] = [];
   const profile: [number, number][] = [
-    [-0.16, 0.03],
-    [-0.12, 0.085],
-    [-0.04, 0.118],
-    [0.06, 0.125],
-    [0.16, 0.112],
-    [0.28, 0.09],
-    [0.4, 0.068],
-    [0.5, 0.052],
-    [0.58, 0.04],
-    [0.62, 0.015],
+    [-0.15, 0.04],
+    [-0.11, 0.1],
+    [-0.03, 0.136],
+    [0.07, 0.14],
+    [0.17, 0.126],
+    [0.27, 0.106],
+    [0.35, 0.092],
+    [0.41, 0.076],
+    [0.445, 0.05],
+    [0.46, 0.015],
   ];
   for (const [along, r] of profile) head.push({ at: [px, top + 0.03 - 0.1 * along, pz + along], rx: r * 0.9, ry: r * 1.05, bone: [2, 1, 0, 0] });
   b.tube(head, 12);
-  // Two small ears laid back.
-  for (const side of [-1, 1]) {
-    b.tube(
-      [0, 0.35, 0.7, 1].map((s) => ({ at: [px + side * (0.085 + 0.03 * s), top + 0.1 + 0.11 * s, pz - 0.07 - 0.12 * s] as [number, number, number], rx: 0.035 * (1 - s) + 0.004, ry: 0.016 * (1 - s) + 0.003, bone: [2, 1, 0, 0] as [number, number, number, number] })),
-      6,
-    );
-  }
   // The legs: thigh or shoulder, knee, cannon, hoof.
   const legs: [[number, number, number], number, number][] = [
     [[-BODY.hipFront[0], BODY.hipFront[1], BODY.hipFront[2]], 0, 1],
@@ -158,7 +151,7 @@ export function drinkerGeometry(): THREE.BufferGeometry {
   }
   // The tail: short, held down.
   b.tube(
-    [0, 0.25, 0.5, 0.75, 1].map((s) => ({ at: [0, 1.5 - 0.42 * s, -1.1 - 0.1 * Math.sin(s * 2)] as [number, number, number], rx: 0.045 * (1 - 0.7 * s), ry: 0.045 * (1 - 0.7 * s), bone: [4, s, 0, 0] as [number, number, number, number] })),
+    [0, 0.25, 0.5, 0.75, 1].map((s) => ({ at: [0, 1.5 - 0.42 * s, -0.82 - 0.1 * Math.sin(s * 2)] as [number, number, number], rx: 0.045 * (1 - 0.7 * s), ry: 0.045 * (1 - 0.7 * s), bone: [4, s, 0, 0] as [number, number, number, number] })),
     6,
   );
   return b.build();
