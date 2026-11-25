@@ -42,14 +42,14 @@ void main() {
   // Red mud wells up where the animal works it.
   float well = 1.0 - smoothstep(0.25, 0.75, length((p - uAt.xy)) / uAt.z);
   albedo = mix(albedo, vec3(0.1, 0.03, 0.022), 0.55 * well * smoothstep(0.35, 0.6, fbm(p * 2.3 + 7.0)));
-  albedo = mix(albedo, vec3(0.14, 0.115, 0.095), dry);
-  albedo = mix(albedo, vec3(0.085, 0.03, 0.024), low * 0.6);
+  albedo = mix(albedo, uMud * 1.5 + 0.012, dry);
+  albedo = mix(albedo, vec3(0.05, 0.015, 0.012), low * 0.6);
   float rough = mix(0.97, 1.0, dry);
-  rough = mix(rough, 0.8, low);
+  rough = mix(rough, 0.35, low);
   float occ = 0.75 + 0.25 * smoothstep(0.35, 0.6, h0);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // Wet mud drinks the light: it does not hold the sky as the crust does.
-  c *= mix(0.6, 0.8, low);
+  c *= mix(0.5, 0.75, low);
   // Its edge is not a line: it thins out over the crust it has run onto.
   float a = smoothstep(0.04, 0.3, vEdge + 0.14 * (fbm(p * 4.0) - 0.5)) * smoothstep(0.0, 0.06, vEdge) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), a);
@@ -77,8 +77,9 @@ export function mudWallow(ctx: Context, x: number, z: number, dir: [number, numb
       const px = x + dir[0] * along - dir[1] * across;
       const pz = z + dir[1] * along + dir[0] * across;
       // It stands a little proud of the trodden crust in the middle and goes under the plates at its edge.
-      const lift = 0.06 + 0.03 * (1 - u) * Math.sin(px * 3.1 + pz * 1.7) * Math.sin(pz * 2.3 - px * 0.9);
-      position.push(px, ctx.rig.land.height(px, pz) + lift, pz);
+      // Pushed up in a low rim round the body, and thinning to nothing over the crust.
+      const lift = 0.04 + 0.09 * (1 - u * u) + 0.07 * Math.exp(-(((u - 0.45) / 0.16) ** 2)) * (0.6 + 0.4 * Math.sin(a * 3 + wobble[0][1])) + 0.03 * (1 - u) * Math.sin(px * 3.1 + pz * 1.7) * Math.sin(pz * 2.3 - px * 0.9);
+      position.push(px, ctx.rig.land.height(px, pz) + lift * Math.min(1, size), pz);
       edge.push(1 - u);
     }
   }
