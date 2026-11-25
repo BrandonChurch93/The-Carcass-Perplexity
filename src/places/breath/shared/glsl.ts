@@ -58,7 +58,7 @@ ${RIG_UNIFORMS_GLSL}
 // approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
 vec3 sunHalo(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
-  return uGlowColour * (exp(-a / 0.6) + vec3(2.3, 1.05, 0.38) * exp(-a / 0.32));
+  return uGlowColour * (exp(-a / 0.6) + vec3(2.3, 1.05, 0.38) * exp(-a / 0.32) + vec3(5.0, 3.4, 1.8) * exp(-a / 0.085));
 }
 float sunGlow(vec3 d) {
   float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
@@ -80,6 +80,8 @@ vec3 skyIrradiance(vec3 n) {
   float up = 0.5 + 0.5 * n.y;
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
   float w = 0.5 + 0.5 * dot(n, uSunDir);
+  // The place is lit from behind: the bright half of the sky is the sun's. A face that stands up and looks away from it sees the dull half.
+  e *= 1.0 - 0.7 * (1.0 - max(n.y, 0.0)) * (1.0 - w);
   return 3.14159 * (e + uGlowColour * (0.55 * w * w * w));
 }
 
