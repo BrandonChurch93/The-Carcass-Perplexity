@@ -96,10 +96,10 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 480, round: 52, tendon: 0 };
-  const legShapeB = { points: LEG_B, knee: 0.34, scale: 1.1, seed: 4.1, rings: 360, round: 40, tendon: 0 };
+  const legShapeA = { points: LEG_A, knee: 0.45, hock: 0.833, scale: 1.3, seed: 1.7, rings: 480, round: 44, tendon: 0 };
+  const legShapeB = { points: LEG_B, knee: 0.482, hock: 0.8, scale: 1.2, seed: 4.1, rings: 360, round: 36, tendon: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
-  const hanging = [padGeometry([2.45, 3.74, 0.55], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
+  const hanging = [padGeometry([2.45, 3.2, 0.5], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
   const near = new THREE.Group();
   near.add(carcass(bodyGeometry(baked, 290, 240, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
   const far = new THREE.Group();

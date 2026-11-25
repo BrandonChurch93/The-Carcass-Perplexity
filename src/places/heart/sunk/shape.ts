@@ -21,34 +21,36 @@ export const BODY = {
 export type P3 = [number, number, number];
 
 /** The two legs that stand out: the hip is inside the body, the knee is the top of the arch. */
-export const LEG_A: P3[] = [
+// Each leg is three bones as on the living ones: thigh from the hip up to the knee, shank down to the hock, cannon into the crust.
+// The points crowd at a joint so the curve turns there and runs nearly straight between.
+const bones = (nodes: P3[], bow: number): P3[] => {
+  const out: P3[] = [];
+  for (let n = 0; n < nodes.length - 1; n++) {
+    const a = nodes[n] as P3;
+    const b = nodes[n + 1] as P3;
+    const steps = [0, 0.08, 0.3, 0.5, 0.7, 0.92];
+    for (const u of steps) {
+      const k = Math.sin(Math.PI * u) * bow * (n === 1 ? -1 : 1);
+      out.push([a[0] + (b[0] - a[0]) * u + k * 0.4, a[1] + (b[1] - a[1]) * u + k, a[2] + (b[2] - a[2]) * u - k * 0.5]);
+    }
+  }
+  out.push(nodes[nodes.length - 1] as P3);
+  return out;
+};
+const NODES_A: P3[] = [
   [-2.75, 0.46, 0.25],
-  [-2.15, 1.17, 0.5],
-  [-1.25, 2.8, 0.74],
-  [-0.05, 4.54, 0.9],
-  [0.95, 5.29, 0.9],
-  [1.65, 5.15, 0.8],
-  [2.5, 4.08, 0.55],
-  [3.55, 2.24, 0.1],
-  [4.35, 0.56, -0.28],
-  [4.6, -0.25, -0.4],
+  [0.95, 5.3, 0.9],
+  [4.05, 1.25, -0.12],
   [4.7, -0.9, -0.45],
 ];
-export const LEG_B: P3[] = [
+const NODES_B: P3[] = [
   [-3, 0.49, -0.7],
-  [-2.3, 1.14, -1.25],
-  [-1.3, 2.16, -1.95],
-  [-0.2, 2.97, -2.55],
-  [0.65, 3.2, -2.9],
-  [1.55, 3.05, -3.25],
-  [2.45, 2.66, -3.5],
-  [3, 2.41, -3.62],
-  [3.45, 1.75, -3.72],
-  [3.75, 0.9, -3.82],
-  [3.92, 0.1, -3.88],
-  [4.0, -0.5, -3.9],
+  [0.85, 3.25, -2.95],
+  [3.5, 1.15, -3.72],
   [4.02, -0.95, -3.9],
 ];
+export const LEG_A: P3[] = bones(NODES_A, 0.16);
+export const LEG_B: P3[] = bones(NODES_B, 0.12);
 export const FOOT_A: [number, number] = [4.53, -0.37];
 /** The second leg goes down into the crust too, behind the first. */
 export const FOOT_B: [number, number] = [3.95, -3.89];
@@ -754,8 +756,9 @@ export function bodyGeometry(baked: Baked, rows = 360, columns = 300, seenOnly =
 
 export interface LegShape {
   points: P3[];
-  /** Part of the length where the knee is. */
+  /** Part of the length where the knee is, and the hock. */
   knee: number;
+  hock: number;
   scale: number;
   seed: number;
   rings: number;
@@ -773,8 +776,10 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
     shape.round,
     KIND.leg,
     (s, a, t) => {
-      const joint = 0.15 * Math.exp(-Math.pow((t - knee) / 0.04, 2)) + 0.07 * Math.exp(-Math.pow((t - knee + 0.07) / 0.02, 2)) + 0.07 * Math.exp(-Math.pow((t - (1 - tendon - 0.03)) / 0.025, 2));
-      const shaft = 0.19 + 0.11 * smooth(0.5, 0.0, t) + 0.02 * smooth(0.6, 1, t);
+      // A thigh with a little left on it, then shafts that taper, and a knuckle at the knee and at the hock.
+      const head = (d: number, w: number): number => 0.5 * Math.exp(-Math.pow(d / w, 2)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w));
+      const joint = 0.12 * head(t - knee, 0.022) + 0.1 * head(t - shape.hock, 0.018);
+      const shaft = t < knee ? mix(0.2, 0.125, t / knee) : t < shape.hock ? mix(0.105, 0.078, (t - knee) / (shape.hock - knee)) : 0.07;
       const cords = 0.2 * Math.cos(2 * a + s * 0.8 + seed) + 0.12 * Math.cos(3 * a - s * 1.5 + seed * 2) + 0.06 * Math.cos(5 * a + s * 2.3);
       const lumps = 0.4 * (fbm3(s * 1.6 + seed, Math.cos(a) * 0.8, Math.sin(a) * 0.8, 3) - 0.47);
       const thin = tendon > 0 ? smooth(1 - tendon * 0.2, 1 - tendon, t) : 1;

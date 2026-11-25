@@ -93,16 +93,21 @@ vec3 skyRadiance(vec3 d) {
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky.
 // uFill is the root's: the share of the open sky's light, band by band, that reaches the floor of the caldera through its fume.
-// A face that looks up takes the zenith and the horizon as before. A wall takes the horizon alone, and a third more of it: the band of a dusk sky
-// just over the far rim is its brightest part, and only upright faces look at it.
+// A face that looks up takes the zenith and the horizon as before, and exactly as much as before: every owner's albedo is set against it.
+// An upright face sees half the sky, the horizon's half, and the dark ground: it takes 0.69 of what a level face takes (it took 0.92, and a block
+// lit as brightly on its sides as on its top is a grey box). A face at 60 degrees takes 0.89.
+// A face that leans DOWN loses the sky with the cube of its lean, not in proportion: in a caldera the low band of the sky is the far wall, which is
+// dark rock, so a face 30 degrees past upright sees a sixth of the sky and an underside none. What is left to it is uSkyGround, the dusk thrown
+// back by dark ground. This is where the darks of the place come from: undersides, overhangs, the lee of every stone.
 vec3 skyIrradiance(vec3 n) {
-  float up = 0.5 + 0.5 * n.y;
-  vec3 band = uSkyHorizon * (1.35 - 0.35 * abs(n.y));
-  vec3 e = mix(uSkyGround, mix(band, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
+  float lean = 1.0 + min(n.y, 0.0);
+  float seen = lean * lean * lean;
+  float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
+  vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
   // The gain is the light's, not uFill's, because the air reads uFill for its haze: it sets rock under the thinned air to the tone of the pictures.
   e *= 1.9 + 0.1 * max(n.y, 0.0);
   float w = 0.5 + 0.5 * dot(n, uWarmDir);
-  return 3.14159 * (e + uWarmColour * 0.35 * w * w);
+  return 3.14159 * (e + uWarmColour * 0.35 * w * w * seen);
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1),
@@ -165,20 +170,45 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
 }
 
 // Irradiance from the round lights: the fall, the mouth, the fountains, the surge.
-// Each lights the place out to about 40 m plus twice its radius and is gone at twice that: the air takes the rest, and a wall a kilometre away stays the sky's.
+// Each is a disc of real size and falls off with the square of the distance, as light does. The fume takes it beyond that: half is left at a reach of
+// 70 m + 1.5 radii (the fall: 85 to 100 m) and a sixteenth at twice as far, so the cliff beside the fall is lit for a hundred metres and a wall a
+// kilometre away stays the sky's.
+// A small light is the core of more open lava than its disc (three discs stand for a river 130 m long, one for a row of fountains), so it casts
+// EMITTER_CORE times its own share; a light wider than 60 m (the lit fume) is its true size and casts once.
+// The land between cuts it: one read of the coarse land half way to the light, only where the light would count.
+const float EMITTER_CORE = 4.5;
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
-    float r2 = uEmitters[i].w * uEmitters[i].w;
-    float d2 = dot(d, d) + r2;
+    float r = uEmitters[i].w;
+    float d2 = dot(d, d) + r * r;
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
-    float reach = 40.0 + 2.2 * uEmitters[i].w;
+    float reach = max(70.0 + 1.5 * r, 40.0 + 2.2 * r);
     float q = d2 / (reach * reach);
-    e += uEmitterRadiance[i] * (3.14159 * r2 / d2) * c / (1.0 + q * q);
+    float k = (3.14159 * r * r / d2) * c / (1.0 + q * q) * mix(EMITTER_CORE, 1.0, smoothstep(20.0, 60.0, r));
+    if (k < 0.0015) continue;
+    vec3 m = p + d * 0.5;
+    float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
+    e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)));
   }
   return e * uCast;
+}
+
+// For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,
+// under a step, between blocks, at the foot of a wall. It reads the land's height at reach and at 3 x reach metres in front of the face (along the
+// level direction it looks in) and takes the steeper rise, as the baked sky open does over hundreds of metres; a face that looks up is cut less
+// than one that looks sideways. Multiply the occlusion you give the rig by it: rigShade(p, n, v, albedo, rough, occ * landHollow(p, n, 1.5)).
+// The land map has a cell of 0.6 m on the bench near the camera and 2.7 m elsewhere, so reach is 1 to 3 m on the bench and 6 m or more on the walls.
+// It costs two reads of landAt: use it on what is near, and not together with a relief that already shades the same scale.
+float landHollow(vec3 p, vec3 n, float reach) {
+  float side = length(n.xz);
+  if (side < 0.05) return 1.0;
+  vec2 dir = n.xz / side;
+  float rise = max(landAt(p.xz + dir * reach).r - p.y, (landAt(p.xz + dir * reach * 3.0).r - p.y) / 3.0) / reach;
+  rise = max(rise, 0.0);
+  return 1.0 - (0.35 + 0.65 * side) * rise * inversesqrt(1.0 + rise * rise);
 }
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.

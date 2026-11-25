@@ -4,6 +4,8 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { BODY } from './shape';
 
 const COMMON = /* glsl */ `
+// The skin of the lava under light version 2: what sets the near crust at 50 44 43 on the display.
+const vec3 LEVEL = vec3(0.5, 0.445, 0.425);
 uniform sampler2D tRelief;
 uniform sampler2D tMask;
 uniform sampler2D tLines;
@@ -183,6 +185,7 @@ void main() {
   albedo = mix(albedo, albedo * vec3(1.55, 0.8, 0.55) + vec3(0.02, 0.004, 0.0), clamp(mk.a * 1.3, 0.0, 0.65));
   float ash = mk.g * (0.35 + 0.65 * smoothstep(0.3, 0.7, 1.0 - small)) * folded;
   albedo = mix(albedo, vec3(0.36, 0.33, 0.295) * (0.7 + 0.5 * nhF.b), ash * 0.62);
+  albedo *= LEVEL;
 
   // The strands stand off the rope: the slope of each is across the rope.
   vec2 wr = ln.gb * (-1.0 * st * ridge * strandSeen);
@@ -301,12 +304,12 @@ void main() {
   vec4 flakeNh = texture2D(tFlakeNh, uvP);
   float grey = dot(hide, vec3(0.33));
   // Soot and ash have taken the brown out of the hide.
-  vec3 dead = mix(vec3(0.3, 0.25, 0.2), vec3(0.3, 0.215, 0.145), isBody) * (0.25 + 9.0 * grey);
+  vec3 dead = vec3(0.088, 0.072, 0.06) * (0.25 + 9.0 * grey);
   // Caked ash and dried skin, the colour of old paper, darker where the plate is thin.
   float tone = dot(flake, vec3(0.33));
-  vec3 pale = mix(vec3(0.36, 0.295, 0.215), vec3(0.62, 0.53, 0.4), smoothstep(0.2, 0.8, flakeNh.b)) * (1.1 + 3.5 * tone);
+  vec3 pale = mix(vec3(0.07, 0.06, 0.05), vec3(0.125, 0.115, 0.1), smoothstep(0.2, 0.8, flakeNh.b)) * (0.7 + 3.5 * tone);
   // On the body: tan to bone on the upper face of each plate.
-  vec3 bodyPale = mix(vec3(0.44, 0.335, 0.21), vec3(0.68, 0.6, 0.47), smoothstep(0.4, 1.0, pl.b + 0.3 * (lump - 0.5))) * (0.55 + 2.2 * tone + 0.5 * hideNh.b);
+  vec3 bodyPale = mix(vec3(0.065, 0.054, 0.044), vec3(0.13, 0.118, 0.1), smoothstep(0.4, 1.0, pl.b + 0.3 * (lump - 0.5))) * (0.55 + 2.2 * tone + 0.5 * hideNh.b);
   pale = mix(pale, bodyPale, isBody);
 
   // On the body the hide lifts in patches; on the legs it is the plates that are left.
@@ -331,7 +334,7 @@ void main() {
   float cs = 2.0 * fract(cordAt) - 1.0;
   float cord = (1.0 - cs * cs) * cordRun * step(0.3, cordTone) * smoothstep(1.2, 0.5, fwidth(cordAt)) * isLeg;
   vec3 flesh = mix(vec3(0.06, 0.04, 0.03), vec3(0.2, 0.135, 0.09), hideNh.b) * (0.6 + 1.2 * strand);
-  vec3 sinew = vec3(0.42, 0.37, 0.29) * (0.55 + 0.6 * hideNh.b);
+  vec3 sinew = vec3(0.16, 0.14, 0.11) * (0.55 + 0.6 * hideNh.b);
   float bare = mix(isLeg * (1.0 - onLeg), split, isBody);
   // In the splits of the body the ribs are barely seen.
   float boney = clamp(max(vSurf.w * mix(smoothstep(0.35, 0.8, strand), 0.22 + 0.3 * strand, isBody), 0.85 * smoothstep(0.3, 0.9, cord)), 0.0, 1.0);
@@ -345,20 +348,20 @@ void main() {
   vec4 lavaNh = texture2D(tRopyNh, uvL);
   float coat = smoothstep(0.36, 0.64, vSurf.x + 0.3 * (lavaNh.b - 0.5));
   // The same skin as the folds it stands in.
-  vec3 lava = (vec3(0.011) + 0.8 * texture2D(tRopy, uvL).rgb) * 1.5;
+  vec3 lava = (vec3(0.011) + 0.8 * texture2D(tRopy, uvL).rgb) * 1.5 * LEVEL;
   lava = mix(lava, vec3(dot(lava, vec3(0.33))), 0.22);
   albedo = mix(albedo, lava * (0.75 + 0.5 * lavaNh.b), coat);
   bump = mix(bump, (lavaNh.rg - 0.5) * 1.2, coat);
   cavity = mix(cavity, 0.75 + 0.25 * lavaNh.b, coat);
 
   // Ash has settled in the hollows of the hide, and the end of the body by the tear is stained by its heat.
-  albedo = mix(albedo, vec3(0.37, 0.345, 0.31), isBody * (1.0 - lifted) * (1.0 - split) * 0.4 * smoothstep(0.5, 0.2, hideNh.b) * (1.0 - coat));
+  albedo = mix(albedo, vec3(0.14, 0.13, 0.115), isBody * (1.0 - lifted) * (1.0 - split) * 0.4 * smoothstep(0.5, 0.2, hideNh.b) * (1.0 - coat));
   float stain = isBody * exp(-dot(vLocal.xz - vec2(-8.25, 4.75), vLocal.xz - vec2(-8.25, 4.75)) / 20.0);
   albedo *= mix(vec3(1.0), vec3(1.25, 0.82, 0.62), stain);
   // Ash lies on whatever faces up.
   float dust = smoothstep(0.35, 0.95, nl.y) * (0.35 + 0.65 * (1.0 - lump)) * (1.0 - 0.5 * coat);
-  albedo = mix(albedo, vec3(0.36, 0.34, 0.315), dust * mix(0.6, 0.25, lifted));
-  albedo = mix(albedo, vec3(0.27, 0.26, 0.25), coat * 0.5 * (1.0 - lump));
+  albedo = mix(albedo, vec3(0.15, 0.138, 0.125), dust * mix(0.6, 0.4, lifted));
+  albedo = mix(albedo, vec3(0.12, 0.112, 0.105), coat * 0.5 * (1.0 - lump));
 
   // The bump is laid on the surface along its own directions.
   vec3 along = normalize(cross(n, vec3(0.31, 0.9, 0.29)));

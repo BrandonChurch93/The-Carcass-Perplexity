@@ -59,9 +59,9 @@ export function create(ctx: HeartContext): HeartPiece {
     return new THREE.Vector3(p.x, river.height(p.x, p.z) + lift, p.z);
   };
   const hot = (kelvin: number, share: number): THREE.Vector3 => new THREE.Vector3(...blackbody(kelvin)).multiplyScalar(share);
-  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 20, TUBE.floor + 4, TUBE.lipZ - 18), radius: 12, radiance: hot(1400, 0.4) };
-  const bodyLight = { position: spot(45, 3), radius: 9, radiance: hot(1300, 0.6) };
-  const footLight = { position: spot(course.length - 26, 3), radius: 20, radiance: hot(1330, 0.4) };
+  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 30, TUBE.floor + 4, TUBE.lipZ - 8), radius: 15, radiance: hot(1400, 0.3) };
+  const bodyLight = { position: spot(48, 5), radius: 16, radiance: hot(1400, 0.3) };
+  const footLight = { position: spot(course.length - 30, 5), radius: 22, radiance: hot(1380, 0.3) };
   const surgeLight = { position: spot(0, 4), radius: 9, radiance: new THREE.Vector3() };
   ctx.rig.emitters.push(mouthLight, bodyLight, footLight, surgeLight);
   const base = [mouthLight, bodyLight, footLight].map((l) => l.radiance.clone());

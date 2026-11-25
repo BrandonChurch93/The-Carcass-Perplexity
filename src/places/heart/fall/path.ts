@@ -11,8 +11,8 @@ export const TUBE = {
   /** The arch is a superellipse of this power: flatter than a circle, as a drained lava tube is. */
   power: 2.5,
   /** The rim flares like the bell of a horn: the first ten metres are a bevel that faces out, and it is what the river lights. */
-  half: (d: number): number => lerp(MOUTH.width / 2 - 11, 39, smooth(0, 95, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
-  crown: (d: number): number => lerp(MOUTH.height - 21, 34, smooth(0, 110, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
+  half: (d: number): number => lerp(MOUTH.width / 2 - 4, 44, smooth(0, 120, d)) + 4 * Math.exp(-Math.max(d, 0) / 7),
+  crown: (d: number): number => lerp(MOUTH.height - 14, 36, smooth(0, 110, d)) + 4 * Math.exp(-Math.max(d, 0) / 7),
   /** The tube bends west as it goes in, so the east wall closes the view from the bench. */
   axis: (d: number): number => MOUTH.x - 58 * smooth(25, 200, d) * smooth(25, 200, d),
 };
@@ -137,15 +137,15 @@ const HALF: [number, number][] = [
   [-200, 7],
   [-40, 7],
   [-6, 4.6],
-  [3, 3.0],
-  [10, 2.3],
-  [FAN_FROM - 4, 2.3],
+  [3, 5.2],
+  [10, 4.2],
+  [FAN_FROM - 4, 4.4],
   [FAN_FROM + 8, 9],
   [FAN_FROM + 22, 20],
   [FAN_FROM + 40, 27],
 ];
 const halfAt = (len: number): number => {
-  let h = table(HALF, len) * (len > 6 && len < FAN_FROM - 4 ? 0.82 + 0.36 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
+  let h = table(HALF, len) * (len > 6 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
   for (const at of SPLITS) h += 2.5 * Math.exp(-Math.pow((len - at) / 4.6, 2));
   return h;
 };
@@ -222,7 +222,7 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
   for (let i = lip + 1; i < n; i++) c.tau[i] = (c.tau[i - 1] as number) + Math.hypot(SPACING, (c.y[i] as number) - (c.y[i - 1] as number)) / (0.5 * ((c.speed[i] as number) + (c.speed[i - 1] as number)));
   for (let i = lip - 1; i >= 0; i--) c.tau[i] = (c.tau[i + 1] as number) - SPACING / (0.5 * ((c.speed[i] as number) + (c.speed[i + 1] as number)));
   // A cascade is narrower than the pool above it.
-  for (let i = 0; i < n; i++) c.half[i] = (c.half[i] as number) * (1.2 - 0.42 * smooth(2.4, 5.5, c.speed[i] as number));
+  for (let i = 0; i < n; i++) c.half[i] = (c.half[i] as number) * (1.12 - 0.2 * smooth(2.4, 5.5, c.speed[i] as number));
   return c;
 }
 

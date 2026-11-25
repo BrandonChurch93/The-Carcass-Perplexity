@@ -8,13 +8,23 @@ const BUTTRESS_LINE = `vec4(${BUTTRESS.root[0].toFixed(1)}, ${BUTTRESS.root[1].t
 
 export const GROUND_VERTEX = /* glsl */ `
 attribute vec3 aSlope;
+attribute float aClosed;
 varying vec3 vWorld;
 varying vec3 vNormal;
+varying float vClosed;
 void main() {
   vWorld = position;
   vNormal = aSlope;
+  vClosed = aClosed;
   gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
 }`;
+
+// The tones of the rock, set by measuring the frames against the pictures under the frozen light (version 2):
+// charcoal basalt at dusk. Albedo of the wall near 0.1, of the ropy bench 0.05 to 0.09, ash in hollows 0.2 at most.
+const WALL_TONE = 0.8;
+const BENCH_TONE = 0.62;
+const BENCH_FACE_TONE = 1.0;
+const ROCK_TONE = 0.95;
 
 const COMMON = /* glsl */ `
 precision highp float;
@@ -45,7 +55,8 @@ vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4
   else lake = mix(lakeIrradiance(p, n), lakeIrradianceFar(p, n), (p.y - 5.0) / 3.0);
   #endif
   vec3 sky = skyIrradiance(n);
-  vec3 e = sky * open + (lake + emitterIrradiance(p, n)) * occ;
+  // A gap closed to the sky is half open to the fire, which comes from the side and from below.
+  vec3 e = sky * open + (lake + emitterIrradiance(p, n)) * sqrt(occ);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Clinker and ash are matte: a rough face keeps no sheen even seen along itself.
@@ -78,6 +89,7 @@ export const GROUND_FRAGMENT = /* glsl */ `
 ${COMMON}
 varying vec3 vWorld;
 varying vec3 vNormal;
+varying float vClosed;
 uniform sampler2D tCliff;
 uniform sampler2D tCliffNh;
 uniform sampler2D tLava;
@@ -236,10 +248,10 @@ void main() {
       vec2 fall = n0.xz / max(length(n0.xz), 1e-3);
       float fan = vnoise(vec2(dot(vWorld.xz, vec2(-fall.y, fall.x)) / 9.0, vWorld.y / 55.0 + big));
       #ifdef BENCH
-      plain = mix(plain, vec3(0.2, 0.195, 0.185) * (0.5 + plainNh.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope));
+      plain = mix(plain, vec3(0.15, 0.14, 0.13) * (0.5 + plainNh.b), 0.55 * smoothstep(0.5, 0.8, fan) * smoothstep(0.08, 0.3, slope));
       #else
       // Under a cliff the apron is scree before it is anything else: pale against the faces above it.
-      plain = mix(plain, vec3(0.22, 0.212, 0.2) * (0.5 + plainNh.b), (0.3 + 0.5 * smoothstep(0.35, 0.75, fan)) * smoothstep(0.08, 0.3, slope));
+      plain = mix(plain, vec3(0.17, 0.158, 0.146) * (0.5 + plainNh.b), (0.15 + 0.5 * smoothstep(0.35, 0.75, fan)) * smoothstep(0.08, 0.3, slope));
       #endif
       tip = (plainNh.rg - 0.5) * vec2(1.0, -1.0);
     }
@@ -258,14 +270,20 @@ void main() {
       tip = mix(tip, lavaTip * 2.0, ropy);
       fold = lavaNhA.b;
       // The skin of a rope is glass: a tight dull sheen along the crests of the folds and nowhere else.
-      rough = mix(0.92, 0.42, ropy * smoothstep(0.5, 0.8, lavaNhA.b) * smoothstep(0.35, 0.7, lavaNhB.b));
+      rough = mix(0.92, 0.62, ropy * smoothstep(0.5, 0.8, lavaNhA.b) * smoothstep(0.35, 0.7, lavaNhB.b));
     }
     #endif
   }
 
   vec3 albedo = mix(plain, cliff, steep);
-  // Old lava under a dusk sky is a cool grey, not the brown of the pictures' daylight.
-  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.98, 1.0, 1.03), 0.88);
+  // The pictures' rock leans warm (red over blue near 1.2): charcoal with a little brown, never blue.
+  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(1.07, 0.99, 0.92), 0.8);
+  #ifdef BENCH
+  // The faces of the bench's crags are broken rock with ash on every ledge, paler than the glassy flats.
+  albedo *= mix(${BENCH_TONE.toFixed(2)}, ${BENCH_FACE_TONE.toFixed(2)}, steep);
+  #else
+  albedo *= ${WALL_TONE.toFixed(2)};
+  #endif
   float height = mix(plainNh.b, cliffNh.b, steep);
   #ifndef BENCH
   // The buttress stands in the lake: the flank that looks at the fountains is baked by them, its lower faces rusted and paler than the rest.
@@ -279,12 +297,12 @@ void main() {
   }
   #endif
   #ifdef BENCH
-  albedo *= mix(1.0, 1.3, steep);
   // The folds of a ropy sheet: black in the creases, the skin grey on the crests.
   albedo *= mix(1.0, 0.4 + 1.25 * smoothstep(0.25, 0.75, fold), sheet);
   // Ash settles on everything that faces up, thickest in the hollows, thin on the glass of the ropy sheets; faces and undersides keep their black.
   float ash = smoothstep(0.38, 0.05, slope) * (1.0 - steep) * mix(0.1, 1.0, smoothstep(0.66, 0.34, height)) * mix(0.6, 1.0, smoothstep(0.3, 0.6, mid)) * mix(0.92, 0.38 + 0.24 * smoothstep(14.0, 30.0, distance(vWorld.xz, vec2(-573.0, 298.0))), sheet);
-  albedo = mix(albedo, vec3(0.335, 0.338, 0.338) * (0.72 + 0.56 * mid), ash);
+  ash *= 0.55 * smoothstep(0.62, 0.3, height);
+  albedo = mix(albedo, vec3(0.168, 0.158, 0.148) * (0.72 + 0.56 * mid), ash);
   #else
   // Ash lies in the hollows of what faces up.
   const float ash = 0.0;
@@ -296,7 +314,10 @@ void main() {
   const float TIP = 0.55;
   #endif
   vec3 n = normalize(n0 + (vec3(tip.x, 0.0, tip.y) * (1.0 - steep) * TIP + bump * steep * 1.1 * sign(vec3(n0.x, 1.0, n0.z))) * mix(0.3, 1.0, sharp) + lean * steep);
-  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.2, 0.6, height), mix(0.5, 1.0, sharp) * (1.0 - 0.25 * ash)) * mix(1.0, ledge, steep);
+  float occ = mix(1.0, 0.3 + 0.7 * smoothstep(0.15, 0.6, height), mix(0.5, 1.0, sharp) * (1.0 - 0.25 * ash)) * mix(1.0, ledge, steep);
+  // The sky lights only what it can see: joints, gaps between slabs and the foot of every face are closed in by the ground round them.
+  float closedIn = clamp(vClosed * 1.7 - 0.25 * (height - 0.5), 0.0, 0.93);
+  occ *= (1.0 - closedIn) * (1.0 - closedIn);
 
   #ifdef NEAR
   // The camera's bench: the same rock read again at the scale of a hand.
@@ -352,7 +373,7 @@ void main() {
   }
   // By the line the rock is glazed black with spatter, and nothing pale survives.
   float rind = smoothstep(2.2, 0.2, land.b + 1.2 * (mid - 0.5));
-  albedo *= mix(1.0, 0.55, rind);
+  albedo *= mix(1.0, 0.8, rind);
   rough = mix(rough, 0.74, rind * smoothstep(0.35, 0.7, height));
   // The crag of the line view carries the vent's stain high on its face.
   vec3 toStain = vWorld - uStain.xyz;
@@ -475,19 +496,19 @@ void main() {
   }
   vec3 n0 = normalize(normalize(vNormal) + 1.3 * facet * smoothstep(0.004, 0.02, size / far));
   vec3 n = normalize(n0 + (vAxisX * bump.x + vAxisY * bump.y + vAxisZ * bump.z) * 1.3 * smoothstep(400.0, 60.0, far));
-  albedo *= vSeed.w * 1.35;
-  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(0.98, 1.0, 1.03), 0.88);
+  albedo *= vSeed.w * ${ROCK_TONE.toFixed(2)};
+  albedo = mix(albedo, dot(albedo, vec3(0.3333)) * vec3(1.07, 0.99, 0.92), 0.8);
   vec4 land = landAt(vWorld.xz);
   // The rock sits in the ground: its foot is in its own shade, and dust lies on what faces up.
   float lift = (vWorld.y - vSeed.z) / max(size, 0.05);
   float foot = smoothstep(-0.08, 0.3, lift);
-  float occ = (0.35 + 0.65 * foot) * (0.6 + 0.4 * smoothstep(0.15, 0.6, height));
+  float occ = (0.1 + 0.9 * foot) * (0.35 + 0.65 * smoothstep(0.15, 0.6, height));
   float rind = smoothstep(2.2, 0.3, land.b);
   // Ash on every face that looks up, none on the sides and undersides, none on a rock just out of the lake.
   float dust = smoothstep(0.3, 0.72, n0.y + 0.25 * (height - 0.5)) * (0.85 + 0.15 * fract(vSeed.x * 7.3)) * (1.0 - 0.75 * rind) * smoothstep(0.4, 0.6, vSeed.w);
-  albedo *= mix(0.72, 1.0, smoothstep(-0.5, 0.15, n0.y));
-  occ = mix(occ, 0.35 + 0.65 * foot, 0.7 * dust);
-  albedo = mix(albedo, vec3(0.375, 0.378, 0.378) * (0.75 + 0.5 * height), 0.95 * dust * mix(0.3, 1.0, smoothstep(0.72, 0.38, height)));
+  // Undersides and the faces that lean over see the ground, not the sky.
+  occ *= mix(0.12, 1.0, smoothstep(-0.55, 0.25, n0.y));
+  albedo = mix(albedo, vec3(0.165, 0.155, 0.145) * (0.75 + 0.5 * height), 0.5 * dust * smoothstep(0.66, 0.3, height));
   albedo *= mix(1.0, 0.8, rind);
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 2.6);
   // By the vents: an olive stain on every face, lemon and cream crystals on the tops.
