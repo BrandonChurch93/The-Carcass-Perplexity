@@ -1,0 +1,147 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-25 14:57 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the far right, behind and right of the mesa",
+        "what": "the broad warm orange glow of lava lighting the fume is replaced by a flat pink-red block with hard edges, and the mesa's right flank gets no warm rim light from it",
+        "fix": "build a soft orange glow that rises into the haze from the lava field and wraps the mesa's right edge, with no hard boundary"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the far right glow behind the animals",
+        "what": "the same hard-edged pink-red rectangle stands in for the soft orange fume glow",
+        "fix": "replace it with a graded orange glow lit from the lava below, fading up into the smoke"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the lava surface across the middle and right foreground",
+        "what": "the ropy, swirled pahoehoe crust has become regular parallel ridges that read as wind-rippled sand or a procedural stripe texture",
+        "fix": "use folded, coiled ropy pahoehoe with irregular lobes and cracks, as in -a"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the molten channel running from left-centre to lower right",
+        "what": "the lava is thinner and dimmer, with no bright yellow core and no swirling skin, and it lights very little of the crust beside it",
+        "fix": "widen and brighten the channel to a yellow-orange core with swirled cooling skin, and let it throw warm light on the crust edges and the air above"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the lava plain, especially lower right",
+        "what": "the plain shows a fine repeating ripple pattern like sand instead of cooled pahoehoe slabs and plates",
+        "fix": "give the plain irregular ropy lava plates and cracks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the lava fissures across the plain",
+        "what": "the glow is broken into many short, evenly bright dashes and spot fires with hard edges that light nothing around them; -a has fewer, connected crack lines that warm the crust nearby",
+        "fix": "join the cracks into longer, branching lines, and add falloff glow on the nearby rock and a faint warm haze above"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the mid-ground animal at left of centre",
+        "what": "a straight horizontal rod sticks out sideways from its body, which no animal in -a has",
+        "fix": "remove the rod"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the overall grade and the cliffs",
+        "what": "the frame is cooler and more neutral grey; the cliffs read as sharp, stacked, uniform grey layers with little warm bounce from the lava and less atmospheric depth",
+        "fix": "warm the grade toward dusky orange-brown, soften the far cliffs with haze, and add warm bounce light low on the cliffs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the sky and smoke on the upper right",
+        "what": "the dense dark plume rising from the right has become a pale, even veil",
+        "fix": "bring back a darker, defined smoke column rising from the right and drifting left"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the left foreground slope, fumarole and sulfur",
+        "what": "the steam is a small wisp rather than a strong plume, the sulfur is pale cream slabs that are too large and smooth, and the slope lacks the warm lava traces of -a",
+        "fix": "strengthen the steam plume, make the sulfur crust smaller, more ochre-yellow and crusted, and add the glowing trickle down the slope"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the left foreground rock and sulfur",
+        "what": "the rock is lit pale grey-green and the sulfur forms big pale lumps; in -a the rock is dark with a thin yellow sulfur crust",
+        "fix": "darken the rock, shrink the sulfur to a thin, brighter yellow crust, and keep the steam rising from it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the overall grade and the sky",
+        "what": "cooler and greyer, with less warm smoke-lit sky and no orange haze in the far field over the lava plain",
+        "fix": "warm the haze and sky toward orange-grey, and add glowing lava lines that recede into the haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the creature in the foreground",
+        "what": "the body reads as smooth folded cloth or brain-like coils, and the arched limbs have a black-and-white camouflage pattern instead of brown, dry bark with peeling flakes",
+        "fix": "retexture it as weathered brown bark with lifting flakes and fibrous detail, and use warm-grey tones"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the ground surface",
+        "what": "the ground is smooth grey with combed stripes and lacks the ropy, cracked pahoehoe detail of -a",
+        "fix": "use irregular ropy lava with cracks and plates"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the bottom-left foreground",
+        "what": "the dark, out-of-focus foreground rock that frames -a is missing, which flattens the depth",
+        "fix": "add a dark, defocused rock mass along the lower left"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the left animal and the left edge",
+        "what": "the animal's trailing appendage is a bright orange, glowing tangle that looks lit from inside, and a stray red rock shape sits on the left edge",
+        "fix": "make the appendage pale and fibrous, lit only by lava below, and remove the red fragment"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the right mesa, the sky and the haze",
+        "what": "the mesa has no warm orange rim and glow beside it, the dark smoke plume is gone, and the lava lines in the back form one even, saturated band",
+        "fix": "bring back the orange glow behind the mesa's right side and the dark rising smoke, and break the far lava into scattered, hazy glints"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "the ember vent at the creature's base",
+        "what": "there is little steam over the embers; -a has thin vapour rising",
+        "fix": "add faint vapour over the vent"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the cave arch top left",
+        "what": "the glowing rim of the arch is a crisp, even orange outline rather than light falling off into the rock",
+        "fix": "soften the rim and let the glow spread into the cliff face above"
+      }
+    ]
+  }
+}

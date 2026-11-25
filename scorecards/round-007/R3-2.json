@@ -1,0 +1,77 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-25 14:59 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), the lava stream descending the dark slope (also visible mid-frame in set-B-04.png)",
+        "what": "the lava reads as a procedural emissive shader with uniform orange-red contour outlines painted over a smooth, clay-like dark grey chute; the rock directly touching the molten stream receives almost no bounce light or specular reflection and shows no physical depth or broken crust",
+        "fix": "give the lava stream recessed channel geometry, rough fractured basalt crust with fine micro-detail, and strong local orange illumination and specular sheen on the immediately adjacent rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the lower rim and left edge of the cave mouth (also visible in set-B-05.png, top-left crop x 0 to 17%, y 25 to 42%)",
+        "what": "a hard horizontal seam and flat grey shelf lip mark where the cave mesh meets the cliff wall, and the left cave rim has jagged low-poly faceted rock spikes",
+        "fix": "blend the cave opening seamlessly into the cliff geometry with continuous strata and higher-resolution sculpted rock edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), the foreground creature's lower front legs",
+        "what": "the leg joints show blocky polygonal faceting, a small detached floating shard sits to the right of the lower joint, and the skin reads as stretched clay with no dust or ash from the ground on it",
+        "fix": "subdivide and smooth the leg joint geometry, remove the floating polygon artifact, add fine organic skin detail, and dust the lower legs and feet with ash"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%), the glowing lava cracks across the ground (also visible lower right of set-B-01.png)",
+        "what": "the lava fissures look like flat glowing orange patches with dark-red rims sitting on top of the terrain, with no recessed depth or crust and almost no light cast onto the surrounding soil and pebbles",
+        "fix": "recess the fissures into the ground with jagged crusted edges and have each glowing crack cast warm light onto nearby stones and dirt"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the three small steam puffs rising from the ground lava cracks (left-center, near the tendrils, and beneath the right creature)",
+        "what": "the isolated puffs read as cool grey-white wisps that pick up almost no orange light from the bright lava directly beneath them",
+        "fix": "light the base and core of each vapour plume with warm orange scatter from the lava underneath and break up their similar isolated shapes"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "cliff rock crops (x 0 to 17%, y 25 to 42% and x 0 to 17%, y 58 to 75%) and cave interior crop (x 42 to 58%, y 25 to 42%)",
+        "what": "at native resolution the cliff rock textures are soft, muddy, and stretched over flat planes, while the cave interior is a flat featureless dark void with a smooth low-detail ceiling",
+        "fix": "increase cliff texture and displacement detail for 4K delivery and add layered rock structure and subtle bounced lava light inside the cave"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "right crop (x 83 to 100%, y 58 to 75%), the orange haze over the lower-right basin (also visible lower right of set-B-04.png)",
+        "what": "the fog reads as a flat uniform orange tint wash with no volumetric structure or depth variation",
+        "fix": "replace the flat orange gradient with layered, wispy volumetric fume that catches light unevenly from the lava below"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the hooves of the foreground and right-side creatures where they meet the ground",
+        "what": "contact shadows under the feet are weak and there is no ground indentation or dust disturbance, making the feet look lightly perched on the terrain",
+        "fix": "tighten ambient occlusion and contact shadows directly under each foot and add slight dust displacement around the hooves"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "top-right crop (x 42 to 58%, y 25 to 42%), the upper shoulder and ridge of the foreground creature",
+        "what": "subtle polygonal faceting is visible along the dark silhouette edge and the hide has a slightly clay-like surface finish",
+        "fix": "increase silhouette mesh resolution and add finer surface roughness variation and micro-creasing"
+      }
+    ]
+  }
+}

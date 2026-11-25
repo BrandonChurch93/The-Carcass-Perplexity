@@ -1,0 +1,98 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-25 14:58 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lava river behind the left animal, upper left",
+        "what": "-a has a large bright lava stream pouring down the far slope and spreading into a wide glowing pool across the midground; -b has only a few small disconnected orange patches high on the left and no lava river or pool, so the scene's main light source is gone",
+        "fix": "restore the flowing lava stream from the upper left down into a broad glowing pool across the mid-ground behind the animals"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the ground across the whole foreground and midground",
+        "what": "-a ground is dark wet basalt crust split by bright, connected molten cracks that run in lines across the plain; -b is pale, dusty, sandy-brown ground with sparse isolated short orange slivers and scattered pebbles, reading as desert rather than a live lava field",
+        "fix": "darken the ground to black-brown crusted basalt and replace the floating slivers with continuous, bright molten cracks and seams that light the crust around them"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the overall light and air",
+        "what": "-a is filled with warm orange glow and smoky haze lit from the lava; -b is greyer and cooler with a flat lilac-grey sky and pink low fog, and the animals are lit by little warm bounce from below except at the central mouth",
+        "fix": "warm the grade toward orange-amber, add lava-lit smoke over the midground and let the lava light the animals' undersides and legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the far cliff, right",
+        "what": "in -a the mesa is softened by heavy smoke and lit warm at its base; in -b it is sharper, greyer and clearer, so the distance reads closer and the air thinner",
+        "fix": "push more warm haze over the cliff and lower its contrast"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the ground under the drinking animal's mouth",
+        "what": "-a has the mouth tendrils sitting in a bright lava pool with a glowing rim and smoke rising; -b has a small soft orange glow on dusty ground with only a few thin steam wisps",
+        "fix": "set the tendrils into a bright molten pool with a hard glowing rim and smoke rising from it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the animals' bodies",
+        "what": "-a bodies are wet-looking, leathery, with skeletal ribs; -b bodies are lumpier and drier with less rib structure",
+        "fix": "tighten the skin over a visible rib cage and add a sheen picked up from the lava"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the lava falls down the slope below the cave",
+        "what": "in -a a broad, branching bright cascade pours from the cave lip over several steps and fans into a wide glowing delta; in -b there is a single thin channel down a dark ridge and a smaller delta at the lower right, so much less lava and glow",
+        "fix": "widen the flow into several braided bright channels down the steps and fan it into a wider delta at the base"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cliff wall and slope around the cave",
+        "what": "-a shows a rough volcanic crater wall with a scree slope, warm-lit by the lava; -b is a stack of horizontal sedimentary layers like a canyon wall, and the slope is lumpy with visibly faceted, low-detail geometry",
+        "fix": "replace the layered strata with broken, irregular basalt and scree and add fine rock detail on the slope"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the cave arch",
+        "what": "-a's arch is lit orange from within by the lava, glowing evenly around the rim; -b's arch is a flat orange-pink band, pasted-looking, with a dark lip and no light spill onto the wall beside it",
+        "fix": "light the arch from the lava below so the glow falls off into the surrounding rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the air on the right and the overall view",
+        "what": "-a has smoke rising from the lava across the middle and the far wall softened by haze; -b keeps haze mainly at the right edge and the wall is sharp and clear",
+        "fix": "add warm smoke rising off the lava across the centre and soften the rear wall"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the foreground floor",
+        "what": "-a has a dark lava-crust foreground crossed by a bright molten crack; -b has a smooth, featureless dark band with only a faint reflection",
+        "fix": "add a textured crust and a glowing crack across the foreground"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the two animals at the lava's edge",
+        "what": "-b animals sit lower and are slightly darker than in -a",
+        "fix": "let the lava light their legs as in -a"
+      }
+    ]
+  }
+}

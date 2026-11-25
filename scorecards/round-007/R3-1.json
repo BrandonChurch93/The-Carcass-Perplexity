@@ -1,0 +1,84 @@
+{
+  "round": 7,
+  "unit": "heart",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-25 15:00 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the pahoehoe lava crust across the lower right and center foreground (also visible in set-A-06.png)",
+        "what": "the ropy crust reads as smooth, clay-like procedural zebra stripes with uniform parallel ridges and no crisp basalt fractures, grit, or glassy surface variation",
+        "fix": "replace the smooth sinusoidal wave pattern with multi-scale fractured basalt displacement, sharp glassy cooling cracks, and varied roughness so it reads as solid volcanic rock rather than sculpted clay"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the molten lava channel running through the foreground (also visible in set-A-06.png left crop)",
+        "what": "the lava fluid is a flat, smooth orange-to-yellow gradient with razor-sharp edges, no cooling crust plates or surface viscosity, and hard-clipped highlights with no bloom",
+        "fix": "add floating dark crust slabs, viscous flow streaks, temperature-driven surface roughness, softer incandescent edges where lava chills against rock, and optical bloom on the hottest cores"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the rock walls bordering the foreground lava channel in both left and right crops",
+        "what": "angular low-poly mesh facets and vertically stretched rock textures are clearly visible along the channel banks at native size",
+        "fix": "increase geometry subdivision and use triplanar or high-resolution rock displacement along steep channel walls to eliminate faceting and UV stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the glowing lava crack at the bottom-left and the foreground lava mound in the left crop",
+        "what": "the glowing fissure forms an unnatural geometric 90-degree hook artifact, and the surrounding rock mound has a soft, smeared, low-resolution fibrous texture",
+        "fix": "fix the shader mask or UV seam causing the right-angle emissive line and increase displacement and texture resolution on the close foreground mound"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the ground beside the creature's foot and the foreground crust in the right crop",
+        "what": "a flat, smooth grey polygonal patch with stair-stepped edges sits immediately next to the foot, while the foreground crust is heavily stretched horizontally into blurry streaks",
+        "fix": "blend the foot contact terrain with higher-resolution displaced basalt geometry to remove the flat polygonal patch and eliminate horizontal texture stretching"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the close-up basalt ridge and sulfur patches in the bottom-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "the rock texture is heavily stretched and soft where the camera is close, and the yellow sulfur deposits look painted onto smooth clay-like lumps",
+        "fix": "use higher-resolution micro-displacement and triplanar texturing on the foreground ridge, and model sulfur as crusty crystalline deposits sitting in rock crevices"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the lava plain, active vents on the right, and the thin foreground fissure (also visible in set-A-03.png right crop)",
+        "what": "the plain reads as a smooth grey plane with repeated ripple stamps, the foreground fissure lights almost none of the adjacent rock, and the right-side vents have soft airbrushed halos with sharp streak-like spatter",
+        "fix": "break up the plain with varied basalt rubble and non-repeating relief, add realistic local bounce light from every glowing crack onto nearby rock edges, and give molten spatter proper incandescent trails and motion blur"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the red vapour and mesa silhouette on the far right (also visible in set-A-02.png bottom-left crop)",
+        "what": "the glowing haze reads as a flat uniform orange-pink tint with no volumetric structure, and the mesa edge cuts across it as a smooth, hard-edged flat-grey silhouette",
+        "fix": "replace the flat colour wash with lit volumetric smoke that scatters light unevenly and softens the mesa silhouette with realistic depth haze and ridge detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the stilt creatures standing across the lava plain",
+        "what": "their feet meet the flat crust with almost no grounded contact shadows or surface interaction, making them look pasted onto the ground",
+        "fix": "add grounded ambient occlusion and directional contact shadows under each foot along with subtle crust disturbance, dust, or heat-lit rim reflections from the lava"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the lava plain crust in the bottom-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "at native size the ground reads as a smooth displaced mesh with soft, stretched procedural noise and no sharp rocky micro-detail",
+        "fix": "add higher-frequency basalt normal and roughness detail so the mid-foreground crust holds up cleanly at native 4K resolution"
+      }
+    ]
+  }
+}
