@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
 import { CRACK_FOOT, CRACK_TOP } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { FLOWS, buttressHeight, crackDip, flowDip, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
+import { FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -100,7 +100,10 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wall = mesh(ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip), wallMaterial);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip);
+  // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
+  open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
+  const wall = mesh(wallAll, wallMaterial);
 
   // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
   const [rx, rz] = BUTTRESS.root;
@@ -195,6 +198,21 @@ export function create(ctx: HeartContext): HeartPiece {
 }
 
 // Drops the triangles of a surface that lie wholly below a height: what is under the lake is never seen and still costs.
+// Drops every triangle with a corner where `hole` says yes.
+function open(g: THREE.BufferGeometry, hole: (x: number, y: number, z: number) => boolean): void {
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const index = g.getIndex() as THREE.BufferAttribute;
+  const kept: number[] = [];
+  for (let i = 0; i < index.count; i += 3) {
+    const a = index.getX(i);
+    const b = index.getX(i + 1);
+    const c = index.getX(i + 2);
+    if (hole(p.getX(a), p.getY(a), p.getZ(a)) || hole(p.getX(b), p.getY(b), p.getZ(b)) || hole(p.getX(c), p.getY(c), p.getZ(c))) continue;
+    kept.push(a, b, c);
+  }
+  g.setIndex(kept);
+}
+
 function trim(g: THREE.BufferGeometry, below: number): void {
   const p = g.getAttribute('position') as THREE.BufferAttribute;
   const index = g.getIndex() as THREE.BufferAttribute;

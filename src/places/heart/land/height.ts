@@ -390,7 +390,7 @@ export const SKERRY: [number, number] = [-518, 282.5];
 /** The true height of the land, metres. Zero or less is lake. */
 // The land with or without the buttress. The wall's ring is drawn without it and the buttress by its own mesh:
 // two meshes of one surface show each other through their joins as dotted lines.
-function compose(x: number, z: number, spur: boolean): number {
+function compose(x: number, z: number, spur: boolean, alcove = true): number {
   const d = calderaDistance(x, z);
   let g = wallAt(x, z, d);
   const bd = benchDistance(x, z);
@@ -413,7 +413,7 @@ function compose(x: number, z: number, spur: boolean): number {
   // The alcove the mouth opens into: the wall is cut back to the floor of the mouth, and the fall folder roofs it.
   const ax = Math.abs(x - MOUTH.x);
   const half = MOUTH.width / 2;
-  if (ax < half + 11 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
+  if (alcove && ax < half + 11 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
     const k = smooth(half + 3, half - 9, ax) * smooth(MOUTH.z - 56, MOUTH.z - 44, z) * smooth(MOUTH.z + 14, MOUTH.z + 4, z);
     return g + (MOUTH.floor - g) * k;
   }
@@ -424,9 +424,21 @@ export function landHeight(x: number, z: number): number {
   return compose(x, z, true);
 }
 
-/** The land as the wall's ring draws it: everything but the buttress. */
+/** The land as the wall's ring draws it: everything but the buttress, and the wall standing whole over the mouth.
+ *  The alcove is a slot open to the sky in `landHeight` (a height field has no roof); the drawn wall keeps its face there
+ *  and the mesh is opened only inside the arch, where the fall's tube shows. */
 export function wallHeight(x: number, z: number): number {
-  return compose(x, z, false);
+  return compose(x, z, false, false);
+}
+
+/** Whether a point of the wall's face lies inside the arch of the mouth, scaled by k: the hole the wall's mesh leaves for the fall's tube.
+ *  The arch is the fall's: a superellipse of power 2.5, MOUTH.width / 2 wide at the sill and MOUTH.height - 10 tall, standing on the floor. */
+export function inArch(x: number, y: number, z: number, k: number): boolean {
+  if (z > MOUTH.z + 40 || z < MOUTH.z - 110) return false;
+  const qx = Math.abs(x - MOUTH.x) / (MOUTH.width / 2);
+  const qy = (y - MOUTH.floor - 0.7) / (MOUTH.height - 10);
+  if (qy < -0.03) return false;
+  return Math.pow(Math.pow(qx, 2.5) + Math.pow(Math.max(qy, 0), 2.5), 0.4) < k;
 }
 
 /** The buttress as its own mesh draws it: the land where the buttress is the top of it, sunk out of sight below the rest. */
