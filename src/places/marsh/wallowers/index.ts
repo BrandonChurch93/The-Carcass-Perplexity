@@ -5,6 +5,7 @@ import type { Context, Piece } from '../shared/context';
 import { Animal, newDrive, walk, type Build, type Plan } from './animal';
 import { hideMaterial } from './material';
 import { Skin } from './skin';
+import { Wet } from './wet';
 
 export const PARTS: readonly string[] = ['wallowers'];
 
@@ -21,11 +22,18 @@ export function create(ctx: Context): Piece {
     const animal = new Animal(skin, b);
     // The slower it goes the longer its cycle: a walk of about one length of the trunk in three cycles, and never two alike.
     const cycle = rng.range(3.4, 4.6) * (0.75 + 0.25 * size);
-    const ground = Math.min(ctx.rig.land.height(x, z), 0) - sink * 1.0 * b.k;
+    // One that wades stands on the bed it has trodden down; one on a bank stands on the bank.
+    const land = ctx.rig.land.height(x, z);
+    const ground = sink > 0.15 ? Math.min(land, 0) - sink * b.k : Math.min(Math.max(land, -0.25), ctx.rig.land.shore(x, z) < 0.3 ? -0.14 : 1) - 0.02;
+    // A young one keeps to the shallows: its legs are too short for the bed.
+    const stand = size < 0.5 ? Math.max(ground, -0.07) : ground;
+    // The head hangs to the mud that is under it, or to the top of the brine.
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.26 * b.k;
+    const hang = Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446;
     herd.push({
       animal,
-      plan: { at: [x, z], when, dir, speed, ground, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang: Math.asin(Math.max(-0.9, Math.min(0.9, (1.1 - Math.max(0.62, sink + 0.3)) / 1.503))) - 0.44 },
-      wet: Math.max(0.5 * b.k, ground + 1.25 * b.k) * rng.range(0.85, 1.1),
+      plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang },
+      wet: Math.max(0.5 * b.k, stand + 1.04 * b.k) * rng.range(0.85, 1.1),
     });
   };
   for (const b of BEASTS) {
@@ -48,7 +56,8 @@ export function create(ctx: Context): Piece {
   const material = hideMaterial(ctx);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  ctx.scene.add(ctx.parts.built('wallowers', mesh));
+  const wet = new Wet(ctx, herd.length);
+  ctx.scene.add(ctx.parts.built('wallowers', mesh, wet.mesh), wet.mesh);
 
   const discs = ctx.rig.contactDiscs(herd.length * DISCS);
   const drive = newDrive();
@@ -62,15 +71,20 @@ export function create(ctx: Context): Piece {
         for (let j = 0; j < 4; j++) {
           const foot = stood.feet[j] as (typeof stood.feet)[number];
           const off = Math.min(1, foot.lift / (0.2 * k));
-          ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), 0.85 * (1 - 0.7 * off));
+          // A foot that stands in the brine throws no shade on it: the ring it makes is its contact.
+          const dry = ctx.rig.land.shore(foot.x, foot.z) > 0.05 ? 1 : 0;
+          ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), 0.85 * (1 - 0.7 * off) * dry);
         }
-        ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, 0.6, 1.9, stood.yaw);
+        ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3, 1.9, stood.yaw);
+        wet.set(i, stood, k, seconds);
       });
       skin.touch();
+      wet.touch();
     },
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      wet.dispose();
     },
   };
 }
