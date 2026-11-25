@@ -227,7 +227,7 @@ const lipAt = (x: number): number => {
 /** Rock that stands in the stream and parts it: 0 none, 1 an island. Long with the flow, on the benches and in the fan. */
 const island = (len: number, across: number, half: number, speed: number): number => {
   if (len < 3) return 0;
-  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.3 * smooth(FAN_FROM, FAN_FROM + 16, len) - 0.1 * smooth(6, 10, speed);
+  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.06 * smooth(FAN_FROM, FAN_FROM + 16, len) - 0.1 * smooth(6, 10, speed);
   return smooth(0.55, 0.67, field) * smooth(0.95, 0.6, Math.abs(across) / half);
 };
 
@@ -264,12 +264,14 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const drop = 1.25 * flank + 0.6 * Math.min(flank, 3);
     const beat = drop * 0.19 + 1.6 * noise2(x / 15, z / 15) + 0.5 * noise2(x / 4.1 + 8, z / 4.1);
     const tread = beat - Math.floor(beat);
-    const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9));
+    // Beside the first cascade the bench leans on the cliff, and is left plain.
+    const calm = smooth(8, 18, n.len);
+    const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9)) * calm;
     const crag = 1.6 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + 1.4 * blocks(x, z, 5.2, 1) + 0.9 * blocks(x + 40, z, 1.9, 2);
     // In the fan the stream no longer stands on a bench: it lies on the slope as a sheet.
     const sheet = smooth(FAN_FROM, FAN_FROM + 16, n.len);
     const top = lerp(n.y, Math.max(ground, 0) + 0.45, sheet);
-    const bench = top + levee * (1 - 0.6 * sheet) * (1 - 0.8 * lakeward) + Math.min(crag * (0.25 + 0.75 * gentle) * smooth(0.3, 3.5, side), (0.5 + 0.12 * side) * (1 - lakeward)) - fall;
+    const bench = top + levee * (1 - 0.6 * sheet) * (1 - 0.8 * lakeward) + Math.min(crag * (0.25 + 0.75 * gentle) * calm * smooth(0.3, 3.5, side), (0.5 + 0.12 * side) * (1 - lakeward)) - fall;
     const cover = 0.9 + 0.5 * smooth(16, 4, side) + ((fbm2(x / 5.5, z / 5.5) - 0.5) * 1.2 + (0.9 * blocks(x, z, 3.4, 3) + 0.45 * blocks(x + 20, z, 1.3, 4)) * smooth(26, 10, side)) * (0.15 + 0.85 * gentle);
     const skirt = ground + lerp(-2.4, cover, smooth(30, 15, side) * smooth(-0.6, 0.6, ground + 0.8 * smooth(6, 0, side)));
     const rock = Math.max(bench, skirt);

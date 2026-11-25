@@ -202,7 +202,7 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   float swell = uSurge.z * smoothstep(34.0, 4.0, len);
   front = max(front, swell);
   float ragged = 0.7 + 0.55 * vnoise(vec2(len * 0.21, s > 0.0 ? 3.0 : 11.0));
-  float half_ = flow.z * ragged * (1.0 + 0.75 * behind * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, len)) + 0.3 * front);
+  float half_ = flow.z * ragged * (1.0 + (0.75 * behind * (1.0 - 0.8 * smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, len)) + 0.3 * front) * (0.3 + 0.7 * smoothstep(8.0, 20.0, len)));
   float cover = (1.0 - smoothstep(0.9, 1.0, away.x / max(half_, 0.1))) * (1.0 - smoothstep(0.3, 0.5, away.y));
   if (cover <= 0.0) return vec2(0.0, 600.0);
   float u = abs(s) / max(half_, 0.1);
@@ -231,7 +231,7 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   float open = max(smoothstep(0.13, 0.06, lane), max(smoothstep(0.1, 0.05, rill) * (0.55 + 0.45 * vnoise(vec2(s * 0.1 + 8.0, len * 0.06))), smoothstep(0.07, 0.03, rill2) * 0.8));
   // Most of what crosses the fan does so in broad lanes drawn out down the slope, with plates of skin between them.
   float broad = vnoise(vec2(s * 0.2 + 1.3 * vnoise(vec2(len * 0.06, 5.0)), len * 0.028 + 1.0)) + 0.25 * (vnoise(vec2(s * 0.9, len * 0.12 + 4.0)) - 0.5);
-  open = max(open, smoothstep(0.5, 0.57, broad));
+  open = max(open, smoothstep(0.45, 0.52, broad));
   // Where the fan meets the lake its skin is broken by the lake's own heave and the lava shows along the shore.
   open = max(open, smoothstep(uSurge.w - 24.0, uSurge.w - 9.0, len) * smoothstep(0.35, 0.6, vnoise(vec2(s * 0.21 + 3.0, age * 0.08))));
   float crack = smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 0.55 + 1.0 + 1.5 * vnoise(vec2(len * 0.13, 1.0)), len * 0.14 + age * 0.03)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(s * 0.2, len * 0.2 + 5.0)));
@@ -242,7 +242,7 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.7 * behind));
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1400.0, 0.5 * behind * (1.0 - 0.5 * raft));
-  kelvin = mix(kelvin, 1500.0, front * (0.45 + 0.55 * streak) * (1.0 - 0.55 * raft));
+  kelvin = mix(kelvin, 1500.0, front * (0.2 + 0.8 * smoothstep(0.25, 0.7, streak)) * (1.0 - 0.55 * raft));
   return vec2(cover, kelvin);
 }`;
 
