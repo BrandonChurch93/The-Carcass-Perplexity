@@ -5,7 +5,8 @@
   "places": {
     "marsh": "The origin is the centre of the seep pool. North is -z and east is +x. The world is a salt flat 18 km square inside a ring of escarpment that starts about 5 km out, and fog hides the far edge. The establishing eye stands 8.5 m above the flats on a rock rise about 7 m high and looks 52 degrees east of north, with the pool 35 m ahead and 15 m to its left.",
     "heart": "The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.",
-    "breath": "The origin is the centre of the main shaft at the level of the shelf. North is -z and east is +x. The world is 16 km square. The shaft is 60 m across and 70 m deep, with its collapse on the east and south east side. The cliff with the cave is about 3 km away to the north east and the sun is low in the north. Every key looks north to north north east, so the cliff is upper right and the sun upper left. The waders are about 3.4 m tall."
+    "breath": "The origin is the centre of the main shaft at the level of the shelf. North is -z and east is +x. The world is 16 km square. The shaft is 60 m across and 70 m deep, with its collapse on the east and south east side. The cliff with the cave is about 3 km away to the north east and the sun is low in the north. Every key looks north to north north east, so the cliff is upper right and the sun upper left. The waders are about 3.4 m tall.",
+    "eye": "The origin is the centre of the lake, on the water. North is -z and east is +x. The low sun is in the west. The world is a disc 3.4 km in radius. The shore is 1 km from the centre, so the lake is 2 km across, and the deep is a disc 480 m in radius. The cliffs stand about 200 m, lower in the west and the south, with the brow overhanging on the east. A gravel fan brings the south shore in by 180 m, and the herd stands on it. The drinkers are about 3.3 m to the head."
   },
   "shots": {
     "reveal-01": {
@@ -88,6 +89,32 @@
       "start": "On the shelf south west of the rim: the dead wader in the foreground, the wader at the rim feeding behind it, the weed, the shaft and its slabs on the right, the cliff upper right.",
       "end": "11.5 m closer, low over the dead wader.",
       "focus": "On the dead wader."
+    },
+    "eye-01": {
+      "start": "From 90 m behind the key position and 34 m above it, over the knoll on the south west rim: the whole lake looking north north east, with the brow on the right and the herd on the gravel below.",
+      "end": "120 m further on and 30 m lower, toward the shore, with the near rocks of the knoll passing below.",
+      "focus": "On the far edge of the deep."
+    },
+    "eye-02": {
+      "start": "1.1 m above the shallows: the amber mats combed toward the centre of the lake, one drinker on the left, the far cliffs behind.",
+      "end": "10 m to the right and 11 m forward, 2.3 m up, turned left to keep the drinker in the frame.",
+      "focus": "On the mats a few metres ahead of the lens."
+    },
+    "eye-03": {
+      "start": "1.7 m up at the lip where the floor of the shallows stops: the lip runs away to the left with the deep beyond it and the skeleton lies on it.",
+      "end": "6.6 m to the left and 6 m forward, turned right to keep the skeleton in the frame.",
+      "focus": "On the skeleton."
+    },
+    "eye-04": {
+      "start": "1.9 m up on the south shore, on a long lens: three drinkers and a calf on the left, one near on the right, rings on the water at their mouths.",
+      "end": "5 m forward and 2.5 m to the right. The shot is a hold with a slow drift.",
+      "focus": "On the nearest of the three on the left."
+    },
+    "eye-05": {
+      "start": "On a bluff on the south shore, 25.75 m up and 900 m from the centre, on a very long lens: over the necks of two drinkers, the dome of water that rises at the centre of the lake.",
+      "end": "250 m straight above the centre of the lake, looking straight down, with north at the top of the frame. The frame holds only the dark water of the deep for about the last 1.7 s, so the cut to the rise cannot be seen.",
+      "move": "It creeps forward to the key, then glides north over the water while it rises, tilts down and the lens opens from 8 to 40 degrees. The dome rises at the key and has sunk 2.5 s later.",
+      "focus": "On the dome at the centre, then on the water straight below."
     }
   }
 }

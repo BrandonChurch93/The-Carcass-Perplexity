@@ -68,111 +68,111 @@ Frames 0 to 2506, 41.78 s, 6 shots.
 
 ## The Heart
 
-Frames 2507 to 4220, 28.57 s, 5 shots.
+Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera floor on the surface of the lake. North is -z, toward the far wall and the vessel mouth, and east is +x, toward the buttress and the second chamber. The world is 12 km square. The floor is about 2.4 km by 0.85 km, the main chamber is about 1 km from the bench to the far wall, and the walls stand 300 m. The tall ones are 9 to 15 m high. The establishing eye is 25 m above the lake on the bench ledge and looks 49 degrees east of north.
 
 ### `heart-01` · The Heart · the lava lake at nightfall
 
 - Frames: 2507 to 2936, 7.17 s.
 - Key: `heart-0` at frame 2722.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: in. The camera travels 110 m, from 21 m above the ground to 11 m.
+- Start framing: From 58 m behind the key position and 13 m above it, over the bench: the whole lake, with the vessel mouth and the lava fall upper left, the buttress and its plume on the right, the bench lower left and the tall ones on the crust.
+- End framing: 50 m ahead of the key position and 12 m above the lake, with the nearest of the tall ones large on the left of the frame and the one that sank beyond it.
+- Focus: On the nearest of the tall ones. The aim is 400 m away at the start and 400 m at the end. Depth of field is off in the blockout.
 
 ### `heart-02` · The Heart · the tall ones walk the skin
 
 - Frames: 2937 to 3374, 7.30 s.
 - Key: `heart-3` at frame 3156.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the left. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 80 mm for the whole shot (a vertical field of view of 17 degrees).
+- Move: to the left. The camera travels 37 m, from 2.9 m above the ground to 3.4 m.
+- Start framing: 3 m over the crust, on the group of five tall ones, with the fall and the mouth at the left edge and the buttress on the right.
+- End framing: 36 m further along, turned against the move to keep the group in the frame. The fall and the mouth have slid out on the left.
+- Focus: On the group of five. The aim is 83 m away at the start and 83 m at the end. Depth of field is off in the blockout.
 
 ### `heart-03` · The Heart · the fire under the skin
 
 - Frames: 3375 to 3578, 3.40 s.
 - Key: `heart-1` at frame 3477.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 61 m above the ground to 29 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 29 mm for the whole shot (a vertical field of view of 45 degrees).
+- Move: in. The camera travels 21 m, from 4.6 m above the ground to 1.7 m.
+- Start framing: 4.6 m up on the bench side of the shore, looking along the glowing seam where the crust meets the rock, with the sulphur crack and its steam on the left.
+- End framing: 1.7 m over the shore and 5 m past the key position, still on the bench side of the seam, which runs away across the frame toward the nearest of the tall ones and the mouth.
+- Focus: On the seam, a few metres ahead of the lens. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-04` · The Heart · the one that sank
 
 - Frames: 3579 to 3790, 3.53 s.
 - Key: `heart-2` at frame 3685.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: a hold that drifts. The camera travels 40 m, from 72 m above the ground to 68 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 43 mm for the whole shot (a vertical field of view of 31 degrees).
+- Move: a hold that drifts. The camera travels 8.5 m, from 3.0 m above the ground to 2.4 m.
+- Start framing: 2.4 m over the crust: the one that sank right of centre, the nearest of the tall ones on the left, the mouth and the fall behind.
+- End framing: About 8 m to the side, the same framing. The shot is a hold with a slow drift.
+- Focus: On the one that sank. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-05` · The Heart · the vessel mouth and the lava fall, no voice
 
 - Frames: 3791 to 4220, 7.17 s.
 - Key: `heart-4` at frame 4006.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: out. The camera travels 280 m, from 30 m above the ground to 59 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 91 mm for the whole shot (a vertical field of view of 15 degrees).
+- Move: out. The camera travels 220 m, from 9.0 m above the ground to 24 m.
+- Start framing: 655 m from the vessel mouth and 9 m over the crust, on a long lens: the mouth and the top of the fall fill the frame.
+- End framing: 850 m from the mouth and 24 m over the bench ledge: the mouth, the whole fall and the foot of the fall, with the surge running down it.
+- Focus: On the mouth and the fall, through the whole retreat. The aim is 670 m away at the start and 870 m at the end. Depth of field is off in the blockout.
 
 ## The Breath
 
-Frames 4221 to 5617, 23.28 s, 5 shots.
+Frames 4221 to 5617, 23.28 s, 5 shots. The origin is the centre of the main shaft at the level of the shelf. North is -z and east is +x. The world is 16 km square. The shaft is 60 m across and 70 m deep, with its collapse on the east and south east side. The cliff with the cave is about 3 km away to the north east and the sun is low in the north. Every key looks north to north north east, so the cliff is upper right and the sun upper left. The waders are about 3.4 m tall.
 
 ### `breath-01` · The Breath · the shelf at dawn
 
 - Frames: 4221 to 4596, 6.27 s.
 - Key: `breath-0` at frame 4409.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: in. The camera travels 50 m, from 17 m above the ground to 7.1 m.
+- Start framing: From about 34 m behind the key position and 2 m above it, over the channel: the tide channel from lower left to centre, the shaft right of centre with its fallen slabs, the wader at the rim, the cliff and its cave upper right, the sun upper left and the far herd on the flats.
+- End framing: 49 m further on, just past the key position, 9 m above the shelf, with the shaft and its rim larger on the right.
+- Focus: On the rim of the shaft. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
 
 ### `breath-02` · The Breath · down the shaft, it breathes out
 
 - Frames: 4597 to 4865, 4.48 s.
 - Key: `breath-4` at frame 4731.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 100 m above the ground to 50 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
+- Move: in. The camera travels 17 m, from 6.2 m above the ground to 2.6 m.
+- Start framing: On the south rim of the shaft, 9 m behind the key position: the hoops down the north wall, the fallen slabs and the weed on the left.
+- End framing: 17 m ahead and 1.9 m higher, tilted 6 degrees down into the shaft. The breath has risen above the rim: it begins at frame 4652 and stands about 20 m high near the end of the shot.
+- Focus: On the north wall and its hoops, then on the rising column. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
 
 ### `breath-03` · The Breath · the red weed at the rim
 
 - Frames: 4866 to 5080, 3.58 s.
 - Key: `breath-3` at frame 4973.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: out. The camera travels 280 m, from 29 m above the ground to 61 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 42 mm for the whole shot (a vertical field of view of 32 degrees).
+- Move: out. The camera travels 11 m, from 5.0 m above the ground to 6.6 m.
+- Start framing: Close on the largest weed on the west lip, 3.5 m in front of the key position.
+- End framing: 10.5 m back: the weed, the breath pouring west over the lip, and the channel and the waders behind.
+- Focus: On the weed. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
 
 ### `breath-04` · The Breath · the pale herds
 
 - Frames: 5081 to 5402, 5.37 s.
 - Key: `breath-1` at frame 5242.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the right. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 35 mm for the whole shot (a vertical field of view of 38 degrees).
+- Move: to the right. The camera travels 14 m, from 2.8 m above the ground to 1.8 m.
+- Start framing: 1.9 m above the bed of the channel, on three waders with the cliff behind them: the near one with its neck down on the left.
+- End framing: 13 m to the right and 5 m forward, past the three.
+- Focus: On the middle wader. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
 
 ### `breath-05` · The Breath · the one at the rim
 
 - Frames: 5403 to 5617, 3.58 s.
 - Key: `breath-2` at frame 5510.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 59 m above the ground to 30 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: in. The camera travels 12 m, from 4.9 m above the ground to 2.8 m.
+- Start framing: On the shelf south west of the rim: the dead wader in the foreground, the wader at the rim feeding behind it, the weed, the shaft and its slabs on the right, the cliff upper right.
+- End framing: 11.5 m closer, low over the dead wader.
+- Focus: On the dead wader. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
 
 ## The Blood Marsh
 
@@ -284,57 +284,57 @@ Frames 7015 to 8304, 21.50 s, 5 shots.
 
 ## The Eye
 
-Frames 8305 to 9540, 20.60 s, 5 shots.
+Frames 8305 to 9540, 20.60 s, 5 shots. The origin is the centre of the lake, on the water. North is -z and east is +x. The low sun is in the west. The world is a disc 3.4 km in radius. The shore is 1 km from the centre, so the lake is 2 km across, and the deep is a disc 480 m in radius. The cliffs stand about 200 m, lower in the west and the south, with the brow overhanging on the east. A gravel fan brings the south shore in by 180 m, and the herd stands on it. The drinkers are about 3.3 m to the head.
 
 ### `eye-01` · The Eye · the still lake
 
 - Frames: 8305 to 8519, 3.58 s.
 - Key: `eye-0` at frame 8412.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: in. The camera travels 230 m, from 31 m above the ground to 40 m.
+- Start framing: From 90 m behind the key position and 34 m above it, over the knoll on the south west rim: the whole lake looking north north east, with the brow on the right and the herd on the gravel below.
+- End framing: 120 m further on and 30 m lower, toward the shore, with the near rocks of the knoll passing below.
+- Focus: On the far edge of the deep. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-02` · The Eye · the amber mats
 
 - Frames: 8520 to 8680, 2.68 s.
 - Key: `eye-2` at frame 8600.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the right. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 29 mm for the whole shot (a vertical field of view of 45 degrees).
+- Move: to the right. The camera travels 15 m, from 2.4 m above the ground to 1.6 m.
+- Start framing: 1.1 m above the shallows: the amber mats combed toward the centre of the lake, one drinker on the left, the far cliffs behind.
+- End framing: 10 m to the right and 11 m forward, 2.3 m up, turned left to keep the drinker in the frame.
+- Focus: On the mats a few metres ahead of the lens. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-03` · The Eye · the edge
 
 - Frames: 8681 to 8841, 2.68 s.
 - Key: `eye-3` at frame 8761.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the left. The camera travels 140 m, at 40 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: to the left. The camera travels 9.4 m, from 3.6 m above the ground to 1.9 m.
+- Start framing: 1.7 m up at the lip where the floor of the shallows stops: the lip runs away to the left with the deep beyond it and the skeleton lies on it.
+- End framing: 6.6 m to the left and 6 m forward, turned right to keep the skeleton in the frame.
+- Focus: On the skeleton. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-04` · The Eye · the drinkers
 
 - Frames: 8842 to 9164, 5.38 s.
 - Key: `eye-1` at frame 9003.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: a hold that drifts. The camera travels 40 m, from 72 m above the ground to 68 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 54 mm for the whole shot (a vertical field of view of 25 degrees).
+- Move: a hold that drifts. The camera travels 5.7 m, from 1.8 m above the ground to 1.9 m.
+- Start framing: 1.9 m up on the south shore, on a long lens: three drinkers and a calf on the left, one near on the right, rings on the water at their mouths.
+- End framing: 5 m forward and 2.5 m to the right. The shot is a hold with a slow drift.
+- Focus: On the nearest of the three on the left. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ### `eye-05` · The Eye · the centre, in the quiet
 
 - Frames: 9165 to 9540, 6.27 s.
 - Key: `eye-4` at frame 9221.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 450 m, from 59 m above the ground to 30 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: from 172 mm to 33 mm (a vertical field of view from 8 to 40 degrees).
+- Move: in. The camera travels 940 m, from 3.2 m above the ground to 250 m. It creeps forward to the key, then glides north over the water while it rises, tilts down and the lens opens from 8 to 40 degrees. The dome rises at the key and has sunk 2.5 s later.
+- Start framing: On a bluff on the south shore, 25.75 m up and 900 m from the centre, on a very long lens: over the necks of two drinkers, the dome of water that rises at the centre of the lake.
+- End framing: 250 m straight above the centre of the lake, looking straight down, with north at the top of the frame. The frame holds only the dark water of the deep for about the last 1.7 s, so the cut to the rise cannot be seen.
+- Focus: On the dome at the centre, then on the water straight below. The aim is 100 m away at the start and 100 m at the end. Depth of field is off in the blockout.
 
 ## The Reveal, the pull-back from the lake to orbit
 
