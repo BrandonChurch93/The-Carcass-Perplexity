@@ -45,9 +45,9 @@ export const WIND: [number, number] = [-0.94, 0.34];
 
 /** The smaller shafts: x, z, radius, how tall their vapour stands against that radius. */
 export const SMALLER: [number, number, number, number][] = [
-  [15, -354, 10, 0.5],
+  [15, -354, 10, 0.2],
   [-107, -545, 15, 1.5],
-  [52, -46, 6, 0.3],
+  [52, -46, 6, 0.12],
   [-250, -900, 12, 1],
 ];
 

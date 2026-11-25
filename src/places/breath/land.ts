@@ -118,15 +118,15 @@ export function surface(columns: number, rows: number, point: (u: number, v: num
   return g;
 }
 
-export const CAVE: [number, number] = [1720, -2457];
-const ALONG: [number, number] = [-0.354, -0.935];
-const BEHIND: [number, number] = [0.935, -0.354];
+export const CAVE: [number, number] = [2125, -2093];
+const ALONG: [number, number] = [-0.177, -0.984];
+const BEHIND: [number, number] = [0.984, -0.177];
 
 export const cliffPoint = (s: number, p: number): [number, number] => [CAVE[0] + s * ALONG[0] + p * BEHIND[0], CAVE[1] + s * ALONG[1] + p * BEHIND[1]];
 
 export function cliffTop(s: number): number {
   const fall = 1 - 0.5 * smooth((s - 2600) / 3200) - 0.35 * smooth((-s - 1800) / 2500);
-  return (470 + 36 * Math.sin(s * 0.0031 + 0.6) + 22 * Math.sin(s * 0.0083 + 2)) * fall;
+  return (520 + 36 * Math.sin(s * 0.0031 + 0.6) + 22 * Math.sin(s * 0.0083 + 2)) * fall;
 }
 
 export function cliffHeight(s: number, p: number): number {

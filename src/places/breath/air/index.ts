@@ -55,13 +55,13 @@ export function create(ctx: Context): Piece {
   const bodies: Body[] = [];
   // The vapour that stands over the smaller shafts: a column that leans with the wind and widens.
   for (const [x, z, r, tall] of SMALLER) {
-    const rise = r * (5 + 9 * tall);
+    const rise = r * (2 + 2.2 * tall);
     bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.5 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
-  const turn = Math.atan2(-0.935, -0.354);
+  const turn = Math.atan2(-0.984, -0.177);
   for (const [s, p, lift, long, tall, deep, dense] of [
-    [60, -170, 150, 420, 60, 150, 0.006],
+    [60, -190, 70, 520, 45, 150, 0.006],
     [240, -420, 60, 520, 55, 210, 0.005],
     [520, -700, 18, 700, 45, 300, 0.004],
     [-900, -620, 30, 900, 60, 260, 0.0024],
