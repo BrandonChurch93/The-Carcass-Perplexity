@@ -15,7 +15,7 @@ const smooth = (lo: number, hi: number, v: number): number => {
 };
 
 export const FAN = 180;
-export const BLUFF = 13;
+export const BLUFF = 20;
 
 export function shoreAt(bearing: number): number {
   const b = ((bearing % 360) + 360) % 360;

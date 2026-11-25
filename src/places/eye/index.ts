@@ -85,8 +85,8 @@ function drinkers(): Drinker[] {
     near(18.6, -5.4, 78, 0.5, steady(0.92, 1.1)),
     near(20.6, -5.05, 76, 1, steady(0.96, 2.2)),
     near(25.75, -1, 283, 1, steady(0.96, 4)),
-    { x: -1.86, z: front + 50, facing: 356, size: 1, down: (t) => 0.9 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0 },
-    { x: 1.03, z: front + 52, facing: 3, size: 0.85, down: (t) => 0.9 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0 },
+    { x: -1.5, z: front + 56, facing: 356, size: 1, down: (t) => 0.9 * (1 - smooth(riseAt, riseAt + 0.9, t)), walk: 0 },
+    { x: 0.84, z: front + 56.2, facing: 3, size: 0.85, down: (t) => 0.9 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), walk: 0 },
     { x: -153.5, z: 746.1, facing: 80, size: 1, down: steady(0.96, 0.7), walk: 0 },
     { x: -181, z: 707, facing: 250, size: 1, down: steady(0.95, 3.1), walk: 0 },
     { x: -175, z: 698, facing: 110, size: 0.9, down: steady(0.95, 5.2), walk: 0 },
@@ -124,7 +124,7 @@ const place: PlaceModule = {
     const scene = new THREE.Scene();
     const two = THREE.DoubleSide;
 
-    scene.add(parts.standIn('sky', kit.sky('#2f62c4', '#f1cba6', '#b8a690')));
+    scene.add(parts.standIn('sky', kit.sky('#4a8cff', '#ecc39c', '#b8a690')));
     kit.air(AIR, HAZE);
 
     scene.add(parts.standIn('land', new THREE.Mesh(landGeometry(), kit.flat('#d8b68c', { band: '#b39069', step: 34, side: two }))));
@@ -248,6 +248,11 @@ const place: PlaceModule = {
     const v = new THREE.Vector3();
     const s = new THREE.Vector3();
 
+    const NEAR_ROCKS: [number, number, number][] = [
+      [-460.3, 1144.1, 5.5],
+      [-466.5, 1132.9, 7],
+      [-469.2, 1144.8, 6],
+    ];
     const ROCKS = 230;
     const rocks = herd(new THREE.DodecahedronGeometry(1, 0), kit.flat('#857f79', { band: '#6f6a65', step: 2.6 }), ROCKS);
     for (let i = 0; i < ROCKS; i++) {
@@ -268,6 +273,8 @@ const place: PlaceModule = {
         [x, z] = at(rng.range(120, 300), SHORE + rng.range(8, 330));
         size = rng.range(1, 6);
       }
+      const fixed = NEAR_ROCKS[i];
+      if (fixed) [x, z, size] = fixed;
       e.set(rng.range(0, 3), rng.range(0, 3), rng.range(0, 3));
       m.compose(v.set(x, landHeight(x, z) + size * 0.25, z), q.setFromEuler(e), s.set(size * rng.range(0.9, 1.5), size * rng.range(0.6, 0.9), size));
       rocks.setMatrixAt(i, m);

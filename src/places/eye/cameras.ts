@@ -22,7 +22,7 @@ export const END_HEIGHT = 250;
 export const END_FOV = 40;
 
 export const SHORE_TURN = -5;
-const CENTRE_PITCH = -1.8;
+const CENTRE_PITCH = -1.94;
 
 export function onShore(x: number, out: number, y: number): Vec3 {
   const r = SHORE - FAN + out;
@@ -35,7 +35,7 @@ export const KEYS = {
   mats: look([-150, 1.1, 760], 8, -11.2, 45),
   edge: look([-372.3, 1.7, 312.4], 12, -13.6, 40),
   shore: look(onShore(25, 4.5, 1.9), 338 + SHORE_TURN, -5.5, 25),
-  centre: look([0, 18.9, SHORE - FAN + 80], 0, CENTRE_PITCH, 8),
+  centre: look([0, 25.75, SHORE - FAN + 80], 0, CENTRE_PITCH, 8),
 };
 
 const last = shotById('eye-05');
@@ -76,8 +76,8 @@ const key = (id: string): number => keyPart(shotById(id));
 
 export const shots: Record<string, CameraPath> = {
   'eye-01': through(KEYS.wide, key('eye-01'), { forward: -80, up: 30, right: -10 }, { forward: 110, up: -22, right: 8 }),
-  'eye-02': through(KEYS.mats, key('eye-02'), { right: -9, forward: -6, up: -0.4 }, { right: 9, forward: 7, up: 1.7 }),
-  'eye-03': through(KEYS.edge, key('eye-03'), { right: 3.6, forward: -6, up: 0.9, turn: 5 }, { right: -3, forward: 2.4, up: 0.5, turn: -4 }),
+  'eye-02': through(KEYS.mats, key('eye-02'), { right: -7, forward: -8, up: -0.3, turn: 3 }, { right: 7, forward: 8, up: 1.2, turn: -5 }),
+  'eye-03': through(KEYS.edge, key('eye-03'), { right: 4, forward: -5, up: 0.7, turn: -6 }, { right: -2.6, forward: 1, up: 0.4, turn: 7 }),
   'eye-04': through(KEYS.shore, key('eye-04'), { forward: -3, right: -1.4, up: -0.2 }, { forward: 2.2, right: 1.1, up: 0.3 }),
   'eye-05': (part) => leave(part),
 };
