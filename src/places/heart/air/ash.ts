@@ -39,9 +39,10 @@ void main() {
   vec2 corner = position.xy * vec2(1.0, tilt);
   corner = vec2(corner.x * cos(turn) - corner.y * sin(turn), corner.x * sin(turn) + corner.y * cos(turn));
   vec4 view = viewMatrix * vec4(centre, 1.0);
-  // Never thinner than a pixel and a half: a flake smaller than that is drawn that wide and fainter in proportion.
+  // Never thinner than three pixels of a frame 1080 high, whatever the format: a flake smaller than that is drawn that wide, soft, and fainter in proportion.
+  // The lens leaves a mark round any single bright pixel far from focus, so nothing here is a pin-point.
   float size = aStart.w;
-  float pixel = 1.5 * (-view.z) * 2.0 / (projectionMatrix[1][1] * uAshView.y);
+  float pixel = 3.0 * (-view.z) * 2.0 / (projectionMatrix[1][1] * 1080.0);
   float drawn = max(size, pixel);
   view.xy += corner * drawn;
   gl_Position = projectionMatrix * view;
@@ -62,12 +63,17 @@ varying float vWarm;
 
 void main() {
   float r = dot(vDisc, vDisc);
-  float alpha = (1.0 - smoothstep(0.55, 1.0, r)) * vFade;
+  float alpha = (1.0 - smoothstep(0.15, 1.0, r)) * vFade;
   if (alpha < 0.004) discard;
   float y = max(vWorld.y, 0.0);
   // Pale grey ash, lit by the sky from above and by the lake from below; close over open lava it is hot enough to glow with it.
   vec3 light = uAshSky * uFill + 0.3 * lakeGlow(vWorld.xz, max(2.0 * y, 12.0)) * exp(-y / 60.0);
-  vec3 colour = vec3(0.6, 0.58, 0.56) * light + 0.35 * lakeGlow(vWorld.xz, 5.0) * exp(-y / 3.5);
+  vec3 grey = vec3(0.6, 0.58, 0.56) * light;
+  vec3 glow = 0.3 * lakeGlow(vWorld.xz, 5.0) * exp(-y / 3.5);
+  // A glowing flake is never more than a few times brighter than a grey one.
+  const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
+  glow *= min(1.0, 3.0 * dot(grey, LUMA) / max(dot(glow, LUMA), 1.0e-5));
+  vec3 colour = grey + glow;
   gl_FragColor = vec4(colour, alpha);
 }`;
 
