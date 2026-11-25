@@ -1,0 +1,104 @@
+{
+  "round": "1",
+  "unit": "film",
+  "critics": [
+    {
+      "critic": "R4b",
+      "family": null,
+      "rendered": [
+        "final tier in uhd",
+        "review tier in preview"
+      ],
+      "key": "out/work/packs-keys/round-1/film/R4b.json",
+      "packs": [
+        {
+          "id": "R4b-1",
+          "folder": "out/work/packs/round-1/film/R4b-1",
+          "pairs": 1,
+          "files": [
+            "set-A-01.png",
+            "set-A-02.png",
+            "set-A-03.png",
+            "set-A-04.png",
+            "set-A-05.png",
+            "set-A-06.png",
+            "set-A-07-a.png",
+            "set-A-07-b.png",
+            "settled.txt"
+          ],
+          "attach": [
+            "out/work/packs/round-1/film/R4b-1/set-A-01.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-02.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-03.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-04.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-05.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-06.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-07-a.png",
+            "out/work/packs/round-1/film/R4b-1/set-A-07-b.png",
+            "out/work/packs/round-1/film/R4b-1/settled.txt"
+          ]
+        },
+        {
+          "id": "R4b-2",
+          "folder": "out/work/packs/round-1/film/R4b-2",
+          "pairs": 3,
+          "files": [
+            "set-B-01.png",
+            "set-B-02-a.png",
+            "set-B-02-b.png",
+            "set-B-03.png",
+            "set-B-04-a.png",
+            "set-B-04-b.png",
+            "set-B-05.png",
+            "set-B-06-a.png",
+            "set-B-06-b.png",
+            "settled.txt"
+          ],
+          "attach": [
+            "out/work/packs/round-1/film/R4b-2/set-B-01.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-02-a.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-02-b.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-03.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-04-a.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-04-b.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-05.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-06-a.png",
+            "out/work/packs/round-1/film/R4b-2/set-B-06-b.png",
+            "out/work/packs/round-1/film/R4b-2/settled.txt"
+          ]
+        },
+        {
+          "id": "R4b-3",
+          "folder": "out/work/packs/round-1/film/R4b-3",
+          "pairs": 3,
+          "files": [
+            "set-C-01.png",
+            "set-C-02-a.png",
+            "set-C-02-b.png",
+            "set-C-03.png",
+            "set-C-04-a.png",
+            "set-C-04-b.png",
+            "set-C-05.png",
+            "set-C-06-a.png",
+            "set-C-06-b.png",
+            "settled.txt"
+          ],
+          "attach": [
+            "out/work/packs/round-1/film/R4b-3/set-C-01.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-02-a.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-02-b.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-03.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-04-a.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-04-b.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-05.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-06-a.png",
+            "out/work/packs/round-1/film/R4b-3/set-C-06-b.png",
+            "out/work/packs/round-1/film/R4b-3/settled.txt"
+          ]
+        }
+      ],
+      "notes": [],
+      "leftOut": []
+    }
+  ]
+}
