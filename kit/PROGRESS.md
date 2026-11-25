@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 27, 2026-11-25 05:17 UTC:
+Status 28, 2026-11-25 05:33 UTC:
 
-- `01-heart-1.jpg`: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right. Approved on the left of each pair, the build on the right. The channel is a flat floor with paper-red banks: the lake owner is rebuilding it as a trench with lips, islands and fingers
-- `02-heart-2.jpg`: The one that sank, second version: turned to the camera, hull with splits, the arched leg, folded skin as real geometry and no ring. Still wrong: the folds are velvet pillows where the picture has crisp cracked ropes, and the feeding walker is too near and cut by the edge
-- `03-heart-0.jpg`: The wide key with every second version merged. Tone now measures close to the approved picture region by region. Still wrong: the lake is nearly blank (about five live seams, the picture has ten), the fountain is a cloud of dark chips, the near walker is a third too small
-- `04-heart-4.jpg`: The mouth and the fall from the new long lens position. The worst of the five: a brown veil over everything, the cave lit inside, the fall thin. Owners have numbers for each of these
+- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
+- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
+- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
+- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
 
+Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
 Status 26, 2026-11-25 04:54 UTC, showed: The wide key against the approved picture, after the land's second version and the new curve for what glows (hd, draft tier); Top: the lava...
 Status 25, 2026-11-25 04:42 UTC, showed: Wide key after the light fix: approved picture left, joined frame right.
-Status 24, 2026-11-25 04:22 UTC, showed: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T05:17:31Z
-phase 3: 2.14 h used of 13.00 h
-build: 8.79 h used of 72.00 h
+2026-11-25T05:33:51Z
+phase 3: 2.41 h used of 13.00 h
+build: 9.06 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -756,3 +756,4 @@ none
 - 2026-11-25 04:55 UTC. Status 26 sent 04:56. G14 (the loop's seam) merged from agent/g13 with 19 tests; today 13 of 14 Heart parts do not come round in 8 s, which is Phase 5 work (kit/08 Phase 2 step 4: the loop's motion does not have to close yet); the fallback of kit/03 section 9 (cross-fade with itself one loop length earlier) is always available. The gate builder has handed back both jobs and is done.
 - 2026-11-25 05:17 UTC. Status 27 sent: four compares (line, sunk, wide key, mouth) with fall, air, lake and sunk v2 merged; cameras on one grammar; tone measured per key
 - 2026-11-25 05:30 UTC. Study written under Look lock: ten lines from nine sources (three photographs, six USGS records)
+- 2026-11-25 05:34 UTC. Status 28 posted: the feeding shot restaged, its motion sheet, notes to the owners, tests 818 of 818
