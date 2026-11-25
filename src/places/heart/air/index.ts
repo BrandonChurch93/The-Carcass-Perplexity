@@ -3,17 +3,28 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, SPATTER_LEFT, SPATTER_RIGHT, SUNK } from '../shared/anchors';
+import { CRACK_FOOT, CRACK_TOP, FALL_FOOT, GROUP, SPATTER_LEFT, SPATTER_RIGHT, SUNK } from '../shared/anchors';
 import type { HeartContext, HeartPiece, HeatSource, SteamSource } from '../shared/context';
 import { blackbody } from '../shared/rig';
 import { bakeNoise } from './noise';
+import { createAsh } from './ash';
 import { createSky } from './sky';
-import { MAX_HEAT, MAX_STEAM, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
+import { BANKS, MAX_HEAT, MAX_STEAM, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'fume'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
 const FUME_LIGHT = { at: [760, 25, -40] as const, radius: 150, open: 0.2 };
+
+/** The banks of smoke that rise off the lake behind and beside the feeding group: metres beyond the group along the view of the walkers' key, metres to its right, radius of the base, height, and how dense (per metre). */
+const SMOKE_BANKS: readonly (readonly [number, number, number, number, number])[] = [
+  [115, 6, 30, 40, 0.036],
+  [150, 52, 38, 26, 0.03],
+  [190, -8, 44, 66, 0.034],
+  [240, 6, 55, 44, 0.03],
+];
+/** They lean with the low wind: metres sideways for each metre of height. */
+const BANK_LEAN = [-0.35, 0.12] as const;
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */
 function standIns(ctx: HeartContext): { steam: SteamSource[]; heat: HeatSource[] } {
@@ -58,6 +69,8 @@ export function create(ctx: HeartContext): HeartPiece {
   const steamC = Array.from({ length: MAX_STEAM }, () => new THREE.Vector4());
   const heatA = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
   const heatB = Array.from({ length: MAX_HEAT }, () => new THREE.Vector4());
+  const bankA = SMOKE_BANKS.slice(0, BANKS).map(([along, right, radius, height]) => new THREE.Vector4(GROUP[0] + along * 0.7 + right * 0.71, GROUP[2] - along * 0.71 + right * 0.7, radius, height));
+  const bankB = SMOKE_BANKS.slice(0, BANKS).map(([, , , , dense], i) => new THREE.Vector4(BANK_LEAN[0], BANK_LEAN[1], 0.17 + 0.31 * i, dense));
   const show = { air: { value: 1 }, fume: { value: 1 } };
 
   const pass = (fragmentShader: string, uniforms: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
@@ -78,12 +91,17 @@ export function create(ctx: HeartContext): HeartPiece {
     uSteamA: { value: steamA },
     uSteamB: { value: steamB },
     uSteamC: { value: steamC },
+    uBankA: { value: bankA },
+    uBankB: { value: bankB },
   });
   const warp = pass(WARP_FRAGMENT, {
     uHeatCount: { value: 0 },
     uHeatA: { value: heatA },
     uHeatB: { value: heatB },
   });
+
+  const ash = createAsh(ctx.rng('air/ash'), ctx.rig.uniforms, skyMean);
+  ctx.scene.add(ctx.parts.built('ash', ash.mesh));
 
   const order: { source: SteamSource; index: number; far: number; small: number }[] = [];
 
@@ -115,7 +133,7 @@ export function create(ctx: HeartContext): HeartPiece {
         // Thickness for a metre of path: a source of strength 1 is all but opaque across its own foot.
         (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * (smoke ? 2.4 : 1.4)) / radius);
         // Steam is quick, smoke is slow; the grain of each is set by the size of its foot.
-        const speed = smoke ? Math.min(4, 1 + s.rise * 0.035) : Math.min(3.2, 1.2 + s.rise * 0.16);
+        const speed = s.kind === 'fume' ? 4.5 : smoke ? Math.min(4, 1 + s.rise * 0.035) : Math.min(3, 1.2 + s.rise * 0.16);
         (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, speed, s.kind === 'fume' ? radius * 2.5 : smoke ? Math.max(3.5, radius * 5) : Math.max(5, radius * 14), s.kind === 'fume' ? 2 : smoke ? 1 : 0);
       }
       (volume.uniforms.uSteamCount as THREE.IUniform<number>).value = count;
@@ -129,12 +147,14 @@ export function create(ctx: HeartContext): HeartPiece {
       }
       (warp.uniforms.uHeatCount as THREE.IUniform<number>).value = heats;
     },
+    resize: (width, height) => ash.resize(width, height),
     solo: (part) => {
       show.air.value = part === 'heart/fume' ? 0 : 1;
       show.fume.value = part === 'heart/air' ? 0 : 1;
     },
     dispose: () => {
       sky.dispose();
+      ash.dispose();
       volume.dispose();
       warp.dispose();
       noise.dispose();
