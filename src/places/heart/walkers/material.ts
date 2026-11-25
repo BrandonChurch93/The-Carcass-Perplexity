@@ -188,7 +188,9 @@ void main() {
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
   albedo = mix(albedo, vec3(0.33, 0.325, 0.32) * (0.7 + 0.5 * grit), 0.4 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.
-  albedo = mix(albedo, vec3(0.17, 0.16, 0.155) * (0.7 + 0.5 * grit), 0.5 * dust);
+  albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
+  // The foot itself is caked dark with what it treads in.
+  albedo = mix(albedo, vec3(0.04, 0.036, 0.034) * (0.6 + 0.6 * grit), 0.85 * smoothstep(0.7, 0.15, vWorld.y) * (1.0 - tendril));
 
   float own = (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (1.0 - 0.7 * gap);
   float occ = vInfo.y * own;
@@ -212,7 +214,7 @@ void main() {
   if (vHeat > 0.001) {
     float open = dot(lakeGlow(vWorld.xz, 0.6), vec3(0.3, 0.6, 0.1)) / (max(uCast, 0.05) * dot(blackbody(1150.0), vec3(0.3, 0.6, 0.1)));
     float hot = min(vHeat, 1.0) * max(smoothstep(0.004, 0.08, open), clamp(vHeat - 1.0, 0.0, 1.0));
-    c += blackbody(mix(1100.0, 1400.0, hot)) * hot * hot * (0.5 + 0.5 * crack);
+    c += blackbody(mix(1260.0, 1420.0, hot)) * hot * hot * (0.5 + 0.5 * crack);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

@@ -129,6 +129,8 @@ const LOOP = Math.PI / 4;
 const TOES = [1.34, 0.52, 1.18, 0.44, 0.38, 0.46, 0.88, 0.46, 0.38, 0.44, 1.18, 0.52];
 /** Seconds a pad is in the air when one that stands re-places it. */
 const STEP = 1.6;
+/** Crumbs a pad drops in one swing. */
+const GRIT = 12;
 const BODY_RINGS = 96;
 const BODY_SIDES = 32;
 const NECK_RINGS = 46;
@@ -174,6 +176,7 @@ export class Animal {
   private readonly legs: LegTable[] = [];
   private readonly tendrils: { tube: Tube; local: Float32Array; angle: number; out: number; length: number; phase: number; parent: number; at: number; turn: number }[] = [];
   private readonly rags: Rag[] = [];
+  private readonly grit: { tube: Tube; local: Float32Array; leg: number; when: number; ox: number; oz: number; size: number }[] = [];
   private readonly shreds: (Rag & { leg: number; node: number })[] = [];
   private readonly roots: Float32Array;
   private readonly ankle: number;
@@ -295,6 +298,27 @@ export class Animal {
     this.tibia = lower * b.hock;
     this.meta = lower * (1 - b.hock);
     for (let j = 0; j < 4; j++) this.legs.push(this.legTable(j));
+
+    // Grit: crumbs of crust that a pad takes up with it and drops as it swings.
+    for (let j = 0; j < 4; j++) {
+      for (let n = 0; n < GRIT; n++) {
+        const tube = skin.tube(3, 3);
+        const local = new Float32Array(3 * 3 * 2);
+        const size = (0.05 + 0.08 * hash(n, seed + j * 5 + 70)) * Math.sqrt(k);
+        for (let r = 0; r < 3; r++) {
+          for (let side = 0; side < 3; side++) {
+            const a = (side / 3) * Math.PI * 2 + n;
+            const w = r === 1 ? size * (0.7 + 0.6 * hash(n * 3 + side, seed + 71)) : 0.012;
+            local[(r * 3 + side) * 2] = Math.cos(a) * w;
+            local[(r * 3 + side) * 2 + 1] = Math.sin(a) * w;
+          }
+          for (let side = 0; side <= 3; side++) skin.describe(tube, r, side, r * size + n, side * size, 0.3, 0.55, size, seed, 4, 0);
+        }
+        const turn = hash(n, seed + j * 7 + 72) * 6.283;
+        const far = b.padR * Math.sqrt(hash(n, seed + j * 7 + 73));
+        this.grit.push({ tube, local, leg: j, when: 0.03 + 0.6 * hash(n, seed + j * 3 + 74), ox: Math.cos(turn) * far, oz: Math.sin(turn) * far, size });
+      }
+    }
 
     // The tendrils: pale roots that start round the crown, and some that fork from those.
     const mains = b.tendrils;
@@ -580,7 +604,7 @@ export class Animal {
     let z = at.z + fz * fore + fx * side;
     // No pad goes down in open lava: one that would is put down beside the seam.
     const near = this.env.seam(x, z);
-    const clear = b.padR + 0.9;
+    const clear = b.padR * 1.35 + 1.3;
     if (near.d < clear) {
       const l = near.d > 1e-3 ? near.d : 1;
       const ox = near.d > 1e-3 ? (x - near.x) / l : fx;
@@ -604,7 +628,8 @@ export class Animal {
     const aim = plan.neck(seconds);
 
     // The pads.
-    const feet: { x: number; z: number; lift: number; pitch: number; unload: number; land: number; fx: number; fz: number }[] = [];
+    const feet: { x: number; z: number; lift: number; pitch: number; unload: number; land: number; fx: number; fz: number; w: number; from: [number, number]; to: [number, number]; high: number; dur: number }[] = [];
+    const rate = (plan.sigma(seconds + 0.05) - plan.sigma(seconds - 0.05)) / 0.1;
     let shiftSide = 0;
     let shiftFore = 0;
     let dip = 0;
@@ -653,11 +678,13 @@ export class Animal {
       let pitch = 0;
       let fx = Math.sin(at.yaw);
       let fz = -Math.cos(at.yaw);
+      let goes = from;
       if (w >= 0) {
         const to = plan.fidget > 0 ? this.plant(j, 0, event + 102) : stepsOut ? this.plant(j, n, 0, 1) : this.plant(j, n + 1, 0);
         // The heel peels first, the pad swings low and is put down toe first.
         const e = smooth(0.05, 0.96, w);
         const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
+        goes = to;
         px = lerp(from[0], to[0], e2);
         pz = lerp(from[1], to[1], e2);
         lift = high * Math.pow(Math.sin(Math.PI * Math.pow(w, 0.85)), 1.3);
@@ -671,7 +698,7 @@ export class Animal {
         }
       }
       const world = env.drift(px, pz, seconds);
-      feet.push({ x: world[0], z: world[1], lift, pitch, unload, land, fx, fz });
+      feet.push({ x: world[0], z: world[1], lift, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02) });
       shiftSide -= leg.side * unload;
       shiftFore -= leg.fore * unload;
       dip += land;
@@ -774,7 +801,7 @@ export class Animal {
       const sq = Math.sin(foot.pitch);
       const axis: V3 = [foot.fx * sq, cq, foot.fz * sq];
       // A pad that carries weight is pressed into the crust; it comes up out of it as the weight goes off it.
-      const sole: V3 = [foot.x, 0.02 - 0.15 * k * (1 - foot.unload) * (1 - smooth(0, 0.1 * k, foot.lift)) + foot.lift + b.padR * sq * 0.95, foot.z];
+      const sole: V3 = [foot.x, 0.02 - 0.05 * k * (1 - foot.unload) * (1 - smooth(0, 0.1 * k, foot.lift)) + foot.lift + b.padR * sq * 0.95, foot.z];
       const ankle: V3 = [sole[0] + axis[0] * this.ankle, sole[1] + axis[1] * this.ankle, sole[2] + axis[2] * this.ankle];
       const knee = this.knee(hip, ankle, f, u, r, leg);
       if (this.dry) {
@@ -810,6 +837,29 @@ export class Animal {
       const end: V3 = [hock[0] + (hx / hl) * this.meta, hock[1] + (hy / hl) * this.meta, hock[2] + (hz / hl) * this.meta];
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
       this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift));
+      // Grit leaves the pad as it swings and falls to the crust.
+      for (const g of this.grit) {
+        if (g.leg !== j) continue;
+        let gx = foot.x;
+        let gy = 0;
+        let gz = foot.z;
+        let big = 0;
+        if (foot.w > g.when) {
+          const e = smooth(0.05, 0.96, g.when);
+          const e2 = e * e * (3 - 2 * e) * 0.25 + e * 0.75;
+          const fell = (foot.w - g.when) * foot.dur;
+          const y = foot.high * Math.pow(Math.sin(Math.PI * Math.pow(g.when, 0.85)), 1.3) + 0.1 * k - 4.9 * fell * fell;
+          if (y > 0) {
+            const left = env.drift(lerp(foot.from[0], foot.to[0], e2), lerp(foot.from[1], foot.to[1], e2), seconds);
+            gx = left[0] + g.ox;
+            gy = y;
+            gz = left[1] + g.oz;
+            big = 1;
+          }
+        }
+        for (let i = 0; i < 3; i++) skin.ring(g.tube, i, gx, gy + (i - 1) * g.size * 0.6, gz, 1, 0, 0, 0, 0, 1, g.local, i * 6, big);
+        skin.normals(g.tube);
+      }
       for (const shred of this.shreds) {
         if (shred.leg !== j) continue;
         const at = shred.node === 1 ? knee : hock;
