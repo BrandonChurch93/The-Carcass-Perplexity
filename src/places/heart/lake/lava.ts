@@ -208,14 +208,14 @@ vec2 meltAt(vec2 p, float ax, float push, float stir, float grain) {
     }
   }
   float between = d2 - d1;
-  float age = h + 0.55 * (id - 0.5);
+  float age = h + 0.7 * (id - 0.5);
   float crackHalf = (0.02 + 0.03 * (1.0 - smoothstep(0.45, 0.9, age))) + 3.0 * grain;
-  float plateOn = smoothstep(0.52 - soft, 0.52 + soft, age) * smoothstep(crackHalf, crackHalf * 1.8, between);
+  float plateOn = smoothstep(0.45 - soft, 0.45 + soft, age) * smoothstep(crackHalf, crackHalf * 1.8, between);
 
   float thin = smoothstep(0.3 - soft, 0.3 + soft, h + 0.12 * (fine - 0.5));
   float streak = vnoise(vec2(p.x * 0.4, p.y * 7.0) + 7.0);
   float core = 1508.0 + 50.0 * streak - 60.0 * smoothstep(0.05, 0.3, h);
-  float skin = mix(1385.0, 1215.0, smoothstep(0.3, 0.75, h));
+  float skin = mix(1345.0, 1150.0, smoothstep(0.3, 0.7, h));
   // The thin skin tears along fine curved lines, and the core shows in them.
   float half1 = 0.012 + 0.6 * grain;
   float seen = min(1.0, 0.03 / half1);
@@ -228,7 +228,7 @@ vec2 meltAt(vec2 p, float ax, float push, float stir, float grain) {
   skin += (fold - 0.5) * 60.0 * ropy;
   skin = mix(skin, 1490.0, crease);
   // A plate is darkest in its middle and where it is old, and glows toward the edge where it is thin.
-  float plate = mix(1170.0, 1000.0, smoothstep(0.52, 1.0, age)) + 150.0 * (1.0 - smoothstep(0.0, 0.14, between)) + (fold - 0.5) * 90.0 * ropy + 30.0 * (fine - 0.5);
+  float plate = mix(1150.0, 980.0, smoothstep(0.45, 0.95, age)) + 150.0 * (1.0 - smoothstep(0.0, 0.14, between)) + (fold - 0.5) * 90.0 * ropy + 30.0 * (fine - 0.5);
   float k = mix(mix(core, skin, thin), plate, plateOn);
   return vec2(k, max(plateOn, 0.3 * thin * (1.0 - crease)));
 }
@@ -275,7 +275,8 @@ void main() {
   // the middle of its run and at none when it starts again. The cycle is out of step from place to place, so the lake never pulses as one.
   float phase = uTime / CYCLE + 1.7 * vnoise(q * 0.21 + vSeam.y * 3.1);
   vec2 kelvin = vec2(0.0);
-  float total = 0.0;
+  vec2 first = vec2(0.0);
+  float lead = 0.0;
   for (int copy = 0; copy < 2; copy++) {
     float ph = phase + 0.5 * float(copy);
     float run = fract(ph) * CYCLE;
@@ -293,10 +294,17 @@ void main() {
     p = wind(p, poolAt, poolReach * 0.9, 0.42 * run * step(0.01, pool));
     p.x -= slowest * uTime + (fast - slowest) * run;
     p += vec2(turnOf * 17.31 + vSeam.y * 9.7, turnOf * 5.17 + float(copy) * 31.0);
-    kelvin += meltAt(p, ax, push, stir, grain) * weight;
-    total += weight;
+    vec2 got = meltAt(p, ax, push, stir, grain);
+    if (copy == 0) {
+      first = got;
+      lead = weight;
+    } else {
+      // One copy gives way to the other in patches that ride the stream, not as a mist over the whole of it: the pattern stays
+      // sharp, and a patch changes hands only while both copies are far from their start.
+      float patch = vnoise((vFlow - vec2(slowest * uTime, 0.0)) * vec2(0.7, 2.1) + 5.0 + vSeam.y) - 0.5;
+      kelvin = mix(got, first, smoothstep(-0.14, 0.14, lead - weight + 0.9 * patch));
+    }
   }
-  kelvin /= total;
   float k = kelvin.x;
   float skin = kelvin.y;
   // The melt breathes with the lake.
