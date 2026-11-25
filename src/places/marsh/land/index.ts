@@ -183,6 +183,7 @@ export function create(ctx: Context): Piece {
       tFieldFar: { value: field.far },
       tPlates: { value: plates },
       tGrain: { value: grain },
+      uBank: { value: new THREE.Vector3(bankCentre[0], bankCentre[1], 3.6) },
     },
     toneMapped: false,
   });
