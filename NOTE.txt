@@ -1,5 +1,5 @@
-2026-11-25 23:32 UTC
-work at 09d3004 on agent/ribs-ground
-Light now from ahead in the sky break: glare on the wet flat, blades against the light. Wrong: water sheet too clean and brown at left, near cliff weed in pillowed tiers and grey, colony grey with regular ledges, right blade lost in sun haze, ribs-1 weed colourless
-look-1.jpg = out/work/c0.jpg
-look-2.jpg = out/work/keys4.jpg
+2026-11-25 23:52 UTC
+work at 5778dfc on agent/ribs-ground
+ribs-0 and keys 1 to 4 on the Builder's material pictures with the new sky: blades now dark with beds against a storm sky, glare on the water; wrong: water sheet still clean, no rubble at blade feet, far blades flat, colony striped brown, ribs-2 bar a brown dome
+look-1.jpg = out/work/look-c0.jpg
+look-2.jpg = out/work/look-keys4.jpg
