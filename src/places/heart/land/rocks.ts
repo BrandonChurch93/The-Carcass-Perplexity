@@ -483,14 +483,28 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
       [12.6, 3.4, 0.3, 1.0, 0.5],
     ] as [number, number, number, number, number][]) pile(ahead, left, y, half, tall);
     // The one that shows at the key: a boulder of clinker on the pile, 7 m from the lens, filling the bottom left corner of the frame out of focus.
-    stand(2, -454.9 + fx * 7.0 - rx * 2.25, 250.3 + fz * 7.0 - rz * 2.25, 5.95, 0.95, 1.2, 0.8, staged);
+    stand(2, -454.9 + fx * 7.0 - rx * 2.25, 250.3 + fz * 7.0 - rz * 2.25, 5.95, 0.95, 1.2, 1.0, staged);
     // Its picture's near mass is wide and low: it falls from the left edge to the bottom of the frame a fifth of the way across, so three more
     // stand to the right of the boulder, each lower than the last.
-    for (const [shape, off, top, half] of [
-      [5, 1.75, 5.68, 0.55],
-      [0, 1.4, 5.5, 0.45],
-      [3, 1.12, 5.33, 0.36],
-    ] as [number, number, number, number][]) stand(shape, -454.9 + fx * 7.0 - rx * off, 250.3 + fz * 7.0 - rz * off, top, half, 1.3, 0.75, staged);
+    for (const [shape, off, top, half, ahead] of [
+      [5, 1.75, 5.77, 0.55, 7.0],
+      [0, 1.4, 5.62, 0.45, 7.0],
+      [3, 1.12, 5.51, 0.36, 7.0],
+      // And on along the whole bottom edge as a low bank with lumps on its top line.
+      [1, 0.85, 5.45, 0.3, 7.2],
+      [4, 0.58, 5.43, 0.27, 6.8],
+      [2, 0.3, 5.36, 0.3, 7.1],
+      [0, 0.02, 5.41, 0.26, 6.9],
+      [5, -0.27, 5.34, 0.3, 7.3],
+      [3, -0.56, 5.38, 0.24, 6.8],
+      [1, -0.86, 5.33, 0.3, 7.1],
+      [4, -1.15, 5.37, 0.27, 6.9],
+      [2, -1.45, 5.33, 0.3, 7.2],
+      [0, -1.75, 5.36, 0.28, 6.8],
+      [5, -2.02, 5.32, 0.3, 7.0],
+    ] as [number, number, number, number, number][]) {
+      stand(shape, -454.9 + fx * ahead - rx * off, 250.3 + fz * ahead - rz * off, top, half, 1.3, off > 1.0 ? rng.range(0.85, 1.15) : rng.range(0.5, 0.75), staged);
+    }
     // It is an island the crust breaks against: a skirt of upturned plates and rubble round its foot.
     const [ix, iz] = ISLAND;
     for (let i = 0; i < 150; i++) {
