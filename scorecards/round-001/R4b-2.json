@@ -1,0 +1,13 @@
+{
+  "round": 1,
+  "unit": "film",
+  "pack": "R4b-2",
+  "family": "gemini",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 10,
+    "pass": true,
+    "issues": []
+  }
+}

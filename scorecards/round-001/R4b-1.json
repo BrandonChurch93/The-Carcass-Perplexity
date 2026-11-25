@@ -1,0 +1,43 @@
+{
+  "round": 1,
+  "unit": "film",
+  "pack": "R4b-1",
+  "family": "gpt",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the first shore wide, 0:00",
+        "what": "The film opens offshore on the rib silhouettes. The target wide's near left bank and the channel it frames are missing until the camera reaches the shallows around 0:19.",
+        "fix": "Start on a wide that includes the left bank and frames the receding rib corridor, then move past the bank and into the place."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the lake-to-overhead transition, 2:39–2:41",
+        "what": "The frame goes featureless blue across consecutive samples before the overhead lake appears. The pullback after that reads continuously, but the blue interval hides the connection to the lake-level move.",
+        "fix": "Keep a visible lake landmark through the tilt and climb so the lake-level shot resolves into the overhead view without a visual reset."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the orbit settle around 2:48 through the fade",
+        "what": "The nearly unchanged orbit view holds for roughly 25–30 seconds after the rise has already made its reveal, leaving the last stretch markedly slower than the rest of the film.",
+        "fix": "Give the whole-body composition a short readable hold, then fade sooner."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the settled orbit composition from 2:48 onward",
+        "what": "The visible curved limb runs out of frame; the pullback stops at a view of the body that does not show its complete outline.",
+        "fix": "Pull farther back and center the whole body with clear space around its perimeter before settling."
+      }
+    ]
+  },
+  "note": "I did not infer lack of motion in the first two seconds or definite internal hard cuts from the sampled stills. Only shore has a direct target image; the other place opens can be judged as wides, not checked against targets."
+}

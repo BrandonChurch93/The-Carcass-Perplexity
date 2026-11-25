@@ -1,0 +1,77 @@
+{
+  "round": 1,
+  "unit": "film",
+  "pack": "R4b-3",
+  "family": "claude",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-05.png",
+        "where": "frames 9963 to 11649 (2:46 to 3:14)",
+        "what": "once the whole body is in frame the camera locks off. Eleven contact frames across about 28 s are identical, so place 7 plays as a 28 s still. That makes it the longest beat in the film and stretches the runtime to 3:17",
+        "fix": "keep the hold to about 6 to 8 s with a slow continuing drift or rotation, then end. Trim so the whole film comes in near 3:00"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-03.png",
+        "where": "frames 9315 to 9541, into set-C-05 9541 to 9752 (2:35 to 2:42)",
+        "what": "the rise from the lake to orbit does not play as one move. The camera goes from just above the water (9315) to near-black space with only a thin limb (9428) in under 2 s. Then it holds on empty navy for about 5 s across the place boundary, so it reads as a fade to black and a new shot, not a continuous climb. The body then appears close up (9752) before the pull-out",
+        "fix": "make it one unbroken ascent of about 8 to 10 s: lake, then crater, then the land outline, then the limb, keeping ground in frame the whole way. Cut the empty navy frames, and let the camera arrive at the full-body framing as the last part of that same move"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "frames 7601 and 8070",
+        "what": "a large pale blob passes right in front of the lens and blocks half to two-thirds of the frame, so it plays as a wipe",
+        "fix": "move the camera path or the foreground object so it passes at the edge of frame, or remove it"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-01.png",
+        "where": "frames 7249 to 7835 (2:00 to 2:10)",
+        "what": "after the push toward the cave, the camera jumps within about 2 s to grazing the rock face (7367), then swings back toward the cave (7601), then to another face-on angle (7718). The path reads as a chain of separate views, not one travel through the place",
+        "fix": "run a single continuous spline: push along the ridge past the streamers, then into the cave mouth, with no reversals"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-01.png",
+        "where": "frames 7952 to 8304",
+        "what": "inside the tunnel the camera faces out, and the opening shrinks as it backs away. The peak that should hold the cave is visible through the mouth, so the geography breaks, and the push-in plays as a pull-back",
+        "fix": "keep the camera facing its direction of travel into the cave, or frame the mouth so the outside view is consistent with the cave being in that peak"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04-b.png",
+        "where": "whole frame, opening wide of place 6",
+        "what": "the camera sits higher and farther back than in the target. The lake fills only about the middle 65% of the width instead of nearly all of it, a grey foreground rim takes the bottom third, and the herd at the shoreline is too small to read. The target is shot low from the shore with the herd across the lower middle",
+        "fix": "lower the camera and bring it to the shore so the lake spans the frame and the herd sits in the lower third"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-03.png",
+        "where": "frames 8417 to 8754 (2:20 to 2:25)",
+        "what": "the camera drops from the rim to ground level on the flats in about 2 s, then rolls to a tilted horizon (8754). The fast drop and the roll read as a cut",
+        "fix": "make the descent a slower glide over 4 to 5 s and keep the horizon level, or add roll only as a gentle banked turn"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-03.png",
+        "where": "frames 8866 to 9091",
+        "what": "near the animals the camera hardly moves for about 4 s",
+        "fix": "keep a slow lateral track past the herd"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-01.png",
+        "where": "places 1 to 4 not supplied",
+        "what": "the opening two seconds could not be judged because only places 5 to 7 were attached",
+        "fix": "send the contact sheets for places 1 to 4"
+      }
+    ]
+  }
+}
