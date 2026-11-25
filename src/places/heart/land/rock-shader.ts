@@ -29,10 +29,29 @@ void main() {
   vObject = position * scale + fract(aSeed.x) * 37.0;
   vNormal = vAxisX * on.x + vAxisY * on.y + vAxisZ * on.z;
   vec4 w = instanceMatrix * vec4(position, 1.0);
-  vWorld = w.xyz;
   vSeed = aSeed;
+  vWorld = w.xyz;
   vCave = aCave;
   gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+
+/** The carpet's bake: one texel a stone. `crust` is the crust's own height function (lake/index.ts), which wants the noise and the rig before it. */
+export const CARPET_BAKE_VERTEX = /* glsl */ `
+void main() {
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+
+export const carpetBakeFragment = (crust: string): string => /* glsl */ `
+precision highp float;
+${NOISE_GLSL}
+${RIG_GLSL}
+${crust}
+uniform sampler2D tRest;
+uniform vec2 uCarpetSpan;
+void main() {
+  vec2 q = texture2D(tRest, gl_FragCoord.xy / uCarpetSpan).xy;
+  vec3 p = crustAt(q);
+  gl_FragColor = vec4(p.y, clamp(gBank, -8.0, 8.0), gSlabEdge, gMound);
 }`;
 
 // aSeed: x a random number, y the size of the rock in metres, z the height of the ground at its middle, w its tone.
