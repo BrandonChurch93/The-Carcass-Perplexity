@@ -1,7 +1,5 @@
-2026-11-25 23:00 UTC
-work at 26ee7e7 on agent/reveal-place
-min 98 heartbeat: reveal-4 uhd, then keys 3, 2, 1 against approved; known worst: lake ring flat orange, hard cloud specks from near, cells too regular
-look-1.jpg = out/work/frame4.jpg
-look-2.jpg = out/work/cmp-3.jpg
-look-3.jpg = out/work/cmp-2.jpg
-look-4.jpg = out/work/cmp-1.jpg
+2026-11-25 23:19 UTC
+work at e70cae3 on agent/reveal-place
+heartbeat 23:20 reveal-4 uhd draft at 1280 and at 400 px
+look-1.jpg = out/work/hb-frame4.jpg
+look-2.jpg = out/work/frame4-400.jpg
