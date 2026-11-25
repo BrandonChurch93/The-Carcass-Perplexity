@@ -30,16 +30,31 @@ review.className = styles.link as string;
 review.href = './review.html';
 review.textContent = 'Review page';
 
+const wait = document.createElement('p');
+wait.className = `${styles.wait} ${styles.hidden}`;
+wait.setAttribute('role', 'status');
+
 control.addEventListener('click', () => {
   control.classList.add(styles.hidden as string);
   review.classList.add(styles.hidden as string);
-  player.canvas.classList.remove(styles.hidden as string);
-  player.start(() => {
-    player.canvas.classList.add(styles.hidden as string);
-    control.classList.remove(styles.hidden as string);
-    review.classList.remove(styles.hidden as string);
-  });
+  wait.textContent = 'Preparing the film';
+  wait.classList.remove(styles.hidden as string);
+  player.start(
+    () => {
+      player.canvas.classList.add(styles.hidden as string);
+      control.classList.remove(styles.hidden as string);
+      review.classList.remove(styles.hidden as string);
+    },
+    (done, total) => {
+      if (done < total) {
+        wait.textContent = total > 1 ? `Preparing the film · ${done + 1} of ${total}` : 'Preparing the film';
+        return;
+      }
+      wait.classList.add(styles.hidden as string);
+      player.canvas.classList.remove(styles.hidden as string);
+    },
+  );
 });
 
-stage.append(player.canvas, control, review);
+stage.append(player.canvas, control, wait, review);
 document.body.appendChild(stage);
