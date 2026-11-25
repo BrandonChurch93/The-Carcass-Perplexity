@@ -116,9 +116,10 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float deepest = mix(21.0, 4.0, east);
   // Past the cut the light falls away into the dark over a few metres more; it does not stop at an edge.
   float shade = max(smoothstep(deepest, 0.3 * deepest, d), 0.22 * smoothstep(64.0, 20.0, d)) * smoothstep(0.6, 3.5, d);
-  // The light is strongest low, on the wall beside the pool, and thins as it climbs: at the crown a third of it is left. East of the
+  // The light is on the upper west of the cut and thins as it climbs: at the crown a third of it is left. The foot of the cut, where
+  // it meets the cone in a comb of broken blocks, stays dark: lit, the comb stood as a row of bright spikes. East of the
   // stream's side it is gone within the first third of the arch.
-  float reach = mix(1.0, 0.0, smoothstep(0.08, 0.62, east)) * smoothstep(${f(TUBE.floor - 1)}, ${f(TUBE.floor + 4)}, p.y) * mix(1.0, 0.33, smoothstep(${f(TUBE.floor + 8)}, ${f(TUBE.floor + 62)}, p.y));
+  float reach = mix(1.0, 0.0, smoothstep(0.08, 0.62, east)) * smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor + 15)}, p.y) * mix(1.0, 0.33, smoothstep(${f(TUBE.floor + 8)}, ${f(TUBE.floor + 62)}, p.y));
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
   // The crusted shelf east of the pool gives the east wall just enough to show it as rock against the dark.
   e += 0.009 * poolLight(p, n, vec3(${f(MOUTH.x + 16)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 26.0) * smoothstep(46.0, 8.0, d) * smoothstep(0.6, 3.5, d);
@@ -140,7 +141,7 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   // Nothing is read that would be multiplied by nothing: past the bevel the round lights are shut out, and far in the lake is too.
   vec3 lake = lit < 0.01 ? vec3(0.0) : (p.y > 30.0 ? lakeIrradianceFar(p, n) : lakeIrradiance(p, n));
   // On the cut of the rim the east side stands behind the heaps on the floor, as it does for the pool's own light.
-  if (d < 7.0) lake += emitterIrradiance(p, n) * smoothstep(7.0, 0.0, d) * mix(1.0, mix(1.0, 0.05, smoothstep(${f(MOUTH.x - 30)}, ${f(MOUTH.x + 30)}, p.x)), smoothstep(0.0, 1.5, d));
+  if (d < 7.0) lake += emitterIrradiance(p, n) * smoothstep(7.0, 0.0, d) * smoothstep(${f(TUBE.floor + 1)}, ${f(TUBE.floor + 12)}, p.y) * mix(1.0, mix(1.0, 0.05, smoothstep(${f(MOUTH.x - 30)}, ${f(MOUTH.x + 30)}, p.x)), smoothstep(0.0, 1.5, d));
   vec3 e = skyIrradiance(n) * open + lake * occ * lit + (riverLight(p, n, d) + tubeDark(d) * smoothstep(1.0, 8.0, d)) * occ + more * occ;
   // Rock is grey: what warmth it shows is the light's.
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.2126, 0.7152, 0.0722))), 0.6);
@@ -408,12 +409,14 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   if (lay < 1.0) {
     float lipHot = smoothstep(-7.0, -1.0, len) * smoothstep(10.0, 3.0, len);
     float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 3)}, ${f(FAN_FROM - 5)}, len) * smoothstep(-3.0, 2.0, len));
-    float hotAt = clamp(lipHot + 0.25 + 1.3 * smoothstep(1.6, 3.6, speed) + 0.7 * bright, 0.0, 1.0);
+    // The pour's first third is its hottest: a broad sheet with a yellow-white core, before it has cooled on the ledges.
+    float pour = smoothstep(50.0, 22.0, len) * smoothstep(-3.0, 2.0, len);
+    float hotAt = clamp(lipHot + 0.25 + 1.3 * smoothstep(1.6, 3.6, speed) + 0.7 * bright + 0.6 * pour, 0.0, 1.0);
     // They are marks in the lava like the rest: they ride down with it at the speed of the flow and do not stand in place.
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
     // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
-    float wide = (0.096 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot;
+    float wide = (0.096 + 0.075 * smoothstep(1.9, 3.4, speed)) * (1.0 + 2.1 * bright - 0.25 * dark) + 0.2 * lipHot + 0.05 * pour;
     float d1 = abs(b1 - 0.5);
     float d2 = abs(b2 - 0.47);
     core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
@@ -579,7 +582,11 @@ void main() {
       n = normalize(mix(n, vec3(tilt.x * 1.6 + 0.2 * (slab.y - 0.5), 1.0, tilt.y * 1.6), shelf));
     }
     // The stream's light on its banks is the rig's: it lays a strip of light along the course, and nothing is lit twice here.
-    vec3 r = rockShade(vWorld, n, v, albedo, 1.0, vec3(0.0), ${f(TUBE.lipZ)} - vWorld.z);
+    // The banks are rubble and spatter, not a screen: lumps of it stand in the stream's light and the hollows between them are in
+    // their shade, so the lit bank is broken ground and no flat orange film.
+    float lump = 0.45 * vnoise(vWorld.xz * 0.42 + vWorld.y * 0.3) + 0.35 * vnoise(vWorld.xz * 1.3 + 5.0) + 0.2 * plates(vWorld.xz / 2.6 + vWorld.y * 0.21).x;
+    float bankOcc = mix(1.0, 0.16 + 0.84 * smoothstep(0.4, 0.52, lump), smoothstep(18.0, 6.0, side) * (1.0 - shelf) * (1.0 - vIn.x));
+    vec3 r = rockShade(vWorld, n, v, albedo, bankOcc, vec3(0.0), ${f(TUBE.lipZ)} - vWorld.z);
     // The rock the lava touches is itself hot for a hand's breadth.
     // The hand's breadth is counted from where the lava ends, which is not everywhere the edge of its bed: counted from the bed, a
     // bed wider than its lava glowed as a flat panel.
