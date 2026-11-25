@@ -597,6 +597,7 @@ Each reports by message to the Builder.
 | --- | --- | --- | --- | --- | --- |
 | `place_eye_builder` | sandbox, reused | The fixes of round 1 on the Eye: `eye-05` and its side of the handoff into the rise (the contract in `src/places/eye/handoff.json`), the establishing key, `eye-01` as a level glide, a lateral track in `eye-04` | `agent/place-eye` | 2026-11-25 02:03 UTC | 25 min |
 | `place_spine_builder` | sandbox, reused | The fixes of round 1 on the Spine: the carcass in the picture's shape, no animal across the lens, `spine-05` as a push forward along the canal, travel that shows in `spine-02` and `spine-04` | `agent/place-spine` | 2026-11-25 02:03 UTC | 25 min |
+| `place_ribs_builder` | sandbox, reused | A follow-up to its fix of round 1: the surf band is broken into narrow streaks, so that no frame of `ribs-01` has a flat pale lower half (frames 740 to 850) | `agent/place-ribs-2` | 2026-11-25 02:19 UTC | 8 min |
 
 Refits asked of the place builders after the Builder's own compare of each key against its picture, 20 minutes each: `place_marsh_builder` (answered 01:27 UTC, `7168ea3`, merged as `c086bac`), `place_heart_builder` (answered 01:31 UTC after 9 minutes, `487cee2`, merged as `6438fe9`), `place_breath_builder` (answered 01:37 UTC after 16 minutes, `ec81ce7`, merged as `13552ba`). Each refit was checked by the Builder with a fresh compare of all five keys of its place. What each refit met and left is under "Open items".
 
