@@ -37,13 +37,15 @@ void main() {
   // Red brine stands in the hollows; the high places have begun to dry and pale.
   float low = smoothstep(0.52, 0.4, h0);
   float dry = smoothstep(0.55, 0.72, h0) * smoothstep(0.3, 0.8, vEdge);
-  vec3 albedo = vec3(0.075, 0.064, 0.057) * (0.75 + 0.5 * fbm(p * 5.0));
+  vec3 albedo = vec3(0.075, 0.06, 0.05) * (0.75 + 0.5 * fbm(p * 5.0));
   albedo = mix(albedo, vec3(0.15, 0.135, 0.122), dry);
   albedo = mix(albedo, vec3(0.085, 0.024, 0.02), low * 0.8);
-  float rough = mix(0.8, 0.95, dry);
+  float rough = mix(0.97, 1.0, dry);
   rough = mix(rough, 0.2, low);
   float occ = 0.75 + 0.25 * smoothstep(0.35, 0.6, h0);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  // Wet mud drinks the light: it does not hold the sky as the crust does.
+  c *= mix(0.6, 1.0, low);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

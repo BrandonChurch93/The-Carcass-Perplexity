@@ -28,7 +28,7 @@ export function create(ctx: Context): Piece {
     // A young one keeps to the shallows: its legs are too short for the bed.
     const stand = size < 0.5 ? Math.max(ground, -0.07) : ground;
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.26 * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.36 * b.k;
     const hang = Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446;
     herd.push({
       animal,

@@ -129,7 +129,7 @@ void main() {
   // The crust of a dead one: crystals as big as a fist, grown into each other.
   float k0 = plates(vUv * vec2(19.0, 21.0) + seed).x;
   float knob = knobHeight(vUv, seed);
-  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.07;
+  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.16;
   // How deep in a fold of the shape this is: 1 on the top of a fold, toward 0 in its crease.
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
@@ -164,7 +164,7 @@ void main() {
   vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
   ivory = mix(ivory, vec3(0.2, 0.12, 0.08), 0.45 * smoothstep(0.7, 1.0, vLook.y) + 0.5 * (1.0 - smoothstep(0.0, 0.14, vLook.y)));
   albedo = mix(albedo, ivory, feeler);
-  albedo = mix(albedo, mix(vec3(0.42, 0.4, 0.38), vec3(0.56, 0.54, 0.52), dead) * mix(salt, vec3(1.0), 0.5 * dead), cake);
+  albedo = mix(albedo, mix(vec3(0.42, 0.4, 0.38), vec3(0.5, 0.47, 0.44), dead) * mix(salt, vec3(1.0), 0.5 * dead), cake);
   slope = mix(slope, (nhS.rg - 0.5) * 2.4 + dead * knobSlope, cake);
   albedo = mix(albedo, albedo * (0.34 + 0.66 * knob) * mix(vec3(1.0), vec3(0.85, 0.7, 0.64), 1.0 - knob), dead * cake);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
@@ -189,7 +189,11 @@ void main() {
   rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
   float occ = vInfo.y * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
   occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
-  occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b), cake);
+  occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b) * mix(1.0, 0.3 + 0.7 * knob, dead), cake);
+  // The mouth: a dark pit in the end of the muzzle.
+  float pit = trunk * smoothstep(0.972, 0.992, vLook.y);
+  albedo = mix(albedo, vec3(0.02, 0.008, 0.006), pit);
+  occ *= 1.0 - 0.7 * pit;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

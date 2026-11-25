@@ -268,7 +268,7 @@ export class Animal {
       const reach = ((f * 0.618 + cell(f, 4, sd) * 0.3) % 1) * 0.95;
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
       const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 15) - Math.floor(3 * Math.abs(u - 0.5));
-      const length = k * (0.46 + 0.2 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
+      const length = k * (0.54 + 0.22 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
       const radius = k * (0.048 + 0.014 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
@@ -472,14 +472,14 @@ export class Animal {
       let y = this.cy[i] + ny * ca * hw + by * sa * hh;
       let z = this.cz[i] + nz * ca * hw + bz * sa * hh;
       // It leaves the lip downward, some reaching forward and some hanging straight, the outer ones leaning out: a rake, not a row.
-      const fore = -0.25 + 1.75 * at.reach + 0.3 * d.splay;
+      const fore = 0.1 + 1.75 * at.reach + 0.3 * d.splay;
       const out = at.lean * (0.75 + 0.5 * d.splay);
       // Forward is where the head points on the level, whatever its hang: the tusks go down into the mud, not back under the chin.
       const hl = Math.hypot(tx, tz) || 1;
       const hx = tx / hl;
       const hz = tz / hl;
       let dx = hx * fore + nx * out;
-      let dy = -1 + 0.35 * d.splay;
+      let dy = -0.72 + 0.35 * d.splay;
       let dz = hz * fore + nz * out;
       let dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
@@ -623,7 +623,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   out.breath = Math.sin(seconds * (1.05 + 0.3 * Math.sin(b.seed * 17)) + b.seed * 9);
   out.squash = 1;
   out.cave = 0;
-  out.splay = 0.1 + 0.25 * shove;
+  out.splay = 0.55 + 0.25 * shove;
   for (let f = 0; f < FEELERS; f++) {
     const w = 2.1 + 1.9 * cell(f, 7, Math.floor(b.seed * 9973));
     const a = seconds * w + f * 2.4 + b.seed * 31;
