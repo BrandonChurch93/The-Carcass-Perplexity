@@ -7,7 +7,8 @@ import type { Stood } from './animal';
 
 export const DROPS = 12;
 const FOOT_RINGS = 3;
-const PER = DROPS * 2 + 4 * FOOT_RINGS + 2;
+const BODY_RINGS_OUT = 3;
+const PER = DROPS * 2 + 4 * FOOT_RINGS + 2 + BODY_RINGS_OUT;
 
 const VERTEX = /* glsl */ `
 attribute vec4 iA;
@@ -207,6 +208,15 @@ export class Wet {
       const near = alive > 0.5 && land.shore(m.x, m.z) < -0.02 && m.y < 0.45 * k;
       const age = fract(seconds / 2.1 + r * 0.5 + i * 0.61);
       if (near) this.put(o, m.x + fx * 0.2 * k, 0.004, m.z + fz * 0.2 * k, (0.3 + 0.9 * age) * k, 1, 0.5 * (1 - age) * (1 - age), 0.05 / (0.3 + 0.9 * age), 40 + r);
+      else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
+      o += 4;
+    }
+    // One that lies in the brine to the back: the swell it makes as it breathes and shifts goes out from the whole of it.
+    const sunk = alive > 0.5 && land.shore(stood.x, stood.z) < -0.05 && stood.belly.y < -0.12 * k;
+    for (let r = 0; r < BODY_RINGS_OUT; r++) {
+      const age = fract(seconds / 4.3 + r / BODY_RINGS_OUT + i * 0.23);
+      const size = (1.5 + 1.7 * age) * k;
+      if (sunk) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.7 * (1 - age) * (1 - age), 0.07 / (1.5 + 1.7 * age), 60 + r);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }

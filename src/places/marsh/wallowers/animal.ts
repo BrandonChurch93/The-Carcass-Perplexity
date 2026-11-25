@@ -26,11 +26,11 @@ const KNOTS: [number, number, number, number, number][] = [
   [0.0, -2.0, 0.94, 0.02, 0.02],
   [0.03, -1.97, 0.95, 0.3, 0.3],
   [0.08, -1.84, 0.98, 0.5, 0.56],
-  [0.18, -1.4, 1.06, 0.63, 0.78],
-  [0.32, -0.72, 1.12, 0.69, 0.88],
-  [0.46, 0.0, 1.2, 0.73, 0.9],
-  [0.58, 0.6, 1.3, 0.77, 0.88],
-  [0.68, 1.1, 1.22, 0.74, 0.82],
+  [0.18, -1.4, 1.01, 0.59, 0.76],
+  [0.32, -0.72, 1.08, 0.67, 0.88],
+  [0.46, 0.0, 1.18, 0.73, 0.9],
+  [0.58, 0.6, 1.33, 0.8, 0.88],
+  [0.68, 1.1, 1.24, 0.76, 0.82],
   [0.77, 1.5, 1.06, 0.69, 0.74],
   [0.85, 1.82, 0.87, 0.61, 0.67],
   [0.92, 2.08, 0.71, 0.53, 0.6],
@@ -214,12 +214,12 @@ export class Animal {
           sleeve += 0.08 * near * (r3 - 0.62);
           fold = Math.min(fold, 1 - near * (1 - r3));
           // The haunch and the shoulder stand out over the leg.
-          sleeve += 0.12 * Math.exp(-((along - lx) ** 2) / 0.22) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
+          sleeve += 0.19 * Math.exp(-((along - lx) ** 2) / 0.2) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
         let m = 1 + 0.12 * neck * (r1 - 0.62) * under + 0.06 * flank * (r2 - 0.62) * side + sleeve;
         m += 0.06 * (lump(along * 1.1 + 9, a * 0.9 + 2, sd + 1) - 0.5) + 0.025 * (lump(along * 3.1, a * 2.6, sd + 2) - 0.5);
         // The belly hangs.
-        m += 0.07 * flank * Math.exp(-((sn + 0.8) ** 2) / 0.1) * (0.6 + 0.8 * lump(along * 0.8, 1, sd + 4));
+        m += 0.14 * flank * Math.exp(-((sn + 0.8) ** 2) / 0.1) * (0.6 + 0.8 * lump(along * 0.8, 1, sd + 4));
         // The spine shows as a row of knobs down the back, and the hips as two corners over the hind legs.
         m += 0.035 * Math.exp(-(cs * cs) / 0.006) * smooth(0, 0.5, sn) * (0.55 + 0.45 * Math.cos((along * TAU) / 0.21)) * bell(0.06, 0.7, s);
         m += 0.07 * Math.exp(-((along + 1.3) ** 2) / 0.08) * Math.exp(-((Math.abs(cs) - 0.55) ** 2) / 0.03) * smooth(0.3, 0.8, sn);
@@ -228,9 +228,13 @@ export class Animal {
         const vent = Math.pow(Math.max(0, Math.cos((along + 1.25) * (TAU / 0.46))), 8) * bell(0.14, 0.62, s);
         m += 0.06 * row * vent;
         // A dead one is under a crust of salt that has grown in knobs.
-        if (b.salt > 1) m += 0.24 * (lump(along * 5.5 + 31, a * 4.5, sd + 11) - 0.35) + 0.1 * (lump(along * 13, a * 11, sd + 12) - 0.5);
+        // The flank is hollow between the ribs and the haunch.
+        m -= 0.06 * Math.exp(-((along + 0.25) ** 2) / 0.16) * smooth(0.25, 0.85, Math.abs(cs)) * smooth(0.75, 0.1, Math.abs(sn));
+        if (b.salt > 1) m += 0.3 * (lump(along * 2.3 + 7, a * 2.1, sd + 13) - 0.4) + 0.22 * (lump(along * 5.5 + 31, a * 4.5, sd + 11) - 0.35) + 0.1 * (lump(along * 13, a * 11, sd + 12) - 0.5);
         this.lumps[i * BODY_SIDES + j] = m;
-        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * under * 0.8 * (1 - r1), 1 - flank * side * 0.45 * (1 - r2), fold));
+        // Between the knobs of a dead one's crust the light does not reach.
+        const pit = b.salt > 1 ? 0.2 + 0.8 * smooth(0.12, 0.5, 0.65 * lump(along * 5.5 + 31, a * 4.5, sd + 11) + 0.35 * lump(along * 13, a * 11, sd + 12)) : 1;
+        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * under * 0.8 * (1 - r1), 1 - flank * side * 0.45 * (1 - r2), fold)) * pit;
       }
     }
     const girth = TAU * 0.8 * k;

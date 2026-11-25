@@ -18,6 +18,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
   const skin = new Skin();
   const bodies: { animal: Animal; drive: Drive; wet: number }[] = [];
+  const nearest = DEAD.reduce((a, b) => (Math.hypot(a.d - STUCK[0], a.l - STUCK[1]) < Math.hypot(b.d - STUCK[0], b.l - STUCK[1]) ? a : b));
   for (const d of DEAD) {
     const p = rel(d.d, d.l);
     const k = 0.8 * d.size;
@@ -26,9 +27,11 @@ export function create(ctx: Context): Piece {
     const drive = newDrive();
     drive.ox = p[0];
     drive.oz = p[1];
-    drive.oy = Math.min(0.1, ctx.rig.land.height(p[0], p[1])) - rng.range(0.42, 0.54) * k;
+    // The one that lies nearest the live one is the furthest gone: it stands no higher than a knee, and the lens of the thin crust looks over it.
+    const under = d === nearest ? 1 : 0;
+    drive.oy = Math.min(0.1, ctx.rig.land.height(p[0], p[1])) - rng.range(0.34, 0.46) * k - under * 0.2 * k;
     drive.dir = [Math.cos(d.yaw), -Math.sin(d.yaw)];
-    drive.squash = rng.range(0.52, 0.66);
+    drive.squash = rng.range(0.66, 0.84) - under * 0.14;
     drive.cave = rng.range(0.35, 0.7);
     drive.roll = rng.range(-0.22, 0.22);
     drive.pitch = rng.range(-0.05, 0.1);
@@ -85,10 +88,10 @@ export function create(ctx: Context): Piece {
       const tremble = heave * 0.012 * Math.sin(seconds * 23);
       live.ox = at[0];
       live.oz = at[1];
-      live.oy = ground - 1.3 + 0.12 * heave + tremble;
+      live.oy = ground - 1.56 + 0.12 * heave + tremble;
       live.dir = [Math.cos(yaw), -Math.sin(yaw)];
       live.surge = 0.1 * heave;
-      live.pitch = -0.38 - 0.06 * heave;
+      live.pitch = -0.5 - 0.06 * heave;
       live.roll = 0.05 * Math.sin(seconds * 0.9) + 0.05 * heave * Math.sin(seconds * 2.7);
       live.shift = 0.04 * Math.sin(seconds * 0.9 - 0.6);
       live.bend = 0.04 * Math.sin(seconds * 0.6);
@@ -97,8 +100,8 @@ export function create(ctx: Context): Piece {
       live.breath = Math.sin(seconds * 2.4);
       live.sway = 0;
       live.squash = 1;
-      live.splay = 1.0 + 0.2 * heave;
-      for (let f = 0; f < FEELERS; f++) live.curl[f] = 0.55 + 0.3 * Math.sin(seconds * (1.3 + 0.37 * f) + f * 2.1) + 0.35 * heave;
+      live.splay = 0.2 + 0.25 * heave;
+      for (let f = 0; f < FEELERS; f++) live.curl[f] = 0.85 + 0.3 * Math.sin(seconds * (1.3 + 0.37 * f) + f * 2.1) + 0.35 * heave;
       // The feet are held by the mud: they stay where they are while the trunk strains above them.
       live.feet.forEach((foot, l) => {
         const side = l < 2 ? -1 : 1;

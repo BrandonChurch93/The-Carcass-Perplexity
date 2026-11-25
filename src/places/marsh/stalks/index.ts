@@ -91,20 +91,36 @@ export function create(ctx: Context): Piece {
     const axis = new Float32Array(set.length * 4);
     const kind = new Float32Array(set.length * 4);
     set.forEach((s, i) => {
-      const seed = rng.next();
-      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size;
+      let seed = rng.next();
+      const close = Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 6.5;
+      // Away from the lens of the colony they are slender, of every height, and lean as they please.
+      // Those the lens of the colony looks through keep the place the approved picture gives them: they bow least.
+      if (close) for (let n = 0; n < 60 && (seed * 91.3) % 1 > 0.12; n++) seed = rng.next();
+      const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
+      const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.1);
+      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 1 : 0.72);
       const dx = Math.cos(s.yaw);
       const dz = -Math.sin(s.yaw);
-      base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, s.h + 0.05], i * 4);
-      axis.set([dx, dz, s.lean, R], i * 4);
+      base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
+      axis.set([dx, dz, lean, R], i * 4);
       kind.set([s.kind, s.phase, s.size, seed], i * 4);
       if (which === 0) ctx.rig.setDisc(discs, i, s.x, s.z, R * 5, 0.7);
       if (s.kind === 2) return;
       // The plume: filaments in rings round the mouth, the inner ones standing and the outer ones hanging.
-      const ax = [dx * Math.sin(s.lean), Math.cos(s.lean), dz * Math.sin(s.lean)];
-      const h = s.h + 0.02;
-      const top = [s.x + ax[0] * h, base[i * 4 + 1] + ax[1] * h, s.z + ax[2] * h];
-      const close = Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 6.5;
+      const A = [dx * Math.sin(lean), Math.cos(lean), dz * Math.sin(lean)];
+      const U = [dx * Math.cos(lean), -Math.sin(lean), dz * Math.cos(lean)];
+      const W = [-dz, 0, dx];
+      // The bow of the stem, as the vertex shader makes it: the plume sits on its end and stands along it.
+      const ba = seed * 37;
+      const hh = tall + 0.05;
+      const h = tall + 0.02;
+      const t = h / hh;
+      const bow = (0.03 + 0.17 * ((seed * 91.3) % 1)) * hh;
+      const B = [0, 1, 2].map((c) => ((U[c] as number) * Math.cos(ba) + (W[c] as number) * Math.sin(ba)) * bow);
+      const top = [s.x + (A[0] as number) * h + (B[0] as number) * t * t, base[i * 4 + 1] + (A[1] as number) * h + (B[1] as number) * t * t, s.z + (A[2] as number) * h + (B[2] as number) * t * t];
+      const axl = [0, 1, 2].map((c) => (A[c] as number) * hh + 2 * (B[c] as number) * t);
+      const an = Math.hypot(axl[0] as number, axl[1] as number, axl[2] as number);
+      const ax = axl.map((c) => c / an);
       const count = which === 0 ? (close ? 340 : 200) : 44;
       if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
