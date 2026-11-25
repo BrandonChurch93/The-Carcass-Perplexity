@@ -43,7 +43,7 @@ export function shaftWall(): THREE.BufferGeometry {
     const top = ground(Math.sin(b) * r * 1.002, -Math.cos(b) * r * 1.002) - 0.25;
     const y = lerp(top, -DEPTH, v);
     const torn = 1 + 1.6 * smooth((r - 31) / 5);
-    const rr = r - 0.35 - 2.5 * v + torn * (0.55 * drift(b * 9, y * 0.22, 1) + 0.25 * drift(b * 31, y * 0.7, 4)) * smooth(v * 12);
+    const rr = r - 0.35 - 12 * v + torn * (0.55 * drift(b * 9, y * 0.22, 1) + 0.25 * drift(b * 31, y * 0.7, 4)) * smooth(v * 12);
     return { at: [Math.sin(b) * rr, y, -Math.cos(b) * rr], uv: [b * 30, y], occ: lerp(1, 0.55, smooth(v * 2.2)) };
   });
 }
@@ -62,7 +62,7 @@ export function hoop(y: number, radius: number, from: number, to: number, thick:
     // A flattened section, squarer than a tube: a rib seen end on.
     const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.7;
     const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.7;
-    const wide = thick * 1.15 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
+    const wide = thick * 1.7 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
     const tall = thick * 1.45 * swell;
     const sag = 0.6 * Math.sin(s * 0.11 + seed) + 0.5 * drift(s * 0.05, seed, 9);
     const rr = radius + 0.9 - cx * wide;
@@ -92,24 +92,38 @@ export function slab(rng: Rng, w: number, h: number, d: number, at: [number, num
     const ey = (2 * y) / h;
     const ez = (2 * z) / d;
     const corner = Math.max(0, Math.abs(ex) + Math.abs(ez) - 1.45) * 0.5 + Math.max(0, Math.abs(ex) + Math.abs(ey) - 1.6) * 0.25 + Math.max(0, Math.abs(ez) + Math.abs(ey) - 1.6) * 0.25;
-    const k = 1 - 0.55 * corner;
+    const k = 1 - 0.3 * corner;
     x = x * k + skew * z * 0.3 + 0.22 * drift(y * 0.8 + seed, z * 0.5, x * 0.4);
     z = z * k + 0.22 * drift(x * 0.5, y * 0.8, z * 0.4 + seed);
     y = y * (1 - 0.3 * corner) + 0.16 * drift(x * 0.45, seed, z * 0.45) + 0.12 * ex * skew * h;
     p.setXYZ(i, x, y, z);
   }
   g.computeVertexNormals();
-  g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(...turn)), new THREE.Vector3(1, 1, 1)));
+  g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1)));
   return open(g);
 }
 
-/** A heap of rubble under the slabs: a cone with a broken face. */
-export function heap(radius: number, height: number, at: [number, number, number]): THREE.BufferGeometry {
-  return sheet(48, 16, (u, v) => {
-    const a = u * 2 * Math.PI;
-    const r = radius * (0.04 + 0.96 * v) * (1 + 0.16 * drift(a * 3, v * 5, 3) + 0.07 * drift(a * 11, v * 15, 7));
-    const y = height * (0.5 - v) + 1.4 * drift(a * 5, v * 9, 1);
-    return { at: [at[0] + Math.cos(a) * r, at[1] + y, at[2] - Math.sin(a) * r], uv: [a * radius * 0.6, y], occ: 0.6 };
+/** The height of the rubble where the east-south-east wall came down: a ramp from the broken rim to the middle of the shaft. */
+export function talusHeight(x: number, z: number): number {
+  const b = Math.atan2(x, -z);
+  const r = Math.hypot(x, z);
+  const rim = rimRadius(b);
+  let d = Math.abs(b - 112 * RAD);
+  if (d > Math.PI) d = 2 * Math.PI - d;
+  const across = smooth((46 * RAD - d) / (22 * RAD));
+  const down = smooth((rim - r) / (rim + 6));
+  const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 1.2;
+  return lerp(top, -27, down ** 0.8) - 44 * (1 - across) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
+}
+
+/** The rubble itself: a fan from the broken rim down into the shaft. */
+export function heap(): THREE.BufferGeometry {
+  return sheet(70, 36, (u, v) => {
+    const b = lerp(58, 166, u) * RAD;
+    const r = lerp(rimRadius(b) - 0.2, -8, v);
+    const x = Math.sin(b) * r;
+    const z = -Math.cos(b) * r;
+    return { at: [x, talusHeight(x, z), z], uv: [b * 24, r], occ: lerp(0.95, 0.5, smooth(v * 1.3)) };
   });
 }
 
@@ -148,7 +162,7 @@ export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
 }
 
 /** The cave: where it is on the cliff's face (metres along it, height) and its half size. */
-export const CAVE_MOUTH = { s: 0, y: 215, wide: 430, tall: 105, deep: 300 };
+export const CAVE_MOUTH = { s: 0, y: 325, wide: 620, tall: 85, deep: 320 };
 
 /** The sea cliff with its cave: 10 km of it, the scree at its foot, the face, the land behind. */
 export function cliff(): THREE.BufferGeometry {

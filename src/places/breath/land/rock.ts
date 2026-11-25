@@ -143,42 +143,52 @@ vec3 raised(vec3 p, vec3 n, float h) {
   return normalize(abs(det) * n - g);
 }`;
 
-// The shelf: ivory bone-rock in level plates, wet from the tide, pitted, cut by joints, with standing water in its low places and weed stains where the tide stands.
+// The shelf: wet bone-rock in level plates, each a hand higher than the next, with scalloped edges and a line of shade under each edge.
+// The low plates hold a film of water that mirrors the sky. Smooth and broad from far off; the grain shows only near the lens.
 export const SHELF_FRAGMENT = /* glsl */ `
 ${COMMON}
 void main() {
   vec3 p = vWorld;
-  vec3 v = normalize(cameraPosition - p);
+  vec3 toEye = cameraPosition - p;
+  float dist = length(toEye);
+  vec3 v = toEye / dist;
   vec3 n = normalize(vNormal);
   vec4 land = landAt(p.xz);
-  vec4 a = texture2D(tRock, p.xz / 37.0);
-  vec4 b = texture2D(tRock, p.xz / 6.3 + 0.37);
-  vec4 c = texture2D(tRock, p.xz / 1.1 + 0.11);
-  float near = smoothstep(90.0, 20.0, length(cameraPosition - p));
+  vec4 a = texture2D(tRock, p.xz / 83.0);
+  vec4 b = texture2D(tRock, p.xz / 11.3 + 0.37);
+  vec4 c = texture2D(tRock, p.xz / 2.1 + 0.11);
 
-  float joint = smoothstep(0.05, 0.0, a.b) * 0.5 * smoothstep(0.45, 0.65, a.r) + smoothstep(0.07, 0.0, b.b) * 0.45 * smoothstep(0.4, 0.6, a.a);
-  float pit = smoothstep(0.35, 0.8, b.g) * 0.6 + smoothstep(0.3, 0.8, c.g) * 0.5 * near;
-  // Metres: the low swells of a plate, the pits in it, the joints between plates, the grain.
-  float h = 0.1 * a.r + 0.05 * b.r - 0.045 * pit - 0.07 * joint + 0.012 * c.r * near + 0.02 * b.a;
+  // The plates: the contours of a slow field, so that their edges are scalloped. t counts plates; a riser is never thinner than a pixel.
+  float t = 5.5 * a.r + 0.45 * b.a;
+  float level = floor(t);
+  float f = t - level;
+  float w = clamp(1.3 * fwidth(t), 0.05, 1.0);
+  float keep = 1.0 - smoothstep(0.3, 0.9, w);
+  float rise = smoothstep(1.0 - w, 1.0, f);
+  // Each plate is a shallow dish: a raised dry brink at its outer edge, and its back, under the next edge, is low, shaded and holds water.
+  float back = smoothstep(0.25, 0.7, f) * (1.0 - rise);
+  float foot = smoothstep(1.0 - w - 0.22, 1.0 - w, f) * (1.0 - rise) * keep;
+  float brink = smoothstep(0.2, 0.0, f) * keep;
+  float h = (0.3 * (level + rise) + 0.05 * brink - 0.04 * back) * keep + 0.07 * b.r + 0.028 * c.r + 0.012 * c.g;
 
-  // How wet: the baked map (low ground), and every hollow of the surface holds a little.
-  float low = clamp(land.a + 0.5 * (0.55 - a.a) + 0.25 * (0.5 - b.r), 0.0, 1.0);
-  float wet = clamp(0.35 + 0.65 * low + 0.3 * pit, 0.0, 1.0);
-  float film = smoothstep(0.62, 0.86, low + 0.2 * pit);
-  n = raised(p, n, h * (1.0 - 0.9 * film));
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.75 * film));
+  // Water stands at the back of the low plates and wherever the ground itself is low.
+  float pool = land.a + 1.5 * (0.5 - a.a) + 0.5 * (0.5 - b.r);
+  float film = clamp(smoothstep(0.1, 0.4, pool + 0.5 * back) * back + smoothstep(0.55, 0.75, pool), 0.0, 1.0) * (1.0 - rise);
+  float wet = clamp(0.6 + 0.6 * pool + 0.3 * back, 0.0, 1.0);
+  n = raised(p, n, h * (1.0 - 0.75 * film));
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.6 * film));
 
-  vec3 ivory = mix(vec3(0.5, 0.44, 0.36), vec3(0.69, 0.64, 0.55), clamp(0.5 + 1.6 * (a.r - 0.5) + 0.8 * (b.a - 0.5), 0.0, 1.0));
-  // Tea-brown where water has stood and dried, olive weed along the tide line, dark in the joints and pits.
-  float stain = smoothstep(0.52, 0.72, a.a + 0.3 * (b.r - 0.5)) * 0.6;
-  vec3 albedo = mix(ivory, vec3(0.3, 0.21, 0.13), stain);
-  float tide = smoothstep(0.75, 0.0, abs(p.y + 0.15)) * smoothstep(0.35, 0.6, b.a);
-  albedo = mix(albedo, vec3(0.17, 0.18, 0.1), 0.6 * tide);
-  albedo *= 1.0 - 0.55 * joint - 0.3 * pit;
-  albedo *= mix(1.0, 0.55, wet);
-  albedo = mix(albedo, vec3(0.05, 0.065, 0.06), 0.8 * film);
-  float rough = mix(mix(0.8, 0.3, wet), 0.05, film);
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc;
+  vec3 rock = mix(vec3(0.3, 0.265, 0.22), vec3(0.56, 0.51, 0.43), clamp(0.5 + 1.8 * (a.a - 0.5) + 0.9 * (b.r - 0.5) + 0.5 * (c.a - 0.5), 0.0, 1.0));
+  rock = mix(rock, vec3(0.66, 0.61, 0.52), 0.6 * brink);
+  // Tea-brown where water has stood and dried, olive weed along the tide line.
+  float stain = smoothstep(0.5, 0.72, b.a + 0.5 * (a.r - 0.5));
+  rock = mix(rock, rock * vec3(0.62, 0.47, 0.34), 0.6 * stain);
+  float tide = smoothstep(0.8, 0.0, abs(p.y + 0.05)) * smoothstep(0.4, 0.62, b.r);
+  rock = mix(rock, vec3(0.085, 0.095, 0.05), 0.55 * tide);
+  vec3 albedo = rock * mix(1.0, 0.6, wet) * (1.0 - 0.22 * back * keep - 0.35 * foot);
+  albedo = mix(albedo, albedo * vec3(0.5, 0.56, 0.56), film);
+  float rough = mix(mix(0.55, 0.3, wet), 0.1, film);
+  float occ = (1.0 - 0.2 * back * keep - 0.4 * foot) * vOcc;
   gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo, rough, occ)), 1.0);
 }`;
 
@@ -191,7 +201,7 @@ uniform vec3 uDark;
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
   vec4 a = texture2D(tRock, vUv / 17.0);
   vec4 b = texture2D(tRock, vUv / 3.1 + 0.23);
   // Streaks that run down the face: the same tile, drawn out along the fall line.
@@ -218,16 +228,16 @@ ${COMMON}
 void main() {
   vec3 p = vWorld;
   vec3 v = normalize(cameraPosition - p);
-  vec3 n = normalize(vNormal);
+  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
   vec4 a = texture2D(tRock, vec2(vUv.x / 2300.0, vUv.y / 520.0));
   vec4 b = texture2D(tRock, vec2(vUv.x / 410.0, vUv.y / 120.0) + 0.31);
   float strata = texture2D(tRock, vec2(vUv.x / 9000.0 + 0.1 * a.r, vUv.y / 260.0)).a;
   float h = 30.0 * a.r + 9.0 * b.r + 14.0 * strata - 10.0 * smoothstep(0.1, 0.0, a.b);
   n = raised(p, n, h);
-  float ledge = smoothstep(0.55, 0.85, n.y);
-  vec3 rock = mix(vec3(0.085, 0.078, 0.072), vec3(0.2, 0.18, 0.16), clamp(0.5 + 2.0 * (strata - 0.5) + 0.6 * (b.r - 0.5), 0.0, 1.0));
-  // Ledges and the scree hold pale rubble and the droppings of what nests there.
-  vec3 albedo = mix(rock, vec3(0.5, 0.48, 0.45), ledge * (0.4 + 0.6 * b.a));
+  float ledge = smoothstep(0.5, 0.8, normalize(vNormal).y * (gl_FrontFacing ? 1.0 : -1.0) + 0.25 * (n.y - 0.3));
+  vec3 rock = mix(vec3(0.022, 0.024, 0.03), vec3(0.075, 0.073, 0.072), clamp(0.5 + 2.2 * (strata - 0.5) + 0.6 * (b.r - 0.5), 0.0, 1.0));
+  // Ledges, the scree and the top hold snow.
+  vec3 albedo = mix(rock, vec3(0.62, 0.64, 0.68), ledge * smoothstep(0.3, 0.5, b.a + 0.25 * ledge));
   float occ = vOcc * (0.6 + 0.4 * b.r);
   gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo * vOcc, 0.85, occ)), 1.0);
 }`;

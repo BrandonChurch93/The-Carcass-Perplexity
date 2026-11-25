@@ -54,21 +54,23 @@ uniform vec3 uFill;`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 
-// How bright the fog is round the sun, toward d: a wide pale-gold glow and a tighter core. The dome, the air and every mirror read this one function.
+// The fog's glow round the sun, toward d: an orange core a quarter of a radian wide inside a pale one that reaches half the sky. Measured on the
+// approved wide view. The dome, the air and every mirror read this one function. sunGlow is its brightness alone.
+vec3 sunHalo(vec3 d) {
+  float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
+  return uGlowColour * (exp(-a / 0.6) + vec3(2.3, 1.05, 0.38) * exp(-a / 0.32));
+}
 float sunGlow(vec3 d) {
-  float c = 0.5 + 0.5 * dot(d, uSunDir);
-  c *= c;
-  float c2 = c * c;
-  float c8 = c2 * c2 * c2 * c2;
-  return 0.1 + 0.3 * c2 + 0.55 * c8 + 2.2 * c8 * c8 * c8 * c8;
+  float a = sqrt(max(2.0 - 2.0 * dot(d, uSunDir), 0.0));
+  return exp(-a / 0.6) + 1.2 * exp(-a / 0.32);
 }
 
-// Radiance of the dawn sky toward d: cold grey overhead, pale toward the horizon, gold toward the sun. The sun's own disc is the dome's.
+// Radiance of the dawn sky toward d: cold grey overhead, paler toward the horizon, gold toward the sun. The sun's own disc is the dome's.
 vec3 skyRadiance(vec3 d) {
   float up = clamp(d.y, -1.0, 1.0);
   vec3 c = mix(uSkyHorizon, uSkyZenith, pow(clamp(up, 0.0, 1.0), 0.45));
   c = mix(c, uSkyGround, smoothstep(0.0, -0.25, up));
-  return c + uGlowColour * sunGlow(vec3(d.x, max(d.y, 0.0), d.z)) * smoothstep(-0.2, 0.03, up);
+  return c + sunHalo(vec3(d.x, max(d.y, 0.0), d.z)) * smoothstep(-0.2, 0.03, up);
 }
 
 // Irradiance from the whole sky on a face with normal n, before anything hides the sky. Cold from above, with the fog's gold glow on the faces
@@ -78,7 +80,7 @@ vec3 skyIrradiance(vec3 n) {
   float up = 0.5 + 0.5 * n.y;
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.55 * max(n.y, 0.0)), up) * uFill;
   float w = 0.5 + 0.5 * dot(n, uSunDir);
-  return 3.14159 * (e + uGlowColour * (0.2 * w * w));
+  return 3.14159 * (e + uGlowColour * (0.55 * w * w * w));
 }
 
 // The land under a point: r the ground's height in metres, g how much of the sky the ground there sees (0 to 1), b the height in metres above

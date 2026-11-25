@@ -29,7 +29,7 @@ function look(position: Vec3, bearingDeg: number, pitchDeg: number, fov: number,
 const key = (id: string): number => keyPart(shotById(id));
 
 const shots: Record<string, CameraPath> = {
-  'breath-01': through(look([-42, 9, 51.7], 18.5, -10.7, 40), key('breath-01'), { forward: -34, up: 2, right: -5 }, { forward: 15, up: 0.5, right: 2 }),
+  'breath-01': through(look([-46, 13, 63], 20.5, -11.4, 44), key('breath-01'), { forward: -30, up: 3, right: -4 }, { forward: 14, up: -1, right: 2 }),
   'breath-02': through(look([-2, 4.2, 36], -14, -18, 46), key('breath-02'), { forward: -9, up: -0.5, right: -2.5 }, { forward: 8, up: 1.4, right: 1.5, tilt: -6 }),
   'breath-03': through(look([-30.3, 4.3, 5], 2, -6, 32), key('breath-03'), { forward: 1, right: -0.6 }, { forward: -6, right: -1.5, up: 0.6 }),
   'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -7, forward: -2.5 }, { right: 5, forward: 2 }),
