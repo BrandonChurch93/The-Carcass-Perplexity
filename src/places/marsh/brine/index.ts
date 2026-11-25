@@ -28,7 +28,7 @@ const RING_LIFE = 5;
 const RING_SPEED = 0.9;
 
 export function create(ctx: Context): Piece {
-  const { grain, field } = landShared();
+  const { grain, field, plates } = landShared();
   const rng = ctx.rng('brine/domes');
 
   const domes: Dome[] = [
@@ -42,18 +42,51 @@ export function create(ctx: Context): Piece {
     domes.push({ x: Math.sin(a) * r - 1.5, z: Math.cos(a) * r - 1, size: rng.range(0.14, 0.36), period, burst: rng.range(0, period), seed: rng.next(), drops: 10 });
   }
 
-  const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain } };
+  const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain }, tPlates: { value: plates } };
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const ringCount = { value: 0 };
 
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount },
+    uniforms: { ...uniforms, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeep: { value: new THREE.Vector2(-3.4, -1.6) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;
-  const plane = new THREE.PlaneGeometry(500, 500, 1, 1).rotateX(-Math.PI / 2);
+  // The surface is laid only where there is brine: squares of two metres, kept where any of their ground is within a stride of a shore.
+  const cell = 2;
+  const half = 250;
+  const count = (half * 2) / cell;
+  const wetCell = new Uint8Array(count * count);
+  for (let j = 0; j < count; j++) {
+    for (let i = 0; i < count; i++) {
+      let least = 9;
+      for (let v = 0; v <= 4 && least > 0.6; v++) {
+        for (let u = 0; u <= 4; u++) least = Math.min(least, field.shore(-half + (i + u / 4) * cell, -half + (j + v / 4) * cell));
+      }
+      wetCell[j * count + i] = least < 0.6 ? 1 : 0;
+    }
+  }
+  const corners: number[] = [];
+  for (let j = 0; j < count; j++) {
+    let i = 0;
+    while (i < count) {
+      if (!wetCell[j * count + i]) {
+        i++;
+        continue;
+      }
+      let end = i;
+      while (end < count && wetCell[j * count + end]) end++;
+      const x0 = -half + i * cell;
+      const x1 = -half + end * cell;
+      const z0 = -half + j * cell;
+      const z1 = z0 + cell;
+      corners.push(x0, 0, z0, x0, 0, z1, x1, 0, z0, x1, 0, z0, x0, 0, z1, x1, 0, z1);
+      i = end;
+    }
+  }
+  const plane = new THREE.BufferGeometry();
+  plane.setAttribute('position', new THREE.Float32BufferAttribute(corners, 3));
   const water = new THREE.Mesh(plane, surface);
   water.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('brine', water));
@@ -111,7 +144,7 @@ export function create(ctx: Context): Piece {
       // It rises slowly, then quickly at the last: gas gathers under a skin that gives.
       const grow = swell <= 0 ? 0 : 0.25 * swell + 0.75 * Math.pow(swell, 2.6);
       const r = d.size * (0.35 + 0.65 * grow) * (swell > 0 ? 1 : 0);
-      const tall = r * (0.25 + 0.75 * grow);
+      const tall = r * (0.22 + 0.5 * grow);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
       domeLife.setXYZW(i, grow, d.seed, d.size, 0);
@@ -155,7 +188,9 @@ export function create(ctx: Context): Piece {
         }
       } else if (ring < MAX_RINGS && swell > 0.5) {
         // A swelling dome pushes a low ripple ahead of its foot.
-        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.12, 0.25 * grow);
+        (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.14, 0.55 * grow);
+        // And, round the larger ones, a second, wider and lower, that left it a breath ago.
+        if (ring < MAX_RINGS && d.size > 0.3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 1.7 + 0.5, 0.3 * grow);
       }
     });
     ringCount.value = ring;
