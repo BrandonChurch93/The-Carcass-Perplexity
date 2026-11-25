@@ -20,6 +20,7 @@ const FLEEING = 9;
 const COLONY = 900;
 const ROCKS = 170;
 const CLOUDS = 30;
+const TRACK_SAMPLES = 96;
 const SPRAY = 70;
 
 function ribbon(y: number, keep: (lo: number, hi: number) => boolean): THREE.BufferGeometry {
@@ -143,8 +144,8 @@ function create(): Place {
 
   const tracks: [number, number][] = [];
   for (const path of Object.values(shots)) {
-    for (let k = 0; k <= 24; k++) {
-      const pose = resolve(path, k / 24, 0);
+    for (let k = 0; k <= TRACK_SAMPLES; k++) {
+      const pose = resolve(path, k / TRACK_SAMPLES, 0);
       tracks.push([pose.position[0], pose.position[2]]);
     }
   }

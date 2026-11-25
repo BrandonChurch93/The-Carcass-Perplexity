@@ -1,5 +1,5 @@
 import { add, scale, through, type CameraPath, type Pose, type Vec3 } from '../../core/cameras';
-import { keyPart, shotById } from '../../film/cut';
+import { cut, keyPart, shotById, shotLength } from '../../film/cut';
 import { BUTTRESS, buttressRadius, groundAt, ribByName, weedPoint } from './layout';
 
 const RAD = Math.PI / 180;
@@ -18,8 +18,10 @@ const DROWNED_PHI = 0.35;
 const DROWNED_HEIGHT = 9.5;
 const GATE_Z = -1500;
 const GATE_X = 105;
+const ARRIVAL_YAW = 8;
+const ARRIVAL_PITCH = 0.2;
 
-const establish = looking(onGround(-180, 110, 1.9), 8, 0.2, 48);
+const establish = looking(onGround(-180, 110, 1.9), ARRIVAL_YAW, ARRIVAL_PITCH, 48);
 const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 const COLONY_HEIGHT = 44;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
@@ -42,17 +44,53 @@ function drownedPose(): Pose {
 
 const drowned = drownedPose();
 
-const approach: CameraPath = [
-  { at: 0, pose: { position: [-120, 7, 2250], aim: [-60, 150, 400], fov: 30 } },
-  { at: 0.5, pose: { position: [-150, 5.5, 1250], aim: [-60, 190, -300], fov: 36 } },
-  { at: 1, pose: { position: [-30, 3.2, 395], aim: [40, 250, -700], fov: 46 } },
-];
+const opening = shotById('ribs-01');
+const strait = shotById('ribs-02');
+const ARRIVAL = {
+  seconds: (shotLength(opening) + shotLength(strait)) / cut.fps,
+  keySeconds: (shotLength(opening) + keyPart(strait) * shotLength(strait)) / cut.fps,
+  fast: 110,
+  slow: 10,
+  far: 1400,
+  archAhead: 496,
+  hold: 0.7,
+  turn: 1.2,
+  offset: 50,
+  drift: 14,
+  rise: 5.5,
+  tilt: 2.3,
+  yaw: ARRIVAL_YAW,
+  pitch: ARRIVAL_PITCH,
+};
+
+function travelled(seconds: number): number {
+  const u = seconds / ARRIVAL.seconds;
+  return ARRIVAL.slow * seconds + (ARRIVAL.fast - ARRIVAL.slow) * ARRIVAL.seconds * (u - u * u * u + 0.5 * u * u * u * u);
+}
+
+const TO_KEY = travelled(ARRIVAL.keySeconds);
+const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
+
+function arrival(seconds: number): Pose {
+  const left = TO_KEY - travelled(seconds);
+  const out = Math.max(0, left) / ARRIVAL.far;
+  const past = Math.max(0, -left) / PAST_KEY;
+  const along = heading(ARRIVAL.yaw, 0);
+  const across: Vec3 = [-along[2], 0, along[0]];
+  const side = ARRIVAL.offset * out * out + ARRIVAL.drift * past * past;
+  const position = add(add(establish.position, scale(along, -left)), add(scale(across, side), [0, ARRIVAL.rise * Math.pow(out, 1.5), 0]));
+  const lens = Math.tan((establish.fov * RAD) / 2) * Math.pow(ARRIVAL.archAhead / (ARRIVAL.archAhead + left), ARRIVAL.hold);
+  return looking(position, ARRIVAL.yaw + ARRIVAL.turn * out * out, ARRIVAL.pitch + ARRIVAL.tilt * Math.pow(out, 1.5), (2 * Math.atan(lens)) / RAD);
+}
+
+const approach: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
+const intoStrait: CameraPath = (part) => arrival((shotLength(opening) + part * shotLength(strait)) / cut.fps);
 
 const key = (id: string): number => keyPart(shotById(id));
 
 export const shots: Record<string, CameraPath> = {
   'ribs-01': approach,
-  'ribs-02': through(establish, key('ribs-02'), { forward: -70, right: 12, up: 1.4 }, { forward: 45, right: 14 }),
+  'ribs-02': intoStrait,
   'ribs-03': through(colony, key('ribs-03'), { right: 12, forward: -14, up: -2 }, { right: -16, forward: 10, up: 4 }),
   'ribs-04': through(feeding, key('ribs-04'), { forward: -24, up: 0.6 }, { forward: 5, up: -0.2 }),
   'ribs-05': through(drowned, key('ribs-05'), { forward: -30, up: -1.6, right: 9 }, { forward: 4, up: 1.2, right: 1 }),
