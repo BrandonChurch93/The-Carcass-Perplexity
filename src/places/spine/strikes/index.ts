@@ -14,7 +14,7 @@ const CORE = 260;
 const CAST = 520;
 const TINT = new THREE.Vector3(0.78, 0.7, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
-const CHANNEL = 1.1;
+const CHANNEL = 2.2;
 const SPARKS = 420;
 
 const CHANNEL_VERTEX = /* glsl */ `
@@ -34,7 +34,7 @@ void main() {
   vec3 side = normalize(cross(b - a, c.xyz));
   float far = -c.z;
   // The core is never thinner than a pixel and a quarter, and the strip carries a soft sheath eight cores wide.
-  float core = max(aInfo.x, 1.25 * uPixel * far);
+  float core = max(aInfo.x, 1.6 * uPixel * far);
   float half_ = core * 8.0;
   c.xyz += side * aSide.x * half_;
   vAcross = aSide.x * 8.0;
@@ -84,8 +84,8 @@ void main() {
   float x = vAcross;
   if (abs(x) > 7.9) discard;
   // White where the arc is, and a violet skirt of lit air close round it that thins fast.
-  float core = exp(-x * x * 7.0);
-  float skirt = 0.03 * exp(-abs(x) * 0.7) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
+  float core = exp(-x * x * 3.2);
+  float skirt = 0.075 * exp(-abs(x) * 0.7) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
   vec3 c = (uTint * (core * 0.55 + skirt) + vec3(core * core * 0.45)) * (uCore * channelLit());
   gl_FragColor = vec4(glowOut(c, 0.7) * (1.0 - uSolo), 1.0);
 }`;
@@ -163,7 +163,7 @@ void main() {
   // The white-hot spot is solid, and so is the violet air close round it; the glow in the cloud is added.
   if (uSharp > 0.5) {
     float most = max(uColour.r, max(uColour.g, uColour.b));
-    c = uColour * exp(-r * r * 700.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.0026 * exp(-r * 5.5) * (1.0 - smoothstep(0.6, 1.0, r)));
+    c = uColour * exp(-r * r * 260.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.0045 * exp(-r * 5.5) * (1.0 - smoothstep(0.6, 1.0, r)));
     c = glowOut(c, 0.7);
   }
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);

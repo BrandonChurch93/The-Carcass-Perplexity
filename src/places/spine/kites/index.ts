@@ -84,6 +84,7 @@ varying float vThin;
 varying float vCord;
 varying float vSpine;
 varying float vHalf;
+varying float vFar;
 void main() {
   float u = aAt.x;
   float e = 0.004;
@@ -97,15 +98,19 @@ void main() {
   // The ribbon rolls about its own length as the waves pass, and the roll travels with them.
   float k = 6.2832 / aShape.w;
   float roll = 0.7 * sin(k * 0.61 * (u * aShape.x - uWind.w * 0.7 * uTime) + aShape.z * 2.0) + 0.8 * (fract(aMore.y * 3.1) - 0.5) + 0.6 * sin(k * 1.9 * (u * aShape.x - uWind.w * 0.8 * uTime) + aShape.z) * u * u;
+  // Seen from far along the ridge, a sheet that lay flat on the wind would be a line: the far ones stand more on edge, as a flag does.
+  float stand = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor));
+  roll = mix(roll, (fract(aMore.y * 5.3) < 0.5 ? -1.1 : 1.1) + 0.45 * roll, stand);
+  vFar = stand;
   roll = mix(1.5708, roll, smoothstep(aMore.w, aMore.w + 0.1, u));
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
   vec3 normal_ = cross(tangent, across);
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
   float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
   float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
-  float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u));
+  float halfW = 0.5 * aShape.y * blade * breadth * (1.0 - 0.4 * smoothstep(0.6, 1.0, u)) * (1.0 + 0.5 * stand);
   float far = length(cameraPosition - c);
-  float cord = max(0.15, 0.9 * uPixel * far);
+  float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
   float thin = max(halfW, cord + 0.95 * (1.0 - smoothstep(aMore.w + 0.02, aMore.w + 0.09, u)));
   // The blade cups across its width: its edges lift off the plane.
@@ -138,6 +143,7 @@ varying float vThin;
 varying float vCord;
 varying float vSpine;
 varying float vHalf;
+varying float vFar;
 void main() {
   float u = vAt.x;
   float v = vAt.y;
@@ -220,14 +226,19 @@ void main() {
 
   // The small ones behind are thinner skins than the great ones.
   float alpha = clamp(0.3 + 0.5 * thick + 0.45 * fres, 0.0, 0.96) * skin * mix(0.72, 1.0, smoothstep(4.0, 9.0, wide));
+  // From far its two edges are what draws it: dark lines round a pale sheet.
+  float hem = vFar * smoothstep(0.66, 0.9, abs(v)) * skin;
+  c *= 1.0 - 0.8 * hem;
+  alpha = max(alpha + 0.22 * vFar * skin, 0.9 * hem);
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
   vec3 round_ = normalize(n * sqrt(1.0 - x * x) + vec3(0.0, 1.0, 0.0) * x);
   float fibre = 0.5 + 0.5 * sin(metres * 9.0 + x * 5.0 + seed);
   float rimed = smoothstep(0.2, 0.8, x) * smoothstep(0.35, 0.75, 0.6 * vnoise(vec2(metres * 0.9, seed)) + 0.4 * vnoise(vec2(metres * 4.5, seed + 3.0)));
   vec3 sinew = mix(vec3(0.1, 0.055, 0.045), vec3(0.035, 0.022, 0.022), fibre) * (1.0 + 0.8 * min(knots, 1.0));
-  vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0);
-  float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, vCord);
+  rimed *= 1.0 - vFar;
+  vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0) * (1.0 - 0.5 * vFar);
+  float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, max(vCord, vFar));
   c = mix(c, cord, corded);
   alpha = max(alpha, corded);
   // The ice on it: clear, lit along one side.
@@ -291,7 +302,7 @@ export function create(ctx: Context): Piece {
   const ribbons: Ribbon[] = [];
   spires.forEach((sp, n) => {
     const near = n === FIRST;
-    const reach = near ? 1 : n === FIRST + 2 ? 1.2 : n === FIRST + 1 ? 0.6 : 0.85;
+    const reach = near ? 1 : n === FIRST + 2 ? 1.9 : n === FIRST + 1 ? 0.6 : 0.85;
     for (const [share, count] of colonies(n)) {
       const t = share + rng.range(-0.008, 0.008);
       for (let i = 0; i < count; i++) {

@@ -90,6 +90,13 @@ void main() {
   float fine = vnoise3(vRest * 90.0);
   // Under the coat: matted under-fur, dark because the coat stands over it.
   vec3 albedo = uTone.rgb * mix(0.4, 0.62, grain) * (0.75 + 0.5 * fine);
+  // The shanks and the feet carry a short, close coat that the locks do not hide: paler, streaked along the leg, rimed where it looks up.
+  float shank = 1.0 - smoothstep(0.3, 0.46, vRest.y);
+  // On the dead one, lying open to the lens, any hide the locks leave bare is this close coat too.
+  if (uBurn.w > 0.0) shank = max(shank, 0.9);
+  float nap = vnoise3(vRest * vec3(60.0, 9.0, 60.0));
+  albedo = mix(albedo, uTone.rgb * mix(0.62, 1.0, nap) * (0.85 + 0.3 * fine), shank);
+  albedo = mix(albedo, vec3(0.88, 0.89, 0.91), shank * smoothstep(0.35, 0.8, n.y + 0.5 * (nap - 0.5)) * 0.7);
   // The pads under the feet are bare and dark.
   float pad = 1.0 - smoothstep(0.004, 0.02, vRest.y);
   albedo = mix(albedo, vec3(0.022, 0.018, 0.018) * (0.7 + 0.6 * fine), pad);
@@ -115,14 +122,17 @@ void main() {
     vec3 skin = mix(char_, raw * 0.8, clamp(max(split, 0.6 * splitFine) + 0.55 * torn, 0.0, 1.0) * (1.0 - smoothstep(0.55, 0.98, ragged)));
     // Toward the edge of the burn the skin is scorched brown and blistered, not black.
     skin = mix(skin, vec3(0.16, 0.09, 0.05) * (0.6 + 0.8 * fine), smoothstep(0.55, 0.95, ragged) * 0.8);
+    // Round it, under the singed coat, the hide is scorched dark.
+    albedo = mix(albedo, vec3(0.085, 0.04, 0.028) * (0.6 + 0.8 * fine), (1.0 - smoothstep(1.0, 3.4, ragged)) * 0.9);
     albedo = mix(albedo, skin, burnt);
-    rough = mix(rough, 0.5 - 0.25 * split, burnt);
+    rough = mix(rough, 0.8 - 0.35 * split, burnt);
     occ = mix(occ, 0.9 - 0.4 * split, burnt);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * e / 3.14159;
+  // A dull sheen and no more: hide and char are not mirrors, even seen along them.
+  c += (0.04 + 0.08 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * e / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -145,6 +155,7 @@ varying vec3 vAt;
 varying float vSeed;
 vec3 gRoot;
 vec3 gOut;
+vec3 gNormal;
 vec3 gLean;
 vec3 gBlown;
 vec3 gLock;
@@ -152,6 +163,8 @@ vec3 gLock;
 // where it reaches it. Nothing hangs through the ground.
 vec3 lockAt(float t) {
   vec3 p = gRoot + gLock.x * (gOut * (t - 0.5 * t * t) + gLean * t + vec3(0.0, -1.0, 0.0) * (gLock.y * 0.5 * t * t) + gBlown * (t * t));
+  // Nor through the hide it grows from: where its weight would take it in, it lies on the hide.
+  p += gNormal * max(0.0, gLock.x * 0.14 * t - dot(p - gRoot, gNormal));
   p.y = max(p.y, groundY(p) + gLock.z);
   return p;
 }
@@ -196,6 +209,7 @@ void main() {
   vec3 lean = comb * 0.4 + own + vec3(0.0, -1.0, 0.0) * (fall * 0.35);
   gRoot = root;
   gOut = n * (off * lift);
+  gNormal = n;
   gLean = lean;
   gBlown = wind * blow;
   gLock = vec3(len, fall, 0.012 + 0.02 * fract(seed * 17.0));
