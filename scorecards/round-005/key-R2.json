@@ -1,0 +1,37 @@
+{
+  "round": "5",
+  "unit": "heart",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: heart-0, film frame 2722"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: heart-1, film frame 3477"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: heart-2, film frame 3685"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: heart-3, film frame 3156"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: heart-4, film frame 4006"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of heart-0, references/approved/2-heart/heart-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of heart-1, references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of heart-2, references/approved/2-heart/heart-2-the-one-that-sank.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of heart-3, references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of heart-4, references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg, resized and encoded like the judged images"
+    }
+  }
+}
