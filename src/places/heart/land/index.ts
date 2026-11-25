@@ -68,7 +68,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tStrata: { value: strataTexture() },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
     // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
-    uStain: { value: new THREE.Vector4(-505.0, 3.0, 203.4, 3.4) },
+    uStain: { value: new THREE.Vector4(-505.0, 0.9, 203.6, 2.6) },
     uCrackB: { value: new THREE.Vector4((cracks[1] as Crack).ax, (cracks[1] as Crack).az, (cracks[1] as Crack).bx, (cracks[1] as Crack).bz) },
   };
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });
@@ -166,12 +166,20 @@ export function create(ctx: HeartContext): HeartPiece {
     const t = -(x + 510.5) * AHEAD[1] + (z - 215.5) * AHEAD[0];
     return Math.min(s - RUBBLE.back, RUBBLE.front - s, t - RUBBLE.left, RUBBLE.right - t);
   };
+  const unit = (v: number): number => Math.min(1, Math.max(0, v));
   const rubbleHeight = (x: number, z: number): number => {
     const base = benchUnder(x, z);
-    // It sinks under the bench at its border and stays off the lip of the shore and the faces of the crag.
-    const inside = Math.min(1, Math.max(0, inPatch(x, z) / 0.8));
-    const on = inside * Math.min(1, Math.max(0, (base - 0.08) / 0.14)) * Math.min(1, Math.max(0, (2.4 - base) / 0.6));
-    return base - 0.06 + on * (0.06 + rubbleAt(x, z));
+    // It sinks under the bench at its border and stays off the faces of the crag.
+    const inside = unit(inPatch(x, z) / 0.8);
+    const on = inside * unit((base - 0.08) / 0.14) * unit((2.4 - base) / 0.6);
+    const onBench = base - 0.06 + on * (0.06 + rubbleAt(x, z));
+    if (base > 0.3) return onBench;
+    // The shore is no kerb: the rubble spills out over the crust, half a metre here and two there, and thins to single stones.
+    const reach = 0.5 + 1.7 * noise(x / 1.7 + 3.3, z / 1.7 + 7.1) + 0.6 * (noise(x / 0.45 + 1.2, z / 0.45) - 0.5);
+    const edge = 0.2 - 1.5 * reach;
+    const t = unit((base - edge) / (0.2 - edge));
+    const spill = -0.07 + 0.27 * Math.sqrt(t) + rubbleAt(x, z) * (0.5 + 0.5 * t);
+    return Math.max(onBench, base - 0.06 + inside * unit(t / 0.12) * (spill - base + 0.06));
   };
   const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
   rubble.renderOrder = -5;
@@ -185,7 +193,7 @@ export function create(ctx: HeartContext): HeartPiece {
   buttress.renderOrder = -1;
   ctx.scene.add(ctx.parts.built('land', wall, buttress, ...rocks.land), buttress, ...rocks.land);
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
-  const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80), lipMaterial);
+  const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
   ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, rubble, lip, ...rocks.bench), midBench, nearBench, rubble, lip, ...rocks.bench);
 
@@ -213,7 +221,8 @@ export function create(ctx: HeartContext): HeartPiece {
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
         radius: c.depth > 1 ? 0.4 : 0.22,
-        strength: (c.depth > 1 ? 0.45 : 0.4) * strong,
+        // The vent at the foot of the line view's crag breathes thinly: the crag is seen through it.
+        strength: (c.depth > 1 ? 0.45 : 0.2) * strong,
         rise: (c.depth > 1 ? 6 : 3.5) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: [-0.42, 0.2],

@@ -255,7 +255,7 @@ function lineCrag(x: number, z: number): number {
   const dx = x - CRAG_A[0];
   const dz = z - CRAG_A[1];
   const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
-  if (u < -19 || u > 10.5) return 0;
+  if (u < -19 || u > 13) return 0;
   // Behind the foot is positive: away from the lake.
   const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
   if (v < -1.2 || v > 27) return 0;
@@ -264,14 +264,20 @@ function lineCrag(x: number, z: number): number {
   const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
-  const top = uj < 6.3 ? 4.9 + broken * smooth(0.3, 2.5, v) : uj < 8.1 ? 3.0 + 0.6 * column : uj < 9.5 ? 1.6 + 0.5 * column : 0;
+  // Its far end comes down as a broken ridge does, in a ragged fall of blocks, not in steps.
+  const end = smooth(13.0, 4.5, uj + 1.0 * (noise(u / 2.3 + 3.1, 0.7) - 0.5) + 0.5 * (column - 0.5));
+  const top = (4.3 + 0.6 * broken * smooth(0.3, 2.5, v)) * end * (0.55 + 0.45 * end);
   // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
   const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
   const back = fall * (0.55 + 0.45 * fall);
   const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
   const start = ramp * ramp * (0.35 + 0.65 * ramp);
-  return top * smooth(0, 0.4, vj) * back * start;
+  // The face is two risers with a ragged ledge between them, the upper set back a stride or two: a crag, not a wall.
+  const ledgeAt = 0.4 + 0.8 * blocks(u / 1.7 + 5.9, 1.3) + 0.3 * (noise(u / 0.6, v / 0.6 + 3.3) - 0.5);
+  const share = 0.42 + 0.2 * (blocks(u / 2.3 + 0.4, 6.1) - 0.5);
+  const rise = share * smooth(0, 0.5, vj) + (1 - share) * smooth(ledgeAt, ledgeAt + 0.7, vj);
+  return top * rise * back * start;
 }
 
 /** Metres from (x, z) to the cameras' route on the bench. */
@@ -328,6 +334,8 @@ export function benchAt(x: number, z: number, d0: number): number {
   const nose = Math.min(1, f / face);
   const s = f < face ? 0.9 * Math.sqrt(nose * (2 - nose)) : 0.9 + (0.1 * (f - face)) / (1 - face);
   h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * lerp(0.7, 1, crag) * (s - f) * w;
+  // The crag at the left of the wide picture is a slope of flows and blocks, not a tower: what stands over 26 m is brought down.
+  if (h > 26) h = 26 + (h - 26) * lerp(1, 0.4, crag);
   // The wide view's lens passes low over the bench: the ground keeps 3.5 m under it.
   const [off, lens] = widePath(x, z);
   if (off < 8 && h > lens - 3.7) h = lerp(lens - 3.7, h, smooth(2.5, 8, off));
