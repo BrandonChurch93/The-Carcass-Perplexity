@@ -113,7 +113,7 @@ vec3 lowCloud(vec2 at) {
     celled = 0.85 * mix(closed, open, openness) * held;
   }
   // Small puffs stand only over the land and off its coasts, where the ground warms the air.
-  float puffs = 0.5 * smoothstep(0.012, 0.05, shore) * (1.0 - smoothstep(0.07, 0.14, shore)) * smoothstep(0.58, 0.9, lumps) * smoothstep(0.42, 1.0, grains);
+  float puffs = mix(0.5, 0.16, smoothstep(500.0, 1300.0, uViewKm)) * smoothstep(0.012, 0.05, shore) * (1.0 - smoothstep(0.07, 0.14, shore)) * smoothstep(0.58, 0.9, lumps) * smoothstep(0.42, 1.0, grains);
   thick = mix(thick, max(mix(torn * present, celled, cold), puffs), away);
   // A front is a closed deck: a nearly whole sheet, lumped by its cells and torn at its edges.
   float body = cover.r + 0.3 * (slow - 0.5) + 0.3 * (wide.b - 0.5) + 0.05 * (mid.b - 0.5);
@@ -163,5 +163,5 @@ float cloudShade(vec2 xz) {
   float low = lowCloud(xz + toSun * ${LOW_KM.toFixed(1)} * lift).x;
   float high = highCloud(xz + toSun * ${HIGH_KM.toFixed(1)} * mix(1.0, 2.0, smoothstep(150.0, 700.0, uViewKm)));
   float mid = ${FULL_SHADE ? 'midCloud(xz + toSun * 5.5)' : '0.0'};
-  return (1.0 - 0.78 * low) * (1.0 - 0.3 * high) * (1.0 - 0.4 * mid);
+  return (1.0 - 0.78 * smoothstep(0.08, 0.7, low)) * (1.0 - 0.3 * high) * (1.0 - 0.4 * mid);
 }`;

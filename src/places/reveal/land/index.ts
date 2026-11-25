@@ -17,6 +17,8 @@ ${NOISE_GLSL}
 ${WEATHER_GLSL}
 uniform sampler2D uGroundWide;
 uniform sampler2D uShapeWide;
+uniform sampler2D uBones;
+uniform vec4 uRectA;
 uniform vec4 uRectWide;
 uniform sampler2D uGroundClose;
 uniform sampler2D uShapeClose;
@@ -125,6 +127,13 @@ void main() {
   ground *= mix(1.0, mix(0.44, 1.05, max(massif, salt)) * mix(0.7, 1.45, max(bones, salt)), land * far * inWide);
   // The crests of the bones are bare pale rock, the colour of old bone: from orbit they are the palest thing on the land but the salt.
   ground = mix(ground, vec3(0.62, 0.55, 0.45), 0.4 * bones * smoothstep(0.2, 0.5, height) * (1.0 - salt) * land * far * inWide);
+  // Only near the top of the rise do the bones come together: the great ranges stand bare and pale, the land between them dark.
+  // (The picture of the bones is the traced outline of the ranges, on the rectangle of the widest level.)
+  vec2 uvA = (read - uRectA.xy) * uRectA.zw;
+  float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
+  float top = smoothstep(520.0, 1300.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
+  ground = mix(ground, vec3(0.66, 0.6, 0.5), 0.44 * skeleton * top);
+  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
   ground *= mix(vec3(1.0), vec3(0.84, 0.7, 0.54), bare * mix(0.5, 1.0, fromFar));
@@ -256,6 +265,8 @@ export function create(ctx: Context): Piece {
     uGroundWide: { value: grounds[0] },
     uShapeWide: { value: shapes[0] },
     uRectWide: { value: rects[0] },
+    uBones: { value: ctx.assets.texture('land/bones.jpg', { kind: 'data', repeat: false }) },
+    uRectA: { value: rects[0] },
     uGroundClose: { value: grounds[1] },
     uShapeClose: { value: shapes[1] },
     uRectClose: { value: rects[1] },
