@@ -5,16 +5,16 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { BODY, FIELD, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, TEAR, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
+import { BODY, FIELD, UNDER, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
-/** Kelvin of the open lava at the bottom of the tear: its walls are dull red and darker. */
-const TEAR_KELVIN = 1380;
+/** Kelvin of the hottest of the split, where the skin of a rope tore: 1100 to 1200 K along it. */
+const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
-const TEAR_GAIN = 1.0;
-/** The albedo of ash where it lies on the hide: set so the upper side of the big arch reads 100 to 140 on the display. */
-const ASH_ON_HIDE: [number, number, number] = [0.32, 0.292, 0.262];
+const TEAR_GAIN = 3.0;
+/** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 150 130 110 on the display. */
+const ASH_ON_HIDE: [number, number, number] = [0.55, 0.45, 0.29];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
 
@@ -47,6 +47,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uOrigin: { value: new THREE.Vector2(SUNK[0], SUNK[2]) },
     uTearKelvin: { value: TEAR_KELVIN },
     uTearGain: { value: TEAR_GAIN },
+    uTearColour: { value: new THREE.Vector3(...blackbody(TEAR_KELVIN)) },
+    uTear: { value: baked.tear.points.map((p) => new THREE.Vector3(p[0], p[1] + 0.03, p[2])) },
     uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 2 }) },
@@ -54,37 +56,21 @@ export function create(ctx: HeartContext): HeartPiece {
     tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 2 }) },
   };
 
-  // The relief is opaque where it is whole, so it hides the lake under it; only its rim is laid over the lake's crust.
   const fieldMaterial = new THREE.ShaderMaterial({ vertexShader: FIELD_VERTEX, fragmentShader: FIELD_FRAGMENT, uniforms: shared });
-  const rimMaterial = new THREE.ShaderMaterial({
-    vertexShader: FIELD_VERTEX,
-    fragmentShader: FIELD_FRAGMENT,
-    uniforms: shared,
-    defines: { RIM: 1 },
-    transparent: true,
-    depthWrite: false,
-  });
-  const WHOLE = FIELD.half - 5.2;
-  const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
-  // The far side of the heap is hidden from the bench by the mound: it gets the coarse sheet.
+  // The sheet is drawn wherever the skin is: where it is not, the field lies under the lake's crust (UNDER) and is left out, so
+  // the front of the skin meets the crust as one body meets another.
+  const skin = (x: number, z: number): boolean => baked.at(x, z) > UNDER + 0.04;
+  // Fine where the ropes are and the bench sees them; the far side of the heap and the thin sheet beyond get wider cells.
   const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && z > -3.0 && z < 7.1;
-  // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.04, (x, z) => inner(x, z) && radial(x, z) < WHOLE),
+    fieldGeometry(baked, 0.04, (x, z) => inner(x, z) && skin(x, z)),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
-    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x + 1.5) < 8.5 && z > -2.7 && z < 6.8) && radial(x, z) < WHOLE),
+    fieldGeometry(baked, 0.07, (x, z) => !(Math.abs(x + 1.5) < 8.66 && z > -2.86 && z < 6.96) && skin(x, z)),
     fieldMaterial,
   );
-  const rim = new THREE.Mesh(
-    fieldGeometry(baked, 0.25, (x, z) => radial(x, z) >= WHOLE - 0.13 && radial(x, z) < FIELD.half - 1.9),
-    rimMaterial,
-  );
-  const farSheet = new THREE.Mesh(
-    fieldGeometry(baked, 0.14, (x, z) => radial(x, z) < WHOLE),
-    fieldMaterial,
-  );
+  const farSheet = new THREE.Mesh(fieldGeometry(baked, 0.14, skin), fieldMaterial);
 
   const carcassMaterial = new THREE.ShaderMaterial({
     vertexShader: CARCASS_VERTEX,
@@ -112,8 +98,14 @@ export function create(ctx: HeartContext): HeartPiece {
     farSheet,
   );
   far.visible = false;
-  for (const m of [fine, coarse, rim, farSheet]) m.position.y = 0.02;
-  group.add(near, far, ...hanging, rim);
+  for (const m of [fine, coarse, farSheet]) m.position.y = 0.02;
+  group.add(near, far, ...hanging);
+  // Drawn from the front to the back, so what is hidden is not shaded: the carcass before its folds, the folds before the lake
+  // under them. The sheets are sorted the same way in themselves, the bench side first (shape.ts).
+  group.traverse((o) => {
+    if (o instanceof THREE.Mesh) o.renderOrder = o.material === carcassMaterial ? -3 : -2;
+  });
+  coarse.renderOrder = -1;
   const meshes: THREE.Mesh[] = [];
   group.traverse((o) => {
     if (o instanceof THREE.Mesh) {
@@ -123,13 +115,16 @@ export function create(ctx: HeartContext): HeartPiece {
   });
   ctx.scene.add(ctx.parts.built('sunk-walker', group));
 
-  // The tear glows too dully to light much, but what it does light, it lights through the same map as the lake.
+  // The split lights what is near it through the same map as the lake. It is a few centimetres wide: drawn 1.25 m wide, dimmer by that much.
   const strip: number[] = [];
   const stripIndex: number[] = [];
+  const TEAR = baked.tear.points.map((p) => [p[0], p[2]] as [number, number]);
+  let tearLength = 0;
   TEAR.forEach(([x, z], i) => {
     const a = TEAR[Math.max(0, i - 1)] as [number, number];
     const b = TEAR[Math.min(TEAR.length - 1, i + 1)] as [number, number];
     const l = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    if (i > 0) tearLength += Math.hypot(x - a[0], z - a[1]);
     const nx = (-(b[1] - a[1]) / l) * 0.625;
     const nz = ((b[0] - a[0]) / l) * 0.625;
     strip.push(x + nx, 0.5, z + nz, x - nx, 0.5, z - nz);
@@ -138,12 +133,11 @@ export function create(ctx: HeartContext): HeartPiece {
   const glowGeometry = new THREE.BufferGeometry();
   glowGeometry.setAttribute('position', new THREE.Float32BufferAttribute(strip, 3));
   glowGeometry.setIndex(stripIndex);
-  const hot = blackbody(TEAR_KELVIN - 50);
-  // Only the bottom of the tear is this hot, a hand wide: drawn 1.25 m wide, dimmer by that much.
+  const hot = blackbody(TEAR_KELVIN - 40);
   const glowMaterial = new THREE.ShaderMaterial({
     vertexShader: GLOW_VERTEX,
     fragmentShader: GLOW_FRAGMENT,
-    uniforms: { uRadiance: { value: new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar(0.12 / 1.25) } },
+    uniforms: { uRadiance: { value: new THREE.Vector3(hot[0], hot[1], hot[2]).multiplyScalar(baked.tear.area / Math.max(0.5, tearLength * 1.25)) } },
     depthTest: false,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
@@ -163,12 +157,18 @@ export function create(ctx: HeartContext): HeartPiece {
   ];
   const discs = ctx.rig.contactDiscs(SHADES.length);
 
-  const tearMid = TEAR[2] as [number, number];
-  const smoke = { at: [0, 0.3, 0] as [number, number, number], radius: 0.8, strength: 0.4, rise: 10, kind: 'smoke' as const, lean: [-0.1, 0.16] as [number, number] };
-  const heat = { at: [0, 0.2, 0] as [number, number, number], radius: 1.6, height: 3.5, strength: 0.35 };
-  // A little steam with it, thin and quick to go.
-  const steam = { at: smoke.at, radius: 0.5, strength: 0.3, rise: 4, kind: 'steam' as const, lean: [-0.1, 0.16] as [number, number] };
-  ctx.sources.steam.push(smoke, steam);
+  const tearMid = TEAR[1] as [number, number];
+  // A faint smoke that drifts low off each length of the split, and the warm air over it. Nothing here stands as a column.
+  const smokes = TEAR.map((_, i) => ({
+    at: [0, 0.3, 0] as [number, number, number],
+    radius: 0.45 + 0.15 * i,
+    strength: 0.07 + 0.02 * ((i * 2) % 3),
+    rise: 1.0 + 0.4 * ((i + 1) % 3),
+    kind: 'smoke' as const,
+    lean: [-0.5 + 0.2 * i, 0.3 - 0.15 * i] as [number, number],
+  }));
+  const heat = { at: [0, 0.2, 0] as [number, number, number], radius: 1.2, height: 2.0, strength: 0.25 };
+  ctx.sources.steam.push(...smokes);
   ctx.sources.heat.push(heat);
 
   const place = (seconds: number): void => {
@@ -180,8 +180,13 @@ export function create(ctx: HeartContext): HeartPiece {
       ctx.rig.setDisc(discs, i, x + wx, z + wz, radius, strength);
     });
     const [tx, tz] = toWorld(tearMid[0], tearMid[1]);
-    smoke.at[0] = heat.at[0] = x + tx;
-    smoke.at[2] = heat.at[2] = z + tz;
+    heat.at[0] = x + tx;
+    heat.at[2] = z + tz;
+    smokes.forEach((smoke, i) => {
+      const [sx, sz] = toWorld((TEAR[i] as [number, number])[0], (TEAR[i] as [number, number])[1]);
+      smoke.at[0] = x + sx;
+      smoke.at[2] = z + sz;
+    });
   };
   place(ctx.rig.flow.t0);
 
@@ -196,7 +201,6 @@ export function create(ctx: HeartContext): HeartPiece {
     dispose: () => {
       for (const m of meshes) m.geometry.dispose();
       fieldMaterial.dispose();
-      rimMaterial.dispose();
       carcassMaterial.dispose();
       glowGeometry.dispose();
       glowMaterial.dispose();
