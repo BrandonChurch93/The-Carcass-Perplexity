@@ -36,10 +36,11 @@ vec2 onCrust(vec2 d, vec2 qx, vec2 qy, float det) {
   return vec2(d.x * qy.y - d.y * qx.y, d.y * qx.x - d.x * qy.x) / det;
 }
 
-// The photographed skin is read twice, turned against itself, at 1.4 m and 0.4 m to a repeat: its mips are the fade,
-// so each grain goes out as it nears the size of a pixel and nothing is left to shimmer.
+// The photographed skin is read three times, turned against itself, at 4.3 m, 1.4 m and 0.4 m to a repeat: its mips are
+// the fade, so each grain goes out as it nears the size of a pixel and nothing is left to shimmer.
 const mat2 TURN_A = mat2(0.7986, 0.6018, -0.6018, 0.7986);
 const mat2 TURN_B = mat2(0.9397, -0.3420, 0.3420, 0.9397);
+const mat2 TURN_C = mat2(-0.2588, 0.9659, -0.9659, -0.2588);
 
 void main() {
   vec2 q = vQ;
@@ -72,6 +73,8 @@ void main() {
   float fresh = 1.0 - smoothstep(12.0, 55.0, groupFar(q) + 14.0 * (vnoise(q / 17.0 + 8.0) - 0.5));
   // Age lies on the lake in broad patches, and each plate and each lobe has its own on top of that.
   float age = 0.5 + 1.6 * (0.65 * vnoise(q / 110.0 + 4.0) + 0.35 * vnoise(q / 37.0 + 9.0) - 0.5) + 0.5 * (net.b - 0.5);
+  // Within a plate, flows of other days lie side by side: wet black beside matte grey, a few metres across.
+  age += 0.55 * (vnoise(q / 9.0 + 17.0) - 0.5) + 0.4 * (vnoise(q / 2.3 + 29.0) - 0.5);
 
   vec3 n = normalize(vNormalG);
   vec2 slope = vec2(0.0);
@@ -123,8 +126,10 @@ void main() {
   vec4 ta = texture2D(tRopeNh, TURN_A * q / 1.37);
   vec4 tb = texture2D(tRopeNh, TURN_B * q / 0.41 + 0.37);
   float grainA = ta.b - 0.5;
+  vec4 tc = texture2D(tRopeNh, TURN_C * q / 4.3 + 0.61);
   float grainB = tb.b - 0.5;
-  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4) * calm;
+  float grainC = tc.b - 0.5;
+  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * calm;
 
   // Threads: on every cord lie strands of two to three centimetres that run with the fold, waver, thin out and start again.
   float waver = vnoise(q / 0.23 + 61.0);
@@ -154,8 +159,8 @@ void main() {
   float dust = clamp(max(hollow, smoothstep(0.7, 0.95, age)) * mix(0.15, 1.0, low) + 0.5 * spall * hollow, 0.0, 1.0) * (1.0 - young);
 
   // Old skin is grey and rough, young skin black and glassy: by patch, by plate and by lobe. Grain on all of it.
-  vec3 albedo = mix(vec3(0.037, 0.0355, 0.0365), vec3(0.07, 0.067, 0.068), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
-  albedo *= clamp(1.0 + 1.5 * grainA + 1.3 * grainB, 0.4, 1.9);
+  vec3 albedo = mix(vec3(0.033, 0.034, 0.036), vec3(0.083, 0.084, 0.087), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  albedo *= clamp(1.0 + 1.5 * grainA + 1.3 * grainB + 1.7 * grainC, 0.3, 2.0);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
@@ -180,13 +185,18 @@ void main() {
   // The lake lies level with the crust: its glow from afar reaches only the faces that are turned toward it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, nShape.y);
   // The warmth of the melt stays on its banks: the open crust takes the cool sky.
-  float byMelt = live * smoothstep(0.05, 0.3, gape) * exp(-max(bank, 0.0) / 2.0);
-  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace) * mix(0.12, 1.0, byMelt) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
+  // Strong within a hand of the lip, gone by three metres, most on the faces turned to the seam, and cut where a foot or a
+  // body stands between.
+  float off = max(bank, 0.0);
+  float byMelt = live * smoothstep(0.05, 0.3, gape) * (0.75 * exp(-off / 0.3) + 0.25 * (1.0 - smoothstep(0.4, 3.0, off)));
   float steepAway = length(vAway);
   vec2 away = steepAway > 0.3 ? vAway / steepAway : vec2(0.0);
-  if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, n, away) * crease;
+  float toward = max(-dot(nShape.xz, away), 0.0);
+  float clear = 1.0 - contactAt(vec3(p.x - 0.8 * away.x, p.y, p.z - 0.8 * away.y));
+  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace + 0.9 * toward) * mix(0.12, 1.6 * clear, byMelt) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
+  if (shown > 0.5 && live > 0.5) light += meltLight(q, net, bank, below, n, away) * crease * clear;
   // The narrow seams, whose heat this sheet draws, light their own lips.
-  light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace) * crease;
+  light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace) * crease * clear;
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.05, 0.043, 0.04) * (0.6 + 0.8 * vnoise(vec2(q.x + q.y, vWorld.y * 3.0) * 9.0)), wallFace * inGap);
   vec3 c = albedo * light / 3.14159;
@@ -194,7 +204,7 @@ void main() {
   float nv = clamp(dot(n, v), 0.35 * foldSeen, 1.0);
   // A rough face does not turn into a mirror at a grazing angle.
   float satin = 1.0 - smoothstep(0.4, 0.9, rough);
-  float fresnel = mix(0.01, 0.06, satin) + 0.1 * satin * pow(1.0 - nv, 3.0);
+  float fresnel = mix(0.012, 0.08, satin) + 0.12 * satin * pow(1.0 - nv, 3.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The crest of a cord carries a pale line of the sky.
