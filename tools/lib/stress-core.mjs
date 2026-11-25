@@ -9,7 +9,7 @@ export const MOMENTS = [
   { id: 'marsh', name: 'The seep pool on the marsh', unit: 'marsh', event: 'burst' },
   { id: 'titan', name: 'The titan frame', unit: null, titan: true }
 ];
-export const ENCODE = { codec: 'libx264', preset: 'medium', matrix: 'bt709', bufferSeconds: 2 };
+export const ENCODE = { codec: 'libx264', preset: 'medium', matrix: 'bt709', bufferSeconds: 2, stressThreads: 1 };
 export const CROP_ZOOM = 2;
 
 const isFrame = (v) => Number.isInteger(v) && v >= 0;
@@ -104,7 +104,7 @@ export function crfFor(format, cfg) {
 export function encodeSettings(mode, format, cfg) {
   const base = { codec: cfg.export.master.videoCodec, encoder: ENCODE.codec, preset: ENCODE.preset, pixelFormat: cfg.export.master.pixelFormat, container: cfg.export.master.container, matrix: ENCODE.matrix };
   if (mode === 'delivered') return { ...base, mode, crf: crfFor(format, cfg) };
-  if (mode === 'stress') return { ...base, mode, mbps: cfg.quality.compressionStressMbps, bufferSeconds: ENCODE.bufferSeconds };
+  if (mode === 'stress') return { ...base, mode, mbps: cfg.quality.compressionStressMbps, bufferSeconds: ENCODE.bufferSeconds, threads: ENCODE.stressThreads };
   throw new Error(`no such encode: ${mode}`);
 }
 
@@ -114,7 +114,7 @@ export function encodeArgs({ settings, width, height, fps, out }) {
   a.push('-vf', `vflip,scale=in_range=pc:out_range=tv:out_color_matrix=${m},format=${settings.pixelFormat}`);
   a.push('-an', '-c:v', settings.encoder, '-preset', settings.preset, '-pix_fmt', settings.pixelFormat);
   if (settings.mode === 'delivered') a.push('-crf', String(settings.crf));
-  else a.push('-b:v', `${settings.mbps}M`, '-maxrate', `${settings.mbps}M`, '-bufsize', `${settings.mbps * settings.bufferSeconds}M`);
+  else a.push('-b:v', `${settings.mbps}M`, '-maxrate', `${settings.mbps}M`, '-bufsize', `${settings.mbps * settings.bufferSeconds}M`, '-threads', String(settings.threads));
   a.push('-colorspace', m, '-color_primaries', m, '-color_trc', m, '-color_range', 'tv', '-movflags', '+faststart', '-map_metadata', '-1', '-fflags', '+bitexact', '-flags:v', '+bitexact', '-f', settings.container, out);
   return a;
 }

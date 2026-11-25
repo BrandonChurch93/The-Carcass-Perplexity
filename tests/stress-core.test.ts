@@ -116,6 +116,8 @@ describe('the clip', () => {
     expect(at(b, '-b:v')).toBe(`${cfg.quality.compressionStressMbps}M`);
     expect(at(b, '-maxrate')).toBe(`${cfg.quality.compressionStressMbps}M`);
     expect(b).not.toContain('-crf');
+    expect(at(b, '-threads')).toBe('1');
+    expect(a).not.toContain('-threads');
     expect(() => core.encodeSettings('other', hd, cfg)).toThrow(/no such encode/);
     expect(core.stillArgs({ file: 'x.mp4', index: 30 }).join(' ')).toContain('select=eq(n\\,30)');
   });
@@ -249,6 +251,9 @@ describe('the command, on a stand-in renderer', () => {
     const forced = renderer(testScene);
     await stress.stressCommand({ _: [], tier: 'draft', format: 'preview', moments: 'titan', force: true }, { cfg: small, root: dir, renderer: forced, print: () => {} });
     expect(forced.calls.frames).toHaveLength(12);
+    const twice = JSON.parse(fs.readFileSync(path.join(out, `${names.stress}.json`), 'utf8'));
+    expect(twice.sha256).toBe(clip.sha256);
+    expect(twice.encode.threads).toBe(1);
   });
 
   it('gives the slot back and leaves no clip when a frame fails', async () => {
