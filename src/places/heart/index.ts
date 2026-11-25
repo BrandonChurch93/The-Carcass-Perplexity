@@ -20,6 +20,8 @@ const C = {
   air: 0x54392f,
   land: 0x2d2725,
   landBand: 0x1f1a19,
+  buttress: 0x1d1918,
+  buttressBand: 0x121010,
   bench: 0x242120,
   benchBand: 0x121111,
   rock: 0x0f0e0e,
@@ -32,7 +34,7 @@ const C = {
   mouth: 0x0b0707,
   arch: 0x9a4a22,
   walker: 0x120e0d,
-  tuft: 0xdcb98e,
+  tuft: 0xf0a04a,
   sunk: 0x4c4846,
   fold: 0x454040,
   fume: 0x5a443a,
@@ -159,7 +161,7 @@ const LINE: [number, number] = [-538, 300];
 const KEY1 = fly(over(LINE[0], LINE[1], 1.5), 44, -9, 45);
 const LINE_DIR = bearing(44);
 
-const KEY2 = fly(over(SUNK[0] - 17, SUNK[2] + 13, 2.4), 41, -2.6, 31);
+const KEY2 = fly(over(SUNK[0] - 19, SUNK[2] + 14, 2.4), 44, -2.4, 31);
 
 const MOUTH_AIM: Vec3 = [MOUTH.x + 26, 68, MOUTH.z];
 const RETREAT = bearing(214);
@@ -171,12 +173,12 @@ const back = (distance: number, height: number, side = 0): Vec3 => {
 const KEY4: Pose = { position: back(760, 5), aim: MOUTH_AIM, fov: 15 };
 
 const shots: Record<string, CameraPath> = {
-  'heart-01': through(KEY0, keyPart(shotById('heart-01')), { forward: -88, up: 17, right: -12, turn: 1.5 }, { forward: 72, up: -9, turn: 2.5 }),
+  'heart-01': through(KEY0, keyPart(shotById('heart-01')), { forward: -58, up: 13, right: -9, turn: 1.5 }, { forward: 50, up: -8, turn: 2.5 }),
   'heart-02': through(KEY3, keyPart(shotById('heart-02')), { right: 13, forward: -14, turn: -6, up: 0.8 }, { right: -13, forward: 12, turn: 6.5, up: -0.4 }),
   'heart-03': [
-    { at: 0, pose: fly(over(LINE[0] - LINE_DIR[0] * 24, LINE[1] - LINE_DIR[1] * 24, 4.2), 40, -10.5, 45) },
+    { at: 0, pose: fly(over(LINE[0] - LINE_DIR[0] * 15, LINE[1] - LINE_DIR[1] * 15, 4.6), 40.5, -11, 45) },
     { at: keyPart(shotById('heart-03')), pose: KEY1 },
-    { at: 1, pose: fly(over(LINE[0] + LINE_DIR[0] * 4.5 - 1.5, LINE[1] + LINE_DIR[1] * 4.5 - 1, 1.1), 47, -7.5, 45) },
+    { at: 1, pose: fly(over(LINE[0] + LINE_DIR[0] * 4.5 - 1.5, LINE[1] + LINE_DIR[1] * 4.5 - 1, 1.7), 47, -8.5, 45) },
   ] satisfies Move,
   'heart-04': [
     { at: 0, pose: moved(KEY2, { right: -3.2, forward: -2.6, up: 0.5, turn: 1.5 }) },
@@ -184,9 +186,9 @@ const shots: Record<string, CameraPath> = {
     { at: 1, pose: moved(KEY2, { right: 3.2, forward: 3, up: 0.1, turn: -1.5 }) },
   ] satisfies Move,
   'heart-05': [
-    { at: 0, pose: { position: back(628, 4), aim: MOUTH_AIM, fov: 15 } },
+    { at: 0, pose: { position: back(655, 9), aim: MOUTH_AIM, fov: 15 } },
     { at: keyPart(shotById('heart-05')), pose: KEY4 },
-    { at: 1, pose: { position: back(862, 24, 30), aim: [MOUTH_AIM[0], MOUTH_AIM[1] - 8, MOUTH_AIM[2]], fov: 15 } },
+    { at: 1, pose: { position: back(850, 24, 62), aim: [MOUTH_AIM[0], MOUTH_AIM[1] - 8, MOUTH_AIM[2]], fov: 15 } },
   ] satisfies Move,
 };
 
@@ -214,11 +216,11 @@ function create(): Place {
   );
   const [rx, rz] = BUTTRESS.root;
   const [tx, tz] = BUTTRESS.tip;
-  const buttress = new THREE.Mesh(terrain(640, 760, 128, 152, buttressHeight, [(rx + tx) / 2, (rz + tz) / 2]), landMaterial);
+  const buttress = new THREE.Mesh(terrain(640, 760, 128, 152, buttressHeight, [(rx + tx) / 2, (rz + tz) / 2]), kit.flat(C.buttress, { band: C.buttressBand, step: 9, amount: 0.7 }));
   scene.add(parts.standIn('land', walls, outer, buttress), outer, buttress);
 
   const bench = new THREE.Group();
-  bench.add(new THREE.Mesh(terrain(640, 880, 160, 220, benchHeight, [-640, 100]), kit.flat(C.bench, { band: C.benchBand, step: 3.2, amount: 0.7 })));
+  bench.add(new THREE.Mesh(terrain(640, 880, 128, 176, benchHeight, [-640, 100]), kit.flat(C.bench, { band: C.benchBand, step: 3.2, amount: 0.7 })));
   const rocks = herd(new THREE.BoxGeometry(1, 1, 1), kit.flat(C.rock), 90);
   for (let i = 0; i < 90; i++) {
     const nearCamera = i < 40;
@@ -416,13 +418,13 @@ function create(): Place {
 
       for (let i = 0; i < FUME; i++) {
         const s = fumeSeeds[i] as { x: number; z: number; k: number };
-        const age = (seconds / 70 + i / FUME) % 1;
+        const age = (seconds / 44 + i / FUME) % 1;
         const r = (30 + 105 * age) * s.k * smooth(0, 0.07, age) * smooth(1, 0.86, age);
-        setBlob(fume, i, [620 + s.x * 70 + 1150 * age * age, 120 + 620 * Math.pow(age, 0.8), -330 + s.z * 60 - 260 * age], [r, r * 0.8, r]);
+        setBlob(fume, i, [500 + s.x * 60 - 420 * age * age, 150 + 640 * Math.pow(age, 0.8), -390 + s.z * 50 - 200 * age], [r, r * 0.8, r]);
       }
       for (let i = 0; i < LOW; i++) {
         const s = fumeSeeds[FUME + i] as { x: number; z: number; k: number };
-        const age = (seconds / 46 + i / LOW) % 1;
+        const age = (seconds / 32 + i / LOW) % 1;
         const r = (34 + 70 * age) * s.k * smooth(0, 0.1, age) * smooth(1, 0.8, age);
         setBlob(fumeLow, i, [760 + s.x * 300 + 160 * age, 8 + 130 * age, -40 + s.z * 220], [r * 1.5, r * 0.6, r * 1.2]);
       }
