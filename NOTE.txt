@@ -1,6 +1,7 @@
-2026-11-25 23:14 UTC
-work at 2b8745d on agent/breath-life
-min 112: backlit waders with thin legs, fine ripples, dead wader two-bone legs
-look-1.jpg = out/work/compare/breath-1.png
-look-2.jpg = out/work/compare/breath-2.png
+2026-11-25 23:25 UTC
+work at 5e6d43a on agent/breath-life
+hb min 125: dead wader re-laid, waders leaner with ragged mop, sea grey-green, plumes wine not black
+look-1.jpg = out/work/compare/breath-2.png
+look-2.jpg = out/work/compare/breath-1.png
 look-3.jpg = out/work/compare/breath-0.png
+look-4.jpg = out/work/compare/breath-3.png
