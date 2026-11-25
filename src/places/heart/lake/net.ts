@@ -139,7 +139,7 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
 
 // The seams the pictures show: half width in metres at the two ends and the middle, how lumpy, and the heat class (0 hottest, 0.9 dull).
 const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
-  line: { half: [0.5, 0.42, 0.15], lumps: 0.5, heat: 0.0 },
+  line: { half: [0.72, 0.6, 0.22], lumps: 0.5, heat: 0.0 },
   group: { half: [0.14, 0.4, 0.14], lumps: 0.6, heat: 0.08 },
   nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
   nearB: { half: [0.14, 0.26, 0.08], lumps: 0.55, heat: 0.25 },
