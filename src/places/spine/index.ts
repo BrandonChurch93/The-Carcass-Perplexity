@@ -42,12 +42,14 @@ const establishingMove: Move = [
   { at: 1, pose: aimed(on(E_S + 44, 2, 6), viewE + 1.5, 5, 50) },
 ];
 
-const KITE_FOV = 14;
+const KITE_FOV = 36;
+const KITE_REACH = 78;
+const KITE_PITCH = 7.2;
 const kiteEdge = finEdge(first, 0.74, 1);
-const kiteBack = heading(tipOf(spire(2)), kiteEdge) - 4.6;
-const kiteFlat = step(kiteEdge, kiteBack, 200);
-const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - 200 * Math.tan(3.5 * RAD), kiteFlat[2]];
-const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 2, 3.5, KITE_FOV);
+const kiteBack = heading(tipOf(spire(2)), kiteEdge) - 12.3;
+const kiteFlat = step(kiteEdge, kiteBack, KITE_REACH);
+const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - KITE_REACH * Math.tan(KITE_PITCH * RAD), kiteFlat[2]];
+const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 5.3, KITE_PITCH, KITE_FOV);
 
 const CARCASS = on(first.s - 655, 1.5, 0);
 const CARCASS_FOV = 48;
@@ -71,9 +73,9 @@ const keyStrike = aimed(strikeStand, heading(strikeStand, strikeTip) + 2.5, 1.8,
 
 const canalStand = tube(FLARE + 9.5, -0.6, 0.7);
 const canalOut = tube(FLARE, 0, 2.2);
-const keyCanal = aimed(canalStand, heading(canalStand, canalOut) - 16, 0, 54, 30);
+const keyCanal = aimed(canalStand, heading(canalStand, canalOut) - 12, 1, 54, 30);
 const canalStart = tube(FLARE - 10, -0.8, 1.6);
-const canalEnd = tube(FLARE + 27, -0.4, 1.1);
+const canalEnd = tube(FLARE + 23, -0.4, 1.1);
 
 const canalMove: Move = [
   { at: 0, pose: aimed(canalStart, heading(canalStart, tube(0, 0, 2)) - 6, 1.5, 54, 30) },
@@ -83,7 +85,7 @@ const canalMove: Move = [
 
 const shots: Record<string, Move> = {
   'spine-01': establishingMove,
-  'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -13, forward: -16, up: -3 }, { right: 13, forward: 16, up: 3 }),
+  'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -9, forward: -7, up: -2 }, { right: 9, forward: 7, up: 2 }),
   'spine-03': carcassMove,
   'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -6, right: -1 }, { forward: 170, right: 26, up: 8 }),
   'spine-05': canalMove,
@@ -96,7 +98,7 @@ interface Bolt {
 }
 
 function ribbonCount(n: number): number {
-  if (n === FIRST) return 11;
+  if (n === FIRST) return 15;
   if (n === FIRST - 1) return 7;
   if (n === FIRST + 1) return 3;
   if (n === FIRST + 2) return 7;
@@ -282,7 +284,8 @@ const place: PlaceModule = {
     const bankAt: { s: number; l: number; y: number; r: number; phase: number }[] = [];
     for (let i = 0; i < WALL; i++) {
       const layer = i % 3;
-      bankAt.push({ s: S_MIN + 300 + (i / WALL) * (S_MAX - S_MIN - 3000) + rng.range(-120, 120), l: -620 - layer * 420 - rng.range(0, 220), y: -700 + layer * 620 + rng.range(-200, 260), r: 420 + layer * 150 + rng.range(0, 220), phase: rng.range(0, 6.28) });
+      const r = 420 + layer * 150 + rng.range(0, 220);
+      bankAt.push({ s: S_MIN + 300 + (i / WALL) * (S_MAX - S_MIN - 3000) + rng.range(-120, 120), l: -(r + 190) - layer * 250 - rng.range(0, 200), y: -700 + layer * 620 + rng.range(-200, 260), r, phase: rng.range(0, 6.28) });
     }
     cloud.add(bank);
     const POUR = 44;
@@ -394,7 +397,7 @@ const place: PlaceModule = {
     runners.add(scorch);
     const outward = Math.atan2(-frameAt(MOUTH_S + FLARE).tz, frameAt(MOUTH_S + FLARE).tx);
     const huddle: { d: number; l: number; size: [number, number, number]; y: number; yaw: number }[] = [
-      { d: FLARE + 4.9, l: 0.5, size: [1, 1.6, 1], y: 0.68, yaw: outward + 1.85 },
+      { d: FLARE + 4.9, l: 0.15, size: [1, 1.6, 1], y: 0.68, yaw: outward + 1.85 },
       { d: FLARE + 6.3, l: 1.5, size: [1.05, 0.85, 1.2], y: 0.36, yaw: outward + 0.5 },
       { d: FLARE + 7.0, l: 2.4, size: [1, 1.6, 1.1], y: 0.68, yaw: outward - 0.4 },
       { d: FLARE + 7.9, l: 2.2, size: [0.8, 1.7, 1.05], y: 0.72, yaw: outward + 1.2 },
@@ -479,8 +482,8 @@ const place: PlaceModule = {
         wallBand.value.set(inside ? (flash ? 0x7a73a6 : 0x5d6075) : 0x1d1e28);
 
         bankAt.forEach((b, i) => {
-          const p = world(b.s + 14 * seconds, b.l + 40 * Math.sin(seconds * 0.11 + b.phase), 0);
-          setFigure(bank, i, p[0], b.y + 30 * Math.sin(seconds * 0.17 + b.phase), p[2], 0, [b.r * 1.5, b.r, b.r]);
+          const p = world(b.s + 14 * seconds, b.l - 20 + 20 * Math.sin(seconds * 0.11 + b.phase), 0);
+          setFigure(bank, i, p[0], b.y + 30 * Math.sin(seconds * 0.17 + b.phase), p[2], 0, b.r);
         });
         pourAt.forEach((c, i) => {
           const u = (c.l + seconds * 0.035) % 1;

@@ -146,7 +146,11 @@ export function ground(s: number, l: number): number {
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   let y = crest(s) + massif - fall;
   const d = s - MOUTH_S;
-  if (d > -6 && d < FLARE + 2 && Math.abs(l - CANAL_L) < flare(d) + 1.2) y = Math.min(y, FLOOR - 0.4);
+  if (d > -6 && d < FLARE + 2 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
+  if (d > -60 && d <= -6) {
+    const w = smooth(-60, -6, d) * (1 - smooth(MOUTH_R * 0.7, MOUTH_R * 1.9, Math.abs(l - CANAL_L)));
+    y += (Math.min(y, FLOOR - 0.4) - y) * w;
+  }
   return Math.max(y, -2700);
 }
 
