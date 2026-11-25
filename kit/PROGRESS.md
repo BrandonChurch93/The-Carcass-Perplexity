@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 44, 2026-11-25 11:18 UTC:
+Status 45, 2026-11-25 11:42 UTC:
 
-- `01-m1108-pair-1.jpg`: The line on main at 11:08 UTC (609da03). Left the approved picture, right the frame. The left crag is lowered and no longer red. Open: the striped trench wall, rings on the lava, ropes that read as drawn lines.
-- `02-m1108-pair-3.jpg`: The walkers at the seam at 11:08 UTC: still the smooth pale floor and the empty upper right. The broken plates, the new necks and the pool light merged at 11:17 and show in the next status.
-- `03-m1108-pair-4.jpg`: The mouth and its fall at 11:08 UTC. Open: the round tan puff, the flat near ground with its straight edge, the orange bevel of the mouth. The fan at the foot merged at 11:17.
-- `04-m1108-pair-0.jpg`: The wide view at 11:08 UTC. Open: the far lake is a bright net where the picture is dark and calm, the butte is a low headland, a pale sheen at the lower right.
+- `01-m1132-pair-3.jpg`: Feeding at a seam, 11:32 UTC (approved picture left, our frame right). New: a butte staged behind the group for this shot; the floor in broken plates with small loose pieces. Still wrong: the butte's top is toothed and black, the smoke is one flat peach bank with a level edge, the floor is 1.6 times too dark and too red, the hero's neck has a hump (the fix for the neck and legs was merged at 11:41 and is in the next chain).
+- `02-m1132-pair-4.jpg`: The vessel mouth and its fall. New: the tan puffs by the fan thinned, the fan's seams lit only in patches. Still wrong: the mouth is an even orange band round a flat dark shape, the fan still shows closed cells, the stream is one bright body. A third owner of the fall started at 11:36 on exactly these three.
+- `03-m1132-pair-0.jpg`: Establishing. New: a high veil of old smoke over the sky (grey mauve, was slate blue). Still wrong: the far lake is a bright net where the picture is dark and calm, the butte is a low headland, a pale sheen lies at the lower right.
+- `04-m1132-pair-1.jpg`: The lava surface at the line. New: darker plates with fewer rings, the fine crag at the left edge. Still wrong: the trench wall is striped red, the plates read as marbled sheets, no steam stands at the crag.
 
+Status 44, 2026-11-25 11:18 UTC, showed: The line on main at 11:08 UTC (609da03). Left the approved picture, right the frame. The left crag is lowered and no longer red.
 Status 43, 2026-11-25 10:53 UTC, showed: The mouth and its fall on main (ef6598c): the fall is now a narrow stream in legs. Left the approved picture, right the frame.
 Status 42, 2026-11-25 10:29 UTC, showed: The establishing view, approved picture left, our frame right, on main 9e63135: darker walls, one grey smoke column, the black cavern; The...
-Status 41, 2026-11-25 10:02 UTC, showed: heart-3 on main 337d087, approved picture at the left.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T11:18:27Z
-phase 3: 8.15 h used of 13.00 h
-build: 14.81 h used of 72.00 h
+2026-11-25T11:42:08Z
+phase 3: 8.55 h used of 13.00 h
+build: 15.20 h used of 72.00 h
 extra rounds: yes
 half point: reached
 minutes since the last status: 24
@@ -608,6 +608,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 11:04 UTC · Round 5, declined in part: the sky's own colour is not changed. It is frozen so that the air can be tuned against a fixed ground. The gap the critic saw is real and measured (top right corner of the wide view: ours 145 153 179, the picture 120 107 113; top left: 130 141 168 against 116 125 146), and it is closed from the other side: the air lays a high smoke veil over the sky, denser to the right.
 - 2026-11-25. 10:57 UTC · The fall's fan (hand-back `0c0842b`) is not merged. Its fan, its uneven legs and the lit roof of the cavern are gains, but from the key of the mouth its stream is broken (bright at the lip, hidden behind ledges, a pale patch, then the fan) where main's is whole from lip to lake, and the picture's first read is one unbroken ribbon. Its owner mends the ribbon first and hands back again.
 - 2026-11-25. 11:10 UTC · Six of the Heart's second owners (land, air, fall, light, walkers, the one that sank) reach the limit of four hours for a build agent at 11:40 UTC, with two rounds of critics still to come. Each writes a hand-over note with its last hand-back, and a fresh owner takes each folder from 11:40 to 13:25 UTC on a new branch, so that the work on the picture does not stop before the last round. The limit of 16 running agents is kept: a successor starts when its predecessor has ended.
+- 2026-11-25. Heart look lock: the butte staged behind the group for shot heart-02 (land, efb443a) is kept. It is staging by shot, like the walkers' groups, and stands in no other shot. Its toothed top, black tone and striped face go to the land's third owner.
+- 2026-11-25. Heart look lock: the sunk one's late commit bec58f0 (the event at frame 3740 made larger) is not merged by the root; the folder's third owner takes it into its own branch, so each folder keeps one owner and main takes no conflict.
 
 ## Notes from Brandon
 
@@ -902,3 +904,7 @@ none
 - 2026-11-25 10:30 UTC. 10:28 UTC, MEASURED at heart-3 (hd, draft): the crust alone is 67 54 52 at the bottom middle where the picture is 55 42 38; fine contrast (luma less its 12 pixel blur, standard deviation) 3.3 to 7.1 on our floor against 9.3 to 19.4 on the picture's. Anisotropy 16 on the crust's two pictures changed nothing that can be seen in this view and cost nothing (61.3 s a key): not kept.
 - 2026-11-25 10:54 UTC. Status 43 shown at 10:54 UTC. Main is ef6598c: the fall's stream (004242f) merged at 10:38 after chain O passed the whole determinism on 11c2ac8; chain P passed it on ef6598c at 10:46. Round 5 (judged 9e63135; packs 25.7 min, measures 28 min on two other machines): R1 3 and 3 (gemini), R3 5 and 5 (gpt), R4 4 and 4 (claude), jury 4 of 25, M1 green, M2 green, M3 red (0.81, 0.35, 0.33, 0.29, 0.82). Fails. A fault of the sender in this round: the list of critics and jurors was read through a tool whose output is cut at 40,000 characters, and the cut fell inside it without breaking its form, so reviewer_58 was sent half of the R4 brief joined to a juror's question, with a juror's image; its answer is void, reviewer_59 judged R4-2 with the whole brief, and three jurors of the wide view were sent after the others. No juror or other critic was sent a cut text (each message was checked for its last sentence from then on; the first four critics' texts were compared with the file by length). ElevenLabs at 10:53: 1 character of 131,000.
 - 2026-11-25 11:18 UTC. 11:18 UTC · Status 44 shown (four pairs of main 609da03 at 11:08). Chain R: determinism passed on 609da03. Merged at 11:17 after viewing each beside the approved picture: walkers C3 and C4 (88b339d), crust form B1 (43e7358), the fall's fan and unbroken ribbon (5783feb), light C (7fb9255), air C and E (f6d3f2c), the sunk one's C3 squashed (751f108, three old commits without the trailer). Main 4a48597, tsc clean, pushed; chain S runs on it. ElevenLabs: 1 of 131,000 characters.
+- 2026-11-25 11:36 UTC. 11:27 to 11:32 UTC: merged after viewing each beside the approved picture: the land's C2 and C3 (the fine crag at the line; a butte staged for shot heart-02 alone), the air's thinned puffs at heart-4 and its high veil over the sky, the fall's last hand-back (the fan as rivulets), the lava's C1 (rings out, a thin skin on the core), and the rocks' carpet after an A/B at heart-3 on the root's machine (finer grain on the floor, the air's pass unchanged). Main 8a63183, pushed; chain T running on it.
+- 2026-11-25 11:36 UTC. 11:22 to 11:36 UTC: third and last owners started for the walkers, the light, the sunk one, the land, the air and the fall (six), each with its predecessor's hand-over word for word and the root's order of work written from main beside the pictures at full size. They end at 13:25, when round 7 takes main.
+- 2026-11-25 11:36 UTC. MEASURED 11:35 UTC, heart-3 near floor (x 35 to 100, y 80 to 100 per cent, hd draft, main 8a63183), p10 / p50 / p90: ours 24 11 7 / 38 24 20 / 54 39 36, the approved picture 43 33 28 / 64 48 43 / 154 83 65. The floor is 1.6 times too dark, crushed and too red. Sent to the crust skin's, the light's and the rocks' owners with the crop.
+- 2026-11-25 11:42 UTC. Status 45 shown at 11:42 UTC (four pairs from main 8a63183, which passed determinism at 11:41; characters 1 of 131,000). Merged at 11:41 after viewing: the crust form's B2, the rocks' clusters and block shape, the walkers' C5 (legs, foot, taut neck), the lava's C2 (fountain lights at a tenth). Main 9b84e4a, chain U running. The fall's third owner started at 11:36.

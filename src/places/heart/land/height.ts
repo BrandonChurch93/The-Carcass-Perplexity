@@ -266,7 +266,8 @@ function lineCrag(x: number, z: number): number {
   const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
   if (u < -19 || u > 13) return 0;
   // Behind the foot is positive: away from the lake.
-  const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
+  // Where the line view's frame begins, 8 to 12 m ahead of that lens, a spur of the crag steps two metres out toward the lens's line.
+  const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0] + 1.5 * smooth(0, 2.5, u) * smooth(8, 5.5, u);
   if (v < -1.2 || v > 27) return 0;
   // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = blocks(u / 1.15 + 3.3, 7.7);
@@ -274,20 +275,22 @@ function lineCrag(x: number, z: number): number {
   const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
   const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
   // Its far end comes down as a broken ridge does, in a ragged fall of blocks, not in steps.
-  const end = smooth(13.0, 4.5, uj + 1.0 * (noise(u / 2.3 + 3.1, 0.7) - 0.5) + 0.5 * (column - 0.5));
-  // Its crest is broken blocks, a stride across and a hand to a forearm proud of each other: no ruled edge against the smoke.
-  const crest = 0.7 * (blocks(u / 0.9 + 1.1, v / 1.1 + 4.2) - 0.5) + 0.3 * (noise(u / 0.33 + 7, v / 0.33) - 0.5);
-  const top = (3.8 + 0.6 * broken * smooth(0.3, 2.5, v) + crest) * end * (0.55 + 0.45 * end);
+  const end = smooth(7.0, 2.7, uj + 1.3 * (blocks(u / 1.1 + 3.1, 0.7) - 0.5) + 0.9 * (blocks(u / 0.45 + 6.7, 1.7) - 0.5) + 0.5 * (blocks(u / 0.2 + 0.3, 4.4) - 0.5) + 0.5 * (column - 0.5) + 0.4 * (noise(u / 0.3 + 1.9, v / 0.3) - 0.5));
+  // Its crest is broken blocks, a hand to a forearm proud of each other, and chipped finer than that: no ruled edge against the smoke.
+  const crest = 0.7 * (blocks(u / 0.9 + 1.1, v / 1.1 + 4.2) - 0.5) + 0.34 * (blocks(u / 0.31 + 5.3, v / 0.37 + 0.9) - 0.5) + 0.3 * (noise(u / 0.33 + 7, v / 0.33) - 0.5) + 0.12 * (noise(u / 0.11, v / 0.11 + 2.7) - 0.5);
+  const top = (4.3 + 0.6 * broken * smooth(0.3, 2.5, v) + crest) * end * (0.55 + 0.45 * end);
   // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
   const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
   const back = fall * (0.55 + 0.45 * fall);
   const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
   const start = ramp * ramp * (0.35 + 0.65 * ramp);
-  // The face is two risers with a ragged ledge between them, the upper set back a stride or two: a crag, not a wall.
-  const ledgeAt = 0.4 + 0.8 * blocks(u / 1.7 + 5.9, 1.3) + 0.3 * (noise(u / 0.6, v / 0.6 + 3.3) - 0.5);
-  const share = 0.42 + 0.2 * (blocks(u / 2.3 + 0.4, 6.1) - 0.5);
-  const rise = share * smooth(0, 0.5, vj) + (1 - share) * smooth(ledgeAt, ledgeAt + 0.7, vj);
+  // The face is a broken stair of four or five short risers, each column of rock a little forward or back of the next and each tread chipped:
+  // no face over half a metre stands bare, and none is steep enough to stretch the ground's detail down it.
+  const steps = 4.5;
+  const q = ((vj + 0.8) / 2.4) * steps + 0.9 * (blocks(u / 0.7 + 5.9, 1.3) - 0.5) + 0.7 * (blocks(u / 0.33 + 2.2, v / 0.45 + 6.1) - 0.5) + 0.35 * (noise(u / 0.17, v / 0.17 + 3.3) - 0.5);
+  const whole = Math.floor(q);
+  const rise = Math.min(1, Math.max(0, (whole + smooth(0.52, 0.96, q - whole)) / steps));
   return top * rise * back * start;
 }
 
@@ -555,4 +558,33 @@ function stones(x: number, z: number, cell: number, share: number, seed: number)
  *  lying against each other. Drawn by a mesh of its own, far finer than the bench; nothing stands on it, so it is not in `landHeight`. */
 export function rubbleAt(x: number, z: number): number {
   return Math.max(0.85 * stones(x, z, 0.66, 0.5, 1), stones(x, z, 0.34, 0.75, 4), 0.6 * stones(x, z, 0.17, 0.8, 9)) + 0.02;
+}
+
+// The butte of the feeding picture (shot heart-02 alone): the approved picture has a dark flat-topped mass over the right of its frame, close behind
+// the group. The buttress of the place is a kilometre off through that lens and lost in the smoke, so a butte is staged for that shot, 235 m ahead of
+// its camera and right of its axis. It stands in no other shot.
+const BUTTE_FROM: [number, number] = [-455.6, 249.8];
+const BUTTE_AHEAD: [number, number] = [0.701, -0.713];
+/** The box of the staged butte, world metres. */
+export const BUTTE_BOX = { x0: -322, x1: -180, z0: 52, z1: 194 };
+
+export function stagedButteHeight(x: number, z: number): number {
+  const dx = x - BUTTE_FROM[0];
+  const dz = z - BUTTE_FROM[1];
+  const a = dx * BUTTE_AHEAD[0] + dz * BUTTE_AHEAD[1];
+  const b = -dx * BUTTE_AHEAD[1] + dz * BUTTE_AHEAD[0];
+  const da = (a - 235) / 46;
+  const db = (b - 60) / 46;
+  // Its plan is a rounded block with bays and noses; its foot is a skirt of talus, its face a cliff in three beds.
+  const e = Math.pow(Math.pow(Math.abs(da), 4) + Math.pow(Math.abs(db), 4), 0.25) + 0.16 * (noise(x / 19 + 2.1, z / 19) - 0.5) + 0.07 * (noise(x / 5.3, z / 5.3 + 7.7) - 0.5) + 0.05 * (blocks(x / 6.1 + 0.3 * z, z / 7.3) - 0.5);
+  if (e > 1.45) return -2;
+  const apron = 9 * smooth(1.42, 1.0, e);
+  const up = smooth(1.02, 0.84, e);
+  const beds = 3;
+  const q = up * beds + 0.5 * (noise(x / 8.3 + 1.1, z / 8.3) - 0.5);
+  const whole = Math.floor(q);
+  const stair = Math.min(1, Math.max(0, (whole + smooth(0.25, 0.8, q - whole)) / beds));
+  // The top falls away to the right of that frame and is broken into blocks and notches against the smoke.
+  const top = 39 - 0.4 * Math.max(0, b - 22) + 4.5 * (blocks(x / 9.7 + 0.2 * z, z / 8.1 + 3.3) - 0.5) + 2.6 * (noise(x / 3.3, z / 3.3 + 1.9) - 0.5) + 1.2 * (noise(x / 1.1 + 4, z / 1.1) - 0.5);
+  return Math.max(apron + 1.5 * (noise(x / 2.7, z / 2.7) - 0.5), top * stair) - 0.4;
 }

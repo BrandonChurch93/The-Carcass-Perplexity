@@ -31,6 +31,12 @@ float beatAt(vec2 q) {
   return 0.5 + 0.5 * sin(uTime * 1.05 - length(q - uFlowFoot) / 240.0);
 }
 
+// What is drawn does not pulse: its heat creeps along the seams, 0.5 to 0.8 m a second, uneven. The mean is the beat's.
+float creepAt(vec2 q) {
+  float c = vnoise(q / 6.0 + vec2(uTime * 0.13, -uTime * 0.07)) * 0.6 + vnoise(q / 2.3 + vec2(-uTime * 0.2, uTime * 0.23)) * 0.4;
+  return clamp(0.5 + 1.8 * (c - 0.5), 0.0, 1.0);
+}
+
 // The edge of a gap is torn: metres to add to the distance from its middle.
 float tornAt(vec2 q) {
   return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.2;
@@ -210,7 +216,9 @@ float seenOver(vec2 q, float wide, float deep, float across) {
 vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float d = n.r;
   float shown = step(1.5, n.g);
-  float beat = beatAt(q);
+  // The glow map keeps the beat of the lake, so its sum is what it was; the drawn surface creeps and crusts.
+  float beat = least > 0.5 ? beatAt(q) : creepAt(q);
+  float pace = least > 0.5 ? 1.0 : 2.6;
   vec2 pr = (q - uPool.xy) * uPool.zw;
   float pool = length(pr) + 0.34 * (vnoise(q / 13.0 + 2.0) - 0.5) + 0.12 * (vnoise(q / 3.1) - 0.5);
   float byPool = 1.0 - smoothstep(1.0, 2.7, pool);
@@ -259,7 +267,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float core = mix(1250.0 + 110.0 * smoothstep(0.06, 0.4, hotHalf) + 70.0 * fully, mix(1190.0, 1400.0 - 300.0 * clamp(n.g - 2.0, 0.0, 1.0) * (1.0 - stirred), max(smoothstep(0.12, 0.25, hotHalf), stirred)), shown);
   // Where the line is too narrow for the crust to cut it down to the melt, this sheet draws it: skinned over, dark red, not a slab of orange.
   core = mix(core, 1085.0, shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)) * (1.0 - smoothstep(0.26, 0.34, hotHalf)));
-  float spot = vnoise(q / 5.3 + vec2(uTime * 0.05, 2.0)) * 0.7 + vnoise(q / 1.9 + vec2(3.0, uTime * 0.09)) * 0.3;
+  float spot = vnoise(q / 5.3 + vec2(uTime * 0.05 * pace, 2.0)) * 0.7 + vnoise(q / 1.9 + vec2(3.0, uTime * 0.09 * pace)) * 0.3;
   core -= mix(150.0, 110.0, shown) * smoothstep(0.6, 0.4, spot);
   core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown);
   gLip = vec3(0.0);
