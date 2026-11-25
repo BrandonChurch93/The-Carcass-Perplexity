@@ -24,7 +24,7 @@ export function bump(bearing: number, centreDeg: number, widthDeg: number): numb
 
 /** The rim of the main shaft: broken out to the east-south-east where the wall fell, bitten and ragged all round. */
 export const rimRadius = (bearing: number): number =>
-  SHAFT + 7 * bump(bearing, 112, 42) + 2.2 * bump(bearing, 215, 30) + 1.0 * Math.sin(5 * bearing + 1) + 0.5 * Math.sin(11 * bearing + 0.5);
+  SHAFT + 7 * bump(bearing, 112, 42) + 2.2 * bump(bearing, 215, 30) + 1.0 * Math.sin(5 * bearing + 1) + 0.5 * Math.sin(11 * bearing + 0.5) + 0.4 * Math.sin(29 * bearing + 2);
 
 export const onRim = (bearingDeg: number, out = 0): [number, number] => {
   const b = bearingDeg * RAD;
@@ -58,7 +58,7 @@ export function lipHeight(bearing: number, r: number): number {
 export function ground(x: number, z: number): number {
   const xc = channelX(z);
   // The west bank comes in closer than the east one where the channel opens out to the north.
-  const half = x < xc ? 5 + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
+  const half = x < xc ? 5 + 6 * sat((z - 20) / 15) + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
   const r = Math.hypot(x, z);
   const b = bearingOf(x, z);
   let base: number;
@@ -129,7 +129,7 @@ export const cliffPoint = (s: number, p: number): [number, number] => [CAVE[0] +
 
 export function cliffTop(s: number): number {
   const fall = 1 - 0.5 * smooth((s - 2600) / 3200) - 0.35 * smooth((-s - 1800) / 2500);
-  return (410 + 26 * Math.sin(s * 0.0031 + 0.6) + 16 * Math.sin(s * 0.0083 + 2)) * fall;
+  return (700 + 40 * Math.sin(s * 0.0031 + 0.6) + 24 * Math.sin(s * 0.0083 + 2)) * fall;
 }
 
 export function cliffHeight(s: number, p: number): number {

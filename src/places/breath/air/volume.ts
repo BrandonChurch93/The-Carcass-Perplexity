@@ -78,7 +78,7 @@ float bumpAt(float b, float centre, float width) {
 }
 // The layout's own numbers (land.ts): the rim of the main shaft and the tide channel.
 float rimAt(float b) {
-  return 30.0 + 7.0 * bumpAt(b, 1.9548, 0.733) + 2.2 * bumpAt(b, 3.7525, 0.5236) + sin(5.0 * b + 1.0) + 0.5 * sin(11.0 * b + 0.5);
+  return 30.0 + 7.0 * bumpAt(b, 1.9548, 0.733) + 2.2 * bumpAt(b, 3.7525, 0.5236) + sin(5.0 * b + 1.0) + 0.5 * sin(11.0 * b + 0.5) + 0.4 * sin(29.0 * b + 2.0);
 }
 float softly(float v) {
   return 0.5 * (v + sqrt(v * v + 64.0));
@@ -109,7 +109,7 @@ float vapourTop(vec2 xz, float ground, vec2 fold, out float rho, out float foot,
 
   // On the rock: a sheet that slides from that lip with the wind and thins as it goes, and a thinner one that creeps over the rim all along the west side.
   float out0 = r - rim;
-  float tongue = lean * smoothstep(24.0 + 12.0 * apron, 0.0, out0) * (1.5 + 1.6 * apron);
+  float tongue = lean * smoothstep(24.0 + 12.0 * apron, 0.0, out0) * (0.9 + 0.6 * apron);
   float creep = west * smoothstep(7.0 + 3.0 * apron, 0.0, out0) * (0.5 + 0.5 * apron);
   float sheet = (tongue + creep) * lumps;
   // In the channel: it lies on the water between the banks, level as the water is, and spreads along it.
@@ -122,7 +122,7 @@ float vapourTop(vec2 xz, float ground, vec2 fold, out float rho, out float foot,
   float open = max(foot + sheet, pool);
   // On the rock it is thin and frayed through its whole height until the breath thickens it. What stands in the shaft itself is not marched:
   // it is gathered in one piece along the ray (shaftMist), so that it cannot speckle.
-  rho = mix(0.035, 0.16, smoothstep(0.3, 2.2, open - foot) * (0.25 + 0.75 * surge));
+  rho = mix(0.018, 0.075, smoothstep(0.3, 2.2, open - foot) * (0.25 + 0.75 * surge));
   soft = clamp(0.8 * (open - foot), 0.12, 3.0);
   return mix(open, foot, inside);
 }
@@ -291,10 +291,10 @@ void main() {
       float mb = min((-h2 + s2) / a2, far);
       if (mb > ma) {
         float surge = uBreath.y * uShow.w;
-        float level = mix(-9.0, uBreath.x, uShow.w) - 1.0 + 1.5 * surge;
+        float level = mix(-9.0, uBreath.x, uShow.w) - 8.0 + 1.5 * surge;
         vec2 g = WINDV * 0.3;
         // It has a surface: thin only through its top few metres, then a body. Under that it thickens until nothing of the bottom is seen.
-        float soft = mix(15.0, 9.0, surge);
+        float soft = mix(20.0, 10.0, surge);
         vec3 pa = ro + rd * ma;
         float dd = dot(g, rd.xz) - rd.y;
         float d0 = level + dot(g, pa.xz) - pa.y;
@@ -310,7 +310,7 @@ void main() {
         float gathered = abs(dd) > 1e-3 ? (column(d1, soft) - column(d0, soft)) / dd : clamp(d0 / soft, 0.0, 1.0) * (mb - ma);
         if (gathered > 0.01) {
           te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
-          float tau = mix(0.04, 0.085, surge) * gathered;
+          float tau = mix(0.03, 0.05, surge) * gathered;
           // The place a little way in that most of what is seen comes from.
           float tm = te + (mb - te) * sqrt(0.5 * min(1.0, 1.0 / max(tau, 1e-3)));
           vec3 pm = ro + rd * tm;
@@ -318,7 +318,7 @@ void main() {
           // faces it is bright and the trough behind it is dark.
           float sunk = clamp(1.0 + min(pm.y + 1.0, 0.0) / 30.0, 0.0, 1.0);
           float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
-          vec3 light = ambient * (0.45 + 0.55 * nm.r) * sunk * sunk
+          vec3 light = ambient * (0.6 + 0.9 * nm.r) * sunk * sunk
             + uSunColour * (sunAt(pm) * phase * (0.15 + 0.85 * faces) * smoothstep(-9.0, -1.0, pm.y));
           float gone = exp(-tau);
           colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
@@ -358,7 +358,8 @@ void main() {
     through *= seg;
     done = here;
     float tops = clamp(0.25 + 1.1 * n0.r + 0.3 * (1.0 - sunward), 0.0, 1.0);
-    vec3 light = ambient * (0.7 + 0.3 * tops) + uSunColour * (sunAt(mid) * phase * (0.2 + 0.8 * tops) * D.z);
+    // Toward the sun a body burns warm; away from it it is thin and blue grey.
+    vec3 light = ambient * vec3(0.72, 0.8, 0.92) * (0.6 + 0.3 * tops) + uSunColour * (sunAt(mid) * phase * (0.2 + 0.8 * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
     through *= gone;

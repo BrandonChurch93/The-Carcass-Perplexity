@@ -31,8 +31,8 @@ const key = (id: string): number => keyPart(shotById(id));
 // One way through the place: in over the shelf toward the pit, up to its south lip and out over the drop, along the west lip past the plumes,
 // down to the channel where the waders feed, and back to the lip where the dead one lies. No shot pulls back: each one travels the way it looks.
 const shots: Record<string, CameraPath> = {
-  'breath-01': through(look([-45.7, 24.3, 79], 13.7, -16.2, 47.9), key('breath-01'), { forward: -22, up: 5, right: -3 }, { forward: 18, up: -5.5, right: 4, turn: 4 }),
-  'breath-02': through(look([-2.2, 5.8, 37.2], -3, -23, 36), key('breath-02'), { forward: -7, up: -1.5, right: 1.5, tilt: 8 }, { forward: 15, up: 3.5, right: -2, turn: -12, tilt: 2 }),
+  'breath-01': through(look([-41, 13, 52], 18, -13, 50), key('breath-01'), { forward: -24, up: 4, right: -3 }, { forward: 13, up: -1.5, right: 1.5, turn: 3 }),
+  'breath-02': through(look([-3, 6.5, 36], -4, -27, 50), key('breath-02'), { forward: -7, up: -1.5, right: 1.5, tilt: 8 }, { forward: 15, up: 8, right: -2, turn: -30, tilt: 14 }),
   'breath-03': through(look([-27.8, 4.4, 6.5], -8, -7, 36), key('breath-03'), { forward: -11, up: 0.8, right: 1.5, turn: -4 }, { forward: 2.2, right: 0.3 }),
   'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
   'breath-05': through(look([-28.5, 2.6, 28.3], 12, -10.3, 40), key('breath-05'), { forward: -6, up: 0.6, right: -1 }, { forward: 2.5, up: -0.1, right: 0.4 }),

@@ -102,30 +102,30 @@ export function create(ctx: Context): Piece {
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
-    [-26, 4.5, -9, 13, 4.5, 11, 0.016],
-    [-17, 3, 6, 15, 3.5, 13, 0.012],
-    [-40, 3.2, -4, 12, 2.6, 9, 0.012],
+    [-24, 4.5, -14, 12, 5, 10, 0.016],
+    [-13, 1.5, -2, 13, 4, 14, 0.012],
+    [-43, 2.6, -8, 12, 2.4, 9, 0.012],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 26, open: 0.42, climb: 0.5, sun: 1.35 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.62, climb: 0.5, sun: 1.35 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
   for (const [s, p, lift, long, tall, deep, dense] of [
-    [60, -190, 60, 560, 60, 150, 0.003],
-    [240, -420, 60, 520, 70, 210, 0.003],
-    [520, -700, 18, 700, 60, 300, 0.0025],
-    [-900, -620, 30, 900, 70, 260, 0.0016],
+    [60, -190, 40, 560, 45, 150, 0.0045],
+    [240, -420, 30, 520, 45, 210, 0.0045],
+    [520, -700, 10, 700, 36, 300, 0.004],
+    [-900, -620, 16, 900, 40, 260, 0.0026],
   ] as const) {
     const [x, z] = cliffPoint(s, p);
-    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense, repeat: 260, open: 0.3, climb: -3, sun: 0.7 });
+    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense, repeat: 190, open: 0.46, climb: -3, sun: 1.2 });
   }
   // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
   for (const [x, z, rx, ry, rz, y] of [
-    [500, -820, 1300, 30, 160, 22],
-    [900, -1350, 1500, 40, 200, 48],
-    [1500, -1750, 1300, 50, 200, 100],
+    [500, -820, 1300, 22, 160, 14],
+    [900, -1350, 1500, 30, 200, 30],
+    [1500, -1750, 1300, 38, 200, 70],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0032, repeat: 420, open: 0.22, climb: 0.3, sun: 0.9 });
+    bodies.push({ part: 'fog', at: [x, y, z], size: [rx, ry, rz], turn: -0.5, dense: 0.0045, repeat: 300, open: 0.48, climb: 0.3, sun: 1.3 });
   }
   // The banks that lie out on the flats.
   for (const [x, z, rx, ry, rz] of [
@@ -133,7 +133,7 @@ export function create(ctx: Context): Piece {
     [-1500, -2900, 900, 90, 600],
     [-3200, 300, 800, 60, 900],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0024, repeat: 520, open: 0.25, climb: 0.4, sun: 0.8 });
+    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0034, repeat: 420, open: 0.44, climb: 0.4, sun: 1.3 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());
