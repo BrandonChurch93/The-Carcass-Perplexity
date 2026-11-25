@@ -44,6 +44,15 @@ export interface Film {
   stageAt(frame: number): Stage;
   loopStage(): Stage;
   state(frame: number): FilmState;
+  partsOf(unit: string): Promise<PartInfo[]>;
+}
+
+export interface PartInfo {
+  id: string;
+  unit: string;
+  name: string;
+  kind: string;
+  state: string;
 }
 
 const BLACK = 'black';
@@ -216,6 +225,10 @@ export function createFilm(): Film {
       const stage = built(LOOP_UNIT);
       stage.shot = null;
       return stage;
+    },
+    partsOf: async (unit) => {
+      const stage = await ensure(unit);
+      return stage.parts.all().map((p) => ({ id: p.id, unit: p.unit, name: p.name, kind: p.kind, state: p.state }));
     },
     state: (frame) => {
       const shot = shotAt(frame);

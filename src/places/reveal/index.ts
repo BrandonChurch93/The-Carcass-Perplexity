@@ -246,6 +246,8 @@ function create(): Place {
   }
 
   const beat = eventSeconds(UNIT, 'heartbeat');
+  const lavaColour = lava.material.uniforms.uColour.value as THREE.Color;
+  const stormColour = storm.material.uniforms.uColour.value as THREE.Color;
   const lavaCool = new THREE.Color(COLOUR.lava);
   const lavaHot = new THREE.Color(COLOUR.lavaHot);
   const stormDull = new THREE.Color(COLOUR.storm);
@@ -268,12 +270,12 @@ function create(): Place {
       cyclone.rotation.y = 0.03 * t;
       const hit = beat !== null && t >= beat ? Math.exp(-(t - beat) / 0.5) : 0;
       const pulse = 0.5 + 0.5 * Math.sin((2 * Math.PI * t) / 1.8);
-      lava.material.uniforms.uColour.value.copy(lavaCool).lerp(lavaHot, Math.min(1, 0.25 * pulse + hit));
+      lavaColour.copy(lavaCool).lerp(lavaHot, Math.min(1, 0.25 * pulse + hit));
       const swell = 1 + 0.08 * pulse + 1.4 * hit;
       lava.scale.set(42 * KM * swell, 1, 42 * KM * swell);
       const slot = Math.floor(t * 9);
       const lit = flashes[slot % flashes.length] > 0.82 ? 1 : flashes[(slot + 4095) % flashes.length] > 0.82 ? 0.45 : 0;
-      storm.material.uniforms.uColour.value.copy(stormDull).lerp(stormFlash, lit);
+      stormColour.copy(stormDull).lerp(stormFlash, lit);
       wisps.forEach((wisp, i) => {
         const along = 1 + 0.12 * Math.sin(t * 0.5 + i * 2.1);
         wisp.scale.x = [150, 110, 85][i] * KM * along;

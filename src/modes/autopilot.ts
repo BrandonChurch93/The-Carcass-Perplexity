@@ -1,6 +1,8 @@
 import styles from './player.module.css';
 import { createPlayer } from './player';
 
+declare const __WEB_MIX__: string;
+
 const params = new URLSearchParams(location.search);
 const unit = params.get('unit');
 const from = Number(params.get('frame') ?? 0);
@@ -11,7 +13,7 @@ const player = createPlayer((frames, _loopFrames, shots) => {
   const last = own.length ? Math.max(...own.map((s) => s.last)) : frames - 1;
   const start = Number.isInteger(from) && from > first && from <= last ? from : first;
   return { first: start, last, repeat: false, loop: false };
-});
+}, `./${__WEB_MIX__}`);
 
 const stage = document.createElement('main');
 stage.className = styles.stage as string;

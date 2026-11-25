@@ -1,3 +1,236 @@
 {
-  "parts": []
+  "schema": "carcass/parts 1",
+  "parts": [
+    {
+      "id": "reveal/sea",
+      "unit": "reveal",
+      "name": "sea",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/sea.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:05:24Z"
+      }
+    },
+    {
+      "id": "reveal/continent",
+      "unit": "reveal",
+      "name": "continent",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/continent.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5499,
+        "made": "2026-11-25T01:05:28Z"
+      }
+    },
+    {
+      "id": "reveal/salt",
+      "unit": "reveal",
+      "name": "salt",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/salt.png",
+        "frame": 10027,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0028,
+        "made": "2026-11-25T01:05:33Z"
+      }
+    },
+    {
+      "id": "reveal/lake",
+      "unit": "reveal",
+      "name": "lake",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/lake.png",
+        "frame": 9627,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2165,
+        "made": "2026-11-25T01:05:37Z"
+      }
+    },
+    {
+      "id": "reveal/lava",
+      "unit": "reveal",
+      "name": "lava",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/lava.png",
+        "frame": 9756,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0017,
+        "made": "2026-11-25T01:05:41Z"
+      }
+    },
+    {
+      "id": "reveal/vapour",
+      "unit": "reveal",
+      "name": "vapour",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/vapour.png",
+        "frame": 9675,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0175,
+        "made": "2026-11-25T01:05:46Z"
+      }
+    },
+    {
+      "id": "reveal/storm",
+      "unit": "reveal",
+      "name": "storm",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/storm.png",
+        "frame": 10027,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0018,
+        "made": "2026-11-25T01:05:50Z"
+      }
+    },
+    {
+      "id": "reveal/cloud",
+      "unit": "reveal",
+      "name": "cloud",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/cloud.png",
+        "frame": 9756,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0219,
+        "made": "2026-11-25T01:05:55Z"
+      }
+    },
+    {
+      "id": "reveal/cyclone",
+      "unit": "reveal",
+      "name": "cyclone",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/cyclone.png",
+        "frame": 11379,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0169,
+        "made": "2026-11-25T01:05:59Z"
+      }
+    },
+    {
+      "id": "reveal/space",
+      "unit": "reveal",
+      "name": "space",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/space.png",
+        "frame": 11379,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0304,
+        "made": "2026-11-25T01:06:03Z"
+      }
+    },
+    {
+      "id": "reveal/atmosphere",
+      "unit": "reveal",
+      "name": "atmosphere",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/reveal"
+      ],
+      "hash": "b334e68d49b10f66",
+      "standIn": {
+        "hash": "b334e68d49b10f66",
+        "picture": "out/stills/parts/reveal/atmosphere.png",
+        "frame": 11334,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.002,
+        "made": "2026-11-25T01:06:08Z"
+      }
+    }
+  ]
 }

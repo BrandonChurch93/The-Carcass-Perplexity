@@ -291,6 +291,11 @@ export async function filmStates(frames) {
   return s.page.evaluate((list) => list.map((f) => window.__carcass.filmState(f)), list);
 }
 
+export async function unitParts(unit) {
+  const s = await open();
+  return s.page.evaluate((u) => window.__carcass.partsOf(u), unit);
+}
+
 export async function rendererState() {
   const s = await open();
   return { built: s.built, browser: s.version, machine: os.hostname() };

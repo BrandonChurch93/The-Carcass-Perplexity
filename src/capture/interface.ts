@@ -3,7 +3,7 @@ import register from '../../parts/PARTS.json';
 import { FPS } from '../config';
 import { Engine } from '../core/engine';
 import type { Stage } from '../core/stage';
-import { createFilm, type FilmInfo, type FilmState } from '../film/film';
+import { createFilm, type FilmInfo, type FilmState, type PartInfo } from '../film/film';
 
 declare const __ENGINE_HASH__: string;
 declare const __UNIT_HASHES__: Record<string, string>;
@@ -21,6 +21,7 @@ export interface Carcass {
   setDiagnostic(view: string | null, part?: string | null): void;
   film(): FilmInfo;
   filmState(frame: number): FilmState;
+  partsOf(unit: string): Promise<PartInfo[]>;
   renderFilmFrame(frame: number, tier: string): Promise<void>;
   loop(): FilmInfo['loop'];
   renderLoopFrame(frame: number, tier: string): Promise<void>;
@@ -70,6 +71,7 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
     setDiagnostic: (view, part = null) => engine.setDiagnostic(view, part),
     film: () => film.info(),
     filmState: (frame) => film.state(frame),
+    partsOf: (unit) => film.partsOf(unit),
     renderFilmFrame: async (frame, t) => {
       tier = t;
       await film.ready(frame);

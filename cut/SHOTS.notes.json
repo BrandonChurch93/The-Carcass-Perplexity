@@ -1,0 +1,12 @@
+{
+  "scale": { "reveal": "km" },
+  "places": {},
+  "shots": {
+    "reveal-01": {
+      "start": "The dark water of the lake fills the frame, seen from straight above. It is the last frame of the Eye, so the cut cannot be seen.",
+      "end": "The whole body lies in the frame from the skull to the feet, with the edge of the planet across the upper left and the cyclone at the lower right. This framing is reached on the titan frame, 10027, and the camera then creeps out by 3 percent until the cut to black.",
+      "move": "It is one rise straight up, with north at the top: still at the lake, fastest as the shore of the lake comes into view, slowing through the skull and the shoulders, still again on the titan frame.",
+      "focus": "On the ground straight below, at every height."
+    }
+  }
+}
