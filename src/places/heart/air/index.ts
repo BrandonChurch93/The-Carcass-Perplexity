@@ -49,6 +49,7 @@ interface Body {
 }
 
 const BROWN = [0.46, 0.34, 0.27] as const;
+const GREY = [0.44, 0.38, 0.35] as const;
 const ROSE = [0.5, 0.42, 0.33] as const;
 /** The view of the walkers' key runs along this (x, z); its right is the second. */
 const ALONG = [0.7, -0.71] as const;
@@ -68,15 +69,16 @@ const BODIES: readonly Body[] = [
   // What stands behind them in the feeding picture: warm brown smoke over the open lake, thin enough for the buttress to stand in it. Staged for that shot.
   { at: behind(430, -110), radius: 140, height: 34, lean: [-0.2, 0.08], dense: 0.003, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0, floor: [1.5, 26], tops: 0.6, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.009, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [0.7, 40], tops: 0.25, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  // And what lies on the lake between the lens and those banks: a thin sheet, so that the far crust goes into the smoke and no line stands where the lake ends.
+  { at: behind(250, 0), radius: 230, height: 6, lean: [0, 0], dense: 0.0045, repeat: 70, hard: 2.2, climb: 0.3, colour: ROSE, foot: 0, lake: [0.15, 8], floor: [0.3, 7], lights: 0.2, tops: 0.9, solid: 0.9, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   { at: fromFoot(-34, 34), radius: 40, height: 45, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(2, 26), radius: 44, height: 60, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(22, 48), radius: 34, height: 38, lean: [0.16, 0.11], dense: 0.013, widen: 0.3, repeat: 84, hard: 2.2, climb: 2.4, colour: ROSE, foot: 0.08, lake: [0.28, 10], floor: [0.4, 22], lights: 0.9, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.08 } },
-  // The plume of the wide view: it rises from behind the buttress, its source hidden by it, leans up and east, and lies out as a thin layer over the east of the sky.
-  { at: [500, -200], radius: 42, height: 260, lean: [0.3, 0.3], dense: 0.03, widen: 1.7, foot: 0.55, repeat: 120, hard: 1.6, climb: 4, colour: BROWN, floor: [0.3, 120], tops: 0.35, solid: 0.45 },
-  { at: [580, -40], base: 170, radius: 400, height: 170, lean: [0.1, 0.1], dense: 0.012, repeat: 260, hard: 1.3, climb: 0.6, colour: BROWN, floor: [0.18, 300], tops: 0.2, solid: 0.5 },
+  // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture.
+  { at: [505, -285], radius: 62, height: 520, lean: [-0.16, -0.18], dense: 0.03, widen: 4, foot: 0.12, repeat: 200, hard: 2.4, climb: 5, colour: GREY, floor: [0.1, 150], tops: 1.4, solid: 0.5 },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
-  { at: [760, -40], base: -25, radius: 150, height: 150, lean: [-0.1, -0.05], dense: 0.008, widen: 0.2, repeat: 130, hard: 1.1, climb: 2, colour: BROWN, foot: 0.12, lake: [0.5, 30], floor: [2.0, 70], lights: 1, tops: 0.4, solid: 0.6 },
+  { at: [760, -40], base: -25, radius: 150, height: 150, lean: [-0.1, -0.05], dense: 0.008, widen: 0.2, repeat: 130, hard: 1.1, climb: 2, colour: BROWN, foot: 0.12, lake: [0.5, 30], floor: [2.6, 70], lights: 1, tops: 0.4, solid: 0.6 },
 ];
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */
