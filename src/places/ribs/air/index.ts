@@ -118,7 +118,11 @@ void main() {
 }`;
 
 export function create(ctx: Context): Piece {
-  (ctx.rig.uniforms.tSky as THREE.IUniform).value = ctx.assets.texture('air/sky.jpg');
+  const storm = ctx.assets.texture('air/storm.jpg');
+  storm.wrapS = THREE.MirroredRepeatWrapping;
+  storm.wrapT = THREE.ClampToEdgeWrapping;
+  storm.needsUpdate = true;
+  (ctx.rig.uniforms.tSky as THREE.IUniform).value = storm;
   const sky = new THREE.ShaderMaterial({
     vertexShader: SKY_VERTEX,
     fragmentShader: SKY_FRAGMENT,

@@ -13,3 +13,11 @@ A photograph of only sky, no ground and no horizon anywhere in the frame: a sky 
 ```
 
 Why this one: slate bases and lit tops of broken cloud. Only its shapes are used: the dome lays them on the cloud sheet that also shades the ground, and the rig gives the colour.
+
+## storm (the sky on the dome)
+
+Two takes. Take 1 (`sky-take1.jpg`) had a horizon in it: discarded and deleted. Take 2 kept: `storm-take1.jpg`.
+
+Prompt: "A wide photograph of a dark storm sky seen looking up at a steep angle, filling the whole frame edge to edge with cloud and nothing else: heavy slate-grey and blue-black stratocumulus and cumulus with dark ragged bases, towering lumps of unlike size, deep shadowed folds, and a few torn gaps where brilliant white sunlit cloud tops and a little pale blue show through. Strong contrast between dark bases and bright edges. No horizon, no land, no sea, no sun disc, no birds. Real photography, natural restrained colour, no sharpening."
+
+Recipe: scaled to `public/assets/ribs/air/storm.jpg`, laid whole on the dome by heading and height, mirrored where it repeats, turning with the wind. Entry `storm` in the place's pictures, plain.
