@@ -16,6 +16,7 @@ if (!url) {
 }
 const base = url.replace(/index\.html(\?.*)?$/, '');
 const waitMs = Number(arg('wait') ?? 6000);
+const startMs = Number(arg('start') ?? 180000);
 const results = [];
 const note = (flow, ok, detail) => { results.push({ flow, ok, detail }); console.log(`${ok ? 'pass' : 'FAIL'}  ${flow}: ${detail}`); };
 const lit = async (file) => {
@@ -79,7 +80,9 @@ try {
     `status ${res.status()}, title "${await page.title()}", play control ${await control.count()}, review link ${await link.count()}`);
   await page.screenshot({ path: path.join(outDir, 'start.png') });
 
-  await control.click();
+  // Starting the film builds every place before the first frame. MEASURED on 2 cores with a software
+  // renderer, 2026-11-25: 40 s for the click to return, so the click gets its own, longer limit.
+  await control.click({ timeout: startMs });
   await page.waitForFunction(() => window.__flow.frames >= 2 || window.__flow.error, null, { timeout: waitMs * 10, polling: 500 }).catch(() => {});
   const played = await page.evaluate(() => ({ ...window.__flow, size: (() => { const c = document.querySelector('canvas'); return c ? [c.width, c.height] : null; })() }));
   note('2 play the film', played.controlHidden && Boolean(played.size) && played.size[0] >= 960 && played.frames >= 2 && played.lit > 60 && !played.error,
