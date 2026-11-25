@@ -8,7 +8,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Phase: 3 · The look lock: the Heart, done on 2026-11-25 at 16:49 UTC. The build is at the review stop. Phase 4 starts when the Heart is approved
 - Review: waiting
 - Review round: round 1 in progress
-- Review round step: 1
+- Review round step: 2
 - Review rounds: 0
 - Budget: running
 - Continuations: 0
@@ -24,29 +24,23 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 59, 2026-11-25 16:51 UTC:
+Status 60, 2026-11-25 17:33 UTC:
 
-- `01-heart-0.jpg`: The Heart, the establishing view at frame 2722: your approved picture on the left, the frame from the build of the clip on the right, at the final tier
-- `02-shot-heart-01.jpg`: The Heart in motion: shot heart-01, twelve frames spread evenly through the opening move, at the review tier, from the same build as the clip
-- `03-heart-3.jpg`: A detail, the walkers feeding at the seam (frame 3156): your approved picture on the left, the frame on the right, at the final tier
-- `04-sheet.jpg`: The narration as it stands: n8 is kept and drawn as a waveform with its four lines, and n1 to n7 are not made yet
+- `01-spots-before.jpg`: The two spots of laughter as they are in your file, before anything is changed. Spot 2 shows the laughter as upright bursts between 2:34.5 and 2:39.8 over held notes. Spot 1 is a dense patch from 1:14 to 1:16 over full music
 
+Status 59, 2026-11-25 16:51 UTC, showed: The Heart, the establishing view at frame 2722: your approved picture on the left, the frame from the build of the clip on the right, at...
 Status 58, 2026-11-25 16:30 UTC, showed: The published review page, read back from the address: the Heart review clip is the first video, with a line under it that says what it is...
 Status 57, 2026-11-25 16:10 UTC, showed: A frame of the review clip, frame 3000 (heart-02, the walkers feeding at the seam), 1920 x 1080 at the final tier; A frame of the review...
-Status 56, 2026-11-25 15:51 UTC, showed: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine; A...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T16:30:15Z
-phase 3: 13.35 h used of 13.00 h
-build: 20.00 h used of 72.00 h
+2026-11-25T17:33:12Z
+review round 1: 0.10 h used of 4.00 h
 extra rounds: yes
-half point: reached
-box end: reached
-minutes since the last status: 19
+minutes since the last status: 63
 ```
 
 ## Phases
@@ -1579,7 +1573,7 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
-| none | | | | | |
+| `music_stem_separator` | lookup, on its own machine (4 cores) | Review round 1, note 9: split the supplied track into stems with free tools (Demucs `htdemucs_ft`, then a voice model as a second opinion) and send back the stems of two windows, 64 to 86 s and 146 to 170 s, as 24 bit FLAC with the per second levels. It edits nothing and judges nothing | none: the files come back as attachments | 2026-11-25 17:33 UTC | 35 minutes, inside `budget.agentWaitMinutes` |
 
 Ended with a record in Phase 3, step 8: `heart_clip_renderer_01` to `heart_clip_renderer_14` (ordered 14:18 UTC, the last share back 16:11 UTC, 113 minutes of the 120 of `sandbox.reviewClipMaxHours`). Each rendered its share of the Heart review clip at the final tier in hd on a fresh 4 core machine from commit `9ac88bf` and handed it back as a tar; every chunk's record names the same browser `147.0.7727.15`, engine `01fc9a2b137a3169` and Heart `c555aa9c875af518`, and each chunk was read back whole before the join. MEASURED seconds a frame, chunk by chunk in film order: 34.39, 35.36, 38.24, 39.53 (shot heart-01); 54.94, 56.27, 55.61, 56.28 (heart-02); 42.60, 39.71 (heart-03); 40.74, 40.17 (heart-04); 44.95, 43.55, 41.64, 39.15 (heart-05). That is 20.98 hours of rendering for 1714 frames, 44.1 s a frame over the clip. The shares took 69 to 113 minutes. Joined by the Builder at 16:11:48 UTC with the mix: no frame twice, the four cuts on their frames. The 16 chunks are kept in `out/work/film/chunks/` so a new mix is joined without a render.
 
@@ -1810,3 +1804,4 @@ What happens next is yours:
 - 2026-11-25 16:56 UTC. 16:51 UTC: status 59 shown in the thread at the review stop, with the four pictures the stop asks for: the Heart's establishing comparison (frame 2722, final tier), the motion sheet of shot heart-01 (review tier, the build of the clip), the feeding seam comparison (frame 3156, final tier) and the narration sheet (n8 kept, n1 to n7 not made). No render since status 58. The first caption of the motion sheet said "from the final build" and read like the final tier, so it was written again before it was shown: the sheet is at the review tier.
 - 2026-11-25 16:56 UTC. 16:51 to 16:55 UTC: `npm run flows` on the published address: 7 of 7 pass. Flow 6, the card loop live, passed this time: canvas 960 x 540, 5 frames drawn in 99 s, MEASURED on this machine with no graphics card. Three sound or film requests were answered with a server error by the storage host and asked again by the page, and all six files then opened in their players. The review page was built again with status 59 and published at 16:55 UTC. Read back from the address: status 59 and its captions are on the page, the Heart review clip is the first video, then the small copy, the blockout and the animatic. The repo measured PUBLIC at 16:56 UTC, for the record (note 3).
 - 2026-11-25 16:57 UTC. 16:57 UTC: the two films of the review stop are attached in the thread: `heart-review.mp4` (1920 x 1080, 60 a second, 1714 frames, 28.57 s, 49.9 MB, the final tier, music only) as file 1 and `animatic.mp4` (960 x 540, 30 a second, 3:18, 73.2 MB) as file 2. The task ends here with the `REVIEW` block. Nothing is built until Brandon writes: the review notes prompt, the approval prompt, or a line that the ElevenLabs characters are back (note 5).
+- 2026-11-25 17:33 UTC. 17:27 to 17:34 UTC, review round 1 opened. The reference images are approved (52 of 52 hashes hold, all 34 key pictures exist). The clock was started for the task and ticks as review round 1 from here (4.00 h allowed). Step 1: the six notes are under "Notes from Brandon" as notes 6 to 11 in his words and as R1.1 to R1.6 under "Review items". The account read 129,921 characters left of 131,000 at 17:30 UTC, before any call of this round: 0 credits spent of the 17,000 cap. Step 2, the items as understood and their order: R1.1 the credit count and the cap, before any call; R1.4 the two spots of laughter in the music (a supporting agent on its own machine splits the track into stems, started 17:33 UTC); R1.3 the sounds in his order; R1.2 the script sheet, with no narration made; R1.5 the settled line for the Reveal; R1.6 the hand back, with the Heart clip joined again from its kept chunks, because no frame of the Heart changes in this round. Status 60 shown at 17:34 UTC with the picture of the two spots as supplied (pipeline/music/spots.py).

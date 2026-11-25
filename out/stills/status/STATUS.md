@@ -1,8 +1,5 @@
-# Status 59
+# Status 60
 
-2026-11-25 16:51 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 17:33 UTC. Phase 3, the look lock: the Heart. Review round 1.
 
-- `01-heart-0.jpg`: The Heart, the establishing view at frame 2722: your approved picture on the left, the frame from the build of the clip on the right, at the final tier
-- `02-shot-heart-01.jpg`: The Heart in motion: shot heart-01, twelve frames spread evenly through the opening move, at the review tier, from the same build as the clip
-- `03-heart-3.jpg`: A detail, the walkers feeding at the seam (frame 3156): your approved picture on the left, the frame on the right, at the final tier
-- `04-sheet.jpg`: The narration as it stands: n8 is kept and drawn as a waveform with its four lines, and n1 to n7 are not made yet
+- `01-spots-before.jpg`: The two spots of laughter as they are in your file, before anything is changed. Spot 2 shows the laughter as upright bursts between 2:34.5 and 2:39.8 over held notes. Spot 1 is a dense patch from 1:14 to 1:16 over full music
