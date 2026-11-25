@@ -73,7 +73,8 @@ export interface Place {
   readonly warp?: THREE.ShaderMaterial | null;
   readonly depthFirst?: boolean;
   readonly parts: Parts;
-  setTime(seconds: number): void;
+  /** `staged` is the seconds of the place the camera stands at, where that is not the world's clock (a held camera, the loop); a place that stages by shot tests its shots against it. */
+  setTime(seconds: number, staged?: number): void;
   resize?(width: number, height: number): void;
   beforeSample?(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera): void;
   solo?(part: string | null): void;
@@ -83,7 +84,8 @@ export interface Place {
 export interface PlaceModule {
   readonly unit: string;
   readonly shots: Record<string, CameraPath>;
-  readonly loop?: { path: CameraPath; timeOffset: number };
+  /** `staged`: the seconds of the place whose staging by shot the loop keeps for its whole length. */
+  readonly loop?: { path: CameraPath; timeOffset: number; staged?: number };
   heightOf?(pose: Pose): number;
   view?(pose: Pose, aspect: number): Record<string, unknown>;
   create(): Place | Promise<Place>;
