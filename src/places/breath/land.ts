@@ -57,7 +57,8 @@ export function lipHeight(bearing: number, r: number): number {
 
 export function ground(x: number, z: number): number {
   const xc = channelX(z);
-  const half = channelHalf(z);
+  // The west bank comes in closer than the east one where the channel opens out to the north.
+  const half = x < xc ? 5 + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
   const r = Math.hypot(x, z);
   const b = bearingOf(x, z);
   let base: number;
@@ -120,7 +121,7 @@ export function surface(columns: number, rows: number, point: (u: number, v: num
   return g;
 }
 
-export const CAVE: [number, number] = [2125, -2093];
+export const CAVE: [number, number] = [1980, -2163];
 const ALONG: [number, number] = [-0.177, -0.984];
 const BEHIND: [number, number] = [0.984, -0.177];
 
@@ -128,7 +129,7 @@ export const cliffPoint = (s: number, p: number): [number, number] => [CAVE[0] +
 
 export function cliffTop(s: number): number {
   const fall = 1 - 0.5 * smooth((s - 2600) / 3200) - 0.35 * smooth((-s - 1800) / 2500);
-  return (520 + 36 * Math.sin(s * 0.0031 + 0.6) + 22 * Math.sin(s * 0.0083 + 2)) * fall;
+  return (620 + 36 * Math.sin(s * 0.0031 + 0.6) + 22 * Math.sin(s * 0.0083 + 2)) * fall;
 }
 
 export function cliffHeight(s: number, p: number): number {

@@ -29,11 +29,11 @@ function look(position: Vec3, bearingDeg: number, pitchDeg: number, fov: number,
 const key = (id: string): number => keyPart(shotById(id));
 
 const shots: Record<string, CameraPath> = {
-  'breath-01': through(look([-46, 13, 63], 20.5, -11.4, 44), key('breath-01'), { forward: -30, up: 3, right: -4 }, { forward: 14, up: -1, right: 2 }),
-  'breath-02': through(look([3.5, 9.5, 39.5], -6, -27, 54), key('breath-02'), { forward: -9, up: -0.5, right: -2.5 }, { forward: 8, up: 1.4, right: 1.5, tilt: -6 }),
+  'breath-01': through(look([-46.9, 11.5, 48.7], 17.9, -12.3, 46.4), key('breath-01'), { forward: -30, up: 3, right: -4 }, { forward: 14, up: -1, right: 2 }),
+  'breath-02': through(look([-3, 7.5, 40], -6, -24, 50), key('breath-02'), { forward: -9, up: -0.5, right: -2.5 }, { forward: 8, up: 1.4, right: 1.5, tilt: -6 }),
   'breath-03': through(look([-27.8, 4.4, 6.5], -8, -7, 36), key('breath-03'), { forward: 1, right: -0.6 }, { forward: -6, right: -1.5, up: 0.6 }),
   'breath-04': through(look([-50.7, 1.9, -19.5], 15, -8.5, 38), key('breath-04'), { right: -7, forward: -2.5 }, { right: 5, forward: 2 }),
-  'breath-05': through(look([-29.5, 3.6, 33], 12, -10.3, 40), key('breath-05'), { forward: -8, up: 0.2, right: -1.5 }, { forward: 3.5, up: 0.2, right: 0.6 }),
+  'breath-05': through(look([-28.5, 2.6, 28.3], 12, -10.3, 40), key('breath-05'), { forward: -8, up: 0.2, right: -1.5 }, { forward: 3.5, up: 0.2, right: 0.6 }),
 };
 
 // The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.

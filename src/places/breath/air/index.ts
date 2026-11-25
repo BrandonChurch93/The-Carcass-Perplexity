@@ -55,16 +55,18 @@ export function create(ctx: Context): Piece {
   const bodies: Body[] = [];
   // The vapour that stands over the smaller shafts: a column that leans with the wind and widens.
   for (const [x, z, r, tall] of SMALLER) {
-    const rise = r * (2 + 2.2 * tall);
-    bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.2 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
+    const rise = r * (2 + 3 * tall);
+    bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.3 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
     [-26, 4.5, -9, 13, 4.5, 11, 0.016],
     [-17, 3, 6, 15, 3.5, 13, 0.012],
     [-40, 3.2, -4, 12, 2.6, 9, 0.012],
+    // What stands in the west half of the shaft itself, under the rim.
+    [-13, -9, -2, 15, 9, 20, 0.022],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 11, open: 0.42, climb: 0.5, sun: 1 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 26, open: 0.42, climb: 0.5, sun: 1 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
@@ -83,7 +85,7 @@ export function create(ctx: Context): Piece {
     [-1500, -2900, 900, 90, 600],
     [-3200, 300, 800, 60, 900],
   ] as const) {
-    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0016, repeat: 520, open: 0.25, climb: 0.4, sun: 0.8 });
+    bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0024, repeat: 520, open: 0.25, climb: 0.4, sun: 0.8 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());

@@ -16,11 +16,11 @@ const WORLD = 16000;
  *  one stands further in, so that they step down as terraces. */
 const LEVELS: [number, number, number][] = [
   [-3.6, 29.0, 1.9],
-  [-10.2, 27.6, 2.1],
-  [-17, 26.2, 2.1],
-  [-24, 24.8, 2.0],
-  [-31.2, 23.4, 2.0],
-  [-39.2, 21.8, 1.9],
+  [-10.6, 27.6, 2.1],
+  [-17.6, 26.2, 2.1],
+  [-24.6, 24.8, 2.0],
+  [-31.6, 23.4, 2.0],
+  [-38.6, 21.8, 1.9],
 ];
 /** What is left of each hoop: level, from and to (bearings in degrees). The east-south-east side, 70 to 150 degrees, is where the wall came
  *  down: no hoop is whole across it, and everywhere else they are broken into lengths. */
@@ -70,7 +70,7 @@ export function create(ctx: Context): Piece {
   shaft.add(mesh(shaftWall(), wall));
   const rubble = rock.bone(0.5, [0.3, 0.265, 0.215], [0.14, 0.12, 0.1], THREE.DoubleSide);
   const fallen = rock.bone(0.8, [0.38, 0.34, 0.275], [0.2, 0.175, 0.14], THREE.DoubleSide);
-  const pale = rock.bone(1, [0.46, 0.41, 0.33], [0.27, 0.23, 0.18], THREE.DoubleSide);
+  const pale = rock.bone(1, [0.62, 0.56, 0.46], [0.36, 0.31, 0.24], THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
 
@@ -81,7 +81,7 @@ export function create(ctx: Context): Piece {
       mergeGeometries(
         HOOPS.map(([at, from, to], i) => {
           const [y, r, thick] = LEVELS[at] as [number, number, number];
-          return hoop(y - 0.25 * (i % 3), r + 0.15 * (i % 2), from, to, thick * (0.9 + 0.07 * (i % 4)), i * 3.7);
+          return hoop(y, r + 0.15 * (i % 2), from, to, thick * (0.9 + 0.07 * (i % 4)), i * 3.7);
         }),
       ),
       pale,
