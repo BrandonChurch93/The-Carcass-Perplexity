@@ -145,3 +145,10 @@ void main() {
   vNormal = normalize(mat3(modelMatrix) * n);
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
+
+// The fine relief of the floor that the land's mesh and the land texture are too coarse to carry, metres. The bed under a point is
+// landAt(xz).r + bedFine(xz): the land wets its sand by it and the water may fade its edge by it. Needs NOISE_GLSL.
+export const BED_GLSL = /* glsl */ `
+float bedFine(vec2 xz) {
+  return 0.15 * (vnoise(xz * 0.41) - 0.5) + 0.05 * (vnoise(xz * 1.37 + 17.0) - 0.5);
+}`;
