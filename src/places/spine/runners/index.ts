@@ -238,17 +238,32 @@ export function create(ctx: Context): Piece {
     a.writhe.set(1, 0, 0, 0);
   };
 
-  // The dead one does not move: its bones are set once. It lies on its right side: the trunk slack and flattened, the forelegs thrown forward
-  // toward its head with the upper one fallen to the ground, the hind legs drawn up under the belly, the neck fallen forward and down.
+  // The dead one does not move: its bones are set once. It lies on its right side, tipped a little so the burned flank shows to the lens:
+  // the trunk slack and flattened, the forelegs thrown out from the chest with their paws on the ground, the hind legs drawn up under the
+  // belly, the neck fallen forward and down.
+  const ROLL = 1.3;
+  /** How high the middle of its trunk lies over the ground, and so how high its own origin does, in its own metres. */
+  const REST = 0.9;
+  const LIFT = 0.27 - REST * Math.cos(ROLL);
+  const over = (v: [number, number, number]): number => LIFT + v[1] * Math.cos(ROLL) - v[2] * Math.sin(ROLL);
+  /** A leg thrown out: swung `fore` toward the head, twisted `twist` about itself, and let fall until its paw is `paw` over the ground. */
+  const thrown = (bone: number, fore: number, twist: number, long: number, paw: number, shift: [number, number, number]): void => {
+    const hip = HIPS[bone - 1] as [number, number, number];
+    const top = over([hip[0] + shift[0], hip[1] + shift[1], hip[2] + shift[2]]);
+    const fallen = Math.PI / 2 - ROLL + Math.asin(Math.min(1, Math.max(-1, (paw - top) / (LEG_TOP * long * Math.cos(fore)))));
+    about(dead.bones[bone] as THREE.Matrix4, hip, fallen, twist, fore, shift, new THREE.Vector3(1, long, 1));
+  };
   (dead.bones[0] as THREE.Matrix4).makeScale(1.1, 0.95, 0.72);
-  const LONG = new THREE.Vector3(1, 1.3, 1);
-  about(dead.bones[1] as THREE.Matrix4, HIPS[0] as [number, number, number], -0.55, 0, 0.5, [0.06, -0.03, 0.12], LONG);
-  about(dead.bones[2] as THREE.Matrix4, HIPS[1] as [number, number, number], -0.1, 0, 0.3, [0.04, 0.02, -0.06], LONG);
-  about(dead.bones[3] as THREE.Matrix4, HIPS[2] as [number, number, number], -0.55, 0, 0.3, [-0.02, 0.02, 0.13], LONG);
-  about(dead.bones[4] as THREE.Matrix4, HIPS[3] as [number, number, number], -0.08, 0, 0.65, [-0.02, 0.03, -0.06], LONG);
+  thrown(1, 0.62, -0.35, 1.3, 0.07, [0.04, -0.03, 0.1]);
+  thrown(2, 0.2, 0.15, 1.3, 0.07, [0.06, 0.0, -0.05]);
+  thrown(3, 0.95, 0, 1.15, 0.07, [-0.02, 0.02, 0.12]);
+  thrown(4, 0.7, 0, 1.15, 0.07, [-0.02, 0.03, -0.06]);
   about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0, -0.45, -0.3, [0.06, -0.04, 0.03]);
-  dead.coat.set(1, 0.6, 0.0, 0.12);
+  dead.coat.set(1, 0.6, 0.0, 0.3);
   dead.writhe.set(0, 1, 0, 0);
+  const UP = new THREE.Vector3(0, 1, 0);
+  const lie3 = new THREE.Vector3();
+  const tilt = new THREE.Quaternion();
 
   const walked = (u: number): number => (u < -0.8 ? 0 : u < 0.4 ? 0.79 * (u + 0.8) ** 2 : 1.14 + 1.9 * (u - 0.4));
   const size = new THREE.Vector2();
@@ -299,11 +314,24 @@ export function create(ctx: Context): Piece {
         ctx.rig.setDisc(discs, HUDDLE.length + i, p[0], p[2], 1.0 * a.role.size, 0.7);
       });
 
-      // The dead one: on its side across the scorched rock, sunk a little into the drift.
-      const gy = ctx.rig.land.height(carcassBody[0], carcassBody[2]);
-      dead.ground.x = gy;
-      place(dead, [carcassBody[0], gy + 0.19 * dead.role.size, carcassBody[2]], -(carcassAxis + 180) * RAD, 1.48, 0);
-      ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, carcassBody[0], carcassBody[2], 1.5 * dead.role.size, 0.8);
+      // The dead one lies on the land as it is there: the slope under it turns it, so nothing of it hangs in the air or is under the snow.
+      const cx = carcassBody[0];
+      const cz = carcassBody[2];
+      const E = 0.8;
+      const land = ctx.rig.land;
+      const sx = (land.height(cx + E, cz) - land.height(cx - E, cz)) / (2 * E);
+      const sz = (land.height(cx, cz + E) - land.height(cx, cz - E)) / (2 * E);
+      const gy = 0.5 * land.height(cx, cz) + 0.125 * (land.height(cx + E, cz) + land.height(cx - E, cz) + land.height(cx, cz + E) + land.height(cx, cz - E));
+      dead.ground.set(gy - sx * cx - sz * cz, sx, sz, 0);
+      lie3.set(-sx, 1, -sz).normalize();
+      tilt.setFromUnitVectors(UP, lie3);
+      q1.setFromEuler(e1.set(ROLL, -(carcassAxis + 180) * RAD, 0, 'YXZ')).premultiply(tilt);
+      const up = LIFT * dead.role.size;
+      dead.group.position.set(cx + lie3.x * up, gy + lie3.y * up, cz + lie3.z * up);
+      dead.group.quaternion.copy(q1);
+      dead.group.scale.setScalar(dead.role.size);
+      dead.group.updateMatrixWorld(true);
+      ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, cx, cz, 1.5 * dead.role.size, 0.8);
       void CARCASS;
     },
     beforeSample: (renderer, camera) => {
