@@ -1,4 +1,4 @@
-// The skin of the herd: every animal is a set of tubes (body, neck, four legs, tendrils) in one geometry.
+// The skin of the herd: every animal is a set of tubes (trunk, four legs, feelers) in one geometry.
 // A tube is rings of vertices round a centre line; the pose writes each ring from a centre, a frame and a table of local offsets,
 // and the normals are then taken from the surface itself, so bends, knobs and lumps are lit as they are.
 import * as THREE from 'three';
@@ -21,7 +21,7 @@ export class Skin {
   who = 0;
   position = new Float32Array(0);
   normal = new Float32Array(0);
-  heat = new Float32Array(0);
+  wet = new Float32Array(0);
   geometry: THREE.BufferGeometry | null = null;
 
   tube(rings: number, sides: number): Tube {
@@ -36,7 +36,7 @@ export class Skin {
         const b = a + 1;
         const c = a + w;
         const d = c + 1;
-        this.index.push(a, b, c, b, d, c);
+        this.index.push(a, c, b, b, c, d);
       }
     }
     return t;
@@ -58,7 +58,7 @@ export class Skin {
   build(): THREE.BufferGeometry {
     this.position = new Float32Array(this.total * 3);
     this.normal = new Float32Array(this.total * 3);
-    this.heat = new Float32Array(this.total);
+    this.wet = new Float32Array(this.total);
     const g = new THREE.BufferGeometry();
     const dynamic = (a: Float32Array, n: number): THREE.BufferAttribute => {
       const at = new THREE.BufferAttribute(a, n);
@@ -67,7 +67,7 @@ export class Skin {
     };
     g.setAttribute('position', dynamic(this.position, 3));
     g.setAttribute('normal', dynamic(this.normal, 3));
-    g.setAttribute('aHeat', dynamic(this.heat, 1));
+    g.setAttribute('aWet', dynamic(this.wet, 1));
     const fill = (a: number[], n: number): Float32Array => {
       const out = new Float32Array(this.total * n);
       for (let i = 0; i < out.length; i++) out[i] = a[i] ?? 0;
@@ -98,10 +98,10 @@ export class Skin {
     }
   }
 
-  setHeat(t: Tube, i: number, value: number): void {
+  setWet(t: Tube, i: number, value: number): void {
     const w = t.sides + 1;
     const o = t.start + i * w;
-    for (let j = 0; j < w; j++) this.heat[o + j] = value;
+    for (let j = 0; j < w; j++) this.wet[o + j] = value;
   }
 
   /** Normals of a tube from its own surface. Call after every ring is written. */
@@ -125,9 +125,9 @@ export class Skin {
         const vx = (p[c] as number) - (p[d] as number);
         const vy = (p[c + 1] as number) - (p[d + 1] as number);
         const vz = (p[c + 2] as number) - (p[d + 2] as number);
-        let x = uy * vz - uz * vy;
-        let y = uz * vx - ux * vz;
-        let z = ux * vy - uy * vx;
+        let x = uz * vy - uy * vz;
+        let y = ux * vz - uz * vx;
+        let z = uy * vx - ux * vy;
         const l = Math.hypot(x, y, z);
         if (l > 1e-12) {
           x /= l;
@@ -159,6 +159,6 @@ export class Skin {
     if (!g) return;
     (g.getAttribute('position') as THREE.BufferAttribute).needsUpdate = true;
     (g.getAttribute('normal') as THREE.BufferAttribute).needsUpdate = true;
-    (g.getAttribute('aHeat') as THREE.BufferAttribute).needsUpdate = true;
+    (g.getAttribute('aWet') as THREE.BufferAttribute).needsUpdate = true;
   }
 }

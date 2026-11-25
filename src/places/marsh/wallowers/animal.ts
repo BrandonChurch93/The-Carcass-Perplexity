@@ -20,19 +20,20 @@ export const FEELER_SIDES = 6;
 
 // The trunk of an adult of size 1, rump to muzzle: how far along (0 to 1), x forward, y of the middle, half height, half width. Metres.
 const KNOTS: [number, number, number, number, number][] = [
-  [0.0, -2.08, 0.98, 0.02, 0.02],
-  [0.03, -2.04, 0.99, 0.36, 0.4],
-  [0.08, -1.88, 1.02, 0.63, 0.68],
-  [0.18, -1.42, 1.08, 0.81, 0.88],
-  [0.32, -0.72, 1.12, 0.9, 1.0],
-  [0.46, 0.0, 1.15, 0.93, 1.02],
-  [0.58, 0.6, 1.16, 0.9, 0.95],
-  [0.68, 1.1, 1.07, 0.78, 0.83],
-  [0.77, 1.52, 0.93, 0.63, 0.7],
-  [0.85, 1.86, 0.77, 0.51, 0.6],
-  [0.92, 2.16, 0.6, 0.41, 0.54],
-  [0.97, 2.36, 0.48, 0.3, 0.46],
-  [1.0, 2.45, 0.44, 0.02, 0.04],
+  [0.0, -2.0, 0.8, 0.02, 0.02],
+  [0.03, -1.97, 0.82, 0.3, 0.32],
+  [0.08, -1.82, 0.88, 0.52, 0.56],
+  [0.18, -1.4, 0.98, 0.68, 0.74],
+  [0.32, -0.72, 1.08, 0.78, 0.82],
+  [0.46, 0.0, 1.16, 0.82, 0.84],
+  [0.58, 0.6, 1.18, 0.8, 0.8],
+  [0.68, 1.1, 1.08, 0.7, 0.72],
+  [0.77, 1.5, 0.94, 0.58, 0.62],
+  [0.85, 1.82, 0.78, 0.48, 0.54],
+  [0.92, 2.1, 0.62, 0.4, 0.48],
+  [0.965, 2.27, 0.52, 0.35, 0.47],
+  [0.987, 2.35, 0.47, 0.3, 0.42],
+  [1.0, 2.38, 0.46, 0.02, 0.04],
 ];
 
 function knot(s: number, col: number): number {
@@ -128,7 +129,7 @@ const LEG_AT: [number, number][] = [
   [0.78, 1],
 ];
 // A leg from where it leaves the trunk to its sole: the radius down it, for an adult of size 1.
-const LEG_R = [0.4, 0.38, 0.345, 0.31, 0.285, 0.27, 0.262, 0.268, 0.285, 0.31, 0.3, 0.02];
+const LEG_R = [0.37, 0.36, 0.33, 0.3, 0.275, 0.26, 0.252, 0.258, 0.275, 0.3, 0.29, 0.02];
 
 export class Animal {
   readonly body: Tube;
@@ -195,14 +196,14 @@ export class Animal {
         this.lumps[i * BODY_SIDES + j] = m;
       }
     }
-    const girth = TAU * 0.9 * k;
+    const girth = TAU * 0.8 * k;
     for (let i = 0; i < BODY_RINGS; i++) {
       const s = this.s[i];
       for (let j = 0; j <= BODY_SIDES; j++) {
         const a = (j / BODY_SIDES) * TAU;
         // Shade: the belly and the throat see little sky.
         const shade = 0.55 + 0.45 * smooth(-0.9, 0.1, Math.sin(a));
-        skin.describe(this.body, i, j, (knot(s, 1) + 2.1) * k, (j / BODY_SIDES) * girth, b.salt, shade, this.half[i * 2 + 1], seed, 0, s);
+        skin.describe(this.body, i, j, (knot(s, 1) + 2.0) * k, (j / BODY_SIDES) * girth, b.salt, shade, this.half[i * 2 + 1], seed, 0, s);
       }
     }
     for (let l = 0; l < 4; l++) {
@@ -221,9 +222,9 @@ export class Animal {
       const u = f / (FEELERS - 1);
       // A fringe round the under lip of the muzzle, from one corner to the other, in two uneven ranks.
       const angle = Math.PI * (1.08 + 0.84 * u) + 0.12 * (cell(f, 1, sd) - 0.5);
-      const ring = BODY_RINGS - 4 - (f % 2) * 2 - Math.floor(3 * Math.abs(u - 0.5));
-      const length = k * (0.5 + 0.22 * cell(f, 2, sd) - 0.14 * Math.abs(u - 0.5)) * (1 - 0.3 * young);
-      const radius = k * (0.042 + 0.014 * cell(f, 3, sd)) * (1 + 0.25 * young);
+      const ring = BODY_RINGS - 3 - (f % 2) - Math.floor(4 * Math.abs(u - 0.5));
+      const length = k * (0.66 + 0.24 * cell(f, 2, sd) - 0.2 * Math.abs(u - 0.5)) * (1 - 0.25 * young);
+      const radius = k * (0.06 + 0.022 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 1.5 });
       for (let i = 0; i < FEELER_RINGS; i++) {
         const v = i / (FEELER_RINGS - 1);
@@ -335,7 +336,7 @@ export class Animal {
     // The legs: from under the haunch or the shoulder, a little bent, to a foot that stays where it was put down.
     for (let l = 0; l < 4; l++) {
       const [lx, side] = LEG_AT[l];
-      carry(lx * k, 0.98 * k * (0.4 + 0.6 * d.squash), side * 0.5 * k * this.b.bulk, tmp, 0);
+      carry(lx * k, 0.92 * k * (0.4 + 0.6 * d.squash), side * 0.44 * k * this.b.bulk, tmp, 0);
       const ax = tmp[0];
       const ay = tmp[1];
       const az = tmp[2];
@@ -417,16 +418,16 @@ export class Animal {
       const tz = bx * ny - by * nx;
       const ca = Math.cos(at.angle);
       const sa = Math.sin(at.angle);
-      const hw = this.half[i * 2 + 1] * 0.86;
-      const hh = this.half[i * 2] * 0.86 * d.squash;
+      const hw = this.half[i * 2 + 1] * 0.8;
+      const hh = this.half[i * 2] * 0.8 * d.squash;
       let x = this.cx[i] + nx * ca * hw + bx * sa * hh;
       let y = this.cy[i] + ny * ca * hw + by * sa * hh;
       let z = this.cz[i] + nz * ca * hw + bz * sa * hh;
       // It leaves the lip forward, down and a little outward, and curls toward down and back.
-      const out = 0.25 + 0.75 * d.splay;
-      let dx = tx * 0.75 + (nx * ca + bx * sa) * out + nx * at.lean * 0.25;
-      let dy = ty * 0.75 + (ny * ca + by * sa) * out - 0.35 * (1 - d.splay) + ny * at.lean * 0.25;
-      let dz = tz * 0.75 + (nz * ca + bz * sa) * out + nz * at.lean * 0.25;
+      const out = 0.45 + 0.55 * d.splay;
+      let dx = tx * 0.6 + (nx * ca + bx * sa) * out + nx * at.lean * 0.3;
+      let dy = ty * 0.6 + (ny * ca + by * sa) * out - 0.3 * (1 - d.splay) + ny * at.lean * 0.3;
+      let dz = tz * 0.6 + (nz * ca + bz * sa) * out + nz * at.lean * 0.3;
       let dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
       dy /= dl;
@@ -465,7 +466,7 @@ export class Animal {
           y += ey * seg;
           z += ez * seg;
         }
-        const rad = r === FEELER_RINGS - 1 ? at.radius * 0.05 : at.radius * (1 - 0.72 * v) * (r === 0 ? 1.25 : 1);
+        const rad = r === FEELER_RINGS - 1 ? at.radius * 0.05 : at.radius * (1 - 0.66 * v) * (r === 0 ? 1.2 : 1);
         let o = (t.start + r * fw) * 3;
         for (let j = 0; j < fw; j++) {
           const a = ((j === FEELER_SIDES ? 0 : j) / FEELER_SIDES) * TAU;
@@ -546,7 +547,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
     }
     out.feet[l][0] = lx * k + 0.03 * k + x;
     out.feet[l][1] = y;
-    out.feet[l][2] = side * 0.6 * k * b.bulk;
+    out.feet[l][2] = side * 0.5 * k * b.bulk;
   }
   // The left pair swings about 0.79 of the cycle and the right pair about 0.29: the trunk is over the other side a tenth of a cycle before.
   const lean = Math.cos(TAU * (c - 0.69));
@@ -573,7 +574,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
     const w = 2.1 + 1.9 * cell(f, 7, Math.floor(b.seed * 9973));
     const a = seconds * w + f * 2.4 + b.seed * 31;
     // Each rakes: curled, then flicked out, each to its own time.
-    out.curl[f] = 1.25 + 0.55 * Math.sin(a) + 0.25 * Math.sin(a * 2.3 + 1) + 0.5 * shove;
+    out.curl[f] = 0.95 + 0.3 * Math.sin(a) + 0.14 * Math.sin(a * 2.3 + 1) + 0.35 * shove;
   }
   return out;
 }
