@@ -376,6 +376,22 @@ export function createLava(ctx: HeartContext, _net: Net, shared: Record<string, 
   // The part 'lava' is registered by the crust as an effect of the lake: alone, it is everything molten with the rest blacked.
   ctx.scene.add(melt);
 
+  // The air over the melt. The air folder takes twelve heat sources in all and nine are taken, so three: the near channel at
+  // its nearest to the line camera, the pool of the group, and one over the two near pools. Steam where each pool meets the wet crust.
+  const near = all.find((r) => r.name === 'line');
+  if (near) {
+    let best = near.line[0] as [number, number];
+    for (const p of near.line) if (Math.hypot(p[0] + 500, p[1] - 215) < Math.hypot(best[0] + 500, best[1] - 215)) best = p;
+    ctx.sources.heat.push({ at: [best[0], 0, best[1]], radius: 11, height: 3.2, strength: 0.75 });
+  }
+  ctx.sources.heat.push({ at: [-401.5, 0, 203.3], radius: 5, height: 3.5, strength: 0.8 });
+  ctx.sources.heat.push({ at: [-492.4, 0, 233.4], radius: 11, height: 2.6, strength: 0.6 });
+  const wet = ctx.rng('lake/lava-steam');
+  for (const [x, z, reach] of [[-401.5, 203.3, 2.0], [-493.8, 225.6, 1.6], [-491.0, 241.2, 1.6]] as const) {
+    const turn = wet.range(0, Math.PI * 2);
+    ctx.sources.steam.push({ at: [x + Math.cos(turn) * reach, 0.05, z + Math.sin(turn) * reach], radius: 0.35, strength: wet.range(0.3, 0.4), rise: wet.range(3, 5), kind: 'steam', lean: [-0.42, 0.2] });
+  }
+
   return {
     setTime: () => undefined,
     solo: (part) => {
