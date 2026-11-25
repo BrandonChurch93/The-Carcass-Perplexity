@@ -73,11 +73,11 @@ function arc(part: number, at: number, from: number, to: number): number {
 
 function track(part: number): Pose {
   const at = key('eye-04');
-  return moved(KEYS.shore, { right: arc(part, at, -3.4, 2), forward: arc(part, at, -1.2, -1.6), turn: arc(part, at, 8, -5) });
+  return moved(KEYS.shore, { right: arc(part, at, -3.6, 1.2), forward: arc(part, at, -1.2, -2), turn: arc(part, at, 8, -3) });
 }
 
 export const shots: Record<string, CameraPath> = {
-  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -20, up: 1, right: -4 }, { forward: 24, up: -1, right: 4 }),
+  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -85, up: -4, right: -22 }, { forward: 85, up: 4, right: 22 }),
   'eye-02': through(KEYS.mats, key('eye-02'), { right: -5, forward: -8, up: -0.3, turn: 4 }, { right: 5, forward: 3.5, up: 1.2, turn: -13 }),
   'eye-03': through(KEYS.edge, key('eye-03'), { right: 4, forward: -5, up: 0.7, turn: -6 }, { right: -2.6, forward: 1, up: 0.4, turn: 7 }),
   'eye-04': (part) => track(part),
