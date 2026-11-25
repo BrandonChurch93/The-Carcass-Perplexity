@@ -1,0 +1,49 @@
+{
+  "round": 2,
+  "unit": "film",
+  "pack": "R4b-1",
+  "family": "gemini",
+  "answered": "2026-11-25",
+  "answer": {
+    "critic": "R4b",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "frames 0 to 1139 (0:00.00 to 0:18.59) at the opening of place 1",
+        "what": "Place 1 does not open on the wide view that frames set-A-07-a.png; it starts far out at sea behind the front-left rib (hiding the left carcass cliff, the broken arch, and the tidal flat) and drifts slowly over empty water with nothing clearly moving in the first two seconds, taking about 20 seconds to reach the target framing",
+        "fix": "Open place 1 directly on the wide view that matches set-A-07-a.png with visible motion (such as flying or wading figures and foreground water movement) in the first two seconds"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "interior shots across places 1 to 6 (e.g. frames 3280 to 3533 and 4794 to 5551 in set-A-02.png, frames 1595 to 2278 in set-A-06.png, and frames 8832 to 9084 in set-A-03.png and set-A-04.png)",
+        "what": "Instead of traveling continuously through each place and pushing in, the camera cuts back and forth between separate views and jumps backward in space (such as leaving the tidal flat for the right mound then cutting back to the entrance cliff in place 1, jumping from close striders back to a wide lava plain in place 2, leaving the inside of the banded pool back to the bank in place 3, and reaching the lake shore at 2:27 only to cut back onto the dry plain at 2:31 in place 6)",
+        "fix": "Replace the cutaways and backward spatial jumps in each place with a continuous forward camera path (or strictly progressive push-in sequence) that travels deeper into the environment toward its focal detail, and in place 6 stay on the path into the lake once reaching the shore"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "frames 10094 to 11860 (2:48.14 to 3:17.40) and overall place durations across set-A-01.png to set-A-04.png",
+        "what": "The pacing is uneven at both ends of the 3:17 runtime: place 1 runs ~42 seconds (nearly double the ~21 to 27 seconds of places 2 through 6) because of the slow sea approach, and after the rise finishes at 2:47 the orbital view holds nearly static for 30 seconds",
+        "fix": "Trim the ~20-second pre-target sea approach in place 1 and shorten the post-rise orbital hold to ~10 to 15 seconds so the film sits cleanly near three minutes with balanced time per place"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "bottom-right corner at the end of the rise (frames 9939 to 10027)",
+        "what": "Although the rise from the lake to orbit is a single continuous move and fits the head, torso, arms, and legs in frame, the spiral feature at the foot end in the bottom-right corner remains clipped by the right and bottom frame edges when the rise settles at frame 10027",
+        "fix": "Pull back slightly further or re-center slightly rightward at the end of the rise so the entire body and adjacent spiral clear the frame border with breathing room by frame 10027"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07-b.png",
+        "where": "rightmost giant rib and bottom-left base of the dark cliff compared with set-A-07-a.png",
+        "what": "The rightmost rib sits further left of the upper-right corner than in set-A-07-a.png and the rocky foreshore bench at the foot of the left cliff is cropped below the frame",
+        "fix": "Nudge the wide framing slightly back and tilt/shift slightly so the rightmost rib reaches the upper-right corner and the base of the left cliff sits inside the lower-left frame as in set-A-07-a.png"
+      }
+    ]
+  }
+}

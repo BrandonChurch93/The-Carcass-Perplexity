@@ -1,0 +1,39 @@
+{
+  "round": "2",
+  "unit": "film",
+  "critic": "R4b",
+  "packs": {
+    "R4b-1": {
+      "set-A-01.png": "Whole film sheet 1 of 4, frames 0 to 2776",
+      "set-A-02.png": "Whole film sheet 2 of 4, frames 3028 to 5804",
+      "set-A-03.png": "Whole film sheet 3 of 4, frames 6056 to 8832",
+      "set-A-04.png": "Whole film sheet 4 of 4, frames 9084 to 11860",
+      "set-A-05.png": "The rise, from frame 9541 to the titan frame 10027",
+      "set-A-06.png": "One sheet across the place ribs, frames 0 to 2506",
+      "set-A-07-a.png": "The key ribs-0: its approved picture references/approved/1-ribs/ribs-0-establishing.jpg as -a and film frame 1241 as -b (the approved picture)",
+      "set-A-07-b.png": "The key ribs-0: its approved picture references/approved/1-ribs/ribs-0-establishing.jpg as -a and film frame 1241 as -b (the frame)"
+    },
+    "R4b-2": {
+      "set-B-01.png": "One sheet across the place heart, frames 2507 to 4220",
+      "set-B-02-a.png": "The key heart-0: its approved picture references/approved/2-heart/heart-0-establishing.jpg as -a and film frame 2722 as -b (the approved picture)",
+      "set-B-02-b.png": "The key heart-0: its approved picture references/approved/2-heart/heart-0-establishing.jpg as -a and film frame 2722 as -b (the frame)",
+      "set-B-03.png": "One sheet across the place breath, frames 4221 to 5617",
+      "set-B-04-a.png": "The key breath-0: its approved picture references/approved/3-breath/breath-0-establishing.jpg as -a and film frame 4409 as -b (the approved picture)",
+      "set-B-04-b.png": "The key breath-0: its approved picture references/approved/3-breath/breath-0-establishing.jpg as -a and film frame 4409 as -b (the frame)",
+      "set-B-05.png": "One sheet across the place marsh, frames 5618 to 7014",
+      "set-B-06-a.png": "The key marsh-0: its approved picture references/approved/4-marsh/marsh-0-establishing.jpg as -a and film frame 5725 as -b (the approved picture)",
+      "set-B-06-b.png": "The key marsh-0: its approved picture references/approved/4-marsh/marsh-0-establishing.jpg as -a and film frame 5725 as -b (the frame)"
+    },
+    "R4b-3": {
+      "set-C-01.png": "One sheet across the place spine, frames 7015 to 8304",
+      "set-C-02-a.png": "The key spine-0: its approved picture references/approved/5-spine/spine-0-establishing.jpg as -a and film frame 7234 as -b (the approved picture)",
+      "set-C-02-b.png": "The key spine-0: its approved picture references/approved/5-spine/spine-0-establishing.jpg as -a and film frame 7234 as -b (the frame)",
+      "set-C-03.png": "One sheet across the place eye, frames 8305 to 9540",
+      "set-C-04-a.png": "The key eye-0: its approved picture references/approved/6-eye/eye-0-establishing.jpg as -a and film frame 8412 as -b (the approved picture)",
+      "set-C-04-b.png": "The key eye-0: its approved picture references/approved/6-eye/eye-0-establishing.jpg as -a and film frame 8412 as -b (the frame)",
+      "set-C-05.png": "One sheet across the place reveal, frames 9541 to 11860",
+      "set-C-06-a.png": "The key reveal-4: its approved picture references/approved/7-reveal/reveal-4-titan-from-orbit.jpg as -a and film frame 10027 as -b (the approved picture)",
+      "set-C-06-b.png": "The key reveal-4: its approved picture references/approved/7-reveal/reveal-4-titan-from-orbit.jpg as -a and film frame 10027 as -b (the frame)"
+    }
+  }
+}
