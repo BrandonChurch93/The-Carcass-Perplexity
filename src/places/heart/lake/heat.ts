@@ -58,7 +58,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 #ifdef LAKE_LIP
   // What the lava in the gap throws on the skin beside it.
   float off = max(d - wide, 0.0);
-  gLip += blackbody(core - 90.0) * (lit * wide / (wide + 2.2 * off + 0.004) * exp(-off / 1.3));
+  gLip += blackbody(core - 90.0) * (lit * wide / (wide + 1.3 * off + 0.004) * exp(-off / 2.6));
 #endif
   // Yellow only in the middle of a wide gap, orange over most of it, deep red where the skin begins.
   float k = mix(core, min(core, 1190.0), smoothstep(0.0, 0.42, x));
@@ -118,14 +118,16 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float t2 = sqrt(texture2D(tRope, vec2(run.y, -run.x) / 4.7 + 0.37).g);
     // Yellow only down the middle of the stream, an orange body, dull red against the banks.
     float middle = 1.0 - smoothstep(0.12, 0.6, gAcross + 0.35 * (s1 - 0.5));
-    float kFloor = mix(1125.0 + 85.0 * t2, 1235.0 + 60.0 * t, middle * smoothstep(0.25, 0.45, hotHalf));
+    float kFloor = mix(1165.0 + 70.0 * t2, 1250.0 + 55.0 * t, middle * smoothstep(0.25, 0.45, hotHalf));
     float skinOn = smoothstep(0.2, 0.3, t * 0.45 + t2 * 0.25 + 0.3 * s1 + 0.1 * (gAcross - 0.4));
-    kFloor = mix(kFloor, 990.0 + 230.0 * t2 * s1, skinOn * (1.0 - 0.8 * middle));
-    kFloor = mix(kFloor, 1055.0 + 45.0 * s2, smoothstep(0.62, 0.95, gAcross));
+    kFloor = mix(kFloor, 1010.0 + 230.0 * t2 * s1, skinOn * (1.0 - 0.8 * middle));
+    kFloor = mix(kFloor, 1055.0 + 45.0 * s2, smoothstep(0.78, 0.98, gAcross));
     // The open lava shows palest in thin lines, where the skin tears and where the stream shears against the bank.
     float tear = (1.0 - smoothstep(0.13, 0.2, t)) * smoothstep(0.3, 0.6, s1);
     float rim = smoothstep(0.7, 0.8, gAcross) * (1.0 - smoothstep(0.84, 0.92, gAcross)) * smoothstep(0.45, 0.65, vnoise(q * 1.3 + 4.0));
     kFloor = mix(kFloor, core - 60.0, tear * 0.95);
+    // Where the stream widens into a pool the lava wells up fresh: a pale core.
+    kFloor = mix(kFloor, 1310.0 + 80.0 * t, smoothstep(1.25, 1.8, hotHalf) * middle * (1.0 - 0.6 * skinOn));
     kFloor = mix(kFloor, 1225.0, rim);
     // Rafts of thick skin, black and cold, lie against the banks.
     float raft = smoothstep(0.5, 0.56, s2 * 0.55 + 0.45 * vnoise(run * 0.8 + 17.0) + 0.3 * (gAcross - 0.6));

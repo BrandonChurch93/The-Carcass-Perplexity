@@ -5,7 +5,7 @@
 // The plates are cells of a fine pattern joined into large and middle plates, so that a large plate has a crooked edge made of
 // short straight runs, and small plates lie between the large ones, as on a real lake.
 import * as THREE from 'three';
-import { FALL_FOOT, GROUP, SEAMS, seamLine } from '../shared/anchors';
+import { FALL_FOOT, SEAMS, seamLine } from '../shared/anchors';
 
 export const NET = { minX: -568, minZ: -352, width: 1872, height: 880, cell: 1 };
 export const NET_FINE = { minX: -560, minZ: 50, width: 1280, height: 1280, cell: 0.25 };
@@ -153,6 +153,17 @@ const OWN: { line: [number, number][]; half: [number, number, number]; lumps: nu
   { line: [[-496.5, 188.5], [-497.4, 184.6]], half: [0.4, 0.26, 0.08], lumps: 0.4, heat: 0.0, seed: 53 },
   { line: [[-398.0, 60.0], [-344.0, 80.0]], half: [0.5, 1.3, 0.4], lumps: 0.6, heat: 0.05, seed: 55 },
   { line: [[-517.0, 282.0], [-513.2, 284.6]], half: [0.03, 0.09, 0.02], lumps: 0.5, heat: 0.3, seed: 56 },
+  // Short cracks across the view of the feeding picture, at several depths, and two that run from the pool under the tuft.
+  { line: [[-427.9, 205.1], [-427.1, 208.5], [-423.5, 210.7]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08, seed: 61 },
+  { line: [[-416.7, 207.2], [-413.8, 208.8], [-412.3, 212.9]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15, seed: 62 },
+  { line: [[-427.3, 212.2], [-424.3, 215.3], [-420.2, 216.1]], half: [0.04, 0.26, 0.03], lumps: 0.9, heat: 0.22, seed: 63 },
+  { line: [[-414.2, 185.3], [-411.8, 186.8], [-410.1, 191.3]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08, seed: 64 },
+  { line: [[-397.8, 185.9], [-395.8, 190.2], [-391.8, 192.8]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15, seed: 65 },
+  { line: [[-396.5, 170.1], [-392.0, 173.3], [-390.0, 178.1]], half: [0.04, 0.26, 0.03], lumps: 0.9, heat: 0.22, seed: 66 },
+  { line: [[-376.4, 164.7], [-375.1, 169.4], [-370.6, 173.4]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08, seed: 67 },
+  { line: [[-426.2, 193.6], [-422.3, 194.0], [-419.8, 196.9]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15, seed: 68 },
+  { line: [[-404.8, 203.6], [-408.4, 207.3]], half: [0.1, 0.05, 0.02], lumps: 0.6, heat: 0.1, seed: 71 },
+  { line: [[-403.0, 203.3], [-398.4, 205.7]], half: [0.1, 0.05, 0.02], lumps: 0.6, heat: 0.1, seed: 72 },
 ];
 
 const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
@@ -240,9 +251,9 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
         const kinds = (sites.kind[bk] as number) + (sites.kind[other] as number);
         const pool = sites.pool[bk] as number;
         // Not every edge between two plates is a seam that lives: the rest stay shut, dark cracks.
-        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.62 : kinds < 3 ? 0.3 : 0.1) + 0.6 * pool;
+        const alive = hash(lo, hi, 37) < (kinds === 0 ? 0.7 : kinds < 3 ? 0.5 : 0.22) + 0.6 * pool;
         const h = hash(lo, hi, 41);
-        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.35 : 0.16) * h * h + 0.25 * pool * h : 0;
+        reach = alive ? 0.06 + (kinds === 0 ? 0.75 : kinds < 3 ? 0.4 : 0.24) * h * h + 0.25 * pool * h : 0;
       }
       const o = (tj * width + ti) * 4;
       out[o] = edge;
@@ -291,7 +302,10 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
             const along = u < 0.5 ? (shape.half[0] as number) + ((shape.half[1] as number) - (shape.half[0] as number)) * smooth(0, 0.5, u) : (shape.half[1] as number) + ((shape.half[2] as number) - (shape.half[1] as number)) * smooth(0.5, 1, u);
             let half = along * (1 - shape.lumps + 2 * shape.lumps * noise(wx / 3.1, wz / 3.1, seed + 4)) * smooth(0, 0.03, Math.min(u, 1 - u) + 0.012);
             // Under the tuft of the one that feeds, the seam opens into a pool.
-            if (name === 'group') half += 1.15 * Math.exp(-((wx - GROUP[0]) ** 2 + (wz - GROUP[2]) ** 2) / 6.5);
+            // The walkers owner gave these points on the crust at T0: the hero's on the group seam, the near walker's at the wide key and at the key of the one that sank.
+            if (name === 'group') half += 1.25 * Math.exp(-((wx + 404.0) ** 2 + (wz - 202.7) ** 2) / 5.0);
+            if (name === 'nearA') half += 1.1 * Math.exp(-((wx + 494.7) ** 2 + (wz - 227.4) ** 2) / 4.0);
+            if (name === 'nearB') half += 1.1 * Math.exp(-((wx + 491.2) ** 2 + (wz - 241.0) ** 2) / 4.0);
             const o = (j * width + i) * 4;
             const had = out[o] as number;
             const hadReach = out[o + 3] as number;
