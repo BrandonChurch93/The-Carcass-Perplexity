@@ -176,57 +176,57 @@ Frames 4221 to 5617, 23.28 s, 5 shots.
 
 ## The Blood Marsh
 
-Frames 5618 to 7014, 23.28 s, 5 shots.
+Frames 5618 to 7014, 23.28 s, 5 shots. The origin is the centre of the seep pool. North is -z and east is +x. The world is a salt flat 18 km square inside a ring of escarpment that starts about 5 km out, and fog hides the far edge. The establishing eye stands 8.5 m above the flats on a rock rise about 7 m high and looks 52 degrees east of north, with the pool 35 m ahead and 15 m to its left.
 
 ### `marsh-01` · The Blood Marsh · the red flats
 
 - Frames: 5618 to 5832, 3.58 s.
 - Key: `marsh-0` at frame 5725.
-- Lens: 28 mm for the whole shot (a vertical field of view of 46 degrees).
-- Move: in. The camera travels 280 m, from 190 m above the ground to 130 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 910 m away at the start and 910 m at the end. Depth of field is off in the blockout.
+- Lens: 30 mm for the whole shot (a vertical field of view of 44 degrees).
+- Move: in. The camera travels 21 m, from 12 m above the ground to 6.5 m.
+- Start framing: From 9 m behind the key position and about 3 m above it, over the rock rise: the whole marsh, with the pool on the left, the red vein running from the bottom centre to the upper right, the crust and its dead on the right, rain on the right and a flock crossing the sky.
+- End framing: 12 m ahead of the key position and lower, past the rise and over the vein, with the pool on the left and the wallowers in the vein ahead.
+- Focus: On the pool and the vein beside it. The aim is 62 m away at the start and 62 m at the end. Depth of field is off in the blockout.
 
 ### `marsh-02` · The Blood Marsh · the stalks
 
 - Frames: 5833 to 6047, 3.58 s.
 - Key: `marsh-2` at frame 5940.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the right. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 45 mm for the whole shot (a vertical field of view of 30 degrees).
+- Move: to the right. The camera travels 6.5 m, from 2.8 m above the ground to 2.6 m.
+- Start framing: Inside the stalk colony on the south west bank of the pool, 2.7 m up, with stems and fans crossing the foreground.
+- End framing: 6.4 m to the right, past the four tall stems of the key picture, the view opens onto the pool with one wallower on its far bank.
+- Focus: On the four tall stems, a few metres from the lens. The wallower beyond them is soft. The aim is 20 m away at the start and 20 m at the end. Depth of field is off in the blockout.
 
 ### `marsh-03` · The Blood Marsh · the seep pool bursts
 
 - Frames: 6048 to 6262, 3.58 s.
 - Key: `marsh-1` at frame 6102.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 290 m, from 61 m above the ground to 29 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 240 m away at the start and 240 m at the end. Depth of field is off in the blockout.
+- Lens: 38 mm for the whole shot (a vertical field of view of 35 degrees).
+- Move: in. The camera travels 4.3 m, from 1.6 m above the ground to 1.5 m.
+- Start framing: On the south rim of the pool about 1 m up, 2.2 m behind the key position, looking across the surface at the largest gas dome.
+- End framing: About 3.8 m from the column of the burst and outside it, turned 8 degrees and tilted up 7, with the column and its crown filling the frame.
+- Focus: On the largest dome, then on the column that rises from it at the burst. The aim is 10 m away at the start and 10 m at the end. Depth of field is off in the blockout.
 
 ### `marsh-04` · The Blood Marsh · the wallowers
 
 - Frames: 6263 to 6585, 5.38 s.
 - Key: `marsh-3` at frame 6424.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: to the left. The camera travels 140 m, at 70 m above the ground.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 420 m away at the start and 420 m at the end. Depth of field is off in the blockout.
+- Lens: 45 mm for the whole shot (a vertical field of view of 30 degrees).
+- Move: to the left. The camera travels 6.4 m, from 2.7 m above the ground to 2.1 m.
+- Start framing: Over the vein at 2.7 m, on the adult rooting in the brine with the young beside it and a half sunk one in front.
+- End framing: 5.9 m to the left and lower, at 2.05 m, on the same three animals, with stalks crossing the foreground.
+- Focus: On the head and forelimbs of the adult. The aim is 10 m away at the start and 9.9 m at the end. Depth of field is off in the blockout.
 
 ### `marsh-05` · The Blood Marsh · the one on the thin crust
 
 - Frames: 6586 to 7014, 7.15 s.
 - Key: `marsh-4` at frame 6800.
-- Lens: 37 mm for the whole shot (a vertical field of view of 36 degrees).
-- Move: in. The camera travels 280 m, from 59 m above the ground to 30 m.
-- Start framing: not written
-- End framing: not written
-- Focus: not written The aim is 330 m away at the start and 330 m at the end. Depth of field is off in the blockout.
+- Lens: 38 mm for the whole shot (a vertical field of view of 35 degrees).
+- Move: in. The camera travels 14 m, from 3.1 m above the ground to 1.3 m.
+- Start framing: 12 m back from the key position and about 2.6 m above it, over the crust: the stuck one small in the frame with the salt mounds of the dead on either side.
+- End framing: 1.7 m past the key position at about 1.3 m, close on the stuck one, with stalks and wallowers behind it.
+- Focus: On the head of the stuck one. The aim is 10 m away at the start and 10 m at the end. Depth of field is off in the blockout.
 
 ## The Spine
 

@@ -388,7 +388,62 @@ Measured 2026-11-24 on the scene "spike: displaced lava ground, fume volume, 600
 
 The list, by the rule in `kit/07-QUALITY-BAR.md`, with the unit and the current frame number of each entry.
 
-none
+Written 2026-11-25 01:13 UTC from `cut/CUTLIST.json` by `judgedTable(judgedList(cfg, cut))` in `tools/lib/judged.mjs`. G6 fails when this table and the cut list part. Frames a critic names are added below the table as they come.
+
+| Entry | Unit | Frame | What |
+| --- | --- | --- | --- |
+| `ribs-0` | `ribs` | 1241 | The key frame of ribs-0 |
+| `ribs-1` | `ribs` | 2081 | The key frame of ribs-1 |
+| `ribs-2` | `ribs` | 1759 | The key frame of ribs-2 |
+| `ribs-3` | `ribs` | 1546 | The key frame of ribs-3 |
+| `ribs-4` | `ribs` | 2401 | The key frame of ribs-4 |
+| `heart-0` | `heart` | 2722 | The key frame of heart-0 |
+| `heart-1` | `heart` | 3477 | The key frame of heart-1 |
+| `heart-2` | `heart` | 3685 | The key frame of heart-2 |
+| `heart-3` | `heart` | 3156 | The key frame of heart-3 |
+| `heart-4` | `heart` | 4006 | The key frame of heart-4 |
+| `breath-0` | `breath` | 4409 | The key frame of breath-0 |
+| `breath-1` | `breath` | 5242 | The key frame of breath-1 |
+| `breath-2` | `breath` | 5510 | The key frame of breath-2 |
+| `breath-3` | `breath` | 4973 | The key frame of breath-3 |
+| `breath-4` | `breath` | 4731 | The key frame of breath-4 |
+| `marsh-0` | `marsh` | 5725 | The key frame of marsh-0 |
+| `marsh-1` | `marsh` | 6102 | The key frame of marsh-1 |
+| `marsh-2` | `marsh` | 5940 | The key frame of marsh-2 |
+| `marsh-3` | `marsh` | 6424 | The key frame of marsh-3 |
+| `marsh-4` | `marsh` | 6800 | The key frame of marsh-4 |
+| `spine-0` | `spine` | 7234 | The key frame of spine-0 |
+| `spine-1` | `spine` | 7579 | The key frame of spine-1 |
+| `spine-2` | `spine` | 7418 | The key frame of spine-2 |
+| `spine-3` | `spine` | 7668 | The key frame of spine-3 |
+| `spine-4` | `spine` | 8090 | The key frame of spine-4 |
+| `eye-0` | `eye` | 8412 | The key frame of eye-0 |
+| `eye-1` | `eye` | 9003 | The key frame of eye-1 |
+| `eye-2` | `eye` | 8600 | The key frame of eye-2 |
+| `eye-3` | `eye` | 8761 | The key frame of eye-3 |
+| `eye-4` | `eye` | 9221 | The key frame of eye-4 |
+| `reveal-1` | `reveal` | 9627 | The key frame of reveal-1 |
+| `reveal-2` | `reveal` | 9675 | The key frame of reveal-2 |
+| `reveal-3` | `reveal` | 9756 | The key frame of reveal-3 |
+| `reveal-4` | `reveal` | 10027 | The key frame of reveal-4 |
+| `reveal-titan` | `reveal` | 10027 | The titan frame |
+| `reveal-handoff-1` | `reveal` | 9563 | Handoff frame 1 of 3, between the last frame at the lake and the key frame of reveal-1 |
+| `reveal-handoff-2` | `reveal` | 9584 | Handoff frame 2 of 3, between the last frame at the lake and the key frame of reveal-1 |
+| `reveal-handoff-3` | `reveal` | 9606 | Handoff frame 3 of 3, between the last frame at the lake and the key frame of reveal-1 |
+| `film-first` | `film` | 0 | Frame 0 of the film |
+| `film-hook` | `film` | 120 | The frame at film.hookSeconds |
+| `film-open-heart` | `film` | 2507 | The first frame of heart |
+| `film-open-breath` | `film` | 4221 | The first frame of breath |
+| `film-open-marsh` | `film` | 5618 | The first frame of marsh |
+| `film-open-spine` | `film` | 7015 | The first frame of spine |
+| `film-open-eye` | `film` | 8305 | The first frame of eye |
+| `film-open-reveal` | `film` | 9541 | The first frame of reveal |
+| `film-titan` | `film` | 10027 | The titan frame |
+| `film-last` | `film` | 11743 | The last frame that is not black |
+| `loop-0` | `film` | loop 0 | Loop frame 0, the card still |
+| `loop-1` | `film` | loop 120 | The loop, 1 quarter of the way through |
+| `loop-2` | `film` | loop 240 | The loop, 2 quarters of the way through |
+| `loop-3` | `film` | loop 360 | The loop, 3 quarters of the way through |
 
 ## Look lock
 
