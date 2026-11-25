@@ -23,8 +23,8 @@ void main() {
 const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
-  float sun = uSunDir.y * (0.42 + 1.16 * clamp(facing, 0.0, 1.0)) * (0.55 + 0.45 * thick);
-  vec3 c = 1.5 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
+  vec3 c = 1.02 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
   float air = 1.0 - exp(-0.015 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour, air);
 }`;
@@ -53,7 +53,7 @@ void main() {
   vec3 lowColour = cloudLight(xz, 0.6 * low.y + 0.4 * self, low.x, 0.0) * (1.0 - 0.25 * over) * (1.0 - 0.35 * overMid);
   vec3 midColour = cloudLight(between, 0.45 + 0.25 * mid, 0.7, 0.5) * (1.0 - 0.2 * over) * 0.92;
   vec3 highColour = cloudLight(up, 0.62, 0.6, 1.0);
-  float a = low.x * 0.96;
+  float a = low.x * 0.9;
   float m = mid * 0.13;
   float b = high * 0.28;
   vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + midColour * m * (1.0 - b) + highColour * b;
@@ -68,36 +68,21 @@ ${CLOUD_LIGHT_GLSL}
 uniform sampler2D uPicture;
 varying vec3 vWorld;
 varying vec2 vUv;
-const float UP = -1.0;
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
   float r = length(p);
   // The whole storm turns, the middle faster than the rim.
-  float turn = uTime * (0.012 + 0.03 / (1.0 + 9.0 * r));
+  float turn = uTime * (0.008 + 0.012 / (1.0 + 9.0 * r));
   float c = cos(turn);
   float s = sin(turn);
   vec2 q = vec2(c * p.x - s * p.y, s * p.x + c * p.y) * 0.5 + 0.5;
+  // The storm is a photograph of one from orbit (public/assets/reveal/mat/cyclone.jpg): its light is its cover, and this place's sun lights it.
   vec3 t = texture2D(uPicture, q).rgb;
-  // The picture gives the fibres; the build of the storm is drawn here: a dense shield over the middle, thick arms wound out of it
-  // with dark sea between them, and a soft dark eye.
-  vec2 w = q * 2.0 - 1.0;
-  float wound = atan(w.y, w.x) + UP * 2.6 * log(r + 0.04);
-  float wob = vnoise(w * 3.0 + 5.0) - 0.5;
-  float band = 0.5 + 0.5 * cos(2.0 * wound + 2.4 * wob);
-  float arms = smoothstep(0.3 + 0.25 * r, 0.8 + 0.2 * r, band);
-  float fibre = 0.5 + 0.25 * cos(9.0 * wound + 5.0 * wob) + 0.25 * cos(17.0 * wound - 7.0 * vnoise(w * 6.0 + 2.0));
-  float shield = exp(-pow(r / 0.21, 2.2));
-  float reach = pow(clamp((0.95 - r) / 0.75, 0.0, 1.0), 0.8);
-  float build = max(shield * (0.92 + 0.08 * fibre), arms * reach * (0.55 + 0.45 * fibre));
-  float eye = smoothstep(0.012, 0.085, r);
-  // The arms are not smooth: they are made of towers, and their outer edges are torn.
-  float towers = 0.5 * vnoise(w * 46.0 + 3.0) + 0.3 * vnoise(w * 97.0 + 8.0) + 0.2 * vnoise(w * 19.0);
-  float tear = 0.55 * (1.0 - towers) * smoothstep(0.12, 0.5, r);
-  build = mix(build, smoothstep(tear, tear + 0.55, build), smoothstep(0.1, 0.3, r));
-  float thick = build * eye * (0.9 + 0.2 * (t.g - 0.5));
-  float tall = clamp(0.35 * thick + 0.65 * shield * eye, 0.0, 1.0);
-  vec3 colour = cloudLight(vWorld.xz, 0.5 + 0.4 * (t.g - 0.5), 0.5 + 0.5 * tall, 0.5 * tall) * (0.76 + 0.5 * tall) * (0.9 + 0.2 * fibre) * (0.86 + 0.28 * towers);
-  float alpha = clamp(thick * 1.1, 0.0, 0.97);
+  float seenLight = dot(t, vec3(0.3, 0.55, 0.15));
+  float thick = smoothstep(0.05, 0.5, seenLight) * (1.0 - smoothstep(0.88, 1.0, r));
+  float tall = smoothstep(0.35, 0.8, seenLight);
+  vec3 colour = cloudLight(vWorld.xz, 0.5 + 0.8 * (seenLight - 0.5), 0.5 + 0.5 * tall, 0.5 * tall) * (0.34 + 0.72 * seenLight * seenLight);
+  float alpha = clamp(thick, 0.0, 0.97);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -119,19 +104,21 @@ vec3 flash(float cell, float rate) {
   return vec3(at, lit * pulse);
 }
 void main() {
+  // The storm is a photograph of merged anvils from orbit (public/assets/reveal/mat/storm.jpg): its light is its cover.
   vec3 t = texture2D(uPicture, vUv).rgb;
-  float thick = t.r;
-  // The sheet of the anvil is thin and grey white; the heads of the towers stand through it, bright on the side of the sun and dark on the other.
-  vec3 colour = cloudLight(vWorld.xz, 0.5, 0.6, t.b) * (0.5 + 0.4 * t.b) * mix(0.55, 1.6, smoothstep(0.25, 0.75, t.g));
+  float seenLight = dot(t, vec3(0.3, 0.55, 0.15));
+  float thick = smoothstep(0.04, 0.5, seenLight) * (1.0 - smoothstep(0.78, 1.0, length(vUv * 2.0 - 1.0)));
+  // (The photograph's own tones are the build of its tops: dark between the towers, bright on them.)
+  vec3 colour = cloudLight(vWorld.xz, 0.62, 0.8, 0.6) * (0.16 + 1.05 * pow(seenLight, 2.2));
   // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
     vec3 f = flash(float(i), 0.55 + 0.17 * float(i));
     vec2 d = (vUv - f.xy) * vec2(1.0, 0.36);
-    glow += vec3(0.66, 0.6, 1.0) * f.z * exp(-dot(d, d) * 520.0) * (0.4 + 0.6 * t.b);
+    glow += vec3(0.66, 0.6, 1.0) * f.z * exp(-dot(d, d) * 520.0) * (0.4 + 0.6 * seenLight) * thick;
   }
   colour += glow * 1.6;
-  float alpha = clamp(pow(thick, 1.25) * 1.2, 0.0, 1.0);
+  float alpha = clamp(thick, 0.0, 0.98);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo));
 }`;
 
@@ -187,6 +174,10 @@ export function create(ctx: Context): Piece {
   const cover = ctx.assets.texture('sky/cloud-cover.jpg', { kind: 'data', repeat: false });
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   (ctx.rig.uniforms.uCloudCover as THREE.IUniform).value = cover;
+  // The photographs of cloud from orbit, made by the Builder (assets-src/reveal/mat/RECIPE.md).
+  for (const [uniform, file] of [['uMatCells', 'mat/cells.jpg'], ['uMatStreets', 'mat/streets.jpg'], ['uMatVeil', 'mat/veil.jpg']] as const) {
+    (ctx.rig.uniforms[uniform] as THREE.IUniform).value = ctx.assets.texture(file, { kind: 'data', repeat: true });
+  }
 
   const made: { geometry: THREE.BufferGeometry; material: THREE.ShaderMaterial }[] = [];
   let order = 10;
@@ -222,8 +213,8 @@ export function create(ctx: Context): Piece {
   // The breath of the throat: it leaves the neck and is carried up the picture by the wind.
   sheet('vapour', quad({ x: AT.throat.x - 200, y: AT.throat.y - 400 }, 380, 400, 1.5, 0), VAPOUR_FRAGMENT);
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT);
-  sheet('storm', quad(AT.storm, 235, 88, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/storm.jpg', { kind: 'data', repeat: false }) } });
-  sheet('cyclone', quad(AT.cyclone, 880, 880, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: ctx.assets.texture('sky/cyclone.jpg', { kind: 'data', repeat: false }) } });
+  sheet('storm', quad(AT.storm, 215, 165, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: ctx.assets.texture('mat/storm.jpg', { kind: 'data', repeat: false }) } });
+  sheet('cyclone', quad(AT.cyclone, 720, 720, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: ctx.assets.texture('mat/cyclone.jpg', { kind: 'data', repeat: false }) } });
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));

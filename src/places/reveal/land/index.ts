@@ -132,8 +132,8 @@ void main() {
   vec2 uvA = (read - uRectA.xy) * uRectA.zw;
   float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
-  ground = mix(ground, vec3(0.66, 0.6, 0.5), 0.44 * skeleton * top);
-  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top);
+  ground = mix(ground, vec3(0.6, 0.555, 0.48), 0.42 * skeleton * top);
+  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.86, top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
   ground *= mix(vec3(1.0), vec3(0.84, 0.7, 0.54), bare * mix(0.5, 1.0, fromFar));
@@ -197,7 +197,7 @@ void main() {
     sea *= mix(vec3(0.78, 0.92, 1.12), vec3(1.0, 1.22, 1.05), smoothstep(0.3, 0.75, bloom));
   }
   sea = mix(sea, sea * vec3(1.7, 0.75, 0.5), stain);
-  vec3 water = sea * light * (0.2 + 0.12 * shelf + 0.3 * stain) * mix(1.0, 0.74, far * (1.0 - shelf) * (1.0 - stain));
+  vec3 water = sea * light * (0.2 + 0.12 * shelf + 0.3 * stain) * mix(vec3(1.0), vec3(0.5, 0.6, 0.52), far * (1.0 - shelf) * (1.0 - stain));
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   vec2 wind = xz + 60.0 * vec2(vnoise(xz / 310.0), vnoise(xz / 310.0 + 9.7));
   float calm = texture2D(uCloudTile, wind / 900.0 + vec2(0.5, 0.2)).b;
@@ -210,7 +210,7 @@ void main() {
   water += uSkyColour * 0.22 * fresnel;
   water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
   // Round the glint the low sun lies on the sea as a broad warm glare.
-  water += uSunColour * vec3(1.0, 0.8, 0.55) * 0.01 * exp(-lean * lean / 0.008) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
+  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0075 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
   water = mix(water, vec3(0.62) * light / 3.14159, 0.55 * surf);
@@ -286,8 +286,8 @@ export function create(ctx: Context): Piece {
     uGlint: { value: new THREE.Vector2(X(6300), Z(800)) },
     uPlanetKm: { value: 10183 * KM },
     // The storm: its middle and its half sizes, km. The cyclone: its middle and its radius. And how far a shade falls for a cloud 7 km up.
-    uStorm: { value: new THREE.Vector4(X(AT.storm.x), Z(AT.storm.y), 215 * KM, 62 * KM) },
-    uCyclone: { value: new THREE.Vector3(X(AT.cyclone.x), Z(AT.cyclone.y), 880 * KM) },
+    uStorm: { value: new THREE.Vector4(X(AT.storm.x), Z(AT.storm.y), 150 * KM, 115 * KM) },
+    uCyclone: { value: new THREE.Vector3(X(AT.cyclone.x), Z(AT.cyclone.y), 640 * KM) },
     uShadeOff: { value: new THREE.Vector2((-SUN[0] / SUN[1]) * 7, (-SUN[2] / SUN[1]) * 7) },
   };
   const material = new THREE.ShaderMaterial({ uniforms, vertexShader: RIG_VERTEX, fragmentShader: FRAGMENT });
