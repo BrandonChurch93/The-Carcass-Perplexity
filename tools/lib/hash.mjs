@@ -39,6 +39,7 @@ export function engineFiles() {
     ...walk(rel('public')).filter((f) => !under(f, 'public', 'assets')),
     rel('package-lock.json'),
     rel('cut', 'CUTLIST.json'),
+    rel('tools', 'lib', 'judged.mjs'),
     rel('index.html'),
     rel('vite.config.ts'),
   ].filter((f) => fs.existsSync(f));

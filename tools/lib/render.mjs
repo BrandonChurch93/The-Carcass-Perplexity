@@ -97,6 +97,12 @@ function dropLock() {
 }
 
 let shared = null;
+let launch = null;
+
+export function configureRenderer(options = null) {
+  if (shared) throw new Error('configureRenderer has to be called before the first frame is asked for.');
+  launch = options;
+}
 
 async function startServer() {
   const waiting = new Map();
@@ -172,7 +178,7 @@ async function open() {
   const built = ensureSite();
   const s = await startServer();
   s.built = built;
-  s.browser = await chromium.launch({ executablePath: browserPath(), headless: true, args: FLAGS });
+  s.browser = await chromium.launch({ executablePath: launch?.executablePath ?? browserPath(), headless: launch?.headless ?? true, args: launch?.args ?? FLAGS });
   s.version = s.browser.version();
   s.page = await openPage(s);
   s.film = await s.page.evaluate(() => window.__carcass.film());
@@ -225,31 +231,69 @@ function unitsShown(s, at) {
   return shotUnit && s.built.units[shotUnit] ? { [shotUnit]: s.built.units[shotUnit] } : {};
 }
 
-async function draw(page, at, tier, format, diag) {
+async function draw(page, at, tier, format, diag, part = null) {
   const started = process.hrtime.bigint();
   await page.evaluate(
-    async ({ at, tier, format, diag }) => {
+    async ({ at, tier, format, diag, part }) => {
       const c = window.__carcass;
       c.setFormat(format);
-      c.setDiagnostic(diag);
+      c.setDiagnostic(diag, part);
       if (at.loop !== null) await c.renderLoopFrame(at.loop, tier);
       else await c.renderFilmFrame(at.frame, tier);
     },
-    { at, tier, format, diag },
+    { at, tier, format, diag, part },
   );
   if (page.problems.length) throw new Error(`The page reported: ${page.problems.join(' | ')}`);
   return Number(process.hrtime.bigint() - started) / 1e9;
 }
 
-async function grab(s, page, file) {
+async function grabRaw(s, page) {
   const token = `${process.pid}-${++s.count}`;
   const body = new Promise((resolve) => s.waiting.set(token, resolve));
   const size = await page.evaluate((url) => window.__carcass.grab(url), `${s.origin}/frame/${token}`);
   const raw = await body;
   if (raw.length !== size.width * size.height * 4) throw new Error(`The frame arrived with ${raw.length} bytes, not ${size.width * size.height * 4}.`);
+  return { raw, size };
+}
+
+async function grab(s, page, file) {
+  const { raw, size } = await grabRaw(s, page);
   fs.mkdirSync(path.dirname(file), { recursive: true });
   await sharp(raw, { raw: { width: size.width, height: size.height, channels: 4 } }).flip().removeAlpha().png({ compressionLevel: 3 }).toFile(file);
   return size;
+}
+
+export async function holdRenderer() {
+  await open();
+  await takeLock();
+}
+
+export function releaseRenderer() {
+  dropLock();
+}
+
+export async function renderRaw({ frame, key, id, loop, tier = 'draft', format = 'preview', diag = null, part = null, hold = false } = {}) {
+  const s = await open();
+  const at = resolveFrame(s.film, { frame, key, id, loop });
+  if (!hold) await takeLock();
+  try {
+    const seconds = await draw(s.page, at, tier, format, diag ?? null, part ?? null);
+    const { raw, size } = await grabRaw(s, s.page);
+    return { data: raw, width: size.width, height: size.height, seconds, frame: at.frame, loop: at.loop };
+  } finally {
+    if (!hold) dropLock();
+  }
+}
+
+export async function filmStates(frames) {
+  const s = await open();
+  const list = Array.isArray(frames) ? frames : Array.from({ length: frames.last - frames.first + 1 }, (_, i) => frames.first + i);
+  return s.page.evaluate((list) => list.map((f) => window.__carcass.filmState(f)), list);
+}
+
+export async function rendererState() {
+  const s = await open();
+  return { built: s.built, browser: s.version, machine: os.hostname() };
 }
 
 export async function renderStill({
@@ -260,6 +304,7 @@ export async function renderStill({
   tier = 'review',
   format = 'hd',
   diag = null,
+  part = null,
   force = false,
   fresh = false,
   portableOnly = false,
@@ -273,8 +318,9 @@ export async function renderStill({
   if (!cfg.tiers[tier]) throw new Error(`No such tier: ${tier}`);
   if (!Object.values(cfg.formats).some((f) => f.id === format)) throw new Error(`No such format: ${format}`);
   const at = resolveFrame(s.film, { frame, key, id, loop });
-  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}`}.png`);
-  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key };
+  const partName = part ? `-${String(part).replace(/[^a-z0-9]+/gi, '_')}` : '';
+  const file = path.join(STILLS, `${name ?? `${at.what}-${format}-${tier}${diag ? `-${diag}` : ''}${partName}`}.png`);
+  const want = { engine: s.built.engine, units: unitsShown(s, at), format, tier, diag: diag ?? null, part: part ?? null, browser: s.version, frame: at.frame, loop: at.loop, key: at.key };
   if (!force && !fresh && !portableOnly && fs.existsSync(file) && fs.existsSync(`${file}.json`)) {
     const record = readJson(`${file}.json`);
     const same = Object.keys(want).every((k) => JSON.stringify(record[k]) === JSON.stringify(want[k]));
@@ -289,7 +335,7 @@ export async function renderStill({
       await s.page.close();
       s.page = page = await openPage(s);
     }
-    seconds = await draw(page, at, tier, format, diag ?? null);
+    seconds = await draw(page, at, tier, format, diag ?? null, part ?? null);
     await grab(s, page, file);
     if (portableOnly) await page.close();
   } finally {

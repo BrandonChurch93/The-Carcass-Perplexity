@@ -1,7 +1,7 @@
 import { args } from './lib/paths.mjs';
 import { renderStill, closeRenderer } from './lib/render.mjs';
 
-const USAGE = 'usage: npm run still -- --frame N | --key ID | --id ID | --loop N [--tier draft|review|final] [--format uhd|hd|preview] [--diag invalid|depth] [--force] [--caption TEXT] [--by NAME]';
+const USAGE = 'usage: npm run still -- --frame N | --key ID | --id ID | --loop N [--tier draft|review|final] [--format uhd|hd|preview] [--diag invalid|depth|standins|motion|solo] [--part UNIT/NAME] [--force] [--caption TEXT] [--by NAME]';
 
 const a = args();
 const one = (v) => (Array.isArray(v) ? v.join(' ') : v);
@@ -21,6 +21,7 @@ try {
     tier: a.tier === true || a.tier === undefined ? 'review' : a.tier,
     format: a.format === true || a.format === undefined ? 'hd' : a.format,
     diag: a.diag === true || a.diag === undefined ? null : a.diag,
+    part: a.part === true || a.part === undefined ? null : a.part,
     force: Boolean(a.force),
     caption: a.caption === undefined ? null : one(a.caption),
     by: a.by === undefined ? 'builder' : one(a.by),
