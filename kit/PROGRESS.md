@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 54, 2026-11-25 15:12 UTC:
+Status 55, 2026-11-25 15:33 UTC:
 
-- `01-m1454-pair-3.jpg`: The walkers at the seam at the final tier: the approved picture left, the frame right. The critic: no stream and pool behind the animals, and pale ground
-- `02-m1454-pair-4.jpg`: The mouth and its fall at the final tier: the approved picture left, the frame right. The critic: one thin channel where the picture has a broad cascade, and the wall as level strata
-- `03-r7-h0-right.jpg`: The wide view at native size, far right: a pink block of glow with a hard edge behind the mesa. New in this round, and open
-- `04-r7-h0-animal.jpg`: The wide view at native size: the dark bar behind the mid-ground animal is a foundering plate seen edge-on. Open
+- `01-shot-heart-02.jpg`: Shot heart-02, the feeding seam: 12 frames spread evenly through the shot, from the final build (new)
+- `02-shot-heart-03.jpg`: Shot heart-03, the lava at the line: 12 frames spread evenly (new)
+- `03-shot-heart-04.jpg`: Shot heart-04, the one that sank: 12 frames spread evenly, the vent opens beside it near the end (new)
+- `04-frame-3578-preview-review.jpg`: Film frame 3578, preview, review tier
 
+Status 54, 2026-11-25 15:12 UTC, showed: The walkers at the seam at the final tier: the approved picture left, the frame right.
 Status 53, 2026-11-25 14:54 UTC, showed: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes.
 Status 52, 2026-11-25 14:20 UTC, showed: heart-2 on the final build (9ac88bf), the picture left, ours right: thick soft ropes now lie on the floor near the lens and the zebra...
-Status 51, 2026-11-25 14:03 UTC, showed: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T15:12:52Z
-phase 3: 12.06 h used of 13.00 h
-build: 18.71 h used of 72.00 h
+2026-11-25T15:33:32Z
+phase 3: 12.40 h used of 13.00 h
+build: 19.06 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 18
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -1245,6 +1245,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 14:03 the skin's owner rendered heart-2 both ways on the form's D3: with and without the paint's own lines shut by the form's flag. MEASURED: lower half mean difference 0.21 of 255, no pixel over 8. They are the same picture at hd, so main's skin stays as D2 and the gated version (1d3be30, determinism passes) is NOT merged. The form's D3 8bda667 goes in after chain AH: on the skin's D2 it gives soft dark ropes round the one that sank and no zebra.
 - 2026-11-25. 2026-11-25 15:10 UTC. Heart look lock, at the limit: round 7 fails (R1 4, R3 4, R4 7 against 9; jury 3 of 25) and is the fifth and last round (quality.lookLockMaxRounds). By the rule in kit/07-QUALITY-BAR.md the build kept is the one of the unit's best judged round: round 7 itself, by its lowest score (4 against 3 in rounds 3 to 6) and by its sum (15 against 11, 12, 12, 12), so 9ac88bf. No fix is made after the round: the review clip is being rendered from that commit, and a change now would reach Brandon unjudged. The 49 open severe and major issues are under Open items in ten items, grouped by what they are about, each with its frame, the critic's words, what was tried and what to try next.
 - 2026-11-25. 2026-11-25 15:10 UTC. The keep tool: npm run keep -- --unit ID kept nothing, because it copies only records marked keep and no tool marked one. It now marks by rule before it copies: the comparison image of each of the unit's keys, the frame that comparison judged, and the sheet of each of the unit's shots (tools/keep.mjs, mark). The copy and its tests are unchanged.
+- 2026-11-25. A kept film carries the time it was made, not the time it was copied (tools/keep.mjs, with a test). The review page plays the films newest first and the REVIEW block says the Heart clip is the first video there; keep --film copied the animatic after the clip, so the older animatic would have been first.
 
 ## Notes from Brandon
 
@@ -1583,3 +1584,4 @@ none
 - 2026-11-25 15:12 UTC. Round 7 is complete. Six critics (reviewer_70 to reviewer_75, each a fresh agent on its own machine): R1-1 4, R1-2 4 (claude), R3-1 4, R3-2 5 (gemini), R4-1 7, R4-2 7 (gpt); merged R1 4, R3 4, R4 7 against 9; 55 issues, 13 severe, 36 major, 6 minor, none declined. Jury, 25 fresh jurors between 15:01 and 15:08: 3 of 25 for a photograph or a film frame (0.12; 19 are needed), all three from the same seat of the panel as in round 6. Of the other 22 by first reason: the crust as a repeating or procedural pattern 9, the lava as a flat emissive or drawn lines that light nothing 6, the animals as copies of one simple model or with faceted joints 4, faceted rock and mesh seams round the mouth 2, flat ambient light on a sparse mid-ground 1. Measures: M1 green, M2 green, M3 red (0.90, 0.25, 0.54, 0.42, 1.03; the floor is 0.75). The round fails at the limit; scorecards/round-007/SUMMARY.md is written and the 49 open severe and major issues are under Open items. The five keys were rendered at the final tier in uhd on this machine between 14:25 and 15:00 for the comparison images; the five shot sheets are rendering for the keep.
 - 2026-11-25 15:13 UTC. Status 54 shown at 15:13 with the walkers at the seam and the mouth and its fall at the final tier beside their pictures, and two native crops of the wide view (the pink block of glow at the far right, the dark bar behind the mid-ground animal). Round 7: R1 4, R3 4, R4 7 against 9; jury 3 of 25; M3 red. ElevenLabs at 15:12: 1 character of 131,000, so clips n1 to n7, the model test, the other takes of n8 and the sound effects are not made and the cut and the mix have not been run again.
 - 2026-11-25 15:30 UTC. Phase 3 step 6: from the final build 9ac88bf, the five comparison images, the five frames they judged (uhd, final tier) and the five shot sheets are kept in out/stills/heart/ (15 files, the largest 1.4 MB). Clip shares back so far: chunk 0 (34.39 s a frame, 69 min) and chunk 1 (35.36 s a frame, 70 min), both MEASURED on 4 cores, 120 frames each read back.
+- 2026-11-25 15:33 UTC. Status 55 shown at 15:34 UTC with three of the new shot sheets (heart-02, heart-03, heart-04) and film frame 3578. Clip: chunks 0, 1 and 7 are back and read back whole (318 of 1714 frames); MEASURED on 4 cores 34.39, 35.36 and 56.28 s a frame. ElevenLabs at 15:31 UTC: 1 character of 131,000, so n1 to n7, the model test, the other takes of n8 and the sound effects are still not made and the cut and the mix have not been run again.

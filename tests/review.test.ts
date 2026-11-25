@@ -339,4 +339,20 @@ describe('keep', () => {
     expect(out.kept.map((k: any) => k.file)).toEqual([`deliver/film/${name}`]);
     expect(fs.readFileSync(path.join(r, 'deliver', 'film', name), 'utf8')).toBe('newer');
   });
+
+  it('keeps the time a film was made, so the review page plays the newest film first whatever the order of the copies', async () => {
+    const film = path.join(r, 'out', 'work', 'film');
+    const clip = cfg.export.files.heartReview;
+    const animatic = cfg.export.files.animatic;
+    put(path.join(film, clip), 'the clip');
+    put(path.join(film, animatic), 'the animatic');
+    fs.utimesSync(path.join(film, animatic), new Date('2026-11-25T00:02:00Z'), new Date('2026-11-25T00:02:00Z'));
+    fs.utimesSync(path.join(film, clip), new Date('2026-11-25T16:40:00Z'), new Date('2026-11-25T16:40:00Z'));
+    const out = await keeper.keep({ root: r, cfg, film: true });
+    expect(out.kept.map((k: any) => k.file)).toEqual(expect.arrayContaining([`deliver/film/${animatic}`, `deliver/film/${clip}`]));
+    expect(fs.statSync(path.join(r, 'deliver', 'film', clip)).mtime.toISOString()).toBe('2026-11-25T16:40:00.000Z');
+    expect(fs.statSync(path.join(r, 'deliver', 'film', animatic)).mtime.toISOString()).toBe('2026-11-25T00:02:00.000Z');
+    const model = review.collect(r, cfg);
+    expect(model.watch.videos.map((v: any) => v.name).filter((n: string) => n === clip || n === animatic)).toEqual([clip, animatic]);
+  });
 });

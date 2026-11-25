@@ -1,8 +1,8 @@
-# Status 54
+# Status 55
 
-2026-11-25 15:12 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 15:33 UTC. Phase 3, the look lock: the Heart.
 
-- `01-m1454-pair-3.jpg`: The walkers at the seam at the final tier: the approved picture left, the frame right. The critic: no stream and pool behind the animals, and pale ground
-- `02-m1454-pair-4.jpg`: The mouth and its fall at the final tier: the approved picture left, the frame right. The critic: one thin channel where the picture has a broad cascade, and the wall as level strata
-- `03-r7-h0-right.jpg`: The wide view at native size, far right: a pink block of glow with a hard edge behind the mesa. New in this round, and open
-- `04-r7-h0-animal.jpg`: The wide view at native size: the dark bar behind the mid-ground animal is a foundering plate seen edge-on. Open
+- `01-shot-heart-02.jpg`: Shot heart-02, the feeding seam: 12 frames spread evenly through the shot, from the final build (new)
+- `02-shot-heart-03.jpg`: Shot heart-03, the lava at the line: 12 frames spread evenly (new)
+- `03-shot-heart-04.jpg`: Shot heart-04, the one that sank: 12 frames spread evenly, the vent opens beside it near the end (new)
+- `04-frame-3578-preview-review.jpg`: Film frame 3578, preview, review tier

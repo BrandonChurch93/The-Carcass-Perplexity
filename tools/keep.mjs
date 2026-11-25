@@ -157,6 +157,11 @@ export async function keep({ root = ROOT, cfg = config(), unit = null, phase = n
       if (!newest) continue;
       any = true;
       copyFile(path.join(from, newest.n), r('deliver', 'film', name));
+      // The review page plays the films newest first, so a kept film carries the time it was made, not the time it was copied.
+      if (fs.existsSync(r('deliver', 'film', name))) {
+        const made = fs.statSync(path.join(from, newest.n)).mtime;
+        if (fs.statSync(r('deliver', 'film', name)).size === fs.statSync(path.join(from, newest.n)).size) fs.utimesSync(r('deliver', 'film', name), made, made);
+      }
       const record = path.join(from, `${newest.n}.json`);
       if (fs.existsSync(record)) fs.copyFileSync(record, r('deliver', 'film', `${name}.json`));
       else fs.rmSync(r('deliver', 'film', `${name}.json`), { force: true });
