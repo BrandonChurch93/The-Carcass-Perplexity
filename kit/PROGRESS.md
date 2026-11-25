@@ -24,26 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 11, 2026-11-25 00:14 UTC:
+Status 12, 2026-11-25 00:36 UTC:
 
-- `01-marsh-6000.jpg`: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet. The print and the label in the corner exist only in the animatic
-- `02-rise-sheet.jpg`: The rise as it is now timed, twelve frames from 158.9 s to 167.2 s: the last frame at the lake, the cut to straight above its black centre, the skull at 161.25 s, head and shoulders at 162.6 s, the whole body on the strike at 167.12 s
+- `01-status12-frames.jpg`: First frames from the film's own engine, one from each place, at the frames the cut list names. These are placeholder scenes, the same shapes in each place's main colour: they prove that the film now plays shot by shot from the cut list. The real blockout of each place is being built from its layout sketch and its five approved pictures by six supporting agents, started 00:36 UTC.
+- `02-status12-views.jpg`: The checking views now work on the film: the standins view flags every pixel a placeholder draws (the whole frame today), the motion view shows what changes in one second with the camera held, and the solo view draws one part alone.
 
+Status 11, 2026-11-25 00:14 UTC, showed: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet.
 Status 10, 2026-11-24 23:54 UTC, showed: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks.
 Status 9, 2026-11-24 23:22 UTC, showed: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet.
-Status 8, 2026-11-24 22:53 UTC, showed: The map of the music, made from the audio itself: loudness, onsets, hits, bar lines and the landmarks; The animatic tool at work: one frame...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T00:14:59Z
-phase 1: 1.66 h used of 3.00 h
-build: 3.75 h used of 72.00 h
+2026-11-25T00:36:06Z
+phase 2: 0.35 h used of 6.00 h
+build: 4.10 h used of 72.00 h
 extra rounds: yes
-half point: reached
-minutes since the last status: 22
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -513,6 +512,12 @@ Each reports by message to the Builder.
 | `film_render_builder` | sandbox | `npm run film`, `npm run loop`, `npm run render:local`, checks G5, D2, D7 | `agent/film-render` | 2026-11-25 00:25 UTC | 85 min |
 | `measure_pack_builder` | sandbox | `npm run measure`, `npm run pack`, check G6 | `agent/measure-pack` | 2026-11-25 00:25 UTC | 80 min |
 | `sound_stress_builder` | sandbox | `npm run sound`, `npm run stress` | `agent/sound-stress` | 2026-11-25 00:25 UTC | 70 min |
+| `place_ribs_builder` | sandbox | The blockout of `ribs`: layout, parts, cameras fitted to its five keys | `agent/place-ribs` | 2026-11-25 00:36 UTC | 75 min |
+| `place_heart_builder` | sandbox | The blockout of `heart`: layout, parts, cameras fitted to its five keys | `agent/place-heart` | 2026-11-25 00:36 UTC | 75 min |
+| `place_breath_builder` | sandbox | The blockout of `breath`: layout, parts, cameras fitted to its five keys | `agent/place-breath` | 2026-11-25 00:36 UTC | 75 min |
+| `place_marsh_builder` | sandbox | The blockout of `marsh`: layout, parts, cameras fitted to its five keys | `agent/place-marsh` | 2026-11-25 00:36 UTC | 75 min |
+| `place_spine_builder` | sandbox | The blockout of `spine`: layout, parts, cameras fitted to its five keys | `agent/place-spine` | 2026-11-25 00:36 UTC | 75 min |
+| `place_eye_builder` | sandbox | The blockout of `eye`: layout, parts, cameras fitted to its five keys | `agent/place-eye` | 2026-11-25 00:36 UTC | 75 min |
 
 Their briefs are in `out/work/briefs/` and share one sheet with the schemas of `cut/MAP.json`, `cut/CUTLIST.json` and `audio/mix/mix.json`, which is copied into `tools/README.md`. Each reports with a `git bundle` attached.
 
@@ -583,3 +588,4 @@ none
 - 2026-11-25 00:23 UTC. 00:17 UTC: published again, visitor flows 7 of 7 on that deploy.
 - 2026-11-25 00:23 UTC. 00:18 UTC: `fbfb93d` pushed. Phase 1 closed, status 11.
 - 2026-11-25 00:23 UTC. 00:24 UTC: Phase 2 harness additions: renderRaw (raw frames for the film tools), filmStates, the part option for the solo and standins views. 516 tests pass.
+- 2026-11-25 00:36 UTC. 00:37 UTC: status 12 posted. Engine core pushed as `590f414`. Nine agents running: six place blockouts, three harness builders.
