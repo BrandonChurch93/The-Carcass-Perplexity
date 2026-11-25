@@ -18,6 +18,8 @@ export function create(ctx: Context): Piece {
   const height = (x: number, z: number): number => ctx.rig.land.height(x, z);
   const far = bedMap(height, SEA_LEVEL, FAR.x, FAR.z, FAR.half, FAR.cells);
   const waves = waveMap(ctx.rng('water-waves'));
+  // The small ripples seen near a lens: many, of every bearing, none much longer than a hand, so the square they repeat in does not show.
+  const ripples = waveMap(ctx.rng('water-ripples'), 512, 9, 44, 0.5, 90);
 
   const frame = new THREE.Vector2(3840, 2160);
   const material = new THREE.ShaderMaterial({
@@ -28,6 +30,7 @@ export function create(ctx: Context): Piece {
       tBedFar: { value: far },
       uBedFar: { value: new THREE.Vector4(FAR.x - FAR.half, FAR.z - FAR.half, 1 / (2 * FAR.half), 0) },
       tWave: { value: waves },
+      tRipple: { value: ripples },
       uSea: { value: SEA_LEVEL },
       tMirror: MIRROR.texture,
       tRings: RIPPLES.texture,
@@ -58,6 +61,7 @@ export function create(ctx: Context): Piece {
       material.dispose();
       far.dispose();
       waves.dispose();
+      ripples.dispose();
     },
   };
 }

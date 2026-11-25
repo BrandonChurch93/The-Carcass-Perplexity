@@ -99,14 +99,14 @@ export function create(ctx: Context): Piece {
     const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.02 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.6 * cage);
     let up: number;
     if (c > 0) {
-      up = tall * 2.5 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.011 * rib - 0.02 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+      up = tall * 2.5 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.018 * rib - 0.034 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
     } else {
       // What lies on the rock is flat on it.
       up = -tall * 0.42 * (-c) ** 0.45;
     }
     const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
     const out = deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.5 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.72 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
     // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
     const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
     return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
@@ -158,9 +158,9 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
     const thigh = 2.3 * (1 - smooth(0, 0.4, u)) ** 1.1;
-    const knuckle = 1.25 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.9 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
-    const foot = 0.5 * smooth(0.95, 1, u);
-    const r = b.legR * 0.95 * (0.8 + thigh + knuckle + foot);
+    const knuckle = 1.9 * Math.exp(-(((u - 0.5) / 0.03) ** 2)) + 1.3 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
+    const foot = 1.1 * smooth(0.95, 1, u);
+    const r = b.legR * 1.0 * (0.7 + thigh + knuckle + foot);
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -168,14 +168,17 @@ export function create(ctx: Context): Piece {
       legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
     }
   }
-  const legLines: V3[][] = [
-    // Hind, upper: off the hip and out across the rock toward the lens, the joint a little up; hind, under: along the rock beneath it.
-    [[0.2, 0.22, -0.42], [0.62, 0.21, -0.6], [1.0, 0.1, -0.86], [1.3, 0.07, -1.2], [1.5, 0.05, -1.62]],
-    [[0.2, 0.07, -0.5], [0.5, 0.07, -0.9], [0.9, 0.07, -1.25], [1.15, 0.06, -1.75], [1.2, 0.05, -2.15]],
-    // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest, only its foot showing.
-    [[0.2, 0.2, 0.4], [0.56, 0.21, 0.3], [0.84, 0.13, 0.02], [0.66, 0.07, -0.3], [0.44, 0.06, -0.56]],
-    [[0.2, 0.07, 0.46], [0.45, 0.07, 0.6], [0.7, 0.07, 0.5], [0.85, 0.06, 0.2], [0.9, 0.05, -0.1]],
+  // Each leg is two straight bones: hip, joint, foot. The line through them turns sharply at the joint.
+  const bones: [V3, V3, V3][] = [
+    // Hind, upper: off the hip, the joint out on the rock toward the lens, the shank back along it; hind, under: beneath it.
+    [[0.2, 0.2, -0.42], [1.06, 0.1, -0.74], [1.42, 0.05, -1.72]],
+    [[0.2, 0.07, -0.5], [0.84, 0.075, -1.2], [1.24, 0.05, -2.12]],
+    // Fore, upper: folded at the joint, the shank back under itself; fore, under: bent beneath the chest.
+    [[0.2, 0.2, 0.4], [0.94, 0.12, 0.06], [0.42, 0.055, -0.6]],
+    [[0.2, 0.07, 0.46], [0.8, 0.075, 0.5], [0.96, 0.05, -0.3]],
   ];
+  const mixed = (a: V3, c: V3, t: number): V3 => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, a[2] + (c[2] - a[2]) * t];
+  const legLines: V3[][] = bones.map(([hip, joint, foot]) => [hip, mixed(hip, joint, 0.5), mixed(hip, joint, 0.94), mixed(joint, foot, 0.06), mixed(joint, foot, 0.5), foot]);
   legLines.forEach((line, j) => {
     const tube = skin.tube(legRings, legSides);
     for (let i = 0; i < legRings; i++) {
@@ -232,11 +235,11 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < tRings; i++) {
     for (let s = 0; s < tSides; s++) {
       const phi = (s / tSides) * Math.PI * 2;
-      weedLocal[(i * tSides + s) * 2] = 0.004 * k * Math.cos(phi);
-      weedLocal[(i * tSides + s) * 2 + 1] = 0.02 * k * Math.sin(phi);
+      weedLocal[(i * tSides + s) * 2] = 0.003 * k * Math.cos(phi);
+      weedLocal[(i * tSides + s) * 2 + 1] = 0.007 * k * Math.sin(phi);
     }
   }
-  for (let n = 0; n < 6; n++) {
+  for (let n = 0; n < 14; n++) {
     const tube = skin.tube(tRings, tSides);
     const t0 = rng.range(0.14, 0.9);
     const slant = rng.range(-0.16, 0.16);

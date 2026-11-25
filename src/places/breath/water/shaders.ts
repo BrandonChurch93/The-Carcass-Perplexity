@@ -15,6 +15,7 @@ varying vec3 vWorld;
 uniform sampler2D tBedFar;
 uniform vec4 uBedFar;
 uniform sampler2D tWave;
+uniform sampler2D tRipple;
 uniform float uSea;
 uniform sampler2D tMirror;
 uniform sampler2D tRings;
@@ -27,7 +28,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs8 * 0.9;
+  float broad = rs64 * rs8 * 0.4;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   return uSunColour * (broad + spark);
 }
@@ -65,7 +66,7 @@ void main() {
   vec2 slope = (g1 * 0.3 + g2 * 0.26) * (0.4 + 0.6 * deep) + g3.rg * 0.1;
   // Near the lens the small ripples show one by one.
   float close = smoothstep(45.0, 6.0, far);
-  if (close > 0.0) slope += (texture2D(tWave, vec2(-xz.y, xz.x) * 0.83 + drift.yx * uTime * 0.16).rg - 0.5) * 0.5 * close * (0.5 + 0.5 * deep);
+  if (close > 0.0) slope = slope * (1.0 - 0.55 * close) + (texture2D(tRipple, vec2(xz.x * 0.829 - xz.y * 0.559, xz.x * 0.559 + xz.y * 0.829) * 0.43 + drift.yx * uTime * 0.07).rg - 0.5) * 1.3 * close * (0.5 + 0.5 * deep);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
   slope += rings.rg * 2.0;
@@ -73,7 +74,7 @@ void main() {
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water with small waves on it never mirrors whole, however low the eye: seen far off it shows the tilted faces, and they show more of the water's own colour.
-  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.34, smoothstep(10.0, 90.0, far)));
+  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.26, smoothstep(10.0, 90.0, far)));
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02 + 0.3 * smoothstep(8.0, 100.0, far);
   r = normalize(r);
@@ -81,7 +82,7 @@ void main() {
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 1.1 * tanh(3.4 * tip);
+  float drawn = 1.0 - 0.85 * tanh(3.0 * tip);
   mirror *= drawn;
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
@@ -100,13 +101,13 @@ void main() {
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);
   // The image is of things in the shade of their own bodies, seen from below: darker than what stands over it.
-  mirror = mirror * (1.0 - image.a) + 0.34 * image.rgb;
+  mirror = mirror * (1.0 - 0.8 * image.a) + 0.16 * image.rgb;
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);
-  vec3 through = exp(-path * vec3(1.9, 0.75, 0.9));
+  vec3 through = exp(-path * vec3(4.2, 1.9, 2.2));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.2, 0.17, 0.13), vec3(0.12, 0.25, 0.215), smoothstep(0.25, 0.6, nv)) * (0.3 + 2.0 * nv) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.2, 0.17, 0.13), vec3(0.17, 0.225, 0.19), smoothstep(0.2, 0.45, v.y)) * (0.5 + 2.6 * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
