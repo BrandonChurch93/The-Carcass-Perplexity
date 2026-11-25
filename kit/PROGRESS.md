@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 34, 2026-11-25 07:36 UTC:
+Status 35, 2026-11-25 07:57 UTC:
 
-- `01-heart-0.jpg`: The wide view, approved picture left, merged main right (07:33 UTC, hd draft). Too pale and too even: it reads as an overcast day, not dusk. The bench is light grey slabs where the picture has near-black ropy rock.
-- `02-heart-1.jpg`: The line. My new staging is in: one tall lead at centre right feeding at a lit seam, two smaller ones at the right, as in the picture. The crust and channel here are still the old lake.
-- `03-heart-3.jpg`: The feeding. Shapes and poses hold; the hide is pale cracked clay lit from above, where the picture has dark animals lit warm from below.
-- `04-heart-4.jpg`: The mouth and the fall. Still the weakest: an evenly lit grey wall, one thin stream. Two tiny walkers now stand at the fan's right toe as in the picture.
+- `01-mouth-test-4.jpg`: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC. The mouth is now as wide and as low as the picture's (it was a third narrower). The pale wall and the thin stream are what the new owners of the fall, the land and the light are on.
+- `02-heart-0.jpg`: The wide view on main at 07:53 UTC with the wider mouth. Still an overcast day where the picture is a dusk: the correction with measured levels is with six fresh owners.
+- `03-sunk2-a-heart-2.jpg`: First hand-back of a second owner (the one that sank, 07:55 UTC, not merged yet): the tone is now dark as in the picture. I asked for thin legs and that was my mistake: the picture has thick arched trunks with flaking bark. Corrected at 07:58 UTC.
+- `04-heart-2.jpg`: heart-2: approved beside frame, hd draft, with 2 crop pairs
 
+Status 34, 2026-11-25 07:36 UTC, showed: The wide view, approved picture left, merged main right (07:33 UTC, hd draft).
 Status 33, 2026-11-25 07:10 UTC, showed: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier); Feeding at a seam through the long...
 Status 32, 2026-11-25 06:51 UTC, showed: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet; Feeding...
-Status 31, 2026-11-25 06:36 UTC, showed: Round 3, the wide view exactly as the jury saw it (built before the third versions below); The line, approved picture and frame, with the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T07:36:21Z
-phase 3: 4.45 h used of 13.00 h
-build: 11.11 h used of 72.00 h
+2026-11-25T07:57:08Z
+phase 3: 4.80 h used of 13.00 h
+build: 11.45 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 25
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -583,6 +583,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 2026-11-25 07:26 UTC. The first versions of the new crust (`4d1b241`) and the new lava (`c69ad7f`) are not merged. MEASURED at heart-0, uhd draft: crust 12.86 s a sample against a share of 2.5 s, whole frame 23.5 s against 15. Seen: crust too pale, plates as outlined polygons, ropes as corduroy; lava too yellow and broad at the line and most seams lost in the wide view. Both owners got direction at 07:39 UTC and hand back by 08:25 UTC; the second versions go into main only if they beat the old lake at the keys. Round 4 is held to about 08:45 UTC for them.
 - 2026-11-25. 2026-11-25 07:36 UTC. Levels after the merge of light version 2 with the fourth versions, MEASURED with the cast tool on hd draft frames against the pictures (rock and crust pixels, 8 bit): heart-0 79 73 72 against 71 61 61, its bottom band (the bench) 61 to 70 against 38 to 47; heart-2 bottom band 59 to 69 against 37 to 52; heart-4 80 71 69 against 76 62 60; red over blue 1.10 against 1.16 to 1.27. The land's paler rock and the light's stronger sky were each made against the darker frame of 06:53 and landed together. Correction: the rock, bench, hide and carcass go darker by their owners under the new light, measured not judged by eye; the light keeps its sky and gets back some warm fill near the fire.
 - 2026-11-25. 2026-11-25 07:50 UTC. The vessel mouth is wider and lower: `MOUTH` in `src/places/heart/layout.ts` goes from floor 96, width 118, height 60 to floor 80, width 172, height 68. MEASURED on the fall's picture: its mouth spans 20 to 65 per cent of the frame's width and 10 to 42 per cent of its height; main's spanned 27 to 57 and 8 to 33, and round 3's R1 called it severe ("The opening is smaller and narrower") at heart-4 and asked for a wider cave at the wide view too. After the change it spans 20 to 63 and 10 to 41 at heart-4, and 25.5 to 36.5 per cent at the wide view against the picture's 25.5 to 38.5. The land's cut and the fall's face patch and bed now follow `MOUTH.width` (a check before the change: 0 of 2,073,600 pixels differ at heart-4). The fall's second owner may tune that one line.
+- 2026-11-25. Directions to owners are written only after the approved picture has been looked at beside main at 1500 px. Reason: four directions written from memory were wrong and cost one owner a hand-back.
 
 ## Notes from Brandon
 
@@ -848,3 +849,4 @@ none
 - 2026-11-25 07:38 UTC. 2026-11-25 07:38 UTC. Merged into main since status 33, each after the trailer check and types: light version 2 (`ec707d9`, final, its owner ended), land version 4 (`4ec487c`), air version 4 (`923cec1`), fall version 4 (`c61d5d8`) and its second part (`e4c75c7`, from `8110ffe`), walkers version 4 (`74b8368`), sunk version 4 (`4fead3b`), then the staging. Build, parts written (15 built), determinism passes at 07:31 and again at 07:37 UTC, the five keys compared at hd draft. The five first owners are done (3 h each); fresh owners take their folders.
 - 2026-11-25 07:38 UTC. 2026-11-25 07:37 UTC. Status 34 shown in the thread: the merged main at the wide view, the line, the feeding and the fall beside the pictures; the pale overcast read and its measured cause; the staging decision; crust and lava version 1 held back; ElevenLabs 1 character of 131,000 at 07:31 UTC.
 - 2026-11-25 07:54 UTC. 2026-11-25 07:54 UTC. Six second owners started between 07:44 and 07:50 UTC (land, fall, light, walkers, sunk, air), each on its own machine with the shared sheet, a sheet of what is different now (the frozen light, the measured levels, the lens, staging by shot), its folder's brief, round 3's list for its folder, its predecessor's own worst list and my direction in order. The vessel mouth change is on main as `6794613`; determinism passes on it (07:52 UTC). Direction went to the crust and lava owners at 07:39 UTC.
+- 2026-11-25 07:57 UTC. Status 35 shown at 07:57 UTC (mouth pair, wide view on main, sunk hand-back A of the second owner). ElevenLabs: 1 of 131,000 characters. Four of my directions corrected against the approved pictures at full size: walkers (legs go down and out from the shoulders, pale root tendrils lit from below, ragged pads), the sunk one (thick arched trunks), the line channel (two fifths bright melt, swirled skin, lit undersides of the banks, a band of orange dashes at the horizon), the wide view's smoke (a broad translucent plume from the far shore, not a dark column).
