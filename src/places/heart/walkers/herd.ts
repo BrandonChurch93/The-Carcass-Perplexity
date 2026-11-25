@@ -195,11 +195,13 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const quickest = 3.4 * Math.sqrt(k);
   const settled = c.role === 'walks' ? 0.16 : c.role === 'grazes' ? 0.52 : 0.6;
   const rest = Math.max(0.06, Math.min(settled, 1 - (speed * quickest) / (b.stride * (1 - ramp))));
+  // The near one feeds where the wide view sees it and again where the view of the one that sank sees it, and walks between.
+  const bout = index === 0 ? KEY_TIMES['heart-2'] - KEY_TIMES['heart-0'] : 12.5;
   let per = 0.5;
-  for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - 12.5) < Math.abs((b.stride * per) / speed - 12.5)) per = q;
+  for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - bout) < Math.abs((b.stride * per) / speed - bout)) per = q;
   const period = (b.stride * per) / speed;
-  // The near one rests while the wide view looks at it; the one that shifts its weight rests while the long lens looks at the group.
-  const shift = index === 0 ? 1 - fract(5.5 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
+  // The one that shifts its weight rests while the long lens looks at the group.
+  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
   const area = 1 - ramp;
   const gone = (u: number): number => ramp * (u * u * u - 0.5 * u * u * u * u);
   const ease = (f: number): number => {
@@ -230,9 +232,10 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const at = body(REST + per * n);
     const fed = feedAt(at.x, at.z, yaw, (hash(n, index) - 0.5) * 3 * k);
     const target: [number, number] = [fed[0], fed[1]];
-    const settle = 2.6 / period;
+    // The tuft starts down over the last steps and is in the heat soon after it stands.
+    const settle = 0.7 / period;
     const depth = c.role === 'walks' ? 0.35 : 1;
-    const down = depth * smooth(rest / 2 + 0.03, Math.max(0.01, rest / 2 - settle), away);
+    const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away);
     return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.46 + 0.22 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, 0, down) };
   };
   void t0;

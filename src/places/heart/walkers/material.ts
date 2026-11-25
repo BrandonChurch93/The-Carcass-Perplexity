@@ -96,11 +96,15 @@ void main() {
   float spine = body * smoothstep(0.7, 0.98, ng.y) * fine;
   slope.x += spine * 0.5 * sin(vUv.x * 6.2832 / 0.42);
 
+  // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
+  float pole = body * smoothstep(0.4, 0.8, vLook.y);
+  slope *= 1.0 - pole;
   vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril));
 
   // A dry ashen hide. Soot lies in the cracks, in the creases of the joints and under the belly; the crown and the roots are bone.
   float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
-  float crack = smoothstep(0.16, 0.48, high);
+  lum = mix(lum, 0.9, pole);
+  float crack = mix(smoothstep(0.16, 0.48, high), 0.8, pole);
   float mottle = vnoise(vUv * 0.9 + seed * 7.0);
   float tone = clamp(pale + 0.2 * (mottle - 0.5) + 0.3 * (lum - 1.0) - 0.2 * ringAmp * (1.0 - ridge), 0.0, 1.0);
   vec3 soot = vec3(0.03, 0.029, 0.03);

@@ -117,7 +117,9 @@ const DUTY = 0.8;
 /** A rest of the gait must fall in that moment. */
 export const REST = 0.0125;
 
-const BODY_RINGS = 38;
+/** What sways does so in a whole number of cycles every eight seconds. */
+const LOOP = Math.PI / 4;
+const BODY_RINGS = 54;
 const BODY_SIDES = 26;
 const NECK_RINGS = 46;
 const NECK_SIDES = 12;
@@ -127,6 +129,8 @@ const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
 const RAG_RINGS = 5;
 const RAG_SIDES = 4;
+const SINEW_RINGS = 7;
+const SINEW_SIDES = 5;
 
 interface Rag {
   tube: Tube;
@@ -148,6 +152,8 @@ interface LegTable {
   pad: number;
   /** Per ring: how far the bone bows from the straight line between its joints, forward and across, metres. */
   bow: Float32Array;
+  /** Strands of sinew that stand off a shaft, from knuckle to knuckle. */
+  sinews: { tube: Tube; local: Float32Array; bone: number; from: number; to: number; off: number; angle: number }[];
 }
 
 export class Animal {
@@ -185,22 +191,28 @@ export class Animal {
       const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.4);
       const x = (t - 0.5) * b.bodyLen;
       const top = b.bodyTop * e * (1 + 0.55 * b.hump * gauss((t - 0.62) / 0.3) - 0.14 * gauss((t - 0.43) / 0.1));
-      const keel = b.bodyKeel * e * (0.72 + 0.5 * gauss((t - 0.5) / 0.2));
-      const wide = b.bodyWide * e * (1 + 0.16 * gauss((t - 0.27) / 0.1) + 0.24 * gauss((t - 0.74) / 0.1) - 0.1 * gauss((t - 0.5) / 0.12));
+      // A deep chest forward and a belly drawn up behind it.
+      const keel = b.bodyKeel * e * (0.5 + 0.78 * gauss((t - 0.66) / 0.17) - 0.1 * gauss((t - 0.3) / 0.12));
+      const wide = b.bodyWide * e * (1 + 0.2 * gauss((t - 0.25) / 0.1) + 0.26 * gauss((t - 0.71) / 0.12) - 0.24 * gauss((t - 0.43) / 0.1));
       for (let j = 0; j < BODY_SIDES; j++) {
         const a = (j / BODY_SIDES) * Math.PI * 2;
         const c = Math.cos(a);
         const s = Math.sin(a);
         // A withered sack: lumps at three sizes, the ribs showing on the flanks, the skin hanging in folds along the keel.
-        let m = 1 + 0.26 * (wrap(t * 5, a, 5, seed) - 0.5) + 0.2 * (wrap(t * 10, a, 10, seed + 1) - 0.5) + 0.09 * (wrap(t * 20, a, 18, seed + 2) - 0.5);
-        m -= 0.05 * Math.sin(t * 34 + 2 * s) * gauss(s / 0.55) * gauss((t - 0.5) / 0.3);
+        let m = 1 + 0.13 * (wrap(t * 5, a, 5, seed) - 0.5) + 0.11 * (wrap(t * 10, a, 10, seed + 1) - 0.5) + 0.08 * (wrap(t * 20, a, 18, seed + 2) - 0.5);
+        // The cage of the ribs shows through the hide of the chest; the flank falls in under the spine and behind the last rib.
+        const fromTop = Math.acos(Math.max(-1, Math.min(1, s)));
+        const cage = gauss((t - 0.63) / 0.19) * smooth(0.45, 0.9, fromTop) * smooth(2.9, 2.3, fromTop);
+        m += 0.15 * cage * (Math.pow(0.5 + 0.5 * Math.sin(t * 50 + 0.9 * c * c), 1.6) - 0.45);
+        m -= 0.1 * gauss((fromTop - 0.62) / 0.24) * gauss((t - 0.47) / 0.3);
+        m -= 0.14 * gauss((t - 0.4) / 0.08) * gauss((fromTop - 1.75) / 0.6);
         m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
         // The blades of the shoulders and the points of the hips, high on each side.
         const up = Math.max(0, s);
         const blade = gauss((Math.abs(c) - 0.72) / 0.3) * up;
-        m += 0.22 * blade * gauss((t - 0.75) / 0.09) + 0.17 * blade * gauss((t - 0.26) / 0.09);
+        m += 0.3 * blade * gauss((t - 0.75) / 0.08) + 0.28 * blade * gauss((t - 0.26) / 0.08);
         // The ridge of the spine, a knob to each bone.
-        m += 0.08 * gauss((a - Math.PI / 2) / 0.24) * (0.55 + 0.45 * Math.sin(t * 46));
+        m += 0.14 * gauss(fromTop / 0.2) * (0.6 + 0.4 * Math.sin(t * 62)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
         const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
         const o = (i * BODY_SIDES + j) * 3;
         this.bodyLocal[o] = x;
@@ -208,9 +220,9 @@ export class Animal {
         this.bodyLocal[o + 2] = c * wide * pinch * m;
         const under = smooth(0.2, -0.9, s);
         const socket = Math.max(gauss((t - 0.75) / 0.12), gauss((t - 0.26) / 0.12)) * smooth(0.5, -0.2, s);
-        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, 1 - 0.35 * under - 0.3 * socket, Math.max(top, wide) * e, seed, 0, 0);
+        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, 1 - 0.35 * under - 0.3 * socket, Math.max(top, wide) * e, seed, 0, 1 - e);
       }
-      skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 0);
+      skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 1 - e);
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
@@ -331,7 +343,7 @@ export class Animal {
     const seg = rag.length / (RAG_RINGS - 1);
     for (let i = 0; i < RAG_RINGS; i++) {
       const uu = i / (RAG_RINGS - 1);
-      const swing = uu * (0.14 * Math.sin(seconds * 1.3 + rag.phase - uu * 1.5) + 0.06 * Math.sin(seconds * 2.9 + rag.phase * 2) + lean) + 0.3 * Math.sin(rag.phase * 5) * uu + 0.5 * (hash(i, rag.phase) - 0.5);
+      const swing = uu * (0.14 * Math.sin(seconds * LOOP * 2 + rag.phase - uu * 1.5) + 0.06 * Math.sin(seconds * LOOP * 4 + rag.phase * 2) + lean) + 0.3 * Math.sin(rag.phase * 5) * uu + 0.5 * (hash(i, rag.phase) - 0.5);
       // It hangs: down, and across its own width by the swing.
       let dx = -nz * swing;
       let dy = -1;
@@ -397,7 +409,7 @@ export class Animal {
     for (let s = 0; s < S3; s += 0.4 * k) push(s);
     [S1, S2].forEach((s, n) => {
       const f = this.fillet[n] as number;
-      for (const d of [-1.5, -1, -0.6, -0.2, 0.2, 0.6, 1, 1.5]) push(s + d * f);
+      for (const d of [-3.4, -2.3, -1.5, -1, -0.6, -0.2, 0.2, 0.6, 1, 1.5, 2.3, 3.4]) push(s + d * f);
     });
     for (const d of [-0.5, -0.25]) push(S3 + d * k);
     marks.sort((x, y) => x - y);
@@ -406,22 +418,22 @@ export class Animal {
     // The pad: height above its sole and radius, in units of the pad's radius; the last rings close the sole.
     const PAD: [number, number][] = [
       [1, 0.17],
-      [0.9, 0.2],
-      [0.8, 0.3],
-      [0.7, 0.48],
-      [0.58, 0.68],
-      [0.44, 0.84],
-      [0.3, 0.94],
-      [0.16, 1],
-      [0.06, 0.98],
-      [0.015, 0.9],
-      [0, 0.7],
+      [0.86, 0.19],
+      [0.72, 0.24],
+      [0.58, 0.33],
+      [0.45, 0.46],
+      [0.33, 0.62],
+      [0.22, 0.79],
+      [0.12, 0.93],
+      [0.05, 1],
+      [0.015, 0.95],
+      [0, 0.72],
       [0, 0.02],
     ];
     const pad = along.length;
     const rings = pad + PAD.length;
     const tube = this.skin.tube(rings, LEG_SIDES);
-    const table: LegTable = { tube, bone: new Int8Array(rings), joint: new Int8Array(rings).fill(-1), value: new Float32Array(rings), local: new Float32Array(rings * LEG_SIDES * 2), pad, bow: new Float32Array(rings * 2) };
+    const table: LegTable = { tube, bone: new Int8Array(rings), joint: new Int8Array(rings).fill(-1), value: new Float32Array(rings), local: new Float32Array(rings * LEG_SIDES * 2), pad, bow: new Float32Array(rings * 2), sinews: [] };
     const starts = [0, S1, S2, S3, S4];
     const p1 = hash(seed, 1) * 6.28;
     const p2 = hash(seed, 2) * 6.28;
@@ -443,9 +455,11 @@ export class Animal {
       // Thickness: a thigh with muscle on it, then shafts that taper, with a knob at each joint.
       let r: number;
       if (s < S1) r = lerp(0.215, 0.15, s / S1) + 0.035 * gauss((s / S1 - 0.2) / 0.22);
-      else if (s < S2) r = lerp(0.145, 0.105, (s - S1) / this.tibia);
-      else r = lerp(0.1, 0.085, Math.min(1, (s - S2) / this.meta));
-      r += 0.085 * gauss((s - S1) / (0.2 * k)) + 0.1 * gauss((s - S2) / (0.17 * k)) + 0.06 * gauss((s - S3) / (0.14 * k));
+      else if (s < S2) r = lerp(0.135, 0.098, (s - S1) / this.tibia);
+      else r = lerp(0.094, 0.08, Math.min(1, (s - S2) / this.meta));
+      // A bone widens toward its end before the knuckle itself.
+      const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
+      r += 0.11 * head(s - S1, 0.24) + 0.115 * head(s - S2, 0.21) + 0.07 * head(s - S3, 0.16);
       r *= k * b.legR;
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
@@ -457,6 +471,7 @@ export class Animal {
           table.bow[i * 2 + 1] = arc * 0.04 * (hash(seed, 40 + n) - 0.5);
         }
       }
+      const knob = Math.max(gauss((s - S1) / (0.3 * k)), gauss((s - S2) / (0.26 * k)), gauss((s - S3) / (0.2 * k)));
       let shape = 0;
       if (inPad) {
         const row = PAD[i - pad] as [number, number];
@@ -468,16 +483,38 @@ export class Animal {
         const a = (n / LEG_SIDES) * Math.PI * 2;
         const tendon = 1 + 0.08 * Math.cos(2 * a + 0.4) + 0.05 * Math.cos(3 * a + p1) + 0.16 * (wrap((s * 2.4) / k, a, 3, seed) - 0.5) + 0.07 * (wrap((s * 6) / k, a, 5, seed + 1) - 0.5);
         const toes = 0.94 + 0.2 * Math.cos(3 * a + p1) + 0.09 * Math.cos(2 * a + p2) + 0.07 * Math.cos(5 * a + p2 * 2) + 0.18 * Math.max(0, Math.cos(a));
-        const m = lerp(tendon, toes, shape);
-        table.local[(i * LEG_SIDES + n) * 2] = Math.cos(a) * r * m * lerp(1.12, 1, shape);
-        table.local[(i * LEG_SIDES + n) * 2 + 1] = Math.sin(a) * r * m * lerp(0.9, 1, shape);
+        // A shaft is flat and twists as it goes down; a knuckle is round, with two heads to it.
+        const shaft = (1 - shape) * (1 - knob) * smooth(0, 0.8 * k, s);
+        const heads = 1 + knob * (1 - shape) * (0.2 * Math.cos(2 * a + p2) + 0.1 * Math.cos(3 * a + p1));
+        const m = lerp(tendon, toes, shape) * heads;
+        const lx = Math.cos(a) * r * m * lerp(1, 1.2, shaft);
+        const ly = Math.sin(a) * r * m * lerp(1, 0.78, shaft);
+        const twist = (p1 + (0.34 * s) / k) * (1 - shape);
+        table.local[(i * LEG_SIDES + n) * 2] = lx * Math.cos(twist) - ly * Math.sin(twist);
+        table.local[(i * LEG_SIDES + n) * 2 + 1] = lx * Math.sin(twist) + ly * Math.cos(twist);
       }
-      const knob = Math.max(gauss((s - S1) / (0.3 * k)), gauss((s - S2) / (0.26 * k)), gauss((s - S3) / (0.2 * k)));
       for (let n = 0; n <= LEG_SIDES; n++) {
         const sole = inPad && (PAD[i - pad] as [number, number])[0] <= 0.02 ? 0.6 : 1;
         this.skin.describe(tube, i, n, s + j * 1.3, (n / LEG_SIDES) * Math.PI * 2 * Math.max(r, 0.14 * k), lerp(0.36, 0.52, smooth(0, 1.5 * k, s)) - 0.26 * knob + 0.1 * shape, sole * lerp(0.4, 1, smooth(0, 1.1 * k, s)), r, b.seed, inPad ? 4 : 3, knob);
       }
     }
+    // Sinew behind the two shafts below the knee: a strand from knuckle to knuckle that stands off the bone between them.
+    [this.tibia, this.meta].forEach((length, n) => {
+      const tube = this.skin.tube(SINEW_RINGS, SINEW_SIDES);
+      const local = new Float32Array(SINEW_RINGS * SINEW_SIDES * 2);
+      const thick = (0.02 + 0.012 * hash(seed, 50 + n)) * k;
+      for (let i = 0; i < SINEW_RINGS; i++) {
+        const u = i / (SINEW_RINGS - 1);
+        const w = thick * (1 + 1.1 * Math.pow(Math.abs(2 * u - 1), 3));
+        for (let side = 0; side < SINEW_SIDES; side++) {
+          const a = (side / SINEW_SIDES) * Math.PI * 2;
+          local[(i * SINEW_SIDES + side) * 2] = Math.cos(a) * w;
+          local[(i * SINEW_SIDES + side) * 2 + 1] = Math.sin(a) * w * 1.5;
+        }
+        for (let side = 0; side <= SINEW_SIDES; side++) this.skin.describe(tube, i, side, u * length + j, (side / SINEW_SIDES) * 6.28 * 0.14 * k, 0.6, 0.85, w, b.seed, 3, 0);
+      }
+      table.sinews.push({ tube, local, bone: n + 1, from: 0.06 * length, to: 0.95 * length, off: (n === 0 ? 0.2 : 0.165) * k * b.legR, angle: Math.PI + (hash(seed, 52 + n) - 0.5) * 0.9 });
+    });
     return table;
   }
 
@@ -595,7 +632,7 @@ export class Animal {
     const centre = env.drift(at.x, at.z, seconds);
     const fwd: V3 = [Math.sin(at.yaw), 0, -Math.cos(at.yaw)];
     const right: V3 = [-fwd[2], 0, fwd[0]];
-    const idle = Math.sin(seconds * 0.7 + b.seed * 9);
+    const idle = Math.sin(seconds * LOOP + b.seed * 9);
     const idle2 = Math.sin(seconds * 0.43 + b.seed * 4);
     const sideways = shiftSide * 0.42 * k + 0.12 * k * idle2;
     const forwards = shiftFore * 0.22 * k + 0.1 * k * idle - 0.5 * k * aim.down * (plan.dip > 0 ? 1 : 0.3);
@@ -774,6 +811,32 @@ export class Animal {
       skin.ring(tube, i, px + nx * b0 + bx * b1, py + ny * b0 + by * b1, pz + nz * b0 + bz * b1, nx, ny, nz, bx, by, bz, table.local, i * LEG_SIDES * 2, i >= table.pad ? spread : 1);
     }
     skin.normals(tube);
+    for (const sinew of table.sinews) {
+      const at = nodes[sinew.bone] as V3;
+      const d = dirs[sinew.bone] as V3;
+      const dot = fwd[0] * d[0] + fwd[1] * d[1] + fwd[2] * d[2];
+      let nx = fwd[0] - d[0] * dot;
+      let ny = fwd[1] - d[1] * dot;
+      let nz = fwd[2] - d[2] * dot;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      nx /= nl;
+      ny /= nl;
+      nz /= nl;
+      const bx = d[1] * nz - d[2] * ny;
+      const by = d[2] * nx - d[0] * nz;
+      const bz = d[0] * ny - d[1] * nx;
+      for (let i = 0; i < SINEW_RINGS; i++) {
+        const u = i / (SINEW_RINGS - 1);
+        const v = lerp(sinew.from, sinew.to, u);
+        // It leaves one knuckle, stands clear of the shaft and runs into the next.
+        const off = sinew.off * (0.25 + 0.75 * Math.pow(Math.sin(Math.PI * u), 0.6));
+        const turn = sinew.angle + 0.5 * (u - 0.5);
+        const ca = Math.cos(turn) * off;
+        const sa = Math.sin(turn) * off;
+        skin.ring(sinew.tube, i, at[0] + d[0] * v + nx * ca + bx * sa, at[1] + d[1] * v + ny * ca + by * sa, at[2] + d[2] * v + nz * ca + bz * sa, nx, ny, nz, bx, by, bz, sinew.local, i * SINEW_SIDES * 2);
+      }
+      skin.normals(sinew.tube);
+    }
   }
 
   // The neck is a curve of fixed length from the shoulders to where the tuft is wanted. The slack is taken up by its shape:
@@ -850,7 +913,7 @@ export class Animal {
         y += Math.sin(a) * ds;
       }
       const s = i / (NECK_RINGS - 1);
-      const wave = b.k * (0.16 + 0.3 * (1 - down)) * Math.sin(Math.PI * Math.min(1, s * 1.15)) * Math.sin(seconds * 0.8 + b.seed * 5 - s * 3.2) * smooth(0, 0.25, s);
+      const wave = b.k * (0.16 + 0.3 * (1 - down)) * Math.sin(Math.PI * Math.min(1, s * 1.15)) * Math.sin(seconds * LOOP + b.seed * 5 - s * 3.2) * smooth(0, 0.25, s);
       c[i * 3] = root[0] + gx * h + qx * wave;
       c[i * 3 + 1] = root[1] + y;
       c[i * 3 + 2] = root[2] + gz * h + qz * wave;
@@ -935,7 +998,7 @@ export class Animal {
         const uu = i / (TENDRIL_RINGS - 1);
         if (i > 0) {
           const kink = 1.1 * (hash(index * 7 + i, b.seed + 13) - 0.5);
-          const sway = 0.09 * Math.sin(seconds * 1.1 + t.phase + uu * 2.4) + 0.05 * Math.sin(seconds * 2.3 + t.phase * 2 + uu * 4) + kink;
+          const sway = 0.09 * Math.sin(seconds * LOOP * 2 + t.phase + uu * 2.4) + 0.05 * Math.sin(seconds * LOOP * 3 + t.phase * 2 + uu * 4) + kink;
           dx = dx * 0.72 + ex * (0.16 * t.out + sway * 0.4) + rx * sway;
           dy = dy * 0.72 - 0.34 - 0.3 * uu + ey * 0.1 * t.out;
           dz = dz * 0.72 + ez * (0.16 * t.out + sway * 0.4) + rz * sway;
