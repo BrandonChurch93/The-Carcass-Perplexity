@@ -37,6 +37,20 @@ float creepAt(vec2 q) {
   return clamp(0.5 + 1.8 * (c - 0.5), 0.0, 1.0);
 }
 
+// What is drawn also surges: whole reaches of the lake flare and dim as heat travels through the web of seams, in lumps 25 to
+// 70 m long that cross a reach in three or four seconds, so that the move is seen from the rim of the bowl. 0 to 1, mean a half.
+float surgeAt(vec2 q) {
+  float a = vnoise(q / 70.0 + vec2(uTime * 0.27, -uTime * 0.16));
+  float b = vnoise(q / 23.0 + vec2(-uTime * 0.33, uTime * 0.29));
+  return clamp(0.5 + 2.1 * (a * 0.62 + b * 0.38 - 0.5), 0.0, 1.0);
+}
+
+// The roots of the one that feeds draw on the seam: heat runs along the string of pools toward the pool under its crown in slow
+// pulses, eight metres long and three seconds apart, and the cracks round it open and close with them. 0 to 1.
+float drawAt(vec2 q) {
+  return 0.5 + 0.5 * sin(uTime * 2.0 + 0.8 * length(q - vec2(-404.9, 204.0)) + 4.0 * vnoise(q / 6.0 + 3.0));
+}
+
 // The edge of a gap is torn: metres to add to the distance from its middle.
 float tornAt(vec2 q) {
   return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.07;
@@ -219,6 +233,13 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   // The glow map keeps the beat of the lake, so its sum is what it was; the drawn surface creeps and crusts.
   float beat = least > 0.5 ? beatAt(q) : creepAt(q);
   float pace = least > 0.5 ? 1.0 : 2.6;
+  // The drawn surface alone surges; the glow map does not know of it.
+  float drawnOnly = least > 0.5 ? 0.0 : 1.0;
+  float surge = surgeAt(q);
+  // Where the surge is low a reach of the web skins over and goes dark; where it is high its seams gape and flare.
+  float flare = smoothstep(0.22, 0.78, surge);
+  float swell = mix(1.0, mix(0.15, 1.85, flare), drawnOnly);
+  float flared = mix(1.0, mix(0.1, 1.0, flare), drawnOnly);
   vec2 pr = (q - uPool.xy) * uPool.zw;
   float pool = length(pr) + 0.34 * (vnoise(q / 13.0 + 2.0) - 0.5) + 0.12 * (vnoise(q / 3.1) - 0.5);
   float byPool = 1.0 - smoothstep(1.0, 2.7, pool);
@@ -229,6 +250,8 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float skin = life.y;
   float was = gWas;
   float hotHalf = gape * mix(1.0 - 0.8 * skin, 1.0, max(shown, byPool));
+  // A plate edge of the web flares and dims: its gap of bare melt widens as the heat comes through and skins over behind it.
+  hotHalf *= mix(swell, 1.0, max(shown, byPool));
   // Far from every camera route the lake is a web of long live seams, as the wide picture has it. The net has none so long, so
   // they are drawn here: the crooked lines where a slow field crosses its middle, a main web and a finer one that branches from
   // it in places, each of uneven width, with a lump here and there where it opens into a small sheet.
@@ -260,6 +283,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     // Where two seams meet the crust is pulled apart: wider, and hotter.
     farMeet = (1.0 - smoothstep(1.0, 6.0, d1)) * (1.0 - smoothstep(1.0, 6.0, d2)) * lane1 * lane2 * farField * (least > 0.5 ? 0.0 : 1.0);
     farHalf += 0.6 * farMeet;
+    farHalf *= swell;
   }
   // A seam is brighter where it is wide, and a few are fully open. Hot spots come and go along it, slowly.
   float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
@@ -269,13 +293,17 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   core = mix(core, 1085.0, shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)) * (1.0 - smoothstep(0.26, 0.34, hotHalf)));
   float spot = vnoise(q / 5.3 + vec2(uTime * 0.05 * pace, 2.0)) * 0.7 + vnoise(q / 1.9 + vec2(3.0, uTime * 0.09 * pace)) * 0.3;
   core -= mix(150.0, 110.0, shown) * smoothstep(0.6, 0.4, spot);
-  core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown);
+  core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown) + drawnOnly * mix(170.0, 110.0, shown) * (surge - 0.5);
+  float drawn = drawAt(q);
+  core += drawnOnly * stringOf(n) * 130.0 * (drawn - 0.5);
   gLip = vec3(0.0);
   gIsle = 0.0;
   float seenFloor = least > 0.5 ? 0.0 : 1.0;
   gFloor = 0.45 * smoothstep(0.03, 0.15, hotHalf) * (1.0 - shown) * seenFloor;
   vec2 g = gapHeat(d, hotHalf, core, least);
   gFloor = 0.0;
+  // From far a seam the pictures show flares and dims along its length too; seen close its melt is the lava's own mesh.
+  g.x *= mix(flared, mix(1.0, mix(0.4, 1.0, flare), drawnOnly * smoothstep(0.04, 0.12, gFoot)), shown);
 #ifdef LAKE_LIP
   // The fountains stand above their brim and are seen from anywhere.
   float sight = mix(seenOver(q, 2.0 * hotHalf, mix(0.04, -meltLevel(n), shown), 1.0), 1.0, stirred);
@@ -288,12 +316,13 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   if (farHalf > 0.0) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
     gFloor = (0.4 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
-    vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5), least);
+    vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5) + drawnOnly * 190.0 * (surge - 0.5), least);
 #ifdef LAKE_LIP
     vec2 sightLine = q - cameraPosition.xz;
     float farSight = seenOver(q, 2.0 * farHalf, 0.035, abs(dot(farAcross, sightLine / max(length(sightLine), 1.0))));
     f.x *= farSight;
 #endif
+    f.x *= flared;
     if (f.x > g.x) g = f;
     gFloor = 0.0;
 #ifdef LAKE_LIP
@@ -310,11 +339,12 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float f = vnoise(w / 2.1 + 57.0);
     vec2 gr = vec2(vnoise((w + vec2(0.15, 0.0)) / 2.1 + 57.0), vnoise((w + vec2(0.0, 0.15)) / 2.1 + 57.0)) - f;
     float dh = abs(f - 0.5) * 0.15 / max(length(gr), 0.004);
-    float lane = smoothstep(0.52, 0.68, vnoise(q / 1.7 + 9.0)) * crazed;
+    // They open and close slowly: the field that chooses them drifts, and the pulse of the seam widens them as it passes.
+    float lane = smoothstep(0.52, 0.68, vnoise(q / 1.7 + 9.0 + vec2(uTime * 0.11, -uTime * 0.08)) + 0.16 * (drawn - 0.5)) * crazed;
     vec3 lipWas = gLip;
     // Off the pool under the tuft they are wider and brighter for a few metres.
     float byHero = 1.0 - smoothstep(2.0, 6.0, length(q - vec2(-404.9, 204.0)));
-    vec2 hair = gapHeat(dh, (0.014 + 0.02 * byHero) * lane, 1070.0 + 120.0 * byHero + 70.0 * vnoise(q / 0.8 + 2.0), least);
+    vec2 hair = gapHeat(dh, (0.014 + 0.02 * byHero) * lane * mix(0.55, 1.5, drawn), 1070.0 + 120.0 * byHero + 70.0 * vnoise(q / 0.8 + 2.0) + 120.0 * (drawn - 0.5), least);
     gLip = lipWas;
     if (hair.x > g.x) g = hair;
   }
