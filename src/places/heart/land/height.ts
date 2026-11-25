@@ -256,11 +256,11 @@ function lineCrag(x: number, z: number): number {
   const column = blocks(u / 1.15 + 3.3, 7.7);
   const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
-  const broken = 1.5 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
-  const top = uj < 6.3 ? 7.4 + 0.11 * Math.min(v, 6) + broken * smooth(0.3, 2.5, v) : uj < 8.1 ? 4.3 + 0.6 * column : uj < 9.5 ? 2.3 + 0.5 * column : 0;
+  const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
+  const top = uj < 6.3 ? 4.9 + broken * smooth(0.3, 2.5, v) : uj < 8.1 ? 3.0 + 0.6 * column : uj < 9.5 ? 1.6 + 0.5 * column : 0;
   // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
   // Neither shows from the line view, which sees the face alone; the wide view sees both.
-  const fall = smooth(25, 5.5, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
+  const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
   const back = fall * (0.55 + 0.45 * fall);
   const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
   const start = ramp * ramp * (0.35 + 0.65 * ramp);

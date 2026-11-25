@@ -137,9 +137,17 @@ export function create(ctx: HeartContext): HeartPiece {
     nearMaterial,
   );
   const rocks = scatterRocks(ctx, shared, landHeight);
+  // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
+  for (const r of rocks.bench) r.renderOrder = -6;
+  nearBench.renderOrder = -5;
+  midBench.renderOrder = -4;
+  farBench.renderOrder = -3;
+  for (const r of rocks.land) r.renderOrder = -2;
+  buttress.renderOrder = -1;
   ctx.scene.add(ctx.parts.built('land', wall, buttress, ...rocks.land), buttress, ...rocks.land);
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80), lipMaterial);
+  lip.renderOrder = -5;
   ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, lip, ...rocks.bench), midBench, nearBench, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
@@ -153,7 +161,9 @@ export function create(ctx: HeartContext): HeartPiece {
     const gap = Math.max(0.06, c.width * 0.4);
     for (let s = -1.6; s <= l + 1.6; s += gap) list.push({ x: c.ax + ux * s - uz * reach, z: c.az + uz * s + ux * reach, dx: uz, dz: -ux, length: reach * 2, on: true });
     const h = (x: number, z: number): number => landHeight(x, z) - crackDip(x, z) + 0.03;
-    crackMeshes.push(mesh(ribs(h, list, 56, 0.04, 0.35), crackMaterial));
+    const crackMesh = mesh(ribs(h, list, 56, 0.04, 0.35), crackMaterial);
+    crackMesh.renderOrder = -5;
+    crackMeshes.push(crackMesh);
     // It steams along its length. The air folder draws these.
     const vents = c.depth > 1 ? 7 : 3;
     for (let i = 0; i < vents; i++) {

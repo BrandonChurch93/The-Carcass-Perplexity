@@ -241,9 +241,10 @@ function lump3(x: number, y: number, z: number): number {
 }
 
 /**
- * One shape of loose rock, about a metre across: a lump broken out of a flow and worn. It has no flat face and no straight edge:
- * a body bounded by a few planes whose meetings are rounded off, then swollen and pitted by noise at two sizes. `detail` is how
- * often the first eight faces are split in four: 1 for a rock of a few pixels, 4 for one that stands before a lens.
+ * One shape of loose rock, about a metre across: a block broken out of a flow. A body cut by thirteen to eighteen planes that lean every way,
+ * none of them level, so it has no flat top and no square corner; its faces are warped by noise and its edges chipped where the
+ * triangles cross them. The shader lights it by its facets. `detail` is how often the first eight faces are split in four:
+ * 0 for a rock of a few pixels, 4 for one that stands before a lens.
  */
 export function rockShape(seed: number, detail: number): THREE.BufferGeometry {
   let s = seed * 7919 + 13;
@@ -252,12 +253,13 @@ export function rockShape(seed: number, detail: number): THREE.BufferGeometry {
     return s / 2147483647;
   };
   const planes: [number, number, number, number][] = [];
-  const count = 5 + Math.floor(rnd() * 4);
+  const count = 13 + Math.floor(rnd() * 6);
   for (let k = 0; k < count; k++) {
-    const u = rnd() * 2 - 1;
+    // No plane looks straight up or down: the top of a block is a ridge or a corner, never a table.
+    const u = (rnd() * 2 - 1) * 0.78;
     const a = rnd() * Math.PI * 2;
     const q = Math.sqrt(1 - u * u);
-    planes.push([q * Math.cos(a), u, q * Math.sin(a), 0.58 + 0.36 * rnd()]);
+    planes.push([q * Math.cos(a), u, q * Math.sin(a), 0.42 + 0.4 * rnd()]);
   }
   const ox = rnd() * 40;
   const oy = rnd() * 40;
@@ -266,16 +268,16 @@ export function rockShape(seed: number, detail: number): THREE.BufferGeometry {
   const kzy = 0.5 * (rnd() - 0.5);
   const kxz = 0.5 * (rnd() - 0.5);
   const radius = (x: number, y: number, z: number): number => {
-    // The body: the reach of each plane, joined softly so that an edge is a rounded shoulder.
-    let sum = Math.pow(1 / 1.08, 9);
+    // The body: the nearest of the planes along this direction, joined hard so that an edge stays an edge.
+    let sum = Math.pow(1 / 1.05, 24);
     for (const p of planes) {
       const d = x * p[0] + y * p[1] + z * p[2];
-      if (d > 0) sum += Math.pow(d / p[3], 9);
+      if (d > 0) sum += Math.pow(d / p[3], 24);
     }
-    const body = Math.pow(sum, -1 / 9);
-    const swell = 0.34 * (lump3(x * 1.3 + ox, y * 1.3 + oy, z * 1.3 + oz) - 0.5) + 0.2 * (lump3(x * 2.9 + oy, y * 2.9 + oz, z * 2.9 + ox) - 0.5);
-    const pit = detail > 1 ? 0.09 * (lump3(x * 6.7 + oz, y * 6.7 + ox, z * 6.7 + oy) - 0.5) : 0;
-    return body * (1 + swell + pit);
+    const body = Math.pow(sum, -1 / 24);
+    const warp = 0.16 * (lump3(x * 1.7 + ox, y * 1.7 + oy, z * 1.7 + oz) - 0.5);
+    const chip = detail > 1 ? 0.1 * (lump3(x * 5.3 + oz, y * 5.3 + ox, z * 5.3 + oy) - 0.5) : 0;
+    return body * (1 + warp + chip);
   };
   const points: P3[] = [
     [1, 0, 0],
