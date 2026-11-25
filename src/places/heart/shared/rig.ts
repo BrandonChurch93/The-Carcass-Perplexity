@@ -1,14 +1,22 @@
 // The light rig of the Heart: the uniforms every surface shares, the map of the lake's glow, the map of contact shade,
 // the baked land, and the drift of the crust. Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
+import { secondsInPlace, shotById } from '../../../film/cut';
 import { MOUTH, ground, smooth } from '../layout';
+import { GROUP, UNIT } from './anchors';
 
 export const GLOW = { minX: -600, maxX: 1320, minZ: -480, maxZ: 560, width: 1536, height: 832 };
 export const LAND = { minX: -1300, maxX: 1500, minZ: -640, maxZ: 760, width: 1024, height: 512 };
 export const LAND_FINE = { minX: -700, maxX: -380, minZ: 60, maxZ: 380, width: 512, height: 512 };
-export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
+// The contact map is 2048 wide (it was 1024): a foot pad of half a metre was less than two texels of it in the wide view and had no shade.
+export const CONTACT = { size: 2048, minRadius: 30, maxRadius: 220 };
 export const FLOW = { foot: [MOUTH.x - 6, -326] as [number, number], speed: 0.28, toward: [0.94, 0.34] as [number, number] };
 export const MAX_EMITTERS = 8;
+// The bank of smoke that stands over the group feeding at the seam in the shot of key heart-3 (the approved picture has the three animals inside
+// lit smoke, on warm ground: 76 52 46 where the sky alone gives 57 50 56). It hides `shade` of the sky from what is under its middle and is a wide
+// dim round light, 25 m up: the lake's light caught by the smoke and thrown down. Its colour is paler than the lava's, as scattered light is.
+// It stands in that shot alone, so the wide view keeps its neutral lake.
+export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] as const, radius: 60, shadeRadius: 110, shade: 0.25, radiance: [1.5, 0.66, 0.11] as const };
 
 export type Height = (x: number, z: number) => number;
 
@@ -291,7 +299,11 @@ export function createRig(t0: number): Rig {
   const contactCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 1, 2000);
   contactCamera.up.set(0, 0, -1);
 
-  const emitters: Emitter[] = [];
+  const bankShot = shotById(BANK.shot);
+  const bankFrom = secondsInPlace(UNIT, bankShot.first) - 0.3 / 60;
+  const bankTo = secondsInPlace(UNIT, bankShot.last) + 0.7 / 60;
+  const bankLight: Emitter = { position: new THREE.Vector3(BANK.at[0], -1000, BANK.at[2]), radius: BANK.radius, radiance: new THREE.Vector3() };
+  const emitters: Emitter[] = [bankLight];
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
 
@@ -308,6 +320,7 @@ export function createRig(t0: number): Rig {
     uLandFineRect: { value: rect(LAND_FINE) },
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
+    uBank: { value: new THREE.Vector4(0, 0, 1, 0) },
     // The dusk sky, measured against the approved wide view: its sky reads 0.22, 0.25, 0.35 at 13 degrees up, and bare rock under it about 0.015.
     uSkyZenith: { value: new THREE.Vector3(0.09, 0.118, 0.2) },
     uSkyHorizon: { value: new THREE.Vector3(0.175, 0.21, 0.33) },
@@ -449,6 +462,10 @@ export function createRig(t0: number): Rig {
       now = seconds;
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uPulse as THREE.IUniform<number>).value = 0.5 + 0.5 * Math.sin(seconds * 1.05);
+      const banked = seconds >= bankFrom && seconds <= bankTo;
+      bankLight.position.y = banked ? BANK.at[1] : -1000;
+      bankLight.radiance.set(BANK.radiance[0], BANK.radiance[1], BANK.radiance[2]).multiplyScalar(banked ? 1 : 0);
+      (uniforms.uBank as THREE.IUniform<THREE.Vector4>).value.set(BANK.at[0], BANK.at[2], 1 / BANK.shadeRadius, banked ? BANK.shade : 0);
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();
@@ -471,7 +488,11 @@ export function createRig(t0: number): Rig {
       camera.getWorldDirection(forward);
       // The map follows the view: it is centred where the middle of the frame meets the ground, and sized to that distance.
       const height = Math.max(1, camera.position.y - Math.max(0, landHeight(camera.position.x, camera.position.z)));
-      const pitch = Math.max(Math.asin(Math.min(1, Math.max(-1, -forward.y))), 0.026);
+      // A long lens that looks level has its subject on the ground a third of the way up the frame, not where the middle of the frame meets
+      // the ground (hundreds of metres on): the map is aimed there, so that the feet in its view have texels of 6 cm and not of 28.
+      const half = Math.atan(1 / (camera.projectionMatrix.elements[5] as number));
+      const long = smooth(0.26, 0.16, half);
+      const pitch = Math.max(Math.asin(Math.min(1, Math.max(-1, -forward.y))) + (long * half) / 3, 0.026);
       const reach = Math.min(900, height / Math.tan(pitch));
       const radius = Math.min(CONTACT.maxRadius, Math.max(CONTACT.minRadius, reach * 0.6));
       const ahead = Math.max(reach * 0.75, radius * 0.72);
