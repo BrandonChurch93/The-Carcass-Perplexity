@@ -93,7 +93,8 @@ void main() {
   r = normalize(r);
   float open = land.g;
   float sun = sunAt(vWorld, land);
-  vec3 refl = skyRadiance(r) * mix(1.0, open, 0.6);
+  // Near, the water mirrors the cloud's shapes; far, where a pixel holds a thousand faces, the mean sky.
+  vec3 refl = mix(skyCloud(vWorld, r), skyRadiance(r), far) * mix(1.0, open, 0.6);
   vec3 hv = normalize(v + uSunDir);
   float gl = pow(max(dot(n, hv), 0.0), mix(700.0, 60.0, far));
   refl += uSunColour * gl * sun * mix(6.0, 0.8, far);
@@ -140,6 +141,7 @@ uniform sampler2D tChop;
 uniform vec2 uWind;
 uniform vec4 uRings[${rings}];
 uniform int uRingCount;
+uniform float uPoolLevel;
 varying vec3 vWorld;
 varying float vDepth;
 void main() {
@@ -151,8 +153,10 @@ void main() {
   vec4 c1 = texture2D(tChop, p / 3.1 - uTime * uWind * 0.16);
   vec4 c2 = texture2D(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3);
   float gust = smoothstep(0.38, 0.72, texture2D(tChop, p / 97.0 - uTime * uWind * 0.11).b);
-  float depth = vDepth + 0.012 * (c1.b - 0.5);
-  float edge = smoothstep(0.0, 0.02, depth);
+  // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
+  float depth = uPoolLevel - (land.r + bedFine(p));
+  if (depth < 0.0) discard;
+  float edge = smoothstep(0.0, 0.012, depth);
   vec2 s2 = c2.xy - 0.5;
   vec2 slope = ((c1.xy - 0.5) * 0.11 + vec2(-s2.y, s2.x) * 0.07) * (0.2 + 0.8 * gust) * smoothstep(0.0, 0.07, depth);
   for (int i = 0; i < ${rings}; i++) {
@@ -170,7 +174,7 @@ void main() {
   r = normalize(r);
   float open = land.g * (1.0 - contactDrawn(vWorld));
   float sun = sunAt(vWorld, land);
-  vec3 refl = skyRadiance(r) * mix(1.0, open, 0.5);
+  vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
   vec3 hv = normalize(v + uSunDir);
   refl += uSunColour * pow(max(dot(n, hv), 0.0), 900.0) * sun * 8.0;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);

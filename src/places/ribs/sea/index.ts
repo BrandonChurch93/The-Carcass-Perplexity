@@ -72,7 +72,8 @@ function poolSheet(height: (x: number, z: number) => number, tracks: [number, nu
     const d10 = depthAt(x + size, z);
     const d01 = depthAt(x, z + size);
     const d11 = depthAt(x + size, z + size);
-    if (Math.max(d00, d10, d01, d11) < -0.02) return;
+    // The fine relief can dip under the level between corners: keep any cell that comes near it.
+    if (Math.max(d00, d10, d01, d11) < -0.3) return;
     positions.push(x, LEVELS.pool, z, x, LEVELS.pool, z + size, x + size, LEVELS.pool, z, x + size, LEVELS.pool, z, x, LEVELS.pool, z + size, x + size, LEVELS.pool, z + size);
     depths.push(d00, d01, d10, d10, d01, d11);
   };
@@ -177,7 +178,7 @@ export function create(ctx: Context): Piece {
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
