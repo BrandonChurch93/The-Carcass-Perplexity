@@ -194,12 +194,10 @@ void main() {
   vec3 mnNear = vec3(0.5);
 #endif
   // The slope of the rock's own grain, as the picture holds it: it turns the normal, it is not differenced on the screen, so it does not glitter.
-  vec2 lean = (mn.rg - 0.5) * 1.1 + (mnNear.rg - 0.5) * 0.9 * near;
-  // The height is read one level up: finer than that it is the grain of the photograph, not the rock, and it would glitter.
   vec3 mn = texture2D(tMatN, p.xz / 6.0).rgb;
-  float mh = mn.b;
+  vec2 lean = (mn.rg - 0.5) * 1.1 + (mnNear.rg - 0.5) * 0.9 * near;
   vec3 grain = (0.4 * m0 + 0.35 * m1 + 0.25 * mix(m0, m2, near)) / uMean;
-  grain = clamp(1.0 + 1.7 * (grain - 1.0), 0.3, 2.0) * mix(vec3(1.0), uMean / dot(uMean, vec3(0.3333)), 0.45);
+  grain = clamp(1.0 + 1.7 * (grain - 1.0), 0.3, 2.0) * mix(vec3(1.0), uMean / dot(uMean, vec3(0.3333)), 0.2);
   float h = (0.75 * a.g + 0.22 * b.g) * dry + 0.6 * a.r + 0.2 * b.r + 0.03 * c.r + 0.015 * c.a + 0.02 * c.g * near;
   // Where two plates meet there is a seam, open in places and closed in others.
   float crack = 0.5 * max(smoothstep(0.035, 0.0, a.b), 0.6 * smoothstep(0.04, 0.0, b.b)) * dry * smoothstep(0.45, 0.65, b.a);
@@ -215,7 +213,7 @@ void main() {
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.92 * film));
 
   // The high plates are washed pale and dry; the low ones are dark with wet.
-  vec3 rock = mix(vec3(0.16, 0.155, 0.15), vec3(0.56, 0.545, 0.52), clamp(0.4 + 1.0 * (a.a - 0.5) + 1.1 * (b.r - 0.5) + 0.9 * (c.a - 0.5) + 1.5 * (rel - 0.48) + 0.5 * (a.g - 0.5), 0.0, 1.0));
+  vec3 rock = mix(vec3(0.24, 0.235, 0.23), vec3(0.72, 0.7, 0.67), clamp(0.4 + 1.0 * (a.a - 0.5) + 1.1 * (b.r - 0.5) + 0.9 * (c.a - 0.5) + 1.5 * (rel - 0.48) + 0.5 * (a.g - 0.5), 0.0, 1.0));
   // Mineral crust where the vapour dries on the high plates: white, with ochre at its edge. It flakes, so it is patchy at every size.
   float crust = smoothstep(0.5, 0.64, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5));
   float ochre = smoothstep(0.42, 0.5, 0.5 * b.a + 0.3 * c.r + 0.2 * a.a + 0.5 * (rel - 0.5)) * (1.0 - crust);
@@ -229,7 +227,7 @@ void main() {
   rock = mix(rock, vec3(0.085, 0.095, 0.05), 0.55 * tide);
   // A riser shows the beds it is made of: thin courses, some standing proud, broken where the plate broke.
   float beds = 0.5 + 0.5 * sin((p.y + h) * 46.0 + 5.0 * b.r + 3.0 * c.r);
-  vec3 albedo = rock * mix(1.0, 0.5, wet) * (1.0 - 0.45 * crack) * (1.0 - 0.3 * hollow) * mix(1.0, 0.55 + 0.6 * beds, steep) * (0.8 + 0.4 * c.g * near);
+  vec3 albedo = rock * mix(1.0, 0.62, wet) * (1.0 - 0.45 * crack) * (1.0 - 0.3 * hollow) * mix(1.0, 0.55 + 0.6 * beds, steep) * (0.8 + 0.4 * c.g * near);
   albedo = mix(albedo, albedo * vec3(0.45, 0.52, 0.52), film);
   // A riser is broken rock, dry and rough: it does not flash.
   float rough = mix(mix(mix(0.7, 0.42, wet), 0.9, steep), 0.06, film);
@@ -240,7 +238,7 @@ void main() {
   float towardSmall = texture2D(tRock, (p.xz + uSunDir.xz * 0.6) / 13.7 + 0.37).g;
   float rise = 0.75 * (toward - a.g) * dry;
   float riseSmall = 0.22 * (towardSmall - b.g) * dry;
-  float shade = 1.0 - 0.92 * max(smoothstep(0.035, 0.11, rise), 0.85 * smoothstep(0.012, 0.045, riseSmall));
+  float shade = 1.0 - mix(0.6, 0.92, near) * max(smoothstep(0.035, 0.11, rise), 0.85 * smoothstep(0.012, 0.045, riseSmall));
   float crestLit = max(smoothstep(0.035, 0.11, -rise), 0.7 * smoothstep(0.012, 0.045, -riseSmall));
   // Under a step the sky is half shut out too: the shade is cold and dark, not grey.
   occ *= mix(0.5, 1.0, shade);
@@ -314,7 +312,7 @@ void main() {
   float wet = clamp(0.45 + 0.5 * smoothstep(-2.0, -14.0, p.y) + 0.3 * stain, 0.0, 1.0);
   // Down the shaft the sky is a disc overhead and everything is wet: it goes to the dark.
   float sunk = clamp(1.0 + min(p.y + 3.0, 0.0) / 40.0, 0.0, 1.0) * mix(1.0, 0.8, smoothstep(1.0, -2.5, p.y));
-  albedo *= (1.0 - 0.5 * joint - 0.35 * pit) * mix(1.0, 0.62, wet);
+  albedo *= (1.0 - 0.5 * joint - 0.35 * pit) * mix(1.0, mix(0.62, 0.85, smoothstep(0.4, 0.9, uBone)), wet);
   float rough = mix(0.85, 0.38, wet);
   // The wall under a hoop is in its shade: black recesses between the ribs. The hoops stand every seven metres.
   float under = mod(-(p.y + 3.6), 7.0);
@@ -323,7 +321,7 @@ void main() {
   // A ledge's top lies open to the disc of sky overhead, tier under tier, each dimmer than the one over it; its face and the wall get the square of that.
   float ledge = smoothstep(0.4, 0.9, uBone);
   float open = mix(sunk * sunk, sunk * mix(sunk, 1.0, 0.75 * up), ledge);
-  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.94 * recess) * mix(1.0, 1.8 + 1.4 * up, ledge);
+  float occ = (1.0 - 0.5 * joint - 0.3 * pit) * vOcc * open * (1.0 - 0.94 * recess) * mix(1.0, 2.3 + 1.6 * up, ledge);
   // Nothing of the sun gets down there either: the shadow's top is lifted over whatever is deep.
   vec4 land = landAt(p.xz);
   land.b = mix(p.y + 1.0, land.b, sunk * sunk);
