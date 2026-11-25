@@ -5,12 +5,16 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { BODY, FIELD, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, TEAR, YAW, bakeField, bakeHide, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
+import { BODY, FIELD, FOOT_A, FOOT_B, LEG_A, LEG_B, SLOPE_RANGE, TEAR, YAW, bakeField, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
-/** Kelvin of the lava at the bottom of the tear, the only place it shows this hot: its walls are dull red and darker. */
-const TEAR_KELVIN = 1250;
+/** Kelvin of the open lava at the bottom of the tear: its walls are dull red and darker. */
+const TEAR_KELVIN = 1380;
+/** How hard the tear lights what is near it, over what its size alone would give. */
+const TEAR_GAIN = 1.0;
+/** The albedo of ash where it lies on the hide: set so the upper side of the big arch reads 100 to 140 on the display. */
+const ASH_ON_HIDE: [number, number, number] = [0.32, 0.292, 0.262];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
 
@@ -42,6 +46,8 @@ export function create(ctx: HeartContext): HeartPiece {
     uTurn: { value: new THREE.Vector2(COS, SIN) },
     uOrigin: { value: new THREE.Vector2(SUNK[0], SUNK[2]) },
     uTearKelvin: { value: TEAR_KELVIN },
+    uTearGain: { value: TEAR_GAIN },
+    uAsh: { value: new THREE.Vector3(...ASH_ON_HIDE) },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
     tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 2 }) },
     tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg', anis) },
@@ -62,11 +68,9 @@ export function create(ctx: HeartContext): HeartPiece {
   const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
   // The far side of the heap is hidden from the bench by the mound: it gets the coarse sheet.
   const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && z > -3.0 && z < 7.1;
-  // Under the body nothing of the sheet is seen, except at the end the skin rode over.
-  const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8 && x > BODY.centre.x - 1.3;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.06, (x, z) => inner(x, z) && radial(x, z) < WHOLE && !buried(x, z)),
+    fieldGeometry(baked, 0.04, (x, z) => inner(x, z) && radial(x, z) < WHOLE),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
@@ -78,11 +82,10 @@ export function create(ctx: HeartContext): HeartPiece {
     rimMaterial,
   );
   const farSheet = new THREE.Mesh(
-    fieldGeometry(baked, 0.14, (x, z) => radial(x, z) < WHOLE && !buried(x, z)),
+    fieldGeometry(baked, 0.14, (x, z) => radial(x, z) < WHOLE),
     fieldMaterial,
   );
 
-  const plates = bakeHide();
   const carcassMaterial = new THREE.ShaderMaterial({
     vertexShader: CARCASS_VERTEX,
     fragmentShader: CARCASS_FRAGMENT,
@@ -92,14 +95,13 @@ export function create(ctx: HeartContext): HeartPiece {
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 2 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', anis) },
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
-      tPlates: { value: plates },
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.45, hock: 0.833, scale: 1.3, seed: 1.7, rings: 480, round: 44, tendon: 0 };
-  const legShapeB = { points: LEG_B, knee: 0.482, hock: 0.8, scale: 1.2, seed: 4.1, rings: 360, round: 36, tendon: 0 };
+  const legShapeA = { points: LEG_A, knee: 0.44, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0 };
+  const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
-  const hanging = [padGeometry([2.45, 3.2, 0.5], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
+  const hanging = [padGeometry([2.45, 3.74, 0.55], 0.62, 0.55, 1.9, 40, 40), padGeometry([-0.55, 3.5, 0.84], 0.46, 0.7, -0.4, 40, 40), padGeometry([1.0, 3.17, -3.04], 0.7, 0.6, 0.9, 40, 40)].map(carcass);
   const near = new THREE.Group();
   near.add(carcass(bodyGeometry(baked, 290, 240, true)), carcass(legGeometry(legShapeA, baked).geometry), carcass(legGeometry(legShapeB, baked).geometry), fine, coarse);
   const far = new THREE.Group();
@@ -193,7 +195,6 @@ export function create(ctx: HeartContext): HeartPiece {
     },
     dispose: () => {
       for (const m of meshes) m.geometry.dispose();
-      plates.dispose();
       fieldMaterial.dispose();
       rimMaterial.dispose();
       carcassMaterial.dispose();
