@@ -83,8 +83,8 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 const float FAR_FIRE = 0.12;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
-const float LAKE_UNDER = 0.36;
-const float CRUST_BOUNCE = 0.38;
+const float LAKE_UNDER = 0.24;
+const float CRUST_BOUNCE = 0.5;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
 const float POOL = 2.0;
 void main() {
@@ -159,6 +159,18 @@ void main() {
     slope += folds * across.yx * (f3 - 0.5) * 1.6 * body;
     fold = mix(fold, 0.6 * fold + 0.4 * f3, body);
   }
+  // The body is dried flesh: strands that run along it, each a ridge with a dark gap beside it, none straight.
+  float strand = 1.0;
+  float flesh = body * (1.0 - pole) * folds;
+  if (flesh > 0.0) {
+    vec2 su = vec2(vUv.x * 0.5, vUv.y * 4.6 + 1.3 * vnoise(vUv * vec2(0.7, 1.1) + seed * 4.0)) + seed * 2.3;
+    float s0 = 1.0 - abs(2.0 * vnoise(su) - 1.0);
+    float s1 = 1.0 - abs(2.0 * vnoise(su + vec2(0.0, 0.22)) - 1.0);
+    float t0 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + 5.0) - 1.0);
+    float t1 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + vec2(5.0, 5.22)) - 1.0);
+    strand = 0.65 * s0 + 0.35 * t0;
+    slope.y += flesh * ((s1 - s0) * 3.2 + (t1 - t0) * 1.6);
+  }
   vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.45 * body));
 
   // A hide the colour of the crust it walks on: charcoal, a little brown, darker in its folds. No two alike: each is sootier or browner than the next.
@@ -172,7 +184,7 @@ void main() {
   // The look of the place deepens the colour of what is dark: a hide a tenth warmer than grey comes out brown-black, as in the pictures.
   vec3 hide = vec3(0.07, 0.065, 0.061) * mix(vec3(1.05, 1.0, 0.95), vec3(0.97, 1.0, 1.03), warm) * (0.74 + 0.42 * sooty);
   // pale: a little lighter at the joints and where the skin is worn, never bone.
-  vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold));
+  vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
   // Scab like the crust's own skin, in patches on the back and the rump.
   float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
@@ -196,7 +208,7 @@ void main() {
   // The foot itself is caked dark with what it treads in.
   albedo = mix(albedo, vec3(0.034, 0.027, 0.024) * (0.6 + 0.6 * grit), 0.92 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
-  float own = (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (0.75 + 0.25 * smoothstep(0.2, 0.6, fold));
+  float own = mix(1.0, 0.5 + 0.5 * strand, flesh) * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (0.75 + 0.25 * smoothstep(0.2, 0.6, fold));
   float occ = vInfo.y * own;
   // The hide is dull: no shine on it at all. Only the roots are wet.
   // The rig's light, put together here from its own parts and not by rigShade: its lake light gives a face that looks up a share of the

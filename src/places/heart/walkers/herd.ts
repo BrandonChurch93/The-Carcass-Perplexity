@@ -65,16 +65,16 @@ export function makeBuild(index: number, rng: Rng): Build {
     k,
     seed: index * 1.618 + 0.37,
     // A small body hung between the shoulders and the hips, on four long legs that leave it at its upper sides and go down and out.
-    bodyLen: 4.5 * k * c.bulk * v(0.92, 1.1),
+    bodyLen: 4.9 * k * c.bulk * v(0.92, 1.1),
     bodyTop: 0.8 * k * c.bulk * c.heavy * v(0.92, 1.08),
-    bodyKeel: 1.05 * k * c.bulk * c.heavy * v(0.9, 1.12),
+    bodyKeel: 0.9 * k * c.bulk * c.heavy * v(0.9, 1.12),
     bodyWide: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
     hump: c.hump,
-    hipFore: 1.3 * k * c.bulk,
+    hipFore: 1.75 * k * c.bulk,
     hipSide: 0.78 * k * c.bulk * c.heavy,
     hipUp: 0.3 * k * c.bulk * c.heavy,
     knee: lerp(0.47, 0.43, c.skater) * v(0.96, 1.04),
-    hock: lerp(0.62, 0.7, c.skater) * v(0.95, 1.05),
+    hock: lerp(0.74, 0.8, c.skater) * v(0.96, 1.04),
     slack: lerp(0.01, 0.028, c.skater),
     stanceFore: 3.9 * k * v(0.9, 1.06),
     stanceSide: 2.9 * k * c.wide,
@@ -87,7 +87,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     tendrils: Math.max(4, Math.round((9 + (index % 3)) * c.tuft[0])),
     tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
-    lean: index === 1 ? 1.1 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
+    lean: index === 1 ? -1.3 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
   };
 }
 

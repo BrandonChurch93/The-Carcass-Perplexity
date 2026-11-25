@@ -212,7 +212,7 @@ export class Animal {
       // It hangs between the shoulders and the hips: the back sags between them, the belly hangs lowest a little ahead of the middle.
       const sag = gauss((t - 0.5) / 0.2);
       const top = b.bodyTop * e * (1 + 0.14 * sag + 0.3 * b.hump * gauss((t - tShoulder) / 0.13) + 0.1 * gauss((t - tHip) / 0.12));
-      const keel = b.bodyKeel * e * (0.68 + 0.5 * gauss((t - 0.54) / 0.2));
+      const keel = b.bodyKeel * e * (0.72 + 0.34 * gauss((t - 0.56) / 0.22));
       const wide = b.bodyWide * e * (1 + 0.14 * gauss((t - tHip) / 0.1) + 0.2 * gauss((t - tShoulder) / 0.1) - 0.14 * sag);
       for (let j = 0; j < BODY_SIDES; j++) {
         // The skin is sewn along the keel, where its seam is out of sight.
@@ -220,7 +220,7 @@ export class Animal {
         const c = Math.cos(a);
         const s = Math.sin(a);
         // A shrunken mass of dried flesh: lumps at three sizes and no pattern to them.
-        let m = 1 + 0.3 * (wrap(t * 3.2, a, 3, seed) - 0.5) + 0.4 * (wrap(t * 6.5, a, 6, seed + 1) - 0.5) + 0.38 * (wrap(t * 12, a, 11, seed + 2) - 0.5) + 0.2 * (wrap(t * 23, a, 19, seed + 7) - 0.5);
+        let m = 1 + 0.42 * (wrap(t * 3.2, a, 3, seed) - 0.5) + 0.4 * (wrap(t * 6.5, a, 6, seed + 1) - 0.5) + 0.22 * (wrap(t * 12, a, 11, seed + 2) - 0.5) + 0.2 * (wrap(t * 23, a, 19, seed + 7) - 0.5);
         // It has shrivelled: creases where the hide has drawn in, each a narrow valley that wanders.
         const fromTop = Math.acos(Math.max(-1, Math.min(1, s)));
         const fold1 = Math.pow(1 - Math.abs(2 * wrap(t * 5 + 0.5 * Math.sin(a * 2 + seed), a, 5, seed + 4) - 1), 4);
@@ -233,7 +233,9 @@ export class Animal {
         // The shoulders and the points of the hips, high on each side: the legs leave the body there.
         const up = Math.max(0, s);
         const blade = gauss((Math.abs(c) - 0.9) / 0.26) * smooth(-0.15, 0.35, s);
-        m += 0.24 * blade * gauss((t - tShoulder) / 0.075) + 0.22 * blade * gauss((t - tHip) / 0.075);
+        m += 0.36 * blade * gauss((t - tShoulder) / 0.09) + 0.32 * blade * gauss((t - tHip) / 0.09);
+        // The top outline is broken: a few big lumps along the back, none where another is.
+        m += 0.34 * up * (lump(t * 4.3, 0.5, seed + 9) - 0.3) * smooth(0.05, 0.2, t) * smooth(0.97, 0.82, t);
         // The spine: a low uneven ridge.
         m += 0.13 * gauss(fromTop / 0.2) * (0.2 + 1.6 * lump(t * 13, 0.5, seed + 6)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
         const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
@@ -530,13 +532,13 @@ export class Animal {
       }
       // Thickness: a thigh with muscle on it, then shafts that taper, with a knob at each joint.
       let r: number;
-      // As thick as a thigh where it leaves the shoulder, a thin straight shaft by a third of the way to the knee.
-      if (s < S1) r = lerp(0.34, 0.118, smooth(0, 0.4, s / S1)) - 0.016 * smooth(0.4, 1, s / S1);
+      // A thigh twice as thick as the shin all the way to the knee, thickest where it leaves the shoulder.
+      if (s < S1) r = lerp(0.36, 0.215, smooth(0, 0.4, s / S1)) - 0.05 * smooth(0.4, 1, s / S1);
       else if (s < S2) r = lerp(0.095, 0.082, (s - S1) / this.tibia);
       else r = lerp(0.08, 0.074, Math.min(1, (s - S2) / this.meta));
       // A bone widens toward its end before the knuckle itself.
       const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
-      r += 0.125 * head(s - S1, 0.22) + 0.11 * head(s - S2, 0.19) + 0.05 * head(s - S3, 0.16);
+      r += 0.105 * head(s - S1, 0.34) + 0.1 * head(s - S2, 0.24) + 0.05 * head(s - S3, 0.16);
       r *= k * b.legR;
       // No bone is straight: each bows a little between its joints.
       const lens = [S1, this.tibia, this.meta];
@@ -548,7 +550,7 @@ export class Animal {
           table.bow[i * 2 + 1] = arc * 0.022 * (hash(seed, 40 + n) - 0.5);
         }
       }
-      const knob = Math.max(gauss((s - S1) / (0.3 * k)), gauss((s - S2) / (0.26 * k)), gauss((s - S3) / (0.2 * k)));
+      const knob = Math.max(gauss((s - S1) / (0.42 * k)), gauss((s - S2) / (0.3 * k)), gauss((s - S3) / (0.2 * k)));
       let shape = 0;
       if (inPad) {
         const row = PAD[i - pad] as [number, number];
