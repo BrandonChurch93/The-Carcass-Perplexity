@@ -130,7 +130,8 @@ void main() {
   // put half of those pixels in the dark and the hide came out as red and black sand. It is kept as a faint tooth; the relief that reads is the folds.
   vec2 slopeF = (nhF.rg - 0.5) * 0.4;
   vec2 slopeH = (nhH.rg - 0.5) * 0.35 * fine;
-  vec2 slope = mix(slopeF + vec2(slopeH.x * 0.8 + slopeH.y * 0.6, slopeH.y * 0.8 - slopeH.x * 0.6), slopeF.yx + slopeH.yx, limb);
+  // On a limb of the hero the grain is what the lens is focused on: it is turned up there, and its pits are darkened below.
+  vec2 slope = mix(slopeF + vec2(slopeH.x * 0.8 + slopeH.y * 0.6, slopeH.y * 0.8 - slopeH.x * 0.6), slopeF.yx * 1.6 + slopeH.yx * 2.4, limb);
   float high = mix(nhF.b, nhH.b, 0.5 * fine);
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
@@ -150,7 +151,7 @@ void main() {
   float fold = 0.5;
   if (folds > 0.0) {
     // On a limb they are the grain of dead wood: short, and they wander round it, so that no line runs the length of a bone.
-    vec2 fu = mix(vec2(vUv.x * 2.6, vUv.y * 0.5), vec2(vUv.x * 0.9, vUv.y * 11.0 + 3.5 * vnoise(vUv * vec2(1.3, 2.0) + seed * 2.3)), limb) + seed * 5.3;
+    vec2 fu = mix(vec2(vUv.x * 2.6, vUv.y * 0.5), vec2(vUv.x * 2.6 + 1.6 * vnoise(vUv * vec2(1.7, 6.0) + seed * 3.1), vUv.y * 13.0 + 4.5 * vnoise(vUv * vec2(2.3, 3.0) + seed * 2.3)), limb) + seed * 5.3;
     float f1 = vnoise(fu);
     float f2 = vnoise(fu * vec2(2.3, 2.1) + 7.0);
     fold = 0.65 * f1 + 0.35 * f2;
@@ -173,7 +174,7 @@ void main() {
     strand = 0.65 * s0 + 0.35 * t0;
     slope.y += flesh * ((s1 - s0) * 3.2 + (t1 - t0) * 1.6);
   }
-  vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.45 * body));
+  vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.25 * body));
 
   // A hide the colour of the crust it walks on: charcoal, a little brown, darker in its folds. No two alike: each is sootier or browner than the next.
   float lum = 0.55 * dot(flakeC, vec3(4.0)) + 0.45 * dot(hideC, vec3(5.2));
@@ -188,6 +189,15 @@ void main() {
   // pale: a little lighter at the joints and where the skin is worn, never bone.
   vec3 albedo = hide * (0.86 + 0.14 * lum) * (0.6 + 0.4 * crack) * (0.82 + 0.3 * mottle + 0.25 * (pale - 0.4)) * (0.8 + 0.4 * fold) * (1.0 - 0.35 * body * smoothstep(0.55, 0.3, fold)) * mix(1.0, 0.5 + 0.75 * strand, flesh);
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
+  // Dry sinew and torn flesh: the pits of the grain are black, its ridges worn pale, and ash is caked on it in scabs with hard edges.
+  float rough = (1.0 - tendril) * (1.0 - rag) * (1.0 - pole) * fine * (1.0 - 0.75 * neck * smoothstep(0.3, 0.9, vLook.y));
+  float pit = smoothstep(0.22, 0.62, high);
+  albedo *= mix(1.0, mix(0.42, 1.12, pit), rough);
+  albedo *= mix(1.0, mix(0.68, 1.1, smoothstep(0.3, 0.7, fold)), rough * limb);
+  // A leg is darker and browner than the back: measured on the picture's hero, 45 29 23 in its shade and about 70 50 40 where the sky finds it.
+  albedo *= mix(vec3(1.0), vec3(0.7, 0.6, 0.54), limb * (1.0 - tendril));
+  float cake = smoothstep(0.56, 0.6, vnoise(vUv * vec2(1.6, 4.5) + seed * 9.0) + 0.3 * (high - 0.5) + 0.12 * (fold - 0.5)) * rough;
+  albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
   // Scab like the crust's own skin, in patches on the back and the rump.
   float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
   albedo = mix(albedo, vec3(0.1, 0.097, 0.094) * (0.6 + 0.4 * dot(flakeC, vec3(4.0))) * (0.7 + 0.3 * crack), 0.8 * scab);

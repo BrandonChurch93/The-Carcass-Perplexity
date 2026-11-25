@@ -432,7 +432,7 @@ void main() {
     float bend = (1.1 + 1.5 * fract(plateHash.x * 7.3)) * (fract(plateHash.y * 5.1) < 0.5 ? -1.0 : 1.0);
     // They are wrinkled, never ringed: the point they bend about lies outside the plate.
     vec2 wrinkled = inPlate - 0.25 * ragged - 0.03 * jagged;
-    turnAt = 0.9 * ropes * length(wrinkled - bend * vec2(-sin(lay), cos(lay))) + 40.0 * plateHash.x + 1.5 * vnoise(inPlate * 2.6 + plateId);
+    turnAt = 0.5 * ropes * length(wrinkled - bend * vec2(-sin(lay), cos(lay))) + 40.0 * plateHash.x + 1.5 * vnoise(inPlate * 2.6 + plateId);
   }
   turnAt += 0.8 * sin(turnAt * 0.21 + 3.0 * fixedBig) + 0.45 * sin(turnAt * 0.47 + 1.3);
   float u = fract(turnAt / 6.28318);
@@ -452,7 +452,7 @@ void main() {
   float fine = 1.0 - smoothstep(0.9, 1.9, max(abs(fx), abs(fy)));
   float roped = seen * fine * ropedHere;
   // Thick, cold skin stands in high ropes; thin hot skin is nearly flat.
-  float tall = ROPE_TALL * mix(1.25, 0.5, hotness) * roped * (0.45 + 1.1 * hash12(vec2(ropeId, vSeam.y + 7.0)));
+  float tall = ROPE_TALL * (1.0 + onRafts) * mix(1.25, 0.5, hotness) * roped * (0.45 + 1.1 * hash12(vec2(ropeId, vSeam.y + 7.0)));
   // A crest is round and a crease is sharp: height tall * (1 - (1 - crest)^2).
   float rise = tall * 2.0 * (1.0 - crest) * (u < 0.5 ? 1.0 : -1.0) / 3.14159;
   vec3 nrm = normalize(vec3(-rise * grad.x, 1.0, -rise * grad.y));
@@ -499,7 +499,9 @@ void main() {
   // Between the rafts the melt is orange.
   float inCore = 1.0 - smoothstep(coreTo * 0.9, coreTo * 1.3, lean);
   // From far a crack is wider on the screen than it is: it is drawn dimmer by as much.
-  float kStream = mix(1250.0 + 60.0 * tearing - 140.0 * smoothstep(0.02, 0.08, grain), mix(kSkin, kTear, tornOpen), inCore);
+  // Most cracks between the plates are hairs of dark red; a few long ones burn orange, and they are not the same ones for long.
+  float burning = smoothstep(0.42, 0.66, vnoise(rode * vec2(0.5, 1.3) + vec2(uTime * 0.03, 61.0)));
+  float kStream = mix(1060.0 + 210.0 * burning + 70.0 * tearing - 140.0 * smoothstep(0.02, 0.08, grain), mix(kSkin, kTear, tornOpen), inCore);
   kStream = mix(kStream, 1490.0 + 60.0 * heart + 20.0, stir);
   hot = mix(hot, blackbody(mix(kStream, 1300.0 + 230.0 * poolHeart, feeding) + 60.0 * (streak - 0.5) - 90.0 * thread * (1.0 - 0.6 * heart)), open);
   // The heat of the melt creeps along it: no even pulse.
@@ -528,10 +530,13 @@ void main() {
   // The skin is a surface: the sky lights the crests and leaves the creases dark, and its sheen lies on every rope that faces it.
   vec3 v = normalize(cameraPosition - vWorld);
   float openSky = landAt(vWorld.xz).g;
-  // A raft is one dark plate: its ropes are fine, and show by their sheen more than by their shadow.
-  float shade = mix(1.0, mix(0.12, 0.5, onRafts) + mix(0.88, 0.5, onRafts) * smoothstep(0.0, 0.85, crest), roped) * (1.0 - 0.5 * onRafts);
+  // A raft is one dark plate of thick ropes, a hand and a half from crest to crest.
+  float shade = mix(1.0, mix(0.12, 0.26, onRafts) + mix(0.88, 0.74, onRafts) * smoothstep(0.0, 0.85, crest), roped) * (1.0 - 0.35 * onRafts);
+  // The skin of a plate is rough and dull: grained, pitted, without the sheen of new skin.
+  float pitted = vnoise(rode * 23.0 + 3.0) * 0.55 + vnoise(rode * vec2(61.0, 47.0) + 9.0) * 0.45;
+  shade *= mix(1.0, 0.45 + 1.1 * pitted, onRafts * (1.0 - smoothstep(0.02, 0.05, grain)));
   float nv = clamp(dot(nrm, v), 0.0, 1.0);
-  float fresnel = 0.02 + 0.07 * pow(1.0 - nv, 5.0);
+  float fresnel = (0.02 + 0.07 * pow(1.0 - nv, 5.0)) * (1.0 - 0.7 * onRafts);
   vec3 r = reflect(-v, nrm);
   r.y = abs(r.y) + 0.05;
   vec3 lit = skin * shade * openSky * (0.06 * skyIrradiance(nrm) / 3.14159 + fresnel * 0.4 * skyRadiance(normalize(r)))
