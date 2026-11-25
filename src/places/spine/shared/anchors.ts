@@ -41,8 +41,9 @@ export const MOUTH = tube(0, 0, 8);
 export const trail = (s: number): number => 2.2 * Math.sin(s / 31) * (1 - Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150))) + CANAL_L * Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150)) ** 2;
 
 /** Where lightning came to ground: the carcass on the saddle, with the mouth ahead. `carcassView` is the heading of the key's lens, degrees. */
-export const CARCASS = on(first.s - 655, 1.5, 0);
-export const carcassView = heading(CARCASS, MOUTH) + 15;
+export const CARCASS_S = first.s - 655;
+export const CARCASS = on(CARCASS_S, 1.5, 0);
+export const carcassView = heading(CARCASS, MOUTH) + 9;
 export const carcassAxis = carcassView + 80;
 export const carcassBody = step(CARCASS, carcassAxis, 0.5);
 
