@@ -79,6 +79,12 @@ void main() {
   age += 0.4 * (vnoise(q / 11.0 + 17.0) - 0.5);
 
   vec3 n = normalize(vNormalG);
+  // A face that stands (the wall of a trench, the side of a slab) is a fracture: no fold, toe or cord is drawn on it, and
+  // the grain is laid on it by its height, so that nothing runs down it in stripes.
+  float steep = 1.0 - smoothstep(0.7, 0.85, n.y);
+  float lean = length(n.xz);
+  vec2 qg = q + (steep * vWorld.y / max(lean, 1e-3)) * n.xz;
+  float fpGrain = max(fpLong, steep * max(abs(dFdx(vWorld.y)), abs(dFdy(vWorld.y))));
   vec2 slope = vec2(0.0);
   float crease = 1.0;
   float foldPhase = 0.0;
@@ -97,7 +103,7 @@ void main() {
     // Past this a pixel is longer than a sheaf and nothing of the folds is left to draw.
     if (fpLong < 0.4) {
       foldAt(q);
-      float skinOn = calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
+      float skinOn = calm * (1.0 - steep) * (1.0 - broken) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.3, 0.4, fpLong));
       foldOn = gFoldCover * skinOn;
       foldPhase = gFoldPhase;
       // The toes between the sheaves: what the cells do not carry of their domes, a dark line where one lies on the next,
@@ -127,6 +133,7 @@ void main() {
   // A groove is dark by its depth: a deep narrow one sees a fifth of the sky, a shallow one most of it. Where a pixel no
   // longer tells one fold from the next, what is left is the tone of the folded patch, not a row of black dashes.
   float pitDark = mix(0.65, 0.2, smoothstep(0.2, 0.7, gFoldDeep / gFoldSpace));
+  pitDark = mix(pitDark, max(pitDark, 0.62), smoothstep(8.0, 24.0, far));
   crease *= mix(1.0, mix(mix(pitDark, 1.0, 0.7), pitDark + (1.0 - pitDark) * smoothstep(0.0, 0.8, fold), seen), foldOn);
   crease *= mix(1.0, 0.45 + 0.55 * smoothstep(0.0, 0.7, cord), cords);
   float crest = 0.6 * cords * pow(cord, 3.0) + (foldSeen - 0.6 * cords) * pow(fold, 3.0);
@@ -135,17 +142,17 @@ void main() {
 
   // The grain of the skin: grit, pits and the scales of a stretched rope, from the photograph.
   // Each reading is skipped where a pixel is too long to hold any of it.
-  float lod = log2(max(fpLong, 1e-5) * 1024.0) - 0.7;
+  float lod = log2(max(fpGrain, 1e-5) * 1024.0) - 0.7;
   vec4 ta = vec4(0.5);
   vec4 tb = vec4(0.5);
   vec4 tc = vec4(0.5);
-  if (fpLong < 0.3) tc = mix(textureLod(tRopeNh, TURN_C * q / 4.3 + 0.61, lod - 2.1), tc, smoothstep(0.18, 0.3, fpLong));
-  if (fpLong < 0.09) ta = mix(textureLod(tRopeNh, TURN_A * q / 1.37, lod - 0.45), ta, smoothstep(0.055, 0.09, fpLong));
-  if (fpLong < 0.03) tb = mix(textureLod(tRopeNh, TURN_B * q / 0.41 + 0.37, lod + 1.29), tb, smoothstep(0.018, 0.03, fpLong));
+  if (fpGrain < 0.3) tc = mix(textureLod(tRopeNh, TURN_C * qg / 4.3 + 0.61, lod - 2.1), tc, smoothstep(0.18, 0.3, fpGrain));
+  if (fpGrain < 0.09) ta = mix(textureLod(tRopeNh, TURN_A * qg / 1.37, lod - 0.45), ta, smoothstep(0.055, 0.09, fpGrain));
+  if (fpGrain < 0.03) tb = mix(textureLod(tRopeNh, TURN_B * qg / 0.41 + 0.37, lod + 1.29), tb, smoothstep(0.018, 0.03, fpGrain));
   float grainA = ta.b - 0.5;
   float grainB = tb.b - 0.5;
   float grainC = tc.b - 0.5;
-  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * calm;
+  vec2 fine = ((ta.rg - 0.5) * TURN_A * 2.8 + (tb.rg - 0.5) * TURN_B * 2.4 + (tc.rg - 0.5) * TURN_C * 2.4) * 0.85;
 
   // Threads: on every cord lie strands of two to three centimetres that run with the fold, waver, thin out and start again.
   float tturn = 3.14159 * (13.0 * foldPhase + 1.6 * waver);
@@ -154,14 +161,14 @@ void main() {
   foldRise += 0.65 * gFoldSpace * cos(tturn) * sign(sin(tturn)) * threads;
   crease *= mix(1.0, 0.4 + 0.6 * smoothstep(0.0, 0.55, thread), threads);
   slope += clamp(onCrust(phaseD, qx, qy, det), -6.0, 6.0) * clamp(foldRise, -0.8, 0.8);
-  age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + 0.4 * (flow - 0.5) + 0.5 * grainC * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
+  age = clamp(clamp(age, 0.0, 1.0) * (1.0 - 0.75 * fresh) + (0.4 + 0.25 * fresh) * (flow - 0.5) + 0.5 * grainC * (1.0 - abs(2.0 * flow - 1.0)), 0.0, 1.0) * (1.0 - 0.8 * young);
 
   // Spall: in patches the glassy skin has flaked off. What shows is paler and rougher and lies a centimetre or two lower,
   // behind a sharp edge. The edge is never drawn finer than a pixel can hold.
   float spallAt = 0.6 * vnoise(q / 0.41 + 51.0) + 0.4 * vnoise(q / 0.14 + 7.0) + 0.35 * grainA;
   float spallPatch = vnoise(q / 3.3 + 91.0);
   float spallFrom = mix(0.8, 0.56, smoothstep(0.35, 0.8, spallPatch) * (0.35 + 0.65 * age));
-  float spall = smoothstep(spallFrom, spallFrom + max(0.03, 5.0 * fpLong), spallAt) * (1.0 - smoothstep(0.15, 0.4, fpLong)) * calm;
+  float spall = smoothstep(spallFrom, spallFrom + max(0.03, 5.0 * fpLong), spallAt) * (1.0 - smoothstep(0.15, 0.4, fpLong)) * (1.0 - steep);
   fine -= clamp(onCrust(vec2(dFdx(spall), dFdy(spall)), qx, qy, det) * 0.016, -1.3, 1.3) * (1.0 - smoothstep(0.03, 0.08, fpLong));
   // The shape decides what a face looks at (its neighbour, the sky, the melt); the grain only turns the light on it.
   vec3 nShape = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
@@ -171,15 +178,15 @@ void main() {
   // Ash: pale dust lies in the hollows of the billow, in grooves and pits, and thick on old plates.
   float hollow = 1.0 - smoothstep(0.2, 0.42, vnoise(q / 2.6 + 1.0));
   float low = max(foldSeen * (1.0 - smoothstep(0.15, 0.7, fold)), 1.0 - smoothstep(0.38, 0.52, ta.b));
-  float dust = clamp(max(hollow, smoothstep(0.7, 0.95, age)) * mix(0.15, 1.0, low) + 0.5 * spall * hollow, 0.0, 1.0) * (1.0 - young);
+  float dust = clamp(max(hollow, smoothstep(0.7, 0.95, age)) * mix(0.15, 1.0, low) + 0.5 * spall * hollow, 0.0, 1.0) * (1.0 - young) * (1.0 - 0.7 * fresh) * (1.0 - steep);
 
   // Old skin is grey and rough, young skin black and glassy: by patch, by plate and by lobe. Grain on all of it.
-  vec3 albedo = mix(vec3(0.026, 0.027, 0.029), vec3(0.088, 0.089, 0.092), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  vec3 albedo = mix(vec3(0.027, 0.028, 0.03), vec3(0.098, 0.099, 0.102), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   albedo *= clamp(1.0 + 1.5 * grainA + 1.3 * grainB + 1.7 * grainC, 0.3, 2.0);
   albedo = mix(albedo, vec3(0.07, 0.065, 0.062) * (0.55 + 1.1 * tb.b + 0.6 * grainA), 0.85 * spall);
   albedo = mix(albedo, vec3(0.1, 0.095, 0.092), 0.4 * dust);
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
-  float glass = (1.0 - 0.35 * fresh) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - broken) * mix(0.8, smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
+  float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - broken) * mix(mix(0.5, 0.25, smoothstep(0.1, 0.4, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
   float rough = mix(0.93, 0.4, clamp(glass, 0.0, 1.0));
 
   // How much sky a point sees: less in a crease, between two lobes, below the brim of a gap.
@@ -187,7 +194,7 @@ void main() {
   // Broken crust is dark, dull clinker, pitted between its blocks.
   if (broken > 0.0) {
     float pits = 0.35 + 0.65 * smoothstep(0.3, 0.65, 0.6 * vnoise(q / 0.31 + 7.0) + 0.4 * vnoise(q / 0.09 + 3.0));
-    albedo = mix(albedo, vec3(0.042, 0.032, 0.028) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(clinker, 0.6 * broken));
+    albedo = mix(albedo, vec3(0.034, 0.031, 0.03) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(clinker, 0.6 * broken));
     crease *= mix(1.0, pits, max(clinker, broken));
   }
   // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
@@ -214,23 +221,26 @@ void main() {
   // over for most of its width and lights little more than its lip.
   float torn = smoothstep(0.04, 0.07, net.g - 2.0) * (1.0 - step(3.3, net.g));
   // The wash of a wide gap on its banks: the grains that face the fire and the lit air over the melt.
-  if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.4, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.1 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (0.3 * toward + 0.06 * wallFace) * (0.7 * exp(-off / 0.3) + 0.3 * (1.0 - smoothstep(0.4, 3.0, off)))) * clear * mix(1.0, crease, 0.6));
+  if (live > 0.5 && gape > 0.03) light += blackbody(meltKelvin(q, net)) * (3.14159 * uCast * mix(0.2, 1.8, torn) * sqrt(gape / (gape + 0.6 * off)) * smoothstep(0.03, 0.15, gape) * (0.1 * (0.9 * exp(-off / 0.3) + 0.1 * (1.0 - smoothstep(0.4, 3.0, off))) + (0.3 * toward + 0.06 * wallFace) * (0.7 * exp(-off / 0.3) + 0.3 * (1.0 - smoothstep(0.4, 3.0, off)))) * clear * mix(1.0, crease, 0.6));
   // The narrow seams, whose heat this sheet draws, light their own lips.
   // Only the faces that look at the seam: the flank of a fold that looks away from it stays dark.
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace * facing) * crease * clear;
   // A broken face is duller and browner than the skin.
-  albedo = mix(albedo, vec3(0.05, 0.043, 0.04) * (0.6 + 0.8 * vnoise(vec2(q.x + q.y, vWorld.y * 3.0) * 9.0)), wallFace * inGap);
+  albedo = mix(albedo, vec3(0.046, 0.041, 0.039) * clamp(0.3 + 1.4 * tb.b + 2.2 * grainA + 1.6 * grainC, 0.25, 2.0), steep);
   vec3 c = albedo * light / 3.14159;
   // A cord's flank turned edge on would glint, one pixel wide.
   float nv = clamp(dot(n, v), 0.35 * foldSeen, 1.0);
   // A rough face does not turn into a mirror at a grazing angle.
   float satin = 1.0 - smoothstep(0.4, 0.9, rough);
-  float fresnel = mix(0.012, 0.09, satin) + 0.14 * satin * pow(1.0 - nv, 3.0);
+  float fresnel = mix(0.012, 0.09, satin) + 0.12 * satin * pow(1.0 - nv, 3.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The crest of a cord carries a pale line of the sky.
-  c += fresnel * lakeMirror(r, rough) * open * (1.0 - 0.85 * clinker) * (1.0 + 0.9 * crest);
+  // What the satin gives back is a grey sheen, not a picture of the sky: a broad dim highlight, never blue, never a glint.
+  vec3 mirror = lakeMirror(r, rough);
+  mirror = mix(mirror, vec3(dot(mirror, vec3(0.3, 0.5, 0.2))), 0.25);
+  c += fresnel * mirror * open * (1.0 - 0.85 * clinker) * (1.0 + 0.9 * crest);
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
@@ -248,7 +258,17 @@ void main() {
     float wide = max(thin, 1.5 * per);
     float line = (1.0 - smoothstep(0.4 * wide, wide, abs(fract(foldPhase + 0.5) - 0.5))) * (thin / wide) * foldSeen;
     float run = smoothstep(0.56, 0.68, vnoise(q / 0.31 + 71.0)) * smoothstep(0.4, 0.6, vnoise(q / 1.7 + 83.0));
-    float ember = clamp(line * run * nearMelt * nearMelt, 0.0, 1.0);
+    // And cracks of its own where the thin crust has split: crooked, a hand wide, half a metre to two metres long.
+    vec2 cq = q / 0.8 + 43.0;
+    float cf = vnoise(cq);
+    vec2 cg = vec2(vnoise(cq + vec2(0.12, 0.0)) - cf, vnoise(cq + vec2(0.0, 0.12)) - cf) / 0.12;
+    float cl = max(length(cg), 0.25);
+    float cd = abs(cf - 0.5) / cl * 0.8;
+    vec2 cn = cg / cl;
+    float cfoot = max(abs(dot(qx, cn)), abs(dot(qy, cn)));
+    float cwide = max(0.035 * (0.4 + vnoise(q / 0.6 + 97.0)), 1.5 * cfoot);
+    float split = (1.0 - smoothstep(0.35 * cwide, cwide, cd)) * min(1.0, 0.045 / cwide) * smoothstep(0.5, 0.62, vnoise(q / 1.1 + 59.0));
+    float ember = clamp((0.7 * line * run + split * (1.0 - steep)) * nearMelt * nearMelt, 0.0, 1.0);
     c *= 1.0 - ember;
     hot += blackbody(1000.0 + 90.0 * nearMelt) * ember;
   }
