@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 38, 2026-11-25 09:02 UTC:
+Status 39, 2026-11-25 09:28 UTC:
 
-- `01-r4-final-2.jpg`: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34). Both families of critic name the same thing first: the crust is smooth clay with stepped folds, where the picture has ropes. Fine detail MEASURED at 0.36 of the picture's; the floor is 0.75.
-- `02-r4-final-4.jpg`: heart-3, the animals at the seam, as judged. Critics: smooth segmented models on a plaster floor, an empty orange horizon where the picture has the cliff and the fall. Fine detail 0.25 of the picture's. The animals' new build is due by 10:05 UTC.
-- `03-r4-final-5.jpg`: heart-4, the mouth and its fall, as judged. Critics: a single thin thread on a pale slope, a flat even glow band on the rim, an opaque smoke mass that hides the right-hand cliff. Fine detail 0.55 of the picture's.
-- `04-r4-final-1.jpg`: heart-0, the wide view, as judged: the only key whose fine detail passes (0.79). Critics: a cracked-mud floor with regular polygons, pale layered cliffs, a smoke column with a glowing base in the centre where the picture has none.
+- `01-m0927-heart-4.jpg`: heart-4 on main, the approved picture at the left. The fall's second hand-back is in: a braided cascade and a fan where there was one thread. Still wrong: the inside of the mouth is lit where the picture's is dark, the melt has no pale core, the smoke at the right is a wall.
+- `02-m0927-heart-1.jpg`: heart-1 on main with the crust's version 3: folds in bundles replace the smooth sheet and its terraces. It still reads as ribbed clay, too brown, and the bundles repeat like a stamp.
+- `03-m0927-heart-3.jpg`: heart-3 on main: the fall now shows at the upper left. The ground is arcs on a sheet where the picture has broken black basalt, and the dark cliff at the right is missing.
+- `04-m0927-heart-0.jpg`: heart-0 on main: the plume is still central and pale and the walls tall and pale. Both lists are with their owners, due back by 10:05 UTC.
 
+Status 38, 2026-11-25 09:02 UTC, showed: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34).
 Status 37, 2026-11-25 08:37 UTC, showed: heart-2, the one that sank. Picture, then the frame on main.
 Status 36, 2026-11-25 08:20 UTC, showed: The feeding picture on main at 08:17 UTC with eight hand-backs merged.
-Status 35, 2026-11-25 07:57 UTC, showed: The mouth and the fall: approved picture left, main right after my change at 07:50 UTC.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T09:02:32Z
-phase 3: 5.89 h used of 13.00 h
-build: 12.54 h used of 72.00 h
+2026-11-25T09:28:17Z
+phase 3: 6.32 h used of 13.00 h
+build: 12.97 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 25
+minutes since the last status: 26
 ```
 
 ## Phases
@@ -593,6 +593,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 09:05 UTC: lava hand-back 3 merged (6746d23) although its owner says it is not at the picture. Reason: beside main at heart-1 its line is nearer the picture's width, and its far seams no longer break into dots, which every pack of round 4 named. Light hand-back B merged with it (6e5ed77): the lake no longer lights level faces, which took the orange off the rock at the left of heart-1 (118 79 70 to 99 75 68 against the picture's 73 65 66). Determinism passed on 6e5ed77 at 09:13 UTC.
 - 2026-11-25. 09:13 UTC: two more owners started. (1) A third lava owner (heart_lava_owner_3, agent/heart-lava-c, until 12:50 UTC), because the second stopped at its limit with the melt, the horizon band and the feeding seam unsolved. (2) The loose rocks split off from the land to an owner of their own (heart_rocks_owner, agent/heart-rocks, until 13:00 UTC), because round 4 named two faults of the land at once, pale layered walls and low-poly rocks, and one owner cannot rebuild both by round 5. The land owner keeps the walls and the ground and was told at 09:11 UTC not to edit the rocks again.
 - 2026-11-25. 09:11 UTC: every owner was sent its part of round 4 word for word with an order of work, and the light owner's notes for it. Nothing of round 4 is declined. Round 4's lesson for the order of work: motion rose from 4 to 6 and 7 while both still critics fell or stayed at 3 and 4, and 13 of 23 jurors gave the lake's ground as their one reason; so the crust is first, the rocks and walls second, the animals third.
+- 2026-11-25. 09:22 UTC. Merged to main: the crust's version 3 (b99837b) and the fall's hand-back B (ff4845f). Looked at both beside the pictures first. The crust: folds in bundles replace the smooth sheet and its terraces, so it is nearer, but it reads as ribbed clay, too brown, the bundles a stamp. The fall: a braided cascade and a fan in the picture's place and extent where there was one thread.
+- 2026-11-25. 09:25 UTC. The crust goes to two fresh owners at once, because its first owner stopped at its limit and the jury names the lake's ground in 13 of 23 reasons: /root/heart_crust_form_owner (relief, plates, mesh: lake/index.ts but the fragment shader, and net.ts) and /root/heart_crust_skin_owner (the fragment shader, moved to lake/skin.ts: grain, threads, flakes, sheen, tone). One file each, so no two agents edit the same lines.
+- 2026-11-25. 09:31 UTC. The fall may carry a pale core up to 1550 K (the ramp gives about 249 225 157; the picture's core is near 255 230 150), in the fastest thread only. The ramp, the knee and the exposure stay frozen.
+- 2026-11-25. 09:31 UTC. The pale striped wall round the mouth is the fall's face() sheet, not the land (found by the land's owner by drawing heart/land alone). The sheet shrinks to a collar of 10 to 15 m round the arch with the land's rock on it, and the land's wall shows elsewhere: one rock. Three round 4 lines move from the land's list to the fall's.
 
 ## Notes from Brandon
 
@@ -733,12 +737,15 @@ Each reports by message to the Builder.
 | `heart_walkers_owner_2` | build | The Heart's crust-walkers, taken over: dark hide, no clay pattern, a lighter build, tendrils and pool, feet, staging of each shot to its picture (may edit the rows of `WALKERS` and `AWAY`), individuals, weight | `agent/heart-walkers-b` | 07:44 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
 | `heart_sunk_owner_2` | build | The Heart's sunk walker, taken over: dark and plainly one of the animals, swallowed by a draped skin, festoons, the tear, rags, cost | `agent/heart-sunk-b` | 07:44 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
 | `heart_air_owner_2` | build | The Heart's air, taken over: depth and dusk carried by the air, a lit plume off the fall at heart-4, no grain, the column, motion that is seen, cost | `agent/heart-air-b` | 07:44 UTC, 25 Nov | until 11:40 UTC, hand-backs by 08:25, 10:05 and 11:40 UTC |
-| `heart_crust_owner` | build | The solid crust of the Heart's lake, taken over from the first lake owner: relief built as geometry wherever a camera is close (ropes, tilted plates, pressure ridges, gaps with walls), no smear at grazing angles, cool tone and sheen by plate, the crust lit by the melt beside it, a crooked far shore, drift that is seen; `src/places/heart/lake/index.ts` and `net.ts` | `agent/heart-crust` (from `agent/base-r3`) | 06:39 UTC, 25 Nov | 3 h, hand-backs by 50, 110 and 170 minutes |
+| `heart_crust_form_owner` | build | The form of the crust of the Heart's lake, taken over at the first crust owner's limit: folds that gather and end and do not repeat like a stamp, billows that hide what is behind them, broken tilted slabs with rubble at the feeding seam, the line and the one that sank, plates of several sizes, the lip at the line, plates that move at the active margins, cost; `src/places/heart/lake/index.ts` but the fragment shader, and `net.ts` | `agent/heart-crust-form` | 09:25 UTC, 25 Nov | until 12:50 UTC, hand-backs by 10:25, 11:50 and 12:50 UTC |
+| `heart_crust_skin_owner` | build | The skin of the crust of the Heart's lake, split off at 09:25 UTC because every pack of round 4 calls it clay or plastic: grain and pits, threads along the ropes, hairline cracks, flaked patches, ash in the grooves, a dull satin only on fresh tops, a neutral grey tone, dull red cracks near the melt; the crust's fragment shader, moved to a new `src/places/heart/lake/skin.ts` | `agent/heart-crust-skin` | 09:25 UTC, 25 Nov | until 12:50 UTC, hand-backs by 10:25, 11:50 and 12:50 UTC |
 | `heart_lava_owner_3` | build | Everything molten in the Heart's lake, taken over from the second lava owner at its limit: the melt at the line as a ropy skin wound by a few large coils with one open tongue, far seams hidden from a low lens by their own banks so that the horizon is separate lights and not a band, the feeding seam at heart-3 as a string of pools and cracks, the right-hand fire of the wide view as a low burning seam, plates that founder at the active margins | `agent/heart-lava-c` | 09:13 UTC, 25 Nov | until 12:50 UTC, hand-backs by 10:20, 11:50 and 12:50 UTC |
 | `heart_rocks_owner` | build | The loose rocks of the Heart, split off from the land at 09:13 UTC because five jurors and six issues of round 4 named their flat faces: dense displaced shapes in place of balls cut by planes, a skin read from the rock's own position, matte, seated in scree; `land/rocks.ts` and the rock's shape and shader in files of its own | `agent/heart-rocks` | 09:13 UTC, 25 Nov | until 13:00 UTC, hand-backs by 10:20, 11:50 and 12:50 UTC |
 | `round4_measure_renderer` | render | The measures of round 4 (`npm run measure -- --unit heart`) on its own machine from commit `fdcac34`, handed back as `out/work/measure/heart.json` | none | 08:26 UTC, 25 Nov | until 10:00 UTC |
 
 Hand-backs of the six owners in Phase 3, each merged into `main` after a check of trailers, files touched, types and the Builder's own compare of the keys: version 1 of all six by 04:46 UTC; land v2 `17395d1` and walkers v2 `6490fd6` by 05:05 UTC; fall v2 `ec1fb3c`, air v2 `e8dc858`, lake v2 `7aa900a`, sunk v2 `e33427c` between 05:08 and 05:13 UTC. Version 3 is due from each by its 170th minute (about 06:42 UTC). Every owner got the refitted cameras at 05:05 UTC and the restaged feeding shot at 05:28 UTC.
+
+Ended and merged into `main` in Phase 3: `heart_crust_owner` (2 h 50 min, three versions; `agent/heart-crust` at `b99837b`, merged as `00c38ca` at 09:22 UTC: folds and cords in bundles, clinker ridges, a warm tone, and the terraces gone, which were the festoon cords in the shading normal and the brim sagging across cells of the net, not the precision of the bake). It stopped at its limit with its own list of twelve faults, the first of them: still clay, now ribbed clay. Its bake target of `FloatType` fails G10 and goes back to `HalfFloatType` in the form owner's first commit.
 
 Ended and merged into `main` in Phase 3: `heart_lava_owner` (2 h 20 min, three versions; `agent/heart-lava` at `a90c5e8`, its last version merged as `6746d23` at 09:05 UTC: a line narrowed to 0.55 of the net's half width with its tongue on the far bank, far seams 2 to 3 pixels wide that do not break into dots, fountains of gobs of 5 to 40 cm; 0.14 to 0.45 s a sample at uhd draft). Its own verdict, kept for the next owner: the melt at the line is a net of cracks round dark plates and not ropes, the horizon at heart-1 is one orange strip, the seam at heart-3 is a flat strip, the pools and the rampart are not started.
 
@@ -869,3 +876,6 @@ none
 - 2026-11-25 08:31 UTC. Sunk walker hand-back A2 (eda8df6) merged as fdcac34 and pushed 08:30 UTC; tsc clean; keys and determinism running. Cost not remeasured by its owner (2.86 s a sample at heart-2 at A); it is the first line of its B.
 - 2026-11-25 08:37 UTC. Status 37 shown at 08:37 UTC: the five keys on fdcac34 beside their pictures, round 4 under way, ElevenLabs at 1 of 131,000 characters. Determinism passes on fdcac34.
 - 2026-11-25 09:04 UTC. Status 38 shown at 09:03 UTC: the four judged frames of round 4 (final tier, uhd, fdcac34). All six critics in: R1 3 and 3, R3 3 and 4, R4 6 and 7 (round 3: 4 and 4, 3 and 4, 4 and 4). Measures: M1 green, M2 green, M3 red (0.79, 0.36, 0.29, 0.25, 0.55 against a floor of 0.75). Jury at 15 votes of 25: 1 for a photograph or a film frame. Lava hand-back 3 (the owner's last, a90c5e8) arrived 09:01 and is being looked at. ElevenLabs at 08:59: 1 of 131,000 characters, nothing made.
+- 2026-11-25 09:25 UTC. 09:22 UTC: `npm run gate -- --phase 3` on 6e5ed77: 19 of 22 passed, 1 failed, 1 not built, 1 sound check open. G13 fails on heart/ash alone (the register lists it and the page does not draw it); D3 is the Heart review clip, not built yet; A1 is open on n8 (the transcriber hears "neverland" where the line has two words; the take stands).
+- 2026-11-25 09:32 UTC. 09:28 UTC: status 39 shown (four pairs on main f19e0bc: heart-4, heart-1, heart-3, heart-0; round 4 final; the account at 1 of 131,000 characters, narration not made).
+- 2026-11-25 09:32 UTC. 09:29 UTC: chain G on f19e0bc: build and keys pass, parts 15 built in the Heart; determinism FAILS: loop frame 288 differs in 9 of 518400 pixels (largest 6 of 255) between a fresh page and a page that drew two film frames first. All nine pixels lie on the mouth, the wall above it and the top of the stream: the fall's B. It passed on 6e5ed77. The fall's owner is told to fix it before anything else; every owner is told to run the whole test before a hand-back.
