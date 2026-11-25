@@ -26,7 +26,8 @@ const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 const COLONY_HEIGHT = 44;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
 const colony = looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36);
-const feeding = looking(onGround(-60, -420, 2), 10, -1.4, 20);
+const FEEDING_YAW = 10;
+const feeding = looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20);
 const gate = looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170);
 
 function drownedPose(): Pose {
@@ -98,6 +99,10 @@ export const shots: Record<string, CameraPath> = {
 };
 
 const feedingAt = feeding.position;
+// Dark rock close under the lens of the two low keys: metres ahead of the camera at the key, metres to its right, and the size.
+const ahead = (from: Vec3, yaw: number, list: [number, number, number][]): [number, number, number][] =>
+  list.map(([forward, right, size]) => [from[0] + Math.sin(yaw * RAD) * forward + Math.cos(yaw * RAD) * right, from[2] - Math.cos(yaw * RAD) * forward + Math.sin(yaw * RAD) * right, size]);
+
 const feederYaw = Math.atan2(-Math.cos(10 * RAD), -Math.sin(10 * RAD));
 
 export const STATIONS = {
@@ -118,4 +123,8 @@ export const STATIONS = {
     [feedingAt[0] - 3, feedingAt[2] - 52, feederYaw - 0.4, 1.1],
   ] as [number, number, number, number][],
   flee: [gate.position[0] + 4, gate.position[2] - 34] as [number, number],
+  foreground: [
+    ...ahead(feedingAt, FEEDING_YAW, [[9, -2.1, 1.8], [13.5, -3.9, 1.3], [8.2, -0.2, 0.55], [17, -5.2, 1.6]]),
+    ...ahead(gate.position, 0, [[10.5, -5.6, 2.2], [11.2, -1.6, 1.2], [12, 3.1, 1.5], [10.2, 6.2, 1.0], [13.5, 0.8, 0.8]]),
+  ] as [number, number, number][],
 };
