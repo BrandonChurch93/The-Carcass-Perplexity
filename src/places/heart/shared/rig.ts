@@ -2,6 +2,8 @@
 // the baked land, and the drift of the crust. Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
 import { secondsInPlace, shotById } from '../../../film/cut';
+import { FAN_FROM, TUBE, createCourse } from '../fall/path';
+import { apronSlope } from '../fall/shape';
 import { MOUTH, ground, smooth } from '../layout';
 import { GROUP, UNIT } from './anchors';
 import { stagedSeconds } from './stage';
@@ -29,6 +31,18 @@ export const POOLS = {
   halves: [[3.0, 0.9], [1.2, 0.7], [1.5, 0.6]] as const,
   radiance: [70, 9.5] as const,
 };
+
+// The stream of the fall as a light: the lava from the lip of the mouth down the foot of the wall to the lake, as the fall draws it (fall/path.ts).
+// It is kept as `rows` cross sections of the main stream, evenly spaced along z from the lip to the toe of the fan: its middle at that z, half
+// the width of its open lava, and how high its surface stands. The course's own width is the bed's; the lava that shows is the middle `open` of it.
+// The rock beside it takes its light from that strip (emitterIrradiance): `share` of the lava at 1400 K at the brim, half of that `half` metres
+// out, nothing past 18 m. The fan is crust with open rivulets, not a sheet of melt: from where the stream spreads it casts `fan` of that.
+// A round light that stands on the stream above the fan (the fall's light for the body of the stream) casts `core` on surfaces in place of
+// EMITTER_CORE: it stood for the whole river as one disc 36 m wide and washed the slope evenly for 20 m each side, which hid the fall-off the
+// strip now gives. The air reads the round lights for itself and is not touched by this.
+export const STREAM = { rows: 48, open: 0.5, half: 3.5, share: 2.4, fan: 0.1, core: 1 };
+/** What a small round light casts on surfaces, against its disc's own share (see emitterIrradiance). A light wider than 60 m casts once. */
+export const EMITTER_CORE = 4.5;
 
 export type Height = (x: number, z: number) => number;
 
@@ -319,6 +333,10 @@ export function createRig(t0: number): Rig {
   const emitters: Emitter[] = [bankLight];
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
+  const emitterCore = new Float32Array(MAX_EMITTERS);
+  const streamRows = Array.from({ length: STREAM.rows }, () => new THREE.Vector4(0, 0, -1000, 0));
+  const streamSpan = new THREE.Vector4(0, 1, STREAM.rows - 1, 0);
+  const streamRadiance = blackbody(1400);
   const poolPlaces = POOLS.at.map((at, i) => new THREE.Vector4(at[0], at[1], (POOLS.axis[i] as readonly [number, number])[0], (POOLS.axis[i] as readonly [number, number])[1]));
 
   const uniforms: Record<string, THREE.IUniform> = {
@@ -347,8 +365,12 @@ export function createRig(t0: number): Rig {
     uEmitterCount: { value: 0 },
     uEmitters: { value: emitterPlaces },
     uEmitterRadiance: { value: emitterRadiance },
+    uEmitterCore: { value: emitterCore },
     uRigPools: { value: poolPlaces },
     uRigPoolSize: { value: POOLS.halves.map((h) => new THREE.Vector4(h[0], h[1], POOLS.radiance[0], POOLS.radiance[1])) },
+    uRigStream: { value: streamRows },
+    uRigStreamSpan: { value: streamSpan },
+    uRigStreamLight: { value: new THREE.Vector4(streamRadiance[0] * STREAM.share, streamRadiance[1] * STREAM.share, 1 / (STREAM.half * STREAM.half), 0) },
     uFlowFoot: { value: new THREE.Vector2(FLOW.foot[0], FLOW.foot[1]) },
     uFlowT0: { value: t0 },
   };
@@ -368,6 +390,47 @@ export function createRig(t0: number): Rig {
     fineTexture = gridTexture(fine);
     (uniforms.tLand as THREE.IUniform).value = coarseTexture;
     (uniforms.tLandFine as THREE.IUniform).value = fineTexture;
+    layStream();
+  };
+
+  // 1 for a round light anywhere, less for one that stands on the stream above its fan, where the strip lights the rock.
+  const onStream = (e: Emitter): number => {
+    const at = (e.position.z - streamSpan.x) * streamSpan.y;
+    if (at < 1.5 || at > STREAM.rows - 1 || e.radius > 30) return 1;
+    const row = streamRows[Math.round(at)] as THREE.Vector4;
+    if (Math.abs(e.position.x - row.x) > row.y + 15 || Math.abs(e.position.y - row.z) > 15) return 1;
+    const share = 1 - Math.max(row.w - 1, 0) / 2;
+    return 1 + (STREAM.core / EMITTER_CORE - 1) * (share - STREAM.fan) / (1 - STREAM.fan);
+  };
+
+  // The stream's rows, from the fall's own course over the true land (the same call the fall makes).
+  const layStream = (): void => {
+    const course = createCourse(
+      (x, z) => (z > TUBE.lipZ + 8 ? Math.max(apronSlope(x, z), landHeight(x, z) + 0.8) : apronSlope(x, z)),
+      (x, z) => (z > TUBE.lipZ + 8 ? landHeight(x, z) + 0.7 : -1e3),
+    );
+    const main = course.main;
+    let first = 0;
+    while (first < main.n - 1 && (main.len[first] as number) < 0) first++;
+    const z0 = main.z[first] as number;
+    const z1 = main.z[main.n - 1] as number;
+    const gap = (z1 - z0) / (STREAM.rows - 1);
+    streamSpan.set(z0, 1 / gap, STREAM.rows - 1, z1);
+    let i = first;
+    for (let r = 0; r < STREAM.rows; r++) {
+      const z = z0 + r * gap;
+      while (i < main.n - 1 && (main.z[i] as number) < z) i++;
+      const a = Math.max(first, i - 3);
+      const b = Math.min(main.n - 1, i + 3);
+      const tx = (main.x[b] as number) - (main.x[a] as number);
+      const tz = (main.z[b] as number) - (main.z[a] as number);
+      // Where the stream runs askew to z, a point beside it at the same z is nearer to it than it is to the stream's middle at that z.
+      const lean = Math.max(0.35, Math.abs(tz) / (Math.hypot(tx, tz) || 1));
+      // The fan spreads to a sheet 170 m wide where the crust has closed over it: its light is that of its head, where the rivulets are open.
+      const share = 1 + (STREAM.fan - 1) * smooth(FAN_FROM, FAN_FROM + 30, main.len[i] as number);
+      // The last number holds two things: the lean (up to 1, on the slope, where the share is whole) and the share (from 1 up, on the fan, which runs straight).
+      (streamRows[r] as THREE.Vector4).set(main.x[i] as number, (main.half[i] as number) * STREAM.open, main.y[i] as number, share < 1 ? 1 + 2 * (1 - share) : lean);
+    }
   };
 
   const read = (pick: (g: Grid) => Float32Array, x: number, z: number): number => {
@@ -498,6 +561,7 @@ export function createRig(t0: number): Rig {
         const e = emitters[i] as Emitter;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
         (emitterRadiance[i] as THREE.Vector3).copy(e.radiance);
+        emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;
 
