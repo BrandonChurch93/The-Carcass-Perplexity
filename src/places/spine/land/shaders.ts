@@ -98,21 +98,23 @@ void main() {
   float top = smoothstep(0.4, 0.75, w.y);
   vec2 sideAt = w.x > w.z ? vWorld.zy : vWorld.xy;
   // Along the beds the rock runs long: the picture is drawn out three times that way.
-  sideAt = (mat2(0.34, 0.94, -0.94, 0.34) * sideAt) * vec2(1.0, 0.36);
+  sideAt = (mat2(0.34, 0.94, -0.94, 0.34) * sideAt) * vec2(1.0, spire ? 0.36 : 0.8);
   vec3 across = w.x > w.z ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0);
   float wide = 64.0;
   vec3 rock = mix(texture2D(tRock, sideAt / wide).rgb, texture2D(tRock, vWorld.xz / wide).rgb, top);
   vec3 nh = mix(texture2D(tRockNh, sideAt / wide).rgb, texture2D(tRockNh, vWorld.xz / wide).rgb, top);
-  vec2 t = (nh.rg - 0.5) * vec2(1.0, -1.0) * 1.5;
+  vec2 t = (nh.rg - 0.5) * vec2(1.0, -1.0) * 1.1;
   float pit = nh.b;
   float close = smoothstep(420.0, 60.0, far);
   vec3 fine = vec3(0.5);
   vec3 fineNh = vec3(0.5);
   if (close > 0.0) {
     float small = 6.3;
-    fine = mix(texture2D(tRock, sideAt / small + 0.31).rgb, texture2D(tRock, vWorld.xz / small + 0.31).rgb, top);
-    fineNh = mix(texture2D(tRockNh, sideAt / small + 0.31).rgb, texture2D(tRockNh, vWorld.xz / small + 0.31).rgb, top);
-    t += close * 1.6 * (fineNh.rg - 0.5) * vec2(1.0, -1.0);
+    // Close to, the rock is not drawn out: its grain is as broad as it is long.
+    vec2 fineAt = (w.x > w.z ? vWorld.zy : vWorld.xy) / small + 0.31;
+    fine = mix(texture2D(tRock, fineAt).rgb, texture2D(tRock, vWorld.xz / small + 0.31).rgb, top);
+    fineNh = mix(texture2D(tRockNh, fineAt).rgb, texture2D(tRockNh, vWorld.xz / small + 0.31).rgb, top);
+    t += close * 1.1 * (fineNh.rg - 0.5) * vec2(1.0, -1.0);
     pit = mix(pit, pit * (0.5 + fineNh.b), close);
     rock = mix(rock, rock * fine / ROCK_MEAN, 0.6 * close);
   }
@@ -122,7 +124,7 @@ void main() {
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
   vec3 tone = mix(vec3(0.2, 0.215, 0.25), vec3(0.47, 0.38, 0.29), smoothstep(0.35, 0.75, 0.6 * bed + 0.4 * blotch));
-  vec3 albedo = tone * (0.35 + 0.65 * rock / ROCK_MEAN);
+  vec3 albedo = tone * (0.55 + 0.45 * rock / ROCK_MEAN);
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
 
@@ -137,10 +139,15 @@ void main() {
 
   // Snow lies where the face leans back, deeper in the lee and in the hollows of the rock; rime frosts what faces the gale.
   float lee = dot(n0.xz, uWind.xz);
-  float lie = n0.y + 0.22 * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
+  float lie = n0.y + (spire ? 0.1 : 0.22) * (pit - 0.5) + 0.12 * lee + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5);
   // Rock that stands out of the snow keeps it only on its level tops.
   float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
-  float snow = spire ? smoothstep(0.5, 0.68, lie) : smoothstep(0.42, 0.62, lie - 0.42 * bare);
+  float snow = smoothstep(0.42, 0.62, lie - 0.42 * bare);
+  if (spire) {
+    // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
+    float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vSL.x) + 0.1 * (pit - 0.5) + 0.1 * lee;
+    snow = smoothstep(0.5, 0.66, held);
+  }
   if (spire && !inside) {
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;
@@ -157,6 +164,11 @@ void main() {
   if (inside) {
     snow = smoothstep(1.6, 0.2, vWorld.y - CANAL_FLOOR + 1.2 * (pit - 0.5)) * 0.85;
     rime = 0.5 * smoothstep(0.45, 0.8, pit);
+    // The canal is black from outside: what the sky gives its walls is gone a few metres in.
+    float lit = uUnder > 1.5 ? 1.0 : exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 2.2);
+    snow *= lit;
+    rime *= lit;
+    occ *= 0.04 + 0.96 * lit;
   }
   albedo = mix(albedo, vec3(0.62, 0.66, 0.72), 0.55 * rime);
 
@@ -182,6 +194,8 @@ void main() {
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
 
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
+  // Seen from outside the canal is black; the shot inside it is exposed for it (uUnder is staged up from that cut).
+  if (inside && uUnder < 1.5) c *= 0.012 + 0.988 * exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 2.2);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

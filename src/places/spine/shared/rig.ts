@@ -2,7 +2,8 @@
 // Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
 import { ground, locate } from '../ridge';
-import { DUSK, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { DUSK, INSIDE_FROM, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { stagedSeconds } from './stage';
 
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
 export const LAND = { minX: -1800, maxX: 3800, minZ: -1100, maxZ: 1700, width: 1024, height: 512 };
@@ -366,6 +367,8 @@ export function createRig(): Rig {
     bake,
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
+      // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
+      (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();

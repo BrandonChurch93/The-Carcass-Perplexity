@@ -14,7 +14,7 @@ import * as land from './land';
 import * as runners from './runners';
 import * as strikes from './strikes';
 import { first, heightAbove, world } from './ridge';
-import { CANAL_KEY, CARCASS, RAD, STRIKES, UNIT, canalFar, carcassView, heading, kiteEdge, raised, spire, step, strikeTip, tube } from './shared/anchors';
+import { CANAL_KEY, CARCASS, RAD, STRIKES, UNIT, canalFar, carcassBody, carcassView, heading, kiteEdge, pitchTo, raised, spire, step, strikeTip, tube } from './shared/anchors';
 import { on, tipOf } from './ridge';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
@@ -27,29 +27,31 @@ function aimed(position: Vec3, h: number, pitch: number, fov: number, reach = 60
 }
 
 const E_S = first.s - 552;
-const standE = on(E_S, 0, 8);
+const standE = on(E_S, 2, 3.4);
 const viewE = heading(standE, [first.x, 0, first.z]) + 17;
 const keyEstablishing = aimed(standE, viewE, 5.6, 50);
 const establishingMove: Move = [
-  { at: 0, pose: aimed(on(E_S - 150, -2, 34), viewE - 5, 1.2, 50) },
-  { at: 0.34, pose: aimed(on(E_S - 62, -1, 17), viewE - 2, 3.4, 50) },
+  { at: 0, pose: aimed(on(E_S - 150, -2, 22), viewE - 5, 1.2, 50) },
+  { at: 0.34, pose: aimed(on(E_S - 62, 0, 10), viewE - 2, 3.4, 50) },
   { at: keyPart(shotById('spine-01')), pose: keyEstablishing },
-  { at: 1, pose: aimed(on(E_S + 44, 2, 6), viewE + 1.5, 5, 50) },
+  { at: 1, pose: aimed(on(E_S + 44, 3, 3), viewE + 1.5, 5, 50) },
 ];
 
 const KITE_FOV = 36;
 const KITE_REACH = 78;
-const KITE_PITCH = 7.2;
-const kiteBack = heading(tipOf(spire(2)), kiteEdge) - 12.3;
+// The lens looks up along the edge: the hooks stand left of the middle, the far spires and the band low on the right.
+const KITE_PITCH = 11.7;
+const KITE_RISE = 13.6;
+const kiteBack = heading(tipOf(spire(2)), kiteEdge) - 16;
 const kiteFlat = step(kiteEdge, kiteBack, KITE_REACH);
-const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - KITE_REACH * Math.tan(KITE_PITCH * RAD), kiteFlat[2]];
-const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 5.3, KITE_PITCH, KITE_FOV);
+const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - KITE_REACH * Math.tan(KITE_RISE * RAD), kiteFlat[2]];
+const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 13, KITE_PITCH, KITE_FOV);
 
-const CARCASS_FOV = 48;
-const carcassStand = raised(step(CARCASS, carcassView + 190, 2.1), 0.56);
-const keyCarcass = aimed(carcassStand, carcassView, -7.4, CARCASS_FOV, 40);
-const carcassFrom = aimed(raised(step(carcassStand, carcassView + 176, 11), 3.2), carcassView - 2.5, -10, CARCASS_FOV, 40);
-const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.55), carcassView + 0.4, -7.3, CARCASS_FOV, 40);
+const CARCASS_FOV = 30;
+const carcassStand = raised(step(carcassBody, carcassView + 180, 3.1), 0.88);
+const keyCarcass = aimed(carcassStand, carcassView, -5, CARCASS_FOV, 40);
+const carcassFrom = aimed(raised(step(carcassStand, carcassView + 176, 9), 2.6), carcassView - 2.5, -8, CARCASS_FOV, 40);
+const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.86), carcassView + 0.4, -4.9, CARCASS_FOV, 40);
 const carcassKeyAt = keyPart(shotById('spine-03'));
 const carcassMove: CameraPath = (part) => {
   const lead = Math.max(0, 1 - part / carcassKeyAt);
@@ -60,30 +62,28 @@ const carcassMove: CameraPath = (part) => {
   return { position: mix(keyCarcass.position, to.position, k), aim: mix(keyCarcass.aim, to.aim, k), fov: CARCASS_FOV };
 };
 
-const STRIKE_FOV = 10;
-const STRIKE_REACH = 1650;
-const strikePass = world(spire(2).s, 20, 0);
-const strikeBack = heading(strikeTip, strikePass);
-const strikeFlat = step(strikeTip, strikeBack, STRIKE_REACH);
-const strikeStand: Vec3 = [strikeFlat[0], strikeTip[1] - STRIKE_REACH * Math.tan(4.2 * RAD), strikeFlat[2]];
-const keyStrike = aimed(strikeStand, heading(strikeStand, strikeTip) + 2.5, 1.8, STRIKE_FOV, 1700);
+// The strike on the third spire is seen from where the carcass lies, down the length of the ridge: the second spire stands dark at the left of the frame,
+// the third takes the bolt, and the rest go down to the band on the right.
+const STRIKE_FOV = 14;
+const strikeStand = on(first.s - 650, 14, 2.4);
+const keyStrike = aimed(strikeStand, heading(strikeStand, strikeTip) + 0.12 * STRIKE_FOV * (16 / 9), pitchTo(strikeStand, strikeTip) - 0.23 * STRIKE_FOV, STRIKE_FOV, 2200);
 
 const canalPose = (d: number, h: number, yaw: number, pitch: number): Pose => {
   const p = tube(d, 0.6, h);
   return aimed(p, heading(p, canalFar) + yaw, pitch, 54, 30);
 };
-const keyCanal = canalPose(CANAL_KEY, 0.7, -24, -2);
+const keyCanal = canalPose(CANAL_KEY, 0.7, -24, 8);
 const canalMove: Move = [
-  { at: 0, pose: canalPose(CANAL_KEY - 6.5, 0.95, -20, -1) },
+  { at: 0, pose: canalPose(CANAL_KEY - 14, 0.95, -14, 5) },
   { at: keyPart(shotById('spine-05')), pose: keyCanal },
-  { at: 1, pose: canalPose(CANAL_KEY + 6.5, 0.8, -20, -1) },
+  { at: 1, pose: canalPose(CANAL_KEY + 6.5, 0.8, -22, 7) },
 ];
 
 const shots: Record<string, CameraPath> = {
   'spine-01': establishingMove,
   'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -20, forward: -22, up: -4 }, { right: 20, forward: 22, up: 4 }),
   'spine-03': carcassMove,
-  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -10, right: -5 }, { forward: 260, right: 130, up: 20, turn: -2.6 }),
+  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -3, right: -1 }, { forward: 70, right: 16, up: 9, turn: -0.8 }),
   'spine-05': canalMove,
 };
 
@@ -153,7 +153,7 @@ async function create(): Promise<Place> {
     unit: UNIT,
     scene,
     camera,
-    look: { ...neutralLook(), bloom: 0.03, vignette: 0.1, grain: 0.006 },
+    look: { ...neutralLook(), exposure: 1.45, bloom: 0.03, vignette: 0.1, grain: 0.006 },
     volume,
     depthFirst: true,
     parts,

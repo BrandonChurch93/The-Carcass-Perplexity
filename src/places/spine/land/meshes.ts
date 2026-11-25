@@ -197,7 +197,7 @@ export function canalShell(rng: Rng, grow: number): THREE.BufferGeometry {
       const l = canalL(d) + Math.cos(ang) * r;
       pos.push(f.x + f.nx * l, cy + Math.sin(ang) * r, f.z + f.nz * l);
       top.push(FAR);
-      sl.push(FAR, FAR);
+      sl.push(MOUTH_S + d, l);
     }
   };
   let count = D_LIST.length;
