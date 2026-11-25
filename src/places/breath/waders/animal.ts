@@ -146,7 +146,7 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stanceSide: 0.16 * k * j(4, 0.85, 1.25),
     legLen: 1.006 * Math.hypot(standH - 0.02 * k, stride * DUTY * 0.5 + 0.06),
     knee: j(5, 0.44, 0.5),
-    legR: 0.034 * k,
+    legR: 0.03 * k,
     stride,
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
@@ -178,7 +178,7 @@ export class Wader {
   private readonly legAlong: number[] = [];
   private readonly bodyT: number[] = [];
   private readonly neckPoints: Float32Array;
-  private readonly strands: { angle: number; out: number; len: number; stiff: number; phase: number; root: number }[] = [];
+  private readonly strands: { angle: number; out: number; len: number; stiff: number; phase: number; root: number; thick: number }[] = [];
   readonly tips: Float32Array;
 
   constructor(
@@ -255,13 +255,13 @@ export class Wader {
       const u = i / (legRings - 1);
       this.legAlong[i] = u;
       // A thigh that is skin on bone and tapers to the joint; the joint a knot; a narrow shank; a knuckle over a cloven foot.
-      const thigh = 3.1 * (1 - smooth(-0.1, 0.44, u)) ** 0.9 * smooth(-0.06, 0.1, u) + 0.35 * (1 - smooth(0, 0.47, u));
-      const knuckle = 1.35 * Math.exp(-(((u - b.knee) / 0.03) ** 2)) + 0.8 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
+      const thigh = 2.7 * (1 - smooth(-0.08, 0.24, u)) * smooth(-0.06, 0.08, u) + 0.6 * (1 - smooth(0.05, 0.47, u));
+      const knuckle = 1.3 * Math.exp(-(((u - b.knee) / 0.036) ** 2)) + 0.8 * Math.exp(-(((u - 0.93) / 0.025) ** 2));
       const foot = 1.5 * smooth(0.955, 1, u);
       const r = b.legR * (0.9 + thigh + knuckle + foot);
       for (let s = 0; s < legSides; s++) {
         const phi = (s / legSides) * Math.PI * 2;
-        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.5 * Math.min(1, thigh / 3.0));
+        this.legLocal[(i * legSides + s) * 2] = r * Math.cos(phi) * (1 - 0.4 * Math.min(1, thigh / 2.4));
         this.legLocal[(i * legSides + s) * 2 + 1] = r * Math.sin(phi);
       }
     }
@@ -299,6 +299,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.15 * hash(seed + n * 8.9) ** 1.6,
+        thick: far ? 1 : 0.55 + 1.6 * hash(seed + n * 12.7) ** 2.2,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
@@ -707,7 +708,7 @@ export class Wader {
         const bx = dy * nz - dz * ny;
         const by = dz * nx - dx * nz;
         const bz = dx * ny - dy * nx;
-        skin.ring(tube, i, x, y, z, nx, ny, nz, bx, by, bz, this.tendrilLocal, i * tube.sides * 2);
+        skin.ring(tube, i, x, y, z, nx, ny, nz, bx, by, bz, this.tendrilLocal, i * tube.sides * 2, st.thick);
         // How wet: what has been in the water is dark and shines.
         skin.setHeat(tube, i, wet ? smooth(env.sea + 0.35, env.sea, y) : 0);
         px = x;
