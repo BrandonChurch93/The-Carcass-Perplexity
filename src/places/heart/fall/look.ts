@@ -55,7 +55,8 @@ float riverOpen(float d) {
 }
 // d is metres into the tube from its rim, negative outside.
 vec3 riverLight(vec3 p, vec3 n, float d) {
-  if (d < -16.0) return vec3(0.0);
+  // The rim's own edge stands between the river and the outer face.
+  if (d < 0.0) return vec3(0.0);
   vec2 to = vec2(riverX(max(d, 0.0)) - p.x, ${f(TUBE.floor)} - p.y);
   float far = length(to);
   float w = 15.0;
@@ -63,7 +64,7 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float facing = clamp(dot(n.xy, to / max(far, 0.01)) * 0.92 + 0.08, 0.0, 1.0);
   // Out on the face of the cliff the light dies away raggedly: it is the fume before the mouth that carries it there.
   float outside = max(-d, 0.0) * (0.7 + 0.6 * vnoise(p.xy / 9.0));
-  float reach = pow(smoothstep(6.5, 0.0, outside), 2.0);
+  float reach = pow(smoothstep(2.6, 0.0, outside), 1.5);
   // The roof fall heaped on the floor stands between the river and the foot of the far wall.
   reach *= mix(1.0, smoothstep(0.1, 0.45, -to.y / max(far, 0.01)), smoothstep(15.0, 40.0, far));
   // The lip hides the river from the cliff below it, and the roof fall hides it from the east foot of the arch.
