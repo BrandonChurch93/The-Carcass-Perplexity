@@ -73,8 +73,8 @@ void main() {
   if (shape > 0.62) discard;
   float thin = smoothstep(0.1, 0.62, shape);
   // It leaves the vent yellow, and cools as it flies: small and thin parts first.
-  float cool = vGob.x / (0.5 + 2.6 * vGob.y) + 0.45 * thin;
-  float kelvin = mix(1430.0, 760.0, clamp(cool * 0.85 + 0.12 * ragged, 0.0, 1.0));
+  float cool = vGob.x / (0.35 + 3.2 * vGob.y) + 0.22 * thin + 0.5 * fract(vGob.z * 3.7) - 0.2;
+  float kelvin = mix(1390.0, 760.0, clamp(cool * 0.9 + 0.2 * ragged, 0.0, 1.0));
   vec3 c = blackbody(kelvin) + vec3(0.004, 0.0035, 0.003);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -192,7 +192,7 @@ export function createFoundering(ctx: HeartContext): Foundering {
   const group = new THREE.Group();
   const rng = ctx.rng('lake/foundering');
   const lines = [seamLine('spatterRight', 24), seamLine('spatterLeft', 16)];
-  const COUNTS = [620, 260];
+  const COUNTS = [1500, 560];
   const total = (COUNTS[0] as number) + (COUNTS[1] as number);
   const origin = new Float32Array(total * 3);
   const thrown = new Float32Array(total * 3);
@@ -208,17 +208,17 @@ export function createFoundering(ctx: HeartContext): Foundering {
       const a = line[Math.floor(f)] as [number, number];
       const b = line[Math.min(line.length - 1, Math.floor(f) + 1)] as [number, number];
       const t = f - Math.floor(f);
-      const sheet = rng.next() < 0.22 ? 1 : 0;
+      const sheet = rng.next() < 0.14 ? 1 : 0;
       origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8);
       origin[k * 3 + 1] = rng.next();
       origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8);
-      const up = sheet ? rng.range(5, 9.5) : rng.range(8, 17.5);
+      const up = sheet ? rng.range(4, 7) : rng.range(5.5, 12.5);
       thrown[k * 3] = rng.range(-2.6, 2.6);
       thrown[k * 3 + 1] = up * tall;
       thrown[k * 3 + 2] = rng.range(-2.6, 2.6);
-      life[k * 4] = rng.range(3.7, 5.2);
+      life[k * 4] = rng.range(2.6, 4.0);
       life[k * 4 + 1] = rng.next();
-      life[k * 4 + 2] = sheet ? rng.range(0.7, 1.7) : 0.12 + 0.6 * Math.pow(rng.next(), 2.2);
+      life[k * 4 + 2] = sheet ? rng.range(0.3, 0.7) : 0.07 + 0.36 * Math.pow(rng.next(), 2.2);
       life[k * 4 + 3] = sheet;
     }
   });
