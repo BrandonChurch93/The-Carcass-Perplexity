@@ -113,7 +113,7 @@ export function create(ctx: HeartContext): HeartPiece {
         const radius = Math.max(0.05, s.radius);
         (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], radius);
         // Thickness for a metre of path: a source of strength 1 is all but opaque across its own foot.
-        (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * (smoke ? 1.2 : 0.9)) / radius);
+        (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * (smoke ? 2.4 : 0.9)) / radius);
         // Steam is quick, smoke is slow; the grain of each is set by the size of its foot.
         const speed = smoke ? Math.min(4, 1 + s.rise * 0.035) : Math.min(3.2, 1.2 + s.rise * 0.16);
         (steamC[i] as THREE.Vector4).set(steamSeed[index % steamSeed.length] as number, speed, Math.max(3.5, radius * (smoke ? 5 : 7)), s.kind === 'fume' ? 2 : smoke ? 1 : 0);

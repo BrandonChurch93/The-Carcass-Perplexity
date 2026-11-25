@@ -119,10 +119,14 @@ void airAt(vec3 p, out float sigma, out vec3 emit) {
   float open = mix(land.g, 1.0, clamp((p.y - land.r) / 80.0, 0.0, 1.0));
   vec3 lights = roundLights(p);
   // The lake lights the air over it twice: what is open right under a point, and the whole glowing floor of the caldera round it.
-  vec3 under = (0.32 + 0.6 * exp(-y / 40.0)) * glow + LAKE_WIDE * exp(-y / 140.0) * lakeGlow(p.xz, 450.0);
+  vec3 under = (0.32 + 0.6 * exp(-y / 40.0)) * glow + LAKE_WIDE * exp(-y / 60.0) * lakeGlow(p.xz, 450.0);
   vec3 sky = skyLight(y);
+  // The heavy air hugs the lake: a view along the surface is deep in it, a view up at the walls leaves it at once. It is heaviest downwind of the open lava.
+  float layer = exp(-y / 12.0);
+  float east = smoothstep(-150.0, 550.0, p.x);
   float haze = uShowAir * (0.00042 * exp(-y / 260.0) * (0.7 + 0.6 * n.a) * (0.45 + 0.55 * overLake)
-        + 0.0018 * exp(-y / 40.0) * overLake * (0.15 + 1.7 * banks)
+        + 0.0045 * layer * overLake * (0.45 + 0.55 * east) * (0.15 + 1.7 * banks)
+        + 0.0024 * exp(-y / 90.0) * smoothstep(-350.0, 350.0, p.x) * (0.4 + 1.2 * banks)
         + 0.0035 * hot * exp(-y / 70.0) * (0.35 + 1.3 * banks));
   // The smoke hangs as a curtain between the column and the lower mass: thin and narrow at the column, broad and heavy over the open lake.
   vec2 axisA = fumeAxis(p.y);
@@ -182,7 +186,8 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
   float rise = B.z;
   vec3 lean = vec3(B.x, 1.0, B.y);
   float kind = min(C.w, 1.0);
-  float spread = mix(0.24, 0.3, kind);
+  bool fume = C.w > 1.5;
+  float spread = fume ? 0.42 : mix(0.24, 0.3, kind);
   // Steam is gone well before its top and smoke a little before: the bounds stop where there is nothing left to see.
   float top = rise * mix(0.72, 0.86, kind);
   // Bounds: in the space where the column stands upright it is inside a round tower.
@@ -212,7 +217,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
   if (t1 <= t0) return;
   vec3 albedo = C.w > 1.5 ? FUME_ALBEDO : mix(STEAM_ALBEDO, SMOKE_ALBEDO, C.w);
   // A fume stands over open lava and is seen against it: it takes far more of that light than a wisp of steam does.
-  float lit = C.w > 1.5 ? 3.0 : mix(1.5, 0.75, kind);
+  float lit = fume ? 1.7 : mix(1.5, 1.0, kind);
   float dt = (t1 - t0) / float(${STEPS.steam});
   for (int k = 0; k < ${STEPS.steam}; k++) {
     float t = t0 + (float(k) + jitter) * dt;
@@ -232,7 +237,7 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, 
     float ragged = d + (n1 - 0.5) * 0.8;
     if (ragged >= 1.0) continue;
     float thin = A.w / r;
-    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, mix(3.0, 2.6, kind)) * mix(1.0, thin, 0.6);
+    float body = (1.0 - smoothstep(0.2, 1.0, ragged)) * smoothstep(0.0, 0.05, u) * pow(1.0 - u, fume ? 1.6 : mix(3.0, 2.6, kind)) * mix(1.0, thin, 0.6);
     float fine = mix(0.32, 0.12, u);
     float wisps = smoothstep(mix(0.36, 0.44, kind), 0.82, n1 * (1.0 - fine) + noise(q * 2.7).b * fine);
     // Steam is a veil with knots in it; smoke is lumps with gaps between them.
