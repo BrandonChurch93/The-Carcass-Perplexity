@@ -77,8 +77,8 @@ export class Vanes {
           if (q > 0) {
             // A barb leaves the stem a little above level, swept toward the frond's tip, and its own wet weight takes it down.
             const vm = (q - 0.5) / ACROSS;
-            const elevation = (layer === 0 ? 0.3 : 0.75) + f.twist * side - ((layer === 0 ? 0.3 : 0.75) + droop) * vm ** (layer === 0 ? 1.2 : 0.8);
-            const sweep = 0.5;
+            const elevation = Math.max(-1.5, (layer === 0 ? 0.2 : 0.7) + f.twist * side - ((layer === 0 ? 0.2 : 0.7) + 1.5 * droop) * vm ** (layer === 0 ? 1.5 : 1.1));
+            const sweep = 1.0;
             const c = Math.cos(elevation);
             const ds = length / ACROSS;
             x += (sx * Math.cos(sweep) + tx * Math.sin(sweep)) * c * ds;

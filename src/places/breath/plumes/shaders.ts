@@ -82,8 +82,8 @@ void main() {
   // Pale wet flesh, knotted, where it leaves the holdfast; wine-dark along its length.
   float mottle = vnoise(vec2(u * 46.0 + tone * 31.0, e * 2.0 + tone * 7.0));
   vec3 flesh = mix(vec3(0.34, 0.2, 0.19), vec3(0.5, 0.36, 0.33), mottle);
-  vec3 albedo = mix(flesh, vec3(0.16, 0.03, 0.035), smoothstep(0.04, 0.3, reach + 0.1 * (mottle - 0.5)));
-  float occ = mix(0.4, 1.0, vTint.x) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
+  vec3 albedo = mix(flesh, vec3(0.2, 0.035, 0.04), smoothstep(0.04, 0.3, reach + 0.1 * (mottle - 0.5)));
+  float occ = mix(0.6, 1.0, vTint.x) * mix(0.5, 1.0, smoothstep(0.0, 0.5, reach));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.35, occ);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
@@ -127,7 +127,7 @@ const VANE_TEST = /* glsl */ `
   // A bead of water at the point of a lock, on most of them.
   float bead = length(vec2(a - centre, (b - lockLen) * len + 0.004));
   bool drop = h1 > 0.72 && bead < 0.0036 + 0.5 * px && vTint.z > 0.3 && px < 0.004;
-  float gather = (0.75 + 0.2 * h1) * smoothstep(0.05, 1.0, t);
+  float gather = (0.45 + 0.3 * h1) * smoothstep(0.05, 1.0, t);
   float fan = 1.0 - gather;
   float rootAt = centre + (a - centre) / fan;
   float spacing = 0.0045;
@@ -137,7 +137,7 @@ const VANE_TEST = /* glsl */ `
   float thick = max(0.0013 * (1.0 - 0.45 * t), 0.75 * px);
   // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
   thick = max(thick, 0.5 * spacing * fan - 0.5 * px + 1.6 * px * smoothstep(3.5 * px, 1.5 * px, spacing * fan));
-  bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.72 + 0.28 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
+  bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.4 + 0.6 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
   if (!barb && !drop) discard;
 `;
 
@@ -164,8 +164,8 @@ ${VANE_TEST}
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float thin = smoothstep(0.25, 1.0, t * lockLen + 0.25 * t) * (0.2 + 0.8 * within);
-  colour += vec3(1.0, 0.045, 0.05) * uSunColour * (thin * (0.05 + 0.95 * against * against) * 0.5 * sunAt(vWorld));
+  float thin = smoothstep(0.35, 1.0, t) * (0.15 + 0.85 * within);
+  colour += vec3(1.0, 0.045, 0.05) * uSunColour * (thin * (0.03 + 0.97 * against * against * against) * 0.3 * sunAt(vWorld));
   if (drop && (!barb || bead < 0.0028 + 0.35 * px)) {
     // The bead: it gathers the sun and the bright fog behind it, and a little of the red it hangs from.
     colour = 0.4 * colour + uSunColour * (0.06 + 3.0 * pow(against, 8.0)) * sunAt(vWorld) + 0.35 * skyRadiance(vec3(-v.x, 0.25, -v.z));
