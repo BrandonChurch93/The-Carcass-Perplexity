@@ -475,6 +475,11 @@ void main() {
     float pitTone = (vnoise(vWorld.xz / 0.07 + 4.3) + vnoise(vWorld.xy / 0.07 + 1.2) + vnoise(vWorld.zy / 0.07 + 8.8)) / 3.0;
     vec3 even = vec3(dot(albedo, vec3(0.3333)));
     albedo = mix(albedo, mix(albedo, even * vec3(1.05, 1.0, 0.95), 0.5) * (0.55 + 0.9 * lumpTone + 0.6 * (pitTone - 0.5) * sharp), 0.7 * broken);
+    // Under the wide view's lens the bank is a ledge of flows: its steep faces show their beds, a pale face over a dark undercut, a metre or so each.
+    float bank = smoothstep(0.2, 0.36, slope) * smoothstep(170.0, 120.0, length(vWorld.xz - vec2(-580.0, 315.0)));
+    float bedAt = vWorld.y / 1.1 + 0.8 * vnoise(vWorld.xz / 5.0 + 3.7);
+    float bedTone = smoothstep(0.25, 0.5, fract(bedAt)) * smoothstep(1.0, 0.8, fract(bedAt)) * (0.5 + vnoise(vec2(floor(bedAt) * 3.1, 7.7) + vWorld.xz / 3.3));
+    albedo *= mix(1.0, 0.5 + 1.5 * bedTone, bank);
   }
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 4.2);

@@ -109,6 +109,8 @@ function rimScale(x: number, z: number): number {
   return lerp(RIM[i % 36] as number, RIM[(i + 1) % 36] as number, u);
 }
 
+/** The tops of the flows under the pour, metres above the lake: unlike the even ledges of the talus elsewhere. */
+const TIERS = [-20, 3, 8, 24, 30, 51, 58, 80, 88, 112, 400];
 // The fall comes down the wall here: beside its channel the wall keeps the shape the fall folder was built on.
 const CHANNEL_X = MOUTH.x - 3;
 
@@ -187,7 +189,19 @@ export function wallAt(x: number, z: number, d: number): number {
     const f = q - Math.floor(q);
     const face = 0.14 + 0.2 * noise(x / 13 + 3, z / 13);
     const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-    h += crop * (s - f) * w * lerp(0.8, 0.62, free);
+    let cut = (s - f) * w;
+    if (free < 1) {
+      // Under the pour the flows are of unlike thickness, a thick one over a thin one, and the melt drops over each in turn.
+      const at = q * w;
+      let i = 1;
+      while (i < TIERS.length - 1 && (TIERS[i] as number) < at) i++;
+      const a = TIERS[i - 1] as number;
+      const b = TIERS[i] as number;
+      const t = Math.min(1, Math.max(0, (at - a) / (b - a)));
+      const st = t < face ? (0.9 * t) / face : 0.9 + (0.1 * (t - face)) / (1 - face);
+      cut = lerp((st - t) * (b - a), cut, free);
+    }
+    h += crop * cut * lerp(0.8, 0.62, free);
   }
   const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
   if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
