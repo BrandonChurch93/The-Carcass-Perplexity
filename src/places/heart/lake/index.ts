@@ -453,7 +453,8 @@ vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   // Most plates lie within a few degrees of level; one in four is tilted by 10 to 25 degrees. A large slab cannot stand as
   // steep as a small one: its high edge is never more than half a metre up.
   float tilt = min(min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, mix(1.0, 0.07, gOverlap)), 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
-  float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
+  // On the banks of the line the plates lap like shingles: each lies 0 to 15 cm over or under its neighbour.
+  float level = mix(0.26 * (r1.x - 0.4) + 0.16 * raft, 0.55 * (r1.x - 0.5) + 0.16 * raft, gOverlap) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
   // On the feeding floor five plates in six lie level and the sixth keeps its tilt.
   float lies = gFlat * step(0.17, fract(r1.y * 13.0 + r2.x * 7.0));
   tilt *= 1.0 - 0.85 * lies;
@@ -475,6 +476,8 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   if (broken <= 0.01) return 0.0;
   float L = size;
   vec2 p = (q + 0.58 * L * vec2(vnoise(q / (2.7 * L) + 17.0), vnoise(q / (2.7 * L) + 53.0))) / L;
+  // On the banks of the line the border between two plates is a crooked line.
+  if (gOverlap > 0.0) p += 0.12 * gOverlap * vec2(vnoise(q / (0.6 * L) + 5.0), vnoise(q / (0.6 * L) + 29.0));
   vec2 cell = floor(p);
   vec2 f = p - cell;
   float d1 = 9.0;
@@ -534,16 +537,18 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   // lies under all three: a floor that jumped from slab to slab would stand as a row of teeth and spikes.
   float beside = slabPlane(k2, -s2, broken, L, drop).x;
   if (d3 - d2 < 0.15) beside = mix(min(beside, slabPlane(k3, -s3, broken, L, drop).x), beside, smoothstep(0.0, 0.15, d3 - d2));
-  float bed = min(min(own.x, beside), 0.0) - (0.06 + 0.12 * broken) * (1.0 - gShut) + rubble * smoothstep(0.3, 0.7, broken) * (1.0 - gShut) * (1.0 - gOverlap);
+  float bed = min(min(own.x, beside), 0.0) - mix(0.06 + 0.12 * broken, 0.065 * broken, gOverlap) * (1.0 - gShut) + rubble * smoothstep(0.3, 0.7, broken) * (1.0 - gShut) * (1.0 - gOverlap);
   // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
-  float gapHalf = mix(0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken), 0.025 + 0.05 * r2.x, gOverlap) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm) * (1.0 - gShut);
+  float gapHalf = mix(0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken), 0.012, gOverlap) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm) * (1.0 - gShut);
   // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
   // 70 degrees, or each triangle of it shades its own way and the edge stands as a row of teeth.
   // Off the feeding floor a plate ends in a step onto its neighbour, seen close and askew: there the face is wider still.
-  float edgeWide = max(max(mix(0.05, 0.1, gOverlap), mix(3.5, 2.5, gFlat) * c), mix(0.62, 0.5, gFlat) * (own.x + rimHigh - bed));
+  float edgeWide = max(max(mix(0.05, 0.1, gOverlap), mix(3.5, 2.5, gFlat) * c), mix(mix(0.62, 0.5, gFlat), 1.3, gOverlap) * (own.x + rimHigh - bed));
   float inner = gapHalf + edgeWide;
   float plane = own.x + rimHigh * exp(-max(e - inner, 0.0) / rimWide);
-  gSlabEdge = (1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e)) * (1.0 - gShut);
+  // Each plate of the banks is a low pillow, 3 to 6 cm higher in its middle: the low light gives it a lit and a shaded side.
+  plane += gOverlap * (broken / 0.45) * (0.03 + 0.03 * r2.x) * smoothstep(0.0, 0.3 * L, e);
+  gSlabEdge = (1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e)) * (1.0 - gShut) * (1.0 - 0.7 * gOverlap);
   return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c, L);
 }
 // The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
