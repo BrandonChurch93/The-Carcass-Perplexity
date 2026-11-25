@@ -1,6 +1,6 @@
 // The cloud as one field of the world, so that the surface that takes its shade and the sheets that draw it read the same cloud.
 // The pictures come from assets-src/reveal/sky/make_sky.py. Lengths are kilometres, the drift is a pure function of the time.
-import { KM, X, Z } from './anchors';
+import { AT, KM, X, Z } from './anchors';
 
 /** The rectangle of the world the picture of the cover lies on: x and z of its corner, one over its width and its height. */
 export const COVER_RECT: [number, number, number, number] = [X(-900), Z(-820), 1 / (8500 * KM), 1 / (((8500 * 9) / 16) * KM)];
@@ -17,6 +17,9 @@ export const WEATHER_GLSL = /* glsl */ `
 uniform sampler2D uCloudTile;
 uniform sampler2D uCloudCover;
 uniform vec4 uCoverRect;
+
+// Where the storm on the spine stands: it is drawn by its own sheet, and no front lies over it.
+const vec2 STORM_AT = vec2(${X(AT.storm.x).toFixed(2)}, ${Z(AT.storm.y).toFixed(2)});
 
 vec3 coverAt(vec2 xz) {
   return texture2D(uCloudCover, clamp((xz - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).rgb;
@@ -85,7 +88,7 @@ vec3 lowCloud(vec2 at) {
   float drawn = smoothstep(0.74 - 0.3 * fieldOf, 1.02 - 0.3 * fieldOf, lines);
   float grains = 0.55 * mid.r + 0.45 * other.r;
   float edge = mix(0.98, 0.42, drawn);
-  float torn = max(0.92 * smoothstep(edge, edge + 0.3, grains), 0.22 * drawn * drawn);
+  float torn = max(0.86 * smoothstep(edge - 0.06, edge + 0.42, grains), 0.22 * drawn * drawn);
   float slow = texture2D(uCloudTile, (xz - drift) / 2300.0 + vec2(0.15, 0.55)).b;
   // Weather comes in systems with clear sea between them: whole regions of the ocean carry none.
   float present = smoothstep(0.34, 0.56, cover.r + 0.5 * (slow - 0.5));
@@ -94,7 +97,7 @@ vec3 lowCloud(vec2 at) {
   float shore = texture2D(uCloudCover, clamp((at - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0), 6.5).b;
   float lumps = 0.5 * wide.r + 0.5 * mid.r;
   float cold = smoothstep(0.0, 0.4, sin(at.x / 1400.0 + 1.9 * sin(at.y / 1150.0) + 2.4));
-  float held = smoothstep(0.46, 0.64, cover.r + 0.6 * (slow - 0.5)) * (1.0 - smoothstep(0.01, 0.05, shore));
+  float held = smoothstep(0.46, 0.64, cover.r + 0.6 * (slow - 0.5)) * (1.0 - smoothstep(0.003, 0.02, shore));
   float celled = 0.0;
   // (The scatter is only worked out where there are cells to draw: it is the dear part of the cloud.)
   if (cold * held * away > 0.0) {
@@ -105,19 +108,20 @@ vec3 lowCloud(vec2 at) {
     float reach = walls.x + 0.22 * (lumps - 0.5) + (0.1 + 0.3 * inner) * (grains - 0.5);
     // A closed cell is a round pillow over its own middle; an open one a ring of cloud round a clear middle.
     float closed = (1.0 - smoothstep(0.3, 0.6, reach)) * mix(0.7 + 0.3 * smoothstep(0.25, 0.6, grains), 0.35 + 0.65 * smoothstep(0.3, 0.62, grains), inner);
-    float open = (1.0 - smoothstep(0.05, 0.2, abs(reach - 0.47 + 0.12 * (lumps - 0.5)))) * smoothstep(0.28, 0.6, 0.5 * lumps + 0.5 * grains);
+    float open = (1.0 - smoothstep(0.02, 0.27, abs(reach - 0.47 + 0.12 * (lumps - 0.5)))) * smoothstep(0.28, 0.6, 0.5 * lumps + 0.5 * grains);
     float openness = smoothstep(-0.2, 0.2, sin(at.x / 620.0 - at.y / 830.0 + 2.0 * sin(at.y / 540.0)));
     celled = 0.85 * mix(closed, open, openness) * held;
   }
   // Small puffs stand only over the land and off its coasts, where the ground warms the air.
-  float puffs = 0.5 * smoothstep(0.012, 0.05, shore) * (1.0 - smoothstep(0.07, 0.14, shore)) * smoothstep(0.62, 0.84, lumps) * smoothstep(0.5, 0.98, grains);
+  float puffs = 0.5 * smoothstep(0.012, 0.05, shore) * (1.0 - smoothstep(0.07, 0.14, shore)) * smoothstep(0.58, 0.9, lumps) * smoothstep(0.42, 1.0, grains);
   thick = mix(thick, max(mix(torn * present, celled, cold), puffs), away);
   // A front is a closed deck: a nearly whole sheet, lumped by its cells and torn at its edges.
-  float body = cover.r + 0.3 * (slow - 0.5) + 0.3 * (wide.b - 0.5) + 0.14 * (mid.b - 0.5);
-  float deck = smoothstep(0.66, 0.86, body);
+  float body = cover.r + 0.3 * (slow - 0.5) + 0.3 * (wide.b - 0.5) + 0.05 * (mid.b - 0.5);
+  body -= 0.6 * (1.0 - smoothstep(0.6, 1.5, length((at - STORM_AT) / vec2(340.0, 460.0))));
+  float deck = smoothstep(0.62, 0.9, body);
   // Over the land a front breaks on the ranges and thins to a veil, so the ground is seen through it.
   deck *= mix(1.0, 0.4, smoothstep(0.01, 0.05, shore) * away);
-  thick = max(thick, deck * (0.3 + 0.6 * smoothstep(0.2, 0.8, 0.45 * mid.b + 0.3 * wide.r + 0.25 * mid.r)));
+  thick = max(thick, deck * (0.5 + 0.42 * smoothstep(0.1, 0.9, 0.45 * mid.b + 0.3 * wide.r + 0.25 * mid.r)));
   // Round the deck a thin veil, drawn out along the wind.
   thick = max(thick, 0.3 * smoothstep(0.5, 0.7, body) * smoothstep(0.3, 0.8, 0.6 * wide.b + 0.4 * mid.b));
   // Past the size a pixel can show, the cells are seen as their share of the field.
