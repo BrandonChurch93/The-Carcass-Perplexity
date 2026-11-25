@@ -195,8 +195,8 @@ const float ROPE_TALL = 0.03;
 // A raft of skin, metres along and across the stream.
 const vec2 RAFT = vec2(0.85, 0.6);
 // Metres a second the rafts ride down the stream, and the thin skin of the core.
-const float RAFT_SPEED = 0.22;
-const float CORE_SPEED = 0.36;
+const float RAFT_SPEED = 0.6;
+const float CORE_SPEED = 0.9;
 
 // What the stream carries, at a point of the pattern: how the ropes are pushed out of line, how alive the creases are, where the skin is stretched thin.
 vec3 carriedAt(vec2 p) {
