@@ -21,7 +21,7 @@ void main() {
   vec3 p = position;
   // A leg or a strand a long way off is thinner than a pixel and would flicker: it is never drawn thinner than a pixel and a half.
   float far = length(cameraPosition - p);
-  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.55 : 0.8;
+  float least = aLook.x > 1.5 && aLook.x < 2.5 ? 0.4 : 0.8;
   p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
@@ -144,7 +144,7 @@ void main() {
   } else if (kind < 2.5) {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
     float tone = vInfo.x;
-    albedo = mix(vec3(0.55, 0.27, 0.26), mix(vec3(0.16, 0.02, 0.03), vec3(0.4, 0.08, 0.09), tone), smoothstep(0.0, 0.3, u));
+    albedo = mix(vec3(0.55, 0.27, 0.26), mix(vec3(0.13, 0.03, 0.035), vec3(0.34, 0.11, 0.1), tone), smoothstep(0.0, 0.3, u));
     // A few are pale and fleshy, the pink of the neck's end carried down them.
     albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.7, hash12(vec2(seed, 9.0))) * 0.7);
     albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));

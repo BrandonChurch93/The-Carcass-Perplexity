@@ -65,7 +65,7 @@ void main() {
   vec2 slope = (g1 * 0.3 + g2 * 0.26) * (0.4 + 0.6 * deep) + g3.rg * 0.1;
   // Near the lens the small ripples show one by one.
   float close = smoothstep(45.0, 6.0, far);
-  if (close > 0.0) slope += (texture2D(tWave, vec2(-xz.y, xz.x) * 0.83 + drift.yx * uTime * 0.16).rg - 0.5) * 0.34 * close * (0.5 + 0.5 * deep);
+  if (close > 0.0) slope += (texture2D(tWave, vec2(-xz.y, xz.x) * 0.83 + drift.yx * uTime * 0.16).rg - 0.5) * 0.5 * close * (0.5 + 0.5 * deep);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
   slope += rings.rg * 1.3;
@@ -79,6 +79,10 @@ void main() {
   r = normalize(r);
   // Under a haze the water gives back less than the sky it faces: every small wave face shows some of the dark bed.
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
+  // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
+  float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
+  float drawn = clamp(1.0 - 4.5 * tip, 0.3, 2.6);
+  mirror *= drawn;
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
@@ -102,7 +106,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(1.9, 0.75, 0.9));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = vec3(0.066, 0.15, 0.135) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.2, 0.17, 0.13), vec3(0.12, 0.25, 0.215), smoothstep(0.12, 0.42, nv)) * (0.3 + 2.0 * nv) * (0.55 + 0.45 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 

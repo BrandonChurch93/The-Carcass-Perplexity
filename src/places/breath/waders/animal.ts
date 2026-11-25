@@ -151,8 +151,8 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
     neckR: 0.085 * k,
-    tendrils: far ? 7 : 104,
-    tendrilLen: 0.7 * k * j(8, 0.85, 1.2),
+    tendrils: far ? 6 : 120,
+    tendrilLen: 0.5 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
 }
@@ -277,7 +277,7 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.017 : 0.0115) * k;
+    const tr = (far ? 0.012 : 0.0095) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * (1 - 0.6 * u ** 1.6);
@@ -562,7 +562,7 @@ export class Wader {
       const ahead = this.along(walked + 0.5 * b.bodyLen + 0.55 * b.neckLen);
       // The end of the neck stays out of the water: it is the mop that hangs from it that goes in.
       const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea);
-      const want = floor + (plan.reach >= 1 ? 0.34 * k : 0.6 * k) + dab;
+      const want = floor + (plan.reach >= 1 ? 0.25 * k : 0.6 * k) + dab;
       let lo = 0.3;
       let hi = 1.3;
       for (let i = 0; i < 9; i++) {
@@ -652,7 +652,7 @@ export class Wader {
       let x = (pts[r0 * 3] as number) * (1 - rf) + (pts[r0 * 3 + 3] as number) * rf + ox * rad;
       let y = (pts[r0 * 3 + 1] as number) * (1 - rf) + (pts[r0 * 3 + 4] as number) * rf + oy * rad;
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
-      const splay = 0.6 * st.out + 1.3 * back;
+      const splay = 0.35 * st.out + 0.9 * back;
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.phase) + 0.04 * Math.sin(seconds * 3.7 + st.phase * 2.3);
       let px = x;
@@ -665,9 +665,9 @@ export class Wader {
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
         const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
-        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.16 + drift)) * g;
+        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.07 + drift)) * g;
         let dy = (ty + oy * splay) * (1 - g) - g * (1 - 0.55 * under);
-        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.16 + drift)) * g;
+        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.07 + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
           const fan = st.angle + 0.5 * Math.sin(st.phase);
@@ -677,7 +677,7 @@ export class Wader {
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
         // No strand hangs straight: each is kinked and curled its own way, more toward its end.
-        const curl = (0.25 + 0.75 * u) * (0.55 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.3 * Math.sin(u * 17 + st.phase * 11));
+        const curl = (0.2 + 0.8 * u) * (0.2 * Math.sin(u * (3 + 7 * st.stiff) + st.phase * 5) + 0.22 * Math.sin(u * 17 + st.phase * 11));
         dx += Math.cos(st.phase * 3) * curl;
         dz += Math.sin(st.phase * 3) * curl;
         dy += 0.35 * curl * Math.sin(st.phase * 7);
