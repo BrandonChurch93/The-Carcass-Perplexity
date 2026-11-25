@@ -487,6 +487,27 @@ describe('keep', () => {
     expect(model.watch.videos.map((v: any) => v.name).filter((n: string) => n === clip || n === animatic)).toEqual([clip, animatic]);
   });
 
+  it('plays the Heart review clip first while the review waits, though the animatic was made after it', () => {
+    const film = path.join(r, 'deliver', 'film');
+    const clip = cfg.export.files.heartReview;
+    const animatic = cfg.export.files.animatic;
+    const file = path.join(r, 'kit', 'PROGRESS.md');
+    const before = fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : null;
+    put(path.join(film, clip), 'the clip');
+    put(path.join(film, animatic), 'the animatic');
+    fs.utimesSync(path.join(film, clip), new Date('2026-11-25T19:42:00Z'), new Date('2026-11-25T19:42:00Z'));
+    fs.utimesSync(path.join(film, animatic), new Date('2026-11-25T19:50:00Z'), new Date('2026-11-25T19:50:00Z'));
+    const names = () => review.collect(r, cfg).watch.videos.map((v: any) => v.name).filter((n: string) => n === clip || n === animatic);
+    put(file, '# Progress\n\n## Status\n\n- Review: not reached\n- Review round: none\n');
+    expect(names()).toEqual([animatic, clip]);
+    put(file, '# Progress\n\n## Status\n\n- Review: waiting\n- Review round: round 1 in progress\n');
+    expect(names()).toEqual([clip, animatic]);
+    put(file, '# Progress\n\n## Status\n\n- Review: approved\n');
+    expect(names()).toEqual([animatic, clip]);
+    if (before === null) fs.rmSync(file);
+    else put(file, before);
+  });
+
   it('keeps the time a short clip was made, and the page plays a film before a clip made at the same time', async () => {
     const film = path.join(r, 'out', 'work', 'film');
     const clips = path.join(r, 'out', 'work', 'clips');

@@ -278,7 +278,13 @@ export function collect(root = ROOT, cfg = config()) {
   const videos = [
     ...list(r('deliver', 'film'), /\.mp4$/i).map((n) => ({ ...item(r('deliver', 'film', n), `film/${n}`), kind: 'film', note: noteOf(r('deliver', 'film', n)) })),
     ...list(r('out', 'clips'), /\.mp4$/i).map((n) => ({ ...item(r('out', 'clips', n), `clips/${n}`), kind: 'clip', note: noteOf(r('out', 'clips', n)) }))
-  ].sort((a, b) => b.mtime - a.mtime || Number(a.kind === 'clip') - Number(b.kind === 'clip') || a.name.localeCompare(b.name));
+  ];
+  // While the review waits, the REVIEW block calls the Heart review clip the first video on this page.
+  // So it leads, whatever was made after it. The rest play newest first.
+  const progressFile = r('kit', 'PROGRESS.md');
+  const waiting = fs.existsSync(progressFile) && /^- Review: waiting\s*$/m.test(fs.readFileSync(progressFile, 'utf8'));
+  const leads = (v) => Number(waiting && v.kind === 'film' && v.name === cfg.export.files.heartReview);
+  videos.sort((a, b) => leads(b) - leads(a) || b.mtime - a.mtime || Number(a.kind === 'clip') - Number(b.kind === 'clip') || a.name.localeCompare(b.name));
 
   const narrDir = r('audio', 'kept', 'narration');
   const narrFiles = list(narrDir, SOUND);

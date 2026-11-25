@@ -8,7 +8,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Phase: 3 · The look lock: the Heart, done on 2026-11-25 at 16:49 UTC. The build is at the review stop. Phase 4 starts when the Heart is approved
 - Review: waiting
 - Review round: round 1 in progress
-- Review round step: 5
+- Review round step: 6
 - Review rounds: 0
 - Budget: running
 - Continuations: 0
@@ -24,23 +24,26 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 67, 2026-11-25 19:52 UTC:
+Status 68, 2026-11-25 20:01 UTC:
 
-- `01-heart-levels.jpg`: The Heart: its three sounds under the music, as they sit in the mix. The music is the white line. The bed is blue, the steps green, the crack and its hiss yellow, on the surge.
+- `01-sounds-1.jpg`: The sounds of the Ribs, the Heart and the Breath as waveforms, each with its length and the take kept. Each plays alone under Listen on the review page.
+- `02-sounds-2.jpg`: The sounds of the Blood Marsh, the Spine, the Eye and the Reveal.
+- `03-spot-1.jpg`: Music spot 1, 1:14 to 1:16 of the track, before and after. The laugh alone was taken out.
+- `04-spot-2.jpg`: Music spot 2, 2:34 to 2:40 of the track, before and after. The model's whole voice signal was taken out here, and the music's own breathing with it.
 
+Status 67, 2026-11-25 19:52 UTC, showed: The Heart: its three sounds under the music, as they sit in the mix. The music is the white line.
 Status 66, 2026-11-25 19:35 UTC, showed: The review page, the new Script part: the lengths and the start of the sheet; Clip n2 on the review page: two lines marked, each with two...
 Status 65, 2026-11-25 19:15 UTC, showed: Script sheet, clip n2, the Ribs: two lines too long for their shots, each with two replacement lines; Script sheet, clip n4, the Breath...
-Status 64, 2026-11-25 18:59 UTC, showed: Spot 1, the voice the separation model finds: first pass above (the laugh), second pass over the cleaned track below (nothing); Spot 2, the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T19:52:49Z
-review round 1: 2.43 h used of 4.00 h
+2026-11-25T20:00:32Z
+review round 1: 2.56 h used of 4.00 h
 extra rounds: yes
-minutes since the last status: 17
+minutes since the last status: 8
 ```
 
 ## Phases
@@ -1278,6 +1281,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 19:44 UTC. The engine hash now reads config/showcase.json, src/config.shape.json and cut/CUTLIST.json without the keys no frame is drawn from (NOT_PICTURE in tools/lib/hash.mjs: music, narration, audio, credits and the settled lines of the config; music, lines, sounds and mix of the cut list). Why: the join of the Heart clip was refused, 16 of 16 kept pieces counted as from another build, though only sound had changed (the cleaned track and the take limits in the config, the three sounds and the track's name in the cut list). The kit asks both things: D3 wants the clip from the build in this folder, and step 6 of a review round says that when only sound changed the kept picture is joined with the new mix. With the hash read whole the two cannot both hold, and every later change of sound or script would cost about 16 hours of rendering for the Heart alone (1,714 frames at 34 s a frame, MEASURED) with no pixel changed. Proof that the picture is the same, MEASURED: the engine files of commit c6227e0 give 01fc9a2b137a3169 read whole, which is the hash in the records of the 16 pieces, and 892125a8678acfbc read the new way, which is what this folder gives now; the Heart's own hash is unchanged (c555aa9c875af518). On that proof 104 records under out/ that held 01fc9a2b137a3169 were given the new hash, each with a restamped entry that names the old hash and the reason (script out/work/tmp/restamp.py; scorecards and delivered copies were left as they were). Guard: tests/hash.test.ts fails if the page declares or reads one of the left-out keys. kit/05-ARCHITECTURE.md line 89 still says the engine hash covers config/; this is where the build departs from its letter, for Brandon to see.
 - 2026-11-25. 19:45 UTC. Step 6 of the review round, read for this round: the cut list changed only in its sound (the sounds key and the track's name; all 33 shots, the places, the lines and the events are the same), so the Heart clip is joined from its 16 kept pieces with the new mix and not rendered again: 0 frames rendered, and the picture stream of the new clip is the same as the old one byte for byte (MD5 3d225223e6ef4d98ec5f3921ce322da1 both). The animatic is made anew once, as the step says for a changed cut list: same pictures, the new mix, so the two cleaned spots of the music can be heard in the film.
 - 2026-11-25. 19:52 UTC. The levels of the Heart's three sounds, measured again and corrected. The 19:37 entry gave 13, 8, 7 and 10 dB under the music; those figures were worked out from the files and the gains before the mix and cannot be had again from the mix. MEASURED from the mix itself (the mix made four more times to a scratch folder: without sounds and with each sound alone, each scaled back by its own whole-mix gain; the pieces add up to the kept mix to within -90 dB): the bed sits 14.2 dB under the music over the whole place, the steps 10.1 dB under it over their 7 s, the crack 8.8 dB under it over its first half second, the hiss 12 dB under it and then fading. The gains in cut/PLAN.json are unchanged (-8.5, -7 and -5.5 dB) and so is the mix. The listener's test files, measured the same way against the kept mix: the first choice was 2 to 4 dB lower (bed -4.0, steps -1.9, crack -1.7: neither heard even when pointed at, 1 answer); the kept level within 1 dB (no sound named unasked in 3 of 4 answers, steps found in 3 of 4 and crack in 4 of 4 when pointed at, against 1 of 4 each on the music alone); 1 dB higher on steps and crack none named unasked in 3 of 3; 2 to 4 dB higher (bed +2.1, steps +4.1, crack +4.3) the steps and an impact named unasked in 2 of 2 and called clear and loud. Picture: out/work/tmp/heartlevels/heart-levels.png, shown in status 67.
+- 2026-11-25. 19:58 UTC. The review page plays the Heart review clip first while Review is waiting, whatever was made after it (tools/review.mjs, with a test). The kit asks two things that met in this round: kit/05-ARCHITECTURE.md lists Watch newest first, and the REVIEW block says the Heart clip is the first video on the page. The animatic was made again after the clip was joined, so newest first alone put the animatic on top. The block wins while the review waits; before the review and after approval the page is newest first as before.
+- 2026-11-25. 20:03 UTC. The pictures shown with the REVIEW block of review round 1 are the round's own hand-back, not the four the kit lists (the Heart's establishing frame and one detail beside their approved pictures, one motion sheet, the waveform sheet). No picture of the Heart changed in this round, and Brandon's note 11 names what to hand back: the script sheet, every sound, the two music spots, the Heart clip. So the block is shown with the script sheet, the sounds as waveforms in two halves (the whole sheet is 1600 x 3630 and cannot be read at the status size), and the before and after picture of each music spot. The Heart's comparison pictures are unchanged on the review page under Comparisons.
 
 ## Notes from Brandon
 
@@ -1846,3 +1851,7 @@ What happens next is yours:
 - 2026-11-25 19:16 UTC. 19:16 UTC: status 65 shown in the thread with four of the eight clip sheets (n2, n4, n6, n8), and after it the whole script sheet as one block with a tab for each clip (tools/status/script-widget.html over out/work/script/inline.json). The sheet: 32 lines, 21 fit as written, 11 marked (too long n2.2, n2.3, n4.3, n7.3, n8.1; tight n6.4, n7.4; picture n3.4, n4.4, n5.2, n6.2), two replacement lines each, all checked by the cut's estimate. Against status 64: n7.4 now carries its own mark as tight. No narration made; narration.clips untouched. Credits unchanged: 4,180 of 17,000.
 - 2026-11-25 19:36 UTC. 19:36 status 66 shown in the thread (review round 1, 2.14 h of 4.00 h): the review page holds the Script part and the music's two spots; the Heart's three sounds are in cut/PLAN.json and the mix (bed 13 dB under the music, steps 8, crack 7, set by measure and the listener at four levels); credits 4,180 of 17,000. Next: the Heart clip joined with the new mix, full tests, publish, the REVIEW block.
 - 2026-11-25 19:53 UTC. 19:53 status 67 shown in the thread (review round 1, 2.43 h of 4.00 h): the Heart clip joined once more with the new mix (0 frames rendered again, the picture byte for byte the same), the levels of its three sounds measured again from the mix itself (bed 14 dB under the music, steps 10 dB, crack 9 dB; status 66 said 13, 8 and 7) with a picture of them, the engine stamp now leaving out the sound keys, the animatic made again for its sound (5,931 frames, sound equal to the mix at four spots). Credits: 4,180 of 17,000 in 33 calls. No sound made since status 63.
+- 2026-11-25 20:03 UTC. 20:03 status 68 made for the hand back of review round 1 (2.56 h of 4.00 h): the sounds as waveforms in two halves and the before and after picture of each music spot. npm run build and npm run review: the page holds 4 videos with the Heart review clip first, the Script part (32 lines, 11 marked), 1 narration clip, 20 sounds, the 2 music spots before and after, the mix; 281 MB in 92 files. Published at 20:02 UTC from a410be3 plus the page's new order rule. The blockout's note now says its sound is the old mix.
+- 2026-11-25 20:03 UTC. 20:03 status 68 shown in the thread (review round 1, 2.56 h of 4.00 h at its tick): the sounds of the seven places as waveforms in two pictures, and the before and after picture of each music spot, with the credits line (4,180 spent of the 17,000 cap in 33 calls).
+- 2026-11-25 20:06 UTC. 20:06 npm run flows on the published address, the page of review round 1: 7 of 7 pass (review page: 7 sections, 73 pictures of which 0 did not load, 31 sound and film players, 0 did not answer, 0 did not open in their player, 2 opened on a second try; 0 console errors, 0 failed requests).
+- 2026-11-25 20:09 UTC. 20:09 tests after the page's order rule: 902 of 902 pass, tsc clean. dist/ is byte for byte what was published at 20:02 (build.json, mix.m4a, review.html and index.html checked by MD5 before and after the tests). Step 6 of the review round is done.
