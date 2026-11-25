@@ -944,13 +944,18 @@ function draw(ctx: HeartContext, shared: Record<string, THREE.IUniform>, shapes:
   };
 
   // The bake of the carpet: for each of its stones, the crust under it at the time of the sample.
-  const restData = new Float32Array(span.x * span.y * 4);
+  // A place is kept in half floats as its whole metres and the fraction over them: both are exact to half a millimetre.
+  const restData = new Uint16Array(span.x * span.y * 4);
   for (const r of rocks) {
     if (r.afloat === undefined) continue;
-    restData[r.afloat * 4] = r.m.elements[12] as number;
-    restData[r.afloat * 4 + 1] = r.m.elements[14] as number;
+    const x = r.m.elements[12] as number;
+    const z = r.m.elements[14] as number;
+    restData[r.afloat * 4] = THREE.DataUtils.toHalfFloat(Math.floor(x));
+    restData[r.afloat * 4 + 1] = THREE.DataUtils.toHalfFloat(x - Math.floor(x));
+    restData[r.afloat * 4 + 2] = THREE.DataUtils.toHalfFloat(Math.floor(z));
+    restData[r.afloat * 4 + 3] = THREE.DataUtils.toHalfFloat(z - Math.floor(z));
   }
-  const restTexture = new THREE.DataTexture(restData, span.x, span.y, THREE.RGBAFormat, THREE.FloatType);
+  const restTexture = new THREE.DataTexture(restData, span.x, span.y, THREE.RGBAFormat, THREE.HalfFloatType);
   restTexture.minFilter = THREE.NearestFilter;
   restTexture.magFilter = THREE.NearestFilter;
   restTexture.needsUpdate = true;
