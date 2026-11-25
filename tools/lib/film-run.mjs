@@ -63,7 +63,7 @@ const editFile = (dir, chunk, cfg) => path.join(dir, `${chunk.name}.${cfg.export
 export function chunkStates({ plan, dir, renderer, what, format, tier, rate, cfg, edit = false }) {
   return plan.map((chunk) => {
     const file = chunkFile(dir, chunk, cfg);
-    const want = core.chunkRecord({ renderer, chunk, what, format, tier, rate, edit });
+    const want = core.chunkRecord({ renderer, chunk, what, format, tier, rate, edit, also: [core.filmUnit(cfg)] });
     let have = fs.existsSync(file) && fs.existsSync(`${file}.json`) && (!edit || fs.existsSync(editFile(dir, chunk, cfg)));
     if (have) {
       try {
@@ -196,7 +196,7 @@ export async function makeFilm({ cfg = config(), format, tier, fps = null, first
   const common = { what: 'film', format: f.id, tier, rate, cfg, edit };
   const all = chunkStates({ plan, dir: chunks, renderer, ...common });
   const todo = share ? core.shareOf(plan, share).map((c) => all[c.index]) : all;
-  say(`film frames ${span.first} to ${span.last}, ${frames} frames at ${rate} a second, ${f.width} x ${f.height}, ${tier} tier, ${plan.length} chunks${share ? `, ${todo.length} of them asked for` : ''}`);
+  say(`film frames ${span.first} to ${span.last}, ${frames} frames at ${rate} a second, ${f.width} x ${f.height}, ${tier} tier, ${plan.length} ${plan.length === 1 ? 'chunk' : 'chunks'}${share ? `, ${todo.length} of them asked for` : ''}`);
   let run = { rendered: 0, seconds: 0 };
   if (!joinOnly) run = await renderChunks({ todo, step, dir: chunks, say, ...common });
   const out = path.join(dir, name ?? core.filmName({ cfg, format: f.id, tier, rate, span, film }));
@@ -241,7 +241,8 @@ export function copyFilm({ cfg = config(), src, format, fps = null, dir = FILM_D
   const frames = Math.ceil(source.frames / thin);
   const span = { first: source.first, last: source.last, whole: source.whole === true };
   const read0 = probe(from);
-  const name = core.filmName({ cfg, format: f.id, tier: source.tier, rate, span, film: null });
+  const cutList = rel('cut', 'CUTLIST.json');
+  const name = core.filmName({ cfg, format: f.id, tier: source.tier, rate, span, film: fs.existsSync(cutList) ? readJson(cutList) : null });
   const out = path.join(dir, name);
   fs.mkdirSync(dir, { recursive: true });
   const tmp = path.join(dir, `.${name}.part`);
@@ -265,7 +266,7 @@ export async function makeStill({ cfg = config(), format, tier, dir = LOOP_DIR, 
   const film = await filmInfo();
   const renderer = await rendererState();
   const file = path.join(dir, cfg.export.files.cardStill);
-  const want = core.stillRecord({ renderer, format: f.id, tier, unit: film.loop.unit });
+  const want = core.stillRecord({ renderer, format: f.id, tier, unit: film.loop.unit, also: [core.filmUnit(cfg)] });
   if (fs.existsSync(file) && fs.existsSync(`${file}.json`)) {
     const have = readJson(`${file}.json`);
     if (['kind', 'loop', 'format', 'tier', 'engine', 'units', 'browser'].every((k) => JSON.stringify(have[k]) === JSON.stringify(want[k]))) {
@@ -298,7 +299,7 @@ export async function makeLoop({ cfg = config(), format, tier, first = null, las
   const chunks = path.join(dir, 'chunks');
   const common = { what: 'loop', format: f.id, tier, rate, cfg };
   const all = chunkStates({ plan, dir: chunks, renderer, ...common });
-  say(`loop frames ${span.first} to ${span.last}, ${frames} frames at ${rate} a second, ${f.width} x ${f.height}, ${tier} tier, ${plan.length} chunks`);
+  say(`loop frames ${span.first} to ${span.last}, ${frames} frames at ${rate} a second, ${f.width} x ${f.height}, ${tier} tier, ${plan.length} ${plan.length === 1 ? 'chunk' : 'chunks'}`);
   let run = { rendered: 0, seconds: 0 };
   if (!joinOnly) run = await renderChunks({ todo: all, step, dir: chunks, say, ...common });
   const names = core.loopNames({ cfg, format: f.id, tier, span });
@@ -330,7 +331,7 @@ export async function makeLoop({ cfg = config(), format, tier, first = null, las
 }
 
 export async function decodeFirst(file) {
-  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-frames:v', '1', '-f', 'image2pipe', '-c:v', 'png', 'pipe:1'], { maxBuffer: 1 << 28 });
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-i', file, '-frames:v', '1', '-vf', core.FROM_VIDEO, '-f', 'image2pipe', '-c:v', 'png', 'pipe:1'], { maxBuffer: 1 << 28 });
   if (r.status !== 0) throw new Error(`ffmpeg could not decode ${shown(file)}.`);
   return sharp(r.stdout).removeAlpha().raw().toBuffer({ resolveWithObject: true });
 }

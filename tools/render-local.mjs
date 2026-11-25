@@ -59,28 +59,61 @@ export function keptKeys(dir = KEPT) {
   return out;
 }
 
-async function judgedFrame(film) {
+export function firstJudged(film) {
+  const all = Object.entries({ ...(film.judged ?? {}), ...(film.keyFrames ?? {}) }).filter(([, f]) => Number.isInteger(f));
+  all.sort((x, y) => x[1] - y[1] || (x[0] < y[0] ? -1 : 1));
+  return all.length ? { id: all[0][0], frame: all[0][1] } : null;
+}
+
+async function judgedFrame(film, cfg) {
+  fs.mkdirSync(LOCAL_DIR, { recursive: true });
+  const toImage = (r) => sharp(r.data, { raw: { width: r.width, height: r.height, channels: 4 } }).flip().removeAlpha();
   const kept = keptKeys().find((k) => k.record.key in (film.keyFrames ?? {}));
   if (!kept) {
-    say('no kept still of a key frame was found under out/stills, so no frame was compared');
+    const judged = firstJudged(film);
+    const r = await renderRaw({ frame: judged ? judged.frame : 0, tier: 'final', format: cfg.formats.master.id });
+    const file = path.join(LOCAL_DIR, `test-${judged ? judged.id : 'frame-0'}.png`);
+    await toImage(r).png({ compressionLevel: 3 }).toFile(file);
+    say(`${judged ? `the judged frame ${judged.id}, film frame ${judged.frame},` : 'the film has no judged frame yet, so film frame 0'} is at ${shown(file)}, and no kept still of a key frame was found under ${shown(KEPT)} to compare it with`);
     return null;
   }
   const { key, format, tier } = kept.record;
   const r = await renderRaw({ key, tier, format });
-  fs.mkdirSync(LOCAL_DIR, { recursive: true });
   const mine = path.join(LOCAL_DIR, `test-${key}.png`);
   const theirs = path.join(LOCAL_DIR, `test-${key}-kept${path.extname(kept.file)}`);
-  const image = sharp(r.data, { raw: { width: r.width, height: r.height, channels: 4 } }).flip().removeAlpha();
+  const image = toImage(r);
   await image.clone().png({ compressionLevel: 3 }).toFile(mine);
   fs.copyFileSync(kept.file, theirs);
   const a = await image.clone().raw().toBuffer();
   const other = await sharp(kept.file).removeAlpha().raw().toBuffer({ resolveWithObject: true });
   const same = other.info.width === r.width && other.info.height === r.height;
   const value = same ? core.psnr(a, other.data) : null;
-  const text = value === null ? 'they are not the same size' : `their PSNR is ${Number.isFinite(value) ? value.toFixed(2) : 'without limit'} dB`;
+  const text = value === null ? 'they are not the same size' : `their PSNR is ${Number.isFinite(value) ? `${value.toFixed(2)} dB` : 'without limit, they are equal'}`;
   writeJson(path.join(LOCAL_DIR, `test-${key}.json`), { key, frame: r.frame, format, tier, rendered: shown(mine), kept: shown(kept.file), psnr: value === null || !Number.isFinite(value) ? null : Math.round(value * 100) / 100, equal: value === Infinity });
   say(`the frame that answers ${key}, film frame ${r.frame}, is at ${shown(mine)} beside ${shown(theirs)}, ${text}`);
   return { key, psnr: value };
+}
+
+function copyTo(dir, file) {
+  const to = path.join(dir, path.basename(file));
+  fs.mkdirSync(dir, { recursive: true });
+  fs.copyFileSync(file, to);
+  fs.copyFileSync(`${file}.json`, `${to}.json`);
+  return to;
+}
+
+function moveTo(dir, file) {
+  const to = path.join(dir, path.basename(file));
+  fs.mkdirSync(dir, { recursive: true });
+  try {
+    fs.rmSync(to, { force: true });
+    fs.renameSync(file, to);
+  } catch {
+    fs.copyFileSync(file, to);
+    fs.rmSync(file, { force: true });
+  }
+  fs.copyFileSync(`${file}.json`, `${to}.json`);
+  return to;
 }
 
 function needMix(silent) {
@@ -94,7 +127,7 @@ async function filmTest(cfg, a) {
   needMix(silent);
   useChrome();
   const film = await filmInfo();
-  await judgedFrame(film);
+  await judgedFrame(film, cfg);
   const span = core.testSpan({ film, cfg });
   const name = `test-film.${cfg.export.master.container}`;
   const made = await makeFilm({ cfg, format: cfg.formats.master.id, tier: 'final', first: span.first, last: span.last, silent, dir: LOCAL_DIR, name, say });
@@ -114,26 +147,14 @@ async function filmGo(cfg, a) {
   if (wrong.length) throw new Error(`The frame count is not the length of the film times film.fps, so nothing was rendered: ${wrong.join('; ')}.`);
   say(`${film.frameCount} frames, ${(film.frameCount / cfg.film.fps).toFixed(2)} seconds at ${cfg.film.fps} frames a second`);
   const made = await makeFilm({ cfg, format, tier: 'final', silent, dir: LOCAL_DIR, edit: Boolean(a.prores), say });
-  fs.mkdirSync(DELIVER, { recursive: true });
-  for (const file of [made.file, made.edit].filter(Boolean)) {
-    const to = path.join(DELIVER, path.basename(file));
-    fs.copyFileSync(file, to);
-    fs.copyFileSync(`${file}.json`, `${to}.json`);
-    say(`copied to ${shown(to)}`);
-  }
+  for (const file of [made.file, made.edit].filter(Boolean)) say(`moved to ${shown(moveTo(DELIVER, file))}`);
   say(`the film holds ${made.frames} frames${silent ? ', rendered without sound because --silent was given' : ` with ${made.mix}`}`);
 }
 
 async function loopGo(cfg) {
   useChrome();
   const made = await makeLoop({ cfg, format: cfg.formats.master.id, tier: 'final', dir: path.join(LOCAL_DIR, 'loop'), say });
-  fs.mkdirSync(DELIVER, { recursive: true });
-  for (const file of [made.file, made.web?.file, made.still?.file].filter(Boolean)) {
-    const to = path.join(DELIVER, path.basename(file));
-    fs.copyFileSync(file, to);
-    fs.copyFileSync(`${file}.json`, `${to}.json`);
-    say(`copied to ${shown(to)}`);
-  }
+  for (const file of [made.file, made.web?.file, made.still?.file].filter(Boolean)) say(`copied to ${shown(copyTo(DELIVER, file))}`);
 }
 
 export function proofPart(made, extra = {}) {

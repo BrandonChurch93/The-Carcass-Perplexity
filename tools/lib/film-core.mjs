@@ -8,7 +8,8 @@ export const SOUND_TYPES = ['.flac', '.wav'];
 const BITEXACT = ['-fflags', '+bitexact', '-map_metadata', '-1'];
 const QUIET = ['-hide_banner', '-loglevel', 'error', '-y'];
 const COLOUR = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709', '-color_range', 'tv'];
-const TO_VIDEO = 'scale=out_color_matrix=bt709:out_range=tv';
+const TO_VIDEO = 'scale=out_color_matrix=bt709:out_range=tv:flags=bicubic+accurate_rnd+full_chroma_int';
+export const FROM_VIDEO = 'scale=flags=bicubic+accurate_rnd+full_chroma_int,format=rgb24';
 const pad = (n) => String(n).padStart(6, '0');
 const sec = (v) => String(Number(v.toFixed(6)));
 const whole = (v) => Number.isInteger(v) && v >= 0;
@@ -212,7 +213,9 @@ export function unitsShown(built, units) {
   return out;
 }
 
-export function chunkRecord({ renderer, chunk, what = 'film', format, tier, rate, edit = false }) {
+export const filmUnit = (cfg) => cfg.units[cfg.units.length - 1].id;
+
+export function chunkRecord({ renderer, chunk, what = 'film', format, tier, rate, edit = false, also = [] }) {
   return {
     kind: 'chunk',
     what,
@@ -225,7 +228,7 @@ export function chunkRecord({ renderer, chunk, what = 'film', format, tier, rate
     frames: chunk.frames,
     edit,
     engine: renderer.built.engine,
-    units: unitsShown(renderer.built, [chunk.unit]),
+    units: unitsShown(renderer.built, [chunk.unit, ...also]),
     built: renderer.built,
     browser: renderer.browser,
     machine: renderer.machine,
@@ -290,7 +293,7 @@ export function loopNames({ cfg, format, tier, span }) {
   return { loop: named(files.cardLoop), web: named(files.cardLoopWeb), still: files.cardStill };
 }
 
-export function stillRecord({ renderer, format, tier, unit }) {
+export function stillRecord({ renderer, format, tier, unit, also = [] }) {
   return {
     kind: 'card-still',
     loop: 0,
@@ -298,7 +301,7 @@ export function stillRecord({ renderer, format, tier, unit }) {
     format,
     tier,
     engine: renderer.built.engine,
-    units: unitsShown(renderer.built, [unit]),
+    units: unitsShown(renderer.built, [unit, ...also]),
     built: renderer.built,
     browser: renderer.browser,
     machine: renderer.machine,

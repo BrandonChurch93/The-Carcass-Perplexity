@@ -263,6 +263,8 @@ describe('the records', () => {
   it('holds the renderer state, the format, the tier, the rate and the frames', () => {
     expect(want).toMatchObject({ kind: 'chunk', what: 'film', name: chunk.name, format: preview, tier: 'draft', rate: fps, first: chunk.first, last: chunk.last, frames: chunk.frames, built: renderer.built, browser: renderer.browser, machine: renderer.machine });
     expect(want.units).toEqual({ ribs: 'r1' });
+    const wide = { ...renderer, built: { engine: 'e1', units: { ...renderer.built.units, [core.filmUnit(cfg)]: 'f1' } } };
+    expect(core.chunkRecord({ renderer: wide, chunk, format: preview, tier: 'draft', rate: fps, also: [core.filmUnit(cfg)] }).units).toEqual({ ribs: 'r1', [core.filmUnit(cfg)]: 'f1' });
   });
 
   it('reuses a chunk only when its record matches the current state', () => {
@@ -392,6 +394,13 @@ describe('small things', () => {
     expect(local.findChrome({ platform: 'darwin', env: { CARCASS_BROWSER: '/x/chrome' }, home: '/Users/b', exists: () => true })).toBe('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
     expect(() => local.findChrome({ platform: 'linux', env: {}, exists: () => false })).toThrow(/No installed Chrome/);
     expect(core.LOCAL_FLAGS.some((f) => f.includes('swiftshader'))).toBe(false);
+  });
+
+  it('picks the first judged frame for the test of the local render', () => {
+    expect(local.firstJudged({ keyFrames: { b: 40, a: 40, c: 900 }, judged: { 'film-first': 0 } })).toEqual({ id: 'film-first', frame: 0 });
+    expect(local.firstJudged({ keyFrames: { b: 40, a: 40 } })).toEqual({ id: 'a', frame: 40 });
+    expect(local.firstJudged(oneShot)).toBe(null);
+    expect(local.keptKeys('/no/such/folder')).toEqual([]);
   });
 
   it('measures PSNR', () => {
