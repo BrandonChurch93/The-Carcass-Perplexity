@@ -80,6 +80,7 @@ export function flanks(): THREE.BufferGeometry {
   const pos: number[] = [];
   const top: number[] = [];
   const sl: number[] = [];
+  const under: boolean[] = [];
   for (let j = 0; j <= ROWS; j++) {
     for (let i = 0; i <= COLS; i++) {
       const x = cx + (i / COLS - 0.5) * W;
@@ -90,14 +91,17 @@ export function flanks(): THREE.BufferGeometry {
       pos.push(x, here.y - (Math.abs(at.l) < 470 ? 90 : 8), z);
       top.push(here.rock);
       sl.push(FAR, FAR);
+      under.push(Math.abs(at.l) < 440 && at.s > S_MIN + 120 && at.s < S_MAX - 120);
     }
   }
+  // What lies wholly under the strip is not drawn at all: on a knife ridge a coarse face stands out of the fine ground beside every wall.
   const index: number[] = [];
   for (let j = 0; j < ROWS; j++) {
     for (let i = 0; i < COLS; i++) {
       const a = j * (COLS + 1) + i;
       const c = a + COLS + 1;
-      index.push(a, c, a + 1, a + 1, c, c + 1);
+      if (!(under[a] && under[c] && under[a + 1])) index.push(a, c, a + 1);
+      if (!(under[a + 1] && under[c] && under[c + 1])) index.push(a + 1, c, c + 1);
     }
   }
   return finish(pos, index, top, sl);
