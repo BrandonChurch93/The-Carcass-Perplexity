@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { stream } from '../../../core/rng';
 import { RIBS, bladeSpine, landAt as layoutLand } from '../layout';
-import { SUN, WIND } from './anchors';
+import { SUN, T0, WIND } from './anchors';
 
 // The land map covers the strait and the sea a camera can see the bed through: cells of 4.9 by 4.8 m.
 export const LAND = { minX: -1200, maxX: 1300, minZ: -3500, maxZ: 1100, width: 512, height: 960 };
@@ -11,6 +11,10 @@ export const CONTACT = { size: 1024, minRadius: 30, maxRadius: 220 };
 /** The cloud sheet: its height, metres of one repeat of the mask, and how much of the sun is left under a cloud. */
 export const CLOUD = { height: 1500, repeat: 5200, shade: 0.12, size: 256 };
 export const MAX_EMITTERS = 8;
+/** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
+export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
+/** The one wide break in the cloud that lets the sun down on the strait: where its light falls on the ground at the establishing key, and its radius, metres. */
+export const BREAK = { x: 200, z: -500, radius: 420, gain: 0.8, cover: 0.62 };
 
 export type Height = (x: number, z: number) => number;
 
@@ -238,6 +242,61 @@ function cloudMask(): { texture: THREE.DataTexture; cover: (u: number, v: number
   return { texture: t, cover: read };
 }
 
+/** One tiling picture of smooth relief, 0 to 1, and the same picture read on the processor exactly as the graphics card reads it. */
+function fineTile(): { texture: THREE.DataTexture; read: (u: number, v: number) => number } {
+  const n = FINE.size;
+  const rng = stream('ribs/rig/fine');
+  const sum = new Float32Array(n * n);
+  let total = 0;
+  [4, 8, 16, 32, 64].forEach((cells, k) => {
+    const gain = Math.pow(0.55, k);
+    total += gain;
+    const lattice = new Float32Array(cells * cells);
+    for (let i = 0; i < lattice.length; i++) lattice[i] = rng.next();
+    for (let j = 0; j < n; j++) {
+      for (let i = 0; i < n; i++) {
+        const fx = (i / n) * cells;
+        const fy = (j / n) * cells;
+        const x0 = Math.floor(fx);
+        const y0 = Math.floor(fy);
+        const u = fx - x0;
+        const v = fy - y0;
+        const su = u * u * (3 - 2 * u);
+        const sv = v * v * (3 - 2 * v);
+        const g = (x: number, y: number): number => lattice[(y % cells) * cells + (x % cells)] as number;
+        sum[j * n + i] = (sum[j * n + i] as number) + gain * ((g(x0, y0) * (1 - su) + g(x0 + 1, y0) * su) * (1 - sv) + (g(x0, y0 + 1) * (1 - su) + g(x0 + 1, y0 + 1) * su) * sv);
+      }
+    }
+  });
+  const data = new Uint8Array(n * n * 4);
+  for (let i = 0; i < n * n; i++) {
+    const v = Math.round(255 * Math.min(1, Math.max(0, (((sum[i] as number) / total) - 0.5) * 2.4 + 0.5)));
+    data[i * 4] = v;
+    data[i * 4 + 1] = v;
+    data[i * 4 + 2] = v;
+    data[i * 4 + 3] = 255;
+  }
+  const t = new THREE.DataTexture(data, n, n, THREE.RGBAFormat, THREE.UnsignedByteType);
+  t.minFilter = THREE.LinearMipmapLinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.generateMipmaps = true;
+  t.wrapS = THREE.RepeatWrapping;
+  t.wrapT = THREE.RepeatWrapping;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  const at = (i: number, j: number): number => data[((((j % n) + n) % n) * n + (((i % n) + n) % n)) * 4] as number;
+  const read = (u: number, v: number): number => {
+    const fx = u * n - 0.5;
+    const fy = v * n - 0.5;
+    const i = Math.floor(fx);
+    const j = Math.floor(fy);
+    const a = fx - i;
+    const b = fy - j;
+    return ((at(i, j) * (1 - a) + at(i + 1, j) * a) * (1 - b) + (at(i, j + 1) * (1 - a) + at(i + 1, j + 1) * a) * b) / 255;
+  };
+  return { texture: t, read };
+}
+
 const rect = (spec: { minX: number; maxX: number; minZ: number; maxZ: number }): THREE.Vector4 => new THREE.Vector4(spec.minX, spec.minZ, 1 / (spec.maxX - spec.minX), 1 / (spec.maxZ - spec.minZ));
 
 const CONTACT_VERTEX = /* glsl */ `
@@ -280,8 +339,10 @@ export interface Rig {
   readonly emitters: Emitter[];
   /** The land as the rig knows it. Before the land folder calls `setLand` it is the rough ground of the layout. */
   readonly land: {
-    /** The bed: sand and rock, metres. Below 0 it is under the sea; the pools and runnels stand at LEVELS.pool. */
+    /** The bed: sand and rock, metres, with its fine relief. Below 0 it is under the sea; the pools and runnels stand at LEVELS.pool. */
     height(x: number, z: number): number;
+    /** The fine relief alone, metres, within plus and minus 0.14: in a shader it is bedFine(xz), and the bed is landAt(xz).r + bedFine(xz). */
+    fine(x: number, z: number): number;
     /** 0 to 1, how much of the sky the ground there sees. */
     open(x: number, z: number): number;
     /** 0 to 1, how much of the sun reaches the ground there past the blades and the land (not the cloud). */
@@ -317,8 +378,19 @@ export function createRig(): Rig {
   contactCamera.up.set(0, 0, -1);
 
   const mask = cloudMask();
+  const tile = fineTile();
+  const fine = (x: number, z: number): number => FINE.wideAmp * (tile.read(x / FINE.wide, z / FINE.wide) - 0.5) + FINE.smallAmp * (tile.read(z / FINE.small, x / FINE.small) - 0.5);
+  const breakAt = new THREE.Vector4(BREAK.x, BREAK.z, 1 / (BREAK.radius * BREAK.radius), BREAK.gain);
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
+  const skyBreak = new THREE.Vector3();
+  const breakToward = (seconds: number): void => {
+    // The break drifts with the cloud: a fifth of a degree a second, to the right.
+    const yaw = ((36 + 0.2 * (seconds - T0)) * Math.PI) / 180;
+    const pitch = (21 * Math.PI) / 180;
+    skyBreak.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+  };
+  breakToward(T0);
 
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
@@ -327,17 +399,25 @@ export function createRig(): Rig {
     uLandRect: { value: rect(LAND) },
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
+    tBedFine: { value: tile.texture },
     tCloudShade: { value: mask.texture },
+    uCloudBreak: { value: breakAt },
     uCloudShade: { value: cloudShade },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
-    uSkyZenith: { value: new THREE.Vector3(0.2, 0.235, 0.29) },
-    uSkyHorizon: { value: new THREE.Vector3(0.5, 0.56, 0.62) },
+    uSkyZenith: { value: new THREE.Vector3(0.13, 0.16, 0.21) },
+    uSkyHorizon: { value: new THREE.Vector3(0.3, 0.345, 0.4) },
     // What wet sand and sea throw back up at the underside of things.
     uSkyGround: { value: new THREE.Vector3(0.05, 0.055, 0.06) },
     uSunDir: { value: sun },
     uSunColour: { value: new THREE.Vector3(...SUN.colour) },
     // The colour the air takes at the horizon: the volume pass and the dome meet in it.
-    uHaze: { value: new THREE.Vector3(0.52, 0.58, 0.64) },
+    uHaze: { value: new THREE.Vector3(0.34, 0.385, 0.43) },
+    // The way to the bright break in the storm sky, as the cameras of the strait see it: up and to the right of the way in.
+    uSkyBreak: { value: skyBreak },
+    // The picture of the cloud's shapes (the air folder loads it), its mean colour, and the height of the sheet.
+    tSky: { value: null },
+    uSkyMean: { value: new THREE.Vector3(0.226, 0.269, 0.32) },
+    uCloudHeight: { value: CLOUD.height },
   };
 
   let landHeight: Height = layoutLand;
@@ -379,13 +459,16 @@ export function createRig(): Rig {
     contactScene,
     emitters: [],
     land: {
-      height: (x, z) => landHeight(x, z),
+      height: (x, z) => landHeight(x, z) + fine(x, z),
+      fine,
       open: (x, z) => read((g) => g.open, x, z),
       sun: (x, z) => read((g) => g.sunLow, x, z),
     },
     cloudShade: (x, z, seconds) => {
       const d = drift(seconds);
-      const c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]);
+      const bx = x - (BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0));
+      const bz = z - (BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0));
+      const c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius));
       const k = Math.min(1, Math.max(0, (c - 0.42) / 0.2));
       return CLOUD.shade + (1 - CLOUD.shade) * k * k * (3 - 2 * k);
     },
@@ -422,6 +505,9 @@ export function createRig(): Rig {
       const d = drift(seconds);
       cloudShade.x = d[0];
       cloudShade.y = d[1];
+      breakToward(seconds);
+      breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0);
+      breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0);
     },
     beforeSample: (renderer, camera) => {
       if (!grid) bake();
@@ -456,6 +542,7 @@ export function createRig(): Rig {
       contactTarget.dispose();
       texture?.dispose();
       mask.texture.dispose();
+      tile.texture.dispose();
       discGeometry.dispose();
       discMaterial.dispose();
     },
