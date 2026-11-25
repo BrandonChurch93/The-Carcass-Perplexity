@@ -5,7 +5,7 @@ import type { HeartContext, HeartPiece } from '../shared/context';
 import { SUNK, seamLine } from '../shared/anchors';
 import { blackbody } from '../shared/rig';
 import { CARCASS_FRAGMENT, CARCASS_VERTEX, FIELD_FRAGMENT, FIELD_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX } from './shaders';
-import { FIELD, FOOT_A, LEG_A, LEG_B, SLOPE_RANGE, TEAR, WRIST_B, YAW, bakeField, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
+import { BODY, FIELD, FOOT_A, LEG_A, LEG_B, SLOPE_RANGE, TEAR, WRIST_B, YAW, bakeField, bodyDistance, bodyGeometry, fieldGeometry, legGeometry, makeField, padGeometry } from './shape';
 
 export const PARTS: readonly string[] = ['sunk-walker'];
 
@@ -56,14 +56,15 @@ export function create(ctx: HeartContext): HeartPiece {
     transparent: true,
     depthWrite: false,
   });
-  const WHOLE = FIELD.half - 4.7;
+  const WHOLE = FIELD.half - 5.2;
   const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
   // The far side of the heap is hidden from the bench by the mound: it gets the coarse sheet.
   const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && z > -3.0 && z < 7.1;
-  const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8;
+  // Under the body nothing of the sheet is seen, except at the end the skin rode over.
+  const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8 && x > BODY.centre.x - 1.3;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.05, (x, z) => inner(x, z) && !buried(x, z)),
+    fieldGeometry(baked, 0.05, (x, z) => inner(x, z) && radial(x, z) < WHOLE && !buried(x, z)),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
@@ -71,7 +72,7 @@ export function create(ctx: HeartContext): HeartPiece {
     fieldMaterial,
   );
   const rim = new THREE.Mesh(
-    fieldGeometry(baked, 0.25, (x, z) => radial(x, z) >= WHOLE - 0.13 && radial(x, z) < FIELD.half),
+    fieldGeometry(baked, 0.25, (x, z) => radial(x, z) >= WHOLE - 0.13 && radial(x, z) < FIELD.half - 1.9),
     rimMaterial,
   );
   for (const m of [fine, coarse, rim]) m.position.y = 0.02;
@@ -129,7 +130,7 @@ export function create(ctx: HeartContext): HeartPiece {
 
   // What stands over the crust hides the sky from it: the body, the foot of the arch, the hanging pad, the span of the arch.
   const SHADES: [number, number, number, number][] = [
-    [-4.3, -0.25, 4.4, 0.55],
+    [BODY.centre.x, BODY.centre.z, 4.8, 0.55],
     [FOOT_A[0], FOOT_A[1], 1.8, 0.5],
     [WRIST_B[0], WRIST_B[2], 1.3, 0.35],
     [1.0, 0.4, 3.6, 0.16],
