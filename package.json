@@ -32,7 +32,10 @@
     "mix": "node tools/mix.mjs",
     "animatic": "node tools/animatic.mjs",
     "cut": "node tools/cut.mjs",
-    "voice": "node tools/voice.mjs"
+    "voice": "node tools/voice.mjs",
+    "sound": "node tools/sound.mjs",
+    "stress": "node tools/stress.mjs",
+    "trace": "node tools/trace.mjs"
   },
   "dependencies": {
     "gsap": "3.15.1",

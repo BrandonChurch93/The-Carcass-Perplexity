@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 12, 2026-11-25 00:36 UTC:
+Status 13, 2026-11-25 00:52 UTC:
 
-- `01-status12-frames.jpg`: First frames from the film's own engine, one from each place, at the frames the cut list names. These are placeholder scenes, the same shapes in each place's main colour: they prove that the film now plays shot by shot from the cut list. The real blockout of each place is being built from its layout sketch and its five approved pictures by six supporting agents, started 00:36 UTC.
-- `02-status12-views.jpg`: The checking views now work on the film: the standins view flags every pixel a placeholder draws (the whole frame today), the motion view shows what changes in one second with the camera held, and the solo view draws one part alone.
+- `01-reveal-blockout-1.jpg`: The reveal as a blockout: six frames of the one rising shot, from the lake's dark water to the whole body with the planet's edge
+- `02-reveal-trace-overlay.jpg`: How the flat continent was made: the outline (magenta) traced from the approved master, and the circle fitted to the planet's edge (cyan)
 
+Status 12, 2026-11-25 00:36 UTC, showed: First frames from the film's own engine, one from each place, at the frames the cut list names.
 Status 11, 2026-11-25 00:14 UTC, showed: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet.
 Status 10, 2026-11-24 23:54 UTC, showed: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks.
-Status 9, 2026-11-24 23:22 UTC, showed: The Reveal's clip n8, kept: its four lines, cut out and brought to one level. The other seven clips are listed as not made yet.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T00:36:06Z
-phase 2: 0.35 h used of 6.00 h
-build: 4.10 h used of 72.00 h
+2026-11-25T00:52:15Z
+phase 2: 0.62 h used of 6.00 h
+build: 4.37 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 21
+minutes since the last status: 16
 ```
 
 ## Phases
@@ -589,3 +589,4 @@ none
 - 2026-11-25 00:23 UTC. 00:18 UTC: `fbfb93d` pushed. Phase 1 closed, status 11.
 - 2026-11-25 00:23 UTC. 00:24 UTC: Phase 2 harness additions: renderRaw (raw frames for the film tools), filmStates, the part option for the solo and standins views. 516 tests pass.
 - 2026-11-25 00:36 UTC. 00:37 UTC: status 12 posted. Engine core pushed as `590f414`. Nine agents running: six place blockouts, three harness builders.
+- 2026-11-25 00:52 UTC. Status 13 posted: the reveal blockout (six frames of the rise) and the outline traced from the master. The sound and stress tools are merged from the first agent, 42 tests pass here.

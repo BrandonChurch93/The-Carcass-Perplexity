@@ -4,6 +4,7 @@ import { runG10 } from './g10.mjs';
 import { checkG8, checkG9 } from './repo.mjs';
 import { runG7 } from './g7.mjs';
 import { runG11 } from './g11.mjs';
+import { runG12 } from './g12.mjs';
 import { runG15 } from './g15.mjs';
 import { runG16 } from './g16.mjs';
 import { runD1 } from './d1.mjs';
@@ -29,6 +30,7 @@ const BUILT = {
   G9: fromRepo(checkG9),
   G10: runG10,
   G11: runG11,
+  G12: runG12,
   G15: runG15,
   G16: runG16,
   D1: (ctx) => runD1(ctx),

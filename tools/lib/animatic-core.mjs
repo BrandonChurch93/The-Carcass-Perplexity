@@ -1,4 +1,7 @@
 import path from 'node:path';
+import { monotone } from './rise-core.mjs';
+
+export { monotone };
 
 export const PUSH_PER_SECOND = 0.008;
 export const PUSH_CAP = 0.08;
@@ -79,37 +82,6 @@ export function placeView(shot, frame, src, out, fps) {
   const w = full.w * scale;
   const h = full.h * scale;
   return { x: full.x + (full.w - w) / 2 + slide * (full.w - w), y: full.y + (full.h - h) / 2, w, h };
-}
-
-export function monotone(ts, ys, startSlope = 0, endSlope = 0) {
-  const n = ts.length;
-  const h = [];
-  const d = [];
-  for (let i = 0; i < n - 1; i++) {
-    h.push(ts[i + 1] - ts[i]);
-    d.push((ys[i + 1] - ys[i]) / h[i]);
-  }
-  const m = new Array(n).fill(0);
-  for (let i = 1; i < n - 1; i++) {
-    if (d[i - 1] * d[i] > 0) {
-      const a = 2 * h[i] + h[i - 1];
-      const b = h[i] + 2 * h[i - 1];
-      m[i] = (a + b) / (a / d[i - 1] + b / d[i]);
-    }
-  }
-  const fit = (slope, secant) => (slope * secant <= 0 ? 0 : Math.sign(secant) * Math.min(Math.abs(slope), 3 * Math.abs(secant)));
-  m[0] = fit(startSlope, d[0]);
-  m[n - 1] = fit(endSlope, d[n - 2]);
-  return (t) => {
-    if (t <= ts[0]) return ys[0];
-    if (t >= ts[n - 1]) return ys[n - 1];
-    let i = 0;
-    while (t > ts[i + 1]) i++;
-    const s = (t - ts[i]) / h[i];
-    const s2 = s * s;
-    const s3 = s2 * s;
-    return (2 * s3 - 3 * s2 + 1) * ys[i] + (s3 - 2 * s2 + s) * h[i] * m[i] + (-2 * s3 + 3 * s2) * ys[i + 1] + (s3 - s2) * h[i] * m[i + 1];
-  };
 }
 
 export function revealKeys(cfg, pullback) {
