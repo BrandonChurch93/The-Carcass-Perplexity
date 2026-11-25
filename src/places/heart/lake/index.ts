@@ -407,6 +407,19 @@ float gSlabRim;
 float slabHeld(float c) {
   return 1.0 - smoothstep(0.25, 0.6, c);
 }
+// The plane of slab k at a point that lies s (in lattice units) from the slab's middle: x is its height there, yz its slope.
+vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
+  vec2 r1 = hash22(k);
+  vec2 r2 = hash22(k + 31.7);
+  float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
+  float a = 6.2832 * r2.x;
+  vec2 dir = normalize(mix(vec2(cos(a), sin(a)), gLean.xy, gLean.z));
+  // Most plates lie within a few degrees of level; one in four is tilted by 10 to 25 degrees. A large slab cannot stand as
+  // steep as a small one: its high edge is never more than half a metre up.
+  float tilt = min(min((0.04 + 0.42 * r2.y * r2.y * r2.y * r2.y) * broken, 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
+  float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
+  return vec3(level * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.85 * gLow) + dot(dir * tilt, s) * L, dir * tilt);
+}
 // size is the lattice the slabs are cut on, metres; drop is how far one slab in three has gone down, metres.
 float slabAt(vec2 q, float broken, float c, float size, float drop) {
   gSlabEdge = 0.0;
@@ -422,6 +435,8 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   float d2 = 9.0;
   vec2 s1 = vec2(0.0);
   vec2 k1 = vec2(0.0);
+  vec2 s2 = vec2(0.0);
+  vec2 k2 = vec2(0.0);
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 g = vec2(float(i), float(j));
@@ -431,11 +446,15 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
       float d = length(s) - 0.22 * step(0.67, fract(r.x * 7.0 + r.y * 3.0));
       if (d < d1) {
         d2 = d1;
+        s2 = s1;
+        k2 = k1;
         d1 = d;
         s1 = s;
         k1 = cell + g;
       } else if (d < d2) {
         d2 = d;
+        s2 = s;
+        k2 = cell + g;
       }
     }
   }
@@ -443,29 +462,27 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   vec2 r1 = hash22(k1);
   vec2 r2 = hash22(k1 + 31.7);
   float raft = step(0.67, fract(r1.x * 7.0 + r1.y * 3.0));
-  float a = 6.2832 * r2.x;
-  vec2 dir = normalize(mix(vec2(cos(a), sin(a)), gLean.xy, gLean.z));
-  // A large slab cannot stand as steep as a small one: its high edge is never more than half a metre up.
-  float tilt = min(min((0.06 + 0.41 * r2.y * r2.y) * broken, 0.55 / L), mix(mix(0.47, 0.13, gPadCalm), 0.025, gLow));
-  gSlabSlope = dir * tilt;
+  vec3 own = slabPlane(k1, -s1, broken, L, drop);
+  gSlabSlope = own.yz;
   gSlabId = r1.y;
   gSlabRim = e;
-  float level = (0.26 * (r1.x - 0.4) + 0.16 * raft) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
   // Its edge is turned up, here more and there not at all: 5 to 25 cm, wide enough for the cells to carry.
   float rimWide = max(0.1, 3.0 * c);
-  float rimHigh = (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
-  float plane = level * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.85 * gLow) - dot(gSlabSlope, s1) * L + (0.03 * broken + rimHigh) * exp(-e / rimWide);
-  // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
-  float gapHalf = (0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken)) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm);
+  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow);
   // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
   float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.03, 0.06, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.06, 0.12, c));
-  float bed = min(plane, 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
+  // The floor of the gap lies under both the slabs it parts, so it is one floor from either side: a floor that jumped from
+  // slab to slab would stand as a row of teeth wherever the cells are too coarse to open the gap.
+  float bed = min(min(own.x, slabPlane(k2, -s2, broken, L, drop).x), 0.0) - (0.06 + 0.12 * broken) + rubble * smoothstep(0.3, 0.7, broken);
+  // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
+  float gapHalf = (0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken)) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm);
   // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
-  // 65 degrees, or each triangle of it shades its own way and the edge stands as a row of teeth.
-  float edgeWide = max(max(0.05, 4.0 * c), 0.5 * (plane - bed));
-  float open = 1.0 - smoothstep(gapHalf, gapHalf + edgeWide, e);
+  // 70 degrees, or each triangle of it shades its own way and the edge stands as a row of teeth.
+  float edgeWide = max(max(0.05, 2.5 * c), 0.5 * (own.x + rimHigh - bed));
+  float inner = gapHalf + edgeWide;
+  float plane = own.x + rimHigh * exp(-max(e - inner, 0.0) / rimWide);
   gSlabEdge = 1.0 - smoothstep(gapHalf, gapHalf + max(0.04, 2.5 * c), e);
-  return mix(plane, bed, open * (1.0 - smoothstep(0.08, 0.3, c))) * slabHeld(c);
+  return mix(plane, bed, 1.0 - smoothstep(gapHalf, inner, e)) * slabHeld(c);
 }
 // The size of the finest thing the sheet may carry at a point: the cell there, or the length of a pixel on the lake if that
 // is longer. Relief finer than a pixel is long would only glitter.
@@ -545,8 +562,8 @@ float heightAt(vec2 q, float c) {
   if (broke > 0.01 && c < 0.6) {
     h += slabAt(q, broke, c, 1.9, 0.0) * smoothstep(0.0, 1.5, lake);
     // Low mounds of ash and rubble, 1 to 3 m across, lie on the broken crust.
-    gMound = smoothstep(0.56, 0.8, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
-    h += gMound * (0.16 + 0.2 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c) * smoothstep(0.0, 1.5, lake);
+    gMound = smoothstep(0.62, 0.84, vnoise(q / 2.3 + 71.0) * 0.8 + vnoise(q / 0.9 + 13.0) * 0.2) * smoothstep(0.3, 0.6, broke) * (1.0 - gPadCalm) * (1.0 - gLow);
+    h += gMound * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c) * smoothstep(0.0, 1.5, lake);
   }
 
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
@@ -754,6 +771,8 @@ const N = 512;
 const SPAN_WIDE = 256;
 const BLOCK = 16;
 const CELL0 = CELL / 2 ** RINGS;
+// Where the rings are set for shot heart-02: a point of the floor 54 m from the lens of key heart-3, toward the group.
+const FLOOR_FOCUS: readonly [number, number] = [-417.0, 211.8];
 const X0 = Math.floor((NET.minX - 12) / CELL) * CELL;
 const Z0 = Math.floor((NET.minZ - 12) / CELL) * CELL;
 const SHEET_NX = Math.ceil((NET.minX + NET.width * NET.cell + 12 - X0) / CELL);
@@ -914,6 +933,9 @@ export function create(ctx: HeartContext): HeartPiece {
   const hillShot = shotById('heart-05');
   const hillFrom = secondsInPlace(UNIT, hillShot.first) - 0.3 / 60;
   const hillTo = secondsInPlace(UNIT, hillShot.last) + 0.7 / 60;
+  const floorShot = shotById('heart-02');
+  const floorFrom = secondsInPlace(UNIT, floorShot.first) - 0.3 / 60;
+  const floorTo = secondsInPlace(UNIT, floorShot.last) + 0.7 / 60;
   const frustum = new THREE.Frustum();
   const matrix = new THREE.Matrix4();
   const box = new THREE.Box3();
@@ -1050,7 +1072,16 @@ export function create(ctx: HeartContext): HeartPiece {
       const long = tall > 4.5;
       const span = long ? N : SPAN_WIDE;
       const ahead = long ? N / 4 : 0;
-      const [fx, fz] = aim(camera, long ? 1.35 : 1);
+      let [fx, fz] = aim(camera, long ? 1.35 : 1);
+      // In the shot of the group at the seam the lens is sharp at the feet, 60 to 76 m out, and soft on the floor in front of
+      // them: the fine cells are spent on the floor from 45 m out to the group, at one place for the whole shot.
+      if (long && now >= floorFrom && now <= floorTo) {
+        const v = ctx.rig.flow.velocity(FLOOR_FOCUS[0], FLOOR_FOCUS[1]);
+        const dt = now - ctx.rig.flow.t0;
+        fx = FLOOR_FOCUS[0] - v[0] * dt;
+        fz = FLOOR_FOCUS[1] - v[1] * dt;
+        heading.slant = Math.hypot(FLOOR_FOCUS[0] - eye.x, eye.y, FLOOR_FOCUS[1] - eye.z);
+      }
       const pixel = 2 / (tall * 2160);
       // No ring finer than a pixel and a half is wide there: its cells would be spent on what the lens cannot see.
       const least = Math.max(CELL0, 3 * pixel * heading.slant);
