@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 16, 2026-11-25 01:34 UTC:
+Status 17, 2026-11-25 02:07 UTC:
 
-- `01-ribs-0.jpg`: The Ribs, the establishing key (frame 1241): the approved picture on the left, the blockout on the right
-- `02-spine-0.jpg`: The Spine, the establishing key (frame 7234): picture and blockout
-- `03-eye-0.jpg`: The Eye, the establishing key (frame 8412): picture and blockout
-- `04-heart-3.jpg`: The Heart after its refit, key heart-3 (frame 3156): the fall whole in the upper left and four tall ones across the frame
+- `01-set-a-05.jpg`: The rise as the critics saw it: the first two frames are plain navy water. Both critics read that stretch as a fade to black and a new shot. This handoff is being rebuilt on both sides of the cut
+- `02-set-c-05.jpg`: The reveal as the critics saw it: once the whole body is in frame the camera locks, and nine frames in a row are the same. The hold keeps its length and gets a slow pull back, a drift and moving weather
+- `03-set-c-01.jpg`: The Spine as the critics saw it: at frames 7601 and 8070 a pale stand-in fills the frame and plays as a wipe, and two shots look static
+- `04-set-c-03.jpg`: The Eye as the critics saw it: the establishing camera sits too high and too far back, and the last two frames are the blank stretch before the rise
 
+Status 16, 2026-11-25 01:34 UTC, showed: The Ribs, the establishing key (frame 1241): the approved picture on the left, the blockout on the right; The Spine, the establishing key...
 Status 15, 2026-11-25 01:20 UTC, showed: The Heart, establishing frame: the approved picture on the left, the blockout on the right.
 Status 14, 2026-11-25 01:10 UTC, showed: The reveal, titan frame: the approved picture on the left, the blockout's flat continent on the right, with two close crops below.
-Status 13, 2026-11-25 00:52 UTC, showed: The reveal as a blockout: six frames of the one rising shot, from the lake's dark water to the whole body with the planet's edge; How the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T01:34:20Z
-phase 2: 1.32 h used of 6.00 h
-build: 5.07 h used of 72.00 h
+2026-11-25T02:07:58Z
+phase 2: 1.88 h used of 6.00 h
+build: 5.63 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 14
+minutes since the last status: 34, status overdue
 ```
 
 ## Phases
@@ -676,3 +676,4 @@ none
 - 2026-11-25 01:21 UTC. Status 15 posted at 01:21 UTC: the Heart and the Breath blockouts against their pictures and the card loop on the Heart's stand-in. The Heart (e15469b) and the Breath (1f80f21) merged and checked. The Phase 2 gate run early: G1 to G12, G15, G16 pass with 754 tests; D2 and D7 open until the film is rendered. A preview draft frame of the Heart takes 0.57 s on this machine.
 - 2026-11-25 01:34 UTC. 01:35 UTC status 16 shown: all six places and the rise in the film as blockouts, the Ribs, the Spine and the Eye against their pictures, the Heart after its refit; the Heart's refit merged as 6438fe9
 - 2026-11-25 02:07 UTC. Round 1 read: scores 6, 10 and 4, merged 4, a fail. The scorecards, the key and the summary are in scorecards/round-001. Fixes sent to the Eye, Spine and Ribs builders at 02:03 UTC; the reveal's side of the handoff and the moving hold are the Builder's
+- 2026-11-25 02:08 UTC. Status 17 shown at 02:09 UTC: round 1's result, four sheets as the critics saw them, what is being fixed and what is declined

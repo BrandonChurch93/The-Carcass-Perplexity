@@ -1,8 +1,8 @@
-# Status 16
+# Status 17
 
-2026-11-25 01:34 UTC. Phase 2, engine and blockout.
+2026-11-25 02:07 UTC. Phase 2, engine and blockout.
 
-- `01-ribs-0.jpg`: The Ribs, the establishing key (frame 1241): the approved picture on the left, the blockout on the right
-- `02-spine-0.jpg`: The Spine, the establishing key (frame 7234): picture and blockout
-- `03-eye-0.jpg`: The Eye, the establishing key (frame 8412): picture and blockout
-- `04-heart-3.jpg`: The Heart after its refit, key heart-3 (frame 3156): the fall whole in the upper left and four tall ones across the frame
+- `01-set-a-05.jpg`: The rise as the critics saw it: the first two frames are plain navy water. Both critics read that stretch as a fade to black and a new shot. This handoff is being rebuilt on both sides of the cut
+- `02-set-c-05.jpg`: The reveal as the critics saw it: once the whole body is in frame the camera locks, and nine frames in a row are the same. The hold keeps its length and gets a slow pull back, a drift and moving weather
+- `03-set-c-01.jpg`: The Spine as the critics saw it: at frames 7601 and 8070 a pale stand-in fills the frame and plays as a wipe, and two shots look static
+- `04-set-c-03.jpg`: The Eye as the critics saw it: the establishing camera sits too high and too far back, and the last two frames are the blank stretch before the rise
