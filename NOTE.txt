@@ -1,4 +1,5 @@
-2026-11-25 23:04 UTC
-work at 0b30081 on agent/ribs-ground
-Wide key against the picture: floor now mostly a sheet of water with a wet gravel bar at right; water too clean (few islets, no weed heaps), near cliff weed in pillowed tiers not ropes, blades still smooth in outline
+2026-11-25 23:32 UTC
+work at 09d3004 on agent/ribs-ground
+Light now from ahead in the sky break: glare on the wet flat, blades against the light. Wrong: water sheet too clean and brown at left, near cliff weed in pillowed tiers and grey, colony grey with regular ledges, right blade lost in sun haze, ribs-1 weed colourless
 look-1.jpg = out/work/c0.jpg
+look-2.jpg = out/work/keys4.jpg
