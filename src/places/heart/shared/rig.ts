@@ -271,8 +271,8 @@ export function createRig(t0: number): Rig {
     // The dusk sky, measured against the approved wide view: its sky reads 0.22, 0.25, 0.35 at 13 degrees up, and bare rock under it about 0.015.
     uSkyZenith: { value: new THREE.Vector3(0.09, 0.118, 0.2) },
     uSkyHorizon: { value: new THREE.Vector3(0.175, 0.21, 0.33) },
-    uSkyGround: { value: new THREE.Vector3(0.016, 0.015, 0.016) },
-    uCast: { value: 0.55 },
+    uSkyGround: { value: new THREE.Vector3(0.034, 0.036, 0.045) },
+    uCast: { value: 0.75 },
     uFill: { value: new THREE.Vector3(0.78, 0.64, 0.4) },
     uWarmDir: { value: new THREE.Vector3(0.86, 0.22, -0.46).normalize() },
     uWarmColour: { value: new THREE.Vector3(0.03, 0.0135, 0.006) },
