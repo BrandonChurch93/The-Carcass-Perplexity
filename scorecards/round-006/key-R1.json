@@ -1,0 +1,26 @@
+{
+  "round": "6",
+  "unit": "heart",
+  "critic": "R1",
+  "packs": {
+    "R1-1": {
+      "set-A-01-a.png": "The key heart-0: its approved picture references/approved/2-heart/heart-0-establishing.jpg as -a and film frame 2722 as -b (the approved picture)",
+      "set-A-01-b.png": "The key heart-0: its approved picture references/approved/2-heart/heart-0-establishing.jpg as -a and film frame 2722 as -b (the frame)",
+      "set-A-02.png": "Matching crops of the key heart-0: references/approved/2-heart/heart-0-establishing.jpg beside film frame 2722 at native size",
+      "set-A-03-a.png": "The key heart-1: its approved picture references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg as -a and film frame 3477 as -b (the approved picture)",
+      "set-A-03-b.png": "The key heart-1: its approved picture references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg as -a and film frame 3477 as -b (the frame)",
+      "set-A-04.png": "Matching crops of the key heart-1: references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg beside film frame 3477 at native size",
+      "set-A-05-a.png": "The key heart-2: its approved picture references/approved/2-heart/heart-2-the-one-that-sank.jpg as -a and film frame 3685 as -b (the approved picture)",
+      "set-A-05-b.png": "The key heart-2: its approved picture references/approved/2-heart/heart-2-the-one-that-sank.jpg as -a and film frame 3685 as -b (the frame)",
+      "set-A-06.png": "Matching crops of the key heart-2: references/approved/2-heart/heart-2-the-one-that-sank.jpg beside film frame 3685 at native size"
+    },
+    "R1-2": {
+      "set-B-01-a.png": "The key heart-3: its approved picture references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg as -a and film frame 3156 as -b (the approved picture)",
+      "set-B-01-b.png": "The key heart-3: its approved picture references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg as -a and film frame 3156 as -b (the frame)",
+      "set-B-02.png": "Matching crops of the key heart-3: references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg beside film frame 3156 at native size",
+      "set-B-03-a.png": "The key heart-4: its approved picture references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg as -a and film frame 4006 as -b (the approved picture)",
+      "set-B-03-b.png": "The key heart-4: its approved picture references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg as -a and film frame 4006 as -b (the frame)",
+      "set-B-04.png": "Matching crops of the key heart-4: references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg beside film frame 4006 at native size"
+    }
+  }
+}

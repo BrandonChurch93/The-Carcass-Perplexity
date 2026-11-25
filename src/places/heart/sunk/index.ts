@@ -131,14 +131,14 @@ export function create(ctx: HeartContext): HeartPiece {
     },
   });
   const carcass = (geometry: THREE.BufferGeometry): THREE.Mesh => new THREE.Mesh(geometry, carcassMaterial);
-  const legShapeA = { points: LEG_A, knee: 0.468, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
+  const legShapeA = { points: LEG_A, knee: 0.455, scale: 1.5, seed: 1.7, rings: 560, round: 64, tendon: 0, cover: 1 };
   const legShapeB = { points: LEG_B, knee: 0.34, scale: 0.82, seed: 4.1, rings: 360, round: 36, tendon: 0, cover: 0 };
   // What hangs and stirs: rags of hide under the arches of the two legs.
   // Each is [where it is held, its length, its half width, its turn, its seed].
   const RAGS: [[number, number, number], number, number, number, number][] = [
-    [[2.2, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
-    [[2.28, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
-    [[2.08, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
+    [[2.4, 3.5, 0.6], 1.05, 0.085, 1.9, 1],
+    [[2.48, 3.38, 0.56], 0.55, 0.05, 0.6, 2],
+    [[2.28, 3.72, 0.64], 0.38, 0.06, 2.7, 3],
     [[-0.3, 3.1, 0.86], 0.8, 0.07, -0.4, 4],
     [[-0.2, 3.22, 0.82], 0.42, 0.045, 0.9, 5],
     [[1.0, 3.19, -3.04], 0.9, 0.075, 0.9, 6],
