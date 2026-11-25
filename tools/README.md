@@ -111,6 +111,18 @@ The check G12 is `tools/checks/g12.mjs` and the rise part of G15 is in `tools/ch
 
 A chunk is used again when its record matches the format, the tier, the rate, the frames, the engine hash, the hashes of the unit it shows and the browser version. The machine is not compared, so chunks made on other machines join. The checks G5, D2 and D7 are `tools/checks/g5.mjs`, `d2.mjs` and `d7.mjs`.
 
+## The parts register and the shots file
+
+| Command | What it does |
+| --- | --- |
+| `npm run parts [-- --unit ID ...] [--refresh] [--fresh] [--no-pictures] [--write]` | Asks the built page for the live parts of every unit and records each in `parts/PARTS.json` (schema `carcass/parts 1`) with its kind, its state and the hash of its unit's files. For each stand-in it renders the `standins` view of that part alone at the unit's key frames and event frames, keeps the frame that flags the most pixels, and saves the `solo` view of that frame as `out/stills/parts/<unit>/<name>.png`: the reference picture G13 compares a built part against. Without `--write` it prints what would change. `--refresh` takes the pictures again. `--fresh` starts the register again and is allowed only while every part is a stand-in. A part that has left the page stays in the register with `missing` and a fault |
+| `npm run shots [-- --check]` | Writes `cut/SHOTS.md` from the cut list, the cameras of the built page and the notes in `cut/SHOTS.notes.json`: the lens as a focal length on a sensor 24 mm high, the move with its travel and heights, the start and end framing, the focus and the key of every shot. `--check` exits 1 while a note is missing or the file on disk differs |
+
+`cut/SHOTS.notes.json` holds what a camera cannot say about itself: `scale` (a unit's world unit when it is not the metre, as `{ "reveal": "km" }`), `places` (a paragraph for each unit) and `shots` (for each shot id its `start`, `end` and `focus`, and a `move` sentence where the numbers need one). The numbers in `cut/SHOTS.md` are never typed by hand.
+
+The build makes a web copy of the mix: `closeBundle` in `vite.config.ts` calls `tools/lib/webmix.mjs`, which encodes `audio/mix/mix.flac` as `dist/mix.m4a` and writes `dist/build.json`. `autopilot` plays to it. The picture follows the sound's clock and is set right again when the two drift apart by more than 0.05 s. If the browser will not play sound, the film plays silent on its own clock.
+
+
 ## The published build, `tools/flows.mjs`
 
 `npm run flows [-- --url URL]` replays the visitor's flows listed in `FLOWS.md` against the hosted copy in a fresh browser and exits 1 if one fails. Without `--url` it reads the address of `index.html` from `out/work/host/url.txt`. It counts the frames the page draws from inside the page, because a machine without a graphics card draws a frame in seconds.

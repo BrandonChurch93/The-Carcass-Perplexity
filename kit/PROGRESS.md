@@ -24,25 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 13, 2026-11-25 00:52 UTC:
+Status 14, 2026-11-25 01:10 UTC:
 
-- `01-reveal-blockout-1.jpg`: The reveal as a blockout: six frames of the one rising shot, from the lake's dark water to the whole body with the planet's edge
-- `02-reveal-trace-overlay.jpg`: How the flat continent was made: the outline (magenta) traced from the approved master, and the circle fitted to the planet's edge (cyan)
+- `01-reveal-4.jpg`: The reveal, titan frame: the approved picture on the left, the blockout's flat continent on the right, with two close crops below. The framing matches. The land is two plain colours on purpose
+- `02-reveal-2.jpg`: The reveal, the skull massif on the way up: approved on the left, blockout on the right
+- `03-marsh-0.jpg`: The Blood Marsh, establishing frame: approved on the left, the blockout on the right. Pool, vein, crust with the dead, rain and flock are in place. The rock rise in the foreground is too wide and will be cut back
+- `04-marsh-3.jpg`: The Blood Marsh, the wallowers: approved on the left, plain shapes standing in for the animals on the right
 
+Status 13, 2026-11-25 00:52 UTC, showed: The reveal as a blockout: six frames of the one rising shot, from the lake's dark water to the whole body with the planet's edge; How the...
 Status 12, 2026-11-25 00:36 UTC, showed: First frames from the film's own engine, one from each place, at the frames the cut list names.
 Status 11, 2026-11-25 00:14 UTC, showed: Animatic, 100.0 s, the Blood Marsh. The line is printed where it will be spoken, because this clip is not made yet.
-Status 10, 2026-11-24 23:54 UTC, showed: Animatic, 52.0 s, the Heart: the walkers, under the line The tall ones walk the skin, and drink from the cracks.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T00:52:15Z
-phase 2: 0.62 h used of 6.00 h
-build: 4.37 h used of 72.00 h
+2026-11-25T01:10:44Z
+phase 2: 0.93 h used of 6.00 h
+build: 4.68 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 18
 ```
 
 ## Phases
@@ -459,6 +461,9 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. The continent of the blockout is traced by a command, not drawn by hand: tools/trace.mjs reads the approved master, takes warm and light pixels as land, drops the cyclone and the cloud, and writes the outline as points in master pixels. 50 pieces of land, 90 seas, 7062 points. Hand tracing would not repeat and a generated outline would not match the keys. The red plume east of the hips is traced as land and the fingers and toes are not traced; both are stand-in faults that the built continent of Phase 4 replaces.
 - 2026-11-25. The rise is one curve in the logarithm of the view's width, through the four windows of pullback.json at their key frames, with zero speed at the lake and on the titan frame. Its speeds at the keys come from one rule (each stretch's mean speed is the mean of the speeds at its ends, worked back from the titan frame), which gives a rise that starts still, is fastest at the first key and slows all the way to the whole body. After the titan frame the camera creeps out 3 percent to the cut to black so the hold is not a frozen frame.
 - 2026-11-25. G12 is measured as: the rise is every frame from the first frame of the last place to the titan frame; it must be one shot of the cut list; the camera's height may never fall; and its climb from one frame to the next may not change by more than a quarter of itself (0.002 where it is nearly still). The kit says 'one move with no cut'; this is the number the Builder put on it.
+- 2026-11-25. Every part's reference picture for G13 is taken by one rule: the part is drawn alone in the stand-in view at each key frame and event frame of its unit, the frame that flags the most pixels wins, and the solo view of that frame is the picture. The rule is in npm run parts. Picking the frames by eye would not repeat.
+- 2026-11-25. The film on the page plays to a web copy of the mix made by the build (dist/mix.m4a, AAC), and the picture follows the sound's clock: when the two drift apart by more than 0.05 s the picture is set to the sound. If the browser refuses to play sound, the film plays silent on its own clock and does not stop. The FLAC stays the master for every render.
+- 2026-11-25. The Blood Marsh blockout takes its sizes from the approved pictures and not from the 50 m bar of the layout sketch: the vein is about 11 m wide near the rise, the pool about 19 m across, a wallower about 4.2 m long, the stalks 1.8 to 4.3 m. Where two pictures disagree, each key follows its own picture. The dead on the crust are six, not four, so the crust reads in both the wide and the close view.
 
 ## Notes from Brandon
 
@@ -489,6 +494,7 @@ Each with its unit, its frame, the critic's words, what was tried and what to tr
 - `reveal` · clip `n8` is kept from its only take. The method asks for a test line on each speech model and allows six takes a clip. Neither could be paid for. Next: with characters, the model test and the other takes, and keep the best by the method's order.
 - `film` · no sound effect is made. Sound effects are paid from the same characters. Next: with characters, the beds and spot sounds of each place inside `audio.maxTakesPerCue` and `audio.maxCuesPerPlace`. Until then the mix is music and voice.
 - `film` · nothing that can hear has judged the voice or the mix. The listener tool described a tone correctly and a voice wrongly (see "The listener cannot judge a voice"). The words are checked by a transcriber and the rest by measures. Brandon is the first to hear it, on the review page.
+`marsh` · blockout, carried to Phase 4 where the place is built: in the establishing frame (5725) the rock rise in the foreground reaches 0.62 of the width where the picture has 0.5, and the left cluster of stalks is too short and thin; at key marsh-1 (6102) the salt rim is too thick; at key marsh-3 (6424) the young is too large and overlaps the adult; at key marsh-4 (6800) the stuck one sits in the centre where the picture has it right of centre. Steam, rain and fans are plain opaque shapes, as stand-ins are.
 
 ## Parts finished with a fallback
 
@@ -515,7 +521,6 @@ Each reports by message to the Builder.
 | `place_ribs_builder` | sandbox | The blockout of `ribs`: layout, parts, cameras fitted to its five keys | `agent/place-ribs` | 2026-11-25 00:36 UTC | 75 min |
 | `place_heart_builder` | sandbox | The blockout of `heart`: layout, parts, cameras fitted to its five keys | `agent/place-heart` | 2026-11-25 00:36 UTC | 75 min |
 | `place_breath_builder` | sandbox | The blockout of `breath`: layout, parts, cameras fitted to its five keys | `agent/place-breath` | 2026-11-25 00:36 UTC | 75 min |
-| `place_marsh_builder` | sandbox | The blockout of `marsh`: layout, parts, cameras fitted to its five keys | `agent/place-marsh` | 2026-11-25 00:36 UTC | 75 min |
 | `place_spine_builder` | sandbox | The blockout of `spine`: layout, parts, cameras fitted to its five keys | `agent/place-spine` | 2026-11-25 00:36 UTC | 75 min |
 | `place_eye_builder` | sandbox | The blockout of `eye`: layout, parts, cameras fitted to its five keys | `agent/place-eye` | 2026-11-25 00:36 UTC | 75 min |
 
@@ -525,7 +530,7 @@ Sandbox agents and the push: `gh auth setup-git` fails in most sandbox VMs ("not
 
 Ended with a record: `render_meter_01` and `render_meter_02` (both answered by 22:15 UTC: every step ran, G3 passed on each VM, their stills and budget files are under "Frames across VMs" and "Render budget").
 
-Ended and merged into `main` in Phase 2: `film_render_builder` (answered 01:00 UTC after 37 minutes, `npm run film`, `npm run loop`, `npm run render:local` and checks G5, D2 and D7, merged from a bundle at 01:02 UTC, 64 tests; MEASURED on its VM on the test scene: a stopped render carries on from its kept chunks, a share of the chunks renders alone and joins later, 1.88 s a frame at preview draft with the encode; not run: the whole film, a render across a cut, `--go` on a machine with a graphics card); `sound_stress_builder` (answered before 00:52 UTC, `npm run sound` and `npm run stress`, merged from a bundle as `6bdb100`, 42 tests; no call to the account was made, so the shape of a quota refusal in its code is UNKNOWN, and the stress test ran only at the `draft` tier on the test scene); `measure_pack_builder` (answered before 00:53 UTC, `npm run measure`, `npm run pack` and check G6, merged from a bundle as `b34d8ae`, 70 tests; its page had no `motion` view, so M2 and M3 first ran for real after the merge).
+Ended and merged into `main` in Phase 2: `place_marsh_builder` (answered 01:08 UTC after 33 minutes, the blockout of the Blood Marsh in `src/places/marsh/index.ts`: 14 parts and five shot cameras, merged from a bundle as `6a6a358`. Checked by the Builder after the merge: all five keys against their approved pictures in `npm run compare`, the sheets of marsh-01 and marsh-03, and each of the 14 parts alone in the `standins` view. What does not match yet is under "Open items"); `film_render_builder` (answered 01:00 UTC after 37 minutes, `npm run film`, `npm run loop`, `npm run render:local` and checks G5, D2 and D7, merged from a bundle at 01:02 UTC, 64 tests; MEASURED on its VM on the test scene: a stopped render carries on from its kept chunks, a share of the chunks renders alone and joins later, 1.88 s a frame at preview draft with the encode; not run: the whole film, a render across a cut, `--go` on a machine with a graphics card); `sound_stress_builder` (answered before 00:52 UTC, `npm run sound` and `npm run stress`, merged from a bundle as `6bdb100`, 42 tests; no call to the account was made, so the shape of a quota refusal in its code is UNKNOWN, and the stress test ran only at the `draft` tier on the test scene); `measure_pack_builder` (answered before 00:53 UTC, `npm run measure`, `npm run pack` and check G6, merged from a bundle as `b34d8ae`, 70 tests; its page had no `motion` view, so M2 and M3 first ran for real after the merge).
 
 Ended and merged into `main` in Phase 1: `cut_compiler_builder` (answered 23:11 UTC after 10 minutes, `npm run cut`, 37 tests) and `voice_tool_builder` (answered 23:13 UTC after 12 minutes, `npm run voice`, 29 tests; its calls to the account were tested against a stand-in only, its check, keep and sheet steps ran for real on the saved take), both from bundles, merged at 23:20 UTC with 516 tests passing; `cut_sound_checks_builder` (answered 22:33 UTC, G7, G11, G15, G16, D1 and A1 to A6), `mix_builder` (22:34 UTC, `npm run mix` and the loudness measures), `audio_map_builder` (22:41 UTC, `npm run audiomap` and the map, merged as `76f358e`), `animatic_builder` (22:47 UTC after 24 minutes, `npm run animatic`, merged as `c157999`; 446 tests pass); the follow-up of `audio_map_builder` (22:53 UTC after 8 minutes, merged as `d35f84a`; 450 tests pass).
 
@@ -592,3 +597,4 @@ none
 - 2026-11-25 00:23 UTC. 00:24 UTC: Phase 2 harness additions: renderRaw (raw frames for the film tools), filmStates, the part option for the solo and standins views. 516 tests pass.
 - 2026-11-25 00:36 UTC. 00:37 UTC: status 12 posted. Engine core pushed as `590f414`. Nine agents running: six place blockouts, three harness builders.
 - 2026-11-25 00:52 UTC. Status 13 posted: the reveal blockout (six frames of the rise) and the outline traced from the master. The sound and stress tools are merged from the first agent, 42 tests pass here.
+- 2026-11-25 01:11 UTC. Status 14 posted at 01:11 UTC: the reveal and the Blood Marsh blockouts against their approved pictures. The Blood Marsh place merged (6a6a358) and checked through the harness. The parts register, the shots file and the sound of the film on the page committed (2ec76a8).
