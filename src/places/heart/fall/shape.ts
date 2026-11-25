@@ -174,8 +174,8 @@ export function shell(): THREE.BufferGeometry {
 
 /** The face of the cliff over the alcove, as the wall was before it was cut, with the arch left open. It lies just proud of the land and sinks under it at its edge. */
 export function face(): THREE.BufferGeometry {
-  const x0 = MOUTH.x - 84;
-  const x1 = MOUTH.x + 84;
+  const x0 = MOUTH.x - 74;
+  const x1 = MOUTH.x + 74;
   const z0 = MOUTH.z - 74;
   const z1 = MOUTH.z + 2;
   const nx = Math.round((x1 - x0) / 1.4);
@@ -183,6 +183,8 @@ export function face(): THREE.BufferGeometry {
   const positions: number[] = [];
   const index: number[] = [];
   const open: boolean[] = [];
+  // Under the sill the land's own wall shows.
+  const low: boolean[] = [];
   for (let j = 0; j <= nz; j++) {
     for (let i = 0; i <= nx; i++) {
       const x = lerp(x0, x1, i / nx);
@@ -191,6 +193,7 @@ export function face(): THREE.BufferGeometry {
       const y = ground(x, z) + lerp(-2.5, 0.35, smooth(0, 9, edge));
       positions.push(x, y, z);
       open.push(inArch(x, y, 1.09) && z > MOUTH.z - 58);
+      low.push(y < TUBE.floor - 3 && x > MOUTH.x - 45);
     }
   }
   const w = nx + 1;
@@ -199,6 +202,7 @@ export function face(): THREE.BufferGeometry {
       const a = j * w + i;
       const b = a + w;
       if (open[a] || open[a + 1] || open[b] || open[b + 1]) continue;
+      if (low[a] && low[a + 1] && low[b] && low[b + 1]) continue;
       index.push(a, b, a + 1, a + 1, b, b + 1);
     }
   }
@@ -254,7 +258,7 @@ export function apronBase(x: number, z: number): number {
  * `aBank`: xy the unit vector on the ground toward the stream, z the height of the stream there, w its speed.
  */
 export function bed(course: Course, land: (x: number, z: number) => number): Bed {
-  const at = (x: number, z: number): { y: number; n: ReturnType<Course['nearest']>; under: number; isle: number; top: number; on: number } => {
+  const at = (x: number, z: number): { y: number; n: ReturnType<Course['nearest']>; under: number; isle: number; top: number; on: number; far: number } => {
     const n = course.nearest(x, z);
     const u = n.distance / n.half;
     const side = n.distance - n.half;
@@ -272,10 +276,12 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const t = Math.min(1, Math.max(0, down(x, z)));
     const middle = lerp(LIP_X, FALL_FOOT[0] - 8, t);
     const reach = lerp(12.5, 41, Math.pow(t, 0.85)) + (13 * (noise2(z / 15 + (x < middle ? 0 : 7.7), 3.3) - 0.5) + 6 * (noise2(z / 5.5 + (x < middle ? 3 : 11.1), 6.1) - 0.5)) * smooth(0, 0.15, t);
-    const out = Math.max(0, Math.abs(x - middle) - reach);
+    // Under the sill to the east the rubble leans on the wall as a shoulder, and the wall's bare panel there is under it.
+    const out = Math.max(0, Math.abs(x - middle) - reach - (x > middle ? 26 * smooth(0.32, 0.04, t) : 0));
     const on = smooth(9, 0, out);
-    const base = apronBase(x, z) - 0.95 * out - 0.012 * out * out;
-    const rubble = 2.6 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 1.25 * blocks(x, z, 3.4, 1) + 0.65 * blocks(x + 40, z, 1.6, 2);
+    const base = apronBase(x, z) - 0.8 * out - 0.012 * out * out + 5 * (fbm2(x / 23 + 3, z / 23 + 8) - 0.5) * smooth(0, 10, out);
+    // Broad heaps, and blocks big enough for the sheet to hold; the smaller rubble is the shader's.
+    const rubble = (2.6 * (fbm2(x / 12 + 5, z / 12) - 0.5) + 2.2 * (fbm2(x / 4.3 + 9, z / 4.3 + 2) - 0.5) + 0.8 * blocks(x, z, 4.6, 1)) * (1 + 0.8 * smooth(0, 12, out));
     // In the fan the stream no longer keeps a bed: it lies on the slope as a sheet of crust with channels in it.
     const sheet = smooth(FAN_FROM, FAN_FROM + 12, n.len);
     // The toe of the fan goes into the lake in lobes: nothing of it ends on a straight line.
@@ -287,11 +293,14 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const levee = (0.25 + 0.55 * noise2(n.len / 4 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 0.9) / 1.0, 2)) * (1 - lakeward);
     const near = smooth(1.2, 11, side);
     const bank = lerp(n.y + levee + 0.3 * smooth(0, 1.2, side) * (1 - lakeward) + 0.35 * rubble * smooth(0.3, 3, side), base + rubble, near) - 1.5 * lakeward * smooth(12, 0.5, side) * smooth(0, 1, side);
-    const rock = Math.max(lerp(bank, Math.max(base, ground) + 0.25 * rubble, sheet * smooth(1.3, 1.0, u)), ground - 2.4);
+    const rock0 = Math.max(lerp(bank, Math.max(base, ground) + 0.25 * rubble, sheet * smooth(1.3, 1.0, u)), ground - 2.4);
+    // Away from the apron the sheet does not go down the wall: it ends as a sill a little below the floor, and the wall under it is the wall.
+    const far = smooth(6, 16, out);
+    const rock = lerp(rock0, Math.max(rock0, TUBE.floor - 2 + 1.2 * (fbm2(x / 3.7, z / 3.7) - 0.5)), far * smooth(7, 2, -d));
     const isle = island(n.len, n.distance * n.side, n.half) * (1 - sheet);
     const stream = top + 0.2 * (1 - Math.min(1, u * u)) * (1 - sheet) + isle * (1.1 + 1.3 * noise2(x / 2.3, z / 2.3)) + 0.3 * sheet * (fbm2(x / 3.1, z / 3.1) - 0.5);
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
-    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle, top, on: on * smooth(-1, 2, -d) };
+    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle, top, on: on * smooth(-1, 2, -d), far };
   };
 
   const xs: number[] = [];
@@ -317,7 +326,7 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
       within.push(smooth(-2, 3, d), p.n.distance, p.isle);
       apron.push(p.on);
       const inTube = Math.abs(x - TUBE.axis(Math.max(d, 0))) < TUBE.half(Math.max(d, 0)) * 1.1 + 3;
-      keep.push((d < -2.5 || inTube) && (d > 2 || (p.y > p.under - 1.6 && p.y > -0.6)));
+      keep.push((d < -2.5 ? p.far < 0.5 : inTube) && (d > 2 || (p.y > p.under - 1.6 && p.y > -0.6)));
     }
   }
   const w = xs.length;

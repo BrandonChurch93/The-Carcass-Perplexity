@@ -51,7 +51,7 @@ float riverX(float d) {
 }
 // How much of the river is open lava at depth d: it comes out from under a crust.
 float riverOpen(float d) {
-  return 0.006 + 0.85 * exp(-d / 6.0) * mix(uFlare, 1.0, smoothstep(1.0, 9.0, d));
+  return 0.006 + 0.85 * (0.7 * exp(-d / 2.2) + 0.3 * exp(-d / 9.0)) * mix(uFlare, 1.0, smoothstep(1.0, 9.0, d));
 }
 // d is metres into the tube from its rim, negative outside.
 vec3 riverLight(vec3 p, vec3 n, float d) {
@@ -63,11 +63,11 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float facing = clamp(dot(n.xy, to / max(far, 0.01)) * 0.92 + 0.08, 0.0, 1.0);
   // Out on the face of the cliff the light dies away raggedly: it is the fume before the mouth that carries it there.
   float outside = max(-d, 0.0) * (0.7 + 0.6 * vnoise(p.xy / 9.0));
-  float reach = pow(smoothstep(9.0, 0.0, outside), 2.0);
+  float reach = pow(smoothstep(6.5, 0.0, outside), 2.0);
   // The roof fall heaped on the floor stands between the river and the foot of the far wall.
   reach *= mix(1.0, smoothstep(0.1, 0.45, -to.y / max(far, 0.01)), smoothstep(15.0, 40.0, far));
-  // The lip hides the river from the cliff below it.
-  if (d < 0.0) reach *= smoothstep(${f(TUBE.floor - 1)}, ${f(TUBE.floor + 4)}, p.y);
+  // The lip hides the river from the cliff below it, and the roof fall hides it from the east foot of the arch.
+  if (d < 0.0) reach *= smoothstep(${f(TUBE.floor - 1)}, ${f(TUBE.floor + 4)}, p.y - 9.0 * smoothstep(${f(MOUTH.x)}, ${f(MOUTH.x + 30)}, p.x));
   return blackbody(1300.0) * riverOpen(max(d, 0.0)) * 3.14159 * 3.5 * form * facing * reach;
 }
 // The rig's shading, with the day and the lake shut out as the tube goes in.
@@ -75,7 +75,11 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   float deep = smoothstep(2.0, 34.0, d);
   float lit = (1.0 - deep) * (1.0 - deep);
   float open = skyOpen(p) * occ * lit;
-  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n) * smoothstep(14.0, 3.0, d)) * occ * lit + riverLight(p, n, d) * occ + more * occ;
+  // The hood of the arch stands between the melt on the floor and the face above it.
+  float hooded = mix(1.0, 0.2, smoothstep(3.0, 11.0, -d) * smoothstep(${f(TUBE.floor)}, ${f(TUBE.floor + 8)}, p.y));
+  vec3 e = skyIrradiance(n) * open + (lakeIrradiance(p, n) + emitterIrradiance(p, n) * smoothstep(14.0, 3.0, d) * hooded) * occ * lit + riverLight(p, n, d) * occ + more * occ;
+  // Rock is grey: what warmth it shows is the light's.
+  albedo = mix(albedo, vec3(dot(albedo, vec3(0.2126, 0.7152, 0.0722))), 0.75);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float fr = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * 0.28;
@@ -171,9 +175,9 @@ void main() {
     // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
     cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
     // Under the sill the wall is draped with what has slopped over it, black and glazed.
-    cliff *= mix(1.0, 0.5, smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 5)}, vWorld.y) * smoothstep(${f(TUBE.floor - 70)}, ${f(TUBE.floor - 30)}, vWorld.y) * out_);
+    cliff *= mix(1.0, 0.75, smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 5)}, vWorld.y) * smoothstep(${f(TUBE.floor - 70)}, ${f(TUBE.floor - 30)}, vWorld.y) * out_);
     // The rim is the youngest rock of the wall, glazed by what has poured through it.
-    cliff *= mix(1.0, 0.6, own);
+    cliff *= 1.3 * mix(1.0, 0.85, own);
     // The roof and walls go back in ribs, one for each time the tube ran full, and the side of each rib that faces the mouth
     // catches the light of the melt on the floor there. They go into the dark one behind another.
     vec3 more = vec3(0.0);
@@ -332,6 +336,8 @@ ${WINDOW_FRAGMENT}
 ${TUBE_GLSL}
 ${STREAM_GLSL}
 void main() {
+  // The true lie of the surface, for the sheer drop under the sill where the sheet is drawn out and its own normals streak.
+  vec3 flat_ = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
   lava.y = mix(lava.y, max(lava.y, 1390.0), smoothstep(0.5, 0.12, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * (0.35 + 0.65 * vnoise(vWorld.xz / 2.7 + uTime * 0.05)));
@@ -339,17 +345,19 @@ void main() {
   if (lava.x < 1.0) {
     vec3 v = normalize(cameraPosition - vWorld);
     vec3 n = normalize(vNormal);
+    if (dot(flat_, v) < 0.0) flat_ = -flat_;
+    n = normalize(mix(n, flat_, smoothstep(0.8, 0.93, 1.0 - flat_.y) * (1.0 - vApron) * (1.0 - vIn.x)));
     float steep = smoothstep(0.22, 0.55, 1.0 - n.y);
     vec3 t = normalize(vec3(-n.z, 0.0, n.x) + 1e-4);
     vec2 wrap = vec2(dot(vWorld.xz, t.xz), vWorld.y);
     vec3 cliff = texture2D(tCliff, wrap / 60.0 + 0.13 * vnoise(vWorld.xz / 90.0)).rgb;
     cliff *= 0.75 + 0.5 * vnoise(vec2(vWorld.y * 0.9 + 3.0 * vnoise(vWorld.xz / 25.0), 0.5));
     vec3 talus = texture2D(tTalus, vWorld.xz / 23.0).rgb;
-    vec3 rock = mix(talus, cliff, steep);
+    vec3 rock = mix(talus, cliff, steep) * 1.1;
     // What the river built is younger and blacker than the wall: welded spatter and levees close in, a dusting of it further out.
     float side = mix(vIn.y - vFlow.z, 0.3, smoothstep(0.3, 0.5, vIn.z));
     float young = max(smoothstep(22.0, 2.0, side) * (0.7 + 0.3 * vnoise(vWorld.xz * 0.35)), vApron);
-    vec3 fresh = threeWay(tTalus, vWorld / 9.0, n) * 0.42;
+    vec3 fresh = threeWay(tTalus, vWorld / 9.0, n) * 1.1;
     vec3 albedo = mix(rock, fresh, 0.9 * young);
     float own = max(max(smoothstep(30.0, 14.0, side), vIn.x), vApron);
     // Flows laid one on another: the flanks of the benches break in ledges, not in columns.
