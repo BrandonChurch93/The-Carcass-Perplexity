@@ -33,11 +33,20 @@ float beatAt(vec2 q) {
 
 // One gap in the crust: d metres from its middle, half width, kelvin in its core. A gap narrower than a pixel is drawn a pixel
 // wide and dimmer by the same factor, so that its light is the same and it does not crawl. Returns cover and kelvin.
+vec3 gLip;
 vec2 gapHeat(float d, float wide, float core, float least) {
   float ww = max(wide, 0.5 * max(least, fwidth(d)));
   float x = d / ww;
-  float cover = (1.0 - smoothstep(0.6, 1.0, x)) * min(1.0, wide / ww) * step(1e-3, wide);
-  return vec2(cover, mix(core, 1085.0, smoothstep(0.1, 0.95, x)));
+  float lit = step(1e-3, wide);
+  float cover = (1.0 - smoothstep(0.82, 1.0, x)) * min(1.0, wide / ww) * lit;
+#ifdef LAKE_LIP
+  // What the lava in the gap throws on the skin beside it.
+  float off = max(d - wide, 0.0);
+  gLip += blackbody(core - 90.0) * (lit * wide / (wide + 2.2 * off + 0.004) * exp(-off / 1.3));
+#endif
+  // Yellow only in the middle of a wide gap, orange over most of it, deep red where the skin begins.
+  float k = mix(core, min(core, 1205.0), smoothstep(0.0, 0.42, x));
+  return vec2(cover, mix(k, 1030.0, smoothstep(0.4, 1.0, x)));
 }
 
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
@@ -60,13 +69,24 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float reach = n.a * mix(along * plain, 0.85 + 0.3 * vnoise(q / 1.7), shown);
   float gape = reach * mix(widen, 1.0, max(shown, byPool));
   float hotHalf = gape * mix(1.0 - 0.92 * skin, 1.0, max(shown, byPool));
-  float core = 1395.0 - 330.0 * clamp(n.g - 2.0, 0.0, 1.0) * shown + 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 110.0 * skin * (1.0 - shown);
+  // Few seams are fully open: most show the orange of lava under a thin skin.
+  float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
+  float core = mix(1265.0 + 135.0 * fully, 1400.0 - 300.0 * clamp(n.g - 2.0, 0.0, 1.0), shown);
+  core -= 190.0 * smoothstep(0.66, 0.44, vnoise(q / 3.3 + vec2(uTime * 0.03, 2.0)));
+  core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 110.0 * skin * (1.0 - shown);
+  gLip = vec3(0.0);
   vec2 g = gapHeat(d, hotHalf, core, least);
+#ifdef LAKE_LIP
+  // Seen close, the lava in a gap is not one colour: rafts of dark skin ride on it, thicker toward the edges.
+  float rafts = vnoise(q * 1.9 + vec2(uTime * 0.05, 0.0)) * 0.5 + vnoise(q * 5.3 + 3.0) * 0.32 + vnoise(q * 14.0 + 1.0) * 0.18;
+  float raftCover = smoothstep(0.47, 0.56, rafts + 0.3 * smoothstep(1280.0, 1000.0, g.y) - 0.1);
+  g.y = mix(g.y, 955.0 + 150.0 * rafts, raftCover * smoothstep(0.03, 0.15, hotHalf));
+#endif
 
   // The margin: the skin is torn from the rock along a crooked line, and a thin glow shows in the tear.
   float tear = 0.5 + 1.3 * vnoise(q / 4.3 + 9.0);
-  float tearHalf = 0.3 * smoothstep(0.3, 0.75, vnoise(q / 17.0 + 21.0)) * (0.5 + vnoise(q / 2.1 + 5.0));
-  vec2 m = gapHeat(abs(lake - tear), tearHalf, 1235.0 + 60.0 * (beat - 0.5), least);
+  float tearHalf = 0.22 * smoothstep(0.42, 0.78, vnoise(q / 17.0 + 21.0)) * smoothstep(0.25, 0.6, vnoise(q / 2.1 + 5.0));
+  vec2 m = gapHeat(abs(lake - tear), tearHalf, 1150.0 + 130.0 * vnoise(q / 6.3 + 1.7) + 60.0 * (beat - 0.5), least);
   if (m.x > g.x) g = m;
   float edge = min(d - gape, abs(lake - tear) - tearHalf);
 
@@ -81,6 +101,9 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float c = open * (1.0 - 0.75 * raft * smoothstep(0.3, 0.8, pool));
     if (c > g.x) g = vec2(c, k);
     edge = min(edge, (pool - 0.9) * 20.0);
+#ifdef LAKE_LIP
+    gLip += blackbody(1290.0) * (0.6 * exp(-max((pool - 0.95) * 20.0, 0.0) / 2.5));
+#endif
   }
   // Where a plate founders: a seam opens round it, and lava shows where its top has gone under the level of the lake.
   for (int i = 0; i < 2; i++) {
