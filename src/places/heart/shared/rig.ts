@@ -32,6 +32,15 @@ export const BANK = { shot: 'heart-02', at: [GROUP[0] + 30, 25, GROUP[2] - 10] a
 // gone 6 m out (emitterIrradiance). The radiance has the colour of the lava at 1400 K, a little yellower, and twice its level. It was three
 // and a half times (70, 9.5) when the crust at a brim was near black (albedo 0.014 to 0.05); the skin has lifted the crust since (0.05 to 0.08)
 // and the floor round the hero's pool stood as one flat saturated patch where the picture has a soft glow on a dark floor.
+// The fire's light lives with the flow: what a round light casts swells and sinks by a few per cent (6 at the most, 3 as a rule), slowly
+// (periods of 17, 10 and 6 s, which never line up inside a shot), and a swell at the mouth reaches the foot of the fall three seconds later,
+// as the lava does (a light lower down is that much behind). Lights far apart are out of step. A function of the place's seconds alone.
+export const BREATH = { deep: [0.03, 0.02, 0.012] as const, rate: [0.37, 0.61, 1.07] as const, lag: 0.05, apart: 0.019 };
+export function breath(e: { position: { x: number; y: number; z: number } }, seconds: number): number {
+  const t = seconds + BREATH.lag * e.position.y + BREATH.apart * (e.position.x + 0.7 * e.position.z);
+  return 1 + BREATH.deep[0] * Math.sin(BREATH.rate[0] * t) + BREATH.deep[1] * Math.sin(BREATH.rate[1] * t + 1.3) + BREATH.deep[2] * Math.sin(BREATH.rate[2] * t + 2.1);
+}
+
 export const POOLS = {
   at: [[-404.9, 204.0], [-418.8, 203.8], [-385.1, 195.4]] as const,
   axis: [[0.734, -0.679], [0.95, -0.3], [0.9, -0.44]] as const,
@@ -587,7 +596,7 @@ export function createRig(t0: number): Rig {
       for (let i = 0; i < count; i++) {
         const e = emitters[i] as Emitter;
         (emitterPlaces[i] as THREE.Vector4).set(e.position.x, e.position.y, e.position.z, e.radius);
-        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance);
+        (emitterRadiance[i] as THREE.Vector3).copy(e.radiance).multiplyScalar(breath(e, now));
         emitterCore[i] = (EMITTER_CORE + (1 - EMITTER_CORE) * smooth(20, 60, e.radius)) * onStream(e);
       }
       (uniforms.uEmitterCount as THREE.IUniform<number>).value = count;
