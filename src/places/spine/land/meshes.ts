@@ -118,15 +118,38 @@ function skin(rng: Rng, around: number, rings: number): (a: number, r: number) =
     };
   };
   const big = layer(5, 4);
-  const slab = layer(9, 26);
   const mid = layer(14, 9);
   const small = layer(36, 44);
+  const COLUMNS = 18;
+  const LEDGES = 15;
+  const column = new Float32Array(COLUMNS);
+  for (let i = 0; i < COLUMNS; i++) column[i] = rng.next();
+  const block = new Float32Array(COLUMNS * (LEDGES + 6));
+  for (let i = 0; i < block.length; i++) block[i] = rng.next();
+  const wrap = (i: number): number => ((i % COLUMNS) + COLUMNS) % COLUMNS;
+  // Slabs: the blade is split along its lean into columns, and each column across into blocks; each block stands proud of its neighbours or back from them.
+  const slabs = (u: number, v: number): number => {
+    const k = (u + 0.1 * v) * COLUMNS;
+    const ki = Math.floor(k);
+    const kf = k - ki;
+    const one = (c: number): number => {
+      const i = wrap(c);
+      const row = v * LEDGES + 4 * (column[i] as number);
+      const ri = Math.floor(row);
+      const rf = row - ri;
+      const a = block[ri * COLUMNS + i] as number;
+      const b = block[(ri + 1) * COLUMNS + i] as number;
+      const t = Math.min(1, Math.max(0, (rf - 0.82) / 0.18));
+      return 0.5 * ((column[i] as number) - 0.5) + 0.5 * (a + (b - a) * t * t * (3 - 2 * t) - 0.5);
+    };
+    const t = Math.min(1, Math.max(0, (kf - 0.84) / 0.16));
+    const a = one(ki);
+    return a + (one(ki + 1) - a) * t * t * (3 - 2 * t);
+  };
   return (a, r) => {
     const u = a / around;
     const v = r / rings;
-    // Slabs: beds that run up the blade on the lean, each standing proud of the next.
-    const lean = u + 0.11 * v;
-    return 0.5 * (big(u, v) - 0.5) + 0.34 * (slab(lean, v * 0.35) - 0.5) + 0.3 * (1 - Math.abs(2 * mid(u, v) - 1) - 0.5) + 0.12 * (small(u, v) - 0.5);
+    return 0.4 * (big(u, v) - 0.5) + 0.9 * slabs(u, v) + 0.22 * (1 - Math.abs(2 * mid(u, v) - 1) - 0.5) + 0.1 * (small(u, v) - 0.5);
   };
 }
 
@@ -154,7 +177,8 @@ export function spireMesh(sp: Spire, rng: Rng, fineMesh: boolean): THREE.BufferG
       const swell = 1 + (0.5 * n * (1 - 0.85 * edge) + 0.05 * n * edge) * (0.45 + 0.55 * (1 - t));
       // The broken top: the edge of the last ring is ragged in height.
       const snap = cap ? 0.12 : 1;
-      const l = p.centre + Math.sign(c) * Math.pow(Math.abs(c), 0.8) * p.half * (1 + 0.04 * n * (1 - edge)) * snap;
+      // The edges keep to the layout: a notch goes in no more than a thirtieth, a block stands out no more than a twelfth.
+      const l = p.centre + Math.sign(c) * Math.pow(Math.abs(c), 0.8) * p.half * (1 + Math.min(0.085, Math.max(-0.032, 0.16 * n))) * snap;
       const along = Math.sign(s) * Math.pow(Math.abs(s), 1.25) * p.thick * swell * snap;
       const y = p.y + (cap ? 1.5 : 0) + (t > 0.9 ? (t - 0.9) * 10 * 7 * n : 0);
       pos.push(sp.x + f.nx * l + f.tx * along, y, sp.z + f.nz * l + f.tz * along);

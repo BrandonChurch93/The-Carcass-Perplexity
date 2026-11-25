@@ -70,7 +70,7 @@ const origin = nearestIndex(0, 0) * STEP;
 
 export const spires: Spire[] = TABLE.map(([x, z, alt, tip]) => {
   const half = 0.5 * tip + 50;
-  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: 0.52 * half };
+  return { x, z, s: nearestIndex(x, z) * STEP - origin, alt, tip, half, thick: 0.33 * half, lean: 1.0 * half };
 });
 
 export const S_MIN = -origin;
