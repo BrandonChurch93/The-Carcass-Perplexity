@@ -214,7 +214,7 @@ function inRim(x: number, y: number): boolean {
 export function face(): THREE.BufferGeometry {
   const x0 = MOUTH.x - (MOUTH.width / 2 + 15);
   const x1 = MOUTH.x + (MOUTH.width / 2 + 15);
-  const z0 = MOUTH.z - 74;
+  const z0 = MOUTH.z - 67;
   const z1 = MOUTH.z + 2;
   const nx = Math.round((x1 - x0) / 2);
   const nz = Math.round((z1 - z0) / 0.8);
@@ -272,7 +272,11 @@ const lipAt = (x: number): number => {
 /** Rock that stands in the stream and parts it: 0 none, 1 an island. Long with the flow. */
 const island = (len: number, across: number, half: number): number => {
   let isle = 0;
-  for (const at of SPLITS) isle = Math.max(isle, smooth(1, 0.55, Math.pow((len - at) / 5.2, 2) + Math.pow(across / (0.47 * half), 2)));
+  // Each stands to one side of the middle or the other and takes a third of the width: the stream goes round it, mostly on its wider side.
+  SPLITS.forEach((at, k) => {
+    const off = (k % 2 === 0 ? -0.3 : 0.36) * half;
+    isle = Math.max(isle, smooth(1, 0.55, Math.pow((len - at) / 4.4, 2) + Math.pow((across - off) / (0.3 * half), 2)));
+  });
   return isle;
 };
 
@@ -283,13 +287,14 @@ const LIP_X = MOUTH.x - 22;
 const down = (x: number, z: number): number => (z - lipAt(x)) / (APRON_FOOT - lipAt(x));
 /**
  * The apron: one slope of rubble from the lip to the lake, steepest under the lip and easing a little toward the water.
+ * Its upper third is a straight slope and it hollows below, which keeps it a few metres clear of the land's own benches all the way down.
  * This is its smooth surface along its middle; the ledges and the blocks are laid on it in `apronBase` and `bed`.
  */
 export function apronSlope(x: number, z: number): number {
   const t = down(x, z);
   if (t <= 0) return TUBE.floor;
   if (t >= 1) return -8 * (t - 1);
-  return TUBE.floor * Math.pow(1 - t, 1.2);
+  return TUBE.floor * Math.pow(1 - t, lerp(0.96, 1.25, smooth(0.3, 0.62, t)));
 }
 /** The same broken into ledges: the rock either side of the stream. The stream keeps the smooth slope and makes its own drops. */
 export function apronBase(x: number, z: number): number {
@@ -357,7 +362,10 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const levee = (0.25 + 0.55 * noise2(n.len / 4 + 3.3, n.side * 2.5)) * Math.exp(-Math.pow((side - 0.9) / 1.0, 2)) * (1 - lakeward);
     const near = smooth(1.2, 11, side);
     const bank = lerp(n.y + levee + 0.3 * smooth(0, 1.2, side) * (1 - lakeward) + 0.35 * rubble * smooth(0.3, 3, side), base + rubble, near) - 1.5 * lakeward * smooth(12, 0.5, side) * smooth(0, 1, side);
-    const rock0 = Math.max(lerp(bank, Math.max(base, ground) + 0.25 * rubble, sheet * smooth(1.3, 1.0, u)), ground - 2.4);
+    const rock1 = lerp(bank, Math.max(base, ground) + 0.25 * rubble, sheet * smooth(1.3, 1.0, u));
+    // Between the stream and the lake nothing stands higher than the stream: the ledges there fall away from it, or from the shore they would
+    // hide all of it but its drops.
+    const rock0 = Math.max(lerp(rock1, Math.min(rock1, n.y + 0.4 - 0.22 * side), lakeward * smooth(28, 12, side) * (1 - sheet)), ground - 2.4);
     // Away from the apron the sheet does not go down the wall: it ends as a sill a little below the floor, and the wall under it is the wall.
     const far = smooth(6, 16, out);
     const rock = lerp(rock0, Math.max(rock0, TUBE.floor - 2 + 1.2 * (fbm2(x / 3.7, z / 3.7) - 0.5)), far * smooth(7, 2, -d));

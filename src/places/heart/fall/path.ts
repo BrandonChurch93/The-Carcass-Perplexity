@@ -119,19 +119,20 @@ const MAIN: [number, number][] = [
 ];
 
 /** Metres from the lip at which the slope eases and the stream spreads into its fan. */
-export const FAN_FROM = 108;
+export const FAN_FROM = 76;
 
 /** The west arm of the fan. It leaves the main stream at `BRAID_FROM` metres from the lip. */
 export const BRAID_FROM = FAN_FROM - 6;
 const ARM_TAIL: [number, number][] = [
-  [-50, -344],
-  [-57, -337],
-  [-62, -329],
-  [-64, -321],
+  [-52, -370],
+  [-57, -356],
+  [-61, -343],
+  [-64, -331],
+  [-65, -321],
 ];
 
 /** Metres from the lip of the places where the stream parts round a rock and joins again. */
-export const SPLITS = [19, 37, 55, 74, 91];
+export const SPLITS = [18, 29, 41, 53, 65];
 
 /** Half the width of the stream by metres from the lip: a thread on the slope, a sheet only in the fan. */
 const HALF: [number, number][] = [
@@ -140,13 +141,13 @@ const HALF: [number, number][] = [
   [-30, 17],
   [-3, 21],
   [5, 11],
-  [13, 5.6],
-  [22, 4.8],
-  [FAN_FROM - 4, 5],
-  [FAN_FROM + 8, 10],
-  [FAN_FROM + 20, 22],
-  [FAN_FROM + 34, 31],
-  [FAN_FROM + 49, 35],
+  [13, 8.5],
+  [22, 9.2],
+  [FAN_FROM - 4, 10],
+  [FAN_FROM + 8, 14],
+  [FAN_FROM + 20, 19],
+  [FAN_FROM + 36, 27],
+  [FAN_FROM + 56, 32],
 ];
 const halfAt = (len: number): number => {
   let h = table(HALF, len) * (len > 14 && len < FAN_FROM - 4 ? 0.9 + 0.3 * Math.sin(len * 0.37 + 1.3) * Math.sin(len * 0.13) : 1);
@@ -253,9 +254,9 @@ export const FAN_POOL: [number, number] = mainAt(FAN_FROM + 9);
  * `from` and `to` are metres from the lip, `side` is +1 east of the stream and -1 west, `out` how many metres it stands off at its widest.
  */
 const BRAIDS = [
-  { from: 9, to: 33, side: 1, out: 13, half: 2.6 },
-  { from: 16, to: 47, side: -1, out: 11, half: 2.2 },
-  { from: 42, to: 70, side: 1, out: 11, half: 2.4 },
+  { from: 9, to: 33, side: 1, out: 18, half: 2.6 },
+  { from: 16, to: 47, side: -1, out: 17, half: 2.4 },
+  { from: 42, to: 70, side: 1, out: 17, half: 2.6 },
   { from: 60, to: 88, side: -1, out: 12, half: 2.8 },
   { from: 78, to: 103, side: 1, out: 13, half: 2.5 },
 ];
@@ -289,13 +290,13 @@ export function createCourse(height: (x: number, z: number) => number): Course {
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 22, smooth(BRAID_FROM + 6, BRAID_FROM + 34, len)), height, main.y[fork] as number, []);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(1.6, 17, smooth(BRAID_FROM + 6, BRAID_FROM + 40, len)), height, main.y[fork] as number, []);
   for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 
   // The side channels. Each starts 12 samples up the main stream so that it leaves along it, and its last metres come down to the main stream's level.
   const sides: Channel[] = [arm];
-  BRAIDS.forEach((b, k) => {
+  BRAIDS.filter((b) => b.to < FAN_FROM - 2).forEach((b, k) => {
     const i0 = lip + Math.round(b.from / SPACING);
     const i1 = Math.min(main.n - 14, lip + Math.round(b.to / SPACING));
     const pts: [number, number][] = [[main.x[i0 - 12] as number, main.z[i0 - 12] as number]];
