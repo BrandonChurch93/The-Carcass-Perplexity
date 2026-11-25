@@ -139,10 +139,13 @@ function makeSites(lakeDistance: (x: number, z: number) => number): Sites {
 
 // The seams the pictures show: half width in metres at the two ends and the middle, how lumpy, and the heat class (0 hottest, 0.9 dull,
 // 1.5 the open, stirred lava under a fountain).
-/** The pressure ridge in front of the camera of key heart-4, its steep side toward the lens, and the one in front of key heart-2. */
+/**
+ * The pressure ridge in front of the camera of key heart-4, its steep side toward the lens: a line of slabs on edge. The one
+ * that stood in front of key heart-2 is taken out (tall 0): it read as a pile of dirt in front of the one that sank.
+ */
 export const RIDGES: readonly { from: [number, number]; to: [number, number]; tall: number; reach: number }[] = [
-  { from: [-404.9, 142.4], to: [-437.5, 119.2], tall: 2.3, reach: 2.2 },
-  { from: [-515.4, 277.7], to: [-515.6, 270.6], tall: 1.5, reach: 1.2 },
+  { from: [-404.9, 142.4], to: [-437.5, 119.2], tall: 2.1, reach: 2.2 },
+  { from: [-515.4, 277.7], to: [-515.6, 270.6], tall: 0, reach: 1.2 },
 ];
 
 // Seams of the lake's own, beside those the pictures name: the fingers where the line channel leaves the shore, the seam
