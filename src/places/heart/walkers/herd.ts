@@ -3,7 +3,7 @@
 // as it lay at the reference time, and is fitted so that the animal, carried by the crust, is where the staging wants it at the key frames.
 import type { Rng } from '../../../core/rng';
 import { KEY_TIMES, WALKERS, walkerAt } from '../shared/anchors';
-import { REST, type Build, type Env, type NeckAim, type Plan, type V3 } from './animal';
+import { REST, TUFT_UP, type Build, type Env, type NeckAim, type Plan, type V3 } from './animal';
 
 const smooth = (a: number, b: number, x: number): number => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -40,7 +40,7 @@ interface Character {
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
 const CAST: Character[] = [
   { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
-  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 1.0, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
+  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
   { role: 'walks', skater: 0.45, heavy: 0.92, neck: 0.96, wide: 1.0, hump: 0.3, tall: 1.13, bulk: 0.84, young: 1, tuft: [0.7, 0.85] },
   { role: 'tastes', skater: 0.4, heavy: 0.9, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
   { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
@@ -64,31 +64,54 @@ export function makeBuild(index: number, rng: Rng): Build {
   return {
     k,
     seed: index * 1.618 + 0.37,
-    bodyLen: 5.3 * k * c.bulk * v(0.92, 1.1),
-    bodyTop: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
-    bodyKeel: 1.26 * k * c.bulk * c.heavy * v(0.9, 1.12),
-    bodyWide: 1.18 * k * c.bulk * c.heavy * v(0.92, 1.08),
+    // A small body hung between the shoulders and the hips, on four long legs that leave it at its upper sides and go down and out.
+    bodyLen: 4.5 * k * c.bulk * v(0.92, 1.1),
+    bodyTop: 0.8 * k * c.bulk * c.heavy * v(0.92, 1.08),
+    bodyKeel: 1.05 * k * c.bulk * c.heavy * v(0.9, 1.12),
+    bodyWide: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
     hump: c.hump,
-    hipFore: 1.85 * k * c.bulk,
-    hipSide: 0.98 * k * c.bulk * c.heavy,
-    hipUp: -0.42 * k,
-    femur: lerp(4.0, 3.5, c.skater) * k * c.tall * v(0.95, 1.05),
-    kneeOut: lerp(0.1, 0.4, c.skater),
-    kneeUp: lerp(0, 0.2, c.skater),
-    hock: lerp(0.58, 0.64, c.skater) * v(0.94, 1.06),
-    stanceFore: 3.6 * k * v(0.9, 1.06),
-    stanceSide: 2.3 * k * c.wide,
-    standH: 9.0 * k * c.tall * v(0.97, 1.03),
+    hipFore: 1.3 * k * c.bulk,
+    hipSide: 0.78 * k * c.bulk * c.heavy,
+    hipUp: 0.3 * k * c.bulk * c.heavy,
+    knee: lerp(0.47, 0.43, c.skater) * v(0.96, 1.04),
+    hock: lerp(0.62, 0.7, c.skater) * v(0.95, 1.05),
+    slack: lerp(0.01, 0.028, c.skater),
+    stanceFore: 3.9 * k * v(0.9, 1.06),
+    stanceSide: 2.9 * k * c.wide,
+    standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
-    legR: lerp(1.24, 1.08, c.skater) * c.heavy,
-    padR: 0.66 * k * v(0.9, 1.12),
-    neckLen: 11.8 * k * c.neck,
+    legR: lerp(1.08, 0.94, c.skater) * c.heavy,
+    padR: 0.8 * k * v(0.9, 1.12),
+    neckLen: 10.6 * k * c.neck,
     neckR: 0.56 * k * c.heavy,
-    tendrils: Math.max(4, Math.round((12 + (index % 4)) * c.tuft[0])),
-    tendrilLen: 2.9 * k * c.tuft[1] * v(0.9, 1.15),
+    tendrils: Math.max(4, Math.round((9 + (index % 3)) * c.tuft[0])),
+    tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
+    lean: index === 1 ? 1.1 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
   };
 }
+
+/** The shape of a neck that is down: it leaves the shoulders steeply and sweeps out low, as a rope hangs. */
+const FEED_SHAPE = 0.1;
+/** The pools the lake opens under the tufts of the hero and of the near one (lake/net.ts), on the crust at the reference time. */
+const POOLS: readonly [number, number][] = [
+  [-403.4, 202.6],
+  [-493.8, 225.6],
+  [-491.6, 241.0],
+];
+
+/** Where an animal stands and faces against its row of the staging: metres east, metres south, degrees. The camera of the feeding picture
+ *  is tied to the hero's row, so the hero is turned three quarters on to it here: it stands about 3 m farther from that lens, a neck's reach from the pool, turned 22 degrees
+ *  toward it, with the pool the lake opens for its tuft between it and the lens. */
+const STAND: Record<number, [number, number, number]> = {
+  1: [1.0, -3.05, 22],
+};
+
+/** The near one is seen in the wide view and again in the view of the one that sank, with two shots between in which it is not drawn:
+ *  it stands and feeds in each, where its row puts it at each key, facing as given here in degrees; `cut` is when it changes places, unseen. */
+const TWICE: Record<number, { cut: number; key: number; first: number; second: number }> = {
+  0: { cut: 12.5, key: KEY_TIMES['heart-2'], first: 100, second: 150 },
+};
 
 const T1 = KEY_TIMES['heart-0'];
 const T2 = KEY_TIMES['heart-4'];
@@ -98,20 +121,24 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const c = CAST[index] as Character;
   const k = b.k;
   // Where the staging wants it, on the crust as it lay at the reference time.
+  const stand = STAND[index] ?? [0, 0, 0];
   const wanted = (seconds: number): [number, number] => {
     const p = walkerAt(index, seconds);
-    return env.undrift(p[0], p[1], seconds);
+    return env.undrift(p[0] + stand[0], p[1] + stand[1], seconds);
   };
   const a = wanted(T1);
   const z = wanted(T2);
   const ux = (z[0] - a[0]) / (T2 - T1);
   const uz = (z[1] - a[1]) / (T2 - T1);
   const speed = Math.hypot(ux, uz);
-  const staged = (w.heading * Math.PI) / 180;
-  const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'tastes' && c.role !== 'turns';
+  const staged = ((w.heading + stand[2]) * Math.PI) / 180;
+  const twice = TWICE[index];
+  const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'tastes' && c.role !== 'turns' && !twice;
   // How far ahead of its shoulders the tuft comes down when the neck is drawn out with a little slack.
-  const drop = b.standH + 0.1 * b.bodyTop - 0.3 * k - 0.6 * b.tendrilLen;
-  const reach = Math.sqrt(Math.max(4, 0.9 * b.neckLen * (0.9 * b.neckLen) - drop * drop));
+  // The last part of the neck turns down to the tuft and is 0.128 of the neck forward and 0.088 down; the rest runs to it nearly taut,
+  // so that it comes to the tuft still going down.
+  const drop = b.standH + 0.1 * b.bodyTop - 0.5 * k - TUFT_UP * b.tendrilLen - 0.088 * b.neckLen;
+  const reach = Math.sqrt(Math.max(4, 0.83 * b.neckLen * (0.83 * b.neckLen) - drop * drop)) + 0.128 * b.neckLen;
   const phase = w.phase;
 
   // The seam it can reach from where it stands, if there is one: the point of it nearest to where the tuft would come down.
@@ -141,6 +168,18 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
         }
       }
     }
+    // Where the lake has opened a pool for a tuft, the tuft goes there if it is in reach.
+    for (const pool of POOLS) {
+      const d = Math.hypot(pool[0] - rx, pool[1] - rz);
+      if (d < 0.6 * reach || d > 1.15 * reach) continue;
+      const ahead = ((pool[0] - rx) * fx + (pool[1] - rz) * fz) / d;
+      if (ahead < 0.3) continue;
+      const cost = Math.abs(d - reach) + (1 - ahead) * 3 * k - 3 * k;
+      if (cost < score) {
+        score = cost;
+        best = [pool[0], pool[1], cost];
+      }
+    }
     return best;
   };
 
@@ -162,26 +201,36 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     // One that turns: a third of a turn, a step at a time, during the shot that looks at the group.
     const swing = turning ? 1.1 : 0;
     const cycles = turning ? 1.5 : 0;
-    const sigma = (seconds: number): number => REST + cycles * smooth(8.2, 20.5, seconds);
-    // It stands turned toward the seam it feeds at, if one is in reach within a small turn of the staged heading.
-    let facing = staged;
-    let found = feedAt(x, zz, staged, 0);
-    let least = found[2];
-    for (const turn of [-0.25, 0.25, -0.5, 0.5, -0.75, 0.75]) {
-      const f = feedAt(x, zz, staged + turn, 0);
-      if (f[2] + Math.abs(turn) * 1.5 * k < least) {
-        least = f[2] + Math.abs(turn) * 1.5 * k;
-        found = f;
-        facing = staged + turn;
+    // Where it stands, which way it faces and where its tuft comes down: turned toward the seam it feeds at, if one is in reach within a
+    // small turn of the staged heading.
+    const standAt = (sx: number, sz: number, heading: number): { x: number; z: number; facing: number; target: [number, number] } => {
+      let facing = heading;
+      let found = feedAt(sx, sz, heading, 0);
+      let least = found[2];
+      for (const turn of [-0.25, 0.25, -0.5, 0.5, -0.75, 0.75]) {
+        const f = feedAt(sx, sz, heading + turn, 0);
+        if (f[2] + Math.abs(turn) * 1.5 * k < least) {
+          least = f[2] + Math.abs(turn) * 1.5 * k;
+          found = f;
+          facing = heading + turn;
+        }
       }
-    }
-    const target: [number, number] = [found[0], found[1]];
+      return { x: sx, z: sz, facing, target: [found[0], found[1]] };
+    };
+    const first = twice ? standAt(a[0], a[1], (twice.first * Math.PI) / 180) : standAt(x, zz, staged);
+    // One that is seen in two shots with a cut between stands where each is staged, and is not seen to go from the one to the other.
+    const later = twice ? wanted(twice.key) : a;
+    const second = twice ? standAt(later[0], later[1], (twice.second * Math.PI) / 180) : first;
+    const sigma = (seconds: number): number => (twice ? REST + (seconds >= twice.cut ? 4 : 0) : REST + cycles * smooth(8.2, 20.5, seconds));
+    const facing = first.facing;
+    const target = first.target;
     const yawOf = (s: number): number => facing + swing * Math.min(1, Math.max(0, (s - REST) / (cycles || 1)));
     // One that turns shuffles along as it does, so that the crust does not carry it off its mark.
     const f0 = turning ? (6 - T1) / (T2 - T1) - 0.5 : 0;
     const f1 = turning ? (22.5 - T1) / (T2 - T1) - 0.5 : 0;
     const body = (s: number): { x: number; z: number; yaw: number } => {
       const u = lerp(f0, f1, Math.min(1, Math.max(0, (s - REST) / (cycles || 1))));
+      if (twice) return s < 2 ? { x: first.x, z: first.z, yaw: first.facing } : { x: second.x, z: second.z, yaw: second.facing };
       return { x: x + (z[0] - a[0]) * u, z: zz + (z[1] - a[1]) * u, yaw: yawOf(s) };
     };
     const neck = (seconds: number): NeckAim => {
@@ -198,7 +247,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // The near one and the one the long lens looks at have their tufts in the seam when the keys look at them.
       const beat = fract((seconds - (index === 0 ? 8 : index === 1 ? 12.9 : phase * 23)) / 23);
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : smooth(0.0, 0.1, beat) * (1 - smooth(0.2, 0.32, beat));
-      return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target, raised: carried(seconds, -0.38), shape: lerp(0.36, 0.2, up) };
+      return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target: twice && seconds >= twice.cut ? second.target : target, raised: carried(seconds, -0.38), shape: lerp(FEED_SHAPE, 0.2, up) };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
     const fidget = turning ? 0 : index === 1 ? 8 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
@@ -259,7 +308,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       const at = body(seconds < 10 ? REST : REST + 0.75);
       const fed = feedAt(at.x, at.z, yaw, 0);
       const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.7 * smooth(15.6, 19.5, seconds);
-      return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater), shape: lerp(0.15 + 0.6 * c.skater, 0.36, down) };
+      return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater), shape: lerp(0.15 + 0.6 * c.skater, FEED_SHAPE, down) };
     }
     const tau = seconds / period + shift;
     const n = Math.round(tau);
@@ -271,7 +320,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const settle = 0.7 / period;
     const depth = c.role === 'walks' ? 0.35 : 1;
     const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away);
-    return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.32 + 0.12 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, 0.36, down) };
+    return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.32 + 0.12 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, FEED_SHAPE, down) };
   };
   void t0;
   // In a long rest it re-places one fore pad: it leans off it, puts it down a step off and settles over it.

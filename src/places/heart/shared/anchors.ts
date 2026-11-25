@@ -50,8 +50,9 @@ const from = (p: Vec3, dx: number, dz: number): [number, number] => [p[0] + dx, 
 
 /** The staging of the walkers. Each walks in a straight line: at `when` it is at `at`, heading and speed as given, metres a second. `feed` 1 means it stands and feeds. */
 export const WALKERS: Walker[] = [
-  // The near one: it has moved 12 m east by the key of the one that sank, where it stands whole at the left of that frame with its tuft in the near seam.
-  { at: from(NEAR, 0, 0), when: T0, heading: 100, speed: 0.75, size: 1.55, feed: 1, phase: 0.1 },
+  // The near one: by the key of the one that sank it stands 22 m north-east of where the wide view saw it, about 74 m from that camera and a fifth of the
+  // way in from the left edge of that frame, soft, its tuft in the pool of the near seam. It is not drawn in the two shots between (see AWAY).
+  { at: from(NEAR, 0, 0), when: T0, heading: 51.8, speed: 1.366, size: 1.55, feed: 1, phase: 0.1 },
   { at: from(GROUP, 0, 0), when: T0, heading: 126, speed: 0.12, size: 1.2, feed: 1, phase: 0.33 },
   // The second of the feeding picture: right of the hero and about 40 m beyond it from that camera, walking, trunk lifted.
   { at: from(GROUP, 41.9, -13.6), when: T0, heading: 104, speed: 0.55, size: 1.3, feed: 1, phase: 0.62 },
@@ -80,8 +81,8 @@ export const WALKERS: Walker[] = [
  *  heart-02, the feeding picture: its three only, no pair behind. Walker 13 is the lead of the line's picture and is in no other shot. */
 export const AWAY: Record<string, number[]> = {
   'heart-01': [13],
-  'heart-02': [8, 11, 13],
-  'heart-03': [1, 3, 4, 6, 7, 8, 11, 12],
+  'heart-02': [0, 8, 11, 13],
+  'heart-03': [0, 1, 3, 4, 6, 7, 8, 11, 12],
   'heart-04': [13],
   'heart-05': [13],
 };

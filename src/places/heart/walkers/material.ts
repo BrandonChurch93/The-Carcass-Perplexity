@@ -62,7 +62,8 @@ vec3 poolLight(vec4 q, vec3 p, vec3 n, vec3 v, vec3 albedo, float wrap, float gl
   // It is a small light: past six metres the fume has most of it, as it has of the rig's round lights. Without that the pool, twelve metres
   // from the body, lit a flank as hard as the sky did, in red, wherever the grain of the hide happened to face it.
   float q2 = d2 / 36.0;
-  float e = q.z * 3.14159 * 2.25 / (d2 + 2.25) * facing / (1.0 + q2 * q2);
+  // A root stands in the pool: its foot is in the full glare and its top, a few metres up in the fume, has little of it.
+  float e = q.z * 3.14159 * 2.25 / (d2 + 2.25) * facing / (1.0 + q2 * q2) * mix(1.0, 2.2 / (1.0 + p.y * p.y), gloss);
   return (albedo / 3.14159 + vec3(gloss * 0.2 * pow(nh, 20.0))) * e * uCast;
 }
 // The lake's light on a face that looks down or sideways at it: the rig's own taps (lakeIrradiance) without its share for faces that look up.
@@ -79,7 +80,11 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 // The share of the round lights (the fountains, the fall) that an animal takes. A round light has no shade in it and wraps a quarter of the
 // way round whatever it lights, so a flank that faces a row of fountains 75 m off was as red as its belly. The pictures have them dark against
 // the glow: smoke and the animal's own legs stand between.
-const float FAR_FIRE = 0.2;
+const float FAR_FIRE = 0.12;
+// The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
+// flank of the feeding picture's hero: 36 26 23 there.
+const float LAKE_UNDER = 0.45;
+const float CRUST_BOUNCE = 0.2;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
 const float POOL = 2.0;
 void main() {
@@ -129,14 +134,11 @@ void main() {
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
   float crown = smoothstep(0.62, 0.95, vLook.y) * neck;
-  float ringAt = vUv.x * 6.2832 / 0.21 + 2.2 * vnoise(vUv * vec2(1.6, 6.0) + seed);
+  float ringAt = vUv.x * 6.2832 / 0.24 + 4.5 * vnoise(vUv * vec2(1.1, 5.0) + seed);
   float crease = (1.0 - neck) * limb * (1.0 - tendril) * vLook.y * 0.55;
-  float ringAmp = (0.4 * crown + crease + 0.1 * neck) * fine;
+  float ringAmp = (0.24 * crown + crease + 0.08 * neck) * fine;
   slope.x += ringAmp * sin(ringAt) * 1.1;
   float ridge = 0.5 + 0.5 * cos(ringAt);
-  // The knobs of the spine along the top of the body.
-  float spine = body * smoothstep(0.7, 0.98, ng.y) * fine;
-  slope.x += spine * 0.5 * sin(vUv.x * 6.2832 / 0.42);
 
   // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
   float pole = body * smoothstep(0.4, 0.8, vLook.y);
@@ -176,7 +178,7 @@ void main() {
   float stain = smoothstep(0.35, 0.75, vnoise(vUv * vec2(1.3, 9.0) + seed * 2.0));
   vec3 bone = vec3(0.44, 0.415, 0.375) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
   float crownPale = neck * smoothstep(0.6, 0.92, vLook.y);
-  albedo = mix(albedo, bone * (0.55 + 0.45 * ridge), 0.85 * crownPale);
+  albedo = mix(albedo, bone * (0.8 + 0.2 * ridge) * (0.72 + 0.4 * vnoise(vUv * vec2(1.4, 34.0) + seed)), 0.8 * crownPale);
   albedo = mix(albedo, bone * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
@@ -184,7 +186,7 @@ void main() {
   float up = smoothstep(0.2, 0.8, ng.y);
   float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 + 0.45 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
-  albedo = mix(albedo, vec3(0.15, 0.145, 0.14) * (0.7 + 0.3 * grit), 0.8 * ash * smoothstep(0.4, 3.0, vWorld.y));
+  albedo = mix(albedo, vec3(0.13, 0.126, 0.122) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.
   albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
   // The foot itself is caked dark with what it treads in.
@@ -198,9 +200,17 @@ void main() {
   // on what faces up and the lake on what faces down: the belly, the inside of the legs, the under side of the neck.
   float open = skyOpen(vWorld) * occ;
   float under = smoothstep(0.05, -0.7, mix(ng.y, n.y, 0.3));
-  vec3 e = skyIrradiance(n) * open + (lakeBelow(vWorld, mix(ng, n, 0.3)) * under + FAR_FIRE * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
+  vec3 e = skyIrradiance(n) * open + (LAKE_UNDER * lakeBelow(vWorld, mix(ng, n, 0.3)) * under + FAR_FIRE * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
+  // The grey crust under it sends some of the sky back up at what faces down or sideways: without it a flank has only the red of the lake.
+  e += CRUST_BOUNCE * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 - 0.5 * n.y) * open;
   vec3 c = albedo * e / 3.14159;
   vec3 rs = reflect(-v, n);
+  // Dull, with the faint sheen of old leather on what faces the sky.
+  float topside = smoothstep(0.15, 0.8, n.y) * (1.0 - tendril) * (1.0 - 0.7 * ash);
+  if (topside > 0.01) {
+    float nvs = clamp(dot(n, v), 0.0, 1.0);
+    c += topside * (0.012 + 0.1 * pow(1.0 - nvs, 4.0)) * skyIrradiance(normalize(rs + n)) / 3.14159 * open;
+  }
   if (tendril > 0.01 && rs.y > 0.15) {
     float nv = clamp(dot(n, v), 0.0, 1.0);
     c += tendril * 0.35 * (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * skyRadiance(rs) * smoothstep(0.15, 0.7, rs.y) * own;
@@ -209,7 +219,7 @@ void main() {
   vec4 pool = uPools[int(vWho + 0.5)];
   if (pool.z > 0.0) c += blackbody(1350.0) * poolLight(pool, vWorld, normalize(mix(ng, n, 0.3 + 0.7 * tendril)), v, albedo, 0.5 * tendril, tendril) * own * POOL * (1.0 - 0.6 * tendril);
   // The roots are thin: the heat under them shows through them.
-  float thin = tendril * 0.4;
+  float thin = tendril * 0.4 * smoothstep(2.5, 0.3, vWorld.y);
   if (thin > 0.01) c += thin * albedo * lakeIrradianceFar(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;
   // Nothing on the animal glows by itself but the tips of the roots that are in the melt. The pose says which rings are down in a seam;
   // the lake's own map must agree that it is open there: a texel of it must carry at least a sixth of what lava under a thin skin sends out.
