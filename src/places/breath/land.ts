@@ -31,8 +31,8 @@ export const onRim = (bearingDeg: number, out = 0): [number, number] => {
 };
 
 const soft = (v: number): number => 0.5 * (v + Math.sqrt(v * v + 64));
-export const channelX = (z: number): number => -50 + 0.22 * soft(z - 5) - 0.3 * soft(-z - 10);
-export const channelHalf = (z: number): number => 7.5 + 14 * sat((-5 - z) / 40) + 140 * sat((z - 130) / 220);
+export const channelX = (z: number): number => -50 + 0.4 * soft(z - 5) - 0.3 * soft(-z - 10);
+export const channelHalf = (z: number): number => 5 + 2.5 * sat((5 - z) / 15) + 14 * sat((-5 - z) / 40) + 140 * sat((z - 130) / 220);
 
 const ripple = (x: number, z: number): number => (1 - 0.8 * smooth((Math.hypot(x, z) - 120) / 70)) * (0.6 * Math.sin(x * 0.07 + 0.5 * Math.sin(z * 0.05)) * Math.sin(z * 0.09 + 1.3) + 0.4 * Math.sin(x * 0.19 + z * 0.13 + 0.7));
 const swell = (x: number, z: number): number => 0.65 * Math.sin(x * 0.021 + 1.9 * Math.sin(z * 0.013 + 0.4)) + 0.35 * Math.sin(z * 0.047 - x * 0.031 + 2.1);
@@ -60,7 +60,9 @@ export function ground(x: number, z: number): number {
     base = lerp(0.3 + 0.2 * ripple(x, z), -0.12 + 0.42 * swell(x, z) + 0.1 * ripple(x, z), 0.85 * wet);
     base += lipHeight(b, r);
   }
-  const bed = 1 - smooth((Math.abs(x - xc) - (half - 2)) / 4.5);
+  const south = sat((z + 5) / 12);
+  const ragged = south * (x < xc ? 1.7 * Math.sin(z * 0.19 + 0.6) + 1.1 * Math.sin(z * 0.43 + 2.2) : 1.5 * Math.sin(z * 0.23 + 3.1) + 1.2 * Math.sin(z * 0.51 + 0.4));
+  const bed = 1 - smooth((Math.abs(x - xc) - (half - 2 + ragged)) / lerp(4.5, 2.6, south));
   return lerp(base, -1.0, bed);
 }
 
