@@ -110,6 +110,7 @@ attribute vec4 aNeck;
 attribute vec4 aFeet;
 attribute vec4 aMore;
 attribute float aPart;
+uniform float uDead;
 const float PI = 3.14159265;
 const float NECK = 1.5;
 const float THIGH = 0.8;
@@ -153,6 +154,8 @@ vec3 animalAt(float part, float s, float a, float id) {
   vec3 X = vec3(1.0, 0.0, 0.0);
   if (part < 0.5) {
     float r = 0.3 * pow(max(sin(PI * pow(s, 0.8)), 0.0), 0.65);
+    // The drowned one is sunk in on its ribs.
+    r *= 1.0 - uDead * (0.3 + 0.1 * sin(s * 47.0) * smoothstep(0.25, 0.4, s) * (1.0 - smoothstep(0.75, 0.9, s)) * abs(cos(a)));
     float deep = 1.0 + 0.25 * max(-sin(a), 0.0) * smoothstep(0.15, 0.8, s);
     return d * ((s - 0.5) * 0.95) + r * (cos(a) * 0.8 * X + sin(a) * deep * nb);
   }
