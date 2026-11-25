@@ -200,8 +200,10 @@ float gLapHigh = 0.0;
 // The cell the lobes are laid for: a step is four cells wide at the least.
 float gLapCell = 0.0234;
 float gLapDeep;
-float lapAt(vec2 q) {
-  const float size = 1.9;
+float lapAt(vec2 q, float big) {
+  // Round the one that sank (big 1) the lobes are larger, their sheets 10 to 14 cm thick and their cords 16 to 22 cm apart:
+  // the lens there is under a metre up and looks along the floor.
+  float size = mix(1.9, 3.3, big);
   vec2 wq = q + 0.5 * vec2(vnoise(q / 1.9 + 15.0), vnoise(q / 1.9 + 47.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
   vec2 base = floor(wq / size - 0.5);
@@ -225,20 +227,23 @@ float lapAt(vec2 q) {
       float t = even * rough;
       if (t < 1.3) {
         float front = smoothstep(-0.9, 0.5, a / R);
-        float thick = (0.05 + 0.035 * fract(hr * 7.1)) * (0.15 + 0.85 * front);
+        float thick = mix(0.05 + 0.035 * fract(hr * 7.1), 0.1 + 0.04 * fract(hr * 7.1), big) * (0.15 + 0.85 * front);
         float on = 1.0 - smoothstep(1.0 - edge / R, 1.0, t);
         float foot = ((t - 1.0) * R - 0.3 * edge) / (0.55 * edge);
-        high += thick * on - (0.035 + 0.02 * fract(hr * 3.3)) * front * exp(-foot * foot);
+        high += thick * on - (0.035 + 0.02 * fract(hr * 3.3)) * (1.0 + 0.6 * big) * front * exp(-foot * foot);
         if (t < 1.0 && hr > top) {
           top = hr;
           float ac = a + (0.9 + 0.4 * fract(hr * 5.7)) * R;
           float rho = length(vec2(ac, s));
-          float space = 0.11 + 0.03 * fract(hr * 11.3);
+          // The lobes nearest the lens of the key (their middles within 3.5 to 5 m of it) wear cords of 3.6 to 4.6 cm: finer
+          // than the cells carry, so the height leaves their tops smooth (foldHeld) and the paint draws them.
+          float nearLens = 1.0 - smoothstep(3.5, 5.0, length((c2 + 0.5 + 0.5 * (hs - 0.5)) * size - vec2(-510.5, 215.5)));
+          float space = mix(mix(0.11 + 0.03 * fract(hr * 11.3), 0.036 + 0.01 * fract(hr * 11.3), nearLens), 0.16 + 0.06 * fract(hr * 11.3), big);
           float u = (rho + 0.12 * R * even * even * even) / space + 7.0 * hr + 0.5 * vnoise(vec2(1.5 * rho + 31.0 * hr, 1.5 * s / R + 5.0 * hr));
           gFoldPhase = u;
           gFoldSpace = space / (1.0 + 0.3 * t * t);
           gFoldDir = (ac * along + s * vec2(along.y, -along.x)) / max(rho, 1e-3);
-          gLapDeep = (0.045 + 0.04 * smoothstep(0.3, 0.95, t)) * (0.7 + 0.6 * vnoise(vec2(0.9 * u + 3.0 * hr, 2.0 * s / R + 21.0 * hr)));
+          gLapDeep = (space / 0.125) * mix(1.0, 0.85, big) * (0.045 + 0.04 * smoothstep(0.3, 0.95, t)) * (0.7 + 0.6 * vnoise(vec2(0.9 * u + 3.0 * hr, 2.0 * s / R + 21.0 * hr)));
           cover = on;
         }
       }
@@ -266,9 +271,14 @@ float foldAt(vec2 q) {
   // Ropes end after 0.3 to 2 m and large areas carry none; broken crust carries none at all (call brokenAt before this).
   // Round the one that sank the ropes are everywhere: its own folds join them.
   float ropes = max(max(ropeMask(q), 1.0 - smoothstep(13.0, 19.0, length(q - uMound.xy))), 1.0 - smoothstep(15.0, 20.0, length(q - vec2(-507.0, 212.0)))) * (1.0 - gFlat) * (1.0 - smoothstep(0.5, 0.8, gBroke));
-  float lapZone = (1.0 - smoothstep(11.0, 15.0, length(q - vec2(-505.0, 213.0)))) * (1.0 - gFlat);
+  // Two places wear the lobes: the banks of the line, and the floor round the one that sank from 5 to 7 m out of its middle
+  // to 24 to 28 m (its own apron, feet and seam lie inside that and stay as they are).
+  float lapLine = 1.0 - smoothstep(11.0, 15.0, length(q - vec2(-505.0, 213.0)));
+  float sunkFar = length(q - uMound.xy);
+  float lapSunk = smoothstep(5.0, 7.0, sunkFar) * (1.0 - smoothstep(24.0, 28.0, sunkFar));
+  float lapZone = max(lapLine, lapSunk) * (1.0 - gFlat);
   if (lapZone > 0.0) {
-    float lapCover = lapAt(q);
+    float lapCover = lapAt(q, step(lapLine, lapSunk));
     gLapHigh *= lapZone;
     gToeBest *= 1.0 - lapZone;
     gToeNext *= 1.0 - lapZone;
@@ -418,6 +428,9 @@ float groupFar(vec2 q) {
 // Metres from the middle of the channel at the line (the same crooked line the net lays down), and which way is away from it.
 uniform vec4 uLineSeam;
 vec2 gLineAway;
+// How far along the channel at the line the point lies, 0 where it leaves the shore to 1 past the lens of key heart-1.
+float gLineT = 0.0;
+float gLineFar = 100.0;
 float lineFar(vec2 q) {
   vec2 ab = uLineSeam.zw - uLineSeam.xy;
   float l = length(ab);
@@ -426,6 +439,8 @@ float lineFar(vec2 q) {
   vec2 d = q - uLineSeam.xy - ab * t - vec2(-ab.y, ab.x) / l * k;
   float far = length(d);
   gLineAway = d / max(far, 1e-3);
+  gLineT = t;
+  gLineFar = far;
   return far;
 }
 // The mound of the one that sank: the crust lies flat under it and is itself again a few metres out (uMound: x, z, the flat radius).
@@ -629,6 +644,14 @@ float fineAt(vec2 q, float c) {
   return max(c, uLens.w * (dot(d, d) + uLens.z * uLens.z) / uLens.z);
 }
 float gFine;
+// The top of the bank at the line, metres: not even. In stretches of 2 to 4 m the trench is a shallow runnel, the brim 8 to
+// 15 cm over the melt (which lies at -0.3 there), in others a deeper cut, 20 to 30 cm. More of it is shallow upstream, where
+// the channel leaves the shore. Call lineFar before it.
+float lineBrim(vec2 q) {
+  float runnel = smoothstep(0.4, 0.62, vnoise(q / 3.1 + 57.0) + 0.3 * (0.65 - gLineT));
+  float rough = vnoise(q / 1.3 + 91.0);
+  return -0.3 + mix(0.2 + 0.1 * rough, 0.08 + 0.07 * rough, runnel);
+}
 // How much of a mound of ash and rubble is at the point, 0 to 1 (after heightAt).
 float gMound;
 float heightAt(vec2 q, float c) {
@@ -713,6 +736,13 @@ float heightAt(vec2 q, float c) {
     h += gMound * (1.0 - 0.75 * gFlat) * (0.1 + 0.16 * vnoise(q / 0.6 + 3.0) * (1.0 - smoothstep(0.1, 0.2, c))) * slabHeld(c, 1.9) * smoothstep(0.0, 1.5, lake) * (1.0 - gOverlap);
   }
 
+  // The banks of the line fall to the brim over 3 m. Laid from the line itself and not from the net: where the nearest
+  // joint of the net stops being the line (1 to 3 m behind the brim) a fall laid from the net ends in a step, a dark toothed
+  // line that made two banks of one.
+  if (gOverlap > 0.0) {
+    float lineFall = exp(-max(gLineFar - 1.0, 0.0) / 3.0) * smoothstep(0.0, 0.08, gLineT) * (1.0 - smoothstep(0.92, 1.0, gLineT)) * (1.0 - smoothstep(6.0, 8.0, gLineFar));
+    h = mix(h, lineBrim(q) + 0.18 * h, lineFall);
+  }
   // Beside a gap the skin is thin and young and sags to the melt, and where it tore its edge is curled up into a thin lip.
   // The gap is cut down: in the seams the pictures name the melt is the lava's mesh, and the floor lies just under it.
   if (live > 0.5) {
@@ -728,13 +758,15 @@ float heightAt(vec2 q, float c) {
     // A seam the melt stands high in (the string the group feeds at) is an opening all the same: its bank on the far side
     // from the lens of the shot that looks into it stands 10 to 25 cm over the melt, a broken wall the melt lights, and
     // the bank on the near side stays low, so the lens sees over it into the gap.
+    float onBrim = named * (1.0 - smoothstep(0.01, 0.05, heatClass));
+    brim = mix(brim, lineBrim(q), onBrim);
     float shallow = named * (1.0 - trench);
     if (shallow > 0.0 && bank < 2.5) {
       vec2 toLens = normalize(vec2(-454.9, 250.3) - q);
       float farSide = smoothstep(0.02, 0.2, n.r - netAt(q + 0.4 * toLens).r);
       brim = mix(brim, level + 0.1 + 0.16 * vnoise(q / 1.3 + 91.0), shallow * farSide * (1.0 - 0.6 * gPadCalm));
     }
-    h = mix(h, brim + mix(0.12, 0.18, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.5, trench)) * wide);
+    h = mix(h, brim + mix(0.12, 0.18, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.5, trench)) * wide * (1.0 - onBrim * smoothstep(0.8, 1.6, bank)));
     // The folds end short of the broken edge: carried over it they would stand as a row of teeth on the wall.
     // At the line the plate ends in a rounded lip, with no broken slabs on it. Within 2.5 m of the brim nothing of the crust
     // (a crack between plates least of all) lies under a hand over the melt: under it the melt would show through.
@@ -777,7 +809,9 @@ float heightAt(vec2 q, float c) {
     if (hr < 7.6) {
       float over = max(hr - 2.0, 0.0);
       float top = 2.96 - 0.096 * over * over;
-      h = mix(h, top + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
+      // Its top line is lumpy, knobs 0.8 to 1.4 m across and up to 0.22 m high: through the blur it reads as a ridge of crust.
+      float knob = 0.22 * smoothstep(0.35, 0.75, vnoise(q / 0.9 + 9.0)) * smoothstep(0.3, 1.2, top);
+      h = mix(h, top + knob + 0.05 * (vnoise(q / 0.8 + 9.0) - 0.5) * smoothstep(2.0, 4.0, hr), smoothstep(0.0, 0.8, top) * uHill.z);
     }
   }
   return h;
