@@ -205,16 +205,16 @@ export function rockShape(seed: number, n: number, planes: number): THREE.Buffer
     const u = rnd() * 2 - 1;
     const a = rnd() * Math.PI * 2;
     const q = Math.sqrt(1 - u * u);
-    cuts.push([q * Math.cos(a), u, q * Math.sin(a), 0.5 + 0.5 * rnd()]);
+    cuts.push([q * Math.cos(a), u, q * Math.sin(a), 0.42 + 0.5 * rnd()]);
   }
   const radius = (x: number, y: number, z: number): number => {
-    let r = 1.25;
+    let r = 1.5;
     for (const c of cuts) {
       const d = x * c[0] + y * c[1] + z * c[2];
       if (d > 0.05) r = Math.min(r, c[3] / d);
     }
     const o = seed * 3.7;
-    return r * (0.86 + 0.2 * noise3(x * 1.7 + o, y * 1.7, z * 1.7) + 0.1 * noise3(x * 4.6 + o, y * 4.6 + 5, z * 4.6)) + 0.03 * noise3(x * 11 + o, y * 11, z * 11 + 3);
+    return r * (0.9 + 0.14 * noise3(x * 1.7 + o, y * 1.7, z * 1.7) + 0.07 * noise3(x * 4.6 + o, y * 4.6 + 5, z * 4.6)) + 0.03 * noise3(x * 11 + o, y * 11, z * 11 + 3);
   };
   const position: number[] = [];
   const normal: number[] = [];
@@ -241,7 +241,7 @@ export function rockShape(seed: number, n: number, planes: number): THREE.Buffer
         const b = Math.tan(((j / n) * 2 - 1) * 0.7854);
         const d = [0, 1, 2].map((k) => (o[k] as number) + a * (right[k] as number) + b * (up[k] as number)) as [number, number, number];
         const p = point(d[0], d[1], d[2]);
-        const e = 0.04;
+        const e = 0.02;
         const pa = point(d[0] + e * (right[0] as number), d[1] + e * (right[1] as number), d[2] + e * (right[2] as number));
         const pb = point(d[0] + e * (up[0] as number), d[1] + e * (up[1] as number), d[2] + e * (up[2] as number));
         const ux = pa[0] - p[0];
