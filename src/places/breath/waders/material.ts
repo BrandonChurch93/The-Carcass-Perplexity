@@ -164,6 +164,8 @@ void main() {
     albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.07, 0.065, 0.035), step(0.82, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
+    // Far off the mop is one dark red mass: no strand of it is seen for itself.
+    albedo = mix(vec3(0.15, 0.04, 0.04), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
     thin = 1.0;
@@ -201,8 +203,8 @@ void main() {
       float crease = vnoise(vUv * vec2(21.0, 57.0) + seed) - 0.5;
       // On the trunk the skin hangs in folds from the spine; on the neck it has dried in rings; the legs are bone with a little skin on.
       float drape = kind < 0.5 ? fbm(vUv * vec2(7.0, 9.0) + seed + 5.0) - 0.5 : 0.0;
-      float ringed = kind < 0.5 ? 0.9 : kind < 1.5 ? 0.7 : 0.2;
-      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.03 * drape) * mid;
+      float ringed = kind < 0.5 ? 0.9 : kind < 1.5 ? 0.4 : 0.2;
+      height += (0.007 * ringed * wrinkle + 0.004 * crease + 0.03 * drape + 0.004 * (swell - 0.5)) * mid;
       albedo *= 1.0 + (0.4 * ringed * wrinkle + 0.35 * drape) * mid;
       float hollow = 1.0 - vInfo.y;
       float rot = smoothstep(0.42, 0.68, fbm(q * vec2(3.1, 2.3) + 11.0) + 0.3 * hollow);

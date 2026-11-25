@@ -106,7 +106,7 @@ export function create(ctx: Context): Piece {
     }
     const drawn = sn > 0 ? 1 : 1 - 0.3 * smooth(0.6, 0.25, t) * -sn;
     const out = 1.25 * deep * (sn > 0 ? sn ** 0.8 : -((-sn) ** 0.9)) * drawn * (1 + 0.1 * smooth(0.3, -0.6, c)) + 0.014 * k * knuckle;
-    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.45 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
+    const seen = (c > 0 ? 1 : 0.25 + 0.75 * smooth(-0.5, 0, c)) * (1 - 0.62 * cage * (1 - rib)) * (1 - 0.45 * pit) * (1 - 0.3 * spine * (1 - knuckle));
     // It lies rolled a little onto its belly's edge, so the spine is the high line of it and the flank faces away from the legs' side less.
     const rolled = up * Math.cos(ROLL) + out * Math.sin(ROLL);
     return [Math.max(rolled, -tall * 0.42), out * Math.cos(ROLL) - Math.max(up, 0) * Math.sin(ROLL), seen];
@@ -160,7 +160,7 @@ export function create(ctx: Context): Piece {
     const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
     const knuckle = 0.75 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.4 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.8 * smooth(0.95, 1, u);
-    const r = 0.03 * k * (1.0 + thigh * 1.1 + knuckle + foot * 0.5) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.75 * smooth(0.975, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
+    const r = 0.037 * k * (1.0 + thigh * 0.9 + knuckle + foot * 1.1) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
