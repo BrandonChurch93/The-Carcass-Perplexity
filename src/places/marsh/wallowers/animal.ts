@@ -26,11 +26,11 @@ const KNOTS: [number, number, number, number, number][] = [
   [0.0, -2.0, 0.94, 0.02, 0.02],
   [0.03, -1.97, 0.95, 0.3, 0.3],
   [0.08, -1.84, 0.98, 0.5, 0.56],
-  [0.18, -1.4, 1.06, 0.63, 0.78],
-  [0.32, -0.72, 1.12, 0.69, 0.88],
-  [0.46, 0.0, 1.2, 0.73, 0.9],
-  [0.58, 0.6, 1.3, 0.77, 0.88],
-  [0.68, 1.1, 1.22, 0.74, 0.82],
+  [0.18, -1.4, 1.01, 0.59, 0.76],
+  [0.32, -0.72, 1.08, 0.67, 0.88],
+  [0.46, 0.0, 1.18, 0.73, 0.9],
+  [0.58, 0.6, 1.33, 0.8, 0.88],
+  [0.68, 1.1, 1.24, 0.76, 0.82],
   [0.77, 1.5, 1.06, 0.69, 0.74],
   [0.85, 1.82, 0.87, 0.61, 0.67],
   [0.92, 2.08, 0.71, 0.53, 0.6],
@@ -214,12 +214,12 @@ export class Animal {
           sleeve += 0.08 * near * (r3 - 0.62);
           fold = Math.min(fold, 1 - near * (1 - r3));
           // The haunch and the shoulder stand out over the leg.
-          sleeve += 0.12 * Math.exp(-((along - lx) ** 2) / 0.22) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
+          sleeve += 0.19 * Math.exp(-((along - lx) ** 2) / 0.2) * smooth(0.15, 0.9, cs * sgn) * smooth(0.7, 0.0, Math.abs(sn + 0.2));
         }
         let m = 1 + 0.12 * neck * (r1 - 0.62) * under + 0.06 * flank * (r2 - 0.62) * side + sleeve;
         m += 0.06 * (lump(along * 1.1 + 9, a * 0.9 + 2, sd + 1) - 0.5) + 0.025 * (lump(along * 3.1, a * 2.6, sd + 2) - 0.5);
         // The belly hangs.
-        m += 0.07 * flank * Math.exp(-((sn + 0.8) ** 2) / 0.1) * (0.6 + 0.8 * lump(along * 0.8, 1, sd + 4));
+        m += 0.14 * flank * Math.exp(-((sn + 0.8) ** 2) / 0.1) * (0.6 + 0.8 * lump(along * 0.8, 1, sd + 4));
         // The spine shows as a row of knobs down the back, and the hips as two corners over the hind legs.
         m += 0.035 * Math.exp(-(cs * cs) / 0.006) * smooth(0, 0.5, sn) * (0.55 + 0.45 * Math.cos((along * TAU) / 0.21)) * bell(0.06, 0.7, s);
         m += 0.07 * Math.exp(-((along + 1.3) ** 2) / 0.08) * Math.exp(-((Math.abs(cs) - 0.55) ** 2) / 0.03) * smooth(0.3, 0.8, sn);
@@ -228,9 +228,13 @@ export class Animal {
         const vent = Math.pow(Math.max(0, Math.cos((along + 1.25) * (TAU / 0.46))), 8) * bell(0.14, 0.62, s);
         m += 0.06 * row * vent;
         // A dead one is under a crust of salt that has grown in knobs.
-        if (b.salt > 1) m += 0.24 * (lump(along * 5.5 + 31, a * 4.5, sd + 11) - 0.35) + 0.1 * (lump(along * 13, a * 11, sd + 12) - 0.5);
+        // The flank is hollow between the ribs and the haunch.
+        m -= 0.06 * Math.exp(-((along + 0.25) ** 2) / 0.16) * smooth(0.25, 0.85, Math.abs(cs)) * smooth(0.75, 0.1, Math.abs(sn));
+        if (b.salt > 1) m += 0.3 * (lump(along * 2.3 + 7, a * 2.1, sd + 13) - 0.4) + 0.22 * (lump(along * 5.5 + 31, a * 4.5, sd + 11) - 0.35) + 0.1 * (lump(along * 13, a * 11, sd + 12) - 0.5);
         this.lumps[i * BODY_SIDES + j] = m;
-        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * under * 0.8 * (1 - r1), 1 - flank * side * 0.45 * (1 - r2), fold));
+        // Between the knobs of a dead one's crust the light does not reach.
+        const pit = b.salt > 1 ? 0.2 + 0.8 * smooth(0.12, 0.5, 0.65 * lump(along * 5.5 + 31, a * 4.5, sd + 11) + 0.35 * lump(along * 13, a * 11, sd + 12)) : 1;
+        crease[i * BODY_SIDES + j] = Math.min(1, Math.min(1 - neck * under * 0.8 * (1 - r1), 1 - flank * side * 0.45 * (1 - r2), fold)) * pit;
       }
     }
     const girth = TAU * 0.8 * k;
@@ -268,7 +272,7 @@ export class Animal {
       const reach = ((f * 0.618 + cell(f, 4, sd) * 0.3) % 1) * 0.95;
       // Those that reach forward stand at the front of the lip, those that hang stand behind them: a fan when seen from the side.
       const ring = BODY_RINGS - 3 - Math.round((1 - reach) * 15) - Math.floor(3 * Math.abs(u - 0.5));
-      const length = k * (0.46 + 0.2 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
+      const length = k * (0.54 + 0.22 * cell(f, 2, sd) + 0.08 * Math.abs(u - 0.5)) * (1 - 0.2 * young);
       const radius = k * (0.048 + 0.014 * cell(f, 3, sd)) * (1 + 0.2 * young);
       this.feelerAt.push({ ring, angle, length, radius, lean: (u - 0.5) * 2, reach });
       for (let i = 0; i < FEELER_RINGS; i++) {
@@ -472,14 +476,14 @@ export class Animal {
       let y = this.cy[i] + ny * ca * hw + by * sa * hh;
       let z = this.cz[i] + nz * ca * hw + bz * sa * hh;
       // It leaves the lip downward, some reaching forward and some hanging straight, the outer ones leaning out: a rake, not a row.
-      const fore = -0.25 + 1.75 * at.reach + 0.3 * d.splay;
+      const fore = 0.1 + 1.75 * at.reach + 0.3 * d.splay;
       const out = at.lean * (0.75 + 0.5 * d.splay);
       // Forward is where the head points on the level, whatever its hang: the tusks go down into the mud, not back under the chin.
       const hl = Math.hypot(tx, tz) || 1;
       const hx = tx / hl;
       const hz = tz / hl;
       let dx = hx * fore + nx * out;
-      let dy = -1 + 0.35 * d.splay;
+      let dy = -0.72 + 0.35 * d.splay;
       let dz = hz * fore + nz * out;
       let dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
@@ -623,7 +627,7 @@ export function walk(plan: Plan, b: Build, seconds: number, out: Drive): Drive {
   out.breath = Math.sin(seconds * (1.05 + 0.3 * Math.sin(b.seed * 17)) + b.seed * 9);
   out.squash = 1;
   out.cave = 0;
-  out.splay = 0.1 + 0.25 * shove;
+  out.splay = 0.55 + 0.25 * shove;
   for (let f = 0; f < FEELERS; f++) {
     const w = 2.1 + 1.9 * cell(f, 7, Math.floor(b.seed * 9973));
     const a = seconds * w + f * 2.4 + b.seed * 31;

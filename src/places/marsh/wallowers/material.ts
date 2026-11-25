@@ -77,9 +77,10 @@ float creases(vec2 uv, float seed, float deep) {
 
 // Crystals grown into each other: round lumps the size of a fist with smaller ones on them.
 float knobHeight(vec2 uv, float seed) {
-  float a = sqrt(clamp(plates(uv * vec2(15.0, 16.0) + seed).x * 2.2, 0.0, 1.0));
-  float b = sqrt(clamp(plates(uv * vec2(47.0, 51.0) + seed * 2.0).x * 2.2, 0.0, 1.0));
-  return 0.65 * a + 0.35 * b;
+  float a = sqrt(clamp(plates(uv * vec2(11.0, 12.0) + seed).x * 2.2, 0.0, 1.0));
+  float b = sqrt(clamp(plates(uv * vec2(37.0, 41.0) + seed * 2.0).x * 2.2, 0.0, 1.0));
+  float c = sqrt(clamp(plates(uv * vec2(103.0, 97.0) + seed * 3.0).x * 2.2, 0.0, 1.0));
+  return 0.4 * a + 0.35 * b + 0.25 * c;
 }
 
 void main() {
@@ -128,8 +129,10 @@ void main() {
   vec2 slope = vec2(cx - c0, cy - c0) / e * 0.02 + (nhH.rg - 0.5) * 0.22 + skinSlope;
   // The crust of a dead one: crystals as big as a fist, grown into each other.
   float k0 = plates(vUv * vec2(19.0, 21.0) + seed).x;
-  float knob = knobHeight(vUv, seed);
-  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.07;
+  // Far off the crystals are smaller than a pixel: what is left of them is their mean.
+  float afar = smoothstep(9.0, 30.0, length(cameraPosition - vWorld));
+  float knob = mix(knobHeight(vUv, seed), 0.72, afar);
+  vec2 knobSlope = vec2(knobHeight(vUv + vec2(0.004, 0.0), seed) - knob, knobHeight(vUv + vec2(0.0, 0.004), seed) - knob) / 0.004 * 0.3 * (1.0 - afar);
   // How deep in a fold of the shape this is: 1 on the top of a fold, toward 0 in its crease.
   float fold = smoothstep(0.3, 0.95, vInfo.y / (0.55 + 0.45 * smoothstep(-0.9, 0.1, ng.y)));
 
@@ -164,9 +167,10 @@ void main() {
   vec3 ivory = vec3(0.4, 0.33, 0.22) * groove * mix(vec3(1.0), hide, 0.5);
   ivory = mix(ivory, vec3(0.2, 0.12, 0.08), 0.45 * smoothstep(0.7, 1.0, vLook.y) + 0.5 * (1.0 - smoothstep(0.0, 0.14, vLook.y)));
   albedo = mix(albedo, ivory, feeler);
-  albedo = mix(albedo, mix(vec3(0.42, 0.4, 0.38), vec3(0.56, 0.54, 0.52), dead) * mix(salt, vec3(1.0), 0.5 * dead), cake);
+  albedo = mix(albedo, mix(vec3(0.42, 0.4, 0.38), vec3(0.62, 0.58, 0.54), dead) * mix(salt, vec3(1.0), 0.5 * dead), cake);
   slope = mix(slope, (nhS.rg - 0.5) * 2.4 + dead * knobSlope, cake);
-  albedo = mix(albedo, albedo * (0.34 + 0.66 * knob) * mix(vec3(1.0), vec3(0.85, 0.7, 0.64), 1.0 - knob), dead * cake);
+  albedo = mix(albedo, albedo * (0.5 + 0.5 * knob) * mix(vec3(1.0), vec3(0.85, 0.7, 0.64), 1.0 - knob), dead * cake);
+  albedo = mix(albedo, albedo * mix(vec3(0.42, 0.3, 0.25), vec3(1.0), smoothstep(0.15, 0.8, vInfo.y)), dead);
   // Damp hide is darker and redder; wet hide is the red of the brine itself.
   albedo = mix(albedo, albedo * mix(vec3(0.72, 0.5, 0.45), vec3(0.7), mudded), damp * (1.0 - wet));
   vec3 wetC = mix(albedo * vec3(0.75, 0.2, 0.12) + vec3(0.03, 0.003, 0.002), albedo * 0.6, mudded);
@@ -176,7 +180,9 @@ void main() {
   vec3 mud = mix(vec3(0.075, 0.02, 0.014), vec3(0.085, 0.074, 0.066), mudded) * (0.7 + 0.6 * streak);
   // Grey mud: wet and dark where it is fresh, paler and cracked where it has dried on the back.
   vec3 greyWet = vec3(0.085, 0.074, 0.066);
-  vec3 greyDry = vec3(0.19, 0.172, 0.155) * (0.6 + 0.4 * s0);
+  // It dries in plates of its own, and the hide shows red brown between them.
+  float plate = smoothstep(0.38, 0.6, fbm(vUv * vec2(2.6, 2.1) + seed * 7.0)) * (0.5 + 0.5 * smoothstep(0.2, 0.5, fbm(vUv * vec2(9.0, 7.0) + seed)));
+  vec3 greyDry = mix(vec3(0.13, 0.085, 0.066), vec3(0.24, 0.215, 0.19), plate) * (0.6 + 0.4 * s0);
   albedo = mix(albedo, mix(greyDry, greyWet, wet), smear * 0.92 * (1.0 - 0.7 * feeler));
   albedo = mix(albedo, mud, soaked * 0.85);
 
@@ -189,7 +195,11 @@ void main() {
   rough = mix(rough, 1.0, 0.8 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
   float occ = vInfo.y * (0.6 + 0.4 * smoothstep(0.0, 0.7, c0)) * (0.8 + 0.2 * nhH.b) * (0.7 + 0.3 * s0);
   occ *= 1.0 - 0.55 * pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 3.0);
-  occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b), cake);
+  occ = mix(occ, vInfo.y * (0.75 + 0.25 * nhS.b) * mix(1.0, 0.3 + 0.7 * knob, dead), cake);
+  // The mouth: a dark pit in the end of the muzzle.
+  float pit = trunk * (1.0 - dead) * smoothstep(0.99, 0.997, vLook.y);
+  albedo = mix(albedo, vec3(0.03, 0.014, 0.011), 0.7 * pit);
+  occ *= 1.0 - 0.45 * pit;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

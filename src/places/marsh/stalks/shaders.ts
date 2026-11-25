@@ -64,14 +64,18 @@ vec3 stemPoint(float a, float v) {
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
-    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.25, 0.15, open);
+    float len = (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * aKind.z * mix(0.19, 0.15, open);
     y = h - 0.06 + len * v;
-    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(1.08, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.06 * sin(a * 9.0 + v * 4.0));
+    r = R * (kind > 1.5 && kind < 2.5 ? 0.0 : 1.0) * mix(0.98, 0.8, open) * pow(max(sin(3.14159 * pow(mix(0.12, 1.0, v), 0.8)), 0.0), 0.8) * (1.0 + 0.06 * sin(a * 9.0 + v * 4.0));
   }
   vec3 A = vec3(aAxis.x * sin(lean), cos(lean), aAxis.y * sin(lean));
   vec3 U = vec3(aAxis.x * cos(lean), -sin(lean), aAxis.y * cos(lean));
   vec3 W = vec3(-aAxis.y, 0.0, aAxis.x);
-  return aBase.xyz + A * y + (U * cos(a) + W * sin(a)) * r;
+  // No stalk is straight: each has grown toward its own light and sagged under its own salt.
+  float ba = seed * 37.0;
+  float t = clamp(y / h, 0.0, 1.3);
+  vec3 bow = (U * cos(ba) + W * sin(ba)) * (aKind.y < -0.5 ? 0.0 : 1.0) * (0.03 + 0.17 * fract(seed * 91.3)) * h * t * t;
+  return aBase.xyz + A * y + bow + (U * cos(a) + W * sin(a)) * r;
 }
 void main() {
   float a = position.x;
@@ -119,7 +123,11 @@ void main() {
     vec3 rust = vec3(0.2, 0.07, 0.03);
     vec3 albedo = salt * 1.2 + 0.03;
     albedo = mix(albedo, horn, 0.75 * bare);
-    albedo = mix(albedo, rust, clamp(under * (0.25 + 0.75 * smoothstep(0.35, 0.7, fbm(vec2(vCoord.x * 2.0, y * 9.0) + seed))), 0.0, 0.8));
+    // Far off the rings are not seen one by one: a stalk is pale with a stain here and there.
+    float away = smoothstep(10.0, 34.0, distance(cameraPosition, vWorld));
+    under *= 1.0 - 0.85 * away;
+    albedo = mix(albedo, rust, clamp(under * (0.25 + 0.75 * smoothstep(0.35, 0.7, fbm(vec2(vCoord.x * 2.0, y * 9.0) + seed))), 0.0, 0.6));
+    albedo = mix(albedo, albedo * vec3(0.8, 0.66, 0.56), away * smoothstep(0.35, 0.65, fbm(vec2(vCoord.x * 0.7, y * 1.3) + seed * 5.0)));
     // The foot stands in red brine and mud.
     float wet = 1.0 - smoothstep(0.1, 0.45 + 0.3 * patchy, vWorld.y);
     albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
@@ -127,7 +135,7 @@ void main() {
     vec3 T = normalize(cross(up, n) + 1e-5);
     vec3 B = cross(n, T);
     n = normalize(n - (T * (nh.r - 0.5) + B * (nh.g - 0.5)) * 1.6);
-    float occ = (0.55 + 0.45 * smoothstep(0.0, 0.35, q)) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
+    float occ = mix(0.55 + 0.45 * smoothstep(0.0, 0.35, q), 0.9, away) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
     // Seen from inside, through a broken mouth: the dark of the tube.
     c = rigShade(vWorld, n, v, albedo, mix(0.95, 0.4, wet), occ);
     if (!gl_FrontFacing) c = vec3(0.05, 0.028, 0.022) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.25 * skyOpen(vWorld);
@@ -138,7 +146,7 @@ void main() {
     // A closed sheath: long scales that lap over each other up to the point.
     float lap = fract(vCoord.w * 3.3 + 0.35 * sin(vCoord.x * 3.0));
     float groove = (0.5 + 0.5 * pow(abs(sin(vCoord.x * 4.5 + vCoord.w * 2.6)), 0.5)) * (0.75 + 0.25 * smoothstep(0.0, 0.3, lap));
-    vec3 albedo = mix(vec3(0.05, 0.007, 0.011), vec3(0.13, 0.02, 0.028), vCoord.w) * groove;
+    vec3 albedo = mix(vec3(0.03, 0.008, 0.009), vec3(0.075, 0.022, 0.02), vCoord.w) * groove;
     c = rigShade(vWorld, n, v, albedo, 0.9, (0.5 + 0.5 * vCoord.w) * (0.6 + 0.4 * groove));
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -163,6 +171,9 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
   vec3 outward = normalize(radial * (0.3 + 0.8 * spread) + sweep * 0.9);
   float heavy = 0.75 + 0.5 * fract(seed * 5.3);
   float u2 = u * u;
+  // One in eight has died: it hangs brown down the stem.
+  float gone = step(fract(seed * 3.1), 0.04);
+  vec3 hung = radialBase * R * 0.9 + radial * (R * 0.5 + L * 0.2 * (2.0 * u - u2)) - vec3(0.0, 1.0, 0.0) * L * 0.6 * u * (0.4 + 0.6 * u) + cross(axis, radial) * L * 0.04 * sin(u * 6.0 + seed * 31.0) * u;
   vec3 outP = radialBase * R * 0.5 * (1.0 - 0.5 * u)
     + d0 * L * (0.86 - 0.3 * spread) * (2.0 * u - u2)
     + outward * L * (0.2 + 0.4 * spread) * u2
@@ -170,8 +181,9 @@ vec3 filamentPoint(float u, float open, vec3 axis, vec3 radial, vec3 radialBase)
     + cross(axis, radial) * L * 0.05 * sin(u * 5.0 + seed * 31.0) * u
     + radial * L * 0.035 * sin(u * 9.0 + seed * 50.0) * u;
   float bulge = sin(3.14159 * pow(mix(0.12, 1.0, u), 0.8));
-  vec3 inP = axis * (0.55 * aMore.z * u - 0.05) + radialBase * R * 1.3 * bulge;
-  vec3 p = mix(inP, outP, open);
+  vec3 inP = axis * (0.2 * aMore.z * u - 0.05) + radialBase * R * 0.78 * bulge;
+  outP = mix(outP, hung, gone);
+  vec3 p = mix(inP, outP, mix(open, 1.0, gone));
   // The air moves it: the whole plume leans and comes back, and each tip swings by itself, slowly, because it is wet.
   float reach = open * u2;
   float gust = sin(uSeconds * 1.1 + aAx.w + dot(aTop.xz, vec2(0.21, 0.17))) + 0.5 * sin(uSeconds * 2.3 + aAx.w * 1.7);
@@ -194,6 +206,7 @@ ${PLUME_SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
+varying float vGone;
 void main() {
   vec3 axis;
   vec3 radial;
@@ -211,6 +224,7 @@ void main() {
   // Round across its width.
   vNormal = normalize(cross(side, t) + side * position.x * 0.9);
   vLook = vec3(u, aFil.w, open);
+  vGone = step(fract(aFil.w * 3.1), 0.04);
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -219,6 +233,7 @@ precision highp float;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
+varying float vGone;
 ${RIG_GLSL}
 void main() {
   vec3 n = normalize(vNormal);
@@ -228,8 +243,11 @@ void main() {
   vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.17, 0.011, 0.024), smoothstep(0.0, 0.8, u) * (0.55 + 0.45 * tone));
   // The ends dry paler between two wettings.
   albedo = mix(albedo, vec3(0.3, 0.13, 0.12), 0.4 * smoothstep(0.8, 1.0, u) * step(0.5, tone));
-  float occ = mix(0.25, 1.0, smoothstep(0.0, 0.6, u)) * mix(0.6, 1.0, vLook.z);
-  vec3 c = rigShade(vWorld, n, v, albedo, 0.55, occ);
+  // Drawn in, the filaments are packed and dark: the bud is a dull sheath.
+  albedo *= mix(0.4, 1.0, max(vLook.z, vGone));
+  albedo = mix(albedo, vec3(0.05, 0.03, 0.02) * (0.6 + 0.8 * tone), vGone);
+  float occ = mix(0.25, 1.0, smoothstep(0.0, 0.6, u)) * mix(0.6, 1.0, max(vLook.z, vGone));
+  vec3 c = rigShade(vWorld, n, v, albedo, mix(0.95, 0.55, vLook.z * (1.0 - vGone)), occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -246,7 +264,7 @@ void main() {
   float open;
   plumeFrame(axis, radial, radialBase, open);
   float seed = aFil.w;
-  float has = step(fract(seed * 17.3), 0.2) * step(0.45, open);
+  float has = step(fract(seed * 17.3), 0.2) * step(0.45, open) * (1.0 - step(fract(seed * 3.1), 0.04));
   float period = 2.6 + 4.4 * fract(seed * 29.1);
   float c = fract(uSeconds / period + seed * 11.0);
   vec3 tip = filamentPoint(1.0, open, axis, radial, radialBase);
