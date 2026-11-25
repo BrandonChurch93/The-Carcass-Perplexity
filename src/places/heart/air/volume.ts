@@ -130,6 +130,8 @@ void airAt(vec3 p, float part, float ya, float yb, out float sigma, out vec3 emi
   // The lake lights the air over it twice: what is open right under a point, and the whole glowing floor of the caldera round it.
   vec3 wide = mix(wideNear, wideFar, part);
   vec3 under = LAKE_WIDE * (0.3 * exp(-y / 110.0) + 0.7 * exp(-y / 14.0)) * wide;
+  // Smoke that has passed the lake's light on many times is brown and grey, not the red of the melt: the veil over dark crust is all but neutral.
+  under = mix(vec3(dot(under, vec3(0.3333))), under, 0.5);
   vec3 sky = skyLight(y);
   float east = smoothstep(-150.0, 550.0, p.x);
   // What the fume sheds settles against the buttress and east of it: a bank that stands off its west face by a few hundred metres.
@@ -241,7 +243,12 @@ void main() {
     vec3 g2 = ro + rd * (far - slant * 0.65);
     float y1 = max(g1.y, 0.0);
     float y2 = max(g2.y, 0.0);
-    sum += trans * (lakeGlow(g1.xz, max(2.0 * y1, 8.0)) * exp(-y1 / 5.0) + lakeGlow(g2.xz, max(2.0 * y2, 8.0)) * exp(-y2 / 5.0)) * ((1.0 - exp(-slant * 0.05)) * 0.035);
+    vec3 l1 = lakeGlow(g1.xz, max(2.0 * y1, 8.0));
+    vec3 l2 = lakeGlow(g2.xz, max(2.0 * y2, 8.0));
+    // Only over open melt: the air over dark crust beside it takes no red of its own, so a black groove stays black and not red.
+    l1 *= smoothstep(0.12, 0.5, lum(l1) / (5.0 * uCast));
+    l2 *= smoothstep(0.12, 0.5, lum(l2) / (5.0 * uCast));
+    sum += trans * (l1 * exp(-y1 / 5.0) + l2 * exp(-y2 / 5.0)) * ((1.0 - exp(-slant * 0.05)) * 0.035);
   }
   // Air seen against the sky sends some of the sky's light on toward the camera: the sky behind a haze is paler, not darker, by less than the haze takes.
   if (far > 20000.0) sum += mix(uSkyHorizon, uSkyZenith, pow(clamp(rd.y, 0.0, 1.0), 0.45)) * trans * min(thick, 1.0);

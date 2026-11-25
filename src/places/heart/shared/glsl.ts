@@ -66,6 +66,8 @@ uniform vec3 uFill;
 uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];
+uniform vec4 uRigPools[3];
+uniform vec4 uRigPoolSize[3];
 uniform vec2 uFlowFoot;
 uniform float uFlowT0;`;
 
@@ -151,8 +153,18 @@ vec3 lakeGlow(vec2 xz, float radius) {
 }
 
 // How much of the lake's light still arrives at a height above it: the fume between takes it, and it is gone a few tens of metres up.
+// The walkers call it for their bellies, so it stays as it was.
 float lakeReach(float h) {
   return 1.0 / (1.0 + h * h / 2025.0);
+}
+
+// The same for the rig's own taps, by the length of the path the light has come, metres: half at 4 m, a tenth at 12 m.
+// The taps were cut by lakeReach of the height alone (half at 45 m), whatever way the light had come: a tap that looks 30 m along the lake from a
+// face 5 m up arrived whole, and the crag of the line view (2 to 6 m over a pool of the line ten metres wide) stood mottled red on every bump that
+// leans to the lake while the land had closed its sky. Now each tap pays for its own path, so the light falls off with the distance from the fire:
+// a face half a metre over a seam keeps nine tenths, one 2 m up two thirds of its near tap, one 5 m up a quarter, a wall 20 m up nothing.
+float lakePath(float path) {
+  return 1.0 / (1.0 + path * path / 16.0);
 }
 
 // Irradiance from the glowing lake on a point p with normal n.
@@ -174,10 +186,11 @@ vec3 lakeIrradiance(vec3 p, vec3 n) {
   vec3 e = lakeLip(p, h);
   if (down > 0.015) {
     vec2 reach = n.xz * h;
-    vec3 under = lakeGlow(p.xz + reach * 0.9, h * 0.8) * 0.55;
-    under += lakeGlow(p.xz + reach * 2.6, h * 1.6) * 0.33;
-    under += lakeGlow(p.xz + reach * 6.5, h * 4.0) * 0.12;
-    e += under * (down * lakeReach(h));
+    // The paths of the three taps: 1.35, 2.8 and 6.6 heights.
+    vec3 under = lakeGlow(p.xz + reach * 0.9, h * 0.8) * (0.55 * lakePath(h * 1.35));
+    under += lakeGlow(p.xz + reach * 2.6, h * 1.6) * (0.33 * lakePath(h * 2.8));
+    under += lakeGlow(p.xz + reach * 6.5, h * 4.0) * (0.12 * lakePath(h * 6.6));
+    e += under * down;
   }
   return e * 3.14159;
 }
@@ -187,7 +200,7 @@ vec3 lakeIrradianceFar(vec3 p, vec3 n) {
   float h = max(p.y, 0.35);
   float down = 0.5 - 0.5 * n.y;
   vec3 e = lakeLip(p, h);
-  if (down > 0.015) e += lakeGlow(p.xz + n.xz * h * 1.8, max(h * 2.2, 3.0)) * (down * lakeReach(h));
+  if (down > 0.015) e += lakeGlow(p.xz + n.xz * h * 1.8, max(h * 2.2, 3.0)) * (down * lakePath(h * 2.06));
   return e * 3.14159;
 }
 
@@ -205,7 +218,7 @@ const float EMITTER_CORE = 4.5;
 const float EMITTER_SHADE = 0.85;
 vec3 emitterIrradiance(vec3 p, vec3 n) {
   vec3 e = vec3(0.0);
-  float low = -1.0;
+  vec3 aim = vec3(0.0);
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
@@ -219,15 +232,44 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     if (k < 0.0015) continue;
     vec3 m = p + d * 0.5;
     float over = texture2D(tLand, (m.xz - uLandRect.xy) * uLandRect.zw).r - m.y;
-    // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the light, on ground only.
-    if (low < 0.0) low = smoothstep(1.2, 0.3, p.y - max(texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw).r, 0.0));
-    float thrown = 0.0;
-    if (low > 0.0) {
-      float flat2 = dot(d.xz, d.xz);
-      vec2 toward = d.xz * (1.4 * sqrt(flat2 / (flat2 + d.y * d.y)) * inversesqrt(max(flat2, 1e-4)));
-      thrown = low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
-    }
-    e += uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)) * (1.0 - thrown));
+    vec3 lit = uEmitterRadiance[i] * (k * (1.0 - smoothstep(3.0, 16.0, over)));
+    e += lit;
+    // Where the light of all of them comes from along the ground, each by its weight: 1.4 m toward a small low light; a light as wide as it is
+    // far (the bank overhead, the lit fume) pulls nowhere, and its shade lies where the thing stands, as under the sky.
+    float far2 = dot(d, d);
+    float narrow = 1.0 - min(r * inversesqrt(far2), 1.0);
+    aim += vec3(d.xz * (narrow * inversesqrt(max(far2, 1e-4))), 1.0) * lit.r;
+  }
+  // The pools of the seam the walkers feed at (uRigPools: x, z and the long axis; uRigPoolSize: half length, half width, radiance red and green).
+  // Each stands brimful and lights an apron round itself: all of it at the brim, two thirds a metre out, a quarter two metres out, nothing at three.
+  // A level face beside it takes a third (the grains of rough ground that face the fire), a face turned to it all. No read of any map.
+  // The pools lie 14 m and more apart and reach 3 m, so only the nearest can count: it is picked first and the light worked out once.
+  vec2 rel = p.xz - uRigPools[0].xy;
+  vec2 ax = uRigPools[0].zw;
+  vec4 size = uRigPoolSize[0];
+  float near2 = dot(rel, rel);
+  vec2 rel1 = p.xz - uRigPools[1].xy;
+  if (dot(rel1, rel1) < near2) { rel = rel1; ax = uRigPools[1].zw; size = uRigPoolSize[1]; near2 = dot(rel1, rel1); }
+  vec2 rel2 = p.xz - uRigPools[2].xy;
+  if (dot(rel2, rel2) < near2) { rel = rel2; ax = uRigPools[2].zw; size = uRigPoolSize[2]; near2 = dot(rel2, rel2); }
+  float far = sqrt(near2);
+  float inside = length(vec2(dot(rel, ax), dot(rel, vec2(-ax.y, ax.x))) / size.xy);
+  float gap = far * max(1.0 - 1.0 / max(inside, 1e-3), 0.0);
+  vec2 back = rel / max(far, 1e-3);
+  vec3 toPool = vec3(-back.x * (gap + 0.3), -max(p.y, 0.0) - 0.05, -back.y * (gap + 0.3));
+  float span = length(toPool);
+  float away = span - 0.3;
+  float facing = clamp((dot(n, toPool) / span + 0.5) / 1.5, 0.0, 1.0);
+  float apron = facing / (1.0 + away * away / 2.25) * (1.0 - smoothstep(1.5, 3.0, away));
+  vec3 poolLit = vec3(size.z, size.w, size.w * 0.08) * (3.14159 * apron);
+  e += poolLit;
+  aim += vec3(-back, 1.0) * poolLit.r;
+  // What stands on the ground (the contact map: feet, bodies, rocks, the one that sank) throws its shade away from the fire, on the crust of the lake
+  // only (within a metre of its level). The map is read once, toward where the light comes from: a read for each light cost half a second a sample.
+  if (aim.z > 0.02) {
+    float low = smoothstep(1.2, 0.3, p.y);
+    vec2 toward = aim.xy * (1.4 / aim.z);
+    e *= 1.0 - low * EMITTER_SHADE * contactDrawn(vec3(p.x + toward.x, p.y, p.z + toward.y));
   }
   return e * uCast;
 }
