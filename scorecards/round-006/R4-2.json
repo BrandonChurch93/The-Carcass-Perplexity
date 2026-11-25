@@ -1,0 +1,42 @@
+{
+  "round": 6,
+  "unit": "heart",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-25 12:49 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the tall strider in the left-midground, the herd across the middle plain, and the smaller creature in the foreground",
+        "what": "every animal stays completely motionless in the exact same pose and position across all 6 seconds, reading as static 3D models rather than living creatures",
+        "fix": "animate individual weight shifts, asynchronous steps, pauses, and subtle body or head turns across the herd so no animal stands frozen like a statue"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the lava cascade pouring from the cave mouth and the glowing crusted lava lake across the caldera floor",
+        "what": "over 6 full seconds the bright lava knots, flow bands, and glowing crust fissures stay locked in place with no visible downward flow, folding skin, or heaving surface",
+        "fix": "drive continuous slow viscous advection and crust-folding down the cascade and across the lake surface so the molten rock visibly flows and shifts under its own weight"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the steam vent on the left rocky ridge and the large grey smoke plumes above the far caldera rim",
+        "what": "across 6 seconds the vapour and smoke plumes barely drift or rise, changing only slightly in place like a faint pulsing texture rather than rising volcanic plumes and pooling vapour",
+        "fix": "give the background plumes clear upward buoyancy and wind drift at height, and make the foreground ridge steam billow and disperse continuously"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the cave arch, cliff walls, and low atmospheric haze",
+        "what": "the orange bounce light from the lava and flames remains completely flat and constant over 6 seconds, reinforcing the impression of a still picture",
+        "fix": "couple subtle organic light variation on the cave roof, nearby rock, and low haze to the moving lava flow and flickering fires"
+      }
+    ]
+  }
+}

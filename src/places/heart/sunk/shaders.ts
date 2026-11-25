@@ -230,9 +230,8 @@ void main() {
   // The tone of the ropy skin goes with its height closely enough to be had from it: a tap less on half the frame.
   float lum = max(3.2 * nhA.b - 0.42, 0.1);
   // A steep face that is no rope carries grit and not the lines of the ropy skin, which would run round it as contours.
-  // Its grit is counted in space, so it does not follow the height either.
-  vec3 inSpace = vec3(l.x, vWorld.y * 1.3, l.y);
-  float wallGrit = 0.6 * vnoise3(inSpace * 5.0 + 3.0) + 0.4 * vnoise3(inSpace * 13.0);
+  // Its grit is the same in every direction on the face, so it does not follow the height either.
+  float wallGrit = 0.6 * vnoise(wallAt * 5.0 + 3.0) + 0.4 * vnoise(wallAt * 13.0);
   grainNh = mix(grainNh, vec4(0.5, 0.5, wallGrit, 0.5), steep);
   lum = mix(lum, 0.5 + 0.7 * (wallGrit - 0.5) + 0.2 * (small - 0.5), steep);
   albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.2 + 0.9 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
@@ -391,7 +390,7 @@ void main() {
   // A charred bark of hide: near black on the trunks, grey-brown on the hull, where the creases between its cords hold the soot.
   vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * 0.5;
   // The hull is one dark mass, as dark as the crust round it: its ropes carry the form and the hide only mottles them.
-  bark = mix(bark, vec3(0.07, 0.062, 0.057) * (0.55 + 0.9 * hideNh.b) * (0.45 + 1.1 * flakeNh.b) * (0.8 + 0.4 * lump2), isBody);
+  bark = mix(bark, vec3(0.084, 0.074, 0.068) * (0.55 + 0.9 * hideNh.b) * (0.45 + 1.1 * flakeNh.b) * (0.8 + 0.4 * lump2), isBody);
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
   // On a limb they are pale and grey, as ash caked on hide; on the hull darker.
@@ -417,8 +416,11 @@ void main() {
   float under = smoothstep(0.03, 0.3, vSurf.y) * (1.0 - smoothstep(0.3, 0.62, vSurf.y));
   // Between the plates the cords of the hull's hide are dry and grey-brown on their backs; the furrows between them are black.
   // No stripe on the cords: only a thin pale line along the top of a rope here and there, where the low light catches it.
-  float ridge = isBody * (1.0 - plated) * smoothstep(0.02, 0.003, furrow) * smoothstep(0.1, 0.5, nl.y) * smoothstep(0.42, 0.6, lump2 + 0.4 * (lump - 0.5));
-  albedo = mix(albedo * (1.0 - 0.85 * smoothstep(0.1, 0.7, furrow)), vec3(0.26, 0.235, 0.215) * (0.8 + 0.4 * hideNh.b), 0.6 * ridge);
+  float ridge = isBody * (1.0 - plated) * (1.0 - smoothstep(0.0004, 0.0025, furrow)) * smoothstep(0.1, 0.5, nl.y) * smoothstep(0.42, 0.6, lump2 + 0.4 * (lump - 0.5)) * smoothstep(0.35, 0.55, vnoise3(vLocal * 5.0 + 19.0));
+  // The hide is cracked across and blotched: dark in the cracks, greyer where the soot has rubbed off.
+  float cracks = 1.0 - abs(2.0 * vnoise3(vLocal * 6.5 + 40.0) - 1.0);
+  albedo *= 1.0 - isBody * (1.0 - plated) * (0.65 * smoothstep(0.86, 0.98, cracks) + 0.35 * (1.0 - smoothstep(0.25, 0.6, vnoise3(vLocal * 15.0 + 7.0))));
+  albedo = mix(albedo * (1.0 - 0.85 * smoothstep(0.1, 0.7, furrow)), vec3(0.33, 0.3, 0.275) * (0.8 + 0.4 * hideNh.b), 0.7 * ridge);
 
   // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);

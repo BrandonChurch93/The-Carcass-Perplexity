@@ -270,6 +270,15 @@ function bake(spec: typeof NET, sites: Sites, authored: boolean): Float32Array {
             shut = true;
           }
         }
+        // On the banks of the line where the lens of key heart-1 lies low over them (within 14 m of (-505, 213), fading by
+        // 20 m) no joint of the net stands open: the banks there are lobes that lap, and the one opening is the line.
+        if (alive && reach > 0) {
+          reach *= smooth(14, 20, Math.hypot(tx + 505, z0 - 213));
+          if (reach < 0.004) {
+            reach = 0;
+            shut = true;
+          }
+        }
         // A shut edge between two large plates may be a pressure ridge: its number then says how tall, 0.5 to 1. Other shut edges stay under 0.25.
         if (!alive) phase = kinds === 0 && hash(lo, hi, 43) < 0.4 ? 0.5 + 0.5 * hash(lo, hi, 47) : 0.25 * phase;
         else if (shut) phase = 0.25 * phase;

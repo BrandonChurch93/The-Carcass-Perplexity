@@ -104,6 +104,7 @@ uniform sampler2D tStrata;
 uniform vec4 uCrackA;
 uniform vec4 uCrackB;
 uniform vec4 uStain;
+uniform vec4 uSpur;
 
 // Every picture is read with slopes taken from the world position at the top of main: a read inside a branch that took its own slope
 // would take it from a neighbour that never computed the coordinate, and the frame would differ from one page load to the next.
@@ -264,7 +265,12 @@ void main() {
     // What a long lens resolves: the overhang's shade deepens and rubble lies pale on the ledge at the top of each flow.
     float fineLens = smoothstep(0.3, 0.1, px);
     ledge = mix(ledge, 0.28 + 0.72 * smoothstep(0.0, 0.16, flow.b), fineLens * smoothstep(96.0, 124.0, beside));
-    cliff = mix(cliff, vec3(0.19, 0.185, 0.175) * (0.5 + cliffNh.b), 0.6 * fineLens * smoothstep(0.86, 0.97, flow.b));
+    cliff = mix(cliff, vec3(0.21, 0.2, 0.185) * (0.5 + cliffNh.b), 0.8 * fineLens * smoothstep(0.8, 0.95, flow.b));
+    // Two or three of those ledges are broken back to fresh rock, buff and cream, and catch the fire's light.
+    // Right of the mouth, and on the wall that stands behind the ramp's head left of it; not on the ramp.
+    float buffSide = max(smoothstep(66.0, 94.0, vWorld.x - (${MOUTH.x.toFixed(1)})), smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(60.0, 85.0, vWorld.y));
+    float buff = smoothstep(0.54, 0.66, vnoise3(vWorld / vec3(23.0, 9.0, 23.0) + 1.3)) * smoothstep(0.45, 0.8, flow.b + 0.3 * (cliffNh.b - 0.5));
+    cliff = mix(cliff, vec3(0.5, 0.37, 0.19) * (0.5 + cliffNh.b), 0.85 * fineLens * buff * buffSide);
     float h = kx > 0.5 ? vWorld.z : vWorld.x;
     // Gullies: narrow chutes cut back into the face every thirty metres or so, in shade, running down through many flows.
     float gn = vnoise(vec2(h / 26.0, 3.7 + vWorld.y / 420.0));
@@ -494,6 +500,11 @@ void main() {
   // The crag itself, measured on the picture: weathered grey-brown rock that catches the sky, paler where a face has broken off lately.
   float broke = vnoise(vWorld.xz / 0.8 + vWorld.y * vec2(1.3, 0.7) + 3.1);
   albedo *= mix(vec3(1.0), vec3(1.0, 0.95, 0.93) * (0.9 + 0.6 * smoothstep(0.4, 0.62, broke)), onCrag);
+  // One mound of crystals at the vent itself: lemon, crusted, cream on its crown. The brightest thing of the near ground.
+  float knob = vnoise(vWorld.xz / 0.16 + vWorld.y * vec2(2.3, 1.7) + 1.9);
+  float mound = smoothstep(0.95, 0.55, segmentDistance(vWorld.xz, uCrackB) + 0.3 * (knob - 0.5));
+  albedo = mix(albedo, mix(vec3(0.9, 0.7, 0.1), vec3(0.94, 0.88, 0.58), smoothstep(0.55, 0.85, knob)) * (0.7 + 0.5 * knob), mound);
+  rough = mix(rough, 0.95, mound);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
     float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.5 + 0.5 * steep) * smoothstep(3.6, 2.2, vWorld.y + 0.8 * (blot - 0.5));
@@ -510,9 +521,32 @@ void main() {
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
   #endif
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
+  #ifdef FAR_LIGHT
+  // The cone of debris left of the fall, as the fall's picture has it: a dark ramp of rubble down to the fan, darker than the wall behind
+  // its crest, with blocks a stride or two across lying pale on it. Its near flank only: east of the crest the fall lights it.
+  vec2 spurRun = uSpur.zw - uSpur.xy;
+  float spurLength = length(spurRun);
+  float spurAt = dot(vWorld.xz - uSpur.xy, spurRun) / (spurLength * spurLength);
+  float spurOff = ((vWorld.x - uSpur.x) * spurRun.y - (vWorld.z - uSpur.y) * spurRun.x) / spurLength;
+  float ramp = smoothstep(-0.1, 0.12, spurAt) * smoothstep(1.2, 1.0, spurAt) * smoothstep(10.0, -2.0, spurOff + 8.0 * (mid - 0.5)) * smoothstep(-170.0, -70.0, spurOff) * (1.0 - 0.6 * steep);
+  // Fine scree with a stone bedded in it here and there, not a field of boulders.
+  float block = smoothstep(0.68, 0.8, vnoise(vWorld.xz / 1.9 + vWorld.y * vec2(0.4, 0.3) + 4.1)) * smoothstep(1.2, 0.4, px);
+  float scree = vnoise(vWorld.xz / 0.45 + vWorld.y * vec2(0.7, 0.5) + 2.3) * smoothstep(0.5, 0.15, px);
+  albedo *= mix(1.0, 0.42 + 0.45 * block + 0.16 * (mid - 0.5) + 0.12 * (scree - 0.5), ramp);
+  // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
+  float behind = smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(0.3, 0.8, steep) * smoothstep(48.0, 72.0, vWorld.y) * smoothstep(200.0, 150.0, vWorld.y + 40.0 * (big - 0.5));
+  albedo *= mix(vec3(1.0), vec3(1.9, 1.6, 1.2) * (0.75 + 0.5 * mid), behind);
+  #endif
   #ifdef BUTTRESS
   // The buttress, measured on the wide picture: darker and warmer than the wall behind it, its table paler than its cliffs.
   albedo *= vec3(0.8, 0.71, 0.67) * mix(1.35, 0.9, steep);
+  // Its table is the palest thing on it, and a skirt of talus lies against its near side in cones: paler than the cliffs and without their joints.
+  float table = (1.0 - steep) * smoothstep(60.0, 85.0, vWorld.y);
+  albedo *= 1.0 + 0.7 * table;
+  float coneRun = dot(vWorld.xz, vec2(0.25, 0.97));
+  float coneTop = 16.0 + 30.0 * vnoise(vec2(coneRun / 34.0, 1.7)) + 6.0 * (mid - 0.5);
+  float skirt = smoothstep(coneTop + 6.0, coneTop - 6.0, vWorld.y) * smoothstep(-0.25, 0.25, dot(n0.xz, vec2(-0.87, 0.5)));
+  albedo = mix(albedo, vec3(0.135, 0.118, 0.104) * (0.75 + 0.5 * mid) * (0.9 + 0.2 * big), 0.8 * skirt);
   #endif
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.
