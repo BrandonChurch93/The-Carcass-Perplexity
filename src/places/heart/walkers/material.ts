@@ -197,7 +197,10 @@ void main() {
   float crownPale = neck * mix(0.04, 1.0, smoothstep(0.28, 0.93, vLook.y));
   albedo = mix(albedo, bone * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)), 0.8 * crownPale);
   // A root is dark where it leaves the crown and tan below, where the pool finds it.
-  albedo = mix(albedo, bone * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)) * mix(0.75, 1.0, smoothstep(0.0, 0.4, vLook.y)), tendril);
+  // A tuft that is not over a pool has nothing to light it from below: its roots are dull and brown there, not pale specks under the sky.
+  float fed = uPools[int(vWho + 0.5)].z;
+  vec3 fibre = bone * mix(vec3(0.5, 0.4, 0.3), vec3(0.95, 0.86, 0.72), fed);
+  albedo = mix(albedo, fibre * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)) * mix(0.75, 1.0, smoothstep(0.0, 0.4, vLook.y)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
