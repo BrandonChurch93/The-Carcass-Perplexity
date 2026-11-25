@@ -40,7 +40,7 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const swell = 0.5 * Math.sin(seconds * 0.9) + 0.3 * Math.sin(seconds * 0.37 + 1);
   const fill = smooth((u - 0.3) / 2.2);
   const over = u < 3.4 ? smooth((u - 1.4) / 2.0) : 0.1 + 0.9 * Math.exp(-(u - 3.4) / 1.7);
-  const level = -10 + swell + 5 * fill * (u < 3.4 ? 1 : 0.35 + 0.65 * Math.exp(-(u - 3.4) / 5)) + 5.5 * over;
+  const level = -9 + swell + 5 * fill * (u < 3.4 ? 1 : 0.35 + 0.65 * Math.exp(-(u - 3.4) / 5)) + 5.5 * over;
   const apron = smooth((u - 2.4) / 2.0) * (0.3 + 0.7 * Math.exp(-Math.max(0, u - 5) / 9));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -56,15 +56,23 @@ export function create(ctx: Context): Piece {
   // The vapour that stands over the smaller shafts: a column that leans with the wind and widens.
   for (const [x, z, r, tall] of SMALLER) {
     const rise = r * (2 + 2.2 * tall);
-    bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.5 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
+    bodies.push({ part: 'vapour', at: [x - 0.3 * rise * 0.5, rise * 0.5, z + 0.1 * rise * 0.5], size: [r * (1.5 + 1.2 * tall), rise * 0.55, r * (1.5 + 1.2 * tall)], lean: [-0.3, 0.1], dense: 0.2 / r, repeat: r * 4.2, open: 0.38, climb: 2.2 + r * 0.12, sun: 1 });
+  }
+  // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
+  for (const [x, y, z, rx, ry, rz, dense] of [
+    [-26, 4.5, -9, 13, 4.5, 11, 0.016],
+    [-17, 3, 6, 15, 3.5, 13, 0.012],
+    [-40, 3.2, -4, 12, 2.6, 9, 0.012],
+  ] as const) {
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 11, open: 0.42, climb: 0.5, sun: 1 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
   for (const [s, p, lift, long, tall, deep, dense] of [
-    [60, -190, 70, 520, 45, 150, 0.006],
-    [240, -420, 60, 520, 55, 210, 0.005],
-    [520, -700, 18, 700, 45, 300, 0.004],
-    [-900, -620, 30, 900, 60, 260, 0.0024],
+    [60, -190, 60, 560, 60, 150, 0.003],
+    [240, -420, 60, 520, 70, 210, 0.003],
+    [520, -700, 18, 700, 60, 300, 0.0025],
+    [-900, -620, 30, 900, 70, 260, 0.0016],
   ] as const) {
     const [x, z] = cliffPoint(s, p);
     bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense, repeat: 260, open: 0.3, climb: -3, sun: 0.7 });
@@ -98,7 +106,7 @@ export function create(ctx: Context): Piece {
       tNoise: { value: noise },
       uShow: { value: show },
       uBreath: { value: breath },
-      uHaze: { value: new THREE.Vector4(0.8e-4, 420, 1.7e-4, 60) },
+      uHaze: { value: new THREE.Vector4(0.6e-4, 420, 1.5e-4, 60) },
       uBodyCount: count,
       uBodyA: { value: bodyA },
       uBodyB: { value: bodyB },

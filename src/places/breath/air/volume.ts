@@ -11,7 +11,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_BODIES = 16;
 
 /** March steps of the heavy vapour. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 20;
+export const STEPS = 14;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -78,7 +78,7 @@ float bumpAt(float b, float centre, float width) {
 }
 // The layout's own numbers (land.ts): the rim of the main shaft and the tide channel.
 float rimAt(float b) {
-  return 30.0 + 7.0 * bumpAt(b, 1.9548, 0.733) + 2.2 * bumpAt(b, 3.7525, 0.5236);
+  return 30.0 + 7.0 * bumpAt(b, 1.9548, 0.733) + 2.2 * bumpAt(b, 3.7525, 0.5236) + sin(5.0 * b + 1.0) + 0.5 * sin(11.0 * b + 0.5);
 }
 float softly(float v) {
   return 0.5 * (v + sqrt(v * v + 64.0));
@@ -97,39 +97,41 @@ float vapourTop(vec2 xz, float ground, vec2 fold, out float rho, out float foot,
   float b = atan(xz.x, -xz.y);
   float rim = rimAt(b);
   float inside = smoothstep(rim + 0.6, rim - 1.2, r);
-  // The lip it leaves by: west-north-west, where the plumes stand.
+  // The lip it leaves by: west-north-west, where the plumes stand. It leans on the whole west wall, most of all there.
   float da = b + 1.2;
   float way = exp(-da * da / 0.42);
+  float lean = exp(-da * da / 1.9);
   float west = smoothstep(0.35, -0.6, sin(b)) * 0.6 + 0.4 * way;
   float surge = uBreath.y * uShow.w;
   float apron = uBreath.z * uShow.w;
   float spread = uBreath.w * uShow.w;
   float lumps = 0.45 + 1.25 * fold.x;
 
-  // In the shaft: a level, with slow swells, that climbs the wall toward the lip it leaves by.
+  // In the shaft: a level, with slow swells, that climbs the west wall to the lip and stands a little over it.
   float level = mix(-9.0, uBreath.x, uShow.w);
-  float lip = 2.3 + 2.6 * surge;
-  float climb = way * smoothstep(rim - 17.0, rim - 0.5, r);
-  float shaftTop = mix(level, max(level, lip), climb * (0.55 + 0.45 * surge)) + (2.4 + 1.5 * surge) * (fold.x - 0.45) + 0.8 * (fold.y - 0.5);
+  float lip = ground + 1.6 + 3.2 * surge;
+  float climb = lean * smoothstep(rim - 26.0, rim - 1.0, r);
+  float shaftTop = mix(level, max(level, lip), climb) + (2.6 + 1.5 * surge) * (fold.x - 0.45) + 0.9 * (fold.y - 0.5);
   // The mass that stands over the mouth when it breathes out: highest toward the lip it leaves by.
   shaftTop += surge * 5.0 * way * smoothstep(rim - 24.0, rim - 6.0, r) * (0.5 + fold.x);
 
-  // On the rock: a sheet that slides from that lip with the wind, and a thin one that creeps over the rim all along the west side.
+  // On the rock: a sheet that slides from that lip with the wind and thins as it goes, and a thinner one that creeps over the rim all along the west side.
   float out0 = r - rim;
-  float tongue = way * smoothstep(15.0 + 12.0 * apron, 0.0, out0) * (0.55 + 2.0 * apron);
-  float creep = west * smoothstep(5.0 + 3.0 * apron, 0.0, out0) * (0.2 + 0.5 * apron);
+  float tongue = lean * smoothstep(24.0 + 12.0 * apron, 0.0, out0) * (1.5 + 1.6 * apron);
+  float creep = west * smoothstep(7.0 + 3.0 * apron, 0.0, out0) * (0.5 + 0.5 * apron);
   float sheet = (tongue + creep) * lumps;
   // In the channel: it lies on the water between the banks, level as the water is, and spreads along it.
   float mid = channelMid(xz.y);
   float reach = 30.0 + 45.0 * spread;
   float along = exp(-pow((xz.y + 10.0 - 6.0 * spread) / reach, 2.0));
   float banks = smoothstep(channelWide(xz.y) + 9.0, channelWide(xz.y) - 2.0, abs(xz.x - mid));
-  float pool = SEA_Y + (0.12 + 0.5 * spread + 0.3 * apron) * along * banks * smoothstep(0.3, 0.75, fold.x) * 1.6;
+  float pool = SEA_Y + (0.2 + 0.35 * spread * (1.0 - 0.6 * apron)) * along * banks * smoothstep(0.3, 0.75, fold.x) * 1.6;
   foot = max(ground, SEA_Y);
   float open = max(foot + sheet, pool);
   // In the shaft it is a mist that thickens with depth, so that the hoops go into it one after the other; the breath is a mass with a top.
-  rho = mix(mix(0.16, 0.3, smoothstep(0.3, 1.2, open - foot)), mix(0.1, 0.24, surge), inside);
-  soft = mix(clamp(0.45 * (open - foot), 0.12, 2.2), mix(30.0, 9.0, surge), inside);
+  // On the rock it is thin and frayed through its whole height until the breath thickens it.
+  rho = mix(mix(0.035, 0.16, smoothstep(0.3, 2.2, open - foot) * (0.25 + 0.75 * surge)), mix(0.05, 0.24, surge) * (0.35 + 1.5 * fold.y), inside);
+  soft = mix(clamp(0.8 * (open - foot), 0.12, 3.0), mix(20.0, 9.0, surge), inside);
   foot = mix(foot, -60.0, inside);
   return mix(open, shaftTop, inside);
 }
@@ -166,11 +168,9 @@ bool bodyAt(int i, vec3 ro, vec3 rd, float far, out float thick, out float at, o
   at = 0.5 * (t0 + t1);
   vec3 q = o + d * at;
   float m = clamp(1.0 - dot(q, q), 0.0, 1.0);
-  thick = (t1 - t0) * m * B.w;
+  thick = (t1 - t0) * B.w;
+  sunward = m;
   mid = ro + rd * at;
-  vec3 n = o + d * t0;
-  n = vec3(cy * n.x - sy * n.z, n.y, sy * n.x + cy * n.z) / B.xyz;
-  sunward = dot(normalize(n), uSunDir);
   return true;
 }
 
@@ -237,8 +237,7 @@ void main() {
         float drift = uTime * 0.55;
         vec3 q = vec3((p.xz - WINDV * drift) / 13.0, uTime * 0.021).xzy;
         vec4 n0 = textureLod(tNoise, q, 0.0);
-        vec4 n1 = textureLod(tNoise, q * 3.7 + vec3(0.31, uTime * 0.03, 0.17), 0.0);
-        vec2 fold = vec2(0.72 * n0.r + 0.28 * n1.b, n0.g);
+        vec2 fold = vec2(0.72 * n0.r + 0.28 * n0.b, n0.g);
         float rho;
         float foot;
         float soft;
@@ -255,9 +254,13 @@ void main() {
         float slope = (0.72 * (n0.r - ns.r)) * 2.2 + 0.5;
         float crest = clamp(0.35 + 0.9 * fold.x, 0.0, 1.0);
         float lit = clamp(slope, 0.0, 1.0);
-        float sun = sunSeen(land, max(p.y, top - 0.4));
+        // How much of this step stands in the sun: the part of its height over the top of the land's shadow.
+        float stepTop = min(hi, top);
+        float sun = clamp((stepTop - land.b + 0.3) / max(stepTop - max(lo, foot), 0.6), 0.0, 1.0);
+        // Down the shaft the sky closes to a disc overhead.
+        float sunk = clamp(1.0 + min(p.y, 0.0) / 34.0, 0.1, 1.0);
         float depth = clamp((top - p.y) / clamp(thickness, 0.5, 14.0), 0.0, 1.0);
-        vec3 light = ambient * (0.5 + 0.5 * crest) * mix(1.0, 0.72, depth) * mix(0.55, 1.0, skyOpen(vec3(p.x, max(top, p.y), p.z)))
+        vec3 light = ambient * (0.5 + 0.5 * crest) * mix(1.0, 0.72, depth) * sunk * sunk * mix(0.55, 1.0, skyOpen(vec3(p.x, max(top, p.y), p.z)))
           + uSunColour * (sun * phase * (0.25 + 0.75 * lit) * mix(1.0, 0.45, depth));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
@@ -287,14 +290,15 @@ void main() {
     vec4 n0 = textureLod(tNoise, q, 0.0);
     vec4 n1 = textureLod(tNoise, q * 3.1 + 0.37, 0.0);
     float lumps = 0.62 * n0.r + 0.2 * n1.b + 0.3 * n0.g;
-    float tau = thick * smoothstep(C.w - 0.22, C.w + 0.3, lumps);
+    // Billows: the body is whole in its middle and eaten by its own lumps toward its edge. sunward carries how deep the ray runs in it.
+    float tau = thick * sunward * sunward * smoothstep(0.0, 0.7, sunward - (0.55 + 1.1 * C.w) * (1.0 - 1.35 * lumps));
     if (tau <= 0.002) continue;
     float here = air * hazeDepth(ro, rd, at);
     float seg = exp(-(here - done));
     colour += through * (1.0 - seg) * haze;
     through *= seg;
     done = here;
-    float tops = clamp(0.5 + 0.5 * sunward + 0.5 * (n0.r - 0.4), 0.0, 1.0);
+    float tops = clamp(0.25 + 1.1 * n0.r + 0.3 * (1.0 - sunward), 0.0, 1.0);
     vec3 light = ambient * (0.7 + 0.3 * tops) + uSunColour * (sunAt(mid) * phase * (0.2 + 0.8 * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
