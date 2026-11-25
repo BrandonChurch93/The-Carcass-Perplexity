@@ -1,0 +1,75 @@
+[
+  {
+    "name": "crust-skin",
+    "refs": [
+      "references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg",
+      "references/drafts/working/real/plate-lava-2.jpg"
+    ],
+    "prompt": "A material texture, seen straight down from above in an orthographic view: the cooled skin on top of an active lava lake, about 5 metres across. Thin flexible crust of blue-grey to charcoal lava, finely wrinkled like elephant skin, with low ropy folds, small pressure ridges and a few hairline cracks that are dark, not glowing. No glowing lava and no fire anywhere. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "pahoehoe",
+    "refs": [
+      "references/approved/2-heart/heart-2-the-one-that-sank.jpg",
+      "references/drafts/working/real/plate-lava-2.jpg"
+    ],
+    "prompt": "A material texture, seen straight down from above in an orthographic view: old solid pahoehoe lava, about 6 metres across. Ropy coils and folded ropes of dark grey-brown basalt with a faint metallic sheen on the ridges, shallow hollows holding pale ash and grit, a few open cracks, small broken plates. No glowing lava. Flat, even, shadowless overcast light. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "cliff",
+    "refs": [
+      "references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg",
+      "references/drafts/working/real/plate-lava-1.jpg"
+    ],
+    "prompt": "A material texture, seen square on in an orthographic view: the face of a caldera wall cut through many stacked basalt lava flows, a section about 60 metres tall. Horizontal strata of dark grey, brown-black and rust, some layers with short vertical columnar joints, some rubbly and crumbling, thin ledges that hold fallen rubble, pale mineral streaks and a few faint sulphur-yellow stains running down. No glowing lava. Flat, even, shadowless overcast light. The rock fills the whole frame edge to edge at one uniform scale, with the strata exactly horizontal, tileable from left to right. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "talus",
+    "refs": [
+      "references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg",
+      "references/drafts/working/real/plate-lava-1.jpg"
+    ],
+    "prompt": "A material texture, seen straight down from above in an orthographic view: a slope of volcanic scree, about 8 metres across. Broken angular basalt blocks from gravel up to one metre, cinder and coarse ash between them, dark grey with rust and ochre tints, a dusting of pale ash on the tops. No glowing lava. Flat, even, shadowless overcast light. The rubble fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "sulphur",
+    "refs": [
+      "references/approved/2-heart/heart-1-the-lava-surface-at-the-line.jpg",
+      "references/drafts/working/real/plate-lava-1.jpg"
+    ],
+    "prompt": "A material texture, seen straight down from above in an orthographic view: fumarole deposits on dark lava, about 2 metres across. Crusts of bright yellow, lemon and chalk-white crystalline sulphur, thicker around small dark vents and thinning to a dusting at the edges, with patches of orange and rust stain and bare dark basalt showing through. No steam, no glowing lava. Flat, even, shadowless overcast light. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "hide",
+    "refs": [
+      "references/approved/2-heart/heart-3-crust-walkers-feeding-at-a-seam.jpg",
+      "references/drafts/working/real/ref-hide-1.jpg"
+    ],
+    "prompt": "A material texture, a flat macro view about 60 centimetres across: the dry hide of a tall thin animal that lives on hot volcanic ground, as in the first reference. Dark umber to charcoal skin, leathery and heat-cracked like dried mud and old bark, with sinewy ridges running top to bottom, thin plates lifting at their edges, pale grey ash packed in the cracks and a dusting of ash on the high points. Only skin: no eye, no ear, no mouth, no face, no limb outline. Flat, even, shadowless light. The skin fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real skin, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "flake",
+    "refs": [
+      "references/approved/2-heart/heart-2-the-one-that-sank.jpg",
+      "references/drafts/working/real/ref-hide-1.jpg"
+    ],
+    "prompt": "A material texture, a flat macro view about 50 centimetres across: the skin of a long dead animal that was burned and dried on a lava lake, as on the two arched legs in the first reference. Blackened hide split into curling flakes and peeling plates like burnt bark and old paint, paler grey and bone-ash colour underneath and on the lifted edges, soot in the gaps, lengthwise fibres showing where it has torn. Only skin: no eye, no ear, no mouth, no face, no limb outline. Flat, even, shadowless light. The skin fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real skin, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "boulder",
+    "refs": [
+      "references/approved/2-heart/heart-0-establishing.jpg",
+      "references/drafts/working/real/plate-lava-1.jpg"
+    ],
+    "prompt": "A material texture, a flat view about 1.5 metres across: the broken face of a basalt boulder. Dense dark grey to brown-black rock with gas bubbles and pits, sharp fracture planes, a rough weathered rind in places, pale ash dust caught in the pits, a hint of rust. No glowing lava. Flat, even, shadowless overcast light. The rock fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top."
+  },
+  {
+    "name": "sky",
+    "refs": [
+      "references/approved/2-heart/heart-0-establishing.jpg",
+      "references/drafts/working/real/plate-dusk-1.jpg"
+    ],
+    "aspect": "16:9",
+    "prompt": "Only sky, in a wide 16 by 9 frame, photographed with a normal lens pointed well above the horizon at nightfall over a volcano: deep blue-grey dusk, a high thin layer of stratus and drifting volcanic haze with soft broken structure, slightly paler and warmer toward the bottom edge where the haze is lit faintly from below by lava glow, darker blue toward the top. No sun, no moon, no stars, no land, no horizon line, no smoke column, no birds. The first reference image is the place: take the colour and the dimness of its sky. The second reference image is a real photograph at dusk: it is the standard for how a camera records a real sky, with real grain and soft real cloud edges, nothing painted. Photographic, no vignette, no text, no logo."
+  }
+]

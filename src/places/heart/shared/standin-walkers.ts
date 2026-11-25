@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import type { Vec3 } from '../../core/cameras';
-import { bearing, lerp, smooth } from './layout';
+import type { Vec3 } from '../../../core/cameras';
+import { bearing, lerp, smooth } from '../layout';
 
 export interface Walker {
   at: [number, number];

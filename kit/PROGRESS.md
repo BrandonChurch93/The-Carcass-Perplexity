@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 20, 2026-11-25 03:13 UTC:
+Status 21, 2026-11-25 03:24 UTC:
 
-- `01-set-a-01.jpg`: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart
-- `02-set-a-02.jpg`: Sheet 2 of 4: the Heart and the Breath
-- `03-set-a-03.jpg`: Sheet 3 of 4: the Marsh, the Spine and the Eye
-- `04-set-a-04.jpg`: Sheet 4 of 4: the rise to the titan and the ending
+- `01-materials-sheet.jpg`: Phase 3, the Heart: nine surface pictures generated for the build (lake skin, ropy bench lava, wall strata, scree, sulphur, walker hide, burnt skin, boulder, dusk sky). Take 1 of at most 6 each, all kept. Each is made to tile and gets a height and slope picture
+- `02-mat-tiles.jpg`: Four of them tiled two by two with their slope and height pictures below: lake skin, bench lava, wall strata, walker hide
+- `03-frame-11438-preview-review.jpg`: Film frame 11438, preview, review tier
+- `04-frame-11649-preview-review.jpg`: Film frame 11649, preview, review tier
 
+Status 20, 2026-11-25 03:13 UTC, showed: The whole film as a blockout, sheet 1 of 4: the Ribs and the start of the Heart; Sheet 2 of 4: the Heart and the Breath; Sheet 3 of 4: the...
 Status 19, 2026-11-25 02:57 UTC, showed: The whole film as a blockout, part 1 of 4: the approach from the sea, the Ribs, into the Heart; Part 2 of 4: the Heart, the Breath, the...
 Status 18, 2026-11-25 02:34 UTC, showed: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way; The...
-Status 17, 2026-11-25 02:07 UTC, showed: The rise as the critics saw it: the first two frames are plain navy water.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T03:13:52Z
-phase 3: 0.08 h used of 13.00 h
-build: 6.73 h used of 72.00 h
+2026-11-25T03:24:06Z
+phase 3: 0.25 h used of 13.00 h
+build: 6.90 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 17
+minutes since the last status: 10
 ```
 
 ## Phases
@@ -544,6 +544,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. Before round 2 the Builder read the three packs of round 1 with the strictest critic's eye and asked two follow-ups that no critic had asked for, on the Breath's exhale and the Marsh's burst. Round 1 failed the Spine because an opaque stand-in covered a third of the frame and read as a wipe, and both of these did the same for a second or more. Fixing them before the last round costs ten minutes; leaving them risks the same severe issue from a stricter critic with no round left to answer it.
 - 2026-11-25. The Builder tuned two shots of the Eye after merging its builder's fix. Shot eye-01 glided 44 m in 3.6 s over a lake 2 km across and read as a still, which round 1 had named, so it now travels 176 m level toward the lake through the same key. Shot eye-04 ended with the near animal across 40 percent of the frame, so its track now comes to rest 1.2 m past the key. The moves of three shots in cut/PLAN.json follow what the cameras do now: spine-04 in, spine-05 in, eye-04 right.
 - 2026-11-25. Round 2 of the blockout rotates the critics so that no family judges the pack it judged in round 1: pack 1 (the whole film, the rise, the Ribs) goes to the family that scored pack 2 at 10, pack 2 (Heart, Breath, Marsh) to the family that scored pack 3 at 4, and pack 3 (Spine, Eye, reveal) to the family that scored pack 1 at 6. The two strict families then judge the pack that was never judged strictly and the pack with the most changes, and the handoff and the hold are in two packs. All three are new agents.
+- 2026-11-25. 2026-11-25. The Heart's surfaces start from nine generated material pictures (lake skin, bench lava, wall strata, scree, sulphur, hide, burnt skin, boulder, sky), each with an approved Heart picture as the place and a public-domain photograph as the standard. The generated pictures are kept under references/drafts/working/heart-materials/ so the script can make the loaded files again; the loaded files are a colour JPEG and a linear slope-and-height PNG per material. Painting detail by procedure alone reads as computer made at close range.
 
 ## Notes from Brandon
 
@@ -713,3 +714,4 @@ none
 - 2026-11-25 02:34 UTC. Status 18 shown in the thread at 02:36 UTC: the Eye's last shot, the cut to the rise, the rise and the Spine after the fixes of round 1.
 - 2026-11-25 02:57 UTC. Status 19 shown at 02:58 UTC: the whole film as a blockout in four sheets, round 2's result (5, 6, 7, merged 5, a fail at the limit), what is carried and what is declined.
 - 2026-11-25 03:14 UTC. Status 20 posted at 03:15 UTC: Phase 2 gate passed (21 of 22, A1 open), the whole film plays as a blockout from the published address, Phase 3 began at 03:11 UTC
+- 2026-11-25 03:24 UTC. Status 21 posted 03:25 UTC: the nine material pictures of the Heart, generated (take 1 of 6 each), made to tile, with recipes in assets-src/heart/RECIPE.md. G8 and G9 pass.
