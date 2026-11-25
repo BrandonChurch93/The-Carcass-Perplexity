@@ -62,7 +62,9 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying float vKind;
+varying float vLeg;
 void main() {
+  vLeg = aBone > 0.5 && aBone < 4.5 ? 1.0 : 0.0;
   mat4 bone = uBones[int(aBone + 0.5)];
   vec4 w = modelMatrix * bone * vec4(position, 1.0);
   vWorld = w.xyz;
@@ -78,11 +80,28 @@ ${NOISE_GLSL}
 ${LIGHT_GLSL}
 uniform vec4 uBurn;
 uniform vec4 uTone;
+uniform vec4 uCoat;
+uniform sampler2D tShag;
+uniform sampler2D tShagData;
 ${BURN_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying float vKind;
+varying float vLeg;
+// The picture of the coat: matted locks that hang from the top of the tile to its foot, 0.8 m to a repeat. It is laid at two sizes, and the
+// animal's own large shapes shift it so no repeat shows. Returns the colour over the tile's mean; gives the slope and the height.
+const vec3 SHAG_MEAN = vec3(0.237, 0.215, 0.232);
+vec3 shagAt(vec2 m, out vec3 lie) {
+  vec2 a = m / 0.8;
+  vec2 b = m / 0.29 + vec2(0.37, 0.61);
+  vec3 ca = texture2D(tShag, a).rgb;
+  vec3 cb = texture2D(tShag, b).rgb;
+  vec3 da = texture2D(tShagData, a).rgb;
+  vec3 db = texture2D(tShagData, b).rgb;
+  lie = vec3((da.rg - 0.5) + 0.6 * (db.rg - 0.5), 0.6 * da.b + 0.4 * db.b);
+  return mix(ca, cb, 0.4) / SHAG_MEAN;
+}
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
@@ -90,15 +109,31 @@ void main() {
   if (dot(n, toCamera) < 0.0) n = -n;
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   float fine = vnoise3(vRest * 90.0);
-  // Under the coat: matted under-fur, dark because the coat stands over it.
-  vec3 albedo = uTone.rgb * mix(0.4, 0.62, grain) * (0.75 + 0.5 * fine);
+  // The coat that lies close on the body, from the picture: it hangs from the spine down the flanks and down each leg. The locks stand
+  // over it and break its edge.
+  float around = atan(vRest.z, vRest.y - 0.85);
+  vec2 lay = vLeg > 0.5 ? vec2(vRest.x + vRest.z, vRest.y) : vec2(vRest.x, -abs(around) * 0.34);
+  lay += 0.07 * vec2(vnoise3(vRest * 2.3 + 5.0), vnoise3(vRest * 2.3 + 23.0)) + uTone.w * 3.0;
+  vec3 lie;
+  vec3 shag = shagAt(lay, lie);
+  {
+    vec3 dpx = dFdx(vWorld);
+    vec3 dpy = dFdy(vWorld);
+    vec2 dux = dFdx(lay);
+    vec2 duy = dFdy(lay);
+    float turn = sign(dux.x * duy.y - dux.y * duy.x);
+    vec3 tu = (dpx * duy.y - dpy * dux.y) * turn;
+    vec3 tv = (dpy * dux.x - dpx * duy.x) * turn;
+    float most = max(dot(tu, tu), dot(tv, tv));
+    if (most > 1e-20) n = normalize(n - 1.6 * (lie.x * tu + lie.y * tv) * inversesqrt(most));
+  }
+  vec3 albedo = uTone.rgb * 1.1 * shag * mix(0.62, 1.0, smoothstep(0.15, 0.6, lie.z));
+  // Rime and packed snow where the coat looks up.
+  albedo = mix(albedo, vec3(0.88, 0.89, 0.91), smoothstep(0.35, 0.8, n.y + 2.0 * uCoat.w + 0.6 * (lie.z - 0.5) + 0.5 * (grain - 0.5)) * 0.75);
   // The shanks and the feet carry a short, close coat that the locks do not hide: paler, streaked along the leg, rimed where it looks up.
   float shank = 1.0 - smoothstep(0.3, 0.46, vRest.y);
-  // On the dead one, lying open to the lens, any hide the locks leave bare is this close coat too.
-  if (uBurn.w > 0.0) shank = max(shank, 0.9);
   float nap = vnoise3(vRest * vec3(60.0, 9.0, 60.0));
-  albedo = mix(albedo, uTone.rgb * mix(0.62, 1.0, nap) * (0.85 + 0.3 * fine), shank);
-  albedo = mix(albedo, vec3(0.88, 0.89, 0.91), shank * smoothstep(0.35, 0.8, n.y + 0.5 * (nap - 0.5)) * 0.7);
+  albedo = mix(albedo, uTone.rgb * mix(0.62, 1.0, nap) * (0.85 + 0.3 * fine), 0.5 * shank);
   // The pads under the feet are bare and dark.
   float pad = 1.0 - smoothstep(0.004, 0.02, vRest.y);
   albedo = mix(albedo, vec3(0.06, 0.048, 0.044) * (0.7 + 0.6 * fine), pad);
@@ -185,6 +220,11 @@ void main() {
   float seed = aLock.y;
   float t = position.y;
   float len = aLock.x * size * uCoat.x;
+  // Seen square on, the coat is the matted picture on the body and the locks over it are short; at the body's edge they are long and
+  // break the outline. A lock that would be a hand long or less on the picture is left out, three in four.
+  float square = smoothstep(0.05, 0.6, dot(n, normalize(cameraPosition - root)));
+  len *= mix(1.0, 0.4, square);
+  if (fract(seed * 77.7) < 0.75 * square) len = 0.0;
   float wide = aLock.w * size;
 
   // The burn: locks inside it are gone, locks at its edge are singed to black stubs.

@@ -80,6 +80,8 @@ export function create(ctx: Context): Piece {
   body.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.6, 0), 2.6);
   const strip = lockGeometry(SEGMENTS);
   const tendril = tendrilGeometry();
+  const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 8 });
+  const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 8 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
   const part = new THREE.Group();
@@ -98,6 +100,8 @@ export function create(ctx: Context): Piece {
       uDoorArea: { value: 420 },
       uPixel: pixel,
       uCoat: { value: coatSet },
+      tShag: { value: shagColour },
+      tShagData: { value: shagData },
       uTone: { value: new THREE.Vector4(role.tone[0], role.tone[1], role.tone[2], rng.next()) },
       uFace: { value: new THREE.Vector4(FACE_AT[0], FACE_AT[1], FACE_AT[2], 0) },
       uWrithe: { value: writhe },
