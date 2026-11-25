@@ -7,9 +7,9 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Build: in progress
 - Phase: 3 · The look lock: the Heart, done on 2026-11-25 at 16:49 UTC. The build is at the review stop. Phase 4 starts when the Heart is approved
 - Review: waiting
-- Review round: round 1 in progress
-- Review round step: 6
-- Review rounds: 0
+- Review round: none
+- Review round step: none
+- Review rounds: 1
 - Budget: running
 - Continuations: 0
 - Extensions: 0
@@ -40,10 +40,10 @@ Status 65, 2026-11-25 19:15 UTC, showed: Script sheet, clip n2, the Ribs: two li
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T20:00:32Z
-review round 1: 2.56 h used of 4.00 h
+2026-11-25T20:10:39Z
+review round 1: 2.73 h used of 4.00 h
 extra rounds: yes
-minutes since the last status: 8
+minutes since the last status: 10
 ```
 
 ## Phases
@@ -1685,25 +1685,27 @@ none
 
 ## Last report block
 
-The `REVIEW` block of the review stop, written on 2026-11-25 at 16:49 UTC. A task that starts on `waiting` with neither prompt line shows it again.
+The `REVIEW` block of review round 1, written on 2026-11-25 at 20:10 UTC. Its second line says what the round changed and what it did not. A task that starts on `waiting` with neither prompt line shows it again.
 
 ```
 REVIEW
+Review round 1 changed the sound and laid out the script: the two spots of laughter are out of the music, all 20 sounds of your list are made, the Heart clip plays its three sounds over the cleaned music, the animatic plays the new mix, and your draft lies against the cut list as a sheet. It did not change a picture, the timing of the cut or the narration: no frame of the Heart was rendered, all 33 shots hold their frames, and no narration is made until you write "The script is final."
 This is the one stop. The Heart is finished and the other five places are not built yet. Watch the Heart with the sound on and listen to the voice. Everything else is built to what you approve here.
 Where everything plays: https://www.perplexity.ai/computer/a/the-carcass-xp_kROepRIapoVuOG1cmNw, then the "Review page" link at the foot of that page, which opens review.html
 Watch first: the Heart, in motion, with the voice, the music and the sound. It is the first video on that page.
-That clip was rendered at: 1920 x 1080, 60 frames a second, the final tier. Its sound is the music alone: the narration that falls in the Heart (clip n3) and the Heart's sounds are not made yet.
+That clip was rendered at: 1920 x 1080, 60 frames a second, the final tier. Its picture is the review stop's, frame for frame. Its sound is new: the cleaned music with the Heart's three sounds under it. The narration that falls in the Heart (clip n3) is not made yet.
 Then listen: all eight narration clips, under Listen on the same page.
 The animatic: the whole film's timing, made from your approved pictures, on the same page.
 Voice: Carcass Narrator. Chosen by the Builder, because the kickoff prompt held the unfilled placeholder, and kept by your note of 25 November.
-Clips with no usable take: n1 to n7 are not made, so only n8 is under Listen. The ElevenLabs account has 1 character of 131,000 left (read at 16:49 UTC). n8 is kept from its first take.
-Music: found and matched
-Time used: 20.32 hours of 72.00
+Clips with no usable take: n1 to n7 are not made, on your word, until the script is final. Under Listen now: n8 from the approved script and its only take, all 20 sounds, and the music's two spots before and after.
+Music: found and matched. The film now plays the cleaned copy, the same length to the sample. Your file is untouched.
+Time used: 20.32 hours of 72.00, and 2.73 hours of 4.00 in review round 1
+Credits spent so far: 4,180 out of 17,000
 The Heart: not passed. Its loop ended at the limit quality.lookLockMaxRounds, five rounds. Round 7, the last (build 9ac88bf): R1 4, R3 4 and R4 7 against a bar of 9, the photo jury 3 of 25 against 19, M1 green, M2 green, M3 red.
 Open items on the Heart: 49 severe and major issues in ten items, 13 of them severe. The worst five: the lake's crust reads as even combed ridges, a procedural pattern (3 severe, 6 major). The melt reads as a flat bright gradient with sharp edges that lights little around it (3 severe, 3 major). The fall is one thin channel where your picture has a broad cascade, and the wall round the mouth reads as level strata (2 severe, 3 major). A pink-red block of glow with a hard edge sits at the far right of the wide view (2 severe, 1 major). The feeding seam has lost the lava stream and the pool behind the animals (1 severe).
 Parts finished with a fallback: none
 Animals kept at a distance: none
-For Brandon to decide: X. The 4K 60 fps master may not upload as it is, and the 1080p copy is the safe file to post. Nothing in the build changes for this.
+For Brandon to decide: the script (11 of its 32 lines are marked on the sheet, each with two replacements, then "The script is final."). The second spot of the music (the cleaned track or the lighter cut, by ear). Eight sounds kept with a fault after both takes (keep, drop or a third take). How loud the sounds sit under the music. X: the 4K 60 fps master may not upload as it is, and the 1080p copy is the safe file to post; nothing in the build changes for this.
 Sound files: committed to the repo
 What happens next is yours:
 - To change the voice, the sound or anything you see, as many times as you like: send the review notes prompt from kit/10-KICKOFF.md.
@@ -1855,3 +1857,4 @@ What happens next is yours:
 - 2026-11-25 20:03 UTC. 20:03 status 68 shown in the thread (review round 1, 2.56 h of 4.00 h at its tick): the sounds of the seven places as waveforms in two pictures, and the before and after picture of each music spot, with the credits line (4,180 spent of the 17,000 cap in 33 calls).
 - 2026-11-25 20:06 UTC. 20:06 npm run flows on the published address, the page of review round 1: 7 of 7 pass (review page: 7 sections, 73 pictures of which 0 did not load, 31 sound and film players, 0 did not answer, 0 did not open in their player, 2 opened on a second try; 0 console errors, 0 failed requests).
 - 2026-11-25 20:09 UTC. 20:09 tests after the page's order rule: 902 of 902 pass, tsc clean. dist/ is byte for byte what was published at 20:02 (build.json, mix.m4a, review.html and index.html checked by MD5 before and after the tests). Step 6 of the review round is done.
+- 2026-11-25 20:10 UTC. 20:10 review round 1 ended at step 7 (2.73 h of 4.00 h): Review rounds 1, Review round none, Review round step none, Review stays waiting. The REVIEW block of the round is stored under Last report block with its round line, the round's time and the line on credits (4,180 out of 17,000). The task ends on that block, with the script sheet and status 68 shown above it and the Heart clip and the animatic attached. The script waits for Brandon: no narration is made until he writes that the script is final.
