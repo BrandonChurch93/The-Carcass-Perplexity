@@ -334,7 +334,7 @@ void main() {
   }
   albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * tb.b - 0.3), 0.8 * mound);
   // That floor is warm dark basalt and nothing on it is pale: its brights are the fire's, not ash on the tops of plates.
-  albedo *= mix(vec3(1.0), vec3(1.12, 0.97, 0.86), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
+  albedo *= mix(vec3(1.0), vec3(1.08, 0.99, 0.92), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
   // Satin only where fresh glass faces the sky, on the tops of ropes: everything else is dead matte.
   float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.6, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * mix(mix(0.5, 0.0, smoothstep(0.08, 0.35, fpLong)), smoothstep(0.45, 0.9, fold), foldSeen) * smoothstep(0.42, 0.56, tb.b + 0.5 * grainA + 0.5);
   // A coiled cord carries a satin line along its top.
