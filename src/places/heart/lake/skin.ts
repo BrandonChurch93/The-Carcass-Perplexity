@@ -78,9 +78,14 @@ void main() {
     slabAt(q, broke, cell, 1.9, 0.0);
     float onLake = smoothstep(0.0, 1.5, lake);
     // A gap is drawn while a pixel is finer than it: from afar the broken ground is a tone, not a net of black lines.
-    slabGap = gSlabEdge * onLake * (1.0 - smoothstep(0.06, 0.25, fpLong));
+    // Most joints between slabs are shut: a hairline of tone. A gap stands open only within a few metres of a pool or of
+    // the seam the group feeds at, and not every one there.
+    float nearPool = live * smoothstep(0.2, 0.4, gape) * (1.0 - smoothstep(1.5, 4.0, net.r - gape));
+    float gapOpen = max(nearPool, 1.0 - smoothstep(3.0, 8.0, groupFar(q))) * smoothstep(0.38, 0.52, vnoise(q / 2.3 + 37.0));
+    slabGap = mix(0.35 * smoothstep(0.7, 0.95, gSlabEdge), gSlabEdge, gapOpen) * onLake * (1.0 - smoothstep(0.06, 0.25, fpLong));
     slabSlope = gSlabSlope * ((1.0 - slabHeld(cell, 1.9)) * (1.0 - gSlabEdge) * onLake);
-    slabTone = 0.78 + 0.44 * fract(gSlabId * 7.31 + 0.17);
+    // A slab differs little from the next: the tone lies across many of them in patches of three to ten metres.
+    slabTone = (0.93 + 0.14 * fract(gSlabId * 7.31 + 0.17)) * (0.8 + 0.4 * smoothstep(0.3, 0.7, vnoise(q / 6.3 + 11.0)));
   }
   ridgeAt(q, cell);
   float clinker = gRidgeOn;
@@ -239,7 +244,7 @@ void main() {
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
   float mound = 0.0;
   float wet = 0.0;
-  albedo *= (1.0 + 2.1 * fresh) * lumpTone * slabTone;
+  albedo *= (1.0 + 2.5 * fresh) * lumpTone * slabTone;
   if (fresh > 0.01) {
     mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
     wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - rubble) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
@@ -254,8 +259,8 @@ void main() {
   // Broken crust is dark, dull clinker, pitted between its blocks.
   if (rubble > 0.0) {
     float pits = 0.35 + 0.65 * smoothstep(0.3, 0.65, 0.6 * vnoise(q / 0.31 + 7.0) + 0.4 * vnoise(q / 0.09 + 3.0));
-    albedo = mix(albedo, vec3(0.034, 0.031, 0.03) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(max(clinker, 0.6 * heap), 0.6 * slabGap));
-    crease *= mix(1.0, pits, max(heap, clinker)) * (1.0 - 0.35 * slabGap);
+    albedo = mix(albedo, mix(vec3(0.034, 0.031, 0.03), vec3(0.055, 0.051, 0.048), slabGap * (1.0 - max(heap, clinker))) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(max(clinker, 0.6 * heap), 0.6 * slabGap));
+    crease *= mix(1.0, pits, max(heap, clinker)) * (1.0 - 0.3 * slabGap);
   }
   // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
   float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.03, 0.12, fpLong), 1.0, shown);
@@ -265,7 +270,7 @@ void main() {
   float occ = crease * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
   // A face that stands steep among folds and lobes looks at its neighbour and not at the sky.
-  float open = land.g * (1.0 - contactAt(p)) * occ * mix(0.15, 1.0, smoothstep(0.3, 0.95, nShape.y));
+  float open = land.g * (1.0 - contactAt(p)) * occ * mix(mix(0.15, 0.45, broke), 1.0, smoothstep(0.3, 0.95, nShape.y));
   // The lake lies level with the crust: its glow from afar reaches only the faces that are turned toward it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, nShape.y);
   // The warmth of the melt stays on its banks: the open crust takes the cool sky.
@@ -293,7 +298,7 @@ void main() {
   float facing = steepAway > 0.3 ? smoothstep(0.0, 0.5, -dot(nShape.xz, away)) : 0.5;
   light += gLip * (1.0 - shown * smoothstep(0.12, 0.25, gape)) * (0.1 + 1.2 * wallFace * facing) * crease * clear;
   // The wall of a trench is dark and broken: the melt at its foot lights a thin line of it, a hand high, and no more.
-  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live);
+  light = skyLight + light * mix(1.0, 0.08 + 0.92 * exp(-max(vWorld.y - meltLevel(net), 0.0) / 0.1), steep * live * (1.0 - smoothstep(0.1, 0.4, fresh)));
   // A broken face is duller and browner than the skin.
   albedo = mix(albedo, vec3(0.042, 0.038, 0.036) * clamp(0.55 + 0.9 * tb.b + 1.3 * grainA + 1.0 * grainC, 0.4, 1.7), steep);
   vec3 c = albedo * light / 3.14159;
@@ -323,7 +328,7 @@ void main() {
   }
   // Over a wet patch at the feeding group stands smoke, not sky.
   // Seen from low over the lake the crust gives back nothing of the sky: it is rough, and a rough face shadows itself.
-  c += (1.0 - 0.8 * wet) * fresnel * mirror * open * (1.0 - 0.85 * rubble) * (1.0 + 0.9 * crest) * smoothstep(0.07, 0.26, v.y);
+  c += (1.0 - 0.8 * wet) * fresnel * mirror * open * (1.0 - 0.85 * rubble) * (1.0 + 0.9 * crest) * smoothstep(0.05, 0.18, v.y);
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
