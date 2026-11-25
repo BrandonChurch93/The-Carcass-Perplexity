@@ -1,0 +1,16 @@
+<div id="st" style="width:100%;font-family:var(--font-sans);color:var(--color-text-primary)"></div>
+<script>
+(function(){var d=(window.visualization||{}).data||{},root=document.getElementById('st');if(!d.clips){root.textContent='The script failed to load.';return;}
+function el(tag,css,text){var e=document.createElement(tag);if(css)e.style.cssText=css;if(text!=null)e.textContent=text;return e;}
+d.clips.forEach(function(c){var card=el('section','background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:11px 16px 10px;margin:0 0 8px');
+var head=el('div','display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 5px');
+head.appendChild(el('div','font-size:14px;font-weight:500',c.id+' · '+c.title));head.appendChild(el('div','font-size:12px;color:var(--color-text-secondary);white-space:nowrap',c.when));card.appendChild(head);
+c.lines.forEach(function(l){var row=el('div','display:grid;grid-template-columns:18px 1fr;column-gap:4px;align-items:baseline');
+row.appendChild(el('div','font-size:12px;color:'+(l.why?'var(--color-warning-primary)':'var(--color-text-tertiary)')+';font-weight:'+(l.why?'600':'400'),String(l.n)));
+var body=el('div','min-width:0');body.appendChild(el('div','font-size:14px;line-height:1.5',l.text));
+if(l.why){var m=el('div','font-size:12.5px;line-height:1.5;color:var(--color-text-secondary);border-left:2px solid var(--color-warning-primary);padding:0 0 0 8px;margin:1px 0 4px');
+m.appendChild(el('span','',l.why+' · '));m.appendChild(el('span','font-weight:600;color:var(--color-text-primary)','A '));m.appendChild(el('span','color:var(--color-text-primary)',l.a));m.appendChild(el('span','',' · '));m.appendChild(el('span','font-weight:600','B '));m.appendChild(el('span','',l.b));body.appendChild(m);}
+row.appendChild(body);card.appendChild(row);});root.appendChild(card);});
+if(d.foot){root.appendChild(el('div','font-size:12px;line-height:1.45;color:var(--color-text-secondary);padding:0 2px 2px',d.foot));}
+})();
+</script>
