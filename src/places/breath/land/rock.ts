@@ -236,7 +236,7 @@ void main() {
   // Under water level in the rock, and wherever the vapour condenses, it is dark and wet.
   float wet = clamp(0.45 + 0.5 * smoothstep(-2.0, -14.0, p.y) + 0.3 * stain, 0.0, 1.0);
   // Down the shaft the sky is a disc overhead and everything is wet: it goes to the dark.
-  float sunk = clamp(1.0 + min(p.y + 3.0, 0.0) / 44.0, 0.12, 1.0);
+  float sunk = clamp(1.0 + min(p.y + 3.0, 0.0) / 32.0, 0.1, 1.0);
   albedo *= (1.0 - 0.5 * joint - 0.35 * pit) * mix(1.0, 0.62, wet);
   float rough = mix(0.85, 0.38, wet);
   // The wall under a hoop is in its shade: black recesses between the ribs. The hoops stand every seven metres.

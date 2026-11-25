@@ -14,7 +14,7 @@ export const PARTS: readonly string[] = ['sky', 'air', 'fog', 'vapour', 'exhale'
 
 /** A far body of vapour or fog: a leaning ellipsoid of lumps. Lengths in metres. */
 interface Body {
-  part: 'fog' | 'vapour';
+  part: 'fog' | 'vapour' | 'exhale';
   /** Its centre. */
   at: readonly [number, number, number];
   /** Half its size along its own x, up, and along its own z. */
@@ -38,12 +38,51 @@ interface Body {
 export function breathAt(seconds: number): [number, number, number, number] {
   const u = seconds - EXHALE;
   const swell = 0.5 * Math.sin(seconds * 0.9) + 0.3 * Math.sin(seconds * 0.37 + 1);
-  const fill = smooth((u - 0.3) / 2.2);
-  const over = u < 3.4 ? smooth((u - 1.4) / 2.0) : 0.1 + 0.9 * Math.exp(-(u - 3.4) / 1.7);
-  const level = -9 + swell + 5 * fill * (u < 3.4 ? 1 : 0.35 + 0.65 * Math.exp(-(u - 3.4) / 5)) + 5.5 * over;
-  const apron = smooth((u - 2.4) / 2.0) * (0.3 + 0.7 * Math.exp(-Math.max(0, u - 5) / 9));
+  // It fills from below for a second and a half, wells up over the mouth for two more, then slides off over the west lip and thins.
+  const fill = smooth((u - 0.2) / 1.3);
+  const over = u < 3 ? smooth((u - 1.0) / 2.0) : 0.08 + 0.92 * Math.exp(-(u - 3) / 2.2);
+  const level = -9 + swell + 5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4));
+  const apron = smooth((u - 2.2) / 2.0) * (0.25 + 0.75 * Math.exp(-Math.max(0, u - 4.5) / 6));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
+}
+
+/** The breath itself: billows that well up in the west half of the shaft one after the other, stand over the lip and slide off it with the wind,
+ *  spreading and thinning as they go. Each is a function of the time alone. */
+const BILLOWS: readonly (readonly [number, number, number, number, number, number, number])[] = [
+  // delay s, x, z, half width, half height, half depth, thickness
+  [0.0, -13, -9, 13, 7.5, 12, 0.05],
+  [0.25, -19, 1, 11, 6.5, 10, 0.045],
+  [0.5, -7, -17, 10, 6, 11, 0.04],
+  [0.8, -19, -18, 11, 7, 9, 0.045],
+  [1.1, -9, -1, 9, 5.5, 9, 0.035],
+  [1.5, -23, -8, 10, 6, 10, 0.04],
+];
+export function exhaleBodies(seconds: number): Body[] {
+  const out: Body[] = [];
+  for (const [delay, x, z, rx, ry, rz, dense] of BILLOWS) {
+    const a = seconds - EXHALE - delay;
+    if (a <= 0.05) continue;
+    const up = smooth((a + 0.5) / 2.2);
+    const slide = Math.max(0, a - 1.4);
+    const grow = 0.55 + 0.45 * smooth(a / 1.6) + 0.07 * slide;
+    // It sinks back on the rock as it slides: heavier than the air it came into.
+    const y = -11 + 14.5 * up - 0.35 * Math.min(slide, 4);
+    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 2.1) / 1.15);
+    if (thin < 0.02) continue;
+    out.push({
+      part: 'exhale',
+      at: [x - 0.94 * 2.6 * slide, y, z - 0.2 * 2.6 * slide],
+      size: [rx * grow * (1 + 0.1 * slide), ry * (0.7 + 0.3 * up) * (1 - 0.06 * Math.min(slide, 5)), rz * grow * (1 + 0.06 * slide)],
+      lean: [-0.25 * up, 0.09 * up],
+      dense: (dense * thin) / (grow * grow),
+      repeat: 17,
+      open: 0.36,
+      climb: 1.4,
+      sun: 1,
+    });
+  }
+  return out;
 }
 
 export function create(ctx: Context): Piece {
@@ -63,8 +102,6 @@ export function create(ctx: Context): Piece {
     [-26, 4.5, -9, 13, 4.5, 11, 0.016],
     [-17, 3, 6, 15, 3.5, 13, 0.012],
     [-40, 3.2, -4, 12, 2.6, 9, 0.012],
-    // What stands in the west half of the shaft itself, under the rim.
-    [-13, -9, -2, 15, 9, 20, 0.022],
   ] as const) {
     bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense, repeat: 26, open: 0.42, climb: 0.5, sun: 1 });
   }
@@ -122,16 +159,19 @@ export function create(ctx: Context): Piece {
   });
 
   const order: { body: Body; index: number; far: number }[] = [];
+  let breathing: Body[] = [];
 
   return {
     volume,
     setTime: (seconds) => {
       breath.set(...breathAt(seconds));
+      breathing = exhaleBodies(seconds);
     },
     beforeSample: (_renderer, camera) => {
       // The bodies are read every sample, since a folder may push its own sources, and laid nearest first.
       order.length = 0;
       bodies.forEach((body, index) => order.push({ body, index, far: Math.hypot(body.at[0] - camera.position.x, body.at[1] - camera.position.y, body.at[2] - camera.position.z) }));
+      breathing.forEach((body, i) => order.push({ body, index: 40 + i, far: Math.hypot(body.at[0] - camera.position.x, body.at[1] - camera.position.y, body.at[2] - camera.position.z) }));
       ctx.sources.steam.forEach((s, i) => {
         if (s.strength <= 0 || s.rise <= 0) return;
         const heavy = s.kind === 'heavy';
@@ -149,7 +189,7 @@ export function create(ctx: Context): Piece {
           climb: heavy ? 0.2 : Math.min(3, 1.2 + s.rise * 0.16),
           sun: 1,
         };
-        order.push({ body, index: bodies.length + i, far: Math.hypot(body.at[0] - camera.position.x, body.at[1] - camera.position.y, body.at[2] - camera.position.z) });
+        order.push({ body, index: 60 + i, far: Math.hypot(body.at[0] - camera.position.x, body.at[1] - camera.position.y, body.at[2] - camera.position.z) });
       });
       order.sort((a, b) => a.far - b.far || a.index - b.index);
       order.length = Math.min(MAX_BODIES, order.length);
@@ -157,7 +197,7 @@ export function create(ctx: Context): Piece {
         (bodyA[i] as THREE.Vector4).set(b.at[0], b.at[1], b.at[2], b.turn ?? 0);
         (bodyB[i] as THREE.Vector4).set(b.size[0], b.size[1], b.size[2], b.dense);
         (bodyC[i] as THREE.Vector4).set(b.lean?.[0] ?? 0, b.lean?.[1] ?? 0, b.repeat, b.open ?? 0.35);
-        (bodyD[i] as THREE.Vector4).set(b.part === 'fog' ? 1 : 0, bodySeed[index % MAX_BODIES] as number, b.sun ?? 1, b.climb ?? 0);
+        (bodyD[i] as THREE.Vector4).set(b.part === 'fog' ? 1 : b.part === 'exhale' ? 2 : 0, bodySeed[index % MAX_BODIES] as number, b.sun ?? 1, b.climb ?? 0);
       });
       count.value = order.length;
     },
