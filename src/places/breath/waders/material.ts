@@ -204,7 +204,7 @@ void main() {
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
   float fogLight = (0.24 + 1.12 * smoothstep(25.0, 140.0, far)) * (0.55 + 0.3 * dot(n, flat_) + 0.15 * n.y);
-  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 0.75 * halo + fogLight) * occ * (0.3 + 0.7 * lit) * (1.0 - 0.5 * uDead));
+  colour += albedo * uSunColour * ((0.2 * wrap * wrap + 0.75 * halo + fogLight * (1.0 + 1.2 * (1.0 - lit))) * occ * (0.45 + 0.55 * lit) * (1.0 - 0.5 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);

@@ -102,7 +102,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(1.9, 0.75, 0.9));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = vec3(0.062, 0.115, 0.1) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = vec3(0.066, 0.15, 0.135) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 

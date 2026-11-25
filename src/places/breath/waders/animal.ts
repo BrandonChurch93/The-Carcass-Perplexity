@@ -151,7 +151,7 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
     neckR: 0.085 * k,
-    tendrils: far ? 8 : 104,
+    tendrils: far ? 7 : 104,
     tendrilLen: 0.7 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
@@ -277,7 +277,7 @@ export class Wader {
 
     // The tendrils: wet strands of unlike length that root round the end of the neck, in clumps.
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
-    const tr = (far ? 0.026 : 0.0115) * k;
+    const tr = (far ? 0.017 : 0.0115) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * (1 - 0.6 * u ** 1.6);

@@ -40,8 +40,7 @@ function through(points: readonly V3[], u: number): V3 {
 
 export function create(ctx: Context): Piece {
   const { rig } = ctx;
-  // It lies nearer the lens of the rim's picture than the anchor allows: it is drawn a quarter larger than it stood, so it holds its place in the frame.
-  const k = DEAD_WADER.size * 1.12;
+  const k = DEAD_WADER.size;
   const rng = ctx.rng('dead-wader');
   const seed = 41.7;
   const b = makeBuild(k, seed, false);
@@ -97,10 +96,10 @@ export function create(ctx: Context): Piece {
     // The spine: a row of knuckles along the edge that is away from the legs.
     const spine = smooth(0.72, 0.97, sn) * smooth(0.06, 0.18, t) * smooth(0.97, 0.85, t);
     const knuckle = spine * (0.5 + 0.5 * Math.cos(t * 26 * Math.PI * 2)) ** 2;
-    const slack = 0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) * (1 - cage);
+    const slack = (0.012 * k * Math.sin(t * 61 + sn * 9 + 2 * Math.sin(phi * 3 + t * 17)) * smooth(0.2, 0.9, Math.abs(sn)) + 0.02 * k * Math.sin(t * 19 + 3 * Math.sin(phi * 2 + t * 7) + sn * 4)) * (1 - 0.6 * cage);
     let up: number;
     if (c > 0) {
-      up = tall * 2.1 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.03 * rib - 0.04 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
+      up = tall * 2.1 * c ** 0.7 * (1 - 0.6 * pit) + cage * k * (0.011 * rib - 0.02 * (1 - rib)) + k * (0.05 * hip + 0.03 * blade) + 0.012 * k * knuckle + slack * top;
     } else {
       // What lies on the rock is flat on it.
       up = -tall * 0.42 * (-c) ** 0.45;
@@ -136,11 +135,11 @@ export function create(ctx: Context): Piece {
   const neckSides = 9;
   const neck = skin.tube(neckRings, neckSides);
   const neckLocal = new Float32Array(neckRings * neckSides * 2);
-  const neckLine: V3[] = [[-0.02, 0.13, half - 0.12], [-0.2, 0.085, half + 0.42], [-0.06, 0.07, half + 0.95], [0.3, 0.062, half + 1.38], [0.42, 0.058, half + 1.86], [0.2, 0.055, half + 2.3], [0.16, 0.05, half + 2.62]];
+  const neckLine: V3[] = [[-0.02, 0.15, half - 0.14], [-0.3, 0.11, half + 0.26], [-0.3, 0.095, half + 0.7], [0.1, 0.085, half + 0.98], [0.52, 0.075, half + 1.18], [0.76, 0.065, half + 1.5], [0.86, 0.055, half + 1.8]];
   for (let i = 0; i < neckRings; i++) {
     const u = i / (neckRings - 1);
     // The skin of the neck has dried in rings on the cords inside it.
-    const r = b.neckR * 1.5 * (0.5 + 0.5 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.6 * smooth(0.12, 0, u)) * (1 + 0.07 * Math.sin(u * 150 + 2 * Math.sin(u * 23)));
+    const r = b.neckR * 2.0 * (0.5 + 0.5 * (1 - u) ** 1.6 + 0.16 * smooth(0.86, 0.97, u) - 0.5 * smooth(0.97, 1, u)) * (1 + 0.6 * smooth(0.12, 0, u)) * (1 + 0.07 * Math.sin(u * 150 + 2 * Math.sin(u * 23)));
     for (let s = 0; s < neckSides; s++) {
       const phi = (s / neckSides) * Math.PI * 2;
       const rr = r * (1 + 0.1 * Math.cos(phi * 2) + 0.07 * Math.sin(phi * 3 + u * 14 + seed));
@@ -158,10 +157,10 @@ export function create(ctx: Context): Piece {
   const legRadius: number[] = [];
   for (let i = 0; i < legRings; i++) {
     const u = i / (legRings - 1);
-    const thigh = 1.5 * (1 - smooth(0, 0.3, u)) ** 1.2;
+    const thigh = 2.6 * (1 - smooth(0, 0.42, u)) ** 1.1;
     const knuckle = 1.25 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.9 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.5 * smooth(0.95, 1, u);
-    const r = b.legR * 1.05 * (0.8 + thigh + knuckle + foot);
+    const r = b.legR * 1.3 * (0.8 + thigh + knuckle + foot);
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -170,12 +169,12 @@ export function create(ctx: Context): Piece {
     }
   }
   const legLines: V3[][] = [
-    // Hind, upper: it stands off the hip, bent, the shank down across the other; hind, under: out along the rock behind it.
-    [[0.16, 0.34, -0.5], [0.34, 0.46, -0.78], [0.5, 0.5, -1.08], [0.62, 0.24, -1.44], [0.7, 0.06, -1.78]],
-    [[0.18, 0.07, -0.56], [0.42, 0.075, -1.0], [0.56, 0.085, -1.46], [0.5, 0.07, -1.9], [0.38, 0.06, -2.3]],
-    // Fore, upper: folded at the joint, the shank back along the belly; fore, under: bent under the chest.
-    [[0.18, 0.32, 0.42], [0.46, 0.4, 0.3], [0.7, 0.36, 0.06], [0.74, 0.18, -0.3], [0.7, 0.06, -0.66]],
-    [[0.2, 0.07, 0.46], [0.56, 0.075, 0.5], [0.86, 0.085, 0.24], [0.96, 0.07, -0.14], [1.0, 0.06, -0.52]],
+    // Hind, upper: the thigh stands off the hip toward the belly's side, the joint up, the shank fallen back across the other; hind, under: along the rock.
+    [[0.16, 0.34, -0.5], [0.44, 0.43, -0.4], [0.7, 0.36, -0.5], [0.84, 0.14, -0.98], [0.86, 0.065, -1.5], [0.8, 0.06, -1.86]],
+    [[0.18, 0.08, -0.56], [0.52, 0.09, -0.72], [0.7, 0.085, -1.16], [0.64, 0.07, -1.66], [0.5, 0.06, -2.08]],
+    // Fore, upper: folded at the joint, the shank back along the belly and over the hind one; fore, under: bent under the chest.
+    [[0.18, 0.32, 0.42], [0.52, 0.38, 0.24], [0.8, 0.27, -0.06], [0.93, 0.15, -0.5], [0.98, 0.1, -0.98]],
+    [[0.2, 0.08, 0.46], [0.5, 0.085, 0.42], [0.72, 0.085, 0.12], [0.76, 0.07, -0.3], [0.7, 0.06, -0.66]],
   ];
   legLines.forEach((line, j) => {
     const tube = skin.tube(legRings, legSides);
@@ -187,7 +186,7 @@ export function create(ctx: Context): Piece {
   });
 
   // The tendrils: stuck to the rock in a matted fan, in clumps, some crossed over others.
-  const tRings = 8;
+  const tRings = 10;
   const tSides = 4;
   const tendrilLocal = new Float32Array(tRings * tSides * 2);
   const tr = 0.015 * k;
@@ -202,20 +201,22 @@ export function create(ctx: Context): Piece {
   }
   const end = neckLine[neckLine.length - 1] as V3;
   const before = neckLine[neckLine.length - 2] as V3;
-  const way = Math.atan2(end[2] - before[2], end[0] - before[0]);
-  for (let n = 0; n < 64; n++) {
+  const way = Math.atan2(end[2] - before[2], end[0] - before[0]) - 0.35;
+  for (let n = 0; n < 96; n++) {
     const tube = skin.tube(tRings, tSides);
     const clump = Math.floor(rng.next() * 7);
-    const angle = way + (clump - 3) * 0.3 + rng.range(-0.2, 0.2);
-    const length = b.tendrilLen / k * rng.range(0.7, 1.7);
+    const angle = way + (clump - 3) * 0.2 + rng.range(-0.2, 0.2);
+    const length = b.tendrilLen / k * rng.range(0.6, 1.7);
     const bend = rng.range(-0.8, 0.8);
     const lift = 0.014 + 0.03 * rng.next() ** 3;
     const line: V3[] = [];
-    for (let q = 0; q <= 4; q++) {
-      const v = q / 4;
-      const a = angle + bend * v * v + 0.25 * Math.sin(q * 2.1 + n);
+    const kink = rng.range(0, 6.28);
+    for (let q = 0; q <= 6; q++) {
+      const v = q / 6;
+      // Each lies as it dried: wavy, like a root.
+      const a = angle + bend * v * v + 0.55 * Math.sin(q * 1.7 + kink) * (0.4 + 0.6 * v);
       const prev = line[q - 1] ?? [end[0], 0.04, end[2]];
-      line.push(q === 0 ? [end[0], 0.04, end[2]] : [prev[0] + Math.cos(a) * length / 4, lift, prev[2] + Math.sin(a) * length / 4]);
+      line.push(q === 0 ? [end[0], 0.04, end[2]] : [prev[0] + (Math.cos(a) * length) / 6, lift, prev[2] + (Math.sin(a) * length) / 6]);
     }
     const tone = rng.next();
     const tseed = seed + n;
