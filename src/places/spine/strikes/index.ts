@@ -142,6 +142,8 @@ uniform vec2 uSize;
 varying vec2 vUv;
 void main() {
   vec4 c = viewMatrix * vec4(uAt, 1.0);
+  // Brought a little toward the lens, so that the rock it sits on does not hide it.
+  c.z += 3.0;
   c.xy += position.xy * uSize;
   vUv = position.xy;
   gl_Position = projectionMatrix * c;
@@ -254,7 +256,7 @@ export function create(ctx: Context): Piece {
 
     // The glow where the channel enters the cloud, and the white-hot spot at the tip.
     const cloudGlow = new THREE.Vector3();
-    const cloud = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: top }, uSize: { value: new THREE.Vector2(site.rise * 0.75, site.rise * 0.42) }, uColour: { value: cloudGlow }, uSharp: { value: 0 } }, ...additive }));
+    const cloud = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: top }, uSize: { value: new THREE.Vector2(site.rise * 0.2, site.rise * 0.12) }, uColour: { value: cloudGlow }, uSharp: { value: 0 } }, ...additive }));
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
@@ -332,7 +334,7 @@ export function create(ctx: Context): Piece {
         // Sheet lightning inside the cloud in the quarter second before the stroke, then the stroke itself.
         const before = age < 0 ? 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3) : 0;
         const power = e.main + e.after;
-        b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 1.6);
+        b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 0.4);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 220 + e.after * 400);
         if (power + before > 1e-4) {
           channelLight.position.copy(b.mid);

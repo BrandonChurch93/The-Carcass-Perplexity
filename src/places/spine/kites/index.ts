@@ -297,8 +297,13 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < count; i++) {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
+        // Over 0.86 of its height the lee prong of the split top stands lower than the storm's: the holdfast goes down with it.
+        const at = t + (i - (count - 1) / 2) * 0.006;
+        const k = Math.max(0, (at - 0.86) / 0.14);
+        const anchor = finEdge(sp, at, 0.93, rng.range(-0.25, 0.25));
+        anchor[1] -= k * k * 0.04 * sp.tip + k * 4.5;
         ribbons.push({
-          anchor: finEdge(sp, t + (i - (count - 1) / 2) * 0.006, 1.01, rng.range(-0.25, 0.25)),
+          anchor,
           length,
           width: near ? (i === 0 ? rng.range(8.5, 12) : rng.range(3, 5.5)) : rng.range(10, 15) * (i === 0 ? 1 : 0.75),
           phase: rng.range(0, 6.28),

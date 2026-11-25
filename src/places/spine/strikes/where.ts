@@ -18,6 +18,9 @@ export interface StrikeSite {
   spire: number;
 }
 
+/** How far under a spire's highest point the channel comes to ground, metres. */
+const SINK = 2.5;
+
 const whichSpire = (to: Vec3): number => {
   for (let n = 1; n <= 8; n++) {
     const t = tipOf(spire(n));
@@ -28,7 +31,9 @@ const whichSpire = (to: Vec3): number => {
 
 export const STRIKES: StrikeSite[] = STRIKE_IDS.map((id, i) => {
   const t = STRIKE_TARGETS[i % STRIKE_TARGETS.length] as (typeof STRIKE_TARGETS)[number];
-  return { id, seconds: SECONDS[i] as number, to: t.to, rise: t.rise, lean: t.lean, branch: t.branch, spire: whichSpire(t.to) };
+  // The channel ends a little inside the rock, so that the hot spot sits on the broken top and not over it.
+  const to: Vec3 = [t.to[0], t.to[1] - SINK, t.to[2]];
+  return { id, seconds: SECONDS[i] as number, to, rise: t.rise, lean: t.lean, branch: t.branch, spire: whichSpire(t.to) };
 });
 
 /** The span of a shot in seconds of the place, a little wide so that every sample of its frames is inside. */
