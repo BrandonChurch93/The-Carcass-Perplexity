@@ -1,0 +1,50 @@
+{
+  "question": "kit/07-QUALITY-BAR.md, R8, word for word",
+  "unit": "reveal",
+  "control": "reveal-4",
+  "picture": {
+    "image": "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg",
+    "size": "400x225",
+    "sha256": "4eb29f55b1ba86ff750159f4a2d0cd6704e738669bf4114b2e38ce8ca1030910"
+  },
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "The image shows a gigantic human skeleton sprawled across Earth’s ocean as seen from space, with a swirling storm at the lower right.",
+      "counts": true,
+      "answered": "22:53 UTC"
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image shows an orbital view of Earth's ocean with a giant skeleton-like figure formed in the clouds and waves, a bright streak and reddish branching marks at its center, and a spiral storm in the lower right corner.",
+      "counts": true,
+      "answered": "22:53 UTC"
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "The image shows an orbital view of Earth from space in which a gigantic human skeleton made of landmasses and geological formations stretches across the dark ocean, surrounded by scattered clouds and a swirling cyclone in the lower-right corner.",
+      "counts": true,
+      "answered": "22:54 UTC"
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "The image shows Earth from space, with clouds forming a giant skeleton sprawled across the ocean and a hurricane swirling near its feet.",
+      "counts": true,
+      "answered": "22:54 UTC"
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows a view from space of a human skeleton formed in the ocean's waves and currents, with the Earth's curved horizon at the upper left and a hurricane swirl at the lower right.",
+      "counts": true,
+      "answered": "22:54 UTC"
+    }
+  ],
+  "share": 1.0,
+  "collected": "2026-11-25 22:53 to 22:54 UTC",
+  "note": "The control of R8: the approved reveal-4, resized to 400 px wide, put to five fresh agents on the fixed panel, each of which received the picture and the question of R8 and nothing else. Collected once and reused. All five answers name a skeleton, so all five count by the rule of R8 (a body, a corpse, a skeleton or a giant figure). The control share is 1.0, so the titan frame passes R8 at a share of at least 0.8 (`quality.recognition.minShare`). Each viewer sent its sentence to a clerk agent that saved it unchanged."
+}
