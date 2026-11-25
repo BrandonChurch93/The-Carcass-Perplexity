@@ -316,6 +316,29 @@ float channel(float fs, float fl, float r, float spacing, float seed, float widt
   float w = max(width * (0.3 + 1.05 * pow(vnoise(vec2(fl * 0.19, i * 3.1 + seed)), 1.5)), 1.0) * clamp(r / 45.0, 0.4, 1.0);
   return (1.0 - smoothstep(0.08 * w, 0.42 * w, m)) * step(0.26, h);
 }
+// Rivulets down the fan: strands that run out from its head down the fall line, each parting from its neighbour on one side and
+// joining the one on the other, by turns. x is the place round the fan counted in strands, fl metres out, r metres from the head.
+// Returned is the profile of the nearest strand: 0 at its bank, 1 down its middle.
+float braid(float x, float fl, float r, float spacing, float seed, float width) {
+  // Where neighbours run as one and where they stand apart: a slow wave down the fall line, out of step from place to place.
+  // The whole braid wanders as it goes down: no strand is a ruled ray from the head.
+  x += 1.5 * (vnoise(vec2(fl * 0.06, x * 0.22 + seed)) - 0.5) + 0.45 * (vnoise(vec2(fl * 0.21, x * 0.5 + 9.0)) - 0.5);
+  float c = clamp(1.2 * cos(fl * 0.105 + 3.5 * vnoise(vec2(x * 0.13 + seed, fl * 0.05))), -1.0, 1.0);
+  float k = floor(x);
+  float best = 0.0;
+  for (int j = 0; j < 2; j++) {
+    float i = k + float(j);
+    float turn = mod(i, 2.0) < 0.5 ? 0.5 : -0.5;
+    float h = fract(sin(i * 127.1 + seed * 311.7) * 43758.5453);
+    float pos = i + turn * c + 0.3 * (vnoise(vec2(fl * 0.13, i * 7.3 + seed)) - 0.5) * (1.0 - abs(c));
+    float m = abs(x - pos) * spacing * r / 45.0;
+    // Its width is uneven, hair-thin here and swollen there, and here and there a strand is skinned over for a stretch.
+    float w = width * (0.45 + 0.9 * vnoise(vec2(fl * 0.11, i * 3.1 + seed))) * clamp(r / 45.0, 0.5, 1.0);
+    float on = smoothstep(0.3, 0.42, h + 0.75 * vnoise(vec2(fl * 0.035, i * 1.7 + seed)));
+    best = max(best, (1.0 - smoothstep(0.15 * w, 0.5 * w, m)) * on);
+  }
+  return best;
+}
 // x: cover 0 to 1, y: kelvin.
 // away: x metres from the middle of the stream, y how much of an island of rock stands here.
 vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
@@ -360,6 +383,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // they come down. They are near white at the lip and down each drop and cool to orange on the flat treads between.
   // Nothing of the stream is worked out on the fan, and nothing of the fan on the stream: only where one goes over to the other.
   float core = 0.0;
+  float strandFar = 0.0;
   if (lay < 1.0) {
     float lipHot = smoothstep(-7.0, -1.0, len) * smoothstep(10.0, 3.0, len);
     float hotDown = max(lipHot, smoothstep(${f(FAN_FROM + 2)}, ${f(FAN_FROM - 14)}, len) * smoothstep(-3.0, 2.0, len));
@@ -367,15 +391,21 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     // They are marks in the lava like the rest: they ride down with it at the speed of the flow and do not stand in place.
     float b1 = vnoise(vec2(s * 0.36 + 3.0, age * 0.47 + 1.0));
     float b2 = vnoise(vec2(s * 0.62 + 17.0, age * 0.72 + 5.0));
-    float wide = 0.11 + 0.17 * hotAt;
-    core = max(1.0 - smoothstep(0.55 * wide, wide, abs(b1 - 0.5)), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, abs(b2 - 0.47)));
+    // On a tread they are strands a metre wide; down a drop and at the lip they swell and run together.
+    float wide = 0.06 + 0.075 * smoothstep(1.9, 3.4, speed) + 0.2 * lipHot;
+    float d1 = abs(b1 - 0.5);
+    float d2 = abs(b2 - 0.47);
+    core = max(1.0 - smoothstep(0.55 * wide, wide, d1), 1.0 - smoothstep(0.45 * wide, 0.85 * wide, d2));
     core *= (1.0 - smoothstep(0.62, 0.86, u)) * hotDown;
-    kelvin = mix(kelvin, mix(1400.0, 1550.0, hotAt) + 30.0 * (streak - 0.5), core);
+    kelvin = mix(kelvin, mix(1505.0, 1560.0, hotAt) + 30.0 * (streak - 0.5), core);
+    // How far this is from the nearest strand, in strand widths, its outline torn.
+    strandFar = min(d1, 1.15 * d2) / wide + 0.9 * (vnoise(vec2(s * 1.7 + 9.0, age * 2.3)) - 0.5) + 0.35 * (vnoise(vec2(s * 5.1, age * 6.1 + 3.0)) - 0.5);
   }
   // Down a drop the sheet is drawn into veils: yellow strands with thinner, redder melt between them.
-  if (fast > 0.0) {
+  float drop = smoothstep(1.9, 3.2, speed) * (1.0 - lay);
+  if (drop > 0.0) {
     float veil = vnoise(vec2(s * 1.9 + 2.0, age * 0.35)) + 0.5 * vnoise(vec2(s * 5.3, age * 0.8 + 4.0));
-    kelvin += fast * smoothstep(1.0, 7.0, len) * 110.0 * (veil - 0.95) * (1.0 - 0.75 * core);
+    kelvin += drop * smoothstep(1.0, 7.0, len) * 190.0 * (veil - 0.9) * (1.0 - 0.6 * core);
   }
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
   kelvin = min(kelvin, 1560.0);
@@ -392,6 +422,12 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
     float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1290.0, smoothstep(0.26, 0.08, cell.x));
     kelvin = mix(kelvin, skin, raft);
+    // Between the strands a tread is under its skin: dark crust that rides with the melt, orange where it meets a strand, with a
+    // crack or two alight along the flow. A drop tears it up, the lip has none yet, and the surge breaks most of it.
+    float skinOn = smoothstep(1.5, 2.3, strandFar) * (1.0 - 0.92 * smoothstep(1.9, 3.2, speed)) * smoothstep(3.0, 10.0, len) * (1.0 - 0.7 * behind) * (1.0 - lay);
+    float crustK = mix(790.0, 1030.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)) + 260.0 * smoothstep(3.1, 1.7, strandFar) + 190.0 * clamp(thread, 0.0, 1.0);
+    kelvin = mix(kelvin, crustK, skinOn);
+    raft = max(raft, skinOn);
     // Its margins are slag: a border of cooled, ropy crust a metre or so wide that the stream has frozen against its banks,
     // ragged on its inner side and torn through where a drop quickens the melt.
     float slagAt = u + 0.16 * (vnoise(vec2(len * 0.5, s > 0.0 ? 2.0 : 9.0)) - 0.5) + 0.07 * (vnoise(vec2(len * 1.9, s * 1.3)) - 0.5);
@@ -404,16 +440,12 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   if (fan > 0.0) {
     float r = length(out_);
     float calm = smoothstep(2.5, 6.0, min(length(at - vec2(-51.1, -298.4)), length(at - vec2(-28.3, -282.1))));
-    float lane = channel(fs, fl, r, 13.0, 2.0, 3.2);
-    lane = max(lane, channel(fs, fl, r, 9.0, 13.0, 2.6) * smoothstep(${f(FAN_FROM + 6)}, ${f(FAN_FROM + 16)}, fl));
-    lane = max(lane, channel(fs, fl, r, 5.2, 29.0, 1.5) * smoothstep(${f(FAN_FROM + 14)}, ${f(FAN_FROM + 30)}, fl));
+    // The rivulets are flow lines and nothing else is alight on the fan: no seam runs across the fall line.
+    float lane = braid(fs / 5.5, fl, r, 5.5, 2.0, 1.5 * (1.0 + 0.6 * behind));
     float open = smoothstep(0.0, 0.22, lane);
     open *= calm;
-    vec2 slab = plates(at / 4.7 + 1.1 * vec2(vnoise(at / 7.0), vnoise(at / 7.0 + 7.0)));
-    // The seams are widest where the fan is youngest: near the channels, down its middle and toward its edge.
-    float lively = clamp(1.25 * vnoise(at / 13.0 + 3.0) - 0.22 + 0.3 * smoothstep(0.75, 0.1, u) + 0.45 * smoothstep(0.6, 0.92, u) + 0.35 * behind, 0.0, 1.0) * (0.3 + 0.7 * calm);
-    float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.66, 0.98, lively + 0.3 * slab.y + 0.35 * (vnoise(at / 3.7 + 13.0) - 0.5));
-    float crust = mix(mix(700.0, 1060.0, pow(vnoise(at / 1.9), 2.0)), mix(1180.0, 1410.0, clamp(lively * 1.3 - 0.1 + 0.35 * (slab.y - 0.5), 0.0, 1.0)), seam);
+    // Between them the skin is whole and dark.
+    float crust = mix(600.0, 900.0, pow(vnoise(at / 1.9), 2.0));
     // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
     // A rivulet is red at its banks, orange within, and pale down its middle where it runs fastest; many have skinned over
     // and show only as a dull line with breaks in it.
@@ -423,7 +455,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     laneK = mix(laneK, 1500.0 + 45.0 * thread, smoothstep(0.62, 0.92, inLane) * (1.0 - 0.5 * smoothstep(${f(FAN_FROM + 40)}, ${f(FAN_FROM + 75)}, fl)));
     laneK = mix(laneK, mix(960.0, 1120.0, vnoise(at / 1.7 + 3.0)) + 260.0 * smoothstep(0.75, 0.95, lane) * smoothstep(0.5, 0.75, vnoise(vec2(fl * 0.3, fs * 0.2))), 0.9 * crusted);
     kelvin = mix(kelvin, laneK, fan);
-    kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.3 * behind * lively));
+    kelvin = mix(kelvin, crust, fan * (1.0 - open));
   }
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1440.0, 0.45 * behind * (1.0 - 0.7 * raft) * (0.4 + 0.6 * streak + 0.5 * thread));
@@ -460,18 +492,16 @@ void main() {
   float toeFan = smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * lava.x;
   if (toeFan > 0.0 && vWorld.y < 14.5) {
     float toeTop = 1.5 + 5.0 * vnoise(vec2(vWorld.x / 5.0, 3.0)) + 1.5 * vnoise(vec2(vWorld.x / 1.4, 7.0));
-    float toeOn = smoothstep(0.22, 0.42, vnoise(vec2(vWorld.x / 7.0, 11.0)) + 0.25 * vnoise(vWorld.xz / 1.3));
+    float toeOn = 0.7 + 0.3 * smoothstep(0.22, 0.42, vnoise(vec2(vWorld.x / 7.0, 11.0)) + 0.25 * vnoise(vWorld.xz / 1.3));
     float toe = smoothstep(toeTop, 0.55 * toeTop, vWorld.y) * toeFan * toeOn;
-    float toeK = 1390.0 + 150.0 * smoothstep(0.35, 0.75, vnoise(vec2(vWorld.x / 2.3, vWorld.y * 1.4 + uTime * 0.1))) - 240.0 * smoothstep(0.55, 0.8, vnoise(vWorld.xz / 1.1 + 9.0));
+    float toeK = 1400.0 + 175.0 * smoothstep(0.35, 0.75, vnoise(vec2(vWorld.x / 2.3, vWorld.y * 1.4))) - 240.0 * smoothstep(0.55, 0.8, vnoise(vWorld.xz / 1.1 + 9.0));
     lava.y = mix(lava.y, max(lava.y, toeK), toe);
-    float tongue = toeTop + 0.05 + 6.0 * pow(vnoise(vec2(vWorld.x / 0.8, uTime * 1.9)), 2.0) * smoothstep(0.4, 0.65, vnoise(vec2(vWorld.x / 6.0, uTime * 0.13 + 9.0)));
-    float flame = (1.0 - smoothstep(toeTop, tongue, vWorld.y)) * smoothstep(toeTop + 0.3, toeTop + 0.9, tongue) * toeFan * toeOn * (1.0 - toe);
-    lava.y = mix(lava.y, max(lava.y, mix(1120.0, 1420.0, flame)), smoothstep(0.0, 0.25, flame));
   }
   vec3 c = blackbody(lava.y);
   // The sheet's own mark: above zero the apron the river built, below zero the skinned shelf of melt on the floor of the mouth.
   float apron = max(vApron, 0.0);
-  float shelf = max(-vApron, 0.0);
+  // The shelf is level melt under a skin: the sheer face of the sill under it is rock, and no seam of the shelf runs down it.
+  float shelf = max(-vApron, 0.0) * smoothstep(0.55, 0.8, normalize(vNormal).y);
   if (lava.x < 1.0) {
     vec3 v = normalize(cameraPosition - vWorld);
     vec3 n = normalize(vNormal);
@@ -537,8 +567,8 @@ void main() {
     }
     n = normalize(n + vec3(slope.x, 0.0, slope.y) * 1.8);
     // On the fan the crust lies between open rivulets and is warm with their light.
-    vec3 glow = blackbody(1300.0) * 3.14159 * (0.16 + 0.07 * still_) * (0.5 + 0.5 * n.y);
-    c += cool * rockShade(vWorld, n, normalize(cameraPosition - vWorld), skin * 0.8, 1.0, glow, ${f(TUBE.lipZ)} - vWorld.z);
+    vec3 glow = blackbody(1300.0) * 3.14159 * (0.16 - 0.12 * still_) * (0.5 + 0.5 * n.y);
+    c += cool * rockShade(vWorld, n, normalize(cameraPosition - vWorld), skin * (0.8 - 0.45 * still_), 1.0, glow, ${f(TUBE.lipZ)} - vWorld.z);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
   if (hiddenByWall(vWorld, vIn.x)) discard;
