@@ -154,8 +154,11 @@ const crag = (phi: number, rho: number): number =>
   smooth(-60, -34, rho) *
   smooth(0, -2.5, rho) *
   (0.35 + 0.65 * Math.max(0, Math.sin(phi)));
+/** The opening is a dome and no slot: highest west of the middle, its roof comes down toward the east and its east shoulder is round,
+ *  so the east end sinks into the cliff and is no square corner. Never under 0.84: the collar must still reach the hole the land leaves. */
+const dome = (phi: number): number => 1 - 0.14 * Math.exp(-Math.pow((phi - 0.25 * Math.PI) / 0.45, 2)) - 0.07 * Math.exp(-Math.pow((phi - 0.4 * Math.PI) / 0.3, 2));
 const ragged = (phi: number, rho: number): number =>
-  rho > -1e-6 ? outline(phi, rho) + flare(phi) / 70 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2 * smooth(0, 3, rho) : (outline(phi, rho) + (flare(phi) / 70) * Math.exp(rho / 14) + crag(phi, rho)) * ribbed(phi, -rho);
+  dome(phi) * (rho > -1e-6 ? outline(phi, rho) + flare(phi) / 70 + 0.03 * (noise2(phi * 21 + 1.3, rho / 3.4) - 0.5) * 2 * smooth(0, 3, rho) : (outline(phi, rho) + (flare(phi) / 70) * Math.exp(rho / 14) + crag(phi, rho)) * ribbed(phi, -rho));
 
 /**
  * The rim of the mouth and the tube behind it, as one skin: rings from the darkness at the back, forward to the rim, then outward over the cliff.
