@@ -7,7 +7,8 @@ import { stagedSeconds } from '../shared/stage';
 import type { HeartContext, HeartPiece, SteamSource } from '../shared/context';
 import { Animal, TUFT_UP, type Env } from './animal';
 import { makeBuild, makePlan } from './herd';
-import { FRAGMENT, VERTEX } from './material';
+import { CRUST_HEIGHT_GLSL, crustUniforms } from '../lake/index';
+import { FRAGMENT, GROUND_FRAGMENT, GROUND_VERTEX, VERTEX } from './material';
 import { Skin } from './skin';
 
 export const PARTS: readonly string[] = ['crust-walkers'];
@@ -125,6 +126,19 @@ export function create(ctx: HeartContext): HeartPiece {
   const geometry = skin.build();
 
   const pixel = { value: 0.001 };
+  // Where each foot is (x, z, how far it is off the ground, the radius of its pad), one texel a foot, and the top of the crust under each:
+  // the crust is broken plates with their own levels, and a foot stands on the plate it is over.
+  const FEET = herd.length * 4;
+  const feetData = new Float32Array(FEET * 4);
+  const feetTexture = new THREE.DataTexture(feetData, FEET, 1, THREE.RGBAFormat, THREE.FloatType);
+  feetTexture.minFilter = THREE.NearestFilter;
+  feetTexture.magFilter = THREE.NearestFilter;
+  feetTexture.needsUpdate = true;
+  const ground = new THREE.WebGLRenderTarget(FEET, 1, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
+  const groundScene = new THREE.Scene();
+  const groundCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  const groundPlane = new THREE.PlaneGeometry(2, 2);
+  let groundMaterial: THREE.ShaderMaterial | null = null;
   // The pool each tuft stands in, as a light: x, z, how far it is open.
   const pools = herd.map(() => new THREE.Vector4(0, 0, 0, 0));
   const material = new THREE.ShaderMaterial({
@@ -137,6 +151,9 @@ export function create(ctx: HeartContext): HeartPiece {
       tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
       uPools: { value: pools },
+      tFeet: { value: feetTexture },
+      tGround: { value: ground.texture },
+      uFeetN: { value: FEET },
       tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
@@ -174,6 +191,11 @@ export function create(ctx: HeartContext): HeartPiece {
           wisp.strength = 0.25 * lit * here * (0.3 + 1.2 * animal.puff);
         }
         stood.feet.forEach((foot, j) => {
+          const o = (i * 4 + j) * 4;
+          feetData[o] = foot.x;
+          feetData[o + 1] = foot.z;
+          feetData[o + 2] = foot.lift / b.k;
+          feetData[o + 3] = b.padR;
           const off = Math.min(1, foot.lift / (1.2 * b.k));
           rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.0 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
         });
@@ -181,9 +203,21 @@ export function create(ctx: HeartContext): HeartPiece {
         const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - TUFT_UP * b.tendrilLen) / (2 * b.k)));
         rig.setDisc(discs, i * DISCS + 5, stood.tuft.x, stood.tuft.z, 1.1 * b.k, here * 0.5 * low);
       });
+      feetTexture.needsUpdate = true;
       skin.touch();
     },
+    // After the lake's own: the crust's height wants what the lake sets there.
     beforeSample: (renderer, camera) => {
+      if (!groundMaterial) {
+        groundMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT(CRUST_HEIGHT_GLSL), uniforms: { ...rig.uniforms, ...crustUniforms, tFeet: { value: feetTexture }, uFeetN: { value: FEET } }, depthTest: false, depthWrite: false });
+        const quad = new THREE.Mesh(groundPlane, groundMaterial);
+        quad.frustumCulled = false;
+        groundScene.add(quad);
+      }
+      const target = renderer.getRenderTarget();
+      renderer.setRenderTarget(ground);
+      renderer.render(groundScene, groundCamera);
+      renderer.setRenderTarget(target);
       renderer.getDrawingBufferSize(size);
       pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
     },
@@ -193,6 +227,10 @@ export function create(ctx: HeartContext): HeartPiece {
     dispose: () => {
       geometry.dispose();
       material.dispose();
+      groundMaterial?.dispose();
+      groundPlane.dispose();
+      ground.dispose();
+      feetTexture.dispose();
     },
   };
 }
