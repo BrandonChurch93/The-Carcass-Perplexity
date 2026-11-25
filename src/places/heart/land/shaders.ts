@@ -403,7 +403,7 @@ void main() {
     }
     // The skin of a ropy sheet is smooth: it is not read again as clinker.
     close *= 1.0 - 0.8 * sheet;
-    albedo *= mix(vec3(1.0), fine * 20.0, (steep > 0.5 ? 0.4 : 0.5) * close);
+    albedo *= mix(vec3(1.0), fine * 20.0, (steep > 0.5 ? 0.22 : 0.5) * close);
     vec2 t2 = TURN * ((fineNh.rg - 0.5) * vec2(1.0, -1.0));
     n = normalize(n + vec3(t2.x, 0.0, t2.y) * 0.7 * close * (1.0 - steep));
     occ *= mix(1.0, 0.6 + 0.4 * smoothstep(0.2, 0.6, fineNh.b), close);
@@ -437,11 +437,13 @@ void main() {
   // The crag of the line view carries the vent's stain high on its face.
   vec3 toStain = vWorld - uStain.xyz;
   float sd = length(toStain * vec3(1.0, 0.75, 1.0)) / uStain.w;
+  // The crag itself is the darkest rock of the view: sooted, in the shade of its own mass, with no red in it.
+  albedo *= mix(1.0, 0.6, smoothstep(3.4, 1.8, sd) * steep);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
     float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.35 + 0.65 * steep);
-    albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.45 * on);
-    albedo = mix(albedo, vec3(0.42, 0.37, 0.16) * (0.55 + 0.9 * height), 0.6 * on * smoothstep(0.62, 0.9, blot + 0.4 * (height - 0.5)));
+    albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.25 * on);
+    albedo = mix(albedo, vec3(0.42, 0.37, 0.16) * (0.55 + 0.9 * height), 0.35 * on * smoothstep(0.62, 0.9, blot + 0.4 * (height - 0.5)));
   }
   #endif
 
