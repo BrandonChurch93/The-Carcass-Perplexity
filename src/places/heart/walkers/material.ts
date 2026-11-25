@@ -193,17 +193,17 @@ void main() {
   // The dust is the crust's own: a foot is as dark as what it stands on.
   albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
   // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.034, 0.027, 0.024) * (0.6 + 0.6 * grit), 0.92 * smoothstep(0.8, 0.2, vWorld.y) * (1.0 - tendril));
+  albedo = mix(albedo, vec3(0.034, 0.027, 0.024) * (0.6 + 0.6 * grit), 0.92 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
   float own = (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (1.0 - 0.7 * gap);
   float occ = vInfo.y * own;
   // Caked ash has no shine at all, even seen along it: a foot is as dull as the crust.
-  float caked = smoothstep(0.9, 0.25, vWorld.y) * (1.0 - tendril);
+  float caked = max(smoothstep(0.9, 0.25, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.93, 1.25, caked), occ);
   // The lake's light from below is not held back by the shade a body throws on itself from the sky.
   if (own - occ > 0.03 && n.y < 0.3) c += albedo * lakeIrradianceFar(vWorld, n) * (own - occ) / 3.14159;
   // The hide is wet with what it sweats: a narrow glint of the sky along whatever turns up to it.
-  float wet = (1.0 - tendril) * (1.0 - rag) * (0.35 + 0.65 * smoothstep(0.35, 0.7, high)) * smoothstep(0.35, 1.6, vWorld.y);
+  float wet = (1.0 - tendril) * (1.0 - rag) * (0.35 + 0.65 * smoothstep(0.35, 0.7, high)) * smoothstep(0.35, 1.6, vWorld.y) * (1.0 - smoothstep(3.4, 3.9, kind));
   vec3 rs = reflect(-v, n);
   if (rs.y > 0.15) {
     float nv = clamp(dot(n, v), 0.0, 1.0);
