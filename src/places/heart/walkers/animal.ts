@@ -126,6 +126,15 @@ const TENDRIL_SIDES = 6;
 const RAG_RINGS = 5;
 const RAG_SIDES = 4;
 
+interface Rag {
+  tube: Tube;
+  local: Float32Array;
+  at: V3;
+  length: number;
+  phase: number;
+  twist: number;
+}
+
 interface LegTable {
   tube: Tube;
   /** Per ring: the bone it is on, or the joint whose bend it is in, and how far along. */
@@ -135,6 +144,8 @@ interface LegTable {
   local: Float32Array;
   /** First ring of the pad. */
   pad: number;
+  /** Per ring: how far the bone bows from the straight line between its joints, forward and across, metres. */
+  bow: Float32Array;
 }
 
 export class Animal {
@@ -144,7 +155,8 @@ export class Animal {
   private readonly neckLocal: Float32Array;
   private readonly legs: LegTable[] = [];
   private readonly tendrils: { tube: Tube; local: Float32Array; angle: number; out: number; length: number; phase: number; parent: number; at: number; turn: number }[] = [];
-  private readonly rags: { tube: Tube; local: Float32Array; at: V3; length: number; phase: number; twist: number }[] = [];
+  private readonly rags: Rag[] = [];
+  private readonly shreds: (Rag & { leg: number; node: number })[] = [];
   private readonly roots: Float32Array;
   private readonly ankle: number;
   private readonly fillet: [number, number, number];
@@ -199,34 +211,22 @@ export class Animal {
       skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 0);
     }
 
-    // Rags of dead skin that hang from the keel and the flanks.
+    // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
     const rags = 7 + Math.floor(hash(seed, 21) * 6);
     for (let n = 0; n < rags; n++) {
-      const tube = skin.tube(RAG_RINGS, RAG_SIDES);
-      const local = new Float32Array(RAG_RINGS * RAG_SIDES * 2);
       const i = Math.floor(lerp(0.22, 0.8, hash(n, seed + 22)) * (BODY_RINGS - 1));
       const j = Math.floor(lerp(0.62, 0.88, hash(n, seed + 23)) * BODY_SIDES);
       const q = (i * BODY_SIDES + j) * 3;
-      const length = (0.35 + 1.3 * Math.pow(hash(n, seed + 24), 2)) * k;
-      const broad = (0.03 + 0.09 * Math.pow(hash(n, seed + 25), 2)) * k;
-      for (let r = 0; r < RAG_RINGS; r++) {
-        const u = r / (RAG_RINGS - 1);
-        const w = broad * (r === RAG_RINGS - 1 ? 0.15 : 1 - 0.6 * u + 0.5 * (hash(n * 5 + r, seed + 26) - 0.5));
-        for (let side = 0; side < RAG_SIDES; side++) {
-          const a = (side / RAG_SIDES) * Math.PI * 2;
-          local[(r * RAG_SIDES + side) * 2] = Math.cos(a) * w;
-          local[(r * RAG_SIDES + side) * 2 + 1] = Math.sin(a) * 0.022 * k * (1 - 0.6 * u);
-        }
-        for (let side = 0; side <= RAG_SIDES; side++) skin.describe(tube, r, side, u * length + n, (side / RAG_SIDES) * 2 * broad, 0.22 + 0.1 * u, 0.5 + 0.3 * u, Math.max(w, 0.03), seed, 5, u);
-      }
-      this.rags.push({
-        tube,
-        local,
-        at: [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9],
-        length,
-        phase: hash(n, seed + 27) * 6.28,
-        twist: hash(n, seed + 28) * 3.14,
-      });
+      const rag = this.rag(n, (0.35 + 1.3 * Math.pow(hash(n, seed + 24), 2)) * k, (0.03 + 0.09 * Math.pow(hash(n, seed + 25), 2)) * k);
+      rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
+      this.rags.push(rag);
+    }
+    for (let n = 0; n < 16; n++) {
+      if (hash(n, seed + 31) < 0.3) continue;
+      const node = 1 + (n & 1);
+      const rag = this.rag(40 + n, (0.25 + 0.75 * Math.pow(hash(n, seed + 32), 2)) * k, (0.025 + 0.06 * hash(n, seed + 33)) * k);
+      rag.at = [(hash(n, seed + 34) - 0.5) * 0.2 * k, -(0.1 + 0.08 * hash(n, seed + 35)) * k * b.legR, (hash(n, seed + 36) - 0.5) * 0.2 * k];
+      this.shreds.push({ ...rag, leg: n >> 2, node });
     }
 
     // The neck: thick where it leaves the shoulders, thin along its length, a ribbed crown where the tendrils start.
@@ -294,6 +294,60 @@ export class Animal {
     this.roots = new Float32Array(mains * TENDRIL_RINGS * 6);
   }
 
+  private rag(n: number, length: number, broad: number): Rag {
+    const { skin } = this;
+    const k = this.b.k;
+    const seed = this.b.seed;
+    const tube = skin.tube(RAG_RINGS, RAG_SIDES);
+    const local = new Float32Array(RAG_RINGS * RAG_SIDES * 2);
+    for (let r = 0; r < RAG_RINGS; r++) {
+      const u = r / (RAG_RINGS - 1);
+      const w = broad * (r === RAG_RINGS - 1 ? 0.15 : 1 - 0.6 * u + 0.5 * (hash(n * 5 + r, seed + 26) - 0.5));
+      for (let side = 0; side < RAG_SIDES; side++) {
+        const a = (side / RAG_SIDES) * Math.PI * 2;
+        local[(r * RAG_SIDES + side) * 2] = Math.cos(a) * w;
+        local[(r * RAG_SIDES + side) * 2 + 1] = Math.sin(a) * 0.022 * k * (1 - 0.6 * u);
+      }
+      for (let side = 0; side <= RAG_SIDES; side++) skin.describe(tube, r, side, u * length + n, (side / RAG_SIDES) * 2 * broad, 0.22 + 0.1 * u, 0.5 + 0.3 * u, Math.max(w, 0.03), seed, 5, u);
+    }
+    return { tube, local, at: [0, 0, 0], length, phase: hash(n, seed + 27) * 6.28, twist: hash(n, seed + 28) * 3.14 };
+  }
+
+  // A rag hangs from a point and swings a little behind it.
+  private hang(rag: Rag, x: number, y: number, z: number, f: V3, r: V3, lean: number, seconds: number): void {
+    const { skin } = this;
+    let px = x;
+    let py = y;
+    let pz = z;
+    const ct = Math.cos(rag.twist);
+    const st = Math.sin(rag.twist);
+    const wx = f[0] * ct + r[0] * st;
+    const wz = f[2] * ct + r[2] * st;
+    const wl = Math.hypot(wx, wz) || 1;
+    const nx = wx / wl;
+    const nz = wz / wl;
+    const seg = rag.length / (RAG_RINGS - 1);
+    for (let i = 0; i < RAG_RINGS; i++) {
+      const uu = i / (RAG_RINGS - 1);
+      const swing = uu * (0.14 * Math.sin(seconds * 1.3 + rag.phase - uu * 1.5) + 0.06 * Math.sin(seconds * 2.9 + rag.phase * 2) + lean) + 0.3 * Math.sin(rag.phase * 5) * uu + 0.5 * (hash(i, rag.phase) - 0.5);
+      // It hangs: down, and across its own width by the swing.
+      let dx = -nz * swing;
+      let dy = -1;
+      let dz = nx * swing;
+      const dl = Math.hypot(dx, dy, dz);
+      dx /= dl;
+      dy /= dl;
+      dz /= dl;
+      if (i > 0) {
+        px += dx * seg;
+        py = Math.max(0.03, py + dy * seg);
+        pz += dz * seg;
+      }
+      skin.ring(rag.tube, i, px, py, pz, nx, 0, nz, dy * nz, dz * nx - dx * nz, -dy * nx, rag.local, i * RAG_SIDES * 2);
+    }
+    skin.normals(rag.tube);
+  }
+
   // The lower leg must reach the farthest pad of a stride with a little bend to spare: measure it over a cycle.
   private lowerLeg(): number {
     const b = this.b;
@@ -350,22 +404,22 @@ export class Animal {
     // The pad: height above its sole and radius, in units of the pad's radius; the last rings close the sole.
     const PAD: [number, number][] = [
       [1, 0.17],
-      [0.86, 0.175],
-      [0.72, 0.19],
-      [0.58, 0.24],
-      [0.44, 0.36],
-      [0.32, 0.58],
-      [0.22, 0.8],
-      [0.13, 0.95],
-      [0.06, 1],
-      [0.015, 0.96],
+      [0.9, 0.2],
+      [0.8, 0.3],
+      [0.7, 0.48],
+      [0.58, 0.68],
+      [0.44, 0.84],
+      [0.3, 0.94],
+      [0.16, 1],
+      [0.06, 0.98],
+      [0.015, 0.9],
       [0, 0.7],
       [0, 0.02],
     ];
     const pad = along.length;
     const rings = pad + PAD.length;
     const tube = this.skin.tube(rings, LEG_SIDES);
-    const table: LegTable = { tube, bone: new Int8Array(rings), joint: new Int8Array(rings).fill(-1), value: new Float32Array(rings), local: new Float32Array(rings * LEG_SIDES * 2), pad };
+    const table: LegTable = { tube, bone: new Int8Array(rings), joint: new Int8Array(rings).fill(-1), value: new Float32Array(rings), local: new Float32Array(rings * LEG_SIDES * 2), pad, bow: new Float32Array(rings * 2) };
     const starts = [0, S1, S2, S3, S4];
     const p1 = hash(seed, 1) * 6.28;
     const p2 = hash(seed, 2) * 6.28;
@@ -391,6 +445,16 @@ export class Animal {
       else r = lerp(0.1, 0.085, Math.min(1, (s - S2) / this.meta));
       r += 0.085 * gauss((s - S1) / (0.2 * k)) + 0.1 * gauss((s - S2) / (0.17 * k)) + 0.06 * gauss((s - S3) / (0.14 * k));
       r *= k * b.legR;
+      // No bone is straight: each bows a little between its joints.
+      const lens = [S1, this.tibia, this.meta];
+      for (let n = 0; n < 3; n++) {
+        const u = (s - (starts[n] as number)) / (lens[n] as number);
+        if (u > 0 && u < 1) {
+          const arc = Math.pow(Math.sin(Math.PI * u), 1.5) * (lens[n] as number);
+          table.bow[i * 2] = arc * 0.05 * (hash(seed, 30 + n) - 0.35) * (n === 1 ? -1 : 1);
+          table.bow[i * 2 + 1] = arc * 0.04 * (hash(seed, 40 + n) - 0.5);
+        }
+      }
       let shape = 0;
       if (inPad) {
         const row = PAD[i - pad] as [number, number];
@@ -401,7 +465,7 @@ export class Animal {
       for (let n = 0; n < LEG_SIDES; n++) {
         const a = (n / LEG_SIDES) * Math.PI * 2;
         const tendon = 1 + 0.08 * Math.cos(2 * a + 0.4) + 0.05 * Math.cos(3 * a + p1) + 0.16 * (wrap((s * 2.4) / k, a, 3, seed) - 0.5) + 0.07 * (wrap((s * 6) / k, a, 5, seed + 1) - 0.5);
-        const toes = 1 + 0.11 * Math.cos(3 * a + p1) + 0.07 * Math.cos(5 * a + p2) + 0.16 * Math.max(0, Math.cos(a));
+        const toes = 0.94 + 0.2 * Math.cos(3 * a + p1) + 0.09 * Math.cos(2 * a + p2) + 0.07 * Math.cos(5 * a + p2 * 2) + 0.18 * Math.max(0, Math.cos(a));
         const m = lerp(tendon, toes, shape);
         table.local[(i * LEG_SIDES + n) * 2] = Math.cos(a) * r * m * lerp(1.12, 1, shape);
         table.local[(i * LEG_SIDES + n) * 2 + 1] = Math.sin(a) * r * m * lerp(0.9, 1, shape);
@@ -551,42 +615,7 @@ export class Animal {
 
     // The rags hang from the body and swing a little behind it.
     for (const rag of this.rags) {
-      let px = cx + f[0] * rag.at[0] + u[0] * rag.at[1] + r[0] * rag.at[2];
-      let py = cy + f[1] * rag.at[0] + u[1] * rag.at[1] + r[1] * rag.at[2];
-      let pz = cz + f[2] * rag.at[0] + u[2] * rag.at[1] + r[2] * rag.at[2];
-      const ct = Math.cos(rag.twist);
-      const st = Math.sin(rag.twist);
-      const wx = f[0] * ct + r[0] * st;
-      const wz = f[2] * ct + r[2] * st;
-      const seg = rag.length / (RAG_RINGS - 1);
-      for (let i = 0; i < RAG_RINGS; i++) {
-        const uu = i / (RAG_RINGS - 1);
-        const swing = uu * (0.16 * Math.sin(seconds * 1.3 + rag.phase - uu * 1.5) + 0.07 * Math.sin(seconds * 2.9 + rag.phase * 2) + 0.5 * roll + 0.12 * (hash(i, rag.phase) - 0.5));
-        // It hangs: down, and across its own width by the swing.
-        const ax = -wz;
-        const az = wx;
-        let dx = ax * swing;
-        let dy = -1;
-        let dz = az * swing;
-        const dl = Math.hypot(dx, dy, dz);
-        dx /= dl;
-        dy /= dl;
-        dz /= dl;
-        if (i > 0) {
-          px += dx * seg;
-          py += dy * seg;
-          pz += dz * seg;
-        }
-        // The frame: the width of the rag, and across it.
-        const nx2 = wx;
-        const ny2 = 0;
-        const nz2 = wz;
-        const bx2 = dy * nz2 - dz * ny2;
-        const by2 = dz * nx2 - dx * nz2;
-        const bz2 = dx * ny2 - dy * nx2;
-        skin.ring(rag.tube, i, px, py, pz, nx2, ny2, nz2, bx2, by2, bz2, rag.local, i * RAG_SIDES * 2);
-      }
-      skin.normals(rag.tube);
+      this.hang(rag, cx + f[0] * rag.at[0] + u[0] * rag.at[1] + r[0] * rag.at[2], cy + f[1] * rag.at[0] + u[1] * rag.at[1] + r[1] * rag.at[2], cz + f[2] * rag.at[0] + u[2] * rag.at[1] + r[2] * rag.at[2], f, r, 0.5 * roll, seconds);
     }
 
     // Legs.
@@ -635,16 +664,21 @@ export class Animal {
       const end: V3 = [hock[0] + (hx / hl) * this.meta, hock[1] + (hy / hl) * this.meta, hock[2] + (hz / hl) * this.meta];
       const base: V3 = [end[0] - axis[0] * this.ankle, end[1] - axis[1] * this.ankle, end[2] - axis[2] * this.ankle];
       this.writeLeg(table, [hip, knee, hock, end, base], fwd, 1 - 0.07 * smooth(0, 0.2 * k, foot.lift));
+      for (const shred of this.shreds) {
+        if (shred.leg !== j) continue;
+        const at = shred.node === 1 ? knee : hock;
+        this.hang(shred, at[0] + shred.at[0], at[1] + shred.at[1], at[2] + shred.at[2], fwd, right, 0, seconds);
+      }
     }
 
     // Neck.
     const root: V3 = [
-      cx + f[0] * 0.33 * b.bodyLen - u[0] * 0.28 * b.bodyKeel,
-      cy + f[1] * 0.33 * b.bodyLen - u[1] * 0.28 * b.bodyKeel,
-      cz + f[2] * 0.33 * b.bodyLen - u[2] * 0.28 * b.bodyKeel,
+      cx + f[0] * 0.41 * b.bodyLen - u[0] * 0.14 * b.bodyKeel,
+      cy + f[1] * 0.41 * b.bodyLen - u[1] * 0.14 * b.bodyKeel,
+      cz + f[2] * 0.41 * b.bodyLen - u[2] * 0.14 * b.bodyKeel,
     ];
     const fed = env.drift(aim.target[0], aim.target[1], seconds);
-    const low: V3 = [fed[0], 0.5 * b.tendrilLen, fed[1]];
+    const low: V3 = [fed[0], 0.36 * b.tendrilLen, fed[1]];
     const high: V3 = [
       root[0] + fwd[0] * aim.raised[0] + right[0] * aim.raised[2],
       Math.max(0.8 * b.tendrilLen, root[1] + aim.raised[1]),
@@ -715,7 +749,9 @@ export class Animal {
       const bx = ty * nz - tz * ny;
       const by = tz * nx - tx * nz;
       const bz = tx * ny - ty * nx;
-      skin.ring(tube, i, px, py, pz, nx, ny, nz, bx, by, bz, table.local, i * LEG_SIDES * 2, i >= table.pad ? spread : 1);
+      const b0 = table.bow[i * 2] as number;
+      const b1 = table.bow[i * 2 + 1] as number;
+      skin.ring(tube, i, px + nx * b0 + bx * b1, py + ny * b0 + by * b1, pz + nz * b0 + bz * b1, nx, ny, nz, bx, by, bz, table.local, i * LEG_SIDES * 2, i >= table.pad ? spread : 1);
     }
     skin.normals(tube);
   }
@@ -925,7 +961,7 @@ export class Animal {
         const cz2 = dx * ay - dy * ax;
         skin.ring(t.tube, i, px, py, pz, ax, ay, az, cx2, cy2, cz2, t.local, i * TENDRIL_SIDES * 2);
         // The part of a root that lies on the crust: where the lake is open under it, the hide makes it glow.
-        const heat = smooth(0.25, 0.9, uu) * smooth(0.3 * b.k, 0.08 * b.k, py);
+        const heat = smooth(0.25, 0.85, uu) * smooth(0.45 * b.k, 0.1 * b.k, py);
         skin.setHeat(t.tube, i, heat);
       }
       skin.normals(t.tube);

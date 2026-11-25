@@ -72,7 +72,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     standH: 9.0 * k * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     legR: lerp(0.86, 0.76, c.skater) * c.heavy,
-    padR: 0.62 * k * v(0.92, 1.1),
+    padR: 0.56 * k * v(0.92, 1.1),
     neckLen: 11.4 * k * c.neck,
     neckR: 0.33 * k * c.heavy,
     tendrils: 10 + (index % 4),
@@ -101,16 +101,16 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const staged = (w.heading * Math.PI) / 180;
   const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'feeds' && c.role !== 'tastes' && c.role !== 'shifts';
   // How far ahead of its shoulders the tuft comes down when the neck is drawn out with a little slack.
-  const drop = b.standH - 0.28 * b.bodyKeel - 0.3 * k - 0.5 * b.tendrilLen;
-  const reach = Math.sqrt(Math.max(4, 0.9 * b.neckLen * (0.9 * b.neckLen) - drop * drop));
+  const drop = b.standH - 0.14 * b.bodyKeel - 0.3 * k - 0.36 * b.tendrilLen;
+  const reach = Math.sqrt(Math.max(4, 0.86 * b.neckLen * (0.86 * b.neckLen) - drop * drop));
   const phase = w.phase;
 
   // The seam it can reach from where it stands, if there is one: the point of it nearest to where the tuft would come down.
   const feedAt = (x: number, zz: number, yaw: number, side: number): [number, number, number] => {
     const fx = Math.sin(yaw);
     const fz = -Math.cos(yaw);
-    const rx = x + fx * 0.33 * b.bodyLen;
-    const rz = zz + fz * 0.33 * b.bodyLen;
+    const rx = x + fx * 0.41 * b.bodyLen;
+    const rz = zz + fz * 0.41 * b.bodyLen;
     let best: [number, number, number] = [rx + fx * reach - fz * side, rz + fz * reach + fx * side, 1e9];
     let score = 1e9;
     for (let turn = -1.2; turn <= 1.2; turn += 0.15) {
@@ -167,7 +167,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
         return {
           down: 0,
           target,
-          raised: [b.neckLen * (0.5 + 0.06 * Math.sin(seconds * 0.33 + 1)), b.neckLen * (0.2 + 0.07 * Math.sin(seconds * 0.41 + phase * 6)), b.neckLen * 0.3 * Math.sin(seconds * 0.47 + phase * 6)],
+          raised: [b.neckLen * (0.5 + 0.06 * Math.sin(seconds * 0.33 + 1)), b.neckLen * (0.1 + 0.07 * Math.sin(seconds * 0.41 + phase * 6)), b.neckLen * 0.3 * Math.sin(seconds * 0.47 + phase * 6)],
           shape: 0.8,
         };
       }

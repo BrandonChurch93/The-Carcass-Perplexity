@@ -104,16 +104,16 @@ void main() {
   float mottle = vnoise(vUv * 0.9 + seed * 7.0);
   float tone = clamp(pale + 0.2 * (mottle - 0.5) + 0.3 * (lum - 1.0) - 0.2 * ringAmp * (1.0 - ridge), 0.0, 1.0);
   vec3 soot = vec3(0.03, 0.029, 0.03);
-  vec3 skin = vec3(0.19, 0.18, 0.168) * (0.45 + 0.55 * lum);
+  vec3 skin = vec3(0.25, 0.24, 0.228) * (0.5 + 0.5 * mix(lum, 1.0, 0.35 * limb));
   vec3 bone = vec3(0.45, 0.41, 0.34) * (0.5 + 0.5 * lum);
   vec3 albedo = mix(mix(soot, skin, smoothstep(0.0, 0.5, tone)), bone, smoothstep(0.5, 1.0, tone)) * (0.35 + 0.65 * crack);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
   float up = smoothstep(0.15, 0.75, ng.y);
-  float ash = up * smoothstep(0.8, 0.3, high + 0.4 * grit - 0.5 * up) * (1.0 - tendril) * (0.55 + 0.45 * body);
+  float ash = up * smoothstep(0.85, 0.3, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.6 + 0.4 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
-  albedo = mix(albedo, vec3(0.25, 0.24, 0.235) * (0.7 + 0.5 * grit), clamp(0.8 * ash + 0.6 * dust, 0.0, 0.9));
+  albedo = mix(albedo, vec3(0.33, 0.325, 0.32) * (0.7 + 0.5 * grit), clamp(0.85 * ash + 0.6 * dust, 0.0, 0.9));
 
   float occ = vInfo.y * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   vec3 c = rigShade(vWorld, n, v, albedo, 0.93, occ);
@@ -122,8 +122,8 @@ void main() {
   c += thin * albedo * lakeIrradiance(vWorld, vec3(0.0, -1.0, 0.0)) * occ / 3.14159;
   // Where a root lies in open lava it glows from the tip: the lake itself says where it is open.
   if (vHeat > 0.001) {
-    float open = dot(lakeGlow(vWorld.xz, 0.35), vec3(0.3, 0.6, 0.1)) / dot(blackbody(1150.0), vec3(0.3, 0.6, 0.1));
-    float hot = vHeat * smoothstep(0.04, 0.45, open);
+    float open = dot(lakeGlow(vWorld.xz, 0.6), vec3(0.3, 0.6, 0.1)) / (max(uCast, 0.05) * dot(blackbody(1150.0), vec3(0.3, 0.6, 0.1)));
+    float hot = vHeat * smoothstep(0.02, 0.3, open);
     c += blackbody(mix(820.0, 1150.0, hot)) * hot * hot * 0.6;
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
