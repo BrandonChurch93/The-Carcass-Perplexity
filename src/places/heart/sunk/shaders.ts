@@ -162,10 +162,16 @@ void main() {
   float sheet = mk.a;
   float onRope = step(0.03, ln.a);
   vec2 ropeAt = vec2(texture2D(tAlong, fieldUv(l)).r, ln.r) + sheet * 37.0;
-  vec2 uvA = mix(q / 6.1, ropeAt / 1.7, onRope);
+  // A steep face of the skin that is no rope is laid by its own height and its run along the ground, so the ropy skin
+  // hangs round it in folds and is not drawn out down it.
+  float steep = smoothstep(1.0, 1.6, length(grad)) * (1.0 - onRope) * folded;
+  vec2 lean = abs(grad);
+  float faces = step(lean.x, lean.y);
+  vec2 wallAt = vec2(mix(l.y, l.x, faces), vWorld.y * 1.4) + 11.0;
+  vec2 uvA = mix(mix(q / 6.1, ropeAt / 1.7, onRope), wallAt / 2.2, steep);
   vec4 nhA = texture2D(tRopyNh, uvA);
   vec3 rope = texture2D(tRopy, uvA, -0.3).rgb;
-  vec2 qd = mix(q, ropeAt, onRope);
+  vec2 qd = mix(mix(q, ropeAt, onRope), wallAt, steep);
   vec2 uvD = vec2(qd.x * 0.8 - qd.y * 0.6, qd.x * 0.6 + qd.y * 0.8) / 1.37 + 0.13;
   vec4 grainNh = vec4(0.5);
   if (near > 0.0) grainNh = texture2D(tSkinNh, uvD, -0.7);
@@ -176,7 +182,7 @@ void main() {
   vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * tone;
   // The ropy skin has a grain the lake's plain plates have not.
   // On the flank of a rope the textures, which are laid flat, would be drawn out down it: there the fibres carry the surface.
-  float wall = smoothstep(0.7, 1.8, length(grad)) * (1.0 - onRope);
+  float wall = smoothstep(0.7, 1.8, length(grad)) * (1.0 - onRope) * (1.0 - steep);
   grainNh = mix(vec4(0.5), grainNh, 1.0 - 0.6 * wall);
   float flat2 = folded * mid * (1.0 - 0.5 * wall);
   vec2 fromBody = l - vec2(${BODY.centre.x.toFixed(2)}, ${BODY.centre.z.toFixed(2)});
@@ -188,7 +194,7 @@ void main() {
   albedo *= mix(vec3(1.0), vec3(1.22, 1.08, 0.96) * (1.0 + 0.3 * ashed), folded);
   albedo = mix(albedo, ROPE * (0.8 + 0.4 * small), 0.9 * roped);
   float lum = dot(rope, vec3(5.7));
-  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.13 + 1.05 * lum * lum, onRope) * (0.85 + 0.3 * grainNh.b), flat2);
+  albedo *= mix(1.0, mix(0.35 + 0.65 * lum, 0.13 + 1.05 * lum * lum, max(onRope, steep)) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.
   float count = cordCount(ln.r + sheet * 94.0);
@@ -217,7 +223,8 @@ void main() {
   vec2 nd = nhA.rg - 0.5;
   // Laid on a rope, the slopes of the texture lie along it and round it; round it they are steeper on the ground than on the rope.
   vec2 onIt = turned(vec2(-ln.b, ln.g) * nd.x + ln.gb * nd.y) * (1.0 + min(dot(grad, grad), 3.0)) * 1.3;
-  vec2 detail = mix(nd, onIt, onRope) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
+  vec2 onWall = turned(mix(vec2(0.0, 1.0), vec2(1.0, 0.0), faces) * nd.x + grad / max(length(grad), 1e-3) * nd.y * 2.0) * 1.5;
+  vec2 detail = mix(mix(nd, onIt, onRope), onWall, steep) * 0.7 * mid * (1.0 - 0.6 * amp) * (1.0 - 0.85 * wall);
   detail += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.35 * near;
   vec2 gl = grad + cordSlope;
   vec2 sw = turned(gl) - detail * folded;
@@ -328,7 +335,7 @@ void main() {
   vec3 bark = vec3(0.088, 0.072, 0.061) * (0.3 + 9.0 * grey) * (0.45 + 1.25 * hideNh.b * hideNh.b) * mix(0.6, 1.5, isBody);
   // The plates that lift off it are the same hide, dried pale.
   float plateTone = 0.68 + 0.5 * smoothstep(0.72, 1.0, vSurf.y);
-  vec3 scab = vec3(0.22, 0.185, 0.135) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone;
+  vec3 scab = vec3(0.22, 0.185, 0.135) * (0.55 + 5.0 * tone) * (0.7 + 0.5 * flakeNh.b) * plateTone * (1.0 + 0.25 * isBody);
 
   float plated = smoothstep(0.35, 0.6, vSurf.y);
   float furrow = isBody * vSurf.w;
@@ -350,7 +357,7 @@ void main() {
   float under = smoothstep(0.03, 0.3, vSurf.y) * (1.0 - smoothstep(0.3, 0.62, vSurf.y));
   // Between the plates the cords of the hull's hide are dry and grey-brown on their backs; the furrows between them are black.
   float ridge = isBody * (1.0 - plated) * smoothstep(0.18, 0.5, hideNh.b * (1.0 - furrow) + 0.25 * (lump - 0.5));
-  albedo = mix(albedo * (1.0 - 0.6 * furrow), vec3(0.2, 0.19, 0.18) * (0.6 + 6.0 * grey), 0.8 * ridge);
+  albedo = mix(albedo * (1.0 - 0.6 * furrow), vec3(0.15, 0.125, 0.105) * (0.6 + 6.0 * grey), 0.8 * ridge);
 
   // The lava that climbed it and froze. Its edge is cut by the grain of the skin so it is not a drawn line.
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);

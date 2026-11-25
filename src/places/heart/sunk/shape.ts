@@ -108,18 +108,6 @@ function runOut(x: number, z: number): number {
 }
 
 /** A plate of the lake's crust that the front broke off and tilted up against itself, or a piece of one lying before it. */
-interface Slab {
-  x: number;
-  z: number;
-  cos: number;
-  sin: number;
-  long: number;
-  wide: number;
-  /** Metres it rises for each metre toward the mound. */
-  tilt: number;
-  /** Metres its middle stands over the crust. */
-  lift: number;
-}
 
 // The rounded front of a sheet of lava, `inside` metres in from its edge: it rises steeply and levels off at `thick`.
 function frontOf(inside: number, thick: number): number {
@@ -186,12 +174,12 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
   let plate = 0;
   if (fine) {
     // The hide dried onto the frame in cords that run the length of the body and wind a little round it, as it twisted going down.
-    const wind = a + 1.1 * along + 0.3 * Math.sin(s * 1.3 + 0.7) + 0.5 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
-    const f1 = Math.abs(Math.sin(wind * 4.5 + 2.6 * noise3(s * 0.5 + 5, dy * 1.2, dz * 1.2)));
+    const wind = a + 2.3 * along + 0.45 * Math.sin(s * 1.3 + 0.7) + 1.1 * (noise3(s * 0.4 + 9, dy, dz) - 0.5);
+    const f1 = Math.abs(Math.sin(wind * 2.0 + 5.5 * noise3(s * 0.45 + 5, dy * 0.9, dz * 0.9)));
     const f2 = Math.abs(Math.sin(wind * 15 + 2.4 * noise3(s * 0.8 + 5, dy * 1.7, dz * 1.7) + 1.5 * f1));
     furrow = Math.pow(1 - f1, 1.6);
     const full = Math.min(1, ring * 1.4);
-    r -= (0.1 * furrow * (0.4 + 1.2 * dry) + 0.035 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
+    r -= (0.14 * furrow * (0.4 + 1.2 * dry) + 0.03 * Math.pow(1 - f2, 2.2) * (0.4 + 1.2 * dry)) * full;
     // The frame under it: ribs across the flank, the spine as a keel.
     const ribs = Math.pow(0.5 + 0.5 * Math.cos(s * 6.8 + 1.1 * Math.sin(a * 2 + s) + 2.0 * noise2(s * 0.9, dy * 1.3)), 3);
     r += 0.03 * ribs * smooth(0.15, 0.75, Math.abs(dz)) * ring;
@@ -199,9 +187,9 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     r += 0.06 * spine * (0.6 + 0.4 * Math.cos(s * 11));
     r += 0.025 * (noise3(s * 7, dy * 5, dz * 5) - 0.5);
     // The same plates as on the trunks, on the side that looks up: 20 to 60 cm, ragged, lifting at their edges.
-    const cell = cells2((a / (Math.PI * 2)) * 30 + 0.5 * Math.sin(s * 1.9), s * 0.8 + 0.6 * noise2(a * 2, s + 3), 30);
+    const cell = cells2((a / (Math.PI * 2)) * 20 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 1.3 + 0.9 * noise2(a * 2, s + 3), 20);
     const id = cell[1];
-    const upper = smooth(-0.1, 0.55, dy) * Math.min(1, ring * 1.6);
+    const upper = smooth(0.15, 0.75, dy) * Math.min(1, ring * 1.6);
     const gone = 1 - 0.5 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
     const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.2 * (noise2(a * 14, s * 4) - 0.5) + 0.08 * (noise2(a * 41, s * 13 + 2) - 0.5);
     plate = id > gone ? smooth(0, 0.03, inside) : 0;
@@ -423,6 +411,8 @@ interface Rope {
 }
 
 const DEG = Math.PI / 180;
+/** Metres a pile of ropes stands as it is counted, and the most it stands over that. */
+const PILE = { knee: 0.38, over: 0.34 };
 /** The eye of the swirl, on the side the crust left by. */
 export const EYE: [number, number] = [-7.3, 3.2];
 
@@ -516,40 +506,6 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const box = FIELD.half - 1.3 - Math.max(Math.abs(x - FIELD.cx), Math.abs(z - FIELD.cz));
     return Math.min(runOut(x, z) - d - toes, box);
   };
-  // The slabs stand where the front is, at chosen bearings; smaller pieces lie about them.
-  const slabs: Slab[] = [];
-  const bearings: [number, number, number, number][] = [
-    [128, 0.8, 0.55, 0.2],
-    [63, 0.65, 0.5, 0.26],
-    [171, 0.6, 0.4, 0.18],
-    [22, 0.7, 0.45, 0.24],
-    [205, 0.5, 0.45, 0.2],
-    [-12, 0.45, 0.35, 0.24],
-    [98, 0.5, 0.4, 0.15],
-    [146, 0.4, 0.3, 0.28],
-  ];
-  bearings.forEach(([deg, long, wide, tilt], i) => {
-    const c = Math.cos((deg * Math.PI) / 180);
-    const sn = Math.sin((deg * Math.PI) / 180);
-    let far = 2;
-    while (far < FIELD.half && within(FIELD.cx + c * far, FIELD.cz + sn * far) > 0) far += 0.05;
-    const turn = 0.5 * (noise2(i * 3.7, 1.3) - 0.5);
-    const cs = Math.cos(turn);
-    const st = Math.sin(turn);
-    const sx = FIELD.cx + c * (far + 0.55 * long);
-    const sz = FIELD.cz + sn * (far + 0.55 * long);
-    slabs.push({ x: sx, z: sz, cos: c * cs - sn * st, sin: sn * cs + c * st, long, wide, tilt, lift: tilt * long * 0.82 });
-    // Pieces of it, broken off as it was lifted.
-    for (let j = 0; j < 4; j++) {
-      const a = 6.2832 * noise2(i * 5.1 + j * 1.9, 7.7);
-      const off = long * (0.9 + 1.3 * noise2(i * 2.3 + j * 4.1, 3.3));
-      const size = 0.14 + 0.3 * noise2(i * 1.7 + j * 2.9, 9.1);
-      const px = sx + c * 0.4 * long + Math.cos(a) * off;
-      const pz = sz + sn * 0.4 * long + Math.sin(a) * off;
-      if (within(px, pz) > -0.25) continue;
-      slabs.push({ x: px, z: pz, cos: Math.cos(a * 2.3), sin: Math.sin(a * 2.3), long: size, wide: size * (0.6 + 0.4 * noise2(j * 3.3, i * 1.1)), tilt: 0.15 + 0.5 * noise2(i + j * 7.7, 2.2), lift: 0.03 + 0.2 * size });
-    }
-  });
   return (x, z) => {
     const n1 = noise2(x * 0.27 + 3.1, z * 0.27);
     const n2 = noise2(x * 0.27 + 11.7, z * 0.27 + 5.2);
@@ -659,8 +615,10 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
               // The fibres are counted round the girth of the rope, so they are as wide on its flank as on its back.
               // Both are counted on the surface and not on the ground: where the rope climbs what is under it, or comes down onto
               // the rope under it, the height is part of the way. Without it the fibres are drawn out down every steep place.
-              along = (a - 0.5 * (k.a0 + k.a1)) * k.mean + 0.7 * lying;
-              phase = 1.25 * r * Math.asin(e / r) + Math.sign(e) * gap * (1 - settle) + 0.7 * lying + 0.05 * Math.sin(a * 6.1 + k.seed) + k.twist * along;
+              along = (a - 0.5 * (k.a0 + k.a1)) * k.mean + 0.7 * lying + 0.8 * gap * settle;
+              // Round the body what is under a rope falls away outward, as the girth is counted: the fall is added to the way and
+              // not taken from it, or the two cancel and the fibres stand upright on every flank that looks away from the body.
+              phase = 1.25 * r * Math.asin(e / r) + Math.sign(e) * gap * (1 - settle) + (k.about === 0 ? -0.9 : 0.7) * lying + 0.05 * Math.sin(a * 6.1 + k.seed) + k.twist * along;
               // Round the eye the ropes turn so tightly that strong fibres would read as rings.
               // Never nought on a rope: the shader knows a rope by it, and lays its textures by the rope there.
               cords = Math.max(0.06, smooth(0.04, 0.3, round) * (k.main ? 1 : 0.7) * (k.about === 1 ? 0.8 : 1));
@@ -681,6 +639,8 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
         }
       }
     }
+    // Ropes that lie on ropes are pressed flat: a pile is a broad low back, never a peak.
+    if (hard > PILE.knee) hard = PILE.knee + PILE.over * (1 - Math.exp(-(hard - PILE.knee) / PILE.over));
     if (hard > 0) h = Math.max(h, lying + hard);
 
     // Elsewhere the skin is smooth, with low swells where a sheet of it lies on the next.
@@ -713,23 +673,6 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     h += frontOf(run - 1.5 - 2.2 * (noise2(x * 0.5 + 15, z * 0.5 + 3) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.1 + 27, z * 1.1 + 44) - 1), 0.08);
     h += frontOf(run - 3.6 - 3.0 * (noise2(x * 0.42 + 52, z * 0.42 + 19) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.3 + 7, z * 1.3 + 33) - 1), 0.07);
     h = mix(UNDER, h, smooth(-0.04, 0, run));
-    for (const k of slabs) {
-      const ex = x - k.x;
-      const ez = z - k.z;
-      if (Math.abs(ex) > 1.6 * k.long || Math.abs(ez) > 1.6 * k.long) continue;
-      const u = ex * k.cos + ez * k.sin;
-      const v = -ex * k.sin + ez * k.cos;
-      const rag = 0.14 * k.long * (noise2(x * 2.6 + k.x, z * 2.6 + k.z) - 0.5);
-      // A plate with its corners broken off.
-      if (Math.abs(u) > k.long + rag || Math.abs(v) > k.wide + rag || Math.abs(u) / k.long + Math.abs(v) / k.wide > 1.55 + rag) continue;
-      const plate = k.lift - k.tilt * u + 0.02 * (noise2(x * 1.9 + 3, z * 1.9) - 0.5);
-      if (plate > h) {
-        h = plate;
-        cords = 0;
-        heat = 0;
-      }
-    }
-
     return { h, heat, d: dTrue, phase, along, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
   };
 }
