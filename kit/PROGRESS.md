@@ -7,8 +7,8 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Build: in progress
 - Phase: 3 · The look lock: the Heart, done on 2026-11-25 at 16:49 UTC. The build is at the review stop. Phase 4 starts when the Heart is approved
 - Review: waiting
-- Review round: none
-- Review round step: none
+- Review round: round 1 in progress
+- Review round step: 1
 - Review rounds: 0
 - Budget: running
 - Continuations: 0
@@ -16,7 +16,7 @@ The Builder's memory. Read it at the start of every task and after every compact
 - Extension step: none
 - Published address: https://www.perplexity.ai/computer/a/the-carcass-xp_kROepRIapoVuOG1cmNw (the workspace's app hosting, behind Brandon's sign-in, first published 2026-11-24 22:19 UTC)
 - Review page: the "Review page" link at the foot of the published address, which opens `review.html` beside it
-- Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The measurement at the review stop, on 2026-11-25 at 16:56 UTC, read public. It is measured once at the start of each task and at the review stop for the record, and nothing waits on it
+- Repo is private: treated as private from 2026-11-24 20:44 UTC on Brandon's word (note 3): he sets it to private later and the sound files go in now. The measurement at the start of the review round task, on 2026-11-25 at 17:27 UTC, read public. It is measured once at the start of each task and at the review stop for the record, and nothing waits on it
 - Sound files: committed to the repo. The music went in on 2026-11-24 at 20:47 UTC on Brandon's word (note 3). Kept narration clips, kept sounds and the newest mix are committed like any other built asset, each inside `repo.maxFileMb`. No archive of sounds is attached anywhere
 - Large files reach Brandon by: an attachment in the thread. MEASURED 2026-11-24: 20 MB, 100 MB and 400 MB test files were all accepted by the share call. The review page carries the same films while the site stays under the hosting limit
 
@@ -1330,10 +1330,175 @@ His words, numbered, with the date and how each was applied.
    And after it: "The narrator voice is Carcass Narrator, the one you chose. Keep it." Applied: the note's script was compared by script with `narration.clips` in `config/showcase.json` at 07:02 UTC (MEASURED: 8 of 8 clips and 32 of 32 lines are the same, line breaks included) and with "The words" in `kit/01-FILM.md` (all 32 lines found word for word), so nothing in the repo changes and every clip is made from exactly these lines. The kept clip `n8` was made from the same four lines. The voice stays `Carcass Narrator`, id `GSUpY5pPm1gN8Crb8gqz`; "Voice" now says Brandon confirmed it.
 5. 2026-11-25 07:00 UTC, in the thread, the second of two notes: "ElevenLabs. The account is out of characters. I will top it up in the morning. Do not wait for it: keep building the picture. Read the account's characters each time you post a status. As soon as they are back, make clips n1 to n7, run the model test and the remaining takes for n8, and make the sound effects, all inside their limits. Then run the cut and the mix again and say so in the next status." Applied: the picture goes on without a pause. `npm run voice -- --status` reads the account's characters and runs with every status from status 33 on; the figure and its time go into the status. First reading at 07:02 UTC: 1 of 131,000 (MEASURED). When the figure is back, in this order and each inside its limit: `npm run voice -- --make` for `n1` to `n7` with check and keep (`narration.maxTakesPerClip` 6); the model test of `kit/03-METHOD.md` (the same test line on each speech model on offer, at most 6 lines in all) and the 5 takes still open for `n8`; the sound effects by `npm run sound` inside `audio.maxTakesPerCue` and `audio.maxCuesPerPlace`; then `npm run cut`, `npm run mix` and the animatic again, and the next status says so.
 
+Review round 1. Sent on 2026-11-25 at 17:26 UTC in the thread, under the lines `BUILD MODE.` and `Review notes.`, with "Pull https://github.com/BrandonChurch93/The-Carcass-Perplexity and continue from kit/PROGRESS.md. Read AGENTS.md and kit/addenda/ first. Same rules." Six items under "What to change:", copied here in his words. How each was applied is written under it as the round goes, and its state is in "Review items".
+
+6. Review round 1, item 1, credits:
+
+   > 1. Credits. ElevenLabs has credits again. From now to the end of the build, everything you make with it, narration, sounds and tests together, stays inside a hard cap of 17,000 credits. This cap beats the take limits in the config.
+   > - Read the account's credit count before and after every call. Keep a running total under "Sound" in kit/PROGRESS.md and print it in every status.
+   > - When the total reaches 17,000, stop making sound. Whatever is not made becomes an open item.
+   > - Hold 3,000 of the 17,000 back for the narration and my notes on it.
+   > - Skip the speech model test. Stay on the model and settings that made clip n8.
+
+   Applied: open. See "Review items".
+
+7. Review round 1, item 2, the script:
+
+   > 2. The script is changing. This note replaces the approved script, and I am finishing it here with you. Do not make any narration in this round.
+   >
+   > The new direction is the witness. The narrator only states what is there, like a grim nature film from an unknown alien world.
+   > - No "I", no "you", no people, no maps, no god.
+   > - Nothing says outright that the land is a body before the Reveal. Lines like "the ground breathes" should sound like a figure of speech first and turn out to be literal.
+   > - Eight clips, four lines each, about the same length as now, so the timing of the film does not move.
+   > - Every line falls on the picture it describes.
+   > - The third line of the Reveal lands on the reveal strike of the music.
+   > - Short, blunt lines. Not every line is about dying.
+   >
+   > This is my draft:
+   >
+   > n1 · the opening
+   > Past the last calm water, there is a shore.
+   > Nothing on it has a name.
+   > Nothing on it should be alive.
+   > All of it is.
+   >
+   > n2 · the Ribs
+   > The strait.
+   > Blades of stone, taller than the storms that break on them.
+   > At low tide the winged ones come down to feed. They do not have long.
+   > High in the weed hangs one that stayed. Then the sea returns. All at once.
+   >
+   > n3 · the Heart
+   > The fire.
+   > A lake of it, under a black skin.
+   > The tall ones walk the skin, and drink from the cracks.
+   > Sometimes the skin gives way. The fire beneath has never cooled.
+   >
+   > n4 · the Breath
+   > The pits.
+   > The ground breathes here. Slow. From far below.
+   > Red growth crowds the rim, feeding on the breath.
+   > The pale herds graze the channel, and never the rim. One did.
+   >
+   > n5 · the Blood Marsh
+   > The red flats.
+   > The ground still bleeds here. No rain made this.
+   > The heavy ones wallow in it, and grow fat.
+   > The salt keeps whatever it catches. Forever.
+   >
+   > n6 · the Spine
+   > The ridge.
+   > Above the cloud. Above the storm.
+   > Every night the lightning walks it. Spire to spire.
+   > The herds shelter in the hollow beneath, and wait for morning.
+   >
+   > n7 · the Eye
+   > The lake.
+   > Still. Gold at the edge. Black at the center.
+   > The herds drink at the shallows. None of them looks down.
+   > The center has no floor. Something there looks back.
+   >
+   > n8 · the Reveal
+   > From high enough, the land has a shape.
+   > None of it was ever land.
+   > It was a body.
+   > Everything here feeds on it. And it is not finished.
+   >
+   > What I want from you on the script in this round:
+   > - Lay the draft against the cut list: every line beside the shot it falls on, with one frame of that shot and its time in the film.
+   > - Mark every line that does not match what its shot shows, or that will not fit its shot's length. For each one, give me two replacement lines in the same voice.
+   > - If a shot shows something the script should mention and does not, say so.
+   > - Show me this as a sheet in the thread and on the review page, and stop there. I will send changes as review notes.
+   > - When I write "The script is final.", write the final words into narration.clips in config/showcase.json, log that the config now holds the new script, and make all eight clips from it, clip n8 included, at most 3 takes of a clip. Then run the cut and the mix and make the animatic with all eight clips.
+
+   Applied: open. See "Review items".
+
+8. Review round 1, item 3, sound effects:
+
+   > 3. Sound effects. This is the whole list for the film: one bed, one life sound and one event for each place. Make no sound that is not on it. Beds are about 20 seconds and loop. Life sounds are about 8 seconds. Events are about 6 to 8 seconds. Every sound sits quiet under the music and the voice. Life sounds are low and breathy: no roars, and nothing that reads as an animal from Earth.
+   >
+   > The Ribs
+   > - Bed: sea wind through huge stone arches, slow surf far off.
+   > - Life: the winged colony, dry chittering and leathery wings lifting off.
+   > - Event: the bore, a deep rising roar as one wall of water arrives.
+   >
+   > The Heart
+   > - Bed: the low churn and hiss of a lava lake, its crust creaking and ticking.
+   > - Life: the tall walkers, dry tapping steps on the crust and a slow hollow draw as they feed.
+   > - Event: a plate foundering, a crack, a thick fold and a burst of hiss.
+   >
+   > The Breath
+   > - Bed: one vast slow exhale from deep in a stone shaft, with dripping.
+   > - Life: the pale herds, soft steps in shallow water and a few low fluting calls far apart.
+   > - Event: heavy vapour pouring over the rim, a long sliding sigh.
+   >
+   > The Blood Marsh
+   > - Bed: dead still air, a faint insect drone, slow thick bubbling.
+   > - Life: the heavy ones, wet wallowing and deep slow breaths.
+   > - Event: a gas dome swelling and bursting in thick brine.
+   >
+   > The Spine
+   > - Bed: a high gale over a knife ridge, spindrift hiss, hail ticking on rock.
+   > - Life: the herd sheltering in the hollow, huddled breathing and shuffling in an echoing stone tunnel.
+   > - Event: a close strike, one flat dry crack and then long rolling thunder. The same sound serves every strike.
+   >
+   > The Eye
+   > - Bed: near silence, a faint air tone and tiny laps of water at a shore.
+   > - Life: the herds drinking, quiet steps and drips at the water's edge.
+   > - Event: the water doming at the centre, a deep muffled swell.
+   >
+   > The Reveal
+   > - Bed: thin high wind that fades to nothing as the camera climbs.
+   > - One deep distant thud, only if the ending uses the Heart's glow.
+   >
+   > Make the sounds in this round, in this order, so the cap cuts the least important things first:
+   > - First, one take of every bed.
+   > - Second, one take of every event.
+   > - Third, one take of every life sound.
+   > - Last, second takes of whatever failed its check. At most 2 takes of a sound.
+   > - After the first two sounds, say in a status how many credits a second of sound really costs.
+
+   Applied: open. See "Review items".
+
+9. Review round 1, item 4, the laughter in the music:
+
+   > 4. The music has two spots of laughter in it that do not belong in this film. Take them out.
+   > - 1:14 to 1:16 of the track: laughter that sounds like a witch.
+   > - 2:34 to 2:40 of the track: a child laughing.
+   > - First choice: isolate only the laughter and remove it, with everything else in the track left exactly as it is. Split the track into stems with a free tool if that is the way. Do not spend ElevenLabs credits on this.
+   > - If the laughter cannot be isolated cleanly, find another way and tell me which you used. For example: mute the voice stem for just those seconds with short fades, or replace those seconds with a matching bar from elsewhere in the track.
+   > - The track keeps its exact length and timing, so the map and the cut do not move.
+   > - Keep my original file untouched. Save the cleaned track as a new file and use it from now on.
+   > - You cannot hear, so prove it as well as you can: ask the listener about each spot before and after, show me a before and after picture of each spot, and put a short before and after clip of each spot on the Listen part of the review page. I will check them by ear.
+
+   Applied: open. See "Review items".
+
+10. Review round 1, item 5, the Reveal's look:
+
+   > 5. The Reveal's look, for when it is built. In the draft it reads as a person lying on the ocean. That is not what I want.
+   > - It should read as a continent first: mountain ranges, coasts, rivers, cloud at several heights, real scale. More land around the bones, less bare figure on open water.
+   > - The body should only come together near the top of the rise. In the last frame it must still read as a body.
+   > - Add this settled line to keys reveal-1 to reveal-4: "`-b` may read more as a continent and less as a figure than `-a`: more land around the bones and more scale."
+   > - Log this as a review item for the phase that builds the Reveal.
+
+   Applied: open. See "Review items".
+
+11. Review round 1, item 6, what to hand back:
+
+   > 6. To hand back at the end of this round: the script sheet, every sound on the Listen part of the review page, the before and after of the two music spots, and the Heart clip rendered once more with the Heart's three sounds and the cleaned music. End with the REVIEW block, and add one line to it: credits spent so far out of 17,000.
+
+   Applied: open. See "Review items".
+
 ## Review items
 
 | No. | From | His words | When it is worked | State |
 | --- | --- | --- | --- | --- |
+| R1.1 | review round 1, note 6 | "ElevenLabs has credits again. From now to the end of the build, everything you make with it, narration, sounds and tests together, stays inside a hard cap of 17,000 credits." | this round, before the first call, and for the rest of the build | open |
+| R1.2 | review round 1, note 7 | "The script is changing. This note replaces the approved script, and I am finishing it here with you. Do not make any narration in this round." | this round: the draft laid against the cut list as a sheet, then stop. The clips are made when he writes "The script is final." | open |
+| R1.3 | review round 1, note 8 | "Sound effects. This is the whole list for the film: one bed, one life sound and one event for each place. Make no sound that is not on it." | this round, in his order: beds, events, life sounds, then second takes | open |
+| R1.4 | review round 1, note 9 | "The music has two spots of laughter in it that do not belong in this film. Take them out." | this round | open |
+| R1.5 | review round 1, note 10 | "The Reveal's look, for when it is built. In the draft it reads as a person lying on the ocean. That is not what I want." | the settled line this round. The look itself in Phase 5, the phase that builds the Reveal | open |
+| R1.6 | review round 1, note 11 | "To hand back at the end of this round: the script sheet, every sound on the Listen part of the review page, the before and after of the two music spots, and the Heart clip rendered once more with the Heart's three sounds and the cleaned music." | the end of this round | open |
 
 ## Review items not done
 
