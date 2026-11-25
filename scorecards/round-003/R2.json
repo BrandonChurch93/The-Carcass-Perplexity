@@ -133,6 +133,114 @@
       "confidence": 60,
       "why": "the ground looks like a real-time game engine made it. It's a flat plane with tiled, repeating textures, the lighting is simple and the depth fog is uniform. The creatures look like copies of the same model (they resemble Morrowind silt striders, so it could be a fan remake or mod). It isn't polished enough for a big-budget cinematic, and it doesn't look like a typical stock render.",
       "answered": "06:32 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "The flat, uniform midground terrain plane with weak ground-contact shadows beneath the creatures' feet and simple glowing fire/lava effects—clearly below top-budget film or AAA cinematic quality, yet paired with finer foreground surface detail and atmospheric fog than a typical mobile game or web 3D demo.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 76,
+      "why": "The ground reads as a flat plane covered in a repeating low-detail texture rather than a sculpted volcanic landscape.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the scene has deep volumetric haze and smoke, warm lava glow that lights the surrounding air, and high-resolution rock and ground textures. That points to a high-end game engine render or cinematic. Close second is (d), at roughly 30%. The creature meshes are fairly simple, and the ground texture tiles a bit.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "The near-identical creature models repeated at multiple depths make the scene feel like a stock 3D render.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "Decent volumetric fog and lighting, but the creatures look like simple procedural rigs with repetitive, plasticky textures, and the ground is a flat tiled surface. It reads as a hobbyist or stock 3D render (Blender-style), not cinematic-grade work.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "The flat, procedurally textured ground plane with almost no realistic orange bounce light or contact interaction between the glowing lava crack and the creatures' feet and tendrils right next to it, paired with clean soft-shaded anti-aliasing and atmospheric fog typical of a standalone 3D render rather than a top-budget cinematic or a low-budget/mobile real-time graphic.",
+      "answered": "06:33 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 78,
+      "why": "The creatures' identical dome-shaped feet appear to sit on top of the ground without contact shadows, giving the scene a low-budget real-time look.",
+      "answered": "06:34 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "The thing that most influenced me was the atmosphere and lighting. The volumetric haze, the glowing lava rim light, the depth falloff and the cinematic framing look like a high-end engine or film-quality render. Those cues outweigh the simple creature modeling, the plain lava texture and the blob-like feet. Those weaker details are why (c), a good independent 3D render, is my second choice at about 30%. (d) is about 20%, and (a) is under 5%.",
+      "answered": "06:34 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 81,
+      "why": "The strongest cue is the lava's uniform, glossy streaking over the rocks, which reads more like a CG material than a convincing fluid simulation.",
+      "answered": "06:34 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "it looks like a hobbyist render made in an Unreal or Blender style, not a high-end production. The lava flow has smeared, stretched textures, the cave mouth is a plain blobby shape, and the spindly creature is a basic asset. All of it is wrapped in volumetric fog that makes it look atmospheric but hides how little detail there is.",
+      "answered": "06:34 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 72,
+      "why": "The visibly faceted, low-poly silhouette of the cave opening paired with stretched lava textures, billboard-like smoke, and a flat ground-plane intersection, which point to a real-time web 3D demo, mobile game, or low-budget production rather than a high-budget cinematic or polished offline render.",
+      "answered": "06:35 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 84,
+      "why": "The bright cascade looks like a stretched, glowing texture draped over angular ledges rather than fluid flowing around them.",
+      "answered": "06:34 UTC"
     }
   ]
 }

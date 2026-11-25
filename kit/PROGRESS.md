@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 30, 2026-11-25 06:13 UTC:
+Status 31, 2026-11-25 06:36 UTC:
 
-- `01-v3-h3-compare.jpg`: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal. The hide still reads as a sculpted model, there is no orange light from below, and the crust and the wall behind are flat brown.
-- `02-land-v3-compare-heart-1.jpg`: Land, version 3: the bench and its lip are in and the stripes are gone. The open lava is flat tan where the picture has deep orange with white cores: the fault is in the fire's colour, now with an owner of its own.
-- `03-v3-compare-heart-0.jpg`: Air, version 3, the wide key: two kinds of air now, thin pale haze and a heavy low layer. The far lake lost its pale haze and goes back in; the animals are still too small in this frame.
-- `04-key-heart-0-hd-draft-solo.jpg`: The frame that answers heart-0, film frame 2722, hd, draft tier, solo view
+- `01-set-a-01.jpg`: Round 3, the wide view exactly as the jury saw it (built before the third versions below)
+- `02-cmp-heart-1.jpg`: The line, approved picture and frame, with the new fire colours of the light owner
+- `03-compare-heart-2.jpg`: The one that sank, third version, beside its picture
+- `04-v3-compare-heart-4.jpg`: The mouth and its fall, third version, beside its picture
 
+Status 30, 2026-11-25 06:13 UTC, showed: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal.
 Status 29, 2026-11-25 05:53 UTC, showed: Left: the approved hero. Right: ours as it stands.
 Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
-Status 27, 2026-11-25 05:17 UTC, showed: The line, refitted: shore and rocks left, the channel across the frame, the mouth upper left, the tall ones right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T06:13:37Z
-phase 3: 3.07 h used of 13.00 h
-build: 9.73 h used of 72.00 h
+2026-11-25T06:36:13Z
+phase 3: 3.45 h used of 13.00 h
+build: 10.10 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 20
+minutes since the last status: 23
 ```
 
 ## Phases
@@ -771,3 +771,4 @@ none
 - 2026-11-25 06:08 UTC. 06:07 UTC: the determinism hunter reproduced G3 on its machine (305 pixels there) and narrowed it by part: crust and lava differ between two fresh loads (the lake folder or the rig's glow map), air, fume, bench and land inherit one level through the glow light, eight parts are identical. It reads the lake's shaders for an undefined value next.
 - 2026-11-25 06:14 UTC. 06:14 UTC: status 30 shown (third versions of walkers, land and air beside the approved pictures; machine checks 18 of 22; the fire's colour traced to the blackbody function; the light owner started). Air v3 (8c4d412) and walkers v3 (6054354) are in and wait for the merge until this machine's renders of the judged commit end.
 - 2026-11-25 06:25 UTC. 06:26 UTC: round 3, the motion critic answered on both R4 packs: 4 and 4. Severe: the surge switches on in one frame (4009 to 4010); the herd reads as mechanical models; the fall shot is a still for its first three seconds and the surge slides like a mask. Major: lava patterns locked in place, the fume column frozen over seven seconds, the sunk shot a still diorama, the seam under the animals static. I looked at the sheets and agree with every line. Each owner has its lines word for word with what I want (flow in open lava, a column that rises and rolls, ash in the near air, steps with weight and travel, a surge with a lead-in and a travelling front). The determinism hunter fixed G3 (two discards ahead of derivatives in the lake's shaders; agent/determinism 1488769, MEASURED there: npm run determinism passes twice); it merges with the third versions as soon as this machine's measures end. Light v1 (f94d366): blackbody now has the display's colour plus a clip term above 1450 K, fire curve [0.12, 0.7, 0.6], knee [0.6, 0.5]; open lava must be drawn at 1320 to 1400 K to read orange, passed to all owners.
+- 2026-11-25 06:36 UTC. Status 31 shown in the thread (06:36 UTC): the judged wide frame of round 3, the line with the new fire colours, the third versions of the one that sank and of the fall; round 3 scores so far R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 3 of 24.
