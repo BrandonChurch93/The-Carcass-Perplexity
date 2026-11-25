@@ -173,8 +173,8 @@ void main() {
   // A rope is old skin, greyer than the plates of the lake. They die out before the rim, so nothing of this reaches it.
   float roped = clamp(ln.a, 0.0, 1.0) * ashed * folded;
   // The skin that was pushed up is older and greyer than the lake's plates the nearer it lies to the body; at the rim it is theirs.
-  albedo *= 1.0 + 0.45 * folded * ashed;
-  albedo = mix(albedo, vec3(0.11, 0.095, 0.087) * (0.8 + 0.4 * small), 0.9 * roped);
+  albedo *= mix(vec3(1.0), vec3(1.2, 1.1, 1.02) * (1.0 + 0.7 * ashed), folded);
+  albedo = mix(albedo, vec3(0.12, 0.103, 0.093) * (0.8 + 0.4 * small), 0.9 * roped);
   albedo *= mix(1.0, (0.35 + 0.65 * dot(rope, vec3(5.7))) * (0.85 + 0.3 * grainNh.b), flat2);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.

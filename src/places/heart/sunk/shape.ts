@@ -10,6 +10,8 @@ export const YAW = (58.6 * Math.PI) / 180;
 const UPSTREAM: [number, number] = [0.611 * Math.cos(YAW) - 0.791 * Math.sin(YAW), -0.611 * Math.sin(YAW) - 0.791 * Math.cos(YAW)];
 
 export const FIELD = { cx: -3.5, cz: 0.3, half: 14.5, size: 1024 };
+/** Where there is no skin the field lies this far under the lake's crust, and the sheet is not drawn. */
+export const UNDER = -0.12;
 
 export const BODY = {
   centre: new THREE.Vector3(-3.5, 0.8, -0.4),
@@ -81,6 +83,49 @@ function reach(x: number, z: number): number {
     best = Math.max(best, far * Math.exp(-(off * off) / (wide * wide)));
   }
   return 3.4 + 0.5 * best;
+}
+
+// How far the skin that was pushed out ran over the lake's crust before it froze, by the same direction: a broad sheet toward
+// the bench that fills the ground before it, and tongues of very different length. It ends in a front that stands on the crust.
+const TONGUES: [number, number, number][] = [
+  [158, 16, 6.5],
+  [196, 10, 3.2],
+  [252, 22, 4.5],
+  [300, 9, 7.0],
+  [338, 12, 2.2],
+  [12, 11, 5.6],
+  [38, 8, 2.5],
+];
+function runOut(x: number, z: number): number {
+  const phi = (Math.atan2(z - FIELD.cz, x - FIELD.cx) * 180) / Math.PI;
+  const front = ((((phi - 88) % 360) + 540) % 360) - 180;
+  let best = 7.9 * Math.exp(-Math.pow(front / 52, 4));
+  for (const [at, wide, far] of TONGUES) {
+    const off = ((((phi - at) % 360) + 540) % 360) - 180;
+    best = Math.max(best, far * Math.exp(-(off * off) / (wide * wide)));
+  }
+  return 3.0 + best;
+}
+
+/** A plate of the lake's crust that the front broke off and tilted up against itself, or a piece of one lying before it. */
+interface Slab {
+  x: number;
+  z: number;
+  cos: number;
+  sin: number;
+  long: number;
+  wide: number;
+  /** Metres it rises for each metre toward the mound. */
+  tilt: number;
+  /** Metres its middle stands over the crust. */
+  lift: number;
+}
+
+// The rounded front of a sheet of lava, `inside` metres in from its edge: it rises steeply and levels off at `thick`.
+function frontOf(inside: number, thick: number): number {
+  if (inside <= 0) return 0;
+  const k = 1 - Math.min(1, inside / 0.32);
+  return thick * Math.sqrt(1 - k * k);
 }
 
 function polyDistance(line: [number, number][], x: number, z: number): [number, number] {
@@ -450,6 +495,50 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
   const ropes = makeRopes();
   const R = BODY.radii;
   const middle: [number, number] = [0, 0];
+  // Metres inside the front of the skin that ran out. Its line is scalloped: each scallop is a toe of the sheet.
+  const within = (x: number, z: number): number => {
+    const wx = x + 1.0 * (noise2(x * 0.27 + 3.1, z * 0.27) - 0.5);
+    const wz = z + 1.0 * (noise2(x * 0.27 + 11.7, z * 0.27 + 5.2) - 0.5);
+    // Counted from a round middle, not from the long body: far out a front forgets the shape of what it came round.
+    const d = Math.max(0, Math.min(Math.hypot(wx - BODY.centre.x, wz - BODY.centre.z) - 2.1, Math.hypot(wx - FOOT_A[0], wz - FOOT_A[1]) - 0.8, Math.hypot(wx - FOOT_B[0], wz - FOOT_B[1]) - 0.8));
+    const toes = 1.5 * (noise2(x * 0.33 + 90, z * 0.33 + 14) - 0.5) + 0.9 * Math.abs(2 * noise2(x * 0.85 + 5, z * 0.85 + 71) - 1) + 0.35 * Math.abs(2 * noise2(x * 2.2 + 61, z * 2.2 + 8) - 1) - 0.6;
+    const box = FIELD.half - 1.3 - Math.max(Math.abs(x - FIELD.cx), Math.abs(z - FIELD.cz));
+    return Math.min(runOut(x, z) - d - toes, box);
+  };
+  // The slabs stand where the front is, at chosen bearings; smaller pieces lie about them.
+  const slabs: Slab[] = [];
+  const bearings: [number, number, number, number][] = [
+    [128, 0.8, 0.55, 0.2],
+    [63, 0.65, 0.5, 0.26],
+    [171, 0.6, 0.4, 0.18],
+    [22, 0.7, 0.45, 0.24],
+    [205, 0.5, 0.45, 0.2],
+    [-12, 0.45, 0.35, 0.24],
+    [98, 0.5, 0.4, 0.15],
+    [146, 0.4, 0.3, 0.28],
+  ];
+  bearings.forEach(([deg, long, wide, tilt], i) => {
+    const c = Math.cos((deg * Math.PI) / 180);
+    const sn = Math.sin((deg * Math.PI) / 180);
+    let far = 2;
+    while (far < FIELD.half && within(FIELD.cx + c * far, FIELD.cz + sn * far) > 0) far += 0.05;
+    const turn = 0.5 * (noise2(i * 3.7, 1.3) - 0.5);
+    const cs = Math.cos(turn);
+    const st = Math.sin(turn);
+    const sx = FIELD.cx + c * (far + 0.55 * long);
+    const sz = FIELD.cz + sn * (far + 0.55 * long);
+    slabs.push({ x: sx, z: sz, cos: c * cs - sn * st, sin: sn * cs + c * st, long, wide, tilt, lift: tilt * long * 0.82 });
+    // Pieces of it, broken off as it was lifted.
+    for (let j = 0; j < 4; j++) {
+      const a = 6.2832 * noise2(i * 5.1 + j * 1.9, 7.7);
+      const off = long * (0.9 + 1.3 * noise2(i * 2.3 + j * 4.1, 3.3));
+      const size = 0.14 + 0.3 * noise2(i * 1.7 + j * 2.9, 9.1);
+      const px = sx + c * 0.4 * long + Math.cos(a) * off;
+      const pz = sz + sn * 0.4 * long + Math.sin(a) * off;
+      if (within(px, pz) > -0.25) continue;
+      slabs.push({ x: px, z: pz, cos: Math.cos(a * 2.3), sin: Math.sin(a * 2.3), long: size, wide: size * (0.6 + 0.4 * noise2(j * 3.3, i * 1.1)), tilt: 0.15 + 0.5 * noise2(i + j * 7.7, 2.2), lift: 0.03 + 0.2 * size });
+    }
+  });
   return (x, z) => {
     const n1 = noise2(x * 0.27 + 3.1, z * 0.27);
     const n2 = noise2(x * 0.27 + 11.7, z * 0.27 + 5.2);
@@ -471,10 +560,11 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     // Where the folded skin ends. The ropes die out over the last metres of it and its low billows run on into the lake's crust.
     const out = reach(x, z);
     const wobble = 1.1 * (noise2(x * 0.45 + 33, z * 0.45 + 2) - 0.5) + 0.35 * (noise2(x * 1.9 + 3, z * 1.9 + 41) - 0.5);
-    const radial = Math.hypot(x - FIELD.cx, z - FIELD.cz);
     const inside = out - dd - wobble;
-    const edge = smooth(0, 3.6, inside) * smooth(9.0, 7.0, radial);
-    const sheet = smooth(-2.6, 0.6, inside) * smooth(9.15, 7.6, radial);
+    // Past the mound the skin ran on as a thin sheet, to its front.
+    const run = within(x, z);
+    const edge = smooth(0, 3.6, inside) * smooth(0, 1.2, run);
+    const sheet = smooth(-0.05, 0.35, run);
 
     let h = -0.1 * Math.exp(-Math.pow(dd / 2.4, 2)) * edge;
     // The skin rode up against the body and the legs: highest on the side it came from and at the end that went under first.
@@ -518,7 +608,7 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     const rhoEye = Math.hypot(wx - EYE[0], wz - EYE[1]);
     const angEye = Math.atan2(-(wx - EYE[0]), wz - EYE[1]);
     // They die out over the last metres of the skin.
-    const fade = smooth(0.2, 3.8, inside + 1.2) * smooth(9.0, 6.5, radial);
+    const fade = smooth(0.2, 3.8, inside + 1.2) * smooth(0.3, 1.5, run);
     // A rope that crosses the body lies on it, but none climbs higher than the skin could push it.
     const lying = Math.max(h, Math.min(top, bare + 0.5));
     let hard = 0;
@@ -598,6 +688,29 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     // The lake's seam runs on under the folded skin: the skin stands a little proud along it.
     const [ds] = polyDistance(lakeSeam, x, z);
     h += 0.08 * Math.exp(-Math.pow(ds / 0.7, 2)) * edge;
+
+    // The sheet that ran out: a front that stands on the lake's crust, and inside it the fronts of the sheets that overran it.
+    // Outside it the field is under the crust, so the sheet ends where it meets whatever the lake is there and not on a blend.
+    h += frontOf(run, 0.09 + 0.1 * noise2(x * 0.37 + 81, z * 0.37 + 7));
+    h += frontOf(run - 1.5 - 2.2 * (noise2(x * 0.5 + 15, z * 0.5 + 3) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.1 + 27, z * 1.1 + 44) - 1), 0.08);
+    h += frontOf(run - 3.6 - 3.0 * (noise2(x * 0.42 + 52, z * 0.42 + 19) - 0.5) - 0.8 * Math.abs(2 * noise2(x * 1.3 + 7, z * 1.3 + 33) - 1), 0.07);
+    h = mix(UNDER, h, smooth(-0.04, 0, run));
+    for (const k of slabs) {
+      const ex = x - k.x;
+      const ez = z - k.z;
+      if (Math.abs(ex) > 1.6 * k.long || Math.abs(ez) > 1.6 * k.long) continue;
+      const u = ex * k.cos + ez * k.sin;
+      const v = -ex * k.sin + ez * k.cos;
+      const rag = 0.14 * k.long * (noise2(x * 2.6 + k.x, z * 2.6 + k.z) - 0.5);
+      // A plate with its corners broken off.
+      if (Math.abs(u) > k.long + rag || Math.abs(v) > k.wide + rag || Math.abs(u) / k.long + Math.abs(v) / k.wide > 1.55 + rag) continue;
+      const plate = k.lift - k.tilt * u + 0.02 * (noise2(x * 1.9 + 3, z * 1.9) - 0.5);
+      if (plate > h) {
+        h = plate;
+        cords = 0;
+        heat = 0;
+      }
+    }
 
     return { h, heat, d: dTrue, phase, cords: Math.min(1, Math.max(0, cords)), folded: sheet, tone };
   };
