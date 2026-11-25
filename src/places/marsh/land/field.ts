@@ -2,7 +2,7 @@
 // ground it is. The land's mesh, the rig's map and the shaders all read the same numbers from here, so a shoreline is in one place for all of them.
 import * as THREE from 'three';
 import {
-  CREEKS, CRUST, POOL_R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
+  CREEKS, CRUST, F, POOL_R, R, STUCK, TAU, VEIN, clamp, makePools, rel, rockHeight, smooth, type Node,
 } from '../shared/anchors';
 import { stream } from '../../../core/rng';
 
@@ -271,15 +271,20 @@ export function createField(): Field {
     return h;
   };
 
-  // The rock rise under the first camera: beds of pale rock, stepped, with a broken foot.
+  // The rock rise the first camera leaves: beds of pale rock, stepped, with a broken foot that runs out toward the vein as low ledges.
+  const spur = rel(9, -7.5);
   const rockAt = (x: number, z: number): number => {
-    const base = rockHeight(x, z);
-    if (base < -0.55) return base;
+    let base = rockHeight(x, z) * 0.8;
+    const dx = x - spur[0];
+    const dz = z - spur[1];
+    const q = ((dx * F[0] + dz * F[1]) / 7.5) ** 2 + ((dx * R[0] + dz * R[1]) / 6) ** 2 + 0.5 * (fbm(x / 3.1 + 9, z / 3.1, 3) - 0.5);
+    base = Math.max(base, 2.9 * (1 - smooth(0.15, 1.05, q)) - 0.5 * smooth(0.6, 1.05, q));
+    if (base < -0.45) return base;
     const warp = 0.9 * (fbm(x / 5.2 + 3, z / 5.2, 3) - 0.5);
     const beds = base + warp;
-    const stepped = Math.floor(beds / 0.8) * 0.8 + 0.8 * smooth(0.55, 1, beds / 0.8 - Math.floor(beds / 0.8));
-    const rough = 0.35 * (fbm(x / 1.7, z / 1.7, 4) - 0.5);
-    return base * 0.45 + stepped * 0.55 + rough * smooth(-0.5, 0.6, base);
+    const stepped = Math.floor(beds / 0.7) * 0.7 + 0.7 * smooth(0.5, 1, beds / 0.7 - Math.floor(beds / 0.7));
+    const rough = 0.3 * (fbm(x / 1.7, z / 1.7, 4) - 0.5) + 0.08 * (fbm(x / 0.4, z / 0.4, 3) - 0.5);
+    return base * 0.4 + (stepped - warp) * 0.6 + rough * smooth(-0.4, 0.5, base);
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),

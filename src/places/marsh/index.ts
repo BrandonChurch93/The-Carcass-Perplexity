@@ -22,7 +22,7 @@ import { setStaged } from './shared/stage';
 // The five cameras. Positions are fixed numbers in the world, not heights above whatever the land is today: the land is built round the cameras.
 
 /** marsh-0, the establishing view: from the rock rise, over the seep pool and down the vein to the flats. */
-const K0: Pose = { position: at(0, 0, EYE_HEIGHT), aim: at(60, 0, EYE_HEIGHT - 60 * Math.tan(12.7 * DEG)), fov: 44 };
+const K0: Pose = { position: at(3, -1.5, 7.6), aim: at(63, -1.5, 7.6 - 60 * Math.tan(13.2 * DEG)), fov: 44 };
 
 /** marsh-2, the stalk colony, from the bank of the pool. */
 const K2: Pose = {
@@ -43,16 +43,23 @@ const K3: Pose = { position: at(27.7, 3, 2.3), aim: at(37.7, 3.2, -0.12), fov: 3
 /** marsh-4, the one on the thin crust. */
 const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35 };
 
+// The five shots are one walk: each starts near where the last ended, on a heading close to it, with its subject already small in the last frames
+// of the shot before. Thick stalks stand close to two of the paths, so those paths turn to keep them at the edge of the frame.
 const shots: Record<string, CameraPath> = {
-  'marsh-01': through(K0, keyPart(shotById('marsh-01')), { forward: -9, up: 1.2 }, { forward: 12, up: 0.6 }),
-  'marsh-02': through(K2, keyPart(shotById('marsh-02')), { right: -3.2, forward: -0.6 }, { right: 3.2, forward: 0.8 }),
-  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.2, up: 0.2, right: 0.6 }, { forward: 0.4, up: 0.45, turn: 8, tilt: 3 }),
+  // Down off the rock rise toward the seep pool.
+  'marsh-01': through(K0, keyPart(shotById('marsh-01')), { forward: -8, right: 4, up: 2, turn: 10 }, { forward: 7.5, right: -1, up: -1.5, turn: -13 }),
+  // Along the pool's bank, in and to the right round the near stalks while the lens turns left to hold them: they leave by the left edge.
+  'marsh-02': through(K2, keyPart(shotById('marsh-02')), { right: -2.2, forward: -2.6, up: 0.3, turn: 10 }, { right: 2.6, forward: 0.6, turn: -8 }),
+  // In over the brine to the dome; the last of it turns right, toward the wallowers.
+  'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.6, right: -1.2, up: 0.6, turn: 5 }, { forward: 0.6, right: 0.5, up: 0.5, turn: 14, tilt: 3 }),
+  // Left along the vein past the wallowers, turning right as it goes, so the stalks on the near bank leave by the left edge.
   'marsh-04': [
-    { at: 0, pose: { position: at(26.7, 6.6, 2.7), aim: at(36.4, 4.6, -0.1), fov: 30 } },
+    { at: 0, pose: { position: at(26.9, 6.3, 2.7), aim: at(36.4, 4.6, -0.1), fov: 30 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
-    { at: 1, pose: { position: at(28.9, 0.7, 2.05), aim: at(38.4, 2.2, -0.1), fov: 30 } },
+    { at: 1, pose: { position: at(28.3, 1.5, 2.2), aim: at(38, 6, -0.1), fov: 30 } },
   ],
-  'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -12, up: -0.6, right: -1.5 }, { forward: 1.7, up: 0.15, right: 0.5 }),
+  // From over the thin crust, wide, with the vein, the pool and its stalks behind the stuck one, down and in to it.
+  'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -9, up: 2.2, right: 1.5, turn: 14, tilt: -6 }, { forward: 1.7, up: 0.15, right: 0.5 }),
 };
 
 // The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.
