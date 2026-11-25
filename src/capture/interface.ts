@@ -19,6 +19,7 @@ export interface Carcass {
   info(): Record<string, unknown>;
   setFormat(id: string): void;
   setDiagnostic(view: string | null, part?: string | null): void;
+  setLens(aperture: number | null, focus: number | null): void;
   film(): FilmInfo;
   filmState(frame: number): FilmState;
   partsOf(unit: string): Promise<PartInfo[]>;
@@ -69,6 +70,7 @@ export function install(canvas: HTMLCanvasElement, formatId = 'hd'): { engine: E
       if (id !== engine.format.id) engine.setFormat(id);
     },
     setDiagnostic: (view, part = null) => engine.setDiagnostic(view, part),
+    setLens: (aperture, focus) => engine.setLens(aperture, focus),
     film: () => film.info(),
     filmState: (frame) => film.state(frame),
     partsOf: (unit) => film.partsOf(unit),
