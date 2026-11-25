@@ -24,27 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 39, 2026-11-25 09:28 UTC:
+Status 40, 2026-11-25 09:48 UTC:
 
-- `01-m0927-heart-4.jpg`: heart-4 on main, the approved picture at the left. The fall's second hand-back is in: a braided cascade and a fan where there was one thread. Still wrong: the inside of the mouth is lit where the picture's is dark, the melt has no pale core, the smoke at the right is a wall.
-- `02-m0927-heart-1.jpg`: heart-1 on main with the crust's version 3: folds in bundles replace the smooth sheet and its terraces. It still reads as ribbed clay, too brown, and the bundles repeat like a stamp.
-- `03-m0927-heart-3.jpg`: heart-3 on main: the fall now shows at the upper left. The ground is arcs on a sheet where the picture has broken black basalt, and the dark cliff at the right is missing.
-- `04-m0927-heart-0.jpg`: heart-0 on main: the plume is still central and pale and the walls tall and pale. Both lists are with their owners, due back by 10:05 UTC.
+- `01-m0945-pair-3.jpg`: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light. Still wrong: the level orange band behind the animals, the stamped whorls on the ground, the tan tone.
+- `02-m0945-pair-1.jpg`: heart-1 on main 67a933a. In: the line's first hand-back from the third lava owner. Still wrong: the ground reads as ribbed clay, the orange band at the horizon, the mouth's pale wall.
+- `03-m0945-pair-2.jpg`: heart-2 on main 67a933a. In: the sunk animal's second hand-back. Still wrong: contour lines on the sunk mass, the flat brown patch in front, pale grey where the picture is dark brown.
+- `04-m0945-pair-4.jpg`: heart-4 on main 67a933a. Still wrong: the pale striped wall round the mouth, the lit vault inside it, the wide flat stream, the orange streaks in the near field.
 
+Status 39, 2026-11-25 09:28 UTC, showed: heart-4 on main, the approved picture at the left.
 Status 38, 2026-11-25 09:02 UTC, showed: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34).
 Status 37, 2026-11-25 08:37 UTC, showed: heart-2, the one that sank. Picture, then the frame on main.
-Status 36, 2026-11-25 08:20 UTC, showed: The feeding picture on main at 08:17 UTC with eight hand-backs merged.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T09:28:17Z
-phase 3: 6.32 h used of 13.00 h
-build: 12.97 h used of 72.00 h
+2026-11-25T09:48:18Z
+phase 3: 6.65 h used of 13.00 h
+build: 13.30 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 26
+half point: reached
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -882,3 +883,4 @@ none
 - 2026-11-25 09:32 UTC. 09:28 UTC: status 39 shown (four pairs on main f19e0bc: heart-4, heart-1, heart-3, heart-0; round 4 final; the account at 1 of 131,000 characters, narration not made).
 - 2026-11-25 09:32 UTC. 09:29 UTC: chain G on f19e0bc: build and keys pass, parts 15 built in the Heart; determinism FAILS: loop frame 288 differs in 9 of 518400 pixels (largest 6 of 255) between a fresh page and a page that drew two film frames first. All nine pixels lie on the mouth, the wall above it and the top of the stream: the fall's B. It passed on 6e5ed77. The fall's owner is told to fix it before anything else; every owner is told to run the whole test before a hand-back.
 - 2026-11-25 09:40 UTC. 09:40 UTC: chain H on fd3a120: build, keys and parts pass; determinism fails again at the loop frame 288 (7 pixels, largest 2 levels), at the same places on the fall's edges; the light's owner saw 10, 11 and 18 pixels on its own machine. The count changes from run to run, so it is an undefined value and not state: the same class as the 06:08 UTC failure (a discard before a derivative, fixed then in the lake by 9e7213b). The fall's owner has the lines of fall/look.ts that break the rule. G10 will also fail on main: the crust's version 3 made the bake target FloatType; its form owner puts HalfFloatType back in its first commit.
+- 2026-11-25 09:48 UTC. 09:48 status 40 shown (pairs on 67a933a: heart-3, heart-1, heart-2, heart-4). Rocks hand-back A merged as 6704c3b after viewing its heart-1 and heart-0 pairs beside the pictures (pale square blocks gone; left mass still stands high; no sulphur at the vent; heart-4 costs 3 s more at uhd draft, the owner brings it down in B). Chain J runs on 6704c3b. ElevenLabs read 09:47: 1 of 131,000 characters.
