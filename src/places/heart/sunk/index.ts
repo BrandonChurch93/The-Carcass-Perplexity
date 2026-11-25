@@ -29,7 +29,8 @@ export function create(ctx: HeartContext): HeartPiece {
   const group = new THREE.Group();
   group.rotation.y = -YAW;
 
-  const anis = { anisotropy: 8 };
+  // Every tap of a stretched texture is paid for here: two is what the folds need at the bench's angle.
+  const anis = { anisotropy: 2 };
   const shared = {
     ...ctx.rig.uniforms,
     tRelief: { value: baked.relief },
@@ -40,9 +41,9 @@ export function create(ctx: HeartContext): HeartPiece {
     uOrigin: { value: new THREE.Vector2(SUNK[0], SUNK[2]) },
     uTearKelvin: { value: TEAR_KELVIN },
     tSkin: { value: ctx.assets.texture('mat/crust-skin.jpg', anis) },
-    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 4 }) },
+    tSkinNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data', anisotropy: 2 }) },
     tRopy: { value: ctx.assets.texture('mat/pahoehoe.jpg', anis) },
-    tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 4 }) },
+    tRopyNh: { value: ctx.assets.texture('mat/pahoehoe-nh.png', { kind: 'data', anisotropy: 2 }) },
   };
 
   // The relief is opaque where it is whole, so it hides the lake under it; only its rim is laid over the lake's crust.
@@ -57,15 +58,16 @@ export function create(ctx: HeartContext): HeartPiece {
   });
   const WHOLE = FIELD.half - 4.7;
   const radial = (x: number, z: number): number => Math.hypot(x - FIELD.cx, z - FIELD.cz);
-  const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && Math.abs(z - 0.9) < 6.2;
+  // The far side of the heap is hidden from the bench by the mound: it gets the coarse sheet.
+  const inner = (x: number, z: number): boolean => Math.abs(x + 1.5) < 8.8 && z > -3.0 && z < 7.1;
   const buried = (x: number, z: number): boolean => bodyDistance(x, z) < -0.8;
   // Fine near the carcass, coarser toward the rim where the relief dies away.
   const fine = new THREE.Mesh(
-    fieldGeometry(baked, 0.04, (x, z) => inner(x, z) && !buried(x, z)),
+    fieldGeometry(baked, 0.05, (x, z) => inner(x, z) && !buried(x, z)),
     fieldMaterial,
   );
   const coarse = new THREE.Mesh(
-    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x + 1.5) < 8.5 && Math.abs(z - 0.9) < 5.9) && radial(x, z) < WHOLE),
+    fieldGeometry(baked, 0.1, (x, z) => !(Math.abs(x + 1.5) < 8.5 && z > -2.7 && z < 6.8) && radial(x, z) < WHOLE),
     fieldMaterial,
   );
   const rim = new THREE.Mesh(
@@ -80,14 +82,14 @@ export function create(ctx: HeartContext): HeartPiece {
     uniforms: {
       ...shared,
       tHide: { value: ctx.assets.texture('mat/hide.jpg', anis) },
-      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 2 }) },
       tFlake: { value: ctx.assets.texture('mat/flake.jpg', anis) },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 2 }) },
     },
   });
   const body = new THREE.Mesh(bodyGeometry(baked), carcassMaterial);
-  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 900, round: 96, tendon: 0 }, baked);
-  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 1.1, seed: 4.1, rings: 560, round: 72, tendon: 0.085 }, baked);
+  const legA = legGeometry({ points: LEG_A, knee: 0.44, scale: 1.45, seed: 1.7, rings: 700, round: 80, tendon: 0 }, baked);
+  const legB = legGeometry({ points: LEG_B, knee: 0.47, scale: 1.1, seed: 4.1, rings: 460, round: 60, tendon: 0.085 }, baked);
   const pad = new THREE.Mesh(padGeometry(), carcassMaterial);
   const legs = [new THREE.Mesh(legA.geometry, carcassMaterial), new THREE.Mesh(legB.geometry, carcassMaterial), pad];
   group.add(body, ...legs, fine, coarse, rim);

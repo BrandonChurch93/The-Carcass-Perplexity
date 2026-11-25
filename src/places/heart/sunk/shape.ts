@@ -12,8 +12,8 @@ const UPSTREAM: [number, number] = [0.611 * Math.cos(YAW) - 0.791 * Math.sin(YAW
 export const FIELD = { cx: -2.0, cz: 0.5, half: 14.5, size: 1024 };
 
 export const BODY = {
-  centre: new THREE.Vector3(-4.3, 0.85, -0.25),
-  radii: new THREE.Vector3(3.0, 1.8, 1.85),
+  centre: new THREE.Vector3(-4.3, 1.0, -0.25),
+  radii: new THREE.Vector3(3.0, 2.3, 1.9),
   // Tilted: the back turned up toward the bench side, the neck end down.
   turn: new THREE.Euler(0.42, 0.24, -0.16, 'YXZ'),
 };
@@ -160,10 +160,12 @@ export function makeField(lakeSeam: [number, number][]): (x: number, z: number) 
     // The tear: the lips lift, the floor is the lava under the skin.
     const [dt, at] = polyDistance(TEAR, x, z);
     const ragged = dt + 0.2 * (noise2(x * 2.6 + 8, z * 2.6) - 0.5) + 0.07 * (noise2(x * 8.1, z * 8.1 + 3) - 0.5);
-    const tearWidth = 0.2 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.7 * (0.55 + 0.9 * noise2(x * 0.9 + 14, z * 0.9 + 22));
-    h += 0.3 * Math.exp(-Math.pow(Math.max(ragged - tearWidth, 0) / 0.6, 2)) * smooth(0, 0.08, tearWidth);
+    const tearWidth = 0.16 * Math.sin(Math.PI * Math.min(1, Math.max(0, at))) ** 0.7 * (0.55 + 0.9 * noise2(x * 0.9 + 14, z * 0.9 + 22));
+    // The lip on the bench side is the lower one, so the bench sees the far wall of the tear and the glow on it.
+    const benchSide = smooth(-0.1, 0.3, z - (2.15 - 0.62 * (x + 6.7)));
+    h += (0.34 - 0.24 * benchSide) * Math.exp(-Math.pow(Math.max(ragged - tearWidth, 0) / 0.6, 2)) * smooth(0, 0.08, tearWidth);
     const open = smooth(tearWidth, tearWidth * 0.45, ragged) * smooth(0.02, 0.1, tearWidth);
-    h = mix(h, -0.05 + 0.04 * noise2(x * 6, z * 6), open);
+    h = mix(h, -0.2 + 0.05 * noise2(x * 6, z * 6), open);
     const heat = smooth(tearWidth * 1.7, tearWidth * 0.35, ragged) * smooth(0.02, 0.1, tearWidth);
 
     // The lake's seam runs on under the folded skin: the skin stands a little proud along it.
@@ -216,7 +218,7 @@ function dataTexture(data: Uint8Array, n: number): THREE.DataTexture {
   t.wrapS = THREE.ClampToEdgeWrapping;
   t.wrapT = THREE.ClampToEdgeWrapping;
   t.generateMipmaps = true;
-  t.anisotropy = 4;
+  t.anisotropy = 2;
   t.colorSpace = THREE.NoColorSpace;
   t.needsUpdate = true;
   return t;
@@ -443,8 +445,8 @@ function weld(g: THREE.BufferGeometry, rows: number, columns: number): void {
 function lavaCoat(baked: Baked, p: THREE.Vector3, reach: number, seed: number): { coat: number; out: number; above: number } {
   const above = p.y - baked.at(p.x, p.z);
   const drips = Math.pow(noise2(p.x * 4.3 + seed, p.z * 4.3), 2) * 0.9 + 0.25 * noise2(p.x * 13 + seed, p.z * 13 + 5);
-  const line = reach * (0.55 + 0.9 * noise2(p.x * 0.8 + seed + 3, p.z * 0.8 + 7)) + 0.4 * drips;
-  const coat = smooth(line, line - 0.3, above);
+  const line = reach * (0.55 + 0.9 * noise2(p.x * 0.8 + seed + 3, p.z * 0.8 + 7)) + 0.22 * drips;
+  const coat = smooth(line + 0.1, line - 0.4, above);
   const out = coat * (0.035 + 0.14 * smooth(0.75, 0, above) + 0.05 * drips * smooth(line - 0.5, line, above));
   return { coat, out, above };
 }
@@ -459,8 +461,8 @@ const SPLITS: [number, number, number, number, number][] = [
 
 /** The body: a deep small hull, its hide sunk between the ribs of the frame and split open over them, tilted in the crust. */
 export function bodyGeometry(baked: Baked): THREE.BufferGeometry {
-  const rows = 230;
-  const columns = 340;
+  const rows = 200;
+  const columns = 300;
   const count = (rows + 1) * (columns + 1);
   const position = new Float32Array(count * 3);
   const map = new Float32Array(count * 4);
@@ -484,7 +486,7 @@ export function bodyGeometry(baked: Baked): THREE.BufferGeometry {
       const dry = fbm3(along * 2.1 + 3, dy * 1.4, dz * 1.4, 4);
       // A hull deeper than it is wide, the hide sunk between the ribs, a keel of spine along the back.
       let r = 1;
-      r -= 0.085 * (1 - ribs) * flank * ring * (0.2 + 1.5 * dry);
+      r -= 0.11 * (1 - ribs) * flank * ring * (0.2 + 1.5 * dry);
       r += 0.03 * ribs * flank * ring;
       // Plates of hide that have dried and lifted at an edge.
       const cell = cells2((a / (Math.PI * 2)) * 22 + 0.6 * noise2(s * 1.3, 4), s * 3.2 + 0.5 * Math.sin(a * 3), 22);
@@ -493,15 +495,18 @@ export function bodyGeometry(baked: Baked): THREE.BufferGeometry {
       const plateEdge = smooth(0, 0.035, cell[0]);
       r += (0.012 + 0.1 * peel * peel) * plateEdge * ring;
       const spine = Math.exp(-Math.pow(Math.min(a, Math.PI * 2 - a) / 0.15, 2));
-      r += 0.1 * spine * (0.55 + 0.45 * Math.cos(s * 14));
+      r += 0.08 * spine * (0.7 + 0.3 * Math.cos(s * 14));
       r += 0.16 * (dry - 0.47);
       // One side fell in.
       r -= 0.2 * smooth(0.45, 0.8, noise3(along * 1.3 + 7, dy * 1.1 + 2, dz * 1.1)) * ring;
       // The wrinkles of dried hide run round the body, finer than the ribs.
       r += 0.008 * Math.sin(s * 60 + 5 * noise3(along * 4, dy * 3, dz * 3)) * flank;
       // And the hide hangs in long pleats from the spine where the flesh under it has gone.
-      const pleat = Math.abs(Math.sin(a * 17 + 2.4 * noise2(s * 0.8 + 5, a * 1.6) + 0.6 * Math.sin(s * 2.1)));
-      r -= 0.035 * Math.pow(1 - pleat, 2.2) * ring * (0.4 + 1.2 * dry);
+      // They are cords of several widths, and they wind a little round the body as it twisted when it went down.
+      const wind = a + 0.16 * s + 0.1 * Math.sin(s * 1.3 + 0.7);
+      const cord = Math.abs(Math.sin(wind * 5 + 2.2 * noise2(s * 0.55 + 5, a * 1.1) + 0.5 * Math.sin(s * 1.7)));
+      const pleat = Math.abs(Math.sin(wind * 18 + 2.4 * noise2(s * 0.8 + 5, a * 1.6) + 2.0 * cord));
+      r -= (0.1 * Math.pow(1 - cord, 1.6) * (0.3 + 1.4 * dry) + 0.032 * Math.pow(1 - pleat, 2.2) * (0.4 + 1.2 * dry)) * ring;
 
       // The splits: the hide parted between two ribs, its lips curled back, the ribs bare across the gap.
       let gap = -1;
@@ -534,7 +539,7 @@ export function bodyGeometry(baked: Baked): THREE.BufferGeometry {
       map[k * 4 + 3] = KIND.body;
       surf[k * 4] = lava.coat * (1 - hole);
       surf[k * 4 + 1] = hole;
-      surf[k * 4 + 2] = (0.22 + 0.78 * smooth(-0.1, 0.8, lava.above)) * (1 - 0.72 * hole * (1 - bar)) * (0.75 + 0.25 * smooth(0.0, 0.4, ribs + 1 - flank));
+      surf[k * 4 + 2] = (0.34 + 0.66 * smooth(-0.1, 0.8, lava.above)) * (1 - 0.72 * hole * (1 - bar)) * (0.75 + 0.25 * smooth(0.0, 0.4, ribs + 1 - flank));
       surf[k * 4 + 3] = bar;
     }
   }
@@ -580,8 +585,9 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       const end = smooth(0, 0.03, t) * (tendon > 0 ? 1 : smooth(1, 0.985, t));
       const core = scale * end * (0.045 + thin * ((shaft + joint) * (1 + cords * 0.5 + lumps) - 0.045));
       // Plates of hide caked with ash, long as bark: some gone, the rest peeling from one end so that an edge stands off the limb.
-      const cell = cells2((a / (Math.PI * 2)) * 8 + 0.35 * Math.sin(s * 1.7 + seed), s * 2.3 + seed, 8);
-      const bare = 0.12 + 0.5 * smooth(0.45, 0.75, noise2(s * 0.5 + seed * 3, 1.5)) + 0.25 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
+      const cell = cells2((a / (Math.PI * 2)) * 6 + 0.35 * Math.sin(s * 1.7 + seed), s * 1.8 + seed, 6);
+      // The plates went in patches: whole stretches of the limb are bare, with a flake or two left on them.
+      const bare = 0.1 + 0.8 * smooth(0.38, 0.62, noise2(s * 0.75 + seed * 3, Math.cos(a + seed) * 1.1 + 1.5)) + 0.2 * Math.exp(-Math.pow((t - knee) / 0.05, 2));
       const present = cell[1] > bare ? 1 : 0;
       const edge = smooth(0.0, 0.03, cell[0] + 0.03 * (noise2(a * 14, s * 21) - 0.5));
       const way = cell[1] * 97 - Math.floor(cell[1] * 97);
@@ -593,9 +599,9 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
       return [core + scale * lift, plate, bone];
     },
     (p, s, a, t) => {
-      const lava = lavaCoat(baked, p, t > 0.5 ? 1.25 : 0.85, seed * 7);
+      const lava = lavaCoat(baked, p, t > 0.5 ? 0.5 : 0.55, seed * 7);
       const recess = 0.72 + 0.28 * smooth(-0.1, 0.25, Math.cos(2 * a + s * 0.8 + seed));
-      return { out: lava.out * 1.2, coat: lava.coat, feature: 0, bone: 0, open: (0.22 + 0.78 * smooth(-0.1, 0.9, lava.above)) * recess };
+      return { out: lava.out * 1.2, coat: lava.coat, feature: 0, bone: 0, open: (0.36 + 0.64 * smooth(-0.1, 0.9, lava.above)) * recess };
     },
     (c) => c.y < baked.at(c.x, c.z) - 0.55,
   );
@@ -603,8 +609,8 @@ export function legGeometry(shape: LegShape, baked: Baked): Tube {
 
 /** The pad of the second leg: a broad flat foot dried to a curled leaf, hanging from the wrist by its tendon. */
 export function padGeometry(): THREE.BufferGeometry {
-  const rows = 90;
-  const columns = 120;
+  const rows = 64;
+  const columns = 84;
   const count = (rows + 1) * (columns + 1);
   const position = new Float32Array(count * 3);
   const map = new Float32Array(count * 4);
