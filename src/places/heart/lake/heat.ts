@@ -200,7 +200,11 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   // The glow map lights feet, legs, ground and air beside a seam the pictures show: there the melt goes in at its true width
   // and at the mean heat of the open melt, not at the heat of its skin. A seam narrower than a texel keeps its power.
   if (least > 0.5 && shown > 0.5) {
-    g = vec2(gapHeat(d, gape, core, least).x, clamp(meltKelvin(q, n), 1320.0, 1400.0));
+    // Most of a channel is dark skin: the map carries the share of it that shows bright, more at the seams the walkers have torn open to feed.
+    float c = n.g - 2.0;
+    float feeding = smoothstep(0.04, 0.07, c) * (1.0 - step(1.3, c));
+    float bright = mix(0.05 + 0.13 * max(smoothstep(0.7, 1.0, gape), stirred), 0.22, feeding);
+    g = vec2(gapHeat(d, gape, core, least).x * bright, clamp(meltKelvin(q, n), 1320.0, 1400.0));
     gLip = vec3(0.0);
   }
 #ifdef LAKE_LIP
@@ -253,6 +257,8 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     float raft = smoothstep(0.42, 0.7, vnoise(polar) * 0.6 + vnoise(polar * 2.7 + 5.0) * 0.4 + 0.45 * (pool - 0.6));
     float k = 1440.0 - 150.0 * pool - 230.0 * raft + 50.0 * (beat - 0.5) + 40.0 * (vnoise(polar * 6.0) - 0.5);
     float c = open * (1.0 - 0.75 * raft * smoothstep(0.3, 0.8, pool));
+    // In the glow map the pool carries the share of it that is bare: the fume over it is lit from this.
+    if (least > 0.5) c *= 0.4;
     if (c > g.x) g = vec2(c, k);
     edge = min(edge, (pool - 0.9) * 20.0);
 #ifdef LAKE_LIP

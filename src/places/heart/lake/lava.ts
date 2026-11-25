@@ -273,7 +273,9 @@ void main() {
   // Two copies of the pattern, half a cycle apart. Each starts unsheared and is carried for a cycle; it is at full weight in
   // the middle of its run and at none when it starts again. The cycle is out of step from place to place, so the lake never pulses as one.
   float phase = uTime / CYCLE + 1.7 * vnoise(q * 0.21 + vSeam.y * 3.1);
-  float wide = smoothstep(0.7, 1.0, gape);
+  // A wide reach keeps a tongue open, and so does a seam the walkers have torn open to feed.
+  float feeding = smoothstep(0.04, 0.07, vSeam.x) * (1.0 - stir);
+  float wide = max(smoothstep(0.7, 1.0, gape), feeding * smoothstep(0.2, 0.45, gape));
   vec4 kelvin = vec4(0.0);
   vec4 first = vec4(0.0);
   float lead = 0.0;
