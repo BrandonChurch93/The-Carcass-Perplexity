@@ -108,7 +108,7 @@ vec3 riverLight(vec3 p, vec3 n, float d) {
   float e = poolLight(p, n, vec3(${f(MOUTH.x - 34)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 9)}), 13.0) * uFlare * shade * reach;
   e += 0.014 * poolLight(p, n, vec3(${f(MOUTH.x + 22)}, ${f(TUBE.floor)}, ${f(TUBE.lipZ - 12)}), 24.0) * shade * smoothstep(1.5, 6.5, d);
   // The river further in shows the ribs of the roof that face it, dull red.
-  e += 0.22 * poolLight(p, n, vec3(riverX(40.0), ${f(TUBE.floor)}, ${f(TUBE.lipZ - 40)}), 13.0) * exp(-abs(d - 40.0) / 30.0);
+  e += 0.14 * poolLight(p, n, vec3(riverX(40.0), ${f(TUBE.floor)}, ${f(TUBE.lipZ - 40)}), 13.0) * exp(-abs(d - 40.0) / 30.0);
   return blackbody(1390.0) * 3.14159 * RIM_LIGHT * e;
 }
 // The rig's shading, with the day and the lake shut out as the tube goes in.
@@ -336,7 +336,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float wave = sin(len * 2.3 + 2.5 * vnoise(vec2(s * 0.6, len * 0.4)) + 0.7 * sin(uTime * 6.0 + s * 1.7));
   // Open melt from bank to bank, yellow down the middle and orange toward the margins, a little hotter where a drop stirs it.
   float thread = mk.y;
-  float kelvin = mix(1300.0, 1450.0, 1.0 - smoothstep(0.55, 1.0, u)) - 60.0 * (streak - 0.5) + fast * (8.0 + 10.0 * wave);
+  float kelvin = mix(1310.0, 1470.0, 1.0 - smoothstep(0.5, 1.0, u)) - 60.0 * (streak - 0.5) + fast * (8.0 + 10.0 * wave);
   kelvin = mix(kelvin, 1450.0, clamp(thread * (0.35 + 0.65 * fast), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
   // Down a drop the sheet is drawn into veils: yellow strands with thinner, redder melt between them.
   float veil = vnoise(vec2(s * 1.9 + 2.0, age * 0.35)) + 0.5 * vnoise(vec2(s * 5.3, age * 0.8 + 4.0));
@@ -358,12 +358,12 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float open = channel(fs, fl, r, 13.0, 2.0, 3.4);
   open = max(open, channel(fs, fl, r, 9.0, 13.0, 2.6) * smoothstep(${f(FAN_FROM + 6)}, ${f(FAN_FROM + 16)}, fl));
   float pool = 1.0 - smoothstep(5.0, 10.0, length(at - vec2(${f(FAN_POOL[0])}, ${f(FAN_POOL[1])})) * (0.75 + 0.5 * vnoise(at / 4.0)));
-  float rim = smoothstep(0.8, 0.93, u) * smoothstep(0.34, 0.54, vnoise(at / 6.5 + vec2(0.0, uTime * 0.02)));
+  float rim = smoothstep(0.8, 0.93, u) * smoothstep(0.42, 0.6, vnoise(at / 6.5 + vec2(0.0, uTime * 0.02)) + 0.2 * vnoise(at / 2.1));
   open = max(max(open, pool), rim) * calm;
   vec2 slab = plates(at / 4.7 + 1.1 * vec2(vnoise(at / 7.0), vnoise(at / 7.0 + 7.0)));
   // The seams are widest where the fan is youngest: near the channels, down its middle and toward its edge.
-  float lively = clamp(0.9 * vnoise(at / 15.0 + 3.0) + 0.08 + 0.5 * smoothstep(0.75, 0.1, u) + 0.4 * smoothstep(0.55, 0.9, u) + 0.35 * behind, 0.0, 1.0) * (0.3 + 0.7 * calm);
-  float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.12, 0.42, lively + 0.25 * slab.y);
+  float lively = clamp(1.25 * vnoise(at / 13.0 + 3.0) - 0.22 + 0.3 * smoothstep(0.75, 0.1, u) + 0.45 * smoothstep(0.6, 0.92, u) + 0.35 * behind, 0.0, 1.0) * (0.3 + 0.7 * calm);
+  float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.2, 0.55, lively + 0.3 * slab.y);
   float crust = mix(mix(700.0, 1060.0, pow(vnoise(at / 1.9), 2.0)), mix(1180.0, 1410.0, clamp(lively * 1.3 - 0.1 + 0.35 * (slab.y - 0.5), 0.0, 1.0)), seam);
   // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
   kelvin = mix(kelvin, 1420.0 - 110.0 * streak + 60.0 * thread, fan);
@@ -395,7 +395,7 @@ void main() {
   vec3 flat_ = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   vec2 lava = stream(vFlow, vBank.w, vIn.yz, vWorld.xz);
   // Where the toe of the fan goes under the lake its skin is broken by the lake's heave, and the edge glows.
-  lava.y = mix(lava.y, max(lava.y, 1400.0), smoothstep(0.6, 0.15, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * smoothstep(0.25, 0.5, vnoise(vWorld.xz / 3.7 + uTime * 0.05)));
+  lava.y = mix(lava.y, max(lava.y, 1430.0), smoothstep(1.7, 0.3, vWorld.y) * smoothstep(${f(FAN_FROM + 8)}, ${f(FAN_FROM + 16)}, vFlow.w) * smoothstep(0.3, 0.5, vnoise(vWorld.xz / 4.3 + uTime * 0.05) + 0.25 * vnoise(vWorld.xz / 1.3)) * smoothstep(2.0, 5.0, min(length(vWorld.xz - vec2(-51.1, -298.4)), length(vWorld.xz - vec2(-28.3, -282.1)))));
   vec3 c = blackbody(lava.y);
   // The sheet's own mark: above zero the apron the river built, below zero the skinned shelf of melt on the floor of the mouth.
   float apron = max(vApron, 0.0);
