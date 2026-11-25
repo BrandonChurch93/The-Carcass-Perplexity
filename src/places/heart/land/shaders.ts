@@ -7,15 +7,7 @@ import { WALL_TONE } from './rock';
 
 const BUTTRESS_LINE = `vec4(${BUTTRESS.root[0].toFixed(1)}, ${BUTTRESS.root[1].toFixed(1)}, ${BUTTRESS.tip[0].toFixed(1)}, ${BUTTRESS.tip[1].toFixed(1)})`;
 
-// The wall (FAR_LIGHT) takes the light of the round fires at its vertices, which stand 1.6 to 5 m apart where a lens looks: that light
-// changes over tens of metres, and reading it for every pixel was a quarter of the wall's cost. The pixel turns it by its own normal.
 export const GROUND_VERTEX = /* glsl */ `
-#ifdef FAR_LIGHT
-${NOISE_GLSL}
-${RIG_GLSL}
-varying vec3 vFire;
-varying vec4 vFireDir;
-#endif
 attribute vec3 aSlope;
 attribute vec2 aLand;
 varying vec3 vWorld;
@@ -25,21 +17,6 @@ void main() {
   vWorld = position;
   vNormal = aSlope;
   vLand = aLand;
-  #ifdef FAR_LIGHT
-  vec3 n = normalize(aSlope);
-  vFire = emitterIrradiance(position, n);
-  // Where most of that light comes from, and how the face stands to it.
-  vec3 dir = vec3(0.0);
-  for (int i = 0; i < 8; i++) {
-    if (i >= uEmitterCount) break;
-    vec3 d = uEmitters[i].xyz - position;
-    float r = uEmitters[i].w;
-    float d2 = dot(d, d) + r * r;
-    dir += d * (inversesqrt(d2) * r * r / d2 * dot(uEmitterRadiance[i], vec3(0.3333)));
-  }
-  dir = normalize(dir + vec3(0.0, 1e-6, 0.0));
-  vFireDir = vec4(dir, dot(n, dir));
-  #endif
   gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
 }`;
 
@@ -64,10 +41,6 @@ float lakeRind(vec3 p) {
 // rigShade with the land map already read. The lake's light is read with four taps near the lake and with one above it
 // (FAR_LIGHT: always one); only a glazed face (GLAZE) is given the sky and the lake as a mirror would see them.
 // No material asks for GLAZE now: the rock of the bench is dry and matte.
-#ifdef FAR_LIGHT
-varying vec3 vFire;
-varying vec4 vFireDir;
-#endif
 vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4 land, float shade, float graze) {
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
@@ -83,12 +56,7 @@ vec3 landShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ, vec4
   vec3 sky = skyIrradiance(n);
   // A gap closed to the sky is half open to the fire, which comes from the side and from below.
   // What stands over a gap closes it to the fire as well, though less: the fire comes in from the side.
-  #ifdef FAR_LIGHT
-  vec3 fire = vFire * clamp((dot(n, vFireDir.xyz) + 0.35) / max(vFireDir.w + 0.35, 0.2), 0.0, 3.0);
-  #else
-  vec3 fire = emitterIrradiance(p, n);
-  #endif
-  vec3 e = sky * open + (lake + fire) * (pow(occ, 0.75) * (1.0 - 0.75 * shade) * graze);
+  vec3 e = sky * open + (lake + emitterIrradiance(p, n)) * (pow(occ, 0.75) * (1.0 - 0.75 * shade) * graze);
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Clinker and ash are matte: a rough face keeps no sheen even seen along itself.
