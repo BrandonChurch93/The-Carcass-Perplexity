@@ -3,7 +3,7 @@ import { isMain, one, relPath, getRenderer } from './lib/img.mjs';
 import { sheet } from './sheet.mjs';
 import { criticsFor, buildCritic } from './lib/pack-core.mjs';
 
-export const USAGE = 'usage: npm run pack -- --round R --unit ID [--critic R4b] [--tier T] [--format F] [--family carbon] [--fake]';
+export const USAGE = 'usage: npm run pack -- --round R --unit ID [--critic R4b] [--tier T] [--format F] [--family carbon] [--record] [--fake]';
 
 export async function packCommand(a, deps = {}) {
   const print = deps.print ?? ((l) => console.log(l));
@@ -39,6 +39,7 @@ export async function packCommand(a, deps = {}) {
         tier,
         format,
         family: one(a.family, null),
+        record: Boolean(a.record),
         outDir: deps.outDir ?? rel('out', 'work', 'packs'),
         keyDir: deps.keyDir ?? rel('out', 'work', 'packs-keys'),
         scratch: deps.scratch ?? rel('out', 'work', 'pack-work'),

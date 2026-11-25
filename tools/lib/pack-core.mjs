@@ -2,11 +2,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { judgedList, riseShot, lakeFrame, lastPictureFrame } from './judged.mjs';
-import { fitWithin, gridFit, grid, cropBox, percentText, locatorOf, spread, SEP } from './img.mjs';
+import { fitWithin, formatSize, gridFit, grid, cropBox, percentText, locatorOf, spread, timecode, SEP } from './img.mjs';
 import { coverRect, unitKinds } from './measure-core.mjs';
 
 export const CARBON_EDGE = 1048;
 export const FILM_SHEETS = 4;
+export const TILES = { cols: 2, rows: 2 };
 export const SETTLED_FILE = 'settled.txt';
 export const SETTLED_HEAD = 'Settled';
 export const PLAIN_WORDS = ['render', 'target', 'approved', 'generated', 'final', 'blockout'];
@@ -24,8 +25,6 @@ const TABLE = {
   R8: { places: false, reveal: true, film: false },
 };
 export const BLOCKOUT = 'R4b';
-export const NO_PACK = { R2: 'R2 needs no pack: each juror gets one picture and the Builder sends it.', R8: 'R8 needs no pack: each viewer gets the titan frame alone and the Builder sends it.' };
-
 export function unitKind(cfg, unit) {
   const k = unitKinds(cfg);
   if (k.places.includes(unit)) return 'places';
@@ -231,7 +230,13 @@ export function planR4({ cfg, cut, film, unit }) {
 export function planR5({ cfg, cut, film, unit }) {
   const count = cfg.critics.contactSheetFrames;
   const groups = [{ items: wholeFilm(film, count) }];
-  for (const e of judgedOf(cfg, cut, film, unit)) groups.push({ items: [{ kind: 'still', ...e, what: e.loop !== undefined ? `The judged frame ${e.id}, loop frame ${e.loop}` : `The judged frame ${e.id}, film frame ${e.frame}` }] });
+  const judged = judgedOf(cfg, cut, film, unit);
+  const per = TILES.cols * TILES.rows;
+  const total = Math.ceil(judged.length / per);
+  for (let i = 0; i < total; i++) {
+    const entries = judged.slice(i * per, (i + 1) * per);
+    groups.push({ items: [{ kind: 'tiles', entries, title: `frames of the film in order${SEP}part ${i + 1} of ${total}`, what: `The judged frames of the film in order, part ${i + 1} of ${total}: ${entries.map((e) => `${e.id} at ${e.loop !== undefined ? `loop frame ${e.loop}` : `frame ${e.frame}`}`).join(', ')}` }] });
+  }
   const est = film.places.map((p) => keysOf(cfg, p.unit).find((x) => x.kind === 'establishing')).filter((x) => x && Number.isInteger(film.keyFrames[x.id]));
   const frames = [...est.map((x) => film.keyFrames[x.id]), film.titanFrame];
   groups.push({ items: [sheetItem(frames, 'the opening view of every place, then the last wide view', `The establishing frame of ${est.map((x) => x.unit).join(', ')}, then the titan frame ${film.titanFrame}`)] });
@@ -248,10 +253,34 @@ export function planR7() {
   return { groups: [], left: ['The R7 pack was left out: there is no stress encode yet to take stills from.'] };
 }
 
-export const PLANS = { R4b: planR4b, R1: planR1, R3: planR3, R4: planR4, R5: planR5, R6: planR6, R7: planR7 };
+export function planR2({ cfg, cut, film, unit, record = false }) {
+  const k = unitKinds(cfg);
+  const judged = judgedOf(cfg, cut, film, unit);
+  const shown = record ? judged : judged.slice(0, cfg.quality.jury.stillsPerUnit);
+  const controls = unit === k.film ? [...cfg.keys.filter((x) => x.kind === 'establishing'), keysOf(cfg, k.reveal).at(-1)].filter(Boolean) : keysOf(cfg, unit);
+  const groups = [
+    ...shown.map((e) => ({ items: [{ kind: 'still', ...e, what: e.loop !== undefined ? `Judged image: ${e.id}, loop frame ${e.loop}` : `Judged image: ${e.id}, film frame ${e.frame}` }] })),
+    ...controls.map((key) => ({ items: [{ kind: 'control', image: key.image, what: `Control: the approved picture of ${key.id}, ${key.image}, resized and encoded like the judged images` }] })),
+  ];
+  const left = [`Each pack is one picture for one call. Each goes to ${cfg.quality.jury.jurors} jurors. The votes on a control are collected once and reused.`];
+  if (!shown.length) left.push(`The unit ${unit} has no judged frame on the page.`);
+  return { groups, left, single: true };
+}
+
+export function planR8({ cfg, film }) {
+  const k = unitKinds(cfg);
+  const width = cfg.quality.recognition.widthPx;
+  const control = keysOf(cfg, k.reveal).at(-1);
+  const groups = [
+    { items: [{ kind: 'still', frame: film.titanFrame, width, what: `The titan frame, film frame ${film.titanFrame}, ${width} px wide` }] },
+    { items: [{ kind: 'control', image: control.image, width, what: `Control: the approved picture of ${control.id}, ${control.image}, ${width} px wide` }] },
+  ];
+  return { groups, left: [`Each pack is one picture for one call. Each goes to ${cfg.quality.recognition.viewers} viewers. The answers on the control are collected once and reused.`], single: true };
+}
+
+export const PLANS = { R4b: planR4b, R1: planR1, R2: planR2, R3: planR3, R4: planR4, R5: planR5, R6: planR6, R7: planR7, R8: planR8 };
 
 export function planFor(critic, ctx) {
-  if (NO_PACK[critic]) return { groups: [], left: [NO_PACK[critic]] };
   return PLANS[critic](ctx);
 }
 
@@ -281,6 +310,12 @@ export async function plain(input, limits, width = null) {
   let img = sharp(input).removeAlpha().toColourspace('srgb');
   if (fit.width !== m.width || fit.height !== m.height) img = img.resize(fit.width, fit.height, { fit: 'fill', kernel: 'lanczos3' });
   return encode(img);
+}
+
+export async function approvedLike(approved, size) {
+  const m = await sharp(approved).metadata();
+  const rect = coverRect(m.width, m.height, size.width / size.height);
+  return encode(sharp(approved).extract(rect).removeAlpha().toColourspace('srgb').resize(size.width, size.height, { fit: 'fill', kernel: 'lanczos3' }));
 }
 
 export function lattice() {
@@ -363,6 +398,23 @@ export async function buildItem(item, { critic, cfg, renderer, sheet, limits, ti
     const made = await sheet({ ...(item.loopFrames ? { loopFrames: item.loopFrames } : { frames: item.frames }), name: 'work', title: item.title, tier: t, format: f, renderer, dir: scratch, look: false });
     return { used, files: [{ side: null, buffer: await plain(made.file, limits) }] };
   }
+  if (item.kind === 'control') {
+    const size = formatSize(f);
+    const fit = item.width && item.width < size.width ? { width: item.width, height: Math.max(1, Math.round((item.width * size.height) / size.width)) } : fitWithin(size.width, size.height, limits.maxEdge, limits.maxMegapixels);
+    return { used, files: [{ side: null, buffer: await approvedLike(approvedPath(item.image), fit) }] };
+  }
+  if (item.kind === 'tiles') {
+    const size = formatSize(f);
+    const cell = gridFit({ ...TILES, aspect: size.width / size.height, title: true, limits, maxCell: size });
+    const cells = [];
+    for (const e of item.entries) {
+      const one = await renderer.renderStill({ ...(e.loop !== undefined ? { loop: e.loop } : { frame: e.frame }), tier: t, format: f, look: false });
+      const caption = e.loop !== undefined ? `loop frame ${e.loop}${SEP}the cover loop` : `frame ${e.frame}${SEP}${timecode(e.frame, cfg.film.fps)}`;
+      cells.push({ input: await sharp(one.file).removeAlpha().resize(cell.width, cell.height, { fit: 'fill', kernel: 'lanczos3' }).png().toBuffer(), caption });
+    }
+    const made = await grid({ cells, cols: TILES.cols, cell, title: item.title });
+    return { used, files: [{ side: null, buffer: await plain(made.buffer, limits) }] };
+  }
   const still = await renderer.renderStill({ ...at, tier: t, format: f, look: false });
   if (item.kind === 'still') return { used, files: [{ side: null, buffer: await plain(still.file, limits, item.width ?? null) }] };
   if (item.kind === 'crops') {
@@ -379,8 +431,7 @@ export async function buildItem(item, { critic, cfg, renderer, sheet, limits, ti
   }
   const b = await plain(still.file, limits);
   const size = await sharp(b).metadata();
-  const a = await encode(sharp(approved).extract(rect).removeAlpha().toColourspace('srgb').resize(size.width, size.height, { fit: 'fill', kernel: 'lanczos3' }));
-  return { used, files: [{ side: 'a', buffer: a }, { side: 'b', buffer: b }] };
+  return { used, files: [{ side: 'a', buffer: await approvedLike(approved, size) }, { side: 'b', buffer: b }] };
 }
 
 const sizeOf = (g) => g.items.reduce((n, i) => n + i.files.length, 0);
@@ -478,9 +529,9 @@ export function writePacks({ critic, round, unit, packs, outDir, keyDir, root, n
   return { entry, manifest: manifestFile, keyFile };
 }
 
-export async function buildCritic({ critic, round, unit, cfg, cut, film, renderer, sheet, tier = null, format = null, family = null, outDir, keyDir, scratch, root, approvedPath }) {
+export async function buildCritic({ critic, round, unit, cfg, cut, film, renderer, sheet, tier = null, format = null, family = null, record = false, outDir, keyDir, scratch, root, approvedPath }) {
   const filled = standInFilm(film, cut, cfg);
-  const plan = planFor(critic, { cfg, cut, film: filled.film, unit });
+  const plan = planFor(critic, { cfg, cut, film: filled.film, unit, record });
   const limits = packLimits(cfg, family);
   const used = [];
   for (const g of plan.groups) {
@@ -490,7 +541,7 @@ export async function buildCritic({ critic, round, unit, cfg, cut, film, rendere
       used.push(made.used);
     }
   }
-  const packs = namePacks(splitGroups(plan.groups, cfg.critics.maxFilesPerMessage));
+  const packs = namePacks(plan.single ? plan.groups.map((g) => ({ items: g.items, files: 1, pairs: false })) : splitGroups(plan.groups, cfg.critics.maxFilesPerMessage));
   for (const p of packs) for (const f of p.files) for (const fault of nameFaults(f.name, cfg)) throw new Error(fault);
-  return writePacks({ critic, round, unit, packs, outDir, keyDir, root, notes: filled.notes, left: plan.left, used, family });
+  return writePacks({ critic, round, unit, packs, outDir, keyDir, root, notes: packs.length ? filled.notes : [], left: plan.left, used, family });
 }

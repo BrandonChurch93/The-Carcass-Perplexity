@@ -11,7 +11,7 @@ const cmd = await tool('pack');
 const img = await tool('lib/img');
 const { sheet } = await tool('sheet');
 const { config, rel, readJson, ROOT } = await tool('lib/paths');
-const { judgedFrames, riseShot } = await tool('lib/judged');
+const { judgedFrames, judgedList, riseShot } = await tool('lib/judged');
 
 const cfg = config();
 const cut = readJson(rel('cut', 'CUTLIST.json'));
@@ -221,13 +221,18 @@ describe('the plans of the other critics', () => {
     expect(seam[count / 2]).toBe(0);
   });
 
-  it('R5: the film sheets, the judged frames of the film in order and one sheet of the opening views', () => {
+  it('R5: the film sheets, the judged frames of the film in order four to a picture, and one sheet of the opening views', () => {
     const plan = core.planR5({ cfg, cut, film: filled(), unit: filmUnit });
-    const stills = items(plan).filter((i) => i.kind === 'still');
-    expect(stills[0].frame).toBe(0);
-    expect(stills.filter((s) => s.loop !== undefined).length).toBe(4);
+    const tiles = items(plan).filter((i) => i.kind === 'tiles');
+    const shown = tiles.flatMap((t) => t.entries);
+    expect(shown[0]).toEqual({ id: `${filmUnit}-first`, frame: 0 });
+    expect(shown.filter((e) => e.loop !== undefined).length).toBe(4);
+    expect(shown.map((e) => e.id)).toEqual(judgedList(cfg, cut).filter((e) => e.unit === filmUnit).map((e) => e.id));
+    for (const t of tiles) expect(t.entries.length).toBeLessThanOrEqual(4);
     const last = items(plan).at(-1);
     expect(last.frames).toEqual([...places.map((p) => cut.keyFrames[`${p}-0`]), cut.titanFrame]);
+    const packs = core.splitGroups(withFiles(plan.groups), max);
+    expect(packs.length).toBe(1);
   });
 
   it('R6: frame 0 and frames across the hook, at phone width, in one pack', () => {
@@ -239,10 +244,30 @@ describe('the plans of the other critics', () => {
     for (const i of all) expect(i.width).toBe(cfg.critics.phonePreviewWidthPx);
   });
 
-  it('R7, R2 and R8: no pack, and the plan says why', () => {
+  it('R7: no pack, and the plan says why', () => {
     expect(core.planFor('R7', {})).toEqual({ groups: [], left: ['The R7 pack was left out: there is no stress encode yet to take stills from.'] });
-    expect(core.planFor('R2', {}).left[0]).toMatch(/^R2 needs no pack/);
-    expect(core.planFor('R8', {}).left[0]).toMatch(/^R8 needs no pack/);
+  });
+
+  it('R2: one picture a pack, the keys first up to the limit, then the approved pictures as controls', () => {
+    const plan = core.planR2({ cfg, cut, film: filled(), unit: reveal });
+    expect(plan.single).toBe(true);
+    const all = items(plan);
+    const keys = cfg.keys.filter((k) => k.unit === reveal);
+    expect(all.filter((i) => i.kind === 'still').map((i) => i.id)).toEqual([...keys.map((k) => k.id), `${reveal}-titan`, `${reveal}-handoff-1`].slice(0, cfg.quality.jury.stillsPerUnit));
+    expect(all.filter((i) => i.kind === 'control').map((i) => i.image)).toEqual(keys.map((k) => k.image));
+    const record = core.planR2({ cfg, cut, film: filled(), unit: reveal, record: true });
+    expect(items(record).filter((i) => i.kind === 'still').length).toBe(keys.length + 4);
+    const whole = core.planR2({ cfg, cut, film: filled(), unit: filmUnit });
+    expect(items(whole).filter((i) => i.kind === 'control').map((i) => i.image)).toEqual([...cfg.keys.filter((k) => k.kind === 'establishing'), cfg.keys.find((k) => k.id === 'reveal-4')].map((k) => k.image));
+    expect(items(whole)[0].frame).toBe(0);
+  });
+
+  it('R8: the titan frame and its control, each alone, at the width of the recognition test', () => {
+    const plan = core.planR8({ cfg, cut, film: filled(), unit: reveal });
+    expect(plan.single).toBe(true);
+    expect(items(plan).map((i) => [i.kind, i.width])).toEqual([['still', cfg.quality.recognition.widthPx], ['control', cfg.quality.recognition.widthPx]]);
+    expect(items(plan)[0].frame).toBe(cut.titanFrame);
+    expect(items(plan)[1].image).toBe(cfg.keys.find((k) => k.id === 'reveal-4').image);
   });
 
   it('renders judged frames at the final tier in the master format and sheets at the review tier', () => {
@@ -380,6 +405,16 @@ describe('the crops and the pictures of the other packs', () => {
     expect((await sharp(out).raw().toBuffer()).equals(await sharp(withText).raw().toBuffer())).toBe(true);
   });
 
+  it('tiles judged frames two across with the frame number under each', async () => {
+    const r = img.fakeRenderer(path.join(dir, 'stills'));
+    const item = { kind: 'tiles', entries: [{ id: 'x', frame: 0 }, { id: 'y', frame: 120 }, { id: 'z', loop: 240 }], title: 'frames of the film in order' };
+    const made = await core.buildItem(item, { critic: 'R5', cfg, renderer: r, sheet, limits: core.packLimits(cfg), tier: 'draft', format: 'preview', scratch: path.join(dir, 'w'), approvedPath: rel });
+    expect(made.files.length).toBe(1);
+    const m = await sharp(made.files[0].buffer).metadata();
+    expect(img.inside(m.width, m.height, core.packLimits(cfg))).toBe(true);
+    expect(m.width).toBeGreaterThan(1000);
+  });
+
   it('resizes a still to the phone width for R6 and strips it', async () => {
     const r = img.fakeRenderer(path.join(dir, 'stills'));
     const made = await core.buildItem({ kind: 'still', frame: 0, width: cfg.critics.phonePreviewWidthPx }, { critic: 'R6', cfg, renderer: r, sheet, limits: core.packLimits(cfg), tier: 'draft', format: 'preview', scratch: path.join(dir, 'w'), approvedPath: rel });
@@ -388,6 +423,31 @@ describe('the crops and the pictures of the other packs', () => {
     expect(m.format).toBe('png');
     expect(m.exif ?? m.icc ?? m.xmp ?? null).toBe(null);
   });
+});
+
+describe('the one picture packs of R2 and R8', () => {
+  it('gives each juror one file, with the control the same size and encoding as the judged image', async () => {
+    const base = path.join(dir, 'r8');
+    const deps = { renderer: img.fakeRenderer(path.join(dir, 'stills')), outDir: path.join(base, 'packs'), keyDir: path.join(base, 'keys'), scratch: path.join(base, 'work'), root: base, print: () => {} };
+    const r8 = await cmd.packCommand({ round: '1', unit: reveal, critic: 'R8', tier: 'draft', format: 'preview' }, deps);
+    expect(r8.entries[0].packs.map((p) => p.files)).toEqual([['set-A-01.png'], ['set-B-01.png']]);
+    const sizes = [];
+    for (const p of r8.entries[0].packs) {
+      const m = await sharp(path.join(base, p.folder, p.files[0])).metadata();
+      sizes.push([m.width, m.height, m.format, m.channels]);
+    }
+    expect(sizes[0]).toEqual(sizes[1]);
+    expect(sizes[0][0]).toBe(cfg.quality.recognition.widthPx);
+    const r2 = await cmd.packCommand({ round: '1', unit: reveal, critic: 'R2', tier: 'draft', format: 'preview' }, deps);
+    const packs = r2.entries[0].packs;
+    expect(packs.length).toBe(Math.min(cfg.quality.jury.stillsPerUnit, 8) + 4);
+    for (const p of packs) expect(p.files.length).toBe(1);
+    const first = await sharp(path.join(base, packs[0].folder, packs[0].files[0])).metadata();
+    const last = await sharp(path.join(base, packs.at(-1).folder, packs.at(-1).files[0])).metadata();
+    expect([last.width, last.height]).toEqual([first.width, first.height]);
+    const manifest = JSON.parse(fs.readFileSync(r2.manifest, 'utf8'));
+    expect(manifest.critics.map((c) => c.critic)).toEqual(['R2', 'R8']);
+  }, 120000);
 });
 
 describe('the command', () => {
