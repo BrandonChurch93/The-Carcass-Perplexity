@@ -28,7 +28,8 @@ export function create(ctx: HeartContext): HeartPiece {
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
     tTalus: { value: ctx.assets.texture('mat/talus.jpg') },
-    tBoulder: { value: ctx.assets.texture('mat/boulder.jpg') },
+    tCrust: { value: ctx.assets.texture('mat/crust-skin.jpg') },
+    tCrustNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
     tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
   };
 
@@ -54,7 +55,7 @@ export function create(ctx: HeartContext): HeartPiece {
     return new THREE.Vector3(p.x, river.height(p.x, p.z) + lift, p.z);
   };
   const hot = (kelvin: number, share: number): THREE.Vector3 => new THREE.Vector3(...blackbody(kelvin)).multiplyScalar(share);
-  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 20, TUBE.floor + 5, TUBE.lipZ - 12), radius: 15, radiance: hot(1400, 0.5) };
+  const mouthLight = { position: new THREE.Vector3(MOUTH.x - 22, TUBE.floor + 3, TUBE.lipZ - 5), radius: 12, radiance: hot(1400, 0.32) };
   const bodyLight = { position: spot(52, 3), radius: 11, radiance: hot(1420, 0.55) };
   const footLight = { position: spot(course.length - 26, 3), radius: 20, radiance: hot(1330, 0.4) };
   const surgeLight = { position: spot(0, 4), radius: 9, radiance: new THREE.Vector3() };
@@ -69,7 +70,7 @@ export function create(ctx: HeartContext): HeartPiece {
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
   const footAt = spot(course.length - 8, 0);
   const footFume = { at: [footAt.x + 14, 1, footAt.z + 4] as [number, number, number], radius: 34, strength: 0.6, rise: 150, kind: 'fume' as const, lean: [0.3, -0.1] as [number, number] };
-  const mouthFume = { at: [MOUTH.x - 4, TUBE.floor + 30, TUBE.lipZ - 4] as [number, number, number], radius: 30, strength: 0.35, rise: 120, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
+  const mouthFume = { at: [MOUTH.x - 6, TUBE.floor + MOUTH.height + 6, TUBE.lipZ - 20] as [number, number, number], radius: 26, strength: 0.14, rise: 120, kind: 'smoke' as const, lean: [0.15, 0.1] as [number, number] };
   ctx.sources.steam.push(footFume, mouthFume);
 
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.

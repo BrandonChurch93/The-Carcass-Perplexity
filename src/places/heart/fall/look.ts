@@ -1,7 +1,7 @@
 // The shaders of the fall's folder.
 import { MOUTH } from '../layout';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { TUBE } from './path';
+import { FAN_FROM, TUBE } from './path';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
 
@@ -75,6 +75,13 @@ vec3 rockShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float occ, vec3 more, float 
   return c + fr * skyIrradiance(n) / 3.14159 * open;
 }
 uniform sampler2D tBoulderNh;
+uniform sampler2D tTalus;
+// A picture laid on from the three axes of the world.
+vec3 threeWay(sampler2D map, vec3 p, vec3 n) {
+  vec3 w = pow(abs(n), vec3(4.0));
+  w /= w.x + w.y + w.z;
+  return w.x * texture2D(map, p.zy).rgb + w.y * texture2D(map, p.xz).rgb + w.z * texture2D(map, p.xy).rgb;
+}
 // What the big pictures cannot hold at this distance: the small relief of the rock, laid on from the three axes of the world so that it
 // neither swims nor stretches on a face of any slope. It bends the normal and returns the shade of its pits and knobs.
 float fineRock(vec3 p, float amount, inout vec3 n) {
@@ -185,13 +192,13 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   if (cover <= 0.0) return vec2(0.0, 600.0);
   float u = abs(s) / max(half_, 0.1);
   float fast = smoothstep(5.5, 11.0, speed);
-  float fan = smoothstep(116.0, 136.0, len);
+  float fan = smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, len);
   float streak = 0.5 * vnoise(vec2(s * 0.7, age * 1.1)) + 0.3 * vnoise(vec2(s * 2.3 + 7.0, age * 2.7)) + 0.2 * vnoise(vec2(s * 6.5 + 3.0, age * 6.0));
   float wave = sin(len * 2.3 + 2.5 * vnoise(vec2(s * 0.6, len * 0.4)) + 0.7 * sin(uTime * 6.0 + s * 1.7));
   // A thin skin over most of it, orange; open lava down the middle and wherever a cascade tears the skin; red at the margins.
   // Open lava only in threads, most of them down the middle and where a cascade pulls the skin apart. Rock in the stream chills what passes it.
   float thread = smoothstep(0.1, 0.0, abs(vnoise(vec2(s * 0.85 + 11.0, age * 0.45)) - 0.5)) + 0.6 * smoothstep(0.07, 0.0, abs(vnoise(vec2(s * 2.1 + 5.0, age * 1.3)) - 0.5));
-  float kelvin = mix(1060.0, 1215.0, 1.0 - smoothstep(0.3, 1.0, u)) - 170.0 * (streak - 0.45) + fast * (95.0 + 40.0 * wave);
+  float kelvin = mix(1090.0, 1250.0, 1.0 - smoothstep(0.3, 1.0, u)) - 170.0 * (streak - 0.45) + fast * (95.0 + 40.0 * wave);
   kelvin = mix(kelvin, 1440.0, clamp(thread * (0.35 + 0.65 * fast + 0.5 * (1.0 - smoothstep(0.0, 0.5, u))), 0.0, 1.0) * (0.25 + 0.75 * streak));
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
   kelvin = min(kelvin, 1450.0);
@@ -204,9 +211,12 @@ vec2 stream(vec4 flow, float speed, vec2 away) {
   kelvin = mix(kelvin, mix(skin, 1290.0, tear), raft);
   // Where the slope gives out the stream spreads into a fan and skins over; it goes on under the skin and in a few open lanes.
   float lane = abs(vnoise(vec2(s * 0.17 + 1.6 * vnoise(vec2(len * 0.07, 2.0)), len * 0.03 + 9.0)) - 0.5);
-  float open = smoothstep(0.075, 0.03, lane);
+  float open = smoothstep(0.16, 0.09, lane);
   float crack = smoothstep(0.045, 0.0, abs(vnoise(vec2(s * 0.55 + 1.0, len * 0.5 + age * 0.12)) - 0.5)) * (0.4 + 0.6 * vnoise(vec2(s * 0.2, len * 0.2 + 5.0)));
-  float crust = mix(mix(700.0, 930.0, vnoise(vec2(s * 0.8, len * 0.8))), 1210.0, crack);
+  float crack2 = smoothstep(0.035, 0.0, abs(vnoise(vec2(s * 1.7 + 6.0, len * 1.5 + age * 0.12)) - 0.5));
+  float crust = mix(mix(700.0, 930.0, vnoise(vec2(s * 0.8, len * 0.8))), 1260.0, max(crack, 0.7 * crack2));
+  // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
+  kelvin = mix(kelvin, 1330.0 - 170.0 * streak + 110.0 * thread, fan);
   kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.6 * behind));
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1462.0, 0.7 * behind * (1.0 - 0.5 * raft)) + 70.0 * front;
@@ -221,7 +231,8 @@ varying vec4 vFlow;
 varying vec4 vBank;
 varying vec3 vIn;
 uniform sampler2D tCliff;
-uniform sampler2D tTalus;
+uniform sampler2D tCrust;
+uniform sampler2D tCrustNh;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WINDOW_FRAGMENT}
@@ -244,7 +255,8 @@ void main() {
     // What the river built is younger and blacker than the wall: welded spatter and levees close in, a dusting of it further out.
     float side = mix(vIn.y - vFlow.z, 0.3, smoothstep(0.3, 0.5, vIn.z));
     float young = smoothstep(22.0, 2.0, side) * (0.7 + 0.3 * vnoise(vWorld.xz * 0.35));
-    vec3 albedo = mix(rock, vec3(0.026, 0.023, 0.022), 0.9 * young);
+    vec3 fresh = threeWay(tTalus, vWorld / 9.0, n) * 0.42;
+    vec3 albedo = mix(rock, fresh, 0.9 * young);
     float own = max(smoothstep(30.0, 14.0, side), vIn.x);
     albedo *= fineRock(vWorld, own, n);
     // The stream's own light on its banks: it is a long bright strip, and what faces it glows.
@@ -252,13 +264,24 @@ void main() {
     float far = length(to);
     float form = vFlow.z / sqrt(vFlow.z * vFlow.z + far * far);
     float behind = smoothstep(uSurge.x + 3.0, uSurge.x - 8.0, vFlow.w) * uSurge.y;
-    float fan = smoothstep(116.0, 136.0, vFlow.w);
+    float fan = smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, vFlow.w);
     float seen = smoothstep(2.5, 0.0, to.y);
     vec3 strip = blackbody(1400.0) * 3.14159 * (0.3 + 0.4 * behind) * (1.0 - 0.75 * fan) * form * form * form * seen * clamp(dot(n, to / far), 0.0, 1.0) * (1.0 - vIn.x);
     vec3 r = rockShade(vWorld, n, v, albedo, 1.0, strip, ${f(TUBE.lipZ)} - vWorld.z);
     // The rock the lava touches is itself hot for a hand's breadth.
     r += blackbody(max(1090.0 - 420.0 * max(side, 0.0), 500.0)) * smoothstep(1.0, 0.0, side) * (0.5 + 0.5 * vnoise(vWorld.xz * 2.3));
     c = mix(r, c, lava.x);
+  }
+  // Skin that has gone dark is a surface again: it takes the light of what still glows round it.
+  float cool = lava.x * smoothstep(1080.0, 900.0, lava.y);
+  if (cool > 0.0) {
+    vec3 n = normalize(vNormal);
+    vec2 uv = vec2(vFlow.y, vFlow.w - 5.5 * (uTime - vFlow.x) * (1.0 - smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, vFlow.w))) / 5.0;
+    vec3 skin = texture2D(tCrust, uv).rgb;
+    vec2 slope = texture2D(tCrustNh, uv).rg - 0.5;
+    n = normalize(n + vec3(slope.x, 0.0, slope.y) * 1.8);
+    vec3 glow = blackbody(1300.0) * 3.14159 * 0.16 * (0.5 + 0.5 * n.y);
+    c += cool * rockShade(vWorld, n, normalize(cameraPosition - vWorld), skin * 0.8, 1.0, glow, ${f(TUBE.lipZ)} - vWorld.z);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

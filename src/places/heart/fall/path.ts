@@ -98,30 +98,30 @@ const MAIN: [number, number][] = [
   inside(16),
   LIP,
   [-50, -447],
-  [-45, -439],
-  [-39, -431],
-  [-36, -422],
-  [-39, -413],
-  [-46, -404],
-  [-52, -394],
-  [-56, -384],
-  [-57, -374],
-  [-55, -365],
-  [-50, -356],
-  [-44, -347],
-  [-39, -338],
+  [-42, -439],
+  [-31, -432],
+  [-24, -423],
+  [-27, -413],
+  [-38, -404],
+  [-52, -396],
+  [-63, -386],
+  [-66, -375],
+  [-60, -365],
+  [-50, -357],
+  [-42, -348],
+  [-38, -338],
   [FALL_FOOT[0], FALL_FOOT[1]],
   [FALL_FOOT[0] + 2, FALL_FOOT[1] + 14],
 ];
 
 /** The west arm of the braid. It leaves the main stream at `BRAID_FROM` metres from the lip. */
-export const BRAID_FROM = 104;
+export const BRAID_FROM = 112;
 const ARM_TAIL: [number, number][] = [
-  [-63, -362],
-  [-70, -351],
-  [-73, -340],
-  [-71, -329],
-  [-68, -317],
+  [-76, -372],
+  [-84, -361],
+  [-87, -349],
+  [-84, -337],
+  [-80, -325],
 ];
 
 /** The benches of the main stream and of the arm: the run of each, and of the cascade off its end, metres. */
@@ -142,6 +142,9 @@ const ARM_STEPS: [number, number][] = [
   [10, 4],
 ];
 
+/** Metres from the lip at which the slope eases and the stream spreads into its fan. */
+export const FAN_FROM = 128;
+
 /** Width of the stream by metres from the lip. */
 const HALF: [number, number][] = [
   [-200, 9],
@@ -150,9 +153,9 @@ const HALF: [number, number][] = [
   [14, 8.5],
   [60, 6.5],
   [100, 7],
-  [130, 8.5],
-  [150, 12],
-  [172, 22],
+  [FAN_FROM, 8.5],
+  [FAN_FROM + 20, 17],
+  [FAN_FROM + 56, 30],
 ];
 
 /** Metres the stream stands above the ground it has built on, at the head of a bench. */
@@ -190,7 +193,7 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
     const foot = Math.min(n - 1, i + Math.round(run / SPACING));
     const target = (ground[foot] as number) + lerp(0.5, PERCH, smooth(2, 14, ground[foot] as number));
     const top = c.y[i] as number;
-    if (top - target < 2.5) continue;
+    if (top - target < 2.5 || (c.len[i] as number) > FAN_FROM - 6) continue;
     falls.push(c.len[Math.round(0.5 * (i + foot))] as number);
     for (let k = i + 1; k <= foot; k++) {
       const t = (k - i) / (foot - i);
@@ -254,7 +257,7 @@ export function createCourse(height: (x: number, z: number) => number): Course {
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 13, smooth(BRAID_FROM + 20, BRAID_FROM + 66, len)), height, main.y[fork] as number, ARM_STEPS, []);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 15, smooth(BRAID_FROM + 14, BRAID_FROM + 50, len)), height, main.y[fork] as number, ARM_STEPS, []);
   for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 

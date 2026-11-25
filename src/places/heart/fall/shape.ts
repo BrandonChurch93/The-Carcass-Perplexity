@@ -1,7 +1,7 @@
 // The shapes of the fall's folder: the cliff rebuilt round the mouth, the rim and the tube, and the bed the river runs in.
 import * as THREE from 'three';
 import { MOUTH, ground, lerp, smooth } from '../layout';
-import { TUBE, type Course } from './path';
+import { FAN_FROM, TUBE, type Course } from './path';
 
 const fract = (v: number): number => v - Math.floor(v);
 const hash = (i: number, j: number): number => fract(Math.sin(i * 127.1 + j * 311.7) * 43758.5453);
@@ -15,6 +15,41 @@ export function noise2(x: number, z: number): number {
   const a = u * u * (3 - 2 * u);
   const b = v * v * (3 - 2 * v);
   return lerp(lerp(hash(i, j), hash(i + 1, j), a), lerp(hash(i, j + 1), hash(i + 1, j + 1), a), b);
+}
+
+/**
+ * Broken rock: the ground as blocks of about `size` metres, each with its own height and tilt, with a joint between neighbours.
+ * Returns metres, about -1 to 1 times the size of a block's step.
+ */
+export function blocks(x: number, z: number, size: number, seed: number): number {
+  const gx = x / size;
+  const gz = z / size;
+  const ix = Math.floor(gx);
+  const iz = Math.floor(gz);
+  let d1 = Infinity;
+  let d2 = Infinity;
+  let cx = 0;
+  let cz = 0;
+  let id = 0;
+  for (let j = -1; j <= 1; j++) {
+    for (let i = -1; i <= 1; i++) {
+      const px = ix + i + 0.15 + 0.7 * hash(ix + i + seed, iz + j);
+      const pz = iz + j + 0.15 + 0.7 * hash(ix + i + 17.3, iz + j + seed);
+      const d = Math.hypot(px - gx, pz - gz);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        cx = px;
+        cz = pz;
+        id = hash(ix + i + 3.1 * seed, iz + j + 9.7);
+      } else if (d < d2) d2 = d;
+    }
+  }
+  const tiltX = hash(id * 91.7, 2.3) - 0.5;
+  const tiltZ = hash(id * 53.1, 7.9) - 0.5;
+  const body = (id - 0.5) * 1.3 + 1.6 * (tiltX * (gx - cx) + tiltZ * (gz - cz));
+  const joint = smooth(0, 0.16, d2 - d1);
+  return lerp(-0.75, body, joint);
 }
 
 const fbm2 = (x: number, z: number): number => 0.5 * noise2(x, z) + 0.3 * noise2(x * 2.1 + 5.3, z * 2.1 + 1.7) + 0.2 * noise2(x * 4.3 + 9.1, z * 4.3 + 7.9);
@@ -184,7 +219,7 @@ const lipAt = (x: number): number => {
   const key = Math.round(x * 4);
   let z = LIP_Z.get(key);
   if (z === undefined) {
-    z = Math.max(BED.lip - 6, Math.min(BED.lip + 12, faceZ(key / 4, TUBE.floor - 1.5))) + 2.5 * (noise2(x / 9 + 3.7, 0.5) - 0.5) + 1.6 * (noise2(x / 2.7, 7.5) - 0.5);
+    z = Math.max(BED.lip - 6, Math.min(BED.lip + 12, faceZ(key / 4, TUBE.floor - 0.6))) + 1.4 * (noise2(x / 9 + 3.7, 0.5) - 0.5);
     LIP_Z.set(key, z);
   }
   return z;
@@ -192,7 +227,7 @@ const lipAt = (x: number): number => {
 /** Rock that stands in the stream and parts it: 0 none, 1 an island. Long with the flow, on the benches and in the fan. */
 const island = (len: number, across: number, half: number, speed: number): number => {
   if (len < 14) return 0;
-  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.25 * smooth(110, 135, len) - 0.3 * smooth(6, 10, speed);
+  const field = noise2(len / 10.5 + 1.7, across / 3.6 + 4.2) + 0.3 * smooth(FAN_FROM, FAN_FROM + 16, len) - 0.3 * smooth(6, 10, speed);
   return smooth(0.6, 0.72, field) * smooth(0.95, 0.6, Math.abs(across) / half);
 };
 
@@ -202,7 +237,7 @@ const island = (len: number, across: number, half: number, speed: number): numbe
  * `aBank`: xy the unit vector on the ground toward the stream, z the height of the stream there, w its speed.
  */
 export function bed(course: Course, land: (x: number, z: number) => number): Bed {
-  const at = (x: number, z: number): { y: number; n: ReturnType<Course['nearest']>; under: number; isle: number } => {
+  const at = (x: number, z: number): { y: number; n: ReturnType<Course['nearest']>; under: number; isle: number; top: number } => {
     const n = course.nearest(x, z);
     const u = n.distance / n.half;
     const side = n.distance - n.half;
@@ -211,7 +246,8 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     // Inside: a floor that rises a little going in, turned up at the walls.
     const off = Math.abs(x - TUBE.axis(Math.max(d, 0))) / TUBE.half(Math.max(d, 0));
     const up = smooth(0.7, 1.08, off);
-    const floor = n.y - 0.5 + 0.9 * smooth(1.0, 1.25, u) + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5) * smooth(0.9, 1.25, u);
+    const level = TUBE.floor + 0.012 * Math.max(d, 0);
+    const floor = lerp(n.y, level - 0.5 + 0.9 * smooth(1.0, 1.25, u) + 9 * up * up + 0.9 * (fbm2(x / 7, z / 7) - 0.5), smooth(0.9, 1.06, u));
     // Outside: the benches the river has built, a levee each side of it, their broken flanks, and its spatter on the ground beyond.
     const ground = Math.max(land(x, z), -3);
     const shelf = 2.5 + 7 * noise2(x / 13 + 1.3, z / 13 + 4.1) + 3 * noise2(n.len / 9, n.arm ? 3.5 : 9.5);
@@ -222,15 +258,18 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
     const beat = drop * 0.19 + 1.6 * noise2(x / 15, z / 15) + 0.5 * noise2(x / 4.1 + 8, z / 4.1);
     const tread = beat - Math.floor(beat);
     const fall = drop + 2.4 * (smooth(0.0, 0.5, tread) - tread) * smooth(0, 3, drop) * (0.3 + 1.3 * noise2(x / 9 + 4, z / 9));
-    const crag = 2.4 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + (1.1 * (ridged(x / 2.1, z / 2.1 + 5.5) - 0.5) + 0.4 * (noise2(x / 0.8, z / 0.8) - 0.5)) * smooth(2.5, 0, flank);
-    const bench = n.y + levee + crag * smooth(0.3, 3.5, side) - fall;
-    const cover = 0.5 + 0.5 * smooth(16, 4, side) + (fbm2(x / 5.5, z / 5.5) - 0.5) * 1.6 + (noise2(x / 1.4 + 7, z / 1.4) - 0.5) * 0.5;
+    const crag = 1.6 * (ridged(x / 7.3 + 2.2, z / 7.3) - 0.5) + 2.3 * blocks(x, z, 5.2, 1) + 0.8 * blocks(x + 40, z, 1.9, 2);
+    // In the fan the stream no longer stands on a bench: it lies on the slope as a sheet.
+    const sheet = smooth(FAN_FROM, FAN_FROM + 16, n.len);
+    const top = lerp(n.y, Math.max(ground, 0) + 0.45, sheet);
+    const bench = top + levee * (1 - 0.6 * sheet) + Math.min(crag * smooth(0.3, 3.5, side), 0.5 + 0.12 * side) - fall;
+    const cover = 0.9 + 0.5 * smooth(16, 4, side) + (fbm2(x / 5.5, z / 5.5) - 0.5) * 1.2 + (0.9 * blocks(x, z, 3.4, 3) + 0.45 * blocks(x + 20, z, 1.3, 4)) * smooth(26, 10, side);
     const skirt = ground + lerp(-2.4, cover, smooth(30, 15, side) * smooth(-0.6, 0.6, ground + 0.8 * smooth(6, 0, side)));
     const rock = Math.max(bench, skirt);
     const isle = island(n.len, n.distance * n.side, n.half, n.speed);
-    const stream = n.y + 0.25 * (1 - Math.min(1, u * u)) + isle * (0.9 + 1.4 * noise2(x / 2.3, z / 2.3));
+    const stream = top + 0.25 * (1 - Math.min(1, u * u)) + isle * (0.9 + 1.4 * noise2(x / 2.3, z / 2.3));
     const outside = lerp(stream, rock, smooth(0.9, 1.06, u));
-    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle };
+    return { y: lerp(floor, outside, smooth(-1.5, 2.5, -d)), n, under: ground, isle, top };
   };
 
   const xs: number[] = [];
@@ -249,7 +288,7 @@ export function bed(course: Course, land: (x: number, z: number) => number): Bed
       const d = lipAt(x) - z;
       positions.push(x, p.y, z);
       flow.push(p.n.tau, p.n.distance * p.n.side, p.n.half, p.n.len);
-      bank.push(p.n.toward[0], p.n.toward[1], p.n.y, p.n.speed);
+      bank.push(p.n.toward[0], p.n.toward[1], p.top, p.n.speed);
       within.push(smooth(-2, 3, d), p.n.distance, p.isle);
       const inTube = Math.abs(x - TUBE.axis(Math.max(d, 0))) < TUBE.half(Math.max(d, 0)) * 1.1 + 3;
       keep.push((d < -2.5 || inTube) && (d > 2 || (p.y > p.under - 1.6 && p.y > -0.6)));
