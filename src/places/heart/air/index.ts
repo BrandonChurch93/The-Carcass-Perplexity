@@ -61,13 +61,13 @@ const fromFoot = (right: number, toward: number): [number, number] => [FALL_FOOT
 
 const BODIES: readonly Body[] = [
   // The banks that rise off the lake behind and beside the feeding group. The two far ones stand across the right edge of the long lens on the mouth, so they are not drawn there.
-  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.1, climb: 2.2, colour: ROSE, foot: 0.3, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 1.0, shots: { 'heart-01': 0.12 } },
-  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.1, climb: 2.2, colour: ROSE, foot: 0.3, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 1.0, shots: { 'heart-01': 0.12 } },
-  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.1, climb: 2.2, colour: ROSE, foot: 0.3, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 1.0, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
-  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.1, climb: 2.2, colour: ROSE, foot: 0.3, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 1.0, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
+  { at: behind(115, 6), radius: 30, height: 30, lean: BANK_LEAN, dense: 0.019, repeat: 48, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12 } },
+  { at: behind(150, 52), radius: 38, height: 26, lean: BANK_LEAN, dense: 0.016, repeat: 60, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12 } },
+  { at: behind(190, -8), radius: 44, height: 32, lean: BANK_LEAN, dense: 0.017, repeat: 70, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
+  { at: behind(240, 6), radius: 55, height: 30, lean: BANK_LEAN, dense: 0.016, repeat: 88, hard: 2.6, climb: 2.2, colour: ROSE, foot: 0.2, lake: [1.2, 12], floor: [2.3, 12], lights: 0.2, tops: 2.1, solid: 0.6, shots: { 'heart-01': 0.12, 'heart-05': 0 } },
   // What stands behind them in the feeding picture: warm brown smoke over the open lake, thin enough for the buttress to stand in it. Staged for that shot.
-  { at: behind(430, 20), radius: 330, height: 26, lean: [-0.2, 0.08], dense: 0.0022, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.3, floor: [3.4, 12], tops: 2.3, solid: 0.9, shots: { 'heart-02': 1, rest: 0 } },
-  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.005, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [1.6, 40], tops: 2.2, solid: 0.7, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 20), radius: 330, height: 26, lean: [-0.2, 0.08], dense: 0.0022, repeat: 160, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.2, floor: [3.0, 12], tops: 2.3, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
+  { at: behind(430, 290), radius: 300, height: 95, lean: [-0.2, 0.08], dense: 0.005, repeat: 220, hard: 2.2, climb: 1.2, colour: ROSE, foot: 0.15, floor: [1.6, 40], tops: 2.2, solid: 0.5, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   { at: fromFoot(-34, 34), radius: 40, height: 60, lean: [0.26, 0.18], dense: 0.011, widen: 0.5, repeat: 96, hard: 2.2, climb: 3, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.14 } },
   { at: fromFoot(2, 26), radius: 44, height: 90, lean: [0.2, 0.14], dense: 0.011, widen: 0.4, repeat: 110, hard: 2.2, climb: 3.4, colour: ROSE, foot: 0.06, lake: [0.2, 9], floor: [0.15, 40], lights: 0.25, tops: 0.85, solid: 0.3, shots: { 'heart-05': 1, rest: 0.14 } },
@@ -184,8 +184,8 @@ export function create(ctx: HeartContext): HeartPiece {
         const b = BODIES[i] as Body;
         (bodyB[i] as THREE.Vector4).w = b.dense * (b.shots?.[shot] ?? b.shots?.rest ?? 1);
       }
-      // Where the near sheet of smoke ends and the far one begins: between the vapours at hand and the banks beyond, shot by shot.
-      (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-01' ? 600 : 110;
+      // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
+      (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 600;
       // The four offsets of the march move on with time, so that no pattern stands still over the frames.
       phase = (((seconds * 60 + 0.5) % 1) * 61.8034) % 1;
     },

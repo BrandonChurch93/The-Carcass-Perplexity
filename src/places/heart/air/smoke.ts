@@ -190,7 +190,7 @@ void bodyOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // Lit from below: the open lava under it, the whole glowing floor round it, and the round lights where it stands by them. Its underside takes it, its top does not.
     // The lowest metres take the least: the crust right under them is dark, and it is the smoke a little higher that sees the open lava all round.
     float up = p.y - C.w;
-    float rise = 1.0 - 0.95 * exp(-up / 9.0);
+    float rise = 1.0 - 0.86 * exp(-up / 8.0);
     light += rise * exp(-up / C.y) * C.x * 5.0 * lakeGlow(p.xz, max(60.0, 2.0 * p.y));
     light += F.x * rise * exp(-up / F.y) * (0.35 + 0.65 * (1.0 - skyT)) * wide;
     if (C.z > 0.0) light += C.z * roundLights(p) * (0.4 + 0.6 * skyT);
