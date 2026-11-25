@@ -6,8 +6,6 @@ import { BODY, CORD, TEAR } from './shape';
 const tearPoint = (i: number): string => `vec3(${(TEAR[i] as [number, number])[0].toFixed(2)}, -0.12, ${(TEAR[i] as [number, number])[1].toFixed(2)})`;
 
 const COMMON = /* glsl */ `
-// The skin of the lava under light version 2: what sets the near crust at 50 44 43 on the display.
-const vec3 LEVEL = vec3(0.5, 0.445, 0.425);
 // Ash, on the skin and on the hide.
 const vec3 ASH = vec3(0.143, 0.146, 0.15);
 uniform sampler2D tRelief;
@@ -90,7 +88,7 @@ vec3 crustMirror(vec3 r, float rough) {
   float soft = 0.05 + 0.5 * rough;
   float sky = smoothstep(wall - soft, wall + soft, r.y);
   float w = max(dot(normalize(vec3(r.x, max(r.y, 0.0), r.z)), uWarmDir), 0.0);
-  vec3 low = uSkyHorizon * 0.5 + uWarmColour * w * w * w * 0.8;
+  vec3 low = uSkyHorizon * 0.3 + uWarmColour * w * w * w * 0.6;
   return mix(low, skyRadiance(vec3(r.x, max(r.y, wall), r.z)), sky);
 }
 
@@ -130,10 +128,15 @@ void main() {
   if (near > 0.0) grainNh = texture2D(tSkinNh, uvD, -0.7);
   float broad = vnoise(l * 0.4 + 2.0);
   float small = vnoise(l * 2.0 + 7.0);
-  vec3 albedo = vec3(0.105) * mix(vec3(1.0), rope * 17.0, 0.75 * mid) * (0.78 + 0.44 * broad) * mix(1.0, 0.8 + 0.4 * grainNh.b, near);
-  // Each sheet of the folded skin is of its own age: one blacker and glassier, the next greyer.
+  // The lake's own skin, by the lake's own sums (lake/index.ts): black and glassy where young, grey and rough where old, in the
+  // same broad patches. At the rim the sheet is nothing but that, so no edge shows where the lake's plates take over.
+  float age = clamp(0.5 + 1.6 * (0.65 * vnoise(q / 110.0 + 4.0) + 0.35 * vnoise(q / 37.0 + 9.0) - 0.5), 0.0, 1.0);
+  // Each sheet of the folded skin is of its own age.
   float sheet = mk.a;
-  albedo *= mix(1.0, 0.62 + 0.76 * sheet, folded);
+  age = clamp(age + folded * (0.9 * (sheet - 0.5) + 0.25 * (broad - 0.5)), 0.0, 1.0);
+  vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  // The ropy skin has a grain the lake's plain plates have not.
+  albedo *= mix(1.0, (0.35 + 0.65 * dot(rope, vec3(5.7))) * (0.85 + 0.3 * grainNh.b), folded * mid);
 
   // The cords: each bundle is counted along its own phase; a cord is a rounded strip, the crease between two a line of shade.
   float count = cordCount(ln.r + sheet * 94.0);
@@ -148,7 +151,6 @@ void main() {
   float crease = pow(abs(x), 3.0) * amp;
   float crown = k * k * amp;
   albedo *= (1.0 - 0.6 * crease) * (1.0 + amp * 0.5 * (cordTone - 0.5));
-  albedo *= LEVEL;
 
   // What stands up and lies level has gone grey and carries the ash that fell since; what is down in a crease is black.
   float lying = smoothstep(0.5, 0.9, inversesqrt(1.0 + dot(grad, grad)));
@@ -162,26 +164,31 @@ void main() {
   vec2 detail = (nhA.rg - 0.5) * 0.7 * mid * (1.0 - 0.6 * amp);
   detail += vec2(0.8 * (grainNh.r - 0.5) + 0.6 * (grainNh.g - 0.5), -0.6 * (grainNh.r - 0.5) + 0.8 * (grainNh.g - 0.5)) * 0.35 * near;
   vec2 gl = grad + cordSlope;
-  vec2 sw = turned(gl) - detail;
+  vec2 sw = turned(gl) - detail * folded;
   vec3 n = normalize(vec3(-sw.x, 1.0, -sw.y));
 
-  float occ = mix(0.5 + 0.5 * rl.b, rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.75 * crease);
-  float rough = mix(mix(0.62, 0.4 + 0.3 * sheet, folded), 0.95, ash);
+  float occ = mix(1.0, mix(0.5 + 0.5 * rl.b, rl.b, close) * (0.8 + 0.2 * nhA.b) * (1.0 - 0.75 * crease), folded);
+  float rough = clamp(0.22 + 0.45 * age + 0.15 * folded, 0.15, 0.92);
+  rough = mix(rough, 0.95, ash);
   vec4 land = landAt(vWorld.xz);
   float open = land.g * occ;
-  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(vWorld.x, 1.5, vWorld.z), n) * mix(1.0, rl.b, folded) + emitterIrradiance(vWorld, n);
+  // The lake's glow from afar reaches only the faces that are turned toward it, as on the lake's own crust.
+  float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
+  vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(vWorld.x, 1.5, vWorld.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace) + emitterIrradiance(vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z), n) * mix(1.0, occ, 0.7);
   #ifndef RIM
   light += tearLight(vLocal, normalize(vec3(-gl.x, 1.0, -gl.y))) * (0.4 + 0.6 * occ);
   #endif
   vec3 c = albedo * light / 3.14159;
-  // The shine is a satin one: off a surface gentler than the cords, each of which carries a strip of the sky along its crown.
+  // The shine is the lake's satin one. On the folds it comes off a surface gentler than the cords, each of which carries a strip
+  // of the sky along its crown.
   vec2 ss = sw * mix(1.0, 0.45, folded);
-  vec3 ns = normalize(vec3(-ss.x, 1.6, -ss.y));
-  float nv = clamp(dot(n, v), 0.0, 1.0);
-  float fresnel = mix(0.03, 0.045, folded) + mix(0.25, 0.6, folded) * (1.0 - rough) * (1.0 - rough) * pow(1.0 - nv, 5.0);
+  vec3 ns = normalize(vec3(-ss.x, 1.0 + 0.6 * folded, -ss.y));
+  float nv = clamp(dot(ns, v), 0.0, 1.0);
+  float gloss = (1.0 - rough) * (1.0 - rough);
+  float fresnel = (0.03 + 0.97 * pow(1.0 - nv, 4.0)) * (0.09 + 0.24 * gloss);
   vec3 rf = reflect(-v, ns);
   rf.y = abs(rf.y);
-  c += fresnel * crustMirror(rf, rough) * (uFill / uFill.r) * open * (1.0 - 0.8 * ash);
+  c += fresnel * crustMirror(rf, rough) * open;
 
   // The tear: open lava at the bottom, a skin that still glows on its walls.
   float heat = mk.r;
@@ -290,7 +297,7 @@ void main() {
   vec2 uvL = vec2(vMap.x * vMap.z * 0.5, vMap.y / 1.9);
   vec4 lavaNh = texture2D(tRopyNh, uvL);
   float coat = smoothstep(0.36, 0.64, vSurf.x + 0.3 * (lavaNh.b - 0.5));
-  vec3 lava = (vec3(0.011) + 0.8 * texture2D(tRopy, uvL).rgb) * 1.5 * LEVEL;
+  vec3 lava = vec3(0.045, 0.045, 0.047) * (0.35 + 0.65 * dot(texture2D(tRopy, uvL).rgb, vec3(5.7)));
   albedo = mix(albedo, lava * (0.75 + 0.5 * lavaNh.b), coat);
   bump = mix(bump, (lavaNh.rg - 0.5) * 1.2, coat);
   cavity = mix(cavity, 0.75 + 0.25 * lavaNh.b, coat);
