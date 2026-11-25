@@ -108,7 +108,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const buttress = mesh(buttressAll, wallMaterial);
 
   // The bench: 4 m where no camera goes, 1 m round the route, 0.35 m where the camera comes down to it.
-  const NEAR = { x0: -592, x1: -486, z0: 186, z1: 322 };
+  const NEAR = { x0: -592, x1: -486, z0: 172, z1: 322 };
   const MID = { x0: -660, x1: -430, z0: 40, z1: 400 };
   const inside = (r: typeof NEAR, x: number, z: number, margin: number): boolean => x > r.x0 + margin && x < r.x1 - margin && z > r.z0 + margin && z < r.z1 - margin;
   const onBench = (x: number, z: number, y: number): boolean => y > -1.2 && calderaDistance(x, z) < -2 && benchDistance(x, z) > -4;

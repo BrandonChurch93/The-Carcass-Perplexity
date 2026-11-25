@@ -1,7 +1,7 @@
 // The loose rock of the land: pebbles, stones and blocks on the camera's bench, slabs slumped over the line, fallen blocks on the aprons of the wall.
 // Every rock is one of a few shapes, turned, squashed and sunk into the ground, with a shade under it in the rig's contact map.
 import * as THREE from 'three';
-import { MOUTH, SHORE_POINTS, benchDistance, calderaDistance } from '../layout';
+import { MOUTH, SHORE_POINTS, VIEW, benchDistance, calderaDistance } from '../layout';
 import type { HeartContext } from '../shared/context';
 import { noise, routeDistance } from './height';
 import { rockShape, type Height } from './meshes';
@@ -77,6 +77,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
   const drift = (x: number, z: number, cell: number): number => noise(x / cell + 13, z / cell + 5);
   // Nothing may stand where the camera passes: the nearer the route, the smaller the rock.
   const fits = (x: number, z: number, size: number): boolean => size < 0.45 + 0.42 * routeDistance(x, z);
+  const [vx, , vz] = VIEW.position;
+  const yaw = (VIEW.yaw * Math.PI) / 180;
 
   const BOX = { x0: -598, x1: -484, z0: 184, z1: 324 };
   for (let i = 0; i < 16000; i++) {
@@ -119,6 +121,15 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     if (rng.next() > 0.3 + 0.7 * Math.exp(-d / 20)) continue;
     const size = sized(1.9, 5.5, 1.8);
     if (fits(x, z, size)) put(kinds.hero, x, z, size, { sink: rng.range(0.3, 0.5) });
+  }
+
+  // The foreground of the wide view: blocks of one to three metres below the camera, which passes well over them.
+  for (let i = 0; i < 90; i++) {
+    const ahead = rng.range(8, 34);
+    const side = rng.range(-14, 10);
+    const size = sized(0.9, 3, 1.2);
+    if (Math.abs(side) < 2.5 && size > 1.6) continue;
+    put(kinds.hero, vx + Math.sin(yaw) * ahead + Math.cos(yaw) * side, vz - Math.cos(yaw) * ahead + Math.sin(yaw) * side, size, { sink: rng.range(0.3, 0.5) });
   }
 
   // The line: slabs of the bench's edge that have broken off and slumped onto the crust, and the rubble between them.
