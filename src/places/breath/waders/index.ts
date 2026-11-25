@@ -5,7 +5,7 @@ import { SEA_LEVEL, footing } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { Wader, type Env } from './animal';
 import { makeHerd } from './herd';
-import { FRAGMENT, VERTEX } from './material';
+import { DEPTH_FRAGMENT, FRAGMENT, VERTEX } from './material';
 import { makeDrips } from './drips';
 import { MIRROR } from './mirror';
 import { RIPPLES, makeRipples } from './ripples';
@@ -43,6 +43,7 @@ export function create(ctx: Context): Piece {
     fragmentShader: FRAGMENT,
     uniforms: { ...rig.uniforms, ...pictures, uPixel: pixel, uSea: { value: SEA_LEVEL }, uDead: { value: 0 }, uMirror: { value: 0 } },
   });
+  material.userData.depthFragment = DEPTH_FRAGMENT;
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
   const drips = makeDrips(DROPS * 12, { ...rig.uniforms, uPixel: pixel });

@@ -8,7 +8,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { growBush, type Bush } from './bush';
 import { Ribbons } from './ribbons';
-import { STEM_FRAGMENT, STEM_VERTEX, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
+import { STEM_FRAGMENT, STEM_VERTEX, VANE_DEPTH, VANE_FRAGMENT, VANE_VERTEX } from './shaders';
 import { Vanes } from './vanes';
 
 export const PARTS: readonly string[] = ['gill-plumes'];
@@ -54,6 +54,8 @@ export function create(ctx: Context): Piece {
   const uniforms = { ...rig.uniforms, uPixel: pixel, uSeconds: seconds, uSurge: surge, uWind: { value: new THREE.Vector2(WIND[0], WIND[1]) } };
   const stemMaterial = new THREE.ShaderMaterial({ vertexShader: STEM_VERTEX, fragmentShader: STEM_FRAGMENT, uniforms, side: THREE.DoubleSide });
   const vaneMaterial = new THREE.ShaderMaterial({ vertexShader: VANE_VERTEX, fragmentShader: VANE_FRAGMENT, uniforms, side: THREE.DoubleSide });
+  // The fog reads the depth laid before the picture: the vanes say there which of their pixels are barbs.
+  vaneMaterial.userData.depthFragment = VANE_DEPTH;
   const stemMesh = new THREE.Mesh(stemGeometry, stemMaterial);
   const vaneMesh = new THREE.Mesh(vaneGeometry, vaneMaterial);
   stemMesh.frustumCulled = false;
