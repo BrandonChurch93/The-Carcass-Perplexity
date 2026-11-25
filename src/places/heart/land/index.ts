@@ -223,7 +223,10 @@ export function create(ctx: HeartContext): HeartPiece {
   const [crackTop, ...crackRest] = crackMeshes as [THREE.Mesh, ...THREE.Mesh[]];
   ctx.scene.add(ctx.parts.built('sulphur-crack', crackTop, ...crackRest), ...crackRest);
 
+  // The rocks may ask to be told of every sample (their choice of detail by size on screen): passed on as it is.
+  const rocksBefore = (rocks as { beforeSample?: HeartPiece['beforeSample'] }).beforeSample;
   return {
+    ...(rocksBefore ? { beforeSample: rocksBefore } : {}),
     dispose: () => {
       for (const g of geometries) g.dispose();
       for (const m of materials) m.dispose();
