@@ -216,14 +216,14 @@ vec3 animalAt(float part, float s, float a, float id) {
   float sg = part < 5.5 ? -1.0 : 1.0;
   vec3 sh = d * 0.22 + nb * 0.2 + X * (sg * 0.15);
   // Over 1 the sails are a tent: fanned full but hung down round the body, drawn in short.
-  float tent = clamp(aBody.z - 1.0, 0.0, 1.0);
+  float tent = clamp((aBody.z - 1.4) / 0.6, 0.0, 1.0);
   float spread = min(aBody.z, 1.0);
   // A folded sail hangs by its own weight, not by the tilt of the body: lean the fold back to level as the body tips.
   float lean = aBody.y * (1.0 - spread) * 0.5;
   vec3 dl = d * cos(lean) - nb * sin(lean);
   vec3 nl = nb * cos(lean) + d * sin(lean);
   float phi = mix(mix(-1.36, -0.98, a), mix(0.42, -1.3, a), spread);
-  float reach = mix(0.52, 1.0, spread) * SPAN * mix(1.0, mix(0.8, 0.62, spread), a * a) * mix(1.0, 0.4, tent);
+  float reach = mix(0.52, 1.0, spread) * SPAN * mix(1.0, mix(0.8, 0.62, spread), a * a) * mix(1.0, 0.62, tent);
   float web = abs(sin(PI * a * SPARS));
   float along = s * reach * (1.0 - 0.14 * s * s * web * mix(0.8, 1.0, spread));
   float ang = aBody.w * (0.4 + 0.6 * s) + aMore.w * s * s;
@@ -266,7 +266,7 @@ void main() {
   vWorld = w;
   vSkin = vec4(aPart, position.x, position.y, position.z);
   vSeed = vec2(aNeck.w, aBody.x);
-  vOpen = aBody.z > 1.0 ? 0.0 : aBody.z;
+  vOpen = aBody.z > 1.4 ? 0.0 : min(aBody.z, 1.0);
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
 
@@ -296,6 +296,14 @@ void main() {
   vec3 hide = texture2D(tHide, uv + vSeed.x * 7.0).rgb;
   float grain = dot(hide, vec3(0.3333));
   float tone = clamp(0.35 + 0.65 * grain / 0.065, 0.5, 1.45);
+  // Close to, the hide is creased and pored: the same picture laid fine.
+  vec3 fine = texture2D(tHide, uv * vec2(7.0, 5.0) + vSeed.x * 3.0).rgb;
+  float fineG = dot(fine, vec3(0.3333));
+  float crease = clamp(0.5 + 0.5 * fineG / 0.065, 0.55, 1.4);
+  if (!sail) {
+    tone *= crease;
+    n = normalize(n + 5.0 * (fine - fineG) + 0.1 * vec3(0.0, sin(s * 160.0 + 30.0 * grain), 0.0));
+  }
   vec3 ivory = mix(vec3(0.5, 0.485, 0.45), vec3(0.64, 0.62, 0.575), vSeed.x);
   vec3 albedo = ivory;
   // Wet: they live in the spray, and the sky lies along every back.
@@ -303,9 +311,20 @@ void main() {
   float occ = 1.0;
   if (part < 0.5) {
     float belly = smoothstep(-0.2, -0.9, sin(a));
-    albedo = mix(ivory * vec3(0.9, 0.88, 0.9), ivory * 1.12, belly);
+    albedo = mix(ivory * vec3(0.9, 0.88, 0.9), ivory * vec3(1.12, 1.02, 0.98), belly);
+    // Bare and thin over the breast: the blood shows through.
+    albedo = mix(albedo, vec3(0.6, 0.45, 0.42), 0.35 * smoothstep(0.55, 0.9, s) * (0.5 + 0.5 * crease));
     albedo *= mix(0.78, 1.0, smoothstep(0.0, 0.3, s));
     occ = mix(0.62, 1.0, smoothstep(-0.8, 0.3, n.y));
+    // The frame shows through: ribs down each flank, the keel of the breast, the knobs of the spine along the back.
+    float flank = 1.0 - abs(sin(a));
+    float cage = smoothstep(0.3, 0.42, s) * smoothstep(0.88, 0.72, s);
+    float ribs = 0.5 + 0.5 * cos(s * 52.0 + 2.5 * sin(a));
+    float between = cage * (0.35 + 0.65 * flank) * (1.0 - ribs);
+    albedo *= 1.0 - 0.38 * between;
+    occ *= 1.0 - 0.45 * between;
+    float spine = smoothstep(0.93, 1.0, sin(a)) * (0.5 + 0.5 * cos(s * 90.0));
+    albedo = mix(albedo, ivory * 1.25, 0.5 * spine + 0.35 * cage * (0.35 + 0.65 * flank) * smoothstep(0.75, 1.0, ribs));
   } else if (part < 1.5) {
     albedo = mix(ivory, vec3(0.42, 0.37, 0.33), smoothstep(0.8, 1.0, s));
     albedo *= 0.9 + 0.1 * sin(s * 150.0);
@@ -329,7 +348,7 @@ void main() {
     float edge = smoothstep(0.72, 1.0, s);
     albedo = mix(albedo, vec3(0.6, 0.36, 0.16), edge * 0.5);
     // Folded, the skin lies layer on layer: dull orange brown, dark, the light no longer through it.
-    albedo = mix(mix(vec3(0.4, 0.33, 0.25), vec3(0.5, 0.27, 0.1), smoothstep(0.25, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
+    albedo = mix(mix(vec3(0.5, 0.42, 0.33), vec3(0.66, 0.27, 0.06), smoothstep(0.3, 0.95, s)) * (0.6 + 0.55 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
     n = normalize(n + 0.25 * (hide - grain));
     rough = 0.4;
   }
@@ -350,6 +369,8 @@ void main() {
     vec4 land = landAt(vWorld.xz);
     col += albedo * vec3(1.1, 0.93, 0.76) * smoothstep(0.15, 0.7, vOpen) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.5) / PI;
   }
+  // An open sail is bone pale: what colour it has is at its edge.
+  if (sail) col = mix(col, vec3(dot(col, vec3(0.3, 0.6, 0.1))) * vec3(1.04, 1.0, 0.94), 0.7 * smoothstep(0.15, 0.7, vOpen) * (1.0 - 0.6 * smoothstep(0.72, 1.0, s))) * mix(0.62, 1.2, smoothstep(0.15, 0.7, vOpen));
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 
