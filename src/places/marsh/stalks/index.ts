@@ -1,6 +1,6 @@
 // The stalk colonies: salt-crusted tubes with crimson plumes round the seep pools, and the small winged insects that live in them.
 import * as THREE from 'three';
-import { K1_AT, K2_AT, K2_RIGHT, STUCK, TAU, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
+import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { BEAD_FRAGMENT, BEAD_VERTEX, INSECT_FRAGMENT, INSECT_VERTEX, PLUME_FRAGMENT, PLUME_VERTEX, STEM_FRAGMENT, STEM_VERTEX, WING_FRAGMENT, WING_VERTEX } from './shaders';
 
@@ -133,7 +133,13 @@ export function create(ctx: Context): Piece {
       // Away from the lens of the colony they are slender, of every height, and lean as they please.
       // Those the lens of the colony looks through keep the place the approved picture gives them: they bow least.
       // Those the lens stands among bow least, and none of them is shut when it looks: the open ones are open.
-      if (close) for (let n = 0; n < 200 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36); n++) seed = rng.next();
+      // And the air has combed their plumes the way the approved picture has them: across the lens to its right, a little away from it.
+      const combed = (v: number): boolean => {
+        const want = Math.atan2(K2_RIGHT[1] + 0.3 * K2_DIR[1], K2_RIGHT[0] + 0.3 * K2_DIR[0]);
+        const off = Math.abs(((Math.fround(v) * 40 - want) % TAU + TAU + Math.PI) % TAU - Math.PI);
+        return off < 0.45;
+      };
+      if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = rng.next();
       const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
       const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.2);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 1 : 0.72);
