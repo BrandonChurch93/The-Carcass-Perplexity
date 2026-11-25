@@ -84,7 +84,8 @@ float segmentDistance(vec2 p, vec4 s) {
 }
 `;
 
-// Defines: BENCH (ropy lava on the flats, the sulphur of the crack), NEAR (a second, finer reading of the rock for the camera's bench), FAR_LIGHT, GLAZE.
+// Defines: BENCH (ropy lava on the flats, the sulphur of the crack), NEAR (a second, finer reading of the rock for the camera's bench), FAR_LIGHT, GLAZE,
+// BUTTRESS (its tone), STAGED (the butte staged for one shot).
 export const GROUND_FRAGMENT = /* glsl */ `
 ${COMMON}
 varying vec3 vWorld;
@@ -452,6 +453,14 @@ void main() {
   #endif
 
   #ifdef BENCH
+  // The rubble under the line view's lens, measured against the picture: near black clinker and grit, with no drawn pattern on it.
+  // Its grain is read on three planes and summed, so nothing is drawn out down a slope.
+  if (byLens > 0.0) {
+    float grainA = (vnoise(vWorld.xz / 0.3 + 1.7) + vnoise(vWorld.xy / 0.3 + 5.3) + vnoise(vWorld.zy / 0.3)) / 3.0;
+    float grainB = (vnoise(vWorld.xz / 0.045) + vnoise(vWorld.xy / 0.045 + 3.1) + vnoise(vWorld.zy / 0.045 + 7.7)) / 3.0;
+    vec3 clinker = vec3(0.048, 0.042, 0.039) * (0.5 + 0.7 * grainA + 0.8 * (grainB - 0.5) * sharp);
+    albedo = mix(albedo, clinker, byLens);
+  }
   // The sulphur of the crack: pale crystals on the lips and on what faces up, yellow round them, orange-brown stain fading out over metres.
   float dc = min(segmentDistance(vWorld.xz, uCrackA), segmentDistance(vWorld.xz, uCrackB) * 4.2);
   if (dc < 9.0) {
@@ -468,24 +477,26 @@ void main() {
     // Lemon where the crystals are thin, cream where they are thick, olive only in the stain round them.
     vec3 yellow = mix(vec3(0.6, 0.5, 0.14), vec3(0.8, 0.76, 0.56), smoothstep(3.4, 0.9, dc + grain + clump));
     albedo = mix(albedo, albedo * vec3(1.55, 1.4, 0.7) + vec3(0.025, 0.022, 0.005), stain);
-    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.8) * (0.8 + 0.4 * grain), crust);
+    // Crystals stand on the crust: pale points a finger across.
+    yellow = mix(yellow, vec3(0.93, 0.9, 0.66), smoothstep(0.58, 0.8, vnoise(sp / 0.045 + 7.3)) * sharp);
+    albedo = mix(albedo, mix(sul * 1.4, yellow, 0.8) * (1.1 + 0.5 * grain) * mix(1.0, 2.0, byLens), crust);
     rough = mix(rough, 0.95, crust);
   }
-  // The rubble under the line view's lens, measured against the picture: ash-grey clinker, paler than the bench behind it.
-  albedo *= mix(1.0, 2.4, byLens);
   // By the line the rock is glazed black with spatter, and nothing pale survives.
   float rind = smoothstep(2.2, 0.2, land.b + 1.2 * (mid - 0.5));
   albedo *= mix(1.0, 0.85, rind);
   // A face that stands over the lake's edge is sooted and spattered by it: the darkest rock of the bench.
-  albedo *= mix(1.0, 0.55, steep * smoothstep(8.0, 2.5, land.b + 3.0 * (mid - 0.5)));
   // The crag of the line view carries the vent's stain high on its face.
   vec3 toStain = vWorld - uStain.xyz;
   float sd = length(toStain * vec3(1.0, 0.75, 1.0)) / uStain.w;
-  // The crag itself is the darkest rock of the view: sooted, in the shade of its own mass, with no red in it.
-  albedo *= mix(1.0, 0.6, smoothstep(3.4, 1.8, sd) * steep);
+  float onCrag = smoothstep(3.4, 1.8, sd) * steep;
+  albedo *= mix(1.0, 0.55, steep * smoothstep(8.0, 2.5, land.b + 3.0 * (mid - 0.5)) * (1.0 - onCrag));
+  // The crag itself, measured on the picture: weathered grey-brown rock that catches the sky, paler where a face has broken off lately.
+  float broke = vnoise(vWorld.xz / 0.8 + vWorld.y * vec2(1.3, 0.7) + 3.1);
+  albedo *= mix(vec3(1.0), vec3(1.0, 0.95, 0.93) * (0.9 + 0.6 * smoothstep(0.4, 0.62, broke)), onCrag);
   if (sd < 1.6) {
     float blot = vnoise(vWorld.xz / 0.9 + vWorld.y * vec2(1.3, 0.7));
-    float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.5 + 0.5 * steep) * smoothstep(2.4, 1.0, vWorld.y + 0.8 * (blot - 0.5));
+    float on = smoothstep(1.35, 0.35, sd + 0.9 * (blot - 0.5)) * (0.5 + 0.5 * steep) * smoothstep(3.6, 2.2, vWorld.y + 0.8 * (blot - 0.5));
     albedo = mix(albedo, albedo * vec3(1.5, 1.25, 0.7) + vec3(0.012, 0.009, 0.002), 0.4 * on);
     albedo = mix(albedo, mix(vec3(0.72, 0.6, 0.18), vec3(0.84, 0.8, 0.6), smoothstep(0.5, 0.8, blot)) * (0.6 + 0.8 * height), 0.85 * on * smoothstep(0.38, 0.66, blot + 0.4 * (height - 0.5)));
   }
@@ -499,9 +510,17 @@ void main() {
   float shade = contactAt(vWorld) * smoothstep(4.0, 0.0, vWorld.y - land.r);
   #endif
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
+  #ifdef BUTTRESS
+  // The buttress, measured on the wide picture: darker and warmer than the wall behind it, its table paler than its cliffs.
+  albedo *= vec3(0.8, 0.71, 0.67) * mix(1.35, 0.9, steep);
+  #endif
   #ifdef STAGED
   // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.
   albedo *= vec3(0.68, 0.6, 0.55) * mix(1.25, 0.9, steep);
+  // Its cliffs are bedded: flows a man or two thick, one dark and the next pale, that wander a little along the face.
+  float along = dot(vWorld.xz, vec2(0.713, 0.701));
+  float bed = vnoise(vec2((vWorld.y + 1.5 * vnoise(vec2(along / 14.0, 3.3))) / 1.7, along / 55.0));
+  albedo *= mix(1.0, 0.62 + 0.62 * smoothstep(0.3, 0.7, bed), steep);
   #endif
   // The fire lies low and its light comes in along the ground: on rough level ground the crowns of the rubble take it and the pits between them
   // lie in each other's shade. A face that stands up takes it whole.

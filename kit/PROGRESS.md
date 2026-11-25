@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 46, 2026-11-25 12:07 UTC:
+Status 47, 2026-11-25 12:30 UTC:
 
-- `01-m1200-pair-3.jpg`: Feeding at the seam, shot heart-02 (approved picture left, ours right, draft tier, main 45d0b7f). Better: the far butte has a flat top and a shoulder that falls to the right, the roots stand in the pool like a stool. Still wrong: the floor reads as pale tiles, the hero's body is small and its legs thin.
-- `02-m1200-pair-4.jpg`: The vessel mouth and its fall (picture left, ours right). Better: the arch is ribbed, lit on its west inner wall, dark on its east half, and the banks are lit once. Still wrong: the stream is one fat ribbon, the fan is a net of closed cells, the wall is plain, no lit smoke over the fan.
-- `03-m1200-pair-1.jpg`: The surface at the line (picture left, ours right). Better: the far trench wall is dark, steam stands at the foot of the crag, the top right of the sky sits with the picture's. Still wrong: the near bank is a plain sheet without overhanging plates, the crag is a thin spire.
-- `04-m1200-pair-2.jpg`: The one that sank (picture left, ours right). Better: roped crust runs to the lens, the ring of black slabs is gone. Still wrong: the crust is flat grey where the picture's is deep furrows, the hull is pale stripes.
+- `01-m1220-pair-3.jpg`: Heart 3 on main c0cb367, approved picture left, our frame right: the hero's legs and trunk now have the picture's mass and its feet stand on the plates. Still wrong: the floor is pale tiles where the picture is dark with orange light, the crown sweeps sideways, the sky behind the butte is grey.
+- `02-m1220-pair-4.jpg`: Heart 4: the fall is now a thin stream of strands and the fan a braid of flow lines on dark skin. Still wrong: the fan's outline is a tent, the wall has no ledges, no lit smoke stands beside the fan.
+- `03-m1220-pair-1.jpg`: Heart 1: the plates in the trench are welded but the melt still shows contour lines here. The next lava hand-back (no lines, a narrower line) is seen and waits for the running check.
+- `04-m1220-pair-2.jpg`: Heart 2: ropes run to the lens. The sunk one's hull is still striped and its knee is a sharp point where the picture has a round arch. Both are ordered.
 
+Status 46, 2026-11-25 12:07 UTC, showed: Feeding at the seam, shot heart-02 (approved picture left, ours right, draft tier, main 45d0b7f).
 Status 45, 2026-11-25 11:42 UTC, showed: Feeding at a seam, 11:32 UTC (approved picture left, our frame right).
 Status 44, 2026-11-25 11:18 UTC, showed: The line on main at 11:08 UTC (609da03). Left the approved picture, right the frame. The left crag is lowered and no longer red.
-Status 43, 2026-11-25 10:53 UTC, showed: The mouth and its fall on main (ef6598c): the fall is now a narrow stream in legs. Left the approved picture, right the frame.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T12:07:45Z
-phase 3: 8.98 h used of 13.00 h
-build: 15.63 h used of 72.00 h
+2026-11-25T12:30:34Z
+phase 3: 9.36 h used of 13.00 h
+build: 16.01 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 26
+minutes since the last status: 23
 ```
 
 ## Phases
@@ -912,3 +912,6 @@ none
 - 2026-11-25 12:01 UTC. 11:51 UTC: merged to main 0e74947, each seen beside the approved picture, trailer checks clean: the light C1 and C2 (9f8ce02: a strip light along the fall's course, the bank at heart-3), the sunk one C1 (43e34e9), the crust skin B (74876da: dark trench wall at heart-1, bare skin between the sheaves, the feeding floor lifted), the rocks (e47ca45), the air C1 (93472bc: the smoke of shot heart-02), the lava C3 (08b27c6: matte rafts). Chain U on 9b84e4a passed determinism at 11:50; chain V on 0e74947 passed at 12:00 (1241, 11386, loop 288).
 - 2026-11-25 12:01 UTC. 12:00 UTC: merged to main 45d0b7f, each seen beside the approved picture, trailer checks clean, tsc clean: the fall's third owner C1 and C2 (7792f05: the mouth as ribs with a dark east half and heaps on the lip, its own strip light out so the banks are lit once by the rig), the crust form C1 (f8803c0: the comb on the far wall top at heart-1 lowered, five plates in six level at heart-3, the ring of black slabs round the sunk one out, joints that die out), the air 2 (a6185a5: the top right of the sky at heart-0 and heart-1 within 8 of the picture), the walkers C6 (45471a5: nine stout roots that fork twice in place of the broom; cost 0.43 s a sample at heart-3, inside its share), the land's third owner 1 (19e2fd9: the staged butte with a flat top and a notched shoulder, steam at the crag foot of heart-1, level beds on the wall of heart-4), the sunk one C2 (4c3c451), the light C3 (ea928b2: the west slope at heart-4 from 79 to 73, the picture 61), the crust skin C1 (afa1164: the floor of shot heart-02 as hairline joints, median 65 54 50 against the picture's 64 48 43). Chain W runs on it. Twenty-four hand-backs merged since status 44.
 - 2026-11-25 12:08 UTC. 12:08 UTC: status 46 shown in the thread: four pairs of main 45d0b7f beside the approved pictures (heart-3, heart-4, heart-1, heart-2), with what is better and what is still wrong under each; twenty-four hand-backs merged since status 44; the fault of the sunk one's event; round 6 ordered on main at 12:10; one sample at heart-3 measured at 32.96 s (uhd draft); ElevenLabs characters 1 of 131,000 at 12:07, so no narration clips or sound effects yet.
+- 2026-11-25 12:10 UTC. 12:10 UTC: chain W passed determinism on main 45d0b7f. Merged the rocks D (088580f: the pale lump at heart-0 was the rocks' skerry, now on the set of shot heart-04 only; the heart-1 foreground as broken blocks with sulphur at the vent). Main 197686c, its source identical to the tree the rocks' owner checked (tsc, build, determinism pass). Round 6 ordered on 197686c: the packs of all four critics from the pack renderer, the measures from the measure renderer.
+- 2026-11-25 12:20 UTC. 12:20 UTC: chain X passed determinism on main 197686c. Merged to main c0cb367, each seen beside the approved picture at full size, trailer checks clean, tsc clean: the fall's third owner C3 (24dd519: the fan as one braid of flow lines on dark skin in place of the closed cells, the stream as two or three thin strands at 1505 to 1560 K; luma over 200 in 0.41 per cent of heart-4), the walkers C7 (f061b4a: the hero's legs 1.6 times as thick with knuckles, its trunk a third longer and 1.4 times as deep, every foot of every walker set on the crust's own height), the lava C4 (041bb6b: the second term of tornAt 0.07 by the Builder's ruling so melt, paint and wall share one line to 3 cm; the plates in the trench welded). These three came after round 6's snapshot and are judged in round 7. Not merged: the crust form C2 (fbd3b48), whose many small tilted blocks move away from the picture; a C3 with a few large flat plates is ordered. Chain Y runs on c0cb367.
+- 2026-11-25 12:30 UTC. 12:30 UTC: chain Y passed determinism on main c0cb367. Merged the rocks' gate fix (62876e6: the carpet's rest places in a half float texture as whole metres and fraction, so G10 passes again and no stone moved) and the sunk one C3 (1e143d4: the event as one break line 3 m long that flares to about 1310 K and is dark 3.6 s later, the hull's wrinkles wander, the leg's plates, grit at native size; 1.22 s a sample at heart-2 uhd draft against its limit of 2). Main is e167457, chain Z runs on it. Status 47 shown at 12:31 with four pairs of main c0cb367. ElevenLabs read at 12:27: 1 character left of 131,000. The lava C5 (0fa6191: no lines inside a raft, the melt one smooth body, LINE_NARROW 0.85) is seen beside the picture and waits for chain Z.

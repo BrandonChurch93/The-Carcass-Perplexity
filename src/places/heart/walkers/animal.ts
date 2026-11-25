@@ -140,7 +140,7 @@ const LEG_SIDES = 16;
 /** How high over the lake the end of the neck is held when the tuft is down, in lengths of a root. */
 export const TUFT_UP = 0.85;
 /** The same for the pose itself: the crown comes down to two thirds of a root's length over the melt, and the roots are cut to it. */
-const TUFT_LOW = 0.64;
+const TUFT_LOW = 0.52;
 const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
 const RAG_RINGS = 7;
@@ -256,7 +256,7 @@ export class Animal {
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
-    const rags = 8 + Math.floor(hash(seed, 21) * 5);
+    const rags = 12 + Math.floor(hash(seed, 21) * 5);
     for (let n = 0; n < rags; n++) {
       // Two in three hang under the keel; the rest are torn loose at the shoulders and the hips.
       const joint = n % 3 === 2;
@@ -267,7 +267,7 @@ export class Animal {
       const q = (i * BODY_SIDES + j) * 3;
       // Few and short: torn hide, 0.15 to 0.9 m, never a long string under the belly.
       const strip = hash(n, seed + 25);
-      const rag = this.rag(n, (hash(n, seed + 24) < 0.12 ? 0.5 + 0.25 * hash(n, seed + 26) : 0.12 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
+      const rag = this.rag(n, (hash(n, seed + 24) < 0.3 ? 0.45 + 0.45 * hash(n, seed + 26) : 0.15 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.02 + 0.04 * strip : 0.06 + 0.16 * Math.pow(strip - 0.3, 1.2)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }
@@ -516,18 +516,18 @@ export class Animal {
     const along: number[] = [];
     for (const s of marks) if (along.length === 0 || s - (along[along.length - 1] as number) > 0.045 * k) along.push(s);
     // The pad: height above its sole and radius, in units of the pad's radius; the last rings close the sole.
-    // A flat plate, thin at its rim, with the ankle standing in the middle of it: not a stand that widens all the way down.
+    // A clump caked on the end of the shin, a bell that widens all the way down to its toes.
     const PAD: [number, number][] = [
-      [1, 0.25],
-      [0.86, 0.27],
-      [0.72, 0.31],
-      [0.58, 0.37],
-      [0.46, 0.45],
-      [0.35, 0.55],
-      [0.25, 0.67],
-      [0.16, 0.8],
-      [0.09, 0.92],
-      [0.035, 1],
+      [1, 0.3],
+      [0.88, 0.34],
+      [0.76, 0.42],
+      [0.63, 0.52],
+      [0.5, 0.63],
+      [0.38, 0.74],
+      [0.27, 0.84],
+      [0.17, 0.92],
+      [0.08, 0.98],
+      [0.025, 1],
       [0, 0.93],
       [0, 0.02],
     ];
@@ -568,9 +568,11 @@ export class Animal {
       const head = (d: number, w: number): number => 0.5 * gauss(d / (w * k)) + 0.5 * Math.exp(-Math.abs(d) / (2.2 * w * k));
       // A knuckle is two heads, one on each bone, with the line of the joint between them and a waist on either side: it stands out of the
       // shaft sharply, as bone under dry skin does.
-      const heads2 = (d: number, w: number): number => gauss((d + 0.62 * w * k) / (0.5 * w * k)) + 0.8 * gauss((d - 0.6 * w * k) / (0.42 * w * k)) - 0.35 * gauss((d - 1.9 * w * k) / (0.7 * w * k)) - 0.3 * gauss((d + 2.0 * w * k) / (0.7 * w * k));
+      const heads2 = (d: number, w: number): number => gauss((d + 0.62 * w * k) / (0.5 * w * k)) + 0.8 * gauss((d - 0.6 * w * k) / (0.42 * w * k)) - 0.16 * gauss((d - 1.9 * w * k) / (0.7 * w * k)) - 0.14 * gauss((d + 2.0 * w * k) / (0.7 * w * k));
       r += 0.035 * head(s - S1, 0.34) + 0.04 * head(s - S2, 0.26) + 0.02 * head(s - S3, 0.16);
-      r += 0.085 * heads2(s - S1, 0.2) + 0.08 * heads2(s - S2, 0.17) + 0.03 * heads2(s - S3, 0.12);
+      r += 0.05 * heads2(s - S1, 0.3) + 0.046 * heads2(s - S2, 0.26) + 0.012 * heads2(s - S3, 0.16);
+      // The shin thickens into the clump of the foot.
+      r += 0.035 * smooth(S3 - 1.1 * k, S3, s);
       // Dead wood: knots along each shaft, where it pleases, and a slow swell and waist between them.
       const knots: [number, number][] = [];
       for (let n = 0; n < 9; n++) {
@@ -1087,7 +1089,8 @@ export class Animal {
     // It comes to the tuft still going down: it does not rise again before it turns to hang.
     const over = lerp(2, 0.62, smooth(0.22, 0.1, shape));
     const phi = (s: number): number => c1 * (1 - over * Math.pow(s, sweep)) + c2 * Math.sin(2 * Math.PI * s);
-    const hang = lerp(-1.42, -0.62, feeding);
+    // The crown of one that feeds turns down over the pool: the roots are its ends, and they go down into the melt.
+    const hang = lerp(-1.42, -1.38, feeding);
     // A neck that feeds is drawn out nearly taut: what it has to spare it takes up in itself, as a trunk does, not in a level run before the crown.
     const TAUT = 0.972;
     let dm = ds;
@@ -1099,7 +1102,8 @@ export class Animal {
     for (let pass = 0; pass < 3; pass++) {
       const mr = run - endRun;
       const my = rise - endRise;
-      dm = lerp(ds, Math.min(ds, Math.hypot(mr, my) / (TAUT * main)), feeding);
+      // One that feeds reaches: where the melt is a little too far its neck is drawn out by up to a quarter, as a trunk is.
+      dm = lerp(ds, Math.min(1.25 * ds, Math.hypot(mr, my) / (TAUT * main)), feeding);
       const chord = Math.min(0.985, Math.max(0.3, Math.hypot(mr, my) / (dm * main)));
       let lo = 0;
       let hi = 3;
@@ -1124,7 +1128,7 @@ export class Animal {
       endRun = 0;
       endRise = 0;
       for (let i = 0; i < NECK_END; i++) {
-        const a = lerp(last, hang, smooth(0, 1, (i + 0.5) / NECK_END));
+        const a = lerp(last, hang, smooth(lerp(0, 0.25, feeding), 1, (i + 0.5) / NECK_END));
         endRun += Math.cos(a) * ds;
         endRise += Math.sin(a) * ds;
       }
@@ -1138,7 +1142,7 @@ export class Animal {
     let y = 0;
     for (let i = 0; i < NECK_RINGS; i++) {
       if (i > 0) {
-        const a = i <= main ? base + beta * phi((i - 0.5) / main) : lerp(last, hang, smooth(0, 1, (i - main - 0.5) / NECK_END));
+        const a = i <= main ? base + beta * phi((i - 0.5) / main) : lerp(last, hang, smooth(lerp(0, 0.25, feeding), 1, (i - main - 0.5) / NECK_END));
         h += Math.cos(a) * (i <= main ? dm : ds);
         y += Math.sin(a) * (i <= main ? dm : ds);
       }

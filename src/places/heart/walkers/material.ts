@@ -9,6 +9,9 @@ attribute float aHeat;
 attribute float aWho;
 uniform float uPixel;
 uniform vec4 uPools[14];
+uniform vec4 uFeet[56];
+uniform highp sampler2D tGround;
+uniform float uFeetN;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -19,10 +22,30 @@ varying float vWho;
 void main() {
   vec3 n = normalize(normal);
   vec3 p = position;
+  // A foot stands on the plate of crust it is over, whatever that plate's level: the leg below the knee goes up or down with it.
+  if (aLook.x > 2.5 && aLook.x < 4.5 && p.y < 4.0) {
+    float first = floor(aWho + 0.5) * 4.0;
+    float near = 1e9;
+    float top = 0.0;
+    float off = 0.0;
+    for (int j = 0; j < 4; j++) {
+      vec2 at = vec2((first + float(j) + 0.5) / uFeetN, 0.5);
+      vec4 foot = uFeet[int(first) + j];
+      float d = distance(foot.xy, p.xz);
+      if (d < near) {
+        near = d;
+        top = texture2D(tGround, at).r;
+        off = foot.z;
+      }
+    }
+    // A foot in the air is not on a plate: it comes down on the next one.
+    top = mix(top, 0.1, smoothstep(0.02, 0.3, off));
+    p.y += top * (1.0 - smoothstep(1.2, 4.0, p.y));
+  }
   // A leg a long way off is thinner than a pixel and would flicker: it is never drawn thinner than two pixels.
   float far = length(cameraPosition - p);
-  // A leg or a neck is never thinner than three pixels, a root never thinner than two and a half.
-  float least = aLook.x > 2.5 && aLook.x < 3.5 || aLook.x > 0.5 && aLook.x < 1.5 ? 1.5 : 1.25;
+  // A leg or a neck is never thinner than three pixels, a root never thinner than four: far off the roots are a few stout cords, not threads.
+  float least = aLook.x > 2.5 && aLook.x < 3.5 || aLook.x > 0.5 && aLook.x < 1.5 ? 1.5 : aLook.x > 1.5 && aLook.x < 2.5 ? 1.9 : 1.25;
   p += n * max(0.0, least * uPixel * far - aInfo.z);
   vWorld = p;
   vNormal = n;
@@ -34,6 +57,28 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
   // One that is not in this shot is not drawn.
   if (uPools[int(aWho + 0.5)].w > 0.5) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
+}`;
+
+/** The top of the crust under each foot, one texel a foot. `crust` is the crust's own height function (lake/index.ts). */
+export const GROUND_VERTEX = /* glsl */ `
+void main() {
+  gl_Position = vec4(position.xy, 0.0, 1.0);
+}`;
+export const GROUND_FRAGMENT = (crust: string): string => /* glsl */ `
+precision highp float;
+${NOISE_GLSL}
+${RIG_GLSL}
+${crust}
+uniform vec4 uFeet[56];
+void main() {
+  vec4 foot = uFeet[int(gl_FragCoord.x)];
+  // The highest of the plates under the pad: a foot does not go down into a gap, it bears on what stands highest.
+  float top = crustAt(crustPoint(foot.xy)).y;
+  for (int i = 0; i < 4; i++) {
+    float a = 1.5708 * float(i) + 0.6;
+    top = max(top, crustAt(crustPoint(foot.xy + 0.3 * foot.w * vec2(cos(a), sin(a)))).y);
+  }
+  gl_FragColor = vec4(clamp(top, -0.5, 1.2), 0.0, 0.0, 1.0);
 }`;
 
 export const FRAGMENT = /* glsl */ `
@@ -154,7 +199,8 @@ void main() {
   float fold = 0.5;
   if (folds > 0.0) {
     // On a limb they are the grain of dead wood: short, and they wander round it, so that no line runs the length of a bone.
-    vec2 fu = mix(vec2(vUv.x * 2.6, vUv.y * 0.5), vec2(vUv.x * 2.6 + 1.6 * vnoise(vUv * vec2(1.7, 6.0) + seed * 3.1), vUv.y * 13.0 + 4.5 * vnoise(vUv * vec2(2.3, 3.0) + seed * 2.3)), limb) + seed * 5.3;
+    // On the body they are lumps and short wrinkles that run no one way: torn dry flesh, not cloth that hangs.
+    vec2 fu = mix(vec2(vUv.x * 1.8 + 1.3 * vnoise(vUv * vec2(0.9, 1.1) + seed), vUv.y * 1.5 + 1.3 * vnoise(vUv * vec2(1.3, 0.8) + seed * 2.0)), vec2(vUv.x * 2.6 + 1.6 * vnoise(vUv * vec2(1.7, 6.0) + seed * 3.1), vUv.y * 13.0 + 4.5 * vnoise(vUv * vec2(2.3, 3.0) + seed * 2.3)), limb) + seed * 5.3;
     float f1 = vnoise(fu);
     float f2 = vnoise(fu * vec2(2.3, 2.1) + 7.0);
     fold = 0.65 * f1 + 0.35 * f2;
@@ -175,7 +221,7 @@ void main() {
     float t0 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + 5.0) - 1.0);
     float t1 = 1.0 - abs(2.0 * vnoise(su * vec2(2.6, 2.3) + vec2(5.0, 5.22)) - 1.0);
     strand = 0.65 * s0 + 0.35 * t0;
-    slope.y += flesh * ((s1 - s0) * 3.2 + (t1 - t0) * 1.6);
+    slope.y += flesh * ((s1 - s0) * 1.8 + (t1 - t0) * 1.4);
   }
   vec3 n = normalize(ng + (gu * slope.x + gv * slope.y) * (1.0 - 0.7 * tendril) * (1.0 - 0.25 * body));
 
@@ -201,6 +247,10 @@ void main() {
   albedo *= mix(vec3(1.0), vec3(0.7, 0.6, 0.54), limb * (1.0 - tendril));
   float cake = smoothstep(0.56, 0.6, vnoise(vUv * vec2(1.6, 4.5) + seed * 9.0) + 0.3 * (high - 0.5) + 0.12 * (fold - 0.5)) * rough;
   albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
+  // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
+  float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
+  albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.55 * crest);
+  albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
   // Scab like the crust's own skin, in patches on the back and the rump.
   float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
   albedo = mix(albedo, vec3(0.1, 0.097, 0.094) * (0.6 + 0.4 * dot(flakeC, vec3(4.0))) * (0.7 + 0.3 * crack), 0.8 * scab);
@@ -219,7 +269,7 @@ void main() {
   vec3 fibre = bone * mix(vec3(0.5, 0.4, 0.3), vec3(1.0, 0.95, 0.85), fed);
   // A root is brown wood where it leaves the crown and pale fibre lower down, streaked along its length.
   float streak = vnoise(vec2(vUv.x * 2.0, vUv.y * 55.0) + seed);
-  albedo = mix(albedo, mix(vec3(0.2, 0.158, 0.122), fibre, smoothstep(0.1, 0.7, vLook.y)) * (0.55 + 0.7 * streak) * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
+  albedo = mix(albedo, mix(vec3(0.2, 0.158, 0.122), fibre * vec3(0.8, 0.7, 0.58), smoothstep(0.1, 0.7, vLook.y)) * mix(0.3, 1.25, smoothstep(0.25, 0.6, streak)) * (0.85 + 0.3 * vnoise(vUv * vec2(3.0, 40.0) + seed)), tendril);
 
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
@@ -249,7 +299,7 @@ void main() {
   vec3 c = albedo * e / 3.14159;
   vec3 rs = reflect(-v, n);
   // Dull, with the faint sheen of old leather on what faces the sky.
-  float topside = smoothstep(0.15, 0.8, n.y) * (1.0 - tendril) * (1.0 - 0.7 * ash);
+  float topside = smoothstep(0.15, 0.8, n.y) * (1.0 - tendril) * (1.0 - 0.7 * dust);
   if (topside > 0.01) {
     float nvs = clamp(dot(n, v), 0.0, 1.0);
     c += topside * (0.012 + 0.1 * pow(1.0 - nvs, 4.0)) * skyIrradiance(normalize(rs + n)) / 3.14159 * open;

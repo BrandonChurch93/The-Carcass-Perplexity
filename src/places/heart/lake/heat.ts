@@ -39,7 +39,7 @@ float creepAt(vec2 q) {
 
 // The edge of a gap is torn: metres to add to the distance from its middle.
 float tornAt(vec2 q) {
-  return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.2;
+  return (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5 + (vnoise(q * 5.3 + 3.0) - 0.5) * 0.07;
 }
 
 // One gap in the crust: d metres from its middle, half width, kelvin in its core. A gap narrower than a pixel is drawn a pixel
@@ -85,7 +85,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
 
 // The half width of the gap at the nearest seam now, and in y how far its skin has grown back (0 to 1).
 // The life of a seam: it opens, widens, its skin grows in from the edges, it closes. Different seams are at different places in that life.
-const float LINE_NARROW = 1.3;
+const float LINE_NARROW = 0.85;
 // How much wider the net has the gap than it is drawn, as of the last call of gapeAt.
 float gWas = 1.0;
 // The seam the walkers feed at and the cracks that run from its pool (heat classes 0.08 and 0.1) are no even channel: an uneven
