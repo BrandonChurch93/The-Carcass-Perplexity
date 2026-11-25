@@ -18,13 +18,23 @@ const ANISOTROPY = 1;
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(height, hollow);
 
-  const rock = ctx.assets.texture('land/cliff.jpg', { anisotropy: ANISOTROPY });
-  const rockNh = ctx.assets.texture('land/cliff-nh.png', { kind: 'data', anisotropy: ANISOTROPY });
+  const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
+  const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
+  const pictures = {
+    tSpire: picture('spire'),
+    tSpireNh: data('spire'),
+    tRubble: picture('rubble'),
+    tRubbleNh: data('rubble'),
+    tSnow: picture('snow'),
+    tSnowNh: data('snow'),
+    tCanal: picture('canal'),
+    tCanalNh: data('canal'),
+  };
   const material = (kind: number, side: THREE.Side = THREE.FrontSide): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      uniforms: { ...ctx.rig.uniforms, tRock: { value: rock }, tRockNh: { value: rockNh }, uKind: { value: kind } },
+      uniforms: { ...ctx.rig.uniforms, ...pictures, uKind: { value: kind } },
       side,
       toneMapped: false,
       // The depth is already there (see LAND_DEPTH_FRAGMENT): colour is shaded only where this is the nearest surface.
@@ -35,7 +45,7 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_DEPTH_FRAGMENT,
-      uniforms: { ...ctx.rig.uniforms, tRock: { value: rock }, tRockNh: { value: rockNh }, uKind: { value: kind } },
+      uniforms: { ...ctx.rig.uniforms, ...pictures, uKind: { value: kind } },
       side,
       toneMapped: false,
       colorWrite: false,

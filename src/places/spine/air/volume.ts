@@ -17,6 +17,11 @@ uniform int uSampleIndex;
 uniform highp sampler3D tNoise;
 uniform sampler2D tRidge;
 uniform vec2 uRidgeSpan;
+uniform sampler2D tDeck;
+uniform sampler2D tSeaNh;
+uniform vec4 uSteam[8];
+uniform vec4 uSteamMore[8];
+uniform int uSteamCount;
 uniform vec4 uShow;
 uniform vec4 uStage;
 varying vec2 vUv;
@@ -145,7 +150,8 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
     vec3 off = d - rd * dot(d, rd);
     // The pool keeps its size in the frame, so a long lens does not turn it into a veil.
     float reach = min(1.7 * r + 120.0, 0.25 * uInvProjection[1][1] * max(t + dot(d, rd), 0.0) + 20.0);
-    within += uEmitterRadiance[i] * (r / 260.0) * (0.008 * exp(-dot(off, off) / (reach * reach)) + 0.0006 * exp(-dot(off, off) / (9.0 * reach * reach)));
+    // Violet: the cloud takes the red and the green out of the light that comes through it.
+    within += uEmitterRadiance[i] * vec3(0.8, 0.6, 1.25) * (r / 260.0) * (0.02 * exp(-dot(off, off) / (reach * reach)) + 0.0018 * exp(-dot(off, off) / (9.0 * reach * reach)));
   }
   return c + within * (0.15 + 0.85 * smoothstep(0.82, 0.38, dome)) * (0.6 + 0.4 * lump);
 }
@@ -153,10 +159,15 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
 // so that the flank goes down into cloud; and in the saddles the storm's cloud, which comes over the crest and falls down the lee into the bank.
 const float CLOUD_UNDER = 300.0;
+const vec3 SEA_MEAN = vec3(0.113, 0.127, 0.201);
+float seaLod = 1.0;
 float seaTop(vec3 p, bool fine) {
   vec3 q = p - uWind.xyz * (uTime * uWind.w * 0.6);
-  float n = 0.65 * noise(vec3(q.xz / 3100.0, 0.21)).r + 0.35 * noise(vec3(q.xz / 760.0, 0.63)).b;
-  if (fine) n += 0.14 * (noise(vec3(q.xz / 210.0, 0.43)).r - 0.5);
+  // Its lumps are those of the picture of a cloud deck seen from above (mat/cloudsea, 10 km a repeat), laid twice at two sizes so no repeat shows.
+  float deck = textureLod(tSeaNh, q.xz / 10000.0, seaLod).b;
+  float lumps = textureLod(tSeaNh, q.zx / 2900.0 + 0.37, seaLod + 1.0).b;
+  float n = 0.62 * deck + 0.38 * lumps;
+  if (fine) n += 0.12 * (noise(vec3(q.xz / 210.0, 0.43)).r - 0.5);
   vec3 ridge = ridgeAt(p.x);
   float lee = p.z - ridge.x;
   // The sea lies close under the crest on both hands, level to the horizon, and stands a little higher against the rock:
@@ -165,7 +176,7 @@ float seaTop(vec3 p, bool fine) {
   float top = ridge.y - CLOUD_UNDER + 300.0 * (n - 0.5) + 70.0 * bank;
   if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
-    float m = 0.6 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.4 * noise(vec3(c.xz / 140.0, 0.81)).b;
+    float m = 0.45 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.2 * noise(vec3(c.xz / 140.0, 0.81)).b + 0.35 * textureLod(tSeaNh, c.xz / 1300.0 + 0.11, seaLod).b;
     float gone = 1.0 - ridge.z * smoothstep(-700.0, -160.0, lee) * smoothstep(1500.0, 150.0, lee);
     float pour = ridge.y + (140.0 * m - 30.0) * ridge.z - 0.5 * max(lee, 0.0) - 700.0 * gone * gone;
     top = max(top, pour);
@@ -180,6 +191,34 @@ void main() {
 
   vec3 light = vec3(0.0);
   float through = 1.0;
+
+  // What a strike leaves on a tip: steam, and smoke off the burn, carried down the gale and rising a little as it goes. Each is a plume about
+  // a line from its source; the ray takes what lies about the point where it passes nearest that line.
+  for (int i = 0; i < 8; i++) {
+    if (i >= uSteamCount) break;
+    bool smoke = uSteamMore[i].x > 1.5;
+    float strength = smoke ? uSteamMore[i].x - 2.0 : uSteamMore[i].x;
+    if (strength <= 0.001) continue;
+    vec3 from = uSteam[i].xyz;
+    float rise = uSteamMore[i].y;
+    vec3 dir = normalize(uWind.xyz + vec3(uSteamMore[i].z, 0.2, uSteamMore[i].w));
+    vec3 w0 = ro - from;
+    float b = dot(rd, dir);
+    float x = clamp((dot(dir, w0) - b * dot(rd, w0)) / max(1.0 - b * b, 1e-4), 0.0, rise);
+    vec3 on = from + dir * x;
+    float tr = dot(on - ro, rd);
+    if (tr < 0.0 || tr > far) continue;
+    vec3 at = ro + rd * tr;
+    vec3 off = at - on;
+    float wide = uSteam[i].w + 0.2 * x;
+    vec3 c = at - uWind.xyz * (uTime * uWind.w * 0.5);
+    float curl = noise(c / (wide * 5.0 + 24.0)).r;
+    float body = exp(-dot(off, off) / (wide * wide)) * (1.0 - x / rise) * smoothstep(0.0, 0.06, x / rise + 0.02);
+    float thick = clamp(strength * body * (0.4 + 1.5 * curl) * 1.3, 0.0, 0.9) * uShow.x;
+    vec3 pale = (smoke ? 0.3 : 0.85) * (skyOn(1.0, rd) + strikeLight(at) * 0.25);
+    light += through * thick * pale;
+    through *= 1.0 - thick;
+  }
 
   // The cloud under the crest: a surface with a soft top, found by walking to it.
   float seaAt = -1.0;
@@ -265,6 +304,7 @@ void main() {
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
     vec3 p = ro + rd * t;
+    seaLod = max(0.0, log2(t * 0.00035));
     float e = 30.0 + 0.02 * t;
     float h0 = seaTop(p, true);
     vec3 n = normalize(vec3(h0 - seaTop(p + vec3(e, 0.0, 0.0), true), e, h0 - seaTop(p + vec3(0.0, 0.0, e), true)));
@@ -276,6 +316,10 @@ void main() {
     float w = max(dot(n, uWarmDir), 0.0);
     float wn = clamp((w + 0.25) / 1.25, 0.0, 1.0);
     vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.7 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
+    // The deck's own tone: pale on the heads of its lumps, blue-grey between them.
+    vec3 qs = p - uWind.xyz * (uTime * uWind.w * 0.6);
+    vec3 tint = clamp(textureLod(tDeck, qs.xz / 10000.0, seaLod).rgb / SEA_MEAN, 0.45, 1.9);
+    sea *= mix(vec3(1.0), tint, 0.75);
     sea = mix(sea, uSkyGround, gone);
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     float lap = clamp((far - t) / 160.0, 0.0, 1.0);

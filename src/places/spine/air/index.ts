@@ -71,6 +71,9 @@ export function create(ctx: Context): Piece {
   // What is drawn when one effect is shown alone: the haze, the sea, the storm and its pour, the spindrift.
   const show = new THREE.Vector4(1, 1, 1, 1);
   const stage = new THREE.Vector4(1, 0, 0, 0);
+  // The sources of steam and smoke the other folders have named (ctx.sources.steam): at most eight are drawn, the first eight.
+  const steam = Array.from({ length: 8 }, () => new THREE.Vector4());
+  const steamMore = Array.from({ length: 8 }, () => new THREE.Vector4());
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
@@ -79,6 +82,11 @@ export function create(ctx: Context): Piece {
       ...volumeUniforms(),
       tNoise: { value: noise },
       tRidge: { value: ridge },
+      tDeck: { value: ctx.assets.texture('mat/cloudsea.jpg') },
+      tSeaNh: { value: ctx.assets.texture('mat/cloudsea-nh.png', { kind: 'data' }) },
+      uSteam: { value: steam },
+      uSteamMore: { value: steamMore },
+      uSteamCount: { value: 0 },
       uRidgeSpan: { value: new THREE.Vector2(RIDGE.from, 1 / (RIDGE.to - RIDGE.from)) },
       uShow: { value: show },
       uStage: { value: stage },
@@ -92,6 +100,16 @@ export function create(ctx: Context): Piece {
   return {
     volume,
     setTime: () => {
+      const sources = ctx.sources.steam;
+      const count = Math.min(8, sources.length);
+      for (let i = 0; i < count; i++) {
+        const source = sources[i];
+        if (!source) continue;
+        (steam[i] as THREE.Vector4).set(source.at[0], source.at[1], source.at[2], source.radius);
+        // Smoke is told from steam by its strength standing over 1: it is drawn grey.
+        (steamMore[i] as THREE.Vector4).set(source.kind === 'smoke' ? 2 + source.strength : source.strength, source.rise, source.lean?.[0] ?? 0, source.lean?.[1] ?? 0);
+      }
+      (volume.uniforms.uSteamCount as THREE.IUniform<number>).value = count;
       // Staged by shot: inside the canal the gale does not reach, so no spindrift runs over its floor.
       stage.x = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
     },

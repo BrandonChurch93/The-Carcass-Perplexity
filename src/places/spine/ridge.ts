@@ -168,7 +168,7 @@ export function ground(s: number, l: number): number {
   let near = spires[0] as Spire;
   for (const sp of spires) if (Math.abs(sp.s - s) < Math.abs(near.s - s)) near = sp;
   const rho = Math.hypot((s - near.s) / 150, l / 130);
-  const massif = 0.25 * near.tip * (1 - smooth(0.4, 1, rho));
+  const massif = 0.14 * near.tip * (1 - smooth(0.4, 1, rho));
   const shelf = Math.exp(-(((s - MOUTH_S + 20) / 85) ** 2));
   // The crest is a knife, a few metres of snow with a fall on either hand; it is broad only where the carcass lies.
   const stand = 19 * Math.exp(-(((s - first.s + 641) / 48) ** 2));
@@ -182,7 +182,7 @@ export function ground(s: number, l: number): number {
   let fall = ((1.15 + (l > 0 ? 0.6 * smooth(60, 220, al) : 0.5 * smooth(30, 160, al))) * al * al) / (al + 10);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
   // The first spire stands on a shoulder: on the storm side of the trail the ground climbs to its foot in broken rock.
-  let y = crest(s) + massif + 72 * shoulder(s, l) - fall;
+  let y = crest(s) + massif + 42 * shoulder(s, l) - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
   if (d > -6 && d < 0.6 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
