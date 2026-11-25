@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 40, 2026-11-25 09:48 UTC:
+Status 41, 2026-11-25 10:02 UTC:
 
-- `01-m0945-pair-3.jpg`: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light. Still wrong: the level orange band behind the animals, the stamped whorls on the ground, the tan tone.
-- `02-m0945-pair-1.jpg`: heart-1 on main 67a933a. In: the line's first hand-back from the third lava owner. Still wrong: the ground reads as ribbed clay, the orange band at the horizon, the mouth's pale wall.
-- `03-m0945-pair-2.jpg`: heart-2 on main 67a933a. In: the sunk animal's second hand-back. Still wrong: contour lines on the sunk mass, the flat brown patch in front, pale grey where the picture is dark brown.
-- `04-m0945-pair-4.jpg`: heart-4 on main 67a933a. Still wrong: the pale striped wall round the mouth, the lit vault inside it, the wide flat stream, the orange streaks in the near field.
+- `01-m1000-pair-3.jpg`: heart-3 on main 337d087, approved picture at the left. In: the air's second hand-back (the hard orange band is gone) and the new crust skin. Still wrong: the floor is one even tan field with comma marks, the smoke behind is one flat rose field, the buttress does not stand in it.
+- `02-m1000-pair-1.jpg`: heart-1 on main 337d087. In: the rocks' first hand-back (no pale square blocks) and the crust's photographed skin (neutral dark grey, no clay). Still wrong: the red lump at the upper left (the land's crag, lit red, half hidden by steam), the ribs read as machined, a bare apron and a straight ramp at the shore.
+- `03-m1000-pair-0.jpg`: heart-0 on main 337d087. In: no column at the centre. Still wrong: the plume is a red-brown smear at the top right where the picture has one grey column, a pale blue patch on the crust at the lower right, the wall's stripes.
+- `04-m1000-pair-4.jpg`: heart-4 on main 337d087. In: no dark body right of the mouth, a low haze over the fan. Still wrong: the pale wall round the mouth, the lit vault, the wide flat stream without white-hot cores, the pale slope with sprinkled stones.
 
+Status 40, 2026-11-25 09:48 UTC, showed: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light.
 Status 39, 2026-11-25 09:28 UTC, showed: heart-4 on main, the approved picture at the left.
 Status 38, 2026-11-25 09:02 UTC, showed: heart-1, the line, as round 4 judged it (final tier, uhd, commit fdcac34).
-Status 37, 2026-11-25 08:37 UTC, showed: heart-2, the one that sank. Picture, then the frame on main.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T09:48:18Z
-phase 3: 6.65 h used of 13.00 h
-build: 13.30 h used of 72.00 h
+2026-11-25T10:02:31Z
+phase 3: 6.89 h used of 13.00 h
+build: 13.54 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 20
+minutes since the last status: 14
 ```
 
 ## Phases
@@ -888,3 +888,4 @@ none
 - 2026-11-25 09:40 UTC. 09:40 UTC: chain H on fd3a120: build, keys and parts pass; determinism fails again at the loop frame 288 (7 pixels, largest 2 levels), at the same places on the fall's edges; the light's owner saw 10, 11 and 18 pixels on its own machine. The count changes from run to run, so it is an undefined value and not state: the same class as the 06:08 UTC failure (a discard before a derivative, fixed then in the lake by 9e7213b). The fall's owner has the lines of fall/look.ts that break the rule. G10 will also fail on main: the crust's version 3 made the bake target FloatType; its form owner puts HalfFloatType back in its first commit.
 - 2026-11-25 09:48 UTC. 09:48 status 40 shown (pairs on 67a933a: heart-3, heart-1, heart-2, heart-4). Rocks hand-back A merged as 6704c3b after viewing its heart-1 and heart-0 pairs beside the pictures (pale square blocks gone; left mass still stands high; no sulphur at the vent; heart-4 costs 3 s more at uhd draft, the owner brings it down in B). Chain J runs on 6704c3b. ElevenLabs read 09:47: 1 of 131,000 characters.
 - 2026-11-25 09:56 UTC. 09:55 merged as 337d087: the fall's determinism fix 0cd82cf (textureGrad from slopes taken first; merged without a picture because the failure blocked every owner's own test, its other small changes are judged on chain K's heart-4 pair), the air's hand-back B a57a775 (viewed heart-3, heart-0, heart-4 beside the pictures: hard band gone, dark body right of the mouth gone, grain gone; plume at heart-0 still a red-brown smear), the crust skin's hand-back A cb467b9 (viewed heart-1 and heart-3: photographed lava skin, neutral; heart-3 still an even tan floor). Chain J on 6704c3b: determinism still failed by the same 10 pixels, so the rocks added none. Chain K runs on 337d087.
+- 2026-11-25 10:02 UTC. 10:03 status 41 shown (pairs on 337d087: heart-3, heart-1, heart-0, heart-4). Chain K on 337d087: determinism passes (still, late, loop). Walkers hand-back C1 merged as e691fc8 after viewing heart-3 (full and hero), heart-1 and heart-4 beside the pictures; chain L runs on it. ElevenLabs read 10:02: 1 of 131,000 characters.
