@@ -3,13 +3,11 @@
 // a share of the wind's speed, each ribbon with its own length of wave, so no two are ever in step.
 import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
-import { FPS } from '../../../config';
-import { SHUTTER } from '../../../core/time';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WIND } from '../shared/anchors';
 import { FIRST, finEdge, spires } from '../ridge';
-import { flashAt } from '../strikes/bolt';
+import { ditherAt, flashAt } from '../strikes/bolt';
 
 export const PARTS: readonly string[] = ['tether-kites'];
 
@@ -303,7 +301,7 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(0.55, 0.45, 1.2) } },
+    uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) } },
     side: THREE.DoubleSide,
   });
   const kites = new THREE.Mesh(geometry, material);
@@ -344,9 +342,7 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       const flash = flashAt(seconds);
-      // Where in the open shutter this sample is, and which frame: the samples of a frame are spread evenly through it.
-      const frames = seconds * FPS + 1e-6;
-      dither.value = ((frames - Math.floor(frames)) / SHUTTER + Math.floor(frames) * 0.6180339887) % 1;
+      dither.value = ditherAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
       struck.set(flash ? flash.spire : 0, flash ? Math.min(1.5, flash.power * 1.2 + 0.5 * Math.exp(-Math.max(0, flash.age) / 0.35) * (flash.age > 0 ? 1 : 0)) : 0, 0, 0);
     },
