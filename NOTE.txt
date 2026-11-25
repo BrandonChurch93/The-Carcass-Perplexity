@@ -1,0 +1,4 @@
+2026-11-25 21:42 UTC
+work at 1b35cd3 on agent/ribs-ground
+ribs-0 preview, first built frame: all eight of my parts drawn by real shaders. Wrong: everything grey and flat, weed skirt reads grey not black, ripple marks alias into moire, blades lack pale stone and sun, arch is a smooth tube, pools mostly gone
+look-1.jpg = out/work/stills/key-ribs-0-preview-draft.png
