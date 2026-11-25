@@ -1,4 +1,7 @@
-2026-11-25 21:28 UTC
-work at 86e55f5 on agent/reveal-place
-foundation: the blockout drawn through the new pattern, every part still a stand-in
-look-1.jpg = out/work/foundation-reveal-4.png
+2026-11-25 22:02 UTC
+work at d293ddc on agent/reveal-place
+version 1: all eleven parts built; keys 1 to 4 against the approved pictures, hd draft
+look-1.jpg = out/work/hand/v1-reveal-1.jpg
+look-2.jpg = out/work/hand/v1-reveal-2.jpg
+look-3.jpg = out/work/hand/v1-reveal-3.jpg
+look-4.jpg = out/work/hand/v1-reveal-4.jpg
