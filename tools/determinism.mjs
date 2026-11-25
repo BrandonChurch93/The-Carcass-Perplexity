@@ -7,6 +7,10 @@ const a = args();
 const tier = typeof a.tier === 'string' ? a.tier : 'review';
 const format = typeof a.format === 'string' ? a.format : config().formats.preview.id;
 const DIR = rel('out', 'work', 'determinism');
+// To find what differs: one part of a unit alone (UNIT/NAME, as `npm run still -- --diag solo --part` takes it), and only some of the three frames.
+const part = typeof a.part === 'string' ? a.part : null;
+const KINDS = ['still', 'late', 'loop'];
+const only = typeof a.only === 'string' ? a.only.split(',') : KINDS;
 
 async function difference(x, y) {
   const [p, q] = await Promise.all([x, y].map((f) => sharp(f).raw().toBuffer({ resolveWithObject: true })));
@@ -34,12 +38,14 @@ try {
     { name: 'still', what: { frame: still }, label: `film frame ${still}` },
     { name: 'late', what: { frame: late }, label: `late film frame ${late}` },
     { name: 'loop', what: { loop }, label: `loop frame ${loop}` },
-  ];
+  ].filter((j) => only.includes(j.name));
+  const unknown = only.filter((k) => !KINDS.includes(k));
+  if (unknown.length || !jobs.length) throw new Error(`--only takes ${KINDS.join(', ')} or a list of them with commas, not "${a.only}".`);
   const run = async (pass, order) => {
     const files = {};
     let first = true;
     for (const j of order) {
-      const r = await renderStill({ ...j.what, tier, format, force: true, fresh: first, look: false, name: `determinism/${pass}-${j.name}` });
+      const r = await renderStill({ ...j.what, tier, format, diag: part ? 'solo' : null, part, force: true, fresh: first, look: false, name: `determinism/${pass}-${j.name}` });
       files[j.name] = r.file;
       first = false;
     }
@@ -55,12 +61,12 @@ try {
     results.push({ ...j.what, ...d, same });
     lines.push(
       same
-        ? `The ${j.label} is pixel-identical across two fresh page loads and both orders (${format}, ${tier} tier).`
+        ? `The ${j.label} is pixel-identical across two fresh page loads and both orders (${format}, ${tier} tier${part ? `, ${part} alone` : ''}).`
         : `The ${j.label} differs between the two page loads in ${d.pixels} of ${d.total} pixels. The largest difference is ${d.largest} levels out of 255.`,
     );
   }
   fs.mkdirSync(DIR, { recursive: true });
-  writeJson(rel('out', 'work', 'determinism', 'report.json'), { at: utc(), tier, format, ok, results });
+  writeJson(rel('out', 'work', 'determinism', 'report.json'), { at: utc(), tier, format, part, only, ok, results });
 } catch (e) {
   ok = false;
   lines.push(`determinism: ${e.message}`);

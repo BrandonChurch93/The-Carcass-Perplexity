@@ -48,7 +48,8 @@ export function create(ctx: HeartContext): HeartPiece {
   const along: [number, number] = [0.451, 0.892];
   const cracks: Crack[] = [
     { ax: CRACK_TOP[0] - along[0] * 5.2, az: CRACK_TOP[2] - along[1] * 5.2, bx: CRACK_TOP[0] + along[0] * 5.2, bz: CRACK_TOP[2] + along[1] * 5.2, width: 0.3, depth: 1.3, seed: 3.1 },
-    { ax: CRACK_FOOT[0] - 0.4, az: CRACK_FOOT[1] - 1.9, bx: CRACK_FOOT[0] + 0.5, bz: CRACK_FOOT[1] + 1.6, width: 0.14, depth: 0.5, seed: 8.4 },
+    // The short one lies across the line view, 7 m from its lens: a crust of about 1.5 by 0.8 m.
+    { ax: CRACK_FOOT[0] - 0.4, az: CRACK_FOOT[1] - 0.52, bx: CRACK_FOOT[0] + 0.4, bz: CRACK_FOOT[1] + 0.52, width: 0.1, depth: 0.4, seed: 8.4 },
   ];
   setCracks(cracks);
   ctx.rig.setLand(landHeight);
@@ -66,13 +67,24 @@ export function create(ctx: HeartContext): HeartPiece {
     tSulphur: { value: ctx.assets.texture('mat/sulphur.jpg') },
     tStrata: { value: strataTexture() },
     uCrackA: { value: new THREE.Vector4((cracks[0] as Crack).ax, (cracks[0] as Crack).az, (cracks[0] as Crack).bx, (cracks[0] as Crack).bz) },
+    // Where the vent's stain sits on the crag of the line view: a point high on its lake face, and the stain's reach.
+    uStain: { value: new THREE.Vector4(-505.0, 3.0, 203.4, 3.4) },
     uCrackB: { value: new THREE.Vector4((cracks[1] as Crack).ax, (cracks[1] as Crack).az, (cracks[1] as Crack).bx, (cracks[1] as Crack).bz) },
   };
   const ground = (defines: Record<string, string>): THREE.ShaderMaterial => new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: shared, defines });
   const wallMaterial = ground({ FAR_LIGHT: '' });
   const benchMaterial = ground({ BENCH: '' });
-  const nearMaterial = ground({ BENCH: '', NEAR: '', GLAZE: '' });
-  const crackMaterial = ground({ BENCH: '', NEAR: '', CRACK: '' });
+  // The camera's bench is seen along itself from a few metres up: without anisotropic reads its pictures smear along the view.
+  const fine = (file: string, data: boolean): THREE.IUniform => ({ value: ctx.assets.texture(file, data ? { kind: 'data', anisotropy: 4 } : { anisotropy: 4 }) });
+  const near = {
+    ...shared,
+    tLava: fine('mat/pahoehoe.jpg', false),
+    tLavaNh: fine('mat/pahoehoe-nh.png', true),
+    tTalus: fine('mat/talus.jpg', false),
+    tTalusNh: fine('mat/talus-nh.png', true),
+  };
+  const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
+  const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
   const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {

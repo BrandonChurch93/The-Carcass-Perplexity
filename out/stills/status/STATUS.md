@@ -1,8 +1,8 @@
-# Status 28
+# Status 31
 
-2026-11-25 05:33 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 06:36 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-3.jpg`: The feeding shot restaged. Top: the approved picture. Bottom: the frame now (hd, draft tier)
-- `02-shot-heart-02.jpg`: The same shot across its seven seconds: a 16 m push toward the feeding animal
-- `03-frame-3374-preview-review.jpg`: Film frame 3374, preview, review tier
-- `04-frame-3334-preview-review.jpg`: Film frame 3334, preview, review tier
+- `01-set-a-01.jpg`: Round 3, the wide view exactly as the jury saw it (built before the third versions below)
+- `02-cmp-heart-1.jpg`: The line, approved picture and frame, with the new fire colours of the light owner
+- `03-compare-heart-2.jpg`: The one that sank, third version, beside its picture
+- `04-v3-compare-heart-4.jpg`: The mouth and its fall, third version, beside its picture
