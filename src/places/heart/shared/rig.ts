@@ -109,6 +109,28 @@ function skyOpen(at: Height, spec: typeof LAND, step: number, reach: readonly nu
   for (let j = 0; j < spec.height; j++) {
     for (let i = 0; i < spec.width; i++) out[j * spec.width + i] = sample(low, lowSpec, spec.minX + (i + 0.5) * cx, spec.minZ + (j + 0.5) * cz);
   }
+  // Read through a linear filter, a map that was itself stretched linearly shows its cells as creases on a steep wall, where the sky open changes
+  // by half within two cells: a faint regular grid. Two passes of a 1 2 1 blur round the creases off.
+  return soften(soften(out, spec.width, spec.height), spec.width, spec.height);
+}
+
+function soften(data: Float32Array, w: number, h: number): Float32Array {
+  const across = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const a = data[j * w + Math.max(0, i - 1)] as number;
+      const b = data[j * w + Math.min(w - 1, i + 1)] as number;
+      across[j * w + i] = 0.25 * a + 0.5 * (data[j * w + i] as number) + 0.25 * b;
+    }
+  }
+  const out = new Float32Array(w * h);
+  for (let j = 0; j < h; j++) {
+    for (let i = 0; i < w; i++) {
+      const a = across[Math.max(0, j - 1) * w + i] as number;
+      const b = across[Math.min(h - 1, j + 1) * w + i] as number;
+      out[j * w + i] = 0.25 * a + 0.5 * (across[j * w + i] as number) + 0.25 * b;
+    }
+  }
   return out;
 }
 
