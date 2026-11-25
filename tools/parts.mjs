@@ -48,7 +48,7 @@ export async function partsCommand(a, deps = {}) {
     }
     const hashes = Object.fromEntries(order.map((u) => [u, unitHash(u)]));
     const files = Object.fromEntries(order.map((u) => [u, [...new Set(unitFiles(u).map((f) => relPath(f).split(path.sep).slice(0, 3).join('/')))].sort()]));
-    const { register, faults } = core.mergeRegister(old, live, { hashes, files, order, fresh: a.fresh === true });
+    const { register, faults } = core.mergeRegister(old, live, { hashes, files, order, fresh: a.fresh === true, units });
     if (a.fresh === true && register.parts.some((p) => p.state !== 'stand-in')) throw new Error('--fresh is only for a register in which every part is still a stand-in.');
     const never = [];
     if (a['no-pictures'] !== true) {
