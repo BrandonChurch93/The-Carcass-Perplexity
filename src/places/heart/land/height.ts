@@ -64,11 +64,11 @@ const WALL: [number, number][] = [
   [125, 74],
   [150, 150],
   [172, 206],
-  [380, 232],
-  [408, 284],
-  [432, 300],
-  [900, 330],
-  [6000, 380],
+  [372, 232],
+  [386, 286],
+  [432, 298],
+  [900, 292],
+  [6000, 250],
 ];
 
 function profile(d: number): number {
@@ -83,7 +83,8 @@ function profile(d: number): number {
 }
 
 /** The tops of the lava flows the wall is built of, metres above the lake. Thick hard flows stand as cliffs, thin ones as steps. */
-export const FLOWS = [58, 66, 83, 91, 97, 118, 126, 131, 152, 161, 167, 188, 195, 206, 212, 233, 241, 262, 269, 277, 296, 304, 330, 338, 356, 364, 385, 393, 414];
+// Thick flows of basalt, 9 to 36 m each, with a thin bed of rubble between some of them: a few tiers, not fine strata.
+export const FLOWS = [58, 83, 97, 131, 140, 176, 206, 219, 252, 277, 304, 338, 351, 385, 414];
 
 // A smooth height cut into flows: most of each flow's thickness is climbed in the first part of its run (the cliff), the rest is its ledge.
 function terrace(h: number, face: number): number {
@@ -98,7 +99,7 @@ function terrace(h: number, face: number): number {
 }
 
 /** How tall the wall stands round the lake, as a share of the layout's profile: one number every ten degrees round the lake's centre, from west through north. */
-export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.73, 0.69, 1, 1, 1, 1, 1.27, 1.2, 1.15, 1.23, 1.3, 1.17, 0.95, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+export const RIM = [0.9, 0.9, 0.9, 0.9, 0.85, 0.82, 0.73, 0.69, 0.96, 1, 1, 1.04, 1.13, 1.12, 1.1, 1.11, 1.13, 1.08, 0.97, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
 
 function rimScale(x: number, z: number): number {
   const a = (Math.atan2(z - 90, x - 190) * 18) / Math.PI + 18;
@@ -106,6 +107,18 @@ function rimScale(x: number, z: number): number {
   const f = a - i;
   const u = f * f * (3 - 2 * f);
   return lerp(RIM[i % 36] as number, RIM[(i + 1) % 36] as number, u);
+}
+
+// The fall comes down the wall here: beside its channel the wall keeps the shape the fall folder was built on.
+const CHANNEL_X = MOUTH.x - 3;
+
+// The crest of the cone of debris left of the fall: from the foot of the cliff to the shore, as x, z, x, z.
+const SPUR: [number, number, number, number] = [-238, -452, -116, -324];
+
+/** How far the flows of the wall dip at (x, z), metres: the ledges wander up and down by some metres over tens of metres, so that none is a level line. */
+export function flowDip(x: number, z: number): number {
+  const free = smooth(40, 75, Math.abs(x - CHANNEL_X));
+  return 5 * (noise(x / 310 + 2, z / 310) - 0.5) + free * (13 * (noise(x / 83 + 5.3, z / 83 + 1.1) - 0.5) + 4.5 * (noise(x / 21 + 0.7, z / 21 + 3.9) - 0.5));
 }
 
 /** The caldera wall and the country outside it. */
@@ -116,32 +129,60 @@ export function wallAt(x: number, z: number, d: number): number {
   const g = ridge(x / 52 + 3.1, z / 52 + 7.7);
   const gully = g * g * g * 17 * up;
   const rib = (fbm(x / 23, z / 23, 3) - 0.5) * 12 * up;
-  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 30 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib;
-  let h = profile(ragged) + 9 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
+  // The cliff is broken along its joints into piers some metres wide that stand forward or back of each other. Not at the rim, whose outline is the wide picture's.
+  const free = smooth(40, 75, Math.abs(x - CHANNEL_X));
+  const pier = free * up * smooth(300, 215, d) * (7 * (blocks(x / 8.3 + 0.21 * z, z / 9.1 - 0.19 * x) - 0.5) + 9 * (blocks(x / 27 + 3.3, z / 31 + 1.7) - 0.5));
+  // Away from the fall the wall is broken into masses ten to thirty metres across that stand forward of the crevices between them.
+  const wide = smooth(95, 130, Math.abs(x - CHANNEL_X));
+  const m1 = ridge(x / 33 + 0.31 * z / 33 + 5.5, z / 41 - 0.2 * x / 41 + 1.9);
+  const m2 = ridge(x / 13 + 2.2, z / 15 + 8.4);
+  const mass = wide * up * smooth(330, 240, d) * (15 * (0.55 - m1 * m1 * m1) + 5 * (0.5 - m2 * m2));
+  const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 14 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d) - gully + rib + pier + mass;
+  let h = profile(ragged) + 3.5 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
   // The rim is set by the wide picture: lower in the west, where the wall is near that camera, higher in the east.
   if (h > 50) h = 50 + (h - 50) * rimScale(x, z);
   if (h > 50) {
     // The flows dip a little, so the bands are level but not ruled.
-    const dip = 5 * (noise(x / 310 + 2, z / 310) - 0.5);
+    const dip = flowDip(x, z);
     const face = 0.2 + 0.3 * noise(x / 37 + 11, z / 37 + 5);
     const cut = terrace(h + dip, face) - dip;
-    h = lerp(h, cut, smooth(50, 64, h));
+    // Stretches of the wall are massive: there the flows are welded and barely step.
+    const stepped = lerp(1, 0.4 + 0.6 * smooth(0.3, 0.62, noise(x / 97 + 9.1, z / 97 + 4.3)), free);
+    h = lerp(h, cut, smooth(50, 64, h) * stepped);
   }
   // Fans of talus under the gullies, and the apron's own lumps.
   const apron = smooth(4, 40, d) * smooth(150, 100, d);
   h += apron * (5 * g * g + 2.4 * (fbm(x / 9, z / 9, 3) - 0.5) + 6 * (noise(x / 61, z / 61 + 4) - 0.5));
-  // Here and there the rock under the talus stands out of it in ledges.
+  // Left of the fall a cone of debris lies against the wall: its crest runs down from the cliff to the shore, askew to the wall,
+  // and the ground east of the crest falls away toward the channel. From the fall's lens the crest is a diagonal against what lies behind it.
+  {
+    const ex = SPUR[2] - SPUR[0];
+    const ez = SPUR[3] - SPUR[1];
+    const len = Math.hypot(ex, ez);
+    const t = ((x - SPUR[0]) * ex + (z - SPUR[1]) * ez) / (len * len);
+    if (t > -0.15 && t < 1.2) {
+      // East of the crest is positive.
+      const across = ((x - SPUR[0]) * ez - (z - SPUR[1]) * ex) / len + 7 * (noise(t * 7.3, 1.7) - 0.5) + 2.5 * (noise(t * 31, 5.1) - 0.5);
+      const rise = (23 * smooth(-0.1, 0.25, t) * smooth(0.97, 0.42, t) + 3 * smooth(1.2, 0.95, t) * smooth(0.6, 0.9, t)) * (0.8 + 0.4 * noise(t * 5.1 + 3.3, 0.4)) * smooth(-12, -2, d);
+      const flank = across > 0 ? smooth(17, 0, across) : Math.exp(across / 70);
+      h += rise * flank * flank;
+    }
+  }
+  // Here and there the rock under the talus stands out of it: in ledges beside the channel, in knobs and ribs with broken sides elsewhere.
   const crop = apron * smooth(0.5, 0.72, noise(x / 43 + 7, z / 43 + 2)) * smooth(8, 20, h);
   if (crop > 0) {
     const w = 7.5;
-    const q = (h + 2 * noise(x / 31, z / 31 + 9) + 1.6 * blocks(x / 5.3 + 0.3 * z, z / 6.1 - 0.2 * x)) / w;
+    const q = (h + 2 * noise(x / 31, z / 31 + 9) + free * (9 * noise(x / 37 + 2.2, z / 37 + 6.1) + 3 * noise(x / 11 + 8.1, z / 11)) + 1.6 * blocks(x / 5.3 + 0.3 * z, z / 6.1 - 0.2 * x)) / w;
     const f = q - Math.floor(q);
     const face = 0.14 + 0.2 * noise(x / 13 + 3, z / 13);
     const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-    h += crop * (s - f) * w * 0.8;
+    h += crop * (s - f) * w * lerp(0.8, 0.3, free);
   }
+  const knob = free * apron * smooth(0.56, 0.7, noise(x / 17 + 1.3, z / 21 + 6.6) + 0.25 * (noise(x / 5.1 + 2, z / 5.1) - 0.5));
+  if (knob > 0) h += knob * (2.5 + 5 * noise(x / 29 + 4.4, z / 29 + 0.9) + 2.2 * (blocks(x / 3.7 + 0.4 * z, z / 4.3 - 0.3 * x) - 0.5) + 1.2 * (noise(x / 1.9, z / 1.9 + 3) - 0.5));
   // The rim and the country outside: broken crags, then long low hills.
-  h += smooth(400, 470, d) * (14 * (fbm(x / 70, z / 70, 3) - 0.5) + 70 * smooth(600, 3000, d) * (fbm(x / 900, z / 900, 3) - 0.35));
+  // The rim is a table of flows broken at its edge into blocks: a level skyline with notches, and nothing behind it stands higher.
+  h += smooth(400, 470, d) * (5 * (fbm(x / 70, z / 70, 3) - 0.5) + 7 * (blocks(x / 31 + 0.2 * z, z / 37 - 0.15 * x) - 0.5) * smooth(700, 480, d));
   return h;
 }
 
@@ -214,17 +255,22 @@ function lineCrag(x: number, z: number): number {
   const dx = x - CRAG_A[0];
   const dz = z - CRAG_A[1];
   const u = dx * CRAG_ALONG[0] + dz * CRAG_ALONG[1];
-  if (u < -6 || u > 10.5) return 0;
+  if (u < -19 || u > 10.5) return 0;
   // Behind the foot is positive: away from the lake.
   const v = dx * CRAG_ALONG[1] - dz * CRAG_ALONG[0];
-  if (v < -1.2 || v > 11) return 0;
-  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is in steps.
+  if (v < -1.2 || v > 27) return 0;
+  // The face is fractured into columns of rock that stand a little forward or back of each other, and the top is broken, never level.
   const column = blocks(u / 1.15 + 3.3, 7.7);
   const vj = v - 0.75 * (column - 0.5) - 0.25 * (noise(u / 0.4, v / 0.4) - 0.5);
   const uj = u + 0.9 * (blocks(v / 1.3 + 1.7, 2.9) - 0.5);
-  const top = uj < 6.3 ? 7.4 + 0.11 * v + 1.3 * (blocks(u / 2.3 + 9.1, v / 2.9) - 0.5) : uj < 8.1 ? 4.3 + 0.6 * column : uj < 9.5 ? 2.3 + 0.5 * column : 0;
-  const back = smooth(10.5, 6.5, v + 1.5 * noise(u / 3.1, 4.4));
-  const start = smooth(-5.5, -3.6, uj);
+  const broken = 2.1 * (noise(u / 2.3 + 9.1, v / 2.9) - 0.5) + 0.9 * (noise(u / 0.9 + 2.2, v / 0.9 + 5.1) - 0.5);
+  const top = uj < 6.3 ? 4.9 + broken * smooth(0.3, 2.5, v) : uj < 8.1 ? 3.0 + 0.6 * column : uj < 9.5 ? 1.6 + 0.5 * column : 0;
+  // It is the end of a ridge and not a stump: behind its face a slope of rubble falls back to the bench, and its south end is a ramp of fallen blocks.
+  // Neither shows from the line view, which sees the face alone; the wide view sees both.
+  const fall = smooth(21, 1.4, v + 3 * noise(u / 3.1, 4.4) + 2.5 * (noise(u / 1.7 + 3, v / 1.7) - 0.5));
+  const back = fall * (0.55 + 0.45 * fall);
+  const ramp = smooth(-17.5, -3.4, uj + 2.2 * (noise(u / 1.3 + 7.7, v / 1.3) - 0.5) + 2.5 * (noise(u / 4.1 + 1.1, v / 4.1) - 0.5));
+  const start = ramp * ramp * (0.35 + 0.65 * ramp);
   return top * smooth(0, 0.4, vj) * back * start;
 }
 
@@ -253,17 +299,16 @@ export function benchAt(x: number, z: number, d0: number): number {
   // Tumuli: low swollen domes.
   const t = noise(x / 13 + 40, z / 13 + 9);
   const dome = t > 0.55 ? smooth(0.55, 0.85, t) * 1.1 * smooth(2, 12, routeDistance(x, z)) : 0;
-  // Slabs: the crust broken into plates a few metres across, each tilted its own way, with gaps between.
+  // Pillows: the crust swollen into lobes a few metres across, each with its own height, sagging into the creases between them.
   const sx = x / 4.3 + 1.3 * noise(x / 9, z / 9 + 3);
   const sz = z / 4.3 + 1.3 * noise(x / 9 + 7, z / 9);
   const ci = Math.floor(sx);
   const cj = Math.floor(sz);
-  const fx = sx - ci - 0.5;
-  const fz = sz - cj - 0.5;
-  const tilt = (hash(ci, cj) - 0.5) * fx + (hash(cj + 31, ci + 17) - 0.5) * fz;
-  const gap = Math.min(0.5 - Math.abs(fx), 0.5 - Math.abs(fz));
+  const fx = Math.abs(sx - ci - 0.5) * 2;
+  const fz = Math.abs(sz - cj - 0.5) * 2;
   const broken = smooth(0.35, 0.7, noise(x / 31 + 5, z / 31 + 2));
-  const slab = broken * (0.7 * tilt * smooth(0, 0.08, gap) - 0.25 * smooth(0.06, 0, gap));
+  const pillow = Math.sqrt(Math.max(0, (1 - fx * fx * fx) * (1 - fz * fz * fz)));
+  const slab = broken * ((0.25 + 0.5 * hash(ci, cj)) * pillow - 0.3) + 0.22 * (ridge(x / 2.9 + 3.3, z / 2.9 + 0.7) - 0.5);
   const lumps = 0.5 * (fbm(x / 5.5, z / 5.5, 3) - 0.5);
   // Lobes: each flow of pahoehoe ends in a swollen front a forearm high, and the fronts wander like contour lines.
   const lf = 7 * fbm(x / 17 + 3, z / 17 + 8, 2) + 0.35 * noise(x / 2.3, z / 2.3);
@@ -274,13 +319,15 @@ export function benchAt(x: number, z: number, d0: number): number {
   // bench (z under 200) the stair becomes the crag of the wide picture: faces of eight metres and more, jointed into blocks.
   const reach = routeDistance(x, z);
   const crag = smooth(200, 150, z);
-  const joint = blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x);
+  // The fronts of the flows are swollen noses, not cut steps: a front wanders, bulges and sags, and its top is round.
+  const joint = lerp(noise(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x), blocks(x / 2.9 + 0.31 * z, z / 3.3 - 0.27 * x), 0.35 + 0.4 * crag);
   const w = lerp(2.6, 9.5, crag);
-  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9)) / w;
+  const q = (h + (1 + 2 * crag) * noise(x / 40, z / 40) + (0.8 + 3.6 * crag) * joint + 2.2 * crag * blocks(x / 11 + 3.7, z / 13 + 1.9) + 0.5 * noise(x / 1.3 + 4.1, z / 1.3 + 2.2)) / w;
   const f = q - Math.floor(q);
   const face = lerp(0.2, 0.09, crag) + 0.12 * noise(x / 17 + 3, z / 17);
-  const s = f < face ? (0.9 * f) / face : 0.9 + (0.1 * (f - face)) / (1 - face);
-  h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * (s - f) * w;
+  const nose = Math.min(1, f / face);
+  const s = f < face ? 0.9 * Math.sqrt(nose * (2 - nose)) : 0.9 + (0.1 * (f - face)) / (1 - face);
+  h += smooth(1.2, 4, h) * lerp(0.45 + 0.55 * smooth(3, 14, reach), 1, crag) * lerp(0.7, 1, crag) * (s - f) * w;
   // The wide view's lens passes low over the bench: the ground keeps 3.5 m under it.
   const [off, lens] = widePath(x, z);
   if (off < 8 && h > lens - 3.7) h = lerp(lens - 3.7, h, smooth(2.5, 8, off));
@@ -289,8 +336,16 @@ export function benchAt(x: number, z: number, d0: number): number {
   const low = linePathDistance(x, z);
   if (low < 3.5 && h > 0.6) h = lerp(0.6, h, smooth(1.6, 3.5, low));
   if (h > 1.25 && lineOpen(x, z)) h = 1.25 + 0.12 * (1 - Math.exp(-(h - 1.25)));
-  const stand = lineCrag(x, z);
+  // Its ramp of rubble stays low beside the path of the line view's lens.
+  const stand = Math.min(lineCrag(x, z), 0.6 + 1.1 * Math.max(0, low - 3.5) + 100 * smooth(-7, -4.5, (x - CRAG_A[0]) * CRAG_ALONG[0] + (z - CRAG_A[1]) * CRAG_ALONG[1]));
   if (stand > h) h = stand;
+  // The last metres of shore are rubble under ash, not a ramp: lumps a stride across and blocks half buried, a hand to a forearm high.
+  // Under the line view's lens they stay low.
+  const near = smooth(34, 22, Math.hypot(x - LINE_LENS[0], z - LINE_LENS[1]));
+  if (near > 0) {
+    const lump = 0.34 * (blocks(x / 1.15 + 0.37 * z, z / 1.3 - 0.29 * x) - 0.5) + 0.3 * (noise(x / 2.7 + 6.3, z / 2.7 + 1.1) - 0.5) + 0.16 * (noise(x / 0.75, z / 0.75 + 4.4) - 0.5);
+    h += near * lump * (0.35 + 0.65 * smooth(0.6, 2.6, low)) * smooth(0.3, 1.5, d);
+  }
   // The lip at the line: a step of a few hand widths, not a ramp.
   return h * smooth(0, 0.3, d);
 }
@@ -335,7 +390,7 @@ export const SKERRY: [number, number] = [-518, 282.5];
 /** The true height of the land, metres. Zero or less is lake. */
 // The land with or without the buttress. The wall's ring is drawn without it and the buttress by its own mesh:
 // two meshes of one surface show each other through their joins as dotted lines.
-function compose(x: number, z: number, spur: boolean): number {
+function compose(x: number, z: number, spur: boolean, alcove = true): number {
   const d = calderaDistance(x, z);
   let g = wallAt(x, z, d);
   const bd = benchDistance(x, z);
@@ -358,7 +413,7 @@ function compose(x: number, z: number, spur: boolean): number {
   // The alcove the mouth opens into: the wall is cut back to the floor of the mouth, and the fall folder roofs it.
   const ax = Math.abs(x - MOUTH.x);
   const half = MOUTH.width / 2;
-  if (ax < half + 11 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
+  if (alcove && ax < half + 11 && z > MOUTH.z - 60 && z < MOUTH.z + 16 && g > MOUTH.floor) {
     const k = smooth(half + 3, half - 9, ax) * smooth(MOUTH.z - 56, MOUTH.z - 44, z) * smooth(MOUTH.z + 14, MOUTH.z + 4, z);
     return g + (MOUTH.floor - g) * k;
   }
@@ -369,9 +424,21 @@ export function landHeight(x: number, z: number): number {
   return compose(x, z, true);
 }
 
-/** The land as the wall's ring draws it: everything but the buttress. */
+/** The land as the wall's ring draws it: everything but the buttress, and the wall standing whole over the mouth.
+ *  The alcove is a slot open to the sky in `landHeight` (a height field has no roof); the drawn wall keeps its face there
+ *  and the mesh is opened only inside the arch, where the fall's tube shows. */
 export function wallHeight(x: number, z: number): number {
-  return compose(x, z, false);
+  return compose(x, z, false, false);
+}
+
+/** Whether a point of the wall's face lies inside the arch of the mouth, scaled by k: the hole the wall's mesh leaves for the fall's tube.
+ *  The arch is the fall's: a superellipse of power 2.5, MOUTH.width / 2 wide at the sill and MOUTH.height - 10 tall, standing on the floor. */
+export function inArch(x: number, y: number, z: number, k: number): boolean {
+  if (z > MOUTH.z + 40 || z < MOUTH.z - 110) return false;
+  const qx = Math.abs(x - MOUTH.x) / (MOUTH.width / 2);
+  const qy = (y - MOUTH.floor - 0.7) / (MOUTH.height - 10);
+  if (qy < -0.03) return false;
+  return Math.pow(Math.pow(qx, 2.5) + Math.pow(Math.max(qy, 0), 2.5), 0.4) < k;
 }
 
 /** The buttress as its own mesh draws it: the land where the buttress is the top of it, sunk out of sight below the rest. */

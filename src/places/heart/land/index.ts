@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { BUTTRESS, benchDistance, calderaDistance } from '../layout';
 import { CRACK_FOOT, CRACK_TOP } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
-import { FLOWS, buttressHeight, crackDip, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
+import { FLOWS, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, setCracks, wallHeight, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
 import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
@@ -100,7 +100,10 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wall = mesh(ribs(wallHeight, wallRibs(spacing, -3, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190), wallMaterial);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip);
+  // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
+  open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
+  const wall = mesh(wallAll, wallMaterial);
 
   // The buttress: ribs across it, so its sheer faces get rows all the way up. The wall's ring is drawn without it, and it sinks under the ring where the wall is the higher.
   const [rx, rz] = BUTTRESS.root;
@@ -115,7 +118,7 @@ export function create(ctx: HeartContext): HeartPiece {
     const reach = 150;
     across.push({ x: cx - az * reach, z: cz + ax * reach, dx: az, dz: -ax, length: reach * 2, on: true });
   }
-  const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2);
+  const buttressAll = ribs(buttressHeight, across, 230, 0.6, 0.2, [1.6, 5, 16]);
   trim(buttressAll, -1.2);
   const buttress = mesh(buttressAll, wallMaterial);
 
@@ -137,9 +140,17 @@ export function create(ctx: HeartContext): HeartPiece {
     nearMaterial,
   );
   const rocks = scatterRocks(ctx, shared, landHeight);
+  // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
+  for (const r of rocks.bench) r.renderOrder = -6;
+  nearBench.renderOrder = -5;
+  midBench.renderOrder = -4;
+  farBench.renderOrder = -3;
+  for (const r of rocks.land) r.renderOrder = -2;
+  buttress.renderOrder = -1;
   ctx.scene.add(ctx.parts.built('land', wall, buttress, ...rocks.land), buttress, ...rocks.land);
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80), lipMaterial);
+  lip.renderOrder = -5;
   ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, lip, ...rocks.bench), midBench, nearBench, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
@@ -153,7 +164,9 @@ export function create(ctx: HeartContext): HeartPiece {
     const gap = Math.max(0.06, c.width * 0.4);
     for (let s = -1.6; s <= l + 1.6; s += gap) list.push({ x: c.ax + ux * s - uz * reach, z: c.az + uz * s + ux * reach, dx: uz, dz: -ux, length: reach * 2, on: true });
     const h = (x: number, z: number): number => landHeight(x, z) - crackDip(x, z) + 0.03;
-    crackMeshes.push(mesh(ribs(h, list, 56, 0.04, 0.35), crackMaterial));
+    const crackMesh = mesh(ribs(h, list, 56, 0.04, 0.35), crackMaterial);
+    crackMesh.renderOrder = -5;
+    crackMeshes.push(crackMesh);
     // It steams along its length. The air folder draws these.
     const vents = c.depth > 1 ? 7 : 3;
     for (let i = 0; i < vents; i++) {
@@ -185,6 +198,21 @@ export function create(ctx: HeartContext): HeartPiece {
 }
 
 // Drops the triangles of a surface that lie wholly below a height: what is under the lake is never seen and still costs.
+// Drops every triangle with a corner where `hole` says yes.
+function open(g: THREE.BufferGeometry, hole: (x: number, y: number, z: number) => boolean): void {
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const index = g.getIndex() as THREE.BufferAttribute;
+  const kept: number[] = [];
+  for (let i = 0; i < index.count; i += 3) {
+    const a = index.getX(i);
+    const b = index.getX(i + 1);
+    const c = index.getX(i + 2);
+    if (hole(p.getX(a), p.getY(a), p.getZ(a)) || hole(p.getX(b), p.getY(b), p.getZ(b)) || hole(p.getX(c), p.getY(c), p.getZ(c))) continue;
+    kept.push(a, b, c);
+  }
+  g.setIndex(kept);
+}
+
 function trim(g: THREE.BufferGeometry, below: number): void {
   const p = g.getAttribute('position') as THREE.BufferAttribute;
   const index = g.getIndex() as THREE.BufferAttribute;
