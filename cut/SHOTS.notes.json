@@ -12,9 +12,9 @@
   },
   "shots": {
     "reveal-01": {
-      "start": "The dark water of the lake fills the frame, seen from straight above. It is the last frame of the Eye, so the cut cannot be seen.",
-      "end": "The whole body lies in the frame from the skull to the feet, with the edge of the planet across the upper left and the cyclone at the lower right. This framing is reached on the titan frame, 10027, and the camera then creeps out by 3 percent until the cut to black.",
-      "move": "It is one rise straight up, with north at the top: still at the lake, fastest as the shore of the lake comes into view, slowing through the skull and the shoulders, still again on the titan frame.",
+      "start": "Deep water and nine pale rings, seen from straight above the centre of the lake, 20 km of water above and below the middle of the frame. The last frames of the Eye draw the same water and the same rings at the same rate of climb, so the cut cannot be seen. The amber shore enters the frame after about 0.8 s and the rings fade into the water as it does.",
+      "end": "The whole body lies in the frame from the skull to the feet, with the edge of the planet across the top and the cyclone at the lower right. The window of the approved picture is reached on the titan frame, 10027. The camera does not stop there: it goes on pulling back, 17 percent wider by the cut to black and a little slower each second, and it drifts until the middle of the body is the middle of the frame, with clear sea on every side.",
+      "move": "It is one rise straight up, with north at the top. It leaves the lake at the rate of climb the Eye ends on, is fastest as the shore of the lake fills the frame, and slows through the skull and the shoulders to the titan frame. In the hold the clouds drift east, the cyclone turns, the storm flickers and the Heart beats once, on the music's last strike at frame 11334.",
       "focus": "On the ground straight below, at every height."
     },
     "marsh-01": {

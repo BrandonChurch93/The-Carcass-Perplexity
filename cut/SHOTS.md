@@ -84,18 +84,18 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 
 - Frames: 2937 to 3374, 7.30 s.
 - Key: `heart-3` at frame 3156.
-- Lens: 80 mm for the whole shot (a vertical field of view of 17 degrees).
-- Move: to the left. The camera travels 37 m, from 2.9 m above the ground to 3.4 m.
+- Lens: 76 mm for the whole shot (a vertical field of view of 18 degrees).
+- Move: to the left. The camera travels 37 m, from 3.2 m above the ground to 3.1 m.
 - Start framing: 3 m over the crust, on the group of five tall ones, with the fall and the mouth at the left edge and the buttress on the right.
 - End framing: 36 m further along, turned against the move to keep the group in the frame. The fall and the mouth have slid out on the left.
-- Focus: On the group of five. The aim is 83 m away at the start and 83 m at the end. Depth of field is off in the blockout.
+- Focus: On the group of five. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-03` · The Heart · the fire under the skin
 
 - Frames: 3375 to 3578, 3.40 s.
 - Key: `heart-1` at frame 3477.
 - Lens: 29 mm for the whole shot (a vertical field of view of 45 degrees).
-- Move: in. The camera travels 21 m, from 4.6 m above the ground to 1.7 m.
+- Move: in. The camera travels 18 m, from 4.2 m above the ground to 1.7 m.
 - Start framing: 4.6 m up on the bench side of the shore, looking along the glowing seam where the crust meets the rock, with the sulphur crack and its steam on the left.
 - End framing: 1.7 m over the shore and 5 m past the key position, still on the bench side of the seam, which runs away across the frame toward the nearest of the tall ones and the mouth.
 - Focus: On the seam, a few metres ahead of the lens. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
@@ -104,7 +104,7 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 
 - Frames: 3579 to 3790, 3.53 s.
 - Key: `heart-2` at frame 3685.
-- Lens: 43 mm for the whole shot (a vertical field of view of 31 degrees).
+- Lens: 41 mm for the whole shot (a vertical field of view of 33 degrees).
 - Move: a hold that drifts. The camera travels 8.5 m, from 3.0 m above the ground to 2.4 m.
 - Start framing: 2.4 m over the crust: the one that sank right of centre, the nearest of the tall ones on the left, the mouth and the fall behind.
 - End framing: About 8 m to the side, the same framing. The shot is a hold with a slow drift.
@@ -149,7 +149,7 @@ Frames 4221 to 5617, 23.28 s, 5 shots. The origin is the centre of the main shaf
 - Frames: 4866 to 5080, 3.58 s.
 - Key: `breath-3` at frame 4973.
 - Lens: 42 mm for the whole shot (a vertical field of view of 32 degrees).
-- Move: out. The camera travels 11 m, from 5.0 m above the ground to 6.6 m.
+- Move: out. The camera travels 7.6 m, from 3.2 m above the ground to 5.1 m.
 - Start framing: Close on the largest weed on the west lip, 3.5 m in front of the key position.
 - End framing: 10.5 m back: the weed, the breath pouring west over the lip, and the channel and the waders behind.
 - Focus: On the weed. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
@@ -159,7 +159,7 @@ Frames 4221 to 5617, 23.28 s, 5 shots. The origin is the centre of the main shaf
 - Frames: 5081 to 5402, 5.37 s.
 - Key: `breath-1` at frame 5242.
 - Lens: 35 mm for the whole shot (a vertical field of view of 38 degrees).
-- Move: to the right. The camera travels 14 m, from 2.8 m above the ground to 1.8 m.
+- Move: to the right. The camera travels 13 m, from 2.7 m above the ground to 2.0 m.
 - Start framing: 1.9 m above the bed of the channel, on three waders with the cliff behind them: the near one with its neck down on the left.
 - End framing: 13 m to the right and 5 m forward, past the three.
 - Focus: On the middle wader. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
@@ -169,7 +169,7 @@ Frames 4221 to 5617, 23.28 s, 5 shots. The origin is the centre of the main shaf
 - Frames: 5403 to 5617, 3.58 s.
 - Key: `breath-2` at frame 5510.
 - Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
-- Move: in. The camera travels 12 m, from 4.9 m above the ground to 2.8 m.
+- Move: in. The camera travels 12 m, from 5.6 m above the ground to 2.8 m.
 - Start framing: On the shelf south west of the rim: the dead wader in the foreground, the wader at the rim feeding behind it, the weed, the shaft and its slabs on the right, the cliff upper right.
 - End framing: 11.5 m closer, low over the dead wader.
 - Focus: On the dead wader. The aim is 60 m away at the start and 60 m at the end. Depth of field is off in the blockout.
@@ -345,10 +345,10 @@ Frames 9541 to 11860, 38.67 s, 2 shots.
 - Frames: 9541 to 11743, 36.72 s.
 - Key: `reveal-4` at frame 10027.
 - Lens: 45 mm for the whole shot (a vertical field of view of 30 degrees).
-- Move: out. The camera travels 5655 km, from 49.0 km above the ground to 5412 km. It is one rise straight up, with north at the top: still at the lake, fastest as the shore of the lake comes into view, slowing through the skull and the shoulders, still again on the titan frame.
-- Start framing: The dark water of the lake fills the frame, seen from straight above. It is the last frame of the Eye, so the cut cannot be seen.
-- End framing: The whole body lies in the frame from the skull to the feet, with the edge of the planet across the upper left and the cyclone at the lower right. This framing is reached on the titan frame, 10027, and the camera then creeps out by 3 percent until the cut to black.
-- Focus: On the ground straight below, at every height. The aim is 49.0 km away at the start and 5412 km at the end. Depth of field is off in the blockout.
+- Move: out. The camera travels 6444 km, from 74.6 km above the ground to 6161 km. It is one rise straight up, with north at the top. It leaves the lake at the rate of climb the Eye ends on, is fastest as the shore of the lake fills the frame, and slows through the skull and the shoulders to the titan frame. In the hold the clouds drift east, the cyclone turns, the storm flickers and the Heart beats once, on the music's last strike at frame 11334.
+- Start framing: Deep water and nine pale rings, seen from straight above the centre of the lake, 20 km of water above and below the middle of the frame. The last frames of the Eye draw the same water and the same rings at the same rate of climb, so the cut cannot be seen. The amber shore enters the frame after about 0.8 s and the rings fade into the water as it does.
+- End framing: The whole body lies in the frame from the skull to the feet, with the edge of the planet across the top and the cyclone at the lower right. The window of the approved picture is reached on the titan frame, 10027. The camera does not stop there: it goes on pulling back, 17 percent wider by the cut to black and a little slower each second, and it drifts until the middle of the body is the middle of the frame, with clear sea on every side.
+- Focus: On the ground straight below, at every height. The aim is 74.6 km away at the start and 6161 km at the end. Depth of field is off in the blockout.
 
 ### `reveal-02` · black
 

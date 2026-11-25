@@ -1,0 +1,10 @@
+{
+  "what": "The handoff between the Eye and the rise. On the frames either side of it both places draw the same picture: deep water and rings, seen from straight above the centre of the lake. This file has an identical copy in the other place and a test fails if the two differ.",
+  "climbPerFrame": 0.006,
+  "water": "#0c1a2c",
+  "ring": "#31465c",
+  "ringRadii": [0.05531, 0.08296, 0.12444, 0.18667, 0.28, 0.42, 0.63, 0.945, 1.4175],
+  "ringWidth": 0.07,
+  "eyeHalfHeightMetres": 212,
+  "revealHalfHeightKm": 20
+}

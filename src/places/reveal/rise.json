@@ -1,0 +1,9 @@
+{
+  "what": "The Builder's tuning of the rise. cover: how much wider than its window the camera sees at each key. settlePerFrame and settleFrames: the climb does not stop on the titan frame, it leaves it at this rate (natural log of the width, per film frame) and the rate dies away over this many frames, so the hold is never a still. holdCentre: where the middle of the frame ends the hold, in px of the master: the middle of the land's bounding box, so the body ends with clear space on every side. lakeShorePx and lakeDeepPx: the half axes of the lake's amber ring and of its deep water, in px of the master.",
+  "cover": 1.001,
+  "settlePerFrame": 0.0002,
+  "settleFrames": 900,
+  "holdCentre": {"x": 3361.6, "y": 1570.3},
+  "lakeShorePx": [62, 54],
+  "lakeDeepPx": [56, 48]
+}

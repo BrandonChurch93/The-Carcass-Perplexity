@@ -1,13 +1,15 @@
 import * as THREE from 'three';
 import pullback from '../../../references/approved/7-reveal/pullback.json';
 import { risePath, type RiseWindow } from '../../../tools/lib/rise-core.mjs';
-import { config } from '../../config';
+import { config, FPS } from '../../config';
 import { createBlockout } from '../../core/blockout';
 import type { CameraPath, Pose } from '../../core/cameras';
 import { Parts, type Place, type PlaceModule } from '../../core/place';
 import { neutralLook } from '../../core/stage';
 import { cut, eventSeconds, shotsOf } from '../../film/cut';
 import traced from './continent.json';
+import handoff from './handoff.json';
+import tuning from './rise.json';
 
 const UNIT = 'reveal';
 const KM = pullback.scale_STATED.km_per_master_px;
@@ -16,11 +18,10 @@ const MASTER_H = pullback.master.height;
 const FILM_ASPECT = config.formats.master.width / config.formats.master.height;
 const FOV = 30;
 const HALF_TAN = Math.tan((FOV * Math.PI) / 360);
-const COVER = 1.001;
-const CREEP = 0.03;
 const CLOUD_HEIGHT = 12;
 const CLOUDS = 380;
-const CLOUD_DRIFT: [number, number] = [1.2, -0.3];
+const CLOUD_DRIFT: [number, number] = [9, -2.2];
+const RING_FADE: [number, number] = [1.35, 2.75];
 
 const X = (px: number): number => (px - MASTER_W / 2) * KM;
 const Z = (py: number): number => (py - MASTER_H / 2) * KM;
@@ -28,7 +29,8 @@ const Z = (py: number): number => (py - MASTER_H / 2) * KM;
 const COLOUR = {
   sea: 0x0f2236,
   land: 0xb3a48f,
-  deep: 0x0c1a2c,
+  deep: new THREE.Color(handoff.water).getHex(),
+  ring: new THREE.Color(handoff.ring).getHex(),
   shore: 0x8c6a2a,
   lava: 0xff6a1a,
   lavaHot: 0xffd9a0,
@@ -77,7 +79,22 @@ function keysOfRise(): { frames: number[]; windows: RiseWindow[] } {
 }
 
 const riseShots = shotsOf(UNIT).filter((s) => s.picture !== 'black');
-const rise = risePath({ start: riseShots[0].first, ...keysOfRise(), cover: COVER, creep: CREEP });
+const riseKeys = keysOfRise();
+const RISE_FIRST = riseShots[0].first;
+const RISE_LAST = riseShots[riseShots.length - 1].last;
+const TITAN = riseKeys.frames[riseKeys.frames.length - 1];
+const START_WIDTH = (2 * handoff.revealHalfHeightKm * FILM_ASPECT) / KM;
+const rise = risePath({
+  start: RISE_FIRST,
+  ...riseKeys,
+  cover: tuning.cover,
+  startWidth: START_WIDTH,
+  startSpeed: handoff.climbPerFrame,
+  endSpeed: tuning.settlePerFrame,
+  endFrames: tuning.settleFrames,
+  hold: { ...tuning.holdCentre, frames: RISE_LAST - TITAN },
+});
+const halfHeightKm = (frame: number): number => (rise.at(frame).w * KM) / FILM_ASPECT / 2;
 
 function poseAt(frame: number): Pose {
   const v = rise.at(frame);
@@ -183,9 +200,17 @@ function create(): Place {
   layer(parts.standIn('sea', new THREE.Mesh(new THREE.PlaneGeometry(80000, 80000).rotateX(-Math.PI / 2), paint(COLOUR.sea))));
   layer(parts.standIn('continent', new THREE.Mesh(continent(), paint(COLOUR.land))));
   layer(parts.standIn('salt', oval(COLOUR.salt, AT.salt, 150, 115)));
-  const shore = layer(oval(COLOUR.shore, AT.lake, 62, 54));
-  const deep = layer(oval(COLOUR.deep, AT.lake, 56, 48));
-  parts.standIn('lake', shore, deep);
+  const shore = layer(oval(COLOUR.shore, AT.lake, tuning.lakeShorePx[0], tuning.lakeShorePx[1]));
+  const deep = layer(oval(COLOUR.deep, AT.lake, tuning.lakeDeepPx[0], tuning.lakeDeepPx[1]));
+  const ringPaint = paint(COLOUR.ring);
+  const rings = new THREE.Group();
+  for (const share of handoff.ringRadii) {
+    const r = share * handoff.revealHalfHeightKm;
+    rings.add(new THREE.Mesh(new THREE.RingGeometry(r * (1 - handoff.ringWidth / 2), r * (1 + handoff.ringWidth / 2), 160).rotateX(-Math.PI / 2), ringPaint));
+  }
+  rings.position.set(X(AT.lake.x), 0, Z(AT.lake.y));
+  layer(rings);
+  parts.standIn('lake', shore, deep, rings);
   const lava = layer(parts.standIn('lava', oval(COLOUR.lava, AT.lava, 42, 42)));
 
   const vapour = new THREE.Group();
@@ -247,6 +272,9 @@ function create(): Place {
 
   const beat = eventSeconds(UNIT, 'heartbeat');
   const lavaColour = lava.material.uniforms.uColour.value as THREE.Color;
+  const ringColour = ringPaint.uniforms.uColour.value as THREE.Color;
+  const ringFull = new THREE.Color(COLOUR.ring);
+  const ringGone = new THREE.Color(COLOUR.deep);
   const stormColour = storm.material.uniforms.uColour.value as THREE.Color;
   const lavaCool = new THREE.Color(COLOUR.lava);
   const lavaHot = new THREE.Color(COLOUR.lavaHot);
@@ -267,6 +295,10 @@ function create(): Place {
       kit.setTime(seconds);
       const t = Math.max(0, seconds);
       cloud.position.set(CLOUD_DRIFT[0] * t, CLOUD_HEIGHT, CLOUD_DRIFT[1] * t);
+      const wide = halfHeightKm(RISE_FIRST + seconds * FPS) / handoff.revealHalfHeightKm;
+      const fade = Math.min(1, Math.max(0, (wide - RING_FADE[0]) / (RING_FADE[1] - RING_FADE[0])));
+      ringColour.copy(ringFull).lerp(ringGone, fade * fade * (3 - 2 * fade));
+      rings.visible = fade < 1;
       cyclone.rotation.y = 0.03 * t;
       const hit = beat !== null && t >= beat ? Math.exp(-(t - beat) / 0.5) : 0;
       const pulse = 0.5 + 0.5 * Math.sin((2 * Math.PI * t) / 1.8);

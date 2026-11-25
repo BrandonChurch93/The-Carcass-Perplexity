@@ -22,6 +22,13 @@ describe('the speeds of the rise', () => {
     expect((v[1] + v[2]) / 2).toBeCloseTo(1 / 20, 12);
     expect((v[0] + v[1]) / 2).toBeCloseTo(2 / 10, 12);
   });
+
+  it('ends on a speed that is asked for, and still gives each stretch the mean of its two ends', () => {
+    const v = riseSpeeds([0, 10, 30], [0, 2, 3], 0.01);
+    expect(v[2]).toBe(0.01);
+    expect((v[1] + v[2]) / 2).toBeCloseTo(1 / 20, 12);
+    expect((v[0] + v[1]) / 2).toBeCloseTo(2 / 10, 12);
+  });
 });
 
 describe('the curve of the rise', () => {
@@ -57,10 +64,46 @@ describe('the curve of the rise', () => {
   it('refuses a first key that is not after the first frame', () => {
     expect(() => riseCurve(100, [100, 200], [1, 2])).toThrow(/not after its first frame/);
   });
+
+  it('leaves at a set height and speed when it is asked to, smoothly, and still passes through every key', () => {
+    const launch = { height: 4.2, speed: 0.004 };
+    const l = riseCurve(20, at, heights, { launch });
+    expect(l.at(20)).toBeCloseTo(4.2, 12);
+    expect(l.at(21) - l.at(20)).toBeGreaterThan(0.004 * 0.99);
+    expect(l.at(21) - l.at(20)).toBeLessThan(0.004 * 1.02);
+    at.forEach((f, i) => expect(l.at(f)).toBeCloseTo(heights[i], 9));
+    const hs = [];
+    for (let f = 20; f <= 500; f++) hs.push(Math.exp(l.at(f)));
+    expect(riseFaults(hs, { first: 20 })).toEqual([]);
+    expect(l.at(101) - l.at(100)).toBeCloseTo(l.at(100) - l.at(99), 3);
+  });
+
+  it('refuses a launch the keys cannot meet', () => {
+    expect(() => riseCurve(20, at, heights, { launch: { height: 4.99, speed: 0.004 } })).toThrow(/cannot leave/);
+    expect(() => riseCurve(20, at, heights, { launch: { height: 1, speed: 0.004 } })).toThrow(/cannot leave/);
+  });
 });
 
 describe('the path of the rise in this film', () => {
-  const path = risePath({ start, frames, windows, cover: 1.001, creep: 0.03 });
+  const handoff = JSON.parse(fs.readFileSync('src/places/reveal/handoff.json', 'utf8'));
+  const tuning = JSON.parse(fs.readFileSync('src/places/reveal/rise.json', 'utf8'));
+  const traced = JSON.parse(fs.readFileSync('src/places/reveal/continent.json', 'utf8'));
+  const km = pullback.scale_STATED.km_per_master_px;
+  const aspect = cfg.formats.master.width / cfg.formats.master.height;
+  const shot = cut.shots.find((s: { unit: string; picture: string }) => s.unit === unit && s.picture !== 'black');
+  const startWidth = (2 * handoff.revealHalfHeightKm * aspect) / km;
+  const path = risePath({
+    start,
+    frames,
+    windows,
+    cover: tuning.cover,
+    startWidth,
+    startSpeed: handoff.climbPerFrame,
+    endSpeed: tuning.settlePerFrame,
+    endFrames: tuning.settleFrames,
+    hold: { ...tuning.holdCentre, frames: shot.last - cut.titanFrame },
+  });
+  const step = (f: number): number => Math.log(path.at(f + 1).w / path.at(f).w);
 
   it('shows each key window at its key frame, a hair wider', () => {
     frames.forEach((f: number, i: number) => {
@@ -68,34 +111,85 @@ describe('the path of the rise in this film', () => {
       const w = windows[i];
       expect(v.cx).toBeCloseTo(w.x + w.w / 2, 6);
       expect(v.cy).toBeCloseTo(w.y + w.h / 2, 6);
-      expect(v.w).toBeCloseTo(w.w * 1.001, 6);
+      expect(v.w).toBeCloseTo(w.w * tuning.cover, 6);
     });
   });
 
-  it('starts inside the dark water of the lake, on the centre of the first key', () => {
+  it('keeps one contract for the handoff, with the same bytes in the Eye and in the rise', () => {
+    expect(fs.readFileSync('src/places/eye/handoff.json', 'utf8')).toBe(fs.readFileSync('src/places/reveal/handoff.json', 'utf8'));
+    expect(handoff.ringRadii.length).toBeGreaterThan(4);
+    for (let i = 1; i < handoff.ringRadii.length; i++) expect(handoff.ringRadii[i] / handoff.ringRadii[i - 1]).toBeCloseTo(1.5, 2);
+  });
+
+  it('starts on the centre of the lake at the width and the rate of climb the handoff names', () => {
     const v = path.at(start);
     const w = windows[0];
     expect(v.cx).toBeCloseTo(w.x + w.w / 2, 6);
-    expect(v.w).toBeLessThan(w.w * 0.3);
-    expect(v.w * pullback.scale_STATED.km_per_master_px).toBeGreaterThan(20);
-    expect(v.w * pullback.scale_STATED.km_per_master_px).toBeLessThan(80);
+    expect(v.cy).toBeCloseTo(w.y + w.h / 2, 6);
+    expect((v.w * km) / aspect / 2).toBeCloseTo(handoff.revealHalfHeightKm, 9);
+    expect(step(start)).toBeGreaterThan(handoff.climbPerFrame * 0.99);
+    expect(step(start)).toBeLessThan(handoff.climbPerFrame * 1.01);
+    expect(Math.abs(step(start + 1) - step(start))).toBeLessThan(handoff.climbPerFrame * 0.01);
   });
 
-  it('never narrows from the first frame to the last, and has no jump before the titan frame', () => {
-    const last = cut.places.find((p: { unit: string }) => p.unit === unit).last;
+  it('starts with nothing in frame but the deep water and the rings', () => {
+    const halfH = path.at(start).w / aspect / 2;
+    const halfW = path.at(start).w / 2;
+    const [rx, ry] = tuning.lakeDeepPx;
+    expect((halfW / rx) ** 2 + (halfH / ry) ** 2).toBeLessThan(0.9);
+    const inFrame = handoff.ringRadii.filter((r: number) => r < Math.hypot(1, aspect));
+    expect(inFrame.length).toBeGreaterThanOrEqual(6);
+    const widest = Math.max(...handoff.ringRadii) * (1 + handoff.ringWidth / 2) * handoff.revealHalfHeightKm;
+    expect(widest).toBeLessThan(ry * km);
+    expect(widest * (handoff.eyeHalfHeightMetres / handoff.revealHalfHeightKm)).toBeLessThan(440);
+  });
+
+  it('never narrows and has no jump, from its first frame to the last frame of the hold', () => {
     const widths = [];
-    for (let f = start; f <= last; f++) widths.push(path.at(f).w);
+    for (let f = start; f <= shot.last; f++) widths.push(path.at(f).w);
     for (let i = 1; i < widths.length; i++) expect(widths[i]).toBeGreaterThanOrEqual(widths[i - 1]);
-    expect(riseFaults(widths.slice(0, cut.titanFrame - start + 1), { first: start })).toEqual([]);
+    expect(riseFaults(widths, { first: start })).toEqual([]);
   });
 
-  it('is fastest near the first key and creeps on after the titan frame', () => {
-    const step = (f: number): number => Math.log(path.at(f + 1).w / path.at(f).w);
+  it('is fastest near the first key', () => {
     let best = start;
     for (let f = start; f < cut.titanFrame; f++) if (step(f) > step(best)) best = f;
     expect(Math.abs(best - frames[0])).toBeLessThan(20);
-    expect(path.at(cut.titanFrame + 1200).w).toBeGreaterThan(path.at(cut.titanFrame).w);
-    expect(path.at(cut.titanFrame + 1200).w).toBeLessThan(path.at(cut.titanFrame).w * 1.04);
+  });
+
+  it('never stops in the hold: the camera keeps pulling back, a little less each frame', () => {
+    for (let f = cut.titanFrame; f < shot.last; f++) {
+      expect(step(f)).toBeGreaterThan(0);
+      expect(step(f)).toBeLessThanOrEqual(tuning.settlePerFrame * 1.0001);
+    }
+    const grown = path.at(shot.last).w / path.at(cut.titanFrame).w;
+    expect(grown).toBeGreaterThan(1.1);
+    expect(grown).toBeLessThan(1.25);
+  });
+
+  it('ends the hold on the middle of the land, with clear space on every side', () => {
+    let x0 = Infinity;
+    let x1 = -Infinity;
+    let y0 = Infinity;
+    let y1 = -Infinity;
+    for (const shape of traced.shapes) {
+      for (let i = 0; i < shape.outer.length; i += 2) {
+        x0 = Math.min(x0, shape.outer[i]);
+        x1 = Math.max(x1, shape.outer[i]);
+        y0 = Math.min(y0, shape.outer[i + 1]);
+        y1 = Math.max(y1, shape.outer[i + 1]);
+      }
+    }
+    expect(Math.abs(tuning.holdCentre.x - (x0 + x1) / 2)).toBeLessThan(1);
+    expect(Math.abs(tuning.holdCentre.y - (y0 + y1) / 2)).toBeLessThan(1);
+    const v = path.at(shot.last);
+    expect(v.cx).toBeCloseTo(tuning.holdCentre.x, 6);
+    expect(v.cy).toBeCloseTo(tuning.holdCentre.y, 6);
+    const h = v.w / aspect;
+    expect((x0 - (v.cx - v.w / 2)) / v.w).toBeGreaterThan(0.1);
+    expect((v.cx + v.w / 2 - x1) / v.w).toBeGreaterThan(0.1);
+    expect((y0 - (v.cy - h / 2)) / h).toBeGreaterThan(0.1);
+    expect((v.cy + h / 2 - y1) / h).toBeGreaterThan(0.1);
   });
 });
 
