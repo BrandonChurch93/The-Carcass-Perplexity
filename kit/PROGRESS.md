@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 32, 2026-11-25 06:51 UTC:
+Status 33, 2026-11-25 07:10 UTC:
 
-- `01-heart-0.jpg`: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet
-- `02-heart-3.jpg`: Feeding at a seam after the merge: the animals and the seam are the picture's, the crust is flat and the far wall ends in a square corner
-- `03-heart-1.jpg`: The line after the merge: the channel is cut as a trench, the picture's is full to the brim with a white-hot core (sent to both lake owners)
-- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
+- `01-key-heart-2-hd-draft.jpg`: The one that sank, now through a lens: sharp on the carcass, soft before and behind it (draft tier)
+- `02-key-heart-3-hd-draft.jpg`: Feeding at a seam through the long lens: the far wall and the fall go soft behind the animals (draft tier)
+- `03-heart-1.jpg`: The line beside its picture, with a slight lens. The trench and the brown crust are what the two lake owners are replacing now
+- `04-key-heart-3-hd-draft-solo.jpg`: The frame that answers heart-3, film frame 3156, hd, draft tier, solo view, lens set by hand, radius 0 m
 
+Status 32, 2026-11-25 06:51 UTC, showed: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet; Feeding...
 Status 31, 2026-11-25 06:36 UTC, showed: Round 3, the wide view exactly as the jury saw it (built before the third versions below); The line, approved picture and frame, with the...
 Status 30, 2026-11-25 06:13 UTC, showed: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal.
-Status 29, 2026-11-25 05:53 UTC, showed: Left: the approved hero. Right: ours as it stands.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T06:51:21Z
-phase 3: 3.70 h used of 13.00 h
-build: 10.36 h used of 72.00 h
+2026-11-25T07:10:54Z
+phase 3: 4.03 h used of 13.00 h
+build: 10.68 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 15
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -840,3 +840,4 @@ none
 - 2026-11-25 06:51 UTC. Status 32 shown in the thread (06:51 UTC): compares of the merged main at the wide view, the feeding and the line; round 3 closed (R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 4 of 25), measures M1 and M2 green and M3 red at heart-4, merge done (818 of 818 tests, determinism passes), my reading of the merged frames (red-brown cast, crust without lobes or sheen, trench where the picture has a brimming channel, mouth and fall not the picture's), and what runs next. Correction sent to both lake owners at 06:48: the melt lies 5 to 30 cm below the brim with a thin curled lip, not 0.25 to 0.9 m between walls; the crust is smooth billowy pahoehoe with a sheen.
 - 2026-11-25 07:02 UTC. 07:00 UTC. Two notes from Brandon logged as notes 4 and 5 and applied: the approved script is the same as the config and the kit, line for line (MEASURED by script); the voice stays Carcass Narrator; the account's characters are read with every status (07:02 UTC: 1 of 131,000) and the voice, the model test, the takes for n8, the sound effects, the cut and the mix run as soon as the figure is back.
 - 2026-11-25 07:07 UTC. 07:07 UTC. Depth of field, the G10 fix and the hold merged into main as 31710fb (types clean, G10 pass, determinism pass); the lens set per key in the Heart's cameras; determinism passes with the lens open, 830 of 830 tests.
+- 2026-11-25 07:11 UTC. Status 33 shown in the thread (07:11 UTC): the one that sank and the feeding through the new lens, the line beside its picture; notes 4 and 5 from Brandon applied (script the same as config and kit, voice kept); the account's characters read at 07:10 UTC: 1 of 131,000; the pinholes in the crust's mesh (13 at heart-3, 25 at heart-0) sent to the crust owner; the levels against the pictures sent to five owners.
