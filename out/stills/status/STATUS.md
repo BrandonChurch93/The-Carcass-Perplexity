@@ -1,8 +1,8 @@
-# Status 40
+# Status 41
 
-2026-11-25 09:48 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 10:02 UTC. Phase 3, the look lock: the Heart.
 
-- `01-m0945-pair-3.jpg`: heart-3 on main 67a933a, approved picture at the left. In: the walkers' second hand-back and the bank's light. Still wrong: the level orange band behind the animals, the stamped whorls on the ground, the tan tone.
-- `02-m0945-pair-1.jpg`: heart-1 on main 67a933a. In: the line's first hand-back from the third lava owner. Still wrong: the ground reads as ribbed clay, the orange band at the horizon, the mouth's pale wall.
-- `03-m0945-pair-2.jpg`: heart-2 on main 67a933a. In: the sunk animal's second hand-back. Still wrong: contour lines on the sunk mass, the flat brown patch in front, pale grey where the picture is dark brown.
-- `04-m0945-pair-4.jpg`: heart-4 on main 67a933a. Still wrong: the pale striped wall round the mouth, the lit vault inside it, the wide flat stream, the orange streaks in the near field.
+- `01-m1000-pair-3.jpg`: heart-3 on main 337d087, approved picture at the left. In: the air's second hand-back (the hard orange band is gone) and the new crust skin. Still wrong: the floor is one even tan field with comma marks, the smoke behind is one flat rose field, the buttress does not stand in it.
+- `02-m1000-pair-1.jpg`: heart-1 on main 337d087. In: the rocks' first hand-back (no pale square blocks) and the crust's photographed skin (neutral dark grey, no clay). Still wrong: the red lump at the upper left (the land's crag, lit red, half hidden by steam), the ribs read as machined, a bare apron and a straight ramp at the shore.
+- `03-m1000-pair-0.jpg`: heart-0 on main 337d087. In: no column at the centre. Still wrong: the plume is a red-brown smear at the top right where the picture has one grey column, a pale blue patch on the crust at the lower right, the wall's stripes.
+- `04-m1000-pair-4.jpg`: heart-4 on main 337d087. In: no dark body right of the mouth, a low haze over the fan. Still wrong: the pale wall round the mouth, the lit vault, the wide flat stream without white-hot cores, the pale slope with sprinkled stones.

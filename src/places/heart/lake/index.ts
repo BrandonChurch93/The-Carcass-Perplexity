@@ -334,12 +334,15 @@ float heightAt(vec2 q, float c) {
 
   // A plate rides the melt: it rises and sinks a finger's width, each in its own time.
   float h = 0.015 * sin(uTime * 0.7 + n.b * 9.0) * calm;
+  // The folds and the toes, kept apart from the swell: beside a gap the swell is levelled and they are not.
+  float fine = 0.0;
   if (ridgeUp > 0.0) h += pow(ridgeUp, 1.5) * (0.5 + 1.2 * vnoise(q / 5.0 + 5.0));
 
   // The billow of the skin and the lobes on it. The cords are finer than the cells and go into the normal.
   if (c < 1.5) {
     // Nothing of the skin's relief stands above the rock where the lake runs out under the shore.
-    float off = smoothstep(0.0, 2.5, lake);
+    // The relief runs to the shore and a little under the land's skirt, so that the line where crust meets rock is crooked.
+    float off = smoothstep(-1.0, 0.5, lake);
     // Swells of 0.3 to 0.6 m over 2 to 5 m: from a low lens a near one hides the foot of the one behind it.
     float swell = mix(0.42, 0.62, smoothstep(20.0, 45.0, groupFar(q)));
     h += off * (swell * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.22 * (vnoise(q / 1.7 + 27.0) - 0.5) * (1.0 - smoothstep(0.35, 0.7, c)) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
@@ -347,8 +350,8 @@ float heightAt(vec2 q, float c) {
     if (gFine < 0.16) {
       float smoothSkin = off * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp));
       float fold = foldAt(q);
-      h += smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
-      h += smoothSkin * gToeBest * toeHeld(gFine);
+      fine = smoothSkin * gFoldCover * gFoldDeep * (pow(fold, 0.7) - 0.65) * foldHeld(gFine);
+      fine += smoothSkin * gToeBest * toeHeld(gFine);
     }
   }
 
@@ -368,15 +371,25 @@ float heightAt(vec2 q, float c) {
     float wide = smoothstep(0.04, 0.25, gape);
     float named = shown * smoothstep(0.2, 0.3, gape);
     // The brim hardly sags: the crust ends in a lip that stands over the melt.
-    float brim = mix(-0.02, max(meltLevel(n) + 0.03, -0.05), named);
-    h = mix(h, brim + 0.12 * h, exp(-max(bank, 0.0) / 0.7) * wide);
+    // The brim hardly sags. Where the melt lies deep (the line, the fountains) it lies in a trench: the crust keeps its
+    // thickness to the broken edge and its top stands a foot over the melt, uneven along the bank.
+    float level = meltLevel(n);
+    float heatClass = n.g - 2.0;
+    float trench = named * max(1.0 - smoothstep(0.01, 0.05, heatClass), step(1.3, heatClass));
+    float brim = mix(-0.02, mix(max(level + 0.03, -0.05), max(level + 0.2, 0.12 * (vnoise(q / 1.3 + 91.0) - 0.5)), trench), named);
+    h = mix(h, brim + mix(0.12, 0.3, trench) * h, exp(-max(bank, 0.0) / mix(0.7, 1.1, trench)) * wide);
+    // The folds end short of the broken edge: carried over it they would stand as a row of teeth on the wall.
+    float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
+    h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
     float lipWide = max(0.06, 2.5 * c);
     float lipAt = (bank - 0.07) / lipWide;
     h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0)) * (1.0 - smoothstep(0.03, 0.08, c));
     float deep = mix(0.03 + 0.25 * min(gape, 0.3), 0.15 - meltLevel(n), named);
-    float cut = (1.0 - smoothstep(-max(5.0 * c - 0.035, 0.05), min(2.0 * max(c - 0.04, 0.0), 0.6), bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    float cut = (1.0 - smoothstep(-max(5.0 * c - 0.035, 0.05), wallTop, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
     if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - smoothstep(0.03, 0.08, c));
     h = mix(h, -deep, cut);
+  } else {
+    h += fine;
   }
   if (c < 3.0) h += ridgeAt(q, c) * (1.0 - smoothstep(1.0, 3.0, c));
   return h;
