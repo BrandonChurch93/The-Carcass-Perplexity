@@ -73,62 +73,67 @@ float lobeAt(vec2 q) {
   gLobeNext = next;
   return best;
 }
-// Festoons: where the skin was pushed against something it gathered into a bundle of cords, 5 to 20 of them, each as thick
-// as a wrist, bent in an arc that bulges downstream. Between the bundles the skin is smooth.
-// Returns the cover; dir is across the cords, u runs -1 to 1 across one, lam is its thickness.
-#define FEST 2.6
-float festoonAt(vec2 q, out vec2 dir, out float u, out float lam) {
-  vec2 base = floor(q / FEST);
+// Folds: where the skin was pushed while it was soft it lies in ropes as thick as an arm, 20 to 60 cm from crest to crest,
+// in swirls metres across, with smooth skin between the swirls, and they swell and die along their length. Returns the
+// profile across one fold, 0 in the crease and 1 on the crest; the cover and depth go to gFoldCover, the count of folds
+// crossed to gFoldPhase. On each fold lie cords as thick as a wrist, which only the normal can carry.
+float gFoldCover;
+float gFoldPhase;
+#define BUNDLE 2.4
+float foldAt(vec2 q) {
+  gFoldPhase = 0.0;
+  gFoldCover = 0.0;
+  vec2 base = floor(q / BUNDLE);
+  vec2 wq = q + 0.6 * vec2(vnoise(q / 1.7 + 5.0), vnoise(q / 1.7 + 31.0));
   float flowTurn = 9.4 * vnoise(q / 60.0 + 3.0);
-  float wob = 0.3 * (vnoise(q / 1.9 + 4.0) - 0.5) + 0.02 * (vnoise(q / 0.6 + 9.0) - 0.5);
-  float best = 0.0;
-  dir = vec2(1.0, 0.0);
-  u = 0.0;
-  lam = 0.06;
+  float best = 1.0;
+  float next = 1.0;
   for (int j = 0; j < 3; j++) {
     for (int i = 0; i < 3; i++) {
       vec2 c2 = base + vec2(float(i - 1), float(j - 1));
       float hr = hash12(c2 + 8.1);
-      if (hr < 0.15) continue;
-      vec2 hs = hash22(c2 + 2.37);
-      float turn = flowTurn + 1.4 * (fract(hr * 17.3) - 0.5);
-      vec2 along = vec2(cos(turn), sin(turn));
-      float bend = 0.8 + 3.2 * fract(hr * 5.7);
-      vec2 rel = q - (c2 + 0.2 + 0.6 * hs) * FEST + along * bend;
-      float len = max(length(rel), 1e-3);
-      float r = len + wob;
-      float thick = 0.03 + 0.07 * fract(hr * 11.3);
-      float halfWide = min(0.5 * (5.0 + 15.0 * fract(hr * 23.1)) * thick, 0.55 * bend);
-      float band = 1.0 - abs(r - bend) / halfWide;
-      if (band <= 0.0) continue;
-      float halfChord = min(0.5 + 1.3 * fract(hr * 31.7), 0.95 * bend);
-      float least = sqrt(1.0 - halfChord * halfChord / (bend * bend));
-      float w = smoothstep(0.0, 0.35, band) * smoothstep(least, least + 0.4 * (1.0 - least), dot(rel, along) / len);
-      if (w > best) {
-        best = w;
-        dir = rel / len;
-        u = 2.0 * fract(r / thick) - 1.0;
-        lam = thick;
+      vec2 rel = wq - (c2 + 0.15 + 0.7 * hash22(c2 + 2.37)) * BUNDLE;
+      float d = length(rel) / (0.8 + 1.3 * hr);
+      if (d < best) {
+        next = best;
+        best = d;
+        // A bundle is a sheaf of arcs that bulge downstream.
+        float turn = flowTurn + 2.6 * (fract(hr * 17.3) - 0.5);
+        vec2 along = vec2(cos(turn), sin(turn));
+        float side = rel.x * along.y - rel.y * along.x;
+        gFoldPhase = (dot(rel, along) + (0.2 + 0.5 * fract(hr * 5.7)) * side * side) / (0.28 + 0.14 * fract(hr * 11.3)) + 7.0 * hr;
+      } else if (d < next) {
+        next = d;
       }
     }
   }
-  return best;
+  if (best >= 1.0) return 1.0;
+  // A fold swells and dies along its length, and none runs true.
+  gFoldCover = smoothstep(0.0, 0.22, min(1.0 - best, next - best)) * (0.3 + 0.7 * smoothstep(0.2, 0.65, vnoise(q / 0.9 + 19.0)));
+  gFoldPhase += 0.45 * vnoise(q / 0.57 + 3.0);
+  return abs(sin(3.14159 * gFoldPhase));
 }
+#define FOLD_DEEP 0.2
 // The two pressure ridges the pictures name.
-float ridgeAt(vec2 q) {
+float gRidgeOn;
+float ridgeAt(vec2 q, float c) {
   float h = 0.0;
+  gRidgeOn = 0.0;
   for (int i = 0; i < 2; i++) {
     vec2 ab = uRidge[i].zw - uRidge[i].xy;
     vec2 rel = q - uRidge[i].xy;
     float t = clamp(dot(rel, ab) / dot(ab, ab), 0.0, 1.0);
-    float side = (rel.x * ab.y - rel.y * ab.x) / length(ab);
     float across = length(rel - ab * t);
-    float tall = (0.55 + 0.45 * vnoise(q / (1.9 * uRidgeSize[i].y) + 3.0)) * pow(sin(t * 3.14159), 0.6);
-    float reach = (side > 0.0 ? 1.0 + 0.5 * vnoise(q / 1.3) : 2.1 + 0.8 * vnoise(q / 2.3 + 9.0)) * uRidgeSize[i].y;
+    float size = uRidgeSize[i].y;
+    if (across > 3.0 * size) continue;
+    float side = (rel.x * ab.y - rel.y * ab.x) / length(ab);
+    float tall = (0.55 + 0.45 * vnoise(q / (1.9 * size) + 3.0)) * pow(sin(t * 3.14159), 0.6);
+    float reach = (side > 0.0 ? 1.0 + 0.5 * vnoise(q / 1.3) : 2.1 + 0.8 * vnoise(q / 2.3 + 9.0)) * size;
     float rise = max(0.0, 1.0 - across / reach);
-    float slab = vnoise(q / (0.9 * uRidgeSize[i].y) + 17.0);
-    rise = mix(rise, floor(rise * 3.0 + slab) / 3.0, 0.25 * smoothstep(0.05, 0.3, rise));
-    h += uRidgeSize[i].x * tall * rise;
+    // Clinker: a heap of broken blocks, lumpy in outline, with nothing smooth on it.
+    float blocks = 0.5 * vnoise(q / (0.45 * size) + 17.0) + 0.32 * vnoise(q / (0.17 * size) + 5.0) + 0.18 * mix(vnoise(q / (0.06 * size) + 2.0), 0.5, smoothstep(0.02, 0.05, c / size));
+    h += uRidgeSize[i].x * tall * rise * (0.4 + 1.2 * blocks);
+    gRidgeOn = max(gRidgeOn, smoothstep(0.0, 0.15, rise) * smoothstep(0.0, 0.2, tall));
   }
   return h;
 }
@@ -176,7 +181,10 @@ float heightAt(vec2 q, float c) {
   float bank = n.r;
   if (live > 0.5) {
     gape = gapeAt(q, n).x;
-    bank = n.r + tornAt(q) * smoothstep(0.0, 0.3, n.a) - gape;
+    // The torn edge is finer than the far cells: there the wall runs smooth, or it would be cut into teeth.
+    float tornLow = (vnoise(q * 1.7 + 11.0) - 0.5) * 0.5;
+    float torn = tornLow * (1.0 - smoothstep(0.15, 0.4, c)) + (tornAt(q) - tornLow) * (1.0 - smoothstep(0.03, 0.08, c));
+    bank = n.r + torn * smoothstep(0.0, 0.3, n.a) - gape;
   }
   gBank = bank;
   gRope = 0.0;
@@ -197,16 +205,23 @@ float heightAt(vec2 q, float c) {
 
   // The billow of the skin and the lobes on it. The cords are finer than the cells and go into the normal.
   if (c < 1.5) {
-    h += (0.1 * (vnoise(q / 3.1 + 1.0) - 0.5) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
-    h += lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
+    // Nothing of the skin's relief stands above the rock where the lake runs out under the shore.
+    float off = smoothstep(0.0, 2.5, lake);
+    h += off * (0.42 * (vnoise(q / 2.6 + 1.0) - 0.5) + 0.045 * (vnoise(q / 1.1 + 7.0) - 0.5) * (1.0 - smoothstep(0.25, 0.5, c))) * (1.0 - smoothstep(0.7, 1.5, c)) * calm;
+    h += off * lobeAt(q) * (1.0 - smoothstep(0.5, 1.2, c)) * calm * (1.0 - 0.5 * shoreUp);
+    if (c < 0.13) {
+      float fold = foldAt(q);
+      h += off * gFoldCover * FOLD_DEEP * (pow(fold, 0.7) - 0.65) * (1.0 - smoothstep(0.06, 0.13, c)) * calm * (1.0 - shoreUp) * (1.0 - min(1.0, 3.0 * ridgeUp));
+    }
   }
 
   // Where crust has been broken, at the ridges and against the rock, it lies in upturned slabs with rubble between them.
   float rub = max(shoreUp, 0.8 * ridgeUp);
   if (rub > 0.0 && c < 0.7) {
     float saw = fract(dot(q, vec2(0.41, 0.33)) + 1.7 * vnoise(q / 3.7 + 3.0));
+    saw = min(saw / 0.8, (1.0 - saw) / 0.2);
     h += rub * calm * 0.45 * saw * (0.3 + 0.7 * vnoise(q / 2.9 + 5.0)) * (1.0 - smoothstep(0.3, 0.7, c));
-    if (c < 0.14) h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.07, 0.14, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.03, 0.055, c)));
+    if (c < 0.07) h += rub * calm * (0.16 * smoothstep(0.5, 0.75, vnoise(q / 0.27 + 13.0)) * (1.0 - smoothstep(0.03, 0.07, c)) + 0.07 * smoothstep(0.5, 0.75, vnoise(q / 0.11 + 3.0)) * (1.0 - smoothstep(0.012, 0.03, c)));
   }
   h += gShore;
 
@@ -215,17 +230,18 @@ float heightAt(vec2 q, float c) {
   if (live > 0.5) {
     float wide = smoothstep(0.04, 0.25, gape);
     float named = shown * smoothstep(0.2, 0.3, gape);
-    float brim = mix(-0.02, meltLevel(n) + 0.03, named);
+    // The brim hardly sags: the crust ends in a lip that stands over the melt.
+    float brim = mix(-0.02, max(meltLevel(n) + 0.03, -0.05), named);
     h = mix(h, brim + 0.12 * h, exp(-max(bank, 0.0) / 0.7) * wide);
     float lipWide = max(0.06, 2.5 * c);
     float lipAt = (bank - 0.07) / lipWide;
-    h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0));
+    h += (0.05 + 0.1 * vnoise(q / 0.9 + 5.0)) * exp(-lipAt * lipAt) * (0.06 / lipWide) * wide * smoothstep(0.25, 0.45, vnoise(q / 2.3 + 15.0)) * (1.0 - smoothstep(0.03, 0.08, c));
     float deep = mix(0.03 + 0.25 * min(gape, 0.3), 0.15 - meltLevel(n), named);
-    float cut = (1.0 - smoothstep(-max(3.5 * c, 0.05), 0.0, bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
-    if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape);
+    float cut = (1.0 - smoothstep(-max(5.0 * c - 0.035, 0.05), min(2.0 * max(c - 0.04, 0.0), 0.6), bank)) * min(1.0, 2.0 * gape / max(1.5 * c, 1e-3));
+    if (gape > 0.45 && n.g < 3.3) cut *= 1.0 - isleAt(q, n.r / max(gape, 1e-3)) * smoothstep(0.45, 0.6, gape) * (1.0 - smoothstep(0.03, 0.08, c));
     h = mix(h, -deep, cut);
   }
-  if (c < 3.0) h += ridgeAt(q) * (1.0 - smoothstep(1.0, 3.0, c));
+  if (c < 3.0) h += ridgeAt(q, c) * (1.0 - smoothstep(1.0, 3.0, c));
   return h;
 }`;
 
@@ -354,6 +370,9 @@ void main() {
   float calm = smoothstep(uSunk.z - 5.0, uSunk.z + 5.0, length(q - uSunk.xy));
 
   float broken = shoreAt(q, lake, cell);
+  ridgeAt(q, cell);
+  float clinker = gRidgeOn;
+  broken = max(broken, clinker);
   // The crust the group feeds on is the youngest of the lake: dark, glassy, hardly a day old.
   float fresh = 1.0 - smoothstep(12.0, 55.0, groupFar(q) + 14.0 * (vnoise(q / 17.0 + 8.0) - 0.5));
   // Age lies on the lake in broad patches, and each plate and each lobe has its own on top of that.
@@ -362,8 +381,8 @@ void main() {
   vec3 n = normalize(vNormalG);
   vec2 slope = vec2(0.0);
   float crease = 1.0;
-  float rope = 0.0;
-  float seen = 0.0;
+  float foldPhase = 0.0;
+  float foldOn = 0.0;
   // Lobes and cords, as far as a pixel can tell one from the next. Beyond that the skin is a smooth sheet.
   if (fpLong < 0.7) {
     float lobeHigh = lobeAt(q);
@@ -375,37 +394,54 @@ void main() {
     slope += fall * min(1.0, 1.2 / max(length(fall), 1e-4)) * calm * smoothstep(0.5, 1.2, cell) * detail * has;
     // Dark where one tongue lies on the next.
     crease = mix(1.0, 0.7 + 0.3 * smoothstep(0.0, 0.03, lobeHigh - gLobeNext), calm * step(1e-4, gLobeNext) * (1.0 - smoothstep(0.03, 0.2, fpShort)));
-    // Cords: the mesh lifts the thick ones, the normal is theirs here. A cord is kept as long as a pixel is narrower than it
-    // across the cord, whatever the pixel's length along it: cords that lie across the view melt into roughness.
-    if (fpShort < 0.06) {
-      vec2 dir;
-      float u;
-      float lam;
-      rope = festoonAt(q, dir, u, lam) * calm * (1.0 - broken);
-      float across = max(abs(dot(qx, dir)), abs(dot(qy, dir)));
-      seen = rope * (1.0 - smoothstep(0.1 * lam, 0.3 * lam, across));
-      if (seen > 0.0) {
-        float round2 = sqrt(max(1.0 - u * u, 0.0));
-        slope -= dir * (0.35 * u / (round2 + 0.5)) * seen;
-        crease *= mix(1.0, 0.45 + 0.55 * smoothstep(0.0, 0.5, round2), seen);
-      }
-    }
+    foldAt(q);
+    foldOn = gFoldCover * calm * (1.0 - broken) * smoothstep(0.0, 2.5, lake);
+    foldPhase = gFoldPhase;
   }
+  // Folds, the cords on them, four to a fold, and the bundles, three folds to a band: each is drawn as long as a pixel is
+  // finer than one of it across its run, so that none can beat against the pixels. All run along the lines of equal
+  // phase, and the phase is smooth, so its slope is taken from the screen.
+  vec2 phaseD = vec2(dFdx(foldPhase), dFdy(foldPhase));
+  float per = max(abs(phaseD.x), abs(phaseD.y));
+  float turn = 3.14159 * foldPhase;
+  float fold = abs(sin(turn));
+  float cord = abs(sin(4.0 * turn));
+  float band = abs(sin(turn / 3.0));
+  float foldSeen = foldOn * (1.0 - smoothstep(0.12, 0.3, per));
+  float cords = foldOn * (1.0 - smoothstep(0.035, 0.08, per));
+  float bands = foldOn * (1.0 - smoothstep(0.4, 0.95, per)) - foldSeen;
+  // The slope of a fold where the cells are too coarse to carry it, and of the cords always.
+  float foldRise = FOLD_DEEP * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * smoothstep(0.06, 0.13, cell);
+  foldRise += 0.035 * 4.0 * 3.14159 * cos(4.0 * turn) * sign(sin(4.0 * turn)) * cords;
+  // Black in the crease and the groove, by how deep a point lies below the crests beside it; a pale line on the crest.
+  crease *= mix(1.0, 0.25 + 0.75 * smoothstep(0.0, 0.8, fold), foldSeen - 0.6 * cords);
+  crease *= mix(1.0, 0.12 + 0.88 * smoothstep(0.0, 0.7, cord), cords);
+  crease *= mix(1.0, 0.72 + 0.28 * smoothstep(0.0, 0.8, band), bands);
+  float crest = cords * pow(cord, 3.0) + (foldSeen - cords) * pow(fold, 3.0) + 0.3 * bands * pow(band, 3.0);
+  float det = qx.x * qy.y - qx.y * qy.x;
+  if (abs(det) > 1e-12) slope += clamp(vec2(phaseD.x * qy.y - phaseD.y * qx.y, phaseD.y * qx.x - phaseD.x * qy.x) / det, -6.0, 6.0) * clamp(foldRise, -0.7, 0.7);
   age = clamp(age, 0.0, 1.0) * (1.0 - 0.8 * young) * (1.0 - 0.7 * fresh);
   n = normalize(n - vec3(slope.x, 0.0, slope.y) * n.y);
 
   // Old skin is grey and rough, young skin black, smooth and glassy: by patch, by plate and by lobe.
-  vec3 albedo = mix(vec3(0.03, 0.031, 0.033), vec3(0.056, 0.056, 0.058), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
-  float rough = clamp(0.22 + 0.45 * age + 0.2 * rope * (1.0 - seen) + 0.3 * broken, 0.15, 0.92);
+  vec3 albedo = mix(vec3(0.04, 0.0345, 0.032), vec3(0.071, 0.062, 0.058), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
+  float rough = clamp(0.22 + 0.45 * age + 0.2 * (foldOn - foldSeen) - 0.15 * crest + 0.3 * broken, 0.15, 0.92);
 
   // How much sky a point sees: less in a crease, between two lobes, below the brim of a gap.
   float below = max(-vWorld.y, 0.0);
+  // Broken crust is dark, dull clinker, pitted between its blocks.
+  if (broken > 0.0) {
+    float pits = 0.35 + 0.65 * smoothstep(0.3, 0.65, 0.6 * vnoise(q / 0.31 + 7.0) + 0.4 * vnoise(q / 0.09 + 3.0));
+    albedo = mix(albedo, vec3(0.042, 0.032, 0.028) * (0.6 + 0.8 * vnoise(q / 0.6 + 41.0)), max(clinker, 0.6 * broken));
+    crease *= mix(1.0, pits, max(clinker, broken));
+  }
   // A joint that no picture names is a fine dark line seen close, and is gone from the wide view.
-  float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.08, 0.35, fpLong), 1.0, shown);
+  float inGap = live * (1.0 - smoothstep(-0.02, 0.06, bank)) * mix(1.0 - smoothstep(0.03, 0.12, fpLong), 1.0, shown);
   float pit = mix(1.0, clamp(1.0 - below / max(2.5 * gape, 0.12), 0.04, 1.0), inGap);
   float occ = crease * pit;
   vec3 p = vec3(vWorld.x, max(vWorld.y, 0.02), vWorld.z);
-  float open = land.g * (1.0 - contactAt(p)) * occ;
+  // A face that stands steep among folds and lobes looks at its neighbour and not at the sky.
+  float open = land.g * (1.0 - contactAt(p)) * occ * mix(0.15, 1.0, smoothstep(0.3, 0.95, n.y));
   // The lake lies level with the crust: its glow from afar reaches only the faces that are turned toward it.
   float wallFace = 1.0 - smoothstep(0.35, 0.9, n.y);
   vec3 light = skyIrradiance(n) * open + lakeIrradianceFar(vec3(p.x, p.y + 1.5, p.z), n) * mix(1.0, occ, 0.5) * (0.12 + 0.6 * wallFace) + emitterIrradiance(p, n) * mix(1.0, occ, 0.7);
@@ -422,7 +458,8 @@ void main() {
   float fresnel = (0.03 + 0.97 * pow(1.0 - nv, 4.0)) * (0.09 + 0.24 * gloss);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  c += fresnel * lakeMirror(r, rough) * open;
+  // The crest of a cord carries a pale line of the sky.
+  c += fresnel * lakeMirror(r, rough) * open * (1.0 - 0.85 * clinker) * (1.0 + 1.6 * crest);
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;
@@ -559,7 +596,7 @@ export function create(ctx: HeartContext): HeartPiece {
   const ringLattice = lattice(N, N);
   const makeRing = (nx: number, nz: number, cell: number, block: number, stitched: boolean, position: THREE.BufferAttribute): Ring => {
     const uniform = new THREE.Vector3(0, 0, cell);
-    const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
+    const target = new THREE.WebGLRenderTarget(nx + 1, nz + 1, { type: THREE.FloatType, format: THREE.RGBAFormat, minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, depthBuffer: false, generateMipmaps: false });
     const ringUniforms = { uRing: { value: uniform }, uFocus: { value: focus } };
     const material = new THREE.ShaderMaterial({ vertexShader: RING_VERTEX, fragmentShader: FRAGMENT, uniforms: { ...shared, ...ringUniforms, uLava: lava, tBake: { value: target.texture } } });
     material.userData.depthFragment = depthFragment;
