@@ -375,7 +375,11 @@ void main() {
   for (int j = -1; j <= 1; j++) {
     for (int i = -1; i <= 1; i++) {
       vec2 o = vec2(float(i), float(j));
-      vec2 pt = o + 0.12 + 0.76 * hash22(prCell + o + vSeam.y * 13.0) - prIn;
+      // Each plate drifts a hand or two about its place in the pack, at a pace of its own: the cracks between plates open and
+      // shut and the plates jostle as they ride.
+      vec2 placed = hash22(prCell + o + vSeam.y * 13.0);
+      vec2 sway = vec2(sin(uTime * (0.8 + 0.7 * placed.y) + 40.0 * placed.x), sin(uTime * (0.7 + 0.8 * placed.x) + 55.0 * placed.y));
+      vec2 pt = o + 0.16 + 0.68 * placed + 0.15 * sway - prIn;
       float dd = dot(pt, pt);
       if (dd < near1) {
         near2 = near1;
@@ -438,8 +442,13 @@ void main() {
   float turnAt = ropes * psi + 3.5 * (carried.x - 0.5) + 3.0 * vnoise(here * vec2(0.6, 1.7) + 41.0) + 2.0 * fixedBig;
   if (onRafts > 0.5) {
     // On a raft the ropes are arcs about one point beside it: parallel, and curved one way.
+    // A plate turns slowly as it rides, a quarter of a radian each way, each at its own pace.
+    float plateTurn = 0.45 * sin(uTime * (0.5 + 0.6 * plateHash.y) + 30.0 * plateHash.x);
+    float turnC = cos(plateTurn);
+    float turnS = sin(plateTurn);
     vec2 inPlate = -at1 * RAFT;
-    float lay = (plateHash.y - 0.5) * 1.4;
+    inPlate = vec2(inPlate.x * turnC - inPlate.y * turnS, inPlate.x * turnS + inPlate.y * turnC);
+    float lay = (plateHash.y - 0.5) * 1.4 + plateTurn;
     float bend = (1.1 + 1.5 * fract(plateHash.x * 7.3)) * (fract(plateHash.y * 5.1) < 0.5 ? -1.0 : 1.0);
     // They are wrinkled, never ringed: the point they bend about lies outside the plate.
     vec2 wrinkled = inPlate - 0.25 * ragged - 0.03 * jagged;
