@@ -302,7 +302,7 @@ export function create(ctx: Context): Piece {
   const ribbons: Ribbon[] = [];
   spires.forEach((sp, n) => {
     const near = n === FIRST;
-    const reach = near ? 1 : n === FIRST + 2 ? 1.2 : n === FIRST + 1 ? 0.6 : 0.85;
+    const reach = near ? 1 : n === FIRST + 2 ? 1.9 : n === FIRST + 1 ? 0.6 : 0.85;
     for (const [share, count] of colonies(n)) {
       const t = share + rng.range(-0.008, 0.008);
       for (let i = 0; i < count; i++) {
