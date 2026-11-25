@@ -240,6 +240,12 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float flare = smoothstep(0.22, 0.78, surge);
   float swell = mix(1.0, mix(0.15, 1.85, flare), drawnOnly);
   float flared = mix(1.0, mix(0.1, 1.0, flare), drawnOnly);
+  // Out on the lake, far from every route, the picture has few seams: long, broken, of unlike brightness, with wide dark crust
+  // between them. Of the web's seams less than half the reaches are drawn live there, and those in pieces. The glow map keeps all.
+  float outThere = smoothstep(70.0, 170.0, length(q - vec2(-505.0, 245.0))) * drawnOnly;
+  float pieces = smoothstep(0.3, 0.5, vnoise(q / 27.0 + 40.0));
+  float sparse = mix(1.0, smoothstep(0.47, 0.62, vnoise(q / 90.0 + 17.0)) * pieces, outThere);
+  float unlike = outThere * 150.0 * (vnoise(q / 41.0 + 60.0) - 0.5);
   vec2 pr = (q - uPool.xy) * uPool.zw;
   float pool = length(pr) + 0.34 * (vnoise(q / 13.0 + 2.0) - 0.5) + 0.12 * (vnoise(q / 3.1) - 0.5);
   float byPool = 1.0 - smoothstep(1.0, 2.7, pool);
@@ -251,7 +257,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float was = gWas;
   float hotHalf = gape * mix(1.0 - 0.8 * skin, 1.0, max(shown, byPool));
   // A plate edge of the web flares and dims: its gap of bare melt widens as the heat comes through and skins over behind it.
-  hotHalf *= mix(swell, 1.0, max(shown, byPool));
+  hotHalf *= mix(swell * sparse, 1.0, max(shown, byPool));
   // Far from every camera route the lake is a web of long live seams, as the wide picture has it. The net has none so long, so
   // they are drawn here: the crooked lines where a slow field crosses its middle, a main web and a finer one that branches from
   // it in places, each of uneven width, with a lump here and there where it opens into a small sheet.
@@ -269,7 +275,8 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     vec2 g2 = vec2(vnoise((w + vec2(2.0, 0.0)) / 24.0 + 31.3), vnoise((w + vec2(0.0, 2.0)) / 24.0 + 31.3)) - f2;
     float d2 = abs(f2 - 0.5) * 2.0 / max(length(g2), 0.03);
     float lane1 = smoothstep(0.3, 0.45, vnoise(q / 140.0 + 1.7));
-    float lane2 = smoothstep(0.52, 0.66, vnoise(q / 75.0 + 5.1));
+    // The finer web is drawn in a third of the places the glow map has it.
+    float lane2 = smoothstep(0.52 + 0.15 * drawnOnly, 0.66 + 0.15 * drawnOnly, vnoise(q / 75.0 + 5.1));
     float uneven = vnoise(q / 5.3 + 9.0) * vnoise(q / 23.0 + 4.0);
     float lump = smoothstep(0.7, 0.86, vnoise(q / 15.0 + vec2(2.0, uTime * 0.004)));
     float h1 = lane1 * (0.1 + 0.75 * uneven + 1.1 * lump);
@@ -283,7 +290,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     // Where two seams meet the crust is pulled apart: wider, and hotter.
     farMeet = (1.0 - smoothstep(1.0, 6.0, d1)) * (1.0 - smoothstep(1.0, 6.0, d2)) * lane1 * lane2 * farField * (least > 0.5 ? 0.0 : 1.0);
     farHalf += 0.6 * farMeet;
-    farHalf *= swell;
+    farHalf *= swell * mix(1.0, pieces, drawnOnly);
   }
   // A seam is brighter where it is wide, and a few are fully open. Hot spots come and go along it, slowly.
   float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
@@ -293,7 +300,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   core = mix(core, 1085.0, shown * (1.0 - smoothstep(0.01, 0.04, n.g - 2.0)) * (1.0 - smoothstep(0.26, 0.34, hotHalf)));
   float spot = vnoise(q / 5.3 + vec2(uTime * 0.05 * pace, 2.0)) * 0.7 + vnoise(q / 1.9 + vec2(3.0, uTime * 0.09 * pace)) * 0.3;
   core -= mix(150.0, 110.0, shown) * smoothstep(0.6, 0.4, spot);
-  core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown) + drawnOnly * mix(170.0, 110.0, shown) * (surge - 0.5);
+  core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown) + drawnOnly * mix(170.0, 110.0, shown) * (surge - 0.5) + unlike * (1.0 - shown);
   float drawn = drawAt(q);
   core += drawnOnly * stringOf(n) * 130.0 * (drawn - 0.5);
   gLip = vec3(0.0);
@@ -316,7 +323,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   if (farHalf > 0.0) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
     gFloor = (0.4 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
-    vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5) + drawnOnly * 190.0 * (surge - 0.5), least);
+    vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5) + drawnOnly * 190.0 * (surge - 0.5) + unlike, least);
 #ifdef LAKE_LIP
     vec2 sightLine = q - cameraPosition.xz;
     float farSight = seenOver(q, 2.0 * farHalf, 0.035, abs(dot(farAcross, sightLine / max(length(sightLine), 1.0))));
@@ -408,11 +415,12 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float edge = min(d - gape, abs(lake - tear) - tearHalf);
 
   // The pool at the foot of the fall: open lava that skins over outward, in rafts that ride away from the fall.
+  // As drawn the rafts ride out at 3.8 m a second, so that the pool is seen to move from the rim of the bowl; the glow map keeps 1.5.
   float open = 1.0 - smoothstep(0.55, 1.02, pool);
   if (open > 0.0) {
     vec2 out2 = q - uFlowFoot;
     float ring = length(out2);
-    vec2 polar = vec2(atan(out2.y, out2.x) * 9.0, ring / 7.0 - uTime * 0.22);
+    vec2 polar = vec2(atan(out2.y, out2.x) * 9.0, ring / 7.0 - uTime * (least > 0.5 ? 0.22 : 0.55));
     float raft = smoothstep(0.42, 0.7, vnoise(polar) * 0.6 + vnoise(polar * 2.7 + 5.0) * 0.4 + 0.45 * (pool - 0.6));
     float k = 1440.0 - 150.0 * pool - 230.0 * raft + 50.0 * (beat - 0.5) + 40.0 * (vnoise(polar * 6.0) - 0.5);
     float c = open * (1.0 - 0.75 * raft * smoothstep(0.3, 0.8, pool));
