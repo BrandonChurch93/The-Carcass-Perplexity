@@ -130,7 +130,7 @@ vec3 lakeBelow(vec3 p, vec3 n) {
 const float FAR_FIRE = 0.08;
 // The share of the lake's light under it that a down face takes, and the share of the sky that the crust sends back up. Measured on the
 // flank of the feeding picture's hero: 36 26 23 there.
-const float LAKE_UNDER = 0.12;
+const float LAKE_UNDER = 0.25;
 const float LEG_RIM = 0.8;
 const float CRUST_BOUNCE = 1.0;
 // How hard the pool lights the animal that feeds at it, against a bare round light of its size.
@@ -183,11 +183,11 @@ void main() {
 
   // Rings round the neck, closer and deeper toward the crown; creases across a joint.
   float crown = smoothstep(0.62, 0.95, vLook.y) * neck;
-  float ringAt = vUv.x * 6.2832 / 0.42 + 11.0 * vnoise(vUv * vec2(0.9, 5.0) + seed) + 5.0 * vnoise(vUv * vec2(2.3, 11.0) + seed * 1.7);
+  float ringAt = vUv.x * 6.2832 / 0.42 + mix(11.0, 2.5, neck) * vnoise(vUv * vec2(0.9, 5.0) + seed) + mix(5.0, 1.0, neck) * vnoise(vUv * vec2(2.3, 11.0) + seed * 1.7);
   float crease = (1.0 - neck) * limb * (1.0 - tendril) * vLook.y * 0.55;
-  float ringAmp = (0.11 * crown + crease + 0.03 * neck) * fine;
+  float ringAmp = (0.04 * crown + crease + 0.015 * neck) * fine;
   slope.x += ringAmp * sin(ringAt) * 1.1;
-  slope.y += 0.9 * neck * smoothstep(0.3, 0.8, vLook.y) * fine * (vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0 + 0.25) + seed * 1.3) - vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0 - 0.25) + seed * 1.3));
+  slope.y += 0.9 * neck * smoothstep(0.3, 0.8, vLook.y) * fine * (vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 + 0.25) + seed * 1.3) - vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0 - 0.25) + seed * 1.3));
   float ridge = 0.5 + 0.5 * cos(ringAt);
 
   // Where the hide is drawn together at the two ends of the body its pattern would pinch: it lies plain there.
@@ -260,7 +260,8 @@ void main() {
   vec3 bone = vec3(0.38, 0.33, 0.265) * mix(1.0, 0.5, stain) * (0.7 + 0.3 * crack);
   float crownPale = neck * mix(0.04, 1.0, smoothstep(0.28, 0.93, vLook.y));
   // The lower neck and the crown are dry wood, brown, with pale worn cords that run down them into the roots and dark gaps between.
-  float cord = 0.5 * vnoise(vec2(vUv.x * 1.3, vUv.y * 60.0) + seed * 1.3) + 0.5 * vnoise(vec2(vUv.x * 3.1, vUv.y * 140.0) + seed * 2.1);
+  // The grain runs along the neck: each cord holds for metres, so that none steps across to the next in a zigzag.
+  float cord = 0.5 * vnoise(vec2(vUv.x * 0.3, vUv.y * 60.0) + seed * 1.3) + 0.5 * vnoise(vec2(vUv.x * 0.7, vUv.y * 140.0) + seed * 2.1);
   vec3 wood = vec3(0.2, 0.158, 0.122) * mix(1.0, 0.6, stain) * (0.6 + 0.4 * crack);
   albedo = mix(albedo, wood * mix(0.6, 1.4, smoothstep(0.3, 0.7, cord)) * (0.8 + 0.2 * ridge) * (0.8 + 0.24 * vnoise(vUv * vec2(2.6, 15.0) + seed)), 0.85 * crownPale);
   // A root is dark where it leaves the crown and tan below, where the pool finds it.
@@ -294,6 +295,10 @@ void main() {
   // The fire's rim: a leg near a seam takes its light on the faces turned to it, low down, where a flank high over the lake does not.
   float rim = LEG_RIM * smoothstep(0.55, -0.25, ny) * smoothstep(8.0, 1.5, vWorld.y) * (1.0 - body) * (1.0 - 0.85 * tendril * smoothstep(0.3, 1.8, vWorld.y));
   vec3 e = skyIrradiance(n) * open + ((LAKE_UNDER * under + rim) * lakeBelow(vWorld, mix(ng, n, 0.3)) + FAR_FIRE * emitterIrradiance(vWorld, normalize(mix(ng, n, 0.25)))) * occ;
+  // The pool it feeds at lights it from below at any reach (the rig's apron): the belly takes it, the legs and the neck a little less, the back and the flanks next to none.
+  // The roots and the crown have the pool's own glare already (poolLight below).
+  vec2 poolWay;
+  e += poolApron(vWorld, normalize(mix(ng, n, 0.3)), 14.0, poolWay) * own * mix(0.1, 0.15 * mix(0.1, 1.0, under), body) * (1.0 - 0.85 * tendril) * (1.0 - 0.7 * crown);
   // The grey crust under it sends some of the sky back up at what faces down or sideways: without it a flank has only the red of the lake.
   e += CRUST_BOUNCE * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 - 0.5 * n.y) * open;
   vec3 c = albedo * e / 3.14159;

@@ -78,14 +78,15 @@ export function create(ctx: HeartContext): HeartPiece {
     ctx.sources.heat.push({ at: [p.x, p.y, p.z], radius: 14, height: 40, strength: 0.8 });
   }
   ctx.sources.heat.push({ at: [MOUTH.x - 10, TUBE.floor, TUBE.lipZ - 6], radius: 40, height: 50, strength: 1 });
-  // The fume leaves the fan where it meets the lake, east of its middle, and leans east and out over the lake; smoke leaves its west edge.
+  // The fume leaves the east end of the fan, where its arm meets the lake, and leans east: it stands behind the two walkers and not
+  // before the face of the fan.
   const footAt = spot(course.length - 8, 0);
-  // All of it is smoke, low and lit from below by the melt under it. Three stand in a row down the wind over the fan's east half
+  // All of it is smoke, low and lit from below by the melt under it. Three stand in a row down the wind along the fan's east arm
   // and make one low bank that leans east.
   const lean: [number, number] = [0.65, 0.12];
-  const footFume = { at: [footAt.x + 6, 1.5, footAt.z - 12] as [number, number, number], radius: 12, strength: 0.16, rise: 26, kind: 'smoke' as const, lean };
-  const fanSmoke = { at: [footAt.x + 26, 1.5, footAt.z - 7] as [number, number, number], radius: 10, strength: 0.14, rise: 22, kind: 'smoke' as const, lean };
-  const toeSteam = { at: [footAt.x + 48, 1.5, footAt.z - 3] as [number, number, number], radius: 9, strength: 0.11, rise: 18, kind: 'smoke' as const, lean };
+  const footFume = { at: [footAt.x + 40, 2, footAt.z - 26] as [number, number, number], radius: 12, strength: 0.16, rise: 26, kind: 'smoke' as const, lean };
+  const fanSmoke = { at: [footAt.x + 62, 2, footAt.z - 27] as [number, number, number], radius: 10, strength: 0.14, rise: 22, kind: 'smoke' as const, lean };
+  const toeSteam = { at: [footAt.x + 84, 1.5, footAt.z - 27] as [number, number, number], radius: 9, strength: 0.11, rise: 18, kind: 'smoke' as const, lean };
   // No smoke source stands in the opening: lit by the surge it drew as a pale round blob in the dark.
   ctx.sources.steam.push(footFume, fanSmoke, toeSteam);
 
