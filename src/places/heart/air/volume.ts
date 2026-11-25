@@ -12,7 +12,7 @@ export const STEPS = { air: 12, column: 22, low: 12, steam: 8 };
 const COMMON = /* glsl */ `
 precision highp float;
 precision highp sampler3D;
-uniform sampler2D tDepth;
+uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
 uniform mat4 uCameraWorld;
 uniform int uSeq;
@@ -30,8 +30,11 @@ float lum(vec3 c) {
 }
 // The ray of this pixel: where it starts, where it goes, and how far it gets before it meets the scene.
 void viewRay(out vec3 ro, out vec3 rd, out float far) {
-  float depth = texture2D(tDepth, vUv).r;
-  vec4 view = uInvProjection * vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+  // The engine lays this half-size pass over the scene by depth, and takes each texel to have been marched to the depth of the full-size pixel at twice its index.
+  ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
+  float depth = texelFetch(tDepth, pixel, 0).r;
+  vec2 uv = (vec2(pixel) + 0.5) / vec2(textureSize(tDepth, 0));
+  vec4 view = uInvProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
   vec3 world = (uCameraWorld * vec4(view.xyz / view.w, 1.0)).xyz;
   ro = uCameraWorld[3].xyz;
   rd = world - ro;
