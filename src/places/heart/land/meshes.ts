@@ -222,7 +222,7 @@ export { fbm };
  * It runs along the line where the bench meets the lake, from one end point to the other; `distance` is the layout's distance to that line
  * (positive on the bench) and `wobble` any smooth noise of two numbers between 0 and 1.
  */
-export function shoreLip(height: Height, distance: Height, wobble: Height, from: [number, number], length: number): THREE.BufferGeometry {
+export function shoreLip(height: Height, distance: Height, wobble: Height, from: [number, number], length: number, without?: (x: number, z: number) => boolean): THREE.BufferGeometry {
   const gap = 0.07;
   const count = Math.floor(length / gap);
   let [x, z] = from;
@@ -296,7 +296,8 @@ export function shoreLip(height: Height, distance: Height, wobble: Height, from:
       [0.04, -0.08],
     ];
     for (const [d, y] of ring) position.push(c.x + c.nx * (d0 + d), y, c.z + c.nz * (d0 + d));
-    if (i > 0) {
+    const before = sections[Math.max(0, i - 1)] as (typeof sections)[number];
+    if (i > 0 && !(without && (without(c.x, c.z) || without(before.x, before.z)))) {
       const a = (i - 1) * RING;
       const b = i * RING;
       for (let k = 0; k + 1 < RING; k++) index.push(a + k, b + k, a + k + 1, a + k + 1, b + k, b + k + 1);
