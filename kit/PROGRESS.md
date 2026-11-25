@@ -66,7 +66,7 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 
 | Unit | Phase | State | Rounds run | Best round | Commit | What ended its loop |
 | --- | --- | --- | --- | --- | --- | --- |
-| `heart` | 3 | in progress | 5 (rounds 3 to 7; round 7 is being judged) |  |  |  |
+| `heart` | 3 | in progress | 5 | 7 | `9ac88bf` | Not ended in this table until step 10 marks it: its five rounds are rounds 3 to 7 of the build, and round 7 reached the limit `quality.lookLockMaxRounds` |
 | `ribs` | 4 | not started | 0 | | | |
 | `breath` | 4 | not started | 0 | | | |
 | `marsh` | 4 | not started | 0 | | | |
@@ -381,22 +381,35 @@ Pinned 2026-11-24 in `package.json` as exact versions, with `package-lock.json` 
 
 Seconds for one sample and for one frame at each format and tier, on this VM and on a sandbox VM, with the scene they were measured on and the date. Then the wall-clock time of each long job as `npm run budget` estimates it. Add a row for every new kind of job when it ends.
 
-Measured 2026-11-25 on the scene "the blockout of the whole film: every part a stand-in, the Marsh", frame 5930. The jobs are estimated on space-sandbox, this machine, because no other machine was merged.
+Measured 2026-11-25 on the scene "not named", frame 2722. The jobs are estimated on space-sandbox, the fastest merged machine with 4 or more cores. space-sandbox was measured on 2026-11-25 on the scene "the Heart, frame 2722", with another engine hash. space-sandbox was measured on 2026-11-25 on the scene "the Heart, frame 3156", with another engine hash. space-sandbox was measured on 2026-11-25 on the scene "the Heart, frame 3477", with another engine hash. space-sandbox was measured on 2026-11-25 on the scene "the Heart, frame 3685", with another engine hash. space-sandbox was measured on 2026-11-25 on the scene "the Heart, frame 4006", with another engine hash.
 
 | Machine | Cores | Format | Seconds for one sample | Seconds for a draft frame | Seconds for a review frame | Seconds for a final frame | Start cost in seconds |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| space-sandbox | 2 | uhd | 1.134 | 3.81 | 4.94 | 7.21 | 1.7 |
-| space-sandbox | 2 | hd | 0.344 | 0.96 | 1.30 | 1.99 | 1.7 |
-| space-sandbox | 2 | preview | 0.131 | 0.28 | 0.41 | 0.67 | 1.7 |
+| space-sandbox | 2 | uhd | 14.964 | 17.35 | 32.31 | 62.24 | 1.7 |
+| space-sandbox | 2 | hd | 4.303 | 5.04 | 9.34 | 17.95 | 1.7 |
+| space-sandbox | 2 | preview | 1.397 | 1.59 | 2.98 | 5.78 | 1.7 |
+| space-sandbox | 4 | uhd | 21.064 | 22.85 | 43.91 | 86.04 | 1.5 |
+| space-sandbox | 4 | hd | 8.113 | 8.31 | 16.42 | 32.65 | 1.5 |
+| space-sandbox | 4 | preview | 3.938 | 4.17 | 8.11 | 15.98 | 1.5 |
+| space-sandbox | 4 | uhd | 31.542 | 35.94 | 67.48 | 130.57 | 1.5 |
+| space-sandbox | 4 | hd | 12.886 | 13.50 | 26.38 | 52.15 | 1.5 |
+| space-sandbox | 4 | preview | 7.026 | 7.46 | 14.49 | 28.54 | 1.5 |
+| space-sandbox | 4 | uhd | 26.148 | 27.69 | 53.84 | 106.14 | 1.4 |
+| space-sandbox | 4 | hd | 9.430 | 10.02 | 19.45 | 38.31 | 1.4 |
+| space-sandbox | 4 | preview | 4.406 | 4.75 | 9.16 | 17.97 | 1.4 |
+| space-sandbox | 4 | uhd | 23.868 | 25.63 | 49.50 | 97.23 | 1.4 |
+| space-sandbox | 4 | hd | 9.223 | 9.55 | 18.77 | 37.22 | 1.4 |
+| space-sandbox | 4 | preview | 4.461 | 4.51 | 8.97 | 17.89 | 1.4 |
+| space-sandbox | 4 | uhd | 23.226 | 25.50 | 48.73 | 95.18 | 1.5 |
+| space-sandbox | 4 | hd | 10.015 | 10.62 | 20.63 | 40.66 | 1.5 |
+| space-sandbox | 4 | preview | 5.734 | 6.06 | 11.80 | 23.27 | 1.5 |
 
-| Job | Format | Tier | Frames | Hours on one machine | Hours across 16 agents | Limit in hours | Fits |
+| Job | Format | Tier | Frames | Hours on one machine | Hours across 14 agents | Limit in hours | Fits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| preview film | preview | draft | 5931 | 0.51 | 0.04 | 1 | fits |
-| film in hd | hd | final | 11861 | 6.60 | 0.47 | 3 | fits |
-| master | uhd | final | 11861 | 23.80 | 1.69 | 8 | fits |
-| card loop | uhd | final | 480 | 0.96 | 0.24 | 1 | fits |
-Kept for planning, the Phase 0 measurement on a heavier scene ("spike: displaced lava ground, fume volume, 6000 embers", frame 300, 2026-11-24): on a 4-core sandbox VM uhd 15.433 s a sample and 62.98 s a final frame, hd 4.614 s and 18.86 s, preview 1.576 s and 6.31 s. The blockout is far lighter than a built place, so the table above is a floor and this line is the working estimate until the Heart is measured in Phase 3.
-MEASURED cost at hd draft on fdcac34 (08:50 UTC, one sample a frame, npm run cost): heart-0 12.94 s (crust 4.12, land 2.89, bench 1.76 above the empty frame), heart-2 14.17 s (crust 5.26, land 2.83, sunk 1.66), heart-4 11.94 s (land 4.19, crust 1.75, vessel-mouth 1.73, lava-fall 1.29); the empty frame is about 1.2 to 1.4 s. For the Heart's review clip (1714 frames) that is about 6 machine hours at draft, 12 at review and 25 at final, before any split across render agents.
+| preview film | preview | draft | 5931 | 6.91 | 0.56 | 1 | fits |
+| film in hd | hd | final | 11861 | 107.61 | 8.71 | 3 | does not fit |
+| master | uhd | final | 11861 | 283.51 | 22.95 | 8 | does not fit |
+| card loop | uhd | final | 480 | 11.47 | 2.87 | 1 | does not fit |
 
 ## Judged frames
 
@@ -1585,3 +1598,4 @@ none
 - 2026-11-25 15:13 UTC. Status 54 shown at 15:13 with the walkers at the seam and the mouth and its fall at the final tier beside their pictures, and two native crops of the wide view (the pink block of glow at the far right, the dark bar behind the mid-ground animal). Round 7: R1 4, R3 4, R4 7 against 9; jury 3 of 25; M3 red. ElevenLabs at 15:12: 1 character of 131,000, so clips n1 to n7, the model test, the other takes of n8 and the sound effects are not made and the cut and the mix have not been run again.
 - 2026-11-25 15:30 UTC. Phase 3 step 6: from the final build 9ac88bf, the five comparison images, the five frames they judged (uhd, final tier) and the five shot sheets are kept in out/stills/heart/ (15 files, the largest 1.4 MB). Clip shares back so far: chunk 0 (34.39 s a frame, 69 min) and chunk 1 (35.36 s a frame, 70 min), both MEASURED on 4 cores, 120 frames each read back.
 - 2026-11-25 15:33 UTC. Status 55 shown at 15:34 UTC with three of the new shot sheets (heart-02, heart-03, heart-04) and film frame 3578. Clip: chunks 0, 1 and 7 are back and read back whole (318 of 1714 frames); MEASURED on 4 cores 34.39, 35.36 and 56.28 s a frame. ElevenLabs at 15:31 UTC: 1 character of 131,000, so n1 to n7, the model test, the other takes of n8 and the sound effects are still not made and the cut and the mix have not been run again.
+- 2026-11-25 15:45 UTC. An early run of the Phase 3 gate (15:31 to 15:40 UTC) to find faults before the clip is in: 19 of 22 passed; D3 not built yet; A1 open (the transcriber writes "neverland" for "never land" in n8); G2 failed on one test, because the heart row of the "Units" table held words after the number of rounds and the reader of that table takes a number only. The row now holds 5, 7 and 9ac88bf, and all 831 tests pass (15:45 UTC). Step 4: the budget table was written anew from the five frames measured on a 4 core machine at the final engine; at the Heart's cost the film in hd at the final tier is 8.71 h across 14 machines against a limit of 3 h and the master 22.95 h against 8 h. Clip: 7 of 16 chunks are back (0, 1, 2, 7, 8, 10, 14), 798 of 1714 frames.
