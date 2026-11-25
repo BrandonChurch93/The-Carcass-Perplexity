@@ -194,6 +194,9 @@ const float ROPE = 0.066;
 const float ROPE_TALL = 0.03;
 // A raft of skin, metres along and across the stream.
 const vec2 RAFT = vec2(0.85, 0.6);
+// Metres a second the rafts ride down the stream, and the thin skin of the core.
+const float RAFT_SPEED = 0.22;
+const float CORE_SPEED = 0.36;
 
 // What the stream carries, at a point of the pattern: how the ropes are pushed out of line, how alive the creases are, where the skin is stretched thin.
 vec3 carriedAt(vec2 p) {
@@ -353,7 +356,12 @@ void main() {
   float coilC = cos(coilTurn * uTime);
   float coilS = sin(coilTurn * uTime);
   vec2 turned = coilAt + vec2(fromCoil.x * coilC - fromCoil.y * coilS, fromCoil.x * coilS + fromCoil.y * coilC) + 37.0;
-  vec2 pr = mix(vec2(here.x - slowest * uTime, here.y), turned, inCoil) / RAFT;
+  vec2 rode = mix(vec2(here.x - RAFT_SPEED * uTime, here.y), turned, inCoil);
+  // No plate has a straight edge: the edges are torn.
+  // The warp is gentle enough that it never folds: a fold would close a crack into a ring.
+  vec2 ragged = vec2(vnoise(rode * 1.3 + 5.0), vnoise(rode * 1.3 + 31.0)) - 0.5;
+  vec2 jagged = vec2(vnoise(rode * 7.0 + 2.0), vnoise(rode * 7.0 + 17.0)) - 0.5;
+  vec2 pr = (rode + 0.3 * ragged + 0.03 * jagged) / RAFT;
   vec2 prCell = floor(pr);
   vec2 prIn = pr - prCell;
   float near1 = 9.0;
@@ -386,9 +394,15 @@ void main() {
   float sideOf = dot(vAcross, vec2(0.96, 0.27)) < 0.0 ? -1.0 : 1.0;
   float leanMid = abs(sideOf * (here.y + at1.y * RAFT.y) / gape - strays);
   float slowSide = max(smoothstep(0.3, 0.8, leanMid), inCoil);
-  float present = max(smoothstep(-0.03, 0.03, smoothstep(0.12, 0.4, leanMid + 0.6 * (1.0 - max(reachOpen, onLine))) - plateHash.x), inCoil);
-  float crackHalf = mix(0.035, 0.008, slowSide);
+  // The stream is skinned from bank to bank but for its core, where the skin is thin and tears. The plates part in cracks of a
+  // centimetre or two, and here and there, for a while, a tear opens between them and closes again.
+  float coreTo = 0.16 + 0.3 * max(reachOpen, 0.35 * onLine);
+  float present = max(smoothstep(-0.03, 0.03, leanMid - coreTo - 0.12 * (plateHash.x - 0.5)), inCoil);
+  float tearing = smoothstep(0.56, 0.8, vnoise(vec2(rode.x * 0.7, rode.y * 1.1 + uTime * 0.06) + 9.0));
+  float crackHalf = 0.006 + 0.012 * plateHash.y + 0.07 * tearing * (1.0 - 0.6 * inCoil);
   float plate = present * smoothstep(crackHalf, crackHalf + max(0.008, 1.2 * grain), border);
+  // The edge of a plate is rolled and thick: colder than its middle.
+  float rolled = present * (1.0 - smoothstep(crackHalf + 0.015, crackHalf + 0.06, border));
   // Round the rim of a coil the skin is torn from the skin of the stream.
   plate *= smoothstep(0.02, 0.05, abs(held - 0.5));
   open = mix(open, 1.0 - plate, onRafts);
@@ -406,7 +420,7 @@ void main() {
   float hotness = clamp(0.02 + 0.5 * neck + (0.3 * fastSide + 0.34 * rim) * (0.45 + 1.1 * alive) + 0.3 * (alive - 0.62) + 0.55 * thin + 0.3 * torn * (0.3 + 0.7 * fastSide) - 0.2 * core - 0.3 * smoothstep(0.6, 1.0, ax) - 0.75 * raft, 0.0, 1.0);
 
   // A raft is cold and dark; one near the core, and one in five, is thin and hot.
-  hotness = mix(hotness, clamp(0.03 + 0.35 * (1.0 - slowSide) + 0.3 * step(0.8, fract(plateHash.x * 11.0)) + 0.2 * (alive - 0.5), 0.0, 1.0), onRafts);
+  hotness = mix(hotness, clamp(0.03 + 0.3 * (1.0 - slowSide) + 0.3 * step(0.8, fract(plateHash.x * 11.0)) + 0.2 * (alive - 0.5) - 0.3 * rolled, 0.0, 1.0), onRafts);
 
   // The ropes: uneven in width, bundled, each of its own height.
   float ropes = 6.28318 / ROPE;
@@ -416,9 +430,9 @@ void main() {
     vec2 inPlate = -at1 * RAFT;
     float lay = (plateHash.y - 0.5) * 1.4;
     float bend = (1.1 + 1.5 * fract(plateHash.x * 7.3)) * (fract(plateHash.y * 5.1) < 0.5 ? -1.0 : 1.0);
-    turnAt = 1.4 * ropes * length(inPlate - bend * vec2(-sin(lay), cos(lay))) + 40.0 * plateHash.x + 1.5 * vnoise(inPlate * 2.6 + plateId);
-    // In a coil they wind round its middle.
-    if (inCoil > 0.5) turnAt = 1.4 * ropes * length(fromCoil - 0.12 * (plateHash - 0.5)) + 40.0 * plateHash.x + 1.5 * vnoise(inPlate * 2.6 + plateId);
+    // They are wrinkled, never ringed: the point they bend about lies outside the plate.
+    vec2 wrinkled = inPlate - 0.25 * ragged - 0.03 * jagged;
+    turnAt = 0.9 * ropes * length(wrinkled - bend * vec2(-sin(lay), cos(lay))) + 40.0 * plateHash.x + 1.5 * vnoise(inPlate * 2.6 + plateId);
   }
   turnAt += 0.8 * sin(turnAt * 0.21 + 3.0 * fixedBig) + 0.45 * sin(turnAt * 0.47 + 1.3);
   float u = fract(turnAt / 6.28318);
@@ -434,7 +448,9 @@ void main() {
   float steep = length(grad);
   // Where the count runs too fast or too slow for a rope (a coil's eye, a seam of the pattern) the skin is smooth.
   float ropedHere = (1.0 - open) * (1.0 - smoothstep(2.2 * ropes, 4.0 * ropes, steep)) * smoothstep(0.1 * ropes, 0.3 * ropes, steep);
-  float roped = seen * ropedHere;
+  // A rope finer than three pixels is not drawn: it would beat against them into rings.
+  float fine = 1.0 - smoothstep(0.9, 1.9, max(abs(fx), abs(fy)));
+  float roped = seen * fine * ropedHere;
   // Thick, cold skin stands in high ropes; thin hot skin is nearly flat.
   float tall = ROPE_TALL * mix(1.25, 0.5, hotness) * roped * (0.45 + 1.1 * hash12(vec2(ropeId, vSeam.y + 7.0)));
   // A crest is round and a crease is sharp: height tall * (1 - (1 - crest)^2).
@@ -447,9 +463,11 @@ void main() {
   // A crease keeps its width in metres where the ropes run wide.
   float creaseWide = mix(0.16, 0.4, hotness) * (0.3 + 0.7 * lives) * clamp(steep / ropes, 0.25, 1.4);
   float crease = 1.0 - smoothstep(0.45 * creaseWide, creaseWide, crest);
-  crease = mix(0.55 * creaseWide, crease * ropedHere, seen);
+  crease = mix(0.55 * creaseWide, crease * ropedHere, seen * fine);
   // Where the skin is pulled apart a vein of bare melt runs across the ropes.
-  float vein = (1.0 - smoothstep(0.012, 0.03, abs(carried.z - 0.56))) * smoothstep(0.25, 0.6, fastSide + 0.6 * (alive - 0.5)) * seen;
+  float vein = (1.0 - smoothstep(0.012, 0.03, abs(carried.z - 0.56))) * smoothstep(0.25, 0.6, fastSide + 0.6 * (alive - 0.5)) * seen * (1.0 - onRafts);
+  // On a raft the creases burn only beside its cracks, a hand's breadth in, and not all along them: its middle is dark.
+  crease *= 1.0 - onRafts * (1.0 - (1.0 - smoothstep(0.04, 0.16, border)) * smoothstep(0.4, 0.6, vnoise(rode * 3.1 + 23.0)));
   crease = max(crease, vein);
   float kCrest = mix(870.0, 1010.0, hotness) + 50.0 * thin + 25.0 * (carried.z - 0.5);
   float kCrease = mix(1130.0, 1350.0, hotness) * mix(0.82, 1.0, lives) + 60.0 * torn;
@@ -467,22 +485,25 @@ void main() {
   // Across the tongue the heat falls from white-yellow in the middle through yellow to orange at its edge; beyond the tongue the
   // core of the stream is orange, and so is the melt between the rafts.
   float coreHeat = 1.0 - smoothstep(0.0, 1.0, (lean + 0.5 * edgeNoise) / (openTo + 0.1));
-  float kStream = mix(1265.0 + 120.0 * coreHeat, 1300.0 + 255.0 * pow(coreHeat, 0.45), reachOpen);
-  kStream = mix(kStream, 1490.0 + 60.0 * heart + 20.0, stir);
-  // Two or three dark threads of new skin are drawn out along the core.
+  // The core is no bare band: a thin skin rides it, dark red at its edge and red-orange in mid stream, and it tears as it is
+  // drawn out. Only inside a tear is the melt yellow, and white-yellow in the tongue; the tears travel with the stream, open and close.
   float acrossCore = (bankSide * ax - strays) * gape;
-  float threads = 0.0;
-  for (int k = 0; k < 3; k++) {
-    float fk = float(k);
-    float lies = (fk - 1.0) * 0.13 + 0.06 * sin(vFlow.x * (0.9 + 0.4 * fk) + 2.1 * fk - uTime * 0.12);
-    float fine = max(0.008 + 0.005 * fk, 0.9 * grain);
-    float shows = smoothstep(0.36, 0.5, vnoise(vec2(vFlow.x * 0.6 - uTime * 0.2, fk * 7.3 + 1.0)));
-    threads = max(threads, (1.0 - smoothstep(fine, 2.0 * fine, abs(acrossCore - lies))) * shows);
-  }
-  kStream -= 270.0 * threads * (1.0 - stir);
+  float drawn = here.x - CORE_SPEED * uTime;
+  float tearAt = vnoise(vec2(drawn * 0.8, acrossCore * 4.6 + uTime * 0.07) + 3.0) * 0.62 + vnoise(vec2(drawn * 2.3, acrossCore * 13.0) + 7.0) * 0.38 + 0.14 * (coreHeat - 0.5) + 0.015;
+  float tornOpen = smoothstep(0.47, 0.56, tearAt);
+  float tearHeart = smoothstep(0.52, 0.72, tearAt);
+  // The skin of the core is drawn into fine ropes that bow downstream: dark on the crest, red in the crease.
+  float bowed = sin(42.0 * (drawn + 1.6 * acrossCore * acrossCore) + 6.0 * vnoise(vec2(drawn * 1.3, acrossCore * 3.0) + 13.0));
+  float kSkin = 1010.0 + 150.0 * coreHeat * (0.5 + 0.5 * reachOpen) + 50.0 * bowed * (1.0 - smoothstep(0.03, 0.09, grain));
+  float kTear = mix(1330.0 + 60.0 * tearHeart, 1400.0 + 160.0 * tearHeart, reachOpen);
+  // Between the rafts the melt is orange.
+  float inCore = 1.0 - smoothstep(coreTo * 0.9, coreTo * 1.3, lean);
+  // From far a crack is wider on the screen than it is: it is drawn dimmer by as much.
+  float kStream = mix(1250.0 + 60.0 * tearing - 140.0 * smoothstep(0.02, 0.08, grain), mix(kSkin, kTear, tornOpen), inCore);
+  kStream = mix(kStream, 1490.0 + 60.0 * heart + 20.0, stir);
   hot = mix(hot, blackbody(mix(kStream, 1300.0 + 230.0 * poolHeart, feeding) + 60.0 * (streak - 0.5) - 90.0 * thread * (1.0 - 0.6 * heart)), open);
-  // The melt breathes with the lake.
-  hot *= 1.0 + 0.3 * (beatAt(q) - 0.5) * (0.4 + 0.6 * pool);
+  // The heat of the melt creeps along it: no even pulse.
+  hot *= 1.0 + 0.12 * (creepAt(q) - 0.5) * (0.4 + 0.6 * pool);
   float skin = 1.0 - open;
 
   // Against the bank a thin dark skin clings, torn, and the glow shows through the tears. Where the stream shears past it a bright line opens.
