@@ -36,7 +36,7 @@ float rockAt(vec2 q) {
 // How high the rock stands over the land at q, metres.
 float standAt(vec2 q) {
   float inside = 1.0 - smoothstep(0.45, 0.95, patchAt(q));
-  return inside * (0.008 + 0.075 * smoothstep(0.38, 0.75, rockAt(q)));
+  return inside * (0.008 + 0.045 * smoothstep(0.38, 0.75, rockAt(q)));
 }`;
 
 const VERTEX = /* glsl */ `

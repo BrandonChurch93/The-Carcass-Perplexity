@@ -91,8 +91,9 @@ void main() {
   // Under the coat: matted under-fur, dark because the coat stands over it.
   vec3 albedo = uTone.rgb * mix(0.4, 0.62, grain) * (0.75 + 0.5 * fine);
   // The pads under the feet are bare and dark.
-  albedo = mix(vec3(0.045, 0.036, 0.034), albedo, smoothstep(0.004, 0.02, vRest.y));
-  float rough = 0.95;
+  float pad = 1.0 - smoothstep(0.004, 0.02, vRest.y);
+  albedo = mix(albedo, vec3(0.022, 0.018, 0.018) * (0.7 + 0.6 * fine), pad);
+  float rough = 0.95 + 0.05 * pad;
   float occ = 0.6;
   if (vKind > 0.5) {
     // A claw: dark horn, ridged along its length, worn pale at the tip.
@@ -110,7 +111,8 @@ void main() {
     float splitFine = 1.0 - smoothstep(0.0, 0.05, abs(vnoise3(vRest * vec3(9.0, 26.0, 26.0)) - 0.5));
     vec3 char_ = mix(vec3(0.018, 0.015, 0.014), vec3(0.09, 0.06, 0.045), fine * grain);
     vec3 raw = mix(vec3(0.22, 0.035, 0.02), vec3(0.42, 0.16, 0.09), fine);
-    vec3 skin = mix(char_, raw, max(split, 0.6 * splitFine) * (1.0 - smoothstep(0.5, 0.95, ragged)));
+    float torn = smoothstep(0.4, 0.62, vnoise3(vRest * vec3(5.0, 13.0, 13.0) + 11.0));
+    vec3 skin = mix(char_, raw * 0.8, clamp(max(split, 0.6 * splitFine) + 0.55 * torn, 0.0, 1.0) * (1.0 - smoothstep(0.55, 0.98, ragged)));
     // Toward the edge of the burn the skin is scorched brown and blistered, not black.
     skin = mix(skin, vec3(0.16, 0.09, 0.05) * (0.6 + 0.8 * fine), smoothstep(0.55, 0.95, ragged) * 0.8);
     albedo = mix(albedo, skin, burnt);
@@ -168,16 +170,17 @@ void main() {
   float singe = 0.0;
   if (uBurn.w > 0.0) {
     float d = burnAt(aRoot) + 0.3 * (vnoise3(aRoot * 7.0) - 0.5);
-    singe = 1.0 - smoothstep(0.9, 2.6, d);
-    len *= mix(1.0, 0.15 + 0.3 * fract(seed * 9.1), smoothstep(0.0, 0.7, singe));
-    if (d < 0.75 + 0.2 * fract(seed * 5.3)) len = 0.0;
+    singe = 1.0 - smoothstep(0.8, 3.6, d);
+    // Round the wound the coat is not gone but burned short and matted down.
+    len *= mix(1.0, 0.25 + 0.3 * fract(seed * 9.1), smoothstep(0.0, 0.7, singe));
+    if (d < 0.8 + 0.25 * fract(seed * 5.3)) len = 0.0;
   }
 
   // A lock leaves the hide at a slant toward the rump, bends under its own weight, and narrows to a point: a wet spike of hair, not a curtain.
   vec3 comb = normalize(mat3(modelMatrix) * vec3(-1.0, 0.0, 0.0));
   // A long coat hangs: it stands off the hide less and falls more.
   float droop = smoothstep(1.0, 1.8, uCoat.x);
-  float off = (0.4 + 0.45 * fract(seed * 13.7)) * (1.0 - 0.65 * droop);
+  float off = (0.4 + 0.45 * fract(seed * 13.7)) * (1.0 - 0.65 * droop) * (1.0 - 0.7 * smoothstep(0.1, 0.6, singe));
   float fall = 0.45 + 0.5 * fract(seed * 3.3) + 1.1 * droop;
   vec3 wind = normalize(uWind.xyz);
   // The gale takes the loose end: a steady lean and a flutter that runs through the coat as gusts pass over the animal.
@@ -234,8 +237,9 @@ void main() {
   float rime = smoothstep(0.1, 0.6, windward) * smoothstep(0.3, 0.85, t + 0.3 * fract(seed * 31.0));
   albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * min(0.45 + 1.2 * max(uCoat.w, 0.0), 0.9));
   // The singed edge of the burn: rust, then black.
-  albedo = mix(albedo, vec3(0.3, 0.13, 0.05), smoothstep(0.0, 0.35, singe) * 0.8);
-  albedo = mix(albedo, vec3(0.02, 0.017, 0.015), smoothstep(0.3, 0.75, singe) * (0.55 + 0.45 * t));
+  albedo = mix(albedo, vec3(0.4, 0.14, 0.055), smoothstep(0.0, 0.4, singe) * 0.75 * (0.5 + 0.5 * fract(seed * 29.0)));
+  albedo = mix(albedo, vec3(0.26, 0.035, 0.02), smoothstep(0.4, 0.75, singe) * 0.75 * step(0.4, fract(seed * 37.0)));
+  albedo = mix(albedo, vec3(0.02, 0.017, 0.015), smoothstep(0.4, 0.85, singe) * (0.55 + 0.45 * t) * (0.6 + 0.4 * fract(seed * 43.0)));
   vColour = albedo * e / 3.14159;
   // Rime in a clump on the end of the lock, in the light of the open end.
   vFrost = vec4(vec3(0.9, 0.91, 0.93) * runnerLight(p, normalize(facing + vec3(0.0, 0.6, 0.0))) / 3.14159, rime * (1.0 - smoothstep(0.0, 0.3, singe)));
@@ -321,8 +325,10 @@ void main() {
   float r = aLimb.y * size * (1.0 - 0.85 * pow(t, 1.2)) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
   vec3 ahead = root + len * pathAt(t + 0.03, lead, across, seed);
-  centre.y = max(centre.y, groundY(centre) + r * 0.85);
-  ahead.y = max(ahead.y, groundY(ahead) + r * 0.85);
+  // The dead one's lie on the burned rock, which stands a little over the land.
+  float bed = r * 0.85 + 0.05 * uWrithe.y;
+  centre.y = max(centre.y, groundY(centre) + bed);
+  ahead.y = max(ahead.y, groundY(ahead) + bed);
   vec3 way = normalize(ahead - centre + vec3(0.0, 1e-5, 0.0));
   vec3 u = normalize(cross(way, abs(way.y) > 0.9 ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 1.0, 0.0)));
   vec3 v = cross(way, u);
