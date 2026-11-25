@@ -1,8 +1,8 @@
-# Status 24
+# Status 25
 
-2026-11-25 04:22 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 04:42 UTC. Phase 3, the look lock: the Heart.
 
-- `01-heart-0.jpg`: The wide view, the approved picture on the left and the first joined frame on the right. Every part is in its place. The bench is a plain ramp, the crust is cracked mud and the light is too dark and too red.
-- `02-heart-3.jpg`: The tall ones at the seam. They stand, step and feed, and they still read as models: smooth tubes with no hide.
-- `03-heart-2.jpg`: The one that sank. The arch and the folded skin are there, nearly black. The camera here is the old one and will be fitted again.
-- `04-heart-4.jpg`: The vessel mouth and the fall. The throat is too bright and flat, and the stream is a smooth ribbon with no steps.
+- `01-heart-0.jpg`: Wide key after the light fix: approved picture left, joined frame right. Sky and near bench now measure close; the far air is still too blue (the air owner is rebalancing it toward the lake's warm glow)
+- `02-pair-a.jpg`: Walkers and the line, approved left, frame right: the animals are still dark and heavy, the channel is flat and pale. Both owners have their directions
+- `03-pair-b.jpg`: The one that sank and the fall, approved left, frame right: the mouth is broken from this angle and the lava reads pale peach; the tone curve is being changed so lava keeps a fiery orange
+- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
