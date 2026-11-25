@@ -75,9 +75,9 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 - Frames: 2507 to 2936, 7.17 s.
 - Key: `heart-0` at frame 2722.
 - Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
-- Move: in. The camera travels 110 m, from 21 m above the ground to 11 m.
-- Start framing: From 58 m behind the key position and 13 m above it, over the bench: the whole lake, with the vessel mouth and the lava fall upper left, the buttress and its plume on the right, the bench lower left and the tall ones on the crust.
-- End framing: 50 m ahead of the key position and 12 m above the lake, with the nearest of the tall ones large on the left of the frame and the one that sank beyond it.
+- Move: in. The camera travels 59 m, from 5.7 m above the ground to 13 m. One push of 59 m toward the mouth with a slight crab to the right, down from 28 m to 17 m, through the establishing view at the key frame. The bench falls away under the lens and the lake opens.
+- Start framing: From 29 m behind the key position and 3 m above it, over the bench: the whole lake, with the vessel mouth and the lava fall upper left, the buttress and its plume on the right, the bench lower left and the tall ones on the crust.
+- End framing: 29 m ahead of the key position and 17 m above the lake, off the edge of the bench, with the nearest of the tall ones large on the left of the frame and the one that sank beyond it.
 - Focus: On the nearest of the tall ones. The aim is 400 m away at the start and 400 m at the end. Depth of field is off in the blockout.
 
 ### `heart-02` · The Heart · the tall ones walk the skin
@@ -85,9 +85,9 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 - Frames: 2937 to 3374, 7.30 s.
 - Key: `heart-3` at frame 3156.
 - Lens: 76 mm for the whole shot (a vertical field of view of 18 degrees).
-- Move: to the left. The camera travels 37 m, from 3.2 m above the ground to 3.1 m.
-- Start framing: 3 m over the crust, on the group of five tall ones, with the fall and the mouth at the left edge and the buttress on the right.
-- End framing: 36 m further along, turned against the move to keep the group in the frame. The fall and the mouth have slid out on the left.
+- Move: in. The camera travels 22 m, from 3.2 m above the ground to 3.0 m. One push of 22 m toward the group with a slight crab to the right, level at 3 m over the crust.
+- Start framing: 3 m over the crust, 90 m from the group of five tall ones on a long lens, with the fall and the mouth at the left edge and the buttress on the right.
+- End framing: 22 m closer, the same heading, with the largest of the group a little over half the height of the frame.
 - Focus: On the group of five. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-03` · The Heart · the fire under the skin
@@ -95,30 +95,30 @@ Frames 2507 to 4220, 28.57 s, 5 shots. The origin is the middle of the caldera f
 - Frames: 3375 to 3578, 3.40 s.
 - Key: `heart-1` at frame 3477.
 - Lens: 29 mm for the whole shot (a vertical field of view of 45 degrees).
-- Move: in. The camera travels 18 m, from 4.2 m above the ground to 1.7 m.
-- Start framing: 4.6 m up on the bench side of the shore, looking along the glowing seam where the crust meets the rock, with the sulphur crack and its steam on the left.
-- End framing: 1.7 m over the shore and 5 m past the key position, still on the bench side of the seam, which runs away across the frame toward the nearest of the tall ones and the mouth.
-- Focus: On the seam, a few metres ahead of the lens. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
+- Move: in. The camera travels 7.1 m, from 2.2 m above the ground to 1.6 m. One push of 7 m toward the mouth with a slight crab to the right, down from 2.7 m to 1.6 m, slowing onto the channel.
+- Start framing: 2.7 m up on the last rocks of the shore: the crag and the steaming sulphur vent on the left, the glowing channel leaving the shore ahead and crossing the frame to the lower right, the mouth and the fall upper left, the tall ones upper right.
+- End framing: 7 m further and 1.6 m up, at the edge of the shore, with the channel just below the lens.
+- Focus: On the channel, a few metres ahead of the lens. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-04` · The Heart · the one that sank
 
 - Frames: 3579 to 3790, 3.53 s.
 - Key: `heart-2` at frame 3685.
-- Lens: 41 mm for the whole shot (a vertical field of view of 33 degrees).
-- Move: a hold that drifts. The camera travels 8.5 m, from 3.0 m above the ground to 2.4 m.
-- Start framing: 2.4 m over the crust: the one that sank right of centre, the nearest of the tall ones on the left, the mouth and the fall behind.
-- End framing: About 8 m to the side, the same framing. The shot is a hold with a slow drift.
+- Lens: 33 mm for the whole shot (a vertical field of view of 40 degrees).
+- Move: in. The camera travels 5.5 m, from 4.9 m above the ground to 4.1 m. One slow push of 5.5 m toward the carcass with a slight crab to the right.
+- Start framing: 4.9 m over the crust, 24 m from the one that sank: the carcass in the middle, the nearest of the tall ones feeding on the left, the mouth and the fall behind it, the buttress on the right.
+- End framing: 5.5 m closer and a little lower, the same heading.
 - Focus: On the one that sank. The aim is 200 m away at the start and 200 m at the end. Depth of field is off in the blockout.
 
 ### `heart-05` · The Heart · the vessel mouth and the lava fall, no voice
 
 - Frames: 3791 to 4220, 7.17 s.
 - Key: `heart-4` at frame 4006.
-- Lens: 91 mm for the whole shot (a vertical field of view of 15 degrees).
-- Move: out. The camera travels 220 m, from 9.0 m above the ground to 24 m.
-- Start framing: 655 m from the vessel mouth and 9 m over the crust, on a long lens: the mouth and the top of the fall fill the frame.
-- End framing: 850 m from the mouth and 24 m over the bench ledge: the mouth, the whole fall and the foot of the fall, with the surge running down it.
-- Focus: On the mouth and the fall, through the whole retreat. The aim is 670 m away at the start and 870 m at the end. Depth of field is off in the blockout.
+- Lens: 104 mm for the whole shot (a vertical field of view of 13 degrees).
+- Move: in. The camera travels 34 m, from 2.5 m above the ground to 3.8 m. One push of 34 m toward the mouth with a slight crab to the right and a small rise. On this lens the wall hardly grows; the near crust slides under the frame. The surge comes at frame 4010.
+- Start framing: 777 m from the vessel mouth and 2.5 m over the crust, on the longest lens of the place: the mouth, the whole fall and its foot.
+- End framing: 34 m closer and 3.8 m over the crust, still aimed at the same point beside the mouth, with the surge running down the fall.
+- Focus: On the mouth and the fall, through the whole push. The aim is 790 m away at the start and 760 m at the end. Depth of field is off in the blockout.
 
 ## The Breath
 

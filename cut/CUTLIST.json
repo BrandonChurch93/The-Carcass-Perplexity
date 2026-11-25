@@ -139,7 +139,7 @@
       "last": 3374,
       "key": "heart-3",
       "picture": "heart-3",
-      "move": "left",
+      "move": "in",
       "label": "The Heart · the tall ones walk the skin"
     },
     {
@@ -159,7 +159,7 @@
       "last": 3790,
       "key": "heart-2",
       "picture": "heart-2",
-      "move": "hold",
+      "move": "in",
       "label": "The Heart · the one that sank"
     },
     {
@@ -169,7 +169,7 @@
       "last": 4220,
       "key": "heart-4",
       "picture": "heart-4",
-      "move": "out",
+      "move": "in",
       "label": "The Heart · the vessel mouth and the lava fall, no voice"
     },
     {

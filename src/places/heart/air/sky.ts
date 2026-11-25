@@ -65,9 +65,9 @@ void main() {
   c *= 1.0 + 0.1 * (veil - 0.5) * low;
 
   // The pale band over the rim: the last light, low all round, a little stronger away from the fume.
-  float band = exp(-pow((el - 0.1) / 0.075, 2.0));
+  float band = exp(-pow((el - 0.12) / 0.14, 2.0));
   float west = 0.5 - 0.5 * dot(normalize(d.xz + 1e-5), normalize(uWarmDir.xz));
-  c *= 1.0 + band * (0.1 + 0.16 * west);
+  c *= 1.0 + band * (0.14 + 0.18 * west);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
