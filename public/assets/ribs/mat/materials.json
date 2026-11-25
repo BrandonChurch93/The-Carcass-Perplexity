@@ -1,0 +1,81 @@
+{
+  "recipe": {
+    "size": 1024,
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "skyWidth": 2048,
+    "skyQuality": 94
+  },
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "materials": [
+    {
+      "name": "bone",
+      "kind": "tile",
+      "metres": 12,
+      "mean": [
+        0.28,
+        0.267,
+        0.239
+      ]
+    },
+    {
+      "name": "weed",
+      "kind": "tile",
+      "metres": 8,
+      "mean": [
+        0.054,
+        0.04,
+        0.023
+      ]
+    },
+    {
+      "name": "flat",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.126,
+        0.129,
+        0.131
+      ]
+    },
+    {
+      "name": "rock",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.111,
+        0.088,
+        0.061
+      ]
+    },
+    {
+      "name": "ledge",
+      "kind": "tile",
+      "metres": 10,
+      "mean": [
+        0.229,
+        0.21,
+        0.177
+      ]
+    },
+    {
+      "name": "wing",
+      "kind": "tile",
+      "metres": 1,
+      "mean": [
+        0.495,
+        0.387,
+        0.3
+      ]
+    },
+    {
+      "name": "sky",
+      "kind": "sky",
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}

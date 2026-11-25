@@ -1,0 +1,71 @@
+{
+  "recipe": {
+    "size": 1024,
+    "band": 0.14,
+    "heightBlur": 0.05,
+    "heightSpread": 0.2,
+    "normalStrength": 2.2,
+    "jpegQuality": 92,
+    "skyWidth": 2048,
+    "skyQuality": 94
+  },
+  "note": "mean is the linear mean colour of each tile, 0 to 1; metres is the real width one repeat of the tile stands for",
+  "materials": [
+    {
+      "name": "cliff",
+      "kind": "tile",
+      "metres": 120,
+      "mean": [
+        0.432,
+        0.336,
+        0.244
+      ]
+    },
+    {
+      "name": "mat",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.279,
+        0.092,
+        0.014
+      ]
+    },
+    {
+      "name": "shore",
+      "kind": "tile",
+      "metres": 4,
+      "mean": [
+        0.323,
+        0.255,
+        0.2
+      ]
+    },
+    {
+      "name": "sinter",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.501,
+        0.351,
+        0.19
+      ]
+    },
+    {
+      "name": "hide",
+      "kind": "tile",
+      "metres": 0.6,
+      "mean": [
+        0.452,
+        0.29,
+        0.193
+      ]
+    },
+    {
+      "name": "sky",
+      "kind": "sky",
+      "width": 1536,
+      "height": 1024
+    }
+  ]
+}
