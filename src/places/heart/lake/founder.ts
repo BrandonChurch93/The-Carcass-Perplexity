@@ -70,13 +70,13 @@ void main() {
   float body = length(p * vec2(1.0, 0.75 + 0.25 * p.y));
   float ragged = vnoise(p * 2.6 + vGob.z * 13.0) * 0.6 + vnoise(p * 6.5 + vGob.z * 29.0) * 0.4;
   float shape = body + (ragged - 0.5) * (0.9 + 0.7 * vGob.w);
-  if (shape > 0.62) discard;
   float thin = smoothstep(0.1, 0.62, shape);
   // It leaves the vent yellow, and cools as it flies: small and thin parts first.
   float cool = vGob.x / (1.5 + 6.0 * vGob.y) + 0.3 * thin + 0.55 * fract(vGob.z * 3.7) - 0.25;
   float kelvin = mix(1330.0, 780.0, clamp(cool * 0.9 + 0.25 * ragged, 0.0, 1.0));
   vec3 c = blackbody(kelvin) + vec3(0.004, 0.0035, 0.003);
   gl_FragColor = vec4(rigOut(c), 1.0);
+  if (shape > 0.62) discard;
 }`;
 
 const SLAB_VERTEX = /* glsl */ `
