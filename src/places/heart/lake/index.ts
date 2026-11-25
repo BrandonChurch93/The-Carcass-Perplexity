@@ -457,7 +457,7 @@ vec3 slabPlane(vec2 k, vec2 s, float broken, float L, float drop) {
   float level = mix(0.26 * (r1.x - 0.4) + 0.16 * raft, 0.55 * (r1.x - 0.5) + 0.16 * raft, gOverlap) * broken * min(1.0, L / 1.5) - drop * step(0.67, fract(r2.x * 5.0 + r1.y * 3.0));
   // On the feeding floor five plates in six lie level and the sixth keeps its tilt.
   float lies = gFlat * step(0.17, fract(r1.y * 13.0 + r2.x * 7.0));
-  tilt *= 1.0 - 0.85 * lies;
+  tilt *= (1.0 - 0.85 * lies) * (1.0 - 0.4 * gFlat);
   level *= 1.0 - 0.8 * gFlat;
   if (gRock > 0.0) {
     // Two slabs in three move: up to 6 degrees of tilt and 4 cm of rise, over 8 to 18 seconds.
@@ -530,14 +530,14 @@ float slabAt(vec2 q, float broken, float c, float size, float drop) {
   gSlabRim = e;
   // Its edge is turned up, here more and there not at all: 5 to 25 cm, wide enough for the cells to carry.
   float rimWide = max(0.1, 3.0 * c);
-  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow) * (1.0 - 0.9 * gOverlap) * (1.0 - gShut);
+  float rimHigh = 0.03 * broken + (0.05 + 0.2 * r2.y) * broken * smoothstep(0.3, 0.62, vnoise(q / 1.1 + 40.0 * r1.x)) * (1.0 - 0.6 * gPadCalm) * (1.0 - 0.9 * gLow) * (1.0 - 0.9 * gOverlap) * (1.0 - gShut) * (1.0 - 0.6 * gFlat);
   // Rubble the sheet can carry: a lump needs four cells across, or it stands as a spike.
   float rubble = 0.13 * smoothstep(0.4, 0.7, vnoise(q / 0.21 + 3.0)) * (1.0 - smoothstep(0.025, 0.04, c)) + 0.1 * smoothstep(0.35, 0.7, vnoise(q / 0.45 + 9.0)) * (1.0 - smoothstep(0.05, 0.09, c));
   // The floor of the gap lies under the slabs it parts, so it is one floor from either side, and where three slabs meet it
   // lies under all three: a floor that jumped from slab to slab would stand as a row of teeth and spikes.
   float beside = slabPlane(k2, -s2, broken, L, drop).x;
   if (d3 - d2 < 0.15) beside = mix(min(beside, slabPlane(k3, -s3, broken, L, drop).x), beside, smoothstep(0.0, 0.15, d3 - d2));
-  float bed = min(min(own.x, beside), 0.0) - mix(0.06 + 0.12 * broken, 0.065 * broken, gOverlap) * (1.0 - gShut) + rubble * smoothstep(0.3, 0.7, broken) * (1.0 - gShut) * (1.0 - gOverlap);
+  float bed = min(min(own.x, beside), 0.0) - mix(0.06 + 0.12 * broken, 0.065 * broken, gOverlap) * (1.0 - gShut) * (1.0 - 0.4 * gFlat) + rubble * smoothstep(0.3, 0.7, broken) * (1.0 - gShut) * (1.0 - gOverlap);
   // The gap is as wide as the crust is broken; a rafted slab ends in a step down onto its neighbour, with no gap on its side.
   float gapHalf = mix(0.02 + 0.1 * r2.x * smoothstep(0.3, 0.8, broken), 0.012, gOverlap) * (1.0 - 0.8 * raft) * (1.0 - 0.5 * gPadCalm) * (1.0 - gShut);
   // The broken edge of a slab is a face the cells can carry: four cells wide at the least and never steeper than about
@@ -668,7 +668,7 @@ float heightAt(vec2 q, float c) {
     if (onLine > 0.0 && bank < 2.5) {
       // Rounded, not cut: the crease of a hard floor through the wall of a crack stands as a row of small teeth.
       float over = h - level - 0.06;
-      h = level + 0.06 + 0.5 * (over + sqrt(over * over + 0.0016));
+      h = mix(h, level + 0.06 + 0.5 * (over + sqrt(over * over + 0.0016)), 1.0 - smoothstep(1.7, 2.5, bank));
     }
     float wallTop = min(2.0 * max(c - 0.04, 0.0), 0.6);
     h += fine * mix(1.0, smoothstep(wallTop + 0.02, wallTop + 0.3, bank), wide);
