@@ -504,15 +504,8 @@ void main() {
       vec2 tilt = laid(tCrustNh, vWorld, 0, 6.0, 0.0).rg - 0.5;
       n = normalize(mix(n, vec3(tilt.x * 1.6 + 0.2 * (slab.y - 0.5), 1.0, tilt.y * 1.6), shelf));
     }
-    // The stream's own light on its banks: it is a long bright strip, and what faces it glows.
-    vec3 to = vec3(vBank.x * max(side, 0.0), vBank.z - vWorld.y + 0.4, vBank.y * max(side, 0.0));
-    float far = length(to);
-    float form = vFlow.z / sqrt(vFlow.z * vFlow.z + far * far);
-    float behind = smoothstep(uSurge.x + 4.0, uSurge.x - 8.0, vFlow.w) * uSurge.y;
-    float fan = smoothstep(${f(FAN_FROM)}, ${f(FAN_FROM + 18)}, vFlow.w);
-    float seen = smoothstep(2.5, 0.0, to.y);
-    vec3 strip = blackbody(1400.0) * 3.14159 * (0.3 + 0.4 * behind) * (1.0 - 0.75 * fan) * form * form * form * seen * clamp(dot(n, to / far), 0.0, 1.0) * (1.0 - vIn.x);
-    vec3 r = rockShade(vWorld, n, v, albedo, 1.0, strip, ${f(TUBE.lipZ)} - vWorld.z);
+    // The stream's light on its banks is the rig's: it lays a strip of light along the course, and nothing is lit twice here.
+    vec3 r = rockShade(vWorld, n, v, albedo, 1.0, vec3(0.0), ${f(TUBE.lipZ)} - vWorld.z);
     // The rock the lava touches is itself hot for a hand's breadth.
     r += blackbody(max(1110.0 - 420.0 * max(side, 0.0), 500.0)) * smoothstep(1.0, 0.0, side) * (0.5 + 0.5 * vnoise(vWorld.xz * 2.3)) * (1.0 - shelf);
     if (shelf > 0.0) {
