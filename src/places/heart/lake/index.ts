@@ -200,6 +200,7 @@ export function create(ctx: HeartContext): HeartPiece {
       uLava: lava,
     },
   });
+  material.userData.depthFragment = `precision highp float;\nvarying vec3 vWorld;\n${RIG_GLSL}\nvoid main() { if (landAt(vWorld.xz).b > 1.5) discard; gl_FragColor = vec4(0.0); }`;
   const sheet = new THREE.Mesh(new THREE.PlaneGeometry(3400, 2200, 1, 1).rotateX(-Math.PI / 2).translate(150, 0, 60), material);
   ctx.scene.add(ctx.parts.built('crust', sheet));
   // The lava is drawn by the same sheet: it is an effect of the crust, and alone it is the sheet with everything but its heat blacked.
