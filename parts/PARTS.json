@@ -2,6 +2,300 @@
   "schema": "carcass/parts 1",
   "parts": [
     {
+      "id": "heart/sky",
+      "unit": "heart",
+      "name": "sky",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/sky.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:25:06Z"
+      }
+    },
+    {
+      "id": "heart/air",
+      "unit": "heart",
+      "name": "air",
+      "kind": "effect",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/air.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:25:11Z"
+      }
+    },
+    {
+      "id": "heart/land",
+      "unit": "heart",
+      "name": "land",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/land.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.7232,
+        "made": "2026-11-25T01:25:17Z"
+      }
+    },
+    {
+      "id": "heart/bench",
+      "unit": "heart",
+      "name": "bench",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/bench.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.206,
+        "made": "2026-11-25T01:25:23Z"
+      }
+    },
+    {
+      "id": "heart/crust",
+      "unit": "heart",
+      "name": "crust",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/crust.png",
+        "frame": 3685,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.4999,
+        "made": "2026-11-25T01:25:28Z"
+      }
+    },
+    {
+      "id": "heart/lava",
+      "unit": "heart",
+      "name": "lava",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/lava.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0685,
+        "made": "2026-11-25T01:25:34Z"
+      }
+    },
+    {
+      "id": "heart/lava-fall",
+      "unit": "heart",
+      "name": "lava-fall",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/lava-fall.png",
+        "frame": 4010,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.02,
+        "made": "2026-11-25T01:25:40Z"
+      }
+    },
+    {
+      "id": "heart/vessel-mouth",
+      "unit": "heart",
+      "name": "vessel-mouth",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/vessel-mouth.png",
+        "frame": 4006,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0918,
+        "made": "2026-11-25T01:25:46Z"
+      }
+    },
+    {
+      "id": "heart/crust-walkers",
+      "unit": "heart",
+      "name": "crust-walkers",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/crust-walkers.png",
+        "frame": 3156,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0665,
+        "made": "2026-11-25T01:25:52Z"
+      }
+    },
+    {
+      "id": "heart/sunk-walker",
+      "unit": "heart",
+      "name": "sunk-walker",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/sunk-walker.png",
+        "frame": 3685,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0806,
+        "made": "2026-11-25T01:25:58Z"
+      }
+    },
+    {
+      "id": "heart/foundering",
+      "unit": "heart",
+      "name": "foundering",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/foundering.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0054,
+        "made": "2026-11-25T01:26:03Z"
+      }
+    },
+    {
+      "id": "heart/fume",
+      "unit": "heart",
+      "name": "fume",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/fume.png",
+        "frame": 2722,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0398,
+        "made": "2026-11-25T01:26:09Z"
+      }
+    },
+    {
+      "id": "heart/sulphur-crack",
+      "unit": "heart",
+      "name": "sulphur-crack",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/sulphur-crack.png",
+        "frame": 3477,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0206,
+        "made": "2026-11-25T01:26:15Z"
+      }
+    },
+    {
+      "id": "heart/surge",
+      "unit": "heart",
+      "name": "surge",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/heart"
+      ],
+      "hash": "13b7cfb078f53f02",
+      "standIn": {
+        "hash": "13b7cfb078f53f02",
+        "picture": "out/stills/parts/heart/surge.png",
+        "frame": 4055,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0277,
+        "made": "2026-11-25T01:26:21Z"
+      }
+    },
+    {
       "id": "breath/sky",
       "unit": "breath",
       "name": "sky",
@@ -587,6 +881,300 @@
         "tier": "draft",
         "shown": 0.0002,
         "made": "2026-11-25T01:11:19Z"
+      }
+    },
+    {
+      "id": "eye/sky",
+      "unit": "eye",
+      "name": "sky",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/sky.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:24:10Z"
+      }
+    },
+    {
+      "id": "eye/air",
+      "unit": "eye",
+      "name": "air",
+      "kind": "effect",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/air.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 1,
+        "made": "2026-11-25T01:24:14Z"
+      }
+    },
+    {
+      "id": "eye/land",
+      "unit": "eye",
+      "name": "land",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/land.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.326,
+        "made": "2026-11-25T01:24:17Z"
+      }
+    },
+    {
+      "id": "eye/lake",
+      "unit": "eye",
+      "name": "lake",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/lake.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.248,
+        "made": "2026-11-25T01:24:21Z"
+      }
+    },
+    {
+      "id": "eye/shallows",
+      "unit": "eye",
+      "name": "shallows",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/shallows.png",
+        "frame": 9003,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.256,
+        "made": "2026-11-25T01:24:24Z"
+      }
+    },
+    {
+      "id": "eye/shaft",
+      "unit": "eye",
+      "name": "shaft",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/shaft.png",
+        "frame": 8761,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2955,
+        "made": "2026-11-25T01:24:28Z"
+      }
+    },
+    {
+      "id": "eye/brow",
+      "unit": "eye",
+      "name": "brow",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/brow.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.1095,
+        "made": "2026-11-25T01:24:32Z"
+      }
+    },
+    {
+      "id": "eye/scree",
+      "unit": "eye",
+      "name": "scree",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/scree.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2737,
+        "made": "2026-11-25T01:24:36Z"
+      }
+    },
+    {
+      "id": "eye/stream",
+      "unit": "eye",
+      "name": "stream",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/stream.png",
+        "frame": 8412,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0021,
+        "made": "2026-11-25T01:24:39Z"
+      }
+    },
+    {
+      "id": "eye/mats",
+      "unit": "eye",
+      "name": "mats",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/mats.png",
+        "frame": 8600,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.5178,
+        "made": "2026-11-25T01:24:43Z"
+      }
+    },
+    {
+      "id": "eye/skeleton",
+      "unit": "eye",
+      "name": "skeleton",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/skeleton.png",
+        "frame": 8761,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0316,
+        "made": "2026-11-25T01:24:47Z"
+      }
+    },
+    {
+      "id": "eye/drinkers",
+      "unit": "eye",
+      "name": "drinkers",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/drinkers.png",
+        "frame": 9003,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.2132,
+        "made": "2026-11-25T01:24:50Z"
+      }
+    },
+    {
+      "id": "eye/riser",
+      "unit": "eye",
+      "name": "riser",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/riser.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0389,
+        "made": "2026-11-25T01:24:54Z"
+      }
+    },
+    {
+      "id": "eye/mist",
+      "unit": "eye",
+      "name": "mist",
+      "kind": "solid",
+      "state": "stand-in",
+      "fallbackStep": null,
+      "files": [
+        "src/places/eye"
+      ],
+      "hash": "fea22f619142d9f7",
+      "standIn": {
+        "hash": "fea22f619142d9f7",
+        "picture": "out/stills/parts/eye/mist.png",
+        "frame": 9221,
+        "format": "preview",
+        "tier": "draft",
+        "shown": 0.0313,
+        "made": "2026-11-25T01:24:58Z"
       }
     },
     {
