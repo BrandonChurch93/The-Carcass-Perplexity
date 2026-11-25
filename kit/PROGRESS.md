@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 56, 2026-11-25 15:51 UTC:
+Status 57, 2026-11-25 16:10 UTC:
 
-- `01-c02-f2807.jpg`: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine
-- `02-c14-f4091.jpg`: A frame of the review clip itself, frame 4091 (heart-05, the mouth and its fall), 1920 x 1080 at the final tier
-- `03-shot-heart-01.jpg`: Motion sheet of heart-01 from the build kept (9ac88bf): frames across the shot, read left to right, top to bottom
-- `04-shot-heart-05.jpg`: Motion sheet of heart-05 from the build kept (9ac88bf)
+- `01-c04-f3000.jpg`: A frame of the review clip, frame 3000 (heart-02, the walkers feeding at the seam), 1920 x 1080 at the final tier
+- `02-c09-f3540.jpg`: A frame of the review clip, frame 3540 (heart-03, the lava at the line, the lens near the bank)
+- `03-c11-f3745.jpg`: A frame of the review clip, frame 3745 (heart-04, the one that sank)
 
+Status 56, 2026-11-25 15:51 UTC, showed: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine; A...
 Status 55, 2026-11-25 15:33 UTC, showed: Shot heart-02, the feeding seam: 12 frames spread evenly through the shot, from the final build (new); Shot heart-03, the lava at the line...
 Status 54, 2026-11-25 15:12 UTC, showed: The walkers at the seam at the final tier: the approved picture left, the frame right.
-Status 53, 2026-11-25 14:54 UTC, showed: heart-2 at the final tier in uhd, the frame round 7 judges, the picture left, ours right. Thick ropes on the near floor, no stripes.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T15:51:07Z
-phase 3: 12.70 h used of 13.00 h
-build: 19.35 h used of 72.00 h
+2026-11-25T16:10:58Z
+phase 3: 13.03 h used of 13.00 h
+build: 19.68 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 18
+box end: reached
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -1604,3 +1604,4 @@ none
 - 2026-11-25 15:45 UTC. An early run of the Phase 3 gate (15:31 to 15:40 UTC) to find faults before the clip is in: 19 of 22 passed; D3 not built yet; A1 open (the transcriber writes "neverland" for "never land" in n8); G2 failed on one test, because the heart row of the "Units" table held words after the number of rounds and the reader of that table takes a number only. The row now holds 5, 7 and 9ac88bf, and all 831 tests pass (15:45 UTC). Step 4: the budget table was written anew from the five frames measured on a 4 core machine at the final engine; at the Heart's cost the film in hd at the final tier is 8.71 h across 14 machines against a limit of 3 h and the master 22.95 h against 8 h. Clip: 7 of 16 chunks are back (0, 1, 2, 7, 8, 10, 14), 798 of 1714 frames.
 - 2026-11-25 15:51 UTC. 15:52 UTC status 56 shown: two frames of the review clip itself (2807 and 4091, from parts rendered on other machines) and the motion sheets of heart-01 and heart-05; 9 of 16 parts back; the early gate; the budget table; ElevenLabs 1 character of 131,000, so n1 to n7, the model test, the n8 takes and the sounds are not made and the cut and the mix were not run again.
 - 2026-11-25 16:07 UTC. 16:07 UTC the budget table written again with this machine's own row at the final engine (2 cores: 68.4 s a frame in hd at the final tier, 185 s in uhd, MEASURED 15:45 to 16:05 on frame 2722). The tool's verdict from the five frames measured on 4 core machines: only the draft tier fits the limits of the film in hd (3 h), of the master (8 h) and of the card loop (1 h) across 14 machines. 13 of 16 parts of the review clip are back (1,354 of 1,714 frames).
+- 2026-11-25 16:12 UTC. 16:12 UTC status 57 shown: three frames of the review clip (3000, 3540, 3745, from parts rendered on other machines). All 16 parts of the clip back by 16:11 UTC and each read back whole (1,714 frames); MEASURED 34 to 56 s a frame on 14 machines of 4 cores, 113 minutes from the order to the last part. The status tool added a fourth picture of its own, a preview frame of 15:30 UTC from the early gate; it was dropped from the status because it is not new. The clock printed `box end: reached` for Phase 3 (13.03 h of 13.00): the Heart has no stand-in left, so no fallback is due. ElevenLabs 1 character of 131,000 at 16:10 UTC.

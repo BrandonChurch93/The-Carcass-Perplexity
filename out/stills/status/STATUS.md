@@ -1,8 +1,7 @@
-# Status 56
+# Status 57
 
-2026-11-25 15:51 UTC. Phase 3, the look lock: the Heart.
+2026-11-25 16:10 UTC. Phase 3, the look lock: the Heart.
 
-- `01-c02-f2807.jpg`: A frame of the review clip itself, frame 2807 (heart-01, the wide view), 1920 x 1080 at the final tier, as rendered on another machine
-- `02-c14-f4091.jpg`: A frame of the review clip itself, frame 4091 (heart-05, the mouth and its fall), 1920 x 1080 at the final tier
-- `03-shot-heart-01.jpg`: Motion sheet of heart-01 from the build kept (9ac88bf): frames across the shot, read left to right, top to bottom
-- `04-shot-heart-05.jpg`: Motion sheet of heart-05 from the build kept (9ac88bf)
+- `01-c04-f3000.jpg`: A frame of the review clip, frame 3000 (heart-02, the walkers feeding at the seam), 1920 x 1080 at the final tier
+- `02-c09-f3540.jpg`: A frame of the review clip, frame 3540 (heart-03, the lava at the line, the lens near the bank)
+- `03-c11-f3745.jpg`: A frame of the review clip, frame 3745 (heart-04, the one that sank)
