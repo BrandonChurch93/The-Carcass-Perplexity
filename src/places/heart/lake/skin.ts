@@ -231,8 +231,8 @@ void main() {
       // Where the relief lays no rope on a bank of the line near the lens, the skin coils there all the same, on whole
       // crust and on the tops of its plates: the picture's whole bank is coils. Only as far as a cord is a dozen pixels
       // or more: farther off, even cords side by side are a field of stripes.
-      // Not round the one that sank: there the relief's ropes are half a metre and more apart and carry no cords of the skin's.
-      float own = coil * (1.0 - coilMound) * (1.0 - smoothstep(0.25, 0.6, gFoldCover)) * (1.0 - steep) * (1.0 - slabGap) * (1.0 - max(heap, clinker)) * (1.0 - fresh) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.004, 0.012, fpLong));
+      // Not where the relief lays its ropes round the one that sank: they are half a metre and more apart and carry no cords of the skin's.
+      float own = coil * (1.0 - gLapRope) * (1.0 - smoothstep(0.25, 0.6, gFoldCover)) * (1.0 - steep) * (1.0 - slabGap) * (1.0 - max(heap, clinker)) * (1.0 - fresh) * smoothstep(0.0, 2.5, lake) * (1.0 - smoothstep(0.004, 0.012, fpLong));
       if (own > foldOn) {
         foldOn = own;
         foldPhase = coilAt(q) + 9.0 * fract(slabId * 7.31);
@@ -263,7 +263,7 @@ void main() {
   float seen = 1.0 - smoothstep(0.05, 0.17, per);
   float foldSeen = foldOn * seen;
   // Only a fold as thick as an arm carries cords.
-  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per)) * max(smoothstep(0.07, 0.16, foldSpace), 0.8 * coil * (1.0 - coilMound));
+  float cords = foldOn * (1.0 - smoothstep(0.02, 0.05, per)) * max(smoothstep(0.07, 0.16, foldSpace), 0.8 * coil * (1.0 - gLapRope));
   // The slope of a fold where the cells are too coarse to carry it, and of the cords always.
   float foldRise = foldDeep * 0.7 * 3.14159 * pow(max(fold, 0.06), -0.3) * cos(turn) * sign(sin(turn)) * foldSeen * (1.0 - foldCarried);
   foldRise += 0.1 * foldSpace * 4.0 * 3.14159 * cos(strands * turn) * sign(sin(strands * turn)) * cords * (0.4 + 1.2 * waver);
