@@ -43,6 +43,10 @@ export interface Stage {
   readonly lens: Lens;
   readonly look: Look;
   readonly volume: THREE.ShaderMaterial | null;
+  /** A half-size pass drawn after the volume with the same uniforms. Red and green: how far the scene behind the pixel is displaced, in frame heights. */
+  readonly warp?: THREE.ShaderMaterial | null;
+  /** True when the engine draws the opaque shader materials depth-first, so each pixel is shaded once. */
+  readonly depthFirst?: boolean;
   readonly parts?: Parts;
   resize(width: number, height: number): void;
   setTime(seconds: number, worldShift?: number): void;

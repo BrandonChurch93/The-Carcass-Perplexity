@@ -134,6 +134,7 @@ async function create(): Promise<Place> {
 
   const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.4, 40000);
   const volume = pieces.find((p) => p.volume)?.volume ?? null;
+  const warp = pieces.find((p) => p.warp)?.warp ?? null;
 
   return {
     unit: UNIT,
@@ -141,6 +142,8 @@ async function create(): Promise<Place> {
     camera,
     look: { ...neutralLook(), exposure: 1.7, bloom: 0.05, vignette: 0.1, grain: 0.006 },
     volume,
+    warp,
+    depthFirst: true,
     parts,
     resize: (width, height) => {
       for (const p of pieces) p.resize?.(width, height);
