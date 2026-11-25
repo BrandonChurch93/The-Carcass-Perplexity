@@ -85,6 +85,7 @@ uniform sampler2D tBloom;
 uniform sampler2D tDepth;
 uniform vec2 uSize;
 uniform float uExposure;
+uniform vec3 uFire;
 uniform float uBloom;
 uniform float uVignette;
 uniform float uGrain;
@@ -129,7 +130,13 @@ void main() {
   vec3 c = mix(clean(raw), texture2D(tBloom, vUv).rgb / float(${LEVELS}), uBloom);
   vec2 q = (vUv - 0.5) * vec2(uSize.x / uSize.y, 1.0);
   c *= 1.0 - uVignette * smoothstep(0.25, 1.05, length(q));
-  c = AgXToneMapping(c * uExposure);
+  vec3 lit = c * uExposure;
+  c = AgXToneMapping(lit);
+  if (uFire.y > 0.0) {
+    // What glows passes to a filmic curve laid on each channel, which keeps the colour of fire where the first curve turns it pale.
+    float w = smoothstep(uFire.x, uFire.y, max(lit.r, max(lit.g, lit.b)));
+    if (w > 0.0) c = mix(c, ACESFilmicToneMapping(lit * uFire.z), w);
+  }
   c = toSrgb(c);
   float luma = dot(c, vec3(0.2126, 0.7152, 0.0722));
   c = mix(vec3(luma), c, uSaturation);
@@ -200,6 +207,7 @@ export class Post {
     tDepth: { value: null },
     uSize: { value: new THREE.Vector2() },
     uExposure: { value: 1 },
+    uFire: { value: new THREE.Vector3(0, 0, 1) },
     uBloom: { value: 0 },
     uVignette: { value: 0 },
     uGrain: { value: 0 },
@@ -271,6 +279,7 @@ export class Post {
     f.tDepth!.value = depth;
     (f.uSize!.value as THREE.Vector2).set(this.width, this.height);
     f.uExposure!.value = look.exposure;
+    (f.uFire!.value as THREE.Vector3).set(look.fire?.[0] ?? 0, look.fire?.[1] ?? 0, look.fire?.[2] ?? 1);
     f.uBloom!.value = look.bloom;
     f.uVignette!.value = look.vignette;
     f.uGrain!.value = look.grain;
