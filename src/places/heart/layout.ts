@@ -57,7 +57,7 @@ export function wallHeight(x: number, z: number): number {
   if (d < -40) return -8;
   const ragged = d + 16 * wave(x * 1.7, z * 1.7) * smooth(20, 160, d) + 30 * wave(x * 0.45 + 300, z * 0.45) * smooth(150, 450, d);
   const h = profile(WALL, ragged) + 9 * wave(x * 2.3 + 90, z * 2.3) * smooth(140, 420, d);
-  return h;
+  return h > 0 ? h * (1 - 0.4 * smooth(260, 820, x)) : h;
 }
 
 const SHORE: [number, number][] = [

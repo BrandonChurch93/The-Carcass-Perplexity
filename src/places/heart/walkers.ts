@@ -82,8 +82,8 @@ export function poseWalker(meshes: WalkerMeshes, index: number, w: Walker, secon
     const n = Math.floor(cycle);
     const f = cycle - n;
     const swing = smooth(0.72, 1, f);
-    const along = stride * (n + swing - offset - w.phase + 0.36) + fore * 3.3 * k;
-    const out = sideways * 2.7 * k;
+    const along = stride * (n + swing - offset - w.phase + 0.36) + fore * 3.9 * k;
+    const out = sideways * 3.2 * k;
     const fx = w.at[0] + hx * along + sx * out;
     const fz = w.at[1] + hz * along + sz * out;
     const foot: Vec3 = [fx, floorAt(fx, fz) + Math.sin(Math.PI * swing) * 1.5 * k, fz];
