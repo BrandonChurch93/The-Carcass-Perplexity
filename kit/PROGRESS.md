@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 31, 2026-11-25 06:36 UTC:
+Status 32, 2026-11-25 06:51 UTC:
 
-- `01-set-a-01.jpg`: Round 3, the wide view exactly as the jury saw it (built before the third versions below)
-- `02-cmp-heart-1.jpg`: The line, approved picture and frame, with the new fire colours of the light owner
-- `03-compare-heart-2.jpg`: The one that sank, third version, beside its picture
-- `04-v3-compare-heart-4.jpg`: The mouth and its fall, third version, beside its picture
+- `01-heart-0.jpg`: The wide view after the merge, beside its picture: the place is right, the colour is too red-brown and the crust has no sheen yet
+- `02-heart-3.jpg`: Feeding at a seam after the merge: the animals and the seam are the picture's, the crust is flat and the far wall ends in a square corner
+- `03-heart-1.jpg`: The line after the merge: the channel is cut as a trench, the picture's is full to the brim with a white-hot core (sent to both lake owners)
+- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
 
+Status 31, 2026-11-25 06:36 UTC, showed: Round 3, the wide view exactly as the jury saw it (built before the third versions below); The line, approved picture and frame, with the...
 Status 30, 2026-11-25 06:13 UTC, showed: Walkers, version 3, beside the approved picture: the silhouette is now the picture's animal.
 Status 29, 2026-11-25 05:53 UTC, showed: Left: the approved hero. Right: ours as it stands.
-Status 28, 2026-11-25 05:33 UTC, showed: The feeding shot restaged. Top: the approved picture.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T06:36:13Z
-phase 3: 3.45 h used of 13.00 h
-build: 10.10 h used of 72.00 h
+2026-11-25T06:51:21Z
+phase 3: 3.70 h used of 13.00 h
+build: 10.36 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 23
+minutes since the last status: 15
 ```
 
 ## Phases
@@ -780,3 +780,4 @@ none
 - 2026-11-25 06:25 UTC. 06:26 UTC: round 3, the motion critic answered on both R4 packs: 4 and 4. Severe: the surge switches on in one frame (4009 to 4010); the herd reads as mechanical models; the fall shot is a still for its first three seconds and the surge slides like a mask. Major: lava patterns locked in place, the fume column frozen over seven seconds, the sunk shot a still diorama, the seam under the animals static. I looked at the sheets and agree with every line. Each owner has its lines word for word with what I want (flow in open lava, a column that rises and rolls, ash in the near air, steps with weight and travel, a surge with a lead-in and a travelling front). The determinism hunter fixed G3 (two discards ahead of derivatives in the lake's shaders; agent/determinism 1488769, MEASURED there: npm run determinism passes twice); it merges with the third versions as soon as this machine's measures end. Light v1 (f94d366): blackbody now has the display's colour plus a clip term above 1450 K, fire curve [0.12, 0.7, 0.6], knee [0.6, 0.5]; open lava must be drawn at 1320 to 1400 K to read orange, passed to all owners.
 - 2026-11-25 06:36 UTC. Status 31 shown in the thread (06:36 UTC): the judged wide frame of round 3, the line with the new fire colours, the third versions of the one that sank and of the fall; round 3 scores so far R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 3 of 24.
 - 2026-11-25 06:46 UTC. Round 3 closed at 06:45 UTC: R1 4, R3 3, R4 4, jury 4 of 25 (0.16 against 0.76 needed), M1 and M2 green, M3 red at heart-4. A floor round, failed as expected; nothing declined. Third versions of all six folders, the light's first version and the determinism fix merged at 06:44 UTC.
+- 2026-11-25 06:51 UTC. Status 32 shown in the thread (06:51 UTC): compares of the merged main at the wide view, the feeding and the line; round 3 closed (R1 4 and 4, R3 3 and 4, R4 4 and 4, jury 4 of 25), measures M1 and M2 green and M3 red at heart-4, merge done (818 of 818 tests, determinism passes), my reading of the merged frames (red-brown cast, crust without lobes or sheen, trench where the picture has a brimming channel, mouth and fall not the picture's), and what runs next. Correction sent to both lake owners at 06:48: the melt lies 5 to 30 cm below the brim with a thin curled lip, not 0.25 to 0.9 m between walls; the crust is smooth billowy pahoehoe with a sheen.
