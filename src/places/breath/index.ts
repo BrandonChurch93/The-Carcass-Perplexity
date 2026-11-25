@@ -320,11 +320,11 @@ function create(): Place {
 
   const exhale = new THREE.Group();
   const breath = kit.flow(0xe6dfd4, C.vapour, { direction: [-0.9, 0.44], speed: 5, scale: 3.4 });
-  const rise = new THREE.Mesh(dome, breath);
+  const puffs = Array.from({ length: 10 }, (_, i) => new THREE.Mesh(dome, i % 2 ? heavy : breath));
   const apron = new THREE.Mesh(dome, breath);
   const cap = new THREE.Mesh(dome, breath);
   const pooled = new THREE.Mesh(dome, breath);
-  exhale.add(rise, apron, cap, pooled);
+  exhale.add(...puffs, apron, cap, pooled);
   scene.add(parts.standIn('exhale', exhale));
 
   const weed = kit.flat(C.plume, { band: C.plumeBand, step: 0.9, amount: 0.6 });
@@ -454,20 +454,27 @@ function create(): Place {
     const sigh = Math.sin(t * 0.9);
 
     fill.position.set(-24, -33, 6);
-    fill.scale.set(8, 22 + 1.2 * sigh + 6 * low, 12);
+    fill.scale.set(5, 19 + 1.2 * sigh + 6 * low, 7);
     tongue.position.set(-26, -4 + 0.5 * surge, -8);
-    tongue.scale.set(5, 3 + 0.4 * sigh + 0.6 * surge, 7);
+    tongue.scale.set(4, 2.6 + 0.4 * sigh + 0.6 * surge, 5);
     pool.position.set(-35.5 + 0.6 * sigh, 0.2, -14);
     pool.scale.set(5.5, 1 + 0.1 * sigh, 8);
 
-    rise.position.set(-21, -12, -9);
-    rise.scale.set((6 + 3 * surge) * grow + 0.001, 3 + 31 * surge, (8 + 3 * surge) * grow + 0.001);
-    cap.position.set(-22 - 7 * surge, -14 + 19 * surge - 3 * spread, -16);
-    cap.scale.set((7 + 6 * surge) * grow + 0.001, 2 + 6.5 * surge - 2 * spread, (7 + 4 * surge) * grow + 0.001);
+    const top = -9 + 31 * surge;
+    puffs.forEach((puff, i) => {
+      const f = (i / puffs.length + t * 0.11) % 1;
+      const turn = i * 2.4 + t * 0.3;
+      const wide = 1 + 3.2 * f;
+      const r = (1.2 + 1.8 * f) * Math.sin(Math.PI * f) ** 0.6 * grow * (0.6 + 0.4 * surge) + 0.001;
+      puff.position.set(-21 + Math.cos(turn) * wide - 7 * f * f * surge, -12 + (top + 12) * f, -9 + Math.sin(turn) * wide);
+      puff.scale.set(r, r, r);
+    });
+    cap.position.set(-27 - 5 * surge, -3 + 5 * surge - 2 * spread, -14);
+    cap.scale.set((3.5 + 1.5 * surge) * grow + 0.001, (1.6 + 1.2 * surge) * grow + 0.001, (3 + 1.5 * surge) * grow + 0.001);
     apron.position.set(-36, 0.3 - 3 * (1 - body1), -10);
-    apron.scale.set(9, 0.05 + 1.1 * body1 - 0.5 * spread, 7.5);
+    apron.scale.set(5.5, 0.05 + 0.9 * body1 - 0.4 * spread, 4.5);
     pooled.position.set(-47, -0.1 - 3 * (1 - body1), -13 + 17 * spread);
-    pooled.scale.set(7.5, 0.05 + 1.1 * smooth((u - 3.4) / 2.5), 9 + 9 * spread);
+    pooled.scale.set(5, 0.05 + 0.8 * smooth((u - 3.4) / 2.5), 6 + 5 * spread);
 
     plumes.forEach((puffs) => {
       puffs.forEach((puff) => {
