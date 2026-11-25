@@ -1,8 +1,8 @@
-# Status 17
+# Status 18
 
-2026-11-25 02:07 UTC. Phase 2, engine and blockout.
+2026-11-25 02:34 UTC. Phase 2, engine and blockout.
 
-- `01-set-a-05.jpg`: The rise as the critics saw it: the first two frames are plain navy water. Both critics read that stretch as a fade to black and a new shot. This handoff is being rebuilt on both sides of the cut
-- `02-set-c-05.jpg`: The reveal as the critics saw it: once the whole body is in frame the camera locks, and nine frames in a row are the same. The hold keeps its length and gets a slow pull back, a drift and moving weather
-- `03-set-c-01.jpg`: The Spine as the critics saw it: at frames 7601 and 8070 a pale stand-in fills the frame and plays as a wipe, and two shots look static
-- `04-set-c-03.jpg`: The Eye as the critics saw it: the establishing camera sits too high and too far back, and the last two frames are the blank stretch before the rise
+- `01-shot-eye-05.jpg`: The Eye's last shot after the fix: one flight from the drinkers to straight above the lake, with the rings in the water all the way
+- `02-handoff-1.jpg`: The cut from the Eye to the rise, frame by frame: the same water, the same rings, the same rate of climb on both sides
+- `03-shot-reveal-01.jpg`: The rise after the fix: one move from the lake to the whole body, then a drift that never stops
+- `04-spine-0405.jpg`: The Spine after the fix: the strike, then a steady push to the far mouth of the canal with nothing crossing the lens
