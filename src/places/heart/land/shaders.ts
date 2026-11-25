@@ -130,7 +130,6 @@ void main() {
   vec3 ng = normalize(cross(wx, wy));
   ng *= sign(dot(ng, n0) + 1e-5);
   float slope = max(1.0 - n0.y, 0.88 - abs(ng.y));
-  vec3 nk = n0 + 0.6 * ng;
   #ifdef BENCH
   float steep = smoothstep(0.25, 0.39, slope + 0.1 * (mid - 0.5));
   #else
@@ -142,7 +141,9 @@ void main() {
   vec3 bump = vec3(0.0);
   vec3 lean = vec3(0.0);
   float ledge = 1.0;
-  float kx = smoothstep(0.4, 0.6, nk.x * nk.x / (nk.x * nk.x + nk.z * nk.z + 1e-5));
+  // Which upright plane a face's pictures are laid on, from the smooth normal of the land and not from the triangle's own:
+  // the two layings cross over a quarter turn of the face, so no triangle's edge shows as a change of grain.
+  float kx = smoothstep(0.26, 0.74, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
   if (steep > 0.003) {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
     #ifdef BENCH
@@ -154,7 +155,8 @@ void main() {
     // no band of it is a level line, and no flow starts the picture afresh.
     vec4 flow = PICK(tStrata, vec2((vWorld.y + vLand.y) / 340.0, 0.5), vec2(wx.y / 340.0, 0.0), vec2(wy.y / 340.0, 0.0));
     float shift = 0.0;
-    float wander = (vLand.y + 26.0 * (vnoise(vec2((vWorld.x + vWorld.z) / 57.0, vWorld.y / 90.0)) - 0.5)) / 140.0;
+    // The cliff picture lies level: its beds are beds. Sheared along the flows' dip its grain ran slantwise in patches.
+    const float wander = 0.0;
     #endif
     #ifndef BENCH
     // Round the mouth the wall turns through every direction: there the picture is laid by world position on three axes, with no jump from flow to flow.
@@ -202,12 +204,18 @@ void main() {
     // at the scale of a block: broken faces a metre or two across, with their own shade.
     cliff = mix(vec3(dot(cliff, vec3(0.3333))), cliff, 0.6) * 0.5 + 0.5 * vec3(0.105, 0.096, 0.088);
     if (px < 0.7) {
-      vec2 fq = (kx > 0.5 ? vWorld.zy : vWorld.xy) / 17.0 + vec2(0.37, 0.11);
-      vec3 fr = PICK(tBoulderNh, fq, (kx > 0.5 ? wx.zy : wx.xy) / 17.0, (kx > 0.5 ? wy.zy : wy.xy) / 17.0).rgb;
+      // Laid on both upright planes and crossed by the face's direction, as the cliff picture is.
+      vec3 frz = PICK(tBoulderNh, vWorld.zy / 17.0 + vec2(0.37, 0.11), wx.zy / 17.0, wy.zy / 17.0).rgb;
+      vec3 frx = PICK(tBoulderNh, vWorld.xy / 17.0 + vec2(0.37, 0.11), wx.xy / 17.0, wy.xy / 17.0).rgb;
+      vec3 fr = mix(frx, frz, kx);
       float on = smoothstep(0.7, 0.3, px);
+      #ifdef STAGED
+      // The staged butte is seen soft, far behind the focus: blocks a metre or two across would read as spots on it.
+      on *= 0.3;
+      #endif
       cliff *= mix(1.0, 0.5 + 1.0 * fr.b, on);
       cliffNh.b = mix(cliffNh.b, cliffNh.b * (0.4 + 1.2 * fr.b), on);
-      bump += on * 0.9 * ((kx > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0)) * (fr.r - 0.5) - vec3(0.0, 1.0, 0.0) * (fr.g - 0.5));
+      bump += on * 0.9 * (kx * vec3(0.0, 0.0, 1.0) * (frz.r - 0.5) + (1.0 - kx) * vec3(1.0, 0.0, 0.0) * (frx.r - 0.5) - vec3(0.0, 1.0, 0.0) * (fr.g - 0.5));
     }
     #endif
     // Hard flows are darker and stand proud, the rubble between them is paler; streaks run down the face.
@@ -220,13 +228,14 @@ void main() {
     #else
     // The wall is one dark rock in masses tens of metres across, some sooted, some weathered paler; the flows only tint it.
     float mass = vnoise3(vWorld / 43.0 + 2.7);
-    cliff *= (0.93 + 0.14 * flow.g) * (0.7 + 0.6 * streak) * (0.5 + 1.0 * mass);
+    cliff *= (0.93 + 0.14 * flow.g) * (0.87 + 0.26 * streak) * (0.5 + 1.0 * mass);
     // The shade under each flow's foot is there in stretches, where the flow overhangs, and not along the whole wall.
     float hangs = smoothstep(0.32, 0.6, vnoise(vec2((vWorld.x - vWorld.z) / 11.0, flow.r * 91.0)));
     ledge = 1.0 - 0.6 * hangs * (1.0 - smoothstep(0.0, 0.12, flow.b));
-    // Fractures: sheets of broken rock that stand near upright in the wall, tens of metres tall, and finer ones between them.
+    // Fractures: joints that cut the wall into masses some metres across, and finer ones between them.
     // The rock between two fractures is a face of its own that leans its own way, so a light from the side picks the faces out.
-    vec3 fp = vec3(vWorld.x, vWorld.y * 0.17, vWorld.z);
+    // They break the face into blocks a little taller than wide, not into curtains.
+    vec3 fp = vec3(vWorld.x, vWorld.y * 0.55, vWorld.z);
     float f1 = vnoise3(fp / 7.5 + 3.1);
     vec3 along = normalize(vec3(-n0.z, 0.0, n0.x) + 1e-4);
     float w1 = 0.022 + px / 7.5;
@@ -243,8 +252,8 @@ void main() {
     float c1 = vnoise(vec2(run / 1.9 + 9.0 * flow.r, flow.r * 53.0));
     float columns = smoothstep(0.3, 0.55, flow.a) * smoothstep(0.78, 0.6, flow.b) * smoothstep(1.3, 0.45, px) * smoothstep(0.35, 0.6, vnoise(vWorld.xz / 71.0 + 6.2));
     float wj = 0.05 + px / 1.9;
-    lean += along * (c1 - 0.5) * 1.6 * columns;
-    ledge *= 1.0 - 0.7 * columns * (1.0 - smoothstep(0.3 * wj, wj, abs(c1 - 0.5)));
+    lean += along * (c1 - 0.5) * 0.9 * columns;
+    ledge *= 1.0 - 0.4 * columns * (1.0 - smoothstep(0.3 * wj, wj, abs(c1 - 0.5)));
     cliff *= 1.0 - 0.22 * columns;
     // A few fresh breaks, buff against the soot.
     float fresh = smoothstep(0.7, 0.82, vnoise(vec2(vWorld.x + vWorld.z, vWorld.y * 1.3) / 13.0 + 5.3)) * smoothstep(0.5, 0.62, f2);
@@ -491,8 +500,8 @@ void main() {
   #endif
   albedo = mix(albedo, vec3(0.04, 0.038, 0.038) * (0.7 + 0.6 * mid), 0.92 * lakeRind(vWorld));
   #ifdef STAGED
-  // The staged butte of the feeding picture stands dark against its smoke.
-  albedo *= 0.5;
+  // The staged butte of the feeding picture stands dark against its smoke: sooted brown rock, a little paler on its ledges and its talus.
+  albedo *= vec3(0.68, 0.6, 0.55) * mix(1.25, 0.9, steep);
   #endif
   // The fire lies low and its light comes in along the ground: on rough level ground the crowns of the rubble take it and the pits between them
   // lie in each other's shade. A face that stands up takes it whole.
