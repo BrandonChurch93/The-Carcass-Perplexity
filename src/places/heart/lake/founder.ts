@@ -70,13 +70,13 @@ void main() {
   float body = length(p * vec2(1.0, 0.75 + 0.25 * p.y));
   float ragged = vnoise(p * 2.6 + vGob.z * 13.0) * 0.6 + vnoise(p * 6.5 + vGob.z * 29.0) * 0.4;
   float shape = body + (ragged - 0.5) * (0.9 + 0.7 * vGob.w);
-  if (shape > 0.62) discard;
   float thin = smoothstep(0.1, 0.62, shape);
   // It leaves the vent yellow, and cools as it flies: small and thin parts first.
-  float cool = vGob.x / (0.35 + 3.2 * vGob.y) + 0.22 * thin + 0.5 * fract(vGob.z * 3.7) - 0.2;
-  float kelvin = mix(1390.0, 760.0, clamp(cool * 0.9 + 0.2 * ragged, 0.0, 1.0));
+  float cool = vGob.x / (1.5 + 6.0 * vGob.y) + 0.3 * thin + 0.55 * fract(vGob.z * 3.7) - 0.25;
+  float kelvin = mix(1330.0, 780.0, clamp(cool * 0.9 + 0.25 * ragged, 0.0, 1.0));
   vec3 c = blackbody(kelvin) + vec3(0.004, 0.0035, 0.003);
   gl_FragColor = vec4(rigOut(c), 1.0);
+  if (shape > 0.62) discard;
 }`;
 
 const SLAB_VERTEX = /* glsl */ `
@@ -112,7 +112,7 @@ void main() {
   vec3 skin = texture2D(tSkin, q / 5.0).rgb * 0.6 + texture2D(tSkin, vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) / 19.0 + 0.31).rgb * 0.6;
   vec2 slope = (texture2D(tSkinNh, q / 5.0).rg - 0.5) * 1.2 * (1.0 - vSide);
   n = normalize(n + vec3(slope.x, 0.0, slope.y));
-  vec3 c = rigShade(vWorld, n, v, skin * 2.4 * (1.0 - 0.6 * vSide), 0.6, 1.0);
+  vec3 c = rigShade(vWorld, n, v, skin * 0.42 * (1.0 - 0.6 * vSide), 0.75, 1.0);
   // The broken edge and the underside of a plate are still hot: red rock under a thin black skin.
   float hot = vSide * (0.35 + 0.65 * vnoise(vLocal.xz * 1.7 + vLocal.y * 3.0)) * smoothstep(0.1, -0.5, vLocal.y);
   c += blackbody(mix(820.0, 1240.0, hot));
@@ -274,7 +274,7 @@ export function createFoundering(ctx: HeartContext): Foundering {
   });
 
   centres.forEach((c, i) => {
-    ctx.sources.steam.push({ at: [c.x, 0.5, c.z], radius: i === 0 ? 15 : 8, strength: i === 0 ? 0.6 : 0.42, rise: i === 0 ? 70 : 40, kind: 'smoke', lean: [-0.28, -0.1] });
+    ctx.sources.steam.push({ at: [c.x, 0.5, c.z], radius: i === 0 ? 15 : 8, strength: i === 0 ? 0.6 : 0.42, rise: i === 0 ? 70 : 40, kind: 'smoke', lean: [0.273, -0.119] });
     ctx.sources.heat.push({ at: [c.x, 0, c.z], radius: i === 0 ? 18 : 10, height: i === 0 ? 16 : 9, strength: i === 0 ? 0.9 : 0.7 });
   });
 
