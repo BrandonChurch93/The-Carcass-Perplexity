@@ -177,15 +177,15 @@ export function createRig(): Rig {
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dawn sky under fog, scene linear. Measured against the approved wide view: the sky away from the sun reads a cold grey,
     // and pale rock in open shade reads about 0.3.
-    uSkyZenith: { value: new THREE.Vector3(0.36, 0.35, 0.36) },
-    uSkyHorizon: { value: new THREE.Vector3(0.6, 0.53, 0.47) },
+    uSkyZenith: { value: new THREE.Vector3(0.115, 0.112, 0.115) },
+    uSkyHorizon: { value: new THREE.Vector3(0.17, 0.155, 0.145) },
     // What pale wet rock throws back up at the underside of things.
-    uSkyGround: { value: new THREE.Vector3(0.13, 0.12, 0.11) },
+    uSkyGround: { value: new THREE.Vector3(0.06, 0.054, 0.048) },
     uSunDir: { value: sunDirection },
     // The sun through the fog on a face turned to it, and the fog's own glow round it.
-    uSunColour: { value: new THREE.Vector3(1.5, 1.02, 0.6) },
-    uGlowColour: { value: new THREE.Vector3(1.5, 1.0, 0.6) },
-    uFill: { value: new THREE.Vector3(1, 1, 1) },
+    uSunColour: { value: new THREE.Vector3(1.25, 0.8, 0.45) },
+    uGlowColour: { value: new THREE.Vector3(0.38, 0.3, 0.25) },
+    uFill: { value: new THREE.Vector3(0.84, 0.95, 1.12) },
   };
 
   // Until the land folder says otherwise: the ground of the layout, with the shaft cut into it.

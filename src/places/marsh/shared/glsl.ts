@@ -96,7 +96,10 @@ vec4 landAt(vec2 xz) {
 float contactDrawn(vec3 p) {
   vec2 uv = (p.xz - uContactRect.xy) * uContactRect.zw;
   vec2 e = min(uv, 1.0 - uv);
-  return texture2D(tContact, uv).r * smoothstep(0.0, 0.03, min(e.x, e.y));
+  float edge = min(e.x, e.y);
+  // Outside the map nothing is drawn, and the map is not read: most of a wide frame is outside it.
+  if (edge <= 0.0) return 0.0;
+  return texture2D(tContact, uv).r * smoothstep(0.0, 0.03, edge);
 }
 
 // 0 open, 1 covered: how much of the sky is hidden at the ground by something standing over it. Drawn by whoever stands there.
@@ -138,7 +141,11 @@ float landHollow(vec3 p, vec3 n, float reach) {
 
 // How much of the sky a point sees: the land's own horizon, opening with height above the ground, and whatever stands over it.
 float skyOpen(vec3 p) {
-  vec4 land = landAt(p.xz);
+  vec2 uv = (p.xz - uLandRect.xy) * uLandRect.zw;
+  vec2 e = min(uv, 1.0 - uv);
+  // Outside the map the flats are open and level, and the map is not read.
+  if (min(e.x, e.y) <= 0.0) return 1.0;
+  vec4 land = texture2D(tLand, uv);
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 12.0, 0.0, 1.0));
   return vis * (1.0 - contactDrawn(p) * smoothstep(3.0, 0.0, above));
@@ -152,7 +159,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   if (uEmitterCount > 0) e += emitterIrradiance(p, n) * occ;
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  // A rough dry surface has next to no sheen even where the view skims it: only what is wet and smooth gives back the sky.
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.94 * rough);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);

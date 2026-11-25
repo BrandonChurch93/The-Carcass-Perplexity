@@ -304,9 +304,9 @@ export function create(ctx: Context): Piece {
         const a = (beat - n) * life;
         const H = mistHigh(x);
         const z = frontZ + lineAt(x, seconds) - H * (1.3 + 4 * rand(i, n + 24)) - 3 * a;
-        const y = H * (0.3 + 1.35 * rand(i, n + 25)) + 1.2 * a;
+        const y = H * (0.25 + 0.85 * rand(i, n + 25)) + 1.2 * a;
         const fade = Math.min(1, a / 1.2) * Math.min(1, (life - a) / 1.5);
-        boreSpray.put(x, y, z, (17 + 12 * rand(i, n + 28)) * (1 + 0.04 * a), 1 + 0.62 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.85);
+        boreSpray.put(x, y, z, (9 + 7 * rand(i, n + 28)) * (1 + 0.04 * a), 1 + 0.55 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.85);
       }
       for (const b of burstAt) {
         const hit = boreArrives(b.z) ;
@@ -316,13 +316,13 @@ export function create(ctx: Context): Piece {
           const seed = 9000 + b.id * 97 + j;
           const a = since - 0.9 * rand(seed, 1);
           if (a < 0 || a > 5.5) continue;
-          const up = 22 + 26 * rand(seed, 2);
+          const up = 15 + 15 * rand(seed, 2);
           const side = (rand(seed, 3) - 0.5) * 2.2 * b.reach;
           const y = 4 + up * a - 4.2 * a * a;
           if (y < 0) continue;
           const fwd = (14 + 22 * rand(seed, 4)) * a;
           const fade = Math.min(1, a / 0.25) * Math.max(0, 1 - a / 5.2);
-          boreSpray.put(b.x + side, y, b.z + fwd + 4, (5 + 6 * a) * (0.7 + 0.6 * rand(seed, 5)), 0.85 * fade, rand(seed, 6), rand(seed, 7) * 6.28, 1.3);
+          boreSpray.put(b.x + side, y, b.z + fwd + 4, (2.5 + 2.6 * a) * (0.6 + 0.8 * rand(seed, 5)), 0.8 * fade, rand(seed, 6), rand(seed, 7) * 6.28, 1.3);
         }
       }
       // Water torn off the crest by its own speed: born on the crest in heads, thrown up and ahead, left behind as it falls.
@@ -332,17 +332,17 @@ export function create(ctx: Context): Piece {
         // Against the sides of the channel the wall piles up and is thrown far higher: one fifth of the heads are born there.
         const piled = i % 5 === 0;
         const x = piled ? (i % 15 === 0 ? gate[0] + 44 + 14 * (rand(i, 11) - 0.5) : gate[0] - 42 + 22 * (rand(i, 11) - 0.5)) : i % 5 < 4 ? gate[0] + 200 * (rand(i, 11) - 0.5) : wide(i, 11);
-        const life = (1.0 + 1.2 * rand(i, 12)) * (piled ? 1.5 : 1);
+        const life = (1.2 + 1.4 * rand(i, 12)) * (piled ? 1.4 : 1);
         const beat = seconds / life + rand(i, 13);
         const n = Math.floor(beat);
         const a = (beat - n) * life;
         const born = seconds - a;
         const H = highAt(x);
         const z0 = boreFront(born) + lineAt(x, born) - H * (0.1 + 0.3 * rand(i, n + 14));
-        const y = H * (0.84 + 0.2 * rand(i, n + 15)) + (piled ? 14 + 16 * rand(i, n + 16) : 8 + 12 * rand(i, n + 16)) * a - 4.4 * a * a;
+        const y = H * (0.84 + 0.2 * rand(i, n + 15)) + (piled ? 14 + 14 * rand(i, n + 16) : 5 + 11 * rand(i, n + 16)) * a - 4.4 * a * a;
         const z = z0 + BORE_SPEED * (1.03 - 0.3 * a / life) * a;
-        const fade = Math.min(1, a / 0.1) * Math.max(0, 1 - a / life);
-        boreSpray.put(x, y + 1, z, (piled ? 1.8 + 2.4 * a : 1.3 + 2.6 * a) * (0.7 + 0.6 * rand(i, n + 17)), 0.95 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
+        const fade = Math.min(1, a / 0.1) * Math.pow(Math.max(0, 1 - a / life), 2);
+        boreSpray.put(x, y + 1, z, (piled ? 2.0 + 2.6 * a : 1.2 + 2.0 * a) * (0.6 + 0.8 * rand(i, n + 17)), 0.7 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.25);
       }
       // White heads that tumble down the face in front of the wall.
       for (let i = 0; i < FACE; i++) {
