@@ -1,4 +1,5 @@
-2026-11-25 23:13 UTC
-work at a4042c9 on agent/eye-place
-minute 111: eye-0, eye-2, eye-3, eye-4 frames. Wrong: mats read as wood grain ribbons and pink from afar; cliffs flat and pale with little shade; shaft wall not seen from the lip; dome a pale sliver; foreground rock smooth lumps
-look-1.jpg = out/work/sheet5.png
+2026-11-25 23:26 UTC
+work at 8524781 on agent/eye-place
+eye-0, eye-1, eye-3 and eye-2 at minute 123. Wrong: cliffs smooth pale quarry wall with no shaded flank; animals still clay with no joints; bones clean sticks; shaft wall a hard teal panel; eye-0 shoulders are smooth lumps and the herd is thin and small; water pale behind the drinkers
+look-1.jpg = out/work/sheet8.png
+look-2.jpg = out/work/sheet9.png
