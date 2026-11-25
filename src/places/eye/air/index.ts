@@ -1,0 +1,165 @@
+// The air of the Eye: the evening sky with its one thin streak of cloud, the clear air that pales the far cliffs,
+// and the mist that lies at their feet and on the far water.
+import * as THREE from 'three';
+import { volumeUniforms } from '../../../core/engine';
+import { QUAD_VERTEX } from '../../../core/post';
+import { smooth } from '../layout';
+import type { Context, Piece } from '../shared/context';
+import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+
+export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
+
+const SKY_VERTEX = /* glsl */ `
+varying vec3 vDir;
+void main() {
+  vDir = position;
+  vec4 w = modelMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * viewMatrix * w;
+}`;
+
+const SKY_FRAGMENT = /* glsl */ `
+varying vec3 vDir;
+${NOISE_GLSL}
+${RIG_GLSL}
+void main() {
+  vec3 d = normalize(vDir);
+  vec3 c = skyRadiance(d);
+  // One thin streak of high cloud, lit from under by the sun that has left the ground.
+  float az = atan(d.x, -d.z);
+  float el = asin(clamp(d.y, -1.0, 1.0));
+  float along = (az - 0.42) / 0.5;
+  float lane = el - 0.235 - 0.03 * along - 0.012 * sin(along * 5.0);
+  float wisp = fbm(vec2(az * 26.0 - uTime * 0.004, lane * 240.0));
+  float fine = fbm(vec2(az * 90.0 - uTime * 0.006, lane * 520.0) + 4.0);
+  float streak = exp(-along * along * 1.6) * exp(-pow(lane / 0.011, 2.0)) * smoothstep(0.25, 0.7, 0.6 * wisp + 0.4 * fine);
+  float veil = exp(-pow((el - 0.33) / 0.09, 2.0)) * smoothstep(0.42, 0.8, fbm(vec2(az * 6.0 + 2.0, el * 30.0))) * 0.12;
+  c += (uSunColour * 0.085 + uSkyHorizon * 0.25) * (streak * 0.75 + veil);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
+const VOLUME_FRAGMENT = /* glsl */ `
+uniform highp sampler2D tDepth;
+uniform mat4 uInvProjection;
+uniform mat4 uCameraWorld;
+uniform float uSeq;
+uniform float uSampleIndex;
+uniform float uHaze;
+uniform float uMist;
+uniform float uThin;
+varying vec2 vUv;
+${NOISE_GLSL}
+${RIG_GLSL}
+
+const float TOP = 30.0;
+
+// How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
+float mistAt(vec3 p, vec4 land) {
+  float band = smoothstep(-260.0, -40.0, land.b) * (1.0 - smoothstep(40.0, 230.0, land.b));
+  float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
+  vec2 q = p.xz / 150.0 + vec2(uTime * 0.012, -uTime * 0.007);
+  float banks = smoothstep(0.3, 0.72, fbm(q) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.03));
+  float lift = 5.0 + 9.0 * vnoise(p.xz / 210.0 + 3.0);
+  return band * far * banks * exp(-max(p.y, 0.0) / lift);
+}
+
+void main() {
+  ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
+  float depth = texelFetch(tDepth, pixel, 0).r;
+  vec2 uv = (vec2(pixel) + 0.5) / vec2(textureSize(tDepth, 0));
+  vec4 view = uInvProjection * vec4(uv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+  vec3 world = (uCameraWorld * vec4(view.xyz / view.w, 1.0)).xyz;
+  vec3 ro = uCameraWorld[3].xyz;
+  vec3 rd = world - ro;
+  float far = length(rd);
+  rd /= far;
+  if (depth >= 1.0) far = 20000.0;
+  far = min(far, 20000.0);
+
+  // The clear air: thickest at the water, gone by the top of the walls. Its light is the low sky it is seen against.
+  float k0 = 0.00014 * uHaze * uThin;
+  float scale = 190.0;
+  float y1 = ro.y + rd.y * far;
+  float od = abs(rd.y) > 1e-4 ? k0 * scale * (exp(-max(ro.y, 0.0) / scale) - exp(-max(y1, 0.0) / scale)) / rd.y : k0 * exp(-max(ro.y, 0.0) / scale) * far;
+  od = max(od, 0.0);
+  float through = exp(-od);
+  vec3 low = skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)));
+  vec3 light = low * 0.85 * (1.0 - through);
+
+  // The mist, marched through the layer it lies in.
+  float mistOn = uMist * uThin;
+  if (mistOn > 0.0) {
+    float t0 = 0.0;
+    float t1 = far;
+    if (abs(rd.y) > 1e-5) {
+      float a = (0.0 - ro.y) / rd.y;
+      float b = (TOP - ro.y) / rd.y;
+      t0 = max(t0, min(a, b));
+      t1 = min(t1, max(a, b));
+    } else if (ro.y > TOP) t1 = -1.0;
+    t1 = min(t1, 4200.0);
+    if (t1 > t0) {
+      const int STEPS = 14;
+      float dt = (t1 - t0) / float(STEPS);
+      float jitter = hash13(vec3(gl_FragCoord.xy, uSampleIndex + 17.0 * fract(uSeq * 0.137)));
+      vec3 sum = vec3(0.0);
+      float tr = 1.0;
+      for (int i = 0; i < STEPS; i++) {
+        vec3 p = ro + rd * (t0 + (float(i) + jitter) * dt);
+        vec4 land = landAt(p.xz);
+        float d = mistAt(p, land) * 0.0052 * mistOn;
+        if (d > 0.0) {
+          float a = 1.0 - exp(-d * dt);
+          float open = mix(land.g, 1.0, 0.5);
+          vec3 lit = 0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.13 * sunOver(land, p.y)) + 0.35 * low;
+          sum += tr * a * lit / 3.14159 * 2.4;
+          tr *= 1.0 - a;
+        }
+      }
+      light = light * tr + sum;
+      through *= tr;
+    }
+  }
+  gl_FragColor = vec4(light, through);
+}`;
+
+export function create(ctx: Context): Piece {
+  const skyMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms }, vertexShader: SKY_VERTEX, fragmentShader: SKY_FRAGMENT, side: THREE.BackSide });
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(20000, 64, 32), skyMaterial);
+  sky.frustumCulled = false;
+  ctx.scene.add(ctx.parts.built('sky', sky));
+  ctx.unmirrored.push(sky);
+  ctx.parts.effect('air', 'built');
+  ctx.parts.effect('mist', 'built');
+
+  const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 } };
+  const volume = new THREE.ShaderMaterial({
+    vertexShader: QUAD_VERTEX,
+    fragmentShader: VOLUME_FRAGMENT,
+    uniforms: { ...ctx.rig.uniforms, ...volumeUniforms(), ...show },
+    depthTest: false,
+    depthWrite: false,
+    blending: THREE.NoBlending,
+    toneMapped: false,
+  });
+  const end = ctx.events.end;
+
+  return {
+    volume,
+    setTime: (t) => {
+      // The air clears as the camera leaves: the last frames are the flat picture the rise begins with.
+      show.uThin.value = 1 - smooth(end - 3, end - 1.3, t);
+    },
+    beforeSample: (_renderer, camera) => {
+      sky.position.copy(camera.position);
+    },
+    solo: (part) => {
+      show.uHaze.value = part === null || part === 'eye/air' ? 1 : 0;
+      show.uMist.value = part === null || part === 'eye/mist' ? 1 : 0;
+    },
+    dispose: () => {
+      sky.geometry.dispose();
+      skyMaterial.dispose();
+      volume.dispose();
+    },
+  };
+}

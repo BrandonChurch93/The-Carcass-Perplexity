@@ -1,8 +1,8 @@
-# Status 71
+# Status 72
 
-2026-11-25 21:46 UTC. Phase 4, the other places and the rise.
+2026-11-25 22:12 UTC. Phase 4, the other places and the rise.
 
-- `01-look-1.jpg`: The Ribs, first built frame of the land at minute 20 (draft): blades, floor, arch. Still grey and flat; the owner has the list
-- `02-look-2.jpg`: The Blood Marsh, the wallowers, first pass at minute 19 (draft, on stand-in ground). Next: folds in the hide, the feeler fringe
-- `03-v1-spine-3.jpg`: The Spine, the strike and the kites, version 1 at minute 22: approved picture left, frame right (the spire is still a stand-in)
-- `04-look-1.jpg`: The Blood Marsh, the stalks, first pass (draft). Next: crowns that hang wet, salt collars
+- `01-m1-ribs-0.jpg`: The Ribs on main, version 1 of both owners: approved picture left, frame right
+- `02-m1-marsh-0.jpg`: The Blood Marsh on main, version 1 of both owners
+- `03-m1-spine-0.jpg`: The Spine on main, version 1 of both owners
+- `04-m1-reveal-4.jpg`: The Reveal on main, version 1, built to note R1.5

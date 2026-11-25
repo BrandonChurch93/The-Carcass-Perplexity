@@ -1,3 +1,4 @@
+import { FLOOR } from '../ridge';
 // The one light model of the Spine. Every built surface includes RIG_GLSL in its fragment shader and reads its light from these functions,
 // so that the rock, the snow, the animals and the kites sit in the same light. Radiance is scene linear; the grade and the exposure come after, in the post.
 // The light: dusk above the cloud. No sun. Cold blue-grey from above, a last band of orange low on the open side (uWarmDir), the storm standing dark
@@ -63,6 +64,7 @@ uniform vec3 uStormDir;
 uniform vec3 uWarmDir;
 uniform vec3 uWarmColour;
 uniform vec3 uFill;
+uniform float uUnder;
 uniform vec3 uFlash;
 uniform vec4 uWind;
 uniform int uEmitterCount;
@@ -71,6 +73,10 @@ uniform vec3 uEmitterRadiance[8];`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
+const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
+// The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
+// ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
+const float EMITTER_CAST = 0.04;
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {
@@ -107,11 +113,12 @@ vec3 skyIrradiance(vec3 n) {
   return 3.14159 * (e + uWarmColour * (0.16 * w * w * seen));
 }
 
-// The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1). Outside the maps the land is far below and open.
+// The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
+// (metres over the canal floor, 0 where the ground is solid), b the share of light that reaches into the canal there. Outside the maps the land is far below and open.
 vec4 landAt(vec2 xz) {
   vec2 c = (xz - uLandRect.xy) * uLandRect.zw;
   vec2 ce = min(c, 1.0 - c);
-  vec4 coarse = mix(vec4(-3000.0, 1.0, 0.0, 1.0), texture2D(tLand, c), smoothstep(0.0, 0.02, min(ce.x, ce.y)));
+  vec4 coarse = mix(vec4(-3000.0, 1.0, 0.0, 0.0), texture2D(tLand, c), smoothstep(0.0, 0.02, min(ce.x, ce.y)));
   vec2 f = (xz - uLandFineRect.xy) * uLandFineRect.zw;
   vec2 e = min(f, 1.0 - f);
   float k = smoothstep(0.0, 0.06, min(e.x, e.y));
@@ -144,7 +151,7 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
     float c = clamp((dot(n, d) * inversesqrt(d2) + 0.25) / 1.25, 0.0, 1.0);
     e += uEmitterRadiance[i] * (3.14159 * r * r / d2 * c);
   }
-  return e;
+  return e * EMITTER_CAST;
 }
 
 // For the owners: how much of the sky a face keeps when the land in front of it stands higher than it does. 1 in the open, toward 0 in a crack,
@@ -163,6 +170,10 @@ float skyOpen(vec3 p) {
   vec4 land = landAt(p.xz);
   float above = p.y - land.r;
   float vis = mix(land.g, 1.0, clamp(above / 80.0, 0.0, 1.0));
+  // Inside the canal the sky is the two mouths.
+  float roof = CANAL_FLOOR + land.a;
+  float under = smoothstep(0.3, 1.0, land.a) * smoothstep(roof + 1.5, roof + 0.5, p.y);
+  vis = mix(vis, min(land.b * uUnder, 1.0), under);
   return vis * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above));
 }
 
