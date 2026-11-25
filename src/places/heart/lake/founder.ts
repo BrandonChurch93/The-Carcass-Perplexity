@@ -26,6 +26,7 @@ varying vec2 vUv;
 varying vec3 vWorld;
 varying vec4 vGob;
 varying vec2 vFlight;
+varying vec3 vShape;
 ${NOISE_GLSL}
 uniform float uTime;
 void main() {
@@ -44,19 +45,28 @@ void main() {
   vec3 at = vec3(aOrigin.x, 0.1, aOrigin.z) + vel * age + vec3(0.0, -4.9 * age * age, 0.0);
   vec3 now = vel + vec3(0.0, -9.8 * age, 0.0);
   float size = aLife.z * (0.7 + 0.6 * r2);
-  // A gob is pulled out along its path while it is soft, and shrinks as it tears.
-  float pull = 1.0 + aLife.w * 1.6 + 0.09 * length(now);
+  float jet = aLife.w;
+  // A jet stands on the seam: a tongue of melt that rises with the burst and falls back, torn at its top.
+  float jetBurst = 0.62 + 0.38 * sin(uTime * 2.3 + aOrigin.x * 0.21) * sin(uTime * 0.9 + aOrigin.z * 0.17 + 1.0);
+  float jetTall = aThrow.y * 0.95 * (0.45 + 0.75 * r1) * jetBurst * pow(sin(3.14159 * fract(turn)), 0.7);
+  at = mix(at, vec3(aOrigin.x, 0.1, aOrigin.z), jet);
   vec4 centre = viewMatrix * vec4(at, 1.0);
   // Never a point of light: from far a gob is drawn two to three pixels wide (at 1080 lines) and dimmer by as much as it is widened.
   float pixel = 2.0 * max(-centre.z, 0.1) / (projectionMatrix[1][1] * 1080.0);
   float drawn = max(size, 1.25 * pixel);
   vFlight = vec2(age / max(2.0 * vel.y / 9.8, 0.2), size / drawn);
   size = drawn;
+  // A gob draws a tail behind it along its path, as long as it flies in a fourteenth of a second: an arc, not a speck.
+  float pull = 1.0 + min(5.0, 0.035 * length(now) / size);
   vec2 along = normalize((viewMatrix * vec4(now, 0.0)).xy + vec2(1e-4, 0.0));
   vec2 across = vec2(-along.y, along.x);
-  float shown = step(0.0, at.y) * step(0.02, age);
+  float shown = max(step(0.0, at.y) * step(0.02, age), jet);
   vec2 corner = position.xy * shown;
-  centre.xy += along * corner.y * size * pull + across * corner.x * size;
+  float jetUp = 0.5 * (corner.y + 1.0) * jetTall;
+  vec2 flown = along * (corner.y * pull - (pull - 1.0) * shown) * size + across * corner.x * size;
+  vec2 stood = vec2(corner.x * size * 2.3 + (r2 - 0.5) * 0.6 * jetUp, jetUp);
+  centre.xy += mix(flown, stood, jet);
+  vShape = vec3(pull, jet, uTime);
   vUv = position.xy;
   vWorld = at;
   vGob = vec4(age, size, seed + launch * 0.37, aLife.w);
@@ -69,22 +79,38 @@ varying vec2 vUv;
 varying vec3 vWorld;
 varying vec4 vGob;
 varying vec2 vFlight;
+varying vec3 vShape;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
-  // Never a round dot: a ragged body with a tail, torn at the edge, with holes where a sheet has thinned.
+  // Never a round dot: a ragged lump with a tail behind it, torn at the edge.
   vec2 p = vUv;
-  float body = length(p * vec2(1.0, 0.75 + 0.25 * p.y));
-  float ragged = vnoise(p * 2.6 + vGob.z * 13.0) * 0.6 + vnoise(p * 6.5 + vGob.z * 29.0) * 0.4;
-  float shape = body + (ragged - 0.5) * (0.9 + 0.7 * vGob.w);
+  float pull = vShape.x;
+  // Metres along the path in units of the lump: 0 at its middle, 1 at its front, falling to the end of the tail.
+  float ahead = p.y * pull - (pull - 1.0);
+  float tail = clamp(-ahead / (2.0 * pull - 1.0), 0.0, 1.0);
+  float body = ahead > 0.0 ? length(vec2(p.x, ahead)) : abs(p.x) / mix(1.0, 0.5, tail) + smoothstep(0.75, 1.0, tail);
+  float ragged = vnoise(vec2(p.x, ahead) * 2.6 + vGob.z * 13.0) * 0.6 + vnoise(vec2(p.x, ahead) * 6.5 + vGob.z * 29.0) * 0.4;
+  float shape = body + (ragged - 0.5) * 0.9;
   float thin = smoothstep(0.1, 0.62, shape);
-  // It leaves the vent yellow, and cools as it flies: small and thin parts first.
-  // About 1450 K at the vent and 1150 K where it lands. Round in its shading: hottest in its middle, a cooler rim.
+  // It leaves the vent yellow and cools as it flies, small and thin parts first, and lands red.
+  // About 1480 K at the vent and 1120 K where it lands. Round in its shading: hottest in its middle, a cooler rim, a cooler tail.
   float cool = vFlight.x * (0.75 + 0.5 * fract(vGob.z * 3.7)) + 0.12 * (ragged - 0.5);
-  float kelvin = mix(1450.0, 1150.0, clamp(cool, 0.0, 1.0)) - 130.0 * thin * thin;
+  float kelvin = mix(1480.0, 1120.0, clamp(cool, 0.0, 1.0)) - 110.0 * thin * thin - 150.0 * tail;
+  float gone = shape - 0.62;
+  if (vShape.y > 0.5) {
+    // A jet: widest and yellow at its foot, torn into shreds toward its top, where it is orange and then red.
+    float up = 0.5 * (p.y + 1.0);
+    float slow = vnoise(vec2(p.x * 1.6 + vGob.z * 17.0, up * 3.0 - vShape.z * 1.7 + vGob.z * 5.0));
+    float quick = vnoise(vec2(p.x * 4.5 + vGob.z * 9.0, up * 8.0 - vShape.z * 3.1));
+    float wide = 1.0 - 0.8 * pow(up, 0.8);
+    float torn = abs(p.x - 0.7 * up * (slow - 0.5)) / wide + (0.6 * slow + 0.4 * quick - 0.5) * (0.5 + 1.7 * up);
+    kelvin = mix(1530.0, 1150.0, smoothstep(0.0, 1.0, up + 0.3 * (quick - 0.5))) - 140.0 * smoothstep(0.4, 1.0, torn);
+    gone = torn - 1.0;
+  }
   vec3 c = blackbody(kelvin) * vFlight.y + vec3(0.004, 0.0035, 0.003) * vFlight.y;
   gl_FragColor = vec4(rigOut(c), 1.0);
-  if (shape > 0.62) discard;
+  if (gone > 0.0) discard;
 }`;
 
 const SLAB_VERTEX = /* glsl */ `
@@ -200,7 +226,8 @@ export function createFoundering(ctx: HeartContext): Foundering {
   const group = new THREE.Group();
   const rng = ctx.rng('lake/foundering');
   const lines = [seamLine('spatterRight', 24), seamLine('spatterLeft', 16)];
-  const COUNTS = [1500, 560];
+  // Few: about seventy jets on the long line and four hundred lumps, of which a third are in the air at once.
+  const COUNTS = [470, 170];
   const total = (COUNTS[0] as number) + (COUNTS[1] as number);
   const origin = new Float32Array(total * 3);
   const thrown = new Float32Array(total * 3);
@@ -216,7 +243,7 @@ export function createFoundering(ctx: HeartContext): Foundering {
       const a = line[Math.floor(f)] as [number, number];
       const b = line[Math.min(line.length - 1, Math.floor(f) + 1)] as [number, number];
       const t = f - Math.floor(f);
-      const sheet = rng.next() < 0.14 ? 1 : 0;
+      const sheet = rng.next() < 0.17 ? 1 : 0;
       origin[k * 3] = a[0] + (b[0] - a[0]) * t + rng.range(-0.8, 0.8);
       origin[k * 3 + 1] = rng.next();
       origin[k * 3 + 2] = a[1] + (b[1] - a[1]) * t + rng.range(-0.8, 0.8);
