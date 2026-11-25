@@ -1,8 +1,8 @@
-# Status 76
+# Status 77
 
-2026-11-25 23:20 UTC. Phase 4, the other places and the rise.
+2026-11-25 23:34 UTC. Phase 4, the other places and the rise.
 
-- `01-v2-keys-0-4.jpg`: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right
-- `02-hb5-marsh-0.jpg`: The Blood Marsh at minute 117 · the establishing key · approved, the frame, and two crops at native size
-- `03-look-1.jpg`: The Spine at minute 108 · the establishing key · approved, the frame, and two crops at native size
-- `04-look-1.jpg`: The Eye at minute 111 · four of its keys as they stand
+- `01-all.jpg`: The 34 material and sky pictures made tonight, one row a place. Generated working pictures: they feed the build, the approved pictures stay the target
+- `02-v2-reveal-4.jpg`: The Reveal, version 2: the last frame of the rise. The strip under it shows the built frame small between two approved pictures
+- `03-v2-reveal-123.jpg`: The Reveal, version 2, from the top: just above the lake, the skull massif, head and shoulders
+- `04-hb7-five-a.jpg`: The Breath at 23:27 UTC, before the new materials: approved on the left, built on the right

@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 76, 2026-11-25 23:20 UTC:
+Status 77, 2026-11-25 23:34 UTC:
 
-- `01-v2-keys-0-4.jpg`: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right
-- `02-hb5-marsh-0.jpg`: The Blood Marsh at minute 117 · the establishing key · approved, the frame, and two crops at native size
-- `03-look-1.jpg`: The Spine at minute 108 · the establishing key · approved, the frame, and two crops at native size
-- `04-look-1.jpg`: The Eye at minute 111 · four of its keys as they stand
+- `01-all.jpg`: The 34 material and sky pictures made tonight, one row a place. Generated working pictures: they feed the build, the approved pictures stay the target
+- `02-v2-reveal-4.jpg`: The Reveal, version 2: the last frame of the rise. The strip under it shows the built frame small between two approved pictures
+- `03-v2-reveal-123.jpg`: The Reveal, version 2, from the top: just above the lake, the skull massif, head and shoulders
+- `04-hb7-five-a.jpg`: The Breath at 23:27 UTC, before the new materials: approved on the left, built on the right
 
+Status 76, 2026-11-25 23:20 UTC, showed: The Breath, version 2 · keys 0 and 4 · approved on the left, the frame on the right; The Blood Marsh at minute 117 · the establishing key ·...
 Status 75, 2026-11-25 23:03 UTC, showed: The Breath, 23:00 UTC: approved pictures left, built right (draft tier).
 Status 74, 2026-11-25 22:49 UTC, showed: The Reveal, last frame, 22:35 UTC (owner's heartbeat, draft tier): the land is drawn round the bones again.
-Status 73, 2026-11-25 22:28 UTC, showed: The Ribs, minute 56 of the owner's work: the approved picture (left) and the frame (right), with two crops of each.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T23:20:32Z
-phase 4: 3.16 h used of 17.00 h
-build: 23.49 h used of 72.00 h
+2026-11-25T23:34:45Z
+phase 4: 3.40 h used of 17.00 h
+build: 23.72 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 17
+minutes since the last status: 14
 ```
 
 ## Phases
@@ -1302,6 +1302,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 2026-11-25 22:39 UTC: the first rounds of Phase 4 judge the last hand-back of wave 1 (version 3, due by 01:07 UTC) and not version 2. This replaces the timing in the decision of 22:13 UTC and nothing else in it. Reason: with note 16 time no longer ends a loop, so the scarce thing is the count, three rounds a place (`quality.maxRoundsPerUnit`), the first of them counted like the others. A round on version 2 would be answered at about 01:00 UTC, when the owners have minutes left and the frames it judged are already an hour old; a round on version 3 judges the state that the next wave starts from, so every issue the critics write is one the next owners can act on, and no counted round is spent on faults the owners already list themselves. It also lets all six rounds render side by side: at 01:22 UTC the ten build agents end and their slots are free. Order: packs and measures are ordered for each place as soon as its version 3 is merged and determinism passes on that commit, in `buildOrderAfterLookLock`; the Reveal's follows the Eye's, as the kit says. Clock rule 3 (no polishing before the first round once the half point is reached) would not have been touched by this even before note 16: the half point of the phase is at about 04:40 UTC. Until then the Builder's own compares of every wide key go on, and direction goes to the owners worst first
 - 2026-11-25. 23:02 UTC, on note 16 (the limits of time are lifted): the hours the config gives a render in this workspace (`sandbox.previewFilmMaxHours`, `sandbox.hdFilmMaxHours`, `sandbox.masterMaxHours`, `sandbox.cardLoopMaxHours`) are limits of time too, so from here they are records and no longer decide the tier or the size of a render: in Phase 6 the film and the card loop are rendered here at the final tier at full size, split across render agents, however long that takes, as long as each chunk finishes (the rule that a chunk which overruns twice drops a tier stays: it guards against a stalled job, not against time). No config value is changed. For the owners of Phase 4 this means the cost budget the Builder set them (7 s for one sample of a whole place at 3840 x 2160 on 4 cores, which existed to fit those hours) stays as the aim and is no longer a wall: where the look plainly needs more than a part's share, the better version is built, the cheaper one is kept behind a constant, and both costs are reported. Why: the picture comes first, and Brandon's word removes the one reason the budget had. The owners were told at 23:03 UTC, together with the request for a hand-over file (`assets-src/<place>/<folder>/HANDOVER.md`) with version 3, from which the owners of wave 2 start
 - 2026-11-25. 23:17 UTC: the first rounds of the six units judge version 2 of wave 1 (merged about 00:10 UTC), not version 3 as decided at 22:39. Why: kit/08 Phase 4 step 3 sends a unit to its first round as soon as nothing in its frames is a stand-in, which has held on main since 22:18 UTC (96 parts built, none a stand-in); the six slots kept for critics are free now; and the critics' issues then reach the second wave of owners at their start instead of at their middle. Version 2 and not the heads of the branches as they stand, because a version is a state its owner has checked. The order stays: ribs, breath, marsh, spine, eye, reveal as rounds 8 to 13, the Reveal's ordered after the Eye's. Version 3 of wave 1 is merged at 01:07 UTC as before and the second wave starts from it
+- 2026-11-25. 23:35 UTC 25 Nov: the Builder makes the generated pictures of the places itself. Reason: the owners work on their own machines and none of them made a picture with the image tool in 130 minutes; they copied the Heart's maps instead, and rock, bone and hide read as clay or noise in every place. kit/06 asks for material sheets, skies and backplates generated from the approved picture of the view with a real photograph as the standard; that is what was made (34 pictures, 1 take each of at most 6, prompts in assets-src/materials/spec.py, recipes under assets-src/<place>/mat/). An owner who needs another surface names it and the Builder makes it.
 
 ## Notes from Brandon
 
@@ -1907,3 +1908,4 @@ What happens next is yours:
 - 2026-11-25 22:55 UTC. 22:56 UTC: the controls of R2 and R8 for the six other units are collected and written to scorecards/controls/ (145 votes of 145 fresh agents on the fixed panel of five, one picture and the question each; 5 viewers for R8). MEASURED, the share of votes that took an approved picture for a photograph or a film frame: the Ribs 25 of 25 (1.00), the Breath 25 of 25 (1.00), the Blood Marsh 25 of 25 (1.00), the Spine 24 of 25 (0.96), the Eye 22 of 25 (0.88), the Reveal 5 of 20 (0.25: fifteen answered an ordinary 3D render, most naming a repeating erosion texture or the literal skeleton). So R2 passes at a judged share of 0.80 for the Ribs, the Breath and the Marsh, 0.76 for the Spine, 0.68 for the Eye and 0.05 for the Reveal. R8 control: all 5 viewers named a skeleton on the approved reveal-4 at 400 px (share 1.0), so the titan frame passes at 0.8. One seat was asked twice (ribs-4, seat b: the first agent got a cut prompt, its answer is void and kept; the note is in the scorecard). The votes are reused in every round of each unit
 - 2026-11-25 23:03 UTC. 23:04 UTC: status 75 shown inline (the Breath hb6, the Ribs 22:55, the Reveal's last frame 23:00, the Spine's wide key 22:53). Since 22:56: direction on light, fog and two framings to breath_ground_owner and on the waders to breath_life_owner; all ten owners asked for a hand-over file with version 3 and told that the cost budget is an aim and no longer a wall (decision of 23:02); the round tools were run end to end on a fake pack of the Reveal (R1 2 packs, R2 5 judged and 4 controls, R3 3, R4 1, R8 2: 36 entries planned) and the fake files removed
 - 2026-11-25 23:20 UTC. 23:21 UTC: status 76 shown in the thread (the Breath's version 2, the Marsh, the Spine and the Eye beside their approved pictures; the decision on the first rounds; the live page's start)
+- 2026-11-25 23:35 UTC. Status 77 shown at 23:35 UTC: the 34 material and sky pictures made for five places (commit ff99453, one take each), the Reveal's version 2 (2f652be) and the Breath at heartbeat 7. Finding logged: no owner had generated pictures of their own; the places reused the Heart's volcanic maps. All nine owners of the five places told at 23:35 UTC to build version 3 on the new pictures.
