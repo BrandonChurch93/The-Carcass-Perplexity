@@ -41,6 +41,8 @@ float tornAt(vec2 q) {
 vec3 gLip;
 float gAcross;
 float gIsle;
+// The least share of a pixel a gap fills: a far seam seen edge on shows its lit far wall and the glow over it, and never thins to nothing.
+float gFloor = 0.0;
 // Islands of dark crust stand in the stream of a wide channel, away from its banks.
 float isleAt(vec2 q, float across) {
   return smoothstep(0.6, 0.66, vnoise(q / 1.7 + 31.0) * 0.72 + vnoise(q / 0.45 + 7.0) * 0.28) * (1.0 - smoothstep(0.4, 0.62, across));
@@ -57,7 +59,7 @@ vec2 gapHeat(float d, float wide, float core, float least) {
   float x = d / ww;
   float lit = step(1e-3, wide);
   gAcross = x;
-  float cover = (1.0 - smoothstep(0.82, 1.0, x)) * min(1.0, wide / ww) * lit;
+  float cover = (1.0 - smoothstep(0.82, 1.0, x)) * min(1.0, max(wide / ww, gFloor)) * lit;
 #ifdef LAKE_LIP
   // What the lava in the gap throws on the skin beside it.
   float off = max(d - wide, 0.0);
@@ -160,6 +162,7 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   float farField = smoothstep(100.0, 230.0, length(q - vec2(-505.0, 245.0))) * plain;
   float farD = 1e3;
   float farHalf = 0.0;
+  float farMeet = 0.0;
   if (farField > 0.0) {
     vec2 w = q + 13.0 * vec2(vnoise(q / 19.0 + 3.0), vnoise(q / 19.0 + 13.0)) + 3.0 * vec2(vnoise(q / 4.1 + 5.0), vnoise(q / 4.1 + 15.0));
     float f1 = vnoise(w / 61.0 + 7.7);
@@ -176,6 +179,9 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     bool first = d1 * max(h2, 1e-3) < d2 * max(h1, 1e-3);
     farD = first ? d1 : d2;
     farHalf = (first ? h1 : h2) * farField;
+    // Where two seams meet the crust is pulled apart: wider, and hotter.
+    farMeet = (1.0 - smoothstep(1.0, 6.0, d1)) * (1.0 - smoothstep(1.0, 6.0, d2)) * lane1 * lane2 * farField * (least > 0.5 ? 0.0 : 1.0);
+    farHalf += 0.6 * farMeet;
   }
   // A seam is brighter where it is wide, and a few are fully open. Hot spots come and go along it, slowly.
   float fully = smoothstep(0.72, 0.9, fract(n.g * 7.13 + 0.37));
@@ -186,15 +192,20 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
   core += 70.0 * (vnoise(q * 0.6 + vec2(uTime * 0.07, 0.0)) - 0.5) + 80.0 * (beat - 0.5) - 70.0 * skin * (1.0 - shown);
   gLip = vec3(0.0);
   gIsle = 0.0;
+  float seenFloor = least > 0.5 ? 0.0 : 1.0;
+  gFloor = 0.3 * smoothstep(0.05, 0.25, hotHalf) * (1.0 - shown) * seenFloor;
   vec2 g = gapHeat(d, hotHalf, core, least);
+  gFloor = 0.0;
   if (farHalf > 0.0) {
     float hotSpot = vnoise(q / 9.0 + vec2(uTime * 0.04, 6.0));
-    vec2 f = gapHeat(farD, farHalf, 1290.0 + 90.0 * smoothstep(0.15, 0.9, farHalf) + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5), least);
+    gFloor = (0.25 + 0.3 * smoothstep(0.1, 0.6, farHalf)) * seenFloor;
+    vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5), least);
     if (f.x > g.x) g = f;
+    gFloor = 0.0;
 #ifdef LAKE_LIP
     // The warm halo on the crust beside a far seam.
     float beside = max(farD - farHalf, 0.0);
-    gLip += blackbody(1300.0) * (2.5 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / 5.0));
+    gLip += blackbody(1300.0) * (4.0 * farHalf / (farHalf + 0.4 * beside + 0.01) * exp(-beside / 5.0));
 #endif
   }
   // The glow map lights feet, legs, ground and air beside a seam the pictures show: there the melt goes in at its true width
