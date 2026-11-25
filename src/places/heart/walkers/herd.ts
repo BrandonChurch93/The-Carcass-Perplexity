@@ -41,8 +41,8 @@ interface Character {
 const CAST: Character[] = [
   { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
   { role: 'feeds', skater: 0.22, heavy: 1.3, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.28, young: 1, tuft: [1.1, 1.05] },
-  { role: 'walks', skater: 0.45, heavy: 0.92, neck: 0.96, wide: 1.0, hump: 0.3, tall: 1.13, bulk: 0.84, young: 1, tuft: [0.7, 0.85] },
-  { role: 'tastes', skater: 0.4, heavy: 0.9, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
+  { role: 'walks', skater: 0.45, heavy: 1.12, neck: 0.96, wide: 1.15, hump: 0.3, tall: 1.13, bulk: 1.0, young: 1, tuft: [0.9, 1.25] },
+  { role: 'tastes', skater: 0.4, heavy: 1.0, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
   { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
   { role: 'shifts', skater: 0.3, heavy: 0.95, neck: 0.96, wide: 1.12, hump: 0.4, tall: 1.1, bulk: 0.9, young: 1, tuft: [1, 0.9] },
   { role: 'walks', skater: 0.7, heavy: 0.9, neck: 1.1, wide: 1.05, hump: 0.35, tall: 0.88, bulk: 1.15, young: 1, tuft: [1.2, 1.1] },
@@ -240,7 +240,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
         return {
           down: 0,
           target,
-          raised: [b.neckLen * (0.38 + 0.05 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.64 + 0.05 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.2 * Math.sin(seconds * om + phase * 6)],
+          raised: [b.neckLen * (0.27 + 0.05 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.74 + 0.05 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.2 * Math.sin(seconds * om + phase * 6)],
           shape: 0.8,
         };
       }
