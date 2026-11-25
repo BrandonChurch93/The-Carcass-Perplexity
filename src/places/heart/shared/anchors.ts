@@ -73,7 +73,7 @@ export const WALKERS: Walker[] = [
   { at: [-140, 190], when: T0, heading: 20, speed: 0.7, size: 0.88, feed: 0.5, phase: 0.92 },
   // The lead of the picture at the line: 100 m from that camera and 8 degrees right of its axis, tall at 60 per cent of the frame's width, its tuft
   // down in the seam named `lead`. It is in that shot only (see AWAY).
-  { at: [-423.5, 166.1], when: KEY_TIMES['heart-1'], heading: 135, speed: 0.05, size: 1.25, feed: 1, phase: 0.4 },
+  { at: [-423.5, 166.1], when: KEY_TIMES['heart-1'], heading: 135, speed: 0.05, size: 1.4, feed: 1, phase: 0.4 },
 ];
 
 /** Staging by shot, as on a set: each shot is staged for its own camera, and the walkers listed here are not drawn for the whole of that shot.

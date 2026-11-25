@@ -40,7 +40,7 @@ interface Character {
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
 const CAST: Character[] = [
   { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
-  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
+  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 0.87, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
   { role: 'walks', skater: 0.45, heavy: 0.92, neck: 0.96, wide: 1.0, hump: 0.3, tall: 1.13, bulk: 0.84, young: 1, tuft: [0.7, 0.85] },
   { role: 'tastes', skater: 0.4, heavy: 0.9, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
   { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
@@ -52,7 +52,7 @@ const CAST: Character[] = [
   { role: 'grazes', skater: 0.2, heavy: 1.15, neck: 0.98, wide: 1.0, hump: 0.8, tall: 0.92, bulk: 1.1, young: 1, tuft: [1.1, 0.9] },
   { role: 'walks', skater: 0.55, heavy: 0.95, neck: 1.05, wide: 0.92, hump: 0.4, tall: 1.06, bulk: 0.9, young: 1, tuft: [0.45, 0.6] },
   { role: 'grazes', skater: 0.75, heavy: 1.0, neck: 0.96, wide: 1.08, hump: 0.6, tall: 1.0, bulk: 1.0, young: 0.7, tuft: [1, 1] },
-  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.1, wide: 0.88, hump: 0.65, tall: 0.95, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
+  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 0.86, wide: 0.72, hump: 0.65, tall: 1.2, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
 ];
 
 export function makeBuild(index: number, rng: Rng): Build {
@@ -65,16 +65,16 @@ export function makeBuild(index: number, rng: Rng): Build {
     k,
     seed: index * 1.618 + 0.37,
     // A small body hung between the shoulders and the hips, on four long legs that leave it at its upper sides and go down and out.
-    bodyLen: 4.5 * k * c.bulk * v(0.92, 1.1),
+    bodyLen: 4.9 * k * c.bulk * v(0.92, 1.1),
     bodyTop: 0.8 * k * c.bulk * c.heavy * v(0.92, 1.08),
-    bodyKeel: 1.05 * k * c.bulk * c.heavy * v(0.9, 1.12),
+    bodyKeel: 0.9 * k * c.bulk * c.heavy * v(0.9, 1.12),
     bodyWide: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
     hump: c.hump,
-    hipFore: 1.3 * k * c.bulk,
+    hipFore: 1.75 * k * c.bulk,
     hipSide: 0.78 * k * c.bulk * c.heavy,
     hipUp: 0.3 * k * c.bulk * c.heavy,
     knee: lerp(0.47, 0.43, c.skater) * v(0.96, 1.04),
-    hock: lerp(0.62, 0.7, c.skater) * v(0.95, 1.05),
+    hock: lerp(0.74, 0.8, c.skater) * v(0.96, 1.04),
     slack: lerp(0.01, 0.028, c.skater),
     stanceFore: 3.9 * k * v(0.9, 1.06),
     stanceSide: 2.9 * k * c.wide,
@@ -83,11 +83,11 @@ export function makeBuild(index: number, rng: Rng): Build {
     legR: lerp(1.08, 0.94, c.skater) * c.heavy,
     padR: 0.8 * k * v(0.9, 1.12),
     neckLen: 10.6 * k * c.neck,
-    neckR: 0.56 * k * c.heavy,
-    tendrils: Math.max(4, Math.round((9 + (index % 3)) * c.tuft[0])),
+    neckR: 0.64 * k * c.heavy,
+    tendrils: Math.max(4, Math.round((7 + (index % 3)) * c.tuft[0])),
     tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
-    lean: index === 1 ? 1.1 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
+    lean: index === 1 ? -0.5 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
   };
 }
 
@@ -104,7 +104,7 @@ const POOLS: readonly [number, number][] = [
  *  is tied to the hero's row, so the hero is turned three quarters on to it here: it stands about 3 m farther from that lens, a neck's reach from the pool, turned 22 degrees
  *  toward it, with the pool the lake opens for its tuft between it and the lens. */
 const STAND: Record<number, [number, number, number]> = {
-  1: [1.0, -3.05, 22],
+  1: [1.82, -1.73, 28],
 };
 
 /** The near one is seen in the wide view and again in the view of the one that sank, with two shots between in which it is not drawn:
@@ -138,7 +138,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   // The last part of the neck turns down to the tuft and is 0.128 of the neck forward and 0.088 down; the rest runs to it nearly taut,
   // so that it comes to the tuft still going down.
   const drop = b.standH + 0.1 * b.bodyTop - 0.5 * k - TUFT_UP * b.tendrilLen - 0.088 * b.neckLen;
-  const reach = Math.sqrt(Math.max(4, 0.83 * b.neckLen * (0.83 * b.neckLen) - drop * drop)) + 0.128 * b.neckLen;
+  const reach = Math.sqrt(Math.max(4, 0.82 * b.neckLen * (0.82 * b.neckLen) - drop * drop)) + 0.128 * b.neckLen;
   const phase = w.phase;
 
   // The seam it can reach from where it stands, if there is one: the point of it nearest to where the tuft would come down.
