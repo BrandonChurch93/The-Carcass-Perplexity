@@ -27,56 +27,65 @@ interface Character {
   /** Width of stance. */
   wide: number;
   hump: number;
+  /** Length of leg against the staged size. */
+  tall: number;
+  /** Size of body against the staged size. */
+  bulk: number;
+  /** A young one: its whole size against the staged size. */
+  young: number;
+  /** The tuft: how many roots it has left and how long they are, against a whole one. */
+  tuft: [number, number];
 }
 
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
 const CAST: Character[] = [
-  { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55 },
-  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 1.0, wide: 1.0, hump: 0.7 },
-  { role: 'walks', skater: 0.3, heavy: 1.04, neck: 1.0, wide: 1.0, hump: 0.45 },
-  { role: 'tastes', skater: 0.4, heavy: 0.98, neck: 1.15, wide: 0.82, hump: 0.45 },
-  { role: 'turns', skater: 0.6, heavy: 1.05, neck: 0.9, wide: 0.95, hump: 0.85 },
-  { role: 'shifts', skater: 0.3, heavy: 0.95, neck: 1.0, wide: 1.12, hump: 0.4 },
-  { role: 'walks', skater: 0.7, heavy: 0.9, neck: 1.1, wide: 1.05, hump: 0.35 },
-  { role: 'grazes', skater: 0.15, heavy: 1.1, neck: 0.94, wide: 0.9, hump: 0.75 },
-  { role: 'walks', skater: 0.35, heavy: 1.0, neck: 1.0, wide: 0.8, hump: 0.5 },
-  { role: 'grazes', skater: 0.9, heavy: 0.85, neck: 1.12, wide: 1.15, hump: 0.3 },
-  { role: 'grazes', skater: 0.2, heavy: 1.15, neck: 0.96, wide: 1.0, hump: 0.8 },
-  { role: 'walks', skater: 0.55, heavy: 0.95, neck: 1.05, wide: 0.92, hump: 0.4 },
-  { role: 'grazes', skater: 0.75, heavy: 1.0, neck: 0.92, wide: 1.08, hump: 0.6 },
-  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.1, wide: 0.88, hump: 0.65 },
+  { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
+  { role: 'feeds', skater: 0.22, heavy: 1.16, neck: 1.0, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.1, young: 1, tuft: [1.1, 1.05] },
+  { role: 'walks', skater: 0.45, heavy: 0.92, neck: 0.96, wide: 1.0, hump: 0.3, tall: 1.13, bulk: 0.84, young: 1, tuft: [0.7, 0.85] },
+  { role: 'tastes', skater: 0.4, heavy: 0.9, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
+  { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
+  { role: 'shifts', skater: 0.3, heavy: 0.95, neck: 0.96, wide: 1.12, hump: 0.4, tall: 1.1, bulk: 0.9, young: 1, tuft: [1, 0.9] },
+  { role: 'walks', skater: 0.7, heavy: 0.9, neck: 1.1, wide: 1.05, hump: 0.35, tall: 0.88, bulk: 1.15, young: 1, tuft: [1.2, 1.1] },
+  { role: 'grazes', skater: 0.15, heavy: 1.1, neck: 0.98, wide: 0.9, hump: 0.75, tall: 1.0, bulk: 1.2, young: 1, tuft: [0.9, 1] },
+  { role: 'walks', skater: 0.35, heavy: 1.0, neck: 1.05, wide: 0.8, hump: 0.5, tall: 1.15, bulk: 0.8, young: 1, tuft: [1, 1.2] },
+  { role: 'grazes', skater: 0.9, heavy: 0.85, neck: 1.12, wide: 1.15, hump: 0.3, tall: 1.05, bulk: 0.95, young: 0.66, tuft: [0.8, 0.9] },
+  { role: 'grazes', skater: 0.2, heavy: 1.15, neck: 0.98, wide: 1.0, hump: 0.8, tall: 0.92, bulk: 1.1, young: 1, tuft: [1.1, 0.9] },
+  { role: 'walks', skater: 0.55, heavy: 0.95, neck: 1.05, wide: 0.92, hump: 0.4, tall: 1.06, bulk: 0.9, young: 1, tuft: [0.45, 0.6] },
+  { role: 'grazes', skater: 0.75, heavy: 1.0, neck: 0.96, wide: 1.08, hump: 0.6, tall: 1.0, bulk: 1.0, young: 0.7, tuft: [1, 1] },
+  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.1, wide: 0.88, hump: 0.65, tall: 0.95, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
 ];
 
 export function makeBuild(index: number, rng: Rng): Build {
   const w = WALKERS[index] as (typeof WALKERS)[number];
   const c = CAST[index] as Character;
-  const k = w.size;
+  // No two alike: each differs from the staged size in leg, body, neck and tuft, and three are young.
+  const k = w.size * c.young;
   const v = (a: number, b: number): number => rng.range(a, b);
   return {
     k,
     seed: index * 1.618 + 0.37,
-    bodyLen: 5.3 * k * v(0.92, 1.1),
-    bodyTop: 1.0 * k * c.heavy * v(0.92, 1.08),
-    bodyKeel: 1.26 * k * c.heavy * v(0.9, 1.12),
-    bodyWide: 1.18 * k * c.heavy * v(0.92, 1.08),
+    bodyLen: 5.3 * k * c.bulk * v(0.92, 1.1),
+    bodyTop: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
+    bodyKeel: 1.26 * k * c.bulk * c.heavy * v(0.9, 1.12),
+    bodyWide: 1.18 * k * c.bulk * c.heavy * v(0.92, 1.08),
     hump: c.hump,
-    hipFore: 1.85 * k,
-    hipSide: 0.98 * k * c.heavy,
+    hipFore: 1.85 * k * c.bulk,
+    hipSide: 0.98 * k * c.bulk * c.heavy,
     hipUp: -0.42 * k,
-    femur: lerp(4.0, 3.5, c.skater) * k * v(0.95, 1.05),
+    femur: lerp(4.0, 3.5, c.skater) * k * c.tall * v(0.95, 1.05),
     kneeOut: lerp(0.1, 0.4, c.skater),
     kneeUp: lerp(0, 0.2, c.skater),
-    hock: lerp(0.46, 0.52, c.skater) * v(0.94, 1.06),
+    hock: lerp(0.58, 0.64, c.skater) * v(0.94, 1.06),
     stanceFore: 3.6 * k * v(0.9, 1.06),
     stanceSide: 2.3 * k * c.wide,
-    standH: 9.0 * k * v(0.97, 1.03),
+    standH: 9.0 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
     legR: lerp(1.24, 1.08, c.skater) * c.heavy,
-    padR: 0.54 * k * v(0.92, 1.1),
+    padR: 0.66 * k * v(0.9, 1.12),
     neckLen: 11.8 * k * c.neck,
     neckR: 0.56 * k * c.heavy,
-    tendrils: 12 + (index % 4),
-    tendrilLen: 2.9 * k * v(0.9, 1.15),
+    tendrils: Math.max(4, Math.round((12 + (index % 4)) * c.tuft[0])),
+    tendrilLen: 2.9 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
   };
 }
@@ -135,10 +144,15 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     return best;
   };
 
+  // Its own slow thing, in its own time: no two of the fourteen share a period, and none is under 3 s or over 9.
+  const habit = { period: 3.2 + 5.6 * (((index * 5 + 3) % 14) / 13), phase: hash(index, 17) };
+  const om = (2 * Math.PI) / habit.period;
+  const dig = index === 1 ? 2.5 : 2.7 + 1.6 * hash(index, 11);
+  const none = (): number => -1;
   const carried = (seconds: number, low: number): V3 => [
-    b.neckLen * (0.56 + 0.05 * Math.sin(seconds * 0.31 + phase * 9)),
-    b.neckLen * (low + 0.04 * Math.sin(seconds * 0.23 + phase * 5)),
-    b.neckLen * 0.12 * Math.sin(seconds * 0.4 + phase * 7),
+    b.neckLen * (0.56 + 0.05 * Math.sin(seconds * om + phase * 9)),
+    b.neckLen * (low + 0.06 * Math.sin(seconds * om * 0.8 + phase * 5)),
+    b.neckLen * 0.17 * Math.sin(seconds * om * 0.6 + phase * 7),
   ];
 
   if (!walksOn) {
@@ -176,17 +190,20 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
         return {
           down: 0,
           target,
-          raised: [b.neckLen * (0.5 + 0.06 * Math.sin(seconds * 0.33 + 1)), b.neckLen * (0.1 + 0.07 * Math.sin(seconds * 0.41 + phase * 6)), b.neckLen * 0.3 * Math.sin(seconds * 0.47 + phase * 6)],
+          raised: [b.neckLen * (0.38 + 0.05 * Math.sin(seconds * om * 0.7 + 1)), b.neckLen * (0.64 + 0.05 * Math.sin(seconds * om * 0.85 + phase * 6)), b.neckLen * 0.2 * Math.sin(seconds * om + phase * 6)],
           shape: 0.8,
         };
       }
       // It feeds, and now and then lifts its tuft out of the heat for a moment.
       // The near one and the one the long lens looks at have their tufts in the seam when the keys look at them.
-      const beat = fract((seconds - (index === 0 ? 8 : index === 1 ? 12.2 : phase * 23)) / 23);
+      const beat = fract((seconds - (index === 0 ? 8 : index === 1 ? 12.9 : phase * 23)) / 23);
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : smooth(0.0, 0.1, beat) * (1 - smooth(0.2, 0.32, beat));
       return { down: 1 - (turning ? 0.85 : c.role === 'shifts' ? 0.35 : 0.5) * up, target, raised: carried(seconds, -0.38), shape: lerp(0.36, 0.2, up) };
     };
-    return { sigma, body, neck, fidget: turning ? 0 : c.role === 'shifts' ? 5 : 6.5 + 4 * hash(index, 3), dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 0.75 * k };
+    // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
+    const fidget = turning ? 0 : index === 1 ? 8 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
+    const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
+    return { sigma, body, neck, fidget, lag, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
   }
 
   // One that walks: on a line on the crust, a few steps and a rest, so that its mean speed is the staged one.
@@ -204,7 +221,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   for (let q = 0.5; q <= 4; q += 0.25) if (Math.abs((b.stride * q) / speed - bout) < Math.abs((b.stride * per) / speed - bout)) per = q;
   const period = (b.stride * per) / speed;
   // The one that shifts its weight rests while the long lens looks at the group.
-  let shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
+  const shift = index === 0 ? 1 - fract((KEY_TIMES['heart-0'] + KEY_TIMES['heart-2'] - period) / 2 / period) : c.role === 'shifts' ? 1 - fract(11 / period) : phase;
   const area = 1 - ramp;
   const gone = (u: number): number => ramp * (u * u * u - 0.5 * u * u * u * u);
   const ease = (f: number): number => {
@@ -218,18 +235,14 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const n = Math.floor(tau);
     return REST + per * (n + ease(tau - n));
   };
-  if (index === 2) {
-    // The second of the feeding picture has a hind pad in the air, half way through its swing, when the long lens looks.
-    let least = 1;
-    for (let q = 0; q < 240; q++) {
-      const miss = Math.abs(fract(sigmaAt(KEY_TIMES['heart-3'], q / 240) + 0.5 - 0.88 + 0.5) - 0.5);
-      if (miss < least) {
-        least = miss;
-        shift = q / 240;
-      }
-    }
-  }
-  const sigma = (seconds: number): number => sigmaAt(seconds, shift);
+  // The second of the feeding picture stands, walks through the long lens's shot in three steps and stands again:
+  // it is half way, a hind pad in the air, when the key looks.
+  const through = (seconds: number): number => {
+    const t = Math.min(1, Math.max(0, (seconds - 5.6) / 10.4));
+    const u = t < ramp ? gone(t / ramp) / area : t > 1 - ramp ? 1 - gone((1 - t) / ramp) / area : (ramp / 2 + t - ramp) / area;
+    return REST + 0.75 * u;
+  };
+  const sigma = (seconds: number): number => (index === 2 ? through(seconds) : sigmaAt(seconds, shift));
   // Centre the error of the stop and go against the steady staging over the key frames.
   let low = 1e9;
   let high = -1e9;
@@ -241,6 +254,13 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const bias = -(low + high) / 2;
   const body = (s: number): { x: number; z: number; yaw: number } => ({ x: a[0] + dx * (b.stride * s + bias), z: a[1] + dz * (b.stride * s + bias), yaw });
   const neck = (seconds: number): NeckAim => {
+    if (index === 2) {
+      // It carries its tuft while it walks, and lowers it where it comes to stand.
+      const at = body(seconds < 10 ? REST : REST + 0.75);
+      const fed = feedAt(at.x, at.z, yaw, 0);
+      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.7 * smooth(15.6, 19.5, seconds);
+      return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater), shape: lerp(0.15 + 0.6 * c.skater, 0.36, down) };
+    }
     const tau = seconds / period + shift;
     const n = Math.round(tau);
     const away = Math.abs(tau - n);
@@ -254,11 +274,18 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.32 + 0.12 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, 0.36, down) };
   };
   void t0;
-  // In a rest it may shift its weight from pad to pad: not in the last moments before it walks on.
-  const restless = (seconds: number): number => {
-    const tau = seconds / period + shift;
-    const away = Math.abs(tau - Math.round(tau));
-    return smooth(rest / 2 - 0.4 / period, rest / 2 - 1.6 / period, away);
+  // In a long rest it re-places one fore pad: it leans off it, puts it down a step off and settles over it.
+  const long = rest * period;
+  const halfStep = (j: number, n: number): number => {
+    if (index === 2 || long < 5 || (j !== 1 && j !== 3)) return -1;
+    const off = j * 0.25;
+    const m = Math.ceil((n - off - REST) / per - 1e-6);
+    if (Math.floor(REST + per * m + off + 1e-9) !== n) return -1;
+    if ((hash(m, index + 7) < 0.5 ? 1 : 3) !== j) return -1;
+    const centre = (m - shift) * period;
+    // The near one has it down again just before the keys that look at it.
+    if (index === 0) return centre + (centre < 10 ? 0.9 : -1.9);
+    return centre - long / 2 + 0.9 + hash(m, index + 9) * (long - 3.6);
   };
-  return { sigma, body, neck, fidget: 0, shifts: c.role === 'shifts' ? { every: 4.4, weight: restless } : undefined, dip: 0.25 * k, range: 0.4 * b.stride + 0.55 * k };
+  return { sigma, body, neck, fidget: 0, lag: 0, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * b.stride + 0.55 * k };
 }
