@@ -1,10 +1,125 @@
 // The crust-walkers: the herd, its walk and its feeding.
-// A name moves into PARTS when this folder draws it; until then the part keeps its stand-in from the blockout.
-// The names this folder will own: 'crust-walkers'.
+// Each animal is a skin of tubes posed on the processor from the time alone (animal.ts); what each one is and does is in herd.ts.
+import * as THREE from 'three';
+import { SEAMS, WALKERS, seamLine } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
+import { Animal, type Env } from './animal';
+import { makeBuild, makePlan } from './herd';
+import { FRAGMENT, VERTEX } from './material';
+import { Skin } from './skin';
 
-export const PARTS: readonly string[] = [];
+export const PARTS: readonly string[] = ['crust-walkers'];
 
-export function create(_ctx: HeartContext): HeartPiece {
-  return {};
+/** Discs of contact shade for each animal: four pads, the body, the tuft. */
+const DISCS = 6;
+
+function seamField(): Env['seam'] {
+  const lines = Object.keys(SEAMS).map((name) => {
+    const points = seamLine(name, 28);
+    let minX = 1e9;
+    let maxX = -1e9;
+    let minZ = 1e9;
+    let maxZ = -1e9;
+    for (const p of points) {
+      minX = Math.min(minX, p[0]);
+      maxX = Math.max(maxX, p[0]);
+      minZ = Math.min(minZ, p[1]);
+      maxZ = Math.max(maxZ, p[1]);
+    }
+    return { points, minX, maxX, minZ, maxZ };
+  });
+  return (x, z) => {
+    let d = 60;
+    let bx = x + 60;
+    let bz = z;
+    for (const line of lines) {
+      if (x < line.minX - d || x > line.maxX + d || z < line.minZ - d || z > line.maxZ + d) continue;
+      for (let i = 0; i < line.points.length - 1; i++) {
+        const a = line.points[i] as [number, number];
+        const b = line.points[i + 1] as [number, number];
+        const ex = b[0] - a[0];
+        const ez = b[1] - a[1];
+        const t = Math.min(1, Math.max(0, ((x - a[0]) * ex + (z - a[1]) * ez) / (ex * ex + ez * ez || 1)));
+        const px = a[0] + ex * t;
+        const pz = a[1] + ez * t;
+        const dd = Math.hypot(x - px, z - pz);
+        if (dd < d) {
+          d = dd;
+          bx = px;
+          bz = pz;
+        }
+      }
+    }
+    return { d, x: bx, z: bz };
+  };
+}
+
+export function create(ctx: HeartContext): HeartPiece {
+  const { rig } = ctx;
+  const t0 = rig.flow.t0;
+  const env: Env = {
+    drift: (x, z, seconds) => rig.flow.drift(x, z, seconds),
+    undrift: (x, z, seconds) => {
+      const v = rig.flow.velocity(x, z);
+      return [x - v[0] * (seconds - t0), z - v[1] * (seconds - t0)];
+    },
+    seam: seamField(),
+  };
+
+  const skin = new Skin();
+  const rng = ctx.rng('walkers');
+  const herd = WALKERS.map((_, i) => {
+    const build = makeBuild(i, rng);
+    return new Animal(skin, build, makePlan(i, build, env, t0), env);
+  });
+  const geometry = skin.build();
+
+  const pixel = { value: 0.001 };
+  const material = new THREE.ShaderMaterial({
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    uniforms: {
+      ...rig.uniforms,
+      uPixel: pixel,
+      tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
+      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tFlake: { value: ctx.assets.texture('mat/flake.jpg') },
+      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data' }) },
+    },
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.frustumCulled = false;
+  ctx.scene.add(ctx.parts.built('crust-walkers', mesh));
+
+  const discs = rig.contactDiscs(herd.length * DISCS);
+  let height = 0;
+  const size = new THREE.Vector2();
+
+  return {
+    setTime: (seconds) => {
+      herd.forEach((animal, i) => {
+        const stood = animal.pose(seconds);
+        const b = animal.b;
+        stood.feet.forEach((foot, j) => {
+          const off = Math.min(1, foot.lift / (1.2 * b.k));
+          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (1.25 + 1.6 * off), 0.85 * (1 - 0.75 * off));
+        });
+        rig.setDisc(discs, i * DISCS + 4, stood.body.x, stood.body.z, 3.4 * b.k, 0.22, 1.5, -stood.body.yaw + Math.PI / 2);
+        const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - 0.6 * b.tendrilLen) / (2 * b.k)));
+        rig.setDisc(discs, i * DISCS + 5, stood.tuft.x, stood.tuft.z, 1.1 * b.k, 0.5 * low);
+      });
+      skin.touch();
+    },
+    beforeSample: (renderer, camera) => {
+      renderer.getDrawingBufferSize(size);
+      pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
+    },
+    resize: (_width, h) => {
+      height = h;
+    },
+    dispose: () => {
+      geometry.dispose();
+      material.dispose();
+    },
+  };
 }

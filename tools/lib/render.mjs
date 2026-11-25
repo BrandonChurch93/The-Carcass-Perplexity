@@ -6,7 +6,7 @@ import { spawnSync } from 'node:child_process';
 import sharp from 'sharp';
 import { chromium } from 'playwright-core';
 import { ROOT, rel, readJson, writeJson, config, utc } from './paths.mjs';
-import { state } from './hash.mjs';
+import { state, filesHash } from './hash.mjs';
 import { addLook } from '../look.mjs';
 
 export const SITE = rel('out', 'work', 'site');
@@ -61,12 +61,18 @@ export function ensureDisk(cfg = config()) {
   if (freeGb() < need) throw new Error(`Only ${freeGb().toFixed(1)} GB of disk is free and a render needs ${need} GB. Nothing was rendered.`);
 }
 
+// The page carries parts/PARTS.json for info().standIns, and no hash of the engine or of a unit
+// covers it, so the site is also built again when the register has changed.
 export function ensureSite() {
   const now = state();
   const file = path.join(SITE, 'build.json');
-  if (fs.existsSync(file) && JSON.stringify(readJson(file)) === JSON.stringify(now)) return now;
+  const mark = path.join(SITE, 'register.json');
+  const register = filesHash(['parts/PARTS.json']);
+  const same = (f, v) => fs.existsSync(f) && JSON.stringify(readJson(f)) === JSON.stringify(v);
+  if (same(file, now) && same(mark, { register })) return now;
   const r = spawnSync('npx', ['vite', 'build', '--logLevel', 'error'], { cwd: ROOT, env: { ...process.env, CARCASS_OUT_DIR: SITE }, encoding: 'utf8' });
   if (r.status !== 0) throw new Error(`The site did not build:\n${(r.stdout + r.stderr).trim().split('\n').slice(-20).join('\n')}`);
+  writeJson(mark, { register });
   return now;
 }
 
