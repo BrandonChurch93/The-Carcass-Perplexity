@@ -14,7 +14,7 @@ import * as land from './land';
 import * as runners from './runners';
 import * as strikes from './strikes';
 import { first, heightAbove, world } from './ridge';
-import { CANAL_KEY, CARCASS, RAD, STRIKES, UNIT, canalFar, carcassBody, carcassView, heading, kiteEdge, pitchTo, raised, spire, step, strikeTip, tube } from './shared/anchors';
+import { CANAL_KEY, CARCASS, RAD, STRIKES, UNIT, canalFar, carcassBody, carcassView, heading, kiteEdge, pitchTo, raised, spire, step, strikeTip, trail, tube } from './shared/anchors';
 import { on, tipOf } from './ridge';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
@@ -27,14 +27,14 @@ function aimed(position: Vec3, h: number, pitch: number, fov: number, reach = 60
 }
 
 const E_S = first.s - 552;
-const standE = on(E_S, 2, 3.4);
+const standE = on(E_S, trail(E_S), 3.4);
 const viewE = heading(standE, [first.x, 0, first.z]) + 17;
 const keyEstablishing = aimed(standE, viewE, 5.6, 50);
 const establishingMove: Move = [
-  { at: 0, pose: aimed(on(E_S - 150, -2, 22), viewE - 5, 1.2, 50) },
-  { at: 0.34, pose: aimed(on(E_S - 62, 0, 10), viewE - 2, 3.4, 50) },
+  { at: 0, pose: aimed(on(E_S - 150, trail(E_S - 150), 22), viewE - 5, 1.2, 50) },
+  { at: 0.34, pose: aimed(on(E_S - 62, trail(E_S - 62), 10), viewE - 2, 3.4, 50) },
   { at: keyPart(shotById('spine-01')), pose: keyEstablishing },
-  { at: 1, pose: aimed(on(E_S + 44, 3, 3), viewE + 1.5, 5, 50) },
+  { at: 1, pose: aimed(on(E_S + 44, trail(E_S + 44), 3), viewE + 1.5, 5, 50) },
 ];
 
 const KITE_FOV = 36;
@@ -48,10 +48,10 @@ const kiteStand: Vec3 = [kiteFlat[0], kiteEdge[1] - KITE_REACH * Math.tan(KITE_R
 const keyKites = aimed(kiteStand, heading(kiteStand, kiteEdge) + 13, KITE_PITCH, KITE_FOV);
 
 const CARCASS_FOV = 30;
-const carcassStand = raised(step(carcassBody, carcassView + 180, 3.1), 0.88);
+const carcassStand = raised(step(carcassBody, carcassView + 180, 3.1), 0.4);
 const keyCarcass = aimed(carcassStand, carcassView, -5, CARCASS_FOV, 40);
 const carcassFrom = aimed(raised(step(carcassStand, carcassView + 176, 9), 2.6), carcassView - 2.5, -8, CARCASS_FOV, 40);
-const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.86), carcassView + 0.4, -4.9, CARCASS_FOV, 40);
+const carcassTo = aimed(raised(step(carcassStand, carcassView - 4, 0.22), 0.4), carcassView + 0.4, -4.9, CARCASS_FOV, 40);
 const carcassKeyAt = keyPart(shotById('spine-03'));
 const carcassMove: CameraPath = (part) => {
   const lead = Math.max(0, 1 - part / carcassKeyAt);
@@ -83,7 +83,7 @@ const shots: Record<string, CameraPath> = {
   'spine-01': establishingMove,
   'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -20, forward: -22, up: -4 }, { right: 20, forward: 22, up: 4 }),
   'spine-03': carcassMove,
-  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -3, right: -1 }, { forward: 70, right: 16, up: 9, turn: -0.8 }),
+  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -3, right: -1 }, { forward: 26, right: 5, up: 3, turn: -0.5 }),
   'spine-05': canalMove,
 };
 

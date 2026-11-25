@@ -22,7 +22,7 @@ const TABLE: [number, number, number, number, number, number, number][] = [
   [-2330, 950, 30, 252, 1.0, 0.5, 2.0],
   [-1540, 740, 10, 170, 0.9, 0.25, 1.5],
   [-732, 451, 20, 230, 1.0, 0.45, 1.9],
-  [0, 0, 0, 300, 1.15, 0.42, 2.2],
+  [0, 0, 0, 300, 1.15, 0.56, 2.6],
   [740, 184, -25, 195, 0.85, 0.3, 1.6],
   [1596, 426, -40, 292, 0.95, 0.55, 2.0],
   [2470, 745, -70, 143, 1.1, 0.22, 1.4],
@@ -170,7 +170,11 @@ export function ground(s: number, l: number): number {
   // The lee side is the steeper: it falls to the cloud in walls.
   let fall = ((1.3 + (l > 0 ? 1.0 * smooth(50, 190, al) : 0)) * al * al) / (al + 12);
   fall *= 1 + 0.16 * Math.sin(s * 0.023 + (l > 0 ? 2.1 : -2.1)) * smooth(20, 220, al);
-  let y = crest(s) + massif - fall;
+  // The first spire stands on a shoulder: on the storm side of the trail the ground climbs to its foot in broken rock.
+  const toMouth = Math.min(1, Math.max(0, (s - MOUTH_S + 160) / 150));
+  const path = CANAL_L * toMouth * toMouth;
+  const shoulder = 58 * smooth(first.s - 400, first.s - 70, s) * (1 - smooth(first.s + 60, first.s + 230, s)) * (1 - smooth(path - 52, path - 9, l));
+  let y = crest(s) + massif + shoulder - fall;
   y += 40 * Math.exp(-(((s - MOUTH_S - EXIT + 12) / 26) ** 2) - ((l - canalL(EXIT)) / 34) ** 2);
   const d = s - MOUTH_S;
   if (d > -6 && d < 0.6 && Math.abs(l - CANAL_L) < flare(d) + 4.5) y = Math.min(y, FLOOR - 0.4);
@@ -226,7 +230,7 @@ export function fin(sp: Spire, t: number): FinPoint {
   // A horn: a broad foot that narrows fast, a slender blade above it, and a top that hooks over toward the storm.
   return {
     centre: -sp.lean * Math.pow(t, sp.hook),
-    half: sp.half * (0.6 * Math.pow(q, 2.5) + 0.4 * Math.pow(q, 1.05)) + 4 * q + 0.045 * sp.half * blunt,
+    half: sp.half * (0.7 * Math.pow(q, 3) + 0.3 * q) + 4 * q + 0.045 * sp.half * blunt,
     thick: sp.thick * (0.6 * Math.pow(q, 2.8) + 0.4 * Math.pow(q, 1.1)) + 3 * q + 2.6 * blunt,
     y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t,
   };
