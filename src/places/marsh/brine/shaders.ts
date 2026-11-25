@@ -38,8 +38,9 @@ void main() {
 
   // Thick brine hardly ripples: a slow crawl of two swells, the rings that leave the seep's mouth, and the rings of every dome that has burst.
   float closeBy = smoothstep(40.0, 6.0, dist);
-  vec2 slope = (texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime).ba - 0.5) * 0.09
-    + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.22 * closeBy;
+  vec2 slope = (texture2D(tGrain, p.xz / 3.7 + vec2(0.011, 0.007) * uTime).ba - 0.5) * 0.08
+    + (texture2D(tGrain, p.xz / 0.83 - vec2(0.013, 0.021) * uTime).ba - 0.5) * 0.14 * closeBy;
+  if (dist < 14.0) slope += (texture2D(tGrain, p.xz / 0.23 + vec2(0.017, -0.009) * uTime).ba - 0.5) * 0.12 * smoothstep(14.0, 5.0, dist);
   vec2 fromSeep = p.xz - uSeep.xy;
   float reach = length(fromSeep);
   if (reach < 16.0) {
@@ -59,9 +60,13 @@ void main() {
   }
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
   // Scum in rafts that drift, thickest along the shores.
-  vec4 raft = texture2D(tGrain, p.xz / 6.1 + vec2(0.004, 0.0025) * uTime);
-  vec4 fleck = texture2D(tGrain, p.xz / 0.57 + vec2(0.004, 0.0025) * uTime * 10.7);
-  float foam = 0.75 * smoothstep(0.72, 0.9, raft.g * 0.35 + fleck.r * 0.65 + 0.22 * smoothstep(-1.3, -0.1, s)) * (0.3 + 0.7 * fleck.g) * smoothstep(120.0, 30.0, dist);
+  vec2 drift = vec2(0.004, 0.0025) * uTime;
+  vec4 raft = texture2D(tGrain, p.xz / 6.1 + drift);
+  vec4 fleck = texture2D(tGrain, p.xz / 0.57 + drift * 10.7);
+  float nearShore = smoothstep(-1.6, -0.1, s);
+  // Small rafts of bubbles, gathered where the slow turn of the pool leaves them.
+  vec4 bubble = texture2D(tGrain, p.xz / 0.21 + drift * 31.0);
+  float foam = smoothstep(0.6, 0.66, bubble.g * 0.5 + raft.g * 0.35 + fleck.r * 0.15) * smoothstep(-0.9, -0.15, s) * smoothstep(60.0, 15.0, dist);
   vec3 lit = brineShade(p, n, v, s, foam);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
@@ -139,12 +144,16 @@ void main() {
   float age = aLife.x;
   float size = aLife.z;
   float a = atan(position.z, position.x);
-  float finger = 0.55 + 0.45 * sin(a * 5.0 + aLife.y * 9.0) * sin(a * 3.0 - aLife.y * 4.0) + 0.25 * sin(a * 11.0 + aLife.y * 3.0);
+  float k = aLife.y * 6.283;
+  // No two tongues of it alike: a few tall, most low, and none evenly spaced.
+  float f = 0.42 + 0.3 * sin(a * 2.0 + k * 9.0) + 0.26 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.2 * sin(a * 9.0 + k * 3.0) + 0.12 * sin(a * 17.0 + k * 7.0);
+  float finger = pow(clamp(f, 0.04, 1.0), 1.6);
   float h = position.y;
-  // The sheet leaves the rim at 3 m/s and leans outward as it climbs; it falls back under its own weight.
-  float up = sqrt(size / 0.4) * (3.0 * age - 4.9 * age * age) * (0.45 + 0.55 * finger);
-  float out_ = size * (0.85 + 1.5 * age * (0.4 + 0.6 * h));
-  vec3 q = vec3(position.x * out_, max(up, 0.0) * h, position.z * out_);
+  // The sheet leaves the rim at 2 m/s and leans outward as it climbs; it falls back under its own weight.
+  float up = sqrt(size / 0.4) * (2.1 * age - 4.9 * age * age) * (0.25 + 0.75 * finger);
+  float out_ = size * (0.85 + (1.1 + 1.6 * finger) * age * (0.3 + 0.7 * h * h));
+  float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
+  vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
   vWorld = w.xyz;
   vLocal = vec3(a, h, finger);
@@ -165,20 +174,20 @@ ${RIG_GLSL}
 void main() {
   // The top of the sheet is torn into fingers and holes open in it as it stretches.
   vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
-  float torn = vLocal.y - (0.5 + 0.5 * vLocal.z) + (g.r - 0.5) * 0.5 + vLife.x * 0.5 * g.g;
+  float torn = vLocal.y - (0.35 + 0.65 * vLocal.z) + (g.r - 0.5) * 0.7 + vLife.x * 0.9 * g.g;
   if (torn > 0.0 || vLife.x <= 0.0) discard;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   if (dot(n, v) < 0.0) n = -n;
   // A sheet of brine: dark where it is thick at the foot, clearer and pinker toward its torn edge, wet all over.
   float edge = smoothstep(-0.35, 0.0, torn);
-  vec3 albedo = mix(vec3(0.055, 0.012, 0.01), vec3(0.2, 0.075, 0.068), edge * edge);
-  n = normalize(n + vec3(g.b - 0.5, (g.r - 0.5) * 0.6, g.a - 0.5) * 0.9);
+  vec3 albedo = mix(vec3(0.06, 0.013, 0.011), vec3(0.19, 0.06, 0.053), edge * edge);
+  n = normalize(n + vec3(g.b - 0.5, (g.r - 0.5) * 0.6, g.a - 0.5) * 0.5);
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 40.0);
-  lit += skyRadiance(r) * (0.03 + 0.5 * pow(1.0 - nv, 3.0) + window * 1.2);
+  float window = pow(max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0), 50.0);
+  lit += skyRadiance(r) * (0.015 + 0.12 * pow(1.0 - nv, 4.0) + window * 0.7);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;

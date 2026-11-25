@@ -154,6 +154,36 @@ const edgeDistance = (poly: [number, number][], x: number, z: number): number =>
 
 export const STUCK_AT = rel(STUCK[0], STUCK[1]);
 
+const frac = (v: number): number => v - Math.floor(v);
+/** Cells with one seed each: metres (in cells' own measure) inside the edge of the cell a point is in, the cell's number, the point's offset
+ * across the cell, and a second number of the cell. */
+function blocks(u: number, w: number, cell: number, salt: number): [number, number, number, number] {
+  const gu = Math.floor(u / cell);
+  const gw = Math.floor(w / cell);
+  let d1 = 9;
+  let d2 = 9;
+  let id = 0;
+  let off = 0;
+  let other = 0;
+  for (let j = gw - 1; j <= gw + 1; j++) {
+    for (let i = gu - 1; i <= gu + 1; i++) {
+      const a = frac(Math.sin(i * 127.1 + j * 311.7 + salt) * 43758.5453);
+      const b = frac(Math.sin(i * 269.5 + j * 183.3 + salt) * 43758.5453);
+      const pu = (i + 0.12 + 0.76 * a) * cell;
+      const pw = (j + 0.12 + 0.76 * b) * cell;
+      const d = Math.hypot(u - pu, w - pw);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        id = frac(Math.sin(i * 419.2 + j * 371.9 + salt) * 43758.5453);
+        other = frac(Math.sin(i * 157.3 + j * 113.5 + salt) * 43758.5453);
+        off = w - pw;
+      } else if (d < d2) d2 = d;
+    }
+  }
+  return [(d2 - d1) * 0.5, id, off, other];
+}
+
 export function createField(): Field {
   const make = (half: number, n: number): Grid => ({ half, n, cell: (half * 2) / n, d: new Float32Array(n * n).fill(DRY) });
   const near = make(NEAR.half, NEAR.n);
@@ -197,10 +227,10 @@ export function createField(): Field {
         }
         if (d > 0.5) {
           const r = Math.hypot(x, z);
-          const pond = (0.71 + 0.3 * smooth(110, 60, r) - fbm(x / 70 + 9, z / 70, 3)) * 150;
+          const pond = (0.63 + 0.3 * smooth(110, 60, r) - fbm(x / 70 + 9, z / 70, 3)) * 150;
           if (pond < d) d = pond;
           if (fine && d > 0.5 && r < 230 && Math.hypot(x - crustAt[0], z - crustAt[1]) > 11) {
-            const th = 0.7 - 0.07 * Math.exp(-d / 4) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5);
+            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5);
             const puddle = (th - fbm(x / 3.7 + 11, z / 3.7 + 5, 3)) * 9;
             if (puddle < d) d = puddle;
           }
@@ -223,7 +253,7 @@ export function createField(): Field {
       const ahead = dx * K1_DIR[0] + dz * K1_DIR[1];
       const across = -dx * K1_DIR[1] + dz * K1_DIR[0];
       // Land on the lens's side of a line that bows toward the lens at the middle of the frame.
-      const want = 2.15 + 0.1 * across * across * 0.3 - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
+      const want = 1.45 + 0.5 * across - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
       const w = smooth(8, 4.5, Math.hypot(dx, dz));
       near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
     }
@@ -333,16 +363,20 @@ export function createField(): Field {
     // Each bed has a tread that leans back a little and a riser that is nearly a wall, its line broken where blocks have come away.
     const broken = 0.22 * (fbm(x / 0.6 + 4, z / 0.6, 3) - 0.5);
     const stepped = (Math.floor(bed) + 0.15 * part + 0.85 * smooth(0.78 + broken, 0.97 + broken, part)) * 0.34;
-    // The beds dip, so the rock weathers into sharp ribs that run one way with broken blocks between: crests are edges, hollows are round.
-    const u = x * 0.82 + z * 0.57;
-    const w = -x * 0.57 + z * 0.82;
-    const ridge = (a: number, b: number, o: number): number => {
-      const r = 1 - Math.abs(fbm(a, b, o) - 0.5) * 2.6;
-      return r > 0 ? r * r : 0;
-    };
-    const crag = 0.5 * (ridge(u / 6.3 + 2, w / 2.1, 3) - 0.3) + 0.24 * (ridge(u / 1.9 + 8, w / 0.8 + 3, 3) - 0.3) + 0.09 * (ridge(x / 0.45, z / 0.45 + 6, 2) - 0.3);
-    const rough = 0.16 * (fbm(x / 1.7, z / 1.7, 4) - 0.5) + 0.07 * (fbm(x / 0.33, z / 0.33, 3) - 0.5) + 0.03 * (fbm(x / 0.09, z / 0.09, 2) - 0.5);
-    return base * 0.25 + (stepped - warp) * 0.75 + (rough + crag) * smooth(-0.4, 0.6, base);
+    // The beds dip and are jointed, so the rock breaks into blocks longer along the strike than across it, each settled and tipped its own
+    // way, with an open crack between each and the next; smaller blocks ride on the larger.
+    const wu = x + 0.6 * (fbm(x / 1.3, z / 1.3 + 4, 2) - 0.5);
+    const wz = z + 0.6 * (fbm(x / 1.3 + 9, z / 1.3, 2) - 0.5);
+    const u = wu * 0.82 + wz * 0.57;
+    const w = -wu * 0.57 + wz * 0.82;
+    const big = blocks(u / 1.6, w, 3.0, 1);
+    const small = blocks(u / 1.5 + 3.1, w, 0.47, 7);
+    const crag = (big[1] - 0.5) * 0.6 + (big[3] - 0.5) * 0.1 * big[2] - 0.55 * smooth(0.4, 0, big[0]) ** 2
+      + (small[1] - 0.5) * 0.05 + (small[3] - 0.5) * 0.08 * small[2] - 0.04 * smooth(0.06, 0, small[0]);
+    // Weathered round between the cracks: lumps on lumps.
+    const lumps = 1.0 * (fbm(x / 4.3 + 1, z / 4.3, 2) - 0.5) + 0.05 * (Math.abs(fbm(x / 1.2, z / 1.2 + 3, 2) - 0.5) * 2) ** 0.8;
+    const rough = lumps + 0.07 * (fbm(x / 0.33, z / 0.33, 3) - 0.5) + 0.04 * (fbm(x / 0.09, z / 0.09, 2) - 0.5);
+    return base * 0.6 + (stepped - warp) * 0.4 + (rough + crag) * smooth(-0.4, 0.6, base);
   };
 
   // The flats: a bed under the brine, a shelf a finger under its level at the shore (the brine's own edge is cut for each pixel, on this shelf),
