@@ -221,8 +221,9 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float fl = ${f(FAN_FROM - 15)} + length(out_);
   float fs = atan(out_.x, out_.y) * 45.0;
   // On the fan the moving marks go over to the fan's lay, so nothing is drawn across the grain of the mesh.
-  vec2 mk = fan < 1.0 ? marks(s, age) : vec2(0.0);
-  if (fan > 0.0) mk = mix(mk, marks(fs, fl / 8.0 - uTime), fan);
+  float lay = smoothstep(${f(FAN_FROM - 6)}, ${f(FAN_FROM + 2)}, len);
+  vec2 mk = lay < 1.0 ? marks(s, age) : vec2(0.0);
+  if (lay > 0.0) mk = mix(mk, marks(fs, fl / 8.0 - uTime), lay);
   float streak = mk.x;
   float wave = sin(len * 2.3 + 2.5 * vnoise(vec2(s * 0.6, len * 0.4)) + 0.7 * sin(uTime * 6.0 + s * 1.7));
   // A thin skin over most of it, orange; open lava down the middle and wherever a cascade tears the skin; red at the margins.
@@ -238,7 +239,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   // Rafts of skin: they gather on the benches and along the margins, and the cascades tear them.
   float plate = 0.65 * vnoise(vec2(s * 0.33 + 5.0, age * 0.55)) + 0.35 * vnoise(vec2(s * 0.9, age * 1.4 + 2.0));
   float want = mix(0.5, 0.8, fast) - 0.2 * smoothstep(0.45, 0.95, u) + 0.25 * behind - 0.12 * smoothstep(0.0, -90.0, len);
-  float raft = smoothstep(want, want + 0.07, plate);
+  float raft = smoothstep(want, want + 0.07, plate) * (1.0 - lay);
   float tear = smoothstep(0.05, 0.0, abs(vnoise(vec2(s * 1.6 + 2.0, age * 2.6)) - 0.5));
   float skin = mix(830.0, 1080.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0));
   kelvin = mix(kelvin, mix(skin, 1260.0, tear), raft);
