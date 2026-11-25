@@ -1,7 +1,9 @@
 // The shaders of the fall's folder.
+import { WALL_ROCK_GLSL } from '../land/rock';
 import { MOUTH } from '../layout';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { FAN_FROM, FAN_HEAD, FAN_POOL, TUBE } from './path';
+import { COLLAR } from './shape';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
 
@@ -37,6 +39,20 @@ bool hiddenByWall(vec3 world, float inside) {
   vec2 q = vec2(abs(hit.x - uArch.x) / (uArch.z * 1.22), (hit.y - uArch.y) / (uArch.w * 1.22));
   if (q.y < -0.3) return true;
   return pow(q.x, ${f(TUBE.power)}) + pow(max(q.y, 0.0), ${f(TUBE.power)}) > 1.0;
+}`;
+
+// The land's rock for the collar, as the land draws its wall. Its pictures are read here with slopes made from `px`, which is taken
+// first thing in main, so the read cannot take a slope of its own inside one of the function's branches.
+const COLLAR_ROCK_GLSL = WALL_ROCK_GLSL.replace(/texture2D\((\w+), (\w+)\)/g, (_all: string, map: string, uv: string): string => {
+  const scale = map === 'tBoulderNh' ? '17.0' : 'CLIFF';
+  return `textureGrad(${map}, ${uv}, vec2(px / ${scale}, 0.0), vec2(0.0, px / ${scale}))`;
+});
+
+// The collar ends in a broken edge, the land's own wall showing between its last pieces, so no line is drawn where the two meet.
+const TORN_GLSL = /* glsl */ `
+bool torn(vec3 world, vec3 skin) {
+  if (skin.z > 0.5 || skin.y < 0.0) return false;
+  return ${f(COLLAR)} - skin.y < 1.2 + 5.5 * (0.6 * vnoise(world.xy / 9.0 + world.z / 13.0) + 0.4 * vnoise(world.xy / 2.3 + world.z / 3.1));
 }`;
 
 const PLATES_GLSL = /* glsl */ `
@@ -186,56 +202,34 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 ${WINDOW_FRAGMENT}
 ${TUBE_GLSL}
+${COLLAR_ROCK_GLSL}
+${TORN_GLSL}
 void main() {
   gDx = dFdx(vWorld);
   gDy = dFdy(vWorld);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
   float inside = vSkin.z;
-  // The face of the cliff has no skin: its distance from the arch is reckoned from the arch itself.
-  vec2 q = vec2(abs(vWorld.x - uArch.x) / uArch.z, max(vWorld.y - uArch.y, 0.0) / uArch.w);
-  float beyond = max((pow(pow(q.x, ${f(TUBE.power)}) + pow(q.y, ${f(TUBE.power)}), ${f(1 / TUBE.power)}) - 1.0) * 58.0, uArch.y - vWorld.y);
-  float d = vSkin.x >= 0.5 ? -vSkin.y : -max(beyond, 0.0);
+  // The land's rock, read before anything branches. On the collar it is all there is: the same rock under the same light as the wall.
+  vec3 wn;
+  float wocc;
+  vec3 wall = wallRock(vWorld, n, max(length(gDx), length(gDy)), wn, wocc);
+  // The lip itself is the wall's rock too: the fall's own rock begins where the cut turns in.
+  float collar = smoothstep(-1.2, 0.2, vSkin.y);
+  float d = -vSkin.y;
   vec3 c = vec3(0.0);
-  // The patch of cliff ends in a broken edge, the land's own wall showing between its last pieces, so no line is drawn where the two meet.
-  float edge = vSkin.x < 0.5 && inside < 0.5 ? vSkin.y : 99.0;
-  bool ragged = edge < 3.0 + 13.0 * (0.6 * vnoise(vWorld.xy / 9.0 + vWorld.z / 13.0) + 0.4 * vnoise(vWorld.xy / 2.3 + vWorld.z / 3.1));
+  bool ragged = torn(vWorld, vSkin);
   // Far inside no light reaches and there is no rock to draw; between, only the melt's light on plain dark rock.
   if (inside > 0.5 && d > 26.0) {
     if (d < 110.0) c = vec3(0.06) * (0.25 + 0.8 * vnoise(vWorld.xy / 3.0 + vWorld.z / 4.0) + 0.7 * vnoise(vWorld.xy / 10.0 + vWorld.z / 8.0)) * riverLight(vWorld, n, d) / 3.14159;
   } else if (!ragged) {
-    // The wall, mapped as the land maps it (the picture upright on the face, sixty metres to a repeat) so the two do not show a join.
-    // On the rim and in the tube that mapping has no direction (the roof, the bevel), and the picture is laid on from the three axes.
-    float own = step(0.5, vSkin.x) * smoothstep(36.0, 18.0, vSkin.y);
-    vec3 cliff = vec3(0.0);
-    float tri = max(own, inside);
-    float out_ = 1.0 - inside;
-    if (tri < 1.0) {
-      float kx = smoothstep(0.3, 0.7, n.x * n.x / (n.x * n.x + n.z * n.z + 1e-5));
-      int up = kx >= 0.5 ? 1 : 2;
-      vec3 relief = laid(tCliffNh, vWorld, up, 60.0, 0.0).rgb;
-      cliff += (1.0 - tri) * laid(tCliff, vWorld, up, 60.0, 0.0).rgb * (0.6 + 0.8 * relief.b);
-      n = normalize(n + (1.0 - tri) * 1.6 * (mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), step(0.5, kx)) * (relief.r - 0.5) - vec3(0.0, 1.0, 0.0) * (relief.g - 0.5)));
-    }
-    if (tri > 0.0) cliff += tri * laid(tCliff, vWorld, lieOf(n), 47.0, 0.0).rgb;
-    cliff *= 0.75 + 0.5 * vnoise(vec2(vWorld.y * 0.9 + 3.0 * vnoise(vWorld.xz / 25.0), 0.5));
-    // Beds and joints: the wall breaks in ledges along its beds and in cracks down its joints.
-    float along = vWorld.x + 0.4 * vWorld.z;
-    float bedY = vWorld.y * 0.32 + 1.8 * vnoise(vWorld.xz / 31.0) + 0.5 * vnoise(vec2(along / 7.0, vWorld.y / 5.0));
-    float ledge = vnoise(vec2(bedY, 7.0)) - vnoise(vec2(bedY + 0.25, 7.0));
-    n = normalize(n + vec3(0.0, 1.0, 0.0) * ledge * 2.4 * out_);
-    float joint = abs(vnoise(vec2(along / 5.5 + 0.7 * vnoise(vec2(vWorld.y / 9.0, along / 30.0)), floor(bedY) * 3.7 + vWorld.y / 6.5)) - 0.5);
-    cliff *= 1.0 - out_ * (0.5 * smoothstep(0.05, 0.22, ledge) + 0.5 * smoothstep(0.025, 0.0, joint));
-    cliff *= fineRock(vWorld, max(own, 0.6 * out_), n);
+    // The rim and the tube have no upright direction (the roof, the bevel): the picture is laid on from the axis the face looks along.
+    vec3 cliff = laid(tCliff, vWorld, lieOf(n), 47.0, 0.0).rgb;
+    cliff *= fineRock(vWorld, 1.0, n);
     // Soot and glaze inside: the lining of a tube is darker than the wall it runs through.
     cliff *= mix(1.0, 0.5, smoothstep(0.0, 30.0, -vSkin.y) * inside);
-    // Under the sill the wall is draped with what has slopped over it, black and glazed.
-    cliff *= mix(1.0, 0.75, smoothstep(${f(TUBE.floor + 3)}, ${f(TUBE.floor - 5)}, vWorld.y) * smoothstep(${f(TUBE.floor - 70)}, ${f(TUBE.floor - 30)}, vWorld.y) * out_);
-    // The rim is the youngest rock of the wall, glazed by what has poured through it.
-    // Soot: the wall is darkest and warmest round the mouth and goes over to the land's own tone forty metres out, where the patch ends.
-    float sooty = smoothstep(46.0, 8.0, -d) * smoothstep(4.0, 18.0, edge);
     // The cut rock of the bevel and the roof is broken in blocks: each takes the light at its own angle and the joints between them are black.
-    if (vSkin.x >= 0.5 && vSkin.y < 2.0) {
+    if (vSkin.y < 2.0) {
       // The cut rock of the bevel and the roof is folded along the tube, as the melt that once filled it left it: ridges that go back into
       // the dark, grooves between them that the light from below does not reach, and a break across them here and there.
       float broken = smoothstep(2.0, -3.0, vSkin.y);
@@ -254,6 +248,7 @@ void main() {
     }
     vec3 more = vec3(0.0);
     c = rockShade(vWorld, n, v, cliff, 1.0, more, d);
+    if (collar > 0.0) c = mix(c, rigShade(vWorld, wn, v, wall, 0.92, wocc), collar);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
   // Last, so that no texture is read beside a pixel already thrown away.
@@ -565,9 +560,9 @@ varying vec3 vWorld;
 varying vec3 vSkin;
 ${NOISE_GLSL}
 ${WINDOW_FRAGMENT}
+${TORN_GLSL}
 void main() {
-  float edge = vSkin.x < 0.5 && vSkin.z < 0.5 ? vSkin.y : 99.0;
-  if (edge < 3.0 + 13.0 * (0.6 * vnoise(vWorld.xy / 9.0 + vWorld.z / 13.0) + 0.4 * vnoise(vWorld.xy / 2.3 + vWorld.z / 3.1))) discard;
+  if (torn(vWorld, vSkin)) discard;
   if (hiddenByWall(vWorld, vSkin.z)) discard;
   gl_FragColor = vec4(0.0);
 }`;
