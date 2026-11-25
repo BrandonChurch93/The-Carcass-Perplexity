@@ -29,13 +29,21 @@
         "height": 1024
       },
       {
-        "name": "sky",
-        "from": "air/sky-take1.jpg",
+        "name": "shingle",
+        "from": "land/shingle-take1.jpg",
+        "to": "land",
+        "width": 1024,
+        "height": 1024,
+        "dataAs": "jpg"
+      },
+      {
+        "name": "storm",
+        "from": "air/storm-take1.jpg",
         "to": "air",
         "width": 2048,
         "height": 1024,
         "colourOnly": true,
-        "band": 0.2
+        "plain": true
       }
     ]
   },
@@ -66,11 +74,19 @@
       ]
     },
     {
-      "name": "sky",
+      "name": "shingle",
       "mean": [
-        0.226,
-        0.269,
-        0.32
+        0.106,
+        0.104,
+        0.1
+      ]
+    },
+    {
+      "name": "storm",
+      "mean": [
+        0.144,
+        0.166,
+        0.193
       ]
     }
   ]

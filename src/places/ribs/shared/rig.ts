@@ -384,9 +384,13 @@ export function createRig(): Rig {
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
+  const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
   const breakToward = (seconds: number): void => {
-    // The break drifts with the cloud: a fifth of a degree a second, to the right.
+    // The break drifts with the cloud: a fifth of a degree a second, to the right. In the picture it lies 0.733 radians right of the middle.
     const yaw = ((36 + 0.2 * (seconds - T0)) * Math.PI) / 180;
+    skyTurn.x = yaw - 0.733;
+    skyTurn.y = 0.0021 * seconds;
+    skyTurn.z = 0.0034 * seconds;
     const pitch = (21 * Math.PI) / 180;
     skyBreak.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   };
@@ -404,20 +408,19 @@ export function createRig(): Rig {
     uCloudBreak: { value: breakAt },
     uCloudShade: { value: cloudShade },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
-    uSkyZenith: { value: new THREE.Vector3(0.13, 0.16, 0.21) },
-    uSkyHorizon: { value: new THREE.Vector3(0.3, 0.345, 0.4) },
+    uSkyZenith: { value: new THREE.Vector3(0.115, 0.14, 0.185) },
+    uSkyHorizon: { value: new THREE.Vector3(0.33, 0.38, 0.45) },
     // What wet sand and sea throw back up at the underside of things.
-    uSkyGround: { value: new THREE.Vector3(0.05, 0.055, 0.06) },
+    uSkyGround: { value: new THREE.Vector3(0.08, 0.088, 0.097) },
     uSunDir: { value: sun },
     uSunColour: { value: new THREE.Vector3(...SUN.colour) },
     // The colour the air takes at the horizon: the volume pass and the dome meet in it.
-    uHaze: { value: new THREE.Vector3(0.34, 0.385, 0.43) },
+    uHaze: { value: new THREE.Vector3(0.33, 0.37, 0.415) },
     // The way to the bright break in the storm sky, as the cameras of the strait see it: up and to the right of the way in.
     uSkyBreak: { value: skyBreak },
-    // The picture of the cloud's shapes (the air folder loads it), its mean colour, and the height of the sheet.
+    // The picture of the storm sky (the air folder loads it); how far it has turned round the dome (radians), how far its lumps have worked, its gain.
     tSky: { value: null },
-    uSkyMean: { value: new THREE.Vector3(0.226, 0.269, 0.32) },
-    uCloudHeight: { value: CLOUD.height },
+    uSkyTurn: { value: skyTurn },
   };
 
   let landHeight: Height = layoutLand;
