@@ -121,27 +121,28 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
   // Its billows: light on the round of each dome, dark in the creases between.
   float shade = smoothstep(0.52, 0.95, dome) * mix(1.0, 0.5, smoothstep(300.0, 2600.0, h)) * (0.35 + 0.65 * lump) * (0.75 + 0.25 * max(n.y, 0.0) + 0.2 * max(dot(n, uWarmDir), 0.0));
   shade = clamp(shade, 0.0, 1.0);
-  vec3 c = mix(uSkyStorm * 0.38 + vec3(0.0006, 0.0, 0.0014), mix(uSkyHorizon, uSkyZenith, 0.45) * 0.3, shade);
+  vec3 c = mix(uSkyStorm * 0.27 + vec3(0.0006, 0.0, 0.0014), mix(uSkyHorizon, uSkyZenith, 0.45) * 0.3, shade);
   // Low down it is lighter: the snow in the air under it.
   vec3 q = p - uWind.xyz * (uTime * 30.0);
   float streak = noise(vec3(q.x / 420.0, q.y / 5200.0 + q.z / 1400.0, q.z / 420.0)).g;
   float under = smoothstep(900.0, -500.0, h);
   c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.12 + 0.25 * streak), 0.5 * under);
-  vec3 within = uFlash * 2.5;
+  vec3 within = uFlash * 0.3;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
     float r = uEmitters[i].w;
     float d2 = dot(d, d) + r * r;
     float fall = r * r / d2 * EMITTER_CAST * 3.14159;
-    c += uEmitterRadiance[i] * (fall * (0.55 + 0.45 * dot(n, d) * inversesqrt(d2)) * (0.3 + 0.7 * lump) * 0.16);
+    c += uEmitterRadiance[i] * (fall * (0.55 + 0.45 * dot(n, d) * inversesqrt(d2)) * (0.3 + 0.7 * lump) * 0.05);
     // The bolt is in the cloud: the cloud about it glows from inside, most in its creases.
     // The bolt is in the cloud: the cloud behind it glows from inside, most in its creases, a pool of light about the channel as it is seen.
     vec3 off = d - rd * dot(d, rd);
-    float reach = 1.7 * r + 120.0;
-    within += uEmitterRadiance[i] * (r / 260.0) * (0.006 * exp(-dot(off, off) / (reach * reach)) + 0.0012 * exp(-dot(off, off) / (9.0 * reach * reach)));
+    // The pool keeps its size in the frame, so a long lens does not turn it into a veil.
+    float reach = min(1.7 * r + 120.0, 0.09 * max(t + dot(d, rd), 0.0) + 20.0);
+    within += uEmitterRadiance[i] * (r / 260.0) * (0.007 * exp(-dot(off, off) / (reach * reach)) + 0.0006 * exp(-dot(off, off) / (9.0 * reach * reach)));
   }
-  return c + within * (0.3 + 0.7 * smoothstep(0.8, 0.4, dome)) * (0.6 + 0.4 * lump);
+  return c + within * (0.3 + 0.7 * smoothstep(0.82, 0.38, dome)) * (0.6 + 0.4 * lump);
 }
 
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
