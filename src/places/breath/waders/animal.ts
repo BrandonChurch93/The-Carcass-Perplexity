@@ -151,7 +151,7 @@ export function makeBuild(k: number, seed: number, far: boolean): Build {
     stepH: 0.55 * k * j(6, 0.8, 1.2),
     neckLen: 2.1 * k * j(7, 0.93, 1.08),
     neckR: 0.082 * k,
-    tendrils: far ? 6 : 120,
+    tendrils: far ? 6 : 190,
     tendrilLen: 0.62 * k * j(8, 0.85, 1.2),
     skew: j(9, -0.12, 0.12),
   };
@@ -300,7 +300,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.6 + 1.7 * hash(seed + n * 12.7) ** 3.0,
+        thick: far ? 1 : 0.32 + 1.5 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {

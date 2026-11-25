@@ -158,9 +158,9 @@ void main() {
   } else if (kind < 2.5) {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
     float tone = vInfo.x;
-    albedo = mix(vec3(0.55, 0.27, 0.26), mix(vec3(0.1, 0.03, 0.03), vec3(0.3, 0.12, 0.1), tone), smoothstep(0.0, 0.3, u));
+    albedo = mix(vec3(0.5, 0.25, 0.24), mix(vec3(0.07, 0.018, 0.02), vec3(0.22, 0.06, 0.055), tone), smoothstep(0.0, 0.3, u));
     // A few are pale and fleshy, the pink of the neck's end carried down them.
-    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.7, hash12(vec2(seed, 9.0))) * 0.7);
+    albedo = mix(albedo, vec3(0.56, 0.3, 0.27), step(0.84, hash12(vec2(seed, 9.0))) * 0.7);
     albedo = mix(albedo, vec3(0.09, 0.075, 0.04), smoothstep(0.55, 1.0, u) * smoothstep(0.35, 0.8, tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.07, 0.065, 0.035), step(0.82, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));

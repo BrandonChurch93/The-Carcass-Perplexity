@@ -171,7 +171,7 @@ ${VANE_TEST}
   float strand = mix(1.0, 0.25 + 0.75 * sqrt(1.0 - across * across), smoothstep(0.7 * px, 2.2 * px, spacing * fan));
   occ *= strand;
   albedo *= 0.75 + 0.5 * hb;
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
+  vec3 colour = rigShade(vWorld, n, v, albedo, 0.55, occ);
   // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float thin = smoothstep(0.35, 1.0, t) * (0.15 + 0.85 * within);
