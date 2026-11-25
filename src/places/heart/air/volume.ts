@@ -1,0 +1,378 @@
+// The half-size passes of the Heart's air. VOLUME writes the light the air scatters toward the camera in rgb and how much of the scene it lets through in alpha;
+// WARP writes how far the scene behind each pixel is bent by hot air. Both read the rig, so the air is lit by what lights the ground.
+import { HASH_GLSL } from '../../../core/post';
+import { RIG_GLSL } from '../shared/glsl';
+
+export const MAX_STEAM = 16;
+export const MAX_HEAT = 12;
+
+/** March steps. The cost of the volume is close to linear in these. */
+export const STEPS = { air: 12, column: 22, low: 12, steam: 8 };
+
+const COMMON = /* glsl */ `
+precision highp float;
+precision highp sampler3D;
+uniform sampler2D tDepth;
+uniform mat4 uInvProjection;
+uniform mat4 uCameraWorld;
+uniform int uSeq;
+uniform int uSampleIndex;
+uniform highp sampler3D tNoise;
+varying vec2 vUv;
+${HASH_GLSL}
+${RIG_GLSL}
+
+vec4 noise(vec3 p) {
+  return textureLod(tNoise, p, 0.0);
+}
+float lum(vec3 c) {
+  return dot(c, vec3(0.2126, 0.7152, 0.0722));
+}
+// The ray of this pixel: where it starts, where it goes, and how far it gets before it meets the scene.
+void viewRay(out vec3 ro, out vec3 rd, out float far) {
+  float depth = texture2D(tDepth, vUv).r;
+  vec4 view = uInvProjection * vec4(vUv * 2.0 - 1.0, depth * 2.0 - 1.0, 1.0);
+  vec3 world = (uCameraWorld * vec4(view.xyz / view.w, 1.0)).xyz;
+  ro = uCameraWorld[3].xyz;
+  rd = world - ro;
+  far = length(rd);
+  rd /= far;
+  if (depth >= 1.0) far = 30000.0;
+}
+bool hitBall(vec3 ro, vec3 rd, vec3 centre, float radius, out float t0, out float t1) {
+  vec3 oc = ro - centre;
+  float b = dot(oc, rd);
+  float c = dot(oc, oc) - radius * radius;
+  float h = b * b - c;
+  if (h < 0.0) return false;
+  h = sqrt(h);
+  t0 = -b - h;
+  t1 = -b + h;
+  return t1 > 0.0;
+}`;
+
+export const VOLUME_FRAGMENT = /* glsl */ `
+${COMMON}
+uniform float uShowAir;
+uniform float uShowFume;
+uniform vec3 uSkyMean;
+uniform vec3 uVent;
+uniform int uSteamCount;
+uniform vec4 uSteamA[${MAX_STEAM}];
+uniform vec4 uSteamB[${MAX_STEAM}];
+uniform vec4 uSteamC[${MAX_STEAM}];
+
+const vec3 AIR_ALBEDO = vec3(0.95, 0.9, 0.84);
+const vec3 FUME_ALBEDO = vec3(0.8, 0.72, 0.64);
+const vec3 STEAM_ALBEDO = vec3(0.9, 0.92, 0.95);
+const vec3 SMOKE_ALBEDO = vec3(0.52, 0.46, 0.4);
+const vec3 FUME_BASE = vec3(585.0, 0.0, -285.0);
+const vec3 LOW_CENTRE = vec3(790.0, 25.0, -40.0);
+const vec3 LOW_SIZE = vec3(380.0, 170.0, 270.0);
+const vec3 SKY_DIR = vec3(-0.38, 0.9, 0.22);
+
+// What the round lights of the rig scatter toward the camera from a point of air.
+vec3 roundLights(vec3 p) {
+  vec3 e = vec3(0.0);
+  for (int i = 0; i < 8; i++) {
+    if (i >= uEmitterCount) break;
+    vec3 d = uEmitters[i].xyz - p;
+    float r2 = uEmitters[i].w * uEmitters[i].w;
+    e += uEmitterRadiance[i] * (r2 / (dot(d, d) + r2));
+  }
+  return e * 0.25;
+}
+
+// The air itself: thin everywhere, heavier low over the lake, in banks that drift west, thickest where the lake is open.
+void airAt(vec3 p, out float sigma, out vec3 source) {
+  vec4 land = texture2D(tLand, (p.xz - uLandRect.xy) * uLandRect.zw);
+  float y = max(p.y, 0.0);
+  float overLake = smoothstep(40.0, -90.0, land.b);
+  vec3 glow = lakeGlow(p.xz, max(2.0 * y, 30.0));
+  float hot = clamp(lum(glow) * 0.6, 0.0, 1.0);
+  vec3 q = p + vec3(1.3, -0.15, -0.45) * uTime;
+  vec4 n = noise(q * vec3(0.0013, 0.0042, 0.0013));
+  float banks = smoothstep(0.3, 0.75, n.g * 0.65 + n.a * 0.35);
+  sigma = 0.0003 * exp(-y / 210.0) * (0.7 + 0.6 * n.a)
+        + 0.0012 * exp(-y / 48.0) * overLake * (0.2 + 1.6 * banks)
+        + 0.0035 * hot * exp(-y / 70.0) * (0.35 + 1.3 * banks);
+  float open = mix(land.g, 1.0, clamp((p.y - land.r) / 80.0, 0.0, 1.0));
+  source = AIR_ALBEDO * (0.8 * uSkyMean * open + 0.3 * glow + roundLights(p));
+}
+
+vec2 fumeAxis(float h) {
+  float a = max(h - 150.0, 0.0) / 640.0;
+  vec2 foot = mix(FUME_BASE.xz, vec2(500.0, -390.0), smoothstep(0.0, 170.0, h));
+  return foot + vec2(-420.0 * a * a, -200.0 * a);
+}
+// 0 outside the column, 1 on its axis.
+float columnShape(vec3 p) {
+  float h = p.y;
+  if (h < -5.0 || h > 800.0) return 0.0;
+  float d = length(p.xz - fumeAxis(h)) / (85.0 + 0.5 * h);
+  return clamp(1.0 - d, 0.0, 1.0) * (1.0 - smoothstep(560.0, 800.0, h)) * smoothstep(-5.0, 30.0, h);
+}
+float lowShape(vec3 p) {
+  return clamp(1.0 - length((p - LOW_CENTRE) / LOW_SIZE), 0.0, 1.0) * smoothstep(-2.0, 24.0, p.y);
+}
+// The plume's own flow: the lumps climb with it and are carried west above the rim.
+vec3 columnFlow(vec3 p) {
+  return vec3(p.x + uTime * 2.6 * smoothstep(180.0, 480.0, p.y), p.y - uTime * 3.4, p.z);
+}
+vec3 lowFlow(vec3 p) {
+  return vec3(p.x - uTime * 1.2, p.y - uTime * 2.2, p.z + 400.0);
+}
+// The body of a plume: lumps of three sizes cut by its shape, so that its surface is where the lumps end. Cheap: one read.
+float lumps(vec3 q, float shape) {
+  return clamp((noise(q / 236.0).r + shape * 1.45 - 1.0) * 4.0, 0.0, 1.0);
+}
+// The same with the small lumps on the surface: two reads where the surface is, one elsewhere.
+float fumeDensity(vec3 q, float shape) {
+  float body = noise(q / 236.0).r + shape * 1.45 - 1.0;
+  if (body < -0.2) return 0.0;
+  if (body < 0.45) body += (noise(q / 57.0 + 0.37).b - 0.5) * 0.4;
+  return clamp(body * 4.0, 0.0, 1.0);
+}
+
+// One of the vapours the other folders ask for: a column that widens and thins as it rises and bends with the wind.
+void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter, inout vec3 sum, inout float trans, inout float first) {
+  vec4 A = uSteamA[i];
+  vec4 B = uSteamB[i];
+  vec4 C = uSteamC[i];
+  float rise = B.z;
+  vec3 lean = vec3(B.x, 1.0, B.y);
+  float spread = 0.3;
+  // Bounds: in the space where the column stands upright it is inside a round tower.
+  vec3 o = ro - A.xyz;
+  vec2 oxz = o.xz - B.xy * 1.3 * o.y;
+  vec2 dxz = rd.xz - B.xy * 1.3 * rd.y;
+  float tower = A.w + rise * (spread + 0.27 * length(B.xy));
+  float qa = dot(dxz, dxz);
+  float qb = dot(oxz, dxz);
+  float qc = dot(oxz, oxz) - tower * tower;
+  float t0 = 0.0;
+  float t1 = far;
+  if (qa > 1e-8) {
+    float qh = qb * qb - qa * qc;
+    if (qh < 0.0) return;
+    qh = sqrt(qh);
+    t0 = max(t0, (-qb - qh) / qa);
+    t1 = min(t1, (-qb + qh) / qa);
+  } else if (qc > 0.0) return;
+  if (abs(rd.y) > 1e-5) {
+    float ya = -o.y / rd.y;
+    float yb = (rise - o.y) / rd.y;
+    t0 = max(t0, min(ya, yb));
+    t1 = min(t1, max(ya, yb));
+  } else if (o.y < 0.0 || o.y > rise) return;
+  if (t1 <= t0) return;
+  vec3 albedo = mix(STEAM_ALBEDO, SMOKE_ALBEDO, C.w);
+  float dt = (t1 - t0) / float(${STEPS.steam});
+  for (int k = 0; k < ${STEPS.steam}; k++) {
+    float t = t0 + (float(k) + jitter) * dt;
+    vec3 p = ro + rd * t;
+    float h = p.y - A.y;
+    float u = h / rise;
+    if (u < 0.0 || u > 1.0) continue;
+    vec2 centre = A.xz + B.xy * h * (0.45 + 1.1 * u) + (noise(vec3(u * 0.7, uTime * 0.11, C.x)).ga - 0.5) * (A.w * 0.6 + h * 0.25);
+    float r = A.w + h * spread;
+    float d = length(p.xz - centre) / r;
+    if (d >= 1.0) continue;
+    float thin = A.w / r;
+    float core = (1.0 - d) * smoothstep(0.0, 0.05, u) * (1.0 - u * u) * mix(1.0, thin, 0.5);
+    vec3 q = p - A.xyz;
+    q -= lean * (C.y * uTime);
+    q = q / C.z + C.x;
+    float n = noise(q).r;
+    float dens = clamp((n * 0.7 + noise(q * 3.7).b * 0.5 + core * 1.5 - 1.0) * 2.2, 0.0, 1.0);
+    if (dens <= 0.0) continue;
+    float sigma = dens * B.w;
+    vec3 light = 0.5 * uSkyMean * (1.0 - 0.3 * dens) + 0.3 * lakeGlow(p.xz, max(2.0 * p.y, 6.0)) + roundLights(p);
+    float a = 1.0 - exp(-sigma * dt);
+    sum += trans * a * albedo * light;
+    trans *= 1.0 - a;
+    if (first < 0.0) first = t;
+  }
+}
+
+void main() {
+  vec3 ro;
+  vec3 rd;
+  float far;
+  viewRay(ro, rd, far);
+  float jitter = rnd(ivec2(gl_FragCoord.xy), uint(uSeq) * 8u + uint(uSampleIndex));
+
+  // The vapours first, each as a sheet at its own distance; the air is then marched from the camera and takes them in as it passes them.
+  vec3 steamSum = vec3(0.0);
+  float steamTrans = 1.0;
+  float steamAt = -1.0;
+  vec3 fumeSum = vec3(0.0);
+  float fumeTrans = 1.0;
+  float fumeAt = -1.0;
+  vec3 lowSum = vec3(0.0);
+  float lowTrans = 1.0;
+  float lowAt = -1.0;
+
+  if (uShowFume > 0.5) {
+    for (int i = 0; i < ${MAX_STEAM}; i++) {
+      if (i >= uSteamCount) break;
+      steamOne(i, ro, rd, far, fract(jitter + 0.618 * float(i + 1)), steamSum, steamTrans, steamAt);
+    }
+
+    // The column: four balls along its axis bound it.
+    float c0 = 1e9;
+    float c1 = -1e9;
+    float a0;
+    float a1;
+    if (hitBall(ro, rd, vec3(fumeAxis(70.0), 70.0).xzy, 150.0, a0, a1)) { c0 = min(c0, a0); c1 = max(c1, a1); }
+    if (hitBall(ro, rd, vec3(fumeAxis(230.0), 230.0).xzy, 215.0, a0, a1)) { c0 = min(c0, a0); c1 = max(c1, a1); }
+    if (hitBall(ro, rd, vec3(fumeAxis(420.0), 420.0).xzy, 300.0, a0, a1)) { c0 = min(c0, a0); c1 = max(c1, a1); }
+    if (hitBall(ro, rd, vec3(fumeAxis(640.0), 640.0).xzy, 400.0, a0, a1)) { c0 = min(c0, a0); c1 = max(c1, a1); }
+    c0 = max(c0, 0.0);
+    c1 = min(c1, far);
+    if (c1 > c0) {
+      vec3 under = (lakeGlow(FUME_BASE.xz, 170.0) + uVent) * 0.3;
+      float dt = (c1 - c0) / float(${STEPS.column});
+      float j = fract(jitter + 0.37);
+      float weight = 0.0;
+      float where = 0.0;
+      for (int k = 0; k < ${STEPS.column}; k++) {
+        float t = c0 + (float(k) + j) * dt;
+        vec3 p = ro + rd * t;
+        float shape = columnShape(p);
+        if (shape <= 0.0) continue;
+        vec3 q = columnFlow(p);
+        float dens = fumeDensity(q, shape);
+        if (dens <= 0.0) continue;
+        // Its own shade: how much of the plume lies between this point and the sky, and between it and the lake.
+        vec3 p1 = p + SKY_DIR * 34.0;
+        vec3 p2 = p + SKY_DIR * 110.0;
+        vec3 p3 = p - vec3(0.0, 60.0, 0.0);
+        float skyT = exp(-(lumps(columnFlow(p1), columnShape(p1)) * 0.9 + lumps(columnFlow(p2), columnShape(p2)) * 1.4));
+        float underT = exp(-lumps(columnFlow(p3), columnShape(p3)) * 1.6) * exp(-max(p.y - 10.0, 0.0) / 120.0);
+        vec3 light = uSkyMean * (0.16 + 1.0 * skyT) + under * underT + 0.3 * lakeGlow(p.xz, max(2.0 * p.y, 60.0)) + roundLights(p);
+        float a = 1.0 - exp(-dens * 0.02 * dt);
+        fumeSum += fumeTrans * a * FUME_ALBEDO * light;
+        weight += fumeTrans * a;
+        where += fumeTrans * a * t;
+        fumeTrans *= 1.0 - a;
+        if (fumeTrans < 0.02) break;
+      }
+      if (weight > 0.0) fumeAt = where / weight;
+    }
+
+    // The low mass over the open lake beyond the buttress.
+    if (hitBall(ro, rd, LOW_CENTRE + vec3(0.0, 40.0, 0.0), 400.0, a0, a1)) {
+      a0 = max(a0, 0.0);
+      a1 = min(a1, far);
+      if (a1 > a0) {
+        float dt = (a1 - a0) / float(${STEPS.low});
+        float j = fract(jitter + 0.71);
+        float weight = 0.0;
+        float where = 0.0;
+        for (int k = 0; k < ${STEPS.low}; k++) {
+          float t = a0 + (float(k) + j) * dt;
+          vec3 p = ro + rd * t;
+          float shape = lowShape(p);
+          if (shape <= 0.0) continue;
+          vec3 q = lowFlow(p);
+          float dens = fumeDensity(q, shape * 0.8);
+          if (dens <= 0.0) continue;
+          vec3 p1 = p + SKY_DIR * 40.0;
+          float skyT = exp(-lumps(lowFlow(p1), lowShape(p1) * 0.8) * 1.6);
+          vec3 under = (lakeGlow(p.xz, max(2.0 * p.y, 80.0)) + uVent * exp(-p.y / 90.0)) * 0.3;
+          vec3 light = uSkyMean * (0.16 + 1.0 * skyT) + under * (0.45 + 0.55 * (1.0 - skyT)) + roundLights(p);
+          float a = 1.0 - exp(-dens * 0.011 * dt);
+          lowSum += lowTrans * a * FUME_ALBEDO * light;
+          weight += lowTrans * a;
+          where += lowTrans * a * t;
+          lowTrans *= 1.0 - a;
+          if (lowTrans < 0.02) break;
+        }
+        if (weight > 0.0) lowAt = where / weight;
+      }
+    }
+  }
+
+  vec3 sum = vec3(0.0);
+  float trans = 1.0;
+  float reach = min(far, 3400.0);
+  if (rd.y > 0.0) reach = min(reach, max((900.0 - ro.y) / rd.y, 0.0));
+  float prev = 0.0;
+  float j = fract(jitter + 0.13);
+  for (int i = 0; i < ${STEPS.air}; i++) {
+    float edge = reach * pow((float(i) + 1.0) / float(${STEPS.air}), 1.7);
+    if (steamAt >= 0.0 && steamAt < edge) { sum += trans * steamSum; trans *= steamTrans; steamAt = -1.0; }
+    if (fumeAt >= 0.0 && fumeAt < edge) { sum += trans * fumeSum; trans *= fumeTrans; fumeAt = -1.0; }
+    if (lowAt >= 0.0 && lowAt < edge) { sum += trans * lowSum; trans *= lowTrans; lowAt = -1.0; }
+    if (uShowAir > 0.5) {
+      float dt = edge - prev;
+      vec3 p = ro + rd * mix(prev, edge, j);
+      float sigma;
+      vec3 source;
+      airAt(p, sigma, source);
+      float a = 1.0 - exp(-sigma * dt);
+      sum += trans * a * source;
+      trans *= 1.0 - a;
+    }
+    prev = edge;
+  }
+  if (steamAt >= 0.0) { sum += trans * steamSum; trans *= steamTrans; }
+  if (fumeAt >= 0.0) { sum += trans * fumeSum; trans *= fumeTrans; }
+  if (lowAt >= 0.0) { sum += trans * lowSum; trans *= lowTrans; }
+  gl_FragColor = vec4(sum, trans);
+}`;
+
+export const WARP_FRAGMENT = /* glsl */ `
+${COMMON}
+uniform float uShowAir;
+uniform int uHeatCount;
+uniform vec4 uHeatA[${MAX_HEAT}];
+uniform vec4 uHeatB[${MAX_HEAT}];
+
+void main() {
+  vec3 ro;
+  vec3 rd;
+  float far;
+  viewRay(ro, rd, far);
+  float jitter = rnd(ivec2(gl_FragCoord.xy), uint(uSeq) * 8u + uint(uSampleIndex));
+
+  // Metres of hot air the view passes through before it reaches the scene: low over open lava, and inside the sources.
+  float heat = 0.0;
+  float reach = min(far, 1600.0);
+  float prev = 0.0;
+  for (int i = 0; i < 7; i++) {
+    float edge = reach * pow((float(i) + 1.0) / 7.0, 1.8);
+    vec3 p = ro + rd * mix(prev, edge, jitter);
+    float y = max(p.y, 0.0);
+    if (y < 45.0) heat += (edge - prev) * clamp(lum(lakeGlow(p.xz, 5.0 + y)) / 5.0, 0.0, 1.0) * exp(-y / 9.0);
+    prev = edge;
+  }
+  for (int i = 0; i < ${MAX_HEAT}; i++) {
+    if (i >= uHeatCount) break;
+    vec4 A = uHeatA[i];
+    vec4 B = uHeatB[i];
+    // The source as a ball stretched to its height: the length of the view inside it.
+    vec3 squash = vec3(1.0, A.w / max(B.x, 0.01), 1.0);
+    vec3 centre = (A.xyz + vec3(0.0, B.x * 0.5, 0.0)) * squash;
+    vec3 dir = rd * squash;
+    float scale = length(dir);
+    float t0;
+    float t1;
+    if (!hitBall(ro * squash, dir / scale, centre, A.w, t0, t1)) continue;
+    t0 = max(t0, 0.0) / scale;
+    t1 = min(t1 / scale, far);
+    if (t1 > t0) heat += (t1 - t0) * B.y * 2.0;
+  }
+  float amount = 1.0 - exp(-heat / 36.0);
+  if (amount < 0.004 || uShowAir < 0.5) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+  // Fine cells that rise, tied to the direction of view and to the lens, so that they are the same few pixels wide through any lens.
+  float lens = 1.0 / uInvProjection[1][1];
+  vec2 ang = vec2(atan(rd.x, -rd.z), asin(clamp(rd.y, -1.0, 1.0))) * lens;
+  vec3 q = vec3(ang.x * 8.0, ang.y * 8.0 - uTime * 2.3, uTime * 0.7);
+  vec2 n = (noise(q).ga - 0.5) + 0.6 * (noise(q * 2.6 + 0.4).ag - 0.5);
+  gl_FragColor = vec4(n * amount * 0.0034, 0.0, 1.0);
+}`;
