@@ -31,10 +31,13 @@ void main() {
 const EDGE_BED = at(197.6, DEEP + 2);
 
 const MATS_GLSL = /* glsl */ `
+uniform sampler2D tMat;
+uniform sampler2D tMatNh;
 struct Mat {
   float cover;
   float strand;
   vec3 colour;
+  vec2 grain;
 };
 // Where the mats grow: beds drawn out toward the centre, with dark water between, thin toward the shore and gone at the lip.
 float matBeds(vec3 p) {
@@ -53,6 +56,7 @@ Mat matsAt(vec3 p) {
   m.cover = 0.0;
   m.strand = 0.0;
   m.colour = vec3(0.0);
+  m.grain = vec2(0.0);
   float beds = matBeds(p);
   if (beds <= 0.0) return m;
   // The filaments lie combed from the shore toward the centre, in locks that swing round each other as hair does in a slow water, and sway.
@@ -72,36 +76,27 @@ Mat matsAt(vec3 p) {
   float dry = smoothstep(-0.03, 0.04, p.y);
   m.cover *= 1.0 - 0.7 * dry;
   m.cover *= 1.0 - 0.8 * dry * smoothstep(0.62, 0.4, tress);
-  // The threads are the lines where long thin noise crosses its middle: they run, part and join. Three sizes, each laid a little across the last.
+  // The filaments are the mat picture laid in the combed space: 3 m a repeat, its hair along the comb. Again at a third and at five times that.
+  vec2 ma = vec2(q.y, q.x) / 3.0;
+  vec2 mb = vec2(q.y * 0.8, q.x) / 1.05 + vec2(0.31, 0.57);
+  vec2 mc = vec2(q.y, q.x) / 14.0 + vec2(0.11, 0.73);
+  vec3 ta = texture2D(tMat, ma).rgb;
+  vec3 tb = texture2D(tMat, mb).rgb;
+  vec3 tc = texture2D(tMat, mc).rgb;
+  vec3 ha = texture2D(tMatNh, ma).rgb;
+  // Fine hair near the camera, the picture itself in the middle distance, its broad streaks from far off.
   float grain = fwidth(q.x);
-  vec2 q2 = q + 0.5 * (vec2(vnoise(w / 1.1 + 4.4), vnoise(w / 1.1 + 8.8)) - 0.5);
-  vec2 q3 = q + 0.3 * (vec2(vnoise(w / 0.6 + 2.4), vnoise(w / 0.6 + 5.8)) - 0.5);
-  float a1 = vnoise(vec2(q.x * 21.0, q.y * 0.8) + 2.0);
-  float a2 = vnoise(vec2(q2.x * 58.0, q2.y * 1.6) + 11.0);
-  float a3 = vnoise(vec2(q3.x * 150.0, q3.y * 3.1) + 23.0);
-  float l1 = 1.0 - smoothstep(0.02, 0.1, abs(a1 - 0.5));
-  float l2 = 1.0 - smoothstep(0.02, 0.11, abs(a2 - 0.5));
-  float l3 = 1.0 - smoothstep(0.02, 0.12, abs(a3 - 0.5));
-  // From far off they are finer than a picture point: there they are let go to their mean, so that nothing glitters.
-  float far1 = smoothstep(0.008, 0.035, grain);
-  float far2 = smoothstep(0.003, 0.013, grain);
-  float far3 = smoothstep(0.0012, 0.005, grain);
-  l1 = mix(l1, 0.24, far1);
-  l2 = mix(l2, 0.26, far2);
-  l3 = mix(l3, 0.28, far3);
-  // Not every thread is bright along its whole length.
-  float lit = 0.35 + 0.65 * vnoise(vec2(q.x / 0.09, q.y / 0.5) + 31.0);
-  float lines = max(max(l1, 0.85 * l2), 0.7 * l3) * mix(lit, 0.65, far2);
-  m.strand = 0.5 + 0.5 * lines;
-  float kind = 0.6 * vnoise(vec2(q.x / 2.1, q.y / 6.0) + 5.0) + 0.4 * vnoise(vec2(q.x / 0.5, q.y / 2.2));
-  vec3 rust = vec3(0.11, 0.026, 0.009) * (1.0 - 0.3 * dry);
-  vec3 amber = vec3(0.29, 0.1, 0.014) * (1.0 - 0.3 * dry);
-  vec3 honey = vec3(0.62, 0.4, 0.08);
-  vec3 body = mix(rust, amber, smoothstep(0.4, 0.7, kind)) * 0.4;
-  vec3 thread = mix(mix(rust * 1.6, amber, smoothstep(0.3, 0.55, kind)), honey, max(l2, l3) * smoothstep(0.45, 0.7, kind));
-  m.colour = mix(body, thread, lines);
-  // From far off the beds are amber and gold in streaks, with brown between.
-  m.colour = mix(m.colour, mix(vec3(0.2, 0.075, 0.016), vec3(0.6, 0.33, 0.055), smoothstep(0.35, 0.62, kind)), smoothstep(0.03, 0.25, grain));
+  float fine = 1.0 - smoothstep(0.004, 0.02, grain);
+  vec3 hair = mix(ta, tb, 0.45 * fine);
+  hair = mix(hair, hair * (tc / vec3(0.279, 0.092, 0.014)), 0.5);
+  // The pale stone of the picture is not hair: there the water shows.
+  float lum = dot(hair, vec3(0.3, 0.5, 0.2));
+  float red = hair.r / max(hair.g, 1e-3);
+  float isHair = smoothstep(1.5, 2.3, red);
+  m.strand = isHair * (0.55 + 0.45 * smoothstep(0.2, 0.65, ha.b));
+  // Amber and gold, not red: the picture is tinted toward the approved one, and is darker where the hair lies deep.
+  m.colour = hair * mix(vec3(0.62, 0.62, 0.4), vec3(1.0, 1.05, 0.6), smoothstep(0.25, 0.7, ha.b)) * mix(1.0, 0.7, dry);
+  m.grain = (ha.xy * 2.0 - 1.0) * fine;
   return m;
 }`;
 
@@ -131,7 +126,12 @@ void main() {
   albedo = mix(albedo, k.albedo * 0.42, smoothstep(7.0, 1.5, shoreward));
   // The crust is pale and pitted, with rims of darker scale.
   float pit = 0.6 * vnoise(vWorld.xz / 0.9 + 5.0) + 0.4 * vnoise(vWorld.xz / 0.23);
-  albedo = mix(albedo, vec3(0.66, 0.63, 0.56) * (0.55 + 0.75 * pit) * (0.7 + 0.4 * k.occ), 0.75 * crust);
+  vec3 sa = texture2D(tSinter, vWorld.xz / 3.0).rgb;
+  vec3 sb = texture2D(tSinter, vWorld.xz / 13.0 + 0.37).rgb;
+  vec3 sn = texture2D(tSinterNh, vWorld.xz / 3.0).rgb;
+  albedo = mix(albedo, mix(sa, sb, 0.4) * vec3(1.05, 1.2, 1.45) * (0.75 + 0.35 * pit), 0.9 * crust);
+  k.normal = normalize(mix(k.normal, normalize(n + vec3(sn.x * 2.0 - 1.0, 0.0, sn.y * 2.0 - 1.0) * 1.3), crust));
+  k.occ = mix(k.occ, 0.5 + 0.5 * smoothstep(0.1, 0.6, sn.b), crust);
   albedo = mix(albedo, albedo * vec3(0.55, 0.3, 0.14), 0.7 * stained);
   // Out of the water the rim is wet stone; under it the stone is darker than it is dry.
   float dry = smoothstep(0.0, 0.14, vWorld.y);
@@ -153,8 +153,8 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   Mat m = matsAt(vWorld);
   float a = m.cover * m.strand;
-  vec3 n = vec3(0.0, 1.0, 0.0);
-  vec3 c = rigShade(vWorld, n, v, m.colour, 0.8, 0.6 + 0.4 * m.strand);
+  vec3 n = normalize(vec3(m.grain.x, 1.6, m.grain.y));
+  vec3 c = rigShade(vWorld, n, v, m.colour, 0.8, 0.45 + 0.55 * m.strand);
   // The filaments are thin: the sun comes through them.
   c += m.colour * uSunColour * (0.14 * sunAt(vec3(vWorld.x, 0.0, vWorld.z)) * m.strand);
   c = throughWater(c * sunk(vWorld), vWorld);
@@ -454,7 +454,7 @@ function surfaceGeometry(): THREE.BufferGeometry {
 export function create(ctx: Context): Piece {
   const rig = ctx.rig.uniforms;
   const rock = rockUniforms(ctx);
-  const water = waterUniforms();
+  const water: Record<string, THREE.IUniform> = { ...waterUniforms(), tMat: { value: ctx.assets.texture('mat/mat.jpg', { anisotropy: 4 }) }, tMatNh: { value: ctx.assets.texture('mat/mat-nh.png', { kind: 'data' }) } };
   const mirror = createMirror();
   const lake = new THREE.Group();
 
@@ -501,11 +501,11 @@ export function create(ctx: Context): Piece {
   }
   forms.frustumCulled = false;
   // The shaft has no floor that is ever seen, but it is closed: nothing behind it shows through from above.
-  const pit = new THREE.Mesh(new THREE.CircleGeometry(DEEP, 48).rotateX(Math.PI / 2), shaftMaterial);
+  const pit = new THREE.Mesh(new THREE.CircleGeometry(DEEP, 48).rotateX(-Math.PI / 2), shaftMaterial);
   pit.position.y = -390;
   pit.frustumCulled = false;
   lake.add(ctx.parts.built('shaft', shaft, forms, pit));
-  lake.add(forms);
+  lake.add(forms, pit);
 
   // What rises: a pale back under a dome of water, never the whole of it, and thin pale tips that break the surface around it.
   const riserMaterial = new THREE.ShaderMaterial({ uniforms: { ...rig, ...water, uSway: { value: 0 }, uPale: { value: 0.8 }, uMurk: { value: 1 } }, vertexShader: FORM_VERTEX, fragmentShader: FORM_FRAGMENT });

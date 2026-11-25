@@ -103,13 +103,13 @@ void main() {
   // The skin: pale, creased, thin over the ribs and the joints. Mapped in the body's own rest shape, so that it moves with the body.
   vec3 w = pow(abs(normalize(vRestNormal)), vec3(3.0));
   w /= w.x + w.y + w.z;
-  vec3 q = vRest * 2.6 + vSeed * 9.0;
+  vec3 q = vRest * 1.67 + vSeed * 9.0;
   vec3 col = texture2D(tHide, q.zy).rgb * w.x + texture2D(tHide, q.xz).rgb * w.y + texture2D(tHide, q.xy).rgb * w.z;
   vec3 nh = texture2D(tHideNh, q.zy).rgb * w.x + texture2D(tHideNh, q.xz).rgb * w.y + texture2D(tHideNh, q.xy).rgb * w.z;
   float lum = dot(col, vec3(0.33));
   float ribs = smoothstep(-0.18, 0.55, vRest.z) * (1.0 - smoothstep(0.55, 0.7, vRest.z)) * step(vPart, 0.5) * smoothstep(1.75, 1.35, vRest.y);
   float rib = sin(vRest.z * 46.0 + vRest.y * 9.0);
-  vec3 albedo = mix(vec3(0.42, 0.33, 0.27), vec3(0.8, 0.7, 0.6), smoothstep(0.03, 0.3, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
+  vec3 albedo = mix(vec3(0.42, 0.33, 0.27), vec3(0.8, 0.7, 0.6), smoothstep(0.16, 0.48, lum)) * (0.92 + 0.16 * vnoise(vRest.zy * 3.0 + vSeed * 20.0));
   albedo *= 1.0 - 0.07 * ribs * smoothstep(0.2, 0.9, rib);
   // Old skin: stained in patches, darker along the back, grey with dust on the legs.
   float stain = 0.6 * vnoise(vRest.zy * 2.1 + vSeed * 13.0) + 0.4 * vnoise(vRest.zy * 7.0 + vRest.x * 3.0 + vSeed * 3.0);
@@ -154,8 +154,8 @@ export function create(ctx: Context): Piece {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...ctx.rig.uniforms,
-      tHide: { value: ctx.assets.texture('drinkers/hide.jpg', { anisotropy: 4 }) },
-      tHideNh: { value: ctx.assets.texture('drinkers/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
+      tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
+      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
