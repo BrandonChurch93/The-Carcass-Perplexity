@@ -175,7 +175,7 @@ export function create(ctx: HeartContext): HeartPiece {
         }
         stood.feet.forEach((foot, j) => {
           const off = Math.min(1, foot.lift / (1.2 * b.k));
-          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.8 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
+          rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, b.padR * (2.0 + 1.6 * off), here * 0.9 * (1 - 0.75 * off));
         });
         rig.setDisc(discs, i * DISCS + 4, stood.body.x, stood.body.z, 3.4 * b.k, here * 0.35, 1.5, -stood.body.yaw + Math.PI / 2);
         const low = Math.min(1, Math.max(0, 1 - (stood.tuft.y - TUFT_UP * b.tendrilLen) / (2 * b.k)));
