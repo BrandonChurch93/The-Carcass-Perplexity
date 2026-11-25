@@ -252,7 +252,7 @@ uniform float uPool;
 uniform float uTide;
 void main() {
   float over = landAt(vAt.xz).r + bedFine(vAt.xz) - uPool;
-  float wet = smoothstep(0.16, 0.05, over) * smoothstep(-0.9, -0.5, over);
+  float wet = smoothstep(0.24, 0.08, over) * smoothstep(-3.5, -0.4, over);
   if (wet < 0.01) discard;
   vec3 toEye = cameraPosition - vAt;
   float f = 0.04 + 0.96 * pow(1.0 - clamp(toEye.y / length(toEye), 0.0, 1.0), 5.0);
@@ -261,8 +261,8 @@ void main() {
   vec3 c = rigShade(vWorld, normalize(vNormal), normalize(vAt - vWorld), albedo, 1.0, 0.8);
   c = mix(uHaze * 0.9, c, exp(-length(vWorld - vAt) * 0.0006));
   // The wind's ripple breaks the image into streaks that lie across the line of sight.
-  float streak = 0.72 + 0.28 * vnoise(vec2(dot(vAt.xz, normalize(toEye.xz)) * 1.7, dot(vAt.xz, normalize(toEye.zx * vec2(1.0, -1.0))) * 0.3) + uTime * 0.5);
-  gl_FragColor = vec4(rigOut(c), 0.9 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
+  float streak = 0.5 + 0.5 * vnoise(vec2(dot(vAt.xz, normalize(toEye.xz)) * 1.7, dot(vAt.xz, normalize(toEye.zx * vec2(1.0, -1.0))) * 0.3) + uTime * 0.5);
+  gl_FragColor = vec4(rigOut(c), 0.85 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
 }`;
 
 // Loose rock on the floor: dark and wet, weed on what faces up.
