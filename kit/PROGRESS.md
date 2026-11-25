@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 51, 2026-11-25 14:03 UTC:
+Status 52, 2026-11-25 14:20 UTC:
 
-- `01-m1356-pair-2.jpg`: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron. Still wrong: the floor is paler and flatter than the picture. Thick ropes for it are handed back and go into the next chain
-- `02-m1356-pair-1.jpg`: heart-1: cords are now drawn up to the shore, so the grey mottle in the nearest 3 m is gone, and the trench wall shows lit plate ends. Still wrong: the cords are too even, like combed lines, and the far bank is hatched
-- `03-m1356-pair-3.jpg`: heart-3: hairline seams and hot pockets now cross the feeding floor. Still wrong: the seams are dull red scribbles where the picture's are yellow with a hot core
-- `04-m1356-pair-4.jpg`: heart-4: the pour leaves the lip as a broad sheet and steps down the land's new ledges. Still wrong: it leaves mid-lip, not from the left third, and a comb of lit spikes stands at the mouth's west foot
+- `01-m1406-pair-2.jpg`: heart-2 on the final build (9ac88bf), the picture left, ours right: thick soft ropes now lie on the floor near the lens and the zebra stripes are gone. Still wrong: the floor is greyer and flatter than the picture's wet black folds, the hull sits on a pale woolly apron, and the glow round it is small
+- `02-m1406-pair-0.jpg`: heart-0: the pale ellipse beside the fountain is gone (it was a sinking plate mirroring the sky) and each vent carries a yellow dome. Still wrong: the fall is thinner than the picture's, the far bank is rows of level orange lines, the near bank is one dark slope
+- `03-m1406-pair-1.jpg`: heart-1: cords run to the shore and the trench wall shows plate ends. Still wrong: the cords are even combed arcs and paler than the picture, and the melt is a flat bright ribbon in a hard trench
+- `04-heart-4.jpg`: heart-4: approved beside frame, hd draft, with 2 crop pairs
 
+Status 51, 2026-11-25 14:03 UTC, showed: heart-2 on ee929c8, the picture left, ours right: the zebra stripes on the floor are gone and the hull's ropes run down to the apron.
 Status 50, 2026-11-25 13:36 UTC, showed: Feeding shot, frame 3156, main e3672d8. Approved picture left, our frame right.
 Status 49, 2026-11-25 13:15 UTC, showed: Feeding shot, frame 3156, main ea1ea7e. Approved picture left, our frame right.
-Status 48, 2026-11-25 12:52 UTC, showed: Heart, shot heart-02 (key heart-3), main fe39638 at 12:45: the approved picture left, ours right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T14:03:16Z
-phase 3: 10.90 h used of 13.00 h
-build: 17.55 h used of 72.00 h
+2026-11-25T14:20:46Z
+phase 3: 11.19 h used of 13.00 h
+build: 17.85 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 27
+minutes since the last status: 18
 ```
 
 ## Phases
@@ -1566,3 +1566,4 @@ none
 - 2026-11-25 14:03 UTC. 14:03 status 51 shown (four pairs of chain AH on ee929c8: heart-2 without zebra, heart-1 with cords to the shore, heart-3 with seams on the feeding floor, heart-4 with the broad pour). ElevenLabs characters at 13:59: 1 of 131,000, so n1 to n7, the model test, the n8 takes and the sound effects are still not made.
 - 2026-11-25 14:06 UTC. 14:06 chain AH passed determinism on ee929c8 (commit fc560ae holds its parts and pictures). Merged to 0141c0c, each after the trailer check, tsc clean, G10 pass: the crust form D3 8bda667 (ropes 0.55 to 0.8 m apart and 6 to 26 cm high round the one that sank; arc centres behind the lobe) and the lava D4 ccf7bf1 (the pale ellipse beside the fountain was the top of the foundering plate mirroring the sky; found by rendering each part alone; the plate is now shaded along its normal and fully rough, albedo 0.28). The final chain AI runs on 0141c0c since 14:06:29. Every owner has now given its last code. The Look lock writer was started at 14:07 with the ten owners' blocks (limit 30 minutes).
 - 2026-11-25 14:19 UTC. 14:16 UTC: chain AI passed determinism on main 0141c0c. The snapshot for round 7 is commit 9ac88bf (0141c0c with the parts register: 96 parts, the Heart's 15 all built, none a stand-in or a fallback). Round 7, the last round of the look lock, was ordered at 14:18: the pack and the measures on two other machines, critics and jury to follow when the packs are back, with the families turned once more (R1 claude, R3 gemini, R4 gpt). No fix follows round 7; what stays wrong goes into the review stop. The Heart review clip was ordered at 14:18 at the final tier in hd from the same commit: 16 chunks of 2 s, 1714 frames, in 14 shares on 14 fresh machines (heart_clip_renderer_01 to _14), 65 to 105 minutes a share by the meter, 19.4 machine hours. The Look lock writer handed back at 14:15 after 8 minutes: Locked settings, What worked and what did not, and the six Recipes are now under Look lock (618 lines, checked against the source at 0141c0c). Rounds 6 and 7 were added to the Rounds list, and the Parts table under Units was brought up to date.
+- 2026-11-25 14:21 UTC. Status 52 shown at 14:21 UTC with three pairs of the final build 9ac88bf (heart-2, heart-0, heart-1; heart-3 and heart-4 are pixel-identical to status 51 and were not shown again). ElevenLabs read at 14:19: 1 character left of 131,000. The five keys at the final tier in uhd render locally from 14:20 for the comparison images.
