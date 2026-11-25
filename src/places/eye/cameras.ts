@@ -75,8 +75,8 @@ function leave(part: number): Pose {
 const key = (id: string): number => keyPart(shotById(id));
 
 export const shots: Record<string, CameraPath> = {
-  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -80, up: 30, right: -10 }, { forward: 110, up: -22, right: 8 }),
-  'eye-02': through(KEYS.mats, key('eye-02'), { right: -7, forward: -8, up: -0.3, turn: 3 }, { right: 7, forward: 8, up: 1.2, turn: -5 }),
+  'eye-01': through(KEYS.wide, key('eye-01'), { forward: -90, up: 34, right: -10 }, { forward: 120, up: -30, right: 8 }),
+  'eye-02': through(KEYS.mats, key('eye-02'), { right: -5, forward: -8, up: -0.3, turn: 4 }, { right: 5, forward: 3.5, up: 1.2, turn: -13 }),
   'eye-03': through(KEYS.edge, key('eye-03'), { right: 4, forward: -5, up: 0.7, turn: -6 }, { right: -2.6, forward: 1, up: 0.4, turn: 7 }),
   'eye-04': through(KEYS.shore, key('eye-04'), { forward: -3, right: -1.4, up: -0.2 }, { forward: 2.2, right: 1.1, up: 0.3 }),
   'eye-05': (part) => leave(part),

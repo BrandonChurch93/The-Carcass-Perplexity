@@ -127,13 +127,14 @@ const place: PlaceModule = {
     scene.add(parts.standIn('sky', kit.sky('#4a8cff', '#ecc39c', '#b8a690')));
     kit.air(AIR, HAZE);
 
-    scene.add(parts.standIn('land', new THREE.Mesh(landGeometry(), kit.flat('#d8b68c', { band: '#b39069', step: 34, side: two }))));
+    const land = new THREE.Mesh(landGeometry(), kit.flat('#d8b68c', { band: '#b39069', step: 34, side: two }));
+    scene.add(parts.standIn('land', land));
 
     const lake = new THREE.Group();
     lake.add(new THREE.Mesh(new THREE.CircleGeometry(DEEP, 96).rotateX(-Math.PI / 2), kit.flat(DEEP_COLOUR)));
     scene.add(parts.standIn('lake', lake));
 
-    const shallows = new THREE.Mesh(ringSector(DEEP, SHORE + 12, 0, 0, 360, 240), kit.flow('#b46a27', '#8e4c1d', { direction: [1, 0.25], speed: 5, scale: 26, side: two }));
+    const shallows = new THREE.Mesh(ringSector(DEEP, SHORE + 12, 0, 0, 360, 240), kit.flow('#b46a27', '#8e4c1d', { direction: [1, 0.25], speed: 9, scale: 26, side: two }));
     scene.add(parts.standIn('shallows', shallows));
 
     const shaft = new THREE.Group();
@@ -222,7 +223,7 @@ const place: PlaceModule = {
       cave.scale.set(size, size * 0.9, size);
       caves.add(cave);
     }
-    scene.add(parts.standIn('caves', caves));
+    land.add(caves);
 
     const water = kit.flow('#a9bcc4', '#e3e9e8', { direction: GAP_DIR, speed: 4, scale: 2.5, side: two });
     const ribbon: number[] = [];
@@ -279,13 +280,15 @@ const place: PlaceModule = {
       m.compose(v.set(x, landHeight(x, z) + size * 0.25, z), q.setFromEuler(e), s.set(size * rng.range(0.9, 1.5), size * rng.range(0.6, 0.9), size));
       rocks.setMatrixAt(i, m);
     }
-    scene.add(parts.standIn('rocks', rocks));
+    scree.add(rocks);
 
     const mats = new THREE.Group();
+    const matsBearing = (Math.atan2(KEYS.mats.position[0], -KEYS.mats.position[2]) / DEG + 360) % 360;
     const STRIPS = 260;
     const strips = herd(new THREE.BoxGeometry(1, 0.05, 1), kit.flat('#d7a04a'), STRIPS);
     for (let i = 0; i < STRIPS; i++) {
-      const bearing = (i / STRIPS) * 360 + rng.range(-0.6, 0.6);
+      let bearing = (i / STRIPS) * 360 + rng.range(-0.6, 0.6);
+      if (Math.abs(bearing - matsBearing) < 1.4) bearing += 2.8;
       const inner = DEEP + rng.range(14, 160);
       const outer = Math.min(shoreAt(bearing) - 12, inner + rng.range(90, 420));
       const [x, z] = at(bearing, (inner + outer) / 2);
@@ -365,7 +368,7 @@ const place: PlaceModule = {
       centreRings.push(ring);
       ripples.add(ring);
     }
-    scene.add(parts.standIn('ripples', ripples));
+    lake.add(ripples);
 
     const riser = new THREE.Group();
     const dome = new THREE.Mesh(new THREE.SphereGeometry(1, 40, 10, 0, Math.PI * 2, 0, Math.PI / 2), kit.flat('#2b3d52', { band: '#3a5068', step: 1.5 }));
@@ -393,19 +396,6 @@ const place: PlaceModule = {
     );
     scene.add(parts.standIn('mist', mist));
 
-    const cloud = new THREE.Group();
-    const wisp = kit.flat('#f1e3d3', { side: two });
-    for (const [x, y, z, w, d] of [
-      [900, 1900, -5200, 2600, 240],
-      [2300, 2200, -5600, 1500, 160],
-      [-2600, 2500, -6000, 2200, 200],
-      [400, 2700, 4200, 2400, 260],
-    ] as [number, number, number, number, number][]) {
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(w, 20, d), wisp);
-      strip.position.set(x, y, z);
-      cloud.add(strip);
-    }
-    scene.add(parts.standIn('cloud', cloud));
 
     const riseKey = secondsInPlace('eye', cut.keyFrames['eye-4'] as number);
     const endSeconds = secondsInPlace('eye', placeOf('eye').last + 1);
@@ -473,7 +463,7 @@ const place: PlaceModule = {
             const life = 13.5;
             if (age > 0 && age < life) {
               radius = 6 + 15 * age;
-              width = 2.6 * Math.sin((Math.PI * age) / life);
+              width = 4.5 * Math.sin((Math.PI * age) / life);
             }
           } else {
             const age = t - (riseKey - 1.2 + 0.62 * (i - 7));
@@ -507,7 +497,6 @@ const place: PlaceModule = {
         threads.position.set(0.25 * Math.sin(t * 0.9), 0, 0.2 * Math.sin(t * 0.6 + 1));
         mist.rotation.y = -0.0035 * t;
         mist.scale.y = 1 + 0.08 * Math.sin(t * 0.5);
-        cloud.position.x = 9 * t;
       },
       solo: (part) => kit.solo(part),
     };
