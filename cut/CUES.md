@@ -37,10 +37,10 @@ Written by `npm run cut` from `cut/PLAN.json`. Do not edit by hand. Frames count
 | ribs-05 | ribs | 1867 | 0:31.07 | 7.13 | ribs-1 | ribs-1 | in | The Ribs · the camera looks up at the drowned | bar at 31.1094 s | 0.44 |
 | ribs-06 | ribs | 2295 | 0:38.15 | 3.53 | ribs-4 | ribs-4 | hold | The Ribs · the bore comes through the cage | bar at 38.2515 s | 0.09 |
 | heart-01 | heart | 2507 | 0:41.47 | 7.17 | heart-0 | heart-0 | in | The Heart · the lava lake at nightfall | hit at 41.7822 s | 0.07 |
-| heart-02 | heart | 2937 | 0:48.57 | 7.3 | heart-3 | heart-3 | left | The Heart · the tall ones walk the skin | bar at 48.956 s | 0.36 |
+| heart-02 | heart | 2937 | 0:48.57 | 7.3 | heart-3 | heart-3 | in | The Heart · the tall ones walk the skin | bar at 48.956 s | 0.36 |
 | heart-03 | heart | 3375 | 0:56.15 | 3.4 | heart-1 | heart-1 | in | The Heart · the fire under the skin | hit at 56.25 s | 0 |
-| heart-04 | heart | 3579 | 0:59.39 | 3.53 | heart-2 | heart-2 | hold | The Heart · the one that sank | bar at 59.6473 s | 0.16 |
-| heart-05 | heart | 3791 | 1:03.11 | 7.17 | heart-4 | heart-4 | out | The Heart · the vessel mouth and the lava fall, no voice | bar at 63.1909 s | 0.45 |
+| heart-04 | heart | 3579 | 0:59.39 | 3.53 | heart-2 | heart-2 | in | The Heart · the one that sank | bar at 59.6473 s | 0.16 |
+| heart-05 | heart | 3791 | 1:03.11 | 7.17 | heart-4 | heart-4 | in | The Heart · the vessel mouth and the lava fall, no voice | bar at 63.1909 s | 0.45 |
 | breath-01 | breath | 4221 | 1:10.21 | 6.27 | breath-0 | breath-0 | in | The Breath · the shelf at dawn | bar at 70.3551 s | 0.31 |
 | breath-02 | breath | 4597 | 1:16.37 | 4.48 | breath-4 | breath-4 | in | The Breath · down the shaft, it breathes out | beat at 76.6238 s | 0.43 |
 | breath-03 | breath | 4866 | 1:21.06 | 3.58 | breath-3 | breath-3 | out | The Breath · the red weed at the rim | bar at 81.1015 s | 0.09 |

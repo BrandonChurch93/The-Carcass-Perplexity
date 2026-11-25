@@ -10,8 +10,9 @@ export const TUBE = {
   floor: MOUTH.floor + 0.7,
   /** The arch is a superellipse of this power: flatter than a circle, as a drained lava tube is. */
   power: 2.5,
-  half: (d: number): number => lerp(MOUTH.width / 2, 39, smooth(0, 95, d)),
-  crown: (d: number): number => lerp(MOUTH.height, 41, smooth(0, 110, d)),
+  /** The rim flares like the bell of a horn: the first ten metres are a bevel that faces out, and it is what the river lights. */
+  half: (d: number): number => lerp(MOUTH.width / 2 - 11, 39, smooth(0, 95, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
+  crown: (d: number): number => lerp(MOUTH.height - 11, 41, smooth(0, 110, d)) + 11 * Math.exp(-Math.max(d, 0) / 7),
   /** The tube bends west as it goes in, so the east wall closes the view from the bench. */
   axis: (d: number): number => MOUTH.x - 58 * smooth(25, 200, d) * smooth(25, 200, d),
 };
@@ -34,6 +35,8 @@ export interface Channel {
   readonly half: Float32Array;
   /** Metres a second. */
   readonly speed: Float32Array;
+  /** Height of the surface of the stream. */
+  readonly y: Float32Array;
 }
 
 function spline(points: [number, number][], spacing: number): [number, number][] {
@@ -79,7 +82,8 @@ function table(rows: [number, number][], at: number): number {
 }
 
 const SPACING = 0.5;
-const LIP: [number, number] = [MOUTH.x - 22, TUBE.lipZ];
+// The stream leaves the floor where the wall under it begins, which is further back on the west side.
+const LIP: [number, number] = [MOUTH.x - 22, TUBE.lipZ - 4];
 
 /** The river inside the tube keeps to the west of its axis. */
 const inside = (d: number): [number, number] => [TUBE.axis(d) - 16 + 6 * Math.sin(d * 0.045 + 1), TUBE.lipZ - d];
@@ -95,68 +99,132 @@ const MAIN: [number, number][] = [
   inside(16),
   LIP,
   [-50, -447],
-  [-45, -439],
-  [-39, -431],
-  [-36, -422],
-  [-39, -413],
-  [-46, -404],
-  [-52, -394],
-  [-56, -384],
-  [-57, -374],
-  [-55, -365],
-  [-50, -356],
-  [-44, -347],
-  [-39, -338],
+  [-42, -439],
+  [-31, -432],
+  [-24, -423],
+  [-27, -413],
+  [-38, -404],
+  [-52, -396],
+  [-63, -386],
+  [-66, -375],
+  [-60, -365],
+  [-50, -357],
+  [-42, -348],
+  [-38, -338],
   [FALL_FOOT[0], FALL_FOOT[1]],
   [FALL_FOOT[0] + 2, FALL_FOOT[1] + 14],
 ];
 
 /** The west arm of the braid. It leaves the main stream at `BRAID_FROM` metres from the lip. */
-export const BRAID_FROM = 104;
+export const BRAID_FROM = 112;
 const ARM_TAIL: [number, number][] = [
-  [-63, -362],
-  [-70, -351],
-  [-73, -340],
-  [-71, -329],
-  [-68, -317],
+  [-76, -372],
+  [-84, -361],
+  [-87, -349],
+  [-84, -337],
+  [-80, -325],
 ];
+
+/** The benches of the main stream and of the arm: the run of each, and of the cascade off its end, metres. */
+const MAIN_STEPS: [number, number][] = [
+  [1, 12.5],
+  [9, 4.5],
+  [14, 6],
+  [9, 4],
+  [15, 5.5],
+  [12, 5],
+  [14, 5],
+  [12, 4],
+  [10, 4],
+];
+const ARM_STEPS: [number, number][] = [
+  [9, 4.5],
+  [11, 4],
+  [10, 4],
+];
+
+/** Metres from the lip at which the slope eases and the stream spreads into its fan. */
+export const FAN_FROM = 128;
 
 /** Width of the stream by metres from the lip. */
 const HALF: [number, number][] = [
   [-200, 9],
   [-40, 11],
   [0, 12],
-  [14, 6.5],
-  [60, 5],
-  [100, 5.5],
-  [130, 7.5],
-  [150, 12],
-  [172, 22],
+  [14, 8.5],
+  [60, 6.5],
+  [100, 7],
+  [FAN_FROM, 8.5],
+  [FAN_FROM + 12, 17],
+  [FAN_FROM + 30, 29],
+  [FAN_FROM + 56, 38],
 ];
 
-function build(points: [number, number][], lip: number, len0: number, tau0: number, half: (len: number) => number, height: (x: number, z: number) => number): Channel {
+/** Metres the stream stands above the ground it has built on, at the head of a bench. */
+const PERCH = 1.3;
+
+/**
+ * The stream does not follow the slope: it has built benches on it, runs slowly along each and drops off its end in a cascade.
+ * `steps` is the run of each bench and of the cascade after it, metres. `y0` is the height where the staircase starts, at sample `lip`.
+ */
+function build(points: [number, number][], lip: number, len0: number, tau0: number, half: (len: number) => number, height: (x: number, z: number) => number, y0: number, steps: [number, number][], falls: number[]): Channel {
   const p = spline(points, SPACING);
   const n = p.length;
-  const c = { n, x: new Float32Array(n), z: new Float32Array(n), len: new Float32Array(n), tau: new Float32Array(n), half: new Float32Array(n), speed: new Float32Array(n) };
+  const c = { n, x: new Float32Array(n), z: new Float32Array(n), len: new Float32Array(n), tau: new Float32Array(n), half: new Float32Array(n), speed: new Float32Array(n), y: new Float32Array(n) };
+  const ground = new Float32Array(n);
   for (let i = 0; i < n; i++) {
     c.x[i] = (p[i] as [number, number])[0];
     c.z[i] = (p[i] as [number, number])[1];
     c.len[i] = len0 + (i - lip) * SPACING;
     c.half[i] = half(c.len[i] as number);
   }
-  // Speed from the slope of the ground under the stream, smoothed over a few metres: 5 m/s on the flat, 15 on the steepest pitch.
-  const raw = new Float32Array(n);
+  // The ground under the stream is the highest ground under its whole width, or the slope would bury its uphill half.
   for (let i = 0; i < n; i++) {
-    const a = Math.max(0, i - 6);
-    const b = Math.min(n - 1, i + 6);
-    const drop = height(c.x[a] as number, c.z[a] as number) - height(c.x[b] as number, c.z[b] as number);
-    const slope = Math.max(0, drop) / ((b - a) * SPACING);
-    raw[i] = (c.len[i] as number) < 0 ? 5 : 5 + 10 * smooth(0.05, 1.1, slope);
+    const a = p[Math.max(0, i - 1)] as [number, number];
+    const b = p[Math.min(n - 1, i + 1)] as [number, number];
+    const run = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    const ax = -(b[1] - a[1]) / run;
+    const az = (b[0] - a[0]) / run;
+    let top = -0.4;
+    for (const k of i < lip ? [0] : [-1, -0.5, 0, 0.5, 1]) top = Math.max(top, height((c.x[i] as number) + ax * k * (c.half[i] as number), (c.z[i] as number) + az * k * (c.half[i] as number)));
+    ground[i] = top;
+  }
+  for (let i = lip; i >= 0; i--) c.y[i] = y0 + 0.012 * (lip - i) * SPACING;
+  let i = lip;
+  let stepAt = 0;
+  while (i < n - 1) {
+    const [tread, run] = steps[Math.min(stepAt, steps.length - 1)] as [number, number];
+    stepAt++;
+    const end = Math.min(n - 1, i + Math.round(tread / SPACING));
+    for (let k = i + 1; k <= end; k++) {
+      const low = smooth(3, 0, ground[k] as number);
+      c.y[k] = Math.max((c.y[k - 1] as number) - lerp(0.34, 0.14, low) * SPACING, (ground[k] as number) + lerp(0.5, PERCH, smooth(2, 14, ground[k] as number)), 0.12);
+    }
+    i = end;
+    if (i >= n - 1) break;
+    const foot = Math.min(n - 1, i + Math.round(run / SPACING));
+    const target = (ground[foot] as number) + lerp(0.5, PERCH, smooth(2, 14, ground[foot] as number));
+    const top = c.y[i] as number;
+    if (top - target < 2.5 || (c.len[i] as number) > FAN_FROM - 6) continue;
+    falls.push(c.len[Math.round(0.5 * (i + foot))] as number);
+    for (let k = i + 1; k <= foot; k++) {
+      const t = (k - i) / (foot - i);
+      c.y[k] = Math.max(lerp(top, target, t * t * (3 - 2 * t)), (ground[k] as number) + 0.5);
+    }
+    i = foot;
+  }
+  // Speed from the slope of the stream, smoothed over a few metres: 5 m/s on a bench, 15 down the steepest cascade.
+  const raw = new Float32Array(n);
+  for (let k = 0; k < n; k++) {
+    const a = Math.max(0, k - 3);
+    const b = Math.min(n - 1, k + 3);
+    const slope = Math.max(0, (c.y[a] as number) - (c.y[b] as number)) / ((b - a) * SPACING);
+    raw[k] = (c.len[k] as number) < 0 ? 5 : 5 + 10 * smooth(0.04, 1.3, slope);
   }
   for (let i = 0; i < n; i++) {
     let s = 0;
     let w = 0;
-    for (let k = -16; k <= 16; k++) {
+    for (let k = -7; k <= 7; k++) {
       const j = Math.min(n - 1, Math.max(0, i + k));
       s += raw[j] as number;
       w++;
@@ -164,8 +232,11 @@ function build(points: [number, number][], lip: number, len0: number, tau0: numb
     c.speed[i] = s / w;
   }
   c.tau[lip] = tau0;
-  for (let i = lip + 1; i < n; i++) c.tau[i] = (c.tau[i - 1] as number) + SPACING / (0.5 * ((c.speed[i] as number) + (c.speed[i - 1] as number)));
+  // The seconds are counted along the stream as it really runs, down its slope.
+  for (let i = lip + 1; i < n; i++) c.tau[i] = (c.tau[i - 1] as number) + Math.hypot(SPACING, (c.y[i] as number) - (c.y[i - 1] as number)) / (0.5 * ((c.speed[i] as number) + (c.speed[i - 1] as number)));
   for (let i = lip - 1; i >= 0; i--) c.tau[i] = (c.tau[i + 1] as number) - SPACING / (0.5 * ((c.speed[i] as number) + (c.speed[i + 1] as number)));
+  // A cascade is narrower than the pool above it.
+  for (let i = 0; i < n; i++) c.half[i] = (c.half[i] as number) * (1.2 - 0.42 * smooth(5.5, 12, c.speed[i] as number));
   return c;
 }
 
@@ -174,8 +245,10 @@ export interface Course {
   readonly arm: Channel;
   /** Metres from the lip to the end of the main stream. */
   readonly length: number;
-  /** The nearest point of either stream. */
-  nearest(x: number, z: number): { distance: number; len: number; tau: number; half: number; speed: number; side: number; arm: boolean };
+  /** Metres from the lip of the middle of each cascade of the main stream. */
+  readonly falls: number[];
+  /** The nearest point of either stream. `toward` is the unit vector on the ground from the point to the stream. */
+  nearest(x: number, z: number): { distance: number; len: number; tau: number; half: number; speed: number; side: number; arm: boolean; y: number; toward: [number, number] };
   /** A point of the main stream by metres from the lip: position on the ground plane, direction, speed. */
   at(len: number): { x: number; z: number; dx: number; dz: number; speed: number; tau: number; half: number };
 }
@@ -191,11 +264,13 @@ export function createCourse(height: (x: number, z: number) => number): Course {
       lip = i;
     }
   });
-  const main = build(MAIN, lip, 0, 0, (len) => table(HALF, len), height);
+  const falls: number[] = [];
+  const main = build(MAIN, lip, 0, 0, (len) => table(HALF, len), height, TUBE.floor, MAIN_STEPS, falls);
   const fork = Math.min(main.n - 1, lip + Math.round(BRAID_FROM / SPACING));
   const armPoints: [number, number][] = [[main.x[fork - 12] as number, main.z[fork - 12] as number], [main.x[fork] as number, main.z[fork] as number], ...ARM_TAIL];
   // The arm starts 12 samples up the main stream so that it leaves along it.
-  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 13, smooth(BRAID_FROM + 20, BRAID_FROM + 66, len)), height);
+  const arm = build(armPoints, 12, BRAID_FROM, main.tau[fork] as number, (len) => lerp(3.2, 22, smooth(BRAID_FROM + 12, BRAID_FROM + 42, len)), height, main.y[fork] as number, ARM_STEPS, []);
+  for (let i = 0; i < 12; i++) arm.y[i] = main.y[fork - 12 + i] as number;
   const length = main.len[main.n - 1] as number;
 
   const scan = (c: Channel, x: number, z: number, from: number): { i: number; d2: number } => {
@@ -226,6 +301,7 @@ export function createCourse(height: (x: number, z: number) => number): Course {
     main,
     arm,
     length,
+    falls,
     nearest: (x, z) => {
       const a = scan(main, x, z, 0);
       const b = scan(arm, x, z, 12);
@@ -234,13 +310,36 @@ export function createCourse(height: (x: number, z: number) => number): Course {
       const db = Math.sqrt(b.d2) - (arm.half[b.i] as number);
       const useArm = db < da;
       const c = useArm ? arm : main;
-      const i = useArm ? b.i : a.i;
-      const j = Math.min(c.n - 1, i + 1);
-      const k = Math.max(0, i - 1);
-      const tx = (c.x[j] as number) - (c.x[k] as number);
-      const tz = (c.z[j] as number) - (c.z[k] as number);
-      const side = tx * (z - (c.z[i] as number)) - tz * (x - (c.x[i] as number)) > 0 ? 1 : -1;
-      return { distance: Math.sqrt(useArm ? b.d2 : a.d2), len: c.len[i] as number, tau: c.tau[i] as number, half: c.half[i] as number, speed: c.speed[i] as number, side, arm: useArm };
+      const near = useArm ? b.i : a.i;
+      // Between the samples: the foot of the perpendicular on the nearer of the two segments that meet at the nearest sample.
+      let i = near;
+      let f = 0;
+      let d2 = Infinity;
+      for (const k of [Math.max(0, near - 1), Math.min(c.n - 2, near)]) {
+        const ax = c.x[k] as number;
+        const az = c.z[k] as number;
+        const sx = (c.x[k + 1] as number) - ax;
+        const sz = (c.z[k + 1] as number) - az;
+        const t = Math.min(1, Math.max(0, ((x - ax) * sx + (z - az) * sz) / (sx * sx + sz * sz || 1)));
+        const qx = ax + sx * t - x;
+        const qz = az + sz * t - z;
+        if (qx * qx + qz * qz < d2) {
+          d2 = qx * qx + qz * qz;
+          i = k;
+          f = t;
+        }
+      }
+      const j = i + 1;
+      const px = lerp(c.x[i] as number, c.x[j] as number, f);
+      const pz = lerp(c.z[i] as number, c.z[j] as number, f);
+      const tx = (c.x[j] as number) - (c.x[i] as number);
+      const tz = (c.z[j] as number) - (c.z[i] as number);
+      const side = tx * (z - pz) - tz * (x - px) > 0 ? 1 : -1;
+      const distance = Math.sqrt(d2);
+      const far = Math.max(distance, 1e-3);
+      const toward: [number, number] = [(px - x) / far, (pz - z) / far];
+      const mixed = (v: Float32Array): number => lerp(v[i] as number, v[j] as number, f);
+      return { distance, len: mixed(c.len), tau: mixed(c.tau), half: mixed(c.half), speed: mixed(c.speed), side, arm: useArm, y: mixed(c.y), toward };
     },
     at: (len) => {
       const f = Math.min(main.n - 1.001, Math.max(0, lip + len / SPACING));
