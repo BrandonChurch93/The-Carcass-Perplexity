@@ -5,7 +5,7 @@ import { FLOOR, landAt as layoutLand } from '../layout';
 import { fbm2, noise2, smooth } from './noise';
 
 /** Where the bars lie: chosen so that the establishing camera stands at the edge of one, with sheets of water before it. */
-export const BAR: [number, number] = [13.66, 0.38];
+export const BAR: [number, number] = [78.05, 33.75];
 
 export function bed(x: number, z: number): number {
   const base = layoutLand(x, z);
@@ -13,8 +13,8 @@ export function bed(x: number, z: number): number {
   const on = smooth(-60, 40, edge);
   if (on <= 0) return base;
   // The floor is nearly level: bars of shingle a foot over the pools, long down the strait; between them braided channels and hollows a hand under the pools.
-  const bar = smooth(0.5, 0.62, 0.45 * noise2(x / 43 + BAR[0], z / 110 + BAR[1]) + 0.33 * noise2(x / 14 + 0.3 * noise2(x / 9, z / 9), z / 31) + 0.22 * noise2(x / 5.1 + 3.3, z / 9.7));
-  const level = 1.2 + 0.3 * (base - 1) + 0.22 * (fbm2(x / 58, z / 58, 3) - 0.5) + 0.26 * bar;
+  const bar = smooth(0.54, 0.66, 0.45 * noise2(x / 43 + BAR[0], z / 110 + BAR[1]) + 0.33 * noise2(x / 14 + 0.3 * noise2(x / 9, z / 9), z / 31) + 0.22 * noise2(x / 5.1 + 3.3, z / 9.7));
+  const level = 1.09 + 0.3 * (base - 1) + 0.22 * (fbm2(x / 58, z / 58, 3) - 0.5) + 0.26 * bar;
   const low = 1 - 0.85 * bar;
   const channel = (1 - smooth(0, 0.3, Math.abs(noise2(x / 12 + z / 40, z / 26) - 0.5) * 2)) * low;
   const hollow = smooth(0.47, 0.22, noise2(x / 17 + 7.3, z / 17 - 2.1)) * low;
