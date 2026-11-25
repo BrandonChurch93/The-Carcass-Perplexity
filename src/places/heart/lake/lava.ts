@@ -37,7 +37,9 @@ const levelOf = (heat: number): number => {
   const full = smooth(0.01, 0.04, heat);
   const k = smooth(0, 0.2, heat);
   const low = 0.3 + (0.1 - 0.3) * full;
-  return -(low + (0.08 - low) * k);
+  const string = smooth(0.06, 0.075, heat) * (1 - smooth(0.105, 0.115, heat));
+  const level = low + (0.08 - low) * k;
+  return -(level + (0.045 - level) * string);
 };
 
 
@@ -223,7 +225,17 @@ void main() {
   // The hottest tongue does not run down the middle: it lies against one bank, and wanders a little along the channel.
   vec2 up = vec2(netAt(q + vec2(0.25, 0.0)).r, netAt(q + vec2(0.0, 0.25)).r) - n.r;
   float bankSide = dot(up, vec2(0.96, 0.27)) < 0.0 ? -1.0 : 1.0;
-  float lean = mix(abs(bankSide * ax - 0.5 - 0.2 * vnoise(vec2(vFlow.x / 5.0, vSeam.y * 1.9))), ax, stir);
+  // The seam the walkers feed at is a string of pools: each has a hot middle and a dark rolled skin at its rim, so there the
+  // measure is the way in from the brim.
+  float feeding = stringOf(n);
+  // The skin reaches in from the brim in ragged lobes, a hand to most of a metre; a small pool is skinned over whole.
+  float hero = step(0.001, heroPool(q));
+  float skinEdge = (0.1 + 0.4 * vnoise(q / 0.9 + 31.0) + 0.15 * vnoise(q / 0.31 + 7.0)) * (1.0 - 0.5 * hero);
+  float inFrom = clamp(0.4 + skinEdge + bank, 0.0, 1.0);
+  // Rafts of the same skin, torn from the rim, lie on the open melt and drift along it.
+  vec2 rafted = q + vec2(0.95, -0.3) * (0.015 * uTime);
+  float raft = feeding * smoothstep(0.5, 0.58, vnoise(rafted / 0.55 + 47.0) * 0.72 + vnoise(rafted / 0.19 + 3.0) * 0.28);
+  float lean = mix(abs(bankSide * ax - 0.5 - 0.2 * vnoise(vec2(vFlow.x / 5.0, vSeam.y * 1.9))), mix(ax, inFrom, feeding), max(stir, feeding));
   // Metres across the stream from the middle of the gap as the net has it, signed, and smooth through the middle: the ribbon's own
   // middle line is up to a metre off it.
   vec2 here = vec2(vFlow.x, d * clamp(dot(up, vAcross) / 0.2, -1.0, 1.0));
@@ -271,11 +283,15 @@ void main() {
     spins[e] = vec2(reach, -side * (0.16 + 0.14 * fract(h.y * 3.1)));
   }
   psi = mix(psi, length(vFlow - poolAt) * 0.9, 0.85 * smoothstep(0.3, 0.8, pool));
+  // In a pool of the string the ropes lie along the rim, rolled.
+  psi = mix(psi, bank + 0.15 * vnoise(q * 1.1 + 5.0), feeding);
+  held *= 1.0 - feeding;
+  core *= 1.0 - feeding;
 
   // How fast the stream runs here: fastest in mid stream and in a narrows, slowest at the banks, in a coil and in the slack of a pool.
   float narrow = 1.0 - smoothstep(0.3, 1.2, gape);
   float slowest = 0.1 * vSeam.z;
-  float fast = vSeam.z * (0.1 + (0.36 + 0.2 * narrow) * (1.0 - ax * ax) * (1.0 - 0.75 * pool) * (1.0 - 0.7 * held));
+  float fast = vSeam.z * (0.1 + (0.36 + 0.2 * narrow) * (1.0 - ax * ax) * (1.0 - 0.75 * pool) * (1.0 - 0.7 * held)) * (1.0 - 0.8 * feeding);
 
   // Two copies of what the stream carries, half a cycle apart. Each starts unsheared and is carried for a cycle; it is at full weight
   // in the middle of its run and at none when it starts again. The cycle is out of step from place to place, so the lake never pulses as one.
@@ -288,7 +304,7 @@ void main() {
     float weight = smoothstep(0.2, 0.8, 1.0 - abs(2.0 * fract(ph) - 1.0));
     float turnOf = floor(ph);
     vec2 p = here;
-    for (int e = 0; e < 3; e++) p = wind(p, mids[e], spins[e].x * 0.9, spins[e].y * run);
+    for (int e = 0; e < 3; e++) p = wind(p, mids[e], spins[e].x * 0.9, spins[e].y * run * (1.0 - feeding));
     p = wind(p, vec2(poolAt.x, 0.0), poolReach * 0.9, -0.3 * run * step(0.01, pool));
     p.x -= slowest * uTime + (fast - slowest) * run;
     p += vec2(turnOf * 17.31 + vSeam.y * 9.7, turnOf * 5.17 + float(copy) * 31.0);
@@ -306,16 +322,16 @@ void main() {
   float fixedBig = vnoise(here * vec2(0.35, 1.3) + 3.0 + vSeam.y);
 
   // The tongue of bare lava: one in a reach, against the far bank. The line has it where the picture has it.
-  float feeding = smoothstep(0.04, 0.07, vSeam.x) * (1.0 - stir);
   float reachOpen = smoothstep(0.5, 0.62, vnoise(vec2(vFlow.x / 6.5 - uTime * 0.02, vSeam.y * 3.7)));
   if (abs(vSeam.y - uTongue.w) < 0.5) reachOpen = 1.0 - smoothstep(0.6, 1.0, abs(vFlow.x - uTongue.x - 0.3 * sin(uTime * 0.21)) / uTongue.y);
   float onLine = abs(vSeam.y - uTongue.w) < 0.5 ? 1.0 : 0.0;
-  float wide = max(smoothstep(0.4, 0.7, gape) * reachOpen, feeding * smoothstep(0.2, 0.45, gape) * (0.4 + 0.6 * reachOpen));
+  float wide = max(smoothstep(0.4, 0.7, gape) * reachOpen * (1.0 - feeding), feeding * smoothstep(0.18, 0.4, gape));
   wide = max(wide, stir);
   float edgeNoise = 0.3 * (fixedBig - 0.5) + 0.2 * (carried.z - 0.5);
   // The line's tongue is 0.8 m across; the others are narrower.
-  float openTo = 0.2 + 0.2 * onLine * reachOpen;
+  float openTo = 0.2 + 0.2 * onLine * reachOpen + 0.2 * feeding;
   float open = wide * (1.0 - smoothstep(openTo, openTo + 0.1, lean + edgeNoise - 0.3 * stir)) * (1.0 - 0.9 * held * (1.0 - stir) * (1.0 - 0.6 * onLine));
+  open *= 1.0 - raft;
   float thin = wide * (1.0 - smoothstep(openTo + 0.08, openTo + 0.3, lean + edgeNoise));
 
   // How hot the skin is here: hot beside the tongue and down the fast side of the stream, where the stream has stretched it thin,
@@ -325,7 +341,9 @@ void main() {
   float torn = smoothstep(0.66, 0.76, carried.z + 0.2 * fastSide - 0.15 * core);
   // The rim of a coil shears against the stream that passes it.
   float rim = 4.0 * held * (1.0 - held) * (1.0 - smoothstep(0.5, 1.0, ax));
-  float hotness = clamp(0.02 + (0.3 * fastSide + 0.34 * rim) * (0.45 + 1.1 * alive) + 0.3 * (alive - 0.62) + 0.55 * thin + 0.3 * torn * (0.3 + 0.7 * fastSide) - 0.2 * core - 0.3 * smoothstep(0.6, 1.0, ax), 0.0, 1.0);
+  // A narrow crack between two pools glows along its whole length.
+  float neck = feeding * (1.0 - smoothstep(0.1, 0.25, gape));
+  float hotness = clamp(0.02 + 0.5 * neck + (0.3 * fastSide + 0.34 * rim) * (0.45 + 1.1 * alive) + 0.3 * (alive - 0.62) + 0.55 * thin + 0.3 * torn * (0.3 + 0.7 * fastSide) - 0.2 * core - 0.3 * smoothstep(0.6, 1.0, ax) - 0.75 * raft, 0.0, 1.0);
 
   // The ropes: uneven in width, bundled, each of its own height.
   float ropes = 6.28318 / ROPE;
@@ -370,7 +388,11 @@ void main() {
   float heart = 1.0 - smoothstep(0.0, 0.2, lean + edgeNoise);
   float streak = vnoise(vec2(vFlow.x * 0.4 - uTime * 0.25, vFlow.y * 7.0) + 7.0);
   float thread = smoothstep(0.62, 0.8, vnoise(vec2(vFlow.x * 0.5 - uTime * 0.3, vFlow.y * 16.0) + 19.0)) * seen;
-  hot = mix(hot, blackbody(1490.0 + 60.0 * heart + 60.0 * (streak - 0.5) + 20.0 * stir - 190.0 * thread * (1.0 - 0.6 * heart)), open);
+  // A pool is white-yellow only in its middle and falls to orange toward its skin.
+  // The pool under the tuft and one in a few of the others are that hot; the rest are orange.
+  float chosen = max(hero, smoothstep(0.62, 0.74, vnoise(q / 13.0 + 91.0)));
+  float poolHeart = (1.0 - smoothstep(0.1, 0.4, lean + edgeNoise)) * chosen;
+  hot = mix(hot, blackbody(mix(1490.0 + 60.0 * heart, 1300.0 + 230.0 * poolHeart, feeding) + 60.0 * (streak - 0.5) + 20.0 * stir - 190.0 * thread * (1.0 - 0.6 * heart)), open);
   // The melt breathes with the lake.
   hot *= 1.0 + 0.3 * (beatAt(q) - 0.5) * (0.4 + 0.6 * pool);
   float skin = 1.0 - open;
@@ -449,7 +471,7 @@ export function createLava(ctx: HeartContext, _net: Net, shared: Record<string, 
   ctx.sources.heat.push({ at: [-401.5, 0, 203.3], radius: 5, height: 3.5, strength: 0.8 });
   ctx.sources.heat.push({ at: [-492.4, 0, 233.4], radius: 11, height: 2.6, strength: 0.6 });
   const wet = ctx.rng('lake/lava-steam');
-  for (const [x, z, reach] of [[-401.5, 203.3, 2.0], [-493.8, 225.6, 1.6], [-491.0, 241.2, 1.6]] as const) {
+  for (const [x, z, reach] of [[-401.5, 203.3, 2.0], [-493.8, 225.6, 1.6], [-491.0, 241.2, 1.6], [-416.9, 204.5, 1.0], [-383.2, 196.1, 1.2]] as const) {
     const turn = wet.range(0, Math.PI * 2);
     ctx.sources.steam.push({ at: [x + Math.cos(turn) * reach, 0.05, z + Math.sin(turn) * reach], radius: 0.35, strength: wet.range(0.3, 0.4), rise: wet.range(3, 5), kind: 'steam', lean: [-0.42, 0.2] });
   }

@@ -234,13 +234,13 @@ void main() {
       vec2 tb = fract(big.y * vec2(17.3, 41.7)) - 0.5;
       vec2 ts = fract(small.y * vec2(23.1, 37.9)) - 0.5;
       vec3 round_ = normalize(cross(n, vec3(0.0, 0.0, 1.0)) + 1e-4);
-      vec2 tilt = tb * 2.6 + ts * mix(0.5, 2.4, shattered);
+      vec2 tilt = tb * 1.3 + ts * mix(0.4, 1.5, shattered);
       n = normalize(n + broken * (round_ * tilt.x + vec3(0.0, 0.0, 1.0) * tilt.y));
       float joint = max(smoothstep(0.05 + 0.12 * vnoise(vSkin.xy / 2.3), 0.0, big.x), shattered * smoothstep(0.14, 0.0, small.x));
       cliff *= 1.0 - broken * 0.8 * joint;
       // A block that stands back is in the shade of its neighbours, and soot lies on some of them.
       float back = mix(big.y, small.y, 0.35 + 0.5 * shattered);
-      cliff *= mix(1.0, (0.3 + 1.7 * back * back) * (0.55 + 0.9 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
+      cliff *= mix(1.0, (0.5 + 1.1 * back) * (0.55 + 0.9 * vnoise(vSkin.xy / 14.0 + 7.0)), broken);
       c = rockShade(vWorld, n, v, cliff, 1.0, vec3(0.0), d);
     }
     if (collar > 0.0) {
@@ -344,16 +344,31 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float wave = sin(len * 2.3 + 2.5 * vnoise(vec2(s * 0.6, len * 0.4)) + 0.7 * sin(uTime * 6.0 + s * 1.7));
   // Open melt from bank to bank, yellow down the middle and orange toward the margins, a little hotter where a drop stirs it.
   float thread = mk.y;
-  float kelvin = mix(1340.0, 1475.0, 1.0 - smoothstep(0.45, 0.95, u)) - 50.0 * (streak - 0.5) + fast * (8.0 + 10.0 * wave);
-  kelvin = mix(kelvin, 1450.0, clamp(thread * (0.35 + 0.65 * fast), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
+  float kelvin = mix(1400.0, 1290.0, smoothstep(0.2, 0.85, u)) - 50.0 * (streak - 0.5) + fast * (8.0 + 10.0 * wave);
+  kelvin = mix(kelvin, 1430.0, clamp(thread * (0.35 + 0.65 * fast), 0.0, 1.0) * (0.25 + 0.75 * streak) * (1.0 - 0.7 * smoothstep(0.35, 0.95, u)));
+  // The core: the fastest melt is a thread a quarter to a third of the stream's width that wanders from bank to bank and breaks,
+  // near white at the lip and down to about half the fall's height, and it cools to orange at its sides.
+  float lipHot = smoothstep(-7.0, -1.0, len) * smoothstep(10.0, 3.0, len);
+  // The core cools as it comes down: it is gone a little below half the fall's height.
+  float hotDown = max(lipHot, smoothstep(126.0, 82.0, len) * smoothstep(-3.0, 2.0, len));
+  float wander = 0.5 * (vnoise(vec2(len * 0.16, 5.0)) - 0.5) + 0.22 * (vnoise(vec2(len * 0.55, 8.0)) - 0.5);
+  float coreWide = (0.6 + 0.3 * lipHot) * (0.7 + 0.6 * vnoise(vec2(len * 0.3, age * 0.5 + 2.0)));
+  float coreAt = abs(s / max(half_, 0.1) - wander * (1.0 - 0.6 * lipHot));
+  float core = (1.0 - smoothstep(0.75 * coreWide, coreWide, coreAt)) * smoothstep(0.14, 0.3, vnoise(vec2(age * 0.9 + 1.0, 31.0)) + 0.4 * lipHot);
+  core *= hotDown;
+  kelvin = mix(kelvin, 1515.0 + 45.0 * streak + 15.0 * fast, core);
   // Down a drop the sheet is drawn into veils: yellow strands with thinner, redder melt between them.
   float veil = vnoise(vec2(s * 1.9 + 2.0, age * 0.35)) + 0.5 * vnoise(vec2(s * 5.3, age * 0.8 + 4.0));
-  kelvin += fast * smoothstep(1.0, 7.0, len) * 110.0 * (veil - 0.95);
+  kelvin += fast * smoothstep(1.0, 7.0, len) * 110.0 * (veil - 0.95) * (1.0 - 0.75 * core);
   kelvin -= 150.0 * smoothstep(0.0, 0.3, away.y);
-  kelvin = min(kelvin, 1450.0);
+  kelvin = min(kelvin, 1560.0);
   // Plates of dark skin ride it: nearly half of a tread is under them, they crowd the margins, and a drop tears most of them up.
   // In the tube the river comes out from under its crust, and the fuller melt of the surge breaks what skin it carries.
-  vec2 cell = plates(vec2(s / 1.9 + 0.5 * vnoise(vec2(age * 2.2, 3.0)), (flow.x - uTime) / 0.8));
+  // They are torn, not cut: the plates' lay is warped and their outline broken, and they turn a little as they ride.
+  vec2 rq = vec2(s / 1.5 + 0.5 * vnoise(vec2(age * 2.2, 3.0)), (flow.x - uTime) / 0.8);
+  rq += 0.8 * vec2(vnoise(rq * 0.6 + 3.0), vnoise(rq * 0.6 + 11.0)) + 0.22 * vec2(vnoise(rq * 2.3 + 5.0), vnoise(rq * 2.3 + 17.0));
+  vec2 cell = plates(rq);
+  cell.y += 0.16 * (vnoise(rq * 3.7 + 9.0) - 0.5);
   float want = mix(0.22, 0.03, fast) + mix(0.5, 0.22, fast) * smoothstep(0.62, 0.95, u) + 0.4 * smoothstep(-14.0, -50.0, len) - 0.25 * smoothstep(-6.0, 4.0, len) * smoothstep(14.0, 6.0, len) - 0.25 * behind;
   float raft = smoothstep(want + 0.03, want - 0.03, cell.y) * smoothstep(0.03, 0.1, cell.x) * (1.0 - lay);
   float skin = mix(mix(880.0, 1095.0, pow(vnoise(vec2(s * 1.2 + 4.0, age * 3.0)), 2.0)), 1290.0, smoothstep(0.26, 0.08, cell.x));
@@ -379,7 +394,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float seam = smoothstep(0.06 + 0.12 * lively, 0.0, slab.x) * smoothstep(0.2, 0.55, lively + 0.3 * slab.y);
   float crust = mix(mix(700.0, 1060.0, pow(vnoise(at / 1.9), 2.0)), mix(1180.0, 1410.0, clamp(lively * 1.3 - 0.1 + 0.35 * (slab.y - 0.5), 0.0, 1.0)), seam);
   // In the fan the open lanes are what is left of the stream, and they are as hot as it was.
-  kelvin = mix(kelvin, 1440.0 - 80.0 * streak + 40.0 * thread, fan);
+  kelvin = mix(kelvin, 1370.0 - 90.0 * streak + 60.0 * thread, fan);
   kelvin = mix(kelvin, crust, fan * (1.0 - open) * (1.0 - 0.3 * behind * lively));
   // The surge: everything behind its front runs hotter and the front itself is the hottest thing in the frame.
   kelvin = mix(kelvin, 1440.0, 0.45 * behind * (1.0 - 0.7 * raft) * (0.4 + 0.6 * streak + 0.5 * thread));
