@@ -93,8 +93,7 @@ function drinkers(): Drinker[] {
     { x: -175, z: 698, facing: 110, size: 0.9, down: steady(0.95, 5.2), walk: 0 },
   ];
   for (let i = 0; i < 30; i++) {
-    let bearing = rng.range(168, 214);
-    if (bearing > 172 && bearing < 184) bearing += bearing < 178 ? -6 : 12;
+    const bearing = rng.range(190, 206);
     const walker = i % 3 === 0;
     const r = shoreAt(bearing) + (walker ? rng.range(14, 30) : rng.range(-7, 2));
     const [x, z] = at(bearing, r);
