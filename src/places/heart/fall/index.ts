@@ -134,10 +134,10 @@ export function create(ctx: HeartContext): HeartPiece {
       bodyLight.radiance.copy(base[1] as THREE.Vector3).multiplyScalar(since < 0 ? 1 : 1 + 0.8 * smooth(0, 1, since));
       footLight.radiance.copy(base[2] as THREE.Vector3).multiplyScalar(since < 0 ? 1 : 1 + 0.9 * smooth(0, 1, since));
       if (since >= 0) {
-        const p = course.at(Math.min(course.length - 10, Math.max(0, front)));
-        surgeLight.position.set(p.x, river.height(p.x, p.z) + 5, p.z);
-        surgeLight.radius = 10 + 5 * Math.exp(-since / 0.5);
-        surgeLight.radiance.set(...blackbody(1470)).multiplyScalar((0.9 + 0.8 * Math.exp(-since / 0.5)) * smooth(course.length + 20, course.length - 30, front));
+        const p = course.at(Math.min(course.length - 10, Math.max(0, front + 6)));
+        surgeLight.position.set(p.x, river.height(p.x, p.z) + 3, p.z);
+        surgeLight.radius = 9 + 3 * Math.exp(-since / 0.5);
+        surgeLight.radiance.set(...blackbody(1470)).multiplyScalar((0.9 + 0.3 * Math.exp(-since / 0.5)) * smooth(course.length + 20, course.length - 30, front));
       } else surgeLight.radiance.set(0, 0, 0);
 
       for (let i = 0; i < GOBS; i++) {
