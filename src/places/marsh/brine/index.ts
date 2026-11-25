@@ -28,7 +28,7 @@ const RING_LIFE = 5;
 const RING_SPEED = 0.9;
 
 export function create(ctx: Context): Piece {
-  const { grain, field } = landShared();
+  const { grain, field, plates } = landShared();
   const rng = ctx.rng('brine/domes');
 
   const domes: Dome[] = [
@@ -42,7 +42,7 @@ export function create(ctx: Context): Piece {
     domes.push({ x: Math.sin(a) * r - 1.5, z: Math.cos(a) * r - 1, size: rng.range(0.14, 0.36), period, burst: rng.range(0, period), seed: rng.next(), drops: 10 });
   }
 
-  const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain } };
+  const uniforms = { ...ctx.rig.uniforms, tGrain: { value: grain }, tPlates: { value: plates } };
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const ringCount = { value: 0 };
 
@@ -144,7 +144,7 @@ export function create(ctx: Context): Piece {
       // It rises slowly, then quickly at the last: gas gathers under a skin that gives.
       const grow = swell <= 0 ? 0 : 0.25 * swell + 0.75 * Math.pow(swell, 2.6);
       const r = d.size * (0.35 + 0.65 * grow) * (swell > 0 ? 1 : 0);
-      const tall = r * (0.25 + 0.75 * grow);
+      const tall = r * (0.22 + 0.5 * grow);
       m.makeScale(r, tall, r).setPosition(d.x, -0.01, d.z);
       domeMesh.setMatrixAt(i, m);
       domeLife.setXYZW(i, grow, d.seed, d.size, 0);

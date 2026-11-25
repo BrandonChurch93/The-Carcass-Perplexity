@@ -137,29 +137,32 @@ void main() {
   float az = atan(rd.x, -rd.z);
   float side = abs(az - uRain.x) / uRain.y;
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 1.3 && rd.y > -0.02 && rd.y < 0.4) {
+  if (uShow.y > 0.5 && far > curtain && side < 1.9 && rd.y > -0.02 && rd.y < 0.4) {
     float el = rd.y / max(length(rd.xz), 0.05);
     // Streaks that lean with the wind, in sheets of unlike weight.
     float lean = az * 40.0 + el * 9.0;
     float sheets = textureLod(tNoise, vec3(az * 1.7, 0.2, 0.4 + uTime * 0.002), 0.0).g;
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.01, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.02, 0.13), 0.0).b * 0.45;
-    float edge = smoothstep(1.25, 0.55, side + (sheets - 0.5) * 0.7);
-    float base = smoothstep(0.34, 0.17, el) * smoothstep(-0.004, 0.012, el);
+    float edge = smoothstep(1.5, 0.0, side + (sheets - 0.5) * 1.6);
+    float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(-0.004, 0.012, el);
     rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.25 + 1.5 * streaks);
   }
   float show = uShow.x;
+  // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.
+  float layers = far > 250.0 ? 0.8 + 0.4 * textureLod(tNoise, vec3(az * 0.9, log(far) * 0.8, 0.3 + uTime * 0.001), 0.0).r : 1.0;
   if (rain > 0.0) {
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, curtain) * show);
-    sum += trans * a * airLight;
-    trans *= 1.0 - a;
     float r = 1.0 - exp(-rain);
-    sum += trans * r * vec3(0.26, 0.27, 0.3);
+    // The air under the raining cloud is in its shade.
+    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, curtain) * show * layers);
+    sum += trans * a * airLight * (1.0 - 0.5 * r);
+    trans *= 1.0 - a;
+    sum += trans * r * vec3(0.24, 0.25, 0.28);
     trans *= 1.0 - r;
-    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, far) * show);
-    sum += trans * a * airLight;
+    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, far) * show * layers);
+    sum += trans * a * airLight * (1.0 - 0.3 * r);
     trans *= 1.0 - a;
   } else {
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, far) * show);
+    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, far) * show * layers);
     sum += trans * a * airLight;
     trans *= 1.0 - a;
   }
