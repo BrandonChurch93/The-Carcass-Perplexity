@@ -8,6 +8,7 @@ attribute vec2 aLook;
 attribute float aHeat;
 attribute float aWho;
 uniform float uPixel;
+uniform vec4 uPools[14];
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -29,6 +30,8 @@ void main() {
   vHeat = aHeat;
   vWho = aWho;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+  // One that is not in this shot is not drawn.
+  if (uPools[int(aWho + 0.5)].w > 0.5) gl_Position = vec4(0.0, 0.0, 3.0, 1.0);
 }`;
 
 export const FRAGMENT = /* glsl */ `
@@ -190,15 +193,17 @@ void main() {
   // The dust is the crust's own: a foot is as dark as what it stands on.
   albedo = mix(albedo, vec3(0.085, 0.078, 0.074) * (0.7 + 0.5 * grit), 0.6 * dust);
   // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.04, 0.036, 0.034) * (0.6 + 0.6 * grit), 0.85 * smoothstep(0.7, 0.15, vWorld.y) * (1.0 - tendril));
+  albedo = mix(albedo, vec3(0.034, 0.027, 0.024) * (0.6 + 0.6 * grit), 0.92 * smoothstep(0.8, 0.2, vWorld.y) * (1.0 - tendril));
 
   float own = (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge)) * (1.0 - 0.7 * gap);
   float occ = vInfo.y * own;
-  vec3 c = rigShade(vWorld, n, v, albedo, 0.93, occ);
+  // Caked ash has no shine at all, even seen along it: a foot is as dull as the crust.
+  float caked = smoothstep(0.9, 0.25, vWorld.y) * (1.0 - tendril);
+  vec3 c = rigShade(vWorld, n, v, albedo, mix(0.93, 1.25, caked), occ);
   // The lake's light from below is not held back by the shade a body throws on itself from the sky.
   if (own - occ > 0.03 && n.y < 0.3) c += albedo * lakeIrradianceFar(vWorld, n) * (own - occ) / 3.14159;
   // The hide is wet with what it sweats: a narrow glint of the sky along whatever turns up to it.
-  float wet = (1.0 - tendril) * (1.0 - rag) * (0.35 + 0.65 * smoothstep(0.35, 0.7, high));
+  float wet = (1.0 - tendril) * (1.0 - rag) * (0.35 + 0.65 * smoothstep(0.35, 0.7, high)) * smoothstep(0.35, 1.6, vWorld.y);
   vec3 rs = reflect(-v, n);
   if (rs.y > 0.15) {
     float nv = clamp(dot(n, v), 0.0, 1.0);

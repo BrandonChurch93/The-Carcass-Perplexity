@@ -126,7 +126,7 @@ export const REST = 0.0125;
 /** What sways does so in a whole number of cycles every eight seconds. */
 const LOOP = Math.PI / 4;
 /** The outline of a foot round its ankle, from straight ahead: toes ahead and to both sides, a spur behind. */
-const TOES = [1.34, 0.52, 1.18, 0.44, 0.38, 0.46, 0.88, 0.46, 0.38, 0.44, 1.18, 0.52];
+const TOES = [1.4, 0.42, 1.22, 0.36, 0.32, 0.38, 0.9, 0.38, 0.32, 0.36, 1.22, 0.42];
 /** Seconds a pad is in the air when one that stands re-places it. */
 const STEP = 1.6;
 /** Crumbs a pad drops in one swing. */
