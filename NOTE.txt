@@ -1,7 +1,7 @@
-2026-11-25 23:07 UTC
-work at 5780896 on agent/ribs-sea
-23:07 after the 22:48 direction: colony in knots with tent sails, bore one wall with dark face, feeders wet, drowned draped
-look-1.jpg = out/work/look-ribs-3.jpg
-look-2.jpg = out/work/look-ribs-4.jpg
-look-3.jpg = out/work/look-ribs-2.jpg
+2026-11-25 23:47 UTC
+work at 358426e on agent/ribs-sea
+V2 at 358426e: bore, feeders, colony, drowned at hd draft
+look-1.jpg = out/work/look-ribs-4.jpg
+look-2.jpg = out/work/look-ribs-2.jpg
+look-3.jpg = out/work/look-ribs-3.jpg
 look-4.jpg = out/work/look-ribs-1.jpg
