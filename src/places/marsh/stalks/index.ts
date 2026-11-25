@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { INSECT_FRAGMENT, INSECT_VERTEX, PLUME_FRAGMENT, PLUME_VERTEX, STEM_FRAGMENT, STEM_VERTEX, WING_FRAGMENT, WING_VERTEX } from './shaders';
+import { BEAD_FRAGMENT, BEAD_VERTEX, INSECT_FRAGMENT, INSECT_VERTEX, PLUME_FRAGMENT, PLUME_VERTEX, STEM_FRAGMENT, STEM_VERTEX, WING_FRAGMENT, WING_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
 
@@ -83,6 +83,7 @@ export function create(ctx: Context): Piece {
   const group = new THREE.Group();
   const sets = [stalks.filter(near), stalks.filter((s) => !near(s))];
   const fils: number[][] = [[], [], [], []];
+  let nearFils = 0;
   const discs = ctx.rig.contactDiscs(sets[0].length);
   sets.forEach((set, which) => {
     const base = new Float32Array(set.length * 4);
@@ -102,15 +103,18 @@ export function create(ctx: Context): Piece {
       const ax = [dx * Math.sin(s.lean), Math.cos(s.lean), dz * Math.sin(s.lean)];
       const h = s.h + 0.02;
       const top = [s.x + ax[0] * h, base[i * 4 + 1] + ax[1] * h, s.z + ax[2] * h];
-      const count = which === 0 ? 140 : 14;
-      const length = (s.kind === 0 ? 0.6 : s.kind === 3 ? 0.5 : 0.44) * s.size;
+      const count = which === 0 ? 230 : 22;
+      const length = (s.kind === 0 ? 0.38 : s.kind === 3 ? 0.34 : 0.3) * s.size * (which === 0 ? 1 : 1.5);
+      // Wet filaments cling: they leave the mouth each by itself and go over in locks.
+      const locks = Array.from({ length: which === 0 ? 18 : count }, () => [rng.range(0, TAU), Math.pow(rng.next(), 0.7), rng.range(0.65, 1.15)] as [number, number, number]);
       for (let f = 0; f < count; f++) {
-        const spread = Math.pow(rng.next(), 0.7);
+        const lock = locks[which === 0 ? rng.int(locks.length) : f] as [number, number, number];
         fils[0].push(top[0], top[1], top[2], R);
         fils[1].push(ax[0], ax[1], ax[2], s.phase);
-        fils[2].push(rng.range(0, TAU), spread, length * rng.range(0.6, 1.15), rng.next());
-        fils[3].push(s.kind, seed, length, (which === 0 ? 0.0045 : 0.02) * s.size * rng.range(0.7, 1.3));
+        fils[2].push(lock[0] + rng.range(-0.11, 0.11), Math.min(1, Math.max(0, lock[1] + rng.range(-0.07, 0.07))), length * lock[2] * rng.range(0.85, 1.08), rng.next());
+        fils[3].push(s.kind, seed, length, (which === 0 ? 0.0034 : 0.016) * s.size * rng.range(0.7, 1.3));
       }
+      if (which === 0) nearFils = fils[0].length / 4;
     });
     const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 14 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
     const mesh = new THREE.Mesh(g, stemMaterial);
@@ -122,7 +126,7 @@ export function create(ctx: Context): Piece {
   const ribbon = new THREE.BufferGeometry();
   const rp: number[] = [];
   const ri: number[] = [];
-  const PARTS_OF = 8;
+  const PARTS_OF = 10;
   for (let i = 0; i <= PARTS_OF; i++) rp.push(-1, i / PARTS_OF, 0, 1, i / PARTS_OF, 0);
   for (let i = 0; i < PARTS_OF; i++) ri.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
   ribbon.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3));
@@ -133,6 +137,16 @@ export function create(ctx: Context): Piece {
   );
   plumes.frustumCulled = false;
   group.add(plumes);
+  // The drops at the ends of the filaments of the near stalks.
+  const quad = new THREE.BufferGeometry();
+  quad.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
+  quad.setIndex([0, 1, 2, 0, 2, 3]);
+  const beads = new THREE.Mesh(
+    instanced(quad, nearFils, { aTop: new Float32Array(fils[0]), aAx: new Float32Array(fils[1]), aFil: new Float32Array(fils[2]), aMore: new Float32Array(fils[3]) }),
+    new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, uSeconds }, vertexShader: BEAD_VERTEX, fragmentShader: BEAD_FRAGMENT, side: THREE.DoubleSide }),
+  );
+  beads.frustumCulled = false;
+  group.add(beads);
   ctx.scene.add(ctx.parts.built('stalks', group));
 
   // The insects: most round the plumes the camera of the colony looks through, some round the one that is stuck, some over the pool.
@@ -145,14 +159,14 @@ export function create(ctx: Context): Piece {
   for (let i = 0; i < COUNT; i++) {
     let p: [number, number, number];
     if (i < 80) {
-      const f = swarm.range(1.5, 3.8);
+      const f = swarm.range(2.6, 6.5);
       const r = swarm.range(-1.1, 1.4);
       p = [K2_AT[0] + K2_DIR[0] * f + K2_RIGHT[0] * r, swarm.range(2.3, 3.5), K2_AT[1] + K2_DIR[1] * f + K2_RIGHT[1] * r];
     } else if (i < 120) p = [stuck[0] + swarm.range(-2.5, 2.5), swarm.range(0.6, 2), stuck[1] + swarm.range(-2.5, 2.5)];
     else p = [swarm.range(-6, 6), swarm.range(0.4, 1.6), swarm.range(-6, 9)];
     home.set([p[0], p[1], p[2], swarm.range(0.2, 0.7)], i * 4);
     rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
-    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.8, 1.25)], i * 4);
+    phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.5, 0.8)], i * 4);
   }
   // A body of three parts with two long tails, about four centimetres; x runs forward.
   const body = new THREE.BufferGeometry();
