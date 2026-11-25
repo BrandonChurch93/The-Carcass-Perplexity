@@ -10,7 +10,8 @@ import { stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture } from './chop';
 import { BORE_FRAGMENT, BORE_VERTEX, POOL_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_VERTEX } from './shaders';
 import { Spray, rand } from './spray';
-import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RINGS, SWELL, boreArrives, boreFront } from './tide';
+import type { Ring } from './tide';
+import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreArrives, boreFront } from './tide';
 
 export const PARTS: readonly string[] = ['sea', 'surf', 'runnels', 'bore'];
 
@@ -171,6 +172,7 @@ export function create(ctx: Context): Piece {
     }
   }
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
+  const ringList: Ring[] = Array.from({ length: MAX_RINGS }, () => ({ x: 0, z: 0, phase: 0, strength: 0 }));
   const ringCount = { value: 0 };
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
@@ -243,7 +245,9 @@ export function create(ctx: Context): Piece {
       front.value = frontZ;
 
       ringCount.value = staged >= feeding.from && staged <= feeding.to ? MAX_RINGS : 0;
-      RINGS.forEach((ring, i) => (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength));
+      for (const ring of ringList) ring.strength = 0;
+      RING_SOURCE.at?.(seconds, ringList);
+      ringList.forEach((ring, i) => (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength));
 
       surf.begin();
       for (const e of surfAt) {
