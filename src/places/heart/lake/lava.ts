@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import type { HeartContext } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { SEAMS, seamLine } from '../shared/anchors';
-import type { Net } from './net';
+import { AUTHORED, OWN as NET_OWN, type Net } from './net';
 import { HEAT_GLSL } from './heat';
 
 export interface LavaPiece {
@@ -17,30 +17,8 @@ export interface LavaPiece {
   dispose(): void;
 }
 
-// The seams of net.ts as it bakes them: half width at the two ends and the middle, how lumpy, the heat class.
-// A copy, because net.ts does not export them yet (asked of the crust owner): keep the two the same.
-const AUTHORED: Record<string, { half: [number, number, number]; lumps: number; heat: number }> = {
-  line: { half: [0.55, 0.85, 0.3], lumps: 0.45, heat: 0.0 },
-  group: { half: [0.45, 1.05, 0.4], lumps: 0.75, heat: 0.08 },
-  nearA: { half: [0.1, 0.3, 0.14], lumps: 0.55, heat: 0.2 },
-  nearB: { half: [0.14, 0.26, 0.08], lumps: 0.55, heat: 0.25 },
-  spatterRight: { half: [0.5, 2.3, 0.5], lumps: 0.5, heat: 1.5 },
-  spatterLeft: { half: [0.4, 1.7, 0.4], lumps: 0.5, heat: 1.5 },
-};
-const OWN: { line: [number, number][]; half: [number, number, number]; lumps: number; heat: number }[] = [
-  { line: [[-497.6, 191.5], [-499.3, 188.0]], half: [0.4, 0.32, 0.1], lumps: 0.4, heat: 0.0 },
-  { line: [[-497.0, 190.0], [-494.6, 186.2]], half: [0.4, 0.3, 0.08], lumps: 0.4, heat: 0.0 },
-  { line: [[-496.5, 188.5], [-497.4, 184.6]], half: [0.4, 0.26, 0.08], lumps: 0.4, heat: 0.0 },
-  { line: [[-398.0, 60.0], [-344.0, 80.0]], half: [0.5, 1.3, 0.4], lumps: 0.6, heat: 0.05 },
-  { line: [[-427.9, 205.1], [-427.1, 208.5]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08 },
-  { line: [[-416.7, 207.2], [-413.8, 208.8]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15 },
-  { line: [[-427.3, 212.2], [-424.3, 215.3]], half: [0.04, 0.26, 0.03], lumps: 0.9, heat: 0.22 },
-  { line: [[-414.2, 185.3], [-411.8, 186.8]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08 },
-  { line: [[-397.8, 185.9], [-395.8, 190.2]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15 },
-  { line: [[-396.5, 170.1], [-392.0, 173.3]], half: [0.04, 0.26, 0.03], lumps: 0.9, heat: 0.22 },
-  { line: [[-376.4, 164.7], [-375.1, 169.4]], half: [0.04, 0.16, 0.03], lumps: 0.9, heat: 0.08 },
-  { line: [[-426.2, 193.6], [-422.3, 194.0]], half: [0.04, 0.21, 0.03], lumps: 0.9, heat: 0.15 },
-];
+// The seams of net.ts as it bakes them. Of its own lines the net bakes the first two points only, and a ribbon lies in those wide enough to open.
+const OWN = NET_OWN.filter((o) => Math.max(...o.half) >= 0.15).map((o) => ({ ...o, line: o.line.slice(0, 2) }));
 /** Where a seam opens into a pool: the middle on the crust at the reference time, metres added to the half width, and the square of its reach. */
 const POOLS: { seam: string; x: number; z: number; add: number; reach2: number }[] = [
   { seam: 'group', x: -403.4, z: 202.6, add: 1.25, reach2: 5.0 },
@@ -326,11 +304,11 @@ void main() {
 
   // Against the bank a thin dark skin clings, torn, and the glow shows through the tears. Where the stream shears past it a bright line opens.
   float inside = -bank;
-  float reach = 0.1 + 0.34 * vnoise(q * 0.9 + 4.0) + 0.1 * vnoise(q * 3.7 + 1.0);
+  float reach = 0.16 + 0.42 * vnoise(q * 0.9 + 4.0) + 0.14 * vnoise(q * 3.7 + 1.0);
   float torn = smoothstep(0.5, 0.66, vnoise(q * 3.3 + vec2(9.0, uTime * 0.04)) * 0.62 + vnoise(q * 9.5) * 0.38);
   float cling = (1.0 - smoothstep(reach * 0.55, reach, inside + 0.06 * (vnoise(q * 14.0) - 0.5))) * (1.0 - torn * smoothstep(0.02, 0.09, inside));
   float shear = (1.0 - smoothstep(0.0, 0.03 + grain, abs(inside - reach))) * smoothstep(0.42, 0.62, vnoise(q * 1.4 + vec2(uTime * 0.11, 0.0))) * (1.0 - pool);
-  k = mix(k, 905.0 + 150.0 * vnoise(q * 6.1 + 2.0), cling);
+  k = mix(k, 880.0 + 170.0 * vnoise(q * 6.1 + 2.0), cling);
   skin = max(skin, cling);
   k = mix(k, 1430.0, shear * 0.85 * (1.0 - cling));
   // Under the crust nothing glows.

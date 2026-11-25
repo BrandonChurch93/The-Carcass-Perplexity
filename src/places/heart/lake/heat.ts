@@ -126,8 +126,10 @@ vec3 meltLight(vec2 q, vec4 n, float off, float below, vec3 nrm, vec2 away) {
   float lift = 0.2 + 0.5 * w;
   float air = stripLight(n2, vec2(0.1 - off, lift - y), vec2(-span - 0.1 - off, lift - y));
   // Nothing reaches a point far below the melt or far from it.
-  float reach = exp(-max(off, 0.0) / (1.5 + 4.0 * w));
-  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (direct * smoothstep(-0.15, 0.0, y - level) + 0.3 * air));
+  // The picture shows a warm wash for about the width of the channel and little more, and a wall that glows dimly, not a lamp:
+  // most of what the melt sends up is taken by the air and the skin on it.
+  float reach = exp(-max(off, 0.0) / (0.5 + 1.8 * w));
+  return blackbody(meltKelvin(q, n)) * (3.14159 * uCast * wide * reach * (0.3 * direct * smoothstep(-0.15, 0.0, y - level) + 0.3 * air));
 }
 
 // x: how much of the place is open lava, 0 to 1. y: kelvin of the lava that shows. z: metres to the edge of the nearest gap that
