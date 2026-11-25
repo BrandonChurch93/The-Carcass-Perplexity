@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 69, 2026-11-25 21:02 UTC:
+Status 70, 2026-11-25 21:23 UTC:
 
-- `01-ribs-0.jpg`: The Ribs, where it starts: your picture on the left, the stand-in on the right.
-- `02-breath-0.jpg`: The Breath, where it starts.
-- `03-marsh-0.jpg`: The Blood Marsh, where it starts.
-- `04-spine-0.jpg`: The Spine, where it starts.
+- `01-eye-0.jpg`: The Eye: your approved picture on the left, the blockout its owner starts from on the right
+- `02-reveal-4.jpg`: The Reveal, last frame: your approved picture on the left, the blockout on the right. The owner builds to your note: a continent first, the body only near the top
+- `03-key-reveal-4-preview-draft.jpg`: The frame that answers reveal-4, film frame 10027, preview, draft tier
+- `04-key-eye-0-preview-draft.jpg`: The frame that answers eye-0, film frame 8412, preview, draft tier
 
+Status 69, 2026-11-25 21:02 UTC, showed: The Ribs, where it starts: your picture on the left, the stand-in on the right; The Breath, where it starts; The Blood Marsh, where it...
 Status 68, 2026-11-25 20:01 UTC, showed: The sounds of the Ribs, the Heart and the Breath as waveforms, each with its length and the take kept.
 Status 67, 2026-11-25 19:52 UTC, showed: The Heart: its three sounds under the music, as they sit in the mix. The music is the white line.
-Status 66, 2026-11-25 19:35 UTC, showed: The review page, the new Script part: the lengths and the start of the sheet; Clip n2 on the review page: two lines marked, each with two...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-25T21:02:47Z
-phase 4: 0.87 h used of 17.00 h
-build: 21.19 h used of 72.00 h
+2026-11-25T21:23:44Z
+phase 4: 1.22 h used of 17.00 h
+build: 21.54 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 62, status overdue
+minutes since the last status: 21
 ```
 
 ## Phases
@@ -66,12 +66,12 @@ State is `not started`, `in progress` or `finished`. A finished unit names what 
 | Unit | Phase | State | Rounds run | Best round | Commit | What ended its loop |
 | --- | --- | --- | --- | --- | --- | --- |
 | `heart` | 3 | finished | 5 | 7 | `9ac88bf` | Ended by the limit `quality.lookLockMaxRounds`, not by the pass bar: its five rounds are rounds 3 to 7 of the build, and round 7 is a fail (R1 4, R3 4, R4 7 against a bar of 9; jury 3 of 25 against 19; M1 green, M2 green, M3 red). Marked at step 10 on 2026-11-25 at 16:27 UTC. The review clip, the five comparison images and the motion sheets are from this commit |
-| `ribs` | 4 | not started | 0 | | | |
-| `breath` | 4 | not started | 0 | | | |
-| `marsh` | 4 | not started | 0 | | | |
-| `spine` | 4 | not started | 0 | | | |
-| `eye` | 4 | not started | 0 | | | |
-| `reveal` | 4 | not started | 0 | | | |
+| `ribs` | 4 | in progress | 0 |  |  |  |
+| `breath` | 4 | in progress | 0 |  |  |  |
+| `marsh` | 4 | in progress | 0 |  |  |  |
+| `spine` | 4 | in progress | 0 |  |  |  |
+| `eye` | 4 | in progress | 0 |  |  |  |
+| `reveal` | 4 | in progress | 0 |  |  |  |
 | `film` | 5 | not started | 0 | | | |
 
 ### Parts
@@ -1290,6 +1290,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-25. 2026-11-25 21:00 UTC: the script is worked on with Brandon in the thread (note 13). It is shown there as text, because the sheet alone did not read as the script to him: tools/status/script-text.py writes the 32 lines with the marks from cut/SCRIPT-SHEET.json and tools/status/script-text-widget.html shows them. Building does not wait for it: the cut list keeps each line's length worked out from the pace of n8 until the clips exist.
 - 2026-11-25. 2026-11-25 21:11 UTC. Line n8.3 of the script is "It was a titan." Brandon asked for a stronger word than "body" and left the choice to the Builder (note 15). Chosen over "being" because it is the word the kit and the art direction use for it ("Titan-fall"), it carries the size, which "body" and "being" do not, and the line keeps its five syllables and its stress, so by the estimate it is 1.58 s where 1.5 s more are free and the timing of the film does not move. Weighed and not taken: "It is a carcass.", the film's own name, which would say the title aloud on the strike; it is offered to him in the thread as the one other choice. "Titan" is not read as a god (note 7 rules out a god): with "a" it names a kind of thing, a giant. `npm run script` passes with the new line.
 - 2026-11-25. 2026-11-25 21:11 UTC. His "I like everything except for it was a body" (note 15) is taken as approval of the script as it was shown to him at 20:55 UTC: his 21 unmarked lines as written and the 11 marked lines in the form marked A, each of which was marked because it does not fit its picture or its time as written. In `cut/SCRIPT-DRAFT.json` every mark now holds `stands: A`; his own words stay in `text`. This is not the word "The script is final.": nothing is recorded, `narration.clips` in the config still holds the approved script, and any line goes back to his words when he says so. When he writes that the script is final, the words that go into `narration.clips` are the standing form of each line.
+- 2026-11-25. 21:22 UTC. Phase 4, the team: ten build agents at once, which is the 16 of `sandbox.maxAgents` less the 6 of `criticSlots`, on all six units from the first minute, because Brandon said to start on all the scenes and the half point of the phase is 8.5 h in. Two owners each for the Ribs, the Breath, the Marsh and the Spine (a lead with the foundation, the light, the cameras, the land and the weather; a second owner with the fluids or the storm and the animals); one each for the Eye and the Reveal for now. A slot that frees goes to the worst place first, and the first two go to an animal owner for the Eye and a second owner for the Reveal. Every place takes the Heart's folder pattern and names, so a second owner writes against the Heart's signatures before its lead's foundation lands.
+- 2026-11-25. 21:22 UTC. Phase 4, cost: a whole place may cost at most 7 s for one sample at 3840 x 2160 at its wide key on 4 cores, split between its owners in their briefs. The Heart costs 21 to 31 s (MEASURED in Phase 3), and six more places at that cost could not be rendered inside the film's budget. The owners are told to say what a part costs at every hand-back and to keep a dearer look behind a constant.
+- 2026-11-25. 21:22 UTC. Phase 4, light: places with a sun that does not move in their seconds (Ribs, Breath, Eye, Reveal) bake the terrain's shadow once into the rig's land map, animals cast through stretched contact discs, cloud shadow is one drifting mask. The Marsh is a flat overcast with no sun. The Spine is dusk and takes its main light from the six strikes through the rig's emitters.
+- 2026-11-25. 21:22 UTC. Phase 4, the Spine: the cut list's shot order is kept and the staging is moved instead, so the route runs one way along the ridge (the scorched one on the saddle beyond the first spire, the last shot starting outside the canal's mouth). The Reveal's owner works to Brandon's item R1.5 word for word, which outranks the approved pictures where they differ; the kit's rule stays: the outline says corpse, the surface says continent.
 
 ## Notes from Brandon
 
@@ -1617,8 +1621,18 @@ Each reports by message to the Builder.
 
 | Agent | Kind | Job | Branch | Started | Limit |
 | --- | --- | --- | --- | --- | --- |
+| `ribs_ground_owner` | build, own machine | The Ribs, lead: the place's foundation (light, contract, stand-ins), the cameras with the opening, the floor, the blades, the weed, the ledges, the rocks, the sky, the air, the cloud | `agent/ribs-ground`, looks on `agent/ribs-ground-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `ribs_sea_owner` | build, own machine | The Ribs, second owner: the sea, the surf, the runnels, the bore as one wall of water, the kite-wings, the drowned one | `agent/ribs-sea`, looks on `agent/ribs-sea-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `breath_ground_owner` | build, own machine | The Breath, lead: the foundation, the cameras, the shelf, the shaft with its hoops and slabs, the cliff, the sky, the fog, the vapour as a heavy thing with a surface, the exhale | `agent/breath-ground`, looks on `agent/breath-ground-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `breath_life_owner` | build, own machine | The Breath, second owner: the tide channel and the sea, the gill-plumes, the waders, the dead wader | `agent/breath-life`, looks on `agent/breath-life-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `marsh_ground_owner` | build, own machine | The Blood Marsh, lead: the foundation, the cameras, the flats, the salt crust, the brine, the gas domes and the burst, the sky, the rain, the steam | `agent/marsh-ground`, looks on `agent/marsh-ground-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `marsh_life_owner` | build, own machine | The Blood Marsh, second owner: the stalks and their insects, the wallowers, the dead and the one on the thin crust, the fliers | `agent/marsh-life`, looks on `agent/marsh-life-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `spine_ground_owner` | build, own machine | The Spine, lead: the foundation, the cameras and the one-way route, the ridge with its spires and the canal, the sky, the storm cloud, the cloud sea, the spindrift | `agent/spine-ground`, looks on `agent/spine-ground-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `spine_storm_owner` | build, own machine | The Spine, second owner: the six strikes and their light, the tether-kites, the ridge-runners and the scorched one | `agent/spine-storm`, looks on `agent/spine-storm-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `eye_owner` | build, own machine | The Eye, alone for now: the foundation, the cameras, the lake with its shallows and shaft, the socket of cliffs, the sky, the mist, the drinkers, the mats, the skeleton, what rises | `agent/eye-place`, looks on `agent/eye-place-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
+| `reveal_owner` | build, own machine | The Reveal, alone for now: the one shot from the lake to orbit, the continent to Brandon's item R1.5, the six places from orbit, cloud, sea, atmosphere, space | `agent/reveal-place`, looks on `agent/reveal-place-looks` | 2026-11-25 21:22 UTC | 4 h, to 01:22 UTC |
 
-none
+Wave 1 of Phase 4: ten build agents, each on its own machine of 4 cores, all six units at once. Their briefs are `out/work/briefs/PLACE-OWNERS.md` (one sheet for all) and `out/work/briefs/p4/<agent>.md`, written by `out/work/briefs/p4/make.py` from the cut list and the carried items, and kept as sent on the branch `agent/briefs` (`1357cf0`). Each pushes its branch and its looks every 30 minutes and hands back three versions by message.
 
 Ended in review round 1, each on its own machine with free tools, nothing merged and no ElevenLabs credits spent: `music_stem_separator` (started 17:33 UTC: the stems of the two windows of the supplied track; the signal taken out of each spot was cut from them and is kept in `audio/cleaned/removed/`, where `pipeline/music/clean.py` reads it) and `music_second_pass_checker` (back before 19:00 UTC: the separation run again over the cleaned track, to measure what voice is left in each spot; its levels are in `audio/cleaned/proof/second-pass-levels.txt`).
 
@@ -1868,3 +1882,5 @@ What happens next is yours:
 - 2026-11-25 20:12 UTC. 20:12 the hand back in the thread: the script sheet shown again as one block with a tab for each clip, the Heart review clip attached as file 3 (0:29, 1080p, 60 fps, final tier, cleaned music and its three sounds) and the animatic as file 4 (3:18, the new mix). The repo read public at 20:07 UTC; it holds the 20 sound files on Brandon's word (note 3), and the line on the sound tool's terms is said once more in the reply.
 - 2026-11-25 21:01 UTC. 2026-11-25 21:00 UTC: After the review, steps 1 to 3. Step 1 pushed as 9ca79ce (notes 12 to 14, items A.1 to A.3 open, Review approved, Phase 4 in progress). Step 2: the clock's first tick of Phase 4 read 0.82 h, counted from the last tick of the review round at 20:10 UTC; about 5 minutes of that were the wait for his message, left as counted. Step 3: A.1 done, A.2 open (the script, in the thread), A.3 done (two decisions logged); item R1.5 corrected to Phase 4, where the unit reveal is built. Stop condition 1 checked at 20:57 UTC: 52 of 52 hashes match and all 34 key pictures exist. Disk: 2.8 GB free at 20:57 UTC, under sandbox.minFreeDiskGb; old packs of rounds 1 to 6 and four folders under out/work/tmp deleted, 3.8 GB free.
 - 2026-11-25 21:03 UTC. 2026-11-25 21:04 UTC: status 69 posted, the first of Phase 4 (After the review, step 4): the three items as understood and when each is worked, with four fresh draft compares of the stand-ins (ribs-0, breath-0, marsh-0, spine-0; 3 to 4 s each on this machine). The status tool prints the credits line itself, so it stood twice in this one; it is left out of the notes from here.
+- 2026-11-25 21:23 UTC. 21:22 the ten build agents of Phase 4, wave 1, are started, each on its own machine with the shared sheet and its own brief: ribs_ground_owner, ribs_sea_owner, breath_ground_owner, breath_life_owner, marsh_ground_owner, marsh_life_owner, spine_ground_owner, spine_storm_owner, eye_owner, reveal_owner. All six units are in progress. Their limit is 4 h, to 01:22 UTC; first looks are due by 21:52, lead foundations by 21:57, first versions by 22:42 (second owners) and 22:52 (leads).
+- 2026-11-25 21:24 UTC. 21:24 status 70 posted in the thread: all the scenes started with ten build agents, the script change, and where the Eye and the Reveal start (the blockout beside the approved picture; 2 new draft renders at preview).
