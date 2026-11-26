@@ -36,6 +36,26 @@ const BONES_GLSL = /* glsl */ `
 uniform mat4 uBones[6];
 uniform vec4 uBurn;
 uniform vec4 uGround;
+uniform float uAnkle;
+// A leg is one bone, so a leg thrown out flat would show its sole. The dead one's feet are let fall at the hock instead: below it the leg
+// turns about its own cross axis, so the paw comes down on its pad. v is a place on the leg (w 1) or a direction (w 0), at rest.
+vec3 hockAt(vec4 v, float y, float which) {
+  if (uAnkle == 0.0 || which < 0.5 || which > 4.5) return v.xyz;
+  if (uAnkle > 0.0) {
+    // A living one lying down: its forelegs lie out ahead, and the paws turn down at the hock to lie flat, claws forward.
+    if (which > 2.5) return v.xyz;
+    float b = -uAnkle * (1.0 - smoothstep(0.14, 0.26, y));
+    vec2 o = v.w * vec2(0.4, 0.2);
+    vec2 f = v.xy - o;
+    return vec3(o + vec2(f.x * cos(b) - f.y * sin(b), f.x * sin(b) + f.y * cos(b)), v.z);
+  }
+  float a = uAnkle * (1.0 - smoothstep(0.14, 0.26, y));
+  float z0 = (which < 1.5 || (which > 2.5 && which < 3.5)) ? -0.24 : 0.24;
+  vec2 d = v.yz - v.w * vec2(0.2, z0);
+  float c = cos(a);
+  float e = sin(a);
+  return vec3(v.x, v.w * vec2(0.2, z0) + vec2(d.x * c - d.y * e, d.x * e + d.y * c));
+}
 // The ground under an animal is a plane: its height at the world's origin, and its slope along x and z.
 float groundY(vec3 p) {
   return uGround.x + dot(uGround.yz, p.xz);
@@ -48,7 +68,7 @@ float burnAt(vec3 rest) {
   float down = clamp((uBurn.y - rest.y) / 0.7, -0.2, 1.2);
   float line = uBurn.x - 0.22 * down - 0.06 * sin(down * 9.0);
   float fork = uBurn.x + 0.26 - 0.1 * down + 0.05 * sin(down * 7.0 + 2.0);
-  float across = min(abs(rest.x - line), abs(rest.x - fork) * 1.9 + 0.35 * uBurn.w);
+  float across = min(abs(rest.x - line), abs(rest.x - fork) * 3.0 + 1.6 * uBurn.w);
   float side = smoothstep(-0.16, 0.02, rest.z * sign(uBurn.z));
   float ends = smoothstep(0.0, 0.12, down + 0.1) * smoothstep(1.15, 0.85, down);
   return across / uBurn.w + (1.0 - side * ends) * 4.0;
@@ -62,11 +82,13 @@ varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying float vKind;
+varying float vLeg;
 void main() {
+  vLeg = aBone > 0.5 && aBone < 4.5 ? 1.0 : 0.0;
   mat4 bone = uBones[int(aBone + 0.5)];
-  vec4 w = modelMatrix * bone * vec4(position, 1.0);
+  vec4 w = modelMatrix * bone * vec4(hockAt(vec4(position, 1.0), position.y, aBone), 1.0);
   vWorld = w.xyz;
-  vNormal = normalize(mat3(modelMatrix) * mat3(bone) * normal);
+  vNormal = normalize(mat3(modelMatrix) * mat3(bone) * hockAt(vec4(normal, 0.0), position.y, aBone));
   vRest = position;
   vKind = aKind;
   gl_Position = projectionMatrix * viewMatrix * w;
@@ -78,28 +100,63 @@ ${NOISE_GLSL}
 ${LIGHT_GLSL}
 uniform vec4 uBurn;
 uniform vec4 uTone;
+uniform vec4 uCoat;
+uniform sampler2D tShag;
+uniform sampler2D tShagData;
 ${BURN_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vRest;
 varying float vKind;
+varying float vLeg;
+// The picture of the coat: matted locks that hang from the top of the tile to its foot, 0.8 m to a repeat. It is laid at two sizes, and the
+// animal's own large shapes shift it so no repeat shows. Returns the colour over the tile's mean; gives the slope and the height.
+const vec3 SHAG_MEAN = vec3(0.237, 0.215, 0.232);
+vec3 shagAt(vec2 m, out vec3 lie) {
+  vec2 a = m / 0.8;
+  vec2 b = m / 0.29 + vec2(0.37, 0.61);
+  vec3 ca = texture2D(tShag, a).rgb;
+  vec3 cb = texture2D(tShag, b).rgb;
+  vec3 da = texture2D(tShagData, a).rgb;
+  vec3 db = texture2D(tShagData, b).rgb;
+  lie = vec3((da.rg - 0.5) + 0.6 * (db.rg - 0.5), 0.6 * da.b + 0.4 * db.b);
+  return mix(ca, cb, 0.4) / SHAG_MEAN;
+}
 void main() {
   vec3 toCamera = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
+  // The hide is drawn from both sides, and the side that is seen is the outside.
+  if (dot(n, toCamera) < 0.0) n = -n;
   float grain = vnoise3(vRest * vec3(14.0, 40.0, 40.0));
   float fine = vnoise3(vRest * 90.0);
-  // Under the coat: matted under-fur, dark because the coat stands over it.
-  vec3 albedo = uTone.rgb * mix(0.4, 0.62, grain) * (0.75 + 0.5 * fine);
+  // The coat that lies close on the body, from the picture: it hangs from the spine down the flanks and down each leg. The locks stand
+  // over it and break its edge.
+  float around = atan(vRest.z, vRest.y - 0.85);
+  vec2 lay = vLeg > 0.5 ? vec2(vRest.x + vRest.z, vRest.y) : vec2(vRest.x, -abs(around) * 0.34);
+  lay += 0.07 * vec2(vnoise3(vRest * 2.3 + 5.0), vnoise3(vRest * 2.3 + 23.0)) + uTone.w * 3.0;
+  vec3 lie;
+  vec3 shag = shagAt(lay, lie);
+  {
+    vec3 dpx = dFdx(vWorld);
+    vec3 dpy = dFdy(vWorld);
+    vec2 dux = dFdx(lay);
+    vec2 duy = dFdy(lay);
+    float turn = sign(dux.x * duy.y - dux.y * duy.x);
+    vec3 tu = (dpx * duy.y - dpy * dux.y) * turn;
+    vec3 tv = (dpy * dux.x - dpx * duy.x) * turn;
+    float most = max(dot(tu, tu), dot(tv, tv));
+    if (most > 1e-20) n = normalize(n - 1.6 * (lie.x * tu + lie.y * tv) * inversesqrt(most));
+  }
+  vec3 albedo = uTone.rgb * 1.1 * shag * mix(0.62, 1.0, smoothstep(0.15, 0.6, lie.z));
+  // Rime and packed snow where the coat looks up.
+  albedo = mix(albedo, vec3(0.88, 0.89, 0.91), smoothstep(0.35, 0.8, n.y + 2.0 * uCoat.w + 0.6 * (lie.z - 0.5) + 0.5 * (grain - 0.5)) * 0.75);
   // The shanks and the feet carry a short, close coat that the locks do not hide: paler, streaked along the leg, rimed where it looks up.
   float shank = 1.0 - smoothstep(0.3, 0.46, vRest.y);
-  // On the dead one, lying open to the lens, any hide the locks leave bare is this close coat too.
-  if (uBurn.w > 0.0) shank = max(shank, 0.9);
   float nap = vnoise3(vRest * vec3(60.0, 9.0, 60.0));
-  albedo = mix(albedo, uTone.rgb * mix(0.62, 1.0, nap) * (0.85 + 0.3 * fine), shank);
-  albedo = mix(albedo, vec3(0.88, 0.89, 0.91), shank * smoothstep(0.35, 0.8, n.y + 0.5 * (nap - 0.5)) * 0.7);
+  albedo = mix(albedo, uTone.rgb * mix(0.62, 1.0, nap) * (0.85 + 0.3 * fine), 0.5 * shank);
   // The pads under the feet are bare and dark.
   float pad = 1.0 - smoothstep(0.004, 0.02, vRest.y);
-  albedo = mix(albedo, vec3(0.022, 0.018, 0.018) * (0.7 + 0.6 * fine), pad);
+  albedo = mix(albedo, vec3(0.06, 0.048, 0.044) * (0.7 + 0.6 * fine), 0.8 * pad);
   float rough = 0.95 + 0.05 * pad;
   float occ = 0.6;
   if (vKind > 0.5) {
@@ -124,8 +181,14 @@ void main() {
     skin = mix(skin, vec3(0.16, 0.09, 0.05) * (0.6 + 0.8 * fine), smoothstep(0.55, 0.95, ragged) * 0.8);
     // Round it, under the singed coat, the hide is scorched dark.
     albedo = mix(albedo, vec3(0.085, 0.04, 0.028) * (0.6 + 0.8 * fine), (1.0 - smoothstep(1.0, 3.4, ragged)) * 0.9);
+    // Down the middle the hide is split open to the raw flesh, wet and dark red.
+    float gash = 1.0 - smoothstep(0.12, 0.42, ragged + 0.25 * (vnoise3(vRest * vec3(4.0, 15.0, 15.0) + 7.0) - 0.5));
+    vec3 flesh = mix(vec3(0.075, 0.006, 0.006), vec3(0.3, 0.035, 0.022), clamp(0.9 * fine * grain + 0.5 * splitFine + 0.3 * torn, 0.0, 1.0));
+    // Black crust lies over it in flakes.
+    float crust = smoothstep(0.5, 0.62, vnoise3(vRest * vec3(11.0, 30.0, 30.0) + 19.0));
+    skin = mix(skin, mix(flesh, char_, 0.85 * crust), gash * 0.92);
     albedo = mix(albedo, skin, burnt);
-    rough = mix(rough, 0.8 - 0.35 * split, burnt);
+    rough = mix(rough, 0.8 - 0.35 * max(split, gash), burnt);
     occ = mix(occ, 0.9 - 0.4 * split, burnt);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
@@ -171,19 +234,29 @@ vec3 lockAt(float t) {
 void main() {
   int which = int(aLock.z + 0.5);
   mat4 bone = uBones[which];
-  vec3 root = (modelMatrix * bone * vec4(aRoot, 1.0)).xyz;
-  vec3 n = normalize(mat3(modelMatrix) * mat3(bone) * aDir);
+  vec3 root = (modelMatrix * bone * vec4(hockAt(vec4(aRoot, 1.0), aRoot.y, aLock.z), 1.0)).xyz;
+  vec3 n = normalize(mat3(modelMatrix) * mat3(bone) * hockAt(vec4(aDir, 0.0), aRoot.y, aLock.z));
   float size = length(modelMatrix[0].xyz);
   float seed = aLock.y;
   float t = position.y;
   float len = aLock.x * size * uCoat.x;
-  float wide = aLock.w * size;
+  // Seen square on, the coat is the matted picture on the body and the locks over it are short; at the body's edge they are long and
+  // break the outline. A lock that would be a hand long or less on the picture is left out, three in four.
+  float square = smoothstep(0.05, 0.6, dot(n, normalize(cameraPosition - root)));
+  len *= mix(1.0, 0.5, square);
+  if (fract(seed * 77.7) < 0.4 * square) len = 0.0;
+  // The dead one's legs and feet show: the coat on the legs is shorter, and close below the hock.
+  if (uAnkle < 0.0 && which > 0 && which < 5) len *= aRoot.y < 0.2 ? 0.3 : 0.55;
+  // One lock in seven is a long guard lock: it breaks the outline and carries the rime on its end.
+  float guard = which == 5 ? 0.0 : step(0.86, fract(seed * 53.3));
+  len *= 1.0 + 0.9 * guard;
+  float wide = aLock.w * size * (1.0 + 0.6 * guard);
 
   // The burn: locks inside it are gone, locks at its edge are singed to black stubs.
   float singe = 0.0;
   if (uBurn.w > 0.0) {
     float d = burnAt(aRoot) + 0.3 * (vnoise3(aRoot * 7.0) - 0.5);
-    singe = 1.0 - smoothstep(0.8, 3.6, d);
+    singe = 1.0 - smoothstep(0.8, 2.6, d);
     // Round the wound the coat is not gone but burned short and matted down.
     len *= mix(1.0, 0.25 + 0.3 * fract(seed * 9.1), smoothstep(0.0, 0.7, singe));
     if (d < 0.8 + 0.25 * fract(seed * 5.3)) len = 0.0;
@@ -249,6 +322,7 @@ void main() {
   vec3 albedo = mix(cream * 0.62, cream, smoothstep(0.0, 0.5, t));
   float windward = n.y * 0.55 - dot(n, wind) * 0.55 + 0.6 * (stain - 0.5) + uCoat.w;
   float rime = smoothstep(0.1, 0.6, windward) * smoothstep(0.3, 0.85, t + 0.3 * fract(seed * 31.0));
+  rime = max(rime, guard * smoothstep(0.45, 0.85, t) * smoothstep(-0.3, 0.4, n.y));
   albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * min(0.45 + 1.2 * max(uCoat.w, 0.0), 0.9));
   // The singed edge of the burn: rust, then black.
   albedo = mix(albedo, vec3(0.4, 0.14, 0.055), smoothstep(0.0, 0.4, singe) * 0.75 * (0.5 + 0.5 * fract(seed * 29.0)));
@@ -285,7 +359,9 @@ void main() {
   float hair = step(abs(f), mix((0.24 + 0.14 * t) * (1.0 - through_ * through_ * through_), 0.5, clump)) * step(t, ends);
   float near = smoothstep(0.8, 2.2, vAt.z * 2.0 / count);
   if (mix(1.0, hair, near) < 0.5) discard;
-  vec3 c = mix(vColour * mix(1.0, 0.72 + 0.56 * h, near), vFrost.rgb, mix(vFrost.w * smoothstep(0.5, 0.9, t) * 0.6, clump, near));
+  // Dark and warm at the root where the locks shade each other, each lock its own tone: the coat reads as locks, not as plush.
+  vec3 root = mix(vec3(0.42, 0.33, 0.27), vec3(1.0), smoothstep(0.0, 0.75, t));
+  vec3 c = mix(vColour * root * (0.8 + 0.4 * fract(vSeed * 7.31)) * mix(1.0, 0.72 + 0.56 * h, near), vFrost.rgb, mix(vFrost.w * smoothstep(0.5, 0.9, t) * 0.6, clump, near));
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
@@ -313,7 +389,7 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   vec3 hangs = lead * (0.3 * t - 0.12 * t * t) + down * (0.25 * t + 0.6 * t * t) + across * (0.12 * wr * s1 + 0.05 * aHang.w * t + 0.05 * sin(t * 7.0 + seed * 50.0))
     + lead * (0.1 * wr * s2 - 0.35 * curl * t) + down * (-0.25 * curl * t);
   // Dead, it lies fanned over the rock where the head fell: slack, kinked like a root, its end curled up off the ground as it froze.
-  float fan = 1.5 * aHang.w;
+  float fan = 1.15 * aHang.w;
   vec3 flatLead = normalize(vec3(lead.x, 0.0, lead.z));
   vec3 flatAcross = vec3(-flatLead.z, 0.0, flatLead.x);
   vec3 dir = flatLead * cos(fan) + flatAcross * sin(fan);
@@ -321,7 +397,7 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.45 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.3 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.05 * abs(sin(t * 5.0 + seed * 44.0)) * step(0.3, t) * fract(seed * 3.1) + 0.2 * hook * hook * step(0.7, fract(seed * 11.0)));
+    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.16 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) * fract(seed * 3.1) + 0.2 * hook * hook * step(0.7, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -336,7 +412,7 @@ void main() {
   vec3 across = normalize(cross(lead, vec3(0.0, 1.0, 0.0)) + vec3(1e-4, 0.0, 0.0));
   float len = aLimb.x * size;
   // Thick where it leaves the face, knuckled along its length, a point at its end.
-  float r = aLimb.y * size * (1.0 - 0.85 * pow(t, 1.2)) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
+  float r = aLimb.y * size * (1.0 - 0.97 * pow(t, 1.6)) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
   vec3 ahead = root + len * pathAt(t + 0.03, lead, across, seed);
   // The dead one's lie on the burned rock, which stands a little over the land.
@@ -369,10 +445,10 @@ void main() {
   // Bare skin: dark, ringed like a worm's, paler and raw toward the root, wet.
   float rings = smoothstep(0.3, 0.7, fract(t * (22.0 + 10.0 * fract(vAt.z * 3.0)) + 0.4 * sin(vAt.y * 2.0)));
   float blotch = vnoise3(vec3(t * 9.0, vAt.y * 1.5, vAt.z * 40.0));
-  vec3 albedo = mix(vec3(0.05, 0.035, 0.035), vec3(0.17, 0.1, 0.09), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
+  vec3 albedo = mix(vec3(0.028, 0.02, 0.022), vec3(0.09, 0.055, 0.052), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
   // Rime where it looks up, in beads.
   float crystals = vnoise3(vWorld * 520.0);
-  float rime = smoothstep(0.25, 0.75, n.y + 1.5 * uCoat.w + 1.3 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
+  float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, rime);
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);
