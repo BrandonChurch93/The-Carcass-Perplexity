@@ -1,0 +1,84 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-26 05:08 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the whole shallow foreground, the lake bed under the water",
+        "what": "the long trailing filaments of orange, gold and rust weed, the pale crusted rock showing through, and the rising bubble trails are gone; in their place is flat, sandy, speckled brown ground under painted swirling orange caustic lines, so the main subject of the shot is lost",
+        "fix": "put back the dense, three-dimensional streaming weed in rust, amber and yellow, with pale crusted rock patches between them and fine bubble chains rising through clear water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the foreground shore, lower third",
+        "what": "the rough grey scree and big lit boulders, with the small rocky stream on the left, are now a flat grey mud plain edged with low-poly, CG-looking rocks that have stretched, smeared texture (crops in set-A-02); a stray pale curved strip runs across the lower left",
+        "fix": "rebuild the foreground as a rising slope of real, varied scree and large weathered boulders with fine surface detail and soft, low light; bring back the stream and remove the strip"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the lake surface between the dark pool and the shore",
+        "what": "the shallow flats of patchy rust, ochre and gold mats, with clear water and pale reflective pools between them, are now one even field of brown-orange tiger stripes that look like a repeating texture; the flats no longer hold sky reflections",
+        "fix": "break the band back into irregular mats of rust, ochre and yellow growth with pale, mirror-like water between them, thinning toward the deep pool"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the far shore and cliff base behind the animals",
+        "what": "the far shore line, scree fans and cliff reflections in the water are gone; the water ends in a hard, perfectly straight horizontal edge, and above it a flat band of haze sits like a backdrop. The cliffs are framed higher and no sky shows",
+        "fix": "let the water run to a soft, natural shoreline at the foot of scree slopes, carry the lit cliff reflections into the water, and make the haze thin and uneven over the water instead of a wall"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the foreground shore",
+        "what": "the soft, out-of-focus wet gravel with shallow depth of field is replaced by a sharp, even field of pebbles that look scattered by hand, many floating on the surface, some lit and some dark at random (crops in set-A-04)",
+        "fix": "go back to a low, close, shallow-focus foreground of wet, partly sunk gravel that blurs out, lit warm from low behind"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the far shore and the base of the cliffs",
+        "what": "in -a the water meets the scree under the cliffs with a clear line and the cliffs mirror cleanly in the still outer water; in -b the shore dissolves into a flat band of haze over a hard, ruler-straight water line and the outer reflections are mostly lost",
+        "fix": "bring back a readable shoreline at the scree foot, thin the haze to a low drifting mist, and put the warm cliff reflection back in the calm outer water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the water in the mid and lower frame",
+        "what": "the clear, glassy water with rust weed mats near the shore and calm rings round the drinking animal has become dark, choppy water with a darker brown cast, and its golden reflection sits as a separate block on the left",
+        "fix": "calm and clear the water, put back the thin rust and gold weed lines near the edge, and let the warm sky glint spread evenly across it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the far shore and the haze line",
+        "what": "the water runs to a hard, straight horizon edge, with a wall of haze at the cliff foot in place of the soft, low mist lying over the water in -a; the cool, still, deep-blue reflective far water is gone and the whole lake turns orange-brown",
+        "fix": "put back the calm dark-blue mirror of far water under a thin, low mist with a soft shoreline, and keep the orange weed to the shallows"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the animals along the waterline",
+        "what": "in -a the herd is spread in depth, grazing up the slope on the right and wading among scattered stones in the water; in -b they stand in one flat line along a single waterline, all at the same distance, and look pasted onto the scene with little contact shadow",
+        "fix": "spread the herd in depth across the shallows and up the bank, with contact shadows, wet legs and reflections that match the low light"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01-b.png",
+        "where": "the dark central pool",
+        "what": "the ripple rings in -b are wider and harder, with bright painted white streaks across the pool, against the soft concentric rings and clean cliff reflections of -a",
+        "fix": "soften the ripples and let the pool carry the cliff reflection again"
+      }
+    ]
+  }
+}

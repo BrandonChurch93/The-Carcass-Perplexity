@@ -1,0 +1,105 @@
+{
+  "round": 17,
+  "unit": "marsh",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-26 05:12 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the splash crown left of centre and the drops above it",
+        "what": "the crown is a ring of flat pink cards with hard cut edges and no thickness or translucency, and the drops are opaque dark beads hanging in a neat arc; it reads as a cartoon splash at playing speed",
+        "fix": "simulate the splash as a thin translucent fluid sheet breaking into ligaments and droplets that pick up the sky and the red of the pool, with motion blur"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the clear dome on the pool right of centre (also set-A-07.png, small dome near the centre stumps)",
+        "what": "a perfect glass hemisphere with one round specular dot, no film colour, no wall thickness variation and no contact meniscus; it looks like a modelled dome sitting on the surface",
+        "fix": "give the bubble an uneven film with thin-film colour and pick-up of the red liquid, an irregular shape, a meniscus where it meets the surface, and a reflection that fits the overcast sky"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "spray or mist on the left, x 0 to 17%, y 25 to 42% (also the haze in set-A-08.png and set-A-09.png)",
+        "what": "the spray is a field of discrete grey and pink dots laid over the plants like noise; the haze in other frames is grainy speckle rather than soft scattering vapour",
+        "fix": "render the spray as volumetric droplets with depth-of-field and forward scattering so it softens and lights up toward the light, and denoise the fog volume"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the stump bottom right and the cut stumps in the middle",
+        "what": "the open top of the right stump is a paper-thin shell with a flat brown interior and no wall thickness; the trunks share one bark texture with regular rings repeating",
+        "fix": "give the stumps a real wall thickness and fibrous broken interior, and vary the bark material and ring spacing per trunk"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the trunk, x 42 to 58%, y 58 to 75%",
+        "what": "two bark textures overlap with visible scale shapes ghosting through each other and a horizontal seam across the trunk",
+        "fix": "fix the UV seam and blend between layers so the bark reads as one continuous surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the flying creatures, x 42 to 58%, y 25 to 42%",
+        "what": "the fliers are flat dark silhouettes, one doubled into a smeared transparent ghost with streak lines that look like a compositing artefact rather than motion blur",
+        "fix": "render the fliers in 3D with proper motion blur, shading and haze attenuation by distance"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the shoreline crust, x 42 to 58%, y 58 to 75% (also set-A-04.png foreground shore)",
+        "what": "the white crust is flat decal patches lying on the liquid surface, with no thickness, no wet dark edge and no meniscus where it meets the land",
+        "fix": "model the salt crust as raised crystalline rafts with a wet darkened margin, varied scale and reflection breakup around them"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the grey lumps lying on the flat, x 83 to 100%, y 58 to 75%",
+        "what": "the forms are noisy displaced blobs with rippled clay-like sculpt lines and no defined anatomy, legs or contact shadow; they read as unfinished meshes",
+        "fix": "either resolve them as clear animal bodies with weight, contact shadow and salt or wet on the hide, or as believable rock with crisp fractures"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the foreground rock bottom left (also set-A-06.png right crop)",
+        "what": "the rock has soft rounded clay-like lobes and a stretched blurry texture close to camera, with no fine fracture or grain",
+        "fix": "use higher-resolution, unstretched rock texture with sharp fracture edges and micro-detail at close range"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the large animal standing in the pool",
+        "what": "smooth uniform fur-shaded model look; legs enter the liquid with no ripple ring, no wet darkening and no splash or pickup of salt on the lower legs",
+        "fix": "add contact ripples and displacement where legs meet the liquid, wet darkened matted hair on the legs and belly, and salt crust spatter"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the brown fur lumps in the channel",
+        "what": "identical smooth fuzzy domes with near-identical neat concentric ripple rings, no wet line where they break the surface",
+        "fix": "vary shapes and poses, add a wet darkened band at the waterline and irregular ripples"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the flats, x 83 to 100%, y 25 to 42%",
+        "what": "the ground is soft and smeared, with stretched streaks of the same pink and grey texture and little detail",
+        "fix": "raise the texture resolution in the mid-ground and break up the repetition"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the liquid, x 42 to 58%, y 25 to 42%",
+        "what": "the dark red area has a fine digital grain and soft reflections that smear like a blur filter",
+        "fix": "increase samples on the liquid shader and add sharper small-scale ripple detail"
+      }
+    ]
+  }
+}

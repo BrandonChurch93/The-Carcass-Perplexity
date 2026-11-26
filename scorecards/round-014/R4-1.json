@@ -1,0 +1,49 @@
+{
+  "round": 14,
+  "unit": "breath",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 05:20 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the water surface across the lower half of frame 5249",
+        "what": "the sky reflections, creature reflections, specular highlights, and ripples abruptly drop out for a single frame, turning the water into a flat murky green-grey texture before popping back on frame 5250",
+        "fix": "fix the water reflection and ripple simulation dropout so the water surface remains temporally continuous without single-frame flashes"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the water surface across the lower half of frame 5344",
+        "what": "the same water reflection and specular dropout recurs mid-shot, replacing the sunlit ripples and reflections with a flat dark green-grey patterned surface",
+        "fix": "eliminate the intermittent water shader or cache glitch across the entire shot 4 frame range"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the living creature standing behind the carcass on the rocky rim across frames 5403 to 5617",
+        "what": "the creature remains completely frozen in a single rigid pose for the entire push-in with no breathing, head movement, or weight shift, reading as a static 3D model, while the surrounding tendrils, bushes, mist, and water also stay motionless",
+        "fix": "add subtle idle animation to the standing creature (breathing, weight shift, neck or head motion) and gentle wind or drift to the carcass tendrils, bushes, mist, and water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the hero red feathery plant, background mist, and water across frames 4866 to 5080",
+        "what": "as the camera pushes in and slows nearly to a halt on the bush (frames 4983 to 5080), none of the fine fronds sway and the mist, water, and distant creatures remain completely static, making the shot read like a camera sliding onto a still picture",
+        "fix": "animate subtle wind sway in the red fronds, continuous drift in the mist, and gentle ripple motion on the sunlit water so the scene stays alive when the camera holds"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the creature standing on the pit rim and the distant herd on the left flats across frames 4221 to 4596",
+        "what": "the creatures hold completely rigid, unchanging poses over the entire six-second aerial push-in, reading as static models rather than living animals",
+        "fix": "add subtle asynchronous movement to the rim creature and distant herd so they read as alive throughout the establishing move"
+      }
+    ]
+  }
+}
