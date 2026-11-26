@@ -94,6 +94,8 @@ vec3 ringAt(vec3 from, vec3 d, float radius) {
   vec2 p = o + d.xz * t;
   return vec3(wrapPi(atan(p.y, p.x) - STORM_AZ), from.y + d.y * t - MASS_SEAT.y, t);
 }
+// How much of this ray the masses hide: before the flash a mass is a dark shape with a lit edge, not a lamp.
+float massCover = 0.0;
 // One mass over c. seat: x where its middle stands on the ring, y how high, z half its width in radians of the ring, w half its height in metres.
 vec3 massOver(vec3 c, sampler2D picture, vec3 at, vec4 seat, float dots, float foot, float air, float show) {
   vec2 uv = vec2(0.5 + wrapPi(at.x - seat.x) / (2.0 * seat.z), 0.5 + (at.y - seat.y) / (2.0 * seat.w));
@@ -112,6 +114,7 @@ vec3 massOver(vec3 c, sampler2D picture, vec3 at, vec4 seat, float dots, float f
   m.rgb *= mix(1.0, 0.5, smoothstep(0.1, 0.42, pale));
   // And its darks are cloud in the dusk's air, not holes: slate, never black.
   m.rgb = m.rgb * 0.88 + vec3(0.017, 0.02, 0.03);
+  massCover = 1.0 - (1.0 - massCover) * (1.0 - m.a * show);
   return mix(c, mix(m.rgb, c, air), m.a * show);
 }
 vec3 stormMasses(vec3 c, vec3 from, vec3 d, float foot) {
