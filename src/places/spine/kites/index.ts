@@ -333,6 +333,9 @@ void main() {
   n = normalize(n - uBody.z * slope / (1.0 + uBody.z * length(slope)) * 1.6);
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
   float gather = vSkin.x;
+  // Far off: its gathered middle (core), and how far a place is from its two thin ends (mid).
+  float mid = smoothstep(0.03, 0.28, s) * (1.0 - smoothstep(0.4, 0.9, s));
+  float core = vFar * max(mid * (1.0 - smoothstep(0.1, 0.6, abs(vb))), gather);
   // The lens looks into the trough of the section, or at its back.
   float hollow = smoothstep(0.2, 1.3, face * vSkin.y);
   float back = smoothstep(0.2, 1.3, -face * vSkin.y);
@@ -386,7 +389,7 @@ void main() {
   vec3 pearl = (vec3(0.56, 0.4, 1.0) * tints.x + vec3(1.0, 0.5, 0.8) * tints.y + vec3(0.6, 1.0, 0.76) * tints.z) / (tints.x + tints.y + tints.z);
   c *= mix(vec3(1.0), 1.6 * pearl, 1.6 * uFilm.z * (1.0 - vFar) * (1.0 - gather));
   // Thin as a soap film: where it is stretched it takes colours by its thickness and the angle it is seen at.
-  float oil = 1.2 + 2.2 * relief + 1.4 * vnoise(vec2(metres / (1.7 * wide) + seed, vb * 1.3)) + 0.8 * (1.0 - nv);
+  float oil = 1.2 + 2.2 * relief + 1.4 * drift + 0.8 * (1.0 - nv);
   vec3 sheen = 0.5 + 0.5 * cos(6.2832 * oil * vec3(1.0, 1.17, 1.4));
   c *= mix(vec3(1.0), 0.55 + 0.9 * sheen, 0.5 * uFilm.z * (1.0 - 0.6 * fold) * (1.0 - gather));
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
@@ -415,12 +418,10 @@ void main() {
   vec2 off = vWorld.xz - uStruckAt.xz;
   float mine = max(abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.3, 1.0 / (1.0 + dot(off, off) / 250000.0));
   float aslant = 1.0 - smoothstep(0.1, 0.5, nv);
-  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim * lineHere + 0.2 * aslant + 0.07 * belly, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim + 0.5 * aslant + 0.16 * belly, vFar));
+  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.35 * rim * lineHere + 0.2 * aslant + 0.07 * belly, (0.04 + 0.25 * fold + 0.3 * glint + 0.8 * rim + 0.5 * aslant + 0.16 * belly) * (1.0 - 0.6 * core), vFar));
   // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
   // Far off each is a darker body where it is gathered, along its middle and at its wrung places, and thin toward its two ends and its
   // edges, where the sky shows through it.
-  float mid = smoothstep(0.03, 0.28, s) * (1.0 - smoothstep(0.4, 0.9, s));
-  float core = vFar * max(mid * (1.0 - smoothstep(0.1, 0.6, abs(vb))), gather);
   float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) * mix(1.0, 0.3 + 0.55 * mid, vFar) + vFar * (0.03 + 0.2 * mid + 0.3 * core) * (1.0 + 0.3 * vNear), 0.0, 0.95);
   c *= 1.0 - 0.7 * core;
   // Lilac-grey, whatever the light: glass, not flesh.
