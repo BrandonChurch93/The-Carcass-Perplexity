@@ -1,4 +1,4 @@
-// The four nested pictures of the ground (assets-src/reveal/land/make_land.py makes them and holds the same numbers): the whole body, the head and
+// The four nested satellite maps of the ground (public/assets/reveal/maps/maps.json holds the same numbers): the whole body, the head and
 // shoulders, the skull, the lake. Each is 16:9. Centre and width are px of the master.
 import { KM, X, Z } from '../shared/anchors';
 
@@ -16,7 +16,7 @@ const level = (name: string, cx: number, cy: number, width: number): Level => {
 };
 
 /** From the widest to the closest. */
-export const LEVELS: Level[] = [level('a', 3361.6, 1570.3, 5300), level('b', 1554, 1581, 2620), level('c', 1272.85, 1580.8, 1130), level('d', 1272.85, 1580.8, 320)];
+export const LEVELS: Level[] = [level('a', 2983.67, 1727.13, 5295.59), level('b', 1554, 1581, 2620), level('c', 1272.85, 1580.8, 1130), level('d', 1272.85, 1580.8, 320)];
 
 /** The pair of levels a view of that width (px of the master) is drawn from, and how much of the closer one is left.
  *  The closer level fades into the wider one before the view outgrows the wider one's picture, so the swap of a pair is never seen. */
