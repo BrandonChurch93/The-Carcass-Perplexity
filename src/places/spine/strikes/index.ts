@@ -15,7 +15,7 @@ const CAST = 4600;
 const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
 const CHANNEL = 0.2;
-const SPARKS = 70;
+const SPARKS = 140;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -145,7 +145,7 @@ void main() {
   float lit = uEnv.x + uEnv.z;
   float lead = 0.06 * (1.0 - smoothstep(uEnv.w - 0.04, uEnv.w, vWay)) * step(uEnv.w, 0.999);
   float strength = min(lit + lead, 1.5);
-  float need = max(mix(0.13, 0.93, smoothstep(0.06, 0.22, broad)), 0.033 / max(strength, 1e-3));
+  float need = max(mix(0.13, 0.5, smoothstep(0.06, 0.22, broad)), 0.033 / max(strength, 1e-3));
   if (lum < need || strength < 0.002) discard;
   vec3 c = mix(uTint, vec3(1.0), smoothstep(need, min(need + 0.3, 1.0), lum)) * uCore * (0.15 + 0.85 * lum * lum) * min(strength * 3.0, 1.0);
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
@@ -328,7 +328,7 @@ export function create(ctx: Context): Piece {
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(9, 9) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(15, 15) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
     spot.frustumCulled = false;
     // The glow of the cloud round the channel is drawn by the air folder from the rig's lights; this one stays off.
     cloud.visible = false;
@@ -367,7 +367,9 @@ export function create(ctx: Context): Piece {
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
   const channelLight = { position: new THREE.Vector3(), radius: 220, radiance: new THREE.Vector3() };
   const cloudLight = { position: new THREE.Vector3(), radius: 380, radiance: new THREE.Vector3() };
-  ctx.rig.emitters.push(channelLight, cloudLight);
+  // And two along the channel between them, small, so that whatever draws the cloud can glow along the whole stroke.
+  const alongLights = [0.3, 0.6].map(() => ({ position: new THREE.Vector3(), radius: 110, radiance: new THREE.Vector3() }));
+  ctx.rig.emitters.push(channelLight, cloudLight, ...alongLights);
 
   // What a strike leaves on a tip: the rime flashes to steam and the gale carries it off. The air folder draws it; a strike only says how much.
   const puffs: { source: SteamSource; strikes: number[] }[] = [];
@@ -396,6 +398,7 @@ export function create(ctx: Context): Piece {
       }
       channelLight.radiance.set(0, 0, 0);
       cloudLight.radiance.set(0, 0, 0);
+      for (const l of alongLights) l.radiance.set(0, 0, 0);
       for (const b of bolts) {
         const age = seconds - b.site.seconds;
         const live = age > -0.3 && age < 1.2;
@@ -407,14 +410,20 @@ export function create(ctx: Context): Piece {
         b.age.value = age;
         // Sheet lightning inside the cloud in the quarter second before the stroke, then the stroke itself.
         const before = age < 0 ? 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3) : 0;
+        // After the last stroke the light does not cut off: the channel cools and the cloud holds it for half a second.
+        const tail = age > 0 ? 0.1 * Math.exp(-age / 0.22) * (1 - Math.exp(-age / 0.02)) : 0;
         const power = e.main + e.after;
         b.cloudGlow.copy(TINT).multiplyScalar((power * 0.9 + before) * 0.4);
         b.spotGlow.set(1, 0.93, 1).multiplyScalar(Math.min(power, 1) * 220 + e.after * 400);
-        if (power + before > 1e-4) {
+        if (power + before + tail > 1e-4) {
           channelLight.position.copy(b.mid);
-          channelLight.radiance.copy(TINT).multiplyScalar(CAST * power);
+          channelLight.radiance.copy(TINT).multiplyScalar(CAST * (power + tail));
+          alongLights.forEach((l, n) => {
+            l.position.lerpVectors(b.top, b.mid, n === 0 ? 0.3 : 0.65);
+            l.radiance.copy(TINT).multiplyScalar(CAST * 0.5 * (power + tail));
+          });
           cloudLight.position.copy(b.top);
-          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (power + before * 4));
+          cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (power + tail * 2 + before * 4));
         }
       }
     },
