@@ -1,7 +1,7 @@
-2026-11-26 02:38 UTC
-work at 77409c6 on agent/marsh-life-2
-heartbeat 3: palms from stalk.jpg, dead as standing cards, thick pale feelers, wet mud
-look-1.jpg = out/work/t/hb3-marsh-4.jpg
-look-2.jpg = out/work/t/hb3-marsh-0.jpg
-look-3.jpg = out/work/t/hb3-marsh-3.jpg
-look-4.jpg = out/work/t/hb3-marsh-2.jpg
+2026-11-26 03:01 UTC
+work at b04857a on agent/marsh-life-2
+heartbeat 4: hero belly-deep in wet mud, stuck one sunk in the hollow with thin feelers, K2 in focus
+look-1.jpg = out/work/t/hb4-marsh-3.jpg
+look-2.jpg = out/work/t/hb4-marsh-4.jpg
+look-3.jpg = out/work/t/hb4-marsh-2.jpg
+look-4.jpg = out/work/t/hb4-marsh-0.jpg
