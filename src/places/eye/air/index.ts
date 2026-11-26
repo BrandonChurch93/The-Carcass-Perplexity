@@ -155,7 +155,9 @@ void main() {
   if (lowEye * mistOn > 0.0) {
     float dp = plateDistance(ro, rd);
     vec3 hit = ro + rd * far;
+    // The angle round the far shore, with its cut turned to the south: left where atan puts it, it stood due north, in the middle of the far wall.
     float round2 = atan(hit.x - uPlateAt.x, hit.z - uPlateAt.z);
+    round2 += round2 < 0.0 ? 6.2831853 : 0.0;
     float tall = 4.0 + 16.0 * vnoise(vec2(round2 * 23.0 + uTime * 0.012, 2.0)) + 5.0 * vnoise(vec2(round2 * 90.0 - uTime * 0.02, 7.0));
     float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
     float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * max(smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall), (uPlateTone.w > 1.5 ? 0.0 : 0.9) * exp(-abs(rd.y) / 0.011) * smoothstep(250.0, 700.0, far)) * drift;
