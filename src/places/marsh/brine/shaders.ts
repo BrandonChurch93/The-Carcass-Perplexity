@@ -7,6 +7,8 @@ import { RIG_GLSL } from '../shared/glsl';
 import { FIELD_GLSL } from '../land/shaders';
 
 export const MAX_RINGS = 24;
+/** Seconds the skin of a dome takes to draw back from the point it tore at: twenty frames. */
+export const TEAR = 0.34;
 
 const WIND_RAW = [R[0] * 0.8 + F[0] * 0.6, R[1] * 0.8 + F[1] * 0.6];
 const WIND_LEN = Math.hypot(WIND_RAW[0] as number, WIND_RAW[1] as number);
@@ -41,10 +43,18 @@ ${BRINE_GLSL}
 
 // One train of wavelets: its slope at q. Short waves on a liquid do not travel together: each length has its own speed (gravity and the skin's
 // tension), so the pattern never slides as one sheet.
-vec2 train(vec2 q, vec2 dir, float len, float bend) {
+vec2 train(vec2 q, vec2 dir, float len, float bend, vec2 group) {
   float k = 6.2832 / len;
   float w = k * sqrt(9.81 / k + 0.000074 * k);
-  return dir * cos(k * dot(dir, q) - w * uTime + bend);
+  return dir * cos(k * dot(dir, q) - w * uTime + bend + group.y * 7.0) * smoothstep(0.38, 0.66, group.x) * 1.6;
+}
+// Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed. One
+// look for two trains of near lengths (rg for the one, ba for the other), read at the level a pixel of this width wants.
+vec4 groups(vec2 q, vec2 dir, float len, float px) {
+  float k = 6.2832 / len;
+  float w = k * sqrt(9.81 / k + 0.000074 * k);
+  vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
+  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), log2(max(px / (len * 13.0) * float(textureSize(tGrain, 0).x), 1.0)));
 }
 
 void main() {
@@ -67,7 +77,8 @@ void main() {
   vec2 bank = vec2(0.0, 1.0);
   vec2 flow = vec2(0.0);
   float nearBy = smoothstep(90.0, 50.0, dist);
-  if (nearBy > 0.0) {
+  // (The round pool has no way through and no bank but at its rim: there the bed is not asked which way it lies.)
+  if (nearBy > 0.0 && (inPool < 1.0 || s > 0.1)) {
     vec2 g = vec2(fieldAt(p.xz + vec2(0.7, 0.0)).r - fieldAt(p.xz - vec2(0.7, 0.0)).r, fieldAt(p.xz + vec2(0.0, 0.7)).r - fieldAt(p.xz - vec2(0.0, 0.7)).r);
     float gl = length(g);
     bank = gl > 1e-4 ? g / gl : bank;
@@ -76,8 +87,10 @@ void main() {
     vec2 run = vec2(-bank.y, bank.x);
     run *= clamp(dot(run, down) * 3.0, -1.0, 1.0);
     vec2 dir = normalize(mix(down, run, 0.75 * smoothstep(0.0, 0.5, gl)) + vec2(1e-4));
-    // Fastest over the deep middle, still at the bank, and none in the round pool, which has no way through.
-    flow = dir * (0.03 + 0.15 * smoothstep(-0.1, -1.6, s)) * (1.0 - inPool) * nearBy;
+    // Fastest over the deep middle, still at the bank, faster where the banks close in (the same brine has to pass), and none in the round
+    // pool, which has no way through.
+    float narrow = smoothstep(-2.2, 0.2, fieldAt(p.xz - bank * 3.5).r);
+    flow = dir * (0.04 + (0.16 + 0.4 * narrow) * smoothstep(-0.05, -1.2, s)) * (1.0 - inPool) * nearBy;
   }
   // What the flow carries is looked up where it came from: twice, half a turn apart, each fading out as the other fades in, so that the
   // carried pattern never snaps back. No two places turn over together.
@@ -98,9 +111,14 @@ void main() {
 
   // There is no wind to speak of: the brine lies near to glass, and what moves on it has a cause.
   // A slow heave of the whole surface, too low to see but in what it mirrors.
-  vec2 slope = (texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.035 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.025;
+  vec4 heave = texture2D(tGrain, p.xz / 4.1 + vec2(0.013, 0.008) * uTime);
+  vec2 slope = (heave.ba - 0.5) * 0.035 + (heave.rg - 0.5) * 0.025;
   // The flow dimples the skin where it runs: low boils and seams that go down the channel with it.
-  slope += (carriedFine.ba - 0.5) * 0.09 * smoothstep(0.02, 0.12, length(flow)) * smoothstep(0.5, 0.1, px);
+  float speed = length(flow);
+  slope += (carriedFine.ba - 0.5) * (0.07 + 0.25 * speed) * smoothstep(0.02, 0.12, speed) * smoothstep(0.5, 0.1, px);
+  // What stands in the current leaves a wake down the flow from it: the skin broken, and scum caught in it.
+  float wake = speed > 0.06 ? contactDrawn(p - vec3(flow.x, 0.0, flow.y) / speed * 0.7) * smoothstep(0.06, 0.25, speed) : 0.0;
+  slope += (carried.ba - 0.5) * 0.5 * wake;
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
   brineSlurry = 1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})));
@@ -109,14 +127,28 @@ void main() {
   vec2 wdir = ${v2(WIND_N)};
   vec2 lane = vec2(dot(p.xz, wdir) - 1.6 * uTime, dot(p.xz, vec2(-wdir.y, wdir.x)));
   float paw = smoothstep(0.5, 0.74, texture2D(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06).g);
-  float ruffle = 0.04 + 0.5 * paw + 0.12 * inPool + 0.8 * brineMud;
+  // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
+  float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
   vec2 ripples = vec2(0.0);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.05 * smoothstep(0.2, 0.07, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.055 * smoothstep(0.13, 0.045, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.05 * smoothstep(0.085, 0.03, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.045 * smoothstep(0.058, 0.02, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.035 * smoothstep(0.035, 0.012, px);
+  vec2 wcross = vec2(-wdir.y, wdir.x);
+  // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
+  // a lens can tell its crests apart: finer than that it would be grit.)
+  if (px < 0.12) {
+    vec4 e = groups(p.xz, wdir, 0.55, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 0.17), 0.73, bend.b * 3.0 + 2.1, e.rg) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
+  }
+  if (px < 0.045) {
+    vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
+  }
+  if (px < 0.02) {
+    vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
+  }
   slope += ripples * ruffle * (0.6 + 0.8 * bend.g);
 
   // How much froth the domes and the bursts have left here.
@@ -135,18 +167,42 @@ void main() {
       vec4 ring = uRings[i];
       vec2 d = p.xz - ring.xy;
       float r = length(d);
-      float q = r - ring.z;
-      float wide = 0.16 + 0.05 * ring.z;
-      float env = exp(-q * q / (wide * wide)) * ring.w;
+      float wide = 0.16 + 0.07 * ring.z;
+      if (abs(r - ring.z) > 3.2 * wide + 0.25) continue;
+      // No ring is a circle drawn with a compass: the front runs ahead here and lags there, and is higher where more was thrown.
+      // (Its unevenness is a few slow turns round it, each ring's own: counted, not looked up, for a pixel asks every ring.)
+      vec2 u = d / max(r, 0.01);
+      vec4 own = fract(ring.x * vec4(1.37, 2.91, 0.83, 3.57) + ring.y * vec4(0.71, 1.93, 2.47, 0.59)) * 2.0 - 1.0;
+      float two = u.x * u.x - u.y * u.y;
+      float three = u.x * (4.0 * u.x * u.x - 3.0);
+      float lag = 0.2 * two * own.x + 0.2 * (2.0 * u.x * u.y) * own.y + 0.16 * three * own.z + 0.14 * u.y * (3.0 - 4.0 * u.y * u.y) * own.w;
+      float thrown = 0.5 + 0.3 * u.x * own.w + 0.3 * u.y * own.z + 0.2 * two * own.y - 0.2 * three * own.x;
+      float q = r - ring.z - lag * (0.1 + 0.22 * ring.z);
+      float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
-      slope += d / max(r, 0.01) * env * sin(q * 14.0) * 0.3;
+      // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
+      slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3;
       boil = max(boil, env * smoothstep(1.5, 0.25, ring.z));
     }
   }
-  // Whatever stands in the brine (the contact map has it) troubles it: the wavelets are steeper round it.
+  // Whatever stands in the brine (the contact map has it) is met by it: the brine climbs the thing in a tight lip, the wavelets that reach it
+  // are turned and stand steeper, and it sends its own small rings out as it sways.
   float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
-  slope *= 1.0 + 1.3 * ringed;
+  float collar = 0.0;
+  // (Which way the thing stands from here is read off the map's own fall across the pixel and its neighbours.)
+  vec2 px0 = dFdx(p.xz);
+  vec2 px1 = dFdy(p.xz);
+  vec2 fall = vec2(dFdx(stood), dFdy(stood));
+  float det = px0.x * px1.y - px0.y * px1.x;
+  if (stood > 0.01) {
+    vec2 lean = abs(det) > 1e-12 ? -vec2(px1.y * fall.x - px0.y * fall.y, px0.x * fall.y - px1.x * fall.x) / det : vec2(0.0);
+    float ll = length(lean);
+    vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
+    slope *= 1.0 + 1.3 * ringed;
+    slope += off * (0.1 * ringed * sin(stood * 30.0 + uTime * 5.5 + patchy.r * 9.0) + 0.75 * smoothstep(0.6, 0.92, stood)) * smoothstep(30.0, 10.0, dist);
+    collar = smoothstep(0.45, 0.8, stood) * (1.0 - brineMud);
+  }
   // The meniscus: in the last two fingers before the bank the brine climbs it, and that lip looks the other way from the rest of the surface.
   float lipAt = smoothstep(0.17, 0.26, s) * smoothstep(40.0, 12.0, dist);
   slope -= bank * 0.55 * lipAt * lipAt;
@@ -165,23 +221,42 @@ void main() {
   float lip = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   want = max(want, lip * smoothstep(-0.9, -0.06, s) * smoothstep(0.6, 0.78, fleck.g * 0.4 + raft.g * 0.6 + 0.3 * smoothstep(-0.5, -0.04, s)));
   // What the flow carries off the banks goes down the channel in thin strings.
-  float strings = smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, length(flow)) * 0.55;
-  want = max(max(want, strings), min(boil * 0.8, 0.6)) * seen;
-  vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 1.5;
-  vec4 relief = texture2D(tFrothN, fuv);
-  vec3 scum = texture2D(tFroth, fuv).rgb;
-  float foam = smoothstep(0.0, 0.16, relief.b - 1.0 + want * 0.8) * step(1e-3, want);
-  vec4 froth = vec4((scum * 2.3 + 0.07) * vec3(0.92, 0.74, 0.7), foam * 0.92);
+  float strings = max(smoothstep(0.71, 0.8, carriedFine.r * 0.55 + carried.g * 0.45) * smoothstep(0.03, 0.1, speed) * 0.55, wake * smoothstep(0.4, 0.6, carriedFine.r) * 0.7);
+  // (And scum catches on whatever stands in it.)
+  want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
+  // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
+  float foam = 0.0;
+  vec4 froth = vec4(0.0);
+  vec2 frothSlope = vec2(0.0);
+  vec2 fdx = dFdx(p.xz) / 0.62;
+  vec2 fdy = dFdy(p.xz) / 0.62;
+  if (want > 1e-3) {
+    vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
+    vec4 relief = textureGrad(tFrothN, fuv, fdx, fdy);
+    vec4 clump = textureLod(tFrothN, fuv * 0.31 + 0.37, log2(max(px / 2.0 * float(textureSize(tFrothN, 0).x), 1.0)));
+    vec3 scum = textureLod(tFroth, fuv, log2(max(px / 0.62 * float(textureSize(tFroth, 0).x), 2.0)) - 1.0).rgb;
+    float high = relief.b * 0.62 + clump.b * 0.38;
+    // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
+    float dense = smoothstep(0.2, 0.75, want);
+    foam = smoothstep(0.0, 0.1, high - 1.1 + dense * 1.12);
+    // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
+    // between the bubbles, where the sky does not reach.
+    float pit = smoothstep(0.25, 0.75, relief.b);
+    froth = vec4((scum * 1.25 + 0.02) * (0.4 + 0.6 * pit) * mix(vec3(1.0, 0.8, 0.74), vec3(1.0), smoothstep(0.5, 0.8, high)), foam * 0.95);
+    frothSlope = (relief.rg - 0.5) * vec2(1.0, -1.0) * 2.6;
+  }
   // The bubbles stand up out of the surface: their own slopes take over from the brine's.
-  slope = mix(slope, (relief.rg - 0.5) * vec2(1.0, -1.0) * 1.6, foam);
+  slope = mix(slope, frothSlope, foam);
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
 
   // The bed under the shallows, seen where the line of sight is bent down to it.
   float depth = clamp(max(-s * 0.5 - 0.02, 0.03 * (1.0 - smoothstep(0.12, 0.27, s))), 0.0, 0.7);
   vec2 bedAt = p.xz - v.xz / max(v.y, 0.3) * depth * 0.75 + slope * depth * 3.0;
-  vec3 bedTex = texture2D(tBed, bedAt / 2.6).rgb;
-  // (Salt has come out of the brine on the shelf: paler in the last hand before the bank.)
-  brineBed = bedTex * (0.42 + 0.4 * smoothstep(-0.3, 0.1, s) * fleck.b);
+  // (Under more than half a metre of it the bed gives back a fiftieth of its light: there it is not looked up.)
+  vec3 bedTex = vec3(0.45, 0.4, 0.36);
+  if (depth < 0.6) bedTex = textureGrad(tBed, bedAt / 2.6, fdx * (0.62 / 2.6), fdy * (0.62 / 2.6)).rgb;
+  // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
+  brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
   vec3 lit = brineShade(p, n, v, s, froth);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
@@ -213,12 +288,12 @@ void main() {
   float az = atan(position.z, position.x);
   float bulge = 1.0 + (0.07 * sin(az * 2.0 + aLife.y * 30.0) + 0.045 * sin(az * 5.0 + aLife.y * 70.0 + position.y * 4.0)) * smoothstep(0.0, 0.25, position.y);
   float sag = 1.0 - 0.1 * position.y * (0.5 + 0.5 * sin(az * 1.0 + aLife.y * 50.0));
-  vec3 q = vec3(position.x * (1.0 + 0.12 * skirt * skirt) * bulge, position.y * sag, position.z * (1.0 + 0.12 * skirt * skirt) * bulge);
+  vec3 q = vec3(position.x * (1.0 + 0.05 * skirt * skirt) * bulge, position.y * sag, position.z * (1.0 + 0.05 * skirt * skirt) * bulge);
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
   vWorld = w.xyz;
   vLocal = position;
   vLife = aLife;
-  vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normalize(normal + vec3(0.0, 1.6 * skirt * skirt, 0.0)));
+  vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normalize(normal + vec3(0.0, 0.7 * skirt * skirt, 0.0)));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -234,6 +309,8 @@ ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(vNormal);
+  // (The far wall is drawn only while the skin is open, when it is seen through the hole.)
+  if (!gl_FrontFacing && vLife.w <= 0.0) discard;
   if (dot(n, v) < 0.0) n = -n;
   // The skin drains from the crown toward the foot: thin and clear on top, thick and dark where it meets the pool. Through the thin top the
   // far wall of the dome shows, paler; across it lies the sky, as on any wet bubble.
@@ -251,13 +328,21 @@ void main() {
   float solid = 0.0;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
   float rim = 0.0;
+  float glint = 0.0;
   if (vLife.w > 0.0) {
-    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.6, 0.75, sin(vLife.y * 40.0) * 0.6));
-    float open = dot(normalize(vLocal), from) + (g.g - 0.5) * 0.22 + (grit.r - 0.5) * 0.08;
+    vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
+    vec3 at = normalize(vLocal);
+    // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
+    vec4 ragged = texture2D(tGrain, vLocal.xz * 0.13 + vLife.y * 3.0);
+    float open = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (open > gone) discard;
-    rim = smoothstep(gone - 0.1, gone, open);
-    albedo = mix(albedo, vec3(0.03, 0.006, 0.005), rim);
+    // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
+    float fat = 0.035 + 0.07 * vLife.w;
+    rim = smoothstep(gone - fat, gone - fat * 0.6, open);
+    albedo = mix(albedo, vec3(0.05, 0.008, 0.006), rim);
+    thin *= 1.0 - rim;
+    glint = smoothstep(gone - fat * 0.75, gone - fat * 0.5, open) * smoothstep(gone - fat * 0.1, gone - fat * 0.4, open);
   }
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.03);
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -270,6 +355,7 @@ void main() {
   vec3 through = exp(-vec3(0.55, 2.6, 3.0) * way);
 #ifdef DROP
   through = vec3(0.0);
+  albedo = vec3(0.085, 0.011, 0.008);
 #endif
   float kept = dot(through, vec3(0.333));
   // What the film itself gives back: the brine's own red where it is thick, a pale milk where it is stretched over the gas.
@@ -282,22 +368,31 @@ void main() {
   vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
   float horizon = r.y + (run.g - 0.5) * 0.06;
   vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.03, 0.035, horizon));
-  env = mix(env, uSkyGround * 0.75, smoothstep(0.09, 0.0, abs(horizon - 0.02)) * 0.55);
+  // (Only a whole dome carries that band: on the torn skin and on its far wall it would be a drawn line.)
+  float whole = gl_FrontFacing ? 1.0 - smoothstep(0.0, 0.2, vLife.w) : 0.0;
+  env = mix(env, uSkyGround * 0.75, smoothstep(0.09, 0.0, abs(horizon - 0.02)) * 0.55 * whole);
   // The overcast is not even: its brighter quarter stands in the skin as one soft window, cut by the runs.
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   env *= 1.0 + (0.5 * smoothstep(0.75, 0.99, toward) + 0.5 * smoothstep(0.972, 0.995, toward)) * (0.6 + 0.8 * run.g);
   float fres = min(1.0, (0.035 + 0.965 * pow(1.0 - nv, 5.0)) * 1.7);
-  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.7 * rim);
+  // (Where the skin runs out into the pool it mirrors no more than the pool does.)
+  fres *= mix(0.25, 1.0, smoothstep(0.03, 0.22, vLocal.y));
+#ifdef DROP
+  // (A bead of dark brine: one small window of the sky on its upper side and no pale limb.)
+  fres = 0.03 + 0.45 * smoothstep(0.93, 0.99, toward);
+#endif
+  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.75 * rim) + skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
   // Grit and scum ride on the skin and slide down it with the runs.
-  float speck = smoothstep(0.74, 0.8, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
+  float speck = smoothstep(0.79, 0.84, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
   lit = mix(lit, vec3(0.05, 0.016, 0.012) * skyIrradiance(n) * (open / 3.14159), speck);
   float cover = clamp(1.0 - kept * (1.0 - fres) * (1.0 - veil * 2.0), 0.0, 1.0);
   cover = max(max(cover, rim), speck);
   gl_FragColor = vec4((lit + mirrored) * (1.0 - uSolo), cover);
 }`;
 
-// The crown: the torn skin of a dome, thrown up and outward as a ragged sheet. A unit tube (radius 1, y 0 to 1); aLife.x is its age in seconds,
-// aLife.y its own number, aLife.z the dome's size in metres.
+// What the pool does when a dome's skin is gone: its floor comes back up through the middle as a low mound, which falls and spreads.
+// A unit tube (radius 1, y 0 to 1) folded into a cap; aLife.x is seconds since it began to rise, aLife.y the dome's own number, aLife.z its
+// size in metres.
 export const CROWN_VERTEX = /* glsl */ `
 attribute vec4 aLife;
 varying vec3 vWorld;
@@ -309,21 +404,21 @@ void main() {
   float size = aLife.z;
   float a = atan(position.z, position.x);
   float k = aLife.y * 6.283;
-  // No two tongues of it alike: a few tall, most low, and none evenly spaced.
-  float f = 0.4 + 0.15 * sin(a * 3.0 + k * 9.0) + 0.13 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.26 * pow(abs(sin(a * 6.5 + k * 3.0)), 3.0) * (0.55 + 0.45 * sin(a * 2.0 - k)) + 0.2 * pow(abs(sin(a * 11.5 + k * 7.0)), 4.0) * (0.5 + 0.5 * sin(a * 3.0 + k * 2.0));
-  float finger = pow(clamp(f, 0.14, 1.0), 1.4);
-  float h = position.y;
-  // The sheet leaves the rim at near 5 m/s and leans outward as it climbs. It is a film: its own tension, not its weight, stops it within
-  // an eighth of a second and pulls it back, torn.
-  float up = sqrt(size / 0.4) * (4.6 * age - 18.0 * age * age) * (0.34 + 0.66 * finger);
-  float out_ = size * (0.85 + (2.6 + 3.0 * finger) * age * (0.45 + 0.55 * h));
-  float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
-  vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
-  vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
+  // Level where it joins the pool and round on top: the brine heaving up, not a spout.
+  float v0 = 1.2 * sqrt(size / 0.4);
+  float tall = max(v0 * age - 4.905 * age * age, 0.0);
+  float dur = v0 / 4.905;
+  float spread = 0.6 + 0.7 * age / dur;
+  float rho = 1.0 - position.y;
+  float wob = 1.0 + 0.1 * sin(a * 3.0 + k * 5.0) * rho + 0.05 * sin(a * 5.0 - k * 3.0);
+  float wide = rho * size * spread * wob;
+  float hill = (1.0 - rho * rho) * (1.0 - rho * rho);
+  float fall = 4.0 * rho * (1.0 - rho * rho) * tall;
+  vec4 w = modelMatrix * instanceMatrix * vec4(cos(a) * wide, tall * hill - 0.01, sin(a) * wide, 1.0);
   vWorld = w.xyz;
-  vLocal = vec3(a, h, finger);
-  vLife = aLife;
-  vNormal = normalize(vec3(position.x, 0.2 + 0.9 * h, position.z));
+  vLocal = vec3(a, position.y, rho);
+  vLife = vec4(tall > 0.0 && age > 0.0 ? clamp(age / dur, 0.001, 1.0) : 0.0, aLife.yzw);
+  vNormal = normalize(vec3(cos(a) * fall, size * spread, sin(a) * fall));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -337,27 +432,27 @@ uniform sampler2D tGrain;
 ${RIG_GLSL}
 
 void main() {
-  // The top of the sheet is torn into tongues, and holes open in it as it stretches.
+  if (vLife.x <= 0.0) discard;
   vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
-  float tip = 0.35 + 0.65 * vLocal.z;
-  float torn = vLocal.y - tip + (g.r - 0.5) * 0.45 + vLife.x * 2.4 * g.g;
-  if (torn > 0.0 || vLife.x <= 0.0) discard;
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 radial = normalize(vNormal);
-  if (dot(radial, v) < 0.0) radial = -radial;
-  // The same thick liquid as the dome's skin, thrown: a film where it is stretched, a rolled lip where it ends (surface tension gathers
-  // the edge into a bead that looks up at the sky), dark and solid at the foot where it is still the pool.
-  float lip = smoothstep(-0.22, 0.0, torn);
-  float thick = clamp(1.0 - vLocal.y / tip, 0.0, 1.0);
-  vec3 n = normalize(mix(radial, vec3(0.0, 1.0, 0.0), 0.45 * lip * lip) + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.14);
-  vec3 albedo = mix(vec3(0.14, 0.028, 0.022), vec3(0.06, 0.009, 0.007), max(thick * 0.8, lip * 0.7));
-  vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
+  vec3 n = normalize(vNormal);
+  if (dot(n, v) < 0.0) n = -n;
+  n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.12);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
-  r.y = abs(r.y);
+  float open = skyOpen(vWorld);
+  // The brine itself, heaved up.
+  vec3 body = vec3(0.055, 0.008, 0.006);
+  vec3 lit = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
+  // It is wet: the sky stands in it over the mirrored horizon, the dark pool under.
+  vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
+  vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.05, 0.08, r.y + (g.g - 0.5) * 0.1));
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
-  float window = 0.3 * smoothstep(0.99, 0.998, toward) * lip + 0.03 * pow(toward, 30.0);
-  vec3 mirrored = skyRadiance(r) * vec3(1.0, 0.6, 0.54) * (0.02 + 0.1 * pow(1.0 - nv, 4.0) + 0.5 * window);
-  float cover = clamp(0.86 + 0.2 * thick + 0.3 * lip + 0.2 * pow(1.0 - nv, 2.0) + (g.g - 0.5) * 0.2, 0.0, 0.98);
-  gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
+  env *= 1.0 + 0.6 * smoothstep(0.8, 0.99, toward);
+  // (The same held-back mirror as the pool's own skin, so that what the pool throws up is the pool's colour.)
+  float fres = 0.02 + 0.25 * pow(1.0 - nv, 2.5) + 0.12 * pow(1.0 - nv, 10.0);
+  vec3 mirrored = env * vec3(1.0, 0.8, 0.75) * fres * mix(1.0, open, 0.5);
+  // It runs out into the pool with no edge.
+  float cover = smoothstep(1.0, 0.8, vLocal.z);
+  gl_FragColor = vec4((lit + mirrored) * cover * (1.0 - uSolo), cover);
 }`;
