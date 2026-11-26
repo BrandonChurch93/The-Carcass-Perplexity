@@ -28,9 +28,10 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs64 * 0.22 + rs64 * 0.16 + rs8 * rs8 * 0.02;
+  float broad = rs64 * rs64 * 0.1 + rs64 * 0.1 + rs8 * rs8 * 0.035 + rs2 * rs2 * 0.006;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
-  return uSunColour * (broad + spark);
+  // Through that much fog the sun is gold, and so is its path.
+  return uSunColour * vec3(1.0, 0.74, 0.46) * (broad + spark);
 }
 void main() {
   vec2 xz = vWorld.xz;
@@ -75,7 +76,7 @@ void main() {
     slope = slope * (1.0 - 0.6 * close) + (ra * 0.55 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.22 + 1.0 * gust);
   }
   // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
-  slope *= 0.3 + 0.7 * smoothstep(0.03, 0.32, depth);
+  slope *= 0.5 + 0.5 * smoothstep(0.02, 0.2, depth);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
   slope += rings.rg * 4.2;
@@ -91,7 +92,7 @@ void main() {
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 0.6 * tanh(2.4 * tip);
+  float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(1.05, 1.0, 0.88), 0.45 * smoothstep(0.04, 0.3, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
@@ -127,7 +128,7 @@ void main() {
       sparks += on * dot_ * life;
     }
   }
-  mirror += uSunColour * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
+  mirror += uSunColour * vec3(1.0, 0.8, 0.55) * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);

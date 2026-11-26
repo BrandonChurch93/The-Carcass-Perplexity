@@ -93,12 +93,12 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
   };
 
   // The stain: a sheet laid on the rock, a finger above it.
-  const x0 = -1.5;
-  const x1 = 2.6;
-  const z0 = -3.6;
-  const z1 = 4.4;
-  const nx = 50;
-  const nz = 96;
+  const x0 = -3.3;
+  const x1 = 3.3;
+  const z0 = -2.6;
+  const z1 = 2.8;
+  const nx = 80;
+  const nz = 66;
   const positions = new Float32Array((nx + 1) * (nz + 1) * 3);
   const nears = new Float32Array((nx + 1) * (nz + 1));
   for (let j = 0; j <= nz; j++) {

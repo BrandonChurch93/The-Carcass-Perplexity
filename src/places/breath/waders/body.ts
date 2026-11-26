@@ -179,14 +179,14 @@ export class Fields {
     // The points of the hips, the pins beside the tail, the hollow of the flank behind the last rib, the blades of the shoulders.
     const fh = (0.25 - 0.5) * this.L;
     const hipTop = this.top(0.25);
-    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.82) - 0.05 * k * g, 0.08 * k);
+    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.74) - 0.034 * k * g, 0.11 * k);
     const fp = (0.035 - 0.5) * this.L;
     d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.035 * k), ar - 0.075 * k) - 0.036 * k * g, 0.06 * k);
     const fo = (0.37 - 0.5) * this.L;
     const hollow = Math.hypot((f - fo) / (0.13 * k), (u - (u0 + 0.3 * a)) / (0.16 * k), (ar - (w + 0.035 * k)) / (0.085 * k));
     d = smax(d, -(hollow - 1) * 0.085 * k, 0.06 * k);
     const fb = (0.82 - 0.5) * this.L;
-    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.62) / (0.04 * k)) - 1) * 0.04 * k, 0.05 * k);
+    d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.03 * k, 0.09 * k);
     // The ribs.
     const [phase, cage] = this.ribs(f, u, r);
     if (cage > 0) {

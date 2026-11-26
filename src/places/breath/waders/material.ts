@@ -150,7 +150,7 @@ void main() {
     // Slack skin in folds across the neck where it leaves the chest, and round every joint.
     float joint = exp(-pow((legT - 0.47) / 0.05, 2.0)) + exp(-pow((legT - 0.94) / 0.03, 2.0));
     float shank = smoothstep(0.42, 0.52, legT);
-    float fold = (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
+    float fold = 0.5 * (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
     height = (0.003 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
     pale = mix(vec3(0.76, 0.58, 0.55), vec3(0.96, 0.85, 0.81), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
     albedo = pale * (0.84 + 0.16 * crack) * (1.0 + (0.3 * drape + 0.1 * crease + 0.2 * fold) * mid);
@@ -214,20 +214,25 @@ void main() {
     thin = 0.7;
   } else if (kind < 2.5) {
     // A tendril: a thread of the same bare flesh as the neck, pale pink, blood-red in some, and the ends dark with what they have dragged through.
-    float tone = vInfo.x;
+    float finger = step(1.5, vInfo.x);
+    float tone = fract(vInfo.x);
     float own = hash12(vec2(seed, 9.0));
     vec3 flesh = mix(vec3(0.66, 0.4, 0.36), vec3(0.8, 0.6, 0.54), own);
-    vec3 blood = mix(vec3(0.3, 0.08, 0.07), vec3(0.52, 0.2, 0.17), tone);
+    vec3 blood = mix(vec3(0.2, 0.05, 0.045), vec3(0.4, 0.14, 0.12), tone);
     albedo = mix(flesh, blood, step(0.3, own) * smoothstep(0.0, 0.25, u) * 0.85);
     albedo = mix(albedo, vec3(0.62, 0.36, 0.33), smoothstep(0.2, 0.0, u));
     albedo = mix(albedo, vec3(0.16, 0.1, 0.06), smoothstep(0.6, 1.0, u) * (0.35 + 0.5 * tone));
     // Some of what hangs there is weed it has dragged up: dark, olive.
     albedo = mix(albedo, vec3(0.1, 0.095, 0.045), step(0.86, hash12(vec2(seed, 5.0))) * smoothstep(0.1, 0.3, u));
+    // A finger: the neck's own pale flesh, pinker down its length, raw and dark at the very end.
+    vec3 fleshy = mix(vec3(0.86, 0.68, 0.63), vec3(0.72, 0.4, 0.37), smoothstep(0.1, 0.75, u)) * (0.85 + 0.3 * tone);
+    albedo = mix(albedo, mix(fleshy, vec3(0.3, 0.1, 0.08), smoothstep(0.75, 1.0, u)), finger);
     // Far off the mop is one mass: no strand of it is seen for itself.
     albedo = mix(vec3(0.5, 0.27, 0.24), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
-    thin = 1.0;
+    // The threads are dark and wet: little of the sun comes through them. The fingers are flesh, and it does.
+    thin = mix(0.3, 0.8, finger);
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));

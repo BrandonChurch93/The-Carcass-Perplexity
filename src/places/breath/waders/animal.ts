@@ -129,7 +129,7 @@ const SPINE: [number, number][] = [[0, -0.1], [0.2, 0.05], [0.45, 0.09], [0.8, 0
 // The neck's pitch along its length, degrees above level: carried up (it stands off the shoulders, arches and hooks over at the end so the tuft
 // hangs), and down (it leaves the chest level and goes down into the water).
 const NECK_UP: [number, number][] = [[0, 38], [0.22, 74], [0.52, 86], [0.72, 58], [0.87, 0], [1, -74]];
-const NECK_DOWN: [number, number][] = [[0, 16], [0.18, -14], [0.45, -66], [0.75, -84], [1, -80]];
+const NECK_DOWN: [number, number][] = [[0, 4], [0.14, -30], [0.4, -62], [0.75, -60], [1, -38]];
 
 // The legs: left hind, left fore, right hind, right fore, and where in the cycle each one steps. A slow walk: one foot at a time.
 const LEGS: { side: number; fore: number; at: number }[] = [
@@ -325,7 +325,7 @@ export class Wader {
     const tr = (far ? 0.012 : 0.0075) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
-      const r = tr * (1 - 0.6 * u ** 1.6);
+      const r = tr * (1 - 0.82 * u ** 1.3);
       for (let s = 0; s < tSides; s++) {
         const phi = (s / tSides) * Math.PI * 2;
         this.tendrilLocal[(i * tSides + s) * 2] = r * Math.cos(phi);
@@ -335,23 +335,25 @@ export class Wader {
     for (let n = 0; n < b.tendrils; n++) {
       const tube = skin.tube(tRings, tSides);
       this.tendrils.push(tube);
-      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 12);
+      // One in twenty is a finger of flesh as thick as a thumb at its root; the rest are the threads that hang between and from them.
+      const finger = !far && n % 20 === 0;
+      const clump = finger ? (n / 20) % 12 : Math.floor(hash(seed * 3.1 + n * 0.37) * 12);
       const strand = {
         angle: (clump / 12) * Math.PI * 2 + hash(seed + clump * 5.3) * 0.5 + (hash(seed + n * 1.7) - 0.5) * 0.3,
         out: (0.15 + 0.85 * hash(seed + clump * 2.9)) * (0.8 + 0.4 * hash(seed + n * 2.9)),
-        len: b.tendrilLen * (0.3 + 0.95 * hash(seed * 1.3 + n * 5.1) ** 1.4),
-        stiff: 0.3 + 0.7 * hash(seed + n * 9.7),
+        len: b.tendrilLen * (finger ? 0.8 + 0.35 * hash(seed * 1.3 + n * 5.1) : 0.2 + 0.75 * hash(seed * 1.3 + n * 5.1) ** 1.6),
+        stiff: finger ? 1.1 : 0.3 + 0.7 * hash(seed + n * 9.7),
         phase: hash(seed + n * 4.3) * 6.28,
         // Wet, the strands of one lock hang as one: they kink together.
         lock: hash(seed * 1.9 + clump * 7.7) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
-        root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.26 + 0.75 * hash(seed + n * 12.7) ** 3.0,
+        root: finger ? 1 - 0.05 * hash(seed + n * 8.9) : 1 - 0.1 * hash(seed + n * 8.9) ** 1.5,
+        thick: far ? 1 : finger ? 2.6 + 1.2 * hash(seed + n * 12.7) : 0.3 + 0.6 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
         const u = i / (tRings - 1);
-        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1), 0.9, tr * (1 - 0.6 * u ** 1.6), seed + n, 2, u);
+        for (let s = 0; s <= tSides; s++) skin.describe(tube, i, s, u * strand.len, (s / tSides) * 0.1, hash(seed + n * 6.1) * 0.99 + (finger ? 2 : 0), 0.9, tr * (1 - 0.82 * u ** 1.3) * strand.thick, seed + n, 2, u);
       }
     }
     this.tips = new Float32Array(b.tendrils * 3);
@@ -706,7 +708,7 @@ export class Wader {
       const ahead = this.along(walked + 0.5 * b.bodyLen + 0.55 * b.neckLen);
       // The end of the neck stays out of the water: it is the mop that hangs from it that goes in.
       const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea);
-      const want = floor + (plan.reach >= 1 ? 0.25 * k : 0.6 * k) + dab;
+      const want = floor + (plan.reach >= 1 ? 0.17 * k : 0.6 * k) + dab;
       let lo = 0.3;
       let hi = 1.3;
       for (let i = 0; i < 9; i++) {
