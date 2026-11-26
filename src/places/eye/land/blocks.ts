@@ -190,7 +190,7 @@ void main() {
   // A face that stands or leans over sees the ground and its neighbours where a top sees the sky.
   float occ = ao * (0.55 + 0.45 * smoothstep(0.2, 0.7, high)) * mix(0.35, 1.0, foot) * mix(0.5, 1.0, smoothstep(-0.3, 0.8, up));
   // By the lake its foot is wet, and in the stream it is wet as high as the water throws.
-  float damp = max(smoothstep(0.28, 0.02, vWorld.y), vSeat.w * smoothstep(0.75, 0.4, above + 0.2 * stain));
+  float damp = max(smoothstep(1.15, 0.5, vWorld.y + 0.7 * vnoise(vWorld.xz * 0.11)), vSeat.w * smoothstep(0.75, 0.4, above + 0.2 * stain));
   albedo *= mix(1.0, 0.42, damp);
   vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.92, 0.4, damp), occ);
   if (damp > 0.02) c += damp * 0.5 * rigGlint(vWorld, n, v, 0.4);

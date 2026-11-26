@@ -192,6 +192,8 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // Grey limestone gone buff where it has lain long, each drift of its own tone.
     float aged = 0.6 * vnoise(p.xz / 37.0 + 5.0) + 0.4 * vnoise(p.xz / 9.0);
     gravel = col * mix(vec3(1.2, 1.15, 1.08), vec3(1.62, 1.5, 1.3), aged);
+    // Stretches of it are darker: finer, and stained where water has stood.
+    gravel *= mix(0.62, 1.0, smoothstep(0.3, 0.62, 0.6 * vnoise(p.xz / 13.0 + 31.0) + 0.4 * vnoise(p.xz / 3.7 + 2.0)));
     // Dirt and shade lie in the hollows between the stones.
     gravel *= mix(0.42, 1.0, smoothstep(0.18, 0.5, h)) * mix(0.82, 1.0, big);
     stone = gravel;
