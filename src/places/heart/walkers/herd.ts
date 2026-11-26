@@ -89,7 +89,7 @@ export function makeBuild(index: number, rng: Rng): Build {
     bodyWide: 1.0 * k * girth * v(0.92, 1.08),
     hump: c.hump,
     hipFore: 1.75 * k * c.bulk,
-    hipSide: 0.62 * k * girth,
+    hipSide: 0.78 * k * girth,
     hipUp: 0.3 * k * girth,
     knee: lerp(0.47, 0.43, c.skater) * c.knee * v(0.96, 1.04),
     hock: lerp(0.74, 0.8, c.skater) * v(0.96, 1.04),
