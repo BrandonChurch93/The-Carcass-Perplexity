@@ -73,6 +73,7 @@ export function create(ctx: HeartContext): HeartPiece {
   };
 
   // The wall: ribs every 1.6 m where the long lens looks (round the mouth), 5 m along the rest of the north wall, coarser where it is far or behind the cameras.
+  const unit01 = (v: number): number => Math.min(1, Math.max(0, v));
   const spacing = (x: number, z: number): number => {
     if (z < -150 && Math.abs(x + 30) < 215) return 1.6;
     // The stretch the wide lens sees against the sky: cut fine enough to carry the wall's blocks.
@@ -81,12 +82,13 @@ export function create(ctx: HeartContext): HeartPiece {
     if (x > 700 && z < 330) return 9;
     return 18;
   };
-  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 190, 0.8, 0.3, [1.6, 5, 16], flowDip);
+  // The slopes under the mouth fill the fall's lens: a slope got a row every five metres and showed its faces. There it gets three times its share.
+  const underMouth = (x: number, z: number, y: number): number => 1 + 2.2 * unit01((250 - Math.abs(x - MOUTH.x)) / 50) * unit01(-(z + 150) / 40) * unit01((y - 0.5) / 2) * unit01((100 - y) / 15);
+  const wallAll = ribs(wallHeight, wallRibs(spacing, -16, 470, [20, 60, 130, 250, 450, 750, 1200, 1900, 2900, 4300, 6000]), 230, 0.8, 0.3, [1.6, 5, 16], flowDip, underMouth);
   // The wall stands whole over the mouth and is opened only inside the arch, a little wider than the arch itself: the fall's rim covers the edge.
   open(wallAll, (x, y, z) => inArch(x, y, z, 1.03));
   // The wall is broken along its joints: blocks the size of a house stand back from the face and leave notches in the rim, smaller ones in them.
   // Not beside the fall, whose channel and arch are built on the land as it is, nor on the aprons, nor where the mesh is too coarse to carry a block.
-  const unit01 = (v: number): number => Math.min(1, Math.max(0, v));
   const CRAG_JOINTS: Joints[] = [
     { cell: [1.3, 0.9, 1.3], depth: 0.5, seed: 7 },
     { cell: [0.42, 0.3, 0.42], depth: 0.14, seed: 29 },
@@ -263,7 +265,12 @@ export function create(ctx: HeartContext): HeartPiece {
       { cell: [7, 11, 7], depth: 1.6, seed: 5 },
       { cell: [2.6, 4, 2.6], depth: 0.6, seed: 23 },
     ],
-    (_x, y, _z, ny) => unit01((y - 12) / 6) * Math.max(unit01((0.75 - ny) / 0.25), unit01((y - 24) / 6)),
+    (x, y, z, ny) => {
+      // Its tops and the ridge left of its sheer end are cut less: a block left standing between two that fell was a tooth on the skyline.
+      const b = -(x - BUTTE.from[0]) * BUTTE.ahead[1] + (z - BUTTE.from[1]) * BUTTE.ahead[0];
+      const steep = unit01((0.75 - ny) / 0.25);
+      return unit01((y - 12) / 6) * Math.max(steep, 0.3 * unit01((y - 24) / 6)) * (0.25 + 0.75 * unit01((b - 11) / 5));
+    },
   );
   const butte = mesh(butteAll, butteMaterial);
   butte.renderOrder = -1;
@@ -298,16 +305,15 @@ export function create(ctx: HeartContext): HeartPiece {
       const x = c.ax + (c.bx - c.ax) * t;
       const z = c.az + (c.bz - c.az) * t;
       const strong = 0.55 + 0.45 * Math.abs(Math.sin(i * 2.4 + c.seed));
-      // The middle of the short crack is the vent at the foot of the line view's crag, and the middle of the long one the vent of the wide view's
-      // bank: one dense pale plume each, standing well over a man, as in both pictures. Three such side by side hid the crag,
-      // and so did one as dense as the bank's, 7 m from the lens: the short crack's is the thinner. The rest only smokes.
-      const plume = i === (vents - 1) / 2;
-      const weak = c.depth > 1 ? 1 : 0.6;
+      // The middle of the long crack is the vent of the wide view's bank: one dense pale plume, standing well over a man, as in that picture.
+      // The short crack lies 7 m from the line view's lens, at the foot of its crag: it only smokes, thin enough that the crag shows through.
+      const long = c.depth > 1;
+      const plume = long && i === (vents - 1) / 2;
       ctx.sources.steam.push({
         at: [x, landHeight(x, z) + 0.1, z],
-        radius: plume ? (c.depth > 1 ? 0.38 : 0.3) : 0.4 * weak,
-        strength: plume ? (c.depth > 1 ? 0.5 : 0.34) : 0.45 * weak * strong,
-        rise: plume ? 8 : 6 * weak * (0.7 + 0.3 * strong),
+        radius: plume ? 0.38 : long ? 0.4 : 0.22,
+        strength: plume ? 0.5 : (long ? 0.45 : 0.2) * strong,
+        rise: plume ? 8 : (long ? 6 : 3) * (0.7 + 0.3 * strong),
         kind: 'steam',
         lean: c.depth > 1 ? [-0.42, 0.2] : [-0.3, -0.35],
       });
