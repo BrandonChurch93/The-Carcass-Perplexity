@@ -32,14 +32,14 @@ const FRAMED = { from: 0.185, to: 0.765 };
 const HUNG = {
   hip: [440, 100],
   head: [960, 520],
-  trunk: [1.1, 1.8],
+  trunk: [1.3, 1.9],
   girth: 0.8,
   limbs: [
-    { at: 480, top: 330, out: 0.9, plumb: 0 },
-    { at: 625, top: 400, out: 1.8, plumb: 0.1 },
-    { at: 765, top: 440, out: 1.0, plumb: 0 },
-    { at: 912, top: 560, out: 2.1, plumb: 0.1 },
-    { at: 1000, top: 600, out: 1.8, plumb: 0.1 },
+    { at: 480, top: 330, out: 1.2, plumb: 0 },
+    { at: 625, top: 400, out: 2.1, plumb: 0.1 },
+    { at: 765, top: 440, out: 1.3, plumb: 0 },
+    { at: 912, top: 560, out: 2.4, plumb: 0.1 },
+    { at: 1000, top: 600, out: 2.0, plumb: 0.1 },
   ],
   /** Between two limbs, across the picture (px): the middle of the gap and half its width. */
   gaps: [
@@ -430,6 +430,7 @@ uniform float uTime;
 varying vec3 vWorld;
 varying vec2 vUv;
 varying vec3 vShape;
+varying vec3 vLay;
 const float METRE = ${glslNumber(1086 / PLATE.high)};
 const vec2 HIP = vec2(${HUNG.hip.map(glslNumber).join(', ')});
 const vec2 HEAD = vec2(${HUNG.head.map(glslNumber).join(', ')});
@@ -483,11 +484,12 @@ void main() {
   vec3 w = flat_ + ray * (depth / dot(ray, uProud));
   vShape = vec3(dx, dy, depth);
 #ifdef SHADE
-  float fall = (depth - 0.5) / dot(uSkyWay, uProud);
+  float fall = (depth - 0.7) / dot(uSkyWay, uProud);
   w -= uSkyWay * fall;
   vShape.z = fall;
 #endif
   vWorld = w;
+  vLay = flat_ + uProud * 0.3;
   vUv = uv;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
@@ -503,33 +505,13 @@ uniform vec3 uKeyEye;
 varying vec3 vWorld;
 varying vec2 vUv;
 varying vec3 vShape;
-// rigShade, but the land is asked once for the whole body, before the face it hangs on: rigShade asks 14 m along each normal, and the normals of
-// a round thing a metre thick would each ask a different place of the strait.
-vec3 hungShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  vec4 land = landAt(p.xz + uProud.xz * 14.0);
-  float above = p.y - land.r;
-  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
-  float sun = sunAt(p, land) * occ;
-  float nl = max(dot(n, uSunDir), 0.0);
-  vec3 e = skyIrradiance(n) * open + uSunColour * (nl * sun);
-  vec3 c = albedo * e / 3.14159;
-  // Sodden skin is no mirror at its edges: it is rough with folds there, and the glancing shine is held to a part of the full one.
-  float nv = clamp(dot(n, v), 0.3, 1.0);
-  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
-  vec3 r = reflect(-v, n);
-  r.y = abs(r.y);
-  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
-  vec3 h = normalize(v + uSunDir);
-  float gloss = 2.0 / max(rough * rough * rough * rough, 2e-4);
-  float spec = pow(max(dot(n, h), 0.0), gloss) * (gloss + 8.0) * 0.0398;
-  return c + f * (env * open + uSunColour * (spec * nl * sun));
-}
+varying vec3 vLay;
 void main() {
 #ifdef SHADE
   // The farther the part hangs from the face the wider and the fainter what it hides of the sky.
   float far = max(vShape.z, 0.0);
-  float hidden = textureLod(tRelief, vUv, 3.0 + 1.2 * far).r;
-  float dark = clamp(hidden * 2.2, 0.0, 1.0) * (0.35 + 0.5 * exp(-0.7 * far)) * (1.0 - uSolo);
+  float hidden = textureLod(tRelief, vUv, 2.5 + 0.9 * far).r;
+  float dark = clamp(hidden * 2.0, 0.0, 1.0) * (0.45 + 0.4 * exp(-0.7 * far)) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dark, dark);
 #else
   vec3 pic = texture2D(tCarcass, vUv).rgb;
@@ -546,23 +528,34 @@ void main() {
   vec2 slope = vShape.xy * min(1.0, 1.5 / max(length(vShape.xy), 1e-3));
   vec3 face = normalize(cross(down + ray * slope.y, across + ray * slope.x));
   if (dot(face, uProud) < 0.0) face = -face;
+  // Under an overcast the far side of a round thing is filled by the wet rock and the water: the form is held to a part of its full turn.
+  face = normalize(mix(uProud, face, 0.6));
   // And the skin on it: ribs, folds, tears.
   vec3 n = normalize(face - (across * hx - down * hy) * 0.9);
   if (dot(n, v) < 0.0) n = reflect(n, v);
+  vec3 wet = normalize(uProud - (across * hx - down * hy) * 0.9);
+  if (dot(uProud, v) < 0.0) wet = reflect(wet, uProud) * -1.0;
   // Sodden hide: a little greyer than the dry picture, and it shines where the water runs off it. The hollows between the ribs see little sky.
   // It hangs in the rock's own shade, no brighter than the weed's highlights: grey pink, stained down its length by what runs off it, green brown toward the weed it lies in.
   vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.86), pic, 0.5) * 1.12;
   float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
   albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
   albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.4 * smoothstep(0.6, 0.15, vUv.y));
-  // What hangs behind the trunk and close to the face is in their shade.
-  // And what faces down, the belly and the under side of every limb, sees the wet rock and not the sky.
-  float occ = mix(0.4, 0.85, smoothstep(0.1, 0.7, h)) * mix(0.72, 1.0, smoothstep(0.9, 1.9, vShape.z)) * (1.0 - 0.45 * smoothstep(0.8, 3.0, -vShape.y));
-  vec3 col = hungShade(vWorld, n, v, albedo, 0.26, occ);
+  // The hide is lit where the picture lay, by the lie of the hide: asked from where it now hangs, a metre or two out, the land's coarse bake
+  // answers for another place at every fold. The form under the hide then turns that light: what faces the sky and the sun is brighter, what
+  // faces down or hangs close to the face and behind the trunk is darker.
+  vec3 col = rigShade(vLay, wet, v, albedo, 0.26, mix(0.4, 0.85, smoothstep(0.1, 0.7, h)));
+  float sunHere = sunAt(vLay, landAt(vLay.xz + uProud.xz * 14.0));
+  vec3 grey = vec3(0.3, 0.5, 0.2);
+  float lit = dot(skyIrradiance(n), grey) + dot(uSunColour, grey) * max(dot(n, uSunDir), 0.0) * sunHere;
+  float flat_ = dot(skyIrradiance(wet), grey) + dot(uSunColour, grey) * max(dot(wet, uSunDir), 0.0) * sunHere;
+  float form = clamp(lit / max(flat_, 1e-4), 0.45, 1.5);
+  float occ = form * mix(0.84, 1.0, smoothstep(1.2, 2.2, vShape.z)) * (1.0 - 0.3 * smoothstep(0.8, 3.0, -vShape.y));
+  col *= occ;
   // Water still runs off it: threads of it slide down the hide, bead after bead, and each bead holds the sky.
   float thread = smoothstep(0.8, 0.97, 0.5 + 0.5 * sin(vUv.x * 210.0 + 5.0 * sin(vUv.x * 47.0)));
   float bead = smoothstep(0.6, 0.92, 0.5 + 0.5 * sin(vUv.y * 46.0 + uTime * 5.0 + 9.0 * sin(vUv.x * 63.0)));
-  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05 * occ * thread * bead * smoothstep(0.1, 0.5, h);
+  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.07 * thread * bead * smoothstep(0.1, 0.5, h);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (h < 0.045) discard;
 #endif
