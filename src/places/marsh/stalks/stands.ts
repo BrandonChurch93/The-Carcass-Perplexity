@@ -398,7 +398,8 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
   }
 
   for (const s of stands) {
-    shades.push([s.x, s.z, s.r * 1.25, 0.5, 1, 0]);
+    // The shade a stand lays on its ground is seen as far as the stand is seen as stems: beyond that the brush is its own dark.
+    if (s.far < 90) shades.push([s.x, s.z, s.r * 1.25, 0.5, 1, 0]);
     // Stems, where a stem can still be told from the next: tens in a near stand, a few in one far off, none beyond that.
     const count = s.far < 150 ? Math.round((s.tall ? 1.6 : 1) * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
     const cores: [number, number][] = [];
@@ -427,12 +428,12 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
         age: dead ? 2 : shoot ? rng.range(0, 0.25) : cls < 0.16 ? rng.range(0.6, 1) : rng.range(0, 0.7), stain: rng.range(0.12, 1.1), uvo: rng.range(0, 2), quiver: shoot ? 1.6 : 1,
         fork: [0, 0, 0], collar: rng.range(0.6, 1.5), cards: [], foot: true,
       };
-      (s.far < 70 ? stems : farStems).push(w);
-      if (s.far < 70) shades.push([x, z, Math.max(0.14, R * 6.5), 0.7, 1, 0]);
+      (s.far < 48 ? stems : farStems).push(w);
+      if (s.far < 40) shades.push([x, z, Math.max(0.14, R * 6.5), 0.7, 1, 0]);
       if (dead) continue;
       const roll = rng.next();
       dress(w, shoot ? (kind === 1 ? 4 : 3) : roll < 0.5 ? 0 : roll < 0.75 ? 1 : roll < 0.88 ? 2 : 3, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : 1), s.far > 95);
-      if (!shoot && h > 1.2) hang(w, s.far < 95 ? (h > 2.4 ? 4 : 2) : 0, s.far < 95 ? 2 + rng.int(2) : 1);
+      if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? (h > 2.4 ? 4 : 2) : 0, s.far < 95 ? 2 + rng.int(2) : 1);
     }
     // Dead canes lie where they fell, half in the brine.
     for (let k = 0; k < (s.far < 110 ? 1 + rng.int(4) : 0); k++) {
@@ -449,16 +450,18 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
         swayA: Math.PI / 2, swayM: rng.range(0, 0.03), kinkA: rng.next() < 0.5 ? Math.PI / 2 : -Math.PI / 2, rate: 1,
         age: 2, stain: 0.1, uvo: rng.range(0, 2), quiver: 0, fork: [0, 0, 0], collar: 0, cards: [], foot: false,
       });
-      shades.push([p[0] + Math.cos(yaw) * h * 0.5, p[1] + Math.sin(yaw) * h * 0.5, rr * 3.5, 0.6, (h * 0.5) / (rr * 3.5), Math.atan2(-Math.sin(yaw), Math.cos(yaw))]);
+      if (s.far < 60) shades.push([p[0] + Math.cos(yaw) * h * 0.5, p[1] + Math.sin(yaw) * h * 0.5, rr * 3.5, 0.6, (h * 0.5) / (rr * 3.5), Math.atan2(-Math.sin(yaw), Math.cos(yaw))]);
     }
     // The understorey: tufts thick at the feet of the stems and thinning out onto the salt.
-    const tufts = s.far < 220 ? Math.round(s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
+    // Far off two of them are a pixel or two apart: fewer stand there, each wider.
+    const thin = s.far > 110 ? 0.4 : s.far > 32 ? 0.65 : 1;
+    const tufts = s.far < 220 ? Math.round(thin * s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
     for (let k = 0; k < tufts; k++) {
       const p = around(s, 0.5);
       if (land.height(p[0], p[1]) < -0.08 || !clear(p[0], p[1])) continue;
       const big = rng.next() < 0.2;
       const h = big ? rng.range(0.55, 1.1) : rng.range(0.16, 0.55);
-      addTuft(p[0], p[1], h, h * rng.range(1.0, 1.9), rng.next(), rng.next() < 0.22 ? rng.range(0.6, 1) : rng.range(0, 0.15), 0, s.far > 45);
+      addTuft(p[0], p[1], h, (h * rng.range(1.0, 1.9)) / Math.sqrt(thin), rng.next(), rng.next() < 0.22 ? rng.range(0.6, 1) : rng.range(0, 0.15), 0, s.far > 32);
     }
     // Brush: what a stand is from far off, a dark red mass with a ragged top, standing among the stems where there are stems.
     const brush = s.far > 45 ? Math.round((3 + 6 * s.q) * (s.far > 150 ? 1.5 : Math.min(1, (s.far - 45) / 60))) : 0;
@@ -499,7 +502,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const a = rng.range(0, TAU);
       const o = rng.range(0, 0.6) * r;
       const h = rng.range(0.14, 0.45);
-      addTuft(p[0] + Math.cos(a) * o, p[1] + Math.sin(a) * o, h, h * rng.range(1.1, 2), rng.next(), rng.next() < 0.25 ? rng.range(0.6, 1) : rng.range(0, 0.15), 0, d > 50);
+      addTuft(p[0] + Math.cos(a) * o, p[1] + Math.sin(a) * o, h, h * rng.range(1.1, 2), rng.next(), rng.next() < 0.25 ? rng.range(0.6, 1) : rng.range(0, 0.15), 0, d > 35);
     }
   }
 
@@ -508,9 +511,11 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     const cards = new THREE.BufferGeometry();
     const pp: number[] = [];
     const pi: number[] = [];
-    for (let k = 0; k < 3; k++) {
+    // Two cards crossed, each leaning its own way: eight corners to place.
+    for (let n = 0; n < 2; n++) {
+      const k = n * 2;
       pp.push(-0.5, 0, k, 0.5, 0, k, -0.5, 1, k, 0.5, 1, k);
-      pi.push(k * 4, k * 4 + 1, k * 4 + 2, k * 4 + 1, k * 4 + 3, k * 4 + 2);
+      pi.push(n * 4, n * 4 + 1, n * 4 + 2, n * 4 + 1, n * 4 + 3, n * 4 + 2);
     }
     cards.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
     cards.setIndex(pi);
