@@ -178,17 +178,23 @@ Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: one broken rib of the shaft (asked for by `breath_ground_owner_2`).
 Date: 2026-11-26
 
-## `public/assets/breath/mat/slab.jpg`
+## `public/assets/breath/mat/slab.jpg` and `public/assets/breath/mat/slab-h.png`
 
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `assets-src/breath/mat/src/slab.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`, `references/drafts/working/real/plate-terrace-1.jpg`.
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/breath/mat/src/slab.png`, the generated picture, and `assets-src/breath/mat/src/slab-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/3-breath/breath-4-down-the-shaft.jpg`, `references/drafts/working/real/plate-terrace-1.jpg`.
 Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs breath`.
 
 ```
 One fallen slab of pale rock, seen square on: a cracked block 9 metres wide and 5 metres tall with chipped and broken edges, pale ivory and cream with thin bedding lines, rust stain in the cracks, a little grit lying on its ledges and one corner split away. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
 ```
 
-Takes: 1 made, take 1 kept.
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: a fallen slab of the collapsed side (asked for by `breath_ground_owner_2`).
 Date: 2026-11-26
 
