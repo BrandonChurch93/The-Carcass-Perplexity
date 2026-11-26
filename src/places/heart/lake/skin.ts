@@ -44,34 +44,26 @@ const mat2 TURN_A = mat2(0.7986, 0.6018, -0.6018, 0.7986);
 const mat2 TURN_B = mat2(0.9397, -0.3420, 0.3420, 0.9397);
 const mat2 TURN_C = mat2(-0.2588, 0.9659, -0.9659, -0.2588);
 
-// The photographed crust as the relief lays it (sheetGrid), read with the footprint of a pixel (gx, gy) on the crust.
-// Returns the slope of the sheet's height (which runs 0 to 1) per metre, and that height. Leaves the colour over the
-// sheet's mean in gSheetTone when it is asked for.
-const vec3 SHEET_MEAN = vec3(0.0653, 0.0645, 0.0706);
-vec3 gSheetTone = vec3(1.0);
-vec3 sheetAt(vec2 q, float span, vec2 gx, vec2 gy, float seed, bool colour) {
+// The photographed crust as the relief lays it (sheetGrid), read with the footprint of a pixel (gx, gy) on the crust: one
+// reading a corner. Returns the slope of the sheet's height (which runs 0 to 1) per metre, and the sheet's tone, 0.5 at
+// its mean: a crest is pale and a furrow black, so the tone stands for the height too.
+vec3 sheetAt(vec2 q, float span, vec2 gx, vec2 gy, float seed) {
   sheetGrid(q, span);
   vec2 scale = vec2(1.0, 2.0) / span;
   vec3 got = vec3(0.0);
-  vec3 tone = vec3(0.0);
   float sum = 0.0;
   for (int i = 0; i < 3; i++) {
     mat2 turn;
     vec2 shift;
     float w = sheetCorner(i, seed, turn, shift);
-    vec2 uv = (turn * q) * scale + shift;
-    vec2 ux = (turn * gx) * scale;
-    vec2 uy = (turn * gy) * scale;
-    vec4 nh = textureGrad(tSheetNh, uv, ux, uy);
-    float k = w * exp(7.0 * nh.b);
+    vec3 nt = textureGrad(tSheet, (turn * q) * scale + shift, (turn * gx) * scale, (turn * gy) * scale).rgb;
+    float k = w * exp(9.0 * nt.b);
     // The picture is loaded upside down, so its second slope is counted the other way.
-    got += k * vec3(vec2(nh.r - 0.5, 0.5 - nh.g) * turn, nh.b);
-    if (colour) tone += k * textureGrad(tSheet, uv, ux, uy).rgb;
+    got += k * vec3(vec2(nt.r - 0.5, 0.5 - nt.g) * turn, nt.b);
     sum += k;
   }
   got /= sum;
-  if (colour) gSheetTone = tone / (sum * SHEET_MEAN);
-  return vec3(got.xy * (682.7 / span), got.z);
+  return vec3(got.xy * (682.7 / span), min(1.25 * got.z, 1.0));
 }
 
 void main() {
@@ -217,26 +209,22 @@ void main() {
   vec2 gy = dFdy(qg);
   float lx = max(length(gx), 1e-6);
   float ly = max(length(gy), 1e-6);
-  // Seen very low a pixel is thirty times as long as it is wide: past sixteen the long way is cut, or the reading would
+  // Seen very low a pixel is thirty times as long as it is wide: past two and a half the long way is cut, or the reading would
   // blur what lies across it.
-  gx *= min(1.0, 16.0 * ly / lx);
-  gy *= min(1.0, 16.0 * lx / ly);
+  gx *= min(1.0, 2.5 * ly / lx);
+  gy *= min(1.0, 2.5 * lx / ly);
   float fpS = min(lx, ly);
   float nearOn = 1.0 - smoothstep(0.006, 0.016, fpS);
-  float farOn = smoothstep(0.005, 0.012, fpS);
+  float farOn = smoothstep(0.008, 0.02, fpS);
   vec3 skinM = vec3(0.0, 0.0, 0.5);
   vec3 skinD = skinM;
   vec3 skinL = skinM;
-  vec3 tone = vec3(1.0);
-  if (fpS < 0.5) {
-    skinM = sheetAt(qg, SHEET_M, gx, gy, 11.0, true);
-    tone = gSheetTone;
-  }
-  if (nearOn > 0.0) skinD = mix(skinD, sheetAt(qg, SHEET_D, gx, gy, 47.0, false), nearOn);
-  if (farOn > 0.0) {
-    skinL = mix(skinL, sheetAt(qg, SHEET_L, gx, gy, 83.0, true), farOn);
-    tone *= mix(vec3(1.0), gSheetTone, farOn);
-  }
+  // Each reading is taken only where a pixel can tell it from its mean: the readings are what the crust costs.
+  float midOn = 1.0 - smoothstep(0.03, 0.06, fpS);
+  if (midOn > 0.0) skinM = mix(skinM, sheetAt(qg, SHEET_M, gx, gy, 11.0), midOn);
+  if (nearOn > 0.0) skinD = mix(skinD, sheetAt(qg, SHEET_D, gx, gy, 47.0), nearOn);
+  if (farOn > 0.0) skinL = mix(skinL, sheetAt(qg, SHEET_L, gx, gy, 83.0), farOn);
+  float tone = 4.0 * skinM.z * skinL.z;
   vec2 fine = SHEET_TALL_M * skinM.xy + SHEET_TALL_D * skinD.xy + SHEET_TALL_L * skinL.xy;
   float grainA = skinM.z - 0.5;
   // A furrow sees a sixth of the sky, a crest all of it.

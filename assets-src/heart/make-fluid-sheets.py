@@ -1,7 +1,7 @@
 # Makes the lake's and the fall's sheets from the generated pictures under assets-src/heart/gen/.
 # Run: python3 assets-src/heart/make-fluid-sheets.py   (numpy, scipy, Pillow)
-# rope: colour (JPEG) and a data picture (JPEG, 4:4:4): r, g the slope of the height, b the height.
-# melt: colour (JPEG) with the heat in it, and a data picture: r, g the slope of the skin, b the heat (0 skin to 1 white melt).
+# rope: two data pictures (JPEG, 4:4:4): r, g the slope of the height, and in b the height (nh, for the relief) or the tone (nt, for the paint).
+# melt: a data picture: r, g the slope of the skin, b the heat (0 skin to 1 white melt).
 import os
 import sys
 import numpy as np
@@ -69,8 +69,11 @@ def rope():
     # The colour keeps its furrows but not the broad light and dark of the picture: the film lays its own.
     broad = blur(lum, 160.0)
     c = c * (broad.mean() / np.maximum(broad, 1e-3))[..., None]
-    Image.fromarray((np.clip(c, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, 'rope.jpg'), quality=90, subsampling=0)
     save_data('rope-nh.jpg', dx, dy, h)
+    # What the paint reads: the same slopes, and in b the brightness in linear light over 2.5 times its mean, so that one
+    # reading gives slope and tone. The film's own grey is laid under it.
+    lin = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4) @ np.array([0.2126, 0.7152, 0.0722], np.float32)
+    save_data('rope-nt.jpg', dx, dy, lin / (2.5 * lin.mean()))
     print('rope', float(lum.mean()), float(h.mean()), float(np.abs(dx).mean()))
 
 
@@ -89,7 +92,6 @@ def melt():
     cover = blur(skin, 3.0)
     hh = np.clip(cover * (0.55 + h), 0, 1)
     dx, dy = slopes(hh, SLOPE)
-    Image.fromarray((np.clip(c, 0, 1) * 255 + 0.5).astype(np.uint8)).save(os.path.join(OUT, 'melt.jpg'), quality=90, subsampling=0)
     save_data('melt-nh.jpg', dx, dy, heat)
     print('melt', float(heat.mean()), float(skin.mean()))
 
