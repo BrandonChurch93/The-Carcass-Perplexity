@@ -66,6 +66,9 @@ vec2 picAt(vec3 p, float leg) {
   float limb = mix(1570.0 + (uPic.w - p.x) * 350.0, 850.0 + (uPic.z - p.x) * 350.0, fore);
   // The head of the picture hangs lower than the head at rest.
   float y = p.y - 0.2 * smoothstep(0.52, 0.88, p.x / uPic.x);
+  // Over the back the picture is carried on from the flank, row by row, to the spine: the back is the upper flank of the picture, never its edge.
+  float over = max(p.y - 1.27, 0.0) / 0.75;
+  y -= (p.y - 1.27 - 0.44 * (1.5708 - atan(abs(p.z) / 0.86, max(over, 0.001)))) * step(1.27, p.y) * (1.0 - leg);
   return vec2(mix(trunk, limb, leg * smoothstep(1.05, 0.5, p.y)) / 1774.0, 1.0 - (824.0 - y * 370.0) / 887.0);
 }`;
 
@@ -151,12 +154,13 @@ void main() {
   // the legs) the picture would smear: there the hide tile carries the grain and the picture, blurred, only the colour.
   vec2 uv = picAt(vRest, vInfo.z);
   float cover = smoothstep(0.45, 0.85, textureLod(tPicA, uv, 1.5).r);
-  float side = smoothstep(0.06, 0.3, abs(nr.z)) * cover;
+  float top = smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z);
+  float side = max(smoothstep(0.06, 0.3, abs(nr.z)), top) * cover;
   vec3 pic = texture2D(tPic, uv).rgb;
-  vec2 e = vec2(2.0 / 1774.0, 2.0 / 887.0);
-  float l0 = dot(pic, LUMA);
-  float lx = dot(texture2D(tPic, uv + vec2(e.x, 0.0)).rgb, LUMA);
-  float ly = dot(texture2D(tPic, uv + vec2(0.0, e.y)).rgb, LUMA);
+  vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0);
+  float l0 = dot(textureLod(tPic, uv, 1.6).rgb, LUMA);
+  float lx = dot(textureLod(tPic, uv + vec2(e.x, 0.0), 1.6).rgb, LUMA);
+  float ly = dot(textureLod(tPic, uv + vec2(0.0, e.y), 1.6).rgb, LUMA);
   vec4 soft = vec4(textureLod(tPic, uv, 5.0).rgb, textureLod(tPicA, uv, 5.0).r);
   float y = vRest.y;
   vec3 plain = mix(vec3(0.15, 0.075, 0.055), vec3(0.19, 0.14, 0.115), smoothstep(0.45, 1.25, y));
@@ -181,7 +185,7 @@ void main() {
   vec3 bump = w.x * vec3(0.0, sx.y, sx.x) + w.y * vec3(sy.x, 0.0, sy.y) + w.z * vec3(sz.x, sz.y, 0.0);
   vec2 slope = vec2(lx - l0, ly - l0) / (l0 + 0.04);
   // In the picture u runs from the muzzle back and v up.
-  bump += vec3(slope.x, -slope.y, 0.0) * 1.6 * side;
+  bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * 1.5 * side;
   vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn));
   mat3 r = mat3(vR0, vR1, vR2);
   vec3 ng = normalize(r * nr);
@@ -192,7 +196,7 @@ void main() {
   float grain = 0.5 + (height - 0.5) * (1.0 - side) + (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0) * 0.5 * side;
   // Dry salt blooms on what looks at the sky and stands out of the creases.
   float dry = clamp(uSalt, 0.0, 1.0);
-  float dust = dry * smoothstep(0.1, 0.8, ng.y) * smoothstep(0.4, 0.75, grain + 0.3 * (patchy - 0.5)) * (1.0 - horn);
+  float dust = dry * smoothstep(0.1, 0.8, ng.y) * smoothstep(0.3, 0.9, grain + 0.5 * (patchy - 0.5)) * (1.0 - horn);
 
   // Wet: what has been under the brine is dark and red and shines. The line is ragged, and the brine still runs from it in threads.
   float lane = vnoise(vec2(q.x * 7.0 + q.z * 5.0, uSeed));
@@ -201,22 +205,24 @@ void main() {
   float wet = 1.0 - smoothstep(uWet - 0.1 + ragged, uWet + 0.06 + ragged, vWorld.y);
   float damp = 1.0 - smoothstep(uWet + ragged, uWet + 0.35 + ragged + 0.25 * lane, vWorld.y);
   dust *= 1.0 - damp;
-  albedo = mix(albedo, vec3(0.21, 0.18, 0.155) * (0.7 + 0.5 * grain), 0.45 * dust);
+  albedo = mix(albedo, vec3(0.21, 0.18, 0.155) * (0.7 + 0.5 * grain), 0.28 * dust);
   // The stuck one is plastered with the grey mud it lies in: wet and dark below, drying pale and cracking on the back.
   float smear = uMudded * smoothstep(0.3, 0.6, patchy + 0.5 * damp + 0.3 * (1.0 - grain));
-  albedo = mix(albedo, mix(vec3(0.13, 0.115, 0.1), vec3(0.05, 0.043, 0.038), damp) * (0.6 + 0.6 * grain), 0.85 * smear);
+  albedo = mix(albedo, mix(vec3(0.13, 0.115, 0.1), vec3(0.05, 0.043, 0.038), damp) * (0.6 + 0.6 * grain), 0.55 * smear);
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
-  albedo = mix(albedo, albedo * vec3(0.72, 0.52, 0.45), damp * (1.0 - wet) * (1.0 - uMudded));
-  vec3 soaked = mix(albedo * vec3(0.5, 0.26, 0.2) + vec3(0.012, 0.002, 0.001), albedo * 0.55, uMudded);
+  albedo = mix(albedo, albedo * vec3(0.62, 0.42, 0.35), damp * (1.0 - wet) * (1.0 - uMudded));
+  vec3 soaked = mix(albedo * vec3(0.42, 0.2, 0.15) + vec3(0.01, 0.002, 0.001), albedo * 0.55, uMudded);
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
   float deep = 1.0 - smoothstep(0.02, 0.2 + 0.25 * lane, vWorld.y);
   albedo = mix(albedo, mix(vec3(0.05, 0.014, 0.01), vec3(0.05, 0.043, 0.038), uMudded) * (0.7 + 0.6 * grain), 0.8 * deep);
 
-  float rough = mix(0.93, 0.42, max(wet, 0.7 * thread * damp));
+  // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
+  float glint = smoothstep(0.55, 0.95, grain);
+  float rough = mix(0.93, mix(0.74, 0.44, glint), max(wet, 0.7 * thread * damp));
   rough = mix(rough, 0.34, deep);
   rough = mix(rough, 0.6, horn * (1.0 - deep));
   rough = mix(rough, 1.0, 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
@@ -242,7 +248,7 @@ void main() {
   float s = position.x;
   float a = iShape.z * 40.0;
   // Each rakes to its own time: curled, then flicked out.
-  float curl = max(0.15, uCurl + 0.28 * sin(uSeconds * (2.1 + 1.9 * fract(a)) + a) + 0.1 * sin(uSeconds * 5.3 + a * 2.3));
+  float curl = max(0.3, 1.7 * uCurl + 0.28 * sin(uSeconds * (2.1 + 1.9 * fract(a)) + a) + 0.1 * sin(uSeconds * 5.3 + a * 2.3));
   vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay);
   vec3 c = vec3(-0.75, -1.0, -0.4 * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
@@ -277,12 +283,12 @@ void main() {
   // Old ivory: grooved along its length, ringed where it grew, stained dark at the root and red where it has been in the mud.
   float groove = vnoise(vec2(vLook.y * 3.0 + vLook.z * 9.0, s * 2.0));
   float ring = vnoise(vec2(s * 46.0 + vLook.z * 5.0, vLook.y * 0.7));
-  vec3 albedo = vec3(0.125, 0.092, 0.06) * (0.62 + 0.3 * groove + 0.2 * ring);
+  vec3 albedo = vec3(0.088, 0.06, 0.038) * (0.62 + 0.3 * groove + 0.2 * ring);
   albedo = mix(albedo, vec3(0.05, 0.03, 0.022), 0.75 * (1.0 - smoothstep(0.0, 0.16, s)));
   float wet = 1.0 - smoothstep(uWet - 0.05, uWet + 0.12 + 0.1 * groove, vWorld.y);
   albedo = mix(albedo, albedo * vec3(0.6, 0.3, 0.22) + vec3(0.008, 0.001, 0.001), 0.8 * wet);
-  albedo = mix(albedo, vec3(0.05, 0.018, 0.012), 0.5 * smoothstep(0.75, 1.0, s));
-  float rough = mix(0.6, 0.36, wet);
+  albedo = mix(albedo, vec3(0.022, 0.012, 0.009), 0.85 * smoothstep(0.55, 0.98, s));
+  float rough = mix(0.86, 0.6, wet);
   float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, s)) * (0.55 + 0.45 * smoothstep(-0.9, 0.3, n.y));
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -357,7 +363,7 @@ export class Beast {
     readonly b: Build,
     look: Look,
   ) {
-    const hide = hideOf(b.young > 0.5 ? 1 : 0, 1, look.cell * (b.young > 0.5 ? 1.8 : 1));
+    const hide = hideOf(b.young > 0.5 ? 1 : 0, 1, look.cell * (b.young > 0.5 ? 1.3 : 1));
     this.skeleton = hide.skeleton;
     const seed = b.seed;
     const lx = b.young > 0.5 ? 0.9 : 1;
@@ -396,7 +402,7 @@ export class Beast {
       at.set(l.at, i * 3);
       out.set(l.out, i * 3);
       const mid = 1 - Math.abs(i / (lip.length - 1) - 0.5) * 0.6;
-      shape.set([rng.range(0.42, 0.78) * mid * (1 - 0.25 * b.young), rng.range(0.03, 0.043) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
+      shape.set([rng.range(0.5, 0.95) * mid * (1 - 0.25 * b.young), (0.017 + 0.022 * rng.next() ** 2) * (1 + 0.2 * b.young), rng.next(), rng.next()], i * 4);
     });
     const geometry = new THREE.InstancedBufferGeometry();
     geometry.index = tube().index;

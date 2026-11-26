@@ -127,9 +127,9 @@ export function wallowerBody(young: number, seed: number): Body {
     ball(PELVIS, [-1.24 * lx, 1.02, s * 0.44], [0.52, 0.6, 0.4], 0.22);
     ball(CHEST, [0.74 * lx, 1.02, s * 0.47], [0.46, 0.58, 0.38], 0.22);
   }
-  ball(NECK, [1.3 * lx, 1.06, 0], [0.68 * hd, 0.68 * hd, 0.68 * hd], 0.3);
-  ball(HEAD, [1.82 * lx, 0.86, 0], [0.56 * hd, 0.5 * hd, 0.52 * hd], 0.24, -0.45);
-  ball(HEAD, [2.18 * lx, 0.66, 0], [0.42 * hd, 0.34 * hd, 0.42 * hd], 0.16, -0.6);
+  ball(NECK, [1.28 * lx, 1.1, 0], [0.66 * hd, 0.62 * hd, 0.6 * hd], 0.3, -0.35);
+  ball(HEAD, [1.82 * lx, 0.86, 0], [0.56 * hd, 0.42 * hd, 0.45 * hd], 0.24, -0.5);
+  ball(HEAD, [2.2 * lx, 0.64, 0], [0.42 * hd, 0.28 * hd, 0.36 * hd], 0.16, -0.65);
   // The lip: a broad pad that overhangs the mouth.
   ball(HEAD, [2.36 * lx, 0.52, 0], [0.2 * hd, 0.16 * hd, 0.33 * hd], 0.1, -0.7);
   // A brow with nothing under it.
@@ -178,13 +178,13 @@ export function wallowerBody(young: number, seed: number): Body {
   });
 
   // The feelers stand in a fringe round the under lip, from one corner of the mouth to the other.
-  const FRINGE = 14;
+  const FRINGE = 22;
   for (let f = 0; f < FRINGE; f++) {
     const u = f / (FRINGE - 1);
     const a = (u - 0.5) * 2.5;
     const r = 0.3 * hd;
     const at: V3 = [2.3 * lx + Math.cos(a) * 0.17 * hd, 0.47 - 0.05 * Math.cos(a), Math.sin(a) * r];
-    const down = 0.75 + 0.5 * hash3(f, 3, 1, sd);
+    const down = 1.0 + 0.7 * hash3(f, 3, 1, sd);
     const out: V3 = [Math.cos(a) * 0.9, -down, Math.sin(a) * 0.8];
     const l = Math.hypot(out[0], out[1], out[2]);
     skeleton.lip.push({ at, out: [out[0] / l, out[1] / l, out[2] / l] });
