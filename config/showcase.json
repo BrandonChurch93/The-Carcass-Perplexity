@@ -96,10 +96,10 @@
         "name": "opening",
         "unit": "ribs",
         "lines": [
-          "Listen.",
-          "There is a land the maps leave empty.",
-          "I have walked it. End to end.",
-          "I will tell you what is there."
+          "Past the last calm water, there is a shore.",
+          "Nothing on it has a name.",
+          "Nothing on it should be alive.",
+          "All of it is."
         ]
       },
       {
@@ -108,9 +108,9 @@
         "unit": "ribs",
         "lines": [
           "The strait.",
-          "Stone ribs. Taller than any wall men have built.",
-          "At low tide, the winged things come down to feed.",
-          "Look up. The drowned hang in the weed. That is how high the sea returns."
+          "Stone blades, taller than the storms.",
+          "At low tide the winged ones feed. They do not have long.",
+          "High in the weed hangs one that stayed. Then the sea returns. All at once."
         ]
       },
       {
@@ -121,7 +121,7 @@
           "The fire.",
           "A lake of it, under a black skin.",
           "The tall ones walk the skin, and drink from the cracks.",
-          "It burned before there were men. It will burn after."
+          "The fire has never cooled. Sometimes the skin gives way."
         ]
       },
       {
@@ -130,9 +130,9 @@
         "unit": "breath",
         "lines": [
           "The pits.",
-          "The land breathes here. Slow. From far below.",
-          "Nothing grows near them but the red weed.",
-          "The pale herds feed, and keep their distance. They are wiser than men."
+          "The ground breathes here. Slow. From far below.",
+          "Red growth feeds on the breath.",
+          "The pale herds graze the channel, not the rim. One did. One will."
         ]
       },
       {
@@ -141,9 +141,9 @@
         "unit": "marsh",
         "lines": [
           "The red flats.",
-          "It was blood once. It still seeps.",
-          "The great beasts wallow in it, and grow fat.",
-          "The salt keeps what it catches. Forever."
+          "Stalks root in the red. The ground still bleeds.",
+          "The heavy ones wallow in it, and grow fat.",
+          "The salt keeps whatever it catches. Forever."
         ]
       },
       {
@@ -152,9 +152,9 @@
         "unit": "spine",
         "lines": [
           "The ridge.",
-          "Above the clouds. Above the storm.",
-          "Lightning walks it every night. Spire to spire.",
-          "The beasts sleep inside the bone, and wait for morning."
+          "Above the cloud. Under the storm.",
+          "Every night the lightning walks it. Spire to spire.",
+          "The herds shelter in the hollow beneath, until morning."
         ]
       },
       {
@@ -164,8 +164,8 @@
         "lines": [
           "The lake.",
           "Still. Gold at the edge. Black at the center.",
-          "The herds drink there. They do not look down.",
-          "The center has no bottom. I did not find one."
+          "The herds drink. None of them looks down.",
+          "The center has no floor. Something looks back."
         ]
       },
       {
@@ -173,10 +173,10 @@
         "name": "reveal",
         "unit": "reveal",
         "lines": [
-          "Now you see it.",
-          "This was never land.",
-          "It was a god.",
-          "Gods die slow. This one is not finished."
+          "The land has a shape.",
+          "None of it was ever land.",
+          "It was a titan.",
+          "Everything here feeds on it. And it is not finished."
         ]
       }
     ]
