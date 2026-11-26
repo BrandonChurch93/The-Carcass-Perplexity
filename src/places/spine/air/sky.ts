@@ -5,7 +5,11 @@ import * as THREE from 'three';
 import { DUSK, WIND } from '../shared/anchors';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
+import { MASSES_GLSL, massPictures } from './masses';
 import { STORM_SHAPE_GLSL } from './storm';
+
+// The storm's masses before the dome's pictures (masses.ts): not drawn until they have been looked at shot by shot.
+const MASSES_DRAWN: boolean = false;
 
 const VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -176,10 +180,11 @@ uniform sampler2D tSkyDusk;
 uniform sampler2D tStormLit;
 ${RIG_GLSL}
 ${SKY_GLSL}
+${MASSES_GLSL}
 
 // The sky from pictures: the storm wall on the gale's side (mat/stormwall, and the same lit from inside, mat/stormwall-lit), the dusk sky on the
 // lee (mat/sky). The pictures flow. The band of the last light is kept to a thin line on the horizon: over it the dusk's cloud is cold.
-vec3 skyPainted(vec3 from, vec3 d) {
+vec3 skyPainted(vec3 from, vec3 d, float foot) {
   float el = asin(clamp(d.y, -1.0, 1.0));
   float az = atan(d.z, d.x);
   float turned = wrapPi(az - STORM_AZ - uSkyStage.x);
@@ -213,6 +218,8 @@ vec3 skyPainted(vec3 from, vec3 d) {
     if (k > 0.002) dark = mix(dark, flowing(tStormLit, uvS, vec2(0.02, 0.004), 22.0, 0.0) * (1.0 + 0.8 * k), k);
     c += storm * dark;
   }
+  // Before the pictures of the dome stand the storm's masses, on their two rings (masses.ts).
+  ${MASSES_DRAWN ? 'c = stormMasses(c, from, d, foot);' : ''}
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
   float glow = clamp(near, 0.0, 3.0);
   c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
@@ -245,7 +252,7 @@ void main() {
       vec4 storm = 0.4 * texture2D(tStorm, at) + 0.15 * (texture2D(tStorm, at + by) + texture2D(tStorm, at - by) + texture2D(tStorm, at + vec2(by.x, -by.y)) + texture2D(tStorm, at + vec2(-by.x, by.y)));
       c = c * storm.a + storm.rgb;
     } else {
-      c = skyPainted(cameraPosition, d);
+      c = skyPainted(cameraPosition, d, foot);
     }
     // Under the level the dome is what the air pass takes for the far end of the sea: the band of the dusk is a line on the sea's edge, and
     // nothing of it shows under that edge where the sea's own cloud ends.
@@ -314,6 +321,7 @@ export function skyPictures(ctx: Context): Record<string, THREE.IUniform> {
     tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tStormLit: { value: ctx.assets.texture('mat/stormwall-lit.jpg', { repeat: false }) },
+    ...(MASSES_DRAWN ? massPictures(ctx) : {}),
   };
 }
 

@@ -3,7 +3,7 @@
 // cloud under the crest (the sea far below, the bank against the lee, the pour through the saddles) is a deck of heaps each ray walks to, the spindrift is a
 // column over the snow, and the haze of the height is worked out in one. All of it reads the rig, so the cloud takes the dusk and the lightning as the rock does.
 import { HASH_GLSL } from '../../../core/post';
-import { SEA_LEVEL } from '../shared/anchors';
+import { MOUTH, SEA_LEVEL } from '../shared/anchors';
 import { RIG_GLSL } from '../shared/glsl';
 import { SEA_GLSL, SEA_MARCH_GLSL, SEA_SHADE_GLSL } from './sea';
 import { SKY_GLSL } from './sky';
@@ -34,6 +34,8 @@ ${SKY_GLSL}
 
 const vec3 TO_SKY = vec3(0.12, 0.8, 0.59);
 const float SEA = ${SEA_LEVEL.toFixed(1)};
+// The cave mouth of the first spire: the storm's veil of snow starts beyond it.
+const vec3 VEIL_FROM = vec3(${MOUTH[0].toFixed(1)}, ${MOUTH[1].toFixed(1)}, ${MOUTH[2].toFixed(1)});
 
 vec4 noise(vec3 p) {
   return textureLod(tNoise, p, 0.0);
@@ -276,7 +278,10 @@ ${SEA_SHADE_GLSL}
     float reachV = far > 50000.0 ? 2200.0 : min(far, 9000.0);
     float tall = 240.0;
     float fallV = max(rd.y, 0.0) / tall;
-    float depthV = exp(-max(ro.y - crestY, -60.0) / tall) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
+    // It starts beyond the first spire: the spire, its cave mouth and the sea beside it stand in clear air, whatever the lens's distance.
+    float startV = length(VEIL_FROM.xz - ro.xz) + 140.0;
+    reachV = max(reachV - startV, 0.0);
+    float depthV = exp(-max(ro.y - crestY, -60.0) / tall - fallV * startV) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
     float azV = atan(rd.z, rd.x);
     float bands = noise(vec3(azV * 0.9 - uTime * 0.013, rd.y * 2.6 + uTime * 0.004, 0.37)).g;
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
@@ -317,6 +322,8 @@ ${SEA_SHADE_GLSL}
     // Staged by shot (uStage.z under 0.75): from inside the canal the snow flies only out beyond the far mouth, at the three depths past it.
     bool beyond = uStage.z < 0.75;
     for (int j = 0; j < 3; j++) {
+      // On the ridge no flake is drawn: streaks at this size read as dashes laid on the lens. The snow there is the veil's.
+      if (!beyond) break;
       int k = beyond ? j + 5 : 2 * j;
       float dist = (beyond ? 1.6 : 1.1) * pow(2.0, float(k)) * lens;
       if (dist * 0.8 > far) break;
@@ -360,22 +367,6 @@ ${SEA_SHADE_GLSL}
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
     fly *= uShow.w * (beyond ? 3.0 : uStage.z) * mix(1.0, beyond ? 0.45 : 0.2, smoothstep(120.0, 700.0, far));
-    // Between the streaks the gale carries snow too fine to see as flakes: veils of it cross the lens in gusts, broad and soft, at two depths,
-    // no two gusts alike and none by a beat. Each lies before whatever stands farther off than it does.
-    if (!beyond) {
-      for (int j = 0; j < 2; j++) {
-        float distV = (j == 0 ? 14.0 : 60.0) * lens;
-        if (distV > far) break;
-        vec2 pv = onLens * distV;
-        float kv = float(j);
-        float runs = uTime * (0.34 - 0.13 * kv);
-        float gust = noise(vec3(uTime * (0.09 + 0.03 * kv), 0.21 + 0.4 * kv, 0.67)).g;
-        float body = noise(vec3(dot(pv, e1) / (distV * 3.1) - runs, dot(pv, e2) / (distV * 1.3) + 0.05 * sin(uTime * 0.21 + kv), 0.13 + 0.37 * kv + uTime * 0.017)).g;
-        float torn = noise(vec3(dot(pv, e1) / (distV * 1.1) - runs * 2.9, dot(pv, e2) / (distV * 0.45), 0.71 - 0.2 * kv)).a;
-        float veilG = smoothstep(0.46, 0.8, 0.7 * body + 0.3 * torn) * (0.35 + 0.65 * smoothstep(0.3, 0.7, gust));
-        fly += (1.0 - fly) * veilG * (0.34 - 0.1 * kv) * uShow.w * uStage.z * mix(1.0, 0.35, smoothstep(200.0, 900.0, far));
-      }
-    }
     vec3 flakes = (beyond ? 1.1 : 2.1) * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;

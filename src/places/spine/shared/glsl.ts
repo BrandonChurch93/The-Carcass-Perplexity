@@ -271,7 +271,7 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   // The last light itself, low out of the dusk: it rims what looks to it, warm, and reaches no face that looks elsewhere.
   vec3 toDusk = normalize(vec3(uWarmDir.x, 0.07, uWarmDir.z));
   float rim = clamp((dot(n, toDusk) - 0.1) / 0.9, 0.0, 1.0);
-  vec3 warm = uWarmColour * (outside ? 1.25 * rim * rim * sqrt(sky) : 0.0);
+  vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
   float nv = clamp(dot(n, v), 0.0, 1.0);
