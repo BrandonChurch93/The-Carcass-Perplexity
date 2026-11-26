@@ -1,0 +1,66 @@
+{
+  "round": 28,
+  "unit": "film",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the fog forms uniformly smooth, repeated streaks around the rocks.",
+      "answered": "18:16 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "simple tiled texture on the rock spires combined with generic procedural ocean and volumetric fog, typical of a standalone hobbyist/stock CG landscape render rather than film-grade detail",
+      "answered": "18:16 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the procedural-looking rock spires paired with simple streaky mist and a flat-looking wave splash lack the fine detail and physical realism of a real photo or top-budget production.",
+      "answered": "18:17 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 76,
+      "why": "The mist across the spires looks like smooth, overlapping sheets rather than turbulent sea fog.",
+      "answered": "18:17 UTC"
+    }
+  ]
+}

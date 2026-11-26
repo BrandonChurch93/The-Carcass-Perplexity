@@ -24,29 +24,29 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 125, 2026-11-26 17:53 UTC:
+Status 126, 2026-11-26 18:16 UTC:
 
-- `01-s125-cloud.jpg`: The Spine's cloud sea, merged: frames 7015, 7234 and 7418 from top to bottom, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s125-walk.jpg`: The Heart's walkers, version 2, merged: frames 3028, 3074 and 3119 from top to bottom, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `03-s125-lava.jpg`: The Heart's lava fall, version 1, merged: frame 4127 above and frame 4217 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `04-s125-orbit.jpg`: The orbit, last version, merged: frames 10346, 10598 and 10851 from top to bottom, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `01-s126-rock.jpg`: The Spine's rock, tone pass, merged: frame 7338 above and frame 7418 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `02-s126-hung.jpg`: The hung body of the Ribs, version 3, merged: frame 2081 above and loop frame 0 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `03-s126-bore.jpg`: The Ribs' bore, version 3, merged: frame 2295 above and frame 2401 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `04-s126-kite.jpg`: The tether-kites, version 2, merged: frame 7418 above and frame 7450 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
 
+Status 125, 2026-11-26 17:53 UTC, showed: The Spine's cloud sea, merged: frames 7015, 7234 and 7418 from top to bottom, before at left and after at right (draft tier, preview size...
 Status 124, 2026-11-26 17:22 UTC, showed: The tether-kites, version 1, merged: frame 7015, before above and after below (draft tier, preview size, rendered on a render machine); The...
 Status 123, 2026-11-26 16:57 UTC, showed: The join from the lake into the rise, merged: frames 9541, 9546 and 9560 from top to bottom, before at left and after at right (draft tier...
-Status 122, 2026-11-26 16:36 UTC, showed: The Breath's mist column, merged: frame 4500 above and frame 4590 below, before at left and after at right (draft tier, preview size...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T17:53:42Z
-phase 5: 7.63 h used of 6.00 h
-build: 42.04 h used of 72.00 h
+2026-11-26T18:16:40Z
+phase 5: 8.01 h used of 6.00 h
+build: 42.42 h used of 72.00 h
 extra rounds: yes
 half point: reached
 box end: reached
-minutes since the last status: 31, status overdue
+minutes since the last status: 23
 ```
 
 ## Phases
