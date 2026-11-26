@@ -1,71 +1,94 @@
 // The ridge-runners: the herd sheltering in the canal, the ones still crossing the saddle, and the one the lightning found.
-// An animal is a hide of tubes moved by six bones, a coat of some thousands of locks rooted on it, and a beard of tendrils where a face would be.
-// Everything it does is worked out from the seconds of the place: the bones on the processor, the coat and the tendrils in the vertex shader.
+// An animal is one skin taken from the shape of its pose (skin.ts), a coat of locks in clumps rooted on it, claws, and a beard of tendrils
+// where a face would be. Everything it does is worked out from the seconds of the place: the bones on the processor, the coat and the
+// tendrils in the vertex shader.
 import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
 import type { Context, Piece } from '../shared/context';
-import { CANAL_KEY, CANAL_KEY_AT, CARCASS, INSIDE_FROM, RAD, canalFar, carcassAxis, trail, tube } from '../shared/anchors';
+import { CANAL_KEY, CANAL_KEY_AT, INSIDE_FROM, RAD, canalFar, carcassAxis, carcassBody, carcassView, step, trail, tube } from '../shared/anchors';
 import { stagedSeconds } from '../shared/stage';
 import { FLOOR, MOUTH_S, first, frameAt, world } from '../ridge';
 import { flashAt } from '../strikes/bolt';
-import { BODY_FRAGMENT, BODY_VERTEX, LOCK_FRAGMENT, LOCK_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
-import { LIES_AT, scorch } from './scorch';
-import { FACE_AT, HIPS, LEG_TOP, NECK_AT, bodyGeometry, coat, lockGeometry, tendrilGeometry } from './shape';
+import { LOCK_FRAGMENT, LOCK_VERTEX, SKIN_FRAGMENT, SKIN_VERTEX, TENDRIL_FRAGMENT, TENDRIL_VERTEX } from './material';
+import { scorch } from './scorch';
+import { BONES, claws, coat, lockGeometry, skin, tendrilGeometry, type Joints, type LegPose, type Pose, type Skin, type V3 } from './skin';
 
 export const PARTS: readonly string[] = ['ridge-runners'];
 
-type Act = 'stand' | 'lie' | 'walk' | 'dead';
+type Act = 'stand' | 'sit' | 'lie' | 'walk' | 'dead';
 
 interface Role {
   act: Act;
+  pose: Pose;
   size: number;
-  /** Locks in its coat: the ones the lens comes close to have more. */
-  locks: number;
-  /** How long its skirt hangs, 1 the usual. */
-  skirt: number;
+  /** The size of the cells its skin is taken on, metres, and the clumps of its coat. */
+  cell: number;
+  clumps: number;
+  long: number;
   /** Its coat's colour, scene linear. */
   tone: [number, number, number];
   phase: number;
   inside: boolean;
+  burn: [number, number, number, number];
+  tendrils: number;
 }
 
 interface Animal {
   role: Role;
   group: THREE.Group;
+  joints: Joints;
   bones: THREE.Matrix4[];
   ground: THREE.Vector4;
   coat: THREE.Vector4;
   writhe: THREE.Vector4;
 }
 
-const TENDRILS = 34;
-const TENDRILS_DEAD = 170;
-const SEGMENTS = 5;
+const leg = (u: number, us: number, l: number, ls: number, p: number, ps = 0.05): LegPose => ({ upper: [u, us], lower: [l, ls], paw: [p, ps] });
 
-const m1 = new THREE.Matrix4();
+// Standing square, head hung low out of the wind.
+const STAND: Pose = { roll: 0, pitch: 0, slack: 1, curl: 0, neck: [-0.5, 0], head: [-0.55, 0], legs: [leg(-0.12, 0.03, 0.1, 0, 1.35), leg(-0.1, 0.03, 0.12, 0, 1.35), leg(0.32, 0.04, -0.36, 0, 1.35), leg(0.28, 0.04, -0.33, 0, 1.35)] };
+// Standing at the mouth, looking out: the head up a little, one forefoot ahead.
+const WATCH: Pose = { roll: 0, pitch: 0.03, slack: 1, curl: 0.1, neck: [-0.2, 0.15], head: [-0.75, 0.1], legs: [leg(0.1, 0.03, 0.12, 0, 1.3), leg(-0.2, 0.03, 0.1, 0, 1.35), leg(0.22, 0.04, -0.3, 0, 1.35), leg(0.4, 0.04, -0.4, 0, 1.35)] };
+// Sitting up on its haunches against the wall, forelegs straight under the chest, the beard hanging before it.
+const SIT: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.6, 0.1], head: [-0.75, 0.05], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
+// Lying on its chest, curled, legs folded under, forepaws out before it, the head down on them.
+const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 0.5], head: [-0.4, 0.4], legs: [leg(1.1, 0.3, 1.45, 0.1, 1.5), leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(1.2, 0.5, -1.3, 0.3, 1.4), leg(1.25, 0.55, -1.2, 0.3, 1.4)] };
+const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [-0.15, -0.3], head: [-0.7, -0.2], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
+// The dead one: fallen on its right side, slack, its legs thrown out toward the lens with the paws on the ground, the neck fallen forward.
+const DEAD: Pose = {
+  roll: 0.62,
+  pitch: -0.04,
+  slack: 0.8,
+  curl: -0.3,
+  neck: [-0.3, -0.5],
+  head: [-0.4, -0.3],
+  legs: [leg(1.0, 0.2, 1.3, 0.5, 1.4, 0.3), leg(0.5, 0.5, 1.0, 0.2, 1.3, 0), leg(0.7, 0.5, -0.2, 0.9, 1.0, 0.4), leg(-0.5, 0.3, -0.9, 0.0, 0.6, 0)],
+};
+
+const BARE = false;
+// The ground owner now draws the burned rock under the dead one (scorchfield); this folder's own sheet is kept but not drawn.
+const SCORCH = false;
+/** Where the dead one lies: right of the middle of the key's frame and a little back from the lens, its head toward the wet rock. */
+const BODY_AT = step(step(carcassBody, carcassAxis, 0.35), carcassView, -0.1);
 const m2 = new THREE.Matrix4();
+const m3 = new THREE.Matrix4();
 const q1 = new THREE.Quaternion();
 const e1 = new THREE.Euler();
 const v1 = new THREE.Vector3();
+const v2 = new THREE.Vector3();
 const ONE = new THREE.Vector3(1, 1, 1);
 
-/** A turn about a point of the animal. */
-function about(out: THREE.Matrix4, pivot: [number, number, number], rx: number, ry: number, rz: number, shift?: [number, number, number], scale: THREE.Vector3 = ONE): THREE.Matrix4 {
+/** A turn about a point of the animal, with a shift after it. */
+function about(out: THREE.Matrix4, pivot: V3, rx: number, ry: number, rz: number, shift?: V3, scale: THREE.Vector3 = ONE): THREE.Matrix4 {
   q1.setFromEuler(e1.set(rx, ry, rz, 'YXZ'));
   out.compose(v1.set(pivot[0] + (shift ? shift[0] : 0), pivot[1] + (shift ? shift[1] : 0), pivot[2] + (shift ? shift[2] : 0)), q1, scale);
   m2.makeTranslation(-pivot[0], -pivot[1], -pivot[2]);
   return out.multiply(m2);
 }
 
-/** A leg whose foot stands at (dx, lift, dz) from its rest and whose top follows the trunk: a lean of the whole leg, not a slide. */
-function leg(out: THREE.Matrix4, hip: [number, number, number], footX: number, footZ: number, lift: number, topX: number, topY: number, topZ: number): THREE.Matrix4 {
-  const sy = (LEG_TOP + topY - lift) / LEG_TOP;
-  out.set(1, (topX - footX) / LEG_TOP, 0, footX, 0, sy, 0, lift, 0, (topZ - footZ) / LEG_TOP, 1, footZ, 0, 0, 0, 1);
-  // The lean is about the leg's own line, not the animal's middle.
-  m2.makeTranslation(-hip[0], 0, -hip[2]);
-  out.multiply(m2);
-  m2.makeTranslation(hip[0], 0, hip[2]);
-  return out.premultiply(m2);
+/** A leg whose foot stays where it stands while its top goes with the trunk by (dx, dz): a lean of the whole leg. */
+function lean(out: THREE.Matrix4, top: V3, dx: number, dz: number): THREE.Matrix4 {
+  return out.set(1, dx / top[1], 0, 0, 0, 1, 0, 0, 0, dz / top[1], 1, 0, 0, 0, 0, 1);
 }
 
 const smooth = (a: number, b: number, v: number): number => {
@@ -75,66 +98,92 @@ const smooth = (a: number, b: number, v: number): number => {
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('runners');
-  const pixel = { value: 0.0005 };
-  const body = bodyGeometry();
-  body.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 0.6, 0), 2.6);
-  const strip = lockGeometry(SEGMENTS);
+  const strip = lockGeometry(5);
   const tendril = tendrilGeometry();
-  const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 8 });
-  const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 8 });
+  const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 4 });
+  const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 4 });
+  const lockPicture = ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
+  const burnPicture = ctx.assets.texture('mat/burn.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
   const part = new THREE.Group();
+  const skins = new Map<string, { body: Skin; claws: THREE.BufferGeometry }>();
+  const skinOf = (pose: Pose, cell: number): { body: Skin; claws: THREE.BufferGeometry } => {
+    const key = `${JSON.stringify(pose)}|${cell}`;
+    let s = skins.get(key);
+    if (!s) {
+      const body = skin(pose, cell);
+      s = { body, claws: claws(body.joints) };
+      skins.set(key, s);
+    }
+    return s;
+  };
 
-  const make = (role: Role, burn: THREE.Vector4): Animal => {
-    const bones = Array.from({ length: 6 }, () => new THREE.Matrix4());
+  const make = (role: Role): Animal => {
+    const bones = Array.from({ length: BONES }, () => new THREE.Matrix4());
     const ground = new THREE.Vector4(0, 0, 0, 0);
-    const coatSet = new THREE.Vector4(1, 0.1, 0.02, 0);
+    const coatSet = new THREE.Vector4(1, 0.1, 0.0, 0);
     const writhe = new THREE.Vector4(1, 0, 0, 0);
+    const { body, claws: horn } = skinOf(role.pose, role.cell);
+    const j = body.joints;
     const shared = {
       ...ctx.rig.uniforms,
       uBones: { value: bones },
-      uBurn: { value: burn },
+      uBurn: { value: new THREE.Vector4(...role.burn) },
       uGround: { value: ground },
-      uAnkle: { value: role.act === 'dead' ? -Math.PI / 2 : role.act === 'lie' ? 1.42 : 0 },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uPixel: pixel,
+      uDoorGain: { value: 3 },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },
+      tLock: { value: lockPicture },
+      tBurn: { value: burnPicture },
+      uBurnU: { value: new THREE.Vector3(j.fwd[0], j.fwd[1], j.fwd[2]) },
+      uBurnV: { value: new THREE.Vector3(j.up[0], j.up[1], j.up[2]) },
       uTone: { value: new THREE.Vector4(role.tone[0], role.tone[1], role.tone[2], rng.next()) },
-      uFace: { value: new THREE.Vector4(FACE_AT[0], FACE_AT[1], FACE_AT[2], 0) },
+      uFace: { value: new THREE.Vector4(j.face[0], j.face[1], j.face[2], 0) },
+      uLead: { value: new THREE.Vector4(j.lead[0], j.lead[1], j.lead[2], 0) },
       uWrithe: { value: writhe },
-      uHairs: { value: role.locks > 3000 ? 3 : 2 },
-      uDoorGain: { value: 3 },
     };
     const group = new THREE.Group();
-    const hide = new THREE.Mesh(body, new THREE.ShaderMaterial({ vertexShader: BODY_VERTEX, fragmentShader: BODY_FRAGMENT, uniforms: shared, side: THREE.DoubleSide }));
-    group.add(hide);
+    const hide = new THREE.ShaderMaterial({ vertexShader: SKIN_VERTEX, fragmentShader: SKIN_FRAGMENT, uniforms: shared });
+    const skinMesh = new THREE.Mesh(body.geometry, hide);
+    // The coat is drawn first: it hides nearly all of the skin, which then costs nothing.
+    skinMesh.renderOrder = 2;
+    group.add(skinMesh);
+    const hornMesh = new THREE.Mesh(horn, hide);
+    hornMesh.renderOrder = 2;
+    group.add(hornMesh);
 
-    const c = coat(rng, role.locks, role.skirt, role.act === 'dead');
+    // The wind in the animal's own frame is set when it is placed; the coat is combed back along the body and a little down the gale.
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0] });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
     locks.setAttribute('aRoot', new THREE.InstancedBufferAttribute(c.root, 3));
-    locks.setAttribute('aDir', new THREE.InstancedBufferAttribute(c.dir, 3));
-    locks.setAttribute('aLock', new THREE.InstancedBufferAttribute(c.lock, 4));
+    locks.setAttribute('aCtrl', new THREE.InstancedBufferAttribute(c.ctrl, 3));
+    locks.setAttribute('aTip', new THREE.InstancedBufferAttribute(c.tip, 3));
+    locks.setAttribute('aCard', new THREE.InstancedBufferAttribute(c.card, 4));
+    locks.setAttribute('aLockBones', new THREE.InstancedBufferAttribute(c.bones, 4));
     locks.instanceCount = c.count;
-    locks.boundingSphere = body.boundingSphere;
-    group.add(new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
+    locks.boundingSphere = body.geometry.boundingSphere;
+    const lockMesh = new THREE.Mesh(locks, new THREE.ShaderMaterial({ vertexShader: LOCK_VERTEX, fragmentShader: LOCK_FRAGMENT, uniforms: shared, side: THREE.DoubleSide }));
+    lockMesh.renderOrder = 1;
+    lockMesh.visible = !BARE;
+    group.add(lockMesh);
 
-    const count = role.act === 'dead' ? TENDRILS_DEAD : TENDRILS;
-    const thin = role.act === 'dead' ? 0.85 : 1;
+    const count = role.tendrils;
+    const thin = role.act === 'dead' ? 1.1 : 1;
     const hang = new Float32Array(count * 4);
     const limb = new Float32Array(count * 4);
     for (let i = 0; i < count; i++) {
       const a = rng.range(0, Math.PI * 2);
-      const r = 0.11 * Math.sqrt(rng.next());
-      hang.set([r * Math.cos(a) - 0.02, r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
+      const r = 0.07 * Math.sqrt(rng.next());
+      hang.set([r * Math.cos(a), r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
       // A few long thick ones, many thin ones.
       const big = rng.next() < 0.3;
-      limb.set([big ? rng.range(0.55, 0.75) : rng.range(0.3, 0.55), thin * (big ? rng.range(0.024, 0.032) : rng.range(0.012, 0.02)), rng.range(0.2, 1), rng.next()], i * 4);
+      limb.set([big ? rng.range(0.5, 0.72) : rng.range(0.26, 0.5), thin * (big ? rng.range(0.022, 0.03) : rng.range(0.011, 0.019)), rng.range(0.2, 1), rng.next()], i * 4);
     }
     const beard = new THREE.InstancedBufferGeometry();
     beard.index = tendril.index;
@@ -142,13 +191,13 @@ export function create(ctx: Context): Piece {
     beard.setAttribute('aHang', new THREE.InstancedBufferAttribute(hang, 4));
     beard.setAttribute('aLimb', new THREE.InstancedBufferAttribute(limb, 4));
     beard.instanceCount = count;
-    beard.boundingSphere = body.boundingSphere;
+    beard.boundingSphere = body.geometry.boundingSphere;
     group.add(new THREE.Mesh(beard, new THREE.ShaderMaterial({ vertexShader: TENDRIL_VERTEX, fragmentShader: TENDRIL_FRAGMENT, uniforms: shared, side: THREE.DoubleSide })));
     part.add(group);
-    return { role, group, bones, ground, coat: coatSet, writhe };
+    return { role, group, joints: j, bones, ground, coat: coatSet, writhe };
   };
 
-  const NONE = new THREE.Vector4(0, 0, 0, 0);
+  const NONE: [number, number, number, number] = [0, 0, 0, 0];
   const cream = (): [number, number, number] => {
     const k = rng.range(0.85, 1.1);
     const warm = rng.range(0, 1);
@@ -157,129 +206,118 @@ export function create(ctx: Context): Piece {
 
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
-  const HUDDLE: { d: number; l: number; yaw: number; act: Act; size: number; skirt: number }[] = [
-    { d: CANAL_KEY + 4.3, l: 0.1, yaw: along - 1.6, act: 'stand', size: 1.0, skirt: 0.8 },
-    { d: CANAL_KEY + 3.2, l: -1.5, yaw: along + 2.5, act: 'lie', size: 1.05, skirt: 1.0 },
-    { d: CANAL_KEY + 2.5, l: -2.4, yaw: along + 2.3, act: 'lie', size: 1.15, skirt: 1.0 },
-    { d: CANAL_KEY + 1.6, l: -2.6, yaw: along + 1.9, act: 'lie', size: 1.2, skirt: 1.0 },
-    { d: CANAL_KEY + 0.6, l: -2.6, yaw: along + 0.5, act: 'stand', size: 1.1, skirt: 0.7 },
+  const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
+    { d: CANAL_KEY + 3.7, l: -0.7, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.1 },
+    { d: CANAL_KEY + 3.3, l: -2.2, yaw: along + 2.6, act: 'lie', pose: LIE, size: 1.1 },
+    { d: CANAL_KEY + 2.5, l: -2.5, yaw: along + 2.2, act: 'sit', pose: SIT, size: 1.25 },
+    { d: CANAL_KEY + 1.6, l: -2.3, yaw: along + 1.9, act: 'sit', pose: SIT, size: 1.4 },
+    { d: CANAL_KEY + 2.4, l: -1.5, yaw: along + 2.0, act: 'lie', pose: LIE2, size: 1.15 },
   ];
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, size: h.size, locks: 36000, skirt: h.skirt, tone: cream(), phase: i * 1.9 + 0.4, inside: true }, NONE));
+
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 1000, long: 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   const CROSSING = 4;
-  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', size: rng.range(0.9, 1.15), locks: 5000, skirt: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false }, NONE));
-  // The scorched one: on its side, the bolt's way burned along its upper flank.
-  const dead = make({ act: 'dead', size: 1.15, locks: 110000, skirt: 0.5, tone: [0.92, 0.77, 0.52], phase: 0, inside: false }, new THREE.Vector4(-0.02, 1.2, -1, 0.15));
+  const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', pose: STAND, size: rng.range(0.9, 1.15), cell: 0.04, clumps: 260, long: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false, burn: NONE, tendrils: 12 }));
+  // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
+  const deadSkin = skinOf(DEAD, 0.016).body;
+  const dj = deadSkin.joints;
+  const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.2 * (dj.fwd[d] as number) + 0.05 * (dj.up[d] as number) - 0.24 * (dj.right[d] as number);
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.3];
+  const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
   const burned = scorch(ctx);
   burned.drape();
-  part.add(burned.mesh);
+  if (SCORCH) part.add(burned.mesh);
   ctx.scene.add(ctx.parts.built('ridge-runners', part));
 
   const discs = ctx.rig.contactDiscs(HUDDLE.length + CROSSING + 1);
-  const place = (a: Animal, at: Vec3, yaw: number, roll = 0, pitch = 0): void => {
-    q1.setFromEuler(e1.set(roll, yaw, pitch, 'YXZ'));
+  const place = (a: Animal, at: Vec3, yaw: number): void => {
+    q1.setFromEuler(e1.set(0, yaw, 0, 'YXZ'));
     a.group.position.set(at[0], at[1], at[2]);
     a.group.quaternion.copy(q1);
     a.group.scale.setScalar(a.role.size);
     a.group.updateMatrixWorld(true);
   };
-
-  /** Standing: it breathes, shifts its weight from side to side over planted feet, and its neck swings slowly. `look` turns the neck (radians). */
-  const stand = (a: Animal, t: number, look: number, shiver: number): void => {
-    const ph = a.role.phase;
-    const breath = Math.sin(t * 2.6 + ph);
-    const sway = 0.065 * Math.sin(t * 1.05 + ph * 3) + 0.02 * Math.sin(t * 2.3 + ph);
-    const fore = 0.035 * Math.sin(t * 0.7 + ph * 2);
-    (a.bones[0] as THREE.Matrix4).compose(v1.set(fore, -0.012 * breath, sway), q1.setFromEuler(e1.set(sway * 0.6, 0, 0.02 * breath, 'YXZ')), new THREE.Vector3(1, 1 + 0.04 * breath, 1 + 0.07 * breath));
-    HIPS.forEach((hip, i) => leg(a.bones[i + 1] as THREE.Matrix4, hip, 0, 0, 0, fore, 0, sway));
-    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(t * 0.83 + ph), 0.2 * Math.sin(t * 1.07 + ph * 2) + look, 0.14 * Math.sin(t * 1.4 + ph) - 0.05, [fore, 0, sway]);
-    a.coat.set(a.role.inside ? 0.8 * a.role.skirt + 0.3 : 1.2, a.role.inside ? 0.05 : 0.5, 0.012 + shiver, a.role.inside ? 0.24 : 0.2);
-    a.writhe.set(1, 0, 0, 0);
+  const still = (a: Animal): void => {
+    for (const b of a.bones) b.identity();
   };
 
-  /** Lying on its chest with its legs folded under it and its neck down. */
-  const lie = (a: Animal, t: number, shiver: number): void => {
+  /** What a living animal does where it rests: it breathes, its neck and head swing slowly, and a standing one shifts its weight from side
+   * to side over planted feet. `look` turns the head (radians), `shiver` shakes the coat. */
+  const idle = (a: Animal, t: number, look: number, shiver: number): void => {
     const ph = a.role.phase;
-    const breath = Math.sin(t * 2.2 + ph);
-    const down = -0.4;
-    (a.bones[0] as THREE.Matrix4).compose(v1.set(0, down - 0.004 * breath, 0), q1.setFromEuler(e1.set(0.14 * Math.sin(ph * 5) + 0.03 * Math.sin(t * 0.9 + ph * 2), 0, -0.04, 'YXZ')), new THREE.Vector3(1, 1 + 0.05 * breath, 1.06 + 0.08 * breath));
-    HIPS.forEach((hip, i) => {
-      const m = a.bones[i + 1] as THREE.Matrix4;
-      // Folded: the leg is a third of its height. A foreleg lies out ahead of the chest with its paw flat on the ground; a hind foot
-      // lies just ahead of its hip.
-      const out = i < 2 ? 0.62 : 0.12;
-      const slope = i < 2 ? -0.62 : 0;
-      const side = hip[2] > 0 ? 1 : -1;
-      if (i < 2) about(m, hip, -0.2 * side, 0, 1.42, [0.02, down - 0.004 * breath, 0.06 * side]);
-      else m.set(1, slope, 0, out, 0, 0.36, 0, 0.0, 0, 0, 1, side * 0.06, 0, 0, 0, 1);
-    });
-    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0.25 * Math.sin(ph * 3) + 0.2 * Math.sin(t * 0.93 + ph), 0.5 * Math.sin(ph * 7) + 0.32 * Math.sin(t * 0.71 + ph * 4), -0.3 + 0.14 * Math.sin(t * 1.2 + ph), [0, down, 0]);
-    a.coat.set(0.8, 0.04, 0.012 + shiver, 0.3);
-    a.writhe.set(0.6, 0, 0, 0);
+    const j = a.joints;
+    still(a);
+    const breath = Math.sin(t * 2.5 + ph) + 0.25 * Math.sin(t * 5.0 + ph * 2);
+    const standing = a.role.act === 'stand';
+    const sway = standing ? 0.05 * Math.sin(t * 1.05 + ph * 3) + 0.018 * Math.sin(t * 2.3 + ph) : 0;
+    const fore = standing ? 0.03 * Math.sin(t * 0.7 + ph * 2) : 0;
+    const settle = 0.012 * Math.sin(t * 0.9 + ph * 2);
+    (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.004 * breath, sway);
+    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.012 * breath, 1 + 0.035 * breath, 1 + 0.05 * breath));
+    if (standing)
+      for (let i = 0; i < 4; i++) {
+        lean(a.bones[4 + i] as THREE.Matrix4, j.tops[i] as V3, fore, sway);
+        (a.bones[8 + i] as THREE.Matrix4).copy(a.bones[4 + i] as THREE.Matrix4);
+      }
+    const ny = 0.16 * Math.sin(t * 0.83 + ph * 2) + 0.07 * Math.sin(t * 1.9 + ph) + look;
+    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03;
+    about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
+    about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
+    (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
+    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.0 : 0.1);
+    a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
   /** A walk in which each foot stands still on the ground while the trunk goes over it. `dist` is metres gone, `speed` metres a second. */
-  const STRIDE = 1.05;
+  const STRIDE = 0.5;
   const DUTY = 0.62;
   const OFFSETS = [0.5, 0, 0.75, 0.25];
   const walk = (a: Animal, dist: number, speed: number): void => {
-    const size = a.role.size;
-    const cycle = dist / (STRIDE * size) + a.role.phase;
+    const j = a.joints;
+    still(a);
+    const cycle = dist / (2 * STRIDE * a.role.size) + a.role.phase;
     const go = Math.min(1, speed / 0.5);
-    const bob = 0.022 * Math.cos(cycle * 4 * Math.PI) * go;
-    // The trunk goes over to the side whose feet are down, and rolls with it.
-    const swayZ = 0.045 * Math.sin(cycle * 2 * Math.PI + 0.6) * go;
-    (a.bones[0] as THREE.Matrix4).compose(v1.set(0, bob, swayZ), q1.setFromEuler(e1.set(swayZ * 1.2, 0, 0.03 * Math.sin(cycle * 4 * Math.PI + 1) * go, 'YXZ')), ONE);
-    HIPS.forEach((hip, i) => {
+    const bob = 0.02 * Math.cos(cycle * 4 * Math.PI) * go;
+    // The trunk goes over to the side whose feet are down, and rolls with it; the shoulders and the hips work against each other.
+    const swayZ = 0.04 * Math.sin(cycle * 2 * Math.PI + 0.6) * go;
+    const twist = 0.07 * Math.sin(cycle * 2 * Math.PI) * go;
+    about(a.bones[0] as THREE.Matrix4, j.hip, swayZ * 1.2, -twist, 0.025 * Math.sin(cycle * 4 * Math.PI + 1) * go, [0, bob, swayZ]);
+    about(a.bones[1] as THREE.Matrix4, j.chest, swayZ * 1.2, twist, -0.02 * Math.sin(cycle * 4 * Math.PI + 1) * go, [0, bob, swayZ]);
+    for (let i = 0; i < 4; i++) {
+      const top = j.tops[i] as V3;
+      const knee = j.knees[i] as V3;
       const p = (((cycle + (OFFSETS[i] as number)) % 1) + 1) % 1;
       let x: number;
       let lift = 0;
       if (p < DUTY) x = STRIDE * (0.5 - p / DUTY);
       else {
         const k = (p - DUTY) / (1 - DUTY);
-        const ease = k * k * (3 - 2 * k);
-        x = STRIDE * (-0.5 + ease);
-        lift = 0.16 * Math.sin(Math.PI * k) * (0.6 + 0.4 * k);
+        x = STRIDE * (-0.5 + k * k * (3 - 2 * k));
+        lift = Math.sin(Math.PI * k);
       }
-      leg(a.bones[i + 1] as THREE.Matrix4, hip, x * 0.5 * go, 0, lift * go, 0, bob, swayZ);
-    });
-    about(a.bones[5] as THREE.Matrix4, NECK_AT, 0, 0.06 * Math.sin(cycle * 2 * Math.PI), -0.12 + 0.06 * Math.sin(cycle * 4 * Math.PI + 0.8) * go, [0, bob, swayZ]);
-    a.coat.set(1.2, 0.55, 0.01, 0.15);
+      // The whole leg swings about its top to carry the foot x ahead of where it rests, and stretches so that a foot on the ground stays
+      // on it; in the air the lower leg folds and the foot comes up.
+      const swing = Math.atan2(x * go, top[1]);
+      const upper = a.bones[4 + i] as THREE.Matrix4;
+      about(upper, top, 0, 0, swing, [0, bob, swayZ], v2.set(1, (1 / Math.cos(swing)) * (1 - 0.1 * lift * go), 1));
+      about(m3, knee, 0, 0, -0.75 * lift * go * (i < 2 ? -1 : 1));
+      (a.bones[8 + i] as THREE.Matrix4).copy(upper).multiply(m3);
+    }
+    about(a.bones[2] as THREE.Matrix4, j.chest, 0, 0.05 * Math.sin(cycle * 2 * Math.PI), 0.05 * Math.sin(cycle * 4 * Math.PI + 0.8) * go, [0, bob, swayZ]);
+    about(m3, j.head, 0, 0, 0.06 * Math.sin(cycle * 4 * Math.PI + 1.6) * go);
+    (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
+    a.coat.set(1, 0.6, 0, 0.1);
     a.writhe.set(1, 0, 0, 0);
   };
 
-  // The dead one does not move: its bones are set once. It lies collapsed across the frame, long and low, half on its far side so the
-  // burned flank faces the lens and the sky: the trunk slack and flattened, the legs of the near side thrown out toward the lens with
-  // their paws on the ground, a far foreleg out from under the chest, the neck fallen forward with the face on the rock.
-  const ROLL = 0.45;
-  const SLACK = 0.72;
-  /** How high the middle of its trunk lies over the ground, and so how high its own origin does, in its own metres. */
-  const REST = 0.9 * SLACK;
-  const LIFT = 0.25 - REST * Math.cos(ROLL);
-  const over = (v: [number, number, number]): number => LIFT + v[1] * Math.cos(ROLL) - v[2] * Math.sin(ROLL);
-  /** A leg thrown out: swung `fore` toward the head, twisted `twist` about itself, and let fall until its paw is `paw` over the ground. */
-  const thrown = (bone: number, fore: number, twist: number, long: number, paw: number, shift: [number, number, number]): void => {
-    const hip = HIPS[bone - 1] as [number, number, number];
-    const top = over([hip[0] + shift[0], hip[1] + shift[1], hip[2] + shift[2]]);
-    const fallen = Math.PI / 2 - ROLL + Math.asin(Math.min(1, Math.max(-1, (paw - top) / (LEG_TOP * long * Math.cos(fore)))));
-    about(dead.bones[bone] as THREE.Matrix4, hip, fallen, twist, fore, shift, new THREE.Vector3(1, long, 1));
-  };
-  (dead.bones[0] as THREE.Matrix4).makeScale(1.1, SLACK, 1.15);
-  const SUNK = -LEG_TOP * (1 - SLACK);
-  thrown(1, 0.25, -0.2, 1.2, 0.2, [0.02, SUNK, 0.05]);
-  thrown(2, 1.0, 0.1, 1.25, 0.2, [0.1, SUNK, -0.2]);
-  thrown(3, 0.25, 0, 1.1, 0.2, [0, SUNK, 0.05]);
-  thrown(4, 0.7, 0, 0.9, 0.2, [0, SUNK, -0.1]);
-  about(dead.bones[5] as THREE.Matrix4, NECK_AT, 0.2, 0.3, -0.12, [0.04, -NECK_AT[1] * (1 - SLACK), 0]);
-  dead.coat.set(0.88, 0.65, 0.0, 0.1);
+  still(dead);
+  dead.coat.set(1, 0.35, 0.0, 0.12);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
   const lie3 = new THREE.Vector3();
   const tilt = new THREE.Quaternion();
 
   const walked = (u: number): number => (u < -0.8 ? 0 : u < 0.4 ? 0.79 * (u + 0.8) ** 2 : 1.14 + 1.9 * (u - 0.4));
-  const size = new THREE.Vector2();
-  let height = 0;
 
   return {
     setTime: (seconds) => {
@@ -297,13 +335,11 @@ export function create(ctx: Context): Piece {
         const gone = i === 0 ? walked(seconds - CANAL_KEY_AT) : 0;
         const at = tube(h.d + gone, h.l, 0);
         a.ground.x = FLOOR;
-        // As it sets off it turns to the way it goes.
         place(a, [at[0], FLOOR, at[2]], i === 0 ? h.yaw + (along - h.yaw) * smooth(-0.8, 1.4, seconds - CANAL_KEY_AT) : h.yaw);
-        if (h.act === 'lie') lie(a, seconds, 0.05 * start);
-        else if (i === 0 && gone > 0.002) {
+        if (i === 0 && gone > 0.002) {
           const u = seconds - CANAL_KEY_AT;
           walk(a, gone, u < 0.4 ? 1.58 * (u + 0.8) : 1.9);
-        } else stand(a, seconds, 0.35 * start * (i % 2 ? 1 : -1), 0.06 * start);
+        } else idle(a, seconds, 0.3 * start * (i % 2 ? 1 : -1), 0.012 * start);
         ctx.rig.setDisc(discs, i, at[0], at[2], 1.1 * a.role.size, 0.75);
       });
 
@@ -314,21 +350,20 @@ export function create(ctx: Context): Piece {
         const free = first.s - 330 + 2.6 * seconds - i * 7;
         const s = Math.min(free, end);
         const l = trail(s);
-        const f = frameAt(s);
-        const y = ctx.rig.land.height(...(world(s, l, 0).filter((_, k) => k !== 1) as [number, number]));
+        const w = world(s, l, 0);
+        const y = ctx.rig.land.height(w[0], w[2]);
         const p = world(s, l, y);
         const ahead = world(s + 1, trail(s + 1), 0);
-        void f;
         a.ground.x = y;
         place(a, p, Math.atan2(-(ahead[2] - p[2]), ahead[0] - p[0]));
         if (free < end) walk(a, s - (first.s - 330), 2.6);
-        else stand(a, seconds, 0, 0);
+        else idle(a, seconds, 0, 0);
         ctx.rig.setDisc(discs, HUDDLE.length + i, p[0], p[2], 1.0 * a.role.size, 0.7);
       });
 
       // The dead one lies on the land as it is there: the slope under it turns it, so nothing of it hangs in the air or is under the snow.
-      const cx = LIES_AT[0];
-      const cz = LIES_AT[2];
+      const cx = BODY_AT[0];
+      const cz = BODY_AT[2];
       const E = 0.8;
       const land = ctx.rig.land;
       const sx = (land.height(cx + E, cz) - land.height(cx - E, cz)) / (2 * E);
@@ -337,21 +372,12 @@ export function create(ctx: Context): Piece {
       dead.ground.set(gy - sx * cx - sz * cz, sx, sz, 0);
       lie3.set(-sx, 1, -sz).normalize();
       tilt.setFromUnitVectors(UP, lie3);
-      q1.setFromEuler(e1.set(ROLL, -(carcassAxis + 180) * RAD, 0, 'YXZ')).premultiply(tilt);
-      const up = LIFT * dead.role.size;
-      dead.group.position.set(cx + lie3.x * up, gy + lie3.y * up, cz + lie3.z * up);
+      q1.setFromEuler(e1.set(0, -(carcassAxis + 180) * RAD, 0, 'YXZ')).premultiply(tilt);
+      dead.group.position.set(cx, gy, cz);
       dead.group.quaternion.copy(q1);
       dead.group.scale.setScalar(dead.role.size);
       dead.group.updateMatrixWorld(true);
       ctx.rig.setDisc(discs, HUDDLE.length + CROSSING, cx, cz, 1.5 * dead.role.size, 0.8);
-      void CARCASS;
-    },
-    beforeSample: (renderer, camera) => {
-      renderer.getDrawingBufferSize(size);
-      pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
-    },
-    resize: (_w, h) => {
-      height = h;
     },
   };
 }
