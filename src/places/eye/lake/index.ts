@@ -366,26 +366,26 @@ void main() {
     float since = max(uLeave.y, 0.05);
     float phase = 132.0 * since * since / max(r, 8.0);
     float wavenumber = phase / max(r, 8.0);
-    float train = 0.1 * exp(-r / 190.0) * exp(-since / 5.5) * smoothstep(1.1, 0.35, wavenumber) * smoothstep(0.0, 1.2, uLeave.y) * cos(phase + 3.0 * vnoise(p.xz / 70.0 + 9.0));
-    train *= 0.3 + 1.4 * vnoise(out2 * 2.6 + r / 110.0 + 4.0);
+    float train = 0.1 * exp(-r / 190.0) * exp(-since / 5.5) * smoothstep(1.7, 0.6, wavenumber) * smoothstep(0.0, 1.2, uLeave.y) * cos(phase + 1.3 * vnoise(p.xz / 90.0 + 9.0));
+    train *= 0.25 + 1.5 * vnoise(out2 * 1.7 + r / 160.0 + 4.0);
     vec2 leaning = heave + out2 * train;
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east.
     float toLit = -dot(leaning, vec2(0.9, -0.44));
     float face = clamp(4.0 * toLit, -1.0, 1.0);
-    c += uSunColour * vec3(0.0024, 0.0027, 0.0036) * max(face, 0.0) * downward;
-    c *= 1.0 - 0.34 * max(-face, 0.0) * downward;
+    c += uSunColour * vec3(0.0017, 0.002, 0.0027) * max(face, 0.0) * downward;
+    c *= 1.0 - 0.28 * max(-face, 0.0) * downward;
     // Lanes where the air has roughened the water are a little paler: they take more of the sky.
     c += skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * gust * downward;
     // What rose is going down the shaft: pale, long, wider than the frame, lost in the blue as it sinks.
     float sunkBy = uLeave.z;
     vec2 pp = (p.xz - vec2(-46.0, 28.0)) * (1.0 + sunkBy / 420.0);
     vec2 along = vec2(dot(pp, vec2(0.86, -0.5)), dot(pp, vec2(0.5, 0.86)));
-    along.y += 26.0 * sin(along.x / 120.0 + 0.6) + 30.0 * (vnoise(pp / 64.0 + 2.0) - 0.5);
+    along.y += 34.0 * sin(along.x / 41.0 + 0.6) + 56.0 * (vnoise(pp / 58.0 + 2.0) - 0.5);
     float soft = 0.12 + sunkBy / 110.0;
-    float girth = 54.0 * (1.0 - 0.45 * smoothstep(-80.0, 380.0, along.x)) * (0.8 + 0.4 * vnoise(vec2(along.x / 47.0, 3.0)));
-    float body = (1.0 - smoothstep(1.0 - soft, 1.0 + soft, abs(along.y) / girth)) * smoothstep(-470.0, -380.0, along.x) * (1.0 - smoothstep(330.0, 480.0, along.x));
+    float girth = 50.0 * (1.0 - 0.5 * smoothstep(-80.0, 380.0, along.x)) * (0.65 + 0.7 * vnoise(vec2(along.x / 61.0, 3.0)));
+    float body = exp(-1.4 * pow(abs(along.y) / girth, 2.0 + 0.5 / (soft + 0.3))) * smoothstep(-470.0, -300.0, along.x) * (1.0 - smoothstep(240.0, 480.0, along.x));
     float folds = 0.5 + 0.5 * vnoise(vec2(along.x / 13.0 + 2.0 * vnoise(pp / 21.0), along.y / 34.0)) * (0.6 + 0.4 * vnoise(pp / 5.0));
-    float rounded = sqrt(max(1.0 - pow(abs(along.y) / girth, 2.0), 0.0));
+    float rounded = exp(-1.2 * pow(along.y / girth, 2.0));
     vec3 paleLight = vec3(0.62, 0.6, 0.52) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.12 / 3.14159) * exp(-uAbsorb * sunkBy * 1.2);
     c += paleLight * body * (0.35 + 0.65 * rounded) * (0.45 + 0.55 * folds) * downward;
     // Its air comes up after it: small white flecks that open on the surface over where it went and are gone.

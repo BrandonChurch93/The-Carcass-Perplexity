@@ -115,15 +115,15 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float big = lidBig(q);
     vec2 f = comb * q;
     float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
-    float n = clamp((0.56 * big + 0.44 * fine - 0.5) * 1.7 + 0.5, 0.0, 1.0);
-    float cover = smoothstep(open, open + 0.34, n);
+    float n = clamp((0.56 * big + 0.44 * fine - 0.5) * 1.6 + 0.5, 0.0, 1.0);
+    float cover = smoothstep(open, open + 0.4, n);
     if (cover <= 0.0) continue;
     float a = 1.0 - exp(-layer.z * thin * cover * cover * min(near / 0.02, 1.0) / down);
     // The low sun reaches a place on the sheet when the cloud toward it stands no higher: the hollows lie in long soft shade.
     vec2 toSun = q + sunSide * 0.035;
     float sunward = 0.56 * lidBig(toSun) + 0.44 * 0.5 * vnoise(comb * toSun * 19.0 + layer.x * 37.0 + d * 3.0) + 0.11;
-    float lit = smoothstep(-0.07, 0.07, 0.56 * big + 0.44 * fine - sunward + (cover - 0.6) * 0.05) * mix(0.35, 1.0, tr);
-    vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.85 + 0.3 * fine);
+    float lit = smoothstep(-0.05, 0.05, 0.56 * big + 0.44 * fine - sunward + (cover - 0.7) * 0.06) * mix(0.35, 1.0, tr);
+    vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.62 + 0.75 * n);
     vec3 colour = mix(within * (0.75 + 0.5 * fine), top, above);
     sum += tr * a * colour;
     tr *= 1.0 - a;
