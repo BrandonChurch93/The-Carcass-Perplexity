@@ -42,10 +42,10 @@ const matsAt = at(196, front - 42);
 const edgeAt = at(197, lipAt(197 * DEG) + 7.5);
 
 export const KEYS = {
-  wide: look(standOn(150, 0, 6.2), 18, -5.06, 40),
+  wide: look(standOn(150, 0, 6.2), 18, -4.6, 40),
   mats: look([matsAt[0], 1.1, matsAt[1]], 8, -11.2, 45),
   edge: look([edgeAt[0], 2.6, edgeAt[1]], 2, -13.6, 40),
-  shore: look(onShore(-75, 4.5, 1.9), SHORE_HEADING, -5.5, 25),
+  shore: { ...look(onShore(-75, 11, 2.1), SHORE_HEADING, -5.5, 25), aperture: 0.03, focus: 34 },
   centre: look(above(0, front + 98, 2.3), 0, CENTRE_PITCH, 8),
 };
 
@@ -73,6 +73,9 @@ function leave(frame: number): Pose {
   const f = flight(frame, FLIGHT);
   const reach = 100;
   return {
+    // A long lens held on the centre of the lake: the two that stand under it are soft.
+    aperture: 0.04,
+    focus: Math.max(30, Math.hypot(f.y, f.z)),
     position: [0, f.y, f.z],
     aim: [0, f.y - f.sin * reach, f.z - f.cos * reach],
     up: [0, f.cos, -f.sin],

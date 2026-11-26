@@ -172,6 +172,9 @@ export function createRig(t0: number): Rig {
   const emitterPlaces = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector4(0, -1000, 0, 0));
   const emitterRadiance = Array.from({ length: MAX_EMITTERS }, () => new THREE.Vector3());
 
+  // What the mirror uniform holds until the brine has drawn its own, and while it draws it (a picture cannot be read while it is drawn into).
+  const blank = new THREE.DataTexture(new Uint8Array([200, 200, 205, 255]), 1, 1, THREE.RGBAFormat, THREE.UnsignedByteType);
+  blank.needsUpdate = true;
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
     uPulse: { value: 0 },
@@ -190,6 +193,9 @@ export function createRig(t0: number): Rig {
     // The air pales the distance toward this, the horizon's white.
     uAirColour: { value: new THREE.Vector3(0.84, 0.845, 0.87) },
     uAir: { value: new THREE.Vector4(AIR.density, AIR.thin, 0, 0) },
+    uMirror: { value: 0 },
+    tMirror: { value: blank },
+    uMirrorMatrix: { value: new THREE.Matrix4() },
     uEmitterCount: { value: 0 },
     uEmitters: { value: emitterPlaces },
     uEmitterRadiance: { value: emitterRadiance },

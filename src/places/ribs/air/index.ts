@@ -92,8 +92,10 @@ void main() {
   for (int i = 0; i < ${STEPS}; i++) {
     float f = (float(i) + 1.0) / float(${STEPS});
     float t1 = span * f * f;
-    vec3 p = ro + rd * mix(t0, t1, 0.25 + 0.5 * jitter);
-    float a = 1.0 - exp(-thickness(p.y) * (t1 - t0));
+    float tm = mix(t0, t1, 0.25 + 0.5 * jitter);
+    vec3 p = ro + rd * tm;
+    // Air shows by distance: what stands within a hundred and fifty metres keeps its blacks.
+    float a = 1.0 - exp(-thickness(p.y) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
     float lit = sunAt(p, landAt(p.xz));
     sum += trans * a * (ambient + sunlit * lit);
     trans *= 1.0 - a;
@@ -162,7 +164,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.0009, 170, 0.0003, 12) },
+      uAir: { value: new THREE.Vector4(0.0007, 170, 0.0003, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,

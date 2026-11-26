@@ -23,7 +23,8 @@ const ARRIVAL_PITCH = 0.2;
 
 const establish = looking(onGround(-180, 110, 1.9), ARRIVAL_YAW, ARRIVAL_PITCH, 48);
 const COLONY_SIDE: [number, number] = [-0.8, 0.6];
-const COLONY_HEIGHT = 44;
+// Between two ledges (they stand every 2.1 m): a ledge seen along its own top is a row of bars.
+const COLONY_HEIGHT = 45.2;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
 const colony = looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36);
 const FEEDING_YAW = 10;
