@@ -16,13 +16,13 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [1, 0.7, 0.8, 0.75, 0.18, 0.15];
+const FLASH_OF = [1.5, 0.8, 0.9, 0.85, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
-const CLOUD_OF = [0.6, 0.7, 0.8, 0.75, 0.45, 0.85];
-const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 0.85];
-const ROUND_OF = [0.35, 0.5, 0.6, 0.7, 0.3, 0.15];
+const CLOUD_OF = [0.8, 0.5, 0.8, 0.75, 0.45, 0.85];
+const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
+const ROUND_OF = [0.02, 0.2, 0.4, 0.7, 0.02, 0.15];
 /** The glow in the cloud before the first stroke, as a share of the breakdown; and how far down from the channel's top toward its middle
  * the cloud's glow stands: the sixth is seen through a mouth that hides the top of the storm. */
 const BEFORE_OF = [0.03, 0.03, 0.03, 0.03, 0.03, 0.06];
@@ -194,7 +194,7 @@ void main() {
 
 /** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
 const BLOOM_PIXELS = 90;
-const BLOOM_GLARE = 0.004;
+const BLOOM_GLARE = 0.0008;
 const HALO_VERTEX = /* glsl */ `
 #define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;

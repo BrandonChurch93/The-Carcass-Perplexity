@@ -175,15 +175,15 @@ vec3 strikeIrradiance(vec3 p, vec3 n) {
   float facing = clamp((dot(n, l) + 0.06) / 1.06, 0.0, 1.0);
   if (facing <= 0.0) return near;
   // Faces square to the channel take the most by far: the light models the rock, it does not coat it.
-  facing *= sqrt(facing);
+  facing *= facing;
   // The land between the face and the channel: the ray is walked toward the light and is shaded wherever the ground stands over it.
   float lit = 1.0;
   float reach = min(dist * 0.9, 1400.0);
-  for (int i = 0; i < 7; i++) {
-    float f = (float(i) + 1.0) / 7.0;
-    float t = reach * f * f;
+  for (int i = 0; i < 5; i++) {
+    float f = (float(i) + 1.0) / 5.0;
+    float t = reach * f * f * f;
     vec3 q = p + l * t;
-    lit = min(lit, smoothstep(-1.5 - 0.04 * t, 0.5 + 0.01 * t, q.y - landAt(q.xz).r + 1.0 + 0.02 * t));
+    lit = min(lit, smoothstep(-0.6 - 0.015 * t, 0.3 + 0.004 * t, q.y - landAt(q.xz).r + 0.5 + 0.008 * t));
     if (lit <= 0.0) return near;
   }
   return near + STRIKE_COLOUR * (uStrikeAt.w * facing * lit / (1.0 + dist * dist / (STRIKE_REACH * STRIKE_REACH)));

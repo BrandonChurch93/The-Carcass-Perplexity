@@ -93,7 +93,7 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
   // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.
   g *= 1.0e-7 * (uSkyStage.z > 0.0 ? 0.2 : 1.0);
   // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
-  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.6 * small / (1.0 + small));
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.25 * small / (1.0 + small));
 }
 
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
@@ -287,7 +287,7 @@ void main() {
     if (uStrikeAt.w > 0.0) {
       vec3 toStroke = uStrikeAt.xyz - p;
       float span2 = dot(toStroke, toStroke);
-      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.036 * head * head * grainS / (1.0 + span2 / 9.0e6));
+      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.03 * head * head * grainS / (1.0 + span2 / 1.0e6));
     }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
