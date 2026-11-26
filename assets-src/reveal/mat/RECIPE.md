@@ -1,10 +1,12 @@
 # Material pictures of the Reveal
 
-The material pictures and the sky picture of the Reveal, made by the Builder on 2026-11-25 for every owner of the place to read. Each began as one generated picture: a flat surface seen straight on under even light, 1254 px square, or a sky, 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile and writes a colour picture and a data picture from it, by the method of the Heart's materials. The list and every prompt are in `assets-src/materials/spec.py`.
+The working pictures of the Reveal, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 5 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
-The Reveal's pictures are seen straight down from orbit. Cloud pictures lie on a black sea: their brightness is the cover, after the dark floor of the sea is taken off. `cells`, `streets` and `veil` repeat; `front`, `storm` and `cyclone` are plates, one whole feature each, written at their own size and not repeated. The ground pictures (`range`, `plain`, `badland`, `shelf`, `redflat`) are detail for the provinces of the continent and repeat.
+The Reveal's pictures are seen straight down from orbit. Cloud pictures lie on a black sea: their brightness is the cover, after the dark floor of the sea is taken off. `cells`, `streets`, `veil`, `popcorn` and `streaks` repeat; `front`, `storm`, `cyclone` and `wisps` are plates, one whole feature each, written at their own size and not repeated. The ground pictures (`range`, `plain`, `badland`, `shelf`, `redflat`) and the water pictures (`glitter`, `lakewater`) are detail for the provinces of the continent and repeat.
 
-How to read them: the colour picture is sRGB. In the data picture red and green are the slope on x and y (0.5 is level) and blue is height. `metres` in `materials.json` is the real width one repeat stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
+How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
+
+A plate is one whole picture and does not repeat: a far backplate (the far distance of a view, with its own sky and a level horizon), a feature sheet (one thing whole on black under flat light), or a ground plate (one piece of ground from straight above). Where a plate has a relief picture, `<name>-h.png`, it is grey and the size of the colour picture: white is highest (ground plates) or nearest (feature sheets and faces), black is lowest or furthest, and on a feature sheet the black round the subject is no subject. The relief was made by a second call from the colour picture, so it lies on it within a few pixels and its greys are a guess at the form, good for slope and for parallax, not a measured height. Where the generated picture came with a clear background, the plate is laid on black and `<name>-a.png` is its cover: grey, white where the subject is. The animals in these pictures have no eyes and no ears.
 
 ## `public/assets/reveal/mat/cells.jpg` and `public/assets/reveal/mat/cells-nh.png`
 
@@ -160,11 +162,81 @@ Takes: 1 made, take 1 kept.
 Why this one: the red flats of the marsh province seen from orbit.
 Date: 2026-11-25
 
+## `public/assets/reveal/mat/popcorn.jpg` and `public/assets/reveal/mat/popcorn-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/popcorn.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-2-skull-massif.jpg`, `references/drafts/working/real/orb-modis-popcorn.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Cloud seen straight down from orbit in an orthographic view: a field of small fair-weather cumulus over open ocean, about 250 kilometres across. Thousands of separate small white puffs, each 1 to 4 kilometres across, in loose clumps and short streets with clear black gaps between them, denser in some parts of the field and sparse in others, every puff lumpy with a soft edge. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the popcorn field of the lower keys (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/streaks.jpg` and `public/assets/reveal/mat/streaks-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/streaks.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-4-titan-from-orbit.jpg`, `references/drafts/working/real/orb-modis-streets.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Cloud seen straight down from orbit in an orthographic view: the fine wind-drawn streaks and flecks of small cloud that cover a whole sea, about 1,600 kilometres across. Thin, torn white streaks and beaded lines all drawn roughly one way from left to right, with brighter knots, small flecks between them and wide black gaps, never ruled straight and never evenly spaced. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the wind streaks that cover the whole sea in the widest key (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/glitter.jpg` and `public/assets/reveal/mat/glitter-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/glitter.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-4-titan-from-orbit.jpg`, `references/drafts/working/real/orb-iss39-dahlak.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+A texture seen straight down from orbit in an orthographic view: open sea in sunglint, about 400 kilometres across. A silver-grey sheen over dark blue water, broken by dark smooth slicks in long curved bands, fine parallel swell lines, wind lanes and patches of rougher brighter water. No cloud, no land, no ships. The sea fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the world this sea belongs to: take the colour of its sea from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real sunglint on real water. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the sea in the sun, for a glint that has texture (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/lakewater.jpg` and `public/assets/reveal/mat/lakewater-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/lakewater.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-1-above-the-lake.jpg`, `references/drafts/working/real/orb-iss39-dahlak.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+A texture seen straight down from high above in an orthographic view: the surface of a deep lake, about 20 kilometres across. Black-blue water with broad fields of fine wind ripple, darker smooth patches, cat's paws where gusts touch it, and a few faint pale foam lines. No shore, no land, no boats, no cloud. The water fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the lake this water belongs to: take its colour from there, and nothing of its composition. The second reference image is a real photograph from orbit: it is the standard for how a camera records real water from above. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the water of the lake in the first frames of the rise (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/wisps.jpg`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/wisps.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-2-skull-massif.jpg`, `references/drafts/working/real/orb-modis-sgeorgia-streets.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Vapour seen straight down from orbit in an orthographic view, on a pure black background: three thin translucent trails of white vapour that rise from three points close together near the left edge of the frame and drift to the right for about 500 kilometres, curling, braiding and thinning as they go, each ragged and fibrous, the frame about 600 kilometres wide. Black means nothing is there. Nothing else is in the frame: no land, no sea detail, no cloud field. The first reference image is the world this vapour belongs to: take its softness from there. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real thin plumes. Photographic, sharp, no text, no logo, no border.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the vapour trails of the throat (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
 ## `public/assets/reveal/mat/materials.json`
 
 Made by: `assets-src/materials/make-materials.mjs`.
 From: the pictures above.
 Prompt or command: `node assets-src/materials/make-materials.mjs reveal`.
 
-What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number.
-Date: 2026-11-25
+What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number; for each plate its size in pixels, the real width it stands for and the name of its relief picture where it has one.
+Date: 2026-11-26
