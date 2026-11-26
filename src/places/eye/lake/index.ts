@@ -379,7 +379,7 @@ void main() {
     c += uSunColour * vec3(0.0026, 0.0026, 0.003) * max(face, 0.0) * downward;
     c *= 1.0 - 0.4 * max(-face, 0.0) * downward;
     // And the steepest of those faces throws the low sun itself: a small hard glint.
-    c += uSunColour * 0.03 * smoothstep(0.078, 0.11, -dot(ripple + 0.3 * out2 * train, vec2(0.9, -0.44))) * downward;
+    c += uSunColour * 0.03 * smoothstep(0.112, 0.14, -dot(ripple + 0.3 * out2 * train, vec2(0.9, -0.44))) * downward;
     // Air comes up from what went down: a tight knot of small bubbles that opens on the surface into one thin ring and is gone.
     vec2 knotAt = p.xz / 34.0;
     vec2 knot = floor(knotAt);
