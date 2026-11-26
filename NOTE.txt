@@ -1,7 +1,7 @@
-2026-11-25 23:33 UTC
-work at 1d79a9c on agent/marsh-life
-Minute 131. Six points first pass: eyes gone, back sags, wet red-brown lower half, 14 thin feelers on the mud, dead with ribs and dark stains, close plume a large hanging mop. Wrong still: marsh-2 plume too long and worm-like, hip of the hero a ball, wide-key wallowers reddish bales, stuck one crack net too even.
-look-1.jpg = out/work/h-marsh-3.jpg
-look-2.jpg = out/work/h-marsh-2.jpg
-look-3.jpg = out/work/h-marsh-4.jpg
-look-4.jpg = out/work/h-marsh-0.jpg
+2026-11-26 00:33 UTC
+work at 77d706b on agent/marsh-life
+version 3 at minute 190: heads lift in marsh-04, no leg cuffs, Builder hide tile, ragged plume, stuck one heaves
+look-1.jpg = out/work/c-marsh-3.jpg
+look-2.jpg = out/work/c-marsh-2.jpg
+look-3.jpg = out/work/c-marsh-4.jpg
+look-4.jpg = out/work/s-marsh-04.jpg
