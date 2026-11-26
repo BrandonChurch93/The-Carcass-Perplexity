@@ -152,8 +152,9 @@ void main() {
     float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
     albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
     // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
-    float heart = (1.0 - smoothstep(0.12, 0.5, d + 0.4 * (fine - 0.5))) * on;
-    albedo = mix(albedo, vec3(0.34, 0.028, 0.02) * (0.45 + 1.1 * pic.r), heart);
+    float heart = (1.0 - smoothstep(0.3, 0.62, d + 0.4 * (fine - 0.5))) * on;
+    albedo = mix(albedo, vec3(0.006, 0.005, 0.005), (1.0 - smoothstep(0.55, 1.15, d + 0.3 * (fine - 0.5))) * on * 0.9);
+    albedo = mix(albedo, vec3(0.15, 0.022, 0.014) * (0.35 + 1.2 * pic.r), heart);
     raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
@@ -252,7 +253,7 @@ void main() {
   float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5));
   float lies = frost * smoothstep(0.1, 0.5, t) * smoothstep(0.9, 1.7, lum + 0.35 * frost);
   float bead = smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w);
-  float white = clamp(max(lies, bead) * (1.0 - singe), 0.0, 1.0);
+  float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
@@ -347,8 +348,8 @@ void main() {
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
-  albedo = mix(albedo, vec3(0.075, 0.062, 0.062) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
-  rime = max(rime, uWrithe.y * smoothstep(0.75, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)) * 0.8);
+  albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
+  rime = mix(rime, 0.3 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)), uWrithe.y);
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

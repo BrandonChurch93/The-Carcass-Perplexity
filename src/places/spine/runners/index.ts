@@ -226,7 +226,7 @@ export function create(ctx: Context): Piece {
   const deadSkin = skinOf(DEAD, 0.016).body;
   const dj = deadSkin.joints;
   const wd = (d: 0 | 1 | 2): number => (dj.chest[d] as number) - 0.22 * (dj.fwd[d] as number) - 0.1 * (dj.up[d] as number) - 0.2 * (dj.right[d] as number);
-  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.34];
+  const wound: [number, number, number, number] = [wd(0), wd(1), wd(2), 0.4];
   const dead = make({ act: 'dead', pose: DEAD, size: 1.05, cell: 0.016, clumps: 2400, long: 0.8, tone: [0.92, 0.77, 0.52], phase: 0, inside: false, burn: wound, tendrils: 110 });
 
   const burned = scorch(ctx);
