@@ -1,6 +1,6 @@
 # The Eye: hand-over from eye_owner_3 (version 3 of wave 3)
 
-Honest state: round 18 judged the place I received at match 3, filmed 4, motion 6, jury 0 of 25. This version has not been judged. Read "Still wrong" first.
+Honest state: round 18 judged the place I received at match 3, filmed 4, motion 6, jury 0 of 25. This version has not been judged. Measures at draft tier in uhd are green (M3 1.84, 1.86, 3.72, 3.31, 1.86 for eye-0 to eye-4); the final-tier measure of frame 8412 was started and stopped after 15 minutes without a result, so it is not known. Read "Still wrong" first.
 
 ## How each part is drawn (all under `src/places/eye/`)
 
@@ -51,7 +51,7 @@ Far picture per shot group; built land beyond `uNear` hidden while a plate hangs
 
 ## Cost, seconds a sample at 3840 x 2160, frame 8412, draft tier
 
-`npm run -s cost -- --key eye-0 --format uhd --tier draft`. Received 16.01 on this machine; now COST_WHOLE (empty stage 1.75; above it: lake COST_LAKE, land COST_LAND, scree COST_SCREE, sky 1.05, drinkers 0.26, stream 0.14). Saved by: lip radius read once a pixel, lap slots counted, scree and shore relief read only where seen, the mats picture not read from the rim, the long heave and the fine crust made of numbers from the rim. The aim of 7 is far off: the land's 4 s for a third of the frame and the water's 5.6 s are the places to look (texture reads over large areas are the cost, about 0.2 s each).
+`npm run -s cost -- --key eye-0 --format uhd --tier draft`. Received 16.01 on this machine; now 15.11 and 15.46 in two runs (16.00 at version 2), which is 3 to 6 percent under and not a clear margin (empty stage 1.75; above it: lake 5.7, land 4.2, scree 1.8, sky 1.05, drinkers 0.26, stream 0.14). Saved by: lip radius read once a pixel, lap slots counted, scree and shore relief read only where seen, the mats picture not read from the rim, the long heave and the fine crust made of numbers from the rim. The aim of 7 is far off: the land's 4 s for a third of the frame and the water's 5.6 s are the places to look (texture reads over large areas are the cost, about 0.2 s each).
 
 ## What I would do next, in order
 
