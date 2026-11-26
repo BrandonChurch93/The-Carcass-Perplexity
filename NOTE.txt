@@ -1,5 +1,5 @@
-2026-11-26 12:36 UTC
-work at f8ccf06 on agent/film-loop
-v2 f8ccf06: loop 0 hd beside film 1241; loop 0 uhd final crops of a feeder and of the far blades. Missing: the wash, animal idles; feeders hold too still at card size
-look-1.jpg = out/work/v2-pair.jpg
-look-2.jpg = out/work/v2-uhd-crops.jpg
+2026-11-26 12:55 UTC
+work at ae16944 on agent/film-loop
+v3 in checks: loop sheet with the wash (174 to 305) and the knot of fliers in the sky; twelve frames in the wash. Wrong: feeders still read as standing at this size, sky still stands
+look-1.jpg = out/work/sheets/loop.png
+look-2.jpg = out/work/sheets/v3-wash12.png
