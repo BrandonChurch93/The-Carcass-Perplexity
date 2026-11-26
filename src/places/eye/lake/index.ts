@@ -128,8 +128,8 @@ void main() {
     // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
     quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
     // Round what heaves the rings stand close and high, each broken along its length, and they thin as they go out over a third of the lake.
-    float nearDome = uDome.x * exp(-r / 85.0) * smoothstep(uDome.y * 0.35, uDome.y * 0.9, r);
-    quiet += 0.045 * nearDome * cos(r * 0.3 - uTime * 2.0 + 2.0 * vnoise(p.xz / 47.0 + 2.0)) * (0.25 + 1.3 * vnoise(vec2(atan(p.x, p.z) * 5.0, r / 37.0 - uTime * 0.06)));
+    float nearDome = uDome.x * exp(-r / 120.0) * smoothstep(uDome.y * 0.35, uDome.y * 0.9, r);
+    quiet += 0.075 * nearDome * cos(r * 0.17 - uTime * 1.5 + 2.6 * vnoise(p.xz / 47.0 + 2.0)) * (0.1 + 1.6 * pow(vnoise(vec2(atan(p.x, p.z) * 4.0, r / 53.0 - uTime * 0.05)), 1.5));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
@@ -226,6 +226,8 @@ void main() {
   }
   // Staged by shot: the far water of the shore shot lies under the shaded wall and the high sky, and is the colour of them.
   refl *= mix(vec3(1.0), uMirror.rgb, smoothstep(12.0, 90.0, away));
+  // Under the long lens the wall's gold lies on the water in long broken streaks, and the water between them is dark.
+  if (uPlateTone.w > 1.5) refl *= clamp(pow(max(dot(refl, vec3(0.3, 0.5, 0.2)), 1e-4) / 0.2, 0.7), 0.4, 1.5);
   refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {
@@ -336,7 +338,7 @@ void main() {
     // The water it has lifted runs off it in threads that catch the sky.
     float round2 = atan(p.x, p.z);
     float thread = smoothstep(0.62, 0.8, vnoise(vec2(round2 * 43.0, r / 9.0 - uTime * 1.2)) * (0.5 + 0.5 * vnoise(vec2(round2 * 9.0, 3.0))) + 0.25) * clamp((uDome.x - 1.2) / 2.0, 0.0, 1.0) * (1.0 - du * du);
-    f = mix(f, 0.9, 0.3 * thread * smoothstep(0.15, 0.6, du));
+    f = mix(f, 0.9, 0.45 * thread * smoothstep(0.15, 0.6, du));
   }
   // From the rim the water over the mats is the colour of the mats: the pale of the sky lies only on the deep.
   float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted * (1.0 - smoothstep(0.68, 0.76, 0.7 * vnoise(p.xz / 19.0 + 31.0) + 0.3 * vnoise(p.xz / 6.0 + 2.0)));
@@ -474,7 +476,7 @@ export function create(ctx: Context): Piece {
     const c = new THREE.Color(hex);
     return new THREE.Vector3(c.r, c.g, c.b);
   };
-  const dome = new THREE.Vector4(0, 66, 0, 0);
+  const dome = new THREE.Vector4(0, 60, 0, 0);
   const centre = new THREE.Vector4(-100, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -536,12 +538,12 @@ void main() {
     setTime: (t) => {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
-      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 6.5 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 8.5 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
       if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
-      else if (during('eye-05')) mirrorTone.value.set(0.62, 0.7, 0.8, 1);
+      else if (during('eye-05')) mirrorTone.value.set(0.76, 0.78, 0.8, 1);
       else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;

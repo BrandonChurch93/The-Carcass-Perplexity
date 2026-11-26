@@ -171,9 +171,11 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float edge = mix(0.53, 0.35, toLip) - 0.06 * smoothstep(8.0, 40.0, cameraPosition.y);
   float cover = smoothstep(edge - 0.02, edge + 0.07, field) * thin * (1.0 - 0.92 * lanes);
   // Toward the lip the weed thins to loose strands over the pale crust.
-  cover *= mix(0.3, 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
+  // An eye that stands on the lip sees them run over the whole of it to the edge.
+  float onFoot = smoothstep(12.0, 4.0, cameraPosition.y);
+  cover *= mix(mix(0.3, 0.5, onFoot), 1.0, smoothstep(1.0, 20.0, wLip + 14.0 * (blobs - 0.5)));
   // The crust of the lip keeps a strand here and there.
-  cover = max(cover, 0.8 * thin * smoothstep(0.42, 0.56, field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
+  cover = max(cover, mix(0.8, 1.0, onFoot) * thin * smoothstep(mix(0.42, 0.4, onFoot), mix(0.56, 0.54, onFoot), field) * smoothstep(9.0, 3.0, wLip) * smoothstep(-0.6, 0.6, wLip));
   o.albedo = bare;
   o.tilt = (snh.xy * 2.0 - 1.0) * 0.5;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
