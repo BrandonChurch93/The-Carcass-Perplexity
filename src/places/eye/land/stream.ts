@@ -66,9 +66,11 @@ uniform vec3 uCells;
 uniform sampler2D tGrit;
 ${NOISE_GLSL}
 ${RIG_GLSL}
-// Froth as the flow draws it out: long along the water, short across it, at three sizes.
+// Froth as the flow draws it out: threads of it, long along the water and thin across it. This is 1 on the line of a thread.
 float froth(vec2 q) {
-  return 0.36 * vnoise(q * vec2(0.6, 3.6)) + 0.34 * vnoise(q * vec2(1.9, 11.0) + 3.7) + 0.3 * vnoise(q * vec2(6.0, 33.0) + 9.1);
+  float a = 1.0 - abs(2.0 * vnoise(q * vec2(0.45, 3.1)) - 1.0);
+  float b = 1.0 - abs(2.0 * vnoise(q * vec2(1.3, 8.7) + 3.7) - 1.0);
+  return 0.6 * a + 0.4 * b;
 }
 void main() {
   float depth = vWater.x;
@@ -113,23 +115,24 @@ void main() {
   float a2 = froth(q2);
   float ridden = mix(a2, a1, w1);
   // White where it falls, where it piles and where it is torn, and a thread of it along the shallows of each bank.
-  float much = 0.05 + 0.2 * smoothstep(20.0, 45.0, vFlow.x) + 1.1 * max(fall, 0.85 * churned) + 0.55 * piled + 0.75 * wake + 0.15 * smoothstep(0.1, 0.03, depth);
-  float white = smoothstep(0.68 - 0.5 * much, 0.76 - 0.5 * much, ridden);
+  float much = clamp(0.06 + 0.85 * max(fall, 0.85 * churned) + 0.5 * piled + 0.7 * wake + 0.12 * smoothstep(0.1, 0.03, depth), 0.0, 1.0);
+  // Glass for the most part: the white is threads, and they thicken only where the water has been broken.
+  float white = smoothstep(0.985 - 0.3 * much, 1.0 - 0.26 * much, ridden) * smoothstep(0.02, 0.2, much);
   // The skin of the water: small waves that go with it, higher where it runs fast.
-  float rough = 0.12 + 0.5 * fall + 0.4 * piled + 0.3 * wake;
+  float rough = 0.07 + 0.3 * fall + 0.3 * piled + 0.25 * wake;
   vec2 lean = vec2(mix(vnoise(q2 * vec2(1.3, 3.9) + 5.0), vnoise(q1 * vec2(1.3, 3.9) + 5.0), w1), mix(vnoise(q2 * vec2(1.3, 3.9) + 21.0), vnoise(q1 * vec2(1.3, 3.9) + 21.0), w1)) - 0.5;
   vec3 n = normalize(vec3(lean.x * rough, 1.0, lean.y * rough));
   vec3 v = normalize(cameraPosition - vWorld);
   // Under it the bed: wet stones, darker the deeper they lie.
-  vec3 bed = texture2D(tGrit, vWorld.xz / 2.3 + lean * 0.04).rgb * vec3(0.2, 0.2, 0.19) * exp(-depth * 2.6);
-  vec3 albedo = mix(bed, vec3(1.5, 1.52, 1.55) * (0.7 + 0.3 * ridden), white);
+  vec3 bed = texture2D(tGrit, vWorld.xz / 2.3 + lean * 0.04).rgb * vec3(0.15, 0.16, 0.16) * exp(-depth * 2.6);
+  vec3 albedo = mix(bed, vec3(1.1, 1.12, 1.15), white);
   vec3 c = rigShade(vWorld, mix(vec3(0.0, 1.0, 0.0), n, white), v, albedo, 1.0, 1.0);
   // The sky lies on what is not white, more the lower the eye.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   // It lies in a bed among stones: what it mirrors is the sky overhead, not the glow at the rim.
-  r.y = max(abs(r.y), 0.3);
-  c = mix(c, 0.55 * skyRadiance(normalize(r)) * skyOpen(vWorld), (0.02 + 0.98 * pow(1.0 - nv, 5.0)) * (1.0 - white));
+  r.y = max(abs(r.y), 0.7);
+  c = mix(c, 0.8 * skyRadiance(normalize(r)) * skyOpen(vWorld), (0.03 + 0.97 * pow(1.0 - nv, 5.0)) * (1.0 - white));
   c += (1.0 - white) * 0.6 * rigGlint(vWorld, n, v, 0.1);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
