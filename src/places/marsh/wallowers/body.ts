@@ -92,7 +92,18 @@ varying vec4 vInfo;
 varying vec3 vR0;
 varying vec3 vR1;
 varying vec3 vR2;
+varying float vRaise;
+uniform vec4 uRaise;
 ${PIC_GLSL}
+// How far a bone of a leg has been lifted off the ground with its foot: the foot all the way, the leg above it less.
+float raised(float bone) {
+  float j = bone - ${LEG}.0;
+  if (j < -0.5) return 0.0;
+  float l = floor((j + 0.5) / 3.0);
+  float part = j - 3.0 * l;
+  float r = l < 0.5 ? uRaise.x : l < 1.5 ? uRaise.y : l < 2.5 ? uRaise.z : uRaise.w;
+  return r * (part < 0.5 ? 0.3 : part < 1.5 ? 0.65 : 1.0);
+}
 void main() {
   float lift = 0.0;
   #ifdef CRUSTED
@@ -126,6 +137,7 @@ void main() {
   vRest = position;
   vRestN = normal;
   vInfo = aInfo;
+  vRaise = mix(raised(aBones.y), raised(aBones.x), aBones.z);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
@@ -154,6 +166,9 @@ uniform float uFloorY;
 uniform float uSeed;
 uniform float uNear;
 uniform float uTile;
+uniform vec2 uTurned;
+uniform float uMud;
+varying float vRaise;
 uniform float uTileGain;
 #ifdef CRUSTED
 uniform sampler2D tRime;
@@ -205,9 +220,19 @@ void main() {
 
   // The picture, on the flank it was taken of and on the other. Where the skin turns away from the side (the back, the brow, the breast, between
   // the legs) the picture would smear: there the hide tile carries the grain and the picture, blurred, only the colour.
-  vec2 uv = picAt(vRest, vInfo.z);
+  // One that rolls shows its belly, and the picture has none: under the trunk it is carried on from the flank to the middle, as it is over the back,
+  // so what comes up wears the coat of the flank. uTurned.x is 0 for every one that does not roll, and nothing here is changed for it.
+  vec3 pr = vRest;
+  float belly = 0.0;
+  if (uTurned.x > 0.0) {
+    belly = clamp(atan(-nr.y, abs(nr.z)) / 1.5708, 0.0, 1.0) * (1.0 - nr.x * nr.x) * (1.0 - vInfo.z) * (1.0 - smoothstep(0.45, 0.65, vRest.x / uPic.x));
+    pr.y += 0.9 * belly;
+  }
+  // A leg that is lifted takes with it the wet and the mud of where it stood: they are measured from where it would be on the ground.
+  float wy = vWorld.y - vRaise;
+  vec2 uv = picAt(pr, vInfo.z);
   float cover = smoothstep(0.45, 0.85, textureLod(tPicA, uv, 1.5).r);
-  float top = smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z);
+  float top = max(smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z), smoothstep(0.0, 0.25, belly));
   // One that wears a photographed tile (matted hair, drying mud) wears it everywhere: the flank picture gives way to it.
   float side = max(smoothstep(0.06, 0.3, abs(nr.z)), top) * cover * (1.0 - uTile);
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
@@ -302,8 +327,15 @@ void main() {
   // A small one is wet as far up its own side as a large one is up its side.
   float kk = clamp(uK, 0.3, 1.0);
   ragged *= kk;
-  float wet = 1.0 - smoothstep(uWet - 0.1 * kk + ragged, uWet + 0.06 * kk + ragged, vWorld.y);
-  float damp = 1.0 - smoothstep(uWet - 0.15 * kk + ragged, uWet + (0.34 + 0.26 * lane) * kk + ragged, vWorld.y);
+  float wet = 1.0 - smoothstep(uWet - 0.1 * kk + ragged, uWet + 0.06 * kk + ragged, wy);
+  float damp = 1.0 - smoothstep(uWet - 0.15 * kk + ragged, uWet + (0.34 + 0.26 * lane) * kk + ragged, wy);
+  // What lay under the brine is wet when it is rolled up into the air, to the line the brine stood at.
+  float was = 0.0;
+  if (uTurned.x > 0.0) {
+    was = uTurned.x * (1.0 - smoothstep(uTurned.y - 0.04 + 0.3 * ragged / kk, uTurned.y + 0.12 + 0.3 * ragged / kk, vRest.y));
+    wet = max(wet, was);
+    damp = max(damp, was);
+  }
   dust *= 1.0 - damp;
   albedo = mix(albedo, vec3(0.26, 0.225, 0.195) * (0.7 + 0.5 * grain), 0.5 * dust);
   // The stuck one's hide is bare where it has heaved: pink brown, and folded deep round the neck and down the flank, each fold dark at its foot.
@@ -330,7 +362,7 @@ void main() {
   float daub = (1.0 - uMudded) * damp * (1.0 - wet) * (1.0 - horn) * smoothstep(0.42, 0.52, plate);
   albedo = mix(albedo, vec3(0.095, 0.052, 0.042) * (0.55 + 0.7 * grain), 0.7 * daub);
   // Mud thrown up the flank as it roots: flecks and clots, thick by the wet line and thinning up to the back, and dried paler than the wet below.
-  float rise = clamp((vWorld.y - uWet) / (1.1 * kk), 0.0, 1.0);
+  float rise = clamp((wy - uWet) / (1.1 * kk), 0.0, 1.0);
   float thrown = (1.0 - uMudded) * (1.0 - horn) * (1.0 - rise) * (1.0 - rise);
   float fleck = smoothstep(0.6, 0.68, vnoise3(q * 21.0 + uSeed * 3.0)) * smoothstep(0.35, 0.6, vnoise3(q * 3.3 + uSeed * 8.0) + 0.45 * (1.0 - rise) - 0.2);
   float clot = smoothstep(0.56, 0.62, vnoise3(q * 7.5 + uSeed * 6.0) + 0.25 * (vnoise3(q * 19.0 + uSeed) - 0.5));
@@ -371,7 +403,11 @@ void main() {
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
-  float deep = 1.0 - smoothstep(0.02, 0.2 + 0.25 * lane, vWorld.y);
+  float deep = 1.0 - smoothstep(0.02, 0.2 + 0.25 * lane, wy);
+  // A leg that is dragged up out of the mud wears it to the line it stood in to. Only a leg that is lifted by one that is acted has a vRaise above 0.
+  if (vRaise > 0.0) deep = max(deep, smoothstep(0.0, 0.03 * kk, vRaise) * (1.0 - smoothstep(uMud - 0.04 * kk + 0.25 * ragged, uMud + 0.1 * kk + 0.25 * ragged, wy)));
+  // And it is dark with the red mud of the brine it lay in, thickest low on it.
+  if (uTurned.x > 0.0) albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3) + vec3(0.008, 0.002, 0.002), was * (0.6 + 0.3 * (1.0 - smoothstep(uTurned.y - 0.4, uTurned.y, vRest.y))));
   albedo = mix(albedo, mix(vec3(0.05, 0.014, 0.01), vec3(0.05, 0.022, 0.018), uMudded) * (0.7 + 0.6 * grain), 0.8 * deep);
 
   // Wet hide does not shine all over under a white sky: it glistens on the tops of its folds.
@@ -383,11 +419,11 @@ void main() {
   rough = mix(rough, 0.16, 0.85 * max(wet, 0.5 * damp) * (1.0 - horn) * smoothstep(0.45, 0.6, fract(fineCell.z * 7.3)) * (1.0 - smoothstep(0.12, 0.3, fineCell.y)));
   #endif
   // Where it meets what it stands or lies in, the brine has climbed the hide a finger's width: a dark wet line, ragged, that shines.
-  float meet = (1.0 - smoothstep(0.012, 0.07 + 0.07 * lane, vWorld.y - uLine)) * smoothstep(-0.06, -0.01, vWorld.y - uLine);
+  float meet = (1.0 - smoothstep(0.012, 0.07 + 0.07 * lane, wy - uLine)) * smoothstep(-0.06, -0.01, wy - uLine);
   albedo = mix(albedo, albedo * vec3(0.32, 0.2, 0.18) + vec3(0.012, 0.002, 0.002), 0.85 * meet);
   rough = mix(rough, 0.22, 0.8 * meet);
   // The stuck one is wet and dark with the slurry it lies in to a hand above it, and that shines.
-  float sunkIn = uMudded * (1.0 - smoothstep(0.0, 0.3 + 0.2 * lane, vWorld.y - uLine));
+  float sunkIn = uMudded * (1.0 - smoothstep(0.0, 0.3 + 0.2 * lane, wy - uLine));
   albedo *= 1.0 - 0.55 * sunkIn;
   rough = mix(rough, 0.3, 0.6 * sunkIn);
   rough = mix(rough, 0.34, deep);
@@ -604,6 +640,9 @@ export class Beast {
         uLine: { value: look.line ?? 0 },
         uSalt: { value: b.salt },
         uMudded: { value: look.mudded ?? 0 },
+        uRaise: { value: new THREE.Vector4(0, 0, 0, 0) },
+        uTurned: { value: new THREE.Vector2(0, 0) },
+        uMud: { value: -1e9 },
         uCrust: { value: look.crust ?? 0 },
         uFloorY: { value: look.wet + 5 },
         uSeed: { value: seed },
@@ -713,9 +752,9 @@ export class Beast {
       q1.setFromUnitVectors(vc.set(ankle[0] - knee[0], ankle[1] - knee[1], ankle[2] - knee[2]).normalize(), vd.copy(A).sub(K).normalize());
       (M[bone + 1] as THREE.Matrix4).makeRotationFromQuaternion(q1);
       (M[bone + 1] as THREE.Matrix4).premultiply(t1.makeTranslation(K.x, K.y, K.z)).multiply(t2.makeTranslation(-knee[0], -knee[1], -knee[2]));
-      // A lifted foot hangs toe down.
+      // A lifted foot hangs toe down, but for one that is acted: its pad is held as it is told.
       const lift = foot[1] / k;
-      (M[bone + 2] as THREE.Matrix4).makeRotationZ(-Math.min(0.7, lift * 2.6));
+      (M[bone + 2] as THREE.Matrix4).makeRotationZ(d.acted > 0 ? -(d.toe[l] as number) : -Math.min(0.7, lift * 2.6));
       (M[bone + 2] as THREE.Matrix4).premultiply(t1.makeTranslation(A.x, A.y, A.z)).multiply(t2.makeTranslation(-ankle[0], -ankle[1], -ankle[2]));
       const f = this.stood.feet[l] as (typeof this.stood.feet)[number];
       va.set(A.x, 0, A.z).applyMatrix4(this.world);
@@ -730,6 +769,10 @@ export class Beast {
     this.head.multiplyMatrices(this.world, M[HEAD] as THREE.Matrix4);
     const u = this.material.uniforms;
     (u.uBreath as THREE.IUniform<number>).value = 0.022 * d.breath;
+    const lifts = d.feet as [number, number, number][];
+    (u.uRaise as THREE.IUniform<THREE.Vector4>).value.set(d.acted * (lifts[0] as number[])[1]!, d.acted * (lifts[1] as number[])[1]!, d.acted * (lifts[2] as number[])[1]!, d.acted * (lifts[3] as number[])[1]!);
+    (u.uTurned as THREE.IUniform<THREE.Vector2>).value.set(d.acted > 0 && d.under !== 0 ? 1 : 0, d.under);
+    (u.uMud as THREE.IUniform<number>).value = d.acted > 0 ? d.mud : -1e9;
     (u.uSeconds as THREE.IUniform<number>).value = seconds;
     const fu = this.feelerMaterial.uniforms;
     (fu.uSeconds as THREE.IUniform<number>).value = seconds;
