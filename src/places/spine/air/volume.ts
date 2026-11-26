@@ -73,6 +73,7 @@ vec3 strikeLight(vec3 p) {
 // The air about a stroke, lit by it: the light a ray gathers in passing a round light, in closed form, no farther than what the ray meets.
 vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
   vec3 g = vec3(0.0);
+  float small = 0.0;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 q = ro - uEmitters[i].xyz;
@@ -81,10 +82,17 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
     float b = dot(rd, q);
     float h = sqrt(max(dot(q, q) - b * b, 0.0) + 0.04 * r * r);
     g += uEmitterRadiance[i] * (r * r * (atan((far + b) / h) - atan(b / h)) / h);
+    // A small light (the one at a struck tip) blooms in the lens: violet white, gone within some 25 m of it, and hidden by what stands
+    // before it. It is summed apart from the great lights and closes on its own, higher ceiling.
+    if (uEmitters[i].w < 20.0 && -b > 0.0 && -b < far + 20.0) {
+      float off = sqrt(max(dot(q, q) - b * b, 0.0));
+      float power = 1.0 - exp(-dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) / 60000.0);
+      small += power * (exp(-off * off / 90.0) + 0.3 * exp(-off / 11.0));
+    }
   }
   g *= 1.0e-7;
   // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
-  return g / (1.0 + dot(g, vec3(0.33)) / 0.07);
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.6 * small / (1.0 + small));
 }
 
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
@@ -276,12 +284,14 @@ void main() {
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
     vec2 uvP = vec2(0.0);
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
+#if PLATE == 1
     if (plate > 0.0) {
       vec3 seaP = skyCloud(ro, rd, 0.0);
       sea = mix(sea, seaP * (0.55 + 0.9 * head * head) * (1.0 + 0.5 * lean), plate);
       domeFar = mix(domeFar, seaP, plate);
       gone = mix(gone, smoothstep(2500.0, 7000.0, t), plate);
     }
+#endif
     sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035 / zoomF, 0.0, dip) * (1.0 - plate)));
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     sea = mix(sea, domeFar, stormSide(rd) * smoothstep(0.14, 0.0, dip));
@@ -363,10 +373,12 @@ void main() {
   // the cloud behind it, read soft.
   vec2 uvQ = vec2(0.0);
   float plateOn = uPlate.w > 0.0 ? plateAt(atan(rd.z, rd.x), asin(clamp(rd.y, -1.0, 1.0)), uvQ) : 0.0;
+#if PLATE == 1
   if (plateOn > 0.0) {
     domeAir = mix(domeAir, skyCloud(ro, rd, 5.0), plateOn);
     if (far > 50000.0) stormAir *= 1.0 - plateOn;
   }
+#endif
   if (stormAir > 0.0) {
     light = light * (1.0 - stormAir) + domeAir * stormAir;
     through *= 1.0 - stormAir;
