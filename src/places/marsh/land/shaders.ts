@@ -253,7 +253,7 @@ void main() {
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
     // The slabs keep their salt; the mud between them is wet, and dark with it.
-    colour = mix(colour, mudCol * mix(vec3(0.29, 0.215, 0.185), vec3(0.56, 0.46, 0.4), slab), k);
+    colour = mix(colour, mudCol * mix(vec3(0.29, 0.215, 0.185), vec3(0.56, 0.46, 0.4), slab) * mix(1.0, 1.16, smoothstep(5.0, 16.0, dist)), k);
     hgt = mix(hgt, mix(nS.b * 0.6, h0, plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -368,7 +368,7 @@ void main() {
   float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + lowland * mix(0.2, 0.3, smoothstep(140.0, 50.0, dist)) * smoothstep(700.0, 150.0, dist);
   level = min(level, 0.97) * (1.0 - rock);
   level = mix(level, 0.41 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
-  level = mix(level, 0.3, shoreW) * (1.0 - 0.9 * bankDry);
+  level = mix(level, 0.3, shoreW) * (1.0 - 0.6 * bankDry);
   float over = hgt - level;
   float aa = 0.02 + 0.1 * smoothstep(30.0, 200.0, dist);
   float flood = smoothstep(aa, -aa, over);
