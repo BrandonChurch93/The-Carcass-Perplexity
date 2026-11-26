@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 105, 2026-11-26 09:56 UTC:
+Status 106, 2026-11-26 10:15 UTC:
 
-- `01-crab.jpg`: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier)
-- `02-cloud.jpg`: The Reveal, the top of the rise: round 3's cloud left, the new build right (draft tier); below, the west sea at native size
-- `03-breath-03.jpg`: The Breath in motion (shot breath-03, twelve frames, review tier)
-- `04-eye-04.jpg`: The Eye in motion (shot eye-04, twelve frames, review tier)
+- `01-crab-final.jpg`: The Ribs, the hung carcass at native size: round 3 left, after the crab fix right (both at the final tier)
+- `02-sheet-shot-marsh-03.jpg`: The Blood Marsh in motion (shot marsh-03, the burst, twelve frames, review tier)
+- `03-sheet-shot-spine-03.jpg`: The Spine in motion (shot spine-03, twelve frames, review tier)
+- `04-compare-reveal-4.jpg`: The Reveal, the top of the rise after the cloud change: approved left, built right at the final tier, with two native crops
 
+Status 105, 2026-11-26 09:56 UTC, showed: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier); The Reveal, the top of the...
 Status 104, 2026-11-26 09:35 UTC, showed: The Ribs, round 3: approved left, built right at final tier (all five keys); The Blood Marsh, round 3: approved left, built right at final...
 Status 103, 2026-11-26 09:19 UTC, showed: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)...
-Status 102, 2026-11-26 08:57 UTC, showed: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again; The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T09:56:19Z
-phase 4: 13.76 h used of 17.00 h
-build: 34.08 h used of 72.00 h
+2026-11-26T10:15:54Z
+phase 4: 14.09 h used of 17.00 h
+build: 34.41 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 21
+minutes since the last status: 20
 ```
 
 ## Phases
@@ -1377,6 +1377,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 09:59 UTC. The Reveal's cloud goes back to round 19's look inside the current build. MEASURED from the cards: round 19 (the look of wave 2) had 1 severe and about 4 major issues on the cloud and the cyclone, round 25 (wave 3) has 5 severe and 5 major on them, and the jury went from 6 to 1 of 25. A render machine made `reveal-4` and `reveal-3` at the final tier from `b902c2ec` (round 25's build) and from `9741a5fb` (round 19's). A third build, wave 3's land with wave 2's sky files as they stood, did not compile: wave 3's land calls `westSea` and wave 2's `weather.ts` has none. Seen by the Builder at native size: at `reveal-4` wave 3's cloud is smeared slabs with polygonal shadow blocks and a milky cyclone, wave 2's is small crisp cells in rows and a cyclone with open beaded arms, which is what the approved picture shows. At `reveal-3` neither is good, smeared streaks against specks. So `src/places/reveal/shared/weather.ts` is wave 2's file with wave 3's `westSea`, wave 3's `lowGround` (the drift while the view is held, which answered round 19's severe issue that the world is frozen) and wave 3's amount line, and `src/places/reveal/sky/index.ts` is wave 3's file with the lit side of the low cloud read as in wave 2 and wave 2's cyclone. Kept from wave 3: the Heart's beat on the cloud, the day's light, the cloud dark against the sun's image, the veil, the storm's glimmer, the vapour. Draft stills of the four keys, made once each, show round 19's look with the west sea open water. 914 tests pass and the build is clean. The Reveal's measures, G12 and G15 are run on the new commit by a render machine before the unit is marked. If one is red the two files go back to `b902c2ec`. `mat/specks.jpg` is still loaded and no longer read by a shader, and `mat/cyclone-wide.jpg` is not loaded. Both are left for the Reveal's polish, where the cloud is the first item: the specks at `reveal-2` and `reveal-3` are what round 19's critics called confetti.
 - 2026-11-26. 10:07 UTC. Looked at whether round 25's three issues on the Reveal's ridges are declined, and none is. `R3-1` issue 3 (severe, frame 9756, "unnaturally regular, parallel, rib-like stripes radiating symmetrically from a central valley"), `R3-2` issue 8 (major) and `R4` issue 3 (major) ask for uneven spacing, varied relief, detail at native size and haze with height, and the first is at `reveal-3`, where on note 10 the body is not yet to come together. All three are taken, in the Reveal's open item on the relief. Round 19's declined line stands for the titan frame alone, where the land reading as a body is the picture. Things on an animal that read as an eye are faults and are taken: the pale spot on a head at the Spine (`R3-1` issue 5) and the crease on a hide at the Marsh (`R3-1` issue 4).
 - 2026-11-26. 10:10 UTC. Which build each place keeps at the end of its loop. The rule (`kit/07-QUALITY-BAR.md`): the build of the unit's best judged round, plus later fixes only while the machine checks and measures stay green. MEASURED from the cards, as lowest R1, R3, R4 · the six critics' sum · the jury of 25. `ribs`: round 16 2, 4, 3 · 22 · 2 and round 22 2, 4, 6 · 25 · 4. `marsh`: round 17 4, 3, 4 · 24 · 2 and round 23 4, 5, 4 · 28 · 2. `eye`: round 18 3, 4, 6 · 26 · 0 and round 24 6, 4, 4 · 28 · 1. For these three the last round is the best judged and its build is kept, with the crab fix on the Ribs (measures green on `5c1109b7`). `breath`: round 14 4, 4, 5 · 27 · 7 and round 20 3, 5, 4 · 27 · 3. Round 14 did better with the jury, and its build had a red measure (M3 at `breath-1`, 0.39 against a floor of 0.75), so it cannot be kept as it stood. The later build has every measure green and is kept. One part of it reads worse than in round 14, the red growth (named by 7 of 25 jurors against 2), which is written into its open item and comes first in the Breath's polish. `spine`: round 15 2, 3, 6 · 22 · 2 and round 21 4, 2, 4 · 21 · 2. One point apart on the sum with the jury the same, and round 15's build had a red measure (M3 at `spine-2`). The later build is kept. `reveal`: round 19 5, 4, 3 · 28 · 6, where R2 passed, and round 25 5, 3, 5 · 26 · 1, where R2 fails by one vote. Round 19 is the best judged. What fell is the cloud: 10 of 25 jurors give the cloud as their reason in round 25 against 3 of 25 in round 19, and the critics' cards hold 5 severe and 5 major issues on cloud and cyclone against 1 severe and about 4 major. So round 19's cloud is back inside the current build (`e7991a3e`) and the rest of the later work stays while its measures are green: the drift that took R4 from 3 to 5, the open west sea and the join with the Eye. No critic has judged that mix, and the record round in Phase 6 will. Nothing more is judged in Phase 4: the limit `quality.maxRoundsPerUnit` (3) is reached for all six places.
+- 2026-11-26. 10:14 UTC. The Reveal's cloud change stays. MEASURED on `e7991a3e` at the final tier in 4K on a render machine: M1 and M3 green, 12 of 12 lines (`scorecards/round-025/measures-reveal-after-e7991a3e.json`). Fine detail moved from round 3's 1.049, 0.8727, 1.4142 and 0.881 to 1.049, 1.8018, 4.4951 and 1.0579 (round 2: 2.1708, 1.8457, 2.7259, 1.0895). The measure has only a floor. The number at `reveal-3` is the cloud over the open west sea drawn as many small hard-edged flecks, where the approved picture has fewer, softer clumps and long streaks over the skull; it is the Reveal's first open item and not a reason to take the change back, because the rule for a kept build is green machine checks and measures and the jurors named round 3's cloud in 10 of 25 answers against 3 of 25. The Reveal's kept stills, comparison images and sheets are from `e7991a3e` (commit `7e5d3e06`).
+- 2026-11-26. 10:13 UTC. Ahead of the gate's result, three idle render machines were given the sheets Phase 5 starts from, at `480c0ab2`, review tier, preview format: job A the establishing sheet, four whole film sheets, the opening shot, the hook (frames 0 to 176), the ending (11200 to 11860) and the heartbeat (11312 to 11422); job B every frame across each of the six joins between places and the card loop with its seam; job C four seconds around each join. They cost no time on the Builder's machine, which the gate holds. The pick's folders are made (`out/work/pick/`, `key.json`): the six establishing stills of the kept builds scaled to 1920 by 1080 under the names `picture-1.jpg` to `picture-6.jpg`, one seeded shuffle of the six places turned one step for each of the five jurors, so every juror has a different order and each place stands in five different positions. The pick itself starts only when Phase 4 is closed.
 
 ## Notes from Brandon
 
