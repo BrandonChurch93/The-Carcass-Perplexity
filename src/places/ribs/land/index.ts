@@ -450,7 +450,18 @@ export function create(ctx: Context): Piece {
       }
     }
   }
-  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
+  // What lies on the flat is gathered: long patches drawn out along the strait with bare wet sand between them, the rubble under the
+  // near cliff, and what each low lens has close under it. Three stones in four of an even strewing are taken away.
+  const gateAt0 = resolve(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 0).position;
+  const feedAt0 = resolve(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 0).position;
+  const cliff = RIBS[0] as Rib;
+  const gathered = (x: number, z: number, size: number): boolean => {
+    if (Math.hypot(x - cliff.x, z - cliff.z) < 150) return true;
+    if (Math.hypot(x - (gateAt0[0] as number), z - (gateAt0[2] as number)) < 70 || Math.hypot(x - (feedAt0[0] as number), z - (feedAt0[2] as number)) < 60) return true;
+    const patch0 = fbm3(x / 42 + 7.3, 3.5, z / 130, 2) + 0.12 * noise3(x / 6, 8.5, z / 6);
+    return patch0 > (size < 0.09 ? 0.55 : 0.57);
+  };
+  const kept = placed.filter((p) => gathered(p.x, p.z, p.size) && !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
   STATIONS.foreground.forEach(([x, z, size], i) => {
     kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.55 });
     // A heap, not one stone: smaller rock against its sides.
