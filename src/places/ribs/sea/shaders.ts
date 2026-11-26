@@ -86,7 +86,7 @@ void main() {
   float sigma = 0.21 * lively;
   float lean = sigma * sigma / (graze + 1.25 * sigma);
   n = normalize(n + vec3(v.x, 0.0, v.z) / max(length(v.xz), 1e-4) * lean);
-  float nv = max(dot(n, v), 0.0);
+  float nv = clamp(dot(n, v), 0.0, 1.0);
   float fres = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
@@ -200,7 +200,7 @@ void main() {
     slope += (d / l) * wave * 0.16;
   }
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
-  float nv = max(dot(n, v), 0.0);
+  float nv = clamp(dot(n, v), 0.0, 1.0);
   float fres = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.01;
@@ -434,7 +434,7 @@ void main() {
   // A head of thrown water: eaten at the rim into lumps and strings, thick in the middle.
   float eat = r2 + mix(1.5, 0.22, vMist) * (t.r - 0.5) + mix(0.6, 0.0, vMist) * (0.5 - t.g);
   float body = 1.0 - smoothstep(mix(0.22, -0.1, vMist), mix(0.72, 0.95, vMist), eat);
-  float alpha = body * (0.55 + 0.45 * t.a) * vLook.x * (1.0 - uSolo);
+  float alpha = clamp(body * (0.55 + 0.45 * t.a) * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
   vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.9 + 0.6 * t.g) * mix(0.62 + 0.3 * body + 0.42 * vUv.y + 0.25 * (t.r - 0.5), 0.6, vMist);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;

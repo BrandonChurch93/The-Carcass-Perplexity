@@ -382,7 +382,7 @@ void main() {
   vec3 col = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light: thin wet skin lets a little through and the low sun rims it, so a shaded animal is never a black shape.
   {
-    float rimNv = 1.0 - max(dot(n, v), 0.0);
+    float rimNv = 1.0 - clamp(dot(n, v), 0.0, 1.0);
     float against = pow(max(dot(-v, uSunDir), 0.0), 2.0);
     col += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.11 / PI;
     col += (albedo * 0.6 + 0.05) * uSunColour * pow(rimNv, 3.0) * against * 0.16 * sunAt(vWorld, landAt(vWorld.xz));

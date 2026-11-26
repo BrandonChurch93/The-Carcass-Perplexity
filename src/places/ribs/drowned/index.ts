@@ -164,11 +164,12 @@ varying vec3 vRun;
 varying vec2 vAt;
 void main() {
   // vRun: x across the ribbon (-1 to 1), y along it (0 to 1), z its own number.
-  float across = 1.0 - vRun.x * vRun.x;
+  // Held at 0: at the edge of a ribbon a value read between samples can lie a hair outside -1 to 1, and a negative alpha paints a negative colour.
+  float across = max(1.0 - vRun.x * vRun.x, 0.0);
   float fall = vAt.y * 3.0 - uTime * (2.6 + 1.5 * vRun.z);
   float beads = smoothstep(0.35, 0.9, vnoise(vec2(vRun.z * 40.0 + vRun.x * 1.5, fall)));
   float thin = smoothstep(0.0, 0.08, vRun.y) * (1.0 - smoothstep(0.75, 1.0, vRun.y));
-  float alpha = across * thin * (0.16 + 0.75 * beads) * (1.0 - uSolo);
+  float alpha = clamp(across * thin * (0.16 + 0.75 * beads), 0.0, 1.0) * (1.0 - uSolo);
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 n = normalize(uOut + vec3(0.0, 0.25, 0.0));
   vec3 col = skyRadiance(reflect(-v, n)) * 0.85 + skyIrradiance(n) * 0.08;
