@@ -188,7 +188,8 @@ export const SEA_MARCH_GLSL = /* glsl */ `
       // Over every top lies mist, thinning upward: a ray that passes low over a head goes a long way through it and a ray that falls
       // steeply into one hardly any. The march's own strides add it up, so a head has no cut edge against what stands behind it.
       float soft = 18.0 + 0.02 * t;
-      float w = max(1.0 - d / soft, 0.0) * min(stride, 2.0 * soft);
+      // (Only near: far out a stride is longer than a head is wide, and the sum of a few of them changed from one pixel row to the next, as dashes.)
+      float w = max(1.0 - d / soft, 0.0) * min(stride, 2.0 * soft) * exp(-t * t / 8.0e5);
       seaMist += w;
       seaMistAt += w * t;
       t += stride;
@@ -208,7 +209,9 @@ export const SEA_MARCH_GLSL = /* glsl */ `
         if (ts > far || ts > 16000.0) break;
         p = ro + rd * ts;
         if (rd.y > 0.0 && p.y > BANK_TOP) break;
-        seaLod = log2(ts * seaPix);
+        // The rows stand an eighth of their distance apart, and a head narrower than that was met by some rays and stepped over by their
+        // neighbours: it stood as a slab with stepped sides. So the heaps are read here no finer than a row can find them.
+        seaLod = log2(ts * seaPix) + 2.6;
         float d = p.y - seaTop(p, (i & 1) == 0);
         if (d < 0.0) {
           float lo = before;
@@ -295,7 +298,10 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // The smaller grain is gone where the lens cannot hold it: far out the deck keeps only its banks.
     float fineSeen = 1.0 - smoothstep(-1.0, 1.5, seaLod);
     vec2 tilt = (grainA.rg - 0.5) * 1.5 + (grainB.rg - 0.5) * (1.1 * fineSeen);
-    float grain = 0.62 * (grainA.b - 0.5) + 0.38 * fineSeen * (grainB.b - 0.5);
+    // (And the larger goes soft far out, where the march finds a head only to an eighth of its distance: sharp there, it showed each row as a cut slab.)
+    float coarseSeen = 1.0 - 0.8 * smoothstep(0.0, 2.5, seaLod);
+    tilt *= coarseSeen;
+    float grain = (0.62 * (grainA.b - 0.5) + 0.38 * fineSeen * (grainB.b - 0.5)) * coarseSeen;
     facing = normalize(facing + vec3(0.891 * tilt.x - 0.454 * tilt.y, 0.0, 0.454 * tilt.x + 0.891 * tilt.y) * GRAIN_TILT);
     head = clamp(head + GRAIN_HEAD * grain, 0.0, 1.0);
     // The last light comes low over the deck from the dusk: a face that looks at it is lit, a face turned away is in its own shade, and a
@@ -313,17 +319,6 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float rim = clamp(dot(facing, toDusk) * 1.6, 0.0, 1.0);
     vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 2.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
-    // A top of cloud is no surface: where the ray would leave the head again a little way on, it has gone through wisps and not into
-    // cloud. How deep it stands under the top at two places ahead says how much cloud it met; the grain tears the edge.
-    float slantF = max(-rd.y, 0.06);
-    float thick = 0.0;
-    for (int i = 0; i < 2; i++) {
-      float deep = i == 0 ? 14.0 : 48.0;
-      vec3 pf = p + rd * (deep / slantF);
-      thick += clamp((level + tall * seaLift(pf, 0, false) - pf.y) / deep, -1.0, 1.5);
-    }
-    float feather = smoothstep(0.1, 1.5, thick + 1.1 * grain + 0.25);
-    sea = mix(SEA_COLD * (1.0 + 0.9 * dusk) * vec3(0.95, 1.0, 1.1) + SEA_WARM * dusk * (0.5 - 0.35 * stormSide(rd)), sea, 0.35 + 0.65 * feather);
     // The mist the ray came through over the heads before this one.
     vec3 mistTone = (SEA_COLD * vec3(1.55, 1.65, 1.95) + 0.5 * SEA_WARM * (1.0 - stormSide(rd)));
     if (seaMist > 0.0) {
