@@ -65,6 +65,7 @@ uniform sampler2D tSmokeNearAt;
 uniform sampler2D tSmokeFarAt;
 uniform vec2 uSmokeFit;
 uniform vec4 uHang;
+uniform float uFumeShare;
 
 // The air of a caldera at dusk carries smoke: it is a little rose, never neutral.
 const vec3 AIR_ALBEDO = vec3(0.95, 0.89, 0.87);
@@ -163,7 +164,7 @@ void airAt(vec3 p, float part, float ya, float yb, vec3 glow, out float sigma, o
   if (uHang.w > 0.0) hang = uShowAir * uHang.w * (1.0 - smoothstep(0.35, 1.0, length(p.xz - uHang.xy) / uHang.z)) * exp(-y / 45.0) * (0.6 + 0.8 * n.g);
   // The fume: its share of a stretch is worked out as the heavy layer's is. Thinner over the bench the lens stands on, thicker over the lake and east.
   float fumeLayer = hi - lo < 1.0 ? exp(-0.5 * (lo + hi) / FUME_HIGH) : FUME_HIGH * (exp(-lo / FUME_HIGH) - exp(-hi / FUME_HIGH)) / (hi - lo);
-  float fume = uShowAir * FUME * fumeLayer * (0.4 + 0.6 * overLake) * (0.4 + 1.0 * east) * (0.25 + 1.5 * n.g);
+  float fume = uShowAir * uFumeShare * FUME * fumeLayer * (0.4 + 0.6 * overLake) * (0.4 + 1.0 * east) * (0.25 + 1.5 * n.g);
   // It is lit by the fire under it: glow is the lake's own light under this stretch of the view (main reads it at four places along the view).
   vec3 fire = fireOnSmoke(glow) * (0.85 * exp(-y / 14.0) + 0.15 * exp(-y / 70.0));
   float haze = thin + heavy + hang + fume;

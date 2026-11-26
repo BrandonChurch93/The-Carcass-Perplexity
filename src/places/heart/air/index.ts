@@ -183,8 +183,12 @@ export function create(ctx: HeartContext): HeartPiece {
   // The thin smoke that hangs before the butte of the feeding shot (its face is 205 m from that lens, right of its axis). It is marched with the air, to the scene's depth,
   // so that it veils the cliff by how far in it the cliff stands: its middle (x, z), its radius, its thickness for a metre (set by shot).
   const hang = new THREE.Vector4(...behind(99, 60), 75, 0);
+  // How much of the fume stands in a shot. The long lens on the mouth looks along a kilometre of it: at full strength it lay over the whole wall
+  // as one lit veil and took the dark out of the mouth. There the smoke at the foot of the fall is the bodies', and the wall above it is clear.
+  const fumeShare = { value: 1 };
   const volume = pass(VOLUME_FRAGMENT, {
     uHang: { value: hang },
+    uFumeShare: fumeShare,
     uShowFume: show.fume,
     uSkyMean: { value: skyMean },
     ...smoke.layers,
@@ -215,6 +219,7 @@ export function create(ctx: HeartContext): HeartPiece {
         (bodyF[i] as THREE.Vector4).x = (b.floor?.[0] ?? 0) * swell;
       }
       hang.w = shot === 'heart-02' ? 0.008 : 0;
+      fumeShare.value = shot === 'heart-05' ? 0.15 : 1;
       // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
       (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 60;
       // The four offsets of the march are tied to the pixel alone. Moved on with each sample they made a thin vapour flicker from frame to frame.
