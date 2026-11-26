@@ -175,6 +175,12 @@ uniform sampler2D tPlate;
 uniform sampler2D tNear;
 uniform sampler2D tNearS;
 uniform vec4 uNear;
+// The rim of the main shaft, as land.ts has it (rimRadius).
+float rimBump(float b, float centre, float width) {
+  float d = mod(abs(b - centre), 6.2831853);
+  if (d > 3.14159265) d = 6.2831853 - d;
+  return d < width ? 0.5 + 0.5 * cos(3.14159265 * d / width) : 0.0;
+}
 void main() {
   vec3 p = vWorld;
   vec3 toEye = cameraPosition - p;
@@ -188,19 +194,30 @@ void main() {
   vec4 field = mix(vec4(p.y, land.b, 0.5, 0.0), texture2D(tNear, q), inNear);
   vec3 slope = texture2D(tNearS, q).rgb * inNear;
   // The brim's own face hangs inside the rim, where the map holds no cliff: there the mesh's normal is the true one.
-  float hang = smoothstep(0.35, 0.1, gn.y);
+  // Only there: the riser of a plate out on the shelf is steep too, and the map does hold it.
+  float bearing = atan(p.x, -p.z);
+  float rimHere = 30.0 + 7.0 * rimBump(bearing, 1.9548, 0.733) + 2.2 * rimBump(bearing, 3.7525, 0.5236) + sin(5.0 * bearing + 1.0) + 0.5 * sin(11.0 * bearing + 0.5) + 0.4 * sin(29.0 * bearing + 2.0);
+  float hang = smoothstep(0.35, 0.1, gn.y) * smoothstep(rimHere + 0.5, rimHere + 0.1, length(p.xz));
   vec3 n = normalize(mix(mix(gn, normalize(vec3(-slope.x, 1.0, -slope.y)), inNear), normalize(vec3(-p.x, 0.25 * length(p.xz), -p.z)), hang));
 
   // The plate, and near the lens the grain of wet rock too fine for the plate to hold (mat/wetrock, 1.5 m).
   vec2 pq = vec2(p.x / ${PLATE.metres.toFixed(1)}, 1.0 - p.z / ${PLATE.depth.toFixed(4)});
   // The hanging face of the brim is seen edge on by the plate: it takes the plate's broad colour, not its stretched picture.
-  vec3 plate = mix(texture2D(tPlate, pq).rgb, texture2D(tPlate, pq, 5.0).rgb * 0.7, hang);
+  vec3 plate = mix(texture2D(tPlate, pq).rgb, texture2D(tPlate, pq, 5.0).rgb * 0.38, hang);
   vec4 a = texture2D(tRock, p.xz / 37.0);
   float near = smoothstep(26.0, 5.0, dist);
   vec3 m0 = texture2D(tMat, p.xz / 1.5 + 0.57).rgb;
   vec3 mn = texture2D(tMatN, p.xz / 1.5 + 0.57).rgb;
-  float tone = mix(1.0, clamp(1.0 + 1.5 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.45, 1.7), near);
-  vec2 lean = (mn.rg - 0.5) * 1.3 * near;
+  // And nearer still its pits and grit: the same grain a quarter the size, turned, so that the ground at the lens is not one even weave.
+  vec2 pg = vec2(0.8 * p.x - 0.6 * p.z, 0.6 * p.x + 0.8 * p.z) / 0.41;
+  float close = smoothstep(9.0, 1.5, dist);
+  vec3 m1 = texture2D(tMat, pg).rgb;
+  vec3 mf = texture2D(tMatN, pg).rgb;
+  float pit = smoothstep(0.75, 0.4, dot(m1 / uMean, vec3(0.3333))) * smoothstep(0.45, 0.7, a.g + 0.3 * (m0.g / uMean.g - 1.0));
+  float tone = mix(1.0, clamp(1.0 + 1.5 * (dot(m0 / uMean, vec3(0.3333)) - 1.0), 0.45, 1.7), near) * mix(1.0, clamp(dot(m1 / uMean, vec3(0.3333)), 0.5, 1.5) * (1.0 - 0.55 * pit), close);
+  // Broad stains: the rock is not one colour for more than a few metres.
+  tone *= 0.72 + 0.56 * texture2D(tRock, p.xz / 9.0 + 0.3).r;
+  vec2 lean = (mn.rg - 0.5) * 0.8 * near + vec2(0.8 * (mf.r - 0.5) + 0.6 * (mf.g - 0.5), -0.6 * (mf.r - 0.5) + 0.8 * (mf.g - 0.5)) * 0.9 * close;
 
   float steep = smoothstep(0.3, 0.75, 1.0 - n.y);
   float stone = smoothstep(0.02, 0.2, field.a);
@@ -214,17 +231,23 @@ void main() {
 
   // The rock: the plate's own colour, cooled a little (it was painted under a warm lamp), each loose stone its own tone.
   // It is wet, and seen against the light: its own colour is the lesser part of what reaches the lens, the sheen the greater.
-  vec3 rock = plate * vec3(0.62, 0.64, 0.66) * tone;
+  // The picture's own lights and darks are drawn out: its cracks go dark, its plates stay pale.
+  float mark = dot(plate, vec3(0.3333)) / dot(texture2D(tPlate, pq, 6.0).rgb, vec3(0.3333));
+  vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6);
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
-  vec3 side = abs(n.x) > abs(n.z) ? texture2D(tMat, vec2(p.z, p.y * 2.2) / 1.1).rgb : texture2D(tMat, vec2(p.x, p.y * 2.2) / 1.1).rgb;
-  vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.7, 0.6, 0.5) * clamp(dot(side / uMean, vec3(0.3333)), 0.35, 1.8) * (0.75 + 0.25 * sin(p.y * 70.0 + 3.0 * a.g));
+  float wx = n.x * n.x / max(n.x * n.x + n.z * n.z, 1e-4);
+  vec3 side = mix(texture2D(tMat, vec2(p.x, p.y * 1.6) / 1.1).rgb, texture2D(tMat, vec2(p.z, p.y * 1.6) / 1.1).rgb, wx);
+  vec3 face = texture2D(tPlate, pq, 4.0).rgb * vec3(0.62, 0.58, 0.52) * clamp(dot(side / uMean, vec3(0.3333)), 0.4, 1.7);
   rock = mix(rock, face, steep * (1.0 - stone));
   // A dark green-brown weed along the tide line and in the wet foot of the edges near it.
   float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
   rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0));
   vec3 albedo = rock * mix(1.0, 0.4, damp);
+  // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
+  float under = smoothstep(-0.03, -0.22, over);
+  albedo = mix(albedo, vec3(0.2, 0.25, 0.2) * clamp(tone * mark, 0.5, 1.4), 0.8 * under);
   // The pool is a hand deep over slime: dark, green, and a mirror.
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(0.9, 0.36, damp), 0.04, film);
@@ -240,7 +263,10 @@ void main() {
   vec3 back = reflect(-v, n);
   back.y = abs(back.y);
   // The whole shelf has a thin wet sheen at dawn: at a grazing angle even a dry plate mirrors the sky, and toward the sun that is the gold glare.
-  float sheen = max(damp, 0.55 * (1.0 - steep) * (1.0 - 0.6 * stone));
+  // Not evenly: the sheen lies where the rock is smooth and low, and the pitted and the raised dry first.
+  // And it lies near the tide: a plate that stands half a metre clear of it has dried in the wind.
+  float dry = smoothstep(0.45, 1.0, over + 0.3 * (a.g - 0.5));
+  float sheen = max(damp, (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
   colour += skyRadiance(back) * (fres * sheen * (0.75 + 0.25 * film) * 1.1 * occ * land.g);
   // The low sun in the wet sheen: a broad gold glare down the shelf toward it, which is what the backlight of this place is made of.
   float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);

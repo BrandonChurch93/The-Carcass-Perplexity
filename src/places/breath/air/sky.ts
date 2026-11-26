@@ -49,7 +49,7 @@ vec4 farPicture(vec3 d) {
   float z = dot(d, ahead);
   vec2 q = vec2(dot(d, right), d.y) / max(z, 0.05);
   vec2 uv = vec2(0.5 + q.x / ${(2 * FAR.wide).toFixed(4)}, ${FAR.horizon.toFixed(3)} + q.y / ${(2 * FAR.tall).toFixed(4)});
-  float w = step(0.05, z) * smoothstep(0.0, 0.12, uv.x) * smoothstep(1.0, 0.9, uv.x) * smoothstep(1.0, 0.9, uv.y);
+  float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(1.0, 0.9, uv.x) * smoothstep(1.0, 0.9, uv.y);
   uv.y = max(uv.y, ${(FAR.horizon + 0.006).toFixed(3)});
   return vec4(untoned(textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb), w);
 }`;
