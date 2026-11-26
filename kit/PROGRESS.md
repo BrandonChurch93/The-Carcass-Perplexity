@@ -24,29 +24,29 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 123, 2026-11-26 16:57 UTC:
+Status 124, 2026-11-26 17:22 UTC:
 
-- `01-s123-join.jpg`: The join from the lake into the rise, merged: frames 9541, 9546 and 9560 from top to bottom, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s123-strike.jpg`: The Spine's first strike, merged: frame 7015 above and frame 7020 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `03-s123-open.jpg`: The opening, merged: frame 0 above and frame 120 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `04-s123-beasts.jpg`: The Marsh's beasts, version 1, merged: the key frame 6424 above and frame 6503 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `01-s124-kite.jpg`: The tether-kites, version 1, merged: frame 7015, before above and after below (draft tier, preview size, rendered on a render machine)
+- `02-s124-cloud.jpg`: The Spine's cloud sea, version 2, not merged: frame 7015, before above and after below (rendered by its builder in 1080p; the kites in it are the old ones)
+- `03-s124-plant.jpg`: The Marsh's plants, version 1, merged: frame 5618 above and the approved picture below (rendered by its builder)
+- `04-s124-bore.jpg`: The Ribs' bore, version 2, merged: the approved picture, frame 2401 before and frame 2401 after, from top to bottom (rendered by its builder)
 
+Status 123, 2026-11-26 16:57 UTC, showed: The join from the lake into the rise, merged: frames 9541, 9546 and 9560 from top to bottom, before at left and after at right (draft tier...
 Status 122, 2026-11-26 16:36 UTC, showed: The Breath's mist column, merged: frame 4500 above and frame 4590 below, before at left and after at right (draft tier, preview size...
 Status 121, 2026-11-26 16:13 UTC, showed: The opening, version 3, not merged: frame 0 at left and frame 120 at right, at the size a phone shows them (draft tier, rendered by its...
-Status 120, 2026-11-26 15:48 UTC, showed: Frame 0 as round 2's jury and scroll-stop critic saw it (final tier, rendered in 4K on a render machine, shown smaller): 1 of 5 jurors took...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T16:57:00Z
-phase 5: 6.68 h used of 6.00 h
-build: 41.09 h used of 72.00 h
+2026-11-26T17:22:59Z
+phase 5: 7.12 h used of 6.00 h
+build: 41.53 h used of 72.00 h
 extra rounds: yes
 half point: reached
 box end: reached
-minutes since the last status: 21
+minutes since the last status: 26
 ```
 
 ## Phases
@@ -1505,6 +1505,11 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 17:13 UTC. The Spine's rock, version 2 (`d91b1630`, handed back at its minute 109, with the lightning merged in): into guard 2 on a render machine at 17:13 UTC as one commit on main with the kites (`a3c2cb5a`; the branch has two merge commits without the trailer, so its history stays on the branch), three frames to stay equal (1241, 4409, 10027), seven looked at (7015, 7234, 7338, 7418, 7450, 7579, 7668). From its builder's pictures: at the key 7418 the triangles and shards of the face are gone and it reads as jointed rock with beds; it is darker and bluer in the middle of the frame than the approved picture's pale tan under rime. Its builder's own word: at full size in 4K it is not at the bar, the faces are soft blots of magnified photograph and the pieces read as flat tinted panels. Cost STATED by its builder: 15.13 and 15.23 s a frame against 14.92 and 14.67 s before. Asked back by 17:45 UTC, one thing: the tone toward the approved picture's pale face with deeper rime
 - 2026-11-26. 17:16 UTC. The Ribs' bore, version 2, merged (`8dda7057`). Guard 2, MEASURED on a render machine, 16 stills in 6 minutes, draft tier, preview size: frames 1241, loop 0 and 10027 byte equal, types clean. Looked at, before beside after, and 2401 beside the approved picture: the wall has a face now as the picture has, a dark streaked band with foam running down it between a white crest and a white foot, where the build before had one bank of white spume; at 2506, the last frame before the cut to the Heart, the face stands over the lens with the burst at its foot. Round 26's motion critic had read frames 2501 to 2506 as 'a fixed white texture, not water breaking with weight'; its builder states that all six frames differ now. Lost against before: the height of the thrown water at 2350 and 2401, and the plume at the left of 2401, which the approved picture has. Asked back by 17:45 UTC with the whites
 - 2026-11-26. 17:17 UTC. The Marsh's plants, version 1, merged (`1490c050`). Guard 2, MEASURED on a render machine, 18 stills in 7 minutes, draft tier, preview size: frames 1241, 5940, 6424 and 10027 byte equal, types clean. Looked at, before beside after, and the key 5725 beside the approved picture: where single stems stood far apart there are thickets with dead canes, hanging leaf and low growth along the brine, which is how the approved picture grows; the animals and the ground are as they were. Round 2's jury gave frame 5618 none of five votes and four of the five named the plants. Not met: the heads are drooping fans, not the picture's upright crowns, and nothing stands as near or as tall as the thicket at the picture's left. The cost is over what was asked, STATED by its builder: about 1.6 s a frame against 1.0 s, in the Marsh's first shot only (frames 5618 to 5832); open until version 2, due 17:45 UTC, which cuts it first
+- 2026-11-26. 17:18 UTC. The Spine's cloud sea, version 2: not merged yet. Guard 2, MEASURED on a render machine, 20 stills in 5.5 minutes, draft tier, preview size: frames 1241, 4409, 10027 and 8090 byte equal, types clean. Looked at, before beside after: 7015, 7018 and 7234 have a deck of heaps on both sides of the ridge where the flat plane with its straight dark edge was, which is what round 2's critic of the whole asked of frame 7015; 7418 and 7579 hardly move. One fault: at the key 7668 the far deck under the dusk, in the lower right quarter of the frame, is drawn as rows of short horizontal dashes stacked like scan lines, where the build before had a plain dark plane. It reads as a rendering fault in a judged key, so the version waits. Its builder has the picture and the place and is asked for the cause first, before the cost, inside its limit of 17:54 UTC. If no clean version is back by the start of round 3, the cloud sea stays out of that round and goes to the polish
+- 2026-11-26. 17:19 UTC. The hung body of the Ribs, version 2 (`1fa86b3`, handed back at its minute 114): not put into the guard. Looked at from its builder's pictures beside the approved pictures. The gain is the pose: the trunk along the fall line, the neck lolling, the legs plumb, so that in the wide view (1241, the loop) it hangs where it stood. But at the key 2081 it moved away from the approved picture: there the body is pale against the dark weed and nothing lies across its trunk, and version 2 is darker, has three dark bands painted across trunk and leg, and sinks into the wall from 2180 on (its builder's own word). The approved picture outranks the read of the wide view. Asked back by 17:45 UTC, inside its limit of 17:54 UTC: the pose kept, the bands off, the hide back at the picture's pale value at 2081, and a plain word if the wide view then reads as a standing animal again. Cost STATED by its builder: 1.24 and 1.21 s a sample against 0.60 s before
+- 2026-11-26. 17:22 UTC. The thread was compacted a second time at about 17:18 UTC. Before the kit was read again one answer went out, to the hung body's builder at 17:19 UTC (version 2 asked back), and that decision was logged; nothing else was ordered. Read again from 17:22 UTC: this file's lines 1 to 118, addendum 001, the quality bar (freshness, judged frames, packs, critics, the pick, the pass bar, issues, rounds and limits, the plateau rule, the record round) and the build order's Phases 5 and 6
+- 2026-11-26. 17:22 UTC. The push to the remote is refused again since 17:16 UTC (could not read Username), tried last at 17:19 UTC; reading from the remote works. The remote's main is `fcde205f`, with the kites; the merges of the bore and the plants (`9402738e`, `fdafc58b`) are on the Builder's machine. Tried again at the next commit; if it is refused then too, main goes up through a render machine as a bundle
+- 2026-11-26. 17:22 UTC. The Spine's rock, version 2: back from guard 2 at 17:20 UTC (20 stills in 6 minutes on a render machine, draft tier, preview size). MEASURED: frames 1241, 4409 and 10027 byte equal, types clean; 7015, 7234, 7338, 7418, 7450, 7579 and 7668 differ, most at 7338, 7418 and 7450. Not decided yet. The walkers' version 2 (`c15dc26b`, with main `fcde205f` merged in) came in at its minute 98
 
 ## Notes from Brandon
 
