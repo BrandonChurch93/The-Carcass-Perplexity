@@ -1,7 +1,7 @@
-2026-11-26 07:49 UTC
-work at 85f8e24 on agent/breath-ground-3
-heartbeat 6: heap dropped into the pit, fog warmer with dark core, cliff toned, cost 23.96
-look-1.jpg = out/work/hb6-breath-0.jpg
-look-2.jpg = out/work/hb6-breath-2.jpg
-look-3.jpg = out/work/hb6-breath-4.jpg
-look-4.jpg = out/work/hb6-sheet-breath-02.jpg
+2026-11-26 08:18 UTC
+work at c7f5959 on agent/breath-ground-3
+version 3: all keys; 0 and 4 at draft on the merged tree, 2 and 3 at final tier
+look-1.jpg = out/work/v3-breath-0.jpg
+look-2.jpg = out/work/v3-breath-2-final.jpg
+look-3.jpg = out/work/v3-breath-3-final.jpg
+look-4.jpg = out/work/v3-breath-4.jpg
