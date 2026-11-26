@@ -8,7 +8,7 @@ export const BRINE_GLSL = /* glsl */ `
 float mirrorShare(vec3 n, vec3 v) {
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // A rippled skin never shows the eye its true grazing angle: the share stops well short of a mirror's.
-  return 0.02 + 0.2 * pow(1.0 - nv, 3.0);
+  return 0.02 + 0.13 * pow(1.0 - nv, 3.5);
 }
 // What a level wet surface at p mirrors, stained by the red film on it. A ripple swings the mirrored ray by twice its lean times the way to
 // what it mirrors, which is not known, so a share of the way to the lens stands for it.
@@ -28,8 +28,8 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float d2 = max(deep + (silt - 0.5) * 0.25, 0.0);
   // A finger of it over the shelf at the shore lets the bed show, rust and pale; a stride out it is blood; in the pits near black.
   vec3 bed = vec3(0.17, 0.05, 0.034);
-  vec3 body = vec3(0.08, 0.009, 0.0075);
-  vec3 pit = vec3(0.04, 0.0055, 0.005);
+  vec3 body = vec3(0.065, 0.007, 0.006);
+  vec3 pit = vec3(0.028, 0.004, 0.004);
   vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 4.5));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
   albedo *= 0.8 + 0.4 * silt;

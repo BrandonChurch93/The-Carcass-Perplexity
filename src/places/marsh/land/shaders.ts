@@ -27,12 +27,12 @@ vec2 plateAt(vec2 xz, vec4 at, vec2 size) {
   return vec2(dot(d, at.zw), dot(d, vec2(-at.w, at.z))) / size + 0.5;
 }
 const vec2 LEDGE = vec2(14.0, 7.98);
-const vec2 THIN = vec2(10.0, 5.63);
+const vec2 THIN = vec2(5.0, 2.81);
 const float LEDGE_RISE = 0.42;
 const float THIN_RISE = 0.09;
 // The shore's plate is a strip across the waterline, 4 m of shore by 2.25 m: dry crust at its top, the rind of salt, the wet red mud, the
 // line of froth (0.6 of the way down), then brine. It is laid along every shore by the way to the brine.
-const vec2 SHORE = vec2(4.0, 2.25);
+const vec2 SHORE = vec2(2.6, 1.46);
 const float SHORE_RISE = 0.1;
 float shoreRow(float s) { return clamp(0.6 - s / SHORE.y, 0.004, 0.996); }
 // No shore keeps one width: the band is a stride wide here and a hand there, and its line wanders. g is the grain at xz / 13 + 0.37.
@@ -154,7 +154,7 @@ void main() {
   float s = f.r + (fine.r - 0.5) * 0.1;
   float t = max(s, 0.0);
   // Where the crust is thin, and along every shore a few strides back, it is broken slabs on wet mud.
-  float thin = max(f.g, 0.5 * exp(-t / 2.2) * step(0.0, s));
+  float thin = max(f.g, 0.8 * exp(-t / 3.5) * step(0.0, s));
   float stain = f.b;
   float rock = smoothstep(0.28, 0.75, vBase);
   float near = smoothstep(90.0, 30.0, dist);
@@ -222,7 +222,8 @@ void main() {
       mudCol *= mix(vec3(1.0), 0.6 + 0.4 * texture2D(tSilt, p.xz / 0.7 + 0.31).rgb / vec3(0.32, 0.281, 0.257), close * (1.0 - slab));
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
-    colour = mix(colour, mudCol * 0.62, k);
+    // The slabs keep their salt; the mud between them is wet, and dark with it.
+    colour = mix(colour, mudCol * mix(vec3(0.44, 0.36, 0.34), vec3(0.72), slab), k);
     hgt = mix(hgt, mix(nS.b * 0.6, h0, plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -300,6 +301,20 @@ void main() {
     vec4 ng2 = mix(ns, nr, dryish);
     colour *= mix(vec3(1.0), 0.45 + 0.55 * g, close);
     colour *= mix(1.0, 0.75 + 0.5 * nh.b, nearer * dryish);
+    // The rind at a waterline and the rims a stride back from it: salt grown in knobs a few fingers across, white on top, stained in
+    // the clefts, each with its own small hard shadow from the brighter quarter of the sky. The crust's picture, laid small.
+    float knobby = max(shoreW * smoothstep(0.42, 0.7, hgt), (1.0 - smoothstep(0.0, 0.5, thin)) * smoothstep(3.0, 0.8, t) * smoothstep(0.4, 0.65, hgt)) * close * (1.0 - rock) * step(0.0, s);
+    if (knobby > 0.0) {
+      vec2 uK = vec2(p.x * 0.6 - p.z * 0.8, p.x * 0.8 + p.z * 0.6) / 0.55;
+      vec4 nk = texture2D(tCrustN, uK);
+      float lit2 = texture2D(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035).b;
+      vec3 ck = texture2D(tCrust, uK).rgb / vec3(0.413, 0.304, 0.269);
+      vec3 knob = mix(vec3(0.2, 0.075, 0.06), vec3(0.74, 0.71, 0.68) * (0.6 + 0.4 * ck), smoothstep(0.28, 0.6, nk.b));
+      colour = mix(colour, knob, knobby * 0.85);
+      bend -= (nk.rg - 0.5) * 2.4 * knobby;
+      occ *= 1.0 - knobby * (0.5 * smoothstep(0.5, 0.15, nk.b) + 0.45 * smoothstep(0.03, 0.14, lit2 - nk.b));
+      hgt += (nk.b - 0.5) * 0.25 * knobby;
+    }
     bend -= (ng2.rg - 0.5) * mix(0.9, 1.7, dryish) * close + (nh.rg - 0.5) * 1.2 * nearer * dryish;
     hgt += (ng2.b - 0.5) * 0.16 * close * (1.0 - rock);
     occ *= 1.0 - 0.3 * smoothstep(0.45, 0.15, ng2.b) * close;
@@ -310,7 +325,7 @@ void main() {
   float lowland = smoothstep(0.52, 0.72, wide.g * 0.55 + mid.g * 0.2 + 0.3 * stain + 0.25 * (wide.r - 0.5));
   float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + 0.3 * lowland * smoothstep(700.0, 150.0, dist);
   level = min(level, 0.97) * (1.0 - rock);
-  level = mix(level, 0.3 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
+  level = mix(level, 0.37 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
   level = mix(level, 0.3, shoreW);
   float over = hgt - level;
   float aa = 0.02 + 0.1 * smoothstep(30.0, 200.0, dist);

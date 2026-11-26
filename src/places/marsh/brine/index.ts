@@ -222,6 +222,7 @@ export function create(ctx: Context): Piece {
         (rings[ring++] as THREE.Vector4).set(d.x, d.z, r + 0.14, 0.55 * grow);
         // And, round the larger ones, a second, wider and lower, that left it a breath ago.
         if (ring < MAX_RINGS && d.size > 0.3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 1.7 + 0.5, 0.3 * grow);
+        if (ring < MAX_RINGS && d.size > 0.3) (rings[ring++] as THREE.Vector4).set(d.x, d.z, r * 2.5 + 1.1, 0.18 * grow);
       }
     });
     ringCount.value = ring;

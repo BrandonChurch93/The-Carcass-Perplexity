@@ -164,11 +164,11 @@ void main() {
         vec2 push = (textureLod(tNoise, vec3(at / 23.0, 0.13 * fl + uTime * 0.017), 0.0).ga - 0.5) * 5.0;
         float big = textureLod(tNoise, vec3((at + push) / 9.5, 0.21 * fl + uTime * 0.03), 0.0).g;
         float small = textureLod(tNoise, vec3((at + push * 1.6) / 2.7, 0.33 * fl - uTime * 0.05), 0.0).b;
-        float wisp = smoothstep(0.62, 0.9, big * 0.72 + small * 0.4 + 0.1 * min(cover, 1.0));
+        float wisp = smoothstep(0.66, 0.92, big * 0.72 + small * 0.4 + 0.1 * min(cover, 1.0));
         if (wisp <= 0.0) continue;
         // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
         float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
-        float a = 1.0 - exp(-wisp * cover * crossed * 0.2 * exp(-y / 1.5));
+        float a = 1.0 - exp(-wisp * cover * crossed * 0.14 * exp(-y / 1.5));
         a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
         sum += trans * a * steamLit * 0.98;
         trans *= 1.0 - a;
@@ -219,7 +219,9 @@ void main() {
   float curtain = uRain.z / max(length(rd.xz), 0.05);
   float az = atan(rd.x, -rd.z);
   // The shaft walks along the horizon with the wind, a degree in six seconds.
-  float side = abs(az - uRain.x - 0.003 * uTime) / uRain.y;
+  // A shaft of rain is narrow at its foot and wide under its cloud, and the wind leans it.
+  float elev = rd.y / max(length(rd.xz), 0.05);
+  float side = abs(az - uRain.x - 0.003 * uTime - 0.6 * elev) / (uRain.y * (0.45 + 4.5 * max(elev, 0.0)));
   float rain = 0.0;
   if (uShow.y > 0.5 && far > curtain && side < 1.9 && rd.y > -0.02 && rd.y < 0.4) {
     float el = rd.y / max(length(rd.xz), 0.05);
@@ -227,9 +229,9 @@ void main() {
     float lean = az * 40.0 + el * 9.0;
     float sheets = textureLod(tNoise, vec3(az * 1.7 - uTime * 0.004, 0.2, 0.4 + uTime * 0.012), 0.0).g;
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.03, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.07, 0.13), 0.0).b * 0.45;
-    float edge = smoothstep(1.5, 0.0, side + (sheets - 0.5) * 1.6);
-    edge *= edge;
-    float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(-0.004, 0.012, el);
+    float edge = smoothstep(1.7, 0.0, side + (sheets - 0.5) * 1.9);
+    edge *= edge * edge;
+    float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(0.0, 0.06, el);
     rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.55 + 0.9 * streaks);
   }
   float show = uShow.x;
@@ -241,9 +243,9 @@ void main() {
 #ifdef SHEETS
   {
     float reach = min(far, 9000.0);
-    float mid = max(ro.y + rd.y * 0.5 * (reach + 380.0), 0.0);
+    float mid = max(ro.y + rd.y * 0.5 * (reach + 120.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0016 * max(reach - 380.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.0011 * max(reach - 120.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
   }
 #endif
   if (rain > 0.0) {
