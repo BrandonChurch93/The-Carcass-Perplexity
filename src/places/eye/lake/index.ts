@@ -16,6 +16,8 @@ export const PARTS: readonly string[] = ['lake', 'shallows', 'shaft', 'mats', 'r
 
 /** Seconds after the crest of the dome at which the view from over the lake begins to come in: film frame 9330. */
 const LEAVE_FROM = (9330 - 9221) / 60;
+// Seconds after the rise at which the rings of the Eye begin to die away: by then the lens looks straight down on them.
+const RINGS_DIE = (9416 - 9221) / 60;
 
 const LAPS = 22;
 
@@ -83,7 +85,7 @@ uniform vec4 uDome;
 // x: seconds since the centre rose (negative before).
 uniform vec4 uCentre;
 // The view from over the centre as the camera leaves. x: how far it has come in (0 until the camera begins to look down: nothing below reads it).
-// y: seconds since the dome began to sink.
+// y: seconds since the dome began to sink. z: how far the rings of the Eye have died away under a lens that looks straight down (at 1 nothing reads them).
 uniform vec4 uLeave;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -121,7 +123,7 @@ void main() {
   // The rings of what drinks, kept apart: they are read on the whole of the water, the mirror and what lies under it.
   vec2 lapped = vec2(0.0);
   // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
-  if (r < 700.0) {
+  if (r < 700.0 && uLeave.z < 1.0) {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
     float quiet = 0.012 * (uPlateTone.w > 1.5 ? 0.3 : 1.0) * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
     // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
@@ -146,6 +148,11 @@ void main() {
     float gust = smoothstep(0.5, 0.72, vnoise(p.xz / 95.0 + vec2(uTime * 0.035, 3.0))) * smoothstep(1500.0, 500.0, away) * smoothstep(40.0, 120.0, away);
     if (gust > 0.0) slope += gust * 0.022 * waves(p.xz / 4.6, vec2(uTime * 0.07, -uTime * 0.04));
     if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
+    // Seen from straight over them these rings die away: the swell that comes in from one side is all that is left on the water.
+    if (uLeave.z > 0.0) {
+      slope *= 1.0 - uLeave.z;
+      heave *= 1.0 - uLeave.z;
+    }
   }
   // Each small thing that breaks the surface round the swell throws its own ring, one at a time, that widens and dies.
   float splash = 0.0;
@@ -187,12 +194,17 @@ void main() {
   }
   // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
   vec2 wind = vec2(0.8, 0.6);
-  float gust = smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0)));
+  float gust = uLeave.z < 1.0 ? smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0))) : 0.0;
+  if (uLeave.z > 0.0) gust *= 1.0 - uLeave.z;
   // From the rim the long heave is too small to tell from any other: it is made of numbers there and costs no reads.
-  if (cameraPosition.y > 20.0 && uPlateTone.w < 1.5) slope += 0.008 * (vec2(vnoise(p.xz / 9.0 + wind * uTime * 0.09), vnoise(p.zx / 7.3 + 4.0 - wind.yx * uTime * 0.11)) - 0.5);
-  else slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
   float mid = 1.0 - smoothstep(260.0, 900.0, away);
-  if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
+  if (uLeave.z < 1.0) {
+    vec2 calm2 = slope;
+    if (cameraPosition.y > 20.0 && uPlateTone.w < 1.5) slope += 0.008 * (vec2(vnoise(p.xz / 9.0 + wind * uTime * 0.09), vnoise(p.zx / 7.3 + 4.0 - wind.yx * uTime * 0.11)) - 0.5);
+    else slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
+    if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
+    if (uLeave.z > 0.0) slope = mix(calm2, slope, 1.0 - uLeave.z);
+  }
   float close = 1.0 - smoothstep(25.0, 110.0, away);
   if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.06);
   float closer = 1.0 - smoothstep(4.0, 22.0, away);
@@ -365,44 +377,68 @@ void main() {
   // The water from over its centre as the camera leaves. Straight down the mirror is almost gone and the eye is in the deep: the surface shows only by its light.
   if (uLeave.x > 0.0) {
     float downward = uLeave.x * smoothstep(0.3, 0.8, v.y);
-    // The dome has sunk and its waves go out: each a thin crest, broken along its length, all of them dying.
-    float since = max(uLeave.y, 0.05);
     float lanes = vnoise(p.xz / 90.0 + 9.0);
-    float phase = 0.78 * r * (1.0 - 0.0011 * r) - 2.7 * since + 1.3 * lanes;
-    float front = 30.0 + 72.0 * since;
-    float broken = smoothstep(0.3, 0.62, vnoise(out2 * 2.3 + r / 130.0 + 4.0)) * (0.5 + lanes);
-    float train = -0.2 * sin(phase) * exp(3.0 * (cos(phase) - 1.0)) * exp(-r / 210.0) * exp(-since / 6.5) * smoothstep(front, front - 70.0, r) * smoothstep(4.0, 26.0, r) * smoothstep(0.0, 1.2, uLeave.y) * broken;
-    // The wind lays a fine ripple on the water, in patches.
-    float patches = smoothstep(0.36, 0.66, lanes);
-    vec2 ripple = 0.075 * waves(p.xz / 15.0, vec2(uTime * 0.03, uTime * 0.019)) * (0.25 + 0.75 * patches);
-    vec2 leaning = heave + out2 * train + ripple;
-    // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east.
-    float toLit = -dot(leaning, vec2(0.9, -0.44));
-    float face = clamp(5.0 * toLit, -1.0, 1.0);
+    float along = vnoise(p.xz / 37.0 + 4.0);
+    // How much water one pixel covers, in metres: no wave shorter than a few of them is drawn, so none can beat against the pixels.
+    float covers = max(length(dFdx(p.xz)), length(dFdy(p.xz)));
+    // A swell comes in from one side, two trains of unlike length that cross at a small angle: where one gives way to the other a crest ends or forks,
+    // and no two crests lie the same way apart.
+    vec2 from1 = vec2(0.82, 0.57);
+    vec2 from2 = vec2(0.97, 0.24);
+    float give = vnoise(vec2(dot(p.xz, vec2(-0.57, 0.82)) / 26.0, dot(p.xz, from1) / 75.0 - uTime * 0.03) + 17.0);
+    float ph1 = dot(p.xz, from1) * 0.27 - 1.6 * uTime + 9.0 * lanes + 4.0 * along;
+    float ph2 = dot(p.xz, from2) * 0.41 - 2.0 * uTime + 6.0 * lanes - 5.0 * along;
+    vec2 swell = (0.15 + 1.7 * lanes * along) * 0.2 * (from1 * (-sin(ph1) * exp(4.0 * (cos(ph1) - 1.0)) * smoothstep(0.5, 0.74, give)) + from2 * (-0.8 * sin(ph2) * exp(4.0 * (cos(ph2) - 1.0)) * smoothstep(0.46, 0.24, give)));
+    // Over the place where it went down the water lies smooth, a slick with a torn edge: the wind has no hold on it yet.
+    float slick = smoothstep(0.0, 9.0, length((p.xz - vec2(9.0, -6.0)) * vec2(1.0, 1.5)) - 13.0 - 22.0 * along);
+    // The wind lays a fine ripple on the rest, in patches. Two reads of the field of small waves, the second turned against the first, so that no row of them shows.
+    float patches = smoothstep(0.3, 0.78, lanes + 0.5 * (along - 0.5)) * slick;
+    float keepFine = smoothstep(4.0, 8.0, 1.15 / covers);
+    float keepMid = smoothstep(4.0, 8.0, 2.1 / covers);
+    vec2 second = texture2D(tRipple, vec2(0.53 * p.x - 0.85 * p.z, 0.85 * p.x + 0.53 * p.z) / 27.0 - vec2(uTime * 0.011, uTime * 0.017)).rg;
+    vec2 ripple = keepMid * vec2(0.53 * second.x + 0.85 * second.y, -0.85 * second.x + 0.53 * second.y);
+    if (keepFine > 0.0) ripple += keepFine * texture2D(tRipple, p.xz / 15.0 + vec2(uTime * 0.03, uTime * 0.019)).rg;
+    ripple *= 0.075 * (0.12 + 0.88 * patches);
+    // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east:
+    // a crest is a bright line toward the sun with a dark one behind it.
+    vec2 toSun = vec2(-0.9, 0.44);
+    float crestLit = dot(swell, toSun);
+    float rippleLit = dot(ripple, toSun);
+    float face = clamp(30.0 * crestLit + 4.0 * rippleLit, -1.0, 1.0);
     c += uSunColour * vec3(0.0026, 0.0026, 0.003) * max(face, 0.0) * downward;
     c *= 1.0 - 0.4 * max(-face, 0.0) * downward;
-    // And the steepest of those faces throws the low sun itself: a small hard glint.
-    c += uSunColour * 0.03 * smoothstep(0.112, 0.14, -dot(ripple + 0.3 * out2 * train, vec2(0.9, -0.44))) * downward;
-    // Air comes up from what went down: a tight knot of small bubbles that opens on the surface into one thin ring and is gone.
+    vec3 pale = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.8 / 3.14159);
+    // Where the wind has roughened it the water gives back more of the low sky and is paler for it, as a whole.
+    float clump = vnoise(p.xz / 6.3 + vec2(uTime * 0.17, -uTime * 0.11));
+    c = mix(c, pale, 0.05 * patches * (0.7 + 0.6 * clump) * downward);
+    // The low sun itself is thrown only from the side of the frame that looks toward it: a path of small hard glints, no two alike, that thins to nothing away from it.
+    float sunward = dot(-v.xz, toSun) / max(v.y, 0.3);
+    float across = dot(-v.xz, vec2(toSun.y, -toSun.x)) / max(v.y, 0.3);
+    float path = smoothstep(0.08, 0.7, sunward + 0.3 * (lanes - 0.5)) * exp(-across * across / 0.12);
+    float steep = rippleLit * (0.15 + 1.5 * clump) + 3.0 * max(crestLit, 0.0);
+    // Where the ripple is too fine for the pixels its glints are still there, as few and as uneven: they are drawn no smaller than the pixels can hold.
+    if (keepMid < 1.0 && path > 0.0) steep += 0.3 * (1.0 - keepMid) * (0.12 + 0.88 * patches) * max(vnoise(p.xz / (2.4 * covers) + vec2(uTime * 0.9, -uTime * 0.7)) - 0.45, 0.0) * (0.15 + 1.5 * clump);
+    float thrown = path * smoothstep(0.09, 0.22, steep * (0.4 + 0.9 * path));
+    c += (0.5 * pale + uSunColour * 0.012) * thrown * thrown * downward;
+    // Air comes up from what went down: a tight knot of froth that boils on the surface, spreads, thins and is gone. No two are alike and none is round.
     vec2 knotAt = p.xz / 34.0;
     vec2 knot = floor(knotAt);
     vec2 rnd = hash22(knot);
-    if (rnd.x < 0.45 && r < 190.0) {
+    if (rnd.x < 0.85 - r / 150.0) {
       float age = fract(uTime * (0.16 + 0.1 * rnd.y) + rnd.x * 17.0);
       vec2 dk = (knotAt - knot - 0.3 - 0.4 * rnd) * 34.0;
-      float m = length(dk);
-      if (m < 14.0) {
-        vec2 bubbleAt = p.xz / 0.9;
-        vec2 bubble = floor(bubbleAt);
-        vec2 jitter = hash22(bubble + knot);
-        float dot2 = smoothstep(0.34, 0.2, length(bubbleAt - bubble - 0.3 - 0.4 * jitter)) * floor(jitter.x + 0.4);
-        float boil = dot2 * smoothstep(1.0 + 3.0 * age, 0.4, m) * smoothstep(0.0, 0.1, age) * (1.0 - smoothstep(0.35, 0.5, age));
-        float wide = 1.5 + 11.0 * max(age - 0.35, 0.0);
-        float thin = exp(-pow((m - wide) / 0.45, 2.0)) * smoothstep(0.35, 0.42, age) * (1.0 - age) * (1.0 - age) * smoothstep(0.25, 0.6, vnoise(dk * 0.9 + rnd * 40.0));
-        c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 / 3.14159), min(0.85 * boil + 0.22 * thin, 1.0) * downward);
+      float reach = 1.2 + 5.0 * age;
+      float m = length(dk) + 0.9 * reach * (vnoise(dk * 0.45 + rnd * 40.0) - 0.5);
+      if (m < reach) {
+        // The froth is drawn no finer than the pixels can hold.
+        float grain = max(0.28, 2.2 * covers);
+        float froth = smoothstep(0.52, 0.74, vnoise(p.xz / grain + rnd * 91.0 + vec2(uTime * 0.6, 0.0)));
+        float boil = froth * smoothstep(reach, 0.3 * reach, m) * smoothstep(0.0, 0.08, age) * (1.0 - age) * (1.0 - age);
+        c = mix(c, pale * 0.9, min(0.85 * boil, 1.0) * downward);
       }
     }
   }
+
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -581,7 +617,7 @@ void main() {
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
       // The camera leaves: from the frame it begins to look down, the water is drawn as it is from over it.
-      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), 0, 0);
+      leave.set(during('eye-05') ? smooth(rise + LEAVE_FROM, rise + LEAVE_FROM + 1.2, t) : 0, t - (rise + 1.0), during('eye-05') ? smooth(rise + RINGS_DIE, rise + RINGS_DIE + 0.4, t) : 0, 0);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
