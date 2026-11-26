@@ -62,6 +62,8 @@ const float RELIEF_KM = 16.0;
 const float RELIEF_DRAWN = 1.5;
 // How tall the relief of a ground photograph stands, as a share of its width.
 const float TILE_RELIEF = 0.085;
+// (How much of the rib ranges the low country buries below the top of the rise. Off: it read as a wash, away from the approved pictures.)
+const float RIB_BURIAL = 0.0;
 // The lesser vents: x and z from the Heart, km, and their size beside it.
 const vec3 VENTS[6] = vec3[6](vec3(-42.0, -98.0, 0.5), vec3(76.0, -33.0, 0.55), vec3(170.0, -66.0, 0.45), vec3(124.0, 24.0, 0.4), vec3(-52.0, 50.0, 0.45), vec3(43.0, 79.0, 0.4));
 
@@ -426,21 +428,21 @@ void main() {
   if (unjoined > 0.0) {
     float across = 0.5;
     float paleRange = 1.0;
-    if (xz.x > -900.0) {
+    if (RIB_BURIAL > 0.0 && xz.x > -900.0) {
       vec2 over = xz + 46.0 * vec2(vnoise(xz / 74.0 + 3.0), vnoise(xz / 74.0 + 11.0));
       // (Along a range, so that here and there a whole one is gone and the spacing is uneven; and across, so that crests end.)
       float along = vnoise(over / vec2(52.0, 170.0) + 5.0);
       across = 0.6 * vnoise(over / 80.0 + 31.0) + 0.4 * vnoise(over / 33.0 + 21.0);
-      buried = max(smoothstep(0.44, 0.58, along), smoothstep(0.4, 0.54, across)) * smoothstep(-900.0, -760.0, xz.x) * unjoined;
-      paleRange = mix(1.0, smoothstep(0.3, 0.6, vnoise(over / vec2(60.0, 210.0) + 47.0)), smoothstep(-900.0, -760.0, xz.x));
+      buried = RIB_BURIAL * max(smoothstep(0.44, 0.58, along), smoothstep(0.4, 0.54, across)) * smoothstep(-900.0, -760.0, xz.x) * unjoined;
+      paleRange = mix(1.0, smoothstep(0.3, 0.6, vnoise(over / vec2(60.0, 210.0) + 47.0)), RIB_BURIAL * smoothstep(-900.0, -760.0, xz.x));
     }
     // (And seen from that height under a sun a third of the way up, their relief is quiet: a lit side and a shaded side, no bars.)
-    eased = smoothstep(-900.0, -760.0, xz.x) * unjoined;
+    eased = RIB_BURIAL * smoothstep(-900.0, -760.0, xz.x) * unjoined;
     float naturalLum = dot(natural, vec3(0.3, 0.55, 0.15));
     // (The map's own light and dark is the bars of the ribs: the rock here is read with most of it taken out.)
     vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * mix(naturalLum, 0.36, 0.78 * eased));
     // (Range by range the rock is paler or darker, and one stands in forest.)
-    rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.08, 1.04, 1.0), paleRange);
+    rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.0), paleRange);
     // (The low country is no darker than the rock that stands in it: olive and tan, lit as the ranges are.)
     vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96) * 0.7 + vec3(0.1, 0.105, 0.07);
     // (Where the crests stand, the valleys between them are dry and nearly as light: high country, one mass, not stripes.)
@@ -797,15 +799,6 @@ void main() {
     float drawn = 0.6 * vnoise(tw * vec2(2.2, 5.5) + 7.0 + 0.5 * swirl) + 0.4 * vnoise(tw * vec2(4.5, 11.0) + 19.0);
     float toNE = dot(lakeAt / max(lakeR, 0.05), vec2(0.7, -0.7));
     float amber = max(pow(smoothstep(min(0.56 + 0.4 * drawn + 0.24 * toNE + 0.16 * (vnoise(lakeAt / max(lakeR, 0.05) * 1.4 + 9.0) - 0.5), 0.94), 1.0, shoreR + 0.07), 1.9) * (0.5 + 0.5 * smoothstep(0.25, 0.6, vnoise(lakeAt / max(lakeR, 0.05) * 2.3 + 3.0))), 0.45 * smoothstep(0.08, 0.55, shallow) * smoothstep(0.6, 0.9, lakeR)) * (1.0 - 0.8 * smoothstep(0.1, 0.8, toNE));
-    // (Threads of the ochre leave the shallows and trail round into the dark, each curling the way the water turns.)
-    float inFrom = shoreR + 0.07;
-    float turned = 7.5 * (1.0 - inFrom) + 0.03 * uTime;
-    vec2 onRing = mat2(cos(turned), sin(turned), -sin(turned), cos(turned)) * (lakeAt / max(lakeR, 0.05));
-    float threadAt = vnoise(onRing * 2.6 + 1.3 * inFrom + 0.35 * swirl + 4.0);
-    float broken = vnoise(lakeAt * 9.0 + 2.0 * swirl + 5.0);
-    float thread = (1.0 - smoothstep(0.0, (0.011 + 0.05 * smoothstep(0.7, 0.96, inFrom)) * (0.3 + 1.4 * broken * broken), abs(threadAt - 0.5))) * smoothstep(0.6, 0.8, inFrom) * (1.0 - smoothstep(0.95, 1.0, inFrom)) * smoothstep(0.35, 0.6, vnoise(onRing * 1.1 + 9.0));
-    // (They are seen from some height only: near the water a thread is a mark on it.)
-    amber = max(amber, 0.5 * thread * (0.2 + 0.8 * smoothstep(0.66, 0.94, inFrom)) * smoothstep(0.25, 0.6, broken) * smoothstep(40.0, 90.0, uViewKm));
     float paler = smoothstep(0.35, 1.0, 0.25 * shallow + smoothstep(0.9, 1.0, shoreR + 0.07) + 0.3 * (drawn - 0.5));
     vec3 eye = mix(vec3(0.002, 0.0065, 0.017), mix(vec3(0.15, 0.07, 0.007), vec3(0.34, 0.185, 0.028), paler) * (0.55 + 0.9 * drawn) * (0.75 + 0.5 * swirl), amber * (0.55 + 0.45 * smoothstep(0.3, 0.6, swirl)));
     bed = mix(bed, eye, max(1.0 - smoothstep(1.03, 1.1, shoreR + 0.07), 1.0 - smoothstep(1.12, 1.3, lakeR)) * (1.0 - stream * smoothstep(0.98, 1.06, lakeR)));
