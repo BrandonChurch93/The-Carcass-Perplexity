@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 96, 2026-11-26 06:10 UTC:
+Status 97, 2026-11-26 07:07 UTC:
 
-- `01-eye1-v1.jpg`: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water. They stand further off than in the picture by a logged choice. Still missing: rings at every leg and muzzle, and the pebbles are even dark chips
-- `02-ribs0-v1.jpg`: The Ribs, wide view, approved left, version 1 right: the blades carry relief now and the face in the backdrop is gone. The flat is still one even pebble sheet where the picture has wet sand that mirrors the sky, the blades are fluted like tusks, the near cliff is striped
-- `03-reveal4-v1.jpg`: The Reveal from orbit, approved left, version 1 right: open sea west of the skull, glint at the right edge, a wider cyclone, more land round the bones as Brandon asked. The land is one brown ridge texture and the sea cloud is dots; both are on the owner's list
-- `04-spine0-v1.jpg`: The Spine, wide view, approved left, version 1 right: the furthest of the six from its picture. No sea of cloud, a pale combed tongue for a ridge, a tan cone for a spire. Both owners have the order: cloud deck first, then spire and ridge as one snowed rock
+- `01-c-ribs0.jpg`: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded rock in courses, the face in the backdrop is gone. Still off: the stones lie evenly like dropped pebbles, the blades are darker and more ribbed than the picture's pale smooth stone, the feeders are bright pink where the picture has thin dark ones
+- `02-c-marsh3.jpg`: The Marsh's wallowers, approved left, version 2 right: the great one stands on a mud bank with a creased hide, the brine is red. Still off: sky and far flats are white where the picture is a warm wet haze, the stalks read as clean palm trunks, the brine is flat paint without mirror, the one in the water has a cut-out edge
+- `03-c-spine0.jpg`: The Spine, wide view, approved left, heartbeat of 06:47 right: there is a sea of cloud now, a snowed ridge, a rock spire with its cave, far spires, a strike. Still off: the spire is a twisted cone with a combed pattern, the snow reads as creased cloth, the kites are a tangle of hair where the picture has a few long ribbons
+- `04-c-reveal4.jpg`: The Reveal from orbit, approved left, heartbeat of 06:57 right: more land round the bones as you asked, in kinds of country (forest, scree, red flanks, green plain), sea cloud in groups, the body still reads at once. Still off: the ranges repeat one ridge pattern, the limbs are thicker than the picture's, the glint is weak
 
+Status 96, 2026-11-26 06:10 UTC, showed: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water.
 Status 95, 2026-11-26 05:51 UTC, showed: The Eye's far wall, the same crop: the old picture left, the remade one at double size right.
 Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
-Status 93, 2026-11-26 05:16 UTC, showed: The Heart, kept picture beside the new render of the same frame: identical (0 difference in every pixel once saved the same way); Wave 3...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T06:10:05Z
-phase 4: 9.99 h used of 17.00 h
-build: 30.31 h used of 72.00 h
+2026-11-26T07:07:32Z
+phase 4: 10.95 h used of 17.00 h
+build: 31.27 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 19
+minutes since the last status: 57, status overdue
 ```
 
 ## Phases
@@ -1351,6 +1351,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. - 2026-11-26 05:58 UTC. Seen in the Ribs sea owner's look of 05:47: the far backdrop at the top right of the wide view reads as a giant face (a pale form with one dark brow line and a round hollow). It breaks the note that nothing says the land is a body before the Reveal, and it is what a juror called a backdrop mountain with a face. Sent to the Ribs ground owner as its first item with the crop; it checks every key and the opening for the same form.
 - 2026-11-26. - 2026-11-26 06:12 UTC. Wave 3, version 1: nine of ten owners merged into main between 05:58 and 06:09 (the Ribs' ground and sea, the Eye, the Spine's ground and storm, the Reveal, the Marsh's ground and life, the Breath's ground). One conflict, in the Eye's materials list, settled by keeping main's entry for the remade far wall. Each owner got the Builder's notes on its version, worst first, by what a viewer names first. The Reveal's join (frames 9773 to 9795, round 19 R4) was checked with three draft frames from main: continuous; closed, not declined. A critic's line against the broad land round the Reveal's bones would be declined, since Brandon's note 10 asks for it.
 - 2026-11-26. - 2026-11-26 06:14 UTC. Disk: a render refused to start with 3.0 GB free. Deleted harness output under out/work (old stills, the jury's sent packs, the site copy that the review tool builds again, the music cleaning's working stems, old film parts) and the reference run's first two rounds of candidates outside the repo (their kept takes are with Brandon as shared files and the approved pictures are in the repo). 4.5 GB free.
+- 2026-11-26. - 2026-11-26 07:08 UTC. Status 97 was shown at 07:08, 58 minutes after status 96: a miss of the 30 minute rule by 28 minutes. Cause: the Builder waited for mail from 06:15 and the owners' heartbeats arrive without waking it; the first mail that did was the Marsh life owner's version 2 at 07:06. From now on the Builder does not wait without a timer: it polls a clock that ends 25 minutes after the last status and reads mail between polls.
 
 ## Notes from Brandon
 
