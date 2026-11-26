@@ -18,7 +18,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [2.4, 0.8, 0.9, 3.2, 0.6, 0.15];
+const FLASH_OF = [3.6, 0.8, 0.9, 3.2, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
@@ -74,15 +74,24 @@ const ROOT_FRAGMENT = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform sampler2D tRoot;
 uniform vec3 uGlow;
+// x: how far the light has died since the stroke, 0 to 1; y: which stroke lit it.
+uniform vec2 uDie;
 varying vec2 vUv;
 varying vec2 vOff;
 void main() {
-  vec3 pic = texture2D(tRoot, vUv).rgb;
+  // Each stroke lights the cloud from another side, and as the light dies it draws in toward the root: the picture is turned for each
+  // stroke and read closer and a little aside as it sinks, so no two frames show one shape.
+  float turn = 1.9 * uDie.y + 0.35 * uDie.x;
+  vec2 o = (vUv - 0.5) * (1.0 - 0.3 * uDie.x);
+  vec2 uv = 0.5 + vec2(o.x * cos(turn) - o.y * sin(turn), o.x * sin(turn) + o.y * cos(turn)) + vec2(0.05, -0.03) * uDie.x;
+  vec3 pic = texture2D(tRoot, uv).rgb;
   // The picture is black along its edges; the card's own edge is taken out besides.
   float edge = (1.0 - smoothstep(0.7, 1.0, abs(vOff.x))) * (1.0 - smoothstep(0.7, 1.0, abs(vOff.y)));
   // The brightest of it burns out about the root; its dim billows stay dim, so the cloud keeps its shapes in the light.
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
-  vec3 c = pic * (0.35 + 1.6 * lum) * uGlow * edge;
+  // The dim billows far from the root go dark first.
+  float keep = smoothstep(0.0, 0.22, lum * (1.25 - 0.75 * length(vOff)) - 0.5 * uDie.x);
+  vec3 c = pic * (0.35 + 1.6 * lum) * uGlow * (edge * mix(1.0, keep, min(1.0, 3.0 * uDie.x)));
   gl_FragColor = vec4(c * (1.0 - uSolo), 0.0);
 }`;
 
@@ -136,7 +145,7 @@ void main() {
 
 /** The bloom at the struck tip: its radius in pixels of a 4K frame, and the glare's radiance as a share of the hot spot's. */
 const BLOOM_PIXELS = 90;
-const BLOOM_GLARE = 0.0008;
+const BLOOM_GLARE = 0.005;
 const HALO_VERTEX = /* glsl */ `
 #define BLOOM_PIXELS ${BLOOM_PIXELS.toFixed(1)}
 uniform vec3 uAt;
@@ -163,7 +172,7 @@ void main() {
   float r = length(vUv);
   // White where the channel lands, burning out the tip under it; round that the glare the lens makes of it, violet, falling to nothing
   // inside the card. It hides what is behind it only as far as it outshines it.
-  float core = exp(-r * r * 1400.0);
+  float core = exp(-r * r * 320.0);
   float fall = (1.0 - r) * (1.0 - r);
   float glare = fall / (1.0 + r * r * 14.0);
   float power = max(uColour.r, max(uColour.g, uColour.b));
@@ -183,6 +192,7 @@ interface Bolt {
   againGroup: THREE.Group;
   firstGroup: THREE.Group;
   rootGlow: THREE.Vector3;
+  rootDie: THREE.Vector2;
   age: { value: number };
   spotGlow: THREE.Vector3;
   top: THREE.Vector3;
@@ -217,8 +227,9 @@ export function create(ctx: Context): Piece {
 
     // The cloud about the root. It stands a little under the channel's top, where the channel comes out of the cloud.
     const rootGlow = new THREE.Vector3();
+    const rootDie = new THREE.Vector2();
     const rootAt = new THREE.Vector3().lerpVectors(top, tip, 0.05);
-    const root = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: ROOT_VERTEX, fragmentShader: ROOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tRoot: { value: rootPicture }, uAt: { value: rootAt }, uLay: { value: new THREE.Vector4(0.5 * ROOT_WIDE * Math.min(1, site.rise / 600), rng.range(-0.5, 0.5), index % 2 === 0 ? 1 : -1, 0) }, uGlow: { value: rootGlow } }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
+    const root = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: ROOT_VERTEX, fragmentShader: ROOT_FRAGMENT, uniforms: { ...ctx.rig.uniforms, tRoot: { value: rootPicture }, uAt: { value: rootAt }, uLay: { value: new THREE.Vector4(0.5 * ROOT_WIDE * Math.min(1, site.rise / 600), rng.range(-0.5, 0.5), index % 2 === 0 ? 1 : -1, 0) }, uGlow: { value: rootGlow }, uDie: { value: rootDie } }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor }));
     root.renderOrder = 11;
     root.frustumCulled = false;
     group.add(root);
@@ -260,7 +271,7 @@ export function create(ctx: Context): Piece {
     // off is lit from above as the lit cloud lights it and not grazed.
     const cast = new THREE.Vector3().lerpVectors(tip, top, 0.28);
     cast.y = Math.max(cast.y, tip.y + (CAST_UP[index % CAST_UP.length] as number));
-    return { site, group, first: firstChannel.env, again: againChannel.env, firstGroup: firstChannel.group, againGroup: againChannel.group, rootGlow, age, spotGlow, top, cast, mid, tip };
+    return { site, group, first: firstChannel.env, again: againChannel.env, firstGroup: firstChannel.group, againGroup: againChannel.group, rootGlow, rootDie, age, spotGlow, top, cast, mid, tip };
   });
 
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
@@ -358,7 +369,9 @@ export function create(ctx: Context): Piece {
         const land = Math.max(hard, HOLD_LAND * e.held);
         const sky = Math.max(hard, HOLD_CLOUD * e.glow);
         // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky, 0.5 * before));
+        // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.5 * before));
+        b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
         if (within > 0 && hard <= 0 && INNER_CLOUD * within > (CLOUD_OF[of] as number) * sky) {
           // A cloud lit from inside: its own glow and what of it comes in by the canal's mouth. No light with a shadow.
           flashTip.set(INNER_AT.x - 0.4 * INNER_SPAN.x, INNER_AT.y - 0.4 * INNER_SPAN.y, INNER_AT.z - 0.4 * INNER_SPAN.z, FLASH * INNER_PULSE * within);
