@@ -64,7 +64,7 @@ void main() {
   vec2 p = position.xz + uEye.xz;
   float r = length(position.xz);
   float bed = texture2D(tLand, (p - uLandRect.xy) * uLandRect.zw).r;
-  float calm = smoothstep(0.3, 9.0, -bed);
+  float calm = smoothstep(0.2, 4.5, -bed);
   vec2 g;
   float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;
   // No crest ever stands over a low lens: close under it the water keeps a clear metre below.
@@ -107,7 +107,7 @@ void main() {
   // Water shoals toward the sand and toward the foot of a blade alike.
   float ragged = (textureLod(tChop, p / 173.0, levelOf(tChop, 173.0)).b - 0.5) * 5.0 + (textureLod(tChop, p.yx / 39.0, levelOf(tChop, 39.0)).b - 0.5) * 2.0;
   float shoal = min(depth + ragged * smoothstep(0.0, 3.0, depth), 0.2 + feet * 0.4);
-  float calm = smoothstep(0.3, 9.0, depth);
+  float calm = smoothstep(0.2, 4.5, depth);
   vec2 g;
   float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;
   g *= calm;
@@ -235,7 +235,7 @@ float levelOf(sampler2D t, float metres) {
 // Ripples seen at a glance keep their crests: read by the long side they went to glass a stone's throw out. Between the long side and the short.
 float rippleLevel(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
-  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size);
+  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size) + 0.7;
 }
 // The rig's sky, cloud shadow and contact, word for word (shared/glsl.ts: skyCloud, cloudShade, contactDrawn), but each picture read at a
 // stated level: over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
@@ -278,6 +278,9 @@ void main() {
   vec4 barB = textureLod(tChop, p / 7.3, levelOf(tChop, 7.3));
   // Two trains of ripples that cross, each bent by the slow water under it so that no crest runs straight or evenly spaced.
   vec2 bend = (barB.xy - 0.5) * 0.9 + (barA.xy - 0.5) * 2.2;
+  // Before the bore the flat is sucked out toward it: what lies on the water is drawn to the wall, and the level falls a hand.
+  float drawn = smoothstep(190.0, 80.0, p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3));
+  bend.y += 14.0 * drawn * drawn;
   vec4 c1 = textureLod(tChop, (p + bend) / 3.1 - uTime * uWind * 0.16, rippleLevel(tChop, 3.1));
   vec4 c2 = textureLod(tChop, (vec2(p.y, -p.x) + bend.yx * 0.4) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, rippleLevel(tChop, 0.83));
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
@@ -303,7 +306,8 @@ void main() {
   // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
   // The sheet is never still: thin water comes on and drains back round every stone and bar, a hand's breadth, each stretch in its own time.
   float tide = barA.g;
-  depth += 0.011 * sin(uTime * 0.9 + tide * 19.0) + 0.006 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
+  depth += 0.004 * sin(uTime * 0.9 + tide * 19.0) + 0.004 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
+  depth -= 0.07 * drawn;
   // What the water has just left is wet and dark: a band on every stone and bar above the line.
   bool dry = depth < -0.09;
   float wetBand = 0.42 * smoothstep(-0.09, -0.004, depth);
@@ -315,8 +319,8 @@ void main() {
   // The wind works the sheet in cats' paws: ruffled dark stretches and slack bright ones, a few metres each, that drift.
   float paw = smoothstep(0.3, 0.7, 0.6 * barA.a + 0.4 * barB.a + 0.25 * sin(uTime * 0.35 + barA.r * 12.0));
   float gust = 0.35 + 0.65 * paw;
-  float ruffle = 0.3 + 0.7 * paw;
-  vec2 slope = ((c1.xy - 0.5) * 0.17 + vec2(-s2.y, s2.x) * 0.11) * ruffle * smoothstep(0.0, 0.07, depth);
+  float ruffle = 0.2 + 0.8 * paw;
+  vec2 slope = ((c1.xy - 0.5) * 0.3 + vec2(-s2.y, s2.x) * 0.26) * ruffle * smoothstep(0.0, 0.07, depth);
   slope += ringSlope;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -327,7 +331,7 @@ void main() {
   float open = land.g * (1.0 - stoodOver(vWorld));
   float sun = sunOn(vWorld, land);
   // The water of the flat is full of sand: what it mirrors it mirrors warm and a little dulled.
-  vec3 refl = mirrorSky(r) * mix(1.0, open, 0.5) * vec3(0.84, 0.81, 0.77);
+  vec3 refl = mirrorSky(r) * mix(1.0, open, 0.5) * vec3(0.86, 0.79, 0.72);
   // The blades stand in it, dark, paler with the air between.
   // The lead draws each blade's true image on the water after this sheet (land/, MIRROR): the walked mirror here stood as a block beside it and is off.
 #ifdef WALKED_MIRROR
@@ -344,14 +348,16 @@ void main() {
     float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
     float white = max(1.0 - smoothstep(0.1, 0.2, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
-    // It is white water from foot to crest now: its lifted body shows grey in the mirror, never a hole.
-    refl = mix(refl, mix(vec3(0.42, 0.46, 0.45), vec3(0.9), white) * lit, 0.8 * wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
+    // Its dark face stands in the mirror between the white of its foot and of its lip.
+    refl = mix(refl, mix(vec3(0.2, 0.25, 0.24), vec3(0.9), white) * lit, 0.8 * wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
+  // Sparkle: here and there a ripple's flank finds the break in the cloud and throws it at the lens, a point at a time.
+  refl += uSunColour * 0.22 * smoothstep(0.8, 0.95, c2.a) * smoothstep(0.5, 0.75, c1.a) * ruffle * sun * smoothstep(0.02, 0.08, depth);
   vec3 hv = normalize(v + uSunDir);
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
-  float murk = 1.0 - exp(-max(depth, 0.0) * 2.2);
+  float murk = 1.0 - exp(-max(depth, 0.0) * 1.3);
   vec3 body = vec3(0.125, 0.11, 0.085) * e / 3.14159;
   // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
