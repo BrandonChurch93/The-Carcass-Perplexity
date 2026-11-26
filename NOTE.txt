@@ -1,7 +1,7 @@
-2026-11-26 16:55 UTC
-work at 143377dc on agent/heart-walkers
-v2 before the merge: hero on different feet at 3028 (hind pad up, knee folded) and 3280 (far fore pad up, hangs by the trunk and reads busy); walker 2 with a pad up at 3028; sheet neighbours after the fourth cell still nearly alike; 3156 and 2507 unchanged
+2026-11-26 17:16 UTC
+work at c15dc26b on agent/heart-walkers
+v2 merged: hero on different feet at 3028 (hind pad up, knee folded) and 3280 (far fore pad up, hangs by the trunk and reads busy); walker 2 with a pad up at 3028, trunk down at 3280; sheet neighbours after the fourth cell still nearly alike; 3156 and 2507 byte for byte
 look-1.jpg = out/work/guard/v2-sheet.jpg
-look-2.jpg = out/work/guard/v2-3028-3280.jpg
-look-3.jpg = out/work/guard/v2-3156-approved.jpg
-look-4.jpg = out/work/guard/v2-2507.jpg
+look-2.jpg = out/work/guard/v2m-3028-3280.jpg
+look-3.jpg = out/work/guard/v2m-3156-approved.jpg
+look-4.jpg = out/work/guard/v2m-2507.jpg
