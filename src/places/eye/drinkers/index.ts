@@ -129,10 +129,10 @@ void main() {
   skin *= mix(0.9, 1.03, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
   float wet = 1.0 - smoothstep(0.3, 0.8, above + 0.3 * ragged);
   // Its legs are dark with the mud and the water of the shore, to above the knee.
-  skin *= mix(0.5, 1.0, smoothstep(0.8, 1.5, above + 0.12 * ragged));
+  skin *= mix(vec3(0.36, 0.32, 0.3), vec3(1.0), smoothstep(0.75, 1.5, above + 0.12 * ragged));
   float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * vec2(31.0, 17.0))) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  vec3 albedo = mix(skin * mix(1.0, 0.7, wet), vec3(0.11, 0.085, 0.065), 0.3 * fleck);
+  vec3 albedo = mix(skin * mix(1.0, 0.62, wet), vec3(0.11, 0.085, 0.065), 0.3 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.7, 1.0, vShade.x);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
