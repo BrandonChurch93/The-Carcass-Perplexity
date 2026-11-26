@@ -183,9 +183,12 @@ export function create(ctx: Context): Piece {
     const l = Math.hypot(dx, dz) || 1;
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     grain > 0
-      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift } })
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 } })
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
           tRock: { value: rockC },
           tRockN: { value: rockN },
@@ -211,9 +214,6 @@ export function create(ctx: Context): Piece {
   };
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
-  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
-  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
-  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
   const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 47.5 } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
@@ -328,15 +328,17 @@ export function create(ctx: Context): Piece {
     const rock = { x: at.x, z: at.z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.25, 0.25), kind: scatter.int(KINDS), sink: scatter.range(0.15, 0.4) + 0.2 };
     if (i % 2 === 0) placed.push(rock);
   }
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 700; i++) {
     const x = scatter.range(-300, 380);
     const z = scatter.range(-1500, 260);
     const size = 0.18 + 1.1 * Math.pow(scatter.next(), 3);
-    placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) });
+    const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) };
+    // In groups, bare flat between them: a strewing at even spacing reads as one.
+    if (fbm3(x / 37, 1.5, z / 37, 2) > 0.56) placed.push(rock);
   }
   // Cobbles and half sunk stones, in drifts: thick where the floor stands proud, thin in the pools.
-  for (let i = 0; i < 1500; i++) {
-    const near = i < 800;
+  for (let i = 0; i < 3000; i++) {
+    const near = i < 1600;
     const x = near ? STATIONS.establish[0] + scatter.range(-170, 330) : scatter.range(-300, 380);
     const z = near ? STATIONS.establish[1] - 420 * Math.pow(scatter.next(), 1.6) + 30 : scatter.range(-1500, 200);
     const size = 0.05 + 0.3 * Math.pow(scatter.next(), 4);
@@ -345,7 +347,7 @@ export function create(ctx: Context): Piece {
     const tilt = scatter.range(-0.3, 0.3);
     const kind = scatter.int(KINDS);
     const sink = scatter.range(0.2, 0.55);
-    if (drift > 0.42 + 0.2 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
+    if (drift > 0.52 + 0.1 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
   }
   const ground0 = ctx.rig.land.height;
   // Stones of a fist's to a head's size close under the lens of each key on the floor: thick on the bars, a few in the films of water.
