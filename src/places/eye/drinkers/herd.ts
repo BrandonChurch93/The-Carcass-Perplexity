@@ -36,7 +36,7 @@ const SHORE_KEY = (9003 - 8305) / 60;
 const MATS_KEY = (8600 - 8305) / 60;
 
 /** How deep they wade: the bed they stand on is never further under the water than this, metres. */
-export const WADE = -0.16;
+export const WADE = -0.34;
 
 const hash = (n: number): number => {
   const s = Math.sin(n * 127.1 + 311.7) * 43758.5453;
@@ -135,7 +135,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const s = b.size;
   const o = d.own;
   const bearing = d.facing * DEG;
-  const y = d.level ?? Math.max(WADE, ground(d.x, d.z));
+  const y = d.level ?? Math.max(WADE * s, ground(d.x, d.z));
   const sinB = Math.sin(bearing);
   const cosB = Math.cos(bearing);
   const shift: V3 = [0, 0, 0];
@@ -159,7 +159,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
     // The ground under this hoof, in the world.
     const wx = d.x - cosB * hx + sinB * hz;
     const wz = d.z - sinB * hx - cosB * hz;
-    const floor = d.level === undefined ? Math.max(WADE, ground(wx, wz)) - y : 0;
+    const floor = d.level === undefined ? Math.max(WADE * s, ground(wx, wz)) - y : 0;
     hooves.push({ at: [hx, floor + 0.17 * s * arcUp, hz], fold: arcUp });
     // Its weight goes off the leg before the hoof leaves the ground and comes back on after it lands.
     const weight = Math.max(ease(1.0, 0.2, until), 1 - ease(swing * 0.6, swing + 0.7, since));
