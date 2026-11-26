@@ -27,7 +27,7 @@ const FLASH_OF = [3.6, 0.8, 0.9, 3.2, 0.6, 0.15];
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
 const CLOUD_OF = [1.6, 0.5, 0.8, 0.75, 0.45, 0.85];
-const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 1.2];
+const PULSE_OF = [1, 0.7, 0.8, 0.75, 0.45, 2.5];
 const ROUND_OF = [0.02, 0.2, 0.2, 0.7, 0.02, 0.15];
 /** Each strike's share of the light in the cloud about its root. */
 const ROOT_OF = [1, 0.8, 0.9, 0.8, 0.7, 0.8];
