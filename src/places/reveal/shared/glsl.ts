@@ -47,6 +47,14 @@ float limbCos(vec2 xz) {
   return sqrt(max(1.0 - d * d, 0.0));
 }
 
+// The day at a point of the planet: 1 in full sun, falling toward the night side. The edge of the night lies off the frame on the
+// side away from the sun as the rise ends, and creeps in while the titan is held: the planet turns.
+float dayAt(vec2 xz) {
+  float along = dot(xz, -normalize(uSunDir.xz));
+  float edge = 2100.0 - 16.0 * max(uTime - 8.0, 0.0);
+  return 1.0 - 0.6 * smoothstep(edge - 250.0, edge + 450.0, along);
+}
+
 // Irradiance of the blue sky on a face: the air's scattered light, from above.
 vec3 skyIrradiance(vec3 n) {
   return uSkyColour * (0.45 + 0.4 * n.y);
@@ -62,8 +70,9 @@ float contactAt(vec3 p) {
 
 // The shading every opaque surface uses. v points from the surface to the camera. occ is the share of the sun that reaches the point (cloud shade, relief shade).
 vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
-  float sun = max(dot(n, uSunDir), 0.0) * occ;
-  vec3 e = uSunColour * sun + skyIrradiance(n) * (0.55 + 0.45 * occ);
+  float day = dayAt(p.xz);
+  float sun = max(dot(n, uSunDir), 0.0) * occ * day;
+  vec3 e = uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + skyIrradiance(n) * (0.55 + 0.45 * occ) * (0.5 + 0.5 * day);
   vec3 c = albedo * e / 3.14159;
   vec3 h = normalize(uSunDir + v);
   float a = max(rough * rough, 0.002);
