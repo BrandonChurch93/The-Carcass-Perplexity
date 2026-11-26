@@ -104,11 +104,11 @@ void main() {
     grain = texture2D(tHideNh, uvF).b;
   }
   // What the picture says of the skin beside its own mean: applied to the colour the shader sets for each part.
-  vec3 told = mix(vec3(1.0), (0.7 * hideC + 0.3 * hideF) / vec3(0.44, 0.308, 0.249), mid);
+  vec3 told = mix(vec3(1.0), (0.85 * hideC + 0.15 * hideF) / vec3(0.44, 0.308, 0.249), mid);
   told = mix(vec3(dot(told, vec3(0.333))), told, 1.1);
   float crack = clamp(dot(told, vec3(0.333)), 0.0, 2.0);
 
-  vec3 pale = mix(vec3(0.5, 0.39, 0.36), vec3(0.74, 0.66, 0.6), smoothstep(0.25, 0.7, blotch)) * (0.78 + 0.44 * mottle) * clamp(told, 0.0, 2.0);
+  vec3 pale = mix(vec3(0.5, 0.39, 0.36), vec3(0.74, 0.66, 0.6), smoothstep(0.25, 0.7, blotch)) * (0.78 + 0.44 * mottle) * clamp(mix(vec3(1.0), told, kind > 2.5 ? 0.45 : 1.0), 0.0, 2.0);
   vec3 raw = vec3(0.58, 0.34, 0.3);
   vec3 albedo;
   float rough = 0.7;
@@ -138,7 +138,7 @@ void main() {
     height += (0.03 * drape + 0.003 * crease) * mid * (1.0 - 0.6 * cage);
     albedo = pale * (0.82 + 0.18 * crack) * (1.0 - 0.12 * between_) * (1.0 + (0.4 * drape + 0.12 * crease) * mid);
     float between = between_;
-    occ *= 1.0 - 0.28 * between - 0.07 * back * (1.0 - knuckle) * mid;
+    occ *= 1.0 - 0.16 * between - 0.07 * back * (1.0 - knuckle) * mid;
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.2 * vein * mid);
     float sore = smoothstep(0.42, 0.66, mottle) * (0.3 + 0.5 * smoothstep(0.4, 0.65, blotch)) + 0.55 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.4 * smoothstep(0.86, 1.0, u) + 0.3 * smoothstep(0.1, 0.0, u) + 0.3 * smoothstep(0.86, 1.0, sn);
     albedo = mix(albedo, raw, 0.55 * clamp(sore, 0.0, 0.8));
@@ -147,13 +147,13 @@ void main() {
     albedo = mix(albedo, vec3(0.36, 0.34, 0.31), belly * (0.35 + 0.45 * smoothstep(0.35, 0.65, vnoise(q * 13.0))));
   } else if (kind < 1.5) {
     // The neck: slack skin in folds where it leaves the chest, tighter and pinker along it, raw at the end where the tendrils root.
-    float fold = vnoise(vec2(vUv.x * 34.0, vUv.y * 5.0) + seed) - 0.5 + 0.5 * (pow(0.5 + 0.5 * sin(vUv.x * 62.0 / 2.1 * 2.0), 2.0) - 0.4) * smoothstep(0.15, 0.4, u);
+    float fold = vnoise(vec2(vUv.x * 34.0 + 3.0 * vnoise(vUv * 7.0 + seed), vUv.y * 9.0) + seed) - 0.5;
     height = 0.006 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid + (0.003 * (swell - 0.5) + 0.0006 * (grain - 0.5)) * mid;
     albedo = pale * (0.82 + 0.18 * crack);
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.16 * vein * mid);
     albedo = mix(albedo, raw, clamp(0.3 * smoothstep(0.5, 0.75, mottle) + smoothstep(0.6, 1.0, u) * (0.5 + 0.4 * blotch), 0.0, 0.85));
     albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.3 * pimple * smoothstep(0.4, 0.7, mottle));
-    albedo *= 1.0 + 0.5 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
+    albedo *= 1.0 + 0.22 * fold * (1.0 - 0.45 * smoothstep(0.0, 0.4, u)) * mid;
     thin = 0.7;
   } else if (kind < 2.5) {
     // A tendril: raw pink where it roots, dark wine-red along it, and the ends darker still with what they have dragged through.
@@ -175,13 +175,13 @@ void main() {
     float joint = exp(-pow((u - 0.47) / 0.06, 2.0)) + exp(-pow((u - 0.93) / 0.04, 2.0));
     float scale = vnoise(vUv * vec2(55.0, 110.0) + seed);
     // Cords stand under the skin above and below the joint.
-    float cord = pow(0.5 + 0.5 * cos(vUv.y / max(vInfo.z, 0.004) * 3.0 + seed), 3.0) * (1.0 - 0.6 * joint);
+    float cord = pow(0.5 + 0.5 * cos(vUv.y / max(vInfo.z, 0.004) * 3.0 + seed), 3.0) * exp(-pow((u - 0.47) / 0.16, 2.0)) * (1.0 - 0.6 * joint);
     height = (0.002 * (swell - 0.5) + 0.0005 * (grain - 0.5)) * mid + 0.0018 * (scale - 0.5) * shank * fine + 0.006 * cord * mid;
-    occ *= 0.72 + 0.28 * cord;
+    occ *= 1.0 - 0.25 * cord;
     albedo = pale * (0.8 + 0.2 * crack);
     albedo = mix(albedo, vec3(0.4, 0.42, 0.52), 0.16 * vein * mid * (1.0 - shank));
     albedo = mix(albedo, raw, 0.5 * joint + 0.25 * smoothstep(0.5, 0.75, mottle) * (1.0 - shank));
-    albedo = mix(albedo, vec3(0.24, 0.2, 0.18) * (0.7 + 0.5 * crack), shank * (0.7 + 0.25 * mottle) * (1.0 - 0.4 * joint));
+    albedo = mix(albedo, vec3(0.1, 0.065, 0.058) * (0.7 + 0.5 * crack), shank * (0.75 + 0.25 * mottle) * (1.0 - 0.3 * joint));
     // Wet from the water up to where it last stood deeper.
     wet = smoothstep(uSea + 0.5, uSea + 0.08, vWorld.y + 0.2 * (blotch - 0.5));
     thin = 0.35;
@@ -233,15 +233,15 @@ void main() {
   float halo = pow(clamp(0.5 + 0.5 * dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0, 1.0), 2.0) * 0.7;
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.56 + 0.6 * smoothstep(30.0, 150.0, far)) * (0.5 + 0.4 * dot(n, flat_));
+  float fogLight = (0.47 + 0.7 * smoothstep(25.0, 140.0, far)) * (0.46 + 0.42 * dot(n, flat_) + 0.12 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.22, 1.0, 0.8) / 3.14159;
-  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 1.5 * halo) + fogColour * (9.0 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
+  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (9.0 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = pow(1.0 - nv, 1.6) + 2.6 * pow(1.0 - nv, 4.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
   vec3 through = mix(vec3(1.0, 0.6, 0.45), vec3(0.45, 0.1, 0.07), tendril);
-  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 3.2 * (0.3 + 0.7 * against * against) * edge * lit * (0.5 + 0.5 * occ) * smoothstep(-0.5, 0.3, dot(n, uSunDir)));
+  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 5.0 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.5, 0.3, dot(n, uSunDir)));
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;
