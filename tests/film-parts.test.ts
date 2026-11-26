@@ -19,7 +19,7 @@ describe('the parts of the whole film', () => {
   it('are named once each, drawn by places of the film, and never a stand-in', () => {
     const names = FILM_PARTS.map((p) => p.name);
     expect(new Set(names).size).toBe(names.length);
-    expect(names).toContain('opening');
+    for (const name of ['opening', 'handoff', 'ending', 'loop']) expect(names).toContain(name);
     for (const p of FILM_PARTS) {
       expect(['built', 'fallback']).toContain(p.state);
       expect(STATES).toContain(p.state);

@@ -12,7 +12,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/land.png",
@@ -34,7 +34,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/ribs.png",
@@ -56,7 +56,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/ledges.png",
@@ -78,7 +78,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/weed.png",
@@ -100,7 +100,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/rocks.png",
@@ -122,7 +122,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/sea.png",
@@ -144,7 +144,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/runnels.png",
@@ -166,7 +166,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/surf.png",
@@ -188,7 +188,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/bore.png",
@@ -210,7 +210,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/drowned.png",
@@ -232,7 +232,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/kite-wings.png",
@@ -254,7 +254,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/sky.png",
@@ -276,7 +276,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/air.png",
@@ -298,7 +298,7 @@
         "public/assets/ribs",
         "src/places/ribs"
       ],
-      "hash": "e25a2af1a005b207",
+      "hash": "6e946d308d1591c0",
       "standIn": {
         "hash": "ae1b7aca7cca81a8",
         "picture": "out/stills/parts/ribs/cloud.png",
@@ -1872,7 +1872,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/continent.png",
@@ -1894,7 +1894,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/sea.png",
@@ -1916,7 +1916,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/salt.png",
@@ -1938,7 +1938,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/lake.png",
@@ -1960,7 +1960,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/lava.png",
@@ -1982,7 +1982,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/vapour.png",
@@ -2004,7 +2004,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/cloud.png",
@@ -2026,7 +2026,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/storm.png",
@@ -2048,7 +2048,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/cyclone.png",
@@ -2070,7 +2070,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/space.png",
@@ -2092,7 +2092,7 @@
         "public/assets/reveal",
         "src/places/reveal"
       ],
-      "hash": "bbfab0b3d7bbf76c",
+      "hash": "f26ea1f15423f9ac",
       "standIn": {
         "hash": "41173928c314d275",
         "picture": "out/stills/parts/reveal/atmosphere.png",
@@ -2115,7 +2115,7 @@
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "3e13a2de132926e9"
+      "hash": "51d802f37e2b75ab"
     },
     {
       "id": "film/handoff",
@@ -2129,7 +2129,35 @@
         "src/film/film.ts",
         "src/film/parts.ts"
       ],
-      "hash": "3e13a2de132926e9"
+      "hash": "51d802f37e2b75ab"
+    },
+    {
+      "id": "film/ending",
+      "unit": "film",
+      "name": "ending",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "src/film/cut.ts",
+        "src/film/film.ts",
+        "src/film/parts.ts"
+      ],
+      "hash": "51d802f37e2b75ab"
+    },
+    {
+      "id": "film/loop",
+      "unit": "film",
+      "name": "loop",
+      "kind": "effect",
+      "state": "built",
+      "fallbackStep": null,
+      "files": [
+        "src/film/cut.ts",
+        "src/film/film.ts",
+        "src/film/parts.ts"
+      ],
+      "hash": "51d802f37e2b75ab"
     }
   ]
 }
