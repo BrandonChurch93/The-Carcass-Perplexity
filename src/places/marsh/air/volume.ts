@@ -106,7 +106,8 @@ void main() {
 
   vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97;
   ivec2 here = ivec2(gl_FragCoord.xy);
-  float jitter = float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0;
+  // (Half a step of play, and a different one for each sample of a frame: the frame's samples together are smoother than any one.)
+  float jitter = 0.25 + 0.5 * float(hash2(uint(here.x) + uint(uSampleIndex) * 131u, uint(here.y) + uint(uSampleIndex) * 71u) & 1023u) / 1024.0;
 #ifdef SHEETS
   // The steam of each source, nearest first, each marched in its own stretch of the view: a far column is cut as finely as a near one.
   // Offsets are tied to the pixel, never to the sample: thin vapour must not flicker.
@@ -253,9 +254,9 @@ void main() {
     float reach = min(far, mix(9000.0, 1100.0, open));
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0019 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.0007 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
     // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
-    bank = mix(bank, 2.2 * exp(-max(elev, 0.0) / 0.011) * show, open);
+    bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
     // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so
     // the flats go off in steps and not in one grade. (x, z: the way they face; then how far along it; then how thick.)
     for (int k = 0; k < 3; k++) {

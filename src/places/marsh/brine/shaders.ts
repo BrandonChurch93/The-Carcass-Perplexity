@@ -20,8 +20,9 @@ varying vec3 vWorld;
 uniform sampler2D tGrain;
 uniform sampler2D tFroth;
 uniform sampler2D tRipple;
+uniform sampler2D tRippleN;
 // How steep the wavelets stand: the slope a full swing of the tile is.
-const float RIPPLE = 0.5;
+const float RIPPLE = 0.3;
 // Drawn rings round whatever stands in the brine (0: none; they read as circles laid on with a pen).
 const float WADER_RINGS = 0.0;
 // Rafts of scum out on the open brine (0: none; they read as chalk dust).
@@ -58,8 +59,11 @@ void main() {
   // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
   float chop = smoothstep(60.0, 6.0, dist) * ruffle;
   vec4 rA = texture2D(tRipple, p.xz / 2.3 + vec2(0.031, 0.017) * uTime);
-  vec4 rB = texture2D(tRipple, vec2(p.z, -p.x) / 1.37 - vec2(0.023, 0.039) * uTime);
-  slope += ((rA.rg - 0.5) + (rB.ba - 0.5) * 0.7) * RIPPLE * chop;
+  // (The second and third are a picture of still brine with its relief, mat/ripple: its wavelets lie one way, as the light air lays them,
+  // and it is laid twice, the second time turned and smaller.)
+  vec2 rB = texture2D(tRippleN, vec2(p.x * 0.9 + p.z * 0.44, p.z * 0.9 - p.x * 0.44) / 3.0 - vec2(0.006, 0.027) * uTime).rg - vec2(0.5, 0.481);
+  vec2 rC = texture2D(tRippleN, vec2(p.z * 0.94 + p.x * 0.34, p.z * 0.34 - p.x * 0.94) / 1.9 + vec2(0.011, 0.035) * uTime).rg - vec2(0.5, 0.481);
+  slope += ((rA.rg - 0.5) * RIPPLE + vec2(rB.x * 0.9 - rB.y * 0.44, rB.y * 0.9 + rB.x * 0.44) * 0.3 + vec2(rC.y * 0.94 + rC.x * 0.34, rC.y * 0.34 - rC.x * 0.94) * 0.2) * chop;
   float pool = length(p.xz);
   if (pool < 16.0) {
     // Each seep sends out ring after ring: half a stride from crest to crest, 0.7 m a second, dying with the way they have come.

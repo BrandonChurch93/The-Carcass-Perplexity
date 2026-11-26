@@ -151,6 +151,8 @@ export function create(ctx: Context): Piece {
       tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 4 }) },
       tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
+      tFlat: { value: ctx.assets.texture('mat/flatplate.jpg', { kind: 'colour', anisotropy: 4 }) },
+      tFlatH: { value: ctx.assets.texture('mat/flatplate-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 4 }) },
       tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
       uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },

@@ -74,7 +74,7 @@ export function create(ctx: Context): Piece {
   const surface = new THREE.ShaderMaterial({
     vertexShader: BRINE_VERTEX,
     fragmentShader: BRINE_FRAGMENT,
-    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tRipple: { value: bakeRipple(ctx.rng('brine/ripple')) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
+    uniforms: { ...uniforms, uWade: { value: new THREE.Vector2(...rel(34.3, 3)) }, tFieldNear: { value: field.near }, tFieldFar: { value: field.far }, uRings: { value: rings }, uRingCount: ringCount, uSeeps: { value: seeps }, tRipple: { value: bakeRipple(ctx.rng('brine/ripple')) }, tRippleN: { value: ctx.assets.texture('mat/ripple-nh.png', { kind: 'data', repeat: true, anisotropy: 2 }) }, tFroth: { value: ctx.assets.texture('mat/froth.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) } },
     toneMapped: false,
   });
   surface.userData.depthFragment = BRINE_DEPTH;

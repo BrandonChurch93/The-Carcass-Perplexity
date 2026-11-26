@@ -21,7 +21,7 @@ uniform vec4 uRain;
 uniform sampler2D tSky;
 uniform sampler2D tFar;
 // What the far picture's white comes to in the rig's light.
-const float FAR_GAIN = 0.78;
+const float FAR_GAIN = 0.8;
 ${RIG_GLSL}
 
 void main() {
@@ -62,7 +62,11 @@ void main() {
   float fv = 0.574 + max(el, 0.0) / 0.808;
   vec3 far = texture2D(tFar, vec2(fu, min(fv, 0.995))).rgb;
   float low = smoothstep(0.3, 0.14, el);
-  c = mix(c, far * FAR_GAIN, low);
+  // The picture is as a screen shows it; the film's own curve (exposure 2, then AgX) is undone here so that it comes out as it went in:
+  // its bellies as dark and its hills as faint as they were taken. (A fit of the curve's inverse, good from 0.4 to 0.93 of white.)
+  vec3 shown = pow(far, vec3(1.0 / 2.2));
+  far = exp2((((43.76 * shown - 96.814) * shown + 79.933) * shown - 21.049) * shown - 3.544) * FAR_GAIN;
+  c = mix(c, far, low);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
