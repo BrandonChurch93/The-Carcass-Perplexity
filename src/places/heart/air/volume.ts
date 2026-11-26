@@ -7,7 +7,7 @@ import { RIG_GLSL } from '../shared/glsl';
 export const MAX_HEAT = 12;
 
 /** March steps. The cost of the volume is close to linear in these. */
-export const STEPS = { air: 6 };
+export const STEPS = { air: 5 };
 
 const COMMON = /* glsl */ `
 precision highp float;
