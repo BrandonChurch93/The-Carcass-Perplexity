@@ -67,7 +67,7 @@ void main() {
   vec3 nhd = texture2D(tRockN, ud).rgb;
   vec3 n = bump(n0, vWorld, ud, (nhd.xy - 0.5) * 2.2 + (nhb.xy - 0.5) * 2.6);
   float macro = vnoise(vUv * vec2(0.011, 0.017)) * 0.6 + vnoise(vUv * vec2(0.043, 0.06) + 5.0) * 0.4;
-  vec3 albedo = det * mix(vec3(1.0), big / 0.26, 0.6) * (0.7 + 0.55 * macro);
+  vec3 albedo = det * mix(vec3(1.0), big / 0.26, 0.6) * (0.86 + 0.66 * macro);
   // Beds a stride thick and a room thick, lying across the blade: the soft ones worn back and dark.
   float beds = 0.5 * vnoise(vec2(vUv.x * 0.03, vUv.y * 1.7)) + 0.5 * vnoise(vec2(vUv.x * 0.013 + 4.0, vUv.y * 0.55));
   float soft = smoothstep(0.55, 0.4, beds);
@@ -79,9 +79,11 @@ void main() {
   albedo *= (1.0 - 0.35 * soft) * (0.78 + 0.44 * c2);
   // Stains of damp the size of a room, grey-brown.
   float stain = smoothstep(0.3, 0.7, vnoise(vWorld.xz * 0.09 + vWorld.y * 0.13) * 0.6 + vnoise(vWorld.xz * 0.37 + vWorld.y * 0.29) * 0.4);
-  albedo *= mix(vec3(0.62, 0.61, 0.6), vec3(1.0), stain);
+  albedo *= mix(vec3(0.75, 0.74, 0.72), vec3(1.0), stain);
   // The hollows between the beds hold the dark and the damp.
-  albedo *= 0.6 + 0.4 * smoothstep(0.2, 0.55, nhb.z);
+  albedo *= 0.7 + 0.3 * smoothstep(0.2, 0.55, nhb.z);
+  // Pale stone: bone grey more than brown, the warmth left to the lichen.
+  albedo = mix(vec3(dot(albedo, vec3(0.333))), albedo, 0.65) * 1.25;
   float y = vWorld.y;
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (nhd.z - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
@@ -91,7 +93,7 @@ void main() {
   float run = vnoise(vec2(vUv.x * 0.8, vUv.y * 0.03)) * (0.4 + 0.6 * vnoise(vUv * vec2(0.06, 0.04) + 3.0));
   float white = max(smoothstep(0.36, 0.62, run + 0.3 * (nhd.z - 0.5)), smoothstep(0.35, 0.75, n0.y + 0.5 * (macro - 0.5)) * smoothstep(40.0, 90.0, y)) * (1.0 - band);
   float patches = 0.6 * vnoise(vWorld.xz * 0.021 + vWorld.y * 0.017 + 9.0) + 0.25 * vnoise(vUv * 0.13) + 0.15 * vnoise(vUv * 0.9);
-  float lichen = smoothstep(0.6, 0.72, patches + 0.25 * (nhd.z - 0.5) + 0.45 * n0.y) * smoothstep(-0.3, 0.35, n0.y) * (1.0 - band);
+  float lichen = smoothstep(0.63, 0.75, patches + 0.25 * (nhd.z - 0.5) + 0.45 * n0.y) * smoothstep(-0.3, 0.35, n0.y) * (1.0 - band);
   albedo = mix(albedo, vec3(0.85, 0.42, 0.09) * (0.45 + det.r * 2.2), 0.7 * lichen * step(uTier, 0.0));
   if (uTier > 0.0) {
     // Dark wet grey rock; the white hangs from the edge of each ledge in runs, long under the thick roosts and short elsewhere; lichen in patches.
@@ -114,7 +116,12 @@ void main() {
   albedo = mix(albedo, wc * 0.9, weed);
   float rough = mix(0.9, 0.5, max(weed, band));
   float occ = (0.5 + 0.5 * smoothstep(0.25, 0.6, nhd.z)) * (0.6 + 0.4 * smoothstep(0.3, 0.6, nhb.z)) * mix(1.0, 0.45, weed) * vShade * (1.0 - 0.4 * soft);
-  gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
+  vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
+  // Against the light the edge of the stone burns: the sun grazes round the rough rim toward the lens.
+  float edge = 1.0 - max(dot(n, v), 0.0);
+  float back = max(dot(-v, uSunDir), 0.0);
+  lit += albedo * uSunColour * (0.3 * edge * edge * edge * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
 // The weed stirs in the wind: each hank a hand's breadth, the hems more than the roots.
@@ -293,7 +300,7 @@ void main() {
   cover *= uWeedy;
   // A stone on the floor has its own tone: some slate, some nearly black, a few pale.
   float tone = vnoise(vWorld.xz * 2.3 + 0.5);
-  vec3 albedo = mix(side * mix(0.8 + 0.8 * tone, 1.4, uWeedy), wc * 2.2, 0.6 * cover);
+  vec3 albedo = mix(side * mix(0.8 + 0.8 * tone, 0.75, uWeedy), wc * 1.2, 0.7 * cover);
   float rough = mix(mix(0.3, 0.45, uWeedy), 0.35, cover);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);

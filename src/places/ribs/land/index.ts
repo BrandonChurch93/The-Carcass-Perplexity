@@ -268,16 +268,16 @@ export function create(ctx: Context): Piece {
   {
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
     const yaw = yawOf(pose.aim, pose.position);
-    for (let i = 0; i < 70; i++) {
-      const r = 7 + 150 * Math.pow(scatter.next(), 1.7);
+    for (let i = 0; i < 120; i++) {
+      const r = 7 + 130 * Math.pow(scatter.next(), 1.5);
       const a = yaw + scatter.range(-0.62, 0.5);
       const x = pose.position[0] + Math.sin(a) * r;
       const z = pose.position[2] - Math.cos(a) * r;
       const size = (0.5 + 1.6 * Math.pow(scatter.next(), 2)) * (0.7 + r / 120);
-      if (bed(x, z) < LEVELS.pool + 0.05) placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.12, 0.12), kind: scatter.int(KINDS), sink: scatter.range(0.56, 0.7) });
+      if (bed(x, z) < LEVELS.pool + 0.05) placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.12, 0.12), kind: scatter.int(KINDS), sink: scatter.range(0.6, 0.74) });
     }
   }
-  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
+  const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
   STATIONS.foreground.forEach(([x, z, size], i) => {
     kept.push({ x, z, size, yaw: 1.3 + i * 2.4, tilt: 0.1, kind: i % KINDS, sink: 0.55 });
     // A heap, not one stone: smaller rock against its sides.
@@ -305,7 +305,9 @@ export function create(ctx: Context): Piece {
     mine.forEach((p, i) => {
       dummy.position.set(p.x, ground0(p.x, p.z) + p.size * (squat[kind % KINDS] as number) * (1 - 2 * p.sink) * 0.5, p.z);
       dummy.rotation.set(p.tilt, p.yaw, p.tilt * 0.6);
-      dummy.scale.setScalar(p.size);
+      // A heap of weed lies lower and wider than a stone.
+      if (p.sink > 0.555) dummy.scale.set(p.size * 1.25, p.size * 0.6, p.size);
+      else dummy.scale.setScalar(p.size);
       dummy.updateMatrix();
       herd.setMatrixAt(i, dummy.matrix);
       if (p.size > 0.3) ctx.rig.setDisc(shades, shade++, p.x, p.z, p.size * 1.7, 0.75);

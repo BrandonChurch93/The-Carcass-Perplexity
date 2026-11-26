@@ -24,6 +24,8 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - The forward lobe of the air at 2.2: the near right blade washed out to white. Now 0.8.
 - The first generated rock, weed, sand and storm pictures and the copies of the Heart's boulder: replaced by the Builder's `mat/` pictures and deleted.
 - `--diag solo` shows a part unoccluded and dim. It is not how the part sits in the frame.
+- A `discard` before a picture read in a fragment shader: the mip level at the cut edge changes from render to render and determinism fails (the partner found it in the pool sheet). Keep every `discard` on the last line, as in `MIRROR_FRAGMENT`.
+- Weed heaps as plain weed-grown boulders: they read as brown domes. They are now squashed, sunk and darkened; proper lumps would be better.
 
 ## Still wrong beside the approved pictures, worst first
 
@@ -35,7 +37,7 @@ Written before the last checks of version 3. Numbers are measured unless a line 
 - ribs-1: the weed behind the drowned is one dark mass with little colour; the rock top is not in frame.
 - ribs-2: the heap at the left is a brown dome with one even texture; the sky behind the feeders is flat, no glare behind them (the sun lies outside the frame).
 - ribs-4: the cliffs left and right are dark and even; the floor is a dark sheet with few stones.
-- Determinism: the whole frame 1241 differs by a few hundred pixels of up to 8 levels between page loads. Alone, `ribs/land`, `ribs/sea` and `ribs/kite-wings` pass and `ribs/runnels` fails, on the discard edge of the pool sheet against `tLand` and `tBedFine`. Not solved. Both textures are built on the processor from pure functions; I found no state of mine that the sheet reads.
+- ribs-0 at native size: the top of `L1` reads as shaggy brown strands, not rock; the shingle bar is one relief pattern at one scale.
 
 ## Staged by shot
 
@@ -43,7 +45,11 @@ Nothing of mine is staged by time or by shot. Three things are placed by a key c
 
 ## Cost, seconds a sample at 3840 x 2160, key ribs-0, draft tier
 
-COST_LINES
+Measured 00:10 UTC with `npm run -s cost -- --key ribs-0 --format uhd --tier draft --parts ...`, each part alone less the empty frame (1.86 s).
+
+- Mine, 4.10 in all (share 4.5): `land` 1.49, `ribs` 1.35, `rocks` 0.66, `weed` 0.31, `sky` 0.26, `ledges` 0.03. `air` and `cloud` are not listed by the tool: they ride in the empty frame and in each part's shading.
+- Partner, 5.18 in all (share 2.5): `sea` 1.94, `runnels` 1.54, `kite-wings` 1.16, `bore` 0.34, `drowned` 0.20, `surf` 0.00.
+- The whole frame: 10.18 s against the aim of 7.
 
 No cheaper version sits behind a constant: nothing of mine was built over its share.
 
@@ -55,4 +61,4 @@ No cheaper version sits behind a constant: nothing of mine was built over its sh
 4. Blades: an arch between two blades and broken stacks at the feet as real geometry; a second row behind in the haze.
 5. Colony: irregular treads, white runs by `mat/ledge.jpg` height, lichen in patches.
 6. Ask the Builder for a far backplate of blades in haze for ribs-0 and ribs-4.
-7. Find the runnels determinism fault with the partner.
+7. Bring the whole frame from 10.2 s toward 7: the pool sheet and the sea are the largest; of mine, the floor (two pictures at two scales plus the mirror of the sky) and the blade rock.
