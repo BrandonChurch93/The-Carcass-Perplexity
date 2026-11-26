@@ -1,7 +1,8 @@
 // The dead wader at the rim, some days dead, on its side where it fell: the trunk gone flat and sunk between its ribs, the skin dried to
-// parchment and split, the legs folded, the neck along the rock in a slack curve, the tendrils matted in a fan.
-// It is built from the working picture of it (mat/carcass.jpg, seen from over it): a sheet of the rock's own ground, raised by the form
-// that assets-src/breath/dead/make_lift.py makes from the picture's outline (dead/carcass-lift.png), and lit by the rig.
+// parchment and split, the legs folded and crossed toward the lens, the neck along the rock in a slack curve, the tendrils matted in a fan.
+// It is built from the working picture of it as the lens at the rim sees it (mat/carcass-low.jpg). Every pixel of that picture is put
+// on its own ray from that lens, at the height off the rock that assets-src/breath/dead/make_low.py guesses for it (dead/carcass-low-lift.png):
+// so from that lens the picture is whole, and as the lens moves the animal lies on the rock, it does not stand on it like a sign.
 import * as THREE from 'three';
 import { DEAD_WADER, SEA_LEVEL } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
@@ -13,10 +14,15 @@ export const PARTS: readonly string[] = ['dead-wader'];
 
 type V3 = [number, number, number];
 
-/** The picture: metres across and deep, and where in it the middle of the trunk is. */
-const WIDE = 4.5;
-const DEEP = (4.5 * 848) / 1854;
-const MID: [number, number] = [0.64, 0.4];
+/** The picture: metres across and up it, where in it (across, and up from its foot) the animal's middle and its lowest hoof are. */
+const WIDE = 4.667;
+const TALL = 2.627;
+const MID = 0.56;
+const FOOT = 0.25;
+/** Staged: the lens of the key at the rim (breath-2, shot breath-05), from the place's own list of cameras. The picture was made for it. */
+const LENS: V3 = [-28.5, 2.6, 28.3];
+/** How far behind the picture's foot, along the rock, the anchor is. */
+const BACK = 1.35;
 
 const VERTEX = /* glsl */ `
 uniform sampler2D tLand;
@@ -24,30 +30,30 @@ uniform vec4 uLandRect;
 uniform sampler2D tLift;
 uniform vec4 uPlace;
 uniform vec4 uSheet;
-uniform vec3 uBed;
+uniform vec4 uLie;
 varying vec2 vAt;
 varying vec3 vWorld;
 void main() {
-  // position.xy is a place in the picture, across and down; the picture is loaded with its first row at the top of v.
-  vAt = vec2(position.x, 1.0 - position.y);
-  // The animal's own metres: x toward its legs (down the picture), z toward its neck (to the picture's left).
-  vec2 own = vec2((position.y - uSheet.y) * uSheet.w, (uSheet.x - position.x) * uSheet.z - uPlace.w);
-  vec2 xz = uPlace.xy + vec2(own.x * cos(uPlace.z) + own.y * sin(uPlace.z), -own.x * sin(uPlace.z) + own.y * cos(uPlace.z));
+  // position.xy is a place in the picture, across it and up it.
+  vAt = position.xy;
+  float lift = texture2D(tLift, vAt).r * 0.5;
+  // Across the lens's line of sight, and away from the lens along the rock: the higher a thing stands, the nearer it is on its ray.
+  float across = (position.x - uSheet.x) * uSheet.z;
+  float away = ((position.y - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
+  vec2 xz = uPlace.xy + across * vec2(-uPlace.w, uPlace.z) + away * uPlace.zw;
   // Dead some days, it is stiff: the trunk, the neck and the limbs lie as on a level bed and bridge the cracks of the rock; only the fan
   // of the tendrils (the picture's left end) follows the rock itself.
-  float lift = texture2D(tLift, vAt).r * 0.5;
   float rock = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw).r;
-  float bed = uBed.x + uBed.y * own.x + uBed.z * own.y;
-  vec3 p = vec3(xz.x, mix(rock, max(bed, rock - 0.05), smoothstep(0.17, 0.27, position.x)) + lift - 0.01, xz.y);
+  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), smoothstep(0.2, 0.3, position.x)) + lift - 0.01, xz.y);
   vWorld = p;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
-// What of the sheet is animal: the form's own cover, and the finest strands of the mop from the picture's relief (it stands on black).
+// What of the sheet is animal: the body's own cover, and the strands of the fan from the picture's relief (it stands on black).
 const CUT = /* glsl */ `
   vec4 form = texture2D(tLift, vAt);
   float told = texture2D(tCarcassH, vAt).r;
-  if (form.g < 0.5 && told < 0.075) discard;
+  if (form.g < 0.5 && told < 0.07) discard;
 `;
 
 const FRAGMENT = /* glsl */ `
@@ -59,29 +65,34 @@ uniform sampler2D tSlope;
 uniform sampler2D tCarcass;
 uniform sampler2D tCarcassH;
 uniform vec4 uPlace;
-uniform vec4 uSheet;
+uniform vec4 uLie;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
 ${CUT}
   vec3 v = normalize(cameraPosition - vWorld);
   float lift = form.r * 0.5;
-  // The slope of the form with the folds and the ribs on it, as the picture is laid: across it, and down it.
+  // The way the skin faces, from the slope of its height across the picture and up it.
   vec2 slope = (texture2D(tSlope, vAt).rg - 0.5) * 6.0;
-  vec2 own = vec2(-slope.y, slope.x);
-  vec3 n = normalize(vec3(own.x * cos(uPlace.z) + own.y * sin(uPlace.z), 1.0, -own.x * sin(uPlace.z) + own.y * cos(uPlace.z)));
-  // Where the skin stands steep the picture, taken from over it, has little to say: it is read coarser there, so it does not smear.
-  vec3 albedo = texture2D(tCarcass, vAt, clamp(length(slope) - 0.9, 0.0, 2.0) * 2.0).rgb;
-  // Parchment: the colour has gone out of it. Brown where it has leaked, dark and damp where it lies on the rock, salt on what faces up.
+  slope /= 1.0 + 0.35 * length(slope);
+  vec3 right = vec3(-uPlace.w, 0.0, uPlace.z);
+  vec3 away = vec3(uPlace.z, 0.0, uPlace.w);
+  vec3 rise = vec3(0.0, 1.0, 0.0) - away * (uLie.y / uLie.x);
+  vec3 n = normalize(cross(right + rise * slope.x, away / uLie.x + rise * slope.y));
+  // A fold steeper than the picture can tell is turned back to face the lens: never lit from behind itself.
+  n = normalize(n + v * max(0.0, 0.12 - dot(n, v)));
+  n.y = max(n.y, 0.05);
+  n = normalize(n);
+  vec3 albedo = texture2D(tCarcass, vAt).rgb;
+  // Parchment: the colour has gone out of it. Dark and damp where it lies on the rock, salt on what faces up.
   float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
-  albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.3) * 1.5;
-  albedo *= 0.88 + 0.24 * fbm(vWorld.xz * 6.0);
-  albedo = mix(albedo, vec3(0.14, 0.07, 0.05), 0.45 * smoothstep(0.52, 0.72, fbm(vWorld.xz * 2.3 + 7.0)) * smoothstep(0.2, 0.03, lift));
+  albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.2) * 1.5;
+  albedo *= 0.9 + 0.2 * fbm(vWorld.xz * 6.0);
   albedo *= 0.6 + 0.4 * smoothstep(0.0, 0.05, lift);
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
-  albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.25 * salt);
+  albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.2 * salt * step(0.5, form.g));
   // The hollows between the ribs and under the folds see little of the sky.
-  float occ = (0.45 + 0.55 * smoothstep(0.2, 0.55, form.b)) * (0.65 + 0.35 * smoothstep(0.0, 0.05, lift));
+  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.55, form.b)) * (0.65 + 0.35 * smoothstep(0.0, 0.05, lift));
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.86, occ);
   // The fog over the shaft beside it is bright and it is pale: it is lit from that side as the living ones are.
@@ -108,126 +119,86 @@ ${CUT}  gl_FragColor = vec4(0.0);
 export function create(ctx: Context): Piece {
   const { rig } = ctx;
   const k = DEAD_WADER.size;
-  // The anchor's turn is that of the stand-in, whose length lay across the animal's own axis here: the spine lies across the view from the rim.
-  const turn = DEAD_WADER.turn - 1.07;
-  const SHIFT = 0.9;
-  const cos = Math.cos(turn);
-  const sin = Math.sin(turn);
-  // The bed it lies on: the level that best fits the rock under it, raised until most of that rock is under it. The rock near the anchor
-  // is plates and cracks with pools in them: of the places within three metres of the anchor it lies on the one that is most nearly a
-  // level bed and is dry.
-  const fit = (cx: number, cz: number): { level: number; bx: number; bz: number; rough: number } => {
-    const at: [number, number, number][] = [];
-    let wet = 0;
-    for (let i = 0; i <= 12; i++) {
-      for (let j = 0; j <= 6; j++) {
-        const ox = (0.1 + (0.8 * j) / 6 - MID[1]) * DEEP;
-        const oz = (MID[0] - (0.02 + (0.96 * i) / 12)) * WIDE - SHIFT * k;
-        const y = rig.land.height(cx + ox * cos + oz * sin, cz - ox * sin + oz * cos);
-        if (y < SEA_LEVEL + 0.06) wet++;
-        at.push([ox, oz, y]);
-      }
-    }
-    const n = at.length;
-    const mean = (f: (a: [number, number, number]) => number): number => at.reduce((sum, a) => sum + f(a), 0) / n;
-    const mx = mean((a) => a[0]);
-    const mz = mean((a) => a[1]);
-    const my = mean((a) => a[2]);
-    const sxx = mean((a) => (a[0] - mx) ** 2);
-    const szz = mean((a) => (a[1] - mz) ** 2);
-    const sxz = mean((a) => (a[0] - mx) * (a[1] - mz));
-    const sxy = mean((a) => (a[0] - mx) * (a[2] - my));
-    const szy = mean((a) => (a[1] - mz) * (a[2] - my));
-    const det = sxx * szz - sxz * sxz || 1;
-    const bx = Math.max(-0.15, Math.min(0.15, (sxy * szz - szy * sxz) / det));
-    const bz = Math.max(-0.15, Math.min(0.15, (szy * sxx - sxy * sxz) / det));
-    const over = at.map((a) => a[2] - (my + bx * (a[0] - mx) + bz * (a[1] - mz))).sort((p, q) => p - q);
-    const raise = over[Math.floor(0.7 * (n - 1))] as number;
-    const rough = (over[Math.floor(0.95 * (n - 1))] as number) - (over[Math.floor(0.05 * (n - 1))] as number) + wet * 0.05;
-    return { level: my - bx * mx - bz * mz + raise, bx, bz, rough };
-  };
-  let here = { x: DEAD_WADER.x, z: DEAD_WADER.z };
-  let lie = fit(here.x, here.z);
-  let best = lie.rough;
-  for (let i = -6; i <= 6; i++) {
-    for (let j = -6; j <= 6; j++) {
-      const far = Math.hypot(i, j) * 0.5;
-      if (far > 3) continue;
-      const tried = fit(DEAD_WADER.x + i * 0.5, DEAD_WADER.z + j * 0.5);
-      // A place further from the anchor has to be that much better.
-      const score = tried.rough + 0.03 * far;
-      if (score < best) {
-        best = score;
-        lie = tried;
-        here = { x: DEAD_WADER.x + i * 0.5, z: DEAD_WADER.z + j * 0.5 };
-      }
-    }
-  }
-  const bed = new THREE.Vector3(lie.level, lie.bx, lie.bz);
-  /** From the animal's own metres (x toward its legs, y up from the rock, z toward its neck) to the world, laid on the ground. */
+  // The line of sight of that lens along the rock, and how steeply it looks down on the anchor.
+  const gx0 = DEAD_WADER.x - LENS[0];
+  const gz0 = DEAD_WADER.z - LENS[2];
+  const reach = Math.hypot(gx0, gz0);
+  const gx = gx0 / reach;
+  const gz = gz0 / reach;
+  const down = Math.atan2(LENS[1] - rig.land.height(DEAD_WADER.x, DEAD_WADER.z), reach);
+  const sin = Math.sin(down);
+  const cos = Math.cos(down);
+  /** A place in the picture (0 to 1 across, 0 to 1 down it) at a height off the rock, as metres across the line of sight and away along it. */
+  const from = (s: number, t: number, up = 0): V3 => [(s - MID) * WIDE, up, ((1 - t - FOOT) * TALL - up * cos) / sin - BACK];
+  /** From those metres to the world, on the rock. */
   const world = (p: V3): V3 => {
-    // The anchor is under its chest, not its middle: the whole of it, with the fan of its tendrils, is inside the frame of the rim's picture.
-    const x = here.x + (p[0] * cos + (p[2] - SHIFT) * sin) * k;
-    const z = here.z + (-p[0] * sin + (p[2] - SHIFT) * cos) * k;
-    return [x, rig.land.height(x, z) + p[1] * k, z];
+    const x = DEAD_WADER.x - gz * p[0] + gx * p[2];
+    const z = DEAD_WADER.z + gx * p[0] + gz * p[2];
+    return [x, rig.land.height(x, z) + p[1], z];
   };
-  /** A place in the picture (0 to 1 across, 0 to 1 down), in the animal's own metres over k. */
-  const from = (s: number, t: number, up = 0): V3 => [((t - MID[1]) * DEEP) / k, up, ((MID[0] - s) * WIDE) / k];
+  // The bed it lies on: a level under which most of the rock it covers is, and never the water.
+  const heights: number[] = [];
+  for (let i = 0; i <= 12; i++) {
+    for (let j = 0; j <= 6; j++) heights.push(world(from(0.28 + (0.7 * i) / 12, 0.32 + (0.42 * j) / 6))[1]);
+  }
+  heights.sort((a, b) => a - b);
+  const bed = Math.max(heights[Math.floor(0.7 * (heights.length - 1))] as number, SEA_LEVEL + 0.05);
 
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
     uniforms: {
       ...rig.uniforms,
-      tLift: { value: ctx.assets.texture('dead/carcass-lift.png', { kind: 'data', repeat: false }) },
-      tSlope: { value: ctx.assets.texture('dead/carcass-slope.png', { kind: 'data', repeat: false }) },
-      tCarcass: { value: ctx.assets.texture('mat/carcass.jpg', { repeat: false }) },
-      tCarcassH: { value: ctx.assets.texture('mat/carcass-h.png', { kind: 'data', repeat: false }) },
-      uPlace: { value: new THREE.Vector4(here.x, here.z, turn, SHIFT * k) },
-      uSheet: { value: new THREE.Vector4(MID[0], MID[1], WIDE, DEEP) },
-      uBed: { value: bed },
+      tLift: { value: ctx.assets.texture('dead/carcass-low-lift.png', { kind: 'data', repeat: false }) },
+      tSlope: { value: ctx.assets.texture('dead/carcass-low-slope.png', { kind: 'data', repeat: false }) },
+      tCarcass: { value: ctx.assets.texture('mat/carcass-low.jpg', { repeat: false }) },
+      tCarcassH: { value: ctx.assets.texture('mat/carcass-low-h.png', { kind: 'data', repeat: false }) },
+      uPlace: { value: new THREE.Vector4(DEAD_WADER.x, DEAD_WADER.z, gx, gz) },
+      uSheet: { value: new THREE.Vector4(MID, FOOT, WIDE, TALL) },
+      uLie: { value: new THREE.Vector4(sin, cos, BACK, bed) },
     },
     side: THREE.DoubleSide,
   });
   material.userData.depthFragment = DEPTH;
-  const geometry = new THREE.PlaneGeometry(1, 1, 400, 184).translate(0.5, 0.5, 0);
+  // Only the band of the picture the animal is in.
+  const geometry = new THREE.PlaneGeometry(1, 0.5, 420, 150).translate(0.5, 0.47, 0);
   const mesh = new THREE.Mesh(geometry, material);
   mesh.frustumCulled = false;
-  const half = 0.75 / k;
-  const neckLine: V3[] = [from(0.47, 0.3), from(0.36, 0.33), from(0.27, 0.3), from(0.21, 0.42), from(0.2, 0.55)];
+  // Where it meets the rock, as the lens sees it: the lower edge of the trunk, of the neck and the mop, of the legs.
+  const trunkLine: V3[] = [from(0.43, 0.5), from(0.5, 0.565), from(0.62, 0.56), from(0.76, 0.56)];
+  const neckLine: V3[] = [from(0.43, 0.49), from(0.36, 0.455), from(0.3, 0.48), from(0.27, 0.55), from(0.15, 0.62)];
   const legLines: V3[][] = [
-    [from(0.52, 0.55), from(0.65, 0.6)],
-    [from(0.75, 0.3), from(0.76, 0.55), from(0.87, 0.5), from(0.97, 0.68), from(0.78, 0.85)],
-    [from(0.72, 0.5), from(0.86, 0.5)],
+    [from(0.5, 0.57), from(0.64, 0.62), from(0.8, 0.6), from(0.97, 0.6)],
+    [from(0.78, 0.55), from(0.86, 0.6), from(0.93, 0.7)],
   ];
   // What it has left on the rock: the stain it lies in, a line of salt where that dried, and the grit that has gathered against it.
-  const lines: V3[][] = [[[0, 0, -half], [0, 0, half]], neckLine, ...legLines];
+  const lines: V3[][] = [trunkLine, neckLine, ...legLines];
   const ground = makeGround(ctx, world, lines, k);
   const group = new THREE.Group();
   group.add(mesh, ground.group);
   // Flies: over the belly, the hip, the root of the neck and the mop.
   const flyRng = ctx.rng('dead-wader-flies');
-  const flies = makeFlies(46, [world([0.1, 0.32, -0.3]), world([0.1, 0.32, 0.25]), world([0.0, 0.36, -0.6]), world(from(0.36, 0.33, 0.16)), world(from(0.1, 0.6, 0.08)), world(from(0.76, 0.5, 0.14))], () => flyRng.next(), rig.uniforms);
+  const flies = makeFlies(46, [world(from(0.55, 0.52, 0.3)), world(from(0.63, 0.55, 0.3)), world(from(0.7, 0.5, 0.34)), world(from(0.44, 0.54, 0.15)), world(from(0.2, 0.68, 0.06)), world(from(0.8, 0.7, 0.12))], () => flyRng.next(), rig.uniforms);
   group.add(flies.mesh);
   ctx.scene.add(ctx.parts.built('dead-wader', group));
 
   // It has lain here: the rock under it is in its shade and damp.
   const spots: [V3, number, number][] = [
-    [[0, 0, 0], 0.7, 0.9],
-    [[0, 0, 0.5], 0.5, 0.8],
-    [[0, 0, -0.5], 0.5, 0.8],
-    [from(0.36, 0.33), 0.3, 0.7],
-    [from(0.25, 0.32), 0.3, 0.6],
-    [from(0.1, 0.6), 0.5, 0.5],
-    [from(0.58, 0.58), 0.4, 0.55],
-    [from(0.78, 0.5), 0.5, 0.55],
-    [from(0.9, 0.65), 0.5, 0.45],
-    [from(0.78, 0.85), 0.3, 0.4],
+    [from(0.5, 0.56), 0.55, 0.95],
+    [from(0.6, 0.56), 0.6, 0.95],
+    [from(0.7, 0.56), 0.6, 0.95],
+    [from(0.78, 0.58), 0.45, 0.8],
+    [from(0.38, 0.47), 0.3, 0.8],
+    [from(0.3, 0.5), 0.3, 0.7],
+    [from(0.2, 0.6), 0.5, 0.5],
+    [from(0.66, 0.62), 0.3, 0.7],
+    [from(0.86, 0.6), 0.35, 0.65],
+    [from(0.93, 0.68), 0.25, 0.6],
   ];
   const discs = rig.contactDiscs(spots.length);
   spots.forEach(([p, radius, strength], i) => {
     const w = world(p);
-    rig.setDisc(discs, i, w[0], w[2], radius * k, strength);
+    rig.setDisc(discs, i, w[0], w[2], radius, strength);
   });
 
   return {

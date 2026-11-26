@@ -28,9 +28,10 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs64 * 0.22 + rs64 * 0.16 + rs8 * rs8 * 0.02;
+  float broad = rs64 * rs64 * 0.1 + rs64 * 0.1 + rs8 * rs8 * 0.035 + rs2 * rs2 * 0.006;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
-  return uSunColour * (broad + spark);
+  // Through that much fog the sun is gold, and so is its path.
+  return uSunColour * vec3(1.0, 0.74, 0.46) * (broad + spark);
 }
 void main() {
   vec2 xz = vWorld.xz;
@@ -75,7 +76,7 @@ void main() {
     slope = slope * (1.0 - 0.6 * close) + (ra * 0.55 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.22 + 1.0 * gust);
   }
   // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
-  slope *= 0.3 + 0.7 * smoothstep(0.03, 0.32, depth);
+  slope *= 0.5 + 0.5 * smoothstep(0.02, 0.2, depth);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
   slope += rings.rg * 4.2;
@@ -91,7 +92,7 @@ void main() {
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 0.6 * tanh(2.4 * tip);
+  float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(1.05, 1.0, 0.88), 0.45 * smoothstep(0.04, 0.3, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
@@ -127,7 +128,7 @@ void main() {
       sparks += on * dot_ * life;
     }
   }
-  mirror += uSunColour * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
+  mirror += uSunColour * vec3(1.0, 0.8, 0.55) * sunHere * (sparks * seen * 0.9 + (1.0 - seen) * lobe * 0.012);
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.07 + (g1.x + g2.y) * 0.012, (slope.y + g1.y * 0.5) * 0.2) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);
@@ -136,14 +137,18 @@ void main() {
 
   // What is in the water: fine silt lit by the sky. The bed shows through it where it is thin.
   float path = depth / max(nv, 0.25);
-  vec3 through = exp(-path * vec3(4.2, 1.9, 2.2));
+  vec3 through = exp(-path * vec3(3.0, 1.15, 1.45));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.21, 0.18, 0.145), vec3(0.21, 0.225, 0.18), smoothstep(0.28, 0.6, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.17, 0.195, 0.165), vec3(0.14, 0.27, 0.23), smoothstep(0.1, 0.4, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
   vec3 colour = fresnel * mirror + (1.0 - fresnel) * (1.0 - clear) * body;
   float alpha = 1.0 - (1.0 - fresnel) * clear * (1.0 - 0.5 * rim);
+  // Looked down on, the water mirrors little, and still the image of what stands in it is seen: the animal is between the sky and
+  // the water under it, so the silt there is in its shade and the bed is hidden by it.
+  colour *= 1.0 - 0.5 * image.a;
+  alpha = mix(alpha, 1.0, 0.6 * image.a);
   // What the water leaves at its edge: a broken line of scum and small bubbles, pale, that rides the ragged line of the bank.
   float line = depth - ragged;
   float scum = smoothstep(0.045, 0.07, line) * smoothstep(0.15, 0.085, line) * smoothstep(0.42, 0.62, vnoise(xz * 3.1 + 0.2 * uTime * drift) + 0.25 * vnoise(xz * 17.0)) * smoothstep(60.0, 20.0, far);
