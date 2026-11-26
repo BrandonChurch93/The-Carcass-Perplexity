@@ -1,6 +1,7 @@
-2026-11-26 03:28 UTC
+2026-11-26 03:33 UTC
 work at 8524d94 on agent/reveal-place-2
-hb5: soft cyclone, puffs in long tail, cold lowland
-look-1.jpg = out/work/looks/hb5-reveal-2.png
-look-2.jpg = out/work/looks/hb5-reveal-4.png
-look-3.jpg = out/work/looks/v2-400px.png
+V2 at 8524d94
+look-1.jpg = out/work/looks/v2-reveal-2.png
+look-2.jpg = out/work/looks/v2-reveal-3.png
+look-3.jpg = out/work/looks/v2-reveal-4.png
+look-4.jpg = out/work/looks/v2-400px.png
