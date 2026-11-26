@@ -5,7 +5,8 @@ import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { WIND, heading, kiteEdge, step } from '../shared/anchors';
+import { INSIDE_FROM, STRIKE_FROM, WIND, heading, kiteEdge, step } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { FIRST, finAxes, finEdge, spires, tipOf } from '../ridge';
 import { flashAt } from '../strikes/bolt';
 
@@ -32,7 +33,7 @@ interface Ribbon {
 function colonies(n: number): [number, number][] {
   // The first spire is seen close, at two thirds of its height: three colonies there and one at its tip.
   if (n === FIRST) return [[0.955, 3], [0.865, 2], [0.83, 2], [0.795, 3], [0.765, 2], [0.735, 2], [0.705, 3]];
-  if (n === FIRST + 2) return [[0.965, 3], [0.9, 1]];
+  if (n === FIRST + 2) return [[0.965, 3], [0.945, 2], [0.9, 1]];
   if (n === FIRST + 1) return [[0.95, 2]];
   if (n === FIRST + 3) return [[0.96, 1], [0.87, 1]];
   // The far peaks: one, or none.
@@ -58,7 +59,7 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float amp = 0.02 * len * grow;
   // A gust lifts or drops the whole ribbon slowly.
   float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
-  float fan = (fract(more.y * 13.7) - 0.5) * 0.12;
+  float fan = (fract(more.y * 13.7) - 0.5) * (more.w > 0.9 ? 0.4 : 0.12);
   // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
   float held = clamp(u / more.w, 0.0, 1.0);
   float hang = 0.3 * more.w * len * held * (1.0 - held);
@@ -75,6 +76,8 @@ attribute vec4 aShape;
 attribute vec4 aMore;
 attribute vec2 aAt;
 uniform float uPixel;
+uniform float uReach;
+uniform vec4 uStage;
 ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -87,49 +90,62 @@ varying float vSpine;
 varying float vHalf;
 varying float vFar;
 void main() {
+  // Staged by shot: before the long lens of spine-04 the struck spire's ribbons are the size the lens needs, and no other spire flies any.
+  vec4 shape = aShape;
+  vec4 more = aMore;
+  if (uStage.w > 0.0) {
+    if (abs(more.z - uStage.w) > 0.5) {
+      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+      return;
+    }
+    shape.x *= uStage.x;
+    shape.w *= uStage.x;
+    shape.y *= uStage.y;
+    more.w = more.w > 0.9 ? more.w : min(more.w * uStage.z, 0.45);
+  }
   float u = aAt.x;
   float e = 0.004;
-  vec3 c = centreAt(aAnchor, aShape, aMore, u);
-  vec3 ahead = centreAt(aAnchor, aShape, aMore, u + e);
-  vec3 tangent = normalize(ahead - centreAt(aAnchor, aShape, aMore, u - e));
+  vec3 c = centreAt(aAnchor, shape, more, u);
+  vec3 ahead = centreAt(aAnchor, shape, more, u + e);
+  vec3 tangent = normalize(ahead - centreAt(aAnchor, shape, more, u - e));
   vec3 wind = normalize(uWind.xyz);
   vec3 flat_ = normalize(cross(vec3(0.0, 1.0, 0.0), wind));
   vec3 upward = normalize(cross(tangent, flat_));
   flat_ = cross(upward, tangent);
   // The ribbon rolls about its own length as the waves pass, and the roll travels with them.
-  float k = 6.2832 / aShape.w;
-  float roll = 0.3 * sin(k * 0.61 * (u * aShape.x - uWind.w * 0.7 * uTime) + aShape.z * 2.0) + 0.4 * (fract(aMore.y * 3.1) - 0.5) + 0.35 * sin(k * 1.9 * (u * aShape.x - uWind.w * 0.8 * uTime) + aShape.z) * u * u;
+  float k = 6.2832 / shape.w;
+  float roll = 0.3 * sin(k * 0.61 * (u * shape.x - uWind.w * 0.7 * uTime) + shape.z * 2.0) + 0.4 * (fract(more.y * 3.1) - 0.5) + 0.35 * sin(k * 1.9 * (u * shape.x - uWind.w * 0.8 * uTime) + shape.z) * u * u;
   // Seen from far along the ridge, a sheet that lay flat on the wind would be a line: the far ones stand more on edge, as a flag does.
-  float stand = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor));
+  float stand = smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach);
   // Near, a sheet stands on its edge in the gale as a flag does, and shows its face; somewhere down its length it turns over, half a turn in
   // a few metres, and the turn creeps along it. Far along the ridge a sheet that lay flat on the wind would be a line: they stand on edge too.
-  float way = fract(aMore.y * 5.3) < 0.5 ? -1.0 : 1.0;
-  float turnAt = 0.3 + 0.45 * fract(aMore.y * 2.3) + 0.04 * sin(uTime * 0.7 + aShape.z);
-  float turn = fract(aMore.y * 8.9) < 0.65 ? 3.14159 * smoothstep(turnAt - 0.05, turnAt + 0.05, u) : 0.0;
-  roll = mix(way * (1.0 + 0.4 * fract(aMore.y * 9.1)) + 0.8 * roll + turn, way * 0.8 + 0.45 * roll, stand);
+  float way = fract(more.y * 5.3) < 0.5 ? -1.0 : 1.0;
+  float turnAt = 0.3 + 0.45 * fract(more.y * 2.3) + 0.04 * sin(uTime * 0.7 + shape.z);
+  float turn = fract(more.y * 8.9) < 0.65 ? 3.14159 * smoothstep(turnAt - 0.05, turnAt + 0.05, u) : 0.0;
+  roll = mix(way * (1.0 + 0.4 * fract(more.y * 9.1)) + 0.8 * roll + turn, way * 0.8 + 0.45 * roll, stand);
   vFar = stand;
-  roll = mix(1.5708, roll, smoothstep(aMore.w, aMore.w + 0.1, u));
+  roll = mix(1.5708, roll, smoothstep(more.w, more.w + 0.1, u));
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
   vec3 normal_ = cross(tangent, across);
   // Its width: a cord for the stalk, widening to the blade, a slow taper, and a ragged tail.
-  float blade = smoothstep(aMore.w, aMore.w + 0.09, u);
-  float breadth = 0.75 + 0.25 * sin(u * 9.0 + aMore.y * 40.0) * sin(u * 23.0 + aMore.y * 11.0);
+  float blade = smoothstep(more.w, more.w + 0.09, u);
+  float breadth = 0.75 + 0.25 * sin(u * 9.0 + more.y * 40.0) * sin(u * 23.0 + more.y * 11.0);
   // Long and narrow: widest a third of the way out, drawn down from there to a thread.
-  float bu = clamp((u - aMore.w) / (1.0 - aMore.w), 0.0, 1.0);
+  float bu = clamp((u - more.w) / (1.0 - more.w), 0.0, 1.0);
   float profile = pow(smoothstep(0.0, 0.25, bu), 0.8) * mix(1.0, mix(0.4, 0.1, stand), smoothstep(0.45, 1.0, bu));
-  float halfW = 0.5 * aShape.y * blade * breadth * 2.0 * profile;
+  float halfW = 0.5 * shape.y * blade * breadth * 2.0 * profile;
   float far = length(cameraPosition - c);
-  float cord = max(0.15, (0.9 + 0.8 * stand) * uPixel * far);
+  float cord = max(0.15, (1.25 + 0.6 * stand) * uPixel * far);
   // Along the stalk the strip is wider than the cord: room for the knots on it and for what hangs from it.
-  float thin = max(halfW, cord + 0.95 * (1.0 - smoothstep(aMore.w + 0.02, aMore.w + 0.09, u)));
+  float thin = max(halfW, cord + 0.95 * (1.0 - smoothstep(more.w + 0.02, more.w + 0.09, u)));
   // The blade cups across its width: its edges lift off the plane.
-  float cup = 0.09 * aShape.y * blade * sin(u * 14.0 + aMore.y * 20.0 - uTime * 2.0);
+  float cup = 0.09 * shape.y * blade * sin(u * 14.0 + more.y * 20.0 - uTime * 2.0);
   vec3 p = c + across * (aAt.y * thin) + normal_ * (cup * aAt.y * aAt.y);
   vWorld = p;
   vNormal = normalize(normal_ - across * (2.0 * cup * aAt.y / max(thin, 0.05)) * 0.5);
   vAt = aAt;
-  vShape = aShape;
-  vMore = aMore;
+  vShape = shape;
+  vMore = more;
   vThin = halfW / thin;
   vCord = min(1.0, 0.15 / cord);
   vSpine = cord / thin;
@@ -198,7 +214,8 @@ void main() {
   float knots = 1.6 * exp(-pow((metres - stalkAt - 0.6) / 0.75, 2.0)) + 0.7 * smoothstep(0.72, 0.9, vnoise(vec2(metres * 0.45, seed * 3.0)));
   float girth = vSpine * (1.0 + (0.25 * vnoise(vec2(metres * 2.2, seed)) + knots) * vCord);
   float cordHere = 1.0 - smoothstep(0.6, 1.0, abs(v) / girth);
-  cordHere *= 1.0 - smoothstep(0.45, 0.8, u);
+  // A ribbon that is all stalk is a tether with no skin on it: a thread to its end.
+  cordHere *= vMore.w > 0.9 ? 1.0 - smoothstep(0.9, 1.0, u) : 1.0 - smoothstep(0.45, 0.8, u);
   // Ice hangs from the cord where its water froze as it dripped: spikes, each with a bead at its end. Only where the lens is near enough to see them.
   float below = -v * vHalf - 0.5 * girth * vHalf;
   float cell = metres / 0.8;
@@ -254,7 +271,8 @@ void main() {
   vec3 shine = mirror * (0.5 * fres + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) + 0.5 * lead + 0.6 * rim);
   // When a strike is near the ribbon carries the charge along its edges for a moment, violet white.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
-  shine += uGlowTint * (uStruck.y * mine * (0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim));
+  // Seen close the film stays glass: violet in its body, and only its folds and its rolled edge take the white of the stroke.
+  shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.4 * rim, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim, vFar));
   // How much of what is behind it the film hides: little where it is stretched, more at a fold, a vein, its rolled edge, and where it is
   // seen aslant. Far off it is a pale streak.
   float cover = clamp(0.3 + 0.25 * fold + 0.2 * crease + 0.2 * veins + 0.45 * rim + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
@@ -286,6 +304,8 @@ void main() {
 const KNOB_VERTEX = /* glsl */ `
 ${NOISE_GLSL}
 attribute vec4 aSeed;
+attribute vec4 aHold;
+uniform vec2 uKnobStage;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLocal;
@@ -296,6 +316,9 @@ void main() {
   float bulge = 0.34 * (vnoise3(at) - 0.5) + 0.16 * (vnoise3(at * 2.7) - 0.5);
   vec3 local = position * (1.0 + bulge);
   vec4 w = modelMatrix * instanceMatrix * vec4(local, 1.0);
+  // Staged by shot: before the long lens the cluster is drawn in about its holdfast, and only the struck spire keeps any.
+  w.xyz = aHold.xyz + (w.xyz - aHold.xyz) * uKnobStage.x;
+  if (uKnobStage.y > 0.0 && abs(aHold.w - uKnobStage.y) > 0.5) w.xyz = vec3(0.0, -90000.0, 0.0);
   vWorld = w.xyz;
   vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
   vLocal = position;
@@ -357,6 +380,23 @@ export function create(ctx: Context): Piece {
           stalk: rng.range(14, 30) * (near ? 0.4 : 1.6) / length,
         });
       }
+      // And bare tethers from the same holdfast: threads with no skin on them, that lost it or never grew it.
+      const threads = ctx.rng(`kites/threads/${n}/${share}`);
+      const bare = n === FIRST + 2 ? 3 : near ? 2 : 0;
+      for (let i = 0; i < bare; i++) {
+        const length = threads.range(60, 190) * reach;
+        ribbons.push({
+          anchor: finEdge(sp, t + threads.range(-0.008, 0.008), near ? 1.02 : 1.04, near ? lensSide * threads.range(0.5, 0.57) : threads.range(-0.25, 0.25)),
+          length,
+          width: 0.3,
+          phase: threads.range(0, 6.28),
+          wave: length / threads.range(1.6, 3.4),
+          sag: threads.range(0.0, 0.1),
+          seed: threads.next(),
+          spire: n - FIRST + 1,
+          stalk: 0.999,
+        });
+      }
     }
   });
 
@@ -391,6 +431,10 @@ export function create(ctx: Context): Piece {
   geometry.setIndex(index);
 
   const pixel = { value: 0.0005 };
+  // How long the lens is beside that of key spine-2, and the staging of spine-04: the scale of length, of width and of the stalk's share,
+  // and the one spire that flies ribbons.
+  const reach = { value: 1 };
+  const stage = new THREE.Vector4(1, 1, 1, 0);
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
@@ -398,8 +442,10 @@ export function create(ctx: Context): Piece {
     uniforms: {
       ...ctx.rig.uniforms,
       uPixel: pixel,
+      uReach: reach,
+      uStage: { value: stage },
       uStruck: { value: struck },
-      uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) },
+      uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
       uFilm: { value: new THREE.Vector4(1.0, 0.05, 0.15, 0.9) },
       uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
@@ -417,11 +463,13 @@ export function create(ctx: Context): Piece {
   // Drawn after the dome, so that the sky is behind the film when it is laid over.
   kites.renderOrder = 12;
 
+  const knobStage = new THREE.Vector2(1, 0);
   // The holdfasts: a cluster of leathery knobs in the crack each stalk comes from.
   const KNOBS = 9;
   const knobGeometry = new THREE.SphereGeometry(1, 22, 16);
-  const knobs = new THREE.InstancedMesh(knobGeometry, new THREE.ShaderMaterial({ vertexShader: KNOB_VERTEX, fragmentShader: KNOB_FRAGMENT, uniforms: { ...ctx.rig.uniforms } }), ribbons.length * KNOBS);
+  const knobs = new THREE.InstancedMesh(knobGeometry, new THREE.ShaderMaterial({ vertexShader: KNOB_VERTEX, fragmentShader: KNOB_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uKnobStage: { value: knobStage } } }), ribbons.length * KNOBS);
   const seeds = new Float32Array(ribbons.length * KNOBS * 4);
+  const holds = new Float32Array(ribbons.length * KNOBS * 4);
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const out = new THREE.Vector3(WIND[0], 0.25, WIND[2]).normalize();
@@ -437,9 +485,11 @@ export function create(ctx: Context): Piece {
       m.compose(new THREE.Vector3(rb.anchor[0] + Math.cos(a) * off * 0.5, rb.anchor[1] + Math.sin(a) * off, rb.anchor[2] + Math.cos(a * 1.7) * off * 0.4), q, new THREE.Vector3(size * 0.62, size * 1.15, size * 0.62));
       knobs.setMatrixAt(r * KNOBS + k, m);
       seeds.set([rng.next(), rng.next(), rng.next(), rng.next()], (r * KNOBS + k) * 4);
+      holds.set([rb.anchor[0], rb.anchor[1], rb.anchor[2], rb.spire], (r * KNOBS + k) * 4);
     }
   });
   knobGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(seeds, 4));
+  knobGeometry.setAttribute('aHold', new THREE.InstancedBufferAttribute(holds, 4));
   knobs.instanceMatrix.needsUpdate = true;
   knobs.frustumCulled = false;
 
@@ -450,6 +500,10 @@ export function create(ctx: Context): Piece {
   let height = 0;
   return {
     setTime: (seconds) => {
+      const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+      if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
+      else stage.set(1, 1, 1, 0);
+      knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
       struck.set(flash ? flash.spire : 0, flash ? Math.min(1.5, flash.power * 1.2 + 0.5 * Math.exp(-Math.max(0, flash.age) / 0.35) * (flash.age > 0 ? 1 : 0)) : 0, 0, 0);
@@ -457,6 +511,7 @@ export function create(ctx: Context): Piece {
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
       pixel.value = 2 / ((camera.projectionMatrix.elements[5] as number) * (height || size.y || 2160));
+      reach.value = 1 / ((camera.projectionMatrix.elements[5] as number) * 0.3249);
     },
     resize: (_w, h) => {
       height = h;
