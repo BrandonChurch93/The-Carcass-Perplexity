@@ -131,6 +131,12 @@ void main() {
   vUp = vec3(0.0, cos(uBody.z), 0.0) - toLens * sin(uBody.z);
   vec3 nrm = toLens * cos(uBody.z) + vec3(0.0, sin(uBody.z), 0.0);
   float swell = textureLod(tRelief, vUv, 5.0).r;
+  // Each has gone down its own way: rolled so that one end of it is under the crust.
+  float roll = uAt.w;
+  vec3 r2 = vRight * cos(roll) + vUp * sin(roll);
+  vec3 u2 = vUp * cos(roll) - vRight * sin(roll);
+  vRight = r2;
+  vUp = u2;
   vWorld = vec3(uAt.x, uAt.y, uAt.z) + vRight * (position.x * uBody.x) + vUp * ((uv.y - uBody.w) * uBody.y) + nrm * (swell * 0.3 * uBody.y);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -147,8 +153,7 @@ ${BODY_GLSL}
 const vec3 LUMA = vec3(0.3, 0.5, 0.2);
 const vec3 RIME_MEAN = vec3(0.389, 0.306, 0.282);
 void main() {
-  if (bodyCover(vUv) < 0.5) discard;
-  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
+  float covered = bodyCover(vUv);
   vec3 pic = texture2D(tPic, vUv).rgb;
   float l0 = dot(pic, LUMA);
   // Its form from the relief, blurred; its ribs and knobs from the light and dark of the picture.
@@ -159,16 +164,30 @@ void main() {
   vec2 de = vec2(1.5 / 1672.0, 1.5 / 941.0);
   float lx = (dot(texture2D(tPic, vUv + vec2(de.x, 0.0)).rgb, LUMA) - l0) * sign_;
   float ly = dot(texture2D(tPic, vUv + vec2(0.0, de.y)).rgb, LUMA) - l0;
+  // Over all of it the salt has grown: clumps the size of a fist and needles between them.
+  vec2 cq = vUv * vec2(uBody.x, uBody.y) * 1.6 + uSeed;
+  vec3 clump = texture2D(tSalt, cq).rgb / RIME_MEAN;
+  float cl = dot(clump, LUMA);
+  vec2 cs = vec2(dot(texture2D(tSalt, cq + vec2(0.004, 0.0)).rgb / RIME_MEAN, LUMA) - cl, dot(texture2D(tSalt, cq + vec2(0.0, 0.004)).rgb / RIME_MEAN, LUMA) - cl);
+  float crusted = smoothstep(0.25, 0.6, vnoise(vUv * vec2(9.0, 5.0) + uSeed) * 0.6 + 0.4 * cl);
   vec3 face = normalize(cross(vRight, vUp));
-  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 1.6 / (l0 + 0.1)) - vUp * (hy * 9.0 + ly * 1.6 / (l0 + 0.1)) + vec3(0.0, 0.35, 0.0));
+  vec3 n = normalize(face - vRight * (hx * 9.0 + lx * 0.7 / (l0 + 0.1) + cs.x * 5.0) - vUp * (hy * 9.0 + ly * 0.7 / (l0 + 0.1) + cs.y * 5.0) + vec3(0.0, 0.35, 0.0));
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 rime = texture2D(tSalt, vWorld.xz * 2.0 + vWorld.y * 1.3 + uSeed).rgb / RIME_MEAN;
+  // Every read of a picture comes before any discard: the software renderer leaves the slopes of a dropped pixel's neighbours undefined.
+  if (covered < 0.5) discard;
+  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
   // Salt white on the knobs, bone and dried hide between them, and the dark of the hollows kept dark.
   vec3 albedo = pic * 0.62 * mix(vec3(1.0), rime, 0.2);
   float hollow = smoothstep(0.05, 0.38, l0);
+  // The bars of the ribs are all but grown over: what is left of the animal is its shape and the dark of its deepest hollows.
+  vec3 crust = vec3(0.3, 0.287, 0.28) * (0.55 + 0.6 * cl);
+  albedo = mix(albedo, crust, (0.5 + 0.38 * crusted) * (0.35 + 0.65 * hollow));
+  hollow = mix(hollow, 1.0, 0.45);
   float above = vWorld.y - uAt.y;
   float stain = (1.0 - smoothstep(0.0, 0.16, above + 0.12 * (vnoise(vWorld.xz * 3.0 + uSeed) - 0.5)));
-  albedo = mix(albedo, albedo * vec3(0.36, 0.2, 0.17), 0.8 * stain);
+  // Where it meets the crust the brine wicks up into the salt and it is pink.
+  albedo = mix(albedo, albedo * vec3(0.74, 0.4, 0.37), 0.8 * stain);
   float occ = (0.3 + 0.7 * hollow) * (0.6 + 0.4 * smoothstep(0.0, 0.25, above));
   vec3 c = rigShade(vWorld, n, v, albedo, 0.97, occ);
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -210,7 +229,7 @@ export function create(ctx: Context): Piece {
   const bodyGrid = grid(40, 24);
   const bodies: { mesh: THREE.Mesh; material: THREE.ShaderMaterial }[] = [];
   const nearest = DEAD.reduce((a, b) => (Math.hypot(a.d - STUCK[0], a.l - STUCK[1]) < Math.hypot(b.d - STUCK[0], b.l - STUCK[1]) ? a : b));
-  const tPic = ctx.assets.texture('mat/deadone.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
+  const tPic = ctx.assets.texture('mat/deadone.jpg', { kind: 'colour', repeat: false });
   const tRelief = ctx.assets.texture('mat/deadone-h.png', { kind: 'data', repeat: false });
   const tSalt = ctx.assets.texture('mat/rime.jpg', { kind: 'colour', anisotropy: 4 });
   const tSaltNh = ctx.assets.texture('mat/rime-nh.png', { kind: 'data', anisotropy: 4 });
@@ -249,7 +268,7 @@ export function create(ctx: Context): Piece {
     mesh.updateMatrixWorld();
     cards.push({ mesh, material, x: p[0], z: p[1], yaw: d.yaw, size });
     // The body: about three metres of it, sunk in its apron to a different depth each, the furthest gone the deepest.
-    const wide = 3.3 * d.size * rng.range(0.9, 1.1);
+    const wide = 3.3 * d.size * rng.range(0.75, 1.2);
     const bodyMaterial = new THREE.ShaderMaterial({
       uniforms: {
         ...ctx.rig.uniforms,
@@ -257,8 +276,8 @@ export function create(ctx: Context): Piece {
         tRelief: { value: tRelief },
         tSalt: { value: tSalt },
         uFlip: { value: rng.next() < 0.5 ? 1 : 0 },
-        uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], 0) },
-        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, under ? 0.95 : rng.range(0.5, 0.75), under ? 0.6 : rng.range(0.2, 0.3)) },
+        uAt: { value: new THREE.Vector4(p[0], ground + 0.04, p[1], under ? 0 : (rng.next() < 0.5 ? -1 : 1) * rng.range(0.12, 0.42)) },
+        uBody: { value: new THREE.Vector4(wide, (wide * 941) / 1672, under ? 0.95 : rng.range(0.45, 0.85), under ? 0.6 : rng.range(0.22, 0.5)) },
         uSeed: { value: rng.range(1, 60) },
       },
       vertexShader: BODY_VERTEX,

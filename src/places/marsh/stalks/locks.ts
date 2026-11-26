@@ -71,7 +71,10 @@ ${CUT}
   vec3 albedo = mix(vec3(dot(hue, vec3(0.3, 0.5, 0.2))), hue, 0.88) * (0.028 + 0.15 * mix(smoothstep(0.02, 0.5, luma), 0.75, away));
   float bead = smoothstep(0.55, 0.9, min(t.g, t.b));
   vec3 n = normalize(vNormal * sign(dot(vNormal, v) + 1e-5) * 0.6 + vOut + vec3(0.0, 0.3, 0.0) + v * 0.7);
-  float occ = mix(0.42, 1.0, smoothstep(0.0, 0.6, vUv.z)) * mix(0.6, 1.0, vUv.w);
+  // Dark at the core, where the strands stand close and the sky does not reach.
+  float core = smoothstep(0.0, 0.7, vUv.z);
+  albedo *= mix(vec3(0.6, 0.42, 0.42), vec3(1.0), core);
+  float occ = mix(0.28, 1.0, core) * mix(0.6, 1.0, vUv.w);
   vec3 c = rigShade(vWorld, n, v, albedo, mix(0.96, 0.4, bead), occ);
   // Wet and thin: the sky behind a filament comes through it.
   c += albedo * skyIrradiance(-n) / 3.14159 * 0.3 * occ * skyOpen(vWorld);
