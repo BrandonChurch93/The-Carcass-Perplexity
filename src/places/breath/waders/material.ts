@@ -164,11 +164,11 @@ void main() {
     float joint = exp(-pow((legT - 0.47) / 0.05, 2.0)) + exp(-pow((legT - 0.94) / 0.03, 2.0));
     float shank = smoothstep(0.42, 0.52, legT);
     float fold = 0.5 * (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
-    height = (0.002 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
+    height = (0.002 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.0035 * crease + 0.004 * fold) * mid;
     pale = mix(vec3(0.76, 0.58, 0.55), vec3(0.96, 0.85, 0.81), smoothstep(0.2, 0.65, blotch)) * (0.84 + 0.32 * mottle) * clamp(told, 0.0, 2.0);
-    albedo = pale * (0.84 + 0.16 * crack) * (1.0 + (0.3 * drape + 0.1 * crease + 0.2 * fold) * mid);
+    albedo = pale * (0.78 + 0.22 * crack) * (1.0 + (0.42 * drape + 0.34 * crease + 0.34 * fold) * mid);
     occ *= 1.0 - 0.04 * between * mid;
-    albedo = mix(albedo, vec3(0.42, 0.44, 0.54), 0.2 * vein * mid * (1.0 - shank));
+    albedo = mix(albedo, vec3(0.4, 0.4, 0.52), 0.42 * vein * mid * (1.0 - shank));
     // Raw where bone rubs the skin from inside: the points of the hips, the spine, the joints, the end of the neck.
     float bony = smoothstep(0.55, 0.95, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - smoothstep(0.0, 0.1, neckU));
     float sore = smoothstep(0.42, 0.66, mottle) * (0.25 + 0.45 * smoothstep(0.4, 0.65, blotch)) + 0.5 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.3 * bony + 0.75 * joint + smoothstep(0.62, 1.0, neckU) * (0.5 + 0.4 * blotch);

@@ -136,7 +136,7 @@ ${VANE_TEST}
   // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
   float close = mix(0.22, 1.0, smoothstep(0.0075, 0.0025, px));
   vec3 blood = mix(vec3(1.0, 0.27, 0.17), vec3(1.0, 0.5, 0.36), 0.5 * tip + 0.35 * pale);
-  colour += blood * uSunColour * (1.15 * through * (0.35 + 0.65 * through) * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
+  colour += blood * uSunColour * (1.5 * through * (0.35 + 0.65 * through) * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
   // Wet: here and there a thread turns the sun to the lens, and against the light the wet edges of the threads are lined with it.
   float glint = smoothstep(0.972, 0.995, vnoise(at * vec2(700.0, 260.0) + vVane.z)) * smoothstep(0.004, 0.0012, px) * rim;
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * glint * (1.6 * pow(against, 5.0)) * lit * (0.3 + 0.7 * within);
@@ -194,8 +194,8 @@ void main() {
   float strings = vnoise(vec2(vVane.y * 9.0 + vVane.z, vVane.x * 3.0)) * 0.6 + 0.4 * vnoise(vec2(vVane.y * 23.0, vVane.x * 11.0 + vVane.z));
   float knots = smoothstep(0.55, 0.8, vnoise(vec2(vVane.x * 14.0 + vVane.z, vVane.y * 3.0)));
   float flesh = vVane.w;
-  vec3 dark = mix(vec3(0.12, 0.03, 0.03), vec3(0.3, 0.1, 0.08), strings);
-  vec3 fleshy = mix(vec3(0.2, 0.09, 0.085), vec3(0.47, 0.31, 0.27), strings);
+  vec3 dark = mix(vec3(0.14, 0.035, 0.03), vec3(0.36, 0.11, 0.08), strings);
+  vec3 fleshy = mix(vec3(0.24, 0.1, 0.09), vec3(0.6, 0.42, 0.37), strings);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
   n = normalize(n + 0.5 * (strings - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
   float occ = mix(0.35, 1.0, vTint.x) * mix(0.55, 1.0, smoothstep(0.02, 0.3, vTint.z)) * (0.6 + 0.4 * strings);
