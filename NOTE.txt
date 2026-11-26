@@ -1,7 +1,5 @@
-2026-11-26 18:13 UTC
-work at a291098 on agent/heart-lava
-v2 before the last merge: slabs are dull red with a hot rim and ride down; fume rises at the drops; wall and mouth underside answer the surge. Wrong: fume reads as dark grey smudges, not pale; the bed's own banks answer only faintly; slabs at preview are red mottle more than rafts
-look-1.jpg = out/work/v2/fall-sheet.png
-look-2.jpg = out/work/v2/fall-before-above-after.png
-look-3.jpg = out/work/v2/4006-approved-beside-frame.png
-look-4.jpg = out/work/v2/f-4217-hd-review.png
+2026-11-26 18:31 UTC
+work at eafac11 on agent/heart-lava
+v3 in progress, v2 above v3 at 4006, 4127, 4217, and the stream enlarged: fume is now a pale warm veil that does not darken; slabs are longer along the flow and darker. Wrong: on the flat treads a slab is still only a few pixels high at preview; fume foot a little pink
+look-1.jpg = out/work/v3c/look.png
+look-2.jpg = out/work/v3c/z.png
