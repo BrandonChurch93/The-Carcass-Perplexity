@@ -561,8 +561,12 @@ void main() {
 
 /**
  * The pools in the card loop: every wave of the sheet goes a whole number of turns a loop, so the water of the last frame is that of the first
- * and none of it is left to the cross-fade.
+ * and none of it is left to the cross-fade. And once a loop a thin sheet washes up the flats and drains back: the level of the pools comes up
+ * a few fingers, each stretch in its own time, with foam at its running edge, and what it leaves stays wet a while after it. At the loop's
+ * first frame it is all the way out, so that frame is the key's picture.
  */
+/** Metres the level comes up; how late in the loop a stretch may be, by its own time and by how near the establishing lens it lies. */
+const WASH = { rise: 0.12, late: 0.1, near: 0.14 };
 export const POOL_LOOP_FRAGMENT = (rings: number): string =>
   loopText(POOL_FRAGMENT(rings), [
     ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
@@ -574,4 +578,21 @@ export const POOL_LOOP_FRAGMENT = (rings: number): string =>
     ['sin(uTime * 2.3 +', `sin(${loopAngle('2.3', 3)} +`],
     ['sin(uTime * 0.35 +', `sin(${loopAngle('0.35', 1)} +`],
     ['vec2 drift = uTime * uWind * 0.05;', 'vec2 drift = uLoop.x * uWind * 0.05;'],
+    [
+      '  depth -= 0.07 * drawn;',
+      `  depth -= 0.07 * drawn;
+  float washAt = fract(uLoop.y - ${f(WASH.late)} * tide - ${f(WASH.near)} * smoothstep(55.0, 112.0, p.y));
+  float washUp = smoothstep(0.02, 0.24, washAt);
+  float wash = washUp * (1.0 - smoothstep(0.3, 0.58, washAt));
+  float washWet = washUp * (1.0 - smoothstep(0.48, 0.74, washAt));
+  depth += ${f(WASH.rise)} * wash;
+  float wetDepth = depth + ${f(WASH.rise)} * (washWet - wash);`,
+    ],
+    ['bool dry = depth < -film;', 'bool dry = wetDepth < -film;'],
+    ['smoothstep(-film, -0.004, depth);', 'smoothstep(-film, -0.004, wetDepth);'],
+    [
+      '  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);',
+      `  foamed = max(foamed, smoothstep(0.22, 0.5, lace) * (1.0 - smoothstep(0.0, 0.035, depth)) * edge * washUp * (1.0 - smoothstep(0.3, 0.56, washAt)));
+  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);`,
+    ],
   ]);

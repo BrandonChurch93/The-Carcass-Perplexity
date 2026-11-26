@@ -239,6 +239,19 @@ export function create(ctx: Context): Piece {
       fig.y = 0.14 * Math.abs(Math.sin(stride)) * f.size;
       tuft.shake = Math.abs(Math.cos(stride));
     }
+    if (lp !== null && f.habit !== 2) {
+      // The loop's idle: once a loop, at its own time and for its own length, it shifts its weight, takes a step, stands, and steps back
+      // to where the key has it. No two have the same time or length.
+      const long = 0.24 + 0.2 * hash(f.seed, 3);
+      const u = (lp - 0.05 - (0.9 - long) * hash(f.seed, 5)) / long;
+      const out = u <= 0 || u >= 1 ? 0 : smooth(0, 0.32, u) * (1 - smooth(0.62, 1, u));
+      const lifted = Math.sin(Math.PI * out);
+      const far = (hash(f.seed, 7) < 0.5 ? -0.4 : 0.5) * f.size * out;
+      fig.x += fx * far;
+      fig.z += fz * far;
+      fig.y += 0.05 * f.size * lifted;
+      fig.sway += 0.035 * lifted * (u < 0.5 ? 1 : -1);
+    }
     fig.y += ground(fig.x, fig.z);
     tuft.x = fig.x + fx * tip[0] * f.size;
     tuft.z = fig.z + fz * tip[0] * f.size;
@@ -634,7 +647,33 @@ export function create(ctx: Context): Piece {
     group.add(figures.mesh);
     if (figures.mirror) group.add(figures.mirror);
   }
-  group.add(colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh);
+  // ---- The card loop's own: a knot that stoops into the sky of the establishing picture and climbs out over the top of the frame ----
+  // It is in no frame of the film. Its way is one closed ring to the loop, tilted: high and near at the loop's start, where it is over the
+  // top of the frame, so that frame 0 is the key's picture; low and far at the middle of the loop.
+  // [the part of the loop it is behind the first, metres outside the ring, metres over it, size]
+  const SWOOP: [number, number, number, number][] = [[0, 0, 0, 1], [0.012, 3.2, -1.8, 0.9], [-0.016, -2.6, 1.5, 0.95], [0.03, 1.4, 2.6, 0.86], [-0.034, -4.1, -0.6, 1.02], [0.045, 4.4, -2.8, 0.92], [-0.05, -1.2, 3.1, 0.88]];
+  /** The ring: its middle in metres ahead of the establishing lens, to its right and over it; metres a second round it; metres it falls and climbs. */
+  const STOOP = { ahead: 120, right: 3, over: 42.5, speed: 22, fall: 15 };
+  const swoopFigures = new Figures(airSheet, SWOOP.length, {}, 6, 4);
+  swoopFigures.mesh.visible = false;
+  const swoopAt = (i: number, eye: [number, number, number]): void => {
+    const [lag, wide, over, size] = SWOOP[i] as [number, number, number, number];
+    const a = TAU * ((lp ?? 0) - lag);
+    const ring = (STOOP.speed * LOOP_SECONDS) / TAU + wide;
+    const turn = TAU / LOOP_SECONDS;
+    const along = STOOP.ahead - ring * Math.cos(a);
+    const side = STOOP.right + ring * Math.sin(a);
+    const goAlong = ring * Math.sin(a) * turn;
+    const goSide = ring * Math.cos(a) * turn;
+    const fx = ex / el;
+    const fz = ez / el;
+    // It glides down and strokes hard to climb.
+    const amp = 0.2 + 0.8 * smooth(-0.3, 0.5, -Math.sin(a));
+    airborne(STATIONS.establish[0] + fx * along - fz * side, eye[1] + STOOP.over + over + STOOP.fall * Math.cos(a), STATIONS.establish[1] + fz * along + fx * side, fx * goAlong - fz * goSide, -STOOP.fall * Math.sin(a) * turn, fz * goAlong + fx * goSide, size, hash(i, 3), T0, amp, eye);
+    // Seen from under, against the bright of the sky, it is dark.
+    fig.tone = 0.5 + 0.1 * hash(i, 9);
+  };
+  group.add(colonyFigures.mesh, standers.mesh, flockFigures.mesh, skeinFigures.mesh, swoopFigures.mesh);
   if (colonyFigures.shade) group.add(colonyFigures.shade);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
 
@@ -745,6 +784,14 @@ export function create(ctx: Context): Piece {
       });
       skeinFigures.commit();
       standers.commit();
+      swoopFigures.mesh.visible = lp !== null;
+      if (lp !== null) {
+        for (let i = 0; i < SWOOP.length; i++) {
+          swoopAt(i, eye);
+          swoopFigures.put(i, fig);
+        }
+        swoopFigures.commit();
+      }
     },
     dispose: () => {
       for (const m of [...feederSheets, perchedSheet, airSheet]) {
@@ -753,7 +800,7 @@ export function create(ctx: Context): Piece {
         m.shade.dispose();
         m.late.dispose();
       }
-      for (const figures of [...feederFigures, colonyFigures, standers, flockFigures, skeinFigures]) figures.dispose();
+      for (const figures of [...feederFigures, colonyFigures, standers, flockFigures, skeinFigures, swoopFigures]) figures.dispose();
       splash.dispose();
     },
   };
