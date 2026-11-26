@@ -1,5 +1,9 @@
-// The dome: the dusk sky above the cloud. The rig's sky, as every surface is lit by it, with the bars of high cloud that lie over the last light.
+// The dome: the storm sky of the Spine at dusk, from pictures. The storm wall stands on the gale's side (mat/stormwall, and the same lit from
+// inside, mat/stormwall-lit), the dusk sky with the last band under it on the lee (mat/sky). The pictures flow: each is drawn twice, carried a
+// little way along a field of slow eddies and faded from one copy to the next, so the cloud moves and never jumps. Where a strike is, the cloud
+// about it lights from inside: the lit picture comes up round the bolt as it is seen, and over the whole wall with the rig's flash.
 import * as THREE from 'three';
+import { DUSK, WIND } from '../shared/anchors';
 import type { Context } from '../shared/context';
 import { RIG_GLSL } from '../shared/glsl';
 
@@ -11,43 +15,117 @@ void main() {
   gl_Position = p.xyww;
 }`;
 
+/** The dome's cloud, for the dome and for whatever has to fade into it (the air pass): radiance toward d. */
+export const SKY_GLSL = /* glsl */ `
+uniform sampler2D tSkyDusk;
+uniform sampler2D tStormWall;
+uniform sampler2D tStormLit;
+const float STORM_AZ = ${Math.atan2(-WIND[2], -WIND[0]).toFixed(4)};
+const float DUSK_AZ = ${Math.atan2(DUSK[2], DUSK[0]).toFixed(4)};
+// How bright the pictures stand in the scene: the lens is set for the dusk.
+const float SKY_GAIN = 0.4;
+
+float wrapPi(float a) {
+  return a - 6.28318 * floor((a + 3.14159) / 6.28318);
+}
+float mirrored(float u) {
+  return 1.0 - abs(1.0 - mod(u, 2.0));
+}
+// A picture at uv, flowing: two copies half a period apart, each carried along the eddies from where it started.
+vec3 flowing(sampler2D picture, vec2 uv, vec2 drift, float period, float lod) {
+  vec2 eddy = textureLod(tNoise, vec3(uv * vec2(1.3, 0.9), 0.31), 0.0).rg - 0.5 + 0.5 * (textureLod(tNoise, vec3(uv * vec2(3.7, 2.9) + 0.4, 0.67), 0.0).ba - 0.5);
+  vec2 flow = drift + 0.035 * eddy;
+  float a = fract(uTime / period);
+  float b = fract(uTime / period + 0.5);
+  vec2 ua = uv - flow * (a - 0.5);
+  vec2 ub = uv - flow * (b - 0.5) ;
+  vec3 ca = textureLod(picture, vec2(mirrored(ua.x), clamp(ua.y, 0.004, 0.996)), lod).rgb;
+  vec3 cb = textureLod(picture, vec2(mirrored(ub.x), clamp(ub.y, 0.004, 0.996)), lod).rgb;
+  return mix(ca, cb, abs(1.0 - 2.0 * a));
+}
+// How much the cloud toward d is lit from inside: each round light of the rig as the lens sees it, and the rig's flash on the storm side.
+float cloudLit(vec3 from, vec3 d) {
+  float lit = 0.0;
+  for (int i = 0; i < 8; i++) {
+    if (i >= uEmitterCount) break;
+    vec3 e = uEmitters[i].xyz - from;
+    float far = length(e);
+    float c = dot(d, e / far);
+    float power = dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) * uEmitters[i].w * uEmitters[i].w;
+    // The glow is wide and soft, and wider and stronger about a light that stands high: that one is in the cloud.
+    float high = smoothstep(150.0, 900.0, uEmitters[i].y);
+    float wide = mix(0.02, 0.09, high);
+    lit += power * (0.25 + 0.75 * high) * (exp(-(1.0 - c) / wide) + 0.25 * exp(-(1.0 - c) / (6.0 * wide)));
+  }
+  return lit / 1.2e6;
+}
+vec3 skyCloud(vec3 from, vec3 d, float lod) {
+  float el = asin(clamp(d.y, -1.0, 1.0));
+  float az = atan(d.z, d.x);
+  float toStorm = abs(wrapPi(az - STORM_AZ));
+  // The storm wall: 107 degrees of it about the gale at the picture's own shape, mirrored on beyond.
+  vec2 uvS = vec2(0.5 + wrapPi(az - STORM_AZ) / 1.87, 0.03 + el / 1.05);
+  // The dusk: the picture's band lies along the horizon, toward the last light.
+  vec2 uvD = vec2(0.62 + wrapPi(az - DUSK_AZ) / 1.5, 0.045 + el / 1.0);
+  float seam = textureLod(tNoise, vec3(az * 0.9, el * 1.7, 0.53), 0.0).r - 0.5;
+  float storm = 1.0 - smoothstep(0.85, 1.45, toStorm + 0.5 * seam);
+  float lit = cloudLit(from, d) + 30.0 * dot(uFlash, vec3(0.33)) * storm;
+  vec3 c = vec3(0.0);
+  if (storm < 0.999) {
+    vec3 dusk = flowing(tSkyDusk, uvD, vec2(0.012, 0.0), 26.0, lod);
+    // No lit picture of the dusk: its cloud brightens and goes to violet about the bolt.
+    float k = clamp(lit, 0.0, 1.5);
+    dusk = dusk * (1.0 + 2.2 * k) + vec3(0.05, 0.035, 0.1) * k * (0.3 + 4.0 * dot(dusk, vec3(0.33)));
+    c += (1.0 - storm) * dusk;
+  }
+  if (storm > 0.001) {
+    vec3 dark = flowing(tStormWall, uvS, vec2(0.02, 0.004), 22.0, lod);
+    vec3 bright = flowing(tStormLit, uvS, vec2(0.02, 0.004), 22.0, lod);
+    float k = clamp(lit, 0.0, 1.0);
+    c += storm * mix(dark, bright * (1.0 + 0.8 * k), k);
+  }
+  // Overhead the pictures end: the cloud closes over in its own dark.
+  c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
+  return c * SKY_GAIN;
+}`;
+
 const FRAGMENT = /* glsl */ `
 precision highp float;
 precision highp sampler3D;
 varying vec3 vDir;
 uniform highp sampler3D tNoise;
 ${RIG_GLSL}
+${SKY_GLSL}
 
 void main() {
   vec3 d = normalize(vDir);
-  vec3 c = skyRadiance(d);
-  float el = asin(clamp(d.y, -1.0, 1.0));
-  float az = atan(d.z, d.x);
-  float open = 1.0 - stormSide(d);
-  // Bars of cloud, long and level, low over the horizon: dark against the band, with the band's light under them.
-  vec2 q = vec2(az * 2.2, el * 9.0) + uTime * vec2(0.0012, 0.0);
-  vec4 n = textureLod(tNoise, vec3(q.x * 0.21, q.y * 0.9, 0.37), 0.0);
-  vec4 m = textureLod(tNoise, vec3(q.x * 0.9 + 0.3, q.y * 3.1, 0.71), 0.0);
-  float bars = smoothstep(0.44, 0.7, 0.7 * n.g + 0.3 * m.g) * smoothstep(0.012, 0.05, el) * smoothstep(0.75, 0.2, el);
-  float w = max(dot(normalize(d.xz + 1e-5), uWarmDir.xz), 0.0);
-  vec3 under = uSkyStorm * 1.9 + uWarmColour * (0.05 * w * w * smoothstep(0.3, 0.02, el));
-  // Over the band the lee sky is not open dusk but the storm's own shelf running out: a dark blue-grey that deepens upward, so that the
-  // edge of the storm is lost in it and only the band and the cloud under it are light.
-  c *= mix(vec3(1.0), vec3(0.4, 0.43, 0.53), open * smoothstep(0.02, 0.22, el));
-  c = mix(c, under * 0.7, 0.85 * bars * (0.35 + 0.65 * open));
+  vec3 c = skyCloud(cameraPosition, d, 0.0);
+  // Under the horizon there is only the cloud sea, which the air pass draws.
+  c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
+/** The pictures the dome's cloud is read from, for any material that carries SKY_GLSL. */
+export function skyPictures(ctx: Context): Record<string, THREE.IUniform> {
+  return {
+    tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
+    tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
+    tStormLit: { value: ctx.assets.texture('mat/stormwall-lit.jpg', { repeat: false }) },
+  };
+}
+
 export interface Sky {
   dome: THREE.Mesh;
+  uniforms: Record<string, THREE.IUniform>;
   dispose(): void;
 }
 
 export function createSky(ctx: Context, noise: THREE.Data3DTexture): Sky {
+  const uniforms = skyPictures(ctx);
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, tNoise: { value: noise } },
+    uniforms: { ...ctx.rig.uniforms, ...uniforms, tNoise: { value: noise } },
     side: THREE.BackSide,
     // At the far plane and drawn last, so that the engine can reject it wherever anything stands in front.
     depthTest: true,
@@ -61,6 +139,7 @@ export function createSky(ctx: Context, noise: THREE.Data3DTexture): Sky {
   dome.renderOrder = 10;
   return {
     dome,
+    uniforms,
     dispose: () => {
       geometry.dispose();
       material.dispose();

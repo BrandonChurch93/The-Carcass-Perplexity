@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 84, 2026-11-26 01:50 UTC:
+Status 85, 2026-11-26 02:18 UTC:
 
-- `01-a-seam1.jpg`: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right
-- `02-a-joined-small.jpg`: 2 · The larger map of the whole body, reduced (4096 x 2305, joined from nine windows)
-- `03-look-1.jpg`: 3 · The Blood Marsh, wave 2 at minute 33: the wallower as one skin beside the approved picture (head, young ones and wet line still open)
-- `04-look-1.jpg`: 4 · The Reveal, wave 2: the last frame on the first maps beside the approved picture (lowlands too dark, bones too white, both sent back)
+- `01-reveal-4.jpg`: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below
+- `02-eye-1.jpg`: The Eye, the drinkers, restaged further off. Approved left, the build right
+- `03-ribs-2.jpg`: The Ribs, the kite-wings feeding. Approved left, the build right
+- `04-marsh-3.jpg`: The Blood Marsh, the wallowers. Approved left, the build right, crops below
 
+Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
 Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 Status 82, 2026-11-26 01:11 UTC, showed: The Reveal's new ground, kept set.
-Status 81, 2026-11-26 00:51 UTC, showed: The Reveal's new ground. Top: the new satellite map with the bones traced from the approved picture drawn on it in magenta.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T01:50:38Z
-phase 4: 5.67 h used of 17.00 h
-build: 25.99 h used of 72.00 h
+2026-11-26T02:18:00Z
+phase 4: 6.12 h used of 17.00 h
+build: 26.44 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 27
 ```
 
 ## Phases
@@ -1624,7 +1624,9 @@ none
 
 ## Animals kept at a distance
 
-- Open, ordered 2026-11-26 01:10 UTC and not yet in the frames: the drinkers of the Eye (`eye-1`, and the same animals where `eye-2` and `eye-4` show them). The owner `eye_owner_2` restages them under `kit/03-METHOD.md` section 4. The settled sentence is added to each key when its restaged frame is on `main`, and the key is named in the next report block.
+- Open, `ribs-3`, on `main` since 2026-11-26 02:09 UTC (6b36521e): the kite-wings that pass close to the lens at the colony are moved 40 to 60 m off by the sea's owner (`ribs_sea_owner_2`, version 1 of wave 2), after the fliers and the colony drew severe issues in round 10 (R1 pack B, R3 pack B). The detail is carried by the colony on its ledges. The settled sentence is in `settled["ribs-3"]` of `config/showcase.json`, word for word.
+- Open, `spine-4`, on `main` since 2026-11-26 02:21 UTC (d7c67ab1): the herd in the hollow is restaged by `spine_storm_owner_2` (version 1 of wave 2), after the ridge-runners drew severe issues in round 9. The six animals sit further in, five grouped at the left wall and one standing against the mouth, lit only from the mouth behind them as near silhouettes. The detail is carried by the place: the rimed mouth, the ice floor, the storm outside. The settled sentence is in `settled["spine-4"]` of `config/showcase.json`, word for word.
+- Open, `eye-1`, `eye-2`, `eye-4`, on `main` since 2026-11-26 02:14 UTC (ecb3bc47): the drinkers of the Eye are restaged by `eye_owner_2` (version 1 of wave 2), ordered 01:10 UTC after they drew severe issues in round 12. `eye-1`: four animals side on in the shallows, 21 to 31 m off, the camera 6.5 m back on the gravel with the foreground soft. `eye-2`: three small animals 31 to 52 m out beyond the mats, in silhouette. `eye-4`: two from behind, cropped by the foot of the frame and out of focus. The detail is carried by the place: the shallows, the mats, the dark water. The settled sentence is in `settled` of `config/showcase.json` for each of the three keys, word for word.
 
 ## For Brandon to decide
 

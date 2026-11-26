@@ -7,7 +7,7 @@ import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { WIND } from '../shared/anchors';
 import { FIRST, finEdge, spires } from '../ridge';
-import { ditherAt, flashAt } from '../strikes/bolt';
+import { flashAt } from '../strikes/bolt';
 
 export const PARTS: readonly string[] = ['tether-kites'];
 
@@ -34,8 +34,9 @@ function colonies(n: number): [number, number][] {
   if (n === FIRST) return [[0.955, 3], [0.845, 2], [0.795, 3], [0.752, 2], [0.705, 3]];
   if (n === FIRST + 2) return [[0.965, 3], [0.9, 1]];
   if (n === FIRST + 1) return [[0.95, 2]];
-  if (n === FIRST + 3) return [[0.96, 2], [0.87, 1]];
-  return [[0.955, 2]];
+  if (n === FIRST + 3) return [[0.96, 1], [0.87, 1]];
+  // The far peaks: one, or none.
+  return (n - FIRST) % 2 === 0 ? [[0.955, 1]] : [];
 }
 
 // The shape of a ribbon at a share u of its length. Shared by the ribbons and by nothing else: the stalks are the first fifth of the same strip.
@@ -133,7 +134,8 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 uniform vec4 uStruck;
 uniform vec3 uGlowTint;
-uniform float uDither;
+uniform sampler2D tMembrane;
+uniform sampler2D tMembraneH;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec2 vAt;
@@ -155,17 +157,20 @@ void main() {
   if (dot(n, toCamera) < 0.0) n = -n;
   float blade = smoothstep(vMore.w, vMore.w + 0.07, u);
 
-  // The edge is frayed, more toward the tail, and the tail is torn into tatters; some ribbons are slit.
-  float edge = 1.0 - abs(v);
-  float fray = (0.05 + 0.5 * smoothstep(0.45, 1.0, u)) * (0.35 * vnoise(vec2(metres / (0.35 * wide), seed)) + 0.65 * vnoise(vec2(metres / (1.6 * wide), seed + 5.0)));
-  float tatter = smoothstep(0.7, 1.0, u) * smoothstep(0.42, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, v * 2.2 + seed)));
-  float slit = step(0.55, fract(seed * 0.37)) * smoothstep(0.35, 0.5, u) * (1.0 - smoothstep(0.02, 0.05, abs(v - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.1 * vnoise(vec2(metres / wide, seed))));
-  // Holes where the gale has gone through it, more of them toward the tail, each with a rolled rim.
-  float worn = vnoise(vec2(metres / (1.3 * wide) + seed * 3.0, v * 1.7 + seed)) + 0.35 * (vnoise(vec2(metres / (0.3 * wide), v * 6.0 + seed)) - 0.5);
-  float gate = mix(0.84, 0.62, smoothstep(0.2, 0.9, u));
-  float hole = smoothstep(gate, gate + 0.03, worn);
-  float rim = smoothstep(gate - 0.09, gate, worn) * (1.0 - hole);
-  float cut = smoothstep(fray, fray + 0.06, edge) * (1.0 - tatter) * (1.0 - slit) * (1.0 - hole);
+  // The skin is the picture of a membrane, laid once down the blade: its torn edge, its hole and its tail are the picture's own. Each
+  // ribbon takes its own length of it, either way up, and is pulled about across its width, so no two are cut alike.
+  float s = clamp((u - vMore.w) / (1.0 - vMore.w), 0.0, 1.0);
+  float vb = v / max(vThin, 0.05);
+  float flip = fract(seed * 0.37) < 0.5 ? -1.0 : 1.0;
+  float from = 0.04 + 0.3 * fract(seed * 1.7);
+  float warp = 0.3 * (vnoise(vec2(metres / (2.0 * wide), seed)) - 0.5) * s;
+  vec2 uv = vec2(mix(from, 0.99, pow(s, 0.8 + 0.5 * fract(seed * 2.9))), 0.472 + flip * 0.225 * (vb + warp));
+  vec3 pic = texture2D(tMembrane, uv).rgb;
+  float relief = texture2D(tMembraneH, uv).r;
+  float tatter = smoothstep(0.6, 1.0, s) * smoothstep(0.5, 0.62, vnoise(vec2(metres / (2.5 * wide) + seed, vb * 2.2 + seed)));
+  float slit = step(0.55, fract(seed * 0.61)) * smoothstep(0.3, 0.45, s) * (1.0 - smoothstep(0.0, 0.03, abs(vb - 0.5 * sin(metres / (4.0 * wide) + seed) - 0.1) - 0.02 - 0.08 * vnoise(vec2(metres / wide, seed))));
+  float cut = step(0.085, max(pic.r, max(pic.g, pic.b))) * step(abs(vb), 1.0) * (1.0 - step(0.5, tatter)) * (1.0 - step(0.5, slit));
+  float edge = 1.0 - abs(vb);
   // The stalk: a cord of wet sinew, knotted where the skin grows from it and here and there along it. Under the blade it runs on as a spine.
   float stalkAt = vMore.w * vShape.x;
   float knots = 1.6 * exp(-pow((metres - stalkAt - 0.6) / 0.75, 2.0)) + 0.7 * smoothstep(0.72, 0.9, vnoise(vec2(metres * 0.45, seed * 3.0)));
@@ -180,56 +185,31 @@ void main() {
   float lengthOf = 0.06 + 0.95 * fract(h * 7.3) * fract(h * 3.1) * fract(h * 17.9 + 0.3);
   float spike = step(abs(fx), 0.05 * pow(clamp(1.0 - below / lengthOf, 0.0, 1.0), 0.7)) * step(0.0, below) * step(below, lengthOf);
   float bead = 1.0 - smoothstep(0.035, 0.05, length(vec2(fx, below - lengthOf)));
-  float ice = max(spike, bead) * step(0.55, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
+  float ice = max(spike, bead) * step(0.78, h) * (1.0 - blade) * smoothstep(0.6, 1.0, vCord) * smoothstep(0.02, 0.06, u);
   float skin = cut * blade;
   if (max(skin, max(cordHere, ice)) < 0.02) discard;
 
-  // The skin: thin and wet, pale as fish skin, with veins that run its length and creases across it.
-  float vein = 1.0 - smoothstep(0.0, 0.09, abs(fract(v * (1.6 + 1.4 * fract(seed)) + 1.1 * vnoise(vec2(metres / (1.4 * wide), seed)) + 0.25 * vnoise(vec2(metres / (0.3 * wide), seed + 9.0))) - 0.5));
-  float fine = vnoise(vec2(metres / (0.12 * wide), v * 9.0 + seed));
-  float crease = smoothstep(0.55, 0.8, vnoise(vec2(metres / (0.5 * wide) + seed, v * 1.3)));
-  float rolled = 1.0 - smoothstep(fray + 0.05, fray + 0.22, edge);
-  rolled = max(rolled, rim);
-  // The edge that meets the wind is a thick wet welt.
-  float welt = smoothstep(0.72, 0.9, v) * blade;
-  float thick = clamp(0.2 + 0.55 * rolled + 0.4 * vein + 0.22 * crease + 0.12 * fine + 0.7 * welt, 0.0, 1.0);
-
-  // Pale violet, bruised darker along the veins and in blotches where it has been beaten against itself.
-  float bruise = smoothstep(0.5, 0.8, vnoise(vec2(metres / (3.0 * wide) + seed * 7.0, v * 0.9 + seed * 2.0)));
-  vec3 albedo = mix(vec3(0.66, 0.58, 0.72), vec3(0.24, 0.17, 0.3), clamp(0.75 * vein + 0.3 * crease + 0.35 * bruise + 0.6 * welt, 0.0, 1.0));
-  // Light comes through it: the far side's light counts as much as the near side's, and the lightning shows through from behind.
-  vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n));
-  // The skin scatters what falls on it from every side: it takes the cold of the whole sky more than the warmth of the horizon's band.
-  e = mix(e, vec3(dot(e, vec3(0.3, 0.5, 0.2))) * vec3(0.9, 0.8, 1.3), 0.7);
-  vec3 c = albedo * e / 3.14159 * (1.0 + 0.3 * thick);
-  // The sheen: a wet film, violet where it is seen flat and blue-green at a glance.
+  // Thin, dark and wet. What light it has comes through it from the sky behind and off its wet folds; the veins are the picture's dark lines.
+  float lum = dot(pic, vec3(0.333));
+  float vein = 1.0 - smoothstep(0.08, 0.3, lum);
+  float fold = smoothstep(0.45, 0.85, relief);
+  vec3 albedo = pic * (0.55 + 0.5 * fract(seed * 5.3)) * mix(vec3(1.0), vec3(0.85, 0.75, 1.1), fract(seed * 3.3));
+  vec3 e = 0.5 * (skyIrradiance(n) + skyIrradiance(-n)) + min(vec3(2.5), 0.6 * (emitterIrradiance(vWorld, n) + emitterIrradiance(vWorld, -n)));
+  vec3 c = albedo * e / 3.14159;
+  // What is behind it shows through where it is thin, stained by it.
+  c += albedo * skyRadiance(-toCamera) * 0.5 * (1.0 - 0.8 * vein) * (1.0 - 0.5 * fold);
+  // Wet glints on the folds, fine and few.
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
-  float fres = 0.08 + 0.92 * pow(1.0 - nv, 4.0);
-  // An oil film on it: violet seen flat, rose as it turns, green at a glance, and the bands wander over the sheet.
-  float glance = pow(1.0 - nv, 1.3) + 0.5 * (vnoise(vec2(metres / (2.0 * wide) + seed, v * 1.4 + seed * 5.0)) - 0.5) + 0.12 * (fine - 0.5);
-  vec3 film = mix(vec3(0.62, 0.5, 1.0), vec3(1.0, 0.5, 0.72), smoothstep(0.12, 0.4, glance));
-  film = mix(film, vec3(0.45, 0.95, 0.68), smoothstep(0.48, 0.8, glance));
+  float fres = 0.04 + 0.96 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r)) + emitterIrradiance(vWorld, n) * 0.08;
-  c += mirror * (fres * 0.9) * mix(vec3(0.85, 0.8, 1.0), film, 0.7);
-  // The rolled edges and the creases are wet ridges: each carries a line of the sky's light.
-  c += mirror * (1.3 * rolled + 0.9 * crease * fine + 0.5 * vein + 2.4 * exp(-pow((v - 0.84) / 0.035, 2.0)) * blade) * mix(vec3(0.92, 0.86, 1.05), film, 0.3);
-  // What is behind it shows through it, stained: the band at the horizon, the storm, the bolt.
-  c += albedo * film * skyRadiance(-toCamera) * (0.45 * (1.0 - 0.7 * thick));
-  c += albedo * e / 3.14159 * 0.3 * film * (1.0 - thick);
-
-  // When its spire is struck the ribbon carries the charge: its edges and veins glow dim violet-blue, and its tatters spark.
+  float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
+  c += mirror * (0.35 * fres + 1.6 * glint * (0.3 + 0.7 * fres));
+  // When its spire is struck the ribbon carries the charge for a moment along its folds.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.12;
-  float charge = uStruck.y * mine * (0.8 * rolled + 0.35 * vein + 1.5 * tatter * step(0.7, fine));
-  c += uGlowTint * charge;
-
-  // The small ones behind are thinner skins than the great ones.
-  float alpha = clamp(0.15 + 0.62 * thick + 0.5 * fres, 0.0, 0.96) * skin * mix(0.72, 1.0, smoothstep(4.0, 9.0, wide));
-  // From far its two edges are what draws it: dark lines round a pale sheet.
-  float hem = vFar * smoothstep(0.66, 0.9, abs(v)) * skin;
-  c *= 1.0 - 0.8 * hem;
-  alpha = max(alpha + 0.22 * vFar * skin, 0.9 * hem);
+  c += uGlowTint * (uStruck.y * mine * 0.25 * glint);
+  float alpha = skin;
   // The cord: dark wet sinew, its fibres twisted along it, round, rimed in beads on top.
   float x = clamp(v / max(girth, 1e-4), -1.0, 1.0);
   vec3 round_ = normalize(n * sqrt(1.0 - x * x) + vec3(0.0, 1.0, 0.0) * x);
@@ -244,12 +224,9 @@ void main() {
   // The ice on it: clear, lit along one side.
   vec3 hung = rigShade(vWorld, normalize(n + vec3(fx * 14.0, 0.3, 0.0)), toCamera, vec3(0.5, 0.56, 0.64), 0.12, 1.0) + 0.35 * skyRadiance(-toCamera);
   c = mix(c, hung, ice * (1.0 - corded));
-  alpha = max(alpha, 0.85 * ice);
-  // It is seen through by leaving pixels out, not by blending: every pixel it keeps has its own depth, so the air draws over it as over rock, and
-  // the storm behind shows through the pixels it leaves. The pattern moves with each sample of a frame, and the samples add up to its true cover.
-  // The pattern is a scatter without rows, so what is left of it after the samples reads as grain and not as a mesh.
-  float grain = fract(fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) + uDither);
-  if (alpha <= grain) discard;
+  alpha = max(alpha, ice);
+  // Every pixel it keeps is whole: no pattern, no grain.
+  if (alpha < 0.5) discard;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -357,11 +334,17 @@ export function create(ctx: Context): Piece {
 
   const pixel = { value: 0.0005 };
   const struck = new THREE.Vector4(0, 0, 0, 0);
-  const dither = { value: 0.5 };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uStruck: { value: struck }, uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) } },
+    uniforms: {
+      ...ctx.rig.uniforms,
+      uPixel: pixel,
+      uStruck: { value: struck },
+      uGlowTint: { value: new THREE.Vector3(1.3, 1.05, 2.8) },
+      tMembrane: { value: ctx.assets.texture('mat/membrane.jpg', { kind: 'colour', repeat: false, anisotropy: 8 }) },
+      tMembraneH: { value: ctx.assets.texture('mat/membrane-h.png', { kind: 'data', repeat: false, anisotropy: 8 }) },
+    },
     side: THREE.DoubleSide,
   });
   const kites = new THREE.Mesh(geometry, material);
@@ -402,7 +385,6 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       const flash = flashAt(seconds);
-      dither.value = ditherAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
       struck.set(flash ? flash.spire : 0, flash ? Math.min(1.5, flash.power * 1.2 + 0.5 * Math.exp(-Math.max(0, flash.age) / 0.35) * (flash.age > 0 ? 1 : 0)) : 0, 0, 0);
     },

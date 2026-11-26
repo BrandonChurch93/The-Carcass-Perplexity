@@ -8,7 +8,7 @@ import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { INSIDE_FROM } from '../shared/anchors';
 import { bakeNoise } from './noise';
-import { createSky } from './sky';
+import { createSky, skyPictures } from './sky';
 import { VOLUME_FRAGMENT } from './volume';
 
 export const PARTS: readonly string[] = ['sky', 'air', 'cloud-sea', 'cloud', 'spindrift'];
@@ -80,6 +80,7 @@ export function create(ctx: Context): Piece {
     uniforms: {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
+      ...skyPictures(ctx),
       tNoise: { value: noise },
       tRidge: { value: ridge },
       tDeck: { value: ctx.assets.texture('mat/cloudsea.jpg') },
