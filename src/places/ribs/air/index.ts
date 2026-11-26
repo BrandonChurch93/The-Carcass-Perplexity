@@ -164,16 +164,26 @@ void main() {
   for (int i = 0; i < ${STEPS}; i++) {
     float f = (float(i) + 1.0) / float(${STEPS});
     float t1 = span * f * f;
-    float tm = mix(t0, t1, 0.25 + 0.5 * jitter);
+    float tm = mix(t0, t1, 0.4 + 0.2 * jitter);
     vec3 p = ro + rd * tm;
     // Air shows by distance: what stands within a hundred and fifty metres keeps its blacks.
     // Low mist lies in banks over the wet floor and round the feet of the blades, and goes with the wind: a bank passes a blade in some
     // ten seconds.
-    float banks = texture2D(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019)).r;
-    float mist = 0.0022 * exp(-max(p.y, 0.0) / 24.0) * smoothstep(0.3, 0.8, banks);
-    float a = 1.0 - exp(-(thickness(p.y) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
-    float lit = sunAt(p, landAt(p.xz));
-    sum += trans * a * (ambient + sunlit * lit);
+    // The level of the picture is named, by the length of the stride: what a stride cannot follow is left out, or it would show as the
+    // screen's weave over the far air.
+    float fineness = log2(t1 - t0);
+    float banks = textureLod(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019), clamp(fineness - 3.6, 1.0, 8.0)).r;
+    float lumps = textureLod(tCloudShade, p.xz / 210.0 - uTime * vec2(0.033, 0.058) + 0.37, clamp(fineness - 2.6, 1.0, 8.0)).g;
+    float bank = smoothstep(0.3, 0.8, banks + 0.4 * (lumps - 0.5));
+    // A bank has a top, low where it is thin and some forty metres where it is thick, and the haze over it stands thicker too.
+    float mist = 0.0034 * exp(-max(p.y, 0.0) / (9.0 + 34.0 * bank)) * bank;
+    float a = 1.0 - exp(-(thickness(p.y) * (0.6 + 0.9 * bank) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
+    // Under the shut cloud the air is the storm's slate; where the break stands over it, it takes the sky's light and the sun.
+    float gap = cloudShadeMarched(p);
+    // A long stride crosses many shadows of the blades: it takes their mean, not the one it happens to stand in, which would lay the
+    // screen's weave over the far air.
+    float lit = mix(sunBaked(p, landAt(p.xz)), 0.55, smoothstep(60.0, 220.0, t1 - t0)) * gap;
+    sum += trans * a * (ambient * (0.7 + 0.5 * gap) + sunlit * lit);
     trans *= 1.0 - a;
     t0 = t1;
   }
@@ -252,7 +262,7 @@ const LOOP_MIST = 0.7;
 export function create(ctx: Context): Piece {
   const storm = ctx.assets.texture('air/storm.jpg');
   storm.wrapS = THREE.MirroredRepeatWrapping;
-  storm.wrapT = THREE.ClampToEdgeWrapping;
+  storm.wrapT = THREE.MirroredRepeatWrapping;
   storm.needsUpdate = true;
   (ctx.rig.uniforms.tSky as THREE.IUniform).value = storm;
   const sky = new THREE.ShaderMaterial({

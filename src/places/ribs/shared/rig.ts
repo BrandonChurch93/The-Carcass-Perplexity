@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { config } from '../../../config';
 import { stream } from '../../../core/rng';
 import { RIBS, bladeSpine, landAt as layoutLand } from '../layout';
-import { SUN, T0, WIND, keySeconds, shotSpan } from './anchors';
+import { DROWNED, SUN, T0, WIND, keySeconds, shotSpan } from './anchors';
 import { OPENING_END, SHAFT_TARGET, openingLight, openingWeight } from './opening';
 import { loopPhase, stagedSeconds } from './stage';
 
@@ -25,16 +25,19 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62 };
  * the light the lit sea and flats throw back is raised, `bounce` times, as a crew would hold a white sheet), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
  * bore's spray in the gate.
  */
-const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number }[] = [
+const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number; bounce?: number; shaft?: number }[] = [
   { shot: 'ribs-03', key: 'ribs-3', x: 196, z: -500, radius: 380, yaw: 16, bounce: 4.4 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23 },
-  { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42 },
+  { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42, shaft: 2.4 },
   { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
-/** The small break of the opening: where its light falls on the sea at the first frame of the place (it travels with the wind like the wide one), and its radius. */
-export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
+/**
+ * The small break. As the film opens its shaft stands on the first blade (SHAFT_TARGET in opening.ts); from then on it stands on the one
+ * that hangs in the weed, `radius` metres across the sun's way, or the `shaft` of the shot: close on it the wall round it stays in shade.
+ */
+export const BREAK2 = { radius: 5, gain: 0.9 };
 /**
  * The approach: the storm stands over the strait as the film opens. The wide break is shut (`gain` is what its place in the cover is given)
  * and the sky's own light is cut by `dim`, both whole until `holds` seconds and back to the place's own by `ends`; the one light is the
@@ -46,7 +49,7 @@ const SKY_GAIN = 2.3;
 /** What the lit flats and sea throw back up of the sun's light, by colour: wet sand and shingle, warm. */
 const BOUNCE = [0.2, 0.185, 0.16] as const;
 /** The colour a depth of air goes to: the horizon's pale slate. */
-const HAZE = [0.29, 0.345, 0.42] as const;
+const HAZE = [0.215, 0.265, 0.335] as const;
 const SKY_LIGHT = { zenith: [0.115, 0.14, 0.185], horizon: [0.33, 0.38, 0.45], ground: [0.08, 0.088, 0.097] } as const;
 
 
@@ -415,14 +418,14 @@ export function createRig(): Rig {
   const tile = fineTile();
   const fine = (x: number, z: number): number => FINE.wideAmp * (tile.read(x / FINE.wide, z / FINE.wide) - 0.5) + FINE.smallAmp * (tile.read(z / FINE.small, x / FINE.small) - 0.5);
   const breakAt = new THREE.Vector4(BREAK.x, BREAK.z, 1 / (BREAK.radius * BREAK.radius), BREAK.gain);
-  const break2At = new THREE.Vector4(BREAK2.x, BREAK2.z, 1 / (BREAK2.radius * BREAK2.radius), BREAK2.gain);
+  const break2At = new THREE.Vector4(0, 0, 1 / (BREAK2.radius * BREAK2.radius), BREAK2.gain);
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, SKY_GAIN);
   const staging = BREAK_BY_SHOT.map((b) => ({ ...b, span: shotSpan(b.shot), at: keySeconds(b.key) }));
   /** The break's staging for the shot the camera stands in: its own, or the strait's. */
-  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number } => {
+  const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
     return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0 };
@@ -455,15 +458,16 @@ export function createRig(): Rig {
     const k = Math.min(1, Math.max(0, (STORM.ends - world) / (STORM.ends - STORM.holds)));
     return k * k * (3 - 2 * k);
   };
-  // The small break at `seconds` of the sky: x, z and radius. In the approach it stands on the first blade's seaward face and the water
-  // before it, and then goes to the film's own place.
-  const break2 = (seconds: number, world: number): [number, number, number] => {
-    const x = BREAK2.x + WIND.to[0] * WIND.cloud * seconds;
-    const z = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
-    if (openingWeight(world) === 0) return [x, z, BREAK2.radius];
+  // The small break at `world` seconds: x, z and radius of its light on the ground. In the approach it stands on the first blade's seaward
+  // face and the water before it; then it goes to the one that hangs in the weed and stays, as a gap in a sheet stays in a blade's lee.
+  const hung = DROWNED.at();
+  const hungOn = [hung[0] - (SUN.toward[0] * hung[1]) / SUN.toward[1], hung[2] - (SUN.toward[2] * hung[1]) / SUN.toward[1]];
+  const break2 = (world: number): [number, number, number] => {
+    const radius = stagedBreak().shaft ?? BREAK2.radius;
+    if (openingWeight(world) === 0) return [hungOn[0], hungOn[1], radius];
     const stay = 1 - Math.min(1, Math.max(0, (world - SHAFT_TARGET.stays) / (OPENING_END - 1 - SHAFT_TARGET.stays)));
     const held = stay * stay * (3 - 2 * stay);
-    return [x + (SHAFT_TARGET.x - x) * held, z + (SHAFT_TARGET.z - z) * held, BREAK2.radius + (SHAFT_TARGET.radius - BREAK2.radius) * held];
+    return [hungOn[0] + (SHAFT_TARGET.x - hungOn[0]) * held, hungOn[1] + (SHAFT_TARGET.z - hungOn[1]) * held, radius + (SHAFT_TARGET.radius - radius) * held];
   };
 
   /** The wide break at `sky` seconds of the cloud, for the shot the camera stands in: x, z and radius of its light on the ground. */
@@ -563,7 +567,7 @@ export function createRig(): Rig {
       const bz = z - wide[1];
       const along = bx * sun.x + bz * sun.z;
       const wr = (wide[2] * wide[2] * (bx * bx + bz * bz)) / Math.max(1e-6, bx * bx + bz * bz - (0.84 * along * along) / (1 - sun.y * sun.y));
-      const b = break2(seconds, world);
+      const b = break2(world);
       const ex = x - b[0];
       const ez = z - b[1];
       const along2 = ex * sun.x + ez * sun.z;
@@ -614,7 +618,8 @@ export function createRig(): Rig {
       const wide = wideBreak(sky);
       breakAt.x = wide[0];
       breakAt.y = wide[1];
-      break2At.set(BREAK2.x + WIND.to[0] * WIND.cloud * sky, BREAK2.z + WIND.to[1] * WIND.cloud * sky, 1 / (BREAK2.radius * BREAK2.radius), BREAK2.gain);
+      const b = break2(seconds);
+      break2At.set(b[0], b[1], 1 / (b[2] * b[2]), BREAK2.gain);
       const weight = openingWeight(seconds);
       cloudShade.w = CLOUD.shade;
       breakAt.z = 1 / (wide[2] * wide[2]);
@@ -633,8 +638,6 @@ export function createRig(): Rig {
         const c = Math.cos(turn);
         const n = Math.sin(turn);
         skyBreak.set(skyBreak.x * c - skyBreak.z * n, skyBreak.y, skyBreak.z * c + skyBreak.x * n);
-        const b = break2(sky, seconds);
-        break2At.set(b[0], b[1], 1 / (b[2] * b[2]), BREAK2.gain);
         // The storm: the wide break is shut and the sky's own light is low; the shaft is the one light, and the place's own comes back as the lens comes in.
         const dark = storm(seconds);
         breakAt.w = BREAK.gain + (STORM.gain - BREAK.gain) * dark;

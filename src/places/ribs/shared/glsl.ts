@@ -110,6 +110,12 @@ float cloudCover(vec2 q) {
 }
 
 // The moving shadow of the broken cloud at a point: 1 in a gap, uCloudShade.w under cloud. One sheet for the whole place, drifting with the wind.
+// The same inside a march of the air, where the places read jump from pixel to pixel: the level of the picture is named.
+float cloudShadeMarched(vec3 p) {
+  vec2 q = p.xz - uSunDir.xz * (p.y / uSunDir.y);
+  float c = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, 1.5).r * 0.62 + cloudBreaks(q);
+  return mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
+}
 float cloudShade(vec3 p) {
   // The sun is not overhead: the shadow of a cloud 1500 m up lies where the ray to the sun leaves the cloud sheet.
   float c = cloudCover(p.xz - uSunDir.xz * (p.y / uSunDir.y));
@@ -125,6 +131,12 @@ vec3 skyCloud(vec3 from, vec3 d) {
   vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.82));
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
+  // The picture has a sixth of a texel for a pixel of the widest lens: its own lumps, read four times smaller and against their own
+  // local mean, are laid into it as the fine structure a cloud has at every size.
+  vec2 fineAt = uv * 4.0 + vec2(0.31, 0.17) + 0.05 * work;
+  float fine = dot(texture2D(tSky, fineAt).rgb, vec3(0.333));
+  float broad = dot(textureLod(tSky, fineAt, 6.5).rgb, vec3(0.333));
+  c *= mix(1.0, clamp(fine / max(broad, 0.004), 0.65, 1.4), 0.4);
   // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
   // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
   c *= 0.6 + 0.4 * smoothstep(0.04, 0.22, dot(c, vec3(0.333))) + 1.6 * smoothstep(0.45, 1.5, dot(c, vec3(0.333)));
