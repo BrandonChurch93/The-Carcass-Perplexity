@@ -103,7 +103,18 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
   float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
   vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(v, 0.004, 0.996)), bias).rgb) * uPlateTone.rgb;
-  return mix(plate, sky, smoothstep(0.9, 0.995, v));
+  // A picture of a wall alone (w is 2) has no sky of its own: what the water mirrors above it is still the wall.
+  float open = uPlateTone.w > 1.5 && bias > 0.0 ? 0.0 : 1.0;
+  return mix(plate, sky, smoothstep(0.9, 0.995, v) * open);
+}
+
+// Metres along a ray to the picture of the far world.
+float plateDistance(vec3 ro, vec3 rd) {
+  vec2 o = ro.xz - uPlateAt.xz;
+  float a = max(dot(rd.xz, rd.xz), 1e-6);
+  float b = dot(o, rd.xz);
+  float c = dot(o, o) - uPlateAt.w * uPlateAt.w;
+  return (-b + sqrt(max(b * b - a * c, 0.0))) / a;
 }
 
 // True where the built land gives way to the picture of the far world.

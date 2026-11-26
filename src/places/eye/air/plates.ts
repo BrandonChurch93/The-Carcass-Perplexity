@@ -17,6 +17,8 @@ export interface Plate {
   /** The v of the picture's horizon row, 0 at its foot. */
   horizon: number;
   tone: [number, number, number];
+  /** True for a picture of a wall alone, with no sky in it. */
+  wall?: boolean;
   /** The built land is drawn within `near` metres of the camera of this key. */
   key: keyof typeof KEYS;
   near: number;
@@ -31,7 +33,7 @@ export const PLATES: Plate[] = [
   // The north rim from the water, for the three shots that stand in the shallows of the south shore.
   { file: 'mat/far-low.jpg', shots: ['eye-02', 'eye-03', 'eye-04'], at: [-110, 0, 550], radius: 1500, bearing: 5, tanAcross: tan(22.5) * (16 / 9), tanUp: tan(22.5), horizon: 0.545, tone: [1, 1, 1], key: 'mats', near: 420 },
   // The north wall with its cave, for the last shot: hung on the far shore itself, round the centre of the lake, so that it stays a shore as the camera climbs.
-  { file: 'mat/far-long.jpg', shots: ['eye-05'], at: [0, 0, 0], radius: 1000, bearing: 0, tanAcross: tan(9.8), tanUp: 0.0966, horizon: 0.25, tone: [1, 1, 1], key: 'centre', near: 420 },
+  { file: 'mat/far-long.jpg', shots: ['eye-05'], at: [0, 0, 0], radius: 1000, bearing: 0, tanAcross: 0.215, tanUp: 0.215 * (9 / 16), horizon: 0.45, tone: [0.8, 0.8, 0.82], wall: true, key: 'centre', near: 420 },
 ];
 
 /** The index of the picture hung for the shot the camera stands in, or -1. */

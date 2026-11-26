@@ -121,19 +121,19 @@ void main() {
   w /= w.x + w.y + w.z;
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
-  vec2 ux = vLocal.zy + at;
-  vec2 uy = vLocal.xz + at.yx;
-  vec2 uz = vLocal.xy - at;
+  vec2 ux = vWorld.zy + at;
+  vec2 uy = vWorld.xz + at.yx;
+  vec2 uz = vWorld.xy - at;
   vec4 col = screeAt(ux) * w.x + screeAt(uy) * w.y + screeAt(uz) * w.z;
   float e = 0.05;
   vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
     + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
     + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
-  vec3 albedo = col.rgb * vec3(0.94, 0.98, 1.06) * (0.8 + 0.35 * vTint.x);
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.75, 1.66, 1.5) * (0.85 + 0.3 * vTint.x);
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
-  n = normalize(n - (t * d.x + b * d.y) * 5.0);
+  n = normalize(n - (t * d.x + b * d.y) * 3.0);
   // Where the stone meets the ground it is in its own shade, and wet where the ground is.
   vec4 land = landAt(vWorld.xz);
   float foot = smoothstep(0.0, 0.35, vWorld.y - max(land.r, 0.0) + 0.08);
@@ -244,6 +244,17 @@ export function create(ctx: Context): Piece {
     if (Math.abs(across - streamAcross(along)) < 1.6 + size) continue;
     const clump = vnoise(along / 14 + 3, across / 14 + 8);
     if (clump < 0.42 && size < 1.2) continue;
+    const [x, z] = onAxis(along, across);
+    put(x, z, size);
+  }
+  // The shoulders of the spur are piles of fallen blocks, each its own stone.
+  for (let i = 0; i < 900; i++) {
+    const along = rng.range(40, 215);
+    const side = rng.next() < 0.5 ? -1 : 1;
+    const across = side * (9 + 62 * rng.next() ** 1.4);
+    const size = 0.7 + 3.6 * rng.next() ** 2.2;
+    if (Math.abs(across - streamAcross(along)) < 1.4 + size * 0.7) continue;
+    if (vnoise(along / 23 + 9, across / 23 + 2) < 0.34) continue;
     const [x, z] = onAxis(along, across);
     put(x, z, size);
   }

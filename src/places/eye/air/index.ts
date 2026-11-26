@@ -66,7 +66,10 @@ float mistAt(vec3 p, vec4 land) {
   // With a picture of the far world hung, the mist lies on the water in front of it and thickens toward its foot.
   if (uPlateTone.w > 0.5) {
     float d = length(p.xz - uPlateAt.xz);
-    band = smoothstep(uPlateAt.w - 520.0, uPlateAt.w - 90.0, d) * step(d, uPlateAt.w);
+    band = smoothstep(uPlateAt.w - 330.0, uPlateAt.w - 40.0, d) * step(d, uPlateAt.w);
+    float lift = 2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012);
+    float banks = smoothstep(0.15, 0.75, 0.6 * vnoise(p.xz / 260.0 + vec2(uTime * 0.03, -uTime * 0.017)) + 0.4 * vnoise(p.xz / 70.0 + uTime * 0.06) + 0.35 * band);
+    return 0.55 * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
   }
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
   float lift = 1.6 + 3.6 * vnoise(p.xz / 210.0 + 3.0 + uTime * 0.01);
@@ -88,7 +91,7 @@ void main() {
   float far = length(rd);
   rd /= far;
   // The far world is a picture with its own air in it: the air of the place is laid over it only as far as its cylinder stands.
-  far = min(far, uPlateTone.w > 0.5 ? 1300.0 : 20000.0);
+  far = min(far, uPlateTone.w > 0.5 ? plateDistance(ro, rd) : 20000.0);
 
   // The clear air: thickest at the water, gone by the top of the walls. Its light is the low sky it is seen against.
   float k0 = 0.000042 * uHaze * uThin;
@@ -178,7 +181,7 @@ export function create(ctx: Context): Piece {
         (rig.tPlate as THREE.IUniform).value = pictures[i];
         (rig.uPlateAt as THREE.IUniform<THREE.Vector4>).value.set(p.at[0], p.at[1], p.at[2], p.radius);
         (rig.uPlateLens as THREE.IUniform<THREE.Vector4>).value.set((p.bearing * Math.PI) / 180, p.tanAcross, p.tanUp, p.horizon);
-        tone.set(p.tone[0], p.tone[1], p.tone[2], 1);
+        tone.set(p.tone[0], p.tone[1], p.tone[2], p.wall ? 2 : 1);
         near.set(KEYS[p.key].position[0], KEYS[p.key].position[2], p.near, 1);
       }
     },

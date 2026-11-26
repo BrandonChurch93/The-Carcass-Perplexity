@@ -60,6 +60,8 @@ vec2 waves(vec2 q, vec2 drift) {
 
 void main() {
   vec3 p = vWorld;
+  // The water ends where the picture of the far world stands on it.
+  if (uPlateTone.w > 0.5 && length(p.xz - uPlateAt.xz) > uPlateAt.w) discard;
   vec3 toCamera = cameraPosition - p;
   float away = length(toCamera);
   vec3 v = toCamera / away;
@@ -102,11 +104,11 @@ void main() {
   float gust = smoothstep(0.38, 0.75, vnoise(vec2(dot(p.xz, wind), dot(p.xz, vec2(-wind.y, wind.x)) * 2.4) / 170.0 - vec2(uTime * 0.06, 0.0)));
   slope += 0.0035 * waves(p.xz / 71.0, wind * uTime * 0.011);
   float mid = 1.0 - smoothstep(260.0, 900.0, away);
-  if (mid > 0.0) slope += (0.003 + 0.011 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
+  if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
   float close = 1.0 - smoothstep(25.0, 110.0, away);
-  if (close > 0.0) slope += (0.004 + 0.012 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.09);
+  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.09);
   float closer = 1.0 - smoothstep(4.0, 22.0, away);
-  if (closer > 0.0) slope += 0.006 * closer * waves(p.xz / 0.61, wind * uTime * 0.21);
+  if (closer > 0.0) slope += 0.0025 * closer * waves(p.xz / 0.61, wind * uTime * 0.21);
 
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -116,7 +118,7 @@ void main() {
   vec3 rd = reflect(-v, n);
   rd.y = abs(rd.y) + 0.003;
   rd = normalize(rd);
-  float soft = 0.6 + 2.2 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
+  float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
   vec3 refl = farRadiance(p, rd, soft) * vec3(0.5, 0.6, 0.76);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {
@@ -138,8 +140,8 @@ void main() {
     vec2 b = p.xz + rf.xz * (max(depth, 0.0) / fall);
     float w2 = length(b) - lipRadius(b);
     float in2 = shoreIn(b);
-    float depth2 = shelfDepthAt(b, in2, w2);
-    Bed bed = bedAt(b, max(w2, 0.0), in2, depth2, away);
+    Bed bed = bedAt(b, max(w2, 0.0), in2, shelfDepthAt(b, in2, w2), away);
+    float depth2 = bed.depth;
     vec3 at = vec3(b.x, 0.0, b.y);
     float sun = sunAt(at);
     float open = skyOpen(at);
@@ -149,10 +151,9 @@ void main() {
     vec3 lit = bed.albedo * e * (bed.occ / 3.14159);
     float d = max(depth2, 0.0);
     vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
-    through = mix(through, vec3(1.0), bed.dry);
     under = lit * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 0.7 * (1.0 - through);
-    // Where the crust of the lip or a bar stands out of the water it is wet stone, not a mirror.
-    dry = max(smoothstep(0.0, -0.035, depth2), bed.dry);
+    // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
+    dry = bed.dry;
   } else {
     // Over the shaft: the wall goes down pale and green under the lip and is lost in a few metres; then only the dark of the water.
     float inside = -w;
@@ -174,7 +175,7 @@ void main() {
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
-  float glint = pow(max(dot(n, hv), 0.0), sharp) * sqrt(sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
+  float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
   c += uSunColour * glint * 0.6 * (close + 0.3);
 
   // The last second of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
@@ -318,6 +319,14 @@ export function create(ctx: Context): Piece {
     vertexShader: WATER_VERTEX,
     fragmentShader: WATER_FRAGMENT,
   });
+  material.userData.depthFragment = /* glsl */ `
+varying vec3 vWorld;
+uniform vec4 uPlateTone;
+uniform vec4 uPlateAt;
+void main() {
+  if (uPlateTone.w > 0.5 && length(vWorld.xz - uPlateAt.xz) > uPlateAt.w) discard;
+  gl_FragColor = vec4(0.0);
+}`;
   const surface = new THREE.Mesh(surfaceGeometry(), material);
   surface.frustumCulled = false;
   ctx.scene.add(ctx.parts.built('lake', surface));
@@ -330,7 +339,7 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (t) => {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
-      dome.x = 5.2 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      dome.x = 3.4 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       centre.x = t - rise;
       centre.y = smooth(end - 1.6, end - 0.1, t);
       laps.forEach((lap, i) => {

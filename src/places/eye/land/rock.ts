@@ -149,17 +149,24 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   if (wall < 0.5) {
     // The spur and the beach under it are one slope of broken grey stone: the plate of the scree, laid on the ground at its own size,
     // and again larger and turned so that the eye finds no repeat. Its relief gives every stone its faces.
-    vec2 q = p.xz + vec2(0.0, 0.35 * p.y);
-    vec4 a = screeAt(q);
-    vec2 qr = vec2(q.x * 0.8 - q.y * 0.6, q.x * 0.6 + q.y * 0.8) * 0.31 + 7.3;
+    // Which way each face of the ground truly looks, from the ground itself, so that no face has the plate pulled long over it.
+    vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+    vec3 w3 = pow(abs(gn), vec3(4.0));
+    w3 /= w3.x + w3.y + w3.z;
+    vec4 a = screeAt(p.xz) * w3.y;
+    if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
+    if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
+    vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
     vec4 b = screeAt(qr);
-    float e = 0.045;
-    float hx = screeAt(q + vec2(e, 0.0)).a - screeAt(q - vec2(e, 0.0)).a;
-    float hz = screeAt(q + vec2(0.0, e)).a - screeAt(q - vec2(0.0, e)).a;
-    vec3 grey = a.rgb * (0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5);
-    gravel = grey * vec3(0.94, 0.98, 1.06);
+    // The larger copy is laid from above: on a steep face it would be pulled long, so it fades there.
+    vec3 grey = a.rgb * mix(vec3(1.0), 0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5, w3.y * w3.y);
+    gravel = grey * vec3(1.5, 1.42, 1.3);
     stone = gravel;
-    bentFlat = vec3(-hx, 0.0, -hz) * 7.0;
+    // The relief of the plate turns the faces of each stone.
+    float e = 0.04;
+    float hx = screeAt(p.xz + vec2(e, 0.0)).a - screeAt(p.xz - vec2(e, 0.0)).a;
+    float hz = screeAt(p.xz + vec2(0.0, e)).a - screeAt(p.xz - vec2(0.0, e)).a;
+    bentFlat = vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
     bentFace = bentFlat;
     gh = mix(a.a, b.a, 0.35);
     fh = gh;
@@ -167,7 +174,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   }
   k.albedo = clamp(mix(gravel, stone, face), 0.0, 0.92);
   vec3 bent = mix(bentFlat, bentFace, face);
-  k.normal = normalize(n + bent - n * dot(bent, n) * 0.5);
+  k.normal = wall < 0.5 ? normalize(n + bent) : normalize(n + bent - n * dot(bent, n) * 0.5);
   float h = mix(gh, fh, face);
   k.occ = (0.5 + 0.5 * smoothstep(0.05, 0.55, h)) * (1.0 - 0.85 * arch * face);
   k.rough = 0.92;

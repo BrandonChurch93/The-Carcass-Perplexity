@@ -57,8 +57,15 @@ void main() {
   float w = smoothstep(uNeck.z, uNeck.w, along);
   vec2 pivot = vec2(uNeck.x - uSheet.z, uSheet.x - uNeck.y) * uMetres;
   vec2 d = q - pivot;
-  float a = aPose.y * w;
-  q = pivot + vec2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a));
+  if (uSheet.y == 0.0) {
+    // Seen from behind, a neck that leans out over the water is seen short.
+    float up = max(d.y, 0.0);
+    q.y = pivot.y + min(d.y, 0.0) + up * (1.0 - aPose.y);
+    q.x += aPose.z * 14.0 * up * up;
+  } else {
+    float a = aPose.y * w;
+    q = pivot + vec2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a));
+  }
   // Its weight goes from side to side over feet that stay where they are.
   q.x += aPose.z * q.y;
   q *= aPose.x;
@@ -84,7 +91,7 @@ const CUT = /* glsl */ `
 uniform sampler2D tRelief;
 varying vec2 vUv;
 float coverAt(vec2 uv) {
-  return texture2D(tRelief, uv).r;
+  return texture2D(tRelief, uv, -2.5).r;
 }`;
 
 const DEPTH = /* glsl */ `
@@ -107,7 +114,7 @@ ${RIG_GLSL}
 void main() {
   float h = coverAt(vUv);
   if (h < 0.16) discard;
-  vec3 skin = texture2D(tSkin, vUv).rgb;
+  vec3 skin = texture2D(tSkin, vUv, -2.5).rgb;
   // The form of the body, from the relief read soft: it turns away toward every outline.
   vec2 e = uTexel * 12.0;
   float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 4.0).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 4.0).r;
@@ -119,10 +126,12 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // Wet and dark below, where it has stood in the lake; dry and dusty above.
   float above = vWorld.y - max(vFeet, 0.0);
-  float wet = smoothstep(0.75, 0.2, above + 0.25 * vnoise(vWorld.xy * 3.0 + vWorld.z));
-  vec3 albedo = mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), 0.3) * vec3(0.72, 0.78, 0.84) * mix(1.0, 0.42, wet);
+  float wet = smoothstep(0.6, 0.15, above + 0.25 * vnoise(vWorld.xy * 3.0 + vWorld.z));
+  vec3 albedo = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), 0.25) * vec3(1.3, 1.34, 1.38), 0.95) * mix(1.0, 0.5, wet);
   float occ = 0.5 + 0.5 * smoothstep(0.15, 0.75, soft);
-  vec3 c = rigShade(vWorld, n, v, albedo, mix(0.9, 0.55, wet), occ);
+  vec3 c = rigShade(vec3(vWorld.x, vWorld.y + 3.2, vWorld.z), n, v, albedo, mix(0.9, 0.55, wet), occ * mix(0.7, 1.0, smoothstep(0.0, 1.2, above)));
+  // The pale gravel and the water under it throw the sky back up at it.
+  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 * skyOpen(vWorld) / 3.14159);
   // The low sun in the short hair along every outline that is turned to it.
   float rim = smoothstep(0.5, 0.12, soft) * max(dot(n, uSunDir) + 0.35, 0.0);
   c += skin * uSunColour * (0.11 * rim * sunAt(vWorld));
@@ -224,13 +233,13 @@ export function create(ctx: Context): Piece {
           const down = Math.min(1, Math.max(0, d.down(t)));
           // A sheet with its neck down lifts its head by turning the neck about its root; one with its neck up only looks about.
           const drinks = g.sheet.reach > 0;
-          const neck = drinks ? (1 - down) * 1.25 * g.sheet.faces + 0.012 * Math.sin(t * 1.9 + i * 2.3) : 0.05 * Math.sin(t * 0.43 + i * 2.1) + 0.03 * Math.sin(t * 1.1 + i * 0.7) + 0.16 * (1 - down - 0.7);
+          const neck = g.sheet.faces === 0 ? 0.38 + 0.3 * down : drinks ? (1 - down) * 1.25 * g.sheet.faces + 0.012 * Math.sin(t * 1.9 + i * 2.3) : 0.05 * Math.sin(t * 0.43 + i * 2.1) + 0.03 * Math.sin(t * 1.1 + i * 0.7) + 0.16 * (1 - down - 0.7);
           const lean = 0.012 * Math.sin(t * 0.83 + i * 1.7) + 0.006 * Math.sin(t * 0.31 + i * 0.9);
           g.stand.setXYZW(k, d.x, ground - 0.03 * size, d.z, d.facing * DEG);
           g.pose.setXYZW(k, size, neck, lean, d.flip);
           const long = 2.6;
           const off = size * 1.5 * (long - 1) * 0.5;
-          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * 1.5, 0.7, long, sun.shadowYaw);
+          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * 1.2, d.level === undefined ? 0.5 : 0, long, sun.shadowYaw);
           // Rings where its mouth is in the water and round its legs, for the ones the shots are about.
           if (drinks) {
             const reach = g.sheet.reach * size * d.flip;
