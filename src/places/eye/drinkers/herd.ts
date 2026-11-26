@@ -50,13 +50,13 @@ const part = (v: number): number => v - Math.floor(v);
 
 const build = (size: number, own: number, calf = false): Build =>
   calf
-    ? { size: size * 0.56, girth: 0.84, depth: 0.82, neck: 0.74, leg: 1.2, head: 1.12 }
+    ? { size: size * 0.52, girth: 1.08, depth: 1.0, neck: 0.72, leg: 1.14, head: 1.1 }
     : {
         size: size * (0.94 + 0.12 * hash(own * 91)),
-        girth: 0.78 + 0.24 * hash(own * 53),
-        depth: 0.8 + 0.16 * hash(own * 71),
+        girth: 1.08 + 0.2 * hash(own * 53),
+        depth: 0.9 + 0.12 * hash(own * 71),
         neck: 0.9 + 0.2 * hash(own * 37),
-        leg: 1.05 + 0.12 * hash(own * 29),
+        leg: 1.0 + 0.09 * hash(own * 29),
         head: 0.94 + 0.14 * hash(own * 13),
       };
 

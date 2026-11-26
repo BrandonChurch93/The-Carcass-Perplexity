@@ -18,12 +18,12 @@ b = np.roll(a, (N // 2, N // 2), axis=(0, 1))
 mean = a.mean(axis=(0, 1))
 out = mean + ((a - mean) * (1 - w) + (b - mean) * w) / np.sqrt((1 - w) ** 2 + w ** 2)
 out = np.clip(out, 0, 1)
-Image.fromarray((out * 255 + 0.5).astype(np.uint8)).save('public/assets/eye/drinker/hide.jpg', quality=90)
-# The relief: creases are dark in an evenly lit picture of skin.
+# The relief: creases are dark in an evenly lit picture of skin. It rides in the fourth channel of the one sheet.
 lum = out @ np.array([0.3, 0.5, 0.2], dtype=np.float32)
 pad = np.pad(lum, N // 4, mode='wrap')
 high = (pad - ndimage.gaussian_filter(pad, 10))[N // 4:-N // 4, N // 4:-N // 4]
 h = np.clip(0.5 + high / (6 * high.std()), 0, 1)
-Image.fromarray((h * 255 + 0.5).astype(np.uint8)).save('public/assets/eye/drinker/hide-h.png', optimize=True)
+rgba = np.concatenate([out, h[..., None]], axis=2)
+Image.fromarray((rgba * 255 + 0.5).astype(np.uint8), 'RGBA').save('public/assets/eye/drinker/hide.png', optimize=True)
 t = np.tile((out * 255).astype(np.uint8), (2, 2, 1))
 Image.fromarray(t).resize((1024, 1024)).save('out/work/body/hide-tiled.jpg')
