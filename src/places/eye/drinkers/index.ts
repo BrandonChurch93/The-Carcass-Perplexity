@@ -6,7 +6,7 @@ import { landHeight } from '../land/height';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { during } from '../shared/anchors';
-import { FAR_DATA, LEVELS, NEAR_DATA } from './body.data';
+import { FAR_DATA, LEVELS, MID_DATA, NEAR_DATA } from './body.data';
 import { WADE, herd, standPose, type Drinker } from './herd';
 import { BONES, solve, type Solved } from './skeleton';
 
@@ -80,8 +80,9 @@ void main() {
   vec3 r1 = cross(dpy, n);
   vec3 r2 = cross(n, dpx);
   float det = dot(dpx, r1);
-  vec3 lean = sign(det) * (dFdx(hide.a) * r1 + dFdy(hide.a) * r2);
-  n = normalize(abs(det) * n - 0.011 * (1.0 - smoothstep(0.006, 0.03, px)) * lean);
+  float relief = 0.002 * broad.a + 0.0005 * fine.a;
+  vec3 lean = sign(det) * (dFdx(relief) * r1 + dFdy(relief) * r2) * (1.0 - smoothstep(0.004, 0.02, px));
+  n = normalize(abs(det) * n - lean / max(1.0, length(lean) / (0.4 * abs(det) + 1e-12)));
   // A pale naked hide: each animal a tone of its own and marks of its own, dustier and darker along the back, paler under the belly.
   vec2 side = vRest.zy * vec2(1.0, 1.4) + own * 37.0;
   float blotch = 0.6 * vnoise(side * 1.7) + 0.4 * vnoise(side * 5.0 + 5.0);
@@ -90,7 +91,7 @@ void main() {
   skin *= mix(vec3(0.86, 0.85, 0.84), vec3(1.08, 1.04, 1.0), fract(own * 7.3));
   skin = mix(skin, skin * vec3(0.6, 0.57, 0.56), mark * (0.35 + 0.5 * fract(own * 13.7)));
   skin *= mix(vec3(1.0), hide.rgb / vec3(0.69, 0.41, 0.32), 0.7);
-  skin *= 0.8 + 0.4 * hide.a;
+  skin *= mix(0.6, 1.0, smoothstep(0.22, 0.52, broad.a)) * (0.88 + 0.24 * fine.a);
   float top = smoothstep(0.35, 0.9, vRestNormal.y + 0.4 * (blotch - 0.5));
   skin *= mix(1.0, 0.7, top * smoothstep(1.7, 2.2, vRest.y));
   // Creases hold the dirt.
@@ -98,12 +99,12 @@ void main() {
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
   float ragged = vnoise(vRest.xy * 9.0 + vRest.z * 5.0);
   // Wet and dark below, where it has stood in the lake, and flecked with the mud it kicked up; dry above.
-  float wet = 1.0 - smoothstep(0.42, 0.8, above + 0.3 * ragged);
-  float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * 31.0)) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged));
-  vec3 albedo = mix(skin * mix(1.0, 0.4, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
+  float wet = 1.0 - smoothstep(0.5, 0.92, above + 0.3 * ragged);
+  float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * 31.0)) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
+  vec3 albedo = mix(skin * mix(1.0, 0.3, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
   float occ = mix(0.45, 1.0, vShade.x);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
-  vec3 c = rigShade(p, n, v, albedo, mix(0.82, 0.3, wet), occ);
+  vec3 c = rigShade(p, n, v, albedo, mix(0.82, 0.5, wet), occ);
   // The pale gravel and the water under it throw the sky back up at it.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 * skyOpen(vWorld) / 3.14159) * (0.5 - 0.5 * n.y);
   // The wet of the leg takes the sun as a film of water does.
@@ -155,7 +156,10 @@ function bodyGeometry(text: string, level: { vertices: number; triangles: number
 
 interface Drawn {
   animal: Drinker;
+  /** The body as its own shot sees it, and thinned, as every other shot does. */
   mesh: THREE.Mesh;
+  thinned: THREE.Mesh;
+  shot: string;
   material: THREE.ShaderMaterial;
   bones: Float32Array;
   own: THREE.Vector4;
@@ -167,23 +171,28 @@ export function create(ctx: Context): Piece {
   const far = bodyGeometry(FAR_DATA, LEVELS.far);
   const tHide = { value: ctx.assets.texture('drinker/hide.jpg', { repeat: true, anisotropy: 4 }) };
   const tHideRelief = { value: ctx.assets.texture('drinker/hide-h.png', { kind: 'data', repeat: true, anisotropy: 4 }) };
-  const drawn: Drawn[] = animals.map((animal) => {
+  const mid = bodyGeometry(MID_DATA, LEVELS.mid);
+  const drawn: Drawn[] = animals.map((animal, i) => {
     const bones = new Float32Array(BONES * 12);
-    const full = animal.close || animal.level !== undefined;
-    const own = new THREE.Vector4(animal.own, animal.build.size, 0, full ? 0 : 1);
+    const own = new THREE.Vector4(animal.own, animal.build.size, 0, 0);
     const material = new THREE.ShaderMaterial({
       uniforms: { ...ctx.rig.uniforms, uBones: { value: bones }, uOwn: { value: own }, tHide, tHideRelief },
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
       side: THREE.DoubleSide,
     });
-    const mesh = new THREE.Mesh(full ? near : far, material);
-    mesh.frustumCulled = false;
-    ctx.scene.add(mesh);
-    ctx.reflected.push(mesh);
-    return { animal, mesh, material, bones, own };
+    // The whole surface for the three a lens comes close to, a lighter one for the rest of the close shots, the thinned one for the herd.
+    const shot = animal.level !== undefined ? 'eye-05' : i < 4 ? 'eye-04' : animal.close ? 'eye-02' : '';
+    const mesh = new THREE.Mesh(animal.level !== undefined || i === 3 ? near : animal.close ? mid : far, material);
+    const thinned = new THREE.Mesh(far, material);
+    for (const m of [mesh, thinned]) {
+      m.frustumCulled = false;
+      ctx.scene.add(m);
+      ctx.reflected.push(m);
+    }
+    return { animal, mesh, thinned, material, bones, own, shot };
   });
-  ctx.parts.built('drinkers', (drawn[0] as Drawn).mesh, ...drawn.slice(1).map((d) => d.mesh));
+  ctx.parts.built('drinkers', (drawn[0] as Drawn).mesh, ...drawn.slice(1).map((d) => d.mesh), ...drawn.map((d) => d.thinned));
   const shade = ctx.rig.contactDiscs(animals.length);
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
   const scratch = new Float32Array(BONES * 12);
@@ -220,7 +229,9 @@ export function create(ctx: Context): Piece {
       drawn.forEach((g, i) => {
         const d = g.animal;
         const seen = !(d.wideOnly && !wide);
-        g.mesh.visible = seen;
+        const whole = g.shot !== '' && during(g.shot);
+        g.mesh.visible = seen && whole;
+        g.thinned.visible = seen && !whole;
         const size = seen ? d.build.size : 0;
         const solved = poseAt(d, t, g.bones);
         g.own.z = d.level ?? Math.max(WADE, ground(d.x, d.z));
@@ -249,6 +260,7 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       near.dispose();
+      mid.dispose();
       far.dispose();
       for (const g of drawn) g.material.dispose();
     },

@@ -27,6 +27,8 @@ export interface Drinker {
   own: number;
   /** Seconds between the steps of one leg, about. */
   stepEvery: number;
+  /** The moment its shot is judged by: it stands on all four then. */
+  key: number;
 }
 
 /** Seconds into the place at the keys of the shore shot (frame 9003) and of the mats shot (frame 8600), at 60 frames a second. */
@@ -71,25 +73,27 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   let count = 0;
   const one = (x: number, z: number, facing: number, size: number, down: (t: number) => number, watches: boolean, close: boolean, calf = false): Drinker => {
     const own = hash(++count * 7.31);
-    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 9 + 9 * hash(own * 19) };
+    return { x, z, facing, build: build(size, own, calf), down, watches, close, own, stepEvery: 9 + 9 * hash(own * 19), key: 0 };
   };
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, down: (t: number) => number, watches: boolean, calf = false): Drinker =>
     one(key.position[0] + Math.sin(bearing * DEG) * distance, key.position[2] - Math.cos(bearing * DEG) * distance, facing, size, down, watches, true, calf);
+  const shore = (d: Drinker): Drinker => ({ ...d, key: SHORE_KEY });
+  const mats = (d: Drinker): Drinker => ({ ...d, key: MATS_KEY });
   const centre = KEYS.centre.position;
   const H = SHORE_HEADING;
   const list: Drinker[] = [
     // The four of the shore shot: they stand off in the shallows, side on, the low sun behind them. One has its head up, a calf beside it, two drink.
-    from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true),
-    from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(9, SHORE_KEY, 0.2), false, true),
-    from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(11, SHORE_KEY, 0.34), false),
-    from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(13, SHORE_KEY, 0.08), false),
+    shore(from(KEYS.shore, H - 7.5, 31, H + 84, 1, up(0.3), true)),
+    shore(from(KEYS.shore, H - 5.2, 29.5, H + 96, 1, sips(9, SHORE_KEY, 0.2), false, true)),
+    shore(from(KEYS.shore, H - 1.5, 27, H + 92, 1, sips(11, SHORE_KEY, 0.34), false)),
+    shore(from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, sips(13, SHORE_KEY, 0.08), false)),
     // The two of the last shot, below the camera with their backs to it, cut by the foot of the frame. Each lifts its head to the swell, not together.
-    { ...one(centre[0] - 1.22, centre[2] - 13.5, 6, 1.12, (t) => 0.62 - 0.4 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.07 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.015 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.83, alert: riseAt + 0.9 },
-    { ...one(centre[0] + 0.72, centre[2] - 16.5, -8, 1.0, (t) => 0.74 - 0.5 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.07 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.015 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.9, alert: riseAt + 1.15 },
+    { ...one(centre[0] - 1.22, centre[2] - 13.5, 6, 1.12, (t) => 0.78 - 0.46 * ease(riseAt + 0.95, riseAt + 1.65, t) - 0.05 * ease(riseAt + 2.4, riseAt + 4.5, t) + 0.012 * Math.sin(t * 0.9), true, false), level: centre[1] - 3.83, alert: riseAt + 0.9, key: riseAt + 1.7 },
+    { ...one(centre[0] + 0.72, centre[2] - 16.5, -8, 1.0, (t) => 0.84 - 0.54 * ease(riseAt + 1.2, riseAt + 1.75, t) - 0.05 * ease(riseAt + 3.0, riseAt + 5.0, t) + 0.012 * Math.sin(t * 0.8 + 2), true, false), level: centre[1] - 3.9, alert: riseAt + 1.15, key: riseAt + 1.7 },
     // The ones of the mats shot: out on the shelf beyond the mats, small, side on. Both companions are down at the key.
-    from(KEYS.mats, -13, 31, 80, 1, sips(10, MATS_KEY, 0.3), false),
-    from(KEYS.mats, -21, 44, 262, 1, sips(12, MATS_KEY, 0.12), false),
-    from(KEYS.mats, -17.5, 52, 96, 0.9, sips(9, MATS_KEY, 0.42), false),
+    mats(from(KEYS.mats, -13, 31, 80, 1, sips(10, MATS_KEY, 0.3), false)),
+    mats(from(KEYS.mats, -21, 44, 262, 1, sips(12, MATS_KEY, 0.12), false)),
+    mats(from(KEYS.mats, -17.5, 52, 96, 0.9, sips(9, MATS_KEY, 0.42), false)),
   ];
   // The herd along the south shore, as the wide shot sees it: in the shallows and on the gravel.
   // They stand in loose bands of two to five, some far out on the shelf, some up on the gravel: never one row along the water.
@@ -139,7 +143,7 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const hooves: Hoof[] = [];
   for (let k = 0; k < 4; k++) {
     const every = d.stepEvery * (0.75 + 0.6 * hash(o * 17 + k));
-    const u = t / every + hash(o * 31 + k * 3.7);
+    const u = (t - d.key) / every + 0.22 + 0.56 * hash(o * 31 + k * 3.7);
     const m = Math.floor(u);
     const since = (u - m) * every;
     const until = every - since;
@@ -171,6 +175,8 @@ export function standPose(d: Drinker, t: number, ground: Ground, reach: number):
   const low = Math.min(1, Math.max(0, d.down(t)));
   const neck: [number, number, number, number, number] = [0, 0, 0, 0, 0];
   for (let i = 0; i < 5; i++) neck[i] = drive(i) * reach;
+  // One that stares holds its head level, whatever its neck does.
+  if (d.alert !== undefined) neck[4] *= 1 - 0.8 * ease(d.alert, d.alert + 0.5, t);
   // With its mouth in the water it sips: the head works a little and each mouthful swells the neck on its way up to the chest.
   const sipping = ease(0.9, 0.99, low);
   neck[4] += sipping * 0.012 * Math.sin(t * 13.8 + o * 40);

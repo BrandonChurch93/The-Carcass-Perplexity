@@ -21,7 +21,7 @@ J = {
     'root': (0, 2.12, -0.2), 'pelvis': (0, 2.12, -0.5), 'chest': (0, 2.12, 0.1),
     'n0': (0, 2.02, 0.95), 'n1': (0, 2.42, 1.26), 'n2': (0, 2.84, 1.40), 'n3': (0, 3.24, 1.46), 'head': (0, 3.60, 1.52), 'tip': (0, 3.52, 2.26),
     't0': (0, 2.17, -1.30), 't1': (0, 1.9, -1.4), 't2': (0, 1.6, -1.4),
-    'hip': (0.22, 1.98, -0.92), 'stifle': (0.25, 1.42, -0.66), 'hock': (0.23, 0.82, -1.06), 'hfet': (0.22, 0.13, -0.96), 'htoe': (0.22, 0.03, -0.83),
+    'hip': (0.22, 1.98, -0.92), 'stifle': (0.25, 1.42, -0.72), 'hock': (0.23, 0.82, -1.03), 'hfet': (0.22, 0.13, -0.96), 'htoe': (0.22, 0.03, -0.83),
     'shoulder': (0.23, 1.74, 0.80), 'elbow': (0.25, 1.33, 0.58), 'carpus': (0.23, 0.72, 0.62), 'ffet': (0.23, 0.13, 0.60), 'ftoe': (0.23, 0.03, 0.73),
 }
 BONES = ['loin', 'pelvis', 'chest', 'neck0', 'neck1', 'neck2', 'neck3', 'head', 'tail0', 'tail1',
@@ -149,13 +149,13 @@ def folds(d):
     n0, hd = np.array(J['n0']), np.array(J['head'])
     axis = (hd - n0) / np.linalg.norm(hd - n0)
     u = (X - n0[0]) * axis[0] + (Y - n0[1]) * axis[1] + (Z - n0[2]) * axis[2]
-    neck = sm(-0.1, 0.12, u) * sm(1.95, 1.6, u) * sm(0.55, 0.75, Z + 0.35 * (Y - 2.0))
+    neck = sm(0.08, 0.4, u) * sm(1.95, 1.6, u) * sm(0.55, 0.75, Z + 0.35 * (Y - 2.0))
     out = neck * (0.0075 - 0.002 * np.clip(u, 0, 1.6)) * crease(u / 0.105 + 2.2 * n1 + 0.5 * n2)
     # The trunk: the ribs under the hide of the chest, and loose folds that hang behind the shoulder and before the haunch.
     side = sm(0.16, 0.3, np.abs(X))
-    ribs = side * sm(-0.12, 0.05, Z) * sm(0.6, 0.42, Z) * sm(1.42, 1.6, Y) * sm(2.3, 2.1, Y)
+    ribs = side * sm(-0.12, 0.05, Z) * sm(0.6, 0.42, Z) * sm(1.42, 1.6, Y) * sm(2.2, 2.0, Y)
     out = out + ribs * (0.0004 + 0.0012 * n1) * np.cos(2 * np.pi * (Z + 0.3 * (Y - 1.9) + 0.05 * n1) / 0.15)
-    hang = sm(1.45, 1.6, Y) * sm(2.42, 2.2, Y) * (sm(0.45, 0.3, Z) * sm(-0.05, 0.1, Z) + sm(-0.25, -0.4, Z) * sm(-0.9, -0.6, Z) + 0.35) * sm(1.25, 1.1, Z) * sm(-1.3, -1.15, Z)
+    hang = sm(1.45, 1.6, Y) * sm(2.3, 2.05, Y) * (sm(0.45, 0.3, Z) * sm(-0.05, 0.1, Z) + sm(-0.25, -0.4, Z) * sm(-0.9, -0.6, Z) + 0.35) * sm(1.25, 1.1, Z) * sm(-1.3, -1.15, Z)
     out = out + hang * (0.001 + 0.0026 * n2) * crease(Z / 0.15 + 0.9 * n1 + 0.5 * n2 + 0.45 * (Y - 1.9))
     # Everywhere: the hide is never a turned surface.
     out = out + 0.012 * (n3 - 0.5) + 0.006 * (n1 - 0.5) * sm(0.5, 0.9, Y)
@@ -249,9 +249,9 @@ def main():
         return
     levels = {}
     blobs = {}
-    for name, count in (('near', 76000), ('far', 5200)):
+    for name, count in (('near', 76000), ('mid', 20000), ('far', 5200)):
         tp, tf = thin(p, faces, count)
-        if name == 'far':
+        if name != 'near':
             # Far off a leg must not thin to nothing: the thinned body is drawn out to the field again.
             tp = tp - gradient(d, tp) * sample(d, tp)[:, None]
         tn = gradient(d, tp)

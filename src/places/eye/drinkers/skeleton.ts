@@ -120,9 +120,9 @@ const LEGS = [
   { bones: 22, side: -1, hind: false },
 ] as const;
 
-/** How high the trunk's middle joint stands over the ground on straight legs. */
+/** How high the trunk's middle joint stands over the ground with the hind legs as they were made. */
 export function standing(b: Build): number {
-  return b.size * (1.74 * b.leg + 0.38 * b.depth);
+  return b.size * (1.85 * b.leg + 0.13 + 0.14 * b.depth);
 }
 
 export function solve(b: Build, p: Pose, out: Float32Array): Solved {
