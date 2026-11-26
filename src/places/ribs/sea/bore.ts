@@ -147,8 +147,14 @@ void main() {
   vec2 tip = vec2(T * (-0.38 + 0.45 * boreCurl(x)), T);
   float z = uFront + boreLine(x) + tip.x + 0.4;
   float bed = max(texture2D(tLand, (vec2(x, z) - uLandRect.xy) * uLandRect.zw).r, uPoolLevel);
+#ifdef BACK
+  // A second wall behind the first: the wave is deep, and what breaks behind the crest stands over it, paler with the air between.
+  float t = 0.35 + 1.05 * a;
+  vWorld = vec3(x, bed + 1.18 * t * T / ${f(UNDER)}, z - 38.0 - 6.0 * a);
+#else
   float t = ${f(UNDER)} * (1.0 - 0.06 + (${f(CURTAIN)} + 0.06) * a);
   vWorld = vec3(x, bed + t * T / ${f(UNDER)}, z - 1.5 * a);
+#endif
   vNormalW = vec3(0.0, 0.3, 0.95);
   vRide = vec3(x, a, t);
 #else
@@ -202,16 +208,29 @@ void main() {
   float x = vRide.x;
   float a = vRide.y;
   float t = vRide.z;
+#ifdef BACK
+  vec3 pic = wallAt(x + 143.0, t);
+#else
   vec3 pic = wallAt(x, t);
+#endif
+  // The sheets were shot in flat light: here the white stays white and the green water goes down dark.
+  pic = pow(pic, vec3(1.3)) * 1.12;
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
   vec4 land = landAt(vWorld.xz);
   // The wall stands over the blades' shade: half of it is always in the sun.
   float sun = mix(sunAt(vWorld + vec3(0.0, 30.0, 0.0), land), 1.0, 0.5);
   vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
 #ifdef CURTAIN
-  float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.75, 1.0, a)) * (1.0 - uSolo);
+  float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.6, 1.0, a)) * (1.0 - uSolo);
   vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
-  gl_FragColor = vec4(col * alpha, alpha);
+  // Thrown water is thin at its top and the bright sky behind the wave shows in it.
+  vec3 behind = skyRadiance(-v);
+  col = mix(col, behind * 1.05, (1.0 - alpha) * 0.7 + 0.12);
+#ifdef BACK
+  alpha *= smoothstep(0.0, 0.12, a) * 0.85;
+  col = mix(col, behind, 0.35);
+#endif
+  gl_FragColor = vec4(rigOut(col) * alpha, alpha);
 #else
   // The churn at the foot and the run-out over the flat: broken white water seen from above, laid in metres on the ground.
   vec2 g = vWorld.xz - vec2(0.0, uFront);
@@ -230,7 +249,9 @@ void main() {
   if (dot(n, v) < 0.0) n = -n;
   // The picture has its own form: the built face lights it broadly, and only the dark water takes the sky's glint.
   vec3 nf = normalize(mix(n, vec3(0.0, 0.45, 0.89), 0.6 + 0.3 * foam));
-  vec3 col = rigShade(vWorld, nf, v, pic * 0.8, mix(0.3, 1.0, foam), 1.0);
+  // Under the falling lip the face is in its shade: a dark trough before the white of the run-out.
+  float trough = smoothstep(0.02, 0.16, t) * (1.0 - smoothstep(0.3, 0.62, t)) * step(0.0, a);
+  vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.38 * trough), mix(0.3, 1.0, foam), 1.0 - 0.3 * trough);
   col += pic * (uSunColour * 0.12 * sun + lightUp * 0.1) / 3.14159;
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (bare) discard;
@@ -423,6 +444,7 @@ export interface BoreSite {
 export interface Bore {
   wall: THREE.Mesh;
   curtain: THREE.Mesh;
+  back: THREE.Mesh;
   cards: THREE.Mesh;
   setTime(seconds: number): void;
   dispose(): void;
@@ -531,6 +553,12 @@ export function createBore(
   const curtain = new THREE.Mesh(curtainSheet(focus[0]), curtainMaterial);
   curtain.frustumCulled = false;
   curtain.renderOrder = 4;
+  const backMaterial = curtainMaterial.clone();
+  backMaterial.uniforms = uniforms;
+  backMaterial.defines = { CURTAIN: 1, BACK: 1 };
+  const back = new THREE.Mesh(curtain.geometry, backMaterial);
+  back.frustumCulled = false;
+  back.renderOrder = 3;
 
   const count = LIPS + PLUME + FOOT + VEIL + sites.reduce((n, s) => n + (s.near ? BURST_NEAR : BURST_FAR), 0);
   const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, uAtlas: { value: 1 } });
@@ -541,6 +569,7 @@ export function createBore(
   return {
     wall,
     curtain,
+    back,
     cards: cards.mesh,
     setTime: (seconds) => {
       cards.begin();
@@ -656,6 +685,7 @@ export function createBore(
       wallMaterial.dispose();
       curtain.geometry.dispose();
       curtainMaterial.dispose();
+      backMaterial.dispose();
       profile.dispose();
       cards.dispose();
     },

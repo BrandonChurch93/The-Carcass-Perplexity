@@ -13,6 +13,7 @@ import { RING_SOURCE, boreArrives } from '../sea/tide';
 import type { Ring } from '../sea/tide';
 import { FAR, Flock, NEAR, STAND, animalMaterial, blend, stand } from './animal';
 import type { Pose } from './animal';
+import { Puppets, puppetMaterials, sheetTip } from './puppet';
 
 /** The kite-wing of the approved pictures stands twice a man at the back: every free animal is this much larger than the animal of size 1. */
 const GROW = 1.35;
@@ -31,6 +32,8 @@ const COLONISTS = 78;
 const COLONY_NEAR = 78;
 const SKEIN = 22;
 const NECK = 1.5;
+/** How far the sails may be open before the picture of the standing animal gives way to the built one. */
+const OPEN = 0.6;
 
 const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 const smooth = (a: number, b: number, x: number): number => {
@@ -166,10 +169,14 @@ export function create(ctx: Context): Piece {
   // the three before the feeding camera are at their stations on that key, the nearest with its tuft in the water.
   const HABITS = [0.6, 0.62, 0.9, 0.64, 0.66, 0.3, 0.68, 0.9];
   const feedKey = keySeconds('ribs-2');
+  const feedShot = shotById('ribs-04');
+  const feedEye = resolve(shots['ribs-04'] as (typeof shots)[string], 0.5, feedShot.first).position;
+  // The three before the feeding camera show it their sides, heads to its left, each a little off the square.
+  const sideOn = (x: number, z: number, off: number): number => Math.atan2(z - feedEye[2], -(x - feedEye[0])) + off;
   STATIONS.feeders.forEach((s, i) => {
     if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
     else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
-    else addFeeder(s[0], s[1], s[2], s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey);
+    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey);
   });
   {
     // The second hero of the wide picture: walking tall, right of centre, 47 m out.
@@ -186,6 +193,8 @@ export function create(ctx: Context): Piece {
     addFeeder(x, z, yaw, scatter.range(0.95, 1.2), false);
   }
   const feederFlock = new Flock(NEAR, material, feeders.length);
+  const sheets = puppetMaterials(ctx, LEVELS.pool);
+  const feederSheets = new Puppets(sheets, feeders.length, true);
   const discs = rig.contactDiscs(feeders.length + 4);
   const runner = feeders.findIndex((f) => f.runs);
 
@@ -233,13 +242,13 @@ export function create(ctx: Context): Piece {
     let hip = STAND - 0.05 - dip;
     if (feed > 0) {
       // Reach for the water: tip the body, lower the hip, and bend the neck until the tuft trails in the pool.
-      const reach: Pose = { ...pose, pitch: -0.34, rise: -0.6, tuck: 0.0, bend: -0.6 };
-      const want = (LEVELS.pool - ground(bx, bz)) / f.size - (hip - 0.07) + 0.5;
-      let lo = -1.7;
+      const reach: Pose = { ...pose, pitch: -0.62, rise: -0.6, tuck: 0.0, bend: -0.6 };
+      const want = (LEVELS.pool - ground(bx, bz)) / f.size - (hip - 0.07) - 0.04;
+      let lo = -2.6;
       let hi = 0.5;
       for (let i = 0; i < 12; i++) {
         reach.bend = (lo + hi) / 2;
-        if (neckTip(reach)[0] > want) hi = reach.bend;
+        if (sheetTip(reach)[0] > want) hi = reach.bend;
         else lo = reach.bend;
       }
       reach.bend += 0.05 * Math.sin(t * 2.3 + f.seed * 30);
@@ -250,9 +259,9 @@ export function create(ctx: Context): Piece {
     if (run > 0) blend(pose, { spread: 0.5, flap: 0.42 + 0.16 * Math.sin(p * Math.PI * 2 + 0.6), pitch: -0.24, rise: 0.82, bend: -0.1, tuck: 0.36, lag: -0.1 * Math.cos(p * Math.PI * 2 + 0.6) }, run);
     if (alert > 0) blend(pose, { rise: 1.46, bend: -0.12, tuck: 0.12, pitch: 0.06, sweep: (held(t, 1.9, f.seed) - 0.5) * 2.2 }, alert);
     feeding = feed;
-    const tip = neckTip(pose);
-    tuftX = bx + fx * (tip[1] + 0.2) * f.size;
-    tuftZ = bz + fz * (tip[1] + 0.2) * f.size;
+    const tip = sheetTip(pose);
+    tuftX = bx + fx * tip[1] * f.size;
+    tuftZ = bz + fz * tip[1] * f.size;
     const bed = ground(bx, bz);
     pose.x = bx;
     pose.z = bz;
@@ -316,8 +325,6 @@ export function create(ctx: Context): Piece {
   };
 
   // The pools ring the legs of the feeders nearest the feeding camera.
-  const feedShot = shotById('ribs-04');
-  const feedEye = resolve(shots['ribs-04'] as (typeof shots)[string], 0.5, feedShot.first).position;
   const ringed = feeders
     .map((f, i) => ({ i, d: Math.hypot(f.x0 - feedEye[0], f.z0 - feedEye[2] + 20) }))
     .sort((a, b) => a.d - b.d)
@@ -330,10 +337,10 @@ export function create(ctx: Context): Piece {
       feederAt(f, seconds);
       for (let k = 0; k < 2; k++) {
         const ring = out[n++];
-        if (ring) Object.assign(ring, { x: foot[k * 3], z: foot[k * 3 + 1], phase: f.seed * 20 + k * 2.1, strength: (foot[k * 3 + 2] as number) * 0.7, stand: [foot[k * 3], foot[k * 3 + 1], pose.y - LEVELS.pool, 0.05 * f.size] });
+        if (ring) Object.assign(ring, { x: foot[k * 3], z: foot[k * 3 + 1], phase: f.seed * 20 + k * 2.1, strength: (foot[k * 3 + 2] as number) * 0.7, stand: undefined });
       }
       const ring = out[n++];
-      if (ring) Object.assign(ring, { x: tuftX, z: tuftZ, phase: f.seed * 31, strength: feeding, stand: [pose.x + Math.sin(f.yaw) * 0.1 * f.size, pose.z + Math.cos(f.yaw) * 0.1 * f.size, pose.y - LEVELS.pool + 0.12 * f.size, -0.42 * f.size] });
+      if (ring) Object.assign(ring, { x: tuftX, z: tuftZ, phase: f.seed * 31, strength: feeding, stand: undefined });
     }
   };
 
@@ -389,6 +396,7 @@ export function create(ctx: Context): Piece {
   sitters.sort((a, b) => a.d - b.d);
   const colonyNear = new Flock(NEAR, material, COLONY_NEAR);
   const colonyFar = new Flock(FAR, material, COLONISTS - COLONY_NEAR);
+  const colonySheets = new Puppets(sheets, COLONISTS, false);
   const sitterAt = (s: Sitter, t: number): void => {
     Object.assign(pose, stand(s.seed));
     pose.size = s.size;
@@ -544,7 +552,7 @@ export function create(ctx: Context): Piece {
       seed: scatter.next(),
     });
   }
-  // And the ones that cross close before the colony camera: large in its picture at the key, and one more before and after.
+  // And the ones that cross before the colony camera, far enough off to be shapes against the rock and the sky.
   {
     const shot = shotById('ribs-03');
     const key = keySeconds('ribs-3');
@@ -555,7 +563,7 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[17, -6, 5.5, 0, 12], [29, 4, 10, 0.2, -13], [44, -16, 14, -0.4, 14], [23, 0, 7, 1.5, -12], [36, -6, 12, -1.3, 13], [58, -24, 20, 0.6, 15]];
+    const cross: [number, number, number, number, number][] = [[38, -17, 13, 0, 12], [46, -9, 18, 0.2, -13], [50, -24, 16, -0.4, 14], [40, -12, 12, 1.5, -12], [47, -19, 20, -1.3, 13], [62, -26, 22, 0.6, 15]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
       skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: 1.1 * GROW, seed: scatter.next() });
@@ -674,6 +682,8 @@ export function create(ctx: Context): Piece {
   };
 
   const group = new THREE.Group();
+  group.add(feederSheets.mesh, colonySheets.mesh);
+  if (feederSheets.mirror) group.add(feederSheets.mirror);
   group.add(feederFlock.mesh, colonyNear.mesh, colonyFar.mesh, lowFlock.mesh, highFlock.mesh, skeinFlock.mesh, fleeFlock.mesh, landFlock.mesh);
   ctx.scene.add(ctx.parts.built('kite-wings', group, splash.mesh), splash.mesh);
 
@@ -682,11 +692,19 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < feeders.length; i++) {
         const f = feeders[i] as Feeder;
         feederAt(f, seconds);
-        feederFlock.put(i, pose);
+        // Standing and wading it is the picture; with its sails up it is the built animal.
+        if (pose.spread < OPEN) {
+          feederSheets.put(i, pose);
+          feederFlock.hide(i);
+        } else {
+          feederSheets.hide(i);
+          feederFlock.put(i, pose);
+        }
         const down = seconds < f.leave ? 1 : 1 - smooth(0, 1.5, seconds - f.leave);
         rig.setDisc(discs, i, pose.x, pose.z, 1.1 * f.size, 0.3 * down);
       }
       feederFlock.commit();
+      feederSheets.commit();
       splashAt(seconds);
       for (let i = 0; i < sitters.length; i++) {
         const s = sitters[i] as Sitter;
@@ -694,11 +712,16 @@ export function create(ctx: Context): Piece {
         const at = i < COLONY_NEAR ? i : i - COLONY_NEAR;
         if (s.size === 0) {
           flock.hide(at);
+          colonySheets.hide(i);
           continue;
         }
         sitterAt(s, seconds);
-        flock.put(at, pose);
+        // No two rows alike: half of them stand the other way round on their ledge.
+        if (Math.floor(s.seed * 1000) % 2 === 1) pose.yaw += Math.PI;
+        colonySheets.put(i, pose);
+        flock.hide(at);
       }
+      colonySheets.commit();
       colonyNear.commit();
       colonyFar.commit();
       for (let i = 0; i < fliers.length; i++) {
@@ -747,6 +770,10 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       material.dispose();
+      sheets.body.dispose();
+      sheets.mirror.dispose();
+      feederSheets.dispose();
+      colonySheets.dispose();
     },
   };
 }
