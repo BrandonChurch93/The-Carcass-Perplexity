@@ -229,8 +229,8 @@ void main() {
         // Nothing is read from the noise where the ray is well above anything the vapour can reach.
         float lo = min(ya, yb);
         if (lo > max(land.r, SEA_Y) + roof - 1.5 && lo > uBreath.x + 9.0 + 9.0 * uBreath.y) continue;
-        float drift = uTime * 0.55;
-        vec3 q = vec3((p.xz - WINDV * drift) / 24.0, uTime * 0.021).xzy;
+        float drift = uTime * 1.5;
+        vec3 q = vec3((p.xz - WINDV * drift) / 24.0, uTime * 0.05).xzy;
         vec4 n0 = textureLod(tNoise, q, 0.0);
         // Only the broad lumps: the fine ones are smaller than a step along the ray and would boil.
         vec2 fold = vec2(0.85 * n0.r + 0.15 * n0.a, n0.g);
@@ -253,9 +253,9 @@ void main() {
         if (tau <= 0.0005) continue;
         // The top's own shape toward the sun: a fold that faces it is bright, the one behind it is in its shade.
         vec3 ph = ro + rd * tHit;
-        vec3 qh = vec3((ph.xz - WINDV * drift) / 24.0, uTime * 0.021).xzy;
+        vec3 qh = vec3((ph.xz - WINDV * drift) / 24.0, uTime * 0.05).xzy;
         vec4 nh = tHit == tAt ? n0 : textureLod(tNoise, qh, 0.0);
-        vec4 ns = textureLod(tNoise, vec3((ph.xz + sunStep.xz - WINDV * drift) / 24.0, uTime * 0.021).xzy, 0.0);
+        vec4 ns = textureLod(tNoise, vec3((ph.xz + sunStep.xz - WINDV * drift) / 24.0, uTime * 0.05).xzy, 0.0);
         float foldHit = 0.85 * nh.r + 0.15 * nh.a;
         float slope = (0.85 * (ns.r - nh.r)) * 6.0 + 0.5;
         float crest = clamp(0.1 + 1.25 * foldHit, 0.0, 1.0);
@@ -301,10 +301,10 @@ void main() {
         // The surface is folded: the folds are read where the ray meets the level plane, and lift or drop the top there.
         float te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
         vec3 pe = ro + rd * te;
-        vec3 qe = vec3((pe.xz - WINDV * (uTime * 0.55)) / 27.0, uTime * 0.017 + 0.3).xzy;
+        vec3 qe = vec3((pe.xz - WINDV * (uTime * 1.4)) / 27.0, uTime * 0.05 + 0.3).xzy;
         vec4 nm = textureLod(tNoise, qe, 0.0);
         vec4 nt = textureLod(tNoise, qe + vec3(uSunDir.x, 0.0, uSunDir.z) * 0.11, 0.0);
-        float lift = 5.0 * (nm.r - 0.42);
+        float lift = 9.0 * (nm.r - 0.42);
         d0 += lift;
         float d1 = d0 + dd * (mb - ma);
         float gathered = abs(dd) > 1e-3 ? (column(d1, soft) - column(d0, soft)) / dd : clamp(d0 / soft, 0.0, 1.0) * (mb - ma);
@@ -312,7 +312,7 @@ void main() {
           te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
           // It gathers on the side it leaves by, the west: there it is a body, and on the east the hoops show through it.
           vec3 pw = ro + rd * (0.5 * (te + mb));
-          float tau = mix(0.024, 0.045, surge) * gathered * mix(0.45, 1.7, smoothstep(12.0, -22.0, pw.x + 0.4 * pw.z));
+          float tau = mix(0.024, 0.032, surge) * gathered * mix(0.45, 1.7, smoothstep(12.0, -22.0, pw.x + 0.4 * pw.z));
           // The place a little way in that most of what is seen comes from.
           float tm = te + (mb - te) * sqrt(0.5 * min(1.0, 1.0 / max(tau, 1e-3)));
           vec3 pm = ro + rd * tm;
@@ -348,7 +348,7 @@ void main() {
     if (!bodyAt(i, ro, rd, far, thick, at, sunward, mid)) continue;
     vec4 C = uBodyC[i];
     vec3 q = (mid - vec3(0.0, uBodyD[i].w * uTime, 0.0)) / C.z + D.y;
-    q.xz -= WINDV * (uTime * 0.6 / C.z);
+    q.xz -= WINDV * (uTime * 2.0 / C.z);
     vec4 n0 = textureLod(tNoise, q, 0.0);
     vec4 n1 = textureLod(tNoise, q * 3.1 + 0.37, 0.0);
     // The fine lumps are for far off: near the lens they are smaller than a pixel's step along the ray and would boil.

@@ -42,7 +42,7 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const fill = smooth((u - 0.2) / 1.3);
   const over = u < 3 ? smooth((u - 0.4) / 2.4) : 0.08 + 0.92 * Math.exp(-(u - 3) / 1.3);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -9 + swell + 7 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
+  const level = -9 + swell + 3.5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
   const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -98,16 +98,16 @@ export function create(ctx: Context): Piece {
     // A column that climbs, leans with the wind as it climbs and opens into a plume that trails off down the wind.
     const rise = r * (3.5 + 6 * tall);
     const lean: [number, number] = [-0.4, 0.14];
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.3 / r, repeat: r * 3.4, open: 0.34, climb: 2.4 + r * 0.14, sun: 1.5 });
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.11 / r, repeat: r * 5.5, open: 0.44, climb: 1.2, sun: 1.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.5 + 0.8 * tall), rise * 0.58, r * (1.5 + 0.8 * tall)], lean, dense: 0.3 / r, repeat: r * 3.4, open: 0.34, climb: 4.5 + r * 0.2, sun: 1.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (3.2 + 2.6 * tall), rise * 0.36, r * (2.2 + 1.6 * tall)], lean: [-1.1, 0.4], dense: 0.11 / r, repeat: r * 5.5, open: 0.44, climb: 2.4, sun: 1.5 });
   }
   // What hangs over the west side of the main shaft and drifts off it with the wind: thin, frayed, a few metres over the rim.
   for (const [x, y, z, rx, ry, rz, dense] of [
-    [-24, 4.5, -14, 12, 5, 10, 0.008],
+    [-24, 1.5, -14, 12, 3, 10, 0.008],
     [-13, 0.5, -2, 17, 3.2, 18, 0.004],
     [-43, 2.6, -8, 12, 2.4, 9, 0.012],
   ] as const) {
-    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.7, climb: 0.5, sun: 1.0 });
+    bodies.push({ part: 'vapour', at: [x, y, z], size: [rx, ry, rz], dense: dense * 0.9, repeat: 13, open: 0.7, climb: 1.6, sun: 1.0 });
   }
   // The fog that pours from the cave and down the scree under it, and lies along the foot of the cliff.
   const turn = Math.atan2(-0.984, -0.177);
