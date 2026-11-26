@@ -106,6 +106,150 @@
       "confidence": 80,
       "why": "the nearest spire has shallow rock striations stretched over a conspicuously smooth surface.",
       "answered": "12:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "the fantastical giant curved rock spires with convincing atmospheric haze, volumetric spray and detailed water read as high-end cinematic or concept-art rendering, not a photo, though the slightly smooth procedural textures leave (c) as the main alternative.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the molten lake looks like a flat textured plane with glowing streaks.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "smeared/stretched low-resolution foreground rock textures and simplistic creature models typical of a real-time game engine rather than a high-end cinematic",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "flat emissive lava plane and stretched procedural cliff textures with low-detail creature models",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 91,
+      "why": "the foreground rock texture visibly stretches across flat facets.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 45,
+      "why": "the foreground rock and ground textures are smeared and stretched with a swirly, low-detail look, and the thin-legged creatures are simply modeled. This reads as a real-time game scene rather than a polished film or cinematic frame, though the atmosphere and lava lighting are good enough that (b) is a close second.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 85,
+      "why": "the visibly stretched rock texture on the crater walls.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "alien-creature landscape with polished but matte-painting-like CG terrain (repetitive rock textures, composited fog) reads as high-quality concept/stock CG rather than a real photo or film frame",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the procedural terrain and stretched sinkhole textures combined with repeated, low-detail alien creature models lack the asset fidelity of a top-budget film or AAA cinematic while exceeding a low-budget or web 3D demo.",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the foreground crater walls show conspicuously stretched rock textures.",
+      "answered": "12:27 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the alien landscape has film-grade detail and atmospheric haze in its rock strata, but the odd creatures and fantastical composition mean it can't be a photograph.",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 91,
+      "why": "the repeated, nearly identical plant models scattered across the flats.",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "alien landscape whose repeated, instanced plant and creature props and uniform procedural ground textures look like a polished hobbyist/stock CG render (Blender-style), not a film frame or a photo",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the flat procedural shoreline transitions and weak contact shadows around the sculpted CG alien creatures",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the same spindly plant model repeats across the plain with little variation.",
+      "answered": "12:28 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "The scene is clearly CG, and the cloned stalk plants and mound creatures with uniform textures look like a solo or procedural render. The haze and rain curtain are good, but the lighting is flat and nothing is hand-art-directed to the level of a top-budget film or cinematic (b is the runner-up).",
+      "answered": "12:28 UTC"
     }
   ]
 }
