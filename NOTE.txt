@@ -1,0 +1,7 @@
+2026-11-26 16:38 UTC
+work at 3e54ef6 on agent/marsh-beasts
+v1: sheet across marsh-04 shows head up early, shove, foreleg step, roll; great one's head is off the left edge at 6309 and 6561, lifted foreleg hangs toe down, rolled flank pale with no rings
+look-1.jpg = out/work/v1-sheet.png
+look-2.jpg = out/work/v1-pair-6309-6561.png
+look-3.jpg = out/work/v1-key-6424.png
+look-4.jpg = out/work/v1-crop-great.jpg
