@@ -215,7 +215,8 @@ void main() {
 
   // Thin crust over mud: the plate of it, broken slabs lying on wet grey mud with red in the gaps. Far off the plate gives way to wet silt.
   float slab = 0.0;
-  if (thin > 0.0) {
+  // (Under a fiftieth it is not there to be seen, and most of the flats are spared its reads.)
+  if (thin > 0.02) {
     float k = smoothstep(0.0, 0.5, thin);
     // Where the two lays meet there is a gap of mud, as between any two rafts of crust.
     vec3 lay = thinLay(p.xz, uThinAt, mid, fine.g);
