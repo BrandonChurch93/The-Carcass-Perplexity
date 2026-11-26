@@ -1,0 +1,43 @@
+{
+  "round": "27",
+  "unit": "film",
+  "critic": "R7",
+  "packs": {
+    "R7-1": {
+      "set-A-01-a.png": "The Heart's peak, film frame 4010: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (before the encode)",
+      "set-A-01-b.png": "The Heart's peak, film frame 4010: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (after the encode)",
+      "set-A-02.png": "The Heart's peak, film frame 4010: crops at full size, before the encode beside after it, part 1 of 5",
+      "set-A-03.png": "The Heart's peak, film frame 4010: crops at full size, before the encode beside after it, part 2 of 5",
+      "set-A-04.png": "The Heart's peak, film frame 4010: crops at full size, before the encode beside after it, part 3 of 5",
+      "set-A-05.png": "The Heart's peak, film frame 4010: crops at full size, before the encode beside after it, part 4 of 5",
+      "set-A-06.png": "The Heart's peak, film frame 4010: crops at full size, before the encode beside after it, part 5 of 5"
+    },
+    "R7-2": {
+      "set-B-01-a.png": "The storm on the Spine, film frame 7450: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (before the encode)",
+      "set-B-01-b.png": "The storm on the Spine, film frame 7450: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (after the encode)",
+      "set-B-02.png": "The storm on the Spine, film frame 7450: crops at full size, before the encode beside after it, part 1 of 5",
+      "set-B-03.png": "The storm on the Spine, film frame 7450: crops at full size, before the encode beside after it, part 2 of 5",
+      "set-B-04.png": "The storm on the Spine, film frame 7450: crops at full size, before the encode beside after it, part 3 of 5",
+      "set-B-05.png": "The storm on the Spine, film frame 7450: crops at full size, before the encode beside after it, part 4 of 5",
+      "set-B-06.png": "The storm on the Spine, film frame 7450: crops at full size, before the encode beside after it, part 5 of 5"
+    },
+    "R7-3": {
+      "set-C-01-a.png": "The seep pool on the marsh, film frame 6158: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (before the encode)",
+      "set-C-01-b.png": "The seep pool on the marsh, film frame 6158: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (after the encode)",
+      "set-C-02.png": "The seep pool on the marsh, film frame 6158: crops at full size, before the encode beside after it, part 1 of 5",
+      "set-C-03.png": "The seep pool on the marsh, film frame 6158: crops at full size, before the encode beside after it, part 2 of 5",
+      "set-C-04.png": "The seep pool on the marsh, film frame 6158: crops at full size, before the encode beside after it, part 3 of 5",
+      "set-C-05.png": "The seep pool on the marsh, film frame 6158: crops at full size, before the encode beside after it, part 4 of 5",
+      "set-C-06.png": "The seep pool on the marsh, film frame 6158: crops at full size, before the encode beside after it, part 5 of 5"
+    },
+    "R7-4": {
+      "set-D-01-a.png": "The titan frame, film frame 10027: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (before the encode)",
+      "set-D-01-b.png": "The titan frame, film frame 10027: the frame as it was rendered as -a, and the same frame out of the encode at 10 Mb/s as -b (after the encode)",
+      "set-D-02.png": "The titan frame, film frame 10027: crops at full size, before the encode beside after it, part 1 of 5",
+      "set-D-03.png": "The titan frame, film frame 10027: crops at full size, before the encode beside after it, part 2 of 5",
+      "set-D-04.png": "The titan frame, film frame 10027: crops at full size, before the encode beside after it, part 3 of 5",
+      "set-D-05.png": "The titan frame, film frame 10027: crops at full size, before the encode beside after it, part 4 of 5",
+      "set-D-06.png": "The titan frame, film frame 10027: crops at full size, before the encode beside after it, part 5 of 5"
+    }
+  }
+}

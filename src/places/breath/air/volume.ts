@@ -102,16 +102,21 @@ float channelWide(float z) {
 //   over the west lip it comes out and lies on the rock a metre or three deep, sliding down the wind and torn to shreds in thirty metres;
 //   the breath lifts the layer and the columns and thickens them, and lets them down again.
 // fine 1 reads the small billows too (the march); 0 does not (the taps toward the sun). t is the distance from the lens.
-float column(vec3 p, vec2 foot, float wide, float head, float n) {
+float column(vec3 p, vec2 foot, float wide, float head, float n, vec4 fineN) {
   // The axis wanders a little with height and leans down the wind over the brim.
   vec2 axis = foot + WINDV * (0.55 * max(p.y + 2.0, 0.0)) + 2.0 * vec2(sin(0.21 * p.y + foot.x), cos(0.17 * p.y + foot.y));
-  vec2 d = p.xz - axis;
+  // Seen side on from the west shelf a column was a tube: one straight side from the layer to its head and one even tone across it, a
+  // pale slab under the second ledge. The noise that moved its edge was the same across its whole width, so it moved the tube and did
+  // not break it. Now its section is pushed about by the two smooth fields of the fine read (a few metres across, another way at every
+  // height, climbing with the billows), so no side of it is straight, and the billows of that read make it thick and thin across its
+  // face. No read is added: these are the other three channels of the one already made.
+  vec2 d = p.xz - axis + 6.0 * (fineN.ga - 0.5);
   float w = wide * (1.0 + 0.012 * (p.y + 40.0));
   // Billows: the edge of the column is where the noise says, not a tube.
   // Over the brim only the hearts of the billows are left: torn wisps with air between, not a veil.
   float core = exp(-dot(d, d) / (w * w));
   float shape = core + 1.9 * (n - 0.5) * smoothstep(0.02, 0.3, core) - 0.3 * smoothstep(-3.0, 8.0, p.y);
-  return smoothstep(0.4, 0.85, shape) * smoothstep(head, head - 6.0, p.y + 5.0 * (n - 0.5));
+  return smoothstep(0.4, 0.85, shape) * smoothstep(head, head - 6.0, p.y + 5.0 * (n - 0.5)) * (1.0 + 0.8 * (fineN.r - 0.5));
 }
 // Whether any of it can be at a place: asked first, with no picture read, so that a step out over the shelf costs nothing.
 // How high the lens stands: 0 for a lens low at the rim, 1 for one high over the shelf. The vapour is drawn two ways by it. A low lens
@@ -121,6 +126,8 @@ float column(vec3 p, vec2 foot, float wide, float head, float n) {
 // It is the height and not the distance because the first shot ends three metres from where the last begins: no reach from the shaft
 // tells them apart. Shots two to five stay under 7 m and are all the first way; the first shot comes down through the fade after its key.
 float lensFar = 0.0;
+// The fine read at the last place the march asked of, for the edge of the rim's shadow in the vapour.
+vec4 seenFine = vec4(0.5);
 bool vapourNear(vec3 p) {
   float r = length(p.xz);
   if (r < 28.0) return true;
@@ -148,7 +155,12 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   vec4 n0 = textureLod(tNoise, q.xzy / 27.0, 0.0);
   float big = n0.r;
   float small = 0.5;
-  if (fine > 0.5) small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.0) * (0.3 * uTime)) / 8.3 + 0.31, 0.0).b;
+  vec4 fineN = vec4(0.5);
+  if (fine > 0.5) {
+    fineN = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.0) * (0.3 * uTime)) / 8.3 + 0.31, 0.0);
+    small = fineN.b;
+    seenFine = fineN;
+  }
   float n = 0.45 * big + 0.55 * small;
 
   // The layer low in the shaft, heaped.
@@ -161,8 +173,8 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float lift = 9.0 * surge;
   // The two ways are faded one into the other, never slid: a head that climbed as the lens came down would be vapour that rises.
   float cols = 0.0;
-  if (lensFar < 0.999) cols = (1.0 - lensFar) * (column(p, vec2(-19.0, -9.0), 2.7, 6.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n));
-  if (lensFar > 0.001) cols += lensFar * (column(p, vec2(-19.0, -9.0), 2.7, -1.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, -4.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -6.0 + 1.5 * lift, n));
+  if (lensFar < 0.999) cols = (1.0 - lensFar) * (column(p, vec2(-19.0, -9.0), 2.7, 6.0 + lift, n, fineN) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n, fineN) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n, fineN));
+  if (lensFar > 0.001) cols += lensFar * (column(p, vec2(-19.0, -9.0), 2.7, -1.0 + lift, n, fineN) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, -4.0 + lift, n, fineN) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -6.0 + 1.5 * lift, n, fineN));
   rho = max(rho, (0.11 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
@@ -357,7 +369,9 @@ void main() {
         float shade = 13.0 * vapourRho(p + uSunDir * 4.0, land.r, 0.0, t);
         // What lies in the thick of a heap is in that heap's shade.
         float roofed = exp(-9.0 * rho);
-        float sun = sunSeen(land, p.y) * sunCloud(p.xz);
+        // The rim's shadow crosses a column as a level line, ruled, and what stood over it was a lit band with a straight foot: the slab's
+        // lower edge. In vapour that edge is three metres deep and stands higher and lower by the fine field: light gets about in it.
+        float sun = smoothstep(-2.6, 1.2, p.y - land.b + 3.0 * (seenFine.g - 0.5)) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead.
         float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 26.0, 0.22, 1.0);
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
