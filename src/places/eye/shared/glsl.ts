@@ -102,11 +102,19 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float phi = (1.0 - abs(mod(k + 1.0, 4.0) - 2.0)) * halfField;
   float u = 0.5 + 0.5 * tan(phi) / uPlateLens.y;
   float v = uPlateLens.w + 0.5 * (q.y / (uPlateAt.w * cos(phi))) / uPlateLens.z;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(v, 0.004, 0.996)), bias).rgb) * uPlateTone.rgb;
+  // A picture of a wall alone (w is 2) has no sky of its own: what the water mirrors from above its top is still the wall, soft and dim.
+  float over = uPlateTone.w > 1.5 && bias > 0.0 ? smoothstep(0.8, 1.05, v) : 0.0;
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(v, 0.004, 0.93 + 0.066 * (1.0 - over))), bias + 6.0 * over).rgb) * uPlateTone.rgb * (1.0 - 0.45 * over);
   // A picture of a wall alone (w is 2) has no sky of its own: what the water mirrors above it is still the wall.
   float open = uPlateTone.w > 1.5 && bias > 0.0 ? 0.0 : 1.0;
   // The high sky in a mirror: water that is never quite still gives back less of it than of the low bright world.
-  if (bias > 0.0) sky *= vec3(0.42, 0.45, 0.5);
+  // The sky of the picture itself, in a mirror, is the low warm sky too.
+  if (bias > 0.0) {
+    float blue = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3));
+    plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.72, 0.56), 0.85 * blue);
+  }
+  // And what it gives back is the low warm sky, drawn out, more than the blue overhead.
+  if (bias > 0.0) sky = skyRadiance(normalize(vec3(rd.x, min(rd.y, 0.1), rd.z))) * vec3(0.5, 0.46, 0.44);
   return mix(plate, sky, smoothstep(0.9, 0.995, v) * open);
 }
 

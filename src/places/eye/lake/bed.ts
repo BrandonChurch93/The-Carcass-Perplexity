@@ -106,7 +106,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
   float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2));
   float crust = smoothstep(9.0, 1.5, w);
-  vec3 silt = vec3(0.1, 0.085, 0.07) * (0.5 + 1.0 * snh.b);
+  vec3 silt = vec3(0.07, 0.05, 0.035) * (0.5 + 1.0 * snh.b);
   vec3 bare = mix(silt, pale, max(slabs, crust));
   float beach = smoothstep(11.0, 2.5, inShore);
   if (beach > 0.0) {
@@ -147,7 +147,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       mh = mix(mh, texture2D(tMatH, q2).r, wide);
     }
     // The plate is redder than the weed of this lake: amber, gold where it is thin.
-    mp = mix(mp, dot(mp, vec3(0.3, 0.5, 0.2)) * vec3(1.5, 1.05, 0.5), 0.55);
+    mp = mix(mp, dot(mp, vec3(0.3, 0.5, 0.2)) * vec3(1.5, 1.08, 0.46), 0.75) * (0.35 + 0.65 * smoothstep(0.08, 0.5, mh));
     // Rust in one bed, gold in the next.
     float tone = 0.45 * vnoise(vec2(aw * 420.0, rw / 140.0) + 5.0) + 0.3 * vnoise(vec2(aw * 1500.0, rw / 60.0)) + 0.25 * vnoise(b / 6.0);
     vec3 weed = mp * mix(vec3(1.1, 0.72, 0.36), vec3(1.7, 1.4, 0.7), smoothstep(0.3, 0.72, tone));

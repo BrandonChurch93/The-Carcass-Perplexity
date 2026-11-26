@@ -74,7 +74,7 @@ function leave(frame: number): Pose {
   const reach = 100;
   return {
     // A long lens held on the centre of the lake: the two that stand under it are soft.
-    aperture: 0.04,
+    aperture: 0.014,
     focus: Math.max(30, Math.hypot(f.y, f.z)),
     position: [0, f.y, f.z],
     aim: [0, f.y - f.sin * reach, f.z - f.cos * reach],

@@ -76,6 +76,8 @@ void main() {
   if (r < 700.0) {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
     float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
+    // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
+    quiet += 0.06 * exp(-r / 300.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.0 * vnoise(out2 * 2.0));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
@@ -83,7 +85,7 @@ void main() {
     float du = clamp(r / uDome.y, 0.0, 1.0);
     float dr = (quiet + thrown) * broken + uDome.x * 2.0 * (1.0 - du * du) * (-2.0 * du / uDome.y);
     slope += out2 * dr;
-    float chop = clamp(uDome.x / 3.0, 0.0, 1.0) * smoothstep(190.0, 40.0, r);
+    float chop = clamp(uDome.x / 2.0, 0.0, 1.0) * smoothstep(150.0, 30.0, r);
     if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
   }
   // Rings where something drinks or stands: two trains of unlike length that leave it and die within a few metres.
@@ -117,6 +119,9 @@ void main() {
   // What the water mirrors: the far world, softer the further off and where the air has roughened it.
   vec3 rd = reflect(-v, n);
   rd.y = abs(rd.y) + 0.003;
+  // Seen low across water, a wave moves what it mirrors up and down and hardly at all to the side: the mirrored wall breaks into level bars.
+  vec2 level = normalize(-v.xz);
+  rd.xz = mix(level * length(rd.xz), rd.xz, 0.15 + 0.85 * smoothstep(0.12, 0.5, v.y));
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
   vec3 refl = farRadiance(p, rd, soft) * vec3(0.5, 0.6, 0.76);
@@ -126,6 +131,9 @@ void main() {
     vec3 bent = (viewMatrix * vec4(n.x, 0.0, n.z, 0.0)).xyz;
     vec2 uv = m4.xy / m4.w + vec2(bent.x, -bent.z) * uLens * 0.6;
     vec4 seen = texture2D(tMirror, clamp(uv, 0.001, 0.999));
+    // Nothing is known of what lies outside the mirror's own frame.
+    vec2 inside = smoothstep(vec2(0.0), vec2(0.03), uv) * smoothstep(vec2(1.0), vec2(0.97), uv);
+    seen.a *= inside.x * inside.y;
     refl = mix(refl, seen.rgb * 0.82, seen.a);
   }
 
@@ -152,6 +160,8 @@ void main() {
     float open = skyOpen(at);
     vec3 bn = normalize(vec3(bed.tilt.x, 1.0, bed.tilt.y));
     vec3 e = skyIrradiance(bn) * open + uSunColour * (sun * (max(dot(bn, normalize(vec3(uSunDir.x, uSunDir.y + 0.35, uSunDir.z))), 0.0) * 0.8 + bed.glow));
+    // The light that reaches the bed has come through amber water: it is warm, whatever the sky.
+    e = mix(e, dot(e, vec3(0.3, 0.5, 0.2)) * vec3(1.2, 1.0, 0.74), 0.65);
     // The light of the low sky comes into the water far more easily than the sun does: the bed is lit from above.
     vec3 lit = bed.albedo * e * (bed.occ / 3.14159);
     float d = max(depth2, 0.0);
@@ -181,6 +191,13 @@ void main() {
     f *= mix(0.3, 1.0, smoothstep(0.5, 14.0, inside));
   }
   f *= 1.0 - dry;
+  // The swell at the centre is a hump of dark water: its near face looks at the eye, and the eye looks into it.
+  if (r < uDome.y) {
+    float du = r / uDome.y;
+    float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * (1.0 - du * du) * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz)));
+    f *= 1.0 - 0.92 * hump;
+    under *= 1.0 - 0.4 * hump;
+  }
   vec3 c = mix(under, refl, f);
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
@@ -308,7 +325,7 @@ export function create(ctx: Context): Piece {
     const c = new THREE.Color(hex);
     return new THREE.Vector3(c.r, c.g, c.b);
   };
-  const dome = new THREE.Vector4(0, 66, 0, 0);
+  const dome = new THREE.Vector4(0, 44, 0, 0);
   const centre = new THREE.Vector4(-100, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
     uniforms: {
@@ -349,9 +366,10 @@ void main() {
   return {
     setTime: (t) => {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
-      dome.x = 3.4 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
+      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 2.3 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       centre.x = t - rise;
-      centre.y = smooth(end - 1.6, end - 0.1, t);
+      centre.y = smooth(end - 1.0, end - 0.05, t);
       laps.forEach((lap, i) => {
         const from = ctx.laps[i];
         if (from) lap.set(from.x, from.z, from.offset, from.strength);
