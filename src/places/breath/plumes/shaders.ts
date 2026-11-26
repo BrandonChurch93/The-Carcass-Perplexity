@@ -75,8 +75,11 @@ const VANE_TEST = /* glsl */ `
   vec4 made = ragged ? texture2D(tFrondBA, at) : texture2D(tFrondA, at);
   float deadOne = mod(vVane.w, 2.0);
   float cover = made.r;
+  // The ragged one gives the outline of a frond and the full one its threads: inside the outline it is combed into single threads,
+  // never a blade.
+  if (ragged) cover = min(cover, texture2D(tFrondA, vec2(at.x * 0.93 + 0.03, 0.5 + (at.y - 0.5) * 0.9)).r + 0.1 * smoothstep(0.62, 0.8, made.r));
   // Far off the threads are thinner than a pixel and would go: there each is cut a little outside its edge, and the frond stays as full as it is near.
-  float cut = mix(0.5, 0.4, smoothstep(0.003, 0.03, px));
+  float cut = mix(0.5, 0.26, smoothstep(0.004, 0.024, px));
   // The dead ones are broken short and half gone.
   if (deadOne > 0.5 && vnoise(at * vec2(14.0, 5.0) + vVane.z) > 0.52) discard;
   if (cover < cut) discard;
@@ -106,7 +109,7 @@ ${VANE_TEST}
   float light = dot(told, vec3(0.4, 0.35, 0.25));
   // Wet, it is darker than the picture of it and deeper in the red: wine, and the pale of the stem stays pale.
   float pale = smoothstep(0.32, 0.6, min(told.g, told.b) / max(told.r, 0.02));
-  vec3 albedo = mix(pow(told, vec3(1.45)) * vec3(0.8, 0.52, 0.52), told * vec3(0.7, 0.6, 0.56), pale) * (0.7 + 0.5 * tone);
+  vec3 albedo = mix(pow(told, vec3(1.45)) * vec3(0.66, 0.58, 0.62), told * vec3(0.64, 0.58, 0.56), pale) * (0.7 + 0.5 * tone);
   // The ends of the threads are bleached: pale, a little pink.
   float tip = smoothstep(0.72, 1.0, vAlong) * (1.0 - made.g) * smoothstep(0.4, 0.9, tone + 0.4 * vnoise(at * 40.0 + vVane.z));
   albedo = mix(albedo, vec3(0.46, 0.25, 0.2), 0.4 * tip);
@@ -132,13 +135,13 @@ ${VANE_TEST}
   float through = (0.12 + 0.88 * thin) * (0.3 + 0.7 * rim) * (0.2 + 0.8 * within) * (0.3 + 0.7 * smoothstep(0.1, 0.7, reach)) * (0.1 + 0.9 * against * against);
   // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
   float close = mix(0.22, 1.0, smoothstep(0.0075, 0.0025, px));
-  vec3 blood = mix(vec3(1.0, 0.2, 0.13), vec3(1.0, 0.5, 0.36), 0.5 * tip + 0.35 * pale);
-  colour += blood * uSunColour * (0.8 * through * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
+  vec3 blood = mix(vec3(1.0, 0.27, 0.17), vec3(1.0, 0.5, 0.36), 0.5 * tip + 0.35 * pale);
+  colour += blood * uSunColour * (1.15 * through * (0.35 + 0.65 * through) * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
   // Wet: here and there a thread turns the sun to the lens, and against the light the wet edges of the threads are lined with it.
   float glint = smoothstep(0.972, 0.995, vnoise(at * vec2(700.0, 260.0) + vVane.z)) * smoothstep(0.004, 0.0012, px) * rim;
   colour += uSunColour * vec3(1.0, 0.8, 0.6) * glint * (1.6 * pow(against, 5.0)) * lit * (0.3 + 0.7 * within);
   // The film of water on every thread gives back a little of the bright air round it, so its dark is wine and never black.
-  colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.012 / 3.14159) * open;
+  colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.02 / 3.14159) * open;
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
