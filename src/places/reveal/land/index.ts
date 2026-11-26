@@ -158,6 +158,25 @@ void main() {
     tableland = mesa;
     slope *= min(1.0, 0.97 / max(length(slope), 1e-3));
   }
+  // From orbit the great ranges keep the grain of rock: the range photograph again, laid very wide (330 and 610 km a repeat, where a pixel can still show its valleys), on the bones most of all,
+  // so a rib is a range with spurs and valleys of its own and not a smooth bank.
+  float spur = 0.0;
+  vec2 uvA = (read - uRectA.xy) * uRectA.zw;
+  float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
+  if (uViewKm >= 1050.0) {
+    mat2 turnA = mat2(0.8, 0.6, -0.6, 0.8);
+    mat2 turnB = mat2(-0.28, 0.96, -0.96, -0.28);
+    vec2 r3 = turnB * xz / 330.0 + vec2(0.61, 0.08);
+    vec2 r4 = turnA * xz / 610.0 + vec2(0.23, 0.47);
+    vec2 a3 = texture2D(uMatRangeNh, r3).rg * 2.0 - 1.0;
+    vec2 a4 = texture2D(uMatRangeNh, r4).rg * 2.0 - 1.0;
+    grain = smoothstep(1050.0, 1300.0, uViewKm) * land * (0.25 + 0.75 * skeleton);
+    country = clamp(texture2D(uMatRange, r3).rgb / vec3(0.122, 0.126, 0.125), 0.45, 1.9);
+    vec2 spurs = (vec2(a3.x, -a3.y) * turnB) * 0.55 + (vec2(a4.x, -a4.y) * turnA) * 0.5;
+    slope += spurs * 0.9 * grain;
+    spur = dot(spurs, normalize(uSunDir.xz)) * grain;
+    slope *= min(1.0, 0.97 / max(length(slope), 1e-3));
+  }
   vec3 n = normalize(vec3(slope.x, sqrt(max(1.0 - dot(slope, slope), 0.04)), slope.y));
   vec2 toSunUv = normalize(uSunDir.xz) * (9.0 / 4096.0) * uRectWide.zw / abs(uRectWide.z);
   float ahead = texture2D(uShapeWide, clamp(uvWide + toSunUv, 0.0, 1.0), 2.5).b;
@@ -188,10 +207,12 @@ void main() {
   ground = mix(ground, vec3(0.62, 0.55, 0.45), 0.4 * bones * smoothstep(0.2, 0.5, height) * (1.0 - salt) * land * far * inWide);
   // Only near the top of the rise do the bones come together: the great ranges stand bare and pale, the land between them dark.
   // (The picture of the bones is the traced outline of the ranges, on the rectangle of the widest level.)
-  vec2 uvA = (read - uRectA.xy) * uRectA.zw;
-  float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land * (1.0 - salt) * smoothstep(70.0, 200.0, length((xz - uSalt) * vec2(0.8, 1.0)));
-  ground = mix(ground, vec3(0.6, 0.555, 0.48), 0.42 * skeleton * top);
+  // (The pale of the bones follows their relief: full on the crests and the high slopes, thin in the valleys that cut them, so the
+  // range is seen as rock with its own valleys and not as a band of colour.)
+  float crest = smoothstep(0.1, 0.46, height);
+  ground = mix(ground, vec3(0.57, 0.545, 0.49), 0.46 * skeleton * top * mix(0.42, 1.12, crest));
+  ground *= mix(vec3(1.0), vec3(0.93, 1.0, 1.05), top);
   ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.8, top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
@@ -214,6 +235,7 @@ void main() {
   ground = mix(ground, vec3(0.235, 0.165, 0.13) * country, 0.5 * tableland * (1.0 - salt));
   vec3 earth = rigShade(vWorld, n, view, ground, 0.92, shade);
   earth *= 1.0 + 0.6 * max(side, 0.0) + 0.55 * min(side, 0.0);
+  earth *= 1.0 + clamp(1.5 * spur, -0.5, 0.7);
   // The light the sunlit slopes throw back into the shaded ones: without it every shadow is the blue of the sky.
   earth += ground * uSunColour * 0.085 * (0.4 + 0.6 * shade);
 

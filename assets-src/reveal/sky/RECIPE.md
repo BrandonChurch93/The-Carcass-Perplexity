@@ -15,6 +15,7 @@ It needs python 3 with numpy, scipy and opencv. It takes under a minute.
 - `cloud-tile.jpg`, 1024 x 1024, repeats. Red is the field the low cloud is cut from, made so every value is equally common: a threshold on it is a share of the sky. Green is how much each point of that field faces the sun (0.5 is level). Blue is the streaks the high cloud, the vapour and the wind on the sea are cut from.
 - `cloud-cover.jpg`, 2048 x 1152, the whole world. Red is the share of low cloud, green the share of high cloud, blue the cloud banked against the ranges. It is thin over the body and clear over the head, where the rise begins.
 - `cyclone.jpg`, 1024 x 1024, and `storm.jpg`, 1024 x 384. Red is how thick the cloud is, green how much it faces the sun, blue how high it stands.
+  Since version 3 the place no longer reads these two: the cyclone and the storm are drawn from `public/assets/reveal/mat/cyclone.jpg` and `storm.jpg`. They are kept so this recipe still makes what it names.
 
 ### What is read as data
 
