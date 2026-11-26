@@ -7,6 +7,7 @@ import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { loopPhase, stagedSeconds } from '../shared/stage';
+import { openingDark, openingWeight } from '../shared/opening';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -14,6 +15,10 @@ export const PARTS = ['sky', 'air', 'cloud'] as const;
 const MAX_SOURCES = 20;
 const STEPS = 8;
 const BANK_STEPS = 22;
+/** Where the bank's slabs begin and end across the way in: world z, metres. */
+const BANK_FAR = 1480;
+const BANK_NEAR = 210;
+const glslFloat = (x: number): string => (Number.isInteger(x) ? x.toFixed(1) : String(x));
 
 const SKY_VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -56,6 +61,9 @@ uniform vec4 uSourceC[${MAX_SOURCES}];
 uniform vec4 uBank;
 // How far the bank has thinned over the breaking swell at the first blade's foot, 0 to 1.
 uniform float uBankHole;
+// The approach: how far the march of the air is held still on the screen (1 as the film opens, nothing from the sixteenth second).
+uniform float uStillAir;
+uniform float uClearAir;
 ${RIG_GLSL}
 
 // The bank lies on the sea before the shore, across the way in: a low body with a ragged top (it hides the feet of the blades and the far
@@ -67,24 +75,34 @@ vec2 bankAt(vec3 p) {
   float lump = texture2D(tCloudShade, q / 760.0 + 0.37 + p.y * vec2(0.0023, 0.0011)).g;
   float lane = (p.x + 325.0 - 0.07 * (1504.0 - p.z) + 110.0 * (big - 0.5)) / (24.0 + 300.0 * uBank.y);
   float open = exp(-lane * lane) * smoothstep(0.0, 0.12, uBank.y);
-  float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / (40.0 + 120.0 * uBankHole);
-  open = max(open, (0.45 + 0.55 * uBankHole) * exp(-hole * hole));
+  // The clearing is widest over the breaking swell and narrows toward the lens: out there the mist closes in from both sides.
+  float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, p.z)));
+  open = max(open, (0.9 + 0.1 * uBankHole) * exp(-hole * hole));
   float fine = texture2D(tCloudShade, q / 410.0 + 0.11 + p.y * vec2(0.004, 0.007)).r;
-  float top = (42.0 + 64.0 * smoothstep(0.2, 0.75, big)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
-  float under = top - p.y + 46.0 * (lump - 0.5) + 26.0 * (fine - 0.5);
+  // East of the blades the banks stand taller: their torn tops rise out of the grey of the far air into the sky.
+  float top = (42.0 + 64.0 * smoothstep(0.2, 0.75, big)) * (1.0 + 0.8 * smoothstep(100.0, 600.0, p.x)) * (1.0 + 0.5 * smoothstep(640.0, 400.0, p.z)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
+  float under = top - p.y + 64.0 * (lump - 0.5) + 36.0 * (fine - 0.5);
   float pz = p.z + 170.0 * (big - 0.5);
-  float inside = smoothstep(790.0, 660.0, pz) * smoothstep(300.0, 430.0, pz);
-  float body = inside * smoothstep(0.0, 16.0, under) * (0.3 + 1.4 * lump);
+  // Not one wall from side to side: banks with clear water between them, and the one before the first blades the heaviest.
+  // (The clear water runs out like the ribs of a fan from where the film opens, so a lens low on the sea looks down it and sees the far sky
+  // between two banks.)
+  float gaps = 0.5 + 0.5 * sin(14.0 * (q.x + 325.0) / max(1450.0 - p.z, 200.0) - 2.29 + 3.0 * (big - 0.5)) + 0.5 * (lump - 0.5);
+  float banked = max(smoothstep(0.34, 0.62, gaps), exp(-(p.x + 60.0) * (p.x + 60.0) / 70000.0) * 0.9);
+  float inside = smoothstep(790.0, 660.0, pz) * smoothstep(300.0, 430.0, pz) * banked;
+  // Behind, among the blades, it stands higher and thinner than before the near one.
+  float body = inside * smoothstep(0.0, 16.0, under) * (0.3 + 1.4 * lump) * (1.0 - 0.4 * smoothstep(640.0, 400.0, p.z));
   // Its seaward face is not a wall: tongues of it stand out over the water, lower the further out. (The mist that lies on the water
   // itself before the bank, through which the far sea pales into it, is the sea's: sea/shaders.ts.)
   float tongue = smoothstep(0.34, 0.66, 0.6 * fine + 0.4 * lump);
   // Some of them reach a long way out and some places stay clear to the bank's face: the water is seen to go into it at no one distance.
   float reach = 460.0 * smoothstep(0.3, 0.7, texture2D(tCloudShade, q / 1500.0 + 0.61).r);
-  float near = smoothstep(1010.0 + reach, 900.0 + reach, pz + 160.0 * (lump - 0.5));
+  float near = smoothstep(1010.0 + reach, 900.0 + reach, pz + 160.0 * (lump - 0.5)) * (0.06 + 0.94 * banked);
   // Far out they lie lower than a lens nine metres up; against the bank they stand up into it.
   // And none has a level top: each thins upward from the water, and between them there is none.
-  float lid = (1.0 + 7.0 * tongue + 40.0 * tongue * smoothstep(1010.0, 760.0, pz + 160.0 * (lump - 0.5))) * (1.0 - 0.7 * open);
-  float foot = near * smoothstep(300.0, 430.0, pz) * smoothstep(lid, 0.0, p.y) * tongue * (1.0 - open);
+  // Far out it stands higher than a lens nine metres up, so the lens is in it and sees no top of it: the sea goes pale with the distance
+  // and is lost, sooner where a tongue lies and later between two.
+  float lid = (15.0 + 7.0 * tongue + 34.0 * tongue * smoothstep(1010.0, 760.0, pz + 160.0 * (lump - 0.5))) * (1.0 - 0.7 * open);
+  float foot = near * smoothstep(300.0, 430.0, pz) * smoothstep(lid, 0.0, p.y) * (0.22 + 0.78 * tongue) * (1.0 - open);
   return vec2(uBank.x * max(body, foot), under);
 }
 
@@ -119,6 +137,9 @@ void main() {
   float span = min(reach, 3200.0);
   // The offset of the march is fixed to the pixel: it does not crawl from sample to sample.
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  // In the approach a shaft of sun stands in the air between the lens and the first blade: an offset that differs from pixel to pixel
+  // would lay the screen's weave over it, so there the march keeps one offset. The film's own frames keep theirs.
+  if (uStillAir > 0.0) jitter = mix(jitter, 0.5, uStillAir);
   float mu = max(dot(rd, uSunDir), 0.0);
   float mu2 = mu * mu;
   float phase = 0.45 + 0.6 * mu2 * mu2 + 0.8 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
@@ -138,6 +159,8 @@ void main() {
     float banks = texture2D(tCloudShade, p.xz / 640.0 - uTime * vec2(0.011, 0.019)).r;
     float mist = 0.0022 * exp(-max(p.y, 0.0) / 24.0) * smoothstep(0.3, 0.8, banks);
     float a = 1.0 - exp(-(thickness(p.y) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm));
+    // As the film opens the air before the first blade is clear, in a lane as wide as the blade: it stands dark before the haze, not in it.
+    if (uClearAir > 0.0) a = 1.0 - exp(-(thickness(p.y) + mist) * (t1 - t0) * smoothstep(130.0, 600.0, tm) * (1.0 - 0.92 * uClearAir * smoothstep(-220.0, 40.0, p.z) * exp(-(p.x + 330.0) * (p.x + 330.0) / 78000.0)));
     float lit = sunAt(p, landAt(p.xz));
     sum += trans * a * (ambient + sunlit * lit);
     trans *= 1.0 - a;
@@ -166,34 +189,66 @@ void main() {
     sum = sum * (1.0 - cover * near) + light * (cover * near);
     trans *= 1.0 - cover;
   }
-  // The bank of the opening stands nearer than the haze: it is marched on its own, only while it is up.
-  if (uBank.x > 0.0) {
-    float ta = (1480.0 - ro.z) / rd.z;
-    float tb = (210.0 - ro.z) / rd.z;
-    float from = max(min(ta, tb), 0.0);
-    float to = min(min(max(ta, tb), reach), 2600.0);
-    if (rd.y > 0.0) to = min(to, (150.0 - ro.y) / rd.y);
-    if (to > from) {
-      vec3 bankSum = vec3(0.0);
-      float bankTrans = 1.0;
-      float len = (to - from) / float(${BANK_STEPS});
-      for (int i = 0; i < ${BANK_STEPS}; i++) {
-        float tm = from + (float(i) + jitter) * len;
-        vec3 p = ro + rd * tm;
-        vec2 fog = bankAt(p);
-        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 200.0, tm));
-        if (a > 0.0005) {
-          // The shaft of sun that walks over the water stands in the bank as a pool of light with no drawn edge.
-          vec2 fromShaft = p.xz - uCloudBreak2.xy;
-          float lit = exp(-1.7 * dot(fromShaft, fromShaft) * uCloudBreak2.z) * cloudShade(vec3(uCloudBreak2.x, 0.0, uCloudBreak2.y));
-          // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
-          float deep = 0.42 + 0.58 * smoothstep(60.0, 4.0, fog.y);
-          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.26 * phase * lit * deep)) * uShowAir;
-          bankTrans *= 1.0 - a;
-        }
+  // The bank of the opening stands nearer than the haze: it is summed on its own, only while it is up. Its slabs are fixed in the world
+  // (planes across the way in), never set off by the pixel: a sum that is jittered by the screen leaves the screen's grain in the fog.
+  if (uBank.x > 0.0 && rd.z < -0.02) {
+    vec3 bankSum = vec3(0.0);
+    float bankTrans = 1.0;
+    float deepZ = ${glslFloat((BANK_FAR - BANK_NEAR) / BANK_STEPS)};
+    float len = min(deepZ / -rd.z, 420.0);
+    float ahead = smoothstep(0.02, 0.2, -rd.z);
+    for (int i = 0; i < ${BANK_STEPS}; i++) {
+      float tm = (${glslFloat(BANK_FAR)} - (float(i) + 0.5) * deepZ - ro.z) / rd.z;
+      // How much of the slab lies before the lens and before what the ray meets.
+      float part = clamp((reach - tm) / len + 0.5, 0.0, 1.0) * smoothstep(30.0, 200.0, tm) * ahead;
+      if (part <= 0.0) continue;
+      vec3 p = ro + rd * tm;
+      if (p.y > 190.0) continue;
+      vec2 fog = bankAt(p);
+      float a = 1.0 - exp(-fog.x * len * part);
+      if (a > 0.0005) {
+        // The shaft of sun that walks over the water stands in the bank as a pool of light with no drawn edge.
+        vec2 fromShaft = p.xz - uCloudBreak2.xy;
+        float lit = exp(-0.7 * dot(fromShaft, fromShaft) * uCloudBreak2.z) * cloudShade(vec3(uCloudBreak2.x, 0.0, uCloudBreak2.y));
+        // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
+        float deep = 0.42 + 0.58 * smoothstep(60.0, 4.0, fog.y);
+        bankSum += bankTrans * a * (uHaze * (0.7 * deep * (1.0 + 0.45 * smoothstep(34.0, 2.0, fog.y))) + uSunColour * (0.26 * phase * lit * deep)) * uShowAir;
+        bankTrans *= 1.0 - a;
       }
-      sum = bankSum + bankTrans * sum;
-      trans *= bankTrans;
+    }
+    sum = bankSum + bankTrans * sum;
+    trans *= bankTrans;
+    // The mist that lies on the water itself, from the lens out to the bank: thickest at the water and thinning upward with no top. It is
+    // summed whole along the ray (no slabs), the same for the water and for what stands above it, so the sea pales into the fog and there
+    // is no line where one ends and the other begins. It lies in patches, and it is clear along the way to the breaking swell.
+    float t0 = 30.0;
+    float t1 = min(reach, 1500.0);
+    if (t1 > t0) {
+      float k = rd.y * (t1 - t0) / 14.0;
+      float g = abs(k) < 0.001 ? 1.0 : (1.0 - exp(-k)) / k;
+      float through = (t1 - t0) * g * exp(-max(ro.y + rd.y * t0, 0.0) / 14.0);
+      vec3 pa = ro + rd * min(reach, 160.0);
+      vec3 pb = ro + rd * min(reach, 420.0);
+      float ha = (pa.x + 318.0) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pa.z)));
+      float hb = (pb.x + 318.0) / ((135.0 + 60.0 * uBankHole) * mix(0.75, 1.0, smoothstep(1050.0, 520.0, pb.z)));
+      float clear = (0.9 + 0.1 * uBankHole) * 0.5 * (exp(-ha * ha) + exp(-hb * hb));
+      float patches = texture2D(tCloudShade, (pb.xz - uBank.zw) / 900.0 + 0.29).g;
+      // Where clear water runs between two banks the mist is thin as well: the far sky is seen down the gap.
+      vec3 pc = ro + rd * min(reach, 700.0);
+      vec2 qc = pc.xz - uBank.zw;
+      float lanes = 0.5 + 0.5 * sin(14.0 * (qc.x + 325.0) / max(1450.0 - pc.z, 200.0) - 2.29 + 3.0 * (texture2D(tCloudShade, qc / 2900.0).r - 0.5));
+      patches *= 0.18 + 0.82 * smoothstep(0.3, 0.66, lanes);
+      float tau = uBank.x * 0.6 * through * (0.35 + 1.3 * patches) * (1.0 - 0.94 * clear) * (1.0 - 0.8 * uBank.y) * ahead;
+      // Under it the lowest air, a few metres on the water, is thick everywhere, also on the way to the breaking swell: the lens looks over
+      // it at what stands up, and down through it at the far water.
+      float k2 = rd.y * (t1 - t0) / 4.0;
+      float g2 = abs(k2) < 0.001 ? 1.0 : (1.0 - exp(-k2)) / k2;
+      tau += uBank.x * 0.75 * (t1 - t0) * g2 * exp(-max(ro.y + rd.y * t0, 0.0) / 4.0) * (0.55 + 0.9 * patches) * (1.0 - 0.6 * uBank.y) * ahead;
+      float am = 1.0 - exp(-tau);
+      vec2 fromShaft = pb.xz - uCloudBreak2.xy;
+      float lit = exp(-0.7 * dot(fromShaft, fromShaft) * uCloudBreak2.z) * cloudShade(vec3(uCloudBreak2.x, 0.0, uCloudBreak2.y));
+      sum = sum * (1.0 - am) + am * (uHaze * 0.42 + uSunColour * (0.16 * phase * lit)) * uShowAir;
+      trans *= 1.0 - am;
     }
   }
   gl_FragColor = vec4(sum * uScatter.z, trans);
@@ -235,6 +290,8 @@ export function create(ctx: Context): Piece {
   // Staged for the opening shot only: a bank of sea fog lies across the way in, tears open in the first two seconds and is flown through in shreds.
   const bank = new THREE.Vector4(0, 0, 0, 0);
   const bankHole = { value: 0 };
+  const stillAir = { value: 0 };
+  const clearAir = { value: 0 };
   const openingShot = shotSpan('ribs-01');
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
@@ -254,6 +311,8 @@ export function create(ctx: Context): Piece {
       uShowCloud: showCloud,
       uBank: { value: bank },
       uBankHole: bankHole,
+      uStillAir: stillAir,
+      uClearAir: clearAir,
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -274,12 +333,14 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       const up = staged >= openingShot.from && staged < openingShot.to;
       const since = seconds - openingShot.from;
-      const fade = Math.min(1, Math.max(0, (13 - since) / 6));
+      const fade = Math.min(1, Math.max(0, (8.4 - since) / 4.2));
       // The lane opens slowly at first (the bank is whole in the first frames) and is wide by the time the camera is in it.
       const torn = Math.min(1, Math.max(0, (since - 1.2) / 6.5));
-      const holed = Math.min(1, Math.max(0, (since + 1.3) / 3.2));
+      const holed = Math.min(1, Math.max(0, (since + 1.1) / 3.3));
       bank.set(up ? 0.0085 * fade : 0, torn * torn * (3 - 2 * torn), WIND.to[0] * 20 * since, WIND.to[1] * 20 * since);
       bankHole.value = holed * holed * (3 - 2 * holed);
+      stillAir.value = up ? Math.min(1, 3 * openingWeight(seconds)) : 0;
+      clearAir.value = openingDark(seconds);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       // In the card loop the mist between the blades thickens once and thins again.
       const phase = loopPhase();

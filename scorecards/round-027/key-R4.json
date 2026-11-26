@@ -1,0 +1,25 @@
+{
+  "round": "27",
+  "unit": "film",
+  "critic": "R4",
+  "packs": {
+    "R4-1": {
+      "set-A-01.png": "Whole film sheet 1 of 4, frames 0 to 2776",
+      "set-A-02.png": "Whole film sheet 2 of 4, frames 3028 to 5804",
+      "set-A-03.png": "Whole film sheet 3 of 4, frames 6056 to 8832",
+      "set-A-04.png": "Whole film sheet 4 of 4, frames 9084 to 11860",
+      "set-A-05.png": "Consecutive frames across the change of place into heart at frame 2507",
+      "set-A-06.png": "Consecutive frames across the change of place into breath at frame 4221",
+      "set-A-07.png": "Consecutive frames across the change of place into marsh at frame 5618",
+      "set-A-08.png": "Consecutive frames across the change of place into spine at frame 7015",
+      "set-A-09.png": "Consecutive frames across the change of place into eye at frame 8305",
+      "set-A-10.png": "Consecutive frames across the change of place into reveal at frame 9541"
+    },
+    "R4-2": {
+      "set-B-01.png": "The first 2 seconds, frames 0 to 120",
+      "set-B-02.png": "The last 2 seconds before black, frames 11623 to 11743",
+      "set-B-03.png": "One sheet across the loop of 480 frames",
+      "set-B-04.png": "The seam of the loop: its last 6 frames, then its first 6"
+    }
+  }
+}
