@@ -1,6 +1,6 @@
 # Material pictures of the Blood Marsh
 
-The working pictures of the Blood Marsh, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 13 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Blood Marsh, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 22 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -314,6 +314,150 @@ The reference image shows one subject on a black background. Make its relief map
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the front of a wallower, as the stuck one shows it (asked for by `marsh_life_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/mudhide.jpg` and `public/assets/marsh/mat/mudhide-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/mudhide.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg`, `references/drafts/working/real/ref-hide-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+A material texture, seen straight on: the hide of a huge heavy wallowing animal that has stood a long time in drying mud, about 1 metre across. Pinkish-brown creased skin plastered with grey-tan mud that has dried to pale cracked plates. The plates lift and curl at their edges, some have flaked away and show the skin beneath, and a white bloom of salt lies on them. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 2 made, take 2 kept (take 1 was made from a prompt cut short by a fault of the Builder's own script and was thrown away).
+Why this one: the hide of the stuck one: skin under dried, cracked, curling plates of mud, where the built one is smooth and grey (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/hairhide.jpg` and `public/assets/marsh/mat/hairhide-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/hairhide.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-3-mud-wallowers.jpg`, `references/drafts/working/real/ref-hide-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+A material texture, seen straight on: the hide of the back of a huge heavy wallowing animal, about 1 metre across. Grey-tan wrinkled skin in broad folds, with coarse sparse hair lying one way in wet clumps, and salt dried pale in flakes on the high folds. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the back of a wallower with its sparse coarse hair in wet clumps, where the built backs have no hair (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/deadone-b.jpg` and `public/assets/marsh/mat/deadone-b-h.png` and `public/assets/marsh/mat/deadone-b-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/deadone-b.png`, the generated picture, and `assets-src/marsh/mat/src/deadone-b-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg`, `references/drafts/working/real/plate-porcelain-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+The carcass of a mud-wallower, an animal of an unknown world, long dead, 3 metres long, seen from the side and a little from above, as a camera 1.5 metres above the ground and 6 metres away sees it, lying level across the frame. It has collapsed in on itself: the back has fallen in and dark bone shows in the hollow. Its head end is at the left, with its fringe of long pale feelers splayed out on the ground in front of it. The whole carcass is coated in white salt crystals like hoar frost, thick on the upper side, and the short thick tan legs show through the crust. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a second dead one seen from the side: fallen in, hoar-frost white with tan legs and splayed feelers, where the built dead are dark grey heaps (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/deadone-c.jpg` and `public/assets/marsh/mat/deadone-c-h.png` and `public/assets/marsh/mat/deadone-c-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/deadone-c.png`, the generated picture, and `assets-src/marsh/mat/src/deadone-c-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg`, `references/drafts/working/real/plate-porcelain-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+What is left of the carcass of a mud-wallower, an animal of an unknown world, dead for many years, 2.5 metres long, seen from the side and a little from above, as a camera 1.5 metres above the ground and 6 metres away sees it, lying level across the frame. It is a low white mound of coarse salt crystals with a few crusted knobs where bones lie under the salt and the tips of two pale feelers at the left end. The foot of the mound is stained pink. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the oldest of the dead: a low white mound of salt with a few knobs (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/fan.jpg` and `public/assets/marsh/mat/fan-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/fan.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-2-the-stalk-colony.jpg`, `references/drafts/working/real/ref-tissue-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+One open feeding fan of a stalk, a growth of an unknown world, with the top 25 centimetres of its stalk, seen from the side, 0.9 metres wide. A dense soft plume of crimson strap-shaped filaments rises from a brown papery sheath at the top of a bone-white stem and arches over to the right. The filaments are wet and clumped in locks, darker wine red at the base, and some tips are torn or bleached pale. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: one open fan from the side as the stalk colony detail has it, a soft plume of strap filaments, where the built plume is dark and wiry (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/stalk-b.jpg` and `public/assets/marsh/mat/stalk-b-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/stalk-b.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-2-the-stalk-colony.jpg`, `references/drafts/working/real/plate-forest-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+One stalk of a stalk colony, a growth of an unknown world, whole, seen square on, about 3 metres tall, with its foot at the bottom of the frame. A single stem as thick as an arm, sheathed in overlapping bone-white fibrous rings crusted with salt, each ring with a ragged dry brown lower edge. This one is thin and leans to the right. Its crimson fan is half drawn back into the tube at its top, so that only a short bunch of wet red filaments, a hand long, sticks out of the brown papery sheath. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: a second stalk, thin and leaning with its fan half drawn in, so that the stalks are not copies of one (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/stalk-c.jpg` and `public/assets/marsh/mat/stalk-c-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/stalk-c.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-2-the-stalk-colony.jpg`, `references/drafts/working/real/plate-forest-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+One stalk of a stalk colony, a growth of an unknown world, whole, seen square on, about 3 metres tall, with its foot at the bottom of the frame. A single stem as thick as an arm, sheathed in overlapping bone-white fibrous rings crusted with salt, each ring with a ragged dry brown lower edge. This one is dead: it is broken off at two thirds of its height and empty, with a ragged rim, a dark hole at the top and one flap of its fibrous bark hanging down the side. It has no fan and nothing red on it. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: a third stalk, broken off and empty (asked for by `marsh_life_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/flatplate.jpg` and `public/assets/marsh/mat/flatplate-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/flatplate.png`, the generated picture, and `assets-src/marsh/mat/src/flatplate-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-0-establishing.jpg`, `references/drafts/working/real/plate-flats-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+A salt flat between channels of brine, a piece 40 metres wide and 22.5 metres tall. Salt plates in irregular polygons 2 to 5 metres across, pale grey-tan, each with a raised, crumbled white rim. Wet dark grey mud lies in the seams between the plates and in a few bare patches. In the lowest places thin sheets of shallow red brine have pooled, each with a dark wet margin and a rust stain round it. A few low mounds of white salt. No channel crosses the whole picture. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the flats of the establishing picture: salt plates with rims, wet grey mud and red only in the lows, where the built flats are pink-white speckle (asked for by `marsh_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/ripple.jpg` and `public/assets/marsh/mat/ripple-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/marsh/mat/src/ripple.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/4-marsh/marsh-3-mud-wallowers.jpg`, `references/drafts/working/real/plate-norris-2.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs marsh`.
+
+```
+A material texture, seen straight down from above in an orthographic view: the surface of still, dense, dark red brine, about 3 metres across. Small low wavelets that cross each other from two directions and a few faint spreading rings, as from single drops. The red is dark oxblood and even. No foam, no froth, no shore, no reflections of sky. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the small waves and rings of the brine, read for its height only, where the built brine is flat with drawn ring lines (asked for by `marsh_ground_owner_3`).
 Date: 2026-11-26
 
 ## `public/assets/marsh/mat/materials.json`

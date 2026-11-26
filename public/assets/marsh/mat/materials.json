@@ -183,6 +183,86 @@
       "width": 1358,
       "height": 1158,
       "relief": "muzzle-h.png"
+    },
+    {
+      "name": "mudhide",
+      "kind": "tile",
+      "metres": 1,
+      "mean": [
+        0.281,
+        0.208,
+        0.172
+      ]
+    },
+    {
+      "name": "hairhide",
+      "kind": "tile",
+      "metres": 1,
+      "mean": [
+        0.186,
+        0.121,
+        0.088
+      ]
+    },
+    {
+      "name": "deadone-b",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1774,
+      "height": 887,
+      "cover": "deadone-b-a.png",
+      "relief": "deadone-b-h.png"
+    },
+    {
+      "name": "deadone-c",
+      "kind": "plate",
+      "metres": 2.5,
+      "width": 1672,
+      "height": 941,
+      "cover": "deadone-c-a.png",
+      "relief": "deadone-c-h.png"
+    },
+    {
+      "name": "fan",
+      "kind": "plate",
+      "metres": 0.9,
+      "width": 1536,
+      "height": 1024,
+      "cover": "fan-a.png"
+    },
+    {
+      "name": "stalk-b",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1024,
+      "height": 1536,
+      "cover": "stalk-b-a.png"
+    },
+    {
+      "name": "stalk-c",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1024,
+      "height": 1536,
+      "cover": "stalk-c-a.png"
+    },
+    {
+      "name": "flatplate",
+      "kind": "plate",
+      "metres": 40,
+      "width": 1672,
+      "height": 941,
+      "relief": "flatplate-h.png"
+    },
+    {
+      "name": "ripple",
+      "kind": "tile",
+      "metres": 3,
+      "mean": [
+        0.105,
+        0.019,
+        0.014
+      ]
     }
   ]
 }
