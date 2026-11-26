@@ -105,7 +105,7 @@ export const LAND_DEPTH_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 void main() {
   // The mouths of the canal: the rock wall over each stands across it, and is open where the canal passes through.
   float dCanal = vSL.x - MOUTH_S;
-  if (uKind < 1.5 && dCanal > (uKind > 0.5 ? -14.0 : -1.0) && dCanal < EXIT + (uKind > 0.5 ? 14.0 : 1.0) && vWorld.y > CANAL_FLOOR - 0.2) {
+  if (uKind < 1.5 && dCanal > (uKind > 0.5 ? -42.0 : -1.0) && dCanal < EXIT + (uKind > 0.5 ? 42.0 : 1.0) && vWorld.y > CANAL_FLOOR - 0.2) {
     float r = flareAt(dCanal);
     // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds.
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
@@ -369,7 +369,7 @@ void main() {
   vec3 n = normalize(mix(nRock, nSnow, snow));
   // Packed by the wind in long plates, the snow is glazed and blue-grey; between them it lies soft and white.
   float plate = smoothstep(0.4, 0.62, vnoise(vec2(dot(vWorld.xz, vec2(0.98, -0.2)) * 0.19, dot(vWorld.xz, vec2(0.2, 0.98)) * 0.045)));
-  albedo = mix(albedo, mix(vec3(0.84, 0.87, 0.91), vec3(0.6, 0.66, 0.76), 0.55 * plate) * clamp(snowTint, 0.4, 1.1), snow);
+  albedo = mix(albedo, mix(vec3(0.78, 0.84, 0.93), vec3(0.56, 0.64, 0.78), 0.55 * plate) * clamp(snowTint, 0.4, 1.1), snow);
   rough = mix(rough, 0.7 - 0.3 * plate, snow);
   occ = mix(occ, snowOcc, snow);
   if (!spire) occ *= landHollow(vWorld, n0, 5.0);
