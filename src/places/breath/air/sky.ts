@@ -49,16 +49,20 @@ vec4 farPicture(vec3 d) {
   float z = dot(d, ahead);
   vec2 q = vec2(dot(d, right), d.y) / max(z, 0.05);
   vec2 uv = vec2(0.5 + q.x / ${(2 * FAR.wide).toFixed(4)}, ${FAR.horizon.toFixed(3)} + q.y / ${(2 * FAR.tall).toFixed(4)});
-  float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(1.0, 0.9, uv.x) * smoothstep(1.0, 0.9, uv.y);
+  // Past its right edge the cliff does not stop: its last strata run on, drawn out, and thin into the haze a long way on.
+  float past = max(uv.x - 0.94, 0.0);
+  uv.x = min(uv.x, 0.94) + 0.055 * (1.0 - exp(-past / 0.11));
+  float w = step(0.05, z) * smoothstep(0.02, 0.3, uv.x) * smoothstep(0.7, 0.2, past) * smoothstep(1.0, 0.9, uv.y);
   uv.y = max(uv.y, ${(FAR.horizon + 0.006).toFixed(3)});
   vec3 seen = textureLod(tFar, clamp(uv, 0.002, 0.998), 0.0).rgb;
-  // The picture's cliff holds snow in white patches. The place has none: they are toned down to pale rock faces in the haze.
-  float lum = dot(seen, vec3(0.3333));
-  float pale = smoothstep(0.15, 0.26, lum) * smoothstep(0.1, 0.04, seen.r - seen.b) * smoothstep(0.22, 0.3, uv.x);
-  seen *= mix(vec3(1.0), vec3(1.12, 1.0, 0.84) * ((0.17 + 0.14 * (lum - 0.15)) / max(lum, 0.01)), pale);
-  // The cliff stands kilometres off in the dawn haze: it is bare grey-brown strata, a little darker than it was painted (by number against the approved rim picture).
-  seen *= mix(1.0, 0.8, smoothstep(0.22, 0.3, uv.x));
-  return vec4(untoned(seen), w);
+  // The cliff stands kilometres off in the dawn haze, snow on its ledges as the approved pictures have it: the air between pales it
+  // toward the sky's own colour, more at its foot and where it is read back past the picture's edge.
+  vec3 lin = untoned(seen);
+  float cliff = smoothstep(0.22, 0.3, uv.x);
+  float foot = smoothstep(0.2, 0.0, uv.y - ${FAR.horizon.toFixed(3)});
+  vec3 air = skyRadiance(normalize(vec3(d.x, 0.03, d.z)));
+  lin = mix(lin, air, cliff * clamp(0.16 + 0.3 * foot + 1.6 * past, 0.0, 0.88));
+  return vec4(lin, w);
 }`;
 
 const FRAGMENT = /* glsl */ `
