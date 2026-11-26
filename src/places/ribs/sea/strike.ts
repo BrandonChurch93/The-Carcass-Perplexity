@@ -21,7 +21,7 @@ export interface Strike {
   /** Metres the face of the blade goes sideways (x, z) for each metre up: the water climbs the stone, not the air beside it. */
   lean: [number, number];
   /** The stone's face on the side the sea strikes: x and z of it, so many metres along the foot and so high. */
-  face: (along: number, y: number) => [number, number];
+  face?: (along: number, y: number) => [number, number];
   /** Tells the cards of one strike from those of another. */
   id: number;
 }
@@ -317,7 +317,8 @@ export class Burst {
         const along = (rand(id, 1) - 0.5) * 1.15;
         const peak = Math.exp(-(along * along) / 0.07);
         const late = 0.55 * Math.abs(along) + 0.3 * rand(id, 3);
-        if (i % 2 === 0) {
+        const stone = s.face;
+        if (i % 2 === 0 && stone) {
           // Runs down the stone: born where the sheet wetted it, falling at the pace of water down a wall.
           const a = t - late - 0.8 - 2.4 * rand(id, 6);
           const life = 3.5 + 3 * rand(id, 7);
@@ -327,7 +328,7 @@ export class Burst {
           const y = from - speed * a - 0.8 * a * a;
           if (y < 0.5) continue;
           const o = 0.7 + 0.5 * rand(id, 24);
-          const on = s.face(along * s.width, y);
+          const on = stone(along * s.width, y);
           const x = on[0] + s.out[0] * o;
           const z = on[1] + s.out[1] * o;
           const fade = Math.min(1, a / 0.4) * Math.pow(1 - a / life, 0.8) * Math.min(1, (y - 0.5) / 2);

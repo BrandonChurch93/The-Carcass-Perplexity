@@ -234,7 +234,7 @@ export function create(ctx: Context): Piece {
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
   const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   // A sea of the set breaking on a blade: where the open water meets its foot on the side the swell comes from, and the stone's face above it.
-  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number): Strike => {
+  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at?: [number, number], walk = true): Strike => {
     const out: [number, number] = [-main[0], -main[1]];
     const cs = Math.cos(rib.yaw);
     const sn = Math.sin(rib.yaw);
@@ -263,19 +263,37 @@ export function create(ctx: Context): Piece {
       return [lo[0] + (hi[0] - lo[0]) * (at - n), lo[1] + (hi[1] - lo[1]) * (at - n)];
     };
     // Where the sea begins before the foot: on a blade that stands in the water, the stone itself.
-    let [x, z] = face(0, 0);
+    const foot = face(-75, 0);
+    let [x, z] = at ?? foot;
     let walked = 0;
-    while (walked < 420 && rig.land.height(x, z) > -0.8) {
+    while (!at && walk && walked < 420 && rig.land.height(x, z) > -0.8) {
       x += out[0] * 4;
       z += out[1] * 4;
       walked += 4;
     }
-    const up = face(0, height * 0.6);
-    const foot = face(0, 0);
-    return { x, z, out, seconds, width, height, lean: [(up[0] - foot[0]) / (height * 0.6), (up[1] - foot[1]) / (height * 0.6)], face: (along, y) => { const on = face(along, y); return [on[0] + (x - foot[0]), on[1] + (z - foot[1])]; }, id };
+    // Where a shore lies between the sea and the stone the water goes up into the air, not up the blade.
+    if (Math.hypot(x - foot[0], z - foot[1]) > 14) return { x, z, out, seconds, width, height, lean: [0, 0], id };
+    const up = face(-75, height * 0.6);
+    return {
+      x,
+      z,
+      out,
+      seconds,
+      width,
+      height,
+      lean: [(up[0] - foot[0]) / (height * 0.6), (up[1] - foot[1]) / (height * 0.6)],
+      face: (along, y) => {
+        const on = face(along - 75, y);
+        return [on[0] + (x - foot[0]), on[1] + (z - foot[1])];
+      },
+      id,
+    };
   };
   const struck = RIBS.find((r) => r.name === 'L1') as Rib;
-  const strikes: Strike[] = [strikeOn(struck, 0.35, 52, 46, 1), strikeOn(struck, 4.0, 44, 46, 2)];
+  const TEST = 8.65;
+  let shoreZ = 200;
+  while (shoreZ < 420 && rig.land.height(-322, shoreZ) > -0.8) shoreZ += 4;
+  const strikes: Strike[] = [strikeOn(struck, 0.35 + TEST, 52, 46, 1, undefined, false), strikeOn(struck, 4.0 + TEST, 44, 46, 2, undefined, false)];
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
