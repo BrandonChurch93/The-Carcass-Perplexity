@@ -186,7 +186,7 @@ void main() {
     vec2 qx = dFdx(q);
     vec2 qy = dFdy(q);
     // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
-    float level = smoothstep(0.45, 0.8, n0.y);
+    float level = smoothstep(0.45, 0.8, min(n0.y, smoothN.y));
     float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
     Tap A = tap(tPack, tPackNh, q / vec2(9.0, 6.0), lodP);
     vec2 r = vec2(0.92 * q.x - 0.39 * q.y, 0.39 * q.x + 0.92 * q.y);

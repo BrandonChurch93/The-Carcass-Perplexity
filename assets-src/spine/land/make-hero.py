@@ -114,6 +114,11 @@ d = d * keep[None, :]
 d = d * np.clip(top / 14.0, 0, 1)
 d = d + wall * (0.8 * np.abs(d) - d)
 d = np.clip(d, -8.8, 8.8)
+# The edge of a block is a narrow slope, not a step: a step that crosses the fine lattice aslant is a stair, and its treads stand in the
+# baked normals as stripes when a lens comes close.
+for k in range(4):
+    d = 0.25 * (np.roll(d, 1, axis=1) + np.roll(d, -1, axis=1)) + 0.5 * d
+    d[1:-1] = 0.25 * (d[:-2] + d[2:]) + 0.5 * d[1:-1]
 
 Ph = Pf + Nf * d[..., None]
 # The lattice's own relief: the fine one averaged over a quad of the lattice about each vertex, so a step is not cut in shards.
@@ -206,6 +211,6 @@ def joints(ident, wide):
     for k in range(wide):
         f = np.maximum(f, np.maximum(np.roll(f, 1, axis=1), np.roll(f, 1, axis=0)))
     return np.asarray(Image.fromarray((f[::-1] * 255).astype(np.uint8)).resize((SIZE, SIZE), Image.BILINEAR))[::-1] / 255.0
-px = px * (1 - 0.6 * joints(id1, 2)) * (1 - 0.45 * joints(id2, 1)) * (1 - 0.3 * joints(id3, 0))
+px = px * (1 - 0.55 * joints(id1, 1)) * (1 - 0.4 * joints(id2, 0)) * (1 - 0.2 * joints(id3, 0))
 out = np.stack([px, tone1, tone2], axis=-1)
 Image.fromarray(np.clip(out[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'public/assets/spine/land/hero-ao.jpg', quality=92, subsampling=0)
