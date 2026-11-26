@@ -11,19 +11,25 @@ import { RIG_VERTEX } from '../shared/glsl';
 import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
-import { BOULDER_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, UV_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { archShape, bladeShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
+import { bladeShape, worldSpace } from './blade';
+import { BOULDER_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
 
 export { bed };
 
-const BLADE: Record<string, { around: number; fine: number }> = {
-  L1: { around: 320, fine: 1.3 },
-  R1: { around: 256, fine: 1.7 },
-  L2: { around: 192, fine: 2 },
-  R2: { around: 192, fine: 2 },
-  S: { around: 192, fine: 2 },
+// How fine each blade is cut, and the metres of one repeat of its stone: the near ones show a hand's breadth, the far ones a house.
+const BLADE: Record<string, { around: number; fine: number; coarse?: number; grain: number }> = {
+  L1: { around: 420, fine: 1.2, coarse: 2.2, grain: 5 },
+  R1: { around: 420, fine: 1.8, coarse: 2.4, grain: 12 },
+  R2: { around: 320, fine: 1.8, coarse: 2.2, grain: 12 },
+  L2: { around: 160, fine: 1.8, coarse: 2.2, grain: 14 },
+  L3: { around: 200, fine: 1.8, coarse: 2.2, grain: 12 },
+  R3: { around: 192, fine: 2, grain: 16 },
+  S: { around: 192, fine: 2, grain: 16 },
+  OL: { around: 256, fine: 2, grain: 12 },
+  OR: { around: 256, fine: 2, grain: 12 },
 };
 
 interface Stack {
@@ -119,8 +125,19 @@ export function create(ctx: Context): Piece {
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
   const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
-  const rock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: 0 } });
-  const roostRock = material(UV_VERTEX, ROCK_FRAGMENT, { tRock: { value: ledgeC }, tRockN: { value: ledgeN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step } });
+  const stone = (grain: number): THREE.ShaderMaterial =>
+    material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: 0 }, uGrain: { value: new THREE.Vector2(grain, grain * 4.7) }, uRockTint: { value: new THREE.Vector3(1.75, 1.72, 1.66) } });
+  const stones = new Map<number, THREE.ShaderMaterial>();
+  const stoneOf = (grain: number): THREE.ShaderMaterial => {
+    let m = stones.get(grain);
+    if (!m) {
+      m = stone(grain);
+      stones.set(grain, m);
+    }
+    return m;
+  };
+  const rock = stoneOf(12);
+  const roostRock = material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: ledgeC }, tRockN: { value: ledgeN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step }, uGrain: { value: new THREE.Vector2(10, 43) }, uRockTint: { value: new THREE.Vector3(1.1, 1.1, 1.1) } });
   const weed = material(WEED_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 1 } });
   const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 0 } });
@@ -156,7 +173,8 @@ export function create(ctx: Context): Piece {
     return mesh;
   };
   for (const rib of RIBS as Rib[]) {
-    add(blades, bladeShape(rib, BLADE[rib.name] ?? { around: 128, fine: 2.5 }), rock);
+    const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), weed);
   }
@@ -164,16 +182,16 @@ export function create(ctx: Context): Piece {
   // The two stacks of the gate, and the arch rock.
   for (const post of STATIONS.posts) {
     const s: Stack = { x: post[0], z: post[1], foot: 25, top: 10, height: 66 };
-    add(blades, stackRock(s), rock);
+    add(blades, worldSpace(stackRock(s)), rock);
     add(skirts, stackWeed(s.x, s.z, (y) => s.foot + (s.top - s.foot) * smooth(-10, s.height, y), 160), weed);
   }
-  const arch = add(blades, archShape(68, 45, 13, 19, 96, 64), rock);
+  const arch = add(blades, worldSpace(archShape(68, 45, 13, 19, 96, 64)), rock);
   arch.position.set(STATIONS.arch[0], 0, STATIONS.arch[1]);
   arch.rotation.y = Math.atan2(STATIONS.establish[0] - STATIONS.arch[0], STATIONS.establish[1] - STATIONS.arch[1]);
   ctx.scene.add(ctx.parts.built('ribs', blades));
 
   // The colony's rock: ledges above the tide line, weed below.
-  const ledges = new THREE.Mesh(colonyRock(), roostRock);
+  const ledges = new THREE.Mesh(worldSpace(colonyRock()), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
   add(skirts, stackWeed(COLONY.x, COLONY.z, (y) => COLONY.radiusAt(y), 420), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
@@ -322,7 +340,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, rock, roostRock, weed, boulder, pebble, glass]) m.dispose();
+      for (const m of [ground, roostRock, weed, boulder, pebble, glass, ...stones.values()]) m.dispose();
     },
   };
 }
