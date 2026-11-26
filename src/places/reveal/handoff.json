@@ -17,6 +17,8 @@
     "drift": [0.035, -0.02],
     "erodeFrames": 86,
     "erodePower": 0.9,
-    "shadow": 0.5
+    "shadow": 0.5,
+    "water": [0.0045, 0.0125, 0.0285],
+    "waterReach": 0.98
   }
 }
