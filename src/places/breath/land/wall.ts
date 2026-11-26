@@ -19,6 +19,8 @@ const START = -47;
 const JOIN = 190;
 /** The relief at which the wall stands where the plain shaft would: lower is eaten back, higher stands out. */
 const LEVEL = 0.36;
+/** Metres of the top of the plate that are not used. */
+const SKIP = 3.2;
 /** Over this the relief is a rib. */
 const RIB = 0.6;
 
@@ -57,7 +59,9 @@ export function wallPoint(b: number, depth: number): WallPoint {
   const u = ((deg - START) * RAD * 30) / WALL_METRES;
   // The ribs do not run level round the shaft: each side of every mirror line hangs its own way.
   const hang = smooth(depth / 7) * (1.7 * noise3(deg * 0.031, 4.4, 1.2) + 0.7 * noise3(deg * 0.09, 9.1, 3.3));
-  const v = Math.max(0, depth + hang) / WALL_TALL;
+  // The plate is read from a little way down it: its own top is dark dripping wall over its first rib, and at the brim that stood as a
+  // row of teeth. So the first rib of the plate is the lip of the shaft, or just under it.
+  const v = (Math.max(0, depth + hang) + SKIP) / WALL_TALL;
   let h = read(relief, u, v);
   const open = read(opens, u, v);
   // At the join the relief goes back to the plain wall, so the two edges meet.
@@ -98,9 +102,9 @@ export function ledge(bearing: number, nth: number): [number, number, number] {
 
 /** The wall as two meshes that share every point: the ribs, and the wall between them. */
 export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeometry } {
-  const columns = 1504;
-  // 12.5 cm rows for the 42 m a lens can see into; coarser below, in the mist.
-  const fineRows = 336;
+  const columns = 1056;
+  // 17.5 cm rows for the 42 m a lens can see into; coarser below, in the mist.
+  const fineRows = 240;
   const rows = fineRows + 40;
   const count = (columns + 1) * (rows + 1);
   const position = new Float32Array(count * 3);
@@ -108,7 +112,7 @@ export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeo
   const occ = new Float32Array(count);
   const rib = new Uint8Array(count);
   for (let j = 0; j <= rows; j++) {
-    const depth = j <= fineRows ? j * 0.125 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
+    const depth = j <= fineRows ? j * 0.175 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
     for (let i = 0; i <= columns; i++) {
       const b = (JOIN - 360 + (i / columns) * 360) * RAD;
       const q = wallPoint(b, depth);

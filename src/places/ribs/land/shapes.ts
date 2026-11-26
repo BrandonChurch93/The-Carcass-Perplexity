@@ -258,20 +258,20 @@ export function boulderShape(seed: number, detail: number, squat: number): THREE
   g.deleteAttribute('normal');
   const pos = g.getAttribute('position') as THREE.BufferAttribute;
   const v = new THREE.Vector3();
+  // Broken rock: a block cut by flat breaks on every side and by one bed plane on top, so that it is angular and low, not a ball.
   const cuts: { n: THREE.Vector3; d: number }[] = [];
-  for (let k = 0; k < 7; k++) {
-    const n = new THREE.Vector3(unit(seed, k * 3 + 1) - 0.5, (unit(seed, k * 3 + 2) - 0.3) * 0.8, unit(seed, k * 3 + 3) - 0.5).normalize();
-    cuts.push({ n, d: 0.62 + 0.3 * unit(seed, k + 50) });
+  for (let k = 0; k < 10; k++) {
+    const n = new THREE.Vector3(unit(seed, k * 3 + 1) - 0.5, (unit(seed, k * 3 + 2) - 0.35) * 0.7, unit(seed, k * 3 + 3) - 0.5).normalize();
+    cuts.push({ n, d: 0.44 + 0.36 * unit(seed, k + 50) });
   }
+  cuts.push({ n: new THREE.Vector3(0.3 * (unit(seed, 71) - 0.5), 1, 0.3 * (unit(seed, 72) - 0.5)).normalize(), d: 0.5 + 0.15 * unit(seed, 73) });
   const o = seed * 13.7;
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i).normalize();
-    let r = 1 + 0.5 * (fbm3(v.x * 1.1 + o, v.y * 1.1, v.z * 1.1, 3) - 0.5) + 0.12 * (noise3(v.x * 5 + o, v.y * 5, v.z * 5) - 0.5);
-    // Knobs of a quarter of its size, so that a big rock is a heap and not a slab.
-    r += 0.3 * Math.abs(noise3(v.x * 2.6 + o, v.y * 2.6, v.z * 2.6) - 0.5);
+    let r = 1 + 0.4 * (fbm3(v.x * 1.1 + o, v.y * 1.1, v.z * 1.1, 3) - 0.5) + 0.06 * (noise3(v.x * 5 + o, v.y * 5, v.z * 5) - 0.5);
     for (const c of cuts) {
       const along = v.dot(c.n);
-      if (along > 0) r = Math.min(r, c.d / along + 0.1 * (noise3(v.x * 3.1 + o, v.y * 3.1, v.z * 3.1) - 0.5) + 0.03 * (noise3(v.x * 7 + o, v.y * 7, v.z * 7) - 0.5));
+      if (along > 0) r = Math.min(r, c.d / along + 0.035 * (noise3(v.x * 3.1 + o, v.y * 3.1, v.z * 3.1) - 0.5) + 0.02 * (noise3(v.x * 9 + o, v.y * 9, v.z * 9) - 0.5));
     }
     v.multiplyScalar(r);
     v.y *= squat;

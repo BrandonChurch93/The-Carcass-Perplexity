@@ -3,7 +3,10 @@
 // and the cloud's light in that air (shafts: the sun reaches the haze only through the gaps of the cloud and between the blades).
 import * as THREE from 'three';
 import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
-import type { Context, Piece } from '../shared/context';
+import { shotSpan } from '../shared/anchors';
+import type { Context, Piece, SteamSource } from '../shared/context';
+import { partAtHeight, ribByName, surface } from '../layout';
+import { stagedSeconds } from '../shared/stage';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -164,7 +167,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.0007, 170, 0.0003, 12) },
+      uAir: { value: new THREE.Vector4(0.0013, 75, 0.0003, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,
@@ -182,11 +185,20 @@ export function create(ctx: Context): Piece {
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('cloud', 'built');
 
+  // Staged for the colony's shot only: mist stands round the blade behind the colony's rock, so that it is a pale shape in the air and
+  // the roosts read against it.
+  const colonyShot = shotSpan('ribs-03');
+  const behind = ribByName('R2');
+  const stand = surface(behind, partAtHeight(behind, 110), 0, 0, 0);
+  const veil: SteamSource = { at: [stand.x - 60, 20, stand.z + 60], radius: 160, strength: 0.06, rise: 380, kind: 'mist' };
+
   return {
     volume,
     setTime: (seconds) => {
+      const staged = stagedSeconds();
+      const steam = staged >= colonyShot.from && staged <= colonyShot.to ? [...ctx.sources.steam, veil] : ctx.sources.steam;
       // The heaviest columns first: there is room for MAX_SOURCES of them.
-      const list = ctx.sources.steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
+      const list = steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
       const n = Math.min(MAX_SOURCES, list.length);
       for (let i = 0; i < n; i++) {
         const s = list[i] as (typeof list)[number];

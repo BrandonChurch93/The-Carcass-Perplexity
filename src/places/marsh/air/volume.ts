@@ -5,7 +5,11 @@ import { HASH_GLSL } from '../../../core/post';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const MAX_STEAM = 12;
-export const STEAM_STEPS = 12;
+export const STEAM_STEPS = 8;
+export const MAX_MIST = 8;
+/** True: the low steam is drawn as drifting sheets, each column is marched in its own stretch of the view, and the far flats lie under a bank
+ *  of mist. False: the columns only, marched together (version 2 of this folder, the cheaper one). */
+export const SHEETS: boolean = true;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -25,6 +29,11 @@ uniform vec4 uSteamB[${MAX_STEAM}];
 uniform vec4 uSteamC[${MAX_STEAM}];
 // Where the rain hangs: bearing of its middle and half width in radians, distance in metres, thickness.
 uniform vec4 uRain;
+// The warm brine that breathes low steam: x, z of a patch, its radius, how thick its steam lies.
+uniform int uMistCount;
+uniform vec4 uMist[${MAX_MIST}];
+// Where no low steam lies, whatever the patches say: x, z, radius in metres (the wallow, where the animals are to be seen whole).
+uniform vec3 uClear;
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
@@ -91,6 +100,85 @@ void main() {
   vec3 sum = vec3(0.0);
   float trans = 1.0;
 
+  vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97;
+  ivec2 here = ivec2(gl_FragCoord.xy);
+  float jitter = float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0;
+#ifdef SHEETS
+  // The steam of each source, nearest first, each marched in its own stretch of the view: a far column is cut as finely as a near one.
+  // Offsets are tied to the pixel, never to the sample: thin vapour must not flicker.
+  if (uShow.z > 0.5) {
+    for (int i = 0; i < ${MAX_STEAM}; i++) {
+      if (i >= uSteamCount || trans < 0.02) break;
+      vec4 A = uSteamA[i];
+      vec4 B = uSteamB[i];
+      float reach = A.w * 3.6 + 0.5 * B.z * (1.0 + length(B.xy));
+      vec3 c = A.xyz + vec3(B.x, 1.0, B.y) * B.z * 0.5;
+      vec3 oc = ro - c;
+      float b = dot(oc, rd);
+      float disc = b * b - dot(oc, oc) + reach * reach;
+      if (disc < 0.0) continue;
+      disc = sqrt(disc);
+      float t0 = max(-b - disc, 0.0);
+      float t1 = min(-b + disc, far);
+      // Only the part of the stretch between the source's foot and its top is worth the steps.
+      if (abs(rd.y) > 1e-4) {
+        float ta = (A.y - 0.02 * B.z - ro.y) / rd.y;
+        float tb = (A.y + B.z - ro.y) / rd.y;
+        t0 = max(t0, min(ta, tb));
+        t1 = min(t1, max(ta, tb));
+      }
+      if (t1 <= t0) continue;
+      float dt = (t1 - t0) / float(${STEAM_STEPS});
+      for (int k = 0; k < ${STEAM_STEPS}; k++) {
+        float sigma = steamAt(ro + rd * (t0 + (float(k) + jitter) * dt), i);
+        if (sigma <= 0.0) continue;
+        float a = 1.0 - exp(-sigma * dt);
+        // Thick steam is a little darker in its heart than at its lit edge.
+        sum += trans * a * steamLit * mix(1.0, 0.86, clamp(sigma * 1.5, 0.0, 1.0));
+        trans *= 1.0 - a;
+      }
+    }
+    // The low steam: it lies on the warm brine in sheets a hand to a stride up, torn into wisps and carried by the wind. Each sheet is met
+    // by the view exactly, so a wisp keeps its edge at any distance.
+    if (uMistCount > 0 && abs(rd.y) > 1e-4) {
+      vec2 wind = vec2(-0.96, -0.27);
+      for (int k = 0; k < 6; k++) {
+        // Below the lens the sheets are met from the top one down, above it from the lowest up.
+        int level = rd.y < 0.0 ? 5 - k : k;
+        float fl = float(level);
+        float y = 0.1 + 0.26 * fl + 0.055 * fl * fl;
+        float t = (y - ro.y) / rd.y;
+        if (t <= 0.25 || t >= far) continue;
+        vec3 p = ro + rd * t;
+        // No sheet is level: it bellies and lifts, and the view meets it where it really is.
+        float belly = textureLod(tNoise, vec3(p.xz / 19.0 + fl * 0.37, 0.4 + uTime * 0.011), 0.0).g - 0.5;
+        t = clamp((y + belly * (0.25 + 0.14 * fl) - ro.y) / rd.y, 0.0, far);
+        p = ro + rd * t;
+        float cover = 0.0;
+        for (int m = 0; m < ${MAX_MIST}; m++) {
+          if (m >= uMistCount) break;
+          vec2 d = (p.xz - uMist[m].xy - wind * y * 1.6) / (uMist[m].z * (1.0 + 0.3 * y));
+          cover += uMist[m].w * exp(-dot(d, d));
+        }
+        cover *= smoothstep(uClear.z, uClear.z + 7.0, length(p.xz - uClear.xy));
+        if (cover < 0.004) continue;
+        // Carried downwind at the pace of a walk, the upper sheets faster than the lower; pushed about by a second, slower field.
+        vec2 at = p.xz - wind * uTime * (0.34 + 0.16 * fl);
+        vec2 push = (textureLod(tNoise, vec3(at / 23.0, 0.13 * fl + uTime * 0.017), 0.0).ga - 0.5) * 5.0;
+        float big = textureLod(tNoise, vec3((at + push) / 9.5, 0.21 * fl + uTime * 0.03), 0.0).g;
+        float small = textureLod(tNoise, vec3((at + push * 1.6) / 2.7, 0.33 * fl - uTime * 0.05), 0.0).b;
+        float wisp = smoothstep(0.66, 0.92, big * 0.72 + small * 0.4 + 0.1 * min(cover, 1.0));
+        if (wisp <= 0.0) continue;
+        // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
+        float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
+        float a = 1.0 - exp(-wisp * cover * crossed * 0.14 * exp(-y / 1.5));
+        a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
+        sum += trans * a * steamLit * 0.98;
+        trans *= 1.0 - a;
+      }
+    }
+  }
+#else
   // The steam, marched only where the view passes a source. Offsets are tied to the pixel, never to the sample: thin vapour must not flicker.
   if (uShow.z > 0.5 && uSteamCount > 0) {
     float t0 = 1e9;
@@ -112,11 +200,8 @@ void main() {
     }
     t1 = min(t1, far);
     if (t1 > t0) {
-      ivec2 pixel = ivec2(gl_FragCoord.xy);
-      float jitter = float(hash2(uint(pixel.x), uint(pixel.y)) & 1023u) / 1024.0;
-      float dt = (t1 - t0) / float(${STEAM_STEPS});
-      vec3 lit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97;
-      for (int k = 0; k < ${STEAM_STEPS}; k++) {
+      float dt = (t1 - t0) / 12.0;
+      for (int k = 0; k < 12; k++) {
         vec3 p = ro + rd * (t0 + (float(k) + jitter) * dt);
         float sigma = 0.0;
         for (int i = 0; i < ${MAX_STEAM}; i++) {
@@ -125,34 +210,48 @@ void main() {
         }
         if (sigma <= 0.0) continue;
         float a = 1.0 - exp(-sigma * dt);
-        // Thick steam is a little darker in its heart than at its lit edge.
-        sum += trans * a * lit * mix(1.0, 0.86, clamp(sigma * 1.5, 0.0, 1.0));
+        sum += trans * a * steamLit * mix(1.0, 0.86, clamp(sigma * 1.5, 0.0, 1.0));
         trans *= 1.0 - a;
         if (trans < 0.02) break;
       }
     }
   }
+#endif
 
   // The haze, and the rain inside it at its own distance.
   float curtain = uRain.z / max(length(rd.xz), 0.05);
   float az = atan(rd.x, -rd.z);
   // The shaft walks along the horizon with the wind, a degree in six seconds.
-  float side = abs(az - uRain.x - 0.003 * uTime) / uRain.y;
+  // A shaft of rain is narrow at its foot and wide under its cloud, and the wind leans it.
+  float elev = rd.y / max(length(rd.xz), 0.05);
+  float side = abs(az - uRain.x - 0.003 * uTime - 0.55 * elev) / (uRain.y * (1.0 + 1.6 * max(elev, 0.0)));
   float rain = 0.0;
-  if (uShow.y > 0.5 && far > curtain && side < 1.9 && rd.y > -0.02 && rd.y < 0.4) {
-    float el = rd.y / max(length(rd.xz), 0.05);
-    // Streaks that lean with the wind, in sheets of unlike weight.
-    float lean = az * 40.0 + el * 9.0;
-    float sheets = textureLod(tNoise, vec3(az * 1.7 - uTime * 0.004, 0.2, 0.4 + uTime * 0.012), 0.0).g;
+  if (uShow.y > 0.5 && far > curtain && side < 2.6 && rd.y > -0.02 && rd.y < 0.5) {
+    float el = elev;
+    // It has no side: it thins away to either hand, and what is seen of it is slanting streaks in veils of unlike weight, each veil
+    // its own width and its own height.
+    float lean = az * 40.0 + el * 22.0;
+    float veils = textureLod(tNoise, vec3((az + 0.55 * el) * 2.3 - uTime * 0.004, el * 0.9, 0.4 + uTime * 0.012), 0.0).g;
+    float torn = textureLod(tNoise, vec3((az + 0.55 * el) * 7.0, el * 2.6 + 0.3, 0.8 + uTime * 0.02), 0.0).b;
     float streaks = textureLod(tNoise, vec3(lean * 0.33, el * 0.35 - uTime * 0.03, 0.7), 0.0).r * 0.55 + textureLod(tNoise, vec3(lean * 1.3, el * 0.8 - uTime * 0.07, 0.13), 0.0).b * 0.45;
-    float edge = smoothstep(1.5, 0.0, side + (sheets - 0.5) * 1.6);
-    edge *= edge;
-    float base = smoothstep(0.3, 0.07 + 0.08 * sheets, el) * smoothstep(-0.004, 0.012, el);
-    rain = uRain.w * edge * base * (0.35 + 1.3 * sheets) * (0.55 + 0.9 * streaks);
+    float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
+    float base = smoothstep(0.42, 0.1 + 0.1 * veils, el) * smoothstep(0.0, 0.07, el);
+    rain = uRain.w * body * base * (0.4 + 1.2 * streaks);
   }
   float show = uShow.x;
   // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.
   float layers = far > 250.0 ? 0.8 + 0.4 * textureLod(tNoise, vec3(az * 0.9, log(far) * 0.8, 0.3 + uTime * 0.001), 0.0).r : 1.0;
+  // The bank of mist the far flats lie under: it starts some hundreds of strides out, thickens in steps, and stands a few degrees high, so
+  // that the land has no last line against the sky.
+  float bank = 0.0;
+#ifdef SHEETS
+  {
+    float reach = min(far, 9000.0);
+    float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
+    float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
+    bank = 0.0019 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+  }
+#endif
   if (rain > 0.0) {
     float r = 1.0 - exp(-rain);
     // The air under the raining cloud is in its shade.
@@ -161,11 +260,11 @@ void main() {
     trans *= 1.0 - a;
     sum += trans * r * vec3(0.24, 0.25, 0.28);
     trans *= 1.0 - r;
-    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, far) * show * layers);
+    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, far) * show * layers - bank);
     sum += trans * a * airLight * (1.0 - 0.3 * r);
     trans *= 1.0 - a;
   } else {
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, far) * show * layers);
+    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, far) * show * layers - bank);
     sum += trans * a * airLight;
     trans *= 1.0 - a;
   }
