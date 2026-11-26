@@ -1,7 +1,4 @@
-2026-11-26 01:16 UTC
-work at 16513ac on agent/spine-ground-2
-Start of wave 2: the five keys as they stand on main beside the approved pictures. Tower on a dome, streaked flanks, smeared storm, tube canal.
-look-1.jpg = out/work/compare/spine-0.png
-look-2.jpg = out/work/compare/spine-3.png
-look-3.jpg = out/work/compare/spine-1.png
-look-4.jpg = out/work/compare/spine-4.png
+2026-11-26 01:33 UTC
+work at 8b25da3 on agent/spine-ground-2
+01:37 heartbeat: land foundation rebuilt, spine-0 hd draft
+look-1.jpg = out/work/hb1-spine0.jpg
