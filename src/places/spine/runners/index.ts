@@ -57,16 +57,16 @@ const LIE: Pose = { roll: 0.12, pitch: 0, slack: 0.95, curl: 0.7, neck: [-0.35, 
 const SITUP: Pose = { roll: 0.06, pitch: 0.62, slack: 1, curl: 0.15, neck: [-0.1, 0.5], head: [-0.3, 0.4], legs: [leg(-0.5, 0.06, -0.62, 0, 0.8), leg(-0.55, 0.06, -0.58, 0, 0.8), leg(0.75, 0.5, -1.9, 0.3, 0.9), leg(0.75, 0.5, -1.9, 0.3, 0.9)] };
 // Lying the other way round, the head lifted off the paws.
 const LIE2: Pose = { roll: -0.18, pitch: 0.05, slack: 0.95, curl: -0.5, neck: [0.25, -0.5], head: [-0.3, -0.4], legs: [leg(1.2, 0.35, 1.5, 0.1, 1.5), leg(0.9, 0.3, 1.4, 0.1, 1.5), leg(1.25, 0.55, -1.2, 0.3, 1.4), leg(1.2, 0.5, -1.3, 0.3, 1.4)] };
-// The dead one: on its right side, stiff, the four legs straight out toward the lens, the upper pair held off the ground as it froze, the
-// neck stretched along the ground.
+// The dead one: flat on its right side and sunk in, long dead: the trunk fallen, the upper legs dropped across the under ones onto the
+// ground, the neck stretched along it and the head turned down into the snow.
 const DEAD: Pose = {
-  roll: 1.32,
+  roll: 1.47,
   pitch: 0,
-  slack: 0.9,
-  curl: -0.12,
-  neck: [-0.15, -0.1],
-  head: [-0.2, -0.15],
-  legs: [leg(0.35, 0.22, 0.25, 0, 0.9, 0), leg(-0.25, 0.02, 0.45, 0, 0.8, 0), leg(-0.2, 0.28, -0.45, 0, 0.9, 0), leg(0.3, 0.02, -0.7, 0, 0.8, 0)],
+  slack: 0.74,
+  curl: -0.16,
+  neck: [-0.1, -0.3],
+  head: [-0.15, -0.45],
+  legs: [leg(0.5, -0.85, 0.75, -0.9, 1.1, -0.3), leg(-0.25, 0.02, 0.45, 0, 0.8, 0), leg(-0.35, -0.8, -0.75, -0.9, 0.9, -0.3), leg(0.3, 0.02, -0.7, 0, 0.8, 0)],
 };
 /** How far the dead one is turned from square on to the lens, radians: enough that its legs are seen along their length. */
 const DEAD_TURN = 0.3;
@@ -191,7 +191,7 @@ export function create(ctx: Context): Piece {
       hang.set([r * Math.cos(a), r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
       // A few long thick ones, many thin ones.
       const big = rng.next() < 0.3;
-      limb.set([big ? rng.range(0.5, 0.72) : rng.range(0.26, 0.5), thin * (big ? rng.range(0.022, 0.03) : rng.range(0.011, 0.019)), rng.range(0.2, 1), rng.next()], i * 4);
+      limb.set([(role.inside ? 0.45 : 1) * (big ? rng.range(0.5, 0.72) : rng.range(0.26, 0.5)), thin * (big ? rng.range(0.022, 0.03) : rng.range(0.011, 0.019)), rng.range(0.2, 1), rng.next()], i * 4);
     }
     const beard = new THREE.InstancedBufferGeometry();
     const limbShape = role.act === 'dead' ? tendrilFine : tendril;
@@ -287,21 +287,21 @@ export function create(ctx: Context): Piece {
     const breath = Math.sin(t * 2.5 + ph) + 0.25 * Math.sin(t * 5.0 + ph * 2);
     const standing = a.role.act === 'stand';
     // A standing one carries its weight from one side to the other and back, slowly, and never evenly.
-    const sway = calm * (standing ? 0.13 * Math.sin(t * 0.9 + ph * 3 + 0.8 * Math.sin(t * 0.37 + ph)) + 0.035 * Math.sin(t * 2.3 + ph) : 0.02 * Math.sin(t * 0.8 + ph * 3));
-    const fore = standing ? calm * 0.08 * Math.sin(t * 0.6 + ph * 2) - 0.06 * start : 0;
+    const sway = calm * (standing ? 0.13 * Math.sin(t * 1.25 + ph * 3 + 0.8 * Math.sin(t * 0.5 + ph)) + 0.035 * Math.sin(t * 2.3 + ph) : 0.035 * Math.sin(t * 1.1 + ph * 3));
+    const fore = standing ? calm * 0.08 * Math.sin(t * 0.9 + ph * 2) - 0.06 * start : 0;
     // At a flash it drops: a flinch of the whole body, and it comes up again slowly.
-    const settle = 0.012 * Math.sin(t * 0.9 + ph * 2) - (standing ? 0.05 : 0.025) * start;
-    (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.004 * breath, sway);
-    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.015 * breath, 1 + 0.05 * breath, 1 + 0.07 * breath));
+    const settle = 0.018 * Math.sin(t * 1.3 + ph * 2) - (standing ? 0.05 : 0.025) * start;
+    (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.01 * breath, sway);
+    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.02 * breath, 1 + 0.065 * breath, 1 + 0.085 * breath));
     // Each lifts its head in its own time, holds it, and lets it down again; a standing one drops it to the ice between looks.
-    const lift = Math.max(0, Math.sin(t * 0.7 + ph * 1.7)) ** 3;
-    const ny = (standing ? 0.3 : 0.2) * Math.sin(t * 0.83 + ph * 2 + 0.7 * Math.sin(t * 0.31 + ph * 4)) + 0.07 * Math.sin(t * 1.9 + ph) + look;
-    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03 + (standing ? -0.3 * calm * Math.max(0, Math.sin(t * 0.45 + ph)) ** 2 + 0.3 * start : 0.3 * lift + 0.4 * start);
+    const lift = Math.max(0, Math.sin(t * 1.0 + ph * 1.7)) ** 3;
+    const ny = (standing ? 0.3 : 0.2) * Math.sin(t * 1.1 + ph * 2 + 0.7 * Math.sin(t * 0.45 + ph * 4)) + 0.07 * Math.sin(t * 1.9 + ph) + look;
+    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03 + (standing ? -0.34 * calm * Math.max(0, Math.sin(t * 0.75 + ph)) ** 2 + 0.3 * start : 0.3 * lift + 0.4 * start);
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
     // The gale reaches the one at the mouth in gusts: its coat is blown and falls back.
-    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.14 + 0.06 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.2 : 0.02) : 0.1);
+    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.3 + 0.1 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.2 : 0.02) : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
@@ -365,7 +365,7 @@ export function create(ctx: Context): Piece {
   // moment the foot lands until it leaves, and the trunk goes over it on legs that bend. All of it is a function of the metres gone.
   const walker = HUDDLE[0] as (typeof HUDDLE)[number];
   const SIZE = walker.size;
-  const PACE = 1.5;
+  const PACE = 1.9;
   const EASE = PACE / 1.58 - 0.8;
   const EASED = 0.79 * (EASE + 0.8) ** 2;
   const walked = (u: number): number => (u < -0.8 ? 0 : u < EASE ? 0.79 * (u + 0.8) ** 2 : EASED + PACE * (u - EASE));
@@ -378,7 +378,7 @@ export function create(ctx: Context): Piece {
     return FLOOR + 0.03 + floorRise(at.l - canalL(d), d, 0.79 * flare(d) + 0.6);
   };
   /** Metres to a stride once it is under way; it sets out in strides half as long. */
-  const STRIDE_M = 0.72 * SIZE;
+  const STRIDE_M = 0.84 * SIZE;
   const SET_OUT = 0.6;
   /** Strides gone at g metres, and the metres at c strides. Before it sets out it is taken to have come in at its short stride, which is
    * how it stands: stopped in a step, no two feet level. */
