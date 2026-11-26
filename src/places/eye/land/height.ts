@@ -155,11 +155,20 @@ export function landHeight(x: number, z: number): number {
     spur += ((whole + smooth(0.3, 0.7, t - whole) - (t - spur / ledge)) * ledge - spur) * 0.12;
     if (spur > y) y += (spur - y) * lateral * smooth(10, 40, along);
 
-    // The gully of the stream.
+    // Under the spur a fan of fallen stone runs down to the beach, steeper the higher it stands and higher at its two sides: the wide camera
+    // looks down its length, so that the foot of its frame is broken stone near at hand and not the flat of the beach far below.
+    if (along > 6 && along < 135) {
+      const g = along - 6;
+      const sides = (1 - smooth(58, 90, across)) * (1 - smooth(72, 110, -across));
+      const shoulder = 1 + 0.6 * smooth(14, 52, Math.abs(across + 6 * Math.sin(along / 17)));
+      const fan = (0.063 * g + 0.0019 * g * g) * shoulder * (0.9 + 0.2 * fbm(x / 19, z / 19, 3)) * sides * (1 - smooth(118, 135, along));
+      if (fan > y) y = fan;
+    }
+
     const off = Math.abs(across - streamAcross(along));
     const open = smooth(1.2 + 1.2 * vnoise(along / 9, 3.3), 7 + 5 * vnoise(along / 31, 7.7), off);
     const bed = streamBed(along) + 0.4 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);
-    const from = smooth(-30, 6, along);
+    const from = smooth(8, 20, along);
     if (bed < y) y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
   }
   return y;

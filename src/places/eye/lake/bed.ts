@@ -116,6 +116,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float crust = smoothstep(9.0, 1.5, w);
   vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(150.0, 230.0, w)) * (0.5 + 1.0 * snh.b);
   vec3 bare = mix(silt, pale, max(slabs, crust));
+  float stands = 0.0;
+  vec2 stoneLean = vec2(0.0);
   float beach = smoothstep(11.0, 2.5, inShore);
   if (beach > 0.0) {
     vec3 gravel = texture2D(tShore, b / 4.0).rgb * (texture2D(tShore, b / 23.0 + 0.61).rgb / vec3(0.323, 0.255, 0.2));
@@ -124,10 +126,15 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     float under = beach * smoothstep(24.0, 9.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
     if (under > 0.0) {
       vec2 xs = b / 0.11 + 2.0 * vec2(vnoise(b * 1.3), vnoise(b * 1.3 + 7.0));
-      under *= smoothstep(1.1, 0.35, length(fwidth(xs)));
+      under *= smoothstep(1.1, 0.35, 0.43 * length(fwidth(xs)));
       if (under > 0.0) {
         vec2 lean;
-        bare = mix(bare, shingleAt(b, xs, lean).rgb * 0.34, under);
+        float tall;
+        vec4 stones = shingleAt(b, xs, lean, tall);
+        // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones.
+        stands = under * smoothstep(0.0, 0.006, tall * 1.6 - depth);
+        bare = mix(bare, stones.rgb * mix(0.34, 0.6, stands), under);
+        stoneLean = lean * stands;
       }
     }
   }
@@ -150,7 +157,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
   o.glow = 0.0;
   o.depth = depth;
-  o.dry = smoothstep(0.0, -0.035, depth);
+  o.dry = max(smoothstep(0.0, -0.035, depth), stands);
   if (cover > 0.0) {
     // The mats themselves: one piece of the bed seen from above, laid 5 m wide so that its strands are as fine as weed is, its strands combed toward the top, laid round the lake so that the top is the centre.
     // It is turned over at each of its edges and swung a little from lock to lock, so that no edge and no repeat shows.

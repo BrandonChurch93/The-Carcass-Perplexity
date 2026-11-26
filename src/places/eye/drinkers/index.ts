@@ -123,13 +123,19 @@ void main() {
   float soft = texture2D(tRelief, vUv, 3.0).r;
   vec3 axis = normalize(vAxis);
   vec3 face = normalize(vFace);
-  vec3 n = normalize(face * 0.42 - axis * hx * 1.0 - vec3(0.0, 1.0, 0.0) * hy * 1.0);
+  // The hide over the form, from the relief read sharp: the ribs, the points of the hip and the shoulder, the folds at the neck and the knee,
+  // and the lie of the short coat. Each fold is dark in its hollow.
+  vec2 e2 = uTexel * 2.0;
+  float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
+  float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
+  float fold = clamp(1.0 + 5.0 * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
+  vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * fy));
   vec3 v = normalize(cameraPosition - vWorld);
   // Wet and dark below, where it has stood in the lake; dry and dusty above.
   float above = vWorld.y - max(vFeet, 0.0);
   float wet = smoothstep(0.6, 0.15, above + 0.25 * vnoise(vWorld.xy * 3.0 + vWorld.z));
   vec3 albedo = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), mix(0.25, 0.62, step(0.1, uShade.w))) * vec3(1.3, 1.34, 1.38), 0.95) * mix(1.0, 0.5, wet);
-  float occ = 0.5 + 0.5 * smoothstep(0.15, 0.75, soft);
+  float occ = (0.5 + 0.5 * smoothstep(0.15, 0.75, soft)) * fold;
   // Far off in the shade of the evening the herd is pale: tan going to grey.
   if (uShade.w > 0.1) albedo = mix(albedo, vec3(0.62, 0.59, 0.54), 0.6);
   vec3 c = rigShade(vec3(vWorld.x, vWorld.y + 3.2, vWorld.z), n, v, albedo, mix(0.9, 0.55, wet), occ * mix(0.7, 1.0, smoothstep(0.0, 1.2, above)));

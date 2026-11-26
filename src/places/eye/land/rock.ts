@@ -173,10 +173,11 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     if (fine > 0.0) {
       vec2 xs = p.xz / 0.11 + 2.0 * vec2(vnoise(p.xz * 1.3), vnoise(p.xz * 1.3 + 7.0));
       // A stone smaller than the pixel that looks at it is not drawn: the shore keeps its tone and loses its grain.
-      float seen = fine * smoothstep(1.1, 0.35, length(fwidth(xs)));
+      float seen = fine * smoothstep(1.1, 0.35, 0.43 * length(fwidth(xs)));
       if (seen > 0.0) {
         vec2 lean;
-        vec4 stones = shingleAt(p.xz, xs, lean);
+        float tall;
+        vec4 stones = shingleAt(p.xz, xs, lean, tall);
         gravel = mix(gravel, stones.rgb, seen);
         pebbleBent = vec3(lean.x, 0.0, lean.y) * seen;
         a.a = mix(a.a, 0.15 + 0.85 * stones.a, seen);
