@@ -180,6 +180,24 @@ export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeo
       rib[k] = q.relief > RIB ? 1 : 0;
     }
   }
+  // What the rock over a point leaves it of the sky. The wall here stands in its own shade, so a ledge shows by this and not by the sun:
+  // under rock that stands out the face is dark, and the top and the brow of what stands out itself are open and pale. Asked of the
+  // column over each point for two metres up; the edge of the dark is as wide as the ledge is deep.
+  const reach = (k: number): number => Math.hypot(position[k * 3] as number, position[k * 3 + 2] as number);
+  for (let j = 1; j <= fineRows; j++) {
+    for (let i = 0; i <= columns; i++) {
+      const k = j * (columns + 1) + i;
+      const r = reach(k);
+      let shut = 0;
+      let clear = 1;
+      for (let n = 1; n <= Math.min(j, 11); n++) {
+        const over = r - reach(k - n * (columns + 1));
+        shut = Math.max(shut, sat((over - 0.05 - 0.02 * n) / 0.45) * (1 - 0.07 * n));
+        if (n <= 4) clear = Math.min(clear, sat((0.12 - over) / 0.3));
+      }
+      occ[k] = (occ[k] as number) * (1 - 0.6 * shut) * (1 + 0.35 * clear * smooth((j - 4) / 6));
+    }
+  }
   const all: number[] = [];
   const ribsIndex: number[] = [];
   const wallIndex: number[] = [];
