@@ -37,10 +37,10 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
   float d2 = max(deep + (silt - 0.5) * 0.35, 0.0);
   // Over the salt shelf at the shore it is milky and pink; a stride out a dull maroon; in the channels a brown red near black.
-  vec3 bed = vec3(0.3, 0.145, 0.13);
+  vec3 bed = vec3(0.24, 0.105, 0.09);
   vec3 body = vec3(0.075, 0.019, 0.016);
   vec3 pit = vec3(0.034, 0.01, 0.009);
-  vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 3.0));
+  vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 5.0));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
   albedo *= 0.8 + 0.4 * silt;
   albedo = mix(albedo, froth.rgb, foam);
