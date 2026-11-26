@@ -197,7 +197,10 @@ void main() {
     float scaled = vnoise(q * vec2(70.0, 110.0));
     vec3 shankC = mix(vec3(0.11, 0.095, 0.085), vec3(0.24, 0.2, 0.175), mottle) * (0.55 + 0.9 * scaled);
     albedo = mix(albedo, shankC, 0.86 * shank * (1.0 - 0.6 * min(joint, 1.0)));
-    albedo = mix(albedo, vec3(0.4, 0.17, 0.15) * (0.75 + 0.5 * mottle), 0.56 * min(joint, 1.0));
+    // The skin over a joint is slack and creased across the leg.
+    float knuckle = vnoise(vec2(legT * 150.0, q.x * 12.0 + seed));
+    albedo = mix(albedo, vec3(0.34, 0.17, 0.15) * (0.5 + 0.95 * knuckle), 0.6 * min(joint, 1.0));
+    height += 0.003 * (knuckle - 0.5) * min(joint, 1.0) * mid;
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     height += 0.0016 * (scaled - 0.5) * shank * fine;
     // No two are one colour: one is chalk pale, the next ruddy, the next grey with old silt.
@@ -273,7 +276,7 @@ void main() {
     wet = 0.6 + 0.4 * under;
     occ *= 0.7 + 0.3 * u;
     // Where it is flesh the low sun comes through it; where it is coated it does not.
-    thin = mix(0.2, 0.08, weed);
+    thin = mix(0.2, 0.08, weed) * smoothstep(0.02, 0.005, px);
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));

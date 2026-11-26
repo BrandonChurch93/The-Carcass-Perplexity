@@ -90,7 +90,7 @@ export function create(ctx: Context): Piece {
   // stands in the lit mist behind the first of them, neck up.
   const rim = herd[NEAR_WADERS.length] as Wader;
   const AWAY = { x: -58, z: -98 };
-  // Staged: in the view of the plumes it stands where the lens sees it between the two of them, out in the lit mist over the channel.
+  // Staged: in the view of the plumes it stands on the rock behind the weed, where its neck and mop rise clear of the fronds beside the sun.
   const MIST = { x: -34.4, z: -8.4, heading: -100 };
   const rimUp = rim.plan.up;
   const rimCarry = rim.plan.carry;

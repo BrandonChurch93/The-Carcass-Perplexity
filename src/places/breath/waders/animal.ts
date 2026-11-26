@@ -478,7 +478,9 @@ export class Wader {
       // A heavy wet mop: cords of flesh, none much thicker than the next, that hang in locks.
       // One in seven is a finger of bare flesh, shorter and thicker than the cords round it.
       const finger = !far && hash(seed + n * 3.3) < 0.14;
-      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 8);
+      // One strand in five has come loose of every lock and hangs by itself between them.
+      const lone = !far && !finger && hash(seed + n * 13.3) < 0.2;
+      const clump = lone ? 8 + n : Math.floor(hash(seed * 3.1 + n * 0.37) * 8);
       const strand = {
         angle: (clump / 8) * Math.PI * 2 + hash(seed + clump * 5.3) * 0.7 + (hash(seed + n * 1.7) - 0.5) * 0.2,
         out: (0.15 + 0.85 * hash(seed + clump * 2.9)) * (0.87 + 0.26 * hash(seed + n * 2.9)),
@@ -489,9 +491,9 @@ export class Wader {
         // Wet, the strands of one lock hang as one: they kink together.
         lock: hash(seed * 1.9 + clump * 7.7) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
-        root: 1 - 0.3 * hash(seed + n * 8.9) ** 1.15,
+        root: 1 - 0.3 * (0.8 * hash(seed * 1.7 + clump * 8.9) + 0.2 * hash(seed + n * 8.9)) ** 1.15,
         floats: hash(seed + n * 7.3) < 0.34,
-        thick: far ? 1 : finger ? 1.2 : 0.55 + 0.45 * hash(seed + n * 12.7) ** 1.5,
+        thick: far ? 1 : finger ? 1.2 : lone ? 0.5 : 0.55 + 0.45 * hash(seed + n * 12.7) ** 1.5,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
@@ -1024,11 +1026,12 @@ export class Wader {
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
       const splay = 0.7 * st.out + 0.6 * back;
       const rest = st.floats ? afloat : sunk;
-      // Let down into the water the mop opens: each cord goes in at its own place, a hand or two from the next.
-      // Over rock it hangs close, a brush; let down into the water it opens.
-      const flare = wet ? 0.34 + 0.95 * down : 0.34 - 0.12 * down;
-      const loose = wet ? 1 : 1 - 0.55 * down;
+      // Let down it hangs close, a wet brush: matted hair clings to itself, in the water as over rock.
+      const flare = wet ? 0.34 - 0.04 * down : 0.34 - 0.12 * down;
+      const loose = wet ? 1 - 0.4 * down : 1 - 0.55 * down;
       const each = st.len / (tube.rings - 1);
+      // How far a strand stands off before it falls: that of its lock, a little its own.
+      const hold = 0.75 * (0.2 + 0.6 * Math.abs(Math.sin(st.lock * 13))) + 0.25 * st.stiff;
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.lock) + 0.04 * Math.sin(seconds * 3.7 + st.lock * 2.3);
       let px = x;
       let py = y;
@@ -1041,18 +1044,19 @@ export class Wader {
       for (let i = 0; i < tube.rings; i++) {
         const u = i / (tube.rings - 1);
         // It leaves along the neck's end, spreads a little, and gravity takes it.
-        const g = smooth(0, 0.2 + 0.45 * st.stiff * st.stiff, u);
+        const g = smooth(0, 0.2 + 0.45 * hold * hold, u);
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
-        const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
+        const drift = under * (0.12 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.1 * st.out);
         let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.03 + flare * st.out * (1 - 0.6 * u) + drift)) * g;
         let dy = (ty + oy * splay) * (1 - g) - g * (1 - 0.55 * under);
         let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.03 + flare * st.out * (1 - 0.6 * u) + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
-          const fan = st.angle + 0.5 * Math.sin(st.phase);
-          dx = Math.cos(fan) * 0.85 + lagX * 2;
-          dz = Math.sin(fan) * 0.85 + lagZ * 2;
+          const fan = st.angle + 0.14 * Math.sin(st.phase);
+          const lie = wet ? 0.4 : 0.85;
+          dx = Math.cos(fan) * lie + lagX * 2;
+          dz = Math.sin(fan) * lie + lagZ * 2;
           dy = (rest - y) * 4;
           dx += wet ? 0.3 * Math.sin(seconds * 1.3 + st.phase + u * 3) : 0;
         }
