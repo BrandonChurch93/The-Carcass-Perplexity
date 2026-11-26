@@ -1,6 +1,7 @@
-2026-11-26 14:01 UTC
-work at b538960 on agent/marsh-stalks
-keys back to their pictures: 6424 pair, 5940/6800/6102 pairs, 5618 hd before/after (b538960)
-look-1.jpg = out/work/v1fix/pair-6424.png
-look-2.jpg = out/work/v1fix/keys-2-4-1.png
-look-3.jpg = out/work/v1fix/5618-before-after.png
+2026-11-26 14:35 UTC
+work at fb2c931 on agent/marsh-stalks
+v2 fb2c931: 5618 hd before/after, hd crop before/after, uhd final crops, keys 5725 and 6102 pairs
+look-1.jpg = out/work/v2/5618-before-after.png
+look-2.jpg = out/work/v2/crop-before-after.png
+look-3.jpg = out/work/v2/crops-uhd-final.png
+look-4.jpg = out/work/v2/keys-0-1.png
