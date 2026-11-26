@@ -1,0 +1,255 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the conspicuous repeating grid-like texture across the terrain.",
+      "answered": "00:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "procedural erosion terrain with flat, unlit water planes and smeared texture-blended shore color typical of a real-time web/WebGL terrain demo",
+      "answered": "00:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the flat untextured water planes with simple smooth depth-gradient shading intersecting a procedural heightmap terrain",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "The terrain texture stretches into repetitive comb-like stripes along the crater walls.",
+      "answered": "00:19 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "the top-down terrain is procedural noise with repetitive ridge texturing, a flat water shader and a blurry orange shoreline gradient, which reads as a web or low-budget 3D demo.",
+      "answered": "00:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 79,
+      "why": "the same tightly spaced branching ridge pattern repeats across almost the entire landmass.",
+      "answered": "00:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "procedural erosion-style terrain with uniform branching ridges and simple circular lakes, typical of a real-time shader/web terrain demo rather than real satellite imagery",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 75,
+      "why": "the repetitive procedural erosion ridges and uniform glowing cyan coastlines with streaky low-res clouds look like a real-time web 3D terrain demo or low-budget game map",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 90,
+      "why": "The same comb-like ridge pattern repeats across the mountains, making the terrain look procedurally generated.",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "The terrain is clearly procedural: uniform fractal ridge and river noise, perfectly smooth elliptical lakes, and a flat blurry ocean and cloud layer, which look like a procedural-terrain or web 3D demo and not a photo or a polished cinematic.",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 84,
+      "why": "the mountain ridges repeat with the regularity of procedurally generated terrain.",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "procedural-noise terrain and repetitive blotchy cloud sprites typical of a real-time web/procedural planet demo",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the procedural heightmap mountain ridges paired with a uniform glowing cyan coastline and flat stretched-noise clouds look like a standard computer-generated 3D terrain render rather than a real photograph or film-grade VFX.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the same narrow turquoise glow traces almost every shoreline like a game-map shader.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the procedural-looking planet terrain, with uniform noise-driven ridges, glowing cyan coastline halos and pixelated, noisy cloud sprites, reads like a procedural planet generator or web demo and not a polished film or a photograph.",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 92,
+      "why": "the uniformly turquoise outline tracing nearly every coastline looks like a procedural terrain mask.",
+      "answered": "00:20 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "procedural fictional planet terrain with blotchy, repetitive cloud textures typical of a hobbyist/stock CG render (e.g., Space Engine-style).",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 65,
+      "why": "the flat non-volumetric cloud layer with an artificial spiral storm over stylized fantasy-map continents",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 86,
+      "why": "the mountain ridges trace a conspicuously designed skeletal figure across the continent.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the planet looks procedurally generated, with smeared, noisy cloud sprites, a spiral cyclone that looks pasted on, and repetitive ridge-like terrain texture, so it reads as a real-time or procedural planet demo, not a film-quality render or a photograph.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 92,
+      "why": "the mountain ridges have a uniformly embossed, height-map-like texture.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "procedurally generated fictional planet with tiled, repetitive cloud textures and noise-based terrain typical of a hobbyist/stock CG render",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 68,
+      "why": "flat procedural clouds with an overly geometric spiral hurricane and a uniform cyan-outlined fantasy terrain map that lacks cinematic volumetric depth",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the lower-right cyclone looks like a flat spiral texture pasted over the ocean.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 50,
+      "why": "the procedural-looking planet: the odd continent shape, the smeared streaky cloud sprites and the single spiral storm look like a procedural planet generator or demo, not a film-quality render (c is the runner-up).",
+      "answered": "00:21 UTC"
+    }
+  ]
+}

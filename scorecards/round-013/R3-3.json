@@ -1,0 +1,56 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R3-3",
+  "family": "gemini",
+  "answered": "2026-11-26 00:20 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "the concentric blue-grey rings across the center of the water (also visible in set-C-02.png, set-C-03.png, set-C-04.png, set-C-05.png, and set-C-06.png)",
+        "what": "perfectly geometric, hard-edged, flat-colored 2D rings that look like a vector target graphic rather than natural waves, ripples, or mineral formations",
+        "fix": "replace the flat geometric bands with organically broken, physically shaded water ripples or natural depth and mineral variation"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-04.png",
+        "where": "the dark navy and orange-brown fluid filling the crater (also in set-C-01.png, set-C-02.png, and set-C-03.png)",
+        "what": "the fluid reads as a matte, airbrushed color gradient with no surface ripples, no depth, no sky reflections, and no specular highlights",
+        "fix": "add a physically reflective water surface with fine wave detail, sky reflection, depth-based absorption, and grounded lighting interaction"
+      },
+      {
+        "severity": "severe",
+        "file": "set-C-05.png",
+        "where": "the shoreline where the orange-brown fluid meets the rock in the top-left, bottom-left, and bottom-right crops (also in set-C-02.png and set-C-06.png)",
+        "what": "a hard, jagged, stair-stepped clipping seam with thin bright stepped fringes and no foam, mineral crust, or wet edge on the land",
+        "fix": "remove the intersection stair-stepping and add a darkened wet rock band, shoreline foam, and natural shallow translucent or crusted edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-05.png",
+        "where": "the rocky terrain slopes in the top-left, bottom-left, and bottom-right crops (also in set-C-04.png and set-C-06.png)",
+        "what": "the rock looks like soft, blurry molded clay in a single uniform material with visible parallel contour-stepping and banding artifacts across the slopes",
+        "fix": "eliminate the heightfield stepping artifacts and add crisp rock micro-detail, fractures, scree, and varied mineral and soil materials"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-03.png",
+        "where": "the small white cloud wisps over the dark water in the left crop (also in set-C-01.png, set-C-02.png, set-C-04.png, and set-C-06.png)",
+        "what": "the vapour reads as flat, blurry 2D noise patches with no volume, no directional lighting, and no shadows cast onto the surface below",
+        "fix": "render the wisps as lit volumetric clouds with directional sunlight, internal scattering, and soft shadows projected onto the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04.png",
+        "where": "the overall aerial view across the crater rim and basin",
+        "what": "there is no atmospheric haze or sky-driven ambient lighting across the distance, making the scene feel like an airless miniature",
+        "fix": "add subtle distance-based aerial perspective and consistent sky lighting across both terrain and water"
+      }
+    ]
+  }
+}

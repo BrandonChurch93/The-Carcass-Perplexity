@@ -1,0 +1,70 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-26 00:20 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the whole land mass, especially the ribcage and arms",
+        "what": "the skeleton barely reads: the ribs are buried in one solid brown block, the upper arm and hand are a shapeless lobe, and the gaps of open sea between the bones are filled with land, so the outline of the land is no longer that of -a",
+        "fix": "keep the extra land and scale, but bring the ribs back as distinct ridges with sea or shallow water between them, and make the arms, hands and spine follow the -a outline"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the cyclone, bottom right",
+        "what": "-a has a loose spiral of many thin, streaky cloud bands with sea showing between them. -b has a smooth, solid, airbrushed white swirl with a hard black eye and a long tail. It looks like CG and out of scale",
+        "fix": "break the cyclone into many fine, separated, textured bands with dark sea between them, and soften the eye. Keep it the same size and position as in -a"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the ocean surface and cloud cover across the frame",
+        "what": "-a has a fine, even scatter of small whitecap-like cloud streaks over all of the sea. -b swaps this for a few heavy, smeared cloud bands and large patches of clear, flat navy sea, which changes the weather",
+        "fix": "bring back the dense, fine, wind-aligned streak texture over the whole ocean. The layered cloud can stay, but it should be thinner and less smeared"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the pelvis and the sea to its right",
+        "what": "-a has a large bright white salt or snow flat with vivid red veins, and a rust-red and orange plume streaming into the sea. In -b the white patch is small, the red is faint, and the sea plume is gone",
+        "fix": "widen the bright white pelvis flat, strengthen the red veining, and bring back the red and ochre plume in the water to its right"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the shallow water around the bones",
+        "what": "-a has murky teal-green shallows with ochre and olive swirls of sediment hugging the bones. -b has deep navy sea with flat turquoise rims that end on hard edges and look cut out",
+        "fix": "bring back the teal-green turbid shallows with soft gradients and ochre sediment swirls. Soften the hard turquoise rims"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the inland lakes and coast edges on the land",
+        "what": "the lakes and inlets are flat-filled shapes with dark outlines, like a sticker over the terrain, not water in relief",
+        "fix": "blend the lake and shore edges into the terrain and remove the dark outline strokes"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the terrain colour along the bones",
+        "what": "-a's ridges are pale, almost bone-white, with sharp crests. -b's ridges are a darker, warmer brown, so the bone pallor is lost",
+        "fix": "lift the ridge crests toward the pale grey-white of -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the sun glare, right edge",
+        "what": "the glare is warmer and more orange than -a's neutral, silvery sheen",
+        "fix": "cool the glare toward the neutral silver of -a"
+      }
+    ]
+  }
+}
