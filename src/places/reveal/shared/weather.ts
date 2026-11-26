@@ -97,6 +97,7 @@ float lowPicture(vec2 w) {
     // (Here and there a large soft mass: a field of cells grown together, a few hundred kilometres across.)
     // (They stand higher and are carried by another wind: they cross the streaks as the frame is held.)
     vec2 mw = sw + uTime * vec2(8.5, -2.5);
+    if (uLive > 0.0) mw += uLive * vec2(30.0, -9.0);
     float massy = smoothstep(0.6, 0.82, texture2D(uCloudTile, mw / 2300.0 + vec2(0.33, 0.61), 2.0).b) * seen(texture2D(uMatPopcorn, mw / 300.0 + 0.2, 1.5).rgb, 0.1, 0.7);
     pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay)) + 0.34 * away * massy;
   }
@@ -107,7 +108,10 @@ float lowPicture(vec2 w) {
 vec2 lowGround(vec2 at) {
   // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
   float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
-  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(24.0, 8.0);
+  vec2 carried = at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(24.0, 8.0);
+  // (While the frame is held the wind is seen: the field runs on at a pace the eye can follow from orbit.)
+  if (uLive > 0.0) carried -= uLive * vec2(20.0, 7.0);
+  return carried;
 }
 
 // The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).

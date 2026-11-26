@@ -2,7 +2,8 @@
 // edge of the planet the air and the black behind it. Each is a sheet at its own height, so the rise passes them at their own speeds.
 // The cloud itself is one field of the world (shared/weather.ts): the surface takes its shade from the same field.
 import * as THREE from 'three';
-import { AT, KM, LIMB, X, Z } from '../shared/anchors';
+import { AT, KM, LIMB, LIMB_FOLLOW, RISE_FIRST, X, Z, driftAt } from '../shared/anchors';
+import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
@@ -36,7 +37,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
     float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.035 + 0.085 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
+    vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.07 + 0.19 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
@@ -68,6 +69,7 @@ void main() {
 
   // The veil: thin ice, far above, drifting the other way.
   vec2 hv = up + uTime * vec2(6.5, -3.8);
+  if (uLive > 0.0) hv += uLive * vec2(36.0, -21.0);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
   float where = vnoise(hv / 1500.0 + 3.0);
   if (uViewKm < 900.0) where = 0.6 * where + 0.4 * vnoise(hv / 640.0 + 11.0);
@@ -77,6 +79,7 @@ void main() {
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
+  if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.94;
   float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
@@ -85,7 +88,7 @@ void main() {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
     // take too little light to show over the ground.)
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
-    float aNight = a * mix(1.0, 0.3 + 0.45 * a, gone);
+    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone);
     float bNight = b * (1.0 - 0.8 * gone);
     colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
     a = aNight;
@@ -152,6 +155,7 @@ void main() {
   float r = length(p);
   // The whole storm turns, the middle faster than the rim, so its arms wind as the frame is held.
   float turn = uTime * (0.009 + 0.05 / (1.0 + 14.0 * r)) / 6.28318;
+  if (uLive > 0.0) turn += uLive * (0.012 + 0.009 / (1.0 + 14.0 * r));
   vec2 sunStep = normalize(uSunDir.xz);
   float thick = storm(p, turn);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
@@ -165,7 +169,7 @@ void main() {
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
   vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (0.86 + 0.1 * thick);
   // (By night the cyclone is a dim wheel, no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
   // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
   // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
   float side = smoothstep(-0.2, 0.9, dot(p / max(r, 1e-3), vec2(-0.5, -0.86)));
@@ -239,7 +243,7 @@ void main() {
   glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
   if (uDusk > 0.0) glow *= uCalm.x;
   // (The storm dies down with the day: by night its towers are no brighter than the bone.)
-  if (uDusk > 0.0) colour *= 1.0 - 0.45 * uEmber.x;
+  if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
   if (uDusk > 0.0) colour += exposed(beatOnCloud(vWorld.xz)) - beatOnCloud(vWorld.xz);
   colour += glow * 1.6 + beatOnCloud(vWorld.xz);
   float alpha = clamp(thick, 0.0, 0.98);
@@ -263,12 +267,14 @@ void main() {
   float across = dot(d, vec2(-uWind.y, uWind.x)) / 300.0;
   // The wind carries the curls: the trail is read through a bend that travels down it, stronger the farther it has gone.
   vec2 flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011, across * 0.8 + 0.3)).rg - 0.5;
+  if (uLive > 0.0) flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011 - uLive * 0.035, across * 0.8 + 0.3)).rg - 0.5;
   vec2 q = vec2(along + 0.02, across * (1.0 - 0.35 * along) + 0.5 + 0.1 * sin(along * 5.0 + 1.0) * along) + flow * vec2(0.04, 0.26) * smoothstep(0.02, 0.5, along);
   // (Read soft: each trail a thin veil with a denser thread in it, and the three of unlike strength.)
   float seenLight = 0.25 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 1.0).rgb, vec3(0.3, 0.55, 0.15)) + 1.2 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 4.5).rgb, vec3(0.3, 0.55, 0.15));
   seenLight *= 0.55 + 0.9 * texture2D(uCloudTile, vec2(along * 0.4 + 0.1, across * 1.7 + 0.6), 3.0).b;
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
+  if (uLive > 0.0) puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 - uLive * 1.6 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
   float thick = smoothstep(0.03, 0.95, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
@@ -301,6 +307,12 @@ void main() {
       // The air at the edge keeps the sun longest, on the side the sun went: a twilight arc, warm against the planet and blue above,
       // and when that has gone a thin line of airglow all round. The stars come out as the exposure opens.
       float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.08;
+      // (The stars stand with the edge of the planet, not with the ground that slides under the drifting camera.)
+      vec2 fixedSky = vWorld.xz - (uLimb.xy - vec2(${X(LIMB.cx).toFixed(3)}, ${Z(LIMB.cy).toFixed(3)}));
+      vec2 cellSky = floor(fixedSky / 40.0);
+      vec2 withinSky = fract(fixedSky / 40.0) - 0.5;
+      vec2 offSky = vec2(hash12(cellSky + 7.3), hash12(cellSky + 19.1)) - 0.5;
+      star = step(0.94, hash12(cellSky)) * exp(-dot(withinSky - 0.6 * offSky, withinSky - 0.6 * offSky) * 520.0) * (0.25 + 0.75 * hash12(cellSky + 3.7)) * smoothstep(20.0, 90.0, km);
       // (Layered as it is seen from orbit: red against the planet, orange, a pale band, and blue above. Held under the opening exposure.)
       float lowSun = uTerm.w * (1.0 - smoothstep(0.05, 0.32, sunH));
       vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
@@ -378,10 +390,14 @@ export function create(ctx: Context): Piece {
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));
-  sheet('space', ring(0.995, 4), EDGE_FRAGMENT, { uWhich: { value: 0 } });
-  sheet('atmosphere', ring(0.9, 1.03), EDGE_FRAGMENT, { uWhich: { value: 1 } }, true);
+  const edges = [sheet('space', ring(0.995, 4), EDGE_FRAGMENT, { uWhich: { value: 0 } }), sheet('atmosphere', ring(0.9, 1.03), EDGE_FRAGMENT, { uWhich: { value: 1 } }, true)];
 
   return {
+    // (As the camera drifts at the end the edge of the planet goes most of the way with it: shared/anchors.ts.)
+    setTime: (seconds) => {
+      const [driftX, driftZ] = driftAt(RISE_FIRST + seconds * FPS);
+      for (const edge of edges) edge.position.set(LIMB_FOLLOW * driftX, 0, LIMB_FOLLOW * driftZ);
+    },
     dispose: () => {
       for (const m of made) {
         m.geometry.dispose();
