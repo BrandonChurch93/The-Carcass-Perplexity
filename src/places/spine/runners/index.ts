@@ -218,7 +218,7 @@ export function create(ctx: Context): Piece {
   };
 
   // In the canal the coats are the colour of the wall they lie against: dimmer, a little warmer.
-  const dim = (c: [number, number, number], k: number): [number, number, number] => [c[0] * 0.72 * k, c[1] * 0.75 * k, c[2] * 0.82 * k];
+  const dim = (c: [number, number, number], k: number, warm = 0): [number, number, number] => [c[0] * (0.72 + 0.09 * warm) * k, c[1] * 0.75 * k, c[2] * (0.82 - 0.09 * warm) * k];
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
@@ -232,7 +232,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 0.8), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 0.8, h.act === 'stand' ? 0 : 1), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
