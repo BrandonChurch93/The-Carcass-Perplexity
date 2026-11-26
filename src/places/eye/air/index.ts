@@ -54,6 +54,7 @@ uniform float uSampleIndex;
 uniform float uHaze;
 uniform float uMist;
 uniform float uThin;
+uniform float uVeil;
 varying vec2 vUv;
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -68,7 +69,7 @@ float mistAt(vec3 p, vec4 land) {
     float d = length(p.xz - uPlateAt.xz);
     band = smoothstep(uPlateAt.w - 330.0, uPlateAt.w - 40.0, d) * step(d, uPlateAt.w);
     // At the foot of the far wall it stands up in a bank that hides the shoreline.
-    float lift = (2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : mix(9.0, 5.0, smoothstep(5.0, 40.0, cameraPosition.y))) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
+    float lift = (2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : mix(4.0, 5.0, smoothstep(5.0, 40.0, cameraPosition.y))) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
     float banks = smoothstep(0.15, 0.75, 0.6 * vnoise(p.xz / 260.0 + vec2(uTime * 0.03, -uTime * 0.017)) + 0.4 * vnoise(p.xz / 70.0 + uTime * 0.06) + 0.35 * band);
     return (0.55 + mix(0.7, 0.45, smoothstep(5.0, 40.0, cameraPosition.y)) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
   }
@@ -105,7 +106,7 @@ void main() {
   vec3 light = low * vec3(0.9, 0.82, 0.78) * (1.0 - through);
 
   // The mist, marched through the layer it lies in.
-  float mistOn = uMist * uThin;
+  float mistOn = uMist * uThin * uVeil;
   if (mistOn > 0.0) {
     float t0 = 0.0;
     float t1 = far;
@@ -153,7 +154,7 @@ export function create(ctx: Context): Piece {
   ctx.parts.effect('air', 'built');
   ctx.parts.effect('mist', 'built');
 
-  const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 } };
+  const show = { uHaze: { value: 1 }, uMist: { value: 1 }, uThin: { value: 1 }, uVeil: { value: 1 } };
   const volume = new THREE.ShaderMaterial({
     vertexShader: QUAD_VERTEX,
     fragmentShader: VOLUME_FRAGMENT,
@@ -172,6 +173,8 @@ export function create(ctx: Context): Piece {
     setTime: (t) => {
       // The air clears as the camera leaves: the last frames are the flat picture the rise begins with.
       show.uThin.value = 1 - smooth(end - 3, end - 1.3, t);
+      // The mist is a veil at the foot of the far wall: thinnest for the long lens of the shore shot, which looks straight through it.
+      show.uVeil.value = during('eye-04') ? 0.22 : during('eye-01') ? 0.5 : 0.6;
       // The evening shade over the south shore and the spur is laid for the wide shot alone.
       (rig.uShade as THREE.IUniform<THREE.Vector4>).value.w = during('eye-01') ? 0.55 : 0;
       // The far world of the shot the camera stands in.

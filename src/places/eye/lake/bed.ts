@@ -19,7 +19,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
     tLipPlate: { value: mirrored(ctx.assets.texture('mat/lip.jpg', { anisotropy: 8 })) },
     tLipPlateH: { value: mirrored(ctx.assets.texture('mat/lip-h.png', { kind: 'data', anisotropy: 4 })) },
     tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
-    tShore: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 2 }) },
+    tShore: { value: mirrored(ctx.assets.texture('mat/shoreplate.jpg', { anisotropy: 8 })) },
     tWall: { value: mirrored(ctx.assets.texture('mat/shaftwall.jpg', { anisotropy: 4 })) },
     uAbsorb: { value: new THREE.Vector3(...ABSORB) },
     uDeep: { value: new THREE.Vector3(0.004, 0.017, 0.03) },
@@ -125,22 +125,17 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   vec2 stoneLean = vec2(0.0);
   float beach = smoothstep(11.0, 2.5, inShore);
   if (beach > 0.0) {
-    vec3 gravel = texture2D(tShore, b / 4.0).rgb * (texture2D(tShore, b / 23.0 + 0.61).rgb / vec3(0.323, 0.255, 0.2));
-    bare = mix(bare, gravel * 0.42, beach);
+    // The bed by the shore is the shore's own picture gone on under the water, at its own size: eight metres of stones and grit.
+    vec3 plate = texture2D(tShore, b / vec2(8.0, 4.5)).rgb;
+    vec3 gravel = plate * (texture2D(tShore, b / vec2(43.0, 24.2) + 0.61).rgb / vec3(0.222, 0.161, 0.119)) * vec3(1.3, 1.36, 1.44);
+    bare = mix(bare, gravel * 0.5, beach);
     // Under a low eye the same shingle the shore is made of goes on under the water, wet and dark, as far as the eye can tell one stone from the next.
-    float under = beach * smoothstep(24.0, 9.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
+    float under = beach * smoothstep(40.0, 16.0, away) * smoothstep(12.0, 4.0, cameraPosition.y);
     if (under > 0.0) {
-      vec2 xs = b / 0.11 + 2.0 * vec2(vnoise(b * 1.3), vnoise(b * 1.3 + 7.0));
-      under *= smoothstep(1.1, 0.35, 0.43 * length(fwidth(xs)));
-      if (under > 0.0) {
-        vec2 lean;
-        float tall;
-        vec4 stones = shingleAt(b, xs, lean, tall);
-        // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones.
-        stands = under * smoothstep(0.0, 0.006, tall * 1.6 - depth);
-        bare = mix(bare, stones.rgb * mix(0.34, 0.6, stands), under);
-        stoneLean = lean * stands;
-      }
+      // A stone taller than the water over it stands out of it, wet: the waterline goes in and out between the stones. The pale stones of the picture are its tall ones.
+      float tall = 0.09 * smoothstep(0.12, 0.42, dot(plate, vec3(0.333)));
+      stands = under * smoothstep(0.0, 0.006, tall - depth);
+      bare = mix(bare, plate * vec3(1.3, 1.36, 1.44) * mix(0.5, 0.85, stands), under);
     }
   }
   // Where the mats lie: patches drawn out toward the centre, thick round the lip, torn and thin toward the shore, with lanes of open

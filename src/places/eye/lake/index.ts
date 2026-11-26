@@ -120,7 +120,9 @@ void main() {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
     float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
     // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
-    quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 2.2 * vnoise(p.xz / 47.0 + 5.0)) * (0.35 + 1.3 * vnoise(p.xz / 29.0 + vec2(0.0, uTime * 0.02)));
+    quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 7.0 * vnoise(p.xz / 83.0 + 5.0) + 2.4 * vnoise(p.xz / 21.0 + 1.7)) * (0.12 + 1.7 * pow(vnoise(p.xz / 37.0 + vec2(0.0, uTime * 0.02)), 1.6));
+    // A second train comes back off the south shore across the first, so that no ring runs whole from side to side.
+    quiet += 0.07 * exp(-r / 240.0) * smoothstep(40.0, 120.0, r) * cos(dot(p.xz, vec2(0.071, 0.118)) + uTime * 0.9 + 5.0 * vnoise(p.xz / 61.0 + 9.0)) * vnoise(p.xz / 44.0 + 3.0);
     // From high up the lake is a mirror first: the rings are there, slow and low, and the wall stands whole in them.
     quiet *= mix(1.0, 0.3, smoothstep(8.0, 30.0, cameraPosition.y));
     float since = uCentre.x;
@@ -131,7 +133,10 @@ void main() {
     float dr = (quiet + thrown) * broken + uDome.x * 2.0 * (1.0 - du * du) * (-2.0 * du / uDome.y);
     slope += out2 * dr;
     heave += out2 * (quiet + thrown) * broken;
-    float chop = clamp(uDome.x / 2.0, 0.0, 1.0) * smoothstep(150.0, 30.0, r);
+    float chop = clamp(uDome.x / 2.0, 0.0, 1.0) * smoothstep(210.0, 40.0, r) * (0.5 + vnoise(p.xz / 17.0 + uTime * 0.05));
+    // The breath of the evening lays patches of small waves on the open water between the rings.
+    float gust = smoothstep(0.5, 0.72, vnoise(p.xz / 95.0 + vec2(uTime * 0.035, 3.0))) * smoothstep(1500.0, 500.0, away) * smoothstep(40.0, 120.0, away);
+    if (gust > 0.0) slope += gust * 0.022 * waves(p.xz / 4.6, vec2(uTime * 0.07, -uTime * 0.04));
     if (chop > 0.0) slope += chop * (0.05 * waves(p.xz / 13.0, vec2(uTime * 0.05, uTime * 0.03)) + 0.04 * waves(p.xz / 3.7, vec2(-uTime * 0.11, uTime * 0.08)));
   }
   // Each small thing that breaks the surface round the swell throws its own ring, one at a time, that widens and dies.
@@ -204,7 +209,7 @@ void main() {
     vec3 mistLight = (0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * skyRadiance(normalize(vec3(-v.x, 0.05, -v.z)))) * (2.4 / 3.14159);
     refl = mix(refl, mistLight, 0.9 * smoothstep(0.72, 0.985, toPlate) * (1.0 - uSolo));
     // And the bank that stands at the foot of the far wall is in the mirror as it is in the air: a ray that leaves the water low finds it.
-    refl = mix(refl, mistLight, 0.85 * pow(smoothstep(0.035, 0.002, rd.y), 1.5) * (1.0 - uSolo));
+    refl = mix(refl, mistLight, 0.5 * pow(smoothstep(0.03, 0.002, rd.y), 1.5) * (1.0 - uSolo));
   }
   refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
@@ -286,21 +291,10 @@ void main() {
   if (r < uDome.y) {
     float du = r / uDome.y;
     float hump = clamp(uDome.x / 2.5, 0.0, 1.0) * (1.0 - du * du) * smoothstep(-0.2, 0.5, dot(out2, normalize(v.xz))) * smoothstep(0.6, 0.25, v.y);
-    f *= 1.0 - 0.92 * hump;
-    under *= 1.0 - 0.75 * hump;
+    f *= 1.0 - 0.6 * hump;
+    under *= 1.0 - 0.5 * hump;
   }
   vec3 c = mix(under, refl, f);
-  // The swell stood up: its face is turned up to the sky and takes the pale of it, and the water it has lifted runs off it in threads.
-  if (r < uDome.y && uDome.x > 1.6) {
-    float du = r / uDome.y;
-    float stood = clamp((uDome.x - 1.6) / 2.4, 0.0, 1.0) * smoothstep(1.0, 0.55, du) * smoothstep(0.6, 0.25, v.y);
-    float round2 = atan(p.x, p.z);
-    float run = vnoise(vec2(round2 * 23.0, r / 7.0 - uTime * 1.4)) * (0.4 + 0.6 * vnoise(vec2(round2 * 7.0, 3.0)));
-    float lean = dot(out2, normalize(v.xz));
-    vec3 silver = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (1.0 / 3.14159) * mix(0.22, 0.75, smoothstep(-0.7, 0.8, lean + 0.6 * (vnoise(vec2(round2 * 3.0, r / 30.0)) - 0.5)));
-    silver += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.2 / 3.14159) * smoothstep(0.34, 0.6, run) * smoothstep(1.0, 0.2, du);
-    c = mix(c, silver, 0.8 * stood);
-  }
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
@@ -490,7 +484,7 @@ void main() {
     setTime: (t) => {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
-      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 5.2 * swell * (1 + 0.05 * Math.sin(t * 2.3));
+      dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 3.0 * swell * (1 + 0.05 * Math.sin(t * 2.3));
       // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
       (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       centre.x = t - rise;

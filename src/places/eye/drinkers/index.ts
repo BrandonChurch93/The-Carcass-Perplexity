@@ -3,10 +3,11 @@
 // A card is honest only from the side it was made from and at a distance: the herd stands off, backlit, cut by the water and its own rings,
 // and the shots that came close have been restaged further off (the mats, the shore and the last shot).
 import * as THREE from 'three';
-import { DEG, shoreOf } from '../layout';
+import { DEG, shoreOf, smooth } from '../layout';
 import { landHeight } from '../land/height';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { during } from '../shared/anchors';
 import { herd, type Drinker } from './herd';
 
 export const PARTS: readonly string[] = ['drinkers'];
@@ -50,6 +51,7 @@ varying vec2 vUv;
 varying vec3 vAxis;
 varying vec3 vFace;
 varying float vFeet;
+varying float vOwn;
 void main() {
   // position.xy runs 0 to 1 over the sheet, y up. aStand: x, ground level, z, bearing it faces (radians). aPose: size, angle of the neck, lean, flip.
   vec2 q = vec2(position.x - uSheet.z, uSheet.x - (1.0 - position.y)) * uMetres;
@@ -69,6 +71,14 @@ void main() {
   }
   // Its weight goes from side to side over feet that stay where they are.
   q.x += aPose.z * q.y;
+  // Now and then it shifts a leg: the hind pair goes back a little and the fore pair forward, and the feet come up as they go.
+  float pace = abs(aPose.w) - 1.0;
+  if (uSheet.y != 0.0) {
+    float hind = step((position.x - uSheet.z) * uSheet.y, 0.0);
+    float leg = smoothstep(1.15, 0.1, q.y);
+    q.x += uSheet.y * leg * mix(0.55, -1.0, hind) * pace;
+    q.y += leg * 2.4 * pace * (1.0 - pace / 0.17) * hind;
+  }
   q *= aPose.x;
   vec3 axis;
   if (uSheet.y == 0.0) {
@@ -76,7 +86,7 @@ void main() {
     vec2 to = normalize(cameraPosition.xz - aStand.xz + vec2(1e-4, 0.0));
     axis = vec3(to.y, 0.0, -to.x);
   } else {
-    axis = vec3(sin(aStand.w), 0.0, -cos(aStand.w)) * uSheet.y * aPose.w;
+    axis = vec3(sin(aStand.w), 0.0, -cos(aStand.w)) * uSheet.y * sign(aPose.w);
   }
   vec3 world = vec3(aStand.x, aStand.y, aStand.z) + axis * q.x + vec3(0.0, q.y, 0.0);
   vWorld = world;
@@ -85,6 +95,7 @@ void main() {
   vec3 face = cross(axis, vec3(0.0, 1.0, 0.0));
   vFace = dot(face, cameraPosition - world) < 0.0 ? -face : face;
   vFeet = aStand.y;
+  vOwn = fract(sin(dot(aStand.xz, vec2(12.9898, 78.233))) * 43758.5453);
   gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
 }`;
 
@@ -110,6 +121,7 @@ varying vec3 vWorld;
 varying vec3 vAxis;
 varying vec3 vFace;
 varying float vFeet;
+varying float vOwn;
 ${CUT}
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -133,9 +145,14 @@ void main() {
   float fx = texture2D(tRelief, vUv + vec2(e2.x, 0.0), 0.5).r - texture2D(tRelief, vUv - vec2(e2.x, 0.0), 0.5).r;
   float fy = texture2D(tRelief, vUv + vec2(0.0, e2.y), 0.5).r - texture2D(tRelief, vUv - vec2(0.0, e2.y), 0.5).r;
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
-  float creased = uSheet.y == 0.0 ? 0.0 : 0.55;
+  float creased = uSheet.y == 0.0 ? 0.14 : 0.3;
+  // The picture's own shading of the ribs is not the hide's colour: half of it is taken out, and each animal has a coat of its own tone, with dust and marks in it.
+  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, 0.55);
+  float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
+
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
   if (uSheet.y == 0.0) skin = mix(skin, vec3(0.5, 0.36, 0.26) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.8);
+  skin *= mix(vec3(0.78, 0.76, 0.74), vec3(1.12, 1.08, 1.02), vOwn) * (0.84 + 0.32 * coat);
   float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
   vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
   vec3 v = normalize(cameraPosition - vWorld);
@@ -243,22 +260,27 @@ export function create(ctx: Context): Piece {
         slot.strength = strength;
         lap++;
       };
+      const wide = during('eye-01');
       for (const g of groups) {
         g.members.forEach(({ animal: d, index: i }, k) => {
-          const size = d.size;
+          const size = d.wideOnly && !wide ? 0 : d.size;
           const ground = d.level ?? Math.max(-0.5, landHeight(d.x, d.z));
           const down = Math.min(1, Math.max(0, d.down(t)));
           // A sheet with its neck down lifts its head by turning the neck about its root; one with its neck up only looks about.
           const drinks = g.sheet.reach > 0;
-          const neck = g.sheet.faces === 0 ? 0.38 + 0.3 * down : drinks ? (1 - down) * 1.25 * g.sheet.faces + 0.012 * Math.sin(t * 1.9 + i * 2.3) : 0.05 * Math.sin(t * 0.43 + i * 2.1) + 0.03 * Math.sin(t * 1.1 + i * 0.7) + 0.16 * (1 - down - 0.7);
-          const lean = 0.012 * Math.sin(t * 0.83 + i * 1.7) + 0.006 * Math.sin(t * 0.31 + i * 0.9);
+          const neck = g.sheet.faces === 0 ? 0.38 + 0.3 * down : drinks ? (1 - down) * 1.25 * g.sheet.faces + 0.012 * Math.sin(t * 1.9 + i * 2.3) : 0.14 * Math.sin(t * 0.9 + i * 2.1) + 0.05 * Math.sin(t * 2.1 + i * 0.7) + 0.16 * (1 - down - 0.7);
+          const lean = 0.03 * Math.sin(t * 0.83 + i * 1.7) + 0.012 * Math.sin(t * 0.31 + i * 0.9);
           g.stand.setXYZW(k, d.x, ground - 0.03 * size, d.z, d.facing * DEG);
-          g.pose.setXYZW(k, size, neck, lean, d.flip);
+          // Every so many seconds it shifts its legs and settles again; each at a time of its own.
+          const every = 5.5 + 4 * ((i * 0.618) % 1);
+          const u = (((t / every + i * 0.37) % 1) + 1) % 1;
+          const pace = 0.17 * smooth(0.0, 0.1, u) * (1 - smooth(0.45, 0.6, u));
+          g.pose.setXYZW(k, size, neck, lean, d.flip * (1 + pace));
           const long = 2.6;
           const off = size * 1.5 * (long - 1) * 0.5;
-          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * 1.2, d.level === undefined ? 0.5 : 0, long, sun.shadowYaw);
+          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * 1.2, d.level === undefined ? 0.7 : 0, long, sun.shadowYaw);
           // Rings where its mouth is in the water and round its legs, for the ones the shots are about.
-          if (drinks) {
+          if (drinks && size > 0) {
             const reach = g.sheet.reach * size * d.flip;
             const mx = d.x + Math.sin(d.facing * DEG) * reach;
             const mz = d.z - Math.cos(d.facing * DEG) * reach;
