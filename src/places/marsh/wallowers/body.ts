@@ -97,6 +97,8 @@ varying vec2 vBlade;
 uniform vec4 uRaise;
 uniform vec4 uBlade;
 uniform vec2 uGirdle;
+uniform float uSeed;
+${NOISE_GLSL}
 // A bone that stands under the skin of the flank: a long plate from a up to b, wider at the top. Its height, and the slope of that height.
 vec3 plate(vec2 at, vec2 a, vec2 b, float amp) {
   vec2 pa = at - a;
@@ -137,7 +139,9 @@ void main() {
     float side = smoothstep(0.25, 0.6, abs(normal.z)) * smoothstep(0.8, 0.97, textureLod(tPicA, uv, 4.0).r) * mix(smoothstep(0.6, 0.95, position.y), smoothstep(0.45, 0.8, abs(normal.z)), aInfo.z);
     float fine = dot(textureLod(tPic, uv, 3.0).rgb, vec3(0.3, 0.5, 0.2));
     float wide = dot(textureLod(tPic, uv, 4.5).rgb, vec3(0.3, 0.5, 0.2));
-    lift = clamp((fine - wide) / (wide + 0.03), -0.7, 0.5) * uDisp * side * (1.0 - aInfo.y);
+    // In folds where the hide hangs, smooth where it is stretched: the same places as the fragment draws them.
+    float folds = smoothstep(0.34, 0.62, vnoise3((position * uK + uShift) * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0));
+    lift = clamp((fine - wide) / (wide + 0.03), -0.7, 0.5) * uDisp * side * (1.0 - aInfo.y) * mix(0.3, 1.3, folds);
   }
   // The shoulder blade and the point of the hip: each rises under the hide as its leg takes the weight, and sinks as the leg is lifted.
   float flank = smoothstep(0.25, 0.55, abs(normal.z)) * (1.0 - aInfo.z) * (1.0 - aInfo.y);
@@ -268,8 +272,10 @@ void main() {
   float ridge = smoothstep(0.22, 0.7, height);
   float creased = uNear * (1.0 - horn) * mix(0.9, 0.5, uTile);
   albedo *= mix(1.0, mix(0.8, 1.1, ridge), creased);
-  // And the picture's own creases are drawn harder than it has them.
-  albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), 0.6 * side * uNear * (1.0 - 0.6 * vInfo.z));
+  // The picture's creases all run one way, and a coat of them reads as hair. So they are kept in places and let go in others:
+  // where the hide hangs it is folded, drawn harder than the picture has it, and where it is stretched it is smooth but for its pores.
+  float folds = mix(1.0, smoothstep(0.34, 0.62, vnoise3(q * vec3(0.55, 0.8, 0.55) + uSeed * 3.0 + 11.0)), nearK);
+  albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), mix(0.08, 0.85, folds) * side * uNear * (1.0 - 0.6 * vInfo.z));
   // A warm tan with pink in it; the deep red is the mud's, lower down.
   albedo = mix(vec3(dot(albedo, LUMA)) * mix(mix(vec3(1.15, 0.95, 0.78), vec3(1.07, 0.97, 0.88), uTile), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
   // The head is the darkest of it: heavy, grey, and folded.
@@ -278,14 +284,14 @@ void main() {
   albedo *= 1.0 - 0.3 * headed * mix(1.0, 0.4, ridge);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
-  float tile = mix(1.2 + 0.6 * uTile + 0.9 * uNear, 1.1 * uNear, side);
+  float tile = mix(1.2 + 0.6 * uTile + 0.9 * uNear, 1.1 * uNear, side) * (1.0 - 0.5 * vInfo.z);
   vec2 sx = (hx.rg - 0.5) * tile;
   vec2 sy = (hy.rg - 0.5) * tile;
   vec2 sz = (hz.rg - 0.5) * tile;
   vec3 bump = w.x * vec3(0.0, sx.y, sx.x) + w.y * vec3(sy.x, 0.0, sy.y) + w.z * vec3(sz.x, sz.y, 0.0);
   vec2 slope = vec2(lx - l0, ly - l0) / (l0 + 0.04);
   // In the picture u runs from the muzzle back and v up.
-  bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * 1.0 * side;
+  bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * mix(0.25, 1.5, folds) * side;
   bump += vec3(vBlade, 0.0);
   #ifdef CRUSTED
   vec3 rq = q * RIME_SCALE;
@@ -306,7 +312,7 @@ void main() {
   vec3 ng = normalize(r * nr);
   vec3 v = normalize(cameraPosition - vWorld);
   // At its outline the grain is seen edge on: there it is the body's own slope that holds the light, or every edge wears a fringe of white sparks.
-  float graze = pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 2.5);
+  float graze = pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), mix(2.5, 1.1, vInfo.z));
   vec3 n = normalize(mix(normalize(r * nb), ng, 0.9 * graze));
 
   float patchy = vnoise3(q * 1.7 + uSeed);
