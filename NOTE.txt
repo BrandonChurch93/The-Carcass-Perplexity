@@ -1,5 +1,7 @@
-2026-11-26 17:58 UTC
-work at e1c3b02 on agent/heart-lava
-v2 candidate (agent/heart-lava-e e1c3b02). 4157 hd review cut out: the head mid cascade, slabs with a dark lee edge and a pale banked edge; the fall at preview: top v2g 4157, v2g 4217, v2h 4127, bottom v2h 4157, v2h 4217. Wrong: fume is thin, the bed's own banks answer the head faintly, spatter is a few dots, slabs at preview are a red mottle more than separate rafts.
-look-1.jpg = out/work/v2h/hd-4157.png
-look-2.jpg = out/work/v2h/look.png
+2026-11-26 18:13 UTC
+work at a291098 on agent/heart-lava
+v2 before the last merge: slabs are dull red with a hot rim and ride down; fume rises at the drops; wall and mouth underside answer the surge. Wrong: fume reads as dark grey smudges, not pale; the bed's own banks answer only faintly; slabs at preview are red mottle more than rafts
+look-1.jpg = out/work/v2/fall-sheet.png
+look-2.jpg = out/work/v2/fall-before-above-after.png
+look-3.jpg = out/work/v2/4006-approved-beside-frame.png
+look-4.jpg = out/work/v2/f-4217-hd-review.png
