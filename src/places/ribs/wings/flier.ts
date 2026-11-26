@@ -119,7 +119,8 @@ export class Flight {
       hide[v * 2] = ahead * 0.9 + 300;
       hide[v * 2 + 1] = out * 0.9 + 300;
       this.mix[v * 3] = thrown;
-      this.mix[v * 3 + 1] = occ;
+      // In the open air all the sky lights it: more of the sky's light than one that stands on the ground under a rock takes.
+      this.mix[v * 3 + 1] = occ * 1.45;
       this.mix[v * 3 + 2] = 1;
     };
     for (let i = 0; i < count; i++) {
@@ -244,8 +245,9 @@ export class Flight {
     const s = p.stroke;
     // Gliding, the arm is held up and the hand hangs from the wrist.
     const glide = (1 - p.deep) * (1 - p.drawn);
-    const arm = 0.16 + 0.22 * glide + p.deep * (0.62 * Math.cos(s + 0.25 * Math.sin(s)) - 0.08) - 0.5 * p.drawn;
-    const hand = arm - 0.55 * glide + p.deep * 0.5 * Math.cos(s - 1.15) - 0.25 * p.drawn;
+    const arm = 0.26 + 0.14 * glide + p.deep * (0.62 * Math.cos(s + 0.25 * Math.sin(s)) - 0.08) - 0.5 * p.drawn;
+    // The hand always hangs a little from the wrist: seen from ahead the sail is bent, never a straight line.
+    const hand = arm - (0.3 + 0.3 * glide) * (1 - p.drawn) + p.deep * 0.5 * Math.cos(s - 1.15) - 0.25 * p.drawn;
     const rising = Math.max(0, -Math.sin(s - 0.5));
     const fold = 1 - 0.22 * p.deep * rising - 0.45 * p.drawn;
     const reach = 1 - 0.2 * p.drawn;

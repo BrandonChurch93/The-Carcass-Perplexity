@@ -1102,7 +1102,9 @@ export function create(ctx: Context): Piece {
     const az = cam.aim[2] - cam.position[2];
     const al = Math.hypot(ax, ay, az) || 1;
     const fl = Math.hypot(ax, az) || 1;
-    const far = k < FIRST ? 70 + 130 * ((k * 5) % FIRST) / FIRST : 60 + 95 * hash(k, 93);
+    // Of those in the first frame, four are near enough that the bent sail and the body read: no two side by side.
+    const slot = (k * 5) % FIRST;
+    const far = k < FIRST ? (slot < 4 ? 22 + 6 * slot : 60 + 140 * slot / FIRST) : 60 + 95 * hash(k, 93);
     const side = (k < FIRST ? ((k + 0.5) / FIRST) * 2 - 1 + 0.08 * (hash(k, 92) - 0.5) : 2 * hash(k, 92) - 1) * 0.42 * far;
     const over = (-0.05 + 0.27 * hash(k, 94)) * far;
     const x = cam.position[0] + (ax / al) * far - (az / fl) * side;
@@ -1129,8 +1131,8 @@ export function create(ctx: Context): Piece {
   const leavers: Leaver[] = Array.from({ length: FLEEING }, (_, i) => {
     const staged = i < 6;
     // Where it is at the bore's event if it has left by then: six staged across the middle of the bore's frame, the rest by the flats.
-    const far = staged ? ([44, 35, 52, 40, 33, 48][i] as number) : 0;
-    const off = staged ? ([-19, -10, -3, 6, 13, 21][i] as number) + 5 : 0;
+    const far = staged ? ([28, 22, 34, 25, 21, 31][i] as number) : 0;
+    const off = staged ? ([-12, -6.5, -2, 3.5, 8, 13][i] as number) + 3 : 0;
     const side = (i - (FLEEING - 1) / 2) / FLEEING;
     const vx = staged ? -gateRight[0] * 10 - gateAhead[0] * 12 : -14;
     const vz = staged ? -gateRight[1] * 10 - gateAhead[1] * 12 : 12;
@@ -1367,7 +1369,7 @@ export function create(ctx: Context): Piece {
         }
         const bout = smooth(0.25, 0.45, heldAt(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         const y = s.y + 1.2 * Math.sin(at * 0.6 + s.seed * 20);
-        const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
+        const amp = i < SKEIN ? 0.25 + 0.75 * bout : lp === null ? 0.7 : 1;
         if (lp === null) {
           straight(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp);
           escort.put(i, F);
