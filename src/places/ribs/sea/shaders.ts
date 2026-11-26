@@ -199,10 +199,9 @@ void main() {
   bool dry = depth < -0.09;
   float wetBand = 0.42 * smoothstep(-0.09, -0.004, depth);
   float edge = smoothstep(0.0, 0.012, depth);
-  // Only standing water is worked out: the wet band above the line is a darkening and no more.
+  // No branch round the work: a picture read inside one has no slope at its border, and the waterlines came out different on every page load.
   vec3 col = vec3(0.0);
   float alpha = 0.0;
-  if (depth > 0.0) {
   vec2 s2 = c2.xy - 0.5;
   vec2 slope = ((c1.xy - 0.5) * 0.11 + vec2(-s2.y, s2.x) * 0.07) * (0.2 + 0.8 * gust) * smoothstep(0.0, 0.07, depth);
   for (int i = 0; i < ${rings}; i++) {
@@ -250,7 +249,7 @@ void main() {
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;
-  alpha = (fres + (1.0 - fres) * murk) * edge;
+  alpha = fres + (1.0 - fres) * murk;
   // Foam: lace left along the line where the water works against stone and sand, and in lanes the wind draws out over the open sheet.
   vec2 drift = uTime * uWind * 0.05;
   float lace = dot(texture2D(tFoamPic, p / 6.0 - drift).rgb, vec3(0.3333));
@@ -259,8 +258,11 @@ void main() {
   float foamed = smoothstep(0.38, 0.7, lace) * clamp((1.0 - smoothstep(0.0, 0.07, depth)) * stretch + 0.45 * lanes * gust, 0.0, 1.0) * edge;
   col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);
   alpha = mix(alpha, 1.0, foamed);
-  }
-  gl_FragColor = vec4(rigOut(col * edge), max(alpha, wetBand * (1.0 - edge)) * (1.0 - uSolo));
+  // A bar the water has just left is wet: dark from above, and at a glance it holds the sky as the water beside it does. No hole in the mirror.
+  float band = wetBand / 0.42;
+  col = mix(0.85 * fres * refl * band, col, edge);
+  alpha = mix(band * max(0.42, 0.85 * fres), alpha, edge);
+  gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo);
   if (dry) discard;
 }`;
 

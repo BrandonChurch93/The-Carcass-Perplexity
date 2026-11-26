@@ -486,17 +486,17 @@ export function create(ctx: Context): Piece {
     const low = i < LOW;
     if (i >= FLIERS) {
       // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
-      const colony = scatter.next() < 0.2;
+      const colony = scatter.next() < 0.07;
       const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
       // Round the head of the blade itself: the blade's own middle line, near its top.
       const high = top.height * (1 - 0.3 * scatter.next() ** 2);
       const head = surface(top, partAtHeight(top, high), 0, 0, 0);
-      const radius = colony ? scatter.range(70, 190) : 12 + 90 * scatter.next() ** 2;
+      const radius = colony ? scatter.range(110, 260) : 12 + 90 * scatter.next() ** 2;
       fliers.push({
         cx: colony ? COLONY.x + scatter.range(-20, 20) : head.x + scatter.range(-12, 12),
         cz: colony ? COLONY.z + scatter.range(-20, 20) : head.z + scatter.range(-12, 12),
         radius,
-        y: colony ? scatter.range(COLONY.top - 20, COLONY.top + 90) : high + scatter.range(-25, 35),
+        y: colony ? scatter.range(COLONY.top - 10, COLONY.top + 120) : high + scatter.range(-25, 35),
         rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
         phase: scatter.range(0, Math.PI * 2),
         squash: scatter.range(0.55, 1),
