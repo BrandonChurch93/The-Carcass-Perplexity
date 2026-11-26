@@ -421,3 +421,73 @@ void main() {
   c += (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough) * runnerLight(vWorld, normalize(r + n)) / 3.14159;
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
+
+// The marks of the one that walks: aAt is the place and the radius, aLook the strength, the kind (0 flat on the floor, 1 snow in the air,
+// turned to the lens), the heading and a seed.
+export const MARK_VERTEX = /* glsl */ `
+attribute vec4 aAt;
+attribute vec4 aLook;
+varying vec2 vUv;
+varying vec4 vLook;
+varying vec3 vWorld;
+void main() {
+  vUv = position.xy;
+  vLook = aLook;
+  vec3 p;
+  if (aLook.y < 0.5 || aLook.y > 2.5) {
+    float c = cos(aLook.z);
+    float s = sin(aLook.z);
+    vec2 q = vec2(position.x * 1.25, position.y);
+    p = aAt.xyz + aAt.w * vec3(c * q.x + s * q.y, 0.0, c * q.y - s * q.x);
+  } else if (aLook.y < 1.5) {
+    vec3 right = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+    vec3 up = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+    p = aAt.xyz + aAt.w * (right * position.x + up * position.y);
+  } else {
+    // What the ice shows of a thing standing on it lies from its foot towards the lens, and a thing held over the ice by aLook.z metres
+    // begins that much further out as the lens is low.
+    vec2 to = cameraPosition.xz - aAt.xz;
+    float far = length(to);
+    to /= max(far, 1e-3);
+    float low = far / max(0.2, cameraPosition.y - aAt.y);
+    float along = 0.5 * position.y + 0.5;
+    float out0 = aLook.z * low;
+    float len = min(aLook.w * low, 0.8 * far);
+    vec2 at = aAt.xz + to * (out0 + along * len) + vec2(-to.y, to.x) * position.x * aAt.w * (1.0 + 0.8 * along);
+    p = vec3(at.x, aAt.y, at.y);
+  }
+  vWorld = p;
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+export const MARK_FRAGMENT = /* glsl */ `
+${RIG_GLSL}
+${NOISE_GLSL}
+varying vec2 vUv;
+varying vec4 vLook;
+varying vec3 vWorld;
+void main() {
+  float r = length(vUv);
+  float grain = vnoise(vUv * 3.0 + vLook.w * 31.0);
+  float a;
+  vec3 c = vec3(0.0);
+  if (vLook.y < 0.5) {
+    a = vLook.x * (1.0 - smoothstep(0.3, 1.0, r + 0.3 * (grain - 0.5)));
+  } else if (vLook.y < 1.5) {
+    a = vLook.x * pow(max(0.0, 1.0 - r), 1.5) * (0.35 + 0.65 * grain);
+    c = a * rigShade(vWorld, vec3(0.0, 1.0, 0.0), normalize(cameraPosition - vWorld), vec3(0.8, 0.84, 0.9), 1.0, 1.0);
+  } else if (vLook.y < 2.5) {
+    float along = 0.5 * vUv.y + 0.5;
+    float fine = vnoise(vWorld.xz * 9.0);
+    a = vLook.x * (1.0 - vUv.x * vUv.x) * (1.0 - vUv.x * vUv.x) * smoothstep(0.0, 0.04, along) * pow(1.0 - along, 1.6) * (0.75 + 0.5 * fine);
+  } else {
+    // A print: the rime trodden through to the dark ice, and what was trodden pushed up pale behind it.
+    float rr = r + 0.35 * (grain - 0.5);
+    float pressed = 0.6 * (1.0 - smoothstep(0.25, 0.62, rr)) * vLook.x;
+    float rim = smoothstep(0.42, 0.62, rr) * (1.0 - smoothstep(0.7, 1.0, rr)) * (0.45 + 0.55 * smoothstep(0.5, -0.6, vUv.x)) * (0.45 + 0.55 * grain) * vLook.x;
+    a = 1.0 - (1.0 - pressed) * (1.0 - rim);
+    c = rim * rigShade(vWorld, vec3(0.0, 1.0, 0.0), normalize(cameraPosition - vWorld), vec3(0.8, 0.84, 0.9), 1.0, 1.0);
+  }
+  if (a < 0.004) discard;
+  gl_FragColor = vec4(rigOut(c), a * (1.0 - uSolo));
+}`;
