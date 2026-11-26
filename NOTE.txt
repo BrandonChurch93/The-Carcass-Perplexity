@@ -1,5 +1,7 @@
-2026-11-26 03:47 UTC
-work at 6166891 on agent/marsh-ground-2
-hb9: marsh-0, marsh-3 (lower lens), marsh-4 beside approved; marsh-2 and marsh-1
-look-1.jpg = out/work/hb9.jpg
-look-2.jpg = out/work/a33.jpg
+2026-11-26 04:19 UTC
+work at 49353ae on agent/marsh-ground-2
+hb10 minute 190: all checks green; wade froth off, bank cracks, plume; five keys uhd
+look-1.jpg = out/work/v3-marsh-0.jpg
+look-2.jpg = out/work/v3-marsh-1.jpg
+look-3.jpg = out/work/v3-marsh-3.jpg
+look-4.jpg = out/work/v3-marsh-4.jpg
