@@ -215,6 +215,123 @@
       "width": 1448,
       "height": 1086,
       "relief": "carcass-hung-h.png"
+    },
+    {
+      "name": "feeder-a",
+      "kind": "plate",
+      "metres": 2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "feeder-a-a.png",
+      "relief": "feeder-a-h.png"
+    },
+    {
+      "name": "feeder-b",
+      "kind": "plate",
+      "metres": 2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "feeder-b-a.png",
+      "relief": "feeder-b-h.png"
+    },
+    {
+      "name": "feeder-c",
+      "kind": "plate",
+      "metres": 2,
+      "width": 1536,
+      "height": 1024,
+      "cover": "feeder-c-a.png",
+      "relief": "feeder-c-h.png"
+    },
+    {
+      "name": "perched",
+      "kind": "plate",
+      "metres": 1.5,
+      "width": 1536,
+      "height": 1024,
+      "cover": "perched-a.png",
+      "relief": "perched-h.png"
+    },
+    {
+      "name": "fliers",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1536,
+      "height": 1024,
+      "cover": "fliers-a.png",
+      "relief": "fliers-h.png"
+    },
+    {
+      "name": "borewall-c",
+      "kind": "plate",
+      "metres": 70,
+      "width": 2048,
+      "height": 768,
+      "cover": "borewall-c-a.png",
+      "relief": "borewall-c-h.png"
+    },
+    {
+      "name": "seastreak",
+      "kind": "tile",
+      "metres": 60,
+      "mean": [
+        0.089,
+        0.115,
+        0.123
+      ]
+    },
+    {
+      "name": "blade-b",
+      "kind": "plate",
+      "metres": 300,
+      "width": 1024,
+      "height": 1536,
+      "cover": "blade-b-a.png",
+      "relief": "blade-b-h.png"
+    },
+    {
+      "name": "blade-c",
+      "kind": "plate",
+      "metres": 500,
+      "width": 1024,
+      "height": 1536,
+      "cover": "blade-c-a.png",
+      "relief": "blade-c-h.png"
+    },
+    {
+      "name": "stack-a",
+      "kind": "plate",
+      "metres": 70,
+      "width": 1024,
+      "height": 1536,
+      "cover": "stack-a-a.png",
+      "relief": "stack-a-h.png"
+    },
+    {
+      "name": "stack-b",
+      "kind": "plate",
+      "metres": 70,
+      "width": 1024,
+      "height": 1536,
+      "cover": "stack-b-a.png",
+      "relief": "stack-b-h.png"
+    },
+    {
+      "name": "nearbar",
+      "kind": "plate",
+      "metres": 12,
+      "width": 1254,
+      "height": 1254,
+      "relief": "nearbar-h.png"
+    },
+    {
+      "name": "weedrock",
+      "kind": "plate",
+      "metres": 4,
+      "width": 2172,
+      "height": 724,
+      "cover": "weedrock-a.png",
+      "relief": "weedrock-h.png"
     }
   ]
 }
