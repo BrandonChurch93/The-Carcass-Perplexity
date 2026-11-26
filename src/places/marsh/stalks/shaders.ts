@@ -55,15 +55,18 @@ vec3 stemPoint(float a, float v) {
     float collar = smoothstep(h - 0.1, h, y);
     r = R * (1.12 - 0.12 * v) * (1.0 + 0.15 * flare + 0.05 * (1.0 - smoothstep(0.0, 0.4, q)) + 0.035 * lobe(a + y * 3.0, seed));
     r *= 1.0 + collar * (0.2 + 0.16 * lobe(a, seed + 2.0));
-    float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
-    y += collar * torn * (0.6 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.1 * wob(a * 3.0, seed + 3.0));
+    float torn = kind > 1.5 && kind < 2.5 ? 0.085 : 0.035;
+    y += collar * torn * (0.5 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.3 * wob(a * 3.0, seed + 3.0));
     // The foot spreads into the crust.
     r *= 1.0 + 0.5 * exp(-y / 0.09);
   } else if (aSkin < 1.5) {
     // The inside of the mouth.
-    float torn = kind > 1.5 && kind < 2.5 ? 0.045 : 0.035;
-    y = h + torn * (0.6 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.1 * wob(a * 3.0, seed + 3.0)) * (1.0 - v) - 0.4 * v;
-    r = R * mix(1.0 + 0.2 + 0.16 * lobe(a, seed + 2.0), 0.7, smoothstep(0.0, 0.2, v));
+    // The wall is a thumb thick: the break runs in across it, torn, to the hollow, and the hollow goes down dark.
+    float torn = kind > 1.5 && kind < 2.5 ? 0.085 : 0.035;
+    float inner = smoothstep(0.0, 0.25, v);
+    float sunk = max(0.0, v - 0.25) / 0.75;
+    y = h + torn * (0.5 * wob(a * 0.7, seed + 5.0) + 0.4 * wob(a * 1.6, seed + 8.0) + 0.3 * wob(a * 3.0, seed + 3.0)) * (1.0 - 0.6 * inner) * (1.0 - sunk) - 0.015 * inner - 0.45 * sunk;
+    r = R * mix(1.0 + 0.2 + 0.16 * lobe(a, seed + 2.0), 0.74, inner) * (1.0 - 0.15 * sunk);
   } else {
     // The body of the plume in the mouth: a pointed bud when it is drawn in, a low throat when it is out.
     float open = plumeOpen(kind, aKind.y, seed);
@@ -123,19 +126,19 @@ void main() {
     // Under the salt the tube is horn brown; it shows where the crust has flaked and under each lip, where the brine has run and left rust.
     float bare = smoothstep(0.42, 0.62, patchy + 0.3 * (0.5 - nh.b));
     float under = (1.0 - smoothstep(0.0, 0.3, q)) + 0.6 * smoothstep(0.9, 1.0, q);
-    vec3 horn = vec3(0.15, 0.095, 0.06) * (0.6 + 0.8 * nh.b);
-    vec3 rust = vec3(0.2, 0.07, 0.03);
-    vec3 albedo = (salt * 1.05 + 0.03) * vec3(1.0, 0.93, 0.85);
-    albedo = mix(albedo, horn, 0.8 * bare);
+    vec3 horn = vec3(0.25, 0.16, 0.105) * (0.6 + 0.8 * nh.b);
+    vec3 rust = vec3(0.3, 0.11, 0.045);
+    vec3 albedo = (salt * 1.05 + 0.03) * vec3(1.0, 0.9, 0.79);
+    albedo = mix(albedo, horn, 0.6 * bare);
     // Some nodes still carry the sheath they grew in: brown paper, split and hanging to a ragged end. And where a plume was shed there is a scar.
     float nodeId = floor((y + 0.045 * sin(y * 6.1 + seed * 20.0) + 0.02 * sin(y * 15.7 + seed * 50.0)) / sp + seed);
     float has = step(hash12(vec2(nodeId, floor(seed * 977.0))), 0.34);
     float rag = 0.25 + 0.5 * vnoise(vec2(vCoord.x * 2.6, nodeId * 3.1 + seed * 9.0));
     float sheath = has * smoothstep(1.0 - rag - 0.06, 1.0 - rag + 0.02, q) * smoothstep(0.38, 0.5, vnoise(vec2(vCoord.x * 1.4 + nodeId, seed * 40.0)));
     float fibre = vnoise(vec2(vCoord.x * 30.0, y * 2.0 + seed * 7.0));
-    albedo = mix(albedo, vec3(0.17, 0.105, 0.066) * (0.55 + 0.9 * fibre), 0.9 * sheath);
+    albedo = mix(albedo, vec3(0.26, 0.13, 0.065) * (0.55 + 0.9 * fibre), 0.8 * sheath);
     float scar = smoothstep(0.8, 0.86, vnoise(vec2(vCoord.x * 2.2, y * 9.0) + seed * 30.0));
-    albedo = mix(albedo, vec3(0.045, 0.028, 0.02), 0.85 * scar);
+    albedo = mix(albedo, vec3(0.1, 0.05, 0.03), 0.6 * scar);
     // One that is dead and broken has lost its salt: it is grey brown and stained.
     float deadStem = step(1.5, vKind.x) * step(vKind.x, 2.5) * step(0.5, fract(seed * 57.0));
     albedo = mix(albedo, albedo * vec3(0.5, 0.4, 0.33) + vec3(0.02, 0.012, 0.008), deadStem);
@@ -160,7 +163,7 @@ void main() {
     albedo *= mix(0.82 + 0.36 * fibre, 1.0, worn / 0.8);
     float lipLight = (1.0 - smoothstep(0.0, 0.2, t)) * worn;
     float tuck = smoothstep(0.35, 1.25, t) * worn;
-    albedo = mix(albedo * (1.0 - 0.42 * tuck), albedo * 1.25 + 0.03, 0.7 * lipLight);
+    albedo = mix(albedo * (1.0 - 0.25 * tuck), albedo * 1.25 + 0.03, 0.7 * lipLight);
     albedo = mix(albedo, rust * 0.8, 0.3 * tuck * smoothstep(0.4, 0.7, patchy));
     // The foot stands in red brine and mud.
     float wet = 1.0 - smoothstep(0.1, 0.7 + 0.6 * patchy, vWorld.y);
@@ -169,13 +172,18 @@ void main() {
     vec3 T = normalize(cross(up, n) + 1e-5);
     vec3 B = cross(n, T);
     n = normalize(n - (T * (nh.r - 0.5) + B * (nh.g - 0.5)) * 1.6 + up * (0.55 * lipLight - 0.3 * tuck));
-    float occ = (1.0 - 0.35 * tuck) * mix(0.55 + 0.45 * smoothstep(0.0, 0.35, q), 0.9, away) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
+    float occ = (1.0 - 0.2 * tuck) * mix(0.72 + 0.28 * smoothstep(0.0, 0.35, q), 0.9, away) * (0.75 + 0.25 * nh.b) * (0.6 + 0.4 * smoothstep(0.0, 0.25, y));
     // Seen from inside, through a broken mouth: the dark of the tube.
     c = rigShade(vWorld, n, v, albedo, mix(0.95, 0.4, wet), occ);
     if (!gl_FrontFacing) c = vec3(0.05, 0.028, 0.022) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.25 * skyOpen(vWorld);
   } else if (skin < 1.5) {
+    // The break: pale torn fibre across the thickness of the wall, and below it the wet dark of the hollow with the pith still in it.
     float down = vCoord.w;
-    c = vec3(0.07, 0.035, 0.028) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * 0.5 * (1.0 - smoothstep(0.0, 0.35, down)) * skyOpen(vWorld);
+    float wall = 1.0 - smoothstep(0.22, 0.36, down);
+    float fib = vnoise(vec2(vCoord.x * 38.0, down * 26.0 + seed * 3.0));
+    float pithy = smoothstep(0.4, 0.7, vnoise(vec2(vCoord.x * 5.0 + seed * 9.0, down * 9.0)));
+    vec3 inside = mix(mix(vec3(0.035, 0.014, 0.01), vec3(0.11, 0.06, 0.04), pithy), vec3(0.13, 0.078, 0.05), wall) * (0.3 + 0.9 * fib * fib);
+    c = inside * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * mix(0.45 * (1.0 - smoothstep(0.25, 0.8, down)), 1.0, wall) * skyOpen(vWorld);
   } else {
     // A closed sheath: long scales that lap over each other up to the point.
     float lap = fract(vCoord.w * 3.3 + 0.35 * sin(vCoord.x * 3.0));
@@ -280,9 +288,9 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float u = vLook.x;
   float tone = fract(vLook.y * 7.7);
-  vec3 albedo = mix(vec3(0.045, 0.005, 0.009), vec3(0.25, 0.016, 0.034), smoothstep(0.0, 0.8, u) * (0.3 + 0.7 * tone));
+  vec3 albedo = mix(vec3(0.07, 0.01, 0.015), vec3(0.4, 0.045, 0.07), smoothstep(0.0, 0.8, u) * (0.3 + 0.7 * tone));
   // The ends dry paler between two wettings.
-  albedo = mix(albedo, vec3(0.3, 0.13, 0.12), 0.5 * smoothstep(0.55, 1.0, u) * step(0.4, tone));
+  albedo = mix(albedo, vec3(0.42, 0.19, 0.18), 0.5 * smoothstep(0.55, 1.0, u) * step(0.4, tone));
   // Pale where it leaves the mouth.
   albedo = mix(albedo, vec3(0.2, 0.12, 0.09), 0.5 * (1.0 - smoothstep(0.03, 0.22, u)) * vLook.z);
   // Drawn in, the filaments are packed and dark: the bud is a dull sheath.

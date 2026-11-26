@@ -33,7 +33,7 @@ function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
     }
   };
   sheet(0, rings, (v) => v);
-  sheet(1, 3, (v) => v);
+  sheet(1, 4, (v) => v);
   sheet(2, 12, (v) => v);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -196,7 +196,7 @@ export function create(ctx: Context): Piece {
       if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = rng.next();
       const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
       const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.2);
-      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 1.15 : 0.72);
+      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 0.85 : 0.72);
       const dx = Math.cos(s.yaw);
       const dz = -Math.sin(s.yaw);
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
@@ -236,7 +236,7 @@ export function create(ctx: Context): Piece {
         fils[3].push(rng.next() < 0.5 ? -1 : 1, (close ? 1.5 : 0.8) * rng.range(0.85, 1.15), close ? rng.range(0.45, 0.7) : rng.range(0.2, 0.5), rng.next());
       }
     });
-    const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 14 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
+    const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 18 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
     const mesh = new THREE.Mesh(g, stemMaterial);
     mesh.frustumCulled = false;
     group.add(mesh);

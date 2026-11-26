@@ -1,5 +1,7 @@
 // The mud-wallowers: heavy eyeless animals that root in the red brine of the vein with a fringe of tusk-like feelers.
-import { BEASTS, F, R, T0, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
+import { BEASTS, F, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime, rel } from '../shared/anchors';
+import { secondsInPlace, shotsOf } from '../../../film/cut';
+import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { newDrive, walk, type Build, type Plan } from './animal';
 import { Beast } from './body';
@@ -10,8 +12,12 @@ export const PARTS: readonly string[] = ['wallowers'];
 
 const DISCS = 5;
 /** The size of a cell of the skin's grid, metres at size 1: the three by the lens of the wallowers, and the rest. */
-const CELL_NEAR = 0.024;
-const CELL_FAR = 0.05;
+const CELL_NEAR = 0.03;
+const CELL_FAR = 0.065;
+// STAGED by shot: the two that lie in the vein to the right of the lens of the wallowers are off the set for its shot. The approved picture has one animal behind the three, far and soft, and these two stood large and cropped at its edge.
+const WALLOW_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-04');
+const WALLOW_SPAN: [number, number] = WALLOW_SHOT ? [secondsInPlace(UNIT, WALLOW_SHOT.first) - 0.004, secondsInPlace(UNIT, WALLOW_SHOT.last) + 0.004] : [0, -1];
+const OFF_SET = [6, 9];
 
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('wallowers');
@@ -32,11 +38,11 @@ export function create(ctx: Context): Piece {
     // One on a bank has sunk into it to the ankle and further: the mud is soft.
     const sunkIn = (size < 0.5 ? Math.max(ground, -0.07) : ground) - (sink > 0.15 ? 0 : (size < 0.5 ? 0.1 : 0.12) * b.k);
     // In shallows it goes in no deeper than the ankle.
-    // STAGED for the lens of the wallowers: the great one has trodden itself a wallow and stands in it to the shins, its belly close over the mud.
+    // STAGED for the lens of the wallowers: the great one stands in the mud of the bank to the shins, its belly clear of it.
     const hero = herd.length === 0;
-    const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.24 * b.k : 0);
+    const stand = (sink > 0.15 ? sunkIn : Math.max(sunkIn, land - 0.1)) - (hero ? 0.05 * b.k : 0);
     // The head hangs to the mud that is under it, or to the top of the brine.
-    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.62 : 0.6) * b.k;
+    const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + 0.6 * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
     const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
@@ -60,7 +66,8 @@ export function create(ctx: Context): Piece {
     // STAGED for the wide key: the two that lie in the brine nearest its lens lie across its view, as the approved picture has them, and not tail on.
     const dir: [number, number] = b.d < 26 ? [0.25 * F[0] - 0.97 * R[0], 0.25 * F[1] - 0.97 * R[1]] : [F[0] * hd + R[0] * hl, F[1] * hd + R[1] * hl];
     // STAGED by distance: the ones that wade away from the lens of the wallowers go at a walk that is seen from far off, and are where the anchors put them half way between the wide key and the key of the wallowers.
-    const far = herd.length >= 3 && b.sink < 0.75;
+    // The one behind the three is where the anchors put it at the key of the wallowers: far and to the right of the young one, as the approved picture has it.
+    const far = herd.length > 3 && b.sink < 0.75;
     add(p[0], p[1], far ? 0.5 * (T0 + WALLOW_TIME) : WALLOW_TIME, dir, size, b.sink, far ? b.speed * 1.5 + 0.06 : b.speed, b.root);
   }
   // STAGED for the lens of the colony: one wades the far shallows of the pool, side on, right of the middle of that view.
@@ -84,7 +91,12 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (seconds) => {
+      const staged = stagedSeconds();
+      const cleared = staged >= WALLOW_SPAN[0] && staged <= WALLOW_SPAN[1];
       herd.forEach((h, i) => {
+        const on = !(cleared && OFF_SET.includes(i));
+        h.beast.mesh.visible = on;
+        h.beast.feelers.visible = on;
         const driven = walk(h.plan, h.beast.b, seconds, drive);
         driven.floor = h.floor;
         // One that lies in the brine lies nose down: the back stands out of it and falls away to the head.
@@ -113,10 +125,10 @@ export function create(ctx: Context): Piece {
           const off = Math.min(1, foot.lift / (0.2 * k));
           // A foot that stands in the brine throws no shade on it: the ring it makes is its contact.
           const dry = ctx.rig.land.shore(foot.x, foot.z) > 0.05 ? 1 : 0;
-          ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), 0.85 * (1 - 0.7 * off) * dry);
+          ctx.rig.setDisc(discs, i * DISCS + j, foot.x, foot.z, 0.55 * k * (1 + 0.6 * off), on ? 0.85 * (1 - 0.7 * off) * dry : 0);
         }
-        ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3, 1.9, stood.yaw);
-        wet.set(i, stood, k, seconds);
+        ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
+        wet.set(i, stood, k, seconds, on ? 1 : 0);
       });
       wet.touch();
     },
