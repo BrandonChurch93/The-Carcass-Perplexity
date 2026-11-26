@@ -287,7 +287,7 @@ void main() {
     if (uStrikeAt.w > 0.0) {
       vec3 toStroke = uStrikeAt.xyz - p;
       float span2 = dot(toStroke, toStroke);
-      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.03 * head * head * grainS / (1.0 + span2 / 1.0e6));
+      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.07 * head * head * grainS / (1.0 + span2 / 4.0e6));
     }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
