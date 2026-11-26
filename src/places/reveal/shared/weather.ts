@@ -110,21 +110,27 @@ float lowPicture(vec2 w) {
   return pic;
 }
 
-// One bank of the field that travels as a body: its ragged outline and its torn cloud are read in its own ground, so it is the same
-// bank wherever it has got to. x how thick, y how far the scatter round it is cleared so that it stands apart.
-vec2 bankAt(vec2 at, vec2 gx, vec2 gy, vec2 from, vec2 wind, vec2 along, vec2 size, vec2 bite, float seed) {
-  vec2 q = at - from - uWx * wind;
-  vec2 l = vec2(dot(q, along), dot(q, vec2(-along.y, along.x))) / size;
+// The two banks of the field that travel as bodies, the one north past the skull on the upper wind, the other east across the lower
+// arm with the field. Each has its ragged outline and its torn cloud in its own ground, so it is the same bank wherever it has got
+// to. They never meet, so a point is read once, in the ground of the nearer (a read for each cost 0.3 s a frame).
+// x how thick, y how far the scatter round it is cleared so that it stands apart.
+vec2 bankField(vec2 at) {
+  vec2 qn = at - vec2(-2030.0, 600.0) - uWx * vec2(3.0, -21.0);
+  vec2 qe = at - vec2(-650.0, 950.0) - uWx * vec2(17.0, -8.0);
+  vec2 ln = vec2(dot(qn, vec2(0.5, -0.866)), dot(qn, vec2(0.866, 0.5))) / vec2(390.0, 150.0);
+  vec2 le = vec2(dot(qe, vec2(0.94, 0.34)), dot(qe, vec2(-0.34, 0.94))) / vec2(330.0, 210.0);
+  bool north = dot(ln, ln) < dot(le, le);
+  vec2 q = north ? qn : qe;
+  vec2 l = north ? ln : le;
+  float seed = north ? 0.37 : 0.81;
   float far = length(l);
-  if (far > 1.7) return vec2(0.0);
-  // (The reads are inside a branch: the slopes come from outside it.)
-  float rag = textureGrad(uCloudTile, q / 760.0 + seed, gx / 760.0, gy / 760.0).b;
-  mat2 lay = mat2(0.84, 0.54, -0.54, 0.84);
-  // (The same torn streaks as the field's, laid twice and closer: a bank is the scatter grown thick, with the sea seen through it.)
-  float fine = seen(textureGrad(uMatStreaks, lay * q / vec2(430.0, 300.0) + seed, lay * gx / vec2(430.0, 300.0), lay * gy / vec2(430.0, 300.0)).rgb, 0.26, 0.68);
-  float wide = seen(textureGrad(uMatStreaks, q / vec2(840.0, 620.0) + seed + 0.4, gx / vec2(840.0, 620.0), gy / vec2(840.0, 620.0)).rgb, 0.28, 0.75);
-  float body = (1.0 - smoothstep(0.4, 1.0, far * (0.55 + 0.95 * rag))) * smoothstep(0.25, 0.6, length(l - bite));
-  return vec2(body * min(1.0, 1.35 * max(fine, 0.9 * wide) + 0.2 * body), 1.0 - smoothstep(0.9, 1.7, far));
+  vec3 tile = texture2D(uCloudTile, q / 760.0 + seed).rgb;
+  float rag = tile.b;
+  // (The same torn streaks as the field's, laid closer: a bank is the scatter grown thick, with the sea seen through it.)
+  // (The tile's other two fields bend the streaks and open gaps in them, so the bank is not a hatched patch.)
+  float torn = seen(texture2D(uMatStreaks, mat2(0.84, 0.54, -0.54, 0.84) * q / vec2(430.0, 300.0) + seed + 0.05 * (tile.rg - 0.5)).rgb, 0.22, 0.62) * (0.2 + 0.8 * smoothstep(0.15, 0.55, tile.r));
+  float body = (1.0 - smoothstep(0.4, 1.0, far * (0.55 + 0.95 * rag))) * smoothstep(0.25, 0.6, length(l - (north ? vec2(0.3, 0.9) : vec2(-0.2, 0.55))));
+  return vec2(body * min(1.0, 1.25 * torn + 0.16 * body), 1.0 - smoothstep(0.9, 1.7, far));
 }
 
 // The ground of the low field: the world, read through a slow bend so the streets curve, and drifting.
@@ -166,16 +172,10 @@ vec2 lowField(vec2 at) {
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
   float thick = min(1.0, 1.25 * smoothstep(0.05, 0.85, pic)) * smoothstep(0.0, 0.5, field);
   if (uLive > 0.0) {
-    // (Two banks gather out of the scatter as the hold begins and go their own ways, the one north past the skull on the upper
-    // wind, the other east across the lower arm with the field: they are what the eye follows from frame to frame.)
-    vec2 gx = dFdx(at);
-    vec2 gy = dFdy(at);
-    vec2 north = bankAt(at, gx, gy, vec2(-2030.0, 600.0), vec2(3.0, -21.0), vec2(0.5, -0.866), vec2(390.0, 150.0), vec2(0.3, 0.9), 0.37);
-    vec2 east = bankAt(at, gx, gy, vec2(-650.0, 950.0), vec2(17.0, -8.0), vec2(0.94, 0.34), vec2(330.0, 210.0), vec2(-0.2, 0.55), 0.81);
-    float gathered = smoothstep(0.0, 2.5, uWx) * smoothstep(0.1, 0.4, limbCos(at));
-    float bank = gathered * max(north.x, east.x);
-    thick = max(thick * (1.0 - 0.75 * gathered * max(north.y, east.y)), bank);
-    pic = max(pic, bank);
+    // (The banks gather out of the scatter as the hold begins: they are what the eye follows from frame to frame.)
+    vec2 bank = bankField(at) * smoothstep(0.0, 2.5, uWx) * vec2(smoothstep(0.1, 0.4, limbCos(at)), 1.0);
+    thick = max(thick * (1.0 - 0.75 * bank.y), bank.x);
+    pic = max(pic, bank.x);
   }
   return vec2(thick, pic);
 }

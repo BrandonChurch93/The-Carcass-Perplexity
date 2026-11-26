@@ -520,7 +520,7 @@ void main() {
       // The Heart itself: a lake of fire under a cracked skin, no two sides of its shore alike. The skin glows dull red, the cracks
       // bright, hottest at the middle; and the beat widens it.
       // (And between the beats it works: the lake swells and sinks back, slow and uneven, and its shore is never still.)
-      float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear + 0.38 * work)) * (0.38 + 0.8 * vnoise(xz / 24.0 + 2.0) + 0.4 * vnoise(xz / 13.0 + vec2(1.3 * uTime, -0.9 * uTime)));
+      float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear + 0.38 * work)) * (0.5 + 1.0 * vnoise(xz / 24.0 + 2.0) + 0.14 * sin(xz.x / 9.0 + 3.1 * uTime) * sin(xz.y / 7.0 - 2.3 * uTime));
       float lake = 1.0 - smoothstep(0.45, 1.0, shore);
       lakeNight = lake * uEmber.x * land;
       crowd = lake * (1.5 + 0.2 * beatNear);
@@ -544,7 +544,7 @@ void main() {
     glow *= mix(1.0, 0.5 + 0.5 * clamp(1.4 * hit, 0.0, 1.0), uEmber.x);
     glow *= 0.5 + 0.5 * uEmber.w;
     // (Held down as it is for the open camera, the fire would lie flat: its swell is laid on after, on the lake and on the rock it lights.)
-    glow *= 1.0 + 0.7 * work;
+    glow *= 1.0 + 0.12 * (1.0 - aside) + 0.7 * work;
   }
 
   // ---- the water ----
