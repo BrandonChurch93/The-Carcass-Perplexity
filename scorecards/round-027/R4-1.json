@@ -1,0 +1,56 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 15:33 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "frames 9535 to 9546 across the climb from the lake to orbit",
+        "what": "the rise to orbit is broken by a flat, featureless grey-beige blur across all twelve frames that hides a scene swap between the low lake view and the orbital cloud view",
+        "fix": "replace the flat blurred cloud wipe with continuous volumetric cloud layers and unbroken camera motion so the climb carries through cleanly"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "the lava cascade pouring from the cave mouth in frames 4215 to 4220 compared with set-A-02.png frame 4037",
+        "what": "the molten stream holds the same frozen pattern of bright ribbons and dark crusts across three full seconds while the camera pushes in, reading as a static glowing surface rather than flowing lava",
+        "fix": "animate genuine downward flow, folding crust plates, and rising fume along the cascade so the lava moves with thick weight"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the clouds and spiral cyclone across frames 10094 to 11608",
+        "what": "over twenty-five seconds in orbit, the cyclone in the lower right and all cloud formations stay completely frozen in place while only the shadow and orange glow change, reading as a still picture",
+        "fix": "add slow rotation to the cyclone and independent drift to the cloud decks so the planet remains alive during the hold"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the shaggy marsh beasts in frames 6309 to 6561",
+        "what": "across more than four seconds, the large beast, the smaller one beside it, and the foreground creature stay locked in identical poses with no weight shift or step as the camera moves in, reading as static models",
+        "fix": "add natural weight shifts, stepping, breathing, or head turns so the animals read as living creatures"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the tall stilt-legged creatures in the lava field in frames 3028 to 3280",
+        "what": "across more than four seconds, both foreground and midground creatures hold the same planted stances as the camera trucks past, reading as rigid models",
+        "fix": "give the creatures subtle weight shifts, stepping, or independent neck and tendril motion so they stay alive as the camera passes"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the lightning strike over the snowy ridge in frames 7015 to 7020",
+        "what": "the bolt begins on the cut frame and strobes on frames 7015, 7018, and 7020 without lighting the main jagged peak or surrounding ridge faces, leaving only a faint brighten on the lower snow",
+        "fix": "offset the strike briefly after the cut and cast a strong, brief flash across the peak, snow ridge, and clouds so the event lands"
+      }
+    ]
+  }
+}

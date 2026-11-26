@@ -1,0 +1,35 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 15:33 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the entire orbital frame from frame 11623 to 11743",
+        "what": "the shot is completely frozen across all two seconds with no camera drift, no rotation in the lower-right cyclone, no atmospheric cloud movement, and no life or variation in the glowing ember inside the ribcage",
+        "fix": "keep the orbital shot alive with slow continuous camera drift, gradual rotation in the cyclone, subtle cloud shear across the planet surface, and slow pulsing in the glowing core"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the pale quadruped on the left cliff face and the smaller animals along the left-center shoreline",
+        "what": "the animals remain completely motionless in identical rigid poses across all 480 frames of the eight-second loop, reading as static models rather than living creatures",
+        "fix": "give the cliff and shoreline animals subtle asynchronous life such as head turns, grazing, weight shifts, or a slow step that loops cleanly"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03.png",
+        "where": "the overcast cloud layer behind the giant rib arches",
+        "what": "the cloud formations remain locked in place across the entire eight-second loop while the water and birds move below",
+        "fix": "add a slow, seamless horizontal drift to the cloud layer that matches the loop period"
+      }
+    ]
+  }
+}

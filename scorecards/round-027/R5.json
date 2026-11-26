@@ -1,0 +1,28 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R5",
+  "family": "gpt",
+  "answered": "",
+  "answer": {
+    "critic": "R5",
+    "score": 8,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "frame 10027, between the rib cage and the red channels to its right",
+        "what": "The skeleton reads immediately and the coast and red flats have obvious counterparts, but the terraced pools, ice spire, and amber lake are hard to locate as specific places in the wide. The terrain texture swallows their identifying contours.",
+        "fix": "Carry one recognizable contour from each opening into the lit wide, such as the terraced sinkhole, a distinct ice ridge, and the lake's dark oval rim."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 7015, behind the ice spire and across the left horizon",
+        "what": "The pale streamers look like separate flat ribbons, and the distant snow shelves sit against a straight dark boundary with little depth. This shot looks less finished than the other landscapes.",
+        "fix": "Break up the horizon with receding snow ridges and drifting spindrift; give the streamers softer volume and let the lightning light their edges."
+      }
+    ]
+  }
+}
