@@ -1,6 +1,7 @@
-2026-11-25 23:52 UTC
-work at f026f5c on agent/reveal-place
-min 149: cloud, storm, cyclone from mat photographs; frame darker (58/66/76); cost 7.62 s
+2026-11-26 00:03 UTC
+work at c5c9af3 on agent/reveal-place
+min 160: country from mat range, plain, badland; bay in far leg; storm lit; mean 55/63/72; cost 6.98 s
 look-1.jpg = out/work/frame4.jpg
 look-2.jpg = out/work/frame4-400.jpg
-look-3.jpg = out/work/k123.jpg
+look-3.jpg = out/work/k23.jpg
+look-4.jpg = out/work/bay.jpg
