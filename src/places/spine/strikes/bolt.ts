@@ -183,7 +183,7 @@ export function ditherAt(seconds: number): number {
 /** The pattern itself, for a fragment shader that declares `uniform float uDither`. */
 export const GRAIN_GLSL = /* glsl */ `
 float grainAt() {
-  return fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))) + uDither);
+  return fract(fract(sin(dot(floor(gl_FragCoord.xy), vec2(12.9898, 78.233))) * 43758.5453) + uDither);
 }
 // What glows in the air is drawn solid, with a depth of its own, so that the air between it and the lens draws over it as over rock. Where it is
 // dimmer than \`full\` it leaves pixels out and the ones it keeps make up the difference.

@@ -19,7 +19,8 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
 ## Tried and did not work
 
 - Blended or additive materials for bolt, glow, kites: they vanish under the air pass, which composites by depth. Everything of mine is
-  solid with pixels left out by a moving pattern (`ditherAt`, `glowOut`). At draft this shows as a screen door; samples average it.
+  solid with pixels left out by a moving pattern (`ditherAt`, `glowOut`). At draft this shows as grain; samples average it.
+- An ordered pattern for the left-out pixels (interleaved gradient): the jury read it as a halftone mesh. It is a hash scatter now.
 - Hide drawn single-sided: it was inside out all session and showed as bare grey patches. It is `DoubleSide` with the normal turned.
 - Dead one rolled 1.3 (belly to the lens, reads as two heaps) and rolled negative (back to the lens, wound hidden). 0.45 is right.
 - Legs thrown straight at the lens as rigid bones: the soles show as discs. Fixed by a bend at the hock in the vertex shader (`hockAt`).
@@ -39,7 +40,7 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
   the flash lights cloud and ridge evenly violet, the picture has it fall off down the rock.
 - spine-0: the crossing runners are about 25 px wide on the trail and barely read; far cords read as dark dashes.
 - spine-2: kites are paler and flatter than the glassy violet films of the picture; no light comes through them.
-- Everywhere: screen-door grain on kites and bolt at draft; legs are one rigid bone each.
+- Everywhere: grain on kites and bolt at draft from the left-out pixels; legs are one rigid bone each.
 
 ## Round 9 (judged on version 2): closed, tried, not reached
 
@@ -49,8 +50,9 @@ All looks were at the draft tier, 3840 x 2160, one sample. The final tier was ne
   now the paw lies flat); hole in the dead one's body (the inside-out hide); frozen herd (breath, neck and weight shifts 2 to 3 times larger).
 - Tried, partly there: clumped frosted coat (dark roots, guard locks one in seven with rime ends, frost on backs); the dead one's weight
   and pose (hock bend, legs apart). Both still read as a model beside the pictures.
-- Not reached: kites (even lilac, dotted edges, even tassels, too soft at spine-2 on measure M3, no change of shape downwind);
-  the herd's place in the canal (standing one left of the mouth and backlit, resting ones staggered back); feet wet in the water;
+- Kites, tried in the last half hour: the left-out pixels are now a scatter, not rows (the rows were the "halftone mesh"); skin thinner,
+  muted grey-violet with darker veins; icicles on the cords uneven and fewer. Not judged at the final tier.
+- Not reached: kites shearing, detaching and tearing downwind, each one different, attachment clusters seated in clefts; the herd's place in the canal (standing one left of the mouth and backlit, resting ones staggered back); feet wet in the water;
   dotted pattern on sparks; fur sharpness on M3 at spine-4; the dead one reframed to the right edge.
 
 ## Staged by shot
