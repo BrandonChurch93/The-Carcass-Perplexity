@@ -203,6 +203,50 @@
       "width": 1672,
       "height": 941,
       "relief": "carcass-low-h.png"
+    },
+    {
+      "name": "frond-b",
+      "kind": "plate",
+      "metres": 1.5,
+      "width": 2048,
+      "height": 768,
+      "cover": "frond-b-a.png",
+      "relief": "frond-b-h.png"
+    },
+    {
+      "name": "holdfast",
+      "kind": "plate",
+      "metres": 0.8,
+      "width": 1536,
+      "height": 1024,
+      "cover": "holdfast-a.png",
+      "relief": "holdfast-h.png"
+    },
+    {
+      "name": "tassel",
+      "kind": "plate",
+      "metres": 0.9,
+      "width": 1024,
+      "height": 1536,
+      "cover": "tassel-a.png"
+    },
+    {
+      "name": "drypad",
+      "kind": "plate",
+      "metres": 6,
+      "width": 1254,
+      "height": 1254,
+      "relief": "drypad-h.png"
+    },
+    {
+      "name": "pebbles",
+      "kind": "tile",
+      "metres": 1.5,
+      "mean": [
+        0.31,
+        0.272,
+        0.234
+      ]
     }
   ]
 }

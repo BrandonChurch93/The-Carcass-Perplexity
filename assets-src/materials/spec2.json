@@ -1455,5 +1455,780 @@
   "group": 5,
   "model": "gpt_image_2_6_flare",
   "date": "2026-11-26"
+ },
+ {
+  "place": "eye",
+  "name": "matfield",
+  "kind": "plate",
+  "prompt": "The amber shallows of a mountain lake as seen from high above, a piece 240 metres wide and 135 metres tall, under perfectly clear, still water with no ripples and no reflections. Long patches and streaks of rust, orange and gold growth lie on the bed, all drawn out one way, toward the top edge of the picture, torn and ragged, in every width from a hand to twenty metres, with gaps of open water over pale silt between them: the gaps are as wide as the patches and nowhere regular. Along the bottom edge the growth thins out to bare wet pale silt and gravel. Toward the top edge the patches close up, the colour deepens to dark rust and brown, and the water over them darkens. No stripes of one width, no even spacing. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/6-eye/eye-0-establishing.jpg",
+   "references/drafts/working/real/orb-prismatic.jpg"
+  ],
+  "why": "the amber shallows of the establishing picture from high: patches and streaks with open water between, where the built mats read as tiger stripes",
+  "metres": 240,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "eye_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "eye",
+  "name": "matdark",
+  "kind": "plate",
+  "prompt": "The bed of the shallow, perfectly clear margin of a lake, a piece 12 metres wide and 12 metres tall, seen with no ripples and no reflections. A dense tangle of fine gold, amber and rust filaments, strands over strands, thick as rope in places and thin as hair in others, all combed roughly toward the top of the picture, the upper strands bright and the ones beneath them dimmer. They lie over dark clear water and dark brown silt, not over pale rock: every gap between the strands is deep brown to black. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/6-eye/eye-2-the-iris-amber-mats.jpg",
+   "references/drafts/working/real/plate-terrace-2.jpg"
+  ],
+  "why": "the tangle of strands of the weed detail over dark water, where the built strands are thin pale swirls on brown",
+  "metres": 12,
+  "aspect": "1:1",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "eye_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "eye",
+  "name": "shaftwall",
+  "kind": "plate",
+  "prompt": "The sheer rock wall of a flooded shaft seen square on through perfectly clear water, a face 30 metres wide and 17 metres tall. Pale limestone in thick level beds, with ledges, rounded overhangs, pockets and broken edges, a little pale silt lying on the ledges and a few thin strands of amber growth hanging from the uppermost lip. The water tints the rock more with depth and that is the only change of brightness in the picture: along the top edge the rock is pale cream and clear, in the middle it is blue-green, and toward the bottom edge it is lost in blue-black. The surface fills the whole frame edge to edge, square on, with no background showing. Flat, even, shadowless light from the front, so that no side is brighter than another: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/6-eye/eye-3-the-edge-where-the-floor-stops.jpg",
+   "references/drafts/working/real/plate-crater-1.jpg"
+  ],
+  "why": "the wall of the shaft under water at the edge where the floor stops: pale at the lip and lost in blue-black below",
+  "metres": 30,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of a rock face seen square on. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. White is what stands furthest out toward the viewer and black is what lies deepest in. Cracks, joints, caves, hollows and undercut bands are dark; ledges, ribs, bulges and the noses of blocks are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "eye_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "eye",
+  "name": "shoreplate",
+  "kind": "plate",
+  "prompt": "The wet edge of a lake shore, a piece 8 metres wide and 4.5 metres tall. Rounded cobbles and pebbles of pale grey and buff limestone in every size from a pea to a loaf, most of them small, bedded in dark wet silt and coarse grit, some half sunk, some lying on others, with a few torn scraps of orange and rust growth stranded among them and a film of water in the lowest hollows. The stones are packed close in some parts and sparse in others. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/6-eye/eye-1-drinkers-at-the-shore.jpg",
+   "references/drafts/working/real/plate-terrace-1.jpg"
+  ],
+  "why": "the wet shore at the drinkers: cobbles and pebbles of many sizes in dark silt, where the built pebbles read as beans on flat grey",
+  "metres": 8,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "eye_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "feeder-a",
+  "kind": "plate",
+  "prompt": "One kite-wing, feeding, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. Its body is held level and both legs are straight. Its wings are folded over its back as one closed bundle, like a furled umbrella, the rust-orange edges showing as lines along the bundle. Its neck reaches down and forward, and the tuft of tendrils is spread out where it touches the ground. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "a feeder in the pose of the nearest animal of the tide pool detail, pale as the picture has them, where the built ones are dark brown",
+  "metres": 2,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "feeder-b",
+  "kind": "plate",
+  "prompt": "One kite-wing, in mid step, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. One foot is lifted clear of the ground with the knee bent and the other leg is straight. Its wings are folded over its back as one closed bundle. Its neck is stretched out level in front of it and the tendrils at its end are flung outward in all directions, as if it were shaking water off them, with a few drops in the air. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "a second feeder, mid step with the tendrils flung, so that the feeders are not copies of one pose",
+  "metres": 2,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "feeder-c",
+  "kind": "plate",
+  "prompt": "One kite-wing, running, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. It runs with a long stride: one leg reaching far forward, the other pushing off behind it, the body tipped forward. Its wings are half open and raised above its back, the membrane slack between the finger bones. Its neck is stretched forward and a little down, the tendrils streaming back. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "a third feeder, running with the wings half open, for the ones that leave before the bore",
+  "metres": 2,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "perched",
+  "kind": "plate",
+  "prompt": "Six kite-wings, animals of an unknown world, perched, shown apart from each other in a grid of three across and two down, each alone in its own cell with black between it and its neighbours, each about 1.5 metres tall, seen from the side or at a three-quarter angle. They are the animals that sit on the ledges of the first reference image: rock-grey and dirty ivory skin, stained, with rust-orange only along the edges of the wing membranes. Each has two long thin legs, a small lean body, two wings of long thin finger bones with leathery membrane, and a long neck that ends in nothing but a tuft of pale tendrils. Every pose is different. Top row, from the left: one sitting low on a nest of black weed with its legs folded under it; one standing upright with its wings folded; one standing and stretching one wing straight out to the side. Bottom row, from the left: one with its neck raised straight up and its wings half lifted, squabbling; one with its neck curled back over its shoulder, preening a wing; one asleep with its neck tucked under a folded wing. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-3-the-colony.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "six perched kite-wings in six poses for the colony, grey and dirty as the colony picture has them, where the built sitters are one cream drawing",
+  "metres": 1.5,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "fliers",
+  "kind": "plate",
+  "prompt": "Four kite-wings, animals of an unknown world, in flight, shown apart from each other in a grid of two across and two down, each alone in its own cell with black between it and its neighbours, each about 3 metres from wing tip to wing tip. They are the fliers of the first reference image: pale grey-white skin and membrane, with rust-orange along the trailing edges of the wings, a small lean body, two long thin legs, and a long neck that ends in nothing but a tuft of pale tendrils. Each wing is long thin finger bones with thin leathery membrane stretched between them. Top left: seen from the side, wings raised high at the top of a beat, legs trailing. Top right: seen from the side, wings swept down at the bottom of a beat. Bottom left: seen from below, both wings spread wide and flat, banking. Bottom right: landing, seen from the side and a little in front, wings cupped forward and the long legs reaching down. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-0-establishing.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "four fliers in four poses, pale against the dark cloud as the pictures have them, where the built fliers are brown and of one pose",
+  "metres": 3,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "borewall-c",
+  "kind": "plate",
+  "prompt": "One section of a tidal bore, a single breaking wall of sea water, seen square on from in front: a section 70 metres wide and 30 metres tall that runs out of the frame at the left and right edges. The lip of the wave has pitched forward along its whole length and falls as one thick white curtain of water over the upper half of the wall, ragged along its lower edge. Under the curtain the dark green-grey face of the wave shows as a band, glassy and streaked with foam, and at its foot lies a band of white churn. The light comes from behind the wave and from the right, so the thin lip of the crest glows pale green. The wall reaches from the left edge of the frame to the right edge; black is above it and below it only. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "a third section of the bore, with the lip pitched forward and falling as a white curtain, so that the wall has a dark standing face and a lip",
+  "metres": 70,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "seastreak",
+  "kind": "tile",
+  "prompt": "A material texture, seen straight down from above in an orthographic view: open sea under a gale, about 60 metres across. Dark slate-green water with a short steep chop, long thin white foam streaks all drawn out one way down the wind from the top of the picture to the bottom, unevenly spaced, and a few torn whitecaps with lace trailing from them. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.",
+  "refs": [
+   "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "the open sea of the opening from above: foam streaks down the wind and whitecaps, where the built sea is a plain sheet",
+  "metres": 60,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "ribs_sea_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "mudhide",
+  "kind": "tile",
+  "prompt": "A material texture, seen straight on: the hide of a huge heavy wallowing animal that has stood a long time in drying mud, about 1 metre across. Pinkish-brown creased skin plastered with grey-tan mud that has dried to pale cracked plates. The plates lift and curl at their edges, some have flaked away and show the skin beneath, and a white bloom of salt lies on them. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.",
+  "refs": [
+   "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg",
+   "references/drafts/working/real/ref-hide-2.jpg"
+  ],
+  "why": "the hide of the stuck one: skin under dried, cracked, curling plates of mud, where the built one is smooth and grey",
+  "metres": 1,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26",
+  "takes": "2 made, take 2 kept (take 1 was made from a prompt cut short by a fault of the Builder's own script and was thrown away)"
+ },
+ {
+  "place": "marsh",
+  "name": "hairhide",
+  "kind": "tile",
+  "prompt": "A material texture, seen straight on: the hide of the back of a huge heavy wallowing animal, about 1 metre across. Grey-tan wrinkled skin in broad folds, with coarse sparse hair lying one way in wet clumps, and salt dried pale in flakes on the high folds. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.",
+  "refs": [
+   "references/approved/4-marsh/marsh-3-mud-wallowers.jpg",
+   "references/drafts/working/real/ref-hide-2.jpg"
+  ],
+  "why": "the back of a wallower with its sparse coarse hair in wet clumps, where the built backs have no hair",
+  "metres": 1,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "deadone-b",
+  "kind": "plate",
+  "prompt": "The carcass of a mud-wallower, an animal of an unknown world, long dead, 3 metres long, seen from the side and a little from above, as a camera 1.5 metres above the ground and 6 metres away sees it, lying level across the frame. It has collapsed in on itself: the back has fallen in and dark bone shows in the hollow. Its head end is at the left, with its fringe of long pale feelers splayed out on the ground in front of it. The whole carcass is coated in white salt crystals like hoar frost, thick on the upper side, and the short thick tan legs show through the crust. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg",
+   "references/drafts/working/real/plate-porcelain-1.jpg"
+  ],
+  "why": "a second dead one seen from the side: fallen in, hoar-frost white with tan legs and splayed feelers, where the built dead are dark grey heaps",
+  "metres": 3,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "deadone-c",
+  "kind": "plate",
+  "prompt": "What is left of the carcass of a mud-wallower, an animal of an unknown world, dead for many years, 2.5 metres long, seen from the side and a little from above, as a camera 1.5 metres above the ground and 6 metres away sees it, lying level across the frame. It is a low white mound of coarse salt crystals with a few crusted knobs where bones lie under the salt and the tips of two pale feelers at the left end. The foot of the mound is stained pink. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/4-marsh/marsh-4-the-one-on-the-thin-crust.jpg",
+   "references/drafts/working/real/plate-porcelain-1.jpg"
+  ],
+  "why": "the oldest of the dead: a low white mound of salt with a few knobs",
+  "metres": 2.5,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "fan",
+  "kind": "plate",
+  "prompt": "One open feeding fan of a stalk, a growth of an unknown world, with the top 25 centimetres of its stalk, seen from the side, 0.9 metres wide. A dense soft plume of crimson strap-shaped filaments rises from a brown papery sheath at the top of a bone-white stem and arches over to the right. The filaments are wet and clumped in locks, darker wine red at the base, and some tips are torn or bleached pale. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg",
+   "references/drafts/working/real/ref-tissue-1.jpg"
+  ],
+  "why": "one open fan from the side as the stalk colony detail has it, a soft plume of strap filaments, where the built plume is dark and wiry",
+  "metres": 0.9,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "stalk-b",
+  "kind": "plate",
+  "prompt": "One stalk of a stalk colony, a growth of an unknown world, whole, seen square on, about 3 metres tall, with its foot at the bottom of the frame. A single stem as thick as an arm, sheathed in overlapping bone-white fibrous rings crusted with salt, each ring with a ragged dry brown lower edge. This one is thin and leans to the right. Its crimson fan is half drawn back into the tube at its top, so that only a short bunch of wet red filaments, a hand long, sticks out of the brown papery sheath. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg",
+   "references/drafts/working/real/plate-forest-1.jpg"
+  ],
+  "why": "a second stalk, thin and leaning with its fan half drawn in, so that the stalks are not copies of one",
+  "metres": 3,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "stalk-c",
+  "kind": "plate",
+  "prompt": "One stalk of a stalk colony, a growth of an unknown world, whole, seen square on, about 3 metres tall, with its foot at the bottom of the frame. A single stem as thick as an arm, sheathed in overlapping bone-white fibrous rings crusted with salt, each ring with a ragged dry brown lower edge. This one is dead: it is broken off at two thirds of its height and empty, with a ragged rim, a dark hole at the top and one flap of its fibrous bark hanging down the side. It has no fan and nothing red on it. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/4-marsh/marsh-2-the-stalk-colony.jpg",
+   "references/drafts/working/real/plate-forest-1.jpg"
+  ],
+  "why": "a third stalk, broken off and empty",
+  "metres": 3,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "marsh_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "strikesky",
+  "kind": "plate",
+  "prompt": "A photograph of storm cloud only, at nightfall, taken with a long lens from a high mountain crest, at the moment a lightning stroke inside the cloud lights it. In the upper middle of the frame the cloud glows violet-white from within, brightest at one place and falling off through violet to dark blue-grey, so that the heaped towers and bellies round the glow stand as dark heavy masses with lit edges. The rest of the cloud wall is very dark. Low at the right, about a third of the way up the frame, a thin band of orange dusk light shows under the cloud base. Below it a rolling sea of cloud tops fills the bottom quarter of the frame from the left edge to the right edge, level, dark blue-grey with paler crests. Only cloud and that band of light are in the frame: no land, no ridge, no spires, no lightning channel, no bolt, no sun, no stars. The first reference image is the place this sky belongs to: take its colours, its darkness and its light from there, and leave out its spires and its bolt. The second reference image is a real photograph: it is the standard for how a camera records a real storm, with real soft gradients and real cloud structure and no painted or stylised look. The horizon of the cloud sea is exactly level. Output one wide landscape image, sixteen units wide and nine tall. Photographic, no text, no logo, no people, no birds.",
+  "refs": [
+   "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg",
+   "references/drafts/working/real/plate-storm-1.jpg"
+  ],
+  "why": "the sky behind the strike on the third spire, seen by the long lens: a dark cloud wall lit from inside, a thin hot band and the cloud sea, where the built sky is one flat violet wash",
+  "metres": 0,
+  "aspect": "16:9",
+  "height": null,
+  "asked": "spine_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "saddle",
+  "kind": "plate",
+  "prompt": "The crest of a high mountain ridge in winter, a piece 120 metres wide and 68 metres tall, the crest running level across the picture from the left edge to the right. A narrow back of hard wind-packed snow, blue-white, with tan-grey rock outcrops breaking through it in ragged groups of unlike size, tails of drifted snow behind every outcrop all pointing the same way, toward the bottom of the picture, sharp wind ridges, and one line of animal prints that wanders along the length of the crest. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/5-spine/spine-0-establishing.jpg",
+   "references/drafts/working/real/plate-ridge-1.jpg"
+  ],
+  "why": "the foreground crest of the establishing picture: packed snow with rock outcrops, drift tails and one line of prints, where the built ground reads as fur",
+  "metres": 120,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "spine_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "crustfield",
+  "kind": "plate",
+  "prompt": "Snow on a high mountain ridge after a gale, a piece 40 metres wide and 22 metres tall. A hard wind-scoured crust, blue-white and glazed, with dark wet ribs of rock showing through it, loose stones each with a tail of drifted snow behind it, all the tails pointing one way, and one line of animal prints that runs from the bottom left corner to the middle of the picture and stops there. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/5-spine/spine-1-where-lightning-came-to-ground.jpg",
+   "references/drafts/working/real/plate-ridge-1.jpg"
+  ],
+  "why": "the ground where the lightning came down: scoured crust, rock ribs, drift tails and a line of prints that ends, where the built ground is flat blue",
+  "metres": 40,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "spine_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "kiteface",
+  "kind": "plate",
+  "prompt": "The upper lee face of a great rock spire on a storm-swept ridge, a face 50 metres wide and 50 metres tall. Pale cream and tan rock, jointed and frost-shattered, the joints running upward, with small ledges that hold thin snow. Thick feathers of white rime ice stand along the left edge of the face. Along the top edge the rock is burned black and glassy where lightning has struck it. The surface fills the whole frame edge to edge, square on, with no background showing. Flat, even, shadowless light from the front, so that no side is brighter than another: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg",
+   "references/drafts/working/real/plate-ridge-1.jpg"
+  ],
+  "why": "the face of the first spire behind the kites: pale jointed rock with rime on the windward edge and a burned top, where the built face is dark blotches",
+  "metres": 50,
+  "aspect": "1:1",
+  "height": "The reference image is a photograph of a rock face seen square on. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. White is what stands furthest out toward the viewer and black is what lies deepest in. Cracks, joints, caves, hollows and undercut bands are dark; ledges, ribs, bulges and the noses of blocks are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "spine_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "frond-b",
+  "kind": "plate",
+  "prompt": "One frond of a gill-plume, a growth of an unknown world, laid flat and seen from straight above, 1.5 metres long, lying level across the frame with its root at the left. A single dark stem, wine red going to nearly black, carries fine wet crimson barbs on both sides like a feather or the gill of a fish. This frond is sparse and ragged: there are gaps where barbs are missing, some barbs are torn short, a few are bleached pale pink or straw, the rest are clumped in wet locks, and the tip thins to a few wet hairs with clear drops hanging on them. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg",
+   "references/drafts/working/real/ref-tissue-1.jpg"
+  ],
+  "why": "a second frond, sparser and more ragged, so that the fronds of a plume are not copies of one",
+  "metres": 1.5,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "breath_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "holdfast",
+  "kind": "plate",
+  "prompt": "The holdfast of a gill-plume, a growth of an unknown world: the fleshy foot by which it grips the rock, 0.8 metres wide, seen square on from the side. Pale pink-brown wet root flesh in thick folds, spreading at the bottom into blunt toes that grip downward. From its top rise the cut stubs of five dark red stems, each as thick as a thumb and a hand long. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/3-breath/breath-3-gill-plumes-on-the-lip.jpg",
+   "references/drafts/working/real/ref-tissue-1.jpg"
+  ],
+  "why": "the fleshy foot of a plume with the stubs of its stems, which the built plumes lack",
+  "metres": 0.8,
+  "aspect": "1:1",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "breath_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "tassel",
+  "kind": "plate",
+  "prompt": "The head tuft of a wader, an animal of an unknown world, hanging straight down, seen from the side, 0.9 metres long, its root at the top of the frame. A heavy wet mop of pink-red tendrils clumped in uneven strands, thick at the root and ragged at the ends, with grey silt and strands of olive weed caught in it and clear drops of water hanging from the tips. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/3-breath/breath-1-waders-feeding-in-the-channel.jpg",
+   "references/drafts/working/real/ref-wader-1.jpg"
+  ],
+  "why": "the wet tuft at the end of a wader neck, heavy and dripping, where the built tassel is small",
+  "metres": 0.9,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "breath_life_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "reveal",
+  "name": "cyclone-wide",
+  "kind": "plate",
+  "prompt": "Cloud seen straight down from orbit in an orthographic view: the wide outer field of one great cyclone over open ocean, a square 2,500 kilometres across with the small dark eye of the storm at its centre. Eight to ten thin, soft spiral arms wind out from the eye, each arm a band of small separate beaded cumulus cells, lumpy and loose, never a smooth painted stroke and never combed into hard flakes. Black sea shows between the arms all the way in to the core. The arms run on past all four edges of the frame, so that the storm has no circular rim and no outer edge anywhere in the picture. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.",
+  "refs": [
+   "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg",
+   "references/drafts/working/real/orb-apollo17-earth.jpg"
+  ],
+  "why": "the cyclone of the widest key as soft beaded bands that run off the frame, where the built one is combed hard flakes with a rim",
+  "metres": 2500000,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "reveal_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "reveal",
+  "name": "specks",
+  "kind": "tile",
+  "prompt": "Cloud seen straight down from orbit in an orthographic view from very high: ragged fields of very small fair-weather cumulus over open ocean, about 1,500 kilometres across. Every cloud is no more than a tiny white dot, thousands and thousands of them, gathered in loose clusters and in beaded streets that all run roughly one way from left to right, with wide lanes of clear black sea between the fields and a few denser lumpy patches. No large cloud, no sheet, no streak longer than a few dots. The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.",
+  "refs": [
+   "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg",
+   "references/drafts/working/real/orb-modis-popcorn.jpg"
+  ],
+  "why": "the tiny cumulus of the sea in the widest key, where the built cloud is hard white dashes over grey smudges",
+  "metres": 1500000,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "reveal_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "reveal",
+  "name": "seacloud",
+  "kind": "plate",
+  "prompt": "Cloud seen straight down from orbit in an orthographic view: the whole deck of low cloud over an open ocean, a piece 6,000 kilometres wide and 3,400 kilometres tall. Long curving streets of small beaded cumulus and ragged fields of tiny cloud sweep across it in broad arcs. At the left side the cloud is thin, a scatter of dots with much black sea; toward the right side it thickens into dense lumpy fields, broken by clear lanes of black sea that wander through it. No cyclone, no single great storm, no smooth sheet. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one wide landscape image, sixteen units wide and nine tall. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.",
+  "refs": [
+   "references/approved/7-reveal/reveal-4-titan-from-orbit.jpg",
+   "references/drafts/working/real/orb-modis-sgeorgia-streets.jpg"
+  ],
+  "why": "the low cloud deck of the whole sea in the widest key as one picture: curving streets and ragged fields, thin at one side and dense at the other",
+  "metres": 6000000,
+  "aspect": "16:9",
+  "height": null,
+  "asked": "reveal_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "kitefilm-a",
+  "kind": "plate",
+  "prompt": "One ribbon of a tether-kite, a growth of an unknown world, laid flat and seen square on: 30 metres long and 3 metres at its widest, lying level across the frame from left to right. A glassy translucent membrane, pale as the skin of a fish, with a sheen of violet and pink that changes along it, a fine net of branching veins, and frayed edges. At both ends it is drawn out to a thread. This one is whole. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. It is lit evenly from behind, like a film laid on a light table in a dark room, so that it shows only by the light that passes through it: thin parts glow pale, thick parts and veins are darker, and nothing is lit from the front. Black means nothing is there. The first reference image is where the subject comes from: take its colours, its sheen and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg",
+   "references/drafts/working/real/ref-tissue-1.jpg"
+  ],
+  "why": "one kite as a glassy film lit from behind, as the kite picture has them, where the built kites are opaque lilac sheets",
+  "metres": 30,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "spine_storm_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "kitefilm-b",
+  "kind": "plate",
+  "prompt": "One ribbon of a tether-kite, a growth of an unknown world, laid flat and seen square on: 30 metres long and 3 metres at its widest, lying level across the frame from left to right. A glassy translucent membrane, pale as the skin of a fish, with a sheen of violet and pink that changes along it, a fine net of branching veins, and frayed edges. At both ends it is drawn out to a thread. This one is torn half way through near its middle, and a ragged flap of membrane hangs down from the tear. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. It is lit evenly from behind, like a film laid on a light table in a dark room, so that it shows only by the light that passes through it: thin parts glow pale, thick parts and veins are darker, and nothing is lit from the front. Black means nothing is there. The first reference image is where the subject comes from: take its colours, its sheen and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/5-spine/spine-2-tether-kites-on-the-first-spire.jpg",
+   "references/drafts/working/real/ref-tissue-1.jpg"
+  ],
+  "why": "a second kite film, torn half through with a hanging flap",
+  "metres": 30,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "spine_storm_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "bolt-b",
+  "kind": "plate",
+  "prompt": "A photograph of one lightning stroke at night on a pure black background, taken with a short exposure: a single cloud-to-ground channel that enters at the top of the frame a little left of centre, leans to the right as it comes down and reaches the bottom centre, with two long sideways steps on the way, crooked and kinked the whole way as real lightning is and never a regular zigzag. It is very thin, violet-white, with no wide glow round it. Five or six fine side branches leave it at shallow angles, most of them on its right side and in its upper half, each fainter and thinner than the channel, forking again and ending in nothing. Black means nothing is there: no glow fog, no cloud, no rain, no ground, no horizon, no stars. The first reference image is the storm this stroke belongs to: take the violet of its lightning from there, and nothing of its composition. The second reference image is a real photograph of a storm: it is the standard for how a camera records the real thing, with no painted, drawn or stylised look. Output one tall portrait image, nine units wide and sixteen tall. Photographic, sharp, no text, no logo, no border, no people.",
+  "refs": [
+   "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg",
+   "references/drafts/working/real/plate-storm-1.jpg"
+  ],
+  "why": "a second stroke with its own path, so that the strikes are not copies of one",
+  "metres": 340,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "spine_storm_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "bolt-c",
+  "kind": "plate",
+  "prompt": "A photograph of one lightning stroke at night on a pure black background, taken with a short exposure: a single channel that enters at the top centre of the frame and comes down crooked and kinked the whole way as real lightning is, never a regular zigzag. One fifth of the way above the bottom of the frame it forks in two, and the two legs reach the bottom edge a little apart, one left of centre and one right of centre. It is very thin, violet-white, with no wide glow round it. A dozen fine side branches leave it at shallow angles on both sides, each fainter and thinner than the channel, forking again and ending in nothing. Black means nothing is there: no glow fog, no cloud, no rain, no ground, no horizon, no stars. The first reference image is the storm this stroke belongs to: take the violet of its lightning from there, and nothing of its composition. The second reference image is a real photograph of a storm: it is the standard for how a camera records the real thing, with no painted, drawn or stylised look. Output one tall portrait image, nine units wide and sixteen tall. Photographic, sharp, no text, no logo, no border, no people.",
+  "refs": [
+   "references/approved/5-spine/spine-3-the-strike-on-the-third-spire.jpg",
+   "references/drafts/working/real/plate-storm-1.jpg"
+  ],
+  "why": "a third stroke, forked near its foot",
+  "metres": 340,
+  "aspect": "9:16",
+  "height": null,
+  "asked": "spine_storm_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "spine",
+  "name": "lock-b",
+  "kind": "plate",
+  "prompt": "Twelve separate hanging locks of long coarse hair in two rows of six, each lock alone with black between it and its neighbours, each with its root at the top and hanging straight down, each about 35 centimetres long and only 3 centimetres wide, each different. Cream-white coarse hair, nearly straight, the strands lying side by side and drawn out to a few fine single strands at the tip. White frost lies on the upper third of every lock. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/5-spine/spine-4-inside-the-canal.jpg",
+   "references/drafts/working/real/ref-dusk-1.jpg"
+  ],
+  "why": "twelve thin straight locks for the coat, where the built coat reads as fern or feather cards",
+  "metres": 0.35,
+  "aspect": "16:9",
+  "height": null,
+  "asked": "spine_storm_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "drypad",
+  "kind": "plate",
+  "prompt": "Dry rock at the rim of a great pit, a piece 6 metres wide and 6 metres tall. Warm tan-grey gritty rock, water-worn and rounded, dry, with small drifts of grit lying in its hollows, scattered small pebbles, a few hairline cracks, and one dark damp stain a little off centre. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/3-breath/breath-2-the-rim.jpg",
+   "references/drafts/working/real/plate-porcelain-1.jpg"
+  ],
+  "why": "the dry gritty rock under the dead wader of the rim detail, where the built ground is a striped dark plate",
+  "metres": 6,
+  "aspect": "1:1",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "breath_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "breath",
+  "name": "pebbles",
+  "kind": "tile",
+  "prompt": "A material texture, seen straight down from above in an orthographic view: a bed of shingle and grit on a rock shelf, about 1.5 metres across. Rounded pale grey and cream pebbles from 1 to 8 centimetres, most of them small, lying close on coarse pale grit, dry on top and darker and damp between. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.",
+  "refs": [
+   "references/approved/3-breath/breath-0-establishing.jpg",
+   "references/drafts/working/real/plate-porcelain-1.jpg"
+  ],
+  "why": "the pale shingle and grit of the lower right of the establishing picture and at the roots of the plumes",
+  "metres": 1.5,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "breath_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "flatplate",
+  "kind": "plate",
+  "prompt": "A salt flat between channels of brine, a piece 40 metres wide and 22.5 metres tall. Salt plates in irregular polygons 2 to 5 metres across, pale grey-tan, each with a raised, crumbled white rim. Wet dark grey mud lies in the seams between the plates and in a few bare patches. In the lowest places thin sheets of shallow red brine have pooled, each with a dark wet margin and a rust stain round it. A few low mounds of white salt. No channel crosses the whole picture. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/4-marsh/marsh-0-establishing.jpg",
+   "references/drafts/working/real/plate-flats-1.jpg"
+  ],
+  "why": "the flats of the establishing picture: salt plates with rims, wet grey mud and red only in the lows, where the built flats are pink-white speckle",
+  "metres": 40,
+  "aspect": "16:9",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "marsh_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "marsh",
+  "name": "ripple",
+  "kind": "tile",
+  "prompt": "A material texture, seen straight down from above in an orthographic view: the surface of still, dense, dark red brine, about 3 metres across. Small low wavelets that cross each other from two directions and a few faint spreading rings, as from single drops. The red is dark oxblood and even. No foam, no froth, no shore, no reflections of sky. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.",
+  "refs": [
+   "references/approved/4-marsh/marsh-3-mud-wallowers.jpg",
+   "references/drafts/working/real/plate-norris-2.jpg"
+  ],
+  "why": "the small waves and rings of the brine, read for its height only, where the built brine is flat with drawn ring lines",
+  "metres": 3,
+  "aspect": "1:1",
+  "height": null,
+  "asked": "marsh_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "blade-b",
+  "kind": "plate",
+  "prompt": "One whole rib blade of the strait, seen square on from the side in an orthographic view: a thin arching fin of weathered bone turned to stone, 300 metres tall, with its foot at the bottom of the frame. It is slender, about 50 metres at the foot, and curves over to the left as it rises until its upper third hangs far out past its foot as a hook; the tip is broken off short, with a ragged pale break. Pale ivory and grey-cream, in thin level beds that show as fine ledges across it, pitted and flaked, with dark water stains running down it, white streaks below the ledges where animals roost, rust-orange lichen in patches on its upper side, and its lowest tenth hung with black-olive weed up to one level line. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-0-establishing.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "a second blade, the thin hooked arch with a broken tip, so that the blades are not copies of one",
+  "metres": 300,
+  "aspect": "9:16",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "blade-c",
+  "kind": "plate",
+  "prompt": "One whole rib blade of the strait, seen square on from the side in an orthographic view: a broad fin of weathered bone turned to stone, 500 metres tall and 240 metres wide at its foot, with its foot at the bottom of the frame. It rises as a great ledged wall that narrows slowly and leans a little to the right, ending in a blunt hooked top. Pale ivory and grey-cream rock in thick level beds that stand out as ledges of unequal depth, with wide fields of rust-orange and yellow lichen on its upper half, dark water stains, white streaks below the ledges, one great block fallen out of its side leaving a square pale scar, a dark cave at its foot, and its lowest part hung with black-olive weed up to one level line. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-0-establishing.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "a third blade, the broad ledged fin with lichen fields, a fallen block and a cave",
+  "metres": 500,
+  "aspect": "9:16",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "stack-a",
+  "kind": "plate",
+  "prompt": "One sea stack at low tide, seen square on from the side in an orthographic view, 70 metres tall, with its foot at the bottom of the frame: a pillar of wet dark rock, broken and ledged, never smooth, narrower in its upper half and with a ragged top. Its lower two thirds are hung with ropes and curtains of olive and gold seaweed, glistening wet, that hang straight down, with wet black barnacled rock between the clumps. Above the weed the rock is dark grey with pale streaks of droppings and a little rust-orange lichen. This one is thick and leans slightly to the left, with one deep notch in its side. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "one of the two gate stacks before the bore: wet dark rock hung with olive-gold weed, where the built stacks are black pillars",
+  "metres": 70,
+  "aspect": "9:16",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "stack-b",
+  "kind": "plate",
+  "prompt": "One sea stack at low tide, seen square on from the side in an orthographic view, 70 metres tall, with its foot at the bottom of the frame: a pillar of wet dark rock, broken and ledged, never smooth, narrower in its upper half and with a ragged top. Its lower two thirds are hung with ropes and curtains of olive and gold seaweed, glistening wet, that hang straight down, with wet black barnacled rock between the clumps. Above the weed the rock is dark grey with pale streaks of droppings and a little rust-orange lichen. This one is slender and split near the top into two unequal prongs. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "the second gate stack, slender and split at the top",
+  "metres": 70,
+  "aspect": "9:16",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "nearbar",
+  "kind": "plate",
+  "prompt": "A gravel bar on the floor of a sea strait at low tide, a piece 12 metres wide and 12 metres tall. Shingle of rounded grey, slate and pale stones from 2 to 40 centimetres, sorted in loose drifts of unlike size, with films of wet dark sand between them, scraps of black-olive weed, shell grit, and a few larger dark stones. Wet, but with no reflections of the sky and no standing pools. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.",
+  "refs": [
+   "references/approved/1-ribs/ribs-0-establishing.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "the gravel bar under the lens of the establishing picture, where the built shingle is ringed loaves and stipple",
+  "metres": 12,
+  "aspect": "1:1",
+  "height": "The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
+ },
+ {
+  "place": "ribs",
+  "name": "weedrock",
+  "kind": "plate",
+  "prompt": "A low heap of rock on a tidal flat, 4 metres wide and 1.5 metres tall, seen from the side at ground level, lying level across the frame. Dark wet boulders piled together and draped in gold and olive seaweed, glistening wet, that hangs over them in heavy straps and ropes, with dark gaps under the boulders and a few barnacles on the bare rock. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.",
+  "refs": [
+   "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg",
+   "references/drafts/working/real/plate-surf-1.jpg"
+  ],
+  "why": "a weed-draped rock heap for the foregrounds of the feeders and the bore",
+  "metres": 4,
+  "aspect": "16:9",
+  "height": "The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.",
+  "asked": "ribs_ground_owner_3",
+  "group": 6,
+  "model": "gpt_image_2_6_flare",
+  "date": "2026-11-26"
  }
 ]
