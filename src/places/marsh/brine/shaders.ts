@@ -52,12 +52,12 @@ void main() {
   // in what it mirrors; the rings that leave every place gas comes up; the rings of each dome; the rings round whatever stands in it.
   // Nothing in nature is ruffled evenly: the gas troubles the brine in patches some strides wide and leaves glass between them.
   vec4 patchy = texture2D(tGrain, p.xz / 37.0 + vec2(0.0009, 0.0005) * uTime);
-  float ruffle = 0.3 + 1.25 * smoothstep(0.38, 0.7, patchy.r);
+  float ruffle = 0.5 + 1.05 * smoothstep(0.38, 0.7, patchy.r);
   // Two fields of low swell cross and never travel as one: the surface works, it does not slide.
   vec2 slope = ((texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.2 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.16) * ruffle;
   // Close to, the skin is never glass: small wavelets from the gas cross it every way, two fields of them sliding through each other, so
   // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
-  float chop = smoothstep(60.0, 6.0, dist) * ruffle;
+  float chop = smoothstep(60.0, 6.0, dist) * ruffle * (1.0 + 1.1 * smoothstep(12.0, 3.0, dist));
   vec4 rA = texture2D(tRipple, p.xz / 2.3 + vec2(0.031, 0.017) * uTime);
   // (The second and third are a picture of still brine with its relief, mat/ripple: its wavelets lie one way, as the light air lays them,
   // and it is laid twice, the second time turned and smaller.)
@@ -115,6 +115,7 @@ void main() {
   vec4 froth = vec4(scum * 1.5 + 0.05, foam);
   // Dark clots carried on the slow drift.
   float clot = smoothstep(0.7, 0.76, bubble.r * 0.5 + fleck.g * 0.5) * smoothstep(0.5, 0.65, raft.r) * smoothstep(14.0, 6.0, dist);
+  brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
   vec3 lit = brineShade(p, n, v, s, froth) * (1.0 - 0.4 * clot * (1.0 - foam));
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
@@ -140,11 +141,14 @@ varying vec3 vNormal;
 varying vec3 vLocal;
 varying vec4 vLife;
 void main() {
-  vec4 w = modelMatrix * instanceMatrix * vec4(position, 1.0);
+  // Where the skin meets the pool the brine is drawn up it: the foot flares out in a low skirt.
+  float skirt = smoothstep(0.14, 0.0, position.y);
+  vec3 q = vec3(position.x * (1.0 + 0.12 * skirt * skirt), position.y, position.z * (1.0 + 0.12 * skirt * skirt));
+  vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
   vWorld = w.xyz;
   vLocal = position;
   vLife = aLife;
-  vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normal);
+  vNormal = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * normalize(normal + vec3(0.0, 0.5 * skirt, 0.0)));
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
@@ -165,10 +169,12 @@ void main() {
   // far wall of the dome shows, paler; across it lies the sky, as on any wet bubble.
   float top = smoothstep(0.1, 1.0, vLocal.y);
   vec4 g = texture2D(tGrain, vLocal.xz * 0.9 + vLife.y);
-  float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.3, 0.0, 1.0);
+  vec4 run = texture2D(tGrain, vec2(atan(vLocal.z, vLocal.x) * 0.9 + vLife.y, vLocal.y * 0.35));
+  // (The skin drains in runs down its sides: thick dark streaks between thinner panes.)
+  float thin = clamp(top * (0.35 + 0.65 * vLife.x) + (g.r - 0.5) * 0.45 + (run.r - 0.5) * 0.5 * (1.0 - top), 0.0, 1.0);
   // The skin is a clear film of thick liquid: what is behind it shows through it, stained. It is thick and dark only where it is seen
   // edge on and where it meets the pool.
-  vec3 albedo = mix(vec3(0.045, 0.006, 0.005), vec3(0.11, 0.022, 0.018), thin);
+  vec3 albedo = mix(vec3(0.06, 0.01, 0.008), vec3(0.16, 0.036, 0.03), thin);
   vec4 grit = texture2D(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0);
   float solid = 0.0;
   // Torn: the skin opens from one point on its side, the hole's edge ragged and rolled thick, until nothing of it stands.
@@ -182,20 +188,21 @@ void main() {
     albedo = mix(albedo, vec3(0.03, 0.006, 0.005), rim);
   }
   n = normalize(n + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.035);
-  float foot = mix(0.5, 1.0, smoothstep(0.0, 0.35, vLocal.y));
+  float foot = mix(0.8, 1.0, smoothstep(0.0, 0.35, vLocal.y));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) * foot / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
   // The overcast is not even: the brighter quarter of it shows on the wet skin as one sharp window, and a second, faint, from the far wall.
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
-  float window = 1.6 * smoothstep(0.985, 0.996, toward) + 0.12 * pow(toward, 40.0);
-  float sheen = (0.012 + 0.2 * pow(1.0 - nv, 5.0)) * foot;
+  // (Not a dot: the window is wide and soft, broken by the runs of the skin, with one brighter core.)
+  float window = (0.5 * smoothstep(0.9, 0.985, toward) * (0.55 + 0.9 * g.g) + 0.9 * smoothstep(0.985, 0.996, toward)) * (0.6 + 0.8 * run.g) + 0.1 * pow(toward, 12.0);
+  float sheen = (0.02 + 0.3 * pow(1.0 - nv, 4.0)) * foot;
   vec3 mirrored = skyRadiance(r) * (sheen + window) * (1.0 - 0.7 * rim);
   // How much of what is behind the film is hidden: next to nothing through its face, most at its edge (the film seen along itself) and
   // at its foot, where it is the pool drawn up, and all of it at a torn hole's rolled rim.
   float along = pow(1.0 - nv, 2.2);
-  float cover = clamp(0.1 + 0.2 * (1.0 - thin) + 0.75 * along + 0.8 * smoothstep(0.2, 0.02, vLocal.y), 0.0, 0.97);
+  float cover = clamp(0.5 + 0.3 * (1.0 - thin) + 0.5 * along + 0.5 * smoothstep(0.2, 0.02, vLocal.y), 0.0, 0.97);
   cover = max(cover, rim);
 #ifdef DROP
   cover = 1.0;
@@ -218,10 +225,10 @@ void main() {
   float k = aLife.y * 6.283;
   // No two tongues of it alike: a few tall, most low, and none evenly spaced.
   float f = 0.42 + 0.3 * sin(a * 2.0 + k * 9.0) + 0.26 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.2 * sin(a * 9.0 + k * 3.0) + 0.12 * sin(a * 17.0 + k * 7.0);
-  float finger = pow(clamp(f, 0.04, 1.0), 1.6);
+  float finger = pow(clamp(f, 0.04, 1.0), 2.4);
   float h = position.y;
   // The sheet leaves the rim at 3 m/s and leans outward as it climbs; it falls back under its own weight.
-  float up = sqrt(size / 0.4) * (2.9 * age - 4.9 * age * age) * (0.3 + 0.7 * finger);
+  float up = sqrt(size / 0.4) * (2.9 * age - 4.9 * age * age) * (0.22 + 0.78 * finger) * 0.85;
   float out_ = size * (0.85 + (0.7 + 1.1 * finger) * age * (0.25 + 0.75 * h * h));
   float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
   vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
@@ -256,7 +263,7 @@ void main() {
   float lip = smoothstep(-0.22, 0.0, torn);
   float thick = clamp(1.0 - vLocal.y / tip, 0.0, 1.0);
   vec3 n = normalize(mix(radial, vec3(0.0, 1.0, 0.0), 0.45 * lip * lip) + vec3(g.b - 0.5, 0.0, g.a - 0.5) * 0.14);
-  vec3 albedo = mix(vec3(0.25, 0.055, 0.045), vec3(0.07, 0.01, 0.008), max(thick * 0.8, lip * 0.5));
+  vec3 albedo = mix(vec3(0.15, 0.03, 0.025), vec3(0.07, 0.011, 0.009), max(thick * 0.8, lip * 0.6));
   vec3 lit = albedo * skyIrradiance(n) * (skyOpen(vWorld) / 3.14159);
   float nv = clamp(dot(n, v), 0.0, 1.0);
   vec3 r = reflect(-v, n);
@@ -264,6 +271,6 @@ void main() {
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   float window = 0.9 * smoothstep(0.988, 0.997, toward) + 0.06 * pow(toward, 30.0);
   vec3 mirrored = skyRadiance(r) * (0.014 + 0.09 * pow(1.0 - nv, 5.0) + window * (1.0 - 0.85 * lip));
-  float cover = clamp(0.62 + 0.35 * thick + 0.4 * lip + 0.3 * pow(1.0 - nv, 2.0), 0.0, 0.97);
+  float cover = clamp(0.72 + 0.3 * thick + 0.4 * lip + 0.3 * pow(1.0 - nv, 2.0) + (g.g - 0.5) * 0.3, 0.0, 0.97);
   gl_FragColor = vec4((lit * cover + mirrored) * (1.0 - uSolo), cover);
 }`;

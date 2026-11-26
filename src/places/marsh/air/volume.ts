@@ -89,7 +89,8 @@ float steamAt(vec3 p, int i) {
   q.y *= 0.45;
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
-  float shape = smoothstep(0.4 + 0.22 * h, 0.82, lumps * (0.75 + 0.6 * body));
+  // (Soft strands: a hard edge on them is cut into dots by the few steps a view takes through a column.)
+  float shape = smoothstep(0.3 + 0.2 * h, 0.95, lumps * (0.75 + 0.6 * body));
   return B.w * shape * body * pow(1.0 - h, 1.2) * smoothstep(-0.02, 0.1, h + 0.02);
 }
 
@@ -176,7 +177,7 @@ void main() {
         if (wisp <= 0.0) continue;
         // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
         float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
-        float a = 1.0 - exp(-wisp * cover * crossed * 0.14 * exp(-y / 1.5));
+        float a = 1.0 - exp(-wisp * cover * crossed * 0.075 * exp(-y / 1.5));
         a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
         sum += trans * a * steamLit * 0.98;
         trans *= 1.0 - a;
@@ -254,7 +255,7 @@ void main() {
     float reach = min(far, mix(9000.0, 1100.0, open));
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0007 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.0005 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
     // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
     bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
     // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so
