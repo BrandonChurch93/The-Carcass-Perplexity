@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 95, 2026-11-26 05:51 UTC:
+Status 96, 2026-11-26 06:10 UTC:
 
-- `01-s95-far.jpg`: The Eye's far wall, the same crop: the old picture left, the remade one at double size right. Bedding, joints, scree and seepage that follows the cracks; nothing moved
-- `02-spine-hb3-2.jpg`: The Spine's first spire, approved left, wave 3's look at 05:44 right. This key failed the detail measure (0.33 against 0.75): the rock is a photograph pulled into brown smears, the rime ice and the far spires are missing, the kites are empty sheets. Told to both owners
-- `03-marsh3-r17.jpg`: The Marsh's wallowers, approved left, the judged frame of round 2 right. It failed the detail measure (0.40 against 0.75): the hide is close, but the pool is an opaque pink sheet with drawn rings and the mud bank is gone. Told to both owners
-- `04-eye-hb43.jpg`: The Eye in wave 3 at 05:34, approved left, built right, four keys: the shore, the mats and the far wall hold; the animals are pale clay, the swell is a grey disc, the skeleton lies on a zigzag ribbon. Told to the owner
+- `01-eye1-v1.jpg`: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water. They stand further off than in the picture by a logged choice. Still missing: rings at every leg and muzzle, and the pebbles are even dark chips
+- `02-ribs0-v1.jpg`: The Ribs, wide view, approved left, version 1 right: the blades carry relief now and the face in the backdrop is gone. The flat is still one even pebble sheet where the picture has wet sand that mirrors the sky, the blades are fluted like tusks, the near cliff is striped
+- `03-reveal4-v1.jpg`: The Reveal from orbit, approved left, version 1 right: open sea west of the skull, glint at the right edge, a wider cyclone, more land round the bones as Brandon asked. The land is one brown ridge texture and the sea cloud is dots; both are on the owner's list
+- `04-spine0-v1.jpg`: The Spine, wide view, approved left, version 1 right: the furthest of the six from its picture. No sea of cloud, a pale combed tongue for a ridge, a tan cone for a spire. Both owners have the order: cloud deck first, then spire and ridge as one snowed rock
 
+Status 95, 2026-11-26 05:51 UTC, showed: The Eye's far wall, the same crop: the old picture left, the remade one at double size right.
 Status 94, 2026-11-26 05:34 UTC, showed: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows)...
 Status 93, 2026-11-26 05:16 UTC, showed: The Heart, kept picture beside the new render of the same frame: identical (0 difference in every pixel once saved the same way); Wave 3...
-Status 92, 2026-11-26 04:53 UTC, showed: The Reveal, last version of wave 2: the approved pictures left, the built frames right, the four keys of the rise.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T05:50:55Z
-phase 4: 9.67 h used of 17.00 h
-build: 29.99 h used of 72.00 h
+2026-11-26T06:10:05Z
+phase 4: 9.99 h used of 17.00 h
+build: 30.31 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 17
+minutes since the last status: 19
 ```
 
 ## Phases
@@ -1347,6 +1347,10 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. - 2026-11-26 05:43 UTC. Round 17, the Marsh: M3 is red on `marsh-3` (film frame 6424: 0.4049 against its floor; the other four keys 1.33 to 3.27). M1 and M2 are green. Both Marsh owners were told at once with the draft check command, and the red measure goes first in their order; a red measure alone fails the round whatever the critics and the jury say.
 - 2026-11-26. - 2026-11-26 05:52 UTC. Round 2 of the six places is judged in full on 9741a5fb (rounds 14 to 19) and every place fails it. Critics' lowest scores, round 1 in brackets, the bar is 9: Breath R1 4 (2), R3 4 (4), R4 5 (4); Spine 2 (3), 3 (2), 6 (4); Ribs 2 (2), 4 (3), 3 (5); Marsh 4 (2), 3 (4), 4 (4); Eye 3 (3), 4 (2), 6 (2); Reveal 5 (2), 4 (2), 3 (5). MEASURED, R2, votes for a film frame of 25, round 1 in brackets: Breath 7 (0), Reveal 6 (0, passes against a needed 2), Spine 2 (0), Ribs 2 (1), Marsh 2 (0), Eye 0 (0); needed 20, 2, 19, 20, 20 and 17. M3 is red on marsh-3 (0.40) and spine-2 (0.33); Ribs, Eye and Reveal are green; the Breath's measure run is still out, so round 14 has no closing line yet. Each round has its `SUMMARY.md`; each owner has its jury word for word. One round is left for every place and is ordered on wave 3's last versions.
 - 2026-11-26. - 2026-11-26 05:52 UTC. Round 15, the Spine: a critic (R3-1, severe) read the ridge-runner at the end of the trail in the wide view as "a small upright human figure". The owner of the ground calls it the storm owner's runner, as the film has it. The Builder takes the line and does not decline it: the film has no people, so at that size the animal must read as a four-legged shaggy animal (side-on, low, with others of the herd) or stand where it does not read. Both owners are told.
+- 2026-11-26. - 2026-11-26 05:57 UTC. Round 14 (the Breath, round 2 of 3): M3 is red on breath-1 (film frame 5242, 0.39 against the floor 0.75) and narrow on breath-3 (0.79). Both Breath owners have the numbers, the draft check and the Builder's notes on their looks of 05:48 (the water under the animals is a matte brown sheet where the picture has a sparkling film of clear water; the rim's ground is a smooth dune where the picture has rough wet rock; the pit is a neat ring wall where the picture has thick rounded overhung layers). Three keys are now red on the detail measure after round 2: marsh-3, spine-2, breath-1.
+- 2026-11-26. - 2026-11-26 05:58 UTC. Seen in the Ribs sea owner's look of 05:47: the far backdrop at the top right of the wide view reads as a giant face (a pale form with one dark brow line and a round hollow). It breaks the note that nothing says the land is a body before the Reveal, and it is what a juror called a backdrop mountain with a face. Sent to the Ribs ground owner as its first item with the crop; it checks every key and the opening for the same form.
+- 2026-11-26. - 2026-11-26 06:12 UTC. Wave 3, version 1: nine of ten owners merged into main between 05:58 and 06:09 (the Ribs' ground and sea, the Eye, the Spine's ground and storm, the Reveal, the Marsh's ground and life, the Breath's ground). One conflict, in the Eye's materials list, settled by keeping main's entry for the remade far wall. Each owner got the Builder's notes on its version, worst first, by what a viewer names first. The Reveal's join (frames 9773 to 9795, round 19 R4) was checked with three draft frames from main: continuous; closed, not declined. A critic's line against the broad land round the Reveal's bones would be declined, since Brandon's note 10 asks for it.
+- 2026-11-26. - 2026-11-26 06:14 UTC. Disk: a render refused to start with 3.0 GB free. Deleted harness output under out/work (old stills, the jury's sent packs, the site copy that the review tool builds again, the music cleaning's working stems, old film parts) and the reference run's first two rounds of candidates outside the repo (their kept takes are with Brandon as shared files and the approved pictures are in the repo). 4.5 GB free.
 
 ## Notes from Brandon
 
@@ -1857,6 +1861,7 @@ What happens next is yours:
 - 2026-11-26 03:37 UTC the push of `94bc9a6d` (version 2 of the Spine's storm owner merged) failed from the Builder's machine ("could not read Username for 'https://github.com'"), and so did eight more tries up to 03:39 UTC. Fetches work, and pushes from the owners' machines work (the Eye's owner pushed at 03:38 UTC). No commit is lost: `main` is whole in the workspace. Until the Builder's push works again, `main` goes to GitHub by a bundle of `origin/main..main` sent to an idle renderer (`pack_renderer_r8`), which checks that it starts at the remote's head and pushes it without force; the push is tried again from here at every commit.
 - 2026-11-26 04:09 UTC the push of `552108bf` (status 90) failed from the Builder's machine with the same error, five tries up to 04:11 UTC, and at 04:10 UTC the renderer that pushed `4910502e` to `94bc9a6d` for the Builder (`pack_renderer_r8`) failed with it too: its machine has lost the right to push as the owners' machines did in wave 1 after about 2 h 45 min. Fetches work everywhere. No commit is lost. A fresh machine pushes for the Builder from now on (`main_pusher_2`, started 04:11 UTC, the same checked steps: start hash, bundle verify, ancestor, no force), and is replaced by a fresh one when it stops working.
 - 2026-11-26 04:39 UTC `0d507bf5` pushed from the Builder's machine (the shutter rule and version 3 of eight owners), and `c85d5f4a` a minute later. The push works here again after failing from 04:09 to 04:38 UTC; nothing was changed on this machine. In the same half hour the machines of three owners lost their sign-in (the Eye at 04:31, the Marsh ground at 04:32, the Spine storm at 04:33 UTC; their branches on GitHub stand at `e043742c`, `b22f6f94` and `38d68b8c`, behind the bundles they mailed) while the other five that handed in pushed (the Ribs sea, the Marsh life, the Spine ground, the Breath ground, the Reveal). Status 91 said four owners; three is the count read from GitHub's branch heads at 04:41 UTC. `main_pusher_2` pushed nothing and stays idle.
+- 2026-11-26 06:02 UTC. The push of 4576efb7 (the Eye's version 1 merged) was refused: git could not read a username for the host, as at 04:09. A bundle went to the renderer that pushes for the Builder. Tried again at every commit.
 
 ## Session log
 

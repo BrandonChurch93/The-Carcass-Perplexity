@@ -18,6 +18,8 @@ export interface Drinker {
   flip: number;
   /** One of the animals a close shot is about: it has rings round its legs. */
   close: boolean;
+  /** One of the herd that stands where a low camera of a close shot would meet it: it is there for the wide shot alone. */
+  wideOnly?: boolean;
   /** The level its feet stand at, where that is not the ground under it. */
   level?: number;
 }
@@ -32,7 +34,7 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   const sips = (period: number, keyTime: number, at: number) => (t: number) => {
     const u = ((((t - keyTime) / period + at) % 1) + 1) % 1;
     const lift = smooth(0.6, 0.72, u) * (1 - smooth(0.86, 0.98, u));
-    return 1 - 0.42 * lift + 0.012 * Math.sin(t * 2.3 + at * 9);
+    return 1 - 0.6 * lift + 0.012 * Math.sin(t * 2.3 + at * 9);
   };
   const from = (key: { position: [number, number, number] }, bearing: number, distance: number, facing: number, size: number, sheet: Drinker['sheet'], down: (t: number) => number): Drinker => ({
     x: key.position[0] + Math.sin(bearing * DEG) * distance,
@@ -62,24 +64,34 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     from(KEYS.mats, -17.5, 52, 96, 0.9, 'down', sips(6, MATS_KEY, 0.05)),
   ];
   // The herd along the south shore, as the wide shot sees it: side on to that camera or with their backs to it, in the shallows and on the gravel.
-  for (let i = 0; i < 30; i++) {
-    const bearing = rng.range(186, 208);
-    const dry = i % 4 === 0;
-    const r = shoreAt(bearing) + (dry ? rng.range(4, 26) : rng.range(-17, -3));
+  // They stand in loose bands of two to five, some far out on the shelf, some up on the gravel: never one row along the water.
+  let band = 196;
+  let out = -10;
+  for (let i = 0; i < 26; i++) {
+    if (i % 4 === 0) {
+      band = rng.range(186, 208);
+      out = i % 8 === 0 ? rng.range(6, 30) : rng.range(-48, -4);
+    }
+    const dry = out > 0;
+    const bearing = band + rng.range(-1.6, 1.6);
+    const r = shoreAt(bearing) + out + rng.range(-7, 7);
     const [x, z] = at(bearing, r);
     const period = rng.range(9, 17);
     const phase = rng.next();
     const kind = i % 9 === 4 ? 'calf' : i % 5 === 1 ? 'back' : dry || i % 3 === 2 ? 'up' : 'down';
     const way = rng.next() < 0.5 ? 1 : -1;
+    // None of the herd stands in front of the low cameras of the close shots: those have their own animals, placed for them.
+    const hidden = Math.min(...[KEYS.mats, KEYS.edge, KEYS.shore].map((k) => Math.hypot(x - k.position[0], z - k.position[2]))) < 110;
     list.push({
       x,
       z,
       facing: kind === 'back' ? 18 : 18 + 90 * way + rng.range(-28, 28),
-      size: rng.range(1.75, 2.05) * (kind === 'calf' ? 1.15 : 1),
+      size: rng.range(1.35, 2.1) * (kind === 'calf' ? 1.1 : 1),
       down: kind === 'up' || kind === 'back' ? up(phase * 6) : (t) => 0.55 + 0.45 * smooth(-0.35, 0.35, Math.sin((t / period + phase) * Math.PI * 2)),
       sheet: kind,
-      flip: 1,
+      flip: rng.next() < 0.5 ? 1 : -1,
       close: false,
+      wideOnly: hidden,
     });
   }
   return list;

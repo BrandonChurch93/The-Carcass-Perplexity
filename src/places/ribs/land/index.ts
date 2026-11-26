@@ -5,7 +5,8 @@ import { resolve } from '../../../core/cameras';
 import { keyPart, shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { RIBS, ribByName, weedPoint, type Rib } from '../layout';
-import { COLONY, DROWNED, LEVELS, STATIONS } from '../shared/anchors';
+import { COLONY, DROWNED, LEVELS, STATIONS, shotSpan } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { CRAG } from '../shared/crag';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
@@ -14,6 +15,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -156,9 +158,10 @@ export function create(ctx: Context): Piece {
   const plateN = tex('land/plate-nh.png', { kind: 'data', anisotropy: 4 });
   const wallC = tex('mat/wall.jpg', { anisotropy: 4 });
   const wallN = tex('land/wall-nh.png', { kind: 'data', anisotropy: 4 });
-  const ledgeC = tex('mat/ledge.jpg');
   const ledgeN = tex('mat/ledge-nh.png', { kind: 'data' });
-  for (const t of [plateC, plateN, wallC, wallN]) {
+  const nearC = tex('mat/nearbar.jpg', { anisotropy: 2 });
+  const nearN = tex('land/nearbar-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [plateC, plateN, wallC, wallN, nearC, nearN]) {
     t.wrapS = THREE.MirroredRepeatWrapping;
     t.wrapT = THREE.MirroredRepeatWrapping;
   }
@@ -171,7 +174,7 @@ export function create(ctx: Context): Piece {
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) } });
   {
     // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
@@ -181,19 +184,21 @@ export function create(ctx: Context): Piece {
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
-    material(ROCK_VERTEX, ROCK_FRAGMENT, {
-      tRock: { value: rockC },
-      tRockN: { value: rockN },
-      tWide: { value: grain > 0 ? finC : rockC },
-      tWideN: { value: grain > 0 ? finN : rockN },
-      uFin: { value: grain > 0 ? 1 : 0 },
-      uLift: { value: lift },
-      tWeed: { value: weedC },
-      uTide: { value: LEVELS.tide },
-      uTier: { value: 0 },
-      uGrain: { value: new THREE.Vector2(Math.abs(grain), Math.abs(grain) * 4.7) },
-      uRockTint: { value: grain > 0 ? new THREE.Vector3(1.35, 1.33, 1.3) : new THREE.Vector3(1.75, 1.72, 1.66) },
-    });
+    grain > 0
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift } })
+      : material(ROCK_VERTEX, ROCK_FRAGMENT, {
+          tRock: { value: rockC },
+          tRockN: { value: rockN },
+          tWide: { value: rockC },
+          tWideN: { value: rockN },
+          uFin: { value: 0 },
+          uLift: { value: lift },
+          tWeed: { value: weedC },
+          uTide: { value: LEVELS.tide },
+          uTier: { value: 0 },
+          uGrain: { value: new THREE.Vector2(Math.abs(grain), Math.abs(grain) * 4.7) },
+          uRockTint: { value: new THREE.Vector3(1.75, 1.72, 1.66) },
+        });
   const stones = new Map<number, THREE.ShaderMaterial>();
   const stoneOf = (grain: number, lift = 4): THREE.ShaderMaterial => {
     const key = grain * 64 + lift;
@@ -206,7 +211,11 @@ export function create(ctx: Context): Piece {
   };
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
-  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tLedge: { value: ledgeC }, tLedgeN: { value: ledgeN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide } });
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
+  // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 47.5 } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
@@ -249,17 +258,29 @@ export function create(ctx: Context): Piece {
   };
   for (const rib of RIBS as Rib[]) {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
-    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.min(8, 0.11 * rib.b + 0.02 * rib.a)));
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
   // The two stacks of the gate, and the arch rock.
   // The two are unlike: on the left a wall that leaves the frame, on the right a sloping buttress standing further back.
+  // Staged for the gate's shot only: from the strait the left one stands in the middle of the way out as a tower, which the picture of the
+  // strait does not hold.
+  const gateStacks: THREE.Mesh[] = [];
+  const gateShot = shotSpan('ribs-06');
   STATIONS.posts.forEach((post, n) => {
     const s: Stack = n === 0 ? { x: post[0], z: post[1], foot: 33, top: 24, height: 170 } : { x: post[0], z: post[1], foot: 36, top: 7, height: 96 };
-    add(blades, worldSpace(stackRock(s)), rock);
-    add(skirts, stackWeed(s.x, s.z, (y, angle) => stackRadius(s, y, angle), 220, 0.9), weedGate);
+    const sheet = n === 0 ? 'stack-a' : 'stack-b';
+    const stackC = tex(`land/${sheet}.jpg`, { anisotropy: 2 });
+    const stackN = tex(`land/${sheet}-nh.png`, { kind: 'data', anisotropy: 2 });
+    for (const t of [stackC, stackN]) t.wrapS = THREE.MirroredRepeatWrapping;
+    // The picture goes round the pillar a whole number of times, so that it meets itself at the back.
+    const girth = 2 * Math.PI * s.foot;
+    const lays = 2 * Math.round(girth / 68);
+    const pillar = material(RIG_VERTEX, STACK_FRAGMENT, { tStack: { value: stackC }, tStackN: { value: stackN }, tRock: { value: boulderC }, tWeed: { value: weedC }, uStack: { value: new THREE.Vector4(s.x, s.z, s.foot, girth / lays) } });
+    gateStacks.push(add(blades, worldSpace(stackRock(s)), pillar));
+    gateStacks.push(add(skirts, stackWeed(s.x, s.z, (y, angle) => stackRadius(s, y, angle), 220, 0.9), weedGate));
   });
   const arch = add(blades, worldSpace(archShape(68, 45, 13, 19, 96, 64)), rock);
   arch.position.set(STATIONS.arch[0], 0, STATIONS.arch[1]);
@@ -347,7 +368,7 @@ export function create(ctx: Context): Piece {
       if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
     }
   };
-  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 30000, 1.2, 40, 0.62);
+  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 2600, 1.2, 40, 0.62);
   strew(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 1200, 5, 110, 0.3);
   strew(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 1500, 2, 60, 0.55);
   // At the foot of every blade what has fallen from it: weed-grown blocks against the wall, smaller ones out on the flat.
@@ -435,6 +456,11 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('rocks', rocks));
 
   return {
+    setTime: () => {
+      const staged = stagedSeconds();
+      const atGate = staged >= gateShot.from && staged <= gateShot.to;
+      for (const m of gateStacks) m.visible = atGate;
+    },
     dispose: () => {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();

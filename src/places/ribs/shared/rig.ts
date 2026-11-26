@@ -15,6 +15,8 @@ export const MAX_EMITTERS = 8;
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
 /** The one wide break in the cloud that lets the sun down on the strait: where its light falls on the ground at the establishing key, and its radius, metres. */
 export const BREAK = { x: 200, z: -500, radius: 420, gain: 0.8, cover: 0.62 };
+/** The small break of the opening: where its light falls on the sea at the first frame of the place (it travels with the wind like the wide one), and its radius. */
+export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
 
 export type Height = (x: number, z: number) => number;
 
@@ -381,6 +383,7 @@ export function createRig(): Rig {
   const tile = fineTile();
   const fine = (x: number, z: number): number => FINE.wideAmp * (tile.read(x / FINE.wide, z / FINE.wide) - 0.5) + FINE.smallAmp * (tile.read(z / FINE.small, x / FINE.small) - 0.5);
   const breakAt = new THREE.Vector4(BREAK.x, BREAK.z, 1 / (BREAK.radius * BREAK.radius), BREAK.gain);
+  const break2At = new THREE.Vector4(BREAK2.x, BREAK2.z, 1 / (BREAK2.radius * BREAK2.radius), BREAK2.gain);
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
@@ -406,6 +409,7 @@ export function createRig(): Rig {
     tBedFine: { value: tile.texture },
     tCloudShade: { value: mask.texture },
     uCloudBreak: { value: breakAt },
+    uCloudBreak2: { value: break2At },
     uCloudShade: { value: cloudShade },
     // The sky after the storm, scene linear: slate overhead, pale and a little warm at the horizon where the cloud is thin.
     uSkyZenith: { value: new THREE.Vector3(0.115, 0.14, 0.185) },
@@ -471,7 +475,9 @@ export function createRig(): Rig {
       const d = drift(seconds);
       const bx = x - (BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0));
       const bz = z - (BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0));
-      const c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius));
+      const ex = x - (BREAK2.x + WIND.to[0] * WIND.cloud * seconds);
+      const ez = z - (BREAK2.z + WIND.to[1] * WIND.cloud * seconds);
+      const c = mask.cover(x / CLOUD.repeat - d[0], z / CLOUD.repeat - d[1]) * BREAK.cover + BREAK.gain * Math.exp(-(bx * bx + bz * bz) / (BREAK.radius * BREAK.radius)) + BREAK2.gain * Math.exp(-(ex * ex + ez * ez) / (BREAK2.radius * BREAK2.radius));
       const k = Math.min(1, Math.max(0, (c - 0.42) / 0.2));
       return CLOUD.shade + (1 - CLOUD.shade) * k * k * (3 - 2 * k);
     },
@@ -511,6 +517,8 @@ export function createRig(): Rig {
       breakToward(seconds);
       breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0);
       breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0);
+      break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * seconds;
+      break2At.y = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
     },
     beforeSample: (renderer, camera) => {
       if (!grid) bake();

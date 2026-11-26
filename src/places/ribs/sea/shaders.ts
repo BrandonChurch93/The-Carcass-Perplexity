@@ -22,6 +22,35 @@ ${SWELL.map(([dx, dz, length, amp]) => {
 }).join('\n')}
   return h;
 }
+// White water of the wind sea: each of its waves breaks in patches along its crest and leaves a lace behind it that the wave runs out from under.
+// x: the fresh break at the crest. y: the older foam trailing behind it.
+vec2 whitecaps(vec2 p, float t, float px, sampler2D chop) {
+  vec2 cap = vec2(0.0);
+${SWELL.map(([dx, dz, length, amp], n) => {
+  if (dz <= 0 || length < 20) return '';
+  const k = (Math.PI * 2) / length;
+  const w = Math.sqrt(9.81 * k);
+  const group = (0.5 * w) / k;
+  return `  {
+    float ph = ${f(k)} * dot(p, vec2(${f(dx)}, ${f(dz)})) - ${f(w)} * t;
+    // 0 on the crest, falling behind it; the wave runs toward +phase.
+    float back = mod(ph + 0.6, 6.2832) - 0.6;
+    back = back > 3.4 ? back - 6.2832 : back;
+    vec2 ride = p - vec2(${f(dx)}, ${f(dz)}) * ${f(group)} * t;
+    // A break is short along its crest: a few lengths of the wave's own height, never a bar from side to side.
+    vec2 lay = vec2(dot(ride, vec2(${f(dx)}, ${f(dz)})) / ${f(length * 0.9)}, dot(ride, vec2(${f(-dz)}, ${f(dx)})) / ${f(length * 0.38)});
+    float torn = textureLod(chop, lay + ${f(0.37 * n)}, log2(max(px * 256.0 / ${f(length * 0.38)}, 1e-6))).b;
+    float keep = 1.0 - smoothstep(0.35, 1.0, ${f(k)} * px);
+    // And not at every crest, nor evenly along one: whole stretches of the sea break and whole stretches do not.
+    float where = textureLod(chop, lay.yx * 0.19 + ${f(0.61 * n + 0.2)}, log2(max(px * 256.0 / ${f(length * 2)}, 1e-6))).a;
+    float on = smoothstep(${f(0.47 + 0.02 * n)}, ${f(0.62 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
+    // Thickest in the middle of its length and thinning to nothing at its ends.
+    cap.x = max(cap.x, on * smoothstep(-0.2 - 0.45 * on, -0.1, back) * (1.0 - smoothstep(0.05, 0.3, back)));
+    cap.y = max(cap.y, on * smoothstep(-3.2, -0.6, back) * (1.0 - smoothstep(-0.2, 0.4, back)));
+  }`;
+}).join('\n')}
+  return cap;
+}
 float swellPhase(vec2 p, float t) {
   return ${f((Math.PI * 2) / (SWELL[0] as number[])[2]!)} * dot(p, vec2(${f((SWELL[0] as number[])[0]!)}, ${f((SWELL[0] as number[])[1]!)})) - ${f(Math.sqrt((9.81 * Math.PI * 2) / (SWELL[0] as number[])[2]!))} * t;
 }`;
@@ -38,6 +67,8 @@ void main() {
   float calm = smoothstep(0.3, 9.0, -bed);
   vec2 g;
   float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;
+  // No crest ever stands over a low lens: close under it the water keeps a clear metre below.
+  h = min(h, mix(uEye.y - 1.4, 1e3, smoothstep(12.0, 55.0, r)));
   vWorld = vec3(p.x, h, p.y);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -47,6 +78,7 @@ precision highp float;
 ${RIG_GLSL}
 uniform sampler2D tChop;
 uniform sampler2D tFeet;
+uniform sampler2D tFoamPic;
 uniform vec2 uWind;
 uniform float uFeetReach;
 varying vec3 vWorld;
@@ -112,26 +144,39 @@ void main() {
   refl += uSunColour * gl * sun * mix(6.0, 0.8, far);
 
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
-  vec3 deep = vec3(0.024, 0.056, 0.052);
-  vec3 shallow = vec3(0.095, 0.105, 0.088);
+  // Slate grey-green, never teal: the water of a cold strait after a storm, full of sand where it shoals.
+  vec3 deep = vec3(0.027, 0.043, 0.039);
+  vec3 shallow = vec3(0.092, 0.098, 0.08);
   vec3 body = mix(shallow, deep, smoothstep(0.0, 5.0, depth));
-  // Light comes through the thin top of a wave that faces the lens.
-  body *= 1.0 + 1.6 * smoothstep(0.3, 1.2, h + 2.0 * (c1.b - 0.5)) * calm;
+  // Light comes through the thin top of a tall wave: only the highest water of the heaviest crests, green where the sun is on it.
+  float thin = smoothstep(1.3, 3.3, h + 1.6 * (c1.b - 0.5)) * calm;
+  body += vec3(0.022, 0.05, 0.036) * thin * (0.5 + 1.5 * sun);
   col = mix(body * e / 3.14159, refl, fres);
 
-  float lace = 0.55 * textureLod(tChop, p / 7.3 - uTime * uWind * 0.08, levelOf(tChop, 7.3)).a + 0.45 * textureLod(tChop, p.yx / 1.9 + uTime * 0.05, levelOf(tChop, 1.9)).a;
-  float cap = smoothstep(0.6, 0.76, c1.b * 0.55 + c2.b * 0.35 + 0.1 * h) * calm;
+  // White water. The lace is the Builder's picture of broken water seen from above, laid in metres and carried a little by the wind.
+  float lacePic = dot(textureLod(tFoamPic, p / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
+  float fine = textureLod(tChop, p.yx / 1.9 + uTime * 0.05, levelOf(tChop, 1.9)).a;
+  float lace = 0.72 * lacePic + 0.28 * fine;
+  // A patch of broken water is read by the short side of the pixel: by the long side, at a glance, every crest would be one band.
+  vec2 caps = whitecaps(p, uTime, min(length(dFdx(p)), length(dFdy(p))), tChop) * calm;
+  // Streaks down the wind: what the breakers leave is drawn out into long lines, in drifts, thick in one stretch of sea and absent in the next.
   vec2 across = vec2(-uWind.y, uWind.x);
-  float lane = textureLod(tChop, vec2(dot(p, across) / 31.0, dot(p, uWind) / 330.0 - uTime * 0.012), levelOf(tChop, 31.0)).b;
-  lane = smoothstep(0.66, 0.9, lane) * calm * 0.55;
+  float streak = dot(textureLod(tFoamPic, vec2(dot(p, across) / 13.0, dot(p, uWind) / 110.0 - uTime * 0.03), levelOf(tFoamPic, 13.0)).rgb, vec3(0.3333));
+  float drift = smoothstep(0.38, 0.7, textureLod(tChop, p / 290.0 + 0.11, levelOf(tChop, 290.0)).b);
+  float lane = smoothstep(0.5, 0.78, streak) * (0.15 + 0.85 * drift) * calm * (1.0 - 0.6 * far);
   float ph = swellPhase(p, uTime) + 0.9 * shoal;
   float crest = pow(0.5 + 0.5 * cos(ph), 3.0);
   float wet = smoothstep(-0.25, 0.25, depth);
   float surfZone = smoothstep(5.5, 1.2, shoal) * wet;
   float wash = smoothstep(1.7, 0.15, shoal) * wet;
-  float amount = max(max(cap * 0.9, lane), surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
+  float amount = max(0.7 * caps.y * (1.0 - smoothstep(0.05, 0.4, px)), 0.55 * lane);
+  amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
-  vec3 foamCol = vec3(0.8, 0.81, 0.8) * (0.7 + 0.3 * lace) * e / 3.14159;
+  // The break itself is thick white water, ragged at its rim.
+  float fresh = smoothstep(0.42, 0.66, caps.x * (0.22 + 0.75 * lacePic + 0.5 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
+  foam = max(foam, fresh);
+  // Fresh white water is thick and white; what trails is thin, and the green shows through it.
+  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.8, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
@@ -187,6 +232,38 @@ float levelOf(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
   return log2(max(max(length(footX), length(footY)) * size, 1e-6));
 }
+// Ripples seen at a glance keep their crests: read by the long side they went to glass a stone's throw out. Between the long side and the short.
+float rippleLevel(sampler2D t, float metres) {
+  float size = float(textureSize(t, 0).x) / metres;
+  return 0.5 * log2(max(max(dot(footX, footX), dot(footY, footY)) * min(dot(footX, footX), dot(footY, footY)), 1e-12)) * 0.5 + log2(size);
+}
+// The rig's sky, cloud shadow and contact, word for word (shared/glsl.ts: skyCloud, cloudShade, contactDrawn), but each picture read at a
+// stated level: over the rippled sheet a read by its own slopes is several times the cost for the same picture. Keep in step with the rig.
+vec3 mirrorSky(vec3 d) {
+  float az = atan(d.x, -d.z);
+  float el = asin(clamp(d.y, 0.0, 1.0));
+  vec2 uv = vec2(0.5 + (az - uSkyTurn.x) / 2.62, 1.0 - exp(-el / 0.3));
+  // The cloud's slow working is left out: the ripples bend the picture far more than it does.
+  vec3 c = textureLod(tSky, uv, 1.0).rgb * uSkyTurn.w;
+  c *= 0.5 + 0.5 * smoothstep(0.08, 0.3, dot(c, vec3(0.333))) + 2.4 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
+  c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
+  float s = max(dot(d, uSkyBreak), 0.0);
+  float s2 = s * s;
+  float low = 0.7 * smoothstep(0.07, 0.0, d.y);
+  return mix(c, uHaze * (1.0 + 0.5 * s2 * s2), low);
+}
+float sunOn(vec3 at, vec4 land) {
+  vec2 q = at.xz - uSunDir.xz * (at.y / uSunDir.y);
+  vec2 d = q - uCloudBreak.xy;
+  vec2 e = q - uCloudBreak2.xy;
+  float c = textureLod(tCloudShade, q * uCloudShade.z - uCloudShade.xy, 0.0).r * 0.62 + uCloudBreak.w * exp(-dot(d, d) * uCloudBreak.z) + uCloudBreak2.w * exp(-dot(e, e) * uCloudBreak2.z);
+  return land.b * mix(uCloudShade.w, 1.0, smoothstep(0.42, 0.62, c));
+}
+float stoodOver(vec3 at) {
+  vec2 uv = (at.xz - uContactRect.xy) * uContactRect.zw;
+  vec2 e = min(uv, 1.0 - uv);
+  return textureLod(tContact, uv, 0.0).r * smoothstep(0.0, 0.03, min(e.x, e.y));
+}
 void main() {
   vec2 p = vWorld.xz;
   footX = dFdx(p);
@@ -194,25 +271,38 @@ void main() {
   vec3 toEye = cameraPosition - vWorld;
   float dist = length(toEye);
   vec3 v = toEye / dist;
-  vec4 land = landAt(p);
-  vec4 c1 = textureLod(tChop, p / 3.1 - uTime * uWind * 0.16, levelOf(tChop, 3.1));
-  vec4 c2 = textureLod(tChop, vec2(p.y, -p.x) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, levelOf(tChop, 0.83));
-  float gust = smoothstep(0.38, 0.72, textureLod(tChop, p / 97.0 - uTime * uWind * 0.11, levelOf(tChop, 97.0)).b);
+  // The land and its fine relief, read at a stated level (the same pictures the rig reads; a read by its own slopes costs several times this).
+  vec4 land = textureLod(tLand, (p - uLandRect.xy) * uLandRect.zw, 0.0);
+  float fineBed = 0.2 * (textureLod(tBedFine, p / 37.0, levelOf(tBedFine, 37.0)).r - 0.5) + 0.07 * (textureLod(tBedFine, p.yx / 9.7, levelOf(tBedFine, 9.7)).r - 0.5);
+  vec4 barA = textureLod(tChop, p / 29.0, levelOf(tChop, 29.0));
+  vec4 barB = textureLod(tChop, p / 7.3, levelOf(tChop, 7.3));
+  // Two trains of ripples that cross, each bent by the slow water under it so that no crest runs straight or evenly spaced.
+  vec2 bend = (barB.xy - 0.5) * 0.9 + (barA.xy - 0.5) * 2.2;
+  vec4 c1 = textureLod(tChop, (p + bend) / 3.1 - uTime * uWind * 0.16, rippleLevel(tChop, 3.1));
+  vec4 c2 = textureLod(tChop, (vec2(p.y, -p.x) + bend.yx * 0.4) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, rippleLevel(tChop, 0.83));
   // The true bed under this pixel: the sheet ends where the bed breaks the level, in braids.
   // Over the level of the pools it is a draining film that follows the bed and lies in its fine lows, thinner the higher the bed, and none over uDrain.y.
   float over = max(land.r - uPoolLevel, 0.0);
-  float depth = uPoolLevel + uDrain.x * over - (land.r + bedFine(p)) - 0.03 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
+  float depth = uPoolLevel + uDrain.x * over - (land.r + fineBed) - 0.03 * smoothstep(0.0, 0.1, over) - 0.1 * smoothstep(0.5 * uDrain.y, uDrain.y, over);
   // The sheet is not one sheet: bars of bare wet sand break it wherever the bed comes within a hand of the level.
   // Round a wader's legs the water stays: its rings and its mirror need it.
   float waded = 1e3;
+  vec2 ringSlope = vec2(0.0);
   for (int i = 0; i < ${rings}; i++) {
     if (i >= uRingCount) break;
-    waded = min(waded, length(p - uRings[i].xy));
+    vec2 d = p - uRings[i].xy;
+    float l = length(d) + 1e-3;
+    waded = min(waded, l);
+    // No ruled circles: each ring is pushed about by the ripples it crosses, and they go out in packets, a few crests and then slack water.
+    float lr = l + 0.5 * (barB.b - 0.5) + 0.22 * (c1.b - 0.5);
+    float packet = 0.5 + 0.5 * sin(lr * 2.3 - uTime * 2.1 + uRings[i].z * 1.7);
+    float wave = sin(lr * 17.0 - uTime * 10.0 + uRings[i].z) * exp(-l * 1.9) * packet * uRings[i].w;
+    ringSlope += (d / l) * wave * 0.13;
   }
-  depth -= 0.16 * smoothstep(0.36, 0.62, textureLod(tChop, p / 29.0, levelOf(tChop, 29.0)).b + 0.5 * (textureLod(tChop, p / 7.3, levelOf(tChop, 7.3)).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
+  depth -= 0.16 * smoothstep(0.36, 0.62, barA.b + 0.5 * (barB.b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
   // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
   // The sheet is never still: thin water comes on and drains back round every stone and bar, a hand's breadth, each stretch in its own time.
-  float tide = textureLod(tChop, p / 37.0 + 0.3, levelOf(tChop, 37.0)).a;
+  float tide = barA.g;
   depth += 0.011 * sin(uTime * 0.9 + tide * 19.0) + 0.006 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
   // What the water has just left is wet and dark: a band on every stone and bar above the line.
   bool dry = depth < -0.09;
@@ -222,23 +312,22 @@ void main() {
   vec3 col = vec3(0.0);
   float alpha = 0.0;
   vec2 s2 = c2.xy - 0.5;
-  vec2 slope = ((c1.xy - 0.5) * 0.11 + vec2(-s2.y, s2.x) * 0.07) * (0.2 + 0.8 * gust) * smoothstep(0.0, 0.07, depth);
-  for (int i = 0; i < ${rings}; i++) {
-    if (i >= uRingCount) break;
-    vec2 d = p - uRings[i].xy;
-    float l = length(d) + 1e-3;
-    float wave = sin(l * 13.0 - uTime * 9.0 + uRings[i].z) * exp(-l * 1.1) * uRings[i].w;
-    slope += (d / l) * wave * 0.16;
-  }
+  // The wind works the sheet in cats' paws: ruffled dark stretches and slack bright ones, a few metres each, that drift.
+  float paw = smoothstep(0.3, 0.7, 0.6 * barA.a + 0.4 * barB.a + 0.25 * sin(uTime * 0.35 + barA.r * 12.0));
+  float gust = 0.35 + 0.65 * paw;
+  float ruffle = 0.3 + 0.7 * paw;
+  vec2 slope = ((c1.xy - 0.5) * 0.17 + vec2(-s2.y, s2.x) * 0.11) * ruffle * smoothstep(0.0, 0.07, depth);
+  slope += ringSlope;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float fres = 0.02 + 0.98 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.01;
   r = normalize(r);
-  float open = land.g * (1.0 - contactDrawn(vWorld));
-  float sun = sunAt(vWorld, land);
-  vec3 refl = skyCloud(vWorld, r) * mix(1.0, open, 0.5);
+  float open = land.g * (1.0 - stoodOver(vWorld));
+  float sun = sunOn(vWorld, land);
+  // The water of the flat is full of sand: what it mirrors it mirrors warm and a little dulled.
+  vec3 refl = mirrorSky(r) * mix(1.0, open, 0.5) * vec3(0.84, 0.81, 0.77);
   // The blades stand in it, dark, paler with the air between.
   // The lead draws each blade's true image on the water after this sheet (land/, MIRROR): the walked mirror here stood as a block beside it and is off.
 #ifdef WALKED_MIRROR
@@ -263,7 +352,7 @@ void main() {
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 500.0) * 4.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
   float murk = 1.0 - exp(-max(depth, 0.0) * 2.2);
-  vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;
+  vec3 body = vec3(0.125, 0.11, 0.085) * e / 3.14159;
   // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
   fres = mix(fres, 0.8, 0.18 * lip);
@@ -272,8 +361,8 @@ void main() {
   // Foam: lace left along the line where the water works against stone and sand, and in lanes the wind draws out over the open sheet.
   vec2 drift = uTime * uWind * 0.05;
   float lace = dot(textureLod(tFoamPic, p / 6.0 - drift, levelOf(tFoamPic, 6.0)).rgb, vec3(0.3333));
-  float stretch = smoothstep(0.35, 0.65, textureLod(tChop, p / 23.0 + 0.7, levelOf(tChop, 23.0)).a);
-  float lanes = smoothstep(0.6, 0.85, textureLod(tChop, vec2(p.x * 0.011, p.y * 0.07) - drift * 0.2, levelOf(tChop, 14.0)).b) * smoothstep(0.03, 0.12, depth);
+  float stretch = smoothstep(0.35, 0.65, barA.r);
+  float lanes = smoothstep(0.62, 0.85, 0.5 * barB.g + 0.5 * barA.g) * smoothstep(0.03, 0.12, depth);
   float foamed = smoothstep(0.38, 0.7, lace) * clamp((1.0 - smoothstep(0.0, 0.07, depth)) * stretch + 0.45 * lanes * gust, 0.0, 1.0) * edge;
   col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);
   alpha = mix(alpha, 1.0, foamed);
