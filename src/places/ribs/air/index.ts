@@ -179,6 +179,9 @@ void main() {
   gl_FragColor = vec4(sum * uScatter.z, trans);
 }`;
 
+/** How much thicker the air stands at the middle of the card loop than at its ends. */
+const LOOP_MIST = 0.7;
+
 export function create(ctx: Context): Piece {
   const storm = ctx.assets.texture('mat/sky.jpg');
   storm.wrapS = THREE.MirroredRepeatWrapping;
@@ -253,7 +256,10 @@ export function create(ctx: Context): Piece {
       const torn = Math.min(1, Math.max(0, (since - 0.15) / 2.4));
       bank.set(up ? 0.0055 * fade : 0, torn * torn * (3 - 2 * torn) * 0.7 + 0.3 * Math.min(1, since / 8), WIND.to[0] * 34 * since, WIND.to[1] * 34 * since);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
-      air.set(thick ? 0.006 : 0.0013, thick ? 160 : 75, 0.0003, 12);
+      // In the card loop the mist between the blades thickens once and thins again.
+      const phase = loopPhase();
+      const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
+      air.set((thick ? 0.006 : 0.0013) * mist, thick ? 160 : 75, 0.0003, 12);
       const steam = ctx.sources.steam;
       // In the card loop what travels one way stands where the loop's first frame has it.
       const run = loopPhase() === null ? seconds : staged;
