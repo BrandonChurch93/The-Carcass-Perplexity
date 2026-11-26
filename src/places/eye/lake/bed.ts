@@ -297,8 +297,14 @@ Bed wallAt(vec2 b, float down, float inside) {
   Bed o;
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
-  vec2 uv = vec2(along / 19.0, 1.0 - clamp(down / 17.0, 0.02, 0.98));
-  vec3 c = texture2D(tWall, uv).rgb;
+  // The ledges do not keep to one depth all the way round: they step up and down along the wall.
+  float jog = smoothstep(0.3, 2.5, down) * (2.4 * (vnoise(b / 4.1 + 2.0) - 0.5) + 0.9 * (vnoise(b / 0.9) - 0.5));
+  vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
+  // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
+  float r2 = max(dot(b, b), 1.0);
+  vec2 bx = dFdx(b);
+  vec2 by = dFdy(b);
+  vec3 c = textureGrad(tWall, uv, vec2(480.0 / 19.0 * (b.y * bx.x - b.x * bx.y) / r2, dFdx(uv.y)), vec2(480.0 / 19.0 * (b.y * by.x - b.x * by.y) / r2, dFdy(uv.y))).rgb;
   float ledge = 0.55 + 0.45 * smoothstep(0.05, 0.3, dot(c, vec3(0.33)));
   o.albedo = clamp(c * 1.3, 0.0, 0.95) * vec3(0.62, 0.86, 0.9);
   o.occ = ledge;
