@@ -15,7 +15,7 @@ const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [numbe
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
 const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
-const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.05 };
+const ROCK = { at: [9.25, -8.5] as [number, number], half: [10.75, 8.0] as [number, number], cell: 0.05 };
 
 /** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
 const DATA_SHARP: number = 1;
@@ -149,22 +149,19 @@ export function create(ctx: Context): Piece {
       tFieldFar: { value: field.far },
       tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      tFlat: { value: ctx.assets.texture('mat/flatplate.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tFlatH: { value: ctx.assets.texture('mat/flatplate-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },
-      uThinAt: { value: new THREE.Vector4(centre[0], centre[1], -F[1], F[0]) },
+      tPan: { value: ctx.assets.texture('mat/pan.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tPanN: { value: ctx.assets.texture('mat/pan-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tSlick: { value: ctx.assets.texture('mat/slick.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
+      tSlickN: { value: ctx.assets.texture('mat/slick-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tGrain: { value: grain },
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
-      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
+      tRock: { value: ctx.assets.texture('mat/rocktop.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRockN: { value: ctx.assets.texture('mat/rocktop-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tRockS: { value: ctx.assets.texture('mat/rockside.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRockSN: { value: ctx.assets.texture('mat/rockside-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
     },
     toneMapped: false,
   });
@@ -177,7 +174,7 @@ export function create(ctx: Context): Piece {
   far.frustumCulled = false;
   const land = new THREE.Group();
   land.add(ground, far);
-  const hollow = hollowOf(field.height, 0.16, 0.5, 0.07, 0.3);
+  const hollow = hollowOf(field.height, 0.12, 0.6, 0.06, 0.34);
   // A fine patch is raised by the pictures' heights in its vertices; the raising dies out toward its rim, where the plain ground takes over.
   const raised = (c: [number, number], half: [number, number], cell: number, along: [number, number] = F): THREE.ShaderMaterial => {
     const m = new THREE.ShaderMaterial({
