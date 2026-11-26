@@ -39,7 +39,7 @@ varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
 
-void viewRay(out vec3 ro, out vec3 rd, out float far) {
+void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
   // The engine lays this half-size pass over the scene by depth, and takes each texel to have been marched to the depth of the full-size pixel at twice its index.
   ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
   float depth = texelFetch(tDepth, pixel, 0).r;
@@ -50,6 +50,7 @@ void viewRay(out vec3 ro, out vec3 rd, out float far) {
   rd = world - ro;
   far = length(rd);
   rd /= far;
+  open = depth >= 1.0 ? 1.0 : 0.0;
   if (depth >= 1.0) far = 60000.0;
 }
 
@@ -88,7 +89,8 @@ float steamAt(vec3 p, int i) {
   q.y *= 0.45;
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
-  float shape = smoothstep(0.4 + 0.22 * h, 0.82, lumps * (0.75 + 0.6 * body));
+  // (Soft strands: a hard edge on them is cut into dots by the few steps a view takes through a column.)
+  float shape = smoothstep(0.3 + 0.2 * h, 0.95, lumps * (0.75 + 0.6 * body));
   return B.w * shape * body * pow(1.0 - h, 1.2) * smoothstep(-0.02, 0.1, h + 0.02);
 }
 
@@ -96,14 +98,17 @@ void main() {
   vec3 ro;
   vec3 rd;
   float far;
-  viewRay(ro, rd, far);
+  // 1 where the view ends on the sky. The sky's low band is a picture of the far distance with its own air in it: only the near air lies over it.
+  float open;
+  viewRay(ro, rd, far, open);
   vec3 airLight = uAirColour;
   vec3 sum = vec3(0.0);
   float trans = 1.0;
 
   vec3 steamLit = (uSkyZenith * 0.6 + uSkyHorizon * 0.4) * 0.97;
   ivec2 here = ivec2(gl_FragCoord.xy);
-  float jitter = float(hash2(uint(here.x), uint(here.y)) & 1023u) / 1024.0;
+  // (Half a step of play, and a different one for each sample of a frame: the frame's samples together are smoother than any one.)
+  float jitter = 0.25 + 0.5 * float(hash2(uint(here.x) + uint(uSampleIndex) * 131u, uint(here.y) + uint(uSampleIndex) * 71u) & 1023u) / 1024.0;
 #ifdef SHEETS
   // The steam of each source, nearest first, each marched in its own stretch of the view: a far column is cut as finely as a near one.
   // Offsets are tied to the pixel, never to the sample: thin vapour must not flicker.
@@ -172,7 +177,7 @@ void main() {
         if (wisp <= 0.0) continue;
         // How much of a sheet the view crosses: more the flatter it looks along it, and nothing where a solid stands in it.
         float crossed = min((0.2 + 0.09 * fl) / abs(rd.y), 2.5);
-        float a = 1.0 - exp(-wisp * cover * crossed * 0.14 * exp(-y / 1.5));
+        float a = 1.0 - exp(-wisp * cover * crossed * 0.075 * exp(-y / 1.5));
         a *= smoothstep(0.25, 1.6, t) * smoothstep(0.0, 0.5, far - t);
         sum += trans * a * steamLit * 0.98;
         trans *= 1.0 - a;
@@ -247,10 +252,12 @@ void main() {
   float bank = 0.0;
 #ifdef SHEETS
   {
-    float reach = min(far, 9000.0);
+    float reach = min(far, mix(9000.0, 1100.0, open));
     float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
     float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    bank = 0.0019 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    bank = 0.0005 * max(reach - 230.0, 0.0) * exp(-mid / (55.0 * steps)) * steps * show;
+    // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
+    bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
     // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so
     // the flats go off in steps and not in one grade. (x, z: the way they face; then how far along it; then how thick.)
     for (int k = 0; k < 3; k++) {
@@ -275,11 +282,11 @@ void main() {
     trans *= 1.0 - a;
     sum += trans * r * vec3(0.24, 0.25, 0.28);
     trans *= 1.0 - r;
-    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, far) * show * layers - bank);
+    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, min(far, mix(60000.0, curtain + 600.0, open))) * show * layers - bank);
     sum += trans * a * airLight * (1.0 - 0.3 * r);
     trans *= 1.0 - a;
   } else {
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, far) * show * layers - bank);
+    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, min(far, mix(60000.0, 700.0, open))) * show * layers - bank);
     sum += trans * a * airLight;
     trans *= 1.0 - a;
   }

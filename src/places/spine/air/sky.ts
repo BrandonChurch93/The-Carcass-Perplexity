@@ -20,8 +20,13 @@ export const SKY_GLSL = /* glsl */ `
 uniform sampler2D tSkyDusk;
 uniform sampler2D tStormWall;
 uniform sampler2D tStormLit;
-// Staged by shot: x turns the storm wall round the horizon, radians.
+// Staged by shot: x turns the storm wall round the horizon, radians; y opens the lens; z is the size of the bloom about a stroke, as a share of
+// the lights' own radii (0 for the whole of them); w lays the pictures so many times smaller for a long lens (0 for their own size).
 uniform vec4 uSkyStage;
+// Staged by shot: the sky of the strike as one picture behind the long lens (mat/strikesky). x is the heading of its lit cloud, y the height of
+// its horizon, both radians; z is how many radians its width takes; w is 1 while it stands.
+uniform sampler2D tStrikeSky;
+uniform vec4 uPlate;
 const float STORM_AZ = ${Math.atan2(-WIND[2], -WIND[0]).toFixed(4)};
 const float DUSK_AZ = ${Math.atan2(DUSK[2], DUSK[0]).toFixed(4)};
 // How bright the pictures stand in the scene: the lens is set for the dusk.
@@ -50,30 +55,55 @@ float cloudLit(vec3 from, vec3 d) {
   float lit = 0.0;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
-    vec3 e = uEmitters[i].xyz - from;
-    float far = length(e);
-    float c = dot(d, e / far);
+    vec3 q = uEmitters[i].xyz - from;
+    float along = dot(d, q);
+    if (along <= 0.0) continue;
+    float r = uEmitters[i].w * (uEmitters[i].w > 20.0 && uSkyStage.z > 0.0 ? uSkyStage.z : 1.0);
+    // By metres, not by angle: how far the ray passes from the light, in the light's own radii. A long lens and a wide one see the same bloom.
+    float off = sqrt(max(dot(q, q) - along * along, 0.0)) / r;
     float power = dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) * uEmitters[i].w * uEmitters[i].w;
-    // The glow is wide and soft, and wider and stronger about a light that stands high: that one is in the cloud.
     float high = smoothstep(150.0, 900.0, uEmitters[i].y);
-    float wide = mix(0.006, 0.02, high);
-    // However strong the light is made, the cloud about it is lit to a bloom and no further: a core tens of metres wide, and a faint breadth.
-    lit += (1.0 - exp(-power * (0.25 + 0.75 * high) / 8.0e6)) * (exp(-(1.0 - c) / wide) + 0.22 * exp(-(1.0 - c) / (5.0 * wide)));
+    // However strong the light is made, the cloud about it is lit to a bloom and no further: a core a radius wide, and a faint breadth of four.
+    lit += (1.0 - exp(-power * (0.25 + 0.75 * high) / 8.0e6)) * (exp(-off * off * 1.4) + 0.2 * exp(-off / 2.2));
   }
   return lit;
+}
+// How much of the strike's sky stands toward d, and where on it.
+float plateAt(float az, float el, out vec2 uv) {
+  uv = vec2(0.43 + wrapPi(az - uPlate.x) / uPlate.z, 0.32 + (el - uPlate.y) / (uPlate.z * 0.5625));
+  return uPlate.w * (1.0 - smoothstep(0.44, 0.5, abs(uv.x - 0.5))) * (1.0 - smoothstep(0.44, 0.5, abs(uv.y - 0.5)));
+}
+// The strike's sky: storm cloud lit from inside about the stroke, the last band low on the lee, the sea of cloud under it. The picture is of
+// the lit moment; between strokes its glow sinks to embers that flicker, and each stroke brings it up whole.
+vec3 plateCloud(vec2 uv, float lod) {
+  vec3 c = flowing(tStrikeSky, uv, vec2(0.02, 0.0), 22.0, lod);
+  float m = dot(c, vec3(0.3, 0.5, 0.2));
+  float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
+  float glowing = smoothstep(0.1, 0.45, m) * (1.0 - warm);
+  float ember = 0.22 + 0.5 * pow(textureLod(tNoise, vec3(uTime * 0.21, 0.37, 0.61), 0.0).r, 3.0) + 0.4 * pow(textureLod(tNoise, vec3(uTime * 0.83, 0.71, 0.13), 0.0).g, 4.0);
+  float lit = clamp(ember + 1.5 * dot(uFlash, vec3(0.33)), 0.0, 1.0);
+  return c * mix(mix(1.0, 0.3, glowing), 1.0 + 0.2 * glowing, lit) * SKY_GAIN * 1.0;
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   float el = asin(clamp(d.y, -1.0, 1.0));
   float az = atan(d.z, d.x);
+  vec2 uvP = vec2(0.0);
+  float plate = uPlate.w > 0.0 ? plateAt(az, el, uvP) : 0.0;
+  if (plate >= 1.0) return plateCloud(uvP, lod);
   float turned = wrapPi(az - STORM_AZ - uSkyStage.x);
   float toStorm = abs(turned);
   // The storm wall: 107 degrees of it about the gale at the picture's own shape, mirrored on beyond. The picture's flat foot is under the horizon.
-  vec2 uvS = vec2(0.5 + turned / 1.87, 0.14 + el / 1.2);
+  float zoom = uSkyStage.w > 0.0 ? uSkyStage.w : 1.0;
+  vec2 uvS = vec2(0.5 + turned * zoom / 1.87, (zoom > 1.0 ? 0.3 : 0.14) + el * zoom / 1.2);
   // The dusk: the picture's band lies along the horizon, toward the last light.
-  vec2 uvD = vec2(0.62 + wrapPi(az - DUSK_AZ) / 1.5, 0.045 + el / 1.0);
+  // For a long lens the band lies on the sea's own horizon, which stands a little under the level.
+  vec2 uvD = vec2(0.62 + wrapPi(az - DUSK_AZ) * zoom / 1.5, 0.045 + (zoom > 1.0 ? el + 0.014 : el) * zoom);
   float seam = textureLod(tNoise, vec3(az * 0.9, el * 1.7, 0.53), 0.0).r - 0.5;
-  float storm = 1.0 - smoothstep(1.2, 1.75, toStorm + 0.4 * seam);
-  float lit = cloudLit(from, d) + 30.0 * dot(uFlash, vec3(0.33)) * storm;
+  // For a long lens the wall ends as fast as its pictures are laid small.
+  float storm = 1.0 - smoothstep(1.2, 1.75, 1.475 + (toStorm - 1.475) * zoom + 0.4 * seam);
+  float near = cloudLit(from, d);
+  // The whole wall takes a little of a strike; the bloom about the bolt is the light, and the rest of the storm stays dark.
+  float lit = near + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * storm;
   vec3 c = vec3(0.0);
   if (storm < 0.999) {
     vec3 dusk = flowing(tSkyDusk, uvD, vec2(0.012, 0.0), 26.0, lod);
@@ -89,7 +119,7 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
     c += storm * mix(dark, bright * (1.0 + 0.8 * k), k);
   }
   // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
-  float glow = clamp(cloudLit(from, d), 0.0, 3.0);
+  float glow = clamp(near, 0.0, 3.0);
   c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // The storm is of masses: the pictures' own darks are pressed down and their pale bellies kept, and it is darkest overhead.
   float mass = dot(c, vec3(0.3, 0.5, 0.2));
@@ -98,7 +128,8 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
   // The storm's light is violet; only the last band keeps its orange.
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
-  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN * (1.0 + uSkyStage.y);
+  c *= mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN * (1.0 + uSkyStage.y);
+  return plate > 0.0 ? mix(c, plateCloud(uvP, lod), plate) : c;
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -123,7 +154,8 @@ void main() {
   float broad = dot(textureLod(tStormWall, uvT, 4.5).rgb, vec3(0.33));
   c *= mix(1.0, clamp(fine / max(broad, 0.01), 0.6, 1.5), 0.85 * smoothstep(0.0009, 0.0002, foot));
   // Under the horizon there is only the cloud sea, which the air pass draws.
-  c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y));
+  vec2 uvP = vec2(0.0);
+  c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y) * (1.0 - (uPlate.w > 0.0 ? plateAt(az, el, uvP) : 0.0)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -131,6 +163,8 @@ void main() {
 export function skyPictures(ctx: Context): Record<string, THREE.IUniform> {
   return {
     uSkyStage: { value: new THREE.Vector4(0, 0, 0, 0) },
+    uPlate: { value: new THREE.Vector4(0, 0, 1, 0) },
+    tStrikeSky: { value: ctx.assets.texture('mat/strikesky.jpg', { repeat: false }) },
     tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tStormLit: { value: ctx.assets.texture('mat/stormwall-lit.jpg', { repeat: false }) },

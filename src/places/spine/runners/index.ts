@@ -210,17 +210,20 @@ export function create(ctx: Context): Piece {
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
-    { d: CANAL_KEY + 10, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.3 },
-    { d: CANAL_KEY + 4.4, l: -2.1, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.2 },
-    { d: CANAL_KEY + 5.9, l: -2.5, yaw: along + 1.9, act: 'sit', pose: SITUP, size: 1.2 },
-    { d: CANAL_KEY + 7.3, l: -1.8, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
-    { d: CANAL_KEY + 8.5, l: -2.6, yaw: along + 1.6, act: 'sit', pose: SIT, size: 1.1 },
-    { d: CANAL_KEY + 9.7, l: -2.1, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
+    // The standing one, against the far mouth; then the huddle along the wall, the nearest at the lens's left hand.
+    { d: CANAL_KEY + 5.4, l: -0.35, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.3 },
+    { d: CANAL_KEY + 1.7, l: -1.6, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.25 },
+    { d: CANAL_KEY + 2.9, l: -2.5, yaw: along + 1.9, act: 'sit', pose: SITUP, size: 1.2 },
+    { d: CANAL_KEY + 3.9, l: -1.75, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
+    { d: CANAL_KEY + 4.9, l: -2.6, yaw: along + 1.6, act: 'sit', pose: SIT, size: 1.1 },
+    { d: CANAL_KEY + 5.9, l: -2.1, yaw: along + 0.6, act: 'lie', pose: LIE, size: 1.05 },
   ];
 
 
   const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.6 : 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
-  const CROSSING = 4;
+  // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
+  const WALKERS = false;
+  const CROSSING = WALKERS ? 4 : 0;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', pose: STAND, size: rng.range(0.9, 1.15), cell: 0.04, clumps: 260, long: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false, burn: NONE, tendrils: 12 }));
   // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
   const deadSkin = skinOf(DEAD, 0.022).body;
@@ -251,8 +254,8 @@ export function create(ctx: Context): Piece {
     still(a);
     const breath = Math.sin(t * 2.5 + ph) + 0.25 * Math.sin(t * 5.0 + ph * 2);
     const standing = a.role.act === 'stand';
-    const sway = standing ? 0.05 * Math.sin(t * 1.05 + ph * 3) + 0.018 * Math.sin(t * 2.3 + ph) : 0;
-    const fore = standing ? 0.03 * Math.sin(t * 0.7 + ph * 2) : 0;
+    const sway = standing ? 0.085 * Math.sin(t * 1.05 + ph * 3) + 0.025 * Math.sin(t * 2.3 + ph) : 0.012 * Math.sin(t * 0.8 + ph * 3);
+    const fore = standing ? 0.05 * Math.sin(t * 0.7 + ph * 2) : 0;
     const settle = 0.012 * Math.sin(t * 0.9 + ph * 2);
     (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.004 * breath, sway);
     about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.015 * breath, 1 + 0.05 * breath, 1 + 0.07 * breath));
@@ -261,8 +264,10 @@ export function create(ctx: Context): Piece {
         lean(a.bones[4 + i] as THREE.Matrix4, j.tops[i] as V3, fore, sway);
         (a.bones[8 + i] as THREE.Matrix4).copy(a.bones[4 + i] as THREE.Matrix4);
       }
+    // Each lifts its head in its own time, holds it, and lets it down again; a standing one drops it to the ice between looks.
+    const lift = Math.max(0, Math.sin(t * 0.7 + ph * 1.7)) ** 3;
     const ny = 0.16 * Math.sin(t * 0.83 + ph * 2) + 0.07 * Math.sin(t * 1.9 + ph) + look;
-    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03;
+    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03 + (standing ? -0.3 * Math.max(0, Math.sin(t * 0.45 + ph)) ** 2 : 0.3 * lift);
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
@@ -348,8 +353,13 @@ export function create(ctx: Context): Piece {
         if (i === 0 && gone > 0.002) {
           const u = seconds - CANAL_KEY_AT;
           walk(a, gone, u < 0.4 ? 1.58 * (u + 0.8) : 1.9);
-        } else idle(a, seconds, 0.3 * start * (i % 2 ? 1 : -1), 0.012 * start);
-        ctx.rig.setDisc(discs, i, at[0], at[2], 1.1 * a.role.size, 0.75);
+        } else {
+          // The standing one turns its head to the lens as the lens comes up, and back to the mouth before it goes.
+          const u = seconds - CANAL_KEY_AT;
+          const turn = i === 0 ? 0.55 * smooth(-4.5, -3.2, u) * (1 - smooth(-1.6, -0.5, u)) : 0;
+          idle(a, seconds, turn + (0.3 + 0.07 * i) * start * (i % 2 ? 1 : -1), 0.012 * start);
+        }
+        ctx.rig.setDisc(discs, i, at[0], at[2], (h.act === 'stand' ? 1.1 : 1.35) * a.role.size, 0.9);
         const n = BREATHERS.indexOf(i);
         const b = breaths[n];
         if (!b) return;
@@ -367,7 +377,7 @@ export function create(ctx: Context): Piece {
       if (!inCanal) for (const b of breaths) b.strength = 0;
 
       crossing.forEach((a, i) => {
-        a.group.visible = !inCanal;
+        a.group.visible = WALKERS && !inCanal;
         if (!a.group.visible) return;
         const end = MOUTH_S + 14 - i * 3;
         const free = first.s - 330 + 2.6 * seconds - i * 7;
