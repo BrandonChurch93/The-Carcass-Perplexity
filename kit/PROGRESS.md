@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 90, 2026-11-26 04:08 UTC:
+Status 91, 2026-11-26 04:35 UTC:
 
-- `01-hb7-reveal-keys.jpg`: The Reveal at 04:07 UTC, approved left and built right: the lake, the skull massif, head and shoulders, the whole titan from orbit. Still wrong: the lake's margin is too wide and brown, the bones sit duller than the picture's, the small cloud over the sea is one even speckle
-- `02-hb6-breath-life.jpg`: The Breath at 04:07 UTC, approved left and built right with crops: breath-0, breath-1, breath-3. The channel now sits in the picture's warm grey with a glare path. Still wrong: the plume is an orange ball of stiff sprays, the air is clear to the horizon where the picture is backlit haze
-- `03-hb6-spine-ground.jpg`: The Spine at 04:06 UTC, built frames: the ridge (spine-0), the dead one (spine-1), the strike (spine-3), the hollow (spine-4). Still wrong: the strike's sky is a flat violet wash, the spires carry a stretched grain, the herd is four pale mounds
-- `04-hb5-ribs-ground.jpg`: The Ribs at 04:07 UTC, built frames: the tide flat (ribs-0) and the colony (ribs-3). Still wrong: every blade carries the same level banding, the crag reads as laid masonry, the perched ones are all one cream fan
+- `01-shutter-9627.jpg`: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below. Left, the full shutter with 4 samples: four copies of every ridge. Right, the camera's shutter closed: the land as the draft tier shows it
+- `02-v3-marsh-ground.jpg`: The Marsh, version 3 of both owners: marsh-0, the burst (marsh-1), the heavy one (marsh-3), the stuck one (marsh-4). Still wrong: the sky is a blank bright grey, the ground is pale speckle where the picture is dark red-brown, the heavy one has no hair, the stuck one's crust is lumps and not curled plates
+- `03-v3-spine-storm.jpg`: The Spine, version 3 of both owners: the dead one (spine-1), the face with its kites (spine-2), the strike (spine-3), the hollow (spine-4). Still wrong: no glow in the cloud round the stroke, the snow at the dead one is a smooth sheet with no prints, the hollow's wall carries a stretched grain, the lying ones are mounds
+- `04-v3-eye.jpg`: The Eye, version 3, approved left and built right with crops: eye-0, eye-1, eye-2, eye-3. Still wrong: the mats are orange stripes round a pool that is too small, the strands at eye-2 are pale thin swirls and not the tangle, the water beyond the lip is a flat dark sheet, the drinkers are smooth as models
 
+Status 90, 2026-11-26 04:08 UTC, showed: The Reveal at 04:07 UTC, approved left and built right: the lake, the skull massif, head and shoulders, the whole titan from orbit.
 Status 89, 2026-11-26 03:45 UTC, showed: The Breath, version 2 (merged 03:41 UTC), approved left and built right with crops: breath-0, breath-1, breath-2, breath-3.
 Status 88, 2026-11-26 03:32 UTC, showed: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame; The...
-Status 87, 2026-11-26 03:10 UTC, showed: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T04:08:53Z
-phase 4: 7.97 h used of 17.00 h
-build: 28.29 h used of 72.00 h
+2026-11-26T04:35:23Z
+phase 4: 8.41 h used of 17.00 h
+build: 28.73 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 24
+minutes since the last status: 27
 ```
 
 ## Phases
@@ -1329,6 +1329,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-26 03:46 UTC. The Ribs' keys `ribs-0` and `ribs-4` after version 2 of the sea's owner, seen beside the approved pictures: in both the kite-wings stand in the middle distance as they do in the pictures (small on the flat in `ribs-0`, fleeing before the wall in `ribs-4`). No animal is further off than its picture has it, so neither key gets the restage sentence. `ribs-2` is looked at with the next looks.
 - 2026-11-26 03:46 UTC. Draft measures of version 2 of wave 2 (`b2d7afb1`), outside any round like the ones of 03:19 UTC: all six units, ordered at 03:44 UTC on `measure_renderer_r8` (`breath`), `r9` (`marsh`), `r10` (`spine`), `r11` (`eye`), `r12` (`reveal`) and `pack_renderer_r9` (`ribs`), 30 minutes each at most. Their numbers go to the owners before version 3.
 - 2026-11-26 03:46 UTC. The Ribs' lead meant to raise the motion number of `ribs-3` (4.7 percent against a floor of 8 at the draft tier) with camera drift. Declined: M2 is measured with the camera held, and `kit/07-QUALITY-BAR.md` says never to add motion only to raise the number. The motion comes from the colony, the wet runs, the weed and the spray, and both owners of the Ribs have that in their lists.
+- 2026-11-26 04:34 UTC. The shutter. MEASURED on the Reveal's key `reveal-1` (frame 9627, final tier, 4K, this machine, the measure's own fine-detail ratio against the approved picture, floor 0.75): 0.27 with the full 180 degree shutter, 0.64 with the camera's smear held to 0.0015 of the width, 0.92 with it held to 0.0002; `reveal-2` (frame 9675) reads 1.12 and 1.52. The draft tier, one sample and no shutter, read 1.02 and 1.61. Cause, found by the Reveal's owner and confirmed here: the final tier draws 4 samples a frame, and a fast camera move spreads them as four copies of the land up to 10 pixels apart instead of a blur (picture `out/stills/status/` of status 91). A camera survey without a render counts 2,851 of the film's 11,861 frames with more than 5.76 pixels of smear at 4K, in every place, 42 pixels at the worst (frame 9627). Decided: new key `film.maxSmearShare` = 0.0002 (under one pixel at 4K). The camera's own shutter closes on a move just far enough that the move smears its subject by that share of the frame's width and no more; what moves in the world (water, cloud, animals, sparks) is still drawn across the whole 180 degrees, the engine lets the world run on by the rest. So the final tier shows what the owners compose at the draft tier, cleaner, and no judged frame loses its detail to four copies. Not taken: more samples on fast frames (a true 42 pixel blur needs about 28 samples a frame, some 30 to 40 machine-hours more for the film, and, STATED and not measured, a frame blurred that far would not hold the measure's floor at any sample count: with 4 samples it read 0.27). The floor is not touched. Code: `src/core/shutter.ts`, `src/core/engine.ts` (`accumulate`), 10 tests in `tests/shutter.test.ts`.
+- 2026-11-26 04:34 UTC. The Heart keeps the full shutter: new key `film.fullShutterUnits` = `["heart"]`. Brandon approved the Heart as it is and the unit is finished, so its frames stay as they were made, to the pixel (its fastest shot, `heart-03`, smears 10 pixels at 4K, copies 2.5 pixels apart, which read as blur in every round and in the review clip). A test holds the Heart in the list.
 
 ## Notes from Brandon
 
@@ -1649,6 +1651,7 @@ none
 - X. The 4K 60 fps master may not upload as it is: X's written web limits are 1920 x 1200, 40 fps and 25 Mbps, and 4K upload for subscribers rests on one 2025 post by X Engineering. The 1080p copy is the safe file to post. Nothing in the build changes for this. See "Platform".
 
 Decided by Brandon on 2026-11-25 (note 14) and off this list: the eight sounds kept with a fault (they stay, no third take), how loud the sounds sit (the levels of the Heart clip stay and the other 17 follow them), the second spot of the music (the cleaned track stays, the lighter cut stays set aside).
+- The shutter (2026-11-26 04:34 UTC). On a fast camera move the camera's shutter now closes, so every frame of the film is as sharp as a still and nothing moves as four copies; water, cloud, animals and sparks keep their blur. The Heart is left as you approved it. To get the full 180 degree camera blur back everywhere set `film.maxSmearShare` to 0 in `config/showcase.json`; drawn cleanly it needs many more samples on fast frames, some 30 to 40 machine-hours more for the 4K film, and the Reveal's first key then falls under its fine-detail floor. To give the Heart the same rule as the rest, empty `film.fullShutterUnits`.
 
 ## Running jobs
 
@@ -1817,6 +1820,7 @@ What happens next is yours:
 - 2026-11-24 23:56 UTC `e784b81` pushed. Status 10, the animatic, the first cut and the first mix
 - 2026-11-25 15:49 UTC one fetch before a push failed ("could not read Username for 'https://github.com'"); the same fetch and the push of `a1d9efe` succeeded on the next try, seconds later. No commit was lost.
 - 2026-11-26 03:37 UTC the push of `94bc9a6d` (version 2 of the Spine's storm owner merged) failed from the Builder's machine ("could not read Username for 'https://github.com'"), and so did eight more tries up to 03:39 UTC. Fetches work, and pushes from the owners' machines work (the Eye's owner pushed at 03:38 UTC). No commit is lost: `main` is whole in the workspace. Until the Builder's push works again, `main` goes to GitHub by a bundle of `origin/main..main` sent to an idle renderer (`pack_renderer_r8`), which checks that it starts at the remote's head and pushes it without force; the push is tried again from here at every commit.
+- 2026-11-26 04:09 UTC the push of `552108bf` (status 90) failed from the Builder's machine with the same error, five tries up to 04:11 UTC, and at 04:10 UTC the renderer that pushed `4910502e` to `94bc9a6d` for the Builder (`pack_renderer_r8`) failed with it too: its machine has lost the right to push as the owners' machines did in wave 1 after about 2 h 45 min. Fetches work everywhere. No commit is lost. A fresh machine pushes for the Builder from now on (`main_pusher_2`, started 04:11 UTC, the same checked steps: start hash, bundle verify, ancestor, no force), and is replaced by a fresh one when it stops working.
 
 ## Session log
 

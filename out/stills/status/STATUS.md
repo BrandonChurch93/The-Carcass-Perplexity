@@ -1,8 +1,8 @@
-# Status 90
+# Status 91
 
-2026-11-26 04:08 UTC. Phase 4, the other places and the rise.
+2026-11-26 04:35 UTC. Phase 4, the other places and the rise.
 
-- `01-hb7-reveal-keys.jpg`: The Reveal at 04:07 UTC, approved left and built right: the lake, the skull massif, head and shoulders, the whole titan from orbit. Still wrong: the lake's margin is too wide and brown, the bones sit duller than the picture's, the small cloud over the sea is one even speckle
-- `02-hb6-breath-life.jpg`: The Breath at 04:07 UTC, approved left and built right with crops: breath-0, breath-1, breath-3. The channel now sits in the picture's warm grey with a glare path. Still wrong: the plume is an orange ball of stiff sprays, the air is clear to the horizon where the picture is backlit haze
-- `03-hb6-spine-ground.jpg`: The Spine at 04:06 UTC, built frames: the ridge (spine-0), the dead one (spine-1), the strike (spine-3), the hollow (spine-4). Still wrong: the strike's sky is a flat violet wash, the spires carry a stretched grain, the herd is four pale mounds
-- `04-hb5-ribs-ground.jpg`: The Ribs at 04:07 UTC, built frames: the tide flat (ribs-0) and the colony (ribs-3). Still wrong: every blade carries the same level banding, the crag reads as laid masonry, the perched ones are all one cream fan
+- `01-shutter-9627.jpg`: The shutter finding, frame 9627 of the rise at the final tier in 4K: whole frame above, a crop at full size below. Left, the full shutter with 4 samples: four copies of every ridge. Right, the camera's shutter closed: the land as the draft tier shows it
+- `02-v3-marsh-ground.jpg`: The Marsh, version 3 of both owners: marsh-0, the burst (marsh-1), the heavy one (marsh-3), the stuck one (marsh-4). Still wrong: the sky is a blank bright grey, the ground is pale speckle where the picture is dark red-brown, the heavy one has no hair, the stuck one's crust is lumps and not curled plates
+- `03-v3-spine-storm.jpg`: The Spine, version 3 of both owners: the dead one (spine-1), the face with its kites (spine-2), the strike (spine-3), the hollow (spine-4). Still wrong: no glow in the cloud round the stroke, the snow at the dead one is a smooth sheet with no prints, the hollow's wall carries a stretched grain, the lying ones are mounds
+- `04-v3-eye.jpg`: The Eye, version 3, approved left and built right with crops: eye-0, eye-1, eye-2, eye-3. Still wrong: the mats are orange stripes round a pool that is too small, the strands at eye-2 are pale thin swirls and not the tangle, the water beyond the lip is a flat dark sheet, the drinkers are smooth as models
