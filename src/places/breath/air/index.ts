@@ -38,13 +38,15 @@ interface Body {
 export function breathAt(seconds: number): [number, number, number, number] {
   const u = seconds - EXHALE;
   const swell = 0.5 * Math.sin(seconds * 0.9) + 0.3 * Math.sin(seconds * 0.37 + 1);
-  // It fills from below for a second and a half, wells up over the mouth for two more, then slides off over the west lip and thins.
-  const fill = smooth((u - 0.2) / 1.3);
-  const over = u < 3 ? smooth((u - 0.4) / 2.4) : 0.08 + 0.92 * Math.exp(-(u - 3) / 1.3);
+  // It fills from below for a second, wells up over the mouth for two more, then slides off over the west lip and thins: by three and a
+  // half seconds (the end of the shot that looks down the shaft) the rock shows again. Every part is smooth in time: no corner.
+  const after = (x: number): number => 0.5 * (x + Math.sqrt(x * x + 0.25));
+  const fill = smooth((u - 0.1) / 1.2);
+  const over = smooth((u - 0.3) / 2.0) * (0.08 + 0.92 * Math.exp(-after(u - 2.3) / 0.9));
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -10 + swell + 3.5 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
-  const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
-  const spread = smooth((u - 2.8) / 7);
+  const level = -10 + swell + 3.5 * fill * (0.3 + 0.7 * Math.exp(-after(u - 2.6) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-after(u - 6) / 7);
+  const apron = smooth((u - 1.6) / 1.8) * (0.25 + 0.75 * Math.exp(-after(u - 3.6) / 2.6));
+  const spread = smooth((u - 2.2) / 7);
   return [level, over, apron, spread];
 }
 
@@ -62,7 +64,7 @@ export function create(ctx: Context): Piece {
     const lean: [number, number] = [-0.4, 0.14];
     // Far off the far picture (air/sky.ts) holds the plume itself: the body there only keeps it moving.
     const far = Math.hypot(x, z) > 450;
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.1 + 0.4 * tall), rise * 0.58, r * (1.1 + 0.4 * tall)], lean, dense: (far ? 0.025 : 0.07) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: 0.5 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.1 + 0.4 * tall), rise * 0.58, r * (1.1 + 0.4 * tall)], lean, dense: (far ? 0.11 : 0.1) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.6 });
     bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.
@@ -72,6 +74,15 @@ export function create(ctx: Context): Piece {
     [-3200, 300, 800, 60, 900],
   ] as const) {
     bodies.push({ part: 'fog', at: [x, 20, z], size: [rx, ry, rz], dense: 0.0016, repeat: 300, open: 0.75, climb: 0.4, sun: 0.9 });
+  }
+  // The banks that lie at the foot of the far cliff, in front of it: heaped and torn, so that the cliff's foot is lost in fog and not in a level band.
+  for (const [x, z, rx, ry, rz, turn] of [
+    [700, -2300, 620, 55, 260, 0.3],
+    [1500, -1900, 560, 70, 240, 0.9],
+    [2100, -1150, 520, 60, 230, 1.2],
+    [150, -2700, 500, 45, 220, 0.1],
+  ] as const) {
+    bodies.push({ part: 'fog', at: [x, 26, z], size: [rx, ry, rz], turn, dense: 0.0026, repeat: 210, open: 0.8, climb: 0.5, sun: 0.9 });
   }
 
   const vec4s = (): THREE.Vector4[] => Array.from({ length: MAX_BODIES }, () => new THREE.Vector4());
