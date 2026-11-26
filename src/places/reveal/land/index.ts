@@ -42,6 +42,7 @@ uniform vec2 uLake;
 uniform vec2 uLakeSize;
 uniform vec2 uLakeMid;
 uniform vec2 uLava;
+uniform vec2 uThroat;
 uniform vec2 uSalt;
 uniform vec2 uGlint;
 uniform float uPlanetKm;
@@ -146,12 +147,20 @@ void main() {
   // Only near the top of the rise does the body come together: the great ranges stand pale as old bone, the country between them falls dark and cold.
   // Near the ground the country is warm tan under a soft light, its shade open.
   float near = (1.0 - smoothstep(150.0, 520.0, uViewKm)) * land;
-  ground = mix(ground, pow(ground, vec3(0.72)) * 0.56 * vec3(1.08, 0.95, 0.78), 0.8 * near);
+  ground = mix(ground, pow(ground, vec3(0.72)) * 0.47 * mix(vec3(0.74, 0.9, 1.16), vec3(1.03, 0.97, 0.88), smoothstep(0.08, 0.34, lum)), 0.85 * near);
+  // The rock of this country is grey, cold in its shade: the maps' warmth is taken down.
+  ground = mix(ground, vec3(dot(ground, vec3(0.3, 0.55, 0.15))) * vec3(0.95, 1.0, 1.07), 0.5 * land * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
+  // East of the skull, round the throat, the plain is rust red.
+  vec2 fromThroat = (xz - uThroat) / vec2(150.0, 210.0);
+  float rust = exp(-dot(fromThroat, fromThroat)) * land * (1.0 - smoothstep(0.3, 0.55, height));
+  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(1.5, 0.62, 0.42), 0.75 * rust);
   // From the height at which country is seen and no longer ground, the low country lies dark: wet, grown over, teal and slate.
-  float wide = smoothstep(60.0, 260.0, uViewKm) * land;
+  float wide = smoothstep(240.0, 640.0, uViewKm) * land;
   float lowness = 1.0 - smoothstep(0.12, 0.5, height);
-  ground = mix(ground, lum * vec3(0.27, 0.56, 0.6), 0.25 * lowness * wide);
-  ground *= mix(1.0, 0.62, lowness * wide);
+  // (And by value: the middle tones of the country fall away, the pale of the high ground stays.)
+  ground *= mix(1.0, mix(0.6, 1.0, smoothstep(0.22, 0.55, lum)), wide);
+  ground = mix(ground, lum * vec3(0.3, 0.6, 0.62), 0.45 * lowness * wide);
+  ground *= mix(1.0, 0.5, lowness * wide);
   // The bones are ivory and tan, never chalk: the brightest of the map is taken down.
   ground *= mix(1.0, 0.74, smoothstep(0.4, 0.8, lum) * wide);
   slope *= mix(1.0, 0.55, lowness * wide);
@@ -163,6 +172,25 @@ void main() {
   ground = mix(ground, vec3(0.6, 0.54, 0.44), 0.25 * top * smoothstep(0.5, 0.85, height));
   // The high ground is old bone: its pale is warm, never the white of snow.
   ground *= mix(vec3(1.0), vec3(0.98, 0.84, 0.66), land * smoothstep(0.25, 0.7, height) * smoothstep(0.2, 0.5, lum));
+
+  // The chest round the Heart is old lava: a black crust between the ribs, which stand out of it pale.
+  vec2 fromHeart = xz - uLava;
+  float crust = exp(-dot(fromHeart * vec2(0.75, 1.0), fromHeart * vec2(0.75, 1.0)) / 150000.0) * (1.0 - smoothstep(0.24, 0.5, height)) * land;
+  ground = mix(ground, vec3(0.022, 0.024, 0.028) * (0.5 + 2.2 * lum), min(1.0, 1.5 * crust));
+  // The pan of the pelvis: salt, white under the sun, and the red brine that veins it. East of it the red runs out over the low ground
+  // and into the sea, in streaks drawn along the fall of the land.
+  vec2 fromPan = xz - uSalt;
+  float panAt = (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(175.0, 140.0)) + 0.5 * (texture2D(uCloudTile, xz / 420.0, 1.0).b - 0.5))) * land;
+  float brine = smoothstep(0.1, 0.34, (ground.r - ground.g) / max(lum, 0.02));
+  float saltFlat = panAt * smoothstep(0.1, 0.3, lum) * (1.0 - brine);
+  ground = mix(ground, vec3(0.86, 0.87, 0.86) * (0.8 + 0.5 * lum), 0.92 * saltFlat);
+  ground = mix(ground, vec3(0.22, 0.02, 0.02), 0.9 * panAt * brine);
+  vec2 run = vec2(0.965, 0.26);
+  float alongRun = dot(fromPan, run) / 1150.0;
+  float acrossRun = dot(fromPan, vec2(-run.y, run.x)) / (70.0 + 300.0 * alongRun);
+  float streaks = texture2D(uCloudTile, vec2(alongRun * 0.9, acrossRun * 0.55 + 0.3) + 0.04 * slope, 1.0).b;
+  float plume = exp(-acrossRun * acrossRun * 1.6) * smoothstep(0.06, 0.16, alongRun) * (1.0 - smoothstep(0.35, 1.0, alongRun)) * smoothstep(0.3, 0.75, streaks + 0.25 * (1.0 - alongRun));
+  ground = mix(ground, vec3(0.34, 0.075, 0.03) * (0.5 + 1.6 * lum), 0.7 * plume * (1.0 - 0.6 * smoothstep(0.35, 0.6, height)));
 
   // ---- the light ----
   // The maps hold soft light from the upper left, and the place's sun stands on that side: the relief is lit from the slope, on top of it.
@@ -179,16 +207,16 @@ void main() {
   vec2 fromLava = xz - uLava;
   float swell = 0.8 + 0.9 * uBeat;
   float d0 = dot(fromLava, fromLava);
-  float heat = exp(-d0 / 90.0) * 1.5 * swell;
-  float halo = exp(-d0 / 1300.0) * (0.5 + 1.5 * uBeat);
+  float heat = exp(-d0 / 26.0) * 1.5 * swell;
+  float halo = exp(-d0 / 700.0) * (0.5 + 1.5 * uBeat);
   for (int i = 0; i < 6; i++) {
     vec3 vent = VENTS[i];
     vec2 q = fromLava - vent.xy;
     float dd = dot(q, q);
     // The lesser vents answer the beat a little late, each in its turn.
     float answer = 0.75 + 0.5 * uBeat * (0.5 + 0.5 * sin(float(i) * 2.4));
-    heat += exp(-dd / (30.0 * vent.z)) * 1.8 * vent.z * answer;
-    halo += exp(-dd / (420.0 * vent.z)) * 0.3 * vent.z * answer;
+    heat += exp(-dd / (11.0 * vent.z)) * 2.2 * vent.z * answer;
+    halo += exp(-dd / (260.0 * vent.z)) * 0.3 * vent.z * answer;
   }
   float vein = cracks(xz / 7.0) * exp(-d0 / 2200.0) * (0.2 + 0.6 * uBeat);
   heat = (heat + vein) * land;
@@ -200,6 +228,8 @@ void main() {
   vec3 light = uSunColour * uSunDir.y * shade + skyIrradiance(level);
   float pale = pow(shallow, 1.3);
   vec3 bed = mix(DEEP, max(ground * 0.34, vec3(0.006, 0.035, 0.04)), pale);
+  // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
+  bed = mix(bed, vec3(0.2, 0.045, 0.016), 0.75 * plume * (1.0 - land));
   // The lake of the Eye: black in the middle, and round it a margin of amber shallows, uneven, with tongues of it curling in.
   vec2 lakeAt = (xz - uLakeMid) / uLakeSize;
   float lakeR = length(lakeAt);
@@ -335,6 +365,7 @@ export function create(ctx: Context): Piece {
     uLakeMid: { value: new THREE.Vector2(X(AT.lake.x - 5.9), Z(AT.lake.y + 5.6)) },
     uLakeSize: { value: new THREE.Vector2(62.5 * KM, 57.7 * KM) },
     uLava: { value: new THREE.Vector2(X(AT.lava.x), Z(AT.lava.y)) },
+    uThroat: { value: new THREE.Vector2(X(AT.throat.x), Z(AT.throat.y)) },
     uSalt: { value: new THREE.Vector2(X(AT.salt.x), Z(AT.salt.y) + 10 * KM) },
     // Where on the sea the sun's own image lies, and the radius of the planet, km.
     uGlint: { value: new THREE.Vector2(X(6300), Z(600)) },

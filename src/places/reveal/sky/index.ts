@@ -24,7 +24,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-  vec3 c = 0.8 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  vec3 c = 0.72 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
   float air = 1.0 - exp(-0.0125 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour * 0.7, air);
 }`;
@@ -116,12 +116,12 @@ void main() {
   float arms = lightOf(q, 4.0);
   vec2 sunStep = normalize(uSunDir.xz);
   float sunward = lightOf(q + spin * sunStep * 0.006, 0.0);
-  float core = 1.0 - smoothstep(0.08, 0.27, r);
+  float core = 1.0 - smoothstep(0.035, 0.13, r);
   vec2 band = bands(p, turn / 6.28318);
   float bandSun = bands(p + sunStep * 0.012, turn / 6.28318).x;
   // Out along the arms the cloud is bands with sea between, thinner the farther out, thick where the photograph's arms lie.
-  float outer = band.x * (0.45 + 0.6 * smoothstep(0.08, 0.5, arms)) * (1.0 - smoothstep(0.55, 0.99, r)) * smoothstep(0.03, 0.12, r);
-  float inner = smoothstep(0.3, 0.8, seenLight);
+  float outer = band.x * (0.3 + 0.7 * smoothstep(0.08, 0.5, arms)) * (1.0 - smoothstep(0.55, 0.99, r)) * smoothstep(0.02, 0.07, r);
+  float inner = smoothstep(0.42, 0.85, seenLight);
   float thick = mix(outer, max(inner, outer), core);
   float self = clamp(0.5 + mix(0.8 * (band.x - bandSun), 3.0 * (seenLight - sunward), core), 0.0, 1.0);
   float light = mix(band.y, seenLight, core);
@@ -190,18 +190,18 @@ varying vec3 vWorld;
 void main() {
   vec2 d = vWorld.xz - uThroat;
   // along runs from the throat (0) down the wind (1) over 600 km; across is the width of the photograph, 340 km.
-  float along = dot(d, uWind) / 600.0;
-  float across = dot(d, vec2(-uWind.y, uWind.x)) / 340.0;
+  float along = dot(d, uWind) / 560.0;
+  float across = dot(d, vec2(-uWind.y, uWind.x)) / 300.0;
   // The wind carries the curls: the trail is read through a bend that travels down it, stronger the farther it has gone.
   vec2 flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011, across * 0.8 + 0.3)).rg - 0.5;
-  vec2 q = vec2(along + 0.02, across + 0.5) + flow * vec2(0.012, 0.05) * smoothstep(0.02, 0.5, along);
+  vec2 q = vec2(along + 0.02, across + 0.5 + 0.1 * sin(along * 5.0 + 1.0) * along) + flow * vec2(0.03, 0.16) * smoothstep(0.02, 0.5, along);
   float seenLight = dot(texture2D(uPicture, clamp(q, 0.0, 1.0)).rgb, vec3(0.3, 0.55, 0.15));
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.04, 0.5, seenLight) * inside * puff;
+  float thick = smoothstep(0.02, 0.5, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.92, 0.0, 1.0);
+  float alpha = clamp(thick * 0.75, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -276,9 +276,9 @@ export function create(ctx: Context): Piece {
       .translate(X(at.x), height, Z(at.y));
 
   // The breath of the throat: it leaves the neck and is carried up the picture and to the left by the wind.
-  const wind = new THREE.Vector2(-0.8, -0.6).normalize();
+  const wind = new THREE.Vector2(-0.43, -0.9).normalize();
   const throat = new THREE.Vector2(X(AT.throat.x), Z(AT.throat.y));
-  sheet('vapour', quad({ x: AT.throat.x + (wind.x * 300) / KM, y: AT.throat.y + (wind.y * 300) / KM }, 420 / KM, 420 / KM, 1.5, 0), VAPOUR_FRAGMENT, {
+  sheet('vapour', quad({ x: AT.throat.x + (wind.x * 400) / KM, y: AT.throat.y + (wind.y * 400) / KM }, 560 / KM, 560 / KM, 1.5, 0), VAPOUR_FRAGMENT, {
     uPicture: { value: data('mat/wisps.jpg', false) },
     uThroat: { value: throat },
     uWind: { value: wind },

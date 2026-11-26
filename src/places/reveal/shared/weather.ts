@@ -45,10 +45,12 @@ float lowPicture(vec2 w) {
   float away = smoothstep(650.0, 1200.0, uViewKm);
   float pic = 0.0;
   if (away < 1.0) {
-    // Small cumulus stand in streets along the wind, with clear lanes between: the photograph's puffs, kept where a street runs.
-    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 150.0 + vec2(0.13, 0.4)).rgb, 0.2, 0.8);
-    float street = texture2D(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(330.0, 170.0) + vec2(0.4, 0.1), 1.0).b;
-    pic += (1.0 - away) * puff * smoothstep(0.34, 0.62, street);
+    // Small cumulus stand in streets along the wind, with clear lanes between: the photograph's puffs, laid so one is a few kilometres
+    // across, kept where a street runs, and their edges broken by the same photograph laid finer.
+    vec2 pw = mat2(0.8, 0.6, -0.6, 0.8) * w;
+    float puff = seen(texture2D(uMatPopcorn, pw / 190.0 + vec2(0.13, 0.4)).rgb, 0.4, 0.95);
+    float street = texture2D(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(520.0, 260.0) + vec2(0.4, 0.1), 1.0).b;
+    pic += (1.0 - away) * puff * (0.12 + 0.88 * smoothstep(0.4, 0.62, street));
   }
   if (away > 0.0) {
     float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1250.0, 1000.0) + vec2(0.3, 0.7), 0.7).rgb, 0.16, 0.8);
@@ -71,7 +73,7 @@ vec2 lowField(vec2 at) {
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(650.0, 1200.0, uViewKm);
-  float field = amount * (mix(0.26, 0.5, even) + mix(0.74, 0.5, even) * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
+  float field = amount * (mix(0.45, 0.5, even) + mix(0.55, 0.5, even) * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
   float thick = min(1.0, 1.1 * pic) * smoothstep(0.0, 0.5, field);
