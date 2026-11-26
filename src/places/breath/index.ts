@@ -36,9 +36,9 @@ const key = (id: string): number => keyPart(shotById(id));
 const shots: Record<string, CameraPath> = {
   'breath-01': through(look([-41.5, 11, 42.3], 21, -15, 50), key('breath-01'), { forward: -24, up: 4, right: -3 }, { forward: 14, up: -3, right: 10, turn: -8 }),
   'breath-02': through(look([-8.6, 4.4, 31.2], 13, -25, 50), key('breath-02'), { forward: -7, up: -1.5, right: 3, turn: 11, tilt: 8 }, { forward: 3, up: 3.5, right: 6, turn: -2, tilt: -4 }),
-  'breath-03': through(lens(look([-32.5, 3.6, 5], 12, -8, 38), 0.02, 4.8), key('breath-03'), { forward: -11, up: 0.8, right: 1.5, turn: -4 }, { forward: 0.6, right: 0.1 }),
-  'breath-04': through(lens(look([-50.7, 1.9, -19.5], 15, -8.5, 38), 0.04, 10.5), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
-  'breath-05': through(lens(look([-28.5, 2.6, 28.3], 12, -10.3, 40), 0.012, 6.2), key('breath-05'), { forward: -6, up: 0.6, right: -1 }, { forward: 2.5, up: -0.1, right: 0.4 }),
+  'breath-03': through(lens(look([-32.5, 3.6, 5], 12, -8, 38), 0.011, 4.8), key('breath-03'), { forward: -11, up: 0.8, right: 1.5, turn: -4 }, { forward: 0.6, right: 0.1 }),
+  'breath-04': through(lens(look([-50.7, 1.9, -19.5], 15, -8.5, 38), 0.03, 10.5), key('breath-04'), { right: -5, forward: -3 }, { right: 4, forward: 2.5 }),
+  'breath-05': through(lens(look([-28.5, 2.6, 28.3], 12, -10.3, 40), 0.0084, 6.2), key('breath-05'), { forward: -6, up: 0.6, right: -1 }, { forward: 2.5, up: -0.1, right: 0.4 }),
 };
 
 // The order matters: the land tells the rig its shape before anything reads it, and the air comes last because it draws over everything.

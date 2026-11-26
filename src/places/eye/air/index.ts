@@ -10,6 +10,7 @@ import { FLIGHT, KEYS } from '../cameras';
 import { flight } from '../flight';
 import handoff from '../handoff.json';
 import { during } from '../shared/anchors';
+import { MIST_SUN_GLSL, mistSunTexture } from './light';
 import { PLATES, plateFor } from './plates';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -86,6 +87,7 @@ float mistAt(vec3 p, vec4 land) {
   float banks = smoothstep(0.3, 0.72, 0.55 * vnoise(q) + 0.3 * vnoise(q * 2.3 + 5.0) + 0.15 * vnoise(q * 6.1) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.11));
   return thick * banks;
 }
+${MIST_SUN_GLSL}
 
 void main() {
   ivec2 pixel = 2 * ivec2(gl_FragCoord.xy);
@@ -139,7 +141,7 @@ void main() {
         if (d > 0.0) {
           float a = 1.0 - exp(-d * dt);
           float open = mix(land.g, 1.0, 0.5);
-          vec3 lit = 0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.13 * sunOver(land, p)) + 0.35 * low;
+          vec3 lit = 0.3 * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.13 * mistSun(p)) + 0.35 * low;
           sum += tr * a * lit / 3.14159 * 2.4;
           tr *= 1.0 - a;
         }
@@ -196,6 +198,8 @@ export function create(ctx: Context): Piece {
   const end = ctx.events.end;
   const pictures = PLATES.map((p) => ctx.assets.texture(p.file, { repeat: false, anisotropy: 2 }));
   const rig = ctx.rig.uniforms;
+  const mistSun = mistSunTexture(ctx.rig.land.sunlit);
+  volume.uniforms.tMistSun = { value: mistSun };
 
   return {
     volume,
@@ -238,6 +242,7 @@ export function create(ctx: Context): Piece {
       sky.geometry.dispose();
       skyMaterial.dispose();
       volume.dispose();
+      mistSun.dispose();
     },
   };
 }
