@@ -79,6 +79,15 @@ void main() {
   // The footprint of a pixel on the crust: long along the view, short across it.
   float fpLong = max(length(qx), length(qy));
   float fpShort = min(length(qx), length(qy));
+  // The swell beside the lens of the long shot at the fall is out of focus from its first frame to its last: it is shaded
+  // as crust seen from thirty metres, and what the blur would take is not computed.
+  float blurred = 0.0;
+  if (uHill.z > 0.0) {
+    vec2 dh = q - uHill.xy;
+    blurred = uHill.z * (1.0 - smoothstep(6.4, 7.6, length(vec2(dot(dh, vec2(0.582, -0.813)) / 1.6, dot(dh, vec2(0.813, 0.582))))));
+    fpLong = max(fpLong, 0.45 * blurred);
+    fpShort = max(fpShort, 0.2 * blurred);
+  }
   float cell = vAux.y;
   float shown = step(1.5, net.g);
   float live = step(1e-3, net.a);
@@ -217,7 +226,7 @@ void main() {
   // blur what lies across it.
   gx *= min(1.0, 2.5 * ly / lx);
   gy *= min(1.0, 2.5 * lx / ly);
-  float fpS = min(lx, ly);
+  float fpS = max(min(lx, ly), 0.025 * blurred);
   float nearOn = 1.0 - smoothstep(0.006, 0.016, fpS);
   float farOn = smoothstep(0.008, 0.02, fpS);
   vec3 skinM = vec3(0.0, 0.0, 0.5);
@@ -266,6 +275,8 @@ void main() {
   vec3 albedo = mix(vec3(0.034, 0.035, 0.037), vec3(0.125, 0.126, 0.129), age) * (0.9 + 0.2 * vnoise(q / 3.1 + 13.0));
   // The tone within a patch is the photograph's: pale worn crests, black furrows, glass and grit.
   albedo *= 0.85 * clamp(tone, 0.1, 4.0) * (1.0 + 0.8 * (skinD.z - 0.5));
+  // The mean of what is left out on the blurred swell: its grooves and its spall darken and warm it by a tenth.
+  albedo *= mix(vec3(1.0), vec3(0.99, 0.9, 0.885), blurred);
   // The banks of the line are dark charcoal brown, not ash.
   albedo *= mix(vec3(1.0), vec3(0.66, 0.6, 0.59), coil * (1.0 - coilMound));
   albedo *= mix(vec3(1.0), vec3(0.86, 0.8, 0.77), wide);
@@ -373,6 +384,14 @@ void main() {
   // Over a wet patch at the feeding group stands smoke, not sky.
   // Seen from low over the lake the crust gives back nothing of the sky: it is rough, and a rough face shadows itself.
   c += (1.0 - 0.8 * wet) * sheen * mirror * (1.0 - 0.85 * rubble) * (1.0 + 0.9 * crest);
+  // The floor the group feeds on is wet glass: seen low it gives back the grey of the air over the far lake, on its flats
+  // and its wet patches, and nothing in its hollows, on its mounds or its rubble.
+  float glaze = fresh * (1.0 - steep) * (1.0 - rubble) * (1.0 - mound) * (0.3 + 0.7 * wet) * crease * clear;
+  if (glaze > 0.01) {
+    vec3 air = lakeMirror(r, 0.45);
+    air = mix(air, vec3(dot(air, vec3(0.3, 0.5, 0.2))) * vec3(0.92, 0.98, 1.08), 0.75);
+    c += air * (glaze * (0.02 + 0.3 * pow(1.0 - nv, 4.0)));
+  }
 
   // Heat: in a gap the cells hold, only its floor glows, and the floor of a deep one is left dark for the lava's own surface.
   float held = smoothstep(1.0, 2.5, 2.0 * gape / max(cell, 1e-3)) * live;

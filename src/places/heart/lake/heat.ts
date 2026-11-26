@@ -380,9 +380,14 @@ vec4 heatAt(vec2 q, float lake, vec4 n, float least) {
     vec2 f = gapHeat(farD, farHalf, 1320.0 + 80.0 * smoothstep(0.15, 0.9, farHalf) + 60.0 * farMeet + 90.0 * (hotSpot - 0.5) + 50.0 * (beat - 0.5) + drawnOnly * 190.0 * (surge - 0.5) + unlike, least);
 #ifdef LAKE_LIP
     vec2 sightLine = q - cameraPosition.xz;
-    float farSight = seenOver(q, 2.0 * farHalf, 0.035, abs(dot(farAcross, sightLine / max(length(sightLine), 1.0))));
-    // A seam between plates is brimful: from low over the lake it thins, and it does not go out.
-    farSight = max(farSight, 0.6);
+    // How far the melt lies under its brim changes over tens of metres, not every few: seen from low a seam shows in long
+    // reaches and is hidden in long reaches, never in dashes.
+    vec3 farEye = cameraPosition - vec3(q.x, 0.0, q.y);
+    float farLies = 0.035 * (0.3 + 1.5 * vnoise(q / 53.0 + 17.0));
+    float farSight = smoothstep(0.4, 1.2, (farEye.y / max(length(farEye), 1.0)) * 2.0 * farHalf / max(farLies * max(abs(dot(farAcross, sightLine / max(length(sightLine), 1.0))), 0.15), 1e-4));
+    // A seam between plates is brimful, a hand under its crust: seen from low across it the near edge hides most of it,
+    // and what is left is a dull line, not a bar.
+    farSight = max(farSight, 0.25);
     f.x *= farSight;
 #endif
     f.x *= mix(0.6, 1.0, flare);
