@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 114, 2026-11-26 13:22 UTC:
+Status 115, 2026-11-26 13:49 UTC:
 
-- `01-sheet-1.jpg`: The lens fix (final tier, 4K, crops at native size, the builder's sheet): before at left, after at right. Top: the Eye's near pebbles lose the lattice. Middle: the Ribs' far blade, out of focus, is now truly soft. Bottom: a carcass in front of the focus on the Spine
-- `02-set-b-02.jpg`: Round 26, compression, the Spine's third strike (final tier, 1080p, crops at full size): as rendered at left, out of the 10 Mb/s encode at right. The glow round the bolt breaks into patches; the spire's flat facets at top left are in the render itself
-- `03-heart-frame-2507.jpg`: The Heart's first frame as the jury saw it (frame 2507, final tier): none of five said photograph or film. Three named the near bank's stretched texture; it has a builder since 13:10 UTC
-- `04-marsh-frame-5618.jpg`: The Blood Marsh's first frame as the jury saw it (frame 5618, final tier): none of five said photograph or film. Four named the stalks as one model repeated; they have a builder since 13:10 UTC
+- `01-s115-join.jpg`: The join, version 1, merged (draft tier, preview size, rendered on the Builder's machine): frames 9480, 9518, 9541, 9563, 9584 and 9610. The lid of cloud closes over the lake, the cut sits inside the white, and the rise opens through a gap. The first frame still reads as a night sky and is sent back
+- `02-s115-merges.jpg`: Three more merges as rendered on the Builder's machine (draft tier, preview size). The first seconds, version 1: film frames 0, 120 and 475. The card loop, version 3: loop frames 0 and 240. The ending, version 3: frames 10454, 11340 and 11743: day leaves the body, the fire holds, the last frame is a dim body
+- `03-marsh-crop-12.jpg`: Freshness after the lens fix, the Blood Marsh (final tier, 4K, crops at native size, from the render machine's sheet): kept still at left, new render at right. Top, key marsh-1. Bottom, key marsh-2: fine detail is 0.54 of the kept still in its softest window
+- `04-strike-v1-keys.jpg`: The Spine's lightning, version 1, held back: three keys, each as the kept still (left, final tier), as version 1 (middle, the builder's render, draft tier) and as your approved picture (right). Bottom row: key spine-4 has lost its bolt and the purple beyond the cave mouth
 
+Status 114, 2026-11-26 13:22 UTC, showed: The lens fix (final tier, 4K, crops at native size, the builder's sheet): before at left, after at right.
 Status 113, 2026-11-26 12:57 UTC, showed: The ending, version 2, merged: frames 10860 to 11670 (draft tier, the builder's sheet).
 Status 112, 2026-11-26 12:30 UTC, showed: Round 26, the join from the lake into the rise: twelve consecutive frames, 9535 to 9546 (review tier).
-Status 111, 2026-11-26 12:04 UTC, showed: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier); The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T13:22:58Z
-phase 5: 3.12 h used of 6.00 h
-build: 37.53 h used of 72.00 h
+2026-11-26T13:49:29Z
+phase 5: 3.56 h used of 6.00 h
+build: 37.97 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 26
+minutes since the last status: 27
 ```
 
 ## Phases
