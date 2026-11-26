@@ -39,7 +39,14 @@ void main() {
   float burst = left > 0.0 ? exp(-left / 1.4) * smoothstep(0.0, 0.12, left) : 0.0;
   float amount = vSource.w * (0.5 + burst);
   float fade = smoothstep(reach, 0.3 * reach, d) * smoothstep(0.015, 0.07, d) / (1.0 + 2.5 * d);
-  float slope = cos(k * d * (1.0 - 0.12 * d / reach) - k * speed * uSeconds + vWhen.z) * amount * fade;
+  // No two sources ring alike: each has its own spacing, and its rings leave it in packets of two or three with still water between,
+  // so the rings round one leg are of unlike age and strength. A ring is not whole either: it is strong on one side and gone on another.
+  float own = fract(vWhen.z * 3.71);
+  k *= 0.72 + 0.6 * own;
+  float packet = 0.2 + 0.8 * smoothstep(0.25, 0.75, 0.5 + 0.5 * sin((d / speed - uSeconds) * (1.1 + 0.9 * own) + vWhen.z * 2.7));
+  float round_ = atan(away.y, away.x);
+  float broken = 0.5 + 0.5 * sin(round_ * 2.0 + vWhen.z * 5.0 + d * 3.0) * sin(round_ * 5.0 - vWhen.z * 3.0 - d * 7.0 + 0.6 * uSeconds);
+  float slope = cos(k * d * (1.0 - 0.12 * d / reach) - k * speed * uSeconds + vWhen.z) * amount * fade * packet * (0.35 + 1.0 * broken);
   gl_FragColor = vec4(dir * slope, abs(slope), 1.0) * (1.0 - uSolo);
 }`;
 

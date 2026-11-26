@@ -20,6 +20,8 @@ export interface Bush {
   comb?: number;
   /** A mound seen from some way off, 0 to 1: more and finer fronds that leave the holdfast all the way round and arch over to the rock. Unset: 0. */
   mound?: number;
+  /** A weeping one, 0 to 1: every stem is hung with many short sprays that fall straight down from it. Unset: 0. */
+  weep?: number;
 }
 
 /** Where a thread ends that carries a drop. */
@@ -151,7 +153,7 @@ export class Fronds {
         const seed = rng.range(1, 90);
         // Each ribbon reads its own stretch of the picture, so two crossed ones never show the same barb at the same place.
         const slide = rng.range(0, 0.035);
-        const sag = rng.range(0.45, 0.95);
+        const sag = rng.range(0.6, 1.25);
         // Most ribbons are of the sparse ragged frond, the rest of the full one: no bush is one picture.
         const ragged = rng.next() < 0.7;
         const first = this.count;
@@ -234,7 +236,8 @@ export class Fronds {
 
     const close = bush.detail >= 1;
     const mound = bush.mound ?? 0;
-    const mains = (close ? 10 : bush.detail >= 0.5 ? 5 : 3 + (rng.next() < 0.4 ? 1 : 0)) + Math.round(14 * mound);
+    const weep = bush.weep ?? 0;
+    const mains = (close ? 22 : bush.detail >= 0.5 ? 9 : 6 + (rng.next() < 0.4 ? 1 : 0)) + Math.round((close ? 10 : 5) * mound);
     const blades = 2;
     for (let m = 0; m < mains; m++) {
       // From the crown of the bush to its skirt: the first rise nearly straight and bend over only at their ends, the last go out low
@@ -243,25 +246,26 @@ export class Fronds {
       const k = rng.range(-0.5, 0.5);
       // One in five grows out of the back of the bush and is turned over it by the wind.
       const back = m % 5 === 3;
-      const long = (mound > 0 ? 1.12 - 0.45 * rank : 1.32 - 0.6 * rank) * rng.range(0.78, 1.05) * (back ? 0.7 : 1);
+      const long = (mound > 0 ? 1.12 - 0.45 * rank : 1.32 - 0.6 * rank) * rng.range(0.6, 1.05) * (back ? 0.7 : 1);
       const length = tall * long;
       const out = 0.035 * tall * rng.next();
       const about = rng.range(0, 6.283);
       const from: V3 = [bush.x + Math.sin(about) * out, bush.y + 0.03 * tall, bush.z + Math.cos(about) * out];
       const azimuth = lean + (back ? Math.PI + 1.2 * k : (2.3 + 3.2 * mound) * k) + rng.range(-0.25, 0.25);
       const elevation = (back ? 1.25 : 1.5 - 0.8 * rank) + rng.range(-0.12, 0.1);
-      const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb * (1 - 0.7 * mound)) * (2.3 + 3.2 * mound) * k) + rng.range(-0.2, 0.2), -0.25 - 0.45 * mound - 0.8 * rank ** 0.7 + rng.range(-0.25, 0.2), length, rng.range(1.3, 2.1) - 0.3 * mound);
+      const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb * (1 - 0.7 * mound)) * (2.3 + 3.2 * mound) * k) + rng.range(-0.2, 0.2), -0.6 - 0.35 * mound - 0.7 * rank ** 0.7 + rng.range(-0.3, 0.2), length, rng.range(1.7, 2.7) - 0.6 * mound);
       const phase = rng.range(0, 6.283);
-      ribbons(c, blades, rng.range(0.38, 0.62) * (1 - 0.3 * mound), false, close ? 5 : 0, phase, 0, rng.range(0.12, 0.3) * (1 - 0.5 * mound));
+      ribbons(c, blades, rng.range(0.28, 0.46) * (1 - 0.2 * mound) * (1 - 0.35 * weep), false, close ? 4 : 0, phase, 0, rng.range(0.12, 0.3) * (1 - 0.5 * mound));
       tube(c, tall * 0.011 * (0.7 + 0.5 * long), 0.8, 1, phase, 0);
       // Side fronds leave the stem part way up, shorter, each its own way.
-      const sides = close ? 1 + (rng.next() < 0.5 ? 1 : 0) : bush.detail >= 0.5 ? 1 : rng.next() < 0.5 ? 1 : 0;
+      // A frond branches: three to five lesser ones leave each stem, the last of them near its end.
+      const sides = (close ? 3 + Math.floor(rng.next() * 3) : bush.detail >= 0.5 ? 2 : 1) + Math.round(5 * weep);
       for (let s = 0; s < sides; s++) {
-        const at = Math.round(rng.range(0.14, 0.5) * ALONG);
+        const at = Math.round(rng.range(0.14, close ? 0.8 : 0.5) * ALONG);
         const p = c.points[at] as V3;
         const way = (rng.next() < 0.5 ? -1 : 1) * rng.range(0.35, 0.95);
-        const child = curve(p, (c.azimuth[at] as number) + way, (c.elevation[at] as number) + rng.range(-0.35, 0.35), lean + way * (1 - comb), rng.range(-1.25, -0.4), length * rng.range(0.42, 0.72) * (1 - (0.4 * at) / ALONG), rng.range(1.0, 1.6));
-        ribbons(child, 2, rng.range(0.45, 0.7), false, close ? 3 : 0, phase, at / ALONG, 0.06);
+        const child = curve(p, (c.azimuth[at] as number) + way, (c.elevation[at] as number) + rng.range(-0.35, 0.35) - 0.5 * weep, lean + way * (1 - comb), rng.range(-1.25, -0.4) * (1 - weep) + rng.range(-1.5, -1.2) * weep, length * (close ? rng.range(0.26, 0.55) : rng.range(0.42, 0.72)) * (1 - (0.4 * at) / ALONG) * (1 - 0.3 * weep), rng.range(1.0, 1.6) - 0.4 * weep);
+        ribbons(child, 2, rng.range(0.45, 0.7), false, close ? 2 : 0, phase, at / ALONG, 0.06);
         tube(child, tall * 0.007, 0.7, 0, phase, at / ALONG);
       }
     }

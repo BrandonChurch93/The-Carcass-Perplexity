@@ -39,7 +39,7 @@ export function create(ctx: Context): Piece {
   plate.wrapS = THREE.MirroredRepeatWrapping;
   plate.wrapT = THREE.MirroredRepeatWrapping;
   const nearMap = bakeNear(ctx.rng('land/near'));
-  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'), surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1), plate, surface('cliff', [0.291, 0.273, 0.265], 200, 22), nearMap, {
+  const rock = createRock(ctx.rig.uniforms, ctx.rng('land/rock'), surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1), plate, nearMap, {
     pad: ctx.assets.texture('mat/drypad.jpg', { kind: 'colour', anisotropy: 4 }),
     padHeight: ctx.assets.texture('mat/drypad-h.png', { kind: 'data' }),
     pebbles: surface('pebbles', [0.31, 0.272, 0.234], 1.5, 1, 4),
