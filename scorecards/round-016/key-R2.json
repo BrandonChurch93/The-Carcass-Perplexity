@@ -1,0 +1,37 @@
+{
+  "round": "16",
+  "unit": "ribs",
+  "critic": "R2",
+  "packs": {
+    "R2-1": {
+      "set-A-01.png": "Judged image: ribs-0, film frame 1241"
+    },
+    "R2-2": {
+      "set-B-01.png": "Judged image: ribs-1, film frame 2081"
+    },
+    "R2-3": {
+      "set-C-01.png": "Judged image: ribs-2, film frame 1759"
+    },
+    "R2-4": {
+      "set-D-01.png": "Judged image: ribs-3, film frame 1546"
+    },
+    "R2-5": {
+      "set-E-01.png": "Judged image: ribs-4, film frame 2401"
+    },
+    "R2-6": {
+      "set-F-01.png": "Control: the approved picture of ribs-0, references/approved/1-ribs/ribs-0-establishing.jpg, resized and encoded like the judged images"
+    },
+    "R2-7": {
+      "set-G-01.png": "Control: the approved picture of ribs-1, references/approved/1-ribs/ribs-1-the-drowned-hanging-in-the-weed.jpg, resized and encoded like the judged images"
+    },
+    "R2-8": {
+      "set-H-01.png": "Control: the approved picture of ribs-2, references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg, resized and encoded like the judged images"
+    },
+    "R2-9": {
+      "set-I-01.png": "Control: the approved picture of ribs-3, references/approved/1-ribs/ribs-3-the-colony.jpg, resized and encoded like the judged images"
+    },
+    "R2-10": {
+      "set-J-01.png": "Control: the approved picture of ribs-4, references/approved/1-ribs/ribs-4-the-bore-arrives.jpg, resized and encoded like the judged images"
+    }
+  }
+}

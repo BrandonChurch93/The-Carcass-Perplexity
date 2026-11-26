@@ -516,7 +516,7 @@ void main() {
   vec2 lean = (vec2(hr - hl, hu - hd) / 0.0718 - vec2(wr - wl, wu - wd) / 0.5024) * uWall.x;
   float fold = h - 0.25 * (wl + wr + wd + wu);
 
-  float top = smoothstep(0.45, 0.8, gn.y);
+  float top = smoothstep(0.3, 0.62, gn.y);
   float under = smoothstep(0.3, 0.7, -gn.y);
   float face = 1.0 - top - under;
   float near = smoothstep(46.0, 9.0, dist);
@@ -536,7 +536,10 @@ void main() {
 
   // The top of a rib holds dust and broken stone and is the palest thing in the shaft; its underside is wet and dark.
   float rib = smoothstep(0.5, 0.7, texture2D(tWallH, vUv, 3.0).r);
-  vec3 onTop = mix(broad, vec3(0.56, 0.53, 0.47), 0.3 + 0.45 * rib) * tone;
+  // Its colour is the stone's own, laid flat in the world at two sizes: the wall's picture cannot be laid on a top, it is drawn out there
+  // into streaks metres long.
+  vec3 fineTop = clamp(texture2D(tMat, p.xz / 1.3 + 0.11).rgb / uMean, 0.45, 1.7);
+  vec3 onTop = mix(broad, vec3(0.56, 0.53, 0.47), 0.55 + 0.25 * rib) * tone * mix(vec3(1.0), fineTop, 0.75 * near + 0.1);
   vec3 below = broad * 0.6;
   // The rib is ivory: the plate's own pale stone, a little paler still than the wet wall it stands out of.
   // Between the ribs the wall is dark wet stone, grey-green; the ribs are pale.

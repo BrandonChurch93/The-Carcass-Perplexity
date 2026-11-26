@@ -31,7 +31,8 @@ vec3 runnerLight(vec3 p, vec3 n) {
     // A coat holds light in itself and gives it back warmer than the ice does.
     cold = mix(cold, dot(cold, vec3(0.3, 0.5, 0.2)) * vec3(1.14, 1.0, 0.84), 0.55);
     float up = 0.75 + 0.25 * n.y;
-    e = cold * uDoorGain * up * (sE * (0.3 + 0.7 * max(dot(n, way), 0.0)) + sM * (0.3 + 0.7 * max(dot(n, normalize(back)), 0.0)));
+    // The far mouth is the window; the mouth behind the lens is far off and gives the shade its little light.
+    e = cold * uDoorGain * up * (sE * (0.14 + 0.86 * max(dot(n, way), 0.0)) + 0.3 * sM * (0.3 + 0.7 * max(dot(n, normalize(back)), 0.0)));
     // The flash comes in by the far mouth.
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 flash = emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159) + uFlash;
@@ -60,11 +61,18 @@ float groundY(vec3 p) {
 
 // Where the bolt went through, in the animal's own metres at rest: uBurn is the middle of the wound and how far the burn reaches.
 // 0 in the split, 1 at the edge of the bare patch, over 1 in the singed coat round it.
+/** How much narrower the burn is along the body than round it, less one. */
+export const BURN_NARROW = 1.5;
 const BURN_GLSL = /* glsl */ `
+const float BURN_NARROW = ${BURN_NARROW.toFixed(2)};
 uniform vec4 uBurn;
+uniform vec3 uBurnU;
 float burnAt(vec3 rest) {
   if (uBurn.w <= 0.0) return 9.0;
-  return length(rest - uBurn.xyz) / uBurn.w;
+  // Narrow along the body, long round it: the way the stroke ran over the flank.
+  vec3 r = rest - uBurn.xyz;
+  r += uBurnU * (dot(r, uBurnU) * BURN_NARROW);
+  return length(r) / uBurn.w;
 }`;
 
 export const SKIN_VERTEX = /* glsl */ `
@@ -98,7 +106,6 @@ uniform vec4 uGround;
 uniform sampler2D tShag;
 uniform sampler2D tShagData;
 uniform sampler2D tBurn;
-uniform vec3 uBurnU;
 uniform vec3 uBurnV;
 float groundY(vec3 p) {
   return uGround.x + dot(uGround.yz, p.xz);
@@ -128,7 +135,7 @@ void main() {
   float occ = 0.55;
   if (vKind > 4.5) {
     // The paw: a short close coat, wet and dark toward the pads.
-    albedo = mix(vec3(0.035, 0.03, 0.028), uTone.rgb * shag * 0.5, 0.25 + 0.3 * fine);
+    albedo = mix(vec3(0.035, 0.03, 0.028), uTone.rgb * shag * 0.75, 0.55 + 0.3 * fine);
     occ = 0.75;
   }
   if (vKind > 5.5) {
@@ -144,7 +151,8 @@ void main() {
     occ = 0.6;
   }
   // Rime where the hide looks up.
-  float rime = smoothstep(0.45, 0.9, n.y + 0.5 * (grain - 0.5) + uCoat.w) * (vKind > 5.5 ? 0.35 : 0.7);
+  // On the paws it lies in patches between the toes, not as a cap.
+  float rime = smoothstep(0.45, 0.9, n.y + 0.5 * (grain - 0.5) + uCoat.w - (vKind > 4.5 ? 0.35 + 0.5 * vnoise3(vRest * 23.0) : 0.0)) * (vKind > 5.5 ? 0.35 : 0.7);
   albedo = mix(albedo, vec3(0.86, 0.88, 0.92), rime);
   // Where the bolt went through: the coat is gone and the skin is charred, split, and raw in the splits.
   float d = burnAt(vRest);
@@ -153,37 +161,17 @@ void main() {
     vec3 r = vRest - uBurn.xyz;
     vec2 uv = 0.5 + vec2(dot(r, uBurnU), dot(r, uBurnV)) / (uBurn.w * 2.3);
     vec3 pic = texture2D(tBurn, uv).rgb;
-    // No bright flesh in it: the picture is taken down to char and a dark red-brown.
-    pic = min(mix(vec3(dot(pic, vec3(0.333))), pic, 0.5), vec3(0.22)) * vec3(1.0, 0.8, 0.7);
+    // The picture is a scorched hide as it is: a raw split, the coat singed to tight dark curls either side of it, paler outward. It is
+    // laid as it was photographed, no hollow cut in it and nothing crushed to black: what the lens sees in the wound is hide and hair.
     vec2 edge = abs(uv - 0.5) * 2.0;
-    float on = (1.0 - smoothstep(0.55, 0.9, max(edge.x, edge.y))) * smoothstep(0.02, 0.08, max(pic.r, max(pic.g, pic.b)));
+    float on = (1.0 - smoothstep(0.6, 0.95, max(edge.x, edge.y))) * smoothstep(0.03, 0.1, max(pic.r, max(pic.g, pic.b)));
     float raw = smoothstep(0.02, 0.1, pic.r - 1.25 * pic.g);
-    // Charred black at the middle, whatever the picture has there.
-    float char_ = 1.0 - smoothstep(0.35, 1.0, d + 0.3 * (fine - 0.5));
-    albedo = mix(albedo, pic * mix(mix(0.55, 0.16, char_), 0.9, raw), on);
-    // Raw at the heart of it, where the hide split open: wet red flesh inside the ring of char.
-    float heart = (1.0 - smoothstep(0.2, 0.5, d + 0.4 * (fine - 0.5))) * on;
-    albedo = mix(albedo, vec3(0.006, 0.005, 0.005), (1.0 - smoothstep(0.55, 1.15, d + 0.3 * (fine - 0.5))) * on * 0.9);
-    albedo = mix(albedo, vec3(0.05, 0.016, 0.011) * (0.5 + 2.5 * pic.r), heart);
-    raw = max(raw, heart);
-    rough = mix(rough, mix(0.9, 0.55, raw), on);
-    occ = mix(occ, 0.8, on);
-    // The hide is torn open at the heart of it: a dark hollow, and the broken ends of ribs pale in it.
-    // It is where the lens sees into it: round the body from the flank toward the belly. q is how far round, in the burn's own reach.
-    float q = abs(dot(r, cross(uBurnU, uBurnV))) / uBurn.w;
-    vec2 h = vec2(dot(r, uBurnU) / uBurn.w - 0.05, q - 0.72);
-    float hollow = (1.0 - smoothstep(0.7, 1.0, length(h / vec2(0.72, 0.46)) + 0.4 * (fine - 0.5))) * (1.0 - smoothstep(1.7, 1.9, d));
-    float ra = (h.x - 0.3 * h.y + 0.5 * h.y * h.y) / 0.23 + 0.5;
-    float rb = abs(fract(ra) - 0.5);
-    float id = floor(ra);
-    // Each is broken off short at its own length and splintered to a point.
-    float ends = -0.22 + 0.4 * fract(sin(id * 12.9898) * 43758.5453) + 0.03 * (grain - 0.5);
-    float thick = 0.05 + 0.08 * smoothstep(ends, ends - 0.18, h.y);
-    float rib = (1.0 - smoothstep(0.6 * thick, thick, rb)) * smoothstep(ends, ends - 0.02, h.y);
-    albedo = mix(albedo, vec3(0.014, 0.008, 0.007) * (0.5 + 1.5 * fine), hollow);
-    albedo = mix(albedo, vec3(0.4, 0.35, 0.28) * (1.0 - 0.7 * rb / thick) * mix(0.5, 1.0, fine) * mix(1.0, 0.45, smoothstep(-0.3, 0.2, h.y)), hollow * rib);
-    rough = mix(rough, 0.6, hollow);
-    occ = mix(occ, mix(0.35, 0.9, rib), hollow);
+    vec3 hide = pic * vec3(0.95, 0.84, 0.8);
+    // The split is deepest in its middle and wet there.
+    hide = mix(hide, vec3(0.16, 0.045, 0.03) * (0.5 + 2.0 * pic.r), 0.6 * raw);
+    albedo = mix(albedo, hide, on);
+    rough = mix(rough, mix(0.92, 0.5, raw), on);
+    occ = mix(occ, mix(0.85, 0.6, raw), on);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
@@ -322,8 +310,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   float arch = fract(seed * 3.1);
-  vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.45 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.3 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.04 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.025 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.06 * hook * hook * step(0.6, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.45 * hook * hook - 0.12 * bend * bend * t * t) + sideways * (0.8 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.45 * hook * hook * sign(bend))
+    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.07 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.03 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.14 * hook * hook * step(0.4, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
@@ -339,7 +327,7 @@ void main() {
   vec3 root = (modelMatrix * bone * vec4(from, 1.0)).xyz;
   vec3 lead = normalize(mat3(modelMatrix) * mat3(bone) * out_);
   vec3 across = normalize(cross(lead, vec3(0.0, 1.0, 0.0)) + vec3(1e-4, 0.0, 0.0));
-  float len = aLimb.x * size * (1.0 + 0.35 * uWrithe.y);
+  float len = aLimb.x * size * (1.0 + 0.1 * uWrithe.y);
   // Thick where it leaves the face, knuckled along its length, a point at its end.
   float r = aLimb.y * size * (1.0 - 0.97 * pow(t, mix(1.6, 0.7, uWrithe.y))) * (1.0 + 0.16 * sin(t * 31.0 + seed * 12.0) + 0.1 * sin(t * 77.0 + seed * 5.0));
   vec3 centre = root + len * pathAt(t, lead, across, seed);
@@ -380,7 +368,7 @@ void main() {
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
   albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
-  rime = mix(rime, 0.3 * smoothstep(0.8, 1.0, n.y * 0.5 + 0.5 + 0.5 * (crystals - 0.5)), uWrithe.y);
+  rime = mix(rime, 0.7 * smoothstep(0.55, 0.9, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

@@ -91,7 +91,7 @@ export function create(ctx: Context): Piece {
         s.kind = 2;
         s.h *= clump.range(0.3, 0.7);
       }
-      if (clump.next() < 0.3) forks.push({ ...s, x: s.x + clump.range(-0.08, 0.08), z: s.z + clump.range(-0.08, 0.08), h: s.h * clump.range(0.45, 0.8), lean: s.lean + clump.range(0.25, 0.5), yaw: s.yaw + clump.range(1.3, 5), kind: clump.next() < 0.3 ? 2 : s.kind, size: s.size * 0.85, phase: clump.range(0, 6.28) });
+      if (clump.next() < 0.14) forks.push({ ...s, x: s.x + clump.range(-0.08, 0.08), z: s.z + clump.range(-0.08, 0.08), h: s.h * clump.range(0.45, 0.8), lean: s.lean + clump.range(0.25, 0.5), yaw: s.yaw + clump.range(1.3, 5), kind: clump.next() < 0.3 ? 2 : s.kind, size: s.size * 0.85, phase: clump.range(0, 6.28) });
     });
     stalks.push(...forks);
   }
@@ -136,7 +136,8 @@ export function create(ctx: Context): Piece {
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
-      axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.9, 1.25)], i * 4);
+      // Slender: a stalk away from the lens of the colony is a wrist thick and three metres tall, as the approved pictures have them.
+      axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.5, 0.72)], i * 4);
       kind.set([s.kind, s.phase, s.size, rng.next()], i * 4);
     });
     const palm = new THREE.BufferGeometry();
@@ -164,6 +165,8 @@ export function create(ctx: Context): Piece {
         uSeconds,
         tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
         tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
+        tFan: { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) },
+        tFanA: { value: ctx.assets.texture('mat/fan-a.png', { kind: 'data', repeat: false }) },
       },
       vertexShader: PALM_VERTEX,
       fragmentShader: PALM_FRAGMENT,
@@ -277,8 +280,8 @@ export function create(ctx: Context): Piece {
     if (i < 12 && nearPerches.length > 0) {
       // STAGED for the lens of the colony: a dozen keep to the two plumes nearest it, close in among the strands.
       const perch = nearPerches[i % nearPerches.length] as [number, number, number];
-      p = [perch[0] + swarm.range(-0.3, 0.3), perch[1] + swarm.range(-0.05, 0.3), perch[2] + swarm.range(-0.3, 0.3)];
-      home.set([p[0], p[1], p[2], swarm.range(0.12, 0.3)], i * 4);
+      p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
+      home.set([p[0], p[1], p[2], swarm.range(0.16, 0.34)], i * 4);
       rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
       phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.7, 1.1)], i * 4);
       continue;

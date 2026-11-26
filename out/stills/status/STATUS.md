@@ -1,8 +1,8 @@
-# Status 94
+# Status 96
 
-2026-11-26 05:34 UTC. Phase 4, the other places and the rise.
+2026-11-26 06:10 UTC. Phase 4, the other places and the rise.
 
-- `01-reveal-orbit.jpg`: The Reveal from orbit in wave 3, approved left, built right: land has grown round the bones (ranges, snow on the crests, green shallows); the red plume and the sun's glint on the sea are still missing
-- `02-reveal-cyclone.jpg`: The Reveal's cyclone, approved left, built right: the land beside it is a step forward; the cloud is hard white flakes and half the size, told to the owner (thin graded filaments, dozens of bands, cloud streets)
-- `03-spine-3.jpg`: The Spine's strike, approved left, built right at 05:10: white disc at the bolt's foot, black near crag, a tower with level courses, thick white kites, a pale beam. Told to both owners; the storm owner has since removed the disc and thinned the bolt
-- `04-marsh.jpg`: The Marsh in wave 3, approved rows above built rows (wide view, the burst, two of the wallowers): the animals are the closest; the pools are opaque with a cut edge, the burst is a textbook crown, the ground is dry. Told to both owners
+- `01-eye1-v1.jpg`: The Eye's drinkers, approved left, wave 3 version 1 right: coats, weight on the legs, mirrored in the water. They stand further off than in the picture by a logged choice. Still missing: rings at every leg and muzzle, and the pebbles are even dark chips
+- `02-ribs0-v1.jpg`: The Ribs, wide view, approved left, version 1 right: the blades carry relief now and the face in the backdrop is gone. The flat is still one even pebble sheet where the picture has wet sand that mirrors the sky, the blades are fluted like tusks, the near cliff is striped
+- `03-reveal4-v1.jpg`: The Reveal from orbit, approved left, version 1 right: open sea west of the skull, glint at the right edge, a wider cyclone, more land round the bones as Brandon asked. The land is one brown ridge texture and the sea cloud is dots; both are on the owner's list
+- `04-spine0-v1.jpg`: The Spine, wide view, approved left, version 1 right: the furthest of the six from its picture. No sea of cloud, a pale combed tongue for a ridge, a tan cone for a spire. Both owners have the order: cloud deck first, then spire and ridge as one snowed rock
