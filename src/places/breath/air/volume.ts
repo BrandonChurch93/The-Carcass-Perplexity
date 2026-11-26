@@ -1,7 +1,9 @@
 // The one half-size pass of the Breath's air. It writes the light the air scatters toward the camera in rgb and how much of the scene it lets
 // through in alpha. Three things are in it, nearest first:
 //   the vapour of the main shaft, a density in space cut from the block of noise and marched, each step shaded by what stands between it
-//   and the sun: it fills the shaft, wells up over the brim when the shaft breathes out, pours over the west lip and thins on the rock;
+//   and the sun: it fills the shaft and wells up over the brim when the shaft breathes out;
+//   the sheet of it that pours over the west lip and lies on the rock: too thin for the march's steps, so it is not marched. It is laid
+//   as a layer on the ground whose depth along the ray is worked out, not stepped;
 //   the far bodies (the plumes of the smaller shafts, the fog banks, the fog that pours from the cave), each one ray-against-ellipsoid, no march;
 //   the dawn haze itself, in closed form.
 // Everything is lit by the rig: the sky's cold light from above, the low sun wherever the land's baked shadow lets it through.
@@ -120,8 +122,7 @@ bool vapourNear(vec3 p) {
   float way = exp(-da * da / 0.4);
   float surge = uBreath.y * uShow.w;
   float out0 = r - rimAt(b);
-  if (out0 < 0.7 + 7.0 * way + 5.0 * surge) return true;
-  return way >= 0.02 && p.y < 2.5 + (4.5 + 7.0 * surge) * way;
+  return out0 < 0.7 + 7.0 * way + 5.0 * surge;
 }
 float vapourRho(vec3 p, float ground, float fine, float t) {
   float r = length(p.xz);
@@ -150,22 +151,39 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float rho = (0.03 + 0.07 * smoothstep(0.0, 10.0, under)) * smoothstep(0.0, 2.0 + 3.0 * n0.g, under) * (0.55 + 0.9 * small);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 2.7, 6.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n);
+  // Heavy air does not climb out: away from the breath no column's head clears the brim. One that did stood over the shelf as a round
+  // pale puff a few metres through, cut by one or two steps of the march, and from the far lens it was a smudge on the glass.
+  float cols = column(p, vec2(-19.0, -9.0), 2.7, -1.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, -4.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -6.0 + 1.5 * lift, n);
   rho = max(rho, (0.11 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
   rho *= smoothstep(0.6, -1.2, out0 - smoothstep(0.0, 3.0, p.y) * (7.0 * way + 5.0 * surge));
 
-  // On the rock by the west lip: a layer with its own top, thick at the brim and torn into shreds as it slides off down the wind.
-  float foot = max(ground, SEA_Y);
+  return rho * uShow.z;
+}
+
+// The ground the sheet lies on at a place: the rock, or the tide. Inside the brim the land is the pit, so there it is the lip beside it.
+float pourFoot(vec2 xz, float out0) {
+  vec2 at = out0 < 1.0 ? xz * (1.0 + (1.0 - out0) / max(length(xz), 1.0)) : xz;
+  return max(landAt(at).r, SEA_Y);
+}
+// The sheet on the rock by the west lip, as what a ray that crosses it at p meets: x how deep it stands there in metres, y its thickness
+// for a metre of path. It leaves the brim a stride deep and whole, slides down the wind at a brisk walk (so it is seen to move from one
+// frame to the next), lies lower the farther it has come, and is torn to shreds in thirty metres.
+vec2 pourAt(vec3 p, float way, float out0) {
+  float surge = uBreath.y * uShow.w;
+  float apron = uBreath.z * uShow.w;
   float gone = max(out0, 0.0) / (16.0 + 14.0 * apron + 8.0 * surge);
-  float tall = (1.5 + 0.9 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
-  float lies = smoothstep(0.0, 0.5 + 0.5 * tall, foot + tall - p.y) * smoothstep(-2.5, 0.5, out0) * step(foot - 0.3, p.y);
-  float shred = smoothstep(0.54 + 0.1 * (1.0 - exp(-gone)), 0.68 + 0.12 * (1.0 - exp(-gone)), n);
-  // Never a wash on the lens: within a few metres of the camera the layer on the rock is not there.
-  float pour = (0.04 + 0.02 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
-  return max(rho, pour) * uShow.z;
+  float far0 = 1.0 - exp(-gone);
+  vec3 q = p - vec3(WINDV.x * 2.6, -0.2, WINDV.y * 2.6) * uTime;
+  float big = textureLod(tNoise, q.xzy / 27.0, 0.0).r;
+  float small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 0.0) * (0.9 * uTime)) / 8.3 + 0.31, 0.0).b;
+  float n = 0.45 * big + 0.55 * small;
+  float tall = (1.7 + 0.9 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
+  float shred = smoothstep(0.34 + 0.24 * far0, 0.5 + 0.26 * far0, n);
+  float rho = (0.085 + 0.02 * apron + 0.05 * surge) * smoothstep(0.15, 0.9, tall) * shred * smoothstep(-2.5, 0.5, out0) * (0.6 + 0.8 * small);
+  return vec2(tall, rho);
 }
 
 // One body of far vapour or fog: the ray against a leaning ellipsoid. It gives how thick it is along the ray, where the ray is deepest in it,
@@ -217,6 +235,55 @@ void main() {
   // the step and the sun shades it, so a billow has a lit side and a dark one, and where the view runs toward the sun its thin edges burn.
   // The steps are even and are not jittered: one sample a frame at the low tier would leave a jitter as speckle. The density is soft enough
   // (nothing in it is smaller than two steps) that they do not band.
+  // The sheet over the west lip, first: it is a layer on the ground a stride deep, thinner than any step of the march, so the ray is not
+  // stepped through it. Where the ray meets the middle of the layer is found (three tries: the ground is stepped and the layer is as deep
+  // as its own noise says) and what the ray passes there is the layer's depth over the ray's fall, less what the scene hides of it.
+  // Nothing in it hangs on where a step lands: it neither bands nor boils, at one sample a frame or at four.
+  vec3 sheetLight = vec3(0.0);
+  float sheetGone = 1.0;
+  float sheetAt = 1e9;
+  if (uShow.z > 0.5 && rd.y < -1e-3) {
+    float t = min(far, (1.6 - ro.y) / rd.y);
+    bool met = t > 0.0;
+    vec3 p = ro;
+    float way = 0.0;
+    float out0 = 0.0;
+    float foot = 0.0;
+    vec2 lay = vec2(0.0);
+    for (int i = 0; i < 3; i++) {
+      if (!met) break;
+      p = ro + rd * t;
+      float b = atan(p.x, -p.z);
+      float da = b + 1.2;
+      way = exp(-da * da / 0.4);
+      out0 = length(p.xz) - rimAt(b);
+      if (way < 0.02 || out0 < -2.5 || out0 > 75.0) {
+        met = false;
+        break;
+      }
+      foot = pourFoot(p.xz, out0);
+      lay = pourAt(p, way, out0);
+      t = (foot + 0.5 * lay.x - ro.y) / rd.y;
+      met = t > 0.0;
+    }
+    if (met && lay.x > 0.05 && lay.y > 0.0004) {
+      float top = max((foot + lay.x - ro.y) / rd.y, 0.0);
+      float bottom = min((foot - ro.y) / rd.y, far);
+      // Never a wash on the lens: within a few metres of the camera it is not there. And never a wall of it along a level ray.
+      float path = min(bottom - top, 30.0) * smoothstep(3.0, 11.0, t);
+      if (path > 0.0) {
+        float own = lay.x * lay.y;
+        // The heap next toward the sun shades this one: a heap has a lit side and a dark one.
+        vec2 next = pourAt(p + uSunDir * 3.0, way, out0);
+        float sun = sunSeen(landAt(p.xz), foot + lay.x) * sunCloud(p.xz);
+        sheetLight = VAPOUR_ALBEDO * (vec3(0.33, 0.292, 0.25) * (0.5 + 0.5 * exp(-4.0 * own))
+          + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.3 * min(phase, 1.4) * exp(-7.0 * next.x * next.y - 2.0 * own) + 0.035)));
+        sheetGone = exp(-lay.y * path);
+        sheetAt = t;
+      }
+    }
+  }
+
   vec2 middle = vec2(-9.0, -3.0);
   float drum = 47.0;
   float roof = 9.5 + 10.0 * uBreath.y * uShow.w;
@@ -249,6 +316,13 @@ void main() {
       for (int i = 0; i < ${STEPS}; i++) {
         float t = t0 + (float(i) + first) * dl;
         vec3 p = ro + rd * t;
+        // The sheet takes its place among the steps, by its distance.
+        if (t > sheetAt) {
+          colour += through * (1.0 - sheetGone) * sheetLight;
+          through *= sheetGone;
+          sheetAt = 1e9;
+          sheetGone = 1.0;
+        }
         if (!vapourNear(p)) continue;
         vec4 land = landAt(p.xz);
         float rho = vapourRho(p, land.r, 1.0, t);
@@ -273,6 +347,10 @@ void main() {
       }
     }
   }
+
+  // The sheet, where no step of the march lay beyond it.
+  colour += through * (1.0 - sheetGone) * sheetLight;
+  through *= sheetGone;
 
   // The mist on the ground: banks a knee to a head deep that lie on the water and the wet shelf and drift with the wind, torn at their
   // edges. The ray is asked at four places in the layer; none lies within a few metres of the lens.

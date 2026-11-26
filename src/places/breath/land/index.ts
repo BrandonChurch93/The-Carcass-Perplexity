@@ -69,7 +69,7 @@ export function create(ctx: Context): Piece {
     return t;
   };
   const built = buildWall();
-  const wall = rock.wall(mirrored('mat/shaftwall.jpg', 'colour'), mirrored('mat/shaftwall-h.png', 'data'), ivory, surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1));
+  const wall = rock.wall(mirrored('mat/shaftwall.jpg', 'colour'), mirrored('mat/shaftwall-h.png', 'data'), ivory, surface('wetrock', [0.153, 0.133, 0.107], 1.5, 1), strata);
   const shaft = new THREE.Group();
   shaft.add(mesh(built.wall, wall));
   const rubble = rock.bone(0.5, [0.47, 0.44, 0.4], [0.2, 0.185, 0.165], surface('scree', [0.287, 0.229, 0.184], 3, 1.2), THREE.DoubleSide);
