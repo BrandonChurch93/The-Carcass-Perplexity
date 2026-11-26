@@ -1,0 +1,35 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R4",
+  "family": "gpt",
+  "answered": "2026-11-26 00:19 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the fixed orbital view over all six seconds, especially the lower-right cyclone and the cloud bands along the left and bottom",
+        "what": "the cyclone's eye and spiral arms and the surrounding cloud bands hold nearly the same shape and position. Once the camera stops, the planet reads as a still image.",
+        "fix": "Give the cyclone's cloud bands gradual rotation and evolution, and let the surrounding decks advect and reshape independently at their own heights, without making the whole cloud layer slide as one sheet."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the dark basin, frames 9578 to 9589",
+        "what": "the crisply drawn concentric bands mostly shrink together with the view, keeping their perfectly round shape and smooth blue edges. They read as a target graphic rather than water responding to the basin.",
+        "fix": "Replace the drawn bands with surface relief and reflections, with crests that propagate, break up and lose energy independently of the camera's climb."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the terrain from frames 9626 to 9689 as the caldera recedes",
+        "what": "the uniformly sharp ridges and bright cyan shoreline outlines make the ground read like an embossed map at intermediate altitude, weakening the otherwise continuous climb.",
+        "fix": "Let atmospheric perspective soften distant relief and shift land and water contrast with altitude; vary the coastal shallows so they don't trace the shore at a nearly constant brightness."
+      }
+    ]
+  }
+}

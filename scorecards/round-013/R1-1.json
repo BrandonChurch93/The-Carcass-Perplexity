@@ -1,0 +1,133 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-26 00:21 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "all the land around the crater",
+        "what": "the cold blue-grey, low-sun relief of -a with deep blue shadows and fine branching gullies has become a flat warm beige tile of repeated radial ribs; it reads as a different terrain in different light",
+        "fix": "return to the blue-grey rock with pale ridge crests, deep cool shadows and fine dendritic drainage, lit by a low raking sun"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the crater rim and lake margin",
+        "what": "the steep pale cliff wall around the lake is gone, and the golden swirling algae margin with tongues curling into the dark water is now a soft blurred orange ring with no structure",
+        "fix": "rebuild the pale terraced rim wall and the ochre-gold margin with its swirls and filaments reaching into the lake"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "top right and lower right of frame",
+        "what": "the gold-rimmed twin lakes, the small dark lake and the blue sea inlet with surf are replaced by one flat smooth oval of blue; the river running into the crater at top left is missing",
+        "fix": "restore the rimmed lakes, the sea inlet at lower right and the river channel with its delta at the crater edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the terrain in close view (x 4-46%, y 4-46%)",
+        "what": "the relief breaks into stair-step banding and smeared ridges, with no rock texture",
+        "fix": "give the ridges sharp crests and real rock and scree texture with no banding"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the lake surface",
+        "what": "white specks float on the water and the wisp of vapour that crosses the lake in -a is missing",
+        "fix": "take out the specks and bring back the thin vapour wisp drifting off the rim over the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the open sea on the left",
+        "what": "the dense field of small bright cumulus over the dark sea is gone; the water is empty and smooth, with a few smeared clouds and stray dashed streaks",
+        "fix": "fill the sea again with scattered popcorn cumulus at the density of -a, and take out the dashed streak artifacts"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the land mass as a whole",
+        "what": "the pale grey-blue land with frayed teal shallows and a rust-red pitted plain on the right has become warm beige ridges with an olive-green lowland fringe; the colour, surface and mood are different",
+        "fix": "move the land back to pale grey-blue rock with rust-red pitted ground at the right and no green growth"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the large inlet right of centre and the pits on the right",
+        "what": "the crater-like bay ringed by a frilled white rim is now an open sea arm, and the many dark pits across the rust plain are gone",
+        "fix": "close the bay into the rimmed crater basin of -a and put the scattered dark pits back across the red ground"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the vapour at top right",
+        "what": "the three thin wisps curling across the land have become one thick, straight white column",
+        "fix": "go back to fine, translucent curling vapour trails"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the central crater and the upper lakes",
+        "what": "the crater's golden swirled margin has become a brown smudge, and the hazy, rimmed dark basins are flat filled ovals",
+        "fix": "restore the gold swirl margin, and give the basins soft rims and depth"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "coastlines",
+        "what": "a glowing cyan halo outlines every shore, where -a has soft frayed teal shallows",
+        "fix": "take out the halo and let the shallows break up irregularly"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the ribbed ridges on the right",
+        "what": "the bright pale ribs standing over dark teal lowlands are now low brown ridges on brown ground, so the bones no longer read",
+        "fix": "make the rib crests bright again and darken the lowlands between them to teal-blue"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the sea cloud on the left",
+        "what": "the scattered small bright clouds have become large smeared sheets that swamp the left third",
+        "fix": "go back to broken small cumulus over dark sea, with only the intended motion blur"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the island with the crater, and the coastlines",
+        "what": "the pale grey island fraying into teal shallows is now a brown landmass with hard edges, a cyan halo on the shore and a red-brown plain; the red pitted zone with its pits is lost",
+        "fix": "bring back the pale grey island, the frayed teal shallows and the red pitted ground with its dark pits"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the lava points among the ribs",
+        "what": "the small sharp orange pinpoints have become a soft diffuse orange bloom",
+        "fix": "keep them small bright points with only a faint local glow"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the vapour at top centre",
+        "what": "the fine curling wisps have become a single thick white column",
+        "fix": "go back to thin translucent curling trails"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "the lowlands among the ribs",
+        "what": "flat turquoise lake patches appear that are not in -a",
+        "fix": "remove them, or blend them into the dark teal lowland"
+      }
+    ]
+  }
+}
