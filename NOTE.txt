@@ -1,0 +1,7 @@
+2026-11-26 05:00 UTC
+work at 9741a5f on agent/ribs-sea-3
+start state (main 9741a5f): opening frames 0/60 and keys ribs-2, ribs-3 as inherited; sea a teal sheet, fliers brown stamps, feeders dark, colony flat cut-outs
+look-1.jpg = out/work/stills/frame-0-hd-draft.png
+look-2.jpg = out/work/open4.jpg
+look-3.jpg = out/work/compare/ribs-2.png
+look-4.jpg = out/work/compare/ribs-3.png
