@@ -17,7 +17,7 @@ export interface CurtainOptions {
   next: () => number;
 }
 
-const SEGMENTS = 8;
+const SEGMENTS = 11;
 
 export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeometry {
   const tTide = partAtHeight(rib, 30);
@@ -59,7 +59,7 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
     const phi0 = hank.phi + (1.1 * (options.next() - 0.5)) / reach;
     const yTop = hank.top - 0.9 * options.next();
     const length = hank.length * (0.55 + 0.45 * options.next());
-    const breadth = 0.22 + 0.4 * options.next();
+    const breadth = 0.26 + 0.46 * options.next();
     const layer = Math.min(1, hank.layer * 0.8 + 0.25 * options.next());
     const twist = 0.7 * (options.next() - 0.5);
     const drift = 1.2 * (options.next() - 0.5);
@@ -153,14 +153,20 @@ void main() {
   vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
   float wr = vnoise(at);
   float wr2 = vnoise(at * vec2(2.7, 0.6) + 7.0);
-  vec3 n = normalize(n0 + 0.35 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5), wr2 - 0.5));
+  // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
+  float ragged = 0.62 + 0.38 * vnoise(vec2(vUv.y * 23.0 + vTone.x * 53.0, vUv.x < 0.5 ? 1.5 : 8.5));
+  if (edge > ragged) discard;
+  vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
+  vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
+  float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
+  vec3 n = normalize(n0 + across * ((vUv.x * 2.0 - 1.0) * 0.9) + 0.5 * vec3(wr - 0.5, 0.35 * (wr2 - 0.5) + 0.6 * ruffle, wr2 - 0.5));
   vec3 olive = mix(vec3(0.006, 0.0056, 0.0036), vec3(0.017, 0.0135, 0.0055), vTone.x);
   vec3 amber = vec3(0.075, 0.034, 0.006);
   float gold = vTone.y * (0.35 + 0.65 * smoothstep(0.2, 0.9, edge + 0.5 * (wr - 0.5)));
   vec3 albedo = mix(olive, amber, gold) * (0.7 + 0.6 * wr2);
   // What lies under other fronds is in their shade; the gap by the midrib is dark.
   float occ = vTone.z * (0.55 + 0.45 * smoothstep(0.0, 0.5, edge + wr - 0.5));
-  float rough = 0.24 + 0.2 * wr;
+  float rough = 0.3 + 0.25 * wr;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
   float thru = max(dot(-n0, uSunDir), 0.0) * sunAt(vWorld, landAt(vWorld.xz));

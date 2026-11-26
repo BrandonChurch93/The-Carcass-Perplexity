@@ -280,7 +280,7 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 9000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 6000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -507,21 +507,21 @@ export function create(ctx: Context): Piece {
       kept.push(rock);
     }
   };
-  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 9000, 1.6, 24, 0.66);
-  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 5000, 1.6, 20, 0.6);
+  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 6000, 1.6, 22, 0.66);
+  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 3500, 1.6, 18, 0.6);
   const squat = [0.5, 0.58, 0.38, 0.45];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();
   const shades = ctx.rig.contactDiscs(kept.filter((p) => p.size > 0.3).length);
   let shade = 0;
   // Three grades of shape: rock over a metre, stones, and pebbles of a few facets.
-  const grade = (p: { size: number; lift?: number }): number => (p.lift !== undefined ? 3 : p.size >= 0.3 ? 0 : p.size >= 0.09 ? 1 : 2);
-  const DETAIL = [4, 2, 0, 1];
-  for (let kind = 0; kind < KINDS * 4; kind++) {
+  const grade = (p: { size: number; lift?: number }): number => (p.lift !== undefined ? (p.size >= 0.12 ? 3 : 4) : p.size >= 0.3 ? 0 : p.size >= 0.09 ? 1 : 2);
+  const DETAIL = [4, 2, 0, 1, 0];
+  for (let kind = 0; kind < KINDS * 5; kind++) {
     const g = Math.floor(kind / KINDS);
     const mine = kept.filter((p) => p.kind === kind % KINDS && grade(p) === g);
     if (mine.length === 0) continue;
-    const herd = new THREE.InstancedMesh(boulderShape((kind % KINDS) + 1, DETAIL[g] as number, squat[kind % KINDS] as number), g === 0 ? boulder : g === 3 ? cobble : pebble, mine.length);
+    const herd = new THREE.InstancedMesh(boulderShape((kind % KINDS) + 1, DETAIL[g] as number, squat[kind % KINDS] as number), g === 0 ? boulder : g >= 3 ? cobble : pebble, mine.length);
     herd.frustumCulled = false;
     herd.frustumCulled = false;
     mine.forEach((p, i) => {
