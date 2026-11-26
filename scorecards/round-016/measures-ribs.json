@@ -1,0 +1,229 @@
+{
+  "unit": "ribs",
+  "tier": "final",
+  "format": "uhd",
+  "measures": [
+    "M1",
+    "M2",
+    "M3"
+  ],
+  "colour": {
+    "M1": "green",
+    "M2": "green",
+    "M3": "green"
+  },
+  "missing": [],
+  "frames": [
+    {
+      "id": "ribs-0",
+      "frame": 1241,
+      "key": true
+    },
+    {
+      "id": "ribs-1",
+      "frame": 2081,
+      "key": true
+    },
+    {
+      "id": "ribs-2",
+      "frame": 1759,
+      "key": true
+    },
+    {
+      "id": "ribs-3",
+      "frame": 1546,
+      "key": true
+    },
+    {
+      "id": "ribs-4",
+      "frame": 2401,
+      "key": true
+    }
+  ],
+  "results": [
+    {
+      "measure": "M1",
+      "id": "ribs-0",
+      "frame": 1241,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "ribs-1",
+      "frame": 2081,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "ribs-2",
+      "frame": 1759,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "ribs-3",
+      "frame": 1546,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M1",
+      "id": "ribs-4",
+      "frame": 2401,
+      "status": "pass",
+      "flagged": 0,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "ribs-0",
+      "frame": 1241,
+      "status": "pass",
+      "share": 0.21874,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "ribs-1",
+      "frame": 2081,
+      "status": "pass",
+      "share": 0.530721,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "ribs-2",
+      "frame": 1759,
+      "status": "pass",
+      "share": 0.534314,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "ribs-3",
+      "frame": 1546,
+      "status": "pass",
+      "share": 0.342599,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M2",
+      "id": "ribs-4",
+      "frame": 2401,
+      "status": "pass",
+      "share": 0.810634,
+      "floor": 0.08,
+      "pixels": 8294400
+    },
+    {
+      "measure": "M3",
+      "id": "ribs-0",
+      "frame": 1241,
+      "status": "pass",
+      "ratio": 0.7632,
+      "floor": 0.75,
+      "frameEnergy": 747.6629,
+      "approvedEnergy": 979.6302,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/1-ribs/ribs-0-establishing.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "ribs-1",
+      "frame": 2081,
+      "status": "pass",
+      "ratio": 3.1012,
+      "floor": 0.75,
+      "frameEnergy": 1149.5757,
+      "approvedEnergy": 370.6849,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/1-ribs/ribs-1-the-drowned-hanging-in-the-weed.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "ribs-2",
+      "frame": 1759,
+      "status": "pass",
+      "ratio": 1.8175,
+      "floor": 0.75,
+      "frameEnergy": 421.4945,
+      "approvedEnergy": 231.9135,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "ribs-3",
+      "frame": 1546,
+      "status": "pass",
+      "ratio": 1.5896,
+      "floor": 0.75,
+      "frameEnergy": 975.2098,
+      "approvedEnergy": 613.4912,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/1-ribs/ribs-3-the-colony.jpg"
+    },
+    {
+      "measure": "M3",
+      "id": "ribs-4",
+      "frame": 2401,
+      "status": "pass",
+      "ratio": 1.6288,
+      "floor": 0.75,
+      "frameEnergy": 416.3526,
+      "approvedEnergy": 255.6116,
+      "size": {
+        "width": 1672,
+        "height": 941
+      },
+      "approved": "references/approved/1-ribs/ribs-4-the-bore-arrives.jpg"
+    }
+  ],
+  "usual": {
+    "tier": "final",
+    "format": "uhd"
+  },
+  "thresholds": {
+    "pixelThreshold": 4,
+    "checkGapSeconds": 1,
+    "minSharpnessRatio": 0.75
+  },
+  "sharpness": "The mean squared response of a four neighbour Laplacian on the Rec. 709 luminance of the 8 bit picture, over every pixel that is not on the border. The approved picture is cropped at its centre to the shape of the frame, and both pictures go through the same lanczos3 resize to the size of that crop.",
+  "state": {
+    "engine": "352ba359ca8b255d",
+    "units": {
+      "heart": "c555aa9c875af518",
+      "ribs": "4251a378aba22ddc",
+      "breath": "a4b7011779977004",
+      "marsh": "a18de5d30941ba9c",
+      "spine": "b70434eabb50d99d",
+      "eye": "d7e219be0a417843",
+      "reveal": "bbfab0b3d7bbf76c",
+      "film": "e3b0c44298fc1c14"
+    },
+    "browser": "147.0.7727.15"
+  }
+}
