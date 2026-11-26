@@ -1,8 +1,8 @@
-# Status 122
+# Status 124
 
-2026-11-26 16:36 UTC. Phase 5, the whole film.
+2026-11-26 17:22 UTC. Phase 5, the whole film.
 
-- `01-s122-column.jpg`: The Breath's mist column, merged: frame 4500 above and frame 4590 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s122-walkers.jpg`: The Heart's walkers, version 1, not merged: frames 3028 and 3280 before above and after below (draft tier, rendered by its builder). The tuft and the second walker's trunk move; the legs do not yet
-- `03-s122-hung.jpg`: The dead one hung on the first blade: the approved picture at left, loop frame 100 at right (draft tier, 1080p, rendered on the Builder's machine, cut out). At right it reads as an animal standing on the wall
-- `04-s122-plants.jpg`: The Blood Marsh: the approved establishing picture at left, film frame 5618 as round 2's jury saw it at right (final tier, rendered in 4K on a render machine, shown smaller). Thickets and low growth at left, single stems at right
+- `01-s124-kite.jpg`: The tether-kites, version 1, merged: frame 7015, before above and after below (draft tier, preview size, rendered on a render machine)
+- `02-s124-cloud.jpg`: The Spine's cloud sea, version 2, not merged: frame 7015, before above and after below (rendered by its builder in 1080p; the kites in it are the old ones)
+- `03-s124-plant.jpg`: The Marsh's plants, version 1, merged: frame 5618 above and the approved picture below (rendered by its builder)
+- `04-s124-bore.jpg`: The Ribs' bore, version 2, merged: the approved picture, frame 2401 before and frame 2401 after, from top to bottom (rendered by its builder)

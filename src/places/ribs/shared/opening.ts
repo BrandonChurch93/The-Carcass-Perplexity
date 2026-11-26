@@ -36,6 +36,19 @@ export function openingWeight(seconds: number): number {
   return inOpening() ? 1 - smooth(0, OPENING_END, seconds) : 0;
 }
 
+/**
+ * How dark the near blade stands against the break as the film opens: 1 through the first two seconds, the air before it clear, and the
+ * place's own light is back by the eighth second. 0 outside the approach.
+ */
+export function openingDark(seconds: number): number {
+  return inOpening() ? 1 - smooth(2.6, 7.6, seconds) : 0;
+}
+
+/** The light of the break as the film opens: it comes up through the first two seconds, and goes with the dark. 0 outside the approach. */
+export function openingLight(seconds: number): number {
+  return inOpening() ? (0.6 + 0.4 * smooth(0, 2, seconds)) * (1 - smooth(2.6, 7.6, seconds)) : 0;
+}
+
 /** A shader of the approach alone: the film's text with pieces of it swapped. The film's own text is not touched, and is what every later frame is drawn with. */
 export function openingText(film: string, swaps: readonly (readonly [string, string])[]): string {
   let text = film;

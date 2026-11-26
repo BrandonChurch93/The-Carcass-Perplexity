@@ -6,11 +6,11 @@ import { partAtHeight, radii, skirtPad, surface } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { cloudShut, inOpening, openingWeight } from '../shared/opening';
+import { cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
-import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_VERTEX, SPRAY_OPENING_FRAGMENT } from './shaders';
+import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_OPENING_VERTEX, SEA_VERTEX, SPRAY_OPENING_FRAGMENT } from './shaders';
 import { Spray, rand } from './spray';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
@@ -126,11 +126,12 @@ export function create(ctx: Context): Piece {
     uniforms: seaUniforms,
   });
   // The approach draws the sea with its own text (shaders.ts): the film's material is the one above, untouched, for every other frame.
-  const openSea = new THREE.Vector4(1, 0, 0, 0);
+  const openSea = new THREE.Vector4(1, 0, 0, 1);
+  const openGlint = { value: 0 };
   const seaOpening = new THREE.ShaderMaterial({
-    vertexShader: SEA_VERTEX,
+    vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
-    uniforms: { ...seaUniforms, uOpenSea: { value: openSea } },
+    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint },
   });
   const sea = new THREE.Mesh(seaDisc(), seaMaterial);
   sea.frustumCulled = false;
@@ -202,7 +203,7 @@ export function create(ctx: Context): Piece {
   const PUFFS = 7;
   const surf = new Spray(surfAt.length * PUFFS, { ...rig.uniforms, ...shared });
   // The breaker of the approach (below) is thrown water of the same part.
-  const breaker = new Spray(560, { ...rig.uniforms, ...shared }, SPRAY_OPENING_FRAGMENT);
+  const breaker = new Spray(780, { ...rig.uniforms, ...shared }, SPRAY_OPENING_FRAGMENT);
   breaker.mesh.visible = false;
   ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh), breaker.mesh);
   for (const e of surfAt) if (e.id % 3 === 0) ctx.sources.steam.push({ at: [e.x, 1, e.z], radius: 9, strength: 0.25 * e.power, rise: 14, kind: 'spray', lean: [WIND.to[0] * 0.8, WIND.to[1] * 0.8] });
@@ -229,31 +230,33 @@ export function create(ctx: Context): Piece {
   // The approach: one heavy swell of the set breaks on the shore before the first blade as the film opens. White water is thrown up the
   // height of a tower, hangs and comes down at the pace of its size (it falls as water falls: that is what says how big it is), and the wind
   // takes the top of it off down the shore. Drawn only while the camera stands in the approach.
-  const BREAKER = { x: -322, half: 70, cards: 560, strikes: -0.8, speed: 42 };
+  const BREAKER = { x: -322, half: 70, cards: 780, strikes: -2.7, again: 2.2, speed: 30 };
   let breakerZ = 200;
   while (breakerZ < 420 && rig.land.height(BREAKER.x, breakerZ) > -0.8) breakerZ += 4;
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
-  const SEA_OPEN = { lift: 1.5 };
+  const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   const JETS = 22;
   const breakerAt = (seconds: number): void => {
     breaker.begin();
     // What hangs of it is gone by the time the lens is at the blade's foot: the foot is seen dark through thin air.
-    const late = Math.min(1, Math.max(0, (seconds - 3.5) / 3));
-    const thin = 1 - 0.85 * late * late * (3 - 2 * late);
+    const late = Math.min(1, Math.max(0, (seconds - 3.0) / 2.4));
+    const thin = 1 - late * late * (3 - 2 * late);
     for (let j = 0; j < BREAKER.cards; j++) {
       const id = 90000 + j;
       // The water goes up in fingers: each card belongs to one, follows it up a little behind the last, and is thrown a little wide of it.
-      const jet = 91000 + Math.floor(rand(id, 1) * JETS);
+      const jet = 91000 + (j % 2) * 500 + Math.floor(rand(id, 1) * JETS);
       const along = (rand(jet, 1) - 0.5) * 0.9 + (rand(id, 12) - 0.5) * 0.1;
       // One tall burst where the swell meets the rock square, low shoulders along the rest, and it strikes from one end to the other.
       const peak = Math.exp(-((along + 0.08) * (along + 0.08)) / 0.03);
       // A few fingers go far above the rest.
       const reachUp = rand(jet, 2);
       const power = (0.3 + 0.7 * peak) * (0.55 + 0.45 * reachUp * reachUp) * (0.9 + 0.1 * rand(id, 2));
-      const a = seconds - (BREAKER.strikes + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.7 * rand(id, 3));
+      // Two seas of a set break on it: the first is up as the film opens, the next two seconds behind it.
+      const a = seconds - (BREAKER.strikes + (j % 2) * BREAKER.again + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.7 * rand(id, 3));
       if (a < 0) continue;
       const up = BREAKER.speed * power;
-      const side = (rand(jet, 4) - 0.5) * 11 + (rand(id, 13) - 0.5) * 2.5;
+      // It goes up as a fan: square over the place where the swell strikes, thrown outward along the shore to both sides of it.
+      const side = (rand(jet, 4) - 0.5) * 11 + (rand(id, 13) - 0.5) * 8 + 17 * (along + 0.08);
       const x0 = BREAKER.x + along * 2 * BREAKER.half;
       const z0 = breakerZ + 12 * rand(jet, 5);
       const torn = rand(id, 5) < 0.36;
@@ -267,8 +270,8 @@ export function create(ctx: Context): Piece {
         const out = (2 + 4 * rand(jet, 7)) * a;
         const fade = Math.min(1, a / 0.18) * (torn ? 1 : Math.min(1, Math.max(0, (y + 3) / 8)));
         // Water that is moving is drawn out along its way: strings going up, strings coming down, a head where it hangs.
-        const drawn = 1.15 + 1.7 * Math.min(1, Math.abs(vy) / 22);
-        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.5 + 1.1 * a) * (0.55 + 0.9 * rand(id, 8)), 0.88 * fade, rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
+        const drawn = rand(id, 14) < 0.55 ? 1.9 + 2.6 * Math.min(1, Math.abs(vy) / 22) : 1.2 + 0.9 * Math.min(1, Math.abs(vy) / 22);
+        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.45 + 0.7 * a) * (0.55 + 0.9 * rand(id, 8)), 0.7 * fade * thin, rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
         continue;
       }
       const b = a - top;
@@ -280,7 +283,7 @@ export function create(ctx: Context): Piece {
       const y = y1 + vy * 0.9 * (1 - Math.exp(-b / 0.9)) - 1.3 * b;
       const gone = 14 * (b - 1.2 * (1 - Math.exp(-b / 1.2)));
       const out = (2 + 4 * rand(jet, 7)) * top;
-      breaker.put(x0 + side * top + WIND.to[0] * (0.6 * top * top + gone), y, z0 + out + WIND.to[1] * (0.6 * top * top + gone), (1.5 + 1.1 * top + 3.6 * b) * (0.55 + 0.9 * rand(id, 8)), 0.27 * Math.pow(1 - b / life, 1.5) * thin, rand(id, 9), (rand(id, 10) - 0.5) * 0.7 + 0.12 * b, 1.15 + 0.25 * b);
+      breaker.put(x0 + side * top + WIND.to[0] * (0.6 * top * top + gone), y, z0 + out + WIND.to[1] * (0.6 * top * top + gone), (1.5 + 1.1 * top + 2.4 * b) * (0.55 + 0.9 * rand(id, 8)), 0.2 * Math.pow(1 - b / life, 1.5) * thin, rand(id, 9), (rand(id, 10) - 0.5) * 0.7 + 0.12 * b, 1.15 + 0.25 * b);
     }
     breaker.end();
   };
@@ -339,6 +342,8 @@ export function create(ctx: Context): Piece {
       openSea.x = 1 + SEA_OPEN.lift * cloudShut(seconds);
       openSea.y = inOpening() ? Math.min(1, Math.max(0, (13 - seconds) / 6)) : 0;
       openSea.z = openingWeight(seconds);
+      openGlint.value = openingLight(seconds);
+      openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breakerAt(seconds);
     },
