@@ -19,7 +19,7 @@ type Node = [number, number, number];
 /** The spine in the picture, rump to shoulder: [x, y, half the height of the body there]. */
 const TORSO: Node[] = [[362, 300, 5], [378, 299, 34], [420, 295, 76], [480, 292, 98], [540, 292, 106], [600, 285, 104], [660, 268, 98], [710, 250, 92]];
 /** The neck in the picture, shoulder to the root of the tuft. */
-const NECK: Node[] = [[710, 250, 92], [760, 272, 78], [805, 318, 60], [850, 372, 50], [890, 416, 44], [930, 460, 40], [965, 500, 35], [1000, 540, 31], [1040, 580, 28], [1075, 612, 26], [1090, 626, 13]];
+const NECK: Node[] = [[710, 250, 92], [760, 272, 68], [805, 318, 44], [850, 372, 34], [890, 416, 29], [930, 460, 25.5], [965, 500, 22.5], [1000, 540, 20.5], [1040, 580, 19], [1075, 612, 18], [1090, 626, 10]];
 const TORSO_RINGS = 10;
 const NECK_RINGS = 24;
 const RINGS = TORSO_RINGS + NECK_RINGS;
@@ -29,7 +29,7 @@ const WIDE = [0.74, 0.94];
 
 /** A leg in the picture: hip, the joint that bends back, ankle; and its rings as [part of the bone, half its width]. */
 const LEG = { hip: [497, 362], joint: [397, 545], ankle: [380, 884] } as const;
-const THIGH: [number, number][] = [[0, 27], [0.3, 17.5], [0.65, 12.5], [0.9, 14.5]];
+const THIGH: [number, number][] = [[0, 44], [0.1, 40], [0.24, 28], [0.42, 18.5], [0.68, 13.5], [0.9, 15]];
 const SHANK: [number, number][] = [[0.07, 13.5], [0.25, 9.8], [0.6, 8.6], [0.9, 9.6], [1, 11]];
 const JOINT_WIDE = 18.5;
 const LEG_RINGS = THIGH.length + 1 + SHANK.length;
@@ -45,11 +45,11 @@ const TOE_RINGS = 4;
 const TOE_SIDES = 5;
 
 const STRANDS = 22;
-const STRAND_RINGS = 9;
+const STRAND_RINGS = 12;
 const STRAND_SIDES = 5;
 
 /** The folded sail in the picture, as a ring of corners. Outside the animal the picture's own outline cuts it. */
-const SAIL: [number, number][] = [[795, 150], [700, 105], [600, 85], [480, 82], [380, 90], [280, 105], [170, 135], [80, 175], [40, 200], [35, 470], [160, 408], [240, 374], [468, 374], [470, 246], [530, 227], [610, 207], [690, 191], [795, 193]];
+const SAIL: [number, number][] = [[795, 150], [700, 105], [600, 85], [480, 82], [380, 90], [280, 105], [170, 135], [80, 175], [40, 200], [35, 470], [160, 408], [240, 374], [468, 374], [470, 300], [530, 285], [610, 268], [690, 252], [795, 240]];
 /** Its upper edge, which lies along the ridge of the back, and how far from the middle of the body it may hang: both by x. */
 const RIDGE: [number, number][] = [[40, 215], [80, 195], [170, 152], [280, 122], [380, 104], [480, 97], [600, 100], [700, 118], [795, 165]];
 const HANG: [number, number][] = [[40, 0.05], [150, 0.09], [300, 0.17], [420, 0.27], [540, 0.355], [700, 0.3], [795, 0.26]];
@@ -391,6 +391,15 @@ void main() {
   float cover = texture2D(tCover, uv).r;
   bool sail = vMix.x > 1.5;
   if (sail && cover < 0.5) discard;
+#if defined(FOLDED)
+  // The lower edge of the folded sail, where the picture has the flank and the thigh in front of it: cut along its own line.
+  float lower = vPx.x < 470.0 ? mix(374.0, 255.0, clamp((vPx.x - 240.0) / 230.0, 0.0, 1.0)) : mix(255.0, 193.0, clamp((vPx.x - 470.0) / 325.0, 0.0, 1.0));
+  if (sail && vPx.x > 240.0 && vPx.y > lower + 5.0 * sin(vPx.x * 0.13)) discard;
+  // Light comes through a sail where it stands free of the body: the hand of it behind the rump, most at its ends.
+  float free = 1.0 - smoothstep(230.0, 520.0, vPx.x);
+#else
+  float free = 1.0;
+#endif
   vec3 pic = texture2D(tPic, uv).rgb / max(cover, 0.4);
   // The flank laid round: mirrored at every repeat, so that it has no seam.
   vec2 hq = abs(fract(vHide / (2.0 * uFlank.zw)) * 2.0 - 1.0);
@@ -407,8 +416,9 @@ void main() {
   if (dot(n0, v) < 0.0) n0 = -n0;
   vec3 n = normalize(n0 - 1.1 * (lean(vPx, slopePic, n0) * thrown + lean(hpx, slopeHide, n0) * (1.0 - thrown)));
   // Where the picture is amber it is the skin of a sail, and light comes through it.
-  float skin = smoothstep(0.4, 0.62, (skinPic.r - skinPic.b) / max(skinPic.r, 0.05)) * (sail ? 1.0 : 0.0);
-  vec3 albedo = pow(skinPic, vec3(0.92)) * vMix.z;
+  float amber = smoothstep(0.4, 0.62, (skinPic.r - skinPic.b) / max(skinPic.r, 0.05));
+  float skin = sail ? mix(0.3 * free, 1.0, amber) * mix(0.35, 1.0, free) : 0.0;
+  vec3 albedo = (sail ? pow(skinPic, vec3(0.92)) : min(pow(skinPic, vec3(0.8)) * 1.22, vec3(0.94))) * vMix.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
   // Wet where it stands in the pool, and a hand over it.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.45, vWorld.y);
@@ -418,7 +428,7 @@ void main() {
 #if defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
   vec3 col = rigShade(up, n, v, albedo, 0.6, occ);
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.6 + uSunColour * (uSunDir.y * 0.1)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   // Only standing water holds a mirror, and the water takes most of the light of what it shows.
   float water = smoothstep(0.0, 0.03, uPool - land.r) * smoothstep(-0.02, 0.05, vUnder);
   float glance = 1.0 - max(v.y, 0.0);
@@ -432,14 +442,14 @@ void main() {
   float sun = sunAt(vWorld, land);
   col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the pool send the sky back up at what stands over them.
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.6 + uSunColour * (uSunDir.y * 0.1)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.
-  col += albedo * skin * mix(vec3(1.0, 0.82, 0.62), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
+  col += mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.5 * (1.0 - amber)) * skin * mix(vec3(1.0, 0.74, 0.48), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * (0.45 + 0.9 * max(dot(-n0, uSunDir), 0.0)) + skyIrradiance(-n0) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
-  col += (albedo * 0.6 + 0.04) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sun;
+  col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
   col *= 1.0 - 0.3 * far;
   gl_FragColor = vec4(rigOut(col), 1.0);
 #endif
@@ -461,8 +471,9 @@ export function bodyMaterials(ctx: Context, pool: number, grey: number, sheet = 
     uPool: { value: pool },
     uGrey: { value: grey },
   };
-  const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, side: THREE.DoubleSide });
-  const mirror = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { MIRROR: 1 }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+  const folded = sheet === 'feeder-a' ? { FOLDED: 1 } : {};
+  const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { ...folded }, side: THREE.DoubleSide });
+  const mirror = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { MIRROR: 1, ...folded }, side: THREE.DoubleSide, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
   return { body, mirror };
 }
 
@@ -572,7 +583,7 @@ export class Bodies {
           const c = COS.leg[k] as number;
           const x = from[0] + (to[0] - from[0]) * part + ox * wide * c * 0.82;
           const y = from[1] + (to[1] - from[1]) * part + oy * wide * c * 0.82;
-          const high = lower ? 1 : 0.62 + 0.38 * part;
+          const high = lower ? 1 : 0.84 + 0.16 * part;
           set(v0 + AT.legs + leg * LEG_VERTS + r * LEG_SIDES + k, x, y, (lower ? 210 : 0) + part * l * 0.8, (k / LEG_SIDES) * 220, smooth(0.2, 0.65, Math.abs(SIN.leg[k] as number)), high);
         }
       }
@@ -797,16 +808,20 @@ export class Bodies {
       let y = tip[1] + oy * root;
       let z = tip[2] + oz * root;
       // It leaves along the neck, spread, and gives way to its own weight further down.
-      let dx = tipWay[0] + ox * 0.75;
-      let dy = tipWay[1] + oy * 0.75;
-      let dz = tipWay[2] + oz * 0.75;
+      let dx = tipWay[0] + ox * 1.05;
+      let dy = tipWay[1] + oy * 1.05;
+      let dz = tipWay[2] + oz * 1.05;
       const dl = Math.hypot(dx, dy, dz) || 1;
       dx /= dl;
       dy /= dl;
       dz /= dl;
-      const long = (1.0 + 0.55 * k3) * size;
+      const long = (1.2 + 0.6 * k3) * size;
       const each = long / (STRAND_RINGS - 1);
-      const thick = ((6.2 - 2.2 * k2) / PX) * size;
+      const thick = ((9.5 - 3.5 * k2) / PX) * size;
+      // Each curls its own way as it hangs: a slow turn about its own line, and in towards the animal at its end.
+      const curl = 0.5 + 1.1 * k1;
+      const curlAt = k3 * 6.2832;
+      const lean2 = 0.4 + 0.35 * k2;
       const rate = (r: number): number => (p.beat > 0 ? Math.max(1, Math.round(r / p.beat)) * p.beat : r);
       const sway = 0.1 * Math.sin(p.clock * rate(0.9 + 0.8 * k1) + k2 * 40) + 0.5 * p.shake * Math.sin(p.clock * rate(15 + 5 * k3) + k1 * 30);
       const swayZ = 0.1 * Math.sin(p.clock * rate(0.7 + 0.9 * k3) + k1 * 40) + 0.5 * p.shake * Math.sin(p.clock * rate(13 + 6 * k1) + k3 * 30);
@@ -816,10 +831,13 @@ export class Bodies {
       for (let r = 0; r < STRAND_RINGS; r++) {
         const part = r / (STRAND_RINGS - 1);
         if (r > 0) {
-          const fall = 0.14 + 0.5 * part;
-          wx = wx + (ox * 0.1 + tipSide[0] * sway * part + tipUp[0] * swayZ * part + p.trail[0] * part) * 0.6;
+          const fall = 0.06 + 0.3 * part;
+          const ca = lean2 * Math.cos(curlAt + part * curl * 6.2832) * (0.3 + 0.7 * part);
+          const cb = lean2 * Math.sin(curlAt + part * curl * 6.2832) * (0.3 + 0.7 * part);
+          const inward = 0.3 * part * part;
+          wx = wx + (ox * 0.1 + tipSide[0] * (sway * part + ca) + tipUp[0] * (swayZ * part + cb) - tipWay[0] * inward + p.trail[0] * part) * 0.6;
           wy = wy - fall + p.trail[1] * part * 0.6;
-          wz = wz + (oz * 0.1 + tipSide[2] * sway * part + tipUp[2] * swayZ * part + p.trail[2] * part) * 0.6;
+          wz = wz + (oz * 0.1 + tipSide[2] * (sway * part + ca) + tipUp[2] * (swayZ * part + cb) - tipWay[2] * inward + p.trail[2] * part) * 0.6;
           const wl = Math.hypot(wx, wy, wz) || 1;
           wx /= wl;
           wy /= wl;
@@ -832,6 +850,9 @@ export class Bodies {
           if (y < lie) {
             y = lie;
             wy = Math.max(wy, -0.05);
+            // And is spread there, out from the middle of the tuft.
+            wx += ox * 0.5;
+            wz += oz * 0.5;
           }
         }
         let px = tipSide[1] * wz - tipSide[2] * wy;
@@ -844,7 +865,7 @@ export class Bodies {
         const sx = wy * pz - wz * py;
         const sy = wz * px - wx * pz;
         const sz = wx * py - wy * px;
-        const w = thick * (1 - 0.72 * part) * (r === STRAND_RINGS - 1 ? 0.3 : 1);
+        const w = thick * (1 - 0.7 * part) * (r === STRAND_RINGS - 1 ? 0.3 : 1);
         this.ring(x, y, z, px, py, pz, sx, sy, sz, w, w, STRAND_SIDES, COS.strand, SIN.strand);
       }
     }
