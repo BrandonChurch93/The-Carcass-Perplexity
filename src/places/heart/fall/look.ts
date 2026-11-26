@@ -356,6 +356,31 @@ float braid(float x, float fl, float r, float spacing, float seed, float width) 
 }
 // x: cover 0 to 1, y: kelvin.
 // away: x metres from the middle of the stream, y how much of an island of rock stands here.
+// plates(), and in z which way the middle of the plate lies along the flow: below zero on the half of it that looks down the stream.
+vec3 slabs(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  float d1 = 8.0;
+  float d2 = 8.0;
+  float id = 0.0;
+  float lee = 0.0;
+  for (int y = -1; y <= 1; y++) {
+    for (int x = -1; x <= 1; x++) {
+      vec2 g = vec2(float(x), float(y));
+      vec2 r = g + hash22(i + g) - f;
+      float d = dot(r, r);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        id = hash12(i + g + 7.7);
+        lee = r.y;
+      } else if (d < d2) {
+        d2 = d;
+      }
+    }
+  }
+  return vec3(sqrt(d2) - sqrt(d1), id, lee);
+}
 vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float len = flow.w;
   float s = flow.y;
@@ -489,7 +514,7 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     if (full > 0.001) {
       vec2 bq = vec2(s / 3.3 + 0.5 * vnoise(vec2(ride * 0.7, 5.0)), ride / 1.7);
       bq += 0.7 * vec2(vnoise(bq * 0.6 + 23.0), vnoise(bq * 0.6 + 31.0)) + 0.2 * vec2(vnoise(bq * 2.3 + 5.0), vnoise(bq * 2.3 + 17.0));
-      vec2 slabCell = plates(bq);
+      vec3 slabCell = slabs(bq);
       slabCell.y += 0.14 * (vnoise(bq * 3.1 + 9.0) - 0.5);
       float crowd = mix(0.58, 0.34, smoothstep(1.7, 3.3, speed)) * (1.0 - 0.9 * pool) + 0.16 * smoothstep(0.55, 0.95, u) - 0.3 * lipHotAt;
       float slab = smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(0.03, 0.11, slabCell.x) * full * smoothstep(-30.0, -10.0, len);
@@ -500,7 +525,13 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
       vec2 inner = plates(bq * 2.7 + 13.0);
       float faceK = mix(1010.0, 1095.0, slabCell.y / max(crowd, 0.05)) - 50.0 * smoothstep(0.2, 0.5, slabCell.x) + 50.0 * (vnoise(bq * 4.0 + 3.0) - 0.5);
       float crack = max(smoothstep(0.09, 0.02, inner.x) * seenAt(0.6), 0.8 * buckle);
-      float slabK = mix(mix(faceK, 1330.0, crack), 1400.0, smoothstep(0.17, 0.08, slabCell.x));
+      // It has height: the melt banks up pale against the edge that meets the flow, and the edge that looks down the stream, which
+      // is the one the lake sees, stands a hand proud of the melt and is in its own shade.
+      float lee = smoothstep(0.1, -0.2, slabCell.z);
+      float slabK = mix(faceK, 1330.0, crack);
+      slabK = mix(slabK, 930.0, 0.8 * lee * smoothstep(0.36, 0.2, slabCell.x));
+      slabK = mix(slabK, 1440.0, (1.0 - lee) * smoothstep(0.3, 0.12, slabCell.x));
+      slabK = mix(slabK, 1400.0, smoothstep(0.13, 0.07, slabCell.x));
       kelvin = mix(kelvin, slabK, slab);
       // The melt stands a shade paler in the seam round a slab.
       kelvin = mix(kelvin, max(kelvin, 1545.0), 0.7 * full * (1.0 - slab) * smoothstep(crowd + 0.03, crowd - 0.03, slabCell.y) * smoothstep(-30.0, -10.0, len));
