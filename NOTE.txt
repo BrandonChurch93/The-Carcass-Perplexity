@@ -1,7 +1,7 @@
-2026-11-26 07:06 UTC
-work at 6adc777 on agent/spine-storm-3
-version 2: 07:08 herd, kites, strike
-look-1.jpg = out/work/compare/spine-4.png
-look-2.jpg = out/work/compare/spine-3.png
-look-3.jpg = out/work/compare/spine-2.png
-look-4.jpg = out/work/compare/spine-0.png
+2026-11-26 07:28 UTC
+work at 8908ee2 on agent/spine-storm-3
+heartbeat 5: tip bloom, short puff, kites restaged, husk stalks cut
+look-1.jpg = out/work/compare/spine-3.png
+look-2.jpg = out/work/compare/spine-2.png
+look-3.jpg = out/work/compare/spine-0.png
+look-4.jpg = out/work/compare/spine-4.png
