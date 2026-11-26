@@ -17,6 +17,7 @@ uniform vec4 uBedFar;
 uniform sampler2D tWave;
 uniform sampler2D tRipple;
 uniform float uSea;
+uniform float uHigh;
 uniform sampler2D tMirror;
 uniform sampler2D tRings;
 uniform vec2 uFrame;
@@ -100,8 +101,11 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   mirror *= 1.0 - 0.7 * pow(sunFlat, 8.0);
   // And the faces that turn the sun itself to the lens are the glints of its path: each a hard point or a short bright line on one wavelet.
   // An eye that stands high over the water sees it as a sheet: its own green through the mirror, and the sun's path as a broad field of glints that does not thin with the distance.
-  float high = smoothstep(5.0, 9.0, cameraPosition.y - uSea) * smoothstep(0.03, 0.08, v.y);
-  float hard = pow(max(dot(r, uSunDir), 0.0), mix(700.0, 260.0, high)) * 2.4 * max(smoothstep(160.0, 10.0, far), high);
+  // Staged by shot: uHigh is 1 through the wide view from above (breath-01) and 0 elsewhere, so the colour of the channel holds while that
+  // lens comes down. The field of glints is the eye's own: it thins as the eye drops toward the water.
+  float high = uHigh * smoothstep(0.03, 0.08, v.y);
+  float glint = high * smoothstep(5.0, 9.0, cameraPosition.y - uSea);
+  float hard = pow(max(dot(r, uSunDir), 0.0), mix(700.0, 260.0, glint)) * 2.4 * max(smoothstep(160.0, 10.0, far), glint);
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.98, 1.0, 0.9), 0.1 + 0.3 * smoothstep(0.04, 0.22, v.y)) * mix(0.96, 0.8, smoothstep(0.06, 0.3, v.y)) * mix(vec3(1.12, 0.94, 0.76), vec3(0.96, 1.0, 0.94), high);
   vec3 skyUp = skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159;
@@ -127,7 +131,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
   float crest = smoothstep(0.05, 0.4, -tip);
   // The sun is a broad glare in the fog: its glints reach far to either side of its path, fewer the farther.
   float sunPath = pow(rsun, 48.0);
-  float lobe = (0.7 + 0.3 * pow(rsun, 3.0) + 1.0 * sunPath + 3.0 * high * pow(rsun, 6.0)) * (0.2 + 1.6 * crest) * (0.7 + 0.3 * gust) * (0.5 + 2.2 * rings.b);
+  float lobe = (0.7 + 0.3 * pow(rsun, 3.0) + 1.0 * sunPath + 3.0 * glint * pow(rsun, 6.0)) * (0.2 + 1.6 * crest) * (0.7 + 0.3 * gust) * (0.5 + 2.2 * rings.b);
   float sparks = 0.0;
   // A glint is a facet a few pixels wide wherever it is: near the lens a finger of water, far off a hand, then a wavelet. Two sizes
   // of them are laid at once and the nearer size gives way to the farther with the distance.
@@ -150,7 +154,7 @@ vec4 water(vec2 xz, float depth, vec4 land) {
       sparks += on * dot_ * life * share;
     }
   }
-  mirror += uSunColour * vec3(1.0, 0.88, 0.7) * sunHere * (sparks * seen * (2.2 + 1.0 * sunPath) + (1.0 - seen) * lobe * 0.003 + 0.02 * crest * crest * pow(rsun, 4.0) * smoothstep(60.0, 20.0, far) + (high + 0.4 * low) * pow(rsun, 8.0) * (0.08 + 0.7 * crest));
+  mirror += uSunColour * vec3(1.0, 0.88, 0.7) * sunHere * (sparks * seen * (2.2 + 1.0 * sunPath) + (1.0 - seen) * lobe * 0.003 + 0.02 * crest * crest * pow(rsun, 4.0) * smoothstep(60.0, 20.0, far) + (glint + 0.4 * low) * pow(rsun, 8.0) * (0.08 + 0.7 * crest));
   // What stands in the water is mirrored in it, broken by the waves: the image is read a little aside, more along the line of sight than across it.
   vec2 at = gl_FragCoord.xy / uFrame + vec2(slope.x * 0.03 + (g1.x + g2.y) * 0.01, (slope.y + g1.y * 0.5) * 0.07) * smoothstep(0.0, 6.0, far) * min(1.0, 14.0 / far);
   vec4 image = texture2D(tMirror, at);

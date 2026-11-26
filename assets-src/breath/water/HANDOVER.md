@@ -7,8 +7,8 @@ Owner until 08:46 UTC, 26 November 2026: breath_life_owner_3, branch `agent/brea
 - sea (`water/index.ts`, `shaders.ts`): one sheet at the sea level, now a graded grid of 200 by 200 (fine at the shaft). The body of the
   shader is `water()`, called only where the rig's land says there is water. Mirror of the sky times `drawn` (the tilt of each face to the
   lens), discrete hard sun glints (`hard`) and spark cells that live a fifth of a second, land mirrored in two steps, the waders' image
-  (`tMirror`) and rings (`tRings`). Two gates on the eye's height over the sea: `high` (over 5 to 9 m: green body from 8 cm of depth, a
-  broad field of glints, no warm tint) and `low` (under 3 to 7 m: softer `drawn`, stronger image of the animals).
+  (`tMirror`) and rings (`tRings`). `high` (staged, shot breath-01: green body from 8 cm of depth, no warm tint), `glint` (in that shot, eye over 5 to 9 m:
+  a broad field of glints) and `low` (eye under 3 to 7 m: softer `drawn`, stronger image of the animals).
 - gill-plumes (`plumes/fronds.ts`, `shaders.ts`, `index.ts`): grown fronds (22 mains on a close bush, side sprays, `mound`, `weep`,
   `tidy`), ragged ribbons cut by `tFrondBA` with threads from `tFrondA`, pale holdfast lumps. Far bushes are lifted by pixel size
   (`farLift`: lighter albedo, more through-light, a shallower heart).
@@ -34,7 +34,7 @@ Owner until 08:46 UTC, 26 November 2026: breath_life_owner_3, branch `agent/brea
   continuous `rs^256` lobe, replaced by discrete glints; images of the animals stronger. Splash crowns not done.
 - S5 "tufts replace the dominant heavy right-sweeping clump with thick roots and long strands": grown fronds, 22 mains, holdfast.
 - S6 "overhanging red growth with dangling tips at left gone" (breath-4): two weeping bushes staged for breath-02 (`HANG`).
-- S7 "grey-brown pool; wants blue-green channel through shelves": `high` gate, green body from 8 cm of depth.
+- S7 "grey-brown pool; wants blue-green channel through shelves": `uHigh` for breath-01, green body from 8 cm of depth.
 - M1, M2 "flat brown tint, sparkles stamped, no reflection of rock, no wet margin" / "flat muddy grey": mirror 1.35, land mirror, scum.
 - M3 "pulsing specular dots; wants continuous directional ripples": two cell sizes blended by distance, softer `drawn` for a low eye.
 - M4, M5 "bright halo fringe; smooth; no wet darkening" / "continuous bright outlines, uniform legs": veins, creases, per animal tone.
@@ -52,7 +52,8 @@ COST
 - breath-05: `RIM_GROWTH`, nine bushes round the rim wader (plumes); rim wader's neck down at the key, up 0.9 s after it (`RIM_LIFTS`).
 - breath-02: `HANG`, two tall weeping bushes left of the lens (plumes); rim wader away on the flats (waders).
 - breath-03: rim wader stands at `MIST_WADER`. Bush 5 is rooted at (-13.5, 33.5), clear of the breath-02 lens.
-- The sea's `high` and `low` gates go by the eye's height, not by shot, but in effect `high` is breath-01 and the end of breath-02.
+- breath-01: `uHigh` is 1 (sea: green body, no warm tint of the mirror, and the broad field of glints, through the whole shot).
+  The mirror's `low` gate goes by the eye's height over the sea, not by shot.
 
 ## Do not try twice
 - A continuous sun lobe on perturbed normals (a white hammered sheet). `drawn` at contrast 0.5 with no glints (sand).

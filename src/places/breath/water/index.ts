@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import type { Context, Piece } from '../shared/context';
 import { FRAGMENT, VERTEX } from './shaders';
 import { bedMap, waveMap } from './maps';
-import { SEA_LEVEL } from '../shared/anchors';
+import { SEA_LEVEL, shotSpan } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { MIRROR } from '../waders/mirror';
 import { RIPPLES } from '../waders/ripples';
 
@@ -23,6 +24,9 @@ export function create(ctx: Context): Piece {
   const ripples = waveMap(ctx.rng('water-ripples'), 512, 9, 44, 0.5, 90);
 
   const frame = new THREE.Vector2(3840, 2160);
+  // Staged by shot: the wide view from above (breath-01) sees the channel as green water over pale silt from its first frame to its last.
+  const high = { value: 0 };
+  const wide = shotSpan('breath-01');
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -33,6 +37,7 @@ export function create(ctx: Context): Piece {
       tWave: { value: waves },
       tRipple: { value: ripples },
       uSea: { value: SEA_LEVEL },
+      uHigh: high,
       tMirror: MIRROR.texture,
       tRings: RIPPLES.texture,
       uFrame: { value: frame },
@@ -60,6 +65,10 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('sea', sheet));
 
   return {
+    setTime: () => {
+      const at = stagedSeconds();
+      high.value = at >= wide[0] && at <= wide[1] ? 1 : 0;
+    },
     resize: (w, h) => {
       frame.set(w, h);
     },
