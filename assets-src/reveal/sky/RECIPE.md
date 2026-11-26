@@ -36,14 +36,21 @@ y -820 to 3961.25). Where the weather stands:
 
 ## `public/assets/reveal/sky/banks.png`
 
-Made by `make_banks.py`. 2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts`, the same as `cover.png`.
-Where the land holds cloud, computed from the relief and from nothing else; nothing random, nothing painted.
+Made by: `assets-src/reveal/sky/make_banks.py` (Python 3 with numpy, scipy and Pillow), committed here
+From: `public/assets/reveal/land/relief-a.png` (blue: the height of the land on its widest map)
+Prompt or command: `python3 assets-src/reveal/sky/make_banks.py`, from the root of the repo; no model and no prompt, nothing random
+Takes: 3 made (first the banks and the fog, then the blue channel, then the fog read fine); the third is kept
+Why this one: its fog lies in fingers on the inland floors and not in round lumps beside the ranges or over the sounds
+Date: 2026-11-26
+
+2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts`, the same as `cover.png`.
+Where the land holds cloud, computed from the relief and from nothing else; nothing painted.
 Used by: `src/places/reveal/shared/weather.ts` (`bankDepth`, `fogDepth`, `hazeAt`), read by the part `reveal/cloud`.
 
 - red: banks. The rise of the ground along the wind of the low field, read at the size of a whole range (60 km): cloud piles on the
   flank that faces the wind, and only where there is land 130 km up the wind of it.
 - green: fog. The floors that lie under the ground round them, read fine (15 km), with land all round and above the sounds and the shelf.
-- blue: the low ground, plains and wide valley floors, read wide and soft.
+- blue: the low ground, plains and wide valley floors, read wide and soft (kept in the file; the place no longer lays haze from it).
 
 ### What is read as data
 

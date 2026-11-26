@@ -130,7 +130,9 @@ void main() {
     float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.35 * sunk);
     // (The thin ice far above is lost against the day; with the camera's eye open it is seen, a veil of fibres that catches the
     // moon and crosses the land on its own wind. It is the same ice as by day, the photograph's own, and it never hides the ground.)
-    float bNight = min(0.45, b * (1.0 - 0.5 * gone + 0.7 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))));
+    // (Brought up for the open eye it is eased toward its ceiling, never cut off at it: cut off, every sheet came out one even
+    // grey to its edge, a flake, where the photograph's own fibre should carry through it.)
+    float bNight = 0.5 * (1.0 - exp(-b * (1.0 - 0.5 * gone + 0.7 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) / 0.5));
     // (What the land holds goes the way of the low field: only its body is left to the moon.)
     float heldNight = mix(1.0, 0.5, gone) * (1.0 - 0.8 * sunk);
     bankA *= heldNight;
