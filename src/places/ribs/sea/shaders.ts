@@ -8,7 +8,7 @@ const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
 
 // The swell as a sum of peaked waves: height in metres and its slope. `fine` is the spacing of whoever asks (a vertex ring, a pixel on the water):
 // a wave it cannot carry is faded out between `lo` and `hi` of wave number times spacing.
-const SWELL_GLSL = /* glsl */ `
+export const SWELL_GLSL = /* glsl */ `
 float swellAt(vec2 p, float t, float fine, float lo, float hi, out vec2 grad) {
   float h = 0.0;
   grad = vec2(0.0);
@@ -105,22 +105,27 @@ uniform float uFeetReach;
 varying vec3 vWorld;
 ${SWELL_GLSL}
 // The level of a picture laid over the sea at so many metres a repeat, by the long side of the pixel's foot on the water (as the pool film reads).
-vec2 footX;
-vec2 footY;
+// The long side is held to what level water at that range would give: the one steep face of a crest seen edge on read every picture as
+// its mean, and stood in the frame as a flat pale tile.
+float footLong;
 float levelOf(sampler2D t, float metres) {
   float size = float(textureSize(t, 0).x) / metres;
-  return log2(max(max(length(footX), length(footY)) * size, 1e-6));
+  return log2(max(footLong * size, 1e-6));
 }
 void main() {
   vec2 p = vWorld.xz;
-  footX = dFdx(p);
-  footY = dFdy(p);
+  vec2 footX = dFdx(p);
+  vec2 footY = dFdy(p);
   vec3 toEye = cameraPosition - vWorld;
   float dist = length(toEye);
   vec3 v = toEye / dist;
+  // Metres across a pixel at this range, and the long side of its foot on level water there.
+  float pixel = dist * min(length(dFdx(v)), length(dFdy(v)));
+  float level = pixel * dist / max(toEye.y, 1.5);
+  footLong = min(max(length(footX), length(footY)), level);
   vec4 land = landAt(p);
   float depth = -land.r;
-  float px = length(fwidth(p));
+  float px = min(length(fwidth(p)), level + pixel);
   // Under the floor of the strait no lens ever sees the sea: nothing is worked out for it there.
   vec3 col = vec3(0.03, 0.034, 0.03);
   if (land.r < 0.6) {
@@ -171,7 +176,7 @@ void main() {
   vec3 body = mix(shallow, deep, smoothstep(0.0, 5.0, depth));
   // Light comes through the thin top of a tall wave: only the highest water of the heaviest crests, green where the sun is on it.
   float thin = smoothstep(1.3, 3.3, h + 1.6 * (c1.b - 0.5)) * calm;
-  body += vec3(0.022, 0.05, 0.036) * thin * (0.5 + 1.5 * sun);
+  body += vec3(0.024, 0.044, 0.038) * thin * (0.5 + 0.5 * sun);
   // Seen against the light a wave is a lens: the top of a face that leans to the eye, with the break in the cloud or the sun behind it,
   // is lit from inside, cold green, brightest just under the crest where the water is a hand thick.
   vec2 vh = v.xz / max(length(v.xz), 1e-4);
@@ -180,14 +185,20 @@ void main() {
   float behindBreak = pow(max(dot(-vh, normalize(uSkyBreak.xz)), 0.0), 2.0);
   float behindSun = pow(max(dot(-vh, normalize(uSunDir.xz + 1e-4)), 0.0), 2.0) * sun * (1.0 - 0.6 * uSunDir.y);
   vec3 lens = vec3(0.1, 0.15, 0.13) * top * leans * (skyRadiance(uSkyBreak) * 0.13 * behindBreak * open + uSunColour * 0.16 * behindSun);
-  col = mix(body * e / 3.14159 + lens, refl, fres);
+  // A low sun goes into the water at a slant and little of it comes back: the body is lit by the sky and takes a third of the sun, cooled.
+  vec3 sunCool = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.6);
+  vec3 eBody = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + sunCool * (0.33 * uSunDir.y * sun);
+  col = mix(body * eBody / 3.14159 + lens, refl, fres);
 
   // White water. The lace is the Builder's picture of broken water seen from above, laid in metres and carried a little by the wind.
   float lacePic = dot(textureLod(tFoamPic, p / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
   float fine = textureLod(tChop, p.yx / 1.9 + uTime * 0.05, levelOf(tChop, 1.9)).a;
-  float lace = 0.72 * lacePic + 0.28 * fine;
+  // Close under the lens the same picture is read again small: foam is bubbles and holes down to a hand's width, not a soft patch.
+  float laceFine = dot(textureLod(tFoamPic, p.yx / 2.3 + uTime * uWind * 0.11, levelOf(tFoamPic, 2.3)).rgb, vec3(0.3333));
+  float lace = mix(0.72 * lacePic + 0.28 * fine, 0.5 * lacePic + 0.34 * laceFine + 0.16 * fine, 1.0 - smoothstep(0.02, 0.12, px));
   // A patch of broken water is read by the short side of the pixel: by the long side, at a glance, every crest would be one band.
-  vec2 caps = whitecaps(p, uTime, min(length(dFdx(p)), length(dFdy(p))), tChop) * calm;
+  // And never by more than a few pixels' width at this range: the back of a crest seen edge on read the break's picture as its mean, and one face of the mesh stood white.
+  vec2 caps = whitecaps(p, uTime, min(min(length(footX), length(footY)), 2.5 * pixel), tChop) * calm;
   // Streaks down the wind: what the breakers leave is drawn out into long lines, in drifts, thick in one stretch of sea and absent in the next.
   vec2 across = vec2(-uWind.y, uWind.x);
   float streak = dot(textureLod(tFoamPic, vec2(dot(p, across) / 13.0, dot(p, uWind) / 110.0 - uTime * 0.03), levelOf(tFoamPic, 13.0)).rgb, vec3(0.3333));
@@ -205,7 +216,9 @@ void main() {
   float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
   foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
-  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.35 + 0.7 * lacePic, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
+  // Foam is white all through: it takes the sky from every side and the low sun as a standing thing does, and gives it back nearly white.
+  vec3 eFoam = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 1.15 + sunCool * ((0.3 + uSunDir.y) * sun);
+  vec3 foamCol = vec3(0.84, 0.87, 0.88) * (0.56 + 0.44 * mix(lace, 0.35 + 0.7 * lacePic, fresh)) * mix(0.82, 1.12, max(fresh, surfZone)) * eFoam / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
@@ -238,6 +251,10 @@ export const SEA_OPENING_FRAGMENT = openingText(
     vec3 hb = normalize(v + uSkyBreak);
     float turned = max(dot(n, hb), 0.0);
     refl += vec3(1.0, 0.87, 0.7) * uOpenSea.z * (1.0 + 4.0 * uOpenGlint) * (8.0 * pow(turned, mix(1100.0, 140.0, far)) + 2.6 * pow(turned, 60.0) * far);
+    // And under it the whole sea is silver: every face that leans a little the break's way holds a piece of it, brightest down the middle of the path.
+    vec2 toBreak = normalize(uSkyBreak.xz);
+    float inPath = pow(max(dot(-v.xz / max(length(v.xz), 1e-4), toBreak), 0.0), 14.0);
+    refl += skyRadiance(uSkyBreak) * vec3(1.0, 0.95, 0.88) * uOpenSea.z * inPath * (0.5 * pow(turned, 24.0) + 1.6 * pow(turned, 160.0)) * (0.35 + 0.65 * smoothstep(0.3, 0.6, c3.a));
   }`,
     ],
     ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
