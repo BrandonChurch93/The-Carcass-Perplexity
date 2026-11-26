@@ -1,4 +1,5 @@
-2026-11-26 01:25 UTC
-work at 7332b30 on agent/breath-ground-2
-hb1 minute 29: shelf rebuilt from a baked 6 cm height map (ledges, stones, baked sun shadow); halo de-pinked; hoops, vapour, cameras not yet touched
-look-1.jpg = out/work/looks-hb1-breath-0.png
+2026-11-26 01:56 UTC
+work at 0b0d281 on agent/breath-ground-2
+hb2: shaft wall and ribs built from the wall plate relief, shelf from the shelf plate
+look-1.jpg = out/work/looks-hb2-breath-4.png
+look-2.jpg = out/work/looks-hb2-breath-0.png
