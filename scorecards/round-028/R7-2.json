@@ -1,0 +1,63 @@
+{
+  "round": 28,
+  "unit": "film",
+  "pack": "R7-2",
+  "family": "gemini",
+  "answered": "2026-11-26 18:49 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-05.png",
+        "where": "the lower-left fractured rock slope and recessed grey rock face in the top crop, also visible at full frame in set-B-01-b.png",
+        "what": "compression smears the crisp rock striations and fine stone texture into heavy, muddy, blurry blotches that stand out even at full-frame delivery size",
+        "fix": "raise bitrate and reduce aggressive deblocking or temporal smoothing so textured foreground rock retains sharp detail without smearing"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the dark overhanging rock ledge and adjacent cliff face in the bottom crop",
+        "what": "the dark rock overhang and surrounding ridges smear into blurry, blotchy patches with severe loss of surface texture and edge definition",
+        "fix": "allocate more bits to dark textured foregrounds and soften encoder filtering so rock ridges do not turn to mush"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the upper-left dark gnarled growth cluster clinging to the cliff in the top crop, and the lower clusters in set-B-04.png and set-B-05.png",
+        "what": "fine organic surface detail and jagged silhouettes collapse into mushy, smeared blobs with dark halos that will crawl during playback",
+        "fix": "increase bitrate and use psychovisual rate control tuned to preserve complex dark foreground detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the thin bright-edged translucent vapor ribbons and the orange-purple sunset sky above the horizon",
+        "what": "delicate bright ribbon edges break into smeared, blocky streaks while the sunset sky shows compression blocking and subtle banding across the warm gradient",
+        "fix": "encode in 10-bit at a higher bitrate with gentler quantization to preserve thin bright edges and smooth sky gradients"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the fine wispy translucent tendrils streaming right from the lower cluster in the bottom crop",
+        "what": "fine wispy vapor filaments dissolve into smeared, muddy streaks and lose clean separation against the sunset sky",
+        "fix": "increase bitrate and reduce temporal blur so fine translucent tendrils stay crisp against the background"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the dark purple storm clouds and folded vapor ribbon in the top crop, and the dark clouds in set-B-02.png",
+        "what": "subtle dark cloud texture flattens into visible compression blocks and blotchy patches, and delicate veining inside the vapor ribbon smears",
+        "fix": "use adaptive quantization tuned for dark skies and low-contrast vapour with lower quantization parameters so clouds do not block"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the overlapping translucent vapor membranes in the bottom crop and the purple cloud glow around the lightning in the top crop",
+        "what": "fine internal membrane lines smear and soften, and the purple lightning glow flattens into slightly stepped, blocky patches in the surrounding cloud",
+        "fix": "use 10-bit encoding with higher bitrate and preserve fine dithering so glow falloff and translucent layers remain smooth"
+      }
+    ]
+  }
+}

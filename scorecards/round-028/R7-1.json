@@ -1,0 +1,21 @@
+{
+  "round": 28,
+  "unit": "film",
+  "pack": "R7-1",
+  "family": "gemini",
+  "answered": "2026-11-26 18:49 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 9,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "the dark blurred foreground mound in the bottom-left crop (x 0 to 33%, y 67 to 100%)",
+        "what": "faint tonal flattening and slight dark-shadow banding appear where fine grain was smoothed out, noticeable only when comparing directly against the uncompressed frame",
+        "fix": "preserve slightly more shadow dither or allocate slightly more bitrate to dark smooth gradients"
+      }
+    ]
+  }
+}
