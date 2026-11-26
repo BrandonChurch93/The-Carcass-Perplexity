@@ -36,6 +36,8 @@ const vec2 SHORE = vec2(4.0, 2.25);
 const float SHORE_RISE = 0.1;
 float shoreRow(float s) { return clamp(0.6 - s / SHORE.y, 0.004, 0.996); }
 // No shore keeps one width: the band is a stride wide here and a hand there, and its line wanders. g is the grain at xz / 13 + 0.37.
+// The rind does not run all the way round anything: stretches of a shore carry it, and between them the ground goes under as it is.
+float shoreHeld(vec4 g) { return smoothstep(0.36, 0.52, g.g); }
 float shoreBand(float s, vec4 g) { return s * 1.35 / (0.45 + 1.5 * g.r) + (g.b - 0.5) * 0.4 * smoothstep(0.0, 0.3, s); }
 // Which way is inland, from the field's own slope; and how much the shore there runs along x (1) or along z (0).
 vec3 shoreWay(vec2 xz, float here) {
@@ -61,10 +63,11 @@ float reliefAt(vec2 xz, float y0) {
   float s = fr + (textureLod(tGrain, xz / 1.9, 0.0).r - 0.5) * 0.1;
   if (s > -0.3 && s < 1.4) {
     vec3 way = shoreWay(xz, fr);
-    float sb = shoreBand(s, textureLod(tGrain, xz / 13.0 + 0.37, 0.0));
+    vec4 sg = textureLod(tGrain, xz / 13.0 + 0.37, 0.0);
+    float sb = shoreBand(s, sg);
     float row = shoreRow(sb);
     float h = mix(textureLod(tShoreH, vec2(turned(vec2(xz.y / SHORE.x + 0.37, 0.0)).x, row), lod + 2.0).r, textureLod(tShoreH, vec2(turned(vec2(xz.x / SHORE.x, 0.0)).x, row), lod + 2.0).r, way.z);
-    up = mix(up, (h - 0.1) * SHORE_RISE, smoothstep(0.95, 0.7, sb) * smoothstep(-0.3, 0.0, s));
+    up = mix(up, (h - 0.1) * SHORE_RISE, smoothstep(0.95, 0.7, sb) * smoothstep(-0.3, 0.0, s) * shoreHeld(sg));
   }
   if (rock > 0.0) up = mix(up, (textureLod(tLedgeH, turned(plateAt(xz, uLedgeAt, LEDGE)), lod + 0.8).r - 0.45) * LEDGE_RISE, rock);
   return up;
@@ -260,8 +263,9 @@ void main() {
   }
 
   // The shore: its plate laid across the waterline. The rind of salt, the wet red mud under it and the line of froth are the picture's.
-  float sb = shoreBand(s, textureLod(tGrain, p.xz / 13.0 + 0.37, 0.0));
-  float shoreW = smoothstep(0.95, 0.7, sb) * step(0.0, s) * (1.0 - rock) * smoothstep(70.0, 30.0, dist);
+  vec4 sg = textureLod(tGrain, p.xz / 13.0 + 0.37, 0.0);
+  float sb = shoreBand(s, sg);
+  float shoreW = smoothstep(0.95, 0.7, sb) * step(0.0, s) * (1.0 - rock) * smoothstep(70.0, 30.0, dist) * shoreHeld(sg);
   if (shoreW > 0.0) {
     vec3 way = shoreWay(p.xz, f.r);
     float row = shoreRow(sb);
