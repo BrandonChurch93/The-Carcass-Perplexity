@@ -279,7 +279,7 @@ void main() {
       float da = b + 1.2;
       way = exp(-da * da / 0.4);
       out0 = length(p.xz) - rimAt(b);
-      if (way < 0.02 || out0 < -2.5 || out0 > 75.0) {
+      if (way < 0.02 || out0 < -2.5 || out0 > 34.0 + 20.0 * uBreath.y * uShow.w) {
         met = false;
         break;
       }

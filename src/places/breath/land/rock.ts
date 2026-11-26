@@ -514,9 +514,7 @@ uniform vec3 uMean;
 uniform sampler2D tGrain;
 uniform sampler2D tGrainN;
 uniform vec3 uGrainMean;
-uniform sampler2D tBeds;
 uniform sampler2D tBedsN;
-uniform vec3 uBedsMean;
 uniform vec4 uWall;
 uniform float uBounce;
 void main() {
@@ -590,10 +588,11 @@ void main() {
   // beds cost the wall half as much again as all the rest of it. The two planes meet where the wall runs at 45 degrees to both; the beds
   // lie level on each, so only their breaks along the bed change there.
   vec2 bsel = wx > 0.5 ? bqx : bqz;
-  float blod = max(log2(max(length(dpx), length(dpy)) * float(textureSize(tBeds, 0).x) / 5.0) - 0.5, 0.0);
-  vec3 b0 = textureLod(tBeds, bsel, blod).rgb;
+  float blod = max(log2(max(length(dpx), length(dpy)) * float(textureSize(tBedsN, 0).x) / 5.0) - 0.5, 0.0);
+  // Their colour is not read: a bed is pale where it stands proud and dark in its joints, so its height gives its tone, and the read of
+  // the colour was a quarter of a second a sample on the far lens.
   vec3 bs = textureLod(tBedsN, bsel, blod).rgb;
-  float bedTone = clamp(dot(b0 / uBedsMean, vec3(0.3333)), 0.35, 1.9);
+  float bedTone = clamp(0.5 + 1.0 * bs.b, 0.35, 1.9);
   vec3 t0 = texture2D(tMat, p.xz / 4.0 + 0.37).rgb;
   vec3 ts = texture2D(tMatN, p.xz / 4.0 + 0.37).rgb;
   float tone = clamp(1.0 + 1.2 * (dot(t0 / uMean, vec3(0.3333)) - 1.0), 0.5, 1.6);
@@ -710,9 +709,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
           tGrain: { value: grain.colour },
           tGrainN: { value: grain.data },
           uGrainMean: { value: new THREE.Vector3(...grain.mean) },
-          tBeds: { value: beds.colour },
           tBedsN: { value: beds.data },
-          uBedsMean: { value: new THREE.Vector3(...beds.mean) },
           // x metres the fine relief is drawn as, y gain on the plate's colour, z the sky a shut cell still sees, w how dark a fold is.
           uWall: { value: new THREE.Vector4(0.45, 1.3, 0.3, 2.0) },
           // How much of the sun's light the mist and the far wall hand on to a face in the shaft.
