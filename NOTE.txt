@@ -1,5 +1,7 @@
-2026-11-26 18:31 UTC
-work at eafac11 on agent/heart-lava
-v3 in progress, v2 above v3 at 4006, 4127, 4217, and the stream enlarged: fume is now a pale warm veil that does not darken; slabs are longer along the flow and darker. Wrong: on the flat treads a slab is still only a few pixels high at preview; fume foot a little pink
-look-1.jpg = out/work/v3c/look.png
-look-2.jpg = out/work/v3c/z.png
+2026-11-26 18:56 UTC
+work at 0796493 on agent/heart-lava
+last version 0796493: sheet, fall before above after at 4037 4127 4217, 4006 beside approved, 4217 hd at final tier. Wrong: on the flat treads a raft is only a few pixels high at preview; fume is separate soft puffs, not one plume; banks answer faintly
+look-1.jpg = out/work/v3/fall-sheet.png
+look-2.jpg = out/work/v3/fall-before-above-after.png
+look-3.jpg = out/work/v3/4006-approved-beside-frame.png
+look-4.jpg = out/work/v3/f-4217-hd-final.png
