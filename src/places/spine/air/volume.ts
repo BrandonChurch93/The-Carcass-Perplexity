@@ -201,7 +201,7 @@ void main() {
   float stormAir = 0.0;
   if (uShow.z > 0.0) stormAir = 1.0 - exp(-stormDepth(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far));
   // Open sky keeps the dome's own masses: the near air softens them and does not wash them out.
-  if (seaAt <= 0.0 && far > 50000.0) stormAir = min(stormAir, 0.3);
+  if (seaAt <= 0.0 && far > 50000.0) stormAir = min(stormAir, mix(1.0, 0.3, smoothstep(0.0, 0.1, rd.y)));
 
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
@@ -311,8 +311,9 @@ void main() {
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
     float veiled = 1.0 - exp(-depthV);
     // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
-    if (far > 50000.0) veiled = min(veiled, seaAt > 0.0 ? 0.3 : 0.2);
-    vec3 snowAir = domeAir * 0.9 + vec3(0.006, 0.005, 0.011);
+    if (far > 50000.0) veiled = min(veiled, 0.25);
+    // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
+    vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
   }

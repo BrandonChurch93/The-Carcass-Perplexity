@@ -590,11 +590,11 @@ void main() {
   if (dot(along, EXIT_DIR) < 0.0) along = -along;
   vec3 side = vec3(-along.z, 0.0, along.x);
   // Snow where the plate is pale and stands high: there the floor is matt. Elsewhere it is wet ice.
-  float snow = smoothstep(0.34, 0.6, lum) * smoothstep(0.3, 0.6, h0 + 0.4 * lum);
+  float snow = smoothstep(0.1, 0.32, lum) * smoothstep(0.3, 0.6, h0 + lum);
   vec3 n = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * mix(0.035, 0.12, snow));
-  vec3 albedo = mix(plate * 0.55, min(plate * 1.5, vec3(0.86)), snow);
+  vec3 albedo = mix(min(plate * 2.4 + 0.07, vec3(0.5)), min(plate * 2.6, vec3(0.86)), snow);
   float occ = 0.6 + 0.4 * smoothstep(0.1, 0.5, h0);
-  vec3 c = rigShade(vWorld, n, v, albedo, 1.0, occ) + albedo * windowLight(vWorld, n) * occ * 3.2 / 3.14159;
+  vec3 c = rigShade(vWorld, n, v, albedo, 1.0, occ) + albedo * windowLight(vWorld, normalize(n + 0.6 * normalize(EXIT_AT - vWorld))) * occ * 5.0 / 3.14159;
   // The mirror: the far mouth and the sky in it, broken by the ice's own heave; outside the mouth it mirrors the dark of the rock.
   vec3 nm = normalize(vec3(0.0, 1.0, 0.0) - (side * du + along * dv) * 0.02 + 0.012 * vec3(vnoise(vWorld.xz * 0.7) - 0.5, 0.0, vnoise(vWorld.xz * 0.7 + 7.3) - 0.5));
   vec3 r = reflect(-v, nm);
@@ -602,7 +602,9 @@ void main() {
   float nv = clamp(dot(nm, v), 0.0, 1.0);
   float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
   float open = uUnder > 1.5 ? throughExit(vWorld, r) : 0.0;
-  vec3 seen = windowSky(r, 1.0 + 3.0 * snow) * open + vec3(0.0012, 0.0014, 0.002) * (1.0 - open);
+  // Where it does not mirror the mouth it mirrors the wall over it: pale stone under the mouths' light.
+  vec3 wallSeen = vec3(0.3, 0.32, 0.36) * windowLight(vWorld + r * 9.0, -r) * 3.2 / 3.14159;
+  vec3 seen = windowSky(r, 1.0 + 3.0 * snow) * open + wallSeen * (1.0 - open);
   c += seen * fres * (1.0 - 0.92 * snow) * (0.75 + 0.25 * smoothstep(0.2, 0.05, lum));
   if (uUnder < 1.5) {
     // From outside the canal is dark a few metres in: its floor with it.
