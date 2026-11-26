@@ -207,7 +207,7 @@ function hull(v: number, a: number, fine: boolean, p: THREE.Vector3, o: THREE.Ve
     const cell = cells2((a / (Math.PI * 2)) * 14 + 0.9 * Math.sin(s * 1.9) + 1.2 * noise2(s * 0.8 + 4, a), s * 0.95 + 0.9 * noise2(a * 2, s + 3), 14);
     const id = cell[1];
     const upper = smooth(0.45, 0.9, dy) * Math.min(1, ring * 1.6);
-    const gone = 1 - 0.3 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
+    const gone = 1 - 0.5 * upper * (0.4 + 0.6 * smooth(0.3, 0.6, noise3(s * 0.7 + 21, dy * 1.3, dz * 1.3)) + 0.3);
     const inside = cell[0] - 0.05 - 0.1 * ((id * 57.31) % 1) + 0.12 * (noise2(a * 7, s * 3) - 0.5);
     plate = id > gone ? smooth(0, 0.07, inside) : 0;
     const toward = Math.min(1, Math.max(0, 0.5 + ((id * 711.3) % 1 > 0.5 ? 1 : -1) * cell[3] * 1.3));

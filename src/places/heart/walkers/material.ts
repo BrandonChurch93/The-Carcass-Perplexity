@@ -348,8 +348,12 @@ void main() {
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.
   albedo = mix(albedo, vec3(0.115, 0.108, 0.1) * (0.6 + 0.6 * grit), dust * (0.45 + 0.4 * (1.0 - pit)));
+  // Ash from the ground on the shins: pale, in patches, thick low down and ragged where it ends.
+  float shin = smoothstep(2.6 + 1.8 * (grit - 0.5), 0.4, vWorld.y) * (1.0 - tendril) * (1.0 - body);
+  float caked = shin * smoothstep(0.3, 0.6, 0.55 * vnoise(vUv * vec2(4.0, 17.0) + seed * 1.7) + 0.45 * grit + 0.3 * shin - 0.15);
+  albedo = mix(albedo, vec3(0.2, 0.188, 0.172) * (0.65 + 0.5 * grit) * (0.6 + 0.5 * pit), 0.7 * caked);
   // The foot itself is caked dark with what it treads in.
-  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.6 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
+  albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.4 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
   float own = ownBody * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   float occ = vInfo.y * own;
