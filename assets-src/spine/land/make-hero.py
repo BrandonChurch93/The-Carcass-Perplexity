@@ -145,7 +145,8 @@ SIZE = 2048
 # The faces of the blocks, cut at the size of a texel and not of the mesh (hero-n.jpg, 4096 round by 2048 up): no lattice a renderer can
 # carry cuts a slab of a metre with a sharp edge, and a normal taken from a fine mesh has the mesh's own cells in it. Every block of every
 # size has a face that looks a little its own way (red: round the blade, green: up or down), flat to its edge; blue is the joint between
-# two blocks, a crack. The same blocks as the relief: they are functions of the place.
+# two blocks, a crack. The same blocks as the relief: they are functions of the place. The two great sizes only: the slabs smaller than
+# these are cut by the shader itself (land/open.ts, slabAt), with an edge as hard as the lens is close.
 TW, TH = 4096, 2048
 Pc = np.concatenate([P, P[:, :1]], axis=1)
 tilt = np.zeros((TH, TW, 2), np.float32)
@@ -160,13 +161,13 @@ for r0_ in range(0, TH, 128):
     p = (Pc[i0][:, a0] * (1 - fa) + Pc[i0][:, a0 + 1] * fa) * (1 - fr) + (Pc[i0 + 1][:, a0] * (1 - fa) + Pc[i0 + 1][:, a0 + 1] * fa) * fr
     key = 101
     sl = slice(r0_, r0_ + rr.shape[0])
-    for k, (tall, wide, deep, warp, amp) in enumerate(((74.0, 21.0, 13.0, 9.0, 0.15), (30.0, 8.5, 5.5, 3.0, 0.27), (10.0, 3.2, 2.4, 0.8, 0.38), (4.5, 1.25, 0.9, 0.25, 0.3))):
+    for k, (tall, wide, deep, warp, amp) in enumerate(((74.0, 21.0, 13.0, 9.0, 0.3), (30.0, 8.5, 5.5, 3.0, 0.4))):
         key, _ = level(p, key, tall, wide, deep, 1.0, 1.0, warp)
         ids[k][sl] = key
         tilt[sl, :, 0] += amp * 2 * (h32(key, 13) - 0.5)
         tilt[sl, :, 1] += 0.5 * amp * 2 * (h32(key, 17) - 0.5)
-        tones[sl] += (0.3, 0.25, 0.27, 0.18)[k] * h32(key, (23, 29, 37, 41)[k])
-for k, (dark, wide) in enumerate(((0.75, 2), (0.6, 1), (0.45, 0), (0.25, 0))):
+        tones[sl] += (0.55, 0.45)[k] * h32(key, (23, 29)[k])
+for k, (dark, wide) in enumerate(((0.8, 2), (0.65, 1))):
     # (The upright joints are the open ones: the beds are closed by the weight on them.)
     f = (ids[k] != np.roll(ids[k], 1, axis=1)).astype(np.float32)
     f[1:] = np.maximum(f[1:], 0.5 * (ids[k][1:] != ids[k][:-1]))

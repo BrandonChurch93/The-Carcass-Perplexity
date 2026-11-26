@@ -40,19 +40,78 @@ Tap granite(vec2 p, vec2 gx, vec2 gy, float shift) {
   // The masses: the same rock 4.3 times larger, turned a little, so slabs of 20 to 60 m carry the face from far off.
   vec2 b = vec2(0.94 * p.x + 0.34 * p.y, -0.34 * p.x + 0.94 * p.y) / vec2(64.0, 43.0) + 0.37 + 1.7 * shift;
   Tap B = tap(tGran, tGranNh, b, lodA - 2.1);
-  vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.3);
-  vec2 s = A.s * 0.7 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.0;
-  float h = 0.55 * A.h + 0.45 * B.h;
+  vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.3 * smoothstep(-3.3, -1.0, lodA - 2.1));
+  // (Under a lens some metres off a texel of the masses is many pixels, and what they hold is a soft stain: it is let go.)
+  float far_ = smoothstep(-3.3, -1.0, lodA - 2.1);
+  vec2 s = A.s * 0.7 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * far_;
+  float h = mix(A.h, 0.55 * A.h + 0.45 * B.h, far_);
   // Under the lens a texel of the beds is many pixels: the rock again 5.6 times finer, turned the other way, as grain and small edges.
-  float fine = smoothstep(0.6, -0.8, lodA);
+  float fine = smoothstep(1.6, -0.4, lodA);
   if (fine > 0.01) {
     vec2 d = vec2(0.97 * p.x - 0.24 * p.y, 0.24 * p.x + 0.97 * p.y) / vec2(2.7, 1.8) + 0.61 - shift;
     Tap D = tap(tGran, tGranNh, d, lodA + 2.47);
-    c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.5, 1.6), 0.3 * fine);
-    s += fine * 0.35 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
+    c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.6, 1.6), 0.4 * fine);
+    s += fine * 0.6 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
     h = mix(h, 0.7 * h + 0.3 * D.h, fine);
   }
   return Tap(c, s, h);
+}
+
+// The slabs: the rock cut by three sets of joints (the sheets a face is made of, the uprights across them, the beds), in pieces of no two
+// lengths. Worked from the place itself, so the edge of a slab is as hard as the lens is close: no sheet and no baked map holds an edge
+// under a lens that stands four metres off.
+float hash1(float n, float s) {
+  return fract(sin(n * 127.1 + s * 311.7) * 43758.5453);
+}
+// A line cut in pieces: which piece (x), metres from its low end (y) and to its high end (z).
+vec3 pieceOf(float c, float mean, float seed) {
+  float x = c / mean;
+  float i = floor(x);
+  float e0 = i + 0.7 * (hash1(i, seed) - 0.5);
+  float e1 = i + 1.0 + 0.7 * (hash1(i + 1.0, seed) - 0.5);
+  if (x < e0) {
+    i -= 1.0;
+    e1 = e0;
+    e0 = i + 0.7 * (hash1(i, seed) - 0.5);
+  } else if (x >= e1) {
+    i += 1.0;
+    e0 = e1;
+    e1 = i + 1.0 + 0.7 * (hash1(i + 1.0, seed) - 0.5);
+  }
+  return vec3(i, (x - e0) * mean, (e1 - x) * mean);
+}
+// One size of slab at p (metres in the frame of the beds), on a face that looks along nl: the turn of the slab's own face (xy, -1 to 1),
+// how far its nearest edge is along the face (z, metres) and its number (w, 0 to 1).
+vec4 slabAt(vec3 p, vec3 nl, float tall, float wide, float deep, float key) {
+  const vec3 SHEET = vec3(-0.2121, 0.0771, 0.9642);
+  const vec3 ACROSS = vec3(0.9524, 0.0, 0.3048);
+  const vec3 BEDS = vec3(0.2408, 0.9631, 0.0963);
+  vec3 k = pieceOf(dot(p, SHEET), deep, key);
+  float kk = hash1(k.x, key + 5.0) * 97.0;
+  vec3 j = pieceOf(dot(p, ACROSS) + 0.37 * wide * kk, wide, kk);
+  float jj = hash1(j.x, kk + 11.0) * 89.0;
+  vec3 i = pieceOf(dot(p, BEDS) + tall * jj, tall, jj);
+  float id = hash1(i.x, jj + 3.0);
+  // A joint that meets the face aslant is far along the face for a little way through the rock. The beds are closed by the weight on
+  // them: their line is half as wide.
+  vec3 through = vec3(dot(nl, SHEET), dot(nl, ACROSS), dot(nl, BEDS));
+  vec3 run = inversesqrt(max(1.0 - through * through, 0.03));
+  float edge = min(min(min(k.y, k.z) * run.x, min(j.y, j.z) * run.y), min(i.y, i.z) * run.z * 2.0);
+  return vec4(2.0 * hash1(id * 613.0, 13.0) - 1.0, 2.0 * hash1(id * 613.0, 17.0) - 1.0, edge, id);
+}
+// One size laid on a face, as far as a slab of it is some pixels wide (px: metres a pixel): its turn, its crack, its tone.
+void slabLevel(vec3 p, vec3 nl, float px, float tall, float wide, float deep, float key, float turn, float gap, inout vec2 t, inout float crack, inout float tone, inout float rim) {
+  float seen = smoothstep(2.5, 7.0, wide / px);
+  if (seen <= 0.0) return;
+  vec4 s = slabAt(p, nl, tall, wide, deep, key);
+  t += seen * turn * vec2(s.x, 0.5 * s.y);
+  // No two joints stand open alike: most are closed to a hair, a few gape. A net of even lines is a drawing of rock.
+  float open = hash1(s.w * 419.0, 29.0);
+  float g = gap * (0.12 + 2.1 * open * open);
+  float line = max(g, px);
+  crack = max(crack, seen * min(1.0, 1.3 * g / px) * (1.0 - smoothstep(0.35 * line, line, s.z)));
+  tone *= mix(1.0, 0.8 + 0.4 * s.w, seen);
+  rim = min(rim, mix(1.0, clamp(s.z / (0.07 * wide), 0.0, 1.0), seen));
 }
 
 // The bedrock where it lies level and breaks through the snow (land/outcrop, 8 m): frost-shattered, dark, with snow lodged in it.
@@ -79,6 +138,8 @@ void main() {
   vec3 baked = vec3(1.0, 0.5, 0.5);
   float crack = 0.0;
   float facet = 1.0;
+  float across = 0.0;
+  float held = 1.0;
 #ifdef HERO_MAPS
   // The hero's own normals and occlusion, baked from a mesh four times finer than this one, on the unwrap of its lattice.
   {
@@ -86,7 +147,10 @@ void main() {
     vec2 at = vec2(atan(vHero.y, vHero.x) / 6.2831853, vHero.z);
     vec2 hx = vec2((vHero.x * dFdx(vHero.y) - vHero.y * dFdx(vHero.x)) / (6.2831853 * turn), dFdx(vHero.z));
     vec2 hy = vec2((vHero.x * dFdy(vHero.y) - vHero.y * dFdy(vHero.x)) / (6.2831853 * turn), dFdy(vHero.z));
-    float lod = max(0.0, lodAt(hx, hy, 2048.0));
+    float lodRaw = lodAt(hx, hy, 2048.0);
+    float lod = max(0.0, lodRaw);
+    // (Under a lens some metres off a texel of these maps is many pixels wide: what they hold is then a soft stain, and it is let go.)
+    held = smoothstep(-4.0, -1.5, lodRaw);
     baked = textureLod(tHeroAo, at, lod).rgb;
     // The faces of its blocks (4096 round, 2048 up): each looks a little its own way, flat to its edge, and blue is the crack between two.
     vec3 hm = textureLod(tHeroN, at, max(0.0, lodAt(vec2(2.0 * hx.x, hx.y), vec2(2.0 * hy.x, hy.y), 2048.0))).rgb;
@@ -96,9 +160,13 @@ void main() {
     // (A block leans back, hardly forward: a face tipped to the ground is black in this light, and a blade of black blocks is a chequer.)
     t.y = max(t.y, -0.08);
     n0 = normalize(smoothN + hz * t.x + cross(smoothN, hz) * t.y);
-    crack = hm.b;
-    // The rig's lights are broad and a slab's turn of some degrees would hardly show in them: the low source is counted again on the turn.
-    facet = clamp(1.0 + 1.6 * (dot(n0, KEY_DIR) - dot(smoothN, KEY_DIR)), 0.55, 1.5);
+    crack = hm.b * held;
+    // The blade has two faces on each side and an arete between them: windward of it the rock looks into the storm and is the dark face,
+    // toward the lee it looks to the low light. The line wanders as the blocks have broken.
+    across = sign(vHero.x) * pow(abs(vHero.x) / sqrt(turn), 0.6667);
+    float arete = across + 0.22 + 0.07 * sin(vHero.z * 23.0) + 0.04 * sin(vHero.z * 61.0 + 1.0);
+    float leeward = smoothstep(-0.012, 0.012, arete);
+    n0 = normalize(n0 + normalize(vec3(uWind.x, 0.0, uWind.z)) * mix(-0.75, 0.3, leeward) * smoothstep(0.02, 0.2, vHero.z) * (1.0 - smoothstep(0.75, 1.0, abs(across))));
   }
 #endif
 
@@ -112,6 +180,44 @@ void main() {
   // (The plane a face is read on is the plane the triangle itself lies nearest: at a step the shading normal says level and the face is a wall.)
   vec3 ng = normalize(cross(dFdx(vWorld), dFdy(vWorld)));
   if (dot(ng, n0) < 0.0) ng = -ng;
+  float slabTone = 1.0;
+  float rim = 1.0;
+  // (The face before its slabs are cut: what is heaped on the rock lies on this.)
+  vec3 nFace = n0;
+  if (spire) {
+    // The slabs smaller than the mesh and its maps can cut, in three sizes.
+    float px = max(length(Px), length(Py));
+    float side = length(n0.xz);
+    vec3 hz = vec3(n0.z, 0.0, -n0.x) / max(side, 1e-3);
+    vec3 np = vec3(dot(n0, ax), dot(n0, up), dot(n0, bx));
+    vec2 t = vec2(0.0);
+    float cut = 0.0;
+    slabLevel(P, np, px, 15.0, 3.2, 2.4, 3.0, 0.45, 0.08, t, cut, slabTone, rim);
+    slabLevel(P, np, px, 7.0, 1.15, 0.9, 41.0, 0.38, 0.04, t, cut, slabTone, rim);
+    slabLevel(P, np, px, 3.0, 0.4, 0.33, 77.0, 0.26, 0.006, t, cut, slabTone, rim);
+    t *= smoothstep(0.15, 0.5, side);
+    t.y = max(t.y, -0.08);
+    n0 = normalize(n0 + hz * t.x + cross(n0, hz) * t.y);
+    // The edge of a slab is broken back to its joint: the face falls away toward the crack over a few hands, so one side of every joint
+    // takes the low light and the other loses it. (The fall is read from the distance to the edge as it changes over the pixel.)
+    float ex = dFdx(rim);
+    float ey = dFdy(rim);
+    float a11 = dot(Px, Px);
+    float a12 = dot(Px, Py);
+    float a22 = dot(Py, Py);
+    float det = a11 * a22 - a12 * a12;
+    if (det > 1e-14 && rim < 1.0) {
+      vec3 g = ((a22 * ex - a12 * ey) * Px + (a11 * ey - a12 * ex) * Py) / det;
+      float gl = length(g);
+      if (gl > 1e-4) {
+        vec3 fall = (ax * g.x + up * g.y + bx * g.z) / gl;
+        n0 = normalize(n0 - 0.85 * (1.0 - rim) * fall);
+      }
+    }
+    crack = max(crack, cut);
+    // The rig's lights are broad and a slab's turn of some degrees would hardly show in them: the low source is counted again on the turn.
+    facet = clamp(1.0 + 2.0 * (dot(n0, KEY_DIR) - dot(smoothN, KEY_DIR)), 0.45, 1.55);
+  }
   vec3 nb = normalize(n0 + ng);
   vec3 nl = vec3(dot(nb, ax), dot(nb, up), dot(nb, bx));
   // Each face takes the plane it looks at most squarely, and its neighbour only in a narrow turn between them: nothing is pulled long.
@@ -178,16 +284,20 @@ void main() {
   // Pale ochre granite: the sheet gives the breaks and the grain, less of its own colour and of its darks.
   float rockLuma = dot(rock, LUMA);
   vec3 grain = pow(mix(vec3(rockLuma), rock, ground ? 0.25 : 0.6), vec3(0.85));
+  // (The sheet's own darks are soot at this size: half of them. The darks of the rock are its cracks and the faces turned from the light.)
+  if (spire) grain = mix(grain, max(grain, vec3(0.92)), 0.6);
   // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow.)
-  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.53, 0.465, 0.38)) * grain * tone, vec3(0.85));
+  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.59, 0.525, 0.44)) * grain * tone, vec3(0.85));
   float rough = 0.9;
   // Its cracks are dark: the sky does not reach into them.
   float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
+  // The joints are open and black: no light goes into them.
+  occ *= 1.0 - 0.9 * crack;
+  albedo *= slabTone * facet * (1.0 - 0.6 * crack);
 #ifdef HERO_MAPS
-  occ *= (0.25 + 0.75 * smoothstep(0.1, 0.85, baked.r)) * (1.0 - 0.7 * crack);
-  albedo *= facet;
+  occ *= mix(0.62, 0.25, held) + mix(0.38, 0.75, held) * smoothstep(0.1, 0.85, baked.r);
   // No two blocks have weathered alike: a fresh break is warm and light, an old face grey blue and darker.
-  albedo *= mix(vec3(0.62, 0.68, 0.84) * 0.7, vec3(1.16, 1.04, 0.9), smoothstep(0.3, 0.7, baked.g)) / tone;
+  albedo *= mix(vec3(0.7, 0.74, 0.84) * 0.9, vec3(1.12, 1.03, 0.92), smoothstep(0.3, 0.7, baked.g)) / tone;
 #else
   if (spire) occ *= 0.45 + 0.55 * smoothstep(-5.0, 0.5, vRelief);
 #endif
@@ -209,11 +319,12 @@ void main() {
   // Snow lies where a face leans back far enough to hold it: on every ledge and in the hollows of the rock, deeper in the lee. The rock's
   // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
-  float lie = nRock.y * 0.3 + n0.y * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
+  float lie = nRock.y * 0.3 + mix(n0.y, nFace.y, 0.8) * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
 #ifdef HERO_MAPS
   // Every ledge of the hero holds snow: where a block stands back over the one below it (baked, blue).
   lie += 0.34 * smoothstep(0.7, 0.9, baked.b) * smoothstep(0.3, 0.6, vnoise(vWorld.xy / 34.0 + 5.5) - 0.5 * lee);
-  lie = min(lie, flat_ * 0.9 + 0.22);
+  // (Held to what the face of the lattice can carry, and its edge broken by the rock: a drift cut on the line of a triangle is a card.)
+  lie = min(lie, mix(flat_, n0.y, 0.45) * 0.9 + 0.22 + 0.22 * (vnoise(P.xz * 1.1 + P.y * 0.7) - 0.5) + 0.1 * (vnoise(P.xz * 4.3 + P.y * 2.9) - 0.5));
 #endif
   if (ground) lie -= 0.3 * rockness;
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
@@ -222,15 +333,25 @@ void main() {
   if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
   // Just above the snow the rock is wet and dark, and frost stands in its cracks.
   float brim = show > 0.01 ? smoothstep(hold - 0.22, hold, lie) * (1.0 - snow) : 0.0;
-  albedo *= 1.0 - 0.45 * brim;
+  albedo *= 1.0 - 0.2 * brim;
   float frost = (1.0 - snow) * (1.0 - burn) * smoothstep(0.34, 0.16, pit) * smoothstep(-0.2, 0.5, n0.y + 0.4 * -lee) * (1.0 - 0.8 * uWet);
   albedo = mix(albedo, vec3(0.6, 0.65, 0.72), 0.5 * frost);
 
   // Rime: on what looks into the gale the frost has grown in plumes, thick on windward faces and on edges, none in the lee.
-  vec3 nRime = n0;
+  vec3 nRime = nFace;
+#ifdef HERO_MAPS
+  // Windward of the arete the whole face looks into the gale.
+  float windward = smoothstep(-0.1, -0.5, across);
+  // (High on the blade the gale strips it and the strikes burn it: the upper windward face is bare and is the dark face.)
+  float stripped = 1.0 - 0.7 * smoothstep(0.45, 0.8, vHero.z);
+#else
+  float stripped = 1.0;
+  float windward = 0.0;
+#endif
   float rime = 0.0;
   if (show > 0.01) {
-    float expose = clamp(0.3 - 1.0 * lee + 0.3 * n0.y, 0.0, 1.0) * (ground ? 0.75 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet);
+    // (And on the windward edge of every slab, where its face is broken back to the joint: there the plumes stand thickest.)
+    float expose = clamp(0.36 - 1.0 * lee + 0.3 * n0.y + 0.55 * windward + 0.5 * (1.0 - rim) * smoothstep(0.05, -0.3, lee), 0.0, 1.0) * (ground ? 0.75 * steep : 1.0) * (1.0 - burn) * (1.0 - 0.8 * uWet) * stripped;
     if (expose > 0.1) {
       vec2 rp = w.x >= w.z && w.x >= w.y ? P.zy : w.z >= w.y ? P.xy : P.xz;
       vec2 rx = w.x >= w.z && w.x >= w.y ? Px.zy : w.z >= w.y ? Px.xy : Px.xz;
@@ -245,8 +366,9 @@ void main() {
       float mass = vnoise(rp / 5.5 + 2.7) * 0.65 + vnoise(rp / 1.9 + 8.1) * 0.35;
       float plume = dot(F.c, LUMA) / FROST_LUMA;
       rime = smoothstep(0.42, 0.72, expose + 0.5 * (mass - 0.5) + 0.12 * (plume - 1.0)) * smoothstep(0.1, 0.3, expose);
-      nRime = normalize(n0 + 0.7 * (e0 * F.s.x + e1 * F.s.y));
-      albedo = mix(albedo, clamp(F.c / FROST_LUMA, 0.3, 1.7) * vec3(0.47, 0.5, 0.56), rime);
+      nRime = normalize(mix(n0, nFace, 0.7) + vec3(0.0, 0.45, 0.0) + 0.9 * (e0 * F.s.x + e1 * F.s.y));
+      // (Heaped, it is white: the rock between the plumes is under it.)
+      albedo = mix(albedo, mix(clamp(F.c / FROST_LUMA, 0.3, 1.8), clamp(0.75 * F.c / FROST_LUMA + 0.5, 0.85, 1.65), smoothstep(0.5, 1.0, expose)) * vec3(0.56, 0.585, 0.63), rime);
       rough = mix(rough, 1.0, rime);
       nRock = normalize(mix(nRock, nRime, rime));
       occ = mix(occ, max(occ, 0.8), rime);
@@ -254,7 +376,9 @@ void main() {
   }
 
   // The snow's own surface: the wind pack laid across the gale at two sizes, and the prints.
-  vec3 nSnow = n0;
+  // (Snow lies over the joints of the rock: it has the face's lean, hardly the slabs'.)
+  vec3 nUnder = normalize(mix(n0, nFace, 0.8));
+  vec3 nSnow = nUnder;
   float snowOcc = 1.0;
   vec3 snowTint = vec3(1.0);
   if (snow > 0.0) {
@@ -292,9 +416,9 @@ void main() {
 #endif
     // (The pack's slopes are on its own two level ways: back to the world's.)
     vec2 gw = vec2(0.98 * g.x + 0.2 * g.y, -0.2 * g.x + 0.98 * g.y);
-    nSnow = normalize(n0 + level * vec3(gw.x, 0.0, gw.y));
+    nSnow = normalize(nUnder + level * vec3(gw.x, 0.0, gw.y));
     // On a ledge of the rock the snow takes a little of the rock's tilt, softened: it is a cap on a block, not a sheet.
-    nSnow = normalize(nSnow + 0.25 * show * (nRock - n0));
+    nSnow = normalize(nSnow + mix(0.5, 0.25, level) * show * (nRock - n0));
   }
   vec3 n = normalize(mix(nRock, nSnow, snow));
   // Wind-packed snow is matt: nearly white, a little blue where the pack is glazed.
