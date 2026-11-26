@@ -72,7 +72,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
     const s = Math.sin(turn);
     const centre = world([x, 0, z]);
     // The heap: three fingers high at the body, gone a forearm out from it.
-    const heap = 0.035 * k * Math.exp(-out / 0.13) * rng.range(0.2, 1);
+    const heap = 0.05 * k * Math.exp(-out / 0.13) * rng.range(0.2, 1);
     const tone = rng.next();
     const lump = rng.range(0, 40);
     for (let v = 0; v < each; v++) {

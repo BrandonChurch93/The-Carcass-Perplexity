@@ -37,13 +37,17 @@ varying vec3 vWorld;
 void main() {
   // position.xy is a place in the picture, across it and up it.
   vAt = position.xy;
-  float lift = texture2D(tLift, vAt).r * 0.5;
+  // Some days dead, the trunk has gone down: the belly and the ribs have fallen in, and what stood a forearm high is a hand lower. The
+  // picture is drawn in over the trunk toward its low edge, and what it lifts is less by as much.
+  float sag = smoothstep(0.36, 0.5, position.x) * smoothstep(0.86, 0.68, position.x);
+  float up = position.y - 0.17 * sag * max(position.y - 0.45, 0.0);
+  float lift = texture2D(tLift, vAt).r * 0.5 * (1.0 - 0.17 * sag);
   // Across the lens's line of sight, and away from the lens along the rock: the higher a thing stands, the nearer it is on its ray.
   float across = (position.x - uSheet.x) * uSheet.z;
   // The tendrils dried where they fell, each in its own slack curve: none of them lies straight.
   float fan = smoothstep(0.31, 0.12, position.x);
   across += fan * (0.06 * sin(position.x * 29.0 + position.y * 43.0) + 0.028 * sin(position.x * 71.0 - position.y * 57.0 + 1.3));
-  float away = ((position.y - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
+  float away = ((up - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
   // The wind still moves the ends of the tendrils where they lie loose on the rock: nothing else of it stirs.
   float loose = smoothstep(0.27, 0.06, position.x);
   away += loose * loose * (0.035 * sin(uStir * 1.3 + position.x * 22.0 + position.y * 17.0) + 0.009 * sin(uStir * 4.3 - position.x * 55.0 + position.y * 9.0));
@@ -53,7 +57,7 @@ void main() {
   float rock = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw).r;
   // It has sunk: the low edge of the trunk and of the legs is under the grit that has gathered against it, not on top of the rock.
   float body = smoothstep(0.2, 0.3, position.x);
-  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), body) + lift - mix(0.01, 0.03, body), xz.y);
+  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), body) + lift - mix(0.01, 0.025 + 0.05 * sag * smoothstep(0.03, 0.14, lift), body), xz.y);
   vWorld = p;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
