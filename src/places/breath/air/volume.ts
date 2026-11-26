@@ -142,7 +142,7 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under)
   float soft = 4.5 + 0.35 * max(p.y + 4.0, 0.0);
   under = top - p.y;
   // It is thick and thin by its billows: torn, with air in it, and never a wall.
-  float rho = (0.019 + 0.011 * surge) * layerMean(top, soft, p.y, hy) * mix(0.05, 2.3, smoothstep(0.3, 0.7, 0.55 * n.z + 0.45 * n.y));
+  float rho = (0.019 + 0.011 * surge) * layerMean(top, soft, p.y, hy) * mix(0.0, 3.1, smoothstep(0.4, 0.68, 0.55 * n.z + 0.45 * n.y));
   // Deeper it is thicker: the bottom is never seen.
   rho *= 1.0 + 2.2 * smoothstep(3.0, 20.0, under);
   // Over the brim it is in the wind and thins as it climbs: wisps, and at the breath a body.
@@ -289,7 +289,7 @@ void main() {
             vec3 ps = p + uSunDir * 6.0;
             float unders;
             float os = length(ps.xz) - rimAt(atan(ps.x, -ps.z));
-            sunTau = 14.0 * shaftRho(ps, 1.0, os, way, vec3(risingNoise(ps, 0.0).xy, 0.5), unders);
+            sunTau = 20.0 * shaftRho(ps, 1.0, os, way, vec3(risingNoise(ps, 0.0).xy, 0.5), unders);
             // The sun is low: to reach a place a metre under the top its light has come seven metres through the fog.
             sunTau += 0.22 * max(min(under, unders + 1.0), 0.0);
           }
@@ -314,7 +314,7 @@ void main() {
         float roofed = exp(-0.09 * max(under, 0.0));
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
-        vec3 light = (vec3(0.155, 0.162, 0.172) * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
+        vec3 light = (vec3(0.155, 0.162, 0.172) * sunk * sunk + uSunColour * (0.012 * facing * sunk * sunk)) * (0.2 + 0.8 * roofed)
           + mix(uSunColour, vec3(2.4), 0.42) * (sun * (0.22 * min(phase, 1.8) * exp(-1.6 * sunTau) + 0.02 * exp(-0.2 * sunTau)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
