@@ -1,0 +1,56 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-26 12:21 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the whole frame in the last two seconds, the skeleton seen from orbit",
+        "what": "nothing changes across 120 frames: the bone shapes, the orange point in the ribs, the swirl at lower right and the planet's edge sit frozen, so the ending reads as a still picture rather than a living world seen from height",
+        "fix": "keep the climb or a slow drift going to the last frame, let cloud move over the surface and the glow breathe unevenly, and settle on a strong composition instead of a dead hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the ground under the camera at orbital height",
+        "what": "the surface reads as a glowing line drawing of a skeleton on black, not a real view from that height. There is no atmosphere layer, cloud, terminator light or surface tone",
+        "fix": "render the land and sea with real albedo, cloud cover and an atmospheric rim so the giant form reads as terrain seen from orbit"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the pale four-legged animal on the cliff face at left, and the small creatures along the far shore",
+        "what": "held in the same pose for all 480 frames of the loop. There is no weight shift, head turn or step, so they read as placed models in a living scene",
+        "fix": "give the cliff animal a few non-repeating idle actions (head turn, weight shift, a step on the ledge) and stagger small motions in the shore creatures so they are never in step"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the shallow water and wet flats in the foreground",
+        "what": "apart from one foam edge creeping in near the end, the water surface changes very little across eight seconds and reads more like a texture than water with weight. It shows no clear wash and draw-back of a thin sheet over the flats",
+        "fix": "add a slow wash that runs up, thins and drains back with foam breaking at its edge, and let ripples and reflections move with it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the foam edge at the lower centre across the seam from loop 479 to loop 0",
+        "what": "the foam line at the end of the loop is slightly brighter and further forward than at the start, so a careful viewer could find the seam",
+        "fix": "match foam position and brightness over the last and first frames, or cross-blend the water simulation over the final half-second"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the birds over the sea in the first seconds",
+        "what": "the near birds hold nearly the same wing pose from frame to frame and glide on straight paths, close to a cycled sprite",
+        "fix": "vary wingbeat phase and timing per bird and add banking and changes of speed"
+      }
+    ]
+  }
+}

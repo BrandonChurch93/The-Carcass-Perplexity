@@ -34,6 +34,78 @@
       "confidence": 78,
       "why": "the repeated, low-detail silhouettes of the flying creatures.",
       "answered": "12:16 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the ocean looks like a real-time procedural shader, and the flying creatures and fogged arches are simple and lack film-level detail.",
+      "answered": "12:22 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 68,
+      "why": "the flat uniform distance fog and stiff low-detail flying creatures paired with a decent procedural ocean surface look like a standard 3D render rather than a real photo or a top-budget cinematic.",
+      "answered": "12:22 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the two nearest flying creatures look like the same stiff, angular model reused in different positions.",
+      "answered": "12:22 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 65,
+      "why": "the realistic ocean shading, volumetric fog and atmospheric depth around the giant fantasy structures and flying creatures read as a high-end game or film cinematic, although the stiff bird-like creature models keep a lower-budget game possible.",
+      "answered": "12:24 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the giant rock spires have nearly identical, uniformly striated surface textures.",
+      "answered": "12:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "procedural-looking ocean shader and tiled stone texture on surreal horn spires feel like a hobbyist/stock 3D render (Vue/Terragen style) rather than film-grade or photographic.",
+      "answered": "12:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 68,
+      "why": "The flat, artificial spray plumes and abrupt fog cutoff at the waterline—paired with procedural ocean waves and decent but unrefined rock texturing—point to an ordinary 3D render rather than a real place or a top-budget production.",
+      "answered": "12:25 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the nearest spire has shallow rock striations stretched over a conspicuously smooth surface.",
+      "answered": "12:25 UTC"
     }
   ]
 }

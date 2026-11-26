@@ -1,0 +1,35 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R5",
+  "family": "gemini",
+  "answered": "2026-11-26 12:24 UTC",
+  "answer": {
+    "critic": "R5",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "frame 9541 (2:39.01), full frame",
+        "what": "the transition between the crater lake ripples and the orbital pull-back cuts to flat, mathematically perfect concentric cyan rings on a uniform dark blue field, breaking the photographic reality of the film at its pivotal reveal",
+        "fix": "replace the synthetic ring graphic with continuous photographic dark-water ripples and atmospheric depth bridging frame 9337 into the top-down eye-socket water in frame 9589"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "frame 7015 (1:56.55) and the ice-ridge sequence (also set-A-09.png frame 7234 and set-A-03.png frames 7066-7823)",
+        "what": "the snowy spine-ridge place looks less finished and more stylized than the other five landscapes: the sea/ice flanks have blurry stretched low-detail noise, the lightning bolt reads as a flat white line ending in a circular flare dot without lighting the clouds or snow, and the trailing clouds look like flat painted wisps",
+        "fix": "add crisp scale-appropriate detail to the flanking water and ice, replace the ribbon clouds with volumetric storm mist, and integrate the lightning with realistic cloud and terrain illumination"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "frame 10027 (2:47.07), the skeleton continent (also set-A-09.png frame 10027)",
+        "what": "the third place (the coastal karst sinkhole from frame 4221/4409) has no clearly recognizable landmark on the orbital reveal, while the four bright white lumbar-spine ovals and bright white red-veined pelvis sit slightly too stark and diagram-like compared to the naturalistic rock integration of the skull and ribcage",
+        "fix": "give the third place a legible coastal sinkhole landmark on the wide skeleton continent and soften the albedo and contrast of the white spine and red-veined pelvis under atmospheric haze so they blend like real landforms from orbit"
+      }
+    ]
+  }
+}

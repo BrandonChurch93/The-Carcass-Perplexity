@@ -1,0 +1,98 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-26 12:22 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-10.png",
+        "where": "the whole sheet, the bridge from the pond to orbit (frames 9535 to 9546)",
+        "what": "the climb goes through a flat graphic of perfect concentric rings on blue that looks like a screensaver or texture, not water seen from above, and it swaps the picture instead of carrying one climb",
+        "fix": "make the rise one continuous move up from the real pond surface, keeping its banks, mist and light in view as they fall away"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "frames 9337 to 9841, ripple close-up to dark crater to skeleton continent",
+        "what": "the rise to orbit breaks into three separate pictures (ripples, an almost black blue field with a crater edge, then a planet already in place) with jumps in scale and speed; the ground stops looking like a real view from that height",
+        "fix": "render one eased climb through cloud height with the crater lake shrinking into the landmass so the view stays believable at each altitude"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "orbit section, frames 9841 to 11103",
+        "what": "about 20 seconds of almost identical frames: the cloud swirl stays fixed, clouds don't drift, the terminator doesn't move and the camera barely moves, so it reads as a still picture",
+        "fix": "let the clouds and storm turn and drift, move the terminator/sun glint, and give the camera a slow, weighty drift"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-08.png",
+        "where": "the lightning over the ice spire, frames 7015 to 7020",
+        "what": "the bolt holds for six or more frames, drifts across the sky in nearly the same shape and lights almost nothing; the ridge and cloud stay just as dim, so the strike doesn't land",
+        "fix": "make it a 1–3 frame strike with a flicker and have it light the whole ridge, snow and cloud base for an instant, then go dark"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "ending, frames 11103 to 11860",
+        "what": "the film ends on a slow fade of an unchanging orbit picture to black, so it's a dissolve on a still image, not a move",
+        "fix": "keep the camera and atmosphere moving through the fade or end on a deliberate cut"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "crater lake shot, frames 8305 to 8310, the haze over the right cliff",
+        "what": "there's a hard diagonal edge in the haze and light across the cliff and sky, like a layer seam, and the frames are effectively identical",
+        "fix": "blend the fog layer smoothly and add live mist drift and water movement"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "ice and night shots, frames 7066, 7318 and 7823, the streaks of cloud by the spires",
+        "what": "the wisps look like flat painted cards and don't seem to move at their own height; the spires read as cut-outs against the sky",
+        "fix": "use volumetric cloud that drifts with parallax and wraps around the rock"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "crater shore, frames 4221 to 4226, centre of the frame above the rock bench",
+        "what": "a soft round translucent blob sits there unchanged, like a stray smoke sprite or lens smudge",
+        "fix": "remove it or replace it with real steam that rises and breaks up"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "frames 2019 to 2271, the skeletal creature on the cliff face",
+        "what": "the animal looks pressed flat onto the rock like a relief, with no sign of weight or grip, so it reads as a model rather than a climbing animal",
+        "fix": "give it volume, contact shadows and a weight shift between holds"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "breaking surf behind the flying creature, frames 2501 to 2506",
+        "what": "the spray barely changes from frame to frame and reads as a fixed white texture, not water breaking with weight",
+        "fix": "simulate the breaking crest so the spray climbs, falls and thins frame by frame"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the furred grazers, frames 6309 and 6561",
+        "what": "pose and position are almost the same 4 seconds apart, so the stillness reads as a held model",
+        "fix": "add grazing head moves, breathing and weight shifts"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-07.png",
+        "where": "red flats, frames 5618 to 5623, left edge",
+        "what": "a smeared hazy patch on the left looks like a soft-focus artefact instead of real air",
+        "fix": "replace it with depth-consistent haze or rain that moves"
+      }
+    ]
+  }
+}
