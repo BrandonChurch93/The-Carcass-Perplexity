@@ -95,6 +95,24 @@ export function create(ctx: Context): Piece {
     });
     stalks.push(...forks);
   }
+  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. Small clumps of three to six stand on the dry flats beyond the last of the list,
+  // thinner on the ground the further off, each clump its own height and lean.
+  {
+    const far = ctx.rng('stalks-far');
+    for (let c = 0; c < 90; c++) {
+      const d = far.range(40, 150);
+      const p = rel(d, far.range(-0.62, 0.62) * d);
+      const h = far.range(1.9, 3.3);
+      const count = 3 + far.int(4);
+      if (ctx.rig.land.shore(p[0], p[1]) < 0.08) continue;
+      for (let n = 0; n < count; n++) {
+        const a = far.range(0, TAU);
+        const r = far.range(0.15, 1.3);
+        const roll = far.next();
+        stalks.push({ x: p[0] + Math.cos(a) * r, z: p[1] + Math.sin(a) * r, h: h * far.range(0.55, 1.15), lean: far.range(0.02, 0.22), yaw: far.range(0, TAU), kind: roll < 0.62 ? 0 : roll < 0.76 ? 3 : roll < 0.88 ? 1 : 2, size: far.range(0.8, 1.15), phase: far.range(0, TAU) });
+      }
+    }
+  }
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
@@ -233,7 +251,7 @@ export function create(ctx: Context): Piece {
       // A bud keeps its filaments inside its sheath and a broken one has none: neither is given any to draw.
       if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
-      const length = (s.kind === 0 ? (close ? 0.43 : 0.31) : s.kind === 3 ? 0.3 : 0.25) * s.size * (close ? 1 : which === 0 ? 1.6 : 2.1);
+      const length = (s.kind === 0 ? (close ? 0.38 : 0.31) : s.kind === 3 ? 0.24 : 0.25) * s.size * (close ? 1 : which === 0 ? 1.6 : 2.1);
       // The plume: cards of the photographed lock that stand round the mouth, most through its axis and a few leaning out, so that it is a tuft from every side.
       const bud = s.kind === 1;
       const through = which === 0 ? (close ? (bud ? 5 : 3) : bud ? 3 : 3) : bud ? 0 : 2;
