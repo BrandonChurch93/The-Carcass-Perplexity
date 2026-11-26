@@ -1,8 +1,8 @@
-# Status 120
+# Status 121
 
-2026-11-26 15:48 UTC. Phase 5, the whole film.
+2026-11-26 16:13 UTC. Phase 5, the whole film.
 
-- `01-r27-f0.jpg`: Frame 0 as round 2's jury and scroll-stop critic saw it (final tier, rendered in 4K on a render machine, shown smaller): 1 of 5 jurors took it for a photograph or a film frame
-- `02-r27-a02.jpg`: The whole film, sheet 2 of 4, as the motion critic saw it (review tier, preview size, rendered on a render machine). Frames 3028 and 3280, top left: the Heart's walkers in the same stances four seconds apart
-- `03-r27-a04.jpg`: The whole film, sheet 4 of 4, as the motion critic saw it (review tier, preview size, rendered on a render machine). Frames 10094 to 11608: the cloud and the cyclone do not move in 25 seconds from orbit
-- `04-r27-a10.jpg`: The join from the lake into the rise, frames 9535 to 9546, as the motion critic saw them (review tier, preview size, rendered on a render machine): twelve frames with no form in them
+- `01-s121-opening.jpg`: The opening, version 3, not merged: frame 0 at left and frame 120 at right, at the size a phone shows them (draft tier, rendered by its builder). The bank is heaped and has no ruled edge; the frame is still grey on grey
+- `02-s121-join.jpg`: The join from the lake into the rise, frames 9535 to 9546: as round 2 judged them above the red line, with the builder's passage below it (draft tier, preview size, rendered by its builder). Not merged yet
+- `03-s121-cloud.jpg`: The Spine's cloud sea, version 1, frame 7015: before at left, after at right (review tier, 1080p, rendered by its builder). Not merged yet
+- `04-s121-lava.jpg`: The Heart's lava fall at frames 4037, 4127 and 4217, three seconds apart in all (draft tier, preview size, rendered on the Builder's machine): the stream widens, and nothing on its surface can be seen to travel
