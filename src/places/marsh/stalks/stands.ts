@@ -286,6 +286,8 @@ interface Stand {
   far: number;
   /** A thicket that has stood long: its stems are this much taller, and more. */
   tall?: number;
+  /** A smaller stand beside another. */
+  kin?: boolean;
 }
 
 export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUniform<number>): Stands {
@@ -346,7 +348,8 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     // Stands keep company: beside some a smaller one, beside a few two, a stride or three off, and the rest alone.
     const kin: Stand[] = [];
     for (const s of stands) {
-      if (s.far > 170 || s.tall) continue;
+      // Not under the lens: what stands that near is already a thicket.
+      if (s.far > 170 || s.far < 40 || s.tall) continue;
       const roll = rng.next();
       for (let k = 0; k < (roll < 0.14 ? 2 : roll < 0.5 ? 1 : 0); k++) {
         const a = rng.range(0, TAU);
@@ -354,7 +357,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
         const x = s.x + Math.cos(a) * d;
         const z = s.z + Math.sin(a) * d;
         if (land.height(x, z) < 0.02 || !clear(x, z, 1.5)) continue;
-        kin.push({ x, z, r: s.r * rng.range(0.3, 0.62), q: rng.range(0.45, 0.95), far: farOf(x, z) });
+        kin.push({ x, z, r: s.r * rng.range(0.3, 0.62), q: rng.range(0.45, 0.95), far: farOf(x, z), kin: true });
       }
     }
     for (const k of kin) stands.push(k);
@@ -455,7 +458,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     const habit = HABITS[s.tall ? 0 : rng.int(HABITS.length)] as Habit;
     const sizeK = Math.min(1.6, 0.5 + 0.5 * Math.pow(s.r / 1.9, 1.5));
     // A stand the lens passes close to stays a thicket whatever its habit.
-    const many = Math.max(s.r > 1 ? (s.far < 50 ? 0.9 : s.far < 75 ? 0.55 : 0) : 0, habit.many * rng.range(0.7, 1.3)) * sizeK;
+    const many = Math.max(s.r > 1 ? (s.far < 50 ? 0.75 : s.far < 75 ? 0.55 : 0) : 0, habit.many * rng.range(0.7, 1.3)) * sizeK;
     const shares = habit.shares.map((v) => v * rng.range(0.55, 1.5));
     const whole = shares.reduce((a, v) => a + v, 0);
     const upTo = shares.map((_, i) => shares.slice(0, i + 1).reduce((a, v) => a + v, 0) / whole);
@@ -542,7 +545,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     // The understorey: tufts thick at the feet of the stems and thinning out onto the salt.
     // Far off two of them are a pixel or two apart: fewer stand there, each wider.
     const thin = s.far > 110 ? 0.4 : s.far > 32 ? 0.65 : 1;
-    const tufts = s.far < 220 ? Math.round(thin * sizeK * rng.range(0.5, 1.4) * s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
+    const tufts = s.far < 220 ? Math.round((s.kin ? 0.5 : 1) * thin * sizeK * rng.range(0.5, 1.4) * s.q * (90 - 70 * Math.min(1, s.far / 220))) : 0;
     for (let k = 0; k < tufts; k++) {
       const p = drawn(around(s, 0.5));
       if (land.height(p[0], p[1]) < -0.08 || !clear(p[0], p[1])) continue;
@@ -551,7 +554,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       addTuft(p[0], p[1], h, (h * rng.range(1.0, 1.9)) / Math.sqrt(thin), rng.next(), rng.next() < 0.22 ? rng.range(0.6, 1) : rng.range(0, 0.15), 0, s.far > 32);
     }
     // Brush: what a stand is from far off, a dark red mass with a ragged top, standing among the stems where there are stems.
-    const brush = s.far > 45 ? Math.round((3 + 6 * s.q) * (s.far > 150 ? 1.5 : Math.min(1, (s.far - 45) / 60))) : 0;
+    const brush = s.far > 45 && !s.kin ? Math.round((3 + 6 * s.q) * (s.far > 150 ? 1.5 : Math.min(1, (s.far - 45) / 60))) : 0;
     for (let k = 0; k < brush; k++) {
       const p = around(s, 0.5);
       if (land.height(p[0], p[1]) < -0.1 || !clear(p[0], p[1])) continue;
@@ -559,7 +562,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       addTuft(p[0], p[1], h, h * rng.range(1.2, 2.8), rng.range(0, 0.7), rng.next() < 0.3 ? rng.range(0.5, 0.95) : rng.range(0, 0.25), 1, true);
     }
     // The mat on the wet ground at their feet, and far off the stain of it on the humps.
-    const mats = s.far < 260 ? Math.round((3 + rng.int(4)) * Math.min(1, sizeK + 0.2)) : 2 + rng.int(2);
+    const mats = s.far < 260 ? s.kin ? 1 : Math.round((3 + rng.int(4)) * Math.min(1, sizeK + 0.2)) : 2 + rng.int(2);
     for (let k = 0; k < mats; k++) {
       const p = drawn(around(s, s.far < 260 ? 0.7 : 0.5));
       if (land.height(p[0], p[1]) < 0.01 || !clear(p[0], p[1])) continue;
