@@ -5,8 +5,10 @@ import type { Rng } from '../../../core/rng';
 import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import { height, heightAt, landAt, slab, vnoise } from './height';
+import { HERO } from './hero';
 
 interface Extra {
+  wall?: number[];
   normals?: number[];
   relief?: number[];
   up?: [number, number, number];
@@ -24,6 +26,7 @@ function finish(pos: number[], index: number[], top: number[], sl: number[], ext
   const ups = new Float32Array(count * 3);
   for (let i = 0; i < count; i++) ups.set(up, i * 3);
   g.setAttribute('aUp', new THREE.Float32BufferAttribute(ups, 3));
+  if (extra.wall) g.setAttribute('aWall', new THREE.Float32BufferAttribute(extra.wall, 1));
   g.setIndex(index);
   if (extra.normals) g.setAttribute('normal', new THREE.Float32BufferAttribute(extra.normals, 3));
   else g.computeVertexNormals();
@@ -263,7 +266,7 @@ const LEE_IN = 2.5;
 /** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
-export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
+export function spireMesh(sp: Spire, rng: Rng, level: number, bare = false): THREE.BufferGeometry {
   const UP = level > 1.5 ? 230 : level > 0.5 ? SPIRE_MID[0] : 48;
   const DOWN = level > 1.5 ? 50 : level > 0.5 ? 18 : 8;
   const AROUND = level > 1.5 ? 400 : level > 0.5 ? SPIRE_MID[1] : 96;
@@ -273,6 +276,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   const top: number[] = [];
   const sl: number[] = [];
   const relief: number[] = [];
+  const wall: number[] = [];
   const tipY = fin(sp, 1).y;
   const tall = sp.tip + FIN_ROOT;
   const t0 = FIN_ROOT / tall;
@@ -334,11 +338,19 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
         ln < 0
           ? (bite(u - 0.3 * ln * p.half, 0) * Math.min(0.3, 15 / p.half) + bite(u + 0.25 * ln * p.half, 1) * Math.min(0.12, 5 / p.half)) * Math.pow(-ln, 3) * Math.min(1, Math.max(0, (tipY - p.y) / 30))
           : Math.min(0, bite(u + 0.3 * ln * p.half, 2) + 0.25) * Math.min(0.26, 15 / p.half) * Math.pow(ln, 2) * notch;
-      const l = p.centre + ln * p.half * snap * (1 + rag);
+      let l = p.centre + ln * p.half * snap * (1 + rag);
+      if (bare) {
+        // The broken edges are the edges' own: across the faces the lattice holds to the unbroken outline. A lattice that slides with every
+        // break of an edge shears the face's relief ring by ring, and each shear stands on the face as a level rib.
+        const e = Math.min(1, Math.max(0, (Math.abs(ln) - 0.6) / 0.38));
+        const plain = p.centre0 + ln * p.half0 * snap;
+        l = plain + (l - plain) * e * e * (3 - 2 * e);
+      }
       const y = p.y - (cap ? 1 : 0);
       // Its faces stand in and out as the sheet's relief has them, and the rock on top of that is jointed into blocks (see `jointing`).
       const [su, sv] = sheetAt(sp, l, y);
-      const [cut, joint] = joints(a, y);
+      // (Bare: the blade with its sheet's relief and no blocks, for a hero whose blocks are built elsewhere and laid on it: see hero.ts.)
+      const [cut, joint] = bare ? [0, 0] : joints(a, y);
       const scale = Math.min(1, Math.max(0.22, p.thick / 42));
       // The lee edge keeps its line (the kites hold to it); the windward edge is let stand in and out block by block, so it is broken against the sky.
       const keep = 1 - (ln > 0 ? 0.92 : 0.45) * edge;
@@ -347,7 +359,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       const k = Math.min(1, Math.max(0, (ln - LEE_FROM) / (LEE_FULL - LEE_FROM)));
       const lee = k * k * (3 - 2 * k);
       // (No face of a block is a plane: it swells and gives a little, smoothly, so the mesh can show it.)
-      const swell = 1.3 * (vnoise(u / 6.5 + seed, l / 6.5 + face * 50) - 0.5) + 0.7 * (vnoise(u / 2.6 + 9.1, l / 2.6 + face * 50 + seed) - 0.5);
+      const swell = bare ? 0 : 1.3 * (vnoise(u / 6.5 + seed, l / 6.5 + face * 50) - 0.5) + 0.7 * (vnoise(u / 2.6 + 9.1, l / 2.6 + face * 50 + seed) - 0.5);
       const blocks = Math.max(-0.35 * p.thick, Math.min(0.5 * p.thick, scale * (cut + swell)));
       const n = broad + (blocks + lee * (Math.max(-LEE_IN, Math.min(LEE_OUT, blocks)) - blocks)) * keep;
       // The blade the canal goes through is thinner behind than before, so the way out comes out of its back and not into a pit in it.
@@ -364,6 +376,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
       let across = l + ((1 - lee) * n * gl) / gn;
       // (And at the edge itself the blade is blunt, some metres through, where it was a knife: the holdfasts stand on that.)
       const pad = Math.min(1, Math.max(0, (ln - 0.86) / 0.1));
+      let held = 0;
       let along = face * Math.max(0.3 * body, body + n * (gb / gn + lee * (1 - gb / gn)), LEE_BLUNT * pad * pad * (3 - 2 * pad)) * snap;
       // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
       // only stands out of that wall, never in.
@@ -378,12 +391,14 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
           for (let i = 0; i < 5; i++) want += (target - locate(sp.x + m.ax * l + m.bx * want, sp.z + m.az * l + m.bz * want).s) / 0.9;
           const k = w * w * (3 - 2 * w);
           along += (want - along) * k;
+          held = k;
           across += (l - across) * k;
         }
       }
       const x = sp.x + m.ax * across + m.bx * along;
       const z = sp.z + m.az * across + m.bz * along;
       pos.push(x, y, z);
+      wall.push(held);
       top.push(tipY - y);
       // (A joint is darker than it is deep: the light does not reach into it.)
       relief.push(n - 4 * joint * scale * keep);
@@ -405,7 +420,38 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   // The beds of its rock run up along its lean.
   const run = (fin(sp, t0 + 0.7 * (1 - t0)).centre - fin(sp, t0).centre) / (0.7 * sp.tip);
   const len = Math.hypot(run, 1);
-  return finish(pos, index, top, sl, { relief, up: [(m.ax * run) / len, 1 / len, (m.az * run) / len] });
+  return finish(pos, index, top, sl, { relief, up: [(m.ax * run) / len, 1 / len, (m.az * run) / len], wall: bare ? wall : undefined });
+}
+
+/**
+ * The first spire as a hero object: the bare blade with the relief that was built for it out of the film (assets-src/spine/land/make-hero.py:
+ * the rock cut by three sets of joints in space, four times finer than this lattice, its occlusion baked and its normals taken from the fine
+ * mesh). Here the lattice takes that relief along its own normals, and carries where it is on the unwrap of the baked pictures.
+ */
+export function heroSpire(sp: Spire, rng: Rng): THREE.BufferGeometry {
+  const g = spireMesh(sp, rng, 2, true);
+  const pos = g.getAttribute('position').array as Float32Array;
+  const nor = g.getAttribute('normal').array as Float32Array;
+  const relief = g.getAttribute('aRelief').array as Float32Array;
+  const count = pos.length / 3;
+  if (count !== HERO.rings * HERO.around) throw new Error('spine/land: the hero relief is not on this lattice');
+  const d = Int8Array.from(atob(HERO.relief), (c) => c.charCodeAt(0));
+  const at = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) {
+    const n = (d[i] as number) * HERO.unit;
+    for (let k = 0; k < 3; k++) pos[i * 3 + k] = (pos[i * 3 + k] as number) + (nor[i * 3 + k] as number) * n;
+    relief[i] = (relief[i] as number) + n;
+    // (Round the blade as a point on a circle, so the unwrap closes on itself without a seam.)
+    const th = (2 * Math.PI * (i % HERO.around)) / HERO.around;
+    at[i * 3] = Math.cos(th);
+    at[i * 3 + 1] = Math.sin(th);
+    at[i * 3 + 2] = Math.floor(i / HERO.around) / (HERO.rings - 1);
+  }
+  g.setAttribute('aHero', new THREE.Float32BufferAttribute(at, 3));
+  g.deleteAttribute('aWall');
+  g.computeVertexNormals();
+  g.computeBoundingSphere();
+  return g;
 }
 
 const D_LIST: number[] = [];

@@ -1,0 +1,233 @@
+// The land in the open air: the rock and the snow of the ground and of the spires (KIND 0 and 1). The inside of the canal keeps its own main.
+// The rock is one generated sheet of jointed granite (land/granite, 15 m by 10 m), laid at three sizes on the three planes of the beds, each lay
+// turned and shifted against the others so no repeat stands; its snow lies where the rock's own relief can hold it; the snow is the generated
+// wind pack (land/snowpack, 9 m by 6 m) at two sizes across the gale. What is baked for a hero mesh (land/hero-*) lies over all of it.
+export const OPEN_UNIFORMS = /* glsl */ `
+uniform sampler2D tGran;
+uniform sampler2D tGranNh;
+uniform sampler2D tPack;
+uniform sampler2D tPackNh;
+uniform sampler2D tCrop;
+uniform sampler2D tCropNh;
+uniform sampler2D tHeroN;
+uniform sampler2D tHeroAo;
+const vec3 GRAN_MEAN = vec3(0.2324, 0.1975, 0.1774);
+const vec3 PACK_MEAN = vec3(0.4489, 0.4965, 0.6154);
+const vec3 CROP_MEAN = vec3(0.1996, 0.2158, 0.2667);
+`;
+
+export const openMain = (scorch: string): string => /* glsl */ `
+// One read of a sheet at a level worked from given gradients: colour, and in nh the slope (xy, toward +u and +v) and the height (z).
+struct Tap { vec3 c; vec2 s; float h; };
+Tap tap(sampler2D colour, sampler2D nh, vec2 at, float lod) {
+  vec3 k = textureLod(nh, at, lod).rgb;
+  return Tap(textureLod(colour, at, lod).rgb, vec2(0.5 - k.r, k.g - 0.5) * 2.0, k.b);
+}
+float lodAt(vec2 gx, vec2 gy, float texels) {
+  return 0.5 * log2(max(max(dot(gx, gx), dot(gy, gy)), 1e-14)) + log2(texels);
+}
+// The granite on one plane of the rock. p is metres on the plane (x across, y up the beds), gx and gy its change over a pixel.
+// It comes back as colour over the sheet's mean (1 is the mean), slope and height, the three sizes together.
+Tap granite(vec2 p, vec2 gx, vec2 gy, float shift) {
+  // The beds: 15 m by 10 m, upright as the sheet has them.
+  vec2 a = p / vec2(15.0, 10.0) + shift;
+  float lodA = lodAt(gx / 15.0, gy / 15.0, 1536.0);
+  Tap A = tap(tGran, tGranNh, a, lodA);
+  // The masses: the same rock 4.3 times larger, turned a little, so slabs of 20 to 60 m carry the face from far off.
+  vec2 b = vec2(0.94 * p.x + 0.34 * p.y, -0.34 * p.x + 0.94 * p.y) / vec2(64.0, 43.0) + 0.37 + 1.7 * shift;
+  Tap B = tap(tGran, tGranNh, b, lodA - 2.1);
+  vec3 c = (A.c / GRAN_MEAN) * mix(vec3(1.0), B.c / GRAN_MEAN, 0.6);
+  vec2 s = A.s * 0.9 + vec2(0.94 * B.s.x - 0.34 * B.s.y, 0.34 * B.s.x + 0.94 * B.s.y) * 1.3;
+  float h = 0.55 * A.h + 0.45 * B.h;
+  // Under the lens a texel of the beds is many pixels: the rock again 5.6 times finer, turned the other way, as grain and small edges.
+  float fine = smoothstep(0.6, -0.8, lodA);
+  if (fine > 0.01) {
+    vec2 d = vec2(0.97 * p.x - 0.24 * p.y, 0.24 * p.x + 0.97 * p.y) / vec2(2.7, 1.8) + 0.61 - shift;
+    Tap D = tap(tGran, tGranNh, d, lodA + 2.47);
+    c *= mix(vec3(1.0), clamp(D.c / GRAN_MEAN, 0.5, 1.6), 0.55 * fine);
+    s += fine * 0.7 * vec2(0.97 * D.s.x + 0.24 * D.s.y, -0.24 * D.s.x + 0.97 * D.s.y);
+    h = mix(h, 0.7 * h + 0.3 * D.h, fine);
+  }
+  return Tap(c, s, h);
+}
+
+void main() {
+  float dCanal = vSL.x - MOUTH_S;
+  vec3 smoothN = normalize(vNormal);
+  if (!gl_FrontFacing) smoothN = -smoothN;
+  vec3 toCamera = cameraPosition - vWorld;
+  float far = length(toCamera);
+  vec3 v = toCamera / far;
+  const bool spire = KIND == 1;
+  // The rock over the canal is the spire's own face, carried by the ground.
+  float porch = 0.0;
+  if (ground) porch = dCanal > 0.0 && dCanal < EXIT ? 1.0 - smoothstep(4.0, 26.0, abs(vSL.y - canalAt(dCanal)) - flareAt(dCanal)) : 0.0;
+  vec3 n0 = smoothN;
+  vec3 baked = vec3(1.0, 0.5, 0.5);
+#ifdef HERO_MAPS
+  // The hero's own normals and occlusion, baked from a mesh four times finer than this one, on the unwrap of its lattice.
+  {
+    float turn = dot(vHero.xy, vHero.xy);
+    vec2 at = vec2(atan(vHero.y, vHero.x) / 6.2831853, vHero.z);
+    vec2 hx = vec2((vHero.x * dFdx(vHero.y) - vHero.y * dFdx(vHero.x)) / (6.2831853 * turn), dFdx(vHero.z));
+    vec2 hy = vec2((vHero.x * dFdy(vHero.y) - vHero.y * dFdy(vHero.x)) / (6.2831853 * turn), dFdy(vHero.z));
+    float lod = max(0.0, lodAt(hx, hy, 2048.0));
+    vec3 hn = textureLod(tHeroN, at, lod).rgb * 2.0 - 1.0;
+    n0 = normalize(mix(smoothN, gl_FrontFacing ? hn : -hn, 0.999));
+    baked = textureLod(tHeroAo, at, lod).rgb;
+  }
+#endif
+
+  // The frame of the beds: up along the lean of a spire (straight up on the ground), and the two level ways across.
+  vec3 up = normalize(vUp);
+  vec3 bx = spire ? normalize(vec3(up.z, 0.0, -up.x)) : vec3(0.0, 0.0, 1.0);
+  vec3 ax = spire ? cross(bx, up) : vec3(1.0, 0.0, 0.0);
+  vec3 P = vec3(dot(vWorld, ax), dot(vWorld, up), dot(vWorld, bx));
+  vec3 Px = dFdx(P);
+  vec3 Py = dFdy(P);
+  vec3 nl = vec3(dot(n0, ax), dot(n0, up), dot(n0, bx));
+  // Each face takes the plane it looks at most squarely, and its neighbour only in a narrow turn between them: nothing is pulled long.
+  vec3 w = pow(abs(nl), vec3(6.0));
+  w /= w.x + w.y + w.z;
+
+  // How much of this place is rock standing out of the snow, before the rock's own relief has its say.
+  float rockness = spire ? 1.0 : max(clamp(vTop, 0.0, 1.0), porch);
+  float lee = dot(n0.xz, uWind.xz);
+  float thin = 0.0;
+  if (ground) thin = smoothstep(30.0, 9.0, length(vWorld.xz - uScorch.xy));
+  float steep = smoothstep(0.82, 0.5, n0.y);
+  float show = spire ? 1.0 : max(rockness, max(steep, 0.55 * thin));
+
+  vec3 rock = vec3(1.0);
+  vec3 dn = vec3(0.0);
+  float pit = 0.5;
+  if (show > 0.01) {
+    rock = vec3(0.0);
+    pit = 0.0;
+    if (w.x > 0.02) {
+      Tap t = granite(P.zy, Px.zy, Py.zy, 0.0);
+      rock += w.x * t.c;
+      dn += w.x * (bx * t.s.x + up * t.s.y);
+      pit += w.x * t.h;
+    }
+    if (w.z > 0.02) {
+      Tap t = granite(P.xy + 23.7, Px.xy, Py.xy, 0.29);
+      rock += w.z * t.c;
+      dn += w.z * (ax * t.s.x + up * t.s.y);
+      pit += w.z * t.h;
+    }
+    if (w.y > 0.02) {
+      // What lies level is broken across its beds: the same rock from above, turned.
+      vec2 q = vec2(0.8 * P.x + 0.6 * P.z, -0.6 * P.x + 0.8 * P.z);
+      vec2 qx = vec2(0.8 * Px.x + 0.6 * Px.z, -0.6 * Px.x + 0.8 * Px.z);
+      vec2 qy = vec2(0.8 * Py.x + 0.6 * Py.z, -0.6 * Py.x + 0.8 * Py.z);
+      Tap t = granite(q + 51.3, qx, qy, 0.63);
+      rock += w.y * t.c;
+      dn += w.y * ((0.8 * ax + 0.6 * bx) * t.s.x + (-0.6 * ax + 0.8 * bx) * t.s.y);
+      pit += w.y * t.h;
+    }
+    float sum = (w.x > 0.02 ? w.x : 0.0) + (w.y > 0.02 ? w.y : 0.0) + (w.z > 0.02 ? w.z : 0.0);
+    rock /= sum;
+    dn /= sum;
+    pit /= sum;
+  }
+  vec3 nRock = normalize(n0 + 0.55 * dn);
+
+  // Colour: warm tan slabs with colder planes between, in masses larger than any sheet.
+  float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
+  float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
+  vec3 tone = mix(vec3(0.74, 0.78, 0.86), vec3(1.1, 1.0, 0.88), smoothstep(0.25, 0.75, 0.6 * bed + 0.4 * blotch));
+  vec3 albedo = min(GRAN_MEAN * 1.25 * rock * tone, vec3(0.85));
+  float rough = 0.9;
+  // Its cracks are dark: the sky does not reach into them.
+  float occ = 0.3 + 0.7 * smoothstep(0.12, 0.6, pit);
+#ifdef HERO_MAPS
+  occ *= 0.25 + 0.75 * smoothstep(0.1, 0.85, baked.r);
+  // No two blocks have weathered alike: a fresh break is warm and light, an old face grey blue and darker.
+  albedo *= mix(vec3(0.42, 0.5, 0.66), vec3(1.4, 1.18, 0.9), smoothstep(0.3, 0.7, baked.g)) * (0.6 + 0.8 * baked.b) / tone;
+#else
+  if (spire) occ *= 0.45 + 0.55 * smoothstep(-5.0, 0.5, vRelief);
+#endif
+
+  // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
+  float burn = 0.0;
+  if (spire) {
+    float ragged = vnoise(vWorld.xz * 0.21 + vWorld.y * 0.05) * 14.0 + vnoise(vec2(dot(vWorld.xz, vec2(0.7, 0.7)) * 0.9, vWorld.y * 0.06)) * 22.0;
+    burn = smoothstep(52.0, 16.0, vTop + ragged - 12.0);
+    albedo = mix(albedo, vec3(0.011, 0.011, 0.013) * (0.6 + 0.8 * pit), burn);
+    rough = mix(rough, 0.45, burn);
+  }
+  // Staged by shot (uWet): in the long lens of the strike the struck spire is wet black rock.
+  if (spire) {
+    albedo *= mix(1.0, 0.3, uWet);
+    rough = mix(rough, 0.3, uWet);
+  }
+
+  // Snow lies where a face leans back far enough to hold it: on every ledge and in the hollows of the rock, deeper in the lee. The rock's
+  // own relief cuts its edge, so the line where snow meets stone is broken at the size of the stone.
+  float drift = vnoise(vWorld.xz / 47.0 + 7.3);
+  float lie = nRock.y * 0.6 + n0.y * 0.4 + 0.3 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
+  float hold = spire ? 0.56 + 0.1 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
+  float snow = show > 0.01 ? smoothstep(hold, hold + 0.07, lie) : 1.0;
+  snow *= 1.0 - burn;
+  if (spire) snow *= mix(1.0, smoothstep(-0.15, 0.3, lee), uWet);
+  // Just above the snow the rock is wet and dark, and frost stands in its cracks.
+  float brim = show > 0.01 ? smoothstep(hold - 0.22, hold, lie) * (1.0 - snow) : 0.0;
+  albedo *= 1.0 - 0.45 * brim;
+  float frost = (1.0 - snow) * (1.0 - burn) * smoothstep(0.34, 0.16, pit) * smoothstep(-0.2, 0.5, n0.y + 0.4 * -lee) * (1.0 - 0.8 * uWet);
+  albedo = mix(albedo, vec3(0.6, 0.65, 0.72), 0.5 * frost);
+
+  // The snow's own surface: the wind pack laid across the gale at two sizes, and the prints.
+  vec3 nSnow = n0;
+  float snowOcc = 1.0;
+  vec3 snowTint = vec3(1.0);
+  if (snow > 0.0) {
+    vec2 q = vec2(dot(vWorld.xz, vec2(0.98, -0.2)), dot(vWorld.xz, vec2(0.2, 0.98)));
+    vec2 qx = dFdx(q);
+    vec2 qy = dFdy(q);
+    // On a steep face a level picture would be pulled long: there the snow keeps its tone and loses its ripple.
+    float level = smoothstep(0.45, 0.8, n0.y);
+    float lodP = lodAt(qx / 9.0, qy / 9.0, 1536.0);
+    Tap A = tap(tPack, tPackNh, q / vec2(9.0, 6.0), lodP);
+    vec2 r = vec2(0.92 * q.x - 0.39 * q.y, 0.39 * q.x + 0.92 * q.y);
+    Tap B = tap(tPack, tPackNh, r / vec2(38.0, 25.0) + 0.43, lodP - 2.08);
+    vec2 g = A.s * 0.5 + vec2(0.92 * B.s.x + 0.39 * B.s.y, -0.39 * B.s.x + 0.92 * B.s.y) * 0.9;
+    snowTint = mix(vec3(1.0), (A.c / PACK_MEAN) * mix(vec3(1.0), B.c / PACK_MEAN, 0.7), 0.8 * level);
+    snowOcc = mix(1.0, 0.72 + 0.28 * smoothstep(0.15, 0.6, 0.5 * A.h + 0.5 * B.h), level);
+    float footprint = length(fwidth(vWorld.xz));
+    float fine = smoothstep(0.012, 0.003, footprint) * level;
+    if (fine > 0.01) {
+      Tap D = tap(tPack, tPackNh, q.yx / vec2(1.9, 1.27) + 0.37, lodP + 2.24);
+      g += fine * 0.4 * D.s.yx;
+      snowTint *= mix(vec3(1.0), D.c / PACK_MEAN, 0.5 * fine);
+    }
+#if KIND == 0
+    // The prints of the herd: a line of pits to the mouth, seen as far as a pit is wider than a pixel.
+    float seen = smoothstep(0.3, 0.08, footprint);
+    if (seen > 0.0) {
+      vec3 p = prints(vSL);
+      g += 1.6 * p.yz * seen;
+      snowOcc *= 1.0 + 0.85 * min(p.x, 0.0) * seen;
+    }
+#endif
+    // (The pack's slopes are on its own two level ways: back to the world's.)
+    vec2 gw = vec2(0.98 * g.x + 0.2 * g.y, -0.2 * g.x + 0.98 * g.y);
+    nSnow = normalize(n0 + level * vec3(gw.x, 0.0, gw.y));
+    // On a ledge of the rock the snow takes a little of the rock's tilt, softened: it is a cap on a block, not a sheet.
+    nSnow = normalize(nSnow + 0.25 * show * (nRock - n0));
+  }
+  vec3 n = normalize(mix(nRock, nSnow, snow));
+  // Wind-packed snow is matt: nearly white, a little blue where the pack is glazed.
+  albedo = mix(albedo, vec3(0.8, 0.83, 0.88) * clamp(snowTint, 0.55, 1.15), snow);
+  rough = mix(rough, 1.0, snow);
+  // Against a rock that stands out of it the snow lies in the rock's shadow.
+  occ = mix(occ, snowOcc * (1.0 - 0.3 * show * smoothstep(hold + 0.25, hold + 0.05, lie)), snow);
+  if (!spire) occ *= landHollow(vWorld, n0, 5.0);
+${scorch}
+  // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
+  vec3 lightAt = vWorld;
+  if (dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0) lightAt.y += 16.0;
+  vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}
+`;

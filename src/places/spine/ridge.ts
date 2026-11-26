@@ -322,6 +322,9 @@ export interface FinPoint {
   half: number;
   thick: number;
   y: number;
+  /** The middle and half breadth of the outline before its edges are broken: what a lattice laid on a face holds to, so the breaks of the edges do not shear it. */
+  centre0: number;
+  half0: number;
 }
 
 export const FIN_ROOT = 110;
@@ -378,7 +381,7 @@ export function fin(sp: Spire, t: number): FinPoint {
   const wide = Math.max(1.5, 0.5 * (hi - lo)) + 0.3 * (under - low);
   const thin = Math.min(0.45 * wide + 2, sp.thick);
   const thick = thin + (sp.thick - thin) * Math.pow(q, 1.05) * (1 - 0.3 * smooth(0.3, 0.8, h)) + 0.2 * under;
-  return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t };
+  return { centre: 0.5 * (lo + hi), half: wide, thick, y: sp.alt - FIN_ROOT + (sp.tip + FIN_ROOT) * t, centre0: 0.5 * (l1 + l2), half0: Math.max(1.5, 0.5 * Math.abs(l2 - l1)) + 0.3 * (under - low) };
 }
 
 /** The two level axes of a blade: across it (toward the lee) and along it (down the ridge), each turned by the spire's yaw. */

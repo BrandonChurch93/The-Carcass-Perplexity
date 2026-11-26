@@ -2,6 +2,7 @@
 import { CANAL_L, EXIT, EXIT_FLARE, EXIT_R, FLARE, FLOOR, MOUTH_R, MOUTH_S, THROAT, canalL, first, frameAt, world } from '../ridge';
 import { DUSK, WIND } from '../shared/anchors';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { OPEN_UNIFORMS, openMain } from './open';
 
 const v3 = (p: readonly number[]): string => `vec3(${p.map((k) => k.toFixed(3)).join(', ')})`;
 const exitAt = world(MOUTH_S + EXIT, canalL(EXIT), FLOOR + 0.62 * EXIT_R);
@@ -92,6 +93,8 @@ attribute float aTop;
 attribute vec2 aSL;
 attribute float aRelief;
 attribute vec3 aUp;
+attribute vec3 aHero;
+varying vec3 vHero;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying float vTop;
@@ -106,12 +109,14 @@ void main() {
   vSL = aSL;
   vRelief = aRelief;
   vUp = aUp;
+  vHero = aHero;
   gl_Position = projectionMatrix * viewMatrix * w;
 }`;
 
 // uKind: 0 the ground, 1 a spire or the rock over the mouth, 2 the inside of the canal.
 const LAND_PRELUDE = /* glsl */ `
 precision highp float;
+varying vec3 vHero;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying float vTop;
@@ -164,6 +169,7 @@ const bool ground = KIND == 0;
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WINDOW_GLSL}
+${OPEN_UNIFORMS}
 
 const float MOUTH_S = ${MOUTH_S.toFixed(3)};
 const float CANAL_L = ${CANAL_L.toFixed(3)};
@@ -235,6 +241,40 @@ void main() {
   gl_FragColor = vec4(rigOut(vec3(0.0)), 1.0);
 }`;
 
+// The burn under the dead one, shared by the two mains of the land.
+const SCORCH_BLOCK = /* glsl */ `#if SCORCH == 1
+  if (uKind < 0.5) {
+    vec2 dS = vWorld.xz - uScorch.xy;
+    vec2 uvS = vec2(dot(dS, uScorchAxes.xy) / 7.0, dot(dS, uScorchAxes.zw) / 3.94) + 0.5;
+    vec2 eS = abs(uvS - 0.5);
+    if (max(eS.x, eS.y) < 0.5) {
+      // Seen low across it, the plate's fine bright lines would lie down into ripples like water: it is read soft, and its contrast is held in.
+      vec3 sc = texture2D(tScorch, uvS).rgb;
+      float lum = dot(sc, vec3(0.3, 0.5, 0.2));
+      // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
+      vec3 near_ = texture2D(tScorchD, dS / 2.4).rgb;
+      float close = smoothstep(0.02, 0.004, length(fwidth(vWorld.xz)));
+      sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
+      // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
+      float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.26;
+      // Tongues of new snow lie across it down the gale.
+      float tongue = vnoise(vec2(dot(vWorld.xz, uWind.xz) * 0.35, dot(vWorld.xz, vec2(-uWind.z, uWind.x)) * 1.6));
+      float scorch = 0.85 * smoothstep(1.0, 0.55, out_ + 0.9 * (lum - 0.3) + 0.7 * (tongue - 0.45));
+      vec2 px = 4.0 / vec2(textureSize(tScorchH, 0));
+      float h0 = texture2D(tScorchH, uvS).r;
+      float du = (texture2D(tScorchH, uvS + vec2(px.x, 0.0)).r - h0) / (px.x * 7.0);
+      float dv = (texture2D(tScorchH, uvS + vec2(0.0, px.y)).r - h0) / (px.y * 3.94);
+      // Burned rock, wet but broken: it is rough, and only its hollows hold a little water. The relief is laid at a low strength.
+      vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.022 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
+      albedo = mix(albedo, sc, scorch);
+      n = normalize(mix(n, nS, scorch));
+      // Melt water stands in its hollows and glints; its heads are wet rock.
+      rough = mix(rough, 0.1 + 0.55 * smoothstep(0.25, 0.6, h0), scorch);
+      occ = mix(occ, 0.6 + 0.4 * h0, scorch);
+    }
+  }
+#endif`;
+
 export const LAND_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 // A picture laid on a face at one size in metres, with the slopes of its height map. The gradients are given, so that a lookup may stand in a branch.
 // Frost-shattered rock under the lens, on the plane a face lies in: x is how far a point is from the nearest crack (in pieces), yz the two
@@ -267,6 +307,7 @@ Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
   return Lay(textureLod(colour, at, lod).rgb, (k.rg - 0.5) * vec2(1.0, -1.0), k.b);
 }
 
+#if KIND == 2
 void main() {
   float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
@@ -766,38 +807,7 @@ void main() {
   // Where the bolt came to ground: the burned wet rock under the dead one, a plate 14 m across laid square to the lens of that shot.
 // Staged by shot: the burn is compiled in only for the shot by the dead one (spine-03). No other lens sees it, and a software renderer pays
 // for it on every pixel of the ground otherwise.
-#if SCORCH == 1
-  if (uKind < 0.5) {
-    vec2 dS = vWorld.xz - uScorch.xy;
-    vec2 uvS = vec2(dot(dS, uScorchAxes.xy) / 7.0, dot(dS, uScorchAxes.zw) / 3.94) + 0.5;
-    vec2 eS = abs(uvS - 0.5);
-    if (max(eS.x, eS.y) < 0.5) {
-      // Seen low across it, the plate's fine bright lines would lie down into ripples like water: it is read soft, and its contrast is held in.
-      vec3 sc = texture2D(tScorch, uvS).rgb;
-      float lum = dot(sc, vec3(0.3, 0.5, 0.2));
-      // Burned rock is dark and wet; under the lens the burn's own close picture (2.4 m) gives it its cracks and glass.
-      vec3 near_ = texture2D(tScorchD, dS / 2.4).rgb;
-      float close = smoothstep(0.02, 0.004, length(fwidth(vWorld.xz)));
-      sc = clamp(sc * 3.2 * mix(vec3(1.0), near_ / 0.16, 0.9 * close), vec3(0.018, 0.018, 0.02), vec3(0.6));
-      // The plate's own snow goes into the snow of the place at its rim; its burn keeps to the middle, ragged by the picture's own dark.
-      float out_ = length((uvS - 0.5) * vec2(1.0, 0.9)) / 0.26;
-      // Tongues of new snow lie across it down the gale.
-      float tongue = vnoise(vec2(dot(vWorld.xz, uWind.xz) * 0.35, dot(vWorld.xz, vec2(-uWind.z, uWind.x)) * 1.6));
-      float scorch = 0.85 * smoothstep(1.0, 0.55, out_ + 0.9 * (lum - 0.3) + 0.7 * (tongue - 0.45));
-      vec2 px = 4.0 / vec2(textureSize(tScorchH, 0));
-      float h0 = texture2D(tScorchH, uvS).r;
-      float du = (texture2D(tScorchH, uvS + vec2(px.x, 0.0)).r - h0) / (px.x * 7.0);
-      float dv = (texture2D(tScorchH, uvS + vec2(0.0, px.y)).r - h0) / (px.y * 3.94);
-      // Burned rock, wet but broken: it is rough, and only its hollows hold a little water. The relief is laid at a low strength.
-      vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.022 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
-      albedo = mix(albedo, sc, scorch);
-      n = normalize(mix(n, nS, scorch));
-      // Melt water stands in its hollows and glints; its heads are wet rock.
-      rough = mix(rough, 0.1 + 0.55 * smoothstep(0.25, 0.6, h0), scorch);
-      occ = mix(occ, 0.6 + 0.4 * h0, scorch);
-    }
-  }
-#endif
+${SCORCH_BLOCK}
 
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = vWorld;
@@ -812,7 +822,10 @@ void main() {
     c = c * (0.03 + 0.97 * shown) + vec3(0.0035, 0.0045, 0.0085) * (1.0 - shown);
   }
   gl_FragColor = vec4(rigOut(c), 1.0);
-}`;
+}
+#else
+${openMain(SCORCH_BLOCK)}
+#endif`;
 
 // The floor of the canal: the ice floor picture (8 m across, snow banked at its edges, stones and ridges in it), laid at its one size and
 // turned over every second length, with its relief lit at a low strength. The ice is wet: it mirrors the far mouth and the sky in it.
