@@ -4,9 +4,10 @@ import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
 import { great, lying, trod, young } from './act';
-import { newDrive, walk, type Build, type Plan } from './animal';
+import { newDrive, type Build, type Plan } from './animal';
 import { Beast } from './body';
 import { mudWallow } from '../dead/mud';
+import { roam } from './roam';
 import { Tread } from './tread';
 import { Wet } from './wet';
 
@@ -126,7 +127,7 @@ export function create(ctx: Context): Piece {
         if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
         else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
         else if (acted) lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
-        const driven = acted ? drive : walk(h.plan, h.beast.b, seconds, drive);
+        const driven = acted ? drive : roam(h.plan, h.beast.b, seconds, h.sunk, drive);
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;
