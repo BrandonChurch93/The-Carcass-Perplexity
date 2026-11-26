@@ -26,7 +26,7 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('air/steam');
   const lean: [number, number] = [-0.5, -0.12];
   const main = bearingDir(300);
-  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.34, rise: 16, kind: 'steam', lean });
+  own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.8, strength: 0.6, rise: 16, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-1, 0, -4], radius: 5, strength: 0.012, rise: 5, kind: 'steam', lean });
   // The low steam that drifts off the warm brine. With SHEETS it lies in sheets over these patches (x, z, radius, thickness); without, it

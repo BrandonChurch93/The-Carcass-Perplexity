@@ -198,7 +198,7 @@ void main() {
       bend -= (nC.rg - 0.5) * 1.5 * close;
     }
   }
-  vec3 colour = greyed(crust, 0.55) * (0.72 + 0.26 * wide.r);
+  vec3 colour = greyed(crust, 0.75) * vec3(1.05, 0.96, 0.9) * (0.8 + 0.26 * wide.r);
   // Salt stands white on what is highest; the hollows between the plates are dark with old red.
   colour = mix(colour, vec3(0.42, 0.395, 0.375) * (0.75 + 0.5 * hgt), smoothstep(0.62, 0.88, hgt) * 0.3);
   colour = mix(colour, colour * vec3(0.62, 0.36, 0.32), smoothstep(0.42, 0.14, hgt) * (0.35 + 0.5 * stain));
@@ -207,9 +207,9 @@ void main() {
   float ground = 1.0;
   // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown, and in the seams between
   // the plates.
-  float bare = smoothstep(0.44, 0.54, wide.g * 0.5 + mid.r * 0.5) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
+  float bare = smoothstep(0.4, 0.5, wide.g * 0.5 + mid.r * 0.5) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
   float mudShare = max(bare * 0.95, smoothstep(0.44, 0.2, hgt) * 0.7 * (1.0 - rock));
-  colour = mix(colour, vec3(0.12, 0.092, 0.08) * (0.7 + 0.6 * mid.b), mudShare);
+  colour = mix(colour, vec3(0.2, 0.158, 0.132) * (0.7 + 0.6 * mid.b), mudShare);
   rough = mix(rough, 0.5, mudShare);
 
   // Slopes of the ground from the plates' relief, in metres a metre, on top of the mesh's own.
@@ -246,14 +246,14 @@ void main() {
     float tipped = vPaint.y * inCrust;
     slab = max(slab * (1.0 - sunk), tipped);
     h0 = mix(mix(h0, 0.42 * h0 + 0.1, sunk), max(h0, 0.66), tipped);
-    mudCol *= mix(vec3(1.0), vec3(0.5, 0.36, 0.33), sunk);
+    mudCol *= mix(vec3(1.0), vec3(0.5, 0.42, 0.38), sunk);
     if (close > 0.0) {
       vec4 nS2 = texture2D(tSiltN, p.xz / 0.7 + 0.31);
       mudCol *= mix(vec3(1.0), 0.6 + 0.4 * texture2D(tSilt, p.xz / 0.7 + 0.31).rgb / vec3(0.32, 0.281, 0.257), close * (1.0 - slab));
       grad -= (nS2.rg - 0.5) * 0.5 * close * (1.0 - slab);
     }
     // The slabs keep their salt; the mud between them is wet, and dark with it.
-    colour = mix(colour, mudCol * mix(vec3(0.3, 0.245, 0.225), vec3(0.6, 0.57, 0.54), slab), k);
+    colour = mix(colour, mudCol * mix(vec3(0.29, 0.215, 0.185), vec3(0.56, 0.46, 0.4), slab), k);
     hgt = mix(hgt, mix(nS.b * 0.6, h0, plateSeen), k);
     bend = mix(bend, -(nS.rg - 0.5) * 0.8 * (1.0 - plateSeen), k);
     lean += grad * k;
@@ -351,7 +351,7 @@ void main() {
       vec4 nk = texture2D(tCrustN, uK);
       float lit2 = texture2D(tCrustN, uK + vec2(-0.86 * 0.6 - 0.5 * 0.8, -0.86 * 0.8 + 0.5 * 0.6) * 0.035).b;
       vec3 ck = texture2D(tCrust, uK).rgb / vec3(0.413, 0.304, 0.269);
-      vec3 knob = mix(vec3(0.2, 0.075, 0.06), mix(vec3(0.7, 0.64, 0.585), vec3(0.6, 0.4, 0.35), exp(-t / 0.5)) * (0.6 + 0.4 * ck), smoothstep(0.28, 0.6, nk.b));
+      vec3 knob = mix(vec3(0.2, 0.075, 0.06), mix(vec3(0.5, 0.38, 0.31), vec3(0.44, 0.24, 0.19), exp(-t / 0.5)) * (0.6 + 0.4 * ck), smoothstep(0.4, 0.72, nk.b));
       colour = mix(colour, knob, knobby * 0.85);
       bend -= (nk.rg - 0.5) * 2.4 * knobby;
       occ *= 1.0 - knobby * (0.5 * smoothstep(0.5, 0.15, nk.b) + 0.45 * smoothstep(0.03, 0.14, lit2 - nk.b));
@@ -379,7 +379,7 @@ void main() {
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
   float rimAt = 0.45 + 0.5 * mid.r;
   float salted = smoothstep(0.12, 0.3, t) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood);
-  colour = mix(colour, vec3(0.6, 0.57, 0.545) * (0.8 + 0.4 * hgt), salted * 0.7);
+  colour = mix(colour, vec3(0.6, 0.55, 0.5) * (0.8 + 0.4 * hgt), salted * 0.7);
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
   // The plates' slopes are real slopes: the mesh's normal leans by them.
