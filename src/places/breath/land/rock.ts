@@ -279,6 +279,8 @@ void main() {
   vec3 grit = vec3(0.53);
   vec3 gritN = vec3(0.5, 0.5, 1.0);
   float padHigh = 0.5;
+  float padCrack = 0.0;
+  float padLow = 0.0;
   if (inPad > 0.0) {
     padColour = texture2D(tPad, pu).rgb;
     padHigh = texture2D(tPadH, pu).r;
@@ -288,10 +290,15 @@ void main() {
     vec2 fall = vec2(texture2D(tPadH, pu + vec2(e, 0.0), 2.0).r, texture2D(tPadH, pu + vec2(0.0, e), 2.0).r) - soft;
     // Grit a hand across (the shingle's tile at a third of its size) gives the fine relief: the broad one, under a sun this low, was
     // bands of light and dark like a dune's.
-    gritN = textureGrad(tPebN, p.xz / 0.52 + 0.4, dpx / 0.52, dpy / 0.52).rgb;
-    grit = textureGrad(tPeb, p.xz / 0.52 + 0.4, dpx / 0.52, dpy / 0.52).rgb;
-    lean = mix(lean, 0.3 * lean + fall * 1.2 + (gritN.rg - 0.5) * (0.9 * smoothstep(16.0, 4.0, dist)), inPad);
-    damp *= 1.0 - inPad;
+    gritN = textureGrad(tPebN, p.xz / 0.31 + 0.4, dpx / 0.31, dpy / 0.31).rgb;
+    grit = textureGrad(tPeb, p.xz / 0.31 + 0.4, dpx / 0.31, dpy / 0.31).rgb;
+    // Joints: the gaps between the stones of the same tile, laid 5.3 m wide, are cracks between slabs a foot or two across.
+    vec4 joint = textureGrad(tPebN, p.xz / 5.3 + 0.13, dpx / 5.3, dpy / 5.3);
+    padCrack = smoothstep(0.3, 0.1, joint.b) * smoothstep(30.0, 12.0, dist);
+    // Hollows: the lows of the broad relief hold the damp. They are darker and they shine.
+    padLow = smoothstep(0.4, 0.26, soft + 0.25 * (a.a - 0.5));
+    lean = mix(lean, 0.3 * lean + fall * 1.2 + (joint.rg - 0.5) * 0.8 * smoothstep(0.55, 0.2, joint.b) + (gritN.rg - 0.5) * (0.9 * smoothstep(16.0, 4.0, dist)), inPad);
+    damp = mix(damp, 0.85 * padLow, inPad);
   }
   // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
   // nowhere near the tide. Past thirty metres it is not read.
@@ -357,12 +364,13 @@ void main() {
   vec3 padSoft = mix(vec3(dot(padColour, vec3(0.3333))), padColour, 0.7);
   padSoft = 1.3 * mix(vec3(0.47, 0.435, 0.385), padSoft * vec3(1.05, 1.0, 0.93) * (1.0 + 0.3 * padHigh), 0.4);
   padSoft *= mix(1.0, clamp(tone, 0.7, 1.35), 0.4) * mix(1.0, clamp(dot(grit, vec3(0.3333)) / 0.53, 0.5, 1.5) * (0.75 + 0.5 * gritN.b), smoothstep(16.0, 4.0, dist));
+  padSoft *= mix(1.0, 0.4, padCrack) * mix(1.0, 0.66, padLow);
   albedo = mix(albedo, padSoft, inPad);
   albedo = mix(albedo, pebColour, shingle);
   // Under the tide the bed is pale grey-green stone, fine silt on it: the water over it reads pale green and clear.
   // From the water's edge: an ankle's depth of bed with the rock's own sheen on it was a beach of wet sand along both banks.
   float under = smoothstep(0.01, -0.05, over);
-  albedo = mix(albedo, vec3(0.17, 0.26, 0.24) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
+  albedo = mix(albedo, vec3(0.21, 0.32, 0.3) * clamp(tone * mark, 0.5, 1.4), 0.85 * under);
   // The pool is a hand deep over slime: dark, green, and a mirror.
   albedo = mix(albedo, vec3(0.035, 0.045, 0.03), 0.85 * film);
   float rough = mix(mix(mix(0.9, 0.36, damp), 0.04, film), 0.95, under);
@@ -386,7 +394,7 @@ void main() {
   // And it lies near the tide: a plate that stands half a metre clear of it has dried in the wind.
   float dry = smoothstep(0.45, 1.0, over + 0.3 * (a.g - 0.5));
   // Under the tide the water has the sheen and the glare, not the bed.
-  float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh)) * (1.0 - shingle) * max(mix(0.42 * damp, 1.0, film), (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
+  float sheen = (1.0 - under) * (1.0 - inPad * smoothstep(0.25, 0.5, padHigh) * (1.0 - padLow)) * (1.0 - shingle) * max(mix(0.42 * damp, 1.0, film), (1.0 - 0.8 * dry) * (0.1 + 0.4 * smoothstep(0.35, 0.75, a.r + 0.6 * (dot(m0 / uMean, vec3(0.3333)) - 1.0) * near)) * (1.0 - steep) * (1.0 - 0.6 * stone) * (1.0 - 0.7 * pit * close));
   // Rock is rough even wet: it never mirrors the sky whole as the pool does, or wet rock near the lens would stand pale as sand.
   // Near the lens the sheen is not a sheet: it lies in the lows of the grain and breaks on its highs, so wet rock is dark with bright points.
   float gloss = mix(1.0, smoothstep(0.62, 0.3, mn.b) * (1.0 - 0.8 * pit * close), mix(near, 0.0, film));

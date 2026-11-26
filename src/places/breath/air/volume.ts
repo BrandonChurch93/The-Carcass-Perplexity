@@ -104,7 +104,7 @@ float column(vec3 p, vec2 foot, float wide, float head, float n) {
   // The axis wanders a little with height and leans down the wind over the brim.
   vec2 axis = foot + WINDV * (0.55 * max(p.y + 2.0, 0.0)) + 2.0 * vec2(sin(0.21 * p.y + foot.x), cos(0.17 * p.y + foot.y));
   vec2 d = p.xz - axis;
-  float w = wide * (1.0 + 0.016 * (p.y + 40.0));
+  float w = wide * (1.0 + 0.012 * (p.y + 40.0));
   // Billows: the edge of the column is where the noise says, not a tube.
   // Over the brim only the hearts of the billows are left: torn wisps with air between, not a veil.
   float core = exp(-dot(d, d) / (w * w));
@@ -134,8 +134,8 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float rho = (0.012 + 0.05 * smoothstep(0.0, 14.0, under)) * smoothstep(0.0, 2.5 + 2.5 * n0.g, under);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 4.2, 9.0 + lift, n) + 0.55 * column(p, vec2(-10.0, 11.0), 2.6, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 4.5, -5.0 + 1.5 * lift, n);
-  rho = max(rho, (0.085 + 0.1 * surge) * min(cols, 1.0));
+  float cols = column(p, vec2(-19.0, -9.0), 2.7, 9.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n);
+  rho = max(rho, (0.11 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
