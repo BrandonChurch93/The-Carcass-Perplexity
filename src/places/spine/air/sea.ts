@@ -366,7 +366,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t * t / (1.1e8 * seaLens * seaLens * seaLens));
     // The sky's foot is read only where the deck goes into it: near the lens on the dusk side it has no part.
-    float toWall = stormSide(rd) * 0.95 * (1.0 - exp(-t / 3000.0));
+    float toWall = stormSide(rd) * (1.0 - exp(-t / 1500.0));
     bool needFoot = gone > 0.003 || toWall > 0.003 || uPlate.w > 0.0;
     // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
     vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5) : vec3(0.0);
@@ -392,10 +392,17 @@ export const SEA_SHADE_GLSL = /* glsl */ `
       // (Under the storm the foot is the dark wall's and the deck goes into it whole: kept pale there it stood as a ruled line against it.)
       sea = mix(sea, domeFar, plate > 0.0 ? gone : mix(1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)), gone, stormSide(rd)));
     }
-    stormAir *= 1.0 - gone;
-    seaGone = gone;
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     if (needFoot) sea = mix(sea, domeFar, toWall);
+    // Under the wall the air's haze stays on the deck to its last degree and thins only there, into the sky's foot. Thinned as on the
+    // dusk side, the far deck stood bare behind the last hazed head as a dark level band with that head's stepped outline on it.
+    // (By how low the ray lies, not by how far its head stands: a head met short of the last level takes the air of the level behind it.)
+    float lastAt = (ro.y - ridgeAt(ro.x + rd.x * 16000.0).y + CLOUD_UNDER + CLOUD_DEEP) / max(-rd.y, 1e-5);
+    // (The air there is many times thicker than it takes to hide the deck: thinned evenly it stayed whole to the last and ended in a line.)
+    float last = 1.0 - smoothstep(15000.0, 50000.0, lastAt);
+    last *= last * last;
+    seaGone = mix(gone, 1.0 - last * last, stormSide(rd));
+    stormAir *= 1.0 - seaGone;
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     // (By the depth of cloud before the rock, as cloud hides: forty metres of it hide nearly all. Thinned evenly over some hundreds of
     // metres, the flank under the deck showed through every near head as a weave.)
