@@ -12,6 +12,7 @@ import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
 import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_OPENING_VERTEX, SEA_VERTEX } from './shaders';
 import { Spray, rand } from './spray';
+import { Spindrift } from './spindrift';
 import { Burst, STRIKE_CARDS, type Strike } from './strike';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
@@ -117,6 +118,7 @@ export function create(ctx: Context): Piece {
   const feetMap = feetTexture(LAND, feet, FEET_REACH);
 
   const eye = new THREE.Vector3();
+  const ahead = new THREE.Vector3();
   const shared = { tChop: { value: chop }, tFoam: { value: foamMap }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
 
   const foamPicture = ctx.assets.texture('mat/foam.jpg', { kind: 'colour' });
@@ -206,8 +208,11 @@ export function create(ctx: Context): Piece {
   // The breaker of the approach (below) is thrown water of the same part.
   const breaker = new Burst(STRIKE_CARDS * 2, { ...rig.uniforms, ...shared });
   breaker.mesh.visible = false;
-  ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh), breaker.mesh);
-  for (const e of surfAt) if (e.id % 3 === 0) ctx.sources.steam.push({ at: [e.x, 1, e.z], radius: 9, strength: 0.25 * e.power, rise: 14, kind: 'spray', lean: [WIND.to[0] * 0.8, WIND.to[1] * 0.8] });
+  // And the spindrift off the crests of the approach's gale.
+  const spindrift = new Spindrift(3600, { ...rig.uniforms, ...shared, uOpenSea: { value: openSea } });
+  spindrift.mesh.visible = false;
+  ctx.scene.add(ctx.parts.built('surf', surf.mesh, breaker.mesh, spindrift.mesh), breaker.mesh, spindrift.mesh);
+  // The surf's own haze is not handed to the air: at a blade's foot it stood as a grey column with straight sides.
 
   // Where the bore breaks on a blade or a stack it bursts up white; the two cliffs of the gate stand close to the last shot's lens.
   const sites: BoreSite[] = feet
@@ -283,7 +288,7 @@ export function create(ctx: Context): Piece {
   };
   // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
   const struck = RIBS.find((r) => r.name === STRIKE.blade) as Rib;
-  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : 0.85), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
+  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : STRIKE.lesser), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
@@ -343,9 +348,17 @@ export function create(ctx: Context): Piece {
       openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breaker.setTime(seconds, strikes, windTo);
+      spindrift.mesh.visible = inOpening();
+      spindrift.gale.y = openingWeight(seconds);
     },
     beforeSample: (_renderer, camera) => {
       eye.copy(camera.position);
+      if (spindrift.mesh.visible) {
+        camera.getWorldDirection(ahead);
+        const flat = Math.hypot(ahead.x, ahead.z) || 1;
+        spindrift.field.x = eye.x + (ahead.x / flat) * 0.44 * spindrift.field.z;
+        spindrift.field.y = eye.z + (ahead.z / flat) * 0.44 * spindrift.field.z;
+      }
     },
     dispose: () => {
       chop.dispose();
@@ -360,6 +373,7 @@ export function create(ctx: Context): Piece {
       bore.dispose();
       surf.dispose();
       breaker.dispose();
+      spindrift.dispose();
     },
   };
 }
