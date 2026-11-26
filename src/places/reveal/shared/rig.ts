@@ -1,6 +1,6 @@
 // The light rig of the rise: the uniforms every surface shares. One sun, the blue of the air, the edge of the planet, and the beat of the Heart.
 import * as THREE from 'three';
-import { BEAT, DUSK_FROM, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, SUN, X, Z, driftAt, halfHeightAt, handoff, liveAt } from './anchors';
+import { BEAT, DUSK_FROM, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, SUN, X, Z, driftAt, halfHeightAt, handoff, liveAt, weatherAt } from './anchors';
 import { FPS } from '../../../config';
 import { COVER_RECT } from './weather';
 
@@ -147,6 +147,8 @@ export function createRig(): Rig {
     uCalm: { value: new THREE.Vector4(1, 0, 1, 1) },
     // The seconds the planet has lived while the frame is held: exactly 0 up to LIVE_FROM (film frame 10027).
     uLive: { value: 0 },
+    // The clock of the weather (anchors.ts, weatherAt): exactly 0 while uLive is, then it outruns it.
+    uWx: { value: 0 },
     // x: the fire of the Heart as the night sees it (0 by day, 1 at night, less as the film ends). y: seconds since the beat (negative before it).
     uEmber: { value: new THREE.Vector4(0, -1, 1, 1) },
   };
@@ -195,6 +197,7 @@ export function createRig(): Rig {
       (uniforms.uEmber as THREE.IUniform<THREE.Vector4>).value.set(d.ember, BEAT === null ? -1 : seconds - BEAT, d.lift, d.keep);
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       (uniforms.uLive as THREE.IUniform<number>).value = liveAt(seconds);
+      (uniforms.uWx as THREE.IUniform<number>).value = weatherAt(seconds);
       (uniforms.uBeat as THREE.IUniform<number>).value = beat(seconds);
       (uniforms.uViewKm as THREE.IUniform<number>).value = halfHeightAt(Math.max(0, seconds));
       const wide = Math.min(1, Math.max(0, (halfHeightAt(Math.max(0, seconds)) / handoff.revealHalfHeightKm - 1) / 0.7));
