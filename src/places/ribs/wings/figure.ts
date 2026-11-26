@@ -251,12 +251,16 @@ void main() {
 #else
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.6, 0.25, wet), occ);
   float sun = sunAt(vWorld, land);
-  col += albedo * skin * vec3(1.0, 0.82, 0.62) * (uSunColour * sun * 0.45 + skyIrradiance(-face) * 0.7) / 3.14159;
+  // Far off the air between takes the amber out of the lit skin.
+  float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
+  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
+  col += albedo * skin * mix(vec3(1.0, 0.82, 0.62), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * 0.45 + skyIrradiance(-face) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sun;
   // One that stands in the shade of the rock over it.
   col *= 1.0 - 0.6 * vLook.w;
+  col *= 1.0 - 0.3 * far;
 #ifdef SOFT
   float a = smoothstep(0.1, 0.6, cover) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(col) * a, a);

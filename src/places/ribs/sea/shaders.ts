@@ -43,7 +43,7 @@ ${SWELL.map(([dx, dz, length, amp], n) => {
     float keep = 1.0 - smoothstep(0.35, 1.0, ${f(k)} * px);
     // And not at every crest, nor evenly along one: whole stretches of the sea break and whole stretches do not.
     float where = textureLod(chop, lay.yx * 0.19 + ${f(0.61 * n + 0.2)}, log2(max(px * 256.0 / ${f(length * 2)}, 1e-6))).a;
-    float on = smoothstep(${f(0.47 + 0.02 * n)}, ${f(0.62 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
+    float on = smoothstep(${f(0.45 + 0.02 * n)}, ${f(0.8 + 0.02 * n)}, torn + 0.9 * (where - 0.55)) * keep;
     // Thickest in the middle of its length and thinning to nothing at its ends.
     cap.x = max(cap.x, on * smoothstep(-0.2 - 0.45 * on, -0.1, back) * (1.0 - smoothstep(0.05, 0.3, back)));
     cap.y = max(cap.y, on * smoothstep(-3.2, -0.6, back) * (1.0 - smoothstep(-0.2, 0.4, back)));
@@ -173,10 +173,10 @@ void main() {
   amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   // The break itself is thick white water, ragged at its rim.
-  float fresh = smoothstep(0.42, 0.66, caps.x * (0.22 + 0.75 * lacePic + 0.5 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
-  foam = max(foam, fresh);
+  float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
+  foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
-  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.8, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
+  vec3 foamCol = vec3(0.78, 0.82, 0.84) * (0.5 + 0.5 * mix(lace, 0.35 + 0.7 * lacePic, fresh)) * mix(0.8, 1.12, max(fresh, surfZone)) * e / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
