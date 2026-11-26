@@ -141,6 +141,8 @@ export function create(ctx: Context): Piece {
       clear.z = inCarcass ? 10 : 0;
       // Staged by shot: in the long lens of the strike (spine-04) the storm wall stands 44 degrees further round, behind the struck spire.
       skyStage.x = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4 ? 0.77 : 0;
+      // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
+      skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
     solo: (part) => {
       const only = (name: string): number => (part === null || !part.startsWith('spine/') || !PARTS.includes(part.slice(6)) || part === 'spine/sky' || part === `spine/${name}` ? 1 : 0);

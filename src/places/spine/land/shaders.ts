@@ -56,7 +56,7 @@ float throughExit(vec3 p, vec3 d) {
 vec3 windowLight(vec3 p, vec3 n) {
   vec3 toExit = EXIT_AT - p;
   vec3 toMouth = MOUTH_AT - p;
-  float sE = 420.0 / (dot(toExit, toExit) * 3.14159 + 420.0);
+  float sE = 800.0 / (dot(toExit, toExit) * 3.14159 + 800.0);
   float sM = 900.0 / (dot(toMouth, toMouth) * 3.14159 + 900.0);
   vec3 dE = normalize(toExit);
   vec3 dM = normalize(toMouth);
@@ -278,7 +278,7 @@ void main() {
     vec2 qZ = vec2(vWorld.x + 0.35 * vWorld.y, vWorld.y - 0.35 * vWorld.x) / 19.0 + 0.53;
     vec3 n2 = texture2D(tCanalNh, qX).rgb * tw.x + texture2D(tCanalNh, pY * 0.21).rgb * tw.y + texture2D(tCanalNh, qZ).rgb * tw.z;
     // Pale stone: the canal is ice-worn and the frost has bleached it.
-    rock = mix(c1, vec3(dot(c1, vec3(0.33))), 0.5) * (0.6 + 0.8 * n2.b) * 2.0;
+    rock = mix(c1 * 2.2, vec3(0.5, 0.48, 0.45) * (0.5 + 2.5 * dot(c1, vec3(0.33))), 0.6) * (0.6 + 0.8 * n2.b);
     t = ((n1.rg - 0.5) * 0.3 + (n2.rg - 0.5) * 0.8) * vec2(1.0, -1.0);
     pit = 0.55 * n1.b + 0.45 * n2.b;
     // Rime: the frost picture at its own 3 m, thick round each mouth where the gale reaches and thin on what stands proud farther in.
@@ -400,8 +400,14 @@ void main() {
       float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
       float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
       float grain = dot(rock, vec3(0.33)) / (2.7 * dot(SPIRE_MEAN, vec3(0.33)));
-      rock = mix(rock, sc * 1.5 * (0.8 + 0.2 * grain), sheet);
-      nRock = normalize(mix(nRock, normalize(n0 + 0.35 * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * 0.3 * (sa * da + vec3(0.0, dy, 0.0)));
+      // Close to, the sheet is drawn larger than it was made and would go soft: there it gives the masses alone, and the rock's own
+      // tiles, at their true size, give the fracture and the grain, in colour and in relief.
+      float texel = length(fwidth(uv) * vec2(textureSize(tSheet, 0)));
+      float close = smoothstep(1.4, 0.3, texel);
+      float fine = clamp(dot(rock, vec3(0.33)) / dot(SPIRE_MEAN, vec3(0.33)), 0.25, 2.2);
+      rock = mix(rock, sc * 1.5 * mix(0.8 + 0.2 * grain, 0.25 + 0.75 * fine, 0.85 * close), sheet);
+      nRock = normalize(mix(nRock, normalize(n0 + mix(0.35, 1.5, close) * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * mix(0.3, 0.16, close) * (sa * da + vec3(0.0, dy, 0.0)));
+      pit = mix(pit, mix(0.25 + 0.6 * h0, pit, 0.6 * close), 0.6 * sheet);
       pit = mix(pit, 0.25 + 0.6 * h0, 0.6 * sheet);
     }
   }
@@ -455,6 +461,16 @@ void main() {
     snow *= lit;
     rime *= lit;
     occ *= 0.04 + 0.96 * lit;
+  }
+  if (spire && !inside && rime + 0.3 > 0.02) {
+    // Rime on a spire is the frost picture at its own 3 m, feathered crystal by crystal: thick to windward, a dusting in the lee.
+    vec3 rw = abs(smoothN);
+    rw /= rw.x + rw.y + rw.z;
+    vec3 frostC = texture2D(tRime, vWorld.zy / 3.0).rgb * rw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * rw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * rw.z;
+    float crystals = smoothstep(0.16, 0.4, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
+    float cover = clamp(rime + 0.55 * (1.0 - burn), 0.0, 1.0) * crystals;
+    albedo = mix(albedo, min(frostC * 1.5, vec3(0.88)) * vec3(0.95, 0.98, 1.05), 0.85 * cover);
+    rime = 0.0;
   }
   albedo = mix(albedo, vec3(0.62, 0.66, 0.72), 0.55 * rime);
   if (inside) {
@@ -521,7 +537,8 @@ void main() {
       vec3 nS = normalize(vec3(0.0, 1.0, 0.0) - 0.012 * (vec3(uScorchAxes.x, 0.0, uScorchAxes.y) * du + vec3(uScorchAxes.z, 0.0, uScorchAxes.w) * dv));
       albedo = mix(albedo, sc, scorch);
       n = normalize(mix(n, nS, scorch));
-      rough = mix(rough, 1.0, scorch);
+      // Melt water stands in its hollows and glints; its heads are wet rock.
+      rough = mix(rough, 0.22 + 0.6 * smoothstep(0.25, 0.6, h0), scorch);
       occ = mix(occ, 0.6 + 0.4 * h0, scorch);
     }
   }
@@ -531,7 +548,7 @@ void main() {
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
   if (inside && uUnder > 1.5) {
     // Inside, the two mouths are the windows: cold light on what faces them, and the far mouth seen in the glaze of ice on the rock.
-    c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.4 + 0.6 * pit) * (3.2 + 2.4 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 2.0;
+    c += albedo * windowLight(vWorld, normalize(mix(n, normalize(EXIT_AT + vec3(0.0, 6.0, 0.0) - vWorld), 0.55 * wallRime))) * (0.45 + 0.55 * pit) * (4.5 + 2.5 * wallRime) / 3.14159 + windowGlaze(vWorld, n, v, 2.5) * (1.0 - wallRime) * 2.0;
   }
   if (inside && uUnder < 1.5) {
     float shown = exp(-max(min(dCanal, EXIT - dCanal) - 1.0, 0.0) / 9.0);

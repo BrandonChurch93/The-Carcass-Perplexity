@@ -179,13 +179,13 @@ void main() {
     float fall = max(-rd.y, 0.0) + 0.6;
     vec3 p = ro + rd * t;
     bool found = false;
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 24; i++) {
       float d = p.y - seaTop(p, false);
       if (d < 3.0 + 0.004 * t) {
         found = true;
         break;
       }
-      t += max(d, 4.0) / fall;
+      t += max(d, 4.0 + 0.012 * t) / fall;
       p = ro + rd * t;
       if (t > far || (rd.y > 0.0 && p.y > BANK_TOP)) break;
     }
@@ -216,14 +216,20 @@ void main() {
     float down = dip / 0.26;
     down = 1.0 - abs(1.0 - mod(down, 2.0));
     vec2 uvF = vec2(0.86 + wrapPi(az - DUSK_AZ) / 1.55, 0.32 - 0.305 * down);
-    vec3 sea = flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, 0.0) * SKY_GAIN;
+    // A long lens would draw the picture's own grain large: there it is read soft and gives the tone alone, and the billows below give the form.
+    float lodF = clamp(log2(0.6 / uInvProjection[1][1]), 0.0, 4.0);
+    vec3 sea = flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, lodF) * SKY_GAIN;
     // The billows of the surface itself, broad and soft: their heads a little lighter, their hollows a little darker.
     float h0 = seaTop(p, true);
     float head = smoothstep(-90.0, 110.0, h0 - (ridgeAt(p.x).y - CLOUD_UNDER));
-    sea *= 0.8 + 0.3 * head;
+    // Each billow leans: the face toward the last light is paler, the face away from it darker, so the tops roll and are not a level sheet.
+    vec3 toDusk = vec3(cos(DUSK_AZ), 0.0, sin(DUSK_AZ));
+    float reachS = 160.0 + 0.03 * t;
+    float lean = clamp((h0 - seaTop(p + toDusk * reachS, true)) / reachS * 2.2, -1.0, 1.0);
+    sea *= (0.72 + 0.4 * head) * (1.0 + 0.45 * lean);
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 30.0 * dot(uFlash, vec3(0.33)) * stormSide(rd), 0.0, 1.5);
-    sea = sea * (1.0 - 0.35 * stormSide(rd)) * (1.0 + 1.6 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.05));
+    sea = sea * (1.0 - 0.35 * stormSide(rd)) * (1.0 + 1.6 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
     sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035, 0.0, dip)));
@@ -312,13 +318,15 @@ void main() {
     float veiled = 1.0 - exp(-depthV);
     // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
     if (far > 50000.0) veiled = min(veiled, 0.25);
+    // The sea of cloud is seen from above through thin air: it keeps its lumps and its lit edge.
+    if (seaAt > 0.0 && far <= seaAt + 1.0) veiled = min(veiled, 0.3);
     // Blown snow is the storm's cold violet; the warm band stays on the horizon and does not stain the air.
     vec3 snowAir = mix(domeAir * 0.9, mix(uSkyHorizon, uSkyZenith, 0.35) * 0.55, 0.65) + vec3(0.006, 0.005, 0.011);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
   }
 
-  // The snow before the lens: flakes in the gale, each a streak as long as it flies while the shutter is open, at five depths. Each depth
+  // The snow before the lens: flecks in the gale, each a few times longer than it is wide, of many sizes, in gusts, at six depths. Each depth
   // is a plane across the lens; the flakes lie in cells of it, down the gale as the lens sees it, so every one is a pure function of time.
   // The planes turn against the camera's own turning, so a pan sweeps through the snow and does not carry it.
   if (uShow.w * uStage.z > 0.0) {
@@ -344,8 +352,8 @@ void main() {
       vec2 d2 = vec2(-d1.y, d1.x);
       float wideS = dist * 0.0021 / max(lens, 1.0);
       float cellQ = wideS * 11.0;
-      // The streak: 26 m/s for a 48th of a second, as much of it as lies across the lens.
-      float cellA = (0.55 * across + 6.0 * wideS) * 2.4;
+      // A fleck, not a line: a few times longer than it is wide, as the approved pictures draw their snow.
+      float cellA = wideS * 16.0;
       float along = dot(pc, d1);
       float q = (dot(pc, d2) + 2.5 * wideS * sin(along / (9.0 * cellA) + float(k) * 1.7)) / cellQ;
       float qc = floor(q);
@@ -354,14 +362,16 @@ void main() {
       ivec2 cell = ivec2(int(qc), int(ac));
       // They come in gusts: a clump of them, then none.
       float gustL = noise(vec3(pc / (30.0 * cellQ) - d1 * (uTime * 0.6), float(k) * 0.31)).g;
-      if (rnd(cell, uint(23 + k)) > (0.5 - 0.05 * float(k)) * smoothstep(0.35, 0.7, gustL)) continue;
+      if (rnd(cell, uint(23 + k)) > (0.42 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
       float dq = (q - qc - 0.25 - 0.5 * rnd(cell, uint(31 + k))) * cellQ;
       // Each is brightest in its middle and gone at its ends, and no two are one length.
-      float lengthOf = 0.12 + 0.25 * rnd(cell, uint(41 + k));
+      float lengthOf = 0.3 + 0.4 * rnd(cell, uint(41 + k));
       float fa = (a - ac - 0.02) / lengthOf;
       float lengthS = fa > 0.0 && fa < 1.0 ? 4.0 * fa * (1.0 - fa) : 0.0;
-      float thin = wideS * (0.5 + 0.5 * lengthS);
-      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.03 + 0.13 * rnd(cell, uint(59 + k)));
+      // No two are one size: most are small, a few are big and soft.
+      float sizeOf = rnd(cell, uint(67 + k));
+      float thin = wideS * (0.35 + 1.5 * sizeOf * sizeOf) * (0.5 + 0.5 * lengthS);
+      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.04 + 0.2 * rnd(cell, uint(59 + k))) * (1.0 - 0.5 * sizeOf);
       fly += hid * flake;
       hid *= 1.0 - flake;
     }

@@ -97,7 +97,7 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
   // The storm's light is violet; only the last band keeps its orange.
   float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
-  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN;
+  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN * (1.0 + uSkyStage.y);
 }`;
 
 const FRAGMENT = /* glsl */ `
