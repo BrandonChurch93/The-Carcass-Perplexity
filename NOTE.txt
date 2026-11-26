@@ -1,5 +1,7 @@
-2026-11-26 16:24 UTC
-work at 49fab6d on agent/spine-cloud
-toward v2, 7015 hd draft: storm side heaped and heads break the horizon there; still grey, stair steps on far heads, cost not yet inside budget
-look-1.jpg = out/work/look.jpg
-look-2.jpg = out/work/lookcrop.jpg
+2026-11-26 16:46 UTC
+work at 44d0952 on agent/spine-cloud
+7015 uhd draft whole and right flank at full size, 7234 and 7418 before and after: heaps on both sides now, but a stipple stands in the near hollows, the far deck under the dusk band is flat orange, and 7418 was flatter than before in this pair (eased since)
+look-1.jpg = out/work/v2/hb-7015-uhd-draft.jpg
+look-2.jpg = out/work/v2/hb-7015-right-flank-full-size.jpg
+look-3.jpg = out/work/pair-7234.jpg
+look-4.jpg = out/work/pair-7418.jpg
