@@ -47,15 +47,22 @@ float brineSilt = -1.0;
 // to see, which turn part of it toward the lens: the mirror comes in late and never whole.
 float brineFresnel(vec3 n, vec3 v) {
   float nv = max(dot(n, v), 0.02);
-  return 0.05 + 0.42 * pow(1.0 - nv, 1.6) + 0.08 * pow(1.0 - nv, 10.0);
+  return min(0.03 + 0.34 * pow(1.0 - nv, 2.0), 0.24) + 0.12 * pow(1.0 - nv, 14.0);
 }
 // What the brine mirrors at p: the mirror's picture near the lens (so that the stalks, the banks and the animals stand in it), the sky alone far off.
 // The film of scum on the skin stains it a little.
 vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   float away = length(cameraPosition - p);
   vec2 swing = n.xz * 2.0 * clamp(away * 0.3, 0.15, 12.0);
+  // (A slope that leans to the lens would mirror the brine before it, which mirrors the sky in its turn: it is not swung under the level.)
+  vec2 toLens = normalize(cameraPosition.xz - p.xz);
+  swing -= toLens * max(dot(swing, toLens), 0.0) * 0.75;
   vec4 q = uMirrorMatrix * vec4(p.x + swing.x, p.y, p.z + swing.y, 1.0);
-  vec3 seen = textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), 0.0).rgb;
+  vec4 q1 = uMirrorMatrix * vec4(p.x + swing.x * 2.2, p.y, p.z + swing.y * 2.2, 1.0);
+  // Ripples finer than the lens can see answer for every pixel, each swinging the ray its own way: what stands in the mirror is soft and
+  // drawn out, never a sharp cut-out. (The mirror's picture is read some levels down, the same share of the frame at every size.)
+  float soft = max(log2(float(textureSize(tMirror, 0).x) / 300.0), 0.0);
+  vec3 seen = (textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft).rgb + textureLod(tMirror, clamp(q1.xy / q1.w, 0.003, 0.997), soft + 0.7).rgb) * 0.5;
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
   return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.8, 0.75);
@@ -79,7 +86,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec2 wind = vec2(dot(p.xz, ${v2(WIND)}) - 1.6 * uTime, dot(p.xz, ${v2(CROSS)}));
   vec4 wander = texture2D(tGrain, (p.xz - ${v2(WIND)} * (0.5 * uTime)) / 71.0);
   wind.y += (wander.r - 0.5) * 9.0;
-  float gust = smoothstep(0.44, 0.72, texture2D(tGrain, vec2(wind.x / 67.0, wind.y / 17.0)).g * 0.6 + texture2D(tGrain, vec2(wind.x / 29.0 + 0.4 * uTime / 29.0, wind.y / 6.1 + 0.37)).b * 0.25 + wander.b * 0.15);
+  float gust = smoothstep(0.4, 0.68, texture2D(tGrain, vec2(wind.x / 67.0, wind.y / 17.0)).g * 0.6 + texture2D(tGrain, vec2(wind.x / 29.0 + 0.4 * uTime / 29.0, wind.y / 6.1 + 0.37)).b * 0.25 + wander.b * 0.15);
 
   // The way light takes through the brine to the bed and back to the lens: down, and up along the bent line of sight.
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -89,7 +96,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   vec3 taken = vec3(3.4, 19.0, 23.0) * (0.75 + 0.5 * silt) + vec3(14.0) * brineMud + vec3(30.0) * brineSlurry;
   vec3 through = exp(-taken * path);
   // What the liquid itself gives back where no bed shows: a dark rust red, paler and browner where silt hangs in it.
-  vec3 body = mix(vec3(0.042, 0.006, 0.005), vec3(0.09, 0.019, 0.014), smoothstep(0.25, 0.8, silt));
+  vec3 body = mix(vec3(0.032, 0.006, 0.005), vec3(0.07, 0.017, 0.013), smoothstep(0.25, 0.8, silt));
   body = mix(body, vec3(0.032, 0.0055, 0.0045), smoothstep(0.3, 0.7, depth) * 0.6);
   body = mix(body, vec3(0.045, 0.02, 0.014), brineMud * 0.85);
   body = mix(body, vec3(0.118, 0.086, 0.072) * (0.8 + 0.4 * silt), brineSlurry * 0.92);
@@ -101,7 +108,7 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   // Under a gust the skin is ruffled finer than a pixel and leans every way: seen from above, that lane gives back more of the sky than the
   // glass beside it. Broad pale lanes on dark brine.
   float fres = brineFresnel(n, v);
-  fres = mix(fres, max(fres, 0.3), gust * (0.45 + 0.3 * smoothstep(8.0, 40.0, away)));
+  fres = mix(fres, max(fres, 0.26), gust * (0.7 + 0.2 * smoothstep(8.0, 40.0, away)));
   // (Froth is wet too: each bubble carries its own small piece of the sky.)
   fres *= 1.0 - 0.55 * foam;
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.

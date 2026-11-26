@@ -121,15 +121,17 @@ void main() {
   vec2 lane = vec2(dot(p.xz, wdir) - 1.6 * uTime, dot(p.xz, vec2(-wdir.y, wdir.x)));
   float paw = smoothstep(0.5, 0.74, texture2D(tGrain, vec2(lane.x / 41.0, lane.y / 11.0) + patchy.rb * 0.06).g);
   // Outside the lanes it is not glass either: the flow, the gas and what wades keep a low ripple on it, more here and less there.
-  float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
+  float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
   vec2 ripples = vec2(0.0);
   // (No train is everywhere: each comes and goes in patches of its own, or the five would weave one cloth.)
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.13, 0.045, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.13, 0.045, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.085, 0.03, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.058, 0.02, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.035, 0.012, px);
+  // (A wave is drawn only where a lens can tell its crests apart: finer than that it would be grit.)
+  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.17), 0.73, bend.b * 3.0 + 2.1) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
+  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
+  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
+  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
   slope += ripples * ruffle * (0.6 + 0.8 * bend.g);
 
   // How much froth the domes and the bursts have left here.
@@ -291,8 +293,8 @@ void main() {
     vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.35, 0.94, sin(vLife.y * 40.0) * 0.35));
     vec3 at = normalize(vLocal);
     // The film that has drawn back is rolled up in the hole's edge, and the edge runs ahead here and hangs back there: no two parts alike.
-    vec4 ragged = texture2D(tGrain, vLocal.xz * 0.37 + vLife.y * 3.0);
-    float open = dot(at, from) + (ragged.g - 0.5) * 0.12 + (ragged.r - 0.5) * 0.24 * vLife.w;
+    vec4 ragged = texture2D(tGrain, vLocal.xz * 0.13 + vLife.y * 3.0);
+    float open = dot(at, from) + (ragged.g - 0.5) * 0.05 + (ragged.r - 0.5) * 0.11 * vLife.w;
     float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (open > gone) discard;
     // A rolled bead, thicker the further it has run: dark, and round enough to carry a line of the sky along its back.
@@ -326,16 +328,20 @@ void main() {
   vec3 pond = vec3(0.05, 0.012, 0.01) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 + skyRadiance(vec3(r.x, abs(r.y) + 0.05, r.z)) * 0.1;
   float horizon = r.y + (run.g - 0.5) * 0.06;
   vec3 env = mix(pond, skyRadiance(normalize(vec3(r.x, max(r.y, 0.0) + 0.02, r.z))), smoothstep(-0.03, 0.035, horizon));
-  env = mix(env, uSkyGround * 0.75, smoothstep(0.09, 0.0, abs(horizon - 0.02)) * 0.55);
+  // (Only a whole dome carries that band: on the torn skin and on its far wall it would be a drawn line.)
+  float whole = gl_FrontFacing ? 1.0 - smoothstep(0.0, 0.2, vLife.w) : 0.0;
+  env = mix(env, uSkyGround * 0.75, smoothstep(0.09, 0.0, abs(horizon - 0.02)) * 0.55 * whole);
   // The overcast is not even: its brighter quarter stands in the skin as one soft window, cut by the runs.
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   env *= 1.0 + (0.5 * smoothstep(0.75, 0.99, toward) + 0.5 * smoothstep(0.972, 0.995, toward)) * (0.6 + 0.8 * run.g);
   float fres = min(1.0, (0.035 + 0.965 * pow(1.0 - nv, 5.0)) * 1.7);
+  // (Where the skin runs out into the pool it mirrors no more than the pool does.)
+  fres *= mix(0.25, 1.0, smoothstep(0.03, 0.22, vLocal.y));
 #ifdef DROP
   // (A bead of dark brine: one small window of the sky on its upper side and no pale limb.)
   fres = 0.03 + 0.45 * smoothstep(0.93, 0.99, toward);
 #endif
-  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.75 * rim) + skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.17 * glint * mix(1.0, open, 0.5);
+  vec3 mirrored = env * fres * mix(1.0, open, 0.5) * (1.0 - 0.75 * rim) + skyRadiance(vec3(0.0, 1.0, 0.0)) * 0.035 * glint * smoothstep(0.35, 0.7, grit.r) * mix(1.0, open, 0.5);
   // Grit and scum ride on the skin and slide down it with the runs.
   float speck = smoothstep(0.79, 0.84, grit.g * 0.6 + run.b * 0.4) * (1.0 - 0.6 * top);
   lit = mix(lit, vec3(0.05, 0.016, 0.012) * skyIrradiance(n) * (open / 3.14159), speck);

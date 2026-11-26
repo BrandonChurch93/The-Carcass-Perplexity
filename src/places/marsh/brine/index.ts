@@ -61,8 +61,8 @@ export function create(ctx: Context): Piece {
 
   // The mirror: the scene as the level brine sees it, drawn a quarter of the frame's size before every sample.
   const MIRROR_SHARE = 4;
-  const mirror = new THREE.WebGLRenderTarget(480, 270, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
-  mirror.texture.generateMipmaps = false;
+  const mirror = new THREE.WebGLRenderTarget(480, 270, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
+  mirror.texture.generateMipmaps = true;
   const under = new THREE.PerspectiveCamera();
   const blank = (ctx.rig.uniforms.tMirror as THREE.IUniform<THREE.Texture>).value;
   const bias = new THREE.Matrix4().set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1);
