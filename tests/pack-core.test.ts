@@ -257,6 +257,60 @@ describe('the plans of the other critics', () => {
 
   it('R7: no pack, and the plan says why', () => {
     expect(core.planFor('R7', {})).toEqual({ groups: [], left: ['The R7 pack was left out: there is no stress encode yet to take stills from.'] });
+    expect(core.planFor('R7', { stress: [{ id: 'heart', why: 'its stills from the stress encode are not there' }] })).toEqual({ groups: [], left: [core.NO_STRESS] });
+  });
+
+  it('R7: a pair and its crops for every moment the stress run left, and a line for each one it did not', () => {
+    const stress = [
+      { id: 'heart', name: "The Heart's peak", frame: 4010, before: '/s/heart-source.png', after: '/s/heart-stress.png', format: 'hd', tier: 'final', mbps: 10, why: null },
+      { id: 'spine', name: 'The storm on the Spine', frame: 7450, before: '/s/spine-source.png', after: '/s/spine-stress.png', format: 'hd', tier: 'final', why: 'its stills were made from another build' },
+    ];
+    const plan = core.planFor('R7', { stress });
+    expect(plan.groups).toHaveLength(1);
+    expect(plan.groups[0].items.map((i) => i.kind)).toEqual(['encoded', 'encodedcrops']);
+    expect(plan.groups[0].items[0]).toMatchObject({ frame: 4010, before: '/s/heart-source.png', after: '/s/heart-stress.png', format: 'hd', tier: 'final' });
+    expect(plan.groups[0].items[0].what).toContain('10 Mb/s');
+    expect(plan.left).toEqual(['The moment spine was left out: its stills were made from another build.']);
+  });
+
+  it('R7: the stills are found by moment, and a missing, moved or stale one is named', async () => {
+    const sdir = path.join(dir, 'stress-found');
+    fs.mkdirSync(sdir, { recursive: true });
+    const film = filled();
+    const moments = (await tool('lib/stress-core')).pickMoments(film, cfg);
+    const names = (await tool('lib/stress-core')).fileNames;
+    const put = (m, record) => {
+      const n = names(m, cfg.formats.hd.id, 'final');
+      for (const f of [n.stillSource, n.stillStress]) fs.writeFileSync(path.join(sdir, f), 'x');
+      fs.writeFileSync(path.join(sdir, `${n.stillStress}.json`), JSON.stringify(record));
+    };
+    put(moments[0], { frame: moments[0].frame, engine: 'e1', units: { heart: 'h1' }, encode: { mbps: 10 } });
+    put(moments[1], { frame: moments[1].frame + 1, engine: 'e1', units: {} });
+    put(moments[2], { frame: moments[2].frame, engine: 'e0', units: {} });
+    const found = core.stressStills({ cfg, film, dir: sdir, built: { engine: 'e1', units: { heart: 'h1' } } });
+    expect(found.map((m) => m.id)).toEqual(moments.map((m) => m.id));
+    expect(found[0]).toMatchObject({ why: null, mbps: 10, frame: moments[0].frame });
+    expect(found[1].why).toContain(`frame ${moments[1].frame + 1}`);
+    expect(found[2].why).toBe('its stills were made from another build');
+    expect(found[3].why).toBe('its stills from the stress encode are not there');
+    expect(core.stressStills({ cfg, film, dir: sdir, built: { engine: 'e1', units: { heart: 'h2' } } })[0].why).toBe('its stills were made from another build');
+    expect(core.stressStills({ cfg, film, dir: sdir })[2].why).toBe(null);
+  });
+
+  it('R7: the crops between them show the whole frame at full size', () => {
+    const W = 1920;
+    const H = 1080;
+    const cw = 690;
+    const ch = 388;
+    const regions = core.coverRegions(W, H, cw, ch);
+    expect(regions).toHaveLength(9);
+    const seen = new Uint8Array(W * H);
+    for (const r of regions) {
+      const b = img.cropBox(r.cx, r.cy, cw, ch, W, H);
+      for (let y = b.top; y < b.top + b.height; y++) seen.fill(1, y * W + b.left, y * W + b.left + b.width);
+    }
+    expect(seen.every((v) => v === 1)).toBe(true);
+    expect(core.coverRegions(600, 300, 690, 388)).toEqual([{ cx: 0.5, cy: 0.5 }]);
   });
 
   it('R2: one picture a pack, the keys first up to the limit, then the approved pictures as controls', () => {
@@ -476,10 +530,52 @@ describe('the command', () => {
   it('writes a manifest that says what was left out when a critic has no pack', async () => {
     const base = path.join(dir, 'r7');
     const lines = [];
-    const r = await cmd.packCommand({ round: '2', unit: filmUnit, critic: 'R7' }, { renderer: img.fakeRenderer(path.join(dir, 'stills')), outDir: path.join(base, 'packs'), keyDir: path.join(base, 'keys'), scratch: path.join(base, 'work'), root: base, print: (l) => lines.push(l) });
+    const r = await cmd.packCommand({ round: '2', unit: filmUnit, critic: 'R7' }, { renderer: img.fakeRenderer(path.join(dir, 'stills')), outDir: path.join(base, 'packs'), keyDir: path.join(base, 'keys'), scratch: path.join(base, 'work'), stressDir: path.join(base, 'stress'), root: base, print: (l) => lines.push(l) });
     expect(r.code).toBe(0);
     expect(r.entries[0].packs).toEqual([]);
     expect(r.entries[0].leftOut).toEqual(['The R7 pack was left out: there is no stress encode yet to take stills from.']);
     expect(lines).toContain('pack: R7: no pack');
   });
+
+  it('R7: builds one pack a moment from the stills of a stress run, the pair first and then its crops', async () => {
+    const base = path.join(dir, 'r7-built');
+    const sdir = path.join(base, 'stress');
+    fs.mkdirSync(sdir, { recursive: true });
+    const renderer = img.fakeRenderer(path.join(dir, 'stills'));
+    const film = core.standInFilm(await renderer.filmInfo(), cut, cfg).film;
+    const sc = await tool('lib/stress-core');
+    const size = cfg.formats.hd;
+    const moments = sc.pickMoments(film, cfg);
+    for (const [i, m] of moments.entries()) {
+      const n = sc.fileNames(m, size.id, 'final');
+      await img.fakeStill(path.join(sdir, n.stillSource), { width: size.width, height: size.height, label: `${m.id} a`, seed: i });
+      await img.fakeStill(path.join(sdir, n.stillStress), { width: size.width, height: size.height, label: `${m.id} b`, seed: i + 10 });
+      fs.writeFileSync(path.join(sdir, `${n.stillStress}.json`), JSON.stringify({ frame: m.frame, engine: 'fake', units: {}, encode: { mbps: 10 } }));
+    }
+    const lines = [];
+    const deps = { renderer, outDir: path.join(base, 'packs'), keyDir: path.join(base, 'keys'), scratch: path.join(base, 'work'), stressDir: sdir, root: base, print: (l) => lines.push(l) };
+    const r = await cmd.packCommand({ round: '3', unit: filmUnit, critic: 'R7' }, deps);
+    expect(r.code).toBe(0);
+    const e = r.entries[0];
+    expect(e.leftOut).toEqual([]);
+    expect(e.rendered).toEqual(['final tier in hd']);
+    expect(e.packs.map((p) => p.id)).toEqual(moments.map((_, i) => `R7-${i + 1}`));
+    const key = readJson(path.join(base, e.key));
+    for (const [i, p] of e.packs.entries()) {
+      expect(p.files.length).toBeLessThanOrEqual(max);
+      expect(p.files.slice(0, 2)).toEqual([`set-${core.setLetter(i)}-01-a.png`, `set-${core.setLetter(i)}-01-b.png`]);
+      expect(p.files).not.toContain(core.SETTLED_FILE);
+      expect(p.files.length).toBeGreaterThan(3);
+      expect(key.packs[p.id][p.files[0]]).toContain('before the encode');
+      expect(key.packs[p.id][p.files[1]]).toContain('after the encode');
+      for (const f of p.files) {
+        const m = await sharp(path.join(base, p.folder, f)).metadata();
+        expect(Math.max(m.width, m.height)).toBeLessThanOrEqual(cfg.critics.maxImageLongEdgePx);
+        expect((m.width * m.height) / 1e6).toBeLessThanOrEqual(cfg.critics.maxImageMegapixels);
+      }
+    }
+    const first = tree(path.join(base, 'packs'));
+    await cmd.packCommand({ round: '3', unit: filmUnit, critic: 'R7' }, deps);
+    expect(tree(path.join(base, 'packs'))).toEqual(first);
+  }, 120000);
 });

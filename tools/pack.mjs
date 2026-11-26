@@ -43,6 +43,7 @@ export async function packCommand(a, deps = {}) {
         outDir: deps.outDir ?? rel('out', 'work', 'packs'),
         keyDir: deps.keyDir ?? rel('out', 'work', 'packs-keys'),
         scratch: deps.scratch ?? rel('out', 'work', 'pack-work'),
+        stressDir: deps.stressDir ?? rel('out', 'work', 'stress'),
         root: deps.root ?? ROOT,
         approvedPath: (p) => rel(p),
       });

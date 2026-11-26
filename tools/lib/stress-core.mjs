@@ -192,7 +192,7 @@ export function sizeOf(format, cfg) {
 
 export function fileNames(moment, format, tier) {
   const base = `${moment.id}-${format}-${tier}`;
-  return { delivered: `${base}-delivered.mp4`, stress: `${base}-stress.mp4`, stillDelivered: `${base}-delivered.png`, stillStress: `${base}-stress.png`, sideBySide: `${base}-side-by-side.png` };
+  return { delivered: `${base}-delivered.mp4`, stress: `${base}-stress.mp4`, stillSource: `${base}-source.png`, stillDelivered: `${base}-delivered.png`, stillStress: `${base}-stress.png`, sideBySide: `${base}-side-by-side.png` };
 }
 
 export function want({ moment, range, format, tier, fps, built, browser, units }) {

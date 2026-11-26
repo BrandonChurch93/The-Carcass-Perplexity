@@ -4,6 +4,7 @@ import sharp from 'sharp';
 import { judgedList, riseShot, lakeFrame, lastPictureFrame } from './judged.mjs';
 import { fitWithin, formatSize, gridFit, grid, cropBox, percentText, locatorOf, spread, timecode, SEP } from './img.mjs';
 import { coverRect, unitKinds } from './measure-core.mjs';
+import { pickMoments, fileNames as stressNames } from './stress-core.mjs';
 
 export const CARBON_EDGE = 1048;
 export const FILM_SHEETS = 4;
@@ -259,8 +260,38 @@ export function planR6({ cfg, film }) {
   return { groups: frames.map((frame) => ({ items: [{ kind: 'still', frame, width: cfg.critics.phonePreviewWidthPx, what: `Film frame ${frame}, ${cfg.critics.phonePreviewWidthPx} px wide` }] })), left: [] };
 }
 
-export function planR7() {
-  return { groups: [], left: ['The R7 pack was left out: there is no stress encode yet to take stills from.'] };
+export const NO_STRESS = 'The R7 pack was left out: there is no stress encode yet to take stills from.';
+export const STRESS_TIER = 'final';
+
+// What a stress run left for the compression critic: for each of its moments, the frame as it was rendered
+// and the same frame taken out of the encode at the stress rate. A moment whose stills are not there, or
+// were made from another build, is named with the reason and left out.
+export function stressStills({ cfg, film, dir, built = null }) {
+  const format = cfg.formats.hd.id;
+  return pickMoments(film, cfg).map((m) => {
+    const names = stressNames(m, format, STRESS_TIER);
+    const before = path.join(dir, names.stillSource);
+    const after = path.join(dir, names.stillStress);
+    const base = { id: m.id, name: m.name, frame: m.frame, before, after, format, tier: STRESS_TIER };
+    if (![before, after, `${after}.json`].every((f) => fs.existsSync(f))) return { ...base, why: 'its stills from the stress encode are not there' };
+    const record = JSON.parse(fs.readFileSync(`${after}.json`, 'utf8'));
+    if (record.frame !== m.frame) return { ...base, why: `its stills are of frame ${record.frame}, and the moment is now at frame ${m.frame}` };
+    const stale = built && (record.engine !== built.engine || Object.entries(record.units ?? {}).some(([u, h]) => built.units?.[u] !== h));
+    if (stale) return { ...base, why: 'its stills were made from another build' };
+    return { ...base, mbps: record.encode?.mbps ?? cfg.quality.compressionStressMbps, why: null };
+  });
+}
+
+export function planR7({ stress = null } = {}) {
+  const have = (stress ?? []).filter((m) => !m.why);
+  if (!have.length) return { groups: [], left: [NO_STRESS] };
+  const groups = have.map((m) => ({
+    items: [
+      { kind: 'encoded', frame: m.frame, before: m.before, after: m.after, format: m.format, tier: m.tier, what: `${m.name}, film frame ${m.frame}: the frame as it was rendered as -a, and the same frame out of the encode at ${m.mbps} Mb/s as -b` },
+      { kind: 'encodedcrops', frame: m.frame, before: m.before, after: m.after, format: m.format, tier: m.tier, what: `${m.name}, film frame ${m.frame}: crops at full size, before the encode beside after it` },
+    ],
+  }));
+  return { groups, left: stress.filter((m) => m.why).map((m) => `The moment ${m.id} was left out: ${m.why}.`) };
 }
 
 export function planR2({ cfg, cut, film, unit, record = false }) {
@@ -398,7 +429,51 @@ export async function cropSheets({ frame, approved = null, regions, limits, titl
   return out;
 }
 
+// The regions that between them show the whole of a W x H frame at full size, in cells of cw x ch.
+export function coverRegions(W, H, cw, ch) {
+  const along = (size, cell) => {
+    const n = Math.max(1, Math.ceil(size / cell));
+    return n === 1 ? [0.5] : Array.from({ length: n }, (_, i) => i / (n - 1));
+  };
+  const xs = along(W, cw);
+  return along(H, ch).flatMap((cy) => xs.map((cx) => ({ cx, cy })));
+}
+
+// Grids of crops at full size for the compression critic: each row is one part of the frame, before the encode and after it.
+export async function encodedSheets({ before, after, limits, title }) {
+  const m = await sharp(before).metadata();
+  const W = m.width;
+  const H = m.height;
+  const am = await sharp(after).metadata();
+  if (am.width !== W || am.height !== H) throw new Error(`The two stills of ${title} are not the same size.`);
+  const cols = 2;
+  const rows = 2;
+  const cell = gridFit({ cols, rows, aspect: W / H, title: true, limits, maxCell: { width: W, height: H } });
+  const cells = [];
+  for (const r of coverRegions(W, H, cell.width, cell.height)) {
+    const box = cropBox(r.cx, r.cy, cell.width, cell.height, W, H);
+    const where = percentText(box, W, H);
+    const locator = locatorOf(box, W, H);
+    cells.push({ input: await sharp(before).extract(box).removeAlpha().png().toBuffer(), caption: `-a${SEP}before compression${SEP}${where}`, locator });
+    cells.push({ input: await sharp(after).extract(box).removeAlpha().png().toBuffer(), caption: `-b${SEP}after compression${SEP}${where}`, locator });
+  }
+  const per = cols * rows;
+  const total = Math.ceil(cells.length / per);
+  const out = [];
+  for (let g = 0; g < total; g++) {
+    const made = await grid({ cells: cells.slice(g * per, (g + 1) * per), cols, cell, title: [title, `crops at full size from ${W} x ${H}`, `part ${g + 1} of ${total}`].join(SEP) });
+    out.push(made.buffer);
+  }
+  return out;
+}
+
 export async function buildItem(item, { critic, cfg, renderer, sheet, limits, tier = null, format = null, scratch, approvedPath }) {
+  if (item.kind === 'encoded' || item.kind === 'encodedcrops') {
+    const used = { tier: item.tier, format: item.format };
+    if (item.kind === 'encoded') return { used, files: [{ side: 'a', buffer: await plain(item.before, limits) }, { side: 'b', buffer: await plain(item.after, limits) }] };
+    const grids = await encodedSheets({ before: item.before, after: item.after, limits, title: `frame ${item.frame}` });
+    return { used, files: await Promise.all(grids.map(async (g) => ({ side: null, buffer: await plain(g, limits) }))) };
+  }
   const usual = usualFor(critic, item, cfg);
   const t = tier ?? usual.tier;
   const f = format ?? usual.format;
@@ -479,6 +554,9 @@ export function namePacks(packs) {
       if (item.kind === 'pair') {
         n++;
         for (const f of item.files) files.push({ name: neutralName(pi, n, f.side), buffer: f.buffer, what: `${item.what} (the ${f.side === 'a' ? 'approved picture' : 'frame'})`, item });
+      } else if (item.kind === 'encoded') {
+        n++;
+        for (const f of item.files) files.push({ name: neutralName(pi, n, f.side), buffer: f.buffer, what: `${item.what} (${f.side === 'a' ? 'before the encode' : 'after the encode'})`, item });
       } else {
         item.files.forEach((f, i) => {
           n++;
@@ -539,9 +617,10 @@ export function writePacks({ critic, round, unit, packs, outDir, keyDir, root, n
   return { entry, manifest: manifestFile, keyFile };
 }
 
-export async function buildCritic({ critic, round, unit, cfg, cut, film, renderer, sheet, tier = null, format = null, family = null, record = false, outDir, keyDir, scratch, root, approvedPath }) {
+export async function buildCritic({ critic, round, unit, cfg, cut, film, renderer, sheet, tier = null, format = null, family = null, record = false, outDir, keyDir, scratch, root, approvedPath, stressDir = null }) {
   const filled = standInFilm(film, cut, cfg);
-  const plan = planFor(critic, { cfg, cut, film: filled.film, unit, record });
+  const stress = critic === 'R7' && stressDir ? stressStills({ cfg, film: filled.film, dir: stressDir, built: renderer.rendererState ? (await renderer.rendererState()).built : null }) : null;
+  const plan = planFor(critic, { cfg, cut, film: filled.film, unit, record, stress });
   const limits = packLimits(cfg, family);
   const used = [];
   for (const g of plan.groups) {

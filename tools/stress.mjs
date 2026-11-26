@@ -121,6 +121,9 @@ export async function stressMoment(moment, ctx) {
     delivered: `As delivered${SEP}crf ${settings.delivered.crf}${SEP}${measured.delivered.mbps} Mb/s${SEP}${core.psnrText(measured.delivered.psnrDb)} against the rendered frame`,
     stress: `At ${settings.stress.mbps} Mb/s${SEP}${measured.stress.mbps} Mb/s measured${SEP}${core.psnrText(measured.stress.psnrDb)} against the rendered frame`
   };
+  // The frame as it was rendered, before any encode: the compression critic sees it beside the still from the stress encode.
+  await rawRgb(source, width, height).png({ compressionLevel: 6 }).toFile(files.stillSource);
+  writeJson(`${files.stillSource}.json`, { ...base, kind: 'stress-source', index: range.index });
   for (const mode of ['delivered', 'stress']) {
     const stillFile = mode === 'delivered' ? files.stillDelivered : files.stillStress;
     await rawRgb(stills[mode], width, height).png({ compressionLevel: 6 }).toFile(stillFile);

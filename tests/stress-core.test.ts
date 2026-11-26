@@ -123,7 +123,7 @@ describe('the clip', () => {
   });
 
   it('names its files by moment, format and tier', () => {
-    expect(core.fileNames({ id: 'titan' }, 'hd', 'final')).toEqual({ delivered: 'titan-hd-final-delivered.mp4', stress: 'titan-hd-final-stress.mp4', stillDelivered: 'titan-hd-final-delivered.png', stillStress: 'titan-hd-final-stress.png', sideBySide: 'titan-hd-final-side-by-side.png' });
+    expect(core.fileNames({ id: 'titan' }, 'hd', 'final')).toEqual({ delivered: 'titan-hd-final-delivered.mp4', stress: 'titan-hd-final-stress.mp4', stillSource: 'titan-hd-final-source.png', stillDelivered: 'titan-hd-final-delivered.png', stillStress: 'titan-hd-final-stress.png', sideBySide: 'titan-hd-final-side-by-side.png' });
     expect(core.unitsIn(film, place('heart').last - 5, place('heart').last + 5).sort()).toEqual(['breath', 'heart']);
     expect(core.mbpsOf(1250000, 60, 60)).toBe(10);
   });
@@ -205,7 +205,7 @@ describe('the command, on a stand-in renderer', () => {
     };
   }
 
-  it('makes two clips, two stills, the side by side picture, their records and stress.json', async () => {
+  it('makes two clips, the frame before them, two stills, the side by side picture, their records and stress.json', async () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'carcass-stress-'));
     dirs.push(dir);
     const r = renderer(testScene);
