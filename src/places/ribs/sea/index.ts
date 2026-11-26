@@ -6,7 +6,7 @@ import { partAtHeight, radii, skirtPad, surface, type Rib } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
+import { STRIKE, cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
@@ -234,8 +234,7 @@ export function create(ctx: Context): Piece {
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
   const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   // A sea of the set breaking on a blade: where the open water meets its foot on the side the swell comes from, and the stone's face above it.
-  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at?: [number, number], walk = true): Strike => {
-    const out: [number, number] = [-main[0], -main[1]];
+  const strikeOn = (rib: Rib, seconds: number, height: number, width: number, id: number, at: [number, number], out: [number, number]): Strike => {
     const cs = Math.cos(rib.yaw);
     const sn = Math.sin(rib.yaw);
     const STEP = 3;
@@ -262,18 +261,11 @@ export function create(ctx: Context): Piece {
       const hi = onRow(rows[n + 1] as (typeof rows)[number], along);
       return [lo[0] + (hi[0] - lo[0]) * (at - n), lo[1] + (hi[1] - lo[1]) * (at - n)];
     };
-    // Where the sea begins before the foot: on a blade that stands in the water, the stone itself.
-    const foot = face(-75, 0);
-    let [x, z] = at ?? foot;
-    let walked = 0;
-    while (!at && walk && walked < 420 && rig.land.height(x, z) > -0.8) {
-      x += out[0] * 4;
-      z += out[1] * 4;
-      walked += 4;
-    }
+    const foot = face(0, 0);
+    const [x, z] = at;
     // Where a shore lies between the sea and the stone the water goes up into the air, not up the blade.
     if (Math.hypot(x - foot[0], z - foot[1]) > 14) return { x, z, out, seconds, width, height, lean: [0, 0], id };
-    const up = face(-75, height * 0.6);
+    const up = face(0, height * 0.6);
     return {
       x,
       z,
@@ -283,17 +275,15 @@ export function create(ctx: Context): Piece {
       height,
       lean: [(up[0] - foot[0]) / (height * 0.6), (up[1] - foot[1]) / (height * 0.6)],
       face: (along, y) => {
-        const on = face(along - 75, y);
+        const on = face(along, y);
         return [on[0] + (x - foot[0]), on[1] + (z - foot[1])];
       },
       id,
     };
   };
-  const struck = RIBS.find((r) => r.name === 'L1') as Rib;
-  const TEST = 8.65;
-  let shoreZ = 200;
-  while (shoreZ < 420 && rig.land.height(-322, shoreZ) > -0.8) shoreZ += 4;
-  const strikes: Strike[] = [strikeOn(struck, 0.35 + TEST, 52, 46, 1, undefined, false), strikeOn(struck, 4.0 + TEST, 44, 46, 2, undefined, false)];
+  // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
+  const struck = RIBS.find((r) => r.name === STRIKE.blade) as Rib;
+  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : 0.85), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
@@ -348,7 +338,6 @@ export function create(ctx: Context): Piece {
 
       sea.material = inOpening() ? seaOpening : seaMaterial;
       openSea.x = 1 + SEA_OPEN.lift * cloudShut(seconds);
-      openSea.y = inOpening() ? Math.min(1, Math.max(0, (13 - seconds) / 6)) : 0;
       openSea.z = openingWeight(seconds);
       openGlint.value = openingLight(seconds);
       openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);

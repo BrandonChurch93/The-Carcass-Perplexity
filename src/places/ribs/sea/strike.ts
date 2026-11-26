@@ -103,7 +103,7 @@ void main() {
     col = vec3(0.95, 0.96, 0.96) * vLight * fold * (0.7 + 0.3 * vUv.y) + vBack * (1.6 - 1.1 * smoothstep(0.35, 0.9, thick * web * 1.6));
   } else if (vKind < 1.5) {
     // Droplets: a handful to a card, each its own bead, drawn out along its flight.
-    vec2 q = vUv * vec2(0.2, 0.2 / vBead) + seed;
+    vec2 q = vUv * vec2(0.12, 0.12 / vBead) + seed;
     float beads = texture2D(tDrops, q).r;
     float lobe = 1.0 - smoothstep(0.25, 1.0, r2);
     alpha = clamp(beads * 1.5, 0.0, 1.0) * lobe * vLook.x;
@@ -239,6 +239,8 @@ export class Burst {
         };
       };
       const top = Math.sqrt(2 * G * s.height);
+      // A taller burst is a bigger body of water: its sheets and heads are wider with it.
+      const big = Math.sqrt(s.height / 50);
       // A body thrown with drag k in a wind: where it is and how fast, after `a` seconds, from the launch alone.
       const fly = (a: number, k: number, v0: [number, number, number], blown: number): [number, number, number, number, number, number] => {
         const e = Math.exp(-k * a);
@@ -275,7 +277,7 @@ export class Burst {
         // It tears as it goes: whole as it leaves the sea, holes by its top, strings on the way down.
         const gone = Math.min(1, 0.12 + 0.3 * a + 0.2 * rand(id, 8));
         const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - 0.6 * Math.max(0, gone - 0.6) / 0.4);
-        this.put(bx + dx, y, bz + dz, (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power), vx, vy, vz, 0, 0.92 * fade * still, rand(id, 10), gone, 0);
+        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power), vx, vy, vz, 0, 0.92 * fade * still, rand(id, 10), gone, 0);
       }
 
       // Droplets: thrown wide of the fingers, faster than the sheets at first and slowed sooner, each card a handful of beads.
@@ -292,7 +294,7 @@ export class Burst {
         if (y < -0.5) continue;
         const [bx, bz] = base(j, id);
         const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, 1 - a / (5 + 5 * rand(id, 13)));
-        this.put(bx + dx, y, bz + dz, (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, 0);
+        this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, 0);
       }
 
       // Mist: the finest water stops in the air near the top of its finger and goes off down the wind, thinning.
@@ -308,7 +310,7 @@ export class Burst {
         const y = Math.max(0.6 + dy + sink, 1.5);
         const [bx, bz] = base(j, id);
         const fade = Math.min(1, a / 0.5) * Math.pow(1 - a / life, 1.4);
-        this.put(bx + dx, y, bz + dz, 3.5 + 2.2 * a + 3 * rand(id, 9), vx, vy, vz, 2, 0.26 * fade * still, rand(id, 10), 0, rand(id, 14));
+        this.put(bx + dx, y, bz + dz, big * (3.5 + 2.2 * a + 3 * rand(id, 9)), vx, vy, vz, 2, 0.26 * fade * still, rand(id, 10), 0, rand(id, 14));
       }
 
       // The foot: the sea piles white against the stone, boils out from it over the water, and what went up the face runs back down it.
@@ -343,7 +345,7 @@ export class Burst {
           const x = s.x + tx * along * s.width * 1.1 + s.out[0] * o;
           const z = s.z + tz * along * s.width * 1.1 + s.out[1] * o;
           const fade = Math.min(1, a / 0.15) * Math.pow(1 - a / life, 1.2);
-          this.put(x, y, z, (1.8 + 1.4 * Math.min(a, 2)) * (0.7 + 0.7 * rand(id, 9)), 0, 0, 0, 3, 0.8 * fade * still, rand(id, 10), 0, 0.75);
+          this.put(x, y, z, big * (1.8 + 1.4 * Math.min(a, 2)) * (0.7 + 0.7 * rand(id, 9)), 0, 0, 0, 3, 0.8 * fade * still, rand(id, 10), 0, 0.75);
         }
       }
     }

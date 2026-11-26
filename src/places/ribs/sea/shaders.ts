@@ -213,9 +213,7 @@ void main() {
 
 /**
  * The open sea in the approach. The shut cloud lies over the blades, not over the mile of water before them, which keeps more of the sky's
- * light (uOpenSea.x times what the rig gives the ground under the cloud; 1 once the cloud has opened). And before the fog bank a mist lies
- * on the water itself, a metre or two deep, in drifts that go with the wind: a low lens looks along it, so the far water pales into the bank
- * and there is no line where the sea ends and the fog begins (uOpenSea.y: how much of it is left, nothing once the bank is gone).
+ * light (uOpenSea.x times what the rig gives the ground under the cloud; 1 once the cloud has opened).
  * And the look of a gale's sea from far out (uOpenSea.z, 1 as the film opens and nothing from the sixteenth second): gusts, more white
  * water, the path of light under the break in the cloud.
  */
@@ -250,19 +248,6 @@ export const SEA_OPENING_FRAGMENT = openingText(
   float topple = smoothstep(2.9, 4.4, h + 1.4 * (c1.b - 0.5) + 0.8 * (lacePic - 0.5)) * uOpenSea.z * calm;
   amount = max(amount, 0.85 * topple);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);`,
-    ],
-    [
-      '  gl_FragColor = vec4(rigOut(col), 1.0);',
-      `  if (uOpenSea.y > 0.0) {
-    vec2 q = p - uTime * uWind * 20.0;
-    float wide = textureLod(tChop, q / 1900.0 + 0.23, 0.0).b;
-    float drift2 = textureLod(tChop, q / 610.0 + 0.57, 0.0).a;
-    float lies = smoothstep(1560.0, 900.0, p.y + 520.0 * (wide - 0.5)) * (0.4 + 0.6 * smoothstep(0.3, 0.62, 0.55 * drift2 + 0.45 * wide));
-    // The path of the eye through a layer on the water: its depth over the sine of the glance.
-    float tau = 0.016 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
-    col = mix(col, uHaze * (0.38 + 0.05 * drift2), 1.0 - exp(-tau));
-  }
-  gl_FragColor = vec4(rigOut(col), 1.0);`,
     ],
   ],
 );
