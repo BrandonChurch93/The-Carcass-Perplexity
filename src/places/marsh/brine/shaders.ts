@@ -1,4 +1,5 @@
 // The brine's own surface, its domes of gas, and what a dome becomes when it tears.
+import { K1_AT } from '../shared/anchors';
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
 import { FIELD_GLSL } from '../land/shaders';
@@ -111,7 +112,10 @@ void main() {
   float seen = smoothstep(70.0, 20.0, dist);
   // Where the big ones wade the bed lies a hand under the brine for metres: that is not a bank, and no scum gathers on it.
   float wade = smoothstep(4.0, 6.5, length(p.xz - uWade));
-  float hug = max(smoothstep(-0.1 - 0.4 * smoothstep(0.42, 0.7, raft.r), -0.02, s) * mix(0.25, 1.0, wade), min(boil * 1.6, 0.9));
+  float hug = max(smoothstep(-0.1 - 0.4 * smoothstep(0.42, 0.7, raft.r), -0.02, s) * mix(0.25, 1.0, wade) * smoothstep(0.42, 0.6, raft.b * 0.6 + fleck.r * 0.4), min(boil * 0.7, 0.5));
+  // (Under the third lens's bank the pool's own froth is driven in: clusters of it a stride out from the lip.)
+  float lip = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
+  hug = max(hug, lip * smoothstep(-0.8, -0.06, s) * smoothstep(0.56, 0.7, fleck.g * 0.45 + raft.g * 0.55 + 0.26 * smoothstep(-0.5, -0.04, s)));
   // The froth is its picture: bubbles and pink scum on black, shown where the froth gathers, and thickest where it gathers most.
   // Close to a lens the rafts of scum are seen for what they are; far off only the line at the shore is.
   float rafts = smoothstep(20.0, 8.0, dist);
@@ -119,7 +123,7 @@ void main() {
   float want = max(hug, RAFTS * mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-1.1 - 0.5 * rafts, -0.2, s) * wade) * seen;
   vec3 scum = texture2D(tFroth, p.xz / 1.5 + drift * 3.0).rgb;
   float foam = want * smoothstep(0.03, 0.16, dot(scum, vec3(0.333)) - 0.2 * (1.0 - want) + (bubble.r - 0.5) * 0.06);
-  vec4 froth = vec4(scum * 1.5 + 0.05, foam);
+  vec4 froth = vec4((scum * 1.5 + 0.05) * vec3(0.82, 0.6, 0.55), foam * 0.85);
   // Dark clots carried on the slow drift.
   float clot = smoothstep(0.7, 0.76, bubble.r * 0.5 + fleck.g * 0.5) * smoothstep(0.5, 0.65, raft.r) * smoothstep(14.0, 6.0, dist);
   vec3 lit = brineShade(p, n, v, s, froth) * (1.0 - 0.4 * clot * (1.0 - foam));
@@ -185,7 +189,7 @@ void main() {
   // The skin is a clear film of thick liquid: what is behind it shows through it, stained. It is thick and dark only where it is seen
   // edge on and where it meets the pool.
   // (Cloudy: the brine in the film is milky where it is stretched, and red runs stand in it where it drains.)
-  vec3 albedo = mix(vec3(0.075, 0.011, 0.009), vec3(0.3, 0.125, 0.105), thin * (0.55 + 0.45 * smoothstep(0.35, 0.65, g.g)));
+  vec3 albedo = mix(vec3(0.075, 0.011, 0.009), vec3(0.25, 0.08, 0.066), thin * (0.55 + 0.45 * smoothstep(0.35, 0.65, g.g)));
   albedo = mix(albedo, vec3(0.09, 0.013, 0.01), smoothstep(0.52, 0.72, run.r) * (1.0 - 0.6 * top) * 0.8);
   vec4 grit = texture2D(tGrain, vLocal.xz * 3.3 + vLife.y * 7.0);
   float solid = 0.0;
@@ -194,7 +198,7 @@ void main() {
   if (vLife.w > 0.0) {
     vec3 from = normalize(vec3(cos(vLife.y * 40.0) * 0.6, 0.75, sin(vLife.y * 40.0) * 0.6));
     float open = dot(normalize(vLocal), from) + (g.g - 0.5) * 0.22 + (grit.r - 0.5) * 0.08;
-    float gone = 1.0 - 2.3 * vLife.w * (0.6 + 0.4 * vLife.w);
+    float gone = 1.0 - 2.0 * vLife.w * (0.55 + 0.45 * vLife.w);
     if (open > gone) discard;
     rim = smoothstep(gone - 0.1, gone, open);
     albedo = mix(albedo, vec3(0.03, 0.006, 0.005), rim);
@@ -208,7 +212,7 @@ void main() {
   // The overcast is not even: the brighter quarter of it shows on the wet skin as one sharp window, and a second, faint, from the far wall.
   float toward = max(dot(r, normalize(vec3(-0.35, 0.8, 0.3))), 0.0);
   // (Not a dot: the window is wide and soft, broken by the runs of the skin, with one brighter core.)
-  float window = (0.17 * smoothstep(0.7, 0.99, toward) + 0.12 * smoothstep(0.985, 0.997, toward)) * (0.55 + 0.9 * run.g) + 0.08 * pow(toward, 6.0);
+  float window = (0.09 * smoothstep(0.7, 0.99, toward) + 0.1 * smoothstep(0.985, 0.997, toward)) * (0.55 + 0.9 * run.g) + 0.05 * pow(toward, 6.0);
   // (And the long pale band of the open sky down the side that looks at it, cut by the runs.)
   float turn = atan(vLocal.z, vLocal.x) - 2.4 + (run.r - 0.5) * 0.5;
   turn = abs(turn - 6.2832 * floor(turn / 6.2832 + 0.5));
@@ -243,9 +247,10 @@ void main() {
   float f = 0.5 + 0.2 * sin(a * 3.0 + k * 9.0) + 0.2 * sin(a * 5.0 - k * 4.0) * sin(a + k) + 0.17 * sin(a * 11.0 + k * 3.0) * sin(a * 3.0 - k) + 0.13 * sin(a * 23.0 + k * 7.0) * sin(a * 4.0 + k * 2.0);
   float finger = pow(clamp(f, 0.14, 1.0), 1.4);
   float h = position.y;
-  // The sheet leaves the rim at 3 m/s and leans outward as it climbs; it falls back under its own weight.
-  float up = sqrt(size / 0.4) * (2.9 * age - 4.9 * age * age) * (0.34 + 0.66 * finger) * 0.7;
-  float out_ = size * (0.85 + (1.3 + 2.2 * finger) * age * (0.25 + 0.75 * h * h));
+  // The sheet leaves the rim at near 5 m/s and leans outward as it climbs. It is a film: its own tension, not its weight, stops it within
+  // an eighth of a second and pulls it back, torn.
+  float up = sqrt(size / 0.4) * (4.6 * age - 18.0 * age * age) * (0.34 + 0.66 * finger);
+  float out_ = size * (0.85 + (2.6 + 4.4 * finger) * age * (0.25 + 0.75 * h * h));
   float wob = 1.0 + 0.08 * sin(a * 7.0 + k * 5.0) + 0.05 * sin(a * 13.0 - k * 2.0);
   vec3 q = vec3(position.x * out_ * wob, max(up, 0.0) * h, position.z * out_ * wob);
   vec4 w = modelMatrix * instanceMatrix * vec4(q, 1.0);
@@ -269,7 +274,7 @@ void main() {
   // The top of the sheet is torn into tongues, and holes open in it as it stretches.
   vec4 g = texture2D(tGrain, vec2(vLocal.x * 0.6 + vLife.y, vLocal.y * 0.7));
   float tip = 0.35 + 0.65 * vLocal.z;
-  float torn = vLocal.y - tip + (g.r - 0.5) * 0.45 + vLife.x * 0.7 * g.g;
+  float torn = vLocal.y - tip + (g.r - 0.5) * 0.45 + vLife.x * 2.4 * g.g;
   if (torn > 0.0 || vLife.x <= 0.0) discard;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 radial = normalize(vNormal);
