@@ -275,7 +275,10 @@ void main() {
     float fall = max(-rd.y, 0.0) + 0.6;
     // A long lens sees a far head as large as a short one sees a near head: it reads the deck as finely, and its haze stands as much farther off.
     seaLens = max(0.466 / uInvProjection[1][1], 1.0);
-    seaPix = 0.00035 / seaLens;
+    // It reads no finer than its pixel is deep on the deck: a ray that grazes it takes in a long strip of it, many heads to a pixel
+    // row, and read fine there each row of the picture is a different slice of them, drawn as dashes. So the lens's gain is given
+    // back as the ray lies flatter, and a short lens reads as it did.
+    seaPix = 0.00035 / seaLens * clamp(0.12 / max(-rd.y, 1e-3), 1.0, seaLens);
     vec3 p = ro + rd * t;
     bool found = false;
     float before = t;
