@@ -1787,6 +1787,8 @@ Applied: the final film is planned at 3840 x 2160, which answers the first part 
 
 21. 2026-11-26 by 20:38 UTC (1:38 PM Mountain Time), in the thread, during wave 1 of the wide polish: "I don't know if we need to spend more 11 labs tokens the audio so far sounds great unless there's something I'm missing that you have planned in?"
 Applied: nothing was planned and nothing is planned now. All eight narration clips and all 20 sounds of his list are kept, and what is left for the sound is the final mix, which costs no credits. No ElevenLabs call is made from here on unless he asks by name for a change to a clip or a sound. The count stays 5,037 of the 17,000 cap.
+22. 2026-11-26 by 20:40 UTC (1:40 PM Mountain Time), through Partner, as a session message "on Brandon's request": "please let me know if any of these ever are waiting on me." Partner asks, without any pause in the work: whenever something only Brandon can give (a decision, an approval, "move on", a file, a budget) will hold up finishing or a phase, send Partner one line by session message as well, in the form "<project>: waiting on Brandon for <what>, asked <time MT>, costs <what it delays>", and one more line when he has answered. The question is still asked in this thread as before.
+Applied from now on. Nothing is waiting on him at this moment: the size is answered (note 20), the 1080p copy and the place of the 4K render have defaults the Builder states in status 131, and the question whether to go on below the bar is first put after the first judged round of the wide polish, when its line goes to Partner too.
 
 ## Review items
 
