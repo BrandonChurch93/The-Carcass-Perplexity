@@ -46,12 +46,12 @@ float lowPicture(vec2 w) {
   float pic = 0.0;
   if (away < 1.0) {
     // Small cumulus stand in streets along the wind, with clear lanes between: the photograph's puffs, kept where a street runs.
-    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 140.0 + vec2(0.13, 0.4)).rgb, 0.22, 0.85);
+    float puff = seen(texture2D(uMatPopcorn, mat2(0.8, 0.6, -0.6, 0.8) * w / 250.0 + vec2(0.13, 0.4)).rgb, 0.2, 0.8);
     float street = texture2D(uCloudTile, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(330.0, 170.0) + vec2(0.4, 0.1), 1.0).b;
-    pic += (1.0 - away) * puff * smoothstep(0.42, 0.7, street);
+    pic += (1.0 - away) * puff * smoothstep(0.34, 0.62, street);
   }
   if (away > 0.0) {
-    float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1700.0, 1350.0) + vec2(0.3, 0.7)).rgb, 0.2, 0.85);
+    float streak = seen(texture2D(uMatStreaks, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(1700.0, 1350.0) + vec2(0.3, 0.7)).rgb, 0.17, 0.85);
     pic += away * streak * (0.4 + 0.6 * streak);
   }
   return pic;
@@ -69,10 +69,10 @@ vec2 lowField(vec2 at) {
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = coverAt(at).g * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
-  float field = amount * (0.12 + 0.88 * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
+  float field = amount * (0.26 + 0.74 * smoothstep(0.34, 0.72, slow + 0.2 * (amount - 0.6)));
   float pic = lowPicture(w);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, 1.25 * pic) * smoothstep(0.0, 0.5, field);
+  float thick = min(1.0, 1.1 * pic) * smoothstep(0.0, 0.5, field);
   return vec2(thick, pic);
 }
 

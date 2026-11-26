@@ -23,7 +23,7 @@ HIGH = WIDE * 9 / 16
 # The fronts: centre x and y (px of the master), half size (px), turn (degrees). weather.ts holds the same four numbers for each.
 FRONTS = [(4950.0, -180.0, 1250.0, 22.0), (500.0, 3750.0, 1150.0, -8.0)]
 # The cyclone and the storm: centre, half sizes (px of the master), as sky/index.ts places their sheets.
-CYCLONE = (5557.0, 3007.0, 900.0, 900.0)
+CYCLONE = (5557.0, 3007.0, 1080.0, 1080.0)
 STORM = (79.14 + 0.535 * 5872.86, 44.52 + 0.4563 * 3305.24, 215.0, 165.0)
 MAP_A = (2983.67, 1727.13, 5295.59)
 
@@ -62,7 +62,7 @@ for cx, cy, half, turn in FRONTS:
 blue = np.zeros((H, W), np.float32)
 for (cx, cy, hx, hy), name in ((CYCLONE, 'cyclone'), (STORM, 'storm')):
     pic = luma(os.path.join(PUB, 'mat', f'{name}.jpg'))
-    blue = np.maximum(blue, step(0.05, 0.6, read(pic, (px - cx) / (2 * hx) + 0.5, (py - cy) / (2 * hy) + 0.5)))
+    blue = np.maximum(blue, step(0.3, 0.8, read(pic, (px - cx) / (2 * hx) + 0.5, (py - cy) / (2 * hy) + 0.5)))
 
 # The land, from the relief of the widest map.
 relief = np.asarray(Image.open(os.path.join(PUB, 'land', 'relief-a.png')).convert('RGB'), dtype=np.float32)[..., 2] / 255.0

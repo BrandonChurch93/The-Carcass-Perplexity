@@ -141,8 +141,8 @@ void main() {
   // ---- the colour of this place: cold. The growth of the lowlands is dark slate and teal, the rock blue grey, the high crests the pale of old bone. ----
   lum = dot(ground, vec3(0.3, 0.55, 0.15));
   float growth = clamp((ground.g - max(ground.r, ground.b)) / max(lum, 0.02) * 4.0, 0.0, 1.0) * land;
-  ground = mix(ground, lum * vec3(0.42, 0.68, 0.78), 0.85 * growth);
-  ground = mix(ground, mix(vec3(lum), ground, 0.85) * mix(vec3(0.92, 0.99, 1.09), vec3(1.0), smoothstep(0.2, 0.5, height)), land);
+  ground = mix(ground, lum * vec3(0.3, 0.7, 0.62), 0.4 * growth);
+  ground = mix(ground, mix(vec3(lum), ground, 0.85) * mix(vec3(0.97, 1.0, 1.03), vec3(1.0), smoothstep(0.2, 0.5, height)), land);
   // Only near the top of the rise does the body come together: the great ranges stand pale as old bone, the country between them falls dark and cold.
   // Near the ground the country is warm tan under a soft light, its shade open.
   float near = (1.0 - smoothstep(150.0, 520.0, uViewKm)) * land;
@@ -206,9 +206,9 @@ void main() {
   if (lakeR < 1.3) {
     vec2 w = lakeAt + 0.2 * vec2(vnoise(lakeAt * 2.7 + 3.0), vnoise(lakeAt * 2.7 + 17.0));
     float swirl = vnoise(w * 5.0 + 2.4 * vnoise(w * 2.1 + 3.0 + uTime * 0.02));
-    float amber = max(smoothstep(0.7 + 0.24 * swirl, 0.99, lakeR), smoothstep(0.08, 0.55, shallow) * smoothstep(0.55, 0.85, lakeR));
+    float amber = max(smoothstep(0.6 + 0.3 * swirl, 0.97, lakeR), smoothstep(0.08, 0.55, shallow) * smoothstep(0.55, 0.85, lakeR));
     float paler = smoothstep(0.25, 0.9, shallow + 0.5 * (swirl - 0.4));
-    vec3 eye = mix(vec3(0.003, 0.006, 0.014), mix(vec3(0.055, 0.026, 0.004), vec3(0.24, 0.13, 0.022), paler), amber);
+    vec3 eye = mix(vec3(0.0015, 0.0035, 0.009), mix(vec3(0.085, 0.036, 0.004), vec3(0.3, 0.15, 0.022), paler), amber);
     bed = mix(bed, eye, 1.0 - smoothstep(1.12, 1.3, lakeR));
   }
   vec3 water = bed * light / 3.14159;
@@ -240,15 +240,19 @@ void main() {
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * (0.005 + 0.2 * fresnel) * sparkle * (0.4 + 0.6 * shade);
+  // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
+  water += uSkyColour * 0.006 * (sparkle - 0.85) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
   water += uSunColour * vec3(0.9, 0.95, 1.0) * lobe * 0.004 * shade * (0.55 + 0.45 * sparkle);
-  water += uSunColour * vec3(0.88, 0.94, 1.0) * 0.0075 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.25 + 0.75 * sparkle) * (0.6 + 0.8 * calm);
+  water += uSunColour * vec3(0.88, 0.94, 1.0) * 0.0085 * exp(-lean * lean / 0.0036) * (0.5 + 0.5 * shade) * (0.25 + 0.75 * sparkle) * (0.6 + 0.8 * calm);
 
   vec3 colour = mix(water, earth, land);
 
   // ---- the air between the surface and the eye: more of it toward the edge of the planet, less over the high ground ----
   float path = 1.0 / max(mu, 0.12);
   float far = smoothstep(120.0, 900.0, uViewKm);
-  float air = 1.0 - exp(-mix(0.03, 0.05, far) * path * (1.0 - 0.5 * height * land));
+  // From orbit the haze is thin straight down and grows toward the edge of the planet, where it lifts the darks to blue grey.
+  float beyond = max(path - 1.5, 0.0);
+  float air = 1.0 - exp(-(mix(0.014, 0.011, far) * path + 0.013 * far * beyond * beyond) * (1.0 - 0.5 * height * land));
   colour = mix(colour, mix(uAirColour, vec3(0.2, 0.27, 0.38), 0.5 * far) * (0.4 + 0.6 * shade), air);
   colour += glow * (1.0 - 0.5 * air);
 

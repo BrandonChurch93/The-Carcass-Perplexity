@@ -24,7 +24,7 @@ const CLOUD_LIGHT_GLSL = /* glsl */ `
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
-  vec3 c = 0.92 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
+  vec3 c = 0.8 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
   float air = 1.0 - exp(-0.0125 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour * 0.7, air);
 }`;
@@ -70,8 +70,8 @@ void main() {
   vec3 frontColour = cloudLight(mid, 0.2 + 0.55 * front.y + 0.5 * frontSelf, 0.5 + 0.5 * front.x, 0.5) * (0.55 + 0.6 * front.y);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
-  float m = front.x * 0.8;
-  float b = high * 0.2;
+  float m = front.x * 0.6;
+  float b = high * 0.13;
   vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + frontColour * m * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - m) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -104,7 +104,7 @@ void main() {
   float self = clamp(0.5 + 3.0 * (seenLight - sunward), 0.0, 1.0);
   // Only the wall round the eye is whole. Out along the arms the cloud is bands with sea between, thinner the farther out.
   float open = smoothstep(0.08, 0.42, r);
-  float thick = smoothstep(mix(0.3, 0.46, open), mix(0.8, 0.9, open), seenLight) * (1.0 - smoothstep(0.7, 0.98, r)) * mix(1.0, 0.8, open);
+  float thick = smoothstep(mix(0.3, 0.36, open), mix(0.8, 0.86, open), seenLight) * (1.0 - smoothstep(0.7, 0.98, r)) * mix(1.0, 0.8, open);
   float tall = smoothstep(0.45, 0.9, seenLight);
   vec3 colour = cloudLight(vWorld.xz, 0.1 + 0.4 * seenLight + 0.7 * self, 0.5 + 0.5 * tall, 0.5 * tall) * (0.42 + 0.62 * seenLight);
   float alpha = clamp(thick, 0.0, 0.97);
@@ -138,13 +138,13 @@ void main() {
   vec2 bend = texture2D(uCloudTile, vUv * 0.7 + uTime * vec2(0.004, -0.003)).rg - 0.5;
   vec2 q = vUv + bend * 0.035;
   float seenLight = lightOf(q);
-  float thick = smoothstep(0.1, 0.55, seenLight) * (1.0 - smoothstep(0.78, 1.0, length(vUv * 2.0 - 1.0)));
+  float thick = smoothstep(0.16, 0.7, seenLight) * (1.0 - smoothstep(0.78, 1.0, length(vUv * 2.0 - 1.0)));
   // This place's sun lights it: a tower stands bright on its sunward side and throws its shade down the far one.
   vec2 sunUv = normalize(uSunDir.xz) * vec2(1.0 / 430.0, -1.0 / 330.0);
   float sunward = lightOf(q + sunUv * 9.0);
   float lee = lightOf(q - sunUv * 22.0);
   float self = clamp(0.5 + 2.6 * (seenLight - sunward) - 0.9 * max(lee - seenLight, 0.0), 0.0, 1.0);
-  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.82 * self, 0.8, 0.6) * (0.3 + 0.82 * pow(seenLight, 1.7));
+  vec3 colour = cloudLight(vWorld.xz, 0.08 + 0.8 * self, 0.8, 0.6) * (0.25 + 0.75 * pow(seenLight, 1.7));
   // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
@@ -268,7 +268,7 @@ export function create(ctx: Context): Piece {
     uVeil: { value: data('mat/veil.jpg', true) },
   });
   sheet('storm', quad(AT.storm, 215, 165, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
-  sheet('cyclone', quad(AT.cyclone, 900, 900, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: data('mat/cyclone.jpg', false) } });
+  sheet('cyclone', quad(AT.cyclone, 1080, 1080, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: data('mat/cyclone.jpg', false) } });
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>
     new THREE.RingGeometry(inner * LIMB.r * KM, outer * LIMB.r * KM, 720, 1).rotateX(-Math.PI / 2).translate(X(centre.x), 12, Z(centre.y));
