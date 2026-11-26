@@ -1,0 +1,7 @@
+2026-11-26 04:59 UTC
+work at 9741a5f on agent/spine-storm-3
+Start state (main 9741a5f) at 4K draft: spine-3 has no flash or glow, spine-2 kites opaque and few, spine-4 herd small and flat lit, spine-1 body mostly black hull
+look-1.jpg = out/work/compare/spine-3.png
+look-2.jpg = out/work/compare/spine-2.png
+look-3.jpg = out/work/compare/spine-4.png
+look-4.jpg = out/work/compare/spine-1.png
