@@ -68,7 +68,7 @@ vec2 cellsOf(vec2 p) {
 // The low cloud: x how thick (0 to 1), y how much it faces the sun (0.5 is level), z how fine its edge is drawn.
 // Fields of cells, each a few km across, in streets and clumps: the share of the sky they take comes from the cover.
 vec3 lowCloud(vec2 at) {
-  vec2 drift = uTime * vec2(1.3, -0.35);
+  vec2 drift = uTime * vec2(2.9, -0.8);
   float px = fwidth(at.x) + fwidth(at.y);
   float away = smoothstep(150.0, 560.0, uViewKm);
   // The wind is not straight: the whole field is read through a slow bend, so its streets curve.
@@ -140,7 +140,7 @@ vec3 lowCloud(vec2 at) {
 // The high cloud: thin streaks of ice drawn out along the wind.
 float highCloud(vec2 xz) {
   // The wind aloft runs across the wind below, and the other way: in the rise the veil is seen to move against the deck.
-  vec2 drift = uTime * vec2(-1.9, 1.2);
+  vec2 drift = uTime * vec2(-3.6, 2.3);
   vec3 cover = coverAt(xz);
   mat2 aloft = mat2(0.34, -0.94, 0.94, 0.34);
   vec2 w = aloft * (xz - drift);

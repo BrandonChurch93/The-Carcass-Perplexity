@@ -33,6 +33,7 @@ uniform float uOnly;
 uniform vec3 uHandWater;
 uniform vec3 uHandRing;
 uniform vec3 uRingShape;
+uniform float uBreak;
 uniform vec2 uHand;
 uniform vec2 uLake;
 uniform vec2 uLakeSize;
@@ -80,6 +81,12 @@ void main() {
   if (bendBy > 0.0) {
     vec2 bendOf = vec2(vnoise(lakeAt * 2.6 + 3.0) + 0.5 * vnoise(lakeAt * 8.0 + 7.0), vnoise(lakeAt * 2.6 + 19.0) + 0.5 * vnoise(lakeAt * 8.0 + 31.0)) - 0.75;
     read += bendBy * 0.16 * uLakeSize * bendOf;
+  }
+  // From near, the pictures are read through a small bend everywhere (under a kilometre): the generator lets water run along the
+  // rows and columns of its grid on flat ground, and unbent that shows as straight valleys at right angles.
+  if (uViewKm < 700.0) {
+    float bendNear = 1.0 - smoothstep(350.0, 700.0, uViewKm);
+    read += bendNear * (0.95 * (vec2(vnoise(xz / 6.3 + 2.0), vnoise(xz / 6.3 + 41.0)) - 0.5) + 0.34 * (vec2(vnoise(xz / 1.9 + 7.0), vnoise(xz / 1.9 + 23.0)) - 0.5));
   }
   vec2 uvWide = (read - uRectWide.xy) * uRectWide.zw;
   vec2 uvClose = (read - uRectClose.xy) * uRectClose.zw;
@@ -218,22 +225,22 @@ void main() {
   // (The pale of the bones follows their relief: full on the crests and the high slopes, thin in the valleys that cut them, so the
   // range is seen as rock with its own valleys and not as a band of colour.)
   float crest = smoothstep(0.1, 0.46, height);
-  ground = mix(ground, vec3(0.57, 0.545, 0.49), 0.46 * skeleton * top * mix(0.42, 1.12, crest));
+  ground = mix(ground, vec3(0.77, 0.735, 0.655), 0.6 * skeleton * top * mix(0.42, 1.12, crest));
   ground *= mix(vec3(1.0), vec3(0.86, 0.97, 1.04), top);
-  ground *= mix(1.0, 0.72, (1.0 - skeleton) * top) * mix(1.0, 0.8, top);
+  ground *= mix(vec3(1.0), vec3(0.47, 0.68, 0.65), (1.0 - skeleton) * top) * mix(1.0, 0.84, top);
   // Bare rock is the colour of old bone, not of snow: the snow lies on the highest crests alone.
   float bare = smoothstep(0.1, 0.26, height) * (1.0 - smoothstep(0.58, 0.76, height));
-  ground *= mix(vec3(1.0), vec3(0.84, 0.7, 0.54), bare * mix(0.5, 1.0, fromFar));
+  ground *= mix(vec3(1.0), vec3(0.8, 0.8, 0.83), bare * mix(0.5, 1.0, fromFar));
   if (land > 0.0) {
     // No two ranges are one rock: warm and cold by turns over tens of km, so the relief does not read as one pattern laid down again.
     vec2 strata = xz + 30.0 * vec2(vnoise(xz / 61.0 + 8.0), vnoise(xz / 61.0 + 27.0));
-    ground *= mix(vec3(1.12, 1.0, 0.86), vec3(0.86, 0.95, 1.05), smoothstep(0.25, 0.75, vnoise(strata / 47.0 + 1.0))) * (0.84 + 0.32 * vnoise(strata / 13.0 + 6.0));
+    ground *= mix(vec3(1.03, 1.0, 0.95), vec3(0.84, 0.95, 1.1), smoothstep(0.25, 0.75, vnoise(strata / 47.0 + 1.0))) * (0.84 + 0.32 * vnoise(strata / 13.0 + 6.0));
     ground = mix(ground, vec3(0.86, 0.89, 0.93), 0.55 * smoothstep(0.64, 0.82, height) * fromFar);
     // The plains are not one colour: dry steppe, dark growth, red earth, in provinces hundreds of km across.
     float plain = (1.0 - smoothstep(0.05, 0.22, height)) * fromFar;
     if (plain > 0.0) {
       vec2 province = xz + 90.0 * vec2(vnoise(xz / 230.0 + 4.0), vnoise(xz / 230.0 + 31.0));
-      vec3 soil = mix(vec3(1.28, 1.04, 0.7), vec3(0.7, 0.93, 0.68), smoothstep(0.35, 0.65, vnoise(province / 420.0 + 3.1)));
+      vec3 soil = mix(vec3(1.08, 1.0, 0.86), vec3(0.62, 0.86, 0.9), smoothstep(0.35, 0.65, vnoise(province / 420.0 + 3.1)));
       soil = mix(soil, vec3(1.32, 0.8, 0.6), smoothstep(0.55, 0.8, vnoise(province / 290.0 + 17.0)));
       ground *= mix(vec3(1.0), soil, 0.8 * plain * (1.0 - salt));
     }
@@ -265,7 +272,7 @@ void main() {
   float vein = cracks(xz / 7.0) * exp(-d0 / 2600.0) * (0.25 + 0.6 * uBeat);
   heat = (heat + vein) * land * (1.0 - smoothstep(0.14, 0.3, height));
   vec3 glow = blackbody(1080.0 + 380.0 * clamp(heat, 0.0, 1.4)) * 0.15 * smoothstep(0.03, 0.6, heat);
-  glow += vec3(1.0, 0.3, 0.06) * 0.3 * halo * land;
+  glow += vec3(1.0, 0.3, 0.06) * 0.11 * halo * land * clamp(0.35 + 2.2 * dot(slope, -fromLava / (length(fromLava) + 1.0)), 0.0, 1.8);
 
   // ---- the water ----
   // What comes back from under the surface, lit by the sun and the sky.
@@ -281,6 +288,12 @@ void main() {
   }
   float stain = smoothstep(0.0, 0.14, sea.r - sea.b);
   float shelf = 1.0 - smoothstep(0.0, 0.7, depth);
+  // The shallows are no line drawn round every shore: wide and murky where the bed lies flat, with ochre and olive silt in them,
+  // and none at all where steep ground meets deep water.
+  float shoal = smoothstep(0.34, 0.62, vnoise(xz / 85.0 + 13.0) + 0.3 * (vnoise(xz / 21.0 + 4.0) - 0.5)) * (1.0 - smoothstep(0.25, 0.6, length(slope)));
+  float rim = smoothstep(0.3, 0.47, shape.b) * (1.0 - land);
+  sea = mix(sea, sea * vec3(0.2, 0.34, 0.44), rim * (1.0 - shoal) * (1.0 - stain));
+  sea = mix(sea, sea * vec3(1.05, 0.9, 0.5), rim * shoal * smoothstep(0.4, 0.7, vnoise(xz / 33.0 + 21.0)) * 0.7);
   if (land < 1.0) {
     vec2 gyre = xz + 140.0 * vec2(vnoise(xz / 520.0 + 7.0), vnoise(xz / 520.0 + 23.0));
     float bloom = vnoise(gyre / 380.0 + 11.0);
@@ -298,12 +311,13 @@ void main() {
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   water += uSkyColour * mix(0.22, 0.1, far) * fresnel;
-  water += uSunColour * vec3(1.0, 0.86, 0.66) * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
+  water += uSunColour * vec3(0.9, 0.93, 0.98) * lobe * 0.0036 * shade * (0.6 + 0.4 * depth);
   // Round the glint the low sun lies on the sea as a broad warm glare.
-  water += uSunColour * vec3(1.0, 0.84, 0.62) * 0.0064 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
+  water += uSunColour * vec3(0.86, 0.92, 1.0) * 0.0064 * exp(-lean * lean / 0.0062) * (0.5 + 0.5 * shade) * (0.3 + 1.0 * calm + 0.6 * (ruffle - 0.5));
   // Surf: a broken white line where the swell meets the coast.
   float surf = smoothstep(0.405, 0.47, shape.b) * (1.0 - land) * smoothstep(0.35, 0.75, ruffle + 0.4 * vnoise(xz * 1.7));
-  water = mix(water, vec3(0.62) * light / 3.14159, 0.55 * surf);
+  surf *= smoothstep(-0.1, 0.5, dot(slope, vec2(-0.8, 0.6)) / max(length(slope), 0.05));
+  water = mix(water, vec3(0.62) * light / 3.14159, 0.4 * surf);
 
   vec3 colour = mix(water, earth, land);
 
@@ -322,7 +336,15 @@ void main() {
   float k = clamp(floor(log(max(r, 1e-4) / uRingShape.x) / log(1.5) + 0.5), 0.0, 8.0);
   float ringAt = uRingShape.x * pow(1.5, k);
   float pixel = fwidth(r);
-  float ring = 1.0 - smoothstep(-pixel, pixel, abs(r - ringAt) - 0.5 * uRingShape.y * ringAt);
+  // Once the rise begins the rings are water and no drawn thing: each one bent out of round, broken into arcs of uneven strength,
+  // soft at its edges, weaker the further out, and the whole of it soon gone. (On the first frame uBreak is 0 and nothing here acts.)
+  vec2 round = fromLake / max(r, 1e-4);
+  float bentBy = vnoise(round * 2.3 + k * 3.7) + 0.5 * vnoise(round * 6.1 + k * 9.1) - 0.75;
+  float rr = r * (1.0 + uBreak * 0.11 * bentBy);
+  float soft = pixel + uBreak * 0.3 * uRingShape.y * ringAt;
+  float ring = 1.0 - smoothstep(-soft, soft, abs(rr - ringAt) - 0.5 * uRingShape.y * ringAt * (1.0 - 0.45 * uBreak));
+  float arcs = smoothstep(0.38, 0.7, vnoise(round * 3.4 + k * 5.3 + 2.0) + 0.35 * (vnoise(xz * 0.9 / max(ringAt, 1e-3) * 9.0) - 0.5));
+  ring *= mix(1.0, arcs * exp(-0.3 * k) * 0.7, uBreak);
   vec3 hand = mix(uHandWater, uHandRing, ring * uHand.y);
   colour = mix(colour, hand, max(uHand.x, ring * uHand.y * step(shape.b, 0.3)));
 
@@ -371,6 +393,7 @@ export function create(ctx: Context): Piece {
     uHandWater: { value: new THREE.Color(handoff.water) },
     uHandRing: { value: new THREE.Color(handoff.ring) },
     // The first ring's radius, km, and the width of a ring as a share of its radius.
+    uBreak: { value: 0 },
     uRingShape: { value: new THREE.Vector3((handoff.ringRadii[0] as number) * handoff.revealHalfHeightKm, handoff.ringWidth, 0) },
     // x: how much of the flat water of the handoff is left. y: how much of the rings.
     uHand: { value: new THREE.Vector2(1, 1) },
@@ -412,6 +435,7 @@ export function create(ctx: Context): Piece {
       (uniforms.uRectClose as THREE.IUniform).value = rects[pair.fine];
       (uniforms.uClose as THREE.IUniform<number>).value = pair.mix;
       const wide = width / startWidth;
+      (uniforms.uBreak as THREE.IUniform<number>).value = ease(1, 1.16, wide);
       (uniforms.uHand as THREE.IUniform<THREE.Vector2>).value.set(1 - ease(1, 1.7, wide), 1 - ease(RING_FADE[0], RING_FADE[1], wide));
     },
     solo: (part) => {

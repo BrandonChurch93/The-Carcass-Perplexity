@@ -25,13 +25,12 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 - A log spiral cyclone in the shader: read as painted at any setting.
 - Pale ranges drawn as colour without relief: chalk lines. The pale tint must follow the slope light.
 - Thresholding a cloud photograph hard (`grown` with a narrow step): flecks and blocks of the JPEG show. Wide step, floor taken off, half a mip of blur.
-- Rendering at 3840 x 2160 while `make_land.py` runs: out of memory on 7.9 GB. Run the generator alone (15 minutes).
-- A seventh take of `cyclone` and `cloud-cover` was made by mistake at version 2 and thrown away; the limit is six.
+- Rendering at 3840 x 2160 while `make_land.py` runs: out of memory on 7.9 GB. Run it alone (15 minutes). A seventh take of `cyclone` and `cloud-cover` was made by mistake at version 2 and thrown away.
 
 ## Still wrong beside the approved pictures, worst first
 
 1. `reveal-4`: the bones carry the grain of rock now, but it is the range tile laid 8 and 15 times its real size, not relief of their own; the pale band under it keeps a soft edge and a dark surround that reads as tinted at native size.
-2. `reveal-4`: mean 49/58/68 against 47/62/73. The sea is a little less blue than approved; the top of the frame is brighter (the front there), and approved has many small scattered clouds toward the limb where this has a few large systems.
+2. `reveal-4`: the top of the frame is brighter than approved (the front there), and approved has many small scattered clouds toward the limb where this has a few large systems. Means are near (see the hand-back).
 3. `reveal-4`, `reveal-3`: cloud scraps keep hard edges at native size, and the low deck has no depth of its own (one height). No picture of a front is used: `mat/front.jpg` is not placed.
 4. `reveal-2`, `reveal-3`: one family of dendritic valleys still carries the head. The three kinds of country change grain and colour, the tableland only a little of the large shape.
 5. `reveal-1`, `reveal-2`: near cloud is the old tile, soft and without structure.
@@ -40,10 +39,20 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 8. `reveal-4`: a few islands west of the pelvis read dark as the sea with a thin shore line.
 9. `mat/shelf` and `mat/redflat` are not used: the shelves and the salt pan have no fine detail.
 
+## Round 13 (judged on version 2), in the order given: closed, tried, not reached
+
+1. Body at the top: tried, and by my own look at 400 px closed (skull, ribs, pelvis, legs told apart): `bones.jpg` turns the crests of the great ranges ivory and the land between dark slate, above 680 km only. Not shown to fresh viewers. The gaps between the ribs are still dark land, not sea.
+2. Rings in the basin: closed. From the second frame they bend, break into arcs, soften, weaken outward, and are gone by frame 9578 (`uBreak`, `RING_FADE`). Frame 9541 is unchanged against the Eye.
+3. Cyan shore line: tried. Shallows are darkened where the ground is steep or a noise says no shoal, silted ochre in the shoals, surf on the windward side only. The pale rim is in `ground-*.jpg` itself: weaker and uneven now, not gone. The cure is land take 6.
+4. One procedural terrain: tried (three `mat` tiles near, the range tile on the bones from orbit). The valleys of `erode.c` still carry the head; near, the pictures are read through a small bend, which hides the straight grid valleys at `reveal-1`. The banding at `reveal-1` (8 bit height in `shape-d.jpg`) and the master as colour and height source: not reached.
+5. Weather that moves: the spiral is closed (the cyclone is the photograph, turning 2.2 times faster); deck and veil drift about twice as fast, against each other. A fine field of small cumulus over all the open sea: not reached.
+6. Cold light: tried. Rock is grey blue, the green soil province is gone, the glare is silver. Olive lowland baked in `ground-b.jpg` stays at `reveal-2`.
+7. Water: not reached, but for the glare and the shoals. Lakes are still flat. 8. Vapour: not reached. Lava: points small, the halo a third and only on slopes facing the vent.
+
 ## Staged, by shot (`reveal-01`)
 
 - The relief is drawn up with distance (slope times up to 1.6, a side light across whole ranges from the height read 9 texels each way).
-- Cloud shadows are drawn up to three times their true length from far.
+- Cloud shadows are drawn up to three times their true length from far. Cloud drifts at 3 km a second and the cyclone turns in minutes: both far faster than weather.
 - The body is brought in by the height of the eye (680 to 1,380 km), not by anything in the world. It is not drawn near the salt pan.
 - The front is cleared round the storm (`STORM_AT`) and the low deck thinned over the body (to 15 and 40 percent) so the figure shows.
 - The glint and glare sit at `uGlint`, placed for the last frame; the lake shore is bent by noise only near the lake.
@@ -54,12 +63,12 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 
 ## Cost, seconds a sample at 3840 x 2160, key `reveal-4`, draft, 4 cores (`npm run -s cost`)
 
-- As handed in (`ORBIT_GRAIN` and `SELF_SHADE` on): whole frame 7.79; an empty frame 1.70. Runs of the same code differ by about 0.3.
-- `continent` with `sea`, `salt`, `lake`, `lava`: 3.84 above empty. `cloud`: 2.14. `vapour`, `storm`, `cyclone`, `space`, `atmosphere`: each under 0.15.
-- Cheaper land: `ORBIT_GRAIN = false` in `land/index.ts` (the great ranges smooth from orbit): whole 7.40, continent 3.64.
+- As handed in (`ORBIT_GRAIN` and `SELF_SHADE` on): whole frame 7.91; an empty frame 1.68 (7.79 before the round 13 shore work). Runs of the same code differ by about 0.3.
+- `continent` with `sea`, `salt`, `lake`, `lava`: 4.33 above empty (3.84 before the shore work). `cloud`: 2.14. `vapour`, `storm`, `cyclone`, `space`, `atmosphere`: each under 0.15.
+- Cheaper land: `ORBIT_GRAIN = false` in `land/index.ts` (the great ranges smooth from orbit): about 0.4 less (7.40 against 7.79, measured before round 13).
 - Cheaper cloud: `SELF_SHADE = false` in `sky/index.ts` (cloud lit by its photograph alone): 0.28 less (6.98 against 6.70, measured before the bay and the grain).
 - Dearer shade: `FULL_SHADE = true` in `shared/weather.ts` (three reads of the deck for the ground shade): about 0.95 more (measured at version 2).
-- So the aim of 7 is missed by about 0.8 as handed in, and is only about met with both cheaper settings.
+- So the aim of 7 is missed by about 0.9 as handed in, and by about 0.2 with both cheaper settings.
 
 ## Next, in order
 

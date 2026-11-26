@@ -104,5 +104,5 @@ export function poseAt(frame: number): Pose {
 export const BEAT = eventSeconds(UNIT, 'heartbeat');
 
 /** The rings on the lake that the Eye hands over fade out between these widths of the view, in units of the width at the first frame. */
-export const RING_FADE: [number, number] = [1.35, 2.75];
+export const RING_FADE: [number, number] = [1.2, 1.9];
 export { handoff, traced, tuning };

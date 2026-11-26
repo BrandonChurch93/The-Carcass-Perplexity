@@ -78,7 +78,7 @@ void main() {
   vec2 p = vUv * 2.0 - 1.0;
   float r = length(p);
   // The whole storm turns, the middle faster than the rim.
-  float turn = uTime * (0.008 + 0.012 / (1.0 + 9.0 * r));
+  float turn = uTime * (0.018 + 0.026 / (1.0 + 9.0 * r));
   float c = cos(turn);
   float s = sin(turn);
   vec2 q = vec2(c * p.x - s * p.y, s * p.x + c * p.y) * 0.5 + 0.5;
