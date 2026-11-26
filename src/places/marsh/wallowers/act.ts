@@ -80,9 +80,10 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   rest(out, plan, b);
   const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.34 * k, phase: 0.275, lead: 1 };
   const cycle = 1.45;
-  const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle);
-  const up = 1 - ease(-1.0, -0.25, t) + ease(1.25, 2.0, t);
-  const turn = ease(1.3, 2.3, t);
+  // It walks on again once it has looked: a cycle and more, from a stand.
+  const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle + runUp(v, 1.5, 0.5));
+  const up = 1 - ease(-1.0, -0.25, t) + ease(0.95, 1.55, t);
+  const turn = ease(1.0, 1.8, t) * (1 - 0.6 * ease(2.0, 2.7, t));
   const dig = (v: number): number => pulse(-0.45, 0.75, v) + pulse(0.6, 1.5, v);
   const shove = dig(t) * (1 - up);
   const w = walk(out, plan, b, far(t), far(t - 0.16), k * 0.1 * dig(t), pace);
@@ -91,9 +92,9 @@ export function young(plan: Plan, b: Build, seconds: number, t: number, toward: 
   out.breath = 1.4 * Math.sin(seconds * 3.1 + b.seed * 9);
   out.pitch += 0.04 * shove - 0.03 * up + 0.006 * out.breath;
   out.bob += k * 0.01 * out.breath;
-  out.bend += 0.05 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
-  out.headYaw = (1 - up) * (0.3 * Math.sin(seconds * 2.4 + b.seed * 11) + 0.1 * Math.sin(seconds * 5.1 + b.seed * 3)) + toward * 0.5 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
-  out.headPitch = plan.hang - 0.45 * up + 0.07 * shove - 1.1 * w.fore * up + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
+  out.bend += 0.1 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
+  out.headYaw = (1 - up) * (0.3 * Math.sin(seconds * 2.4 + b.seed * 11) + 0.1 * Math.sin(seconds * 5.1 + b.seed * 3)) + toward * 0.6 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
+  out.headPitch = plan.hang - 0.45 * up - 0.2 * turn + 0.07 * shove - 1.1 * w.fore * up + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove;
   rake(out, b, seconds, 0.95 + 0.3 * shove - 0.15 * up);
   return out;
@@ -112,7 +113,9 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   // The brine stands at the world's 0 and it lies with its feet on the floor of it.
   out.under = Math.max(0.05, -plan.ground / k);
   out.shift = -MID * k * Math.sin(r);
-  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over + 0.03 * k * breath;
+  // Before it goes over it lifts its head clear of the brine and looks about, and lets it down again.
+  const look = pulse(-2.5, -0.2, t);
+  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over + k * (0.045 * breath + 0.015 * Math.sin(seconds * 0.7 + b.seed * 2)) + 0.03 * k * look;
   // Its legs go over with it, folded: they stay under the brine.
   const fr = 0.6 * r;
   for (let l = 0; l < 4; l++) {
@@ -124,11 +127,11 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   out.surge = 0.05 * k * Math.sin(seconds * 0.8 + b.seed);
   out.sway = 0;
   out.breath = 1.5 * breath;
-  out.pitch = 0.02 + 0.03 * over;
+  out.pitch = 0.02 + 0.03 * over - 0.05 * look;
   out.bend = near * 0.06 * over + 0.03 * Math.sin(seconds * 0.9 + b.seed * 21);
   // It rakes the top of the brine with its head while it lies still, and holds the head up clear of it as it goes over.
-  out.headYaw = (1 - 0.7 * over) * (0.26 * Math.sin(seconds * 1.25 + b.seed * 11) + 0.08 * Math.sin(seconds * 2.9 + b.seed * 3)) - near * 0.2 * over;
-  out.headPitch = plan.hang - 0.1 - 0.06 * Math.sin(seconds * 1.4 + b.seed) - 0.14 * over;
+  out.headYaw = (1 - 0.7 * over) * (0.26 * Math.sin(seconds * 1.25 + b.seed * 11) + 0.08 * Math.sin(seconds * 2.9 + b.seed * 3)) - near * 0.2 * over + near * 0.4 * look;
+  out.headPitch = plan.hang - 0.1 - 0.06 * Math.sin(seconds * 1.4 + b.seed) - 0.14 * over - 0.38 * look;
   out.splay = 0.8 + 0.1 * breath;
   rake(out, b, seconds, 0.95);
   return Math.abs(over);

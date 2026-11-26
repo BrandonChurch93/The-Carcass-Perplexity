@@ -15,27 +15,30 @@ const SIDES = 36;
 const VERTEX = /* glsl */ `
 attribute vec4 iA;
 attribute vec4 iB;
+attribute vec2 iC;
 varying vec3 vWorld;
 varying vec2 vAt;
 varying vec4 vB;
 varying float vRise;
 ${NOISE_GLSL}
-// The mud round a leg, in radii of the patch: a collar that stands up where the pad has pushed it out, lumpy round its run.
+// The mud a pad has pushed out, in radii of the patch: thrown up in two or three lumps to the sides and behind, never a ring. It slumps once the foot has gone.
 float collar(vec2 q, vec4 b) {
   float r = length(q);
-  float a = atan(q.y, q.x);
-  float lumps = 0.55 + 0.9 * vnoise(vec2(a * 1.9 + b.z * 17.0, b.z * 5.0)) * (0.6 + 0.8 * vnoise(q * 5.0 + b.z * 9.0));
-  float rim = exp(-pow((r - 0.62) / 0.15, 2.0));
-  return rim * lumps * (0.45 + 0.55 * b.x) * (1.0 - 0.45 * b.y);
+  float lobes = smoothstep(0.42, 0.75, vnoise(q * 1.7 + b.z * 37.0));
+  float lumps = 0.3 + 1.4 * vnoise(q * 4.6 + b.z * 9.0);
+  float rim = exp(-pow((r - 0.66 - 0.16 * (vnoise(q * 2.3 + b.z * 5.0) - 0.5)) / 0.13, 2.0));
+  return rim * lobes * lumps * (0.4 + 0.6 * b.x) * (1.0 - 0.75 * b.y);
 }
 void main() {
+  // x of the patch runs the way the animal walks.
   vAt = position.xz;
   vB = iB;
   float rise = collar(vAt, iB);
   vRise = rise;
   float r = length(vAt);
+  vec2 w = vec2(vAt.x * iC.x - vAt.y * iC.y, vAt.x * iC.y + vAt.y * iC.x);
   // Its edge goes down under the mud about it.
-  vWorld = iA.xyz + vec3(position.x, 0.0, position.z) * iA.w + vec3(0.0, iA.w * (0.12 * rise - 0.2 * smoothstep(0.55, 1.0, r)), 0.0);
+  vWorld = iA.xyz + vec3(w.x, 0.0, w.y) * iA.w + vec3(0.0, iA.w * (0.14 * rise - 0.2 * smoothstep(0.55, 1.0, r)), 0.0);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
@@ -51,44 +54,62 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 const vec3 MUD_MEAN = vec3(0.318, 0.179, 0.155);
 void main() {
-  float r = length(vAt);
-  float shown = vB.w * (1.0 - smoothstep(0.5, 0.95, r + 0.55 * (vnoise(vAt * 3.0 + vB.z * 31.0) - 0.5) + 0.25 * (vnoise(vAt * 9.0 + vB.z * 7.0) - 0.5)));
-  if (shown < 0.004) discard;
   vec2 p = vWorld.xz;
   vec3 wide = texture2D(tMudNh, p / 1.1).rgb;
   vec3 fine = texture2D(tMudNh, vec2(p.x * 0.8 - p.y * 0.6, p.x * 0.6 + p.y * 0.8) / 0.43 + 0.3).rgb;
+  // The place is pulled about by the clods it is trodden in: no edge of it is a curve drawn with a compass.
+  vec2 q = vAt + 0.34 * (vec2(vnoise(vAt * 1.9 + vB.z * 31.0), vnoise(vAt * 1.9 + vB.z * 17.0 + 5.0)) - 0.5) + 0.2 * (wide.rg - 0.5) + 0.1 * (fine.rg - 0.5);
+  float r = length(q);
+  // The pad: longer than it is wide, with the four dents of the claws before it. An old one has slumped in from its edges.
+  float old = vB.y;
+  float size = 1.0 - 0.3 * smoothstep(0.3, 1.0, old);
+  float pad = length((q - vec2(-0.04, 0.0)) / vec2(0.46, 0.38)) / size;
+  float claws = 9.0;
+  for (int c = 0; c < 4; c++) {
+    float f = (float(c) - 1.5) / 1.5;
+    claws = min(claws, length((q - vec2(0.5 - 0.1 * f * f, 0.3 * f)) / vec2(0.16, 0.085)));
+  }
+  float hole = 1.0 - smoothstep(0.78, 1.08, min(pad, claws + 0.25 * old));
+  float churn = 1.0 - smoothstep(0.45, 1.0, r + 0.5 * (fine.b - 0.5));
+  // Seen: the print, the lumps thrown up round it, and a wet stain of the mud between that thins out into the ground.
+  float shown = vB.w * max(max(hole, smoothstep(0.12, 0.3, vRise)), 0.55 * churn);
+  if (shown < 0.004) discard;
   vec3 tone = texture2D(tMud, p / 1.1).rgb / MUD_MEAN;
-  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.6) * (0.85 + 0.3 * fine.b);
-  // The slope of the collar, from its own height, and the clods of the mud on it.
+  tone = mix(vec3(1.0), mix(vec3(dot(tone, vec3(0.3, 0.5, 0.2))), tone, 0.5), 0.75) * (0.7 + 0.6 * fine.b);
   vec3 dx = dFdx(vWorld);
   vec3 dz = dFdy(vWorld);
   vec3 flat_ = normalize(cross(dx, dz));
   if (flat_.y < 0.0) flat_ = -flat_;
-  vec2 slope = (wide.rg - 0.5) * 0.7 + (fine.rg - 0.5) * 0.35;
+  vec2 slope = (wide.rg - 0.5) * 0.9 + (fine.rg - 0.5) * 0.6;
   vec3 n = normalize(flat_ + vec3(-slope.x, 0.0, slope.y));
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 albedo = vec3(0.046, 0.022, 0.018) * tone;
+  vec3 albedo = vec3(0.06, 0.03, 0.025) * tone;
   // Fresh mud turned up from under is red and wet.
-  albedo = mix(albedo, vec3(0.07, 0.02, 0.015) * tone, 0.55 * smoothstep(0.25, 0.8, vRise));
-  float rough = mix(0.95, 0.8, smoothstep(0.2, 0.9, vRise) * fine.b);
-  // The print of a foot that has gone: a pad's breadth of dark, and brine come up into it.
-  float hole = vB.y * (1.0 - smoothstep(0.34, 0.6, r + 0.3 * (wide.b - 0.5) + 0.2 * (vnoise(vAt * 5.0 + vB.z * 3.0) - 0.5)));
-  float pool = hole * smoothstep(0.0, 0.5, vB.y) * smoothstep(0.75, 0.5, fine.b * 0.5 + r);
-  albedo = mix(albedo, vec3(0.03, 0.012, 0.01), 0.8 * hole);
-  albedo = mix(albedo, vec3(0.06, 0.01, 0.008), 0.9 * pool);
-  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.5 * pool));
-  // Dark where the leg stands in it, and inside the wall of the print.
-  float occ = 1.0 - 0.6 * (1.0 - vB.y) * (1.0 - smoothstep(0.4, 0.66, r)) - 0.5 * hole;
-  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ * (0.75 + 0.25 * fine.b));
-  gl_FragColor = vec4(rigOut(c * 0.75) * (1.0 - uSolo), shown * (1.0 - uSolo));
+  albedo = mix(albedo, vec3(0.075, 0.024, 0.018) * tone, 0.6 * smoothstep(0.2, 0.7, vRise));
+  float rough = mix(0.95, 0.7, smoothstep(0.2, 0.9, vRise) * fine.b);
+  // The floor of the print is the wet mud the pad pressed: darker, smeared flat, and the brine comes up into the low side of it only.
+  albedo = mix(albedo, vec3(0.036, 0.016, 0.013) * tone, 0.85 * hole);
+  float low = vnoise(vAt * 2.1 + vB.z * 11.0) + 0.35 * (wide.b - 0.5) - 0.5 * length(q - vec2(0.12, 0.1 * sin(vB.z * 40.0)));
+  float pool = hole * smoothstep(0.1, 0.6, old) * smoothstep(0.28, 0.4, low);
+  albedo = mix(albedo, vec3(0.085, 0.014, 0.01), 0.9 * pool);
+  rough = mix(rough, 0.82, 0.6 * hole * (1.0 - pool));
+  rough = mix(rough, 0.55, pool);
+  n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.25 * hole + 0.6 * pool));
+  // Dark under the leg that stands in it, and under the wall of the print on the side the light does not come from.
+  float wall = hole * (1.0 - smoothstep(0.55, 0.95, min(pad, claws)));
+  float occ = 1.0 - 0.55 * (1.0 - old) * (1.0 - smoothstep(0.35, 0.7, r)) - 0.4 * (hole - wall) * (1.0 - pool);
+  vec3 c = rigShade(vWorld, n, v, albedo, rough, occ * (0.7 + 0.3 * fine.b));
+  gl_FragColor = vec4(rigOut(c) * (1.0 - uSolo), shown * (1.0 - uSolo));
 }`;
 
 export class Tread {
   readonly mesh: THREE.Mesh;
   private readonly a: Float32Array;
   private readonly b: Float32Array;
+  private readonly c: Float32Array;
   private readonly attrA: THREE.InstancedBufferAttribute;
   private readonly attrB: THREE.InstancedBufferAttribute;
+  private readonly attrC: THREE.InstancedBufferAttribute;
   private readonly material: THREE.ShaderMaterial;
 
   constructor(
@@ -98,6 +119,7 @@ export class Tread {
     const n = count * PER;
     this.a = new Float32Array(n * 4);
     this.b = new Float32Array(n * 4);
+    this.c = new Float32Array(n * 2);
     const position: number[] = [];
     const index: number[] = [];
     for (let i = 0; i <= RINGS; i++) {
@@ -121,6 +143,9 @@ export class Tread {
     this.attrB = new THREE.InstancedBufferAttribute(this.b, 4);
     this.attrA.setUsage(THREE.DynamicDrawUsage);
     this.attrB.setUsage(THREE.DynamicDrawUsage);
+    this.attrC = new THREE.InstancedBufferAttribute(this.c, 2);
+    this.attrC.setUsage(THREE.DynamicDrawUsage);
+    geometry.setAttribute('iC', this.attrC);
     geometry.setAttribute('iA', this.attrA);
     geometry.setAttribute('iB', this.attrB);
     geometry.instanceCount = n;
@@ -165,17 +190,24 @@ export class Tread {
         const stood = cl - m;
         const left = stood - g.duty;
         const press = Math.min(1, stood / 0.12) * (1 - Math.min(1, Math.max(0, (stood - 0.6 * g.duty) / (0.4 * g.duty))));
-        const gone = Math.min(1, Math.max(0, left / 0.08));
-        const fade = Math.min(1, stood / 0.05) * (1 - Math.min(1, Math.max(0, (left - 1.2) / 0.9)));
+        const gone = Math.min(1, Math.max(0, left / 0.9));
+        // It is fresh for a cycle, then the mud closes on it.
+        const fade = Math.min(1, stood / 0.05) * (1 - 0.75 * Math.min(1, Math.max(0, (left - 0.5) / 1.6)));
+        const seed = ((((m * 7 + l * 13 + i * 29) % 64) + 64) % 64) / 64;
+        // No two are set down square: each is turned a little, the way that foot is carried.
+        const turn = sd * 0.2 + 0.5 * (seed - 0.5);
+        const q = (i * PER + l * KEPT + j) * 2;
+        this.c[q] = fx * Math.cos(turn) - fz * Math.sin(turn);
+        this.c[q + 1] = fz * Math.cos(turn) + fx * Math.sin(turn);
         const o = ((i * 4 + l) * KEPT + j) * 4;
         // The top of the mud: the land, and what is trodden up on it.
         this.a[o] = x;
         this.a[o + 1] = Math.max(land.height(x, z), plan.ground + 0.1 * k) + 0.03;
         this.a[o + 2] = z;
-        this.a[o + 3] = 0.56 * k;
+        this.a[o + 3] = (0.52 + 0.1 * seed) * k;
         this.b[o] = press;
         this.b[o + 1] = gone;
-        this.b[o + 2] = (((m * 7 + l * 13 + i * 29) % 64) + 64) % 64 / 64;
+        this.b[o + 2] = seed;
         this.b[o + 3] = shown * fade;
       }
     }
@@ -188,6 +220,7 @@ export class Tread {
   touch(): void {
     this.attrA.needsUpdate = true;
     this.attrB.needsUpdate = true;
+    this.attrC.needsUpdate = true;
   }
 
   dispose(): void {
