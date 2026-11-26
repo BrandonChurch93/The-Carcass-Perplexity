@@ -8,6 +8,7 @@ const LIGHT_GLSL = /* glsl */ `
 uniform vec4 uDoor;
 uniform float uDoorArea;
 uniform float uDoorGain;
+uniform vec3 uDoorNear;
 float runnerOpen(vec3 p) {
   vec4 land = landAt(p.xz);
   float vis = mix(land.g, 1.0, clamp((p.y - land.r) / 80.0, 0.0, 1.0));
@@ -18,24 +19,27 @@ float runnerOpen(vec3 p) {
 vec3 runnerLight(vec3 p, vec3 n) {
   vec3 e = skyIrradiance(n) * runnerOpen(p) + emitterIrradiance(p, n) * min(1.0, 4.0 * skyOpen(p));
   if (uDoor.w > 0.5) {
-    // Under the roof no sky reaches it: what the walls give back is a trace.
-    e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.03 * (0.6 + 0.4 * n.y);
-    // Inside the canal the mouth is a window: what faces it takes the dusk and the storm seen through it, and the flash, as a rim.
+    // Inside the canal the two mouths are the windows, as they are for the rock about it: cold light on what faces them, by the share
+    // of the sky each holds from there, and a part of it from all round off the ice and the rimed wall.
     vec3 d = uDoor.xyz - p;
+    vec3 back = uDoorNear - p;
     float d2 = dot(d, d);
     vec3 way = d * inversesqrt(d2);
+    float sE = 800.0 / (d2 * 3.14159 + 800.0);
+    float sM = 900.0 / (dot(back, back) * 3.14159 + 900.0);
+    vec3 cold = mix(uSkyHorizon, uSkyZenith, 0.4) * 3.14159;
+    // A coat holds light in itself and gives it back warmer than the ice does.
+    cold = mix(cold, dot(cold, vec3(0.3, 0.5, 0.2)) * vec3(1.14, 1.0, 0.84), 0.55);
+    float up = 0.75 + 0.25 * n.y;
+    e = cold * uDoorGain * up * (sE * (0.3 + 0.7 * max(dot(n, way), 0.0)) + sM * (0.3 + 0.7 * max(dot(n, normalize(back)), 0.0)));
+    // The flash comes in by the far mouth.
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
-    vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
-    // The snow at the mouth and the pale wall give it back with little of the dusk's blue left in it.
-    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.4);
-    // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
-    float facing = clamp((dot(n, way) + 0.35) / 1.35, 0.0, 1.0);
-    float fill = 0.035 + 0.11 * clamp(n.y, 0.0, 1.0);
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
-    // Seen against the mouth, the light comes through the ends of the coat along its outline.
+    vec3 flash = emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159) + uFlash;
+    e += flash * uDoorArea / (d2 + uDoorArea) * (0.35 + 0.65 * max(dot(n, way), 0.0)) * 3.0;
+    // Seen against the mouth, the light comes through the ends of the coat along its outline: a cold rim.
     vec3 toLens = normalize(cameraPosition - p);
-    float through = pow(1.0 - abs(dot(n, toLens)), 5.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * 2.2 * through;
+    float through = pow(1.0 - abs(dot(n, toLens)), 4.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
+    e += (cold * 4.0 + flash * 3.0) * sE * 2.5 * through;
   }
   return e;
 }`;
@@ -162,6 +166,22 @@ void main() {
     raw = max(raw, heart);
     rough = mix(rough, mix(0.9, 0.55, raw), on);
     occ = mix(occ, 0.8, on);
+    // The hide is torn open at the heart of it: a dark hollow, and the broken ends of ribs pale in it.
+    // It is where the lens sees into it: round the body from the flank toward the belly. q is how far round, in the burn's own reach.
+    float q = abs(dot(r, cross(uBurnU, uBurnV))) / uBurn.w;
+    vec2 h = vec2(dot(r, uBurnU) / uBurn.w - 0.05, q - 0.72);
+    float hollow = (1.0 - smoothstep(0.7, 1.0, length(h / vec2(0.72, 0.46)) + 0.4 * (fine - 0.5))) * (1.0 - smoothstep(1.7, 1.9, d));
+    float ra = (h.x - 0.3 * h.y + 0.5 * h.y * h.y) / 0.23 + 0.5;
+    float rb = abs(fract(ra) - 0.5);
+    float id = floor(ra);
+    // Each is broken off short at its own length and splintered to a point.
+    float ends = -0.22 + 0.4 * fract(sin(id * 12.9898) * 43758.5453) + 0.03 * (grain - 0.5);
+    float thick = 0.05 + 0.08 * smoothstep(ends, ends - 0.18, h.y);
+    float rib = (1.0 - smoothstep(0.6 * thick, thick, rb)) * smoothstep(ends, ends - 0.02, h.y);
+    albedo = mix(albedo, vec3(0.014, 0.008, 0.007) * (0.5 + 1.5 * fine), hollow);
+    albedo = mix(albedo, vec3(0.4, 0.35, 0.28) * (1.0 - 0.7 * rb / thick) * mix(0.5, 1.0, fine) * mix(1.0, 0.45, smoothstep(-0.3, 0.2, h.y)), hollow * rib);
+    rough = mix(rough, 0.6, hollow);
+    occ = mix(occ, mix(0.35, 0.9, rib), hollow);
   }
   vec3 e = runnerLight(vWorld, n) * occ;
   vec3 c = albedo * e / 3.14159;
@@ -215,7 +235,7 @@ void main() {
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
-  float occ = mix(0.12 + 0.33 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
+  float occ = mix(0.12 + 0.43 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
   vLight = runnerLight(p, n) * occ / 3.14159;
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
@@ -256,7 +276,9 @@ void main() {
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight;
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.
-  float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5));
+  // Rime gathers on the fur round the burn, where the steam of it froze.
+  float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
+  float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5) + 0.9 * ring);
   float lies = frost * smoothstep(0.1, 0.5, t) * smoothstep(0.9, 1.7, lum + 0.35 * frost);
   float bead = smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w);
   float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
@@ -297,8 +319,8 @@ vec3 pathAt(float t, vec3 lead, vec3 across, float seed) {
   float bend = (fract(seed * 7.3) - 0.5) * 2.0;
   float hook = aLimb.z * smoothstep(0.55, 1.0, t);
   float arch = fract(seed * 3.1);
-  vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.45 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.3 * hook * hook * sign(bend))
-    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.15 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.1 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.25 * hook * hook * step(0.6, fract(seed * 11.0)));
+  vec3 spilled = dir * (t - 0.3 * hook * hook) + sideways * (0.45 * bend * t * t + 0.1 * sin(t * 8.0 + seed * 20.0) * t + 0.045 * sin(t * 21.0 + seed * 31.0) + 0.12 * t * (abs(fract(t * 3.3 + seed * 9.0) - 0.5) - 0.25) + 0.3 * hook * hook * sign(bend))
+    + down * (1.3 * t) + vec3(0.0, 1.0, 0.0) * (0.04 * arch * arch * sin(3.14159 * pow(t, 0.8)) + 0.025 * abs(sin(t * 5.0 + seed * 44.0)) * smoothstep(0.1, 0.4, t) + 0.06 * hook * hook * step(0.6, fract(seed * 11.0)));
   return mix(hangs, spilled, uWrithe.y);
 }
 void main() {
