@@ -104,18 +104,17 @@ void main() {
   // The foot spreads into a collar of crust, and the trunk thins to its mouth.
   float girth = mix(1.08, 0.8, t) * (1.0 + 0.6 * aFork.w * exp(-y / (1.6 * D)));
   // Every node carries a ledge of salt, ragged round the stem. Where the mesh is too coarse to carry them the picture of the bark does.
-  float sp = 1.25 * D * (0.8 + 0.4 * fract(seed * 7.3));
-  float ny = (y + 0.3 * sp * sin(y * 6.1 + seed * 20.0)) / sp + seed;
-  float q = fract(ny);
-  float node = floor(ny);
-  float ragged = 0.6 + 0.4 * sin(a * 2.0 + (node + seed) * 9.0) + 0.25 * sin(a * 5.0 + (node + seed) * 23.0);
   float close = step(1.5, uLedge);
-  ragged += close * 0.22 * sin(a * 11.0 + (node + seed) * 41.0);
-  float ledge = min(uLedge, 1.0) * smoothstep(0.45, 0.9, q) * (1.0 - smoothstep(0.9, 1.0, q)) * max(ragged, 0.0) * (1.0 - dead * 0.7);
-  float r = R * girth * (1.0 + (0.2 + 0.12 * close) * ledge + 0.05 * lobes(a + y * 2.0, seed) + 0.06 * sin(y * 3.1 / D * 0.2 + seed * 31.0));
-  // By the lens the crust itself stands out of the trunk: the picture of the bark carries how high.
-  vec2 barkUv = vec2(a / 6.28318 * 2.0, y / (1.6 * D)) + seed * vec2(3.1, 7.7);
-  if (close > 0.5) r += R * 0.13 * (texture2D(tBarkNh, barkUv).b - 0.5);
+  float r = R * girth * (1.0 + 0.05 * lobes(a + y * 2.0, seed) + 0.06 * sin(y * 3.1 / D * 0.2 + seed * 31.0));
+  // The picture of the bark goes once round the trunk, seven ledges to a tile. By the lens its ledges and its crust stand out of the trunk
+  // as far as the picture says they are high: the ragged lips are the mesh, not paint.
+  vec2 barkUv = vec2(a / 6.28318, y / (3.4 * D)) + seed * vec2(3.1, 7.7);
+  float ledge = 0.0;
+  if (close > 0.5) {
+    float high = textureLod(tBarkNh, barkUv, 3.0).b;
+    ledge = smoothstep(0.45, 0.9, high);
+    r += R * (0.3 * (high - 0.42) + 0.1 * ledge) * (1.0 - 0.5 * dead);
+  }
   // The mouth flares a little, and its wall has a thickness.
   r *= 1.0 + 0.16 * smoothstep(1.0 - 1.2 * R / h, 1.0, t) * (1.0 - dead);
   r *= 1.0 - cap * (cap > 0.75 ? 0.45 : 0.36);
@@ -125,10 +124,10 @@ void main() {
   vec3 radial = N1 * cos(a) + N2 * sin(a);
   vec3 p = c + radial * rr;
   vWorld = p;
-  vNormal = normalize(radial + T * (0.5 * ledge - 0.5 * cap));
+  vNormal = normalize(radial - T * 0.5 * cap);
   vUv = vec4(barkUv, cap, t);
   vKind = vec4(aKind.x, h, clamp(r / rr, 0.0, 1.0), seed);
-  vLook = vec4(aLook.x, aLook.y, q, max(aBase.y + 0.05, 0.0) + aFork.y * (h / aBase.w));
+  vLook = vec4(aLook.x, aLook.y, ledge, max(aBase.y + 0.05, 0.0) + aFork.y * (h / aBase.w));
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
@@ -158,17 +157,19 @@ void main() {
   float deadStem = age > 1.5 ? 1.0 : 0.0;
   // Chalk white salt over a horn-coloured tube: the picture of the bark gives the rings, the salt takes most of its colour out.
   float luma = dot(bark, vec3(0.3, 0.5, 0.2));
-  vec3 albedo = (mix(bark, vec3(luma), 0.45) * 1.02 + 0.03) * vec3(0.84, 0.8, 0.74);
-  float patchy = fbm(vec2(vUv.x * 2.5, vUv.y * 1.1) + seed * 11.0);
-  albedo = mix(albedo, vec3(0.74, 0.71, 0.68), 0.45 * smoothstep(0.35, 0.7, patchy));
+  vec3 albedo = mix(bark, vec3(luma), 0.2) * vec3(0.8, 0.74, 0.66);
+  // Salt: a crust on what stands highest, the lips of the ledges first, and in patches between them.
+  float patchy = fbm(vec2(vUv.x * 5.0, vUv.y * 2.2) + seed * 11.0);
+  float grain = fbm(vUv.xy * vec2(90.0, 60.0));
+  float crust = smoothstep(0.5, 0.78, nh.b + 0.3 * (patchy - 0.5) + 0.12 * (grain - 0.5));
+  albedo = mix(albedo, vec3(0.8, 0.79, 0.76) * (0.9 + 0.2 * grain), 0.75 * crust);
   // No two the same age: a young one is clean and warm, an old one grey with what has run down it, a dead one has lost its salt.
   albedo *= mix(vec3(1.06, 1.0, 0.95), vec3(0.8, 0.76, 0.74), smoothstep(0.2, 0.9, min(age, 1.0))) * (0.88 + 0.24 * fract(seed * 41.7));
-  float q = vLook.z;
-  float under = (1.0 - smoothstep(0.0, 0.3, q)) * (1.0 - 0.8 * away);
-  vec3 rust = vec3(0.3, 0.12, 0.06);
-  albedo = mix(albedo, rust, clamp(under * (0.2 + 0.6 * smoothstep(0.35, 0.7, fbm(vec2(vUv.x * 4.5, vUv.y * 3.3) + seed))), 0.0, 0.5) * (0.4 + 0.6 * min(age, 1.0)));
-  // The lip of a ledge is fresh salt: whiter than the trunk between.
-  albedo = mix(albedo, vec3(0.8, 0.79, 0.77), 0.35 * smoothstep(0.6, 0.9, q) * (1.0 - away));
+  // Rust gathers where the picture is lowest: under the lips of the ledges and in the cracks, more on one side of a trunk than the other.
+  float pit = 1.0 - smoothstep(0.12, 0.42, nh.b);
+  vec3 rust = vec3(0.36, 0.15, 0.07);
+  float rusty = smoothstep(0.3, 0.7, fbm(vec2(vUv.x * 3.0, vUv.y * 1.3) + seed * 5.0));
+  albedo = mix(albedo, rust, clamp(pit * (0.35 + 0.55 * rusty) + 0.3 * rusty * (1.0 - crust) * smoothstep(0.3, 0.1, nh.b - 0.25), 0.0, 0.8) * (0.5 + 0.5 * min(age, 1.0)));
   float streak = smoothstep(0.25, 0.7, fbm(vec2(vUv.x * 5.5 + seed * 60.0, vUv.y * 0.3))) * min(age, 1.0);
   albedo = mix(albedo, albedo * vec3(0.66, 0.47, 0.4), 0.6 * streak);
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
@@ -184,8 +185,8 @@ void main() {
   vec3 up = vec3(0.0, 1.0, 0.0);
   vec3 tx = normalize(cross(up, n) + 1e-5);
   vec3 bx = cross(n, tx);
-  n = normalize(n - (tx * (nh.r - 0.5) + bx * (nh.g - 0.5)) * 1.5 * (1.0 - away));
-  float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * (0.72 + 0.28 * smoothstep(0.0, 1.5, above)) * mix(0.7 + 0.3 * smoothstep(0.0, 0.35, q), 0.92, away) * mix(0.7 + 0.3 * nh.b, 1.0, away);
+  n = normalize(n - (tx * (nh.r - 0.5) + bx * (nh.g - 0.5)) * 2.2 * (1.0 - away));
+  float occ = (0.5 + 0.5 * smoothstep(0.0, 0.3, above)) * (0.72 + 0.28 * smoothstep(0.0, 1.5, above)) * mix(0.5 + 0.5 * smoothstep(0.08, 0.5, nh.b), 0.94, away);
   // Under its head a stem stands in the head's shade.
   float below = (1.0 - vUv.w) * vKind.y;
   occ *= mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.1 * vKind.y + 0.12, below), uCrowned * (1.0 - deadStem));

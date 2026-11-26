@@ -1,6 +1,6 @@
 // The stalk colonies: salt-crusted tubes with crimson plumes round the seep pools, and the small winged insects that live in them.
 import * as THREE from 'three';
-import { K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
+import { EYE, F as AHEAD, R as ASIDE, K1_AT, K2_AT, K2_DIR, K2_RIGHT, STUCK, TAU, UNIT, distToSegment, makePools, makeStalks, rel, type Stalk } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
@@ -18,6 +18,7 @@ const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SH
 
 // STAGED by shot: in the wide shot the heads of the stalks seen far off are small drooping tufts on thin stems, six tenths of what they are from near,
 // as the approved wide picture has them.
+const OFF: number = 0;
 const SHOTS = shotsOf(UNIT);
 const SPANS = SHOTS.map((s) => [secondsInPlace(UNIT, s.first) - 0.004, secondsInPlace(UNIT, s.last) + 0.004] as [number, number]);
 const WIDE_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-01');
@@ -375,11 +376,6 @@ export function create(ctx: Context): Piece {
     const fineOf = (d: number): number => (d < 9 ? 30 : d < 18 ? 20 : d < 36 ? 12 : d < 80 ? 7 : 4);
     const broadOf = (d: number): number => (d < 18 ? 1 : d < 36 ? 1.3 : d < 80 ? 1.9 : 3);
     {
-      const nearW = wilds.filter((w) => reach(w) < 22);
-      const farW = wilds.filter((w) => reach(w) >= 22);
-      group.add(stemMesh(ctx, growth, nearW.length, lines(nearW), 30, 10, 1), stemMesh(ctx, growth, farW.length, lines(farW), 10, 6, 0));
-    }
-    {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
       const foot2 = new Float32Array(footed.length * 4);
@@ -424,7 +420,14 @@ export function create(ctx: Context): Piece {
         const farF = new Fronds();
         const own = ctx.rng('stalks-fronds-' + shot.id);
         for (const w of wilds) crownOf(from(w) < 22 ? nearF : farF, w, own, fineOf(from(w)), broadOf(from(w)), false);
-        const meshes = [frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4)];
+        // The stems the same way: by the lens of the shot the ledges of the bark are the mesh, far off a stem is a plain tube.
+        const closeW = wilds.filter((w) => from(w) < 7);
+        const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
+        const farW = wilds.filter((w) => from(w) >= 22);
+        const meshes = [
+          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4),
+          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 8, 6, 0),
+        ];
         crowns[which] = meshes;
         group.add(...meshes);
       });
@@ -432,15 +435,21 @@ export function create(ctx: Context): Piece {
     // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
     const stands = growStands(ctx, wilds, uSeconds);
     {
-      const nearS = stands.stems.slice(0, stands.near);
-      const farS = stands.stems.slice(stands.near);
+      // The wide lens walks 16 m forward and turns 23 degrees in all: what stands behind it or beyond the sides of all it sees is not made.
+      const seen = (x: number, z: number): boolean => {
+        const d = (x - EYE[0]) * AHEAD[0] + (z - EYE[1]) * AHEAD[1] + 7;
+        const l = (x - EYE[0]) * ASIDE[0] + (z - EYE[1]) * ASIDE[1] + 1.5;
+        return d > 0 && Math.abs(l) < d * 1.33 + 7;
+      };
+      const nearS = stands.stems.slice(0, stands.near).filter((w) => seen(w.x, w.z));
+      const farS = stands.stems.slice(stands.near).filter((w) => seen(w.x, w.z));
       wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 12, 6, 0), stemMesh(ctx, growth, farS.length, lines(farS), 5, 5, 0));
       const nearF = new Fronds();
       const farF = new Fronds();
       const low = new Fronds();
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
-      for (const w of stands.leaves) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)) * 0.5, broadOf(wideOf(w)), true);
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
+      for (const w of stands.leaves) if (seen(w.x, w.z)) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)) * 0.5, broadOf(wideOf(w)), true);
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
@@ -449,6 +458,7 @@ export function create(ctx: Context): Piece {
         const x = t0[i * 4] as number;
         const z = t0[i * 4 + 2] as number;
         const d = Math.hypot(x - eyeB[0], z - eyeB[1]);
+        if (!seen(x, z)) continue;
         tuftOf(low, fronds, x, t0[i * 4 + 1] as number, z, t0[i * 4 + 3] as number, t1[i * 4] as number, t2[i * 4 + 1] as number, d < 14 ? 14 : d < 30 ? 9 : 6);
       }
       // The mat near the lens: leaves on the ground, not a picture of them.
@@ -459,7 +469,7 @@ export function create(ctx: Context): Piece {
         const x = m0[i * 4] as number;
         const z = m0[i * 4 + 2] as number;
         const d = distToSegment(x, z, eyeA, eyeB);
-        if (d > 60) continue;
+        if (d > 60 || !seen(x, z)) continue;
         matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 55 : d < 40 ? 22 : 9, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3 : 4.5);
       }
       wide.add(frondMesh(ctx, growth, creep, 2, { dry: true }));
@@ -503,6 +513,8 @@ export function create(ctx: Context): Piece {
     closeFar.add(stemMesh(ctx, growth, closeW.length, lines(closeW), 14, 8, 1), frondMesh(ctx, growth, plain, 5));
     group.add(closeSet, closeFar);
   }
+  if (OFF === 99) group.clear();
+  if (OFF === 98) wide.clear();
   ctx.scene.add(ctx.parts.built('stalks', group));
 
   // The insects: most round the plumes the camera of the colony looks through, some round the one that is stuck, some over the pool.
