@@ -308,12 +308,13 @@ float ridgeAt(vec2 q, float c) {
     if (tm < -1.0 || tm > len + 1.0 || abs(side) > 3.2 * size) continue;
     // A line of slabs, each 1.5 to 4.5 m long, pushed up on edge: a long back that leans on the crust behind it and a short
     // broken face toward the lens, each its own height, its crest a little off the line, one in five fallen flat.
-    float u = tm / (1.4 * size) + 1.3 * vnoise(vec2(tm / (2.2 * size) + 7.0, 2.0));
+    // The slabs are of unlike length, 3 to 9 m: shorter, the mesh of the far lake draws each as a tent.
+    float u = tm / (2.5 * size) + 1.7 * vnoise(vec2(tm / (3.4 * size) + 7.0, 2.0));
     float k = floor(u);
     float fu = u - k;
     vec2 hk = hash22(vec2(k, 17.0 + float(i)));
     float ends = smoothstep(0.0, 0.12 * len, tm) * (1.0 - smoothstep(0.88 * len, len, tm));
-    float tall = uRidgeSize[i].x * (0.25 + 0.75 * hk.x) * ends * mix(0.2, 1.0, step(0.2, hk.y));
+    float tall = uRidgeSize[i].x * (0.2 + 0.8 * hk.x * hk.x) * ends * mix(0.15, 1.0, step(0.33, hk.y));
     float back = (1.6 + 1.2 * hk.y) * size;
     float face = max(0.35 * size, 3.0 * c);
     float s = side - (hk.y - 0.5) * 0.8 * size;
