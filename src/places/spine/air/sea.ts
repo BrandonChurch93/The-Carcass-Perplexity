@@ -35,6 +35,9 @@ const vec3 SEA_WARM = vec3(0.16, 0.085, 0.045);
 // The heaps of the deck (air/heaps.ts): metres a repeat, and metres from the floor of a hollow to the crown of a head.
 const float HEAP_SPAN = 2300.0;
 const float HEAP_TALL = 180.0;
+// How far the grain of the real deck turns a face of a heap, and how far it moves a place between hollow and crown.
+const float GRAIN_TILT = 0.55;
+const float GRAIN_HEAD = 0.6;
 float seaLod = 1.0;
 // Laid a little turned from the ridge, so that no row of heads runs along it or straight away from the lens.
 vec2 heapUv(vec2 at) {
@@ -261,6 +264,19 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
     float e = 5.0 + 0.012 * t;
     vec3 facing = normalize(vec3(tall * (n0 - seaLift(p + vec3(e, 0.0, 0.0), 1, false)), e, tall * (n0 - seaLift(p + vec3(0.0, 0.0, e), 1, false))));
+    // What a baked heap cannot have: the grain of real cloud. The picture of a deck seen from above (mat/cloudsea-nh: its slope in red and
+    // green, its height in blue) lies on the heaps at two sizes and goes with them, the smaller a little faster, so that the tops change
+    // as they travel. Its slope turns the faces, so the small billows take the dusk on one side; its height tells crown from crease.
+    vec2 g1 = (p.xz - vec2(0.42, 0.91) * (uTime * 31.0)) / 3400.0;
+    vec2 g2 = (p.xz - vec2(0.2, 0.98) * (uTime * 39.0)) / 980.0;
+    vec3 grainA = textureLod(tSeaNh, vec2(0.891 * g1.x + 0.454 * g1.y, -0.454 * g1.x + 0.891 * g1.y), max(seaLod + 1.6, 1.0)).rgb;
+    vec3 grainB = textureLod(tSeaNh, vec2(0.629 * g2.x - 0.777 * g2.y, 0.777 * g2.x + 0.629 * g2.y) + 0.37, max(seaLod + 3.4, 1.0)).rgb;
+    // The smaller grain is gone where the lens cannot hold it: far out the deck keeps only its banks.
+    float fineSeen = 1.0 - smoothstep(-1.0, 1.5, seaLod);
+    vec2 tilt = (grainA.rg - 0.5) * 1.5 + (grainB.rg - 0.5) * (1.1 * fineSeen);
+    float grain = 0.62 * (grainA.b - 0.5) + 0.38 * fineSeen * (grainB.b - 0.5);
+    facing = normalize(facing + vec3(0.891 * tilt.x - 0.454 * tilt.y, 0.0, 0.454 * tilt.x + 0.891 * tilt.y) * GRAIN_TILT);
+    head = clamp(head + GRAIN_HEAD * grain, 0.0, 1.0);
     // The last light comes low over the deck from the dusk: a face that looks at it is lit, a face turned away is in its own shade, and a
     // head that stands between a place and the dusk shades it. Cloud is lit through, so the light goes a little round each head.
     vec3 toDusk = vec3(cos(DUSK_AZ), 0.0, sin(DUSK_AZ));
@@ -276,8 +292,21 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     float rim = clamp(dot(facing, toDusk) * 1.6, 0.0, 1.0);
     vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 2.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
+    // A top of cloud is no surface: where the ray would leave the head again a little way on, it has gone through wisps and not into
+    // cloud. How deep it stands under the top at two places ahead says how much cloud it met; the grain tears the edge.
+    float slantF = max(-rd.y, 0.06);
+    float thick = 0.0;
+    for (int i = 0; i < 2; i++) {
+      float deep = i == 0 ? 14.0 : 48.0;
+      vec3 pf = p + rd * (deep / slantF);
+      thick += clamp((level + tall * seaLift(pf, 0, false) - pf.y) / deep, -1.0, 1.5);
+    }
+    float feather = smoothstep(0.1, 1.5, thick + 1.1 * grain + 0.25);
+    sea = mix(SEA_COLD * (1.0 + 0.9 * dusk) * vec3(0.95, 1.0, 1.1) + SEA_WARM * dusk * (0.5 - 0.35 * stormSide(rd)), sea, 0.35 + 0.65 * feather);
     // The air over the deck is thick with its own vapour: row behind row the heads go paler and bluer and their hollows fill.
-    sea = mix(sea, SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - stormSide(rd)), 0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens))));
+    // (The vapour takes the contrast of a far bank and leaves its form: the banks of the real deck are read large there, lit on top.)
+    float farBank = 0.62 + 0.76 * grainA.b;
+    sea = mix(sea, (SEA_COLD * vec3(0.95, 1.0, 1.1) + 0.2 * SEA_WARM * (1.0 - stormSide(rd))) * farBank, 0.8 * (1.0 - exp(-t / (6000.0 * seaLens * seaLens))));
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
     sea = sea * (1.0 - 0.5 * stormSide(rd)) * mix(vec3(1.0), vec3(0.8, 0.88, 1.06), stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
@@ -308,13 +337,18 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // it: the band of the dusk lies on them, and no line stands between the deck and the sky.
     float crown = mix(head, clamp(0.5 + 1.6 * n0, 0.0, 1.0), smoothstep(0.5, 2.5, seaLod));
     float shape = mix(0.66 + 0.62 * crown * (0.4 + 0.6 * dusk), 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens)));
-    if (needFoot) sea = mix(sea, domeFar * shape, gone);
+    // The far deck is cloud to the last: it pales and takes a share of the dusk's own colour as the air thickens, and only in its last
+    // sliver under the horizon is it the sky's foot. Given the foot's colour two degrees deep it lay there as a level of bright water.
+    if (needFoot) {
+      sea = mix(sea, mix(SEA_COLD * vec3(1.2, 1.25, 1.4), domeFar, 0.42) * shape * mix(farBank, 1.0, 1.0 - exp(-t * t / (9.0e8 * seaLens * seaLens))), gone);
+      sea = mix(sea, domeFar, plate > 0.0 ? gone : 1.0 - exp(-t * t / (1.3e9 * seaLens * seaLens * seaLens)));
+    }
     stormAir *= 1.0 - gone;
     seaGone = gone;
     // Under the storm wall the sea goes into the wall's own foot: no line stands between them.
     if (needFoot) sea = mix(sea, domeFar, toWall);
     // Its edge against the land is soft: the cloud thins where it laps the rock.
-    float lap = 0.94 * max(smoothstep(0.0, 1.0, (far - t) / (140.0 + 0.05 * t)), seaCover);
+    float lap = 0.94 * max(smoothstep(0.0, 1.0, (far - t) / (220.0 + 0.07 * t) + 0.35 * grain), seaCover);
     light += through * sea * lap;
     through *= 1.0 - lap;
     far = min(far, t);
