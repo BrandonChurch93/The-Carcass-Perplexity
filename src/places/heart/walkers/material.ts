@@ -197,7 +197,7 @@ void main() {
     vec3 plateC = textureGrad(tTorso, uvP, px, py).rgb;
     plate = smoothstep(0.42, 0.58, plateN.b + 0.25 * (vnoise(vUv * vec2(0.5, 0.9) + seed * 3.0) - 0.5)) * (1.0 - tendril);
     slopeW = mix(slopeW, slopeW * 0.35 + (gu * (plateN.r - 0.5) - gv * (plateN.g - 0.5)) * 3.0 * fine, plate);
-    skinC = mix(skinC * 0.72, plateC * 2.3, plate);
+    skinC = mix(skinC * 0.8, plateC * 1.7, plate);
     nh.b = mix(nh.b * 0.8, 0.25 + 0.75 * plateN.b, plate);
   } else {
     skinC = textureGrad(tTorso, uvS, sx, sy).rgb;
@@ -230,10 +230,10 @@ void main() {
   float pale = vInfo.x;
   vec3 tone = mix(vec3(1.07, 1.0, 0.93), vec3(0.95, 1.0, 1.06), warm) * (0.78 + 0.5 * sooty);
   // The trunk is ash grey and umber; a leg is darker and browner (45 29 23 in its shade on the picture's hero, about 70 50 40 where the sky finds it).
-  vec3 albedo = skinC * tone * mix(vec3(1.0), vec3(0.38), onLimb) * (0.9 + 0.25 * (pale - 0.4));
+  vec3 albedo = skinC * tone * mix(vec3(0.5), vec3(0.2), onLimb) * (0.9 + 0.25 * (pale - 0.4));
   // What is shut in is dark with soot: the gaps between the ribs, the creases, the pits where the hide is torn.
   float shut = smoothstep(0.25, 0.85, ao);
-  albedo *= mix(0.3, 1.0, shut);
+  albedo *= mix(0.55, 1.0, shut);
   albedo *= 1.0 - 0.3 * ringAmp * (1.0 - ridge);
   // The pits of the grain are black and its ridges worn pale.
   float pit = smoothstep(0.2, 0.62, high);
@@ -267,7 +267,7 @@ void main() {
   // The foot itself is caked dark with what it treads in.
   albedo = mix(albedo, vec3(0.058, 0.05, 0.045) * (0.6 + 0.6 * grit), 0.6 * max(smoothstep(0.8, 0.2, vWorld.y), smoothstep(3.4, 3.9, kind) * (1.0 - rag)) * (1.0 - tendril));
 
-  float own = mix(1.0, 0.15 + 0.85 * ao * ao, body) * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
+  float own = mix(1.0, 0.4 + 0.6 * ao, body) * (0.5 + 0.5 * crack) * (1.0 - 0.35 * ringAmp * (1.0 - ridge));
   float occ = vInfo.y * own;
   // The hide is dull: no shine on it at all. Only the roots are wet.
   // The rig's light, put together here from its own parts and not by rigShade: its lake light gives a face that looks up a share of the

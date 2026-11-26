@@ -56,7 +56,7 @@ def surface(nu, nv, v, fine=True):
     sag = g((t - 0.5) / 0.2)
     # the back is a hunched dome, highest a little ahead of the middle, that falls to the hips and to the root of the neck
     dome = g((t - 0.56) / 0.42)
-    top = 0.6 * e * (0.7 + 0.8 * v['arch'] * dome - v['sway'] * sag + 0.3 * v['hump'] * g((t - T_SH + 0.03) / 0.1) + 0.12 * g((t - T_HIP) / 0.08))
+    top = 0.6 * e * (0.7 + 0.8 * v['arch'] * dome - v['sway'] * sag + 0.42 * v['hump'] * g((t - T_SH + 0.03) / 0.11) + 0.12 * g((t - T_HIP) / 0.08))
     # the belly hangs in one lobe under the middle, below the line of the hips
     keel = 0.6 * e * (0.62 + v['belly'] * g((t - 0.52) / 0.2) + 0.1 * g((t - T_HIP) / 0.1))
     wide = 0.88 * e * (1 + 0.2 * g((t - T_SH) / 0.085) + 0.2 * g((t - T_HIP) / 0.08) - v['waist'] * sag)
@@ -125,7 +125,7 @@ def bilinear(grid, uu, vv, wrap_v=True):
     return (grid[i0, j0] * (1 - a) + grid[i0 + 1, j0] * a) * (1 - b) + (grid[i0, j1] * (1 - a) + grid[i0 + 1, j1] * a) * b
 
 VARIANTS = [
-    dict(name='a', seed=3, arch=1.0, hump=0.6, sway=0.0, belly=0.75, waist=0.22, vertebrae=19, ribs=9),
+    dict(name='a', seed=3, arch=1.0, hump=1.0, sway=0.0, belly=0.75, waist=0.22, vertebrae=19, ribs=9),
     dict(name='b', seed=11, arch=1.25, hump=1.2, sway=0.0, belly=1.0, waist=0.1, vertebrae=16, ribs=8),
     dict(name='c', seed=23, arch=0.55, hump=0.3, sway=0.12, belly=0.4, waist=0.3, vertebrae=22, ribs=11),
 ]

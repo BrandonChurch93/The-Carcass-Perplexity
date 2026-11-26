@@ -223,8 +223,8 @@ export class Animal {
     {
       const table = trunkTable(b.trunk);
       const sx = b.bodyLen / 4.9;
-      const st = b.bodyTop / 0.53;
-      const sk = b.bodyKeel / 0.54;
+      const st = b.bodyTop / 0.7;
+      const sk = b.bodyKeel / 0.72;
       const sz = b.bodyWide;
       for (let i = 0; i < BODY_RINGS; i++) {
         const u = i / (BODY_RINGS - 1);
