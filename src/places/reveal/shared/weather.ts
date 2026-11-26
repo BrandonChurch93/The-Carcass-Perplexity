@@ -50,12 +50,12 @@ float puffs(vec2 w, float cell, float share) {
   vec2 id = floor(g);
   vec2 at = 0.5 + 0.3 * (vec2(hash12(id + 17.3), hash12(id + 41.7)) - 0.5);
   float tail = hash12(id + 71.1);
-  float size = mix(0.17, 0.44, tail * tail);
+  float size = mix(0.2, 0.5, tail * tail);
   vec2 d = fract(g) - at;
   float lump = 0.5 * (vnoise(g * 3.1 + 9.0) - 0.5);
   float dist = length(d * vec2(1.0, 1.0 + 0.5 * (hash12(id + 23.9) - 0.5))) * (1.0 + lump);
   float soft = 1.0 - smoothstep(0.0, 0.92 * size, dist);
-  return soft * (0.5 + 0.5 * soft) * 1.25 * step(hash12(id + 3.1), share) * (0.4 + 0.6 * hash12(id + 5.5)) * fineness;
+  return soft * (0.25 + 0.75 * soft) * 1.15 * step(hash12(id + 3.1), share) * (0.4 + 0.6 * hash12(id + 5.5)) * fineness;
 }
 
 // The photograph of the low field at a point of its own drifting ground: from near a field of small cumulus at its real size
@@ -87,6 +87,15 @@ float lowPicture(vec2 w, float shadow) {
       float lumps = 0.55 * vnoise(pw / 3.4 + 3.0) + 0.3 * vnoise(pw / 1.5 + 11.0) + 0.15 * vnoise(pw / 0.7 + 23.0);
       puff = max(puff, nearBy * smoothstep(0.68 - 0.2 * core, 1.02 - 0.2 * core, lumps) * step(0.02, core) * (0.55 + 0.45 * lumps));
     }
+    // (Where a street is full the puffs stand in one soft body of cloud, billowed, half see-through at its edge: the tops rise out of it.)
+    float mass = smoothstep(0.28, 0.46, street) * (0.2 + 0.8 * gap);
+    if (mass > 0.02) {
+      float billow = 0.5 * vnoise(pw / 11.0 + 7.0) + 0.3 * vnoise(pw / 4.7 + 19.0) + 0.2 * vnoise(pw / 2.1 + 31.0);
+      float body = mass * smoothstep(0.37, 0.82, billow);
+      puff = max(puff * (0.5 + 0.5 * body), 0.85 * body * (0.5 + 0.5 * smoothstep(0.5, 0.8, billow)));
+    } else {
+      puff *= 0.55;
+    }
     pic += specks * puff;
   }
   if (away > 0.0) {
@@ -103,7 +112,7 @@ float lowPicture(vec2 w, float shadow) {
     vec2 tw = mat2(0.64, 0.77, -0.77, 0.64) * w;
     // (Carried by another wind, the second lay crosses the first while the frame is held.)
     float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
-    vec2 mw = tw + held * vec2(9.0, -19.0);
+    vec2 mw = tw + held * vec2(12.0, -24.0);
     float dots = 0.0;
     float haze = 0.0;
     for (int i = 0; i < 2; i++) {
@@ -114,8 +123,8 @@ float lowPicture(vec2 w, float shadow) {
       float inA = smoothstep(0.4, 0.6, texture2D(uCloudTile, sw / (2600.0 * lay) + vec2(0.33, 0.61) * lay, 2.0).b);
       float inB = smoothstep(0.43, 0.62, texture2D(uCloudTile, mw / (1900.0 * lay) + 0.4 * lay, 2.0).g);
       // (Within a field the cloud stands in ragged groups drawn out along the wind, a hundred kilometres and more, with clear sea between.)
-      inA *= 0.1 + 0.9 * smoothstep(0.44, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g);
-      inB *= 0.1 + 0.9 * smoothstep(0.44, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
+      inA *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g);
+      inB *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
       vec2 ua = sw / (1050.0 * lay) + vec2(0.3, 0.7) * lay;
       vec2 ub = mw / (820.0 * lay) + vec2(0.7, 0.2) * lay;
       // (The photograph is read only where a field stands.)
@@ -138,10 +147,11 @@ float lowPicture(vec2 w, float shadow) {
     // (For the shadow it throws, from orbit, only the body of a cluster counts: a dot is too small for its shadow to be seen.)
     // (And here and there long thin wisps run with the wind: the photograph of wind-drawn streaks, soft, in a few wide fields of their own,
     // carried by a third wind.)
-    vec2 ww = mat2(0.94, -0.34, 0.34, 0.94) * w + held * vec2(-13.0, -6.0);
-    float wispField = smoothstep(0.42, 0.62, texture2D(uCloudTile, ww / vec2(3900.0, 2100.0) + vec2(0.81, 0.27), 2.5).r);
-    float wisp = wispField > 0.0 ? wispField * seen(texture2D(uMatStreaks, ww / vec2(2500.0, 900.0) + vec2(0.37, 0.52), 0.8).rgb, 0.22, 0.9) : 0.0;
-    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.36 * wisp);
+    vec2 ww = mat2(0.94, -0.34, 0.34, 0.94) * w + held * vec2(-22.0, -9.0);
+    float wispField = 0.0;
+    if (shadow < 1.0 && uViewKm > 800.0) wispField = (1.0 - shadow) * smoothstep(800.0, 1300.0, uViewKm) * smoothstep(0.3, 0.55, texture2D(uCloudTile, ww / vec2(3900.0, 2100.0) + vec2(0.81, 0.27), 2.5).r);
+    float wisp = wispField > 0.0 ? wispField * seen(texture2D(uMatStreaks, ww / vec2(2500.0, 900.0) + vec2(0.37, 0.52), 0.3).rgb, 0.22, 0.85) : 0.0;
+    pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.62 * wisp);
   }
   return pic;
 }
@@ -150,7 +160,7 @@ float lowPicture(vec2 w, float shadow) {
 vec2 lowGround(vec2 at) {
   // (From orbit the drift of the field is seen: it gathers way as the rise ends, and the whole field is carried on while the frame is held.)
   float held = uTime < 8.0 ? 0.125 * max(uTime - 4.0, 0.0) * max(uTime - 4.0, 0.0) : uTime - 6.0;
-  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(7.0, 2.5);
+  return at + 90.0 * vec2(sin(at.y / 610.0 + 1.3 * sin(at.x / 1130.0)), sin(at.x / 870.0 + 1.7 * sin(at.y / 1370.0))) - uTime * LOW_DRIFT - held * vec2(15.0, 5.5);
 }
 
 // The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).
@@ -165,10 +175,10 @@ vec2 lowFieldOf(vec2 at, float shadow) {
   float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
   // (And from there it lies in bands along the wind with long clear lanes of sea between, and thins toward the edge of the planet.)
   float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
-  field *= mix(1.0, (0.3 + 0.7 * smoothstep(0.3, 0.52, lane)) * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at))), even);
+  field *= mix(1.0, (0.3 + 0.7 * smoothstep(0.3, 0.52, lane)) * (0.7 + 0.3 * smoothstep(0.12, 0.45, limbCos(at))), even);
   float pic = lowPicture(w, shadow);
   // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, 1.25 * smoothstep(mix(0.05, 0.0, even), 0.85, pic)) * smoothstep(0.0, 0.5, field);
+  float thick = min(1.0, mix(1.0, 1.25, even) * smoothstep(mix(0.03, 0.0, even), mix(1.2, 0.85, even), pic)) * smoothstep(0.0, 0.5, field);
   return vec2(thick, pic);
 }
 
