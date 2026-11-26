@@ -672,6 +672,8 @@ void main() {
   vec3 light = uSunColour * uSunDir.y * shade * day + skyIrradiance(level) * (0.5 + 0.5 * day);
   if (uDusk > 0.0) light = sunLightAt(sunH, day) * mix(uSunDir.y, max(sunH, 0.0), uTerm.w) * shade + skyIrradiance(level) * skyLightAt(sunH, day) + moonAt(sunH) * uMoonDir.y;
   shallow = mix(shallow, 0.06, river);
+  // (The strait shoals to its shores and is dark down its middle: the map has land there and tells nothing of its depth.)
+  shallow = mix(shallow, 0.75 * exp(min(coastKm, 0.0) / 4.0) * (1.0 - land), smoothstep(0.05, 0.25, strait));
   float pale = pow(shallow, 1.3);
   // (From far the shallows along the coasts are a clear teal.)
   vec3 shoal = mix(max(ground * 0.34, vec3(0.006, 0.035, 0.04)), vec3(0.011, 0.075, 0.085) * (0.5 + 0.9 * pale * (1.0 - 0.45 * pale)), 0.6 * smoothstep(240.0, 640.0, uViewKm));
