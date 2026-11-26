@@ -381,16 +381,30 @@ void main() {
   fwd = normalize(fwd + vec3(0.0, 0.35, 0.0));
   vec3 right = normalize(cross(fwd, vec3(0.0, 1.0, 0.0)));
   vec3 up = cross(right, fwd);
+  float perched = aRate.w;
+  if (perched > 0.5) {
+    // Settled on the bark: it does not travel, its back is to the air, and it has turned a little off the line of the trunk.
+    at = aHome.xyz;
+    up = normalize(aRate.xyz);
+    vec3 climb = normalize(vec3(0.0, 1.0, 0.0) - up * up.y);
+    vec3 across = cross(climb, up);
+    float turn = 0.7 * sin(aPhase.x);
+    fwd = climb * cos(turn) + across * sin(turn);
+    right = cross(fwd, up);
+  }
   // position: x across the picture, y along it, z which piece (0 the body, 1 and -1 the wings).
   float side = position.z;
   float reach = abs(position.x) * 0.04;
   float beat = sin(uSeconds * (38.0 + 14.0 * fract(aPhase.x)) + aPhase.y);
   float ang = (0.3 + 0.85 * beat) * abs(side);
+  // At rest the wings stand up together and open a little now and then, slowly, each insect in its own time.
+  float fan = smoothstep(0.6, 1.0, sin(uSeconds * (0.9 + 0.6 * fract(aPhase.z)) + aPhase.y));
+  if (perched > 0.5) ang = (1.32 - 0.5 * fan) * abs(side);
   vec3 local = fwd * (position.y * 0.0267) + right * (sign(position.x) * reach * cos(ang)) + up * (reach * sin(ang));
   vWorld = at + local * aPhase.w;
   vNormal = normalize(up * cos(ang) - right * (sign(position.x) * sin(ang)));
   vUv = vec2(position.x + 0.5, position.y + 0.57);
-  vWing = abs(side);
+  vWing = abs(side) * (perched > 0.5 ? 0.45 : 1.0);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
