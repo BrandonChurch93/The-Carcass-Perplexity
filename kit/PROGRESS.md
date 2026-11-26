@@ -1123,6 +1123,9 @@ Run once, started 2026-11-26 at 10:23 UTC, the first step of Phase 5. Five fresh
 Orders (picture 1 to 6): a heart, spine, breath, ribs, eye, marsh. b spine, breath, ribs, eye, marsh, heart. c breath, ribs, eye, marsh, heart, spine. d ribs, eye, marsh, heart, spine, breath. e eye, marsh, heart, spine, breath, ribs.
 
 Votes, one line a juror as it answers:
+- `pick_juror_b` (seat b), answered 10:24 UTC: `picture-3.png`, which in its order is the Ribs. Its sentence: "The towering curved horn-arches and the skeletal bird creatures wading toward them make a strange, readable world at a glance, and I'd want to click to find out what it is."
+- `pick_juror_a` (seat a), answered 10:24 UTC: `picture-4.png`, which in its order is the Ribs. Its sentence: "The rib-like stone arches grab me immediately, and the tiny creatures wading below make me want to explore the world beyond the frame."
+- `pick_juror_e` (seat e), answered 10:24 UTC: `picture-6.png`, which in its order is the Ribs. Its sentence: "The towering curved rock arches and pale long-legged creatures on a wet, reflective plain make a striking, strange scene with real depth that makes me want to click and explore it."
 
 ## Decisions made by the Builder
 
