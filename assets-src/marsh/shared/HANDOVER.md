@@ -1,6 +1,6 @@
 # Blood Marsh, ground and weather: hand-over from marsh_ground_owner_2
 
-Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 175 of 240 of wave 2. The first owner's note is in the history of this file.
+Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 190 of 240 of wave 2. The first owner's note is in the history of this file.
 
 ## How each part is drawn
 
@@ -44,8 +44,9 @@ Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.
 
 ## Still wrong beside the approved pictures, worst first
 
-- marsh-0: islands are pads with a rim, no plates with seams at that distance, no small things by the hundred; flats darker than approved (147,130,127 against 159,137,134).
-- marsh-1: bank too pale and even; no scum, no small bubbles; water has less ripple contrast than approved.
+- marsh-0: islands are pads with a rim, no plates with seams at that distance, no small things by the hundred; flats darker than approved (146,129,126 against 159,137,134); the plume over the seep pool is faint.
+- Cost: 11.8 s a sample against 7 (see below).
+- marsh-1: bank too pale and even (152,135,131 against 136,103,96); no scum, no small bubbles; water has less ripple contrast than approved.
 - marsh-4: plate edges not curled or undercut (a height field cannot), no drag marks; marsh-3: no hoof pits, bank smooth.
 - Sky paler than approved at marsh-3 and marsh-4; near rock soft; hummocks flat-topped; `mat/far.jpg` unused.
 
@@ -55,11 +56,13 @@ Nothing reads `stagedSeconds()`. The burst at 9.00 s (frame 6158) and the small 
 
 ## Cost at 3840 x 2160, key marsh-0, draft
 
-COST_LINES
+Measured with `npm run -s cost -- --key marsh-0 --format uhd --tier draft --parts land crust sky brine`, minute 180:
+the whole frame 11.81 s a sample; an empty frame 2.65; land 5.40 above it; crust 1.29; sky 0.40; brine the cheapest. The ground owner's share is about 9 s against an aim of 4.5: not met.
+Cheaper constants (`RELIEF = false` in `land/shaders.ts`, `DATA_SHARP = 1` in `land/index.ts`, `SHEETS = false` in `air/volume.ts`): land alone 7.00 s against 8.05, the whole frame 11.80 s, so no gain on the whole frame. The cost is in the count of pixels the land and the mirror pass shade, not in these.
 
 ## Checks at hand-over
 
-CHECK_LINE
+`npx tsc --noEmit -p .` clean; `npm run -s build` passes; `npm run -s determinism` prints `determinism: pass`; `npm run -s gate -- --phase 1 --only G10` passes twice running; the five keys render at 3840 x 2160 with no ERROR; all five shots watched as motion sheets (no lens under ground or through a solid).
 
 ## What I would do next, in order
 
