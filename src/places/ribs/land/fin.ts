@@ -151,15 +151,15 @@ void main() {
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
   // Lichen: rust and ochre where a face sees the sky and the sun, in patches, thick on the ledges; the sheet's own rust shows through it.
   float rusty = smoothstep(0.03, 0.14, stone.r - stone.b);
-  float lichen = smoothstep(0.66, 0.82, field + 0.35 * n0.y + 0.3 * (sunny - 0.5) + 0.25 * shelf + 0.12 * rusty + 0.04 * uCap - 0.3 * deep);
-  vec3 albedo = mix(vec3(mix(0.2, stoneLum, 0.62)) * vec3(1.05, 1.0, 0.92), stone * vec3(1.12, 1.0, 0.86), 0.1 + 0.2 * rusty);
-  albedo *= mix(3.1, 2.5, uCap) * mix(1.0, clamp(far2, 0.4, 1.8), 0.25) * fineLum * (0.82 + 0.36 * macro) * (1.0 + 0.2 * tone);
+  float lichen = smoothstep(0.7, 0.8, field + 0.35 * n0.y + 0.3 * (sunny - 0.5) + 0.25 * shelf + 0.12 * rusty + 0.04 * uCap - 0.3 * deep);
+  vec3 albedo = mix(vec3(mix(0.2, stoneLum, 0.62)) * vec3(1.03, 1.0, 0.95), stone * vec3(1.12, 1.0, 0.86), 0.08 + 0.12 * rusty);
+  albedo *= mix(3.1, 3.3, uCap) * mix(1.0, clamp(far2, 0.4, 1.8), 0.25) * fineLum * (0.82 + 0.36 * macro) * (1.0 + 0.2 * tone);
   albedo = mix(albedo, vec3(0.62, 0.29, 0.045) * clamp(stoneLum / 0.22, 0.5, 1.6), 0.8 * lichen);
   // Over hundreds of metres the stone changes: cold grey here, warm ivory there.
   albedo *= mix(vec3(0.97, 0.99, 1.02), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
   // The near cliff's cap: pale layered stone, cream more than grey, its lichen in patches.
   if (uCap > 0.0) {
-    vec3 cream = vec3(0.36, 0.34, 0.3) * clamp(stoneLum / 0.19, 0.45, 1.6) * fineLum * (0.85 + 0.3 * macro) * (1.0 + 0.2 * tone);
+    vec3 cream = vec3(0.43, 0.41, 0.37) * clamp(stoneLum / 0.19, 0.45, 1.6) * fineLum * (0.85 + 0.3 * macro) * (1.0 + 0.2 * tone);
     cream = mix(cream, vec3(0.42, 0.2, 0.04) * clamp(stoneLum / 0.19, 0.6, 1.4), 0.6 * smoothstep(0.56, 0.7, field + 0.25 * shelf));
     albedo = mix(albedo, cream, 0.85 * uCap);
   }
