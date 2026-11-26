@@ -136,7 +136,7 @@ export function create(ctx: Context): Piece {
       uGround: { value: ground },
       uDoor: { value: role.inside ? door : open },
       uDoorArea: { value: 420 },
-      uDoorGain: { value: 5 },
+      uDoorGain: { value: 8 },
       uCoat: { value: coatSet },
       tShag: { value: shagColour },
       tShagData: { value: shagData },

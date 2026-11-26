@@ -26,9 +26,11 @@ vec3 runnerLight(vec3 p, vec3 n) {
     vec3 way = d * inversesqrt(d2);
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
+    // The snow at the mouth and the pale wall give it back with little of the dusk's blue left in it.
+    seen = mix(seen, dot(seen, vec3(0.3, 0.5, 0.2)) * vec3(1.08, 1.0, 0.9), 0.6);
     // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
     float facing = clamp((dot(n, way) + 0.7) / 1.7, 0.0, 1.0);
-    float fill = 0.16 + 0.1 * n.y;
+    float fill = 0.3 + 0.12 * n.y;
     e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
@@ -211,7 +213,7 @@ void main() {
   // Hair takes light from all round: the lock is lit as something between its own way out of the body and the open sky.
   vec3 n = normalize(nb + vec3(0.0, 0.3, 0.0) + side * (0.35 * position.x) + toCamera * 0.2);
   // Roots stand in each other's shade.
-  float occ = mix(0.12, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
+  float occ = mix(0.12 + 0.33 * uDoor.w, 1.0, smoothstep(0.05, 0.85, t)) * (0.7 + 0.5 * fract(seed * 3.77));
   vLight = runnerLight(p, n) * occ / 3.14159;
   vFrostLight = runnerLight(p, normalize(n + vec3(0.0, 0.8, 0.0))) / 3.14159;
   vAt = vec4(position.x, t, seed, aCard.z);
