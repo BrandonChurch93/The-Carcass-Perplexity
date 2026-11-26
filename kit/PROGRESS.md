@@ -24,28 +24,29 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 121, 2026-11-26 16:13 UTC:
+Status 122, 2026-11-26 16:36 UTC:
 
-- `01-s121-opening.jpg`: The opening, version 3, not merged: frame 0 at left and frame 120 at right, at the size a phone shows them (draft tier, rendered by its builder). The bank is heaped and has no ruled edge; the frame is still grey on grey
-- `02-s121-join.jpg`: The join from the lake into the rise, frames 9535 to 9546: as round 2 judged them above the red line, with the builder's passage below it (draft tier, preview size, rendered by its builder). Not merged yet
-- `03-s121-cloud.jpg`: The Spine's cloud sea, version 1, frame 7015: before at left, after at right (review tier, 1080p, rendered by its builder). Not merged yet
-- `04-s121-lava.jpg`: The Heart's lava fall at frames 4037, 4127 and 4217, three seconds apart in all (draft tier, preview size, rendered on the Builder's machine): the stream widens, and nothing on its surface can be seen to travel
+- `01-s122-column.jpg`: The Breath's mist column, merged: frame 4500 above and frame 4590 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `02-s122-walkers.jpg`: The Heart's walkers, version 1, not merged: frames 3028 and 3280 before above and after below (draft tier, rendered by its builder). The tuft and the second walker's trunk move; the legs do not yet
+- `03-s122-hung.jpg`: The dead one hung on the first blade: the approved picture at left, loop frame 100 at right (draft tier, 1080p, rendered on the Builder's machine, cut out). At right it reads as an animal standing on the wall
+- `04-s122-plants.jpg`: The Blood Marsh: the approved establishing picture at left, film frame 5618 as round 2's jury saw it at right (final tier, rendered in 4K on a render machine, shown smaller). Thickets and low growth at left, single stems at right
 
+Status 121, 2026-11-26 16:13 UTC, showed: The opening, version 3, not merged: frame 0 at left and frame 120 at right, at the size a phone shows them (draft tier, rendered by its...
 Status 120, 2026-11-26 15:48 UTC, showed: Frame 0 as round 2's jury and scroll-stop critic saw it (final tier, rendered in 4K on a render machine, shown smaller): 1 of 5 jurors took...
 Status 119, 2026-11-26 15:25 UTC, showed: The Breath's shaft wall, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right.
-Status 118, 2026-11-26 15:00 UTC, showed: The join, version 2, merged (draft tier, preview size, rendered on the Builder's machine): version 1 at left, version 2 at right.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T16:13:38Z
-phase 5: 5.96 h used of 6.00 h
-build: 40.37 h used of 72.00 h
+2026-11-26T16:36:00Z
+phase 5: 6.33 h used of 6.00 h
+build: 40.74 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 25
+box end: reached
+minutes since the last status: 0
 ```
 
 ## Phases
@@ -1479,6 +1480,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 16:28 UTC. Guard ga is back from pack_renderer_r9 (10 minutes, 20 renders at the draft tier, preview size) and the Breath's mist column is merged (agent/breath-column 907aa0d, only src/places/breath/air/volume.ts). MEASURED: frames 1241 and 10027 byte equal, types clean. Seen by the Builder, before beside after: the flat pale slab under the second ledge is gone at 4500 and softer at 4590; 4221, 4409 and 5242 differ by a few levels and look the same; at the key 4731 the puff over the shaft is torn into lobes where it had a straight edge, and is no nearer the approved picture's thin grey mist than before and no farther; 4973 and 5510 a little more shape in the vapour. Its cost was not measured: UNKNOWN
 - 2026-11-26. 16:29 UTC. ribs_drowned_builder asked whether the new hung body should also show in the establishing shot, where it would break its guard frame 1241. Decided: yes, one body in the whole film and the loop; 1241 and loop 0 become look frames for it. Seen by the Builder on loop frames 100 and 300 at 1080p: the dead one is a level back on four straight legs and reads as an animal standing sideways on the wall, which is what the loop's motion critic took it for ("the pale quadruped on the left cliff face"); in the approved picture ribs-0 it hangs limp along the fall line, wound in weed. Asked of version 2, first: in the wide view it reads as a dead thing hung up
 - 2026-11-26. 16:34 UTC. Two builders ended with their last word (the join's at its minute 227, the lightning's at its minute 222) and two started in their slots at 16:33 UTC, each on its own machine: heart_lava_builder (the lava fall, a severe issue of round 27 with no builder until now) and spine_kite_builder (the tether-kites, rung 1). Counted before the order: 8 builders with a job and no render machine, so 10 of 16 after it, builders 10 of 10. The orbit's version 1 came at 16:31 UTC (agent/reveal-orbit 206cc63). A row of the table first gave the join's version 1 as merged at 13:59 UTC and the lightning's start as 13:10 UTC, written from memory; checked against the merge commits and the row as it stood, they are 13:32 and 12:51 UTC, and were corrected before any commit
+- 2026-11-26. 16:36 UTC. Status 122 shown. The orbit's version 1 (206cc63) looked at: the cyclone turns as one body and the roll shows across the sheet, the last frame still reads as a body; in its own pair at frame 11300 the cloud on the lit limb is whiter and coarser than before and the ember fainter. It goes into guard 1 as it stands, and version 2 (by 17:25 UTC, stop 17:45 UTC) is asked for, in this order: two banks that travel and can be followed across a sheet of six frames, cloud no whiter and no coarser than before between 10680 and 11500, the ember at least as bright as before from 11150 on, the cost at 11400 within 0.3 s a frame of before. The lightning's last version (9697d30) looked at beside the approved picture at 7234: the sky and the cloud sea answer the stroke; it goes into guard 1. The status tool was first run with a broken line in its script (three notes and the four pictures missing); it was run again whole before anything was shown or committed
 
 ## Notes from Brandon
 
