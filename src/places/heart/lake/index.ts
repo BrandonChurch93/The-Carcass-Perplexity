@@ -12,6 +12,7 @@ import { createFoundering } from './founder';
 import { HEAT_GLSL } from './heat';
 import { createLava } from './lava';
 import { skinFragment } from './skin';
+import { SHEET_GLSL } from './sheet';
 
 export const PARTS: readonly string[] = ['crust', 'lava', 'foundering'];
 
@@ -37,30 +38,7 @@ uniform sampler2D tSheetNh;
 #define SHEET_TALL_D 0.012
 #define SHEET_TALL_M 0.06
 #define SHEET_TALL_L 0.24
-vec3 gSheetW;
-vec2 gSheetBase;
-float gSheetSide;
-void sheetGrid(vec2 q, float span) {
-  vec2 sk = mat2(1.0, 0.0, -0.57735027, 1.15470054) * (q * (3.4641016 / span));
-  gSheetBase = floor(sk);
-  vec3 t = vec3(sk - gSheetBase, 0.0);
-  t.z = 1.0 - t.x - t.y;
-  gSheetSide = step(0.0, -t.z);
-  float s2 = 2.0 * gSheetSide - 1.0;
-  gSheetW = vec3(-t.z * s2, gSheetSide - t.y * s2, gSheetSide - t.x * s2);
-}
-// Corner i of the patch sheetGrid found: its weight, and how its reading is turned (cos, sin) and shifted.
-float sheetCorner(int i, float seed, out mat2 turn, out vec2 shift) {
-  float s = gSheetSide;
-  vec2 h = hash22(gSheetBase + (i == 0 ? vec2(s, s) : i == 1 ? vec2(s, 1.0 - s) : vec2(1.0 - s, s)) + seed);
-  float a = 6.2832 * h.x;
-  float ca = cos(a);
-  float sa = sin(a);
-  turn = mat2(ca, sa, -sa, ca);
-  shift = fract(h.yx * 13.7 + 0.31);
-  float w = i == 0 ? gSheetW.x : i == 1 ? gSheetW.y : gSheetW.z;
-  return w * w * w;
-}
+${SHEET_GLSL}
 // The height of the sheet, 0 to 1, read at one mip.
 float sheetHigh(vec2 q, float span, float seed, float lod) {
   sheetGrid(q, span);
@@ -69,7 +47,7 @@ float sheetHigh(vec2 q, float span, float seed, float lod) {
   for (int i = 0; i < 3; i++) {
     mat2 turn;
     vec2 shift;
-    float w = sheetCorner(i, seed, turn, shift);
+    float w = sheetCorner(i, seed, 1.0, turn, shift);
     float high = textureLod(tSheetNh, (turn * q) * (vec2(1.0, 2.0) / span) + shift, lod).b;
     float k = w * exp(7.0 * high);
     got += k * high;
@@ -1033,6 +1011,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tRope: { value: ctx.assets.texture('mat/pahoehoe.jpg') },
     tSheet: { value: ctx.assets.texture('mat/rope-nt.jpg', { kind: 'data' }) },
     tSheetNh: { value: ctx.assets.texture('mat/rope-nh.jpg', { kind: 'data' }) },
+    tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
     uRidge: { value: RIDGES.map((r) => new THREE.Vector4(r.from[0], r.from[1], r.to[0], r.to[1])) },
     uRidgeSize: { value: RIDGES.map((r) => new THREE.Vector2(r.tall, r.reach)) },
     uGroupSeam: { value: new THREE.Vector4(-458.8, 221.3, -326.8, 179.3) },
