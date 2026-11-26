@@ -88,8 +88,14 @@ void main() {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
     // take too little light to show over the ground.)
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
-    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone);
-    float bNight = b * (1.0 - 0.8 * gone);
+    // (From this height, by night, cloud is sheets, bands and a few great cells, dim under the moon; the small bright bodies of the day are not seen.)
+    float sunk = 1.0 - smoothstep(-0.34, -0.06, sunHeight(xz));
+    float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone) * (1.0 - 0.88 * sunk);
+    float sheets = smoothstep(0.56, 0.78, 0.58 * vnoise(hv / 1500.0 + 7.0) + 0.3 * vnoise(hv / 560.0 + 3.0) + 0.12 * vnoise(hv / 210.0 + 11.0)) * (0.55 + 0.45 * ice);
+    vec2 bv = mat2(0.94, 0.34, -0.34, 0.94) * (hv + uLive * vec2(-14.0, 5.0));
+    float bands = smoothstep(0.6, 0.82, 0.7 * vnoise(bv / vec2(3400.0, 620.0) + 5.0) + 0.3 * vnoise(bv / vec2(1100.0, 260.0) + 9.0)) * (0.6 + 0.4 * ice);
+    // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
+    float bNight = min(0.8, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) + sunk * (0.3 * sheets + 0.24 * bands));
     colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
     a = aNight;
     b = bNight;
@@ -241,6 +247,8 @@ void main() {
   vec2 d2 = p - vec2(0.62, -0.06);
   float glimmer = (0.14 + 0.16 * vnoise(vec2(uTime * 0.9, 3.0))) * exp(-dot(d1, d1) * 40.0) + (0.1 + 0.16 * vnoise(vec2(uTime * 1.3, 11.0))) * exp(-dot(d2, d2) * 55.0);
   glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
+  // (Held from orbit the storm is watched long enough to see it work: the strokes inside the anvils tell.)
+  if (uLive > 0.0) glow *= 1.0 + 1.8 * smoothstep(0.0, 2.0, uLive);
   if (uDusk > 0.0) glow *= uCalm.x;
   // (The storm dies down with the day: by night its towers are no brighter than the bone.)
   if (uDusk > 0.0) colour *= 1.0 - 0.2 * uEmber.x;
@@ -279,6 +287,8 @@ void main() {
   float thick = smoothstep(0.03, 0.95, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
   float alpha = clamp(thick * 0.5, 0.0, 1.0);
+  // (And the vapour of the throat is seen to trail: a little denser while the frame is held.)
+  if (uLive > 0.0) alpha = clamp(thick * (0.5 + 0.25 * smoothstep(0.0, 3.0, uLive)), 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -318,7 +328,7 @@ void main() {
       vec3 layers = mix(mix(vec3(0.85, 0.13, 0.03), vec3(1.0, 0.46, 0.12), smoothstep(1.0, 12.0, km)), mix(vec3(0.8, 0.78, 0.7), vec3(0.2, 0.4, 0.95), smoothstep(22.0, 62.0, km)), smoothstep(9.0, 30.0, km));
       vec3 arc = mix(glow, layers * exp(-max(km, 0.0) / 34.0) * 0.5, lowSun) * mix(1.0, sunSeen(sunH - 0.05) + 0.03 * skySeen(sunH), uTerm.w);
       float airglow = exp(-pow((km - 16.0) / 20.0, 2.0));
-      colour = (exposed(arc * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45) * (uEmber.y > 3.0 ? min(1.0, uGain / 5.0) : 1.0)) * a;
+      colour = (exposed(arc * uEmber.w * pow(uGain, -0.88) + vec3(0.2, 0.36, 0.8) * 0.0011 * airglow * uDusk) + vec3(0.85, 0.9, 1.0) * star * 0.3 * pow(uGain, 0.45) * (uEmber.y > 3.0 ? min(1.0, uGain / 5.0) : 1.0)) * a;
     }
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;

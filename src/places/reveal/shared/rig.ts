@@ -69,7 +69,10 @@ export function dusk(seconds: number): Dusk {
   const fallen = 1 - Math.exp(-((u / SET_TAU) * (u / SET_TAU)));
   // (And through the hold before it the day already ages: the sun comes down a few degrees from rest, so the dusk is no switch.)
   const older = 1 - Math.exp(-((aged / AGE_TAU) * (aged / AGE_TAU)));
-  const height = height0 - AGE_DROP * older - SET_DROP * fallen;
+  const sinceBeat = BEAT === null ? -10 : seconds - BEAT;
+  // (Over the last two seconds the picture goes out: the sun sinks a little further, so the last light on the edge narrows to nothing, and the ember sinks with it.)
+  const out = ease(4.82, 6.82, sinceBeat);
+  const height = height0 - AGE_DROP * older - SET_DROP * fallen - OUT_DROP * out;
   // And it sets to the left of where it stood: the planet turns under it.
   const turn = turn0 - AGE_SWING * older - SET_SWING * fallen;
   const flat = Math.cos(height);
@@ -81,9 +84,9 @@ export function dusk(seconds: number): Dusk {
   // After the beat the night thins: the camera's eye closes a little, and the fire sinks back.
   const thin = ease(1.2, 6.8, since);
   // And over the last seconds the dark comes over the whole picture, the ember the last thing to go.
-  const last = ease(3.2, 6.82, since);
-  const dark = 1 - 0.2 * last;
-  const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.18 * thin) * dark;
+  const last = ease(4.4, 6.82, since);
+  const dark = 1 - 0.31 * last;
+  const gain = Math.pow(NIGHT_GAIN, ease(23, -11, degrees)) * (1 - 0.05 * thin) * dark;
   return {
     dusk: Math.max(1e-4, ease(0, 7, u)),
     sun,
@@ -96,8 +99,8 @@ export function dusk(seconds: number): Dusk {
     glint: 1 - ease(2.6, 4.9, u),
     working: 1 - 0.85 * ease(2, 6.5, u),
     ember: night * (1 - 0.42 * thin),
-    lift: (NIGHT_GAIN * (1 - 0.18 * thin) * dark) / gain,
-    keep: (1 - 0.2 * last) / dark,
+    lift: (NIGHT_GAIN * (1 - 0.05 * thin) * dark) / gain,
+    keep: 1 - out,
   };
 }
 const SET_TAU = 5.5;
@@ -105,6 +108,7 @@ const SET_TAU = 5.5;
 const SET_SLOW = 1.3;
 const SET_DROP = (68 * Math.PI) / 180;
 const SET_SWING = (24 * Math.PI) / 180;
+const OUT_DROP = (9 * Math.PI) / 180;
 const AGE_TAU = 11;
 const AGE_DROP = (8 * Math.PI) / 180;
 const AGE_SWING = (6 * Math.PI) / 180;
