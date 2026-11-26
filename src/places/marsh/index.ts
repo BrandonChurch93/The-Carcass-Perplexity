@@ -33,17 +33,18 @@ const K2: Pose = {
   aperture: 0.0035,
 };
 
-/** marsh-1, the seep pool, from a metre over its brine. */
+/** marsh-1, the seep pool, from half a metre over its brine at the lip of the bank. */
+const K1_LENS: [number, number, number] = [K1_AT[0] + K1_DIR[0] * 1.0, 0.55, K1_AT[1] + K1_DIR[1] * 1.0];
 const K1: Pose = {
-  position: [K1_AT[0], 0.95, K1_AT[1]],
-  aim: [K1_AT[0] + K1_DIR[0] * 10, 0.95 - 10 * Math.tan(12 * DEG), K1_AT[1] + K1_DIR[1] * 10],
+  position: K1_LENS,
+  aim: [K1_LENS[0] + K1_DIR[0] * 10, K1_LENS[1] - 10 * Math.tan(9.5 * DEG), K1_LENS[2] + K1_DIR[1] * 10],
   fov: 35,
-  focus: 4.6,
+  focus: 3.8,
   aperture: 0.006,
 };
 
 /** marsh-3, the wallowers in the vein. */
-const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.011 };
+const K3: Pose = { position: at(27.7, 3, 1.5), aim: at(37.7, 3.2, 0.2), fov: 30, aperture: 0.007 };
 /** marsh-4, the one on the thin crust. */
 const K4: Pose = { position: at(24.6, 19.6, 1.5), aim: at(27.6, 10.07, -0.39), fov: 35, aperture: 0.007 };
 

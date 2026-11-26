@@ -19,6 +19,9 @@ varying vec3 vDir;
 uniform highp sampler3D tNoise;
 uniform vec4 uRain;
 uniform sampler2D tSky;
+uniform sampler2D tFar;
+// What the far picture's white comes to in the rig's light.
+const float FAR_GAIN = 0.8;
 ${RIG_GLSL}
 
 void main() {
@@ -50,6 +53,20 @@ void main() {
   // Its lumps, deepened: an overcast seen over a pale flat has more shape than a camera gives it.
   pic = pow(pic, vec3(3.6));
   c *= mix(vec3(1.0), pic, smoothstep(-0.01, 0.05, d.y)) * mix(0.62, 0.46, smoothstep(0.02, 0.3, el));
+  // The far distance is its own picture: the escarpment six kilometres on, the low bellies of the overcast over it and the rain hanging
+  // from them, as the first lens sees them. It stands round the whole horizon (turned over at each end, so it has no seam) and gives way to
+  // the sheet above it eleven degrees up. Its shaft of rain stands on the bearing of the rain.
+  // (It was taken with the first lens: 44 degrees high, so its whole height is 0.808 in tangent and its width 1.436.)
+  float fu = 0.68 + (az - uRain.x) / 1.436;
+  fu = 1.0 - abs(1.0 - mod(fu, 2.0));
+  float fv = 0.574 + max(el, 0.0) / 0.808;
+  vec3 far = texture2D(tFar, vec2(fu, min(fv, 0.995))).rgb;
+  float low = smoothstep(0.3, 0.14, el);
+  // The picture is as a screen shows it; the film's own curve (exposure 2, then AgX) is undone here so that it comes out as it went in:
+  // its bellies as dark and its hills as faint as they were taken. (A fit of the curve's inverse, good from 0.4 to 0.93 of white.)
+  vec3 shown = pow(far, vec3(1.0 / 2.2));
+  far = exp2((((43.76 * shown - 96.814) * shown + 79.933) * shown - 21.049) * shown - 3.544) * FAR_GAIN;
+  c = mix(c, far, low);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -62,7 +79,7 @@ export function createSky(ctx: Context, noise: THREE.Data3DTexture, rain: THREE.
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, tNoise: { value: noise }, uRain: { value: rain }, tSky: { value: ctx.assets.texture('mat/sky.jpg', { kind: 'colour', repeat: true }) } },
+    uniforms: { ...ctx.rig.uniforms, tNoise: { value: noise }, uRain: { value: rain }, tSky: { value: ctx.assets.texture('mat/sky.jpg', { kind: 'colour', repeat: true }) }, tFar: { value: ctx.assets.texture('mat/far.jpg', { kind: 'colour', repeat: false }) } },
     side: THREE.BackSide,
     // At the far plane and drawn last, so that the engine can reject it wherever anything stands in front.
     depthTest: true,

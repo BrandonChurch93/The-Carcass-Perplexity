@@ -246,7 +246,7 @@ export function makeStalks(pools: Pool[]): Stalk[] {
   const near = (forward: number, right: number, h: number, lean: number, kind: number): void => {
     out.push({ x: K1_AT[0] + K1_DIR[0] * forward + k1Right[0] * right, z: K1_AT[1] + K1_DIR[1] * forward + k1Right[1] * right, h, lean, yaw: yawOf(k1Right[0], k1Right[1]), kind, size: 1, phase: forward });
   };
-  near(2.8, -1.5, 3.4, 0.05, 1);
+  near(3.3, -1.32, 3.4, 0.05, 1);
   const edge = stream('marsh-left');
   for (let i = 0; i < 18; i++) {
     const d = edge.range(15.5, 19.5);
