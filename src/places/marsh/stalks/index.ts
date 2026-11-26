@@ -283,13 +283,20 @@ export function create(ctx: Context): Piece {
       const r3 = rng.range(0.5, 0.72);
       const seed = rng.next();
       if (!kept(s)) return;
-      const anchored = near(s);
+      // The groups staged behind the great wallower are a key's own: they keep their lines and sizes as the ones by a lens do.
+      const anchored = near(s) || staged4.has(s);
       const lowly = low.has(s);
+      // What stands behind a subject in a key's picture (the groves across the thin crust, the far side of the colony's water) grows no taller and
+      // carries no wider a head than it did there.
+      const ahead2 = (s.x - K2_AT[0]) * K2_DIR[0] + (s.z - K2_AT[1]) * K2_DIR[1];
+      const aside2 = Math.abs((s.x - K2_AT[0]) * K2_RIGHT[0] + (s.z - K2_AT[1]) * K2_RIGHT[1]);
+      const backdrop = lowly || (ahead2 > 0 && ahead2 < 90 && aside2 < 0.9 * ahead2 + 3);
       // Seedling to old giant. The ones a key's lens stands by keep their height, give or take a little.
       const cls = wild.next();
-      const grow = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
+      const grown = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
+      const grow = backdrop ? Math.min(grown, 1.15) : grown;
       const tall = s.h * (0.45 + 0.75 * r1) * grow;
-      const girth = Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
+      const girth = anchored ? wild.range(0.95, 1.08) : Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * r3 * girth;
       const leaner = !anchored && wild.next() < 0.14 ? wild.range(0.2, 0.5) : 0;
       const kinked = wild.next() < 0.34;
@@ -299,13 +306,23 @@ export function create(ctx: Context): Piece {
         kind: s.kind, phase: s.phase, low: lowly ? 1 : 0, seed,
         bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.22), kinkT: kinked ? wild.range(0.25, 0.8) : 2, kinkM: kinked ? wild.range(0.12, 0.5) : 0,
         swayA: wild.range(0, TAU), swayM: wild.next() < 0.5 ? wild.range(0.02, 0.085) : wild.range(0, 0.02), kinkA: wild.range(0, TAU), rate: wild.range(0.7, 1.6) / Math.sqrt(Math.max(tall, 0.6) / 2.5),
-        age: s.kind === 2 ? 2 : old ? wild.range(0.6, 1) : wild.range(0, 0.55), stain: wild.range(0.12, 1.1), uvo: wild.range(0, 2), quiver: 1,
+        age: s.kind === 2 ? 2 : anchored ? wild.range(0, 0.4) : old ? wild.range(0.6, 1) : wild.range(0, 0.55), stain: anchored ? wild.range(0.1, 0.4) : wild.range(0.12, 1.1), uvo: wild.range(0, 2), quiver: 1,
         fork: [0, 0, 0], collar: wild.range(0.7, 1.6), cards: [], foot: true,
       };
+      if (anchored) {
+        // By a key's lens a stalk keeps the line the key's picture has it on: the bow it always had, no kink, hardly a sway.
+        w.bowA = seed * 37;
+        w.bowM = 0.05 + 0.2 * ((seed * 91.3) % 1);
+        w.kinkT = 2;
+        w.kinkM = 0;
+        w.swayM = Math.min(w.swayM, 0.012);
+        w.collar = 0.5 * w.collar;
+      }
       wilds.push(w);
-      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall));
+      // And a head a key's picture shows keeps its size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
+      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
-      if (!lowly && tall > 1.5 && wild.next() < 0.2) {
+      if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
         const t0 = wild.range(0.28, 0.66);
         const at = lineAt(w, t0);
         const a = wild.range(0, TAU);
