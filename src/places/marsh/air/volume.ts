@@ -13,6 +13,9 @@ export const SHEETS: boolean = true;
 /** The ground mist: the stretches a view is cut into, where it starts and ends (metres along the view), how high it is read (metres),
  *  how deep a bank stands (metres) and how much of a surface's light a metre of it takes at the ground. */
 export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 4.5, thick: 0.0075 };
+/** The shade of what stands close: reads of the frame's depth round each texel, the reach as a share of the distance, how far off it
+ *  ends (metres) and how deep it goes. */
+export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.3 };
 /** How far the near air is counted over the sky, metres. */
 export const HAZE_OVER_SKY = 1100;
 
@@ -27,6 +30,11 @@ precision highp float;
 #define MIST_DEEP ${f(MIST.deep)}
 #define MIST_THICK ${f(MIST.thick)}
 #define HAZE_OVER_SKY ${f(HAZE_OVER_SKY)}
+#define OCC_TAPS ${OCC.taps}
+#define OCC_WAYS ${OCC.ways}
+#define OCC_REACH ${f(OCC.reach)}
+#define OCC_FAR ${f(OCC.far)}
+#define OCC_DEPTH ${f(OCC.depth)}
 precision highp sampler3D;
 uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
@@ -65,6 +73,56 @@ void viewRay(out vec3 ro, out vec3 rd, out float far, out float open) {
   rd /= far;
   open = depth >= 1.0 ? 1.0 : 0.0;
   if (depth >= 1.0) far = 60000.0;
+}
+
+// The place at a full-size pixel, as the camera sees it (x right, y up, the view down -z).
+vec3 seenAt(ivec2 px) {
+  ivec2 size = textureSize(tDepth, 0);
+  px = clamp(px, ivec2(0), size - 1);
+  vec2 uv = (vec2(px) + 0.5) / vec2(size);
+  vec4 v = uInvProjection * vec4(uv * 2.0 - 1.0, texelFetch(tDepth, px, 0).r * 2.0 - 1.0, 1.0);
+  return v.xyz / v.w;
+}
+
+// How much of the overcast a surface loses to what stands close round it: the crease, the foot of a thing on the ground, the underside
+// of a body. Read from the depth of the frame itself, so it holds for every surface of every folder with no call from any of them.
+// 1 open, less where closed in.
+float closedIn(ivec2 pixel) {
+  vec3 P = seenAt(pixel);
+  float dist = -P.z;
+  if (dist > OCC_FAR) return 1.0;
+  // The surface's facing, from the nearer neighbour on each side, so that an edge does not bend it.
+  vec3 l = seenAt(pixel - ivec2(2, 0));
+  vec3 r = seenAt(pixel + ivec2(2, 0));
+  vec3 d = seenAt(pixel - ivec2(0, 2));
+  vec3 u = seenAt(pixel + ivec2(0, 2));
+  vec3 dx = abs(r.z - P.z) < abs(P.z - l.z) ? r - P : P - l;
+  vec3 dy = abs(u.z - P.z) < abs(P.z - d.z) ? u - P : P - d;
+  vec3 n = normalize(cross(dx, dy));
+  // The reach grows with distance, so that a far animal still stands on its own shade; near the lens it is a hand to a stride.
+  float reach = clamp(OCC_REACH * dist, 0.5, 8.0);
+  float pixels = 0.5 * reach / (dist * uInvProjection[1][1]) * float(textureSize(tDepth, 0).y);
+  pixels = min(pixels, 0.2 * float(textureSize(tDepth, 0).y));
+  ivec2 here = ivec2(gl_FragCoord.xy);
+  float turn = 6.2832 / float(OCC_WAYS) * float(hash2(uint(here.x) + uint(uSampleIndex) * 977u, uint(here.y) + uint(uSampleIndex) * 331u) & 1023u) / 1024.0;
+  // Four ways out from the point, turned for each texel and each sample of the frame; on each the highest thing within reach counts,
+  // which is steadier from one texel to the next than a scatter of reads.
+  float start = float(hash2(uint(here.y) + uint(uSampleIndex) * 193u, uint(here.x) + uint(uSampleIndex) * 59u) & 1023u) / 1024.0;
+  float sum = 0.0;
+  for (int i = 0; i < OCC_WAYS; i++) {
+    float a = turn + 6.2832 * float(i) / float(OCC_WAYS);
+    vec2 way = vec2(cos(a), sin(a));
+    float high = 0.0;
+    for (int k = 0; k < OCC_TAPS; k++) {
+      float f = (float(k) + 0.3 + 0.7 * start) / float(OCC_TAPS);
+      vec3 v = seenAt(pixel + ivec2(way * (2.0 + pixels * f * f))) - P;
+      float len = length(v) + 1e-4;
+      high = max(high, (dot(n, v) / len - 0.1) * max(1.0 - len * len / (reach * reach), 0.0));
+    }
+    sum += high;
+  }
+  float open = clamp(1.0 - OCC_DEPTH * sum / float(OCC_WAYS), 0.0, 1.0);
+  return mix(1.0, 0.3 + 0.7 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
 }
 
 // Thickness of the haze along the view from a to b metres: it thins with height, so the sum has a closed form.
@@ -320,5 +378,7 @@ void main() {
     sum += trans * a * airLight;
     trans *= 1.0 - a;
   }
+  // What the nearness of things takes from a surface's light is taken before the air lies over it.
+  if (open < 0.5) trans *= closedIn(2 * here);
   gl_FragColor = vec4(sum, trans);
 }`;

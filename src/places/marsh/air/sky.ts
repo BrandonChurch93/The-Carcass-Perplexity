@@ -71,7 +71,7 @@ void main() {
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
   c *= mix(1.0, 1.55, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
-  gl_FragColor = vec4(rigOut(c), 1.0);
+  gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;
 
 export interface Sky {
