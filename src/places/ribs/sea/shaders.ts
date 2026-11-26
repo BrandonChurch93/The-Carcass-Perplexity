@@ -24,6 +24,16 @@ ${SWELL.map(([dx, dz, length, amp]) => {
 }).join('\n')}
   return h;
 }
+// How far the water of a wave is carried toward its crest: a real sea is peaked at the top and long in the trough, not a sum of round backs.
+vec2 swellPush(vec2 p, float t, float fine, float lo, float hi) {
+  vec2 push = vec2(0.0);
+${SWELL.map(([dx, dz, length, amp]) => {
+  const k = (Math.PI * 2) / length;
+  const w = Math.sqrt(9.81 * k);
+  return `  push -= (1.0 - smoothstep(lo, hi, ${f(k)} * fine)) * ${f(0.72 * amp)} * sin(${f(k)} * dot(p, vec2(${f(dx)}, ${f(dz)})) - ${f(w)} * t) * vec2(${f(dx)}, ${f(dz)});`;
+}).join('\n')}
+  return push;
+}
 // White water of the wind sea: each of its waves breaks in patches along its crest and leaves a lace behind it that the wave runs out from under.
 // x: the fresh break at the crest. y: the older foam trailing behind it.
 vec2 whitecaps(vec2 p, float t, float px, sampler2D chop) {
@@ -60,6 +70,8 @@ float swellPhase(vec2 p, float t) {
 export const SEA_VERTEX = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 uniform vec3 uEye;
+uniform sampler2D tChop;
+uniform vec2 uWind;
 varying vec3 vWorld;
 ${SWELL_GLSL}
 void main() {
@@ -69,9 +81,16 @@ void main() {
   float calm = smoothstep(0.2, 4.5, -bed);
   vec2 g;
   float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;
+  // The wind sea stands in the mesh as far as its rings can carry it (the same two pictures the pixel leans its faces by, in the same
+  // place): a near crest has a broken top and a broken outline, not the smooth back of a sum of six waves.
+  float ring = r * 0.02 + 0.1;
+  float lively = (0.3 + 0.7 * smoothstep(0.0, 2.5, -bed)) * calm;
+  h += lively * (0.95 * (textureLod(tChop, p / 47.0 - uTime * uWind * 0.064, log2(max(ring * 256.0 / 47.0, 1.0))).b - 0.5) * (1.0 - smoothstep(1.2, 3.5, ring))
+    + 0.3 * (textureLod(tChop, vec2(p.y, -p.x) / 13.7 + uTime * vec2(uWind.y, -uWind.x) * 0.117, log2(max(ring * 256.0 / 13.7, 1.0))).b - 0.5) * (1.0 - smoothstep(0.35, 1.0, ring)));
   // No crest ever stands over a low lens: close under it the water keeps a clear metre below.
   h = min(h, mix(uEye.y - 1.4, 1e3, smoothstep(12.0, 55.0, r)));
-  vWorld = vec3(p.x, h, p.y);
+  vec2 push = swellPush(p, uTime, r * 0.02 + 0.1, 0.5, 1.3) * calm;
+  vWorld = vec3(p.x + push.x, h, p.y + push.y);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
@@ -153,7 +172,15 @@ void main() {
   // Light comes through the thin top of a tall wave: only the highest water of the heaviest crests, green where the sun is on it.
   float thin = smoothstep(1.3, 3.3, h + 1.6 * (c1.b - 0.5)) * calm;
   body += vec3(0.022, 0.05, 0.036) * thin * (0.5 + 1.5 * sun);
-  col = mix(body * e / 3.14159, refl, fres);
+  // Seen against the light a wave is a lens: the top of a face that leans to the eye, with the break in the cloud or the sun behind it,
+  // is lit from inside, cold green, brightest just under the crest where the water is a hand thick.
+  vec2 vh = v.xz / max(length(v.xz), 1e-4);
+  float top = smoothstep(1.7, 3.9, h + 2.0 * (c1.b - 0.5) + 0.7 * (c2.b - 0.5)) * calm;
+  float leans = clamp(0.35 + 2.4 * dot(n.xz, vh), 0.0, 1.0);
+  float behindBreak = pow(max(dot(-vh, normalize(uSkyBreak.xz)), 0.0), 2.0);
+  float behindSun = pow(max(dot(-vh, normalize(uSunDir.xz + 1e-4)), 0.0), 2.0) * sun * (1.0 - 0.6 * uSunDir.y);
+  vec3 lens = vec3(0.1, 0.15, 0.13) * top * leans * (skyRadiance(uSkyBreak) * 0.13 * behindBreak * open + uSunColour * 0.16 * behindSun);
+  col = mix(body * e / 3.14159 + lens, refl, fres);
 
   // White water. The lace is the Builder's picture of broken water seen from above, laid in metres and carried a little by the wind.
   float lacePic = dot(textureLod(tFoamPic, p / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
@@ -186,9 +213,7 @@ void main() {
 
 /**
  * The open sea in the approach. The shut cloud lies over the blades, not over the mile of water before them, which keeps more of the sky's
- * light (uOpenSea.x times what the rig gives the ground under the cloud; 1 once the cloud has opened). And before the fog bank a mist lies
- * on the water itself, a metre or two deep, in drifts that go with the wind: a low lens looks along it, so the far water pales into the bank
- * and there is no line where the sea ends and the fog begins (uOpenSea.y: how much of it is left, nothing once the bank is gone).
+ * light (uOpenSea.x times what the rig gives the ground under the cloud; 1 once the cloud has opened).
  * And the look of a gale's sea from far out (uOpenSea.z, 1 as the film opens and nothing from the sixteenth second): gusts, more white
  * water, the path of light under the break in the cloud.
  */
@@ -224,19 +249,6 @@ export const SEA_OPENING_FRAGMENT = openingText(
   amount = max(amount, 0.85 * topple);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);`,
     ],
-    [
-      '  gl_FragColor = vec4(rigOut(col), 1.0);',
-      `  if (uOpenSea.y > 0.0) {
-    vec2 q = p - uTime * uWind * 20.0;
-    float wide = textureLod(tChop, q / 1900.0 + 0.23, 0.0).b;
-    float drift2 = textureLod(tChop, q / 610.0 + 0.57, 0.0).a;
-    float lies = smoothstep(1560.0, 900.0, p.y + 520.0 * (wide - 0.5)) * (0.4 + 0.6 * smoothstep(0.3, 0.62, 0.55 * drift2 + 0.45 * wide));
-    // The path of the eye through a layer on the water: its depth over the sine of the glance.
-    float tau = 0.016 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
-    col = mix(col, uHaze * (0.38 + 0.05 * drift2), 1.0 - exp(-tau));
-  }
-  gl_FragColor = vec4(rigOut(col), 1.0);`,
-    ],
   ],
 );
 
@@ -244,6 +256,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
 export const SEA_OPENING_VERTEX = openingText(SEA_VERTEX, [
   ['uniform vec3 uEye;', 'uniform vec3 uEye;\nuniform vec4 uOpenSea;'],
   ['float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;', 'float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm * uOpenSea.w;'],
+  ['vec2 push = swellPush(p, uTime, r * 0.02 + 0.1, 0.5, 1.3) * calm;', 'vec2 push = swellPush(p, uTime, r * 0.02 + 0.1, 0.5, 1.3) * calm * uOpenSea.w;'],
 ]);
 
 export const POOL_VERTEX = /* glsl */ `
