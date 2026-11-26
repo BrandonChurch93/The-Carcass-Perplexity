@@ -396,6 +396,8 @@ Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the drowned one as the approved picture shows it, four limbs hanging with their joints and smooth pale hide: the first sheet came out stringy with one leg (asked for by `ribs_sea_owner_2`).
 Date: 2026-11-26
 
+One more step on the relief, 2026-11-26 after round 22: `python3 assets-src/ribs/mat/cut-crabs.py` (Python 3 with numpy, scipy and Pillow), then `node assets-src/materials/make-materials.mjs ribs` again. The generated picture has five small crabs standing on the animal's back. At the size the film shows them their thin legs cannot be drawn, each became a smooth pale lump, and the gaps between its legs showed as two black spots with a white rim, which a critic of round 22 read as eyes (`R3-1`, issue on `set-A-05.png`). Nothing living in this film has eyes, so the script sets the crabs to black in the relief (4,952 pixels), where the plate is cut away, and leaves the colour picture as it is. The film keeps its own crabs on the weed and the hide. The script is safe to run twice.
+
 ## `public/assets/ribs/mat/feeder-a.jpg` and `public/assets/ribs/mat/feeder-a-h.png` and `public/assets/ribs/mat/feeder-a-a.png`
 
 Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.

@@ -1,0 +1,21 @@
+{
+  "engine": "e35f4e2b11964eaf",
+  "units": {
+    "breath": "8db376fbac2c1bd5"
+  },
+  "format": "uhd",
+  "tier": "final",
+  "diag": null,
+  "part": null,
+  "browser": "147.0.7727.15",
+  "frame": 4973,
+  "loop": null,
+  "key": "breath-3",
+  "machine": "space-sandbox",
+  "made": "2026-11-26T09:33:24Z",
+  "seconds": 110.574,
+  "portableOnly": false,
+  "id": null,
+  "keep": true,
+  "phase": 4
+}
