@@ -1,0 +1,49 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R7-1",
+  "family": "claude",
+  "answered": "2026-11-26 15:59 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "dark foreground haze and wet ground at the bottom left (x 0-33%, y 67-100%)",
+        "what": "The smooth dark gradient in -a has become mottled in -b. Faint blotchy patches and soft steps show where the haze should fade evenly into the black ground.",
+        "fix": "Spend more bits on the dark low-luminance areas, or add light dither or grain to the haze before encoding so the gradient doesn't quantize."
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-04.png",
+        "where": "orange dust cloud on the right (x 67-100%, y 33-67%)",
+        "what": "In -b the dust is flatter and slightly blotchy, with soft tonal steps between zones. It has lost some of the layered wisps seen in -a. It still reads as dust.",
+        "fix": "Keep some grain or noise in the haze so the encoder holds the wisps instead of smoothing them into patches."
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "glow on the inner cave wall, lower left of the lit arch (top left crop)",
+        "what": "The soft orange glow shows faint vertical streaks and steps in both -a and -b, and -b makes them a little more visible. They are visible only when zoomed.",
+        "fix": "Dither the glow gradient at the source."
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "grey fog wall and rock face at the top right (x 67-100%, y 0-33%), and the darker rock at lower left",
+        "what": "Fine rock texture is slightly smoothed in -b and the dark hazy areas pick up a faint blocky look. The rock still reads as rock.",
+        "fix": "Add a little more bitrate to the dark textured rock areas."
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-06.png",
+        "where": "lava glow strands and the spider legs at the horizon, right side",
+        "what": "The thin lava streaks and the thin legs hold their shape. The edges of the glow haze are a little soft, and the dark-ground reflections are slightly smeared.",
+        "fix": "No change is needed beyond a small bitrate increase on this area."
+      }
+    ]
+  }
+}
