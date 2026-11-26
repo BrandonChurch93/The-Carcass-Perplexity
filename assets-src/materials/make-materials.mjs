@@ -134,9 +134,13 @@ for (const place of process.argv.slice(2)) {
     } else if (row.kind === 'plate') {
       // A source with a clear background is laid on black, and its cover is written beside it as <name>-a.png (grey: white is the subject).
       const meta = await sharp(src).metadata();
-      await sharp(src).flatten({ background: '#000000' }).jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, `${row.name}.jpg`));
+      // A plate with a larger copy (assets-src/materials/enlarge-plate.py wrote src/big/<name>-join.json) is left as that tool wrote it.
+      const joinFile = path.join(ROOT, 'assets-src', place, 'mat', 'src', 'big', `${row.name}-join.json`);
+      const larger = fs.existsSync(joinFile) && fs.existsSync(path.join(out, `${row.name}.jpg`));
+      if (!larger) await sharp(src).flatten({ background: '#000000' }).jpeg({ quality: RECIPE.skyQuality, chromaSubsampling: '4:4:4' }).toFile(path.join(out, `${row.name}.jpg`));
       const made = await sharp(path.join(out, `${row.name}.jpg`)).metadata();
       const entry = { name: row.name, kind: 'plate', metres: row.metres, width: made.width, height: made.height };
+      if (larger) entry.madeFrom = `nine windows made again at ${JSON.parse(fs.readFileSync(joinFile, 'utf8')).k} times and joined (assets-src/materials/enlarge-plate.py)`;
       if (meta.hasAlpha) {
         const cover = await sharp(src).extractChannel(3).raw().toBuffer();
         let clear = 0;

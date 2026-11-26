@@ -4,6 +4,7 @@ import json, os
 spec = json.load(open('assets-src/materials/spec.json'))
 if os.path.exists('assets-src/materials/spec2.json'):
     spec += json.load(open('assets-src/materials/spec2.json'))
+BIG = {(j['place'], j['name']): j for j in json.load(open('assets-src/materials/enlarge.json'))} if os.path.exists('assets-src/materials/enlarge.json') else {}
 NAMES = {'ribs': 'the Ribs', 'breath': 'the Breath', 'marsh': 'the Blood Marsh', 'spine': 'the Spine', 'eye': 'the Eye', 'reveal': 'the Reveal'}
 MODEL = {'gpt_image_2_6_flare': 'the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity)', 'gpt_image_2_6_sunburst': 'the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity)'}
 for place, title in NAMES.items():
@@ -26,6 +27,7 @@ for place, title in NAMES.items():
         else:
             out += [f"## `public/assets/{place}/mat/{r['name']}.jpg` and `public/assets/{place}/mat/{r['name']}-nh.png`", ""]
         made = MODEL[r.get('model', 'gpt_image_2_6_flare')]
+        big = BIG.get((place, r['name']))
         if relief:
             made += f", then for the relief {MODEL[r.get('heightModel', 'gpt_image_2_6_sunburst')]} with the colour picture as its one reference"
         out += [f"Made by: {made}, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.",
@@ -33,7 +35,12 @@ for place, title in NAMES.items():
                 f"Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs {place}`.", "", "```", r['prompt'], "```", ""]
         if relief:
             out += ["The prompt of the relief:", "", "```", r['height'], "```", ""]
-        out += [f"Takes: {r.get('takes', '1 made, take 1 kept')}." + (f" The relief: {r.get('heightTakes', '1 made, take 1 kept')}." if relief else ""),
+        if big:
+            jn = json.load(open(f"assets-src/{place}/mat/src/big/{r['name']}-join.json"))
+            used = [w for w in jn['windows'] if w.get('used', True)]
+            out += [f"The file in `public/` is the larger copy, {jn['written'][0]} x {jn['written'][1]}: the generated picture is the parent, cut into 3 x 3 windows, each made again at full resolution by {MODEL[big['model']]} from its enlarged crop with `{big['real']}` as the standard, and the windows are fitted to the parent, tone-matched and joined by `python3 assets-src/materials/enlarge-plate.py join {place} {r['name']}` (the method of `assets-src/reveal/maps/enlarge-maps.py`). MEASURED (`src/big/{r['name']}-join.json`): {sum(1 for w in used if w['fitted'])} of {len(used)} windows used were fitted, moved at most {max(w['movedPx'] for w in used)} px at a corner."
+                    + (f" Not used: {big['parentRowsWhy']}." if big.get('parentRows') else "") + " The prompt of a window:", "", "```", big['prompt'], "```", ""]
+        out += [f"Takes: {r.get('takes', '1 made, take 1 kept')}." + (f" The relief: {r.get('heightTakes', '1 made, take 1 kept')}." if relief else "") + (f" The larger copy: 9 windows, 1 take each, {9 - 3 * len(big.get('parentRows', []))} kept." if big else ""),
                 f"Why this one: {r['why']}" + (f" (asked for by `{r['asked']}`)" if r.get('asked') and not r['asked'].startswith('the Builder') else "") + ".",
                 f"Date: {r.get('date', '2026-11-25')}", ""]
     out += [f"## `public/assets/{place}/mat/materials.json`", "",
