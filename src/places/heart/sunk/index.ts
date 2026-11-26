@@ -16,7 +16,7 @@ const TEAR_KELVIN = 1180;
 /** How hard the tear lights what is near it, over what its size alone would give. */
 const TEAR_GAIN = 1.6;
 /** The albedo of the ash caked on a plate of hide: set so the plates on the upper side of the big arch read about 120 105 90 on the display. */
-const ASH_ON_HIDE: [number, number, number] = [0.34, 0.28, 0.185];
+const ASH_ON_HIDE: [number, number, number] = [0.27, 0.205, 0.135];
 /** Beyond this the carcass is a few hundred pixels and is drawn with meshes of half the rows. */
 const FAR = 150;
 

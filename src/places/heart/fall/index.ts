@@ -41,6 +41,7 @@ export function create(ctx: HeartContext): HeartPiece {
     tCrust: { value: ctx.assets.texture('mat/crust-skin.jpg') },
     tCrustNh: { value: ctx.assets.texture('mat/crust-skin-nh.png', { kind: 'data' }) },
     tBoulderNh: { value: ctx.assets.texture('mat/boulder-nh.png', { kind: 'data' }) },
+    tMeltNh: { value: ctx.assets.texture('mat/melt-nh.jpg', { kind: 'data', anisotropy: 2 }) },
   };
 
   const rockMaterial = new THREE.ShaderMaterial({ vertexShader: ROCK_VERTEX, fragmentShader: ROCK_FRAGMENT, uniforms: shared });
