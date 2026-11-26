@@ -63,7 +63,7 @@ const carcassMove: CameraPath = (part) => {
   // A real lens this close is shallow: it holds the dead one, and the spire behind and the stones under the lens go soft.
   const position = mix(keyCarcass.position, to.position, k);
   const focus = Math.max(1.5, Math.hypot(position[0] - carcassBody[0], position[1] - carcassBody[1], position[2] - carcassBody[2]));
-  return { position, aim: mix(keyCarcass.aim, to.aim, k), fov: CARCASS_FOV, focus, aperture: 0.004 };
+  return { position, aim: mix(keyCarcass.aim, to.aim, k), fov: CARCASS_FOV, focus, aperture: 0.0026 };
 };
 
 // The strike on the third spire is seen through a long lens from high off the lee edge of the first (anchors.ts): a crag of that spire stands
