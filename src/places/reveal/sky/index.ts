@@ -72,17 +72,18 @@ void main() {
   vec2 bankAt = xz + lean * ${(BANK_KM - LOW_KM).toFixed(1)};
   vec2 fogAt = xz - lean * ${(LOW_KM - FOG_KM).toFixed(1)};
   float bankIs = max(bankDepth(bankAt), 0.0);
-  vec2 bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A + 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
+  vec2 bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A;
+  if (bankNear > 0.0) bankSlope += bankNear * 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
   float bankSelf = clamp(0.5 + 1.25 * dot(bankSlope, toSun), 0.0, 1.0);
   float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
   float fogA = 0.5 * (1.0 - exp(-1.2 * max(fogDepth(fogAt), 0.0))) * uArrive;
-  float under = highField(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
+  float under = highDepth(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
   vec2 hv = up + uTime * vec2(6.5, -3.8);
   if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
   float ice = 0.25 + 0.5 * high;
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
-  vec3 highColour = cloudLight(up, 0.35 + 0.5 * highFlank, 0.6, 1.0);
+  vec3 highColour = cloudLight(up, 0.5 + 0.45 * highFlank, 0.5 + 0.5 * high, 1.0);
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
   vec3 fogColour = cloudLight(fogAt, 0.5, 0.5, 0.0) * vec3(0.84, 0.9, 0.98);
@@ -91,7 +92,7 @@ void main() {
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
-  float b = high * 0.3;
+  float b = high * 0.4;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   // From the ground up: the fog, the low field, the banks, the ice.
