@@ -160,7 +160,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     vec4 b = screeAt(qr);
     // The larger copy is laid from above: on a steep face it would be pulled long, so it fades there.
     vec3 grey = a.rgb * mix(vec3(1.0), 0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5, w3.y * w3.y);
-    gravel = grey * vec3(1.5, 1.42, 1.3);
+    gravel = grey * vec3(1.9, 1.84, 1.74);
     stone = gravel;
     // The relief of the plate turns the faces of each stone.
     float e = 0.04;

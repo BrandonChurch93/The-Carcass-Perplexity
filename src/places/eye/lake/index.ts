@@ -132,15 +132,20 @@ void main() {
   // What lies under it.
   vec3 rf = refract(-v, n, 0.752);
   float fall = max(-rf.y, 0.12);
-  float w = r - lipRadius(p.xz);
+  // The line of the lip wanders, and its edge is the broken edge of its crust.
+  vec3 lip = lipHere(p.xz);
+  float w = lip.x;
+  float crusted = lipCover(p.xz, lip);
   vec3 under;
   float dry = 0.0;
-  if (w > 0.0) {
+  vec3 shelf = vec3(0.0);
+  if (crusted > 0.0) {
     float depth = shelfDepthAt(p.xz, inShore, w);
     vec2 b = p.xz + rf.xz * (max(depth, 0.0) / fall);
-    float w2 = length(b) - lipRadius(b);
+    vec3 lip2 = lipHere(b);
+    float w2 = lip2.x;
     float in2 = shoreIn(b);
-    Bed bed = bedAt(b, max(w2, 0.0), in2, shelfDepthAt(b, in2, w2), away);
+    Bed bed = bedAt(b, lip2, in2, shelfDepthAt(b, in2, max(w2, 0.0)), away);
     float depth2 = bed.depth;
     vec3 at = vec3(b.x, 0.0, b.y);
     float sun = sunAt(at);
@@ -151,24 +156,29 @@ void main() {
     vec3 lit = bed.albedo * e * (bed.occ / 3.14159);
     float d = max(depth2, 0.0);
     vec3 through = exp(-uAbsorb * d * (1.0 + 1.0 / fall));
-    under = lit * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 0.7 * (1.0 - through);
+    shelf = lit * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 0.7 * (1.0 - through);
+    under = shelf;
     // Where a slab, the crust of the lip or the top of a mat stands out of the water it is wet stone and weed, not a mirror.
-    dry = bed.dry;
-  } else {
+    dry = bed.dry * crusted;
+  }
+  if (crusted < 1.0) {
     // Over the shaft: the wall goes down pale and green under the lip and is lost in a few metres; then only the dark of the water.
-    float inside = -w;
-    float down = 0.5 + 1.3 * inside + 0.22 * inside * inside;
+    float inside = max(-w, 0.0) + 0.2;
+    float down = 0.3 + 0.75 * inside + 0.05 * inside * inside;
     vec2 b = p.xz + rf.xz * (min(down, 9.0) / fall) * 0.25;
     Bed bed = wallAt(b, down, inside);
     vec3 at = vec3(p.x, 0.0, p.z);
     float open = skyOpen(at);
     vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (0.12 * sunAt(at));
-    vec3 through = exp(-uAbsorb * down * (1.6 + 1.0 / fall));
-    under = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    vec3 through = exp(-uAbsorb * down * (1.3 + 0.6 / fall));
+    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp(uDome.x / 6.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
-    under += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
+    deep += vec3(0.05, 0.062, 0.06) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * pale * (0.4 + 0.6 * smoothstep(0.1, 0.6, v.y));
+    under = mix(deep, shelf, crusted);
+    // Under the lip the water lies in its lee, flat, and the eye goes down the wall.
+    f *= mix(0.3, 1.0, smoothstep(0.5, 14.0, inside));
   }
   f *= 1.0 - dry;
   vec3 c = mix(under, refl, f);

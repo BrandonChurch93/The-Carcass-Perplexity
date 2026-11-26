@@ -43,7 +43,7 @@ export function lipAt(a: number): number {
   const cz = Math.sin(a);
   const b = (((a / DEG) % 360) + 360) % 360;
   // A tongue of the shelf stands out into the deep beside the place of the edge shot, so that the wall of the shaft under it is seen from the lip.
-  const bay = 34 * smooth(LIP_BAY + 0.1, LIP_BAY + 0.6, b) * (1 - smooth(LIP_BAY + 3.4, LIP_BAY + 4.6, b));
+  const bay = 34 * smooth(LIP_BAY - 1.2, LIP_BAY + 2.6, b) * (1 - smooth(LIP_BAY + 5.5, LIP_BAY + 9.5, b));
   return DEEP + 9 * (vnoise(cx * 9 + 3, cz * 9 + 7) - 0.5) + 5 * (vnoise(cx * 31 + 1, cz * 31 + 5) - 0.5) + 2.4 * (vnoise(cx * 110, cz * 110) - 0.5) - bay;
 }
 
@@ -145,7 +145,7 @@ export function landHeight(x: number, z: number): number {
     // so that the camera looks down a notch between them, and the stream comes down the left one.
     const lateral = across > 0 ? Math.exp(-((across / 78) ** 2)) : Math.exp(-((across / 70) ** 2));
     const side = Math.abs(across + 1.5 * Math.sin(along / 9));
-    const shift = 30 * smooth(6, 21 + 6 * vnoise(along / 13, 2.2), side);
+    const shift = 9 * smooth(6, 21 + 6 * vnoise(along / 13, 2.2), side);
     const crest = 42 * smooth(62 - shift, 150 - shift, along) + 14 * smooth(150, 320, along);
     const rough = 0.9 + 0.2 * fbm(x / 21, z / 21, 3);
     let spur = crest * rough;
