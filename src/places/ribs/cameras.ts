@@ -75,30 +75,40 @@ const TO_KEY = travelled(ARRIVAL.keySeconds);
 const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 
 // The film's first shot, restaged (the rung 2 restaging of the opening): not the old move seen from farther out on a long lens, but a
-// move of its own. It starts 850 m out and 400 m EAST of the old axis, low over the swell, on a 36 degree lens, at 66 metres a second
-// mostly sideways, and sweeps west onto the old move in one arc, so that the near blade (L1) slides against the far ones the whole way in.
+// move of its own. It starts 700 m out (half the old distance) and 350 m EAST of the old axis, 3.5 m up in the trough behind a heavy swell,
+// on a 36 degree lens, at 62 metres a second mostly sideways. It tops that swell's crest inside the first half second (the crest stands
+// before the lens in the first frame and hides the shore), drops into the next trough, and sweeps west onto the old move in one arc, so
+// that the near blade (L1) slides against the far ones the whole way in.
 // From the east the tips of L1 and R1 stand 8 degrees apart with the arch of L2 between them: they cross only once both have left the top of the frame.
 // From OPEN.seconds on (film frame 960) the pose is `arrival`'s own, to the bit, and the two join level in place, speed and acceleration.
 export const OPEN = {
   seconds: 16,
   /** Where the lens is as the film opens (x, z), the way it is going (degrees, 0 is north, negative is west) and its speed. */
-  from: [200, 850] as [number, number],
-  heading: -50,
-  speed: 66,
+  from: [180, 688] as [number, number],
+  heading: -62,
+  speed: 62,
   /** Metres over the old move's height as the film opens, and the heave of a lens that rides the swell: metres, seconds a turn. */
   lift: 0.8,
   heave: [[1.0, 5.3, 0.9], [0.3, 2.3, 2.1]] as [number, number, number][],
+  /**
+   * The trough the film opens in: the metres the lens sits lower in the first frame, the seconds at which it tops the crest ahead, the
+   * metres it is thrown over that crest, and the metres it drops into the trough behind it (a second after the crest).
+   */
+  trough: 7.7,
+  tops: 0.8,
+  thrown: 1.0,
+  again: 3.2,
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
   /** Degrees over the level as the film opens and how far it tilts up as the blade grows; the lens as the film opens and as it widens. */
-  pitch: 10.5,
-  tilt: 3,
+  pitch: 13,
+  tilt: 1.5,
   fov: 36,
   widens: 10,
   /** The seconds from which the look eases into the old move's. */
   eases: 6,
   /** Degrees the lens rolls with the swell. */
-  roll: 0.9,
+  roll: 1.6,
 };
 
 const smoother = (a: number, b: number, x: number): number => {
@@ -172,7 +182,13 @@ export function openingCamera(seconds: number): Pose {
     heave += metres * Math.sin((2 * Math.PI * seconds) / period + phase);
     roll += (metres / (OPEN.heave[0] as [number, number, number])[0]) * Math.sin((2 * Math.PI * seconds) / (period * 1.37) + phase + 1.3);
   }
-  const position: Vec3 = [x, old.position[1] + own * (OPEN.lift + heave), z];
+  // The trough and the crest: the lens opens low behind a swell of sea/tide.ts, is over its crest by OPEN.tops and down in the next trough a second later.
+  const T = OPEN.tops;
+  const crest =
+    OPEN.thrown * smoothed(0.3 * T, T, seconds) * (1 - smoothed(T, T + 1.25, seconds)) -
+    OPEN.trough * (1 - smoothed(0, T, seconds)) -
+    OPEN.again * smoothed(T + 0.35, T + 1.05, seconds) * (1 - smoothed(T + 1.05, T + 1.9, seconds));
+  const position: Vec3 = [x, old.position[1] + own * (OPEN.lift + heave) + crest, z];
   const ease = smoother(OPEN.eases, J, seconds);
   const held = Math.atan2(OPEN.target[0] - x, z - OPEN.target[1]) / RAD;
   const yaw = held + (old.yaw - held) * ease;
