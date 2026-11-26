@@ -1,0 +1,7 @@
+2026-11-26 05:11 UTC
+work at 2d2f0ba on agent/eye-place-3
+min 30: mats from plate, calmer pool, paler sky; eye-0 eye-2 eye-3 eye-4 as they stand
+look-1.jpg = out/work/n0.jpg
+look-2.jpg = out/work/n2.jpg
+look-3.jpg = out/work/n3.jpg
+look-4.jpg = out/work/c4.jpg
