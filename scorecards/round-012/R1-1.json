@@ -1,0 +1,119 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-26 00:09 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "far rim from the left scree to the right overhang",
+        "what": "The rounded, broken terraces and broad rubble fans are replaced by a tall, near-continuous striped wall with pointed crests and deep, regular holes. The right overhang reads as a single black roof rather than a fractured recess with visible rock under it.",
+        "fix": "Lower and round the skyline, break the wall into benches and erosion faces with larger scree fans, and give the smaller, irregular recesses and overhang cool reflected fill."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "foreground banks and inlet (set-A-02.png crops)",
+        "what": "Bulky, warmly sunlit boulders frame a flat bed of uniformly dark gravel with scattered tan rocks. The target has a continuous cool gray rubble slope, smaller embedded stones and a rocky stream entering from bottom left; the pale wedge in b does not read as that current.",
+        "fix": "Rebuild the sloped, densely graded gray scree with fractured embedded stones and occasional dark growth. Keep most of it in cool shade and run a narrow, lively stream over the left-hand rocks into the lake."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "open basin and orange near-shore shallows",
+        "what": "The open lake is nearly black and reflects a hard, coherent cliff outline, with an almost straight abrupt boundary to muted brown marbling. The target has a broad blue oval with softer amber reflections, subtle center rings and a curving apron of irregular rust-orange patches broken by blue wet gaps.",
+        "fix": "Restore the blue oval and curved shore transition, soften and cool the mirror away from the light, and break the brown ribbons into branching orange deposits and wet gaps with restrained center ripples."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "group composition and near/far focus",
+        "what": "The central drinker is much larger and reaches far right, the standing adult's head is cropped off, the small animal is crowded behind the drinker, and the nearest right-hand animal is sharply textured instead of softly out of focus. The target keeps the two left silhouettes and the center drinker distinct, with separation from the foreground and distant cliff.",
+        "fix": "Back off and reframe so the standing head is fully visible and the juvenile reads separately. Leave more water around the center drinker and pull the focus onto that group, keeping the near right animal and far rim soft."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "shallow water around feet and muzzles (set-A-04.png crops)",
+        "what": "Reflections stretch into large, regular zigzags, some submerged legs look pale and ghosted at the waterline, and the visible rings and their contact points do not read as clearly as the small bright ripples where the animals actually touch water in the target.",
+        "fix": "Anchor legs and muzzles in the surface with coherent submersion and refraction. Center fine, bright concentric ripples on the drinking points and break the reflections into smaller, less uniform waves."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "submerged foreground across the lower frame (set-A-06.png crops)",
+        "what": "Uniform fine parallel rust bands sweep toward the horizon as a flat pattern, replacing tangled, overlapping strands draped across uneven pale rock, interrupted by pockets of dark water. The golden variation and visible depth of the growing mat are lost.",
+        "fix": "Build layered amber and rust strands with crossing ends, uneven clumps and exposed pale stones. Let clear water and local reflections reveal and obscure that relief in patches."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "far escarpment and shoreline",
+        "what": "There is more pale sky above a low, jagged left rim, and a huge dark shelf dominates the right. The target has higher, broken golden terraces, a cool rock face with rubble fans on the right, and a broad, irregular mist bank that separates them from the lake. In b the haze hugs a thin, dark horizontal seam.",
+        "fix": "Raise and terrace the left-to-center rock profile, reduce the right shelf and restore the sloping rubble. Feather a thicker uneven bank of low vapor over the shoreline to erase the seam and push the rim back."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "lead drinker and two distant animals at left",
+        "what": "The drinker is larger, blockier and darker than the pale, rounded, creased target, and its long neck reaches farther into the frame. The two distant animals are both too close and distinct; one lifts its head toward the lead rather than reading as a small grazing silhouette in mist.",
+        "fix": "Reduce the lead's footprint, round and crease its body, and give it pale hide with warm low grazing light and cool fill. Move the two behind it deeper into the far-left haze and lower both heads to the water."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "herd along the near and right shore",
+        "what": "Small mostly upright figures are spread forward over the flat gravel and isolated in the orange apron, instead of making a denser band up the right shallows with many lowered heads and a few distinct reclining figures. Their warm highlights make them stand out more than the mostly cool-shaded herd in the target.",
+        "fix": "Gather more bodies along the right waterline, add drinking and resting poses, leave fewer out on the open gravel, and use subdued cool body values with local warm rims and water contact."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "sky and far waterline",
+        "what": "A long wispy stripe spans a muted beige-gray sky, and the vapor forms a narrow even stripe. The target has clearer blue overhead, a brighter peach glow low at left, a much smaller cloud and a soft low veil with local depth.",
+        "fix": "Restore the sky gradient and shorten the cloud trace. Broaden and vary the low vapor, allowing it to soften the far shoreline and reflections."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "background rim, mist and midlake",
+        "what": "The faceted, horizontally banded wall looks closer and more defined, and its broad tan reflection displaces the soft blue midlake and isolated distant ripple in the target. The low mist is an even bright line against the wall.",
+        "fix": "Push the broken escarpment back with cooler shadows, visible scree and diffuse low mist. Keep more quiet blue water between it and the animals, and soften the reflected cliff into shorter warm streaks with a subtle distant ring."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "animal surfaces and lighting",
+        "what": "The hides are evenly brown and stippled, with hard-lit patches and dark faceted transitions; the target has pale warm-gray bodies with directional edge light, folds and mottled damp and dry detail, particularly on the central drinker.",
+        "fix": "Keep the intended designs, but lighten and vary the hide, make the folds and wetness respond to the posture and water level, and restore softer cool fill and a warmer grazing edge."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "lower-left shore and bottom edge (set-A-04.png crops)",
+        "what": "A broad, nearly straight strip of granular surface cuts off the water across the bottom. At left the shallow bed lacks the target's irregular bank of soft-focus wet gravel, stones and floating amber clusters.",
+        "fix": "Keep water across the lower center and right and bring a broken, shallow rocky margin in from the left; add wet pebbles and small amber clusters to divide the reflections at the legs."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "midlake and water immediately under the lead drinker",
+        "what": "A large intact dark body reflection and broad warm cliff mirror fill the middle, with weak drinking rings. The target has more open cool-blue water to the right and narrow surface ripples that fragment the reflections, with readable bright rings around the drinker.",
+        "fix": "Give the midlake more cool negative space and break the warm mirrors with fine horizontal ripples. Make the small concentric wavelets originate visibly under the lead's muzzle and feet."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "foreground and beneath the lead drinker (set-A-06.png crops)",
+        "what": "The little bright bubble columns rising from the mat and the fine drops below the drinker are absent; the surface has less of the target's backlit glint and local activity.",
+        "fix": "Add sparse streams of tiny backlit bubbles above varied points in the mat and a few delicate drops beneath the wet animal, preserving the intended motion blur."
+      }
+    ]
+  }
+}

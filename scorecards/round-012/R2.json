@@ -1,0 +1,255 @@
+{
+  "round": 12,
+  "unit": "eye",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 84,
+      "why": "the obvious polygonal facets along the cliff edges.",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 80,
+      "why": "Blender-style path-traced lighting with obviously procedural, stretched cliff/ground textures and tiny duplicated giraffe models — a hobbyist/stock CG render, not photo or film-grade.",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 80,
+      "why": "the low-poly faceted foreground rocks and sharp polygonal shoreline seam with stretched procedural textures",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the foreground shoreline has a visibly stretched texture that ends in a straight seam.",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "the smudgy procedural-looking textures (swirled ground, blobby foreground rocks, tiny stiff scattered giraffes) on an otherwise clean physically lit scene look like an ordinary Blender-style render, not hand-finished big-budget work.",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "The animals have conspicuously faceted joints beneath a uniform grainy texture.",
+      "answered": "00:07 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 85,
+      "why": "crude featureless blob-like animal models (no heads/eyes detail) with procedural fur and water ripples—typical hobbyist/stock path-traced render, not film-grade or real.",
+      "answered": "00:08 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 90,
+      "why": "the crude featureless creature meshes with visibly mismatched neck joints and a ruler-straight foreground shoreline",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 88,
+      "why": "The animals’ necks meet their bodies with abrupt seams, like separate pieces of a simple game model.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 62,
+      "why": "the path-traced lighting and water reflections are polished, but the animals are crude, simplified, headless-looking blobs with odd anatomy, so it reads as an ordinary or hobbyist 3D render rather than a film or game cinematic.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the foreground water’s stretched, wood-grain-like texture.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the camel-like animals are oddly proportioned and untextured, and the ground has smeared, procedural streaks; it looks like a hobbyist path-traced render, not a photo or a high-end production.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the crude, featureless anatomy of the creatures paired with the heavily procedural swirling ground and cliff textures.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 91,
+      "why": "the foreground water texture stretches into long, wood-grain streaks.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the camels have crude, malformed anatomy and the water has smeared streaky procedural texture, while the path-traced lighting and reflections are fairly polished, which reads as an ordinary hobbyist or stock 3D render rather than a film-grade or low-end real-time image.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 74,
+      "why": "the foreground terrain texture visibly stretches into long streaks along the shoreline.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "simple primitive-built skeleton bones and procedural stretched textures typical of an ordinary hobbyist 3D render (Blender-style), not film-grade or photographic",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the crude primitive 3D geometry of the skeleton in the foreground",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 99,
+      "why": "the visibly stretched terrain texture along the foreground ledge.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "the crude primitive-shaped bones and smeared, stretched textures on the foreground ground, set against otherwise clean ray-traced-looking water reflections. That reads as an amateur or procedural 3D render, not a pro photo or a top-budget production. The second choice is d.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 88,
+      "why": "the dinosaurs’ visibly faceted silhouettes.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "an ordinary Blender-style render: smeared procedural textures, simple untextured dinosaur models and artifact-laden water ripples, far below film quality yet with path-traced lighting that's beyond a web or mobile demo.",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 75,
+      "why": "the low-poly, minimally detailed silhouettes and shading of the two foreground creatures",
+      "answered": "00:09 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the dinosaur silhouettes are visibly faceted, especially along the smaller animal’s back and hips.",
+      "answered": "00:10 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 60,
+      "why": "the stretched, smeared rock textures and glitchy water reflection with simple, low-detail dinosaur models read as an amateur or experimental 3D scene, not a polished film, stock or photographic image.",
+      "answered": "00:10 UTC"
+    }
+  ]
+}

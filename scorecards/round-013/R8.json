@@ -1,0 +1,38 @@
+{
+  "round": 13,
+  "unit": "reveal",
+  "question": "kit/07-QUALITY-BAR.md, R8, word for word",
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "The image shows an Earth-like planet from orbit, with rugged landmasses, dark blue oceans, sweeping cloud bands, and a spiral storm in the lower right.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image shows an orbital view of a planet, with a large, rugged, made-up continent of brown mountains and teal coastlines in a dark blue ocean, surrounded by white cloud bands and a spiral storm in the lower right.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "The image shows a view from space of an Earth-like planet with clouds and a swirling cyclone, where the vast brown landmass in the ocean is shaped like a colossal humanoid skeleton.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "A view from space shows a dark ocean around a rugged, branching landmass beneath bands of white clouds, with a tightly spiraling storm in the lower right.",
+      "answered": "00:21 UTC"
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows a view from space of a planet's ocean-covered surface with swirling white clouds, a hurricane-like storm in the lower right, and a large, irregular, brown-and-tan landmass with a rugged, dragon- or creature-like shape.",
+      "answered": "00:21 UTC"
+    }
+  ],
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+}

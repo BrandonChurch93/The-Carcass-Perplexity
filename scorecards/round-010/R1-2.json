@@ -1,0 +1,98 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-26 00:13 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the colonies of creatures on the ledges and in the air",
+        "what": "the creatures are not the leathery, bat-winged, long-necked beasts of -a. They are thin glassy CG rigs with stringy hair-like fringes, stiff star-shaped paper wings and brown umbrella-like skirts. Silhouettes, anatomy and skin read as a different species and as unfinished renders. Many float in mid-air with hard, untextured wing plates",
+        "fix": "rebuild them as the -a creatures: membranous wings with visible bone struts and warm translucent membrane, scaly grey-beige skin, crouched perching poses, and folded wings on the ledges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the cliff face",
+        "what": "the cliff is a stack of smooth, evenly curved terraces with a noisy, repeating grey procedural texture. It has none of the blocky fractured stratified rock, the orange lichen, the white guano streaks running down the faces, or the nest clumps and kelp of -a",
+        "fix": "model broken angular rock ledges, add orange lichen patches, white guano drips, dark nest material, and wet kelp at the base"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the sky and light",
+        "what": "-a has a dark, heavy storm overcast with soft, moody diffuse light. -b has bright blue sky and sunlit white cumulus, so the frame is airy and flat and the mood is lost",
+        "fix": "replace with the low, dark-grey storm deck of -a, with only a small lighter break, and lower and cool the exposure"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the far sea stack on the left",
+        "what": "in -a it is a hazy, crowded arch with birds on top, fading into mist. In -b it is a near, sharp, brown rock wall with no aerial haze and no birds on it",
+        "fix": "push it back into haze, give it the -a arching shape, and populate the top with birds"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the whole frame",
+        "what": "the camera looks steeply up a terraced slope rather than along a stepped cliff, and the scale reads small and toy-like. There is no kelp-covered foreground",
+        "fix": "match the -a angle along the cliff, with wet kelp rocks in the foreground"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the wave across the strait",
+        "what": "one unbroken wall is allowed, but this one is a flat vertical sheet of streaky green-and-white stripes with puffy cotton-ball clouds pasted on top. There is no foam mass, no spray plume blowing off, and no translucency or weight, so it reads as a broken render",
+        "fix": "give the wall real water: a curling translucent face, a churning white foam lip, and wind-blown spray and mist rising off it and drifting across the far stacks"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the flying creatures",
+        "what": "apart from allowed blur, the creatures in -b are white feathery CG birds with tufted fringes and stiff straight wings. They are not the -a long-legged, curved-necked, bat-winged creatures skimming low in a line over the water. Some sit high and ghostly, without -a's backlit warm membranes",
+        "fix": "use the -a creatures, skimming just above the water in a loose line in front of the wave, with rim-lit translucent wings"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the sky and the far sea stacks",
+        "what": "-a has several curved, horn-like stacks fading into spray haze and a dark sky with a bright sun break upper right. -b has one sharp brown horn, mid-sky bright cumulus and blue patches, and no sun break, so there are no backlit silver highlights on the water",
+        "fix": "restore the group of curved stacks receding into mist, the dark overcast with a sun break upper right, and backlit silver light"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the flanking cliffs",
+        "what": "-a shows wet black rock draped in kelp and weed with spray bursting against it. -b shows rounded, fuzzy, fur-textured lumps with even, uniform texture, no wet sheen and no spray against them",
+        "fix": "model sheer, wet, kelp-hung rock walls with specular wet highlights and surf exploding at their base"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the foreground tidal flat",
+        "what": "-a has a shallow, glinting wet flat with kelp clumps, rippled reflections, and defocused weedy rocks in the foreground. -b has a flat, dull grey plane with round pebble dots and blobby dark patches. There are no kelp, no reflected sky glints and no foreground depth of field",
+        "fix": "add a wet reflective flat with ripples, kelp patches, and blurred weedy foreground rocks catching the backlight"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the rounded boulders in the left foreground and midground",
+        "what": "these are smooth, fuzzy domes that are not in -a, and they block the low view across the flat",
+        "fix": "remove them or replace them with low, wet, weedy rocks as in -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the floating dots in the sky and over the water",
+        "what": "small specks and bubble-like circles hang in the air and on the water surface",
+        "fix": "remove them or turn them into fine wind-blown spray"
+      }
+    ]
+  }
+}
