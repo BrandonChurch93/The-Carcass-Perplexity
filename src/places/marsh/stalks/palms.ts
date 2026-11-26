@@ -256,3 +256,70 @@ void main() {
 ${HEAD_CUT}
   gl_FragColor = vec4(0.0);
 }`;
+
+// Where a stalk meets the ground: a low collar of the salt that has grown round its foot, lumpy, stained where the brine wicks into it.
+// Where it stands in the brine the collar ends at the water and a ring lies on the water round it: dark and wet, with a ragged line of froth at its edge.
+// aFoot: x, the level it stands at, z, its radius. aFoot2: its height, its seed, 1 in the brine. The last quarter of the sheet is the ring.
+const COLLAR_SHAPE = /* glsl */ `
+attribute vec4 aFoot;
+attribute vec4 aFoot2;
+vec3 collarAt(float a, float v) {
+  float s = aFoot2.y;
+  float lobe = 1.0 + 0.28 * sin(a * 2.0 + s * 9.0) + 0.18 * sin(a * 3.0 + s * 23.0) + 0.1 * sin(a * 5.0 + s * 41.0);
+  float u = min(v / 0.75, 1.0);
+  float k = max(v - 0.75, 0.0) / 0.25;
+  float r = aFoot.w * lobe * (u + k * aFoot2.z * (0.45 + 0.5 * fract(s * 13.7)));
+  float y = aFoot.y + mix(-0.04, 0.004, aFoot2.z) + (aFoot2.x + 0.04) * pow(1.0 - u, 1.5) * (0.82 + 0.18 * sin(a * 4.0 + s * 17.0));
+  return vec3(aFoot.x + cos(a) * r, y, aFoot.z + sin(a) * r);
+}`;
+
+export const COLLAR_VERTEX = /* glsl */ `
+${COLLAR_SHAPE}
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec4 vFoot;
+varying vec2 vRing;
+void main() {
+  float a = position.x;
+  float v = position.y;
+  vec3 p = collarAt(a, v);
+  vec3 da = collarAt(a + 0.2, max(v, 0.05)) - collarAt(a, max(v, 0.05));
+  vec3 dv = collarAt(a, v + 0.05) - p;
+  vNormal = normalize(cross(da, dv) + vec3(0.0, 1e-4, 0.0));
+  if (vNormal.y < 0.0) vNormal = -vNormal;
+  vWorld = p;
+  vFoot = vec4(v, aFoot2.y, aFoot2.z, p.y - aFoot.y);
+  vRing = vec2(max(v - 0.75, 0.0) / 0.25, a);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+export const COLLAR_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec4 vFoot;
+varying vec2 vRing;
+uniform sampler2D tSalt;
+${RIG_GLSL}
+void main() {
+  vec3 salt = texture2D(tSalt, vWorld.xz * 2.3 + vFoot.y * vec2(3.1, 7.7)).rgb;
+  if (uMirror > 0.5 && vWorld.y < -0.015) discard;
+  // The ring's edge is ragged: it reaches further on one side than on the next.
+  float reach = 0.55 + 0.25 * sin(vRing.y * 3.0 + vFoot.y * 20.0) + 0.2 * sin(vRing.y * 7.0 + vFoot.y * 50.0);
+  if (vRing.x > reach) discard;
+  vec3 n = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 albedo = (salt * 1.05 + 0.03) * vec3(1.0, 0.9, 0.8) * (0.85 + 0.3 * fract(vFoot.y * 41.7));
+  // The brine wicks up into it from below, and the rust it carries stays.
+  float wick = 1.0 - smoothstep(0.0, 0.035 + 0.05 * fract(vFoot.y * 7.3), vFoot.w + 0.012 * sin(vWorld.x * 60.0 + vFoot.y * 30.0) + 0.012 * sin(vWorld.z * 47.0));
+  albedo = mix(albedo, albedo * vec3(0.62, 0.36, 0.3), 0.75 * wick);
+  float wet = wick * vFoot.z;
+  albedo = mix(albedo, albedo * vec3(0.6, 0.38, 0.33) + vec3(0.02, 0.004, 0.003), wet);
+  // Dark in under the trunk.
+  float occ = 0.6 + 0.4 * smoothstep(0.0, 0.5, vFoot.x);
+  float ring = vRing.x > 0.001 ? 1.0 : 0.0;
+  float froth = smoothstep(0.55, 0.8, salt.r) * smoothstep(reach - 0.2, reach - 0.04, vRing.x);
+  albedo = mix(albedo, mix(vec3(0.12, 0.036, 0.03), vec3(0.72, 0.64, 0.6), froth), ring);
+  vec3 c = rigShade(vWorld, n, v, albedo, mix(mix(0.96, 0.45, wet), mix(0.6, 0.92, froth), ring), occ);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
