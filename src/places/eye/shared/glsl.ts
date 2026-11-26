@@ -293,6 +293,26 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   return c + f * env * open;
 }
 
+// The sun's own highlight on a wet or polished face: a surface that wants it adds this to what rigShade returns. rough runs from 0.08
+// (a film of water) to 0.6 (damp stone). It is the sun's disc and its halo in the low air, so the lobe is never narrower than that,
+// and it is in shade wherever rigShade's sun is. Light on the surface, not from it: multiply by the film's own tint if it has one.
+vec3 rigGlint(vec3 p, vec3 n, vec3 v, float rough) {
+  float nl = dot(n, uSunDir);
+  if (nl <= 0.0) return vec3(0.0);
+  vec3 h = normalize(uSunDir + v);
+  float nv = max(dot(n, v), 1e-3);
+  float nh = max(dot(n, h), 0.0);
+  float a = max(rough * rough, 0.02);
+  float a2 = a * a;
+  float dd = nh * nh * (a2 - 1.0) + 1.0;
+  float lobe = a2 / (3.14159 * dd * dd);
+  float k = 0.5 * a;
+  float seen = 0.25 / ((nl * (1.0 - k) + k) * (nv * (1.0 - k) + k));
+  float f = 0.04 + 0.96 * pow(1.0 - max(dot(h, v), 0.0), 5.0);
+  // No pixel holds more than the sun's own light spread over the halo: a glint that is one bright texel today and none tomorrow is cut here.
+  return uSunColour * (min(lobe * seen * f * nl, 6.0) * sunAt(p));
+}
+
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
   return c * (1.0 - uSolo);
