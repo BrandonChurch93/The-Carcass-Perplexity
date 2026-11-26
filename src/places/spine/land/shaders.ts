@@ -675,12 +675,14 @@ void main() {
     // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
     cover *= 1.0 - 0.85 * uWet;
     // Under the lens the frost lies piece by piece, more on one than on the next, and an open crack is a dark line through it.
-    cover = min(cover * gripFrost, 0.95) * (1.0 - 0.85 * gripCrack);
-    albedo *= 1.0 - 0.45 * gripCrack;
-    // (Near the lens the windward rime is thick and white, feather on feather: the frost picture gives its feathers, not its dark.)
+    // (Thick rime buries the hairline cracks: only a few of them show through it, or the white face would be ruled like brickwork.)
     float white = thick * windward;
+    float cut = gripCrack * (1.0 - 0.8 * white);
+    cover = min(cover * mix(gripFrost, 1.0, 0.6 * white), 0.95) * (1.0 - 0.85 * cut);
+    albedo *= 1.0 - 0.45 * cut;
+    // (Near the lens the windward rime is thick and white, feather on feather: the frost picture gives its feathers, not its dark.)
     vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.98, 0.99, 1.03), thick);
-    frostA = mix(frostA, min(vec3(0.84, 0.86, 0.89) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.9)), 0.85 * white);
+    frostA = mix(frostA, min(vec3(0.84, 0.86, 0.89) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.9)), 0.75 * white);
     albedo = mix(albedo, frostA, cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = dFdx(vWorld);
