@@ -87,13 +87,13 @@ vec3 strikeGlow(vec3 ro, vec3 rd, float far) {
     if (uEmitters[i].w < 20.0 && -b > 0.0 && -b < far + 20.0) {
       float off = sqrt(max(dot(q, q) - b * b, 0.0));
       float power = 1.0 - exp(-dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) / 60000.0);
-      small += power * (exp(-off * off / 90.0) + 0.3 * exp(-off / 11.0));
+      small += power * (exp(-off * off / 7.0) + 0.1 * exp(-off / 5.0));
     }
   }
   // Staged by shot: behind the long lens of the strike (spine-04) the cloud's glow is the strike picture's own; the air adds a fifth of its.
   g *= 1.0e-7 * (uSkyStage.z > 0.0 ? 0.2 : 1.0);
   // A glow in the cloud about the stroke, not a lamp over the frame: it closes on a ceiling a little over the dusk sky's own tone.
-  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.6 * small / (1.0 + small));
+  return g / (1.0 + dot(g, vec3(0.33)) / 0.07) + vec3(0.84, 0.76, 1.0) * (0.25 * small / (1.0 + small));
 }
 
 // The open sky as cloud takes it: the cold light from above, and the last band on what faces it.
@@ -283,6 +283,12 @@ void main() {
     // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
     float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 0.12 * min(dot(uFlash, vec3(0.33)), 1.0) * stormSide(rd), 0.0, 1.5);
     sea = sea * (1.0 - 0.5 * stormSide(rd)) * (1.0 + 0.7 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + min(strikeLight(p) * 0.02, vec3(0.01));
+    // In the flash of a stroke the heads of the deck that stand up toward the channel are lit and its hollows are not.
+    if (uStrikeAt.w > 0.0) {
+      vec3 toStroke = uStrikeAt.xyz - p;
+      float span2 = dot(toStroke, toStroke);
+      sea += STRIKE_COLOUR * (uStrikeTop.w * 0.03 * head * head * grainS / (1.0 + span2 / 1.0e6));
+    }
     // At the horizon it goes into the dome's own cloud.
     float gone = 1.0 - exp(-t / 30000.0);
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
