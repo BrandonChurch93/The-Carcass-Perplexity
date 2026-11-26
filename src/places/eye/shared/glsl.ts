@@ -353,6 +353,16 @@ vec3 rigGlint(vec3 p, vec3 n, vec3 v, float rough) {
   return uSunColour * (min(lobe * seen * f * nl, 6.0) * sunAt(p));
 }
 
+// Opt-in, for what stands in the evening shade near the water: the warm light the sunlit wall across the lake throws back. Add it to what
+// rigShade returns, with the same p, n and albedo. It comes low from the side away from the sun, so faces turned to the lit wall warm and
+// the others keep the sky's blue; in the sun it falls to a third, where the sun itself drowns it.
+vec3 rigBounce(vec3 p, vec3 n, vec3 albedo) {
+  vec3 from = normalize(vec3(-uSunDir.x, 0.22, -uSunDir.z));
+  float w = 0.5 + 0.5 * dot(n, from);
+  float shade = 1.0 - 0.67 * sunAt(p);
+  return albedo * uSunColour * vec3(1.0, 0.8, 0.58) * (0.12 * w * w * shade * skyOpen(p) / 3.14159);
+}
+
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
 vec3 rigOut(vec3 c) {
   return c * (1.0 - uSolo);
