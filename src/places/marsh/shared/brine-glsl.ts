@@ -61,8 +61,10 @@ vec3 brineMirror(vec3 p, vec3 n, vec3 v) {
   vec4 q1 = uMirrorMatrix * vec4(p.x + swing.x * 2.2, p.y, p.z + swing.y * 2.2, 1.0);
   // Ripples finer than the lens can see answer for every pixel, each swinging the ray its own way: what stands in the mirror is soft and
   // drawn out, never a sharp cut-out. (The mirror's picture is read some levels down, the same share of the frame at every size.)
-  float soft = max(log2(float(textureSize(tMirror, 0).x) / 300.0), 0.0);
+  float soft = max(log2(float(textureSize(tMirror, 0).x) / 200.0), 0.0);
   vec3 seen = (textureLod(tMirror, clamp(q.xy / q.w, 0.003, 0.997), soft).rgb + textureLod(tMirror, clamp(q1.xy / q1.w, 0.003, 0.997), soft + 0.7).rgb) * 0.5;
+  // (The air lies between the brine and what it mirrors too: what stands in the mirror is as pale as it stands over it.)
+  seen = rigAir(seen, 3.0 + away * 0.8, 0.5);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02;
   return mix(seen, skyRadiance(normalize(r)) * 0.9, smoothstep(40.0, 95.0, away)) * vec3(1.0, 0.8, 0.75);

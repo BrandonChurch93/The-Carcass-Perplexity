@@ -202,7 +202,9 @@ void main() {
   vec4 clump = texture2D(tFrothN, fuv * 0.31 + 0.37);
   vec3 scum = texture2D(tFroth, fuv).rgb;
   float high = relief.b * 0.62 + clump.b * 0.38;
-  float foam = smoothstep(0.0, 0.14, high - 1.0 + want * 0.8) * step(1e-3, want);
+  // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
+  float dense = smoothstep(0.2, 0.75, want);
+  float foam = smoothstep(0.0, 0.1, high - 1.1 + dense * 1.12) * step(1e-3, want);
   // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
   // between the bubbles, where the sky does not reach.
   float pit = smoothstep(0.25, 0.75, relief.b);
