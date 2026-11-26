@@ -115,7 +115,8 @@ vec3 skyCloud(vec3 from, vec3 d) {
   vec2 work = texture2D(tCloudShade, uv * vec2(1.3, 0.9) + uSkyTurn.yz).rg - 0.5;
   vec3 c = texture2D(tSky, uv + 0.022 * work).rgb * uSkyTurn.w;
   // The break burns: where the picture is bright the cloud is lit through, far above the grey of the bases.
-  c *= 0.8 + 2.2 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
+  // The bases are heavy: what is dark in the picture is darker here, what is bright burns.
+  c *= 0.5 + 0.5 * smoothstep(0.08, 0.3, dot(c, vec3(0.333))) + 2.4 * smoothstep(0.3, 0.85, dot(c, vec3(0.333)));
   // Straight overhead the picture runs out: the slate of the cloud's base.
   c = mix(c, uSkyZenith * 0.8, smoothstep(1.0, 1.35, el));
   // Toward the horizon the cloud is seen through more and more air.

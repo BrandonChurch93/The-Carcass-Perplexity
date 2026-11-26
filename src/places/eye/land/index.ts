@@ -129,7 +129,7 @@ void main() {
   vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
     + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
     + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.75, 1.66, 1.5) * (0.85 + 0.3 * vTint.x);
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.4, 1.36, 1.28) * (0.8 + 0.4 * vTint.x);
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -182,11 +182,11 @@ void main() {
   r.y = abs(r.y);
   float open = skyOpen(vWorld);
   vec3 bed = vec3(0.2, 0.17, 0.13) * (0.5 + 0.8 * b) * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * uSunDir.y * sunAt(vWorld)) / 3.14159;
-  vec3 c = mix(bed, skyRadiance(r) * mix(0.35, 1.0, open), f);
+  vec3 c = mix(bed, skyRadiance(r) * mix(0.35, 1.0, open) * 0.5, f * 0.8);
   // White water where the bed drops, and a pale edge where it laps the stones.
   float foam = smoothstep(0.52, 0.8, a + 0.5 * b * run) * run + smoothstep(0.86, 1.0, abs(vFlow.y)) * 0.25 * smoothstep(0.4, 0.7, b);
   vec3 white = vec3(0.75, 0.78, 0.8) * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * uSunDir.y * sunAt(vWorld)) / 3.14159;
-  c = mix(c, white, clamp(foam, 0.0, 1.0));
+  c = mix(c, white, clamp(foam, 0.0, 1.0) * 0.6);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -248,7 +248,7 @@ export function create(ctx: Context): Piece {
     put(x, z, size);
   }
   // The shoulders of the spur are piles of fallen blocks, each its own stone.
-  for (let i = 0; i < 900; i++) {
+  for (let i = 0; i < 600; i++) {
     const along = rng.range(40, 215);
     const side = rng.next() < 0.5 ? -1 : 1;
     const across = side * (9 + 62 * rng.next() ** 1.4);
@@ -272,6 +272,12 @@ export function create(ctx: Context): Piece {
     [107, -31, 4],
     [137, 9, 1.5],
     [138, -6.5, 1.3],
+    [136, 10, 4.2],
+    [130.5, 13.5, 5],
+    [137, -9.5, 3.6],
+    [131.5, -13, 4.8],
+    [126, -15, 3.2],
+    [123, 16.5, 3.8],
   ];
   for (const [along, across, size] of near) {
     const [x, z] = onAxis(along, across);

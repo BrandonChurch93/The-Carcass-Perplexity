@@ -10,7 +10,7 @@ export const LAND = { minX: -256, maxX: 256, minZ: -256, maxZ: 256, width: 1024,
 export const CONTACT = { size: 1024, minRadius: 14, maxRadius: 160 };
 export const MAX_EMITTERS = 8;
 /** The air: how much of a surface's light is lost in a metre at the ground, and how fast the air thins with height (1 / metres). The air folder draws it. */
-export const AIR = { density: 0.00048, thin: 1 / 320 };
+export const AIR = { density: 0.00018, thin: 1 / 320 };
 
 export type Height = (x: number, z: number) => number;
 
@@ -185,13 +185,13 @@ export function createRig(t0: number): Rig {
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The white overcast, measured against the approved wide view: its sky reads 215 215 220 a third of the way up and 232 230 230 in the
     // haze at the horizon. Scene linear, before the place's exposure.
-    uSkyZenith: { value: new THREE.Vector3(0.74, 0.745, 0.78) },
-    uSkyHorizon: { value: new THREE.Vector3(0.9, 0.89, 0.89) },
+    uSkyZenith: { value: new THREE.Vector3(0.86, 0.86, 0.9) },
+    uSkyHorizon: { value: new THREE.Vector3(0.72, 0.715, 0.74) },
     // What pale wet salt throws back up at the underside of things: about a third of the sky, a little warm and pink.
     uSkyGround: { value: new THREE.Vector3(0.3, 0.27, 0.265) },
     uFill: { value: new THREE.Vector3(1, 1, 1) },
     // The air pales the distance toward this, the horizon's white.
-    uAirColour: { value: new THREE.Vector3(0.84, 0.845, 0.87) },
+    uAirColour: { value: new THREE.Vector3(0.7, 0.695, 0.725) },
     uAir: { value: new THREE.Vector4(AIR.density, AIR.thin, 0, 0) },
     uMirror: { value: 0 },
     tMirror: { value: blank },

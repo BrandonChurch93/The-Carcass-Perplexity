@@ -232,7 +232,11 @@ vec3 animalAt(float part, float s, float a, float id) {
   vec3 outw = X * (sg * cos(ang)) + nl * sin(ang);
   vec3 nrm = -X * (sg * sin(ang)) + nl * cos(ang);
   float fold = (1.0 - spread) * (0.07 * sqrt(s) * cos(2.0 * PI * a * SPARS) + 0.3 * sqrt(sin(PI * clamp(s * 1.1, 0.0, 1.0)) + 1e-4)) + spread * 0.05 * sin(PI * s) * (1.0 - a) + 0.012 * web * spread + tent * 0.05 * sqrt(s) * cos(2.0 * PI * a * SPARS);
-  return sh + along * (cos(phi) * outw + sin(phi) * dl) + nrm * fold;
+  vec3 fanned = sh + along * (cos(phi) * outw + sin(phi) * dl) + nrm * fold;
+  // Open, the sail is one sheet of skin from shoulder to tip, the shape of the picture laid on it: s out along the arm, a from the leading edge back.
+  float plate = smoothstep(0.55, 0.95, spread) * (1.0 - tent);
+  vec3 sheet = sh + outw * (s * 2.28) + dl * ((0.21 - 0.74 * a) * 1.6) + nrm * (0.07 * sin(PI * s) * sin(PI * a));
+  return mix(fanned, sheet, plate);
 }
 
 vec3 animalToWorld(vec3 p) {
@@ -302,6 +306,8 @@ void main() {
   float a = vSkin.z;
   bool sail = part > 4.5;
   float cut = 1.0;
+  float open = smoothstep(0.55, 0.9, vOpen);
+  float bones = 0.0;
   if (sail && dot(n, v) < 0.0) n = -n;
   // The hide: one picture laid along each part.
   vec2 uv = sail ? vec2(s * 1.3, a * 1.1) : vec2(s * (part < 0.5 ? 0.9 : part < 1.5 ? 1.6 : 0.8), a / 6.2832 * (part < 0.5 ? 1.0 : 0.3));
@@ -365,18 +371,20 @@ void main() {
     albedo = mix(skin, vec3(0.3, 0.27, 0.24), bone * 0.8);
     float edge = smoothstep(0.72, 1.0, s);
     albedo = mix(albedo, vec3(0.6, 0.36, 0.16), edge * 0.5);
-    // Open, the sail is the picture of an open wing, fanned from its root: veined skin between the fingers, torn at the trailing edge.
-    float fan = a * 1.2;
-    vec2 wuv = vec2(0.03 + s * 0.95 * cos(fan) * mix(1.0, 0.62, a * a), 0.8 - s * 1.42 * sin(fan) * mix(1.0, 0.62, a * a));
-    vec3 wing = texture2D(tWing, wuv).rgb;
-    cut = mix(1.0, max(wing.r, max(wing.g, wing.b)), smoothstep(0.3, 0.6, vOpen) * smoothstep(0.25, 0.5, s));
-    albedo = mix(albedo, wing * 0.9, smoothstep(0.15, 0.7, vOpen));
+    // Open, the sail is the picture of an open wing: veined skin between the finger bones, torn at the trailing edge.
+    vec3 wing = texture2D(tWing, vec2(0.03 + 0.95 * s, 0.86 - 0.74 * a)).rgb;
+    float bright = max(wing.r, max(wing.g, wing.b));
+    cut = mix(1.0, bright, open);
     // Folded, the skin lies layer on layer: dull orange brown, dark, the light no longer through it.
-    albedo = mix(mix(vec3(0.62, 0.5, 0.38), vec3(0.82, 0.36, 0.08), smoothstep(0.5, 1.0, s)) * (0.7 + 0.45 * panel), albedo, smoothstep(0.15, 0.7, vOpen));
+    albedo = mix(vec3(0.62, 0.5, 0.38), vec3(0.82, 0.36, 0.08), smoothstep(0.5, 1.0, s)) * (0.7 + 0.45 * panel);
+    // Stretched, it is thin and pale between dark bones.
+    vec3 thin = mix(wing, vec3(dot(wing, vec3(0.3333))), 0.5) * vec3(1.0, 0.92, 0.82);
+    bones = smoothstep(0.34, 0.2, bright) + smoothstep(0.1, 0.0, a);
+    albedo = mix(albedo * tone * veined, thin * 1.5, open);
     n = bumped(n, slope * 1.2);
     rough = 0.4;
   }
-  albedo *= tone * veined;
+  if (!sail) albedo *= tone * veined;
   // Legs that stand in a pool are dark and wet to just over the water.
   float wetLeg = (1.0 - smoothstep(uPool + 0.02, uPool + 0.3, vWorld.y)) * step(2.5, part) * step(part, 4.5);
   albedo *= 1.0 - 0.45 * wetLeg;
@@ -398,12 +406,12 @@ void main() {
   if (sail) {
     // Light comes through the stretched skin of a sail.
     vec4 land = landAt(vWorld.xz);
-    col += albedo * vec3(1.1, 0.93, 0.76) * smoothstep(0.15, 0.7, vOpen) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.5) / PI;
+    col += albedo * vec3(1.1, 0.93, 0.76) * open * (1.0 - 0.8 * clamp(bones, 0.0, 1.0)) * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, land) * 0.6 + skyIrradiance(-n) * 0.7) / PI;
   }
-  // In the air they are seen against the sky and the white water: dark leather, the light in the skin of the sails.
-  col *= mix(1.0, sail ? 0.42 : part > 1.5 && part < 2.5 ? 0.16 : 0.3, smoothstep(0.15, 0.7, vOpen));
+  // In the air they are seen against the sky and the white water: dark leather bodies, the light in the skin of the sails.
+  col *= mix(1.0, sail ? 0.8 : part > 1.5 && part < 2.5 ? 0.2 : 0.4, open);
   gl_FragColor = vec4(rigOut(col), 1.0);
-  if (cut < 0.05) discard;
+  if (cut < 0.035) discard;
 }`;
 
 export function animalMaterial(ctx: Context, pool: number, dead = false): THREE.ShaderMaterial {

@@ -18,18 +18,18 @@ export interface BladeOptions {
 /** How far the rock stands out from the smooth blade, metres. q runs round the section in metres, s along the spine in metres; x, y, z are the world. */
 export function bladeRelief(q: number, s: number, x: number, y: number, z: number): number {
   // Masses the size of a hall and of a house.
-  let d = 16 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 5 * (noise3(x / 29, y / 33, z / 29) - 0.5);
+  let d = 10 * (noise3(x / 80, y / 95, z / 80) - 0.5) + 3 * (noise3(x / 29, y / 33, z / 29) - 0.5);
   // Flutes that run the length of the blade: wide ones a house across, narrow ones a stride or two, both wandering a little.
   const wander = 5 * (noise2(s / 60, q / 40) - 0.5);
   const wide = Math.abs(noise2((q + wander) / 9.5, s / 140) - 0.5);
   const narrow = Math.abs(noise2((q + 0.6 * wander) / 21 + 7.7, s / 190) - 0.5);
-  d += 6.5 * (wide - 0.25) + 7 * (narrow - 0.25);
+  d += 2 * (wide - 0.25) + 3 * (narrow - 0.25);
   // Bites out of the blade the size of a house, where a block has gone.
-  d -= 10 * smooth(0.6, 0.8, noise3(x / 36 + 5.1, y / 30, z / 36));
+  d -= 6 * smooth(0.62, 0.8, noise3(x / 36 + 5.1, y / 30, z / 36));
   // Broken at the size of a boat and of a man.
-  d += 1.0 * (noise3(x / 11, y / 8, z / 11) - 0.5);
+  d += 0.6 * (noise3(x / 11, y / 8, z / 11) - 0.5);
   // Joints: cracks across the blade where it will break next.
-  d -= 1.4 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
+  d -= 0.9 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
   return d;
 }
 
