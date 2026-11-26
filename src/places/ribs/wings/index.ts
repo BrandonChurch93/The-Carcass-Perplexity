@@ -1032,6 +1032,8 @@ export function create(ctx: Context): Piece {
   const LEAD = 126;
   /** Of the leaders, those that stand in the first frame itself. */
   const FIRST = 14;
+  /** The side the wind of the storm sets them to: 1 or -1. */
+  const CRAB = 1;
   const flight = new Flight(airBodies, STREAM + SWIRL + LEAD);
   const F = flying();
   const streamWay = { x: FLOCK.toward[0] - FLOCK.from[0], y: FLOCK.toward[1] - FLOCK.from[1], z: FLOCK.toward[2] - FLOCK.from[2], long: 1, hx: 0, hz: 0 };
@@ -1233,7 +1235,6 @@ export function create(ctx: Context): Piece {
   /** The ring: its middle in metres ahead of the establishing lens, to its right and over it; metres a second round it; metres it falls and climbs. */
   const STOOP = { ahead: 120, right: 3, over: 42.5, speed: 22, fall: 15 };
   const swoopFigures = new Figures(airSheet, SWOOP.length, {}, 6, 4);
-  swoopFigures.mesh.visible = false;
   const swoopAt = (i: number, eye: [number, number, number]): void => {
     const [lag, wide, over, size] = SWOOP[i] as [number, number, number, number];
     const a = TAU * ((lp ?? 0) - lag);
@@ -1274,7 +1275,8 @@ export function create(ctx: Context): Piece {
       splashAt(seconds);
 
       // The stream and the swirl are the film's: the card loop begins after they have gone to the gap.
-      flight.mesh.visible = lp === null;
+      // Hidden by drawing none of them, never by the mesh's own switch: the solo view owns that switch and a part that sets it again shows in every other part's solo.
+      flight.draw(lp === null ? STREAM + SWIRL + LEAD : 0);
       if (lp === null) {
         for (let i = 0; i < STREAM; i++) {
           if (!streamPlace(i, seconds - 0.05, was) || !streamPlace(i, seconds, spot) || !streamPlace(i, seconds + 0.05, next)) {
@@ -1302,6 +1304,10 @@ export function create(ctx: Context): Piece {
           leadPlace(k, seconds + 0.05, next);
           leadPlace(k, seconds, spot);
           borne(1 + 0.3 * hash(k, 97), (leads[k] as (typeof leads)[number]).seed, seconds, 0.75);
+          // They come on at the lens, and one that flies straight at it is a flat spread outline: each holds its head off its way into the
+          // wind of the storm, by its own amount, one sail low, so that a flank and the top of a sail are what the lens has of it.
+          F.yaw += CRAB * (0.34 + 0.3 * hash(k, 98));
+          F.roll += CRAB * (0.24 + 0.2 * hash(k, 99));
           flight.put(STREAM + SWIRL + k, F);
         }
         flight.commit();
@@ -1382,8 +1388,7 @@ export function create(ctx: Context): Piece {
       }
       const lead = at - BORE;
       // In the film they are bodies that leave the ground; the card loop keeps its circuits.
-      fleet.mesh.visible = lp === null;
-      if (fleet.mirror) fleet.mirror.visible = lp === null;
+      fleet.draw(lp === null ? FLEEING : 0);
       for (let i = 0; i < FLEEING; i++) {
         if (lp === null) {
           if (lead < -2.4) fleet.hide(i);
@@ -1420,14 +1425,14 @@ export function create(ctx: Context): Piece {
       }
       if (lp === null) fleet.commit();
       // While the lens is far out at sea none of them is a pixel wide: not drawn.
-      escort.mesh.visible = lp === null && lens === null;
+      const escorted = lp === null && lens === null;
       // The crowd over the colony is drawn where a lens is near enough to tell one of it from the specks of the flock.
       const off = Math.hypot(eye[0] - COLONY.x, eye[2] - COLONY.z);
       const crowded = off < 540;
       // They come up out of nothing as the lens nears, so that none is seen to start.
       const grown = smooth(540, 430, off);
-      escort.draw(SKEIN + PASSERS + LOW + (crowded ? ROOK : 0));
-      if (escort.mesh.visible) {
+      escort.draw(escorted ? SKEIN + PASSERS + LOW + (crowded ? ROOK : 0) : 0);
+      if (escorted) {
         for (let i = 0; crowded && i < ROOK; i++) {
           const f = rooks[i] as Flier;
           flierPlace(f, seconds - 0.05, was);
@@ -1472,14 +1477,14 @@ export function create(ctx: Context): Piece {
       });
       skeinFigures.commit();
       standers.commit();
-      swoopFigures.mesh.visible = lp !== null;
-      if (lp !== null) {
-        for (let i = 0; i < SWOOP.length; i++) {
+      for (let i = 0; i < SWOOP.length; i++) {
+        if (lp === null) swoopFigures.hide(i);
+        else {
           swoopAt(i, eye);
           swoopFigures.put(i, fig);
         }
-        swoopFigures.commit();
       }
+      swoopFigures.commit();
     },
     dispose: () => {
       for (const m of [runnerSheet, perchedSheet, airSheet]) {

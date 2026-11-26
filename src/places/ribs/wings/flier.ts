@@ -35,7 +35,7 @@ const NECK = 4;
 const HEAD = 6;
 const SPINE_VERTS = SPINE.length * SIDES;
 /** A leg trailed: [metres ahead of the shoulders, metres up, radius]. */
-const LEG: [number, number, number][] = [[-0.9, -0.06, 0.1], [-1.62, -0.11, 0.058], [-1.74, -0.12, 0.066], [-2.75, -0.2, 0.042], [-2.95, -0.27, 0.062]];
+const LEG: [number, number, number][] = [[-0.9, -0.06, 0.1], [-1.62, -0.11, 0.064], [-1.74, -0.12, 0.072], [-2.75, -0.2, 0.05], [-2.95, -0.27, 0.066]];
 /** The ring of the knee: what is below it lags as the leg comes down. */
 const KNEE = 2;
 const LEG_SIDES = 4;
@@ -293,9 +293,9 @@ export class Flight {
       }
     }
     let n = (v0 + 2 * WING_VERTS) * 3;
-    // With its legs down it carries its neck up and its head level, as one that stands; in the air the neck is stretched ahead.
+    // With its legs down it carries its neck up and its head level, as one that stands; in the air the neck is stretched ahead and a little raised, so that back, neck and legs are not one rod.
     const down = Math.min(1, Math.max(0, p.legs));
-    const lift = 0.95 * down * down * (3 - 2 * down);
+    const lift = 0.2 + 0.75 * down * down * (3 - 2 * down);
     const base = SPINE[NECK] as [number, number, number];
     const nape = SPINE[HEAD] as [number, number, number];
     const cl = Math.cos(lift);
