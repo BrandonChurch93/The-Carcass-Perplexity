@@ -401,16 +401,16 @@ export function create(ctx: Context): Piece {
     const eyes = [KEYS.wide.position, KEYS.mats.position, KEYS.edge.position, KEYS.shore.position, KEYS.centre.position];
     const [wx, wz] = [KEYS.wide.position[0], KEYS.wide.position[2]];
     const classes: { detail: number; smoothing: number; list: Stone[] }[] = [
-      { detail: 22, smoothing: 0, list: [] },
-      { detail: 9, smoothing: 1, list: [] },
-      { detail: 4, smoothing: 2, list: [] },
-      { detail: 2, smoothing: 3, list: [] },
+      { detail: 14, smoothing: 0, list: [] },
+      { detail: 6, smoothing: 1, list: [] },
+      { detail: 3, smoothing: 2, list: [] },
+      { detail: 1, smoothing: 3, list: [] },
     ];
     for (const s of [...(stones[0] as Stone[]), ...(stones[1] as Stone[])]) {
       let reach = Infinity;
       for (const e of eyes) reach = Math.min(reach, Math.hypot(s.x - e[0], s.z - e[2]));
       const wide = Math.hypot(s.x - wx, s.z - wz);
-      const k = wide < 150 && s.size > 1.3 ? 0 : reach < 330 && s.size > 2.2 ? 1 : reach < 330 ? 2 : 3;
+      const k = wide < 110 && s.size > 1.3 ? 0 : reach < 330 && s.size > 2.2 ? 1 : reach < 330 ? 2 : 3;
       (classes[k] as { list: Stone[] }).list.push(s);
       if (s.size <= 2.2 || Math.hypot(s.x, s.z) < 1300) discs.push(s);
     }
