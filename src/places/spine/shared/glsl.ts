@@ -118,11 +118,13 @@ vec3 skyIrradiance(vec3 n) {
   float s = clamp(0.5 + 0.5 * dot(n, uStormDir), 0.0, 1.0);
   float stormShare = s * s * (1.0 - 0.45 * max(n.y, 0.0));
   // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
-  open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare);
+  // Under the rock (the lens exposed for the dark there) the flash does not come by the sky's share: it comes in by the mouths alone,
+  // and the canal's own shader gives it from them.
+  open = mix(open, uSkyStorm, 0.8 * stormShare) + flashCast() * (2.6 * stormShare * (uUnder > 1.5 ? 0.12 : 1.0));
   vec3 e = mix(uSkyGround, open, up) * uFill;
   float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
   // One low source: what looks to it is lit warm, by the square, and what looks away keeps the cold of the sky alone.
-  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.34 * w * w * seen));
+  return 3.14159 * (e * (0.72 + 0.28 * (1.0 - w)) + uWarmColour * (0.26 * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it
