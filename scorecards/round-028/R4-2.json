@@ -1,0 +1,35 @@
+{
+  "round": 28,
+  "unit": "film",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-26 18:33 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the pale shore animals, especially the nearest one on the right, from loop frames 44 to 305",
+        "what": "the bodies shift along the shore, but the long legs retain much the same spread and no planted foot is easy to pick out; the animals read as sliding more than stepping",
+        "fix": "Hold each planted foot in place while the body moves over it, then stagger the lifts, pauses, and turns across the group."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the low fog bank to the right of the front rib, frames 0 to 120",
+        "what": "the foreground sea changes shape, but the fog keeps the same broad diagonal streaks as the framing creeps forward, so it reads more like a fixed layer than heavy air flowing around the ribs",
+        "fix": "Let the bank pool against the rib bases, peel off the far sides, and break into low eddies at a different pace from the camera move."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the right-hand spiral and the wisps over the ribs in the orbital hold, frames 11623 to 11743",
+        "what": "the glow dims and the view drifts, but the spiral and nearby wisps keep almost the same outlines and stay pinned to the ground markings, making the hold read like a dimming still",
+        "fix": "Give the high cloud and storm bands subtle, independent drift against the terrain without speeding up the orbital move."
+      }
+    ]
+  }
+}

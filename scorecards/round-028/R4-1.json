@@ -1,0 +1,42 @@
+{
+  "round": 28,
+  "unit": "film",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-26 18:33 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the climb from the lake to the overhead coast, frames 9337–9841",
+        "what": "The lake-level composition gives way to an overhead ocean view without a recognizable shoreline carrying the eye through the climb. After the climb the clouds and ocean highlights read as attached to the planet image rather than moving at their own heights.",
+        "fix": "Carry a recognizable bend in the shore through the pitch and climb, then let the cloud layers move independently over the surface."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "the large animal and juvenile in the red shallows, frames 6309 and 6561",
+        "what": "The camera gets closer over four seconds, but the animals keep nearly the same stance and spacing, with little sense that the adults or young are loading or releasing their feet in the mud.",
+        "fix": "Give the adult a visible weight transfer and a planted step, let the juvenile pause or turn independently, and disturb the shallows at their feet."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the lava cascade below the opening, frames 4215–4220",
+        "what": "Bright threads change inside an almost fixed outline, giving the cascade the look of an animated glow rather than a thick stream turning over its own skin.",
+        "fix": "Send slower, darker crust folds down the slope and let them split and bunch where the flow reaches the basin."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the rear feet of the animal at the cave mouth, frames 8299–8304",
+        "what": "Both feet remain almost equally separated from the snow, with soft indistinct contact, so the animal reads as suspended before the cut.",
+        "fix": "Set one foot firmly against the slope, transfer the body weight over it, and let the other foot release with a small snow scuff."
+      }
+    ]
+  }
+}
