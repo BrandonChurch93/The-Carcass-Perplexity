@@ -27,11 +27,12 @@ Owner: spine_ground_owner. Folders: `src/places/spine/` root, `shared/`, `land/`
 
 ## Round 9 (judged on version 2: match 3, filmed 2, motion 4), the order given, and where each stands
 
-1. Textures pulled long, spires alike. Tried: ground cliffs moved from the jointed spire picture to the rubble picture measured along the slope (closed the long joints down the flanks, but the gullies of the height field still streak the snow); spires 6 to 15 given unlike breadth, height and lean in `ridge.ts` TABLE. Not reached: the spire faces close up (spine-2) are still the spire picture sheared along the lean; anisotropy is 1 (`ANISOTROPY` in `land/index.ts`, 4 is sharper at grazing angles, +1.75 s).
-2. Strikes that light the place. Tried: `EMITTER_CAST` 0.04 to 0.11, `FLASH_AREA` 3.6e8 to 1.5e8, the pool in the cloud 2.5 times and violet. Seen at preview size only: the cloud glows round the bolt, the ridge takes little. Not reached: the cave taking the flash.
-3. Cloud that moves. Tried: storm billows drift at 16, 34 and 52 m/s by size and rise; the cloud sea's two layers run at 38 and 74 m/s across each other. Checked on one held sheet only, see the report. Air between far peaks: not reached (the haze is one term in `volume.ts`, near line 357).
-4. Canal. Tried: wall beds along the canal at 21 m with the 6 m picture under them, floor as dark ice with snow banks from the snow picture, light 7 m into the mouth. Not reached: icicles, slabs as geometry, the rising snow approach beyond the mouth.
-5. Snow. Not reached beyond the snow picture at 27 m and 4 m: drifts are still smooth blankets and the prints are an even line.
+1. Textures pulled long, spires alike. Tried: ground cliffs and the rock over the mouth moved from the jointed spire picture to the rubble picture, measured along the slope; the snow drifts taken off the steep flanks and the gullies made broader (`land/height.ts`: these waves, 16 m across and 52 m long, were the long streaks, not a picture); spires 6 to 15 given unlike breadth, height and lean (`ridge.ts` TABLE). Better, not closed: streaks remain on the near right flank of spine-0, and the spire face close up (spine-2) is still the spire picture sheared along the lean. `ANISOTROPY` is 1.
+2. Strikes that light the place. The partner raised the strikes' cast five times (CAST 2600); with it `EMITTER_CAST` is 0.07 (was 0.04), the storm's flash counts 2.6 times on what it lights, the cloud has a violet pool round the channel. At the keys the storm, the first spire and the snow take the light. Not reached: the cave taking the flash (the canal is lit by its mouths only, `skyOpen` in `shared/glsl.ts`).
+3. Cloud that moves. Tried: storm billows drift at 16, 34 and 52 m/s by size and rise; the cloud sea's two layers run at 38 and 74 m/s across each other. Looked at on one held sheet of twelve small frames over 6 s at spine-0: the storm's billows change shape and place, the cloud sea's movement is hard to see at that size. Not judged at 4K or in the long lens. Air between far peaks: not reached (the haze is one term near the end of `volume.ts`).
+4. Canal. Tried: wall beds along the canal at 21 m with the 6 m picture under them, floor as dark ice with snow banks from the snow picture, light 7 m into the mouth. The wall is still one picture on a smooth tube and smears near the lens. Not reached: icicles, slabs as geometry, the rising snow approach beyond the mouth.
+5. Snow. Not reached beyond the snow picture at 27 m and 4 m: drifts are still smooth blankets and the prints an even line.
+- Steam from `ctx.sources.steam` is drawn in the air pass (first eight sources) and was seen on the struck tips in the keys.
 
 ## Still wrong beside the approved pictures, worst first
 
@@ -50,12 +51,17 @@ Owner: spine_ground_owner. Folders: `src/places/spine/` root, `shared/`, `land/`
 
 ## Cost at 3840 x 2160, seconds a sample (cost tool, draft, frame 7234, one sample)
 
-- Whole frame with the partner's parts: 10.38. The aim was 7; it is not met.
-- land: 7.54 drawn alone, of which about 2.2 is the empty frame, the sky and the air pass: so about 5.4. Not cut since version 2.
+- Whole frame with the partner's parts: 10.36. The aim was 7; it is not met.
+- land: 5.75 above the empty frame (7.28 drawn alone). Not cut: 5.4 at version 2.
   Where it goes, by taking the shader apart: about 2.5 in triangles and the depth pass (a flat colour costs this), 1.1 in the rig's light, 1.8 in the picture lookups.
-- sky: 0.61. air, cloud, cloud-sea, spindrift: one pass, about 1.0 together at half size (it is inside the empty frame the tool reports, 1.57).
+- sky: 0.53. air, cloud, cloud-sea, spindrift: one pass at half size, inside the 1.54 the tool reports as the empty frame; not measured apart.
 - Kept behind constants: `SPIRE_MID` in `land/meshes.ts` ([170, 440] is the finer mesh on the spires beside the first, +0.3); `ANISOTROPY` in `land/index.ts` (4, +1.75); `SLABS_ON_GROUND` in `land/shaders.ts` (true, +0.1); `DEPTH_FIRST` in `land/index.ts` (false, +0.4).
-- The partner's parts at this frame: runners 0.89, kites 0.39, strikes about 0.1.
+- The partner's parts at this frame, before their last bundle: runners 0.80, kites 0.42, strikes about 0.1.
+
+## Checks at hand-over
+
+- `tsc` and the build are clean. Two fresh loads of spine-0 and spine-4 are pixel-identical.
+- `npm run -s determinism` fails at film frame 1241 and gate G10 at frame 5930, G8 on `public/assets/breath/waders/`: none is a Spine frame or file (1241 is the Ribs, 5930 the Blood Marsh); they came in with a merge of main and were not traced. All three passed on version 2.
 
 ## What I would do next, in order
 

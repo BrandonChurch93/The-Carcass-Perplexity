@@ -141,21 +141,21 @@ vec3 stormFace(vec3 p, float t, vec3 rd) {
   float streak = noise(vec3(q.x / 420.0, q.y / 5200.0 + q.z / 1400.0, q.z / 420.0)).g;
   float under = smoothstep(500.0, -500.0, h);
   c = mix(c, mix(uSkyHorizon, uSkyZenith, 0.4) * (0.16 + 0.05 * streak), 0.4 * under);
-  vec3 within = uFlash * 0.3;
+  vec3 within = uFlash * 0.16;
   for (int i = 0; i < 8; i++) {
     if (i >= uEmitterCount) break;
     vec3 d = uEmitters[i].xyz - p;
     float r = uEmitters[i].w;
     float d2 = dot(d, d) + r * r;
     float fall = r * r / d2 * EMITTER_CAST * 3.14159;
-    c += uEmitterRadiance[i] * (fall * (0.55 + 0.45 * dot(n, d) * inversesqrt(d2)) * (0.3 + 0.7 * lump) * 0.05);
+    c += uEmitterRadiance[i] * (fall * (0.55 + 0.45 * dot(n, d) * inversesqrt(d2)) * (0.3 + 0.7 * lump) * 0.026);
     // The bolt is in the cloud: the cloud about it glows from inside, most in its creases.
     // The bolt is in the cloud: the cloud behind it glows from inside, most in its creases, a pool of light about the channel as it is seen.
     vec3 off = d - rd * dot(d, rd);
     // The pool keeps its size in the frame, so a long lens does not turn it into a veil.
     float reach = min(1.7 * r + 120.0, 0.25 * uInvProjection[1][1] * max(t + dot(d, rd), 0.0) + 20.0);
     // Violet: the cloud takes the red and the green out of the light that comes through it.
-    within += uEmitterRadiance[i] * vec3(0.8, 0.6, 1.25) * (r / 260.0) * (0.02 * exp(-dot(off, off) / (reach * reach)) + 0.0018 * exp(-dot(off, off) / (9.0 * reach * reach)));
+    within += uEmitterRadiance[i] * vec3(0.8, 0.6, 1.25) * (r / 260.0) * (0.006 * exp(-dot(off, off) / (reach * reach)) + 0.0005 * exp(-dot(off, off) / (9.0 * reach * reach)));
   }
   return c + within * (0.15 + 0.85 * smoothstep(0.82, 0.38, dome)) * (0.6 + 0.4 * lump);
 }
