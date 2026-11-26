@@ -15,8 +15,7 @@ import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
 import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
-import { FIN_FRAGMENT, FIN_OPENING_FRAGMENT, FIN_OPENING_VERTEX, FIN_VERTEX, STACK_FRAGMENT } from './fin';
-import { inOpening, openingDark, openingLight, openingWeight } from '../shared/opening';
+import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
 
 export const PARTS = ['land', 'ribs', 'weed', 'ledges', 'rocks'] as const;
@@ -25,15 +24,15 @@ export { bed };
 
 // How fine each blade is cut, and the metres of one repeat of its stone: the near ones show a hand's breadth, the far ones a house.
 const BLADE: Record<string, { around: number; fine: number; coarse?: number; grain: number }> = {
-  L1: { around: 420, fine: 1.2, coarse: 2.2, grain: 5 },
-  R1: { around: 420, fine: 1.8, coarse: 2.4, grain: 12 },
+  L1: { around: 520, fine: 1.2, coarse: 1.7, grain: 5 },
+  R1: { around: 440, fine: 1.4, coarse: 1.8, grain: 12 },
   R2: { around: 320, fine: 1.8, coarse: 2.2, grain: 12 },
   L2: { around: 160, fine: 1.8, coarse: 2.2, grain: 14 },
   L3: { around: 200, fine: 1.8, coarse: 2.2, grain: 12 },
   R3: { around: 192, fine: 2, grain: 16 },
   S: { around: 192, fine: 2, grain: 16 },
-  OL: { around: 256, fine: 2, grain: 12 },
-  OR: { around: 256, fine: 2, grain: 12 },
+  OL: { around: 440, fine: 1.3, coarse: 1.7, grain: 12 },
+  OR: { around: 440, fine: 1.3, coarse: 1.7, grain: 12 },
 };
 
 interface Stack {
@@ -252,7 +251,7 @@ export function create(ctx: Context): Piece {
   glassLoop.fragmentShader = MIRROR_LOOP_FRAGMENT;
   const mirrors = new THREE.Group();
   [...(RIBS as Rib[])].sort((a, b) => a.z - b.z).forEach((rib, i) => {
-    const image = new THREE.Mesh(bladeShape(rib, { around: 40, fine: 7 }), glass);
+    const image = new THREE.Mesh(bladeShape(rib, { around: 40, fine: 7, plain: true }), glass);
     image.frustumCulled = false;
     image.renderOrder = 2 + i * 0.01;
     mirrors.add(image);
@@ -260,7 +259,6 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('land', floor, mirrors));
 
   const blades = new THREE.Group();
-  const openBlades: { mesh: THREE.Mesh; film: THREE.ShaderMaterial; staged: THREE.ShaderMaterial }[] = [];
   const skirts = new THREE.Group();
   const add = (group: THREE.Group, geometry: THREE.BufferGeometry, stuff: THREE.Material): THREE.Mesh => {
     const mesh = new THREE.Mesh(geometry, stuff);
@@ -269,13 +267,7 @@ export function create(ctx: Context): Piece {
   };
   for (const rib of RIBS as Rib[]) {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
-    const blade = add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
-    // The approach draws a blade with its own text (fin.ts) and its own seed: the film's material is the one above, for every other frame.
-    const film = blade.material as THREE.ShaderMaterial;
-    if (film.fragmentShader === FIN_FRAGMENT) {
-      const staged = new THREE.ShaderMaterial({ vertexShader: FIN_OPENING_VERTEX, fragmentShader: FIN_OPENING_FRAGMENT, uniforms: { ...film.uniforms, uOpenStone: { value: new THREE.Vector2(0, 0.137 + 0.618 * openBlades.length) }, uOpenLight: { value: new THREE.Vector2(0, 0) } } });
-      openBlades.push({ mesh: blade, film, staged });
-    }
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
@@ -516,13 +508,7 @@ export function create(ctx: Context): Piece {
   ctx.scene.add(ctx.parts.built('rocks', rocks));
 
   return {
-    setTime: (seconds) => {
-      const opening = inOpening() ? openingWeight(seconds + 4) : 0;
-      for (const b of openBlades) {
-        b.mesh.material = opening > 0 ? b.staged : b.film;
-        (b.staged.uniforms.uOpenStone as THREE.IUniform<THREE.Vector2>).value.x = Math.min(1, opening * 2.5);
-        (b.staged.uniforms.uOpenLight as THREE.IUniform<THREE.Vector2>).value.set(openingDark(seconds), openingLight(seconds));
-      }
+    setTime: () => {
       const staged = stagedSeconds();
       const atGate = staged >= gateShot.from && staged <= gateShot.to;
       for (const m of gateStacks) m.visible = atGate;
@@ -530,7 +516,6 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
-      for (const b of openBlades) b.staged.dispose();
       floor.geometry.dispose();
       ledges.geometry.dispose();
       for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, glassLoop, ...stones.values()]) m.dispose();

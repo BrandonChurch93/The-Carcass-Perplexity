@@ -64,6 +64,38 @@ export function fbm3(x: number, y: number, z: number, octaves: number): number {
   return sum / total;
 }
 
+/**
+ * Cells of broken rock: the number of the cell a place lies in (0 to 1) and how far it is from the wall to the next cell, in cells.
+ * One hash for each of the 27 cells round the place.
+ */
+export function cells3(x: number, y: number, z: number, out: { id: number; edge: number }): void {
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  const zi = Math.floor(z);
+  let f1 = 1e9;
+  let f2 = 1e9;
+  let id = 0;
+  for (let dz = -1; dz <= 1; dz++) {
+    for (let dy = -1; dy <= 1; dy++) {
+      const hy = hash2((yi + dy) | 0, (zi + dz) | 0);
+      for (let dx = -1; dx <= 1; dx++) {
+        const h = hash2((xi + dx) | 0, hy | 0);
+        const px = xi + dx + 0.1 + 0.8 * ((h & 1023) / 1023) - x;
+        const py = yi + dy + 0.1 + 0.8 * (((h >>> 10) & 1023) / 1023) - y;
+        const pz = zi + dz + 0.1 + 0.8 * (((h >>> 20) & 1023) / 1023) - z;
+        const d = px * px + py * py + pz * pz;
+        if (d < f1) {
+          f2 = f1;
+          f1 = d;
+          id = h;
+        } else if (d < f2) f2 = d;
+      }
+    }
+  }
+  out.id = (hash2(id | 0, 77) >>> 0) * INV;
+  out.edge = (Math.sqrt(f2) - Math.sqrt(f1)) * 0.5;
+}
+
 export const smooth = (lo: number, hi: number, v: number): number => {
   const k = Math.min(1, Math.max(0, (v - lo) / (hi - lo)));
   return k * k * (3 - 2 * k);
