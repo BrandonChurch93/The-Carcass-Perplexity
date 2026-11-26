@@ -85,7 +85,7 @@ export function create(ctx: Context): Piece {
   const fallen = rock.bone(0.8, [0.38, 0.34, 0.275], [0.2, 0.175, 0.14], strata, THREE.DoubleSide);
   const pale = rock.bone(1, [0.62, 0.56, 0.46], [0.36, 0.31, 0.24], ivory, THREE.DoubleSide);
   // The brim is the shelf's own top beds seen edge on: the layered rim.
-  const beds = rock.bone(0.9, [0.6, 0.55, 0.47], [0.34, 0.3, 0.24], strata, THREE.DoubleSide);
+  const beds = rock.bone(0.9, [0.44, 0.4, 0.34], [0.2, 0.18, 0.145], strata, THREE.DoubleSide);
   for (const [x, z, r] of SMALLER) shaft.add(mesh(collar(x, z, r), pale));
   ctx.scene.add(ctx.parts.built('shaft', shaft));
 

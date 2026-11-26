@@ -42,7 +42,7 @@ export function breathAt(seconds: number): [number, number, number, number] {
   const fill = smooth((u - 0.2) / 1.3);
   const over = u < 3 ? smooth((u - 0.4) / 2.4) : 0.08 + 0.92 * Math.exp(-(u - 3) / 1.3);
   // After the breath the shaft stands full of mist nearly to the brim, and it sinks back over the next quarter of a minute.
-  const level = -9 + swell + 7 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 6.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
+  const level = -9 + swell + 7 * fill * (u < 3 ? 1 : 0.3 + 0.7 * Math.exp(-(u - 3) / 4)) + 1.5 * smooth((u - 2.5) / 2.5) * Math.exp(-Math.max(0, u - 6) / 7);
   const apron = smooth((u - 2.2) / 2.0) * (0.2 + 0.8 * Math.exp(-Math.max(0, u - 3.4) / 2.4));
   const spread = smooth((u - 2.8) / 7);
   return [level, over, apron, spread];
@@ -69,18 +69,18 @@ export function exhaleBodies(seconds: number): Body[] {
     const grow = 0.55 + 0.45 * smooth(a / 1.6) + 0.07 * slide;
     // It sinks back on the rock as it slides: heavier than the air it came into.
     const y = -11 + 14.5 * up - 0.35 * Math.min(slide, 4);
-    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 3.2) / 1.15);
+    const thin = smooth(a / 0.8) * Math.exp(-Math.max(0, a - 3.2) / 0.9);
     if (thin < 0.02) continue;
     out.push({
       part: 'exhale',
-      at: [x - 0.94 * 2.6 * slide, y, z - 0.2 * 2.6 * slide],
+      at: [x - 0.55 * 2.6 * slide, y, z - 0.83 * 2.6 * slide],
       size: [rx * grow * (1 + 0.1 * slide), ry * (0.7 + 0.3 * up) * (1 - 0.06 * Math.min(slide, 5)), rz * grow * (1 + 0.06 * slide)],
       lean: [-0.25 * up, 0.09 * up],
       dense: (0.8 * dense * thin) / (grow * grow),
       repeat: 17,
       open: 0.42,
       climb: 1.4,
-      sun: 0.35,
+      sun: 0.6,
     });
   }
   return out;
@@ -118,7 +118,7 @@ export function create(ctx: Context): Piece {
     [-900, -620, 16, 900, 40, 260, 0.0026],
   ] as const) {
     const [x, z] = cliffPoint(s, p);
-    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.6, repeat: 150, open: 0.7, climb: -3, sun: 1.0 });
+    bodies.push({ part: 'fog', at: [x, cliffHeight(s, p) + lift, z], size: [long, tall, deep], turn, dense: dense * 0.4, repeat: 150, open: 0.72, climb: -3, sun: 0.8 });
   }
   // Layers of haze between the shelf and the cliff: long low sheets, one behind the other, that take the foot of the cliff away.
   for (const [x, z, rx, ry, rz, y] of [

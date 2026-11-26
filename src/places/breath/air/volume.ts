@@ -291,10 +291,10 @@ void main() {
       float mb = min((-h2 + s2) / a2, far);
       if (mb > ma) {
         float surge = uBreath.y * uShow.w;
-        float level = mix(-9.0, uBreath.x, uShow.w) - 8.0 + 1.5 * surge;
+        float level = mix(-9.0, uBreath.x, uShow.w) - 4.0 + 1.5 * surge;
         vec2 g = WINDV * 0.3;
         // It has a surface: thin only through its top few metres, then a body. Under that it thickens until nothing of the bottom is seen.
-        float soft = mix(20.0, 10.0, surge);
+        float soft = mix(14.0, 9.0, surge);
         vec3 pa = ro + rd * ma;
         float dd = dot(g, rd.xz) - rd.y;
         float d0 = level + dot(g, pa.xz) - pa.y;
@@ -310,7 +310,9 @@ void main() {
         float gathered = abs(dd) > 1e-3 ? (column(d1, soft) - column(d0, soft)) / dd : clamp(d0 / soft, 0.0, 1.0) * (mb - ma);
         if (gathered > 0.01) {
           te = d0 >= 0.0 || dd <= 1e-3 ? ma : min(ma - d0 / dd, mb);
-          float tau = mix(0.024, 0.045, surge) * gathered;
+          // It gathers on the side it leaves by, the west: there it is a body, and on the east the hoops show through it.
+          vec3 pw = ro + rd * (0.5 * (te + mb));
+          float tau = mix(0.024, 0.045, surge) * gathered * mix(0.45, 1.7, smoothstep(12.0, -22.0, pw.x + 0.4 * pw.z));
           // The place a little way in that most of what is seen comes from.
           float tm = te + (mb - te) * sqrt(0.5 * min(1.0, 1.0 / max(tau, 1e-3)));
           vec3 pm = ro + rd * tm;
@@ -318,9 +320,8 @@ void main() {
           // faces it is bright and the trough behind it is dark.
           float sunk = clamp(1.0 + min(pm.y + 1.0, 0.0) / 30.0, 0.0, 1.0);
           float faces = clamp(0.5 + 5.0 * (nt.r - nm.r), 0.0, 1.0);
-          // Before the breath it lies deep and takes the sky whole; what the breath leaves near the brim is seen against the light, and is dim.
-          float left = smoothstep(-15.0, -8.0, level);
-          left *= 1.0 - surge;
+          // Its top takes the sky whole; what is seen deep in it, looking down through it, is under all the rest and is dim.
+          float left = smoothstep(1.5, 12.0, level + dot(g, pm.xz) + lift - pm.y) * (1.0 - surge);
           vec3 light = ambient * mix(mix(0.5 + 0.8 * nm.r, 0.22 + 0.5 * nm.r, left), 0.55 + 0.95 * nm.r, surge) * sunk * mix(1.0, sunk, left)
             + uSunColour * (sunAt(pm) * phase * (0.1 + 0.6 * faces) * smoothstep(-7.0, 0.0, pm.y));
           float gone = exp(-tau);
@@ -364,7 +365,7 @@ void main() {
     // Toward the sun a body burns warm; away from it it is thin and blue grey.
     // What stands down in the shaft is under its own wall: it takes the sky from a disc overhead, and no sun.
     float sunkBody = clamp(1.0 + min(mid.y - 1.0, 0.0) / 14.0, 0.0, 1.0);
-    vec3 tint = D.x > 1.5 ? vec3(0.62) : D.x > 0.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
+    vec3 tint = D.x > 1.5 ? vec3(0.86, 0.78, 0.68) : D.x > 0.5 ? vec3(0.72, 0.8, 0.92) * 0.85 : vec3(1.0);
     vec3 light = ambient * tint * (0.7 + 0.3 * tops) * (0.25 + 0.75 * sunkBody) + uSunColour * (sunAt(mid) * sunkBody * phase * (0.2 + 0.8 * tops) * D.z);
     float gone = exp(-tau);
     colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
