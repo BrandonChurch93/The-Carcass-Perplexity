@@ -348,6 +348,8 @@ void main() {
   vec3 refl;
   // Three looks are for the wall. Where the lowest of them still passes over its top all three find the sky, which one look tells as well.
   bool drawnOut = spread > 0.0045 && uPlateTone.w < 1.5;
+  // Seen from the rim, the deep water inside the ring of mats: it comes in over the drop-off, in tongues, and has no edge.
+  float pool = rimEye * smoothstep(215.0, 130.0, shoalAt);
   if (drawnOut && uPlateTone.w > 0.5) {
     vec2 o = p.xz - uPlateAt.xz;
     float qa = max(dot(rd.xz, rd.xz), 1e-6);
@@ -377,6 +379,13 @@ void main() {
   } else {
     // A little of it is no more than a softer mirror.
     refl = farRadiance(p, rd, soft + log2(1.0 + spread * 420.0));
+  }
+  // Deep water gives back the high sky, not the glow along the rim: under the wall it mirrors, the pool is the blue of the sky overhead and of its own depth.
+  if (pool > 0.0) {
+    // What it holds of the wall stays the wall's. Past the top of the wall the look goes up into the sky, and there the deep shows its own blue.
+    vec3 high = skyRadiance(normalize(vec3(rd.x, 0.85, rd.z))) * vec3(0.3, 0.41, 0.62);
+    float skyInIt = smoothstep(0.118, 0.15, rd.y / max(length(rd.xz), 1e-4));
+    refl = mix(refl, high, pool * mix(0.2, 0.95, skyInIt));
   }
   // The face of the swell leans to the eye and looks up past the wall: it holds the open sky of the hour, and every small wave on it holds another part of it.
   if (skirt > 0.0) refl = mix(refl, skyRadiance(rd) * vec3(0.2, 0.24, 0.31), max(lifted, 0.85 * skirt) * smoothstep(0.06, 0.3, rd.y));
