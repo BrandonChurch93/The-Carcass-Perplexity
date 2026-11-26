@@ -89,12 +89,12 @@ export function create(ctx: Context): Piece {
   // On the rubble: each lies on the slope where it stopped, long side across the fall.
   for (let i = 0; i < 46; i++) {
     const k = rs.next();
-    const b = (112 + (rs.next() - 0.5) * 60) * RAD;
-    const r = lerp(rimRadius(b) + 1.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
+    const b = (108 + (rs.next() - 0.5) * 44) * RAD;
+    const r = lerp(rimRadius(b) - 4.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // A few great slabs and many lesser blocks.
-    const big = i < 6 ? 0.8 : rs.next() ** 2.2;
+    const big = i < 2 ? 0.8 : 0.6 * rs.next() ** 2.2;
     const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
     const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.3;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;

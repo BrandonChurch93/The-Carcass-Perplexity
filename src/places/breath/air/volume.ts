@@ -111,6 +111,18 @@ float column(vec3 p, vec2 foot, float wide, float head, float n) {
   float shape = core + 1.9 * (n - 0.5) * smoothstep(0.02, 0.3, core) - 0.3 * smoothstep(-3.0, 8.0, p.y);
   return smoothstep(0.4, 0.85, shape) * smoothstep(head, head - 6.0, p.y + 5.0 * (n - 0.5));
 }
+// Whether any of it can be at a place: asked first, with no picture read, so that a step out over the shelf costs nothing.
+bool vapourNear(vec3 p) {
+  float r = length(p.xz);
+  if (r < 28.0) return true;
+  float b = atan(p.x, -p.z);
+  float da = b + 1.2;
+  float way = exp(-da * da / 0.4);
+  float surge = uBreath.y * uShow.w;
+  float out0 = r - rimAt(b);
+  if (out0 < 0.7 + 7.0 * way + 5.0 * surge) return true;
+  return way >= 0.02 && p.y < 2.5 + (4.5 + 7.0 * surge) * way;
+}
 float vapourRho(vec3 p, float ground, float fine, float t) {
   float r = length(p.xz);
   float b = atan(p.x, -p.z);
@@ -207,7 +219,7 @@ void main() {
   // (nothing in it is smaller than two steps) that they do not band.
   vec2 middle = vec2(-9.0, -3.0);
   float drum = 47.0;
-  float roof = 12.0 + 10.0 * uBreath.y * uShow.w;
+  float roof = 9.5 + 10.0 * uBreath.y * uShow.w;
   if (uShow.z > 0.5) {
     float t0 = 0.0;
     float t1 = far;
@@ -237,6 +249,7 @@ void main() {
       for (int i = 0; i < ${STEPS}; i++) {
         float t = t0 + (float(i) + first) * dl;
         vec3 p = ro + rd * t;
+        if (!vapourNear(p)) continue;
         vec4 land = landAt(p.xz);
         float rho = vapourRho(p, land.r, 1.0, t);
         if (rho <= 0.0006) continue;
@@ -277,13 +290,14 @@ void main() {
       for (int i = 0; i < 4; i++) {
         float t = mix(m0, m1, (float(i) + 0.5) / 4.0);
         vec3 p = ro + rd * t;
+        vec4 land = landAt(p.xz);
+        // It lies where the ground is low and wet, and not in the shaft.
+        float lies = smoothstep(1.6, 0.2, land.r - (${SEA.toFixed(2)})) * smoothstep(-3.0, -1.0, land.r) * smoothstep(7.0, 22.0, t) * smoothstep(700.0, 250.0, t);
+        if (lies <= 0.0) continue;
         vec2 w = p.xz - WINDV * (2.6 * uTime);
         float bank = textureLod(tNoise, vec3(w / 83.0, 0.13 + 0.004 * uTime), 0.0).r;
         float torn = textureLod(tNoise, vec3(w / 19.0 + 0.4, 0.61 + 0.03 * uTime), 0.0).g;
-        vec4 land = landAt(p.xz);
-        // It lies where the ground is low and wet, and not in the shaft.
-        float lies = smoothstep(1.6, 0.2, land.r - (${SEA.toFixed(2)})) * smoothstep(-3.0, -1.0, land.r);
-        float rho = 0.02 * smoothstep(0.42, 0.72, 0.6 * bank + 0.4 * torn) * lies * smoothstep(7.0, 22.0, t) * smoothstep(700.0, 250.0, t) * smoothstep(0.0, 1.1, ya + 0.5 + 2.0 * bank * (0.5 + torn) - p.y);
+        float rho = 0.02 * smoothstep(0.42, 0.72, 0.6 * bank + 0.4 * torn) * lies * smoothstep(0.0, 1.1, ya + 0.5 + 2.0 * bank * (0.5 + torn) - p.y);
         tau += rho * (m1 - m0) / 4.0;
         sum += rho;
         sunny += rho * sunSeen(land, p.y) * sunCloud(p.xz);
