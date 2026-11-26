@@ -438,13 +438,13 @@ export function crownOf(list: Fronds, w: Wild, rng: Rng, fine: number, broad: nu
         az = rng.range(0, TAU);
         leave = Math.max(0.04, Math.abs(rng.normal()) * 0.4 + 0.5 * droop * Math.cos(az - turn));
         length = 0.6 * wide * tall * rng.range(0.55, 1.05);
-        fall = rng.range(0.7, 1.6) + 1.2 * leave;
+        fall = rng.range(1.1, 2.1) + 1.2 * leave;
       } else {
         // The fall of a head: straps that leave to one side, arch over and hang by their ends.
         az = turn + rng.normal() * 0.6;
         leave = Math.min(2.6, Math.max(0.15, 0.55 + droop * 0.7 + rng.normal() * 0.28));
         length = 0.72 * wide * rng.range(0.5, 1.0);
-        fall = rng.range(1.1, 2.3);
+        fall = rng.range(1.5, 2.8);
       }
       length *= 1 - ragged * rng.range(0, 0.6);
       const sp = spent > 0.5 ? spent : rng.next() < spent ? 1 : 0;
@@ -583,10 +583,14 @@ function instanced(base: THREE.BufferGeometry, count: number, attributes: Record
   return g;
 }
 
-/** What a mesh of straps is told: `dry` keeps it out of the brine's mirror, `wet` gives its straps the sheen of water. */
+/**
+ * What a mesh of straps is told: `dry` keeps it out of the brine's mirror, `wet` gives its straps the sheen of water, and `small` says its
+ * straps are too small on the picture to hide anything: it is drawn once, not a second time for depth alone.
+ */
 export interface FrondLook {
   dry?: boolean;
   wet?: number;
+  small?: boolean;
 }
 
 function frondGeometry(base: THREE.BufferGeometry, list: Fronds): THREE.InstancedBufferGeometry {
@@ -604,7 +608,7 @@ export function frondMesh(ctx: Context, u: GrowthUniforms, list: Fronds, segment
     fragmentShader: FROND_FRAGMENT,
     side: THREE.DoubleSide,
   });
-  material.userData.depthFragment = PLAIN_DEPTH;
+  if (!look.small) material.userData.depthFragment = PLAIN_DEPTH;
   const mesh = new THREE.Mesh(frondGeometry(strip(segments), list), material);
   mesh.frustumCulled = false;
   return mesh;
@@ -632,7 +636,7 @@ export function dropMesh(ctx: Context, u: GrowthUniforms, list: Fronds): THREE.M
  * The tubes of the stems: `lines` is what index.ts gives every line. `ledges` is 1 where the mesh is fine enough to carry the ledges of the nodes,
  * and 2 by the lens, where it carries the relief of the crust as well.
  */
-export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: Record<string, Float32Array>, rings: number, sides: number, ledges: number): THREE.Mesh {
+export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: Record<string, Float32Array>, rings: number, sides: number, ledges: number, small = false): THREE.Mesh {
   const material = new THREE.ShaderMaterial({
     uniforms: {
       ...ctx.rig.uniforms, ...u, uLedge: { value: ledges }, uCrowned: { value: 1 },
@@ -642,7 +646,7 @@ export function stemMesh(ctx: Context, u: GrowthUniforms, count: number, lines: 
     vertexShader: STEM_VERTEX,
     fragmentShader: STEM_FRAGMENT,
   });
-  material.userData.depthFragment = PLAIN_DEPTH;
+  if (!small) material.userData.depthFragment = PLAIN_DEPTH;
   const mesh = new THREE.Mesh(instanced(tube(rings, sides), count, lines), material);
   mesh.frustumCulled = false;
   return mesh;

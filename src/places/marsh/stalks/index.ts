@@ -373,8 +373,8 @@ export function create(ctx: Context): Piece {
       'marsh-04': (w) => Math.hypot(w.x - k3[0], w.z - k3[1]),
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
-    const fineOf = (d: number): number => (d < 9 ? 30 : d < 18 ? 20 : d < 36 ? 12 : d < 80 ? 7 : 4);
-    const broadOf = (d: number): number => (d < 18 ? 1 : d < 36 ? 1.3 : d < 80 ? 1.9 : 3);
+    const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 6 : 3);
+    const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.1 : d < 80 ? 1.9 : 3);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);
@@ -425,8 +425,8 @@ export function create(ctx: Context): Piece {
         const nearW = wilds.filter((w) => from(w) >= 7 && from(w) < 22);
         const farW = wilds.filter((w) => from(w) >= 22);
         const meshes = [
-          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 4),
-          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 8, 6, 0),
+          frondMesh(ctx, growth, nearF, 7, { wet: 0.5 }), frondMesh(ctx, growth, farF, 3, { small: true }),
+          stemMesh(ctx, growth, closeW.length, lines(closeW), 150, 24, 2), stemMesh(ctx, growth, nearW.length, lines(nearW), 24, 9, 1), stemMesh(ctx, growth, farW.length, lines(farW), 8, 6, 0, true),
         ];
         crowns[which] = meshes;
         group.add(...meshes);
@@ -443,13 +443,15 @@ export function create(ctx: Context): Piece {
       };
       const nearS = stands.stems.slice(0, stands.near).filter((w) => seen(w.x, w.z));
       const farS = stands.stems.slice(stands.near).filter((w) => seen(w.x, w.z));
-      wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 12, 6, 0), stemMesh(ctx, growth, farS.length, lines(farS), 5, 5, 0));
+      wide.add(stemMesh(ctx, growth, nearS.length, lines(nearS), 10, 6, 0, true), stemMesh(ctx, growth, farS.length, lines(farS), 4, 5, 0, true));
       const nearF = new Fronds();
+      const midF = new Fronds();
       const farF = new Fronds();
       const low = new Fronds();
+      const listOf = (d: number): Fronds => (d < 20 ? nearF : d < 38 ? midF : farF);
       const wideOf = lensOf['marsh-01'] ?? reach;
-      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
-      for (const w of stands.leaves) if (seen(w.x, w.z)) crownOf(wideOf(w) < 40 ? nearF : farF, w, fronds, fineOf(wideOf(w)) * 0.5, broadOf(wideOf(w)), true);
+      for (const w of stands.stems) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)), broadOf(wideOf(w)), false);
+      for (const w of stands.leaves) if (seen(w.x, w.z)) crownOf(listOf(wideOf(w)), w, fronds, fineOf(wideOf(w)) * 0.35, broadOf(wideOf(w)) * 1.2, true);
       // The understorey near the lens: each tuft a few straps from one foot.
       const t0 = stands.tufts[0] as number[];
       const t1 = stands.tufts[1] as number[];
@@ -470,10 +472,10 @@ export function create(ctx: Context): Piece {
         const z = m0[i * 4 + 2] as number;
         const d = distToSegment(x, z, eyeA, eyeB);
         if (d > 60 || !seen(x, z)) continue;
-        matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 55 : d < 40 ? 22 : 9, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3 : 4.5);
+        matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 55 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
       }
-      wide.add(frondMesh(ctx, growth, creep, 2, { dry: true }));
-      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, farF, 2, { dry: true }), frondMesh(ctx, growth, low, 2, { dry: true }), stands.group);
+      wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true }));
+      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true }), stands.group);
     }
     wideShade = stands.shade;
     group.add(wide);
@@ -500,6 +502,8 @@ export function create(ctx: Context): Piece {
         bowA: seed * 37, bowM: 0.03 + 0.17 * ((seed * 91.3) % 1), kinkT: 2, kinkM: 0, swayA: 0, swayM: 0, kinkA: 0, rate: own.range(0.8, 1.3),
         age: s.kind === 2 ? 2 : own.range(0.1, 0.5), stain: own.range(0.15, 0.4), uvo: 0, quiver: 0.6, fork: [0, 0, 0], collar: 0.5, cards: [], foot: true,
       };
+      // The head it carries when it is seen from the other shots: a heart that stands and a fall to the side the air has combed it.
+      if (s.kind !== 2) w.cards = s.kind === 1 ? [[want, 0.1, 0.3, 1.1, 0, 0, 0]] : [[want, 0.35, 0.42, 1.2, 0, 0.1, 0], [want, 0.5, 0.42, 0.2, 0, 0.1, 0]];
       closeW.push(w);
       if (s.kind === 2) continue;
       if (s.kind !== 1) perches.push(lineAt(w, 1));
@@ -579,7 +583,7 @@ export function create(ctx: Context): Piece {
       if (staged >= CRUST_SPAN[0] && staged <= CRUST_SPAN[1]) uGrove.value.set(0.4, 1.2);
       else uGrove.value.set(1, 1);
       const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
-      uHead.value = inWide ? 0.6 : 1;
+      uHead.value = inWide ? 0.8 : 1;
       wide.visible = inWide;
       // The heads made for the shot that is on: between shots, those of the one that is nearest in time.
       let on = 0;

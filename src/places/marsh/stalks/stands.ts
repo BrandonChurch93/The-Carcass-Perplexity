@@ -500,7 +500,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const loose = rng.next() < looseShare;
       // The loose ones trail off to one side more than to the others: a thin edge there, a clean one opposite.
       const a = loose && rng.next() < 0.65 ? tail + rng.normal() * 0.6 : rng.range(0, TAU);
-      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.08, 0.75);
+      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.12, 0.9) * (0.7 + 0.55 * s.r);
       const at = drawn([core[0] + Math.cos(a) * d, core[1] + Math.sin(a) * d]);
       const x = at[0];
       const z = at[1];
@@ -520,7 +520,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const bl = Math.max(1e-3, Math.hypot(bx, bz));
       const bend: [number, number] = [bx / bl, bz / bl];
       const w: Wild = {
-        x, y: ground - 0.05, z, h, dx: bend[0], dz: bend[1], lean: Math.min(dead ? 0.95 : 0.6, (dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.3) : rng.range(0.04, 0.42)) * leans), R,
+        x, y: ground - 0.05, z, h, dx: bend[0], dz: bend[1], lean: Math.min(dead ? 0.95 : 0.6, (dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.24) : rng.range(0.02, 0.24)) * leans), R,
         kind, phase: rng.range(0, TAU), low: 0, seed: rng.next(),
         bowA: rng.range(0, TAU), bowM: rng.range(0.03, 0.24), kinkT: kinks ? rng.range(0.25, 0.8) : 2, kinkM: kinks ? rng.range(0.12, 0.5) : 0,
         swayA: rng.range(0, TAU), swayM: rng.next() < 0.5 ? rng.range(0.02, 0.085) : rng.range(0, 0.02), kinkA: rng.range(0, TAU), rate: rng.range(0.7, 1.6) / Math.sqrt(Math.max(h, 0.6) / 2.5),
