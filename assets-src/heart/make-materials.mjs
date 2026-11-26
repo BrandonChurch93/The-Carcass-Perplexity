@@ -16,7 +16,8 @@ export const RECIPE = {
   heightSpread: 0.2,
   normalStrength: 2.2,
   jpegQuality: 92,
-  materials: ['crust-skin', 'pahoehoe', 'cliff', 'talus', 'sulphur', 'hide', 'flake', 'boulder'],
+  // The cliff is made by make-cliff.py from its own picture.
+  materials: ['crust-skin', 'pahoehoe', 'talus', 'sulphur', 'hide', 'flake', 'boulder'],
 };
 
 const smooth = (a, b, x) => {
