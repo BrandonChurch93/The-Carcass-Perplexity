@@ -478,10 +478,10 @@ export class Wader {
       // A heavy wet mop: cords of flesh, none much thicker than the next, that hang in locks.
       // One in seven is a finger of bare flesh, shorter and thicker than the cords round it.
       const finger = !far && hash(seed + n * 3.3) < 0.14;
-      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 12);
+      const clump = Math.floor(hash(seed * 3.1 + n * 0.37) * 8);
       const strand = {
-        angle: (clump / 12) * Math.PI * 2 + hash(seed + clump * 5.3) * 0.5 + (hash(seed + n * 1.7) - 0.5) * 0.3,
-        out: (0.15 + 0.85 * hash(seed + clump * 2.9)) * (0.8 + 0.4 * hash(seed + n * 2.9)),
+        angle: (clump / 8) * Math.PI * 2 + hash(seed + clump * 5.3) * 0.7 + (hash(seed + n * 1.7) - 0.5) * 0.2,
+        out: (0.15 + 0.85 * hash(seed + clump * 2.9)) * (0.87 + 0.26 * hash(seed + n * 2.9)),
         // The strands of one lock are nearly of a length: the lock ends in a wet point.
         len: b.tendrilLen * (0.4 + 0.75 * hash(seed * 1.3 + clump * 5.1) + 0.5 * hash(seed * 2.3 + n * 1.9) ** 6) * (0.72 + 0.28 * hash(seed * 1.3 + n * 5.1)) * (finger ? 0.5 : 1),
         stiff: 0.2 + 0.6 * hash(seed + n * 9.7),
@@ -491,7 +491,7 @@ export class Wader {
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.3 * hash(seed + n * 8.9) ** 1.15,
         floats: hash(seed + n * 7.3) < 0.34,
-        thick: far ? 1 : finger ? 1.6 : 0.55 + 0.45 * hash(seed + n * 12.7) ** 1.5,
+        thick: far ? 1 : finger ? 1.2 : 0.55 + 0.45 * hash(seed + n * 12.7) ** 1.5,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {

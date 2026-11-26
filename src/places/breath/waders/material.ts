@@ -259,15 +259,15 @@ void main() {
     vec3 rose = mix(vec3(0.46, 0.2, 0.2), vec3(0.62, 0.3, 0.3), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.7, u) * (0.5 + 0.4 * step(0.45, own)));
     // Out of the water it is dull grey flesh; one that keeps to the rock has a dry mop, red as the weed it eats.
-    albedo = mix(mix(albedo, vec3(0.4, 0.11, 0.1) * (0.8 + 0.5 * tone), 0.7 * smoothstep(0.05, 0.5, u)), albedo * vec3(0.66, 0.64, 0.66), soaked);
-    float weed = smoothstep(0.25, 0.62, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.3 + 0.7 * step(0.3, tone)) * mix(0.3, 1.0, soaked);
+    albedo = mix(mix(albedo, vec3(0.4, 0.11, 0.1) * (0.8 + 0.5 * tone), 0.7 * smoothstep(0.05, 0.5, u)), albedo * vec3(0.5, 0.47, 0.48), soaked);
+    float weed = smoothstep(0.25 - 0.17 * soaked, 0.62 - 0.14 * soaked, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.3 + 0.7 * step(0.3, tone)) * mix(0.3, 1.0, soaked);
     albedo = mix(albedo, mix(vec3(0.035, 0.04, 0.014), vec3(0.09, 0.085, 0.03), own), 0.94 * weed);
     rough = mix(rough, 0.9, weed);
     // Every lock ends dark: what is left of the weed and the blood in the tips.
     albedo *= 1.0 - 0.7 * smoothstep(0.6, 1.0, u);
     // A finger: the neck's own pale flesh, pinker down its length, raw and dark at the very end.
     vec3 fleshy = mix(vec3(0.86, 0.68, 0.63), vec3(0.72, 0.4, 0.37), smoothstep(0.1, 0.75, u)) * (0.85 + 0.3 * tone);
-    albedo = mix(albedo, mix(fleshy, vec3(0.3, 0.1, 0.08), smoothstep(0.75, 1.0, u)), finger);
+    albedo = mix(albedo, mix(fleshy * (1.0 - 0.5 * soaked), vec3(0.2, 0.08, 0.07), smoothstep(0.4, 1.0, u)), finger);
     // Far off the mop is one mass: no strand of it is seen for itself.
     albedo = mix(vec3(0.6, 0.3, 0.29), albedo, smoothstep(0.03, 0.008, px));
     wet = 0.6 + 0.4 * under;

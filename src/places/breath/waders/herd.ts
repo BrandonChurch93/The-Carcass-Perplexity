@@ -95,6 +95,11 @@ export function makeHerd(rng: Rng): Member[] {
     const way = WAYS[i] as [number, number, number, number, number];
     const plan: Plan = { ...planOf(a, UP[i] ?? [], rng), speed: way[0] * PACE, pauses: way[1], pauseMax: 2.6, carry: way[2], tuck: way[3], feedAt: way[4] };
     if (i === 1) plan.strideAt = STRIDE_AT;
+    // Staged: the one on the bank stands clear of the lens of the view in the channel, which drifts toward it.
+    if (i === 9) {
+      plan.x += 2.4;
+      plan.z += 0.65;
+    }
     herd.push({ build: makeBuild(a.size * 1.06, 11 + i * 7.31, false, i < 3 ? 0.0125 : 0.022, OWN[i] ?? {}), plan, near: true });
   });
   // The one at the rim: it stands with its weight on three legs and looks down the shaft, then lets its neck hang.
