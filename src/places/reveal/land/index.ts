@@ -164,14 +164,17 @@ void main() {
     coastKm = min(coastKm, mix(coastKm, (relief.b - 0.36 - 0.09 * strait) * 260.0 + (bake.g - 0.45) * 12.0, smoothstep(0.08, 0.3, strait)));
   }
   float shoreEdge = max(0.75 * pixelKm, 0.02);
+  // (A river is water the bake drew where the map has land. Where the bake is coarser than the picture a river's bank is taken
+  // soft over most of a texel of it, so a thin stream thins away and is never a row of dashes.)
+  float riverBed = smoothstep(0.3, 0.34, relief.b) * step(-12.0, coastKm) * (1.0 - smoothstep(0.08, 0.3, strait));
+  if (riverBed > 0.0) shoreEdge = mix(shoreEdge, max(shoreEdge, 0.7 * mix(uBakeKm.x, uBakeKm.y, inClose)), riverBed);
   float land = smoothstep(-shoreEdge, shoreEdge, coastKm);
   // (The waters the land shuts in are lakes: no surf on them and no pale shelf.)
   float shut = smoothstep(0.3, 0.7, bake.b);
   // (Where a river has built its delta out into the water the map has no ground to show: silt, and green on the older part of it.)
   float built = land * (1.0 - smoothstep(0.24, 0.31, relief.b));
   if (built > 0.0) ground = mix(ground, mix(vec3(0.2, 0.19, 0.1), vec3(0.42, 0.36, 0.22), smoothstep(0.35, 0.65, vnoise(xz / 6.0 + 2.0))), built);
-  // (A river is water the bake drew where the map has land.)
-  float river = (1.0 - land) * smoothstep(0.3, 0.34, relief.b) * step(-12.0, coastKm) * (1.0 - smoothstep(0.08, 0.3, strait));
+  float river = (1.0 - land) * riverBed;
   float drowned = 0.0;
   float height = clamp((relief.b - 0.3) / 0.7, 0.0, 1.0);
   // (The height of the country at large, its valleys and crests drawn together: what says range or lowland.)
