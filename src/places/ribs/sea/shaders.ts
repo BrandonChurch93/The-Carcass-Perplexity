@@ -630,6 +630,11 @@ export const SPRAY_OPENING_FRAGMENT = openingText(SPRAY_FRAGMENT, [
  */
 /** Metres the level comes up; how late in the loop a stretch may be, by its own time and by how near the establishing lens it lies. */
 const WASH = { rise: 0.12, late: 0.1, near: 0.14 };
+/**
+ * Once a loop one gust crosses the wet before the establishing lens: a ruffled dark stretch `long` metres deep that goes over a round of
+ * the flats `reach` metres wide about `at`, heading `way`. At the loop's first and last frames it is outside that round.
+ */
+const GUST = { at: [-172, 62] as const, way: [0.94, 0.34] as const, reach: 62, long: 36 };
 export const POOL_LOOP_FRAGMENT = (rings: number): string =>
   loopText(POOL_FRAGMENT(rings), [
     ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
@@ -652,6 +657,15 @@ export const POOL_LOOP_FRAGMENT = (rings: number): string =>
   float wetDepth = depth + ${f(WASH.rise)} * (washWet - wash);`,
     ],
     ['bool dry = depth < -film;', 'bool dry = wetDepth < -film;'],
+    [
+      '  float gust = 0.35 + 0.65 * paw;',
+      `  vec2 gustAt = p - vec2(${f(GUST.at[0])}, ${f(GUST.at[1])});
+  float gustAlong = dot(gustAt, vec2(${f(GUST.way[0])}, ${f(GUST.way[1])})) + 12.0 * (barA.r - 0.5) + ${f(GUST.reach)} - ${f(2 * GUST.reach + GUST.long)} * uLoop.y;
+  float gustOn = smoothstep(${f(-GUST.long)}, ${f(-0.62 * GUST.long)}, gustAlong) * (1.0 - smoothstep(${f(-0.25 * GUST.long)}, 0.0, gustAlong));
+  gustOn *= (1.0 - smoothstep(${f(0.62 * GUST.reach)}, ${f(GUST.reach - 2)}, length(gustAt))) * smoothstep(0.02, 0.08, uLoop.y) * (1.0 - smoothstep(0.92, 0.98, uLoop.y));
+  paw = max(paw, gustOn * (0.55 + 0.45 * barB.a));
+  float gust = 0.35 + 0.65 * paw;`,
+    ],
     ['smoothstep(-film, -0.004, depth);', 'smoothstep(-film, -0.004, wetDepth);'],
     [
       '  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);',
