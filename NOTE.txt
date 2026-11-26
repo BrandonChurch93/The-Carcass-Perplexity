@@ -1,5 +1,7 @@
-2026-11-26 01:54 UTC
-work at 05cc335 on agent/ribs-ground-2
-hb2 01:56Z: fin sheet on blades, ground plate, weed wall sheet, colony sheet, more air; ribs-0 compare and ribs-3 frame
-look-1.jpg = out/work/v/c0.jpg
-look-2.jpg = out/work/v/k3.jpg
+2026-11-26 02:18 UTC
+work at 7f534bb on agent/ribs-ground-2
+version 1 at 7f534bb, 02:19Z: uhd draft compares of ribs-0, ribs-3, ribs-1, ribs-4
+look-1.jpg = out/work/v/v1c-0.jpg
+look-2.jpg = out/work/v/v1c-3.jpg
+look-3.jpg = out/work/v/v1c-1.jpg
+look-4.jpg = out/work/v/v1c-4.jpg
