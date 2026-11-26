@@ -75,7 +75,8 @@ float hazeDepth(vec3 ro, vec3 rd, float t) {
   float span = max(abs(y1 - y0), 1e-3);
   float ka = uHaze.y * abs(exp(-y0 / uHaze.y) - exp(-y1 / uHaze.y)) / span;
   float kb = uHaze.w * abs(exp(-y0 / uHaze.w) - exp(-y1 / uHaze.w)) / span;
-  return t * (uHaze.x * ka + uHaze.z * kb);
+  // The low layer is the damp of the flats: past a kilometre and a half it counts a quarter, or the far cliff's foot is lost in a level band.
+  return t * uHaze.x * ka + (min(t, 1500.0) + 0.25 * max(t - 1500.0, 0.0)) * uHaze.z * kb;
 }
 
 float bumpAt(float b, float centre, float width) {
@@ -154,7 +155,7 @@ float shaftRho(vec3 p, float hy, float out0, float way, vec3 n, out float under)
   // It wells up on the west and is thin on the east, where the wall and the arches stand clear of it.
   rho *= mix(0.1, 1.15, smoothstep(4.0, -14.0, p.x));
   // Over the brim it is in the wind and thins as it climbs: wisps, and at the breath a body.
-  rho *= exp(-max(p.y, 0.0) / (8.0 + 14.0 * surge));
+  rho *= exp(-max(p.y, 0.0) / (8.0 + 7.0 * wells + 14.0 * surge));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
   return rho * smoothstep(0.8, -1.5, out0 - smoothstep(-1.0, 3.0, p.y) * (8.0 * way + 5.0 * surge));
 }
@@ -409,7 +410,7 @@ void main() {
     float span;
     if (!bodyAt(i, ro, rd, far, thick, at, sunward, mid, qa, qb, span)) continue;
     vec4 C = uBodyC[i];
-    if (D.x < 0.5 && uBodyB[i].y > 5.0) {
+    if (D.x < 0.5 && uBodyB[i].y > 1.2) {
       // The plume of a smaller shaft is not one reading at its middle (that was a pale disc that kept its face to the lens): the ray
       // is cut at five places in it. At each the plume has its own lumps, climbing, so they pass one another as the lens moves; it is
       // thick and broad at its foot and thins as it climbs, torn more the higher, and its axis stands up from the vent and bends over
@@ -425,7 +426,7 @@ void main() {
       done = max(done, here);
       float sunHere = sunCloud(mid.xz);
       // Near the lens the five cuts would show as shells: there each pixel takes them a little apart.
-      float cut = 0.3 * smoothstep(400.0, 80.0, at) * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+      float cut = 0.12 * smoothstep(400.0, 80.0, at) * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
       for (int k = 0; k < 5; k++) {
         float f = (float(k) + fract(0.5 + cut + float(uSampleIndex) * 0.6180339)) / 5.0;
         vec3 qn = mix(qa, qb, f);
@@ -445,7 +446,7 @@ void main() {
         float fineN = textureLod(tNoise, q * 0.85 + 0.37, 0.0).b;
         float lumps = 0.6 * n0.r + 0.2 * fineN + 0.3 * n0.g;
         float open = (0.35 + 1.0 * C.w) * (0.8 + 0.8 * up);
-        float body = smoothstep(0.0, 0.17, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.12, m);
+        float body = smoothstep(0.0, 0.22, m - open * (2.15 - 2.9 * lumps)) * smoothstep(0.0, 0.12, m);
         float rho = uBodyB[i].w * mix(2.4, 0.5, smoothstep(0.1, 0.95, up)) * body;
         float tau = rho * span / 5.0;
         if (tau <= 0.0005) continue;
