@@ -1,7 +1,7 @@
-2026-11-26 07:48 UTC
-work at 6e3b561 on agent/spine-storm-3
-heartbeat 6: ribbons long in spine-2, bolt core whole, herd pale, ground cd9546e merged
-look-1.jpg = out/work/compare/spine-3.png
-look-2.jpg = out/work/compare/spine-2.png
-look-3.jpg = out/work/compare/spine-4.png
-look-4.jpg = out/work/compare/spine-0.png
+2026-11-26 08:23 UTC
+work at 64761a0 on agent/spine-storm-3
+version 3: final tier keys spine-3, spine-2, spine-4, spine-0
+look-1.jpg = out/work/final-7668.jpg
+look-2.jpg = out/work/final-7418.jpg
+look-3.jpg = out/work/final-8090.jpg
+look-4.jpg = out/work/final-7234.jpg
