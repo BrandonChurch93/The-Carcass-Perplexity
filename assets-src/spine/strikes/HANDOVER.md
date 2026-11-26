@@ -53,7 +53,7 @@ Sky, cloud sea, far spires, the glow inside the cloud and the struck spire's roc
 `npm run -s cost -- --key KEY --format uhd --tier draft --parts tether-kites ridge-runners strike-N`, one sample.
 - spine-0 (7234): kites 0.49, strike 0.27, runners 0.00. spine-2 (7418): kites 1.93 (2.45 received), runners 0.10.
 - spine-3 (7668): strike 1.03 (bloom card and the worn channel), kites 0.19. spine-4 (8090): runners 2.53 (4.75 at my version 2), kites 0.12.
-- spine-1 (7579): runners SPINE1, kites 0.06.
+- spine-1 (7579): runners 3.14 (3.50 on 1700 clumps), kites 0.07.
 - Saved in runners: locks facing away from the lens not drawn, one light call per lock vertex inside, 420 clumps for 520 in the herd and 1400 for 1700 on the dead one, one laying of the hide picture inside, no second light call for a dry coat.
 - My share is 2 of the place's 7: spine-4 and spine-1 are over it.
 Checks at the last commit: tsc clean, build, `determinism: pass`, gate G10 pass, measures green at draft.
