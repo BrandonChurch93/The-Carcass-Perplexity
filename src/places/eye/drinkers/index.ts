@@ -110,15 +110,15 @@ void main() {
   }
   // Each a tone of its own.
   skin *= mix(vec3(0.86, 0.85, 0.84), vec3(1.08, 1.04, 1.0), fract(own * 7.3));
-  // In the shade of the evening the hide is tan going to brown, as the herd beside it is.
-  if (uShade.w > 0.1) skin = mix(skin, vec3(0.41, 0.31, 0.235) * (0.5 + 1.25 * dot(skin, vec3(0.3, 0.5, 0.2))), 0.9);
+  // The picture was taken in a warm light of its own: some of that is taken out, and the hide is as pale as the cards beside it.
+  skin = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), 0.25) * vec3(1.42, 1.5, 1.58), 0.95);
   skin *= mix(vec3(0.8, 0.75, 0.71), vec3(1.0), vShade.y);
   // The sky lights its back and leaves its belly and the inside of its legs in its own shade.
-  skin *= mix(0.62, 1.06, smoothstep(-0.55, 0.75, n.y + 0.25 * (blotch - 0.5)));
+  skin *= mix(0.75, 1.06, smoothstep(-0.55, 0.75, n.y + 0.25 * (blotch - 0.5)));
   float above = (vWorld.y - max(uOwn.z, 0.0)) / uOwn.y;
   float ragged = vnoise(vRest.xy * 9.0 + vRest.z * 5.0);
   // Wet and dark below, where it has stood in the lake, and flecked with the mud it kicked up; dry above. The horn of the hoof is dark.
-  skin *= mix(0.8, 1.05, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
+  skin *= mix(0.9, 1.03, smoothstep(1.15, 2.2, above + 0.3 * (blotch - 0.5)));
   float wet = 1.0 - smoothstep(0.3, 0.8, above + 0.3 * ragged);
   // Its legs are dark with the mud and the water of the shore, to above the knee.
   skin *= mix(0.45, 1.0, smoothstep(0.5, 1.0, above + 0.3 * ragged));
@@ -126,11 +126,11 @@ void main() {
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
   vec3 albedo = mix(skin * mix(1.0, 0.45, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
-  float occ = mix(0.45, 1.0, vShade.x);
+  float occ = mix(0.7, 1.0, vShade.x);
   vec3 p = vec3(vWorld.x, vWorld.y + 3.2, vWorld.z);
   vec3 c = rigShade(p, n, v, albedo, mix(0.82, 0.5, wet), occ);
   // The pale gravel and the water under it throw the sky back up at it.
-  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.13 / 3.14159) * (0.5 - 0.5 * n.y);
+  c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 / 3.14159) * (0.75 - 0.25 * n.y);
   // The wet of the leg takes the sun as a film of water does.
   if (wet > 0.01) c += wet * rigGlint(p, n, v, 0.16);
   gl_FragColor = vec4(rigOut(c), 1.0);
