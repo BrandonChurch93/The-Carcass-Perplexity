@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, VEIN, bearingDir } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, VEIN, bearingDir, rel } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -14,7 +14,7 @@ export const PARTS = ['sky', 'air', 'rain', 'steam'] as const;
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
   // The rain: middle bearing and half width in radians, distance in metres, thickness.
-  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.9);
+  const rain = new THREE.Vector4(61 * DEG, 17 * DEG, 2600, 0.6);
   const sky = createSky(ctx, noise, rain);
   ctx.scene.add(ctx.parts.built('sky', sky.dome));
   ctx.parts.effect('air', 'built');
@@ -80,6 +80,7 @@ export function create(ctx: Context): Piece {
       uRain: { value: rain },
       uMistCount: { value: 6 },
       uMist: { value: mist },
+      uClear: { value: new THREE.Vector3(rel(34, 3.5)[0], rel(34, 3.5)[1], 12) },
     },
     defines: SHEETS ? { SHEETS: 1 } : {},
     depthTest: false,

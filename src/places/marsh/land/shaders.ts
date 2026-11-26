@@ -234,6 +234,13 @@ void main() {
     vec3 mudCol = mix(silt, pc, plateSeen);
     // Close to the lens the silt's own grain is on the plate's mud, which is soft in the picture.
     slab = smoothstep(0.5, 0.62, h0 + (mid.b - 0.5) * 0.2) * plateSeen;
+    // The wallow (painted into the fine patch): its mud is lower, wetter and darker than any other, and the slabs tipped round it are whole.
+    float inCrust = smoothstep(0.0, 0.5, f.g);
+    float sunk = vPaint.x * inCrust;
+    float tipped = vPaint.y * inCrust;
+    slab = max(slab * (1.0 - sunk), tipped);
+    h0 = mix(mix(h0, 0.42 * h0 + 0.1, sunk), max(h0, 0.66), tipped);
+    mudCol *= mix(vec3(1.0), vec3(0.5, 0.36, 0.33), sunk);
     if (close > 0.0) {
       vec4 nS2 = texture2D(tSiltN, p.xz / 0.7 + 0.31);
       mudCol *= mix(vec3(1.0), 0.6 + 0.4 * texture2D(tSilt, p.xz / 0.7 + 0.31).rgb / vec3(0.32, 0.281, 0.257), close * (1.0 - slab));
@@ -304,6 +311,16 @@ void main() {
 
   // At the lens a plate is softer than the eye: the grain of a hand's breadth is laid over it, granular salt on what is dry and high, the
   // silt's pits and ripple marks on the mud.
+  // A face too steep for a picture laid on from above shows the crust's own section: salt in thin beds, stained between them.
+  vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+  float sheer = smoothstep(0.62, 0.38, abs(gn.y)) * (1.0 - rock) * smoothstep(40.0, 15.0, dist) * step(0.0, s);
+  if (sheer > 0.0) {
+    vec4 gb = texture2D(tGrain, vec2(dot(p.xz, vec2(0.7, 0.71)) / 0.9, p.y / 0.11));
+    vec3 section = mix(vec3(0.3, 0.13, 0.11), vec3(0.6, 0.55, 0.51), smoothstep(0.35, 0.65, gb.r)) * (0.7 + 0.5 * gb.g);
+    colour = mix(colour, section, sheer);
+    bend *= 1.0 - sheer;
+    occ *= 1.0 - 0.2 * sheer;
+  }
   // The bank the third lens lies on is salt thrown up by the pool: it stands dry over the level and is knobbed all over.
   float bankDry = smoothstep(8.5, 5.0, length(p.xz - vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
   if (close > 0.0) {
