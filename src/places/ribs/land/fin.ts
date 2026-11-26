@@ -131,3 +131,58 @@ void main() {
   lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
+
+// A stack of the gate, drawn from the Builder's own stack (land/stack-a.jpg, stack-b.jpg: 70 m of dark wet rock, its lower half hung with
+// olive weed), laid round the pillar by (way round, height), mirrored where it meets itself; its seam is turned from the lens. Above the
+// 70 m of the picture its upper rock goes on, to and fro.
+export const STACK_FRAGMENT = /* glsl */ `
+precision highp float;
+varying vec3 vWorld;
+varying vec3 vNormal;
+${RIG_GLSL}
+${NOISE_GLSL}
+uniform sampler2D tStack;
+uniform sampler2D tStackN;
+uniform sampler2D tRock;
+uniform sampler2D tWeed;
+uniform vec4 uStack;
+void main() {
+  vec3 n0 = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec2 d = vWorld.xz - uStack.xy;
+  float arc = atan(d.x, d.y) * uStack.z;
+  float y = vWorld.y + 3.0 * (vnoise(vec2(arc / 23.0, 1.5)) - 0.5);
+  float over = max(y - 60.0, 0.0) / 24.0;
+  float vv = y < 60.0 ? 0.03 + y / 70.0 : 0.887 - 0.34 * abs(fract(over * 0.5) * 2.0 - 1.0);
+  vec2 uc = vec2(arc / uStack.w, vv);
+  vec2 flat0 = vec2(arc / uStack.w, vWorld.y / 70.0);
+  vec2 size = vec2(textureSize(tStack, 0));
+  float lv = log2(max(max(length(dFdx(flat0) * size), length(dFdy(flat0) * size)), 1e-6));
+  float mirror = 1.0 - 2.0 * mod(floor(uc.x), 2.0);
+  vec3 pic = textureLod(tStack, uc, lv).rgb;
+  vec3 nhp = textureLod(tStackN, uc, lv).rgb;
+  vec2 ud = vec2(arc, vWorld.y) / 3.0;
+  vec2 sized = vec2(textureSize(tRock, 0));
+  vec3 det = textureLod(tRock, ud, log2(max(max(length(dFdx(ud) * sized), length(dFdy(ud) * sized)), 1e-6))).rgb;
+  float grain = dot(det, vec3(3.8));
+  vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
+  vec3 rise = normalize(cross(n0, round0));
+  vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
+  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 1.8);
+  float macro = vnoise(vec2(arc, vWorld.y) * 0.05) * 0.6 + vnoise(vec2(arc, vWorld.y) * 0.17 + 5.0) * 0.4;
+  // The weed of the picture is wet and takes the sky; the rock over it is damp and dull.
+  float weedy = smoothstep(0.02, 0.1, pic.r - pic.b) * smoothstep(48.0, 36.0, vWorld.y);
+  // Close to, the picture is soft: the hanks of the weed tile and the grain of the rock tile are drawn into it.
+  vec2 uw = vec2(arc, vWorld.y) / 5.0;
+  float hank = dot(textureLod(tWeed, uw, log2(max(max(length(dFdx(uw) * 1024.0), length(dFdy(uw) * 1024.0)), 1e-6))).rgb, vec3(2.4));
+  vec3 albedo = pic * 0.9 * mix(mix(1.0, grain, 0.6), clamp(hank, 0.3, 2.0), 0.85 * weedy) * (0.85 + 0.3 * macro);
+  float rough = mix(0.8, 0.42, weedy);
+  float occ = 0.55 + 0.45 * smoothstep(0.25, 0.6, nhp.z);
+  vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
+  vec3 fill = albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.5 * uSunColour * cloudShade(vWorld)) * (0.2 / 3.14159) * (0.7 + 0.3 * occ);
+  lit = max(lit, fill);
+  float rim = 1.0 - max(dot(n, v), 0.0);
+  float back = max(dot(-v, uSunDir), 0.0);
+  lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  gl_FragColor = vec4(rigOut(lit), 1.0);
+}`;

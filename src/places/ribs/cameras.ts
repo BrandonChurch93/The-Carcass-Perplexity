@@ -26,10 +26,11 @@ const COLONY_SIDE: [number, number] = [-0.8, 0.6];
 // Between two ledges (they stand every 2.1 m): a ledge seen along its own top is a row of bars.
 const COLONY_HEIGHT = 45.2;
 const colonyReach = buttressRadius(COLONY_HEIGHT) + 22;
-const colony = looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36);
+// The four close keys are seen through a lens of a real width: the focus in metres, the radius of the lens in metres.
+const colony: Pose = { ...looking([BUTTRESS.x + COLONY_SIDE[0] * colonyReach, COLONY_HEIGHT, BUTTRESS.z + COLONY_SIDE[1] * colonyReach], 35, 15, 36), focus: 30, aperture: 0.04 };
 const FEEDING_YAW = 10;
-const feeding = looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20);
-const gate = looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170);
+const feeding: Pose = { ...looking(onGround(-60, -420, 1.5), FEEDING_YAW, -3, 20), focus: 22, aperture: 0.02 };
+const gate: Pose = { ...looking(onGround(GATE_X, GATE_Z + 170, 0.9), 0, 5, 40, 170), focus: 60, aperture: 0.04 };
 
 function drownedPose(): Pose {
   const rib = ribByName('L1');
@@ -41,7 +42,7 @@ function drownedPose(): Pose {
   const target: Vec3 = [hang.x, hang.y - 3.5, hang.z];
   const position = add(add(target, scale(north, -15)), scale(out, 10));
   const aim = add(add(position, scale(north, 52)), add(scale(out, -19), [0, 1.8, 0]));
-  return { position, aim, fov: 35 };
+  return { position, aim, fov: 35, focus: 18, aperture: 0.03 };
 }
 
 const drowned = drownedPose();

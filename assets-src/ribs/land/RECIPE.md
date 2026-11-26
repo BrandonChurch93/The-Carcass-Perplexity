@@ -47,3 +47,28 @@ Slopes and height of `mat/wall-h.png` (the hanging weed wall), in the same conve
 
 Slopes and height of `mat/colony-h.png` (the stepped roost cliff), 1024 square, in the same convention. Made by
 `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/nearbar-nh.png
+
+Slopes and height of `mat/nearbar-h.png` (the 12 m by 12 m plate of stones, grit and cast weed under the wide lens), 1024 by 1024, in the
+same convention as the other plates. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/stack-a.jpg
+
+The Builder's `public/assets/ribs/mat/stack-a.jpg` (a 70 m stack hung with weed) drawn out to one upright sheet, 768 by 1536, foot at the
+bottom: each row stretched from the stack's own outline (`mat/stack-a-a.png`) to the full width. Made by
+`python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/stack-a-nh.png
+
+The relief of the same sheet from `mat/stack-a-h.png`, drawn out the same way, its broad swell taken out: slope x, slope y, height, in
+the convention of the other sheets. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/stack-b.jpg
+
+The Builder's `public/assets/ribs/mat/stack-b.jpg` (the second stack of the gate) drawn out to one upright sheet, 768 by 1536, like
+`stack-a.jpg`. Made by `python3 assets-src/ribs/land/make-sheets.py`.
+
+## public/assets/ribs/land/stack-b-nh.png
+
+The relief of that sheet from `mat/stack-b-h.png`: slope x, slope y, height. Made by `python3 assets-src/ribs/land/make-sheets.py`.

@@ -67,3 +67,40 @@ print('fin', top, bottom, 'weed line at', 'see picture')
 slopes(grey('plate-h.png'), 5.0, (1280, 720), 1.6).save(OUT + 'plate-nh.png')
 slopes(grey('wall-h.png'), 5.0, (1024, 1024), 1.6).save(OUT + 'wall-nh.png')
 slopes(grey('colony-h.png'), 5.0, (1024, 1024), 1.6).save(OUT + 'colony-nh.png')
+# The bar under the wide lens: slope and height of the Builder's 12 m plate of stones.
+slopes(grey('nearbar-h.png'), 6.0, (1024, 1024), 1.2).save(OUT + 'nearbar-nh.png')
+
+
+def sheet(name, out, size, strength):
+    """A thing photographed against nothing, drawn out to an upright sheet: each row stretched from its own outline to the full width."""
+    cov = grey(name + '-a.png')
+    col = np.asarray(Image.open(MAT + name + '.jpg').convert('RGB'), dtype=np.float32) / 255
+    rel = grey(name + '-h.png')
+    hh = cov.shape[0]
+    rws = np.where((cov > 0.5).sum(axis=1) > 24)[0]
+    t, b = rws[0], rws[-1]
+    lo2 = np.zeros(hh)
+    hi2 = np.zeros(hh)
+    for yy2 in range(t, b + 1):
+        xs2 = np.where(cov[yy2] > 0.5)[0]
+        lo2[yy2], hi2[yy2] = xs2[0] + 3, xs2[-1] - 3
+    md = (lo2 + hi2) / 2
+    hf = np.maximum((hi2 - lo2) / 2, 12)
+    md[t:b + 1] = gaussian_filter(md[t:b + 1], 40)
+    hf[t:b + 1] = gaussian_filter(hf[t:b + 1], 40)
+    sw, sh = size
+    vv = np.linspace(t + 2, b - 2, sh)
+    uu = np.linspace(-0.94, 0.94, sw)
+    xx2 = np.interp(vv, np.arange(hh), md)[:, None] + np.interp(vv, np.arange(hh), hf)[:, None] * uu[None, :]
+    yy3 = np.repeat(vv[:, None], sw, axis=1)
+    c = np.stack([map_coordinates(col[..., k], [yy3, xx2], order=1, mode='nearest') for k in range(3)], axis=-1)
+    Image.fromarray((np.clip(c, 0, 1) * 255 + 0.5).astype(np.uint8)).save(OUT + out + '.jpg', quality=90)
+    r = map_coordinates(rel, [yy3, xx2], order=1, mode='nearest')
+    r = r - gaussian_filter(r, (50, 70)) + 0.5
+    r = np.clip(0.5 + (r - 0.5) * 2.0, 0, 1)
+    slopes(r, strength, size, 2.0).save(OUT + out + '-nh.png')
+
+
+# The two stacks of the gate, each from its own picture.
+sheet('stack-a', 'stack-a', (768, 1536), 6.0)
+sheet('stack-b', 'stack-b', (768, 1536), 6.0)
