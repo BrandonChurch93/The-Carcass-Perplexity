@@ -1,0 +1,28 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R6",
+  "family": "gpt",
+  "answered": "2026-11-26 12:16 UTC",
+  "answer": {
+    "critic": "R6",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the fog above the horizon and the shapes cut off by the top edge",
+        "what": "the birds and waves read immediately, but the giant curved forms are so washed out that the first glance reads as an ordinary foggy seascape",
+        "fix": "show one unmistakable curved silhouette against the sky from frame one, while keeping the rest in the fog for the reveal"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the base of the giant forms at the waterline",
+        "what": "the fog clears enough to reveal a striking row of spires, but their bases still merge into a gray band, so the reveal never quite establishes their scale against the sea",
+        "fix": "let the fog part around one base and reveal a distinct burst of spray where it meets the water"
+      }
+    ]
+  }
+}
