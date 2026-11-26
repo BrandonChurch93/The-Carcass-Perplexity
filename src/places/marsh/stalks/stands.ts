@@ -432,7 +432,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
         anchor.cards.push([turn + (c / cards) * TAU + rng.range(-0.5, 0.5), under ? rng.range(2.1, 2.9) : rng.range(2.5, 3.3), (under ? rng.range(0.55, 0.9) : rng.range(0.3, 0.55)) * headFor(w.h), (rng.next() < 0.75 ? 1 : 0) + rng.range(0.1, 0.45), rng.next(), rng.range(0.4, 0.95), spent, rng.range(-0.03, 0.03)]);
       }
       // Most of what hung down the stems is gone: a stalk is a bare pale line with its head at the top, and a rag of last year's here and there.
-      if (!under && k % 3 !== 0) continue;
+      if (!under && k % 6 !== 0) continue;
       leaves.push(anchor);
     }
   };
