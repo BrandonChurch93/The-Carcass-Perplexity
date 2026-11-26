@@ -159,6 +159,9 @@ float seaTop(vec3 p, bool fine) {
   // the ridge is a knife out of cloud, and its flanks go down into it.
   float bank = smoothstep(900.0, 120.0, abs(lee));
   float top = ridge.y - CLOUD_UNDER + 360.0 * (n - 0.5) + 70.0 * bank;
+  // Beside the ridge no billow stands over the crest: a head that rolled up there stood as a dark hill before the spires for a quarter
+  // of a second. Farther out the deck may heap as it likes.
+  top = min(top, ridge.y - 28.0 + 0.2 * max(abs(lee) - 200.0, 0.0));
   if (ridge.z > 0.01 && lee > -700.0 && lee < 1500.0) {
     vec3 c = p - uWind.xyz * (uTime * uWind.w);
     float m = 0.45 * noise(vec3(c.xz / 520.0, 0.37)).r + 0.2 * noise(vec3(c.xz / 140.0, 0.81)).b + 0.35 * textureLod(tSeaNh, c.xz / 1300.0 + 0.11, seaLod).b;
