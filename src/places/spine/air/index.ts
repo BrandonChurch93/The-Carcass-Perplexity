@@ -134,10 +134,10 @@ export function create(ctx: Context): Piece {
       // Staged by shot: inside the canal the gale does not reach, so no spindrift runs over its floor.
       stage.x = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
       // Staged by shot: the veil is thinner for the long lens of the strike (spine-04), which looks through 900 m of it, and inside the canal;
-      // the flakes before the lens do not fly inside the canal; by the dead one (spine-03) the running snow is held off 10 m round it.
+      // the flakes before the lens do not fly inside the canal; by the dead one (spine-03) the running snow is held off 10 m round it and the veil is a fifth, so the spire behind keeps its rock.
       const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
       const inCarcass = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4;
-      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.36 : 1;
+      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.36 : inCarcass ? 0.22 : 1;
       stage.z = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
       clear.z = inCarcass ? 3.5 : 0;
       // Staged by shot: by the dead one (spine-03) scud races low past the spires.
