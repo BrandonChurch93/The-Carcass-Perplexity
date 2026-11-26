@@ -258,6 +258,19 @@ export function createField(): Field {
       near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
     }
   }
+  // A low bank of mud the young one stands on, its top just over the brine.
+  const young = rel(33, 5);
+  for (let j = 0; j < near.n; j++) {
+    const z = -near.half + (j + 0.5) * near.cell;
+    if (Math.abs(z - young[1]) > 3) continue;
+    for (let i = 0; i < near.n; i++) {
+      const x = -near.half + (i + 0.5) * near.cell;
+      if (Math.abs(x - young[0]) > 3) continue;
+      const k = j * near.n + i;
+      const want = 1.2 - Math.hypot(x - young[0], z - young[1]) + 0.5 * (fbm(x / 1.1 + 5, z / 1.1, 2) - 0.5);
+      if (want > (near.d[k] as number)) near.d[k] = Math.min(want, 0.9);
+    }
+  }
   ragged(far, false);
 
   const shore = (x: number, z: number): number => {
