@@ -214,8 +214,8 @@ void main() {
   vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
   // The picture's own colour, about its mean: its wrinkles, its stains of violet and brown.
   vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
-  vec3 c = (1.0 * behind + 0.6 * held) * mix(vec3(1.0), stain, 0.35) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
-  c *= 1.0 - 0.5 * (1.0 - smoothstep(0.2, 0.55, tone));
+  vec3 c = (1.0 * behind + 0.6 * held) * mix(vec3(1.0), stain, 0.2) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
+  c *= 1.0 - 0.25 * (1.0 - smoothstep(0.2, 0.55, tone));
   // Its veins: a dark line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
   float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
   float branch = (1.0 - smoothstep(0.02, 0.06, abs(fract(vv) - 0.5))) * (1.0 - 0.6 * abs(vb));
@@ -229,7 +229,7 @@ void main() {
   r.y = abs(r.y) + 0.05;
   vec3 mirror = skyRadiance(normalize(r));
   float glint = smoothstep(0.75, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
-  c += mirror * (0.15 * fres + 0.5 * glint * (0.3 + 0.7 * fres));
+  c += mirror * (0.15 * fres + 0.2 * glint * (0.3 + 0.7 * fres));
   // A wet sheen along the edge that leads.
   float lead = smoothstep(0.72, 0.93, vb * flip) * (1.0 - torn);
   c += mirror * 0.3 * lead;
@@ -323,13 +323,13 @@ export function create(ctx: Context): Piece {
         ribbons.push({
           anchor,
           length,
-          width: near ? (i === 0 ? rng.range(8.5, 12) : rng.range(3, 5.5)) : rng.range(10, 15) * (i === 0 ? 1 : 0.75),
+          width: near ? (i === 0 ? rng.range(6, 8.5) : rng.range(3, 5.5)) : rng.range(10, 15) * (i === 0 ? 1 : 0.75),
           phase: rng.range(0, 6.28),
           wave: length / rng.range(2.2, 4.2),
           sag: n === FIRST + 2 ? rng.range(0.06, 0.16) : rng.range(0.01, 0.06),
           seed: rng.next(),
           spire: n - FIRST + 1,
-          stalk: rng.range(14, 30) * (near ? 1 : 1.6) / length,
+          stalk: rng.range(14, 30) * (near ? 0.4 : 1.6) / length,
         });
       }
     }
