@@ -169,6 +169,7 @@ void main() {
     drowned = flood;
     coastKm = mix(coastKm, min(coastKm, -45.0 * west), flood);
     land *= 1.0 - flood;
+    river *= 1.0 - flood;
     // (The drowned ground shows as a soft shelf under the water near the body, and is gone farther out: no line round it.)
     shallow *= 1.0 - 0.94 * west;
     shelf = flood * (1.0 - smoothstep(0.0, 0.7, west)) * smoothstep(-1.2, 0.0, stand - 3.0 * west);
@@ -495,7 +496,7 @@ void main() {
   }
   if (uDusk > 0.0) sunTan = max(sunH, 0.0) / sqrt(max(1.0 - sunH * sunH, 1e-3));
   float thrown = smoothstep(castKm - 0.08 - 0.3 * sunTan, castKm + 0.04 + 0.2 * sunTan, sunTan);
-  shade *= mix(1.0, thrown, smoothstep(60.0, 160.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome));
+  shade *= mix(1.0, thrown, smoothstep(60.0, 160.0, uViewKm) * mix(0.62, 0.85, smoothstep(700.0, 1300.0, uViewKm)) * (1.0 - 0.5 * dome) * smoothstep(-1.5, 0.5, coastKm));
   // (The shadows the cloud threw were the sun's: they go with it.)
   if (uDusk > 0.0) shade = mix(shade, 1.0, min(1.0, 1.7 * uEmber.x));
   float mu = limbCos(xz);
@@ -616,7 +617,8 @@ void main() {
   // The shelf: the water is pale over the ground that runs out under it from the shore, a few km here and tens of km there, and the
   // rivers (which the bake draws as water) lie shallow in their beds.
   float shelfLen = mix(6.0, 55.0, smoothstep(0.25, 0.75, texture2D(uCloudTile, xz / 620.0 + vec2(0.71, 0.13), 2.0).r));
-  float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(60.0, 160.0, uViewKm);
+  // (Not over the drowned ground west of the skull, which has its own shelf below: its low islands would show as spots.)
+  float onShelf = exp(min(coastKm, 0.0) / shelfLen) * (1.0 - land) * smoothstep(60.0, 160.0, uViewKm) * (1.0 - smoothstep(0.0, 0.22, west));
   bed = mix(bed, mix(vec3(0.006, 0.04, 0.052), vec3(0.03, 0.105, 0.1), onShelf * onShelf), 0.75 * onShelf);
   // (A river carries the country's silt: brown green water, dark beside its banks, paler where it runs wide toward its mouth.)
   bed = mix(bed, mix(vec3(0.012, 0.026, 0.024), vec3(0.06, 0.05, 0.026), smoothstep(-0.2, -2.5, coastKm) * (0.4 + 0.6 * vnoise(xz / 14.0))), 0.9 * river);
@@ -629,7 +631,7 @@ void main() {
   // (From orbit the waters inside the skull lie dark: its sockets.)
   bed = mix(bed, DEEP, 0.8 * (1.0 - smoothstep(0.85, 1.15, length(inSkull))) * smoothstep(600.0, 1100.0, uViewKm));
   // (The drowned shelf west of the skull: teal over pale ground, deepening away from the coast.)
-  bed = mix(bed, vec3(0.01, 0.06, 0.07) * (0.5 + 1.2 * lum), 0.88 * shelf);
+  bed = mix(bed, vec3(0.01, 0.06, 0.07) * (0.55 + 0.75 * shelf), 0.88 * shelf);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.3, 0.06, 0.02), 0.85 * plume * (1.0 - land));
   // (South of it, round the lower leg, the currents carry ochre silt: long curling threads of it, drawn out by the water.)
