@@ -1,6 +1,7 @@
-2026-11-26 06:40 UTC
-work at 7ce99a2 on agent/marsh-life-3
-06:41 marsh-3 adult on the mud bank, feelers down; marsh-4 stuck one bare folded hide with plates (rendered with --focus 5.6, asked partner to set it); marsh-1 seep stalk red brown and wet
-look-1.jpg = out/work/cur-marsh-3.jpg
-look-2.jpg = out/work/cur-marsh-4f.jpg
-look-3.jpg = out/work/cur-marsh-1.jpg
+2026-11-26 06:51 UTC
+work at c8ecca4 on agent/marsh-life-3
+06:53 marsh-0 colonies to the haze; marsh-2 paler fronds, amber insects; marsh-3 young one whole in frame; marsh-4 with K4 focus
+look-1.jpg = out/work/cur-marsh-0.jpg
+look-2.jpg = out/work/cur-marsh-2.jpg
+look-3.jpg = out/work/cur-marsh-3.jpg
+look-4.jpg = out/work/cur-marsh-4f.jpg
