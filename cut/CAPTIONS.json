@@ -1,0 +1,505 @@
+{
+  "schema": "carcass/captions 1",
+  "fps": 60,
+  "frameCount": 11861,
+  "look": {
+    "text": [245, 237, 221],
+    "em": 0.05,
+    "baseline": 0.905,
+    "crossfadeSeconds": 1.5,
+    "cover": 0.88,
+    "sparkFrom": [255, 138, 42],
+    "sparkTo": [255, 194, 122],
+    "sparksPerSquareEm": 0.16,
+    "breaks": {},
+    "units": {
+      "ribs": {
+        "family": "blood red",
+        "dark": [42, 5, 8],
+        "body": [110, 10, 16],
+        "bright": [163, 20, 26],
+        "sparks": false
+      },
+      "heart": {
+        "family": "ash and ember",
+        "dark": [11, 10, 10],
+        "body": [30, 27, 26],
+        "bright": [58, 53, 50],
+        "sparks": true
+      },
+      "breath": {
+        "family": "blood red",
+        "dark": [42, 5, 8],
+        "body": [110, 10, 16],
+        "bright": [163, 20, 26],
+        "sparks": false
+      },
+      "marsh": {
+        "family": "ash and ember",
+        "dark": [11, 10, 10],
+        "body": [30, 27, 26],
+        "bright": [58, 53, 50],
+        "sparks": true
+      },
+      "spine": {
+        "family": "blood red",
+        "dark": [42, 5, 8],
+        "body": [110, 10, 16],
+        "bright": [163, 20, 26],
+        "sparks": false
+      },
+      "eye": {
+        "family": "blood red",
+        "dark": [42, 5, 8],
+        "body": [110, 10, 16],
+        "bright": [163, 20, 26],
+        "sparks": false
+      },
+      "reveal": {
+        "family": "blood red",
+        "dark": [42, 5, 8],
+        "body": [110, 10, 16],
+        "bright": [163, 20, 26],
+        "sparks": false
+      }
+    }
+  },
+  "lines": [
+    {
+      "clip": "n1",
+      "line": 1,
+      "text": "Past the last calm water, there is a shore.",
+      "unit": "ribs",
+      "rows": [
+        "Past the last calm water, there is a shore."
+      ],
+      "words": [
+        { "w": "Past", "on": 1.44, "off": 1.81 },
+        { "w": "the", "on": 1.89, "off": 2.05 },
+        { "w": "last", "on": 2.25, "off": 2.45 },
+        { "w": "calm", "on": 2.61, "off": 2.93 },
+        { "w": "water,", "on": 3.01, "off": 3.49 },
+        { "w": "there", "on": 3.97, "off": 4.13 },
+        { "w": "is", "on": 4.21, "off": 4.29 },
+        { "w": "a", "on": 4.37, "off": 4.45 },
+        { "w": "shore.", "on": 4.53, "off": 5.01 }
+      ],
+      "in": 1.13,
+      "out": 5.81,
+      "gone": 6.36
+    },
+    {
+      "clip": "n1",
+      "line": 2,
+      "text": "Nothing on it has a name.",
+      "unit": "ribs",
+      "rows": [
+        "Nothing on it has a name."
+      ],
+      "words": [
+        { "w": "Nothing", "on": 7.24, "off": 7.71 },
+        { "w": "on", "on": 7.79, "off": 7.87 },
+        { "w": "it", "on": 7.95, "off": 8.03 },
+        { "w": "has", "on": 8.11, "off": 8.27 },
+        { "w": "a", "on": 8.31, "off": 8.35 },
+        { "w": "name.", "on": 8.43, "off": 8.83 }
+      ],
+      "in": 6.93,
+      "out": 9.63,
+      "gone": 10.18
+    },
+    {
+      "clip": "n1",
+      "line": 3,
+      "text": "Nothing on it should be alive.",
+      "unit": "ribs",
+      "rows": [
+        "Nothing on it should be alive."
+      ],
+      "words": [
+        { "w": "Nothing", "on": 10.94, "off": 11.37 },
+        { "w": "on", "on": 11.45, "off": 11.53 },
+        { "w": "it", "on": 11.61, "off": 11.77 },
+        { "w": "should", "on": 11.89, "off": 12.01 },
+        { "w": "be", "on": 12.05, "off": 12.09 },
+        { "w": "alive.", "on": 12.17, "off": 12.81 }
+      ],
+      "in": 10.63,
+      "out": 13.61,
+      "gone": 14.16
+    },
+    {
+      "clip": "n1",
+      "line": 4,
+      "text": "All of it is.",
+      "unit": "ribs",
+      "rows": [
+        "All of it is."
+      ],
+      "words": [
+        { "w": "All", "on": 15.54, "off": 15.73 },
+        { "w": "of", "on": 15.81, "off": 15.89 },
+        { "w": "it", "on": 15.97, "off": 16.13 },
+        { "w": "is.", "on": 16.45, "off": 16.85 }
+      ],
+      "in": 15.23,
+      "out": 16.95,
+      "gone": 17.5
+    },
+    {
+      "clip": "n2",
+      "line": 1,
+      "text": "The strait.",
+      "unit": "ribs",
+      "rows": [
+        "The strait."
+      ],
+      "words": [
+        { "w": "The", "on": 17.94, "off": 18.12 },
+        { "w": "strait.", "on": 18.28, "off": 18.92 }
+      ],
+      "in": 17.63,
+      "out": 19.02,
+      "gone": 19.53
+    },
+    {
+      "clip": "n2",
+      "line": 2,
+      "text": "Stone blades, taller than the storms.",
+      "unit": "ribs",
+      "rows": [
+        "Stone blades, taller than the storms."
+      ],
+      "words": [
+        { "w": "Stone", "on": 19.84, "off": 20.41 },
+        { "w": "blades,", "on": 20.49, "off": 21.21 },
+        { "w": "taller", "on": 21.53, "off": 22.01 },
+        { "w": "than", "on": 22.09, "off": 22.17 },
+        { "w": "the", "on": 22.25, "off": 22.33 },
+        { "w": "storms.", "on": 22.41, "off": 23.05 }
+      ],
+      "in": 19.53,
+      "out": 23.85,
+      "gone": 24.4
+    },
+    {
+      "clip": "n3",
+      "line": 1,
+      "text": "The fire.",
+      "unit": "heart",
+      "rows": [
+        "The fire."
+      ],
+      "words": [
+        { "w": "The", "on": 42.54, "off": 42.68 },
+        { "w": "fire.", "on": 42.84, "off": 43.48 }
+      ],
+      "in": 42.23,
+      "out": 43.58,
+      "gone": 44.03
+    },
+    {
+      "clip": "n3",
+      "line": 2,
+      "text": "A lake of it, under a black skin.",
+      "unit": "heart",
+      "rows": [
+        "A lake of it, under a black skin."
+      ],
+      "words": [
+        { "w": "A", "on": 44.34, "off": 44.39 },
+        { "w": "lake", "on": 44.63, "off": 44.87 },
+        { "w": "of", "on": 44.95, "off": 45.03 },
+        { "w": "it,", "on": 45.11, "off": 45.27 },
+        { "w": "under", "on": 45.67, "off": 45.91 },
+        { "w": "a", "on": 45.99, "off": 46.07 },
+        { "w": "black", "on": 46.15, "off": 46.55 },
+        { "w": "skin.", "on": 46.71, "off": 47.19 }
+      ],
+      "in": 44.03,
+      "out": 47.99,
+      "gone": 48.54
+    },
+    {
+      "clip": "n3",
+      "line": 3,
+      "text": "The tall ones walk the skin, and drink from the cracks.",
+      "unit": "heart",
+      "rows": [
+        "The tall ones walk the skin,",
+        "and drink from the cracks."
+      ],
+      "words": [
+        { "w": "The", "on": 49.44, "off": 49.51 },
+        { "w": "tall", "on": 49.59, "off": 49.91 },
+        { "w": "ones", "on": 49.99, "off": 50.31 },
+        { "w": "walk", "on": 50.47, "off": 50.79 },
+        { "w": "the", "on": 50.87, "off": 50.95 },
+        { "w": "skin,", "on": 51.03, "off": 51.43 },
+        { "w": "and", "on": 51.83, "off": 51.99 },
+        { "w": "drink", "on": 52.07, "off": 52.39 },
+        { "w": "from", "on": 52.47, "off": 52.63 },
+        { "w": "the", "on": 52.71, "off": 52.79 },
+        { "w": "cracks.", "on": 52.87, "off": 53.43 }
+      ],
+      "in": 49.13,
+      "out": 54.23,
+      "gone": 54.78
+    },
+    {
+      "clip": "n4",
+      "line": 1,
+      "text": "The pits.",
+      "unit": "breath",
+      "rows": [
+        "The pits."
+      ],
+      "words": [
+        { "w": "The", "on": 70.99, "off": 71.2 },
+        { "w": "pits.", "on": 71.36, "off": 72.0 }
+      ],
+      "in": 70.68,
+      "out": 72.1,
+      "gone": 72.63
+    },
+    {
+      "clip": "n4",
+      "line": 2,
+      "text": "The ground breathes here. Slow. From far below.",
+      "unit": "breath",
+      "rows": [
+        "The ground breathes here. Slow. From far below."
+      ],
+      "words": [
+        { "w": "The", "on": 72.94, "off": 72.99 },
+        { "w": "ground", "on": 73.07, "off": 73.63 },
+        { "w": "breathes", "on": 73.79, "off": 74.43 },
+        { "w": "here.", "on": 74.51, "off": 74.91 },
+        { "w": "Slow.", "on": 75.63, "off": 76.19 },
+        { "w": "From", "on": 76.75, "off": 76.91 },
+        { "w": "far", "on": 77.07, "off": 77.39 },
+        { "w": "below.", "on": 77.47, "off": 78.03 }
+      ],
+      "in": 72.63,
+      "out": 78.83,
+      "gone": 79.38
+    },
+    {
+      "clip": "n5",
+      "line": 1,
+      "text": "The red flats.",
+      "unit": "marsh",
+      "rows": [
+        "The red flats."
+      ],
+      "words": [
+        { "w": "The", "on": 94.29, "off": 94.41 },
+        { "w": "red", "on": 94.57, "off": 94.89 },
+        { "w": "flats.", "on": 95.05, "off": 95.69 }
+      ],
+      "in": 93.98,
+      "out": 96.13,
+      "gone": 96.68
+    },
+    {
+      "clip": "n5",
+      "line": 2,
+      "text": "Stalks root in the red. The ground still bleeds.",
+      "unit": "marsh",
+      "rows": [
+        "Stalks root in the red. The ground still bleeds."
+      ],
+      "words": [
+        { "w": "Stalks", "on": 97.24, "off": 97.88 },
+        { "w": "root", "on": 98.04, "off": 98.44 },
+        { "w": "in", "on": 98.52, "off": 98.6 },
+        { "w": "the", "on": 98.64, "off": 98.68 },
+        { "w": "red.", "on": 98.84, "off": 99.24 },
+        { "w": "The", "on": 99.88, "off": 99.96 },
+        { "w": "ground", "on": 100.04, "off": 100.6 },
+        { "w": "still", "on": 100.76, "off": 101.08 },
+        { "w": "bleeds.", "on": 101.24, "off": 101.88 }
+      ],
+      "in": 96.93,
+      "out": 102.68,
+      "gone": 103.23
+    },
+    {
+      "clip": "n5",
+      "line": 3,
+      "text": "The heavy ones wallow in it, and grow fat.",
+      "unit": "marsh",
+      "rows": [
+        "The heavy ones wallow in it, and grow fat."
+      ],
+      "words": [
+        { "w": "The", "on": 104.84, "off": 104.92 },
+        { "w": "heavy", "on": 105.0, "off": 105.32 },
+        { "w": "ones", "on": 105.4, "off": 105.72 },
+        { "w": "wallow", "on": 105.88, "off": 106.2 },
+        { "w": "in", "on": 106.28, "off": 106.36 },
+        { "w": "it,", "on": 106.48, "off": 106.6 },
+        { "w": "and", "on": 106.84, "off": 107.0 },
+        { "w": "grow", "on": 107.08, "off": 107.32 },
+        { "w": "fat.", "on": 107.56, "off": 107.96 }
+      ],
+      "in": 104.53,
+      "out": 108.76,
+      "gone": 109.31
+    },
+    {
+      "clip": "n6",
+      "line": 1,
+      "text": "The ridge.",
+      "unit": "spine",
+      "rows": [
+        "The ridge."
+      ],
+      "words": [
+        { "w": "The", "on": 117.29, "off": 117.47 },
+        { "w": "ridge.", "on": 117.55, "off": 118.19 }
+      ],
+      "in": 116.98,
+      "out": 118.29,
+      "gone": 118.68
+    },
+    {
+      "clip": "n6",
+      "line": 2,
+      "text": "Above the cloud. Under the storm.",
+      "unit": "spine",
+      "rows": [
+        "Above the cloud. Under the storm."
+      ],
+      "words": [
+        { "w": "Above", "on": 118.99, "off": 119.4 },
+        { "w": "the", "on": 119.48, "off": 119.56 },
+        { "w": "cloud.", "on": 119.64, "off": 120.2 },
+        { "w": "Under", "on": 120.84, "off": 121.16 },
+        { "w": "the", "on": 121.24, "off": 121.32 },
+        { "w": "storm.", "on": 121.4, "off": 121.96 }
+      ],
+      "in": 118.68,
+      "out": 122.76,
+      "gone": 123.31
+    },
+    {
+      "clip": "n6",
+      "line": 3,
+      "text": "Every night the lightning walks it. Spire to spire.",
+      "unit": "spine",
+      "rows": [
+        "Every night the lightning walks it. Spire to spire."
+      ],
+      "words": [
+        { "w": "Every", "on": 125.04, "off": 125.38 },
+        { "w": "night", "on": 125.54, "off": 125.86 },
+        { "w": "the", "on": 125.94, "off": 126.02 },
+        { "w": "lightning", "on": 126.1, "off": 126.58 },
+        { "w": "walks", "on": 126.66, "off": 126.98 },
+        { "w": "it.", "on": 127.06, "off": 127.14 },
+        { "w": "Spire", "on": 127.7, "off": 128.26 },
+        { "w": "to", "on": 128.34, "off": 128.42 },
+        { "w": "spire.", "on": 128.58, "off": 129.14 }
+      ],
+      "in": 124.73,
+      "out": 129.94,
+      "gone": 130.49
+    },
+    {
+      "clip": "n7",
+      "line": 1,
+      "text": "The lake.",
+      "unit": "eye",
+      "rows": [
+        "The lake."
+      ],
+      "words": [
+        { "w": "The", "on": 138.99, "off": 139.12 },
+        { "w": "lake.", "on": 139.2, "off": 139.76 }
+      ],
+      "in": 138.68,
+      "out": 140.23,
+      "gone": 140.78
+    },
+    {
+      "clip": "n7",
+      "line": 2,
+      "text": "Still. Gold at the edge. Black at the center.",
+      "unit": "eye",
+      "rows": [
+        "Still. Gold at the edge. Black at the center."
+      ],
+      "words": [
+        { "w": "Still.", "on": 141.34, "off": 141.99 },
+        { "w": "Gold", "on": 142.79, "off": 143.27 },
+        { "w": "at", "on": 143.35, "off": 143.43 },
+        { "w": "the", "on": 143.47, "off": 143.51 },
+        { "w": "edge.", "on": 143.67, "off": 144.07 },
+        { "w": "Black", "on": 144.63, "off": 145.11 },
+        { "w": "at", "on": 145.27, "off": 145.35 },
+        { "w": "the", "on": 145.43, "off": 145.51 },
+        { "w": "center.", "on": 145.59, "off": 145.99 }
+      ],
+      "in": 141.03,
+      "out": 146.79,
+      "gone": 147.34
+    },
+    {
+      "clip": "n8",
+      "line": 1,
+      "text": "The land has a shape.",
+      "unit": "reveal",
+      "rows": [
+        "The land has a shape."
+      ],
+      "words": [
+        { "w": "The", "on": 160.54, "off": 160.66 },
+        { "w": "land", "on": 160.74, "off": 161.3 },
+        { "w": "has", "on": 161.7, "off": 161.86 },
+        { "w": "a", "on": 161.9, "off": 161.94 },
+        { "w": "shape.", "on": 162.18, "off": 162.58 }
+      ],
+      "in": 160.23,
+      "out": 163.38,
+      "gone": 163.93
+    },
+    {
+      "clip": "n8",
+      "line": 3,
+      "text": "It was a titan.",
+      "unit": "reveal",
+      "rows": [
+        "It was a titan."
+      ],
+      "words": [
+        { "w": "It", "on": 167.1567, "off": 167.2667 },
+        { "w": "was", "on": 167.3467, "off": 167.4267 },
+        { "w": "a", "on": 167.6667, "off": 167.7197 },
+        { "w": "titan.", "on": 167.7737, "off": 168.2267 }
+      ],
+      "in": 166.8467,
+      "out": 169.0267,
+      "gone": 169.5767
+    },
+    {
+      "clip": "n8",
+      "line": 4,
+      "text": "Everything here feeds on it.",
+      "unit": "reveal",
+      "rows": [
+        "Everything here feeds on it."
+      ],
+      "words": [
+        { "w": "Everything", "on": 177.04, "off": 177.68 },
+        { "w": "here", "on": 177.76, "off": 178.08 },
+        { "w": "feeds", "on": 178.16, "off": 178.48 },
+        { "w": "on", "on": 178.56, "off": 178.64 },
+        { "w": "it.", "on": 178.72, "off": 178.8 }
+      ],
+      "in": 176.73,
+      "out": 179.6,
+      "gone": 180.15
+    }
+  ]
+}

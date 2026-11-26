@@ -46,7 +46,8 @@
     "render:local": "node tools/render-local.mjs",
     "parts": "node tools/parts.mjs",
     "shots": "node tools/shots.mjs",
-    "script": "node tools/script-sheet.mjs"
+    "script": "node tools/script-sheet.mjs",
+    "subs": "python3 assets-src/subs/subs.py"
   },
   "dependencies": {
     "gsap": "3.15.1",
