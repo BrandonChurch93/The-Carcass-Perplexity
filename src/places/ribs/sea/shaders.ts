@@ -345,11 +345,9 @@ void main() {
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
   // A ruffled stretch throws the bright sky wide of the lens and reads dark; near the lens the eye looks down into the water and the bed shows.
   refl *= 1.0 - 0.4 * paw * (1.0 - lip);
-  if (under > 0.0) {
-    // The worked water under the wall holds the high sky too: the break in the cloud lies down the flat as a broad bright path, dark slate either side.
-    vec3 high = mirrorSky(normalize(vec3(r.x, r.y + 0.3, r.z))) * vec3(0.86, 0.79, 0.72);
-    refl = max(refl * (1.0 - 0.6 * under), high * (0.55 + 0.45 * c2.a) * smoothstep(0.0, 0.3, under));
-  }
+  // Under the wall the break in the cloud over it lies down the flat as a broad bright path, worked by the ripples, with dark slate either side.
+  float lane = pow(max(dot(normalize(r.xz + 1e-5), vec2(-0.12, -0.99)), 0.0), 14.0) * smoothstep(0.0, 0.3, under);
+  refl = mix(refl * (1.0 - 0.6 * under), uHaze * 1.7 * (0.4 + 0.8 * c2.a), 0.85 * lane);
   fres *= mix(0.55, 1.0, smoothstep(8.0, 34.0, distance(cameraPosition, vWorld)));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;

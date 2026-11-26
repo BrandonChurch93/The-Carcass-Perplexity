@@ -7,7 +7,14 @@ import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { WALL_A } from './crest';
 
 /** The sheet that stands before the last shot's lens: mat/borewall-c.jpg, a dark standing face under a pitching lip. Its crest is level in the picture: the heads along it are given here. */
-const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => 0.95 + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1)) };
+const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => {
+    // Not one height along it: left of the lens it is already down, in the middle it stands and curls, toward the right stack it rears.
+    const u = i / (WALL_A.profile.length - 1);
+    const down = 1 - Math.min(1, Math.max(0, (u - 0.1) / 0.3));
+    const rears = Math.min(1, Math.max(0, (u - 0.62) / 0.25));
+    return 0.95 - 0.24 * down * down * (3 - 2 * down) + 0.09 * rears * rears * (3 - 2 * rears) + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1);
+  }),
+};
 import { BORE_SPEED, boreArrives, boreFront } from './tide';
 
 const rand = (a: number, b: number): number => hash2(a, b) / 4294967296;
