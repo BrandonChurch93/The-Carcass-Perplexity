@@ -235,7 +235,9 @@ void main() {
   // Broad where it leaves the body, drawn in to its end.
   // The herd's locks are the fine straight ones: narrower, so they read as hanging hair and not as leaves.
   float w = aCard.x * size * (1.0 - 0.38 * uLockKind);
-  p += side * (position.x * w);
+  // No lock hangs straight: each is kinked and waved its own way, more toward its end.
+  float kink = sin(t * (4.0 + 5.0 * fract(seed * 3.3)) + seed * 40.0) + 0.5 * sin(t * (11.0 + 6.0 * fract(seed * 5.9)) + seed * 71.0);
+  p += side * (position.x * w + 0.55 * w * kink * t);
   // It is lit as the body under it is, and a little as itself: the coat reads as the body's shape, with each lock catching its own light.
   vec3 nb = normalize(c - mix(r, e, 0.45) + vec3(0.0, 1e-4, 0.0));
   // A lock of the herd on the side of the body turned from the lens is behind the body: it is not drawn.
@@ -302,19 +304,29 @@ void main() {
     float cover = max(pic.r, max(pic.g, pic.b));
     if (cover < 0.085) discard;
   }
+  // A lock is not a blade: it is a few strands, matted into one at the root, that part toward their ends, and each ends where it ends.
+  float strands = 3.0 + floor(3.0 * fract(seed * 2.71));
+  float k = (0.5 + 0.5 * u) * strands + 0.45 * t * sin(t * 6.0 + seed * 23.0);
+  float f = fract(k) - 0.5;
+  float own = fract(sin(floor(k) * 12.9898 + seed * 78.233) * 43758.5453);
+  float run = t / (0.6 + 0.4 * own);
+  float halfW = mix(0.5, 0.15, smoothstep(0.15, 1.0, run));
+  if (run > 1.0 || abs(f) > halfW) discard;
+  float body = sqrt(max(0.0, 1.0 - (f / halfW) * (f / halfW)));
   float lum = dot(pic, vec3(0.333)) / dot(mean_, vec3(0.333));
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(uLockKind > 0.5 ? 0.72 : 0.55, 1.0, smoothstep(0.0, 0.5, t));
+  albedo *= mix(uLockKind > 0.5 ? 0.5 : 0.45, 1.0, smoothstep(0.0, 0.55, t)) * (0.8 + 0.4 * own);
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
-  vec3 c = albedo * vLight;
+  vec3 c = albedo * vLight * (0.55 + 0.45 * body);
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.
   // Rime gathers on the fur round the burn, where the steam of it froze.
   float ring = smoothstep(0.02, 0.2, singe) * (1.0 - smoothstep(0.4, 0.75, singe));
   float frost = smoothstep(0.7, 1.2, vInfo.z + uCoat.w + 0.7 * (vAt.w - 0.5) + 0.9 * ring);
   float lies = frost * smoothstep(0.1, 0.5, t) * smoothstep(0.9, 1.7, lum + 0.35 * frost);
-  float bead = smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w);
+  // And the end of a strand carries its own ice.
+  float bead = max(smoothstep(0.75, 1.0, t) * smoothstep(1.0, 1.6, lum) * (0.3 + 0.5 * vAt.w), 0.75 * smoothstep(0.7, 0.97, run) * step(0.3, fract(own * 7.7)));
   float white = clamp(max(max(lies, bead) * (1.0 - singe), smoothstep(1.5, 2.0, vAt.w) * smoothstep(0.15, 0.6, t) * smoothstep(0.6, 1.3, lum)), 0.0, 1.0);
   c = mix(c, vec3(0.86, 0.89, 0.94) * vFrostLight, white);
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
@@ -405,13 +417,15 @@ void main() {
   // Bare skin: dark, ringed like a worm's, paler and raw toward the root, wet.
   float rings = smoothstep(0.3, 0.7, fract(t * (22.0 + 10.0 * fract(vAt.z * 3.0)) + 0.4 * sin(vAt.y * 2.0)));
   float blotch = vnoise3(vec3(t * 9.0, vAt.y * 1.5, vAt.z * 40.0));
-  vec3 albedo = mix(vec3(0.028, 0.02, 0.022), vec3(0.09, 0.055, 0.052), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
+  vec3 albedo = mix(vec3(0.16, 0.11, 0.11), vec3(0.42, 0.3, 0.29), 0.55 * blotch + 0.3 * (1.0 - t)) * (0.75 + 0.35 * rings);
   // Rime where it looks up, in beads and feathers.
   float crystals = vnoise3(vWorld * 520.0);
   float rime = smoothstep(0.25, 0.75, n.y + 0.3 * uCoat.w - 0.5 + 0.8 * (crystals - 0.5) + 0.4 * (vnoise3(vWorld * 60.0) - 0.5));
   // Dead, the blood is out of it: grey, dull, and the rime thick on it.
   albedo = mix(albedo, vec3(0.04, 0.03, 0.032) * (0.6 + 0.8 * blotch), 0.6 * uWrithe.y);
   rime = mix(rime, 0.7 * smoothstep(0.55, 0.9, n.y * 0.5 + 0.5 + 0.45 * (crystals - 0.5) + 0.25 * (vnoise3(vWorld * 45.0) - 0.5)), uWrithe.y);
+  // On a living one in the cold its own breath has frozen on them: they hang frosted, pale as the coat.
+  rime = max(rime, (1.0 - uWrithe.y) * (0.45 + 0.4 * crystals));
   albedo = mix(albedo, vec3(0.74, 0.78, 0.84), rime);
   float rough = mix(0.32, 0.85, max(rime, 0.6 * uWrithe.y));
   vec3 e = runnerLight(vWorld, n) * (0.55 + 0.45 * t);

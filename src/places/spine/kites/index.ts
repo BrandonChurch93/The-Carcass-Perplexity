@@ -169,15 +169,16 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
-// The outline: how wide the blade is at s of its length, as a share of its widest. It leaves the knot gathered, is widest a third of the
-// way down and runs out to a tail. Its two edges are not alike.
+varying vec3 vAcross;
+// The outline: how wide the blade is at s of its length, as a share of its widest. A ribbon: it leaves the knot gathered, keeps much of
+// a width all its length, wandering, and runs out to a tail. Its two edges are not alike.
 float outline(float s, float sd) {
   float h1 = fract(sd * 3.7);
   float h2 = fract(sd * 5.9);
   float h3 = fract(sd * 8.3);
-  float rise = smoothstep(0.0, 0.07 + 0.08 * h1, s);
-  float tail = pow(1.0 - smoothstep(0.3 + 0.25 * h2, 1.0, s), 0.7 + 0.7 * h3);
-  float wander = 1.0 + 0.12 * sin(s * 8.0 + sd * 30.0) + 0.06 * sin(s * 21.0 + sd * 70.0);
+  float rise = smoothstep(0.0, 0.05 + 0.06 * h1, s);
+  float tail = pow(1.0 - smoothstep(0.62 + 0.2 * h2, 1.0, s), 0.6 + 0.6 * h3);
+  float wander = 0.72 + 0.2 * sin(s * 7.0 + sd * 30.0) + 0.1 * sin(s * 19.0 + sd * 70.0);
   return max(0.03, (0.07 + 0.93 * rise) * tail * wander);
 }
 void main() {
@@ -207,7 +208,9 @@ void main() {
   vec3 across = flat_ * cos(roll) + upward * sin(roll);
   vec3 normal_ = cross(tangent, across);
   float far = length(cameraPosition - c);
-  float wide = kHalf * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
+  // Where it has wound on itself it is gathered to a rope, and opens again.
+  float neck = 1.0 - 0.78 * step(0.3, fract(kSeed * 6.1)) * exp(-pow((s - 0.22 - 0.5 * fract(kSeed * 4.7)) / 0.04, 2.0));
+  float wide = kHalf * neck * outline(s, kSeed + (v > 0.0 ? 0.37 : 0.0));
   // Far off a blade is never thinner than a pixel and a half: it does not come and go between the pixels.
   float half_ = max(wide, 0.75 * uPixel * far);
   // The section: an arc the wind fills and empties as the waves pass (curl is half the angle the arc turns through), and two edges that
@@ -225,6 +228,7 @@ void main() {
   vec3 p = c + (across * sx + normal_ * sy) * half_;
   vWorld = p;
   vNormal = normalize(normal_ * dx - across * dy);
+  vAcross = normalize(across * dx + normal_ * dy);
   vAt = vec4(s, v, x, half_);
   vKite = vec4(kSeed, aSeed.z, smoothstep(200.0, 450.0, length(cameraPosition - aAnchor) * uReach), wide / half_);
   vSkin = vec3(curl, kHalf, kBlade);
@@ -246,6 +250,7 @@ varying vec3 vNormal;
 varying vec4 vAt;
 varying vec4 vKite;
 varying vec3 vSkin;
+varying vec3 vAcross;
 const vec3 SKIN_MEAN = vec3(0.321, 0.267, 0.355);
 void main() {
   float s = vAt.x;
@@ -261,12 +266,15 @@ void main() {
   // Where the skin is: inside its outline, less the holes the wind has worked open, the rents in from its edges and the split of its tail.
   // inside is in shares of the half width, 0 at an edge.
   float lie = v;
-  float ragged = 0.05 * (vnoise(vec2(metres * 0.9 + seed, 3.0 * sign(v))) - 0.5) + 0.03 * (vnoise(vec2(metres * 3.1, seed + sign(v))) - 0.5);
-  float inside = 1.0 - abs(lie) + ragged * smoothstep(0.1, 0.3, s);
-  for (int i = 0; i < 2; i++) {
+  float edge = sign(v);
+  float ragged = 0.2 * (vnoise(vec2(metres * 0.6 + seed, 3.0 * edge)) - 0.5) + 0.08 * (vnoise(vec2(metres * 2.3, seed + edge)) - 0.5);
+  // Rents: what the gale has torn in from an edge, some of them deep.
+  float rent = smoothstep(0.6, 0.78, vnoise(vec2(metres * 0.33 + seed * 1.7, 7.0 * edge + 2.0))) * (0.35 + 0.5 * vnoise(vec2(metres * 0.11 + seed, edge)));
+  float inside = 1.0 - abs(lie) + (ragged - rent) * smoothstep(0.05, 0.25, s);
+  for (int i = 0; i < 3; i++) {
     float fi = float(i);
     float h = fract(seed * (0.731 + 0.417 * fi));
-    if (h > 0.6) continue;
+    if (h > 0.8) continue;
     vec2 at = vec2(0.26 + 0.5 * fract(h * 7.7 + 0.3 * fi), (fract(h * 13.3) - 0.5) * 1.1);
     vec2 size = vec2(2.2 + 4.5 * fract(h * 29.1), 0.22 + 0.3 * fract(h * 17.9));
     vec2 q = vec2((s - at.x) * vSkin.z / (size.x * vSkin.y), (lie - at.y) / size.y);
@@ -297,6 +305,11 @@ void main() {
   float det = dot(px, r1);
   vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
   n = normalize(n - (1.0 - far) * 0.12 * slope / (1.0 + 0.5 * length(slope)));
+  // It is wrinkled down its length: broad folds, a few across its width, that wander and run into each other.
+  float wob = vnoise(vec2(metres * 0.22 + seed, lie * 1.3));
+  float phase = lie * (7.0 + 5.0 * fract(seed * 0.173)) + 5.0 * wob + metres * 0.15;
+  float fold = sin(phase);
+  n = normalize(n + normalize(vAcross) * (0.32 * cos(phase) * (1.0 - 0.6 * far)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -305,7 +318,7 @@ void main() {
   float knot = 1.0 - smoothstep(0.0, 0.22, s);
   float crease = smoothstep(0.03, 0.12, relief - 0.33);
   float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
-  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease - 0.2 * belly + 0.35 * far;
+  float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 0.55 * smoothstep(0.2, 1.0, fold) - 0.2 * belly + 0.35 * far;
   float path = thick / max(nv, 0.3);
   float cover = (1.0 - exp(-uFilm.y * path)) * cut;
 

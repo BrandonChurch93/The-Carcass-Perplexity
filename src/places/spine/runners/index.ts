@@ -191,7 +191,7 @@ export function create(ctx: Context): Piece {
       hang.set([r * Math.cos(a), r * Math.sin(a), Math.sin(a) * rng.range(0.3, 0.9), rng.range(-1, 1)], i * 4);
       // A few long thick ones, many thin ones.
       const big = rng.next() < 0.3;
-      limb.set([big ? rng.range(0.5, 0.72) : rng.range(0.26, 0.5), thin * (big ? rng.range(0.022, 0.03) : rng.range(0.011, 0.019)), rng.range(0.2, 1), rng.next()], i * 4);
+      limb.set([(role.inside ? 0.45 : 1) * (big ? rng.range(0.5, 0.72) : rng.range(0.26, 0.5)), thin * (big ? rng.range(0.022, 0.03) : rng.range(0.011, 0.019)), rng.range(0.2, 1), rng.next()], i * 4);
     }
     const beard = new THREE.InstancedBufferGeometry();
     const limbShape = role.act === 'dead' ? tendrilFine : tendril;
@@ -365,7 +365,7 @@ export function create(ctx: Context): Piece {
   // moment the foot lands until it leaves, and the trunk goes over it on legs that bend. All of it is a function of the metres gone.
   const walker = HUDDLE[0] as (typeof HUDDLE)[number];
   const SIZE = walker.size;
-  const PACE = 1.5;
+  const PACE = 1.9;
   const EASE = PACE / 1.58 - 0.8;
   const EASED = 0.79 * (EASE + 0.8) ** 2;
   const walked = (u: number): number => (u < -0.8 ? 0 : u < EASE ? 0.79 * (u + 0.8) ** 2 : EASED + PACE * (u - EASE));
@@ -378,7 +378,7 @@ export function create(ctx: Context): Piece {
     return FLOOR + 0.03 + floorRise(at.l - canalL(d), d, 0.79 * flare(d) + 0.6);
   };
   /** Metres to a stride once it is under way; it sets out in strides half as long. */
-  const STRIDE_M = 0.72 * SIZE;
+  const STRIDE_M = 0.84 * SIZE;
   const SET_OUT = 0.6;
   /** Strides gone at g metres, and the metres at c strides. Before it sets out it is taken to have come in at its short stride, which is
    * how it stands: stopped in a step, no two feet level. */
