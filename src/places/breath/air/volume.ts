@@ -12,7 +12,7 @@ import { SEA } from '../land';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 20;
+export const STEPS = 28;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -267,8 +267,10 @@ void main() {
     }
     if (t1 > t0) {
       float dl = (t1 - t0) / ${STEPS}.0;
-      float hy = 0.5 * dl * abs(rd.y);
-      float first = fract(0.18 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) + float(uSampleIndex) * 0.6180339);
+      // A step that runs level still crosses heaps that stand up beside it: it is weighed as if it spanned some height, so the top of a heap
+      // comes in over a step and not at one.
+      float hy = 0.5 * dl * max(abs(rd.y), 0.6);
+      float first = fract(0.1 * fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) + float(uSampleIndex) * 0.6180339);
       for (int i = 0; i < ${STEPS}; i++) {
         float t = t0 + (float(i) + first) * dl;
         vec3 p = ro + rd * t;
@@ -422,7 +424,7 @@ void main() {
         float heart = exp(-1.1 * uBodyB[i].w * min(uBodyB[i].x, uBodyB[i].z) * m * (1.6 - up));
         // Its billows: the lump that stands proud takes the light, the hollow beside it is in its shade.
         float proud = clamp(0.55 + 0.9 * (fineN - 0.4) + 0.9 * (n0.g - 0.5), 0.15, 1.3);
-        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.6 * (0.25 + 0.75 * heart) * proud * D.z);
+        vec3 light = ambient * (0.45 + 0.55 * n0.r) + mix(uSunColour, vec3(2.2), 0.6) * (sunHere * min(phase, 2.4) * 0.5 * (0.6 + 0.4 * heart) * proud * D.z);
         float gone = exp(-tau);
         lit += thru * (1.0 - gone) * light;
         thru *= gone;

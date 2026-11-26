@@ -64,7 +64,7 @@ export function create(ctx: Context): Piece {
     const lean: [number, number] = [-0.4, 0.14];
     // Far off the far picture (air/sky.ts) holds the plume itself: the body there only keeps it moving.
     const far = Math.hypot(x, z) > 450;
-    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.3 + 0.6 * tall), rise * 0.58, r * (1.3 + 0.6 * tall)], lean, dense: (far ? 0.17 : 0.13) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
+    bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 0.5, rise * 0.5, z + lean[1] * rise * 0.5], size: [r * (1.3 + (far ? 0.95 : 0.6) * tall), rise * 0.58, r * (1.3 + (far ? 0.95 : 0.6) * tall)], lean, dense: (far ? 0.3 : 0.16) / r, repeat: r * 2.6, open: 0.62, climb: 4.5 + r * 0.2, sun: far ? 0.8 : 0.65 });
     bodies.push({ part: 'vapour', at: [x + lean[0] * rise * 1.2, rise * 1.0, z + lean[1] * rise * 1.2], size: [r * (2.4 + 1.6 * tall), rise * 0.3, r * (1.6 + 1.0 * tall)], lean: [-1.4, 0.5], dense: (far ? 0.008 : 0.022) / r, repeat: r * 4.0, open: 0.68, climb: 2.4, sun: 0.5 });
   }
   // The banks that lie out on the flats.
