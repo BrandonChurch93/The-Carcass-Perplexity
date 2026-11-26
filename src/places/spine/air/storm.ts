@@ -120,18 +120,26 @@ vec3 roundLights(vec3 q) {
   return lit;
 }
 // The storm lights itself: deep in the wall, sheets of light that come and go by no beat. Three seats, each with its own slow field of chance.
-vec3 sheetLight(vec3 q) {
-  vec3 lit = vec3(0.0);
+// How bright each seat burns now.
+vec3 sheetsNow() {
+  vec3 on = vec3(0.0);
   for (int i = 0; i < 3; i++) {
     float k = float(i);
     float chance = textureLod(tNoise, vec3(uTime * (0.23 + 0.07 * k), 0.17 + 0.31 * k, 0.61 - 0.23 * k), 0.0).r;
     float quick = textureLod(tNoise, vec3(uTime * (1.7 + 0.4 * k), 0.71 - 0.2 * k, 0.13 + 0.3 * k), 0.0).g;
-    float on = smoothstep(0.52, 0.78, chance) * (0.35 + 0.65 * smoothstep(0.35, 0.7, quick));
-    if (on <= 0.0) continue;
-    float c = -7.0 + 6.5 * k + 2.0 * sin(k * 2.3 + floor(uTime * 0.11 + k * 0.37) * 1.9);
+    on[i] = smoothstep(0.52, 0.78, chance) * (0.35 + 0.65 * smoothstep(0.35, 0.7, quick));
+  }
+  return on;
+}
+vec3 sheetLight(vec3 q, vec3 on) {
+  vec3 lit = vec3(0.0);
+  for (int i = 0; i < 3; i++) {
+    if (on[i] <= 0.0) continue;
+    float k = float(i);
+    float c = -7.0 + 6.5 * k;
     vec2 seat = GALE * (-5.2 - 0.9 * k) + vec2(GALE.y, -GALE.x) * c;
     vec3 off = q - vec3(seat.x, 2.6 + 0.9 * k, seat.y);
-    lit += vec3(0.5, 0.36, 1.0) * on / (1.0 + dot(off, off) / 1.6);
+    lit += vec3(0.5, 0.36, 1.0) * on[i] / (1.0 + dot(off, off) / 1.6);
   }
   return lit;
 }
@@ -154,6 +162,7 @@ void main() {
   vec3 keyLight = vec3(0.15, 0.128, 0.122) * phase;
   vec3 flash = uFlash / (1.0 + dot(uFlash, vec3(0.33)) / 0.05);
   // Each sample of a frame starts its steps a share of a step on from the last one's: the frame is marched as finely as all of them together.
+  vec3 sheets = sheetsNow();
   float t = 0.5 + 0.14 * uPhase;
   float T = 1.0;
   vec3 col = vec3(0.0);
@@ -213,16 +222,14 @@ void main() {
       // The sky overhead reaches what is near the top of the body, the snow and the cloud sea what is near its base.
       vec3 qu = q + vec3(0.0, 0.5, 0.0);
       float over = clamp(stormBroad(qu, stormBody(qu), lod + 1.0) * 5.0, 0.0, 1.0);
-      vec3 qd = q - vec3(0.0, 0.4, 0.0);
-      float under = clamp(stormBroad(qd, stormBody(qd), lod + 1.0) * 5.0, 0.0, 1.0);
       float thin = 1.0 - dens;
       // The last light does not reach far into the storm: the wall and what falls from it stand in their own dark.
       float reach = 0.22 + 0.78 * smoothstep(-5.5, 1.5, dot(q.xz, GALE));
-      vec3 lit = keyLight * reach * facing * (exp(-shade * 2.4) + 0.08 * exp(-shade * 0.5)) + vec3(0.018, 0.025, 0.045) * exp(-over * 3.0) + vec3(0.008, 0.0095, 0.015) * exp(-under * 2.5);
+      vec3 lit = keyLight * reach * facing * (exp(-shade * 2.4) + 0.08 * exp(-shade * 0.5)) + vec3(0.018, 0.025, 0.045) * exp(-over * 3.0);
       // The sky overhead on what is open to it, the snow and the cloud sea from below on the undersides, and more of both in the thin edges.
-      lit += vec3(0.0045, 0.0052, 0.0085) * (0.7 + 0.6 * thin);
+      lit += vec3(0.0075, 0.0088, 0.014) * (0.7 + 0.6 * thin);
       // The storm lit from inside: violet, most where the cloud is thick about the light.
-      vec3 inner = vec3(0.62, 0.36, 1.0) * strokeLight(q) * 1.1 + roundLights(q) * 0.5 + sheetLight(q) * 0.11;
+      vec3 inner = vec3(0.62, 0.36, 1.0) * strokeLight(q) * 1.1 + roundLights(q) * 0.5 + sheetLight(q, sheets) * 0.11;
       lit += (inner + flash * 0.12) * (0.3 + 0.7 * dens);
       // Air between the lens and the cloud: far cloud goes to the colour of the sky at its foot.
       float air = exp(-t * 0.022);
