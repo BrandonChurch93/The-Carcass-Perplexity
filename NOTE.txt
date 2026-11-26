@@ -1,7 +1,5 @@
-2026-11-26 12:02 UTC
-work at 1ebb10c on agent/film-loop
-v2 build 1ebb10c: loop sheet, seam sheet, fade sheet 420 to 431, hd crops of fade frames 400 435 470. Camera slide and mist read, light held; feeders and fliers too small to read at card size; sky stands still
-look-1.jpg = out/work/sheets/loop.png
-look-2.jpg = out/work/sheets/loop-seam.png
-look-3.jpg = out/work/sheets/v2-fade.png
-look-4.jpg = out/work/v2-fade-crops.jpg
+2026-11-26 12:36 UTC
+work at f8ccf06 on agent/film-loop
+v2 f8ccf06: loop 0 hd beside film 1241; loop 0 uhd final crops of a feeder and of the far blades. Missing: the wash, animal idles; feeders hold too still at card size
+look-1.jpg = out/work/v2-pair.jpg
+look-2.jpg = out/work/v2-uhd-crops.jpg
