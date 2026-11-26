@@ -1,0 +1,78 @@
+# Round 10, every severe and major issue, and what the second sea owner did
+
+Judged on main 5ca5f3d. The critics' words are quoted as written. `ribs_sea_owner_2`, branch `agent/ribs-sea-2`.
+
+- severe, the arches across the back: "the arches are thick dark leaning tusks and spires; several no longer close into arches, the small arch with its window at right of centre is gone, and there is no surf or spray at their feet"
+  - Lead's (the blades). Mine is the surf at their feet: spray cards stand where the swell meets the blade feet; still thin in the wide.
+- severe, the creatures on the flats and in the sky: "the winged pterosaur-like walkers are replaced by flamingo-like stilt birds with curled orange tail plumes; the right-hand ones are translucent ghosts; the large flock of birds in the sky is almost gone"
+  - Partly closed. Every standing, feeding and flying animal is now a picture sheet of the long-necked wing-walker (`mat/kitewing.jpg`, `mat/kitewing-front.jpg`); the orange plumes and the built capsule animal are gone from every close view; sheets are opaque, so no ghost. The flock round the rib tops is back as specks. Still wrong: at this distance the feeders read brown and stilt-legged.
+- severe, the foreground tidal flat: "the pebble beds, seaweed-covered rocks, rivulets and wet sheen of -a are gone; it is a smooth grey sheet with a few stones and big flat black shadow blobs at lower left (set-A-02 crops show texture-only ground with no stones); even read as motion blur, the stones and channels are missing"
+  - Lead's floor. My share is the pool film: wet band on the bars that holds the sky, foam line at the water's edge, glare path. The black blobs were my wet band on the bars reading the bed too dark; closed.
+- major, the left cliff: "the cliff is stepped dark strata with almost no seaweed curtain; the hanging carcass is a faint grey smear"
+  - Cliff and weed are the lead's. The carcass is now a pale picture plate (`mat/carcass-hung.jpg`) shaded by the place's light; it reads as a pale small figure in the wide.
+- severe, the carcass on the wall: "the shrivelled pale-hide body with ribs, legs and crabs reads as grey tubes with black patches; the crabs are almost gone (set-A-04 top crops); there are no ribs or bones on the wall to the right"
+  - Closed in the main: the body is a relief plate from a generated picture of a hung carcass, shaded with `rigShade`, stained, wet toward the bottom, 18 weed strands across the legs. The Builder read it as a dead thing in the weed. Not done: more crabs, bones on the wall to the right, water running off it.
+- severe, the three feeding creatures: "the pale wrinkled bodies with translucent, backlit orange wings, beak tendrils and dripping water are now striped grey tubes with opaque brown sawtooth fans (set-A-06 lower crops); no prey worm in the beak; the left bird is a stiff flamingo"
+  - Partly closed. Three picture sheets in three poses (head down, head up, stepping) with sails that pass the sky's light. Not done: prey in the beak, drips from the tuft.
+- severe, the light and spray around the feeding: "the warm backlight with rim light and glittering splash crowns is gone; the splash is flat white blobs; no splashes at the other birds' feet; no breaking surf in the mid-distance"
+  - Partly. Splash is fine drops, no white blobs; rings at the feet of all three. Not done: crown shapes, rim light on the animals (the sheets take the rig's light flat), surf in the mid distance.
+- major, the water surface (set-A-06 top right): "the water is clean CG grey with bare ripples and no out-of-focus rocks or sparkle"
+  - Not closed. Glare path and mirror are there; defocus is the lens (engine); rocks with weed are the lead's.
+- severe, the colonies of creatures on the ledges and in the air: "the creatures are not the leathery, bat-winged, long-necked beasts of -a. They are thin glassy CG rigs with stringy hair-like fringes, stiff star-shaped paper wings and brown umbrella-like skirts. Silhouettes, anatomy and skin read as a different species and as unfinished renders. Many float in mid-air with hard, untextured wing plates"
+  - Reworked twice. Sitters are upright cream picture sheets standing on the crag's own ledges (`COLONY.perch`), in knots with gaps, turned across the lens, no tassel strands, no paper stars, no brown skirts; one flier over the upper ledge and three near passers. Still wrong: no cast shade on the rock, no guano tied to a sitter, eyes too small to read.
+- severe, the wave across the strait: "one unbroken wall is allowed, but this one is a flat vertical sheet of streaky green-and-white stripes with puffy cotton-ball clouds pasted on top. There is no foam mass, no spray plume blowing off, and no translucency or weight, so it reads as a broken render"
+  - Rebuilt. The wall is a generated picture of a breaking bore (`mat/borewall-a.jpg`, `-b.jpg`) on the moving front, darks lifted to grey green so it is one mass, with spray and veil cards lit from behind by the sky and mist rolling ahead over the flat. Still wrong: it does not pitch forward in motion, no lit-through lip.
+- severe, the flying creatures: "apart from allowed blur, the creatures in -b are white feathery CG birds with tufted fringes and stiff straight wings. They are not the -a long-legged, curved-necked, bat-winged creatures skimming low in a line over the water. Some sit high and ghostly, without -a's backlit warm membranes"
+  - Closed in the main: nine pale side-on picture sheets, 2.0 to 4.6 m over the water, crossing low in a loose line ahead of the wall. Still wrong: they are sharp where the picture's are blurred.
+- major, the flanking cliffs: "-a shows wet black rock draped in kelp and weed with spray bursting against it. -b shows rounded, fuzzy, fur-textured lumps with even, uniform texture, no wet sheen and no spray against them"
+  - Cliffs are the lead's. Mine: bursts of spray at the two gate stacks, placed from `STATIONS.posts`.
+- major, the foreground tidal flat: "-a has a shallow, glinting wet flat with kelp clumps, rippled reflections, and defocused weedy rocks in the foreground. -b has a flat, dull grey plane with round pebble dots and blobby dark patches. There are no kelp, no reflected sky glints and no foreground depth of field"
+  - Floor, kelp and stones are the lead's. My film: bars now mirror the sky (the blobby dark patches were mine and are closed).
+- severe, the wading animals in the center and right: "necks meet torsos at a hard disconnected cylinder step, legs are rigid angular rods with sharp kinks, wing sails have jagged low-poly edges, and nothing on their legs is wet"
+  - Closed by changing the method: no built animal stands in a close view, so there is no step at the neck and no rod leg; the sheet is one painted animal. Not done: wet darkening on the legs beyond what the picture holds.
+- severe, the splash around the right animal's lowered head: "the spray reads as disconnected flat white dots and fuzzy grey discs in mid-air while the head filaments look like rigid translucent strips cutting into the water"
+  - Partly. Drops are a tenth of the size and many more; the strips are gone with the built tuft. Not a simulated crown.
+- severe, the clinging creature along the cliff face: "the body and limbs look like a smooth clay CG model with blotchy procedural spots, flat-card tendrils, no contact shadow on the rock, and no grit or moisture from the cliff"
+  - Closed in the main with the plate (see the carcass above): relief, stains, wet, weed over it, a dark copy behind for contact shade.
+- severe, the two wading animals on the mid-right shore: "the wing-spreading animal appears ghostly and semi-transparent like an alpha-blended card, the rightmost splash is a cluster of flat white spikes, and the standing animals lack grounding shadows"
+  - Ghost closed (opaque sheets). Splash is fine drops. Grounding is a mirror in the film and rings; there is still no cast shadow on wet sand.
+- major, the foreground boulders and water in the right panel: "the foreground boulder has a sharp faceted polygon ridge and stretched texture, and the water is a flat grey sheet with no foam, meniscus, or darkened wet edge where it meets the rock"
+  - Boulder is the lead's. Water: a darker wet band and a foam line where the film meets a bar. Not done at stones: the stones are the lead's and the film does not know them.
+- major, the distant shoreline surf and mist in the top-left and top-right panels: "the breaking surf reads as a bright flat vertical-striped card topped with repetitive grey puff-blobs"
+  - Not reached: the far surf band is as round 10 left it, apart from the bursts at the stacks.
+- major, the water and dark shadow patch in the bottom-right panel: "the water reads as smooth grey plastic with a hard-edged flat dark patch and no depth, foam, or shoreline transition"
+  - Partly. The film has depth tint, a wet edge and a sky mirror; the hard dark patch was my wet band and is closed.
+- major, the close-up cliff crops in the top-left and bottom-right panels and the creature torso in the top-right panel: "at native size the rock dissolves into blurry glossy streaks with pure black hollows, and the creature torso shows a sharp intersecting polygon seam at the limb joint"
+  - Rock is the lead's. The torso seam is gone with the built body.
+- major, the water surface and pebbles in both panels: "the water is flat grey with procedural concentric rings around the head filaments, and small pebbles float or clip into the surface with dark halos and no refraction"
+  - Partly. Rings stand only in the feeding shot and break up with the ripple; pebbles are the lead's; no refraction of the bed.
+- severe, midground white-and-green ridge across the center: "the ridge has sharp low-poly triangular facets along its crest (also clear in set-B-05.png) and vertically stretched green streaks that read as smeared noise rather than real rock or trees"
+  - This was the bore read as a ridge. The mesh crest is hidden under picture cards; no facets at the key at draft tier. Not checked at the final tier.
+- severe, water surface in the lower half and around the boulders: "the water looks like smooth gray plastic with no depth, no foam, no meniscus or wet darkened edge where it meets the boulders and cliffs, and scattered dark pebble-like blobs sitting on the surface without ripples (confirmed in set-B-06.png)"
+  - Partly. Wet band and foam line at bars; no meniscus at boulders (lead's stones, see above).
+- severe, creature tassels and brown folded wings in both crops: "the tassels and wing edges break into discrete stepped ghost copies and stippled dotted lines instead of continuous strands or smooth motion blur, and the brown wings clip straight through the solid rock ledges"
+  - Tassel strands and the brown wings are gone with the built animal; sitters stand on the ledge's own height so no wing passes through rock at the key. Not checked at the final tier for stepped blur on the passers.
+- severe, perched creatures across the rock terraces: "the creatures have smooth, featureless plastic-looking bodies, repeated stiff poses, no contact shadows grounding them to the ledges, and no dust or weathering from the environment"
+  - Partly. Picture sheets carry skin detail; pitch, neck, sail and size vary; they rock, shift, preen and shake in their own time. Not done: contact shadows, dust.
+- severe, flying creature wing in the center of the left crop: "the creature's wing clips directly through the flat water plane with no reflection, shadow, or surface disturbance"
+  - Closed: fliers before the bore keep 2.0 m and more above the film.
+- major, clouds and mist behind the midground ridge: "the clouds read as repetitive soft gray puffs and flat cards with uniform shading and no internal directional lighting (including a dark oval card visible in the upper left of set-B-06.png)"
+  - Clouds are the lead's. My veil cards take the sky's radiance from behind them and vary with it; the dark oval card is gone.
+- major, flying creature in the right crop (x 83 to 100%, y 58 to 75%): "the wing edges show coarse stair-stepped aliasing and the head tassels read as rigid, uniform sticks"
+  - Closed with the sheets: the edge is the picture's own soft alpha, no tassel sticks.
+- severe, pale flyer above the right-hand shallows, frames 1241–1252: "the wings snap from raised to a broad low fan and back in a handful of adjacent frames; the body barely answers the stroke"
+  - Not verified this round. The lander is still the built animal (far from the lens); its stroke was not respaced.
+- severe, foreground feeding animal and its contact with the water, frames 1730–1866; confirmed close up in set-A-09.png: "the camera closes in while the animal holds a rigid neck and leg pose; the white contact effect stays the same fan of streaks and beads instead of breaking into the pool"
+  - Partly. Feeders hold three different poses and dip in their own time; the thrown water is fine drops that follow the dip. Weight shifts in the legs: not done (a sheet has no legs to move).
+- severe, incoming wave between the rock walls, especially frames 2429–2506: "the wave arrives across the channel, but its face grows into a nearly vertical striped curtain; the foam stretches down it instead of pitching forward and breaking under its own weight"
+  - Partly. One coherent picture wall is carried forward with foam cards boiling on it and mist ahead. It does not roll over or collapse.
+- major, foreground at the ocean-to-shallows approach, frames 757–946: "the moving chop gives way to a nearly mirror-flat surface with a sharp change in the appearance of the water"
+  - Not reached.
+- major, perched animals across the terraces, frames 1517–1651; close detail in set-A-10.png: "many of the animals hold the same bent silhouette as the view travels past, so the colony reads as repeated posed models beneath the moving flyers"
+  - Addressed: pitch, neck sweep, sail state and size differ; looks, shifts and shakes are staggered by seed.
+- major, close flyer crossing from the left cliff toward the right, frames 1867–2022: "the flyer travels a long way with its wings held almost rigid and little banking or body response"
+  - Not reached: the ribs-05 flier is as it was, apart from being a picture sheet.
+- severe, foreground shallows and the wet-sand edge during the six-second camera hold: "The foreground waterline and the large reflection shapes stay effectively pinned while animals cross the midground, so the shoreline reads like part of a still image."
+  - Not verified after the lead's floor changes. The film's ripple moves and the wet band breathes with it; the large reflection shapes are still set by the bed.
+- major, the two near-right flyers at frames 2401–2412, also visible in set-B-02.png: "The wings change angle considerably but the bodies barely pitch or rise in response, making the strokes look hinged onto hovering models."
+  - Partly: the fliers are sheets whose body rises and pitches with the stroke by a small amount; not judged in motion this round.
