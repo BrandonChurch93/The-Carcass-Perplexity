@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { shots } from '../cameras';
 import { partAtHeight, radii, skirtPad, surface } from '../layout';
-import { BORE, FLOOR, LEVELS, RIBS, WIND, shotSpan } from '../shared/anchors';
+import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
 import { stagedSeconds } from '../shared/stage';
@@ -117,10 +117,11 @@ export function create(ctx: Context): Piece {
   const eye = new THREE.Vector3();
   const shared = { tChop: { value: chop }, tFoam: { value: foamMap }, uWind: { value: new THREE.Vector2(WIND.to[0], WIND.to[1]) } };
 
+  const foamPicture = ctx.assets.texture('mat/foam.jpg', { kind: 'colour' });
   const seaMaterial = new THREE.ShaderMaterial({
     vertexShader: SEA_VERTEX,
     fragmentShader: SEA_FRAGMENT,
-    uniforms: { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH } },
+    uniforms: { ...rig.uniforms, ...shared, uEye: { value: eye }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } },
   });
   const sea = new THREE.Mesh(seaDisc(), seaMaterial);
   sea.frustumCulled = false;
@@ -137,12 +138,11 @@ export function create(ctx: Context): Piece {
   const rings = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const ringList: Ring[] = Array.from({ length: MAX_RINGS }, () => ({ x: 0, z: 0, phase: 0, strength: 0 }));
   const ringCount = { value: 0 };
-  const stands = Array.from({ length: MAX_RINGS }, () => new THREE.Vector4());
   const front = { value: 0 };
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uStands: { value: stands }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH } },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
@@ -184,10 +184,12 @@ export function create(ctx: Context): Piece {
   const sites: BoreSite[] = feet
     .map((foot, n) => ({ x: foot.x, z: foot.z, reach: Math.max(foot.a, foot.b), id: n, near: Math.hypot(foot.x - gate[0], foot.z - gate[2]) < 130 }))
     .filter((b) => b.z > -2400 && b.z < 400);
+  // And the two stacks the last shot looks between: the burst up the nearer one is the tallest thing in its frame.
+  STATIONS.posts.forEach((post, n) => sites.push({ x: post[0], z: post[1], reach: 25, id: feet.length + n, near: true, power: n === 0 ? 1.2 : 0.55 }));
   const bore = createBore(rig.uniforms, foamMap, front, LEVELS.pool, [gate[0], gate[2]], sites, {
     wallA: ctx.assets.texture('mat/borewall-a.jpg', { kind: 'colour', repeat: false }),
     wallB: ctx.assets.texture('mat/borewall-b.jpg', { kind: 'colour', repeat: false }),
-    foam: ctx.assets.texture('mat/foam.jpg', { kind: 'colour' }),
+    foam: foamPicture,
     spray: ctx.assets.texture('mat/spray.jpg', { kind: 'colour', repeat: false }),
   });
   ctx.scene.add(ctx.parts.built('bore', bore.wall, bore.back, bore.curtain, bore.cards), bore.back, bore.curtain, bore.cards);
@@ -211,8 +213,6 @@ export function create(ctx: Context): Piece {
       RING_SOURCE.at?.(seconds, ringList);
       ringList.forEach((ring, i) => {
         (rings[i] as THREE.Vector4).set(ring.x, ring.z, ring.phase, ring.strength);
-        const st = ring.stand;
-        (stands[i] as THREE.Vector4).set(st ? st[0] : 0, st ? st[1] : 0, st ? st[2] : 0, st ? st[3] : 0);
       });
 
       surf.begin();

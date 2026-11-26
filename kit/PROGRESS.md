@@ -24,25 +24,25 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 87, 2026-11-26 03:10 UTC:
+Status 88, 2026-11-26 03:32 UTC:
 
-- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
-- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
-- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
-- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
+- `01-establishing.jpg`: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame
+- `02-v2-eye.jpg`: The Eye, version 2 (merged 03:27 UTC), approved left and built right with crops: eye-0, eye-2, eye-3, eye-4. Still wrong: the near third of eye-0 is flat, the backs in eye-4 are smooth, the wall in the water is streaks
+- `03-m-marsh-2.jpg`: The Blood Marsh, marsh-2: main on the left, the approved picture on the right. Fine detail 0.21 of the picture's, the lowest number in the film: the near stalks are out of focus and the frame is washed in fog
+- `04-hb5-reveal-4.jpg`: The Reveal at 03:29 UTC, the owner's frame: approved left, built right, crops of the cyclone and the ribs. Still wrong: the cyclone is darker and coarser than the approved
 
+Status 87, 2026-11-26 03:10 UTC, showed: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1.
 Status 86, 2026-11-26 02:48 UTC, showed: The Spine at 02:35 UTC: the dead one, and the herd in the hollow.
 Status 85, 2026-11-26 02:18 UTC, showed: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below; The Eye, the drinkers, restaged further off.
-Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T03:10:31Z
-phase 4: 7.00 h used of 17.00 h
-build: 27.32 h used of 72.00 h
+2026-11-26T03:32:15Z
+phase 4: 7.36 h used of 17.00 h
+build: 27.68 h used of 72.00 h
 extra rounds: yes
 minutes since the last status: 22
 ```

@@ -58,12 +58,15 @@ void main() {
   vec3 v = toEye / dist;
   vec4 land = landAt(p);
   float depth = -land.r;
+  float px = length(fwidth(p));
+  // Under the floor of the strait no lens ever sees the sea: nothing is worked out for it there.
+  vec3 col = vec3(0.03, 0.034, 0.03);
+  if (land.r < 0.6) {
   float feet = texture2D(tFeet, (p - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
   // Water shoals toward the sand and toward the foot of a blade alike.
   float ragged = (texture2D(tChop, p / 173.0).b - 0.5) * 5.0 + (texture2D(tChop, p.yx / 39.0).b - 0.5) * 2.0;
   float shoal = min(depth + ragged * smoothstep(0.0, 3.0, depth), 0.2 + feet * 0.4);
   float calm = smoothstep(0.3, 9.0, depth);
-  float px = length(fwidth(p));
   vec2 g;
   float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;
   g *= calm;
@@ -105,7 +108,7 @@ void main() {
   vec3 body = mix(shallow, deep, smoothstep(0.0, 5.0, depth));
   // Light comes through the thin top of a wave that faces the lens.
   body *= 1.0 + 1.6 * smoothstep(0.3, 1.2, h + 2.0 * (c1.b - 0.5)) * calm;
-  vec3 col = mix(body * e / 3.14159, refl, fres);
+  col = mix(body * e / 3.14159, refl, fres);
 
   float lace = 0.55 * texture2D(tChop, p / 7.3 - uTime * uWind * 0.08).a + 0.45 * texture2D(tChop, p.yx / 1.9 + uTime * 0.05).a;
   float cap = smoothstep(0.6, 0.76, c1.b * 0.55 + c2.b * 0.35 + 0.1 * h) * calm;
@@ -121,6 +124,7 @@ void main() {
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   vec3 foamCol = vec3(0.8, 0.81, 0.8) * (0.7 + 0.3 * lace) * e / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
+  }
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
 
@@ -140,7 +144,6 @@ ${RIG_GLSL}
 uniform sampler2D tChop;
 uniform vec2 uWind;
 uniform vec4 uRings[${rings}];
-uniform vec4 uStands[${rings}];
 uniform float uFront;
 uniform float uBoreHeight;
 uniform int uRingCount;
@@ -148,6 +151,7 @@ uniform float uPoolLevel;
 uniform vec2 uDrain;
 uniform sampler2D tFeet;
 uniform float uFeetReach;
+uniform sampler2D tFoamPic;
 varying vec3 vWorld;
 varying float vDepth;
 // What stands in the mirror: the blades. The mirrored ray is walked out over the plan of their feet; xyz how much of it a blade fills, and how far off.
@@ -188,8 +192,16 @@ void main() {
   }
   depth -= 0.16 * smoothstep(0.36, 0.62, texture2D(tChop, p / 29.0).b + 0.5 * (texture2D(tChop, p / 7.3).b - 0.5)) * (1.0 - smoothstep(0.0, 0.05, over)) * smoothstep(0.9, 2.4, waded);
   // No discard here: a picture read after a discard has no slope to pick its level by where a neighbour is gone, and the edge of every bar came out different on every render. The sheet is cut at the end.
-  bool dry = depth < 0.0;
+  // The sheet is never still: thin water comes on and drains back round every stone and bar, a hand's breadth, each stretch in its own time.
+  float tide = texture2D(tChop, p / 37.0 + 0.3).a;
+  depth += 0.011 * sin(uTime * 0.9 + tide * 19.0) + 0.006 * sin(uTime * 2.3 + p.x * 0.9 + p.y * 0.7 + tide * 7.0);
+  // What the water has just left is wet and dark: a band on every stone and bar above the line.
+  bool dry = depth < -0.09;
+  float wetBand = 0.42 * smoothstep(-0.09, -0.004, depth);
   float edge = smoothstep(0.0, 0.012, depth);
+  // No branch round the work: a picture read inside one has no slope at its border, and the waterlines came out different on every page load.
+  vec3 col = vec3(0.0);
+  float alpha = 0.0;
   vec2 s2 = c2.xy - 0.5;
   vec2 slope = ((c1.xy - 0.5) * 0.11 + vec2(-s2.y, s2.x) * 0.07) * (0.2 + 0.8 * gust) * smoothstep(0.0, 0.07, depth);
   for (int i = 0; i < ${rings}; i++) {
@@ -224,35 +236,33 @@ void main() {
     float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
     float white = max(1.0 - smoothstep(0.1, 0.2, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
-    refl = mix(refl, mix(vec3(0.07, 0.085, 0.07), vec3(0.9), white) * lit, wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
+    // It is white water from foot to crest now: its lifted body shows grey in the mirror, never a hole.
+    refl = mix(refl, mix(vec3(0.42, 0.46, 0.45), vec3(0.9), white) * lit, 0.8 * wall * mix(1.0, 0.55, smoothstep(1.0, 1.15, k)));
   }
-  // The waders stand in it too: each leg a post, each body a ball, met by the mirrored ray. Feet and mirror join at the water.
-  float rl = max(length(r.xz), 1e-3);
-  vec2 rd = r.xz / rl;
-  float mirrored = 0.0;
-  for (int i = 0; i < ${rings}; i++) {
-    if (i >= uRingCount) break;
-    vec4 st = uStands[i];
-    if (st.w == 0.0) continue;
-    vec2 to = st.xy - p;
-    float t = dot(to, rd);
-    float miss = abs(to.x * rd.y - to.y * rd.x);
-    float high = t * r.y / rl;
-    float hit = st.w > 0.0
-      ? (1.0 - smoothstep(st.w * 0.5, st.w * 1.5, miss)) * (1.0 - smoothstep(st.z - 0.15, st.z, high))
-      : 1.0 - smoothstep(-st.w * 0.7, -st.w, length(vec2(miss, (high - st.z) * 1.3)));
-    mirrored = max(mirrored, hit * step(0.0, t));
-  }
-  refl = mix(refl, vec3(0.46, 0.44, 0.4) * skyIrradiance(vec3(0.0, 0.3, 0.0) - vec3(rd.x, 0.0, rd.y)) / 3.14159, mirrored * 0.85);
   vec3 hv = normalize(v + uSunDir);
   // The glare path toward the sun: a hard core, and the broken glitter of the ripples round it.
   refl += uSunColour * (pow(max(dot(n, hv), 0.0), 900.0) * 8.0 + pow(max(dot(n, hv), 0.0), 90.0) * 0.9 * (0.4 + 1.2 * c2.a)) * sun;
   vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);
   float murk = 1.0 - exp(-max(depth, 0.0) * 2.2);
   vec3 body = vec3(0.1, 0.105, 0.09) * e / 3.14159;
-  vec3 col = fres * refl + (1.0 - fres) * murk * body;
-  float alpha = (fres + (1.0 - fres) * murk) * edge;
-  gl_FragColor = vec4(rigOut(col * edge), alpha * (1.0 - uSolo));
+  // The meniscus: where the water climbs a stone it turns up to the sky, a bright thread along the line.
+  float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
+  fres = mix(fres, 0.8, 0.18 * lip);
+  col = fres * refl + (1.0 - fres) * murk * body;
+  alpha = fres + (1.0 - fres) * murk;
+  // Foam: lace left along the line where the water works against stone and sand, and in lanes the wind draws out over the open sheet.
+  vec2 drift = uTime * uWind * 0.05;
+  float lace = dot(texture2D(tFoamPic, p / 6.0 - drift).rgb, vec3(0.3333));
+  float stretch = smoothstep(0.35, 0.65, texture2D(tChop, p / 23.0 + 0.7).a);
+  float lanes = smoothstep(0.6, 0.85, texture2D(tChop, vec2(p.x * 0.011, p.y * 0.07) - drift * 0.2).b) * smoothstep(0.03, 0.12, depth);
+  float foamed = smoothstep(0.38, 0.7, lace) * clamp((1.0 - smoothstep(0.0, 0.07, depth)) * stretch + 0.45 * lanes * gust, 0.0, 1.0) * edge;
+  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);
+  alpha = mix(alpha, 1.0, foamed);
+  // A bar the water has just left is wet: dark from above, and at a glance it holds the sky as the water beside it does. No hole in the mirror.
+  float band = wetBand / 0.42;
+  col = mix(0.85 * fres * refl * band, col, edge);
+  alpha = mix(band * max(0.42, 0.85 * fres), alpha, edge);
+  gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo);
   if (dry) discard;
 }`;
 

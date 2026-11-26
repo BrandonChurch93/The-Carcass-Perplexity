@@ -1,8 +1,8 @@
-# Status 87
+# Status 88
 
-2026-11-26 03:10 UTC. Phase 4, the other places and the rise.
+2026-11-26 03:32 UTC. Phase 4, the other places and the rise.
 
-- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
-- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
-- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
-- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
+- `01-establishing.jpg`: All seven places on main at 03:24 UTC, draft tier (version 1 of wave 2): the establishing frame of each place, then the titan frame
+- `02-v2-eye.jpg`: The Eye, version 2 (merged 03:27 UTC), approved left and built right with crops: eye-0, eye-2, eye-3, eye-4. Still wrong: the near third of eye-0 is flat, the backs in eye-4 are smooth, the wall in the water is streaks
+- `03-m-marsh-2.jpg`: The Blood Marsh, marsh-2: main on the left, the approved picture on the right. Fine detail 0.21 of the picture's, the lowest number in the film: the near stalks are out of focus and the frame is washed in fog
+- `04-hb5-reveal-4.jpg`: The Reveal at 03:29 UTC, the owner's frame: approved left, built right, crops of the cyclone and the ribs. Still wrong: the cyclone is darker and coarser than the approved
