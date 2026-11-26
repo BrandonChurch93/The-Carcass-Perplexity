@@ -20,10 +20,12 @@ export const SKY_GLSL = /* glsl */ `
 uniform sampler2D tSkyDusk;
 uniform sampler2D tStormWall;
 uniform sampler2D tStormLit;
+// Staged by shot: x turns the storm wall round the horizon, radians.
+uniform vec4 uSkyStage;
 const float STORM_AZ = ${Math.atan2(-WIND[2], -WIND[0]).toFixed(4)};
 const float DUSK_AZ = ${Math.atan2(DUSK[2], DUSK[0]).toFixed(4)};
 // How bright the pictures stand in the scene: the lens is set for the dusk.
-const float SKY_GAIN = 0.4;
+const float SKY_GAIN = 0.3;
 
 float wrapPi(float a) {
   return a - 6.28318 * floor((a + 3.14159) / 6.28318);
@@ -57,18 +59,19 @@ float cloudLit(vec3 from, vec3 d) {
     float wide = mix(0.02, 0.09, high);
     lit += power * (0.25 + 0.75 * high) * (exp(-(1.0 - c) / wide) + 0.25 * exp(-(1.0 - c) / (6.0 * wide)));
   }
-  return lit / 1.2e6;
+  return lit / 8.0e6;
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   float el = asin(clamp(d.y, -1.0, 1.0));
   float az = atan(d.z, d.x);
-  float toStorm = abs(wrapPi(az - STORM_AZ));
-  // The storm wall: 107 degrees of it about the gale at the picture's own shape, mirrored on beyond.
-  vec2 uvS = vec2(0.5 + wrapPi(az - STORM_AZ) / 1.87, 0.03 + el / 1.05);
+  float turned = wrapPi(az - STORM_AZ - uSkyStage.x);
+  float toStorm = abs(turned);
+  // The storm wall: 107 degrees of it about the gale at the picture's own shape, mirrored on beyond. The picture's flat foot is under the horizon.
+  vec2 uvS = vec2(0.5 + turned / 1.87, 0.14 + el / 1.2);
   // The dusk: the picture's band lies along the horizon, toward the last light.
   vec2 uvD = vec2(0.62 + wrapPi(az - DUSK_AZ) / 1.5, 0.045 + el / 1.0);
   float seam = textureLod(tNoise, vec3(az * 0.9, el * 1.7, 0.53), 0.0).r - 0.5;
-  float storm = 1.0 - smoothstep(0.85, 1.45, toStorm + 0.5 * seam);
+  float storm = 1.0 - smoothstep(1.2, 1.75, toStorm + 0.4 * seam);
   float lit = cloudLit(from, d) + 30.0 * dot(uFlash, vec3(0.33)) * storm;
   vec3 c = vec3(0.0);
   if (storm < 0.999) {
@@ -84,6 +87,9 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
     float k = clamp(lit, 0.0, 1.0);
     c += storm * mix(dark, bright * (1.0 + 0.8 * k), k);
   }
+  // About the bolt the cloud glows from inside, violet, most where it is thick and pale.
+  float glow = clamp(cloudLit(from, d), 0.0, 3.0);
+  c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // Overhead the pictures end: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
   return c * SKY_GAIN;
@@ -100,6 +106,16 @@ ${SKY_GLSL}
 void main() {
   vec3 d = normalize(vDir);
   vec3 c = skyCloud(cameraPosition, d, 0.0);
+  // Through a long lens the pictures are seen larger than they were made: the same cloud, four times smaller, gives them the detail
+  // they lack there, as much as the lens asks for.
+  float foot = length(fwidth(d));
+  float az = atan(d.z, d.x);
+  float el = asin(clamp(d.y, -1.0, 1.0));
+  vec2 uvT = vec2(az, el) * 2.3 + vec2(uTime * 0.0012, 0.0);
+  uvT = vec2(mirrored(uvT.x), mirrored(uvT.y + 0.2));
+  float fine = dot(textureLod(tStormWall, uvT, 0.0).rgb, vec3(0.33));
+  float broad = dot(textureLod(tStormWall, uvT, 4.5).rgb, vec3(0.33));
+  c *= mix(1.0, clamp(fine / max(broad, 0.01), 0.6, 1.5), 0.85 * smoothstep(0.0009, 0.0002, foot));
   // Under the horizon there is only the cloud sea, which the air pass draws.
   c = mix(c, uSkyGround, smoothstep(0.0, -0.06, d.y));
   gl_FragColor = vec4(rigOut(c), 1.0);
@@ -108,6 +124,7 @@ void main() {
 /** The pictures the dome's cloud is read from, for any material that carries SKY_GLSL. */
 export function skyPictures(ctx: Context): Record<string, THREE.IUniform> {
   return {
+    uSkyStage: { value: new THREE.Vector4(0, 0, 0, 0) },
     tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
     tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tStormLit: { value: ctx.assets.texture('mat/stormwall-lit.jpg', { repeat: false }) },
@@ -120,8 +137,7 @@ export interface Sky {
   dispose(): void;
 }
 
-export function createSky(ctx: Context, noise: THREE.Data3DTexture): Sky {
-  const uniforms = skyPictures(ctx);
+export function createSky(ctx: Context, noise: THREE.Data3DTexture, uniforms: Record<string, THREE.IUniform>): Sky {
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,

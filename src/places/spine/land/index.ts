@@ -18,7 +18,7 @@ const ANISOTROPY = 1;
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(height, hollow);
 
-  const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY, repeat: false }) });
+  const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
   const pictures = {
     tSpire: picture('spire'),

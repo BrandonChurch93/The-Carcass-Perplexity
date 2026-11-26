@@ -20,6 +20,7 @@ uniform sampler2D tRidge;
 uniform vec2 uRidgeSpan;
 uniform sampler2D tDeck;
 uniform sampler2D tSeaNh;
+uniform sampler2D tFar;
 uniform vec4 uSteam[8];
 uniform vec4 uSteamMore[8];
 uniform int uSteamCount;
@@ -199,23 +200,25 @@ void main() {
     vec3 p = ro + rd * t;
     seaLod = max(0.0, log2(t * 0.00035));
     vec3 domeFar = skyCloud(ro, normalize(vec3(rd.x, 0.035, rd.z)), 5.0);
-    float e = 30.0 + 0.02 * t;
+    // Its light is a picture's: a cloud deck seen low across its top (the foot of mat/far), laid by the way the eye looks, the last band
+    // toward the dusk, and flowing as the dome's cloud flows. The surface found above only says where the cloud stands before the land.
+    float az = atan(rd.z, rd.x);
+    float dip = asin(clamp(-rd.y, 0.0, 1.0));
+    // The picture's cloud runs from its horizon down 15 degrees; lower than that it is laid again, turned over, so nothing is pulled long.
+    float down = dip / 0.26;
+    down = 1.0 - abs(1.0 - mod(down, 2.0));
+    vec2 uvF = vec2(0.86 + wrapPi(az - DUSK_AZ) / 1.55, 0.385 - 0.37 * down);
+    vec3 sea = flowing(tFar, uvF, vec2(0.016, 0.0), 24.0, 0.0) * SKY_GAIN;
+    // The billows of the surface itself, broad and soft: their heads a little lighter, their hollows a little darker.
     float h0 = seaTop(p, true);
-    vec3 n = normalize(vec3(h0 - seaTop(p + vec3(e, 0.0, 0.0), true), e, h0 - seaTop(p + vec3(0.0, 0.0, e), true)));
-    // Far off the billows close up into a level floor.
-    float gone = 1.0 - exp(-t / 26000.0);
-    n = normalize(mix(n, vec3(0.0, 1.0, 0.0), gone));
-    // Its hollows are in their own shade: the tops stand in the light.
-    float hollowed = smoothstep(-0.25, 0.5, (seaTop(p + vec3(n.x, 0.0, n.z) * 500.0, false) - h0) / 500.0);
-    float w = max(dot(n, uWarmDir), 0.0);
-    float wn = clamp((w + 0.25) / 1.25, 0.0, 1.0);
-    vec3 sea = 0.5 * ((skyIrradiance(n) / 3.14159 - uWarmColour * (0.19 * wn * wn)) * (1.0 - 0.82 * hollowed) + uFlash * 0.25 * stormSide(rd) + strikeLight(p) * 0.15);
-    // The deck's own tone: pale on the heads of its lumps, blue-grey between them.
-    vec3 qs = p - uWind.xyz * (uTime * 38.0);
-    vec3 tint = clamp(textureLod(tDeck, qs.xz / 10000.0, seaLod).rgb / SEA_MEAN, 0.45, 1.9);
-    // Cloud is not snow: it is the greyer and the bluer of the two, and only the heads of its billows come near the snow's value.
-    sea *= mix(vec3(1.0), tint, 0.75) * vec3(0.66, 0.69, 0.78) * (0.75 + 0.5 * smoothstep(-0.1, 0.5, n.y - 0.75 + 0.6 * w));
-    sea = mix(sea, mix(uSkyGround, domeFar, 0.6), gone);
+    float head = smoothstep(-90.0, 110.0, h0 - (ridgeAt(p.x).y - CLOUD_UNDER));
+    sea *= 0.8 + 0.3 * head;
+    // Toward the storm the deck lies under the wall, darker; it takes the flash and each strike.
+    float lit = clamp(cloudLit(ro, normalize(vec3(rd.x, 0.03, rd.z))) + 30.0 * dot(uFlash, vec3(0.33)) * stormSide(rd), 0.0, 1.5);
+    sea = sea * (1.0 - 0.35 * stormSide(rd)) * (1.0 + 1.6 * lit) + vec3(0.05, 0.035, 0.1) * lit * 0.5 + strikeLight(p) * 0.06;
+    // At the horizon it goes into the dome's own cloud.
+    float gone = 1.0 - exp(-t / 30000.0);
+    sea = mix(sea, domeFar, max(gone * gone, smoothstep(0.035, 0.0, dip)));
     // Its edge against the land is soft: the cloud thins where it laps the rock.
     float lap = smoothstep(0.0, 1.0, (far - t) / (260.0 + 0.1 * t));
     light += through * sea * lap;
