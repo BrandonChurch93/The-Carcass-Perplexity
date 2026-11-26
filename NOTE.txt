@@ -1,5 +1,4 @@
-2026-11-26 02:49 UTC
-work at deecc39 on agent/marsh-ground-2
-hb7: marsh-4 wallow hollow with tipped slabs, marsh-3 clear of steam, marsh-0 rain as veils and far mist pulled back
-look-1.jpg = out/work/a17.jpg
-look-2.jpg = out/work/a18.jpg
+2026-11-26 03:05 UTC
+work at c82d7b1 on agent/marsh-ground-2
+hb8: marsh-0 uhd (sky picture, salt rims, far specks gone), far crop, marsh-1
+look-1.jpg = out/work/a23.jpg
