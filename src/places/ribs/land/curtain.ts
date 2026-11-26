@@ -17,7 +17,7 @@ export interface CurtainOptions {
   next: () => number;
 }
 
-const SEGMENTS = 11;
+const SEGMENTS = 12;
 
 export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeometry {
   const tTide = partAtHeight(rib, 30);
@@ -101,13 +101,23 @@ export function curtainShape(rib: Rib, options: CurtainOptions): THREE.BufferGeo
         tones[q + 1] = amber;
         tones[q + 2] = 0.35 + 0.65 * layer;
       }
-      if (k < SEGMENTS) {
+    }
+    // Away from the one who hangs there no lens comes near: a frond is one strip of half as many lengths.
+    const own: number[] = [];
+    if (Math.abs(arc) > 34) {
+      for (let k = 0; k < SEGMENTS; k += 2) {
+        const a = v0 + k * 3;
+        own.push(a, a + 6, a + 2, a + 2, a + 6, a + 8);
+      }
+    } else {
+      for (let k = 0; k < SEGMENTS; k++) {
         for (let s = 0; s < 2; s++) {
           const a = v0 + k * 3 + s;
-          index.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
+          own.push(a, a + 3, a + 1, a + 1, a + 3, a + 4);
         }
       }
     }
+    for (const i of own) index.push(i);
     made += 1;
   }
   const g = new THREE.BufferGeometry();
@@ -147,15 +157,19 @@ ${NOISE_GLSL}
 void main() {
   vec3 n0 = normalize(vNormal);
   if (!gl_FrontFacing) n0 = -n0;
-  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 toLens = cameraPosition - vWorld;
+  vec3 v = normalize(toLens);
   float edge = abs(vUv.x * 2.0 - 1.0);
-  // The frond's own wrinkles, across it and along.
-  vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
-  float wr = vnoise(at);
-  float wr2 = vnoise(at * vec2(2.7, 0.6) + 7.0);
+  // The frond's own wrinkles, across it and along. Every fragment of the curtain that is seen is paid for: from 70 m they are not seen, nor asked.
+  float wr = 0.5;
+  float wr2 = 0.5;
+  float close = 1.0 - smoothstep(2500.0, 4900.0, dot(toLens, toLens));
+  if (close > 0.0) {
+    vec2 at = vec2(vUv.x * 2.3 + vTone.x * 37.0, vUv.y * 11.0 + vTone.x * 91.0);
+    wr = mix(0.5, vnoise(at), close);
+    wr2 = mix(0.5, vnoise(at * vec2(2.7, 0.6) + 7.0), close);
+  }
   // A frond is no flat strap: it is ruffled at its edges and troughed along its midrib, so the wet light on it is a line and not a face.
-  float ragged = 0.62 + 0.38 * vnoise(vec2(vUv.y * 23.0 + vTone.x * 53.0, vUv.x < 0.5 ? 1.5 : 8.5));
-  if (edge > ragged) discard;
   vec3 du = dFdx(vWorld) * dFdy(vUv.y) - dFdy(vWorld) * dFdx(vUv.y);
   vec3 across = normalize(du - n0 * dot(du, n0) + vec3(1e-7, 0.0, 0.0)) * sign(dFdx(vUv.x) * dFdy(vUv.y) - dFdy(vUv.x) * dFdx(vUv.y) + 1e-12);
   float ruffle = sin(vUv.y * 60.0 + vTone.x * 40.0 + 3.0 * wr) * smoothstep(0.3, 0.9, edge);
@@ -169,7 +183,7 @@ void main() {
   float rough = 0.3 + 0.25 * wr;
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
   // The low sun through a thin wet frond.
-  float thru = max(dot(-n0, uSunDir), 0.0) * sunAt(vWorld, landAt(vWorld.xz));
-  c += amber * uSunColour * (0.2 * thru * vTone.y * occ);
+  float thru = max(dot(-n0, uSunDir), 0.0) * vTone.y * occ;
+  if (thru > 0.02) c += amber * uSunColour * (0.2 * thru * sunAt(vWorld, landAt(vWorld.xz)));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;

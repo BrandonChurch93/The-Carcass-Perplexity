@@ -14,7 +14,7 @@ import { LAND } from '../shared/rig';
 import { bed } from './height';
 import { fbm3, noise3, smooth } from './noise';
 import { bladeShape, worldSpace, roundSpace } from './blade';
-import { BOULDER_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
+import { BOULDER_FRAGMENT, COBBLE_FRAGMENT, COLONY_FRAGMENT, GROUND_FRAGMENT, MIRROR_FRAGMENT, MIRROR_LOOP_FRAGMENT, MIRROR_VERTEX, ROCK_FRAGMENT, ROCK_VERTEX, WEED_FRAGMENT, WEED_VERTEX } from './shaders';
 import { FIN_FRAGMENT, FIN_VERTEX, STACK_FRAGMENT } from './fin';
 import { CURTAIN_FRAGMENT, CURTAIN_VERTEX, curtainShape } from './curtain';
 import { archShape, boulderShape, floorShape, lathe, lines, relief, skirtShape, turns, weedLump, weedTier, weedTop } from './shapes';
@@ -230,10 +230,10 @@ export function create(ctx: Context): Piece {
   const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.15, 0);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
   // The cobbles heaped on a bar stand clear of the film of water: drained, paler, each of its own tone.
-  const cobble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uDry: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const cobble = material(RIG_VERTEX, COBBLE_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, uPool: { value: LEVELS.pool } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -280,7 +280,7 @@ export function create(ctx: Context): Piece {
   fronds.side = THREE.DoubleSide;
   {
     const hang = ctx.rng('curtain');
-    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 6000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
+    add(skirts, curtainShape(ribByName(DROWNED.rib), { count: 5000, from: -0.3, to: 1.3, focus: [DROWNED.phi, DROWNED.height], next: () => hang.next() }), fronds);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -507,8 +507,8 @@ export function create(ctx: Context): Piece {
       kept.push(rock);
     }
   };
-  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 6000, 1.6, 22, 0.66);
-  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 3500, 1.6, 18, 0.6);
+  heap(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 5000, 1.6, 17, 0.66);
+  heap(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 3000, 1.6, 15, 0.6);
   const squat = [0.5, 0.58, 0.38, 0.45];
   const rocks = new THREE.Group();
   const dummy = new THREE.Object3D();

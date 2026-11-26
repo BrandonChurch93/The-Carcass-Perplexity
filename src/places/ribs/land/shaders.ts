@@ -282,7 +282,7 @@ void main() {
   vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
   vec3 rise = normalize(cross(n0, round0));
   vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
-  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.8);
+  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 0.55);
   float top = smoothstep(0.45, 0.8, nf.y);
   float macro = vnoise(vWorld.xz * 0.05 + y * 0.04) * 0.6 + vnoise(vec2(arc, y) * 0.13 + 5.0) * 0.4;
   // The stone is a mid grey: the sheet's own rust is taken out of it, and its lichen is laid again below, in patches.
@@ -316,12 +316,14 @@ void main() {
   float line = uKelp + 3.6 * (vnoise(vec2(arc / 6.0, 4.5)) - 0.5) + 1.6 * (vnoise(vec2(arc / 1.3, 9.5)) - 0.5);
   float down = line - y;
   vec2 uk = vec2(arc / 40.0, 0.125 - down / 40.0);
-  vec3 kelp = down < 4.6 && top < 0.5 ? textureLod(tColony, uk, lv).rgb * 0.8 : texture2D(tWeed, mix(vec2(arc, y), vWorld.xz, step(0.5, top)) / 7.0).rgb * vec3(1.5, 1.4, 0.95);
+  // The shore weed is olive, gold brown where a strap turns up: never a black band.
+  vec3 wk = texture2D(tWeed, mix(vec2(arc, y), vWorld.xz, step(0.5, top)) / 7.0).rgb;
+  vec3 kelp = down < 4.6 && top < 0.5 ? textureLod(tColony, uk, lv).rgb * 0.8 : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
   float weed = smoothstep(-0.2, 0.5, down + 0.6 * (dot(kelp, vec3(0.333)) < 0.1 ? 1.0 : 0.0));
   albedo = mix(albedo, kelp, weed);
   // The weed is no mirror: it keeps its own olive, and the rock's slopes are not its slopes.
   n = normalize(mix(n, n0, 0.7 * weed));
-  float rough = mix(mix(0.9, 0.4, max(band, 0.7 * low)), 0.85, weed);
+  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.8, weed);
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
@@ -650,7 +652,6 @@ uniform sampler2D tBoulderN;
 uniform sampler2D tWeed;
 uniform sampler2D tWeedN;
 uniform float uWeedy;
-uniform float uDry;
 uniform vec2 uGate;
 uniform float uPool;
 void main() {
@@ -680,21 +681,41 @@ void main() {
   vec3 gold = mix(vec3(0.62, 0.7, 0.72), vec3(1.0), weedPatch) * mix(wc * 0.5, vec3(0.105, 0.07, 0.022) * (0.4 + 2.2 * wc.g / 0.04 * 0.5), smoothstep(0.03, 0.09, wc.g) * 0.2);
   float crust = smoothstep(0.55, 0.7, vnoise(flat2 * 3.1 + 2.0) * 0.5 + vnoise(flat2 * 23.0) * 0.5 + 0.3 * (nh.z - 0.5)) * (1.0 - cover) * uWeedy;
   vec3 albedo = mix(side * mix(0.4 + 0.6 * tone, 0.6, uWeedy), gold, 0.85 * cover);
-  // A drained cobble: its tone is the stone's own and unlike its neighbour's, from slate to bone.
-  float own = vnoise(vWorld.xz * 9.0 + 4.0);
-  albedo = mix(albedo, mix(vec3(0.075, 0.08, 0.085), vec3(0.34, 0.32, 0.28), own * own) * (0.5 + 2.2 * dot(side, vec3(0.333))), uDry);
   albedo = mix(albedo, vec3(0.3, 0.29, 0.26), 0.6 * crust);
   // Weed is no mirror: wet straps, matt in the mass, bright only in small glints.
   float rough = mix(mix(0.3, 0.45, uWeedy), 0.66 - 0.5 * smoothstep(0.62, 0.8, wn.z), cover);
   // What stands in the pool or just out of it is soaked: near black and bright where it turns to the sky.
   float soak = smoothstep(uPool + 0.75, uPool + 0.15, vWorld.y + 0.3 * (vnoise(vWorld.xz * 1.7) - 0.5));
-  soak *= 1.0 - 0.75 * uDry * smoothstep(uPool + 0.02, uPool + 0.12, vWorld.y);
   albedo *= mix(1.0, mix(0.42, 0.7, uWeedy), soak);
-  rough = mix(mix(rough, 0.6, uDry), 0.16, soak * (1.0 - cover));
+  rough = mix(rough, 0.16, soak * (1.0 - cover));
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
   n = normalize(mix(n, bump(n0, vWorld, ut, (wn.xy - 0.5) * 1.3), cover));
   occ = mix(occ, 0.3 + 0.7 * smoothstep(0.15, 0.6, wn.z), cover);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
+}`;
+
+// A cobble heaped on a bar, drained: the shingle's own picture on the plane its face lies nearest, its tone its own and unlike its neighbour's,
+// from slate to bone, soaked only where it stands in the film of water. There are thousands under the low lens: it asks for nothing it does not show.
+export const COBBLE_FRAGMENT = /* glsl */ `
+${HEAD}
+uniform sampler2D tBoulder;
+uniform sampler2D tBoulderN;
+uniform float uPool;
+void main() {
+  vec3 n0 = normalize(vNormal);
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 an = abs(n0);
+  vec2 flat2 = an.y > max(an.x, an.z) ? vWorld.xz : (an.x > an.z ? vWorld.zy : vWorld.xy);
+  vec2 us = flat2 / 1.1 + 0.31;
+  vec3 side = texture2D(tBoulder, us).rgb;
+  vec3 nh = texture2D(tBoulderN, us).rgb;
+  vec3 n = bump(n0, vWorld, us, nh.xy - 0.5);
+  float own = vnoise(vWorld.xz * 9.0 + 4.0);
+  vec3 albedo = mix(vec3(0.075, 0.08, 0.085), vec3(0.34, 0.32, 0.28), own * own) * (0.5 + 2.2 * dot(side, vec3(0.333)));
+  float soak = 1.0 - 0.75 * smoothstep(uPool + 0.02, uPool + 0.12, vWorld.y);
+  albedo *= mix(1.0, 0.42, soak);
+  float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
+  gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, mix(0.6, 0.16, soak), occ)), 1.0);
 }`;
 
 /** The mirror in the card loop: the ripple that breaks the image goes round a closed way, about as far as it runs in the film, and is back where it began. */
