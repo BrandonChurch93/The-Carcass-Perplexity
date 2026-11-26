@@ -5,7 +5,7 @@ import type { Context, Piece } from '../shared/context';
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
-import { PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
+import { COLLAR_FRAGMENT, COLLAR_VERTEX, HEAD_DEPTH, HEAD_FRAGMENT, HEAD_VERTEX, PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
@@ -52,6 +52,35 @@ function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
   g.setAttribute('aSkin', new THREE.Float32BufferAttribute(skin, 1));
   g.setIndex(index);
   return g;
+}
+
+/** One stalk that no lens stands among, as its shaders are given it (palms.ts). */
+interface Wild {
+  x: number; y: number; z: number; h: number;
+  dx: number; dz: number; lean: number; R: number;
+  kind: number; phase: number; low: number; seed: number;
+  bowA: number; bowM: number; kinkT: number; kinkM: number;
+  swayA: number; swayM: number; kinkA: number; rate: number;
+  /** 0 young to 1 old; 2 dead. */
+  age: number; stain: number; uvo: number;
+  /** How much the air moves it: 0 for one that lies. */
+  quiver: number;
+  fork: [number, number, number]; collar: number; bare?: boolean;
+  cards: number[][];
+  foot: boolean;
+}
+
+/** A point of a stalk's line in still air, as the shader's spine() has it. */
+function lineAt(w: Wild, t: number): [number, number, number] {
+  const A = [w.dx * Math.sin(w.lean), Math.cos(w.lean), w.dz * Math.sin(w.lean)];
+  const U = [w.dx * Math.cos(w.lean), -Math.sin(w.lean), w.dz * Math.cos(w.lean)];
+  const W = [-w.dz, 0, w.dx];
+  const base = [w.x + w.fork[0], w.y + w.fork[1], w.z + w.fork[2]];
+  const at = (c: number): number => {
+    const dir = (angle: number): number => (U[c] as number) * Math.cos(angle) + (W[c] as number) * Math.sin(angle);
+    return (base[c] as number) + w.h * ((A[c] as number) * t + dir(w.bowA) * w.bowM * t * t + dir(w.swayA) * w.swayM * Math.sin(t * 4.7) * t + dir(w.kinkA) * w.kinkM * Math.max(t - w.kinkT, 0));
+  };
+  return [at(0), at(1), at(2)];
 }
 
 function instanced(base: THREE.BufferGeometry, count: number, attributes: Record<string, Float32Array>): THREE.InstancedBufferGeometry {
@@ -180,14 +209,12 @@ export function create(ctx: Context): Piece {
   // but for those a lens stands among: the approved wide picture has a few loose clumps by the seep and by the vein, and almost none on the flats.
   const kept = (s: Stalk): boolean =>
     ctx.rig.land.shore(s.x, s.z) < 2 || Math.hypot(s.x - K1_AT[0], s.z - K1_AT[1]) < 9 || Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 12 || Math.hypot(s.x - k3[0], s.z - k3[1]) < 13 || staged4.has(s);
-  const stood = stalks.filter((s) => near(s) && (closeOf(s) || kept(s)));
+  // The ones the lens of the colony stands among shade the ground as they did. Every other one that is drawn does it below, where it is made.
+  const stood = stalks.filter((s) => closeOf(s));
   const discs = ctx.rig.contactDiscs(stood.length);
   stood.forEach((s, i) => ctx.rig.setDisc(discs, i, s.x, s.z, (s.h > 2.6 ? 0.09 : 0.07) * s.size * 5, 0.7));
   {
     const rest = stalks.filter((s) => !closeOf(s));
-    const base = new Float32Array(rest.length * 4);
-    const axis = new Float32Array(rest.length * 4);
-    const kind = new Float32Array(rest.length * 4);
     // STAGED for the lens of the thin crust: the groves it looks across are marked, and stand low and thick in its shot.
     const low = new Set<Stalk>();
     const k4to = rel(27.6, 10.07);
@@ -206,51 +233,285 @@ export function create(ctx: Context): Piece {
       if (s.h > 3.2) s.kind = 3;
       else s.h *= 0.6;
     }
-    rest.forEach((s, i) => {
-      const tall = s.h * (0.45 + 0.75 * rng.next());
-      base.set([s.x, kept(s) ? Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05 : -60, s.z, tall + 0.05], i * 4);
-      // Slender: a stalk away from the lens of the colony is a wrist thick and three metres tall, as the approved pictures have them.
-      axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.5, 0.72)], i * 4);
-      kind.set([s.kind, s.phase, low.has(s) ? 1 : 0, rng.next()], i * 4);
+    // A stand of living things: every stalk has its own line (bow, sway, kink, fork), girth, age and head, and the stand has its old giants,
+    // its young in their lee, its dead standing broken and its dead lying in the brine. `rng` gives what it always gave, in the same order, so that
+    // the stalks the keys show stay the height they were; everything new is drawn from `wild`.
+    const wild = ctx.rng('stalks-wild');
+    const wilds: Wild[] = [];
+    const lee = [0.8, 0.6];
+    // The foot of a line: the bed where it stands in the brine, the ground where it does not.
+    const levelAt = (x: number, z: number): number => ctx.rig.land.height(x, z) - 0.05;
+    // Its own stream: what `wild` gives each stalk stays what it gave before the cards had a shape of their own.
+    const shapes = ctx.rng('stalks-cards');
+    const dress = (w: Wild, style: number, scale: number): void => {
+      // style: 0 a full mop, 1 ragged, 2 spent and hanging, 3 young and tight, 4 a bud, 5 half out.
+      const turn = wild.range(0, TAU);
+      const card = (k: number, n: number, droop: number, size: number, lock: number, ragged: number, spent: number): void => {
+        w.cards.push([turn + ((k + wild.range(-0.3, 0.3)) / n) * TAU, droop, size * scale, lock + shapes.range(0, 0.45), wild.next(), ragged, spent, wild.range(-0.035, 0.035)]);
+      };
+      if (style === 0) {
+        const n = 4 + wild.int(3);
+        const droop = wild.range(0.1, 0.65);
+        for (let k = 0; k < n; k++) card(k, n, droop + wild.range(-0.3, 0.4), wild.range(0.75, 1.25), 0, wild.next() < 0.3 ? wild.range(0.2, 0.5) : 0, 0);
+        if (wild.next() < 0.35) card(0.5, n, wild.range(-0.2, 0.2), wild.range(0.5, 0.75), 1, 0, 0);
+      } else if (style === 1) {
+        const n = 1 + wild.int(3);
+        for (let k = 0; k < n; k++) card(k, n, wild.range(0, 1.1), wild.range(0.6, 1.1), 0, wild.range(0.5, 1), wild.next() < 0.4 ? wild.range(0.3, 0.8) : 0);
+      } else if (style === 2) {
+        const n = 2 + wild.int(2);
+        for (let k = 0; k < n; k++) card(k, n, wild.range(1.7, 2.4), wild.range(0.4, 0.7), 0, wild.range(0.5, 0.95), wild.range(0.8, 1));
+      } else if (style === 3) {
+        const n = 1 + wild.int(2);
+        for (let k = 0; k < n; k++) card(k, n, wild.range(-0.25, 0.25), wild.range(0.5, 0.85), 1, 0, 0);
+        if (wild.next() < 0.5) card(0.5, n, wild.range(-0.5, 0), wild.range(0.5, 0.8), 0, 0.2, 0);
+      } else if (style === 4) {
+        card(0, 1, wild.range(-0.15, 0.15), wild.range(0.4, 0.6), 1, 0, 0);
+      } else {
+        const n = 2 + wild.int(2);
+        for (let k = 0; k < n; k++) card(k, n, wild.range(-0.4, 0.3), wild.range(0.7, 1.1), 0, wild.next() < 0.4 ? 0.4 : 0, 0);
+        card(0.5, n, wild.range(-0.2, 0.2), wild.range(0.6, 0.9), 1, 0, 0);
+      }
+    };
+    // A short stalk carries a small head: the head is as wide as the trunk is thick, and no wider than the stalk can hold up.
+    const headFor = (tall: number): number => Math.pow(Math.min(1.1, Math.max(0.12, tall / 2.6)), 0.9);
+    const headOf = (kind: number): number => {
+      if (kind === 1) return 4;
+      if (kind === 3) return 5;
+      const roll = wild.next();
+      return roll < 0.54 ? 0 : roll < 0.73 ? 1 : roll < 0.84 ? 2 : 3;
+    };
+    rest.forEach((s) => {
+      const r1 = rng.next();
+      const r2 = rng.range(0, 0.2);
+      const r3 = rng.range(0.5, 0.72);
+      const seed = rng.next();
+      if (!kept(s)) return;
+      // The groups staged behind the great wallower are a key's own: they keep their lines and sizes as the ones by a lens do.
+      const anchored = near(s) || staged4.has(s);
+      const lowly = low.has(s);
+      // What stands behind a subject in a key's picture (the groves across the thin crust, the far side of the colony's water) grows no taller and
+      // carries no wider a head than it did there.
+      const ahead2 = (s.x - K2_AT[0]) * K2_DIR[0] + (s.z - K2_AT[1]) * K2_DIR[1];
+      const aside2 = Math.abs((s.x - K2_AT[0]) * K2_RIGHT[0] + (s.z - K2_AT[1]) * K2_RIGHT[1]);
+      const backdrop = lowly || (ahead2 > 0 && ahead2 < 90 && aside2 < 0.9 * ahead2 + 3);
+      // Seedling to old giant. The ones a key's lens stands by keep their height, give or take a little.
+      const cls = wild.next();
+      const grown = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
+      const grow = backdrop ? Math.min(grown, 1.15) : grown;
+      const tall = s.h * (0.45 + 0.75 * r1) * grow;
+      const girth = anchored ? wild.range(0.95, 1.08) : Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
+      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * r3 * girth;
+      const leaner = !anchored && wild.next() < 0.14 ? wild.range(0.2, 0.5) : 0;
+      const kinked = wild.next() < 0.34;
+      const old = grow > 1.25 || wild.next() < 0.2;
+      const w: Wild = {
+        x: s.x, y: anchored || backdrop ? Math.min(0, levelAt(s.x, s.z) + 0.05) - 0.05 : levelAt(s.x, s.z), z: s.z, h: tall + 0.05, dx: Math.cos(s.yaw), dz: -Math.sin(s.yaw), lean: s.lean * 1.5 + r2 + leaner, R,
+        kind: s.kind, phase: s.phase, low: lowly ? 1 : 0, seed,
+        bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.22), kinkT: kinked ? wild.range(0.25, 0.8) : 2, kinkM: kinked ? wild.range(0.12, 0.5) : 0,
+        swayA: wild.range(0, TAU), swayM: wild.next() < 0.5 ? wild.range(0.02, 0.085) : wild.range(0, 0.02), kinkA: wild.range(0, TAU), rate: wild.range(0.7, 1.6) / Math.sqrt(Math.max(tall, 0.6) / 2.5),
+        age: s.kind === 2 ? 2 : anchored ? wild.range(0, 0.4) : old ? wild.range(0.6, 1) : wild.range(0, 0.55), stain: anchored ? wild.range(0.1, 0.4) : wild.range(0.12, 1.1), uvo: wild.range(0, 2), quiver: 1,
+        fork: [0, 0, 0], collar: wild.range(0.7, 1.6), cards: [], foot: true,
+      };
+      if (anchored) {
+        // By a key's lens a stalk keeps the line the key's picture has it on: the bow it always had, no kink, hardly a sway.
+        w.bowA = seed * 37;
+        w.bowM = 0.05 + 0.2 * ((seed * 91.3) % 1);
+        w.kinkT = 2;
+        w.kinkM = 0;
+        w.swayM = Math.min(w.swayM, 0.012);
+        w.collar = 0.5 * w.collar;
+      }
+      // The ones the lens of the wallowers looks past stay exactly as its picture has them: no collar, and a head on its trunk's line.
+      w.bare = staged4.has(s) || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR;
+      wilds.push(w);
+      // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
+      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
+      // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
+      if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
+        const t0 = wild.range(0.28, 0.66);
+        const at = lineAt(w, t0);
+        const a = wild.range(0, TAU);
+        const kind = wild.next() < 0.25 ? 2 : s.kind === 2 ? 0 : s.kind;
+        const f: Wild = {
+          ...w, h: tall * (1 - t0) * wild.range(0.45, 1.05), dx: Math.cos(a), dz: Math.sin(a), lean: wild.range(0.5, 1.05), R: R * wild.range(0.55, 0.8),
+          kind, phase: wild.range(0, TAU), seed: wild.next(),
+          bowA: Math.PI + wild.range(-0.4, 0.4), bowM: wild.range(0.22, 0.48), kinkT: 2, kinkM: 0, swayM: wild.range(0, 0.04), rate: w.rate * wild.range(1.1, 1.5),
+          age: kind === 2 ? 2 : w.age, stain: 0.02, uvo: wild.range(0, 2), fork: [at[0] - w.x, at[1] - w.y, at[2] - w.z], collar: 0, cards: [], foot: false,
+        };
+        wilds.push(f);
+        if (kind !== 2) dress(f, headOf(kind), wild.range(0.7, 1) * headFor(f.h));
+      }
+      if (anchored) return;
+      // Dense cores: more trunks from nearly the same foot, splayed out from it.
+      if (!lowly && grow > 0.8 && wild.next() < 0.42) {
+        const n = 1 + wild.int(4);
+        for (let k = 0; k < n; k++) {
+          const a = wild.range(0, TAU);
+          const d = wild.range(0.1, 0.55);
+          const x = s.x + Math.cos(a) * d;
+          const z = s.z + Math.sin(a) * d;
+          const h = tall * wild.range(0.4, 1.1);
+          const kind = wild.next() < 0.12 ? 2 : wild.next() < 0.2 ? 3 : 0;
+          const kinks = wild.next() < 0.3;
+          const b: Wild = {
+            x, y: levelAt(x, z), z, h, dx: Math.cos(a), dz: Math.sin(a), lean: wild.range(0.04, 0.4), R: R * wild.range(0.6, 1) * Math.pow(h / tall, 0.4),
+            kind, phase: wild.range(0, TAU), low: 0, seed: wild.next(),
+            bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.2), kinkT: kinks ? wild.range(0.25, 0.8) : 2, kinkM: kinks ? wild.range(0.12, 0.45) : 0,
+            swayA: wild.range(0, TAU), swayM: wild.next() < 0.5 ? wild.range(0.02, 0.08) : wild.range(0, 0.02), kinkA: wild.range(0, TAU), rate: wild.range(0.7, 1.6) / Math.sqrt(Math.max(h, 0.6) / 2.5),
+            age: kind === 2 ? 2 : wild.range(0, 0.8), stain: wild.range(0.12, 1.1), uvo: wild.range(0, 2), quiver: 1, fork: [0, 0, 0], collar: wild.range(0.7, 1.6), cards: [], foot: true,
+          };
+          wilds.push(b);
+          if (kind !== 2) dress(b, headOf(kind), (0.8 + 0.35 * wild.next()) * headFor(h));
+        }
+      }
+      // The young stand in the lee of the old.
+      if (tall > 2 && wild.next() < 0.6) {
+        const n = 1 + wild.int(5);
+        for (let k = 0; k < n; k++) {
+          const along = wild.range(0.2, 1.7);
+          const across = wild.range(-0.6, 0.6) * (0.4 + along);
+          const x = s.x + lee[0] * along - lee[1] * across;
+          const z = s.z + lee[1] * along + lee[0] * across;
+          const h = wild.range(0.14, 0.95);
+          const yaw = wild.range(0, TAU);
+          const kind = wild.next() < 0.55 ? 1 : 0;
+          // None where the brine is deep: a seedling stands on the crust or in the shallows.
+          if (ctx.rig.land.height(x, z) < -0.12) continue;
+          const y: Wild = {
+            x, y: levelAt(x, z), z, h, dx: Math.cos(yaw), dz: Math.sin(yaw), lean: wild.range(0, 0.28), R: wild.range(0.016, 0.03) * (0.7 + 0.6 * h),
+            kind, phase: wild.range(0, TAU), low: lowly ? 1 : 0, seed: wild.next(),
+            bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.3), kinkT: 2, kinkM: 0, swayA: wild.range(0, TAU), swayM: wild.range(0, 0.06), kinkA: 0, rate: wild.range(1.5, 2.6),
+            age: wild.range(0, 0.25), stain: wild.range(0.04, 0.2), uvo: wild.range(0, 2), quiver: 1.6, fork: [0, 0, 0], collar: wild.range(0.4, 1), cards: [], foot: true,
+          };
+          wilds.push(y);
+          dress(y, kind === 1 ? 4 : 3, wild.range(0.8, 1.2) * headFor(h) * 2);
+        }
+      }
+      // And the dead lie where they fell, half in the brine.
+      if (!lowly && wild.next() < 0.16) {
+        const a = wild.range(0, TAU);
+        const d = wild.range(0.4, 2.6);
+        const x = s.x + Math.cos(a) * d;
+        const z = s.z + Math.sin(a) * d;
+        const yaw = wild.range(0, TAU);
+        const rr = R * wild.range(0.8, 1.2);
+        const broken = wild.next() < 0.5;
+        wilds.push({
+          x, y: Math.max(0, ctx.rig.land.height(x, z)) - 0.05 + rr * wild.range(0.1, 0.7), z, h: wild.range(1.1, 3.6), dx: Math.cos(yaw), dz: Math.sin(yaw), lean: wild.range(1.5, 1.6), R: rr,
+          kind: 2, phase: 0, low: 0, seed: wild.next(),
+          bowA: wild.next() < 0.5 ? Math.PI / 2 : -Math.PI / 2, bowM: wild.range(0.02, 0.16), kinkT: broken ? wild.range(0.3, 0.7) : 2, kinkM: broken ? wild.range(0.15, 0.5) : 0,
+          swayA: Math.PI / 2, swayM: wild.range(0, 0.03), kinkA: wild.next() < 0.5 ? Math.PI / 2 : -Math.PI / 2, rate: 1,
+          age: 2, stain: 0.1, uvo: wild.range(0, 2), quiver: 0, fork: [0, 0, 0], collar: 0, cards: [], foot: false,
+        });
+      }
     });
-    const palm = new THREE.BufferGeometry();
-    const pp: number[] = [];
-    const pi: number[] = [];
-    const sheet = (piece: number, nx: number, ny: number): void => {
-      const start = pp.length / 3;
-      for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) pp.push(i / nx - 0.5, j / ny, piece);
+    // Each one shades the ground it stands on, and one that lies shades the length of it.
+    const feet = wilds.filter((w) => w.foot || w.quiver === 0);
+    const shade = ctx.rig.contactDiscs(feet.length);
+    feet.forEach((w, i) => {
+      if (w.foot) ctx.rig.setDisc(shade, i, w.x, w.z, Math.max(0.12, w.R * 6.5), 0.7);
+      else ctx.rig.setDisc(shade, i, w.x + w.dx * w.h * 0.5, w.z + w.dz * w.h * 0.5, w.R * 3.5, 0.6, (w.h * 0.5) / (w.R * 3.5), Math.atan2(-w.dz, w.dx));
+    });
+    const sheet = (nx: number, ny: number): THREE.BufferGeometry => {
+      const g = new THREE.BufferGeometry();
+      const pp: number[] = [];
+      const pi: number[] = [];
+      for (let j = 0; j <= ny; j++) for (let i = 0; i <= nx; i++) pp.push(i / nx - 0.5, j / ny, 0);
       for (let j = 0; j < ny; j++) {
         for (let i = 0; i < nx; i++) {
-          const a = start + j * (nx + 1) + i;
+          const a = j * (nx + 1) + i;
           pi.push(a, a + 1, a + nx + 1, a + 1, a + nx + 2, a + nx + 1);
         }
       }
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
+      g.setIndex(pi);
+      return g;
     };
-    sheet(2, 4, 4);
-    sheet(0, 1, 10);
-    sheet(1, 4, 4);
-    palm.setAttribute('position', new THREE.Float32BufferAttribute(pp, 3));
-    palm.setIndex(pi);
+    const lines = (list: Wild[]): Record<string, Float32Array> => {
+      const o = { aBase: new Float32Array(list.length * 4), aAxis: new Float32Array(list.length * 4), aKind: new Float32Array(list.length * 4), aBend: new Float32Array(list.length * 4), aMore: new Float32Array(list.length * 4), aLook: new Float32Array(list.length * 4), aFork: new Float32Array(list.length * 4) };
+      list.forEach((w, i) => {
+        o.aBase.set([w.x, w.y, w.z, w.h], i * 4);
+        o.aAxis.set([w.dx, w.dz, w.lean, w.R], i * 4);
+        o.aKind.set([w.kind, w.phase, w.low, w.seed], i * 4);
+        o.aBend.set([w.bowA, w.bowM, w.kinkT, w.kinkM], i * 4);
+        o.aMore.set([w.swayA, w.swayM, w.kinkA, w.rate], i * 4);
+        o.aLook.set([w.age, w.stain, w.uvo, w.quiver], i * 4);
+        o.aFork.set([w.fork[0], w.fork[1], w.fork[2], w.collar], i * 4);
+      });
+      return o;
+    };
     // No anisotropy on a picture whose cover is tested: the cut would then depend on an extension the film may not have.
+    const tStalk = { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) };
+    const tStalkA = { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) };
+    const tFan = { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) };
+    const tFanA = { value: ctx.assets.texture('mat/fan-a.png', { kind: 'data', repeat: false }) };
+    const tLock = { value: ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false }) };
     const palmMaterial = new THREE.ShaderMaterial({
-      uniforms: {
-        ...ctx.rig.uniforms,
-        uSeconds,
-        uGrove,
-        uHead,
-        tStalk: { value: ctx.assets.texture('mat/stalk.jpg', { kind: 'colour', repeat: false }) },
-        tStalkA: { value: ctx.assets.texture('mat/stalk-a.png', { kind: 'data', repeat: false }) },
-        tFan: { value: ctx.assets.texture('mat/fan.jpg', { kind: 'colour', repeat: false }) },
-        tFanA: { value: ctx.assets.texture('mat/fan-a.png', { kind: 'data', repeat: false }) },
-      },
+      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, tStalk, tStalkA },
       vertexShader: PALM_VERTEX,
       fragmentShader: PALM_FRAGMENT,
       side: THREE.DoubleSide,
     });
     palmMaterial.userData.depthFragment = PALM_DEPTH;
-    const mesh = new THREE.Mesh(instanced(palm, rest.length, { aBase: base, aAxis: axis, aKind: kind }), palmMaterial);
-    mesh.frustumCulled = false;
-    group.add(mesh);
+    const trunks = new THREE.Mesh(instanced(sheet(1, 16), wilds.length, lines(wilds)), palmMaterial);
+    trunks.frustumCulled = false;
+    group.add(trunks);
+    {
+      const footed = wilds.filter((w) => w.foot && !w.bare);
+      const foot = new Float32Array(footed.length * 4);
+      const foot2 = new Float32Array(footed.length * 4);
+      const collars = ctx.rng('stalks-collars');
+      footed.forEach((w, i) => {
+        const ground = ctx.rig.land.height(w.x, w.z);
+        const thick = w.R * (w.low ? 1.2 : 1);
+        foot.set([w.x, Math.max(0, ground), w.z, thick * collars.range(2.3, 4.2) + 0.015], i * 4);
+        foot2.set([thick * collars.range(0.8, 2.1), collars.next(), ground < 0 ? 1 : 0, 0], i * 4);
+      });
+      const ring = new THREE.BufferGeometry();
+      const rp: number[] = [];
+      const ri: number[] = [];
+      const SIDES = 10;
+      const RINGS = 4;
+      for (let j = 0; j <= RINGS; j++) for (let i = 0; i <= SIDES; i++) rp.push((i / SIDES) * TAU, j / RINGS, 0);
+      for (let j = 0; j < RINGS; j++) {
+        for (let i = 0; i < SIDES; i++) {
+          const a = j * (SIDES + 1) + i;
+          ri.push(a, a + 1, a + SIDES + 1, a + 1, a + SIDES + 2, a + SIDES + 1);
+        }
+      }
+      ring.setAttribute('position', new THREE.Float32BufferAttribute(rp, 3));
+      ring.setIndex(ri);
+      const collarMaterial = new THREE.ShaderMaterial({
+        uniforms: { ...ctx.rig.uniforms, tSalt: { value: salt } },
+        vertexShader: COLLAR_VERTEX,
+        fragmentShader: COLLAR_FRAGMENT,
+        side: THREE.DoubleSide,
+      });
+      const mesh = new THREE.Mesh(instanced(ring, footed.length, { aFoot: foot, aFoot2: foot2 }), collarMaterial);
+      mesh.frustumCulled = false;
+      group.add(mesh);
+    }
+    const carded: Wild[] = [];
+    const c1: number[] = [];
+    const c2: number[] = [];
+    for (const w of wilds) {
+      for (const c of w.cards) {
+        carded.push(w);
+        c1.push(c[0], c[1], c[2], c[3]);
+        // A whole number on the last says the head turns up to the light.
+        c2.push(c[4], c[5], c[6], c[7] + (w.bare ? 0 : 1));
+      }
+    }
+    const headMaterial = new THREE.ShaderMaterial({
+      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, uHead, tFan, tFanA, tLock },
+      vertexShader: HEAD_VERTEX,
+      fragmentShader: HEAD_FRAGMENT,
+      side: THREE.DoubleSide,
+    });
+    headMaterial.userData.depthFragment = HEAD_DEPTH;
+    const heads = new THREE.Mesh(instanced(sheet(4, 4), carded.length, { ...lines(carded), aCard: new Float32Array(c1), aCard2: new Float32Array(c2) }), headMaterial);
+    heads.frustumCulled = false;
+    group.add(heads);
   }
   // The ones the lens of the colony stands among draw from their own stream: nothing done to the far ones changes them.
   const own = ctx.rng('stalks-close');

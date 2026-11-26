@@ -13,7 +13,7 @@ export class Spray {
   private readonly material: THREE.ShaderMaterial;
   private used = 0;
 
-  constructor(readonly count: number, uniforms: Record<string, THREE.IUniform>) {
+  constructor(readonly count: number, uniforms: Record<string, THREE.IUniform>, fragment: string = SPRAY_FRAGMENT) {
     const g = new THREE.InstancedBufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0], 3));
     g.setIndex([0, 1, 2, 0, 2, 3]);
@@ -26,7 +26,7 @@ export class Spray {
     this.geometry = g;
     this.material = new THREE.ShaderMaterial({
       vertexShader: SPRAY_VERTEX,
-      fragmentShader: SPRAY_FRAGMENT,
+      fragmentShader: fragment,
       uniforms,
       transparent: true,
       depthWrite: false,

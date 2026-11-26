@@ -77,7 +77,7 @@ const PAST_KEY = travelled(ARRIVAL.seconds) - TO_KEY;
 // The approach opens on a wider and higher lens than the move it joins, so that the first frame holds two blades whole against the sky:
 // how much wider, how many degrees higher, and the seconds over which both ease back into the move. From OPEN.seconds on the move is its own,
 // to the bit: the staging is exactly nothing there (the strait's shot runs on in the same move).
-const OPEN = { seconds: 11, wide: 0.32, pitch: 3.5, yaw: 7.5 };
+const OPEN = { seconds: 11, wide: 0.245, pitch: 4.4, yaw: 6.6 };
 /** 1 at the first frame of the film, 0 from OPEN.seconds on, level at both ends. */
 export function openingLens(seconds: number): number {
   const q = Math.min(1, Math.max(0, 1 - seconds / OPEN.seconds));
@@ -102,6 +102,8 @@ const approach: CameraPath = (part) => {
   return arrival(seconds, openingLens(seconds));
 };
 /** The approach as it was before it was restaged: what was scattered along it once (the fliers' clearances, the skein) stays where it was, so that no later frame moves. */
+/** Where the lens of the approach is at `seconds` of the place, to the metre and smoothly: the staging moves its look, never its place. */
+export const approachEye = (seconds: number): Vec3 => arrival(seconds).position;
 export const approachAsScattered: CameraPath = (part) => arrival((part * shotLength(opening)) / cut.fps);
 const intoStrait: CameraPath = (part) => arrival((shotLength(opening) + part * shotLength(strait)) / cut.fps);
 

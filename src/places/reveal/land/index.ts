@@ -411,9 +411,9 @@ void main() {
   if (uDusk > 0.0) {
     sunH = sunHeight(xz);
     // (Salt under a moon would outshine the bone and the fire both: the pan lies damp by night.)
-    ground *= 1.0 - 0.45 * saltFlat * uEmber.x;
+    ground *= 1.0 - 0.62 * saltFlat * uEmber.x;
     // (By night the low wet plain along the coasts lies nearly as dark as the sea, and the high country stands out of it: the land is read by its relief, not by its outline.)
-    ground *= mix(1.0, mix(0.85, 1.25, smoothstep(0.0, 0.3, height)), uEmber.x * land);
+    ground *= mix(1.0, mix(1.0, 1.25, smoothstep(0.0, 0.3, height)), uEmber.x * land);
     rake = uTerm.w * (1.0 - smoothstep(0.04, 0.4, sunH));
     n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake + 2.5 * uEmber.x), 0.8, -slope.y * (1.0 + 2.0 * rake + 2.5 * uEmber.x)));
     // The ranges throw their shadows, longer as the sun goes down: the height of the land is read toward the sun, farther and
@@ -511,7 +511,7 @@ void main() {
     float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
     // (After the beat it breathes, and never evenly: two slow swells that do not keep step. The light on the flanks goes with it.)
     float breathe = mix(1.0, 0.45 + 0.7 * vnoise(vec2(uTime * 1.1, 5.0)) + 0.4 * vnoise(vec2(uTime * 2.6, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
-    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * beatFar) * mix(1.0, breathe, 0.7) * reach * facing * uEmber.x * land);
+    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.3 + 0.5 * beatFar) * mix(1.0, breathe, 0.7) * reach * facing * uEmber.x * land);
     float crowd = 0.0;
     if (d0 < 250000.0) {
       // The Heart itself: a lake of fire under a cracked skin, no two sides of its shore alike. The skin glows dull red, the cracks
@@ -519,13 +519,13 @@ void main() {
       float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear)) * (0.5 + 1.0 * vnoise(xz / 24.0 + 2.0));
       float lake = 1.0 - smoothstep(0.45, 1.0, shore);
       lakeNight = lake * uEmber.x * land;
-      crowd = lake * (0.5 + 1.2 * beatNear);
+      crowd = lake * (1.5 + 0.2 * beatNear);
       float net = sqrt(cracks(xz / 27.0));
       float skin = 0.25 + 0.75 * vnoise(xz / 6.0 + 9.0);
-      float hot = breathe * lake * (0.12 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
+      float hot = breathe * lake * (0.12 * skin + (0.3 + 1.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
       glow += vec3(1.0, 0.24, 0.025) * 0.3 * hot * uEmber.x * land;
       // (The fume that stands over it, lit red from under: a soft dome, uneven as smoke is.)
-      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.03 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
+      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.008 + 0.05 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
       // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
       float pulse = uEmber.y > 0.0 ? exp(-pow((far0 - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
       float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
@@ -534,9 +534,11 @@ void main() {
     }
     // (Fire seen by an open camera goes to a deep orange, never to white: the red is held and the rest follows it.)
     // (The whole lake is held down together when it swells, so the net of cracks keeps standing over the skin between them.)
-    glow *= mix(1.0, 1.0 / ((1.0 + 0.3 * glow.r * uGain) * (1.0 + 0.9 * crowd)), uEmber.x);
+    glow *= mix(1.0, 1.0 / ((1.0 + (0.3 - 0.17 * min(hit, 1.0) * min(crowd, 1.0)) * glow.r * uGain) * (1.0 + 0.9 * crowd)), uEmber.x);
     glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.58, 0.13)), uEmber.x);
-    glow *= uEmber.w;
+    // (Between its beats the fire lies low: the beat is seen against it.)
+    glow *= mix(1.0, 0.5 + 0.5 * clamp(1.4 * hit, 0.0, 1.0), uEmber.x);
+    glow *= 0.5 + 0.5 * uEmber.w;
   }
 
   // ---- the water ----
@@ -650,7 +652,7 @@ void main() {
   if (uDusk > 0.0) {
     // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
     vec2 fromSheen = xz - uTerm.xy - 1500.0 * normalize(uMoonDir.xz);
-    vec3 sheen = moonAt(sunH) * (0.0026 + 0.008 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
+    vec3 sheen = moonAt(sunH) * (0.002 + 0.006 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
     // (The moon does not reach the bed of the sea: by night only the surface is seen.)
     water = waterBed * (1.0 - 0.9 * uEmber.x) + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
     // (Under the moon the sea has almost no colour.)
@@ -658,6 +660,8 @@ void main() {
   }
   // (The air over the glint is bright too: the land that stands in it is seen through that light.)
   vec3 colour = mix(water, earth + 0.4 * glare, land);
+  // (By night the low coast has no line: the wet plain is a shade over the sea beside it and the land rises out of that into the moon's light.)
+  if (uDusk > 0.0) colour = mix(colour, max(colour, water) * 0.35 + water * 0.95, 0.92 * (1.0 - smoothstep(0.0, 0.16, height)) * land * uEmber.x);
   // (A pale crust lies at the foot of the lake's rim, where the water has stood higher.)
   colour *= 1.0 + 0.45 * (1.0 - smoothstep(0.0, 0.07, abs(shoreR - 0.98))) * land * (1.0 - smoothstep(150.0, 400.0, uViewKm));
 

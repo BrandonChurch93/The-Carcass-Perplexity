@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
-import { approachAsScattered, shots } from '../cameras';
+import { approachAsScattered, approachEye, shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { inOpening } from '../shared/opening';
@@ -37,7 +37,11 @@ const SKEIN = 22;
 const CLEAR = 45;
 /** Seconds the shutter is open, for the softness of what crosses the lens fast. */
 const SHUTTER = 1 / 50;
+/** The approach: no flier is near enough to be read as a model. The widest a wing stands at the lens as the film opens (radians), the metres of wing to a unit of size, and the seconds between which that limit grows away (by e to the `grow`). */
+const FAR = { wing: 0.0017, span: 4.5, from: 4.5, to: 10.5, grow: 7 };
 
+/** The approach: a colony lifts off a ledge of the first blade. Where the ledge is, the metres round it from which its fliers come, when the first leaves, over how many seconds they leave, and how long each takes to be on its own way. */
+const LIFT = { at: [-236, 236, 34] as const, within: 320, from: 0.4, spread: 3, takes: 8 };
 const TAU = Math.PI * 2;
 const LOOP_SECONDS = config.deliver.cardLoop.seconds;
 
@@ -185,6 +189,8 @@ export function create(ctx: Context): Piece {
     if (nearTrack(x, z, 30) || h < 0.7 || h > 1.5 || Math.abs(ground(x + Math.sin(yaw) * 6, z + Math.cos(yaw) * 6) - h) > 0.5) continue;
     addFeeder(x, z, yaw, scatter.range(0.8, 1.05), scatter.next() < 0.62 ? 0 : 1);
   }
+  /** In the card loop these of the wide picture, drawn in mid step, walk out and back. */
+  const walkers = [feeders[1], feeders[4], feeders[7]];
   const feederSheets = [figureMaterials(ctx, FEEDER_A, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_B, LEVELS.pool, 0.5), figureMaterials(ctx, FEEDER_C, LEVELS.pool, 0.4)];
   const feederFigures = feederSheets.map((m) => new Figures(m, feeders.length, { mirror: true }));
   const discs = rig.contactDiscs(feeders.length + 4);
@@ -206,6 +212,7 @@ export function create(ctx: Context): Piece {
     tuft.shake = 0;
     const fx = Math.sin(f.yaw);
     const fz = Math.cos(f.yaw);
+    let heads = 1;
     let tip: [number, number] = [0, 0];
     if (f.habit === 0) {
       // Probing, then the head comes up streaming, looks about, and goes back in.
@@ -239,7 +246,31 @@ export function create(ctx: Context): Piece {
       fig.y = 0.14 * Math.abs(Math.sin(stride)) * f.size;
       tuft.shake = Math.abs(Math.cos(stride));
     }
-    if (lp !== null && f.habit !== 2) {
+    if (lp !== null && walkers.includes(f)) {
+      // The loop's walk: once a loop it walks a few of its lengths out, stands and puts its head down, turns, walks back, and turns again
+      // into the stance of the key. Each has its own time, length and way to go.
+      const long = 0.78 + 0.1 * hash(f.seed, 3);
+      const u = (lp - 0.04 - (0.94 - long) * hash(f.seed, 5)) / long;
+      if (u > 0 && u < 1) {
+        const way = (6 + 2 * hash(f.seed, 11)) * f.size;
+        const out = smooth(0.02, 0.42, u);
+        const back = smooth(0.56, 0.94, u);
+        const going = 4 * out * (1 - out) + 4 * back * (1 - back);
+        const stride = (TAU * way * (out + back)) / 2.6;
+        const dip = smooth(0.42, 0.46, u) * (1 - smooth(0.52, 0.56, u)) + smooth(0.94, 0.96, u) * (1 - smooth(0.98, 1, u));
+        if (u > 0.49 && u < 0.97) {
+          heads = -1;
+          fig.turn = f.yaw + Math.PI;
+        }
+        fig.x += fx * way * (out - back);
+        fig.z += fz * way * (out - back);
+        fig.limbs[0] += 0.45 * dip;
+        fig.limbs[1] += 0.3 * going * Math.sin(stride);
+        fig.sway += 0.02 * going * Math.sin(stride);
+        fig.y += 0.045 * f.size * going * Math.abs(Math.sin(stride));
+        tip = figurePoint(FEEDER_B, 0, TIP_B, fig.limbs);
+      }
+    } else if (lp !== null && f.habit !== 2) {
       // The loop's idle: once a loop, at its own time and for its own length, it shifts its weight, takes a step, stands, and steps back
       // to where the key has it. No two have the same time or length.
       const long = 0.24 + 0.2 * hash(f.seed, 3);
@@ -253,8 +284,8 @@ export function create(ctx: Context): Piece {
       fig.sway += 0.035 * lifted * (u < 0.5 ? 1 : -1);
     }
     fig.y += ground(fig.x, fig.z);
-    tuft.x = fig.x + fx * tip[0] * f.size;
-    tuft.z = fig.z + fz * tip[0] * f.size;
+    tuft.x = fig.x + fx * heads * tip[0] * f.size;
+    tuft.z = fig.z + fz * heads * tip[0] * f.size;
     tuft.y = fig.y + tip[1] * f.size;
   };
 
@@ -699,6 +730,19 @@ export function create(ctx: Context): Piece {
         colonyFigures.put(i, fig);
       }
       colonyFigures.commit();
+      // In the approach no animal comes near the lens: the skein that flew in beside it is not drawn (none of it is ahead of any later lens),
+      // and the flock round the blade tops is specks, each beating its own beat, until the camera has closed on it.
+      const approaching = inOpening();
+      const lens = approaching && seconds < FAR.to ? approachEye(seconds) : null;
+      // The widest a wing may stand at the lens, radians: a few pixels of the full frame as the film opens, and it grows past any flier's
+      // real size before FAR.to, from where every flier is its own size again.
+      const widest = FAR.wing * Math.exp(FAR.grow * smooth(FAR.from, FAR.to, seconds));
+      const lifting = approaching && seconds < LIFT.from + LIFT.spread + LIFT.takes;
+      const far = (): void => {
+        if (!lens) return;
+        const away = Math.hypot(fig.x - lens[0], fig.y - lens[1], fig.z - lens[2]);
+        fig.size *= Math.min(1, (widest * away) / (FAR.span * fig.size));
+      };
       for (let i = 0; i < fliers.length; i++) {
         const f = fliers[i] as Flier;
         if (f.size === 0) {
@@ -706,11 +750,25 @@ export function create(ctx: Context): Piece {
           continue;
         }
         flierAt(f, seconds, eye);
+        if (lifting) {
+          // Those whose way lies near the ledge start on it: they leave it one after another and are on their own way seconds later.
+          const dx = fig.x - LIFT.at[0];
+          const dy = fig.y - LIFT.at[1];
+          const dz = fig.z - LIFT.at[2];
+          const near = smooth(LIFT.within, 0.7 * LIFT.within, Math.hypot(dx, dy, dz));
+          if (near > 0) {
+            const gone = smooth(0, 1, (seconds - LIFT.from - LIFT.spread * hash(i, 31)) / LIFT.takes);
+            const held = (1 - gone) * near;
+            fig.x -= dx * held;
+            fig.y -= dy * held;
+            fig.z -= dz * held;
+            fig.size *= 1 - near * (1 - smooth(0, 0.06, gone));
+          }
+        }
+        far();
         flockFigures.put(i, fig);
       }
       flockFigures.commit();
-      // In the approach no animal comes near the lens: the skein that flew in beside it is not drawn (none of it is ahead of any later lens).
-      const approaching = inOpening();
       for (let i = 0; i < skein.length; i++) {
         const s = skein[i] as Passer;
         if (approaching && i < SKEIN) {
@@ -722,6 +780,7 @@ export function create(ctx: Context): Piece {
         const amp = i < SKEIN ? 0.25 + 0.75 * bout : 1;
         if (lp === null) airborne(s.x + s.vx * (seconds - s.t), y, s.z + s.vz * (seconds - s.t), s.vx, 0.72 * Math.cos(seconds * 0.6 + s.seed * 20), s.vz, s.size, s.seed, seconds, amp, eye);
         else circuit(s.x + s.vx * (at - s.t), y, s.z + s.vz * (at - s.t), s.vx, 0.72 * Math.cos(at * 0.6 + s.seed * 20), s.vz, s.seed < 0.5 ? 1 : -1, s.size, s.seed, amp, eye);
+        far();
         skeinFigures.put(i, fig);
       }
       const lead = at - BORE;

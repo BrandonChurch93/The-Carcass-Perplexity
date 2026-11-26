@@ -500,6 +500,10 @@ void main() {
 // too coarse to hold (the chips, the cracks, the drips) is taken from the same relief as a lean of the normal and a shade in the folds,
 // at a low strength (the relief is a guess at form, not a measure). A top or an underside is seen edge on by the plate, so there the
 // plate would stretch: those faces take the plate's broad colour and a stone laid flat in the world instead.
+// The same holds for every face the relief turns away from the plate: the flank of a fold in the wall, the end of a rib. The plate is laid
+// by bearing and depth, so on such a face one of its texels is drawn out over a hand to a metre of rock, and its relief with it: that was
+// the streak down every fold. How far the plate is drawn out is measured at every pixel (drawn), and as it grows the plate gives only
+// its broad colour, blurred by as much, and its relief gives nothing: the pattern there is bedded stone laid in the world, which cannot stretch.
 export const WALL_FRAGMENT = /* glsl */ `
 ${COMMON}
 uniform sampler2D tWall;
@@ -510,6 +514,9 @@ uniform vec3 uMean;
 uniform sampler2D tGrain;
 uniform sampler2D tGrainN;
 uniform vec3 uGrainMean;
+uniform sampler2D tBeds;
+uniform sampler2D tBedsN;
+uniform vec3 uBedsMean;
 uniform vec4 uWall;
 uniform float uBounce;
 void main() {
@@ -521,7 +528,24 @@ void main() {
   vec3 along = normalize(vec3(-p.z, 0.0, p.x));
   vec3 upward = vec3(0.0, 1.0, 0.0);
 
-  vec3 plate = texture2D(tWall, vUv).rgb;
+  // How far the plate is drawn out on this face: the metres of rock that one metre of the plate is laid over, down it and along it.
+  // On the plain wall both are 1. Where the relief pushes the mesh toward the axis the face turns away from the plate and they grow.
+  vec3 dpx = dFdx(p);
+  vec3 dpy = dFdy(p);
+  vec2 dux = dFdx(vUv);
+  vec2 duy = dFdy(vUv);
+  float det = dux.x * duy.y - dux.y * duy.x;
+  float idet = 1.0 / (abs(det) > 1e-14 ? det : 1e-14);
+  float drawnDown = length(dpy * dux.x - dpx * duy.x) * abs(idet) / 33.75;
+  float drawnAlong = length(dpx * duy.y - dpy * dux.y) * abs(idet) / (2.0 * length(p.xz));
+  float drawn = max(drawnDown, drawnAlong);
+
+  float away = smoothstep(1.15, 2.2, drawn);
+  vec2 texels = vec2(1672.0, 941.0);
+  float seenLod = 0.5 * log2(max(max(dot(dux * texels, dux * texels), dot(duy * texels, duy * texels)), 1e-8));
+  float drawnLod = max(seenLod, log2(max(drawn, 1.0)) + 1.5);
+
+  vec3 plate = texture2D(tWall, vUv, away * max(drawnLod - seenLod, 0.0)).rgb;
   vec3 broad = texture2D(tWall, vUv, 4.0).rgb;
   vec2 e = vec2(1.0 / 1672.0, 1.0 / 941.0);
   float h = texture2D(tWallH, vUv).r;
@@ -534,8 +558,8 @@ void main() {
   float wd = texture2D(tWallH, vUv - vec2(0.0, 7.0 * e.y)).r;
   float wu = texture2D(tWallH, vUv + vec2(0.0, 7.0 * e.y)).r;
   // Metres of height to a metre of wall: the fine slope less the broad one the mesh already has.
-  vec2 lean = (vec2(hr - hl, hu - hd) / 0.0718 - vec2(wr - wl, wu - wd) / 0.5024) * uWall.x;
-  float fold = h - 0.25 * (wl + wr + wd + wu);
+  vec2 lean = (vec2(hr - hl, hu - hd) / 0.0718 - vec2(wr - wl, wu - wd) / 0.5024) * (uWall.x * (1.0 - away));
+  float fold = (h - 0.25 * (wl + wr + wd + wu)) * (1.0 - away);
 
   float top = smoothstep(0.3, 0.62, gn.y);
   float under = smoothstep(0.3, 0.7, -gn.y);
@@ -554,13 +578,30 @@ void main() {
   vec3 gs = mix(mix(texture2D(tGrainN, gqz).rgb, texture2D(tGrainN, gqx).rgb, wx), texture2D(tGrainN, gq).rgb, flat0);
   // And a fifth the size under it near the lens, where a texel of the first is many pixels wide.
   float close = smoothstep(14.0, 3.0, dist);
-  vec3 g1 = mix(mix(texture2D(tGrain, gqz * 4.7 + 0.3).rgb, texture2D(tGrain, gqx * 4.7 + 0.3).rgb, wx), texture2D(tGrain, gq * 4.7 + 0.3).rgb, flat0);
+  // Read once, on the plane the face most nearly lies in: it shows only within a few strides of the lens, and three reads of it were
+  // paid on every pixel of the wall from every lens.
+  vec3 g1 = texture2D(tGrain, (flat0 > 0.5 ? gq : (wx > 0.5 ? gqx : gqz)) * 4.7 + 0.3).rgb;
   float grain = mix(1.0, clamp(1.0 + 1.3 * (dot(g0 / uGrainMean, vec3(0.3333)) - 1.0), 0.5, 1.6), max(near, 0.45)) * mix(1.0, clamp(dot(g1 / uGrainMean, vec3(0.3333)), 0.6, 1.45), close);
+  // The beds: stone that breaks in level courses a hand to a pace thick, seen from the side. Laid in the world on the two upright planes,
+  // each face taking the one it most nearly lies in.
+  vec2 bqz = vec2(p.x, p.y) / 5.0;
+  vec2 bqx = vec2(p.z, p.y) / 5.0;
+  // One plane a face and one read of each picture, at the size the wall's metres are seen at: read on both planes and at two sizes, the
+  // beds cost the wall half as much again as all the rest of it. The two planes meet where the wall runs at 45 degrees to both; the beds
+  // lie level on each, so only their breaks along the bed change there.
+  vec2 bsel = wx > 0.5 ? bqx : bqz;
+  float blod = max(log2(max(length(dpx), length(dpy)) * float(textureSize(tBeds, 0).x) / 5.0) - 0.5, 0.0);
+  vec3 b0 = textureLod(tBeds, bsel, blod).rgb;
+  vec3 bs = textureLod(tBedsN, bsel, blod).rgb;
+  float bedTone = clamp(dot(b0 / uBedsMean, vec3(0.3333)), 0.35, 1.9);
   vec3 t0 = texture2D(tMat, p.xz / 4.0 + 0.37).rgb;
   vec3 ts = texture2D(tMatN, p.xz / 4.0 + 0.37).rgb;
   float tone = clamp(1.0 + 1.2 * (dot(t0 / uMean, vec3(0.3333)) - 1.0), 0.5, 1.6);
 
   vec3 n = gn - (along * lean.x + upward * lean.y) * face;
+  // The courses turn the light: each has a top edge that catches the sky and a foot in its own shade. Stronger where the plate has gone soft.
+  vec3 course = mix(vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 1.0), wx) * (bs.r - 0.5) + upward * (bs.g - 0.5);
+  n -= (course - gn * dot(course, gn)) * (mix(0.9, 1.8, away) * face);
   n -= (along * (gs.r - 0.5) + upward * (gs.g - 0.5)) * (0.9 * near * face);
   n -= vec3(ts.r - 0.5 + (gs.r - 0.5) * near, 0.0, ts.g - 0.5 + (gs.g - 0.5) * near) * (0.8 * top);
   n = normalize(n);
@@ -570,7 +611,8 @@ void main() {
   // Its colour is the stone's own, laid flat in the world at two sizes: the wall's picture cannot be laid on a top, it is drawn out there
   // into streaks metres long.
   vec3 fineTop = clamp(texture2D(tMat, p.xz / 1.3 + 0.11).rgb / uMean, 0.45, 1.7);
-  vec3 onTop = mix(broad, vec3(0.56, 0.53, 0.47), 0.55 + 0.25 * rib) * tone * mix(vec3(1.0), fineTop, 0.75 * near + 0.1);
+  // A ledge of the wall's own courses is not a rib: its top is the wall's wet stone with a little dust on it, not a pale band.
+  vec3 onTop = mix(broad, vec3(0.56, 0.53, 0.47), mix(0.16, 0.8, rib)) * mix(0.75, 1.0, rib) * tone * mix(vec3(1.0), fineTop, 0.75 * near + 0.1);
   vec3 below = broad * 0.6;
   // The rib is ivory: the plate's own pale stone, a little paler still than the wet wall it stands out of.
   // Between the ribs the wall is dark wet stone, grey-green; the ribs are pale.
@@ -584,7 +626,8 @@ void main() {
   vec3 stoneCol = mix(plate, lum * vec3(1.05, 1.0, 0.93), 0.55);
   // Deep in the shaft the wall between the ribs is wet through and dark: the core of the shaft is the darkest thing in the place.
   stoneCol *= mix(1.0, 0.5, (1.0 - rib) * smoothstep(-0.5, -6.0, p.y)) * mix(1.0, 0.6, (1.0 - rib) * smoothstep(-6.0, -22.0, p.y));
-  vec3 albedo = (stoneCol * face * mix(vec3(0.62, 0.72, 0.72), vec3(2.2, 2.2, 2.2), rib) + onTop * top + below * under) * grain * uWall.y;
+  float bedded = mix(0.5, 1.0, away) * mix(1.0, 0.55, rib);
+  vec3 albedo = (stoneCol * (face * mix(1.0, bedTone, bedded)) * mix(vec3(0.62, 0.72, 0.72), vec3(2.2, 2.2, 2.2), rib) + onTop * top + below * under) * grain * uWall.y;
   // Stains: rust runs down the wall and the faces of the ribs in streaks an arm to a pace wide, and the damp holds dark green in patches
   // between the ribs. Both are laid by the bearing round the shaft and the depth (whole repeats round it: no seam), so they run true down.
   float bear = atan(p.x, -p.z) / 6.28318;
@@ -604,14 +647,16 @@ void main() {
   float openSide = 0.6 / (1.0 + depth * depth / 1500.0);
   float open = mix(openSide, openUp, upness);
   float shut = mix(uWall.z, 1.0, vOcc);
-  float occ = shut * open * clamp(1.0 + uWall.w * fold, 0.35, 1.2);
+  // A course's foot and the crack between two are shut in: the beds' own height says where.
+  float crack = mix(1.0, clamp(0.45 + 1.1 * bs.b, 0.4, 1.15), bedded * face);
+  float occ = shut * open * clamp(1.0 + uWall.w * fold, 0.35, 1.2) * crack;
   vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
   // What the shut-off sky is replaced by: the far wall and the mist in the shaft, lit by the sky and by the sun on the south wall.
   vec3 bounce = (0.55 * uSkyHorizon * uFill + 0.3 * uGlowColour) * ((1.0 - open) * (0.55 + 0.45 * smoothstep(-0.2, 0.6, -n.y + 0.4)));
   // And by the low sun itself, second hand: it lights the mist that fills the shaft and the top of the wall it strikes, and they light the
   // rest, warm, from the side and from below as much as from above. It is why a rib in the shade of the shaft is ivory and not grey.
   bounce += uSunColour * (uBounce * exp(-depth / 30.0) * (0.6 + 0.4 * clamp(dot(n, -normalize(vec3(p.x, 0.0, p.z))), 0.0, 1.0)));
-  colour += albedo * bounce * mix(0.6, 1.0, vOcc) * clamp(1.0 + uWall.w * fold, 0.35, 1.2);
+  colour += albedo * bounce * mix(0.6, 1.0, vOcc) * clamp(1.0 + uWall.w * fold, 0.35, 1.2) * crack;
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -627,7 +672,7 @@ export interface Surface {
 
 export interface RockKit {
   shelf: THREE.ShaderMaterial;
-  wall(plate: THREE.Texture, relief: THREE.Texture, top: Surface, grain: Surface): THREE.ShaderMaterial;
+  wall(plate: THREE.Texture, relief: THREE.Texture, top: Surface, grain: Surface, beds: Surface): THREE.ShaderMaterial;
   bone(amount: number, pale: [number, number, number], dark: [number, number, number], of: Surface, side?: THREE.Side): THREE.ShaderMaterial;
   dispose(): void;
 }
@@ -655,7 +700,7 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
   };
   return {
     shelf: make(SHELF_FRAGMENT, { ...of(shelf), tPlate: { value: plate }, tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect }, tPad: { value: dry.pad }, tPadH: { value: dry.padHeight }, tPeb: { value: dry.pebbles.colour }, tPebN: { value: dry.pebbles.data } }),
-    wall: (plate, relief, top, grain) =>
+    wall: (plate, relief, top, grain, beds) =>
       make(
         WALL_FRAGMENT,
         {
@@ -665,6 +710,9 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
           tGrain: { value: grain.colour },
           tGrainN: { value: grain.data },
           uGrainMean: { value: new THREE.Vector3(...grain.mean) },
+          tBeds: { value: beds.colour },
+          tBedsN: { value: beds.data },
+          uBedsMean: { value: new THREE.Vector3(...beds.mean) },
           // x metres the fine relief is drawn as, y gain on the plate's colour, z the sky a shut cell still sees, w how dark a fold is.
           uWall: { value: new THREE.Vector4(0.45, 1.3, 0.3, 2.0) },
           // How much of the sun's light the mist and the far wall hand on to a face in the shaft.

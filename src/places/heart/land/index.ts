@@ -6,10 +6,10 @@ import { secondsInPlace, shotById } from '../../../film/cut';
 import { CRACK_FOOT, CRACK_TOP, UNIT } from '../shared/anchors';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
-import { BUTTE, FLOWS, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, type Crack } from './height';
+import { BUTTE, FLOWS, SPUR, buttressHeight, crackDip, flowDip, inArch, landHeight, nearCrack, noise, rubbleAt, setCracks, stagedButteHeight, wallHeight, widePath, type Crack } from './height';
 import { ribs, sheet, shoreLip, wallRibs, type Rib } from './meshes';
 import { scatterRocks } from './rocks';
-import { GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
+import { FEET, FEET_FADE, GROUND_FRAGMENT, GROUND_VERTEX, LIP_FRAGMENT } from './shaders';
 
 export const PARTS: readonly string[] = ['land', 'bench', 'sulphur-crack'];
 
@@ -89,9 +89,12 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const nearMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '' } });
   const crackMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', CRACK: '' } });
+  // The bank under the wide view: read at the scale of a hand, and at its rim handed over to the camera's bench.
+  const handMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', HAND: '', CORE: '' } });
+  const rimMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: GROUND_FRAGMENT, uniforms: near, defines: { BENCH: '', NEAR: '', HAND: '' } });
   const lipMaterial = new THREE.ShaderMaterial({ vertexShader: GROUND_VERTEX, fragmentShader: LIP_FRAGMENT, uniforms: shared });
   const butteMaterial = ground({ FAR_LIGHT: '', STAGED: '' });
-  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, lipMaterial, butteMaterial];
+  const materials = [wallMaterial, benchMaterial, nearMaterial, crackMaterial, handMaterial, rimMaterial, lipMaterial, butteMaterial];
   const geometries: THREE.BufferGeometry[] = [];
   const mesh = (g: THREE.BufferGeometry, m: THREE.Material): THREE.Mesh => {
     geometries.push(g);
@@ -137,27 +140,44 @@ export function create(ctx: HeartContext): HeartPiece {
     sheet(-1140, -344, 220, 524, 4, landHeight, (x, z, y) => onBench(x, z, y) && !inside(MID, x, z, 4.5) && (x < -280 || z > 380)),
     benchMaterial,
   );
-  // The bank the wide view starts from lies outside the camera's bench: the first 15 m under that lens, and the stair of flows at its left.
-  // Cut at a hand and a half, with lumps the 1 m sheet round it cannot hold.
-  const FEET = { x0: -618, x1: -566, z0: 262, z1: 338 };
+  // The bank the wide view starts from and passes over lies half outside the camera's bench, and all of it nearer that lens than the
+  // camera's bench was cut for. One sheet at a hand and a half, with lumps the sheets round it cannot hold.
   const midBench = mesh(
     sheet(MID.x0, MID.z0, MID.x1, MID.z1, 1, landHeight, (x, z, y) => onBench(x, z, y) && !inside(NEAR, x, z, 1.2) && !inside(FEET, x, z, 1.2)),
     benchMaterial,
   );
-  const FEET_CELL = 0.15;
-  const feetUnder = latticed(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, landHeight);
-  const feetHeight = (x: number, z: number): number => {
-    // At its border it sinks under the sheets it meets; where they end it is the land itself, and its lumps come in after that.
-    const d = Math.min(x - FEET.x0, FEET.x1 - x, z - FEET.z0, FEET.z1 - z, Math.max(NEAR.x0 + 1.2 - x, z - NEAR.z1 + 1.2));
-    const lumps = 0.07 * (noise(x / 0.55 + 7.3, z / 0.55 + 1.9) - 0.5) + 0.035 * (noise(x / 0.23 + 2.1, z / 0.23 + 8.4) - 0.5);
-    return feetUnder(x, z) - 0.05 * (1 - Math.min(1, Math.max(0, d / 1.2))) + Math.min(1, Math.max(0, (d - 1.2) / 1.5)) * lumps;
+  const feetEdge = (x: number, z: number): number => Math.min(x - FEET.x0, FEET.x1 - x, z - FEET.z0, FEET.z1 - z);
+  // Cut at 0.2 m only within 13 m of that lens's way, where a cell is tens of pixels; the rest of the bank at 0.5 m, where it is two or three.
+  // Cut at 0.15 m over the whole bank, the bench alone cost a second a sample more (frame 2507, uhd, draft): triangles smaller than a pixel.
+  const FINE_CELL = 0.2;
+  const fineDepth = (x: number, z: number): number => Math.min(13 - widePath(x, z)[0], feetEdge(x, z) - FEET_FADE - 0.5);
+  /** What the fine sheet stands above the land: lumps of a forearm, none within 1.2 m of its border. */
+  const feetLift = (x: number, z: number): number => {
+    const d = fineDepth(x, z);
+    if (d <= 1.2) return 0;
+    return Math.min(1, (d - 1.2) / 1.5) * (0.08 * (noise(x / 0.62 + 7.3, z / 0.62 + 1.9) - 0.5) + 0.05 * (noise(x / 1.7 + 2.1, z / 1.7 + 8.4) - 0.5));
   };
+  const sunk = (d: number): number => 0.05 * (1 - Math.min(1, Math.max(0, d / 1.2)));
+  // A sheet sinks at its border under the coarser sheets it meets; where they end it is the land itself, and its lumps come in after that.
+  const fineUnder = latticed(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FINE_CELL, landHeight);
+  const fineHeight = (x: number, z: number): number => fineUnder(x, z) - sunk(fineDepth(x, z)) + feetLift(x, z);
+  const feetFine = mesh(
+    sheet(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FINE_CELL, fineHeight, (x, z, y) => onBench(x, z, y + 0.2) && fineDepth(x, z) > 0, 0, 0.1, [0.2, 0.6, 1.0]),
+    handMaterial,
+  );
+  const FEET_CELL = 0.5;
+  const feetHeight = (x: number, z: number): number => landHeight(x, z) - sunk(feetEdge(x, z));
+  // The middle pays for no reading but its own. The rim, where that reading fades, carries the camera's bench's as well; the two overlap by a cell.
   const feetBench = mesh(
-    sheet(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, feetHeight, (x, z, y) => onBench(x, z, y + 0.2) && !inside(NEAR, x, z, 1.2), 0, 0.1, [0.15, 0.45, 1.05]),
-    nearMaterial,
+    sheet(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, feetHeight, (x, z, y) => onBench(x, z, y + 0.2) && inside(FEET, x, z, FEET_FADE) && fineDepth(x, z) < 1.2, 0, 0.3),
+    handMaterial,
+  );
+  const feetRim = mesh(
+    sheet(FEET.x0, FEET.z0, FEET.x1, FEET.z1, FEET_CELL, feetHeight, (x, z, y) => onBench(x, z, y + 0.2) && !inside(FEET, x, z, FEET_FADE + 1.5 * FEET_CELL), 0, 0.3),
+    rimMaterial,
   );
   const nearBench = mesh(
-    sheet(NEAR.x0, NEAR.z0, NEAR.x1, NEAR.z1, 0.35, landHeight, (x, z, y) => onBench(x, z, y) && !nearCrack(x, z, 1.7) && !inside(CRAG, x, z, 1.0), 0, 0.3),
+    sheet(NEAR.x0, NEAR.z0, NEAR.x1, NEAR.z1, 0.35, landHeight, (x, z, y) => onBench(x, z, y) && !nearCrack(x, z, 1.7) && !inside(CRAG, x, z, 1.0) && !inside(FEET, x, z, 1.2), 0, 0.3),
     nearMaterial,
   );
   // The crag that stands at the left edge of the line view, 8 to 14 m from that lens: cut at 0.12 m, so that its outline breaks at a hand's width.
@@ -209,11 +229,13 @@ export function create(ctx: HeartContext): HeartPiece {
   };
   const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0, 0, 0.04, [0.2, 0.6]), nearMaterial);
   rubble.renderOrder = -5;
-  const rocks = scatterRocks(ctx, shared, landHeight);
+  const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
   nearBench.renderOrder = -5;
+  feetFine.renderOrder = -6;
   feetBench.renderOrder = -5;
+  feetRim.renderOrder = -5;
   midBench.renderOrder = -4;
   farBench.renderOrder = -3;
   for (const r of rocks.land) r.renderOrder = -2;
@@ -236,7 +258,7 @@ export function create(ctx: HeartContext): HeartPiece {
   // The shore of the line view, 80 m of it: where the lens stands on the last rocks, the bench ends in an undercut lip of spatter.
   const lip = mesh(shoreLip(landHeight, benchDistance, noise, [-493.5, 176], 80, (x, z) => inPatch(x, z) > 0.6), lipMaterial);
   lip.renderOrder = -5;
-  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetBench, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, feetBench, cragFine, rubble, lip, ...rocks.bench);
+  ctx.scene.add(ctx.parts.built('bench', farBench, midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench), midBench, nearBench, feetFine, feetBench, feetRim, cragFine, rubble, lip, ...rocks.bench);
 
   // The sulphur crack: the fissure itself, cut finer than the bench round it, with its lips. The stain and the crystals are in the bench's shader, so they fade out across both.
   const crackMeshes: THREE.Mesh[] = [];

@@ -1,6 +1,7 @@
 // The water of the Ribs in the light of the rig: the open sea with its surf, the pools and runnels on the floor, the bore, and thrown spray.
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { loopAngle, loopText } from '../shared/looptext';
+import { openingText } from '../shared/opening';
 import { SWELL } from './tide';
 
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
@@ -182,6 +183,54 @@ void main() {
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
 }`;
+
+/**
+ * The open sea in the approach. The shut cloud lies over the blades, not over the mile of water before them, which keeps more of the sky's
+ * light (uOpenSea.x times what the rig gives the ground under the cloud; 1 once the cloud has opened). And before the fog bank a mist lies
+ * on the water itself, a metre or two deep, in drifts that go with the wind: a low lens looks along it, so the far water pales into the bank
+ * and there is no line where the sea ends and the fog begins (uOpenSea.y: how much of it is left, nothing once the bank is gone).
+ * And the look of a gale's sea from far out (uOpenSea.z, 1 as the film opens and nothing from the sixteenth second): gusts, more white
+ * water, the path of light under the break in the cloud.
+ */
+export const SEA_OPENING_FRAGMENT = openingText(
+  // More of the wind sea breaks: a gale's sea, white to the horizon in drifts.
+  SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.17 * uOpenSea.z, ${hi} - 0.17 * uOpenSea.z, torn`),
+  [
+    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;'],
+    [
+      '  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);',
+      `  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);
+  // The wind does not lie evenly on a mile of water: it comes down in gusts that roughen it in dark drifts, with slicks between them.
+  float gust = textureLod(tChop, (p - uTime * uWind * 11.0) / 870.0 + 0.4, 0.0).a * 0.65 + textureLod(tChop, (p - uTime * uWind * 11.0) / 310.0 + 0.7, 0.0).b * 0.35;
+  lively *= mix(1.0, 0.5 + 1.0 * smoothstep(0.32, 0.68, gust), uOpenSea.z);`,
+    ],
+    [
+      '  refl += uSunColour * gl * sun * mix(6.0, 0.8, far);',
+      `  refl += uSunColour * gl * sun * mix(6.0, 0.8, far);
+  // The break in the cloud stands on the water as a path of light toward it: the faces turned to it flash, and far off they run together.
+  if (uOpenSea.z > 0.0) {
+    vec3 hb = normalize(v + uSkyBreak);
+    float turned = max(dot(n, hb), 0.0);
+    refl += vec3(1.0, 0.98, 0.95) * uOpenSea.z * (2.6 * pow(turned, mix(1100.0, 140.0, far)) + 0.5 * pow(turned, 60.0) * far);
+  }`,
+    ],
+    ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
+    ['0.55 * lane);', '(0.55 + 0.35 * uOpenSea.z) * lane);'],
+    [
+      '  gl_FragColor = vec4(rigOut(col), 1.0);',
+      `  if (uOpenSea.y > 0.0) {
+    vec2 q = p - uTime * uWind * 20.0;
+    float wide = textureLod(tChop, q / 1900.0 + 0.23, 0.0).b;
+    float drift2 = textureLod(tChop, q / 610.0 + 0.57, 0.0).a;
+    float lies = smoothstep(1560.0, 900.0, p.y + 520.0 * (wide - 0.5)) * (0.4 + 0.6 * smoothstep(0.3, 0.62, 0.55 * drift2 + 0.45 * wide));
+    // The path of the eye through a layer on the water: its depth over the sine of the glance.
+    float tau = 0.045 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
+    col = mix(col, uHaze * (0.27 + 0.05 * drift2), 1.0 - exp(-tau));
+  }
+  gl_FragColor = vec4(rigOut(col), 1.0);`,
+    ],
+  ],
+);
 
 export const POOL_VERTEX = /* glsl */ `
 attribute float aDepth;
@@ -560,6 +609,20 @@ void main() {
 }`;
 
 /**
+ * The breaker of the approach, seen from a mile out against the light: a body of thrown water is grey where it is thick (the sky behind it
+ * does not come through) and bright where it is torn thin, at its rim and in what the wind takes. White water keeps more of the shut
+ * sky's light than the stone behind it, as the open sea does.
+ */
+export const SPRAY_OPENING_FRAGMENT = openingText(SPRAY_FRAGMENT, [
+  [
+    '  gl_FragColor = vec4(col * alpha, alpha);',
+    `  float thick = smoothstep(0.3, 0.85, body * (0.55 + 0.45 * t.a)) * smoothstep(0.4, 0.8, vLook.x) * (1.0 - vMist) * (1.0 - drop);
+  col = mix(col, vLight * vec3(0.4, 0.45, 0.46) * (0.8 + 0.5 * t.g), 0.6 * thick) * 1.6;
+  gl_FragColor = vec4(col * alpha, alpha);`,
+  ],
+]);
+
+/**
  * The pools in the card loop: every wave of the sheet goes a whole number of turns a loop, so the water of the last frame is that of the first
  * and none of it is left to the cross-fade. And once a loop a thin sheet washes up the flats and drains back: the level of the pools comes up
  * a few fingers, each stretch in its own time, with foam at its running edge, and what it leaves stays wet a while after it. At the loop's
@@ -567,6 +630,11 @@ void main() {
  */
 /** Metres the level comes up; how late in the loop a stretch may be, by its own time and by how near the establishing lens it lies. */
 const WASH = { rise: 0.12, late: 0.1, near: 0.14 };
+/**
+ * Once a loop one gust crosses the wet before the establishing lens: a ruffled dark stretch `long` metres deep that goes over a round of
+ * the flats `reach` metres wide about `at`, heading `way`. At the loop's first and last frames it is outside that round.
+ */
+const GUST = { at: [-172, 62] as const, way: [0.94, 0.34] as const, reach: 62, long: 36 };
 export const POOL_LOOP_FRAGMENT = (rings: number): string =>
   loopText(POOL_FRAGMENT(rings), [
     ['uniform sampler2D tChop;', 'uniform sampler2D tChop;\nuniform vec2 uLoop;'],
@@ -589,6 +657,15 @@ export const POOL_LOOP_FRAGMENT = (rings: number): string =>
   float wetDepth = depth + ${f(WASH.rise)} * (washWet - wash);`,
     ],
     ['bool dry = depth < -film;', 'bool dry = wetDepth < -film;'],
+    [
+      '  float gust = 0.35 + 0.65 * paw;',
+      `  vec2 gustAt = p - vec2(${f(GUST.at[0])}, ${f(GUST.at[1])});
+  float gustAlong = dot(gustAt, vec2(${f(GUST.way[0])}, ${f(GUST.way[1])})) + 12.0 * (barA.r - 0.5) + ${f(GUST.reach)} - ${f(2 * GUST.reach + GUST.long)} * uLoop.y;
+  float gustOn = smoothstep(${f(-GUST.long)}, ${f(-0.62 * GUST.long)}, gustAlong) * (1.0 - smoothstep(${f(-0.25 * GUST.long)}, 0.0, gustAlong));
+  gustOn *= (1.0 - smoothstep(${f(0.62 * GUST.reach)}, ${f(GUST.reach - 2)}, length(gustAt))) * smoothstep(0.02, 0.08, uLoop.y) * (1.0 - smoothstep(0.92, 0.98, uLoop.y));
+  paw = max(paw, gustOn * (0.55 + 0.45 * barB.a));
+  float gust = 0.35 + 0.65 * paw;`,
+    ],
     ['smoothstep(-film, -0.004, depth);', 'smoothstep(-film, -0.004, wetDepth);'],
     [
       '  col = mix(col, vec3(0.8, 0.82, 0.8) * e / 3.14159, foamed);',

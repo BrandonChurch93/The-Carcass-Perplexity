@@ -39,6 +39,30 @@ const read = (grid: Uint8Array, u: number, v: number): number => {
   return (((grid[k] as number) * (1 - a) + (grid[k + 1] as number) * a) * (1 - b) + ((grid[k + WALL_WIDTH] as number) * (1 - a) + (grid[k + WALL_WIDTH + 1] as number) * a) * b) / 255;
 };
 
+// A lattice value that is the same wherever it is asked: 0 to 1.
+const hash = (i: number, j: number): number => {
+  let n = Math.imul(i, 374761393) ^ Math.imul(j, 668265263);
+  n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+};
+/** The courses of the wall, from the brim down: the depth each one begins at. A hand and a half to more than two metres thick, no two alike. */
+const COURSES: number[] = [];
+for (let k = 0, d = 0; d < 80; k++) {
+  COURSES.push(d);
+  d += 0.45 + 1.9 * hash(k, 91) ** 1.6;
+}
+/** How far the rock of the wall stands back from the plain wall at a place, metres: 0 to about 1.4. The wall between the ribs is bedded
+ *  stone, broken along its beds and its upright joints: every course is set back its own way, and of the blocks a course is jointed into
+ *  most are nearly flush and one in five has gone, leaving a hole a block wide with a ledge for a floor. `arc` is metres round the shaft. */
+function courseBack(arc: number, depth: number): number {
+  let k = 0;
+  while (k + 1 < COURSES.length && (COURSES[k + 1] as number) <= depth) k++;
+  const wide = 1.4 + 3.2 * hash(k, 7);
+  const i = Math.floor((arc + hash(k, 13) * wide) / wide);
+  const lost = hash(k * 31 + 7, i * 17 + 3) < 0.22;
+  return 0.32 * hash(k, 39) + (lost ? 0.55 + 0.6 * hash(k * 5 + 1, i * 3 + 11) : 0.24 * hash(k * 11 + 2, i * 7 + 5));
+}
+
 export interface WallPoint {
   at: [number, number, number];
   /** Where it is on the plate, in repeats: across, and down from the brim. */
@@ -49,13 +73,21 @@ export interface WallPoint {
   open: number;
 }
 
+// The brim's height at the bearing last asked: a column of the wall asks it hundreds of times.
+let brimOf = NaN;
+let brimTop = 0;
+
 /** The point of the wall at a bearing (radians) and a depth under the brim (metres). */
 export function wallPoint(b: number, depth: number): WallPoint {
   // The bearing as degrees from the join round to the join.
   let deg = b / RAD;
   deg -= 360 * Math.floor((deg - (JOIN - 360)) / 360);
   const r0 = rimRadius(b);
-  const top = ground(Math.sin(b) * r0 * 1.002, -Math.cos(b) * r0 * 1.002) + 0.02;
+  if (b !== brimOf) {
+    brimOf = b;
+    brimTop = ground(Math.sin(b) * r0 * 1.002, -Math.cos(b) * r0 * 1.002) + 0.02;
+  }
+  const top = brimTop;
   const u = ((deg - START) * RAD * 30) / WALL_METRES;
   // The ribs do not run level round the shaft: each side of every mirror line hangs its own way.
   const hang = smooth(depth / 7) * (1.7 * noise3(deg * 0.031, 4.4, 1.2) + 0.7 * noise3(deg * 0.09, 9.1, 3.3));
@@ -71,7 +103,11 @@ export function wallPoint(b: number, depth: number): WallPoint {
   const band = Math.max(h, 0.94 * Math.max(read(relief, u, v - dv), read(relief, u, v + dv)), 0.82 * Math.max(read(relief, u, v - 2 * dv), read(relief, u, v + 2 * dv)));
   const du = 1.1 / WALL_METRES;
   const broad = (h + read(relief, u - du, v) + read(relief, u + du, v) + read(relief, u - 2.3 * du, v) + read(relief, u + 2.3 * du, v)) / 5;
-  h = lerp(broad, band, smooth((band - 0.42) / 0.16));
+  // Between the ribs the plate's relief is not the shape at all. It is a guess from a picture of wet stone, whose runs of seep it reads as
+  // upright folds: built so, even read broadly, every fold was a pipe that ran straight down the wall from one rib to the next. Only the
+  // broad hollow of it is kept, and the shape of the wall there is its courses (courseBack).
+  const ribbed = smooth((band - 0.42) / 0.16);
+  h = lerp(lerp(LEVEL, broad, 0.3), band, ribbed);
   const open = read(opens, u, v);
   // At the join the relief goes back to the plain wall, so the two edges meet.
   const join = smooth(Math.min(deg - (JOIN - 360), JOIN - deg) / 5);
@@ -87,11 +123,13 @@ export function wallPoint(b: number, depth: number): WallPoint {
   // The brim is a plain broken face for a man's height: the first rib stands out under it as a ledge of its own. Standing out from the
   // brim itself, its top was a pale sheet level with the ground beside every lens on the rim.
   const meet = smooth((depth - 1.7) / 1.0);
-  const r = r0 + 0.03 - inset * 0.6 - 12 * down - stand * meet;
+  // The courses dip a little and wander, with the ribs.
+  const back = (1 - ribbed) * smooth((depth - 0.25) / 0.5) * courseBack(deg * RAD * 30, depth + 0.6 * hang + 0.5 * noise3(deg * 0.11, 2.2, 8.1));
+  const r = r0 + 0.03 - inset * 0.6 - 12 * down - stand * meet + back;
   // A rib is a ledge: what stands out is lifted a little, so its top lies nearly level and its underside is cut back.
   // It never stands over the ground of the brim: lifted past it, the lip of the shaft was a row of tents in front of the lens on the rim.
   const lift = 0.13 * Math.max(0, stand) * meet;
-  return { at: [Math.sin(b) * r, Math.min(y + lift, top - 1.6 * meet - 0.035 * Math.max(0, stand) * meet), -Math.cos(b) * r], u, v, relief: h, open: lerp(1, open, join) };
+  return { at: [Math.sin(b) * r, Math.min(y + lift, top - 1.6 * meet - 0.035 * Math.max(0, stand) * meet), -Math.cos(b) * r], u, v, relief: h, open: lerp(1, open, join) * (1 - 0.3 * sat(back / 0.9)) };
 }
 
 /** The top of the nth rib down from the brim at a bearing (degrees): where a fallen block can lie. */
@@ -126,6 +164,9 @@ export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeo
   const uv = new Float32Array(count * 2);
   const occ = new Float32Array(count);
   const rib = new Uint8Array(count);
+  // Rows even in depth, as the wall had them. Laid along the wall's own outline instead (tried: evenly, and thick where it turns) they
+  // took the lines off the tops of the ribs, but they made the ribs' tops and edges, most of what the far lens sees of the shaft, a mesh
+  // of triangles a few pixels across, and that cost 3 to 6 s a sample at 4221.
   for (let j = 0; j <= rows; j++) {
     const depth = j <= fineRows ? j * 0.175 : 42 + ((j - fineRows) / 40) * (DEPTH - 42 + 2);
     for (let i = 0; i <= columns; i++) {
@@ -137,6 +178,24 @@ export function buildWall(): { ribs: THREE.BufferGeometry; wall: THREE.BufferGeo
       uv[k * 2 + 1] = 1 - q.v;
       occ[k] = q.open;
       rib[k] = q.relief > RIB ? 1 : 0;
+    }
+  }
+  // What the rock over a point leaves it of the sky. The wall here stands in its own shade, so a ledge shows by this and not by the sun:
+  // under rock that stands out the face is dark, and the top and the brow of what stands out itself are open and pale. Asked of the
+  // column over each point for two metres up; the edge of the dark is as wide as the ledge is deep.
+  const reach = (k: number): number => Math.hypot(position[k * 3] as number, position[k * 3 + 2] as number);
+  for (let j = 1; j <= fineRows; j++) {
+    for (let i = 0; i <= columns; i++) {
+      const k = j * (columns + 1) + i;
+      const r = reach(k);
+      let shut = 0;
+      let clear = 1;
+      for (let n = 1; n <= Math.min(j, 11); n++) {
+        const over = r - reach(k - n * (columns + 1));
+        shut = Math.max(shut, sat((over - 0.05 - 0.02 * n) / 0.45) * (1 - 0.07 * n));
+        if (n <= 4) clear = Math.min(clear, sat((0.12 - over) / 0.3));
+      }
+      occ[k] = (occ[k] as number) * (1 - 0.6 * shut) * (1 + 0.35 * clear * smooth((j - 4) / 6));
     }
   }
   const all: number[] = [];

@@ -5,6 +5,7 @@ import { shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { DROWNED, LEVELS, WIND } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { loopAngle, loopText } from '../shared/looptext';
 import { loopPhase } from '../shared/stage';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { partAtHeight, radii, ribByName, surface, weedPoint } from '../layout';
@@ -706,6 +707,13 @@ export function create(ctx: Context): Piece {
   weed.setAttribute('aShape', new THREE.InstancedBufferAttribute(shapes, 4));
   weed.setAttribute('aFall', new THREE.InstancedBufferAttribute(falls, 3));
   const weedMaterial = new THREE.ShaderMaterial({ vertexShader: WEED_VERTEX, fragmentShader: WEED_FRAGMENT, uniforms: { ...ctx.rig.uniforms, ...frame }, side: THREE.DoubleSide });
+  // The weed in the card loop: its sway goes two whole turns a loop, and wider while the gust that swings the body is on it.
+  const weedLoop = weedMaterial.clone();
+  weedLoop.uniforms = weedMaterial.uniforms;
+  weedLoop.vertexShader = loopText(WEED_VERTEX, [
+    ['uniform float uTime;', 'uniform float uTime;\nuniform vec2 uLoop;'],
+    ['sin(uTime * 1.3 + aShape.z * 30.0 + s * 3.0) * 0.09', `sin(${loopAngle('1.3', 2)} + aShape.z * 30.0 + s * 3.0) * (0.09 + 0.12 * pow(sin(3.14159 * clamp((uLoop.y - 0.05) / 0.9, 0.0, 1.0)), 2.0))`],
+  ]);
   const strands = new THREE.Mesh(weed, weedMaterial);
   strands.frustumCulled = false;
 
@@ -798,6 +806,7 @@ export function create(ctx: Context): Piece {
     // weight of that length, and it hangs still again before the loop comes round.
     setTime: () => {
       const lp = loopPhase();
+      strands.material = lp === null ? weedMaterial : weedLoop;
       if (lp === null) {
         swungOrigin.copy(plateOrigin);
         swungAxis.copy(plateAxis);
@@ -818,6 +827,7 @@ export function create(ctx: Context): Piece {
       swungOrigin.copy(plateOrigin).addScaledVector(plateAxis, 0.38).addScaledVector(swungAxis, -0.38);
     },
     dispose: () => {
+      weedLoop.dispose();
       material.dispose();
       clothMaterial.dispose();
       plateMaterial.dispose();

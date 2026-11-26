@@ -102,7 +102,7 @@ export function poseAt(frame: number): Pose {
     const dx = x + driftX;
     const dz = z + driftZ;
     // (And the camera turns a little about its own eye as it rides the orbit: the edge of the planet swings, slow, one way.)
-    const turned = ROLL_PER_KM * Math.hypot(driftX, driftZ);
+    const turned = ROLL_RATE * eased((frame - DRIFT_FROM) / FPS);
     return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
   }
   return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
@@ -112,8 +112,17 @@ const DRIFT_FROM = 10028;
 const DRIFT_SPEED = 32;
 const DRIFT_EASE = 6;
 const DRIFT_TOWARD: [number, number] = [-0.97, -0.24];
-/** The turn of the camera about its own eye, radians for each km of the drift: about ten degrees by the last frame. */
-const ROLL_PER_KM = ((10 * Math.PI) / 180) / 740;
+/** The turn of the camera about its own eye, radians a second once it runs: about twelve degrees by the last frame. */
+const ROLL_RATE = (0.47 * Math.PI) / 180;
+/** From this many seconds into the drift (film frame 10880, where the day ends) its speed settles, over DRIFT_SETTLE seconds, to DRIFT_SLOW km a second: the body stays whole and near the middle of the frame, and the camera never stops. */
+const DRIFT_SLOW_FROM = (10880 - DRIFT_FROM) / FPS;
+const DRIFT_SLOW = 9;
+const DRIFT_SETTLE = 3.5;
+/** Seconds of a move that comes up from rest over DRIFT_EASE seconds and then runs with the clock. */
+function eased(t: number): number {
+  const u = Math.min(t, DRIFT_EASE) / DRIFT_EASE;
+  return DRIFT_EASE * (u * u * u - (u * u * u * u) / 2) + Math.max(t - DRIFT_EASE, 0);
+}
 /** How much of the camera's drift the edge of the planet makes with it: the camera rides its orbit, so the ground slides under it faster than the edge turns. */
 export const LIMB_FOLLOW = 0.7;
 /**
@@ -124,8 +133,9 @@ export const LIMB_FOLLOW = 0.7;
 export function driftAt(frame: number): [number, number] {
   if (!(frame > DRIFT_FROM)) return [0, 0];
   const t = (frame - DRIFT_FROM) / FPS;
-  const u = Math.min(t, DRIFT_EASE) / DRIFT_EASE;
-  const km = DRIFT_SPEED * (DRIFT_EASE * (u * u * u - (u * u * u * u) / 2) + Math.max(t - DRIFT_EASE, 0));
+  let km = DRIFT_SPEED * eased(Math.min(t, DRIFT_SLOW_FROM));
+  const late = t - DRIFT_SLOW_FROM;
+  if (late > 0) km += DRIFT_SLOW * late + (DRIFT_SPEED - DRIFT_SLOW) * DRIFT_SETTLE * (1 - Math.exp(-late / DRIFT_SETTLE));
   return [DRIFT_TOWARD[0] * km, DRIFT_TOWARD[1] * km];
 }
 
