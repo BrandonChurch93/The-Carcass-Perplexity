@@ -164,7 +164,8 @@ export function create(ctx: Context): Piece {
       // The strike's own sky stands behind its long lens: its lit cloud behind the struck tip, its horizon on the sea's.
       plate.set(Math.atan2(strikeTip[2] - strikeStand[2], strikeTip[0] - strikeStand[0]), -0.009, ((STRIKE_FOV * 16) / 9) * 1.2 * (Math.PI / 180), inStrike ? 1 : 0);
       // Staged by shot: by the dead one (spine-03) the lens is opened for the dusk (the rig's sky light is opened by the same there).
-      skyStage.y = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
+      // Inside the canal (spine-05) the lens is opened for the dark of the rock: the sky in the mouth is the brightest thing in the frame.
+      skyStage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 1.9 : stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4 ? 1.3 : 0;
     },
     // The storm's body is marched for this sample's lens before the scene is drawn. The strike's long lens sees its picture instead.
     beforeSample: (renderer, camera) => storm.render(renderer, camera, STORM_MARCHED && plate.w === 0),

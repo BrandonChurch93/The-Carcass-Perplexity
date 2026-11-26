@@ -1,4 +1,5 @@
 import { FLOOR } from '../ridge';
+import { MOUTH, canalFar } from './anchors';
 // The one light model of the Spine. Every built surface includes RIG_GLSL in its fragment shader and reads its light from these functions,
 // so that the rock, the snow, the animals and the kites sit in the same light. Radiance is scene linear; the grade and the exposure come after, in the post.
 // The light: dusk above the cloud. No sun. Cold blue-grey from above, a last band of orange low on the open side (uWarmDir), the storm standing dark
@@ -77,6 +78,9 @@ uniform vec4 uStrikeTop;`;
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
 const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
+// The two mouths of the canal: inside it they are the light.
+const vec3 CANAL_NEAR = vec3(${MOUTH[0].toFixed(1)}, ${MOUTH[1].toFixed(1)}, ${MOUTH[2].toFixed(1)});
+const vec3 CANAL_FAR = vec3(${canalFar[0].toFixed(1)}, ${canalFar[1].toFixed(1)}, ${canalFar[2].toFixed(1)});
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
 const float EMITTER_CAST = 0.07;
@@ -273,6 +277,14 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
   float rim = clamp((dot(n, toDusk) - 0.1) / 0.9, 0.0, 1.0);
   // It shows on what is pale: snow, rime, weathered rock. A small dark thing (a husk on a line) takes almost none, or it reads as rust.
   float paleOf = smoothstep(0.1, 0.4, dot(albedo, vec3(0.3, 0.5, 0.2)));
+  // Inside the canal the mouths are the light: what faces the nearer mouth takes it, what is turned from it stands in the dark of the
+  // rock and is seen against the mouth, not lit like the open ridge.
+  if (!outside) {
+    vec3 toFar = CANAL_FAR - p;
+    vec3 toNear = CANAL_NEAR - p;
+    vec3 toLight = normalize(normalize(toFar) / (dot(toFar, toFar) + 400.0) + 0.35 * normalize(toNear) / (dot(toNear, toNear) + 400.0));
+    skyE *= mix(0.3, 1.3, smoothstep(-0.35, 0.85, dot(n, toLight)));
+  }
   vec3 warm = uWarmColour * (outside ? 0.4 * rim * rim * sqrt(sky) * mix(0.15, 1.0, paleOf) : 0.0);
   vec3 e = skyE * shut + warm * (0.35 + 0.65 * occ) + emitterIrradiance(p, n) * (occ * min(1.0, 4.0 * sky));
   vec3 c = albedo * e / 3.14159;
