@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 134, 2026-11-26 22:04 UTC:
+Status 135, 2026-11-26 22:29 UTC:
 
-- `01-s134-ribs.jpg`: The Ribs on its team's branch at 3783e45, before at left and after at right, from the Builder's own guard. Above: frame 0, the film's first frame. Below: the tide-pool feeders at frame 1759. Draft tier at the preview size, not judged, not in main
-- `02-s134-spine.jpg`: The Spine on its team's branch at 4a65619, before at left and after at right, from the Builder's own guard. Above: the walker leaving the ice cave at frame 8300. Below: the storm at frame 7015, the place's first frame. Draft tier at the preview size, not judged, not in main
-- `03-s134-three.jpg`: Before at left and after at right, from the Builder's own guards. From the top: the Heart at frame 2722 (51efd64); the Blood Marsh at frame 5618, where the rain curtain far off is gone, and its wallowers at frame 6424 (b931ec2); the Eye's drinkers at frame 9003 (05d549f). Draft tier at the preview size, not judged, not in main
-- `04-s134-approved.jpg`: Two key frames that have moved away from their approved pictures on the teams' branches. Left the approved picture, middle the film as it is, right the branch. Above: the Breath's red growth at frame 4973, now across the whole frame and hiding the pit. Below: the Eye's lake at frame 8412, its deep blue pool lost. Both sent back to their leads
+- `01-s135-join.jpg`: The join from the Eye into the rise on the Reveal's branch at 508e5eb, before at left and after at right, from the Builder's own guard. From the top: frames 9500, 9540 and 9541 (the cut), 9563 and 9584. Before, the cut was an empty cloud frame; now the lake is seen through a gap in the banks on both sides of it. At 9563 the grey-blue pane right of the gap and the brown blob at lower left are sent back. Draft tier at the preview size, not judged, not in main
+- `02-s135-spine.jpg`: The Spine's five keys beside their approved pictures: left the approved picture, middle the film as it is, right the branch at d03609d. From the top: frames 7234, 7579, 7418, 7668 and 8090. The dead ridge-runner and the bolt are nearer their pictures; the tether-kites have gone flat and opaque and the orange band at the horizon is nearly gone, both sent back to its lead. Draft tier at the preview size, not judged, not in main
+- `03-s135-eye.jpg`: Three of the Eye's keys beside their approved pictures: left the approved picture, middle the film as it is, right the branch at 2482432. From the top: the drinkers at frame 9003, now standing in the water; the deep water at frame 8761, with the wall of the shaft showing but a brighter blue than the picture; the dome at frame 9221, still flat. Draft tier at the preview size, not judged, not in main
+- `04-s135-heart.jpg`: The Heart's five keys beside their approved pictures: left the approved picture, middle the film as it is, right the branch at ef67dfc. From the top: frames 2722, 3477, 3685, 3156 and 4006. More glowing seams in the crust, a warmer sky and haze, a far cliff with form and light at 3156; the lava fall at 4006 is much as it was. Draft tier at the preview size, not judged, not in main
 
+Status 134, 2026-11-26 22:04 UTC, showed: The Ribs on its team's branch at 3783e45, before at left and after at right, from the Builder's own guard.
 Status 133, 2026-11-26 21:44 UTC, showed: The Reveal on its team's branch at c8e1c42, before at left and after at right. Top: the titan frame 10027.
 Status 132, 2026-11-26 21:20 UTC, showed: The Breath on its team's branch, before at left and after at right.
-Status 131, 2026-11-26 20:49 UTC, showed: Above: the Ribs, frame 0, before at left and after at right on its team's branch: the near blade stands at 85 percent of the frame's height...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T22:04:56Z
-phase 6: 1.26 h used of 24.00 h
-build: 46.23 h used of 72.00 h
+2026-11-26T22:29:25Z
+phase 6: 1.66 h used of 24.00 h
+build: 46.63 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 20
+minutes since the last status: 24
 ```
 
 ## Phases
