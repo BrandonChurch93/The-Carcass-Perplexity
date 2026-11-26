@@ -44,8 +44,8 @@ void main() {
   gl_FragColor = vec4(rigOut(lid.rgb), mix(lid.a, 1.0, uSolo));
 }`;
 
-// Cloud is soft: it is drawn a third of the size of the frame and laid over it.
-const SMALLER = 3;
+// Cloud is soft: it is drawn half the size of the frame and laid over it.
+const SMALLER = 2.5;
 
 export function create(ctx: Context): Piece {
   // The banks stand under the lens on the first frame of the rise, wherever rise.json has put it over the lake.
