@@ -1,10 +1,9 @@
 // The bore's course and the shared water numbers of the sea folder. The front and the event come from the root's anchors.
 import { BORE, BORE_FRONT, WIND } from '../shared/anchors';
 
-/** TEMPORARY until the anchor BORE_FRONT says the same (asked of the lead). Metres a second the wall travels toward +z: slower than the blockout, a wall this high reads as a model when it crosses its own height in under half a second. */
-export const BORE_SPEED = 45;
-/** Height of the wall's crest over the sea, metres, in the strait. */
-export const BORE_HEIGHT = 23;
+/** Metres a second the wall travels toward +z, and the height of its crest over the sea in the strait: the root's numbers. */
+export const BORE_SPEED = BORE_FRONT.speed;
+export const BORE_HEIGHT = BORE_FRONT.height;
 
 /** The z of the bore's front at `seconds` of the place. At the event it stands at the anchor's gate. */
 export const boreFront = (seconds: number): number => BORE_FRONT.gateZ + (seconds - BORE) * BORE_SPEED;
@@ -30,6 +29,8 @@ export interface Ring {
   z: number;
   phase: number;
   strength: number;
+  /** What stands there to be mirrored: x, z, its top over the water, its radius. A negative radius is a ball (a body) centred that high. */
+  stand?: [number, number, number, number];
 }
 /** The wings folder sets `at` when it is created: it fills the list for a time of the place, from that time alone. */
 export const RING_SOURCE: { at: ((seconds: number, out: Ring[]) => void) | null } = { at: null };

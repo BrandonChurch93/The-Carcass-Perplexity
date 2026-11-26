@@ -43,30 +43,36 @@ export function shaftWall(): THREE.BufferGeometry {
     const top = ground(Math.sin(b) * r * 1.002, -Math.cos(b) * r * 1.002) - 0.25;
     const y = lerp(top, -DEPTH, v);
     const torn = 1 + 1.6 * smooth((r - 31) / 5);
-    const rr = r - 0.35 - 2.5 * v + torn * (0.55 * drift(b * 9, y * 0.22, 1) + 0.25 * drift(b * 31, y * 0.7, 4)) * smooth(v * 12);
+    const rr = r - 0.35 - 12 * v + torn * (0.55 * drift(b * 9, y * 0.22, 1) + 0.25 * drift(b * 31, y * 0.7, 4)) * smooth(v * 12);
     return { at: [Math.sin(b) * rr, y, -Math.cos(b) * rr], uv: [b * 30, y], occ: lerp(1, 0.55, smooth(v * 2.2)) };
   });
 }
 
 /** A hoop of cartilage along part of the wall: from one bearing to another (degrees), at a depth, standing `thick` metres out of the wall. */
-export function hoop(y: number, radius: number, from: number, to: number, thick: number, seed: number): THREE.BufferGeometry {
+export function hoop(y: number, radius: number, from: number, to: number, thick: number, seed: number, follow?: (bearing: number) => [number, number]): THREE.BufferGeometry {
   const length = Math.abs(to - from) * RAD * radius;
-  const columns = Math.max(24, Math.round(length / 0.9));
-  return sheet(columns, 14, (u, v) => {
+  const columns = Math.max(30, Math.round(length / 0.55));
+  return sheet(columns, 16, (u, v) => {
     const b = lerp(from, to, u) * RAD;
     const s = u * length;
-    // Broken ends: the hoop thins to a torn stub over its last three metres. Along its run it swells and necks as a rib does.
-    const end = smooth(Math.min(s, length - s) / 3.2);
-    const swell = (0.82 + 0.3 * drift(s * 0.16, seed, 2) + 0.12 * drift(s * 0.7, seed, 5)) * (0.25 + 0.75 * end);
     const a = v * 2 * Math.PI;
-    // A flattened section, squarer than a tube: a rib seen end on.
-    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.7;
-    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.7;
-    const wide = thick * 1.15 * swell * (1 + 0.1 * drift(s * 1.1, a * 2, seed));
-    const tall = thick * 1.45 * swell;
+    // A squared section: a rib of bedded cartilage seen end on, not a tube.
+    const cx = Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** 0.3;
+    const cy = Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** 0.3;
+    // Broken ends: it is snapped off on a slant, the top reaching further than the underside, with a ragged face.
+    const reach = 0.9 * cy + 0.7 * drift(a * 1.7, seed, 11) + 0.5 * cx;
+    const end = smooth((Math.min(s, length - s) + reach - 0.5) / 0.7);
+    // Along its run it swells and necks, and in places a piece has come away from its face and left a bite.
+    const bite = smooth((drift(s * 0.21, seed, 7) - 0.22) / 0.06) * smooth((cx + 0.2) / 0.5);
+    const swell = (0.86 + 0.26 * drift(s * 0.16, seed, 2) + 0.1 * drift(s * 0.7, seed, 5)) * (0.25 + 0.75 * end);
+    const chip = 0.22 * drift(s * 1.3, a * 1.9 + seed, 3) + 0.1 * drift(s * 3.1, a * 4.1, seed);
+    const wide = thick * 2.3 * swell * (1 - 0.5 * bite) + chip;
+    const tall = thick * 0.85 * swell * (1 - 0.18 * bite) + 0.6 * chip;
     const sag = 0.6 * Math.sin(s * 0.11 + seed) + 0.5 * drift(s * 0.05, seed, 9);
-    const rr = radius + 0.9 - cx * wide;
-    return { at: [Math.sin(b) * rr, y + sag + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
+    // The ledge at the brim follows the ragged rim and the lip's own height; the ones below are rings.
+    const [ringRadius, ringY] = follow ? follow(b) : [radius, y + sag];
+    const rr = ringRadius + 0.9 - cx * wide;
+    return { at: [Math.sin(b) * rr, ringY + cy * tall, -Math.cos(b) * rr], uv: [s, a * thick], occ: lerp(0.6, 1, smooth(0.5 - 0.5 * cy + 0.3)) * (0.7 + 0.3 * smooth((y + 45) / 40)) };
   });
 }
 
@@ -92,24 +98,38 @@ export function slab(rng: Rng, w: number, h: number, d: number, at: [number, num
     const ey = (2 * y) / h;
     const ez = (2 * z) / d;
     const corner = Math.max(0, Math.abs(ex) + Math.abs(ez) - 1.45) * 0.5 + Math.max(0, Math.abs(ex) + Math.abs(ey) - 1.6) * 0.25 + Math.max(0, Math.abs(ez) + Math.abs(ey) - 1.6) * 0.25;
-    const k = 1 - 0.55 * corner;
+    const k = 1 - 0.3 * corner;
     x = x * k + skew * z * 0.3 + 0.22 * drift(y * 0.8 + seed, z * 0.5, x * 0.4);
     z = z * k + 0.22 * drift(x * 0.5, y * 0.8, z * 0.4 + seed);
     y = y * (1 - 0.3 * corner) + 0.16 * drift(x * 0.45, seed, z * 0.45) + 0.12 * ex * skew * h;
     p.setXYZ(i, x, y, z);
   }
   g.computeVertexNormals();
-  g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(...turn)), new THREE.Vector3(1, 1, 1)));
+  g.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at), new THREE.Quaternion().setFromEuler(new THREE.Euler(turn[0], turn[1], turn[2], 'YXZ')), new THREE.Vector3(1, 1, 1)));
   return open(g);
 }
 
-/** A heap of rubble under the slabs: a cone with a broken face. */
-export function heap(radius: number, height: number, at: [number, number, number]): THREE.BufferGeometry {
-  return sheet(48, 16, (u, v) => {
-    const a = u * 2 * Math.PI;
-    const r = radius * (0.04 + 0.96 * v) * (1 + 0.16 * drift(a * 3, v * 5, 3) + 0.07 * drift(a * 11, v * 15, 7));
-    const y = height * (0.5 - v) + 1.4 * drift(a * 5, v * 9, 1);
-    return { at: [at[0] + Math.cos(a) * r, at[1] + y, at[2] - Math.sin(a) * r], uv: [a * radius * 0.6, y], occ: 0.6 };
+/** The height of the rubble where the east-south-east wall came down: a ramp from the broken rim to the middle of the shaft. */
+export function talusHeight(x: number, z: number): number {
+  const b = Math.atan2(x, -z);
+  const r = Math.hypot(x, z);
+  const rim = rimRadius(b);
+  let d = Math.abs(b - 112 * RAD);
+  if (d > Math.PI) d = 2 * Math.PI - d;
+  const across = smooth((46 * RAD - d) / (22 * RAD));
+  const down = smooth((rim - r) / (rim + 6));
+  const top = ground(Math.sin(b) * rim * 1.002, -Math.cos(b) * rim * 1.002) - 1.2;
+  return lerp(top, -27, down ** 0.8) - 44 * (1 - across) + 1.1 * drift(x * 0.33, 1, z * 0.33) + 0.5 * drift(x * 0.9, 4, z * 0.9);
+}
+
+/** The rubble itself: a fan from the broken rim down into the shaft. */
+export function heap(): THREE.BufferGeometry {
+  return sheet(70, 36, (u, v) => {
+    const b = lerp(58, 166, u) * RAD;
+    const r = lerp(rimRadius(b) - 0.2, -8, v);
+    const x = Math.sin(b) * r;
+    const z = -Math.cos(b) * r;
+    return { at: [x, talusHeight(x, z), z], uv: [b * 24, r], occ: lerp(0.95, 0.5, smooth(v * 1.3)) };
   });
 }
 
@@ -148,18 +168,18 @@ export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
 }
 
 /** The cave: where it is on the cliff's face (metres along it, height) and its half size. */
-export const CAVE_MOUTH = { s: 0, y: 215, wide: 430, tall: 105, deep: 300 };
+export const CAVE_MOUTH = { s: 0, y: 360, wide: 700, tall: 120, deep: 340 };
 
 /** The sea cliff with its cave: 10 km of it, the scree at its foot, the face, the land behind. */
 export function cliff(): THREE.BufferGeometry {
   return sheet(340, 100, (u, v) => {
     const s = lerp(-4200, 6200, u);
     // Most of the rows are on the face, where the height is.
-    const p = v < 0.22 ? lerp(-700, -150, v / 0.22) : v < 0.82 ? lerp(-150, 45, (v - 0.22) / 0.6) : lerp(45, 1300, ((v - 0.82) / 0.18) ** 1.6);
+    const p = v < 0.22 ? lerp(-700, -150, v / 0.22) : v < 0.82 ? lerp(-150, -35, (v - 0.22) / 0.6) : lerp(-35, 1300, ((v - 0.82) / 0.18) ** 1.6);
     const taper = smooth((s + 4200) / 700) * smooth((6200 - s) / 700);
     let y = cliffHeight(s, p) * taper + 1.5 - 5 * (1 - smooth((p + 700) / 110));
     // Buttresses and gullies down the face, ledges across it.
-    const face = smooth((p + 150) / 60) * (1 - smooth((p - 45) / 200));
+    const face = smooth((p + 150) / 40) * (1 - smooth((p + 35) / 200));
     let back = face * (38 * drift(s * 0.0042, y * 0.004, 1) + 16 * drift(s * 0.013, y * 0.012, 5)) + 22 * face * Math.sin(y * 0.045 + 2 * drift(s * 0.002, 0, 3));
     y += (1 - face) * 9 * drift(s * 0.006, p * 0.006, 8);
     // The cave: a wide low arch with a level floor, cut far back into the face.

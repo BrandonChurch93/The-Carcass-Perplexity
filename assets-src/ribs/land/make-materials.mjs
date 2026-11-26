@@ -19,7 +19,9 @@ export const RECIPE = {
     { name: 'rock', from: 'land/rock-take1.jpg', to: 'land', width: 2048, height: 1024, dataAs: 'jpg' },
     { name: 'weed', from: 'land/weed-take1.jpg', to: 'land', width: 1024, height: 1024 },
     { name: 'sand', from: 'land/sand-take1.jpg', to: 'land', width: 1024, height: 1024 },
-    { name: 'sky', from: 'air/sky-take1.jpg', to: 'air', width: 2048, height: 1024, colourOnly: true, band: 0.2 },
+    { name: 'shingle', from: 'land/shingle-take1.jpg', to: 'land', width: 1024, height: 1024, dataAs: 'jpg' },
+    // The storm sky is laid on the dome whole and mirrored round it: it is not made to tile.
+    { name: 'storm', from: 'air/storm-take1.jpg', to: 'air', width: 2048, height: 1024, colourOnly: true, plain: true },
   ],
 };
 
@@ -76,8 +78,10 @@ async function material(m) {
   const h = m.height;
   const { data } = await sharp(path.join(HERE, '..', m.from)).removeAlpha().resize(w, h, { kernel: 'lanczos3', fit: 'cover' }).raw().toBuffer({ resolveWithObject: true });
   let f = Float32Array.from(data);
-  f = wrapAxis(f, w, h, 0, m.band ?? RECIPE.band);
-  f = wrapAxis(f, w, h, 1, m.band ?? RECIPE.band);
+  if (!m.plain) {
+    f = wrapAxis(f, w, h, 0, m.band ?? RECIPE.band);
+    f = wrapAxis(f, w, h, 1, m.band ?? RECIPE.band);
+  }
   const colour = Buffer.alloc(w * h * 3);
   for (let i = 0; i < f.length; i++) colour[i] = Math.max(0, Math.min(255, Math.round(f[i])));
   const dir = path.join(OUT, m.to);

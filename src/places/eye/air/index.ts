@@ -28,12 +28,13 @@ void main() {
   float az = atan(d.x, -d.z);
   float el = asin(clamp(d.y, -1.0, 1.0));
   float along = (az - 0.42) / 0.5;
-  float lane = el - 0.235 - 0.03 * along - 0.012 * sin(along * 5.0);
-  float wisp = fbm(vec2(az * 26.0 - uTime * 0.004, lane * 240.0));
-  float fine = fbm(vec2(az * 90.0 - uTime * 0.006, lane * 520.0) + 4.0);
-  float streak = exp(-along * along * 1.6) * exp(-pow(lane / 0.011, 2.0)) * smoothstep(0.25, 0.7, 0.6 * wisp + 0.4 * fine);
-  float veil = exp(-pow((el - 0.33) / 0.09, 2.0)) * smoothstep(0.42, 0.8, fbm(vec2(az * 6.0 + 2.0, el * 30.0))) * 0.12;
-  c += (uSunColour * 0.085 + uSkyHorizon * 0.25) * (streak * 0.75 + veil);
+  float lane = el - 0.2 - 0.03 * along - 0.012 * sin(along * 5.0);
+  if (abs(lane) < 0.02 && abs(along) < 1.8) {
+    float wisp = fbm(vec2(az * 26.0 - uTime * 0.004, lane * 240.0));
+    float fine = fbm(vec2(az * 90.0 - uTime * 0.006, lane * 520.0) + 4.0);
+    float streak = exp(-along * along * 1.6) * exp(-pow(lane / 0.006, 2.0)) * smoothstep(0.25, 0.7, 0.6 * wisp + 0.4 * fine);
+    c += (uSunColour * 0.085 + uSkyHorizon * 0.25) * streak * 0.45;
+  }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -54,12 +55,14 @@ const float TOP = 30.0;
 
 // How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
 float mistAt(vec3 p, vec4 land) {
-  float band = smoothstep(-260.0, -40.0, land.b) * (1.0 - smoothstep(40.0, 230.0, land.b));
+  float band = smoothstep(-200.0, -30.0, land.b) * (1.0 - smoothstep(30.0, 170.0, land.b));
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
+  float lift = 3.0 + 6.0 * vnoise(p.xz / 210.0 + 3.0);
+  float thick = band * far * exp(-max(p.y, 0.0) / lift);
+  if (thick < 0.004) return 0.0;
   vec2 q = p.xz / 150.0 + vec2(uTime * 0.012, -uTime * 0.007);
-  float banks = smoothstep(0.3, 0.72, fbm(q) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.03));
-  float lift = 5.0 + 9.0 * vnoise(p.xz / 210.0 + 3.0);
-  return band * far * banks * exp(-max(p.y, 0.0) / lift);
+  float banks = smoothstep(0.3, 0.72, 0.55 * vnoise(q) + 0.3 * vnoise(q * 2.3 + 5.0) + 0.15 * vnoise(q * 6.1) + 0.18 * vnoise(p.xz / 23.0 + uTime * 0.03));
+  return thick * banks;
 }
 
 void main() {
@@ -76,14 +79,14 @@ void main() {
   far = min(far, 20000.0);
 
   // The clear air: thickest at the water, gone by the top of the walls. Its light is the low sky it is seen against.
-  float k0 = 0.00014 * uHaze * uThin;
+  float k0 = 0.000042 * uHaze * uThin;
   float scale = 190.0;
   float y1 = ro.y + rd.y * far;
   float od = abs(rd.y) > 1e-4 ? k0 * scale * (exp(-max(ro.y, 0.0) / scale) - exp(-max(y1, 0.0) / scale)) / rd.y : k0 * exp(-max(ro.y, 0.0) / scale) * far;
   od = max(od, 0.0);
   float through = exp(-od);
   vec3 low = skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)));
-  vec3 light = low * 0.85 * (1.0 - through);
+  vec3 light = low * vec3(0.9, 0.82, 0.78) * (1.0 - through);
 
   // The mist, marched through the layer it lies in.
   float mistOn = uMist * uThin;
@@ -98,7 +101,7 @@ void main() {
     } else if (ro.y > TOP) t1 = -1.0;
     t1 = min(t1, 4200.0);
     if (t1 > t0) {
-      const int STEPS = 14;
+      const int STEPS = 10;
       float dt = (t1 - t0) / float(STEPS);
       float jitter = hash13(vec3(gl_FragCoord.xy, uSampleIndex + 17.0 * fract(uSeq * 0.137)));
       vec3 sum = vec3(0.0);
