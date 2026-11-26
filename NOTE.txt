@@ -1,0 +1,6 @@
+2026-11-26 15:54 UTC
+work at a88b694 on agent/ribs-bore
+Draft previews, before left and after right, frames 2401, 2450, 2506: the white bank of cards is gone and the wave has a dark face under a breaking crest; the face is still too plain and smooth, the foot has too little white, and at 2506 the face is smeary close up
+look-1.jpg = out/work/hb1-2401-before-after.png
+look-2.jpg = out/work/hb1-2450-before-after.png
+look-3.jpg = out/work/hb1-2506-before-after.png
