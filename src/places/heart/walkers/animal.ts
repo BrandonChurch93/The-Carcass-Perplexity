@@ -144,8 +144,8 @@ const LOOP = Math.PI / 4;
 const STEP = 1.6;
 /** Crumbs a pad drops in one swing. */
 const GRIT = 12;
-const BODY_RINGS = 96;
-const BODY_SIDES = 32;
+const BODY_RINGS = 128;
+const BODY_SIDES = 48;
 const NECK_RINGS = 46;
 const NECK_SIDES = 16;
 const NECK_END = 14;
@@ -223,14 +223,31 @@ export class Animal {
     // Where along it the hips and the shoulders stand.
     const tHip = 0.5 - b.hipFore / b.bodyLen;
     const tShoulder = 0.5 + b.hipFore / b.bodyLen;
+    // A few broad folds of slack hide, each its own: where along the trunk it hangs, which flank, how it slants, how wide and deep it is,
+    // and where down the flank it starts and stops. Between them the hide is drawn tight and bald.
+    const drapes: { at: number; flank: number; slant: number; wide: number; deep: number; from: number; to: number; bend: number }[] = [];
+    for (let g = 0; g < 5; g++) {
+      drapes.push({
+        at: 0.16 + 0.68 * ((g + 0.15 + 0.7 * hash(g, seed + 61)) / 5),
+        flank: hash(g, seed + 68) < 0.5 ? 1 : -1,
+        slant: (hash(g, seed + 62) - 0.5) * 0.3,
+        wide: 0.03 + 0.04 * hash(g, seed + 63),
+        deep: 0.07 + 0.14 * hash(g, seed + 64),
+        from: 0.1 + 0.6 * hash(g, seed + 65),
+        to: 1.5 + 1.2 * hash(g, seed + 66),
+        bend: hash(g, seed + 67) * 6.283,
+      });
+    }
     for (let i = 0; i < BODY_RINGS; i++) {
       const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (BODY_RINGS - 1));
       const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.3);
+      // The belly: a lump that hangs lower than the hips, behind the forelegs.
+      const lobe = gauss((t - 0.63) / 0.17);
       const x = (t - 0.5) * b.bodyLen;
       // It hangs between the shoulders and the hips: the back sags between them, the belly hangs lowest a little ahead of the middle.
       const sag = gauss((t - 0.5) / 0.2);
-      const top = b.bodyTop * e * (1 - 0.1 * sag + 0.5 * b.hump * gauss((t - tShoulder) / 0.12) + 0.2 * gauss((t - tHip) / 0.1));
-      const keel = b.bodyKeel * e * (0.72 + 0.34 * gauss((t - 0.56) / 0.22));
+      const top = b.bodyTop * e * (1 - 0.1 * sag + 0.7 * b.hump * gauss((t - tShoulder + 0.03) / 0.13) + 0.2 * gauss((t - tHip) / 0.1));
+      const keel = b.bodyKeel * e * (0.72 + 0.34 * gauss((t - 0.56) / 0.22) + 0.36 * lobe);
       const wide = b.bodyWide * e * (1 + 0.14 * gauss((t - tHip) / 0.1) + 0.2 * gauss((t - tShoulder) / 0.1) - 0.14 * sag);
       for (let j = 0; j < BODY_SIDES; j++) {
         // The skin is sewn along the keel, where its seam is out of sight.
@@ -246,6 +263,13 @@ export class Animal {
         m -= 0.15 * fold1 + 0.06 * fold2;
         // The flank has fallen in under the spine between the shoulder and the hip.
         m -= 0.3 * gauss((fromTop - 1.15) / 0.4) * sag * (0.6 + 0.8 * wrap(t * 7, a, 2, seed + 8));
+        // The folds: each a ridge with a hollow behind it, wandering as it goes down the flank.
+        for (const d of drapes) {
+          if (c * d.flank < -0.2) continue;
+          const dt = t - d.at - d.slant * (fromTop - 1) - 0.012 * Math.sin(fromTop * 2.6 + d.bend);
+          const run = smooth(d.from - 0.25, d.from + 0.2, fromTop) * smooth(d.to + 0.35, d.to, fromTop) * smooth(-0.2, 0.15, c * d.flank);
+          m += d.deep * run * (gauss(dt / d.wide) - 0.55 * gauss((dt + 1.7 * d.wide) / (1.2 * d.wide)));
+        }
         // What hangs under the belly is ragged.
         m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
         // The shoulders and the points of the hips, high on each side: the legs leave the body there.
@@ -256,7 +280,7 @@ export class Animal {
         m += 0.34 * up * (lump(t * 4.3, 0.5, seed + 9) - 0.3) * smooth(0.05, 0.2, t) * smooth(0.97, 0.82, t);
         // The spine: a low uneven ridge.
         m += 0.13 * gauss(fromTop / 0.2) * (0.2 + 1.6 * lump(t * 13, 0.5, seed + 6)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
-        const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
+        const pinch = s < 0 ? 1 - 0.55 * s * s * (1 - 0.9 * lobe) : 1;
         const o = (i * BODY_SIDES + j) * 3;
         this.bodyLocal[o] = x;
         this.bodyLocal[o + 1] = s * (s > 0 ? top : keel) * m;
@@ -788,7 +812,18 @@ export class Animal {
       let land = f < 0.16 ? Math.pow(Math.sin((Math.PI * f) / 0.16), 2) : 0;
       let high = b.stepH;
       // Seconds since this pad came down, and how hard: a walking step lands harder than a shift of weight.
-      let age = rate > 0.02 ? f / rate : 1e3;
+      let age = 1e3;
+      if (plan.fidget <= 0 && plan.sigma(seconds - 1.6) + leg.offset < n) {
+        // The moment the pad came down, found on the plan itself: the pace may have fallen to nothing since.
+        let before = seconds - 1.6;
+        let after = seconds;
+        for (let q = 0; q < 10; q++) {
+          const mid = 0.5 * (before + after);
+          if (plan.sigma(mid) + leg.offset < n) before = mid;
+          else after = mid;
+        }
+        age = seconds - after;
+      }
       let hard = 1;
       if (f >= DUTY) w = (f - DUTY) / (1 - DUTY);
       if (plan.fidget > 0) {

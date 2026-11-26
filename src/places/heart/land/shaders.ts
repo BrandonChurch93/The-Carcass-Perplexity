@@ -245,8 +245,11 @@ void main() {
     cliff *= 1.3;
     if (px < 0.7) {
       // Laid on both upright planes and crossed by the face's direction, as the cliff picture is.
-      vec3 frz = PICK(tBoulderNh, vWorld.zy / 17.0 + vec2(0.37, 0.11), wx.zy / 17.0, wy.zy / 17.0).rgb;
-      vec3 frx = PICK(tBoulderNh, vWorld.xy / 17.0 + vec2(0.37, 0.11), wx.xy / 17.0, wy.xy / 17.0).rgb;
+      // A face that looks squarely along one axis is read on one plane only: the other counts for nothing there.
+      vec3 frz = vec3(0.5);
+      vec3 frx = vec3(0.5);
+      if (kx > 0.003) frz = PICK(tBoulderNh, vWorld.zy / 17.0 + vec2(0.37, 0.11), wx.zy / 17.0, wy.zy / 17.0).rgb;
+      if (kx < 0.997) frx = PICK(tBoulderNh, vWorld.xy / 17.0 + vec2(0.37, 0.11), wx.xy / 17.0, wy.xy / 17.0).rgb;
       vec3 fr = mix(frx, frz, kx);
       float on = smoothstep(0.7, 0.3, px);
       #ifdef STAGED
@@ -274,8 +277,10 @@ void main() {
     // Right of the mouth, and on the wall that stands behind the ramp's head left of it; not on the ramp.
     float fineLens = smoothstep(0.3, 0.1, px);
     float buffSide = max(smoothstep(66.0, 94.0, vWorld.x - (${MOUTH.x.toFixed(1)})), smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(60.0, 85.0, vWorld.y));
-    float buff = smoothstep(0.56, 0.68, vnoise3(vWorld / vec3(17.0, 11.0, 17.0) + 1.3)) * smoothstep(0.45, 0.7, cliffNh.b);
-    cliff = mix(cliff, vec3(0.5, 0.37, 0.19) * (0.5 + cliffNh.b), 0.85 * fineLens * buff * buffSide);
+    if (fineLens * buffSide > 0.0) {
+      float buff = smoothstep(0.56, 0.68, vnoise3(vWorld / vec3(17.0, 11.0, 17.0) + 1.3)) * smoothstep(0.45, 0.7, cliffNh.b);
+      cliff = mix(cliff, vec3(0.5, 0.37, 0.19) * (0.5 + cliffNh.b), 0.85 * fineLens * buff * buffSide);
+    }
     #endif
   }
 
@@ -619,6 +624,9 @@ void main() {
   // Its faces take the sky: dark basalt, a little browner above a man's height, each broken face its own tone, over the black clinker at its foot.
   float cragLit = smoothstep(3.6, 2.0, sd) * smoothstep(1.3, 2.6, vWorld.y + 0.6 * (broke - 0.5));
   albedo *= mix(vec3(1.0), vec3(1.3, 1.2, 1.1) * (0.75 + 0.5 * smoothstep(0.3, 0.7, vnoise(vWorld.xz / 0.37 + vWorld.y * vec2(2.1, 1.3) + 5.5))), cragLit);
+  // It is broken along joints, and every break that looks up carries ash and takes the sky: the tops of its blocks are pale grey against
+  // the dark of their sides, as in the line's picture. Without this the crag was one dark wedge.
+  albedo *= mix(vec3(1.0), mix(vec3(0.8), vec3(2.3, 2.3, 2.35), smoothstep(0.1, 0.5, n0.y + 0.25 * (height - 0.5))), cragLit);
   // One mound of crystals at the vent itself: lemon, crusted, cream on its crown. The brightest thing of the near ground.
   float knob = vnoise(vWorld.xz / 0.16 + vWorld.y * vec2(2.3, 1.7) + 1.9);
   // Small, and a crust, not a coat: half a metre round the crack, olive with lemon on its knobs, the dark rock showing through it.
@@ -654,17 +662,22 @@ void main() {
   float spurOff = ((vWorld.x - uSpur.x) * spurRun.y - (vWorld.z - uSpur.y) * spurRun.x) / spurLength;
   float ramp = smoothstep(-0.1, 0.12, spurAt) * smoothstep(1.2, 1.0, spurAt) * smoothstep(10.0, -2.0, spurOff + 8.0 * (mid - 0.5)) * smoothstep(-170.0, -70.0, spurOff) * (1.0 - 0.6 * steep);
   // Fine scree with a stone bedded in it here and there, not a field of boulders.
-  float block = smoothstep(0.68, 0.8, vnoise(vWorld.xz / 1.9 + vWorld.y * vec2(0.4, 0.3) + 4.1)) * smoothstep(1.2, 0.4, px);
-  float scree = vnoise(vWorld.xz / 0.45 + vWorld.y * vec2(0.7, 0.5) + 2.3) * smoothstep(0.5, 0.15, px);
-  albedo *= mix(1.0, 0.42 + 0.45 * block + 0.16 * (mid - 0.5) + 0.12 * (scree - 0.5), ramp);
-  // The ramp is warm brown scree, not grey rock.
-  albedo *= mix(vec3(1.0), vec3(1.22, 0.98, 0.84), ramp);
+  // None of this is worked out where it counts for nothing: off the ramp, on the cliffs, and under every lens but the long one.
+  if (ramp > 0.0) {
+    float block = smoothstep(0.68, 0.8, vnoise(vWorld.xz / 1.9 + vWorld.y * vec2(0.4, 0.3) + 4.1)) * smoothstep(1.2, 0.4, px);
+    float scree = vnoise(vWorld.xz / 0.45 + vWorld.y * vec2(0.7, 0.5) + 2.3) * smoothstep(0.5, 0.15, px);
+    albedo *= mix(1.0, 0.42 + 0.45 * block + 0.16 * (mid - 0.5) + 0.12 * (scree - 0.5), ramp);
+    // The ramp is warm brown scree, not grey rock.
+    albedo *= mix(vec3(1.0), vec3(1.08, 0.98, 0.9), ramp);
+  }
   // What the long lens resolves on every slope of scree below the cliffs: pale chips a hand across and dark blocks a stride across, crisp,
-  // read in all three axes so that nothing is drawn out down the slope.
+  // read in all three axes so that nothing is drawn out down the slope. The ground between them is dark: the picture's is near black.
   float longLens = smoothstep(0.3, 0.1, px) * (1.0 - steep) * smoothstep(110.0, 80.0, vWorld.y);
-  float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
-  float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
-  albedo *= mix(1.0, (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
+  if (longLens > 0.0) {
+    float chips = smoothstep(0.63, 0.7, vnoise3(vWorld / 0.34 + 1.1));
+    float clods = smoothstep(0.58, 0.64, vnoise3(vWorld / 1.3 + 3.3));
+    albedo *= mix(1.0, 0.72 * (1.0 + 1.7 * chips) * (1.0 - 0.55 * clods), longLens);
+  }
   // The wall that stands behind the ramp's head is the fire's own: baked buff, the palest rock of that frame.
   float behind = smoothstep(-100.0, -118.0, vWorld.x) * smoothstep(-215.0, -180.0, vWorld.x) * smoothstep(0.3, 0.8, steep) * smoothstep(48.0, 72.0, vWorld.y) * smoothstep(200.0, 150.0, vWorld.y + 40.0 * (big - 0.5));
   albedo *= mix(vec3(1.0), vec3(1.9, 1.6, 1.2) * (0.75 + 0.5 * mid), behind);
