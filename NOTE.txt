@@ -1,5 +1,7 @@
-2026-11-26 13:02 UTC
-work at a718847 on agent/film-join
-First build, draft. Lid closes by 9527, gap opens by 9560, shreds to 9604. Wrong: cloud top is flat cream with hard edges, ring waves at 9505 still read as drawn lines, bubbles sit on a grid
-look-1.jpg = out/work/sheets/mid.png
-look-2.jpg = out/work/sheets/join.png
+2026-11-26 13:23 UTC
+work at b1b404d on agent/film-join
+Version 1. Join sheet, the cut every frame, 9563 and 9480 at review hd. Wrong: cloud top at 9563 is flat cream paper with smeared blue shade, water at 9480 reads as smoke with dots, whiteout lasts 12 frames, a still dark smudge sits in the fog
+look-1.jpg = out/work/sheets/join.png
+look-2.jpg = out/work/sheets/cut.png
+look-3.jpg = out/work/stills/frame-9563-hd-review.png
+look-4.jpg = out/work/stills/frame-9480-hd-review.png
