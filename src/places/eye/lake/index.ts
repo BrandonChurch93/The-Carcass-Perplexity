@@ -465,8 +465,8 @@ void main() {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
       dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 2.3 * swell * (1 + 0.05 * Math.sin(t * 2.3));
-      // Staged for the wide shot: the lip is drawn 185 m nearer the centre, so that the dark of the deep is an oval the frame holds whole.
-      (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 185 : 0;
+      // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
+      (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       centre.x = t - rise;
       centre.y = smooth(end - 0.45, end - 0.03, t);
       laps.forEach((lap, i) => {

@@ -57,7 +57,7 @@ struct Bed {
 float lipRadius(vec2 xz) {
   // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
   float toward = dot(xz, vec2(-0.309, 0.951)) / max(length(xz), 1.0);
-  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.15, 0.97, toward));
+  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.6, 1.0, toward));
 }
 
 // The lip where this point is: x is metres in from its line, measured square to it (less than nothing over the shaft), and yz is the way along it.

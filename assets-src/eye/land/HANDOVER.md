@@ -1,66 +1,60 @@
-# The Eye: hand-over from eye_owner (version 3)
+# The Eye: hand-over from eye_owner_2 (version 3 of wave 2)
 
-Honest state: round 12 judged version 2 a fail (match 3, filmed 2, motion 2). Version 3 moves and has the Builder's material pictures, but it is still far from the approved pictures. Read "Still wrong" before anything else.
+Honest state: the measures are green at draft tier in uhd (M1 0 invalid pixels; M2 16 to 62 percent moving; M3 1.5 to 4.5 against a floor of 0.75, eye-1 2.50 from 0.53). No round has judged this version. Read "Still wrong" first.
 
 ## How each part is drawn (all under `src/places/eye/`)
 
-- `land` (`land/index.ts`, `land/rock.ts`, `land/height.ts`): one height field for the basin, walls and beach. Rock is `mat/cliff` at 120 m and 41 m along the wall with my beds, ledge lines, streaks and arches; gravel is `mat/shore` at 4 m, 21 m and 1.37 m near the camera. Damp dark band below about 1.9 m.
-- `brow` (`land/index.ts`): the overhang on the east side, same rock, under side forced dark (cave term by bearing 26 to 142).
-- `scree` (`land/index.ts`): instanced blocks, `mat/cliff` at 9 m, desaturated 60 per cent and tinted cool grey.
-- `stream` (`land/index.ts`): a strip down the left shoulder with white water where the bed drops. Barely reads at eye-0.
-- `lake`, `shallows` (`lake/index.ts`, `lake/water.ts`): one fragment shader over the surface: planar mirror of the land (`createMirror`), sky from the rig, rings from the centre, lap rings at muzzles and legs (22 slots), wind heave at 46 m, 9 m and 1.9 m, gust lanes. Floor under it with `mat/sinter` crust at the lip.
-- `mats` (`MATS_GLSL` in `lake/index.ts`): `mat/mat.jpg` by ground position at 3 m, 1.05 m and 14 m; hair mask from the red to green ratio; beds are noise patches with some rays; gold tint; from far off the bed goes to its mean colour so the repeat does not show.
-- `shaft` (`lake/index.ts`): wall ring under the lip with fall-off by depth, closed by a disc at 390 m down, pale forms at 38 to 80 m.
-- `riser` (`lake/index.ts`): a dome on the surface (`uDome`, 8.5 m high, radius 66 m), a dark back sphere, rise rings, small tips. Tied to the `rise` event.
-- `sky`, `air`, `mist` (`air/index.ts`): rig sky with one cloud streak; height haze; mist marched in 10 steps through a 30 m layer at the foot of the far walls.
-- `drinkers` (`drinkers/`): one instanced body (`shape.ts`), neck, head, legs and tail posed in the vertex shader; `herd.ts` places them and gives each its neck over time; `mat/hide` on the skin.
-- `skeleton` (`skeleton/index.ts`): tubes and spheres: a cage rolled 62 degrees, broken ribs, nine loose pieces.
+- Far world (`shared/glsl.ts`, `farRadiance`): one of the Builder's far pictures (`mat/far`, `far-low`, `far-long`) hung per shot group. Built land beyond `uNear` and the brow are hidden while a picture hangs. The water mirrors it by the reflected ray; under a long lens three looks one above another, soft.
+- `land`, `brow` (`land/`): one height field. New: a fan of fallen stone under the spur (`height.ts`, along 30 to 135 m), so the wide camera has broken stone at the foot of its frame and the herd keeps a gravel flat. Under a low eye the shore is `shingleAt` (`shared/glsl.ts`): four sizes of oval stone, each turned and squashed its own way, the higher on top, each size left out when smaller than the pixel.
+- `scree` (`land/index.ts`): instanced blocks. 1500 on the fan (0.45 to 4.6 m), each shown as one stone (the scree plate read large); 13000 pebbles (3 to 23 cm) before the shore camera with lit tops and wet feet.
+- `stream`: a ribbon in the gully from along 30 m up; it no longer crosses the beach.
+- `lake`, `shallows`, `shaft` (`lake/index.ts`, `lake/bed.ts`): one water surface; the bed is worked out in the shader where the bent ray meets it, so there is no box and no second sheet. Rings from the centre broken by noise; lap rings in two trains, read by shading the water with the ring slope; the wall of the shaft shows pale blue-green for 6 m in from the lip, then the dark.
+- `mats` (`bed.ts`): no picture any more. Filaments: ridges of noise in four finenesses, combed toward the centre with a wandering current, bundles with pale crust between them, rust to amber to gold. From high on the spur the strands are not told: soft rust and amber streaks that go dark at the pool's edge. The strands go on over the crust of the lip (`mat/lip`).
+- `riser`: instanced small tips with a ring each; a low dark hump at the centre tied to the `rise` event.
+- `sky`, `air`, `mist` (`air/index.ts`): rig sky; a mist bank at the foot of the hung picture, higher for a low camera.
+- `drinkers` (`drinkers/`): lit cards from the Builder's sheets (`drinker-down`, `-up`, `-back`, `-quarter`, `calf`) with their relief: soft for the form, sharp for ribs, hips and folds (faint on backs). Wet dark legs, rings at muzzles and legs, each mirrored in the water.
+- `skeleton`: the Builder's picture and relief on the lip, bone pale.
 
 ## Tried and did not work (do not try twice)
 
-- Mats in a combed polar space (round the lake by out from the centre, with bends): it pulled the picture into long wood-grain streaks (9 jurors). Now laid by ground position.
-- Lap rings at 6.2 radians a second: the period is 1.01 s, so on evenly spaced sheets the rings stood still. Now two unlike trains.
-- Damp gravel made glossy (rough 0.35): at a grazing camera it mirrors the sky and goes paler, not darker. Damp is now dark and rough.
-- `ctx.parts.built(a, b)` returns only `a`: the second object was never in the scene. That was the grey disc of eye-05.
-- `textureGrad` in the rock shader: far too slow.
-- The dome mirroring the land: brown stripes and a pinched seam. It now takes dim sky only, but its outline still steps down at the middle at eye-4: I believe the surface mesh is too coarse at the centre or its column seam shows, not checked.
-- Centre key close to the animals: the flight to the handoff needs the key at least about 31 m half height, so the key is a long lens (8 degrees) from the bluff crest and the two animals are small and whole, not cropped backs.
-- Copies of the Heart's maps: deleted, do not bring them back.
+- The first owner's list still stands (combed polar picture warps, lap rings near 1 s, glossy damp gravel, `textureGrad`, dome mirroring land, Heart map copies, `ctx.parts.built(a, b)` returns only `a`).
+- The mat picture warped by noise to hide its repeat: marbled paper at every distance. Replaced by the filaments.
+- Shingle as one size of cell laid edge to edge: paving. Replaced by piled ovals and real pebbles.
+- Sharp relief at full strength on backs seen close: tiger stripes. Now 0.3 on back sheets.
+- The mirrored ray taking the full throw of the waves under a long lens: a mosaic of bricks. Now 12 percent.
+- The land map's sky count on the deep: a stepped dark shape late in eye-05. The deep now takes 0.92 beyond 60 m inside the lip.
+- A fan that begins at the waterline: the herd stands among boulders. It begins at along 30 m.
 
 ## Round 12 order: what is closed
 
-1. Frozen: partly closed. Water heaves and gust lanes cross it, rings travel, drinkers sip and lift (`sips` in `herd.ts`, set so each key matches its picture), lean the neck, shift weight over still feet, breathe; mist and cloud drift faster. At the held wide key the change over 6 s is real but small in a thumbnail. No animal takes a step (no leg solver; a step would slide). The far herd changes neck only every 9 to 17 s.
-2. Disc: closed (the cap is in the scene). Bullseye: not closed. It is the flat rest picture from `handoff.json`, mixed in over the last 2.7 s; it still reads as a graphic.
-3. Pulled textures: closed on the mats. Not reached: the pale crust band along the lip at eye-3 is still stretched; the seam where water meets the beach at eye-1 is darker but still one straight line.
-4. Cut box and two sheets at eye-2 and eye-3: not reached, not diagnosed.
-5. Drinkers: tried (hide picture, dark hooves, bonier trunk). Not closed: no modelled head, smooth joints, no folds, no wet legs.
-6. Far rim: not reached. Still a striped wall with arches (`rock.ts`), not terraces and rubble fans.
+1. Frozen: closed by measure (M2 green at every key). No animal takes a step.
+2. Disc and bullseye: the disc is gone; the rest rings come in only over the last 0.4 s, on the profile agreed with reveal_owner_2 (`handoff.json` untouched).
+3. Pulled textures and the straight seam: mats and shingle are drawn, not stretched; at eye-1 stones taller than the water stand out of it and a thin wet band lies above it. The seam is still nearly level between stones.
+4. Cut box and two sheets: closed (one surface, bed in the shader).
+5. Drinkers: restaged further off (settled with the Builder); hide relief added. Not closed close to: cards, no joints that bend.
+6. Far rim: closed by the hung pictures.
 
 ## Still wrong beside the approved pictures, worst first
 
-- eye-1, eye-4, eye-2: the animals read as models. Tube legs, head fused to the neck, same body everywhere.
-- eye-3: the water is a cut box with a hard blue panel; the lip is a flat shelf with a straight corner, not a broken diagonal lip; skeleton is thin tubes on top of the crust, not sunk in growth.
-- eye-4: wall flat and hazy with no cave or scree slope; dome has a seam; water still warm brown on the right; animals small and central.
-- eye-0: rim too tall, striped and regular; brow one black roof; near scree is a few warm boulders with the cliff picture's beds on them, not a grey graded slope; stream does not read; lake nearly black, not a blue oval; mats a flat orange apron with no blue gaps.
-- eye-2: right shelf of the brow too large; mist a thin line; mats better but flatter and redder than the picture, no pale slabs standing through.
-- eye-1: standing head now in frame but the group is larger and tighter than the picture; reflections still zigzag near the legs.
-- eye-05: about a second of plain dark water before the rest rings.
-- Draft-tier speckle on near gravel never checked at `final` tier. Nothing in version 3 was looked at above preview size except the last uhd compare of eye-0.
+- eye-0: the dark pool reads thinner and wider than the picture's oval; no mist at the cliff's foot in the mirror; mats have no blue wet gaps; blocks are coarse beside the picture's graded scree; the stream barely reads.
+- eye-2: filaments are thinner and paler than the picture's dense red and gold tangle; no pale slabs standing through; 62 percent of the frame moves (the camera moves).
+- eye-1: the shore is in cool shade where the picture has warm low light; rings are fainter than the picture's; the animals are smaller.
+- eye-4: backs are smooth cards; the hump is small; the wall is pale at its foot.
+- eye-3: the lip is a level shelf, not a broken diagonal; the skeleton lies on the crust, not in growth.
+- M3 above 4 at eye-2 and eye-3: fine strands everywhere. Not checked at `final` tier.
 
 ## Staged by shot
 
-Nothing uses `stagedSeconds()` or `during()`. The head lift of the two animals at eye-4, the dome and the rise rings follow the `rise` event; `sips` are phased to the key frames 9003 and 8600 by time, not by shot.
+Hung far picture per shot group; built land beyond `uNear` and the brow hidden while a picture hangs; evening shade over the south shore and a pale herd in eye-01 (`uShade`); the lip drawn in 270 m at the sides, so the dark pool is a compact oval, in eye-01 (`uLipIn`), with mats to the shore and denser; drinkers placed per shot camera; lens blur in eye-04 (slight) and eye-05. By camera height, not by shot: mirror tone, mats as streaks or strands, shingle and pebbles, wet band, mist bank height, block grain.
 
 ## Cost, seconds a sample at 3840 x 2160, eye-0, draft tier
 
-Measured with `npm run -s cost -- --key eye-0 --format uhd --tier draft`: the whole frame 10.72 s (version 2 was 8.83 s; the aim is 7), an empty frame 1.78 s. Above the empty frame: land 2.54, shallows 1.46, lake 1.23, shaft 1.20, mats 1.06, scree 0.95, sky 0.28, brow 0.15, drinkers 0.12, stream 0.09, skeleton 0.04, riser 0.00 (not in this frame). The tool gave no line for air or mist.
-No cheaper variant is kept behind a constant. The wind (12 noise reads a water pixel) and anisotropy 8 on `mat/shore` are the first things to cut.
+`npm run -s cost -- --key eye-0 --format uhd --tier draft`: 11.60 s whole at 3840x2160, one sample, draft (empty stage 1.76; alone: lake 7.35, land 4.21, scree 3.28, sky 2.72, drinkers 2.05). The aim is 7. First things to cut: the two `lipHere` calls a water pixel (ten `lipRadius`), the 22 lap slots and 9 riser slots looped on every water pixel, the four filament layers where the camera is high.
 
 ## What I would do next, in order
 
-1. Drinkers: a real head and jaw, knees and hocks, hooves, hide folds at the neck root, a wet dark band on the legs; two or three body variants.
-2. eye-3: find why two sheets and a panel show (lake and shallows surfaces, shaft wall top); break the lip; sink the skeleton into mats.
-3. Far rim: lower and round the skyline, benches and rubble fans, drop the arches, cool fill under the brow.
-4. eye-0 near shore: graded grey scree slope and a stream that reads; cool the lake toward blue.
-5. eye-4: fix the dome seam, give the wall a cave and scree, ask the Builder whether the key may sit closer.
-6. Check every key at `final` tier and native size; measure cost again and cut.
+1. eye-0: fit the pool (a compact oval, a third of the lake's face), mist in the mirror, blue gaps in the mats.
+2. eye-2: denser, darker strands in three depths with pale slabs; fewer moving pixels.
+3. eye-1: warm light on the shore (the shade is `uShade` and the land map), stronger rings.
+4. Cost: the three cuts above, then measure.
+5. Every key at `final` tier and native size.
