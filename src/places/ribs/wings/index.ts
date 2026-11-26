@@ -483,7 +483,7 @@ export function create(ctx: Context): Piece {
     const low = i < LOW;
     if (i >= FLIERS) {
       // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
-      const colony = scatter.next() < 0.45;
+      const colony = scatter.next() < 0.2;
       const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
       // Round the head of the blade itself: the blade's own middle line, near its top.
       const high = top.height * (1 - 0.3 * scatter.next() ** 2);
@@ -771,10 +771,11 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         Object.assign(pose, stand(hash(i, 3)));
-        pose.size = 1.25 * GROW;
-        pose.x = flee[0] + side * 62 - 9 * lead + 3 * Math.sin(i * 2.4);
-        pose.z = flee[1] - (16 * ((i * 5) % 7)) / 7 + 17 * lead;
-        pose.y = 5.2 + (4.5 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+        // Low over the water before the wall, far enough from the last lens to be shapes against the white.
+        pose.size = (0.9 + 0.25 * hash(i, 5)) * GROW;
+        pose.x = flee[0] + side * 46 - 9 * lead + 3 * Math.sin(i * 2.4);
+        pose.z = flee[1] - 22 - (20 * ((i * 5) % 7)) / 7 + 17 * lead;
+        pose.y = 3.6 + (3.2 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
         pose.yaw = Math.atan2(-9, 17);
         pose.roll = 0.5 * Math.sin(seconds * 0.9 + i * 1.7) + 0.35 * Math.sin(i * 2.9);
         fly(pose, 0.7, seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9);
