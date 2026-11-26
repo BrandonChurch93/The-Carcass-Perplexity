@@ -69,7 +69,7 @@ const UP: [number, number][][] = [
   [[-5, 6.8]],
   [[-5, 2.4], [10, 15], [21, 30]],
   [[13, 18]],
-  [[-5, 30]],
+  [[-5, 14.4]],
 ];
 
 function planOf(a: Anchor, up: [number, number][], rng: Rng, slack = 0, reach = 1): Plan {

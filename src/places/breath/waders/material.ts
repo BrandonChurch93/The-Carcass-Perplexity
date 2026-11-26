@@ -332,9 +332,9 @@ void main() {
   float halo = pow(clamp(0.5 + 0.5 * dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0, 1.0), 2.0) * 0.7;
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = 0.5 * max(0.05, mix(0.52, 0.43, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y);
+  float fogLight = 0.5 * max(0.05, mix(0.52, 0.7, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
-  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (7.4 * (1.0 - 0.3 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
+  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (7.4 * (1.0 - 0.5 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
