@@ -1,6 +1,5 @@
-2026-11-26 16:10 UTC
-work at ab1cf23 on agent/film-join
-passage through the lid: 9535 to 9546 before over after, 9520 to 9560 every fourth frame, pairs of 9518 9563 9584 (v3 left, now right)
-look-1.jpg = out/work/sheets/swap-before-after.png
-look-2.jpg = out/work/sheets/passage.png
-look-3.jpg = out/work/pairs/v4-pairs.png
+2026-11-26 16:21 UTC
+work at 206a50a on agent/film-join
+one sun on the near sheets: 9540 9544 9548 9552 in a row at 400 px, and 9545 to 9556 every frame
+look-1.jpg = out/work/sheets/row-sun.png
+look-2.jpg = out/work/sheets/s-9545.png
