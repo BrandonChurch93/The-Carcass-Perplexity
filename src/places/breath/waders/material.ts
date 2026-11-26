@@ -7,6 +7,10 @@ attribute vec4 aInfo;
 attribute vec2 aLook;
 attribute float aHeat;
 attribute float aWho;
+attribute vec3 aRest;
+attribute vec3 aRestN;
+varying vec3 vRest;
+varying vec3 vRestN;
 uniform float uPixel;
 uniform float uMirror;
 uniform float uSea;
@@ -29,6 +33,8 @@ void main() {
   vInfo = aInfo;
   vLook = aLook;
   vWet = aHeat;
+  vRest = aRest;
+  vRestN = aRestN;
   // The mirror image: the same animal upside down under the level of the water.
   if (uMirror > 0.5) p.y = 2.0 * uSea - p.y;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
@@ -45,6 +51,8 @@ varying vec2 vUv;
 varying vec4 vInfo;
 varying vec2 vLook;
 varying float vWet;
+varying vec3 vRest;
+varying vec3 vRestN;
 uniform float uSea;
 uniform float uPixel;
 uniform float uDead;
@@ -85,7 +93,12 @@ void main() {
   float fine = smoothstep(0.014, 0.003, px);
   float mid = smoothstep(0.06, 0.012, px);
 
-  vec2 q = vUv + seed * 1.37;
+  float whole = step(3.5, kind);
+  // One skin has no seam to lay a picture along: everything on it is laid by where the skin is on the animal at rest, on three axes.
+  vec3 rn = normalize(vRestN + vec3(1e-5));
+  vec3 tw = pow(abs(rn), vec3(4.0));
+  tw /= tw.x + tw.y + tw.z;
+  vec2 q = mix(vUv, vRest.xy + vRest.z * vec2(0.83, 0.41), whole) + seed * 1.37;
   float blotch = fbm(q * vec2(2.6, 3.4));
   float mottle = fbm(q * vec2(9.0, 11.0) + 5.0);
   float pimple = smoothstep(0.72, 0.9, vnoise(q * 95.0)) * fine;
@@ -97,7 +110,15 @@ void main() {
   vec3 hideF = hideC;
   float grain = 0.5;
   float swell = 0.5;
-  if (tendril < 0.5 && mid > 0.0) {
+  if (whole > 0.5 && mid > 0.0) {
+    vec3 r6 = vRest / 0.6 + seed * 0.731;
+    vec3 r2 = vRest / 0.19 + seed * 0.417;
+    hideC = tw.x * texture2D(tHide, r6.zy).rgb + tw.y * texture2D(tHide, r6.xz).rgb + tw.z * texture2D(tHide, r6.xy).rgb;
+    swell = tw.x * texture2D(tHideNh, r6.zy).b + tw.y * texture2D(tHideNh, r6.xz).b + tw.z * texture2D(tHideNh, r6.xy).b;
+    vec2 one = tw.z > max(tw.x, tw.y) ? r2.xy : tw.y > tw.x ? r2.xz : r2.zy;
+    hideF = texture2D(tHide, one).rgb;
+    grain = texture2D(tHideNh, one).b;
+  } else if (tendril < 0.5 && mid > 0.0) {
     hideC = texture2D(tHide, uvH).rgb;
     hideF = texture2D(tHide, uvF).rgb;
     swell = texture2D(tHideNh, uvH).b;
@@ -116,7 +137,41 @@ void main() {
   float occ = vInfo.y;
   float wet = 0.0;
   float thin = 0.5;
-  if (kind < 0.5) {
+  if (whole > 0.5) {
+    // One skin over the whole animal: bare, pale, thin. The ribs and the bones are in its shape; here they are sharpened and coloured.
+    float legT = vInfo.x;
+    float neckU = vLook.y;
+    float cage = vUv.y;
+    float rib = pow(0.5 + 0.5 * cos(vUv.x * 6.2832), 1.6);
+    float between = cage * (1.0 - rib);
+    float drape = fbm(q * vec2(5.0, 7.0) + 9.0) - 0.5;
+    float crease = fbm(q * vec2(23.0, 31.0) + 3.0) - 0.5;
+    // Slack skin in folds across the neck where it leaves the chest, and round every joint.
+    float joint = exp(-pow((legT - 0.47) / 0.05, 2.0)) + exp(-pow((legT - 0.94) / 0.03, 2.0));
+    float shank = smoothstep(0.42, 0.52, legT);
+    float fold = (vnoise(vec2(dot(vRest.xy, vec2(0.89, 0.45)) * 46.0 + 3.0 * vnoise(q * 7.0), vRest.z * 9.0 + dot(vRest.xy, vec2(-0.45, 0.89)) * 7.0) + seed) - 0.5) * smoothstep(0.02, 0.12, neckU);
+    height = (0.006 * rib * cage + 0.0045 * (swell - 0.5) + 0.0012 * (grain - 0.5) + 0.012 * drape * (1.0 - 0.7 * cage) * (1.0 - 0.8 * shank) + 0.002 * crease + 0.004 * fold) * mid;
+    pale = mix(vec3(0.6, 0.43, 0.39), vec3(0.86, 0.73, 0.66), smoothstep(0.25, 0.7, blotch)) * (0.8 + 0.4 * mottle) * clamp(told, 0.0, 2.0);
+    albedo = pale * (0.84 + 0.16 * crack) * (1.0 + (0.3 * drape + 0.1 * crease + 0.2 * fold) * mid);
+    occ *= 1.0 - 0.34 * between * mid;
+    albedo *= 1.0 - 0.1 * between;
+    albedo = mix(albedo, vec3(0.42, 0.44, 0.54), 0.2 * vein * mid * (1.0 - shank));
+    // Raw where bone rubs the skin from inside: the points of the hips, the spine, the joints, the end of the neck.
+    float bony = smoothstep(0.55, 0.95, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - smoothstep(0.0, 0.1, neckU));
+    float sore = smoothstep(0.42, 0.66, mottle) * (0.25 + 0.45 * smoothstep(0.4, 0.65, blotch)) + 0.5 * smoothstep(0.52, 0.7, fbm(q * vec2(1.3, 1.9) + 3.0)) + 0.3 * bony + 0.75 * joint + smoothstep(0.62, 1.0, neckU) * (0.5 + 0.4 * blotch);
+    albedo = mix(albedo, raw, 0.6 * clamp(sore, 0.0, 0.9));
+    albedo = mix(albedo, vec3(0.62, 0.3, 0.28), 0.35 * pimple * smoothstep(0.4, 0.7, mottle));
+    // The belly and the legs are splashed grey with silt; the foot is dark horn.
+    float belly = smoothstep(-0.3, -0.9, rn.y) * (1.0 - step(0.01, legT)) * (1.0 - step(0.02, neckU));
+    albedo = mix(albedo, vec3(0.36, 0.34, 0.31), belly * (0.3 + 0.4 * smoothstep(0.35, 0.65, vnoise(q * 13.0))));
+    albedo = mix(albedo, vec3(0.42, 0.33, 0.29) * (0.6 + 0.6 * mottle), 0.5 * shank);
+    float horn = smoothstep(0.955, 0.972, legT + 0.01 * (mottle - 0.5));
+    albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
+    rough = mix(rough, 0.45, horn);
+    // Wet from the water up to where it last stood deeper, and dark with it.
+    wet = smoothstep(0.3, 0.42, legT) * smoothstep(uSea + 0.55, uSea + 0.12, vWorld.y + 0.25 * (blotch - 0.5));
+    thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
+  } else if (kind < 0.5) {
     // The trunk: the ribs show through the skin as fine ridges that curve down the flank, each a little unlike the next;
     // the points of the hips and the spine are rubbed raw, the belly is splashed grey with silt.
     float sn = sin(vUv.y / 0.32);

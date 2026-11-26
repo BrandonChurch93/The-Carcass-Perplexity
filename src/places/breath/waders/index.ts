@@ -17,6 +17,8 @@ export const PARTS: readonly string[] = ['waders'];
 const DISCS = 5;
 /** Drops in the air under one lifted tuft, at most. */
 const DROPS = 26;
+/** Metres of water a wader stands in at most. */
+const WADE = 0.14;
 const hash = (n: number): number => {
   const s = Math.sin(n * 127.1) * 43758.5453;
   return s - Math.floor(s);
@@ -24,7 +26,8 @@ const hash = (n: number): number => {
 
 export function create(ctx: Context): Piece {
   const { rig } = ctx;
-  const env: Env = { ground: (x, z) => footing(x, z), sea: SEA_LEVEL };
+  // Staged: where the channel is deep the waders keep to its shallows, so a foot stands a hand under the water and a lifted one comes clear of it.
+  const env: Env = { ground: (x, z) => Math.max(footing(x, z), SEA_LEVEL - WADE), sea: SEA_LEVEL };
   const skin = new Skin();
   const members = makeHerd(ctx.rng('waders'));
   const herd = members.map((m, i) => {
