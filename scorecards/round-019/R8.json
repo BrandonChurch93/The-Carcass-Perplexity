@@ -2,6 +2,50 @@
   "round": 19,
   "unit": "reveal",
   "question": "kit/07-QUALITY-BAR.md, R8, word for word",
-  "viewers": [],
-  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in."
+  "viewers": [
+    {
+      "viewer": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "The image shows a giant human skeleton sprawled across Earth’s surface as seen from space, with swirling clouds nearby.",
+      "answered": "05:21 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "b",
+      "model": "claude_opus_5_5",
+      "answer": "The image shows an orbital view of Earth in which a giant skeleton-shaped landmass, like a reddish-brown mountain range forming a skull, ribcage, spine and limbs, lies across a dark ocean under scattered clouds, with a spiral storm in the lower right corner.",
+      "answered": "05:21 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "c",
+      "model": "gemini_neon",
+      "answer": "The image shows a view of Earth from space featuring a colossal landmass shaped like a human skeleton lying across the ocean, complete with a skull, ribcage, spine, limbs, a red-and-white patch at the pelvis, and a swirling cyclone in the lower right corner.",
+      "answered": "05:22 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "Earth is seen from space with a giant humanlike skeleton outlined in the terrain, its skull on the left and a bright red mark near its pelvis.",
+      "answered": "05:22 UTC",
+      "counts": true
+    },
+    {
+      "viewer": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "The image shows a view of Earth from space in which the ocean and cloud patterns form the shape of a giant skeleton, with a visible skull, ribcage and limbs, and a hurricane swirling in the lower right corner.",
+      "answered": "05:22 UTC",
+      "counts": true
+    }
+  ],
+  "note": "Each answer is one fresh agent that received the titan frame at 400 px wide and the question of R8 and nothing else. Whether an answer counts is marked by the Builder by the rule of R8 (a body, a corpse, a skeleton or a giant figure counts; only a landscape, an island, a coast or a map does not) in the field `counts`, added after all answers are in.",
+  "counts": 5,
+  "share": 1.0,
+  "control": {
+    "file": "scorecards/controls/reveal-R8.json",
+    "share": 1.0
+  },
+  "passes": true,
+  "marked": "2026-11-26 05:31 UTC by the Builder: all five answers name a giant skeleton, so all five count by the rule of R8. Share 1.00 against a needed 0.80: R8 passes in this round. In round 13 one of five counted."
 }
