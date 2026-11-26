@@ -1,7 +1,5 @@
-2026-11-26 01:15 UTC
-work at a50c94e on agent/ribs-sea-2
-Start state (main a50c94e): bore is a white band with windows, animals are tubes and fans, drowned is jointed tubes, pool film flat
-look-1.jpg = out/work/compare/ribs-4-start.png
-look-2.jpg = out/work/compare/ribs-2-start.png
-look-3.jpg = out/work/compare/ribs-1-start.png
-look-4.jpg = out/work/compare/ribs-0.png
+2026-11-26 01:39 UTC
+work at 1ece677 on agent/ribs-sea-2
+bore rebuilt on the breaking-wave sheets, ribs-4 look 8
+look-1.jpg = out/work/look-bore-v0.jpg
+look-2.jpg = out/work/c0.jpg
