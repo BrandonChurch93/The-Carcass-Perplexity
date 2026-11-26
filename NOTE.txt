@@ -1,4 +1,4 @@
-2026-11-26 07:35 UTC
-work at 8244442 on agent/ribs-sea-3
-heartbeat 5: bore wall varied along its length, six fliers at the gate, measures all green
-look-1.jpg = out/work/hb5-bore.jpg
+2026-11-26 08:03 UTC
+work at 2348646 on agent/ribs-sea-3
+heartbeat 6: ribs-4 at final tier on the merged tree, with two native crops
+look-1.jpg = out/work/hb6-2401-final.jpg
