@@ -1,8 +1,8 @@
-# Status 116
+# Status 117
 
-2026-11-26 14:13 UTC. Phase 5, the whole film.
+2026-11-26 14:42 UTC. Phase 5, the whole film.
 
-- `01-s116-heart-bank.jpg`: The Heart, frame 2507, the jury's frame (draft tier, preview size, rendered on the Builder's machine): before at left, the near bank version 1 at right, merged
-- `02-s116-strike.jpg`: The Spine's lightning, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top to bottom: frames 7015, 7234 (key spine-0) and 7668 (key spine-3). The white ball at the bolt's foot is gone
-- `03-s116-marsh-fresh2.jpg`: The lens' one fix, the Blood Marsh (final tier, 4K, crops at native size, from the render machine's sheet): kept still at left, new render at right. Top, key marsh-1. Bottom, key marsh-2, which stood at 0.54 of the kept still in its softest window before the fix and stands at 0.85 now
-- `04-s116-eye-seam.jpg`: The Eye's first frame, 8305, merged (the builder's render, crop at native size): before above, after below. The step in the mist at the scree foot is gone; the dark strip along the water at right is sent back
+- `01-s117-marsh.jpg`: The Blood Marsh's stalks, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 5618, the jury's frame. Bottom, frame 6424, key marsh-3: no crown stands over the hero's back
+- `02-s117-ending.jpg`: The ending's last version, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 11340, six frames after the beat. Bottom, the last frame, 11743
+- `03-s117-breath-held.jpg`: Held back, the Breath's wall version 1 (draft tier, preview size, rendered on the Builder's machine): main at left, with the wall at right. Top, frame 5510, key breath-2. Bottom, frame 4973, key breath-3. The vapour behind the weed is gone at right
+- `04-s117-opening.jpg`: The first seconds, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 0. Bottom, frame 120, the frame at the hook

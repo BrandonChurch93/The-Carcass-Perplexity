@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 116, 2026-11-26 14:13 UTC:
+Status 117, 2026-11-26 14:42 UTC:
 
-- `01-s116-heart-bank.jpg`: The Heart, frame 2507, the jury's frame (draft tier, preview size, rendered on the Builder's machine): before at left, the near bank version 1 at right, merged
-- `02-s116-strike.jpg`: The Spine's lightning, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top to bottom: frames 7015, 7234 (key spine-0) and 7668 (key spine-3). The white ball at the bolt's foot is gone
-- `03-s116-marsh-fresh2.jpg`: The lens' one fix, the Blood Marsh (final tier, 4K, crops at native size, from the render machine's sheet): kept still at left, new render at right. Top, key marsh-1. Bottom, key marsh-2, which stood at 0.54 of the kept still in its softest window before the fix and stands at 0.85 now
-- `04-s116-eye-seam.jpg`: The Eye's first frame, 8305, merged (the builder's render, crop at native size): before above, after below. The step in the mist at the scree foot is gone; the dark strip along the water at right is sent back
+- `01-s117-marsh.jpg`: The Blood Marsh's stalks, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 5618, the jury's frame. Bottom, frame 6424, key marsh-3: no crown stands over the hero's back
+- `02-s117-ending.jpg`: The ending's last version, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 11340, six frames after the beat. Bottom, the last frame, 11743
+- `03-s117-breath-held.jpg`: Held back, the Breath's wall version 1 (draft tier, preview size, rendered on the Builder's machine): main at left, with the wall at right. Top, frame 5510, key breath-2. Bottom, frame 4973, key breath-3. The vapour behind the weed is gone at right
+- `04-s117-opening.jpg`: The first seconds, version 2, merged (draft tier, preview size, rendered on the Builder's machine): before at left, after at right. Top, frame 0. Bottom, frame 120, the frame at the hook
 
+Status 116, 2026-11-26 14:13 UTC, showed: The Heart, frame 2507, the jury's frame (draft tier, preview size, rendered on the Builder's machine): before at left, the near bank...
 Status 115, 2026-11-26 13:49 UTC, showed: The join, version 1, merged (draft tier, preview size, rendered on the Builder's machine): frames 9480, 9518, 9541, 9563, 9584 and 9610.
 Status 114, 2026-11-26 13:22 UTC, showed: The lens fix (final tier, 4K, crops at native size, the builder's sheet): before at left, after at right.
-Status 113, 2026-11-26 12:57 UTC, showed: The ending, version 2, merged: frames 10860 to 11670 (draft tier, the builder's sheet).
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T14:13:36Z
-phase 5: 3.96 h used of 6.00 h
-build: 38.37 h used of 72.00 h
+2026-11-26T14:42:09Z
+phase 5: 4.44 h used of 6.00 h
+build: 38.85 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 24
+minutes since the last status: 29
 ```
 
 ## Phases
@@ -1445,6 +1445,11 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 14:19 UTC. The lens' one fix, the Heart's three keys anew at 8745a33a (final tier, 4K, MEASURED by measure_renderer_r8 on its machine). Whole frame fine detail against the kept still, like for like (the new PNG put through the kept file's own JPEG tables), before the fix and after: heart-1 (3477) 0.887, 1.010; heart-2 (3685) 0.855, 1.025; heart-3 (3156) 0.837, 0.982. Softest window: 0.860, 0.939; 0.737, 0.882; 0.713, 0.889. The stills are further from the kept ones pixel for pixel than before the fix (PSNR 43.4, 41.3 and 41.0 dB against 47.1, 46.8 and 44.6), as a smaller lens gives: the focus falls off differently. Seen by me in the crop sheet (out/work/tmp/r27/fresh2/fresh-heart-crop.jpg): the flow of heart-1, the trunk of heart-2 and the crust of heart-3 read as the kept stills do; the out of focus ground of heart-3 is a little smoother. All fifteen keys of the one fix are back: over the whole frame every one is between 0.982 and 1.078 of its kept still, where they were 0.639 to 0.894 before it. The softest windows stand at 0.766 to 0.977, where they were 0.475 to 0.860. The measures of six places are still out, and they decide M3.
 - 2026-11-26. 14:29 UTC. The third guard on the Builder's machine (out/work/tmp/r27/guard-e/, 19 draft stills before and 19 after, each frame once). Merged: the Marsh's stalks with the key fix (2e8156a7, the builder's b538960) and the ending's last version (10e61199, the builder's 9718b1b). tsc 0, build 0; frames 1241, 7418 and 10027 are byte equal before and after. Seen by me in the pairs. The Marsh: on 5618 and 5725 the stalks no longer stand as one model repeated (lean, height and head differ, some are bare), on key marsh-3 (6424) no crown stands over the hero's back, 6102 and 6800 have a mixed far stand. The ending: the night side carries cloud and a coast, the ember stays, and the last frame (11743) still reads as a body, skull, ribs, arms, hips and legs, dimmer against a ground that the night cloud lifts (the body's region has a mean of 15.7 levels where it had 10.7, so the bones stand out less). The Breath's wall, version 1 (the builder's b9332f9), was merged last in the same guard and taken out again before any push (git reset to 10e61199, then a build): on key breath-2 (5510) and key breath-3 (4973) the vapour behind the weed is gone, and the approved pictures of both keys show it there. The wall itself is a gain on the jury's frame 4221 and on key breath-0 (two dark courses and a pale ledge with blocks where wavy drawn-out bands stood) and the round puff is gone on 4731, so it comes back as soon as the vapour stands on both keys again; its cost is its second job. Not a decline: nothing a critic asked for is refused.
 - 2026-11-26. 14:29 UTC. The lens' one fix, the measures after it at 8745a33a (final tier, 4K, MEASURED on render machines, scorecards/round-026/measures-ribs-after-8745a33a.json, -marsh-, -eye-). The Ribs: M1, M2 and M3 green; M3 ribs-3 0.938 where it was red at 0.7459; ribs-1 1.125 (0.9204), ribs-2 1.1559 (0.8765); ribs-0 and ribs-4 as before. The Marsh: green; M3 lowest marsh-0 1.0515. The Eye: green; M3 eye-1 1.7343 where it stood at 1.3145 before the fix and 1.5895 in its round 24; every other line as before. The Spine, the Breath and the Heart are still out.
+- 2026-11-26. 14:41 UTC. The kit read again after a compaction: kit/PROGRESS.md lines 1 to 118, kit/addenda/001-private-repo-and-music.md, kit/07-QUALITY-BAR.md (freshness, judged frames, packs, the critics, the pick, the pass bar, what to do with issues, rounds and their limits, the record round) and kit/08-BUILD-ORDER.md (Phases 5 and 6).
+- 2026-11-26. 14:41 UTC. The lens' one fix, the Spine's measures after it at 8745a33a (final tier, 4K, MEASURED on a render machine, scorecards/round-026/measures-spine-after-8745a33a.json): M1, M2 and M3 green. M3 by key: spine-0 1.1252, spine-1 1.0307 where it was red at 0.748, spine-2 1.96, spine-3 0.8532 (the lowest), spine-4 1.0152. The Breath's and the Heart's measures are still out.
+- 2026-11-26. 14:41 UTC. The fourth guard on the Builder's machine (out/work/tmp/r27/guard-f/, 14:29:41 to 14:36:21, 8 draft stills before and 8 after, each frame once). Merged: the first seconds, version 2 (2d2020dd, the builder's ca27f2f). tsc 0, build 0; frames 1241, 1546 and 10027 are byte equal before and after. Seen by me in the pairs of frames 0, 60, 120, 380 and 600: the two blades stand larger and nearer and carry banding at frames 0 to 120, the bank of fog lies lower and flatter, the burst of spray at the first blade's foot is a small jet on 380 where it was a white mass as wide as the blade, 600 is nearly as it was. Kept. Not cured, and with its builder for version 3 by 16:00 UTC: frame 0 is still two grey blades over fog and sea with nothing in it that an ordinary coast does not have, the fog right of the blades is a dark slab with a straight base, the jet on 380 reads as a spout.
+- 2026-11-26. 14:41 UTC. Five hand-backs went into the fifth guard (out/work/tmp/r27/guard-g/, started 14:38:01): the card loop version 4 (02e19d3, the last, its builder has ended), the Spine's lightning version 2 (3f4d10d), the Eye's seam version 2 (a48832e), the join version 2 (46d9dcf) and the Heart's near bank version 2 (b52639c). The Eye's branch holds a merge commit of its builder's, f6cf9721, with no trailer; it stays out of main: its four commits are taken one by one, oldest first (772084f4, 9d741fd3, 5f7b1e55, a48832e6), each with its own message and trailer. The join's builder asked to edit src/places/eye/shared/blockout.ts to take out the ring fields: no, they stay as dead data and are a note for Phase 6, because the file is the Eye's and two builders are in the Eye now. Byte equal frames asked of this guard: 1241, 2081, 4006, 7418, 10027.
+- 2026-11-26. 14:41 UTC. Handed back for a sixth guard, which starts when the fifth ends: the Marsh's stalks version 2 (fb2c931, 14:39 UTC: collars and wet rings at the feet, spent heads, heads turned to the light; its builder says the collars are a few pixels at frame 5618's distance and cannot be pointed to) and the Breath's wall with its vapour put back (6971aa1, 14:41 UTC: its builder says frames 5510 and 4973 differ from main in the wall only, and the cost is +0.4 to +0.8 s a sample on frame 4221 where version 1 was +6.75). The Marsh builder's finding on the pale patch at the left edge of 5618: it is the seep pool's main steam column of src/places/marsh/air/index.ts cut by the frame edge, proven by a render of that part alone, and not the stalks.
 
 ## Notes from Brandon
 
