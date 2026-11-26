@@ -26,8 +26,10 @@ vec3 runnerLight(vec3 p, vec3 n) {
     vec3 way = d * inversesqrt(d2);
     vec3 level = normalize(vec3(way.x, 0.12, way.z));
     vec3 seen = skyRadiance(level) + emitterIrradiance(uDoor.xyz, level) * (1.0 / 3.14159);
-    float facing = clamp((dot(n, way) + 0.2) / 1.2, 0.0, 1.0);
-    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * facing * facing;
+    // The mouth is broad and the ice and the pale wall give its light back: it wraps the body, and a share of it comes from all round.
+    float facing = clamp((dot(n, way) + 0.7) / 1.7, 0.0, 1.0);
+    float fill = 0.16 + 0.1 * n.y;
+    e += 3.14159 * uDoorGain * seen * (uDoorArea / (d2 + uDoorArea)) * (facing * facing + fill);
     // Seen against the mouth, the light comes through the ends of the coat along its outline.
     vec3 toLens = normalize(cameraPosition - p);
     float through = pow(1.0 - abs(dot(n, toLens)), 5.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
