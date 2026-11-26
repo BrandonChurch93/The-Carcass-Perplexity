@@ -120,7 +120,7 @@ void main() {
   float lumW = dot(stone, vec3(0.333));
   float lumF = dot(stoneF, vec3(0.333));
   // The fine sheet carries its marks into the wide one: its darks are cracks, its lights the faces between.
-  stone *= mix(1.0, clamp(lumF / 0.3, 0.45, 1.7), 0.6 * nearF);
+  stone *= mix(1.0, clamp(lumF / 0.2, 0.5, 1.6), 0.5 * nearF);
   // The same rock again, four times the size and turned: no repeat of the first is seen from far off.
   vec2 uf = plane * mat2(0.83, 0.56, -0.56, 0.83) / 37.0 + 0.31;
   float far2 = 0.55 + 0.9 * vnoise(uf);
@@ -146,14 +146,14 @@ void main() {
   float under = smoothstep(-0.15, -0.6, n0.y);
 
   // Pale bone-stone: weathered limestone, grey-ivory, with the sheet's own marks at their full strength. Each plate has its own tone.
-  float stoneLum = lumW * mix(1.0, clamp(lumF / 0.3, 0.45, 1.7), 0.6 * nearF);
+  float stoneLum = lumW * mix(1.0, clamp(lumF / 0.2, 0.5, 1.6), 0.5 * nearF);
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
   // Lichen: rust and ochre where a face sees the sky and the sun, in patches, thick on the ledges; the sheet's own rust shows through it.
   float rusty = smoothstep(0.03, 0.14, stone.r - stone.b);
   float lichen = smoothstep(0.66, 0.82, field + 0.35 * n0.y + 0.3 * (sunny - 0.5) + 0.25 * shelf + 0.12 * rusty + 0.04 * uCap - 0.3 * deep);
-  vec3 albedo = mix(vec3(mix(0.19, stoneLum, 0.8)) * vec3(1.05, 1.0, 0.92), stone * vec3(1.12, 1.0, 0.86), 0.1 + 0.2 * rusty);
-  albedo *= mix(3.1, 2.5, uCap) * mix(1.0, clamp(far2, 0.4, 1.8), 0.4) * fineLum * (0.82 + 0.36 * macro) * (1.0 + 0.2 * tone);
+  vec3 albedo = mix(vec3(mix(0.2, stoneLum, 0.62)) * vec3(1.05, 1.0, 0.92), stone * vec3(1.12, 1.0, 0.86), 0.1 + 0.2 * rusty);
+  albedo *= mix(3.1, 2.5, uCap) * mix(1.0, clamp(far2, 0.4, 1.8), 0.25) * fineLum * (0.82 + 0.36 * macro) * (1.0 + 0.2 * tone);
   albedo = mix(albedo, vec3(0.62, 0.29, 0.045) * clamp(stoneLum / 0.22, 0.5, 1.6), 0.8 * lichen);
   // Over hundreds of metres the stone changes: cold grey here, warm ivory there.
   albedo *= mix(vec3(0.97, 0.99, 1.02), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
@@ -170,7 +170,7 @@ void main() {
   float white = max(0.7 * shelf, 0.55 * runs * (1.0 - under)) * smoothstep(0.4, 0.62, field + 0.1 * tone) * (1.0 - 0.6 * crack);
   albedo = mix(albedo, vec3(0.66, 0.65, 0.62) * (0.7 + 0.5 * stoneLum / 0.19), white * (1.0 - 0.75 * lichen));
   // A crack between two plates is black, and what lies deep among its neighbours is stained.
-  albedo *= mix(1.0, 0.62, crack * crack) * mix(1.0, 0.85, deep);
+  albedo *= mix(1.0, 0.6, crack * crack) * mix(1.0, 0.8, deep * deep);
 
   float y = vWorld.y;
   float tide = uTide - 4.0 + 7.0 * (far2 - 1.0) + 3.0 * (field - 0.5);
@@ -190,8 +190,8 @@ void main() {
   float rough = mix(mix(0.92, 0.45, max(weed, band)), 0.72, wetWall * (1.0 - max(weed, band)));
   // The hollows of both sheets, the cracks and the gone plates hold shade; what hangs over sees the wet floor and not the sky.
   float hollow = smoothstep(0.2, 0.55, slopes.z) * mix(1.0, smoothstep(0.15, 0.5, slopesF.z), 0.7 * nearF);
-  float occ = (0.6 + 0.4 * hollow) * (0.8 + 0.2 * smoothstep(0.55, 1.0, fineLum)) * mix(1.0, 0.45, weed);
-  occ *= (1.0 - 0.5 * crack * crack) * (1.0 - 0.3 * deep) * (0.55 + 0.45 * smoothstep(-0.55, 0.25, n0.y));
+  float occ = (0.78 + 0.22 * hollow) * (0.88 + 0.12 * smoothstep(0.55, 1.0, fineLum)) * mix(1.0, 0.45, weed);
+  occ *= (1.0 - 0.55 * crack * crack) * (1.0 - 0.4 * deep * deep) * (0.6 + 0.4 * smoothstep(-0.55, 0.25, n0.y));
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
