@@ -104,10 +104,12 @@ float column(vec3 p, vec2 foot, float wide, float head, float n) {
   // The axis wanders a little with height and leans down the wind over the brim.
   vec2 axis = foot + WINDV * (0.55 * max(p.y + 2.0, 0.0)) + 2.0 * vec2(sin(0.21 * p.y + foot.x), cos(0.17 * p.y + foot.y));
   vec2 d = p.xz - axis;
-  float w = wide * (1.0 + 0.022 * (p.y + 40.0));
+  float w = wide * (1.0 + 0.016 * (p.y + 40.0));
   // Billows: the edge of the column is where the noise says, not a tube.
-  float shape = exp(-dot(d, d) / (w * w)) + 0.9 * (n - 0.5);
-  return smoothstep(0.42, 0.62, shape) * smoothstep(head, head - 7.0, p.y + 5.0 * (n - 0.5));
+  // Over the brim only the hearts of the billows are left: torn wisps with air between, not a veil.
+  float core = exp(-dot(d, d) / (w * w));
+  float shape = core + 1.5 * (n - 0.5) * smoothstep(0.02, 0.3, core) - 0.22 * smoothstep(0.0, 9.0, p.y);
+  return smoothstep(0.34, 0.74, shape) * smoothstep(head, head - 6.0, p.y + 5.0 * (n - 0.5));
 }
 float vapourRho(vec3 p, float ground, float fine, float t) {
   float r = length(p.xz);
@@ -124,7 +126,7 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float big = n0.r;
   float small = 0.5;
   if (fine > 0.5) small = textureLod(tNoise, (q.xzy - vec3(WINDV.x, WINDV.y, 1.0) * (0.3 * uTime)) / 8.3 + 0.31, 0.0).b;
-  float n = 0.62 * big + 0.38 * small;
+  float n = 0.45 * big + 0.55 * small;
 
   // The layer low in the shaft, heaped.
   float top = uBreath.x - 9.0 + 9.0 * (big - 0.45) + 3.0 * (small - 0.5) + 7.0 * surge;
@@ -132,21 +134,21 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float rho = (0.012 + 0.05 * smoothstep(0.0, 14.0, under)) * smoothstep(0.0, 2.5 + 2.5 * n0.g, under);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 5.5, 11.0 + lift, n) + column(p, vec2(-13.0, 10.0), 4.5, 6.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 5.0, -4.0 + 1.5 * lift, n);
-  rho = max(rho, (0.1 + 0.07 * surge) * min(cols, 1.0));
+  float cols = column(p, vec2(-19.0, -9.0), 5.0, 10.0 + lift, n) + column(p, vec2(-13.0, 10.0), 4.0, 6.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 5.0, -4.0 + 1.5 * lift, n);
+  rho = max(rho, (0.17 + 0.07 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
-  rho *= mix(1.0, 0.45, smoothstep(1.0, 9.0, p.y));
+  rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
   // Inside the wall; over the brim it leans out on the west, and at the breath all round.
   rho *= smoothstep(0.6, -1.2, out0 - smoothstep(0.0, 3.0, p.y) * (7.0 * way + 5.0 * surge));
 
   // On the rock by the west lip: a layer with its own top, thick at the brim and torn into shreds as it slides off down the wind.
   float foot = max(ground, SEA_Y);
   float gone = max(out0, 0.0) / (16.0 + 14.0 * apron + 8.0 * surge);
-  float tall = (3.2 + 1.6 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
+  float tall = (2.3 + 1.6 * apron + 4.0 * surge) * way * exp(-gone) * (0.35 + 1.3 * big);
   float lies = smoothstep(0.0, 0.5 + 0.5 * tall, foot + tall - p.y) * smoothstep(-2.5, 0.5, out0) * step(foot - 0.3, p.y);
-  float shred = smoothstep(0.34 + 0.3 * (1.0 - exp(-gone)), 0.62 + 0.25 * (1.0 - exp(-gone)), 0.55 * big + 0.45 * small + 0.2 * exp(-gone));
+  float shred = smoothstep(0.5 + 0.1 * (1.0 - exp(-gone)), 0.6 + 0.12 * (1.0 - exp(-gone)), n);
   // Never a wash on the lens: within a few metres of the camera the layer on the rock is not there.
-  float pour = (0.05 + 0.04 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
+  float pour = (0.07 + 0.04 * apron + 0.05 * surge) * smoothstep(0.3, 1.2, tall) * lies * shred * smoothstep(3.0, 11.0, t);
   return max(rho, pour) * uShow.z;
 }
 

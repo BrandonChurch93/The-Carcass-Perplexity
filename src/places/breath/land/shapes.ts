@@ -160,10 +160,12 @@ export function boulder(at: [number, number, number], size: [number, number, num
 export function collar(x: number, z: number, r: number): THREE.BufferGeometry {
   return sheet(40, 10, (u, v) => {
     const a = u * 2 * Math.PI;
-    const k = 1 + 0.12 * drift(a * 3, x, 1);
+    // Not a turned ring: the mouth is lobed, wide one way and pinched another, and its collar stands higher on one side.
+    const k = 1 + 0.12 * drift(a * 3, x, 1) + 0.2 * Math.sin(2 * a + x) + 0.1 * Math.sin(3 * a + 1.7 * z);
     // From the shelf up over the collar and down the throat.
     const out = v < 0.5 ? lerp(r + 5.5, r + 0.6, smooth(v * 2)) : r + 0.6 - 0.8 * (v - 0.5);
-    const y = v < 0.5 ? 1.9 * smooth(v * 2) ** 1.4 : lerp(1.9, -22, (v - 0.5) * 2);
+    const high = 1.9 * (0.55 + 0.45 * Math.sin(a + 0.7 * x) + 0.2 * Math.sin(4 * a + z));
+    const y = v < 0.5 ? high * smooth(v * 2) ** 1.4 : lerp(high, -22, (v - 0.5) * 2);
     const px = x + Math.cos(a) * out * k;
     const pz = z + Math.sin(a) * out * k;
     return { at: [px, ground(px, pz) - 0.15 + y, pz], uv: [a * r, out + y], occ: v < 0.5 ? 1 : lerp(0.8, 0.05, smooth((v - 0.5) * 3)) };

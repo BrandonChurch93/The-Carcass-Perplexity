@@ -63,13 +63,22 @@ export function wallPoint(b: number, depth: number): WallPoint {
   // row of teeth. So the first rib of the plate is the lip of the shaft, or just under it.
   const v = (Math.max(0, depth + hang) + SKIP) / WALL_TALL;
   let h = read(relief, u, v);
+  // The plate's ribs are thin and its wall between them is fluted in narrow upright folds: built so, the shaft was a quarry of neat
+  // benches over organ pipes. Two things are done to the relief before it is the shape. A rib is made thick: it takes in what stands
+  // out within most of a metre above and below it, so it is a heavy rounded band that overhangs. And the wall between the ribs is
+  // read broadly along the shaft, so its folds are a few wide hollows and not many pipes.
+  const dv = 0.75 / WALL_TALL;
+  const band = Math.max(h, 0.94 * Math.max(read(relief, u, v - dv), read(relief, u, v + dv)), 0.82 * Math.max(read(relief, u, v - 2 * dv), read(relief, u, v + 2 * dv)));
+  const du = 1.1 / WALL_METRES;
+  const broad = (h + read(relief, u - du, v) + read(relief, u + du, v) + read(relief, u - 2.3 * du, v) + read(relief, u + 2.3 * du, v)) / 5;
+  h = lerp(broad, band, smooth((band - 0.42) / 0.16));
   const open = read(opens, u, v);
   // At the join the relief goes back to the plain wall, so the two edges meet.
   const join = smooth(Math.min(deg - (JOIN - 360), JOIN - deg) / 5);
   // Where the east-south-east side came down the ribs went with it: they end ragged either side of the fall.
   const torn = smooth((36 - Math.abs(deg - 112) + 5 * noise3(deg * 0.2, depth * 0.3, 7.7)) / 12);
   h = lerp(LEVEL, h, join);
-  const stand = (h - LEVEL) * WALL_REACH * (h > LEVEL ? 1 - 0.85 * torn : 1);
+  const stand = (h - LEVEL) * WALL_REACH * (h > LEVEL ? (1 - 0.85 * torn) * (1 + 0.35 * smooth((h - RIB) / 0.25)) : 1);
   const y = top - depth;
   const down = sat(depth / (top + DEPTH));
   const meet = smooth(depth / 0.9);
