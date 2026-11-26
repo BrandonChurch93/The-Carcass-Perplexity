@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 137, 2026-11-26 23:27 UTC:
+Status 138, 2026-11-26 23:52 UTC:
 
-- `01-reveal-vs.jpg`: The Reveal's four keys on its team's final branch at 95cf52d0, from the Builder's own guard: the approved picture at left, before in the middle, after at right. From the top: just above the lake (9627), the skull massif (9675), head and shoulders (9756), the whole titan (10027). After: crisper ridges, coast and cloud, more land around the bones as note 10 asks; the land is olive with less red than the approved pictures hold, and the body still reads from the second row on. Draft tier; not judged, not in main
-- `02-s137-breath.jpg`: The Breath on its team's final branch at 3f61b97, from its lead's last report: before at left, after at right. Top: frame 4221, the pit with steam rising from it, snow on the far wall, waders on the flats. Bottom: frame 4973, the red growth lifted and arched downwind with the sun behind it; its lead itself calls it a small conifer with stiff boughs. Rendered by the team; the Builder's guard is running; not judged, not in main
-- `03-s137-heart.jpg`: The Heart on its team's final branch at d918e68, from its lead's last report: before at left, after at right. Top: frame 3477, the crust broken into plates where it was even ripples, steam at the crag. Bottom: frame 4006, the lava fall running over ledges to a wider foot. Rendered by the team; the Builder's guard is running; not judged, not in main
-- `04-s137-spine.jpg`: The Spine on its team's final branch at 5f0d8b2, from its lead's last report. Top: frame 7015, before at left and after at right: deeper snow with prints, the strike lighting the far spires. Bottom: frames 7226 to 7237, every frame of one strike. Its lead itself calls the first spire a leaning cone of smeared rock. Rendered by the team; the Builder's guard is running; not judged, not in main
+- `01-s138-words-blood-red-ribs.jpg`: Words on screen, blood red, at the Ribs (frame 1395, the line Stone blades, taller than the storms.): warm off-white words on a soft blood red haze with a ragged edge, low in the frame. Made by the caption builder from the Solar System Fly-Through caption layer. The picture under the words is the older draft frame from before the polish; the shade is provisional until measured on the frozen build
+- `02-s138-words-ash-ember-heart.jpg`: Words on screen, ash and ember, at the Heart (frame 3225, the line The tall ones walk the skin, and drink from the cracks.): the same warm off-white words on a near-black haze with a few sparks fixed in place, set on two rows. The picture under the words is the older draft frame from before the polish
+- `03-s138-ribs-opening.jpg`: The Ribs' opening at the end of wave 1, from the Builder's own guard of the final head 1f228fa2, now in the Builder's main: before at left, after at right; frames 0, 120 and 600 from the top. After: stone with strata, a storm sky, fliers around the stack, arches behind. Still open: the ribs read as broken stone rather than smooth tapering bone, the sea is near black at 120 and 600, and one flier is cut by the left edge of frame 0. Draft tier; not judged
+- `04-s138-marsh-vs.jpg`: The Blood Marsh's keys beside their approved pictures, from the Builder's own guard of the final head 2948acb4, now in the Builder's main: the approved picture at left, before in the middle, after at right. The ground and trunks are whiter than the pictures hold, and the dome at 6102 is pale where the picture's is dark red glass: findings for wave 2. Draft tier; not judged
 
+Status 137, 2026-11-26 23:27 UTC, showed: The Reveal's four keys on its team's final branch at 95cf52d0, from the Builder's own guard: the approved picture at left, before in the...
 Status 136, 2026-11-26 22:58 UTC, showed: The Ribs on its team's branch, from its lead's third report: before at left, after at right.
 Status 135, 2026-11-26 22:29 UTC, showed: The join from the Eye into the rise on the Reveal's branch at 508e5eb, before at left and after at right, from the Builder's own guard.
-Status 134, 2026-11-26 22:04 UTC, showed: The Ribs on its team's branch at 3783e45, before at left and after at right, from the Builder's own guard.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T23:27:30Z
-phase 6: 2.63 h used of 24.00 h
-build: 47.60 h used of 72.00 h
+2026-11-26T23:52:54Z
+phase 6: 3.06 h used of 24.00 h
+build: 48.03 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 28
+minutes since the last status: 25
 ```
 
 ## Phases
