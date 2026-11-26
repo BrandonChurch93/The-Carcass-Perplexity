@@ -537,6 +537,7 @@ void main() {
       const mirrorTone = material.uniforms.uMirror as THREE.IUniform<THREE.Vector4>;
       if (during('eye-04')) mirrorTone.value.set(0.56, 0.78, 1.0, 0.3);
       else if (during('eye-05')) mirrorTone.value.set(0.62, 0.7, 0.8, 1);
+      else if (during('eye-03')) mirrorTone.value.set(1.4, 1.26, 1.12, 1);
       else mirrorTone.value.set(1, 1, 1, 1);
       centre.x = t - rise;
       centre.y = smooth(end - 0.45, end - 0.03, t);
