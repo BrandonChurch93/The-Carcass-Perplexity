@@ -1,6 +1,6 @@
 # Blood Marsh, ground and weather: hand-over from marsh_ground_owner_3 (the last owner)
 
-Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute MINUTE of 240 of wave 3. The notes of owners 1 and 2 are in the history of this file.
+Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 206 of 240 of wave 3. The notes of owners 1 and 2 are in the history of this file.
 
 ## How each part is drawn
 
@@ -49,11 +49,11 @@ Nothing reads `stagedSeconds()`. The burst at frame 6158 and the small burst 0.1
 
 ## Cost at 3840 x 2160, key marsh-0, draft
 
-COSTLINE
+Measured with `npm run -s cost -- --key marsh-0 --format uhd --tier draft --parts land brine air` at 08:07 on the last code: the whole frame 16.50 s a sample; an empty frame 4.25 s; land 7.54 s above it; brine the cheapest part. Received at 18.26 s; my first version was 20.30 s. The saving came from anisotropy 1 on the ground's colour pictures and thinner air. The aim of 7 s is not met.
 
 ## Checks at hand-over
 
-CHECKLINE
+On the last code (commit 002f2b1): `npx tsc --noEmit -p .` clean; `npm run -s build` passes; `npm run -s determinism` prints `determinism: pass`; `npm run -s gate -- --phase 1 --only G10` passes. All five keys rendered at `--tier final --format uhd` with no ERROR; fine detail against the approved pictures at the final tier: marsh-0 1.10, marsh-1 1.30, marsh-2 1.22, marsh-3 1.13, marsh-4 1.15 (floor 0.75). `npm run measure -- --unit marsh --tier draft`: M1 green (no invalid pixel), M2 green (27, 55, 66, 55, 24 percent of the picture moves), M3 green (1.34, 1.78, 1.58, 1.42, 1.41). The draft tier overstates detail: always check M3 on final-tier frames. All five shots and the burst (frames 6154 to 6184) watched as sheets.
 
 ## What I would do next, in order
 
