@@ -298,7 +298,7 @@ Bed wallAt(vec2 b, float down, float inside) {
   float along = atan(b.x, b.y) * 480.0;
   // The Builder's picture of the wall, thirty metres of it by seventeen, its top at the lip: ledge under ledge, lost in the dark at its foot.
   // The ledges do not keep to one depth all the way round: they step up and down along the wall.
-  float jog = smoothstep(0.3, 2.5, down) * (2.4 * (vnoise(b / 4.1 + 2.0) - 0.5) + 0.9 * (vnoise(b / 0.9) - 0.5));
+  float jog = down < 17.0 ? smoothstep(0.3, 2.5, down) * 3.0 * (vnoise(b / 3.1 + 2.0) - 0.5) : 0.0;
   vec2 uv = vec2(along / 19.0, 1.0 - clamp((down + jog) / 17.0, 0.02, 0.98));
   // The way round begins again in the north: the fineness of the picture is told from the ground, which has no such place, so no line is drawn there.
   float r2 = max(dot(b, b), 1.0);
