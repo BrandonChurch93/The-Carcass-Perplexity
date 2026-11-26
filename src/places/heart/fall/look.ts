@@ -595,7 +595,9 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
     vec2 fy = vec2(72.0 * (out_.y * gDy.x - out_.x * gDy.z) / rr, dot(out_, gDy.xz) / max(r, 1.0));
     vec3 fm = meltAt(fp, 32.0, fx, fy, 21.0);
     float fz = clamp(fm.z + 0.5 * smoothstep(0.1, 0.7, lane) * (1.0 - 0.6 * crusted) - 0.03 + 0.22 * behind + 0.25 * smoothstep(26.0, 8.0, r) - 0.3 * smoothstep(40.0, 95.0, r), 0.0, 1.0);
-    float fheat = max(1.0 - pow(1.0 - fz, 2.0), 0.08);
+    // A plate ends at a hard edge and the melt is alight beyond it, orange at once: never a glow that fades into the crust.
+    float gap = smoothstep(0.17, 0.22, fz);
+    float fheat = max(gap * (0.5 + 0.5 * smoothstep(0.25, 0.8, fz)), 0.08);
     kelvin = mix(kelvin, 780.0 + 760.0 * fheat, fan * calm);
 #endif
   }
@@ -620,14 +622,14 @@ vec2 stream(vec4 flow, float speed, vec2 away, vec2 at) {
   float sheetOn = (1.0 - lay) * smoothstep(-3.0, 3.0, len);
   if (sheetOn > 0.0) {
     vec2 mp = vec2(s, STREAM_RIDE * (flow.x - uTime));
-    vec3 m = meltAt(mp, 10.0, vec2(gFlowDx.y, STREAM_RIDE * gFlowDx.x), vec2(gFlowDy.y, STREAM_RIDE * gFlowDy.x), 3.0);
+    vec3 m = meltAt(mp, 15.0, vec2(gFlowDx.y, STREAM_RIDE * gFlowDx.x), vec2(gFlowDy.y, STREAM_RIDE * gFlowDy.x), 3.0);
     float rindAt = u + 0.16 * (vnoise(vec2(len * 0.5, s > 0.0 ? 2.0 : 9.0)) - 0.5) + 0.07 * (vnoise(vec2(len * 1.9, s * 1.3)) - 0.5);
     float rind = smoothstep(0.66, 0.84, rindAt) * (1.0 - 0.5 * fast) * smoothstep(1.0, 6.0, len);
     // The body of the stream is bare melt, orange at its margins and yellow-white down its middle, its folds those of the sheet.
     float body = clamp(0.46 + 0.5 * m.z + 0.3 * (1.0 - u) * (1.0 - u) + 0.14 * core + 0.1 * fast + 0.08 * behind, 0.0, 1.0);
     // The plates come down in packs: whole reaches carry them and others run bare, they crowd the margins, and a drop tears
     // most of them up. A plate stays dark however the melt round it runs.
-    float packed = smoothstep(0.35, 0.6, vnoise(mp / 4.5 + 7.0) + 0.5 * dark - 0.3 * bright + 0.35 * smoothstep(0.5, 0.95, u) - 0.3 * fast - 0.1 * behind);
+    float packed = smoothstep(0.35, 0.6, vnoise(mp / 6.0 + 7.0) + 0.5 * dark - 0.3 * bright + 0.35 * smoothstep(0.5, 0.95, u) - 0.3 * fast - 0.1 * behind);
     float plate = (1.0 - smoothstep(0.04, 0.16, m.z)) * packed;
     float heat = mix(body, 0.13 + 0.08 * behind, plate);
     heat *= 1.0 - 0.85 * rind;
