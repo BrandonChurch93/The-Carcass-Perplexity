@@ -1,0 +1,84 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:05 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-08.png",
+        "where": "left side of the water surface in the x 0 to 17% crops (also visible across the upper-left of set-B-07.png)",
+        "what": "extreme diagonal texture stretching smears the water into long parallel blue stripes, immediately exposing a stretched UV projection rather than a real fluid surface",
+        "fix": "eliminate the UV distortion with undistorted world-space mapping and replace the smeared streaks with physically scaled ocean waves"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "clouds over the ocean in the x 0 to 17% crops (also visible on the left of set-B-01.png, set-B-04.png, and set-B-05.png)",
+        "what": "clouds read as flat stretched alpha cards with hard straight-edged cutout seams, sharp polygonal shadow blocks on the ocean, and blurry low-resolution patches",
+        "fix": "replace the flat cloud texture with volumetric 3D clouds or high-resolution satellite cloud layers with natural soft edges and physically consistent shadows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "entire water body and the concentric rings at the center (also seen at native size in set-B-08.png and set-B-09.png)",
+        "what": "the water is a flat dark navy shader with blurry procedural noise, no sky reflection, no specular highlights, no depth, and jagged segmented concentric rings in the center",
+        "fix": "use physically based water shading with sky reflection, Fresnel falloff, subsurface depth, crisp multi-scale ripples, and natural foam around the central disturbance"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "white cloud or vapour plume lined up along the central spine of the landmass (also in set-B-04.png)",
+        "what": "four to five nearly identical, evenly spaced cotton-puff blobs sit flat on top of the terrain with no cast shadow, reading as pasted-on sprites",
+        "fix": "replace the repeated puffs with irregular wind-sheared volumetric vapour that casts soft, height-consistent shadows onto the terrain"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-09.png",
+        "where": "right-hand shoreline in the x 83 to 100%, y 58 to 75% crop (also visible on the right edge of set-B-07.png)",
+        "what": "water fades into the brownish rock via a soft airbrushed gradient with no foam, no wet edge, no wave interaction, and soft clay-like rock texture",
+        "fix": "add breaking shoreline foam, a darkened wet-rock margin, shallow-water depth transition, and sharper rocky surface detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "dark blue oval water patch at the bottom right of the x 42 to 58%, y 58 to 75% crop (also in set-B-06.png)",
+        "what": "a hard bright cyan outline seam traces the edge of the water patch like a sharp mask boundary, surrounded by soft, blotchy low-resolution ground texture",
+        "fix": "remove the mask seam and replace it with natural coastal gradation, sediment variation, and higher-resolution terrain texture"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "right-side haze and cloud cover in the x 83 to 100%, y 25 to 42% crop (also in set-B-05.png)",
+        "what": "clouds and haze break into flat, posterized gray-tan blotches with hard thresholded edges rather than soft volumetric vapour",
+        "fix": "replace the thresholded cloud mask with continuous-tone volumetric clouds and smooth atmospheric scattering"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "parallel rib-like mountain ridges in the x 42 to 58%, y 25 to 42% crop (also in set-B-05.png)",
+        "what": "ridges look procedurally sculpted and repetitive with soft clay-like slopes, uniform pale crest coloring, and flat dark-teal valleys lacking erosion detail or atmospheric haze",
+        "fix": "add high-frequency geological micro-detail, varied rock and ground materials, natural erosion asymmetry, and subtle atmospheric haze across the valleys"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "bright orange point in the upper-left ribcage and red-on-white branching patch in the lower torso (also in set-B-04.png)",
+        "what": "the orange glow reads as a flat 2D dot that lights almost nothing around it, while the vivid red branching pattern on stark white lacks orbital atmospheric haze and looks painted on",
+        "fix": "let the orange glow cast warm light onto nearby ridges and vapour, and integrate the red-and-white basin with orbital atmospheric scattering and realistic mineral coloration"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "cyclone cloud bands in the x 83 to 100%, y 58 to 75% crop (also in set-B-06.png)",
+        "what": "the spiral clouds are soft, smeared, and flatly shaded at native 4K resolution with no crisp convective cloud tops or directional sunlight relief",
+        "fix": "increase cloud texture and geometry resolution and add directional self-shadowing across the spiral cloud bands"
+      }
+    ]
+  }
+}

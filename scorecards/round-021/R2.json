@@ -1,0 +1,246 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the stretched, repetitive rock texture across the sculpted foreground spire.",
+      "answered": "09:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural-terrain textures and glassy ribbon-like wisps typical of a hobbyist landscape-generator render (Vue/Terragen style)",
+      "answered": "09:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the flat translucent ribbon-mesh wind streamers with hard outlines coming off the low-poly peak",
+      "answered": "09:13 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the foreground spire’s rock texture stretches into conspicuous parallel streaks.",
+      "answered": "09:12 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 50,
+      "why": "stretched procedural-looking rock and snow textures with odd translucent wisps point to an amateur or stock-style CG landscape render rather than a film or game cinematic. (d is the runner-up.)",
+      "answered": "09:13 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the creature’s fur looks like stiff, visibly layered texture cards.",
+      "answered": "09:13 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "The creature's fur is made of clumpy hair cards and the snow and rock textures look procedural, which reads as a hobbyist Blender-style render rather than film-quality CG.",
+      "answered": "09:13 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the crude spiky fur cards and simple cone-like claws under flat lighting with almost no contact shadows.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "The creature’s fur breaks into visibly flat, overlapping textured sheets.",
+      "answered": "09:14 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the detailed shell-based fur and snow-frosted texturing on a fantasy creature with polished cinematic lighting looks like a big-budget game frame, though the muddy water and rock textures keep it from being certain.",
+      "answered": "09:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the conspicuous stretched polygons peeling off the cliff face.",
+      "answered": "09:14 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "stretched low-detail procedural rock texture with jagged faceted geometry and flat translucent cloth/web sheets typical of a web 3D demo",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the visibly coarse low-poly triangular facets and stretched textures on the cliff face",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 86,
+      "why": "the translucent ribbons across the sky have conspicuously angular, stretched edges.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the painterly sunset sky and the odd organic details (tangled bodies on the cliff, translucent membranes) look like an in-engine frame from a big-budget action RPG, though the stretched cliff textures pull it toward d.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the translucent banners look like thin, jagged 3D meshes rather than convincingly lit fabric.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the rock's smeared, stretched procedural texture and the flat ribbon flags look like an ordinary hobbyist render, not film-grade work",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the simplistic ribbon-like cloth banners with sharp alpha cutouts and flat real-time shading alongside basic additive lightning sparks",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 94,
+      "why": "The windblown banners look like flat purple strips with sharply polygonal folds.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the rock textures are stretched and smeared, and the ribbons are flat, plastic-looking geometry. Both look like a low-budget or real-time render, not a big-budget cinematic.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 78,
+      "why": "The creatures’ fur breaks into conspicuously flat, overlapping textured strips.",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 75,
+      "why": "stretched procedural textures and a pasted-in backdrop with a flat lightning bolt look like an ordinary hobbyist/stock 3D render, not a film-quality one",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the flat alpha-card fur strips on the creatures",
+      "answered": "09:15 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the icicles look like repeated, untextured polygon spikes.",
+      "answered": "09:15 UTC"
+    }
+  ]
+}

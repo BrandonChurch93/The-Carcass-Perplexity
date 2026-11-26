@@ -1,0 +1,91 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:08 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the dark dome rising in mid-lake",
+        "what": "a smooth dark shape with radial streaks, a hard outline and no wet highlight. It reflects nothing of the lit cliff, and there is no wash, foam or break where it leaves the water, so it reads as a primitive set into a plane",
+        "fix": "give it wet specular from the sky and cliff, a churned rim of displaced water, run-off and a broken waterline"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the small pale spikes across the water",
+        "what": "every spike has the same shape, lean and size, and each sits on an identical flat white disc. They look like stamped decals with no wake, no ring tied to them and no reflection",
+        "fix": "vary their shape, angle and scale, replace the discs with a real meniscus, small wakes and reflections, and tie them to the ripple rings"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the two foreground animal necks and heads",
+        "what": "a smooth, uniform sculpted look with matching blunt heads and no wet, spray or mist on the skin. They have no reflection or contact with the water below, so they read as models placed in front of a plate",
+        "fix": "add skin breakup, wet sheen and drips on the lower bodies, vary the two poses, and let them reflect in and disturb the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the fog band where it meets the water (x 0 to 100%, y 25 to 42%)",
+        "what": "the fog is one flat grey tint laid in a horizontal strip, with a ruler-straight lower edge and a hard thin orange line at the waterline. It is a flat card with no depth, wisps or light",
+        "fix": "break the fog into volumetric layers that vary in density and pick up the low sun. Remove the straight seam at the waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the near water reflections (x 42 to 58%, y 58 to 75%)",
+        "what": "the sun glints break into blocky, stair-stepped rectangles and horizontal streak banding. That is aliasing from the render, not water",
+        "fix": "raise samples and filter the reflections so the glints are rounded and continuous, and add real ripple normal detail up close"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the skeleton on the shelf edge",
+        "what": "the bones are one smooth clay-like material with no contact shadow, no wet or mineral crust and no water lapping around them. The skeleton sits on top of the surface as if pasted on",
+        "fix": "seat it in the shallows with contact shadow, wet darkening, crust or algae, and water lines and caustics around the bones"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the shelf under the skeleton (x 42 to 58%, y 58 to 75%)",
+        "what": "the orange strands read as CG hair curves laid evenly over everything, and the rock under them is a smeared, stretched texture with a plastic look. There is no water surface or refraction over the shallow shelf at this distance",
+        "fix": "use higher-resolution rock detail, let the strand density follow the flow and clump it, and add the refraction, surface ripples and caustics of the thin water layer"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the drop-off line between the shallow shelf and the deep water",
+        "what": "the colour flips on one hard jagged line with no gradual shoaling, no wet edge and no foam. It reads as a mask boundary",
+        "fix": "grade the depth through the transition with a turquoise-to-dark falloff, scattered light and a softened ledge"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03.png",
+        "where": "the deep water (x 83 to 100%, y 58 to 75%)",
+        "what": "a soft, smeared surface with no ripple detail or sharp reflection at native size",
+        "fix": "add surface normal detail and sharper reflections"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the ripple rings round the dome",
+        "what": "the rings are perfectly concentric and evenly spaced with no interference from the spikes",
+        "fix": "let the rings interfere, vary their spacing and let them decay"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "the far waterline under the cliffs",
+        "what": "the haze is a thin, even band and the waterline is a straight seam with no shore detail",
+        "fix": "add shoreline breakup and haze that varies in depth"
+      }
+    ]
+  }
+}

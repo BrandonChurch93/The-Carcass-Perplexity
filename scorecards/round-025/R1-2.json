@@ -1,0 +1,70 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:04 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the cyclone, bottom right",
+        "what": "In -a the cyclone is an open spiral of thin, broken cumulus bands with dark sea showing between them and a small, soft eye. In -b it is a dense, bright, nearly solid overcast disc with a large, hard black eye, and it reads as a heavier, different storm",
+        "fix": "open it back into thin, separate bands with dark ocean between them, take the brightness down and shrink and soften the eye"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "open ocean, especially the left half and the top",
+        "what": "-a has fine popcorn cumulus and thin wind streaks over a dark navy sea. In -b the cloud is long, smeared, slab-like streaks that look like brush strokes and cover much more of the sea. The extra cloud layers are settled, but this cloud shape and coverage are not",
+        "fix": "break the slabs into small, scattered cumulus cells and thin wind lines, and let more dark navy sea show through"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "sea and land colour around the pelvis, the legs and the lower right",
+        "what": "-a has rust-red and olive-ochre sediment plumes trailing east from the pelvis and around both legs, and terracotta flanks on the ribs and skull. In -b these are mostly gone and the land is an even grey-green, so the warm rust palette is lost",
+        "fix": "bring back the red-brown plume streaming right from the pelvis, the olive and ochre swirls around the legs, and the rust tones on the rib and skull ridges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "sun glow on the sea, upper right",
+        "what": "-a has a warm golden sun sheen on the ocean at the right edge. In -b it is a cool grey-white haze under cloud, so the light direction and its warmth are weaker",
+        "fix": "warm the glow back to gold and let it brighten the open sea surface rather than the cloud haze"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the upper leg and foot reaching to the upper right",
+        "what": "In -a the leg runs out to a raised foot near the top-right corner. In -b the limb stops short around x 90% and the foot is lost in haze. This is more than less exact toes: the foot is missing",
+        "fix": "extend the limb out to the raised foot where -a has it"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the skull",
+        "what": "-a has one large, dark crater eye and a blue lagoon. -b shows two crater eyes plus the lagoon",
+        "fix": "keep a single dominant dark crater eye as in -a"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the glowing point in the upper ribs",
+        "what": "In -b the point is a brighter, whiter flare. In -a it is a small, dim orange spark",
+        "fix": "dim it and warm it to a small orange point"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "space above the limb, top left",
+        "what": "-b shows faint stars in the black. -a has none",
+        "fix": "remove the stars"
+      }
+    ]
+  }
+}

@@ -1,0 +1,98 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the central pinnacle and its left shoulder",
+        "what": "The pinnacle reads as a broad, mostly bare wall with repeated scalloped ledges. The target is a sharper, broken blade rising from a broad snowy shoulder.",
+        "fix": "Recover the blade-like profile, break up the ledges with angular fractures and restore the snow slope and pockets between exposed rock ribs."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the lightning strike and upper rock face",
+        "what": "A large milky halo washes out the summit. The target has a much smaller white-violet contact flash, with light tracing ice and rock edges and catching a local plume beside the tip.",
+        "fix": "Confine the bloom to the contact point, put the violet light back on the nearby edges and fume, and let the rest of the face stay dark and legible."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "behind the central pinnacle and across the right horizon",
+        "what": "The rear cliffs read as blocky neighbors against a nearly level dark layer, with isolated banks of mist at right. The target steps down through pointed, leaning spires into a deep cloud-filled valley.",
+        "fix": "Separate the background into progressively smaller pointed ridges with progressively softer contrast, bury their feet in layered cloud, and retain the thin warm dusk band above them."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the cave arch and side walls",
+        "what": "The opening looks cut into a broad, uniformly striated rock tunnel hung with a dense curtain of straight blue spikes. The target is a tighter, irregular arch of broken stone with transparent ice sheeting and finer icicles tracing its lip.",
+        "fix": "Rebuild the opening with uneven rock shelves, glaze the rim and right side with clear ice, and replace the dense regular spikes with thinner, varied clusters that catch the outside light."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the mountain and slope seen through the opening",
+        "what": "A broad bank of cliffs and a flat ghostlike upper silhouette replace the distinctive leaning spire and the long, broken snow slope leading toward it.",
+        "fix": "Restore one legible leaning blade and its streaming wisps, then carry an uneven, snow-covered slope with scattered rock and a receding track from the cave toward it."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the ice floor from the foreground to the cave mouth",
+        "what": "A broad, nearly level dark sheet with diffuse reflections and a smooth snowbank replaces the chipped, irregular ice runway with pale frost, loose snow, exposed stones and bright reflected light.",
+        "fix": "Break up the floor with crusted ice and shallow relief, restore the low right-hand outcrop, and bring back small directional glints from the mouth."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the left foreground crag",
+        "what": "The blurred crag is a mostly uniform dark shape, with little of the target's snow-covered ledges to identify it as near terrain.",
+        "fix": "Keep the shallow focus but add broad pale snow patches over the projecting rock ledges."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the streamers and their anchor points on the ridge",
+        "what": "Several broad, similarly bright lavender ribbons dominate the right half, while the target has one stronger upper streamer and thinner, more translucent lower strips tied into the rock.",
+        "fix": "Reduce the width and uniform brightness of the lower ribbons, vary their translucency and restore finer lines where they meet the ridge."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the air beside the mountain and the upper sky",
+        "what": "The target's diagonal spindrift is much harder to read, and the background has flat horizontal cloud bands under a much larger bright patch.",
+        "fix": "Restore fine wind-driven snow in depth, concentrated near the ridge, with more sculpted storm cloud and smaller violet openings."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the pack along the left wall",
+        "what": "The sheltered animals read as a low, nearly continuous mass of similarly toned coats. In the target, partly overlapping seated and resting animals remain individually legible, with shadow separating them and clear frost on the outer hairs.",
+        "fix": "Break up the sheltering group with staggered body heights, darker occlusion between animals, and fine crystalline frosting over the larger locks."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the standing animal's coat and the ice rim around it",
+        "what": "The coat has broad pale lighting and conspicuous sheet-like locks, while the target has a selective violet edge on finer frost and darker interior tones. That same violet edge is weak or missing on the surrounding ice.",
+        "fix": "Keep the intended distance and anatomy, but light the hair and rim with narrow cool highlights from the opening and shade the sides facing into the cave."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the sky and air immediately outside the cave",
+        "what": "A thin, exposed strike and broad orange glow draw the eye, while the target has a soft purple light in the storm cloud, a thin orange horizon, and diagonal snow coming across the slope and entrance.",
+        "fix": "Shift more of the flash into the upper cloud, restrict the warm light to the horizon, and layer diagonal spindrift over the outside slope and just across the lip."
+      }
+    ]
+  }
+}

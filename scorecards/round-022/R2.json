@@ -1,0 +1,29 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": []
+}

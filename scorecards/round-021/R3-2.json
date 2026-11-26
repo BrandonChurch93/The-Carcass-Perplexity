@@ -1,0 +1,91 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "pack": "R3-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the three pale ribbons streaming right from the sea stack",
+        "what": "they read as flat translucent cut-out cards with hard jagged edges, uniform lilac tint and no volume; they also cross in front of the far stacks with no depth or atmospheric falloff",
+        "fix": "replace with volumetric spray or cloud with soft edges, internal density variation and light from the lightning"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "lightning strike point at the summit of the main stack",
+        "what": "the white glow and spark burst light nothing: the rock face below, the ribbons and the cloud base right next to it stay the same dull tone; the bolt is a thin 2D line",
+        "fix": "let the strike throw a strong flash onto the summit rock, the nearby cloud and the ribbons, and add bloom and branching falloff to the bolt"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "left edge and base of the main sea stack",
+        "what": "silhouette is stair-stepped and wavy like an extruded or displaced mesh, and the base dissolves into a smeared reflection with no surf, foam or wet line where rock meets sea",
+        "fix": "give the stack a natural fractured silhouette and add breaking surf, foam and a wet dark band at the waterline"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the shaggy animal in the centre and its legs",
+        "what": "the coat is a stack of flat feather-like cards with hard planar edges; the feet show no contact with the ice, no shadow pooled under the body, and no snow or frost on it; a cluster of black spiky strands at its rear looks like a geometry error",
+        "fix": "use real strand fur with clumping, plant the feet with contact shadow and snow disturbance, add frost, and remove the black spike cluster"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the two cut-out mountains and the misty shape through the cave mouth",
+        "what": "the far peaks are flat-lit cut-outs with no aerial perspective, a translucent ghostly shape overlaps them like a mis-layered card, and the orange sunset sits behind a night storm sky that does not light the snow",
+        "fix": "add atmospheric haze and scale cues to the distance, remove the ghost shape, and reconcile sky and ground lighting"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "cave walls and roof (crops x 0-17%, 42-58%, 83-100% at y 25-42%)",
+        "what": "rock texture is smeared and stretched along the surface into streaky brush-like strokes, reading as a projected or stretched texture rather than ice or stone",
+        "fix": "re-texture the cave with proper UVs or triplanar mapping and real ice or rock detail at close range"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the frosted plants or creatures at lower left (crop x 0-17%, y 58-75%)",
+        "what": "they are made of the same flat feather cards as the animal, with clipped hard edges and a crinkled bump texture stamped uniformly on every blade",
+        "fix": "vary the geometry and material and add translucency and frost build-up"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "snow bank at right and the ice floor",
+        "what": "snow is smooth plastic-like with no grain, sparkle or footprints, and the ice floor reflects nothing of the bright cave mouth or the lightning",
+        "fix": "add snow grain and specular sparkle, and reflections and light spill from the opening onto the floor"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "main stack face (crop x 42-58%, y 58-75%)",
+        "what": "rock has a smooth, clay-like sheen with smeared stretched streaks, and the same material covers every stack",
+        "fix": "add sharp fracture detail, wet sheen variation, lichen or guano and per-stack material variety"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the small creature and the thin cords at the stack summit (crop x 42-58%, y 25-42%)",
+        "what": "a brown creature clings to taut straight cords that run into the flat ribbons, with spines regularly spaced like a copied pattern; the whole thing reads as a rig left in shot",
+        "fix": "remove the cords or make them a believable natural structure with irregular spacing, and integrate the creature with shadow and wet"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01.png",
+        "where": "blurred foreground rock at left (crops x 0-17%)",
+        "what": "the defocus is a smooth even gaussian with no bokeh structure, and it shows a repeating blotch pattern at full size",
+        "fix": "use a physically based lens blur on a varied texture"
+      }
+    ]
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:10 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the whole cliff face",
+        "what": "the rock is a smeared, melted procedural texture with stretched and doubled blocks; the crisp layered ledges of -a with their wet, sharp edges are gone",
+        "fix": "rebuild the cliff as sharp, stepped, wet ledges with real fracture detail matching -a"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the cliff surfaces across the frame",
+        "what": "there are no white guano streaks running down the ledges, and the bright orange lichen patches have become dull brown smudges",
+        "fix": "add the dense white guano drips down every ledge and restore crisp, saturated orange-yellow lichen patches"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the base of the cliff and the ledges",
+        "what": "the dark hanging kelp and nest seaweed are missing; the bottom band is a dark, warped, liquid-looking smear",
+        "fix": "hang thick olive-brown kelp along the base and put tangled seaweed nests on the ledges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the colony and the sky",
+        "what": "the colony is sparse, a dozen birds scattered where -a has a packed rookery on every ledge, and there are only a few specks in the sky instead of a big circling flock",
+        "fix": "pack the ledges with roosting creatures in rows and fill the sky with a dense flock that thins with distance"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the far rock at left",
+        "what": "a huge, sharp, near-looking sheer cliff wall replaces the distant curved, hazed, bird-covered arch of -a; depth and atmospheric falloff are lost",
+        "fix": "make it a curving sea-stack arch set far back, softened and lightened by haze and topped with birds"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the overall light",
+        "what": "the light is flat and evenly bright with a pale, washed-out grade; -a has a moody storm light with dark blue-grey cloud and wet highlights on the rock",
+        "fix": "darken and cool the sky, add contrast and specular wet sheen on the rock, and keep the warm lichen as the colour accent"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the roosting creatures at lower right and centre",
+        "what": "the creatures are an uncanny bleached-white, with crumpled wings like paper, standing on stilt legs, and they do not sit into the rock; in -a they are a weathered tan-grey with translucent veined wings, hunched in nests",
+        "fix": "warm and darken the creatures to tan-grey, make the wing membranes translucent and veined, and seat them in nests with contact shadows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the sky upper right and the spray",
+        "what": "the break of sunlight in -a is missing, so the spray has no backlight; the spray reads as flat grey CG smoke instead of bright, sunlit, glittering water",
+        "fix": "open a bright sun break in the clouds at upper right and backlight the spray and wave crest so they glow white"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the far sea stacks",
+        "what": "the stacks are straight, conical horn spikes; -a has tall, curved, arching rock fins that lean and are veiled in spray",
+        "fix": "reshape them into tall curving fins leaning into the frame, softened by spray haze"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the foreground and the tidal flat",
+        "what": "the flat is a smooth grey plane with a few bare, rounded boulders; the wet sheen, sky reflections, scattered weed-covered stones and out-of-focus seaweed rocks in the near foreground of -a are all missing",
+        "fix": "make the flat a shallow reflective sheet with glinting highlights, scatter olive weed clumps across it and put dark, defocused, weed-covered rocks in the near foreground"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the left and right cliffs",
+        "what": "the cliffs are smooth, dull, blobby CG masses with a visible texture seam on the left; -a's cliffs are wet and streaked with hanging golden-brown kelp that catches the light",
+        "fix": "give the cliffs real fractured geometry with wet specular sheen and draped kelp, and remove the seam"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the flying and landing creatures",
+        "what": "the creatures are a saturated orange-brown under flat light with stiff poses; in -a they are pale grey-tan and backlit with bright wing edges, skimming low over the water",
+        "fix": "desaturate them toward grey-tan, add rim light from the sun break and loosen the wing poses into a gliding skim"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the water plane at right, near the landing creature",
+        "what": "black horizontal line artifacts run across the water, and the creature's feet have no contact or splash",
+        "fix": "remove the line artifacts and add reflections and small splashes where the feet touch the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the overall grade",
+        "what": "the frame is low-contrast and milky grey; -a has deep blacks in the rock, silver highlights on the water and a storm-lit contrast",
+        "fix": "deepen the shadows in the rock and foreground, lift the specular highlights on water and spray, and keep a cool silver-grey palette"
+      }
+    ]
+  }
+}

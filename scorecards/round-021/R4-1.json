@@ -1,0 +1,63 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:13 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03.png",
+        "where": "foreground and background creatures and surrounding snow plain (frames 7572 to 7659, also set-A-07.png)",
+        "what": "both animals are completely frozen like static models with no breathing, weight shift, or posture change, and once the camera push-in stops dead at frame 7572 the entire frame holds still with no wind, snow, or cloud motion",
+        "fix": "animate subtle breathing, weight shifts, and wind-ruffled fur on both creatures, keep blowing snow and drifting clouds active during the hold, and ease the push-in into a gentle continuing drift rather than halting on an inert picture"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "huddled herd on the left and the central creature in the ice tunnel (frames 7875 to 8304, also set-A-10.png)",
+        "what": "the huddled animals on the left stay completely motionless like props, the central beast stays rigid during the camera approach (frames 8090 to 8101), and as it moves away (frames 8148 to 8304) it slides down the path in a nearly unchanged silhouette without weight transfer or distinct steps",
+        "fix": "give the huddled herd staggered idle breathing and head turns, and animate the central beast with a heavy, uneven walk cycle showing weight shift before each step, shoulder sway, and planted feet"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "wispy vapour ribbons right of the spire and upper storm clouds (frames 7015 to 7337)",
+        "what": "the ribbon clouds stay locked in the exact same wavy shapes for over five seconds with no drift, curling, or dissipation, making the held landscape read mostly like a still picture",
+        "fix": "replace the static ribbons with deforming volumetric mist that streams and dissipates downwind, and drive continuous layered drift across the storm clouds and lower fog deck"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "spire peak during the lightning strike (frames 7668 to 7718, also set-A-09.png) and the held sky afterward (frames 7738 to 7874)",
+        "what": "the strike emits slow floating firework-like dot sparks without lighting the rock ridge or foreground silhouette for an instant, and once the sparks fade the locked shot is completely frozen with static cloud ribbons",
+        "fix": "make the strike a sharp 1 to 2 frame flash that strongly illuminates the spire faces and rim-lights the foreground rock, replace floating sparks with brief gravity-bound embers, and keep the clouds and vapour moving throughout the hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "lightning bolt, right arch impact, and overall exposure (frames 7234 to 7245, also set-A-01.png frames 7015 to 7074)",
+        "what": "the bolt lingers across five consecutive frames in nearly the same jagged path, the frame 7015 strike washes out the whole image evenly instead of directionally lighting the ridge, and sparks hover in midair 30 to 60 frames after impact",
+        "fix": "limit the bolt to 1 to 2 crisp flickering frames, light the spire and snow ridge directionally from the strike point with shadow contrast rather than a flat wash, and extinguish impact sparks quickly"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "horizontal vapour bands across the sky and the cliff face during the strike at frame 7454 (also set-A-08.png)",
+        "what": "the camera tracks at a uniform mechanical pace without easing, the vapour bands remain rigid in shape and move only via camera parallax like solid strips, and the strike at frame 7454 casts no directional light onto the adjacent cliff",
+        "fix": "add weighted easing to the camera travel, animate the vapour bands to billow and drift independently of parallax, and bounce brief directional flash light onto the nearby rock face at frame 7454"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "cave mouth, icicles, snow floor, and animals during the exterior lightning flash (frames 8091 to 8096)",
+        "what": "lightning flashing outside the tunnel barely illuminates the cave interior, leaving the snow path, icicles, and animal backs flatly lit and disconnected from the storm outside",
+        "fix": "cast a brief cool rim and bounce flash from the cave opening across the icicles, snow floor, and animal silhouettes during each exterior strike"
+      }
+    ]
+  }
+}

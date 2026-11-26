@@ -1,0 +1,140 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:04 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the sea and cloud field left of and below the island",
+        "what": "the scattered white cumulus clusters of -a are replaced by streaked, blocky, glinting patches that read as broken sun-glint or smeared texture rather than cloud over the sea",
+        "fix": "restore discrete soft cumulus clusters in the -a pattern (rows trending NE), with soft edges and cast shadows; keep any motion blur directional and soft, not blocky"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "above the island centre, drifting up toward the top edge",
+        "what": "the white vapour plumes streaming off the land are gone",
+        "fix": "bring back the long thin curling vapour streamers rising from the island toward the upper middle of frame"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "upper right of the land",
+        "what": "the curling white vapour plumes are gone",
+        "fix": "restore the thin white vapour streamers looping down from the top edge into the right-hand land"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "over the crater lake from the upper-right rim",
+        "what": "the white vapour wisp blowing across the lake is gone",
+        "fix": "restore the thin white plume spilling off the upper-right rim over the water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "right third of the land",
+        "what": "the rust-red plain pocked with many dark round pits and pools is replaced by red ridged mountains with no pits",
+        "fix": "flatten that area back to a rust-brown plain studded with many dark circular pools of varied size"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "rust zone between the island and the ribbed ridges",
+        "what": "the dark round pits in the rust ground are gone, replaced by ridged red mountains",
+        "fix": "restore the pitted rust-brown plain with scattered dark circular pools"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "large irregular lake right of centre",
+        "what": "the frilly pale ring of crenellated rim around the lake is gone; the lake is a plain dark blot",
+        "fix": "give the lake its pale lacy fringed shore and the encircling raised ring of -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the irregular lake right of the main crater",
+        "what": "lacks the pale frilly rim and ring of -a; reads as a flat dark heart shape",
+        "fix": "add the lacy pale crenellated shoreline ring"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "the cluster of dark lakes right of and above the main crater",
+        "what": "the group of three or four dark lakes and the large crater lake at top become one small lake and a small oval; the crater lake at top has lost its broad dark shaded basin",
+        "fix": "restore the cluster of several merging dark lakes and the wide shallow crater basin at top"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "sea clouds on the left",
+        "what": "popcorn cumulus clusters become torn, flat, sharp-edged flakes and smears",
+        "fix": "make the clouds rounded soft cumulus puffs in clusters, as in -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "ochre shoreline of the crater lake",
+        "what": "the ochre sediment swirls and tendrils curling into the dark water (notably the lower-left hook) are gone; a flat uniform brown band remains",
+        "fix": "break the ochre band into swirling plumes and tendrils reaching into the lake, thinner on the east shore"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "where the river meets the lake, top left",
+        "what": "the braided delta fan is gone and the river ends on a hard straight edge into the brown band",
+        "fix": "restore a small pale braided delta where the river spreads into the lake"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "lower right sea",
+        "what": "the deep blue sea with white surf and cloud streaks becomes a flat teal lagoon with no surf or cloud",
+        "fix": "restore the deeper blue water with white streaky surf/cloud along it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "upper-right lake",
+        "what": "loses its crater bowl and ochre fringe; becomes a plain dark lake on flat beige ground",
+        "fix": "set the lake back in a rimmed crater bowl with ochre sediment fringing and a channel through it"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "southern coast of the island and the inlets below it",
+        "what": "the frilly dark inlets of -a become murky haze with small lakes ringed in a bright cyan glow",
+        "fix": "drop the cyan halos and restore crisp dark fingered inlets along a fringed coastline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "all terrain",
+        "what": "the cool lavender-grey ground of -a has become warmer beige with harder, deeper ridge shadows",
+        "fix": "cool the land toward grey-violet and soften shadow contrast"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03-b.png",
+        "where": "main crater lake",
+        "what": "the ochre swirl inside the lower-left of the lake is gone and the rim is a plain ring",
+        "fix": "add the curling ochre tendril into the water"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03-b.png",
+        "where": "whole frame",
+        "what": "overall darker and dimmer than -a; land midtones lose their silvery sheen",
+        "fix": "lift exposure slightly and add the pale silver highlight on the ridges"
+      }
+    ]
+  }
+}

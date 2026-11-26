@@ -1,0 +1,119 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the whole near cliff face filling the left two thirds of the frame",
+        "what": "the rock is built of flat polygon facets and shards with hard straight seams; each facet has its own stretched, smeared camouflage-like texture that stops at the facet edge, so the cliff reads as a low-poly mesh, not stone",
+        "fix": "replace with dense displaced geometry and continuous triplanar rock texture with real strata, cracks and frost in the crevices; no hard facet edges"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-08.png",
+        "where": "x 0-17% y 25-42% and x 0-17% y 58-75% (near cliff)",
+        "what": "at native size whole triangles of texture are pasted at different scales and angles over each other; you can see seams, an obvious rotated patch, and texture that is smeared and soft like clay where the camera is close",
+        "fix": "one continuous high-res rock material with no rotated patches and sharp micro-detail at close range"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the long pale ribbons blowing off the spire top across the sky (also set-A-07 upper right)",
+        "what": "the streamers are translucent flat cards with crisp glowing outlines and wobbly edges; they look like cellophane, not cloud, snow plume or spindrift, and have no volume or self-shadowing",
+        "fix": "make the plume a volumetric spindrift/cloud with soft edges, density falloff and light from the storm"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the animal in the foreground",
+        "what": "the body is made of stiff, card-like fur tufts that all point the same way; the head is a dark brown, flat, angular block with a hard straight edge; the claws hang in mid-air off the paw pads; the body sinks into the ground with no contact, no snow pushed up, no shadow under it",
+        "fix": "rebuild with groomed, clumped fur that is wet and caked with snow, a real eyeless head shape, claws attached to toes, and contact shadow plus disturbed snow where it lies"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "x 0-17% y 58-75% (the animal's head)",
+        "what": "there is a small bright light-coloured spot on the dark head block that reads as an eye; the animals are meant to have no eyes. The stick bundle under it is made of identical tube-like rods with the same speckle texture",
+        "fix": "remove the spot so the head has no eye; vary the rods in shape, thickness and frost"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "x 83-100% y 58-75% (the ground on the right)",
+        "what": "the ice and snow is a smeared horizontal streak texture with no grain, no crystals, no surface detail; it looks like a stretched texture or motion smear",
+        "fix": "give the ground real snow/ice detail: sastrugi, crust, grain and small ice chips at close range"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the lightning bolt and its bright glow on the horizon",
+        "what": "the bolt and the glow point light only a small patch of cloud; nearby spires, the sea and the snow get no light from it; the glow point has a hard disc and no real bloom",
+        "fix": "let the strike light the clouds over a wide area, rim-light the spires and spread a reflection on the sea and snow"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the cave mouth at the base of the spire (also set-A-04)",
+        "what": "the opening is a flat, almost pure black blob with no inner wall, no bounce light and no depth",
+        "fix": "show the inner rock with falloff and a bit of bounce light from the snow"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "x 42-58% y 58-75% (snow against the spire base)",
+        "what": "the snow is a smeared, plastic, stretched texture, and the ice curtain on the rock is made of vertical smear streaks; snow and rock have the same plastic sheen",
+        "fix": "use a true snow shader with sparkle, subsurface and crisp drift edges; give the ice real icicles"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "x 83-100% y 58-75% (the far distance on the right)",
+        "what": "the distant spires are flat, detail-free silhouettes under a uniform purple tint; the fog is a flat overlay with no depth layers, and a dark dome with a hard edge sits in the lower right",
+        "fix": "use layered atmospheric perspective with depth-dependent haze and light shafts; keep some form in the far rocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "x 83-100% y 25-42% and x 0-17% y 25-42% (background spires and sky)",
+        "what": "the spire ledges are evenly stacked, identical shelf-like steps, like a repeated pattern; the clouds are painted horizontal bands with no form",
+        "fix": "break the ledge rhythm with uneven natural erosion; give the clouds real volume and lighting"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the clumps on the cliff edge and the sea at the bottom right",
+        "what": "the plant or rime clusters are blobby repeated lumps with stick-like branches; the surf is soft white blobs with no spray or wet rock where it meets the land; ghostly half-transparent spire shapes float in the sunset sky near the horizon",
+        "fix": "make the clusters vary, give the sea spray, foam and wet shore, and remove or properly composite the ghosted far spires"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "x 83-100% y 25-75% (the sheets over the horizon)",
+        "what": "the translucent sheets lie over the sunset sky with hard bright outlines and hole-shaped cutouts; it reads as layered transparent planes, not air",
+        "fix": "replace with volumetric cloud or plume that has soft density and scatters the sunset light"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "x 0-17% y 58-75% (the sea on the left)",
+        "what": "the sea is a dark, flat, soft-smeared surface with no waves, no foam and no reflection of the lightning; a hard dark band runs along the horizon",
+        "fix": "give it wave detail, whitecaps and reflections of the storm light; blend the horizon"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "x 42-58% y 25-42% (the edge of the streamer)",
+        "what": "at full size the streamer edge is a jagged one-pixel bright outline, like an alpha edge",
+        "fix": "feather the edge so it fades into the sky"
+      }
+    ]
+  }
+}

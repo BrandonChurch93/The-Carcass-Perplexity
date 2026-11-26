@@ -1,0 +1,70 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the end of the push through the stalk grove, frames 5969 to 6047",
+        "what": "the move ends on a weak picture: the foreground stalks slide out and the last third of the shot is flat fog over an empty red pool with nothing to look at",
+        "fix": "end the move on a subject, such as a dome rising in the pool or a stalk crown held in frame, or cut before the fog takes the frame"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the red fluid in the channels and pools across the whole shot",
+        "what": "the fluid reads as a still sheet with an even striped texture; it does not visibly flow, rise at the banks or break anywhere, so the place looks like a painted surface that the camera slides over",
+        "fix": "give the channels direction and speed that vary with width, with eddies at the banks and slow ripples around the mounds and blobs"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the animal lying in the foreground and the small calf beside the large animal",
+        "what": "the lying animal holds one pose for the whole shot and the calf barely changes; with no breathing, head turns or shifts of weight they read as placed models",
+        "fix": "add breathing, an ear or head turn and a shift of weight, and let the calf start to walk or nose the ground out of step with the adult"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the large animal's legs and body, frames 6424 to 6435",
+        "what": "the front leg lifts but the body does not shift its weight or dip before the step, and over the shot the body glides at an even rate against the ground, so the feet look like they slide",
+        "fix": "key a weight shift onto the planted legs before each lift, add a dip and roll in the body on each footfall, and lock the planted feet to the ground"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the crowns of the stalk plants, frames 5833 to 5969 (also set-A-08.png)",
+        "what": "the fronds stay rigid from frame to frame while the fog drifts past them; nothing in the air moves the plants",
+        "fix": "add a slow, uneven sway to the frond tips, with the thin ends moving more than the bases and each crown out of phase with its neighbours"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the background creatures and burrows, frames 6586 to 7014",
+        "what": "while the near creature rises, the creatures further back hold their poses, so the colony reads as one animated animal set in a still diorama",
+        "fix": "give the background animals small, unsynchronised actions such as lifting a head, settling or sinking into the burrow"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-03.png",
+        "where": "the large dome as it bursts, frames 6126 to 6184",
+        "what": "before it bursts the dome becomes a smooth glass-like shell, and the burst is followed by perfectly even concentric rings; the burst lands but reads as a little procedural",
+        "fix": "thicken the skin before the burst, tear it unevenly, throw droplets, and break the rings up so they are irregular and fade at different rates"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the sky and the rain curtains on the horizon",
+        "what": "the overcast light and the distant rain show no change across almost four seconds",
+        "fix": "let the rain shafts drift slowly and let the light shift slightly under the passing cloud"
+      }
+    ]
+  }
+}

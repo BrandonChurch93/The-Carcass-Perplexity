@@ -1,0 +1,42 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R4",
+  "family": "gpt",
+  "answered": "2026-11-26 09:05 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the opening of the rise, frames 9541–9562",
+        "what": "Bright, perfectly concentric rings on a flat blue field give way abruptly to mottled water and a visible shoreline. The shot reads as a graphic giving way to an aerial image rather than one climb off the water.",
+        "fix": "Start on the same rendered water surface used throughout the ascent. Let the ripples deform in that surface and diminish continuously as the camera gains height."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the cloud bands left of the coast, the lower-right storm, and the white plume over the interior during the six-second hold",
+        "what": "There is slight movement in the clouds, but the broad shapes stay nearly fixed relative to the ground and the plume retains its beadlike silhouette. The held view reads more like a map with lightly animated overlays than a world with weather at different heights.",
+        "fix": "Give the cloud decks different drift speeds, let the storm bands shear around the eye, and have the plume feed from its source and spread downwind instead of preserving the same outline."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the orbital reveal, especially the repeated ridges flanking the central valley",
+        "what": "The nearly uniform bright ridges on either side of the valley retain the same sharp contrast all the way out to orbit, so the reveal reads like scaling up the view of an engraved relief map rather than gaining altitude over terrain.",
+        "fix": "Vary the spacing and relief of the ridges, and let atmospheric depth and distance soften their contrast as the camera rises."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the diagonal streaks and faint central rings in the lake, frames 9578–9589",
+        "what": "The broad diagonal pattern stays almost unchanged against the moving shoreline, and the small rings fade without a clear outward-moving front. The surface reads as a dragged texture rather than moving water.",
+        "fix": "Animate the water independently of the pullback, with outward-traveling crests that distort and lose height and a separate, slower response along the shore."
+      }
+    ]
+  }
+}

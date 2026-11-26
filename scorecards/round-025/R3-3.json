@@ -1,0 +1,56 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R3-3",
+  "family": "gemini",
+  "answered": "2026-11-26 09:05 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-C-01.png",
+        "where": "left third of the lake surface (also shown at native size in set-C-02.png top-left and bottom-right crops)",
+        "what": "long parallel diagonal streaks smear across the dark water like stretched UV coordinates or directional blur rather than real wind ripples or waves",
+        "fix": "replace the stretched water map with multi-scale isotropic wave displacement and natural wind-driven capillary ripples"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-05.png",
+        "where": "bottom-right crop along the lake shore (also visible in set-C-03.png right crop and around the rim of set-C-04.png)",
+        "what": "the shallow orange-brown water transition looks like a soft airbrushed gradient with no crisp waterline, wet-sand edge, foam, or shoreline wave detail",
+        "fix": "add a sharp shoreline boundary with darkened wet rock and sand, subtle foam or mineral crust, and real depth-based water absorption"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-04.png",
+        "where": "the entire lake surface (and all water crops in set-C-02.png, set-C-03.png, set-C-05.png, and set-C-06.png)",
+        "what": "the water reads as a flat dark navy plane with uniform fine scratchy noise, showing no sky reflection, sun glint, or specular response to the strong sunlight lighting the surrounding mountains",
+        "fix": "give the water physically accurate Fresnel reflections of the sky and sun angle with varying roughness across wind patches"
+      },
+      {
+        "severity": "major",
+        "file": "set-C-06.png",
+        "where": "right crop of the eroded mountain ridges (also in set-C-02.png bottom-left, set-C-03.png right, and set-C-05.png bottom-left)",
+        "what": "at native 4K size the terrain is soft and slightly mushy, reading as a single uniform clay-like procedural heightfield material without crisp rock micro-detail, strata, scree, or material variation",
+        "fix": "increase high-frequency rock displacement and texture resolution and break up the slopes with distinct strata, talus, and colour variation"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-01.png",
+        "where": "dead center of the lake surface",
+        "what": "faint concentric circular rings appear in the middle of the water like a radial texture pinch or stamp artifact",
+        "fix": "remove the radial center artifact from the water displacement or normal map"
+      },
+      {
+        "severity": "minor",
+        "file": "set-C-05.png",
+        "where": "left side of the bottom-left crop over the sunlit ridge (also lower-right of set-C-03.png right crop)",
+        "what": "patches of haze or dust over the slopes read as soft, flat, unlit grey-white blotches rather than sunlit volumetric air",
+        "fix": "render atmospheric haze and dust volumetrically with directional sunlight scattering and proper depth falloff"
+      }
+    ]
+  }
+}

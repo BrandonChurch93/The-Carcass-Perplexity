@@ -1,0 +1,105 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R1-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:10 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the red brine surface and its foreground shoreline edge",
+        "what": "the water is a flat, matte pinkish-red plane with repetitive noise and ends in a hard, straight salmon-pink strip against the dark bank, losing the deep viscous rust brine, sky reflections, and crystalline white salt rim",
+        "fix": "deepen the brine to glossy dark rust-red with organic surface undulations, add a rough crystalline salt crust along the foreground bank, and blend the wet shoreline with foam and small bubbles"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the large right-side bubble and the left-side bursting splash",
+        "what": "the bubble looks like an opaque, smooth plastic dome with a hard flared rim, and the splash is a flat-shaded, clay-like opaque crown instead of translucent liquid",
+        "fix": "make the bubble thin, glassy, and translucent with subtle surface grit and a wet meniscus, and render the splash as thin, translucent, jagged liquid sheets with foam and crisp specular highlights"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the foreground brine channel, left bubbling pool, and meandering stream",
+        "what": "the foreground water looks matte and mud-like rather than reflective liquid, the left pool is pale milky pink with tiny dots instead of prominent dome bubbles and concentric ripples, and the channel runs straight to the horizon like a canal",
+        "fix": "give the brine dark rust-red colour and glossy sky reflections, restore larger bubbles and strong concentric ripples in the left pool, and let the distant stream meander naturally across the salt flats"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the creatures wading in the central channel",
+        "what": "the creatures look pale, fuzzy, and pasted on top of the water with hard cutout edges and no water displacement or wet darkening",
+        "fix": "darken and wet their hides, submerge their lower bodies into the brine, and add contact ripples and reflections around them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "the foreground rock outcrop at bottom left",
+        "what": "the rock is smooth and blobby with glossy marbled brown-and-white procedural swirls instead of fractured, dusty mineral-crusted stone",
+        "fix": "replace the smooth marbled surface with sharp, craggy rock geometry, fine matte mineral grit, and dusty salt-and-ochre staining"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the foreground stalk stems and their upper rims",
+        "what": "the stalks look like thin, jagged, paper-edged hollow tubes with flat wrapped texture instead of thick, rough, salt-encrusted stems transitioning naturally into the plumes",
+        "fix": "build thicker, crusty white salt deposits and bumpy organic texture onto the stems and soften the jagged paper-thin rims where the plumes emerge"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "the background pool, bubble, steam, and wading creature",
+        "what": "the pool is a flat, wide pink-red expanse with an artificial smooth plastic bubble in the middle, steam and distant rain shafts are largely missing, and the creature on the right is obscured behind extra stalks rather than walking clearly in the water",
+        "fix": "deepen the pool's colour and shoreline crust, remove the artificial smooth bubble, add dense rising steam and distant rain streaks, and keep the wading creature clearly visible in the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "the atmosphere over the pool and the depth of field",
+        "what": "the soft steam plume over the left side of the pool is missing, the foreground-to-background focus is too deep and sharp, and the foreground left stalk is a rigid pole sticking out of the water",
+        "fix": "add soft drifting steam over the left pool, narrow the depth of field so foreground stalks and background hills blur softly, and frame the left edge with out-of-focus slender stalks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the red filaments and hanging water droplets on the main plume in the right-hand crops",
+        "what": "the red fronds look noisy and pixelated with rough edges, and the hanging droplets read as dark grey outlined rings instead of clear, bright, refractive water drops",
+        "fix": "smooth and sharpen the wet crimson filaments with glossy highlights and render transparent, bright, refractive droplets clinging to and dripping from the tips"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the water surface and right-hand shoreline in the right-hand crops",
+        "what": "floating pale pink translucent ribbons hover above the water edge, the surface lacks viscous ripples and scum, and the small winged insects resting on the brine are absent",
+        "fix": "remove the floating pink edge artifacts, add thicker fluid ripples and floating organic debris, and place small insects on the water surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the midground stalks and salt flat puddles in the bottom-right crop",
+        "what": "the salt crust is overly smooth and pale pink with flat uniform puddles, and the stalks are stiff, sparse tubes with small tight tufts instead of fuller, drooping crimson plumes",
+        "fix": "add cracked, textured salt plates with deeper dark-rust wet margins and make the stalks curve more organically with fuller, drooping red fronds"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "the central island between the left pool and main channel, and the far-left foreground stalk",
+        "what": "the central island has an artificial stark white outline around a dark coarse patch, and a single thick vertical stalk with a stubby bud stands awkwardly at far left instead of a dense cluster of slender stalks and rising steam",
+        "fix": "blend the central bank naturally with cracked salt crust, replace the lone thick stalk with a natural cluster of slender stalks, and restore thicker steam over the left pool"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "the open main plume, the second bud, and the insects around them",
+        "what": "the main left plume is oversized and dominates the frame, the second stalk's bud is a messy splayed tuft instead of a tight curving half-open bud, and far fewer perched and hovering insects are present",
+        "fix": "scale down the main plume to match the framing, tighten the second bud into a curved partially opened shape, and add more detailed translucent-winged insects perched on and around the fronds"
+      }
+    ]
+  }
+}

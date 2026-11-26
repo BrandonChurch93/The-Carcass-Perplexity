@@ -1,0 +1,77 @@
+{
+  "round": 25,
+  "unit": "reveal",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:05 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the cloud cover over the ocean on the left side of the frame (also in set-A-05.png crops x 0 to 17%)",
+        "what": "the clouds read as scattered fuzzy white dots and flat paint flecks with no 3D volume, no directional lighting, and no shadows cast on the ocean below",
+        "fix": "replace the dot-like cloud noise with volumetric cloud formations lit consistently with the terrain and casting soft shadows onto the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the cloud layer over the ocean on the left half (also in set-A-08.png crops x 0 to 17%)",
+        "what": "the clouds become stretched, smeared directional white streaks mixed with flat jagged white flecks that read as procedural noise over a dark plane",
+        "fix": "build coherent multi-scale cloud decks with natural wispy edges, internal shading, and soft ocean shadows instead of stretched noise streaks"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the mountain range across the right half of the frame (also in set-A-08.png x 83 to 100% y 25 to 42% and set-A-09.png x 83 to 100% y 58 to 75%)",
+        "what": "the ridges form unnaturally regular, parallel, rib-like stripes radiating symmetrically from a central valley, and at native size they dissolve into soft smeared brushwork",
+        "fix": "break up the repetitive parallel ridge pattern with realistic varied geology and add crisp high-frequency terrain detail that holds up at native 4K size"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the bright orange spots on the upper-right mountain ridges (also in set-A-08.png x 83 to 100% y 25 to 42%)",
+        "what": "the glowing orange dots sit on top of the terrain like pasted-on circular airbrush glows and pinpricks that illuminate none of the surrounding rock or ridges",
+        "fix": "either remove the floating glow points or integrate them physically with localized light falloff on adjacent slopes and realistic atmospheric bloom or smoke"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-right crop (x 42 to 58%, y 25 to 42%), upper middle and upper right terrain",
+        "what": "visible square pixelation and blocky grid artifacts appear directly inside the reddish-brown and grey-blue land texture",
+        "fix": "re-render or replace the low-resolution or corrupted texture tile so the surface shows continuous fine terrain detail with no grid blocks"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "all three terrain crops (x 0 to 17% and x 83 to 100%) and similarly across set-A-05.png and set-A-06.png",
+        "what": "at native 4K size the mountain slopes are soft, mushy, and clay-like, using one uniform procedural erosion material everywhere with no sharp rock strata, scree, or surface micro-detail",
+        "fix": "increase terrain texture resolution and add varied geological materials, sharp ridge fractures, talus, and subtle color variation across elevations"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the main crater lake, its brown shoreline, and the inlet channel at the top edge (also in set-A-02.png, set-A-03.png, and set-A-05.png x 42 to 58% y 25 to 42%)",
+        "what": "the lake surface is a nearly flat dark blue with faint smeared streaks and no reflections or wave texture, the brown rim blends like an airbrushed gradient with no wet edge or foam, and the inlet channel is a flat uniform blue ribbon cutting cleanly through the rim",
+        "fix": "add realistic water surface speculars, subtle wave structure, crisp shoreline sediment and wet rock transitions, and natural depth and bank variation along the inlet channel"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "left crop (x 42 to 58%, y 58 to 75%), along the coastline where land meets ocean (also visible at bottom of set-A-04.png)",
+        "what": "the coastline is outlined by a uniform, fuzzy teal airbrushed glow with flat dark ocean water, no surf or coastal shelf detail, and an artificial floating horizontal smudge in the bay",
+        "fix": "replace the uniform teal edge tint with physically varied shallow bathymetry, realistic coastal turbidity, and crisp shoreline detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "across the entire frame (and similarly in set-A-01.png and set-A-04.png)",
+        "what": "there is no atmospheric scattering or aerial perspective despite the high-altitude orbital distance, leaving the ground and dark ocean looking flat with no air between camera and surface",
+        "fix": "add subtle altitude-appropriate Rayleigh haze and coherent sky illumination that lifts the darkest shadows and ties land, water, and clouds together"
+      }
+    ]
+  }
+}

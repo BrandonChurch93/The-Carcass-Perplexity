@@ -1,0 +1,98 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:08 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the dark reflective oval in the middle of the lake",
+        "what": "a hard-edged blue disc of mirror reflection with concentric rings sits on an opaque flat orange surface; two water materials meet on a clean outline with a cyan rim, reading as a composited patch rather than one body of water",
+        "fix": "use one water shader across the lake and let reflectivity and colour change gradually with depth and angle; remove the stamped ripple rings"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the boulders in the right and left foreground",
+        "what": "large rocks are low-poly with visible facets and a stretched grey texture smeared across the faces, reading as plastic or clay at close range",
+        "fix": "use higher-density geometry with displacement and a texture mapped at the right scale, plus moss, staining and varied albedo"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the animals standing in the shallows (x 42 to 58%, y 58 to 75%)",
+        "what": "the animals are flat brown silhouettes with no shading or detail, no splash or ripples around the legs, and only a faint dark smudge for shadow; they look like cut-outs pasted on the water",
+        "fix": "render them with lighting that matches the low warm sun, add ripples, wet darkening on the legs, and correct reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the orange lake surface, left (x 0 to 17%, y 58 to 75%)",
+        "what": "the water is a smooth airbrushed orange with flat pale blobs floating on it; there is no depth, ripple detail or clear reflection, and the blobs read as flat cards",
+        "fix": "add surface micro-ripples, a fresnel reflection of the sky and cliffs, and give the pale patches thickness, edges and a wet margin if they are salt or crust"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the top of the crop where the cliff reflection meets the orange water",
+        "what": "the cliff reflection ends in vertical smeared streaks and a hard horizontal edge",
+        "fix": "blend the reflection boundary and remove the stretched streaking"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the far water band (x 83 to 100%, y 25 to 42%) and set-A-05.png at the same region",
+        "what": "the water is made of horizontal stretched streaks with smeared texture, like a texture stretched along one axis, with no readable ripple structure",
+        "fix": "raise the resolution of the reflection and normal maps at grazing angles and add anisotropic but structured wave detail"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the underwater fibres and cream patches in the foreground",
+        "what": "the orange fibres look like painted brush strokes laid on a flat plane with no parallax or refraction, and the cream patches are flat cutouts with sharp, uniformly bright edges; the surface above shows no reflection of sky over the clear water",
+        "fix": "model the mat as 3D strands under a refracting surface with caustics, add surface reflection with a fresnel falloff, and give the patches shape and soft edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the foreground pebbles across the shoreline",
+        "what": "the out-of-focus pebbles look like smooth clay lumps with posterised edges, and the blur looks like a painted smear rather than optical defocus; the repeated grey-cream pebble shapes look copied",
+        "fix": "vary pebble shape, size and material, and use proper depth-of-field bokeh on a detailed render"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the three adult animals and the young one",
+        "what": "the bodies are smooth model shapes with a uniform suede skin, and there is no wetness, mud or splash on legs that stand deep in water",
+        "fix": "add wet darkening and droplets on lower legs, splash and wake rings at the waterline, and skin variation such as dust, scars and hair"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05.png",
+        "where": "above the horizon behind the animal (x 42 to 58%, y 25 to 42%)",
+        "what": "a thin pale curved stroke and small specks float in the air above the water, like a stray artifact",
+        "fix": "remove the stray element"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-08.png",
+        "where": "on the horizon (x 42 to 58%, y 25 to 42%)",
+        "what": "a small pale object sits on the far water with no context",
+        "fix": "remove it or make it clearly part of the place"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the mist at the cliff base (x 42 to 58%, y 25 to 42%)",
+        "what": "the haze is a flat uniform grey tint at the scree line with no light or structure",
+        "fix": "give the mist density variation and let the warm sun scatter into it"
+      }
+    ]
+  }
+}

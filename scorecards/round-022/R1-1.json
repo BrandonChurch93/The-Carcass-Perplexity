@@ -1,0 +1,162 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R1-1",
+  "family": "claude",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "whole frame, light",
+        "what": "-a has low warm sun breaking through from the right and behind, which picks out the arches, orange lichen and bright specular glints on the wet flats under a dark storm sky. -b is flat, shadowless overcast grey with no direct sun, no warm accents and no glints",
+        "fix": "add a low warm key from the right and back through the cloud gaps, with raking highlights and shadows on the arches and cliff and bright sun glints on the wet sand and water"
+      },
+      {
+        "severe": "",
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "foreground and midground beach",
+        "what": "-a has kelp-covered boulders, seaweed clumps, scattered dark rocks, gravel bars and braided tidal channels that recede in depth. -b is an empty, uniform cobble plain with almost no rocks, no seaweed and no channels",
+        "fix": "rebuild the foreground with weed-draped boulders at left, scattered rocks and weed patches, gravel and wet-sand bands, and shallow channels holding sky reflections"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "left cliff",
+        "what": "-a has a pale, sunlit, lichen-stained cliff top over a thick curtain of hanging wet kelp, with a large weed-covered boulder base. -b has a dark, dry, striated rock wall with no hanging kelp and no lichen, plus a separate grey slab behind it",
+        "fix": "put back the pale lit upper cliff with orange lichen and the dense, glossy, hanging kelp curtain over a bouldered base"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "wading creatures",
+        "what": "-a has a few pale grey creatures spread through the midground, some running with wings open and kicking up splashes, lit by the sun. -b has many near-identical pinkish copies lined up along a single horizon band in the same pose, with no splashes and no sunlight",
+        "fix": "cut the count, scatter them in depth across the flats, vary their poses (running, wings spread), add the foot splashes, and match the grey-white colour and sun-side lighting"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "arches and sea stacks",
+        "what": "-a has weathered, pale, sunlit limestone arches with orange lichen, nesting birds and broken rubble bases, plus surf at their feet. -b has smooth grey horn shapes with repeating striated texture, too many tusk spires, and no lichen, birds, rubble or surf",
+        "fix": "match the arch silhouettes and count, add the lichen and weathering, put back the rubble bases and breaking surf, and let the sun light their right faces"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "sky birds",
+        "what": "-a has a large flock of white, sunlit seabirds wheeling around the arches. -b has sparse dark specks",
+        "fix": "put back the dense flock of pale birds, lit from the sun side and clustered around the arches"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "horizon and distance",
+        "what": "-a has bright surf and sea-spray haze along the horizon, with arches fading into vapour. -b has an even grey fog and a hard ground-to-haze line with no surf",
+        "fix": "add breaking surf and backlit spray haze at the horizon and soften the transition at the ground line"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "carcass on the cliff",
+        "what": "-a has a sagging, hide-covered carcass hanging head down in the kelp, lit warm. -b has a small white skeleton laid flat on the rock",
+        "fix": "match the carcass size, its hanging pose and the remaining hide, and light it with the warm key"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "lower foreground, both crops",
+        "what": "-a shows wet sand with mixed gravel, dark rocks and thin sheets of reflective water. -b shows uniform, tiled, rounded cobbles and a murky brown water patch with a procedural pattern",
+        "fix": "replace the tiled cobbles with mixed wet sand, gravel and scattered rocks under a thin reflective water film"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "carcass",
+        "what": "-a has a translucent pale hide sagging off the ribs, legs hanging straight down, crabs crawling on it, and warm sun glowing through it. -b has a grey-brown carcass stretched diagonally across the rock, flat-lit, with no visible crabs at delivery size",
+        "fix": "rehang it head down with dangling legs and drooping hide, add the crabs, and light it with the warm low sun so the skin glows"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "rock wall",
+        "what": "-a has wet black rock with trickling water, glossy amber kelp strands and specular droplets. -b has a dry, bark-like procedural texture with a few dull strands and no water",
+        "fix": "make the rock wet and glossy black, add the dense amber kelp curtain, the runnels of water and the highlight sparkles"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "background",
+        "what": "-a has arches against sunlit cloud gaps, waders on bright reflective flats, rib bones on the rock and surf at the horizon. -b has grey horn spires, a stray flying creature, dark water and no sunlit flats",
+        "fix": "put back the arch shapes, the sunlit cloud breaks, the bright wet flats with waders and the sky reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "rocks at the base, lower right",
+        "what": "two smooth, rounded CG boulders that don't appear in -a. -a has a low, weed-covered, rocky shore",
+        "fix": "replace them with low, weed-covered rocks on the wet sand"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "carcass and rock crops",
+        "what": "in -b the hide is a smeared rubbery mass with blurry ghost crabs, and the rock is a noisy, smeared bark pattern. -a has crisp crabs on a thin translucent hide, and glossy kelp over wet rock",
+        "fix": "add real skin and sharp crab detail, and replace the rock texture with wet rock and kelp strands"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "whole frame, light",
+        "what": "-a is backlit by warm low sun that rims the creatures, makes the orange wing membranes glow and sparkles on the water. -b is flat grey overcast with no rim light or glow",
+        "fix": "add the warm backlight from the upper right, the rim light on the bodies, translucency through the wings and sparkle highlights on the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "water around the feeding creatures",
+        "what": "-a has splashes, flying droplets, a caught worm, ripples, and a running bird kicking up spray. -b has tendrils entering still water with no disturbance, a few droplets floating in mid-air, and doubled, transparent, ghostly reflections",
+        "fix": "add the splash crowns, droplets and ripple rings where the tendrils and feet meet the water, add the prey, and make the reflections broken and opaque"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "background",
+        "what": "-a has crashing surf, spray haze, and arches and lichen-covered rocks fading into the mist. -b has calm water, plain grey pillars and a distant headland, with no surf or spray",
+        "fix": "add the breaking surf and backlit spray haze, and match the arch shapes and the rocky mid-shore"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "foreground rocks, left",
+        "what": "-a has out-of-focus kelp and orange weed-covered rocks that frame the bottom of the frame. -b has a grassy, fur-textured mound with a transparent water layer cut over it on a hard edge",
+        "fix": "replace it with dark, wet, weed-covered rocks, with a natural waterline and the shallow depth-of-field blur"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "creature bodies",
+        "what": "-a creatures have grey-white skin with warm translucent orange wings and dynamic poses (one running, splashing). -b creatures have a cloth-like, wrinkled, beige skin and stiff poses",
+        "fix": "match the skin colour and texture, the wing colour and translucency, and the running pose of the far bird"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "water and wing crops",
+        "what": "-b water is a noisy, uniform ripple texture with no droplets, splash or prey, and the wing crop lands on empty sky and a headland. -a has a splash, a worm, rocks in the water, and a lit orange wing filling that region",
+        "fix": "add the splash, droplets and prey, defocus the water and rocks in the same way, and frame and size the creature so its wing fills the upper right"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-05-b.png",
+        "where": "leg reflections",
+        "what": "the reflections of the legs and tendrils run long, transparent and doubled, past where they should end",
+        "fix": "shorten them and break them up with the ripples"
+      }
+    ]
+  }
+}

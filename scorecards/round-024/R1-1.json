@@ -1,0 +1,112 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R1-1",
+  "family": "gpt",
+  "answered": "2026-11-26 09:09 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "bottom left, center, and right foreground bank",
+        "what": "The incoming whitewater stream is gone. The descending, gravelly bank has become a flat gray shelf behind a pile of oversized, faceted rocks.",
+        "fix": "Restore the stream flowing between the left-hand boulders into the lake, a continuous slope of graded scree, and smaller, more irregular near rocks."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01-b.png",
+        "where": "lake from the center pool to the orange margins",
+        "what": "The navy pool has a hard-edged, distorted reflection, and the surrounding rust-colored growth reads as broad smooth paint and stretched streaks rather than a fine branching mat in shallow water.",
+        "fix": "Calm the center into a dark blue mirror with localized rings, and break the margins into finer branching ochre strands, seams, and transparent shallows."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "bottom and lower middle of frame",
+        "what": "A nearly full-width band of dry-looking cobbles takes up the lower third, where the target looks across flooded shallows with a rocky lip chiefly at lower left.",
+        "fix": "Keep the animals at the intended distance, but drop or shift the camera to the waterline and open the center and right to continuous shallow water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-03-b.png",
+        "where": "shallow water under and around the herd and the open lake behind it",
+        "what": "The water is dominated by uniform horizontal silver-brown chop. Much of the branching orange growth and the quiet cool-blue water beyond it are gone.",
+        "fix": "Restore broken amber mats and dark blue open water, quiet the general chop, and let clearly defined circular ripples spread outward from individual drinking points."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05-b.png",
+        "where": "middle and right of the lake beneath the far shore",
+        "what": "Gold-gray reflections and thin horizontal bars run nearly all the way to the shore, flattening the dark navy band and the gently rippled depth behind the amber shallows.",
+        "fix": "Bring back a coherent blue-black stretch beyond the shallows, with darker cliff reflections and fewer, softer, wider-spaced wave highlights."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "center and right foreground rocks, including the native-size crops",
+        "what": "Faceted seams, stretched mottling, and flat exposed ground replace granular gravel, fractured stone, and small mossy crevices.",
+        "fix": "Use natural irregular fracture planes, continuous rock texture at scale, dense embedded gravel, and small patches of growth in the crevices."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "herd along the near shore",
+        "what": "The animals read as a dark rusty row along the shelf, mostly standing, with a few walkers out across the orange shallows. The target has pale side-lit animals scattered along the diagonal bank, with waders, drinkers, and several resting on the scree.",
+        "fix": "Break up the row along the sloping shore, restore the resting and drinking groups, and give the bodies warm left-side edges, readable cool fill, and small water-contact ripples where appropriate."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01-b.png",
+        "where": "right rim, overhang and far shore mist",
+        "what": "The near right rim is lower and less enclosing, with harder, more uniformly striated rock. The mist reads as a nearly level narrow stripe rather than a soft veil spreading out over the water.",
+        "fix": "Raise and deepen the nearest overhang, vary the strata and scree at its base, and feather the mist into the water and cliff foot at uneven densities."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "opposite cliffs and their foot",
+        "what": "The wall is sharply etched nearly everywhere, with a strong orange cast over the left slopes and haze mostly pinned to the base; the target reads softer and deeper, with more selective yellow-gold light on ledges and cool recesses.",
+        "fix": "Soften distant texture and the haze transition while localizing warm illumination to the exposed upper faces and retaining cool blue-gray shadow."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03-b.png",
+        "where": "herd bodies and reflections at their feet",
+        "what": "Beyond the intended setback and animal design, the lighting is flatter brown, with muddy black ends and heavy smeared reflections instead of small warm grazing highlights and wet contact details.",
+        "fix": "Keep their distance and silhouettes, but add restrained warm edges where the low light catches wet surfaces, and finer broken reflections and foot-level disturbances."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "lower left through lower right underwater growth and rock",
+        "what": "The filaments read as a relatively uniform thin orange tangle under a milky reflection, with pale bedrock reduced to flat patches. The target has separate gold, rust, and olive bunches with directional drape and dimensional rocky gaps.",
+        "fix": "Build thicker, distinct bundles of long strands that wrap around credible submerged rock, vary the colored density, and clear some of the reflected veil to reveal the depth underneath."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "foreground water above the center-left and center-right mats",
+        "what": "Several vertical trails of bright bubbles visible over the growth in the target are missing.",
+        "fix": "Add sparse staggered bubble trails with tiny sunlit edges rising through the shallows, letting their motion soften naturally."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "far lake edge and crater wall",
+        "what": "The air has become a thin pale line under an unusually crisp, busy wall, rather than a broad soft bank of vapor that obscures the base and separates the warm upper ledges from the cooler lake.",
+        "fix": "Give the vapor more height and uneven density, soften the distant rock texture, and keep the warm rim light distinct from the cool lower shadows."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05-b.png",
+        "where": "left group and the water immediately at the drinker",
+        "what": "One of the two companions is upright rather than drinking, and the entry point of the main drinker is lost among regular horizontal ripple bands.",
+        "fix": "Keep the intended distance and silhouette, but give the companions low drinking poses and a restrained set of rings centered at the main animal’s muzzle."
+      }
+    ]
+  }
+}

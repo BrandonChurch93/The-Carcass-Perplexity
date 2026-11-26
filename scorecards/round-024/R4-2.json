@@ -1,0 +1,35 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the central blue-grey pool and its cliff reflections across 0.00 s to 6.00 s",
+        "what": "the water surface and reflected sunlit cliffs stay frozen over the full six seconds with no perceptible ripples, wave weight, or shoreline motion",
+        "fix": "animate the pool surface with slow wind-driven ripples and gently breaking reflections that stay continuous across the six-second hold"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the pale vapour patches drifting over the orange mineral flats",
+        "what": "the mist translates uniformly left to right like a flat scrolling noise texture rather than heavy vapour curling, rising, or pooling against the terrain",
+        "fix": "replace uniform lateral scrolling with volumetric advection that billows, pools in low hollows, and dissipates unevenly over the basin"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the sky, distant crater-base haze, and light on the far cliffs",
+        "what": "the entire upper half of the frame remains completely still over six seconds, making the held shot read as a static painting behind a moving fog overlay",
+        "fix": "add subtle independent drift to the high haze and distant rim mist along with slight atmospheric light variation"
+      }
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the large animal in the foreground pool",
+        "what": "the flank cuts abruptly into the mud, with a pale straight strip along the edge and no visible meniscus or disturbed water; the body looks dropped through the surface",
+        "fix": "break up the contact line, darken and gloss the submerged skin, and carry displaced water and ripples around the flank"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the standing adult's feet, the juvenile at right, and the animal lying across the foreground",
+        "what": "the legs end as blunt stumps in the same muddy texture, and the prone body disappears into the red water without displacing it; the animals look embedded rather than weighted or submerged",
+        "fix": "show how the weight deforms the mud under each foot and add a distinct wet edge and water disturbance around the immersed body"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the lower-left shore beneath the animal and the right-hand mud crop",
+        "what": "the shore breaks into triangular ridges and the mud repeats the same corrugated relief across wet and dry areas, like one displaced sheet",
+        "fix": "break up the displacement with irregular bank geometry and give pooled water, slick mud, and exposed sediment distinct surface finishes"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the ground under the feet in both crops and the bank at lower right",
+        "what": "there are sharp triangular facets, smeared texture, and a stepped, vertically stretched lip in the pale bank",
+        "fix": "refine the bank geometry and use scale-consistent material mapping with irregular sediment and crust at the lip"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the adult's flank in the upper-right crop and mouth appendages in the lower-right crop",
+        "what": "the flank has a soft web of dark lines that looks printed over a smooth volume, while the appendages have nearly identical smooth plastic highlights and blunt ends",
+        "fix": "give the skin distinct folds and roughness at several scales, and vary appendage shape, tip detail, and wetness"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the midground red pool, pale mound at lower left, and shallow mud at lower right",
+        "what": "the red pool reads as a uniform ripple pattern with little trace of the nearby trunks in reflection, while the pale mound has stretched streaks and the shallow mud lacks a distinct wet margin",
+        "fix": "add broken local reflections and depth variation to the pool, and give the mound and mud margin separate, scale-appropriate materials"
+      }
+    ]
+  }
+}

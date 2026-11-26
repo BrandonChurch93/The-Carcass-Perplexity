@@ -1,0 +1,77 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R3-1",
+  "family": "gpt",
+  "answered": "2026-11-26 09:09 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the large bubble on the right and the splash left of center",
+        "what": "the bubble reads as a polished solid dome pasted onto the pool; the splash is a thick opaque sheet with isolated beadlike droplets and little disturbance below it",
+        "fix": "Give the bubble a thin irregular film, break the splash into finer translucent sheets and droplets, and carry displacement and ripples into the surrounding pool."
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-06.png",
+        "where": "right crop, pink fluid edge along the foreground bank",
+        "what": "the rippled surface stops at a broad, untextured pink ribbon that follows the rock like a mesh skirt; the same sharp border is visible in the wide shot",
+        "fix": "Replace the ribbon with a shallow meniscus, irregular wetting and mineral deposits, and let smaller ripples and reflections reach the bank."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, the pale animal behind the foreground animal",
+        "what": "the right side of its body ends on a nearly vertical straight edge in open space, making it look clipped rather than partly buried or occluded",
+        "fix": "Restore a naturally rounded body silhouette or obscure it with real foreground relief, with a contact shadow at the ground."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "right crop, side of the foreground animal's head and its feet",
+        "what": "a dark almond-shaped crease reads as an eye; the feet and mouth tendrils have weak contact with the ground and the coat has an almost uniform pale finish",
+        "fix": "Remove the eye-shaped crease, plant the feet and tendrils with local shadows, and vary the wetness and sediment on the lower body."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "lower-left crop, pink pools and pale ground around the plant bases",
+        "what": "long soft streaks continue over the ground and across successive pools, with little change in relief or material at the banks",
+        "fix": "Separate the wet, dry and mineral surfaces and break up the stretched streaks with local relief and irregular boundaries."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "lower-right crop, around the stalk entering the pool",
+        "what": "the ripples look nearly uniform up to the stalk and scarcely respond to the obstacle; the stalk appears to end abruptly in the surface",
+        "fix": "Add a broken reflection, a tight wet contact ring, and ripples deflected around the stalk."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "top-right crop, fine red tendrils and hanging loops against the fog",
+        "what": "several thin strands have pale fringes, speckled edges, and wispy streaks that look like a cutout mask",
+        "fix": "Render the narrow strands as geometry with clean coverage and consistent focus blur, and distinguish the water drops from the strand silhouettes."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "middle distance just above the pond, between the foreground stalks and the animal on the right",
+        "what": "the white haze reads as a broad wash that reduces contrast more than it describes vapor with depth or illumination",
+        "fix": "Modulate fog density by depth and height, and introduce localized lit and shadowed structure above the water."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "right crop, small near bubble against the pool",
+        "what": "the dome has a soft molded highlight and almost no distinct meniscus or ring in the uniform surface texture around it",
+        "fix": "Couple the bubble to the surrounding surface with a subtle meniscus and interrupted ripples, and vary the film highlight with thickness."
+      }
+    ]
+  }
+}

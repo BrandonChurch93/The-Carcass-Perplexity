@@ -1,0 +1,98 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R1-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:10 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the foreground and midground brine pool and mud flats",
+        "what": "the water and mud look dry and matte clay-like, missing the deep dark-red liquid surface, crisp ripples, and glossy overcast sky reflections seen in set-B-01-a.png",
+        "fix": "make the brine pools and wet mud highly reflective with sky specular highlights, dark-red water depth, and fine surface ripples around the submerged bodies and legs"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the muddy pool around the foreground creature and the foreground brine",
+        "what": "the water is flat, matte, and opaque with clay-like rippled ridges and no sky reflections or wet sheen, unlike the glossy reflective muddy water and deep red brine in set-B-03-a.png",
+        "fix": "replace the matte surface with reflective liquid mud and glossy dark-red brine pools that catch bright overcast sky reflections and form crisp menisci around the creature"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the mid-to-far background, horizon hills, and distant stalks",
+        "what": "the scene has deep, sharp focus all the way to a crisp mountain ridge with far too little haze, losing the shallow telephoto depth of field and thick misty atmosphere of set-B-01-a.png",
+        "fix": "narrow the depth of field so the foreground edge and background soften heavily, and add dense low-lying overcast mist that obscures the distant horizon"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the midground and background flats, distant animals, and horizon",
+        "what": "the background creatures, stalks, and distant hills are too sharp and clear, lacking the shallow telephoto lens blur and heavy misty haze of set-B-03-a.png",
+        "fix": "increase background defocus and thicken the atmospheric haze across the midground and horizon to match the soft telephoto falloff of the target"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the undersides, legs, and ground contact of the large and small creatures",
+        "what": "the animals look dry and matte with soft, blurred leg-to-mud transitions, missing the glossy dark-red wet mud coating, dripping mud strands beneath the belly, and sharp wet contact shadows",
+        "fix": "coat the lower bodies and legs in dark glossy wet mud, add hanging drips under the belly, and ground the legs with crisp contact shadows and water ripples"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the hide of the large creature (both crops) and its rear legs meeting the ground",
+        "what": "the skin reads as blurry, high-contrast mottled noise rather than deep, crisp leathery wrinkles with flaky salt crust and wet specular sheen, and the legs blend softly into dry-looking mud without drips",
+        "fix": "sharpen the physical skin folds and fine pores, reduce the blotchy high-contrast mottling, add subtle wet sheen and crusty salt flakes on the ridge, and restore dripping wet mud along the lower legs"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the creature's facial appendages entering the water (top right) and the water surface beside its back (bottom right)",
+        "what": "the appendages are smooth, untextured beige shapes clipping into matte mud with no ripples or reflections, and the water surface shows harsh procedural zigzag ridges instead of fluid ripples and wet specular reflections",
+        "fix": "add wet mud texture and sheen to the appendages, form small water menisci and reflections where they break the surface, and replace the ridged displacement on the water with smooth, reflective liquid ripples"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the background and left-edge stalks",
+        "what": "the plants look like stiff, uniformly ringed palm trunks with dense pinkish feathery tufts rather than the slender, gnarled stalks with sparse drooping dark-crimson fronds in set-B-01-a.png",
+        "fix": "make the stalks thinner and more irregular, darken and thin the fronds to muted crimson, and soften them into the background defocus"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the tall stalks on the far left and midground",
+        "what": "the far-left cluster has straight rigid poles topped with bright pink puffball heads that do not match the wispy dark-crimson fronded plants in set-B-03-a.png",
+        "fix": "replace the pink puffball tops with sparser, darker crimson drooping fronds on slender organic stalks matching the target flora"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the salt-crusted carcass on the left, the white mound on the right, and the foreground bank",
+        "what": "the left mound looks like smooth melted grey clay, the right mound looks overly fuzzy, and the foreground bank is a smooth uniform lump instead of crisp granular crystalline salt crust over wet dark-red mud",
+        "fix": "give the salt mounds and foreground crust sharp, crumbly crystalline salt texture with wet dark-reddish crevices and glossy mud edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "overall lighting and colour across the flats and creatures",
+        "what": "the palette is chalkier and flatter with pale pink-grey flats and bright whitish-grey mottling on the creature's back, lacking the rich moody overcast contrast and deep earthy wet tones of set-B-01-a.png",
+        "fix": "deepen the shadow contrast and wet dark-red tones in the mud, tone down the bright white mottling on the hide, and unify the scene under heavier cool-overcast lighting"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the air above the pool and around the foreground creature's head",
+        "what": "the small dark flying insects visible in set-B-03-a.png are absent",
+        "fix": "add a scattering of tiny dark hovering midges above the water and around the creature"
+      }
+    ]
+  }
+}

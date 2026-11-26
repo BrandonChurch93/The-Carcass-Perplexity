@@ -1,0 +1,91 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-09.png",
+        "where": "under the foreground creature's feeding tendrils in the left crop (also visible in set-A-07.png center and behind the running creature on the left)",
+        "what": "water spray and drips render as opaque milky-white stretched oval dots hovering in midair above flat painted-looking white ripple rings",
+        "fix": "replace opaque droplet sprites with refractive, motion-blurred liquid drips and physically displaced water ripples"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-08.png",
+        "where": "foreground water meeting the dark rocks in the bottom-right crop (also visible at bottom-left of set-A-07.png)",
+        "what": "the water surface cuts across the rocks as a glassy, semi-transparent sheet with hard polygonal edges and no foam or wet-rock transition",
+        "fix": "conform the water mesh to the rock geometry with a darkened wet band, meniscus, and subtle foam along the contact line"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the small pale scavenger perched on the upper ridge of the carcass in the top-right crop (also visible in set-A-04.png)",
+        "what": "the scavenger has two distinct glossy black eyes with white specular highlights, violating the no-eyes rule, and reads as a smooth sculpted CG model",
+        "fix": "remove the eyes completely and add fine organic surface variation and wet residue matching the cliff"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the foreground pebble shore across both crops (also visible at bottom-right of set-A-01.png)",
+        "what": "the gravel beach is a flat 2D texture plane with smeared, squashed pebbles and almost no 3D relief at grazing angles",
+        "fix": "replace the flat ground texture with true geometric displacement and scattered 3D pebbles and wet silt in the foreground"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the dark cliff face behind the carcass in the top-left crop (also visible on the left of set-A-01.png)",
+        "what": "the rock texture is heavily stretched, wavy, and pinched horizontally, reading like melted plastic or distorted UV noise",
+        "fix": "reproject or triplanar-map high-resolution fractured rock detail with crisp micro-displacement and matte mineral variation"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the hanging seaweed strands and carcass legs in the left crop (also visible in set-A-04.png)",
+        "what": "the kelp strips look like stiff, paper-thin polygonal ribbons with faceted kinks, and the carcass skin looks like soft sculpted clay with repetitive noise",
+        "fix": "give the seaweed organic thickness, translucency, and limp contact against the wet rock, and add fibrous decay and wet sheen to the carcass"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-04.png",
+        "where": "the two dark boulders sitting in the water at the bottom-right",
+        "what": "a bright, hard-edged halo seam outlines the boulders where they intersect the water plane, with stretched stripey rock texture and no wet waterline",
+        "fix": "eliminate the intersection halo, darken the wet lower rock, and add natural water-line reflections and foam"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "the legs and bodies of the foreground and midground wading creatures",
+        "what": "the legs poke into the water like dry sticks with no wet darkening, no ripples around the ankles, and a uniform dry sculpted parchment look with nothing of the wet coast on them",
+        "fix": "darken and gloss the lower legs where wet, add small ripples and meniscus at each entry point, and vary skin roughness and translucency"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the scattered wading creatures across the midground flats",
+        "what": "several creatures share stiff, nearly identical poses and lack convincing shadows, reflections, or water disturbance where their feet touch the surface",
+        "fix": "vary creature poses and add grounded contact shadows, wet reflections, and ripples in the shallow water"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the distant curved rock spires and sky in the top-right crop",
+        "what": "the spire silhouette shows slight polygonal faceting with repetitive procedural banding, and distant flying birds read as soft dark smudges",
+        "fix": "subdivide the spire silhouette, break up the repetitive horizontal striations, and give distant birds crisp wing silhouettes"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-08.png",
+        "where": "the foreground creature's wingtip in the bottom-left crop",
+        "what": "the wingtip shows a slightly faceted mesh edge and pinched cutout hole with a clay-like shader at native size",
+        "fix": "smooth the wingtip geometry and add fine translucent membrane and vein detail"
+      }
+    ]
+  }
+}

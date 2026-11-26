@@ -1,0 +1,63 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R4-1",
+  "family": "gemini",
+  "answered": "2026-11-26 09:13 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the lake surface and overhead view across frames 9335 to 9540",
+        "what": "the swell generates overly uniform concentric ripple rings that read like a procedural texture, subsides into nearly two seconds of near-empty flat dark blue water (frames 9404 to 9506) so the event fails to land and the crane-up ends on a weak picture, and then abruptly turns into synthetic bullseye rings at frame 9540",
+        "fix": "simulate weighted fluid displacement and breaking surface turbulence from the swell, maintain visual energy through the overhead climb, and replace the abrupt synthetic rings with natural dissipating water motion"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the four animals and surrounding shallow water across frames 8842 to 9164",
+        "what": "three of the four animals stand completely frozen like static models for over five seconds, the fourth locks motionless as soon as its head lowers at frame 8930, and its drinking snout produces no ripples on a completely frozen water surface",
+        "fix": "add independent living motion to every animal (breathing, weight shifts, head and ear turns out of sync) and generate live ripples radiating from the drinking snout and legs"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the two foreground animals in frames 9165 to 9267 (also visible in set-A-10.png)",
+        "what": "both foreground animals remain rigidly frozen like clay models as the camera cranes up past them, showing zero posture shift or reaction to the disturbance rising in the lake directly ahead",
+        "fix": "animate neck tension, head turns, and body weight shifts so the foreground animals react to the rising swell before the camera clears them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the central lake, reflections, and far cliff mist across frames 8305 to 8519 (also visible in set-A-06.png)",
+        "what": "the entire environment is frozen while the camera pushes forward, with static water reflections and motionless haze along the caldera wall, making the place read as a still diorama",
+        "fix": "add continuous wind ripples across the lake surface, shifting water reflections, and slow atmospheric drift in the caldera mist"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-02.png",
+        "where": "the animals in the upper-left midground and the shallow water plane across frames 8520 to 8680 (also visible in set-A-08.png)",
+        "what": "the left animal stays frozen like a statue for the entire shot, the right animal barely moves until the final two frames, and the water surface shows no wind motion or ripples around their legs",
+        "fix": "give both animals continuous natural posture shifts and head movement, and animate subtle ripples and wakes in the shallow water"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the dark lake water and shelf edge beside the skeleton across frames 8681 to 8841 (also visible in set-A-09.png)",
+        "what": "the deep water surface and cliff reflections stay rigidly locked with no swell or shoreline lapping against the orange shelf, reading as a camera glide over a static scene",
+        "fix": "add slow surface swell and gentle water movement along the drop-off edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "lower center foreground across frames 8636 to 8680",
+        "what": "a straight, uniform gray-brown strip slides into the bottom center of the organic orange mat, reading as a terrain or texture seam during the camera pass",
+        "fix": "break up and blend the underwater bed transition so no straight band appears as the camera moves over it"
+      }
+    ]
+  }
+}

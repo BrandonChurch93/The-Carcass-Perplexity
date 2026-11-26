@@ -1,0 +1,77 @@
+{
+  "round": 24,
+  "unit": "eye",
+  "pack": "R1-2",
+  "family": "gpt",
+  "answered": "2026-11-26 09:08 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "foreground ledge and the drop into the pool",
+        "what": "The broad, nearly level shelf runs deep into the left and center of the shot. It replaces the irregular foreground lip, the wide open span of dark water, and the pale vertical rock face visible through clear teal water near center-left.",
+        "fix": "Bring the lip back toward the camera, give it more relief, and reveal the steep submerged face through a clear blue-green transition into deep water."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "far basin rim across the top of the frame",
+        "what": "The cliffs feel larger and closer and are cut off at the top, losing the narrow strip of sky and the irregular, sunlit skyline that establish the basin's scale.",
+        "fix": "Pull the far rim back in the framing, restore a little sky and the rolling rim profile, and keep the warm light concentrated on left-facing slopes and upper ridges."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "middle lake and the water immediately over and around the animal",
+        "what": "Broad, evenly spaced horizontal bands replace much of the radiating wake. The surface at the disturbance lacks the target's layered swells, thin moving crests, and small broken highlights, so the animal feels less embedded in the water.",
+        "fix": "Keep the animal distant and silhouetted, but lay overlapping, irregular concentric ripples and broken glints over and around it, letting them merge gradually into the calmer water."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "distant and middle pool beyond the ledge",
+        "what": "The surface has busy orange flecks and long parallel streaks instead of quiet cliff reflections interrupted by a few broad concentric rings.",
+        "fix": "Calm the background water, restore softer vertical reflections in warm gold and slate, and let a few faint expanding arcs read across the pool."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "skeleton at the foreground edge",
+        "what": "The exposed long vertebral chain, pinched irregular ribs, and folded limb cluster give the remains a different silhouette. The bones are also more uniformly pale and look less settled into the rock and growth.",
+        "fix": "Suggest the target's skull beside a fuller rib cage, with limbs trailing along the lip, and ground the weathered bone with mottling, contact shadows, and growth overlapping it."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "rock and growth on the foreground shelf",
+        "what": "The shelf reads as a uniformly slick orange-brown surface with flat streaks, rather than pitted pale rock with damp patches and loose, matted strands of brown growth.",
+        "fix": "Break up the sheen, give exposed rock more relief and cooler tones, and let strands bunch and drape across it rather than looking printed onto it."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "far shore, cave, and mist band",
+        "what": "The cave and wall loom larger, and a thick gray-beige veil climbs over the shore. The target has a smaller, darker opening, more breathing room along the right scree slope, and a thin mist ribbon tight to the lake.",
+        "fix": "Reduce the apparent scale of the cave and wall, reopen the right-hand shore, and keep the mist lower and patchier so the cave and shaded rock retain depth."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "left and foreground lake reflections",
+        "what": "A broad copper-brown cast and fine speckle spread across the water. The target keeps a cooler slate base with gold broken into brighter, more localized vertical reflections.",
+        "fix": "Cool the base water, soften the fine speckle, and channel the gold into reflected cliff shapes broken up by the ripples."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "two foreground animals at the bottom edge",
+        "what": "The left neck leans sharply inward over a narrow diagonal body, and a hard dark stripe runs along its back. The target has rounder, lower bodies, more upright necks, and softer warm light on their edges.",
+        "fix": "Round out the foreground silhouettes, bring the necks closer to upright, and soften the hard shadow boundary while keeping the warm sidelight."
+      }
+    ]
+  }
+}

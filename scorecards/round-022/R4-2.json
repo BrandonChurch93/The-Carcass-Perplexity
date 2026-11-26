@@ -1,0 +1,35 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "the pale animals at the foot of the left wall and along the far shallows over the six-second hold",
+        "what": "Several animals hold the same hunched silhouette and foot placement for seconds, so they read as posed models even while the water moves.",
+        "fix": "Give the stationary animals independent head turns and weight shifts, and give the moving ones clear foot plants and releases."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the foreground shallows and the bright edge at lower center",
+        "what": "The bright edge advances and retreats, but the mottled surface behind it keeps much the same pattern, so the water reads more like a moving sheen than a wash over the rocks.",
+        "fix": "Let the wash carry and break up small foam patches, and change the reflections independently as the water runs around exposed stones."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the low flyers crossing the shallows at left and center, also visible in set-B-02.png",
+        "what": "The bodies translate low over the water while the extended wings and body pitch change very little, making the flyers look as if they slide along a plane.",
+        "fix": "Give each flyer a different bank or wing adjustment and let its height and pitch respond as it clears the rocks."
+      }
+    ]
+  }
+}

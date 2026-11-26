@@ -1,0 +1,91 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the flying and taking-off creatures over the wet shore",
+        "what": "the three flying creatures are in nearly identical stiff poses, the rightmost creature has blunt legs ending in mid-air with extra limbs visible near its wing, and none of the low-flying creatures cast reflections or shadows onto the wet sand and water beneath them",
+        "fix": "vary each creature's flight pose and wingbeat phase, fix the leg and foot anatomy on the rightmost creature, and render accurate reflections, contact shadows, and takeoff ripples on the wet surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the giant breaking wave and spray plumes in the background",
+        "what": "the tall vertical spray plumes read as flat grey cards with no light or droplet detail, and the wave face shows repeated pale smudge marks",
+        "fix": "replace flat spray cards with volumetric mist and varied droplet spray lit by the sky, and break up the repeating foam pattern on the wave face"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the foreground and mid-ground stepped cliff faces",
+        "what": "rock textures are heavily stretched vertically across steep faces and bevels, giving the cliff a smeared planar-projection look",
+        "fix": "use triplanar or proper UV mapping with high-resolution rock detail and crisp fractured geometry on all vertical cliff faces"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the waterline where the sea meets the left cliff in the bottom-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "the water terminates in a ruler-straight horizontal cut against the dark cliff wall with no foam, splash, or wet-rock edge",
+        "fix": "add breaking foam, irregular water-to-rock contact, and a darkened wet splash zone up the base of the cliff"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the right cliff face in the bottom-left crop (x 83 to 100%, y 25 to 42%)",
+        "what": "the cliff surface shows severe texture smearing, soft faceted geometry, and a hard-edged spray overlay cut across it",
+        "fix": "re-project the rock texture without stretching, add fine rock displacement, and blend the wave spray naturally with depth and alpha"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the shoreline water and distant waterline in both crops",
+        "what": "the shallow water reads as a flat grey plane with no ripples, depth, or wet edges around the rocks, and shows a jagged dark seam along the distant shore edge",
+        "fix": "add water depth, micro-ripples, foam and wet rims around every rock, and close the dark seam along the distant waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the close-up cliff blocks in the bottom-left (x 83 to 100%, y 25 to 42%) and top-right (x 42 to 58%, y 25 to 42%) crops",
+        "what": "the rock looks soft, faceted, and smeared with blurry procedural blotches rather than real stone micro-detail",
+        "fix": "increase rock mesh and displacement detail and replace the soft procedural blotches with crisp, multi-scale rock textures"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the perched creatures and adjacent rock ledges in both crops",
+        "what": "the left creature's folded wingtip dissolves into a smudged translucent patch, its feet sink vaguely into mushy rock without clear contact shadows, and the right creature's wing membrane is soft and blurry at native size",
+        "fix": "clean up the wingtip silhouette and occlusion, ground all feet firmly with tight contact shadows, and sharpen wing surface detail at native 4K resolution"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the four curved rock spires rising behind the wave",
+        "what": "the spires read as smooth, symmetrically paired cone-like models with soft repeated horizontal banding",
+        "fix": "vary the silhouettes, erosion, and geological strata of the distant spires so they look like distinct natural formations"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the distant fog and rock silhouette in the bottom-right crop (x 0 to 17%, y 58 to 75%)",
+        "what": "the atmospheric haze is a flat grey tint with no light variation or layered depth",
+        "fix": "add volumetric lighting and subtle density variation to the distance fog so the sky visibly illuminates the air"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "the wingtip at the far left edge of the top-left crop (x 0 to 17%, y 25 to 42%)",
+        "what": "small dark floating specks trail off the motion-blurred wingtip",
+        "fix": "clean up motion-blur or alpha-edge artifacts on the foreground flying creature"
+      }
+    ]
+  }
+}

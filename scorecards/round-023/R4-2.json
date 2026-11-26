@@ -1,0 +1,56 @@
+{
+  "round": 23,
+  "unit": "marsh",
+  "pack": "R4-2",
+  "family": "claude",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the clear dome rising from the red pool, frames 6156 to 6163",
+        "what": "the dome does not burst like a fluid film. Its shell goes glassy, then sinks within about 0.07 s into a flat dark smear on the surface. It throws no droplets, makes no rim splash and sends no ring wave across the pool, so the event does not land and reads as a mesh fading into a decal",
+        "fix": "simulate the rupture: tear open from a point, let the film retract into a rim of droplets that fall back, and send a ring of ripples outward across the liquid"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the dark patch left on the pool, frames 6161 to 6167",
+        "what": "the residue stays as a hard-edged dark shape with a texture-like pattern. It does not spread or settle, and the pool around it carries no disturbance",
+        "fix": "let the displaced liquid slump outward and calm down over several frames, and break up the residue into the surface"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the small dark blobs rising among the stalks, frames 6164 to 6167",
+        "what": "the specks appear above the stalks with no visible source or arc. They read as particles spawning in place rather than spray thrown from the burst",
+        "fix": "emit the droplets from the burst rim on ballistic arcs with motion blur, and have them fall back into the pool"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "whole frame over 6 s with the camera held",
+        "what": "the place reads as a still picture. The red channels show no visible flow, the stalks do not sway, and the rain curtain on the horizon is fixed. Only faint haze drift and a few specks in the sky change",
+        "fix": "give the liquid a visible current and surface glints, sway the stalks in the wind, move the rain veil and cloud at their own heights, and let the mist banks travel"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the mid-distance plain at upper right and the mist on the left",
+        "what": "faint rectangular outlines and box-edged haze patches show in the distance, like transparent proxy geometry or card edges",
+        "fix": "remove the proxy cards or feather their edges so the mist has no straight boundaries"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "the specks in the sky near the top",
+        "what": "the distant flyers barely change position across 6 s and read as static marks rather than animals",
+        "fix": "give them a readable flight path and a wingbeat at this distance, with the flock out of step"
+      }
+    ]
+  }
+}

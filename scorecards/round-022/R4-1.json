@@ -1,0 +1,42 @@
+{
+  "round": 22,
+  "unit": "ribs",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-26 09:11 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 7,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the close wader and the center wader, frames 1808–1866",
+        "what": "Once the camera arrives, both animals hold almost exactly the same stance for about a second. Even the raised foot and the bright flecks inside the close animal’s feeding tendrils barely change, so the shot ends like a held render.",
+        "fix": "Keep the pause but animate separate balance shifts, a flex through the neck, and droplets falling out of the tendrils into spreading ripples."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the animals on the lower and middle rock shelves, especially frames 1517–1574",
+        "what": "The near flyer beats its wings, but the ledge animals keep their silhouettes and posture as the camera goes by. They read like objects attached to the rock.",
+        "fix": "Give a few visible animals independent reactions to the flyby: a head turn, a shifted foothold, or a wing settling against the body."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the animals taking off ahead of the breaker, frames 2391–2487",
+        "what": "Several bodies seem to skim off the flats without a clear weight transfer or push against the ground. The wave has more weight than the creatures fleeing it.",
+        "fix": "Show planted feet and a brief crouch and extension before lift, stagger the departures, and let the feet kick up a little water at push-off."
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the approach to the wet flats between frames 757 and 852",
+        "what": "The deep choppy foreground gives way to a broad flat reflective surface at a nearly straight boundary, with little visible shoaling or wash connecting the two.",
+        "fix": "Carry the same crests into the shallows, where they can pitch forward, break into irregular fingers of foam, and thin into the reflective wash."
+      }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "round": 21,
+  "unit": "spine",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 09:12 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "storm clouds, valley mist, and peak streamers across all 6 seconds",
+        "what": "with the camera held still the entire landscape, cloud deck, mist, and trailing wisps remain completely frozen, leaving a dead still picture between faint lightning glows",
+        "fix": "animate layered cloud drift, pouring valley vapour, and wind-driven spindrift and wisps so the storm stays alive when the camera stops"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the standing and huddled shaggy animals inside the ice cave",
+        "what": "all creatures hold completely rigid poses with no weight shift, stepping, head turn, or wind motion in their fur, reading as static models as the camera glides past",
+        "fix": "add grounded animal motion with weight shifts, subtle breathing, staggered posture changes, and wind-ruffled fur"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the lightning strike at the peak tip (frames 7665 to 7674)",
+        "what": "the bolt lingers for seven frames and produces only a soft circular flare with slow sparkler-like particles while failing to flash across the ridge or foreground rock",
+        "fix": "compress the peak flash into a brief intense strike that lights the entire ridge and rims the foreground rock for an instant before rapid decay"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "cave mouth, snow floor, icicles, and animals during the exterior lightning (frames 8091 to 8095)",
+        "what": "lightning strikes directly outside the cave opening without casting any bounce light or rim flash into the cave interior, making the storm feel disconnected",
+        "fix": "drive a sharp blue-white light pulse from the strike across the cave mouth, snow path, icicles, and animal silhouettes"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the lightning bolt and foreground snowy ridge (frames 7230 to 7238)",
+        "what": "the same jagged bolt shape hangs on screen for nine frames with only a soft ambient haze in the upper sky and almost no directional light on the foreground ridge",
+        "fix": "shorten bolt persistence with crisp branching flicker and illuminate the snowy ridge faces and cloud undersides in sync with peak discharge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "horizontal cloud streamers trailing from the rock face and background lightning (frames 7448 to 7459)",
+        "what": "the streamers read as flat, rigidly anchored translucent ribbons rather than blowing vapour, and the thin lightning lines light neither the rock face nor the clouds",
+        "fix": "replace the ribbon-like strips with turbulent wind-sheared mist and add responsive flash lighting on the nearby rock and cloud deck"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the lightning bolt and impact glow after the cut (frames 7015 to 7024)",
+        "what": "the bolt remains frozen in one shape for six frames and the impact spot lingers brightly through frame 7024 without lighting the foreground peak",
+        "fix": "give the discharge a sharper onset and decay and cast transient flash illumination across the snow-covered peak"
+      }
+    ]
+  }
+}
