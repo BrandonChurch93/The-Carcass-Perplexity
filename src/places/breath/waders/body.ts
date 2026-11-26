@@ -85,19 +85,25 @@ const smin = (a: number, b: number, k: number): number => {
 const smax = (a: number, b: number, k: number): number => -smin(-a, -b, k);
 
 // The trunk in side view, rump (0) to chest (1), for a size of 1: the line of the back, the line of the belly, the half width.
-// A starved runner's: high bony rump, deep narrow chest, the belly drawn up hard to the hind legs.
-const TOP: [number, number][] = [[0, 0.2], [0.1, 0.34], [0.26, 0.36], [0.5, 0.315], [0.75, 0.31], [0.9, 0.3], [1, 0.25]];
-const BOTTOM: [number, number][] = [[0, 0.02], [0.1, -0.12], [0.3, -0.2], [0.5, -0.33], [0.72, -0.45], [0.9, -0.38], [1, -0.16]];
-const WIDTH: [number, number][] = [[0, 0.09], [0.1, 0.2], [0.25, 0.24], [0.42, 0.21], [0.7, 0.255], [0.9, 0.2], [1, 0.14]];
+// A plucked bird's: one full egg, round behind, the back a low arch, the belly a full curve, closing to the root of the neck.
+const TOP: [number, number][] = [[0, 0.06], [0.05, 0.19], [0.16, 0.285], [0.38, 0.33], [0.62, 0.325], [0.84, 0.28], [1, 0.16]];
+const BOTTOM: [number, number][] = [[0, -0.03], [0.05, -0.15], [0.18, -0.265], [0.42, -0.325], [0.68, -0.335], [0.87, -0.26], [1, -0.07]];
+const WIDTH: [number, number][] = [[0, 0.06], [0.06, 0.19], [0.22, 0.285], [0.48, 0.305], [0.72, 0.275], [0.9, 0.2], [1, 0.11]];
 
-// A leg from above the hip (t below 0, inside the trunk: the haunch on the pelvis, the blade on the ribs) to the ground (1):
+/** How far under the middle of the trunk the heads of the thighs sit, for a size of 1. */
+export const HIP_DROP = 0.1;
+/** How far above its hip a leg begins, as a part of its length: the head of the thigh lies in the flank. */
+const THIGH_TOP = -0.085;
+
+// A leg from above the hip (t below 0, inside the trunk: the drumstick lies on the flank) to the ground (1):
 // half thickness fore and aft, half thickness across, and how far the middle of the section stands aft (-) or fore (+) of the bone. For a leg whose joint is at 0.47.
-const HIND_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.17], [0.05, 0.185], [0.16, 0.13], [0.3, 0.07], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const HIND_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.07], [0.05, 0.078], [0.16, 0.066], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
-const HIND_C: [number, number][] = [[-0.16, -0.05], [0.05, -0.035], [0.3, -0.006], [0.41, 0], [0.47, -0.02], [0.53, -0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
-const FORE_F: [number, number][] = [[-0.16, 0.07], [-0.06, 0.14], [0.05, 0.15], [0.16, 0.115], [0.3, 0.068], [0.41, 0.04], [0.47, 0.064], [0.53, 0.03], [0.7, 0.0235], [0.88, 0.025], [0.94, 0.037], [0.97, 0.03], [1, 0.05]];
-const FORE_S: [number, number][] = [[-0.16, 0.035], [-0.06, 0.062], [0.05, 0.07], [0.16, 0.062], [0.3, 0.045], [0.41, 0.032], [0.47, 0.05], [0.53, 0.026], [0.7, 0.0225], [0.88, 0.024], [0.94, 0.034], [0.97, 0.027], [1, 0.038]];
-const FORE_C: [number, number][] = [[-0.16, 0.02], [0.05, 0.01], [0.3, 0], [0.41, 0.004], [0.47, 0.016], [0.53, 0.004], [0.9, 0], [0.97, 0.008], [1, 0.022]];
+// Sturdy: a full drumstick, a knob at the joint twice the shank, a shank as thick as a wrist, a knuckle over a cloven hoof.
+const HIND_F: [number, number][] = [[-0.085, 0.1], [-0.03, 0.155], [0.05, 0.172], [0.16, 0.15], [0.3, 0.105], [0.4, 0.068], [0.47, 0.092], [0.535, 0.057], [0.7, 0.046], [0.87, 0.045], [0.935, 0.066], [0.965, 0.05], [1, 0.074]];
+const HIND_S: [number, number][] = [[-0.085, 0.06], [-0.03, 0.095], [0.05, 0.11], [0.16, 0.098], [0.3, 0.074], [0.4, 0.055], [0.47, 0.076], [0.535, 0.05], [0.7, 0.042], [0.87, 0.041], [0.935, 0.057], [0.965, 0.045], [1, 0.06]];
+const HIND_C: [number, number][] = [[-0.085, -0.06], [0.05, -0.045], [0.3, -0.008], [0.4, 0], [0.47, -0.026], [0.535, -0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
+const FORE_F: [number, number][] = [[-0.085, 0.085], [-0.03, 0.125], [0.05, 0.14], [0.16, 0.125], [0.3, 0.092], [0.4, 0.064], [0.47, 0.09], [0.535, 0.055], [0.7, 0.045], [0.87, 0.044], [0.935, 0.064], [0.965, 0.05], [1, 0.074]];
+const FORE_S: [number, number][] = [[-0.085, 0.055], [-0.03, 0.085], [0.05, 0.098], [0.16, 0.09], [0.3, 0.07], [0.4, 0.054], [0.47, 0.076], [0.535, 0.049], [0.7, 0.041], [0.87, 0.04], [0.935, 0.056], [0.965, 0.045], [1, 0.06]];
+const FORE_C: [number, number][] = [[-0.085, 0.03], [0.05, 0.018], [0.3, 0], [0.4, 0.004], [0.47, 0.022], [0.535, 0.004], [0.9, 0], [0.965, 0.01], [1, 0.03]];
 
 // The side view picture of a wader (1536 x 1024, head to the right): the box of its trunk (left, top, right, bottom), the line of each leg
 // (top inside the trunk, joint, hoof; hind far, hind near, fore far, fore near), half the width of a leg down its length, and the arc of
@@ -128,7 +134,7 @@ export class Fields {
   constructor(readonly s: Shape) {
     const k = s.k;
     this.L = s.bodyLen;
-    for (let j = 0; j < 4; j++) this.hips.push([(LEG_FORE[j] as number) * s.hipFore, -0.02 * k, (LEG_SIDE[j] as number) * s.hipSide]);
+    for (let j = 0; j < 4; j++) this.hips.push([(LEG_FORE[j] as number) * s.hipFore, -HIP_DROP * k, (LEG_SIDE[j] as number) * s.hipSide]);
     this.neckBase = [0.5 * s.bodyLen - 0.2 * k, 0.1 * k, 0];
     this.ribGap = 0.058 * k * (0.92 + 0.16 * hash(s.seed + 3));
     // The tables are drawn for a joint at 0.47 of the leg: an animal whose joint is elsewhere has them drawn out or in.
@@ -173,10 +179,10 @@ export class Fields {
     const u0 = (top + bot) / 2;
     const a = (top - bot) / 2;
     const y = (u - u0) / a;
-    // The section is no ellipse: it narrows to the spine like a roof, and to a keel under the chest.
+    // The section is full and round: it closes a little to the spine, and to a soft keel under the chest.
     const keel = smooth(0.4, 0.8, tc);
     const yy = Math.min(1.4, Math.abs(y));
-    const we = Math.max(0.035 * k, w * (y > 0 ? 1 - 0.5 * s.gaunt * yy ** 1.6 : 1 - 0.45 * keel * yy ** 2));
+    const we = Math.max(0.035 * k, w * (y > 0 ? 1 - 0.2 * s.gaunt * yy ** 2 : 1 - 0.26 * keel * yy ** 2));
     const q = Math.hypot(y, r / we);
     let d = (q - 1) * Math.min(a, we);
     const over = Math.max(0, Math.abs(t - 0.5) - 0.5) * this.L;
@@ -188,18 +194,18 @@ export class Fields {
       const gap = 0.062 * k;
       const fm = Math.round(f / gap) * gap;
       const tm = sat((fm + this.L / 2) / this.L);
-      const dk = Math.hypot(f - fm, u - (this.top(tm) - 0.012 * k), r * 1.2) - 0.024 * k * g;
-      d = smin(d, dk, 0.03 * k);
+      const dk = Math.hypot(f - fm, u - (this.top(tm) - 0.016 * k), r * 1.2) - 0.021 * k * g;
+      d = smin(d, dk, 0.035 * k);
     }
     // The points of the hips, the pins beside the tail, the hollow of the flank behind the last rib, the blades of the shoulders.
     const fh = (0.25 - 0.5) * this.L;
     const hipTop = this.top(0.25);
-    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.74) - 0.034 * k * g, 0.11 * k);
+    d = smin(d, Math.hypot(f - fh, (u - (hipTop - 0.075 * k)) * 1.1, ar - curve(WIDTH, 0.25) * k * 0.6) - 0.02 * k * g, 0.13 * k);
     const fp = (0.035 - 0.5) * this.L;
-    d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.035 * k), ar - 0.075 * k) - 0.036 * k * g, 0.06 * k);
+    d = smin(d, Math.hypot(f - fp, u - (this.top(0.035) - 0.05 * k), ar - 0.06 * k) - 0.03 * k * g, 0.09 * k);
     const fo = (0.37 - 0.5) * this.L;
     const hollow = Math.hypot((f - fo) / (0.13 * k), (u - (u0 + 0.3 * a)) / (0.16 * k), (ar - (w + 0.035 * k)) / (0.085 * k));
-    d = smax(d, -(hollow - 1) * 0.085 * k, 0.06 * k);
+    d = smax(d, -(hollow - 1) * 0.04 * k * g, 0.08 * k);
     const fb = (0.82 - 0.5) * this.L;
     d = smin(d, (Math.hypot((f - fb) / (0.085 * k), (u - (top - 0.11 * k)) / (0.13 * k), (ar - w * 0.56) / (0.04 * k)) - 1) * 0.03 * k, 0.09 * k);
     // The ribs.
@@ -207,7 +213,7 @@ export class Fields {
     if (cage > 0) {
       const rib = (0.5 + 0.5 * Math.cos(phase * Math.PI * 2)) ** 1.4;
       const each = 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + s.seed);
-      d -= (0.003 * rib * each - 0.001) * cage * k * g;
+      d -= (0.0075 * rib * each - 0.0025) * cage * k * g;
     }
     return d;
   }
@@ -220,24 +226,24 @@ export class Fields {
     const fore = (LEG_FORE[j] as number) > 0;
     const side = LEG_SIDE[j] as number;
     const t = (hip[1] - u) / s.legLen;
-    const tc = Math.min(1, Math.max(-0.16, t));
+    const tc = Math.min(1, Math.max(THIGH_TOP, t));
     // Read the tables with the joint where this animal has it.
     const tt = tc < s.knee ? tc / this.kneeWarp : 0.47 + ((tc - s.knee) / (1 - s.knee)) * 0.53;
     const rf = curve(fore ? FORE_F : HIND_F, tt) * k;
     const rs = curve(fore ? FORE_S : HIND_S, tt) * k;
     const cf = curve(fore ? FORE_C : HIND_C, tt) * k;
     // Above the joint the muscle lies on the outside of the bone.
-    const cr = side * 0.05 * k * (1 - smooth(-0.1, 0.36, tt));
+    const cr = side * 0.055 * k * (1 - smooth(-0.08, 0.38, tt));
     const q = Math.hypot((f - hip[0] - cf) / rf, (r - hip[2] - cr) / rs);
     let d = (q - 1) * Math.min(rf, rs);
-    const over = t < -0.16 ? (-0.16 - t) * s.legLen : t > 1 ? (t - 1) * s.legLen : 0;
+    const over = t < THIGH_TOP ? (THIGH_TOP - t) * s.legLen : t > 1 ? (t - 1) * s.legLen : 0;
     if (over > 0) d = Math.hypot(Math.max(d, 0), over);
     return d;
   }
 
   neckRadius(u: number): number {
     const s = this.s;
-    return s.neckR * (0.5 + 0.5 * (1 - u) ** 2.2 + 0.12 * smooth(0.88, 0.96, u) - 0.2 * smooth(0.97, 1, u)) * (1 + 1.0 * smooth(0.3, 0, u) ** 1.2);
+    return s.neckR * (0.55 + 0.45 * (1 - u) ** 1.6 + 0.1 * smooth(0.88, 0.96, u) - 0.16 * smooth(0.97, 1, u)) * (1 + 0.5 * smooth(0.3, 0, u) ** 1.2);
   }
 
   neck(f: number, u: number, r: number): number {
@@ -336,9 +342,9 @@ export function buildBody(s: Shape, cell: number): Body {
   const pad = 4 * cell;
   const x0 = -0.5 * L - 0.12 * k - pad;
   const x1 = nb[0] + d0[0] * s.neckLen + 0.12 * k + pad;
-  const y0 = -0.02 * k - s.legLen - pad;
+  const y0 = -HIP_DROP * k - s.legLen - pad;
   const y1 = Math.max(0.42 * k, nb[1] + d0[1] * s.neckLen + 0.1 * k) + pad;
-  const z1 = 0.36 * k + pad;
+  const z1 = 0.42 * k + pad;
   const nx = Math.ceil((x1 - x0) / cell) + 1;
   const ny = Math.ceil((y1 - y0) / cell) + 1;
   const nz = Math.ceil((2 * z1) / cell) + 1;
@@ -358,10 +364,10 @@ export function buildBody(s: Shape, cell: number): Body {
     }
   };
   const m = 0.14 * k;
-  fill([-0.5 * L - m, 0.5 * L + m], [-0.5 * k * Math.max(1, s.chest) - m, 0.4 * k + m], [-0.34 * k, 0.34 * k], (f, u, r) => fields.trunk(f, u, r), 0.01);
+  fill([-0.5 * L - m, 0.5 * L + m], [-0.5 * k * Math.max(1, s.chest) - m, 0.4 * k + m], [-0.4 * k, 0.4 * k], (f, u, r) => fields.trunk(f, u, r), 0.01);
   for (let j = 0; j < 4; j++) {
     const h = fields.hips[j] as [number, number, number];
-    fill([h[0] - 0.28 * k, h[0] + 0.24 * k], [h[1] - s.legLen - 0.02, h[1] + 0.2 * s.legLen], [h[2] - 0.2 * k, h[2] + 0.2 * k], (f, u, r) => fields.leg(j, f, u, r), 0.07 * k);
+    fill([h[0] - 0.36 * k, h[0] + 0.32 * k], [h[1] - s.legLen - 0.02, h[1] + 0.16 * s.legLen], [h[2] - 0.26 * k, h[2] + 0.26 * k], (f, u, r) => fields.leg(j, f, u, r), 0.09 * k);
   }
   const nr = s.neckR * 2.6;
   fill([nb[0] - nr, nb[0] + d0[0] * s.neckLen + nr], [nb[1] - nr, nb[1] + d0[1] * s.neckLen + nr], [-nr, nr], (f, u, r) => fields.neck(f, u, r), 0.09 * k);
@@ -475,7 +481,7 @@ export function buildBody(s: Shape, cell: number): Body {
     }
     const hip = fields.hips[j] as [number, number, number];
     const t = (hip[1] - u) / s.legLen;
-    const wLeg = smooth(0.05 * k, -0.05 * k, dL - dT) * smooth(-0.14, 0.02, t);
+    const wLeg = smooth(0.05 * k, -0.05 * k, dL - dT) * smooth(-0.07, 0.05, t);
     const dN = fields.neck(f, u, r);
     const un = sat(((f - nb[0]) * d0[0] + (u - nb[1]) * d0[1]) / s.neckLen);
     const wNeck = smooth(0.05 * k, -0.05 * k, dN - dT) * smooth(-0.02, 0.06, ((f - nb[0]) * d0[0] + (u - nb[1]) * d0[1]) / s.neckLen);
@@ -573,7 +579,7 @@ export function buildBody(s: Shape, cell: number): Body {
     let limb = 0;
     if (wLeg > 0 && wLeg >= wNeck) {
       const line = PIC_LEGS[(LEG_FORE[j] as number) > 0 ? ((LEG_SIDE[j] as number) > 0 ? 3 : 2) : (LEG_SIDE[j] as number) > 0 ? 1 : 0] as [number, number][];
-      const tc = Math.min(1.02, Math.max(-0.1, t));
+      const tc = Math.min(1.02, Math.max(-0.085, t));
       const tt = tc < s.knee ? (tc / s.knee) * 0.47 : 0.47 + ((tc - s.knee) / (1 - s.knee)) * 0.53;
       const fore = (LEG_FORE[j] as number) > 0;
       const rf = curve(fore ? FORE_F : HIND_F, tt) * k;
