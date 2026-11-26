@@ -28,6 +28,8 @@ export function create(ctx: Context): Piece {
   const tall = { value: 1080 };
   const size = new THREE.Vector2();
   const pictures = {
+    tFace: picture('kiteface'),
+    tFaceH: { value: ctx.assets.texture('mat/kiteface-h.png', { kind: 'data', anisotropy: ANISOTROPY }) },
     tSpire: picture('spire'),
     tSpireNh: data('spire'),
     tLedge: picture('ledge'),
