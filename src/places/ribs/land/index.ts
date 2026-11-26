@@ -6,6 +6,7 @@ import { keyPart, shotById } from '../../../film/cut';
 import { shots } from '../cameras';
 import { RIBS, ribByName, weedPoint, type Rib } from '../layout';
 import { COLONY, DROWNED, LEVELS, STATIONS } from '../shared/anchors';
+import { CRAG, cragPhase } from '../shared/crag';
 import type { Context, Piece } from '../shared/context';
 import { RIG_VERTEX } from '../shared/glsl';
 import { LAND } from '../shared/rig';
@@ -101,60 +102,23 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) 
 }
 
 function colonyRock(): THREE.BufferGeometry {
-  const { x, z, top, step, radiusAt } = COLONY;
+  const { x, z, top } = COLONY;
+  // The rows follow the ledge lines: each band of cliff is a dozen rows, close together at its lip and across its ledge.
+  const within = [0, 0.04, 0.14, 0.26, 0.4, 0.54, 0.66, 0.76, 0.82, 0.84, 0.88, 0.92, 0.96];
   const profile: [number, number][] = [];
-  const kinds: number[] = [];
-  const tierOf: number[] = [];
-  const firstTier = Math.floor((LEVELS.tide - 8) / step);
-  for (let y = -10; y < firstTier * step; y += 3) {
-    profile.push([y, radiusAt(y) + 0.6]);
-    kinds.push(0);
-    tierOf.push(0);
-  }
-  const tiers = Math.round(top / step);
-  for (let k = firstTier; k < tiers; k++) {
-    const y = k * step;
-    const r = radiusAt(y + step);
-    // A riser from its foot to the slab that lies on it; the slab's under side, its broken outer edge, and the level part of the ledge
-    // (the 1.7 m against the next riser, where the colony stands).
-    profile.push([y, r], [y + step * 0.45, r + 0.12], [y + step - 0.5, r - 0.1], [y + step - 0.34, r], [y + step, r], [y + step, r - 0.4]);
-    kinds.push(1, 2, 3, 4, 5, 6);
-    for (let i = 0; i < 6; i++) tierOf.push(k);
-  }
-  profile.push([top + 0.4, 0.01]);
-  kinds.push(0);
-  tierOf.push(0);
-  // The slabs: each ledge is a row of blocks of its own lengths; a block stands out over the riser or is broken back, and tips down or up.
-  const slab = (angle: number, k: number): [number, number] => {
-    const length = 2.6 + 4.5 * noise3(k * 1.71, 3.3, 0.5);
-    const way = (angle * 62) / length + 17 * noise3(k * 0.37, 9.1, 2.5);
-    const cell = Math.floor(way);
-    const edge = Math.min(way - cell, cell + 1 - way) * length;
-    const pick = noise3(cell * 3.73 + 0.5, k * 2.91 + 0.5, 4.5);
-    const out = -0.35 + 1.45 * smooth(0.3, 0.75, pick);
-    const tip = 0.5 * (noise3(cell * 5.19 + 0.5, k * 1.37 + 0.5, 8.5) - 0.42);
-    // The joint between two blocks is a notch a hand wide.
-    return [out - 0.5 * (1 - smooth(0, 0.35, edge)), tip];
-  };
-  return lathe(x, z, profile, 720, (y, r, angle, row) => {
-    const kind = kinds[row] as number;
-    if (kind === 0) return [y, r];
-    const k = tierOf[row] as number;
+  for (let k = Math.floor(-16 / CRAG.band); k * CRAG.band < top + 14; k++) for (const f of within) profile.push([(k + f) * CRAG.band - CRAG.mean, 10]);
+  return lathe(x, z, profile, 720, (run, _r, angle) => {
+    const y = run + CRAG.mean - cragPhase(angle);
+    if (y > top + 2.9) return [top + 2.9, 0.01];
+    const r = COLONY.cragAt(angle, y);
     const px = x + Math.cos(angle) * r;
     const pz = z + Math.sin(angle) * r;
-    const wide = 0.9 * (noise3(px / 9, y / 9, pz / 9) - 0.5) + 1.4 * (noise3(px / 23, y / 40, pz / 23) - 0.5);
-    const block = noise3(px / 1.7, y / 2.1, pz / 1.7) - 0.5;
-    // A ledge keeps its height and its inner corner to a hand's width, so that what nests on it stands on it; the riser and the edge are broken.
-    if (kind === 1) return [y + 0.08 * block, r + 0.2 * block];
-    if (kind === 6) return [y + 0.06 * block, r];
-    // Hollows where a block has dropped out of a riser: dark under the ledge above.
-    const gone = 0.9 * smooth(0.55, 0.8, noise3(px / 3.4 + 1.9, y / 2.6, pz / 3.4));
-    if (kind === 2) return [y, r + 0.3 * wide + 0.45 * block - gone + 0.2 * (noise3(px / 0.5, y / 0.5, pz / 0.5) - 0.5)];
-    const [out, tip] = slab(angle, k);
-    if (kind === 3) return [y, r + 0.3 * wide + 0.3 * block - 0.5 * gone + 0.4 * Math.min(out, 0)];
-    const ragged = 0.25 * (noise3(px / 0.8, y, pz / 0.8) - 0.5);
-    if (kind === 4) return [y - Math.max(tip, -0.1), r + out + ragged - 0.12];
-    return [y - tip + 0.05 * block, r + out + ragged];
+    const t = (y + cragPhase(angle)) / CRAG.band;
+    const f = t - Math.floor(t);
+    // The face is rough rock; the ledge is left as it is, so that what nests on it stands on it.
+    const face = smooth(0.84, 0.74, f) * smooth(0, 0.05, f);
+    const d = face * (0.35 * relief(px * 1.3, y * 1.3, pz * 1.3) + 1.1 * (fbm3(px / 7, y / 9, pz / 7, 2) - 0.5));
+    return [y, Math.max(0.01, r + (r > 1 ? d : 0))];
   });
 }
 
@@ -279,7 +243,7 @@ export function create(ctx: Context): Piece {
   // The colony's rock: ledges above the tide line, weed below.
   const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
-  add(skirts, stackWeed(COLONY.x, COLONY.z, (y) => COLONY.radiusAt(y), 420), weed);
+  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
 
   // Loose rock: fallen from the blades round their feet, and smaller pieces out on the floor. None on the paths of the cameras.
@@ -382,6 +346,25 @@ export function create(ctx: Context): Piece {
       const z = pose.position[2] - Math.cos(a) * r;
       const size = (0.5 + 1.6 * Math.pow(scatter.next(), 2)) * (0.7 + r / 120);
       if (bed(x, z) < LEVELS.pool + 0.05) placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.12, 0.12), kind: scatter.int(KINDS), sink: scatter.range(0.6, 0.74) });
+    }
+  }
+  // Black rocks and heaps of wrack out on the flat before the wide lens, in knots of a few: what gives the floor its dark marks.
+  {
+    const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    for (let knot = 0; knot < 46; knot++) {
+      const r = 9 + 230 * Math.pow(scatter.next(), 1.7);
+      const a = yaw + scatter.range(-0.55, 0.6);
+      const kx = pose.position[0] + Math.sin(a) * r;
+      const kz = pose.position[2] - Math.cos(a) * r;
+      const lumps = 2 + scatter.int(5);
+      const heap = scatter.next() < 0.55;
+      for (let i = 0; i < lumps; i++) {
+        const x = kx + scatter.range(-1, 1) * (1.5 + r / 30);
+        const z = kz + scatter.range(-1, 1) * (1.5 + r / 30);
+        const size = (0.35 + 1.1 * Math.pow(scatter.next(), 2)) * (0.6 + r / 110);
+        placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.15, 0.15), kind: scatter.int(KINDS), sink: heap ? scatter.range(0.58, 0.7) : scatter.range(0.38, 0.52) });
+      }
     }
   }
   const kept = placed.filter((p) => !nearTrack(p.x, p.z, p.size < 0.3 ? 0.4 + p.size : p.sink > 0.555 ? 1.5 + p.size : 4 + p.size * 2.5) && bed(p.x, p.z) > -1.5);
