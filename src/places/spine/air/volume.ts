@@ -298,7 +298,7 @@ ${SEA_SHADE_GLSL}
     }
   }
 
-  // The snow before the lens: flecks in the gale, each a few times longer than it is wide, of many sizes, in gusts, at six depths. Each depth
+  // The snow before the lens: streaks in the gale, soft and few, each many times longer than it is wide, in gusts, at three depths. Each depth
   // is a plane across the lens; the flakes lie in cells of it, down the gale as the lens sees it, so every one is a pure function of time.
   // The planes turn against the camera's own turning, so a pan sweeps through the snow and does not carry it.
   if (uShow.w * uStage.z > 0.0) {
@@ -316,20 +316,19 @@ ${SEA_SHADE_GLSL}
     float hid = 1.0;
     // Staged by shot (uStage.z under 0.75): from inside the canal the snow flies only out beyond the far mouth, at the three depths past it.
     bool beyond = uStage.z < 0.75;
-    for (int j = 0; j < 6; j++) {
-      int k = beyond ? j + 5 : j;
-      if (beyond && j > 2) break;
-      float dist = 1.6 * pow(2.0, float(k)) * lens;
+    for (int j = 0; j < 3; j++) {
+      int k = beyond ? j + 5 : 2 * j;
+      float dist = (beyond ? 1.6 : 1.1) * pow(2.0, float(k)) * lens;
       if (dist * 0.8 > far) break;
       vec2 pc = onLens * dist;
       // No two depths fly quite the same way: the gale is not one stream.
       float turn = 0.36 * (rnd(ivec2(k, 3), 5u) - 0.5);
       vec2 d1 = e1 * cos(turn) + e2 * sin(turn);
       vec2 d2 = vec2(-d1.y, d1.x);
-      float wideS = dist * 0.0021 / max(lens, 1.0);
-      float cellQ = wideS * 11.0;
-      // A fleck, not a line: a few times longer than it is wide, as the approved pictures draw their snow.
-      float cellA = wideS * 16.0;
+      float wideS = dist * (beyond ? 0.0021 : 0.0027) / max(lens, 1.0);
+      float cellQ = wideS * (beyond ? 11.0 : 14.0);
+      // Snow that crosses the lens in a gale is drawn out by the open shutter: a soft streak, not a fleck.
+      float cellA = wideS * (beyond ? 16.0 : 46.0);
       float along = dot(pc, d1);
       float q = (dot(pc, d2) + 2.5 * wideS * sin(along / (9.0 * cellA) + float(k) * 1.7)) / cellQ;
       float qc = floor(q);
@@ -338,24 +337,46 @@ ${SEA_SHADE_GLSL}
       ivec2 cell = ivec2(int(qc), int(ac));
       // They come in gusts: a clump of them, then none.
       float chance = rnd(cell, uint(23 + k));
-      if (chance > 0.42 - 0.04 * float(k)) continue;
+      if (chance > 0.46 - 0.04 * float(k)) continue;
       float gustL = noise(vec3(pc / (30.0 * cellQ) - d1 * (uTime * 0.6), float(k) * 0.31)).g;
-      if (chance > (0.42 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
+      if (chance > (0.46 - 0.04 * float(k)) * smoothstep(0.3, 0.7, gustL)) continue;
       float dq = (q - qc - 0.25 - 0.5 * rnd(cell, uint(31 + k))) * cellQ;
       // Each is brightest in its middle and gone at its ends, and no two are one length.
       float lengthOf = 0.3 + 0.4 * rnd(cell, uint(41 + k));
       float fa = (a - ac - 0.02) / lengthOf;
       float lengthS = fa > 0.0 && fa < 1.0 ? 4.0 * fa * (1.0 - fa) : 0.0;
+      // A streak holds its breadth and its light along its length and fades only at its ends; a fleck (beyond the mouth) swells in its middle.
+      if (!beyond) {
+        lengthS = sqrt(sqrt(lengthS));
+        // No two fly quite level with each other: the gale tumbles.
+        dq += (rnd(cell, uint(83 + k)) - 0.5) * 0.16 * (fa - 0.5) * lengthOf * cellA;
+      }
       // No two are one size: most are small, a few are big and soft.
       float sizeOf = rnd(cell, uint(67 + k));
-      float thin = wideS * (0.35 + 1.5 * sizeOf * sizeOf) * (0.5 + 0.5 * lengthS);
-      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.04 + 0.2 * rnd(cell, uint(59 + k))) * (1.0 - 0.5 * sizeOf);
+      float thin = wideS * (beyond ? 0.35 + 1.5 * sizeOf * sizeOf : 0.65 + 1.7 * sizeOf * sizeOf) * (0.5 + 0.5 * lengthS);
+      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (beyond ? 0.04 + 0.2 * rnd(cell, uint(59 + k)) : 0.14 + 0.42 * rnd(cell, uint(59 + k))) * (1.0 - 0.4 * sizeOf);
       fly += hid * flake;
       hid *= 1.0 - flake;
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
     fly *= uShow.w * (beyond ? 3.0 : uStage.z) * mix(1.0, beyond ? 0.45 : 0.2, smoothstep(120.0, 700.0, far));
-    vec3 flakes = 1.1 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
+    // Between the streaks the gale carries snow too fine to see as flakes: veils of it cross the lens in gusts, broad and soft, at two depths,
+    // no two gusts alike and none by a beat. Each lies before whatever stands farther off than it does.
+    if (!beyond) {
+      for (int j = 0; j < 2; j++) {
+        float distV = (j == 0 ? 14.0 : 60.0) * lens;
+        if (distV > far) break;
+        vec2 pv = onLens * distV;
+        float kv = float(j);
+        float runs = uTime * (0.34 - 0.13 * kv);
+        float gust = noise(vec3(uTime * (0.09 + 0.03 * kv), 0.21 + 0.4 * kv, 0.67)).g;
+        float body = noise(vec3(dot(pv, e1) / (distV * 3.1) - runs, dot(pv, e2) / (distV * 1.3) + 0.05 * sin(uTime * 0.21 + kv), 0.13 + 0.37 * kv + uTime * 0.017)).g;
+        float torn = noise(vec3(dot(pv, e1) / (distV * 1.1) - runs * 2.9, dot(pv, e2) / (distV * 0.45), 0.71 - 0.2 * kv)).a;
+        float veilG = smoothstep(0.46, 0.8, 0.7 * body + 0.3 * torn) * (0.35 + 0.65 * smoothstep(0.3, 0.7, gust));
+        fly += (1.0 - fly) * veilG * (0.34 - 0.1 * kv) * uShow.w * uStage.z * mix(1.0, 0.35, smoothstep(200.0, 900.0, far));
+      }
+    }
+    vec3 flakes = (beyond ? 1.1 : 2.1) * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
   }

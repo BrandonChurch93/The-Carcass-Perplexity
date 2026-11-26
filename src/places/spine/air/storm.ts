@@ -29,7 +29,7 @@ vec3 skyClear(vec3 d) {
   vec3 low = mix(vec3(0.03, 0.036, 0.06), vec3(0.047, 0.055, 0.082), lee);
   vec3 c = mix(low, vec3(0.012, 0.017, 0.034), 1.0 - exp(-h * 3.2));
   c += vec3(0.036, 0.029, 0.02) * lee * lee * exp(-h / 0.018);
-  c += vec3(0.27, 0.082, 0.01) * pow(toDusk, 5.0) * exp(-h / 0.0055);
+  c += vec3(0.4, 0.105, 0.01) * pow(toDusk, 5.0) * exp(-h / 0.0065);
   return c;
 }
 // How much of the storm stands at q: 1 in the body of the wall and of the deck, falling to nothing at their edges. The wall is upwind of the
@@ -79,8 +79,8 @@ ${STORM_SHAPE_GLSL}
 // The gale carries the billows to the lee, and they rise through the body as they go: the small ones faster than the large, so the cloud turns over.
 // The noise is read no finer than the march steps (lod), so far cloud keeps its large forms only and never breaks into slices.
 float stormBroad(vec3 q, float body, float lod) {
-  vec3 p = q - vec3(GALE.x, 0.0, GALE.y) * (0.034 * uTime);
-  float n = textureLod(tNoise, p / 7.3 + vec3(0.0, -0.0011 * uTime, 0.0), lod).r;
+  vec3 p = q - vec3(GALE.x, 0.0, GALE.y) * (0.08 * uTime);
+  float n = textureLod(tNoise, p / 7.3 + vec3(0.0, -0.0022 * uTime, 0.0), lod).r;
   return body + 0.95 * (n - 0.6) - 0.5;
 }
 float stormDensity(vec3 q, float body, float ds, out float broad, out float raw) {
@@ -88,7 +88,7 @@ float stormDensity(vec3 q, float body, float ds, out float broad, out float raw)
   raw = d;
   broad = clamp(d * 5.0, 0.0, 1.0);
   if (d <= -0.2) return 0.0;
-  vec3 p = q - vec3(GALE.x, 0.0, GALE.y) * (0.046 * uTime) - vec3(0.0, 0.021 * uTime, 0.0);
+  vec3 p = q - vec3(GALE.x, 0.0, GALE.y) * (0.1 * uTime) - vec3(0.0, 0.035 * uTime, 0.0);
   float lodFine = log2(ds / 0.048);
   float fine = lodFine < 4.0 ? mix(textureLod(tNoise, p.zxy / 3.1, max(lodFine, 0.0)).r, 0.5, smoothstep(2.5, 4.0, lodFine)) : 0.5;
   // The lesser billows, a few hundred metres across, stand on the skin of the great ones and do not reach into the body.
@@ -177,10 +177,10 @@ void main() {
     vec3 nrm = vec3(0.0);
     float hard = 0.0;
     float heads = 1.0;
-    if (t > tEnd || T < 0.02) break;
+    if (t > tEnd || T < 0.05) break;
     vec3 q = ro + d * t;
     float body = stormBody(q);
-    if (body <= 0.002) {
+    if (body <= 0.03) {
       inside = false;
       clear = true;
       last = max(0.14, t * 0.07);
@@ -195,7 +195,7 @@ void main() {
       came = 0.0;
       continue;
     }
-    float ds = max(0.055, t * 0.022);
+    float ds = max(0.07, t * 0.03);
     float broad = 0.0;
     float raw = 0.0;
     float dens = stormDensity(q, body, ds, broad, raw);
@@ -230,7 +230,7 @@ void main() {
       // The heads on the face: round lumps one to four hundred metres across that ride with the body. They turn the face this way and that
       // to the light, and the creases between them are dark.
       float lodH = clamp(log2(hi / 9.0), 0.0, 3.0);
-      vec3 ph = (qs - vec3(GALE.x, 0.0, GALE.y) * (0.034 * uTime)).yzx / 1.7 + vec3(0.0, 0.0, 0.0031 * uTime);
+      vec3 ph = (qs - vec3(GALE.x, 0.0, GALE.y) * (0.08 * uTime)).yzx / 1.7 + vec3(0.0, 0.0, 0.0031 * uTime);
       float eH = 0.018 * exp2(lodH);
       float h0 = textureLod(tNoise, ph, lodH).r;
       vec3 gH = vec3(textureLod(tNoise, ph + vec3(eH, 0.0, 0.0), lodH).r, textureLod(tNoise, ph + vec3(0.0, eH, 0.0), lodH).r, textureLod(tNoise, ph + vec3(0.0, 0.0, eH), lodH).r) - h0;
@@ -241,7 +241,7 @@ void main() {
       // A solid head stops the light; a torn edge, where the ray is soon out of the cloud again, lets it by.
       vec3 qIn = qs + d * 0.22;
       float deep = stormDensity(qIn, stormBody(qIn), ds, held, rx);
-      hard = 0.92 * smoothstep(0.0, 0.75, deep);
+      hard = 0.96 * smoothstep(0.0, 0.75, deep);
       t = hi + 0.02;
       q = qs;
       body = stormBody(q);
@@ -291,7 +291,7 @@ void main() {
     }
     t += ds;
   }
-  if (T < 0.02) {
+  if (T < 0.05) {
     col /= 1.0 - T;
     T = 0.0;
   }

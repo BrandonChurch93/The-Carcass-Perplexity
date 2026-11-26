@@ -99,18 +99,19 @@ vec3 stratus(vec3 c, vec3 from, vec3 d) {
     float across = p.x * LAST_LIGHT.y - p.y * LAST_LIGHT.x;
     vec3 uv = vec3(along / 13.0 - 0.0026 * uTime, across / 37.0, 0.37 + 0.31 * float(i) + 0.0005 * uTime);
     float n = 0.65 * textureLod(tNoise, uv, 0.0).g + 0.35 * textureLod(tNoise, uv * vec3(2.7, 2.3, 1.0) + 0.31, 0.0).a;
-    float cover = smoothstep(0.52, 0.74, n) * smoothstep(12.0, 18.0, along) * (1.0 - smoothstep(70.0, 150.0, t));
+    float cover = smoothstep(0.52, 0.74, n) * smoothstep(12.0, 18.0, along) * (1.0 - smoothstep(32.0, 75.0, t));
     if (cover <= 0.0) continue;
     float air = exp(-t * 0.022);
     vec3 body = mix(skyClear(vec3(d.x, 0.03, d.z)) * 0.6, vec3(0.018, 0.022, 0.038), air);
-    body += vec3(0.16, 0.06, 0.018) * pow(toDusk, 6.0) * exp(-d.y / 0.07) * (1.0 - smoothstep(0.55, 0.85, n));
+    body += vec3(0.07, 0.026, 0.008) * pow(toDusk, 6.0) * exp(-d.y / 0.07) * (1.0 - smoothstep(0.55, 0.85, n));
     c = mix(c, body, 0.88 * cover);
   }
   return c;
 }
 // The storm with none of its billows, for what fades into the sky: its dark where it stands, and the rig's lights on it.
 vec3 skyBroad(vec3 from, vec3 d) {
-  vec3 c = skyClear(d);
+  // The band of the dusk is a line on the horizon and the dome's alone: air, snow and the far sea take the cold sky over it, never its orange.
+  vec3 c = skyClear(normalize(vec3(d.x, max(d.y, 0.07), d.z)));
   float cover = stormCover(d);
   if (cover <= 0.0) return c;
   vec3 cloud = mix(vec3(0.019, 0.022, 0.036), vec3(0.012, 0.014, 0.023), smoothstep(0.1, 0.8, d.y)) + 0.15 * flashCast();
@@ -193,8 +194,9 @@ void main() {
     } else {
       c = skyBroad(cameraPosition, d);
     }
-    // At the level the sky is what the air pass takes for the far end of the sea: no seam between the two.
-    c = mix(c, skyBroad(cameraPosition, normalize(vec3(d.x, 0.0003, d.z))), 0.85 * smoothstep(0.0, -0.012, d.y));
+    // Under the level the dome is what the air pass takes for the far end of the sea: the band of the dusk is a line on the sea's edge, and
+    // nothing of it shows under that edge where the sea's own cloud ends.
+    c = mix(c, skyBroad(cameraPosition, normalize(vec3(d.x, 0.075, d.z))), smoothstep(0.0, -0.005, d.y));
     c *= 1.0 + uSkyStage.y;
   }
   if (plateOn > 0.0) {
@@ -216,7 +218,8 @@ void main() {
   bool pl = uPlate.w > 0.0;
   float hf = uPlate.z / 1.2;
   float elS = el - (pl ? uPlate.y : 0.0);
-  if (elS > -0.02 && elS < 0.09) {
+  // Only there: in every other shot the far ridge is built, and stands in the air as the near one does.
+  if (pl && elS > -0.02 && elS < 0.09) {
     for (int i = 0; i < 6; i++) {
       if (pl && i > 2) break;
       float k = float(i);
