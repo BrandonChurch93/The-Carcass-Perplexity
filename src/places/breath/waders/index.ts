@@ -175,7 +175,7 @@ export function create(ctx: Context): Piece {
               const x = tips[tip] as number;
               const z = tips[tip + 2] as number;
               const y = (tips[tip + 1] as number) - 4.9 * fall * fall;
-              if (y > sea) drips.add(x, y, z, 0.008 + 9.8 * fall * 0.006);
+              if (y > sea) drips.add(x, y, z, 0.01 + 9.8 * fall * 0.012);
               else if (d % 4 === 0) ripples.add(x, z, 0.55, 0.5 * pour + 0.12, (sea - y) / 3, seed + d, 48, 0.24);
             }
             ripples.add(stood.tuft.x, stood.tuft.z, 0.9, 0.2 + 0.45 * pour, 5, seed, 40, 0.26);

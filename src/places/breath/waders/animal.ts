@@ -899,7 +899,7 @@ export class Wader {
       const ahead = this.along(walked + 0.5 * b.bodyLen + (plan.feedAt ?? 0.55) * b.neckLen);
       // The end of the neck stays out of the water: it is the mop that hangs from it that goes in.
       const floor = Math.max(env.ground(ahead[0], ahead[1]), env.sea);
-      const want = floor + (plan.reach >= 1 ? 0.07 * k : 0.6 * k) + dab;
+      const want = floor + (plan.reach >= 1 ? 0.15 * k : 0.6 * k) + dab;
       let lo = 0.3;
       let hi = 1.3;
       for (let i = 0; i < 9; i++) {
@@ -1019,6 +1019,8 @@ export class Wader {
       let z = (pts[r0 * 3 + 2] as number) * (1 - rf) + (pts[r0 * 3 + 5] as number) * rf + oz * rad;
       const splay = 0.7 * st.out + 0.6 * back;
       const rest = st.floats ? afloat : sunk;
+      // Let down into the water the mop opens: each cord goes in at its own place, a hand or two from the next.
+      const flare = 0.34 + 0.6 * down * (wet ? 1 : 0.4);
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.lock) + 0.04 * Math.sin(seconds * 3.7 + st.lock * 2.3);
       let px = x;
@@ -1036,9 +1038,9 @@ export class Wader {
         // In the water a strand weighs little: it drifts and spreads there instead of hanging straight.
         const under = wet ? smooth(env.sea + 0.02, env.sea - 0.12, y) : 0;
         const drift = under * (0.3 * Math.sin(seconds * 0.9 + st.phase + u * 2) + 0.35 * st.out);
-        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.03 + 0.34 * st.out * (1 - u) + drift)) * g;
+        let dx = (tx + ox * splay) * (1 - g) + (lagX + swing * cyw + ox * (0.03 + flare * st.out * (1 - 0.6 * u) + drift)) * g;
         let dy = (ty + oy * splay) * (1 - g) - g * (1 - 0.55 * under);
-        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.03 + 0.34 * st.out * (1 - u) + drift)) * g;
+        let dz = (tz + oz * splay) * (1 - g) + (lagZ + swing * sy + oz * (0.03 + flare * st.out * (1 - 0.6 * u) + drift)) * g;
         if (y < rest + 0.03) {
           // On the water or the rock: it lies along it, fanned, drawn out by the stream where there is one.
           const fan = st.angle + 0.5 * Math.sin(st.phase);
