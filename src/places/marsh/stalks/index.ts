@@ -7,6 +7,7 @@ import { stagedSeconds } from '../shared/stage';
 import { LOCK_DEPTH, LOCK_FRAGMENT, LOCK_VERTEX } from './locks';
 import { COLLAR_FRAGMENT, COLLAR_VERTEX, HEAD_DEPTH, HEAD_FRAGMENT, HEAD_VERTEX, PALM_DEPTH, PALM_FRAGMENT, PALM_VERTEX } from './palms';
 import { INSECT_DEPTH, INSECT_FRAGMENT, INSECT_VERTEX, STEM_FRAGMENT, STEM_VERTEX } from './shaders';
+import { growStands, lineAt, type Wild } from './stands';
 
 export const PARTS: readonly string[] = ['stalks', 'insects'];
 
@@ -19,6 +20,7 @@ const CRUST_SPAN: [number, number] = CRUST_SHOT ? [secondsInPlace(UNIT, CRUST_SH
 // as the approved wide picture has them.
 const WIDE_SHOT = shotsOf(UNIT).find((s) => s.id === 'marsh-01');
 const WIDE_SPAN: [number, number] = WIDE_SHOT ? [secondsInPlace(UNIT, WIDE_SHOT.first) - 0.004, secondsInPlace(UNIT, WIDE_SHOT.last) + 0.004] : [0, -1];
+// STAGED by shot: the stands of the wide shot (stands.ts) are drawn in that shot only.
 
 /** Stalks nearer than this to where a camera stands are drawn in full. Metres. */
 const NEAR = 14;
@@ -52,35 +54,6 @@ function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
   g.setAttribute('aSkin', new THREE.Float32BufferAttribute(skin, 1));
   g.setIndex(index);
   return g;
-}
-
-/** One stalk that no lens stands among, as its shaders are given it (palms.ts). */
-interface Wild {
-  x: number; y: number; z: number; h: number;
-  dx: number; dz: number; lean: number; R: number;
-  kind: number; phase: number; low: number; seed: number;
-  bowA: number; bowM: number; kinkT: number; kinkM: number;
-  swayA: number; swayM: number; kinkA: number; rate: number;
-  /** 0 young to 1 old; 2 dead. */
-  age: number; stain: number; uvo: number;
-  /** How much the air moves it: 0 for one that lies. */
-  quiver: number;
-  fork: [number, number, number]; collar: number; bare?: boolean;
-  cards: number[][];
-  foot: boolean;
-}
-
-/** A point of a stalk's line in still air, as the shader's spine() has it. */
-function lineAt(w: Wild, t: number): [number, number, number] {
-  const A = [w.dx * Math.sin(w.lean), Math.cos(w.lean), w.dz * Math.sin(w.lean)];
-  const U = [w.dx * Math.cos(w.lean), -Math.sin(w.lean), w.dz * Math.cos(w.lean)];
-  const W = [-w.dz, 0, w.dx];
-  const base = [w.x + w.fork[0], w.y + w.fork[1], w.z + w.fork[2]];
-  const at = (c: number): number => {
-    const dir = (angle: number): number => (U[c] as number) * Math.cos(angle) + (W[c] as number) * Math.sin(angle);
-    return (base[c] as number) + w.h * ((A[c] as number) * t + dir(w.bowA) * w.bowM * t * t + dir(w.swayA) * w.swayM * Math.sin(t * 4.7) * t + dir(w.kinkA) * w.kinkM * Math.max(t - w.kinkT, 0));
-  };
-  return [at(0), at(1), at(2)];
 }
 
 function instanced(base: THREE.BufferGeometry, count: number, attributes: Record<string, Float32Array>): THREE.InstancedBufferGeometry {
@@ -201,6 +174,8 @@ export function create(ctx: Context): Piece {
 
   // Those the lens of the colony stands among are built whole; every other one is the photograph of a stalk, on cards.
   const group = new THREE.Group();
+  const wide = new THREE.Group();
+  let wideShade: THREE.Object3D | null = null;
   const closeOf = (s: Stalk): boolean => Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 6.5;
   const sets = [stalks.filter(closeOf)];
   const fils: number[][] = [[], [], [], []];
@@ -512,6 +487,26 @@ export function create(ctx: Context): Piece {
     const heads = new THREE.Mesh(instanced(sheet(4, 4), carded.length, { ...lines(carded), aCard: new Float32Array(c1), aCard2: new Float32Array(c2) }), headMaterial);
     heads.frustumCulled = false;
     group.add(heads);
+    // The stands of the wide shot: more stems and their heads, the leaf that hangs down the stems, and the growth at their feet.
+    const stands = growStands(ctx, wilds, uSeconds);
+    const more = new THREE.Mesh(instanced(sheet(1, 12), stands.stems.length, lines(stands.stems)), palmMaterial);
+    more.frustumCulled = false;
+    wide.add(more);
+    const hung: Wild[] = [];
+    const h1: number[] = [];
+    const h2: number[] = [];
+    for (const w of [...stands.stems, ...stands.leaves]) {
+      for (const c of w.cards) {
+        hung.push(w);
+        h1.push(c[0] as number, c[1] as number, c[2] as number, c[3] as number);
+        h2.push(c[4] as number, c[5] as number, c[6] as number, (c[7] as number) + 1);
+      }
+    }
+    const leaf = new THREE.Mesh(instanced(sheet(4, 4), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
+    leaf.frustumCulled = false;
+    wide.add(leaf, stands.group);
+    wideShade = stands.shade;
+    group.add(wide);
   }
   // The ones the lens of the colony stands among draw from their own stream: nothing done to the far ones changes them.
   const own = ctx.rng('stalks-close');
@@ -664,7 +659,10 @@ export function create(ctx: Context): Piece {
       const staged = stagedSeconds();
       if (staged >= CRUST_SPAN[0] && staged <= CRUST_SPAN[1]) uGrove.value.set(0.4, 1.2);
       else uGrove.value.set(1, 1);
-      uHead.value = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1] ? 0.6 : 1;
+      const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
+      uHead.value = inWide ? 0.6 : 1;
+      wide.visible = inWide;
+      if (wideShade) wideShade.visible = inWide;
     },
   };
 }
