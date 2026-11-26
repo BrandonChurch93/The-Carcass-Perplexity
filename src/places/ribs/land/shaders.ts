@@ -317,13 +317,17 @@ void main() {
   float down = line - y;
   vec2 uk = vec2(arc / 40.0, 0.125 - down / 40.0);
   // The shore weed is olive, gold brown where a strap turns up: never a black band.
-  vec3 wk = texture2D(tWeed, mix(vec2(arc, y), vWorld.xz, step(0.5, top)) / 7.0).rgb;
-  vec3 kelp = down < 4.6 && top < 0.5 ? textureLod(tColony, uk, lv).rgb * 0.8 : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
-  float weed = smoothstep(-0.2, 0.5, down + 0.6 * (dot(kelp, vec3(0.333)) < 0.1 ? 1.0 : 0.0));
+  vec3 wk = texture2D(tWeed, mix(vec2(arc / 2.6, y / 5.5), vWorld.xz / 3.0, step(0.5, top))).rgb;
+  // On a face it hangs: dark strands, drawn down, a few of them amber. The sheet's own weed is a black glass at this size and is not used.
+  float aw = arc + 0.5 * (vnoise(vec2(arc * 0.8, y * 0.6)) - 0.5);
+  float strand = vnoise(vec2(aw * 6.0, y * 0.8 + 3.0)) * 0.6 + vnoise(vec2(aw * 17.0, y * 2.0)) * 0.4;
+  vec3 hank = mix(vec3(0.034, 0.029, 0.014), vec3(0.12, 0.068, 0.017), smoothstep(0.52, 0.8, strand)) * (0.5 + vnoise(vec2(aw * 23.0, y * 3.0)));
+  vec3 kelp = top < 0.5 ? hank : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
+  float weed = smoothstep(-0.2, 0.5, down + 1.5 * (strand - 0.5));
   albedo = mix(albedo, kelp, weed);
   // The weed is no mirror: it keeps its own olive, and the rock's slopes are not its slopes.
-  n = normalize(mix(n, n0, 0.7 * weed));
-  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.8, weed);
+  n = normalize(mix(n, n0 + 0.6 * round0 * (vnoise(vec2(aw * 17.0 + 0.4, y * 2.0)) - vnoise(vec2(aw * 17.0 - 0.4, y * 2.0))), weed));
+  float rough = mix(mix(0.9, 0.5, max(band, 0.7 * low)), 0.5, weed);
   float occ = (0.5 + 0.5 * smoothstep(0.2, 0.6, hgt)) * mix(1.0, 0.6, weed) * max(vShade, 0.4);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
   // Under a ledge the rock still takes the sky and the bounce of the wet floor: no shade here is black.
@@ -441,7 +445,7 @@ void main() {
   vec3 above = skyIrradiance(vec3(0.0, 1.0, 0.0));
   c = max(c, albedo * above * (0.36 / 3.14159) * (0.6 + 0.4 * occ));
   // Close, the wet shows as small glints on the blades of weed that turn to the sky, not as a sheen over the whole wall.
-  c += above * (0.13 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 40.0) * (0.4 + 0.6 * occ));
+  c += above * vec3(1.0, 0.86, 0.6) * (0.045 * closeW * pow(max(dot(n, normalize(v + vec3(0.0, 1.0, 0.0))), 0.0), 40.0) * (0.4 + 0.6 * occ));
   // And the water that runs off it: thin bright threads down the fronds, each a few strides long, coming and going.
   float run = smoothstep(0.8, 0.96, vnoise(vec2(vUv.x * 9.0, vUv.y * 0.3 + uTime * 1.6))) * smoothstep(0.55, 0.8, vnoise(vec2(vUv.x * 1.1, vUv.y * 0.13 - uTime * 0.07) + 3.0));
   c += above * (0.05 * closeW * run * (0.4 + 0.6 * occ));
@@ -711,7 +715,7 @@ void main() {
   vec3 nh = texture2D(tBoulderN, us).rgb;
   vec3 n = bump(n0, vWorld, us, nh.xy - 0.5);
   float own = vnoise(vWorld.xz * 9.0 + 4.0);
-  vec3 albedo = mix(vec3(0.075, 0.08, 0.085), vec3(0.34, 0.32, 0.28), own * own) * (0.5 + 2.2 * dot(side, vec3(0.333)));
+  vec3 albedo = mix(vec3(0.075, 0.08, 0.085), vec3(0.34, 0.32, 0.28), own * (0.4 + 0.6 * own)) * (0.5 + 2.2 * dot(side, vec3(0.333)));
   float soak = 1.0 - 0.75 * smoothstep(uPool + 0.02, uPool + 0.12, vWorld.y);
   albedo *= mix(1.0, 0.42, soak);
   float occ = 0.5 + 0.5 * smoothstep(0.2, 0.6, nh.z);
