@@ -421,8 +421,8 @@ void main() {
   vec3 c = rigShade(vWorld, n, v, albedo * keyLight(n), rough, occ);
   // Wet, the film of brine on a blade is a mirror only where its fold turns the bright part of the sky to the lens: a thin line down its length.
   vec3 r = reflect(-v, n);
-  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 24.0) + 0.45 * pow(clamp(r.y, 0.0, 1.0), 12.0);
-  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 1.35 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
+  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 32.0) + 0.4 * pow(clamp(r.y, 0.0, 1.0), 16.0);
+  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 0.9 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
   // A strap is thin: the sky behind it comes through.
   c += (1.0 - 0.6 * spent) * albedo * vec3(1.2, 0.6, 0.7) * skyIrradiance(-n) / 3.14159 * 0.35 * occ * skyOpen(vWorld);
   // One that is drawn wider than it is carries less of the picture's pixel: it is mixed toward what stands behind a head, which is more head.
