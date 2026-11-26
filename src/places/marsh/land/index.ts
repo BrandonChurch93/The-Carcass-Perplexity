@@ -82,15 +82,6 @@ export function create(ctx: Context): Piece {
   const stuck = rel(STUCK[0], STUCK[1]);
   // Round the stuck one the crust has given way: a hollow of wet mud two strides across, and round it the slabs it broke into, each
   // tipped its own way, most with the broken edge down in the mud and the far edge standing up out of the flat.
-  const slabRng = ctx.rng('land/wallow');
-  const slabs: { a0: number; a1: number; r0: number; r1: number; tip: number; roll: number }[] = [];
-  for (let a = slabRng.range(0, 0.5); a < TAU - 0.35;) {
-    const wide = slabRng.range(0.42, 0.95);
-    const r0 = slabRng.range(-0.05, 0.3);
-    const back = slabRng.next() < 0.25;
-    slabs.push({ a0: a, a1: Math.min(a + wide, TAU - 0.04), r0, r1: r0 + slabRng.range(0.5, 1.0), tip: back ? -slabRng.range(0.03, 0.07) : slabRng.range(0.04, 0.11), roll: slabRng.range(-0.05, 0.05) });
-    a += wide + slabRng.range(0.04, 0.12);
-  }
   /** What the wallow does to a spot of the crust: metres it is moved up, how much of it is the hollow's mud, how much a tipped slab. */
   const wallow = (x: number, z: number): [number, number, number] => {
     const dx = x - stuck[0];
@@ -99,25 +90,8 @@ export function create(ctx: Context): Piece {
     if (hole > 4.2) return [0, 0, 0];
     const rim = 2.0 + 0.5 * (fbm(x / 0.9 + 9, z / 0.9, 2) - 0.5);
     const mud = smooth(rim + 0.12, rim - 0.12, hole);
-    let up = -0.2 * smooth(rim + 0.25, rim - 0.9, hole) + 0.03 * (fbm(x / 0.35, z / 0.35 + 4, 2) - 0.5) * mud;
-    let slab = 0;
-    const a = (Math.atan2(dz, dx) + TAU) % TAU;
-    for (const s of slabs) {
-      if (a < s.a0 || a > s.a1) continue;
-      const ragged = 0.09 * (vnoise(x / 0.21 + 3, z / 0.21) - 0.5) + 0.12 * (vnoise(x / 0.6, z / 0.6 + 8) - 0.5);
-      const inner = rim + s.r0;
-      const edge = Math.min(hole - inner, rim + s.r1 - hole, (a - s.a0) * hole, (s.a1 - a) * hole) + ragged;
-      if (edge <= 0) break;
-      slab = smooth(0, 0.05, edge);
-      const pivot = inner + 0.4 * (s.r1 - s.r0);
-      const across = (a - (s.a0 + s.a1) / 2) * hole;
-      up = Math.max(up, -0.06) * (1 - slab) + slab * ((hole - pivot) * s.tip + across * s.roll - 0.005);
-      break;
-    }
-    // Between the slabs and for a hand round them the mud shows.
-    const between = hole < rim + 1.5 ? (1 - slab) * smooth(rim + 1.5, rim + 0.5, hole) : 0;
-    if (slab === 0 && between > 0) up = Math.min(up, -0.05 * between);
-    return [up, Math.max(mud * (1 - slab), between * 0.8), slab];
+    const up = -0.2 * smooth(rim + 0.25, rim - 0.9, hole) + 0.03 * (fbm(x / 0.35, z / 0.35 + 4, 2) - 0.5) * mud;
+    return [up, mud, 0];
   };
   const crustHeight = (x: number, z: number): number => {
     const base = field.height(x, z);
@@ -166,8 +140,6 @@ export function create(ctx: Context): Piece {
       tPanN: { value: ctx.assets.texture('mat/pan-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tSlick: { value: ctx.assets.texture('mat/slick.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSlickN: { value: ctx.assets.texture('mat/slick-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
-      tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tGrain: { value: grain },
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
