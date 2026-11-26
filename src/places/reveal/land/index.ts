@@ -46,6 +46,8 @@ uniform vec2 uShadeOff;
 varying vec3 vWorld;
 
 const vec3 DEEP = vec3(0.006, 0.017, 0.04);
+// The dearer land: false leaves the great ranges smooth from orbit (three reads of a picture fewer; both costs in HANDOVER.md).
+const bool ORBIT_GRAIN = true;
 // The bay in the far leg, on the rectangle of the widest level: where, and its half size.
 const vec2 BAY_AT = vec2(0.79, 0.205);
 const vec2 BAY_SIZE = vec2(0.027, 0.108);
@@ -92,8 +94,9 @@ void main() {
   // A bay breaks the outline of the far leg: the sea comes in from the north coast to the foot of the range. It is cut here, in the
   // shader, and not in the pictures: the floor falls from the shore to the middle, and the colour of the water follows the floor.
   vec2 inBay = mat2(0.94, 0.34, -0.34, 0.94) * (((read - uRectA.xy) * uRectA.zw - BAY_AT) / BAY_SIZE);
-  float bayEdge = length(inBay) + 0.36 * (vnoise(xz / 43.0 + 3.0) - 0.5) + 0.16 * (vnoise(xz / 13.0 + 8.0) - 0.5);
-  if (bayEdge < 1.3) {
+  float bayEdge = length(inBay);
+  if (bayEdge < 1.6) {
+    bayEdge += 0.36 * (vnoise(xz / 43.0 + 3.0) - 0.5) + 0.16 * (vnoise(xz / 13.0 + 8.0) - 0.5);
     float floorOf = mix(0.06, 0.58, smoothstep(0.3, 1.08, bayEdge));
     float wet = 1.0 - smoothstep(0.42, 0.5, floorOf);
     ground = mix(ground, mix(vec3(0.012, 0.04, 0.056), vec3(0.075, 0.16, 0.14), smoothstep(0.3, 0.48, floorOf)), wet * step(floorOf, shape.b));
@@ -163,15 +166,19 @@ void main() {
   float spur = 0.0;
   vec2 uvA = (read - uRectA.xy) * uRectA.zw;
   float skeleton = texture2D(uBones, clamp(uvA, 0.0, 1.0)).r * inside(uvA);
-  if (uViewKm >= 1050.0) {
+  if (ORBIT_GRAIN && uViewKm >= 1050.0) {
     mat2 turnA = mat2(0.8, 0.6, -0.6, 0.8);
     mat2 turnB = mat2(-0.28, 0.96, -0.96, -0.28);
     vec2 r3 = turnB * xz / 330.0 + vec2(0.61, 0.08);
     vec2 r4 = turnA * xz / 610.0 + vec2(0.23, 0.47);
-    vec2 a3 = texture2D(uMatRangeNh, r3).rg * 2.0 - 1.0;
-    vec2 a4 = texture2D(uMatRangeNh, r4).rg * 2.0 - 1.0;
+    // (Read at a level worked out here from the size of a pixel on the ground: one plain read each, which is what keeps this cheap.)
+    float texels = max(fwidth(xz.x), fwidth(xz.y)) * 1024.0;
+    float lod3 = log2(max(texels / 330.0, 1.0));
+    float lod4 = log2(max(texels / 610.0, 1.0));
+    vec2 a3 = textureLod(uMatRangeNh, r3, lod3).rg * 2.0 - 1.0;
+    vec2 a4 = textureLod(uMatRangeNh, r4, lod4).rg * 2.0 - 1.0;
     grain = smoothstep(1050.0, 1300.0, uViewKm) * land * (0.25 + 0.75 * skeleton);
-    country = clamp(texture2D(uMatRange, r3).rgb / vec3(0.122, 0.126, 0.125), 0.45, 1.9);
+    country = clamp(textureLod(uMatRange, r3, lod3).rgb / vec3(0.122, 0.126, 0.125), 0.45, 1.9);
     vec2 spurs = (vec2(a3.x, -a3.y) * turnB) * 0.55 + (vec2(a4.x, -a4.y) * turnA) * 0.5;
     slope += spurs * 0.9 * grain;
     spur = dot(spurs, normalize(uSunDir.xz)) * grain;

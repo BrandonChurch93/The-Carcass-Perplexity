@@ -5,7 +5,7 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 ## How each part is drawn
 
 - `continent` (`land/index.ts`, one sheet, one shader): four levels of two pictures each, `ground-a..d.jpg` (colour) and `shape-a..d.jpg` (slope in red and green, height in blue), swapped by pairs as the eye rises (`land/levels.ts`). They come from `assets-src/reveal/land/make_land.py` and `erode.c`: the traced outline in `continent.json`, grown to land, then worn by water.
-  Lit by the rig. Fine grain and small relief from `mat/range`, `mat/plain`, `mat/badland` (colour, and `-nh` of two), each laid twice, turned and bent, mixed by height and by dry province; they fade out above 1,050 km.
+  Lit by the rig. From orbit the range tile is laid wide on the bones (`ORBIT_GRAIN`). Fine grain and small relief from `mat/range`, `mat/plain`, `mat/badland` (colour, and `-nh` of two), each laid twice, turned and bent, mixed by height and by dry province; they fade out above 1,050 km.
 - `sea`: the same shader, where the shape is under the shore. Colour from the ground picture by depth, blooms by noise, a glint lobe at `uGlint`, a broad warm glare round it, surf at the coast. No picture of its own.
 - `salt`: the pale pan in the ground picture, kept white in the shader (no growth, no bone tint), with its own edge in `inPan`.
 - `lake`: the lake of the Eye. The pictures are read through a small bend so the shore has bays; black middle, amber shelf by noise.
@@ -30,7 +30,7 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 
 ## Still wrong beside the approved pictures, worst first
 
-1. `reveal-4`: the bones are an even pale band with a soft dark surround. At native size that reads as tinted, not as rock: the tint wants to break up along ridges and snow line.
+1. `reveal-4`: the bones carry the grain of rock now, but it is the range tile laid 8 and 15 times its real size, not relief of their own; the pale band under it keeps a soft edge and a dark surround that reads as tinted at native size.
 2. `reveal-4`: red is still high (mean 55/63/72 against 47/62/73). The land and the warm glare carry it; the top of the frame is hazier than approved.
 3. `reveal-4`, `reveal-3`: cloud scraps keep hard edges at native size, and the low deck has no depth of its own (one height). No picture of a front is used: `mat/front.jpg` is not placed.
 4. `reveal-2`, `reveal-3`: one family of dendritic valleys still carries the head. The three kinds of country change grain and colour, the tableland only a little of the large shape.
@@ -49,19 +49,22 @@ Unit `reveal`, shot `reveal-01`, keys `reveal-1` to `reveal-4`. Code in `src/pla
 - The glint and glare sit at `uGlint`, placed for the last frame; the lake shore is bent by noise only near the lake.
 - The bay (`BAY_AT`, `BAY_SIZE`) is in the shader and not in the pictures or in `bones.jpg`.
 - Fine country tiles are laid 1 and about 3.4 times their real size; the larger lay takes over with distance.
+- From orbit (above 1,050 km) the range tile is laid 330 and 610 km a repeat, 8 and 15 times its real size, most of all on the bones.
 - Level swaps of the pictures fall near frames 9675 and 9756 (largest step about 3 percent of mean).
 
 ## Cost, seconds a sample at 3840 x 2160, key `reveal-4`, draft, 4 cores (`npm run -s cost`)
 
-- Whole frame COST_WHOLE; an empty frame COST_EMPTY.
-- `continent` with `sea`, `salt`, `lake`, `lava`: COST_LAND above empty. `cloud`: COST_CLOUD. `vapour` COST_VAPOUR, `storm` COST_STORM, `space` COST_SPACE, `atmosphere` and `cyclone` under 0.01.
-- Cheaper: `SELF_SHADE = false` in `sky/index.ts` (cloud lit by its photograph alone): whole 6.70, cloud 1.70.
-- Dearer: `FULL_SHADE = true` in `shared/weather.ts` (three reads of the deck for the ground shade): about 0.95 more (measured at version 2).
+- As handed in (`ORBIT_GRAIN` and `SELF_SHADE` on): whole frame 7.79; an empty frame 1.70. Runs of the same code differ by about 0.3.
+- `continent` with `sea`, `salt`, `lake`, `lava`: 3.84 above empty. `cloud`: 2.14. `vapour`, `storm`, `cyclone`, `space`, `atmosphere`: each under 0.15.
+- Cheaper land: `ORBIT_GRAIN = false` in `land/index.ts` (the great ranges smooth from orbit): whole 7.40, continent 3.64.
+- Cheaper cloud: `SELF_SHADE = false` in `sky/index.ts` (cloud lit by its photograph alone): 0.28 less (6.98 against 6.70, measured before the bay and the grain).
+- Dearer shade: `FULL_SHADE = true` in `shared/weather.ts` (three reads of the deck for the ground shade): about 0.95 more (measured at version 2).
+- So the aim of 7 is missed by about 0.8 as handed in, and is only about met with both cheaper settings.
 
 ## Next, in order
 
-1. Break the bone tint by ridge and snow line (use `mat/range-nh` at 3 to 4 times size inside `bones.jpg`), so the body is relief and not a band.
+1. Give the bones relief of their own in the heights (with land take 6) in place of the wide lay of the range tile, and break the edge of the pale band by slope and snow line.
 2. Take red down on the land from far and thin the air at the top of the frame, to the approved means.
 3. Place `mat/front.jpg` for the two fronts and give the deck a second height with its own shadow.
-4. Land take 6 with the bay, a river mouth and two more provinces in the heights themselves (the last take allowed).
+4. In that same land take 6 (the last allowed): the bay, a river mouth, and two more provinces in the heights themselves.
 5. Use `mat/shelf` on the shelves and `mat/redflat` on the pan; replace the near cloud tile with the photographs at a smaller lay.
