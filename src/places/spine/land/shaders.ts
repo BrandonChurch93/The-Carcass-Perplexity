@@ -107,6 +107,8 @@ varying float vRelief;
 varying vec3 vUp;
 uniform sampler2D tSpire;
 uniform sampler2D tSpireNh;
+uniform sampler2D tLedge;
+uniform sampler2D tLedgeNh;
 uniform sampler2D tRubble;
 uniform sampler2D tRubbleNh;
 uniform sampler2D tSnow;
@@ -255,11 +257,12 @@ void main() {
   vec3 rock = vec3(0.0);
   vec2 t = vec2(0.0);
   float pit = 0.5;
+  float ledgeSnow = 0.0;
   float wallRime = 0.0;
   vec3 wallRimeC = vec3(0.7);
   // What the lays below would be spent on unseen: ground the snow buries whole, and a spire's broad face where its sheet covers it.
   // The gale strips the flanks to ribs of dark rock that run down the fall, and leaves the snow in the lee of each.
-  float steep = smoothstep(0.96, 0.8, smoothN.y);
+  float steep = smoothstep(0.985, 0.85, smoothN.y);
   float rib = uKind < 0.5 ? steep * (smoothstep(0.42, 0.7, vnoise(vec2(vSL.x / 17.0, vSL.y / 120.0 + 3.0)) + 0.25 * (vnoise(vWorld.xz * 0.21) - 0.5)) * 0.8 - 0.55 * dot(n0.xz, uWind.xz) * smoothstep(0.0, 1.0, -dot(n0.xz, uWind.xz) * 3.0)) : 0.0;
   float lie0 = mix(smoothN.y, n0.y, 0.35) - 0.07 + 0.12 * dot(n0.xz, uWind.xz) + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5) - rib;
   bool buried = false;
@@ -319,12 +322,16 @@ void main() {
     if (sheet < 0.98 || near > 0.0) {
       // A spire: its jointed rock at its real 30 m, broken close to by the blocks of the rubble picture at their real 5 m.
       Lay a = lay(tSpire, tSpireNh, atS / 30.0, gSx / 30.0, gSy / 30.0);
-      vec3 c2 = textureLod(tSpire, atS / 103.0 + 0.37, lodOf(tSpire, gSx / 103.0, gSy / 103.0)).rgb;
+      // Its beds: the picture of stepped ledges at its real 40 m, across the lean. It breaks the face into ribs and steps, dark under
+      // each overhang, and its own snow lies on each step.
+      Lay g = lay(tLedge, tLedgeNh, atS / 40.0 + 0.37, gSx / 40.0, gSy / 40.0);
+      float bedL = dot(g.c, vec3(0.33));
+      ledgeSnow = smoothstep(0.27, 0.46, bedL);
       Lay f = lay(tRubble, tRubbleNh, atS / 5.0 + 0.13, gSx / 5.0, gSy / 5.0);
       float fineK = max(close, near);
-      rock = 2.7 * a.c * (0.4 + 0.6 * c2 / SPIRE_MEAN) * (1.0 + 0.7 * fineK * (dot(f.c, vec3(0.33)) / dot(RUBBLE_MEAN, vec3(0.33)) - 1.0));
-      t = a.t * 1.2 + fineK * 1.4 * f.t;
-      pit = mix(a.pit, a.pit * (0.5 + f.pit), fineK);
+      rock = 2.7 * a.c * clamp(bedL / 0.08, 0.5, 1.6) * (1.0 + 0.6 * fineK * (dot(f.c, vec3(0.33)) / dot(RUBBLE_MEAN, vec3(0.33)) - 1.0));
+      t = a.t * 1.0 + 1.5 * g.t + fineK * 1.2 * f.t;
+      pit = mix(a.pit * (0.4 + 1.2 * g.pit), a.pit * (0.4 + 1.2 * g.pit) * (0.5 + f.pit), fineK);
     } else {
       // Far off and under its sheet a spire needs none of its tiles.
       rock = 2.7 * SPIRE_MEAN;
@@ -402,7 +409,7 @@ void main() {
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
   // Close to, the cracks of a spire are dark.
-  if (spire) albedo *= mix(1.0, 0.3 + 0.7 * smoothstep(0.12, 0.55, pit), near);
+  if (spire) albedo *= mix(1.0, 1.25 * (0.3 + 0.7 * smoothstep(0.06, 0.32, pit)), near);
 
   // The burn: the top of a spire is black glass where the lightning has come to it, time after time, and streaked below.
   float burn = 0.0;
@@ -424,7 +431,8 @@ void main() {
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
     snow = smoothstep(0.62, 0.76, held) * (1.0 - sheet);
     // Close to, the sheet's own snow is gone with its picture: snow lies on what the broken rock turns up to the sky, block by block.
-    snow = mix(snow, smoothstep(0.74, 0.88, 0.4 * held + 0.6 * nRock.y + 0.25 * (pit - 0.5)), near * sheet);
+    snow = mix(snow, max(ledgeSnow, smoothstep(0.78, 0.9, 0.4 * held + 0.6 * nRock.y + 0.25 * (pit - 0.5))), near * sheet);
+    snow = max(snow, ledgeSnow * (1.0 - sheet));
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
@@ -478,7 +486,8 @@ void main() {
     snowTint = b.c / SNOW_MEAN;
     // On a steep face the level picture would be pulled long: there the snow keeps its tone and loses its ripple.
     float flat_ = smoothstep(0.35, 0.7, n0.y);
-    vec2 g = b.t * 0.9 * flat_;
+    // Far off the drifts are smooth: their ripple is under the size of a pixel and would only be grain.
+    vec2 g = b.t * 0.9 * flat_ * smoothstep(1400.0, 350.0, far);
     snowTint = mix(vec3(1.0), snowTint, 0.4 + 0.6 * flat_);
     if (!spire) if (close > 0.0) {
       Lay f = lay(tSnow, tSnowNh, q / 4.0, qx / 4.0, qy / 4.0);

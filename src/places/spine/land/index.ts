@@ -29,6 +29,8 @@ export function create(ctx: Context): Piece {
   const pictures = {
     tSpire: picture('spire'),
     tSpireNh: data('spire'),
+    tLedge: picture('ledge'),
+    tLedgeNh: data('ledge'),
     tRubble: picture('rubble'),
     tRubbleNh: data('rubble'),
     tSnow: picture('snow'),

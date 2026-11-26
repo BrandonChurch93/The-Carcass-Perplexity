@@ -255,7 +255,7 @@ void main() {
       float column = smoothstep(0.5, 0.78, n) * 3.2 / max(abs(rd.y) + 0.12, 0.15) * exp(-max(above, 0.0) / 2.5);
       column *= uClear.z > 0.0 ? smoothstep(0.4 * uClear.z, uClear.z, length(hit.xz - uClear.xy)) : 1.0;
       float kept = exp(-0.11 * column * smoothstep(1400.0, 500.0, far) * uShow.w * uStage.x);
-      vec3 snow = 0.9 * (skyOn(1.0, rd) + strikeLight(hit) * 0.2);
+      vec3 snow = 0.9 * (skyOn(1.0, rd) + min(strikeLight(hit) * 0.2, vec3(0.1, 0.085, 0.17)));
       light = light + through * (1.0 - kept) * snow;
       through *= kept;
     }
@@ -379,7 +379,7 @@ void main() {
     }
     // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
     fly *= uShow.w * uStage.z * mix(1.0, 0.2, smoothstep(120.0, 700.0, far));
-    vec3 flakes = 1.1 * (skyOn(1.0, rd) + strikeLight(ro + rd * 6.0) * 0.2);
+    vec3 flakes = 1.1 * (skyOn(1.0, rd) + min(strikeLight(ro + rd * 6.0) * 0.2, vec3(0.06, 0.05, 0.1)));
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
   }
