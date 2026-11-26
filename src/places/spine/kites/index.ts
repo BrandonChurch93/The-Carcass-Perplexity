@@ -5,8 +5,8 @@ import * as THREE from 'three';
 import type { Vec3 } from '../../../core/cameras';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { WIND } from '../shared/anchors';
-import { FIRST, finEdge, spires } from '../ridge';
+import { WIND, heading, kiteEdge, step } from '../shared/anchors';
+import { FIRST, finAxes, finEdge, spires, tipOf } from '../ridge';
 import { flashAt } from '../strikes/bolt';
 
 export const PARTS: readonly string[] = ['tether-kites'];
@@ -214,7 +214,7 @@ void main() {
   vec3 lilac = mix(vec3(0.95, 0.9, 1.06), vec3(0.86, 0.82, 1.1), fract(seed * 3.3));
   // The picture's own colour, about its mean: its wrinkles, its stains of violet and brown.
   vec3 stain = clamp(fine / vec3(0.202, 0.181, 0.217), 0.55, 1.5);
-  vec3 c = (0.96 * behind + 0.3 * held) * mix(vec3(1.0), stain, 0.6) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
+  vec3 c = (1.0 * behind + 0.6 * held) * mix(vec3(1.0), stain, 0.35) * lilac * (0.85 + 0.3 * fract(seed * 5.3));
   c *= 1.0 - 0.5 * (1.0 - smoothstep(0.2, 0.55, tone));
   // Its veins: a dark line down the middle over the cord, and finer ones that leave it aslant and wander to the edge.
   float vv = metres / (wide * 1.1) - 1.2 * abs(vb) + 0.4 * vnoise(vec2(metres / wide * 1.3, vb * 3.0 + seed));
@@ -295,7 +295,7 @@ void main() {
   vec3 n = normalize(vNormal - 0.35 * slope / e * 0.2);
   float crease = 1.0 - smoothstep(0.0, 0.1, abs(vnoise3(at * 1.9 + 7.0) - 0.5));
   float sinews = 0.5 + 0.5 * sin(vLocal.y * 16.0 + 5.0 * vnoise3(at * 1.3));
-  vec3 flesh = mix(vec3(0.2, 0.045, 0.035), vec3(0.08, 0.022, 0.02), 0.6 * crease + 0.3 * sinews) * (0.75 + 0.5 * f0 * 0.66);
+  vec3 flesh = mix(vec3(0.055, 0.024, 0.022), vec3(0.022, 0.012, 0.012), 0.6 * crease + 0.3 * sinews) * (0.75 + 0.5 * f0 * 0.66);
   // Rime on what looks up and into the wind, in soft drifts.
   float rime = smoothstep(0.8, 1.05, n.y * 0.6 - dot(n, normalize(uWind.xyz)) * 0.45 + 0.55 * vnoise3(vWorld * 1.7) + 0.2 * (f0 - 0.75)) * (1.0 - 0.7 * crease);
   vec3 albedo = mix(flesh, vec3(0.68, 0.72, 0.78), rime);
@@ -306,6 +306,10 @@ void main() {
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('kites');
   const ribbons: Ribbon[] = [];
+  // The face of the first spire that the lens of key spine-2 stands before: its holdfasts sit on that face, by the edge.
+  const stand = step(kiteEdge, heading(tipOf(spires[FIRST + 1] as (typeof spires)[number]), kiteEdge) - 16, 78);
+  const axes = finAxes(spires[FIRST] as (typeof spires)[number]);
+  const lensSide = (stand[0] - kiteEdge[0]) * axes.bx + (stand[2] - kiteEdge[2]) * axes.bz > 0 ? 1 : -1;
   spires.forEach((sp, n) => {
     const near = n === FIRST;
     const reach = near ? 1 : n === FIRST + 2 ? 1.9 : n === FIRST + 1 ? 0.6 : 0.85;
@@ -315,7 +319,7 @@ export function create(ctx: Context): Piece {
         // A colony is a few ribbons of one holdfast: one long streamer, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
         const at = t + (i - (count - 1) / 2) * 0.006;
-        const anchor = finEdge(sp, at, 1.04, rng.range(-0.25, 0.25));
+        const anchor = finEdge(sp, at, near ? 1.02 : 1.04, near ? lensSide * rng.range(0.5, 0.57) : rng.range(-0.25, 0.25));
         ribbons.push({
           anchor,
           length,
@@ -386,7 +390,7 @@ export function create(ctx: Context): Piece {
   const out = new THREE.Vector3(WIND[0], 0.25, WIND[2]).normalize();
   ribbons.forEach((rb, r) => {
     for (let k = 0; k < KNOBS; k++) {
-      const girth = Math.min(rb.width * 1.4, 9);
+      const girth = rb.spire === 1 ? 8 : Math.min(Math.max(rb.width * 2.3, 11), 15);
       const size = girth * (k === 0 ? 0.34 : rng.range(0.13, 0.28));
       const off = k === 0 ? 0 : girth * rng.range(0.25, 0.7);
       const a = rng.range(0, Math.PI * 2);

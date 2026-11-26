@@ -1,80 +1,65 @@
-# Handover: the storm side of the Spine (strikes, kites, runners)
+# Handover: the storm side of the Spine (strikes, kites, runners), second owner
 
-Owner: spine_storm_owner, branch `agent/spine-storm`. Folders: `src/places/spine/strikes/`, `kites/`, `runners/`.
-No picture of mine is under `public/assets`; the runners read `mat/shag.jpg` and `mat/shag-nh.png` from main.
+Owner: spine_storm_owner_2, branch `agent/spine-storm-2`, looks on `agent/spine-storm-2-looks`. Folders: `src/places/spine/strikes/`, `kites/`, `runners/`.
+No picture of mine is under `public/assets`; I read `mat/bolt.jpg`, `membrane.jpg`, `membrane-h.png`, `shag.jpg`, `shag-nh.png`, `lock.jpg`, `burn.jpg` from main.
 All looks were at the draft tier, 3840 x 2160, one sample. The final tier was never rendered by me.
 
 ## How each part is drawn
 
-- strike-N (`strikes/index.ts`, `bolt.ts`, `where.ts`): a channel grown by a seeded walk from the cloud to 5.5 m under `tipOf()`, drawn as
-  camera-facing ribbons: violet-white core, violet skirt, tapering branches; a hot spot and 800 sparks (drag, gravity, gale); two rig emitters.
-- Strike timing (`bolt.ts`): a leader, then 2 or 3 strokes 30 to 60 ms apart, each on a way of its own (`moved` in the vertex shader,
-  `strokeAt`), nothing left of the channel a frame after each. Steam is pushed to `ctx.sources.steam`. No picture used.
-- tether-kites (`kites/index.ts`): colonies of membranes on sinew cords from holdfasts in the lee of each tip, flown by `uWind`;
-  near ones welted, veined, holed; beyond 200 to 450 m they stand on edge with dark hems and cords at least 1.7 px. No picture used.
-- ridge-runners (`runners/shape.ts`, `material.ts`, `index.ts`): a hide of tubes on six rigid bones, 5,000 to 110,000 instanced locks rooted
-  on it, a beard of tendril tubes; hide colour and slope from the shag picture at 0.8 m and 0.29 m; walk, stand, lie and dead poses.
-- Scorch (`runners/scorch.ts`): one decal 11 m square under the dead one: burned rock, a refrozen melt ring with its own shine, at `LIES_AT`.
+- strike-N (`strikes/index.ts`, `bolt.ts`, `where.ts`): the stroke is `mat/bolt.jpg` on a quad stood between cloud and tip, turned to the lens, alpha tested (core and near branches kept, the picture's glow left out), flipped and bent per return stroke; three strokes in nine frames, gone after; a hot spot of 15 m and 140 sparks at the tip; four rig emitters (channel, cloud top, two along the stroke) with a tail of half a second; one steam source per tip.
+- tether-kites (`kites/index.ts`): each a strip of 80 by 4 flown by `uWind`, cut by alpha test from `mat/membrane.jpg`: a cord for the stalk, widest a third of the way out, drawn down to a thread, torn tail of threads. Colour is the sky behind it, taken to lilac-grey, plus the light it holds; drawn veins; darker on the side away from the sky and where it is edge on; a wet line on the leading edge; at a strike it glows along its edges. Holdfasts: nine noise-bulged knobs per cord.
+- ridge-runners (`runners/skin.ts`, `material.ts`, `index.ts`): one skin per pose (surface nets over a field of the pose's shapes, 12 bones), a coat of clumps of four lock cards from `mat/lock.jpg` rooted on it, horn claws, a beard of tendril tubes. Coat `hang` makes resting ones' locks fall to the floor. Inside the canal the light is the lead's window form from both mouths, warmed, with a rim against the far mouth. The dead one: 1700 clumps, burn from `mat/burn.jpg` taken to char, a torn hollow with rib ends in the skin shader, singed spikes and a ring of rime round it.
+
+## Round 9 issues on these folders, and what was done (quoted, severe first)
+
+- strikes, severe: "The bolt is a large near-white graphic from high in frame with a bright impact spark"; "Two large nearly white bolts, one across the middle of the image"; "a pure white bolt that lights nothing". Done: new technique, the photograph of a stroke, thin, one per strike, the fork a faint thread; emitters light spire, snow and kites. Builder: "The bolt is right."
+- strikes, severe: "lightning bolts stay locked on the same jagged path for 12 or more consecutive frames and pulse brighter on a mechanical 4-to-5-frame cycle"; "the bolts pulse mechanically every three to five frames along the same pinned paths". Done: three strokes in nine frames (7665, 7668, 7671), each mirrored and bent another way, nothing between them.
+- strikes, severe: "lightning strikes emit only a local halo around the bolt and do not illuminate the surrounding ridge, clouds, or cave interior"; major: "bright bolt and spark burst light nothing around them". Done for rock, snow, kites and herd (flash through the far mouth). Cloud glow is the lead's from `ctx.rig.emitters`: not there yet.
+- strikes, severe: "A sharply visible branching bolt and angular gray cloud bands take the place of the purple glow behind cloud". Bolt thinner; the cloud is the lead's. Open.
+- strikes, major: "particles show a regular dotted pattern in the sky"; "sparks from the strike hang around the spire tip for over a second". Done: no dither anywhere, sparks solid, short lived, carried off by the gale.
+- kites, severe: "the plumes read as flat glossy ribbons with banded lines and holes, like extruded plastic". New technique (picture cut, sky seen through). Builder at 03:57 still reads the near ones as "crumpled grey paper". Open.
+- kites, major: "Dense, parallel nearly uniform lilac ribbon stacks"; "The membranes are crowded, evenly lavender and visibly grid-like with regular tears"; "opaque, pale, outlined tangles repeated on multiple peaks". Done: few colonies, lengths 70 to 260 m, each its own cut of the picture; far peaks one or none.
+- kites, major: "a flat, semi-transparent lilac ribbon whose edges break into a regular dotted halftone or screen-door pattern". Done: alpha test, no dither.
+- kites, major: "identical tassels hang at a perfectly even spacing along every cord"; "thin black lines and stair-step dark bands read as geometry seams and wire meshes". Done: tassels removed; cords are dark sinew with uneven rime beads.
+- kites, major: "Most lines disappear behind the wall edge, with only small rounded bumps visible". Tried: knobs 11 to 15 m of girth, moved to the lens side of the edge. At spine-2 they are still mostly hidden by the rock. Open.
+- kites, major: "the vapour plumes hold a rigid horizontal envelope and ripple like flat textured ribbons"; "the wisps undulate in place over six seconds without detaching". Partly: one slow travelling wave, a roll that travels, gusts. Nothing detaches. Open.
+- herd, severe: "The standing animal sits farther right and lower and lacks the bright backlit silhouette at the threshold; the group reads as a few low, overlapping forms crowded into the near left". Done: six against the left wall from 4.4 to 9.7 m past the key, two heads up, one standing 10 m on at the mouth, legs seen.
+- herd, severe: "they look like smooth models wrapped in stiff fur cards ... the near ones float over the water"; major: "The coats are uniformly dark, dry and finely brushed". New technique: skin per pose, clumped locks hanging to the floor, cream, rime on backs. Builder at 03:57: "four pale mounds". Partly.
+- herd, severe: "the three herd animals on the left remain completely motionless"; "the animals are completely frozen". Done: breath in chest and flank, neck and head swing, weight shifts, a flinch and a turn of the head at each flash, coat stirred.
+- herd, major: "a round dark eye-like shape with a dotted pattern shows on the animal". Done: no sole or disc faces the lens; no dither.
+- dead one, severe: "The body sits wholly in frame as rounded dry-looking tufts, with little sense of weight or frozen buildup"; "the fur is stiff straight cards and spikes all combed the same way, so it reads as a model ... a hollow grey hole in the body where the fur cards stop on a hard edge". Done: on its side, legs to the lens, lying on the land's slope, rime and snow on coat and paws, burn charred with a torn hollow and rib ends. Builder: "It reads as a carcass."
+- dead one, major: "flat opaque spike and plaque-like shapes interrupt the coat"; "the logs sit on it as flat strips with no contact or shadow"; "without stirring its fur". Done: spikes only round the burn; tendrils a third as thick and flat on the snow; the coat is blown.
 
 ## Tried and did not work
 
-- Blended or additive materials for bolt, glow, kites: they vanish under the air pass, which composites by depth. Everything of mine is
-  solid with pixels left out by a moving pattern (`ditherAt`, `glowOut`). At draft this shows as grain; samples average it.
-- An ordered pattern for the left-out pixels (interleaved gradient): the jury read it as a halftone mesh. It is a hash scatter now.
-- Hide drawn single-sided: it was inside out all session and showed as bare grey patches. It is `DoubleSide` with the normal turned.
-- Dead one rolled 1.3 (belly to the lens, reads as two heaps) and rolled negative (back to the lens, wound hidden). 0.45 is right.
-- Legs thrown straight at the lens as rigid bones: the soles show as discs. Fixed by a bend at the hock in the vertex shader (`hockAt`).
-- Leg locks twice as long (hay bale). Long straight locks with coat scale above 1 on the herd (haystacks).
-- Lying forelegs made by shearing and squashing the leg (a flat broom). They are now rotated forward about the hip.
-- Leaving out three locks in four where seen square on: at native size the hide shows as smooth plaster. It is now two in five.
-- A wide soft halo round the hot spot: the lead asked for a small core, and the wide one read as a ball.
+- Additive or blended glow (bolt halo, cloud halo): gone under the air pass. Left in the code hidden; delete it.
+- Kite blade five times its width at the root (version 2): read as sheets and laundry. Colour paler than the sky by more than 0.6 of held light: chalk.
+- Singed spikes over more than 1.55 of the burn's reach: a hedgehog. A saturated red burn: read as paint.
+- Rib ends laid out by the body's up axis: the lens sees the belly, so they ran the whole hollow as stripes. They are laid round the body now (`q`).
+- Fill light on the herd at the spine-4 key: the key is a flash frame and the flash swamps it; judge the herd on frames 8000 to 8080 as well.
 
 ## Still wrong beside the approved pictures, worst first
 
-- spine-1: the body is a tall mound, not long and low; legs are thick stumps and the paws and claws are in the ground haze; no head reads;
-  the coat is fine even plush, not long clumped locks with rime; tendrils lie flat like roots, they do not arch and curl.
-- spine-1: the wet dark rock and refrozen ice of the scorch are under the lead's ground haze in the lower third and hardly show.
-- spine-4: lying ones are mounds with one foreleg out and a dark sole at its end; no heads or beards read on them; none lies curled against
-  another; a thin frost on the backs, not packed snow; the standing one's legs are straight posts (no elbows or hocks).
-- spine-3: one broad kite ribbon, not 2 to 4 of different lengths; no lit steam at the tip (the air must draw it from `ctx.sources`);
-  the flash lights cloud and ridge evenly violet, the picture has it fall off down the rock.
-- spine-0: the crossing runners are about 25 px wide on the trail and barely read; far cords read as dark dashes.
-- spine-2: kites are paler and flatter than the glassy violet films of the picture; no light comes through them.
-- Everywhere: grain on kites and bolt at draft from the left-out pixels; legs are one rigid bone each.
-
-## Round 9 (judged on version 2): closed, tried, not reached
-
-- Closed, I think: bolt locked on one path and pulsing for 12 frames (now 2 or 3 short strokes, each moved, gone in about 7 frames);
-  "lights nothing" (`CAST` 520 to 2600: cloud, ridge and snow flash violet); second white bolt at spine-3 (the fork is now a faint thread);
-  sparks hanging over a second (life 0.25 to 0.8 s, more gale); eye-like mark in the canal (it was the dark sole of a lying foreleg,
-  now the paw lies flat); hole in the dead one's body (the inside-out hide); frozen herd (breath, neck and weight shifts 2 to 3 times larger).
-- Tried, partly there: clumped frosted coat (dark roots, guard locks one in seven with rime ends, frost on backs); the dead one's weight
-  and pose (hock bend, legs apart). Both still read as a model beside the pictures.
-- Kites, tried in the last half hour: the left-out pixels are now a scatter, not rows (the rows were the "halftone mesh"); skin thinner,
-  muted grey-violet with darker veins; icicles on the cords uneven and fewer. Not judged at the final tier.
-- Not reached: kites shearing, detaching and tearing downwind, each one different, attachment clusters seated in clefts; the herd's place in the canal (standing one left of the mouth and backlit, resting ones staggered back); feet wet in the water;
-  dotted pattern on sparks; fur sharpness on M3 at spine-4; the dead one reframed to the right edge.
+- spine-3: no glow in the cloud round the stroke and the sky is one wash (lead's cloud); my bolt has no bloom of its own.
+- spine-2: near kites are still wide and creased; holdfasts hidden behind the edge of the first spire.
+- spine-4: resting ones read as mounds, heads small and dark; breath is pushed as steam sources but the air zeroes steam inside the canal (`uShow.x`).
+- spine-1: no wet stain or drift where the body meets the ground (lead's ground); motion measure was 10.22% on version 2.
 
 ## Staged by shot
 
-- The canal huddle is drawn only when `stagedSeconds() > INSIDE_FROM`; the crossing runners only before it.
-- Huddle index 0 stands in the mouth at key spine-4 and walks off after `CANAL_KEY_AT`.
-- `timingOf` moves the nearest stroke onto any key frame inside a strike's flicker, so keys 7234 and 7668 show a return stroke.
-- By lens, not by shot: far kites stand on edge and darken with distance from the camera; locks shorten where seen square on.
+- The huddle is drawn only when `stagedSeconds() > INSIDE_FROM` (shot spine-05); the four crossing runners only before it.
+- Huddle 0 stands at the mouth and walks on after `CANAL_KEY_AT`. Breath sources carry strength only inside spine-05.
+- `timingOf` puts a stroke on a key frame that falls inside a strike. Kite holdfasts of the first spire sit on the side of key spine-2's lens.
+- By lens, not by shot: far kites stand on edge; outline locks of the dead one stand clear of the rime.
 
-## Cost, seconds a sample at 3840 x 2160
-`npm run -s cost -- --key spine-0 --format uhd --tier draft --parts tether-kites ridge-runners strike-2`, above the empty frame (1.93 s):
-ridge-runners 0.50, tether-kites 0.18, strike-2 0.00 (under the noise). Mine together 0.68 of an aim of 2. The whole frame is 10.52 s,
-over the 7 s gate; the rest is the ground and the air. Not measured: the dead one close up at spine-1 (110,000 locks).
-Checks: my last own commit ecdb751 passes all four. Merged with the lead and main, determinism fails at film frame 1241 and G10 at 5930;
-neither is a Spine frame (the Spine runs from about frame 7000 to 8100), so the cause is outside these folders. I did not trace it.
+## Cost, seconds a sample at 3840 x 2160, above the empty frame
+COSTLINE
+Checks at the last commit: tsc clean, build, `determinism: pass`, gate G10 pass.
 
 ## What I would do next, in order
 
-1. Give legs a second bone (knee and hock) in `shape.ts` and `BONES_GLSL`; then pose the dead one long and low with paws flat.
-2. A head: a low skull shape on the neck bone with the beard rooted round a mouth, so the lying ones read as animals.
-3. Clump the locks: root several locks on one seed and lean them together; rime as beads on the clump ends.
-4. Ask the air for a clear floor at spine-1, so the scorch and paws show, and for violet cloud light and steam from `ctx.sources`.
-5. Kites at spine-3: split the one sheet into three ribbons of different length; let the rig's light through the film.
-6. Tendrils of the dead one: root them in an arc that rises from the face and curls down, thicker at the root.
-7. Check the final tier: whether the left-out pixels average to clean edges at the film's sample count.
+1. With the lead: cloud glow from the four emitters, and steam drawn inside the canal.
+2. Kites: a second, narrower cut of the membrane for the near ones; let pieces tear off and travel downwind.
+3. Herd: a real head shape with the beard hung from it, raised on two more; hooves on the standing one.
+4. Holdfasts: seat them from the rock's own surface (ask the lead for a point and normal on the fin face).
+5. Remove the hidden channel, arc and halo meshes and `ditherAt` from `strikes/index.ts`.

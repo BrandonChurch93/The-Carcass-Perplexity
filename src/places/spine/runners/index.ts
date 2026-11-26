@@ -210,7 +210,7 @@ export function create(ctx: Context): Piece {
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
-    { d: CANAL_KEY + 11.5, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.15 },
+    { d: CANAL_KEY + 10, l: -0.2, yaw: along - 1.1, act: 'stand', pose: WATCH, size: 1.3 },
     { d: CANAL_KEY + 4.4, l: -2.1, yaw: along + 2.4, act: 'lie', pose: LIE, size: 1.2 },
     { d: CANAL_KEY + 5.9, l: -2.5, yaw: along + 1.9, act: 'sit', pose: SITUP, size: 1.2 },
     { d: CANAL_KEY + 7.3, l: -1.8, yaw: along + 2.8, act: 'lie', pose: LIE2, size: 1.15 },
@@ -219,7 +219,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.6 : 1, tone: cream(), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   const CROSSING = 4;
   const crossing = Array.from({ length: CROSSING }, (_, i) => make({ act: 'walk', pose: STAND, size: rng.range(0.9, 1.15), cell: 0.04, clumps: 260, long: 1, tone: cream(), phase: i * 0.37 + rng.next(), inside: false, burn: NONE, tendrils: 12 }));
   // The scorched one: on its side, the bolt's way burned into its upper flank behind the shoulder.
@@ -255,7 +255,7 @@ export function create(ctx: Context): Piece {
     const fore = standing ? 0.03 * Math.sin(t * 0.7 + ph * 2) : 0;
     const settle = 0.012 * Math.sin(t * 0.9 + ph * 2);
     (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.004 * breath, sway);
-    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.012 * breath, 1 + 0.035 * breath, 1 + 0.05 * breath));
+    about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.015 * breath, 1 + 0.05 * breath, 1 + 0.07 * breath));
     if (standing)
       for (let i = 0; i < 4; i++) {
         lean(a.bones[4 + i] as THREE.Matrix4, j.tops[i] as V3, fore, sway);
@@ -266,7 +266,7 @@ export function create(ctx: Context): Piece {
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
-    a.coat.set(1, a.role.inside ? 0.12 : 0.5, shiver, a.role.inside ? 0.2 : 0.1);
+    a.coat.set(1, a.role.inside ? (standing ? 0.45 : 0.12) : 0.5, shiver, a.role.inside ? 0.2 : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
@@ -320,7 +320,7 @@ export function create(ctx: Context): Piece {
   const facing = new THREE.Vector3();
 
   still(dead);
-  dead.coat.set(1, 0.35, 0.0, 0.12);
+  dead.coat.set(1, 0.75, 0.0, 0.12);
   dead.writhe.set(0, 1, 0, 0);
   const UP = new THREE.Vector3(0, 1, 0);
   const lie3 = new THREE.Vector3();
