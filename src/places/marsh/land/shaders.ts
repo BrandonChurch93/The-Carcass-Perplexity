@@ -341,8 +341,8 @@ void main() {
     vec4 nh = texture2D(tRimeN, uH);
     vec3 g = mix(gs, gr, dryish);
     vec4 ng2 = mix(ns, nr, dryish);
-    colour *= mix(vec3(1.0), 0.45 + 0.55 * g, close);
-    colour *= mix(1.0, 0.75 + 0.5 * nh.b, nearer * dryish);
+    colour *= mix(vec3(1.0), 0.62 + 0.38 * g, close);
+    colour *= mix(1.0, 0.85 + 0.3 * nh.b, nearer * dryish);
     // The rind at a waterline and the rims a stride back from it: salt grown in knobs a few fingers across, white on top, stained in
     // the clefts, each with its own small hard shadow from the brighter quarter of the sky. The crust's picture, laid small.
     float knobby = max(max(shoreW * smoothstep(0.32, 0.55, hgt), bankDry * smoothstep(0.26, 0.46, hgt)), (1.0 - smoothstep(0.0, 0.5, thin)) * smoothstep(3.0, 0.8, t) * smoothstep(0.4, 0.65, hgt)) * close * (1.0 - rock) * step(0.0, s);
@@ -357,7 +357,7 @@ void main() {
       occ *= 1.0 - knobby * (0.5 * smoothstep(0.5, 0.15, nk.b) + 0.45 * smoothstep(0.03, 0.14, lit2 - nk.b));
       hgt += (nk.b - 0.5) * 0.25 * knobby;
     }
-    bend -= (ng2.rg - 0.5) * mix(0.9, 1.7, dryish) * close + (nh.rg - 0.5) * 1.2 * nearer * dryish;
+    bend -= (ng2.rg - 0.5) * mix(0.7, 1.1, dryish) * close + (nh.rg - 0.5) * 0.7 * nearer * dryish;
     hgt += (ng2.b - 0.5) * 0.16 * close * (1.0 - rock);
     occ *= 1.0 - 0.3 * smoothstep(0.45, 0.15, ng2.b) * close;
   }
@@ -379,7 +379,7 @@ void main() {
   // Round every pool, a stride back from its wet margin, the brine has left its salt: a pale rim, broken, wider here and narrower there.
   float rimAt = 0.45 + 0.5 * mid.r;
   float salted = smoothstep(0.12, 0.3, t) * smoothstep(rimAt + 0.9, rimAt, t) * smoothstep(0.3, 0.55, mid.b * 0.6 + fine.b * 0.4) * (1.0 - rock) * step(0.0, s) * (1.0 - flood);
-  colour = mix(colour, vec3(0.6, 0.55, 0.5) * (0.8 + 0.4 * hgt), salted * 0.7);
+  colour = mix(colour, vec3(0.52, 0.44, 0.38) * (0.8 + 0.4 * hgt), salted * mix(0.7, 0.3, close));
   // An overcast is not the same all round: the quarter away from the rain is the brighter, and every lump and lip shows it.
   vec2 bright = vec2(-0.86, 0.5);
   // The plates' slopes are real slopes: the mesh's normal leans by them.
