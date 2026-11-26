@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { GRAIN_GLSL, ditherAt, envelope, figure, timingOf, type Line } from './bolt';
+import { GRAIN_GLSL, ditherAt, envelope, figure, strokeAt, timingOf, type Line } from './bolt';
 import { WIND, WIND_SPEED } from '../shared/anchors';
 import { STRIKES, type StrikeSite } from './where';
 
@@ -11,10 +11,10 @@ export const PARTS: readonly string[] = STRIKES.map((s) => s.id);
 
 /** Scene-linear radiance of the channel's core at the peak of a stroke, and of the light it casts. */
 const CORE = 260;
-const CAST = 520;
-const TINT = new THREE.Vector3(0.78, 0.7, 1);
+const CAST = 2600;
+const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
-const CHANNEL = 2.2;
+const CHANNEL = 1.3;
 const SPARKS = 800;
 
 const CHANNEL_VERTEX = /* glsl */ `
@@ -23,14 +23,23 @@ attribute vec3 aNext;
 attribute vec4 aInfo;
 attribute vec2 aSide;
 uniform float uPixel;
+uniform vec4 uShift;
 varying float vAcross;
 varying vec4 vInfo;
 varying vec2 vWide;
 varying float vAlong;
+// Each return stroke finds a way of its own: the channel is carried aside by height, differently for each stroke (uShift.x), by up to
+// uShift.z metres, and not at all where it meets the tip (uShift.y is the tip's height). Branches at one height go with it.
+vec3 moved(vec3 p) {
+  float h = max(p.y - uShift.y, 0.0);
+  float k = smoothstep(0.0, 110.0, h) * uShift.z;
+  float n = uShift.x;
+  return p + k * vec3(sin(h * 0.031 + n * 2.7) + 0.5 * sin(h * 0.083 + n * 5.1), 0.0, sin(h * 0.027 + n * 4.3) + 0.5 * sin(h * 0.071 + n * 1.9));
+}
 void main() {
-  vec4 c = viewMatrix * vec4(position, 1.0);
-  vec3 a = (viewMatrix * vec4(aPrev, 1.0)).xyz;
-  vec3 b = (viewMatrix * vec4(aNext, 1.0)).xyz;
+  vec4 c = viewMatrix * vec4(moved(position), 1.0);
+  vec3 a = (viewMatrix * vec4(moved(aPrev), 1.0)).xyz;
+  vec3 b = (viewMatrix * vec4(moved(aNext), 1.0)).xyz;
   vec3 side = normalize(cross(b - a, c.xyz));
   float far = -c.z;
   // The core is never thinner than a pixel and a quarter, and the strip carries a soft sheath eight cores wide.
@@ -86,7 +95,7 @@ void main() {
   // White where the arc is, and a violet skirt of lit air close round it that thins fast.
   float core = exp(-x * x * 3.2);
   float skirt = 0.016 * exp(-abs(x) * 0.33) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
-  vec3 c = (uTint * (core * 0.55) + vec3(0.45, 0.24, 1.0) * skirt + vec3(core * core * 0.45)) * (uCore * channelLit());
+  vec3 c = (uTint * (core * 0.7) + vec3(0.45, 0.24, 1.0) * skirt + vec3(core * core * 0.3)) * (uCore * channelLit());
   gl_FragColor = vec4(glowOut(c, 0.7) * (1.0 - uSolo), 1.0);
 }`;
 
@@ -102,11 +111,11 @@ varying float vHeat;
 void main() {
   // A fragment of rock thrown from the tip: it flies, falls, is carried by the gale, and cools.
   // It leaves fast and the air stops it within a few tens of metres; then it only falls and drifts.
-  float life = 0.6 + 1.8 * aSeed.x * aSeed.x;
+  float life = 0.25 + 0.55 * aSeed.x * aSeed.x;
   float t = max(uAge - 0.042 * aSeed.y * aSeed.y, 0.0);
   float drag = 1.0 - exp(-t * 13.0);
-  vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 3.0);
-  vec3 v = aGo * exp(-t * 13.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 6.0);
+  vec3 p = uAt + aGo * (drag / 13.0) + vec3(0.0, -4.9 * t * t, 0.0) + uGale * (t * t * 6.0);
+  vec3 v = aGo * exp(-t * 13.0) + vec3(0.0, -9.8 * t, 0.0) + uGale * (t * 12.0);
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
@@ -218,6 +227,7 @@ interface Bolt {
   site: StrikeSite;
   group: THREE.Group;
   env: THREE.Vector4;
+  shift: THREE.Vector4;
   age: { value: number };
   cloud: THREE.Vector3;
   cloudGlow: THREE.Vector3;
@@ -238,7 +248,8 @@ export function create(ctx: Context): Piece {
     const lines = figure(rng, site);
     const group = new THREE.Group();
     const env = new THREE.Vector4(0, 0, 0, 0);
-    const channelUniforms = { ...ctx.rig.uniforms, uPixel: pixel, uDither: dither, uEnv: { value: env }, uTint: { value: TINT }, uCore: { value: CORE } };
+    const shift = new THREE.Vector4(0, site.to[1], site.rise * 0.02, 0);
+    const channelUniforms = { ...ctx.rig.uniforms, uShift: { value: shift }, uPixel: pixel, uDither: dither, uEnv: { value: env }, uTint: { value: TINT }, uCore: { value: CORE } };
     const strip = channelGeometry(lines);
     const channel = new THREE.Mesh(strip, new THREE.ShaderMaterial({ vertexShader: CHANNEL_VERTEX, fragmentShader: SHEATH_FRAGMENT, uniforms: channelUniforms, ...additive }));
     channel.frustumCulled = false;
@@ -288,7 +299,7 @@ export function create(ctx: Context): Piece {
 
     group.visible = false;
     ctx.scene.add(ctx.parts.built(site.id, group));
-    return { site, group, env, age, cloud: top, cloudGlow, spotGlow, top, mid };
+    return { site, group, env, shift, age, cloud: top, cloudGlow, spotGlow, top, mid };
   });
 
   // Two lights of the rig: the channel over the struck tip, and the cloud lit from inside where the channel enters it.
@@ -325,11 +336,12 @@ export function create(ctx: Context): Piece {
       cloudLight.radiance.set(0, 0, 0);
       for (const b of bolts) {
         const age = seconds - b.site.seconds;
-        const live = age > -0.3 && age < 2.2;
+        const live = age > -0.3 && age < 1.2;
         b.group.visible = live;
         if (!live) continue;
         const e = envelope(timingOf(b.site.id), age);
         b.env.set(e.main, e.branch, e.after, e.leader);
+        b.shift.x = strokeAt(timingOf(b.site.id), age);
         b.age.value = age;
         // Sheet lightning inside the cloud in the quarter second before the stroke, then the stroke itself.
         const before = age < 0 ? 0.05 * Math.max(0, Math.sin((age + 0.3) * 31) * Math.sin((age + 0.3) * 10.5)) * (1 + age / 0.3) : 0;
