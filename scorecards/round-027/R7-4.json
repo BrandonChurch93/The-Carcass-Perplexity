@@ -1,0 +1,35 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R7-4",
+  "family": "claude",
+  "answered": "2026-11-26 15:59 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 9,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "minor",
+        "file": "set-D-04.png",
+        "where": "white cloud flecks over dark ocean, bottom-left crop",
+        "what": "the smallest cloud flecks are slightly softer and merge a little in the compressed frame. They still read as broken cloud and there is no banding or blocking in the dark water.",
+        "fix": "no change needed, or give the dark ocean a little more bitrate if you want crisper flecks"
+      },
+      {
+        "severity": "minor",
+        "file": "set-D-05.png",
+        "where": "hurricane spiral, bottom-right",
+        "what": "the fine streaks in the outer arms are a little smoother after compression. The spiral structure and the eye are intact.",
+        "fix": "no change needed"
+      },
+      {
+        "severity": "minor",
+        "file": "set-D-03.png",
+        "where": "sun-glint haze on the right side over the ocean",
+        "what": "the glint gradient is smooth with no visible steps, but the faint mottling in the haze is slightly flattened by compression.",
+        "fix": "no change needed"
+      }
+    ]
+  }
+}

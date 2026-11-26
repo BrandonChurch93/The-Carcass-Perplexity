@@ -1,0 +1,255 @@
+{
+  "round": 27,
+  "unit": "film",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the fog ends in an unnaturally straight edge just above the water.",
+      "answered": "15:25 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the smooth, simple procedural-looking rock spires and flat-looking fog over a generic simulated ocean feel like a decent but ordinary 3D render, not film-grade detail",
+      "answered": "15:27 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the smooth procedural rock spires and flat fog-to-ocean transition look like a standard 3D environment render rather than a real photo or top-budget VFX shot.",
+      "answered": "15:28 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 78,
+      "why": "the fog forms a smooth horizontal band that hides every rock base at the same height.",
+      "answered": "15:28 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the fantasy horn-shaped spires with convincing volumetric fog, layered clouds and realistic ocean look like a high-end game cinematic or engine render, though the smooth, simple rock surfaces keep (c) and (d) possible.",
+      "answered": "15:28 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 83,
+      "why": "the fog has a conspicuous regular dither pattern where it overlaps the rock spires.",
+      "answered": "15:28 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "the flat fog bank with a hard, uniform edge and plain procedural ocean look like an ordinary hobbyist render, not film-grade compositing.",
+      "answered": "15:28 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the smooth simply-displaced horn geometry and artificial water-to-mist transition at the horizon and base splashes",
+      "answered": "15:29 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 83,
+      "why": "the fog looks like a flat gray screen laid over the spires rather than mist surrounding them.",
+      "answered": "15:29 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "The fantasy horn-like spires with volumetric fog and detailed layered clouds look like a high-end game or film environment. The slightly tiled, game-engine-style water keeps (d) a close second.",
+      "answered": "15:29 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the lava reads like a flat emissive texture rather than molten rock lighting the scene.",
+      "answered": "15:29 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "convincing but generic lava-field scene with repeated, uniformly shaded rock meshes and simple spider-walker models, which reads as a competent standalone 3D render, not film-grade detail",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "flat ambient lighting and low-detail alien strider models on a procedural volcanic terrain that read as a standard 3D render rather than a cinematic frame or real photograph",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 87,
+      "why": "The distant mesa has a visibly polygonal silhouette despite its detailed rock texture.",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 62,
+      "why": "the atmospheric haze, lava glow and spindly creatures in a big-budget cinematic style, though the blurry rock textures hold it back (d or c possible)",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 81,
+      "why": "the conspicuously repeated poses of the creatures in the shallows.",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "b",
+      "confidence": 50,
+      "why": "Very detailed matte-painting-quality environment (layered rock strata, volumetric fog, many small invented creatures) that looks like high-end film/documentary VFX rather than a photo or cheap render.",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "b",
+      "confidence": 75,
+      "why": "cinematic atmospheric lighting and art-directed alien world-building",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 79,
+      "why": "the rock texture stretches into conspicuous vertical stripes on the crater walls.",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the detailed, atmospheric rock and water with strange alien flamingo-like creatures reads as high-end film or cinematic concept art rather than a photograph or a stock render.",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 89,
+      "why": "the nearly identical foreground plant clumps look like repeated 3D assets.",
+      "answered": "15:36 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "repetitive procedural textures and uniformly scattered instanced alien plants/creatures typical of a hobbyist/stock CG landscape render rather than film-grade detail",
+      "answered": "15:30 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "flat overcast lighting with procedural terrain textures and weak contact shadows around the alien creatures",
+      "answered": "15:31 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 76,
+      "why": "The same spindly plant model repeats conspicuously across the plain.",
+      "answered": "15:31 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the scene is a clearly CG alien landscape with a polished atmosphere, but its repeated plant and blob assets and its smooth, procedural-looking textures read as a solo-artist render, not a film or game cinematic.",
+      "answered": "15:31 UTC"
+    }
+  ]
+}

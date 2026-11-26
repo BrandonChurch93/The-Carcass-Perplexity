@@ -1,0 +1,49 @@
+{
+  "round": 27,
+  "unit": "film",
+  "pack": "R7-2",
+  "family": "claude",
+  "answered": "2026-11-26 15:59 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 8,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "minor",
+        "file": "set-B-02.png",
+        "where": "dark storm sky in the upper right, around the translucent ribbons",
+        "what": "the soft cloud mottling is flattened into smoother, slightly blotchy patches with a faint tonal step near the ribbon edges; no hard banding is visible at delivery size",
+        "fix": "give the dark sky a little more bitrate or add light dither/grain before encoding so the cloud gradients stay smooth"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-06.png",
+        "where": "the sunset sky and the calm sea just under the horizon",
+        "what": "the orange-to-pink glow and the faint horizontal wave texture soften into slightly stepped bands, and the fine sea ripples lose some definition",
+        "fix": "add dither or grain to the horizon glow and sea and keep more bitrate in the dark low-contrast water"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-06.png",
+        "where": "the sea foam or cloud tops at the bottom right",
+        "what": "the fine frothy texture is smoothed into softer lumps; it still reads as foam",
+        "fix": "keep a little more high-frequency detail in the bright foam"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-05.png",
+        "where": "the thin smoke or vapour wisps and the orange muzzle glow to the right of the figure cluster",
+        "what": "the wisps are fainter and slightly smeared after compression and the glow loses some gradient, but both still read as what they are",
+        "fix": "keep more contrast and detail in the faint vapour trails near the glow"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-04.png",
+        "where": "the rock face texture on the left and the edges of the translucent ribbons",
+        "what": "the small speckled grain on the rock and the thin edge lines on the ribbons are smoothed, and some crawling is possible on this fine growth-like texture; the shapes hold at delivery size",
+        "fix": "raise quality on the high-detail rock regions to limit temporal crawl"
+      }
+    ]
+  }
+}
