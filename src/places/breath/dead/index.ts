@@ -40,8 +40,10 @@ void main() {
   // Some days dead, the trunk has gone down: the belly and the ribs have fallen in, and what stood a forearm high is a hand lower. The
   // picture is drawn in over the trunk toward its low edge, and what it lifts is less by as much.
   float sag = smoothstep(0.36, 0.5, position.x) * smoothstep(0.86, 0.68, position.x);
-  float up = position.y - 0.17 * sag * max(position.y - 0.45, 0.0);
-  float lift = texture2D(tLift, vAt).r * 0.5 * (1.0 - 0.17 * sag);
+  float up = position.y - 0.34 * sag * max(position.y - 0.45, 0.0);
+  // The belly, between the ribs and the hip, has fallen in furthest.
+  float cave = sag * smoothstep(0.44, 0.6, position.x) * smoothstep(0.8, 0.68, position.x);
+  float lift = texture2D(tLift, vAt).r * 0.5 * (1.0 - 0.34 * sag) * (1.0 - 0.22 * cave);
   // Across the lens's line of sight, and away from the lens along the rock: the higher a thing stands, the nearer it is on its ray.
   float across = (position.x - uSheet.x) * uSheet.z;
   // The tendrils dried where they fell, each in its own slack curve: none of them lies straight.
@@ -57,7 +59,7 @@ void main() {
   float rock = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw).r;
   // It has sunk: the low edge of the trunk and of the legs is under the grit that has gathered against it, not on top of the rock.
   float body = smoothstep(0.2, 0.3, position.x);
-  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), body) + lift - mix(0.01, 0.025 + 0.05 * sag * smoothstep(0.03, 0.14, lift), body), xz.y);
+  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), body) + lift - mix(0.01, 0.03 + 0.055 * sag * smoothstep(0.03, 0.14, lift), body), xz.y);
   vWorld = p;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
@@ -109,7 +111,7 @@ ${CUT}
   n = normalize(n);
   vec3 albedo = texture2D(tCarcass, vAt).rgb;
   vec3 skin = texture2D(tCarcass, vAt, 4.5).rgb / max(texture2D(tLift, vAt, 3.5).g, 0.5);
-  albedo = mix(albedo, max(albedo, skin * 0.62), 0.7 * hollow);
+  albedo = mix(albedo, max(albedo, skin * 0.62), 0.35 * hollow);
   // Parchment: the colour has gone out of it. Dark and damp where it lies on the rock, salt on what faces up.
   float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
   albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.35) * 1.5;
