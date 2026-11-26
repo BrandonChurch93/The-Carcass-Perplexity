@@ -96,7 +96,8 @@ export function dusk(seconds: number): Dusk {
     gain,
     strikes: 1 - ease(1.5, 5.2, u),
     glintSlide: 1900 * ease(0.3, 5.2, u),
-    glint: 1 - ease(2.6, 4.9, u),
+    // (The sun's image on the sea is gone before the exposure opens: held longer it is lifted with the night into a dull red slab.)
+    glint: 1 - ease(2.4, 4.0, u),
     working: 1 - 0.85 * ease(2, 6.5, u),
     ember: night * (1 - 0.42 * thin),
     lift: (NIGHT_GAIN * (1 - 0.05 * thin) * dark) / gain,
