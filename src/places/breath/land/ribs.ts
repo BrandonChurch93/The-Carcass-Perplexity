@@ -229,8 +229,9 @@ export function wall(levels: number[]): THREE.BufferGeometry {
 export function block(seed: number, size: [number, number, number], at: [number, number, number], turn: [number, number, number]): THREE.BufferGeometry {
   const planes: [number, number, number, number][] = [];
   const h = (k: number): number => hash3(Math.floor(seed * 131), k, 5);
-  // The six sides, each leaning, and four more that take a corner or an edge off.
-  for (let k = 0; k < 10; k++) {
+  // The six sides, each leaning well off square (no face of a fallen block is true), and ten more that take a corner or an edge off:
+  // a block that fell and broke has no two faces parallel and no corner whole.
+  for (let k = 0; k < 16; k++) {
     let nx: number;
     let ny: number;
     let nz: number;
@@ -238,15 +239,15 @@ export function block(seed: number, size: [number, number, number], at: [number,
     if (k < 6) {
       const axis = k >> 1;
       const sign = k & 1 ? -1 : 1;
-      nx = (axis === 0 ? sign : 0) + 0.34 * (h(k * 3) - 0.5);
-      ny = (axis === 1 ? sign : 0) + 0.26 * (h(k * 3 + 1) - 0.5);
-      nz = (axis === 2 ? sign : 0) + 0.34 * (h(k * 3 + 2) - 0.5);
+      nx = (axis === 0 ? sign : 0) + 0.5 * (h(k * 3) - 0.5);
+      ny = (axis === 1 ? sign : 0) + 0.34 * (h(k * 3 + 1) - 0.5);
+      nz = (axis === 2 ? sign : 0) + 0.5 * (h(k * 3 + 2) - 0.5);
       d = 1;
     } else {
       nx = (h(k * 3) > 0.5 ? 1 : -1) * (0.5 + 0.5 * h(k * 5));
       ny = (h(k * 3 + 1) > 0.4 ? 1 : -1) * (0.3 + 0.6 * h(k * 5 + 1));
       nz = (h(k * 3 + 2) > 0.5 ? 1 : -1) * (0.5 + 0.5 * h(k * 5 + 2));
-      d = 0.98 + 0.3 * h(k * 7);
+      d = 1.0 + 0.3 * h(k * 7);
     }
     const l = Math.hypot(nx, ny, nz);
     planes.push([nx / l, ny / l, nz / l, d * (k < 6 ? 1 : 1.25)]);
@@ -277,7 +278,9 @@ export function block(seed: number, size: [number, number, number], at: [number,
     const lx = p.x;
     const ly = p.y;
     const lz = p.z;
-    const rough = 0.22 * chipped(lx + seed * 9, ly, lz - seed * 5);
+    // Worn and chipped by the solid noise, and its beds stand out in steps on its sides.
+    const bed = ly * 2.3 + 0.7 * noise3(lx * 0.6 + seed, ly * 0.6, lz * 0.6);
+    const rough = 0.34 * chipped(lx + seed * 9, ly, lz - seed * 5) + 0.09 * (Math.abs(bed - Math.floor(bed) - 0.5) * 2 - 0.5);
     p.multiplyScalar(1 + rough / Math.max(0.6, p.length()));
     p.applyMatrix4(m);
     return { at: [p.x, p.y, p.z], uv: [lx + seed * 13, ly + lz], occ: lerp(0.55, 1, smooth(dy * 0.8 + 0.75)) };
