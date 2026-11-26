@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 103, 2026-11-26 09:19 UTC:
+Status 104, 2026-11-26 09:35 UTC:
 
-- `01-reveal.jpg`: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)
-- `02-eye.jpg`: The Eye, round 3: approved left, built right at final tier (all five keys)
-- `03-breath.jpg`: The Breath, round 3: approved left, built right at final tier (all five keys)
-- `04-frame-7418-hd-final.jpg`: Film frame 7418, hd, final tier
+- `01-ribs.jpg`: The Ribs, round 3: approved left, built right at final tier (all five keys)
+- `02-marsh.jpg`: The Blood Marsh, round 3: approved left, built right at final tier (all five keys)
+- `03-spine.jpg`: The Spine, round 3: approved left, built right at final tier (all five keys)
+- `04-ribs-06.jpg`: The Ribs in motion: the sea returns (shot ribs-06, twelve frames, review tier)
 
+Status 103, 2026-11-26 09:19 UTC, showed: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)...
 Status 102, 2026-11-26 08:57 UTC, showed: The Ribs, the wide view: approved left, built right at final tier in 4K, with the tighter shutter limit and the blades faint again; The...
 Status 101, 2026-11-26 08:30 UTC, showed: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust); The Spine...
-Status 100, 2026-11-26 08:15 UTC, showed: The Reveal from orbit, version 3: approved left, built right (draft tier); The Eye, heartbeat of 08:05: approved left, built right; the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T09:19:55Z
-phase 4: 13.15 h used of 17.00 h
-build: 33.48 h used of 72.00 h
+2026-11-26T09:35:14Z
+phase 4: 13.41 h used of 17.00 h
+build: 33.73 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 23
+minutes since the last status: 15
 ```
 
 ## Phases
