@@ -2,6 +2,7 @@
 // The pose is solved from nothing each call: where the gait has put each pad on the crust, where the body rides over them,
 // the legs from hip to pad, the neck from the shoulders to what it reaches for, and the tendrils that hang from its end.
 import type { Skin, Tube } from './skin';
+import { TRUNK_RINGS, TRUNK_SIDES, trunkTable } from './trunk';
 
 export type V3 = [number, number, number];
 
@@ -37,6 +38,10 @@ export interface Build {
   tendrilLen: number;
   /** Height of a step, metres. */
   stepH: number;
+  /** How it stands: its shoulders over its hips, radians. */
+  tilt: number;
+  /** Which of the three trunks it has. */
+  trunk: number;
 }
 
 export interface NeckAim {
@@ -139,8 +144,8 @@ const LOOP = Math.PI / 4;
 const STEP = 1.6;
 /** Crumbs a pad drops in one swing. */
 const GRIT = 12;
-const BODY_RINGS = 96;
-const BODY_SIDES = 32;
+const BODY_RINGS = TRUNK_RINGS;
+const BODY_SIDES = TRUNK_SIDES;
 const NECK_RINGS = 46;
 const NECK_SIDES = 16;
 const NECK_END = 14;
@@ -212,55 +217,38 @@ export class Animal {
     this.ankle = 0.6 * k;
     this.fillet = [0.34 * k, 0.3 * k, 0.13 * k];
 
-    // The body: a keeled sack, deepest behind the shoulders, with the hips and the shoulder blades standing out of it.
+    // The body: a dried carcass drawn over its bones, one of three trunks made outside the film (trunk.ts), cut to this animal's measure.
     this.body = skin.tube(BODY_RINGS, BODY_SIDES);
     this.bodyLocal = new Float32Array(BODY_RINGS * BODY_SIDES * 3);
-    // Where along it the hips and the shoulders stand.
-    const tHip = 0.5 - b.hipFore / b.bodyLen;
-    const tShoulder = 0.5 + b.hipFore / b.bodyLen;
-    for (let i = 0; i < BODY_RINGS; i++) {
-      const t = 0.5 - 0.5 * Math.cos((Math.PI * i) / (BODY_RINGS - 1));
-      const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.3);
-      const x = (t - 0.5) * b.bodyLen;
-      // It hangs between the shoulders and the hips: the back sags between them, the belly hangs lowest a little ahead of the middle.
-      const sag = gauss((t - 0.5) / 0.2);
-      const top = b.bodyTop * e * (1 - 0.1 * sag + 0.5 * b.hump * gauss((t - tShoulder) / 0.12) + 0.2 * gauss((t - tHip) / 0.1));
-      const keel = b.bodyKeel * e * (0.72 + 0.34 * gauss((t - 0.56) / 0.22));
-      const wide = b.bodyWide * e * (1 + 0.14 * gauss((t - tHip) / 0.1) + 0.2 * gauss((t - tShoulder) / 0.1) - 0.14 * sag);
-      for (let j = 0; j < BODY_SIDES; j++) {
-        // The skin is sewn along the keel, where its seam is out of sight.
-        const a = (j / BODY_SIDES - 0.25) * Math.PI * 2;
-        const c = Math.cos(a);
-        const s = Math.sin(a);
-        // A shrunken mass of dried flesh: lumps at three sizes and no pattern to them.
-        let m = 1 + 0.42 * (wrap(t * 3.2, a, 3, seed) - 0.5) + 0.4 * (wrap(t * 6.5, a, 6, seed + 1) - 0.5) + 0.22 * (wrap(t * 12, a, 11, seed + 2) - 0.5) + 0.2 * (wrap(t * 23, a, 19, seed + 7) - 0.5);
-        // It has shrivelled: creases where the hide has drawn in, each a narrow valley that wanders.
-        const fromTop = Math.acos(Math.max(-1, Math.min(1, s)));
-        const fold1 = Math.pow(1 - Math.abs(2 * wrap(t * 5 + 0.5 * Math.sin(a * 2 + seed), a, 5, seed + 4) - 1), 4);
-        const fold2 = Math.pow(1 - Math.abs(2 * wrap(t * 11, a, 9, seed + 5) - 1), 4);
-        m -= 0.15 * fold1 + 0.06 * fold2;
-        // The flank has fallen in under the spine between the shoulder and the hip.
-        m -= 0.3 * gauss((fromTop - 1.15) / 0.4) * sag * (0.6 + 0.8 * wrap(t * 7, a, 2, seed + 8));
-        // What hangs under the belly is ragged.
-        m += 0.3 * smooth(-0.55, -1, s) * (wrap(t * 9, a, 4, seed + 3) - 0.35);
-        // The shoulders and the points of the hips, high on each side: the legs leave the body there.
-        const up = Math.max(0, s);
-        const blade = gauss((Math.abs(c) - 0.9) / 0.26) * smooth(-0.15, 0.35, s);
-        m += 0.36 * blade * gauss((t - tShoulder) / 0.09) + 0.32 * blade * gauss((t - tHip) / 0.09);
-        // The top outline is broken: a few big lumps along the back, none where another is.
-        m += 0.34 * up * (lump(t * 4.3, 0.5, seed + 9) - 0.3) * smooth(0.05, 0.2, t) * smooth(0.97, 0.82, t);
-        // The spine: a low uneven ridge.
-        m += 0.13 * gauss(fromTop / 0.2) * (0.2 + 1.6 * lump(t * 13, 0.5, seed + 6)) * smooth(0.04, 0.2, t) * smooth(0.97, 0.85, t);
-        const pinch = s < 0 ? 1 - 0.55 * s * s : 1;
-        const o = (i * BODY_SIDES + j) * 3;
-        this.bodyLocal[o] = x;
-        this.bodyLocal[o + 1] = s * (s > 0 ? top : keel) * m;
-        this.bodyLocal[o + 2] = c * wide * pinch * m;
-        const under = smooth(0.2, -0.9, s);
-        const socket = Math.max(gauss((t - tShoulder) / 0.12), gauss((t - tHip) / 0.12)) * smooth(0.5, -0.2, s);
-        skin.describe(this.body, i, j, x, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under - 0.12 * socket + 0.1 * blade, (1 - 0.35 * under - 0.3 * socket) * (1 - 0.5 * fold1 - 0.25 * fold2), Math.max(top, wide) * e, seed, 0, 1 - e);
+    {
+      const table = trunkTable(b.trunk);
+      const sx = b.bodyLen / 4.9;
+      const st = b.bodyTop / 0.62;
+      const sk = b.bodyKeel / 0.64;
+      const sz = b.bodyWide;
+      for (let i = 0; i < BODY_RINGS; i++) {
+        const u = i / (BODY_RINGS - 1);
+        const t = 0.5 - 0.5 * Math.cos(Math.PI * u);
+        const e = Math.pow(Math.max(0, 4 * t * (1 - t)), 0.32);
+        for (let j = 0; j <= BODY_SIDES; j++) {
+          const jj = j === BODY_SIDES ? 0 : j;
+          const q = (i * BODY_SIDES + jj) * 3;
+          const y = table[q + 1] as number;
+          const x = (table[q] as number) * sx;
+          if (j < BODY_SIDES) {
+            // The shoulders stand higher on one with a hump.
+            const lift = y > 0 ? 1 + 0.3 * (b.hump - 0.7) * gauss((t - 0.86) / 0.12) : 1;
+            this.bodyLocal[q] = x;
+            this.bodyLocal[q + 1] = y * (y > 0 ? st * lift : sk);
+            // The table has the trunk's left as the pose wants it; the pose turns the stored number over.
+            this.bodyLocal[q + 2] = -(table[q + 2] as number) * sz;
+          }
+          const s = Math.sin((jj / BODY_SIDES - 0.25) * Math.PI * 2);
+          const under = smooth(0.2, -0.9, s);
+          skin.describe(this.body, i, j, t * b.bodyLen, (j / BODY_SIDES) * 5.6 * k, 0.5 - 0.3 * under, 1 - 0.35 * under, Math.max(st * 0.56, sz * 0.88) * e, seed, 0, 1 - e);
+          skin.bake(this.body, i, j, u, j / BODY_SIDES, b.trunk);
+        }
       }
-      skin.describe(this.body, i, BODY_SIDES, x, 5.6 * k, 0.5, 1, Math.max(top, wide) * e, seed, 0, 1 - e);
     }
 
     // Rags of dead skin that hang from the keel and the flanks, and shreds of it at the knees and the hocks.
@@ -614,7 +602,7 @@ export class Animal {
       }
       for (let n = 0; n < LEG_SIDES; n++) {
         const a = (n / LEG_SIDES) * Math.PI * 2;
-        let tendon = 0.9 + 0.06 * Math.cos(2 * a + 0.4) + 0.3 * (wrap((s * 1.1) / k, a, 4, seed) - 0.5) + 0.26 * (wrap((s * 4.5) / k, a, 7, seed + 1) - 0.5);
+        let tendon = 0.9 + 0.06 * Math.cos(2 * a + 0.4) + 0.12 * (wrap((s * 1.1) / k, a, 4, seed) - 0.5) + 0.12 * (wrap((s * 4.5) / k, a, 7, seed + 1) - 0.5);
         // Sinew over bone: cords that stand out of the shaft, each starting and stopping where it pleases, with a furrow beside it.
         for (let g = 0; g < 5; g++) {
           const from = S3 * (hash(g + j * 7, seed + 91) * 1.1 - 0.15);
@@ -623,7 +611,7 @@ export class Animal {
           if (win <= 0) continue;
           let da = a - (hash(g + j * 7, seed + 93) * 6.283 + (0.5 * s) / k * (hash(g, seed + 94) - 0.5));
           da -= Math.round(da / 6.2832) * 6.2832;
-          tendon += win * (0.3 * gauss(da / 0.4) - 0.2 * gauss((da - 0.75) / 0.35));
+          tendon += win * (0.17 * gauss(da / 0.4) - 0.11 * gauss((da - 0.75) / 0.35));
         }
         // Knots stand on one side of the shaft, not round it.
         for (const [amp, at] of knots) if (amp > 0.01) tendon += amp * Math.pow(Math.max(0, 0.5 + 0.5 * Math.cos(a - at)), 2);
@@ -846,7 +834,7 @@ export class Animal {
     const forwards = shiftFore * 0.4 * k + 0.45 * k * idle - 0.5 * k * lead * (plan.dip > 0 ? 1 : 0.3) - 0.6 * k * pull;
     const cx = centre[0] + right[0] * sideways + fwd[0] * forwards;
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
-    const pitch = -0.1 * lead - 0.05 * shiftFore + 0.04 * idle2 + 0.05 * pull;
+    const pitch = b.tilt - 0.1 * lead - 0.05 * shiftFore + 0.04 * idle2 + 0.05 * pull;
     const roll = 0.085 * shiftSide + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.

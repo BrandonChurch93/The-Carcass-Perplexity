@@ -14,7 +14,7 @@ const fract = (x: number): number => x - Math.floor(x);
 const hash = (a: number, b: number): number => fract(Math.sin(a * 127.1 + b * 311.7 + 0.5) * 43758.5453);
 
 /** What each animal is doing, by its index in the staging. */
-type Role = 'feeds' | 'walks' | 'tastes' | 'turns' | 'shifts' | 'grazes';
+type Role = 'feeds' | 'walks' | 'tastes' | 'turns' | 'shifts' | 'grazes' | 'stands';
 
 interface Character {
   role: Role;
@@ -26,6 +26,8 @@ interface Character {
   neck: number;
   /** Width of stance. */
   wide: number;
+  /** Length of stance, fore and aft. */
+  long: number;
   hump: number;
   /** Length of leg against the staged size. */
   tall: number;
@@ -35,25 +37,39 @@ interface Character {
   young: number;
   /** The tuft: how many roots it has left and how long they are, against a whole one. */
   tuft: [number, number];
+  /** How it stands: shoulders over hips (radians, up is positive). */
+  tilt: number;
+  /** Where the knee is on the leg, against the common place. */
+  knee: number;
+  /** How it carries its tuft when it is not down: forward and up as parts of the neck's length, and the shape of the neck (0 hangs, 1 arches). */
+  carry: [number, number, number];
+  /** Its pace against the common one, and the part of its time it rests. */
+  pace: number;
+  /** Which of the three trunks it has. */
+  trunk: number;
 }
 
 // No two alike. 0 is the near one, 1 to 5 the group at the seam, the others are far.
+// A rangy one, a squat one, a sway-backed old one, three young at different ages; necks carried low, level, in an S or straight up.
 const CAST: Character[] = [
-  { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1] },
-  { role: 'feeds', skater: 0.22, heavy: 1.3, neck: 0.96, wide: 1.0, hump: 0.7, tall: 0.97, bulk: 1.28, young: 1, tuft: [1.1, 1.05] },
-  { role: 'walks', skater: 0.45, heavy: 1.12, neck: 0.96, wide: 1.15, hump: 0.3, tall: 1.13, bulk: 1.0, young: 1, tuft: [0.9, 1.25] },
-  { role: 'tastes', skater: 0.4, heavy: 1.0, neck: 1.15, wide: 0.82, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65] },
-  { role: 'turns', skater: 0.6, heavy: 1.0, neck: 0.95, wide: 0.95, hump: 0.85, tall: 1.08, bulk: 0.9, young: 0.62, tuft: [0.8, 0.8] },
-  { role: 'shifts', skater: 0.3, heavy: 0.95, neck: 0.96, wide: 1.12, hump: 0.4, tall: 1.1, bulk: 0.9, young: 1, tuft: [1, 0.9] },
-  { role: 'walks', skater: 0.7, heavy: 0.9, neck: 1.1, wide: 1.05, hump: 0.35, tall: 0.88, bulk: 1.15, young: 1, tuft: [1.2, 1.1] },
-  { role: 'grazes', skater: 0.15, heavy: 1.1, neck: 0.98, wide: 0.9, hump: 0.75, tall: 1.0, bulk: 1.2, young: 1, tuft: [0.9, 1] },
-  { role: 'walks', skater: 0.35, heavy: 1.0, neck: 1.25, wide: 1.25, hump: 0.5, tall: 0.85, bulk: 0.8, young: 1, tuft: [1, 1.2] },
-  { role: 'grazes', skater: 0.9, heavy: 0.85, neck: 1.2, wide: 1.35, hump: 0.3, tall: 0.9, bulk: 0.95, young: 0.66, tuft: [0.8, 0.9] },
-  { role: 'grazes', skater: 0.2, heavy: 1.15, neck: 0.98, wide: 1.0, hump: 0.8, tall: 0.92, bulk: 1.1, young: 1, tuft: [1.1, 0.9] },
-  { role: 'walks', skater: 0.55, heavy: 0.95, neck: 1.05, wide: 0.92, hump: 0.4, tall: 1.06, bulk: 0.9, young: 1, tuft: [0.45, 0.6] },
-  { role: 'grazes', skater: 0.75, heavy: 1.0, neck: 0.96, wide: 1.08, hump: 0.6, tall: 1.0, bulk: 1.0, young: 0.7, tuft: [1, 1] },
-  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.15, wide: 0.72, hump: 0.65, tall: 1.2, bulk: 1.05, young: 1, tuft: [0.9, 1.1] },
+  { role: 'feeds', skater: 0.1, heavy: 1.0, neck: 1.0, wide: 0.86, long: 1.0, hump: 0.55, tall: 1.0, bulk: 1.0, young: 1, tuft: [1, 1], tilt: 0.03, knee: 1.0, carry: [0.56, -0.24, 0.4], pace: 1, trunk: 0 },
+  { role: 'feeds', skater: 0.22, heavy: 1.3, neck: 0.96, wide: 1.0, long: 1.0, hump: 0.7, tall: 0.97, bulk: 1.28, young: 1, tuft: [1.1, 1.05], tilt: 0, knee: 1.0, carry: [0.56, -0.38, 0.2], pace: 1, trunk: 0 },
+  { role: 'walks', skater: 0.45, heavy: 1.12, neck: 0.96, wide: 1.15, long: 1.0, hump: 0.3, tall: 1.13, bulk: 1.0, young: 1, tuft: [0.9, 1.25], tilt: 0.05, knee: 1.0, carry: [0.67, -0.15, 0.9], pace: 1, trunk: 2 },
+  { role: 'tastes', skater: 0.4, heavy: 1.0, neck: 1.15, wide: 0.82, long: 1.0, hump: 0.9, tall: 0.9, bulk: 0.95, young: 1, tuft: [0.5, 0.65], tilt: 0.08, knee: 1.0, carry: [0.27, 0.72, 0.8], pace: 1, trunk: 1 },
+  { role: 'turns', skater: 0.6, heavy: 0.85, neck: 0.8, wide: 0.95, long: 0.85, hump: 0.4, tall: 1.12, bulk: 0.78, young: 0.56, tuft: [0.7, 0.7], tilt: -0.06, knee: 0.9, carry: [0.5, 0.3, 0.7], pace: 1.25, trunk: 2 },
+  { role: 'shifts', skater: 0.12, heavy: 0.82, neck: 1.08, wide: 0.7, long: 1.15, hump: 0.25, tall: 1.24, bulk: 0.8, young: 1, tuft: [1, 0.9], tilt: 0.1, knee: 1.12, carry: [0.86, 0.02, 0.55], pace: 0.9, trunk: 2 },
+  { role: 'walks', skater: 0.8, heavy: 1.2, neck: 0.85, wide: 1.4, long: 1.15, hump: 1.5, tall: 0.76, bulk: 1.3, young: 1, tuft: [1.3, 0.8], tilt: 0.12, knee: 0.86, carry: [0.42, 0.46, 0.85], pace: 0.8, trunk: 1 },
+  { role: 'stands', skater: 0.05, heavy: 1.05, neck: 1.28, wide: 0.66, long: 0.8, hump: 0.6, tall: 1.18, bulk: 1.05, young: 1, tuft: [0.6, 0.8], tilt: 0.14, knee: 1.05, carry: [0.2, 0.84, 0.75], pace: 1, trunk: 0 },
+  { role: 'walks', skater: 0.35, heavy: 0.9, neck: 1.3, wide: 1.2, long: 1.2, hump: 0.2, tall: 0.84, bulk: 0.72, young: 1, tuft: [1, 1.3], tilt: -0.1, knee: 0.92, carry: [0.78, -0.22, 0.3], pace: 1.2, trunk: 2 },
+  { role: 'grazes', skater: 0.95, heavy: 0.8, neck: 1.1, wide: 1.45, long: 0.9, hump: 0.3, tall: 0.8, bulk: 0.9, young: 0.7, tuft: [0.8, 0.9], tilt: -0.04, knee: 0.84, carry: [0.62, 0.14, 0.6], pace: 1.1, trunk: 2 },
+  { role: 'grazes', skater: 0.2, heavy: 1.25, neck: 0.9, wide: 1.05, long: 1.1, hump: 1.3, tall: 0.88, bulk: 1.3, young: 1, tuft: [1.2, 0.85], tilt: 0.06, knee: 1.0, carry: [0.45, -0.44, 0.3], pace: 0.75, trunk: 1 },
+  { role: 'walks', skater: 0.5, heavy: 0.88, neck: 1.2, wide: 0.8, long: 0.9, hump: 0.35, tall: 1.14, bulk: 0.82, young: 1, tuft: [0.45, 0.6], tilt: 0.16, knee: 1.1, carry: [0.26, 0.74, 0.8], pace: 1.1, trunk: 0 },
+  { role: 'grazes', skater: 0.7, heavy: 1.0, neck: 0.9, wide: 1.1, long: 1.0, hump: 0.8, tall: 0.92, bulk: 1.05, young: 0.8, tuft: [1, 1], tilt: 0, knee: 0.95, carry: [0.6, -0.3, 0.4], pace: 1, trunk: 1 },
+  { role: 'walks', skater: 0.05, heavy: 1.08, neck: 1.15, wide: 0.72, long: 1.0, hump: 0.65, tall: 1.2, bulk: 1.05, young: 1, tuft: [0.9, 1.1], tilt: 0.04, knee: 1.0, carry: [0.56, -0.31, 0.18], pace: 1, trunk: 0 },
 ];
+
+/** Which of the three trunks an animal has. */
+export const trunkOf = (index: number): number => (CAST[index] as Character).trunk;
 
 export function makeBuild(index: number, rng: Rng): Build {
   const w = WALKERS[index] as (typeof WALKERS)[number];
@@ -61,22 +77,24 @@ export function makeBuild(index: number, rng: Rng): Build {
   // No two alike: each differs from the staged size in leg, body, neck and tuft, and three are young.
   const k = w.size * c.young;
   const v = (a: number, b: number): number => rng.range(a, b);
+  // The trunk is a carcass drawn over its bones: a heavy animal has thicker legs and neck, and a trunk only a little deeper.
+  const girth = c.bulk * (0.55 + 0.45 * c.heavy);
   return {
     k,
     seed: index * 1.618 + 0.37,
     // A small body hung between the shoulders and the hips, on four long legs that leave it at its upper sides and go down and out.
     bodyLen: 4.9 * k * c.bulk * v(0.92, 1.1),
-    bodyTop: 0.8 * k * c.bulk * c.heavy * v(0.92, 1.08),
-    bodyKeel: (index === 1 ? 1.05 : 0.9) * k * c.bulk * c.heavy * v(0.9, 1.12),
-    bodyWide: 1.0 * k * c.bulk * c.heavy * v(0.92, 1.08),
+    bodyTop: 0.8 * k * girth * v(0.92, 1.08),
+    bodyKeel: 0.9 * k * girth * v(0.9, 1.12),
+    bodyWide: 1.0 * k * girth * v(0.92, 1.08),
     hump: c.hump,
     hipFore: 1.75 * k * c.bulk,
-    hipSide: 0.78 * k * c.bulk * c.heavy,
-    hipUp: 0.3 * k * c.bulk * c.heavy,
-    knee: lerp(0.47, 0.43, c.skater) * v(0.96, 1.04),
+    hipSide: 0.62 * k * girth,
+    hipUp: 0.3 * k * girth,
+    knee: lerp(0.47, 0.43, c.skater) * c.knee * v(0.96, 1.04),
     hock: lerp(0.74, 0.8, c.skater) * v(0.96, 1.04),
     slack: lerp(0.01, 0.028, c.skater),
-    stanceFore: 3.9 * k * v(0.9, 1.06),
+    stanceFore: 3.9 * k * c.long * v(0.9, 1.06),
     stanceSide: 2.9 * k * c.wide,
     standH: 9.3 * k * c.tall * v(0.97, 1.03),
     stride: 4.3 * k * v(0.92, 1.08),
@@ -89,6 +107,8 @@ export function makeBuild(index: number, rng: Rng): Build {
     tendrilLen: 3.5 * k * c.tuft[1] * v(0.9, 1.15),
     stepH: 1.0 * k * v(0.8, 1.2),
     lean: index === 1 ? -0.5 * k : (v(0, 1) < 0.5 ? -1 : 1) * v(0.35, 1.0) * k,
+    tilt: c.tilt,
+    trunk: c.trunk,
   };
 }
 
@@ -134,7 +154,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const speed = Math.hypot(ux, uz);
   const staged = ((w.heading + stand[2]) * Math.PI) / 180;
   const twice = TWICE[index];
-  const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'tastes' && c.role !== 'turns' && !twice;
+  const walksOn = speed * (T2 - T1) > 4.2 && c.role !== 'tastes' && c.role !== 'stands' && c.role !== 'turns' && !twice;
   // How far ahead of its shoulders the tuft comes down when the neck is drawn out with a little slack.
   // The last third of the neck turns down to the tuft and is 0.25 of the neck forward and 0.18 down; the rest runs to it with a little slack,
   // so that it comes to the tuft still going down.
@@ -249,6 +269,15 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       return { x: x + (z[0] - a[0]) * u, z: zz + (z[1] - a[1]) * u, yaw: yawOf(s) };
     };
     const neck = (seconds: number): NeckAim => {
+      if (c.role === 'stands') {
+        // It stands with its tuft held high and still, and looks slowly round: it does not feed while the film looks.
+        return {
+          down: 0,
+          target,
+          raised: [b.neckLen * (c.carry[0] + 0.05 * Math.sin(seconds * om * 0.5 + 2)), b.neckLen * (c.carry[1] + 0.03 * Math.sin(seconds * om * 0.6 + phase * 6)), b.neckLen * 0.16 * Math.sin(seconds * om * 0.45 + phase * 6)],
+          shape: c.carry[2],
+        };
+      }
       if (c.role === 'tastes') {
         // Trunk raised and swinging, as if tasting the air. Once, after the key of the feeding picture has seen it raised, it brings its tuft
         // half way down to the crust, slowly, and takes it up again when that shot is over.
@@ -270,12 +299,12 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       return {
         down: 1 - Math.max((turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, 0.8 * held),
         target: twice && seconds >= twice.cut ? second.target : target,
-        raised: carried(seconds, index === 1 ? -0.38 : -0.24),
-        shape: Math.max(lerp(FEED_SHAPE, index === 1 ? 0.2 : 0.4, up), lerp(FEED_SHAPE, 0.2, held)),
+        raised: carried(seconds, c.carry[1], c.carry[0]),
+        shape: Math.max(lerp(FEED_SHAPE, c.carry[2], up), lerp(FEED_SHAPE, 0.2, held)),
       };
     };
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
-    const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
+    const fidget = turning ? 0 : index === 1 ? 4 : c.role === 'stands' ? 9.5 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
     const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
     // The one the long lens looks at is seen on other feet through that shot. Its hind pad goes early and higher than its build has it, is held
     // up for a moment and comes down with weight just before the key: the body sinks on it a beat late. Its fore pad goes early after
@@ -285,7 +314,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const stepUp = index === 1 ? (s: number, j: number): number => (j === 2 ? 2.4 * pulse(s, 7.2, 8.0, 10.4, 10.8) : j === 1 ? 3.2 * pulse(s, 10.9, 11.9, 14.6, 15.2) : 0) : undefined;
     const weight = index === 1 ? (s: number): number => 1 + 0.3 * pulse(s, 10.83, 11.5, 14.6, 15.4) : undefined;
     const sink = index === 1 ? (s: number): number => 1 + 3 * pulse(s, 9.9, 10.2, 10.45, 10.8) : undefined;
-    return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
+    return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, halfStep: none, habit, dig: c.role === 'tastes' || c.role === 'stands' ? 0 : dig, dip: c.role === 'tastes' || c.role === 'stands' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
   }
 
   // One that walks: on a line on the crust, a few steps and a rest, so that its mean speed is the staged one.
@@ -294,7 +323,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
   const yaw = Math.atan2(dx, -dz);
   // A few steps and a rest. It never steps faster than a tall animal can: the faster it must travel, the less it rests.
   const ramp = 0.25;
-  const quickest = 3.4 * Math.sqrt(k);
+  const quickest = (3.4 * Math.sqrt(k)) / c.pace;
   const settled = c.role === 'walks' ? 0.16 : c.role === 'grazes' ? 0.52 : 0.6;
   const rest = Math.max(0.06, Math.min(settled, 1 - (speed * quickest) / (b.stride * (1 - ramp))));
   // The near one feeds where the wide view sees it and again where the view of the one that sank sees it, and walks between.
@@ -345,7 +374,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       const late = smooth(12.9, 14.9, seconds);
       const soon = 0.6 * smooth(11.45, 13.2, seconds) * (1 - smooth(13.2, 14.4, seconds));
       const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * (late + (1 - late) * soon);
-      return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater, 0.67), shape: lerp(0.9, FEED_SHAPE, down) };
+      return { down, target: [fed[0], fed[1]], raised: carried(seconds, c.carry[1], c.carry[0]), shape: lerp(c.carry[2], FEED_SHAPE, down) };
     }
     const tau = seconds / period + shift;
     const n = Math.round(tau);
@@ -357,7 +386,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     const settle = 0.7 / period;
     const depth = c.role === 'walks' ? 0.35 : 1;
     const down = depth * smooth(rest / 2 + 1.6 / period, Math.max(0.01, rest / 2 - settle), away);
-    return { down, target, raised: carried(seconds, c.role === 'walks' ? -0.32 + 0.12 * c.skater : -0.42), shape: lerp(c.role === 'walks' ? 0.15 + 0.6 * c.skater : 0.3, FEED_SHAPE, down) };
+    return { down, target, raised: carried(seconds, c.carry[1], c.carry[0]), shape: lerp(c.carry[2], FEED_SHAPE, down) };
   };
   void t0;
   // In a long rest it re-places one fore pad: it leans off it, puts it down a step off and settles over it.

@@ -143,14 +143,15 @@ export function create(ctx: HeartContext): HeartPiece {
     uniforms: {
       ...rig.uniforms,
       uPixel: pixel,
-      tHide: { value: ctx.assets.texture('mat/hide.jpg', { anisotropy: 4 }) },
-      tHideNh: { value: ctx.assets.texture('mat/hide-nh.png', { kind: 'data', anisotropy: 4 }) },
-      tFlake: { value: ctx.assets.texture('mat/flake.jpg', { anisotropy: 4 }) },
+      tTorso: { value: ctx.assets.texture('mat/torso.jpg', { anisotropy: 4 }) },
+      tTorsoNh: { value: ctx.assets.texture('mat/torso-nh.jpg', { kind: 'data', anisotropy: 4 }) },
+      tLimb: { value: ctx.assets.texture('mat/limb.jpg', { anisotropy: 4 }) },
+      tLimbNh: { value: ctx.assets.texture('mat/limb-nh.jpg', { kind: 'data', anisotropy: 4 }) },
+      tTrunk: { value: ctx.assets.texture('mat/trunk.jpg', { kind: 'data', repeat: false, anisotropy: 4 }) },
       uPools: { value: pools },
       uFeet: { value: feet },
       tGround: { value: ground.texture },
       uFeetN: { value: FEET },
-      tFlakeNh: { value: ctx.assets.texture('mat/flake-nh.png', { kind: 'data', anisotropy: 4 }) },
     },
   });
   const mesh = new THREE.Mesh(geometry, material);
