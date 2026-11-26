@@ -93,7 +93,11 @@ export function radii(rib: Rib, t: number): [number, number] {
   const y = centre(rib, t).y;
   const top = rib.flareTop ?? 1;
   const flare = (rib.flare ?? 0) * Math.pow(Math.max(0, 1 - Math.max(0, y) / top), 1.5);
-  return [rib.a * (1 - 0.9 * Math.pow(t, 1.4)) + flare, rib.b * (1 - 0.85 * t) + flare];
+  // Above its foot a blade thins fast: a thin tall arc, not a horn. The near cliff and the colony's stack keep their girth (things stand on them).
+  const slim = rib.name === 'L1' || rib.name === 'S' ? 0 : Math.min(1, Math.max(0, (t - 0.06) / 0.25));
+  const ka = 1 - 0.9 * Math.pow(t, 1.4);
+  const kb = 1 - 0.85 * t;
+  return [rib.a * ka * (1 - 0.34 * slim) + flare, rib.b * kb * (1 - 0.28 * slim) + flare];
 }
 
 export function skirtPad(y: number): number {
