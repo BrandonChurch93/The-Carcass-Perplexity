@@ -9,6 +9,7 @@ import { INSIDE_FROM, STRIKE_FROM, WIND, heading, kiteEdge, step } from '../shar
 import { stagedSeconds } from '../shared/stage';
 import { FIRST, finAxes, finEdge, spires, tipOf } from '../ridge';
 import { flashAt } from '../strikes/bolt';
+import { during } from '../strikes/where';
 
 export const PARTS: readonly string[] = ['tether-kites'];
 
@@ -78,6 +79,7 @@ attribute vec2 aAt;
 uniform float uPixel;
 uniform float uReach;
 uniform vec4 uStage;
+uniform vec2 uStageMore;
 ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormal;
@@ -95,13 +97,19 @@ void main() {
   vec4 more = aMore;
   if (uStage.w > 0.0) {
     if (abs(more.z - uStage.w) > 0.5) {
-      gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
-      return;
+      // uStageMore.x: 1 where the other spires fly none.
+      if (uStageMore.x > 0.5) {
+        gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+        return;
+      }
+    } else {
+      shape.x *= uStage.x;
+      shape.w *= uStage.x;
+      shape.y *= uStage.y;
+      more.w = more.w > 0.9 ? more.w : min(more.w * uStage.z, 0.45);
+      // uStageMore.y: how much the staged ribbons climb the wind, as a slope.
+      more.x -= uStageMore.y;
     }
-    shape.x *= uStage.x;
-    shape.w *= uStage.x;
-    shape.y *= uStage.y;
-    more.w = more.w > 0.9 ? more.w : min(more.w * uStage.z, 0.45);
   }
   float u = aAt.x;
   float e = 0.004;
@@ -435,6 +443,8 @@ export function create(ctx: Context): Piece {
   // and the one spire that flies ribbons.
   const reach = { value: 1 };
   const stage = new THREE.Vector4(1, 1, 1, 0);
+  const stageMore = new THREE.Vector2(0, 0);
+  const closeShot = during('spine-02');
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
@@ -444,6 +454,7 @@ export function create(ctx: Context): Piece {
       uPixel: pixel,
       uReach: reach,
       uStage: { value: stage },
+      uStageMore: { value: stageMore },
       uStruck: { value: struck },
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
@@ -501,8 +512,13 @@ export function create(ctx: Context): Piece {
   return {
     setTime: (seconds) => {
       const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
+      // Staged by shot. spine-04, the long lens: the struck spire's ribbons at the size that lens needs, no other spire flies any.
+      // spine-02, the close lens on the first spire: its ribbons short enough to be whole in the frame, on long ropes, climbing the wind.
+      const inClose = stagedSeconds() >= closeShot.from && stagedSeconds() <= closeShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
+      else if (inClose) stage.set(0.38, 0.62, 4, 1);
       else stage.set(1, 1, 1, 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0);
       knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
       // The charge lingers in the ribbons a little after the stroke.
