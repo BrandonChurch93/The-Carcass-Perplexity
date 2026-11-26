@@ -325,6 +325,8 @@ void main() {
   float crease = smoothstep(0.03, 0.12, relief - 0.33);
   float belly = smoothstep(0.2, 1.0, abs(vSkin.x)) * (1.0 - lie * lie);
   float thick = 0.16 + 0.85 * drift * drift + 2.2 * knot + 1.3 * lip + 0.35 * crease + 1.0 * smoothstep(0.2, 1.0, fold) + 0.75 * smoothstep(0.3, 1.0, fold2) - 0.2 * belly + 0.35 * far;
+  // Far off its folds are not seen one by one, but it is thick in long streaks and thin between them.
+  thick = max(0.06, thick * (1.0 + far * 1.6 * (vnoise(vec2(metres * 0.045 + seed * 2.0, lie * 2.6 + seed)) - 0.55)));
   float path = thick / max(nv, 0.3);
   float cover = (1.0 - exp(-uFilm.y * path)) * cut;
 
@@ -343,7 +345,7 @@ void main() {
   vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
   // Close, its hue wanders in broad patches: violet, a cold green, a little gold.
   vec3 patches = 0.5 + 0.5 * cos(6.2832 * (1.4 * drift + 0.35 * wob + seed + vec3(0.0, 0.3333, 0.6667)));
-  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98) * (0.78 + 0.4 * patches), 1.0 - far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
+  vec3 body = mix(vec3(0.7, 0.74, 1.0), vec3(1.0, 0.8, 0.98) * (0.78 + 0.4 * patches), 1.0 - 0.5 * far) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
   // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
   // dark sky and the sky is still seen through it.
   float thin = 0.8 * uFilm.y;
@@ -352,7 +354,7 @@ void main() {
   vec3 key = skyIrradiance(above) / 3.14159;
   // Between two folds the skin lies in their shade.
   float trough = 1.0 - (1.0 - far) * (0.3 * smoothstep(0.1, -0.9, fold) + 0.25 * smoothstep(0.0, -0.9, fold2));
-  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze * trough + 0.25 * key * lip * cut);
+  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze * trough + 0.25 * key * lip * cut * (1.0 - 0.7 * far));
 
   // Wet: it gives the sky back, more aslant, and the colours of a thin film slide over it as it turns.
   float fres = 0.07 + 0.93 * pow(1.0 - nv, 4.0);
@@ -363,7 +365,7 @@ void main() {
   vec3 pearl = mix(vec3(1.0), 0.45 + 1.1 * (vec3(0.62, 0.42, 1.0) * tints.x + vec3(1.0, 0.52, 0.74) * tints.y + vec3(1.0, 0.82, 0.55) * tints.z) / (tints.x + tints.y + tints.z), uFilm.z);
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
   // The brightest of the sky on a wet skin: a soft light down every fold that turns to it.
-  vec3 shine = uFilm.w * pearl * mix(vec3(1.0), vec3(0.7, 0.62, 1.0), uVeil) * (mirror * fres * (1.0 + 2.0 * lip) + key * vec3(0.8, 0.72, 1.0) * (1.6 * pow(ndh, 40.0) + 0.07 * pow(ndh, 6.0)) * (1.0 - 0.5 * far)) * cut;
+  vec3 shine = uFilm.w * pearl * mix(vec3(1.0), vec3(0.7, 0.62, 1.0), uVeil) * (mirror * fres * (1.0 + 2.0 * lip * (1.0 - 0.7 * far)) + key * vec3(0.8, 0.72, 1.0) * (1.6 * pow(ndh, 40.0) + 0.07 * pow(ndh, 6.0)) * (1.0 - 0.5 * far)) * cut;
   float alpha = clamp(cover + fres * uFilm.w * cut * (1.0 - cover), 0.0, 1.0);
   gl_FragColor = vec4(rigOut(c + shine), alpha * (1.0 - uSolo));
 }`;
@@ -546,9 +548,9 @@ void main() {
   float rows = smoothstep(-0.2, 0.9, sin(vPod.x * 9.0 + 1.2 * sin(vPod.y * 5.0 + seed)));
   float grain = vnoise(vec2(vPod.y * 4.0 + seed, vPod.x * 9.0));
   // Brown as old kelp, each husk its own shade, and frost on what looks up, in the rows and on the tip.
-  vec3 husk = mix(vec3(0.05, 0.028, 0.018), vec3(0.24, 0.13, 0.07), grain * (0.5 + 0.5 * rows)) * (0.55 + 0.9 * fract(seed * 0.37));
+  vec3 husk = mix(vec3(0.028, 0.02, 0.017), vec3(0.11, 0.078, 0.06), grain * (0.5 + 0.5 * rows)) * (0.55 + 0.9 * fract(seed * 0.37));
   float frost = vnoise(vec2(vPod.y * 9.0 + seed, vPod.x * 17.0));
-  float rime = smoothstep(0.5, 0.85, 0.55 * n.y - 0.25 * dot(n, normalize(uWind.xyz)) + 0.55 * frost + 0.2 * smoothstep(0.3, 1.0, vPod.x)) * 0.8;
+  float rime = smoothstep(0.42, 0.8, 0.55 * n.y - 0.25 * dot(n, normalize(uWind.xyz)) + 0.55 * frost + 0.2 * smoothstep(0.3, 1.0, vPod.x)) * 0.8;
   vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), 1.0, 0.45 + 0.55 * rows);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
@@ -603,6 +605,25 @@ export function create(ctx: Context): Piece {
       }
     }
   });
+
+  // Between the colonies of the first spire fly narrow ones on cords of their own: the thinner ones under the strong.
+  const narrow = ctx.rng('kites/narrow');
+  for (const share of [0.85, 0.812, 0.78, 0.75, 0.72]) {
+    const length = narrow.range(100, 170);
+    const cord = narrow.range(14, 30) * 0.4;
+    kites.push({
+      anchor: seat(spires[FIRST] as (typeof spires)[number], share + narrow.range(-0.004, 0.004), lensSide * narrow.range(0.7, 0.78)),
+      cord,
+      blade: length - cord,
+      half: narrow.range(1.6, 2.6),
+      phase: narrow.range(0, 6.28),
+      wave: (length - cord) / narrow.range(1.25, 2.1),
+      sag: narrow.range(0.05, 0.13),
+      seed: narrow.next(),
+      spire: 1,
+      lead: false,
+    });
+  }
 
   // The skin is laid over what is behind it, so the kites are drawn the farthest first, as the lens of key spine-2 sees them.
   const farness = (k: Kite): number => Math.hypot(k.anchor[0] + WIND[0] * k.blade * 0.4 - stand[0], k.anchor[1] - stand[1], k.anchor[2] + WIND[2] * k.blade * 0.4 - stand[2]);
@@ -794,7 +815,7 @@ export function create(ctx: Context): Piece {
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
       if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
       else if (inClose) film.set(0.34, 0.3, 0.95, 0.75);
-      else film.set(0.5, 0.5, 0.4, 1.0);
+      else film.set(0.24, 0.3, 0.9, 0.35);
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);
       // The stroke as it burns and nothing after it: between the return strokes the kites are dark.
