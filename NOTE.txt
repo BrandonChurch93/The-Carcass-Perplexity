@@ -1,5 +1,7 @@
-2026-11-26 01:43 UTC
-work at ef6a552 on agent/breath-life-2
-minute 35: plumes from the frond picture (breath-3 crops), dead wader first pass as raised sheet (breath-2, still a slab)
-look-1.jpg = out/work/hb2-breath-2.png
-look-2.jpg = out/work/hb2-breath-3-crops.png
+2026-11-26 02:18 UTC
+work at dab6475 on agent/breath-life-2
+V1 minute 69: breath-1, breath-2, breath-3, breath-0 against the approved
+look-1.jpg = out/work/v1-breath-1.png
+look-2.jpg = out/work/v1-breath-2.png
+look-3.jpg = out/work/v1-breath-3.png
+look-4.jpg = out/work/v1-breath-0.png
