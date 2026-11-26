@@ -190,8 +190,8 @@ export function create(ctx: Context): Piece {
           const off = Math.min(1, foot.lift / (0.5 * k));
           rig.setDisc(discs, slot * DISCS + j, foot.x, foot.z, 0.16 * k * (1 + 1.5 * off), 0.85 * dry * (1 - 0.7 * off));
         });
-        const wet = (stood.feet[0]!.wet + stood.feet[2]!.wet) / 2 > 0.02 ? 0.35 : 1;
-        rig.setShadow(discs, slot * DISCS + 4, stood.body.x, stood.body.z, 0.55 * k, 2.6 * k, 0.55 * wet);
+        const wet = (stood.feet[0]!.wet + stood.feet[2]!.wet) / 2 > 0.02 ? 0.24 : 1;
+        rig.setShadow(discs, slot * DISCS + 4, stood.body.x, stood.body.z, 0.55 * k, 2.6 * k, 0.8 * wet);
       });
       skin.touch();
       ripples.end(seconds);

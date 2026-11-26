@@ -192,9 +192,9 @@ void main() {
     height = height * (1.0 - 0.3 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
     // Below the joint the leg is hard, scaled and grey with silt; the joints are knotted and raw; the foot is dark horn.
     float scaled = vnoise(q * vec2(70.0, 110.0));
-    vec3 shankC = mix(vec3(0.27, 0.23, 0.21), vec3(0.5, 0.42, 0.38), mottle) * (0.7 + 0.6 * scaled);
-    albedo = mix(albedo, shankC, 0.74 * shank * (1.0 - 0.6 * min(joint, 1.0)));
-    albedo = mix(albedo, vec3(0.6, 0.23, 0.2) * (0.8 + 0.4 * mottle), 0.5 * min(joint, 1.0));
+    vec3 shankC = mix(vec3(0.11, 0.095, 0.085), vec3(0.24, 0.2, 0.175), mottle) * (0.55 + 0.9 * scaled);
+    albedo = mix(albedo, shankC, 0.86 * shank * (1.0 - 0.6 * min(joint, 1.0)));
+    albedo = mix(albedo, vec3(0.5, 0.17, 0.15) * (0.8 + 0.4 * mottle), 0.62 * min(joint, 1.0));
     albedo = mix(albedo, vec3(0.07, 0.055, 0.05) * (0.7 + 0.6 * crack), horn);
     height += 0.0016 * (scaled - 0.5) * shank * fine;
     // No two are one colour: one is chalk pale, the next ruddy, the next grey with old silt.
@@ -250,11 +250,12 @@ void main() {
     float finger = step(1.5, vInfo.x);
     float tone = fract(vInfo.x);
     float own = hash12(vec2(seed, 9.0));
-    vec3 flesh = mix(vec3(0.9, 0.66, 0.62), vec3(1.0, 0.8, 0.76), own);
+    vec3 flesh = mix(vec3(0.78, 0.55, 0.51), vec3(0.92, 0.7, 0.66), own);
     vec3 rose = mix(vec3(0.78, 0.36, 0.36), vec3(0.95, 0.56, 0.55), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.7, u) * (0.5 + 0.4 * step(0.45, own)));
-    float weed = smoothstep(0.36, 0.72, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.3 + 0.7 * step(0.3, tone));
-    albedo = mix(albedo, mix(vec3(0.1, 0.11, 0.04), vec3(0.22, 0.2, 0.08), own), 0.9 * weed);
+    float weed = smoothstep(0.3, 0.68, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.3 + 0.7 * step(0.3, tone));
+    albedo = mix(albedo, mix(vec3(0.035, 0.04, 0.014), vec3(0.09, 0.085, 0.03), own), 0.94 * weed);
+    rough = mix(rough, 0.9, weed);
     // A finger: the neck's own pale flesh, pinker down its length, raw and dark at the very end.
     vec3 fleshy = mix(vec3(0.86, 0.68, 0.63), vec3(0.72, 0.4, 0.37), smoothstep(0.1, 0.75, u)) * (0.85 + 0.3 * tone);
     albedo = mix(albedo, mix(fleshy, vec3(0.3, 0.1, 0.08), smoothstep(0.75, 1.0, u)), finger);
@@ -319,7 +320,7 @@ void main() {
     thin *= 0.3;
   }
   albedo *= 1.0 - (0.62 - 0.3 * tendril) * wet;
-  rough = mix(rough, mix(0.22, 0.5, tendril), wet);
+  rough = mix(rough, mix(0.22, max(rough, 0.5), tendril), wet);
   if (mid > 0.01 && tendril < 0.5) n = relief(vWorld, n, height);
 
   // The shade an animal throws on the water under it is not on the animal: the light is asked for above the reach of that shade.
@@ -333,14 +334,14 @@ void main() {
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
   float fogLight = 0.5 * max(0.05, mix(0.52, 0.34, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
-  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (7.4 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
+  colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (7.4 * (1.0 - 0.3 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float edge = pow(1.0 - nv, 1.6) + (0.3 + 1.1 * smoothstep(0.3, 0.7, vnoise(vWorld.xy * 3.1 + vWorld.z * 2.3))) * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
+  float edge = pow(1.0 - nv, 2.0) + (0.3 + 1.1 * smoothstep(0.3, 0.7, vnoise(vWorld.xy * 3.1 + vWorld.z * 2.3))) * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
   // The rim is the sun's own colour come through skin and blood, and only on the side the sun is on: the relief of the hide breaks it.
   vec3 through = mix(vec3(1.0, 0.52, 0.36), vec3(0.6, 0.22, 0.17), tendril);
-  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 3.0 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.2, 0.5, dot(n, uSunDir)));
+  colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 2.3 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.2, 0.5, dot(n, uSunDir)));
   if (uMirror > 0.5) {
     gl_FragColor = vec4(colour * (1.0 - uSolo), 1.0);
     return;
