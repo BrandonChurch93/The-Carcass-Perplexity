@@ -273,8 +273,8 @@ export function create(ctx: Context): Piece {
       w.bare = staged4.has(s) || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR;
       // The ones at the left of the wallowers' picture end inside its frame, each under an open head that weeps into it.
       const from3 = Math.hypot(s.x - k3[0], s.z - k3[1]);
-      const framed = from3 < 10 && s.kind !== 2 && w.h > 1.8 && w.h < 3.5;
-      if (framed) w.h = (from3 < 7 ? 1.4 : 2.15) + 0.4 * ((seed * 7.7) % 1);
+      const framed = from3 < 12.5 && s.kind !== 2 && w.h > 1.8;
+      if (framed) w.h = from3 < 7 ? 1.4 + 0.4 * ((seed * 7.7) % 1) : 2.5 + 0.3 * ((seed * 7.7) % 1);
       wilds.push(w);
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
@@ -482,8 +482,8 @@ export function create(ctx: Context): Piece {
         if (d > 60 || !seen(x, z)) continue;
         matOf(creep, fronds, (px, pz) => ctx.rig.land.height(px, pz), x, z, m0[i * 4 + 3] as number, m1[i * 4] as number, m1[i * 4 + 3] as number, d < 10 ? 130 : d < 22 ? 42 : d < 40 ? 15 : 6, d < 10 ? 1.2 : d < 22 ? 1.9 : d < 40 ? 3.6 : 5.5);
       }
-      wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true }));
-      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true }), stands.group);
+      wide.add(frondMesh(ctx, growth, creep, 2, { dry: true, small: true, low: true }));
+      wide.add(frondMesh(ctx, growth, nearF, 4), frondMesh(ctx, growth, midF, 3, { small: true }), frondMesh(ctx, growth, farF, 2, { dry: true, small: true }), frondMesh(ctx, growth, low, 2, { dry: true, small: true, low: true }), stands.group);
     }
     wideShade = stands.shade;
     group.add(wide);

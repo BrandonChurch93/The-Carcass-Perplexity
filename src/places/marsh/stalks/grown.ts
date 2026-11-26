@@ -360,6 +360,7 @@ varying vec3 vSide;
 varying vec4 vF;
 varying vec4 vG;
 uniform float uWet;
+uniform float uLowly;
 ${RIG_GLSL}
 ${KEY_GLSL}
 void main() {
@@ -394,7 +395,7 @@ void main() {
   float plant = fract(vG.y * 41.7);
   vec3 albedo = mix(vec3(0.04, 0.003, 0.009), vec3(0.15, 0.011, 0.026), clamp(0.55 * own + 0.45 * plant + 0.25 * (s - 0.5), 0.0, 1.0));
   // Far off a head is a few pixels of it against pale ground: there it is the red of the lit blade, not of the shade between blades.
-  albedo = mix(albedo, albedo * vec3(2.1, 1.3, 1.5), smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
+  albedo = mix(albedo, albedo * vec3(1.65, 1.05, 1.2), (1.0 - uLowly) * smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -644,6 +645,7 @@ export interface FrondLook {
   dry?: boolean;
   wet?: number;
   small?: boolean;
+  low?: boolean;
 }
 
 function frondGeometry(base: THREE.BufferGeometry, list: Fronds): THREE.InstancedBufferGeometry {
@@ -656,7 +658,7 @@ function frondGeometry(base: THREE.BufferGeometry, list: Fronds): THREE.Instance
 /** The meshes of the straps: `segments` pieces along each. */
 export function frondMesh(ctx: Context, u: GrowthUniforms, list: Fronds, segments: number, look: FrondLook = {}): THREE.Mesh {
   const material = new THREE.ShaderMaterial({
-    uniforms: { ...ctx.rig.uniforms, ...u, uDry: { value: look.dry ? 1 : 0 }, uWet: { value: look.wet ?? 0 } },
+    uniforms: { ...ctx.rig.uniforms, ...u, uDry: { value: look.dry ? 1 : 0 }, uWet: { value: look.wet ?? 0 }, uLowly: { value: look.low ? 1 : 0 } },
     vertexShader: FROND_VERTEX,
     fragmentShader: FROND_FRAGMENT,
     side: THREE.DoubleSide,
