@@ -136,7 +136,7 @@ void main() {
   // The light that reaches it: the sky from above, less of it the deeper in the bush, and the sun where it finds a way in. A thin wet
   // thread takes the light on all sides of it.
   float wrap = 0.2 + 0.8 * max(dot(n, uSunDir), 0.0);
-  vec3 colour = albedo * (skyIrradiance(n) * (open * (0.06 + 0.94 * skyLeft)) + uSunColour * (3.14159 * wrap * lit * sunLeft)) / 3.14159;
+  vec3 colour = albedo * (skyIrradiance(n) * (open * (0.16 + 0.84 * skyLeft)) + uSunColour * (3.14159 * wrap * lit * (0.05 + 0.95 * sunLeft))) / 3.14159;
   // Against the low sun the light comes through: every thread between the lens and the sun that the sun still reaches is ruby, hot
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
@@ -192,9 +192,9 @@ void main() {
   float knots = smoothstep(0.55, 0.8, vnoise(vec2(vVane.x * 14.0 + vVane.z, vVane.y * 3.0)));
   float flesh = vVane.w;
   vec3 dark = mix(vec3(0.14, 0.035, 0.03), vec3(0.36, 0.11, 0.08), strings);
-  vec3 fleshy = mix(vec3(0.36, 0.18, 0.17), vec3(0.8, 0.63, 0.57), strings);
+  vec3 fleshy = mix(vec3(0.36, 0.17, 0.15), vec3(0.64, 0.4, 0.35), strings);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
-  n = normalize(n + 0.5 * (strings - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
+  n = normalize(n + 0.25 * (strings - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
   float occ = mix(0.45, 1.0, vTint.y) * mix(0.7, 1.0, smoothstep(0.02, 0.3, vTint.z)) * (0.6 + 0.4 * strings);
   float lit = sunAt(vWorld + vec3(0.0, 0.3, 0.0)) * vTint.x;
   float open = skyOpen(vec3(vWorld.x, vWorld.y + 6.0, vWorld.z));
@@ -246,7 +246,7 @@ void main() {
   // A drop is a few millimetres: it is drawn no narrower than a pixel and dimmed by as much as it was widened.
   float wide = max(size, 0.75 * uPixel * far);
   // A hanging drop is a pear, longer than wide. The shutter is open a 120th of a second: one that falls is drawn out along its fall.
-  float tall = max(wide, size * 1.35) + falls * 9.8 * since * 0.0045;
+  float tall = max(wide, size * 1.35) + falls * 9.8 * since * 0.012;
   vec3 p = c + across * aCorner.x * wide + vec3(0.0, aCorner.y * tall, 0.0);
   vAt = aCorner.xy;
   vWorld = p;
@@ -274,7 +274,7 @@ void main() {
   float lit = sunAt(vWorld);
   vec3 through = skyRadiance(normalize(vec3(-v.x, 0.25 + 0.5 * vAt.y, -v.z))) * mix(0.3, 1.1, smoothstep(0.5, -0.7, vAt.y)) * (1.0 - 0.5 * smoothstep(0.5, 1.0, d));
   vec2 hot = vAt - vec2(0.28, -0.35);
-  vec3 colour = min(through, vec3(1.6)) + uSunColour * (0.5 + 2.0 * pow(against, 4.0)) * lit * smoothstep(0.1, 0.0, dot(hot, hot));
-  float alpha = bead * min(1.0, vKind * vKind) * 0.9 * (1.0 - uSolo);
+  vec3 colour = min(through, vec3(1.6)) + uSunColour * (0.8 + 3.0 * pow(against, 4.0)) * lit * smoothstep(0.16, 0.0, dot(hot, hot));
+  float alpha = bead * min(1.0, vKind) * 0.9 * (1.0 - uSolo);
   gl_FragColor = vec4(colour * alpha, alpha);
 }`;
