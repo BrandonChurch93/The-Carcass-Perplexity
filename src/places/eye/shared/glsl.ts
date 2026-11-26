@@ -248,6 +248,9 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
     plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb)
       + ungrade(texture2D(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb));
   }
+  // The low sun comes through thin high cloud: what it lights on the far wall swells and fades a little where it stands, the shade never.
+  float lit = smoothstep(0.2, 0.4, (plate.r - plate.b) / max(plate.r + plate.b, 1e-3));
+  plate *= 1.0 + lit * (0.05 * sin(u * 7.0 + 1.3) * sin(uTime * 0.45) + 0.035 * sin(u * 13.0) * sin(uTime * 0.27 + 2.0));
   if (uCirrus.x + uCirrus.y > 0.0) {
     vec2 xy = vec2(tan(phi), (v - uPlateLens.w) * 2.0 * uPlateLens.z);
     float streak = uCirrus.x * cirrus(xy, uCirrusA) + uCirrus.y * cirrus(xy, uCirrusB);
