@@ -1,7 +1,5 @@
-2026-11-26 03:32 UTC
-work at 77f0f61 on agent/ribs-sea-2
-version 2: ribs-4, ribs-1, ribs-3, ribs-2
-look-1.jpg = out/work/s-ribs-4.jpg
-look-2.jpg = out/work/s-ribs-1.jpg
-look-3.jpg = out/work/s-ribs-3.jpg
-look-4.jpg = out/work/s-ribs-2.jpg
+2026-11-26 03:40 UTC
+work at 0f7dadf on agent/ribs-sea-2
+03:42 ribs-3 upright cream colony with a flier, ribs-4 bore lit from behind with mist ahead
+look-1.jpg = out/work/s-ribs-3.jpg
+look-2.jpg = out/work/s-ribs-4.jpg
