@@ -15,7 +15,7 @@ export const SHEETS: boolean = true;
 export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 1.6, thick: 0.0045 };
 /** The shade of what stands close: reads of the frame's depth round each texel, the reach as a share of the distance, how far off it
  *  ends (metres) and how deep it goes. */
-export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.3 };
+export const OCC = { ways: 4, taps: 3, reach: 0.12, far: 420, depth: 2.0 };
 /** How far the near air is counted over the sky, metres. */
 // How fast the rain walks along the horizon, in radians a second. The sky's raining cloud keeps the same pace.
 export const RAIN_WALK = 0.016;
@@ -28,7 +28,7 @@ export const RAIN_APART = 0.84;
 // The overcast thickens as the rain comes on: between these two seconds of the place the sky and the far air lose this share of their light.
 export const DUSK = { from: 3.2, to: 7, share: 0.6 };
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
-export const CAST = { ways: 3, taps: 4, reach: 0.22, depth: 0.52 };
+export const CAST = { ways: 3, taps: 3, reach: 0.22, depth: 0.52 };
 
 const f = (v: number): string => v.toFixed(5);
 
@@ -146,7 +146,8 @@ float closedIn(ivec2 pixel) {
   // The cast shade: from ground that faces the sky, a few ways up into it, each leaning a different way; where a body or a stalk
   // stands in one, that part of the sky is gone. (What stands in the way is taken to be as thick as it is near: a body, not a wall.)
   vec3 up = vec3(uCameraWorld[0].y, uCameraWorld[1].y, uCameraWorld[2].y);
-  float level = smoothstep(0.25, 0.7, dot(n, up));
+  // (Far off the shade of a body is smaller than a texel: none is looked for there.)
+  float level = smoothstep(0.25, 0.7, dot(n, up)) * smoothstep(220.0, 140.0, dist);
   float shaded = 0.0;
   if (level > 0.0) {
     vec3 east = vec3(uCameraWorld[0].x, uCameraWorld[1].x, uCameraWorld[2].x);
@@ -171,7 +172,7 @@ float closedIn(ivec2 pixel) {
     }
   }
   open *= 1.0 - CAST_DEPTH * level * shaded / float(CAST_WAYS);
-  return mix(1.0, 0.42 + 0.58 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
+  return mix(1.0, 0.5 + 0.5 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
 }
 
 // How much of the haze counts at t metres: the near air is clear and the far closes, as over a salt flat on a still wet day.
