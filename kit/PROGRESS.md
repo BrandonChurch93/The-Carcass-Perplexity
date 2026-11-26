@@ -24,29 +24,29 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 126, 2026-11-26 18:16 UTC:
+Status 127, 2026-11-26 18:38 UTC:
 
-- `01-s126-rock.jpg`: The Spine's rock, tone pass, merged: frame 7338 above and frame 7418 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s126-hung.jpg`: The hung body of the Ribs, version 3, merged: frame 2081 above and loop frame 0 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `03-s126-bore.jpg`: The Ribs' bore, version 3, merged: frame 2295 above and frame 2401 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `04-s126-kite.jpg`: The tether-kites, version 2, merged: frame 7418 above and frame 7450 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `01-r28-r2.jpg`: The five frames the jury saw in round 3 of the film: frame 0 and the frame at two seconds above, the first frames of the Heart and of the Breath in the middle, the first frame of the Blood Marsh below (final tier, rendered in 4K on a render machine, shown smaller)
+- `02-r28-r6.jpg`: The first two seconds as the scroll-stop critic saw them: ten frames from frame 0 to frame 120, left to right, upper row first (final tier, rendered in 1080p on a render machine, shown at phone width)
+- `03-r28-r5-07.jpg`: One of the nine sheets of the critic of the whole film: the titan frame 10027 and the last frame before black, 11743, above; loop frames 0 and 120 below (final tier, rendered in 4K on a render machine, shown smaller)
+- `04-r28-r4-pack.jpg`: Four of the motion critic's 14 sheets: the twelve frames across the join from the lake into the rise (upper left), the first two seconds (upper right), the last two seconds (lower left) and the loop (lower right) (review tier, preview size, rendered on a render machine)
 
+Status 126, 2026-11-26 18:16 UTC, showed: The Spine's rock, tone pass, merged: frame 7338 above and frame 7418 below, before at left and after at right (draft tier, preview size...
 Status 125, 2026-11-26 17:53 UTC, showed: The Spine's cloud sea, merged: frames 7015, 7234 and 7418 from top to bottom, before at left and after at right (draft tier, preview size...
 Status 124, 2026-11-26 17:22 UTC, showed: The tether-kites, version 1, merged: frame 7015, before above and after below (draft tier, preview size, rendered on a render machine); The...
-Status 123, 2026-11-26 16:57 UTC, showed: The join from the lake into the rise, merged: frames 9541, 9546 and 9560 from top to bottom, before at left and after at right (draft tier...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T18:16:40Z
-phase 5: 8.01 h used of 6.00 h
-build: 42.42 h used of 72.00 h
+2026-11-26T18:38:42Z
+phase 5: 8.38 h used of 6.00 h
+build: 42.79 h used of 72.00 h
 extra rounds: yes
 half point: reached
 box end: reached
-minutes since the last status: 23
+minutes since the last status: 22
 ```
 
 ## Phases
