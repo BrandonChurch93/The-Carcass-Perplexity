@@ -322,6 +322,9 @@ void main() {
   float aw = arc + 0.5 * (vnoise(vec2(arc * 0.8, y * 0.6)) - 0.5);
   float strand = vnoise(vec2(aw * 7.0, y * 2.2 + 3.0)) * 0.6 + vnoise(vec2(aw * 19.0, y * 5.0)) * 0.4;
   vec3 hank = mix(vec3(0.075, 0.066, 0.032), vec3(0.15, 0.09, 0.026), smoothstep(0.6, 0.85, strand)) * (0.7 + 0.6 * vnoise(vec2(aw * 23.0, y * 6.0)));
+  // It hangs in tiers, each over the next: dark where a tier goes under the one above, its tips the lightest.
+  float tier = fract(y * 1.2 + 1.6 * vnoise(vec2(aw * 1.7, 6.5)) + 0.7 * vnoise(vec2(aw * 6.1, 2.5)) + 0.35 * strand);
+  hank *= 0.55 + 0.8 * tier * tier;
   vec3 kelp = top < 0.5 ? hank : wk * 2.0 + vec3(0.07, 0.048, 0.014) * smoothstep(0.02, 0.07, wk.g);
   float weed = smoothstep(-0.2, 0.5, down + 1.5 * (strand - 0.5));
   albedo = mix(albedo, kelp, weed);
@@ -427,7 +430,7 @@ void main() {
   albedo = mix(albedo, vec3(0.06, 0.046, 0.018) * (0.5 + 0.6 * fine), 0.45 * hem);
   // Threads of water running down off the hems.
   float thread = smoothstep(0.78, 0.95, vnoise(vec2(vUv.x * 5.0, vUv.y * 0.35 + uTime * 0.9))) * smoothstep(0.5, 0.9, vnoise(vec2(vUv.x * 0.7, vUv.y * 0.11 + 3.0)));
-  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), 0.55, closeW), 0.12, thread * (1.0 - closeW));
+  float rough = mix(mix(0.27 + 0.3 * (1.0 - wn.z), 0.7, closeW), 0.12, thread * (1.0 - closeW));
   float occ = (0.25 + 0.75 * smoothstep(0.08, 0.5, wn.z)) * (0.6 + 0.4 * smoothstep(0.2, 0.7, nh.z)) * (0.6 + 0.4 * vShade);
   // On a wall of beds the weed hangs in clumps from each ledge and thins toward the next one down: between the clumps the wall is bare
   // wet rock with its barnacles, dark under the ledge it hangs from.
