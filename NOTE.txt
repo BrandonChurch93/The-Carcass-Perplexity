@@ -1,4 +1,4 @@
-2026-11-26 02:31 UTC
-work at 2181534 on agent/marsh-ground-2
-hb5: Builder items 1 to 5 applied: clear near air, bubble dome, dark brine, wet red thin crust in marsh-3/4, knob crust at shores (keys 0,1,3,4 hd)
-look-1.jpg = out/work/a13.jpg
+2026-11-26 02:40 UTC
+work at aaac56c on agent/marsh-ground-2
+hb6: marsh-0 hd, marsh-4, marsh-1 crop: crown as film, knobbed bank, thin crust in two lays
+look-1.jpg = out/work/a16.jpg
