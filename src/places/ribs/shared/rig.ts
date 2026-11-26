@@ -1,9 +1,11 @@
 // The light rig of the Ribs: the uniforms every surface shares, the baked land (height, open sky, the sun's shadow), the drifting mask of
 // cloud shadow and the map of contact shade. Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
+import { config } from '../../../config';
 import { stream } from '../../../core/rng';
 import { RIBS, bladeSpine, landAt as layoutLand } from '../layout';
 import { SUN, T0, WIND } from './anchors';
+import { loopPhase } from './stage';
 
 // The land map covers the strait and the sea a camera can see the bed through: cells of 4.9 by 4.8 m.
 export const LAND = { minX: -1200, maxX: 1300, minZ: -3500, maxZ: 1100, width: 512, height: 960 };
@@ -395,13 +397,24 @@ export function createRig(): Rig {
     // The lumps of the cloud work as it goes: fast enough that six seconds of a held lens show it.
     skyTurn.y = 0.021 * seconds;
     skyTurn.z = 0.027 * seconds;
+    const phase = loopPhase();
+    if (phase !== null) {
+      // In the card loop the sheet of cloud stands and its lumps work round a closed path: they leave as in the film and come back.
+      const a = phase * Math.PI * 2;
+      const r = config.deliver.cardLoop.seconds / (Math.PI * 2);
+      skyTurn.y = 0.021 * T0 + r * (0.021 * Math.sin(a) - 0.027 * (1 - Math.cos(a)));
+      skyTurn.z = 0.027 * T0 + r * (0.027 * Math.sin(a) + 0.021 * (1 - Math.cos(a)));
+    }
     const pitch = (21 * Math.PI) / 180;
     skyBreak.set(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
   };
   breakToward(T0);
 
+  const loopAt = new THREE.Vector2(T0, 0);
   const uniforms: Record<string, THREE.IUniform> = {
     uTime: { value: 0 },
+    // Read by the card loop's shaders alone: the seconds of its first frame, and its phase.
+    uLoop: { value: loopAt },
     uSolo: { value: 0 },
     tLand: { value: null },
     uLandRect: { value: rect(LAND) },
@@ -460,6 +473,8 @@ export function createRig(): Rig {
   const tint = new THREE.Color();
   const centre = new THREE.Vector3();
   const forward = new THREE.Vector3();
+  // The card loop is eight seconds of one light: a sheet of cloud that went on would have to come back.
+  const skySeconds = (seconds: number): number => (loopPhase() === null ? seconds : T0);
   const drift = (seconds: number): [number, number] => [(WIND.to[0] * WIND.cloud * seconds) / CLOUD.repeat, (WIND.to[1] * WIND.cloud * seconds) / CLOUD.repeat];
 
   return {
@@ -472,7 +487,8 @@ export function createRig(): Rig {
       open: (x, z) => read((g) => g.open, x, z),
       sun: (x, z) => read((g) => g.sunLow, x, z),
     },
-    cloudShade: (x, z, seconds) => {
+    cloudShade: (x, z, world) => {
+      const seconds = skySeconds(world);
       const d = drift(seconds);
       const bx = x - (BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0));
       const bz = z - (BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0));
@@ -512,14 +528,16 @@ export function createRig(): Rig {
     bake,
     setTime: (seconds) => {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
-      const d = drift(seconds);
+      loopAt.y = loopPhase() ?? 0;
+      const sky = skySeconds(seconds);
+      const d = drift(sky);
       cloudShade.x = d[0];
       cloudShade.y = d[1];
-      breakToward(seconds);
-      breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (seconds - T0);
-      breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (seconds - T0);
-      break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * seconds;
-      break2At.y = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
+      breakToward(sky);
+      breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (sky - T0);
+      breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (sky - T0);
+      break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * sky;
+      break2At.y = BREAK2.z + WIND.to[1] * WIND.cloud * sky;
     },
     beforeSample: (renderer, camera) => {
       if (!grid) bake();

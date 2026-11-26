@@ -6,7 +6,7 @@ import { QUAD_VERTEX, volumeUniforms } from '../../../core/engine';
 import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
-import { stagedSeconds } from '../shared/stage';
+import { loopPhase, stagedSeconds } from '../shared/stage';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -179,6 +179,9 @@ void main() {
   gl_FragColor = vec4(sum * uScatter.z, trans);
 }`;
 
+/** How much thicker the air stands at the middle of the card loop than at its ends. */
+const LOOP_MIST = 0.7;
+
 export function create(ctx: Context): Piece {
   const storm = ctx.assets.texture('mat/sky.jpg');
   storm.wrapS = THREE.MirroredRepeatWrapping;
@@ -253,14 +256,19 @@ export function create(ctx: Context): Piece {
       const torn = Math.min(1, Math.max(0, (since - 0.15) / 2.4));
       bank.set(up ? 0.0055 * fade : 0, torn * torn * (3 - 2 * torn) * 0.7 + 0.3 * Math.min(1, since / 8), WIND.to[0] * 34 * since, WIND.to[1] * 34 * since);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
-      air.set(thick ? 0.006 : 0.0013, thick ? 160 : 75, 0.0003, 12);
+      // In the card loop the mist between the blades thickens once and thins again.
+      const phase = loopPhase();
+      const mist = phase === null ? 1 : 1 + LOOP_MIST * (1 - Math.cos(phase * Math.PI * 2)) * 0.5;
+      air.set((thick ? 0.006 : 0.0013) * mist, thick ? 160 : 75, 0.0003, 12);
       const steam = ctx.sources.steam;
+      // In the card loop what travels one way stands where the loop's first frame has it.
+      const run = loopPhase() === null ? seconds : staged;
       // The heaviest columns first: there is room for MAX_SOURCES of them.
       const list = steam.map((s, i) => ({ s, i })).sort((p, q) => q.s.strength * q.s.radius * q.s.radius - p.s.strength * p.s.radius * p.s.radius || p.i - q.i).map((p) => p.s);
       const n = Math.min(MAX_SOURCES, list.length);
       for (let i = 0; i < n; i++) {
         const s = list[i] as (typeof list)[number];
-        const z = s.at[2] + (s.speed ?? 0) * (seconds - (s.since ?? 0));
+        const z = s.at[2] + (s.speed ?? 0) * (run - (s.since ?? 0));
         (sourceA[i] as THREE.Vector4).set(s.at[0], s.at[1], z, s.radius);
         (sourceB[i] as THREE.Vector4).set(s.strength, s.rise, s.lean?.[0] ?? 0, s.lean?.[1] ?? 0);
         const lit = ctx.rig.land.sun(s.at[0], z) * ctx.rig.cloudShade(s.at[0], z, seconds);

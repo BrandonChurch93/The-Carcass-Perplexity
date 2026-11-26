@@ -1,5 +1,6 @@
 // The surfaces of the land. Each takes its light from the rig and ends in rigOut.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { loopText } from '../shared/looptext';
 
 export const UV_VERTEX = /* glsl */ `
 varying vec3 vWorld;
@@ -684,3 +685,9 @@ void main() {
   occ = mix(occ, 0.3 + 0.7 * smoothstep(0.15, 0.6, wn.z), cover);
   gl_FragColor = vec4(rigOut(rigShade(vWorld, n, v, albedo, rough, occ)), 1.0);
 }`;
+
+/** The mirror in the card loop: the ripple that breaks the image goes round a closed way, about as far as it runs in the film, and is back where it began. */
+export const MIRROR_LOOP_FRAGMENT = loopText(MIRROR_FRAGMENT, [
+  ['void main() {', 'uniform vec2 uLoop;\nvoid main() {'],
+  ['+ uTime * 0.5);', '+ uLoop.x * 0.5 + 0.64 * vec2(sin(6.283185 * uLoop.y), 1.0 - cos(6.283185 * uLoop.y)));'],
+]);
