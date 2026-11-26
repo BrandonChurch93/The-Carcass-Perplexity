@@ -46,7 +46,7 @@ float matBeds(vec3 p) {
   vec2 dir = p.xz / max(r, 1.0);
   float rays = 0.6 * vnoise(dir * 46.0 + vec2(r, -0.7 * r) / 85.0) + 0.4 * vnoise(dir * 150.0 + vec2(-0.6 * r, r) / 34.0 + 3.0);
   float blobs = 0.6 * vnoise(p.xz / 38.0) + 0.4 * vnoise(p.xz / 9.0 + 3.0);
-  float beds = 0.72 * rays + 0.28 * blobs + 0.08 * vnoise(p.xz / 2.4);
+  float beds = 0.3 * rays + 0.7 * blobs + 0.1 * vnoise(p.xz / 2.4);
   // A bed lies over the lip where the old bones are.
   beds += 0.1 * smoothstep(30.0, 6.0, length(p.xz - vec2(${EDGE_BED[0].toFixed(1)}, ${EDGE_BED[1].toFixed(1)})));
   return smoothstep(0.38, 0.55, beds) * smoothstep(2.0, 16.0, shoreward);
@@ -70,22 +70,24 @@ Mat matsAt(vec3 p) {
   // Across is metres round the lake, along is metres out from the middle. The seam of the angle lies in the east, under the brow.
   vec2 q = vec2(atan(p.z, -p.x) * 560.0 + sway, r) + vec2(20.0, 9.0) * bend + 3.2 * curl + 0.6 * lock + 0.14 * kink;
   // The locks: pools of dark water stand between them, and they end in wisps.
-  float tress = 0.5 * vnoise(vec2(q.x / 0.55, q.y / 1.9)) + 0.3 * vnoise(vec2(q.x / 0.16, q.y / 1.1) + 4.0) + 0.2 * vnoise(vec2(q.x / 0.05, q.y / 0.7) + 9.0);
+  // The picture is laid by where the ground is, at one scale, turned a little by the locks: nothing is pulled long.
+  vec2 g = w + 0.9 * curl + 0.5 * lock + 0.12 * kink + vec2(sway, 0.6 * sway);
+  float tress = 0.5 * vnoise(g / 1.5) + 0.3 * vnoise(g / 0.47 + 4.0) + 0.2 * vnoise(g / 0.15 + 9.0);
   m.cover = beds * smoothstep(0.43, 0.6, tress + 0.3 * (beds - 0.5));
   // On the crust of the lip, out of the water, they lie dry: thinner and darker.
   float dry = smoothstep(-0.03, 0.04, p.y);
   m.cover *= 1.0 - 0.7 * dry;
   m.cover *= 1.0 - 0.8 * dry * smoothstep(0.62, 0.4, tress);
   // The filaments are the mat picture laid in the combed space: 3 m a repeat, its hair along the comb. Again at a third and at five times that.
-  vec2 ma = vec2(q.y, q.x) / 3.0;
-  vec2 mb = vec2(q.y * 0.8, q.x) / 1.05 + vec2(0.31, 0.57);
-  vec2 mc = vec2(q.y, q.x) / 14.0 + vec2(0.11, 0.73);
+  vec2 ma = g / 3.0;
+  vec2 mb = vec2(g.x * 0.8 + 0.6 * g.y, g.y - 0.6 * g.x) / 1.05 + vec2(0.31, 0.57);
+  vec2 mc = vec2(g.y, -g.x) / 14.0 + vec2(0.11, 0.73);
   vec3 ta = texture2D(tMat, ma).rgb;
   vec3 tb = texture2D(tMat, mb).rgb;
   vec3 tc = texture2D(tMat, mc).rgb;
   vec3 ha = texture2D(tMatNh, ma).rgb;
   // Fine hair near the camera, the picture itself in the middle distance, its broad streaks from far off.
-  float grain = fwidth(q.x);
+  float grain = 0.5 * (fwidth(g.x) + fwidth(g.y));
   float fine = 1.0 - smoothstep(0.004, 0.02, grain);
   vec3 hair = mix(ta, tb, 0.45 * fine);
   hair = mix(hair, hair * (tc / vec3(0.279, 0.092, 0.014)), 0.5);
@@ -95,7 +97,7 @@ Mat matsAt(vec3 p) {
   float isHair = smoothstep(1.5, 2.3, red);
   m.strand = isHair * (0.55 + 0.45 * smoothstep(0.2, 0.65, ha.b));
   // Amber and gold, not red: the picture is tinted toward the approved one, and is darker where the hair lies deep.
-  m.colour = hair * mix(vec3(0.62, 0.62, 0.4), vec3(1.0, 1.05, 0.6), smoothstep(0.25, 0.7, ha.b)) * mix(1.0, 0.7, dry);
+  m.colour = hair * mix(vec3(0.6, 0.8, 0.45), vec3(1.05, 1.5, 0.8), smoothstep(0.25, 0.7, ha.b)) * mix(1.0, 0.7, dry);
   m.grain = (ha.xy * 2.0 - 1.0) * fine;
   return m;
 }`;
