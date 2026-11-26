@@ -115,7 +115,7 @@ export function lying(plan: Plan, b: Build, seconds: number, t: number, near: nu
   out.shift = -MID * k * Math.sin(r);
   // Before it goes over it lifts its head clear of the brine and looks about, and lets it down again.
   const look = pulse(-2.5, -0.2, t);
-  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over + k * (0.045 * breath + 0.015 * Math.sin(seconds * 0.7 + b.seed * 2)) + 0.03 * k * look;
+  out.bob = MID * k * (1 - Math.cos(r)) - 0.07 * k * over - 0.05 * k + k * (0.045 * breath + 0.015 * Math.sin(seconds * 0.7 + b.seed * 2)) + 0.03 * k * look;
   // Its legs go over with it, folded: they stay under the brine.
   const fr = 0.6 * r;
   for (let l = 0; l < 4; l++) {
