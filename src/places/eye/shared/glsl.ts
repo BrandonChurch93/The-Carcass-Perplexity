@@ -125,7 +125,15 @@ uniform vec4 uPlateTone;
 uniform vec2 uPlateShade;
 uniform vec4 uNear;
 uniform vec4 uShade;
-uniform sampler2D tUngrade;`;
+uniform sampler2D tUngrade;
+// The mist of the place, which the air folder sets by shot and marches in its volume, and which a mirror finds through farRadiance.
+// A: metres it reaches out over the water from the far shore, the height of the sheet on the water, the height of the bank at the foot of
+// the wall, the metres before the wall over which the bank stands up. B: how thick the sheet is, how thick the bank, how far the sheet is
+// broken into tongues (0 whole, 1 torn), how much rises off the top in wisps. uMistOn is 0 where there is none.
+uniform highp sampler3D tMistNoise;
+uniform vec4 uMistA;
+uniform vec4 uMistB;
+uniform float uMistOn;`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
@@ -154,6 +162,31 @@ vec3 ungrade(vec3 c) {
 
 // The far world along a ray: the picture of the rim and the sky on its cylinder, and the rig's sky above its top edge.
 // The picture is carried on round the camera mirrored, so it has no side edge. bias softens it (a mirror in moving water).
+vec3 skyIrradiance(vec3 n);
+
+// The bank of mist at the foot of the far wall as a mirror holds it: a ray that leaves the water low ends in it. along is metres along the
+// far shore and up is metres over the water where the ray meets the wall. The march of the air is told here in one look: the same heaps
+// at the same places, summed through the depth of the bank by rule. rgb is its light and a how much of the wall it hides.
+vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
+  if (uMistOn <= 0.0 || uMistA.x <= 0.0) return vec4(0.0);
+  vec4 big = texture(tMistNoise, vec3(along / 1300.0, 60.0 / 1300.0, uTime * 0.0042));
+  vec4 mid = texture(tMistNoise, vec3(along / 410.0 + 0.31, 60.0 / 900.0 + 0.17, 0.5 + uTime * 0.0085));
+  float cover = smoothstep(0.0, 0.55, 0.9 + uMistB.z * (2.6 * (big.g - 0.5) + 1.2 * (mid.a - 0.5)));
+  float sheetTop = uMistA.y * (0.35 + 1.5 * mid.g);
+  float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
+  float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
+  vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
+  float h = up / (top * (0.1 + 2.6 * pow(mix(g.g, g.r, 0.4), 1.8)));
+  float bank = uMistB.y * cover * stands * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
+  float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * (1.0 - uSolo);
+  float toSun = dot(rd, uSunDir);
+  float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
+  vec3 lit = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)))
+    + uSunColour * (0.16 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
+  return vec4(lit * (2.5 / 3.14159), a);
+}
+
 vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   vec3 sky = skyRadiance(rd);
   if (uPlateTone.w < 0.5) return sky;
@@ -203,8 +236,11 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
       vec3 slate = skyRadiance(normalize(vec3(rd.x, max(rd.y, 0.35), rd.z))) * mix(0.62, 0.26, smoothstep(0.03, 0.3, rd.y));
       float lum = dot(plate, vec3(0.3, 0.5, 0.2));
       plate = mix(plate, slate, over * (1.0 - 0.75 * smoothstep(0.5, 1.6, lum / max(dot(slate, vec3(0.33)), 1e-3) * 0.25)));
-      return plate;
+      vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+      return mix(plate, bank.rgb, bank.a);
     }
+    vec4 bank = mistInMirror(rd, atan(q.x, -q.z) * uPlateAt.w, ro.y + rd.y * t, plate);
+    return mix(mix(plate, sky, smoothstep(0.9, 0.995, v)), bank.rgb, bank.a);
   }
   return mix(plate, sky, smoothstep(0.9, 0.995, v));
 }
