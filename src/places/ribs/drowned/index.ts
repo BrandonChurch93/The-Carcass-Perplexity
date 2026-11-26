@@ -1,5 +1,8 @@
 // The drowned one: a kite-wing the last bore left in the weed of the first rib, head down, sodden, with the weed grown through it and crabs on it.
 import * as THREE from 'three';
+import { resolve } from '../../../core/cameras';
+import { shotById } from '../../../film/cut';
+import { shots } from '../cameras';
 import { DROWNED, LEVELS, WIND } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -12,6 +15,8 @@ export const PARTS: readonly string[] = ['drowned'];
 const SIZE = 1.45;
 const STRANDS = 220;
 const CRABS = 16;
+/** The hung body as a plate: metres from the hook to the end of the tuft, how far the relief stands out, and its turn from square to the lens. */
+const PLATE = { high: 11.5, deep: 0.6, turn: 0.55 };
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
 type Point = [number, number, number];
@@ -372,6 +377,56 @@ function crabShape(): THREE.BufferGeometry {
   return out;
 }
 
+// The body itself is a picture with its relief: one hide hung by a leg, the ribs through it, weed and crabs on it. The sheet is pushed out by
+// the relief and lit by the place's light, so it is a thing with form and not a card.
+const PLATE_VERTEX = /* glsl */ `
+uniform sampler2D tRelief;
+uniform vec3 uOrigin;
+uniform vec3 uAxis;
+uniform vec3 uDrop;
+uniform vec3 uProud;
+uniform float uTime;
+varying vec3 vWorld;
+varying vec2 vUv;
+void main() {
+  vec2 uv = vec2(position.x, 1.0 - position.y);
+  float h = textureLod(tRelief, uv, 3.5).r;
+  // What hangs free of it stirs a little: the tuft at the bottom most.
+  float loose = smoothstep(0.62, 1.0, position.y);
+  vec3 w = uOrigin + uAxis * (position.x - 0.22 + loose * 0.012 * sin(uTime * 1.3 + position.y * 9.0)) + uDrop * position.y + uProud * (0.1 + h);
+  vWorld = w;
+  vUv = uv;
+  gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
+}`;
+
+const PLATE_FRAGMENT = /* glsl */ `
+precision highp float;
+${RIG_GLSL}
+uniform sampler2D tCarcass;
+uniform sampler2D tRelief;
+uniform vec3 uAxis;
+uniform vec3 uDrop;
+uniform vec3 uProud;
+varying vec3 vWorld;
+varying vec2 vUv;
+void main() {
+  vec3 pic = texture2D(tCarcass, vUv).rgb;
+  float h = texture2D(tRelief, vUv).r;
+  vec2 e = vec2(3.0 / 1024.0, 3.0 / 1536.0);
+  float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 1.5).r;
+  float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
+  vec3 v = normalize(cameraPosition - vWorld);
+  vec3 face = normalize(uProud);
+  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 1.3);
+  if (dot(face, v) < 0.0) n = reflect(n, face) * -1.0;
+  // Sodden: darker than the dry picture, and it shines where it is wet. The hollows between the ribs see little sky.
+  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))), pic, 0.7) * 1.3;
+  float occ = mix(0.35, 1.0, smoothstep(0.1, 0.7, h));
+  vec3 col = rigShade(vWorld, n, v, albedo, 0.4, occ);
+  gl_FragColor = vec4(rigOut(col), 1.0);
+  if (h < 0.045) discard;
+}`;
+
 export function create(ctx: Context): Piece {
   const scatter = ctx.rng('drowned');
   const rib = ribByName(DROWNED.rib);
@@ -611,7 +666,7 @@ export function create(ctx: Context): Piece {
   const shapes = new Float32Array(STRANDS * 4);
   const falls = new Float32Array(STRANDS * 3);
   for (let i = 0; i < STRANDS; i++) {
-    const over = i < 64;
+    const over = false as boolean;
     // Over the shoulder and the hips, where it is caught; the rest hang round it.
     let u = over ? (i < 30 ? scatter.range(0.5, 1.8) : i < 46 ? scatter.range(-0.4, 0.5) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
     const up = over ? (i < 30 ? scatter.range(-0.9, 0.1) : i < 46 ? scatter.range(0.3, 1.2) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
@@ -641,7 +696,7 @@ export function create(ctx: Context): Piece {
   const at = new Float32Array(CRABS * 4);
   const turn = new Float32Array(CRABS * 4);
   for (let i = 0; i < CRABS; i++) {
-    const on = i < 9;
+    const on = false as boolean;
     // On the trunk they sit on its upper side; the rest are in the weed.
     const q = scatter.range(0.08, 0.95);
     const spot = trunk(q);
@@ -655,12 +710,40 @@ export function create(ctx: Context): Piece {
   const crabMesh = new THREE.Mesh(crabs, crabMaterial);
   crabMesh.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('drowned', body, cloth, strands, crabMesh, runs), cloth, strands, crabMesh, runs);
+  // The plate: hung by the leg at the hook, turned most of the way to the lens of its own shot, which looks along the face.
+  const shot = shotById('ribs-05');
+  const eye = resolve(shots['ribs-05'] as (typeof shots)[string], 0.5, shot.first + Math.round((shot.last - shot.first) / 2)).position;
+  const view = new THREE.Vector3(hang.x - eye[0], 0, hang.z - eye[2]).normalize();
+  const right = new THREE.Vector3().crossVectors(view, new THREE.Vector3(0, 1, 0)).normalize();
+  const axis = right.clone().multiplyScalar(Math.cos(PLATE.turn)).addScaledVector(view, Math.sin(PLATE.turn)).normalize();
+  const proudWay = new THREE.Vector3().crossVectors(axis, down).normalize();
+  if (proudWay.dot(view) > 0) proudWay.negate();
+  const plateGeometry = new THREE.PlaneGeometry(1, 1, 96, 144).translate(0.5, 0.5, 0);
+  const plateMaterial = new THREE.ShaderMaterial({
+    vertexShader: PLATE_VERTEX,
+    fragmentShader: PLATE_FRAGMENT,
+    uniforms: {
+      ...ctx.rig.uniforms,
+      tCarcass: { value: ctx.assets.texture('mat/carcass.jpg', { kind: 'colour', repeat: false }) },
+      tRelief: { value: ctx.assets.texture('mat/carcass-h.png', { kind: 'data', repeat: false }) },
+      uOrigin: { value: weedPoint(rib, DROWNED.phi, DROWNED.height + 3.2, 0.3) },
+      uAxis: { value: axis.clone().multiplyScalar((PLATE.high * 2) / 3) },
+      uDrop: { value: down.clone().multiplyScalar(PLATE.high) },
+      uProud: { value: proudWay.clone().multiplyScalar(PLATE.deep) },
+    },
+    side: THREE.DoubleSide,
+  });
+  const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+  plate.frustumCulled = false;
+
+  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh, runs), strands, crabMesh, runs);
 
   return {
     dispose: () => {
       material.dispose();
       clothMaterial.dispose();
+      plateMaterial.dispose();
+      plateGeometry.dispose();
       runMaterial.dispose();
       skinGeometry.dispose();
       clothGeometry.dispose();
