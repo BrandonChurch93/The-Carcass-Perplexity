@@ -1,0 +1,7 @@
+2026-11-26 17:00 UTC
+work at 415ab2a on agent/spine-kites
+v1: the kites are a curved, wrung, flapping section shaded as a thin body. Close view beside the approved picture: still narrower and greyer than the approved veils, less glass. Far view 7015 before above after: folds and a dark face now, still pale as a group. Sheet of two seconds of the close view. Strike frame 7450 before beside after.
+look-1.jpg = out/work/v1/show-1-7418-beside-approved.jpg
+look-2.jpg = out/work/v1/show-2-7015-kites-before-above-after.jpg
+look-3.jpg = out/work/v1/show-3-sheet-kites-7378-7498.png
+look-4.jpg = out/work/v1/show-4-strike-7450-before-beside-after.jpg
