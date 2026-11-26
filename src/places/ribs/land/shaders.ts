@@ -147,12 +147,12 @@ void main() {
   vec3 nA = bump(n0, vWorld, a1, (nhA.xy - 0.5) * mA * sheet);
   vec3 nB = bump(n0, vWorld, b1, (nhB.xy - 0.5) * mB * sheet);
   vec3 n = normalize(mix(nA, nB, kB));
-  n = normalize(n + (bump(n0, vWorld, a2, (nhW.xy - 0.5) * mix(1.8, 1.0, uFin)) - n0));
+  n = normalize(n + (bump(n0, vWorld, a2, (nhW.xy - 0.5) * mix(1.8, 0.55, uFin)) - n0));
   float lum = dot(big, vec3(0.333));
   float macro = vnoise(vBlade.yx * vec2(0.021, 0.008)) * 0.6 + vnoise(vBlade.yx * vec2(0.06, 0.027) + 5.0) * 0.4;
-  vec3 albedo = mix(det * mix(vec3(1.0), big / 0.26, 0.4) * (0.85 + 0.4 * macro), mix(vec3(0.5, 0.47, 0.42), big, 0.45) * mix(vec3(1.0), det / 0.265, 0.4) * (0.92 + 0.16 * macro), uFin);
+  vec3 albedo = mix(det * mix(vec3(1.0), big / 0.26, 0.4) * (0.85 + 0.4 * macro), mix(vec3(0.5, 0.485, 0.46), big, 0.32) * mix(vec3(1.0), det / 0.265, 0.4) * (0.92 + 0.16 * macro), uFin);
   // Pale stone: ivory more than brown, the warmth left to the lichen.
-  albedo = mix(vec3(dot(albedo, vec3(0.333))), albedo, mix(0.5, 0.75, uFin)) * uRockTint;
+  albedo = mix(vec3(dot(albedo, vec3(0.333))), albedo, mix(0.5, 0.55, uFin)) * uRockTint;
   // Beds that run the length of the blade: the soft ones worn back, grey and damp.
   float beds = vnoise(vec2(vBlade.y * 0.21 + 0.7 * macro, vBlade.x * 0.012)) * 0.6 + vnoise(vec2(vBlade.y * 0.74, vBlade.x * 0.03 + 3.0)) * 0.4;
   float soft = smoothstep(0.56, 0.4, beds) * (1.0 - kB);
@@ -171,13 +171,15 @@ void main() {
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.6), stain * 0.7 * (1.0 - step(0.5, uTier)));
   float roost = vnoise(fall * vec2(0.031, 0.045) + 2.0) * 0.65 + vnoise(fall * vec2(0.11, 0.13)) * 0.35;
   float run = vnoise(fall * vec2(1.3, 0.05) + 11.0) * 0.6 + vnoise(fall * vec2(4.1, 0.16)) * 0.4;
+  // Fine upright fractures and runs of water down a blade's face.
+  albedo *= mix(1.0, 0.9 + 0.2 * run, uFin);
   float white = smoothstep(0.45, 0.75, run * (0.35 + 1.1 * roost) + 0.25 * (nh.z - 0.5)) * smoothstep(0.3, 0.55, roost);
   white = max(white, 0.8 * smoothstep(0.55, 0.9, n0.y) * smoothstep(0.3, 0.6, roost + 0.3 * (nh.z - 0.5)));
   white *= (1.0 - band) * smoothstep(tide + 4.0, tide + 30.0, y);
   // Rust lichen: in fields the size of a house, broken at the size of a hand, on what leans to the sky and the sun, never in the wet.
   float sunny = 0.5 + 0.5 * dot(n0, uSunDir);
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.023 + 9.0) * 0.55 + vnoise(vBlade.yx * 0.09) * 0.3 + vnoise(vBlade.yx * 0.47) * 0.15;
-  float lichen = smoothstep(0.6, 0.7, field + 0.3 * (nh.z - 0.5) + 0.28 * n0.y + 0.22 * (sunny - 0.5) - 0.25 * hollow) * (1.0 - band) * (1.0 - 0.8 * stain);
+  float lichen = smoothstep(0.6, 0.7, field + 0.05 * uFin + 0.3 * (nh.z - 0.5) + 0.28 * n0.y + 0.22 * (sunny - 0.5) - 0.25 * hollow) * (1.0 - band) * (1.0 - 0.8 * stain);
   if (uTier > 0.0) {
     // The colony's rock: dark wet grey, coursed; the white hangs from the edge of each ledge and the lichen lies in patches.
     // One sheet of a real stepped cliff, 40 m by 40 m: its own white and its own lichen; a little more of each is laid over it.
@@ -348,8 +350,8 @@ void main() {
   // The map of the wet comes first: sheets of soaked sand drawn out toward the sea, with hard edges, between the bars of gravel. Soaked,
   // the floor is dark and a mirror; dry, it is pale and matt.
   vec2 sq = vec2(xz.x + 0.3 * xz.y, xz.y * 0.4);
-  float soak = vnoise(sq / 31.0 + 11.0) * 0.5 + vnoise(sq / 11.0 + 4.0) * 0.32 + vnoise(xz / 3.7) * 0.18;
-  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.07);
+  float soak = vnoise(sq / 13.0 + 11.0) * 0.5 + vnoise(sq / 4.7 + 4.0) * 0.32 + vnoise(xz / 1.9) * 0.18;
+  float soaked = smoothstep(0.485, 0.515, soak - 0.3 * (ps.z - 0.35) - 0.12 * clamp(over, 0.0, 0.5) + 0.05 * (nh.z - 0.5) * close0 + 0.11);
   // Stones where the floor stands proud, rippled sand where it lies low.
   float bar = smoothstep(0.3, 0.52, ps.z + 0.5 * clamp(over, -0.2, 0.3) + 0.1 * (nh.z - 0.5) + 0.12 * close0);
   bar *= 1.0 - 0.8 * soaked;
@@ -373,7 +375,7 @@ void main() {
   rough = mix(rough, 0.9, under);
   albedo *= mix(1.6, 0.5, max(wet, 0.35 * damp)) * mix(1.0, 0.55, under);
   vec2 g = (nh.xy - 0.5) * 2.2 * max(bar, 0.5 * close);
-  vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
+  vec3 n = normalize(vNormal + vec3(ps.x, 0.0, ps.y) * 2.6 * (1.0 - 0.85 * film) * (1.0 - 0.7 * close) * (1.0 - 0.8 * under) + vec3(g.x, 0.0, -g.y) * mix(1.0, 0.05, wet));
   float cavity = 0.55 + 0.45 * smoothstep(0.08, 0.4, ps.z);
   float occ = mix(cavity * (0.5 + 0.5 * smoothstep(0.1, 0.55, nh.z)), 1.0, wet);
   vec3 c = rigShade(vWorld, n, v, albedo, rough, occ);
@@ -417,12 +419,14 @@ void main() {
   vec3 toEye = cameraPosition - vAt;
   float f = 0.04 + 0.96 * pow(1.0 - clamp(toEye.y / length(toEye), 0.0, 1.0), 5.0);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5);
-  vec3 albedo = mix(vec3(0.17, 0.175, 0.18), vec3(0.045, 0.042, 0.035), smoothstep(tide + 3.0, tide - 3.0, vWorld.y));
+  vec3 albedo = mix(vec3(0.17, 0.175, 0.18), vec3(0.08, 0.078, 0.07), smoothstep(tide + 3.0, tide - 3.0, vWorld.y));
   vec3 c = rigShade(vWorld, normalize(vNormal), normalize(vAt - vWorld), albedo, 1.0, 0.8);
   c = mix(uHaze * 0.9, c, exp(-length(vWorld - vAt) * 0.0006));
   // The wind's ripple breaks the image into streaks that lie across the line of sight.
   float streak = 0.5 + 0.5 * vnoise(vec2(dot(vAt.xz, normalize(toEye.xz)) * 1.7, dot(vAt.xz, normalize(toEye.zx * vec2(1.0, -1.0))) * 0.3) + uTime * 0.5);
-  gl_FragColor = vec4(rigOut(c), 0.5 * wet * smoothstep(0.02, 0.45, f) * streak * (1.0 - uSolo));
+  // Close under a lens the image is lost in the ripple: it comes in over fifty metres.
+  float nearLens = smoothstep(12.0, 60.0, length(toEye));
+  gl_FragColor = vec4(rigOut(c), 0.5 * wet * smoothstep(0.02, 0.45, f) * streak * nearLens * (1.0 - uSolo));
   // Last, so that every picture above is read with whole neighbours.
   if (wet < 0.01) discard;
 }`;

@@ -167,7 +167,7 @@ export function create(ctx: Context): Piece {
       ...ctx.rig.uniforms,
       ...volumeUniforms(),
       // Haze in a metre at sea level and the height it thins over; spray haze in a metre at sea level and the height it hangs to.
-      uAir: { value: new THREE.Vector4(0.0009, 75, 0.0003, 12) },
+      uAir: { value: new THREE.Vector4(0.0013, 75, 0.0003, 12) },
       // How much of the horizon's colour a metre of air gives back, how much of the sun, and the whole.
       uScatter: { value: new THREE.Vector3(0.8, 0.085, 1) },
       uShowAir: showAir,

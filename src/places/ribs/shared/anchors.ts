@@ -28,9 +28,9 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 
 /** The sun. It does not move in the 42 seconds of the place. `toward` points from the ground to the sun. */
 export const SUN = {
-  // From behind the cameras of the strait and to their right (154 degrees right of north, 37 up): the broad faces the lens sees are lit, the
-  // edges turned to the left row are not, and the broken cloud lays the shade. The bright break stays ahead and right (the rig's skyBreak).
-  toward: [0.3, 0.8, 0.5] as [number, number, number],
+  // High, from the left of the cameras of the strait and a little behind them: a blade's left face and its top are lit hard, its right
+  // face and what hangs over are in shade, as the approved pictures have them. The bright break stays ahead and right (the rig's skyBreak).
+  toward: [-0.55, 0.7, 0.25] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
   colour: [7.0, 6.0, 4.7] as [number, number, number],
 };
