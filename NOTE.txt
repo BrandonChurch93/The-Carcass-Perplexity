@@ -1,0 +1,7 @@
+2026-11-26 11:28 UTC
+work at 0244d6a on agent/film-loop
+v1 loop of the Ribs: loop sheet, seam sheet, loop frame 0 beside film frame 1241 at hd review, fade frames 420 to 431. Wrong: the light drifts 208 m a loop and dissolves back in the fade; camera move small
+look-1.jpg = out/work/sheets/loop.png
+look-2.jpg = out/work/sheets/loop-seam.png
+look-3.jpg = out/work/v1-pair.jpg
+look-4.jpg = out/work/sheets/v1-fade.png
