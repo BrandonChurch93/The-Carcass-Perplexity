@@ -607,36 +607,6 @@ void main() {
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
-// The far cliff: level strata of dark rock, pale ledges that hold scree, and the dark of the cave.
-export const CLIFF_FRAGMENT = /* glsl */ `
-${COMMON}
-uniform sampler2D tMat;
-uniform sampler2D tMatN;
-uniform vec3 uMean;
-void main() {
-  vec3 p = vWorld;
-  vec3 v = normalize(cameraPosition - p);
-  vec3 n = normalize(vNormal) * (gl_FrontFacing ? 1.0 : -1.0);
-  vec4 a = texture2D(tRock, vec2(vUv.x / 2300.0, vUv.y / 520.0));
-  // The picture of the face (mat/cliff): beds, joints and the snow they hold, at two sizes.
-  vec3 m0 = texture2D(tMat, vUv / 330.0).rgb;
-  vec3 m1 = texture2D(tMat, vUv / 1250.0 + 0.27).rgb;
-  float mh = texture2D(tMatN, vUv / 330.0).b;
-  vec3 grain = clamp(1.0 + 1.6 * ((0.6 * m0 + 0.4 * m1) / uMean - 1.0), 0.2, 3.0);
-  vec4 b = texture2D(tRock, vec2(vUv.x / 410.0, vUv.y / 120.0) + 0.31);
-  float strata = texture2D(tRock, vec2(vUv.x / 9000.0 + 0.1 * a.r, vUv.y / 260.0)).a;
-  float h = 30.0 * a.r + 9.0 * b.r + 26.0 * strata + 22.0 * mh;
-  n = raised(p, n, h);
-  float flat0 = normalize(vNormal).y * (gl_FrontFacing ? 1.0 : -1.0);
-  float ledge = smoothstep(0.62, 0.86, flat0 + 0.12 * (b.a - 0.5));
-  vec3 rock = mix(vec3(0.02, 0.022, 0.028), vec3(0.07, 0.068, 0.068), clamp(0.5 + 2.2 * (strata - 0.5) + 0.6 * (b.r - 0.5), 0.0, 1.0)) * grain;
-  // The top holds snow, and the scree a little in its hollows; the face is too steep for it.
-  float high = smoothstep(0.6, 0.85, p.y / 700.0 + 0.2 * (a.a - 0.5));
-  vec3 albedo = mix(rock, vec3(0.62, 0.64, 0.68), ledge * mix(0.3 * smoothstep(0.45, 0.6, b.a), 1.0, high));
-  float occ = vOcc * (0.6 + 0.4 * b.r);
-  gl_FragColor = vec4(rigOut(rigShade(p, n, v, albedo * vOcc, 0.85, occ)), 1.0);
-}`;
-
 /** A material picture of the place (public/assets/breath/mat): its colour, its data (slope in red and green, height in blue), its mean colour in
  *  linear light, the metres of one repeat and the metres its height is drawn as. */
 export interface Surface {
@@ -649,7 +619,6 @@ export interface Surface {
 
 export interface RockKit {
   shelf: THREE.ShaderMaterial;
-  cliff: THREE.ShaderMaterial;
   wall(plate: THREE.Texture, relief: THREE.Texture, top: Surface, grain: Surface): THREE.ShaderMaterial;
   bone(amount: number, pale: [number, number, number], dark: [number, number, number], of: Surface, side?: THREE.Side): THREE.ShaderMaterial;
   dispose(): void;
@@ -662,7 +631,7 @@ export interface DryGround {
   pebbles: Surface;
 }
 
-export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, plate: THREE.Texture, cliff: Surface, near: NearMap, dry: DryGround): RockKit {
+export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, shelf: Surface, plate: THREE.Texture, near: NearMap, dry: DryGround): RockKit {
   const of = (s: Surface): Record<string, THREE.IUniform> => ({
     tMat: { value: s.colour },
     tMatN: { value: s.data },
@@ -678,7 +647,6 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
   };
   return {
     shelf: make(SHELF_FRAGMENT, { ...of(shelf), tPlate: { value: plate }, tNear: { value: near.texture }, tNearS: { value: near.slopes }, uNear: { value: near.rect }, tPad: { value: dry.pad }, tPadH: { value: dry.padHeight }, tPeb: { value: dry.pebbles.colour }, tPebN: { value: dry.pebbles.data } }),
-    cliff: make(CLIFF_FRAGMENT, of(cliff), THREE.DoubleSide),
     wall: (plate, relief, top, grain) =>
       make(
         WALL_FRAGMENT,
