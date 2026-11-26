@@ -239,7 +239,10 @@ void main() {
   if (fract(seed * 77.7) < 0.4 * square) len = 0.0;
   // The dead one's legs and feet show: the coat on the legs is shorter, and close below the hock.
   if (uAnkle != 0.0 && which > 0 && which < 5) len *= aRoot.y < 0.2 ? 0.3 : 0.55;
-  float wide = aLock.w * size;
+  // One lock in seven is a long guard lock: it breaks the outline and carries the rime on its end.
+  float guard = step(0.86, fract(seed * 53.3));
+  len *= 1.0 + 1.1 * guard;
+  float wide = aLock.w * size * (1.0 + 0.6 * guard);
 
   // The burn: locks inside it are gone, locks at its edge are singed to black stubs.
   float singe = 0.0;
@@ -311,6 +314,7 @@ void main() {
   vec3 albedo = mix(cream * 0.62, cream, smoothstep(0.0, 0.5, t));
   float windward = n.y * 0.55 - dot(n, wind) * 0.55 + 0.6 * (stain - 0.5) + uCoat.w;
   float rime = smoothstep(0.1, 0.6, windward) * smoothstep(0.3, 0.85, t + 0.3 * fract(seed * 31.0));
+  rime = max(rime, guard * smoothstep(0.45, 0.85, t) * smoothstep(-0.3, 0.4, n.y));
   albedo = mix(albedo, vec3(0.9, 0.9, 0.91), rime * min(0.45 + 1.2 * max(uCoat.w, 0.0), 0.9));
   // The singed edge of the burn: rust, then black.
   albedo = mix(albedo, vec3(0.4, 0.14, 0.055), smoothstep(0.0, 0.4, singe) * 0.75 * (0.5 + 0.5 * fract(seed * 29.0)));
