@@ -508,7 +508,7 @@ void main() {
     float beatNear = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 420.0 - far0) / 60.0 + 1.0) : 1.0);
     float beatFar = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 1100.0 - far0) / 150.0 + 1.0) : 1.0);
     float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (far0 + 1.0)), 0.0, 2.0);
-    float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
+    float reach = exp(-d0 / 200000.0) / (1.0 + d0 / (8000.0 * (1.0 + 2.5 * max(beatFar - 0.12, 0.0))));
     // (After the beat it breathes, and never evenly: two slow swells that do not keep step. The light on the flanks goes with it.)
     float breathe = mix(1.0, 0.45 + 0.7 * vnoise(vec2(uTime * 1.1, 5.0)) + 0.4 * vnoise(vec2(uTime * 2.6, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
     glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.22 + 3.4 * beatFar) * mix(1.0, breathe, 0.7) * reach * facing * uEmber.x * land);
@@ -536,6 +536,8 @@ void main() {
     // (The whole lake is held down together when it swells, so the net of cracks keeps standing over the skin between them.)
     glow *= mix(1.0, 1.0 / ((1.0 + 0.3 * glow.r * uGain) * (1.0 + 0.9 * crowd)), uEmber.x);
     glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.58, 0.13)), uEmber.x);
+    // (Between its beats the fire lies low: the beat is seen against it.)
+    glow *= mix(1.0, 0.5 + 0.5 * clamp(1.4 * hit, 0.0, 1.0), uEmber.x);
     glow *= uEmber.w;
   }
 

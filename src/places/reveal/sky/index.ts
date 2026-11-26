@@ -90,7 +90,7 @@ void main() {
     float gone = uTerm.w * (1.0 - smoothstep(-0.1, 0.34, sunHeight(xz)));
     float aNight = a * mix(1.0, 0.45 + 0.5 * a, gone);
     // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
-    float bNight = min(1.0, b * (1.0 + 0.6 * gone));
+    float bNight = min(1.0, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))));
     colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
     a = aNight;
     b = bNight;
