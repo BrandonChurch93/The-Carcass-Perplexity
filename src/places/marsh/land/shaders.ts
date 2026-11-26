@@ -145,6 +145,10 @@ uniform sampler2D tRimeN;
 uniform sampler2D tSilt;
 uniform sampler2D tSiltN;
 uniform sampler2D tLedge;
+uniform sampler2D tFlat;
+uniform sampler2D tFlatH;
+// The flats' plate: 40 m by 22.5 m as taken, laid at six tenths of that so its plates are three to five strides across.
+const vec2 FLAT = vec2(24.0, 13.5);
 uniform sampler2D tThin;
 uniform sampler2D tShore;
 uniform sampler2D tGrain;
@@ -176,19 +180,25 @@ void main() {
 
   // The salt crust: one picture at three sizes. Far off its plates are strides wide, turned and bent by the wide grain so no repeat shows;
   // near, the picture at its true size; at the lens the same again small, for the grain of a hand's breadth.
-  vec2 uA = (vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) + (wide.ba - 0.5) * 9.0) / 17.0;
-  vec3 crust = texture2D(tCrust, uA).rgb;
-  vec4 nA = texture2D(tCrustN, uA);
+  // The flats are one picture of them from above with its relief (mat/flatplate): polygon plates some strides across with raised rims of
+  // salt, grey mud and red brine between them. Laid out again and again, every second copy turned over, and bent by the wide grain.
+  vec2 cF = (vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) + (wide.ba - 0.5) * 5.0) / FLAT;
+  vec2 uF = turned(cF);
+  vec3 crust = texture2D(tFlat, uF).rgb * vec3(1.08, 1.02, 1.01);
+  float hF = texture2D(tFlatH, uF).r;
+  // Its slope along one line only, a stride apart: enough to show which side of a rim looks at the brighter sky.
+  float hF2 = texture2D(tFlatH, uF + vec2(0.02, 0.0)).r;
+  vec4 nA = vec4(0.5, 0.5, hF, 0.5);
   // hgt: how high this spot stands among its neighbours, 0 to 1, from the pictures' heights.
-  float hgt = nA.b * 0.7 + mid.g * 0.3;
-  vec2 bend = -(nA.rg - 0.5) * 0.9 * (1.0 - near);
+  float hgt = hF * 0.8 + mid.g * 0.2;
+  vec2 bend = vec2(0.8, -0.6) * ((hF2 - hF) * (mod(cF.x, 2.0) > 1.0 ? 1.0 : -1.0) * 1.6);
   if (near > 0.0) {
     vec2 uB = p.xz / 5.0;
     vec3 cB = texture2D(tCrust, uB).rgb;
     vec4 nB = texture2D(tCrustN, uB);
     crust = mix(crust, cB * (0.4 + 0.6 * crust / vec3(0.413, 0.304, 0.269)), near);
-    hgt = mix(hgt, nB.b * 0.8 + nA.b * 0.2, near);
-    bend -= (nB.rg - 0.5) * 2.2 * near;
+    hgt = mix(hgt, nB.b * 0.45 + hF * 0.55, near);
+    bend = bend * (1.0 - 0.5 * near) - (nB.rg - 0.5) * 2.2 * near;
     if (close > 0.0) {
       vec2 uC = vec2(p.x * 0.6 + p.z * 0.8, p.z * 0.6 - p.x * 0.8) / 1.3;
       vec3 cC = texture2D(tCrust, uC).rgb;
@@ -201,14 +211,14 @@ void main() {
   vec3 colour = greyed(crust, 0.75) * vec3(1.05, 0.96, 0.9) * (0.8 + 0.26 * wide.r);
   // Salt stands white on what is highest; the hollows between the plates are dark with old red.
   colour = mix(colour, vec3(0.42, 0.395, 0.375) * (0.75 + 0.5 * hgt), smoothstep(0.62, 0.88, hgt) * 0.3);
-  colour = mix(colour, colour * vec3(0.62, 0.36, 0.32), smoothstep(0.42, 0.14, hgt) * (0.35 + 0.5 * stain));
+  colour = mix(colour, colour * vec3(0.62, 0.36, 0.32), smoothstep(0.42, 0.14, hgt) * (0.12 + 0.4 * stain));
   float occ = 1.0 - 0.4 * smoothstep(0.45, 0.1, hgt) * mix(0.5, 1.0, near);
   float rough = 1.0;
   float ground = 1.0;
   // The crust lies ON grey brown mud, in patches: back from the rims the mud shows wet where no crust has grown, and in the seams between
   // the plates.
   float bare = smoothstep(0.4, 0.5, wide.g * 0.5 + mid.r * 0.5) * smoothstep(1.0, 3.0, t) * (1.0 - rock);
-  float mudShare = max(bare * 0.95, smoothstep(0.44, 0.2, hgt) * 0.7 * (1.0 - rock));
+  float mudShare = max(bare * 0.95, smoothstep(0.44, 0.2, hgt) * 0.25 * (1.0 - rock));
   colour = mix(colour, vec3(0.2, 0.158, 0.132) * (0.7 + 0.6 * mid.b), mudShare);
   rough = mix(rough, 0.5, mudShare);
 
@@ -365,7 +375,7 @@ void main() {
   // The brine's level against the heights. At the shore most of the relief is under it and only the plates' tops stand out; a stride back
   // only the cracks hold it; where the flats lie low it comes up again in sheets.
   float lowland = smoothstep(0.52, 0.72, wide.g * 0.55 + mid.g * 0.2 + 0.3 * stain + 0.25 * (wide.r - 0.5));
-  float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + lowland * mix(0.2, 0.3, smoothstep(140.0, 50.0, dist)) * smoothstep(700.0, 150.0, dist);
+  float level = 0.85 * exp(-t / 0.35) + 0.5 * exp(-t / (2.5 + 5.0 * wide.r)) + lowland * mix(0.14, 0.2, smoothstep(140.0, 50.0, dist)) * smoothstep(700.0, 150.0, dist);
   level = min(level, 0.97) * (1.0 - rock);
   level = mix(level, 0.41 + 0.14 * lowland + 0.2 * exp(-t / 0.6), smoothstep(0.0, 0.5, thin));
   level = mix(level, 0.3, shoreW) * (1.0 - 0.6 * bankDry);
@@ -387,7 +397,7 @@ void main() {
   ng = normalize(vec3(ng.x / max(ng.y, 0.2) - lean.x, 1.0, ng.z / max(ng.y, 0.2) - lean.y));
   colour *= 1.0 + clamp(0.22 * dot(bend, bright) + mix(0.25, 0.32, rock) * dot(ng.xz, bright), -0.45, 0.35);
   // Far off, the red of stalks and growth too small to draw lies on the flats as a haze of colour.
-  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(150.0, 500.0, dist) * 0.22 * (1.0 - rock));
+  colour = mix(colour, vec3(0.16, 0.06, 0.055), smoothstep(0.44, 0.6, wide.g * 0.5 + mid.g * 0.5) * smoothstep(90.0, 400.0, dist) * 0.4 * (1.0 - rock));
 
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);
@@ -397,7 +407,7 @@ void main() {
     vec3 body = mix(vec3(0.13, 0.07, 0.055), vec3(0.085, 0.022, 0.018), 1.0 - exp(-deep * 26.0));
     body = mix(body, colour * 0.5, exp(-deep * mix(60.0, 25.0, smoothstep(0.0, 0.5, thin))));
     vec3 nf = normalize(vec3(bend.x * 0.03, 1.0, bend.y * 0.03));
-    float share = mirrorShare(nf, v);
+    float share = mirrorShare(nf, v) * mix(1.0, 0.55, smoothstep(25.0, 140.0, dist));
     float open = skyOpen(p) * mix(occ, 1.0, 0.5);
     vec3 film = body * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159) * (1.0 - share) + mirrorAt(p, nf) * share * mix(1.0, open, 0.5);
     lit = mix(lit, film, flood);

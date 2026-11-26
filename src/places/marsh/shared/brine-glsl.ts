@@ -7,8 +7,9 @@ export const BRINE_GLSL = /* glsl */ `
 // light.
 float mirrorShare(vec3 n, vec3 v) {
   float nv = clamp(dot(n, v), 0.0, 1.0);
-  // A rippled skin never shows the eye its true grazing angle: the share stops short of a mirror's, but far off the grey sky lies on it.
-  return 0.02 + 0.3 * pow(1.0 - nv, 9.0);
+  // Water's own law, held short of a whole mirror: the skin is never still at the scale of a hair. A slope that leans from the lens shows it
+  // the sky and one that leans to it the red body, and that alone draws every ripple.
+  return 0.025 + 0.6 * pow(1.0 - nv, 3.0);
 }
 // What a level wet surface at p mirrors, stained by the red film on it. A ripple swings the mirrored ray by twice its lean times the way to
 // what it mirrors, which is not known, so a share of the way to the lens stands for it.
@@ -26,7 +27,7 @@ vec3 mirrorAt(vec3 p, vec3 n) {
   // gives way to the sky alone.
   vec3 d = (p - cameraPosition) / away;
   seen = mix(seen, skyRadiance(normalize(vec3(d.x + swing.x * 0.02, abs(d.y), d.z + swing.y * 0.02))) * 0.82, smoothstep(40.0, 95.0, away));
-  return seen * vec3(1.0, 0.76, 0.74);
+  return seen * vec3(1.0, 0.86, 0.84);
 }
 // s: metres to the shore, negative in the brine. n: the surface's normal (ripples and rings laid in by the caller). froth: the colour of the
 // scum on top and how much of it there is.
@@ -37,9 +38,9 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float silt = texture2D(tGrain, p.xz / 23.0 + vec2(uTime * 0.0011, uTime * 0.0006)).r;
   float d2 = max(deep + (silt - 0.5) * 0.35, 0.0);
   // Over the salt shelf at the shore it is milky and pink; a stride out a dull maroon; in the channels a brown red near black.
-  vec3 bed = vec3(0.24, 0.105, 0.09);
-  vec3 body = vec3(0.075, 0.019, 0.016);
-  vec3 pit = vec3(0.034, 0.01, 0.009);
+  vec3 bed = vec3(0.19, 0.07, 0.058);
+  vec3 body = vec3(0.066, 0.0125, 0.0105);
+  vec3 pit = vec3(0.027, 0.0065, 0.0055);
   vec3 albedo = mix(bed, body, 1.0 - exp(-d2 * 5.0));
   albedo = mix(albedo, pit, smoothstep(0.7, 4.0, d2));
   albedo *= 0.8 + 0.4 * silt;
@@ -47,12 +48,11 @@ vec3 brineShade(vec3 p, vec3 n, vec3 v, float s, vec4 froth) {
   float open = skyOpen(p);
   // The body is lit from inside the liquid: the ripples do not shade it.
   vec3 lit = albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (open / 3.14159);
-  // Far off the grey sky lies on it as a sheen and takes the red out of it.
-  float fres = mirrorShare(n, v) * (1.0 - 0.8 * foam) * mix(1.0, 1.7, smoothstep(15.0, 80.0, length(cameraPosition - p)));
-  // A slope that leans from the lens shows it more of the sky and one that leans to it more of the body: this is what draws a ripple.
+  // Far off the ripples are smaller than a pixel: half of every pixel there is a slope that shows the body, so the sheen stops short.
+  float away = length(cameraPosition - p);
+  float fres = mirrorShare(n, v) * (1.0 - 0.8 * foam) * mix(1.0, 0.62, smoothstep(25.0, 140.0, away));
   float tilt = dot(n.xz, normalize(v.xz + vec2(1e-4)));
-  fres *= clamp(1.0 - tilt * 12.0, 0.3, 2.4);
-  lit *= clamp(1.0 + tilt * 3.0, 0.72, 1.15);
+  lit *= clamp(1.0 + tilt * 1.5, 0.8, 1.12);
   // What stands over the brine and closes the sky also stands in the mirror; the mirror is not shaded twice.
   return lit * (1.0 - fres) + mirrorAt(p, n) * fres * mix(1.0, open, 0.5);
 }`;

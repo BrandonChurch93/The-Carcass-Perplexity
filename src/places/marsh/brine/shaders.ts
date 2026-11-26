@@ -19,6 +19,14 @@ precision highp float;
 varying vec3 vWorld;
 uniform sampler2D tGrain;
 uniform sampler2D tFroth;
+uniform sampler2D tRipple;
+uniform sampler2D tRippleN;
+// How steep the wavelets stand: the slope a full swing of the tile is.
+const float RIPPLE = 0.3;
+// Drawn rings round whatever stands in the brine (0: none; they read as circles laid on with a pen).
+const float WADER_RINGS = 0.0;
+// Rafts of scum out on the open brine (0: none; they read as chalk dust).
+const float RAFTS = 0.0;
 uniform vec2 uWade;
 uniform int uRingCount;
 // x, z of the middle, radius of the front in metres, strength.
@@ -42,20 +50,20 @@ void main() {
 
   // There is no wind: the brine lies as a mirror, and what moves on it has a cause. A slow heave of the whole surface, too low to see but
   // in what it mirrors; the rings that leave every place gas comes up; the rings of each dome; the rings round whatever stands in it.
-  float closeBy = smoothstep(40.0, 6.0, dist);
-  vec2 slope = (texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.04 + (texture2D(tGrain, p.xz / 3.1 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.034;
-  // Close to, a fine tremble from the gas: short crossing trains that the heave bends.
-  if (dist < 22.0) {
-    float chop = smoothstep(22.0, 6.0, dist);
-    vec4 slow = texture2D(tGrain, p.xz / 9.0 + vec2(0.002, 0.001) * uTime);
-    vec2 bent = p.xz + (slow.rg - 0.5) * 0.4;
-    float ph = slow.r * 6.0;
-    slope += vec2(0.83, 0.56) * cos(dot(bent, vec2(0.83, 0.56)) * 23.0 - uTime * 11.0 + ph) * 0.012 * chop;
-    slope += vec2(-0.37, 0.93) * cos(dot(bent, vec2(-0.37, 0.93)) * 37.0 - uTime * 14.0 - ph * 1.7) * 0.009 * chop;
-    slope += vec2(0.26, -0.97) * cos(dot(bent, vec2(0.26, -0.97)) * 13.0 - uTime * 8.3 + ph * 0.6) * 0.014 * chop;
-    // And the wavelets a hand to a stride long that every ring leaves behind it, crossing and never still.
-    slope += ((texture2D(tGrain, p.xz / 0.83 + vec2(0.05, 0.031) * uTime).ba - 0.5) + (texture2D(tGrain, p.xz / 1.37 - vec2(0.043, 0.06) * uTime).ba - 0.5)) * 0.05 * chop;
-  }
+  // Nothing in nature is ruffled evenly: the gas troubles the brine in patches some strides wide and leaves glass between them.
+  vec4 patchy = texture2D(tGrain, p.xz / 37.0 + vec2(0.0009, 0.0005) * uTime);
+  float ruffle = 0.3 + 1.25 * smoothstep(0.38, 0.7, patchy.r);
+  // Two fields of low swell cross and never travel as one: the surface works, it does not slide.
+  vec2 slope = ((texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.2 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.16) * ruffle;
+  // Close to, the skin is never glass: small wavelets from the gas cross it every way, two fields of them sliding through each other, so
+  // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
+  float chop = smoothstep(60.0, 6.0, dist) * ruffle;
+  vec4 rA = texture2D(tRipple, p.xz / 2.3 + vec2(0.031, 0.017) * uTime);
+  // (The second and third are a picture of still brine with its relief, mat/ripple: its wavelets lie one way, as the light air lays them,
+  // and it is laid twice, the second time turned and smaller.)
+  vec2 rB = texture2D(tRippleN, vec2(p.x * 0.9 + p.z * 0.44, p.z * 0.9 - p.x * 0.44) / 3.0 - vec2(0.006, 0.027) * uTime).rg - vec2(0.5, 0.481);
+  vec2 rC = texture2D(tRippleN, vec2(p.z * 0.94 + p.x * 0.34, p.z * 0.34 - p.x * 0.94) / 1.9 + vec2(0.011, 0.035) * uTime).rg - vec2(0.5, 0.481);
+  slope += ((rA.rg - 0.5) * RIPPLE + vec2(rB.x * 0.9 - rB.y * 0.44, rB.y * 0.9 + rB.x * 0.44) * 0.3 + vec2(rC.y * 0.94 + rC.x * 0.34, rC.y * 0.34 - rC.x * 0.94) * 0.2) * chop;
   float pool = length(p.xz);
   if (pool < 16.0) {
     // Each seep sends out ring after ring: half a stride from crest to crest, 0.7 m a second, dying with the way they have come.
@@ -81,8 +89,11 @@ void main() {
   // Whatever stands in the brine (the contact map has it) is ringed: the rings leave it slowly and die within a stride.
   float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
+  // What stands in the brine troubles it: the wavelets are steeper round it.
+  slope *= 1.0 + 1.3 * ringed;
   vec2 lens = normalize(v.xz + vec2(1e-4));
-  slope -= lens * sin(stood * 21.0 + uTime * 2.6 + fine.g * 2.0) * 0.035 * ringed;
+  // (Broken arcs, not drawn circles: the body shifts its weight and each shift sends one low swell, bent by the swell already there.)
+  slope -= lens * sin(stood * 11.0 + uTime * 2.1 + fine.r * 5.0 + patchy.g * 4.0) * WADER_RINGS * ringed * smoothstep(0.25, 0.6, fine.b + 0.3 * sin(uTime * 0.7 + patchy.b * 9.0));
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
 
   // Scum: a pale pink froth that hugs the shore in a broken line, and rafts of it that turn slowly on the open brine.
@@ -98,7 +109,7 @@ void main() {
   // Close to a lens the rafts of scum are seen for what they are; far off only the line at the shore is.
   float rafts = smoothstep(20.0, 8.0, dist);
   // (The rafts keep to the bank: out on the open brine they read as a speckle of noise.)
-  float want = max(hug, mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-1.1 - 0.5 * rafts, -0.2, s) * wade) * seen;
+  float want = max(hug, RAFTS * mix(0.6, 0.8, rafts) * smoothstep(0.66 - 0.07 * rafts, 0.76 - 0.05 * rafts, fleck.g * 0.45 + raft.g * 0.55) * smoothstep(-1.1 - 0.5 * rafts, -0.2, s) * wade) * seen;
   vec3 scum = texture2D(tFroth, p.xz / 1.5 + drift * 3.0).rgb;
   float foam = want * smoothstep(0.03, 0.16, dot(scum, vec3(0.333)) - 0.2 * (1.0 - want) + (bubble.r - 0.5) * 0.06);
   vec4 froth = vec4(scum * 1.5 + 0.05, foam);
