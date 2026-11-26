@@ -99,8 +99,8 @@ void main() {
   // along x; x, height where it looks along z) and on the level plane where it looks up or down. Its beds dip and wander, and the
   // picture goes to and fro up the blade so that it has no seam.
   float h2 = n0.x * n0.x + n0.z * n0.z;
-  float facing = smoothstep(0.3, 0.7, n0.x * n0.x / (h2 + 1e-5));
-  float level0 = smoothstep(0.55, 0.8, abs(n0.y));
+  float facing = smoothstep(0.42, 0.58, n0.x * n0.x / (h2 + 1e-5));
+  float level0 = smoothstep(0.62, 0.76, abs(n0.y));
   float bedY = vWorld.y + 0.16 * vWorld.x - 0.11 * vWorld.z + 22.0 * (macro - 0.5);
   float up = bedY / (0.78 * uRock);
   float fro = abs(fract(up * 0.5) * 2.0 - 1.0);
@@ -117,8 +117,8 @@ void main() {
   if (level0 > 0.001) rockT = textureLod(tColony, ucT, lr).rgb;
   vec3 stone = mix(mix(rockB, rockA, facing), rockT, level0);
   // The same rock again, four times the size and turned: no repeat of the first is seen from far off.
-  vec2 uf = (facing > 0.5 ? vWorld.zy : vWorld.xy) * mat2(0.83, 0.56, -0.56, 0.83) / (uRock * 4.3) + 0.31;
-  float far2 = dot(textureLod(tColony, uf, lr - 2.1).rgb, vec3(0.333)) / 0.19;
+  vec2 uf = (facing > 0.5 ? vWorld.zy : vWorld.xy) * mat2(0.83, 0.56, -0.56, 0.83) / 37.0 + 0.31;
+  float far2 = 0.55 + 0.9 * vnoise(uf);
   vec2 uc = facing > 0.5 ? ucA : ucB;
   vec3 nhR = textureLod(tColonyN, uc, lr).rgb;
   float mirror = (1.0 - 2.0 * mod(floor(uc.x), 2.0));
@@ -144,7 +144,7 @@ void main() {
   vec3 bed = bedding(vBase);
   float shelf = bed.z * smoothstep(1.0, 0.9, bed.y) * smoothstep(0.72, 0.9, bed.y);
   float shade = bed.z * smoothstep(0.16, 0.0, bed.y);
-  lean = lean * (0.05 * uLift) - (level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) * 2.0 + vec3(0.0, 1.3, 0.0) * shelf;
+  lean = lean * (0.05 * uLift * (1.0 - uCap)) - (level1 * gr.x + vec3(0.0, 1.0, 0.0) * gr.y) * 2.0 + vec3(0.0, 1.3, 0.0) * shelf;
   lean -= n0 * dot(lean, n0);
   vec3 n = normalize(n0 + lean);
 
@@ -155,23 +155,29 @@ void main() {
   float field = vnoise(vWorld.xz * 0.019 + vWorld.y * 0.027 + 9.0) * 0.6 + vnoise(vWorld.xz * 0.11 + vWorld.y * 0.09) * 0.4;
   float lichen = smoothstep(0.62, 0.8, field + 0.4 * n0.y + 0.2 * (sunny - 0.5) - 0.3 * hollow + 0.22 * shelf + 0.04 * uCap);
   vec3 albedo = mix(vec3(stoneLum) * vec3(0.95, 1.0, 1.06), stone * vec3(1.15, 1.0, 0.85), 0.1 + 0.9 * lichen);
-  albedo *= mix(1.95, 2.5, uCap) * (0.85 + 0.3 * nhW.z) * mix(1.0, clamp(far2, 0.4, 1.8), 0.45) * fineLum * (0.82 + 0.36 * macro);
+  albedo *= mix(1.75, 2.5, uCap) * vec3(0.97, 1.0, 1.04) * (0.85 + 0.3 * nhW.z) * mix(1.0, clamp(far2, 0.4, 1.8), 0.45) * fineLum * (0.82 + 0.36 * macro);
   // Over hundreds of metres the stone changes: cold grey here, warm ivory there.
-  albedo *= mix(vec3(0.94, 0.98, 1.04), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, vnoise(vWorld.xz * 0.0037 + vWorld.y * 0.0031 + 3.0)));
-  albedo *= 1.0 - 0.3 * hollow;
+  albedo *= mix(vec3(0.94, 0.98, 1.04), vec3(1.07, 1.0, 0.9), smoothstep(0.3, 0.7, macro));
+  albedo *= 1.0 - 0.3 * hollow * (1.0 - uCap);
+  // The near cliff's cap: pale layered stone, cream more than grey, its lichen in patches.
+  if (uCap > 0.0) {
+    vec3 cream = vec3(0.36, 0.34, 0.3) * clamp(stoneLum / 0.19, 0.55, 1.5) * fineLum * (0.85 + 0.3 * macro);
+    cream = mix(cream, vec3(0.36, 0.17, 0.035) * clamp(stoneLum / 0.19, 0.6, 1.4), 0.75 * smoothstep(0.52, 0.62, field + 0.2 * shelf));
+    albedo = mix(albedo, cream, 0.85 * uCap);
+  }
   // White lies on the ledges and runs a little way down from them.
-  float white = max(0.75 * shelf, 0.4 * bed.z * smoothstep(0.55, 0.9, bed.y) * smoothstep(0.45, 0.7, vnoise(vec2((vWorld.x + vWorld.z) * 0.9, bed.x * 7.0)))) * smoothstep(0.45, 0.62, field);
+  float white = max(0.75 * shelf, 0.4 * bed.z * smoothstep(0.55, 0.9, bed.y) * smoothstep(0.9, 1.2, far2)) * smoothstep(0.45, 0.62, field);
   albedo = mix(albedo, vec3(0.62, 0.61, 0.58) * (0.7 + 0.5 * stoneLum / 0.19), white * (1.0 - 0.7 * lichen));
 
   float y = vWorld.y;
-  float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (field - 0.5);
+  float tide = uTide - 4.0 + 7.0 * (far2 - 1.0) + 3.0 * (field - 0.5);
   float weed = smoothstep(tide + 0.5, tide - 0.5, y);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);
   float damp = smoothstep(tide + 40.0 + 30.0 * (macro - 0.5), tide + 2.0, y);
   // What runs down a face runs by the level way across it and the height.
   vec2 fall = vec2(mix(vBlade.w, vBlade.z, edge), y);
   // Seep: dark wet bands that follow the beds, a few to a blade, each broken along its length.
-  float seep = smoothstep(0.6, 0.8, vnoise(vec2(bedY * 0.021, 7.0)) * 0.7 + 0.3 * macro) * smoothstep(0.35, 0.6, vnoise(vec2(fall.x * 0.012, bedY * 0.004) + 40.0));
+  float seep = smoothstep(0.6, 0.8, vnoise(vec2(bedY * 0.021, 7.0 + fall.x * 0.004)) * 0.7 + 0.3 * macro) * smoothstep(0.35, 0.6, field);
   albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.62), 0.7 * seep);
   albedo *= mix(1.0, 0.5, damp * (1.0 - 0.85 * uCap)) * mix(1.0, 0.14, band);
   if (weed > 0.001) albedo = mix(albedo, texture2D(tWeed, fall / 7.0).rgb * 0.9, weed);
@@ -183,7 +189,7 @@ void main() {
   // Against the light the edge of the stone burns.
   float rim = 1.0 - max(dot(n, v), 0.0);
   float back = max(dot(-v, uSunDir), 0.0);
-  lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
+  if (back * rim > 0.2) lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
 
@@ -231,6 +237,14 @@ void main() {
   vec2 uw = vec2(arc, vWorld.y) / 5.0;
   float hank = dot(textureLod(tWeed, uw, log2(max(max(length(dFdx(uw) * 1024.0), length(dFdy(uw) * 1024.0)), 1e-6))).rgb, vec3(2.4));
   vec3 albedo = pic * 0.9 * mix(mix(1.0, grain, 0.6), clamp(hank, 0.3, 2.0), 0.85 * weedy) * (0.85 + 0.3 * macro);
+  // Over the weed the stack is pale layered rock with lichen on it: the cap of the picture.
+  float cap = smoothstep(19.0, 27.0, vWorld.y + 7.0 * (macro - 0.5));
+  float lum = dot(pic, vec3(0.333));
+  float rust = smoothstep(0.55, 0.68, vnoise(vec2(arc, vWorld.y) * 0.21 + 9.0) * 0.6 + vnoise(vec2(arc, vWorld.y) * 0.9) * 0.4);
+  vec3 pale = vec3(0.3, 0.29, 0.265) * clamp(lum / 0.1, 0.7, 1.5) * mix(1.0, grain, 0.5) * (0.8 + 0.4 * macro);
+  pale = mix(pale, vec3(0.3, 0.14, 0.03) * (0.6 + 0.6 * grain), 0.6 * smoothstep(0.1, 0.25, rust * macro));
+  albedo = mix(albedo, pale, cap);
+  weedy *= 1.0 - cap;
   float rough = mix(0.8, 0.42, weedy);
   float occ = 0.55 + 0.45 * smoothstep(0.25, 0.6, nhp.z);
   vec3 lit = rigShade(vWorld, n, v, albedo, rough, occ);
