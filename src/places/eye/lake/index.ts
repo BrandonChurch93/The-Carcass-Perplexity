@@ -113,6 +113,8 @@ void main() {
   vec2 slope = vec2(0.0);
   // The slow rings alone, kept apart: seen low, a face of a ring that leans to the eye is dark and one that leans away is bright.
   vec2 heave = vec2(0.0);
+  // The rings of what drinks, kept apart: they are read on the whole of the water, the mirror and what lies under it.
+  vec2 lapped = vec2(0.0);
   // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
   if (r < 700.0) {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
@@ -154,12 +156,14 @@ void main() {
     if (l.w > 0.0 && m < 11.0) {
       // Seen low and from a way off, only a long ring reads: two metres from crest to crest, and a shorter train inside it.
       float ph = m * 3.2 - (uTime + l.z) * 2.7;
-      float ph2 = m * 6.9 - (uTime + l.z * 2.3) * 4.6;
+      float ph2 = m * 10.0 - (uTime + l.z * 2.3) * 5.2;
+      // The short train is drawn only where the eye can tell one crest from the next.
+      float told = smoothstep(2.4, 0.9, fwidth(m * 10.0));
       float pack = 0.6 + 0.4 * sin(m * 0.5 - uTime * 0.7 + l.z * 5.0);
-      float env = l.w * 0.04 * exp(-m / 3.2) * smoothstep(0.03, 0.4, m) * pack;
-      vec2 ring = d / max(m, 1e-3) * (env * (cos(ph) + 0.4 * cos(ph2)));
+      float env = l.w * 0.055 * exp(-m / 3.2) * smoothstep(0.03, 0.4, m) * pack;
+      vec2 ring = d / max(m, 1e-3) * (env * (0.5 * cos(ph) + 0.9 * told * cos(ph2)));
       slope += ring;
-      heave += 1.2 * ring;
+      lapped += ring;
     }
   }
   // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
@@ -276,6 +280,9 @@ void main() {
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
   float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
   c += uSunColour * glint * 0.6 * (close + 0.3);
+  // A ring round a muzzle or a leg, seen low: the face that leans to the eye shows the dark under the water, the face that leans away the bright of the sky.
+  float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
+  c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
 
   // The last second of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
   if (uCentre.y > 0.0) {

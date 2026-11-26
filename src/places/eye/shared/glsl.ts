@@ -33,7 +33,60 @@ float fbm(vec2 p) {
     a *= 0.5;
   }
   return s;
-}`;
+}
+// Pebbles: every stone is a cell of its own, a low dome. x is the dome (0 in the grit between two stones), yz the way from here to the middle
+// of the stone, w a number the stone keeps for itself.
+vec4 pebbleAt(vec2 x) {
+  vec2 cell = floor(x);
+  vec2 f = fract(x);
+  float best = 8.0;
+  float next = 8.0;
+  vec2 to = vec2(0.0);
+  float own = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 g = vec2(float(i), float(j));
+      vec2 r = g + 0.12 + 0.76 * hash22(cell + g) - f;
+      float d = dot(r, r);
+      if (d < best) {
+        next = best;
+        best = d;
+        to = r;
+        own = hash12(cell + g + 17.0);
+      } else if (d < next) {
+        next = d;
+      }
+    }
+  }
+  float edge = sqrt(next) - sqrt(best);
+  return vec4(smoothstep(0.02, 0.3 + 0.25 * own, edge), to, own);
+}
+
+// The shingle of the shore at xz, stone by stone: its colour and, in a, the dome of the stone (0 in the grit). xs is the same ground counted
+// in small stones, lean the way each dome turns its face. One shore above the water and under it.
+vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean) {
+  // Beds of larger and smaller stone, and grit where there is neither.
+  float bed = smoothstep(0.42, 0.58, vnoise(xz / 1.9 + 11.0));
+  vec4 sa = pebbleAt(xs);
+  vec4 sb = pebbleAt(xs * 2.3 + 3.1);
+  vec4 small = mix(sb, sa, bed);
+  float bare = smoothstep(0.3, 0.42, vnoise(xz / 0.9 + 3.0) + 0.5 * (small.w - 0.5));
+  small.x *= bare;
+  vec4 big = pebbleAt(xz / 0.31 + 5.3 + 1.5 * vec2(vnoise(xz * 0.9), vnoise(xz * 0.9 + 4.0)));
+  float cobble = big.x * smoothstep(0.78, 0.8, big.w);
+  float own = mix(small.w, fract(big.w * 7.3), step(0.001, cobble));
+  float dome = max(small.x, cobble);
+  vec2 to = mix(small.yz, big.yz * 1.8, step(0.001, cobble));
+  // Limestone mostly: pale grey, some buff, a dark one now and then, each with a speck or a vein of its own.
+  vec3 shade = mix(vec3(0.17, 0.17, 0.18), vec3(0.8, 0.77, 0.7), own * own);
+  shade = mix(shade, vec3(0.55, 0.4, 0.26), smoothstep(0.74, 0.8, fract(own * 13.0)));
+  shade = mix(shade, vec3(0.07, 0.07, 0.08), smoothstep(0.86, 0.9, fract(own * 29.0)));
+  shade *= 0.75 + 0.5 * vnoise(xz * 37.0 + own * 50.0);
+  vec3 grit = vec3(0.2, 0.185, 0.165) * (0.45 + 1.1 * vnoise(xz * 110.0)) * (0.5 + 0.5 * bare);
+  lean = -to * (2.4 * (1.0 - dome) * step(0.01, dome) + 0.9 * dome);
+  return vec4(mix(grit, shade, dome), dome);
+}
+`;
 
 export const RIG_UNIFORMS_GLSL = /* glsl */ `
 uniform float uTime;

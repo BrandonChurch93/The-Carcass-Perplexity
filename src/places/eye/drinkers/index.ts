@@ -251,7 +251,7 @@ export function create(ctx: Context): Piece {
             const wet = Math.hypot(mx, mz) < shoreOf(mx, mz) - 0.2;
             if (wet && (d.close || down > 0.9)) ring(mx, mz, Math.min(1, Math.max(0, (down - 0.82) / 0.12)));
           }
-          if (d.close && ground < -0.03) ring(d.x, d.z, 0.35 + 0.2 * Math.sin(t * 0.83 + i * 1.7));
+          if (d.close && ground < -0.03) ring(d.x, d.z, 0.55 + 0.2 * Math.sin(t * 0.83 + i * 1.7));
         });
         g.stand.needsUpdate = true;
         g.pose.needsUpdate = true;
