@@ -1,0 +1,89 @@
+{
+ "made": "2026-11-26",
+ "design": "one seeded shuffle of the six places (seed 20261126), turned one step for each juror, so every juror has a different order and each place stands in five different positions",
+ "panel": "the five seats of the fixed jury panel, one fresh agent each, each on its own machine",
+ "from": {
+  "ribs": {
+   "file": "out/stills/ribs/still-key-ribs-0-uhd-final.jpg",
+   "sha256": "576d3a88e8e0d71f3a89e4b339f37caf60d1a95728b3e6def88e6644e2a02c74"
+  },
+  "heart": {
+   "file": "out/stills/heart/still-key-heart-0-uhd-final.jpg",
+   "sha256": "7195bb0277b569a7c94063aa32167987d513a5133afa09388dfdf9f14fc95d3a"
+  },
+  "breath": {
+   "file": "out/stills/breath/still-key-breath-0-uhd-final.jpg",
+   "sha256": "b8baad3323e266c83979784ad65f691354371e44580e5422ddd878771f6e1e02"
+  },
+  "marsh": {
+   "file": "out/stills/marsh/still-key-marsh-0-uhd-final.jpg",
+   "sha256": "586accbc37c6c97c195ab5de448fba0502388caff14b77c195a58c1ee2b236a8"
+  },
+  "spine": {
+   "file": "out/stills/spine/still-key-spine-0-uhd-final.jpg",
+   "sha256": "b7a1be71d478be5b6c2b51d5aa5017ff990cb2ee51b1850b363d2af207ae9ebf"
+  },
+  "eye": {
+   "file": "out/stills/eye/still-key-eye-0-uhd-final.jpg",
+   "sha256": "672940a84fedc10b134d967328b2b718c78676b32f4794713a91d32805dce5c6"
+  }
+ },
+ "size": "1392 x 783 PNG, lanczos from the kept 4K still (inside critics.maxImageLongEdgePx 1400 and critics.maxImageMegapixels 1.1)",
+ "key": {
+  "a": {
+   "model": "gpt_6_2_sol",
+   "files": {
+    "picture-1.png": "heart",
+    "picture-2.png": "spine",
+    "picture-3.png": "breath",
+    "picture-4.png": "ribs",
+    "picture-5.png": "eye",
+    "picture-6.png": "marsh"
+   }
+  },
+  "b": {
+   "model": "claude_opus_5_5",
+   "files": {
+    "picture-1.png": "spine",
+    "picture-2.png": "breath",
+    "picture-3.png": "ribs",
+    "picture-4.png": "eye",
+    "picture-5.png": "marsh",
+    "picture-6.png": "heart"
+   }
+  },
+  "c": {
+   "model": "gemini_neon",
+   "files": {
+    "picture-1.png": "breath",
+    "picture-2.png": "ribs",
+    "picture-3.png": "eye",
+    "picture-4.png": "marsh",
+    "picture-5.png": "heart",
+    "picture-6.png": "spine"
+   }
+  },
+  "d": {
+   "model": "gpt_6_2_astra",
+   "files": {
+    "picture-1.png": "ribs",
+    "picture-2.png": "eye",
+    "picture-3.png": "marsh",
+    "picture-4.png": "heart",
+    "picture-5.png": "spine",
+    "picture-6.png": "breath"
+   }
+  },
+  "e": {
+   "model": "claude_sonnet_5_5",
+   "files": {
+    "picture-1.png": "eye",
+    "picture-2.png": "marsh",
+    "picture-3.png": "heart",
+    "picture-4.png": "spine",
+    "picture-5.png": "breath",
+    "picture-6.png": "ribs"
+   }
+  }
+ }
+}
