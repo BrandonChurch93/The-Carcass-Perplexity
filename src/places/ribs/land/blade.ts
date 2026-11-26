@@ -23,13 +23,13 @@ export function bladeRelief(q: number, s: number, x: number, y: number, z: numbe
   const wander = 5 * (noise2(s / 60, q / 40) - 0.5);
   const wide = Math.abs(noise2((q + wander) / 9.5, s / 140) - 0.5);
   const narrow = Math.abs(noise2((q + 0.6 * wander) / 21 + 7.7, s / 190) - 0.5);
-  d += 2 * (wide - 0.25) + 3 * (narrow - 0.25);
+  d += 0.6 * (wide - 0.25) + 0.9 * (narrow - 0.25);
   // Bites out of the blade the size of a house, where a block has gone.
   d -= 6 * smooth(0.62, 0.8, noise3(x / 36 + 5.1, y / 30, z / 36));
   // Broken at the size of a boat and of a man.
   d += 0.6 * (noise3(x / 11, y / 8, z / 11) - 0.5);
   // Joints: cracks across the blade where it will break next.
-  d -= 0.9 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
+  d -= 0.3 * (1 - smooth(0, 0.05, Math.abs(noise2(s / 23 + 0.02 * q, q / 90 + 4.1) - 0.5)));
   return d;
 }
 

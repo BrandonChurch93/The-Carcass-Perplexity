@@ -56,7 +56,8 @@ function stackRadius(s: Stack, y: number, angle: number): number {
   }
   const ca = Math.cos(angle);
   const sa = Math.sin(angle);
-  const t = (y + 2.5 * noise3(ca * 1.5 + seed, sa * 1.5, 3.5)) / BED;
+  // The beds are of unlike thickness (two to one) and dip round the rock.
+  const t = (y + 7 * noise3(ca * 1.5 + seed, sa * 1.5, 3.5) + 9 * noise3(y / 26, seed, 1.5)) / BED;
   const band = Math.floor(t);
   const f = t - band;
   const proud = (k: number): number => 2.6 * noise3(k * 1.9 + 0.5, ca * 2.2 + seed, sa * 2.2) * smooth(0.3, 0.6, noise3(k * 0.7 + 0.5, ca * 0.9 + seed, sa * 0.9 + 7));

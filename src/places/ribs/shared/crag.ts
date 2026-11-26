@@ -67,7 +67,9 @@ const blockAt = (angle: number, y: number, wide: number, high: number, seed: num
   const columns = Math.max(3, Math.round((Math.PI * 2 * 45) / wide));
   const turn = angle / (Math.PI * 2);
   const u = (turn - Math.floor(turn)) * columns;
-  const v = y / high;
+  // The beds are not level: they dip and climb round the rock, a few degrees, each size of block its own way.
+  const lean = 6 * noise3(Math.cos(angle) * 2.6 + seed, Math.sin(angle) * 2.6, 0.5) + 1.6 * noise3(angle * 9 + seed, 3.5, 1.5);
+  const v = (y + lean) / high;
   const j0 = Math.floor(v);
   let best = 1e9;
   let next = 1e9;
@@ -88,7 +90,7 @@ const blockAt = (angle: number, y: number, wide: number, high: number, seed: num
       if (d < best) {
         next = best;
         best = d;
-        middle = cv * high;
+        middle = cv * high - lean;
         proud = hash(w, j, seed + 3) - 0.5;
       } else if (d < next) next = d;
     }
