@@ -133,6 +133,69 @@
       "confidence": 60,
       "why": "the foreground rocks have repetitive, photogrammetry-style textures and the lava-field creatures are simple and stiff, like a competent hobbyist Unreal render rather than a polished film or cinematic frame.",
       "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat ambient lighting and simple lava-plane shaders paired with detailed foreground rock textures typical of a standard 3D render rather than a top-budget cinematic or mobile game",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the distant cliffs have angular silhouettes despite the detailed rock texture pasted across them.",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "the lava field with spindly spider-like creatures, the atmospheric haze and the detailed rock textures look like a high-end film or game cinematic, though the repetitive rock detail leaves some chance it is an ordinary 3D render (c).",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the nearly identical flamingo poses repeated across the shallows.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "The scene looks like an imaginary world with strange pale long-necked creatures and very detailed but slightly composited-looking rocks, which reads as a high-quality CG render or matte painting and not a real photo.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 77,
+      "why": "the same spindly creature model repeats across the shallows with little variation in pose.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the high-detail layered rock and atmospheric haze with fantastical creatures reads as a polished cinematic or high-end concept render, not a real photo.",
+      "answered": "18:21 UTC"
     }
   ]
 }
