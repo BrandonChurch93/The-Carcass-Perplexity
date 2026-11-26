@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { AT, KM, LIMB, X, Z } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { FRONTS_GLSL, FRONT_KM, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -33,19 +33,15 @@ const CLOUD_FRAGMENT = /* glsl */ `
 ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WEATHER_GLSL}
-${FRONTS_GLSL}
 ${CLOUD_LIGHT_GLSL}
-uniform sampler2D uFront;
 uniform sampler2D uVeil;
 varying vec3 vWorld;
 void main() {
   vec2 xz = vWorld.xz;
   vec2 toSun = normalize(uSunDir.xz);
-  // What one ray meets on its way down: the veil of ice, then the fronts, then the low field, each at its own height.
+  // What one ray meets on its way down: the veil of ice, then the low field, each at its own height.
   vec2 lean = (cameraPosition.xz - xz) / max(cameraPosition.y - ${LOW_KM.toFixed(1)}, 1.0);
-  vec2 mid = xz + lean * ${(FRONT_KM - LOW_KM).toFixed(1)};
   vec2 up = xz + lean * ${(HIGH_KM - LOW_KM).toFixed(1)};
-  float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
 
   // The low field. Each cloud is lit on its side toward the sun and dark on the other: its neighbour toward the sun shades it.
   vec2 low = lowField(xz);
@@ -53,27 +49,18 @@ void main() {
   float sunward = lowField(xz + toSun * reach).x;
   float self = clamp(0.5 + 1.1 * (low.x - sunward), 0.0, 1.0);
 
-  // The fronts: long bands of deep cloud that cross the sea, and their shade on the field under them.
-  vec2 fa = mid - uTime * FRONT_DRIFT;
-  vec2 front = frontPlate(uFront, fa, vec2(0.0));
-  float frontSun = frontPlate(uFront, fa + toSun * (6.0 + 0.02 * uViewKm), vec2(0.0)).y;
-  float frontSelf = clamp(0.5 + 2.2 * (front.y - frontSun), 0.0, 1.0);
-  float under = coverAt(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(FRONT_KM - LOW_KM).toFixed(1)} * lift - uTime * FRONT_DRIFT).r;
-
   // The veil: thin ice, far above, drifting the other way.
   vec2 hv = up + uTime * vec2(2.2, -1.3);
   float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
   float where = texture2D(uCloudTile, hv / 5200.0 + vec2(0.61, 0.27)).b;
   float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
 
-  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.8 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 - 0.15 * under) * (1.0 - 0.15 * high);
-  vec3 frontColour = cloudLight(mid, 0.2 + 0.55 * front.y + 0.5 * frontSelf, 0.5 + 0.5 * front.x, 0.5) * (0.55 + 0.6 * front.y);
+  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.25 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
-  float m = front.x * 0.05;
   float b = high * 0.05;
-  vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + frontColour * m * (1.0 - b) + highColour * b;
-  float alpha = 1.0 - (1.0 - a) * (1.0 - m) * (1.0 - b);
+  vec3 colour = lowColour * a * (1.0 - b) + highColour * b;
+  float alpha = 1.0 - (1.0 - a) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -95,8 +82,8 @@ float fibre(vec2 p, float turn) {
   vec2 uv = vec2(3.0 * around + 0.318 * lr, 1.432 * lr - 6.0 * around);
   uv += 0.014 * (texture2D(uCloudTile, p * 0.22 + 0.3, 3.0).rg - 0.5);
   float grain = 0.75 / max(r, 0.05);
-  vec2 gx = dFdx(vUv) * grain * 4.0;
-  vec2 gy = dFdy(vUv) * grain * 4.0;
+  vec2 gx = dFdx(vUv) * grain * 2.6;
+  vec2 gy = dFdy(vUv) * grain * 2.6;
   // (Read five times along the band: the wind draws the cloud out.)
   vec3 c = textureGrad(uStreaks, uv, gx, gy).rgb * 0.3;
   c += (textureGrad(uStreaks, uv + vec2(0.012, 0.0), gx, gy).rgb + textureGrad(uStreaks, uv - vec2(0.012, 0.0), gx, gy).rgb) * 0.2;
@@ -113,15 +100,15 @@ float storm(vec2 p, float turn) {
   float lr = log(r);
   float wander = vnoise(p * 2.6 + 4.0) + 0.5 * vnoise(p * 6.1 + 9.0) - 0.75;
   float arm = (0.5 + 0.5 * cos(6.28318 * 5.0 * (around - 0.239 * lr) + 3.2 * wander)) * (0.55 + 0.45 * cos(6.28318 * 2.0 * (around - 0.239 * lr) + 1.0));
-  float mass = pow(1.0 - smoothstep(0.01, 0.1, r), 1.3);
-  float cover = clamp(0.45 * mass + (0.07 + 1.2 * arm) * (1.0 - smoothstep(0.12, 0.97, r)), 0.0, 1.0);
+  float mass = pow(1.0 - smoothstep(0.01, 0.15, r), 1.3);
+  arm = pow(arm, 1.7);
+  float cover = clamp(0.45 * mass + (0.05 + 1.1 * arm) * (1.0 - smoothstep(0.12, 0.86, r)), 0.0, 1.0);
   float f = fibre(p, turn);
   // Near the eye the bands are fine lines in a white mass; toward the rim only the fibres themselves are left.
   float torn = smoothstep(0.01, 0.2, r);
-  float least = mix(0.0, 0.13, torn);
-  float lines = smoothstep(least, least + mix(0.45, 0.55, torn), f);
-  float veil = 0.05 * pow(1.0 - smoothstep(0.02, 0.5, r), 1.5) * (0.6 + 0.4 * arm);
-  return max(max(cover * lines, veil) * smoothstep(0.003, 0.014, r), 0.3 * (1.0 - smoothstep(0.0, 0.02, r)));
+  float least = mix(0.02, 0.2, torn);
+  float lines = smoothstep(least, least + mix(0.4, 0.3, torn), f);
+  return max(cover * lines, 0.62 * mass * (0.15 + 0.85 * smoothstep(0.05, 0.42, f))) * smoothstep(0.004, 0.016, r);
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -130,12 +117,24 @@ void main() {
   float turn = uTime * (0.006 + 0.034 / (1.0 + 14.0 * r)) / 6.28318;
   vec2 sunStep = normalize(uSunDir.xz);
   float thick = storm(p, turn);
-  float sunward = storm(p + sunStep * 0.014, turn);
   // Each band is lit on its side toward the sun and takes its neighbour's shade on the other; the wall round the eye stands highest.
-  float self = clamp(0.55 + 0.9 * (thick - sunward), 0.0, 1.0);
+  // (How its thickness falls toward the sun, from the change of it across the pixel.)
+  vec2 across = vec2(dFdx(thick), dFdy(thick));
+  vec2 sx = dFdx(p);
+  vec2 sy = dFdy(p);
+  float det = sx.x * sy.y - sx.y * sy.x;
+  vec2 fall = abs(det) > 1e-12 ? vec2(sy.y * across.x - sx.y * across.y, sx.x * across.y - sy.x * across.x) / det : vec2(0.0);
+  float self = clamp(0.62 - 0.6 * clamp(0.014 * dot(fall, sunStep), -0.6, 0.6), 0.0, 1.0);
   float tall = 1.0 - smoothstep(0.02, 0.2, r);
-  vec3 colour = cloudLight(vWorld.xz, 0.55 + 0.25 * thick + 0.25 * self, 0.8 + 0.2 * tall, 0.5 * tall) * (0.9 + 0.25 * thick);
-  float alpha = clamp(thick, 0.0, 0.88);
+  vec3 colour = cloudLight(vWorld.xz, 0.74 + 0.1 * thick + 0.2 * self, 0.9 + 0.1 * tall, 0.5 * tall) * (1.08 + 0.12 * thick);
+  // Where it is thin it is haze over the sea, and blue as haze is; only the bands are white.
+  // (A thin veil of high cloud lies over all of it and is drawn off one side, away down the wind, in long fine threads.)
+  float side = smoothstep(-0.2, 0.9, dot(p / max(r, 1e-3), vec2(-0.5, -0.86)));
+  float threads = smoothstep(0.1, 0.5, fibre(p * 0.8 + 0.07, turn * 0.5));
+  float veil = 0.035 * pow(1.0 - smoothstep(0.02, 0.85, r), 1.1) + 0.3 * side * threads * smoothstep(0.1, 0.4, r) * (1.0 - smoothstep(0.45, 1.0, r));
+  float bands = clamp(thick * 1.6, 0.0, 0.92);
+  float alpha = bands + veil * (1.0 - bands);
+  colour = mix(dot(colour, vec3(0.3, 0.55, 0.15)) * vec3(0.3, 0.5, 0.9), colour, bands / max(alpha, 1e-3));
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -226,9 +225,9 @@ void main() {
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.1, 0.75, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
+  float thick = smoothstep(0.08, 0.6, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.5, 0.0, 1.0);
+  float alpha = clamp(thick * 0.85, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -311,7 +310,6 @@ export function create(ctx: Context): Piece {
     uWind: { value: wind },
   });
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT, {
-    uFront: { value: data('mat/front.jpg', false) },
     uVeil: { value: data('mat/veil.jpg', true) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
