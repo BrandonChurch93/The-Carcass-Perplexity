@@ -242,10 +242,6 @@ Lay lay(sampler2D colour, sampler2D nh, vec2 at, vec2 gx, vec2 gy) {
 }
 
 void main() {
-#ifdef PROFILE_FLAT
-  gl_FragColor = vec4(rigOut(vec3(0.1) * (0.5 + 0.5 * normalize(vNormal).y)), 1.0);
-  return;
-#endif
   float dCanal = vSL.x - MOUTH_S;
   vec3 smoothN = normalize(vNormal);
   if (!gl_FrontFacing) smoothN = -smoothN;
@@ -469,10 +465,6 @@ void main() {
 #endif
   }
   vec3 nRock = normalize(n0 + mix(across * t.x + upAlong * t.y, vec3(t.x, 0.0, t.y), top));
-#ifdef PROFILE_A
-  gl_FragColor = vec4(rigOut(rock * 0.3 * (0.5 + 0.5 * nRock.y) * pit), 1.0);
-  return;
-#endif
   // A spire is cut from its feature sheet: the sheet lies on its two broad faces, square on, and gives them their rock, their joints and
   // their snow, whole, at the size of the spire. The tiles stay under it as its grain, and take over on the thin ends where the sheet
   // would be seen edge on. The rock over the mouth takes the first spire's sheet too, so the mouth stands in one face.
@@ -566,7 +558,7 @@ void main() {
   if (spire) {
     // Staged by shot (uWet): there the snow keeps to the lee ledges, and the bare rock is wet and near black.
     snow *= mix(1.0, smoothstep(-0.15, 0.3, lee) * smoothstep(0.55, 0.8, n0.y + 0.25 * nRock.y), uWet);
-    albedo *= mix(1.0, 0.4, uWet);
+    albedo *= mix(1.0, 0.3, uWet);
     rough = mix(rough, 0.3, uWet);
   }
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
@@ -592,7 +584,7 @@ void main() {
     float crystals = smoothstep(0.15, 0.38, frostL * (0.55 + 0.9 * pit));
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
-    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.3 * smoothstep(0.42, 0.2, pit) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.42 * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
     // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
     cover *= 1.0 - 0.85 * uWet;
     albedo = mix(albedo, min(frostC * 1.6, vec3(0.9)) * vec3(0.93, 0.97, 1.06), cover);
@@ -712,10 +704,6 @@ void main() {
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.
   vec3 lightAt = vWorld;
   if (!inside) if (dCanal > 0.0 && dCanal < EXIT && abs(vSL.y - canalAt(dCanal)) < 60.0) lightAt.y += 16.0;
-#ifdef PROFILE_B
-  gl_FragColor = vec4(rigOut(albedo * 0.3 * (0.5 + 0.5 * n.y) * occ * rough), 1.0);
-  return;
-#endif
   vec3 c = rigShade(lightAt, n, v, albedo, rough, occ);
   if (inside) if (uUnder > 1.5) {
     // Inside, the two mouths are the windows: cold light on what faces them, and the far mouth seen in the glaze of ice on the rock.
@@ -875,9 +863,11 @@ void main() {
   float broad = fbm(at * 1.7 + 4.0);
   float fine = fbm(at * 6.5 + 11.0);
   // Snow lies where the rock is level and in its hollows; the faces between are bare.
-  float snow = smoothstep(0.4, 0.48, 0.62 * broad + 0.38 * fine + 0.34 * n.y);
+  // (In its hollows: the rock's edges stand dark out of it, as veins between the drifts, and it is thin old snow, not white.)
+  float veins = smoothstep(0.07, 0.025, abs(fine - 0.5)) + smoothstep(0.05, 0.02, abs(broad - 0.52));
+  float snow = smoothstep(0.5, 0.42, 0.55 * broad + 0.45 * fbm(at * 3.4 + 7.0)) * smoothstep(-0.25, 0.25, n.y) * (1.0 - min(veins, 1.0)) * 0.75;
   vec3 rock = mix(vec3(0.07, 0.052, 0.045), vec3(0.34, 0.23, 0.16), smoothstep(0.3, 0.75, fine) * smoothstep(0.35, 0.6, broad + 0.2));
-  vec3 albedo = mix(rock, vec3(0.66, 0.69, 0.76), snow);
+  vec3 albedo = mix(rock, vec3(0.5, 0.53, 0.6), snow);
   n = normalize(n + (1.0 - snow) * 0.9 * (vec3(fine, broad, 1.0 - fine) - 0.5));
   // It stands in the open off the spire's edge: the sky lights it whole (the land's own shelter is of the ground under it, far below),
   // and the stroke lights the side that looks at it.
