@@ -622,15 +622,19 @@ void main() {
     float low = smoothstep(280.0, 20.0, above);
     // (the lee faces keep their rock: the gale lays its snow on what looks into it)
     low *= smoothstep(-0.25, 0.45, -dot(smoothN.xz, uWind.xz));
-    snow = max(snow, smoothstep(0.5 - 0.3 * low, 0.7 - 0.3 * low, 0.7 * upRock + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
+    float deep = fineRock * (0.05 + 0.12 * smoothstep(1.0, -5.0, vRelief));
+    snow = max(snow, smoothstep(0.5 - 0.3 * low - deep, 0.7 - 0.3 * low - deep, 0.7 * upRock + 0.3 * smoothN.y + 0.25 * (pit - 0.5) - 0.08 * lee) * (1.0 - burn));
     // Under the lens snow lies only on what the rock itself turns up to the sky; a slab's side keeps none.
-    snow *= mix(1.0, smoothstep(0.3 + 0.18 * gripHand, 0.55 + 0.12 * gripHand, upPix), fineRock) * (1.0 - 0.8 * gripCrack);
+    snow *= mix(1.0, smoothstep(0.3 + 0.12 * gripHand, 0.55 + 0.06 * gripHand, upPix + 0.5 * deep), fineRock) * (1.0 - 0.8 * gripCrack);
     // A spire stands in the drift at its foot.
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
     occ *= 0.55 + 0.45 * smoothstep(0.0, 14.0, above);
     float proud = smoothstep(-9.0, 5.0, vRelief);
-    occ *= 0.4 + 0.6 * proud;
-    albedo *= 0.75 + 0.25 * proud;
+    // Near the lens the rock is pale, warm tan and grey as its approved picture has it, and the hollows of the face are not left in the
+    // dark: frost and snow lie in them (below), and the dark is kept for the joints.
+    occ *= mix(0.4 + 0.6 * proud, 0.72 + 0.28 * proud, fineRock);
+    albedo *= mix(0.75 + 0.25 * proud, 0.92 + 0.08 * proud, fineRock);
+    albedo = mix(albedo, min(albedo * 1.25 + vec3(0.085, 0.075, 0.06), vec3(0.9)), fineRock * (1.0 - 0.8 * gripCrack));
   }
   if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
@@ -666,20 +670,27 @@ void main() {
     float crystals = smoothstep(0.15, 0.38, frostL * (0.55 + 0.9 * pit));
     // What looks into the gale is crusted whole, feather on feather; the lee keeps frost only in its cracks.
     float windward = smoothstep(0.05, 0.55, -dot(smoothN.xz, uWind.xz));
-    float cover = clamp(0.5 * rime + 0.22 * windward * (1.0 - burn) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, 0.25 * windward);
+    float thick = fineRock * (1.0 - burn);
+    float cover = clamp(0.5 * rime + (0.22 + 0.7 * thick) * windward * (1.0 - burn) + 0.3 * thick * smoothstep(1.0, -6.0, vRelief) + 0.14 * thick * smoothstep(0.3, 0.6, smoothN.y) + 0.42 * (1.0 - 0.6 * gripHand) * smoothstep(0.45, 0.2, pit) * (1.0 - burn) + 0.3 * smoothstep(0.25, 0.6, nRock.y) * (1.0 - burn), 0.0, 0.95) * mix(crystals, 1.0, (0.25 + 0.65 * thick) * windward);
     // Staged by shot (uWet): the struck spire in the long lens is wet black rock, with frost only in its cracks.
     cover *= 1.0 - 0.85 * uWet;
     // Under the lens the frost lies piece by piece, more on one than on the next, and an open crack is a dark line through it.
-    cover = min(cover * gripFrost, 0.95) * (1.0 - 0.85 * gripCrack);
-    albedo *= 1.0 - 0.45 * gripCrack;
-    albedo = mix(albedo, min(frostC * 1.6, vec3(0.9)) * vec3(0.93, 0.97, 1.06), cover);
+    // (Thick rime buries the hairline cracks: only a few of them show through it, or the white face would be ruled like brickwork.)
+    float white = thick * windward;
+    float cut = gripCrack * (1.0 - 0.8 * white);
+    cover = min(cover * mix(gripFrost, 1.0, 0.6 * white), 0.95) * (1.0 - 0.85 * cut);
+    albedo *= 1.0 - 0.45 * cut;
+    // (Near the lens the windward rime is thick and white, feather on feather: the frost picture gives its feathers, not its dark.)
+    vec3 frostA = min(frostC * (1.6 + 0.3 * thick), vec3(0.9)) * mix(vec3(0.93, 0.97, 1.06), vec3(0.98, 0.99, 1.03), thick);
+    frostA = mix(frostA, min(vec3(0.84, 0.86, 0.89) * (0.78 + 0.5 * smoothstep(0.1, 0.5, frostL)), vec3(0.9)), 0.75 * white);
+    albedo = mix(albedo, frostA, cover);
     // The feathers stand out of the rock: their own relief, from the frost picture's light and dark across the face.
     vec3 dPx = dFdx(vWorld);
     vec3 dPy = dFdy(vWorld);
     vec3 gradF = dFdx(frostL) * dPx / max(dot(dPx, dPx), 1e-8) + dFdy(frostL) * dPy / max(dot(dPy, dPy), 1e-8);
-    nRock = normalize(nRock - cover * clamp(0.5 * gradF, vec3(-1.5), vec3(1.5)));
+    nRock = normalize(nRock - cover * (1.0 - 0.65 * thick) * clamp(0.5 * gradF, vec3(-1.5), vec3(1.5)));
     rough = mix(rough, 0.55, cover);
-    occ = mix(occ, 0.55 + 0.45 * smoothstep(0.2, 0.6, frostL), 0.7 * cover);
+    occ = mix(occ, mix(0.55, 0.95, white) + 0.45 * smoothstep(0.2, 0.6, frostL), 0.7 * cover);
     rime = 0.0;
   }
   albedo = mix(albedo, vec3(0.62, 0.66, 0.72), 0.55 * rime);
