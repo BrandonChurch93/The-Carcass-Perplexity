@@ -4,8 +4,8 @@
 import { noise3, smooth } from '../land/noise';
 import { BUTTRESS, TIDE } from '../layout';
 
-/** A ledge every BAND metres up a cliff, a bench every BENCH; the last LIP of a band is the ledge itself. */
-export const CRAG = { band: 6.3, bench: 21, lip: 0.84, mean: 7 };
+/** A bench every BENCH metres up; the mesh's rows are ROW apart. (BAND, LIP and MEAN are the old coursed cliff's, kept for the lines below.) */
+export const CRAG = { band: 6.3, bench: 21, lip: 0.84, mean: 7, row: 0.3 };
 
 /** 1 on the crest of a buttress, 0 in the bed of a gully. The buttresses lean a little as they rise. */
 const lobe = (angle: number, y: number): number => {
@@ -50,8 +50,54 @@ export const ledgeWidth = (angle: number, k: number): number => {
   return 2.6 * smooth(0.36, 0.58, noise3(c * 6.1 + k * 3.7, s * 6.1, k * 1.3 + 0.5)) * crumble;
 };
 
-/** The radius of the crag at an angle round its axis and a height, metres. */
-export function cragRadius(angle: number, y: number): number {
+/** One of the crag's blocks at a place on its face: the height of its middle, how far it stands out, and how near its edge the place is. */
+type Block = { middle: number; proud: number; edge: number };
+
+const hash = (i: number, j: number, k: number): number => {
+  let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263) ^ Math.imul(k, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1103515245);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+
+/**
+ * The face is broken into blocks with no two alike: cells `wide` metres across and `high` tall, thrown off their grid, each row
+ * shifted along from the one under it. No joint runs level or upright for longer than one block.
+ */
+const blockAt = (angle: number, y: number, wide: number, high: number, seed: number): Block => {
+  const columns = Math.max(3, Math.round((Math.PI * 2 * 45) / wide));
+  const turn = angle / (Math.PI * 2);
+  const u = (turn - Math.floor(turn)) * columns;
+  const v = y / high;
+  const j0 = Math.floor(v);
+  let best = 1e9;
+  let next = 1e9;
+  let middle = y;
+  let proud = 0;
+  for (let dj = -1; dj <= 1; dj++) {
+    const j = j0 + dj;
+    const along = u + 0.5 * hash(j, 7, seed);
+    const i0 = Math.floor(along);
+    for (let di = -1; di <= 1; di++) {
+      const i = i0 + di;
+      const w = ((i % columns) + columns) % columns;
+      const cu = i + 0.5 + 0.8 * (hash(w, j, seed) - 0.5);
+      const cv = j + 0.5 + 0.8 * (hash(w, j, seed + 1) - 0.5);
+      // A block is wider than it is tall, and some are far bigger than their neighbours.
+      const size = 0.7 + 0.9 * hash(w, j, seed + 2);
+      const d = Math.hypot(along - cu, (v - cv) * 1.15) / size;
+      if (d < best) {
+        next = best;
+        best = d;
+        middle = cv * high;
+        proud = hash(w, j, seed + 3) - 0.5;
+      } else if (d < next) next = d;
+    }
+  }
+  return { middle, proud, edge: next - best };
+};
+
+/** The crag without its blocks: the cone, its buttresses and gullies, its benches and its standing columns. */
+const cragBody = (angle: number, y: number): number => {
   const { top, cap, slope } = BUTTRESS;
   const over = Math.max(0, y - top);
   const base = y < top ? cap + (top - y) * slope : cap * Math.max(0, 1 - over / 3);
@@ -60,41 +106,63 @@ export function cragRadius(angle: number, y: number): number {
   const butt = 8 * (Math.pow(lobe(angle, y), 0.8) - 0.6);
   const tb = (y + benchPhase(angle)) / CRAG.bench;
   const fb = tb - Math.floor(tb);
-  const bench = 7.5 * (fb < 0.8 ? fb / 0.8 : (1 - fb) / 0.2) - 3.75;
+  const bench = 5 * (fb < 0.8 ? fb / 0.8 : (1 - fb) / 0.2) - 2.5;
   // Each column stands out of the cliff or back in it.
   const [cell0, across0] = column(angle);
   const pillar = 2.4 * (noise3(cell0 * 4.7 + 0.5, 2.5, 6.5) - 0.5) - 0.5 * (1 - smooth(0, 0.08, Math.min(across0, 1 - across0)));
-  const t = (y + cragPhase(angle)) / CRAG.band;
-  const k = Math.floor(t);
-  const f = t - k;
-  const ledge = ledgeWidth(angle, k) * (f < CRAG.lip ? f / CRAG.lip : (1 - f) / (1 - CRAG.lip));
-  // The cliff between two ledges is built of blocks: each stands a hand out of the face or is set back, with a joint between.
-  const length = 2.4 + 4 * noise3(k * 1.71, 3.3, 0.5);
-  const way = (angle * 45) / length + 17 * noise3(k * 0.37, 9.1, 2.5);
-  const cell = Math.floor(way);
-  const course = Math.floor(f * 3.2);
-  const joint = Math.min(way - cell, cell + 1 - way) * length;
-  const pick = noise3(cell * 3.73 + 0.5, k * 2.91 + course * 5.3 + 0.5, 4.5);
-  const block = (-0.4 + 0.9 * smooth(0.42, 0.5, pick) - 0.3 * (1 - smooth(0, 0.25, joint))) * smooth(0.82, 0.74, f) * smooth(0, 0.04, f);
-  return Math.max(0.01, base + fade * (butt + bench + pillar) + (ledge + block) * Math.min(1, base / cap));
+  return base + fade * (butt + bench + pillar);
+};
+
+/**
+ * The radius of the crag at an angle round its axis and a height, metres. The rock is built of blocks of three sizes, each with an
+ * upright face and a top that is a ledge: the body's slope is taken at the middle of the block a place lies in, not at the place.
+ */
+export function cragRadius(angle: number, y: number): number {
+  const { top, cap } = BUTTRESS;
+  if (y > top - 1 || y < TIDE - 4) return Math.max(0.01, cragBody(angle, y));
+  const big = blockAt(angle, y, 11, 7.5, 11);
+  const mid = blockAt(angle, y, 4.2, 2.8, 23);
+  const small = blockAt(angle, y, 1.9, 1.3, 37);
+  // How much of a block the rock is here: all of it on the cliff, none at the summit and in the weed.
+  const cut = smooth(top - 1, top - 9, y) * smooth(TIDE - 4, TIDE + 5, y);
+  const at = y + cut * (0.55 * (big.middle - y) + 0.3 * (mid.middle - y) + 0.15 * (small.middle - y));
+  const body = cragBody(angle, at);
+  const stand = 1.5 * big.proud + 0.9 * mid.proud + 0.35 * small.proud;
+  // The joints between blocks are worn back a hand.
+  const joint = 0.3 * (1 - smooth(0, 0.07, big.edge)) + 0.2 * (1 - smooth(0, 0.1, mid.edge)) + 0.1 * (1 - smooth(0, 0.12, small.edge));
+  return Math.max(0.01, body + cut * (stand - joint) * Math.min(1, body / cap));
 }
 
 /**
- * A standing place on the crag: the ledge nearest `height` at `angle` that is wide enough to stand on. `across` runs from 0, against the
- * cliff behind, to 1, the outer lip. Gives the radius from the axis and the height of the rock there.
+ * A standing place on the crag: the top of the block nearest `height` at `angle` that is deep enough to stand on. `across` runs from
+ * 0, the outer lip, to 1, against the face behind. Gives the radius from the axis and the height of the rock there, on the mesh's own
+ * rows (CRAG.row apart), so that what stands there stands on what is drawn.
  */
 export function cragPerch(angle: number, height: number, across: number): [number, number] {
-  const phase = cragPhase(angle);
-  const k0 = Math.floor((height + phase) / CRAG.band);
-  let k = k0;
-  for (const o of [0, 1, -1, 2, -2, 3, -3]) {
-    const y = (k0 + o + 0.92) * CRAG.band - phase;
-    if (ledgeWidth(angle, k0 + o) > 1.1 && y > TIDE + 3 && y < BUTTRESS.top - 3) {
-      k = k0 + o;
-      break;
+  const row = CRAG.row;
+  const j0 = Math.round(height / row);
+  let found = j0;
+  let depth = 0;
+  for (let o = 0; o < 28; o++) {
+    for (const j of o === 0 ? [j0] : [j0 + o, j0 - o]) {
+      const y = j * row;
+      if (y < TIDE + 2 || y > BUTTRESS.top - 2) continue;
+      const d = cragRadius(angle, y) - cragRadius(angle, y + row);
+      if (d > 0.9) {
+        found = j;
+        depth = d;
+        break;
+      }
+      if (d > depth) {
+        found = j;
+        depth = d;
+      }
     }
+    if (depth > 0.9) break;
   }
-  const f = 0.975 - 0.115 * Math.min(1, Math.max(0, across));
-  const y = (k + f) * CRAG.band - phase;
-  return [cragRadius(angle, y), y];
+  const outer = cragRadius(angle, found * row);
+  const inner = cragRadius(angle, (found + 1) * row);
+  const deep = Math.max(0.05, outer - inner);
+  const back = Math.min(deep, 0.2 + Math.min(1, Math.max(0, across)) * Math.max(0, deep - 0.5));
+  return [outer - back, found * row + (row * back) / deep];
 }
