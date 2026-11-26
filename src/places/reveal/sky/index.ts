@@ -90,9 +90,9 @@ void main() {
   // q: the sheet as the picture lies, x right and y down, 1 at its edge (1,070 km).
   vec2 q = vec2(vUv.x, 1.0 - vUv.y) * 2.0 - 1.0;
   float r = max(length(q), 1e-3);
-  // It turns against the clock, its arms trailing: an eighth of a turn at its rim while the frame is held and a quarter by the eye. The
+  // It turns against the clock, its arms trailing: a fifth of a turn at its rim while the frame is held and near a half by the eye. The
   // photograph stands unwound in the middle of the hold.
-  float turn = (uTime - 22.0) * 0.02 + (uTime + 46.0) * 0.05 / (1.0 + 5.0 * r);
+  float turn = (uTime - 22.0) * 0.045 + (uTime + 46.0) * 0.05 / (1.0 + 5.0 * r);
   float c = cos(turn);
   float s = sin(turn);
   vec2 qt = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
