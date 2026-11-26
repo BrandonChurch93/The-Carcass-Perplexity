@@ -192,7 +192,7 @@ export class Fields {
     if (cage > 0) {
       const rib = (0.5 + 0.5 * Math.cos(phase * Math.PI * 2)) ** 1.4;
       const each = 0.45 + 0.55 * hash(Math.round(phase) * 3.7 + s.seed);
-      d -= (0.0065 * rib * each - 0.002) * cage * k * g;
+      d -= (0.0045 * rib * each - 0.0015) * cage * k * g;
     }
     return d;
   }
