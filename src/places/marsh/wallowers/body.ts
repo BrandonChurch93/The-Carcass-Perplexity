@@ -248,7 +248,8 @@ void main() {
   // A warm tan with pink in it; the deep red is the mud's, lower down.
   albedo = mix(vec3(dot(albedo, LUMA)) * mix(vec3(1.07, 0.97, 0.88), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
   // The head is the darkest of it: heavy, grey, and folded.
-  float headed = smoothstep(0.58, 0.78, vRest.x / uPic.x) * (1.0 - vInfo.z) * (1.0 - uMudded) * (1.0 - horn);
+  // (Only by the lens: far off a dark head on a pale hump reads as a hole in it.)
+  float headed = smoothstep(0.45, 0.85, vRest.x / uPic.x) * (1.0 - vInfo.z) * (1.0 - uMudded) * (1.0 - horn) * smoothstep(0.5, 0.9, uNear);
   albedo *= 1.0 - 0.3 * headed * mix(1.0, 0.4, ridge);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
