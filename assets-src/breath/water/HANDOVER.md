@@ -19,8 +19,10 @@ Owner until 01:17 UTC, 26 November 2026: breath_life_owner, branch `agent/breath
   the new skin picture, pinker; no rain dashes (drops now fall 0.55 s at most, beads only close up); plumes lower, wider, darker, wetter,
   twice the wind; near waders out of step (UP spans in `herd.ts`); a crown of drops where a foot lands; dead wader lower, legs thicker.
 - Tried, not closed: barb speckle (lengths now smooth along the stem and locks drawn whole below 6 pixels a barb: fewer dots, but the
-  fringe is still a cut-out, see next steps); the middle wader's lifted foot (staged by `AHEAD` in `herd.ts`, read the note beside it);
-  the dead one as dead (it is still a clean pale model on top of the ground, and nothing moves on it); mops paler (still wine, not pink).
+  fringe is still a cut-out, see next steps); the middle wader's lifted foot (`AHEAD` in `herd.ts` puts it at the end of a stride with a hind leg far back; the foot
+  does not leave the water in any setting from 0.07 to 0.28, the step lift in `pose()` is too low to see: raise `stepH` there);
+  the dead one as dead (still a pale model on top of the ground; 46 flies in `dead/flies.ts` circle it but are
+  hard to see at 6 mm, try 10 mm and more of them); mops paler (still wine, not pink).
 - Not reached: a wader in the upper left of breath-3 and small far silhouettes in breath-4 (anchors are the lead's, I asked for none);
   the far flock milling and turning in the held wide key; three different trunks (all builds are one shape, jittered a few percent).
 
@@ -30,7 +32,7 @@ Owner until 01:17 UTC, 26 November 2026: breath_life_owner, branch `agent/breath
 - Fog fill cut to 0.3 on the waders: near black silhouettes. The base wave map scaled up near the lens: a lattice (the ripple map fixed it).
 - Teal body colour of the sea driven by the perturbed normal: noisy patches. Drive it by the view's `v.y`.
 - Flat blade locks on the plumes; a pleated drape on the dead trunk (a scallop shell); the leg narrowed to 0.4 at the hip (table legs);
-  mop strands thicker than 2 (sausages); drops that fall longer than 0.6 s (rain).
+  mop strands thicker than 1 (sausages; 0.26 to 1.0 now); drops that fall longer than 0.6 s (rain).
 
 ## Still wrong beside the approved pictures, worst first
 1. breath-2, dead wader: a tidy pale model. The picture has hide draped and sunk over bone, wrinkled, jointed legs with hooves, a scaly
@@ -45,13 +47,23 @@ Owner until 01:17 UTC, 26 November 2026: breath_life_owner, branch `agent/breath
 
 ## Staged by shot
 - Rim wader: neck up until `RIM_WADER_DOWN_FROM - 1.5` s, then down. Near waders: neck-up spans in `UP` (`herd.ts`).
-- Middle near wader: `AHEAD` metres ahead of its plan so that it is mid-step at 17.0 s. Far flock: 14 percent keep the neck up.
+- Middle near wader: `AHEAD` = 0.14 m ahead of its plan, so that it is at the end of a stride at 17.0 s. Far flock: 14 percent neck up.
 - Dead wader: laid 0.9 m along its own axis from its anchor (`SHIFT`), so that the mop is in the frame of breath-2.
 - Plume bushes 0, 1 and 5 are at full detail with drips; the others are thinner.
 
 ## Cost, seconds a sample at 3840 x 2160, draft tier, key breath-0 (`npm run -s cost`)
-COST_LINES
+Measured at minute 188 of 240, one sample: whole frame 10.24 s; an empty frame 1.92 s. Above the empty frame: sea 0.52,
+gill-plumes 0.27, dead-wader 0.09, waders 0.00 (the cheapest part is taken as empty, so the waders are not told apart from it).
+At version 2 (minute 131): whole 7.90, sea 0.41, gill-plumes 0.18, dead-wader 0.05. The rise of the whole frame is not in my parts.
 There is no cheaper variant behind a constant: the parts are inside their share. The costly things to add (below) will need one.
+
+## Checks at hand-back, as they are
+- `npx tsc --noEmit -p .` clean, build passes.
+- `npm run -s determinism` FAILS after the merge of main: film frame 1241 (shot ribs-02, the Ribs, not this place) differs in 509 pixels.
+  The tool tests no frame of the Breath. My own test (the same still twice, HD): breath-2 identical; breath-1 differs in 7 to 25 pixels
+  by one level of 255, and with only `breath/sea` drawn it still does (waders alone are identical). Not found; look at the two small
+  targets the sea reads (`waders/mirror.ts`, `waders/ripples.ts`) and at the blend of the sheet over the land first.
+- `npm run -s gate -- --phase 1 --only G10` FAILS: frame 5930 (after the Breath, not this place) differs in 4 pixels by one level.
 
 ## What I would do next, in order
 1. Dead wader: rebuild the trunk as hide over a rib cage (ribs as real tubes under a sunk sheet), sink it 3 to 5 cm into grit that is

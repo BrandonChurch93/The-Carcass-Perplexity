@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { DEAD_WADER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { bodyHalfH, bodyHalfW, makeBuild } from '../waders/animal';
+import { makeFlies } from './flies';
 import { makeGround } from './ground';
 import { DEPTH_FRAGMENT, FRAGMENT, VERTEX } from '../waders/material';
 import { Skin, type Tube } from '../waders/skin';
@@ -160,7 +161,7 @@ export function create(ctx: Context): Piece {
     const thigh = 2.2 * (1 - smooth(0, 0.48, u)) ** 0.8;
     const knuckle = 0.75 * Math.exp(-(((u - 0.5) / 0.035) ** 2)) + 0.4 * Math.exp(-(((u - 0.93) / 0.03) ** 2));
     const foot = 0.8 * smooth(0.95, 1, u);
-    const r = 0.05 * k * (1.0 + thigh * 0.7 + knuckle * 0.8 + foot * 0.9) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
+    const r = 0.04 * k * (1.0 + thigh * 0.85 + knuckle * 1.1 + foot * 1.2) * (1 + 0.08 * Math.sin(u * 40)) * (1 - 0.6 * smooth(0.985, 1, u)) * (0.45 + 0.55 * smooth(0, 0.08, u));
     legRadius.push(r);
     for (let s = 0; s < legSides; s++) {
       const phi = (s / legSides) * Math.PI * 2;
@@ -178,7 +179,7 @@ export function create(ctx: Context): Piece {
     [[0.0, 0.07, 0.48], [0.78, 0.075, 0.5], [0.94, 0.05, -0.3]],
   ];
   const mixed = (a: V3, c: V3, t: number): V3 => [a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t, a[2] + (c[2] - a[2]) * t];
-  const legLines: V3[][] = bones.map(([hip, joint, foot]) => [hip, mixed(hip, joint, 0.5), mixed(hip, joint, 0.94), mixed(joint, foot, 0.06), mixed(joint, foot, 0.5), foot]);
+  const legLines: V3[][] = bones.map(([hip, joint, foot]) => [hip, mixed(hip, joint, 0.5), mixed(hip, joint, 0.82), mixed(joint, foot, 0.18), mixed(joint, foot, 0.5), foot]);
   legLines.forEach((line, j) => {
     const tube = skin.tube(legRings, legSides);
     for (let i = 0; i < legRings; i++) {
@@ -239,7 +240,7 @@ export function create(ctx: Context): Piece {
       weedLocal[(i * tSides + s) * 2 + 1] = 0.007 * k * Math.sin(phi);
     }
   }
-  for (let n = 0; n < 14; n++) {
+  for (let n = 0; n < 3; n++) {
     const tube = skin.tube(tRings, tSides);
     const t0 = rng.range(0.14, 0.9);
     const slant = rng.range(-0.16, 0.16);
@@ -317,6 +318,10 @@ export function create(ctx: Context): Piece {
   const ground = makeGround(ctx, world, lines, k);
   const group = new THREE.Group();
   group.add(mesh, ground.group);
+  // Flies: over the belly, the hip, the root of the neck and the mop.
+  const flyRng = ctx.rng('dead-wader-flies');
+  const flies = makeFlies(46, [world([0.1, 0.25, -0.3]), world([0.1, 0.25, 0.25]), world([0.0, 0.3, -0.6]), world([-0.2, 0.15, half + 0.4]), world([0.3, 0.08, half + 1.9]), world([0.6, 0.1, -0.5])], () => flyRng.next(), rig.uniforms);
+  group.add(flies.mesh);
   ctx.scene.add(ctx.parts.built('dead-wader', group));
 
   // It has lain here: the rock under it is in its shade and damp.
@@ -338,7 +343,9 @@ export function create(ctx: Context): Piece {
   });
 
   return {
+    setTime: (seconds) => flies.setTime(seconds),
     dispose: () => {
+      flies.dispose();
       geometry.dispose();
       material.dispose();
       ground.dispose();

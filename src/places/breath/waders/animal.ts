@@ -305,7 +305,7 @@ export class Wader {
         phase: hash(seed + n * 4.3) * 6.28,
         // Most root at the very end of the neck, the rest a little way back up it: a mop, not a brush in a ferrule.
         root: 1 - 0.24 * hash(seed + n * 8.9) ** 1.5,
-        thick: far ? 1 : 0.32 + 1.5 * hash(seed + n * 12.7) ** 3.0,
+        thick: far ? 1 : 0.26 + 0.75 * hash(seed + n * 12.7) ** 3.0,
       };
       this.strands.push(strand);
       for (let i = 0; i < tRings; i++) {
