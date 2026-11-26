@@ -1,4 +1,7 @@
-2026-11-26 17:18 UTC
-work at f25ea43 on agent/ribs-bore
-v3 in work: left plume at the stack, spray torn off the crest, brighter whites, larger clots (2401 above, 2450 below)
-look-1.jpg = out/work/cmpA.jpg
+2026-11-26 17:37 UTC
+work at 8d2028c on agent/ribs-bore
+v3 handed back at 8d2028c: approved, before, after at 2401; crop; sheet with six frames; uhd final native crop
+look-1.jpg = out/work/v3/1-approved-before-after-2401.jpg
+look-2.jpg = out/work/v3/2-2401-crop-before-after.jpg
+look-3.jpg = out/work/v3/3-sheet-2447-2506-and-six.png
+look-4.jpg = out/work/v3/4-2401-uhd-final-crop.jpg
