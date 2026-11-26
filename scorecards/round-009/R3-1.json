@@ -1,0 +1,105 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "pack": "R3-1",
+  "family": "claude",
+  "answered": "2026-11-26 00:05 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 2,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the lightning bolt and where it strikes the far spire",
+        "what": "a pure white bolt that lights nothing: the clouds around it, the spire it hits and the snow below stay at the same dull grey, with no flash, no bloom and no spill at the strike point",
+        "fix": "light the cloud deck, the spire and the snow with a cold flash, add bloom around the channel and a hot glow at the strike"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the whole lower half, the surface the animal lies on (see set-A-05 bottom-left and set-A-06 right crops)",
+        "what": "the ice or water is made of smeared horizontal bands of flat colour, like a stretched texture. It has no depth, it reflects nothing (not the animal, the cliffs or the sky), and where it meets the snow or the animal there is no wet edge, crust or foam",
+        "fix": "give it a real surface: reflect the animal, cliffs and sky, add frost or slush texture, and wet, crusted contact edges where it meets the snow and the animal"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the animal",
+        "what": "the fur is stiff straight cards and spikes all combed the same way, so it reads as a model. It has no snow, wet or frost clumping in it, it casts almost no shadow or contact on the ground, and the body is a shapeless pile with no readable pose. Set-A-06 left crop shows a hollow grey hole in the body where the fur cards stop on a hard edge, which is a seam",
+        "fix": "use clumped, varied fur with snow and ice caught in it, close the hole in the body, ground it with a contact shadow and pressed-in snow, and give it a natural resting pose"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the cave mouths in the near peak (also set-A-04)",
+        "what": "the openings are flat, pure black shapes with no falloff and nothing visible inside",
+        "fix": "lift the blacks and let the ambient and snow bounce light reach into the first metres of the tunnel"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "near rock faces (set-A-02 bottom-right, set-A-03 left, set-A-05 top crops)",
+        "what": "the rock texture is stretched and smeared along the slope, and the snow sits on top as flat cut-out decals with hard paper edges. Every face uses the same brown cracked material, so the rock looks like painted clay",
+        "fix": "use triplanar or higher-resolution rock with real fracture geometry, let the snow lie in drifts that follow the shape of the rock, and vary the material between faces"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the near spire filling the left of set-A-07",
+        "what": "seen close, the rock is a soft, blurred, low-resolution pattern of brown blotches with no detail, and the pale spikes on it are flat flaps",
+        "fix": "add close-range detail texture and displacement, and model the spikes with thickness and shading"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the streamers flying from the spires (also set-A-02 top-right, set-A-09 right)",
+        "what": "the fabric is a flat, semi-transparent lilac ribbon whose edges break into a regular dotted halftone or screen-door pattern. It has no thickness and catches no light",
+        "fix": "replace the dithered transparency with proper alpha or cloth, and shade it with lighting from the storm and the horizon"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the cords strung between the spires",
+        "what": "identical tassels hang at a perfectly even spacing along every cord, which reads as an instanced pattern",
+        "fix": "vary the spacing, length and sag of the tassels and let the wind move them"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the sky and the far mountains (top-left, top-right and bottom-left crops)",
+        "what": "the clouds are smeared painterly strokes with hard cut-out edges. The far mountain silhouette is jagged and stair-stepped with no air between it and the camera, and the rain shafts are flat streaks",
+        "fix": "use volumetric cloud with soft, lit edges, add atmospheric perspective to the far ridges, and anti-alias the silhouettes"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the row of distant spires on the right",
+        "what": "every spire on the ridge is the same model with the same streamer, repeated down the line, and the plain beyond is flat grey with no air in it",
+        "fix": "vary the shape, height and fabric of each spire, and add haze and depth falloff to the far plain"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-01.png",
+        "where": "the orange band on the horizon against the snowfields",
+        "what": "the warm horizon light reaches nothing: the snow and the ridges facing it stay cold flat grey, and the sky does not light the ground",
+        "fix": "let the low warm light rake across the snow and the spire faces, and let the sky fill the shadows"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "bottom-left crop, the foreground snow and the logs",
+        "what": "the snow is made of smooth, blobby, repeated lumps, and the logs sit on it as flat strips with no contact or shadow",
+        "fix": "add wind-carved snow texture, sink the logs into the snow and give them contact shadows"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the footprints along the path at the lower left",
+        "what": "the prints form an evenly spaced line of identical dots",
+        "fix": "vary their spacing, depth and shape, and add disturbed snow around them"
+      }
+    ]
+  }
+}

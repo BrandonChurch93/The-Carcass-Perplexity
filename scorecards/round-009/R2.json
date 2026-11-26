@@ -1,0 +1,255 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "question": "kit/07-QUALITY-BAR.md, R2, word for word",
+  "panel": [
+    {
+      "juror": "a",
+      "model": "gpt_6_2_sol"
+    },
+    {
+      "juror": "b",
+      "model": "claude_opus_5_5"
+    },
+    {
+      "juror": "c",
+      "model": "gemini_neon"
+    },
+    {
+      "juror": "d",
+      "model": "gpt_6_2_astra"
+    },
+    {
+      "juror": "e",
+      "model": "claude_sonnet_5_5"
+    }
+  ],
+  "note": "Each vote is one fresh agent that received one picture and the question of R2 and nothing else. The pictures carry neutral names; which judged frame each is stands in the key file, added when every answer is in. Each juror sent its one line to a clerk agent that saved it unchanged; the lines are read from those files by a script.",
+  "votes": [
+    {
+      "image": "R2-1",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 82,
+      "why": "the same textured rock spire visibly repeats along the ridge.",
+      "answered": "00:03 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 65,
+      "why": "stretched, low-detail rock textures with flat, simple ribbon-like banners and painted-backdrop sky, typical of a real-time indie/web scene rather than a high-end render",
+      "answered": "00:03 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the jagged flat translucent ribbon streamers and unlit lightning bolt casting no light on the stretched skybox clouds or snow",
+      "answered": "00:04 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "The same horn-shaped rock formation repeats almost unchanged into the distance.",
+      "answered": "00:03 UTC"
+    },
+    {
+      "image": "R2-1",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 55,
+      "why": "the rock and snow textures are stretched and repetitive and the ribbons and lightning look flat and simple, so it reads as a competent but ordinary CG render. It is close to d, though, because the low-detail distant peaks and smeared cloud textures also look like a game.",
+      "answered": "00:03 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 83,
+      "why": "the snow texture stretches into conspicuous horizontal bands across the ground.",
+      "answered": "00:04 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 65,
+      "why": "stretched procedural textures and crude fur strands on the creature and rocks look like an amateur/ordinary 3D render, not a film-quality or photographic result",
+      "answered": "00:04 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the flat real-time lighting and crude low-poly geometry with stretched textures and a pitch-black cave cutout",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 99,
+      "why": "the snow texture stretches into long horizontal stripes across the ground.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "the stretched, smeared rock and ice textures, the spiky hair-card fur and the odd floating cloud streaks look like a low-budget or demo-grade real-time or procedural render, not film-quality work.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the distant rock-and-banner formations look like scaled-down copies of the foreground geometry.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "flat tiled low-detail rock texture with simple alpha-card spikes and basic real-time lighting typical of a web/indie real-time scene",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the low-poly faceted rock geometry with stretched textures and flat real-time rendering against a simple gradient horizon",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 96,
+      "why": "the rock spires repeat almost identically as they recede into the distance.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 55,
+      "why": "stretched and smeared textures on the rock face and the flat, low-detail clouds and distant terrain look like a real-time game or indie production, though the stylized composition and translucent ribbons keep a high-budget game cinematic (b) possible.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 77,
+      "why": "the visibly repeated rock-spire asset at multiple scales.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 65,
+      "why": "stretched procedural textures and simple flat-shaded painted clouds/terrain typical of a low-budget or hobbyist render.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 88,
+      "why": "the flat hard-edged layered clouds paired with simplistic polyline lightning and basic radial sparks characteristic of a real-time web 3D demo or low-budget production",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 97,
+      "why": "the same sharply faceted rock spire repeats across the landscape.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 62,
+      "why": "the smeared procedural-looking textures on the rock spires and the blobby, warped cloud and ribbon shapes read as a low-budget or experimental render rather than polished film or game work.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the cave wall’s rock texture visibly stretches into long bands around the opening.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "d",
+      "confidence": 75,
+      "why": "crude shell-fur and smeared/stretched procedural textures on cave walls and creatures typical of a low-budget or web 3D demo",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "d",
+      "confidence": 90,
+      "why": "the sharp geometric seam where the stretched-texture low-poly cave walls meet the flat procedural ground plane without realistic contact shadows",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 98,
+      "why": "the foreground animal’s fur breaks into visibly flat, overlapping strips.",
+      "answered": "00:05 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "d",
+      "confidence": 70,
+      "why": "stretched and smeared textures on the cave walls and fur (shell/billboard fur artifacts, flat water with repeating ring patterns, crude lightning) look like a low-budget or real-time demo render.",
+      "answered": "00:05 UTC"
+    }
+  ]
+}

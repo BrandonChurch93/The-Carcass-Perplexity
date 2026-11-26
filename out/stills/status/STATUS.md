@@ -1,8 +1,8 @@
-# Status 78
+# Status 79
 
-2026-11-26 00:00 UTC. Phase 4, the other places and the rise.
+2026-11-26 00:20 UTC. Phase 4, the other places and the rise.
 
-- `01-v2-ribs-sea.jpg`: The Ribs, version 2 (draft tier): the drowned one in the weed, the feeders, the colony, the bore
-- `02-v2-marsh-life.jpg`: The Blood Marsh, version 2: approved beside built for the stalks, the wallowers and the one on the thin crust
-- `03-v2-eye-keys.jpg`: The Eye, version 2 (draft tier): the drinkers, the mats, the edge with the skeleton, the centre
-- `04-hb8-five-a.jpg`: The Breath at 23:52 UTC with the new material pictures in: approved on the left, built on the right
+- `01-r10-judged.jpg`: The Ribs as judged in round 10 (version 2, final tier): match 2, reads as filmed 3, motion 5, jury 1 of 25
+- `02-r9-judged.jpg`: The Spine as judged in round 9 (version 2, final tier): match 3, reads as filmed 2, motion 4, jury 0 of 25
+- `03-hb6-marsh-0.jpg`: The Blood Marsh at 00:07 UTC, after the judged version: approved on the left, built on the right, with the new material pictures on the flats, the bank and the rock
+- `04-look-1.jpg`: The Reveal at 00:03 UTC, the last frame of the rise, after the judged version: a continent first, the body together only at the top

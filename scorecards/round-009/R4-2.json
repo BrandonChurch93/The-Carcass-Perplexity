@@ -1,0 +1,42 @@
+{
+  "round": 9,
+  "unit": "spine",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 00:05 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-07.png",
+        "where": "storm clouds in the upper sky and the cloud sea below the ridge",
+        "what": "over six full seconds with the camera held still, both the overhead storm clouds and the cloud deck below the mountain do not drift, roll, or change at all, making the place read as a still backdrop",
+        "fix": "animate the storm clouds and lower cloud sea drifting and churning continuously at their own heights and speeds"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "lightning strikes on the spires and the surrounding ridges",
+        "what": "the bolts pulse mechanically every three to five frames along the same pinned paths and fail to light the ridges, rock faces, or clouds, leaving the scene brightness unchanged during each strike (also seen in set-B-01.png and set-B-02.png)",
+        "fix": "make each strike a brief, irregular discharge that lights the whole ridge and surrounding clouds for an instant rather than a repeating pulsing overlay"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-06.png",
+        "where": "the shaggy animals and the cave interior near the mouth",
+        "what": "the animals are completely frozen with no breathing, weight shift, head turn, or fur sway—holding the exact same static poses seen over three seconds earlier in set-B-05.png—and the lightning outside casts no flash onto the cave walls, floor, or animals",
+        "fix": "add staggered living motion to the herd (breathing, shifting weight, small turns, wind in the fur) and let outside lightning flashes illuminate the cave mouth and rim-light the animals"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-07.png",
+        "where": "purple vapour streamers trailing from the spire tips",
+        "what": "the wisps undulate in place over six seconds without detaching, dispersing, or travelling downwind, reading as a displaced ribbon texture rather than real vapour in wind (also visible close up in set-B-03.png)",
+        "fix": "advect the vapour downwind so it tears away from the spires, swirls, and dissipates naturally"
+      }
+    ]
+  }
+}

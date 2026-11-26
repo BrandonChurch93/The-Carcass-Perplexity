@@ -1,0 +1,70 @@
+{
+  "round": 11,
+  "unit": "marsh",
+  "pack": "R4-1",
+  "family": "claude",
+  "answered": "2026-11-26 00:10 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the large humped creatures and the smaller ones at their feet, through the whole shot",
+        "what": "across 10 seconds nothing on the animals moves: no breathing, no weight shift, no head turn. The camera slides around them and they read as rock models set on the ground",
+        "fix": "give them life while the camera holds: slow breathing in the flanks, one animal shifting its weight or turning, small ones out of step with each other"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-09.png",
+        "where": "the big creature across frames 6424 to 6435",
+        "what": "from one frame to the next only the camera moves. The body is rigid, with no secondary motion in the skin or fringe",
+        "fix": "add breathing, settling and a little skin and fur motion so the animal is alive between frames"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the armoured creature with tusks in the mud, frames 6742 to 7014",
+        "what": "the push in ends on a creature that stays still and does not react. The tusks and body hold one pose, so the shot ends on a weak, static picture",
+        "fix": "give the animal a beat to land the push in on: a lift of the head, a tusk sweep or a mud-shedding shrug"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the surface of the red liquid around the domes",
+        "what": "the pale mottled pattern on the liquid moves like a sliding texture, and its scale does not change near the domes and ripples. It does not read as a fluid with weight",
+        "fix": "drive the surface pattern from the flow and the ripples, and let it break and gather around the domes and the burst"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the dome as it bursts, frames 6145 to 6184",
+        "what": "the large dome is gone within about a third of a second, leaving one flat skin and then clean rings. There is no sag, tear or spatter, so the event does not land with weight",
+        "fix": "let the skin thin, tear from one side and fold back into the pool, with a puff of vapour and a splash of drops"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-07.png",
+        "where": "dark specks above the water, frames 6102 to 6113 and on through set-A-03",
+        "what": "small dark points hang in the air at fixed heights and barely drift, so they read as neither insects nor spray",
+        "fix": "give them a clear identity: either insect flight with darting paths, or drops that arc and fall back"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-01.png",
+        "where": "the curtain of rain or fume in the sky, top centre",
+        "what": "the grey streak stays fixed in shape and place across the shot and reads as a painted backdrop rather than moving weather",
+        "fix": "let the rain shaft drift and change its density slowly"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the camera passing through the plumed stalks, frames 5911 to 5969",
+        "what": "the move is eased and gives good parallax, but the plumes sway very little as the camera passes through, so the air feels still",
+        "fix": "add gusting sway with phase offsets between plumes"
+      }
+    ]
+  }
+}

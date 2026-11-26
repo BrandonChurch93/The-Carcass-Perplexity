@@ -1,0 +1,35 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R4-2",
+  "family": "gpt",
+  "answered": "2026-11-26 00:13 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-03.png",
+        "where": "foreground shallows and the wet-sand edge during the six-second camera hold",
+        "what": "The foreground waterline and the large reflection shapes stay effectively pinned while animals cross the midground, so the shoreline reads like part of a still image.",
+        "fix": "Send irregular, low ripples through the shallows and let thin sheets of water advance and drain around the stones, bending the reflections as they pass."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the two near-right flyers at frames 2401–2412, also visible in set-B-02.png",
+        "what": "The wings change angle considerably but the bodies barely pitch or rise in response, making the strokes look hinged onto hovering models.",
+        "fix": "Couple each stroke to a small body pitch and lift, with recovery and glide timed separately for each animal."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "cloud bank between the rear spires during the six-second hold",
+        "what": "The distant cloud silhouettes hold their shape and position while the near spray and flyers change, leaving the sky reading as a fixed backdrop.",
+        "fix": "Give the cloud layers slow, independent drift and subtle changes at their edges without moving the rock silhouettes."
+      }
+    ]
+  }
+}
