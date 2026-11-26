@@ -279,7 +279,8 @@ ${SEA_SHADE_GLSL}
     float tall = 240.0;
     float fallV = max(rd.y, 0.0) / tall;
     // It starts beyond the first spire: the spire, its cave mouth and the sea beside it stand in clear air, whatever the lens's distance.
-    float startV = length(VEIL_FROM.xz - ro.xz) + 140.0;
+    // (Not from inside the canal: through its mouth the ridge beyond stands in the veil from the lens on.)
+    float startV = uStage.z < 0.75 ? 0.0 : length(VEIL_FROM.xz - ro.xz) + 140.0;
     reachV = max(reachV - startV, 0.0);
     float depthV = exp(-max(ro.y - crestY, -60.0) / tall - fallV * startV) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
     float azV = atan(rd.z, rd.x);

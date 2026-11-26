@@ -8,7 +8,7 @@ import { RIG_GLSL } from '../shared/glsl';
 import { MASSES_GLSL, massPictures } from './masses';
 import { STORM_SHAPE_GLSL } from './storm';
 
-// The storm's masses before the dome's pictures (masses.ts): not drawn until they have been looked at shot by shot.
+// The storm's masses before the dome's pictures (masses.ts).
 const MASSES_DRAWN: boolean = false;
 
 const VERTEX = /* glsl */ `
@@ -256,7 +256,12 @@ void main() {
     }
     // Under the level the dome is what the air pass takes for the far end of the sea: the band of the dusk is a line on the sea's edge, and
     // nothing of it shows under that edge where the sea's own cloud ends.
-    c = mix(c, skyBroad(cameraPosition, normalize(vec3(d.x, 0.075, d.z))), smoothstep(0.0, -0.005, d.y));
+    vec3 seaAir = skyBroad(cameraPosition, normalize(vec3(d.x, 0.075, d.z)));
+    c = mix(c, seaAir, smoothstep(0.0, -0.005, d.y));
+    // The sky's foot stands in the air the far sea stands in: the horizon is no ruled line between a pale sea and a dark storm, the one goes
+    // into the other over a degree or two. Toward the last light the band keeps its line.
+    float toLast = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
+    c = mix(c, seaAir * 1.0, 0.9 * exp(-max(d.y, 0.0) / 0.02) * (1.0 - 0.85 * pow(toLast, 3.0)));
     c *= 1.0 + uSkyStage.y;
   }
   if (plateOn > 0.0) {
