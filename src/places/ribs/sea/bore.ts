@@ -278,7 +278,8 @@ void main() {
     float fine = dot(texture2D(tFoamPic, vec2(x / 7.3 + 0.31, a / 9.0 - uTime * 0.85)).rgb, vec3(0.3333));
     float streak = dot(texture2D(tFoamPic, vec2(x / 15.0 + 0.6, a / 41.0 + uTime * 0.07)).rgb, vec3(0.3333));
     float white = smoothstep(0.3, 0.62, lum);
-    float lace = mix(0.6 * streak + 0.4 * fine, 0.55 * big + 0.45 * fine, white);
+    // On the dark band the foam holds together in clots and strings: the two large readings alone, none of the fine one.
+    float lace = mix(0.5 * streak + 0.5 * big, 0.55 * big + 0.45 * fine, white);
     // The tile is nearly all white: its range is opened so that the foam has lumps, shade and holes at this distance.
     float n = clamp((lace - 0.24) / 0.32, 0.0, 1.0);
     // The pile at the foot: white the whole width of the wall, in heads that stand and sink, higher after the lip has come down on it.
@@ -288,10 +289,10 @@ void main() {
     float edge = t + 0.3 * (n - 0.5);
     white = max(white, max(1.0 - smoothstep(pileTop - 0.07, pileTop + 0.07, edge), smoothstep(e - 0.07, e + 0.07, edge)) * step(0.0, a));
     // All of the tile's white shows where the sheet is white, only its brightest threads on the dark water.
-    float show = smoothstep(0.0, 0.25, n - (1.0 - white) * 0.82);
+    float show = smoothstep(0.0, 0.25, n - (1.0 - white) * 0.72);
     vec3 water = vec3(0.094, 0.108, 0.08) * (0.75 + 0.8 * lum);
     // Its thickest lumps stand in the sun.
-    vec3 foamed = mix(vec3(0.24, 0.275, 0.265), vec3(0.95, 0.96, 0.95), smoothstep(0.2, 0.85, n)) * (0.7 + 0.3 * white) * (1.0 + 0.45 * smoothstep(0.5, 1.0, n));
+    vec3 foamed = mix(vec3(0.2, 0.235, 0.225), vec3(0.95, 0.96, 0.95), smoothstep(0.2, 0.85, n)) * (0.7 + 0.3 * white) * (1.0 + 0.9 * white * smoothstep(0.45, 0.95, n));
     pic = mix(water, foamed, show);
     lum = dot(pic, vec3(0.3, 0.5, 0.2));
   }
@@ -872,15 +873,17 @@ export function createBore(
           const H = high(x0);
           const lip = tip(x0, born);
           const g = gust(x0);
-          const up = (4 + 10 * rand(i, n + 16) * rand(i, n + 21)) * (0.5 + 1.0 * g);
+          // One clot in four is torn off by the wind: it goes high, is left far behind the wall and thins as it goes.
+          const torn = i % 4 === 1;
+          const up = (4 + 10 * rand(i, n + 16) * rand(i, n + 21)) * (0.5 + 1.0 * g) * (torn ? 2.1 : 1);
           const y = lip[1] * (0.9 + 0.08 * rand(i, n + 22)) + up * a - 4.9 * a * a;
           if (y < 0.6 * H) continue;
-          const z = boreFront(born) + lineAt(x0, born) + lip[0] + 0.6 + BORE_SPEED * a + (1 + 3 * rand(i, n + 14)) * a - 5.5 * a * a;
+          const z = boreFront(born) + lineAt(x0, born) + lip[0] + 0.6 + BORE_SPEED * a + (1 + 3 * rand(i, n + 14)) * a - (torn ? 13 : 5.5) * a * a;
           const x = x0 + 1.5 * a * a + 2.5 * (rand(i, n + 15) - 0.5) * a;
           const old = a / life;
           const fade = Math.min(1, a / 0.1) * Math.pow(1 - old, 1.2);
-          const size = (1.2 + 1.5 * a) * (0.6 + 0.8 * rand(i, n + 17)) * (0.7 + 0.7 * g);
-          thrown(x, y, z, size, 0.8 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.7 + 0.25 * a, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.35 * old, old);
+          const size = (1.2 + 1.5 * a) * (0.6 + 0.8 * rand(i, n + 17)) * (0.7 + 0.7 * g) * (torn ? 1.7 : 1);
+          thrown(x, y, z, size, (torn ? 0.6 : 0.8) * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.7 + 0.25 * a, 1.3, 0.02 + 0.2 * rand(i, n + 20), 0.35 * old, old);
         }
 
         // The lip: as it pitches, a ragged edge of water leaves it ahead of the face and falls down it, small and drawn out along its fall.
@@ -929,7 +932,7 @@ export function createBore(
           const y = rise + swellAt(z - frontNow - lineAt(x, seconds), high(x) * UNDER);
           const old = a / life;
           const fade = Math.min(1, a / 0.05) * Math.min(1, (life - a) / 0.25);
-          thrown(x, y, z, (0.35 + 0.6 * rand(i, n + 77)) * (1 + 1.1 * a) * (0.7 + 0.5 * power) * heavy, 0.8 * fade, rand(i, n + 78), (rand(i, n + 79) - 0.5) * 1.2 + (rand(i, n + 80) - 0.5) * 2 * a, 1.25, 0.25, 0, 0.7 * old);
+          thrown(x, y, z, (0.35 + 0.6 * rand(i, n + 77)) * (1 + 1.1 * a) * (0.7 + 0.5 * power) * heavy, 0.8 * fade, rand(i, n + 78), (rand(i, n + 79) - 0.5) * 1.2 + (rand(i, n + 80) - 0.5) * 2 * a, 1.25, 0.1, 0, 0.7 * old);
         }
 
         // Where the wall strikes a blade or a cliff the water has nowhere to go but up. The surge ahead of the wall strikes first.
@@ -940,21 +943,24 @@ export function createBore(
           if (since < 0 || since > 8) continue;
           for (let j = 0; j < count; j++) {
             const seed = 9000 + s.id * 977 + j;
-            const a = since - 2.6 * rand(seed, 1) * rand(seed, 8);
-            if (a < 0 || a > 5.5) continue;
+            // At a stack of the gate one clot in three goes up its flank toward the strait, where the lens sees them, a little later than at its face.
+            const flank = s.near && j % 3 === 0;
+            const ang = flank ? Math.sign(X - s.x) * (0.75 + 0.8 * rand(seed, 3)) : (rand(seed, 3) - 0.5) * 2.6;
+            const rr = s.reach * (0.85 + 0.25 * rand(seed, 9));
+            const a = since - 2.6 * rand(seed, 1) * rand(seed, 8) - (flank ? ((1 - Math.cos(ang)) * rr * 0.9) / BORE_SPEED : 0);
+            if (a < 0 || a > (flank ? 3.1 : 5.5)) continue;
             const power = s.power ?? (s.near ? 1 : 0.7);
             if (j > count * Math.min(1, power)) break;
-            const up = (14 + 20 * rand(seed, 2)) * power;
+            const up = flank ? (8 + 11 * rand(seed, 2)) * Math.sqrt(power) : (14 + 20 * rand(seed, 2)) * power;
             const y = 1 + up * a - 4.0 * a * a;
             if (y < 0) continue;
-            const ang = (rand(seed, 3) - 0.5) * 2.6;
-            const rr = s.reach * (0.85 + 0.25 * rand(seed, 9));
             const out = (3 + 8 * rand(seed, 4)) * a;
             const x = s.x + Math.sin(ang) * (rr + out * 0.6);
-            const z = s.z - Math.cos(ang) * rr * 0.9 + (10 + 16 * rand(seed, 10)) * a;
-            const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 5.2);
-            const size = (2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
-            thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a), 0.8 * a / 5.2);
+            // What goes up the flank falls back beside it and is not carried on to the lens.
+            const z = s.z - Math.cos(ang) * rr * 0.9 + (flank ? 3 + 5 * rand(seed, 10) : 10 + 16 * rand(seed, 10)) * a;
+            const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / (flank ? 3.0 : 5.2));
+            const size = (flank ? 1.3 + 1.4 * a : 2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
+            thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.05 + 0.5 * rand(seed, 11), Math.min(flank ? 0.1 : 0.5, 0.12 * a), 0.8 * a / (flank ? 3.0 : 5.2));
           }
         }
       };
