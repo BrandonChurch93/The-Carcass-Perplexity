@@ -60,6 +60,14 @@ export interface Plan {
   fidget: number;
   /** Seconds by which the steps of one that stands are set off. */
   lag: number;
+  /** Seconds by which those steps run early at a given time, so that a pad can be in the air where a shot looks. It must grow slower than time does. None: 0. */
+  early?(seconds: number): number;
+  /** Metres by which pad `j`, if it is in the air at a given time, is lifted over what its build has it lift, at the middle of its swing. None: 0. */
+  stepUp?(seconds: number, j: number): number;
+  /** How many times as far as its build has it the body leans off a lifting pad, at a given time. None: 1. */
+  weight?(seconds: number): number;
+  /** How many times as deep as its build has it the body sinks on a pad that has just landed, at a given time. None: 1. */
+  sink?(seconds: number): number;
   /** One that walks and rests re-places a fore pad in a long rest: when pad `j`, standing for the `n`th time, starts to lift, or -1. */
   halfStep(j: number, n: number): number;
   /** Its own slow thing: seconds for one sway of body and neck, and where in it the animal is at time zero. */
@@ -734,7 +742,7 @@ export class Animal {
       if (f >= DUTY) w = (f - DUTY) / (1 - DUTY);
       if (plan.fidget > 0) {
         // One that stands shifts its weight: each pad in its turn is lifted and put down again a little way off.
-        const beat = (seconds + plan.lag) / (plan.fidget * 4) + leg.offset;
+        const beat = (seconds + plan.lag + (plan.early ? plan.early(seconds) : 0)) / (plan.fidget * 4) + leg.offset;
         event = Math.floor(beat);
         const ff = beat - event;
         const win = STEP / (plan.fidget * 4);
@@ -772,6 +780,7 @@ export class Animal {
         px = lerp(from[0], to[0], e2);
         pz = lerp(from[1], to[1], e2);
         lift = high * Math.pow(Math.sin(Math.PI * Math.pow(w, 0.85)), 1.3);
+        if (plan.stepUp) lift += plan.stepUp(seconds, j) * Math.pow(Math.sin(Math.PI * w), 2);
         pitch = 0.85 * Math.sin(Math.PI * Math.pow(w, 0.7)) * (1 - 0.3 * w);
         const tx = to[0] - from[0];
         const tz = to[1] - from[1];
@@ -783,9 +792,10 @@ export class Animal {
       }
       const world = env.drift(px, pz, seconds);
       feet.push({ x: world[0], z: world[1], lift, pitch, unload, land, fx, fz, w, from, to: goes, high, dur: plan.fidget > 0 || stepsOut ? STEP : (1 - DUTY) / Math.max(rate, 0.02) });
-      shiftSide -= leg.side * unload;
-      shiftFore -= leg.fore * unload;
-      dip += land;
+      const heavy = plan.weight ? plan.weight(seconds) : 1;
+      shiftSide -= leg.side * unload * heavy;
+      shiftFore -= leg.fore * unload * heavy;
+      dip += land * (plan.sink ? plan.sink(seconds) : 1);
       lean = 1 - (1 - lean) * (1 - unload);
       if (plan.fidget > 0) {
         // The body of one that stands follows its pads: it rides over the middle of the four.

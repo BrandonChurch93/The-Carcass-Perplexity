@@ -265,7 +265,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // The one the long lens looks at feeds through its shot, pulls its tuft out near the end of it and puts it back after.
       const hero = Math.max(pulse(seconds, 13.0, 14.2, 14.9, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
       // As the long lens comes to it, it has its tuft out of the heat, well clear of the melt, and holds it there; it lowers it into the pool before the key looks.
-      const held = index === 1 ? pulse(seconds, 5.4, 7.9, 8.05, 10.75) : 0;
+      const held = index === 1 ? pulse(seconds, 5.4, 7.9, 9.2, 10.78) : 0;
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1);
       return {
         down: 1 - Math.max((turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, 0.8 * held),
@@ -277,7 +277,15 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
     const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
     const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
-    return { sigma, body, neck, fidget, lag, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
+    // The one the long lens looks at is seen on other feet through that shot. Its hind pad goes early and higher than its build has it, is in the
+    // air when the shot is a moment old and comes down with weight before the key: the body sinks on it a beat late. Its fore pad goes early after
+    // the key, slower, a third of the leg's length up, knee folded, and the body leans farther off it. The animal is on its own time, at its own
+    // weight, before the shot, at the key and from the end of the shot on, so that the key and the shots either side see it as they did.
+    const early = index === 1 ? (s: number): number => 0.42 * pulse(s, 7.15, 8.4, 8.7, 10.6) + 0.35 * pulse(s, 10.83, 12.05, 12.25, 14.9) : undefined;
+    const stepUp = index === 1 ? (s: number, j: number): number => (j === 2 ? 1.6 * pulse(s, 7.2, 8.0, 10.4, 10.8) : j === 1 ? 3.2 * pulse(s, 10.9, 11.9, 14.6, 15.2) : 0) : undefined;
+    const weight = index === 1 ? (s: number): number => 1 + 0.3 * pulse(s, 10.83, 11.5, 14.6, 15.4) : undefined;
+    const sink = index === 1 ? (s: number): number => 1 + 3 * pulse(s, 9.9, 10.2, 10.45, 10.8) : undefined;
+    return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
   }
 
   // One that walks: on a line on the crust, a few steps and a rest, so that its mean speed is the staged one.
@@ -332,8 +340,11 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // It carries its tuft while it walks, and lowers it where it comes to stand.
       const at = body(seconds < 10 ? REST : REST + 0.75);
       const fed = feedAt(at.x, at.z, yaw, 0);
-      // It starts its tuft down after the key of the long lens's shot and has it low by its last step: the picture at the line has it low, feeding.
-      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * smooth(11.45, 14.6, seconds);
+      // It has its tuft low by its last step: the picture at the line has it low, feeding. In the long lens's shot it starts it down early, after
+      // that shot's key, and from the cut to the line (14.47 s) on it is where it always was.
+      const late = smooth(12.9, 14.9, seconds);
+      const soon = 0.6 * smooth(11.45, 13.2, seconds) * (1 - smooth(13.2, 14.4, seconds));
+      const down = 0.7 * (1 - smooth(2.5, 6.2, seconds)) + 0.9 * (late + (1 - late) * soon);
       return { down, target: [fed[0], fed[1]], raised: carried(seconds, -0.2 + 0.12 * c.skater, 0.67), shape: lerp(0.9, FEED_SHAPE, down) };
     }
     const tau = seconds / period + shift;
@@ -362,5 +373,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     if (index === 0) return centre + (centre < 10 ? 0.9 : -1.9);
     return centre - long / 2 + 0.9 + hash(m, index + 9) * (long - 3.6);
   };
-  return { sigma, body, neck, fidget: 0, lag: 0, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * b.stride + 0.55 * k };
+  // The second of the feeding picture lifts the pad of its first step in that shot high, so that it is seen in mid stride. That pad swings once, 7.2 to 9.4 s.
+  const stepUp = index === 2 ? (s: number, j: number): number => (j === 3 ? 2.6 * pulse(s, 7.15, 7.6, 9.4, 9.6) : 0) : undefined;
+  return { sigma, body, neck, fidget: 0, lag: 0, stepUp, halfStep, habit, dig, dip: 0.25 * k, range: 0.4 * b.stride + 0.55 * k };
 }
