@@ -65,6 +65,21 @@ ${SWELL.map(([dx, dz, length, amp], n) => {
 }
 float swellPhase(vec2 p, float t) {
   return ${f((Math.PI * 2) / (SWELL[0] as number[])[2]!)} * dot(p, vec2(${f((SWELL[0] as number[])[0]!)}, ${f((SWELL[0] as number[])[1]!)})) - ${f(Math.sqrt((9.81 * Math.PI * 2) / (SWELL[0] as number[])[2]!))} * t;
+}
+// The surf on a shelving shore. The long swell slows as the bed comes up under it, so its crests close up; each stands steep in front and
+// long behind, breaks, and runs in as a wall of white water that thins up the sand in tongues, further in one place than the next.
+// x: metres it stands over the level sea. y: the white roller on its front. z: the foam it leaves behind it. w: how much this is the surf at all.
+vec4 surfAt(vec2 p, float t, float depth, float ragged) {
+  float zone = smoothstep(-0.5, -0.12, depth) * (1.0 - smoothstep(1.7, 4.2, depth));
+  if (zone <= 0.0) return vec4(0.0);
+  float ph = swellPhase(p, t) + 2.3 * (4.5 - clamp(depth, -0.5, 4.5)) + 0.45 * ragged;
+  float b = fract(-ph / 6.2832);
+  float body = exp(-4.5 * b);
+  float face = smoothstep(0.9, 1.0, b);
+  float tall = 0.55 * zone * (0.55 + 0.25 * ragged);
+  float roller = max(smoothstep(0.92, 0.985, b), 1.0 - smoothstep(0.0, 0.05, b)) * zone;
+  float left = max(exp(-3.2 * b), 0.22 * (1.0 - smoothstep(0.0, 1.3, depth))) * zone;
+  return vec4(max(tall, 0.0) * max(body, face), roller, left, zone);
 }`;
 
 export const SEA_VERTEX = /* glsl */ `
@@ -87,6 +102,8 @@ void main() {
   float lively = (0.3 + 0.7 * smoothstep(0.0, 2.5, -bed)) * calm;
   h += lively * (0.95 * (textureLod(tChop, p / 47.0 - uTime * uWind * 0.064, log2(max(ring * 256.0 / 47.0, 1.0))).b - 0.5) * (1.0 - smoothstep(1.2, 3.5, ring))
     + 0.3 * (textureLod(tChop, vec2(p.y, -p.x) / 13.7 + uTime * vec2(uWind.y, -uWind.x) * 0.117, log2(max(ring * 256.0 / 13.7, 1.0))).b - 0.5) * (1.0 - smoothstep(0.35, 1.0, ring)));
+  float rag = (textureLod(tChop, p / 173.0, 0.0).b - 0.5) * 5.0 + (textureLod(tChop, p.yx / 39.0, 0.0).b - 0.5) * 2.0;
+  h += surfAt(p, uTime, -bed, rag).x;
   // No crest ever stands over a low lens: close under it the water keeps a clear metre below.
   h = min(h, mix(uEye.y - 1.4, 1e3, smoothstep(12.0, 55.0, r)));
   vec2 push = swellPush(p, uTime, r * 0.02 + 0.1, 0.5, 1.3) * calm;
@@ -146,6 +163,9 @@ void main() {
   // The smallest faces only where the lens can hold them.
   vec4 c4 = textureLod(tChop, (vec2(-p.y, p.x) + (c2.xy - 0.5) * 0.7) / 0.97 + uTime * uWind * 0.31, levelOf(tChop, 0.97));
   float fineKeep = 1.0 - smoothstep(0.004, 0.03, px);
+  // Where the swell breaks on a shelving shore the water is all at work: no mirror lies between the breakers.
+  vec4 surf = surfAt(p, uTime, depth, ragged) * (1.0 - smoothstep(0.0, 0.3, feet));
+  lively = max(lively, 0.9 * surf.w);
   vec2 chop = ((c1.xy - 0.5) * 0.55 + vec2(-s2.y, s2.x) * 0.5 + (c3.xy - 0.5) * 0.45 + (c4.xy - 0.5) * 0.4 * fineKeep) * lively;
   vec3 n = normalize(vec3(-(g.x + chop.x), 1.0, -(g.y + chop.y)));
 
@@ -194,7 +214,11 @@ void main() {
   float lacePic = dot(textureLod(tFoamPic, p / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
   float fine = textureLod(tChop, p.yx / 1.9 + uTime * 0.05, levelOf(tChop, 1.9)).a;
   // Close under the lens the same picture is read again small: foam is bubbles and holes down to a hand's width, not a soft patch.
-  float laceFine = dot(textureLod(tFoamPic, p.yx / 2.3 + uTime * uWind * 0.11, levelOf(tFoamPic, 2.3)).rgb, vec3(0.3333));
+  // Read by the short side of the pixel, as a break's outline is: by the long side the inside of a patch seen along the water was one flat white.
+  float laceFine = dot(textureLod(tFoamPic, p.yx / 2.3 + uTime * uWind * 0.11, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 2.3, 1e-6))).rgb, vec3(0.3333));
+  // Foam stands a finger high on the water: the same picture read a hand's width toward the light says which way each clot of it faces.
+  vec2 key = normalize(mix(uSkyBreak.xz, uSunDir.xz, sun) + 1e-4);
+  float laceLit = dot(textureLod(tFoamPic, (p + key * 0.3) / 9.0 - uTime * uWind * 0.05, levelOf(tFoamPic, 9.0)).rgb, vec3(0.3333));
   float lace = mix(0.72 * lacePic + 0.28 * fine, 0.5 * lacePic + 0.34 * laceFine + 0.16 * fine, 1.0 - smoothstep(0.02, 0.12, px));
   // A patch of broken water is read by the short side of the pixel: by the long side, at a glance, every crest would be one band.
   // And never by more than a few pixels' width at this range: the back of a crest seen edge on read the break's picture as its mean, and one face of the mesh stood white.
@@ -206,7 +230,7 @@ void main() {
   float lane = smoothstep(0.5, 0.78, streak) * (0.15 + 0.85 * drift) * calm * (1.0 - 0.6 * far);
   float ph = swellPhase(p, uTime) + 0.9 * shoal;
   float crest = pow(0.5 + 0.5 * cos(ph), 3.0);
-  float wet = smoothstep(-0.25, 0.25, depth);
+  float wet = smoothstep(-0.25, 0.25, depth) * (1.0 - 0.85 * surf.w);
   float surfZone = smoothstep(5.5, 1.2, shoal) * wet;
   float wash = smoothstep(1.7, 0.15, shoal) * wet;
   float amount = max(0.7 * caps.y * (1.0 - smoothstep(0.05, 0.4, px)), 0.55 * lane);
@@ -215,17 +239,30 @@ void main() {
   float nearBreak = 1.0 - smoothstep(0.08, 0.3, pixel);
   amount = max(amount, 0.58 * caps.x * caps.x * nearBreak);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
+  // Thick where it is dense, thin and grey at its rim, where the water shows through it.
+  float thick = smoothstep(1.25 - amount, 1.9 - amount, lace);
+  float pic = lace;
+  // The surf's white is read by the short side of the pixel: seen along the sand, by the long side, it was one pale band with a ruled edge.
+  if (surf.w > 0.0) {
+    float laceS = dot(textureLod(tFoamPic, p / 7.0 + vec2(0.013, 0.02) * uTime, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 7.0, 1e-6))).rgb, vec3(0.3333));
+    float standing = smoothstep(0.0, 0.05, vWorld.y + depth);
+    float white = standing * max(surf.y * smoothstep(0.1, 0.45, laceS + 0.35 * surf.y), smoothstep(1.0 - 0.8 * surf.z, 1.3 - 0.8 * surf.z, laceS + 0.1) * smoothstep(0.0, 0.25, surf.z));
+    pic = mix(pic, laceS, step(foam, white));
+    thick = max(thick, max(surf.y, smoothstep(1.2 - 0.8 * surf.z, 1.7 - 0.8 * surf.z, laceS + 0.1)) * step(foam, white));
+    foam = max(foam, white);
+  }
   // The break itself is thick white water, ragged at its rim.
   float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
   // Close under the lens a break is no tile: its rim is eaten by the bubbles' own lace and there are holes in its body.
   // Its picture is read by the short side of the pixel, as its outline is: read by the long side its inside was one flat white.
-  float bubbles = dot(textureLod(tFoamPic, p / 1.7 + uTime * uWind * 0.09, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 1.7, 1e-6))).rgb, vec3(0.3333));
-  fresh *= mix(1.0, 0.12 * smoothstep(0.25, 0.75, 1.5 * bubbles + 0.7 * fresh - 0.45), nearBreak);
+  fresh *= mix(1.0, 0.12 * smoothstep(0.25, 0.75, 1.5 * laceFine + 0.7 * fresh - 0.45), nearBreak);
   foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
   // Foam is white all through: it takes the sky from every side and the low sun as a standing thing does, and gives it back nearly white.
   vec3 eFoam = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * 1.15 + sunCool * ((0.3 + uSunDir.y) * sun);
-  vec3 foamCol = vec3(0.84, 0.87, 0.88) * (0.56 + 0.44 * mix(lace, 0.35 + 0.7 * lacePic, fresh)) * mix(0.82, 1.12, max(fresh, surfZone)) * eFoam / 3.14159;
+  // Each clot is lit on the side it turns to the light and dark on the other, and the foam on the top of a crest stands out of the trough's shade.
+  float relief = clamp((lacePic - laceLit) * 5.0, -1.0, 1.0);
+  vec3 foamCol = vec3(0.84, 0.87, 0.88) * (0.5 + 0.5 * mix(pic, 0.35 + 0.7 * lacePic, fresh)) * mix(0.82, 1.12, max(fresh, surfZone)) * mix(0.72, 1.12, thick) * (1.0 + 0.5 * relief) * (1.0 + 0.3 * thin) * eFoam / 3.14159;
   col = mix(col, foamCol, clamp(foam, 0.0, 1.0));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);
@@ -472,7 +509,10 @@ void main() {
   float band = wetBand / 0.42;
   col = mix(0.85 * fres * refl * band, col, edge);
   alpha = mix(band * max(0.42, 0.85 * fres), alpha, edge);
-  gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo);
+  // The sheet of the flat does not reach the sea: down the shelving shore it thins out in tongues. It lay over the surf to its own
+  // last cell, a mirror with a ruled edge, and the surf is the sea's.
+  float toSea = smoothstep(-0.1, 0.6, land.r + 0.5 * (barA.b - 0.5) + 0.2 * (barB.b - 0.5));
+  gl_FragColor = vec4(rigOut(col), alpha) * (1.0 - uSolo) * toSea;
   if (dry) discard;
 }`;
 

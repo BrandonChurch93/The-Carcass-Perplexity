@@ -327,7 +327,9 @@ export function create(ctx: Context): Piece {
           const seed = e.id * 131 + j;
           const a = age - 0.25 * rand(seed, n + 7);
           if (a < 0 || a > 3.6) continue;
-          const up = (7 + 9 * rand(seed, n + 1)) * power;
+          // On the open shore the swell breaks knee high: its spray is a low lit haze over the surf line, not a column.
+          const low = e.id >= 1000 ? 0.24 : 1;
+          const up = (7 + 9 * rand(seed, n + 1)) * power * low;
           const out = 1.5 + 3 * rand(seed, n + 2);
           const side = (rand(seed, n + 3) - 0.5) * 9;
           const y = 0.4 + up * a - 3.4 * a * a;
@@ -336,7 +338,7 @@ export function create(ctx: Context): Piece {
           const x = e.x + side * (-main[1]) - main[0] * out * a + WIND.to[0] * drift;
           const z = e.z + side * main[0] - main[1] * out * a + WIND.to[1] * drift;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 3.4);
-          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)) * Math.max(1, e.power * 1.5), 0.75 * fade * Math.min(1.2, power), rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
+          surf.put(x, y, z, (1.6 + 2.6 * a) * (0.7 + 0.6 * rand(seed, n + 4)) * Math.max(1, e.power * 1.5) * (0.4 + 0.6 * low), (0.75 - 0.4 * (1 - low)) * fade * Math.min(1.2, power), rand(seed, n + 5), rand(seed, n + 6) * 6.28, 1.25);
         }
       }
       surf.end();
