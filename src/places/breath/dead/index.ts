@@ -65,9 +65,8 @@ void main() {
 // What of the sheet is animal: the body's own cover, and the strands of the fan from the picture's relief (it stands on black).
 const CUT = /* glsl */ `
   vec4 form = texture2D(tLift, vAt);
-  // The relief is read no coarser than its third level. Read at the level the far lens asks for, the mean of the animal and of the black
-  // it stands on passed the cut: a pale quad of the sheet lay on the rock beside the body, and went as the lens came nearer. That was the
-  // flip of the held frame, pale to red and back.
+  // The relief is read no coarser than its third level: at the level the far lens asks for, the mean of the strands and of the black they
+  // stand on decided the cut, and the fan was one solid clump there.
   vec2 fine = vec2(1672.0, 941.0);
   vec2 ax = dFdx(vAt) * fine;
   vec2 ay = dFdy(vAt) * fine;

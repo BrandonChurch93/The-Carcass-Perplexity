@@ -1,6 +1,5 @@
-// What has gathered against the dead wader: the grit it is half bedded in. Its stain is in the rock itself (land/rock.ts): as a sheet
-// laid a finger over the rock it won and lost its depth test against the drawn land as the lens moved, and the ground under the body
-// flipped between pale and red.
+// What has gathered against the dead wader: the grit it is half bedded in. Its stain is in the rock itself (land/rock.ts), not a sheet
+// laid a finger over the rock: the rock's own relief shows through a stain that is in it.
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
@@ -30,12 +29,14 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float speck = vnoise(vWorld.xz * 160.0 + vWorld.y * 90.0);
-  vec3 albedo = mix(vec3(0.3, 0.27, 0.235), vec3(0.6, 0.56, 0.49), vTone) * (0.8 + 0.4 * speck);
+  vec3 albedo = mix(vec3(0.42, 0.37, 0.32), vec3(0.8, 0.75, 0.66), vTone) * (0.8 + 0.4 * speck);
   // Salt has dried on what faces up.
   albedo = mix(albedo, vec3(0.74, 0.72, 0.68), 0.5 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
   float occ = 0.5 + 0.5 * smoothstep(-0.4, 0.5, n.y);
   // The body's own shade on the rock is a dark disc: read through it each grain was a black bead. They are lit above it and shaded by hand.
-  vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.85, 0.7 * occ);
+  vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.85, 0.9 * occ);
+  // Against the low sun the shaded side of a grain has the bright haze over the shaft in it, as the rock about it has.
+  colour += albedo * skyIrradiance(normalize(vec3(uSunDir.x, 0.4, uSunDir.z))) * (0.5 / 3.14159);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -45,7 +46,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
   // low edge is in them and not on them. Each is a small solid with flat broken faces.
   const base = new THREE.IcosahedronGeometry(1, 0);
   const basePositions = base.getAttribute('position');
-  const count = 2600;
+  const count = 1500;
   const each = basePositions.count;
   const gritPositions = new Float32Array(count * each * 3);
   const gritNormals = new Float32Array(count * each * 3);
@@ -58,12 +59,12 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
     const b = line[i + 1] as V3;
     const f = at - i;
     const angle = rng.range(0, Math.PI * 2);
-    const out = 0.01 + 0.6 * rng.next() ** 1.7;
-    const side = rng.next() < 0.78 ? -Math.abs(Math.sin(angle)) : 0.6 * Math.abs(Math.sin(angle));
+    const out = 0.02 + 1.3 * rng.next() ** 1.25;
+    const side = rng.next() < 0.7 ? -Math.abs(Math.sin(angle)) : Math.abs(Math.sin(angle));
     const x = a[0] + (b[0] - a[0]) * f + Math.cos(angle) * out;
     const z = a[2] + (b[2] - a[2]) * f + side * out;
     // Most are grains; the knuckles lie where the heap is.
-    const size = (0.004 + 0.02 * rng.next() ** 3 * (0.4 + 0.6 * Math.exp(-out / 0.2))) * k;
+    const size = (0.003 + 0.016 * rng.next() ** 3.4 * (0.4 + 0.6 * Math.exp(-out / 0.2))) * k;
     const sx = size * rng.range(0.7, 1.5);
     const sy = size * rng.range(0.4, 0.8);
     const sz = size * rng.range(0.7, 1.5);
@@ -72,7 +73,7 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
     const s = Math.sin(turn);
     const centre = world([x, 0, z]);
     // The heap: three fingers high at the body, gone a forearm out from it.
-    const heap = 0.05 * k * Math.exp(-out / 0.13) * rng.range(0.2, 1);
+    const heap = 0.02 * k * Math.exp(-out / 0.13) * rng.range(0.2, 1);
     const tone = rng.next();
     const lump = rng.range(0, 40);
     for (let v = 0; v < each; v++) {

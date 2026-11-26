@@ -210,9 +210,12 @@ export function archTop(deg: number, tier: number): [number, number, number] | n
 /** The cap of the rim: the thick pale crust the shelf ends in, all round the shaft but where the east-south-east side fell. It lies on the
  *  shelf for a stride, hangs over the wall by one to two metres and droops in lobes, as flowstone does. One closed skin. */
 export function cap(fine: number): THREE.BufferGeometry {
-  // Not along the south lip, where two lenses stand on it: there the shelf's own crust is the rim.
-  const from = 226;
+  // Not along the south and west lip, where three lenses stand on it: there the shelf's own crust is the rim. Tried there: laid a stride
+  // back and raised it was a blank dome under the lens, as hanging plates alone a pale ribbon along the bottom of the frame, and at the
+  // west lens its top, seen along itself from two strides, was a dark plate with a knife edge.
+  const from = 283;
   const to = 436;
+  const back = 1.1;
   const columns = Math.round(((to - from) * RAD * 30) / fine);
   return tube(columns, 22, (t, ang) => {
     const deg = lerp(from, to, t);
@@ -233,16 +236,17 @@ export function cap(fine: number): THREE.BufferGeometry {
     };
     const crack = smooth(Math.min(inPlate, 1 - inPlate) / 0.07);
     const fallen = dice(1) < 0.22 ? 0.12 : 1;
-    const over = (0.35 + 1.9 * dice(2) ** 1.4 + 0.3 * lobe * lobe) * fallen * (0.25 + 0.75 * crack) * end;
-    const droop = (0.3 + 0.55 * dice(3) + 0.5 * lobe ** 3 * dice(4)) * (0.5 + 0.5 * fallen) * (0.35 + 0.65 * crack) * end;
+    // No plate stands out further than it is thick and half again: a thin one a stride out was a knife edge from the low lens.
+    const over = (0.3 + 0.75 * dice(2) + 0.25 * lobe * lobe) * fallen * (0.3 + 0.7 * crack) * end;
+    const droop = (0.55 + 0.5 * dice(3) + 0.5 * lobe ** 3 * dice(4)) * (0.5 + 0.5 * fallen) * (0.45 + 0.55 * crack) * end;
     const ca = Math.cos(ang);
     const sa = Math.sin(ang);
     const across = 0.5 + 0.5 * Math.sign(ca) * Math.abs(ca) ** 0.8;
-    const r = rim + 1.1 * end - across * (1.1 * end + over);
+    const r = rim + back * end - across * (back * end + over);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // On the shelf it follows the rock; past the brim it keeps the brim's height and sags a little to its lip.
-    const out = sat((r - rim) / 1.1);
+    const out = sat((r - rim) / back);
     const hung = sat((rim - r) / Math.max(over, 0.2));
     const top = lerp(brim(deg), ground(x, z), smooth(out)) + (0.1 * smooth(1 - out) - 0.04) * end - 0.22 * hung * hung;
     // Its underside: thickest a little back from the lip, running back up to the wall behind it.

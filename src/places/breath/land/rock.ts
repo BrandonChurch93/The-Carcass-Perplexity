@@ -371,12 +371,13 @@ void main() {
     lean = mix(lean, 0.3 * lean + fall * 1.2 + (joint.rg - 0.5) * 0.8 * smoothstep(0.55, 0.2, joint.b) + (gritN.rg - 0.5) * (0.9 * smoothstep(16.0, 4.0, dist)), inPad);
     damp = mix(damp, 0.85 * padLow, inPad);
   }
-  // It is laid out to seventy metres. Laid only within twenty, it came up dark over the pale plate as the far lens neared the dead one,
-  // and the ground under the body flipped from pale to dark and red within half a second: the pop of the held frame.
+  // On the plate the dead one lies on it is laid whatever the distance. Laid only within twenty metres of the lens, it came up dark over
+  // the pale plate as the far lens neared the body, and the ground under it went from pale to dark and red within half a second: the pop
+  // of the held frame. (Laid to seventy metres everywhere it was a brown stretched band across the first frame.)
   // Shingle: rounded pale stones a thumb to a fist through, lying in patches on the dry rock, along the border of the dry ground, and
   // nowhere near the tide. Past thirty metres it is not read.
   float ring = 0.0;
-  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.61, 0.71, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * smoothstep(95.0, 70.0, dist);
+  float shingle = max(ring * smoothstep(0.4, 0.6, a.a), smoothstep(0.61, 0.71, a.r + 0.15 * hollow) * (1.0 - 0.4 * smoothstep(0.0, 0.1, sq))) * smoothstep(0.3, 0.55, over) * (1.0 - steep) * (1.0 - film) * max(smoothstep(34.0, 20.0, dist), smoothstep(11.0, 7.0, length(p.xz - vec2(-27.3, 22.6))));
   vec3 pebColour = vec3(0.0);
   if (shingle > 0.0) {
     vec4 pn = textureGrad(tPebN, p.xz / 1.5 + 0.21, dpx / 1.5, dpy / 1.5);
