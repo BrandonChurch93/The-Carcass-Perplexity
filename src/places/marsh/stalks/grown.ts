@@ -195,7 +195,7 @@ void main() {
   // Far off a stem is seen against pale ground and paler air: it is the horn colour of its tube, with its rings as bands, not chalk.
   float banded = 0.5 + 0.5 * sin(vUv.y * 44.0 + seed * 30.0);
   vec3 horn = vec3(0.88, 0.8, 0.72) * (0.75 + 0.35 * banded) * mix(0.55, 1.08, smoothstep(0.0, 0.6, vUv.w)) * (0.7 + 0.5 * fract(seed * 17.3));
-  albedo = mix(albedo, albedo * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
+  albedo = mix(albedo, mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))), 0.45) * horn, smoothstep(6.0, 28.0, distance(cameraPosition, vWorld)) * (1.0 - step(1.5, uLedgeF)));
   albedo = mix(albedo, albedo * vec3(0.5, 0.42, 0.37) + vec3(0.012, 0.008, 0.006), deadStem);
   float above = vWorld.y - vLook.w;
   // The foot stands in red brine and mud, and the stain of it climbs the foot, higher on one than on the next, and ragged.

@@ -546,10 +546,10 @@ export function create(ctx: Context): Piece {
       const len = Math.hypot(along[0] as number, along[1] as number, along[2] as number);
       const o = [(out[0] as number) - (dot * (along[0] as number)) / (len * len), -(dot * (along[1] as number)) / (len * len), (out[2] as number) - (dot * (along[2] as number)) / (len * len)];
       const ol = Math.hypot(o[0] as number, o[1] as number, o[2] as number);
-      const off = w.R * 1.02 + 0.008;
+      const off = w.R * (1.08 - 0.28 * t) + 0.006;
       home.set([at[0] + ((o[0] as number) / ol) * off, at[1] + ((o[1] as number) / ol) * off, at[2] + ((o[2] as number) / ol) * off, 0], i * 4);
       rate.set([(o[0] as number) / ol, (o[1] as number) / ol, (o[2] as number) / ol, 1], i * 4);
-      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.2, 1.7)], i * 4);
+      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1, 1.45)], i * 4);
       continue;
     }
     if (i < 38 && nearPerches.length > 0) {

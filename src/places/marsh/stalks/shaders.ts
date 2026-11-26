@@ -404,7 +404,7 @@ void main() {
   vWorld = at + local * aPhase.w;
   vNormal = normalize(up * cos(ang) - right * (sign(position.x) * sin(ang)));
   vUv = vec2(position.x + 0.5, position.y + 0.57);
-  vWing = abs(side);
+  vWing = abs(side) * (perched > 0.5 ? 0.45 : 1.0);
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
