@@ -25,7 +25,7 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
   vec3 c = 0.72 * (uSunColour * sun + uSkyColour * 0.9) / 3.14159;
-  float air = 1.0 - exp(-0.0125 * (1.0 - 0.6 * high) / max(mu, 0.12));
+  float air = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
   return mix(c, uAirColour * 0.7, air);
 }`;
 
@@ -66,12 +66,12 @@ void main() {
   float where = texture2D(uCloudTile, hv / 5200.0 + vec2(0.61, 0.27)).b;
   float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.42, 0.75, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
 
-  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * (1.0 - 0.5 * under) * (1.0 - 0.15 * high);
+  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.8 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 - 0.15 * under) * (1.0 - 0.15 * high);
   vec3 frontColour = cloudLight(mid, 0.2 + 0.55 * front.y + 0.5 * frontSelf, 0.5 + 0.5 * front.x, 0.5) * (0.55 + 0.6 * front.y);
   vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
   float a = low.x * 0.94;
-  float m = front.x * 0.42;
-  float b = high * 0.13;
+  float m = front.x * 0.05;
+  float b = high * 0.05;
   vec3 colour = lowColour * a * (1.0 - m) * (1.0 - b) + frontColour * m * (1.0 - b) + highColour * b;
   float alpha = 1.0 - (1.0 - a) * (1.0 - m) * (1.0 - b);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -95,12 +95,17 @@ vec2 bands(vec2 p, float turn) {
   float r = max(length(p), 1e-3);
   float around = atan(p.y, p.x) / 6.28318 - turn;
   float lr = log(r);
-  vec2 uv = vec2(2.0 * around + 0.4 * lr, 0.42 * lr - around);
+  vec2 uv = vec2(3.0 * around + 0.45 * lr, 0.7 * lr - 3.0 * around);
   // (A bend, so no band is a drawn curve.)
-  uv += 0.012 * (texture2D(uCloudTile, p * 0.22 + 0.3, 3.0).rg - 0.5);
+  uv += 0.014 * (texture2D(uCloudTile, p * 0.22 + 0.3, 3.0).rg - 0.5);
   float grain = 0.75 / max(r, 0.05);
-  float lum = dot(textureGrad(uStreaks, uv, dFdx(vUv) * grain, dFdy(vUv) * grain).rgb, vec3(0.3, 0.55, 0.15));
-  return vec2(smoothstep(0.14, 0.6, lum), lum);
+  vec2 gx = dFdx(vUv) * grain * 2.0;
+  vec2 gy = dFdy(vUv) * grain * 2.0;
+  // (Read three times along the band: the wind draws the cloud out into fibres.)
+  vec3 c = textureGrad(uStreaks, uv, gx, gy).rgb * 0.4 + textureGrad(uStreaks, uv + vec2(0.012, 0.0), gx, gy).rgb * 0.3 + textureGrad(uStreaks, uv - vec2(0.012, 0.0), gx, gy).rgb * 0.3;
+  float lum = dot(c, vec3(0.3, 0.55, 0.15));
+  // (Thin cloud: the sea shows through all but the thickest of a band.)
+  return vec2(smoothstep(0.1, 0.6, lum), lum);
 }
 void main() {
   vec2 p = vUv * 2.0 - 1.0;
@@ -116,18 +121,18 @@ void main() {
   float arms = lightOf(q, 4.0);
   vec2 sunStep = normalize(uSunDir.xz);
   float sunward = lightOf(q + spin * sunStep * 0.006, 0.0);
-  float core = 1.0 - smoothstep(0.035, 0.13, r);
+  float core = 1.0 - smoothstep(0.015, 0.06, r);
   vec2 band = bands(p, turn / 6.28318);
   float bandSun = bands(p + sunStep * 0.012, turn / 6.28318).x;
   // Out along the arms the cloud is bands with sea between, thinner the farther out, thick where the photograph's arms lie.
-  float outer = band.x * (0.3 + 0.7 * smoothstep(0.08, 0.5, arms)) * (1.0 - smoothstep(0.55, 0.99, r)) * smoothstep(0.02, 0.07, r);
-  float inner = smoothstep(0.42, 0.85, seenLight);
-  float thick = mix(outer, max(inner, outer), core);
+  float outer = band.x * (0.45 + 0.5 * smoothstep(0.08, 0.5, arms)) * (1.0 - smoothstep(0.4, 0.99, r)) * smoothstep(0.012, 0.04, r);
+  float inner = 0.8 * smoothstep(0.5, 0.95, seenLight);
+  float thick = max(mix(outer, max(inner, outer), core), 0.16 * (1.0 - smoothstep(0.1, 0.7, r))) * smoothstep(0.006, 0.018, r);
   float self = clamp(0.5 + mix(0.8 * (band.x - bandSun), 3.0 * (seenLight - sunward), core), 0.0, 1.0);
   float light = mix(band.y, seenLight, core);
   float tall = smoothstep(0.45, 0.9, seenLight) * core;
-  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.4 * light + 0.65 * self, 0.5 + 0.5 * tall, 0.5 * tall) * (0.5 + 0.55 * light);
-  float alpha = clamp(thick, 0.0, 0.97);
+  vec3 colour = cloudLight(vWorld.xz, 0.12 + 0.4 * light + 0.65 * self, 0.5 + 0.5 * tall, 0.5 * tall) * (0.66 + 0.3 * light);
+  float alpha = clamp(thick, 0.0, 0.86);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -149,29 +154,48 @@ vec3 flash(float cell, float rate) {
   float pulse = exp(-f * 16.0) + 0.7 * exp(-pow((f - 0.16) * 22.0, 2.0));
   return vec3(at, lit * pulse);
 }
-float lightOf(vec2 q) {
-  return dot(texture2D(uPicture, q).rgb, vec3(0.3, 0.55, 0.15));
+// One tower of the system: the photograph of merged anvils from orbit (public/assets/reveal/mat/storm.jpg), read small and turned.
+float tower(vec2 p, vec3 where, float turn) {
+  float c = cos(turn);
+  float s = sin(turn);
+  vec2 q = mat2(c, s, -s, c) * (p - where.xy) / where.z + 0.5;
+  vec2 m = min(q, 1.0 - q);
+  return dot(texture2D(uPicture, clamp(q, 0.0, 1.0)).rgb, vec3(0.3, 0.55, 0.15)) * smoothstep(0.0, 0.06, min(m.x, m.y));
+}
+// The storm is a long system that lies along the backbone: five towers of it in a row, the greatest in the middle, each the photograph
+// turned its own way, so the tops are lumpy and the windward edge is the photograph's own ragged one. Its light is its cover.
+float lightOf(vec2 p) {
+  float best = tower(p, vec3(-1.12, 0.03, 0.56), 1.9);
+  best = max(best, tower(p, vec3(-0.66, -0.05, 0.8), 4.1));
+  best = max(best, tower(p, vec3(-0.12, 0.03, 0.98), 0.4));
+  best = max(best, tower(p, vec3(0.5, -0.02, 1.0), 2.9));
+  best = max(best, tower(p, vec3(1.06, 0.04, 0.8), 5.3));
+  return best;
 }
 void main() {
-  // The storm is a photograph of merged anvils from orbit (public/assets/reveal/mat/storm.jpg): its light is its cover.
   // The tops boil: the photograph is read through a slow drifting bend, so its towers swell and its edge works while the frame is held.
-  vec2 bend = texture2D(uCloudTile, vUv * 0.7 + uTime * vec2(0.004, -0.003)).rg - 0.5;
-  vec2 q = vUv + bend * 0.035;
-  float seenLight = lightOf(q);
-  float thick = smoothstep(0.16, 0.7, seenLight) * (1.0 - smoothstep(0.78, 1.0, length(vUv * 2.0 - 1.0)));
+  vec2 bend = texture2D(uCloudTile, vUv * vec2(1.6, 0.5) + uTime * vec2(0.004, -0.003)).rg - 0.5;
+  vec2 p = (vUv - 0.5) * vec2(3.2, 1.0) + bend * 0.05;
+  float seenLight = lightOf(p);
+  float thick = smoothstep(0.14, 0.6, seenLight);
   // This place's sun lights it: a tower stands bright on its sunward side and throws its shade down the far one.
-  vec2 sunUv = normalize(uSunDir.xz) * vec2(1.0 / 430.0, -1.0 / 330.0);
-  float sunward = lightOf(q + sunUv * 9.0);
-  float lee = lightOf(q - sunUv * 22.0);
-  float self = clamp(0.5 + 2.6 * (seenLight - sunward) - 0.9 * max(lee - seenLight, 0.0), 0.0, 1.0);
-  vec3 colour = cloudLight(vWorld.xz, 0.08 + 0.8 * self, 0.8, 0.6) * (0.25 + 0.75 * pow(seenLight, 1.7));
-  // The light of the flashes comes through the cloud from inside: soft, blue white, brightest where the cloud is thin over it.
+  vec2 sunUv = normalize(uSunDir.xz) * vec2(1.0, -1.0);
+  float sunward = lightOf(p + sunUv * 0.035);
+  float lee = lightOf(p - sunUv * 0.08);
+  float self = clamp(0.5 + 2.4 * (seenLight - sunward) - 0.9 * max(lee - seenLight, 0.0), 0.0, 1.0);
+  vec3 colour = cloudLight(vWorld.xz, 0.08 + 0.8 * self, 0.8, 0.6) * (0.3 + 0.7 * pow(seenLight, 1.5));
+  // The light of the strikes comes through the cloud from inside: soft, violet, brightest where the cloud is thin over it. Two of the
+  // towers hold a low glimmer between the strikes, so the held frame is never without it.
   vec3 glow = vec3(0.0);
   for (int i = 0; i < 4; i++) {
     vec3 f = flash(float(i), 0.55 + 0.17 * float(i));
-    vec2 d = (vUv - f.xy) * vec2(1.0, 0.76);
-    glow += vec3(0.66, 0.6, 1.0) * f.z * exp(-dot(d, d) * 260.0) * (0.4 + 0.6 * seenLight) * thick;
+    vec2 d = (vUv - f.xy) * vec2(3.2, 1.0);
+    glow += vec3(0.6, 0.5, 1.0) * f.z * exp(-dot(d, d) * 26.0) * (0.4 + 0.6 * seenLight) * thick;
   }
+  vec2 d1 = p - vec2(-0.2, 0.05);
+  vec2 d2 = p - vec2(0.62, -0.06);
+  float glimmer = (0.2 + 0.1 * sin(uTime * 1.7)) * exp(-dot(d1, d1) * 40.0) + (0.16 + 0.1 * sin(uTime * 2.3 + 1.0)) * exp(-dot(d2, d2) * 55.0);
+  glow += vec3(0.55, 0.42, 1.0) * glimmer * thick;
   colour += glow * 1.6;
   float alpha = clamp(thick, 0.0, 0.98);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
@@ -287,7 +311,7 @@ export function create(ctx: Context): Piece {
     uFront: { value: data('mat/front.jpg', false) },
     uVeil: { value: data('mat/veil.jpg', true) },
   });
-  sheet('storm', quad(AT.storm, 215, 165, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
+  sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
   sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uPicture: { value: data('mat/cyclone.jpg', false) }, uStreaks: { value: data('mat/streaks.jpg', true) } });
   const centre = { x: LIMB.cx, y: LIMB.cy };
   const ring = (inner: number, outer: number): THREE.BufferGeometry =>

@@ -24,7 +24,7 @@ HIGH = WIDE * 9 / 16
 FRONTS = [(4950.0, -180.0, 1250.0, 22.0), (500.0, 3750.0, 1150.0, -8.0)]
 # The cyclone and the storm: centre, half sizes (px of the master), as sky/index.ts places their sheets.
 CYCLONE = (5557.0, 3007.0, 1250.0, 1250.0)
-STORM = (79.14 + 0.535 * 5872.86, 44.52 + 0.4563 * 3305.24, 215.0, 165.0)
+STORM = (79.14 + 0.535 * 5872.86 - 40.0, 44.52 + 0.4563 * 3305.24, 256.0, 80.0)
 MAP_A = (2983.67, 1727.13, 5295.59)
 
 ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
