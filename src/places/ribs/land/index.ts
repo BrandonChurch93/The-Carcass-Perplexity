@@ -230,11 +230,12 @@ export function create(ctx: Context): Piece {
   }
 
   // The two stacks of the gate, and the arch rock.
-  for (const post of STATIONS.posts) {
-    const s: Stack = { x: post[0], z: post[1], foot: 27, top: 15, height: 150 };
+  // The two are unlike: on the left a wall that leaves the frame, on the right a sloping buttress standing further back.
+  STATIONS.posts.forEach((post, n) => {
+    const s: Stack = n === 0 ? { x: post[0], z: post[1], foot: 33, top: 24, height: 170 } : { x: post[0], z: post[1], foot: 36, top: 7, height: 96 };
     add(blades, worldSpace(stackRock(s)), rock);
     add(skirts, stackWeed(s.x, s.z, (y, angle) => stackRadius(s, y, angle), 220, 0.9), weedGate);
-  }
+  });
   const arch = add(blades, worldSpace(archShape(68, 45, 13, 19, 96, 64)), rock);
   arch.position.set(STATIONS.arch[0], 0, STATIONS.arch[1]);
   arch.rotation.y = Math.atan2(STATIONS.establish[0] - STATIONS.arch[0], STATIONS.establish[1] - STATIONS.arch[1]);
