@@ -1,0 +1,5 @@
+2026-11-26 15:52 UTC
+work at fbc2716 on agent/spine-cloud
+7015 uhd draft: right flank is heaped cloud now, still dull grey, left horizon still a line
+look-1.jpg = out/work/look.jpg
+look-2.jpg = out/work/lookcrop.jpg
