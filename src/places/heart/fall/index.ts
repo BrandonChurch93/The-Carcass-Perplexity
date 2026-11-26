@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { MOUTH, smooth } from '../layout';
 import type { HeartContext, HeartPiece } from '../shared/context';
 import { blackbody } from '../shared/rig';
-import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
+import { BED_DEPTH, BED_FRAGMENT, BED_VERTEX, FUME_FRAGMENT, FUME_VERTEX, GLOW_FRAGMENT, GLOW_VERTEX, GOB_FRAGMENT, GOB_VERTEX, ROCK_DEPTH, ROCK_FRAGMENT, ROCK_VERTEX } from './look';
 import { FAN_FROM, TUBE, WINDOW, createCourse } from './path';
 import { apronSlope, bed, shell } from './shape';
 
@@ -34,6 +34,7 @@ export function create(ctx: HeartContext): HeartPiece {
     uArch: { value: new THREE.Vector4(MOUTH.x, TUBE.floor, TUBE.half(0), TUBE.crown(0)) },
     uFlare: { value: 1 },
     uSurge: { value: new THREE.Vector4(-1000, 0, 0, 0) },
+    uFalls: { value: Array.from({ length: 12 }, (_, i) => course.falls[i] ?? 1e4) },
     tCliff: { value: ctx.assets.texture('mat/cliff.jpg') },
     tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
     tTalus: { value: ctx.assets.texture('mat/talus.jpg') },
@@ -93,12 +94,15 @@ export function create(ctx: HeartContext): HeartPiece {
   // The surge's gobs: thrown from the lip when it starts and from each cascade as the front passes.
   const GOBS = 300;
   // Besides the surge's, a few gobs are always in the air at the foot of each cascade. Their cycle is a quarter of the eight second loop.
-  const SPATTER = 60;
+  // From the lake a clot is seen only if it clears the stream and is a pace across: they are thrown a man's height and more.
+  const SPATTER = 150;
   const CYCLE = 2;
   const rng = ctx.rng('fall/surge');
+  // The surge's gobs keep the numbers they were drawn with: the standing spatter draws its own.
+  const own = ctx.rng('fall/spatter');
   const gobGeometry = new THREE.IcosahedronGeometry(1, 1);
   const seed = new THREE.InstancedBufferAttribute(new Float32Array((GOBS + SPATTER) * 4), 4);
-  for (let i = 0; i < GOBS + SPATTER; i++) seed.setY(i, rng.next());
+  for (let i = 0; i < GOBS + SPATTER; i++) seed.setY(i, i < GOBS + 60 ? rng.next() : own.next());
   gobGeometry.setAttribute('aSeed', seed);
   const gobMaterial = new THREE.ShaderMaterial({ vertexShader: GOB_VERTEX, fragmentShader: GOB_FRAGMENT, uniforms: shared });
   const gobs = new THREE.InstancedMesh(gobGeometry, gobMaterial, GOBS + SPATTER);
@@ -123,17 +127,50 @@ export function create(ctx: HeartContext): HeartPiece {
     };
   });
   const spatter = Array.from({ length: SPATTER }, (_, i) => {
-    const from = (course.falls[i % course.falls.length] as number) + rng.range(1, 5);
+    const from = (course.falls[i % course.falls.length] as number) + own.range(1, 4.5);
     const p = course.at(from);
-    const side = rng.range(-0.8, 0.8);
-    const out = rng.range(0.5, 3.5);
+    const side = own.range(-0.6, 0.6);
+    const out = own.range(0.5, 3.5);
     return {
-      phase: rng.range(0, CYCLE),
+      phase: own.range(0, CYCLE),
       at: new THREE.Vector3(p.x - p.dz * side * p.half, river.height(p.x, p.z) + 0.3, p.z + p.dx * side * p.half),
-      velocity: new THREE.Vector3(p.dx * out + rng.range(-1.2, 1.2), rng.range(1, 4.5), p.dz * out + rng.range(-1.2, 1.2)),
-      size: 0.26 + 0.26 * Math.pow(rng.next(), 3),
+      // Most rise a metre, one in a few three.
+      velocity: new THREE.Vector3(p.dx * out + own.range(-1.5, 1.5), own.range(2.5, 5.5) + 3 * Math.pow(own.next(), 3), p.dz * out + own.range(-1.5, 1.5)),
+      size: 0.3 + 0.34 * Math.pow(own.next(), 2.5),
     };
   });
+  // The fume of the fall itself: puffs from the foot of every drop and from the head of the fan. The air's smoke sources stand only at
+  // the fan (one in the opening drew as a pale blob), so what rises along the cascade is drawn here.
+  const PUFFS_A_DROP = 11;
+  const leaves = [...course.falls.map((at) => at + 3), FAN_FROM + 6];
+  const PUFFS = leaves.length * PUFFS_A_DROP;
+  const fumeGeometry = new THREE.InstancedBufferGeometry();
+  fumeGeometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-0.5, -0.5, 0, 0.5, -0.5, 0, 0.5, 0.5, 0, -0.5, 0.5, 0]), 3));
+  fumeGeometry.setIndex([0, 1, 2, 0, 2, 3]);
+  const puffFrom = new Float32Array(PUFFS * 4);
+  const puffLife = new Float32Array(PUFFS * 4);
+  const puffSeed = new Float32Array(PUFFS * 4);
+  for (let i = 0; i < PUFFS; i++) {
+    const from = (leaves[Math.floor(i / PUFFS_A_DROP)] as number) + own.range(-2, 3);
+    const p = course.at(from);
+    const side = own.range(-0.7, 0.7);
+    const x = p.x - p.dz * side * p.half;
+    const z = p.z + p.dx * side * p.half;
+    puffFrom.set([x, river.height(x, z) + 0.5, z, from], i * 4);
+    // Evenly through the cycle, so a drop is never without fume and never gives it off in a burst.
+    const life = own.range(5, 8.5);
+    puffLife.set([(((i % PUFFS_A_DROP) + own.next()) / PUFFS_A_DROP) * life, life, own.range(1.6, 3.2), own.next()], i * 4);
+    puffSeed.set([own.next(), own.next(), own.next(), own.range(0.07, 0.16)], i * 4);
+  }
+  fumeGeometry.setAttribute('aFrom', new THREE.InstancedBufferAttribute(puffFrom, 4));
+  fumeGeometry.setAttribute('aLife', new THREE.InstancedBufferAttribute(puffLife, 4));
+  fumeGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(puffSeed, 4));
+  fumeGeometry.instanceCount = PUFFS;
+  const fumeMaterial = new THREE.ShaderMaterial({ vertexShader: FUME_VERTEX, fragmentShader: FUME_FRAGMENT, uniforms: shared, transparent: true, depthWrite: false });
+  const fume = new THREE.Mesh(fumeGeometry, fumeMaterial);
+  fume.frustumCulled = false;
+  ctx.scene.add(fume);
+
   const dummy = new THREE.Object3D();
   const way = new THREE.Vector3();
   const UP = new THREE.Vector3(0, 1, 0);
@@ -190,7 +227,8 @@ export function create(ctx: HeartContext): HeartPiece {
         dummy.scale.set(size, size * (1.2 + 0.045 * speed), size);
         dummy.updateMatrix();
         gobs.setMatrixAt(GOBS + i, dummy.matrix);
-        seed.setX(GOBS + i, Math.max(700, 1470 - (60 / Math.pow(t.size, 0.9)) * age));
+        // It leaves yellow and is dull red when it lands, the small ones first.
+        seed.setX(GOBS + i, Math.max(700, 1500 - (130 / Math.pow(t.size, 0.9)) * age));
       }
       gobs.instanceMatrix.needsUpdate = true;
       seed.needsUpdate = true;
@@ -198,6 +236,8 @@ export function create(ctx: HeartContext): HeartPiece {
     dispose: () => {
       for (const m of [tube, stream]) m.geometry.dispose();
       gobGeometry.dispose();
+      fumeGeometry.dispose();
+      fumeMaterial.dispose();
       rockMaterial.dispose();
       bedMaterial.dispose();
       glowMaterial.dispose();
