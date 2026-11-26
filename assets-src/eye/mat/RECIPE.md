@@ -1,6 +1,6 @@
 # Material pictures of the Eye
 
-The working pictures of the Eye, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 12 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Eye, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 13 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -316,6 +316,26 @@ The reference image is a photograph of ground seen straight down from above. Mak
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the lip where the floor stops (asked for by `eye_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/eye/mat/drinker-quarter.jpg` and `public/assets/eye/mat/drinker-quarter-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/eye/mat/src/drinker-quarter.png`, the generated picture, and `assets-src/eye/mat/src/drinker-quarter-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/6-eye/eye-4-what-rises-from-the-centre.jpg`, `references/drafts/working/real/ref-hide-3.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs eye`.
+
+```
+One drinker, an animal of an unknown world, about 2 metres tall at the shoulder: a tall lean four-legged animal with long thin legs and small cloven hooves, a deep narrow chest, and a very long neck that tapers to a small blunt smooth muzzle. Its pale tan and sandy fawn hide has very short dense hair and fine creases, slightly darker along faint ridges where the ribs lie beneath. It is seen from behind and from above, at a three-quarter angle, as a person standing on a rock behind it would look down on it: the camera is higher than the animal's back, about 40 degrees above the horizontal, and about 35 degrees to the left of the line of its spine, looking down along the back. The top of the rump is nearest to the viewer and largest; the whole top of the back is seen from above and runs away from the viewer toward the upper right, with the spine a low knobbed ridge along its middle and the ribs faint on both sides of it; the near flank and both hind legs show below, foreshortened, and the far flank is hidden. The long neck rises from the far end of the back, held up and bent a little to one side, and ends in the small blunt muzzle, which points away from the viewer. The skin of the rump, the back and the neck is loose and wrinkled in fine cross folds, with darker creases along the spine, a few faint scratches and patches of dried mud low on the legs. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a drinker from behind at three-quarter and a little above, as the last detail sees the backs and necks in front of it: the square view from behind could only give a rump and a post (asked for by `eye_owner_2`).
 Date: 2026-11-26
 
 ## `public/assets/eye/mat/materials.json`

@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 85, 2026-11-26 02:18 UTC:
+Status 86, 2026-11-26 02:48 UTC:
 
-- `01-reveal-4.jpg`: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below
-- `02-eye-1.jpg`: The Eye, the drinkers, restaged further off. Approved left, the build right
-- `03-ribs-2.jpg`: The Ribs, the kite-wings feeding. Approved left, the build right
-- `04-marsh-3.jpg`: The Blood Marsh, the wallowers. Approved left, the build right, crops below
+- `01-spine-1-4.jpg`: The Spine at 02:35 UTC: the dead one, and the herd in the hollow. Approved left, the build right
+- `02-breath-0-2.jpg`: The Breath at 02:33 UTC: the wide view, and the dead wader at the rim. Approved left, the build right
+- `03-eye-4-0.jpg`: The Eye at 02:38 UTC: the last shot, and the wide view. Approved left, the build right
+- `04-new-pictures.jpg`: Working pictures made for owners in this half hour, each with its relief: the Eye's drinker from behind and above, the Ribs' drowned one
 
+Status 85, 2026-11-26 02:18 UTC, showed: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below; The Eye, the drinkers, restaged further off.
 Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
 Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
-Status 82, 2026-11-26 01:11 UTC, showed: The Reveal's new ground, kept set.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T02:18:00Z
-phase 4: 6.12 h used of 17.00 h
-build: 26.44 h used of 72.00 h
+2026-11-26T02:48:07Z
+phase 4: 6.62 h used of 17.00 h
+build: 26.95 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 27
+minutes since the last status: 30, status overdue
 ```
 
 ## Phases
@@ -1317,6 +1317,11 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 02:03 UTC: two more pictures for owners, by the decision of 23:35 UTC. (1) The Eye's far wall for the low cameras (`eye/mat/far-low.jpg`) is made again at twice the size, 3344 x 1882, by the method of the Reveal's larger maps (`assets-src/materials/enlarge-plate.py`): nine windows, 1 take each. The six that hold the wall, the sky and the reflections by the shore are used (MEASURED: all six fitted within 2.37 px). The three of open water are set aside, because the model drew a rocky shore across the top of each though the prompt forbade it; there the plate is the first picture enlarged, and the owner was told not to show that part close. Seen at native size before it went to `main` (ec53bfd7). (2) A lightning stroke on black for the Spine (`spine/mat/bolt.jpg`, 941 x 1672, 1 take), which the storm's owner found missing after the Builder had named it in a note; on `main` at 53262848. The second list now holds 78 colour pictures.
 - 2026-11-26. 02:10 UTC: disk. 2.58 GB were free, under the 3 GB of `sandbox.minFreeDiskGb`. Removed, all harness output under `out/work/` that is either kept elsewhere or made again by its command: the window PNGs of the larger maps and the Eye's far wall in `out/work/tmp/` (kept as JPEG under `assets-src/.../src/big/`), the two hand-over copies of films already in the thread (`out/work/handover/*.mp4`), the build copy of the gate (`out/work/gate/dist`, made again by G1), the jury packs as sent in rounds 8 to 13 (`out/work/jury/send/r*`; the answers and manifests are in `scorecards/`), the draft preview film of 25 Nov 02:46 (`out/work/film/the-carcass-preview.mp4`, older than every place after the Heart), and the npm and pip caches. 3.42 GB free after it.
 - 2026-11-26. 02:27 UTC: one more picture for an owner, by the decision of 23:35 UTC. The Breath's dead wader as the low lens of `breath-2` sees it (`breath/mat/carcass-low.jpg` with its relief, 1672 x 941, 1 take each), because the life's owner found that the picture taken from straight above cannot carry a view from one metre up. It holds the approved pose: the neck along the ground to the left with its fan of tendrils, the legs toward the lens. On `main` at f974b895. The second list now holds 79 colour pictures and 39 reliefs.
+- 2026-11-26. 02:44 UTC: the gate of Phase 4, second full run, on `main` at `f974b895` with version 1 of all ten owners of wave 2 (`out/work/gate/phase-4.json`, started 02:23:39, 20.7 minutes): pass, 20 of 21, none failed, none not built, one sound check open. G1 to G13, G15 and G16 pass. G13 covers 96 parts of all seven units and none is a stand-in (649 s; one test not checked, word for word: "test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture"); the red of 01:36 UTC (`reveal/space`) is gone with the Reveal owner's stars and limb glow. A1 is open as in Phases 1 to 3: the kept clip n8 of the old script, which the new script replaces when Brandon writes that it is final. Timings: G2 184 s, G3 248 s, G4 68 s, G10 43 s, G13 649 s, A4 34 s. This is a record of the code at version 1, not the gate of the phase: that needs every unit `finished`.
+- 2026-11-26. 02:33 UTC: disk. 3.15 GB were free with a gate running, close to the 3 GB of `sandbox.minFreeDiskGb`. Removed, all harness output under `out/work/`: the draft and solo stills of the Heart's look lock in `out/work/stills/` (the final-tier stills and `key-heart-0-hd-draft.png`, which `tools/regions.mjs` reads, are kept), the pack of round 13 (`out/work/packs/round-13`; its manifest and answers are in `scorecards/round-013/`), and the sample arrays of the sound levels (`out/work/soundlevels/*.npy`; the measurements are kept as JSON beside them). 3.39 GB free after it.
+- 2026-11-26. 02:40 UTC: two more pictures for owners, by the decision of 23:35 UTC, each with its relief. The Eye's `drinker-quarter` (1024 x 1536, on black, 2 takes of the colour picture: the first stood level with the animal and so repeated the square view from behind; the second looks down from above and behind at three-quarter, with the spine ridge running up the back and the neck raised and bent), asked by `eye_owner_2` at 02:33 UTC because the square view from behind can only give a rump and a post at `eye-4`. The Ribs' `carcass-hung` (1448 x 1086, on black, 1 take): the drowned one as the approved `ribs-1` shows it, the trunk slanting down to the right with the ribs through smooth pale hide, four jointed limbs hanging and the tendrils at the lower right, asked by `ribs_sea_owner_2` at 02:36 UTC because the first sheet came out stringy with one leg. `carcass.jpg` is kept as it is. On `main` at `041ab264`. The second list now holds 81 colour pictures and 41 reliefs.
+- 2026-11-26. 02:42 UTC: the sea owner of the Ribs spent his one rebuild of the kite-wings on pictures, and it is accepted: no built one-skin animal stands in any close key. The standing and feeding ones are bent side-view sheets of `kitewing.jpg`, the fliers front-view cards of `kitewing-front.jpg` cut at the shoulders so the sails beat, dark and never emissive, and the built animal is kept only for a lander in its last second and a feeder that leaves. His reason, from his looks: the built animal read as a model every time (paper fans, butterflies, comb tufts). What it costs: a card that slides is caught by the motion critic, so he was told to prove on a motion sheet that a neck dips and a leg lifts. Keys he restaged for it, on his branch and not yet on `main`: `ribs-0` (the lander at 150 m), `ribs-4` (five fliers about 56 m off), `ribs-1` (no close flier). The restaging sentence goes into `settled` for a key only when its frame is on `main` and the animal stands further off than its approved picture shows it.
+- 2026-11-26. 02:44 UTC: a push failed and was tried again, as "Agents and waiting" in `AGENTS.md` says. From about 02:42 to 02:45 UTC no machine could push (`git push` answered that it could not read a user name; fetching still worked): `ribs_ground_owner_2` reported it at 02:42 and sent his heartbeat as a bundle, and the Builder's own push of that bundle failed at 02:44:15. The next push, at 02:46:18 (`041ab264`), went through, and the bundle's head `ff02bfa` was pushed to `agent/ribs-ground-2` for him. Nothing was lost. All ten owners know the fallback: a bundle and the pictures attached to the heartbeat.
 
 ## Notes from Brandon
 
