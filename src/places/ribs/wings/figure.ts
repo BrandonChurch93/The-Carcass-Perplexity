@@ -228,7 +228,8 @@ void main() {
   vec3 n = normalize(face - vAcross * (hx * 0.9 + gx * 1.3) - vUp * (hy * 0.9 + gy * 1.3));
   // Where the picture is amber it is the skin of a sail, and light comes through it.
   float skin = smoothstep(0.4, 0.62, (pic.r - pic.b) / max(pic.r, 0.05));
-  vec3 albedo = pow(pic, vec3(0.92)) * vLook.z;
+  // Pale under the low key, as the wader's body is: the hide is lifted toward white and only the sails keep their amber.
+  vec3 albedo = mix(min(pow(pic, vec3(0.8)) * 1.2, vec3(0.94)), pow(pic, vec3(0.92)), skin) * vLook.z;
   albedo = mix(albedo, vec3(dot(albedo, vec3(0.3333))) * vec3(1.02, 0.98, 0.93), uGrey * (1.0 - skin * (1.0 - uGrey)));
   // Wet where it stands in the pool.
   float wet = 1.0 - smoothstep(uPool + 0.03, uPool + 0.4, vWorld.y);
@@ -251,6 +252,8 @@ void main() {
 #else
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.6, 0.25, wet), occ);
   float sun = sunAt(vWorld, land);
+  // Its shade side takes the sky and the water's bounce.
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * (1.0 - 0.5 * skin);
   // Far off the air between takes the amber out of the lit skin.
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
