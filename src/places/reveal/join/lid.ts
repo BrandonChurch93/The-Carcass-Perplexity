@@ -101,17 +101,18 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   if (abs(camA - 1.0) < 0.1) side = clamp(side + 0.5 * (1.0 - abs(camA - 1.0) / 0.1) * (vnoise(ld.xz * 1.4 + sunSide * camA * 34.0) - 0.5), 0.0, 1.0);
   vec3 within = mix(uLidInside, uLidWarm, side);
   // How far the lens has come out of the top: under it the cloud is lit by what gets in, over it by the sun and the sky.
-  float above = smoothstep(0.995, 1.03, camA);
+  float over = smoothstep(1.0, 1.075, camA);
   // As it breaks up the sheet thins too, and the last of it is gone before it stops being drawn.
   float thin = mix(1.0, 0.3, uLid.z) * (1.0 - smoothstep(0.88, 1.0, uLid.z));
+  float inCloud = exp(-pow((camA - 1.0) / 0.05, 2.0));
   vec2 d = uLidDrift * uLid.y;
   // The fibres of the cloud lie along the wind.
   vec2 wind = normalize(uLidDrift);
   mat2 comb = mat2(wind.x * 0.92, -wind.y, wind.y * 0.92, wind.x);
   vec3 sum = vec3(0.0);
   float tr = 1.0;
-  // The cloud the lens itself stands in: soft, uneven, and nearly all there is for the few frames either side of the cut.
-  float fog = 0.95 * exp(-pow((camA - 0.997) / 0.019, 2.0));
+  // The cloud the lens itself stands in: a thin veil over what streams past under it.
+  float fog = 0.22 * exp(-pow((camA - 0.997) / 0.03, 2.0));
   if (fog > 0.001) {
     float uneven = 0.82 + 0.36 * vnoise(ld.xz * 2.6 - wind * camA * 26.0);
     float a = fog * (0.9 + 0.1 * uneven);
@@ -139,19 +140,45 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     float finest = vnoise(f3 * 113.0 + layer.x * 53.0 + d * 9.0);
     // The nearer the cloud is to the lens the finer the grain the eye can still see in it: each is too fine to draw once the sheet is far below.
     float c1 = 1.0 - smoothstep(0.5, 1.0, near);
+    float m47 = vnoise(f2 * 47.0 + layer.x * 91.0 - d * 5.0);
+    // Right under the lens the cloud is wisps and knots with air between them, and the eye sees through to what lies deeper.
+    float wisp = 1.0;
+    float shadeBy = 1.0;
+    float knotLit = 0.5;
     if (c1 > 0.0) {
-      float more = vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0);
+      float g1 = vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0);
+      float g2 = 0.5;
+      float g3 = 0.5;
+      float more = g1;
       float c2 = 1.0 - smoothstep(0.12, 0.3, near);
       if (c2 > 0.0) {
-        more = mix(more, 0.6 * more + 0.4 * vnoise(f2 * 700.0 + layer.x * 29.0 + d * 30.0), c2);
+        g2 = vnoise(f2 * 700.0 + layer.x * 29.0 + d * 30.0);
+        more = mix(more, 0.6 * more + 0.4 * g2, c2);
         float c3 = 1.0 - smoothstep(0.05, 0.12, near);
-        if (c3 > 0.0) more = mix(more, 0.7 * more + 0.3 * vnoise(f3 * 1700.0 + layer.x * 43.0 - d * 60.0), c3);
+        if (c3 > 0.0) {
+          g3 = vnoise(f3 * 1700.0 + layer.x * 43.0 - d * 60.0);
+          more = mix(more, 0.7 * more + 0.3 * g3, c3);
+        }
+      }
+      float nearby = 1.0 - smoothstep(0.02, 0.09, near);
+      if (nearby > 0.0) {
+        // The grain that makes them is the grain that stands a few times across the frame at this nearness, with the finer ones laid over it more weakly.
+        vec4 x = log2(vec4(113.0, 290.0, 700.0, 1700.0) * near / 2.0);
+        vec4 w = mix(max(1.0 + x / 1.5, 0.0), max(1.0 - x / 3.5, 0.0), vec4(greaterThan(x, vec4(0.0))));
+        float x0 = log2(47.0 * near / 2.0);
+        float w0 = x0 < 0.0 ? max(1.0 + x0 / 1.5, 0.0) : max(1.0 - x0 / 3.5, 0.0);
+        float total = max(w0 + w.x + w.y + w.z + w.w, 1e-3);
+        float knots = (w0 * m47 + w.x * finest + w.y * g1 + w.z * g2 + w.w * g3) / total;
+        knots = clamp(0.5 + 0.6 * (knots - 0.5) * total / max(sqrt(w0 * w0 + dot(w, w)), 1e-3), 0.0, 1.0);
+        wisp = mix(1.0, smoothstep(0.34, 0.66, knots), nearby);
+        shadeBy = mix(1.0, 0.6 + 0.8 * knots, nearby);
+        knotLit = knots;
       }
       finest = mix(finest, 0.45 * finest + 0.55 * more, c1);
     }
     float close = 1.0 - smoothstep(0.08, 0.22, near);
     float coarse = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0);
-    float middle = 0.3 * vnoise(f2 * 47.0 + layer.x * 91.0 - d * 5.0);
+    float middle = 0.3 * m47;
     float fine = coarse + middle + 0.2 * finest;
     float h = 0.56 * big + 0.44 * fine;
     float n = clamp((h - 0.5) * 1.6 + 0.5, 0.0, 1.0);
@@ -159,8 +186,13 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     // The grain eats into the cloud where it is thin: its edge is torn into threads and veils the eye sees through, and its body stays whole.
     cover = clamp(cover - mix(0.75, 0.25, smoothstep(0.7, 0.95, uLid.z)) * (1.0 - finest) * (1.0 - cover), 0.0, 1.0);
     if (cover <= 0.0) continue;
-    float a = 1.0 - exp(-1.5 * layer.z * thin * cover * cover * min(near / 0.02, 1.0) / down);
-    vec3 colour = within * (0.4 + 1.2 * mix(fine, 0.6 * fine + 0.4 * finest, close));
+    float a = (1.0 - exp(-1.5 * layer.z * thin * cover * cover * smoothstep(0.0, 0.03, near) / down)) * wisp;
+    // Brighter above than below: the light comes in from the top of the sheet.
+    vec3 colour = within * (0.4 + 1.2 * mix(fine, 0.6 * fine + 0.4 * finest, close)) * mix(0.7, 1.25, smoothstep(0.86, 1.0, layer.x)) * shadeBy;
+    // While the lens is in the cloud what is close under it is bright and what lies deeper is dim: the eye reads the depth it climbs out of.
+    float dim = mix(1.0, mix(1.22, 0.6, smoothstep(0.004, 0.09, near)), inCloud);
+    // The top of the sheet is lit by the sun and the sky whether the lens is over it yet or not: nothing changes when the lens comes out.
+    float above = max(over, smoothstep(0.95, 1.02, layer.x));
     if (above > 0.0) {
       // The low sun reaches a place on the sheet when the cloud toward it stands no higher: every lump has a lit side and a side in shade.
       vec2 toSun = q + sunSide * 0.03;
@@ -168,9 +200,12 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
       float hs = 0.56 * (big - mid + lidMid(toSun)) + 0.44 * (0.5 * vnoise(fs * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(vec2(0.8 * fs.x - 0.6 * fs.y, 0.6 * fs.x + 0.8 * fs.y) * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest);
       float lit = clamp(0.5 + 6.0 * (h - hs) + 0.5 * (cover - 0.75), 0.0, 1.0);
       lit = lit * lit * (3.0 - 2.0 * lit) * mix(0.4, 1.0, tr);
+      // Close under the lens the lumps are too large to have a lit side and a side in shade.
+      lit = mix(clamp(1.6 * knotLit - 0.3, 0.0, 1.0), lit, smoothstep(0.015, 0.1, near));
       vec3 top = mix(uLidShade, uLidSunlit, lit) * (0.5 + 1.0 * n) * (0.8 + 0.4 * finest);
       colour = mix(colour, top, above);
     }
+    colour *= dim;
     sum += tr * a * colour;
     tr *= 1.0 - a;
     if (tr < 0.01) break;
