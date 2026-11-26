@@ -1,5 +1,7 @@
-2026-11-26 12:55 UTC
-work at ae16944 on agent/film-loop
-v3 in checks: loop sheet with the wash (174 to 305) and the knot of fliers in the sky; twelve frames in the wash. Wrong: feeders still read as standing at this size, sky still stands
+2026-11-26 13:31 UTC
+work at e494ceb on agent/film-loop
+v3 hand-back: loop sheet, seam sheet, twelve frames in the wash, loop 0 beside film 1241. Wrong: feeders read as standing at card size, sky stands
 look-1.jpg = out/work/sheets/loop.png
-look-2.jpg = out/work/sheets/v3-wash12.png
+look-2.jpg = out/work/sheets/loop-seam.png
+look-3.jpg = out/work/sheets/v3-wash12.png
+look-4.jpg = out/work/v3-pair.jpg
