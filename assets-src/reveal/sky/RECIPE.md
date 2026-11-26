@@ -32,3 +32,23 @@ y -820 to 3961.25). Where the weather stands:
 
 - `public/assets/reveal/maps/map-a-h.png`: the height of the land, to thin the low cloud over it.
 - `public/assets/reveal/mat/front.jpg`, `cyclone.jpg`, `storm.jpg`: the plates, for their shade.
+
+## `public/assets/reveal/mat/cyclone-wide.jpg`
+
+Made by: the Builder, with the image model, on the request of `reveal_owner_3` (wave 3). Sent as `reveal-mats-w3.tgz` and unpacked here unchanged.
+What it is: a plate, 1254 by 1254 px, 2,500 km across: a cyclone seen straight down, many thin beaded arms round a small eye, on black sea.
+Used by: `src/places/reveal/sky/index.ts`, the part `reveal/cyclone`.
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/specks.jpg` and `public/assets/reveal/mat/specks-nh.png`
+
+Made by: the Builder, with the image model, on the request of `reveal_owner_3` (wave 3). Sent as `reveal-mats-w3.tgz` and unpacked here unchanged.
+What it is: a tile, 1,500 km a repeat: fields of very small cumulus in beaded streets on black sea, and its relief.
+Used by: `src/places/reveal/shared/weather.ts`, the low cloud seen from orbit.
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/seacloud.jpg`
+
+Made by: the Builder, with the image model, on the request of `reveal_owner_3` (wave 3). Sent as `reveal-mats-w3.tgz` and unpacked here unchanged.
+What it is: a plate, 1672 by 941 px, 6,000 km wide: a deck of sea cloud, thin on the left and dense on the right, on black sea.
+Date: 2026-11-26

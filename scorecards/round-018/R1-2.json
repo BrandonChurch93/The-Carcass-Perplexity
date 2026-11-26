@@ -1,0 +1,98 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R1-2",
+  "family": "claude",
+  "answered": "2026-11-26 05:08 UTC",
+  "answer": {
+    "critic": "R1",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the skeleton on the shelf",
+        "what": "the bones are melted and smeared: the spine is a flat lumpy ribbon, ribs and limbs fuse into a blob, no skull reads; -a has crisp separate vertebrae, ribs, skull and long limb bones. The skeleton is static, so this is not settled motion blur",
+        "fix": "rebuild a clean, articulated skeleton with distinct skull, ribs and limb bones, sitting on the rock with contact shadows and algae tangled through it"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the shelf algae and shallow water, left half and centre",
+        "what": "the algae is a flat orange texture laid over rock and water like a sheet, with no strands and no volume; in -a it is loose rust-gold filaments lying in clear shallow water over pale travertine",
+        "fix": "replace the sheet with separate filamentous strands that cast small shadows, with clear shallow water and pale rock visible between them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01-b.png",
+        "where": "the drop-off from the shelf into the deep water",
+        "what": "the underwater cliff wall dropping into dark blue depth is missing; the edge is a shallow lip over flat blue water, so the scale of the drop and the clarity of the water are gone",
+        "fix": "show the submerged rock wall falling away beneath the shelf edge into blue-black depth, seen through clear water"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the far cliffs, sky and horizon",
+        "what": "the cliffs are closer and cropped at the top with no sky; the haze is a flat wall standing on a ruler-straight waterline; -a shows distant sunlit cliffs under a pale sky with low mist lying on the water",
+        "fix": "push the cliffs back, show a strip of sky, and let the mist lie low and thin on the water with a soft, broken edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "the lake surface, middle distance",
+        "what": "the warm cliff reflections and the concentric ripple rings are missing; the water is choppy blue with faint orange streaks, and the left shallows reflect strong orange like a light source",
+        "fix": "calm the water to a mirror with golden cliff reflections and faint ripple rings, and cut the orange glare on the left shallows"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01-b.png",
+        "where": "overall focus and depth",
+        "what": "everything is sharp from foreground to cliffs; -a has a shallow focus with soft background, which carries its macro scale",
+        "fix": "add lens depth of field so the far shore and cliffs fall soft"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-01-b.png",
+        "where": "the far waterline, right",
+        "what": "small white fin-like specks stand on the horizon that are not in -a",
+        "fix": "remove them"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-03-b.png",
+        "where": "the haze at the foot of the cliffs",
+        "what": "the mist is a flat grey band with hard, grainy top and bottom edges, over a brown strip at the waterline; in -a it is thin soft vapour drifting over the water and the scree shore",
+        "fix": "make the mist soft and uneven, thinning upward, with no hard edges or noise, and remove the brown strip"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the two foreground animals",
+        "what": "the necks are darker grey-brown with stripes and taper to horn-like points, and the left one bends sharply to the right; in -a they are pale cream, smooth, rim-lit by the low sun, with rounded heads and upright necks",
+        "fix": "match the pale cream skin, warm rim light, rounded heads and upright neck pose of -a"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the far shore and cliffs",
+        "what": "the cliffs fill the top of the frame and come right down to the water, with no sky; the scree slope and shore on the right and the low gravel beach are missing, so the lake reads smaller",
+        "fix": "push the cliffs back and restore the scree slope and the strip of shore under them"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03-b.png",
+        "where": "the reflections in the lower half",
+        "what": "the cliff reflections are vertical stretched streaks in stepped columns, with no ripple breakup; in -a they are broken golden patches on the ripples",
+        "fix": "break the reflections with the ripple pattern into soft horizontal gold patches"
+      },
+      {
+        "severity": "minor",
+        "file": "set-B-03-b.png",
+        "where": "the water surface and the fins",
+        "what": "the ripples are evenly spaced parallel bands and the fins are small, uniform and lit bright white; in -a the rings spread from the swell and the fins are lit warm with splash at their bases",
+        "fix": "let the rings spread from the disturbance, vary fin sizes, and light them warm with small splash where they cut the water"
+      }
+    ]
+  }
+}

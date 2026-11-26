@@ -222,8 +222,8 @@ function slabOf(i: number, j: number): Slab {
 export function bedded(x: number, z: number): number {
   // Where a place looks for its plate is pushed about: broadly, by the plate picture's own relief (so an edge runs along a crack of the
   // picture), and finely (so an edge is snapped into pieces of a metre or two).
-  const wx = x + 4.2 * (fbm2(x / 11 + 7.1, z / 11 + 2.3, 2) - 0.5) + 1.3 * (plateAt(x + 1.7, z - 0.9) - 0.5) + 0.7 * (noise2(x / 1.7 + 3.3, z / 1.7 + 9.1) - 0.5) + 0.32 * (noise2(x / 0.5 + 6.1, z / 0.5 + 1.4) - 0.5);
-  const wz = z + 4.2 * (fbm2(x / 11 + 31.4, z / 11 + 18.6, 2) - 0.5) + 1.3 * (plateAt(x - 1.1, z + 2.3) - 0.5) + 0.7 * (noise2(x / 1.7 + 14.7, z / 1.7 + 5.2) - 0.5) + 0.32 * (noise2(x / 0.5 + 2.9, z / 0.5 + 8.3) - 0.5);
+  const wx = x + 4.2 * (fbm2(x / 11 + 7.1, z / 11 + 2.3, 2) - 0.5) + 1.3 * (plateAt(x + 1.7, z - 0.9) - 0.5) + 0.7 * (noise2(x / 1.7 + 3.3, z / 1.7 + 9.1) - 0.5) + 0.16 * (noise2(x / 0.95 + 6.1, z / 0.95 + 1.4) - 0.5);
+  const wz = z + 4.2 * (fbm2(x / 11 + 31.4, z / 11 + 18.6, 2) - 0.5) + 1.3 * (plateAt(x - 1.1, z + 2.3) - 0.5) + 0.7 * (noise2(x / 1.7 + 14.7, z / 1.7 + 5.2) - 0.5) + 0.16 * (noise2(x / 0.95 + 2.9, z / 0.95 + 8.3) - 0.5);
   const ci = Math.floor(wx / SLAB);
   const cj = Math.floor(wz / SLAB);
   let d1 = 1e9;
@@ -248,10 +248,11 @@ export function bedded(x: number, z: number): number {
   if (!s1 || !s2) return smoothGround(x, z);
   const h1 = s1.top + s1.tx * (x - s1.x) + s1.tz * (z - s1.z);
   const h2 = s2.top + s2.tx * (x - s2.x) + s2.tz * (z - s2.z);
-  // Metres to the edge of the plate, about. The riser is a third of a metre through (the mesh that draws it has cells of 18 cm), and a crack runs along its foot.
+  // Metres to the edge of the plate, about. The riser is two thirds of a metre through: the mesh that draws it has cells of 24 cm, and a
+  // riser thinner than three of them, or an edge that jogs in less than four, is drawn as saw teeth. A crack runs along its foot.
   const edge = 0.5 * (d2 - d1);
-  const k = 1 - smooth(edge / 0.17);
-  return h1 + 0.5 * (h2 - h1) * k - 0.05 * (1 - smooth(edge / 0.07)) * (h1 < h2 + 0.03 ? 1 : 0.2);
+  const k = 1 - smooth(edge / 0.34);
+  return h1 + 0.5 * (h2 - h1) * k - 0.05 * (1 - smooth(edge / 0.09)) * (h1 < h2 + 0.03 ? 1 : 0.2);
 }
 
 /** The rocks in the shallows under the lens of the picture of the waders feeding: a dozen lumps of dark wet rock, a foot or two high, just

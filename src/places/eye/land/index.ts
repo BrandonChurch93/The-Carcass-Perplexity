@@ -194,11 +194,13 @@ void main() {
   r.y = abs(r.y);
   float open = skyOpen(vWorld);
   vec3 bed = vec3(0.2, 0.17, 0.13) * (0.5 + 0.8 * b) * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * uSunDir.y * sunAt(vWorld)) / 3.14159;
-  vec3 c = mix(bed, skyRadiance(r) * mix(0.35, 1.0, open) * 0.5, f * 0.8);
+  // Seen from above it is a dark thread of water between its stones, not a pale ribbon.
+  float high = smoothstep(12.0, 40.0, cameraPosition.y);
+  vec3 c = mix(bed * mix(1.0, 0.6, high), skyRadiance(r) * mix(0.35, 1.0, open) * 0.5, f * mix(0.8, 0.35, high));
   // White water where the bed drops, and a pale edge where it laps the stones.
   float foam = smoothstep(0.52, 0.8, a + 0.5 * b * run) * run + smoothstep(0.86, 1.0, abs(vFlow.y)) * 0.25 * smoothstep(0.4, 0.7, b);
   vec3 white = vec3(0.75, 0.78, 0.8) * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * uSunDir.y * sunAt(vWorld)) / 3.14159;
-  c = mix(c, white, clamp(foam, 0.0, 1.0) * 0.6);
+  c = mix(c, white, clamp(foam, 0.0, 1.0) * mix(0.6, 0.25, high));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 

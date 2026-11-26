@@ -1,0 +1,77 @@
+{
+  "round": 18,
+  "unit": "eye",
+  "pack": "R3-2",
+  "family": "gemini",
+  "answered": "2026-11-26 05:09 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the water around the emerging dark dome and white spines across the middle of the lake",
+        "what": "the concentric ripples are mathematically uniform, smooth sine-wave rings with no wind chop, foam, or splash, and the dark dome and white spines pierce the surface with no meniscus, wet runoff, or proper reflections",
+        "fix": "break up the rings with irregular wave interference and wind ripples, add foam and water sheeting around the dome and spines, and render accurate reflections of the spines on the water"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the skeleton on the foreground mineral shelf and overhanging the deep water at bottom right",
+        "what": "the skeleton reads as a uniform clay-like model with no mineral crust, salt, or wet staining from the shelf, and the overhanging skull and jaw cast no shadow and no reflection onto the water directly below",
+        "fix": "ground the skeleton with contact shadows, mineral deposits, and wet edges where it touches the shelf, and render shadows and reflections of the overhanging skull on the water surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-01.png",
+        "where": "the far shoreline across the upper middle where the lake meets the cliff talus",
+        "what": "the water meets the distant cliff base along a ruler-straight horizontal line with no shoreline irregularity or wet edge, topped by a flat grainy mist band with no volumetric depth",
+        "fix": "vary the far shoreline geometry with rocky inlets and wet talus entering the water, and replace the flat grainy mist band with layered volumetric vapour lit by the sun"
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the far shoreline and cliff base across the upper third",
+        "what": "the lake terminates in a dead-straight horizontal edge against the cliff, and the mist along the base and inside the cave reads as a flat grainy tint with no light or volume",
+        "fix": "break up the far waterline with natural shore relief and wet rock, and add sunlit volumetric variation to the mist along the cliff base and cave mouth"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "both native-size crops showing the skeleton spine on the shelf and the skull over the water",
+        "what": "the close-up rock texture under the spine is blurry and stretched, the bone surfaces look soft and clay-like with dark painted seams and a hard cutout silhouette, and the water beneath the skull is smooth blurry streaks with no surface detail or reflection",
+        "fix": "increase close-range rock micro-detail and displacement, add weathered porous bone detail and softer contact blending, and give the water crisp surface ripples and skull reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the far water band and cliff-base mist in the top-left, top-right, and bottom-left crops",
+        "what": "a sharp horizontal band separates the brown far water from the grey water with a visible vertical seam near the middle of the top-right crop, and the mist breaks into coarse flat noise",
+        "fix": "remove the vertical texture seam and blend the water color transition naturally across depth, and denoise and add volumetric structure to the cliff-base mist"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the close mineral shelf in the bottom-right crop and the shelf-to-water edge in the top-right crop",
+        "what": "the foreground travertine texture is soft and stretched with no fine mineral grain, and the orange shelf meets the deep water along a dry hard edge with no wet rim, meniscus, or foam",
+        "fix": "add high-resolution mineral crust detail to the close shelf and add a darkened wet rim, meniscus, and subtle foam where the water meets the ledge"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the midground and lower-right water surface in both crops",
+        "what": "the water surface reads as blurry vertical reflection streaks and a flat dull grey-blue gradient with no fine wavelets, clarity, or realistic surface microstructure",
+        "fix": "add multi-scale capillary ripples and crisp grazing reflections so the water holds up at native resolution"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the two foreground animals at bottom left and bottom right",
+        "what": "even through depth-of-field blur, their hides read as smooth and rubbery with painted-on stripe shading and overly tubular silhouettes, with no wetness, dust, or environmental wear",
+        "fix": "add organic surface irregularity, skin folds, and subtle wet sheen or dust to the foreground animals so they feel part of the environment"
+      }
+    ]
+  }
+}

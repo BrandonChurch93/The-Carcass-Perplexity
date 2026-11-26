@@ -1,0 +1,42 @@
+{
+  "round": 14,
+  "unit": "breath",
+  "pack": "R4-2",
+  "family": "gemini",
+  "answered": "2026-11-26 05:20 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 5,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-02.png",
+        "where": "the pale long-necked animal standing on the central rocky peninsula near the red bush",
+        "what": "the animal stays completely motionless across the entire 6-second held shot with no weight shift, step, or head turn, reading as a static 3D model",
+        "fix": "add subtle organic animation to the animal—breathing, head and neck turns, weight shifts, or a slow step—so it reads as alive when the camera holds"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the water channel and flats on the left and bottom-left",
+        "what": "the water surface shows no wave motion, current, or shoreline break; instead, a patch of bright specular dots fades in around 2.18 s and vanishes by 6.00 s like a pulsing texture",
+        "fix": "replace the pulsing specular noise with continuous directional ripples and gentle shoreline motion that give the water physical weight"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the vapour plume pouring over the left rim of the pit across consecutive frames 4650 to 4661",
+        "what": "the mist silhouette and density shift noticeably from one frame to the next over less than a fifth of a second, making heavy vapour read as fast-boiling noise",
+        "fix": "slow the advection and temporal evolution of the mist so consecutive frames transition smoothly with the weight of heavy, slow-pouring vapour"
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the red tree on the peninsula, the foreground red shrub, and the cloud bank along the distant cliff",
+        "what": "the vegetation and distant clouds remain completely frozen over 6 seconds despite heavy mist pouring across the plateau, making the surrounding landscape read like a still picture",
+        "fix": "add gentle wind sway to the foliage and slow independent drift to the distant cliff clouds and atmospheric haze"
+      }
+    ]
+  }
+}

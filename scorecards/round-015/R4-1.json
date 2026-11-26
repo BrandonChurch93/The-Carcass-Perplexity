@@ -1,0 +1,42 @@
+{
+  "round": 15,
+  "unit": "spine",
+  "pack": "R4-1",
+  "family": "gpt",
+  "answered": "2026-11-26 05:14 UTC",
+  "answer": {
+    "critic": "R4",
+    "score": 6,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-05.png",
+        "where": "the standing shaggy animal centered at the cave mouth, frames 8031–8304",
+        "what": "the camera clears the nearer bodies but the standing animal holds nearly the same head and body silhouette through most of the approach; it reads as another placed model rather than a living subject",
+        "fix": "give it a planted weight shift, a small head turn and an independently timed breath or coat response before the camera settles"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the wind streaks issuing from the central and neighboring spires, frames 7718–7855",
+        "what": "the bright forked ribbons retain almost the same outline and attachment points during the long hold, making the strongest cue for moving air read as fixed geometry",
+        "fix": "keep the wind direction but shed irregular wisps from each tip, letting them stretch, separate and dissipate at different rates"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the long pale streamer on the right and the shorter bands beneath it, frames 7411–7498",
+        "what": "the truck reveals real depth at the cliff edge but the streamers keep long parallel edges and move as stiff sheets rather than bending and breaking in the air",
+        "fix": "vary thickness and curl along the bands, breaking their trailing ends into wisps that move independently of the camera"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-10.png",
+        "where": "the cave floor and inner left wall on the lightning peaks at frames 8091 and 8094",
+        "what": "the off-cave flash lifts a broad area of the interior at once, with little distinction between surfaces exposed to the opening and those behind the rock and animals",
+        "fix": "shape the flash from the cave mouth with distance falloff and occlusion, catching exposed ice edges while keeping sheltered areas darker"
+      }
+    ]
+  }
+}

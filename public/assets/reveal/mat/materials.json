@@ -158,6 +158,30 @@
       "metres": 600000,
       "width": 1672,
       "height": 941
+    },
+    {
+      "name": "cyclone-wide",
+      "kind": "plate",
+      "metres": 2500000,
+      "width": 1254,
+      "height": 1254
+    },
+    {
+      "name": "specks",
+      "kind": "tile",
+      "metres": 1500000,
+      "mean": [
+        0.064,
+        0.067,
+        0.075
+      ]
+    },
+    {
+      "name": "seacloud",
+      "kind": "plate",
+      "metres": 6000000,
+      "width": 1672,
+      "height": 941
     }
   ]
 }

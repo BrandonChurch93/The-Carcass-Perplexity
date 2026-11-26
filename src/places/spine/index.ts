@@ -14,7 +14,7 @@ import * as land from './land';
 import * as runners from './runners';
 import * as strikes from './strikes';
 import { first, heightAbove, world } from './ridge';
-import { CANAL_KEY, CARCASS, RAD, STRIKES, UNIT, canalFar, carcassBody, carcassView, heading, kiteEdge, pitchTo, raised, spire, step, strikeTip, trail, tube } from './shared/anchors';
+import { CANAL_KEY, CARCASS, RAD, STRIKES, STRIKE_FOV, UNIT, canalFar, carcassBody, carcassView, heading, kiteEdge, pitchTo, raised, spire, step, strikeStand, strikeTip, strikeView, trail, tube } from './shared/anchors';
 import { on, tipOf } from './ridge';
 import { createStandIns } from './shared/blockout';
 import type { Context, Folder, Piece, TextureOptions } from './shared/context';
@@ -63,11 +63,10 @@ const carcassMove: CameraPath = (part) => {
   return { position: mix(keyCarcass.position, to.position, k), aim: mix(keyCarcass.aim, to.aim, k), fov: CARCASS_FOV };
 };
 
-// The strike on the third spire is seen from where the carcass lies, down the length of the ridge: the second spire stands dark at the left of the frame,
-// the third takes the bolt, and the rest go down to the band on the right.
-const STRIKE_FOV = 14;
-const strikeStand = on(first.s - 650, 14, 2.4);
-const keyStrike = aimed(strikeStand, heading(strikeStand, strikeTip) + 0.12 * STRIKE_FOV * (16 / 9), pitchTo(strikeStand, strikeTip) - 0.23 * STRIKE_FOV, STRIKE_FOV, 2200);
+// The strike on the third spire is seen through a long lens from high off the lee edge of the first (anchors.ts): a crag of that spire stands
+// near and soft at the left of the frame, the third spire takes the bolt, and the rest go down to the band on the right. The lens stands level
+// with the kites' holdfasts, so the horizon and the last band lie in the lower half of the frame.
+const keyStrike: Pose = { ...aimed(strikeStand, strikeView, pitchTo(strikeStand, strikeTip) - 0.23 * STRIKE_FOV, STRIKE_FOV, 1700), focus: 1650, aperture: 0.05 };
 
 const canalPose = (d: number, h: number, yaw: number, pitch: number): Pose => {
   const p = tube(d, 0.6, h);
@@ -84,7 +83,7 @@ const shots: Record<string, CameraPath> = {
   'spine-01': establishingMove,
   'spine-02': through(keyKites, keyPart(shotById('spine-02')), { right: -20, forward: -22, up: -4 }, { right: 20, forward: 22, up: 4 }),
   'spine-03': carcassMove,
-  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -3, right: -1 }, { forward: 26, right: 5, up: 3, turn: -0.5 }),
+  'spine-04': through(keyStrike, keyPart(shotById('spine-04')), { forward: -1.2, right: -0.25 }, { forward: 10, right: 2.2, up: 1.2, turn: -0.12 }),
   'spine-05': canalMove,
 };
 
