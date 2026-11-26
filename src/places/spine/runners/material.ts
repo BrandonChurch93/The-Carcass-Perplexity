@@ -145,6 +145,7 @@ void main() {
   vec3 albedo = uTone.rgb * shag * mix(0.45, 0.95, smoothstep(0.2, 0.7, lie.b));
   float rough = 0.95;
   float occ = 0.55;
+  vec3 pelt = albedo;
   if (vKind > 4.5) {
     // The paw: a short close coat, wet and dark toward the pads.
     albedo = mix(vec3(0.035, 0.03, 0.028), uTone.rgb * shag * 0.75, 0.55 + 0.3 * fine);
@@ -158,13 +159,16 @@ void main() {
   }
   if (vKind > 6.5) {
     // The face: bare dark skin, creased, where the tendrils root.
-    albedo = mix(vec3(0.03, 0.022, 0.024), vec3(0.11, 0.07, 0.065), 0.6 * fine + 0.4 * grain);
-    rough = 0.5;
-    occ = 0.6;
+    // It is under a short coat of its own, and no edge is drawn where the coat of the head ends.
+    albedo = mix(mix(vec3(0.09, 0.066, 0.068), vec3(0.26, 0.18, 0.17), 0.6 * fine + 0.4 * grain), 0.8 * pelt, 0.75);
+    rough = 0.95;
+    occ = 0.55;
   }
   // Rime where the hide looks up.
   // On the paws it lies in patches between the toes, not as a cap.
   float rime = smoothstep(0.45, 0.9, n.y + 0.5 * (grain - 0.5) + uCoat.w - (vKind > 4.5 ? 0.35 + 0.5 * vnoise3(vRest * 23.0) : 0.0)) * (vKind > 5.5 ? 0.35 : 0.7);
+  // Out in the gale the bare of the head is under hoar, in broad patches: nothing on it is one bright point.
+  if (vKind > 1.5 && vKind < 2.5 || vKind > 6.5) rime = mix(rime, 0.8 * smoothstep(0.3, 0.6, vnoise3(vRest * 7.0) + 0.25 * n.y), 1.0 - uLockKind);
   albedo = mix(albedo, vec3(0.86, 0.88, 0.92), rime);
   // Where the bolt went through: the coat is gone and the skin is charred, split, and raw in the splits.
   float d = burnAt(vRest);
@@ -221,9 +225,11 @@ void main() {
   float seed = aCard.y;
   // The wind in the coat: uCoat.y how hard it blows, uCoat.z a shiver. The end of a lock moves most, each at its own pace.
   float span = distance(r, e);
-  float gust = sin(uTime * (5.0 + 4.0 * seed) + seed * 40.0 + dot(r, vec3(3.1, 0.0, 2.3))) + 0.6 * sin(uTime * (11.0 + 7.0 * fract(seed * 7.3)) + seed * 91.0)
-    + 0.9 * sin(uTime * 2.3 - dot(r, uWind.xyz) * 2.5);
-  vec3 blow = (uWind.xyz * (0.1 * uCoat.y) + vec3(0.0, 0.05 * uCoat.y, 0.0) * sin(uTime * 7.0 + seed * 13.0)) * gust + uCoat.z * vec3(sin(uTime * 31.0 + seed * 50.0), 0.0, cos(uTime * 27.0 + seed * 70.0));
+  // A gust is a front that crosses the animal: the coat lifts as it passes and falls back behind it, and each lock shakes in it.
+  float front = max(0.0, sin(uTime * 1.7 - dot(r, uWind.xyz) * 1.4 + 0.8 * sin(uTime * 0.6)));
+  float own = sin(uTime * (5.0 + 4.0 * seed) + seed * 40.0 + dot(r, vec3(3.1, 0.0, 2.3))) + 0.6 * sin(uTime * (11.0 + 7.0 * fract(seed * 7.3)) + seed * 91.0);
+  float gust = 2.4 * front * front * (1.0 + 0.3 * own) + 0.35 * own - 0.4;
+  vec3 blow = (uWind.xyz * (0.2 * uCoat.y) + vec3(0.0, 0.07 * uCoat.y, 0.0) * sin(uTime * 7.0 + seed * 13.0)) * gust + uCoat.z * vec3(sin(uTime * 31.0 + seed * 50.0), 0.0, cos(uTime * 27.0 + seed * 70.0));
   e += blow * span;
   c += blow * span * 0.35;
   e.y = max(e.y, groundY(e) + 0.012);
