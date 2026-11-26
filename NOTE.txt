@@ -1,6 +1,7 @@
-2026-11-26 03:12 UTC
-work at 0de5f85 on agent/breath-life-2
-minute 130: wader.jpg on the one skin (breath-1 crop, no restage needed in my judgement); plume as three crossed sprays with backlight, washed by vapour in front of it (asked lead); dead one through the whole of breath-05
-look-1.jpg = out/work/hb5-breath-1-crop.png
-look-2.jpg = out/work/hb5-breath-3.png
-look-3.jpg = out/work/hb5-shot-breath-05.png
+2026-11-26 03:40 UTC
+work at 2d17aae on agent/breath-life-2
+version 2, minute 152: keys breath-0 to breath-3 beside the approved pictures
+look-1.jpg = out/work/v2-breath-2.png
+look-2.jpg = out/work/v2-breath-1.png
+look-3.jpg = out/work/v2-breath-3.png
+look-4.jpg = out/work/v2-breath-0.png
