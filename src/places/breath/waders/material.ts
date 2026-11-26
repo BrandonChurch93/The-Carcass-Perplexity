@@ -189,6 +189,9 @@ void main() {
     float shown = smoothstep(0.5, 0.95, cover) * smoothstep(0.02, 0.06, dot(shot, vec3(0.333))) * mid * (1.0 - uDead);
     albedo = mix(albedo, shot * 2.3 * (0.92 + 0.16 * mottle), 0.88 * shown);
     height = height * (1.0 - 0.75 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
+    // No two are one colour: one is chalk pale, the next ruddy, the next grey with old silt.
+    float own = hash12(vec2(seed, 1.7));
+    albedo *= mix(vec3(0.92, 0.9, 0.9), vec3(1.34, 1.3, 1.24), own) * mix(vec3(1.0), vec3(1.06, 0.94, 0.9), step(0.6, hash12(vec2(seed, 6.1))));
     // Wet from the water up to where it last stood deeper, and dark with it.
     wet = smoothstep(0.3, 0.42, legT) * smoothstep(uSea + 0.55, uSea + 0.12, vWorld.y + 0.25 * (blotch - 0.5));
     thin = mix(0.5, 0.75, smoothstep(0.1, 0.5, neckU)) * (1.0 - 0.3 * shank);
