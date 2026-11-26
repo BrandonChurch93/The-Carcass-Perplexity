@@ -1,5 +1,7 @@
-2026-11-26 01:55 UTC
-work at 141ed38 on agent/spine-storm-2
-runners rebuilt as one skin with a coat of locks: dead one at spine-1, herd at spine-4, both unfinished
-look-1.jpg = out/work/look-spine-1.jpg
-look-2.jpg = out/work/look-spine-4.jpg
+2026-11-26 02:17 UTC
+work at ba1efe3 on agent/spine-storm-2
+v1: herd grouped and lit from the mouth, kites from membrane.jpg, thin violet bolt
+look-1.jpg = out/work/look-spine-4.jpg
+look-2.jpg = out/work/look-spine-2.jpg
+look-3.jpg = out/work/look-spine-0.jpg
+look-4.jpg = out/work/look-spine-1.jpg
