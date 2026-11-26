@@ -60,7 +60,9 @@ varying vec3 vN2;
 ${ATLAS_GLSL}
 void main() {
   vec3 d = normalize(position);
-  float r = textureLod(tRockR, rockUv(d, aSeat.x, 0.004), uSmooth).r * 1.6;
+  float wet = step(7.5, aSeat.x);
+  float kind = aSeat.x - 8.0 * wet;
+  float r = textureLod(tRockR, rockUv(d, kind, 0.004), uSmooth).r * 1.6;
   vec3 local = d * r;
   vec3 s2 = vec3(dot(instanceMatrix[0].xyz, instanceMatrix[0].xyz), dot(instanceMatrix[1].xyz, instanceMatrix[1].xyz), dot(instanceMatrix[2].xyz, instanceMatrix[2].xyz));
   vec4 w = modelMatrix * (instanceMatrix * vec4(local, 1.0));
@@ -69,7 +71,7 @@ void main() {
   vLocal = local * sqrt(s2);
   vTint = aTint;
   // Above the ground under it, as the ground lies at its middle.
-  vSeat = vec4(aSeat.x, w.y - (aSeat.y + dot(w.xz - instanceMatrix[3].xz, aSeat.zw)), sqrt(s2.x), 0.0);
+  vSeat = vec4(kind, w.y - (aSeat.y + dot(w.xz - instanceMatrix[3].xz, aSeat.zw)), sqrt(s2.x), wet);
   // A normal goes through the stretch of the stone turned over: each axis divided by its length twice.
   vN0 = instanceMatrix[0].xyz / s2.x;
   vN1 = instanceMatrix[1].xyz / s2.y;
@@ -108,9 +110,10 @@ void main() {
 
   // The skin: the rock sheet, a metre and a half a repeat, on the two faces of the stone's own frame that the point looks out of most.
   vec3 q = vLocal + vTint.yzx * 37.0;
-  vec3 w = pow(abs(no), vec3(5.0));
+  // One face of the frame nearly everywhere, two only where the stone turns between them: each is two reads.
+  vec3 w = pow(abs(no), vec3(8.0));
   w /= w.x + w.y + w.z;
-  w = max(w - 0.12, 0.0);
+  w = max(w - 0.3, 0.0);
   w /= w.x + w.y + w.z;
   vec3 skin = vec3(0.0);
   vec3 lean = vec3(0.0);
@@ -142,12 +145,21 @@ void main() {
     lean += vec3(h.r - 0.5, h.g - 0.5, 0.0) * w.z;
     high += h.b * w.z;
   }
+  // A block the size of a hut is broken at a scale of its own as well: the same sheet laid five metres a repeat on the face it shows most.
+  if (vSeat.z > 1.7) {
+    float which = w.x > max(w.y, w.z) ? 0.0 : w.y > w.z ? 1.0 : 2.0;
+    vec3 h = texture2D(tFaceNh, (which < 0.5 ? q.zy : which < 1.5 ? q.xz : q.xy) / 5.3 + 0.19).rgb;
+    vec2 g = (h.rg - 0.5) * 1.8;
+    lean += which < 0.5 ? vec3(0.0, g.y, g.x) : which < 1.5 ? vec3(g.x, 0.0, g.y) : vec3(g.x, g.y, 0.0);
+    skin *= 0.72 + 0.56 * h.b;
+    high = mix(high, h.b, 0.5);
+  }
   no = normalize(no + lean * 1.1);
   vec3 n = normalize(vN0 * no.x + vN1 * no.y + vN2 * no.z);
   vec3 v = normalize(cameraPosition - vWorld);
 
   // Pale limestone, each block of its own tone: most grey, some buff, a few dark. The sheet gives it its mottle about its own mean.
-  vec3 tone = mix(vec3(0.4, 0.4, 0.39), vec3(0.7, 0.68, 0.63), vTint.x * vTint.x);
+  vec3 tone = mix(vec3(0.47, 0.44, 0.4), vec3(0.76, 0.71, 0.63), vTint.x * vTint.x);
   tone = mix(tone, vec3(0.6, 0.52, 0.4), smoothstep(0.72, 0.8, vTint.y));
   vec3 albedo = tone * mix(vec3(1.0), skin / vec3(0.34, 0.33, 0.31), 0.75);
   // The beds of the stone show as faint bands of tone along its lie.
@@ -171,15 +183,16 @@ void main() {
   float size = vSeat.z;
   float grit = smoothstep(0.1 * size + 0.08, 0.0, above - 0.1 * size * vnoise(vWorld.xz * 3.0 / max(size, 0.4)) - 0.04 * high);
   if (grit > 0.0) {
-    vec3 dust = texture2D(tGrit, vWorld.xz / 3.0 + vWorld.y * 0.31).rgb * vec3(1.2, 1.17, 1.1);
+    vec3 dust = texture2D(tGrit, vWorld.xz / 3.1 + vWorld.y * 0.31).rgb * vec3(1.5, 1.42, 1.3);
     albedo = mix(albedo, dust, 0.8 * grit * smoothstep(-0.3, 0.3, up));
   }
   float foot = smoothstep(-0.02, 0.22 * size + 0.1, above);
   // A face that stands or leans over sees the ground and its neighbours where a top sees the sky.
   float occ = ao * (0.55 + 0.45 * smoothstep(0.2, 0.7, high)) * mix(0.35, 1.0, foot) * mix(0.5, 1.0, smoothstep(-0.3, 0.8, up));
-  // By the lake its foot is wet.
-  float damp = smoothstep(0.28, 0.02, vWorld.y);
-  albedo *= mix(1.0, 0.5, damp);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.92, 0.45, damp), occ);
+  // By the lake its foot is wet, and in the stream it is wet as high as the water throws.
+  float damp = max(smoothstep(0.28, 0.02, vWorld.y), vSeat.w * smoothstep(0.75, 0.4, above + 0.2 * stain));
+  albedo *= mix(1.0, 0.42, damp);
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.92, 0.4, damp), occ);
+  if (damp > 0.02) c += damp * 0.5 * rigGlint(vWorld, n, v, 0.4);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
