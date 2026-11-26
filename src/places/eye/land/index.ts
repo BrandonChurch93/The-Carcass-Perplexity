@@ -270,7 +270,7 @@ export function create(ctx: Context): Piece {
   ];
   // The corners of the wide picture are piles of blocks, none larger than the atlas can hold sharp at that nearness: on the right
   // against the frame, on the left beyond the stream.
-  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [131, -8.0, 4.6], [134.6, -6.4, 2.6], [128.2, -5.4, 2.2], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
+  near.push([135, 9.2, 3.6], [132.5, 10.5, 2.8], [129.5, 14, 4.4], [134.5, -8.3, 3.4], [131, -7.8, 4.6], [133.7, -5.9, 3.6], [128.5, -6.1, 3.4], [130.2, -10.6, 3.2], [133.5, -9.7, 3.0], [135.9, -7.4, 2.4], [127.1, -8.7, 2.2], [136.6, 6.7, 3.0], [131.5, -20.5, 4.4], [139.5, 11.5, 3.4], [134.5, 16, 4.4], [141, 8.4, 2.3], [137.5, 14.5, 3.1], [143, 12.5, 2.6], [139, -21, 3.6], [135, -24, 4.6], [141.5, -19.5, 2.5], [131, -25.5, 4], [137.5, -26.5, 3]);
   for (const [along, across, size] of near) {
     // None stands in the water: one that would is set on the bank on its own side.
     const mid = streamAcross(along);
@@ -305,7 +305,7 @@ export function create(ctx: Context): Piece {
       const along = kin.range(34, 222);
       const across = kin.range(-52, 52);
       const size = 0.3 + 1.1 * kin.next() ** 3;
-      if (vnoise(along / 9 + 13, across / 9 + 4) < 0.5 || !clear(along, across, size)) continue;
+      if (vnoise(along / 9 + 13, across / 9 + 4) < 0.58 || !clear(along, across, size)) continue;
       const [x, z] = onAxis(along, across);
       small.push({ x, z, size });
     }
