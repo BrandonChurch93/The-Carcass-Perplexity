@@ -213,8 +213,8 @@ export function create(ctx: Context): Piece {
   const weedNear = hangs(0.9);
   // The gate's stacks: weed in clumps, bare rock between.
   const weedGate = hangs(0.5, 1);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool } });
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -342,10 +342,11 @@ export function create(ctx: Context): Piece {
       const kind = scatter.int(KINDS);
       const sink = scatter.range(0.4, 0.7);
       const drift = noise3(x / 4.1, 0.5, z / 4.1) * 0.6 + noise3(x / 1.3, 2.5, z / 1.3) * 0.4;
-      if (drift > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
+      // Thick on the bars that stand out of the water, a few in the sheets.
+      if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
     }
   };
-  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 16000, 1.2, 48, 0.62);
+  strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 30000, 1.2, 40, 0.62);
   strew(shots['ribs-04'] as (typeof shots)[string], keyPart(shotById('ribs-04')), 1200, 5, 110, 0.3);
   strew(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 1500, 2, 60, 0.55);
   // At the foot of every blade what has fallen from it: weed-grown blocks against the wall, smaller ones out on the flat.
