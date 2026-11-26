@@ -321,8 +321,9 @@ void steamOne(int i, vec3 ro, vec3 rd, float far, float jitter) {
     // A vapour that stands over open melt is seen against its fire: what the sky gives it is the lesser part, and it is orange and not pale.
     vec3 below = lakeGlow(p.xz, max(1.2 * h, 2.5));
     float hot = smoothstep(0.012, 0.15, below.r);
-    // Steam off a vent in cold rock is thick and white: it has only itself to be seen by. Over melt it is thin and the fire shows through it.
-    float sigma = dens * B.w * mix(mix(2.0, 1.0, hot), 1.0, kind);
+    // Steam off a vent in cold rock is white and thick where it leaves the vent, and a veil the rock is seen through above that. Over melt it is thin and the fire shows through it.
+    float vent = 1.0 + 2.2 * pow(1.0 - u, 3.0);
+    float sigma = dens * B.w * mix(mix(vent, 1.0, hot), 1.0, kind);
     vec3 light = mix(1.05, mix(0.8, 1.5, u), kind) * skyLight(p.y) * (1.0 - 0.35 * min(dens, 1.0)) * (1.0 - 0.5 * hot);
     float near = max(lit * exp(-h / fall) - 0.03, 0.0);
     if (near > 0.0) light += near * fireOnSmoke(mix(0.45, 0.17, kind) * below + roundLights(p));
