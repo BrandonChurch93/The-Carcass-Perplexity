@@ -102,7 +102,7 @@ export const OPEN = {
   round: 12,
   chop: 1,
   settles: [3.2, 8] as [number, number],
-  noses: 0.18,
+  noses: 0.1,
   /** The point on the strait floor the lens is held on through the arc: under the gap between the tips of L1 and R1. */
   target: [-149, -193] as [number, number],
   /**
@@ -110,12 +110,15 @@ export const OPEN = {
    * and between which seconds. It widens late and tilts little: the near blade outgrows the frame, its tip gone through the top inside two
    * seconds and ever farther out, while the tip of the right row's blade (6 degrees lower) is held inside the top by a clear margin.
    */
-  pitch: 11,
-  tilt: 1.7,
-  tilting: [2.8, 5.5] as [number, number],
-  /** Over the first crest the nose comes down ahead of the fall: degrees, and the seconds it begins, is lowest and is back. */
-  nods: 1.6,
-  nodding: [0.15, 0.8, 1.6] as [number, number, number],
+  pitch: 12.2,
+  tilt: 2,
+  tilting: [2.6, 5] as [number, number],
+  /**
+   * Off the first crest the nose comes down with the fall and stays down: degrees, and the seconds between which it does. It is what
+   * throws the near blade's tip through the top of the frame in one move, and brings the sea up into the frame as the lens drops to it.
+   */
+  nods: 1.8,
+  nodding: [0.6, 1.45] as [number, number],
   fov: 31,
   widens: 15,
   widening: [4, 10] as [number, number],
@@ -278,7 +281,7 @@ export function openingCamera(seconds: number): Pose {
   const ease = smoother(OPEN.eases, J, seconds);
   const held = Math.atan2(OPEN.target[0] - x, z - OPEN.target[1]) / RAD;
   const yaw = held + (old.yaw - held) * ease;
-  const pitch = OPEN.pitch + OPEN.tilt * smoothed(OPEN.tilting[0], OPEN.tilting[1], seconds) + OPEN.noses * climbs * own - OPEN.nods * (smoothed(OPEN.nodding[0], OPEN.nodding[1], seconds) - smoothed(OPEN.nodding[1], OPEN.nodding[2], seconds));
+  const pitch = OPEN.pitch + OPEN.tilt * smoothed(OPEN.tilting[0], OPEN.tilting[1], seconds) + OPEN.noses * climbs * own - OPEN.nods * smoothed(OPEN.nodding[0], OPEN.nodding[1], seconds) * own;
   const fov = OPEN.fov + OPEN.widens * smoothed(OPEN.widening[0], OPEN.widening[1], seconds);
   return { ...looking(position, yaw, pitch + (old.pitch - pitch) * ease, fov + (old.fov - fov) * ease), roll: OPEN.roll * roll * own };
 }
