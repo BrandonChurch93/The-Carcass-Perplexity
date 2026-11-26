@@ -59,4 +59,8 @@ By time (`stagedSeconds`): the fog bank of the opening (ribs-01); the gate stack
 
 ## Cost, seconds a sample at 3840 x 2160, key ribs-0, draft tier
 
-COSTLINE
+At 08:28 UTC, version 3, `npm run -s cost -- --key ribs-0 --format uhd --tier draft --parts land ribs weed rocks ledges sky cloud air`: whole 10.91 (received 10.85), empty 2.00, land 1.48, ribs 1.45, weed 0.51, ledges 0.25, sky 0.19, rocks 0.00. Mine 3.88 against 3.83 received; the blades' aim of 1.16 was not reached (1.28 at version 2 with an empty frame of 2.15: the tool's empty frame moves by about 0.15 between runs).
+
+## Measures at version 3
+
+The tool at the final tier, 08:15, before the last change: M1 and M2 green at five keys; M3 ribs-0 0.5547 red, ribs-1 1.00, ribs-2 1.01, ribs-3 0.86, ribs-4 0.84. After the last change, final-tier frames through the tool's own `sharpnessRatio` (`out/work/m3tool.mjs`): ribs-0 0.788, ribs-1 1.065, ribs-2 1.014, ribs-3 0.867, ribs-4 1.250. The whole tool was not run again after the last change (17 minutes at the final tier).
