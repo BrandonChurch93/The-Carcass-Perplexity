@@ -4,7 +4,7 @@
 // public/assets/reveal/mat are laid under it by world position. The light is the rig's: one sun, the air, the shade of the cloud.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, FILM_ASPECT, KM, RING_FADE, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
+import { AT, FILM_ASPECT, KM, RISE_FIRST, X, Z, handoff, rise } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { WEATHER_GLSL } from '../shared/weather';
@@ -34,9 +34,6 @@ uniform sampler2D uMatGlitter;
 uniform sampler2D uMatLakewater;
 uniform float uOnly;
 uniform vec3 uHandWater;
-uniform vec3 uHandRing;
-uniform vec3 uRingShape;
-uniform float uBreak;
 uniform vec2 uHand;
 uniform vec2 uLake;
 uniform vec2 uLakeSize;
@@ -415,8 +412,10 @@ void main() {
     sunH = sunHeight(xz);
     // (Salt under a moon would outshine the bone and the fire both: the pan lies damp by night.)
     ground *= 1.0 - 0.45 * saltFlat * uEmber.x;
+    // (By night the low wet plain along the coasts lies nearly as dark as the sea, and the high country stands out of it: the land is read by its relief, not by its outline.)
+    ground *= mix(1.0, mix(0.85, 1.25, smoothstep(0.0, 0.3, height)), uEmber.x * land);
     rake = uTerm.w * (1.0 - smoothstep(0.04, 0.4, sunH));
-    n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake), 0.8, -slope.y * (1.0 + 2.0 * rake)));
+    n = normalize(vec3(-slope.x * (1.0 + 2.0 * rake + 2.5 * uEmber.x), 0.8, -slope.y * (1.0 + 2.0 * rake + 2.5 * uEmber.x)));
     // The ranges throw their shadows, longer as the sun goes down: the height of the land is read toward the sun, farther and
     // coarser at each reach, for the highest thing that stands between this place and the sun. (Only where the sun still rakes.)
     if (rake > 0.0 && inWide > 0.0) {
@@ -469,6 +468,8 @@ void main() {
   float waver = 1.0;
   if (dot(xz - uLava, xz - uLava) < 160000.0) waver = 0.8 + 0.4 * vnoise(vec2(uTime * 1.7, 5.0)) + 0.2 * vnoise(vec2(uTime * 4.3, 9.0));
   // (By night the working is calmer, so that the one beat is not lost in it.)
+  // (While the frame is held the fire is seen to breathe, slow and uneven.)
+  if (uLive > 0.0) waver *= mix(1.0, 0.62 + 0.76 * vnoise(vec2(uTime * 0.6, 21.0)), smoothstep(0.0, 1.5, uLive));
   if (uDusk > 0.0) waver = mix(1.0, waver, uCalm.w);
   float swell = (0.8 + 0.9 * uBeat) * waver;
   float seenFar = 1.0 + 2.2 * smoothstep(500.0, 1380.0, uViewKm);
@@ -508,21 +509,23 @@ void main() {
     float beatFar = breath + hit * (uEmber.y > 0.0 ? smoothstep(0.0, 1.0, (uEmber.y * 1100.0 - far0) / 150.0 + 1.0) : 1.0);
     float facing = clamp(0.35 + 3.0 * dot(slope, fromLava / (far0 + 1.0)), 0.0, 2.0);
     float reach = exp(-d0 / 200000.0) / (1.0 + d0 / 8000.0);
-    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * beatFar) * reach * facing * uEmber.x * land);
+    // (After the beat it breathes, and never evenly: two slow swells that do not keep step. The light on the flanks goes with it.)
+    float breathe = mix(1.0, 0.45 + 0.7 * vnoise(vec2(uTime * 1.1, 5.0)) + 0.4 * vnoise(vec2(uTime * 2.6, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
+    glow += vec3(1.0, 0.3, 0.06) * ground * (0.22 * (0.4 + 2.6 * beatFar) * mix(1.0, breathe, 0.7) * reach * facing * uEmber.x * land);
+    float crowd = 0.0;
     if (d0 < 250000.0) {
       // The Heart itself: a lake of fire under a cracked skin, no two sides of its shore alike. The skin glows dull red, the cracks
       // bright, hottest at the middle; and the beat widens it.
       float shore = length(fromLava * mat2(0.82, 0.38, -0.5, 1.25)) / (58.0 * (1.0 + 0.9 * beatNear)) * (0.5 + 1.0 * vnoise(xz / 24.0 + 2.0));
       float lake = 1.0 - smoothstep(0.45, 1.0, shore);
       lakeNight = lake * uEmber.x * land;
+      crowd = lake * (0.5 + 1.2 * beatNear);
       float net = sqrt(cracks(xz / 27.0));
       float skin = 0.25 + 0.75 * vnoise(xz / 6.0 + 9.0);
-      // (After the beat it breathes, and never evenly: two slow swells that do not keep step.)
-      float breathe = mix(1.0, 0.62 + 0.5 * vnoise(vec2(uTime * 0.8, 5.0)) + 0.3 * vnoise(vec2(uTime * 2.1, 9.0)), smoothstep(1.4, 3.2, uEmber.y));
-      float hot = breathe * lake * (0.2 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
+      float hot = breathe * lake * (0.12 * skin + (0.45 + 0.9 * beatNear) * net * (0.4 + 0.45 * exp(-d0 / 1500.0)));
       glow += vec3(1.0, 0.24, 0.025) * 0.3 * hot * uEmber.x * land;
       // (The fume that stands over it, lit red from under: a soft dome, uneven as smoke is.)
-      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.04 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
+      glow += vec3(1.0, 0.17, 0.035) * breathe * (0.012 + 0.03 * beatNear) * exp(-dot(fromLava - vec2(22.0, -14.0), fromLava - vec2(22.0, -14.0)) / 14000.0) * (0.35 + 1.3 * vnoise(xz / 38.0 + vec2(0.05 * uTime, 3.0))) * uEmber.x;
       // (Fire in the cracks of the crust round it, broken along its length; the beat runs out along it, as a pulse does.)
       float pulse = uEmber.y > 0.0 ? exp(-pow((far0 - 380.0 * uEmber.y) / 90.0, 2.0)) * exp(-uEmber.y / 0.7) : 0.0;
       float broken = smoothstep(0.3, 0.75, vnoise(xz / 34.0 + 4.0));
@@ -530,8 +533,9 @@ void main() {
       glow += blackbody(980.0 + 220.0 * clamp(veins, 0.0, 1.0)) * 0.03 * smoothstep(0.03, 0.55, veins) * uEmber.x;
     }
     // (Fire seen by an open camera goes to a deep orange, never to white: the red is held and the rest follows it.)
-    glow *= mix(1.0, 1.0 / (1.0 + 1.4 * glow.r * uGain), uEmber.x);
-    glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.5, 0.1)), uEmber.x);
+    // (The whole lake is held down together when it swells, so the net of cracks keeps standing over the skin between them.)
+    glow *= mix(1.0, 1.0 / ((1.0 + 0.3 * glow.r * uGain) * (1.0 + 0.9 * crowd)), uEmber.x);
+    glow.gb = mix(glow.gb, min(glow.gb, glow.r * vec2(0.58, 0.13)), uEmber.x);
     glow *= uEmber.w;
   }
 
@@ -627,6 +631,7 @@ void main() {
   vec2 glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   // (As the sun sets its image slides off toward it, and dies.)
   if (uDusk > 0.0) glintAt = (xz - uGlint - (uTime - 8.1) * vec2(-9.0, -8.0) - uCalm.y * normalize(uSunDir.xz)) * vec2(1.0, 0.48);
+  if (uLive > 0.0) glintAt -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   float glint = exp(-pow(dot(glintAt, glintAt) / 55000.0, 0.463));
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
   vec3 waterBed = water;
@@ -645,7 +650,7 @@ void main() {
   if (uDusk > 0.0) {
     // The sky's image on the sea goes with the sky, the air over it with the air; and at night a faint cold sheen lies toward the moon.
     vec2 fromSheen = xz - uTerm.xy - 1500.0 * normalize(uMoonDir.xz);
-    vec3 sheen = moonAt(sunH) * (0.0018 + 0.0065 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
+    vec3 sheen = moonAt(sunH) * (0.0026 + 0.008 * exp(-dot(fromSheen, fromSheen) / 3.0e6) * (0.6 + 0.4 * sparkle)) * (0.5 + 0.5 * shade);
     // (The moon does not reach the bed of the sea: by night only the surface is seen.)
     water = waterBed * (1.0 - 0.9 * uEmber.x) + (waterSky - waterBed) * skyLightAt(sunH, day) + (waterGlare - waterSky) + (water - waterGlare) * airLightAt(sunH) + sheen;
     // (Under the moon the sea has almost no colour.)
@@ -669,27 +674,9 @@ void main() {
   if (uDusk > 0.0) colour *= 1.0 - 0.85 * lakeNight;
   colour += glow * (1.0 - 0.5 * air);
 
-  // ---- the handoff: on its first frame the rise draws what the Eye last drew, deep water and rings ----
-  if (uHand.x > 0.0 || uHand.y > 0.0) {
-    vec2 fromLake = real - uLake;
-    float r = length(fromLake);
-    float k = clamp(floor(log(max(r, 1e-4) / uRingShape.x) / log(1.5) + 0.5), 0.0, 8.0);
-    float ringAt = uRingShape.x * pow(1.5, k);
-    // On the first frame (uBreak 0) the rings are the rest picture agreed with the Eye: soft bands, each stronger on one side.
-    // Once the rise begins they are water and no drawn thing: each one bent out of round, broken into arcs of uneven strength,
-    // wider and weaker the further out, and the whole of it soon gone.
-    vec2 outward = fromLake / max(r, 1e-4);
-    float theta = atan(fromLake.x, -fromLake.y);
-    float bentBy = vnoise(outward * 2.3 + k * 3.7) + 0.5 * vnoise(outward * 6.1 + k * 9.1) - 0.75;
-    float rr = r * (1.0 + uBreak * 0.11 * bentBy);
-    float across = (rr - ringAt) / (0.5 * uRingShape.y * ringAt * (1.0 + 1.5 * uBreak));
-    float ring = exp(-across * across) * (0.35 + 0.3 * (0.5 + 0.5 * sin(2.0 * theta + 2.4 * k)));
-    float arcs = smoothstep(0.3, 0.8, vnoise(outward * 3.4 + k * 5.3 + 2.0) + 0.35 * (vnoise(real * 0.9 / max(ringAt, 1e-3) * 9.0) - 0.5));
-    ring *= mix(1.0, arcs * exp(-0.3 * k), uBreak);
-    // (The flat water of the first frame is the lake's own once the rise begins: the wind on it shows at once.)
-    vec3 hand = mix(uHandWater * mix(1.0, 0.62 + 0.5 * sparkle, uBreak), uHandRing, ring * uHand.y);
-    colour = mix(colour, hand, max(uHand.x, ring * uHand.y * (1.0 - land)));
-  }
+  // ---- the handoff: the rise begins inside the cloud that lies over the lake (join/). Under it, until the maps of the lake are near
+  // enough to their own size to be water, the lake is its own deep colour with the wind on it ----
+  if (uHand.x > 0.0) colour = mix(colour, uHandWater * (0.62 + 0.5 * sparkle), uHand.x);
 
   // ---- one part drawn alone ----
   vec2 inLake = (xz - uLakeMid) / uLakeSize;
@@ -740,12 +727,8 @@ export function create(ctx: Context): Piece {
     uMatLakewater: { value: ctx.assets.texture('mat/lakewater.jpg', { kind: 'colour', repeat: true }) },
     uOnly: { value: 0 },
     uHandWater: { value: new THREE.Color(handoff.water) },
-    uHandRing: { value: new THREE.Color(handoff.ring) },
-    // The first ring's radius, km, and the width of a ring as a share of its radius.
-    uBreak: { value: 0 },
-    uRingShape: { value: new THREE.Vector3((handoff.ringRadii[0] as number) * handoff.revealHalfHeightKm, handoff.ringWidth, 0) },
-    // x: how much of the flat water of the handoff is left. y: how much of the rings.
-    uHand: { value: new THREE.Vector2(1, 1) },
+    // x: how much of the deep water of the handoff is left.
+    uHand: { value: new THREE.Vector2(1, 0) },
     uLake: { value: new THREE.Vector2(X(AT.lake.x), Z(AT.lake.y)) },
     // The lake as map-d draws it (make_relief.py prints these): its middle, and its half axes.
     uLakeMid: { value: new THREE.Vector2(X(AT.lake.x - 5.9), Z(AT.lake.y + 5.6)) },
@@ -784,8 +767,7 @@ export function create(ctx: Context): Piece {
       (uniforms.uClose as THREE.IUniform<number>).value = pair.mix;
       (uniforms.uTexelKm as THREE.IUniform<THREE.Vector3>).value.set(texelKm(pair.coarse), texelKm(pair.fine), texelKm(0));
       const wide = width / startWidth;
-      (uniforms.uBreak as THREE.IUniform<number>).value = ease(1, 1.09, wide);
-      (uniforms.uHand as THREE.IUniform<THREE.Vector2>).value.set(1 - ease(1, 1.7, wide), 1 - ease(RING_FADE[0], RING_FADE[1], wide));
+      (uniforms.uHand as THREE.IUniform<THREE.Vector2>).value.set(1 - ease(1, 1.7, wide), 0);
     },
     solo: (part) => {
       const mine = part !== null && part in ONLY;
