@@ -102,7 +102,8 @@ export function browCover(x: number, z: number): number {
   return (BROW.lipLevel + 10) * Math.min(1, e * 2) - Math.max(0, front) * 0.42;
 }
 
-export function landHeight(x: number, z: number): number {
+/** The ground before the stream has cut its bed in it. */
+function landBase(x: number, z: number): number {
   const r = Math.hypot(x, z);
   const a = Math.atan2(x, -z);
   const ds = r - shoreAt(a / DEG);
@@ -165,11 +166,79 @@ export function landHeight(x: number, z: number): number {
       if (fan > y) y = fan;
     }
 
+  }
+  return y;
+}
+
+/** The bed of the stream as the ground lets it lie. Above the fan it is the bed of the ravine; down the fan and over the beach it is cut a
+ * little into the ground it crosses, and on the fan it goes down in steps, a pool and a fall, so that the water has something to break on. */
+function cutFloor(along: number): number {
+  // In the ravine it goes down by small falls, a pool between each and the next.
+  const even = streamBed(along);
+  const drop = 0.34;
+  const u = even / drop + 0.35 * Math.sin(along / 3.7);
+  const level = Math.floor(u);
+  const bed = even + ((level + smooth(0.36, 0.64, u - level) - (u - even / drop)) * drop - even) * 0.85 * smooth(120, 136, along);
+  if (along >= 140) return bed;
+  // The lowest ground across its width, so that it has a bank on both sides where it crosses a slope.
+  const mid = streamAcross(along);
+  let low = Infinity;
+  for (const off of [-4.6, -2.3, 0, 2.3, 4.6]) {
+    const [x, z] = onAxis(along, mid + off);
+    low = Math.min(low, landBase(x, z));
+  }
+  const lie = low - 0.24 - 0.3 * smooth(26, 44, along);
+  const rise = 0.8;
+  const t = lie / rise;
+  const whole = Math.floor(t);
+  const cut = lie + ((whole + smooth(0.2, 0.8, t - whole)) * rise - lie) * 0.6 * smooth(30, 46, along) * (1 - smooth(100, 112, along));
+  const upper = smooth(132, 140, along);
+  return Math.min(bed, cut) * (1 - upper) + bed * upper;
+}
+
+// Water does not run uphill: from the lake up, the floor is never lower than it was below. Hollows of the ground fill to their sills.
+const FLOOR = { from: -6, to: 330, each: 0.5 };
+let floors: Float32Array | null = null;
+export function streamFloor(along: number): number {
+  if (along >= FLOOR.to) return cutFloor(along);
+  if (!floors) {
+    const count = Math.round((FLOOR.to - FLOOR.from) / FLOOR.each) + 1;
+    floors = new Float32Array(count);
+    let high = -Infinity;
+    for (let i = 0; i < count; i++) {
+      high = Math.max(high, cutFloor(FLOOR.from + i * FLOOR.each));
+      floors[i] = high;
+    }
+  }
+  const t = Math.max(0, (along - FLOOR.from) / FLOOR.each);
+  const i = Math.min(floors.length - 2, Math.floor(t));
+  const f = Math.min(1, t - i);
+  const filled = (floors[i] as number) * (1 - f) + (floors[i + 1] as number) * f;
+  // Far up the ravine, where no camera looks, it goes back to the bed as cut.
+  const back = smooth(FLOOR.to - 30, FLOOR.to, along);
+  return filled * (1 - back) + cutFloor(along) * back;
+}
+
+export function landHeight(x: number, z: number): number {
+  let y = landBase(x, z);
+  if (Math.hypot(x, z) - shoreAt(Math.atan2(x, -z) / DEG) < -1) return y;
+  const [along, across] = axisOf(x, z);
+  if (along > -6 && along < 2600 && Math.abs(across) < 400) {
     const off = Math.abs(across - streamAcross(along));
-    const open = smooth(1.2 + 1.2 * vnoise(along / 9, 3.3), 7 + 5 * vnoise(along / 31, 7.7), off);
-    const bed = streamBed(along) + 0.4 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);
-    const from = smooth(28, 40, along);
-    if (bed < y) y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
+    const reach = 7 + 5 * vnoise(along / 31, 7.7);
+    if (off < reach) {
+      // On the beach it has cut itself a narrow bed with short banks; on the fan and in the ravine the ground opens wide to it.
+      const wet = 1.2 + 1.2 * vnoise(along / 9, 3.3);
+      const open = smooth(wet, wet + 1.5 + (reach - wet - 1.5) * smooth(28, 60, along), off);
+      const floor = streamFloor(along);
+      const bed = floor + 0.4 * (vnoise(x / 2.3, z / 2.3) - 0.5) * smooth(18, 40, along);
+      // It runs all the way to the lake: its bed dies out only at the water.
+      const from = smooth(-4, 3, along);
+      if (bed < y) y = y * (1 - from) + (bed * (1 - open) + y * open) * from;
+      // Where the ground falls away beside it, the stones it has thrown out stand as a low bank and keep it in.
+      const bank = floor + 0.6 * smooth(1.5, 3.2, off) * (1 - smooth(4.6, reach, off)) * smooth(26, 40, along) * (1 - smooth(130, 140, along));
+      if (y < bank) y = bank;
+    }
   }
   return y;
 }
