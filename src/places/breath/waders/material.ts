@@ -188,7 +188,7 @@ void main() {
     float cover = mix(texture2D(tWaderA, vPic.xy).r, texture2D(tWaderA, vPic.zw).r, limb);
     float shown = smoothstep(0.5, 0.95, cover) * smoothstep(0.02, 0.06, dot(shot, vec3(0.333))) * mid * (1.0 - uDead);
     // The picture is of a whole animal and gives out before the lens is close: the sheet of bare skin, pores, creases, veins and blotches, is laid over it.
-    albedo = mix(albedo, mix(shot, vec3(dot(shot, vec3(0.333))), 0.22) * 3.0 * (0.92 + 0.16 * mottle) * mix(vec3(1.0), clamp(told, 0.0, 2.0), 0.8), 0.88 * shown);
+    albedo = mix(albedo, mix(shot, dot(shot, vec3(0.333)) * vec3(1.05, 1.0, 0.92), 0.42) * 3.0 * (0.92 + 0.16 * mottle) * mix(vec3(1.0), clamp(told, 0.0, 2.0), 0.8), 0.88 * shown);
     height = height * (1.0 - 0.3 * shown) + 0.0035 * (dot(shot, vec3(0.333)) - 0.3) * shown * fine;
     // Below the joint the leg is hard, scaled and grey with silt; the joints are knotted and raw; the foot is dark horn.
     float scaled = vnoise(q * vec2(70.0, 110.0));
@@ -250,8 +250,8 @@ void main() {
     float finger = step(1.5, vInfo.x);
     float tone = fract(vInfo.x);
     float own = hash12(vec2(seed, 9.0));
-    vec3 flesh = mix(vec3(0.78, 0.55, 0.51), vec3(0.92, 0.7, 0.66), own);
-    vec3 rose = mix(vec3(0.78, 0.36, 0.36), vec3(0.95, 0.56, 0.55), tone);
+    vec3 flesh = mix(vec3(0.6, 0.4, 0.37), vec3(0.8, 0.57, 0.53), own);
+    vec3 rose = mix(vec3(0.6, 0.26, 0.26), vec3(0.8, 0.44, 0.43), tone);
     albedo = mix(flesh, rose, smoothstep(0.1, 0.7, u) * (0.5 + 0.4 * step(0.45, own)));
     float weed = smoothstep(0.3, 0.68, u + 0.4 * (vnoise(vec2(u * 2.2, seed * 13.0 + tone * 40.0)) - 0.5)) * (0.3 + 0.7 * step(0.3, tone));
     albedo = mix(albedo, mix(vec3(0.035, 0.04, 0.014), vec3(0.09, 0.085, 0.03), own), 0.94 * weed);
@@ -264,7 +264,7 @@ void main() {
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
     // Where it is flesh the low sun comes through it; where it is coated it does not.
-    thin = mix(0.55, 0.14, weed);
+    thin = mix(0.3, 0.1, weed);
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));
@@ -332,7 +332,7 @@ void main() {
   float halo = pow(clamp(0.5 + 0.5 * dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0, 1.0), 2.0) * 0.7;
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = 0.5 * max(0.05, mix(0.52, 0.34, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y);
+  float fogLight = 0.5 * max(0.05, mix(0.52, 0.43, smoothstep(22.0, 110.0, far)) + 0.34 * dot(n, flat_) + 0.08 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.14, 1.0, 0.86) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (7.4 * (1.0 - 0.3 * tendril) * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.

@@ -146,6 +146,8 @@ const NECK_LOW: [number, number][] = [[0, 12], [0.25, 30], [0.5, 34], [0.7, 18],
 const NECK_DOWN: [number, number][] = [[0, 8], [0.14, -26], [0.4, -60], [0.75, -60], [1, -38]];
 /** Another way down: out level from the chest first, then over and straight down, a sickle. */
 const NECK_SICKLE: [number, number][] = [[0, 24], [0.18, 6], [0.4, -40], [0.66, -78], [1, -84]];
+/** A third: reached out ahead on a slant, the mop let down a body's length before the feet. */
+const NECK_REACH: [number, number][] = [[0, 2], [0.2, -22], [0.5, -40], [0.8, -44], [1, -56]];
 
 // The legs: left hind, left fore, right hind, right fore, and where in the cycle each one steps. A slow walk in the order of every long-legged
 // beast: hind, then the fore of the same side, then the other side. One foot off the ground at a time, and all four down between two steps.
@@ -460,7 +462,7 @@ export class Wader {
     this.tendrilLocal = new Float32Array(tRings * tSides * 2);
     // Cords of wet flesh, thin where they root, thicker where the weed hangs on them, ragged to a point.
     const cord = (u: number): number => (0.7 + 0.55 * smooth(0.2, 0.5, u)) * (1 - 0.85 * smooth(0.78, 1, u));
-    const tr = (far ? 0.014 : 0.0125) * k;
+    const tr = (far ? 0.014 : 0.0092) * k;
     for (let i = 0; i < tRings; i++) {
       const u = i / (tRings - 1);
       const r = tr * cord(u);
@@ -869,6 +871,7 @@ export class Wader {
     // Its own way of holding it, in degrees.
     const own = 7 * (hash(b.seed * 4.9 + 2) - 0.5) * 2;
     const sickle = smooth(0.35, 0.8, hash(b.seed * 6.1 + 3));
+    const slant = smooth(0.45, 0.8, hash(b.seed * 8.3 + 1));
     const chain = (amount: number, write: boolean): number => {
       let x = baseX;
       let y = baseY;
@@ -883,7 +886,7 @@ export class Wader {
         }
         const um = u + 0.5 / (neck.rings - 1);
         const upAt = curve(NECK_UP, um) * carry0 + curve(NECK_TALL, um) * carry1 + curve(NECK_LOW, um) * carry2 + own * Math.sin(um * 5 + b.seed);
-        const downAt = curve(NECK_DOWN, um) * (1 - sickle) + curve(NECK_SICKLE, um) * sickle;
+        const downAt = (curve(NECK_DOWN, um) * (1 - sickle) + curve(NECK_SICKLE, um) * sickle) * (1 - slant) + curve(NECK_REACH, um) * slant;
         const th = Math.max(-104, upAt + (downAt - upAt) * amount) * (Math.PI / 180) + pitch * (1 - um) + 0.22 * nod * (1 - 0.6 * down) * Math.sin(Math.PI * um) * (upAt > 0 ? 1 : -1);
         const ps = sweep * um ** 1.4;
         const c = Math.cos(th);
@@ -1020,7 +1023,7 @@ export class Wader {
       const splay = 0.7 * st.out + 0.6 * back;
       const rest = st.floats ? afloat : sunk;
       // Let down into the water the mop opens: each cord goes in at its own place, a hand or two from the next.
-      const flare = 0.34 + 0.6 * down * (wet ? 1 : 0.4);
+      const flare = 0.34 + 0.95 * down * (wet ? 1 : 0.4);
       const each = st.len / (tube.rings - 1);
       const swing = 0.07 * Math.sin(seconds * 1.6 + st.lock) + 0.04 * Math.sin(seconds * 3.7 + st.lock * 2.3);
       let px = x;
