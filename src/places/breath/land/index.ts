@@ -5,11 +5,12 @@ import { terrain } from '../../../core/blockout';
 import { DEPTH, NEAR, RAD, SEA, bearingOf, farGround, ground, lerp, midGround, rimRadius, smooth } from '../land';
 import { SMALLER } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
+import { createCliff } from '../air/sky';
 import { bakeNear } from './field';
 import { createRock, type Surface } from './rock';
 import { block, rib, type Rib } from './ribs';
 import { buildWall, ledge } from './wall';
-import { cliff, collar, heap, mergeGeometries, open, talusHeight } from './shapes';
+import { collar, heap, mergeGeometries, open, talusHeight } from './shapes';
 
 export const PARTS: readonly string[] = ['land', 'shaft', 'hoops', 'slabs', 'cliff'];
 
@@ -47,8 +48,8 @@ export function create(ctx: Context): Piece {
 
   // The shelf: fine round the shaft, coarse out to the haze.
   const land = new THREE.Group();
-  land.add(mesh(open(nearMap.mesh(960)), rock.shelf));
-  const mid = terrain(NEAR, NEAR, 500, 500, midGround);
+  land.add(mesh(open(nearMap.mesh(680)), rock.shelf));
+  const mid = terrain(NEAR, NEAR, 300, 300, midGround);
   mid.computeVertexNormals();
   land.add(mesh(open(mid), rock.shelf));
   const far = terrain(WORLD, WORLD, 160, 160, farGround);
@@ -82,14 +83,14 @@ export function create(ctx: Context): Piece {
   const rs = ctx.rng('land/slabs');
   const blocks: THREE.BufferGeometry[] = [];
   // On the rubble: each lies on the slope where it stopped, long side across the fall.
-  for (let i = 0; i < 64; i++) {
+  for (let i = 0; i < 46; i++) {
     const k = rs.next();
     const b = (112 + (rs.next() - 0.5) * 60) * RAD;
     const r = lerp(rimRadius(b) + 1.5, 13, k ** 0.8) + rs.range(-1.5, 1.5);
     const x = Math.sin(b) * r;
     const z = -Math.cos(b) * r;
     // A few great slabs and many lesser blocks.
-    const big = i < 9 ? 1 : rs.next() ** 2.2;
+    const big = i < 6 ? 0.8 : rs.next() ** 2.2;
     const h = lerp(0.7, 3.2, big) * rs.range(0.8, 1.2);
     const y = (r > rimRadius(b) ? ground(x, z) : talusHeight(x, z)) + h * 0.3;
     const slope = r > rimRadius(b) - 1 ? 0.12 : 0.62;
@@ -108,18 +109,24 @@ export function create(ctx: Context): Piece {
     const [x, y, z] = ledge(bearing, nth);
     blocks.push(block(20 + bearing * 0.37, [w, 2.4, d], [x, y + 0.9, z], [lean, -b + yaw, lean * 0.6]));
   }
-  slabs.add(mesh(mergeGeometries(blocks), pale));
+  // The fallen slabs are the shelf's own stone, broken: its beds show on their sides, and they are wet and stained, not pale.
+  const face = mirrored('land/slabface.jpg', 'colour');
+  const fallen = rock.bone(0.5, [0.36, 0.32, 0.27], [0.07, 0.06, 0.05], { colour: face, data: ctx.assets.texture('mat/shelf-nh.png', { kind: 'data', repeat: true, anisotropy: 1 }), mean: [0.42, 0.36, 0.3], metres: 5.5, relief: 1.6 }, THREE.DoubleSide);
+  slabs.add(mesh(mergeGeometries(blocks), fallen));
   slabs.add(mesh(heap(), rubble));
+
   ctx.scene.add(ctx.parts.built('slabs', slabs));
 
-  // The cliff, 3 km on.
-  ctx.scene.add(ctx.parts.built('cliff', mesh(cliff(), rock.cliff)));
+  // The cliff, 3 km on: the far picture's own, laid on the sky (air/sky.ts).
+  const farCliff = createCliff(ctx);
+  ctx.scene.add(ctx.parts.built('cliff', farCliff.mesh));
 
   return {
     dispose: () => {
       for (const g of disposable) g.dispose();
       rock.dispose();
       nearMap.dispose();
+      farCliff.dispose();
     },
   };
 }

@@ -178,14 +178,15 @@ export function wallowerBody(young: number, seed: number): Body {
   });
 
   // The feelers stand in a fringe round the under lip, from one corner of the mouth to the other.
-  const FRINGE = 22;
+  const FRINGE = 9;
   for (let f = 0; f < FRINGE; f++) {
     const u = f / (FRINGE - 1);
-    const a = (u - 0.5) * 2.5;
+    const a = (u - 0.5) * 2.7;
     const r = 0.3 * hd;
     const at: V3 = [2.3 * lx + Math.cos(a) * 0.17 * hd, 0.47 - 0.05 * Math.cos(a), Math.sin(a) * r];
-    const down = 1.0 + 0.7 * hash3(f, 3, 1, sd);
-    const out: V3 = [Math.cos(a) * 0.9, -down, Math.sin(a) * 0.8];
+    // Splayed like the fingers of a hand: out from the lip and forward, then down.
+    const down = 0.55 + 0.35 * hash3(f, 3, 1, sd);
+    const out: V3 = [Math.cos(a) * 1.1 + 0.25, -down, Math.sin(a) * 1.15];
     const l = Math.hypot(out[0], out[1], out[2]);
     skeleton.lip.push({ at, out: [out[0] / l, out[1] / l, out[2] / l] });
   }

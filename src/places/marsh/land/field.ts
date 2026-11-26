@@ -230,7 +230,8 @@ export function createField(): Field {
           const pond = (0.63 + 0.3 * smooth(110, 60, r) - fbm(x / 70 + 9, z / 70, 3)) * 150;
           if (pond < d) d = pond;
           if (fine && d > 0.5 && r < 230 && Math.hypot(x - crustAt[0], z - crustAt[1]) > 11) {
-            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5);
+            // Far from the pool the puddles give out: at a distance they would be a pattern of dashes, and the flats there are whole crust.
+            const th = 0.7 - 0.13 * Math.exp(-d / 5) - 0.12 * (fbm(x / 41 + 2, z / 41, 2) - 0.5) + 0.2 * smooth(70, 130, r);
             const puddle = (th - fbm(x / 3.7 + 11, z / 3.7 + 5, 3)) * 9;
             if (puddle < d) d = puddle;
           }
@@ -256,6 +257,32 @@ export function createField(): Field {
       const want = 2.45 + 0.65 * across - ahead + 0.5 * (fbm(x / 1.3 + 2, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.4, z / 0.4) - 0.5);
       const w = smooth(8, 4.5, Math.hypot(dx, dz));
       near.d[k] = (near.d[k] as number) * (1 - w) + Math.max(-3, Math.min(3, want)) * w;
+    }
+  }
+  // Where the largest of them stands the ground is trodden down to the brine's level: wet mud, not crust.
+  const trod = rel(34.3, 3);
+  for (let j = 0; j < near.n; j++) {
+    const z = -near.half + (j + 0.5) * near.cell;
+    if (Math.abs(z - trod[1]) > 5) continue;
+    for (let i = 0; i < near.n; i++) {
+      const x = -near.half + (i + 0.5) * near.cell;
+      if (Math.abs(x - trod[0]) > 5) continue;
+      const k = j * near.n + i;
+      const cap = 0.36 + Math.max(0, Math.hypot(x - trod[0], z - trod[1]) - 2.4) * 0.9 + 0.12 * (fbm(x / 0.9 + 3, z / 0.9, 2) - 0.5);
+      if ((near.d[k] as number) > cap) near.d[k] = cap;
+    }
+  }
+  // A low bank of mud the young one stands on, its top just over the brine.
+  const young = rel(33, 5);
+  for (let j = 0; j < near.n; j++) {
+    const z = -near.half + (j + 0.5) * near.cell;
+    if (Math.abs(z - young[1]) > 3) continue;
+    for (let i = 0; i < near.n; i++) {
+      const x = -near.half + (i + 0.5) * near.cell;
+      if (Math.abs(x - young[0]) > 3) continue;
+      const k = j * near.n + i;
+      const want = 1.2 - Math.hypot(x - young[0], z - young[1]) + 0.5 * (fbm(x / 1.1 + 5, z / 1.1, 2) - 0.5);
+      if (want > (near.d[k] as number)) near.d[k] = Math.min(want, 0.9);
     }
   }
   ragged(far, false);
