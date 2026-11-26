@@ -31,6 +31,7 @@ uniform sampler2D tLift;
 uniform vec4 uPlace;
 uniform vec4 uSheet;
 uniform vec4 uLie;
+uniform float uStir;
 varying vec2 vAt;
 varying vec3 vWorld;
 void main() {
@@ -40,6 +41,9 @@ void main() {
   // Across the lens's line of sight, and away from the lens along the rock: the higher a thing stands, the nearer it is on its ray.
   float across = (position.x - uSheet.x) * uSheet.z;
   float away = ((position.y - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
+  // The wind still moves the ends of the tendrils where they lie loose on the rock: nothing else of it stirs.
+  float loose = smoothstep(0.27, 0.06, position.x);
+  away += loose * loose * (0.022 * sin(uStir * 1.9 + position.x * 30.0 + position.y * 23.0) + 0.009 * sin(uStir * 4.3 - position.x * 55.0 + position.y * 9.0));
   vec2 xz = uPlace.xy + across * vec2(-uPlace.w, uPlace.z) + away * uPlace.zw;
   // Dead some days, it is stiff: the trunk, the neck and the limbs lie as on a level bed and bridge the cracks of the rock; only the fan
   // of the tendrils (the picture's left end) follows the rock itself.
@@ -144,6 +148,7 @@ export function create(ctx: Context): Piece {
   heights.sort((a, b) => a - b);
   const bed = Math.max(heights[Math.floor(0.7 * (heights.length - 1))] as number, SEA_LEVEL + 0.05);
 
+  const stir = { value: 0 };
   const material = new THREE.ShaderMaterial({
     vertexShader: VERTEX,
     fragmentShader: FRAGMENT,
@@ -156,6 +161,7 @@ export function create(ctx: Context): Piece {
       uPlace: { value: new THREE.Vector4(DEAD_WADER.x, DEAD_WADER.z, gx, gz) },
       uSheet: { value: new THREE.Vector4(MID, FOOT, WIDE, TALL) },
       uLie: { value: new THREE.Vector4(sin, cos, BACK, bed) },
+      uStir: stir,
     },
     side: THREE.DoubleSide,
   });
@@ -202,7 +208,10 @@ export function create(ctx: Context): Piece {
   });
 
   return {
-    setTime: (seconds) => flies.setTime(seconds),
+    setTime: (seconds) => {
+      stir.value = seconds;
+      flies.setTime(seconds);
+    },
     dispose: () => {
       flies.dispose();
       geometry.dispose();
