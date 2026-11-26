@@ -114,10 +114,12 @@ float column(vec3 p, vec2 foot, float wide, float head, float n) {
   return smoothstep(0.4, 0.85, shape) * smoothstep(head, head - 6.0, p.y + 5.0 * (n - 0.5));
 }
 // Whether any of it can be at a place: asked first, with no picture read, so that a step out over the shelf costs nothing.
-// How far the lens stands from the west side of the shaft: 0 at the rim, 1 across the shelf. The vapour is drawn two ways by it. A lens at
-// the rim sees it as it was built for those lenses: the columns' heads stand over the brim, soft and large behind the weed, and the layer on
-// the rock is marched. From across the shelf those heads were round pale puffs a few metres through, cut by one or two steps of the march,
-// and stood still: there the heads stay under the brim and the layer is the sheet laid in main.
+// How high the lens stands: 0 for a lens low at the rim, 1 for one high over the shelf. The vapour is drawn two ways by it. A low lens
+// sees it as it was built for those lenses: the columns' heads stand over the brim, soft and large behind the weed, and the layer on the
+// rock is marched. From high across the shelf those heads were round pale puffs a few metres through, cut by one or two steps of the
+// march, and stood still: there the heads stay under the brim and the layer is the sheet laid in main.
+// It is the height and not the distance because the first shot ends three metres from where the last begins: no reach from the shaft
+// tells them apart. Shots two to five stay under 7 m and are all the first way; the first shot comes down through the fade after its key.
 float lensFar = 0.0;
 bool vapourNear(vec3 p) {
   float r = length(p.xz);
@@ -157,7 +159,10 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   float rho = (0.03 + 0.07 * smoothstep(0.0, 10.0, under)) * smoothstep(0.0, 2.0 + 3.0 * n0.g, under) * (0.55 + 0.9 * small);
   // The columns.
   float lift = 9.0 * surge;
-  float cols = column(p, vec2(-19.0, -9.0), 2.7, mix(6.0, -1.0, lensFar) + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, mix(1.0, -4.0, lensFar) + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, mix(-5.0, -6.0, lensFar) + 1.5 * lift, n);
+  // The two ways are faded one into the other, never slid: a head that climbed as the lens came down would be vapour that rises.
+  float cols = 0.0;
+  if (lensFar < 0.999) cols = (1.0 - lensFar) * (column(p, vec2(-19.0, -9.0), 2.7, 6.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, 1.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -5.0 + 1.5 * lift, n));
+  if (lensFar > 0.001) cols += lensFar * (column(p, vec2(-19.0, -9.0), 2.7, -1.0 + lift, n) + 0.6 * column(p, vec2(-10.0, 11.0), 2.2, -4.0 + lift, n) + 0.8 * column(p, vec2(-2.0, -5.0), 3.2, -6.0 + 1.5 * lift, n));
   rho = max(rho, (0.11 + 0.1 * surge) * min(cols, 1.0));
   // Over the brim the columns' heads are torn: thinner the higher.
   rho *= mix(1.0, 0.6, smoothstep(1.0, 9.0, p.y));
@@ -258,7 +263,7 @@ void main() {
   vec3 sheetLight = vec3(0.0);
   float sheetGone = 1.0;
   float sheetAt = 1e9;
-  lensFar = smoothstep(30.0, 46.0, length(ro.xz - vec2(-19.0, -9.0)));
+  lensFar = smoothstep(7.4, 10.4, ro.y);
   if (uShow.z > 0.5 && lensFar > 0.0 && rd.y < -1e-3) {
     float t = min(far, (1.6 - ro.y) / rd.y);
     bool met = t > 0.0;
