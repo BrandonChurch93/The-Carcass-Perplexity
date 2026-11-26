@@ -28,7 +28,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * rs64 * 0.1 + rs64 * 0.1 + rs8 * rs8 * 0.035 + rs2 * rs2 * 0.006;
+  float broad = rs64 * rs64 * 0.07 + rs64 * 0.06 + rs8 * rs8 * 0.014 + rs2 * rs2 * 0.0015;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   // Through that much fog the sun is gold, and so is its path.
   return uSunColour * vec3(1.0, 0.74, 0.46) * (broad + spark);
@@ -84,7 +84,7 @@ void main() {
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water with small waves on it never mirrors whole, however low the eye: seen far off it shows the tilted faces, and they show more of the water's own colour.
-  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.26, smoothstep(10.0, 90.0, far)));
+  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.2, smoothstep(10.0, 90.0, far)));
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02 + 0.3 * smoothstep(8.0, 100.0, far);
   r = normalize(r);
@@ -95,7 +95,7 @@ void main() {
   float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(1.05, 1.0, 0.88), 0.45 * smoothstep(0.04, 0.3, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.75 * smoothstep(0.04, 0.22, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
@@ -139,7 +139,7 @@ void main() {
   float path = depth / max(nv, 0.25);
   vec3 through = exp(-path * vec3(3.0, 1.15, 1.45));
   float clear = dot(through, vec3(0.3, 0.5, 0.2));
-  vec3 body = mix(vec3(0.17, 0.195, 0.165), vec3(0.14, 0.27, 0.23), smoothstep(0.1, 0.4, v.y)) * (0.3 + 5.7 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
+  vec3 body = mix(vec3(0.16, 0.21, 0.18), vec3(0.15, 0.33, 0.28), smoothstep(0.08, 0.3, v.y)) * (0.45 + 7.0 * v.y * v.y) * (0.82 + 0.18 * drawn) * skyIrradiance(vec3(0.0, 1.0, 0.0)) / 3.14159 * skyOpen(vWorld);
   // The line of weed and damp at the water's edge.
   float rim = smoothstep(0.16, 0.06, depth);
 
