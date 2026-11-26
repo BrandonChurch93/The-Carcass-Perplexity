@@ -1,6 +1,6 @@
-2026-11-26 12:22 UTC
-work at 367187b on agent/lens
-v1 367187b: frame 9003 final uhd, main left, new blur right: pebble bank native, 2x, in-focus neck against the cliff 2x
-look-1.jpg = out/work/lab/pair-9003.png
-look-2.jpg = out/work/lab/pair-9003-z.png
-look-3.jpg = out/work/lab/pair-9003-subject.png
+2026-11-26 13:12 UTC
+work at 7f331cb on agent/lens
+v2 7f331cb: sheet 1 native pairs 9003 1546 7579 (main left, new right); sheet 2 in-focus back 4x, brightest glint 5x, Marsh 5725 2x; sheet 3 frames 9002 to 9004 and the 1080 bank
+look-1.jpg = out/work/lab/sheet-1.png
+look-2.jpg = out/work/lab/sheet-2.png
+look-3.jpg = out/work/lab/sheet-3.png
