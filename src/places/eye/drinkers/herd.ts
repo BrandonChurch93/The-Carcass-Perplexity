@@ -13,7 +13,7 @@ export interface Drinker {
   /** 0 neck up, 1 mouth in the water. */
   down: (t: number) => number;
   /** The picture it is taken from. */
-  sheet: 'down' | 'up' | 'back' | 'calf';
+  sheet: 'down' | 'up' | 'back' | 'calf' | 'quarter';
   /** 1 or -1: which way along its bearing the sheet is laid. */
   flip: number;
   /** One of the animals a close shot is about: it has rings round its legs. */
@@ -54,8 +54,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     from(KEYS.shore, H - 1.5, 27, H + 92, 1, 'down', sips(6, SHORE_KEY, 0.3)),
     from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, 'down', sips(7, SHORE_KEY, 0.12)),
     // The two of the last shot, on the brow of the bluff below the camera with their backs to it, cut by the foot of the frame.
-    { x: centre[0] - 1.05, z: centre[2] - 13.5, level: centre[1] - 1.01 - 2.45 * 0.85, facing: 0, size: 0.85, down: (t) => 0.02 + 0.3 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'back', flip: 1, close: false },
-    { x: centre[0] + 0.82, z: centre[2] - 16.5, level: centre[1] - 1.42 - 2.45 * 0.8, facing: 0, size: 0.8, down: (t) => 0.03 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: 1, close: false },
+    { x: centre[0] - 1.22, z: centre[2] - 13.5, level: centre[1] - 2.99, facing: 0, size: 0.7, down: (t) => -0.2 + 0.22 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'quarter', flip: 1, close: false },
+    { x: centre[0] + 0.72, z: centre[2] - 16.5, level: centre[1] - 3.33, facing: 0, size: 0.75, down: (t) => -0.1 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: -1, close: false },
     // The ones of the mats shot, restaged: out on the shelf beyond the mats, small, side on.
     from(KEYS.mats, -13, 31, 80, 1, 'down', sips(5, MATS_KEY, 0.45)),
     from(KEYS.mats, -21, 44, 262, 1, 'up', up(1.4)),

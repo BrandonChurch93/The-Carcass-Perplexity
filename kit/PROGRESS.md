@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 86, 2026-11-26 02:48 UTC:
+Status 87, 2026-11-26 03:10 UTC:
 
-- `01-spine-1-4.jpg`: The Spine at 02:35 UTC: the dead one, and the herd in the hollow. Approved left, the build right
-- `02-breath-0-2.jpg`: The Breath at 02:33 UTC: the wide view, and the dead wader at the rim. Approved left, the build right
-- `03-eye-4-0.jpg`: The Eye at 02:38 UTC: the last shot, and the wide view. Approved left, the build right
-- `04-new-pictures.jpg`: Working pictures made for owners in this half hour, each with its relief: the Eye's drinker from behind and above, the Ribs' drowned one
+- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
+- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
+- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
+- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
 
+Status 86, 2026-11-26 02:48 UTC, showed: The Spine at 02:35 UTC: the dead one, and the herd in the hollow.
 Status 85, 2026-11-26 02:18 UTC, showed: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below; The Eye, the drinkers, restaged further off.
 Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
-Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T02:48:07Z
-phase 4: 6.62 h used of 17.00 h
-build: 26.95 h used of 72.00 h
+2026-11-26T03:10:31Z
+phase 4: 7.00 h used of 17.00 h
+build: 27.32 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 30, status overdue
+minutes since the last status: 22
 ```
 
 ## Phases
@@ -1323,6 +1323,8 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. 02:42 UTC: the sea owner of the Ribs spent his one rebuild of the kite-wings on pictures, and it is accepted: no built one-skin animal stands in any close key. The standing and feeding ones are bent side-view sheets of `kitewing.jpg`, the fliers front-view cards of `kitewing-front.jpg` cut at the shoulders so the sails beat, dark and never emissive, and the built animal is kept only for a lander in its last second and a feeder that leaves. His reason, from his looks: the built animal read as a model every time (paper fans, butterflies, comb tufts). What it costs: a card that slides is caught by the motion critic, so he was told to prove on a motion sheet that a neck dips and a leg lifts. Keys he restaged for it, on his branch and not yet on `main`: `ribs-0` (the lander at 150 m), `ribs-4` (five fliers about 56 m off), `ribs-1` (no close flier). The restaging sentence goes into `settled` for a key only when its frame is on `main` and the animal stands further off than its approved picture shows it.
 - 2026-11-26. 02:44 UTC: a push failed and was tried again, as "Agents and waiting" in `AGENTS.md` says. From about 02:42 to 02:45 UTC no machine could push (`git push` answered that it could not read a user name; fetching still worked): `ribs_ground_owner_2` reported it at 02:42 and sent his heartbeat as a bundle, and the Builder's own push of that bundle failed at 02:44:15. The next push, at 02:46:18 (`041ab264`), went through, and the bundle's head `ff02bfa` was pushed to `agent/ribs-ground-2` for him. Nothing was lost. All ten owners know the fallback: a bundle and the pictures attached to the heartbeat.
 - 2026-11-26. 02:50 UTC: how the two rounds left to each place are spent (`quality.maxRoundsPerUnit` is 3 and round 1 of each was a fail on version 2 of wave 1). Round 2 of each place judges version 3 of wave 2, due 04:55 UTC, and not version 2: a round is worth its issues, and issues written on a build one hour old would be stale when a new owner reads them. A third wave of owners starts from that same commit as soon as it is merged, with each owner's hand-over and the Builder's notes, and gets the critics' words on its parts when the round is in, about an hour into its four. Round 3, the last, judges the final version of wave 3. A place whose round 2 holds the pass bar is finished there and gets no third wave. Why a third wave and not an early end: Brandon lifted the limits of time at 22:35 UTC on 25 Nov and asked that the bar not be lowered to finish sooner, and seen beside the approved pictures at 02:48 UTC no place is at the bar. What it costs: about six more hours of Phase 4, which the clock allows (6.62 h of 17 used at 02:48 UTC).
+- 2026-11-26. 03:19 UTC: a quick measure of `main` for the owners, outside any round. The five idle measure renderers each run `npm run measure -- --unit UNIT --tier draft` on `f11e8672` (version 1 of wave 2) for `breath`, `marsh`, `spine`, `eye` and `reveal`; the Builder ran the same for `ribs` at 03:00 UTC (M2 and M3 green at every key, M1 red with 22 pixels at ribs-0, which were found at 03:12 UTC with the `invalid` view: short level runs on the tide flat at the right, x 78 to 90 percent, y 54 to 57 percent, and two at y 73 percent; both Ribs owners were told where). Why now and at draft: the numbers of round 1 are from version 2 of wave 1 and the owners are 130 minutes into four hours, so a number that arrives in 15 minutes can still be acted on, and one at the final tier in 50 minutes cannot. A draft frame is one sample and reads a little sharp, so the owners are told to take M3 under 0.9 at draft as red. It counts as no round and changes no count.
+- 2026-11-26. 03:21 UTC: the opening, read from the approach shot's sheet (`out/work/sheets/shot-ribs-01.png`, 12 preview frames, rendered 03:05 UTC). `kit/01-FILM.md` wants the land reached from the sea with the first blades coming out of the weather, and the first `film.hookSeconds` to stop a scroll with the sound off. As built the two blades stand clear in flat grey light over an even green sea from frame 0 and nothing changes for the first seconds but the fliers. The reading taken: frame 0 already shows the blades, as huge pale shapes half inside a bank of sea fog under a dark sky with one break of sun, and the bank tears open inside the first two seconds, so a phone viewer has something large in the first frame and a change that rewards staying. It is in the Ribs' own shot (`ribs-01`, frames 0 to 1041), so it goes to the lead of the Ribs in wave 3 as its first item, and Phase 5 step 2 then checks it and builds only what is still missing.
 
 ## Notes from Brandon
 
@@ -1664,6 +1666,8 @@ Each reports by message to the Builder.
 | `spine_storm_owner_2` | build, own machine | The Spine, second owner of the storm: the scorched one, the herd as one skin under the coat (one rebuild, then a distance), cloud lit from within, kites that tear, sparks | `agent/spine-storm-2`, looks on `agent/spine-storm-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
 | `eye_owner_2` | build, own machine | The Eye, second owner of the whole place: the drinkers to a distance at once, the establishing frame fitted to its picture, the rim, the mats, the shaft, the last shot's handoff | `agent/eye-place-2`, looks on `agent/eye-place-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
 | `reveal_owner_2` | build, own machine | The Reveal, second owner: the ground from the four satellite maps and their heights, detail under them, cloud at several heights with shadows, the sea, a continent first and a body at the top | `agent/reveal-place-2`, looks on `agent/reveal-place-2-looks` | 2026-11-26 01:10 UTC | 4 h, to 05:10 UTC |
+
+Draft measures for the owners, outside any round (ordered 2026-11-26 03:19 UTC, limit 30 minutes each): `measure_renderer_r8` (`breath`), `measure_renderer_r9` (`marsh`), `measure_renderer_r10` (`spine`), `measure_renderer_r11` (`eye`), `measure_renderer_r12` (`reveal`), each on its own machine, `npm run measure -- --unit UNIT --tier draft` on `f11e8672`. The four pack renderers stay idle.
 
 Hand-backs of wave 2, each merged into `main` after a check of trailers, files touched, types, the build, G8 and G9, and seen by the Builder beside the approved pictures before its owner got a note: version 1 of all ten, handed in between 02:07 and 02:22 UTC on 2026-11-26 (due 02:30). `ribs_sea_owner_2` `2267eb7` (merged 02:09, `6b36521e`), `marsh_ground_owner_2` `9355ad2`, `eye_owner_2` `add2e08`, `breath_ground_owner_2` `e8325da`, `marsh_life_owner_2` `7e43b4b` (all four on `main` at `ecb3bc47`, 02:14), `reveal_owner_2` `487f1eb` (`39d3c6d5`, 02:17), `spine_storm_owner_2` `ba1efe3`, `breath_life_owner_2` `dab6475`, `ribs_ground_owner_2` `7f534bb` (`2c24486d`, 02:20), `spine_ground_owner_2` `566781d` (`3666d640`, 02:23). Restaged with the animals further off in this version: `ribs-3`, `eye-1`, `eye-2`, `eye-4`, `spine-4` (see "Animals kept at a distance"). The notes of 02:23 to 02:31 UTC, worst first for each owner: the Ribs (the kite-wings come out as white paper on `main`, the colony mound is a staircase, the bore is a hazy band), the Breath (no darks under the marched vapour, the shelf in smooth dunes with a wood grain, the plume in broad blades), the Blood Marsh (a white veil from 20 m on, the dome an opaque speckled ball, thin stalks), the Spine (clear air where the approved has a storm, the herd straw yellow under the canal light, the dead one still a mound), the Eye (the last shot has no swell and no rings, sawtooth reflections, the lake a straight band), the Reveal (cloud puffs as big as ranges, land too tan, the storm on the backbone a flat pad).
 

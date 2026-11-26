@@ -1,8 +1,8 @@
-# Status 86
+# Status 87
 
-2026-11-26 02:48 UTC. Phase 4, the other places and the rise.
+2026-11-26 03:10 UTC. Phase 4, the other places and the rise.
 
-- `01-spine-1-4.jpg`: The Spine at 02:35 UTC: the dead one, and the herd in the hollow. Approved left, the build right
-- `02-breath-0-2.jpg`: The Breath at 02:33 UTC: the wide view, and the dead wader at the rim. Approved left, the build right
-- `03-eye-4-0.jpg`: The Eye at 02:38 UTC: the last shot, and the wide view. Approved left, the build right
-- `04-new-pictures.jpg`: Working pictures made for owners in this half hour, each with its relief: the Eye's drinker from behind and above, the Ribs' drowned one
+- `01-spine.jpg`: The Spine at 03:08 UTC, owner's draft frames: spine-0, spine-3, spine-4, spine-1. Still wrong: no sea of cloud below the ridge, canal walls too dark, spine-1 two stops under
+- `02-marsh.jpg`: The Blood Marsh at 03:01 UTC: marsh-3, marsh-4, marsh-2, marsh-0. Still wrong: blank sky, the stuck one too smooth, brine too saturated
+- `03-ribs.jpg`: The Ribs at 03:05 UTC, all five keys. Still wrong: the colony crag is cream with black slabs under its ledges, blades too soft and beige
+- `04-reveal.jpg`: The Reveal at 02:59 UTC, approved beside built: reveal-2, reveal-3, reveal-4 with crops. Still wrong: cyclone too coarse, puffs one size, lowland too orange
