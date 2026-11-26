@@ -48,7 +48,7 @@ export function create(ctx: Context): Piece {
     const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: near ? 1.3 : 1, ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.45 : near ? 1.3 : 1, ...(hero ? { droop: 2.0 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -60,7 +60,9 @@ export function create(ctx: Context): Piece {
     const n = Math.hypot(b.head[0], b.head[1]);
     const hd = b.head[0] / n;
     const hl = b.head[1] / n;
-    const p = rel(b.d, b.l);
+    // STAGED for the lens of the wallowers: the young one stands on the bank a stride behind where the anchors have it, whole in that frame beside the great one's rump,
+    // and the one behind the three is five metres further off and to the right, small and in the haze, as the approved picture has them.
+    const p = herd.length === 1 ? rel(34.0, 5.6) : herd.length === 3 ? rel(49, 9.5) : rel(b.d, b.l);
     // TEMPORARY, until the lead sets it in the anchors: the ones that wade nearest the lens of the wide key stand larger in it than anything in the approved picture.
     // STAGED for the lens of the wallowers: the great one is a tenth smaller than the anchors have it, and fills as much of that frame as the approved picture gives it.
     const size = b.d < 26 ? b.size * 0.6 : herd.length === 0 ? b.size * 0.9 : b.size;
@@ -100,8 +102,8 @@ export function create(ctx: Context): Piece {
         h.beast.feelers.visible = on;
         const driven = walk(h.plan, h.beast.b, seconds, drive);
         driven.floor = h.floor;
-        // STAGED for the lens of the wallowers: the great one's feelers are curled down into the mud like the fingers of a hand, as the approved picture has them.
-        if (i === 0) driven.curl[0] = (driven.curl[0] ?? 1) * 1.6 + 0.3;
+        // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
+        if (i === 0) driven.splay += 0.3;
         // One that lies in the brine lies nose down: the back stands out of it and falls away to the head.
         if (h.sunk && h.paw < 0) {
           // It wallows: it rolls a little to one side and the other, comes up as it fills its chest and settles as it empties it.

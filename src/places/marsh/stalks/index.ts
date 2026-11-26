@@ -133,6 +133,18 @@ export function create(ctx: Context): Piece {
     const base = new Float32Array(rest.length * 4);
     const axis = new Float32Array(rest.length * 4);
     const kind = new Float32Array(rest.length * 4);
+    // STAGED for the lens of the thin crust: the groves it looks across to stand lower and thinner than the list has them, a third the height of that frame
+    // and not half of it, as the approved picture has them.
+    const k4to = rel(27.6, 10.07);
+    const k4l = Math.hypot(k4to[0] - k4[0], k4to[1] - k4[1]);
+    for (const s of rest) {
+      const along = ((s.x - k4[0]) * (k4to[0] - k4[0]) + (s.z - k4[1]) * (k4to[1] - k4[1])) / k4l;
+      const off = Math.hypot(s.x - k4[0], s.z - k4[1]);
+      if (along > 9 && off < 45 && along > 0.75 * off && Math.hypot(s.x - k3[0], s.z - k3[1]) > 7.5) {
+        s.h *= 0.62;
+        s.size *= 0.8;
+      }
+    }
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
@@ -283,7 +295,7 @@ export function create(ctx: Context): Piece {
       p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
       home.set([p[0], p[1], p[2], swarm.range(0.16, 0.34)], i * 4);
       rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
-      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.7, 1.1)], i * 4);
+      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.3, 1.9)], i * 4);
       continue;
     }
     if (i < 80 && perches.length > 0) {

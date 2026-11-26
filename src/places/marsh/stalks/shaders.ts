@@ -416,8 +416,8 @@ ${INSECT_CUT}
   vec3 n = normalize(vNormal) * sign(dot(vNormal, v) + 1e-5);
   // An amber body, and wings that are a clear skin on pale veins: the sky comes through them, so they are lit from both sides.
   float pale = max(t.r, max(t.g, t.b));
-  vec3 body = t * vec3(0.5, 0.27, 0.09) + 0.004;
-  vec3 wing = vec3(0.2, 0.16, 0.115) * (0.35 + 0.65 * pale);
+  vec3 body = t * vec3(0.8, 0.4, 0.11) + 0.006;
+  vec3 wing = vec3(0.36, 0.31, 0.25) * (0.35 + 0.65 * pale);
   vec3 c = rigShade(vWorld, n, v, mix(body, wing, vWing), mix(0.6, 0.45, vWing), 1.0);
   c += vWing * 0.5 * rigShade(vWorld, -n, v, wing, 0.9, 1.0);
   gl_FragColor = vec4(rigOut(c), 1.0);

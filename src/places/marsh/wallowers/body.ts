@@ -402,6 +402,7 @@ uniform float uSplay;
 uniform float uCurl;
 uniform float uFloor;
 uniform float uHang;
+uniform float uDroop;
 varying vec3 vWorld;
 varying vec3 vNormal;
 varying vec3 vLook;
@@ -412,7 +413,7 @@ void main() {
   float curl = max(0.3, 1.15 * uCurl + 0.16 * sin(uSeconds * (1.3 + 1.2 * fract(a)) + a) + 0.05 * sin(uSeconds * 3.3 + a * 2.3));
   // They hang: whatever way the head is held, each bends toward the ground under it.
   vec3 down = normalize(transpose(mat3(uHead)) * vec3(0.0, -1.0, 0.0));
-  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang));
+  vec3 dir = normalize(iOut + vec3(0.5, 0.35, 0.0) * uSplay + down * (0.9 * uHang + uDroop));
   vec3 c = down + vec3(-0.25, 0.0, -0.25 * iOut.z);
   vec3 bend = normalize(c - dir * dot(c, dir));
   curl *= 1.0 + 0.5 * uHang;
@@ -515,6 +516,8 @@ export interface Look {
   long?: number;
   /** How long the hand of thick feelers is, 1 as built. */
   reach?: number;
+  /** How far the hand of thick feelers is turned down toward the ground, 0 as built. */
+  droop?: number;
   /** How far the hide picture lifts the skin, metres. 0 for one seen from afar. */
   relief?: number;
   /** A photographed tile over the whole of it in place of the flank picture: matted hair, or mud drying on the folds. And how much of it, 0 to 1. */
@@ -632,7 +635,7 @@ export class Beast {
     geometry.setAttribute('iShape', new THREE.InstancedBufferAttribute(shape, 4));
     geometry.instanceCount = lip.length;
     this.feelerMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uSalted: { value: look.crust ? 1 : 0 } },
+      uniforms: { ...ctx.rig.uniforms, uHead: { value: this.head }, uSeconds: { value: 0 }, uSplay: { value: 0.3 }, uCurl: { value: 1 }, uFloor: { value: -1e9 }, uWet: { value: look.wet }, uHang: { value: many ? (look.hang ?? 1) : 0 }, uDroop: { value: look.droop ?? 0 }, uSalted: { value: look.crust ? 1 : 0 } },
       vertexShader: FEELER_VERTEX,
       fragmentShader: FEELER_FRAGMENT,
     });
