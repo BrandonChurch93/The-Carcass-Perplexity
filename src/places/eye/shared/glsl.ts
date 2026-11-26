@@ -193,8 +193,10 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
   float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
+  // A bank that is not torn stands in the mirror as one soft bank, not as a row of heaps.
+  heap = mix(1.0, heap, uMistB.z);
   float h = up / (top * heap);
-  float bank = uMistB.y * cover * stands * smoothstep(0.2, 0.9, heap) * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float bank = uMistB.y * cover * stands * mix(1.0, smoothstep(0.2, 0.9, heap), uMistB.z) * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
   float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
@@ -238,11 +240,13 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + uPlateSoft + 2.5 * over + (tall ? 2.0 : 0.0)).rgb) * uPlateTone.rgb;
+  // The water at the far shore holds the foot of the wall nearly as it stands; the higher on the wall a mirror reads, the more it is drawn out.
+  float drawn = tall ? smoothstep(0.015, 0.22, v - uPlateLens.w) : 0.0;
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + uPlateSoft + 2.5 * over + 2.0 * drawn).rgb) * uPlateTone.rgb;
   // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
-    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005, clamp(vv + 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb)
-      + ungrade(texture2D(tPlate, vec2(u - 0.005, clamp(vv - 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb));
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005 * drawn, clamp(vv + 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb)
+      + ungrade(texture2D(tPlate, vec2(u - 0.005 * drawn, clamp(vv - 0.035 * drawn, 0.004, 0.996)), bias + 3.2 * drawn + 2.5 * over).rgb));
   }
   if (uCirrus.x + uCirrus.y > 0.0) {
     vec2 xy = vec2(tan(phi), (v - uPlateLens.w) * 2.0 * uPlateLens.z);

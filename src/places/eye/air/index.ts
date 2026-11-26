@@ -28,7 +28,7 @@ const MIST: Record<'wide' | 'low' | 'edge' | 'shore' | 'centre', { a: Four; b: F
   low: { a: [600, 3.0, 70, 420], b: [0.4, 0.6, 0.35, 0.3], c: [0, 0, 0, 1], d: [0.7, 0, 0, 0] },
   edge: { a: [520, 2.0, 12, 300], b: [0.12, 0.6, 1.0, 0.3], c: [0, 0, 0.2, 0.6], d: [1, 0, 0, 0] },
   shore: { a: [520, 3.0, 30, 320], b: [0.35, 1.2, 0.9, 0.3], c: [0, 0, 0.1, 1], d: [1, 0, 0, 0] },
-  centre: { a: [620, 1.0, 9, 260], b: [0.22, 1.6, 1.0, 0.35], c: [0, 0, 0.2, 0.45], d: [1, 0, 0, 0] },
+  centre: { a: [520, 2.0, 10, 140], b: [1.3, 1.2, 1.0, 0.35], c: [0, 0, 0.2, 0.45], d: [0.8, 1, 1, 0] },
 };
 
 const SKY_VERTEX = /* glsl */ `
@@ -92,7 +92,13 @@ vec3 mistForm(vec3 q) {
   if (q.z > uMistA.x || q.z < 0.0) return vec3(0.0);
   // The edge of the sheet on the water is not one line: it goes out in tongues, and the same tongue is one all the way from the wall.
   float reach = uMistA.x;
-  if (uMistD.x > 0.0) reach *= mix(1.0, 0.1 + 0.9 * smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / 520.0 + 0.6, 0.21, 0.25 + uTime * 0.004)).b), uMistD.x);
+  float tongue = 1.0;
+  if (uMistD.x > 0.0) {
+    // uMistD.z draws the tongues closer together (a long lens holds only a short run of shore) and leaves the water bare between them.
+    tongue = smoothstep(0.3, 0.68, texture(tMistNoise, vec3(q.x / (520.0 / (1.0 + 2.0 * uMistD.z)) + 0.6, 0.21, 0.25 + uTime * 0.004)).b);
+    reach *= mix(1.0, 0.1 + 0.9 * tongue, uMistD.x);
+    tongue = mix(1.0, tongue, uMistD.z);
+  }
   float near = 1.0 - q.z / reach;
   vec4 big = texture(tMistNoise, vec3(q.x / 1300.0, q.z / 1300.0, uTime * 0.0042));
   vec4 mid = texture(tMistNoise, vec3(q.x / 410.0 + 0.31, q.z / 900.0 + 0.17, 0.5 + uTime * 0.0085));
@@ -103,7 +109,9 @@ vec3 mistForm(vec3 q) {
   // The bank does not stand along the whole wall: here it is heaped, there the foot of the wall is clear down to the sheet on the water.
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   float top = uMistA.z * ramp * stands * (0.35 + 1.5 * mid.r) + sheetTop;
-  return vec3(uMistB.x * cover * exp(-q.y / sheetTop), top, cover * ramp * stands);
+  // Where uMistD.y asks, the sheet thins all the way out from the wall, so that it has no outer edge to see from above.
+  float thins = mix(1.0, pow(clamp(near, 0.0, 1.0), 1.6), uMistD.y);
+  return vec3(uMistB.x * cover * thins * tongue * exp(-q.y / sheetTop), top, cover * ramp * stands);
 }
 
 // How thick the mist is at q. h is how high the point stands in the bank, 0 at the water and 1 at its top.
