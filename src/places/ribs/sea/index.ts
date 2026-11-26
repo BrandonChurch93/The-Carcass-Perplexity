@@ -6,7 +6,7 @@ import { partAtHeight, radii, skirtPad, surface } from '../layout';
 import { BORE, FLOOR, LEVELS, RIBS, STATIONS, WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { LAND } from '../shared/rig';
-import { cloudShut, inOpening, openingWeight } from '../shared/opening';
+import { cloudShut, inOpening, openingLight, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
@@ -127,10 +127,11 @@ export function create(ctx: Context): Piece {
   });
   // The approach draws the sea with its own text (shaders.ts): the film's material is the one above, untouched, for every other frame.
   const openSea = new THREE.Vector4(1, 0, 0, 1);
+  const openGlint = { value: 0 };
   const seaOpening = new THREE.ShaderMaterial({
     vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
-    uniforms: { ...seaUniforms, uOpenSea: { value: openSea } },
+    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint },
   });
   const sea = new THREE.Mesh(seaDisc(), seaMaterial);
   sea.frustumCulled = false;
@@ -229,7 +230,7 @@ export function create(ctx: Context): Piece {
   // The approach: one heavy swell of the set breaks on the shore before the first blade as the film opens. White water is thrown up the
   // height of a tower, hangs and comes down at the pace of its size (it falls as water falls: that is what says how big it is), and the wind
   // takes the top of it off down the shore. Drawn only while the camera stands in the approach.
-  const BREAKER = { x: -322, half: 70, cards: 780, strikes: -2.7, again: 2.2, speed: 40 };
+  const BREAKER = { x: -322, half: 70, cards: 780, strikes: -2.7, again: 2.2, speed: 30 };
   let breakerZ = 200;
   while (breakerZ < 420 && rig.land.height(BREAKER.x, breakerZ) > -0.8) breakerZ += 4;
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
@@ -341,6 +342,7 @@ export function create(ctx: Context): Piece {
       openSea.x = 1 + SEA_OPEN.lift * cloudShut(seconds);
       openSea.y = inOpening() ? Math.min(1, Math.max(0, (13 - seconds) / 6)) : 0;
       openSea.z = openingWeight(seconds);
+      openGlint.value = openingLight(seconds);
       openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breakerAt(seconds);

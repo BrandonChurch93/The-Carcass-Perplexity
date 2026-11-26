@@ -196,7 +196,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
   // More of the wind sea breaks: a gale's sea, white to the horizon in drifts.
   SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.3 * uOpenSea.z, ${hi} - 0.3 * uOpenSea.z, torn`),
   [
-    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;'],
+    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;\nuniform float uOpenGlint;'],
     ['  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;\n  g *= calm;', '  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm * uOpenSea.w;\n  g *= calm * uOpenSea.w;'],
     [
       '  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);',
@@ -212,7 +212,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
   if (uOpenSea.z > 0.0) {
     vec3 hb = normalize(v + uSkyBreak);
     float turned = max(dot(n, hb), 0.0);
-    refl += vec3(1.0, 0.98, 0.95) * uOpenSea.z * (5.0 * pow(turned, mix(1100.0, 140.0, far)) + 1.3 * pow(turned, 60.0) * far);
+    refl += vec3(1.0, 0.87, 0.7) * uOpenSea.z * (1.0 + 4.0 * uOpenGlint) * (8.0 * pow(turned, mix(1100.0, 140.0, far)) + 2.6 * pow(turned, 60.0) * far);
   }`,
     ],
     ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
@@ -633,7 +633,7 @@ export const SPRAY_OPENING_FRAGMENT = openingText(SPRAY_FRAGMENT, [
   [
     '  gl_FragColor = vec4(col * alpha, alpha);',
     `  float thick = smoothstep(0.3, 0.85, body * (0.55 + 0.45 * t.a)) * smoothstep(0.4, 0.8, vLook.x) * (1.0 - vMist) * (1.0 - drop);
-  col = mix(col, vLight * vec3(0.4, 0.45, 0.46) * (0.8 + 0.5 * t.g), 0.35 * thick) * 3.4;
+  col = mix(col, vLight * vec3(0.4, 0.45, 0.46) * (0.8 + 0.5 * t.g), 0.35 * thick) * 1.7;
   gl_FragColor = vec4(col * alpha, alpha);`,
   ],
 ]);

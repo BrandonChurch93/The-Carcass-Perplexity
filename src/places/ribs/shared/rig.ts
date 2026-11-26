@@ -5,7 +5,7 @@ import { config } from '../../../config';
 import { stream } from '../../../core/rng';
 import { RIBS, bladeSpine, landAt as layoutLand } from '../layout';
 import { SUN, T0, WIND } from './anchors';
-import { cloudShut, openingWeight } from './opening';
+import { cloudShut, openingLight, openingWeight } from './opening';
 import { loopPhase } from './stage';
 
 // The land map covers the strait and the sea a camera can see the bed through: cells of 4.9 by 4.8 m.
@@ -25,7 +25,8 @@ export const SHUT = { x: -40, z: -420, radius: 2400, gain: -0.6, lift: 0.55 };
 /** The approach: the small break's shaft of sun starts on the water and the bank before the first blade, its edge on the breaking sea, walks to the foot of the first blade in `walks` seconds, stands there until `stays`, and is at its own place by the fifteenth second: metres. */
 export const SHAFT = { fromX: -300, fromZ: 450, footX: -318, footZ: 345, walks: 2.2, stays: 7 };
 /** The approach: radians the sky's picture is turned so that its brightest break stands behind the first blades; how much of the sky's light and of the sun's the shut cloud keeps from the ground. */
-export const OPEN_SKY = { turn: -0.25, dim: 0.8, shade: 0.8 };
+export const OPEN_SKY = { turn: -0.25, dim: 0.8, shade: 0.8, burn: 0.65 };
+const SKY_GAIN = 1.1;
 const SKY_LIGHT = { zenith: [0.115, 0.14, 0.185], horizon: [0.33, 0.38, 0.45], ground: [0.08, 0.088, 0.097] } as const;
 
 
@@ -398,7 +399,7 @@ export function createRig(): Rig {
   const sun = new THREE.Vector3(...SUN.toward).normalize();
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
-  const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
+  const skyTurn = new THREE.Vector4(0, 0, 0, SKY_GAIN);
   const breakToward = (seconds: number, drifted = seconds): void => {
     // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle; it is laid a little left of the sun so that it shows between the blades.
     const yaw = ((36 + 0.6 * (drifted - T0)) * Math.PI) / 180;
@@ -583,10 +584,13 @@ export function createRig(): Rig {
       skyZenith.set(...SKY_LIGHT.zenith);
       skyHorizon.set(...SKY_LIGHT.horizon);
       skyGround.set(...SKY_LIGHT.ground);
+      skyTurn.w = SKY_GAIN;
       if (weight !== 0) {
         // The break stands behind the blades as the film opens and drifts to its own place; under the shut cloud less of the sky reaches the ground.
         const turn = OPEN_SKY.turn * weight;
         skyTurn.x += turn;
+        // The break behind the tips burns as the film opens, and comes up through the first two seconds.
+        skyTurn.w = SKY_GAIN * (1 + OPEN_SKY.burn * openingLight(seconds));
         const c = Math.cos(turn);
         const n = Math.sin(turn);
         skyBreak.set(skyBreak.x * c - skyBreak.z * n, skyBreak.y, skyBreak.z * c + skyBreak.x * n);

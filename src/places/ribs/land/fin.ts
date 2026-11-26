@@ -263,8 +263,22 @@ void main() {
  * and left paler stone, water has run down from the ledges and stained it, and each blade has its own (uOpenStone.y).
  * It goes with the distance (nothing of it within 300 m of the lens, where the stone's own sheet is seen) and is gone before the approach ends.
  */
+/**
+ * The approach: from a mile out the blade is not ruled in even courses. Most of its beds lie nearly flush and a few stand out as ledges
+ * (uOpenStone.x, 1 as the film opens and nothing before the approach ends; uOpenStone.y, the blade's own number).
+ */
+export const FIN_OPENING_VERTEX = openingText(FIN_VERTEX, [
+  ['uniform sampler2D tWideN;', 'uniform sampler2D tWideN;\nuniform vec2 uOpenStone;'],
+  [
+    '  float lifted = proud * uLift * 0.55 + 1.7 * bed.z * (bed.y - 0.5);',
+    `  float ledgePick = fract(sin(bed.x * 78.233 + uOpenStone.y * 41.0) * 43758.5453);
+  float ledge = mix(1.0, 0.05 + 2.1 * smoothstep(0.64, 0.9, ledgePick), uOpenStone.x);
+  float lifted = proud * uLift * 0.55 + 1.7 * bed.z * ledge * (bed.y - 0.5);`,
+  ],
+]);
+
 export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
-  ['uniform float uCap;', 'uniform float uCap;\nuniform vec2 uOpenStone;'],
+  ['uniform float uCap;', 'uniform float uCap;\nuniform vec2 uOpenStone;\nuniform vec2 uOpenLight;'],
   [
     '  vec3 bed = bedding(vBase);',
     `  vec3 bed = bedding(vBase);
@@ -290,12 +304,14 @@ export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
     // A slab's edge is broken, never a drawn line: the finer field carries it in and out.
     float broken = vnoise(face * vec2(0.19, 0.23) + sd) - 0.5;
     float plate = smoothstep(cutAt - 0.05, cutAt + 0.07, slab + 0.11 * broken);
-    float run = vnoise(vec2(face.x * 0.13 + sd * 5.0, face.y * 0.0045)) * 0.7 + vnoise(vec2(face.x * 0.41, face.y * 0.012 + sd)) * 0.3;
+    float run = vnoise(vec2(face.x * 0.06 + sd * 5.0, face.y * 0.0045)) * 0.7 + vnoise(vec2(face.x * 0.19, face.y * 0.012 + sd)) * 0.3;
     float stain = smoothstep(0.5, 0.8, run + 0.2 * broken) * smoothstep(0.35, 0.6, vnoise(face * 0.006 + sd * 2.0));
     albedo *= mix(1.0, mix(0.88, 1.2, plate), openK);
-    albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.65), 0.5 * openK * stain * (1.0 - 0.5 * plate));
+    albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.65), 0.36 * openK * stain * (1.0 - 0.5 * plate));
     // The wet foot: dark far above the weed where the swell throws its water, higher on the weather side.
-    albedo *= mix(1.0, 0.34, openK * smoothstep(80.0 + 60.0 * (slab - 0.5), 14.0, vWorld.y));
+    albedo *= mix(1.0, 0.34, openK * smoothstep(125.0 + 70.0 * (slab - 0.5), 20.0, vWorld.y));
+    // The near blade stands dark against the break in the cloud.
+    albedo *= mix(1.0, 0.72, openK * uCap);
   }
   float y = vWorld.y;`,
   ],
@@ -309,7 +325,9 @@ export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
     // Only the edge on the break's side of the blade, as the lens sees them stand.
     vec3 aside = uSkyBreak - v * dot(uSkyBreak, v);
     float toBreak = smoothstep(-0.1, 0.6, dot(n0, normalize(aside)));
-    lit += uSunColour * (0.24 * openK * edge4 * edge4 * edge0 * toBreak);
+    // As the film opens the near blade is a dark slate shape against the break (uOpenLight.x), and the break's light comes up along its edge (uOpenLight.y).
+    lit *= mix(1.0, mix(0.5, 0.14, uCap), uOpenLight.x);
+    lit += uSunColour * (0.24 * openK * (1.0 + 3.0 * uOpenLight.y) * edge4 * edge4 * edge0 * toBreak);
   }
   gl_FragColor = vec4(rigOut(lit), 1.0);`,
   ],
