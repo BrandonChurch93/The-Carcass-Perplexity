@@ -207,6 +207,14 @@
       "width": 1024,
       "height": 1536,
       "relief": "carcass-h.png"
+    },
+    {
+      "name": "carcass-hung",
+      "kind": "plate",
+      "metres": 3,
+      "width": 1448,
+      "height": 1086,
+      "relief": "carcass-hung-h.png"
     }
   ]
 }
