@@ -131,7 +131,7 @@ ${VANE_TEST}
   float rim = smoothstep(cut + 0.16, cut, cover);
   float through = (0.12 + 0.88 * thin) * (0.3 + 0.7 * rim) * (0.2 + 0.8 * within) * (0.3 + 0.7 * smoothstep(0.1, 0.7, reach)) * (0.1 + 0.9 * against * against);
   // Far off a bush is one dark wine mass: the glow is in single threads, and none is seen there.
-  float close = mix(0.3, 1.0, smoothstep(0.03, 0.004, px));
+  float close = mix(0.22, 1.0, smoothstep(0.0075, 0.0025, px));
   vec3 blood = mix(vec3(1.0, 0.2, 0.13), vec3(1.0, 0.5, 0.36), 0.5 * tip + 0.35 * pale);
   colour += blood * uSunColour * (0.8 * through * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
   // Wet: here and there a thread turns the sun to the lens, and against the light the wet edges of the threads are lined with it.
