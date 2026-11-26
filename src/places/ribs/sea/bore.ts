@@ -392,7 +392,8 @@ void main() {
   vec4 land = landAt(aAt.xz);
   float open = mix(land.g, 1.0, clamp((aAt.y - land.r) / 60.0, 0.0, 1.0));
   vSky = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.35 + 0.65 * open) / 3.14159;
-  vSun = uSunColour * mix(sunAt(aAt.xyz + vec3(0.0, 30.0, 0.0), land), 1.0, 0.45) / 3.14159;
+  // Thrown water gives back the low sun nearly white: left warm it stood against the sky as dust.
+  vSun = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.55) * mix(sunAt(aAt.xyz + vec3(0.0, 30.0, 0.0), land), 1.0, 0.45) / 3.14159;
   vSunView = normalize((viewMatrix * vec4(uSunDir, 0.0)).xyz);
   // The sky that stands behind it from the lens: thin water takes its light from there.
   vec3 past = normalize(aAt.xyz - cameraPosition);
