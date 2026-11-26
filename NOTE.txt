@@ -1,5 +1,5 @@
-2026-11-26 15:07 UTC
-work at 65e0809 on agent/film-join
-heartbeat: 9480 with a swell from one side, hd review and preview draft
-look-1.jpg = out/work/stills/frame-9480-hd-review.png
-look-2.jpg = out/work/stills/frame-9480-preview-draft.png
+2026-11-26 15:40 UTC
+work at 09c742c on agent/film-join
+v3 water: pairs v2 left v3 right of 9480 9518 9563 9584, and 4K crop of the left half of 9480
+look-1.jpg = out/work/pairs/v3-pairs.png
+look-2.jpg = out/work/crop-9480-left-uhd.png
