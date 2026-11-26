@@ -65,7 +65,9 @@ void main() {
   float tilt = abs(aTuft2.z) * (card - 1.0);
   vec3 rise = normalize(vec3(0.0, 1.0, 0.0) + across * tilt);
   float reach = clamp((q.y - 0.15) / 0.8, 0.0, 1.0);
-  vec3 p = aTuft.xyz + side * ((q.x - 0.5) * aTuft2.x) + rise * ((q.y - 0.1) * aTuft.w);
+  // Brush is low: what stands over it is stems.
+  float tall = aTuft.w * mix(1.0, 0.45, aTuft3.z);
+  vec3 p = aTuft.xyz + side * ((q.x - 0.5) * aTuft2.x) + rise * ((q.y - 0.1) * tall);
   float gust = sin(uSeconds * 1.3 + aTuft3.w + dot(aTuft.xz, vec2(0.21, 0.17))) + 0.5 * sin(uSeconds * 2.7 + aTuft3.w * 1.7);
   p += vec3(0.8, 0.0, 0.6) * (0.035 * aTuft.w * reach * reach * gust) + side * (0.012 * aTuft.w * reach * sin(uSeconds * 2.2 + aTuft2.w * 40.0 + q.x * 9.0));
   if (one && card > 0.5) p = aTuft.xyz;
@@ -237,8 +239,12 @@ export interface Stands {
   leaves: Wild[];
   /** How many of `stems`, from the first, stand near enough for their bends to be seen. The rest are drawn of fewer pieces. */
   near: number;
-  /** The tufts and the mats. */
+  /** The far tufts, the brush and the mats. */
   group: THREE.Group;
+  /** The tufts near enough to be straps (grown.ts): foot and height; width, yaw, lean, seed; tone, how dead, brush, phase. */
+  tufts: number[][];
+  /** The mats near enough to be leaves: place and reach; height, two seeds, how dead. */
+  mats: number[][];
   /** The shade under the stands, in the rig's contact scene. */
   shade: THREE.InstancedMesh;
 }
@@ -292,6 +298,7 @@ interface Stand {
 
 export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUniform<number>): Stands {
   const rng = ctx.rng('stalks-stands');
+  const more = ctx.rng('stalks-stands-more');
   const land = ctx.rig.land;
   const eye = rel(3, -1.5);
   const walkA = rel(-6, 3);
@@ -424,6 +431,8 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       for (let c = 0; c < cards; c++) {
         anchor.cards.push([turn + (c / cards) * TAU + rng.range(-0.5, 0.5), under ? rng.range(2.1, 2.9) : rng.range(2.5, 3.3), (under ? rng.range(0.55, 0.9) : rng.range(0.3, 0.55)) * headFor(w.h), (rng.next() < 0.75 ? 1 : 0) + rng.range(0.1, 0.45), rng.next(), rng.range(0.4, 0.95), spent, rng.range(-0.03, 0.03)]);
       }
+      // Most of what hung down the stems is gone: a stalk is a bare pale line with its head at the top, and a rag of last year's here and there.
+      if (!under && k % 3 !== 0) continue;
       leaves.push(anchor);
     }
   };
@@ -485,12 +494,13 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
     const count = s.far < 150 ? Math.round((s.tall ? 1.6 : 1) * many * Math.max(4, s.q * (40 - 30 * Math.min(1, s.far / 150)))) : 0;
     const cores: [number, number][] = [];
     for (let k = 0; k < 1 + rng.int(4); k++) cores.push(around(s, 0.45));
+    const farFrom = farStems.length;
     for (let k = 0; k < count; k++) {
       const core = cores[rng.int(cores.length)] as [number, number];
       const loose = rng.next() < looseShare;
       // The loose ones trail off to one side more than to the others: a thin edge there, a clean one opposite.
       const a = loose && rng.next() < 0.65 ? tail + rng.normal() * 0.6 : rng.range(0, TAU);
-      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.08, 0.75);
+      const d = loose ? rng.range(0.5, 2.1) * s.r : rng.range(0.12, 0.9) * (0.7 + 0.55 * s.r);
       const at = drawn([core[0] + Math.cos(a) * d, core[1] + Math.sin(a) * d]);
       const x = at[0];
       const z = at[1];
@@ -510,7 +520,7 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const bl = Math.max(1e-3, Math.hypot(bx, bz));
       const bend: [number, number] = [bx / bl, bz / bl];
       const w: Wild = {
-        x, y: ground - 0.05, z, h, dx: bend[0], dz: bend[1], lean: Math.min(dead ? 0.95 : 0.6, (dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.3) : rng.range(0.04, 0.42)) * leans), R,
+        x, y: ground - 0.05, z, h, dx: bend[0], dz: bend[1], lean: Math.min(dead ? 0.95 : 0.6, (dead ? rng.range(0.1, 0.9) : loose ? rng.range(0.02, 0.24) : rng.range(0.02, 0.24)) * leans), R,
         kind, phase: rng.range(0, TAU), low: 0, seed: rng.next(),
         bowA: rng.range(0, TAU), bowM: rng.range(0.03, 0.24), kinkT: kinks ? rng.range(0.25, 0.8) : 2, kinkM: kinks ? rng.range(0.12, 0.5) : 0,
         swayA: rng.range(0, TAU), swayM: rng.next() < 0.5 ? rng.range(0.02, 0.085) : rng.range(0, 0.02), kinkA: rng.range(0, TAU), rate: rng.range(0.7, 1.6) / Math.sqrt(Math.max(h, 0.6) / 2.5),
@@ -524,6 +534,29 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       const style = roll < (styles[0] as number) ? 0 : roll < (styles[0] as number) + (styles[1] as number) ? 1 : roll < (styles[0] as number) + (styles[1] as number) + (styles[2] as number) ? 2 : 3;
       dress(w, shoot ? (kind === 1 ? 4 : 3) : style, (0.8 + 0.35 * rng.next()) * headFor(h) * (shoot ? 2 : crownK), s.far > 95);
       if (!shoot && h > 1.2 && s.far < 125) hang(w, s.far < 95 ? Math.round((h > 2.4 ? 4 : 2) * leafy) : 0, s.far < 95 ? Math.max(1, Math.round((2 + rng.int(2)) * Math.min(1.3, 0.5 + 0.5 * leafy))) : 1);
+    }
+    // Far off a stand is told by its stems, pale lines with a small dark head each, not by a mass at their feet: each stem there has
+    // one or two more beside it. They draw from their own stream, so that the stands near the lens stay as they were.
+    if (s.far >= 48) {
+      for (const w of farStems.slice(farFrom)) {
+        for (let k = 0; k < (s.far < 110 ? 2 : 1); k++) {
+          const a = more.range(0, TAU);
+          const d = more.range(0.15, 0.9) * s.r;
+          const x = w.x + Math.cos(a) * d;
+          const z = w.z + Math.sin(a) * d;
+          const ground = land.height(x, z);
+          const b = more.range(0, TAU);
+          const turn = more.range(0, TAU);
+          const scale = more.range(0.7, 1.1);
+          const h = w.h * more.range(0.5, 1.2);
+          if (ground < -0.3 || !clear(x, z)) continue;
+          farStems.push({
+            ...w, x, y: ground - 0.05, z, h, dx: Math.cos(b), dz: Math.sin(b), lean: Math.min(0.9, w.lean * more.range(0.5, 1.6)), phase: more.range(0, TAU), seed: more.next(),
+            bowA: more.range(0, TAU), bowM: more.range(0.03, 0.24), swayA: more.range(0, TAU),
+            cards: w.cards.map((c) => [(c[0] as number) + turn, c[1] as number, (c[2] as number) * scale * Math.pow(h / w.h, 0.6), c[3] as number, more.next(), c[5] as number, c[6] as number, c[7] as number]),
+          });
+        }
+      }
     }
     // Dead canes lie where they fell, half in the brine.
     for (let k = 0; k < (s.far < 110 ? 1 + rng.int(4) : 0); k++) {
@@ -616,15 +649,13 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
       side: THREE.DoubleSide,
     });
     material.userData.depthFragment = TUFT_DEPTH;
-    const mesh = new THREE.Mesh(instancedOf(cards, (tuft[0] as number[]).length / 4, { aTuft: tuft[0] as number[], aTuft2: tuft[1] as number[], aTuft3: tuft[2] as number[] }), material);
-    mesh.frustumCulled = false;
     // The far ones are one card each: four corners to place, not twelve.
     const card = new THREE.BufferGeometry();
     card.setAttribute('position', new THREE.Float32BufferAttribute([-0.5, 0, 0, 0.5, 0, 0, -0.5, 1, 0, 0.5, 1, 0], 3));
     card.setIndex([0, 1, 2, 1, 3, 2]);
     const far = new THREE.Mesh(instancedOf(card, (tuftOne[0] as number[]).length / 4, { aTuft: tuftOne[0] as number[], aTuft2: tuftOne[1] as number[], aTuft3: tuftOne[2] as number[] }), material);
     far.frustumCulled = false;
-    group.add(mesh, far);
+    group.add(far);
   }
   {
     // A disc of rings about its centre: many pieces near, where its lumps are seen, and few far off, where it is a stain.
@@ -660,5 +691,5 @@ export function growStands(ctx: Context, standing: Wild[], uSeconds: THREE.IUnif
   shades.forEach((d, i) => ctx.rig.setDisc(shade, i, d[0], d[1], d[2], d[3], d[4], d[5]));
   const near = stems.length;
   for (const w of farStems) stems.push(w);
-  return { stems, near, leaves, group, shade };
+  return { stems, near, leaves, group, shade, tufts: tuft, mats: mat };
 }
