@@ -1,7 +1,7 @@
-2026-11-26 04:06 UTC
-work at aa5610c on agent/spine-ground-2
-04:06 after V2: land cost 14.37 to 7.37 s uhd, spine-1 stones and drift, spine-4 floor and view out, spine-3 ribs and capped strike light
-look-1.jpg = out/work/s1.jpg
-look-2.jpg = out/work/s4.jpg
-look-3.jpg = out/work/s3.jpg
-look-4.jpg = out/work/s0.jpg
+2026-11-26 04:25 UTC
+work at ac9969d on agent/spine-ground-2
+Version 3 at 3840x2160 draft: spine-2, spine-1, spine-4, spine-3
+look-1.jpg = out/work/v3-spine-2.jpg
+look-2.jpg = out/work/v3-spine-1.jpg
+look-3.jpg = out/work/v3-spine-4.jpg
+look-4.jpg = out/work/v3-spine-3.jpg
