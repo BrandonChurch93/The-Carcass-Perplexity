@@ -272,6 +272,7 @@ varying vec4 vMore;
 varying vec3 vSky;
 varying vec3 vSun;
 varying vec3 vSunView;
+varying vec3 vBehind;
 void main() {
   vec4 centre = viewMatrix * vec4(aAt.xyz, 1.0);
   float turn = aLook.z;
@@ -287,6 +288,9 @@ void main() {
   vSky = skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.35 + 0.65 * open) / 3.14159;
   vSun = uSunColour * mix(sunAt(aAt.xyz + vec3(0.0, 30.0, 0.0), land), 1.0, 0.45) / 3.14159;
   vSunView = normalize((viewMatrix * vec4(uSunDir, 0.0)).xyz);
+  // The sky that stands behind it from the lens: thin water takes its light from there.
+  vec3 past = normalize(aAt.xyz - cameraPosition);
+  vBehind = skyRadiance(normalize(vec3(past.x, abs(past.y) + 0.12, past.z)));
   gl_Position = projectionMatrix * centre;
 }`;
 
@@ -303,6 +307,7 @@ varying vec4 vMore;
 varying vec3 vSky;
 varying vec3 vSun;
 varying vec3 vSunView;
+varying vec3 vBehind;
 void main() {
   float r2 = dot(vUv, vUv);
   float mist = vMore.y;
@@ -327,6 +332,8 @@ void main() {
   float deep = vMore.x;
   vec3 col = vec3(0.92, 0.94, 0.95) * (vSky * (0.85 + 0.3 * vUv.y) * (1.0 - 0.45 * deep - 0.2 * clot) + vSun * (0.3 + 0.6 * side + rim) * (1.0 - 0.6 * deep));
   col *= mix(mix(1.0, 0.55 + 0.75 * lum, uAtlas), 0.55, mist);
+  // Lit from behind: where the water is thin, at the torn rim of every clot and in the mist, the bright sky behind the wave glows in it.
+  col += vBehind * (0.75 * (1.0 - clot) * (1.0 - 0.5 * deep) + 0.25 * mist);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 
@@ -594,10 +601,12 @@ export function createBore(
         const n = Math.floor(beat);
         const a = (beat - n) * life;
         const H = high(x);
-        const z = frontNow + lineAt(x, seconds) - H * (0.9 + 3.5 * rand(i, n + 24)) - 6 * a;
-        const y = H * (0.5 + 1.0 * rand(i, n + 25)) + 1.5 * a;
+        // One in three rolls ahead of the foot, low over the flat: the wall arrives in its own mist.
+        const rolls = i % 3 === 0;
+        const z = frontNow + lineAt(x, seconds) + (rolls ? 5 + 34 * rand(i, n + 24) + 3 * a : -H * (0.9 + 3.5 * rand(i, n + 24)) - 6 * a);
+        const y = rolls ? 1.5 + 5 * rand(i, n + 25) + 0.6 * a : H * (0.5 + 1.0 * rand(i, n + 25)) + 1.5 * a;
         const fade = Math.min(1, a / 1.2) * Math.min(1, (life - a) / 1.5);
-        cards.put(x, y, z, (11 + 9 * rand(i, n + 28)) * (1 + 0.05 * a), 0.12 * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
+        cards.put(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 11 + 9 * rand(i, n + 28)) * (1 + 0.05 * a), (rolls ? 0.15 : 0.12) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
       }
 
       // Water torn off the crest and blown up: it is born on the top of the wall, climbs, and is left behind as the wall runs on.
