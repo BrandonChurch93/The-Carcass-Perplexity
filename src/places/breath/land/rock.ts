@@ -213,7 +213,8 @@ void main() {
   n = normalize(mix(n, vec3(0.0, 1.0, 0.0), 0.97 * film));
 
   // The rock: the plate's own colour, cooled a little (it was painted under a warm lamp), each loose stone its own tone.
-  vec3 rock = plate * vec3(1.0, 1.05, 1.1) * tone;
+  // It is wet, and seen against the light: its own colour is the lesser part of what reaches the lens, the sheen the greater.
+  vec3 rock = plate * vec3(0.62, 0.64, 0.66) * tone;
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
@@ -239,11 +240,11 @@ void main() {
   vec3 back = reflect(-v, n);
   back.y = abs(back.y);
   // The whole shelf has a thin wet sheen at dawn: at a grazing angle even a dry plate mirrors the sky, and toward the sun that is the gold glare.
-  float sheen = max(damp, 0.38 * (1.0 - steep) * (1.0 - stone));
+  float sheen = max(damp, 0.55 * (1.0 - steep) * (1.0 - 0.6 * stone));
   colour += skyRadiance(back) * (fres * sheen * (0.75 + 0.25 * film) * 1.1 * occ * land.g);
   // The low sun in the wet sheen: a broad gold glare down the shelf toward it, which is what the backlight of this place is made of.
   float glare = pow(max(dot(reflect(-v, normalize(n + vec3(0.0, 1.5, 0.0))), uSunDir), 0.0), 28.0);
-  colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.12 + 0.88 * fres) * mix(0.35, 1.0, lit) * occ * 0.9);
+  colour += uSunColour * vec3(1.0, 0.8, 0.55) * (glare * sheen * (0.12 + 0.88 * fres) * mix(0.3, 1.0, lit) * occ * 1.7);
   float tight = sunLobe(normalize(n + vec3(mn.r - 0.5, 0.0, mn.g - 0.5) * 0.5), v, 0.2) * fres * lit;
   colour += uSunColour * (min(tight, 8.0) * damp * smoothstep(0.4, 0.8, mn.b) * occ * 0.5);
   gl_FragColor = vec4(rigOut(colour), 1.0);
@@ -499,9 +500,9 @@ export function createRock(uniforms: Record<string, THREE.IUniform>, rng: Rng, s
           tGrainN: { value: grain.data },
           uGrainMean: { value: new THREE.Vector3(...grain.mean) },
           // x metres the fine relief is drawn as, y gain on the plate's colour, z the sky a shut cell still sees, w how dark a fold is.
-          uWall: { value: new THREE.Vector4(0.45, 1.5, 0.45, 2.0) },
+          uWall: { value: new THREE.Vector4(0.45, 1.05, 0.3, 2.0) },
           // How much of the sun's light the mist and the far wall hand on to a face in the shaft.
-          uBounce: { value: 0.12 },
+          uBounce: { value: 0.06 },
         },
         THREE.DoubleSide,
       ),
