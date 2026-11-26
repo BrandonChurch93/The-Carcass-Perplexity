@@ -92,9 +92,9 @@ float lowPicture(vec2 w, float shadow) {
     if (mass > 0.02) {
       float billow = 0.5 * vnoise(pw / 11.0 + 7.0) + 0.3 * vnoise(pw / 4.7 + 19.0) + 0.2 * vnoise(pw / 2.1 + 31.0);
       float body = mass * smoothstep(0.37, 0.82, billow);
-      puff = max(puff * (0.5 + 0.5 * body), 0.85 * body * (0.5 + 0.5 * smoothstep(0.5, 0.8, billow)));
+      puff = max(puff * (0.95 + 0.05 * body), 0.85 * body * (0.5 + 0.5 * smoothstep(0.5, 0.8, billow)));
     } else {
-      puff *= 0.55;
+      puff *= 0.95;
     }
     pic += specks * puff;
   }
@@ -123,8 +123,8 @@ float lowPicture(vec2 w, float shadow) {
       float inA = smoothstep(0.4, 0.6, texture2D(uCloudTile, sw / (2600.0 * lay) + vec2(0.33, 0.61) * lay, 2.0).b);
       float inB = smoothstep(0.43, 0.62, texture2D(uCloudTile, mw / (1900.0 * lay) + 0.4 * lay, 2.0).g);
       // (Within a field the cloud stands in ragged groups drawn out along the wind, a hundred kilometres and more, with clear sea between.)
-      inA *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g);
-      inB *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
+      if (shadow < 1.0) inA *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, sw / (vec2(1400.0, 760.0) * lay) + vec2(0.17, 0.71) * lay, 3.5).g);
+      if (shadow < 1.0) inB *= 0.3 + 0.7 * smoothstep(0.42, 0.56, texture2D(uCloudTile, mw / (vec2(1150.0, 640.0) * lay) + vec2(0.53, 0.09) * lay, 3.5).b);
       vec2 ua = sw / (1050.0 * lay) + vec2(0.3, 0.7) * lay;
       vec2 ub = mw / (820.0 * lay) + vec2(0.7, 0.2) * lay;
       // (The photograph is read only where a field stands.)
@@ -149,7 +149,7 @@ float lowPicture(vec2 w, float shadow) {
     // carried by a third wind.)
     vec2 ww = mat2(0.94, -0.34, 0.34, 0.94) * w + held * vec2(-22.0, -9.0);
     float wispField = 0.0;
-    if (shadow < 1.0 && uViewKm > 800.0) wispField = (1.0 - shadow) * smoothstep(800.0, 1300.0, uViewKm) * smoothstep(0.3, 0.55, texture2D(uCloudTile, ww / vec2(3900.0, 2100.0) + vec2(0.81, 0.27), 2.5).r);
+    if (shadow < 1.0 && uViewKm > 800.0) wispField = (1.0 - shadow) * smoothstep(800.0, 1300.0, uViewKm) * smoothstep(0.38, 0.6, texture2D(uCloudTile, ww / vec2(3900.0, 2100.0) + vec2(0.81, 0.27), 2.5).r);
     float wisp = wispField > 0.0 ? wispField * seen(texture2D(uMatStreaks, ww / vec2(2500.0, 900.0) + vec2(0.37, 0.52), 0.3).rgb, 0.22, 0.85) : 0.0;
     pic += away * max(max(dots * (1.0 - shadow), mix(0.36, 0.8, shadow) * haze), 0.62 * wisp);
   }
@@ -169,9 +169,10 @@ vec2 lowFieldOf(vec2 at, float shadow) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
-  float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
   float even = smoothstep(330.0, 760.0, uViewKm);
+  float slow = texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b;
+  if (even < 1.0) slow = 0.6 * slow + 0.4 * texture2D(uCloudTile, w / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
   // (And from there it lies in bands along the wind with long clear lanes of sea between, and thins toward the edge of the planet.)
   float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * w / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
