@@ -50,10 +50,10 @@ vec3 threadAt(vec3 a, vec3 b, vec3 c, vec4 sway, float reach, float tall, float 
   float g = gustAt(a.xz, t - 0.22);
   float swing = 0.42 * (g - 0.4) + (0.07 * sin(t * 4.1 + sway.z) + 0.035 * sin(t * 7.7 + sway.z * 2.7)) * (0.3 + g);
   vec3 bent = c + vec3(uWind.x * swing, 0.22 * max(g - 0.4, 0.0) + 0.5 * surge, uWind.y * swing) * len;
-  // A wet thread is not ruled: it waves along its length, each its own way, more toward its free end.
+  // A wet thread is not ruled: it waves along its length, nearly as the others of its lock do, more toward its free end.
   vec3 across = normalize(cross(b, vec3(0.0, 1.0, 0.0)) + vec3(1e-5, 0.0, 0.0));
   vec3 over = normalize(cross(b, across));
-  float k = sway.z + 6.283 * fract(a.x * 37.1 + a.z * 91.7 + a.y * 53.3);
+  float k = sway.z + 1.1 * fract(a.x * 37.1 + a.z * 91.7 + a.y * 53.3);
   float amp = 0.085 * len;
   vec2 turn = vec2(s * 6.5 + k, s * 5.1 + k * 1.7);
   tangent = b + 2.0 * s * bent + amp * (across * (sin(turn.x) + 6.5 * s * cos(turn.x)) + over * (sin(turn.y) + 5.1 * s * cos(turn.y)));
@@ -128,7 +128,7 @@ void main() {
   vec3 wine = mix(vec3(0.075, 0.008, 0.022), vec3(0.25, 0.018, 0.05), tone * tone);
   wine = mix(wine, wine.r * vec3(1.0, 0.3, 0.16), smoothstep(0.78, 0.95, own) * 0.7);
   wine = mix(wine, wine.r * vec3(0.85, 0.1, 0.3), smoothstep(0.2, 0.05, own) * 0.6);
-  float end = smoothstep(0.7, 1.0, s) * smoothstep(0.75, 1.2, tone + 0.5 * own);
+  float end = smoothstep(0.6, 1.0, s) * (0.3 + 0.7 * smoothstep(0.7, 1.2, tone + 0.5 * own));
   vec3 albedo = mix(wine * (0.6 + 0.4 * smoothstep(0.0, 0.35, s)), vec3(0.45, 0.16, 0.16), 0.5 * end);
   albedo = mix(albedo, vec3(0.2, 0.12, 0.07) * (0.6 + 0.8 * tone), dead);
   // Far off a thread is drawn wider than it is and the gaps between threads are gone: what is seen there is the light among them.
@@ -136,12 +136,12 @@ void main() {
   // The light that reaches it: the sky from above, less of it the deeper in the bush, and the sun where it finds a way in. A thin wet
   // thread takes the light on all sides of it.
   float wrap = 0.2 + 0.8 * max(dot(n, uSunDir), 0.0);
-  vec3 colour = albedo * (skyIrradiance(n) * (open * (0.16 + 0.84 * skyLeft)) + uSunColour * (3.14159 * wrap * lit * (0.05 + 0.95 * sunLeft))) / 3.14159;
+  vec3 colour = albedo * (skyIrradiance(n) * (open * (0.2 + 0.8 * skyLeft)) + uSunColour * (3.14159 * wrap * lit * (0.05 + 0.95 * sunLeft))) / 3.14159;
   // Against the low sun the light comes through: every thread between the lens and the sun that the sun still reaches is ruby, hot
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
-  float through = (0.06 + 0.94 * against * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
+  float through = (0.1 + 0.9 * against * against * sqrt(against)) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
   vec3 blood = mix(vec3(0.85, 0.04, 0.085), vec3(1.0, 0.4, 0.36), 0.4 * end);
   colour += blood * uSunColour * (0.3 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
@@ -192,10 +192,14 @@ void main() {
   float knots = smoothstep(0.55, 0.8, vnoise(vec2(vVane.x * 14.0 + vVane.z, vVane.y * 3.0)));
   float flesh = vVane.w;
   vec3 dark = mix(vec3(0.14, 0.035, 0.03), vec3(0.36, 0.11, 0.08), strings);
-  vec3 fleshy = mix(vec3(0.36, 0.17, 0.15), vec3(0.64, 0.4, 0.35), strings);
+  // The flesh is sinew: cords run along it, mauve on their backs and wine in the creases between them, with a vein here and there.
+  float cords = 0.5 + 0.5 * sin(vVane.y * 19.0 + vVane.z + 2.5 * vnoise(vec2(vVane.x * 5.0 + vVane.z, vVane.y * 2.0)));
+  float vein = smoothstep(0.12, 0.0, abs(vnoise(vec2(vVane.x * 4.0 + vVane.z * 3.0, vVane.y * 5.0)) - 0.5));
+  vec3 fleshy = mix(vec3(0.15, 0.05, 0.06), vec3(0.47, 0.235, 0.225), strings * (0.35 + 0.65 * cords));
+  fleshy = mix(fleshy, vec3(0.2, 0.035, 0.07), 0.5 * vein);
   vec3 albedo = mix(dark, fleshy, flesh * (0.55 + 0.45 * strings)) * (1.0 - 0.45 * knots);
-  n = normalize(n + 0.25 * (strings - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
-  float occ = mix(0.45, 1.0, vTint.y) * mix(0.7, 1.0, smoothstep(0.02, 0.3, vTint.z)) * (0.6 + 0.4 * strings);
+  n = normalize(n + (0.25 * (strings - 0.5) + 0.3 * flesh * (cords - 0.5)) * cross(n, vec3(0.0, 1.0, 0.0)));
+  float occ = mix(0.45, 1.0, vTint.y) * mix(0.55, 1.0, smoothstep(0.02, 0.3, vTint.z)) * (0.6 + 0.4 * strings) * (1.0 - 0.35 * flesh * (1.0 - cords));
   float lit = sunAt(vWorld + vec3(0.0, 0.3, 0.0)) * vTint.x;
   float open = skyOpen(vec3(vWorld.x, vWorld.y + 6.0, vWorld.z));
   float nl = max(dot(n, uSunDir), 0.0);
@@ -207,7 +211,7 @@ void main() {
   float f = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
   vec3 r = reflect(-v, n);
   r.y = abs(r.y);
-  colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.6 + uSunColour * (f * sunLobe(n, v, 0.3) * nl * lit * occ);
+  colour += f * min(skyRadiance(r), vec3(1.5)) * open * occ * 0.8 + uSunColour * ((f + 0.05) * sunLobe(n, v, 0.22) * nl * lit * occ);
   // Wet flesh is not opaque: against the low sun the light comes through its edges, pink.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   colour += mix(vec3(0.7, 0.08, 0.07), vec3(0.9, 0.42, 0.36), flesh) * uSunColour * (0.16 * against * against * pow(1.0 - nv, 1.5) * lit * smoothstep(0.1, 0.4, vTint.z));
