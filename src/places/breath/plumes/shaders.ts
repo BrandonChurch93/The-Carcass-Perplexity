@@ -141,9 +141,11 @@ void main() {
   // at its edges and at its pale end. Deep in the bush nothing comes through and it stays near black.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
-  float through = (0.05 + 0.95 * against * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
-  vec3 blood = mix(vec3(0.55, 0.022, 0.075), vec3(0.9, 0.34, 0.32), 0.4 * end);
-  colour += blood * uSunColour * (0.24 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
+  float through = (0.06 + 0.94 * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
+  // Toward its end a lock is thin and the sun is through all of it: there it glows orange red.
+  float thin = smoothstep(0.3, 1.0, s);
+  vec3 blood = mix(mix(vec3(0.55, 0.022, 0.075), vec3(0.85, 0.2, 0.05), thin), vec3(0.9, 0.34, 0.32), 0.3 * end);
+  colour += blood * uSunColour * (0.24 * (1.0 + 1.6 * thin) * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
