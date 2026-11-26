@@ -1,5 +1,7 @@
 // The brine's own surface, its domes of gas, and what a dome becomes when it tears.
-import { K1_AT } from '../shared/anchors';
+import { K1_AT, STUCK, rel } from '../shared/anchors';
+
+const STUCK_AT = rel(STUCK[0], STUCK[1]);
 import { BRINE_GLSL } from '../shared/brine-glsl';
 import { RIG_GLSL } from '../shared/glsl';
 import { FIELD_GLSL } from '../land/shaders';
@@ -60,6 +62,7 @@ void main() {
   // that no crest travels and every slope winks. (The tile keeps its smaller copies: far off the wavelets close up to nothing.)
   // Where the big ones wade the brine is churned: dark with mud and never still.
   brineMud = 1.0 - smoothstep(5.0, 11.0, length(p.xz - uWade));
+  brineSlurry = 1.0 - smoothstep(1.8, 4.2, length(p.xz - vec2(${STUCK_AT[0].toFixed(3)}, ${STUCK_AT[1].toFixed(3)})));
   float chop = smoothstep(110.0, 6.0, dist) * ruffle * (1.0 + 1.0 * smoothstep(12.0, 3.0, dist)) * (1.0 + 1.6 * brineMud);
   // (At a lens the finest of them are let go: what is left are the wavelets a hand and more long, which is how brine looks from a stride.)
   float soft = 1.0 * smoothstep(14.0, 2.5, dist);
@@ -218,6 +221,10 @@ void main() {
   turn = abs(turn - 6.2832 * floor(turn / 6.2832 + 0.5));
   window += 0.45 * smoothstep(0.42, 0.1, turn) * smoothstep(0.3, 0.55, vLocal.y) * smoothstep(0.97, 0.8, vLocal.y) * (0.4 + 1.2 * g.b);
   float sheen = (0.02 + 0.3 * pow(1.0 - nv, 4.0)) * foot;
+  // (Across a pool a dome is a dark swelling of the brine, not a lamp: its windows are for a lens that lies beside it.)
+  float beside = smoothstep(13.0, 6.0, length(cameraPosition - vWorld));
+  window *= mix(0.25, 1.0, beside);
+  lit *= mix(0.6, 1.0, beside);
   vec3 mirrored = skyRadiance(r) * (sheen + window) * (1.0 - 0.7 * rim);
   // How much of what is behind the film is hidden: next to nothing through its face, most at its edge (the film seen along itself) and
   // at its foot, where it is the pool drawn up, and all of it at a torn hole's rolled rim.

@@ -30,7 +30,7 @@ const K2: Pose = {
   aim: [K2_AT[0] + K2_DIR[0] * 20, 2.7 - 20 * Math.tan(7.6 * DEG), K2_AT[1] + K2_DIR[1] * 20],
   fov: 30,
   focus: 3.2,
-  aperture: 0.006,
+  aperture: 0.004,
 };
 
 /** marsh-1, the seep pool, from half a metre over its brine at the lip of the bank. */
@@ -40,7 +40,7 @@ const K1: Pose = {
   aim: [K1_LENS[0] + K1_DIR[0] * 10, K1_LENS[1] - 10 * Math.tan(9.5 * DEG), K1_LENS[2] + K1_DIR[1] * 10],
   fov: 35,
   focus: 3.8,
-  aperture: 0.006,
+  aperture: 0.0045,
 };
 
 /** marsh-3, the wallowers in the vein. */
