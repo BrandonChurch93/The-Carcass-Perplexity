@@ -2,7 +2,7 @@
 // Owned by the root. Folders read it and never change it, except through the calls below.
 import * as THREE from 'three';
 import { ground, locate } from '../ridge';
-import { DUSK, INSIDE_FROM, STRIKES, WIND, WIND_SPEED } from './anchors';
+import { CARCASS_FROM, DUSK, INSIDE_FROM, STRIKES, STRIKE_FROM, WIND, WIND_SPEED } from './anchors';
 import { stagedSeconds } from './stage';
 
 // The coarse map holds the first four spires and the ground every camera stands on; beyond it the land is taken as open.
@@ -369,8 +369,9 @@ export function createRig(): Rig {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
       (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
-      // Staged by shot: inside the canal the light is the cold of the mouths alone; the last warm band does not reach in.
-      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.5, 0.62, 0.2).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : 1);
+      // Staged by shot: inside the canal the light is the cold of the mouths alone; the last warm band does not reach in. Low by the dead one
+      // (spine-03) the light is the storm's cold, and the band gives a third of itself.
+      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.5, 0.62, 0.2).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : stagedSeconds() >= CARCASS_FROM && stagedSeconds() < STRIKE_FROM ? 0.14 : 0.75);
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();

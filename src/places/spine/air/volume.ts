@@ -164,8 +164,9 @@ void main() {
     float curl = noise(vec3(dot(c, uWind.xyz) / (2.5 * tear), c.y / tear, (c.x - c.z) / tear)).r;
     float fine = noise(c / (0.37 * tear) + 0.3).g;
     float body = exp(-dot(off, off) / (wide * wide)) * (1.0 - x / rise) * (1.0 - x / rise) * smoothstep(0.0, 0.06, x / rise + 0.02);
-    float thick = clamp(strength * body * smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine) * 1.6, 0.0, 0.6) * uShow.x;
-    vec3 pale = (smoke ? 0.25 : 0.6) * (skyOn(1.0, rd) + strikeLight(at) * 0.6);
+    float thick = clamp(strength * body * smoothstep(0.3, 0.72, 0.7 * curl + 0.3 * fine) * 1.6, 0.0, 0.5) * uShow.x;
+    // The flash lights it violet and no brighter than a cloud: it is vapour, not a lamp.
+    vec3 pale = (smoke ? 0.25 : 0.6) * (skyOn(1.0, rd) + min(strikeLight(at) * 0.6, vec3(0.2, 0.17, 0.32)));
     light += through * thick * pale;
     through *= 1.0 - thick;
   }
@@ -199,6 +200,8 @@ void main() {
   // The storm's air between the lens and whatever the ray meets.
   float stormAir = 0.0;
   if (uShow.z > 0.0) stormAir = 1.0 - exp(-stormDepth(ro, rd, seaAt > 0.0 ? min(seaAt, far) : far));
+  // Open sky keeps the dome's own masses: the near air softens them and does not wash them out.
+  if (seaAt <= 0.0 && far > 50000.0) stormAir = min(stormAir, 0.3);
 
   if (seaAt > 0.0 && through > 0.01) {
     float t = seaAt;
@@ -258,7 +261,7 @@ void main() {
       float size = uCrest[i].w;
       if (size <= 0.0) continue;
       vec3 from = uCrest[i].xyz;
-      float reach = 150.0 * size;
+      float reach = 190.0 * size;
       vec3 w0 = ro - from;
       float b = dot(rd, gale);
       float x = clamp((dot(gale, w0) - b * dot(rd, w0)) / max(1.0 - b * b, 1e-4), 0.0, reach);
@@ -267,7 +270,9 @@ void main() {
       if (tr < 0.0 || tr > far) continue;
       vec3 at = ro + rd * tr;
       vec3 off = at - on;
-      float wide = (2.5 + 0.2 * x) * (0.5 + 0.5 * size);
+      float wide = (3.0 + 0.16 * x) * (0.5 + 0.5 * size);
+      // A lens standing in a plume sees through it, not a wall of it.
+      float clearOf = smoothstep(0.5 * wide, 5.0 * wide, tr);
       float d2 = dot(off, off) / (wide * wide);
       if (d2 > 6.0) continue;
       vec3 c = at - uWind.xyz * (uTime * uWind.w * 0.6);
@@ -278,8 +283,8 @@ void main() {
       float gust = noise(vec3(along / 260.0, float(i) * 0.37, 0.11)).g;
       float k = x / reach;
       float body = exp(-d2) * (1.0 - k) * (1.0 - k) * smoothstep(0.0, 0.05, k + 0.01);
-      float thick = clamp(body * smoothstep(0.25, 0.75, torn) * (0.5 + 1.2 * gust) * 1.5, 0.0, 0.85) * uShow.w * uStage.x;
-      vec3 pale = 1.7 * (skyOn(1.0, rd) + strikeLight(at) * 0.25);
+      float thick = clamp(body * smoothstep(0.2, 0.7, torn) * (0.6 + 1.2 * gust) * 2.4, 0.0, 0.9) * uShow.w * uStage.x * clearOf;
+      vec3 pale = 1.7 * (skyOn(1.0, rd) + min(strikeLight(at) * 0.25, vec3(0.12, 0.1, 0.2)));
       light += through * thick * pale;
       through *= 1.0 - thick;
     }
@@ -299,13 +304,14 @@ void main() {
     float crestY = ridgeAt(ro.x).y;
     float reachV = far > 50000.0 ? 2200.0 : min(far, 9000.0);
     float tall = 240.0;
-    float fallV = rd.y / tall;
+    float fallV = max(rd.y, 0.0) / tall;
     float depthV = exp(-max(ro.y - crestY, -60.0) / tall) * (abs(fallV) < 1e-5 ? reachV : (1.0 - exp(-fallV * reachV)) / fallV) / 850.0;
     float azV = atan(rd.z, rd.x);
     float bands = noise(vec3(azV * 0.9 - uTime * 0.013, rd.y * 2.6 + uTime * 0.004, 0.37)).g;
     depthV *= (0.65 + 0.7 * bands) * uShow.x * uStage.y;
     float veiled = 1.0 - exp(-depthV);
-    if (far > 50000.0) veiled = min(veiled, 0.5);
+    // Open sky and the sea of cloud keep their own masses: the veil is of the ridge's air.
+    if (far > 50000.0) veiled = min(veiled, seaAt > 0.0 ? 0.3 : 0.2);
     vec3 snowAir = domeAir * 0.9 + vec3(0.006, 0.005, 0.011);
     light = light * (1.0 - veiled) + snowAir * veiled;
     through *= 1.0 - veiled;
@@ -335,7 +341,7 @@ void main() {
       float turn = 0.36 * (rnd(ivec2(k, 3), 5u) - 0.5);
       vec2 d1 = e1 * cos(turn) + e2 * sin(turn);
       vec2 d2 = vec2(-d1.y, d1.x);
-      float wideS = dist * 0.00085 / max(lens, 1.0);
+      float wideS = dist * 0.0021 / max(lens, 1.0);
       float cellQ = wideS * 11.0;
       // The streak: 26 m/s for a 48th of a second, as much of it as lies across the lens.
       float cellA = (0.55 * across + 6.0 * wideS) * 2.4;
@@ -345,18 +351,21 @@ void main() {
       float a = (along - (uWind.w * across * (0.7 + 0.6 * rnd(ivec2(int(qc), k), 7u))) * uTime) / cellA + 37.0 * rnd(ivec2(int(qc), k), 11u);
       float ac = floor(a);
       ivec2 cell = ivec2(int(qc), int(ac));
-      if (rnd(cell, uint(23 + k)) > 0.62 - 0.06 * float(k)) continue;
+      // They come in gusts: a clump of them, then none.
+      float gustL = noise(vec3(pc / (30.0 * cellQ) - d1 * (uTime * 0.6), float(k) * 0.31)).g;
+      if (rnd(cell, uint(23 + k)) > (0.5 - 0.05 * float(k)) * smoothstep(0.35, 0.7, gustL)) continue;
       float dq = (q - qc - 0.25 - 0.5 * rnd(cell, uint(31 + k))) * cellQ;
       // Each is brightest in its middle and gone at its ends, and no two are one length.
-      float lengthOf = 0.25 + 0.3 * rnd(cell, uint(41 + k));
+      float lengthOf = 0.12 + 0.25 * rnd(cell, uint(41 + k));
       float fa = (a - ac - 0.02) / lengthOf;
       float lengthS = fa > 0.0 && fa < 1.0 ? 4.0 * fa * (1.0 - fa) : 0.0;
       float thin = wideS * (0.5 + 0.5 * lengthS);
-      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.1 + 0.26 * rnd(cell, uint(59 + k)));
+      float flake = exp(-dq * dq / (thin * thin)) * lengthS * lengthS * (0.03 + 0.13 * rnd(cell, uint(59 + k)));
       fly += hid * flake;
       hid *= 1.0 - flake;
     }
-    fly *= uShow.w * uStage.z;
+    // Against the open sky blown snow is the sky's own tone and is lost; it shows against the rock and the snow.
+    fly *= uShow.w * uStage.z * mix(1.0, 0.2, smoothstep(120.0, 700.0, far));
     vec3 flakes = 1.1 * (skyOn(1.0, rd) + strikeLight(ro + rd * 6.0) * 0.2);
     light = light * (1.0 - fly) + flakes * fly;
     through *= 1.0 - fly;
@@ -366,7 +375,8 @@ void main() {
   float scale = 1100.0;
   float base = exp(-(ro.y - SEA) / scale) / 26000.0;
   float fall = rd.y / scale;
-  float length = min(far, 30000.0);
+  // Down to the top of the cloud and no farther: what lies under it is the cloud's own.
+  float length = min(seaAt > 0.0 ? min(far, seaAt) : far, 30000.0);
   float depth = base * (abs(fall) < 1e-5 ? length : (1.0 - exp(-fall * length)) / fall) * uShow.x;
   float clear = exp(-depth);
   vec3 haze = mix(mix(uSkyHorizon, uSkyZenith, 0.35) * 0.6, domeAir, 0.7);

@@ -5,9 +5,9 @@ import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
 import { RAD, carcassAxis, carcassBody, carcassView, step } from '../shared/anchors';
-import { canalFloor, canalShell, crestStrip, flanks, hollow, reliefDepth, spireMesh } from './meshes';
+import { canalFloor, canalShell, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh } from './meshes';
 import { height } from './height';
-import { ICE_FRAGMENT, ICE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
+import { ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
 export const PARTS: readonly string[] = ['land'];
 
@@ -19,7 +19,7 @@ const ANISOTROPY = 1;
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(height, hollow);
   // The burned rock lies under the dead one, a little toward the lens of its shot.
-  const scorchAt = step(carcassBody, carcassView + 180, 0.6);
+  const scorchAt = step(carcassBody, carcassView + 180, 0.2);
 
   const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
@@ -32,6 +32,10 @@ export function create(ctx: Context): Piece {
     tSnowNh: data('snow'),
     tCanal: picture('canal'),
     tCanalNh: data('canal'),
+    tRime: picture('rime'),
+    // The dome's own pictures, for what is seen of the sky from inside the canal: in the ice of the floor, in the glaze on the rock.
+    tSkyDusk: { value: ctx.assets.texture('mat/sky.jpg', { repeat: false }) },
+    tStormWall: { value: ctx.assets.texture('mat/stormwall.jpg', { repeat: false }) },
     tScorch: { value: ctx.assets.texture('mat/scorchfield.jpg', { anisotropy: ANISOTROPY, repeat: false }) },
     tScorchH: { value: ctx.assets.texture('mat/scorchfield-h.png', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
     uScorch: { value: new THREE.Vector4(scorchAt[0], scorchAt[2], 0, 0) },
@@ -78,10 +82,23 @@ export function create(ctx: Context): Piece {
   const iceMaterial = new THREE.ShaderMaterial({
     vertexShader: ICE_VERTEX,
     fragmentShader: ICE_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms, tSnow: pictures.tSnow, tSnowNh: pictures.tSnowNh },
+    uniforms: {
+      ...ctx.rig.uniforms,
+      tIce: { value: ctx.assets.texture('mat/icefloor.jpg', { anisotropy: 4, repeat: false }) },
+      tIceH: { value: ctx.assets.texture('mat/icefloor-h.png', { kind: 'data', repeat: false }) },
+      tSkyDusk: pictures.tSkyDusk,
+      tStormWall: pictures.tStormWall,
+    },
     toneMapped: false,
   });
 
+  const icicleMaterial = new THREE.ShaderMaterial({
+    vertexShader: ICICLE_VERTEX,
+    fragmentShader: ICICLE_FRAGMENT,
+    uniforms: { ...ctx.rig.uniforms, tSkyDusk: pictures.tSkyDusk, tStormWall: pictures.tStormWall },
+    side: THREE.DoubleSide,
+    toneMapped: false,
+  });
   const land = new THREE.Group();
   const made: THREE.BufferGeometry[] = [];
   const add = (geometry: THREE.BufferGeometry, m: THREE.Material): void => {
@@ -107,6 +124,7 @@ export function create(ctx: Context): Piece {
   spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i === FIRST ? 2 : i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
   add(canalShell(ctx.rng('land/canal-wall'), 0), wallMaterial);
   add(canalFloor(), iceMaterial);
+  add(icicles(ctx.rng('land/icicles')), icicleMaterial);
   ctx.scene.add(ctx.parts.built('land', land));
 
   return {
@@ -117,6 +135,7 @@ export function create(ctx: Context): Piece {
       wallMaterial.dispose();
       for (const m of new Set(depthOf.values())) m.dispose();
       iceMaterial.dispose();
+      icicleMaterial.dispose();
     },
   };
 }
