@@ -57,11 +57,12 @@ const shots: Record<string, CameraPath> = {
   'marsh-02': through(K2, keyPart(shotById('marsh-02')), { right: -2.2, forward: -2.6, up: 0.3, turn: 10 }, { right: 2.6, forward: 0.6, turn: -8 }),
   // In over the brine to the dome; the last of it turns right, toward the wallowers.
   'marsh-03': through(K1, keyPart(shotById('marsh-03')), { forward: -2.6, right: -1.2, up: 0.6, turn: 5 }, { forward: 0.6, right: 0.5, up: 0.5, turn: 14, tilt: 3 }),
-  // Left along the vein past the wallowers, turning right as it goes, so the stalks on the near bank leave by the left edge.
+  // Left along the vein to the wallowers.
   'marsh-04': [
     { at: 0, pose: { position: at(26.9, 6.3, 1.8), aim: at(36.4, 4.6, 0.25), fov: 30, aperture: 0.00715 } },
     { at: Math.min(0.98, Math.max(0.02, keyPart(shotById('marsh-04')))), pose: K3 },
-    { at: 1, pose: { position: at(28.3, 1.5, 1.5), aim: at(38, 6, 0.25), fov: 30, aperture: 0.00715 } },
+    // After the key it goes on left with the great one and gives ground: the lens is never nearer than at the key, and the whole walk stays in frame.
+    { at: 1, pose: { position: at(26.8, 2.3, 1.6), aim: at(37.7, 2.7, 0.25), fov: 30, aperture: 0.00715 } },
   ],
   // From over the thin crust, wide, with the vein, the pool and its stalks behind the stuck one, down and in to it.
   'marsh-05': through(K4, keyPart(shotById('marsh-05')), { forward: -9, up: 2.2, right: 1.5, turn: 14, tilt: -6 }, { forward: 1.7, up: 0.15, right: 0.5 }),
