@@ -2,7 +2,7 @@
 // and breaking up over the lake. It is laid over the whole frame, last, and is not drawn at all once the sheet is gone.
 import * as THREE from 'three';
 import { FPS } from '../../../config';
-import { AT, HALF_TAN, X, Z, handoff } from '../shared/anchors';
+import { AT, HALF_TAN, RISE_FIRST, X, Z, handoff, startOffsetAt } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 import { LID_GLSL, lidAt, lidUniforms } from './lid';
@@ -48,7 +48,9 @@ void main() {
 const SMALLER = 3;
 
 export function create(ctx: Context): Piece {
-  const lid = lidUniforms(handoff.lid, [X(AT.lake.x), Z(AT.lake.y)], handoff.revealHalfHeightKm, handoff.revealHalfHeightKm / HALF_TAN);
+  // The banks stand under the lens on the first frame of the rise, wherever rise.json has put it over the lake.
+  const [offX, offZ] = startOffsetAt(RISE_FIRST);
+  const lid = lidUniforms(handoff.lid, [X(AT.lake.x) + offX, Z(AT.lake.y) + offZ], handoff.revealHalfHeightKm, handoff.revealHalfHeightKm / HALF_TAN);
   const target = new THREE.WebGLRenderTarget(8, 8, {
     type: THREE.HalfFloatType,
     format: THREE.RGBAFormat,
