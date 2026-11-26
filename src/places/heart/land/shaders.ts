@@ -233,6 +233,11 @@ void main() {
       cliffNh += r * (1.0 - kx);
       bump += (1.0 - kx) * (vec3(1.0, 0.0, 0.0) * (r.r - 0.5) - vec3(0.0, 1.0, 0.0) * (r.g - 0.5));
     }
+    #ifdef HAND
+    // Under the wide lens the picture of the crags is enlarged five to ten times and its beds are streaks: there it counts for half.
+    cliff = mix(cliff, vec3(0.103, 0.086, 0.079), 0.5 * hand);
+    bump *= 1.0 - 0.4 * hand;
+    #endif
     #ifndef BENCH
     float ky = alcove * smoothstep(0.12, 0.45, n0.y * n0.y);
     if (ky > 0.003) {
@@ -554,6 +559,8 @@ void main() {
     // Ash and grit lie in the pits and the creases, a finger wide.
     albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.25 * pits * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet));
     albedo = mix(albedo, vec3(0.105, 0.098, 0.09) * (0.85 + 0.3 * bed.b), 0.7 * hand * dust);
+    // A face of the bank, close to: grit read through the rock itself, so it lies the same on a face that looks any way.
+    albedo *= mix(1.0, 0.72 + 0.56 * vnoise3(vWorld / 0.035), hand * (1.0 - level));
     height = mix(height, 0.5 * (height + fine), pits);
   }
   #endif
