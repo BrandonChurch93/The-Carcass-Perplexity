@@ -131,10 +131,12 @@ export function create(ctx: Context): Piece {
   // The approach draws the sea with its own text (shaders.ts): the film's material is the one above, untouched, for every other frame.
   const openSea = new THREE.Vector4(1, 0, 0, 1);
   const openGlint = { value: 0 };
+  // The white water a strike leaves on the sea round the foot: x, z of its middle, its reach in metres, how white.
+  const wash = [new THREE.Vector4(0, 0, 1, 0), new THREE.Vector4(0, 0, 1, 0)];
   const seaOpening = new THREE.ShaderMaterial({
     vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
-    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint },
+    uniforms: { ...seaUniforms, uOpenSea: { value: openSea }, uOpenGlint: openGlint, uWash: { value: wash } },
   });
   const sea = new THREE.Mesh(seaDisc(), seaMaterial);
   sea.frustumCulled = false;
@@ -348,6 +350,12 @@ export function create(ctx: Context): Piece {
       openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breaker.setTime(seconds, strikes, windTo);
+      strikes.forEach((s, n) => {
+        const a = seconds - s.seconds;
+        const reach = 0.5 * s.width * (0.75 + 0.1 * Math.max(a, 0)) + 7 * Math.max(a, 0);
+        const on = inOpening() && a > 0 ? Math.min(1, a / 0.5) * Math.min(1, Math.max(0, (12 - a) / 8)) : 0;
+        (wash[n] as THREE.Vector4).set(s.x + s.out[0] * reach * 0.3, s.z + s.out[1] * reach * 0.3, reach, 0.95 * on);
+      });
       spindrift.mesh.visible = inOpening();
       spindrift.gale.y = openingWeight(seconds);
     },

@@ -63,7 +63,10 @@ void main() {
   float open = mix(land.g, 1.0, clamp((aAt.y - land.r) / 120.0, 0.0, 1.0));
   float sun = sunAt(aAt.xyz, land);
   // Thrown water in the open air is lit from every side: the sky all round it and the sun where it reaches.
-  vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.55 + 0.75 * open) + uSunColour * 0.75 * sun) / 3.14159;
+  // The body of the burst is cool, the sky's; the low sun lights the side of it that stands to the sun, and that side alone.
+  vec3 sunCool = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3333))), 0.55);
+  float toSun = kind < 1.5 ? 0.12 + 0.95 * aLook.w : 0.5;
+  vLight = (skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 + 0.7 * open) + sunCool * toSun * sun) / 3.14159;
   // Between the lens and the light it burns: the sun, or the break in the cloud, comes forward through it.
   vec3 ray = normalize(aAt.xyz - cameraPosition);
   float throughSun = pow(max(dot(ray, uSunDir), 0.0), 3.0);
@@ -100,7 +103,8 @@ void main() {
     alpha = thick * vLook.x;
     // Thick water is grey against the light and its thin edges are bright; lit from the front it is white with the folds in shade.
     float fold = 0.55 + 0.45 * smoothstep(0.25, 0.75, fine.r) + 0.3 * (t.g - 0.4);
-    col = vec3(0.95, 0.96, 0.96) * vLight * fold * (0.7 + 0.3 * vUv.y) + vBack * (1.6 - 1.1 * smoothstep(0.35, 0.9, thick * web * 1.6));
+    float heart = smoothstep(0.35, 0.9, thick * web * 1.6);
+    col = vec3(0.95, 0.96, 0.96) * vLight * fold * (0.7 + 0.3 * vUv.y) * (1.0 - 0.32 * heart) + vBack * (1.6 - 1.1 * heart);
   } else if (vKind < 1.5) {
     // Droplets: a handful to a card, each its own bead, drawn out along its flight.
     vec2 q = vUv * vec2(0.3, 0.3 / vBead) + seed;
@@ -165,7 +169,7 @@ const G = 9.81;
 
 /** Cards of one strike: sheets, droplets, mist, and white water at the foot and down the stone. */
 const SHEETS = 300;
-const DROPS = 1100;
+const DROPS = 1400;
 const MIST = 110;
 const FOOT = 190;
 export const STRIKE_CARDS = SHEETS + DROPS + MIST + FOOT;
@@ -179,6 +183,7 @@ export class Burst {
   private readonly geometry: THREE.InstancedBufferGeometry;
   private readonly material: THREE.ShaderMaterial;
   private readonly drops: THREE.DataTexture;
+  private readonly sun: THREE.Vector3;
   private used = 0;
 
   constructor(readonly count: number, uniforms: Record<string, THREE.IUniform>) {
@@ -194,6 +199,7 @@ export class Burst {
     g.setAttribute('aLook', this.look);
     this.geometry = g;
     this.drops = dropsTexture();
+    this.sun = (uniforms.uSunDir as THREE.IUniform<THREE.Vector3>).value;
     this.material = new THREE.ShaderMaterial({
       vertexShader: VERTEX,
       fragmentShader: FRAGMENT,
@@ -240,6 +246,8 @@ export class Burst {
         };
       };
       const top = Math.sqrt(2 * G * s.height);
+      // How far a place on the foot stands to the sun's side of the burst, 0 to 1.
+      const sunward = (along: number, id: number): number => Math.min(1, Math.max(0, 0.5 + 0.9 * along * (tx * this.sun.x + tz * this.sun.z) + 0.5 * (rand(id, 31) - 0.5)));
       // A taller burst is a bigger body of water: its sheets and heads are wider with it.
       const big = Math.sqrt(s.height / 50);
       // A body thrown with drag k in a wind: where it is and how fast, after `a` seconds, from the launch alone.
@@ -278,7 +286,7 @@ export class Burst {
         // It tears as it goes: whole as it leaves the sea, holes by its top, strings on the way down.
         const gone = Math.min(1, 0.12 + 0.3 * a + 0.2 * rand(id, 8));
         const fade = Math.min(1, a / 0.1) * Math.min(1, Math.max(0, (y + 2) / 5)) * (1 - 0.6 * Math.max(0, gone - 0.6) / 0.4);
-        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power), vx, vy, vz, 0, 0.92 * fade * still, rand(id, 10), gone, 0);
+        this.put(bx + dx, y, bz + dz, big * (1.5 + 1.5 * Math.min(a, 2.5)) * (0.6 + 0.8 * rand(id, 9)) * (0.6 + 0.5 * j.power), vx, vy, vz, 0, 0.92 * fade * still, rand(id, 10), gone, sunward(j.along, id));
       }
 
       // Droplets: thrown wide of the fingers, faster than the sheets at first and slowed sooner, each card a handful of beads.
@@ -289,13 +297,15 @@ export class Burst {
         if (a < 0) continue;
         const small = rand(id, 12);
         const k = 0.1 + 0.4 * small * small;
-        const v0 = launch(j, 0.55 + 0.75 * rand(id, 7), 1.6, id);
+        // One in three is of the crown: thrown low and wide of the foot as the sea strikes, and down again inside two seconds.
+        const crown = i % 3 === 0;
+        const v0 = crown ? launch(j, 0.1 + 0.22 * rand(id, 7), 3.4, id) : launch(j, 0.55 + 0.75 * rand(id, 7), 1.6, id);
         const [dx, dy, dz, vx, vy, vz] = fly(a, k, v0, 0.45);
         const y = 0.6 + dy;
         if (y < -0.5) continue;
         const [bx, bz] = base(j, id);
         const fade = Math.min(1, a / 0.08) * Math.min(1, Math.max(0, (y + 0.5) / 1.5)) * Math.max(0, Math.min(1, 2.5 * (1 - a / (4 + 3.5 * rand(id, 13) * big))));
-        this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, 0);
+        this.put(bx + dx, y, bz + dz, big * (0.9 + 0.5 * Math.min(a, 3)) * (0.6 + 1.1 * rand(id, 9)), vx, vy, vz, 1, (0.75 + 0.25 * small) * fade * still, rand(id, 10), 0, sunward(j.along, id));
       }
 
       // Mist: the finest water stops in the air near the top of its finger and goes off down the wind, thinning.

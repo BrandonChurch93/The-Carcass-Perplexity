@@ -211,13 +211,16 @@ void main() {
   float wash = smoothstep(1.7, 0.15, shoal) * wet;
   float amount = max(0.7 * caps.y * (1.0 - smoothstep(0.05, 0.4, px)), 0.55 * lane);
   amount = max(amount, surfZone * (0.3 + 0.7 * crest) + wash * (0.55 + 0.4 * sin(ph - 1.2)));
+  // Within a stone's throw a break is no white tile laid on the water: it is the same lace, thick, with the water showing in its holes.
+  float nearBreak = 1.0 - smoothstep(0.08, 0.3, pixel);
+  amount = max(amount, 0.86 * caps.x * nearBreak);
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);
   // The break itself is thick white water, ragged at its rim.
   float fresh = smoothstep(0.3, 1.0, caps.x * (0.2 + 0.9 * lacePic + 0.4 * mix(fine, 0.5, smoothstep(0.02, 0.2, px))));
   // Close under the lens a break is no tile: its rim is eaten by the bubbles' own lace and there are holes in its body.
   // Its picture is read by the short side of the pixel, as its outline is: read by the long side its inside was one flat white.
   float bubbles = dot(textureLod(tFoamPic, p / 1.7 + uTime * uWind * 0.09, log2(max(2.0 * pixel * float(textureSize(tFoamPic, 0).x) / 1.7, 1e-6))).rgb, vec3(0.3333));
-  fresh *= mix(1.0, smoothstep(0.25, 0.75, 1.5 * bubbles + 0.7 * fresh - 0.45), 1.0 - smoothstep(0.08, 0.3, pixel));
+  fresh *= mix(1.0, 0.45 * smoothstep(0.25, 0.75, 1.5 * bubbles + 0.7 * fresh - 0.45), nearBreak);
   foam = max(foam, 0.82 * fresh);
   // Fresh white water is thick and white; what trails is thin, and the green shows through it.
   // Foam is white all through: it takes the sky from every side and the low sun as a standing thing does, and gives it back nearly white.
@@ -238,7 +241,7 @@ export const SEA_OPENING_FRAGMENT = openingText(
   // More of the wind sea breaks: a gale's sea, white to the horizon in drifts.
   SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.3 * uOpenSea.z, ${hi} - 0.3 * uOpenSea.z, torn`),
   [
-    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;\nuniform float uOpenGlint;'],
+    ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;\nuniform float uOpenGlint;\nuniform vec4 uWash[2];'],
     ['  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;\n  g *= calm;', '  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm * uOpenSea.w;\n  g *= calm * uOpenSea.w;'],
     [
       '  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);',
@@ -268,6 +271,11 @@ export const SEA_OPENING_FRAGMENT = openingText(
       `  // The heaviest crests of the long swell topple at their tops and leave white water behind them in lace.
   float topple = smoothstep(2.9, 4.4, h + 1.4 * (c1.b - 0.5) + 0.8 * (lacePic - 0.5)) * uOpenSea.z * calm;
   amount = max(amount, 0.85 * topple);
+  // Where a sea of the set has struck a foot the water is white round it: the wash goes out from the stone over the swell and thins to lace.
+  for (int i = 0; i < 2; i++) {
+    float off = length((p - uWash[i].xy) * vec2(1.0, 1.8)) / uWash[i].z;
+    amount = max(amount, uWash[i].w * (1.0 - smoothstep(0.3, 1.0, off + 0.5 * (lacePic - 0.5) + 0.25 * (c1.b - 0.5))));
+  }
   float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);`,
     ],
   ],
