@@ -34,8 +34,9 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float day = dayAt(xz);
   if (uDusk > 0.0) {
     // Cloud stands over the ground: it keeps the sun a moment after the ground under it has lost it, the high cloud longest.
-    float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
-    float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
+    // (A top 2.6 km up sees over the curve of the planet by the sine of 1.6 degrees, the ice at 10.5 km by the sine of 3.3.)
+    float sunH = sunHeight(xz) + uTerm.w * (0.03 + 0.03 * high);
+    float low = mix(uSunDir.y, 0.2 + 0.62 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
     vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.07 + 0.19 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
@@ -79,7 +80,7 @@ void main() {
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
   float a = low.x * 0.96;
-  float b = high * 0.22;
+  float b = high * 0.3;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
@@ -366,7 +367,7 @@ export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
   const tile = data('sky/cloud-tile.jpg', true);
   // Where the weather stands (assets-src/reveal/sky/make_cover.py), and the Builder's photographs of cloud from orbit (assets-src/reveal/mat/RECIPE.md).
-  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true]];
+  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true]];
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   for (const [uniform, file, repeat] of shared) (ctx.rig.uniforms[uniform] as THREE.IUniform).value = data(file, repeat);
 

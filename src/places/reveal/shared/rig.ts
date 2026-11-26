@@ -133,6 +133,7 @@ export function createRig(): Rig {
     uMatPopcorn: { value: null },
     uMatStreaks: { value: null },
     uMatSpecks: { value: null },
+    uMatVeil: { value: null },
     // The relief of the cloud photographs (slope in red and green, height in blue): the sky folder gives them.
     uMatCellsNh: { value: null },
     uMatPopcornNh: { value: null },

@@ -18,6 +18,8 @@ uniform sampler2D uCloudTile;
 uniform sampler2D uCover;
 uniform sampler2D uMatPopcorn;
 uniform sampler2D uMatStreaks;
+uniform sampler2D uMatSpecks;
+uniform sampler2D uMatVeil;
 uniform sampler2D uMatCellsNh;
 uniform sampler2D uMatPopcornNh;
 uniform sampler2D uMatSpecksNh;
@@ -60,12 +62,32 @@ vec2 lowGround(vec2 at) {
   return carried;
 }
 
-// The low cloud: x how thick (0 to 1), y how high its tops stand there (0 to 1).
-// One field at every height of the camera: four photographs of cloud fields laid one inside the other, each about a third the size
-// of the last (clusters, the cells in a cluster, the puffs in a cell, the lumps of a puff), and the share of the sky the field
-// takes (the cover, slow noise that drifts with it, the lanes along the wind) says how deep into that relief the sea shows.
-// A lay finer than a pixel falls to its mean by itself, so nothing is switched as the camera climbs.
-vec2 lowField(vec2 at) {
+// How much cloud a photograph of a cloud field holds at a point, against its own mean (1 on the mean; the dark sea of the
+// photograph is near 0, its brightest tops 2.5 to 3.5). A lay finer than a pixel falls to 1 by itself.
+float cloudIn(sampler2D t, vec2 uv, float mean) {
+  return dot(texture2D(t, uv).rgb, vec3(0.3, 0.55, 0.15)) / mean;
+}
+
+// Where the five lays of the low field were last read, and how much of the field each one made there (set by lowDepth).
+vec2 lowUvA = vec2(0.0);
+vec2 lowUvB = vec2(0.0);
+vec2 lowUvC = vec2(0.0);
+vec2 lowUvD = vec2(0.0);
+vec2 lowUvE = vec2(0.0);
+vec3 lowWeigh = vec3(0.0);
+
+const mat2 LOW_A = mat2(0.97, -0.24, 0.24, 0.97);
+const mat2 LOW_B = mat2(0.8, 0.6, -0.6, 0.8);
+const mat2 LOW_C = mat2(0.28, 0.96, -0.96, 0.28);
+const mat2 LOW_D = mat2(-0.6, 0.8, -0.8, -0.6);
+const mat2 LOW_E = mat2(0.71, -0.7, 0.7, 0.71);
+
+// The low cloud as the light meets it: how much water stands in the way (0 where the sea is clear, about 1 in the thin body of a
+// streak, 3 and more in the core of a cluster). The cloud is the photographs' own: wind streaks (1100 by 640 km a repeat) say where
+// cloud lies at all, and inside them a field of cumulus clusters (500 km), the puffs of a cluster (210 km), the lumps of a puff
+// (90 km) and its grain (30 km) each thin it or thicken it. The photographs are multiplied, never cut at a level: a streak thins
+// out to nothing through its own veil, and a cluster keeps the thin body the photograph shows round it.
+float lowDepth(vec2 at) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
@@ -77,45 +99,79 @@ vec2 lowField(vec2 at) {
   if (uLive > 0.0) {
     wSlow += uWx * vec2(-3.0, 4.0);
     wLane += uWx * vec2(3.0, -5.0);
-    // (And the cells in a cluster and the puffs in a cell ride winds a little off each other: a cluster is seen to work, not to slide as a card.)
+    // (And the clusters in a streak and the puffs in a cluster ride winds a little off each other: a bank is seen to work, not to slide as a card.)
     wCell += uWx * vec2(2.2, -3.0);
     wPuff += uWx * vec2(-1.6, 2.4);
   }
   float torn = texture2D(uCloudTile, wSlow / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * torn;
-  float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
+  float lane = texture2D(uCloudTile, LOW_A * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
   float banked = 0.25 + 0.75 * smoothstep(0.3, 0.52, lane);
   if (uLive > 0.0) banked = mix(banked, (0.05 + 1.1 * smoothstep(0.34, 0.6, lane)) * (0.1 + 1.3 * smoothstep(0.36, 0.62, torn)), 0.3 * smoothstep(0.0, 14.0, uWx));
   float share = amount * (0.12 + 0.88 * smoothstep(0.3, 0.66, slow + 0.2 * (amount - 0.6))) * banked * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at)));
 
-  // (Five lays, each a little under three times finer than the last, each turned its own way: 2400, 880, 330, 120 and 45 km a repeat.)
-  vec3 cluster = cloudRelief(uMatCellsNh, w, mat2(0.97, -0.24, 0.24, 0.97), 2400.0, vec2(0.3, 0.7));
-  vec3 cell = cloudRelief(uMatPopcornNh, wCell, mat2(0.8, 0.6, -0.6, 0.8), 880.0, vec2(0.13, 0.4));
-  vec3 puff = cloudRelief(uMatSpecksNh, wPuff, mat2(0.28, 0.96, -0.96, 0.28), 330.0, vec2(0.61, 0.27));
-  vec3 lump = cloudRelief(uMatPopcornNh, wCell, mat2(-0.6, 0.8, -0.8, -0.6), 120.0, vec2(0.83, 0.52));
-  vec3 grain = cloudRelief(uMatSpecksNh, w, mat2(0.71, -0.7, 0.7, 0.71), 45.0, vec2(0.37, 0.91));
-  float tops = 0.5 + 0.42 * (cluster.z - 0.5) + 0.42 * (cell.z - 0.5) + 0.36 * (puff.z - 0.5) + 0.3 * (lump.z - 0.5) + 0.24 * (grain.z - 0.5);
-  lowSlope = 0.35 * cluster.xy + 0.7 * cell.xy + 0.7 * puff.xy + 0.6 * lump.xy + 0.5 * grain.xy;
-  float least = mix(0.75, 0.5, share);
-  float thick = smoothstep(least, least + 0.12, tops) * smoothstep(0.0, 0.1, share);
-  return vec2(thick, tops);
+  lowUvA = LOW_A * wLane / vec2(1100.0, 640.0) + vec2(0.3, 0.7);
+  lowUvB = LOW_B * wCell / 500.0 + vec2(0.13, 0.4);
+  lowUvC = LOW_C * wPuff / 210.0 + vec2(0.61, 0.27);
+  lowUvD = LOW_D * wCell / 90.0 + vec2(0.83, 0.52);
+  lowUvE = LOW_E * w / 30.0 + vec2(0.37, 0.91);
+  float streak = cloudIn(uMatStreaks, lowUvA, 0.31);
+  float cluster = cloudIn(uMatPopcorn, lowUvB, 0.34);
+  float puff = cloudIn(uMatSpecks, lowUvC, 0.2);
+  float lump = cloudIn(uMatPopcorn, lowUvD, 0.34);
+  float grain = cloudIn(uMatSpecks, lowUvE, 0.2);
+  // (A field is not one kind of cloud: here it is all fine specks along the wind, there the clusters have grown.)
+  float grown = smoothstep(0.35, 0.65, texture2D(uCloudTile, w / 1700.0 + vec2(0.44, 0.08), 3.0).b);
+  float byCluster = mix(0.45, 1.0, grown);
+  float byPuff = mix(0.9, 0.5, grown);
+  float knots = mix(1.0, cluster, byCluster) * mix(1.0, puff, byPuff);
+  float fine = mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
+  lowWeigh = vec3(byCluster, byPuff, share);
+  // (The streak is the thin body; the clusters stand in it, and a little beside it.)
+  return pow(streak * knots * fine, 0.6) * share * 1.5 - mix(0.72, 0.48, share);
 }
 
-// The ice far above (HIGH_KM): thin sheets and long threads drawn out along its own wind, which blows across the wind of the low
-// field. at is a point of its own height. How thick, 0 to 1.
-float highField(vec2 at) {
+// The low cloud: x how thick it is to the eye (0 to 1), y how high its tops stand there (0 to 1). The thin of it lets the sea
+// through as water lets light through (the law of Beer), so nothing has a cut edge.
+vec2 lowField(vec2 at) {
+  float depth = lowDepth(at);
+  vec3 a = texture2D(uMatStreaksNh, lowUvA).rgb;
+  vec3 b = texture2D(uMatPopcornNh, lowUvB).rgb;
+  vec3 c = texture2D(uMatSpecksNh, lowUvC).rgb;
+  vec3 d = texture2D(uMatPopcornNh, lowUvD).rgb;
+  vec3 e = texture2D(uMatSpecksNh, lowUvE).rgb;
+  lowSlope = 0.3 * ((a.rg * 2.0 - 1.0) * vec2(1.0, 1.5)) * LOW_A + 0.75 * lowWeigh.x * (b.rg * 2.0 - 1.0) * LOW_B + 0.75 * lowWeigh.y * (c.rg * 2.0 - 1.0) * LOW_C
+    + 0.6 * (d.rg * 2.0 - 1.0) * LOW_D + 0.45 * (e.rg * 2.0 - 1.0) * LOW_E;
+  float thick = 1.0 - exp(-1.3 * max(depth, 0.0));
+  return vec2(thick, clamp(depth / 3.5, 0.0, 1.0));
+}
+
+// The ice far above (HIGH_KM): thin fibrous sheets and long threads drawn out along its own wind, which blows across the wind of
+// the low field. at is a point of its own height. How thick, 0 to 1. It is the photograph of a veil of cirrus, thinned and
+// thickened by a finer lay of wind streaks, and it fades to nothing through its own fibre.
+vec2 highUvSheet = vec2(0.0);
+vec2 highUvThread = vec2(0.0);
+// The ice without the fall of its tops (what a shadow needs).
+float highDepth(vec2 at) {
   vec2 hv = at + uTime * vec2(6.5, -3.8);
   vec2 hs = hv;
   if (uLive > 0.0) {
     hv += uWx * vec2(36.0, -21.0);
     hs += uWx * vec2(44.0, -16.0);
   }
-  vec3 sheet = cloudRelief(uMatVeilNh, hv, mat2(0.9, 0.44, -0.44, 0.9), 1700.0, vec2(0.2, 0.6));
-  vec3 thread = cloudRelief(uMatStreaksNh, hs, mat2(0.84, 0.54, -0.54, 0.84), 520.0, vec2(0.7, 0.2));
-  float where = 0.6 * vnoise(hv / 1500.0 + 3.0) + 0.4 * vnoise(hv / 640.0 + 11.0);
-  highSlope = 0.6 * sheet.xy + 0.8 * thread.xy;
-  float least = mix(0.74, 0.5, smoothstep(0.45, 0.8, where));
-  return smoothstep(least, least + 0.22, 0.5 + 0.5 * (sheet.z - 0.5) + 0.7 * (thread.z - 0.5)) * smoothstep(0.42, 0.6, where) * smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+  highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
+  highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1000.0, 600.0) + vec2(0.7, 0.2);
+  float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
+  float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
+  float where = smoothstep(0.5, 0.85, 0.6 * vnoise(hv / 1500.0 + 3.0) + 0.4 * vnoise(hv / 640.0 + 11.0));
+  float depth = sheet * mix(1.0, thread, 0.8) * where * 1.7 - 0.8;
+  return (1.0 - exp(-1.1 * max(depth, 0.0))) * smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+}
+
+float highField(vec2 at) {
+  float thick = highDepth(at);
+  highSlope = 0.6 * (texture2D(uMatVeilNh, highUvSheet).rg * 2.0 - 1.0) * mat2(0.9, 0.44, -0.44, 0.9) + 0.8 * (texture2D(uMatStreaksNh, highUvThread).rg * 2.0 - 1.0) * mat2(0.84, 0.54, -0.54, 0.84);
+  return thick;
 }
 
 // The share of the sun that reaches a point of the ground under the cloud. Each height of cloud throws its own shadow, as far from
@@ -124,8 +180,8 @@ float cloudShade(vec2 xz) {
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
   // From orbit the shadows are drawn longer than they fall, as relief is on a map, so that each height of cloud is seen to stand off the sea.
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
-  float low = lowField(xz + toSun * ${LOW_KM.toFixed(1)} * lift).x;
-  float high = highField(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
+  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
+  float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
