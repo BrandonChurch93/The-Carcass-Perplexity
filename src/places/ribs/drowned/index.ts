@@ -688,18 +688,16 @@ export function create(ctx: Context): Piece {
   const shapes = new Float32Array(STRANDS * 4);
   const falls = new Float32Array(STRANDS * 3);
   for (let i = 0; i < STRANDS; i++) {
-    const over = false as boolean;
-    // Over the shoulder and the hips, where it is caught; the rest hang round it.
-    let u = over ? (i < 30 ? scatter.range(0.5, 1.8) : i < 46 ? scatter.range(-0.4, 0.5) : scatter.range(-1.5, -0.7)) * SIZE : scatter.range(-6, 9);
-    const up = over ? (i < 30 ? scatter.range(-0.9, 0.1) : i < 46 ? scatter.range(0.3, 1.2) : scatter.range(1.8, 2.6)) * SIZE : scatter.range(-3, 5);
-    // The rest keep clear of it: nothing hangs across the body but what is draped over it.
-    if (!over && u > -2 * SIZE && u < 4.6 * SIZE && up > -5) u += u < 1.3 * SIZE ? -4 * SIZE : 5 * SIZE;
-    const root = toWorld(u, -up, over ? proud(u) + 0.25 * SIZE : 0);
-    const long = over ? scatter.range(2.2, 4.6) : scatter.range(1.4, 5.2);
+    let u = scatter.range(-6, 9);
+    const up = scatter.range(-3, 5);
+    // They keep clear of it: nothing hangs across the body.
+    if (u > -2 * SIZE && u < 4.6 * SIZE && up > -5) u += u < 1.3 * SIZE ? -4 * SIZE : 5 * SIZE;
+    const root = toWorld(u, -up, 0);
+    const long = scatter.range(1.4, 5.2);
     const fall = toWorld(u, -up + long, 0).sub(root).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
-    roots.set([root.x, root.y, root.z, over ? scatter.range(0.3, 0.6) * SIZE : scatter.range(0.05, 0.2)], i * 4);
-    shapes.set([long, over ? scatter.range(0.1, 0.26) : scatter.range(0.05, 0.16), scatter.next() + (over ? 1 : 0), scatter.range(-0.12, 0.12)], i * 4);
+    roots.set([root.x, root.y, root.z, scatter.range(0.05, 0.2)], i * 4);
+    shapes.set([long, scatter.range(0.05, 0.16), scatter.next(), scatter.range(-0.12, 0.12)], i * 4);
   }
   weed.setAttribute('aRoot', new THREE.InstancedBufferAttribute(roots, 4));
   weed.setAttribute('aShape', new THREE.InstancedBufferAttribute(shapes, 4));
@@ -718,11 +716,9 @@ export function create(ctx: Context): Piece {
   const at = new Float32Array(CRABS * 4);
   const turn = new Float32Array(CRABS * 4);
   for (let i = 0; i < CRABS; i++) {
-    const on = false as boolean;
-    // On the trunk they sit on its upper side; the rest are in the weed.
-    const q = scatter.range(0.08, 0.95);
-    const spot = trunk(q);
-    const p = on ? toWorld(spot[0] + scatter.range(-0.1, 0.1), spot[1] - scatter.range(0.05, 0.3) * SIZE, spot[2] + 0.3 * SIZE) : toWorld(scatter.range(-3, 6), scatter.range(-3, 4), 0.12);
+    // In the weed round it. (The first draw is kept so that every crab stays where it was.)
+    scatter.range(0.08, 0.95);
+    const p = toWorld(scatter.range(-3, 6), scatter.range(-3, 4), 0.12);
     at.set([p.x, p.y, p.z, scatter.range(0.09, 0.16)], i * 4);
     turn.set([scatter.range(0, 6.28), scatter.next(), 0, 0], i * 4);
   }

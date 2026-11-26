@@ -489,6 +489,11 @@ export function create(ctx: Context): Piece {
   }
   const skeinFigures = new Figures(airSheet, SKEIN + PASSERS + FLEEING + 2, {}, 6, 4);
   const flee = STATIONS.flee;
+  const gatePose = resolve(shots['ribs-06'] as (typeof shots)[string], 0.5, shotById('ribs-06').first);
+  const gateEye = gatePose.position;
+  const gateLong = Math.hypot(gatePose.aim[0] - gateEye[0], gatePose.aim[2] - gateEye[2]) || 1;
+  const gateAhead: [number, number] = [(gatePose.aim[0] - gateEye[0]) / gateLong, (gatePose.aim[2] - gateEye[2]) / gateLong];
+  const gateRight: [number, number] = [-gateAhead[1], gateAhead[0]];
 
   // ---- Two that land by the establishing camera, about its key ----
   const standers = new Figures(perchedSheet, 2);
@@ -529,14 +534,18 @@ export function create(ctx: Context): Piece {
             const power = 0.5 + 1.6 * tuft.shake;
             const out = (0.1 + 0.95 * rand(key, born + 7) * a * power) * f.size;
             const up = (0.3 + 1.2 * rand(key, born + 3)) * f.size * power;
-            splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.03 + up * 2 * a * (1 - a), tuft.z + Math.sin(dir) * out, (big ? 0.022 + 0.016 * rand(key, born + 5) : 0.008 + 0.014 * rand(key, born + 5)) * f.size * (1 + power * 0.4), (big ? 0.5 : 0.95) * (1 - a * a), rand(key, 9), dir, big ? 1 : 1.8);
+            // Seven tenths of its time in the air, a drop drawn out along its flight; then the ring it leaves where it lands.
+            const b = a / 0.7;
+            const wide = (0.006 + 0.01 * rand(key, born + 5)) * f.size * (big ? 1.5 : 1);
+            if (b < 1) splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.03 + up * 4 * b * (1 - b) * 0.5, tuft.z + Math.sin(dir) * out, wide, 0.95, rand(key, 9), 0, -(1.6 + 2.2 * Math.abs(1 - 2 * b)));
+            else splash.put(tuft.x + Math.cos(dir) * out, LEVELS.pool + 0.012, tuft.z + Math.sin(dir) * out, (0.03 + 0.2 * (b - 1) / 0.43) * f.size, 0.5 * (1 - (b - 1) / 0.43), rand(key, 9), 0, -100.22);
           } else {
             // Lifted, the tuft streams: strings of drops fall from its strands to the pool.
             const fall = 4.9 * age * age;
             const from = tuft.y - 0.1 * f.size - fall;
             if (from < LEVELS.pool) continue;
             const off = (rand(key, 4) - 0.5) * 0.5 * f.size;
-            splash.put(tuft.x + fx * off + (rand(key, 6) - 0.5) * 0.1, from, tuft.z + fz * off + (rand(key, 8) - 0.5) * 0.1, (0.006 + 0.012 * rand(key, born + 5)) * f.size, 0.85, rand(key, 9), 0, 2.4);
+            splash.put(tuft.x + fx * off + (rand(key, 6) - 0.5) * 0.1, from, tuft.z + fz * off + (rand(key, 8) - 0.5) * 0.1, (0.005 + 0.008 * rand(key, born + 5)) * f.size, 0.85, rand(key, 9), 0, -2.6);
           }
         } else if (f.habit === 1) {
           // Shaken, the strands throw the water off in a fan.
@@ -547,14 +556,14 @@ export function create(ctx: Context): Piece {
           const side = (rand(key, born + 13) - 0.5) * 0.8 * v * age;
           const y = tuft.y + Math.sin(el) * v * age - 4.9 * age * age;
           if (y < LEVELS.pool) continue;
-          splash.put(tuft.x + fx * along - fz * side, y, tuft.z + fz * along + fx * side, (big ? 0.03 : 0.006 + 0.012 * rand(key, born + 5)) * f.size, (big ? 0.35 : 0.85) * tuft.shake * (1 - a), rand(key, 9), dir, 1.6);
+          splash.put(tuft.x + fx * along - fz * side, y, tuft.z + fz * along + fx * side, (big ? 0.014 : 0.005 + 0.008 * rand(key, born + 5)) * f.size, 0.9 * tuft.shake * (1 - a), rand(key, 9), 0, -2.2);
         } else {
           // Each foot of a runner throws a sheet back and up as it comes down.
           const out = (0.3 + 1.6 * rand(key, born + 40) * a) * f.size;
           const up = (0.4 + 1.3 * rand(key, born + 80)) * f.size;
           const back = dir * 0.4 - 0.2;
           const lag = RUN_SPEED * age * 0.8;
-          splash.put(fig.x - fx * (lag + Math.cos(back) * out) + fz * Math.sin(back) * out, ground(fig.x, fig.z) + 0.05 + up * 2 * a * (1 - a), fig.z - fz * (lag + Math.cos(back) * out) - fx * Math.sin(back) * out, (big ? 0.12 + 0.1 * rand(key, born + 5) : 0.015 + 0.03 * rand(key, born + 5)) * f.size, (big ? 0.4 : 0.85) * (1 - a), rand(key, 9), dir);
+          splash.put(fig.x - fx * (lag + Math.cos(back) * out) + fz * Math.sin(back) * out, ground(fig.x, fig.z) + 0.05 + up * 2 * a * (1 - a), fig.z - fz * (lag + Math.cos(back) * out) - fx * Math.sin(back) * out, (big ? 0.07 + 0.06 * rand(key, born + 5) : 0.008 + 0.012 * rand(key, born + 5)) * f.size, (big ? 0.3 : 0.9) * (1 - a), rand(key, 9), big ? dir : 0, big ? 1.4 : -(1.6 + 2 * Math.abs(1 - 2 * a)));
         }
       }
     }
@@ -610,6 +619,20 @@ export function create(ctx: Context): Piece {
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the green of the wall.
+        if (i < 6) {
+          // Staged for the bore's key: six flee toward its lens across the middle of the frame, each about a tenth of it wide, dark against the white water.
+          const far = [44, 35, 52, 40, 33, 48][i] as number;
+          const off = ([-19, -10, -3, 6, 13, 21][i] as number) + 5;
+          const vx = -gateRight[0] * 10 - gateAhead[0] * 12;
+          const vz = -gateRight[1] * 10 - gateAhead[1] * 12;
+          const x = gateEye[0] + gateAhead[0] * far + gateRight[0] * off + vx * lead;
+          const z = gateEye[2] + gateAhead[1] * far + gateRight[1] * off + vz * lead;
+          const y = 3.3 + (1.8 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+          airborne(x, y, z, vx, 0.5, vz, 0.8 + 0.25 * hash(i, 5), hash(i, 7), seconds, 1, eye);
+          fig.tone = 0.5 + 0.2 * hash(i, 9);
+          skeinFigures.put(SKEIN + PASSERS + i, fig);
+          continue;
+        }
         const x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
         const z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
         const y = 2.4 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);

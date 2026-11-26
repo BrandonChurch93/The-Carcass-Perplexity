@@ -203,27 +203,9 @@ uniform float uBoreHeight;
 uniform int uRingCount;
 uniform float uPoolLevel;
 uniform vec2 uDrain;
-uniform sampler2D tFeet;
-uniform float uFeetReach;
 uniform sampler2D tFoamPic;
 varying vec3 vWorld;
 varying float vDepth;
-// What stands in the mirror: the blades. The mirrored ray is walked out over the plan of their feet; xyz how much of it a blade fills, and how far off.
-vec2 standing(vec2 p, vec3 r) {
-  vec2 dir = normalize(r.xz + 1e-5);
-  float rise = r.y / max(length(r.xz), 1e-3);
-  float hit = 0.0;
-  float far = 0.0;
-  float t = 14.0;
-  for (int i = 0; i < 8; i++) {
-    float feet = texture2D(tFeet, (p + dir * t - uLandRect.xy) * uLandRect.zw).r * uFeetReach;
-    float h = (1.0 - smoothstep(-4.0, 14.0, feet - 0.06 * t * rise)) * (1.0 - smoothstep(240.0, 380.0, t * rise));
-    far = mix(far, t, step(hit, 0.02) * step(0.02, h));
-    hit = max(hit, h);
-    t *= 1.85;
-  }
-  return vec2(hit, far);
-}
 // The level of a picture laid over the flat at so many metres a repeat, by the long side of the pixel's foot on the ground.
 // Read so, a picture costs the software renderer a fraction of what a read by its own slopes costs, and it is the same level.
 vec2 footX;
@@ -279,7 +261,15 @@ void main() {
   // Two trains of ripples that cross, each bent by the slow water under it so that no crest runs straight or evenly spaced.
   vec2 bend = (barB.xy - 0.5) * 0.9 + (barA.xy - 0.5) * 2.2;
   // Before the bore the flat is sucked out toward it: what lies on the water is drawn to the wall, and the level falls a hand.
-  float drawn = smoothstep(190.0, 80.0, p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3));
+  // No picture is read in this branch: far from the wall the flat pays nothing for it.
+  float drawn = 0.0;
+  float under = 0.0;
+  if (p.y - uFront < 460.0) {
+    float ahead = p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3);
+    drawn = smoothstep(190.0, 80.0, ahead);
+    // Under the wall the flat lies in its shade, dark slate, and only long slack bands across it still hold the sky.
+    under = smoothstep(430.0, 160.0, ahead) * (1.0 - 0.8 * smoothstep(0.5, 0.85, 0.5 + 0.5 * sin(p.y * 0.33 + 2.0 * sin(p.x * 0.017))));
+  }
   bend.y += 14.0 * drawn * drawn;
   vec4 c1 = textureLod(tChop, (p + bend) / 3.1 - uTime * uWind * 0.16, rippleLevel(tChop, 3.1));
   vec4 c2 = textureLod(tChop, (vec2(p.y, -p.x) + bend.yx * 0.4) / 0.83 + uTime * vec2(uWind.y, -uWind.x) * 0.3, rippleLevel(tChop, 0.83));
@@ -332,20 +322,12 @@ void main() {
   float sun = sunOn(vWorld, land);
   // The water of the flat is full of sand: what it mirrors it mirrors warm and a little dulled.
   vec3 refl = mirrorSky(r) * mix(1.0, open, 0.5) * vec3(0.86, 0.79, 0.72);
-  // The blades stand in it, dark, paler with the air between.
-  // The lead draws each blade's true image on the water after this sheet (land/, MIRROR): the walked mirror here stood as a block beside it and is off.
-#ifdef WALKED_MIRROR
-  vec2 stood = standing(p, r);
-#else
-  vec2 stood = vec2(0.0, 1e6);
-#endif
-  vec3 rock = skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05;
-  refl = mix(refl, mix(rock, uHaze, 1.0 - exp(-stood.y / 500.0)), stood.x * 0.9);
+  // The lead draws each blade's true image on the water after this sheet (land/, MIRROR).
   // The wall of the bore stands in it as it comes: white at the foot, the dark lifted water, the white crest and the spray over it.
   float toWall = (uFront + 20.0 * sin(p.x * 0.0076 + 1.3) - p.y) / min(r.z, -1e-3);
   if (toWall > 0.0 && toWall < 1500.0) {
     float k = toWall * r.y / (uBoreHeight * (0.9 + 0.2 * c1.b));
-    float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall) * (stood.x < 0.02 || toWall < stood.y ? 1.0 : 1.0 - stood.x);
+    float wall = (1.0 - smoothstep(1.15, 1.7, k)) * smoothstep(1500.0, 700.0, toWall);
     float white = max(1.0 - smoothstep(0.1, 0.2, k), smoothstep(0.7, 0.86, k));
     vec3 lit = skyIrradiance(vec3(0.0, 0.6, 0.8)) / 3.14159;
     // Its dark face stands in the mirror between the white of its foot and of its lip.
@@ -363,10 +345,9 @@ void main() {
   float lip = smoothstep(0.001, 0.006, depth) * (1.0 - smoothstep(0.006, 0.028, depth));
   // A ruffled stretch throws the bright sky wide of the lens and reads dark; near the lens the eye looks down into the water and the bed shows.
   refl *= 1.0 - 0.4 * paw * (1.0 - lip);
-  // Under the wall the flat lies in its shade, dark slate, and only long slack bands across it still hold the sky.
-  float under = smoothstep(430.0, 160.0, p.y - uFront - 20.0 * sin(p.x * 0.0076 + 1.3));
-  float slack = smoothstep(0.5, 0.85, 0.5 + 0.5 * sin(p.y * 0.33 + 5.0 * barB.a + 2.0 * sin(p.x * 0.017)));
-  refl *= 1.0 - 0.62 * under * (1.0 - 0.8 * slack);
+  // Under the wall the break in the cloud over it lies down the flat as a broad bright path, worked by the ripples, with dark slate either side.
+  float lane = pow(max(dot(normalize(r.xz + 1e-5), vec2(-0.12, -0.99)), 0.0), 14.0) * smoothstep(0.0, 0.3, under);
+  refl = mix(refl * (1.0 - 0.6 * under), uHaze * 1.7 * (0.4 + 0.8 * c2.a), 0.85 * lane);
   fres *= mix(0.55, 1.0, smoothstep(8.0, 34.0, distance(cameraPosition, vWorld)));
   fres = mix(fres, 0.8, 0.18 * lip);
   col = fres * refl + (1.0 - fres) * murk * body;
@@ -533,7 +514,9 @@ void main() {
   float turn = aLook.z;
   vec2 corner = position.xy * aAt.w;
   corner = vec2(corner.x * cos(turn) - corner.y * sin(turn), corner.x * sin(turn) + corner.y * cos(turn));
-  centre.xy += corner * vec2(1.0, aLook.w);
+  // A stretch under zero is a single drop (under minus fifty the ring it leaves on the water); else a head of spray.
+  float ring = step(aLook.w, -50.0);
+  centre.xy += corner * vec2(1.0, abs(aLook.w) - 100.0 * ring);
   vUv = position.xy;
   vLook = aLook;
   vMist = step(1.0, aLook.x);
@@ -565,7 +548,10 @@ void main() {
   // A head of thrown water: eaten at the rim into lumps and strings, thick in the middle.
   float eat = r2 + mix(1.5, 0.22, vMist) * (t.r - 0.5) + mix(0.6, 0.0, vMist) * (0.5 - t.g);
   float body = 1.0 - smoothstep(mix(0.22, -0.1, vMist), mix(0.72, 0.95, vMist), eat);
-  float alpha = clamp(body * (0.55 + 0.45 * t.a) * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
-  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * (0.9 + 0.6 * t.g) * mix(0.62 + 0.3 * body + 0.42 * vUv.y + 0.25 * (t.r - 0.5), 0.6, vMist);
+  float drop = step(vLook.w, -0.001);
+  float ring = step(vLook.w, -50.0);
+  float bead = mix(1.0 - smoothstep(0.2, 1.0, r2), smoothstep(0.3, 0.6, r2) * (1.0 - smoothstep(0.7, 1.0, r2)), ring);
+  float alpha = clamp(mix(body * (0.55 + 0.45 * t.a), bead, drop) * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
+  vec3 col = vec3(0.95, 0.96, 0.96) * vLight * mix((0.9 + 0.6 * t.g) * mix(0.62 + 0.3 * body + 0.42 * vUv.y + 0.25 * (t.r - 0.5), 0.6, vMist), 0.75 + 0.6 * vUv.y, drop);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;

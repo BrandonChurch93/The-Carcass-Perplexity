@@ -7,7 +7,14 @@ import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
 import { WALL_A } from './crest';
 
 /** The sheet that stands before the last shot's lens: mat/borewall-c.jpg, a dark standing face under a pitching lip. Its crest is level in the picture: the heads along it are given here. */
-const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => 0.95 + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1)) };
+const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => {
+    // Not one height along it: left of the lens it is already down, in the middle it stands and curls, toward the right stack it rears.
+    const u = i / (WALL_A.profile.length - 1);
+    const down = 1 - Math.min(1, Math.max(0, (u - 0.1) / 0.3));
+    const rears = Math.min(1, Math.max(0, (u - 0.62) / 0.25));
+    return 0.95 - 0.24 * down * down * (3 - 2 * down) + 0.09 * rears * rears * (3 - 2 * rears) + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1);
+  }),
+};
 import { BORE_SPEED, boreArrives, boreFront } from './tide';
 
 const rand = (a: number, b: number): number => hash2(a, b) / 4294967296;
@@ -237,6 +244,11 @@ void main() {
   vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
 #ifdef CURTAIN
   float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.6, 1.0, a)) * (1.0 - uSolo);
+  // Thrown water is lumps and holes: no sheet of it has an edge, least of all where it leaves the lip.
+  vec3 lumps = texture2D(tFoamPic, vec2(x / 13.0, a * 1.7 - uTime * 0.22)).rgb;
+  float lump = dot(lumps, vec3(0.3333));
+  alpha *= smoothstep(0.0, 0.3, a + 0.6 * (lump - 0.5)) * smoothstep(0.22 + 0.3 * a, 0.62 + 0.3 * a, lump + 0.25);
+  pic = mix(lumps * 1.15 + 0.1, pic, smoothstep(0.1, 0.4, a));
   vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
   // Thrown water is thin at its top and the bright sky behind the wave shows in it.
   vec3 behind = skyRadiance(-v);
@@ -261,6 +273,11 @@ void main() {
   bool bare = a < 0.0 && apron < 0.3 && lifted <= 0.0;
   float foot = a < 0.0 ? 1.0 : smoothstep(0.1, 0.0, t);
   pic = mix(pic, max(churn, vec3(0.5) * step(a, 0.0) * 0.0) + 0.25 * apron * step(a, 0.0), foot);
+  // No wave has an outline: the top of the wall is churned white with holes in it, torn lower in one place than the next.
+  vec3 top = texture2D(tFoamPic, vec2(x / 9.0, t * 2.2 - uTime * 0.3)).rgb;
+  float torn = smoothstep(0.7, 1.0, t) * 1.3 - dot(top, vec3(0.3333)) - 0.25 * (tongue - 0.8);
+  pic = mix(pic, top * 1.1 + 0.12, smoothstep(0.72, 0.9, t) * step(0.0, a));
+  bare = bare || (a > 0.0 && torn > 0.32);
   lum = dot(pic, vec3(0.3, 0.5, 0.2));
   float foam = smoothstep(0.2, 0.6, lum);
   vec3 n = normalize(vNormalW);

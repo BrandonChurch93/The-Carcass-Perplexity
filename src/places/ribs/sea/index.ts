@@ -142,7 +142,7 @@ export function create(ctx: Context): Piece {
   const poolMaterial = new THREE.ShaderMaterial({
     vertexShader: POOL_VERTEX,
     fragmentShader: POOL_FRAGMENT(MAX_RINGS),
-    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFeet: { value: feetMap }, uFeetReach: { value: FEET_REACH }, tFoamPic: { value: foamPicture } },
+    uniforms: { ...rig.uniforms, ...shared, uRings: { value: rings }, uRingCount: ringCount, uPoolLevel: { value: LEVELS.pool }, uFront: front, uBoreHeight: { value: BORE_HEIGHT }, uDrain: { value: new THREE.Vector2(DRAIN, DRAIN_REACH) }, tFoamPic: { value: foamPicture } },
     transparent: true,
     depthWrite: false,
     blending: THREE.CustomBlending,
