@@ -3,10 +3,12 @@ import { BEASTS, F, K1_AT, K1_DIR, R, T0, UNIT, WALLOW_TIME, bearingDir, keyTime
 import { secondsInPlace, shotsOf } from '../../../film/cut';
 import { stagedSeconds } from '../shared/stage';
 import type { Context, Piece } from '../shared/context';
-import { great, lying, young } from './act';
-import { newDrive, walk, type Build, type Plan } from './animal';
+import { great, lying, trod, young } from './act';
+import { newDrive, type Build, type Plan } from './animal';
 import { Beast } from './body';
 import { mudWallow } from '../dead/mud';
+import { roam } from './roam';
+import { Tread } from './tread';
 import { Wet } from './wet';
 
 export const PARTS: readonly string[] = ['wallowers'];
@@ -50,7 +52,8 @@ export function create(ctx: Context): Piece {
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.95 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
-    const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
+    // The one by the lens of the wallowers has rolled and is wet all over; the rest that lie in the brine have dried down to a hand above it.
+    const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
       beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
@@ -90,12 +93,15 @@ export function create(ctx: Context): Piece {
   add(K1_AT[0] + K1_DIR[0] * 33 - K1_DIR[1] * 5.6, K1_AT[1] + K1_DIR[1] * 33 + K1_DIR[0] * 5.6, keyTime('marsh-1'), [K1_DIR[1], -K1_DIR[0]], 0.6, 0.3, 0.16, 0.05);
   const seepWader = herd.length - 1;
 
+  // The two that lay in the channel nearest the lens of the wide key are off the set: that near they did not hold as animals, and nothing that cannot is kept close.
+  const tooNear = herd.map((_, i) => i < BEASTS.length && (BEASTS[i] as (typeof BEASTS)[number]).d < 26);
   const wet = new Wet(ctx, herd.length);
+  const tread = new Tread(ctx, 2);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
   const wallows = herd
     .filter((h) => h.onBank && ctx.rig.land.shore(h.plan.at[0], h.plan.at[1]) > -0.02)
     .map((h, i) => mudWallow(ctx, h.plan.at[0] + h.plan.dir[0] * 0.5 * h.beast.b.k, h.plan.at[1] + h.plan.dir[1] * 0.5 * h.beast.b.k, h.plan.dir, 1.05 * h.beast.b.k, [0.08, 0.052, 0.042], 'wallowers-mud-' + i, 1));
-  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh)];
+  const meshes = [...herd.flatMap((h) => [h.beast.mesh, h.beast.feelers]), wet.mesh, ...wallows.map((w) => w.mesh), tread.mesh];
   ctx.parts.built('wallowers', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
 
@@ -113,7 +119,7 @@ export function create(ctx: Context): Piece {
       const cleared = staged >= WALLOW_SPAN[0] && staged <= WALLOW_SPAN[1];
       const seep = staged >= SEEP_SPAN[0] && staged <= SEEP_SPAN[1];
       herd.forEach((h, i) => {
-        const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep);
+        const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep) && !tooNear[i];
         h.beast.mesh.visible = on;
         h.beast.feelers.visible = on;
         const acted = cleared && i < 3;
@@ -124,7 +130,7 @@ export function create(ctx: Context): Piece {
         if (acted && i === 0) great(h.plan, h.beast.b, seconds, t, cast[0] as number, drive);
         else if (acted && i === 1) young(h.plan, h.beast.b, seconds, t, toGreat, drive);
         else if (acted) lying(h.plan, h.beast.b, seconds, t, cast[2] as number, drive);
-        const driven = acted ? drive : walk(h.plan, h.beast.b, seconds, drive);
+        const driven = acted ? drive : roam(h.plan, h.beast.b, seconds, h.sunk, drive);
         driven.floor = h.floor;
         // STAGED for the lens of the wallowers: the great one's feelers are turned down and spread into the mud like the fingers of a hand, as the approved picture has them.
         if (i === 0) driven.splay += 0.3;
@@ -158,12 +164,18 @@ export function create(ctx: Context): Piece {
         }
         ctx.rig.setDisc(discs, i * DISCS + 4, stood.x, stood.z, 1.5 * k, on ? (ctx.rig.land.shore(stood.x, stood.z) > 0.05 ? 0.6 : 0.3) : 0, 1.9, stood.yaw);
         wet.set(i, stood, k, seconds, on ? 1 : 0);
+        if (i < 2) {
+          if (acted) tread.set(i, h.plan, h.beast.b, (trod[i] as (typeof trod)[number]).s, (trod[i] as (typeof trod)[number]).pace, on ? 1 : 0);
+          else tread.hide(i);
+        }
       });
       wet.touch();
+      tread.touch();
     },
     dispose: () => {
       for (const h of herd) h.beast.dispose();
       wet.dispose();
+      tread.dispose();
       for (const w of wallows) w.dispose();
     },
   };

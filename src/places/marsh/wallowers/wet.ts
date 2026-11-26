@@ -240,6 +240,8 @@ export class Wet {
       const age = fract(turn);
       const size = (1.3 + 1.9 * age) * k;
       if (sunk && r === 0) this.put(o, stood.x, 0.004, stood.z, size, 1, 0.6 * (1 - age) * (1 - age), 0.07 / (1.3 + 1.9 * age), 60 + r + Math.floor(turn) * 0.53);
+      // And the mud it has stirred up off the bed hangs in the brine about it: it lies in a brown cloud, not on a clean sheet.
+      else if (sunk && r === 1) this.put(o, stood.x, 0.003, stood.z, 1.75 * k, 2, 0.7, 0, 70 + i * 1.3);
       else this.put(o, 0, -1000, 0, 0, 1, 0, 0.05, 0);
       o += 4;
     }

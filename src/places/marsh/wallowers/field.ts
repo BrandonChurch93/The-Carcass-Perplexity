@@ -118,14 +118,14 @@ export function wallowerBody(young: number, seed: number): Body {
   };
 
   // The trunk: a rump, a deep belly slung under one arch of back, a chest between the shoulders, and a head that hangs with no neck to speak of.
-  ball(PELVIS, [-1.52 * lx, 1.2, 0], [0.62, 0.7, 0.7], 0);
-  ball(BELLY, [-0.5 * lx, 1.27, 0], [1.02, 0.72 + 0.04 * young, 0.86], 0.3);
+  ball(PELVIS, [-1.52 * lx, 1.25, 0], [0.62, 0.63, 0.7], 0);
+  ball(BELLY, [-0.5 * lx, 1.33, 0], [1.02, 0.63 + 0.08 * young, 0.86], 0.3);
   ball(BELLY, [-0.1 * lx, 1.52, 0], [1.25, 0.55, 0.6], 0.25);
-  ball(CHEST, [0.6 * lx, 1.22, 0], [0.82, 0.72, 0.8], 0.3);
+  ball(CHEST, [0.6 * lx, 1.29, 0], [0.82, 0.63, 0.8], 0.3);
   for (const s of [-1, 1]) {
     // The haunch and the shoulder stand out over each leg.
-    ball(PELVIS, [-1.24 * lx, 1.02, s * 0.44], [0.52, 0.6, 0.4], 0.22);
-    ball(CHEST, [0.74 * lx, 1.02, s * 0.47], [0.46, 0.58, 0.38], 0.22);
+    ball(PELVIS, [-1.24 * lx, 1.14, s * 0.44], [0.52, 0.47, 0.4], 0.22);
+    ball(CHEST, [0.74 * lx, 1.14, s * 0.47], [0.46, 0.45, 0.38], 0.22);
   }
   ball(NECK, [1.28 * lx, 1.1, 0], [0.66 * hd, 0.62 * hd, 0.6 * hd], 0.3, -0.35);
   ball(HEAD, [1.82 * lx, 0.86, 0], [0.56 * hd, 0.42 * hd, 0.45 * hd], 0.24, -0.5);
@@ -153,8 +153,9 @@ export function wallowerBody(young: number, seed: number): Body {
   LEG_AT.forEach(([x0, side], l) => {
     const hind = x0 < 0;
     const x = x0 * lx;
-    const hip: V3 = [x - 0.02, 0.98, side * 0.5];
-    const knee: V3 = [x + (hind ? 0.1 : -0.07), 0.54 * stub, side * 0.63];
+    // Folded as it stands: the thigh comes forward to a knee at the flank, the upper arm goes back to an elbow under the chest, and the shank and the forearm come down from there to the pad.
+    const hip: V3 = [x + (hind ? -0.12 : 0.12), 0.98, side * 0.5];
+    const knee: V3 = [x + (hind ? 0.2 : -0.16), 0.58 * stub, side * 0.63];
     const ankle: V3 = [x + 0.03, 0.14, side * 0.68];
     skeleton.hip.push(hip);
     skeleton.knee.push(knee);
@@ -164,16 +165,20 @@ export function wallowerBody(young: number, seed: number): Body {
     skeleton.joint[bone + 1] = knee;
     skeleton.joint[bone + 2] = ankle;
     const fat = 1 + 0.12 * young;
-    limb(bone, hip, knee, 0.37 * fat, 0.27 * fat, 0.2, 1);
-    limb(bone + 1, knee, [ankle[0], 0.2, ankle[2]], 0.255 * fat, 0.225 * fat, 0.1, 1);
+    // A leg and not a pillar: a thick arm under the hide of the trunk, a knee that stands out, a shin that narrows to the wrist, and the pad wider than the wrist.
+    limb(bone, hip, knee, 0.36 * fat, 0.235 * fat, 0.2, 1);
+    ball(bone + 1, [knee[0] + (hind ? 0.05 : -0.05), knee[1], knee[2]], [0.25 * fat, 0.2 * fat, 0.24 * fat], 0.08);
+    prims[prims.length - 1]!.leg = 1;
+    limb(bone + 1, knee, [ankle[0], 0.2, ankle[2]], 0.215 * fat, 0.17 * fat, 0.08, 1);
     // A broad pad, and four blunt claws that splay from it.
     ball(bone + 2, [ankle[0] + 0.05, 0.1, ankle[2]], [0.31 * fat, 0.14, 0.28 * fat], 0.1);
     prims[prims.length - 1]!.leg = 1;
     for (let c = 0; c < 4; c++) {
       const f = (c - 1.5) / 1.5;
       const a: V3 = [ankle[0] + 0.26 * fat - 0.05 * f * f, 0.085, ankle[2] + f * 0.19 * fat];
-      const b: V3 = [a[0] + 0.2 - 0.05 * f * f, 0.035, a[2] + f * 0.1 + side * 0.02];
-      limb(bone + 2, a, b, 0.062, 0.03, 0.035, 1, 1);
+      // Short and blunt, a hoof to each toe: long ones read as the fingers of a hand.
+      const b: V3 = [a[0] + 0.13 - 0.04 * f * f, 0.045, a[2] + f * 0.07 + side * 0.02];
+      limb(bone + 2, a, b, 0.082, 0.05, 0.03, 1, 1);
     }
   });
 
@@ -285,7 +290,7 @@ export function wallowerBody(young: number, seed: number): Body {
       const d = Math.hypot(x - h[0], (y - h[1] - 0.1) * 0.9, (z - h[2]) * 0.8);
       const near = Math.exp(-(d * d) / 0.34);
       const r = ridge(d / (0.19 * space) + 0.9 * w2 + 0.4 * w1, 0.55);
-      sleeve += 0.016 * near * (r - 0.62);
+      sleeve += 0.034 * near * (r - 0.62);
       r3 = Math.min(r3, 1 - near * (1 - r));
     }
     const r4 = ridge(y / (0.125 * space) + 1.5 * w2 + 0.7 * w3 + 0.3 * Math.sin(x * 9 + z * 7), 0.55);
@@ -293,10 +298,10 @@ export function wallowerBody(young: number, seed: number): Body {
     // Not everywhere: a slack patch here, a tight one there.
     const gate = 0.25 + 0.75 * smooth(0.35, 0.6, noise3(x * 0.9 + 7, y * 0.9, z * 0.9 + 3, sd + 9));
     let h = 0;
-    h += 0.012 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
-    h += 0.016 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
+    h += 0.03 * gate * trunk * flank * (0.45 + 0.55 * side) * (1 - 0.6 * top) * (r1 - 0.62);
+    h += 0.04 * (0.5 + 0.5 * gate) * trunk * neck * (1 - 0.35 * top) * (r2 - 0.62);
     h += sleeve * (1 - horn) * (1 - 0.7 * legness * smooth(0.6, 0.3, y));
-    h += 0.012 * shin * (r4 - 0.62);
+    h += 0.026 * shin * (r4 - 0.62);
     // Slow lumps: nothing on it is a clean ellipsoid.
     h += (0.09 * w1 + 0.04 * w2 + 0.012 * w3) * (1 - horn) * (1 - 0.6 * legness);
     // The belly hangs lower behind the middle.

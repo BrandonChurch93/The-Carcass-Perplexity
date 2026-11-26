@@ -69,6 +69,14 @@ uniform vec3 uEmitterRadiance[8];`;
 
 export const RIG_GLSL = /* glsl */ `
 ${RIG_UNIFORMS_GLSL}
+// Toward the brighter side of the overcast, on x and z (bearing 320 degrees), and how much more a face turned to it takes.
+const vec2 RIG_KEY = vec2(-0.643, -0.766);
+const float RIG_KEY_SHARE = 0.26;
+// (The cloud's shade is laid over the frame by the air pass, once for each texel, and not by each surface: rigCloud is there for it.)
+const float RIG_CLOUD_SHARE = 0.11;
+// The grade: the light that stays where it is, and how much steeper the darks fall away under it.
+const float RIG_PIVOT = 0.4;
+const float RIG_CONTRAST = 0.95;
 
 // Radiance of the overcast toward d, for lighting and for what a wet surface mirrors. An overcast is brightest overhead and a third as bright
 // at the horizon; this one keeps more at the horizon, where the haze over the salt is lit from below by the flats.
@@ -87,7 +95,19 @@ vec3 skyIrradiance(vec3 n) {
   float seen = lean * lean * lean;
   float up = n.y >= 0.0 ? 0.5 + 0.5 * n.y : 0.5 * seen;
   vec3 e = mix(uSkyGround, mix(uSkyHorizon, uSkyZenith, 0.6 * max(n.y, 0.0)), up) * uFill;
+  // The overcast has a brighter side, where the sun stands behind it: a face turned to it takes more, one turned away less, and level
+  // ground the same as before. This is what gives a body, a trunk and a bank a light side and a dull one.
+  e *= 1.0 + RIG_KEY_SHARE * dot(n.xz, RIG_KEY);
   return 3.14159 * e;
+}
+
+// The slow shade of the cloud as it passes over the flats: thicker and thinner overcast, some hundreds of strides across, travelling with
+// the upper wind. 1 is the mean.
+float rigCloud(vec2 xz) {
+  vec2 q = xz * 0.012 + vec2(0.085, 0.031) * uTime;
+  float a = sin(q.x + 1.7 * sin(q.y * 0.83 + 0.6)) * sin(q.y * 1.13 + 1.3 * sin(q.x * 0.71 + 2.0));
+  float b = sin(q.x * 2.3 - q.y * 1.7 + 2.0 * sin(q.y * 1.9 + 0.4));
+  return 1.0 + RIG_CLOUD_SHARE * (0.7 * a + 0.3 * b);
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1),
@@ -180,7 +200,26 @@ vec3 rigAir(vec3 c, float distance, float height) {
 }
 
 // The last line of every built surface: gl_FragColor = vec4(rigOut(colour), 1.0). It blacks the surface when an effect is drawn alone.
+// It carries the grade of the place as well, in scene-linear light and before the air lies over the surface: the darks are taken down
+// and kept rust red, and what is pale loses its pink, so that salt is grey-white beside the brine.
+vec3 rigGrade(vec3 c) {
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  // The darks and mids lifted to the milk of the place: a gain that falls from 1.27 in the darks to 0.955 at white. (It stands in for
+  // RIG_PIVOT * pow(l / RIG_PIVOT, RIG_CONTRAST), which costs every surface of every folder a power for each texel it draws.)
+  float m = l * (0.94 + 0.0156 / (l + 0.042));
+  // The whites are held under the sky's: salt in an overcast is pale, not lit.
+  float over = max(m - 0.4, 0.0);
+  m -= 0.3 * over * over / (over + 0.15);
+  float pale = clamp((m - 0.1) * 2.63, 0.0, 1.0);
+  c = mix(vec3(m), c * (m / max(l, 1e-5)), 1.0 - 0.42 * pale);
+  return max(c * mix(vec3(1.0), vec3(0.985, 1.0, 1.03), pale), 0.0);
+}
 vec3 rigOut(vec3 c) {
+  // (Not while the brine's mirror is drawn: what it mirrors is graded once, when the brine itself comes out.)
+  return (uMirror > 0.5 ? c : rigGrade(c)) * (1.0 - uSolo);
+}
+// For what is not a surface (the sky): blacked when an effect is drawn alone, and not graded.
+vec3 rigPlain(vec3 c) {
   return c * (1.0 - uSolo);
 }`;
 
