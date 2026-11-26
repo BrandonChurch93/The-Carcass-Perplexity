@@ -258,7 +258,8 @@ void main() {
   float drift = vnoise(vWorld.xz / 47.0 + 7.3);
   float lie = nRock.y * 0.3 + mix(n0.y, nFace.y, 0.8) * 0.7 + 0.2 * (0.5 - pit) + 0.1 * lee + 0.16 * (drift - 0.5);
   // (On the ground the snow is deep: it leaves bare only what stands well out of it, and its edge on the stone is hard.)
-  if (ground) lie += 0.1 - 0.3 * rockness;
+  // (Its edge follows the lie of the ground more than the grain of the sheet, which seen aslant is pulled into streaks.)
+  if (ground) lie += 0.2 - 0.3 * rockness + 0.18 * (n0.y - nRock.y);
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
   float snow = show > 0.01 ? smoothstep(hold, hold + (ground ? 0.035 : 0.1), lie) : 1.0;
   snow *= 1.0 - burn;

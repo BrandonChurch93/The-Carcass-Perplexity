@@ -206,6 +206,8 @@ float hangs(vec2 across, float r, float g) {
   float below = -g * length(across * vec2(1.0, low)) / max(across.y * low * low, 0.01);
   float cell = across.x / 0.7;
   float h = fract(sin(floor(cell) * 12.9898 + 4.1) * 43758.5453);
+  // (Not one to every place along the lip: they hang in groups.)
+  if (h < 0.3 || vnoise(vec2(across.x * 0.3 + 3.0, 5.2)) < 0.4) return 0.0;
   float len = (0.8 + 5.5 * h * h) * smoothstep(0.15, 0.5, crown);
   return below < len && abs(fract(cell) - 0.5) < (0.16 + 0.26 * h) * (1.0 - below / len) ? 1.0 : 0.0;
 }
@@ -838,8 +840,10 @@ void main() {
       float crown = smoothstep(-0.3, 0.6, over.y / r);
       float runs = vnoise(vec2(vSL.y * 0.55, 3.3)) * 0.6 + vnoise(vec2(vSL.y * 1.9, 7.1)) * 0.4;
       float wide = mix(0.8, 4.5, crown) * (0.4 + 1.2 * runs);
-      float ice = g < 0.0 ? 1.0 : (1.0 - smoothstep(0.45 * wide, wide, g)) * smoothstep(-0.25, 0.1, over.y / r);
-      albedo = mix(albedo, vec3(0.6, 0.68, 0.79) * (0.8 + 0.4 * runs), 0.9 * ice);
+      // (It is not a line drawn round the hole: it stands in lengths, with bare rock between them.)
+      float held = smoothstep(0.38, 0.56, vnoise(vec2(over.x * 0.3 + 3.0, over.y * 0.3 + 1.7)) * 0.7 + 0.3 * runs);
+      float ice = g < 0.0 ? 1.0 : (1.0 - smoothstep(0.45 * wide, wide, g)) * smoothstep(-0.25, 0.1, over.y / r) * held;
+      albedo = mix(albedo, vec3(0.6, 0.68, 0.79) * (0.8 + 0.4 * runs), (g < 0.0 ? 0.9 : 0.8) * ice);
       rough = mix(rough, 0.22, ice);
       occ = mix(occ, 1.0, 0.7 * ice);
     }
