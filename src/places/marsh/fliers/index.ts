@@ -132,7 +132,7 @@ export function create(ctx: Context): Piece {
     const perch = tall[rng.int(tall.length)] as (typeof tall)[number];
     start.set([perch.x + rng.range(-0.8, 0.8), perch.h + rng.range(0.3, 1.2), perch.z + rng.range(-0.8, 0.8), rng.range(0.6, 1.6)], i * 4);
     // The larger the slower its beat.
-    const size = rng.range(0.1, 0.16);
+    const size = rng.range(0.05, 0.085);
     way.set([rng.range(0, TAU), rng.range(0, TAU), size, rng.range(0, TAU)], i * 4);
   }
   const g = new THREE.InstancedBufferGeometry();
