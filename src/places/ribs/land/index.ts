@@ -293,7 +293,13 @@ export function create(ctx: Context): Piece {
   const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
   // The crag draws its own weed line; the skirt hangs under it, so that no hem of it cuts the crag's blocks before the colony's lens.
-  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2, 9), weed);
+  // It hangs clear of every ledge and block: a curtain over the widest the rock stands within a few metres of a place, not a skin on it.
+  const curtain = (y: number, angle: number): number => {
+    let r = 0;
+    for (const dy of [-3, -1.5, 0, 1.5, 3]) for (const da of [-0.03, 0, 0.03]) r = Math.max(r, COLONY.cragAt(angle + da, Math.max(0, y + dy)));
+    return r;
+  };
+  add(skirts, stackWeed(COLONY.x, COLONY.z, curtain, 420, 0.5, 9), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
 
   // Loose rock: fallen from the blades round their feet, and smaller pieces out on the floor. None on the paths of the cameras.
