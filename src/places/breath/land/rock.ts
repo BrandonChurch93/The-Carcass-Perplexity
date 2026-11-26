@@ -181,6 +181,27 @@ float rimBump(float b, float centre, float width) {
   if (d > 3.14159265) d = 6.2831853 - d;
   return d < width ? 0.5 + 0.5 * cos(3.14159265 * d / width) : 0.0;
 }
+// The shelf's light: the rig's, from the functions under rigShade. The sun stands 8.5 degrees up in a wet haze over a bright sea: half of
+// what it gives the shelf comes straight (and is cut by every edge), the other half comes round from the glowing haze about it and from
+// the lit rock and water beside, and fills the shade. So a plate in shade is half as bright as one in the sun, not a fifth.
+vec3 shelfShade(vec4 land, vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
+  float above = p.y - land.r;
+  float contact = contactDrawn(p) * smoothstep(5.0, 0.0, above);
+  float open = mix(land.g, 1.0, clamp(above / 30.0, 0.0, 1.0)) * (1.0 - 0.85 * contact) * occ;
+  float cloud = sunCloud(p.xz);
+  float sun = sunSeen(land, p.y) * cloud * (1.0 - contact) * (0.4 + 0.6 * occ);
+  float nl = max(dot(n, uSunDir), 0.0);
+  vec3 sky = skyIrradiance(n);
+  vec3 around = mix(uSunColour, vec3(dot(uSunColour, vec3(0.3, 0.5, 0.2))), 0.45) * (0.2 * (0.5 + 0.5 * dot(n, normalize(vec3(uSunDir.x, 0.6, uSunDir.z)))) * mix(0.75, 1.0, cloud));
+  vec3 e = (1.15 * sky + around) * open + uSunColour * (3.14159 * 0.5 * nl * sun);
+  vec3 c = albedo * e / 3.14159;
+  float nv = clamp(dot(n, v), 0.0, 1.0);
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  vec3 r = reflect(-v, n);
+  r.y = abs(r.y);
+  vec3 env = mix(skyRadiance(r), sky / 3.14159, rough * rough);
+  return c + f * env * open + uSunColour * (f * sunLobe(n, v, rough) * nl * sun);
+}
 void main() {
   vec3 p = vWorld;
   vec3 toEye = cameraPosition - p;
@@ -255,8 +276,8 @@ void main() {
   // The plate the dead one lies on stands dry and pale over the tide.
   vec2 fromPad = p.xz - vec2(-27.3, 22.6);
   float dryPad = smoothstep(8.5, 5.0, length(fromPad)) * smoothstep(0.2, 0.4, field.r - (${SEA.toFixed(3)}));
-  plate = mix(plate, texture2D(tPlate, pq, 6.0).rgb * vec3(1.0, 0.98, 0.95), 0.8 * dryPad);
-  vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6) * mix(broadStain, 2.0 / mix(1.0, tone, 0.5), dryPad);
+  plate = mix(plate, texture2D(tPlate, pq, 3.0).rgb * vec3(1.0, 0.98, 0.95), 0.5 * dryPad);
+  vec3 rock = plate * vec3(0.43, 0.52, 0.6) * tone * clamp(pow(mark, 1.3), 0.3, 1.6) * mix(broadStain, 1.2 / mix(1.0, tone, 0.5), dryPad);
   rock = mix(rock, rock * (0.55 + 0.9 * field.a), stone);
   // The steep edge of a plate is broken rock: darker, rustier than its top.
   // It takes the grain of wet rock laid square on its own face (not the plate's picture pulled down it), in level bands as the beds lie.
@@ -273,7 +294,7 @@ void main() {
   float tide = smoothstep(0.5, 0.05, abs(over - 0.1)) * smoothstep(0.3, 0.6, a.b * 2.0 + 0.5 * (tone - 1.0)) + 0.5 * hollow * smoothstep(0.6, 0.15, over);
   // On a plate's broken edge the weed is only a line at the water, and the wet face keeps its stone's colour: it is not a black wall.
   rock = mix(rock, vec3(0.045, 0.05, 0.028) * (0.6 + 0.8 * tone), 0.7 * clamp(tide, 0.0, 1.0) * mix(1.0, smoothstep(0.3, 0.05, over), steep));
-  vec3 albedo = rock * mix(1.0, mix(0.4, 0.55, steep), damp);
+  vec3 albedo = rock * mix(1.0, mix(0.68, 0.74, steep), damp);
   // The rocks that break the water under the lens of the feeding waders are dark and wet through, with weed on them.
   vec2 fromBar = p.xz - vec2(-50.2, -22.4);
   float bar = exp(-(0.12 * fromBar.x * fromBar.x + fromBar.y * fromBar.y) / 5.5) * smoothstep(-0.05, 0.1, over);
@@ -297,7 +318,7 @@ void main() {
   // The shade of the drifting fog banks dims the sun and its glare; it is not the land's shadow and does not move the shadow's height.
   float cloud = sunCloud(p.xz);
   land.b = p.y + mix(0.35, 0.03, lit);
-  vec3 colour = rigShadeOn(land, p, n, v, albedo, rough, occ);
+  vec3 colour = shelfShade(land, p, n, v, albedo, rough, occ);
   // A broken edge in its own shade is lit by the wet rock and the water at its foot.
   colour += albedo * (uSkyHorizon * uFill + 0.25 * uGlowColour) * (0.3 * steep * vOcc);
   // Where it is wet the shelf mirrors the lit haze at the horizon, and in the glare path the wet grain throws the low sun back in points.
