@@ -38,9 +38,9 @@ void main() {
   Rock k = rockAt(vWorld, n, face);
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
-  float damp = smoothstep(0.42, 0.03, vWorld.y + 0.1 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
-  k.albedo *= mix(1.0, 0.5, damp) * mix(1.0, 0.55, smoothstep(0.0, -0.12, vWorld.y) * (1.0 - face));
-  k.rough = mix(k.rough, 0.35, damp * 0.8);
+  float damp = smoothstep(1.9, 0.5, vWorld.y + 0.5 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
+  k.albedo *= mix(1.0, 0.3, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
+  k.rough = mix(k.rough, 0.8, damp);
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
   float bearing = degrees(atan(vWorld.x, -vWorld.z));
   float roofed = smoothstep(26.0, 52.0, bearing) * (1.0 - smoothstep(116.0, 142.0, bearing));
@@ -105,17 +105,18 @@ void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 w = pow(abs(n), vec3(4.0));
   w /= w.x + w.y + w.z;
-  float size = 2.6;
-  vec2 ux = vLocal.zy / size;
-  vec2 uy = vLocal.xz / size;
-  vec2 uz = vLocal.xy / size;
+  // A block is a piece of the wall: the cliff picture, small, from the part of it that is clean stone.
+  float size = 9.0;
+  vec2 ux = vLocal.zy / size + vec2(0.0, 0.62);
+  vec2 uy = vLocal.xz / size + vec2(0.3, 0.62);
+  vec2 uz = vLocal.xy / size + vec2(0.6, 0.62);
   vec3 col = texture2D(tBoulder, ux).rgb * w.x + texture2D(tBoulder, uy).rgb * w.y + texture2D(tBoulder, uz).rgb * w.z;
   vec3 nh = texture2D(tBoulderNh, ux).rgb * w.x + texture2D(tBoulderNh, uy).rgb * w.y + texture2D(tBoulderNh, uz).rgb * w.z;
-  vec3 albedo = vec3(0.4, 0.375, 0.34) * (0.35 + 9.5 * dot(col, vec3(0.33))) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
+  vec3 albedo = mix(col, vec3(dot(col, vec3(0.33))), 0.6) * vec3(0.78, 0.85, 0.96) * (0.72 + 0.5 * vTint.x) * mix(vec3(0.92, 0.95, 1.0), vec3(1.08, 1.0, 0.9), vTint.y);
   vec2 d = nh.xy * 2.0 - 1.0;
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
-  n = normalize(n + (t * d.x + b * d.y) * 0.5);
+  n = normalize(n + (t * d.x + b * d.y) * 1.1);
   // Where the stone meets the ground it is in its own shade, and wet where the ground is.
   vec4 land = landAt(vWorld.xz);
   float foot = smoothstep(0.0, 0.35, vWorld.y - max(land.r, 0.0) + 0.08);
@@ -256,7 +257,7 @@ export function create(ctx: Context): Piece {
     put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
   }
 
-  const boulder = { tBoulder: { value: ctx.assets.texture('land/boulder.jpg', { anisotropy: 2 }) }, tBoulderNh: { value: ctx.assets.texture('land/boulder-nh.png', { kind: 'data', anisotropy: 2 }) } };
+  const boulder = { tBoulder: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) }, tBoulderNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) } };
   const stoneMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...boulder }, vertexShader: STONE_VERTEX, fragmentShader: STONE_FRAGMENT });
   const dummy = new THREE.Object3D();
   const scree: THREE.InstancedMesh[] = [];

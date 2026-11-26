@@ -1,15 +1,17 @@
 // The stone of the Eye: pale bedded limestone on the faces, grey gravel and talus on the flats. One chunk of GLSL, used by the land, the brow,
 // the scree and the wall of the shaft, so that all the rock is the same rock.
-//   tCliff, tCliffNh, tTalus, tTalusNh: the pictures in public/assets/eye/land/.
+//   tCliff, tCliffNh (cliff, 120 m a repeat, beds level, rubble at its foot), tTalus, tTalusNh (shore, 4 m), tSinter, tSinterNh (sinter, 3 m): the pictures in public/assets/eye/mat/.
 import type * as THREE from 'three';
 import type { Context } from '../shared/context';
 
 export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
   return {
-    tCliff: { value: ctx.assets.texture('land/cliff.jpg', { anisotropy: 2 }) },
-    tCliffNh: { value: ctx.assets.texture('land/cliff-nh.png', { kind: 'data' }) },
-    tTalus: { value: ctx.assets.texture('land/talus.jpg', { anisotropy: 2 }) },
-    tTalusNh: { value: ctx.assets.texture('land/talus-nh.png', { kind: 'data' }) },
+    tCliff: { value: ctx.assets.texture('mat/cliff.jpg', { anisotropy: 2 }) },
+    tCliffNh: { value: ctx.assets.texture('mat/cliff-nh.png', { kind: 'data' }) },
+    tTalus: { value: ctx.assets.texture('mat/shore.jpg', { anisotropy: 8 }) },
+    tTalusNh: { value: ctx.assets.texture('mat/shore-nh.png', { kind: 'data', anisotropy: 4 }) },
+    tSinter: { value: ctx.assets.texture('mat/sinter.jpg', { anisotropy: 2 }) },
+    tSinterNh: { value: ctx.assets.texture('mat/sinter-nh.png', { kind: 'data' }) },
   };
 }
 
@@ -18,6 +20,8 @@ uniform sampler2D tCliff;
 uniform sampler2D tCliffNh;
 uniform sampler2D tTalus;
 uniform sampler2D tTalusNh;
+uniform sampler2D tSinter;
+uniform sampler2D tSinterNh;
 
 struct Rock {
   vec3 albedo;
@@ -31,30 +35,34 @@ struct Rock {
 Rock rockAt(vec3 p, vec3 n, float face) {
   Rock k;
   float around = atan(p.x, -p.z) * 1150.0;
-  vec2 ua = vec2(around, p.y * 1.25) / 96.0;
-  vec2 ub = vec2(around, p.y) / 17.0 + vec2(0.37, 0.11);
+  // One repeat of the cliff picture is 120 m, with its rubble at the foot of the wall. A second layer at a third of that, its height broken so that no course runs round the lake.
+  vec2 ua = vec2(around, p.y - 3.0) / 120.0;
+  vec2 ub = vec2(around, p.y + 26.0 * vnoise(vec2(around / 130.0, 1.0))) / 41.0 + vec2(0.37, 0.43);
   // The spur in the south is no wall of the socket: its rock is grey, and lies as the rock itself lies.
   float bearing = degrees(atan(p.x, -p.z));
   float wall = 1.0 - smoothstep(150.0, 165.0, abs(bearing)) * step(length(p.xz), 1100.0);
   if (wall < 0.5) {
-    vec2 side = abs(n.x) > abs(n.z) ? p.zy : p.xy;
-    ua = side / 31.0;
-    ub = side / 7.7 + vec2(0.37, 0.11);
+    // By the axis the rock faces most, at one scale each way, so that nothing is pulled long over a slope.
+    vec3 an = abs(n);
+    vec2 side = an.y > max(an.x, an.z) ? p.xz : an.x > an.z ? p.zy : p.xy;
+    ua = side / 23.0 + vec2(0.0, 0.4);
+    ub = side / 7.0 + vec2(0.37, 0.61);
   }
-  vec2 ga = p.xz / 7.3;
-  vec2 gb = p.xz / 41.0 + vec2(0.21, 0.63);
+  vec2 ga = p.xz / 4.0;
+  vec2 gb = p.xz / 21.0 + vec2(0.21, 0.63);
   vec3 stone = vec3(0.0);
   vec3 bentFace = vec3(0.0);
   float fh = 0.5;
   float arch = 0.0;
   if (face > 0.01) {
-    float ca = dot(texture2D(tCliff, ua).rgb, vec3(0.33));
-    float cb = dot(texture2D(tCliff, ub).rgb, vec3(0.33));
+    vec3 ca = texture2D(tCliff, ua).rgb;
+    vec3 cb = texture2D(tCliff, ub).rgb;
+    vec3 nb = texture2D(tCliffNh, ua).rgb;
     vec3 na = texture2D(tCliffNh, ub).rgb;
-    fh = na.b;
+    fh = mix(nb.b, na.b, 0.45);
     // The face: wrapped around the lake, so that the beds lie level.
     vec3 tu = normalize(vec3(-p.z, 0.0, p.x) + vec3(1e-4, 0.0, 0.0));
-    vec2 fd = (na.xy * 2.0 - 1.0) * 1.6;
+    vec2 fd = (nb.xy * 2.0 - 1.0) * 1.5 + (na.xy * 2.0 - 1.0) * 1.1;
     float thin = vnoise(vec2(around / 300.0, p.y / 1.3));
     float beds = 0.6 * vnoise(vec2(around / 900.0, p.y / 6.5 + 2.0 * vnoise(vec2(around / 260.0, 3.0)))) + 0.4 * vnoise(vec2(around / 410.0, p.y / 2.9));
     // Black streaks where water has run down the face from the ledges, in a few places and not everywhere.
@@ -77,7 +85,7 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     float ay = (p.y - base) / (wide * 1.15);
     float rim = length(vec2(ax, max(ay, 0.0))) + 0.14 * (thin - 0.5) + 0.1 * (na.b - 0.5);
     arch = wall * step(mix(0.5, 0.25, roofed), pick) * (1.0 - smoothstep(0.7, 1.0, rim)) * smoothstep(-0.5, -0.3, ay) * smoothstep(0.3, 0.8, face);
-    stone = mix(vec3(0.56, 0.54, 0.5), vec3(0.74, 0.65, 0.52), wall) * (0.4 + 4.9 * ca * (0.45 + 5.0 * cb));
+    stone = mix(ca, cb, 0.42) * mix(vec3(1.0, 1.12, 1.3), vec3(1.25, 1.2, 1.18), wall);
     stone *= mix(vec3(0.7, 0.71, 0.73), vec3(1.12, 0.98, 0.8), smoothstep(0.3, 0.7, beds)) * (0.9 + 0.2 * thin);
     // Rust under the ledges and in the joints.
     stone = mix(stone, stone * vec3(1.0, 0.7, 0.42), 0.5 * smoothstep(0.5, 0.2, fh) * smoothstep(0.35, 0.65, vnoise(vec2(around / 60.0, p.y / 22.0))));
@@ -100,23 +108,23 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   vec3 bentFlat = vec3(0.0);
   float gh = 0.5;
   if (face < 0.99) {
-    float ta = dot(texture2D(tTalus, ga).rgb, vec3(0.33));
-    float tb = dot(texture2D(tTalus, gb).rgb, vec3(0.33));
+    vec3 ta = texture2D(tTalus, ga).rgb;
+    vec3 tb = texture2D(tTalus, gb).rgb;
     vec3 ha = texture2D(tTalusNh, ga).rgb;
     gh = ha.b;
     // The flat: gravel, at two sizes so that it does not repeat.
     vec2 gd = (ha.xy * 2.0 - 1.0) * 1.5;
     float patchy = 0.65 * vnoise(p.xz / 63.0) + 0.35 * vnoise(p.xz / 19.0 + 4.0);
-    gravel = vec3(0.3, 0.285, 0.27) * (0.5 + 3.8 * ta * (0.5 + 4.0 * tb));
+    gravel = mix(ta, tb, 0.4) * vec3(0.92, 1.02, 1.14);
     gravel *= mix(vec3(0.5, 0.52, 0.56), vec3(1.15, 1.08, 0.96), smoothstep(0.25, 0.7, patchy));
     bentFlat = vec3(gd.x, 0.0, gd.y) * 0.55;
     // Close to the camera the gravel is pebbles, each with its own shade.
     float close = smoothstep(26.0, 7.0, length(cameraPosition - p));
     if (close > 0.0) {
       vec2 gc = p.xz / 1.37 + vec2(0.4, 0.8);
-      float tc = dot(texture2D(tTalus, gc).rgb, vec3(0.33));
+      vec3 tc = texture2D(tTalus, gc).rgb * vec3(0.92, 1.02, 1.14);
       vec3 hc = texture2D(tTalusNh, gc).rgb;
-      gravel *= mix(1.0, 0.5 + 2.4 * tc, close) * mix(1.0, 0.55 + 0.6 * smoothstep(0.1, 0.6, hc.b), close);
+      gravel = mix(gravel, tc * (0.7 + 0.5 * smoothstep(0.1, 0.6, hc.b)), 0.6 * close);
       bentFlat = mix(bentFlat, vec3(hc.x * 2.0 - 1.0, 0.0, hc.y * 2.0 - 1.0) * 1.1, 0.75 * close);
       gh = mix(gh, hc.b, close);
     }

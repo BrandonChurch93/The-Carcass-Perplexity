@@ -107,10 +107,10 @@ export function drinkerGeometry(): THREE.BufferGeometry {
     if (reach < 0.02) continue;
     const up = Math.atan2(dy, Math.abs(x));
     let out = 0;
-    out += smoothAt(0.95, 1.45, up) * (0.03 + 0.04 * bell(z, 0.52, 0.2) + 0.045 * bell(z, -0.6, 0.22));
-    out += 0.06 * bell(z, -0.62, 0.11) * bell(up, 0.75, 0.3);
-    out += 0.05 * bell(z, 0.5, 0.16) * bell(up, 0.35, 0.45);
-    out -= 0.05 * bell(z, -0.3, 0.16) * bell(up, 0.45, 0.4);
+    out += smoothAt(0.95, 1.45, up) * (0.04 + 0.055 * bell(z, 0.52, 0.2) + 0.06 * bell(z, -0.6, 0.22));
+    out += 0.095 * bell(z, -0.62, 0.11) * bell(up, 0.75, 0.3);
+    out += 0.075 * bell(z, 0.5, 0.16) * bell(up, 0.35, 0.45);
+    out -= 0.085 * bell(z, -0.3, 0.16) * bell(up, 0.45, 0.4);
     out -= 0.016 * (0.5 + 0.5 * Math.sin(z * 50)) * smoothAt(-0.22, -0.05, z) * (1 - smoothAt(0.3, 0.46, z)) * bell(up, 0.0, 0.75);
     const k = 1 + out / reach;
     b.position[i] = x * k;
