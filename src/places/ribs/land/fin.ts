@@ -227,7 +227,7 @@ void main() {
   vec3 round0 = normalize(cross(vec3(0.0, 1.0, 0.0), n0) + vec3(1e-6, 0.0, 0.0));
   vec3 rise = normalize(cross(n0, round0));
   vec2 g = (nhp.xy - 0.5) * vec2(mirror, 1.0);
-  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 1.8);
+  vec3 n = normalize(n0 + (round0 * g.x - rise * g.y) * 1.1);
   float macro = vnoise(vec2(arc, vWorld.y) * 0.05) * 0.6 + vnoise(vec2(arc, vWorld.y) * 0.17 + 5.0) * 0.4;
   // The weed of the picture is wet and takes the sky; the rock over it is damp and dull.
   float weedy = smoothstep(0.02, 0.1, pic.r - pic.b) * smoothstep(48.0, 36.0, vWorld.y);
@@ -239,8 +239,8 @@ void main() {
   float cap = smoothstep(19.0, 27.0, vWorld.y + 7.0 * (macro - 0.5));
   float lum = dot(pic, vec3(0.333));
   float rust = smoothstep(0.55, 0.68, vnoise(vec2(arc, vWorld.y) * 0.21 + 9.0) * 0.6 + vnoise(vec2(arc, vWorld.y) * 0.9) * 0.4);
-  vec3 pale = vec3(0.3, 0.29, 0.265) * clamp(lum / 0.1, 0.7, 1.5) * mix(1.0, grain, 0.5) * (0.8 + 0.4 * macro);
-  pale = mix(pale, vec3(0.3, 0.14, 0.03) * (0.6 + 0.6 * grain), 0.6 * smoothstep(0.1, 0.25, rust * macro));
+  vec3 pale = vec3(0.39, 0.385, 0.365) * clamp(lum / 0.1, 0.8, 1.35) * mix(1.0, grain, 0.5) * (0.8 + 0.4 * macro);
+  pale = mix(pale, vec3(0.3, 0.14, 0.03) * (0.6 + 0.6 * grain), 0.22 * smoothstep(0.1, 0.25, rust * macro));
   albedo = mix(albedo, pale, cap);
   weedy *= 1.0 - cap;
   float rough = mix(0.8, 0.42, weedy);

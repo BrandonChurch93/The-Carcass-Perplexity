@@ -46,13 +46,16 @@ interface Stack {
 // A stack of the gate is rock first: a pillar broken into flat faces, built of beds a few metres thick; each bed stands out or back from
 // the one under it, so that there are ledges for weed to hang from and overhangs with bare wet rock under them.
 const BED = 6.5;
+// How far a face of a stack leans in and out with height. At 0.3 the right stack's outline before the bore was a head in profile
+// (brow, nose, mouth); at 0.1 the faces stand nearly straight.
+const STACK_SWAY = 0.1;
 function stackRadius(s: Stack, y: number, angle: number): number {
   const base = s.foot + (s.top - s.foot) * smooth(-10, s.height, y);
   const seed = s.x * 0.013 + s.z * 0.007;
   let r = base * 1.15;
   for (let k = 0; k < 7; k++) {
     const a = k * 0.8976 + 1.3 * noise3(k * 1.7 + 0.5, seed, 0.5);
-    const d = base * (0.74 + 0.36 * noise3(k * 2.3 + 0.5, seed, 5.5)) * (1 + 0.3 * (noise3(k * 1.1 + 0.5, y / 45, seed) - 0.5));
+    const d = base * (0.74 + 0.36 * noise3(k * 2.3 + 0.5, seed, 5.5)) * (1 + STACK_SWAY * (noise3(k * 1.1 + 0.5, y / 45, seed) - 0.5));
     const c = Math.cos(angle - a);
     if (c > 0.2) r = Math.min(r, d / c);
   }
