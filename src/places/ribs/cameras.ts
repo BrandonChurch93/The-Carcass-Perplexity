@@ -119,17 +119,17 @@ export const OPEN = {
    * seconds and ever farther out, while the tip of the right row's blade (6 degrees lower) is held inside the top by a clear margin.
    */
   pitch: 12.2,
-  tilt: 2,
+  tilt: 1.6,
   tilting: [2.6, 5] as [number, number],
   /**
    * Off the first crest the nose comes down with the fall and stays down: degrees, and the seconds between which it does. It is what
    * throws the near blade's tip through the top of the frame in one move, and brings the sea up into the frame as the lens drops to it.
    */
-  nods: 1.8,
+  nods: 1.2,
   nodding: [0.6, 1.45] as [number, number],
-  fov: 31,
-  widens: 15,
-  widening: [4, 10] as [number, number],
+  fov: 29.5,
+  widens: 16.5,
+  widening: [3, 10] as [number, number],
   /** The seconds from which the look eases into the old move's. */
   eases: 6,
   /** Degrees the lens rolls with the swell. */
