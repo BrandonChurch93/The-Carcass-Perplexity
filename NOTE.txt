@@ -1,4 +1,7 @@
-2026-11-25 23:46 UTC
-work at 887b27c on agent/spine-ground
-mat pictures on rock, violet pool, deck picture on the cloud sea
+2026-11-26 00:03 UTC
+work at 4cf57a6 on agent/spine-ground
+five shots as sheets, all hold; keys with mat pictures
 look-1.jpg = out/work/keys5.png
+look-2.jpg = out/work/sheets/shot-spine-01.png
+look-3.jpg = out/work/sheets/shot-spine-04.png
+look-4.jpg = out/work/sheets/shot-spine-05.png
