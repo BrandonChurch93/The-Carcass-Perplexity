@@ -67,6 +67,20 @@ ${LID_GLSL}
 
 const float TOP = 110.0;
 
+// The bank is not one sheet. Above its foot it is drawn out in long thin streamers that slide west along the wall, the finer ones faster, and
+// turn over slowly as they go; on the water it stays whole. They are read round the far shore and by height, not across the ground, so that a
+// look through the depth of the bank finds one streamer and not a stipple of many.
+float streamers(vec3 p, float lift) {
+  float y = max(p.y, 0.0);
+  float torn = smoothstep(0.0, 1.3, y / lift);
+  if (torn <= 0.0) return 1.0;
+  // The bearing from the middle of the far shore, in metres along it. Its cut lies due south, behind every camera that sees the mist.
+  float arc = atan(p.x - uPlateAt.x, uPlateAt.z - p.z) * uPlateAt.w;
+  float slow = vnoise(vec2((arc + uTime * 5.0) / 60.0, y / 5.5 - uTime * 0.03));
+  float quick = vnoise(vec2((arc + uTime * 8.0) / 22.0 + 5.0, y / 2.4 - uTime * 0.07 + 3.0));
+  return mix(1.0, 2.0 * smoothstep(0.2, 0.85, 0.62 * slow + 0.38 * quick), 0.85 * torn);
+}
+
 // How thick the mist is at a point: it lies where the water meets the far walls, in banks, and thins upward.
 float mistAt(vec3 p, vec4 land) {
   float band = smoothstep(-200.0, -30.0, land.b) * (1.0 - smoothstep(30.0, 170.0, land.b));
@@ -77,7 +91,7 @@ float mistAt(vec3 p, vec4 land) {
     // At the foot of the far wall it stands up in a bank that hides the shoreline.
     float lift = (uPlateTone.w > 1.5 ? 0.6 + 9.0 * pow(vnoise(p.xz / 75.0 + 3.0 + uTime * 0.02), 2.0) : 2.2 + 4.5 * vnoise(p.xz / 190.0 + 3.0 + uTime * 0.012)) * (1.0 + (uPlateTone.w > 1.5 ? 1.5 : mix(4.0, 5.0, smoothstep(5.0, 40.0, cameraPosition.y))) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d) * (0.5 + vnoise(p.xz / 330.0 + 9.0 - uTime * 0.008)));
     float banks = smoothstep(0.3, 0.72, 0.6 * vnoise(p.xz / 210.0 + vec2(uTime * 0.045, -uTime * 0.025)) + 0.4 * vnoise(p.xz / 60.0 + uTime * 0.08) + 0.3 * band);
-    return (0.55 + mix(0.7, 0.45, smoothstep(5.0, 40.0, cameraPosition.y)) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y);
+    return (0.55 + mix(0.7, 0.45, smoothstep(5.0, 40.0, cameraPosition.y)) * smoothstep(uPlateAt.w - 220.0, uPlateAt.w - 10.0, d)) * band * banks * exp(-max(p.y, 0.0) / lift) * smoothstep(TOP, TOP * 0.45, p.y) * streamers(p, lift);
   }
   float far = 0.16 + 0.84 * smoothstep(250.0, -350.0, p.z);
   float lift = 1.6 + 3.6 * vnoise(p.xz / 210.0 + 3.0 + uTime * 0.01);
@@ -155,7 +169,9 @@ void main() {
   if (lowEye * mistOn > 0.0) {
     float dp = plateDistance(ro, rd);
     vec3 hit = ro + rd * far;
+    // The angle round the far shore, with its cut turned to the south: left where atan puts it, it stood due north, in the middle of the far wall.
     float round2 = atan(hit.x - uPlateAt.x, hit.z - uPlateAt.z);
+    round2 += round2 < 0.0 ? 6.2831853 : 0.0;
     float tall = 4.0 + 16.0 * vnoise(vec2(round2 * 23.0 + uTime * 0.012, 2.0)) + 5.0 * vnoise(vec2(round2 * 90.0 - uTime * 0.02, 7.0));
     float drift = 0.45 + 0.55 * vnoise(vec2(round2 * 47.0 - uTime * 0.016, hit.y / 9.0 + 4.0));
     float a = 0.8 * lowEye * min(mistOn * 1.6, 1.0) * max(smoothstep(dp - 560.0, dp - 30.0, far) * exp(-max(hit.y, 0.0) / tall), (uPlateTone.w > 1.5 ? 0.0 : 0.9) * exp(-abs(rd.y) / 0.011) * smoothstep(250.0, 700.0, far)) * drift;

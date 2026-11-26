@@ -22,8 +22,8 @@ export const BREAK = { x: 200, z: -500, radius: 420, gain: 0.8, cover: 0.62 };
 export const BREAK2 = { x: -200, z: 530, radius: 170, gain: 0.9 };
 /** The approach: the wide break over the strait is shut as the film opens (the blades stand in the cloud's shade) and thins back into itself. Where the shut cloud lies thickest, its radius, what it takes from the cover, and what the small break is given to stay open under it. */
 export const SHUT = { x: -40, z: -420, radius: 2400, gain: -0.6, lift: 0.55 };
-/** The approach: the small break lies off its own place, over the foot of the first blade as the film opens, and walks back to it: metres. */
-export const SHAFT = { x: -120, z: -230 };
+/** The approach: the small break's shaft of sun starts on the open water before the lens, walks to the foot of the first blade in `walks` seconds, stands there until `stays`, and is at its own place by the fifteenth second: metres. */
+export const SHAFT = { fromX: -280, fromZ: 1130, footX: -318, footZ: 350, walks: 3.4, stays: 7 };
 /** The approach: radians the sky's picture is turned so that its brightest break stands behind the first blades; how much of the sky's light and of the sun's the shut cloud keeps from the ground. */
 export const OPEN_SKY = { turn: -0.25, dim: 0.8, shade: 0.8 };
 const SKY_LIGHT = { zenith: [0.115, 0.14, 0.185], horizon: [0.33, 0.38, 0.45], ground: [0.08, 0.088, 0.097] } as const;
@@ -399,16 +399,17 @@ export function createRig(): Rig {
   const cloudShade = new THREE.Vector4(0, 0, 1 / CLOUD.repeat, CLOUD.shade);
   const skyBreak = new THREE.Vector3();
   const skyTurn = new THREE.Vector4(0, 0, 0, 1.1);
-  const breakToward = (seconds: number): void => {
+  const breakToward = (seconds: number, drifted = seconds): void => {
     // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.786 radians right of the middle; it is laid a little left of the sun so that it shows between the blades.
-    const yaw = ((36 + 0.6 * (seconds - T0)) * Math.PI) / 180;
+    const yaw = ((36 + 0.6 * (drifted - T0)) * Math.PI) / 180;
     skyTurn.x = yaw - 0.93;
     // The lumps of the cloud work as it goes: fast enough that six seconds of a held lens show it.
     skyTurn.y = 0.021 * seconds;
     skyTurn.z = 0.027 * seconds;
     const phase = loopPhase();
     if (phase !== null) {
-      // In the card loop the sheet of cloud stands and its lumps work round a closed path: they leave as in the film and come back.
+      // In the card loop the picture of the sky drifts on as in the film, and the loop's cross-fade brings it round: cloud is soft and
+      // fades without a double edge. Its lumps work round a closed path: they leave as in the film and come back.
       const a = phase * Math.PI * 2;
       const r = config.deliver.cardLoop.seconds / (Math.PI * 2);
       skyTurn.y = 0.021 * T0 + r * (0.021 * Math.sin(a) - 0.027 * (1 - Math.cos(a)));
@@ -425,7 +426,14 @@ export function createRig(): Rig {
     const z = BREAK2.z + WIND.to[1] * WIND.cloud * seconds;
     const weight = openingWeight(world);
     if (weight === 0) return [x, z];
-    return [x + SHAFT.x * weight, z + SHAFT.z * weight];
+    // It comes over the open water from behind the lens, reaches the foot of the first blade, stands there, and then goes to its own place.
+    const walk = Math.min(1, Math.max(0, world / SHAFT.walks));
+    const there = 1 - (1 - walk) * (1 - walk);
+    const stay = 1 - Math.min(1, Math.max(0, (world - SHAFT.stays) / (15 - SHAFT.stays)));
+    const held = stay * stay * (3 - 2 * stay);
+    const ax = SHAFT.fromX + (SHAFT.footX - SHAFT.fromX) * there;
+    const az = SHAFT.fromZ + (SHAFT.footZ - SHAFT.fromZ) * there;
+    return [x + (ax - x) * held, z + (az - z) * held];
   };
 
   const loopAt = new THREE.Vector2(T0, 0);
@@ -494,7 +502,7 @@ export function createRig(): Rig {
   const tint = new THREE.Color();
   const centre = new THREE.Vector3();
   const forward = new THREE.Vector3();
-  // The card loop is eight seconds of one light: a sheet of cloud that went on would have to come back.
+  // The card loop is eight seconds of one light on the ground: a shadow that went on over the flats would have to come back.
   const skySeconds = (seconds: number): number => (loopPhase() === null ? seconds : T0);
   const drift = (seconds: number): [number, number] => [(WIND.to[0] * WIND.cloud * seconds) / CLOUD.repeat, (WIND.to[1] * WIND.cloud * seconds) / CLOUD.repeat];
 
@@ -562,7 +570,7 @@ export function createRig(): Rig {
       const d = drift(sky);
       cloudShade.x = d[0];
       cloudShade.y = d[1];
-      breakToward(sky);
+      breakToward(sky, seconds);
       breakAt.x = BREAK.x + WIND.to[0] * WIND.cloud * (sky - T0);
       breakAt.y = BREAK.z + WIND.to[1] * WIND.cloud * (sky - T0);
       break2At.x = BREAK2.x + WIND.to[0] * WIND.cloud * sky;

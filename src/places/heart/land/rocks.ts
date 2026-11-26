@@ -48,8 +48,8 @@ const LEVEL_FROM = [0.9, 6, 14, 40, 90, 200];
 const LEVEL_MOST = [1e9, 1e9, 1e9, 1e9, 300, 40];
 const REFERENCE_HEIGHT = 2160;
 
-export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUniform>, height: Height): { bench: THREE.Object3D[]; land: THREE.Object3D[]; beforeSample(renderer: THREE.WebGLRenderer, camera: THREE.Camera): void; dispose(): void } {
-  const rng = ctx.rng('land/rocks');
+export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUniform>, height: Height, feetLift: Height): { bench: THREE.Object3D[]; land: THREE.Object3D[]; beforeSample(renderer: THREE.WebGLRenderer, camera: THREE.Camera): void; dispose(): void } {
+  let rng = ctx.rng('land/rocks');
   const shapes: RockShape[] = SHAPE_KINDS.map((k, i) => rockShape(i + 1, k));
   const kind = (part: 'bench' | 'land', slabs = 0, blocks = 0): Kind => ({ part, slabs, blocks });
   const kinds = {
@@ -99,6 +99,8 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     long?: number;
     /** On the set for one shot only: seconds of the place, from and to. */
     only?: [number, number];
+    /** It lies on the fine sheet of the wide view's bank, which stands a little off the land. */
+    feet?: boolean;
   }
   const turnAny = (): THREE.Quaternion => {
     // A turn about any axis, every turn as likely as another.
@@ -108,7 +110,7 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     return new THREE.Quaternion(Math.sqrt(1 - u) * Math.sin(a), Math.sqrt(1 - u) * Math.cos(a), Math.sqrt(u) * Math.sin(b), Math.sqrt(u) * Math.cos(b));
   };
   const put = (k: Kind, x: number, z: number, size: number, o: Options = {}): boolean => {
-    const g = height(x, z);
+    const g = height(x, z) + (o.feet ? feetLift(x, z) : 0);
     if (g < 0.05 && !o.onLake) return false;
     const base = Math.max(g, 0.04);
     const half = size / 2;
@@ -752,6 +754,30 @@ export function scatterRocks(ctx: HeartContext, shared: Record<string, THREE.IUn
     const steep = Math.hypot(height(x + e, z) - height(x - e, z), height(x, z + e) - height(x, z - e)) / (2 * e);
     if (steep > 0.55) continue;
     put(kinds.boulder, x, z, sized(1.2, 4.5, 2.2), { shade: false, sink: rng.range(0.25, 0.5), flat: rng.range(0.5, 0.85) });
+  }
+
+  // The bank under the wide view's lens, 4 to 30 m from it: what lies loose on old lava, from a finger to a forearm, in drifts in the hollows
+  // with bare rock between. It comes last and draws its numbers from a stream of its own, so that no rock set before it is moved.
+  rng = ctx.rng('land/feet');
+  {
+    const [ax, az, bx, bz] = [-606.2, 327.4, -553.8, 302.6];
+    const lx = (bx - ax) / 58;
+    const lz = (bz - az) / 58;
+    for (let i = 0; i < 9000; i++) {
+      const t = rng.range(-8, 58);
+      const off = rng.range(-1, 1);
+      // Thick under the lens's way, thin 30 m to either side of it.
+      const side = 30 * off * Math.abs(off);
+      const x = ax + lx * t + lz * side;
+      const z = az + lz * t - lx * side;
+      const size = sized(0.04, 0.45, 1.8);
+      // Small stones gather in drifts a stride or two across; the larger lie anywhere.
+      const gather = drift(x + 31, z + 17, 2.6) + 0.4 * (drift(x, z, 0.8) - 0.5);
+      if (gather < 0.56 + 0.2 * rng.next() - 0.4 * size) continue;
+      if (Math.hypot(x - ROPY[0], z - ROPY[1]) < 15 && rng.next() < 0.7) continue;
+      if (benchDistance(x, z) < 0.8) continue;
+      put(size > 0.22 ? kinds.stone : kinds.pebble, x, z, size, { feet: true, shade: size > 0.12, sink: rng.range(0.2, 0.36) });
+    }
   }
 
   const discs = ctx.rig.contactDiscs(shades.length);

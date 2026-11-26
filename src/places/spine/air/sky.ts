@@ -159,7 +159,7 @@ vec3 strikeCloud(vec3 c, vec3 from, vec3 d) {
   float body = dot(c, vec3(0.3, 0.5, 0.2));
   float warm = clamp((c.r - c.b) * 30.0, 0.0, 1.0);
   float shape = smoothstep(0.004, 0.05, body);
-  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * vec3(0.8, 0.56, 1.0)) + vec3(0.62, 0.36, 1.0) * (lit * (0.01 + 0.09 * shape) * (1.0 - warm));
+  return c * (1.0 + 3.0 * lit * (1.0 - 0.8 * warm) * vec3(0.78, 0.5, 1.0)) + vec3(0.62, 0.32, 1.0) * (lit * (0.012 + 0.11 * shape) * (1.0 - warm));
 }
 vec3 skyCloud(vec3 from, vec3 d, float lod) {
   vec3 c = skyAtRest(from, d, lod);

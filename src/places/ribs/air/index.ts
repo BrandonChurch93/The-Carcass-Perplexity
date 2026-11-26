@@ -13,7 +13,7 @@ export const PARTS = ['sky', 'air', 'cloud'] as const;
 
 const MAX_SOURCES = 20;
 const STEPS = 8;
-const BANK_STEPS = 14;
+const BANK_STEPS = 22;
 
 const SKY_VERTEX = /* glsl */ `
 varying vec3 vDir;
@@ -69,11 +69,23 @@ vec2 bankAt(vec3 p) {
   float open = exp(-lane * lane) * smoothstep(0.0, 0.12, uBank.y);
   float hole = (p.x + 318.0 + 60.0 * (lump - 0.5)) / (40.0 + 120.0 * uBankHole);
   open = max(open, (0.45 + 0.55 * uBankHole) * exp(-hole * hole));
+  float fine = texture2D(tCloudShade, q / 410.0 + 0.11 + p.y * vec2(0.004, 0.007)).r;
   float top = (42.0 + 64.0 * smoothstep(0.2, 0.75, big)) * (1.0 - open) * (1.0 - 0.3 * uBank.y);
-  float under = top - p.y + 46.0 * (lump - 0.5);
+  float under = top - p.y + 46.0 * (lump - 0.5) + 26.0 * (fine - 0.5);
   float pz = p.z + 170.0 * (big - 0.5);
   float inside = smoothstep(790.0, 660.0, pz) * smoothstep(300.0, 430.0, pz);
-  return vec2(uBank.x * inside * smoothstep(0.0, 22.0, under) * (0.55 + 0.9 * lump), under);
+  float body = inside * smoothstep(0.0, 16.0, under) * (0.3 + 1.4 * lump);
+  // Its seaward face is not a wall: tongues of it stand out over the water, lower the further out. (The mist that lies on the water
+  // itself before the bank, through which the far sea pales into it, is the sea's: sea/shaders.ts.)
+  float tongue = smoothstep(0.34, 0.66, 0.6 * fine + 0.4 * lump);
+  // Some of them reach a long way out and some places stay clear to the bank's face: the water is seen to go into it at no one distance.
+  float reach = 460.0 * smoothstep(0.3, 0.7, texture2D(tCloudShade, q / 1500.0 + 0.61).r);
+  float near = smoothstep(1010.0 + reach, 900.0 + reach, pz + 160.0 * (lump - 0.5));
+  // Far out they lie lower than a lens nine metres up; against the bank they stand up into it.
+  // And none has a level top: each thins upward from the water, and between them there is none.
+  float lid = (1.0 + 7.0 * tongue + 40.0 * tongue * smoothstep(1010.0, 760.0, pz + 160.0 * (lump - 0.5))) * (1.0 - 0.7 * open);
+  float foot = near * smoothstep(300.0, 430.0, pz) * smoothstep(lid, 0.0, p.y) * tongue * (1.0 - open);
+  return vec2(uBank.x * max(body, foot), under);
 }
 
 void viewRay(out vec3 ro, out vec3 rd, out float reach) {
@@ -156,7 +168,7 @@ void main() {
   }
   // The bank of the opening stands nearer than the haze: it is marched on its own, only while it is up.
   if (uBank.x > 0.0) {
-    float ta = (880.0 - ro.z) / rd.z;
+    float ta = (1480.0 - ro.z) / rd.z;
     float tb = (210.0 - ro.z) / rd.z;
     float from = max(min(ta, tb), 0.0);
     float to = min(min(max(ta, tb), reach), 2600.0);
@@ -169,12 +181,14 @@ void main() {
         float tm = from + (float(i) + jitter) * len;
         vec3 p = ro + rd * tm;
         vec2 fog = bankAt(p);
-        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 260.0, tm));
+        float a = 1.0 - exp(-fog.x * len * smoothstep(30.0, 200.0, tm));
         if (a > 0.0005) {
-          float lit = sunAt(p, landAt(p.xz));
+          // The shaft of sun that walks over the water stands in the bank as a pool of light with no drawn edge.
+          vec2 fromShaft = p.xz - uCloudBreak2.xy;
+          float lit = exp(-1.7 * dot(fromShaft, fromShaft) * uCloudBreak2.z) * cloudShade(vec3(uCloudBreak2.x, 0.0, uCloudBreak2.y));
           // Deep in the bank the light is the bank's own grey; its top and its torn edges take the sky and the sun.
           float deep = 0.42 + 0.58 * smoothstep(60.0, 4.0, fog.y);
-          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.13 * phase * lit * deep)) * uShowAir;
+          bankSum += bankTrans * a * (uHaze * (0.7 * deep) + uSunColour * (0.26 * phase * lit * deep)) * uShowAir;
           bankTrans *= 1.0 - a;
         }
       }
@@ -263,7 +277,7 @@ export function create(ctx: Context): Piece {
       const fade = Math.min(1, Math.max(0, (13 - since) / 6));
       // The lane opens slowly at first (the bank is whole in the first frames) and is wide by the time the camera is in it.
       const torn = Math.min(1, Math.max(0, (since - 1.2) / 6.5));
-      const holed = Math.min(1, Math.max(0, (since + 0.4) / 2.6));
+      const holed = Math.min(1, Math.max(0, (since + 1.3) / 3.2));
       bank.set(up ? 0.0085 * fade : 0, torn * torn * (3 - 2 * torn), WIND.to[0] * 20 * since, WIND.to[1] * 20 * since);
       bankHole.value = holed * holed * (3 - 2 * holed);
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
