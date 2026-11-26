@@ -230,13 +230,17 @@ void main() {
     float r = flareAt(dCanal);
     // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds. The near mouth is a low arch, broader than it is high.
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    float turn = atan(across.y, across.x);
-    float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
-    float low = dCanal < 0.5 * EXIT ? 1.0 + 0.75 * smoothstep(-0.2, 0.7, across.y / r) : 1.0 + 0.25 * smoothstep(0.0, 1.0, across.y / r);
-    // The far mouth is cut wider than the canal, so that from inside the canal's own lip is its edge.
-    if (dCanal < 0.5 * EXIT ? length(across * vec2(1.0, low)) < (r - 0.8) * ragged : length(across) < r + 2.5) discard;
-    // Behind the arch the ground does not stand inside the canal: where a flank passes through it, it is cut away to the canal's own wall.
-    if (uKind < 0.5 && dCanal > 2.5 && dCanal < EXIT - 2.5 && length(across) < r + 0.4) discard;
+    // (Nothing is cut farther from the canal's middle than this: the broken line is worked out only near it. The rock stands in three
+    // layers on the first spire, and each is drawn here.)
+    if (max(abs(across.x), abs(across.y)) < r + 2.6) {
+      float turn = atan(across.y, across.x);
+      float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
+      float low = dCanal < 0.5 * EXIT ? 1.0 + 0.75 * smoothstep(-0.2, 0.7, across.y / r) : 1.0 + 0.25 * smoothstep(0.0, 1.0, across.y / r);
+      // The far mouth is cut wider than the canal, so that from inside the canal's own lip is its edge.
+      if (dCanal < 0.5 * EXIT ? length(across * vec2(1.0, low)) < (r - 0.8) * ragged : length(across) < r + 2.5) discard;
+      // Behind the arch the ground does not stand inside the canal: where a flank passes through it, it is cut away to the canal's own wall.
+      if (uKind < 0.5 && dCanal > 2.5 && dCanal < EXIT - 2.5 && length(across) < r + 0.4) discard;
+    }
   }
   gl_FragColor = vec4(rigOut(vec3(0.0)), 1.0);
 }`;

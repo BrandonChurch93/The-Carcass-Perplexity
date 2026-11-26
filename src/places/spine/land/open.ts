@@ -264,7 +264,7 @@ void main() {
   // (The sheet's own darks are soot at this size: half of them. The darks of the rock are its cracks and the faces turned from the light.)
   if (spire) grain = mix(grain, max(grain, vec3(0.92)), 0.6);
   // (The bedrock of the ground is darker than the faces of the spires: it is wet with melt and in the snow's shadow.)
-  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.6, 0.55, 0.485)) * grain * tone, vec3(0.85));
+  vec3 albedo = min((ground ? vec3(0.13, 0.135, 0.15) : vec3(0.6, 0.56, 0.505)) * grain * tone, vec3(0.85));
   float rough = 0.9;
   // Its cracks are dark: the sky does not reach into them.
   float occ = 0.55 + 0.45 * smoothstep(0.1, 0.55, pit);
@@ -307,8 +307,9 @@ void main() {
 #endif
   if (ground) lie -= 0.3 * rockness;
 #ifdef HERO_MAPS
-  // (A slab is a plane: snow that lay on one that only leans would be a white card. It lies on the ledges.)
-  float hold = 0.66;
+  // (A slab is a plane: snow that lay on one that only leans would be a white card. It lies on the ledges, and on those broad enough
+  // to be seen as ledges: on the top of a slab that stands well before the one above it. A ledge of a hand is a white dot.)
+  float hold = 0.66 + 0.4 * (1.0 - smoothstep(0.15, 0.4, vRelief));
 #else
   float hold = spire ? 0.5 + 0.08 * smoothstep(-1.0, 2.0, vRelief) : mix(0.5, 0.86, max(rockness, steep)) + 0.1 * thin;
 #endif
@@ -416,17 +417,19 @@ void main() {
   if (dCanal > -42.0 && dCanal < 14.0 && vWorld.y > CANAL_FLOOR - 0.2) {
     float r = flareAt(dCanal);
     vec2 over = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
-    float turn = atan(over.y, over.x);
-    float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
-    float low = 1.0 + 0.75 * smoothstep(-0.2, 0.7, over.y / r);
-    float out_ = length(over * vec2(1.0, low)) / ((r - 0.8) * ragged) - 1.0;
-    float crown = smoothstep(-0.3, 0.6, over.y / r);
-    float runs = vnoise(vec2(vSL.y * 0.55, 3.3)) * 0.6 + vnoise(vec2(vSL.y * 1.9, 7.1)) * 0.4;
-    float ice = (1.0 - smoothstep(0.0, mix(0.05, 0.22, crown) * (0.4 + 1.2 * runs), out_)) * smoothstep(-0.25, 0.1, over.y / r);
-    albedo = mix(albedo, vec3(0.5, 0.57, 0.66) * (0.8 + 0.4 * runs), 0.85 * ice);
-    rough = mix(rough, 0.22, ice);
-    occ = mix(occ, 1.0, 0.7 * ice);
-    n = normalize(mix(n, nFace, 0.6 * ice));
+    if (max(abs(over.x), abs(over.y)) < 1.45 * r) {
+      float turn = atan(over.y, over.x);
+      float ragged = 0.72 + 0.26 * vnoise(vec2(turn * 2.3 + 5.0, 0.7)) + 0.12 * (vnoise(vec2(turn * 8.0 + 1.0, 2.9)) - 0.5) - 0.1 * vnoise(vec2(vWorld.y * 0.9, vSL.y * 0.9));
+      float low = 1.0 + 0.75 * smoothstep(-0.2, 0.7, over.y / r);
+      float out_ = length(over * vec2(1.0, low)) / ((r - 0.8) * ragged) - 1.0;
+      float crown = smoothstep(-0.3, 0.6, over.y / r);
+      float runs = vnoise(vec2(vSL.y * 0.55, 3.3)) * 0.6 + vnoise(vec2(vSL.y * 1.9, 7.1)) * 0.4;
+      float ice = (1.0 - smoothstep(0.0, mix(0.05, 0.22, crown) * (0.4 + 1.2 * runs), out_)) * smoothstep(-0.25, 0.1, over.y / r);
+      albedo = mix(albedo, vec3(0.5, 0.57, 0.66) * (0.8 + 0.4 * runs), 0.85 * ice);
+      rough = mix(rough, 0.22, ice);
+      occ = mix(occ, 1.0, 0.7 * ice);
+      n = normalize(mix(n, nFace, 0.6 * ice));
+    }
   }
 ${scorch}
   // The rock that stands over the canal is in the open, though the canal's roof is behind it: it is lit as from above that roof.

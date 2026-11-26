@@ -639,7 +639,7 @@ export function heroSlabs(sp: Spire, rng: Rng): THREE.BufferGeometry {
       const rise = Math.max(0.05, span(at(a0, b0), at(a0, Math.min(R - 1, b0 + 1))));
       const slant = Math.min(6, Math.floor((0.45 * across) / rise));
       // (Tall, as far as the blade stays straight under it.)
-      let tall = Math.max(3, Math.min(110, Math.round((3.5 + 15 * rng.next()) / rise)));
+      let tall = Math.max(3, Math.min(110, Math.round((4 + 22 * rng.next() ** 2) / rise)));
       for (let k = 0; k < 5 && tall > 4 && bow(b0, Math.min(R - 1, b0 + tall)) > 0.7; k++) tall = Math.max(4, Math.floor(tall * 0.62));
       let t0 = b0 + tall;
       let t1 = Math.max(b1 + 2, t0 + Math.round((rng.next() - 0.5) * 2 * slant));
@@ -670,7 +670,7 @@ export function heroSlabs(sp: Spire, rng: Rng): THREE.BufferGeometry {
       const kind = rng.next();
       const stand = rng.next();
       const id = 0.05 + 0.95 * rng.next();
-      const turnRound = stripTurn + (rng.next() - 0.5) * 0.22;
+      const turnRound = stripTurn + (rng.next() - 0.5) * 0.16;
       const turnBack = -0.05 + 0.22 * rng.next();
       if (nl < 1e-6 || wide < 0.02) continue;
       nx /= nl;

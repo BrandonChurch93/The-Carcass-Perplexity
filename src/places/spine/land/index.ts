@@ -109,7 +109,9 @@ export function create(ctx: Context): Piece {
   const depthOf = new Map<THREE.Material, THREE.ShaderMaterial>();
   const groundMaterial = material(0);
   const spireDepth = depthMaterial(1, THREE.DoubleSide);
-  const spireMaterials = spires.map((sp) => material(1, THREE.DoubleSide, sp));
+  // (The first spire is closed and wound outward, slab by slab: only what faces the lens is drawn. Its rock stands in layers, and each
+  // layer drawn from both sides was paid for in every sample.)
+  const spireMaterials = spires.map((sp) => material(1, sp === first ? THREE.FrontSide : THREE.DoubleSide, sp));
   const wallMaterial = material(2, THREE.DoubleSide);
   const iceMaterial = new THREE.ShaderMaterial({
     vertexShader: ICE_VERTEX,
@@ -152,7 +154,8 @@ export function create(ctx: Context): Piece {
   };
   if (DEPTH_FIRST) {
     depthOf.set(groundMaterial, depthMaterial(0));
-    for (const m of spireMaterials) depthOf.set(m, spireDepth);
+    const heroDepth = depthMaterial(1, THREE.FrontSide);
+    spireMaterials.forEach((m, i) => depthOf.set(m, i === FIRST ? heroDepth : spireDepth));
     depthOf.set(wallMaterial, depthMaterial(2, THREE.DoubleSide));
   }
   add(crestStrip(), groundMaterial);

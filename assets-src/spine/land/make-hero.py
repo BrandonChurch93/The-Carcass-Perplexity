@@ -4,7 +4,7 @@
 # Made: the rock cut in three sets of joints in space (beds that dip, two upright sets), in three sizes, each block standing in or out of the
 #     face with a tilt of its own. Built four times finer than the runtime's lattice; its occlusion is baked in Blender (Cycles, 24 samples) and
 #     its normals are taken from the fine mesh, both on the lattice's own unwrap (u round the blade, v up the rings).
-# Out: public/assets/spine/land/hero-ao.jpg, hero-n.jpg and src/places/spine/land/hero.ts (the relief on the lattice, 5 cm a count).
+# Out: public/assets/spine/land/hero-ao.jpg and src/places/spine/land/hero.ts (the relief on the lattice, 5 cm a count).
 import sys, json, base64
 import numpy as np
 from PIL import Image
@@ -132,7 +132,7 @@ low = low[::F, ::F]
 q = np.clip(np.round(low / 0.07), -127, 127).astype(np.int8)
 open(ROOT + 'src/places/spine/land/hero.ts', 'w').write(
     '// Made by assets-src/spine/land/make-hero.py: the relief of the first spire as a hero object, on the lattice of its mesh\n'
-    '// (%d rings by %d round, metres out of the bare blade along its normal, %s m a count). Its occlusion and normals are land/hero-ao.jpg and land/hero-n.jpg.\n'
+    '// (%d rings by %d round, metres out of the bare blade along its normal, %s m a count). Its occlusion is land/hero-ao.jpg.\n'
     'export const HERO = { rings: %d, around: %d, unit: 0.07, relief: \'%s\' };\n' % (R, A, '0.07', R, A, base64.b64encode(q.tobytes()).decode()))
 
 du = np.roll(Ph, -1, axis=1) - np.roll(Ph, 1, axis=1)
@@ -142,7 +142,7 @@ nh /= np.linalg.norm(nh, axis=2, keepdims=True) + 1e-9
 if np.mean(np.sum(nh * Nf, axis=2)) < 0: nh = -nh
 SIZE = 2048
 
-# The faces of the blocks, cut at the size of a texel and not of the mesh (hero-n.jpg, 4096 round by 2048 up): no lattice a renderer can
+# The faces of the blocks, cut at the size of a texel and not of the mesh (out/work/hero-n.jpg, not read by the film now that the slabs are in the mesh, 4096 round by 2048 up): no lattice a renderer can
 # carry cuts a slab of a metre with a sharp edge, and a normal taken from a fine mesh has the mesh's own cells in it. Every block of every
 # size has a face that looks a little its own way (red: round the blade, green: up or down), flat to its edge; blue is the joint between
 # two blocks, a crack. The same blocks as the relief: they are functions of the place. The two great sizes only: the slabs smaller than
@@ -177,7 +177,7 @@ for k, (dark, wide) in enumerate(((0.8, 2), (0.65, 1))):
     crack = np.maximum(crack, dark * f)
 hn = np.stack([0.5 + 0.5 * tilt[..., 0] / 1.1, 0.5 + 0.5 * tilt[..., 1] / 1.1, crack], axis=-1)
 # (v up: the first row of the picture is the last ring.)
-Image.fromarray(np.clip(hn[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'public/assets/spine/land/hero-n.jpg', quality=74, subsampling=0)
+Image.fromarray(np.clip(hn[::-1] * 255 + 0.5, 0, 255).astype(np.uint8)).save(ROOT + 'out/work/hero-n.jpg', quality=74, subsampling=0)
 np.save(W + 'd.npy', d.astype(np.float32))
 print('relief', d.min(), d.max(), 'fine', RF, AF)
 if '--no-bake' in sys.argv: sys.exit(0)
