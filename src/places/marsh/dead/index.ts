@@ -73,7 +73,7 @@ void main() {
   vec3 grainC = texture2D(tSalt, xz * 6.3 + uLumps.x * 0.7).rgb / RIME_MEAN;
   float nearBy = 1.0 - smoothstep(4.0, 12.0, length(cameraPosition - vWorld));
   n = normalize(n - vec3(grainN.r - 0.5, 0.0, grainN.g - 0.5) * 1.3 * nearBy);
-  vec3 albedo = vec3(0.345, 0.305, 0.288) * mix(mix(wide, fine, 0.5), grainC, 0.45 * nearBy) * (0.74 + 0.4 * mix(knob, grainN.b, 0.5 * nearBy));
+  vec3 albedo = vec3(0.22, 0.16, 0.135) * mix(mix(wide, fine, 0.5), grainC, 0.45 * nearBy) * (0.74 + 0.4 * mix(knob, grainN.b, 0.5 * nearBy));
   // The brine wicks up into the foot of it, and what ran out of the body it grew on still stains it.
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.22, above + 0.14 * (vnoise(xz * 3.0 + uLumps.x) - 0.5))) * (0.45 + 0.55 * vnoise(xz * 1.3 + uLumps.x * 2.0));
@@ -342,9 +342,9 @@ export function create(ctx: Context): Piece {
   const yaw = relYaw(-0.97, -0.03);
   // The crust has given way under it: the land's hollow is 0.2 m deep here, and the rig's land height does not include it.
   const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1])) - 0.2;
-  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.03, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 15, hang: 0.5, thick: 1.6, long: 0.8 });
+  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.03, wet: ground + 0.26, mudded: 1, relief: 0.022, tendrils: 15, hang: 0.5, thick: 1.6, long: 0.8, droop: 0.9, line: ground + 0.13 });
   const live = newDrive();
-  const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
+  const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.8, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
   // One of the dead is not yet a heap: it lies on its side as it fell, half under, caked and salted, the upper legs stiff in the air.
   const fa = rel(FALLEN.d, FALLEN.l);
   const fl = Math.hypot(lens[0] - fa[0], lens[1] - fa[1]);
