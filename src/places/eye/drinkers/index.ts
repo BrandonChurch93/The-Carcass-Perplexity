@@ -191,6 +191,7 @@ interface Drawn {
   material: THREE.ShaderMaterial;
   bones: Float32Array;
   own: THREE.Vector4;
+  solved: Solved;
 }
 
 export function create(ctx: Context): Piece {
@@ -218,7 +219,7 @@ export function create(ctx: Context): Piece {
     mesh.visible = false;
     ctx.scene.add(mesh);
     ctx.reflected.push(mesh);
-    return { animal, index, mesh, material, bones, own };
+    return { animal, index, mesh, material, bones, own, solved: solve(animal.build, standPose(animal, 0, () => 0, 1), bones) };
   });
   ctx.parts.built('drinkers', (cards.meshes[0] as THREE.Mesh), ...cards.meshes.slice(1), ...drawn.map((d) => d.mesh));
   for (let i = 0; i < 22; i++) ctx.laps.push({ x: 0, z: 0, strength: 0, offset: i * 0.37 });
@@ -260,7 +261,8 @@ export function create(ctx: Context): Piece {
         g.mesh.visible = bodies;
         if (!bodies) continue;
         const solved = poseAt(d, t, g.bones);
-        g.own.z = Math.max(WADE, ground(d.x, d.z));
+        g.solved = solved;
+        g.own.z = Math.max(WADE * d.build.size, ground(d.x, d.z));
         // Rings where its mouth is in the water, and round a hoof that has just come down or is about to leave.
         const low = d.down(t);
         if (wetAt(solved.muzzle[0], solved.muzzle[2])) ring(solved.muzzle[0], solved.muzzle[2], 1.3 * Math.min(1, Math.max(0, (low - 0.86) / 0.1)));
@@ -274,6 +276,11 @@ export function create(ctx: Context): Piece {
           const before = Math.max(was[pair * 2] as number, was[pair * 2 + 1] as number) - g.own.z;
           if (wetAt(at[0], at[2]) && g.own.z < -0.02) ring(at[0], at[2], Math.min(1.2, 9 * Math.max(stir, 0.7 * before)));
         }
+      }
+      // And a faint ring round every leg that stands in the lake: the animal breathes and shifts, and the water at its legs is never quite still.
+      for (const g of drawn) {
+        if (!g.mesh.visible || g.own.z > -0.02) continue;
+        for (const h of g.solved.hooves) if (wetAt(h[0], h[2]) && h[1] - g.own.z < 0.02) ring(h[0], h[2], 0.3);
       }
       for (; lap < ctx.laps.length; lap++) {
         const slot = ctx.laps[lap];
