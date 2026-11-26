@@ -1,7 +1,7 @@
-2026-11-26 06:49 UTC
-work at a1c766f on agent/ribs-ground-3
-heartbeat 5: ribs-0, ribs-2, ribs-3, ribs-4 at draft; no face form in any
-look-1.jpg = out/work/r0.jpg
-look-2.jpg = out/work/r2.jpg
-look-3.jpg = out/work/r3.jpg
-look-4.jpg = out/work/r4.jpg
+2026-11-26 07:21 UTC
+work at 5a25a5c on agent/ribs-ground-3
+version 2: ribs-0, ribs-2, ribs-3 at draft uhd, ribs-4 at final hd
+look-1.jpg = out/work/v2/r0.jpg
+look-2.jpg = out/work/v2/r2.jpg
+look-3.jpg = out/work/v2/r3.jpg
+look-4.jpg = out/work/v2/r4f.jpg
