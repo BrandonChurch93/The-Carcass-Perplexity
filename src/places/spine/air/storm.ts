@@ -28,8 +28,8 @@ vec3 skyClear(vec3 d) {
   float lee = toDusk * toDusk;
   vec3 low = mix(vec3(0.03, 0.036, 0.06), vec3(0.047, 0.055, 0.082), lee);
   vec3 c = mix(low, vec3(0.012, 0.017, 0.034), 1.0 - exp(-h * 3.2));
-  c += vec3(0.036, 0.029, 0.02) * lee * lee * exp(-h / 0.018);
-  c += vec3(0.4, 0.105, 0.01) * pow(toDusk, 5.0) * exp(-h / 0.0065);
+  c += vec3(0.03, 0.026, 0.02) * lee * lee * exp(-h / 0.016);
+  c += vec3(0.62, 0.14, 0.006) * pow(toDusk, 5.0) * exp(-h / 0.0042);
   return c;
 }
 // How much of the storm stands at q: 1 in the body of the wall and of the deck, falling to nothing at their edges. The wall is upwind of the
@@ -117,7 +117,8 @@ vec3 roundLights(vec3 q) {
     float r = max(uEmitters[i].w * 0.001, 0.05);
     vec3 off = q - e;
     float power = dot(uEmitterRadiance[i], vec3(0.3, 0.5, 0.2)) * r * r;
-    lit += normalize(uEmitterRadiance[i] + 1e-4) * (1.0 - exp(-power / 6.0)) / (1.0 + dot(off, off) / (r * r * 9.0 + 0.25));
+    float fall = 1.0 / (1.0 + dot(off, off) / (r * r * 9.0 + 0.25));
+    lit += normalize(uEmitterRadiance[i] + 1e-4) * (1.0 - exp(-power / 6.0)) * fall * (0.12 + 0.88 * fall);
   }
   return lit;
 }
@@ -274,7 +275,10 @@ void main() {
       float crease = clamp(0.5 + 2.6 * (about - raw), 0.0, 1.0);
       float open = mix(1.55, 0.2, crease * crease * (3.0 - 2.0 * crease)) * heads;
       // The last light does not reach far into the storm: the wall and what falls from it stand in their own dark.
-      float reach = 0.22 + 0.78 * smoothstep(-5.5, 1.5, dot(q.xz, GALE));
+      float along = dot(q.xz, GALE);
+      float reach = 0.06 + 0.94 * smoothstep(-3.2, 1.0, along);
+      // The wall is a curtain of falling snow and vapour, not a heap of heads: its face is smooth and it is lit by the sky and the snow alone.
+      open = mix(open, 0.75, 0.7 * (1.0 - smoothstep(-4.2, -1.2, along)));
       vec3 lit = keyLight * reach * facing * (0.4 + 0.6 * open) * (exp(-shade * 2.4) + 0.08 * exp(-shade * 0.5)) + vec3(0.018, 0.025, 0.045) * exp(-over * 3.0) * open * (2.0 * up);
       // The sky overhead on what is open to it, the snow and the cloud sea from below on the undersides, and more of both in the thin edges.
       lit += vec3(0.0085, 0.01, 0.016) * (0.7 + 0.6 * thin) * open * (1.4 - 0.8 * up);
