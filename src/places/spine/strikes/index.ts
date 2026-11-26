@@ -41,6 +41,7 @@ uniform float uLens;
 varying vec2 vUv;
 varying float vWay;
 varying float vNear;
+varying float vFoot;
 void main() {
   vec3 a = uTip - uTop;
   float len = length(a);
@@ -56,6 +57,7 @@ void main() {
   float wander = (0.004 * sin(v * 23.0 + n * 2.1) + 0.006 * sin(v * 7.7 + n * 4.3)) * sin(v * 3.14159) * min(n, 1.0);
   vUv = vec2(0.5 + flip * (0.5 * position.x) + lean + wander, mix(uLean.z, 1.0, v));
   vWay = 1.0 - v;
+  vFoot = v * len;
   vec3 p = mix(uTip, uTop, v) + side * (position.x * 0.5 * len * 0.5628);
   vec4 c = viewMatrix * vec4(p, 1.0);
   // How many pixels of a 4K frame one pixel of the photograph covers: a long lens is close to the stroke and sees the photograph's grain.
@@ -73,6 +75,7 @@ uniform float uCore;
 varying vec2 vUv;
 varying float vWay;
 varying float vNear;
+varying float vFoot;
 // The least of the photograph in a ring round a point: bright only where the channel is broader than the ring.
 float ringOf(vec2 uv, float r) {
   vec2 px = vec2(r / 941.0, r / 1672.0);
@@ -108,9 +111,11 @@ void main() {
   vec3 c = far;
   if (near > 0.0) {
     float edge = smoothstep(need, need + 0.35, lum);
-    float d1 = smoothstep(0.5, 0.85, ringOf(vUv, 1.3));
-    float d2 = smoothstep(0.5, 0.85, ringOf(vUv, 2.5));
-    float d3 = smoothstep(0.55, 0.9, ringOf(vUv, 3.4));
+    // Where it meets the rock the channel is less worn: it is broad and white over its last metres.
+    float worn = mix(0.3, 0.62, smoothstep(1.0, 16.0, vFoot));
+    float d1 = smoothstep(0.5, 0.85, ringOf(vUv, 1.3 * worn));
+    float d2 = smoothstep(0.5, 0.85, ringOf(vUv, 2.5 * worn));
+    float d3 = smoothstep(0.55, 0.9, ringOf(vUv, 3.4 * worn));
     vec3 close = uTint * (0.3 + 0.5 * edge * edge + 0.9 * d1) + uHeart * (30.0 * d2 + uCore * d3);
     // A branch is a thread too fine to wear down: it keeps a pale heart of its own.
     close += uHeart * (10.0 * thin * heart * heart);

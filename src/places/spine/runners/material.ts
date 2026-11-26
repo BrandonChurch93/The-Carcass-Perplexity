@@ -295,7 +295,7 @@ void main() {
   float singe = 1.0 - vInfo.w;
   vec3 albedo = uTone.rgb * pic / mean_ * 0.8 * (0.85 + 0.3 * fract(seed * 7.31));
   // Wet and dark toward the root, where the coat is matted.
-  albedo *= mix(0.55, 1.0, smoothstep(0.0, 0.5, t));
+  albedo *= mix(uLockKind > 0.5 ? 0.72 : 0.55, 1.0, smoothstep(0.0, 0.5, t));
   albedo = mix(albedo, vec3(0.02, 0.016, 0.014), singe * (0.45 + 0.55 * t));
   vec3 c = albedo * vLight;
   // Rime and packed snow: on the locks that look up it lies thick on the bright hairs, on the others it beads the ends.

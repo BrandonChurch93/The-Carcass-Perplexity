@@ -644,7 +644,7 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's ribbons twice as broad, most of its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 2.6, 3);
-      else if (inClose) stage.set(0.56, 0.72, 3, 1);
+      else if (inClose) stage.set(1.0, 0.88, 0.3, 1);
       else if (inWide) stage.set(1, 1.6, 1, 1);
       else stage.set(1, 1, 1, 0);
       stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0);

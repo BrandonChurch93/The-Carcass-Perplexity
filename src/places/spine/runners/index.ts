@@ -232,7 +232,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 0.8, h.act === 'stand' ? 0 : 1), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 1.05, h.act === 'stand' ? 0 : 0.5), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
@@ -286,7 +286,7 @@ export function create(ctx: Context): Piece {
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
     // The gale reaches the one at the mouth in gusts: its coat is blown and falls back.
-    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.14 + 0.06 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.12 : -0.12) : 0.1);
+    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.14 + 0.06 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.2 : 0.02) : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
