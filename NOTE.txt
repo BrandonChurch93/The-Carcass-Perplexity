@@ -1,7 +1,4 @@
-2026-11-26 14:35 UTC
+2026-11-26 14:39 UTC
 work at fb2c931 on agent/marsh-stalks
-v2 fb2c931: 5618 hd before/after, hd crop before/after, uhd final crops, keys 5725 and 6102 pairs
-look-1.jpg = out/work/v2/5618-before-after.png
-look-2.jpg = out/work/v2/crop-before-after.png
-look-3.jpg = out/work/v2/crops-uhd-final.png
-look-4.jpg = out/work/v2/keys-0-1.png
+v2 fb2c931: sheet of frames 5618 to 5738, draft preview
+look-1.jpg = out/work/v2/sheet-first.png
