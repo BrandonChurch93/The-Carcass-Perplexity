@@ -39,7 +39,9 @@ vec3 runnerLight(vec3 p, vec3 n) {
     // Seen against the mouth, the light comes through the ends of the coat along its outline: a cold rim.
     vec3 toLens = normalize(cameraPosition - p);
     float through = pow(1.0 - abs(dot(n, toLens)), 4.0) * smoothstep(0.1, 0.8, dot(way, -toLens));
-    e += (cold * 4.0 + flash * 3.0) * sE * 2.5 * through;
+    // The rim is warm from the slit of last light at the horizon, and violet in a flash.
+    vec3 warm = dot(cold, vec3(0.333)) * vec3(1.7, 0.9, 0.45);
+    e += (cold * 1.5 + warm * 3.5 + flash * 3.0) * sE * 2.5 * through;
   }
   return e;
 }`;
@@ -217,7 +219,8 @@ void main() {
   float seed = aCard.y;
   // The wind in the coat: uCoat.y how hard it blows, uCoat.z a shiver. The end of a lock moves most, each at its own pace.
   float span = distance(r, e);
-  float gust = sin(uTime * (5.0 + 4.0 * seed) + seed * 40.0 + dot(r, vec3(3.1, 0.0, 2.3))) + 0.6 * sin(uTime * (11.0 + 7.0 * fract(seed * 7.3)) + seed * 91.0);
+  float gust = sin(uTime * (5.0 + 4.0 * seed) + seed * 40.0 + dot(r, vec3(3.1, 0.0, 2.3))) + 0.6 * sin(uTime * (11.0 + 7.0 * fract(seed * 7.3)) + seed * 91.0)
+    + 0.9 * sin(uTime * 2.3 - dot(r, uWind.xyz) * 2.5);
   vec3 blow = (uWind.xyz * (0.1 * uCoat.y) + vec3(0.0, 0.05 * uCoat.y, 0.0) * sin(uTime * 7.0 + seed * 13.0)) * gust + uCoat.z * vec3(sin(uTime * 31.0 + seed * 50.0), 0.0, cos(uTime * 27.0 + seed * 70.0));
   e += blow * span;
   c += blow * span * 0.35;
