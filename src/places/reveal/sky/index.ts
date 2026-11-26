@@ -29,6 +29,13 @@ vec3 beatOnCloud(vec2 xz) {
   if (uDusk > 0.0) return vec3(1.0, 0.2, 0.04) * (0.3 * max(uBeat - 0.12, 0.0) + uEmber.x * 0.012 * (0.4 + 1.6 * uBeat) * (1.0 + emberWork())) * exp(-dot(fromHeart, fromHeart) / 90000.0);
   return vec3(1.0, 0.2, 0.04) * 0.3 * max(uBeat - 0.12, 0.0) * exp(-dot(fromHeart, fromHeart) / 90000.0);
 }
+// How much air lies between a cloud top and the eye: one over the cosine of the slant, to the thirty fold of the very edge of the
+// planet, where the cloud is lost in the haze it is seen along.
+float airPath(float mu) {
+  float path = 1.0 / sqrt(mu * mu + 0.0009);
+  float beyond = max(path - 1.5, 0.0);
+  return 0.008 * path + 0.0006 * beyond * beyond;
+}
 vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float mu = limbCos(xz);
   float day = dayAt(xz);
@@ -39,12 +46,12 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
     float low = mix(uSunDir.y, 0.2 + 0.62 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
     vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.1 + 0.26 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
-    float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
+    float airDusk = 1.0 - exp(-airPath(mu) * (1.0 - 0.6 * high));
     return exposed(mix(cDusk, uAirColour * 0.7 * airLightAt(sunH), airDusk));
   }
   float sun = uSunDir.y * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick) * day;
   vec3 c = 0.72 * (uSunColour * mix(vec3(1.0, 0.8, 0.62), vec3(1.0), day) * sun + uSkyColour * 0.9 * (0.5 + 0.5 * day)) / 3.14159;
-  float air = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
+  float air = 1.0 - exp(-airPath(mu) * (1.0 - 0.6 * high));
   return mix(c, uAirColour * 0.7, air);
 }`;
 
@@ -86,6 +93,23 @@ void main() {
   vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
   // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
   vec3 fogColour = cloudLight(fogAt, 0.5, 0.5, 0.0) * vec3(0.84, 0.9, 0.98);
+  // The air that lies on the ground, under every cloud. Haze pools over the low land, pale and a little blue, seen from high up.
+  float hazeA = 0.2 * hazeAt(fogAt) * smoothstep(150.0, 500.0, uViewKm) * uArrive;
+  vec3 hazeColour = cloudLight(fogAt, 0.5, 0.3, 0.0) * vec3(0.5, 0.6, 0.74);
+  // And over the sun's image on the sea the low air is lit from behind: it scatters the sun forward, warm, so the sheet of light
+  // is gold through it and not the white of the bare glitter.
+  float image = sunImage(fogAt);
+  float goldA = 0.7 * smoothstep(0.05, 0.7, image) * uArrive;
+  vec3 gold = uSunColour * vec3(1.0, 0.8, 0.52) * (0.08 + 0.34 * image);
+  if (uDusk > 0.0) {
+    gold = exposed(gold * sunTint(max(uSunDir.y, 0.0)));
+    goldA *= uCalm.z;
+  }
+  float groundA = 1.0 - (1.0 - hazeA) * (1.0 - goldA);
+  if (groundA > 0.0) {
+    fogColour = (fogColour * fogA + (hazeColour * hazeA * (1.0 - goldA) + gold * goldA) * (1.0 - fogA)) / max(1.0 - (1.0 - fogA) * (1.0 - groundA), 1e-4);
+    fogA = 1.0 - (1.0 - fogA) * (1.0 - groundA);
+  }
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
@@ -343,8 +367,11 @@ void main() {
   if (uWhich < 0.5) {
     // space: the black beyond the edge, the last of the air against it, and the stars
     float a = smoothstep(-3.0, 3.0, km);
-    float outer = exp(-max(km, 0.0) / 26.0);
-    vec3 glow = mix(vec3(0.05, 0.17, 0.55), vec3(0.4, 0.64, 1.0), outer * outer) * outer * 0.5;
+    // (The air stands in layers, each thinner and bluer than the one under it: the pale weather layer is a line a few kilometres
+    // deep against the planet, the clear blue above it reaches some tens of kilometres, and the last thin air fades into the black
+    // over a hundred.)
+    float up = max(km, 0.0);
+    vec3 glow = vec3(0.5, 0.7, 1.0) * 0.36 * exp(-up / 7.0) + vec3(0.1, 0.3, 0.9) * 0.2 * exp(-up / 20.0) + vec3(0.02, 0.06, 0.3) * 0.1 * exp(-up / 60.0);
     vec2 cell = floor(vWorld.xz / 40.0);
     vec2 within = fract(vWorld.xz / 40.0) - 0.5;
     float pick = hash12(cell);
@@ -371,10 +398,16 @@ void main() {
     gl_FragColor = vec4(colour * (1.0 - uSolo), a * (1.0 - uSolo));
     return;
   }
-  float inner = exp(min(km, 0.0) / 150.0) * 0.5 + exp(min(km, 0.0) / 30.0) * 0.5;
-  float band = km < 0.0 ? inner : 0.0;
-  vec3 blue = mix(vec3(0.06, 0.2, 0.62), vec3(0.42, 0.66, 1.0), band * band);
-  vec3 colour = blue * band * 0.5;
+  // Inside the edge the eye looks along the air, not down through it: how much air the ray crosses is one over the cosine of its
+  // slant, and at the very edge, where the planet curves away under it, some thirty times the air straight down. The clear air
+  // scatters blue all the way in; the pale haze of the lowest air is seen only edge on, as a band against the edge.
+  float mu = sqrt(max(1.0 - d * d, 0.0));
+  float path = 1.0 / sqrt(mu * mu + 0.0009);
+  // (Where this sheet begins the air it adds is nothing: the ground and the cloud carry their own air up to there.)
+  float beyond = max(path - 2.3, 0.0);
+  float clearAir = 1.0 - exp(-0.08 * beyond);
+  float paleAir = 1.0 - exp(-0.004 * beyond * beyond);
+  vec3 colour = km < 0.0 ? vec3(0.05, 0.17, 0.55) * 0.5 * clearAir + vec3(0.42, 0.6, 0.8) * 0.5 * paleAir : vec3(0.0);
   if (uDusk > 0.0) {
     float sunH = sunHeight(vWorld.xz) + uTerm.w * 0.05;
     vec3 arc = mix(vec3(1.0), mix(vec3(1.25, 0.5, 0.16), vec3(0.75, 0.85, 1.1), sunSeen(sunH - 0.12)) * sunSeen(sunH - 0.03) + 0.04 * skySeen(sunH), uTerm.w);

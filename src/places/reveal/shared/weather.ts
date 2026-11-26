@@ -283,6 +283,16 @@ float fogDepth(vec2 fogAt) {
   return held * today * clear * (0.3 + 0.9 * veil) * 1.5 - 0.5;
 }
 
+// The haze that pools over low ground (sky/banks.png, blue): 0 to 1. It lies in the plains and on the wide valley floors and the
+// ranges stand out of it; it is thicker on some days' reaches than on others, and has no edge.
+float hazeAt(vec2 xz) {
+  float pooled = texture2D(uBanks, clamp((xz - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).b;
+  if (pooled <= 0.004) return 0.0;
+  vec2 w = xz - uTime * vec2(0.5, -0.3);
+  if (uLive > 0.0) w -= uWx * vec2(2.0, -1.2);
+  return pooled * (0.45 + 0.55 * smoothstep(0.3, 0.62, texture2D(uCloudTile, w / 2300.0 + vec2(0.27, 0.59), 3.0).b));
+}
+
 // The share of the sun that reaches a point of the ground under the cloud. Each height of cloud throws its own shadow, as far from
 // itself as it stands high, so the shadow of the ice lies well off the shadow of the puffs under it.
 float cloudShade(vec2 xz) {
