@@ -280,14 +280,14 @@ void main() {
   // The floor the group feeds on is dark, with low mounds of grey ash and rubble a metre or three across, and wet patches.
   float mound = 0.0;
   float wet = 0.0;
-  albedo *= (1.0 + 0.5 * fresh) * lumpTone * slabTone;
+  albedo *= lumpTone * slabTone;
   if (fresh > 0.01) {
     mound = fresh * smoothstep(0.6, 0.72, 0.7 * vnoise(q / 2.1 + 47.0) + 0.3 * vnoise(q / 0.7 + 3.0));
     wet = fresh * (1.0 - flow) * (1.0 - mound) * (1.0 - steep) * (1.0 - rubble) * (1.0 - spall) * smoothstep(0.58, 0.68, 0.7 * vnoise(q / 2.3 + 77.0) + 0.3 * vnoise(q / 0.6 + 19.0));
   }
   albedo = mix(albedo, vec3(0.062, 0.06, 0.059) * (0.7 + 1.2 * skinD.z - 0.3), 0.8 * mound);
   // That floor is warm dark basalt and nothing on it is pale: its brights are the fire's, not ash on the tops of plates.
-  albedo *= mix(vec3(1.0), vec3(1.08, 0.99, 0.92), fresh) * mix(1.0, min(1.0, 0.115 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
+  albedo *= mix(vec3(1.0), vec3(1.03, 1.0, 0.97), fresh) * mix(1.0, min(1.0, 0.05 / max(dot(albedo, vec3(0.3, 0.5, 0.2)), 1e-3)), fresh);
   // Satin only where fresh glass faces the sky, on the tops of ropes and on the smooth slabs: everything else is dead matte.
   float glass = (1.0 - steep) * (1.0 - smoothstep(0.3, 0.75, age)) * (1.0 - spall) * (1.0 - dust) * (1.0 - rubble) * max(crest, 0.35 * (1.0 - smoothstep(0.08, 0.35, fpLong)));
   float rough = mix(mix(0.93, 0.4, clamp(glass * (1.0 - mound), 0.0, 1.0)), 0.2, wet);

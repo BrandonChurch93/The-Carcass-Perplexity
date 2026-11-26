@@ -201,51 +201,11 @@ float gFoldDeep = 0.1;
 vec2 gFoldDir = vec2(1.0, 0.0);
 // The mound of the one that sank (x, z, the flat radius).
 uniform vec3 uMound;
-// Where ropes are at all: patches of a few metres, broken again at half a metre. The skin reads the same through gFoldCover.
-float ropeMask(vec2 q) {
-  return smoothstep(0.45, 0.6, vnoise(q / 2.9 + 31.0)) * smoothstep(0.3, 0.45, vnoise(q / 0.55 + 53.0));
-}
 // How broken the crust is at the point brokenAt was last asked about (0 until it is asked).
 float gBroke = 0.0;
 // How much the plates at a point are flat and level (0 to 1): the floor the group feeds on is plates nearly level, with thin
 // gaps and a few tilted rims; its relief is in the rims and the gaps.
 float gFlat = 0.0;
-float gSheafBest;
-float gSheafNext;
-vec4 gSheaf;
-vec3 gSheafAlong;
-void sheafAt(vec2 wq, float size, float seed, float flowTurn, float small) {
-  vec2 base = floor(wq / size - 0.5);
-  for (int j = 0; j < 2; j++) {
-    for (int i = 0; i < 2; i++) {
-      vec2 c2 = base + vec2(float(i), float(j));
-      vec2 hs = hash22(c2 + seed);
-      float hr = hash12(c2 + seed + 8.1);
-      // The middle of a sheaf lies in the middle half of its cell and it reaches at most three quarters of a cell:
-      // so four cells are enough to look in.
-      vec2 rel = wq - (c2 + 0.5 + 0.5 * (hs - 0.5)) * size;
-      float R = size * (0.22 + 0.53 * hr);
-      float turn = flowTurn + 2.6 * (fract(hr * 17.3) - 0.5);
-      vec2 along = vec2(cos(turn), sin(turn));
-      float a = dot(rel, along);
-      float s = rel.x * along.y - rel.y * along.x;
-      // A sheaf is a band of 3 to 9 ropes that bend together: narrow across the ropes, long along them, lying on its arc.
-      float space = mix(0.12 + 0.14 * fract(hr * 11.3), 0.055 + 0.07 * fract(hr * 11.3), small);
-      float bent = a + (0.25 + 0.7 * fract(hr * 5.7)) / R * s * s;
-      float d = length(vec2(bent / ((1.5 + 3.0 * fract(hr * 41.3)) * space), s / R));
-      // One cell in five of the large ones is bare, and two in five of the small.
-      float p = (1.0 - d) * (0.7 + 0.6 * fract(hr * 29.1)) * (1.0 + 0.6 * small) * step(0.2 + 0.2 * small, fract(hr * 53.7));
-      if (p > gSheafBest) {
-        gSheafNext = gSheafBest;
-        gSheafBest = p;
-        gSheaf = vec4(a, s, R, hr);
-        gSheafAlong = vec3(along, small);
-      } else if (p > gSheafNext) {
-        gSheafNext = p;
-      }
-    }
-  }
-}
 // The coils at the line: within 11 to 15 m of the lens of key heart-1 the crust is thick lobes that lap, 1.9 to 2.8 m across,
 // each a sheet 4 to 8 cm thick that is thin where it was fed and ends at its front in a step with a crease at its foot. Each
 // wears one sheaf of cords, 11 to 14 cm apart, arcs about a point behind the lobe (0.5 to 4 m radius) that bunch up toward
