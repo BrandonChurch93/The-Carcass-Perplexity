@@ -109,8 +109,10 @@ void main() {
   // (Below 100 km the baked light, the surf, the shelf and the places are not in the picture: they are not read.)
   bool high = uViewKm > 100.0;
   vec3 bake = vec3(0.0, 0.5, 0.0);
-  if (high) bake = texture2D(uLightWide, clamp(uvWide, 0.0, 1.0)).rgb;
-  float coastKm = shoreKm(texture2D(uShoreWide, clamp(uvWide, 0.0, 1.0)).r, uBakeKm.x);
+  // (Where the close map covers the ground whole, the wide one's light and coast are not read.)
+  if (high && inClose < 1.0) bake = texture2D(uLightWide, clamp(uvWide, 0.0, 1.0)).rgb;
+  float coastKm = 0.0;
+  if (inClose < 1.0) coastKm = shoreKm(texture2D(uShoreWide, clamp(uvWide, 0.0, 1.0)).r, uBakeKm.x);
   float texel = uTexelKm.x;
   if (inWide < 1.0) {
     // Past the edge of the wide map lies the open sea.
@@ -419,18 +421,23 @@ void main() {
   float buried = 0.0;
   float eased = 0.0;
   if (unjoined > 0.0) {
-    vec2 over = xz + 46.0 * vec2(vnoise(xz / 74.0 + 3.0), vnoise(xz / 74.0 + 11.0));
-    // (Along a range, so that here and there a whole one is gone and the spacing is uneven; and across, so that crests end.)
-    float along = vnoise(over / vec2(52.0, 170.0) + 5.0);
-    float across = 0.6 * vnoise(over / 80.0 + 31.0) + 0.4 * vnoise(over / 33.0 + 21.0);
-    buried = max(smoothstep(0.44, 0.58, along), smoothstep(0.4, 0.54, across)) * smoothstep(-900.0, -760.0, xz.x) * unjoined;
+    float across = 0.5;
+    float paleRange = 1.0;
+    if (xz.x > -900.0) {
+      vec2 over = xz + 46.0 * vec2(vnoise(xz / 74.0 + 3.0), vnoise(xz / 74.0 + 11.0));
+      // (Along a range, so that here and there a whole one is gone and the spacing is uneven; and across, so that crests end.)
+      float along = vnoise(over / vec2(52.0, 170.0) + 5.0);
+      across = 0.6 * vnoise(over / 80.0 + 31.0) + 0.4 * vnoise(over / 33.0 + 21.0);
+      buried = max(smoothstep(0.44, 0.58, along), smoothstep(0.4, 0.54, across)) * smoothstep(-900.0, -760.0, xz.x) * unjoined;
+      paleRange = mix(1.0, smoothstep(0.3, 0.6, vnoise(over / vec2(60.0, 210.0) + 47.0)), smoothstep(-900.0, -760.0, xz.x));
+    }
     // (And seen from that height under a sun a third of the way up, their relief is quiet: a lit side and a shaded side, no bars.)
     eased = smoothstep(-900.0, -760.0, xz.x) * unjoined;
     float naturalLum = dot(natural, vec3(0.3, 0.55, 0.15));
     // (The map's own light and dark is the bars of the ribs: the rock here is read with most of it taken out.)
     vec3 rock = vec3(0.3, 0.27, 0.235) * (0.62 + 0.55 * mix(naturalLum, 0.36, 0.78 * eased));
     // (Range by range the rock is paler or darker, and one stands in forest.)
-    rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.08, 1.04, 1.0), smoothstep(0.3, 0.6, vnoise(over / vec2(60.0, 210.0) + 47.0)) * smoothstep(-900.0, -760.0, xz.x) + 1.0 - smoothstep(-900.0, -760.0, xz.x));
+    rock *= mix(vec3(0.5, 0.6, 0.5), vec3(1.08, 1.04, 1.0), paleRange);
     // (The low country is no darker than the rock that stands in it: olive and tan, lit as the ranges are.)
     vec3 plain = mix(vec3(naturalLum), natural, 0.85) * vec3(0.92, 1.0, 0.96) * 0.7 + vec3(0.1, 0.105, 0.07);
     // (Where the crests stand, the valleys between them are dry and nearly as light: high country, one mass, not stripes.)
