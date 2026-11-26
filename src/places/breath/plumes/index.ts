@@ -2,7 +2,8 @@
 // Every bush is grown once from the seeded stream (fronds.ts): stems that arch from one holdfast, each carrying a frond of the frond picture.
 // The sway and the drops are in the vertex shaders (shaders.ts).
 import * as THREE from 'three';
-import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim } from '../shared/anchors';
+import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim, shotSpan } from '../shared/anchors';
+import { stagedSeconds } from '../shared/stage';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
@@ -13,6 +14,19 @@ export const PARTS: readonly string[] = ['gill-plumes'];
 
 /** Staged, metres: see where the bushes are placed. */
 const HERO_WEST = 3.6;
+
+/** Staged for shot breath-05 only: the growth that stands behind and beside the wader at the rim in the picture of key breath-2, and the low shoots
+ *  on the plate between it and the lens. x, z, height in metres. They stand where the lens of breath-03 walks, so no other shot has them. */
+const RIM_GROWTH: ReadonlyArray<readonly [number, number, number, number]> = [
+  [-28.6, 10.6, 4.6, 1],
+  [-30.4, 8.2, 4.2, 1],
+  [-31.6, 12.9, 2.6, 1],
+  [-33.6, 10.4, 3.2, 0.5],
+  [-32.4, 19.3, 1.0, 0.5],
+  [-30.8, 21.6, 0.75, 0.5],
+  [-33.6, 16.6, 1.2, 0.5],
+  [-34.9, 20.4, 0.8, 0.5],
+];
 
 const HOLDFAST_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -69,6 +83,12 @@ export function create(ctx: Context): Piece {
   for (const bush of bushes) grown.grow(bush, rng, floor);
   const { fronds: vaneGeometry, stems: stemGeometry } = grown.build();
 
+  const rimRng = ctx.rng('gill-plume-rim');
+  const rimBushes: Bush[] = RIM_GROWTH.map(([x, z, tall, detail]) => ({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail, mound: 1 }));
+  const rimGrown = new Fronds();
+  for (const bush of rimBushes) rimGrown.grow(bush, rimRng, floor);
+  const rimBuilt = rimGrown.build();
+
   const pixel = { value: 0.001 };
   const seconds = { value: 0 };
   const surge = { value: 0 };
@@ -98,7 +118,14 @@ export function create(ctx: Context): Piece {
   const holdfastMaterial = new THREE.ShaderMaterial({ vertexShader: RIG_VERTEX, fragmentShader: HOLDFAST_FRAGMENT, uniforms: { ...rig.uniforms } });
   const group = new THREE.Group();
   group.add(vaneMesh, stemMesh);
-  for (const b of bushes) {
+  const rimGroup = new THREE.Group();
+  const rimVanes = new THREE.Mesh(rimBuilt.fronds, vaneMaterial);
+  rimVanes.frustumCulled = false;
+  const rimStems = new THREE.Mesh(rimBuilt.stems, stemMaterial);
+  rimStems.frustumCulled = false;
+  rimGroup.add(rimVanes, rimStems);
+  group.add(rimGroup);
+  for (const b of [...bushes, ...rimBushes]) {
     const g = lump.clone();
     const at = g.getAttribute('position') as THREE.BufferAttribute;
     const seed = rng.range(0, 50);
@@ -114,7 +141,7 @@ export function create(ctx: Context): Piece {
     lumps.push(g);
     const m = new THREE.Mesh(g, holdfastMaterial);
     m.frustumCulled = false;
-    group.add(m);
+    (rimBushes.includes(b) ? rimGroup : group).add(m);
   }
   lump.dispose();
 
@@ -186,12 +213,23 @@ export function create(ctx: Context): Piece {
     rig.setShadow(discs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, 0.5);
   });
 
+  const rimDiscs = rig.contactDiscs(rimBushes.length * 2);
+  const rimSpan = shotSpan('breath-05');
+
   let height = 0;
   const size = new THREE.Vector2();
   return {
     setTime: (t) => {
       seconds.value = t;
       surge.value = surgeAt(t);
+      // Staged by shot: the growth by the rim wader is on the set for breath-05 alone.
+      const at = stagedSeconds();
+      const shown = at >= rimSpan[0] && at <= rimSpan[1];
+      rimGroup.visible = shown;
+      rimBushes.forEach((b, i) => {
+        rig.setDisc(rimDiscs, i * 2, b.x + Math.sin(b.lean) * 0.2 * b.tall, b.z - Math.cos(b.lean) * 0.2 * b.tall, 0.42 * b.tall, shown ? 0.7 : 0);
+        rig.setShadow(rimDiscs, i * 2 + 1, b.x, b.z, 0.35 * b.tall, 0.8 * b.tall, shown ? 0.5 : 0);
+      });
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
@@ -204,6 +242,8 @@ export function create(ctx: Context): Piece {
       vaneGeometry.dispose();
       vaneMaterial.dispose();
       stemGeometry.dispose();
+      rimBuilt.fronds.dispose();
+      rimBuilt.stems.dispose();
       stemMaterial.dispose();
       dropGeometry.dispose();
       dropMaterial.dispose();

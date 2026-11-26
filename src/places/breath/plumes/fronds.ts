@@ -18,6 +18,8 @@ export interface Bush {
   detail: number;
   /** How far over it is combed, 0 to 1. Unset: 0.6. */
   comb?: number;
+  /** A mound seen from some way off, 0 to 1: more and finer fronds that leave the holdfast all the way round and arch over to the rock. Unset: 0. */
+  mound?: number;
 }
 
 /** Where a thread ends that carries a drop. */
@@ -231,7 +233,8 @@ export class Fronds {
     };
 
     const close = bush.detail >= 1;
-    const mains = close ? 10 : bush.detail >= 0.5 ? 5 : 3 + (rng.next() < 0.4 ? 1 : 0);
+    const mound = bush.mound ?? 0;
+    const mains = (close ? 10 : bush.detail >= 0.5 ? 5 : 3 + (rng.next() < 0.4 ? 1 : 0)) + Math.round(14 * mound);
     const blades = 2;
     for (let m = 0; m < mains; m++) {
       // From the crown of the bush to its skirt: the first rise nearly straight and bend over only at their ends, the last go out low
@@ -240,16 +243,16 @@ export class Fronds {
       const k = rng.range(-0.5, 0.5);
       // One in five grows out of the back of the bush and is turned over it by the wind.
       const back = m % 5 === 3;
-      const long = (1.32 - 0.6 * rank) * rng.range(0.78, 1.05) * (back ? 0.7 : 1);
+      const long = (mound > 0 ? 1.12 - 0.45 * rank : 1.32 - 0.6 * rank) * rng.range(0.78, 1.05) * (back ? 0.7 : 1);
       const length = tall * long;
       const out = 0.035 * tall * rng.next();
       const about = rng.range(0, 6.283);
       const from: V3 = [bush.x + Math.sin(about) * out, bush.y + 0.03 * tall, bush.z + Math.cos(about) * out];
-      const azimuth = lean + (back ? Math.PI + 1.2 * k : 2.3 * k) + rng.range(-0.25, 0.25);
+      const azimuth = lean + (back ? Math.PI + 1.2 * k : (2.3 + 3.2 * mound) * k) + rng.range(-0.25, 0.25);
       const elevation = (back ? 1.25 : 1.5 - 0.8 * rank) + rng.range(-0.12, 0.1);
-      const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb) * 2.3 * k) + rng.range(-0.2, 0.2), -0.25 - 0.8 * rank ** 0.7 + rng.range(-0.25, 0.2), length, rng.range(1.3, 2.1));
+      const c = curve(from, azimuth, elevation, lean + (back ? 1.6 * k : (1 - comb * (1 - 0.7 * mound)) * (2.3 + 3.2 * mound) * k) + rng.range(-0.2, 0.2), -0.25 - 0.45 * mound - 0.8 * rank ** 0.7 + rng.range(-0.25, 0.2), length, rng.range(1.3, 2.1) - 0.3 * mound);
       const phase = rng.range(0, 6.283);
-      ribbons(c, blades, rng.range(0.38, 0.62), false, close ? 5 : 0, phase, 0, rng.range(0.12, 0.3));
+      ribbons(c, blades, rng.range(0.38, 0.62) * (1 - 0.3 * mound), false, close ? 5 : 0, phase, 0, rng.range(0.12, 0.3) * (1 - 0.5 * mound));
       tube(c, tall * 0.011 * (0.7 + 0.5 * long), 0.8, 1, phase, 0);
       // Side fronds leave the stem part way up, shorter, each its own way.
       const sides = close ? 1 + (rng.next() < 0.5 ? 1 : 0) : bush.detail >= 0.5 ? 1 : rng.next() < 0.5 ? 1 : 0;

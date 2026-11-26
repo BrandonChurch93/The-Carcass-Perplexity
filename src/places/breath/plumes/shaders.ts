@@ -114,7 +114,7 @@ ${VANE_TEST}
   float dead = step(0.5, deadOne);
   albedo = mix(albedo, light * vec3(0.55, 0.36, 0.24), dead);
   // How thick the growth is here: where the barbs meet the stem it is many threads deep, at its ends single ones.
-  float body = smoothstep(0.25, 0.75, made.g);
+  float body = smoothstep(0.25, 0.75, made.g) * (ragged ? 0.5 : 1.0);
   // The heart of the bush is near black: the fronds shade each other where they cross, at the root and inside.
   float occ = mix(1.0, 0.3, body) * mix(0.14, 1.0, within) * mix(0.3, 1.0, smoothstep(0.05, 0.5, reach));
   // A thread is round and hangs: what light it turns is from above and from the side of the sun, not from the face of the ribbon.
@@ -135,8 +135,8 @@ ${VANE_TEST}
   vec3 blood = mix(vec3(1.0, 0.2, 0.13), vec3(1.0, 0.5, 0.36), 0.5 * tip + 0.35 * pale);
   colour += blood * uSunColour * (0.8 * through * lit * close * (1.0 - 0.8 * dead)) * (0.3 + 1.7 * light);
   // Wet: here and there a thread turns the sun to the lens, and against the light the wet edges of the threads are lined with it.
-  float glint = smoothstep(0.93, 0.99, vnoise(at * vec2(900.0, 340.0) + vVane.z)) * smoothstep(0.004, 0.0012, px);
-  colour += uSunColour * vec3(1.0, 0.8, 0.6) * glint * (0.03 + 0.9 * pow(against, 5.0)) * lit * (0.3 + 0.7 * within);
+  float glint = smoothstep(0.972, 0.995, vnoise(at * vec2(700.0, 260.0) + vVane.z)) * smoothstep(0.004, 0.0012, px) * rim;
+  colour += uSunColour * vec3(1.0, 0.8, 0.6) * glint * (1.6 * pow(against, 5.0)) * lit * (0.3 + 0.7 * within);
   // The film of water on every thread gives back a little of the bright air round it, so its dark is wine and never black.
   colour += skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.012 / 3.14159) * open;
   gl_FragColor = vec4(rigOut(colour), 1.0);
