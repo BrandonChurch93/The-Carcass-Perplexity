@@ -468,3 +468,73 @@ Prompt or command: `node assets-src/materials/make-materials.mjs marsh`.
 
 What it holds: the settings of the script, and for each tile its name, the real width of one repeat in metres and its mean colour in linear light, so a place can tint or blend by number; for each plate its size in pixels, the real width it stands for and the name of its relief picture where it has one.
 Date: 2026-11-26
+
+## `public/assets/marsh/mat/pan.jpg` and `public/assets/marsh/mat/pan-nh.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer at its default model, then `assets-src/marsh/mat/make-tile.py` on Python 3.14.8 with Pillow 13.0.0, numpy 2.5.5 and scipy 1.18.1.
+From: `assets-src/marsh/mat/src/pan.jpg`, the generated picture (kept as JPEG at quality 93; the tile was made from the PNG take before that, so a second making differs from the first by that much). Picture passed to the model with the prompt: `references/approved/4-marsh/marsh-0-establishing.jpg`.
+Prompt or command: the prompt below, as it was noted when the take was asked for (its wording was not kept letter for letter), then `python3 assets-src/marsh/mat/make-tile.py pan`.
+
+```
+A seamless tiling material texture photographed from straight above (orthographic, top-down), filling the whole frame edge to edge, evenly lit under a flat white overcast, no cast shadows, no horizon, no perspective, no objects, no text. The material belongs to the place in the reference picture (same colours and minerals). Subject: a grey-white salt pan about 3 metres across: polygonal salt plates each roughly 40 cm wide with raised, knobbly, bright white crystalline rims where the plates meet, matte pale grey slightly dished interiors with fine crystal grain, a few hairline cracks stained dark rust red. No pink wash, no water.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the salt pans of the flats: plates a stride wide with raised white rims, where the built flats were soft and stretched near the lens (made by `marsh_ground_builder`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/slick.jpg` and `public/assets/marsh/mat/slick-nh.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer at its default model, then `assets-src/marsh/mat/make-tile.py` on Python 3.14.8 with Pillow 13.0.0, numpy 2.5.5 and scipy 1.18.1.
+From: `assets-src/marsh/mat/src/slick.jpg`, the generated picture (kept as JPEG at quality 93; the tile was made from the PNG take before that, so a second making differs from the first by that much). Picture passed to the model with the prompt: `references/approved/4-marsh/marsh-0-establishing.jpg`.
+Prompt or command: the prompt below, as it was noted when the take was asked for (its wording was not kept letter for letter), then `python3 assets-src/marsh/mat/make-tile.py slick 1024 1024`.
+
+```
+A seamless tiling material texture photographed from straight above (orthographic, top-down), filling the whole frame edge to edge, evenly lit under a flat white overcast, no cast shadows, no horizon, no perspective, no objects, no text. The material belongs to the place in the reference picture (same colours and minerals). Subject: dark rust red wet mud about 1.5 metres across, slick and glistening, with soft ripples and small slumps, and scattered remnants of white salt crust sinking into it. No standing water.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the wet, shining rust mud of the trodden bank and of a channel margin (made by `marsh_ground_builder`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/rocktop.jpg` and `public/assets/marsh/mat/rocktop-nh.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer at its default model, then `assets-src/marsh/mat/make-tile.py` on Python 3.14.8 with Pillow 13.0.0, numpy 2.5.5 and scipy 1.18.1.
+From: `assets-src/marsh/mat/src/rocktop.jpg`, the generated picture (kept as JPEG at quality 93; the tile was made from the PNG take before that, so a second making differs from the first by that much). Picture passed to the model with the prompt: `references/approved/4-marsh/marsh-0-establishing.jpg`.
+Prompt or command: the prompt below, as it was noted when the take was asked for (its wording was not kept letter for letter), then `python3 assets-src/marsh/mat/make-tile.py rocktop 1024 1024`.
+
+```
+A seamless tiling material texture photographed from straight above (orthographic, top-down), filling the whole frame edge to edge, evenly lit under a flat white overcast, no cast shadows, no horizon, no perspective, no objects, no text. The material belongs to the place in the reference picture (same colours and minerals). Subject: the top of a pale grey-buff sedimentary rock outcrop about 2 metres across: matte, dusty, weathered stone, pitted and rough, broken by sharp joints and small fractures into angular pieces, thin white salt crust dusted on the flattest parts, dried dark rust red stain in the joints only. Hard, dry, fractured stone, not smooth, not glossy, no marbling, no water.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the top of the rock rise: dry jointed stone, where the built rock read as clay (made by `marsh_ground_builder`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/rockside.jpg` and `public/assets/marsh/mat/rockside-nh.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer at its default model, then `assets-src/marsh/mat/make-tile.py` on Python 3.14.8 with Pillow 13.0.0, numpy 2.5.5 and scipy 1.18.1.
+From: `assets-src/marsh/mat/src/rockside.jpg`, the generated picture (kept as JPEG at quality 93; the tile was made from the PNG take before that, so a second making differs from the first by that much). Picture passed to the model with the prompt: `references/approved/4-marsh/marsh-0-establishing.jpg`.
+Prompt or command: the prompt below, as it was noted when the take was asked for (its wording was not kept letter for letter), then `python3 assets-src/marsh/mat/make-tile.py rockside 1024 1024`.
+
+```
+A seamless tiling material texture photographed square-on (orthographic, straight at a vertical rock face), filling the whole frame edge to edge, evenly lit under a flat white overcast, no cast shadows, no sky, no ground, no objects, no text. The material belongs to the place in the reference picture (same colours and minerals). Subject: a vertical face of pale grey-buff bedded sedimentary rock about 1.5 metres across: thin level strata a few centimetres thick, some beds standing proud and some eaten back, broken edges, vertical joints, matte dusty stone, white salt efflorescence along some beds, dried dark rust red streaks seeping down from a few bedding joints. Hard, dry, fractured, not smooth, not glossy.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the upright faces of the rock rise, in level beds (made by `marsh_ground_builder`).
+Date: 2026-11-26
+
+## `public/assets/marsh/mat/knob.jpg` and `public/assets/marsh/mat/knob-nh.jpg`
+
+Made by: the image tool `generate_image` of Perplexity Computer at its default model, then `assets-src/marsh/mat/make-tile.py` on Python 3.14.8 with Pillow 13.0.0, numpy 2.5.5 and scipy 1.18.1.
+From: `assets-src/marsh/mat/src/knob.jpg`, the generated picture, kept as JPEG at quality 93. Picture passed to the model with the prompt: `references/approved/4-marsh/marsh-1-the-bubbling-seep-pool.jpg`.
+Prompt or command: the prompt below, as it was noted when the take was asked for (its wording was not kept letter for letter), then `python3 assets-src/marsh/mat/make-tile.py knob 1024 1024`.
+
+```
+A seamless tiling material texture photographed from straight above (orthographic, top-down), filling the whole frame edge to edge, evenly lit under a flat white overcast, no cast shadows, no horizon, no perspective, no objects, no text. The material belongs to the place in the reference picture (same colours and minerals). The material belongs to the place in the reference picture (same colours and minerals as the knobbly white crust at the bottom of the reference). Subject: the salt rind at the edge of a blood red brine pool, about 1.3 metres across: knobbly cauliflower-like nodules and ridges of bright white granular salt crystals, each knob 4 to 10 centimetres across, crowded together in irregular clumps and winding ridges, with deep narrow hollows between them where dark wet rust red brine and red stained mud stands. The tops are dry, matte and white with sparkling coarse crystals; the hollows are dark red and wet. Strong relief, rough, crystalline, not smooth.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the knobbed salt rind of the seep pool bank, and the salt grown on the dead (made by `marsh_ground_builder`).
+Date: 2026-11-26
