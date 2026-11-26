@@ -181,6 +181,15 @@
     },
     {
       "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the alien creatures and procedural water-to-terrain transitions look stiff and lightly integrated compared to a top-budget film or cinematic",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
       "juror": "d",
       "model": "gpt_6_2_astra",
       "answer": "d",
@@ -196,6 +205,51 @@
       "confidence": 70,
       "why": "the high-detail layered rock and atmospheric haze with fantastical creatures reads as a polished cinematic or high-end concept render, not a real photo.",
       "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the same plant-clump geometry repeats across the terrain.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "alien red-fluid landscape with repetitive instanced plants and furry creatures looks like a polished but ordinary offline 3D render (clean flat-lit surfaces, uniform scattering) rather than film-grade VFX.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the alien tentacled creatures and repetitive instanced plants rendered under flat, uncinematic CG lighting",
+      "answered": "18:22 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the same distinctive plant clump repeats across the plain like a reused game asset.",
+      "answered": "18:22 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the dense, coherent alien landscape with believable atmospheric haze, distant rain and layered detail looks like concept art or film-grade CGI, though the repeated plant and rock assets leave (c) a close second.",
+      "answered": "18:22 UTC"
     }
   ]
 }
