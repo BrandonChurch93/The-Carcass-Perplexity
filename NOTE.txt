@@ -1,7 +1,7 @@
-2026-11-26 06:35 UTC
-work at 3294697 on agent/ribs-sea-3
-06:36 heartbeat 3: colony thinned to 46 single animals with shade behind; bore is a wall of water (borewall-c) with lee round stacks, swell ahead, draw-back on flat; ribs-2 near feeder whole, sharper ripples, flying drops
-look-1.jpg = out/work/c-ribs-3.jpg
-look-2.jpg = out/work/c-ribs-4.jpg
-look-3.jpg = out/work/s-06.jpg
-look-4.jpg = out/work/c-ribs-2.jpg
+2026-11-26 06:52 UTC
+work at ea48daa on agent/ribs-sea-3
+06:54 colony thinned and spaced, ribs-2 water darker with paws, drowned paler, bore wall with dark flat
+look-1.jpg = out/work/y.jpg
+look-2.jpg = out/work/c-ribs-2.jpg
+look-3.jpg = out/work/v-bore2.jpg
+look-4.jpg = out/work/c-ribs-1.jpg
