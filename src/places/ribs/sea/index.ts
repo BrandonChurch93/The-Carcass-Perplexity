@@ -10,7 +10,7 @@ import { cloudShut, inOpening, openingWeight } from '../shared/opening';
 import { loopPhase, stagedSeconds } from '../shared/stage';
 import { chopTexture, feetTexture, foamTexture } from './chop';
 import { createBore, type BoreSite } from './bore';
-import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_VERTEX, SPRAY_OPENING_FRAGMENT } from './shaders';
+import { POOL_FRAGMENT, POOL_LOOP_FRAGMENT, POOL_VERTEX, SEA_FRAGMENT, SEA_OPENING_FRAGMENT, SEA_OPENING_VERTEX, SEA_VERTEX, SPRAY_OPENING_FRAGMENT } from './shaders';
 import { Spray, rand } from './spray';
 import type { Ring } from './tide';
 import { BORE_HEIGHT, BORE_SPEED, MAX_RINGS, RING_SOURCE, SWELL, boreFront } from './tide';
@@ -126,9 +126,9 @@ export function create(ctx: Context): Piece {
     uniforms: seaUniforms,
   });
   // The approach draws the sea with its own text (shaders.ts): the film's material is the one above, untouched, for every other frame.
-  const openSea = new THREE.Vector4(1, 0, 0, 0);
+  const openSea = new THREE.Vector4(1, 0, 0, 1);
   const seaOpening = new THREE.ShaderMaterial({
-    vertexShader: SEA_VERTEX,
+    vertexShader: SEA_OPENING_VERTEX,
     fragmentShader: SEA_OPENING_FRAGMENT,
     uniforms: { ...seaUniforms, uOpenSea: { value: openSea } },
   });
@@ -229,28 +229,29 @@ export function create(ctx: Context): Piece {
   // The approach: one heavy swell of the set breaks on the shore before the first blade as the film opens. White water is thrown up the
   // height of a tower, hangs and comes down at the pace of its size (it falls as water falls: that is what says how big it is), and the wind
   // takes the top of it off down the shore. Drawn only while the camera stands in the approach.
-  const BREAKER = { x: -322, half: 70, cards: 560, strikes: -0.8, speed: 42 };
+  const BREAKER = { x: -322, half: 70, cards: 560, strikes: -2.7, again: 2.2, speed: 42 };
   let breakerZ = 200;
   while (breakerZ < 420 && rig.land.height(BREAKER.x, breakerZ) > -0.8) breakerZ += 4;
   /** The approach: how much more of the sky's light the open water keeps than the ground under the shut cloud. */
-  const SEA_OPEN = { lift: 1.5 };
+  const SEA_OPEN = { lift: 1.5, swell: 0.7 };
   const JETS = 22;
   const breakerAt = (seconds: number): void => {
     breaker.begin();
     // What hangs of it is gone by the time the lens is at the blade's foot: the foot is seen dark through thin air.
-    const late = Math.min(1, Math.max(0, (seconds - 3.5) / 3));
+    const late = Math.min(1, Math.max(0, (seconds - 3.6) / 2.4));
     const thin = 1 - 0.85 * late * late * (3 - 2 * late);
     for (let j = 0; j < BREAKER.cards; j++) {
       const id = 90000 + j;
       // The water goes up in fingers: each card belongs to one, follows it up a little behind the last, and is thrown a little wide of it.
-      const jet = 91000 + Math.floor(rand(id, 1) * JETS);
+      const jet = 91000 + (j % 2) * 500 + Math.floor(rand(id, 1) * JETS);
       const along = (rand(jet, 1) - 0.5) * 0.9 + (rand(id, 12) - 0.5) * 0.1;
       // One tall burst where the swell meets the rock square, low shoulders along the rest, and it strikes from one end to the other.
       const peak = Math.exp(-((along + 0.08) * (along + 0.08)) / 0.03);
       // A few fingers go far above the rest.
       const reachUp = rand(jet, 2);
       const power = (0.3 + 0.7 * peak) * (0.55 + 0.45 * reachUp * reachUp) * (0.9 + 0.1 * rand(id, 2));
-      const a = seconds - (BREAKER.strikes + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.7 * rand(id, 3));
+      // Two seas of a set break on it: the first is up as the film opens, the next two seconds behind it.
+      const a = seconds - (BREAKER.strikes + (j % 2) * BREAKER.again + 0.9 * (along + 0.5) + 0.35 * rand(jet, 3) + 0.7 * rand(id, 3));
       if (a < 0) continue;
       const up = BREAKER.speed * power;
       const side = (rand(jet, 4) - 0.5) * 11 + (rand(id, 13) - 0.5) * 2.5;
@@ -267,8 +268,8 @@ export function create(ctx: Context): Piece {
         const out = (2 + 4 * rand(jet, 7)) * a;
         const fade = Math.min(1, a / 0.18) * (torn ? 1 : Math.min(1, Math.max(0, (y + 3) / 8)));
         // Water that is moving is drawn out along its way: strings going up, strings coming down, a head where it hangs.
-        const drawn = 1.15 + 1.7 * Math.min(1, Math.abs(vy) / 22);
-        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.5 + 1.1 * a) * (0.55 + 0.9 * rand(id, 8)), 0.88 * fade, rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
+        const drawn = 1.9 + 2.6 * Math.min(1, Math.abs(vy) / 22);
+        breaker.put(x0 + side * a + WIND.to[0] * 0.6 * a * a, y, z0 + out + WIND.to[1] * 0.6 * a * a, (1.1 + 0.6 * a) * (0.55 + 0.9 * rand(id, 8)), 0.7 * fade * (vy < 0 ? thin : 1), rand(id, 9), -lean + (rand(id, 10) - 0.5) * 0.3, drawn);
         continue;
       }
       const b = a - top;
@@ -339,6 +340,7 @@ export function create(ctx: Context): Piece {
       openSea.x = 1 + SEA_OPEN.lift * cloudShut(seconds);
       openSea.y = inOpening() ? Math.min(1, Math.max(0, (13 - seconds) / 6)) : 0;
       openSea.z = openingWeight(seconds);
+      openSea.w = 1 + SEA_OPEN.swell * openingWeight(seconds);
       breaker.mesh.visible = inOpening();
       if (breaker.mesh.visible) breakerAt(seconds);
     },

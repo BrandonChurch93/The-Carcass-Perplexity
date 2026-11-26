@@ -194,9 +194,10 @@ void main() {
  */
 export const SEA_OPENING_FRAGMENT = openingText(
   // More of the wind sea breaks: a gale's sea, white to the horizon in drifts.
-  SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.17 * uOpenSea.z, ${hi} - 0.17 * uOpenSea.z, torn`),
+  SEA_FRAGMENT.replace(/float on = smoothstep\(([0-9.]+), ([0-9.]+), torn/g, (_m, lo: string, hi: string) => `float on = smoothstep(${lo} - 0.3 * uOpenSea.z, ${hi} - 0.3 * uOpenSea.z, torn`),
   [
     ['uniform float uFeetReach;', 'uniform float uFeetReach;\nuniform vec4 uOpenSea;'],
+    ['  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm;\n  g *= calm;', '  float h = swellAt(p, uTime, px, 0.9, 2.4, g) * calm * uOpenSea.w;\n  g *= calm * uOpenSea.w;'],
     [
       '  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);',
       `  float lively = 0.3 + 0.7 * smoothstep(0.0, 2.5, depth);
@@ -211,11 +212,18 @@ export const SEA_OPENING_FRAGMENT = openingText(
   if (uOpenSea.z > 0.0) {
     vec3 hb = normalize(v + uSkyBreak);
     float turned = max(dot(n, hb), 0.0);
-    refl += vec3(1.0, 0.98, 0.95) * uOpenSea.z * (2.6 * pow(turned, mix(1100.0, 140.0, far)) + 0.5 * pow(turned, 60.0) * far);
+    refl += vec3(1.0, 0.98, 0.95) * uOpenSea.z * (5.0 * pow(turned, mix(1100.0, 140.0, far)) + 1.3 * pow(turned, 60.0) * far);
   }`,
     ],
     ['vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * (uSunDir.y * sun);', 'vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * uOpenSea.x + uSunColour * (uSunDir.y * sun);'],
     ['0.55 * lane);', '(0.55 + 0.35 * uOpenSea.z) * lane);'],
+    [
+      '  float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);',
+      `  // The heaviest crests of the long swell topple at their tops and leave white water behind them in lace.
+  float topple = smoothstep(2.9, 4.4, h + 1.4 * (c1.b - 0.5) + 0.8 * (lacePic - 0.5)) * uOpenSea.z * calm;
+  amount = max(amount, 0.85 * topple);
+  float foam = smoothstep(1.0 - amount, 1.3 - amount, lace) * smoothstep(0.0, 0.25, amount);`,
+    ],
     [
       '  gl_FragColor = vec4(rigOut(col), 1.0);',
       `  if (uOpenSea.y > 0.0) {
@@ -224,13 +232,19 @@ export const SEA_OPENING_FRAGMENT = openingText(
     float drift2 = textureLod(tChop, q / 610.0 + 0.57, 0.0).a;
     float lies = smoothstep(1560.0, 900.0, p.y + 520.0 * (wide - 0.5)) * (0.4 + 0.6 * smoothstep(0.3, 0.62, 0.55 * drift2 + 0.45 * wide));
     // The path of the eye through a layer on the water: its depth over the sine of the glance.
-    float tau = 0.045 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
+    float tau = 0.016 * lies * uOpenSea.y * dist / max(cameraPosition.y - vWorld.y, 2.0);
     col = mix(col, uHaze * (0.27 + 0.05 * drift2), 1.0 - exp(-tau));
   }
   gl_FragColor = vec4(rigOut(col), 1.0);`,
     ],
   ],
 );
+
+/** The sea of the approach stands higher: the long swell of the open strait, uOpenSea.w times the film's, 1 from the sixteenth second. */
+export const SEA_OPENING_VERTEX = openingText(SEA_VERTEX, [
+  ['uniform vec3 uEye;', 'uniform vec3 uEye;\nuniform vec4 uOpenSea;'],
+  ['float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm;', 'float h = swellAt(p, uTime, r * 0.02 + 0.1, 0.5, 1.3, g) * calm * uOpenSea.w;'],
+]);
 
 export const POOL_VERTEX = /* glsl */ `
 attribute float aDepth;
@@ -614,10 +628,12 @@ void main() {
  * sky's light than the stone behind it, as the open sea does.
  */
 export const SPRAY_OPENING_FRAGMENT = openingText(SPRAY_FRAGMENT, [
+  // Seen from a mile out a card is a few pixels: the picture is laid finer over it, so it is torn water and not a billow.
+  ['vUv * mix(0.4, 0.19, vMist)', 'vUv * mix(0.85, 0.19, vMist)'],
   [
     '  gl_FragColor = vec4(col * alpha, alpha);',
     `  float thick = smoothstep(0.3, 0.85, body * (0.55 + 0.45 * t.a)) * smoothstep(0.4, 0.8, vLook.x) * (1.0 - vMist) * (1.0 - drop);
-  col = mix(col, vLight * vec3(0.4, 0.45, 0.46) * (0.8 + 0.5 * t.g), 0.6 * thick) * 1.6;
+  col = mix(col, vLight * vec3(0.4, 0.45, 0.46) * (0.8 + 0.5 * t.g), 0.35 * thick) * 3.4;
   gl_FragColor = vec4(col * alpha, alpha);`,
   ],
 ]);

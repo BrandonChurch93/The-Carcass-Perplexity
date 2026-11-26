@@ -266,9 +266,21 @@ void main() {
 export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
   ['uniform float uCap;', 'uniform float uCap;\nuniform vec2 uOpenStone;'],
   [
-    '  float y = vWorld.y;',
-    `  float openK = uOpenStone.x * smoothstep(300.0, 850.0, length(cameraPosition - vWorld));
+    '  vec3 bed = bedding(vBase);',
+    `  vec3 bed = bedding(vBase);
+  float openK = uOpenStone.x * smoothstep(300.0, 850.0, length(cameraPosition - vWorld));
   if (openK > 0.0) {
+    // From a mile out the courses are not ruled up the whole blade: a stretch of ledges here, bare face there, each blade its own.
+    float kept = smoothstep(0.46, 0.7, vnoise(vec2(vWorld.y * 0.015 + uOpenStone.y * 3.0, mix(vBlade.w, vBlade.z, edge) * 0.012 + uOpenStone.y)));
+    bed.z *= mix(1.0, 0.1 + 0.9 * kept, openK);
+  }`,
+  ],
+  // The first blade's pale cap is a thing of the near view. From a mile out it is rock like the rest, with the rock's own marks.
+  ['BLADE_MARKS - 0.6 * uCap)', 'BLADE_MARKS - 0.6 * uCap * (1.0 - openK) - 0.07 * uCap * openK)'],
+  ['albedo = mix(albedo, cream, 0.85 * uCap);', 'albedo = mix(albedo, cream, 0.85 * uCap * (1.0 - 0.9 * openK));'],
+  [
+    '  float y = vWorld.y;',
+    `  if (openK > 0.0) {
     float sd = uOpenStone.y;
     vec2 face = vec2(mix(vBlade.w, vBlade.z, edge), vWorld.y);
     float slab = vnoise(face * vec2(0.012, 0.019) + sd * 3.7) * 0.62 + vnoise(face * vec2(0.04, 0.075) + sd * 9.1) * 0.38;
@@ -291,8 +303,11 @@ export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
     // The break in the cloud stands behind the blades: the flank that turns from the lens toward it takes its light along the edge.
     // (By the blade's own form, not by its grooves: the light lies along the edge as one line.)
     float edge0 = 1.0 - max(dot(n0, v), 0.0);
-    float toBreak = clamp(dot(n0, uSkyBreak) + 0.3, 0.0, 1.0);
-    lit += uSunColour * (0.2 * openK * edge0 * edge0 * edge0 * edge0 * toBreak);
+    float edge4 = edge0 * edge0 * edge0 * edge0;
+    // Only the edge on the break's side of the blade, as the lens sees them stand.
+    vec3 aside = uSkyBreak - v * dot(uSkyBreak, v);
+    float toBreak = smoothstep(-0.1, 0.6, dot(n0, normalize(aside)));
+    lit += uSunColour * (0.24 * openK * edge4 * edge4 * edge0 * toBreak);
   }
   gl_FragColor = vec4(rigOut(lit), 1.0);`,
   ],
