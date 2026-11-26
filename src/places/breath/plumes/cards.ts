@@ -124,15 +124,15 @@ export class Cards {
     for (let c = 0; c < sprays; c++) {
       const k = (c + rng.range(0.25, 0.75)) / sprays - 0.5;
       // Combed toward the shaft by its breath: the widest spray lies along the lean, the others stand out to its sides.
-      const heading = lean + 2.9 * k + rng.range(-0.25, 0.25);
-      const long = 0.42 + 0.75 * rng.next() ** 2.2;
+      const heading = lean + 1.5 * k + rng.range(-0.2, 0.2);
+      const long = 0.36 + 0.9 * rng.next() ** 2.2;
       const wide = tall * long * (1 - 0.4 * Math.abs(k));
       const out = 0.03 * tall * rng.next();
       const about = rng.range(0, 6.283);
       const bx = bush.x + Math.sin(about) * out;
       const bz = bush.z + Math.cos(about) * out;
       const dead = bush.detail >= 1 && c === 1;
-      spray(bx, Math.max(bush.y, floor(bx, bz)) - 0.02 * tall, bz, heading, dead ? 0.45 * tall : wide, dead ? rng.range(0.9, 1.1) * (k < 0 ? -1 : 1) : 0.5 * k + rng.range(-0.25, 0.25), rng.range(-0.3, 0.3), c % 2 === 1, dead ? 0.5 : rng.next() ** 2 * 0.9, dead);
+      spray(bx, Math.max(bush.y, floor(bx, bz)) - 0.02 * tall, bz, heading, dead ? 0.45 * tall : wide, dead ? rng.range(0.9, 1.1) * (k < 0 ? -1 : 1) : 0.5 * k + rng.range(-0.25, 0.25), rng.range(-0.3, 0.3), false, dead ? 0.5 : rng.next() ** 2 * 0.9, dead);
     }
   }
 

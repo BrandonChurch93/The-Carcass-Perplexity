@@ -2,7 +2,7 @@
 // Every bush is grown once from the seeded stream (cards.ts): a fan of sprays cut from the plume picture, standing on a holdfast.
 // The sway is in the vertex shader.
 import * as THREE from 'three';
-import { BUSHES, SEEDLINGS, WIND, bushAt } from '../shared/anchors';
+import { BUSHES, SEA_LEVEL, SEEDLINGS, WIND, bushAt, onRim } from '../shared/anchors';
 import { surgeAt } from '../shared/blockout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
@@ -39,6 +39,25 @@ export function create(ctx: Context): Piece {
     // Three stand in front of a camera at the lip: every frond is grown. The others are seen from far off.
     bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: i < 2 || i === 5 ? 1 : 0.5 });
   });
+  // Between the tall ones the lip is grown over: low dense growth in a crescent along the rim where the anchored bushes stand, seen from the wide key
+  // as one dark red band. None stands where a lens passes: they keep to the far side of the tall ones from every camera at the lip.
+  const fill = ctx.rng('gill-plume-fill');
+  for (let j = 0; j < 16; j++) {
+    const bearing = -72 + (j + fill.next()) * (50 / 16);
+    const [x, z] = onRim(bearing, fill.range(0.8, 5.5));
+    bushes.push({ x, y: floor(x, z), z, tall: fill.range(1.4, 2.6), lean: Math.atan2(-x, z), detail: 0.4 });
+  }
+  // And on the lip west of the first tall one, toward the channel: the low end of the crescent, left of every lens that stands at the lip
+  // (the breath-03 lens at x -32.5 looks north past it; from the rim's lens it is small red tufts at the left).
+  const [bx, bz] = bushAt(0);
+  for (let j = 0; j < 14; j++) {
+    const x = bx - fill.range(3.5, 10.5);
+    const z = bz + fill.range(-3, 9.5);
+    const tall = fill.range(0.9, 1.9);
+    const y = floor(x, z);
+    if (y < SEA_LEVEL + 0.12) continue;
+    bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
+  }
   for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
   const vanes = new Cards();

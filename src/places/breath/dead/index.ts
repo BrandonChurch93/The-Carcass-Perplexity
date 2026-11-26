@@ -43,7 +43,7 @@ void main() {
   float away = ((position.y - uSheet.y) * uSheet.w - lift * uLie.y) / uLie.x - uLie.z;
   // The wind still moves the ends of the tendrils where they lie loose on the rock: nothing else of it stirs.
   float loose = smoothstep(0.27, 0.06, position.x);
-  away += loose * loose * (0.022 * sin(uStir * 1.9 + position.x * 30.0 + position.y * 23.0) + 0.009 * sin(uStir * 4.3 - position.x * 55.0 + position.y * 9.0));
+  away += loose * loose * (0.035 * sin(uStir * 1.3 + position.x * 22.0 + position.y * 17.0) + 0.009 * sin(uStir * 4.3 - position.x * 55.0 + position.y * 9.0));
   vec2 xz = uPlace.xy + across * vec2(-uPlace.w, uPlace.z) + away * uPlace.zw;
   // Dead some days, it is stiff: the trunk, the neck and the limbs lie as on a level bed and bridge the cracks of the rock; only the fan
   // of the tendrils (the picture's left end) follows the rock itself.
@@ -57,7 +57,7 @@ void main() {
 const CUT = /* glsl */ `
   vec4 form = texture2D(tLift, vAt);
   float told = texture2D(tCarcassH, vAt).r;
-  if (form.g < 0.5 && told < 0.07) discard;
+  if (form.g < 0.5 && told < 0.11) discard;
 `;
 
 const FRAGMENT = /* glsl */ `

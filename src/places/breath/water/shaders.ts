@@ -87,18 +87,18 @@ void main() {
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
   // Water with small waves on it never mirrors whole, however low the eye: seen far off it shows the tilted faces, and they show more of the water's own colour.
-  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.45, smoothstep(10.0, 90.0, far)));
+  float fresnel = min(0.02 + 0.98 * pow(1.0 - nv, 5.0), mix(0.62, 0.52, smoothstep(10.0, 90.0, far)));
   vec3 r = reflect(-v, n);
   r.y = abs(r.y) + 0.02 + 0.3 * smoothstep(8.0, 100.0, far);
   r = normalize(r);
   // Under a haze the water gives back less than the sky it faces: every small wave face shows some of the dark bed.
-  vec3 mirror = 0.7 * skyRadiance(r) * skyOpen(vWorld);
+  vec3 mirror = 0.82 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
   float drawn = 1.0 - 0.85 * tanh(3.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
-  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.4 + 0.35 * smoothstep(0.04, 0.22, v.y)) * mix(0.9, 0.66, smoothstep(0.06, 0.3, v.y));
+  mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(0.92, 1.0, 0.93), 0.55 + 0.2 * smoothstep(0.04, 0.22, v.y)) * mix(0.9, 0.66, smoothstep(0.06, 0.3, v.y));
   // Where the mirrored ray meets the land the water shows the land: dark rock, paler with the fog between.
   vec2 way = r.xz / max(length(r.xz), 1e-4);
   float rise = r.y / max(length(r.xz), 1e-4);
