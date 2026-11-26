@@ -1,5 +1,7 @@
-2026-11-26 01:43 UTC
-work at d803a28 on agent/marsh-life-2
-min 33: wallower rebuilt as one skin (field mesh + bones), side picture projected on flanks; feelers as tubes; dead, stalks, insects not yet touched
-look-1.jpg = out/work/compare/marsh-3.png
-look-2.jpg = out/work/t/marsh-3-hero-close.jpg
+2026-11-26 02:13 UTC
+work at 7e43b4b on agent/marsh-life-2
+v1: K3 wallowers on legs with wet line, lying one half sunk, K4 dead as relief cards
+look-1.jpg = out/work/t/v1-marsh-3-compare.jpg
+look-2.jpg = out/work/t/v1-marsh-3-hero.jpg
+look-3.jpg = out/work/t/v1-marsh-3-young.jpg
+look-4.jpg = out/work/t/v1-marsh-4.jpg
