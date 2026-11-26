@@ -190,8 +190,13 @@ void main() {
   float stood = contactDrawn(p);
   float ringed = smoothstep(0.0, 0.12, stood) * smoothstep(0.85, 0.35, stood);
   float collar = 0.0;
+  // (Which way the thing stands from here is read off the map's own fall across the pixel and its neighbours.)
+  vec2 px0 = dFdx(p.xz);
+  vec2 px1 = dFdy(p.xz);
+  vec2 fall = vec2(dFdx(stood), dFdy(stood));
+  float det = px0.x * px1.y - px0.y * px1.x;
   if (stood > 0.01) {
-    vec2 lean = vec2(contactDrawn(p - vec3(0.07, 0.0, 0.0)) - contactDrawn(p + vec3(0.07, 0.0, 0.0)), contactDrawn(p - vec3(0.0, 0.0, 0.07)) - contactDrawn(p + vec3(0.0, 0.0, 0.07)));
+    vec2 lean = abs(det) > 1e-12 ? -vec2(px1.y * fall.x - px0.y * fall.y, px0.x * fall.y - px1.x * fall.x) / det : vec2(0.0);
     float ll = length(lean);
     vec2 off = ll > 1e-4 ? lean / ll : vec2(0.0);
     slope *= 1.0 + 1.3 * ringed;
@@ -228,8 +233,8 @@ void main() {
   if (want > 1e-3) {
     vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
     vec4 relief = textureGrad(tFrothN, fuv, fdx, fdy);
-    vec4 clump = textureGrad(tFrothN, fuv * 0.31 + 0.37, fdx * 0.31, fdy * 0.31);
-    vec3 scum = textureGrad(tFroth, fuv, fdx, fdy).rgb;
+    vec4 clump = textureLod(tFrothN, fuv * 0.31 + 0.37, log2(max(px / 2.0 * float(textureSize(tFrothN, 0).x), 1.0)));
+    vec3 scum = textureLod(tFroth, fuv, log2(max(px / 0.62 * float(textureSize(tFroth, 0).x), 2.0)) - 1.0).rgb;
     float high = relief.b * 0.62 + clump.b * 0.38;
     // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
     float dense = smoothstep(0.2, 0.75, want);
