@@ -184,8 +184,13 @@ export function create(ctx: Context): Piece {
   const sites: BoreSite[] = feet
     .map((foot, n) => ({ x: foot.x, z: foot.z, reach: Math.max(foot.a, foot.b), id: n, near: Math.hypot(foot.x - gate[0], foot.z - gate[2]) < 130 }))
     .filter((b) => b.z > -2400 && b.z < 400);
-  const bore = createBore(rig.uniforms, foamMap, front, LEVELS.pool, [gate[0], gate[2]], sites, {});
-  ctx.scene.add(ctx.parts.built('bore', bore.wall, bore.cards), bore.cards);
+  const bore = createBore(rig.uniforms, foamMap, front, LEVELS.pool, [gate[0], gate[2]], sites, {
+    wallA: ctx.assets.texture('mat/borewall-a.jpg', { kind: 'colour', repeat: false }),
+    wallB: ctx.assets.texture('mat/borewall-b.jpg', { kind: 'colour', repeat: false }),
+    foam: ctx.assets.texture('mat/foam.jpg', { kind: 'colour' }),
+    spray: ctx.assets.texture('mat/spray.jpg', { kind: 'colour', repeat: false }),
+  });
+  ctx.scene.add(ctx.parts.built('bore', bore.wall, bore.curtain, bore.cards), bore.curtain, bore.cards);
   // The air over and behind the wall is full of water: four columns that travel with the front, drawn by the air folder in the place's light.
   for (const [dx, radius, strength] of [[-70, 40, 0.05], [0, 50, 0.04], [75, 45, 0.05], [-260, 80, 0.03], [280, 80, 0.03]] as const) {
     ctx.sources.steam.push({ at: [gate[0] + dx, 6, boreFront(BORE) - 55], radius, strength, rise: 48, kind: 'spray', lean: [0.1, -0.5], speed: BORE_SPEED, since: BORE });

@@ -4,7 +4,8 @@
 import * as THREE from 'three';
 import { hash2 } from '../../../core/rng';
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { BORE_HEIGHT, BORE_SPEED, boreArrives, boreFront } from './tide';
+import { WALL_A, WALL_B } from './crest';
+import { BORE_SPEED, boreArrives, boreFront } from './tide';
 
 const rand = (a: number, b: number): number => hash2(a, b) / 4294967296;
 const f = (v: number): string => (Number.isInteger(v) ? `${v}.0` : `${v}`);
@@ -15,36 +16,72 @@ const FACE = 40;
 const LIP = 6;
 /** Seconds from one fall of the lip to the next at one place on the wall. */
 const BREAK_PERIOD = 2.9;
+/** Metres of wall that one feature sheet of the breaking wave covers; it is laid mirrored on either side of itself, so its ends always join. */
+const SHEET = 100;
+/** Where along x the middle of sheet B stands (the last shot's lens looks at it), and how far sheet A is slid. */
+const SLIDE_A = 0.37;
+/** The built lip stands this far under the crest of the picture, so that nothing of the picture's sky is ever drawn on the wall. */
+const UNDER = 0.95;
+/** The curtain of thrown water over the crest: its height as a part of the wall's. */
+const CURTAIN = 0.36;
+const SPAN_A = (SHEET / WALL_A.aspect) * (WALL_A.crest - WALL_A.foot);
+const SPAN_B = (SHEET / WALL_B.aspect) * (WALL_B.crest - WALL_B.foot);
 
-// The same sums of sines on the processor and in the shader, so that thrown water is born exactly where the drawn lip is.
+const smooth = (lo: number, hi: number, v: number): number => {
+  const u = Math.min(1, Math.max(0, (v - lo) / (hi - lo)));
+  return u * u * (3 - 2 * u);
+};
+const mirrored = (u: number): number => {
+  const m = u - 2 * Math.floor(u / 2);
+  return m > 1 ? 2 - m : m;
+};
+const profileAt = (profile: number[], u: number): number => {
+  const at = mirrored(u) * (profile.length - 1);
+  const i = Math.min(profile.length - 2, Math.floor(at));
+  const k = at - i;
+  return (profile[i] as number) * (1 - k) + (profile[i + 1] as number) * k;
+};
+
+// The same sums on the processor and in the shader, so that thrown water is born exactly where the drawn lip is.
 const lineAt = (x: number, t: number): number => 20 * Math.sin(x * 0.0076 + 1.3) + 8 * Math.sin(x * 0.021 + t * 0.25) + 3 * Math.sin(x * 0.09 - t * 0.6);
-const highAt = (x: number, t: number): number => {
-  const strait = Math.min(1, Math.max(0, (950 - Math.abs(x - 80)) / 430));
-  const s = strait * strait * (3 - 2 * strait);
-  return BORE_HEIGHT * (0.3 + 0.7 * s) * (0.9 + 0.1 * Math.sin(x * 0.021 + t * 0.7) + 0.07 * Math.sin(x * 0.063 - t * 1.1));
+const whichAt = (x: number, focusX: number): number => smooth(0.4, 0.6, 0.5 + 0.5 * Math.cos((6.2832 * (x - focusX)) / (4 * SHEET)));
+/** The height of the picture's crest over the flat at x, metres. */
+const highAt = (x: number, focusX: number): number => {
+  const strait = smooth(520, 950, 1470 - Math.abs(x - 80));
+  const a = SPAN_A * profileAt(WALL_A.profile, x / SHEET + SLIDE_A);
+  const b = SPAN_B * profileAt(WALL_B.profile, (x - focusX) / SHEET + 0.5);
+  const w = whichAt(x, focusX);
+  return (a * (1 - w) + b * w) * (0.3 + 0.7 * strait);
 };
 const curlAt = (x: number, t: number): number => {
   const ph = (6.2832 * t) / BREAK_PERIOD + 2.1 * Math.sin(x * 0.031 + 0.7) + 1.7 * Math.sin(x * 0.0573 + 2.1) + 1.2 * Math.sin(x * 0.113 + 4.0);
-  const u = Math.min(1, Math.max(0, (0.5 + 0.5 * Math.sin(ph) - 0.15) / 0.7));
-  return u * u * (3 - 2 * u);
+  return smooth(0.15, 0.85, 0.5 + 0.5 * Math.sin(ph));
 };
 /** The tip of the lip at x: metres ahead of the foot, and its height, as the shader draws it. */
-const tipAt = (x: number, t: number): [number, number] => {
-  const H = highAt(x, t);
-  const c = curlAt(x, t);
-  return [H * (-0.38 + 0.5 * c), H * (1 - 0.28 * c * c)];
+const tipAt = (x: number, t: number, focusX: number): [number, number] => {
+  const T = highAt(x, focusX) * UNDER;
+  return [T * (-0.38 + 0.45 * curlAt(x, t)), T];
 };
 
 const SHAPE_GLSL = /* glsl */ `
 uniform float uFront;
 uniform float uPoolLevel;
+uniform float uFocus;
 uniform sampler2D tFoam;
+uniform sampler2D tProfile;
 float boreLine(float x) {
   return 20.0 * sin(x * 0.0076 + 1.3) + 8.0 * sin(x * 0.021 + uTime * 0.25) + 3.0 * sin(x * 0.09 - uTime * 0.6);
 }
+// Which of the two sheets stands at x: 1 is sheet B, before the last shot's lens.
+float boreWhich(float x) {
+  return smoothstep(0.4, 0.6, 0.5 + 0.5 * cos(6.2832 * (x - uFocus) / ${f(4 * SHEET)}));
+}
+// The height of the picture's crest over the flat at x.
 float boreHigh(float x) {
   float strait = smoothstep(520.0, 950.0, 1470.0 - abs(x - 80.0));
-  return ${f(BORE_HEIGHT)} * (0.3 + 0.7 * strait) * (0.9 + 0.1 * sin(x * 0.021 + uTime * 0.7) + 0.07 * sin(x * 0.063 - uTime * 1.1));
+  float a = ${f(SPAN_A)} * 2.0 * textureLod(tProfile, vec2(x / ${f(SHEET)} + ${f(SLIDE_A)}, 0.25), 0.0).r;
+  float b = ${f(SPAN_B)} * 2.0 * textureLod(tProfile, vec2((x - uFocus) / ${f(SHEET)} + 0.5, 0.75), 0.0).r;
+  return mix(a, b, boreWhich(x)) * (0.3 + 0.7 * strait);
 }
 // 0: the wall stands up clean and its lip begins to pitch. 1: the lip has fallen and the face is a tumbling pile of white.
 float boreCurl(float x) {
@@ -55,49 +92,44 @@ vec2 bez3(vec2 a, vec2 b, vec2 c, vec2 d, float t) {
   float s = 1.0 - t;
   return s * s * s * a + 3.0 * s * s * t * b + 3.0 * s * t * t * c + t * t * t * d;
 }
-// The section at x: a metres along it. Returns metres ahead of the foot and metres over the flat.
-vec2 boreSection(float x, float a, float H, float c) {
-  vec2 tip = vec2(H * (-0.38 + 0.5 * c), H * (1.0 - 0.28 * c * c));
-  vec2 crest = vec2(-0.56 * H, H * (1.03 - 0.12 * c));
+// The section at x: a metres along it, T the height of its lip. Returns metres ahead of the foot and metres over the flat.
+vec2 boreSection(float a, float T, float c) {
+  vec2 tip = vec2(T * (-0.38 + 0.45 * c), T);
+  vec2 crest = vec2(-0.6 * T, 0.96 * T);
   vec2 p;
   if (a < 0.0) {
     p = vec2(-a, 0.08 + 0.7 * exp(a / 9.0));
   } else if (a < ${f(FACE)}) {
     float q = a / ${f(FACE)};
-    p = bez3(vec2(0.0, 0.78), vec2(-0.5 * H, 0.06 * H), vec2(H * (-0.66 + 0.3 * c), 0.82 * H), tip, q);
+    p = bez3(vec2(0.0, 0.78), vec2(-0.5 * T, 0.06 * T), vec2(T * (-0.66 + 0.3 * c), 0.82 * T), tip, q);
     // The fallen lip lies on the face as a pile that rolls ahead of the foot.
     float pile = c * sin(3.14159 * clamp(q * 1.5, 0.0, 1.0));
-    p += vec2(0.34 * H * pile, 0.05 * H * pile);
+    p.x += 0.34 * T * pile;
   } else if (a < ${f(FACE + LIP)}) {
     float q = (a - ${f(FACE)}) / ${f(LIP)};
     float s = 1.0 - q;
-    p = s * s * tip + 2.0 * s * q * (tip + vec2(0.05 * H, 0.13 * H)) + q * q * crest;
+    p = s * s * tip + 2.0 * s * q * (tip + vec2(0.03 * T, 0.0)) + q * q * crest;
   } else {
     float b = a - ${f(FACE + LIP)};
-    p = vec2(crest.x - b, H * (0.6 + 0.43 * exp(-b / (0.8 * H)) - 0.12 * c * exp(-b / (0.8 * H))));
+    p = vec2(crest.x - b, T * (0.6 + 0.36 * exp(-b / (0.8 * T))));
   }
   return p;
 }
-// A point of the bore in the world; w is how white the water is there by its state alone (the fragment tears it).
+// A point of the bore in the world; w is its height as a part of the picture's crest (0 the foot, 1 the crest).
 vec4 boreAt(float x, float a) {
-  float H = boreHigh(x);
+  float T = boreHigh(x) * ${f(UNDER)};
   float c = boreCurl(x);
-  vec2 p = boreSection(x, a, H, c);
-  // White water stands in heads: the pile, the lip and the back are lumped, the clean face is not.
-  float onFace = smoothstep(0.0, 6.0, a) * (1.0 - smoothstep(${f(FACE - 5)}, ${f(FACE)}, a));
-  float white = 1.0 - onFace * (1.0 - smoothstep(0.3, 0.8, c));
-  float up = smoothstep(-8.0, 2.0, a);
-  float behind = exp(-max(a - ${f(FACE + LIP)}, 0.0) / 60.0);
+  vec2 p = boreSection(a, T, c);
+  // White water stands in heads: the face is lumped toward and away from the lens, never up and down (the picture lies on it by height).
+  float up = smoothstep(-8.0, 2.0, a) * (1.0 - smoothstep(${f(FACE - 4)}, ${f(FACE)}, a));
   vec2 ride = vec2(x, a + uTime * 5.0);
   float big = textureLod(tFoam, ride / 61.0, 1.0).r - 0.5;
   float mid = textureLod(tFoam, ride / 23.0 + 0.37, 1.5).g - 0.35;
-  float small = textureLod(tFoam, ride / 7.3 + 0.11, 1.0).g - 0.35;
-  float amp = up * behind * (0.035 + 0.075 * white) * H;
-  p.y += amp * (1.5 * big + 0.9 * mid + 0.35 * small) + 0.25 * (1.0 - up) * (mid + small);
-  p.x += amp * (1.0 * mid + 0.5 * small) * step(0.0, a);
+  p.x += up * 0.09 * T * (1.2 * big + 0.8 * mid);
+  p.y += 0.25 * (1.0 - smoothstep(-8.0, 2.0, a)) * mid;
   float z = uFront + boreLine(x) + p.x;
   float bed = max(texture2D(tLand, (vec2(x, z) - uLandRect.xy) * uLandRect.zw).r, uPoolLevel);
-  return vec4(x, bed + p.y, z, white);
+  return vec4(x, bed + p.y, z, p.y / (T / ${f(UNDER)}));
 }`;
 
 const VERTEX = /* glsl */ `
@@ -105,20 +137,30 @@ ${RIG_UNIFORMS_GLSL}
 ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormalW;
-varying vec4 vRide;
-varying float vHigh;
+varying vec3 vRide;
 void main() {
   float x = position.x;
   float a = position.y;
+#ifdef CURTAIN
+  // The thrown water over the crest: a sheet that stands on the lip and carries the top of the picture.
+  float T = boreHigh(x) * ${f(UNDER)};
+  vec2 tip = vec2(T * (-0.38 + 0.45 * boreCurl(x)), T);
+  float z = uFront + boreLine(x) + tip.x + 0.4;
+  float bed = max(texture2D(tLand, (vec2(x, z) - uLandRect.xy) * uLandRect.zw).r, uPoolLevel);
+  float t = ${f(UNDER)} * (1.0 - 0.06 + (${f(CURTAIN)} + 0.06) * a);
+  vWorld = vec3(x, bed + t * T / ${f(UNDER)}, z - 1.5 * a);
+  vNormalW = vec3(0.0, 0.3, 0.95);
+  vRide = vec3(x, a, t);
+#else
   vec4 at = boreAt(x, a);
   float da = a < ${f(FACE + LIP + 4)} ? 0.45 : 0.15 * (a - ${f(FACE + LIP)}) + 0.45;
   vec3 ax = boreAt(x + 0.6, a).xyz - boreAt(x - 0.6, a).xyz;
   vec3 aa = boreAt(x, a + da).xyz - boreAt(x, a - da).xyz;
   vWorld = at.xyz;
   vNormalW = normalize(cross(aa, ax));
-  vRide = vec4(x, a, boreCurl(x), at.w);
-  vHigh = boreHigh(x);
-  gl_Position = projectionMatrix * viewMatrix * vec4(at.xyz, 1.0);
+  vRide = vec3(x, a, at.w);
+#endif
+  gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -127,84 +169,72 @@ ${NOISE_GLSL}
 ${RIG_GLSL}
 uniform sampler2D tFoam;
 uniform sampler2D tFoamPic;
-uniform sampler2D tFoamNh;
-uniform float uFoamPic;
+uniform sampler2D tWallA;
+uniform sampler2D tWallB;
+uniform float uFocus;
+uniform float uFront;
 varying vec3 vWorld;
 varying vec3 vNormalW;
-varying vec4 vRide;
-varying float vHigh;
+varying vec3 vRide;
+// The breaking wave as the two sheets show it, at x and at the height t (0 the foot, 1 the crest, more is the thrown water over it).
+// The white water in it works: two readings slide past each other down the face, each fading in as the other fades out.
+vec3 wallAt(float x, float t) {
+  float w = smoothstep(0.4, 0.6, 0.5 + 0.5 * cos(6.2832 * (x - uFocus) / ${f(4 * SHEET)}) + 0.12 * (vnoise(vec2(x * 0.05, t * 3.0)) - 0.5));
+  float ua = x / ${f(SHEET)} + ${f(SLIDE_A)};
+  float ub = (x - uFocus) / ${f(SHEET)} + 0.5;
+  float va = mix(${f(WALL_A.foot)}, ${f(WALL_A.crest)}, t);
+  float vb = mix(${f(WALL_B.foot)}, ${f(WALL_B.crest)}, t);
+  float ph = uTime * 0.8;
+  float p1 = fract(ph);
+  float p2 = fract(ph + 0.5);
+  // The water moves most where it is thrown and where it lands.
+  float reach = 0.028 * (0.4 + 0.6 * smoothstep(0.5, 1.1, t) + 0.5 * smoothstep(0.35, 0.0, t));
+  vec2 wob = 0.004 * vec2(sin(x * 0.7 + uTime * 2.3), 0.0);
+  vec2 f1 = vec2(0.0, (p1 - 0.5) * reach) + wob;
+  vec2 f2 = vec2(0.0, (p2 - 0.5) * reach) - wob;
+  float k = abs(2.0 * p1 - 1.0);
+  vec3 a = mix(texture2D(tWallA, vec2(ua, va) + f1).rgb, texture2D(tWallA, vec2(ua, va) + f2).rgb, k);
+  vec3 b = mix(texture2D(tWallB, vec2(ub, vb) + f1).rgb, texture2D(tWallB, vec2(ub, vb) + f2).rgb, k);
+  return mix(a, b, w);
+}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   float x = vRide.x;
   float a = vRide.y;
-  float c = vRide.z;
-  float q = clamp(a / ${f(FACE)}, 0.0, 1.0);
-  float onFace = step(0.0, a) * (1.0 - step(${f(FACE)}, a));
-  // White water rides with the wall and tumbles down its face: laid in metres along the section, one speed for all of it.
-  vec2 p = vec2(x, a + uTime * 5.0);
-  vec4 f1 = texture2D(tFoam, p / 19.0);
-  vec4 f2 = texture2D(tFoam, p / 6.1 + f1.rb * 0.2);
-  vec4 f3 = texture2D(tFoam, p / 1.9 + 0.31 + f2.rb * 0.1);
-  float heads = 0.38 * f1.g + 0.34 * f2.g + 0.28 * f3.g;
-  float lace = 0.55 * f2.a + 0.45 * f3.a;
-  // Strings of white drawn out along the face by the water climbing it: long up the face, a hand to a metre across.
-  vec4 s1 = texture2D(tFoam, vec2(x / 3.1, a / 37.0 + uTime * 0.2) + f1.rb * 0.12);
-  vec4 s2 = texture2D(tFoam, vec2(x / 1.1, a / 19.0 + uTime * 0.35) + 0.43 + f1.gr * 0.1);
-  float drawn = 0.6 * s1.a + 0.4 * s2.a;
-
-  // Where the wall still stands clean its face is a dark window of lifted water, torn at its edges, with strings of white climbing it.
-  // The window is an arch: widest under the lip, closing downward into the pile, and it closes from its ends as the lip falls.
-  float state = c + 0.3 * (f1.r - 0.5);
-  float low = 0.12 + 0.95 * smoothstep(0.05, 0.7, state) + 0.1 * (f1.g - 0.4) + 0.05 * (f2.g - 0.4);
-  float span = smoothstep(low, low + 0.07, q) * (1.0 - smoothstep(0.87, 0.95, q + 0.05 * (f2.r - 0.5)));
-  float window = span * onFace;
-  float strings = smoothstep(0.62, 0.9, drawn + 0.3 * (q - 0.6) + 0.3 * (f1.r - 0.5));
-  float foam = mix(1.0, 0.55 * strings, window);
-  // Behind the crest the white thins to lace over the dark water of the returned sea.
-  float b = a - ${f(FACE + LIP)};
-  foam *= mix(1.0, smoothstep(0.4, 0.7, 0.55 * f1.r + 0.45 * lace + 0.2), smoothstep(8.0, 70.0, b));
-  // Ahead of the foot foam runs out over the flat in tongues and thins to nothing.
+  float t = vRide.z;
+  vec3 pic = wallAt(x, t);
+  float lum = dot(pic, vec3(0.3, 0.5, 0.2));
+  vec4 land = landAt(vWorld.xz);
+  // The wall stands over the blades' shade: half of it is always in the sun.
+  float sun = mix(sunAt(vWorld + vec3(0.0, 30.0, 0.0), land), 1.0, 0.5);
+  vec3 lightUp = skyIrradiance(vec3(0.0, 1.0, 0.0));
+#ifdef CURTAIN
+  float alpha = smoothstep(0.02, 0.22, lum) * (1.0 - smoothstep(0.75, 1.0, a)) * (1.0 - uSolo);
+  vec3 col = pic * (lightUp * 0.9 + uSunColour * 0.45 * sun) / 3.14159;
+  gl_FragColor = vec4(col * alpha, alpha);
+#else
+  // The churn at the foot and the run-out over the flat: broken white water seen from above, laid in metres on the ground.
+  vec2 g = vWorld.xz - vec2(0.0, uFront);
+  vec3 churn = texture2D(tFoamPic, g / 6.0 + vec2(0.0, uTime * 0.35)).rgb * 0.6 + texture2D(tFoamPic, g.yx / 17.0 + 0.3).rgb * 0.5;
+  float churnLum = dot(churn, vec3(0.333));
   float ahead = clamp(-a / ${f(APRON)}, 0.0, 1.0);
-  float tongue = texture2D(tFoam, vec2(x, uTime * 2.0) / 53.0).r + 0.6 * f1.r;
-  float run = 1.25 - 2.2 * ahead / (0.2 + tongue);
-  float apron = smoothstep(0.35, 0.75, run + 0.5 * (lace - 0.5));
-  foam = mix(foam, apron, step(a, 0.0));
-  bool bare = a < 0.0 && apron < 0.25;
-
-  // The relief of the heads, from the slope of their height as the lens sees it.
-  float h = heads + 0.25 * f3.a;
+  float tongue = texture2D(tFoam, vec2(x, uTime * 2.0) / 53.0).r + 0.6 * texture2D(tFoam, vec2(x, a + uTime * 5.0) / 19.0).r;
+  float run = 1.3 - 2.2 * ahead / (0.2 + tongue);
+  float apron = smoothstep(0.3, 0.8, run + 0.9 * (churnLum - 0.45));
+  bool bare = a < 0.0 && apron < 0.3;
+  float foot = a < 0.0 ? 1.0 : smoothstep(0.1, 0.0, t);
+  pic = mix(pic, max(churn, vec3(0.5) * step(a, 0.0) * 0.0) + 0.25 * apron * step(a, 0.0), foot);
+  lum = dot(pic, vec3(0.3, 0.5, 0.2));
+  float foam = smoothstep(0.2, 0.6, lum);
   vec3 n = normalize(vNormalW);
   if (dot(n, v) < 0.0) n = -n;
-  vec3 px = dFdx(vWorld);
-  vec3 py = dFdy(vWorld);
-  float hx = dFdx(h);
-  float hy = dFdy(h);
-  vec3 r1 = cross(py, n);
-  vec3 r2 = cross(n, px);
-  float det = dot(px, r1);
-  vec3 grad = sign(det) * (hx * r1 + hy * r2);
-  vec3 nf = normalize(abs(det) * n - 0.7 * grad * foam);
-  float crease = smoothstep(0.08, 0.5, heads);
-  // Under the pitching lip the face lies in the lip's own shade.
-  float under = smoothstep(0.45, 0.95, q) * (1.0 - smoothstep(0.5, 0.9, c)) * onFace;
-  float occ = mix(1.0, 0.3 + 0.7 * crease, foam) * (1.0 - 0.5 * under);
-
-  // Lifted water is thick with sand: slate green low on the face, olive brown where it thins toward the lip.
-  vec3 water = mix(vec3(0.018, 0.028, 0.025), vec3(0.085, 0.075, 0.04), smoothstep(0.3, 0.95, q) * onFace);
-  vec3 white = vec3(0.9, 0.92, 0.92) * (0.5 + 0.5 * smoothstep(0.15, 0.7, 0.45 * f2.r + 0.35 * f3.g + 0.2 * f1.r + 0.15 * foam));
-  vec3 albedo = mix(water, white, foam);
-  vec3 col = rigShade(vWorld, nf, v, albedo, mix(0.18, 1.0, foam), occ);
-  // The sun stands behind the wall, over the blades' shade: where the water thins at the lip the light comes through it, and white water,
-  // which is lit all through, glows toward the lens.
-  vec4 land = landAt(vWorld.xz);
-  float sun = mix(sunAt(vWorld + vec3(0.0, 30.0, 0.0), land), 1.0, 0.45);
-  float back = 0.45 + 0.55 * pow(max(dot(-v, uSunDir), 0.0), 2.0);
-  float thin = smoothstep(0.5, 0.98, q) * onFace + (1.0 - onFace) * step(0.0, a) * (1.0 - smoothstep(0.0, 4.0, b));
-  col += (1.0 - foam) * vec3(0.1, 0.13, 0.065) * thin * back * uSunColour * 0.32 * sun;
-  float topward = 0.55 + 0.45 * clamp(nf.y, 0.0, 1.0);
-  col += foam * white * occ * (uSunColour * 0.2 * back * sun * topward + skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.1);
+  // The picture has its own form: the built face lights it broadly, and only the dark water takes the sky's glint.
+  vec3 nf = normalize(mix(n, vec3(0.0, 0.45, 0.89), 0.6 + 0.3 * foam));
+  vec3 col = rigShade(vWorld, nf, v, pic * 0.8, mix(0.3, 1.0, foam), 1.0);
+  col += pic * (uSunColour * 0.12 * sun + lightUp * 0.1) / 3.14159;
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (bare) discard;
+#endif
 }`;
 
 const CARD_VERTEX = /* glsl */ `
@@ -256,25 +286,24 @@ void main() {
   vec2 o = vLook.y * vec2(3.1, 7.3);
   vec4 t = texture2D(tFoam, vUv * mix(0.33, 0.2, mist) + o);
   vec4 g = texture2D(tFoam, vUv * 1.3 + o.yx);
-  vec4 k = texture2D(tFoam, vUv * 4.1 + o * 1.7);
+  vec4 k = texture2D(tFoam, vUv * 0.37 + o * 1.7);
   // Thrown water is not a ball: a torn clot, thick only at its heart, that breaks toward its rim into strings and then into single drops.
   float clot = 1.0 - smoothstep(-0.15, 0.85, r2 + 1.5 * (t.r - 0.5) + 0.7 * (0.45 - g.g));
-  float grain = smoothstep(0.42 - 0.5 * clot, 0.75 - 0.4 * clot, 0.55 * k.b + 0.45 * g.b + 0.25 * (k.a - 0.3));
+  float grain = smoothstep(0.5 - 0.45 * clot, 0.62 - 0.3 * clot, k.b + 0.3 * (k.a - 0.3));
   float soft = 1.0 - smoothstep(mix(0.0, -0.1, mist), 0.95, r2 + 0.3 * (t.r - 0.5));
   float dens = mix(clot * grain * (1.0 - smoothstep(0.75, 1.0, r2)), soft, mist);
-  if (uAtlas > 0.5) {
-    vec2 cell = vec2(mod(floor(vMore.z), 4.0), floor(vMore.z / 4.0));
-    vec3 pic = texture2D(tAtlas, (cell + clamp(vUv * 0.5 + 0.5, 0.02, 0.98)) / 4.0).rgb;
-    float lum = dot(pic, vec3(0.333));
-    dens = mix(smoothstep(0.03, 0.55, lum) * (1.0 - smoothstep(0.7, 1.0, r2)), dens, mist);
-  }
+  vec2 cell = vec2(mod(floor(vMore.z), 4.0), floor(vMore.z / 4.0));
+  vec3 pic = texture2D(tAtlas, (cell + clamp(vUv * vec2(0.5, 0.5) + 0.5, 0.03, 0.97)) / 4.0).rgb;
+  float lum = dot(pic, vec3(0.333));
+  float cut = smoothstep(0.03, 0.4, lum) * (1.0 - smoothstep(0.6, 0.98, max(abs(vUv.x), abs(vUv.y))));
+  dens = mix(mix(dens, cut, uAtlas), dens, mist);
   float alpha = clamp(dens * vLook.x, 0.0, 1.0) * (1.0 - uSolo);
   // Lit through, not on a skin: the side toward the sun a little brighter, the heart of a mass grey, the thin rim against the sun burning.
   float side = 0.5 + 0.5 * dot(normalize(vRaw + 1e-4), normalize(vSunView.xy + 1e-4)) * sqrt(r2);
   float rim = pow(max(-vSunView.z, 0.0), 2.0) * (1.0 - clot) * 1.2;
   float deep = vMore.x;
   vec3 col = vec3(0.92, 0.94, 0.95) * (vSky * (0.85 + 0.3 * vUv.y) * (1.0 - 0.45 * deep - 0.2 * clot) + vSun * (0.3 + 0.6 * side + rim) * (1.0 - 0.6 * deep));
-  col *= mix(1.0, 0.55, mist);
+  col *= mix(mix(1.0, 0.55 + 0.75 * lum, uAtlas), 0.55, mist);
   gl_FragColor = vec4(col * alpha, alpha);
 }`;
 
@@ -393,6 +422,7 @@ export interface BoreSite {
 
 export interface Bore {
   wall: THREE.Mesh;
+  curtain: THREE.Mesh;
   cards: THREE.Mesh;
   setTime(seconds: number): void;
   dispose(): void;
@@ -406,6 +436,56 @@ const VEIL = 150;
 const BURST_NEAR = 300;
 const BURST_FAR = 40;
 
+function curtainSheet(focusX: number): THREE.BufferGeometry {
+  const xs: number[] = [];
+  for (let x = focusX - 420; x <= focusX + 420; x += 1.5) xs.push(x);
+  const positions: number[] = [];
+  const index: number[] = [];
+  const ROWS = 5;
+  for (let j = 0; j < ROWS; j++) for (const x of xs) positions.push(x, j / (ROWS - 1), 0);
+  const W = xs.length;
+  for (let j = 0; j < ROWS - 1; j++) {
+    for (let i = 0; i < W - 1; i++) {
+      const k = j * W + i;
+      index.push(k, k + 1, k + W, k + 1, k + W + 1, k + W);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  g.setIndex(index);
+  return g;
+}
+
+/** The crest of each sheet by column, as a picture the vertex shader reads: row 0 sheet A, row 1 sheet B, half the value. */
+function profileTexture(): THREE.DataTexture {
+  const N = WALL_A.profile.length;
+  const data = new Uint8Array(N * 2 * 4);
+  [WALL_A.profile, WALL_B.profile].forEach((profile, row) => {
+    profile.forEach((v, i) => {
+      data[(row * N + i) * 4] = Math.round(Math.min(1, v / 2) * 255);
+      data[(row * N + i) * 4 + 3] = 255;
+    });
+  });
+  const t = new THREE.DataTexture(data, N, 2, THREE.RGBAFormat, THREE.UnsignedByteType);
+  t.wrapS = THREE.MirroredRepeatWrapping;
+  t.wrapT = THREE.ClampToEdgeWrapping;
+  t.minFilter = THREE.LinearFilter;
+  t.magFilter = THREE.LinearFilter;
+  t.colorSpace = THREE.NoColorSpace;
+  t.needsUpdate = true;
+  return t;
+}
+
+export interface BorePictures {
+  /** The two feature sheets of the breaking wall, colour. */
+  wallA: THREE.Texture;
+  wallB: THREE.Texture;
+  /** Broken white water seen from above, a repeating tile of 6 m. */
+  foam: THREE.Texture;
+  /** Sixteen bursts of thrown water on black, four by four. */
+  spray: THREE.Texture;
+}
+
 export function createBore(
   rigUniforms: Record<string, THREE.IUniform>,
   foam: THREE.Texture,
@@ -413,31 +493,54 @@ export function createBore(
   poolLevel: number,
   focus: [number, number],
   sites: BoreSite[],
-  pictures: { foam?: THREE.Texture; foamNh?: THREE.Texture; spray?: THREE.Texture },
+  pictures: BorePictures,
 ): Bore {
-  const wallMaterial = new THREE.ShaderMaterial({
-    vertexShader: VERTEX,
-    fragmentShader: FRAGMENT,
-    uniforms: {
-      ...rigUniforms,
-      tFoam: { value: foam },
-      uFront: front,
-      uPoolLevel: { value: poolLevel },
-      tFoamPic: { value: pictures.foam ?? foam },
-      tFoamNh: { value: pictures.foamNh ?? foam },
-      uFoamPic: { value: pictures.foam ? 1 : 0 },
-    },
-    side: THREE.DoubleSide,
-  });
+  // The sheets join their own mirror images along the wall and never repeat upward.
+  for (const t of [pictures.wallA, pictures.wallB]) {
+    t.wrapS = THREE.MirroredRepeatWrapping;
+    t.wrapT = THREE.ClampToEdgeWrapping;
+    t.anisotropy = 4;
+  }
+  const profile = profileTexture();
+  const uniforms = {
+    ...rigUniforms,
+    tFoam: { value: foam },
+    uFront: front,
+    uPoolLevel: { value: poolLevel },
+    uFocus: { value: focus[0] },
+    tProfile: { value: profile },
+    tFoamPic: { value: pictures.foam },
+    tWallA: { value: pictures.wallA },
+    tWallB: { value: pictures.wallB },
+  };
+  const wallMaterial = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, side: THREE.DoubleSide });
   const wall = new THREE.Mesh(sheet(focus[0]), wallMaterial);
   wall.frustumCulled = false;
+  const curtainMaterial = new THREE.ShaderMaterial({
+    vertexShader: VERTEX,
+    fragmentShader: FRAGMENT,
+    uniforms,
+    defines: { CURTAIN: 1 },
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  const curtain = new THREE.Mesh(curtainSheet(focus[0]), curtainMaterial);
+  curtain.frustumCulled = false;
+  curtain.renderOrder = 4;
 
   const count = LIPS + PLUME + FOOT + VEIL + sites.reduce((n, s) => n + (s.near ? BURST_NEAR : BURST_FAR), 0);
-  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray ?? foam }, uAtlas: { value: pictures.spray ? 1 : 0 } });
+  const cards = new Cards(count, { ...rigUniforms, tFoam: { value: foam }, tAtlas: { value: pictures.spray }, uAtlas: { value: 1 } });
   const X = focus[0];
+  const high = (x: number): number => highAt(x, X);
+  const tip = (x: number, t: number): [number, number] => tipAt(x, t, X);
 
   return {
     wall,
+    curtain,
     cards: cards.mesh,
     setTime: (seconds) => {
       cards.begin();
@@ -457,7 +560,7 @@ export function createBore(
         const beat = seconds / life + rand(i, 23);
         const n = Math.floor(beat);
         const a = (beat - n) * life;
-        const H = highAt(x, seconds);
+        const H = high(x);
         const z = frontNow + lineAt(x, seconds) - H * (0.9 + 3.5 * rand(i, n + 24)) - 6 * a;
         const y = H * (0.5 + 1.0 * rand(i, n + 25)) + 1.5 * a;
         const fade = Math.min(1, a / 1.2) * Math.min(1, (life - a) / 1.5);
@@ -472,7 +575,7 @@ export function createBore(
         const n = Math.floor(beat);
         const a = (beat - n) * life;
         const born = seconds - a;
-        const H = highAt(x, born);
+        const H = high(x);
         const c = curlAt(x, born);
         const z0 = boreFront(born) + lineAt(x, born) - H * (0.3 + 0.3 * rand(i, n + 14));
         const up = (6 + 12 * rand(i, n + 16)) * (0.6 + 0.8 * c);
@@ -480,7 +583,7 @@ export function createBore(
         const z = z0 + BORE_SPEED * a * (1 - 0.32 * a / life);
         const fade = Math.min(1, a / 0.15) * Math.pow(Math.max(0, 1 - a / life), 1.5);
         const size = (0.9 + 1.7 * a) * (0.6 + 0.8 * rand(i, n + 17));
-        cards.put(x, y, z, size, 0.45 * fade, rand(i, n + 18), rand(i, n + 19) * 6.28, 1.5, 0.15 + 0.5 * rand(i, n + 20), 0.15 * a / life);
+        cards.put(x, y, z, size, 0.45 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.15 + 0.5 * rand(i, n + 20), 0.15 * a / life);
       }
 
       // The lip: where it pitches, a ragged edge of water is thrown ahead of the face and falls; where it has fallen, white boils up from the pile.
@@ -492,12 +595,12 @@ export function createBore(
         const a = (beat - n) * life;
         const born = seconds - a;
         const c = curlAt(x, born);
-        const tip = tipAt(x, born);
-        const H = highAt(x, born);
+        const lip = tip(x, born);
+        const H = high(x);
         const low = i % 6 === 0;
         // A third of them boil on the fallen pile, low on the face.
-        const f0 = low ? H * (0.15 + 0.3 * c) * rand(i, n + 54) : tip[0] - 0.5 + 1.5 * rand(i, n + 54);
-        const y0 = low ? H * (0.1 + 0.45 * rand(i, n + 55)) * (0.4 + 0.6 * c) : tip[1] + 0.8 * (rand(i, n + 55) - 0.4);
+        const f0 = low ? H * (0.15 + 0.3 * c) * rand(i, n + 54) : lip[0] - 0.5 + 1.5 * rand(i, n + 54);
+        const y0 = low ? H * (0.1 + 0.45 * rand(i, n + 55)) * (0.4 + 0.6 * c) : lip[1] + 0.8 * (rand(i, n + 55) - 0.4);
         const vf = low ? 3 + 5 * rand(i, n + 56) : 2 + 7 * rand(i, n + 56) * (0.5 + c);
         const vy = low ? 3 + 6 * rand(i, n + 57) : 1 + 5 * rand(i, n + 57);
         const z = boreFront(born) + lineAt(x, born) + f0 + (BORE_SPEED + vf) * a;
@@ -543,7 +646,7 @@ export function createBore(
           const z = s.z - Math.cos(ang) * rr * 0.9 + (10 + 16 * rand(seed, 10)) * a;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 5.2);
           const size = (1.8 + 2.4 * a) * (0.6 + 0.9 * rand(seed, 5));
-          cards.put(x, y, z, size, 0.8 * fade, rand(seed, 6), rand(seed, 7) * 6.28, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
+          cards.put(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
         }
       }
       cards.end();
@@ -551,6 +654,9 @@ export function createBore(
     dispose: () => {
       wall.geometry.dispose();
       wallMaterial.dispose();
+      curtain.geometry.dispose();
+      curtainMaterial.dispose();
+      profile.dispose();
       cards.dispose();
     },
   };
