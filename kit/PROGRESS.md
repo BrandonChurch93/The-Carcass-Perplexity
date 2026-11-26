@@ -24,28 +24,28 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 100, 2026-11-26 08:15 UTC:
+Status 101, 2026-11-26 08:30 UTC:
 
-- `01-reveal4.jpg`: The Reveal from orbit, version 3: approved left, built right (draft tier)
-- `02-eye.jpg`: The Eye, heartbeat of 08:05: approved left, built right; the wide view above, what rises from the centre below (final tier)
-- `03-ribs.jpg`: The Ribs, the bore arrives: approved left, built right at final tier with two native crops (heartbeat of 08:03)
-- `04-voice.jpg`: The eight narration clips as kept: each clip's waveform with its four lines marked
+- `01-marsh3.jpg`: The Blood Marsh, version 3: approved left, built right at final tier (the wide view, the wallowers, the one on the thin crust)
+- `02-spine.jpg`: The Spine, version 3: approved left, built right at final tier (the wide view, the strike on the third spire)
+- `03-breath.jpg`: The Breath, version 3: approved left, built right (the wide view, the rim)
+- `04-spine24.jpg`: The Spine's two weakest keys, version 3: approved left, built right at final tier (the kites on the first spire, inside the canal)
 
+Status 100, 2026-11-26 08:15 UTC, showed: The Reveal from orbit, version 3: approved left, built right (draft tier); The Eye, heartbeat of 08:05: approved left, built right; the...
 Status 99, 2026-11-26 07:52 UTC, showed: The Reveal from orbit: approved left, built right (the owner's heartbeat of 07:44, draft tier); The establishing frame of every place and...
 Status 98, 2026-11-26 07:29 UTC, showed: The Breath, the rim: approved left, built right (version 2, draft tier); The Eye, the edge where the floor stops: approved left, built...
-Status 97, 2026-11-26 07:07 UTC, showed: The Ribs, wide view, approved left, heartbeat of 06:50 right: the flat is wet now with bands that mirror the sky, the blades are bedded...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T08:15:38Z
-phase 4: 12.08 h used of 17.00 h
-build: 32.41 h used of 72.00 h
+2026-11-26T08:30:51Z
+phase 4: 12.34 h used of 17.00 h
+build: 32.66 h used of 72.00 h
 extra rounds: yes
 half point: reached
-minutes since the last status: 23
+minutes since the last status: 15
 ```
 
 ## Phases
@@ -1368,6 +1368,7 @@ One line each: the date, the decision and the reason.
 - 2026-11-26. - 2026-11-26 08:26 UTC. The hold of the rise is back on the Builder's tuning: `src/places/reveal/rise.json` `holdPerFrame` 0.0001 and `settleFrames` 300. The Reveal's owner had set 0.00003 and 200 in wave 3. Asked, it answered that no critic's issue and no note of Brandon's asked for it: it had read the order sheet's "a few per cent of the frame over the hold" as a new aim. An owner does not retune the film's one camera move unasked, so the value went back (commit `d2e37696`). MEASURED: `tests/rise-core.test.ts` 31 of 31 pass on the restored values, G12 and G15 pass, frames up to the titan frame 10027 do not change, and the owner's own render of the last frame 11743 at both rates reads as a body at 400 px either way. What this changes: the owner's hold sheets of version 3 show the slower crawl, so the hold after the titan frame is rendered anew by the Builder before round 25 is packed.
 - 2026-11-26. - 2026-11-26 08:26 UTC. The review page and three test files follow the final script. The page marked a kept clip when the draft sheet's words differed from the config's, which since note 17 would have said of every new clip that it is "made again when the script is final". Now a clip is marked only when its own record quotes other words than the config holds (none of the eight is), and the Script part says the script is final and that the sheet below is the draft as it was laid out, kept as the record (`tools/review.mjs`). `cut/SCRIPT-DRAFT.json` and `cut/SCRIPT-SHEET.json` are not touched: the draft stays Brandon's words with the Builder's replacements beside them, and the sheet's last column stays the length of the script the draft replaced. Tests: `tests/script-sheet.test.ts` now asserts that the config holds the draft with each of its 11 marked lines as replacement A; `tests/voice.test.ts` runs on the saved take of the first script with that take's own words, since it tests the tool and not the script; `tests/review.test.ts` covers the new marking. MEASURED: these three files, 88 of 88 pass.
 - 2026-11-26. - 2026-11-26 08:26 UTC. Version 3 of wave 3 merged into main so far, each with tsc clean after it: the Reveal (`1320a6c`), the Ribs' sea (`9fcc503`, holding the Ribs' ground as of `57125cc`), the Eye (`288022f`), the Breath's ground (`c7f5959`, holding the Breath's life as of `711997f`), the Marsh's ground (`14208f1`), the Spine's ground (`12b0346`) and the Spine's storm (`64761a0`). Still to come by the owners' limit of 08:51 UTC: the Ribs' ground, the Breath's life (its numbers) and the Marsh's life. STATED by the owners, not yet measured by the Builder: whole-frame costs at uhd draft of 8.50 s a sample for the Reveal (received 8.7), 11.21 for the Ribs (10.85: over), 15.11 to 15.46 for the Eye (16.01), 23.47 for the Breath (24.76), 16.50 for the Marsh (18.26) and 16.94 for the Spine (15.2: over, the owner chose pictures before cost). The two that went up are measured with `npm run cost` on the merged tree before round 3 is packed, since the film's render time follows them.
+- 2026-11-26. - 2026-11-26 08:33 UTC. The Marsh's life, version 3 (`19ef465`), is merged. STATED by its owner and logged as it stands: its tuning looks ran two over `assets.maxTuningLooksPerPart` on two parts. The limit is the owner's to hold and it did not; the looks are made and cannot be unmade, nothing in the picture depends on the two extra looks being allowed, and no part of that owner gets a further look. Its own worst list: the skin does not slide and the brine does not part round a leg, the hide in marsh-3 is nearer coarse fibre than wet skin, one thick colony stem stands as a pole at the left of marsh-0, the heaps are coarse. Its need ("a brine surface the life can write to") is shared code between two owners and goes to the open items for Phase 5.
 
 ## Notes from Brandon
 
