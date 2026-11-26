@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { resolve } from '../../../core/cameras';
 import { shotById } from '../../../film/cut';
 import { shots } from '../cameras';
-import { DROWNED, LEVELS, WIND } from '../shared/anchors';
+import { DROWNED, LEVELS, SUN, WIND } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
 import { loopAngle, loopText } from '../shared/looptext';
 import { loopPhase } from '../shared/stage';
@@ -19,10 +19,38 @@ const STRANDS = 220;
 const CRABS = 16;
 /** In the card loop a gust sets the hung body swinging on its hook and it settles again: radians either way at the most. */
 const SWING = 0.06;
-/** The hung body as a plate: metres from the hook to the end of the tuft, how far the relief stands out, and its turn from square to the lens. */
-const PLATE = { high: 9.5, deep: 0.5, turn: 0.2 };
+/** The picture of the hung body (1448 by 1086 px) is the plan of a body with depth: metres from the hook to the end of the tuft, and its turn from square to the lens. */
+const PLATE = { high: 9.5, turn: 0.2 };
 /** Where the body lies in its picture (1448 by 1086): from, to across it. */
 const FRAMED = { from: 0.185, to: 0.765 };
+/**
+ * The body in depth, metres out of the plane of the weed (the plane the picture used to lie in). Every point of the picture is moved toward the
+ * lens of the key along its own line of sight, so the key keeps the picture's outline and every other frame sees a body with a near and a far side.
+ * The trunk is a round of `girth` from the hip, where it caught, to the head, which hangs clear. Each limb: its middle across the picture and its
+ * top down it (px), how far out it leaves the trunk, and how much nearer the face it comes for each metre it hangs (the face leans back, a limb hangs plumb).
+ */
+const HUNG = {
+  hip: [440, 100],
+  head: [960, 520],
+  trunk: [1.1, 1.8],
+  girth: 0.8,
+  limbs: [
+    { at: 480, top: 330, out: 0.9, plumb: 0 },
+    { at: 625, top: 400, out: 1.8, plumb: 0.1 },
+    { at: 765, top: 440, out: 1.0, plumb: 0 },
+    { at: 912, top: 560, out: 2.1, plumb: 0.1 },
+    { at: 1000, top: 600, out: 1.8, plumb: 0.1 },
+  ],
+  /** Between two limbs, across the picture (px): the middle of the gap and half its width. */
+  gaps: [
+    [556, 25],
+    [695, 22],
+    [835, 35],
+    [953, 12],
+  ],
+} as const;
+/** How far the body turns on its hook in the wind of the film, radians either way, and each limb about its own root. */
+const SWAY = { body: 0.004, limb: 0.011 };
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
 type Point = [number, number, number];
@@ -383,28 +411,81 @@ function crabShape(): THREE.BufferGeometry {
   return out;
 }
 
-// The body itself is a picture with its relief: one hide hung by a leg, the ribs through it, weed and crabs on it. The sheet is pushed out by
-// the relief and lit by the place's light, so it is a thing with form and not a card.
+const glslNumber = (n: number): string => (Number.isInteger(n) ? `${n}.0` : `${n}`);
+const HUNG_LIMBS = HUNG.limbs.map((l) => `vec4(${[l.at, l.top, l.out, l.plumb].map(glslNumber).join(', ')})`);
+const HUNG_GAPS = HUNG.gaps.map(([at, half]) => `smoothstep(${glslNumber(at - half)}, ${glslNumber(at + half)}, pix.x)`);
+
+// The body is the picture of one hide hung by a leg, the ribs through it, and it is a body: every point of the picture stands at its own depth
+// out of the weed (hung(), below), so the trunk is round, the far legs hang behind the near ones and there is air between all of it and the face.
+// Its shade is the same sheet thrown down the light of the sky onto the plane of the weed, softer the farther the part that throws it.
 const PLATE_VERTEX = /* glsl */ `
 uniform sampler2D tRelief;
 uniform vec3 uOrigin;
 uniform vec3 uAxis;
 uniform vec3 uDrop;
 uniform vec3 uProud;
+uniform vec3 uKeyEye;
+uniform vec3 uSkyWay;
 uniform float uTime;
 varying vec3 vWorld;
 varying vec2 vUv;
+varying vec3 vShape;
+const float METRE = ${glslNumber(1086 / PLATE.high)};
+const vec2 HIP = vec2(${HUNG.hip.map(glslNumber).join(', ')});
+const vec2 HEAD = vec2(${HUNG.head.map(glslNumber).join(', ')});
+// Which limb hangs at a place of the picture, its top and its depth.
+vec4 limbAt(vec2 pix) {
+  vec4 l = ${HUNG_LIMBS[0]};
+${HUNG_GAPS.map((g, i) => `  l = mix(l, ${HUNG_LIMBS[i + 1]}, ${g});`).join('\n')}
+  return l;
+}
+// x: 1 on the trunk, 0 on what hangs from it. y: metres out of the plane of the weed.
+vec2 hung(vec2 pix) {
+  vec2 way = HEAD - HIP;
+  float len = length(way);
+  way /= len;
+  vec2 rel = pix - HIP;
+  float s = dot(rel, way) / len;
+  float t = dot(rel, vec2(-way.y, way.x));
+  // The trunk thins into the neck.
+  float thin = 1.0 - 0.62 * smoothstep(0.7, 1.05, s);
+  float half_ = 115.0 * thin;
+  float round_ = sqrt(max(1.0 - t * t / (half_ * half_), 0.0));
+  float trunk = mix(${glslNumber(HUNG.trunk[0])}, ${glslNumber(HUNG.trunk[1])}, smoothstep(0.0, 1.0, s)) + ${glslNumber(HUNG.girth)} * thin * round_;
+  vec4 l = limbAt(pix);
+  float limb = l.z - l.w * max(pix.y - l.y, 0.0) / METRE;
+  float onTrunk = 1.0 - smoothstep(0.8 * half_, 1.03 * half_, t);
+  vec2 uv = vec2(pix.x / 1448.0, 1.0 - pix.y / 1086.0);
+  return vec2(onTrunk, mix(limb, trunk, onTrunk) + 0.25 * textureLod(tRelief, uv, 3.0).r);
+}
 void main() {
-  vec2 uv = vec2(mix(${FRAMED.from.toFixed(3)}, ${FRAMED.to.toFixed(3)}, position.x), 1.0 - position.y);
-  float h = textureLod(tRelief, uv, 3.0).r;
-  // What hangs free of it stirs a little: the ends of the legs and the tuft most.
-  float loose = smoothstep(0.5, 1.0, position.y);
-  float sway = loose * loose * 0.03 * sin(uTime * 1.3 + position.x * 23.0);
+  vec2 at = position.xy;
 #ifdef SHADE
-  // Its shade on the weed behind it: the same sheet a hand behind, fallen a little down the face.
-  vec3 w = uOrigin + uAxis * (position.x - 0.12 + sway) + uDrop * (position.y + 0.012) + uProud * 0.04;
-#else
-  vec3 w = uOrigin + uAxis * (position.x - 0.12 + sway) + uDrop * position.y + uProud * (0.12 + h);
+  // The shade is wider than what throws it.
+  at = (at - 0.5) * 1.3 + 0.5;
+#endif
+  vec2 uv = vec2(mix(${FRAMED.from.toFixed(3)}, ${FRAMED.to.toFixed(3)}, at.x), 1.0 - at.y);
+  vec2 pix = vec2(uv.x * 1448.0, at.y * 1086.0);
+  vec2 here = hung(pix);
+  float dx = (hung(pix + vec2(6.0, 0.0)).y - hung(pix - vec2(6.0, 0.0)).y) * METRE / 12.0;
+  float dy = (hung(pix + vec2(0.0, 6.0)).y - hung(pix - vec2(0.0, 6.0)).y) * METRE / 12.0;
+  // What hangs from the trunk swings a little about its own root, each limb in its own time, the strings of the muzzle most.
+  vec4 l = limbAt(pix);
+  float number = floor(l.x / 140.0);
+  float hangs = (1.0 - here.x) * max(pix.y - l.y, 0.0) / METRE;
+  float loose = l.x > 990.0 ? 2.6 : 1.0;
+  float swing = ${glslNumber(SWAY.limb)} * loose * (sin(uTime * 1.1 + number * 1.9) + 0.5 * sin(uTime * 1.9 + number * 4.1));
+  float nod = ${glslNumber(SWAY.limb)} * loose * sin(uTime * 0.8 + number * 2.7);
+  vec3 flat_ = uOrigin + uAxis * (at.x - 0.12) + uDrop * at.y + normalize(uAxis) * (hangs * swing);
+  // Out of the plane along the line of sight of the key: there the picture keeps its outline, everywhere else it is seen to have depth.
+  vec3 ray = uKeyEye - flat_;
+  float depth = here.y + hangs * nod;
+  vec3 w = flat_ + ray * (depth / dot(ray, uProud));
+  vShape = vec3(dx, dy, depth);
+#ifdef SHADE
+  float fall = (depth - 0.5) / dot(uSkyWay, uProud);
+  w -= uSkyWay * fall;
+  vShape.z = fall;
 #endif
   vWorld = w;
   vUv = uv;
@@ -418,13 +499,37 @@ uniform sampler2D tRelief;
 uniform vec3 uAxis;
 uniform vec3 uDrop;
 uniform vec3 uProud;
+uniform vec3 uKeyEye;
 varying vec3 vWorld;
 varying vec2 vUv;
+varying vec3 vShape;
+// rigShade, but the land is asked once for the whole body, before the face it hangs on: rigShade asks 14 m along each normal, and the normals of
+// a round thing a metre thick would each ask a different place of the strait.
+vec3 hungShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
+  vec4 land = landAt(p.xz + uProud.xz * 14.0);
+  float above = p.y - land.r;
+  float open = mix(land.g, 1.0, clamp(above / 120.0, 0.0, 1.0)) * (1.0 - contactDrawn(p) * smoothstep(4.0, 0.0, above)) * occ;
+  float sun = sunAt(p, land) * occ;
+  float nl = max(dot(n, uSunDir), 0.0);
+  vec3 e = skyIrradiance(n) * open + uSunColour * (nl * sun);
+  vec3 c = albedo * e / 3.14159;
+  // Sodden skin is no mirror at its edges: it is rough with folds there, and the glancing shine is held to a part of the full one.
+  float nv = clamp(dot(n, v), 0.3, 1.0);
+  float f = (0.04 + 0.96 * pow(1.0 - nv, 5.0)) * (1.0 - 0.8 * rough);
+  vec3 r = reflect(-v, n);
+  r.y = abs(r.y);
+  vec3 env = mix(skyRadiance(r), skyIrradiance(n) / 3.14159, rough * rough);
+  vec3 h = normalize(v + uSunDir);
+  float gloss = 2.0 / max(rough * rough * rough * rough, 2e-4);
+  float spec = pow(max(dot(n, h), 0.0), gloss) * (gloss + 8.0) * 0.0398;
+  return c + f * (env * open + uSunColour * (spec * nl * sun));
+}
 void main() {
 #ifdef SHADE
-  float near = texture2D(tRelief, vUv, 4.5).r;
-  float wide = texture2D(tRelief, vUv - vec2(0.0, 0.012), 6.0).r;
-  float dark = clamp(1.3 * smoothstep(0.02, 0.3, near) + 0.6 * smoothstep(0.02, 0.25, wide), 0.0, 0.8) * (1.0 - uSolo);
+  // The farther the part hangs from the face the wider and the fainter what it hides of the sky.
+  float far = max(vShape.z, 0.0);
+  float hidden = textureLod(tRelief, vUv, 3.0 + 1.2 * far).r;
+  float dark = clamp(hidden * 2.2, 0.0, 1.0) * (0.35 + 0.5 * exp(-0.7 * far)) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dark, dark);
 #else
   vec3 pic = texture2D(tCarcass, vUv).rgb;
@@ -433,21 +538,31 @@ void main() {
   float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 1.5).r;
   float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
   vec3 v = normalize(cameraPosition - vWorld);
-  vec3 face = normalize(uProud);
-  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 0.9);
-  if (dot(face, v) < 0.0) n = reflect(n, face) * -1.0;
+  vec3 across = normalize(uAxis);
+  vec3 down = normalize(uDrop);
+  // The form of the body: the sheet as it stands in depth, each point pushed along its line to the key's lens.
+  vec3 ray = normalize(uKeyEye - vWorld) / max(dot(normalize(uKeyEye - vWorld), uProud), 0.2);
+  // Where the sheet runs from a near part to a far one it stands edge on to the lens: its slope is held, or the wet skin there mirrors the sky.
+  vec2 slope = vShape.xy * min(1.0, 1.5 / max(length(vShape.xy), 1e-3));
+  vec3 face = normalize(cross(down + ray * slope.y, across + ray * slope.x));
+  if (dot(face, uProud) < 0.0) face = -face;
+  // And the skin on it: ribs, folds, tears.
+  vec3 n = normalize(face - (across * hx - down * hy) * 0.9);
+  if (dot(n, v) < 0.0) n = reflect(n, v);
   // Sodden hide: a little greyer than the dry picture, and it shines where the water runs off it. The hollows between the ribs see little sky.
   // It hangs in the rock's own shade, no brighter than the weed's highlights: grey pink, stained down its length by what runs off it, green brown toward the weed it lies in.
   vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.86), pic, 0.5) * 1.12;
   float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
   albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
   albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.4 * smoothstep(0.6, 0.15, vUv.y));
-  float occ = mix(0.4, 0.85, smoothstep(0.1, 0.7, h));
-  vec3 col = rigShade(vWorld, n, v, albedo, 0.26, occ);
+  // What hangs behind the trunk and close to the face is in their shade.
+  // And what faces down, the belly and the under side of every limb, sees the wet rock and not the sky.
+  float occ = mix(0.4, 0.85, smoothstep(0.1, 0.7, h)) * mix(0.72, 1.0, smoothstep(0.9, 1.9, vShape.z)) * (1.0 - 0.45 * smoothstep(0.8, 3.0, -vShape.y));
+  vec3 col = hungShade(vWorld, n, v, albedo, 0.26, occ);
   // Water still runs off it: threads of it slide down the hide, bead after bead, and each bead holds the sky.
   float thread = smoothstep(0.8, 0.97, 0.5 + 0.5 * sin(vUv.x * 210.0 + 5.0 * sin(vUv.x * 47.0)));
   float bead = smoothstep(0.6, 0.92, 0.5 + 0.5 * sin(vUv.y * 46.0 + uTime * 5.0 + 9.0 * sin(vUv.x * 63.0)));
-  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.07 * thread * bead * smoothstep(0.1, 0.5, h);
+  col += skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.05 * occ * thread * bead * smoothstep(0.1, 0.5, h);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (h < 0.045) discard;
 #endif
@@ -739,9 +854,12 @@ export function create(ctx: Context): Piece {
   const crabMesh = new THREE.Mesh(crabs, crabMaterial);
   crabMesh.frustumCulled = false;
 
-  // The plate: hung by the leg at the hook, turned most of the way to the lens of its own shot, which looks along the face.
+  // The picture's plane: hung by the leg at the hook, turned most of the way to the lens of its own shot, which looks along the face.
   const shot = shotById('ribs-05');
   const eye = resolve(shots['ribs-05'] as (typeof shots)[string], 0.5, shot.first + Math.round((shot.last - shot.first) / 2)).position;
+  // The lens of the key (the middle frame of the shot): the body's depth is laid along its lines of sight.
+  const keyFrame = shot.first + Math.round((shot.last - shot.first) / 2);
+  const keyEye = new THREE.Vector3(...resolve(shots['ribs-05'] as (typeof shots)[string], (keyFrame - shot.first) / (shot.last - shot.first), keyFrame).position);
   const view = new THREE.Vector3(hang.x - eye[0], 0, hang.z - eye[2]).normalize();
   const right = new THREE.Vector3().crossVectors(view, new THREE.Vector3(0, 1, 0)).normalize();
   const axis = right.clone().multiplyScalar(Math.cos(PLATE.turn)).addScaledVector(view, Math.sin(PLATE.turn)).normalize();
@@ -751,17 +869,22 @@ export function create(ctx: Context): Piece {
   const plateOrigin = weedPoint(rib, DROWNED.phi, DROWNED.height + 2.5, 0.3);
   const plateWide = (PLATE.high * (FRAMED.to - FRAMED.from) * 1448) / 1086;
   for (let i = 0; i < 18; i++) {
-    const root = plateOrigin
+    const flat = plateOrigin
       .clone()
       .addScaledVector(axis, plateWide * (scatter.range(0.22, 0.86) - 0.12))
-      .addScaledVector(down, PLATE.high * scatter.range(0.42, 0.8))
-      .addScaledVector(proudWay, PLATE.deep * 0.8);
+      .addScaledVector(down, PLATE.high * scatter.range(0.42, 0.8));
+    // Caught on the near limbs, or hanging between them from the trunk: at the depth of what holds it.
+    const ray = keyEye.clone().sub(flat);
+    const root = flat.addScaledVector(ray, HUNG.limbs[1 + 2 * (i % 2)].out / ray.dot(proudWay));
     const fall = down.clone().addScaledVector(axis, scatter.range(-0.15, 0.15)).normalize();
     falls.set([fall.x, fall.y, fall.z], i * 3);
     roots.set([root.x, root.y, root.z, 0.06], i * 4);
     shapes.set([scatter.range(1.2, 2.8), scatter.range(0.07, 0.16), scatter.next() + 1, scatter.range(-0.08, 0.08)], i * 4);
   }
-  const plateGeometry = new THREE.PlaneGeometry(1, 1, 96, 144).translate(0.5, 0.5, 0);
+  const plateGeometry = new THREE.PlaneGeometry(1, 1, 150, 220).translate(0.5, 0.5, 0);
+  // The face looks up at the sky more than out at it: what hangs before it throws its shade down the face.
+  // And the bright side of the overcast is the sun's: the shade falls from between the two.
+  const skyWay = new THREE.Vector3(...SUN.toward).normalize().addScaledVector(proudWay, 0.3).addScaledVector(down, -0.15).normalize();
   const plateAxis = axis.clone().multiplyScalar(plateWide);
   const plateDrop = down.clone().multiplyScalar(PLATE.high);
   const swungOrigin = plateOrigin.clone();
@@ -777,7 +900,9 @@ export function create(ctx: Context): Piece {
       uOrigin: { value: swungOrigin },
       uAxis: { value: swungAxis },
       uDrop: { value: swungDrop },
-      uProud: { value: proudWay.clone().multiplyScalar(PLATE.deep) },
+      uProud: { value: proudWay },
+      uKeyEye: { value: keyEye },
+      uSkyWay: { value: skyWay },
     },
     side: THREE.DoubleSide,
   });
@@ -795,6 +920,19 @@ export function create(ctx: Context): Piece {
     blendSrc: THREE.OneFactor,
     blendDst: THREE.OneMinusSrcAlphaFactor,
   });
+  // In the card loop the limbs swing on whole turns of the loop.
+  const loopSwaps = [
+    ['uniform float uTime;', 'uniform float uTime;\nuniform vec2 uLoop;'],
+    ['uTime * 1.1', loopAngle('1.1', 1)],
+    ['uTime * 1.9', loopAngle('1.9', 2)],
+    ['uTime * 0.8', loopAngle('0.8', 1)],
+  ] as const;
+  const plateLoop = plateMaterial.clone();
+  plateLoop.uniforms = plateMaterial.uniforms;
+  plateLoop.vertexShader = loopText(PLATE_VERTEX, loopSwaps);
+  const shadeLoop = shadeMaterial.clone();
+  shadeLoop.uniforms = plateMaterial.uniforms;
+  shadeLoop.vertexShader = loopText(PLATE_VERTEX, loopSwaps);
   const shade = new THREE.Mesh(plateGeometry, shadeMaterial);
   shade.frustumCulled = false;
   shade.renderOrder = 3;
@@ -804,18 +942,15 @@ export function create(ctx: Context): Piece {
   return {
     // In the film it hangs still. In the card loop a gust swings it on its hook, about the middle of the plate's top, at the pace of a
     // weight of that length, and it hangs still again before the loop comes round.
-    setTime: () => {
+    setTime: (seconds: number) => {
       const lp = loopPhase();
       strands.material = lp === null ? weedMaterial : weedLoop;
-      if (lp === null) {
-        swungOrigin.copy(plateOrigin);
-        swungAxis.copy(plateAxis);
-        swungDrop.copy(plateDrop);
-        return;
-      }
-      const u = Math.min(1, Math.max(0, (lp - 0.05) / 0.9));
+      plate.material = lp === null ? plateMaterial : plateLoop;
+      shade.material = lp === null ? shadeMaterial : shadeLoop;
+      const u = lp === null ? 0 : Math.min(1, Math.max(0, (lp - 0.05) / 0.9));
       const gust = Math.sin(Math.PI * u) ** 2;
-      const swing = SWING * gust * Math.sin(3 * Math.PI * u);
+      // In the film the wind only stirs it: two slow turns that never meet the same way twice in the shot.
+      const swing = lp === null ? SWAY.body * (Math.sin(seconds * 0.83 + 1.2) + 0.6 * Math.sin(seconds * 1.37)) : SWING * gust * Math.sin(3 * Math.PI * u);
       if (swing === 0) {
         swungOrigin.copy(plateOrigin);
         swungAxis.copy(plateAxis);
@@ -828,6 +963,8 @@ export function create(ctx: Context): Piece {
     },
     dispose: () => {
       weedLoop.dispose();
+      plateLoop.dispose();
+      shadeLoop.dispose();
       material.dispose();
       clothMaterial.dispose();
       plateMaterial.dispose();
