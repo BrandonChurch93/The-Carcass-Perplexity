@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 import { volumeUniforms } from '../../../core/engine';
 import { QUAD_VERTEX } from '../../../core/post';
-import { DEG, POOL_R, TAU, bearingDir } from '../shared/anchors';
+import { DEG, HERO_DOME, K1_AT, K1_DIR, POOL_R, TAU, bearingDir } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { bakeNoise } from './noise';
 import { createSky } from './sky';
@@ -29,7 +29,16 @@ export function create(ctx: Context): Piece {
   own.push({ at: [main[0] * 5.5, 0, main[1] * 5.5], radius: 3.4, strength: 0.34, rise: 16, kind: 'steam', lean });
   // The mist that lies low over the whole pool.
   own.push({ at: [-4, 0, -1], radius: 6, strength: 0.022, rise: 5, kind: 'steam', lean });
-  for (let i = 0; i < 5; i++) {
+  // The low steam that drifts off the warm brine: wisps a stride or two high, carried along the surface by the wind.
+  const drift: [number, number] = [-0.9, -0.25];
+  const low: [number, number][] = [
+    [K1_AT[0] + K1_DIR[0] * 7 + 2.5, K1_AT[1] + K1_DIR[1] * 7],
+    [HERO_DOME[0] + 4, HERO_DOME[1] - 5],
+    [-5, -4],
+    [3, 2],
+  ];
+  for (const [x, z] of low) own.push({ at: [x, 0, z], radius: rng.range(3.4, 5), strength: rng.range(0.12, 0.2), rise: rng.range(1.7, 2.6), kind: 'steam', lean: drift });
+  for (let i = 0; i < 3; i++) {
     const a = rng.range(0, TAU);
     const r = rng.range(1, POOL_R * 0.75);
     own.push({ at: [Math.sin(a) * r, 0, -Math.cos(a) * r], radius: rng.range(1.2, 2.6), strength: rng.range(0.04, 0.09), rise: rng.range(6, 12), kind: 'steam', lean });
@@ -81,7 +90,7 @@ export function create(ctx: Context): Piece {
         const radius = Math.max(0.05, s.radius);
         (steamA[i] as THREE.Vector4).set(s.at[0], s.at[1], s.at[2], radius);
         (steamB[i] as THREE.Vector4).set(s.lean?.[0] ?? 0, s.lean?.[1] ?? 0, s.rise, (s.strength * 1.4) / radius);
-        (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.3, radius * 1.5), 0);
+        (steamC[i] as THREE.Vector4).set(seeds[index % seeds.length] as number, Math.min(2.2, 0.6 + s.rise * 0.08), Math.max(1.3, Math.min(radius * 1.5, s.rise * 1.2)), 0);
       });
       steamCount.value = order.length;
     },

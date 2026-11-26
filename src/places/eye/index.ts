@@ -64,7 +64,7 @@ async function create(): Promise<Place> {
     assets: { texture },
     sources: { steam: [], heat: [] },
     laps: [],
-    unmirrored: [],
+    reflected: [],
     events: { rise: RISE, end: END },
   };
 

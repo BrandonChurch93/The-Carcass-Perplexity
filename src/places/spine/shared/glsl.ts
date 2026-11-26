@@ -77,6 +77,9 @@ const float CANAL_FLOOR = ${FLOOR.toFixed(3)};
 // The share of a round light's radiance that the place takes as light cast: the lens is set for the dusk, and a bolt at full radiance would white the
 // ridge out for kilometres. With it a strike's channel (radiance 520, radius 70) lights the snow 800 m off about as much again as the sky does.
 const float EMITTER_CAST = 0.07;
+// The key of the place: the last light comes over the cloud sea from the lee and a little from behind the lens of the wide shot, low. It
+// warms the rock that looks to the lee and leaves what looks to the storm in the storm's dark. The band the dome draws is where uWarmDir says.
+const vec3 KEY_DIR = normalize(vec3(-0.34, 0.16, 0.93));
 
 // How far a direction looks into the storm: 1 level into it, 0 away from it and overhead.
 float stormSide(vec3 d) {
@@ -111,8 +114,8 @@ vec3 skyIrradiance(vec3 n) {
   // The flash counts for more on what it lights than in the sky itself: the cloud is a wall of it for the land, and a glow for the lens.
   open = mix(open, uSkyStorm, 0.8 * stormShare) + uFlash * (2.6 * stormShare);
   vec3 e = mix(uSkyGround, open, up) * uFill;
-  float w = clamp((dot(n, uWarmDir) + 0.25) / 1.25, 0.0, 1.0);
-  return 3.14159 * (e + uWarmColour * (0.24 * w * w * seen));
+  float w = clamp((dot(n, KEY_DIR) + 0.12) / 1.12, 0.0, 1.0);
+  return 3.14159 * (e + uWarmColour * (0.2 * w * w * w * seen));
 }
 
 // The land under a point: r height in metres, g how much of the sky the ground there sees (0 to 1), a the roof of the canal under it

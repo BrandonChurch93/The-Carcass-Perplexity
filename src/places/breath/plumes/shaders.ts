@@ -108,42 +108,18 @@ void main() {
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
 
-// Which pixels of a vane are barb or bead: the same lines in the picture and in the depth the fog reads.
+// Which pixels of a vane are barb: read from the picture of a frond (its relief stands on black), the same in the picture and in the depth the fog reads.
 const VANE_TEST = /* glsl */ `
   vec3 toEye = cameraPosition - vWorld;
   float far = length(toEye);
   vec3 v = toEye / far;
   float px = uPixel * far;
-  float seed = vVane.z;
-  float len = max(vVane.w, 0.001);
-  float b = vVane.y;
-  // The barbs do not hang straight: each lock of them wanders a little as it goes down.
-  float a = vVane.x + len * b * b * (0.9 * (vnoise(vec2(vVane.x * 5.0 + seed, b * 1.6 + seed)) - 0.5) + 0.22 * (vnoise(vec2(vVane.x * 33.0 + seed, b * 6.0 - seed)) - 0.5));
-  // Wet barbs gather into locks: the barbs of one lock leave the stem side by side and come together at its point.
-  float wide = 0.03 + 0.035 * hash12(vec2(seed, 3.1));
-  float cell = floor(a / wide);
-  float h1 = hash12(vec2(cell, seed));
-  float h2 = hash12(vec2(cell + 17.0, seed * 1.7));
-  float centre = (cell + 0.5 + 0.5 * (h1 - 0.5)) * wide;
-  float lockLen = 0.3 + 0.7 * h2;
-  float t = b / lockLen;
-  // A bead of water at the point of a lock, on most of them.
-  float bead = length(vec2(a - centre, (b - lockLen) * len + 0.004));
-  bool drop = h1 > 0.72 && bead < 0.0036 + 0.5 * px && vTint.z > 0.3 && px < 0.0016;
-  float gather = (0.45 + 0.3 * h1) * smoothstep(0.05, 1.0, t);
-  float fan = 1.0 - gather;
-  float rootAt = centre + (a - centre) / fan;
-  float spacing = 0.0045;
-  float id = floor(rootAt / spacing);
-  // Barbs finer than a pixel are not told apart: there the lock has one length and one colour.
-  float whole = smoothstep(6.0 * px, 2.5 * px, spacing * fan);
-  float hb = mix(0.65 * vnoise(vec2(id * 0.22, seed)) + 0.35 * hash12(vec2(id, seed)), 0.55, smoothstep(1.6 * px, 0.6 * px, spacing * fan));
-  float line = abs(fract(rootAt / spacing) - 0.5) * spacing * fan;
-  float thick = max(0.0013 * (1.0 - 0.45 * t), 1.1 * px);
-  // A gap between two barbs narrower than a pixel is not a gap the lens can see: there the lock is drawn whole.
-  thick = max(thick, 0.5 * spacing * fan - 0.5 * px + 2.4 * px * whole);
-  bool barb = t <= 1.0 && rootAt > cell * wide && rootAt < (cell + 1.0) * wide && t < 0.4 + 0.6 * hb + 0.3 * step(abs(rootAt - centre), spacing) && line < thick;
-  if (!barb && !drop) discard;
+  // Along the stem from the root to the tip; across it from the stem out to the ends of the barbs, on the side this vane is.
+  vec2 at = vec2(0.035 + 0.945 * vVane.x, 0.5 + 0.475 * vVane.y * vVane.w);
+  float relief = texture2D(tFrondH, at).r;
+  // Far off the finest barbs are thinner than a pixel and would go: the frond is kept as full as it is near.
+  float cut = mix(0.3, 0.05, smoothstep(0.001, 0.01, px));
+  if (relief < cut) discard;
 `;
 
 export const VANE_FRAGMENT = /* glsl */ `
@@ -152,6 +128,8 @@ varying vec3 vWorld;
 varying vec4 vVane;
 varying vec4 vTint;
 uniform float uPixel;
+uniform sampler2D tFrond;
+uniform sampler2D tFrondH;
 ${NOISE_GLSL}
 ${RIG_GLSL}
 void main() {
@@ -161,27 +139,29 @@ ${VANE_TEST}
   float tone = vTint.y;
   float reach = vTint.z;
   float within = vTint.x;
-  // Wine red, each barb a little unlike the next; darker at the stem, a little paler and clearer at the hanging end.
-  vec3 albedo = mix(vec3(0.1, 0.012, 0.022), vec3(0.24, 0.026, 0.042), 0.45 * tone + 0.3 * hb + 0.25 * h2);
-  albedo = mix(albedo, vec3(0.36, 0.07, 0.06), 0.45 * smoothstep(0.6, 1.0, t) * h1);
+  // The colour is the picture's: wet wine-red barbs, pale and fleshy at the stem, each frond a little darker or lighter than the next.
+  vec3 told = texture2D(tFrond, at).rgb;
+  // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
+  vec3 albedo = told * sqrt(told) * vec3(1.15, 0.36, 0.42) * (0.6 + 0.5 * tone);
+  // How thick the frond is here: its heart is many barbs deep, its edge is single hairs.
+  float body = smoothstep(cut, 0.7, relief);
   // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
-  float occ = mix(0.42, 1.0, smoothstep(0.0, 0.8, t * lockLen)) * mix(0.36, 1.0, within * within) * mix(0.55, 1.0, smoothstep(0.0, 0.5, reach));
-  // Each barb is a round wet hair: dark where it meets the next, so a lock is strands and not a blade.
-  float across = clamp(line / max(0.5 * spacing * fan, 1e-5), 0.0, 1.0);
-  float strand = mix(1.0, 0.25 + 0.75 * sqrt(1.0 - across * across), smoothstep(0.7 * px, 2.2 * px, spacing * fan));
-  occ *= strand;
-  albedo *= 0.58 + 0.34 * hb;
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.34, occ);
-  // Thin and wet against the low sun: the light comes through blood red, most at the thin edge of the vane and looking toward the sun.
+  float occ = mix(0.9, 0.3, body) * mix(0.15, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
+  // The relief of the picture turns the light a little: a lock is strands and not a blade.
+  float lift = (texture2D(tFrondH, at + vec2(0.0015, 0.0)).r - relief) + (texture2D(tFrondH, at + vec2(0.0, 0.004)).r - relief);
+  n = normalize(n + 1.6 * lift * normalize(vec3(uSunDir.x, 0.4, uSunDir.z)));
+  vec3 colour = rigShade(vWorld, n, v, albedo, 0.3, occ);
+  // Thin and wet against the low sun: the light comes through blood red, most through the single hairs at the edge and looking toward the sun.
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float thin = smoothstep(0.35, 1.0, t) * (0.15 + 0.85 * within);
-  colour += vec3(1.0, 0.07, 0.05) * uSunColour * (thin * (0.14 + 0.86 * against * against) * 0.44 * sunAt(vWorld));
+  float thin = (1.0 - 0.75 * body) * (0.15 + 0.85 * within);
+  float lit = sunAt(vWorld);
+  float hair = (1.0 - body) * (1.0 - body);
+  colour += mix(vec3(0.8, 0.05, 0.03), vec3(1.0, 0.24, 0.1), hair * against) * uSunColour * (thin * (0.04 + 0.96 * against * against) * 0.24 * lit) * (0.25 + 0.75 * hair) * (0.3 + 2.0 * dot(told, vec3(0.33)));
+  // Wet: here and there a barb turns the sun to the lens.
+  float glint = smoothstep(0.93, 0.99, vnoise(at * vec2(300.0, 110.0) + vVane.z)) * smoothstep(0.003, 0.001, px) * (1.0 - body);
+  colour += uSunColour * glint * (0.03 + 0.5 * pow(against, 6.0)) * lit;
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 / 3.14159) * (0.35 + 0.65 * occ);
-  if (drop && (!barb || bead < 0.0028 + 0.35 * px)) {
-    // The bead: it gathers the sun and the bright fog behind it, and a little of the red it hangs from.
-    colour = 0.4 * colour + uSunColour * (0.06 + 3.0 * pow(against, 8.0)) * sunAt(vWorld) + 0.35 * skyRadiance(vec3(-v.x, 0.25, -v.z));
-  }
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.1 / 3.14159) * (0.35 + 0.65 * occ);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -192,7 +172,7 @@ varying vec3 vWorld;
 varying vec4 vVane;
 varying vec4 vTint;
 uniform float uPixel;
-${NOISE_GLSL}
+uniform sampler2D tFrondH;
 void main() {
 ${VANE_TEST}  gl_FragColor = vec4(0.0);
 }`;

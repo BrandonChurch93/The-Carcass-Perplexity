@@ -58,6 +58,11 @@ uniform vec3 uSkyGround;
 uniform vec3 uFill;
 uniform vec3 uAirColour;
 uniform vec4 uAir;
+// The brine's mirror: the scene as the level brine sees it, drawn small before each sample (brine/index.ts). uMirror is 1 while that
+// picture is being drawn: the ground under the brine's level is left out of it. uMirrorMatrix takes a place in the world to that picture.
+uniform float uMirror;
+uniform sampler2D tMirror;
+uniform mat4 uMirrorMatrix;
 uniform int uEmitterCount;
 uniform vec4 uEmitters[8];
 uniform vec3 uEmitterRadiance[8];`;

@@ -195,6 +195,14 @@
       "width": 2048,
       "height": 768,
       "relief": "frond-h.png"
+    },
+    {
+      "name": "carcass-low",
+      "kind": "plate",
+      "metres": 4.5,
+      "width": 1672,
+      "height": 941,
+      "relief": "carcass-low-h.png"
     }
   ]
 }

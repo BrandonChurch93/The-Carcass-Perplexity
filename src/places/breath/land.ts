@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { PLATE_DATA, PLATE_HEIGHT, PLATE_METRES, PLATE_WIDTH } from './land/plate';
 
 export const RAD = Math.PI / 180;
 export const SEA = -0.4;
@@ -36,10 +37,43 @@ const soft = (v: number): number => 0.5 * (v + Math.sqrt(v * v + 64));
 export const channelX = (z: number): number => -50 + 0.4 * soft(z - 5) - 0.3 * soft(-z - 10);
 export const channelHalf = (z: number): number => 5 + 2.5 * sat((5 - z) / 15) + 14 * sat((-5 - z) / 40) + 140 * sat((z - 130) / 220);
 
+// A lattice noise that is the same wherever and whenever it is asked: 0 to 1.
+const hash2 = (ix: number, iz: number): number => {
+  let h = Math.imul(ix, 374761393) ^ Math.imul(iz, 668265263);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+export function noise2(x: number, z: number): number {
+  const ix = Math.floor(x);
+  const iz = Math.floor(z);
+  const fx = x - ix;
+  const fz = z - iz;
+  const u = fx * fx * fx * (fx * (fx * 6 - 15) + 10);
+  const v = fz * fz * fz * (fz * (fz * 6 - 15) + 10);
+  const a = hash2(ix, iz);
+  const b = hash2(ix + 1, iz);
+  const c = hash2(ix, iz + 1);
+  const d = hash2(ix + 1, iz + 1);
+  return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+}
+export function fbm2(x: number, z: number, octaves: number): number {
+  let s = 0;
+  let a = 0.5;
+  let n = 0;
+  for (let i = 0; i < octaves; i++) {
+    s += a * noise2(x, z);
+    n += a;
+    x = x * 2.03 + 17.3;
+    z = z * 2.03 + 9.1;
+    a *= 0.5;
+  }
+  return s / n;
+}
+
 const ripple = (x: number, z: number): number => (1 - 0.8 * smooth((Math.hypot(x, z) - 120) / 70)) * (0.6 * Math.sin(x * 0.07 + 0.5 * Math.sin(z * 0.05)) * Math.sin(z * 0.09 + 1.3) + 0.4 * Math.sin(x * 0.19 + z * 0.13 + 0.7));
 const swell = (x: number, z: number): number => 0.65 * Math.sin(x * 0.021 + 1.9 * Math.sin(z * 0.013 + 0.4)) + 0.35 * Math.sin(z * 0.047 - x * 0.031 + 2.1);
 
-/** The shelf is a pavement of level plates, each a hand higher than the next, with a short riser between them: metres above the mean. */
+/** Kept for the blockout: the old pavement of sines. The built shelf is bedded by `bedded()`. */
 export function plates(x: number, z: number): number {
   const s = 0.5 * Math.sin(x * 0.045 + 1.7 * Math.sin(z * 0.031 + 0.3)) + 0.3 * Math.sin(z * 0.083 + 1.3 * Math.sin(x * 0.052 + 2.0)) + 0.2 * Math.sin(x * 0.13 - z * 0.11 + 1.1);
   const t = s * 2.3 + 0.35 * Math.sin(x * 0.31 + 0.6 * Math.sin(z * 0.27)) * Math.sin(z * 0.29 + 1.9);
@@ -55,26 +89,85 @@ export function lipHeight(bearing: number, r: number): number {
   return north + south + west;
 }
 
-export function ground(x: number, z: number): number {
+/** The smooth ground under the plates: the shelf, the lips of the shaft, the flats, the tide channel with its shallows. */
+export function smoothGround(x: number, z: number): number {
   const xc = channelX(z);
   // The west bank comes in closer than the east one where the channel opens out to the north.
   const half = x < xc ? 5 + 6 * sat((z - 20) / 15) + 2.5 * sat((5 - z) / 15) + 8 * sat((-25 - z) / 50) + 140 * sat((z - 130) / 220) : channelHalf(z);
   const r = Math.hypot(x, z);
   const b = bearingOf(x, z);
+  const broad = 0.6 * (fbm2(x / 23 + 3.1, z / 23 + 7.7, 3) - 0.5);
   let base: number;
   if (x < xc) {
     const flats = Math.max(smooth((-15 - z) / 60), smooth((xc - half - 45 - x) / 60));
-    base = lerp(0.42 + 0.14 * ripple(x, z) + plates(x, z), -0.2 + 0.45 * swell(x, z) + 0.1 * ripple(x, z) + 0.5 * plates(x, z), flats);
+    base = lerp(0.5 + 0.14 * ripple(x, z) + 1.5 * broad, -0.2 + 0.45 * swell(x, z) + 0.1 * ripple(x, z) + 0.7 * broad, flats);
     base -= 0.004 * Math.max(0, -x - 420);
   } else {
     const wet = smooth((r - 70) / 120) * smooth((-z - 30) / 90);
-    base = lerp(0.4 + 0.13 * ripple(x, z) + plates(x, z), -0.12 + 0.42 * swell(x, z) + 0.1 * ripple(x, z) + 0.5 * plates(x, z), 0.85 * wet);
+    base = lerp(0.5 + 0.13 * ripple(x, z) + 1.5 * broad, -0.12 + 0.42 * swell(x, z) + 0.1 * ripple(x, z) + 0.7 * broad, 0.85 * wet);
     base += lipHeight(b, r);
   }
   const south = sat((z + 5) / 12);
-  const ragged = south * (x < xc ? 1.7 * Math.sin(z * 0.19 + 0.6) + 1.1 * Math.sin(z * 0.43 + 2.2) : 1.5 * Math.sin(z * 0.23 + 3.1) + 1.2 * Math.sin(z * 0.51 + 0.4));
-  const bed = 1 - smooth((Math.abs(x - xc) - (half - 2 + ragged)) / lerp(4.5, 2.6, south));
-  return lerp(base, -1.0, bed);
+  const ragged =
+    south * (x < xc ? 1.7 * Math.sin(z * 0.19 + 0.6) + 1.1 * Math.sin(z * 0.43 + 2.2) : 1.5 * Math.sin(z * 0.23 + 3.1) + 1.2 * Math.sin(z * 0.51 + 0.4)) + 5 * (noise2(z / 9 + (x < xc ? 40 : 0), 0.5) - 0.5) + 2.2 * (noise2(z / 2.7 + (x < xc ? 11 : 0), 3.5) - 0.5);
+  // Metres inside the bank: the bed shelves gently, ankle deep for a long way, and only the middle of the wide reach is deeper.
+  const inside = half - 2 + ragged - Math.abs(x - xc);
+  const bank = smooth(inside / lerp(4.5, 2.6, south) + 1);
+  const bedLevel = SEA - 0.06 - 0.16 * smooth(inside / 4) - 0.5 * smooth((inside - 9) / 6);
+  let h = lerp(base, bedLevel, bank);
+  // A bar of rock in the shallows, just awash: it lies under the lens of the picture of the waders feeding.
+  const dx = x + 50.4;
+  const dz = z + 22.6;
+  h += 0.62 * Math.exp(-(dx * dx * 0.5 + dz * dz) / 7) + 0.3 * Math.exp(-((x + 46.5) * (x + 46.5) + (z + 24.2) * (z + 24.2)) / 2.5);
+  return h;
+}
+
+/** The rectangle of ground that is drawn fine and baked into the near map (land/field.ts): it holds every camera of the place and the whole rim. */
+export const FINE = { minX: -84, minZ: -70, size: 122.88, cells: 2048 };
+export const inFine = (x: number, z: number, margin = 0): boolean => x > FINE.minX + margin && x < FINE.minX + FINE.size - margin && z > FINE.minZ + margin && z < FINE.minZ + FINE.size - margin;
+
+// The plate of the shelf (public/assets/breath/mat/shelfplate.jpg and its relief): 48 m by 27 m of the pavement seen from straight above,
+// laid over the whole shelf turn and turn about (each repeat is the mirror of the last, so no edge shows). Its relief is the shape of the
+// ground and its colour is the colour of the ground: the two are one picture, so every crack is dark and every plate has its own edge.
+const plateBytes = Uint8Array.from(atob(PLATE_DATA), (c) => c.charCodeAt(0));
+export const PLATE = { metres: PLATE_METRES, depth: (PLATE_METRES * PLATE_HEIGHT) / PLATE_WIDTH };
+/** The plate's relief is drawn as this many metres from black to white. */
+export const RELIEF = 0.9;
+/** Under this level of the plate's relief water stands: the pool in the plate's hollow. */
+export const POOL = 0.13;
+const mirror = (t: number): number => {
+  const m = t - 2 * Math.floor(t / 2);
+  return m > 1 ? 2 - m : m;
+};
+/** The plate's relief at a place on the ground: 0 to 1. */
+export function plateAt(x: number, z: number): number {
+  const fx = Math.min(PLATE_WIDTH - 1.001, Math.max(0, mirror(x / PLATE.metres) * PLATE_WIDTH - 0.5));
+  const fz = Math.min(PLATE_HEIGHT - 1.001, Math.max(0, mirror(z / PLATE.depth) * PLATE_HEIGHT - 0.5));
+  const i = Math.floor(fx);
+  const j = Math.floor(fz);
+  const u = fx - i;
+  const v = fz - j;
+  const k = j * PLATE_WIDTH + i;
+  return (((plateBytes[k] as number) * (1 - u) + (plateBytes[k + 1] as number) * u) * (1 - v) + ((plateBytes[k + PLATE_WIDTH] as number) * (1 - u) + (plateBytes[k + PLATE_WIDTH + 1] as number) * u) * v) / 255;
+}
+
+/** Where the dead wader lies (DEAD_WADER of shared/anchors.ts) the rock is one dry plate, level to a few centimetres for 3.2 m round, standing
+ *  clear of the tide: 1 on it, 0 off it. */
+const PAD: [number, number] = [-27.3, 22.6];
+export const padAt = (x: number, z: number): number => 1 - smooth((Math.hypot(x - PAD[0], z - PAD[1]) - 3.2) / 1.5);
+let padHeight: number | null = null;
+const padLevel = (): number => (padHeight ??= Math.max(SEA + 0.45, smoothGround(PAD[0], PAD[1]) - 0.1));
+
+/** The ground everything stands on: the smooth land with the plate's relief on it. Outside the fine rectangle the plates are too small for
+ *  the mesh that draws them and the ground is the same land worn smooth. */
+export function ground(x: number, z: number): number {
+  const base = smoothGround(x, z);
+  const edge = Math.min(x - FINE.minX, FINE.minX + FINE.size - x, z - FINE.minZ, FINE.minZ + FINE.size - z);
+  const fine = smooth((edge - 2) / 9);
+  if (fine <= 0) return base;
+  const relief = base + fine * RELIEF * (Math.max(plateAt(x, z), POOL) - 0.56);
+  const pad = padAt(x, z);
+  return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 
 export function nearLand(cells: number): THREE.BufferGeometry {
@@ -102,6 +195,12 @@ export function nearLand(cells: number): THREE.BufferGeometry {
   p.needsUpdate = true;
   g.computeBoundingSphere();
   return g;
+}
+
+/** The ground between the fine rectangle and the far land: sunk out of sight under the fine rectangle. */
+export function midGround(x: number, z: number): number {
+  if (inFine(x, z, 1.2)) return -DEPTH - 6;
+  return ground(x, z) - (inFine(x, z) ? 0.06 : 0);
 }
 
 export function farGround(x: number, z: number): number {

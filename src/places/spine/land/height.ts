@@ -1,6 +1,6 @@
 // The shape of the Spine's ground: the ridge of the layout (ridge.ts) with what the weather and the rock add to it.
 // Nothing is added where the animals trod and where the cameras stand, so that everything placed on the layout's ground stands on this one.
-import { CANAL_L, EXIT, MOUTH_R, MOUTH_S, canalL, first, flare, frameAt, ground, locate, shoulder } from '../ridge';
+import { CANAL_L, EXIT, MOUTH_R, MOUTH_S, canalL, first, flare, frameAt, ground, locate } from '../ridge';
 import { CARCASS_S, trail } from '../shared/anchors';
 
 const hash = (x: number, y: number): number => {
@@ -83,32 +83,34 @@ export function landAt(s: number, l: number): { y: number; rock: number } {
   const near = trodden(s, l);
   const free = smooth(2.5, l > 0 ? 16 : 30, near);
   const out = Math.abs(l);
-  // Ribs and gullies down the flanks, deeper the further down.
-  // Aretes and gullies run down the fall line: the flank is not a plane but buttress after buttress, with snow in the gullies between.
+  // Buttress after buttress down the flanks, with gullies between: large shapes only. Anything narrow that runs down a fall line reads,
+  // on a steep face, as a picture pulled long.
   const ribs =
     (ridged(x / 210 + 3.1, z / 210) - 0.5) * Math.min(90, 0.2 * out) +
     (ridged(x / 74, z / 74 + 7.7) - 0.5) * Math.min(26, 0.09 * out) +
-    (ridged(s / 84 + 1.7, l / 250 + 0.5 * vnoise(s / 90, l / 90)) - 0.45) * Math.min(60, 0.5 * Math.max(0, Math.min(near, out) - 8)) +
-    (ridged(s / 37 + 5.1, l / 85 + 0.4 * vnoise(s / 50 + 3.3, l / 50)) - 0.5) * Math.min(11, 0.2 * Math.max(0, Math.min(near, out) - 5));
+    (ridged(s / 150 + 1.7, l / 420 + 0.5 * vnoise(s / 120, l / 120)) - 0.45) * Math.min(70, 0.5 * Math.max(0, Math.min(near, out) - 8));
   // Outcrops: rock that stands out of the snow in broken slabs, here and there on the crest and over most of the steep flanks.
-  const patch = smooth(0.36, 0.54, vnoise(x / 58 + 11.3, z / 58 + 4.1));
+  const patch = smooth(0.4, 0.58, vnoise(x / 58 + 11.3, z / 58 + 4.1));
   const steep = 0.9 * smooth(16, 70, out) * (0.5 + 0.5 * smooth(0.22, 0.48, vnoise(x / 150 + 2.2, z / 150 + 8.8)));
-  // The buttress over the canal is rock, all of it.
-  const d = s - MOUTH_S;
-  const over = d > 0 && d < EXIT && Math.abs(l - canalL(d)) < flare(d) + 30 ? 0.9 : 0;
-  const small = 0.85 * smooth(0.5, 0.64, vnoise(x / 19 + 3.7, z / 19 + 9.4));
-  // The shoulder under the first spire is broken rock with snow on its ledges, more rock than snow.
-  const broken = 0.9 * smooth(0.12, 0.5, shoulder(s, l)) * smooth(0.3, 0.5, vnoise(x / 37 + 8.1, z / 37 + 2.9));
-  const where = Math.max(patch, small, steep, over, broken);
+  const small = 0.85 * smooth(0.52, 0.66, vnoise(x / 19 + 3.7, z / 19 + 9.4));
+  const where = Math.max(patch, small, steep);
   const u = 0.82 * x + 0.57 * z;
   const v = -0.57 * x + 0.82 * z;
-  const crag = where * (9 * slab(u, v, 40, 14, 3) + 3.6 * slab(u + 0.4 * v, v, 14, 6, 5) + 3 * ridged(x / 23, z / 23) - 0.6);
-  // Drifts: the snow lies in long low waves across the wind, on the crest and its benches. On the steep flanks there are none: long waves
-  // down a fall line read as a picture pulled long.
+  const crag = where * (7 * slab(u, v, 40, 14, 3) + 3.2 * slab(u + 0.4 * v, v, 14, 6, 5) + 1.4 * slab(u - 0.3 * v, v, 4.5, 2.4, 7) + 2 * ridged(x / 23, z / 23) - 0.6);
+  // Drifts: the snow lies in long low waves across the wind, on the crest and its benches, with shorter ones on their backs.
   const drift = 2.3 * (ridged(x / 16 + 5.5, z / 52) - 0.6) + 1.0 * (vnoise(x / 9 + 5.5, z / 31) - 0.5) + 0.3 * (vnoise(x / 2.7, z / 8.1 + 2.2) - 0.5);
   // Beside the trail the rock breaks through the snow in low stones and steps, a metre or two high.
   const stones = smooth(2.2, 6.5, near) * (1 - 0.7 * free) * smooth(0.43, 0.57, vnoise(x / 15 + 1.3, z / 15 + 6.6)) * Math.max(0, 2.6 * slab(u, v, 8, 3.5, 9) + 1.6 * ridged(x / 5.5, z / 5.5) - 0.2);
-  return { y: base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * (1 - 0.9 * smooth(16, 50, out)) * drift + stones, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.08, 0.4, stones)) };
+  let y = base + free * (ribs + Math.max(crag, -0.8)) + smooth(1.5, 9, near) * (1 - 0.9 * smooth(16, 50, out)) * drift + stones;
+  // Here and there a flank goes down in beds: a wall, a ledge that holds the snow, a wall. Level, of no two heights, and never right along a face.
+  const flank = free * smooth(26, 80, out) * smooth(0.45, 0.7, vnoise(x / 260 + 4.4, z / 260 + 9.1));
+  if (flank > 0) {
+    const bed = 34 + 22 * vnoise(x / 300 + 7.1, z / 300);
+    const ph = y / bed + 1.6 * vnoise(x / 120 + 1.9, z / 120 + 5.2);
+    const saw = ph - Math.floor(ph);
+    y += flank * 0.6 * bed * (smooth(0.3, 0.7, saw) - saw);
+  }
+  return { y, rock: Math.max(smooth(0.15, 1.2, free * crag), smooth(0.08, 0.4, stones)) };
 }
 
 export function heightAt(s: number, l: number): number {
