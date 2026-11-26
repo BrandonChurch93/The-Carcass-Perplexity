@@ -10,6 +10,7 @@ import * as drowned from './drowned';
 import * as land from './land';
 import * as sea from './sea';
 import * as wings from './wings';
+import { ribsLook } from './shared/look';
 import { loopPath, shots } from './cameras';
 import { BORE, T0, UNIT } from './shared/anchors';
 import { createStandIns } from './shared/blockout';
@@ -83,7 +84,7 @@ async function create(): Promise<Place> {
     unit: UNIT,
     scene,
     camera,
-    look: { ...neutralLook(), bloom: 0.02, vignette: 0.1, grain: 0.006 },
+    look: ribsLook(neutralLook()),
     volume,
     depthFirst: true,
     parts,

@@ -22,13 +22,14 @@ export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62 };
  * The break by shot: where the low sun comes down on the ground at the shot's key and how wide, metres, and where the break stands in the
  * sky, degrees right of north. The approach and the strait are one move and keep BREAK. Inside a shot the light goes with the wind; at a cut
  * it stands where the next shot wants it, as a crew waits for the light: on the sea behind the colony's rock (the rock keeps the storm's
- * shade), on the feeders and the water behind them, on the near cliff and the one that hangs there, on the gate.
+ * shade), on the feeders and the water behind them, on the flats behind the one that hangs in the weed (pale against a cliff in shade), on the
+ * bore's spray in the gate.
  */
 const BREAK_BY_SHOT: readonly { shot: string; key: string; x: number; z: number; radius: number; yaw: number }[] = [
   { shot: 'ribs-03', key: 'ribs-3', x: -160, z: -900, radius: 360, yaw: 16 },
   { shot: 'ribs-04', key: 'ribs-2', x: -40, z: -500, radius: 380, yaw: 23 },
-  { shot: 'ribs-05', key: 'ribs-1', x: -300, z: -60, radius: 380, yaw: 42 },
-  { shot: 'ribs-06', key: 'ribs-4', x: 140, z: -1500, radius: 480, yaw: 22 },
+  { shot: 'ribs-05', key: 'ribs-1', x: -60, z: -420, radius: 220, yaw: 42 },
+  { shot: 'ribs-06', key: 'ribs-4', x: 120, z: -1440, radius: 260, yaw: 22 },
 ];
 /** Where the break stands in the sky at the establishing key, degrees right of north: upper right of the strait's frame, left of the sun that burns through its edge. */
 const BREAK_YAW = 42;
