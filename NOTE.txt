@@ -1,6 +1,7 @@
-2026-11-26 06:39 UTC
-work at 58f2c10 on agent/breath-ground-3
-hb4 06:42: breath-2 pit wall reads with pale rounded tiers, pad pale and gritty; breath-1 channel floor sunk; breath-3 veil at right still open
-look-1.jpg = out/work/hb4-breath-2.jpg
-look-2.jpg = out/work/hb4-breath-3.jpg
-look-3.jpg = out/work/hb4-breath-1.jpg
+2026-11-26 07:10 UTC
+work at 2cf451e on agent/breath-ground-3
+version 2, 07:11: keys 0, 2, 3, 4 at hd draft
+look-1.jpg = out/work/v2-breath-0.jpg
+look-2.jpg = out/work/v2-breath-2.jpg
+look-3.jpg = out/work/v2-breath-3.jpg
+look-4.jpg = out/work/v2-breath-4.jpg
