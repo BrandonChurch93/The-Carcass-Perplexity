@@ -29,7 +29,7 @@ export const LEVELS = { sea: SEA, pool: POOL, tide: TIDE };
 export const SUN = {
   // From behind the cameras of the strait and to their right (154 degrees right of north, 37 up): the broad faces the lens sees are lit, the
   // edges turned to the left row are not, and the broken cloud lays the shade. The bright break stays ahead and right (the rig's skyBreak).
-  toward: [0.35, 0.6, 0.72] as [number, number, number],
+  toward: [0.3, 0.8, 0.5] as [number, number, number],
   /** Radiance times solid angle of the sun through thin cloud, scene linear: what a face turned to it takes over and above the sky. */
   colour: [7.0, 6.0, 4.7] as [number, number, number],
 };
