@@ -52,10 +52,11 @@ export function create(ctx: Context): Piece {
     const under = Math.max(ctx.rig.land.height(x + dir[0] * 2.3 * b.k, z + dir[1] * 2.3 * b.k), -0.1) - stand + (hero ? 0.95 : 0.6) * b.k;
     const hang = Math.min(0.4, Math.asin(Math.max(-0.9, Math.min(0.9, (1.2 * b.k - under) / (1.507 * b.k)))) - 0.446);
     const near = herd.length < 3;
-    const wet = sink > 0.5 ? rng.range(1.0, 1.4) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
+    // The one by the lens of the wallowers has rolled and is wet all over; the rest that lie in the brine have dried down to a hand above it.
+    const wet = sink > 0.5 ? (herd.length === 2 ? rng.range(1.0, 1.4) : 0.4 * rng.range(1.0, 1.4) - 0.05) * b.k : Math.max(0.5 * b.k, stand + 0.85 * b.k) * rng.range(0.9, 1.1);
     herd.push({
       // The one that lies in the brine before the lens of the wallowers is shaggy: the photographed matted hair is its hide.
-      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.5 } : {}) }),
+      beast: new Beast(ctx, b, { cell: near ? CELL_NEAR : CELL_FAR, wet, relief: near ? 0.012 : 0, reach: hero ? 1.6 : near ? 1.3 : 1, ...(hero ? { droop: 1.2 } : {}), ...(herd.length === 2 ? { tile: 'hair' as const, cover: 0.85 } : {}) }),
       plan: { at: [x, z], when, dir, speed, ground: stand, cycle, phase: rng.next(), root: Math.min(1, root * 12), hang, look: LOOKS[herd.length] ?? 1.7 + herd.length * 2.9 },
       onBank: sink <= 0.15,
       sunk: sink > 0.75,
@@ -92,6 +93,8 @@ export function create(ctx: Context): Piece {
   add(K1_AT[0] + K1_DIR[0] * 33 - K1_DIR[1] * 5.6, K1_AT[1] + K1_DIR[1] * 33 + K1_DIR[0] * 5.6, keyTime('marsh-1'), [K1_DIR[1], -K1_DIR[0]], 0.6, 0.3, 0.16, 0.05);
   const seepWader = herd.length - 1;
 
+  // The two that lay in the channel nearest the lens of the wide key are off the set: that near they did not hold as animals, and nothing that cannot is kept close.
+  const tooNear = herd.map((_, i) => i < BEASTS.length && (BEASTS[i] as (typeof BEASTS)[number]).d < 26);
   const wet = new Wet(ctx, herd.length);
   const tread = new Tread(ctx, 2);
   // Where one roots on a bank it has trodden the crust into red mud and pushed it up round its legs.
@@ -116,7 +119,7 @@ export function create(ctx: Context): Piece {
       const cleared = staged >= WALLOW_SPAN[0] && staged <= WALLOW_SPAN[1];
       const seep = staged >= SEEP_SPAN[0] && staged <= SEEP_SPAN[1];
       herd.forEach((h, i) => {
-        const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep);
+        const on = !(cleared && OFF_SET.includes(i)) && !(seep && bySeep[i]) && (i !== seepWader || seep) && !tooNear[i];
         h.beast.mesh.visible = on;
         h.beast.feelers.visible = on;
         const acted = cleared && i < 3;
