@@ -338,6 +338,10 @@ void main() {
     float thread = smoothstep(0.62, 0.8, vnoise(vec2(round2 * 43.0, r / 9.0 - uTime * 1.2)) * (0.5 + 0.5 * vnoise(vec2(round2 * 9.0, 3.0))) + 0.25) * clamp((uDome.x - 1.2) / 2.0, 0.0, 1.0) * (1.0 - du * du);
     f = mix(f, 0.9, 0.3 * thread * smoothstep(0.15, 0.6, du));
   }
+  // From the rim the water over the mats is the colour of the mats: the pale of the sky lies only on the deep.
+  float onMats = smoothstep(8.0, 40.0, cameraPosition.y) * crusted;
+  refl *= mix(vec3(1.0), vec3(0.74, 0.6, 0.46), onMats);
+  under *= mix(vec3(1.0), vec3(0.94, 0.84, 0.72), onMats);
   vec3 c = mix(under, refl, f);
   // A low sun on moving water: a hard glitter where a wavelet turns its face to it.
   vec3 hv = normalize(uSunDir + v);
