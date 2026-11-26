@@ -168,10 +168,11 @@ void main() {
   w = vec3(cameraPosition.xz + (w.xz - cameraPosition.xz) * m, uPool + 0.012).xzy;
 #endif
 #ifdef SHADE
-  // Its shade: the same outline a little larger than itself and just behind it, so the rock round it is darker where it hides the sky.
+  // Its shade: the same outline a little larger than itself, set behind it and drawn only on what stands nearer than that: the rock at its back
+  // is darker where it hides the sky, and the open sky past it takes nothing.
   vec3 ray = normalize(w - cameraPosition);
   vec3 fall = -uSunDir - ray * dot(-uSunDir, ray);
-  w = at + (w - at) * 1.14 + normalize(fall + vec3(0.0, -0.05, 0.0)) * 0.1 * aLook.x + ray * 0.12;
+  w = at + (w - at) * 1.1 + normalize(fall + vec3(0.0, -0.05, 0.0)) * 0.22 * aLook.x + ray * 2.2 * aLook.x;
 #endif
   vWorld = w;
   vLook = aLook;
@@ -236,7 +237,7 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float soft = texture2D(tCover, uv, 3.5).r;
 #if defined(SHADE)
-  float dim = 0.62 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
+  float dim = 0.7 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dim, dim);
 #elif defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -250,12 +251,16 @@ void main() {
 #else
   vec3 col = rigShade(vWorld, n, v, albedo, mix(0.6, 0.25, wet), occ);
   float sun = sunAt(vWorld, land);
-  col += albedo * skin * vec3(1.0, 0.82, 0.62) * (uSunColour * sun * 0.45 + skyIrradiance(-face) * 0.7) / 3.14159;
+  // Far off the air between takes the amber out of the lit skin.
+  float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
+  col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
+  col += albedo * skin * mix(vec3(1.0, 0.82, 0.62), vec3(0.8, 0.78, 0.74), far) * (uSunColour * sun * 0.45 + skyIrradiance(-face) * 0.7) / 3.14159 * (1.0 - 0.55 * far);
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sun;
   // One that stands in the shade of the rock over it.
   col *= 1.0 - 0.6 * vLook.w;
+  col *= 1.0 - 0.3 * far;
 #ifdef SOFT
   float a = smoothstep(0.1, 0.6, cover) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(col) * a, a);
@@ -271,6 +276,8 @@ export interface FigureMaterials {
   body: THREE.ShaderMaterial;
   mirror: THREE.ShaderMaterial;
   shade: THREE.ShaderMaterial;
+  /** The body drawn after the shades, so that no shade falls on the one that casts it. */
+  late: THREE.ShaderMaterial;
   sheet: Sheet;
 }
 
@@ -301,8 +308,9 @@ export function figureMaterials(ctx: Context, sheet: Sheet, pool: number, grey =
   const blended = { transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor };
   const body = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines, side: THREE.DoubleSide, ...(air ? { ...blended, depthWrite: true } : {}) });
   const mirror = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { MIRROR: 1 }, side: THREE.DoubleSide, ...blended });
-  const shade = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { SHADE: 1 }, side: THREE.DoubleSide, ...blended });
-  return { body, mirror, shade, sheet };
+  const shade = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines: { SHADE: 1 }, side: THREE.DoubleSide, ...blended, depthFunc: THREE.GreaterDepth });
+  const late = new THREE.ShaderMaterial({ vertexShader: VERTEX, fragmentShader: FRAGMENT, uniforms, defines, side: THREE.DoubleSide, transparent: true, depthWrite: true, blending: THREE.NoBlending });
+  return { body, mirror, shade, late, sheet };
 }
 
 /** Where a pixel of a cell goes when its joints are turned: metres ahead of the foot and over it, at size 1. */
@@ -371,9 +379,10 @@ export class Figures {
     this.look = attribute('aLook');
     this.limb = attribute('aLimb');
     this.move = attribute('aMove');
-    this.mesh = new THREE.Mesh(geometry, materials.body);
+    this.mesh = new THREE.Mesh(geometry, extras.shade ? materials.late : materials.body);
     this.mesh.frustumCulled = false;
     if (materials.body.transparent) this.mesh.renderOrder = 4;
+    if (extras.shade) this.mesh.renderOrder = 2;
     if (extras.mirror) {
       this.mirror = new THREE.Mesh(geometry, materials.mirror);
       this.mirror.frustumCulled = false;

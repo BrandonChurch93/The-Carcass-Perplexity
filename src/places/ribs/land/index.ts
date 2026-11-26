@@ -62,7 +62,7 @@ function stackRadius(s: Stack, y: number, angle: number): number {
   const t = (y + 7 * noise3(ca * 1.5 + seed, sa * 1.5, 3.5) + 9 * noise3(y / 26, seed, 1.5)) / BED;
   const band = Math.floor(t);
   const f = t - band;
-  const proud = (k: number): number => 2.6 * noise3(k * 1.9 + 0.5, ca * 2.2 + seed, sa * 2.2) * smooth(0.3, 0.6, noise3(k * 0.7 + 0.5, ca * 0.9 + seed, sa * 0.9 + 7));
+  const proud = (k: number): number => 1.1 * noise3(k * 1.9 + 0.5, ca * 2.2 + seed, sa * 2.2) * smooth(0.3, 0.6, noise3(k * 0.7 + 0.5, ca * 0.9 + seed, sa * 0.9 + 7));
   // The bed keeps its place over its whole thickness and gives way to the next in its last tenth.
   return r + proud(band) + (proud(band + 1) - proud(band)) * smooth(0.9, 1, f);
 }
@@ -76,12 +76,12 @@ function stackRock(s: Stack): THREE.BufferGeometry {
     const base = stackRadius(s, y, angle);
     const x = s.x + Math.cos(angle) * base;
     const z = s.z + Math.sin(angle) * base;
-    const d = 0.45 * relief(x * 1.6, y * 1.6, z * 1.6) + 1.6 * (fbm3(x / 9, y / 14, z / 9, 2) - 0.5);
+    const d = 0.3 * relief(x * 1.6, y * 1.6, z * 1.6) + 0.6 * (fbm3(x / 9, y / 14, z / 9, 2) - 0.5);
     return [y, Math.max(0.01, base + d)];
   });
 }
 
-function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2): THREE.BufferGeometry {
+function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2, lower = 0, lumps = 1): THREE.BufferGeometry {
   const rows = 30;
   const span = LEVELS.tide + 5;
   const profile: [number, number][] = [];
@@ -90,13 +90,13 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) 
   const g = lathe(x0, z0, profile, around, (run, _r, angle) => {
     const f = run / span;
     const far = radiusAt(LEVELS.tide, angle);
-    const top = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far);
+    const top = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far) - lower;
     const y = -5 + (top + 5) * f;
     const tuck = smooth(0.9, 1, f);
     const base = radiusAt(Math.max(0, y), angle);
     const x = x0 + Math.cos(angle) * base;
     const z = z0 + Math.sin(angle) * base;
-    return [y, base + (proud + 1.5 * smooth(12, 0, y) + 0.6 * weedLump(x, y, z) + 0.2 * weedTier(x, y, z)[0]) * (1 - tuck) - 2.5 * tuck];
+    return [y, base + (proud + 1.5 * smooth(12, 0, y) + lumps * (0.6 * weedLump(x, y, z) + 0.2 * weedTier(x, y, z)[0])) * (1 - tuck) - 2.5 * tuck];
   });
   // v is counted down from the top of the weed, as on the blades' skirts.
   const uv = g.getAttribute('uv') as THREE.BufferAttribute;
@@ -174,7 +174,8 @@ export function create(ctx: Context): Piece {
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) } });
+  const gateAt = new THREE.Vector2(STATIONS.posts[0][0] + 64, STATIONS.posts[0][1] + 74 - 22);
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tNear: { value: nearC }, tNearN: { value: nearN }, uPool: { value: LEVELS.pool }, uPath: { value: new THREE.Vector4(0, 0, 0, -1) }, uGate: { value: gateAt } });
   {
     // A lane of standing water runs down the middle of the strait toward the gap, from where the wide lens stands: it holds the sky.
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
@@ -183,9 +184,12 @@ export function create(ctx: Context): Piece {
     const l = Math.hypot(dx, dz) || 1;
     (ground.uniforms.uPath as THREE.IUniform).value.set(pose.position[0], pose.position[2], dx / l, dz / l);
   }
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
+  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
     grain > 0
-      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift } })
+      ? material(FIN_VERTEX, FIN_FRAGMENT, { tRock: { value: rockC }, tWide: { value: finC }, tWideN: { value: finN }, tWeed: { value: weedC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, uTide: { value: LEVELS.tide }, uGrain: { value: grain }, uLift: { value: lift }, uRock: { value: 95 }, uCap: { value: grain === 5 ? 1 : 0 } })
       : material(ROCK_VERTEX, ROCK_FRAGMENT, {
           tRock: { value: rockC },
           tRockN: { value: rockN },
@@ -211,20 +215,17 @@ export function create(ctx: Context): Piece {
   };
   // A grain below zero is stone that is no blade: it has no sheet of its own.
   const rock = stoneOf(-12);
-  const colonyC = tex('mat/colony.jpg', { anisotropy: 2 });
-  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 2 });
-  for (const t of [colonyC, colonyN]) t.wrapS = THREE.MirroredRepeatWrapping;
   // Staged: on the colony's rock the weed line stands at the foot of the colony's frame, where the picture of it has its weed.
-  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 47.5 } });
+  const roostRock = material(ROCK_VERTEX, COLONY_FRAGMENT, { tRock: { value: boulderC }, tColony: { value: colonyC }, tColonyN: { value: colonyN }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uKelp: { value: 46.3 } });
   const hangs = (proud: number, bare = 0): THREE.ShaderMaterial =>
     material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, tBare: { value: boulderC }, tBareN: { value: boulderN }, uProud: { value: proud }, uBare: { value: bare } });
   // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
   const weed = hangs(0.5);
-  const weedNear = hangs(0.9);
+  const weedNear = hangs(0.6);
   // The gate's stacks: weed in clumps, bare rock between.
-  const weedGate = hangs(0.5, 1);
-  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool } });
+  const weedGate = hangs(0.15, 0);
+  const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 1 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uWeedy: { value: 0 }, uPool: { value: LEVELS.pool }, uGate: { value: gateAt } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -258,7 +259,7 @@ export function create(ctx: Context): Piece {
   };
   for (const rib of RIBS as Rib[]) {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
-    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, rib.name === 'L1' ? 4 : Math.round(Math.min(14, Math.max(4, 0.1 * rib.a)))));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
     add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
@@ -280,7 +281,8 @@ export function create(ctx: Context): Piece {
     const lays = 2 * Math.round(girth / 68);
     const pillar = material(RIG_VERTEX, STACK_FRAGMENT, { tStack: { value: stackC }, tStackN: { value: stackN }, tRock: { value: boulderC }, tWeed: { value: weedC }, uStack: { value: new THREE.Vector4(s.x, s.z, s.foot, girth / lays) } });
     gateStacks.push(add(blades, worldSpace(stackRock(s)), pillar));
-    gateStacks.push(add(skirts, stackWeed(s.x, s.z, (y, angle) => stackRadius(s, y, angle), 220, 0.9), weedGate));
+    // At the gate the weed stands lower, as its picture has it: a black wet wall hung with weed, the pale cap over it.
+    gateStacks.push(add(skirts, stackWeed(s.x, s.z, (y, angle) => stackRadius(s, y, angle), 220, 0.7, 11, 0.2), weedGate));
   });
   const arch = add(blades, worldSpace(archShape(68, 45, 13, 19, 96, 64)), rock);
   arch.position.set(STATIONS.arch[0], 0, STATIONS.arch[1]);
@@ -290,7 +292,8 @@ export function create(ctx: Context): Piece {
   // The colony's rock: ledges above the tide line, weed below.
   const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
-  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2), weed);
+  // The crag draws its own weed line; the skirt hangs under it, so that no hem of it cuts the crag's blocks before the colony's lens.
+  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2, 9), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
 
   // Loose rock: fallen from the blades round their feet, and smaller pieces out on the floor. None on the paths of the cameras.
@@ -328,24 +331,27 @@ export function create(ctx: Context): Piece {
     const rock = { x: at.x, z: at.z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.25, 0.25), kind: scatter.int(KINDS), sink: scatter.range(0.15, 0.4) + 0.2 };
     if (i % 2 === 0) placed.push(rock);
   }
-  for (let i = 0; i < 260; i++) {
+  for (let i = 0; i < 700; i++) {
     const x = scatter.range(-300, 380);
     const z = scatter.range(-1500, 260);
-    const size = 0.18 + 1.1 * Math.pow(scatter.next(), 3);
-    placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) });
+    const size = 0.12 + 1.7 * Math.pow(scatter.next(), 3.5);
+    const rock = { x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.25, 0.6) };
+    // In groups, bare flat between them: a strewing at even spacing reads as one.
+    // The groups are drawn out across the strait, as the tide leaves them.
+    if (fbm3(x / 70, 1.5, z / 17, 2) > 0.58) placed.push(rock);
   }
   // Cobbles and half sunk stones, in drifts: thick where the floor stands proud, thin in the pools.
-  for (let i = 0; i < 1500; i++) {
-    const near = i < 800;
+  for (let i = 0; i < 3000; i++) {
+    const near = i < 1600;
     const x = near ? STATIONS.establish[0] + scatter.range(-170, 330) : scatter.range(-300, 380);
     const z = near ? STATIONS.establish[1] - 420 * Math.pow(scatter.next(), 1.6) + 30 : scatter.range(-1500, 200);
     const size = 0.05 + 0.3 * Math.pow(scatter.next(), 4);
-    const drift = fbm3(x / 23, 0.5, z / 23, 2);
+    const drift = fbm3(x / 48, 0.5, z / 12, 2);
     const yaw = scatter.range(0, 6.283);
     const tilt = scatter.range(-0.3, 0.3);
     const kind = scatter.int(KINDS);
     const sink = scatter.range(0.2, 0.55);
-    if (drift > 0.42 + 0.2 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
+    if (drift > 0.56 + 0.1 * scatter.next()) placed.push({ x, z, size, yaw, tilt, kind, sink });
   }
   const ground0 = ctx.rig.land.height;
   // Stones of a fist's to a head's size close under the lens of each key on the floor: thick on the bars, a few in the films of water.
@@ -358,14 +364,14 @@ export function create(ctx: Context): Piece {
       const a = yaw + scatter.range(-half, half);
       const x = pose.position[0] + Math.sin(a) * r;
       const z = pose.position[2] - Math.cos(a) * r;
-      const size = 0.02 + 0.045 * scatter.next() + 0.22 * Math.pow(scatter.next(), 9);
+      const size = 0.02 + 0.045 * scatter.next() + 0.34 * Math.pow(scatter.next(), 7);
       const yaw2 = scatter.range(0, 6.283);
       const tilt = scatter.range(-0.3, 0.3);
       const kind = scatter.int(KINDS);
       const sink = scatter.range(0.4, 0.7);
-      const drift = noise3(x / 4.1, 0.5, z / 4.1) * 0.6 + noise3(x / 1.3, 2.5, z / 1.3) * 0.4;
+      const drift = noise3(x / 9, 0.5, z / 2.6) * 0.65 + noise3(x / 1.3, 2.5, z / 1.3) * 0.35;
       // Thick on the bars that stand out of the water, a few in the sheets.
-      if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.4 + 0.35 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
+      if (drift + 0.9 * Math.min(0.3, Math.max(0, bed(x, z) - LEVELS.pool - 0.05)) > 0.5 + 0.3 * scatter.next()) placed.push({ x, z, size, yaw: yaw2, tilt, kind, sink });
     }
   };
   strew(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 2600, 1.2, 40, 0.62);
@@ -382,6 +388,27 @@ export function create(ctx: Context): Piece {
       const rock = { x: at.x, z: at.z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.4, 0.4), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) };
       if (Math.hypot(at.x - wide[0], at.z - wide[2]) > 16 && Math.hypot(at.x - hung.x, at.z - hung.z) > 18) placed.push(rock);
     }
+  }
+  // Weed-grown rock close under the gate's lens, left and right of its way: dark, out of focus, the flat between them clear.
+  {
+    const pose = resolve(shots['ribs-06'] as (typeof shots)[string], keyPart(shotById('ribs-06')), 0);
+    const yaw = yawOf(pose.aim, pose.position);
+    for (let i = 0; i < 44; i++) {
+      const r = 2.6 + 30 * Math.pow(scatter.next(), 1.7);
+      const side = i % 2 === 0 ? -1 : 1;
+      const a = yaw + side * scatter.range(0.2, 0.62) * (r < 8 ? 1 : 0.7);
+      const x = pose.position[0] + Math.sin(a) * r;
+      const z = pose.position[2] - Math.cos(a) * r;
+      const size = (0.45 + 1.1 * Math.pow(scatter.next(), 2)) * (0.6 + r / 30);
+      if (!nearTrack(x, z, 1.6 + size)) placed.push({ x, z, size, yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.15, 0.15), kind: scatter.int(KINDS), sink: scatter.range(0.45, 0.66) });
+    }
+    // And the low heaps right under the lens at its key, clear of its way: (metres ahead, metres to the right, size).
+    const ahead0: [number, number, number][] = [[4.4, 2.3, 1.3], [5.8, 3.6, 1.7], [3.8, 0.7, 0.45], [9.5, -4.4, 1.5], [8.2, -1.2, 0.7], [8, 4.6, 1.2], [11, 1.5, 0.9], [7, 1.2, 0.5]];
+    ahead0.forEach(([f, rt, size], i) => {
+      const x = pose.position[0] + Math.sin(yaw) * f + Math.cos(yaw) * rt;
+      const z = pose.position[2] - Math.cos(yaw) * f + Math.sin(yaw) * rt;
+      placed.push({ x, z, size, yaw: 1.3 + i * 2.1, tilt: 0.1 * Math.sin(i * 1.7), kind: i % KINDS, sink: 0.36 + 0.05 * (i % 3) });
+    });
   }
   // Heaps of cast weed lying in the standing water before the wide lens: low, dark, half drowned.
   {
@@ -422,7 +449,7 @@ export function create(ctx: Context): Piece {
     for (let k = 0; k < 9; k++) {
       const a = scatter.range(0, 6.283);
       const r = size * scatter.range(0.75, 1.5);
-      kept.push({ x: x + Math.cos(a) * r, z: z + Math.sin(a) * r, size: size * scatter.range(0.22, 0.5), yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) });
+      kept.push({ x: x + Math.cos(a) * r, z: z + Math.sin(a) * r, size: Math.min(0.9, size * scatter.range(0.22, 0.5)), yaw: scatter.range(0, 6.283), tilt: scatter.range(-0.3, 0.3), kind: scatter.int(KINDS), sink: scatter.range(0.3, 0.5) });
     }
   });
   const squat = [0.5, 0.58, 0.38, 0.45];

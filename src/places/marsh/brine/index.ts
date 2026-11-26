@@ -150,7 +150,7 @@ export function create(ctx: Context): Piece {
     vertexShader: CROWN_VERTEX, fragmentShader: CROWN_FRAGMENT, uniforms, side: THREE.DoubleSide, toneMapped: false, transparent: true, depthWrite: false,
     blending: THREE.CustomBlending, blendSrc: THREE.OneFactor, blendDst: THREE.OneMinusSrcAlphaFactor,
   });
-  const tube = new THREE.CylinderGeometry(1, 1, 1, 72, 10, true).translate(0, 0.5, 0);
+  const tube = new THREE.CylinderGeometry(1, 1, 1, 192, 14, true).translate(0, 0.5, 0);
   const crownLife = new THREE.InstancedBufferAttribute(new Float32Array(domes.length * 4), 4);
   tube.setAttribute('aLife', crownLife);
   const crownMesh = new THREE.InstancedMesh(tube, crownMaterial, domes.length);
@@ -185,10 +185,10 @@ export function create(ctx: Context): Piece {
       domeMesh.setMatrixAt(i, m);
       domeLife.setXYZW(i, full, d.seed, d.size, age >= 0 && age < TEAR ? Math.max(tear, 0.04) : 0);
 
-      // The crown and the drops leave when the skin is half open.
-      const flung = age >= 0 ? age - TEAR * 0.5 : -1;
-      // The crown stands for a third of a second and is gone.
-      const crowned = flung >= 0 && flung < 0.59 * Math.sqrt(d.size / 0.4);
+      // The crown and the drops leave as the skin opens: the tear and the throw are one event.
+      const flung = age >= 0 ? age - 0.03 : -1;
+      // The crown stands for a quarter of a second and is gone.
+      const crowned = flung >= 0 && flung < 0.256;
       m.makeScale(1, 1, 1).setPosition(d.x, 0, d.z);
       crownMesh.setMatrixAt(i, m);
       crownLife.setXYZW(i, crowned ? flung : 0, d.seed, d.size, 0);
@@ -198,16 +198,18 @@ export function create(ctx: Context): Piece {
         const out = (thrown[drop * 5 + 1] as number) * Math.sqrt(d.size / 0.4);
         const rise = (thrown[drop * 5 + 2] as number) * Math.sqrt(d.size / 0.4);
         const size = (thrown[drop * 5 + 3] as number) * (0.6 + d.size);
-        const y = flung < 0 ? -1 : 0.25 * d.size + rise * flung - 4.905 * flung * flung;
-        if (flung < 0 || flung > DROP_LIFE || y < -size) {
+        // (They do not all leave at once: the sheet lets them go over a tenth of a second, so no arc of them hangs in the air.)
+        const fl = flung - 0.13 * (thrown[drop * 5 + 4] as number);
+        const y = fl < 0 ? -1 : 0.25 * d.size + rise * fl - 4.905 * fl * fl;
+        if (fl < 0 || fl > DROP_LIFE || y < -size) {
           m.makeScale(0, 0, 0);
           dropMesh.setMatrixAt(drop, m);
           continue;
         }
-        const reach = d.size * 0.8 + out * flung;
+        const reach = d.size * 0.8 + out * fl;
         pos.set(d.x + Math.cos(a) * reach, y, d.z + Math.sin(a) * reach);
         // A drop in flight is drawn out along its way and trails a thinner tail.
-        dir.set(Math.cos(a) * out, rise - 9.81 * flung, Math.sin(a) * out);
+        dir.set(Math.cos(a) * out, rise - 9.81 * fl, Math.sin(a) * out);
         const speed = dir.length();
         q.setFromUnitVectors(up, dir.divideScalar(speed || 1));
         scale.set(size, size * (1 + 0.22 * speed), size);
@@ -224,7 +226,7 @@ export function create(ctx: Context): Piece {
           const out = (thrown[(first + k * 5) * 5 + 1] as number) * Math.sqrt(d.size / 0.4);
           const rise = (thrown[(first + k * 5) * 5 + 2] as number) * Math.sqrt(d.size / 0.4);
           const lands = (rise + Math.sqrt(rise * rise + 4.905 * d.size)) / 9.81;
-          const since = flung - lands;
+          const since = flung - 0.13 * (thrown[(first + k * 5) * 5 + 4] as number) - lands;
           if (since <= 0 || since > 1.6) continue;
           const reach = d.size * 0.8 + out * lands;
           (rings[ring++] as THREE.Vector4).set(d.x + Math.cos(a) * reach, d.z + Math.sin(a) * reach, 0.04 + 0.55 * since, 0.5 * Math.min(1, since * 10) * Math.pow(1 - since / 1.6, 1.5));

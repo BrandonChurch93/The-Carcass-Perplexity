@@ -56,8 +56,8 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
     from(KEYS.shore, H - 1.5, 27, H + 92, 1, 'down', sips(6, SHORE_KEY, 0.3)),
     from(KEYS.shore, H + 6.5, 21, H - 82, 1.04, 'down', sips(7, SHORE_KEY, 0.12)),
     // The two of the last shot, on the brow of the bluff below the camera with their backs to it, cut by the foot of the frame.
-    { x: centre[0] - 1.22, z: centre[2] - 13.5, level: centre[1] - 2.99, facing: 0, size: 0.7, down: (t) => -0.2 + 0.22 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'quarter', flip: 1, close: false },
-    { x: centre[0] + 0.72, z: centre[2] - 16.5, level: centre[1] - 3.33, facing: 0, size: 0.75, down: (t) => -0.1 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: -1, close: false },
+    { x: centre[0] - 1.22, z: centre[2] - 13.5, level: centre[1] - 3.15, facing: 0, size: 0.7, down: (t) => -0.2 + 0.22 * (1 - smooth(riseAt, riseAt + 0.9, t)), sheet: 'quarter', flip: 1, close: false },
+    { x: centre[0] + 0.72, z: centre[2] - 16.5, level: centre[1] - 3.47, facing: 0, size: 0.75, down: (t) => -0.1 + 0.3 * (1 - smooth(riseAt + 0.25, riseAt + 1.2, t)), sheet: 'back', flip: -1, close: false },
     // The ones of the mats shot, restaged: out on the shelf beyond the mats, small, side on.
     from(KEYS.mats, -13, 31, 80, 1, 'down', sips(5, MATS_KEY, 0.45)),
     from(KEYS.mats, -21, 44, 262, 1, 'up', up(1.4)),
@@ -69,12 +69,12 @@ export function herd(rng: Rng, riseAt: number): Drinker[] {
   let out = -10;
   for (let i = 0; i < 26; i++) {
     if (i % 4 === 0) {
-      band = rng.range(186, 208);
-      out = i % 8 === 0 ? rng.range(6, 30) : rng.range(-48, -4);
+      band = rng.range(187, 199);
+      out = i % 8 === 0 ? rng.range(3, 12) : rng.range(-20, -1.5);
     }
     const dry = out > 0;
-    const bearing = band + rng.range(-1.6, 1.6);
-    const r = shoreAt(bearing) + out + rng.range(-7, 7);
+    const bearing = band + rng.range(-1.3, 1.3);
+    const r = shoreAt(bearing) + out + rng.range(-3, 3);
     const [x, z] = at(bearing, r);
     const period = rng.range(9, 17);
     const phase = rng.next();

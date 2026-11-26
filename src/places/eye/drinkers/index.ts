@@ -52,6 +52,7 @@ varying vec3 vAxis;
 varying vec3 vFace;
 varying float vFeet;
 varying float vOwn;
+varying float vSize;
 void main() {
   // position.xy runs 0 to 1 over the sheet, y up. aStand: x, ground level, z, bearing it faces (radians). aPose: size, angle of the neck, lean, flip.
   vec2 q = vec2(position.x - uSheet.z, uSheet.x - (1.0 - position.y)) * uMetres;
@@ -64,7 +65,7 @@ void main() {
     // Seen from behind, a neck that leans out over the water is seen short.
     float up = max(d.y, 0.0);
     q.y = pivot.y + min(d.y, 0.0) + up * (1.0 - aPose.y);
-    q.x += aPose.z * 14.0 * up * up;
+    q.x += aPose.z * 4.0 * up * up;
   } else {
     float a = aPose.y * w;
     q = pivot + vec2(d.x * cos(a) - d.y * sin(a), d.x * sin(a) + d.y * cos(a));
@@ -95,6 +96,7 @@ void main() {
   vec3 face = cross(axis, vec3(0.0, 1.0, 0.0));
   vFace = dot(face, cameraPosition - world) < 0.0 ? -face : face;
   vFeet = aStand.y;
+  vSize = max(aPose.x, 0.01);
   vOwn = fract(sin(dot(aStand.xz, vec2(12.9898, 78.233))) * 43758.5453);
   gl_Position = projectionMatrix * viewMatrix * vec4(world, 1.0);
 }`;
@@ -122,6 +124,7 @@ varying vec3 vAxis;
 varying vec3 vFace;
 varying float vFeet;
 varying float vOwn;
+varying float vSize;
 ${CUT}
 ${NOISE_GLSL}
 ${RIG_GLSL}
@@ -147,11 +150,20 @@ void main() {
   // A back seen close from behind is a short coat lying smooth over the spine and the hips: its folds are faint.
   float creased = uSheet.y == 0.0 ? 0.14 : 0.3;
   // The picture's own shading of the ribs is not the hide's colour: half of it is taken out, and each animal has a coat of its own tone, with dust and marks in it.
-  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, 0.55);
+  skin = mix(skin, texture2D(tSkin, vUv, 4.5).rgb, uSheet.y == 0.0 ? 0.2 : 0.55);
   float coat = 0.6 * vnoise(vUv * vec2(9.0, 6.0) + vOwn * 40.0) + 0.4 * vnoise(vUv * vec2(70.0, 34.0) + vOwn * 17.0);
 
   // What the picture holds of its own light, the dark of a hollow or a mark on the coat, is not the hide's: seen from behind the coat is one pale tan.
-  if (uSheet.y == 0.0) skin = mix(skin, vec3(0.5, 0.36, 0.26) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.8);
+  if (uSheet.y == 0.0) {
+    skin = mix(skin, vec3(0.62, 0.53, 0.42) * (0.8 + 0.4 * dot(skin, vec3(0.3, 0.5, 0.2)) / 0.38), 0.25);
+    // Dust lies in the coat.
+    skin *= 0.86 + 0.28 * vnoise(vUv * vec2(520.0, 800.0));
+    // A short pale coat, mottled, lying in whorls; dark along the spine, whose bumps stand under it.
+    float mottle = 0.5 * vnoise(vUv * vec2(26.0, 38.0) + vOwn * 30.0) + 0.3 * vnoise(vUv * vec2(90.0, 130.0)) + 0.2 * vnoise(vUv * vec2(330.0, 520.0));
+    skin *= 0.84 + 0.32 * mottle;
+    float spine = smoothstep(0.022, 0.004, abs(vUv.x - uSheet.z - 0.01 * sin(vUv.y * 9.0))) * smoothstep(0.0, 0.3, vUv.y);
+    skin *= 1.0 - 0.3 * spine * (0.55 + 0.45 * sin(vUv.y * 260.0));
+  }
   skin *= mix(vec3(0.78, 0.76, 0.74), vec3(1.12, 1.08, 1.02), vOwn) * (0.84 + 0.32 * coat);
   float fold = clamp(1.0 + 5.0 * creased * (texture2D(tRelief, vUv, 0.0).r - texture2D(tRelief, vUv, 2.5).r), 0.45, 1.35);
   vec3 n = normalize(face * 0.42 - axis * (hx + 2.2 * creased * fx) - vec3(0.0, 1.0, 0.0) * (hy + 2.2 * creased * fy));
@@ -162,13 +174,25 @@ void main() {
   vec3 albedo = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), mix(0.25, 0.62, step(0.1, uShade.w))) * vec3(1.3, 1.34, 1.38), 0.95) * mix(1.0, 0.5, wet);
   float occ = (0.5 + 0.5 * smoothstep(0.15, 0.75, soft)) * fold;
   // Far off in the shade of the evening the herd is pale: tan going to grey.
-  if (uShade.w > 0.1) albedo = mix(albedo, vec3(0.62, 0.59, 0.54), 0.6);
+  if (uShade.w > 0.1) {
+    albedo = mix(albedo, vec3(0.8, 0.7, 0.57), 0.5);
+    // The sky lights its back and leaves its belly in its own shade: a small solid thing, told by that alone.
+    albedo *= mix(0.5, 1.25, smoothstep(0.5, 0.95, above / (2.4 * vSize)));
+  }
+  // Its legs are dark with the mud and the water of the shore, to the knee.
+  albedo *= mix(0.4, 1.0, smoothstep(0.25, 0.62, above / (1.2 * vSize) + 0.12 * vnoise(vUv * 30.0 + vOwn * 9.0)));
   vec3 c = rigShade(vec3(vWorld.x, vWorld.y + 3.2, vWorld.z), n, v, albedo, mix(0.9, 0.55, wet), occ * mix(0.7, 1.0, smoothstep(0.0, 1.2, above)));
   // The pale gravel and the water under it throw the sky back up at it.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 * skyOpen(vWorld) / 3.14159);
   // The low sun in the short hair along every outline that is turned to it.
   float rim = smoothstep(0.5, 0.12, soft) * max(dot(n, uSunDir) + 0.35, 0.0);
   c += skin * uSunColour * (0.11 * rim * sunAt(vWorld));
+  if (uSheet.y == 0.0) {
+    // Seen from behind it stands against the lit wall it watches: that wall's warm light lies along its outline, on the side the sun went down.
+    vec3 wallLight = normalize(vec3(-v.x, 0.3, -v.z) - axis * 0.7);
+    float edge = smoothstep(0.62, 0.2, soft) * max(dot(n, wallLight) + 0.45, 0.0);
+    c += skin * vec3(1.0, 0.66, 0.36) * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.5 * edge);
+  }
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -276,18 +300,25 @@ export function create(ctx: Context): Piece {
           const u = (((t / every + i * 0.37) % 1) + 1) % 1;
           const pace = 0.17 * smooth(0.0, 0.1, u) * (1 - smooth(0.45, 0.6, u));
           g.pose.setXYZW(k, size, neck, lean, d.flip * (1 + pace));
-          const long = 2.6;
+          const long = wide ? 1.3 : 2.6;
           const off = size * 1.5 * (long - 1) * 0.5;
-          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * 1.2, d.level === undefined ? 0.7 : 0, long, sun.shadowYaw);
+          ctx.rig.setDisc(shade, i, d.x - sun.direction.x * off, d.z - sun.direction.z * off, size * (wide ? 1.7 : 1.2), d.level === undefined ? (wide ? 1 : 0.7) : 0, long, sun.shadowYaw);
           // Rings where its mouth is in the water and round its legs, for the ones the shots are about.
           if (drinks && size > 0) {
             const reach = g.sheet.reach * size * d.flip;
             const mx = d.x + Math.sin(d.facing * DEG) * reach;
             const mz = d.z - Math.cos(d.facing * DEG) * reach;
             const wet = Math.hypot(mx, mz) < shoreOf(mx, mz) - 0.2;
-            if (wet && (d.close || down > 0.9)) ring(mx, mz, Math.min(1, Math.max(0, (down - 0.82) / 0.12)));
+            if (wet && (d.close || down > 0.9)) ring(mx, mz, 1.3 * Math.min(1, Math.max(0, (down - 0.82) / 0.12)));
           }
-          if (d.close && ground < -0.03) ring(d.x, d.z, 0.55 + 0.2 * Math.sin(t * 0.83 + i * 1.7));
+          if (d.close && ground < -0.03) {
+            // Its fore legs and its hind legs each stand in rings of their own; they come stronger as it shifts its weight.
+            const half = 0.52 * size * d.flip;
+            const fx = Math.sin(d.facing * DEG) * half;
+            const fz = -Math.cos(d.facing * DEG) * half;
+            ring(d.x + fx, d.z + fz, 0.6 + 0.25 * Math.sin(t * 0.83 + i * 1.7) + 2 * pace);
+            ring(d.x - fx, d.z - fz, 0.5 + 0.25 * Math.sin(t * 0.71 + i * 2.9) + 2 * pace);
+          }
         });
         g.stand.needsUpdate = true;
         g.pose.needsUpdate = true;

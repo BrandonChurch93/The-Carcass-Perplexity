@@ -107,6 +107,8 @@ export function create(ctx: Context): Piece {
   const shagColour = ctx.assets.texture('mat/shag.jpg', { kind: 'colour', anisotropy: 4 });
   const shagData = ctx.assets.texture('mat/shag-nh.png', { kind: 'data', anisotropy: 4 });
   const lockPicture = ctx.assets.texture('mat/lock.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
+  const lockFine = ctx.assets.texture('mat/lock-b.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
+  const lockFineCut = ctx.assets.texture('mat/lock-b-a.png', { kind: 'data', repeat: false, anisotropy: 4 });
   const burnPicture = ctx.assets.texture('mat/burn.jpg', { kind: 'colour', repeat: false, anisotropy: 4 });
   const door = new THREE.Vector4(canalFar[0], canalFar[1], canalFar[2], 1);
   const open = new THREE.Vector4(0, 0, 0, 0);
@@ -144,6 +146,9 @@ export function create(ctx: Context): Piece {
       tShag: { value: shagColour },
       tShagData: { value: shagData },
       tLock: { value: lockPicture },
+      tLockB: { value: lockFine },
+      tLockBA: { value: lockFineCut },
+      uLockKind: { value: role.inside ? 1 : 0 },
       tBurn: { value: burnPicture },
       uBurnU: { value: new THREE.Vector3(j.fwd[0], j.fwd[1], j.fwd[2]) },
       uBurnV: { value: new THREE.Vector3(j.up[0], j.up[1], j.up[2]) },
@@ -165,7 +170,7 @@ export function create(ctx: Context): Piece {
     // The wind in the animal's own frame is set when it is placed; the coat is combed back along the body and a little down the gale.
     // The dead one lies on its right side: the coat of that side is under it, in the snow, and is not grown.
     const under = role.act === 'dead' ? (_p: [number, number, number], n: [number, number, number]): boolean => n[0] * (j.right[0] as number) + n[1] * (j.right[1] as number) + n[2] * (j.right[2] as number) > 0.45 : undefined;
-    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, hang: role.inside && role.act !== 'stand' ? 0.9 : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: [j.fwd[0] as number, j.fwd[1] as number, j.fwd[2] as number], burnNarrow: BURN_NARROW });
+    const c = coat(body, rng, { clumps: role.clumps, locks: 4, long: role.long, burn: role.burn, hang: role.inside ? (role.act === 'stand' ? 0.55 : 0.9) : 0, wind: role.act === 'dead' ? [-0.25, 0, 0.3] : [-0.35, 0, 0], skip: under, burnAxis: [j.fwd[0] as number, j.fwd[1] as number, j.fwd[2] as number], burnNarrow: BURN_NARROW });
     const locks = new THREE.InstancedBufferGeometry();
     locks.index = strip.index;
     locks.setAttribute('position', strip.getAttribute('position'));
@@ -213,7 +218,7 @@ export function create(ctx: Context): Piece {
   };
 
   // In the canal the coats are the colour of the wall they lie against: dimmer, a little warmer.
-  const dim = (c: [number, number, number], k: number): [number, number, number] => [c[0] * 0.8 * k, c[1] * 0.75 * k, c[2] * 0.7 * k];
+  const dim = (c: [number, number, number], k: number, warm = 0): [number, number, number] => [c[0] * (0.72 + 0.09 * warm) * k, c[1] * 0.75 * k, c[2] * (0.82 - 0.09 * warm) * k];
   // The herd in the canal, along its left wall, out of the wind: where, which way it faces, and what it does.
   const along = Math.atan2(-frameAt(MOUTH_S + CANAL_KEY).tz, frameAt(MOUTH_S + CANAL_KEY).tx);
   const HUDDLE: { d: number; l: number; yaw: number; act: Act; pose: Pose; size: number }[] = [
@@ -227,7 +232,7 @@ export function create(ctx: Context): Piece {
   ];
 
 
-  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.6 : 1, tone: dim(cream(), h.act === 'stand' ? 1.2 : 0.8), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
+  const huddle = HUDDLE.map((h, i) => make({ act: h.act, pose: h.pose, size: h.size, cell: 0.018, clumps: 520, long: h.act === 'stand' ? 0.95 : 1, tone: dim(cream(), h.act === 'stand' ? 1.75 : 0.8, h.act === 'stand' ? 0 : 1), phase: i * 1.9 + 0.4, inside: true, burn: NONE, tendrils: 34 }));
   // The walkers on the ridge trail are off: far in the wide lens one of them stood for a person, and the approved wide has the trail alone.
   const WALKERS = false;
   const CROSSING = WALKERS ? 4 : 0;
@@ -255,15 +260,17 @@ export function create(ctx: Context): Piece {
 
   /** What a living animal does where it rests: it breathes, its neck and head swing slowly, and a standing one shifts its weight from side
    * to side over planted feet. `look` turns the head (radians), `shiver` shakes the coat. */
-  const idle = (a: Animal, t: number, look: number, shiver: number): void => {
+  const idle = (a: Animal, t: number, look: number, shiver: number, start = 0): void => {
     const ph = a.role.phase;
     const j = a.joints;
     still(a);
     const breath = Math.sin(t * 2.5 + ph) + 0.25 * Math.sin(t * 5.0 + ph * 2);
     const standing = a.role.act === 'stand';
-    const sway = standing ? 0.085 * Math.sin(t * 1.05 + ph * 3) + 0.025 * Math.sin(t * 2.3 + ph) : 0.012 * Math.sin(t * 0.8 + ph * 3);
-    const fore = standing ? 0.05 * Math.sin(t * 0.7 + ph * 2) : 0;
-    const settle = 0.012 * Math.sin(t * 0.9 + ph * 2);
+    // A standing one carries its weight from one side to the other and back, slowly, and never evenly.
+    const sway = standing ? 0.13 * Math.sin(t * 0.9 + ph * 3 + 0.8 * Math.sin(t * 0.37 + ph)) + 0.035 * Math.sin(t * 2.3 + ph) : 0.02 * Math.sin(t * 0.8 + ph * 3);
+    const fore = standing ? 0.08 * Math.sin(t * 0.6 + ph * 2) - 0.06 * start : 0;
+    // At a flash it drops: a flinch of the whole body, and it comes up again slowly.
+    const settle = 0.012 * Math.sin(t * 0.9 + ph * 2) - (standing ? 0.05 : 0.025) * start;
     (a.bones[0] as THREE.Matrix4).makeTranslation(fore, settle - 0.004 * breath, sway);
     about(a.bones[1] as THREE.Matrix4, j.chest, sway * 0.5, 0, 0.012 * breath, [fore, settle, sway], v2.set(1 + 0.015 * breath, 1 + 0.05 * breath, 1 + 0.07 * breath));
     if (standing)
@@ -273,12 +280,13 @@ export function create(ctx: Context): Piece {
       }
     // Each lifts its head in its own time, holds it, and lets it down again; a standing one drops it to the ice between looks.
     const lift = Math.max(0, Math.sin(t * 0.7 + ph * 1.7)) ** 3;
-    const ny = 0.16 * Math.sin(t * 0.83 + ph * 2) + 0.07 * Math.sin(t * 1.9 + ph) + look;
-    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03 + (standing ? -0.3 * Math.max(0, Math.sin(t * 0.45 + ph)) ** 2 : 0.3 * lift);
+    const ny = (standing ? 0.3 : 0.2) * Math.sin(t * 0.83 + ph * 2 + 0.7 * Math.sin(t * 0.31 + ph * 4)) + 0.07 * Math.sin(t * 1.9 + ph) + look;
+    const nz = 0.09 * Math.sin(t * 1.17 + ph) - 0.03 + (standing ? -0.3 * Math.max(0, Math.sin(t * 0.45 + ph)) ** 2 + 0.3 * start : 0.3 * lift + 0.4 * start);
     about(a.bones[2] as THREE.Matrix4, j.chest, 0.06 * Math.sin(t * 0.6 + ph), ny, nz, [fore, settle, sway]);
     about(m3, j.head, 0.1 * Math.sin(t * 1.3 + ph * 3), 0.12 * Math.sin(t * 1.1 + ph * 5) + 0.6 * look, 0.1 * Math.sin(t * 0.77 + ph * 4));
     (a.bones[3] as THREE.Matrix4).copy(a.bones[2] as THREE.Matrix4).multiply(m3);
-    a.coat.set(1, a.role.inside ? (standing ? 0.45 : 0.12) : 0.5, shiver, a.role.inside ? -0.12 : 0.1);
+    // The gale reaches the one at the mouth in gusts: its coat is blown and falls back.
+    a.coat.set(1, a.role.inside ? (standing ? 0.5 + 0.35 * Math.sin(t * 1.3 + 1.1 * Math.sin(t * 0.53)) : 0.14 + 0.06 * Math.sin(t * 0.9 + ph)) : 0.5, shiver, a.role.inside ? (standing ? 0.12 : -0.12) : 0.1);
     a.writhe.set(a.role.act === 'lie' ? 0.6 : 1, 0, 0, 0);
   };
 
@@ -364,9 +372,9 @@ export function create(ctx: Context): Piece {
           // The standing one turns its head to the lens as the lens comes up, and back to the mouth before it goes.
           const u = seconds - CANAL_KEY_AT;
           const turn = i === 0 ? 0.55 * smooth(-4.5, -3.2, u) * (1 - smooth(-1.6, -0.5, u)) : 0;
-          idle(a, seconds, turn + (0.3 + 0.07 * i) * start * (i % 2 ? 1 : -1), 0.012 * start);
+          idle(a, seconds, turn + (0.45 + 0.07 * i) * start * (i % 2 ? 1 : -1), 0.03 * start, start);
         }
-        ctx.rig.setDisc(discs, i, at[0], at[2], (h.act === 'stand' ? 1.1 : 1.35) * a.role.size, 0.9);
+        ctx.rig.setDisc(discs, i, at[0], at[2], (h.act === 'stand' ? 1.25 : 1.6) * a.role.size, 1);
         const n = BREATHERS.indexOf(i);
         const b = breaths[n];
         if (!b) return;

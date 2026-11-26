@@ -285,6 +285,29 @@ export function createField(): Field {
       if (want > (near.d[k] as number)) near.d[k] = Math.min(want, 0.9);
     }
   }
+  // The mud the wallowers have trodden: a shelf that comes in from the left of the fourth lens under the largest one's muzzle, and a wider
+  // bank under the young one.
+  const shelf = (a: [number, number], b: [number, number], r: number): void => {
+    for (let j = 0; j < near.n; j++) {
+      const z = -near.half + (j + 0.5) * near.cell;
+      if (z < Math.min(a[1], b[1]) - r - 2 || z > Math.max(a[1], b[1]) + r + 2) continue;
+      for (let i = 0; i < near.n; i++) {
+        const x = -near.half + (i + 0.5) * near.cell;
+        if (x < Math.min(a[0], b[0]) - r - 2 || x > Math.max(a[0], b[0]) + r + 2) continue;
+        const k = j * near.n + i;
+        const vx = b[0] - a[0];
+        const vz = b[1] - a[1];
+        const t = clamp(((x - a[0]) * vx + (z - a[1]) * vz) / (vx * vx + vz * vz || 1));
+        const want = r - Math.hypot(x - a[0] - vx * t, z - a[1] - vz * t) + 0.5 * (fbm(x / 1.3 + 5, z / 1.3, 3) - 0.5) + 0.25 * (vnoise(x / 0.45 + 2, z / 0.45) - 0.5);
+        if (want > (near.d[k] as number)) near.d[k] = Math.min(want, 0.9);
+      }
+    }
+  };
+  // (Under the largest one from its tail to past its muzzle; in from the left of the fourth lens; and back from the young one's bank. The
+  // one that lies in the brine keeps open liquid a stride round rel(32.3, 3.4).)
+  shelf(rel(34.5, -2.5), rel(34.5, 4.4), 1.35);
+  shelf(rel(30.4, 0.6), rel(33.2, 0.1), 1.4);
+  shelf(rel(33.5, 5.4), rel(35.2, 7.6), 1.3);
   ragged(far, false);
 
   const shore = (x: number, z: number): number => {

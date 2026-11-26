@@ -4,7 +4,10 @@
 import * as THREE from 'three';
 import { hash2 } from '../../../core/rng';
 import { NOISE_GLSL, RIG_GLSL, RIG_UNIFORMS_GLSL } from '../shared/glsl';
-import { WALL_A, WALL_B } from './crest';
+import { WALL_A } from './crest';
+
+/** The sheet that stands before the last shot's lens: mat/borewall-c.jpg, a dark standing face under a pitching lip. Its crest is level in the picture: the heads along it are given here. */
+const WALL_B = { foot: 0.185, crest: 0.8, aspect: 2048 / 768, profile: Array.from({ length: WALL_A.profile.length }, (_, i) => 0.95 + 0.028 * Math.sin(i * 0.19) + 0.014 * Math.sin(i * 0.53 + 1)) };
 import { BORE_SPEED, boreArrives, boreFront } from './tide';
 
 const rand = (a: number, b: number): number => hash2(a, b) / 4294967296;
@@ -24,6 +27,10 @@ const SLIDE_A = 0.37;
 const UNDER = 0.95;
 /** The curtain of thrown water over the crest: its height as a part of the wall's. */
 const CURTAIN = 0.36;
+/** The sea ahead of the wall lifts to meet it: the height of that swell at the foot as a part of the lip's, and the metres over which it dies out ahead. */
+const SWELL = 0.12;
+const SWELL_RUN = 15;
+const swellAt = (ahead: number, T: number): number => SWELL * T * Math.max(Math.exp(-Math.max(ahead, 0) / SWELL_RUN) - 0.05, 0);
 const SPAN_A = (SHEET / WALL_A.aspect) * (WALL_A.crest - WALL_A.foot);
 const SPAN_B = (SHEET / WALL_B.aspect) * (WALL_B.crest - WALL_B.foot);
 
@@ -97,11 +104,12 @@ vec2 boreSection(float a, float T, float c) {
   vec2 tip = vec2(T * (-0.38 + 0.45 * c), T);
   vec2 crest = vec2(-0.6 * T, 0.96 * T);
   vec2 p;
+  float swell = ${f(SWELL)} * T * 0.95;
   if (a < 0.0) {
-    p = vec2(-a, 0.08 + 0.7 * exp(a / 9.0));
+    p = vec2(-a, 0.08 + 0.7 * exp(a / 9.0) + ${f(SWELL)} * T * max(exp(a / ${f(SWELL_RUN)}) - 0.05, 0.0));
   } else if (a < ${f(FACE)}) {
     float q = a / ${f(FACE)};
-    p = bez3(vec2(0.0, 0.78), vec2(-0.5 * T, 0.06 * T), vec2(T * (-0.66 + 0.3 * c), 0.82 * T), tip, q);
+    p = bez3(vec2(0.0, 0.78 + swell), vec2(-0.5 * T, 0.06 * T + swell), vec2(T * (-0.66 + 0.3 * c), 0.82 * T), tip, q);
     // The fallen lip lies on the face as a pile that rolls ahead of the foot.
     float pile = c * sin(3.14159 * clamp(q * 1.5, 0.0, 1.0));
     p.x += 0.34 * T * pile;
@@ -129,7 +137,8 @@ vec4 boreAt(float x, float a) {
   p.y += 0.25 * (1.0 - smoothstep(-8.0, 2.0, a)) * mid;
   float z = uFront + boreLine(x) + p.x;
   float bed = max(texture2D(tLand, (vec2(x, z) - uLandRect.xy) * uLandRect.zw).r, uPoolLevel);
-  return vec4(x, bed + p.y, z, p.y / (T / ${f(UNDER)}));
+  float base = a < 0.0 ? p.y : ${f(SWELL)} * T * 0.95;
+  return vec4(x, bed + p.y, z, (p.y - base) / (T / ${f(UNDER)} - base));
 }`;
 
 const VERTEX = /* glsl */ `
@@ -138,9 +147,11 @@ ${SHAPE_GLSL}
 varying vec3 vWorld;
 varying vec3 vNormalW;
 varying vec3 vRide;
+varying float vLift;
 void main() {
   float x = position.x;
   float a = position.y;
+  vLift = 0.0;
 #ifdef CURTAIN
   // The thrown water over the crest: a sheet that stands on the lip and carries the top of the picture.
   float T = boreHigh(x) * ${f(UNDER)};
@@ -165,6 +176,7 @@ void main() {
   vWorld = at.xyz;
   vNormalW = normalize(cross(aa, ax));
   vRide = vec3(x, a, at.w);
+  vLift = ${f(SWELL)} * boreHigh(x) * ${f(UNDER)} * max(exp(min(a, 0.0) / ${f(SWELL_RUN)}) - 0.05, 0.0);
 #endif
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
@@ -182,6 +194,7 @@ uniform float uFront;
 varying vec3 vWorld;
 varying vec3 vNormalW;
 varying vec3 vRide;
+varying float vLift;
 // The breaking wave as the two sheets show it, at x and at the height t (0 the foot, 1 the crest, more is the thrown water over it).
 // The white water in it works: two readings slide past each other down the face, each fading in as the other fades out.
 vec3 wallAt(float x, float t) {
@@ -215,8 +228,8 @@ void main() {
 #endif
   // The sheets were shot in flat light: here the white stays white and the green water goes down dark.
   pic = pow(pic, vec3(1.3)) * 1.12;
-  // One mass: the lifted water is full of air and never goes down to a dark green hole behind the white.
-  pic = mix(vec3(0.4, 0.45, 0.43), pic, smoothstep(0.0, 0.42, dot(pic, vec3(0.3, 0.5, 0.2))));
+  // A wall of water: its face is dark and green under the lip, and only the far sheet's flat light is lifted a little.
+  pic = mix(vec3(0.16, 0.2, 0.19), pic, smoothstep(0.0, 0.3, dot(pic, vec3(0.3, 0.5, 0.2))));
   float lum = dot(pic, vec3(0.3, 0.5, 0.2));
   vec4 land = landAt(vWorld.xz);
   // The wall stands over the blades' shade: half of it is always in the sun.
@@ -229,7 +242,8 @@ void main() {
   vec3 behind = skyRadiance(-v);
   col = mix(col, behind * 1.05, (1.0 - alpha) * 0.7 + 0.12);
 #ifdef BACK
-  alpha *= smoothstep(0.0, 0.12, a) * 0.85;
+  // Only its white stands over the first: its dark water would be a slab in the air.
+  alpha *= smoothstep(0.0, 0.12, a) * 0.85 * smoothstep(0.3, 0.55, lum);
   col = mix(col, behind, 0.35);
 #endif
   gl_FragColor = vec4(rigOut(col) * alpha, alpha);
@@ -242,7 +256,9 @@ void main() {
   float tongue = texture2D(tFoam, vec2(x, uTime * 2.0) / 53.0).r + 0.6 * texture2D(tFoam, vec2(x, a + uTime * 5.0) / 19.0).r;
   float run = 1.3 - 2.2 * ahead / (0.2 + tongue);
   float apron = smoothstep(0.3, 0.8, run + 0.9 * (churnLum - 0.45));
-  bool bare = a < 0.0 && apron < 0.3;
+  // Ahead of the white the lifted sea is dark water; where it has not yet lifted the flat's own sheet shows.
+  float lifted = smoothstep(0.05, 0.4, vLift - 0.12 * tongue);
+  bool bare = a < 0.0 && apron < 0.3 && lifted <= 0.0;
   float foot = a < 0.0 ? 1.0 : smoothstep(0.1, 0.0, t);
   pic = mix(pic, max(churn, vec3(0.5) * step(a, 0.0) * 0.0) + 0.25 * apron * step(a, 0.0), foot);
   lum = dot(pic, vec3(0.3, 0.5, 0.2));
@@ -255,6 +271,16 @@ void main() {
   float trough = smoothstep(0.02, 0.16, t) * (1.0 - smoothstep(0.3, 0.62, t)) * step(0.0, a);
   vec3 col = rigShade(vWorld, nf, v, pic * 0.8 * (1.0 - 0.22 * trough), mix(0.3, 1.0, foam), 1.0 - 0.3 * trough);
   col += pic * (uSunColour * 0.12 * sun + lightUp * 0.1) / 3.14159;
+  if (a < 0.0) {
+    vec3 nw = normalize(n + vec3(texture2D(tFoam, g / 7.1 + vec2(0.0, uTime * 0.2)).rg + texture2D(tFoam, g.yx / 2.9 - vec2(uTime * 0.3, 0.0)).gr - 1.0, 0.0).xzy * 0.2);
+    vec3 r = reflect(-v, nw);
+    r.y = abs(r.y) + 0.02;
+    float fr = 0.02 + 0.98 * pow(1.0 - clamp(dot(nw, v), 0.0, 1.0), 5.0);
+    // It leans toward the lens and mirrors the wall over it more than the sky.
+    vec3 over = mix(skyRadiance(normalize(r)), vec3(0.2, 0.25, 0.24) * lightUp / 3.14159, 0.6);
+    vec3 water = fr * over + (1.0 - fr) * vec3(0.05, 0.065, 0.06) * (lightUp + uSunColour * 0.3 * sun) / 3.14159;
+    col = mix(water, col, smoothstep(0.3, 0.6, apron));
+  }
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (bare) discard;
 #endif
@@ -585,6 +611,24 @@ export function createBore(
     setTime: (seconds) => {
       cards.begin();
       if (DEBUG_NO_CARDS) { cards.end(); return; }
+      // What stands close to the last lens has a lee: the wall goes round it and its thrown water with it, so none is ever seen before the rock
+      // or cut by it. The lee opens as it runs on. Returns how far a card of that size must stand from the middle of the nearest such thing, less its own distance.
+      const lee = (x: number, z: number, size: number): number => {
+        let deep = 0;
+        for (const s of sites) {
+          if (!s.near) continue;
+          const dz = z - s.z;
+          const clear = s.reach * 1.05 + size * 0.8;
+          if (dz < -clear) continue;
+          const wide = dz < 0 ? Math.sqrt(Math.max(clear * clear - dz * dz, 0)) : clear + 0.3 * dz;
+          deep = Math.max(deep, wide - Math.abs(x - s.x));
+        }
+        return deep;
+      };
+      const thrown = (x: number, y: number, z: number, size: number, alpha: number, seed: number, turn: number, stretch: number, deep: number, mist: number): void => {
+        const hid = lee(x, z, size);
+        if (hid < size) cards.put(x, y, z, size, alpha * (1 - Math.max(0, hid) / size), seed, turn, stretch, deep, mist);
+      };
       const frontNow = boreFront(seconds);
       // Nothing of the thrown water is seen from more than three kilometres.
       if (Math.abs(frontNow - focus[1]) > 3000) {
@@ -606,7 +650,7 @@ export function createBore(
         const z = frontNow + lineAt(x, seconds) + (rolls ? 5 + 34 * rand(i, n + 24) + 3 * a : -H * (0.9 + 3.5 * rand(i, n + 24)) - 6 * a);
         const y = rolls ? 1.5 + 5 * rand(i, n + 25) + 0.6 * a : H * (0.5 + 1.0 * rand(i, n + 25)) + 1.5 * a;
         const fade = Math.min(1, a / 1.2) * Math.min(1, (life - a) / 1.5);
-        cards.put(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 11 + 9 * rand(i, n + 28)) * (1 + 0.05 * a), (rolls ? 0.15 : 0.12) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
+        thrown(x, y, z, (rolls ? 7 + 6 * rand(i, n + 28) : 11 + 9 * rand(i, n + 28)) * (1 + 0.05 * a), (rolls ? 0.05 : 0.1) * fade, rand(i, n + 29), rand(i, n + 30) * 6.28, 0.8, 0.5, 1);
       }
 
       // Water torn off the crest and blown up: it is born on the top of the wall, climbs, and is left behind as the wall runs on.
@@ -626,7 +670,7 @@ export function createBore(
         const z = z0 + BORE_SPEED * a * (1 + 0.2 * a / life);
         const fade = Math.min(1, a / 0.15) * Math.pow(Math.max(0, 1 - a / life), 1.5);
         const size = (2.2 + 3.4 * a) * (0.6 + 0.8 * rand(i, n + 17));
-        cards.put(x, y, z, size, 0.5 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.3 * a / life);
+        thrown(x, y, z, size, 0.5 * fade, rand(i, n + 18), (rand(i, n + 19) - 0.5) * 0.9, 1.3, 0.1 + 0.3 * rand(i, n + 20), 0.3 * a / life);
       }
 
       // The lip: where it pitches, a ragged edge of water is thrown ahead of the face and falls; where it has fallen, white boils up from the pile.
@@ -651,7 +695,7 @@ export function createBore(
         if (y < 0.3) continue;
         const fade = Math.min(1, a / 0.08) * Math.min(1, (life - a) / 0.3) * (low ? 0.4 + 0.6 * c : 1);
         const size = (low ? 1.0 + 1.2 * rand(i, n + 58) : 0.6 + 1.0 * rand(i, n + 58)) * (1 + 0.9 * a);
-        cards.put(x, y, z, size, (low ? 0.5 : 0.8) * fade, rand(i, n + 59), rand(i, n + 60) * 6.28, 1.2, low ? 0.45 : 0.1, 0);
+        thrown(x, y, z, size, (low ? 0.5 : 0.8) * fade, rand(i, n + 59), rand(i, n + 60) * 6.28, 1.2, low ? 0.45 : 0.1, 0);
       }
 
       // The foot: the run-out is flung ahead over the flat, low and fast.
@@ -663,10 +707,11 @@ export function createBore(
         const a = (beat - n) * life;
         const born = seconds - a;
         const z = boreFront(born) + lineAt(x, born) + 1 + 6 * rand(i, n + 74) + (BORE_SPEED + 4 + 9 * rand(i, n + 75)) * a;
-        const y = 0.7 + (3 + 6 * rand(i, n + 76)) * a - 4.9 * a * a;
-        if (y < 0.2) continue;
+        const rise = 0.7 + (3 + 6 * rand(i, n + 76)) * a - 4.9 * a * a;
+        if (rise < 0.2) continue;
+        const y = rise + swellAt(z - frontNow - lineAt(x, seconds), high(x) * UNDER);
         const fade = Math.min(1, a / 0.06) * Math.min(1, (life - a) / 0.3);
-        cards.put(x, y, z, (0.6 + 1.1 * rand(i, n + 77)) * (1 + 1.2 * a), 0.7 * fade, rand(i, n + 78), rand(i, n + 79) * 6.28, 1.3, 0.25, 0);
+        thrown(x, y, z, (0.6 + 1.1 * rand(i, n + 77)) * (1 + 1.2 * a), 0.7 * fade, rand(i, n + 78), rand(i, n + 79) * 6.28, 1.3, 0.25, 0);
       }
 
       // Where the wall strikes a blade or a cliff the water has nowhere to go but up. The surge ahead of the wall strikes first.
@@ -690,7 +735,7 @@ export function createBore(
           const z = s.z - Math.cos(ang) * rr * 0.9 + (10 + 16 * rand(seed, 10)) * a;
           const fade = Math.min(1, a / 0.2) * Math.max(0, 1 - a / 5.2);
           const size = (2.6 + 3.6 * a) * (0.6 + 0.9 * rand(seed, 5));
-          cards.put(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
+          thrown(x, y, z, size, 0.8 * fade, rand(seed, 6), (rand(seed, 7) - 0.5) * 0.6, 1.35, 0.1 + 0.6 * rand(seed, 11), Math.min(0.5, 0.12 * a));
         }
       }
       cards.end();

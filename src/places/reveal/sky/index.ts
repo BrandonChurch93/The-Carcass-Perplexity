@@ -90,9 +90,9 @@ void main() {
   // q: the sheet as the picture lies, x right and y down, 1 at its edge (1,070 km).
   vec2 q = vec2(vUv.x, 1.0 - vUv.y) * 2.0 - 1.0;
   float r = max(length(q), 1e-3);
-  // It turns against the clock, its arms trailing: an eighth of a turn at its rim while the frame is held and a quarter by the eye. The
+  // It turns against the clock, its arms trailing: a fifth of a turn at its rim while the frame is held and near a half by the eye. The
   // photograph stands unwound in the middle of the hold.
-  float turn = (uTime - 22.0) * 0.02 + (uTime + 46.0) * 0.05 / (1.0 + 5.0 * r);
+  float turn = (uTime - 22.0) * 0.045 + (uTime + 46.0) * 0.05 / (1.0 + 5.0 * r);
   float c = cos(turn);
   float s = sin(turn);
   vec2 qt = vec2(c * q.x - s * q.y, s * q.x + c * q.y);
@@ -210,14 +210,16 @@ void main() {
   float across = dot(d, vec2(-uWind.y, uWind.x)) / 300.0;
   // The wind carries the curls: the trail is read through a bend that travels down it, stronger the farther it has gone.
   vec2 flow = texture2D(uCloudTile, vec2(along * 1.3 - uTime * 0.011, across * 0.8 + 0.3)).rg - 0.5;
-  vec2 q = vec2(along + 0.02, across + 0.5 + 0.1 * sin(along * 5.0 + 1.0) * along) + flow * vec2(0.03, 0.16) * smoothstep(0.02, 0.5, along);
-  float seenLight = dot(texture2D(uPicture, clamp(q, 0.0, 1.0)).rgb, vec3(0.3, 0.55, 0.15));
+  vec2 q = vec2(along + 0.02, across * (1.0 - 0.35 * along) + 0.5 + 0.1 * sin(along * 5.0 + 1.0) * along) + flow * vec2(0.04, 0.26) * smoothstep(0.02, 0.5, along);
+  // (Read soft: each trail a thin veil with a denser thread in it, and the three of unlike strength.)
+  float seenLight = 0.25 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 1.0).rgb, vec3(0.3, 0.55, 0.15)) + 1.2 * dot(texture2D(uPicture, clamp(q, 0.0, 1.0), 4.5).rgb, vec3(0.3, 0.55, 0.15));
+  seenLight *= 0.55 + 0.9 * texture2D(uCloudTile, vec2(along * 0.4 + 0.1, across * 1.7 + 0.6), 3.0).b;
   // Puffs leave the throat one after another and thin as they go.
   float puff = 0.78 + 0.22 * sin(along * 26.0 - uTime * 0.5 + 3.0 * flow.x);
   float inside = smoothstep(0.0, 0.02, q.x) * (1.0 - smoothstep(0.55, 0.98, q.x)) * smoothstep(0.0, 0.08, q.y) * (1.0 - smoothstep(0.92, 1.0, q.y));
-  float thick = smoothstep(0.08, 0.7, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
+  float thick = smoothstep(0.03, 0.95, seenLight) * inside * puff * (1.0 - 0.5 * smoothstep(0.2, 0.9, along));
   vec3 colour = cloudLight(vWorld.xz, 0.7, 0.7, 0.3);
-  float alpha = clamp(thick * 0.9, 0.0, 1.0);
+  float alpha = clamp(thick * 0.5, 0.0, 1.0);
   gl_FragColor = vec4(colour * alpha * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
