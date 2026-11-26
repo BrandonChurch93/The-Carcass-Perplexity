@@ -50,8 +50,14 @@ vec3 threadAt(vec3 a, vec3 b, vec3 c, vec4 sway, float reach, float tall, float 
   float g = gustAt(a.xz, t - 0.22);
   float swing = 0.42 * (g - 0.4) + (0.07 * sin(t * 4.1 + sway.z) + 0.035 * sin(t * 7.7 + sway.z * 2.7)) * (0.3 + g);
   vec3 bent = c + vec3(uWind.x * swing, 0.22 * max(g - 0.4, 0.0) + 0.5 * surge, uWind.y * swing) * len;
-  tangent = b + 2.0 * s * bent;
-  return base + b * s + bent * (s * s);
+  // A wet thread is not ruled: it waves along its length, each its own way, more toward its free end.
+  vec3 across = normalize(cross(b, vec3(0.0, 1.0, 0.0)) + vec3(1e-5, 0.0, 0.0));
+  vec3 over = normalize(cross(b, across));
+  float k = sway.z + 6.283 * fract(a.x * 37.1 + a.z * 91.7 + a.y * 53.3);
+  float amp = 0.085 * len;
+  vec2 turn = vec2(s * 6.5 + k, s * 5.1 + k * 1.7);
+  tangent = b + 2.0 * s * bent + amp * (across * (sin(turn.x) + 6.5 * s * cos(turn.x)) + over * (sin(turn.y) + 5.1 * s * cos(turn.y)));
+  return base + b * s + bent * (s * s) + amp * s * (across * sin(turn.x) + over * sin(turn.y));
 }`;
 
 export const THREAD_VERTEX = /* glsl */ `
@@ -119,7 +125,7 @@ void main() {
   float open = vLight.y;
   // Wet flesh: wine at the limb, crimson along it, and at the very end bleached to a pale pink that the light goes through. A lock
   // here and there is browner or more purple than its neighbours.
-  vec3 wine = mix(vec3(0.11, 0.01, 0.024), vec3(0.34, 0.022, 0.05), tone * tone);
+  vec3 wine = mix(vec3(0.1, 0.012, 0.026), vec3(0.32, 0.04, 0.062), tone * tone);
   wine = mix(wine, wine.r * vec3(1.0, 0.3, 0.16), smoothstep(0.78, 0.95, own) * 0.7);
   wine = mix(wine, wine.r * vec3(0.85, 0.1, 0.3), smoothstep(0.2, 0.05, own) * 0.6);
   float end = smoothstep(0.7, 1.0, s) * smoothstep(0.75, 1.2, tone + 0.5 * own);
@@ -136,8 +142,8 @@ void main() {
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float edge = across * across;
   float through = (0.06 + 0.94 * against * against * against) * sunLeft * (0.35 + 0.65 * edge) * (1.0 - 0.85 * dead);
-  vec3 blood = mix(vec3(1.0, 0.075, 0.085), vec3(1.0, 0.45, 0.38), 0.8 * end);
-  colour += blood * uSunColour * (0.42 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
+  vec3 blood = mix(vec3(1.0, 0.13, 0.12), vec3(1.0, 0.45, 0.38), 0.8 * end);
+  colour += blood * uSunColour * (0.36 * through * lit * (0.5 + 0.8 * tone)) * (1.0 - 0.4 * mass);
   // Wet: the sun runs along a thread as a line of light where it lies right to it, and breaks into beads.
   vec3 h = normalize(uSunDir + v);
   float th = dot(t, h);
@@ -194,6 +200,8 @@ void main() {
   float open = skyOpen(vec3(vWorld.x, vWorld.y + 6.0, vWorld.z));
   float nl = max(dot(n, uSunDir), 0.0);
   vec3 colour = albedo * (skyIrradiance(n) * (open * occ) + uSunColour * (3.14159 * nl * lit * occ)) / 3.14159;
+  // Under the bush the lit rock throws its warm light back up into the flesh.
+  colour += albedo * uSunColour * (0.07 * sunAt(vec3(vWorld.x, vWorld.y + 4.0, vWorld.z)) * (0.6 - 0.4 * n.y) * (0.3 + 0.7 * flesh));
   // Wet: a line of the sky and of the sun along it.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float f = 0.04 + 0.96 * pow(1.0 - nv, 5.0);

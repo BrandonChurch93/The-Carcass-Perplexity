@@ -44,13 +44,13 @@ ${RIG_GLSL}
 void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
-  // Knotted wet flesh, the colour of a root: pale and pink where it swells, wine-dark in its folds, with cords that run down it to the rock.
-  float knot = fbm(vWorld.xz * 9.0 + vWorld.y * 5.0);
-  float cords = vnoise(vec2(atan(n.z, n.x) * 9.0 + 2.0 * knot, vWorld.y * 3.0));
-  float fold = smoothstep(0.3, 0.6, 0.6 * knot + 0.4 * cords);
-  vec3 albedo = mix(vec3(0.16, 0.05, 0.05), vec3(0.6, 0.43, 0.38), fold) * (0.8 + 0.4 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0));
-  n = normalize(n + 0.35 * (cords - 0.5) * cross(n, vec3(0.0, 1.0, 0.0)));
+  // Wet flesh, the colour of the limbs that leave it: pale and pink where it swells, wine-dark in its folds.
+  float knot = fbm(vWorld.xz * 7.0 + vWorld.y * 4.0);
+  float fold = smoothstep(0.25, 0.6, knot);
+  vec3 albedo = mix(vec3(0.3, 0.1, 0.09), vec3(0.8, 0.6, 0.54), fold) * (0.85 + 0.3 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0));
   vec3 colour = rigShade(vWorld, n, v, albedo, 0.4, 0.35 + 0.5 * fold);
+  // Under the bush the lit rock throws its warm light back up into it.
+  colour += albedo * uSunColour * (0.07 * sunAt(vec3(vWorld.x, vWorld.y + 4.0, vWorld.z)) * (0.6 - 0.4 * n.y));
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
@@ -96,7 +96,8 @@ export function create(ctx: Context): Piece {
     if (y < SEA_LEVEL + 0.12) continue;
     bushes.push({ x, y, z, tall, lean: Math.atan2(-x, z), detail: 0.4, mound: 0.7 });
   }
-  for (const [x, z, tall] of SEEDLINGS) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
+  // A seedling whose anchor is under the water is not grown: nothing of this kind roots in the channel.
+  for (const [x, z, tall] of SEEDLINGS) if (floor(x, z) > SEA_LEVEL + 0.03) bushes.push({ x, y: floor(x, z), z, tall, lean: Math.atan2(-x, z), detail: 0.4 });
 
   const grown: Grown[] = bushes.map((bush) => grow(bush, rng, floor));
 
@@ -148,8 +149,8 @@ export function create(ctx: Context): Piece {
       const x = at.getX(i);
       const y = at.getY(i);
       const z = at.getZ(i);
-      const swell = 1 + 0.28 * Math.sin(x * 5 + seed) * Math.sin(z * 4.3 + seed * 1.3) + 0.2 * Math.sin(y * 7 + x * 3 + seed * 2.1) + 0.12 * Math.sin(x * 11 + z * 9 + seed);
-      const r = 0.07 * b.tall * swell;
+      const swell = 1 + 0.2 * Math.sin(x * 3 + seed) * Math.sin(z * 2.6 + seed * 1.3) + 0.12 * Math.sin(y * 4 + x * 2 + seed * 2.1);
+      const r = 0.055 * b.tall * swell;
       at.setXYZ(i, b.x + x * r * 1.25, b.y + y * r * 0.8 + 0.02 * b.tall, b.z + z * r * 1.25);
       // The lump is smooth: its normal is the ball's, flattened as the lump is.
       const nl = Math.hypot(x / 1.25, y / 0.8, z / 1.25) || 1;
@@ -191,7 +192,7 @@ export function create(ctx: Context): Piece {
         if (drops.next() > share) continue;
         const every = drops.range(3, 11);
         const offset = drops.range(0, 11);
-        const size = drops.range(0.004, 0.0085);
+        const size = drops.range(0.006, 0.014);
         const x = tip.a[0] + tip.b[0] + tip.c[0];
         const z = tip.a[2] + tip.b[2] + tip.c[2];
         const ground = floor(x, z);
