@@ -1,0 +1,77 @@
+{
+  "round": 8,
+  "unit": "breath",
+  "pack": "R3-2",
+  "family": "gpt",
+  "answered": "2026-11-25 23:56 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 4,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the foreground rim and stepped walls across the chasm",
+        "what": "the rock reads as molded slabs, with angular cutouts, smooth bevels and thin bright cracks drawn over broadly uniform faces",
+        "fix": "Break up the slab silhouettes with irregular erosion and give the faces distinct grain, fracture relief and roughness."
+      },
+      {
+        "severity": "severe",
+        "file": "set-B-04.png",
+        "where": "the cream mist bank across the upper right of the chasm",
+        "what": "a broad, smooth patch of mist lies across the rim with a nearly horizontal lower edge and little visible breakup around the ledges",
+        "fix": "Vary the fog density in depth and let the mist curl around and partially occlude successive ledges."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-06.png",
+        "where": "the inner shelves and recesses in both crops",
+        "what": "the shelves disappear into near-black gaps with almost no reflected light, making separate layers read as cutouts",
+        "fix": "Add restrained sky and rock bounce to the upward-facing shelves while keeping the deepest crevices dark."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-05.png",
+        "where": "the ledges in the upper-right and lower-left crops",
+        "what": "the texture smears over the rounded edges in broad stripes and the thin crack highlights are visibly stair-stepped",
+        "fix": "Use higher-resolution material detail at a consistent scale across tops and faces, and anti-alias the fine crack edges."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-03.png",
+        "where": "the near cliff face in the left crop and the projecting shelf in the right crop",
+        "what": "the faces have stretched vertical streaks and abrupt polygonal breaks rather than chipped, layered stone",
+        "fix": "Replace the stretched mapping and add irregular fractures and small-scale relief to the exposed faces."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the distant flats beneath the haze in the lower-left crop",
+        "what": "the surface collapses into long, parallel bands behind a straight transition, with little depth or local variation",
+        "fix": "Break up the parallel bands and vary the surface detail and haze gradually with distance."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-02.png",
+        "where": "the red fronds in the two top crops",
+        "what": "the frond fringes break into harsh pale speckles and clipped-looking edges",
+        "fix": "Soften the alpha cutouts, improve fine-edge sampling and tie the highlights to the shape of the individual fibers."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-01.png",
+        "where": "the near lip below the red trees and the slab at bottom center",
+        "what": "the edges repeat squared-off steps and the nearby stone detail stretches into parallel ribbons",
+        "fix": "Vary the edge geometry and keep the rock texture at a consistent scale across the lip and walls."
+      },
+      {
+        "severity": "major",
+        "file": "set-B-04.png",
+        "where": "the long-legged animal above the foliage at upper left",
+        "what": "the rodlike legs and smooth body read as a posed model, with no clear foot contact in the visible ground gaps",
+        "fix": "Vary the joint angles and leg loading, and add contact shadows and local ground coloration where the feet are visible."
+      }
+    ]
+  }
+}
