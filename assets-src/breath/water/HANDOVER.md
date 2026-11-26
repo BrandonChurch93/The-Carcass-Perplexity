@@ -20,7 +20,7 @@ Owner until 01:17 UTC, 26 November 2026: breath_life_owner, branch `agent/breath
   twice the wind; near waders out of step (UP spans in `herd.ts`); a crown of drops where a foot lands; dead wader lower, legs thicker.
 - Tried, not closed: barb speckle (lengths now smooth along the stem and locks drawn whole below 6 pixels a barb: fewer dots, but the
   fringe is still a cut-out, see next steps); the middle wader's lifted foot (`AHEAD` in `herd.ts` puts it at the end of a stride with a hind leg far back; the foot
-  does not leave the water in any setting from 0.07 to 0.28, the step lift in `pose()` is too low to see: raise `stepH` there);
+  does not leave the water in any setting from 0.07 to 0.28, though `stepH` is 0.55 k: the lift is lost in the leg solve of `pose()`, look there);
   the dead one as dead (still a pale model on top of the ground; 46 flies in `dead/flies.ts` circle it but are
   hard to see at 6 mm, try 10 mm and more of them); mops paler (still wine, not pink).
 - Not reached: a wader in the upper left of breath-3 and small far silhouettes in breath-4 (anchors are the lead's, I asked for none);
