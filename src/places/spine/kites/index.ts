@@ -410,6 +410,9 @@ void main() {
   // The edge is not lit along its whole length: the line comes and goes with the film's thickness, and seen close it is thin.
   float lineHere = mix(mix(0.25, 1.0, smoothstep(0.35, 0.65, drift)), 1.0, vFar);
   rim *= lineHere;
+  // Far down the ridge a kite is a pale body with a lighter edge, not two bright lines with nothing between them.
+  float distant = vFar * (1.0 - uVeil);
+  rim *= 1.0 - 0.55 * distant;
   // A wet sheen on the face that looks up, on every fold, and along the rolled edge.
   vec3 shine = mirror * (0.5 * fres * litNear + 0.5 * uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) * (0.35 + 0.65 * litNear) * (1.0 - 0.5 * clear) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
   // Pearl: aslant the film gives the sky back tinted by its thickness, violet, then pink, then a pale green, and the tints slide as it
@@ -431,7 +434,7 @@ void main() {
   // How much of what is behind it the skin hides. Far off it is more of a body: its lit face pale, its other face dark.
   // Far off each is a darker body where it is gathered, along its middle and at its wrung places, and thin toward its two ends and its
   // edges, where the sky shows through it.
-  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) * mix(1.0, 0.3 + 0.55 * mid, vFar) + vFar * (0.03 + 0.2 * mid + 0.3 * core) * (1.0 + 0.3 * vNear), 0.0, 0.95);
+  float cover = clamp((1.0 - exp(-0.33 * path)) * (1.0 - 0.8 * clear) * mix(1.0, 0.3 + 0.55 * mid, vFar) + vFar * (0.03 + 0.2 * mid + 0.3 * core) * (1.0 + 0.3 * vNear) + 0.16 * distant, 0.0, 0.95);
   c *= 1.0 - 0.7 * core;
   // Lilac-grey, whatever the light: glass, not flesh.
   c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
