@@ -101,7 +101,9 @@ export function poseAt(frame: number): Pose {
     const [driftX, driftZ] = driftAt(frame);
     const dx = x + driftX;
     const dz = z + driftZ;
-    return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [0, 0, -1] };
+    // (And the camera turns a little about its own eye as it rides the orbit: the edge of the planet swings, slow, one way.)
+    const turned = ROLL_PER_KM * Math.hypot(driftX, driftZ);
+    return { position: [dx, height, dz], aim: [dx, 0, dz], fov: FOV, up: [Math.sin(turned), 0, -Math.cos(turned)] };
   }
   return { position: [x, height, z], aim: [x, 0, z], fov: FOV, up: [0, 0, -1] };
 }
@@ -110,6 +112,8 @@ const DRIFT_FROM = 10028;
 const DRIFT_SPEED = 32;
 const DRIFT_EASE = 6;
 const DRIFT_TOWARD: [number, number] = [-0.97, -0.24];
+/** The turn of the camera about its own eye, radians for each km of the drift: about ten degrees by the last frame. */
+const ROLL_PER_KM = ((10 * Math.PI) / 180) / 740;
 /** How much of the camera's drift the edge of the planet makes with it: the camera rides its orbit, so the ground slides under it faster than the edge turns. */
 export const LIMB_FOLLOW = 0.7;
 /**

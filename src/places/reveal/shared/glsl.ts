@@ -133,6 +133,8 @@ vec3 rigShade(vec3 p, vec3 n, vec3 v, vec3 albedo, float rough, float occ) {
     float sunH = sunHeight(p.xz);
     vec3 toSun = sunToward(sunH);
     vec3 sunLight = sunLightAt(sunH, day) * occ;
+    // (The last sun on a flank that faces it is gold, and stronger than the blue of the sky that fills the shade.)
+    sunLight *= mix(vec3(1.0), vec3(2.3, 1.55, 0.7), uTerm.w * (1.0 - smoothstep(0.0, 0.35, sunH)) * smoothstep(-0.1, 0.02, sunH));
     vec3 eDusk = sunLight * max(dot(n, toSun), 0.0) + skyIrradiance(n) * (0.55 + 0.45 * occ) * skyLightAt(sunH, day);
     // (Under the moon the eye and the camera lose colour: the ground is read nearly grey.)
     vec3 eMoon = moonAt(sunH) * (max(0.85 * dot(n, uMoonDir) + 0.15, 0.0) * (0.6 + 0.4 * occ) * moonShade + 0.14);
