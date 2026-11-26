@@ -441,6 +441,9 @@ void main() {
 
   // (The salt of the third lens's bank is wet with the pool's spray and stained by it.)
   colour *= mix(vec3(1.0), mix(vec3(0.84, 0.56, 0.49), vec3(0.44, 0.19, 0.155), smoothstep(0.6, 0.25, hgt)), bankDry);
+  // (Along that bank's waterline the salt has crusted white on every knob; under and between the knobs the bank stays red and wet.)
+  float rimK = bankDry * smoothstep(0.1, 0.3, t) * smoothstep(1.4, 0.7, t) * step(0.0, s) * (1.0 - rock) * (1.0 - flood);
+  colour = mix(colour, vec3(0.5, 0.445, 0.415) * (0.75 + 0.5 * hgt), rimK * smoothstep(0.42, 0.62, hgt) * 0.62);
   rough = mix(rough, 1.0, churn);
   vec3 n = normalize(ng + vec3(bend.x, 0.0, bend.y) * (1.0 - 0.8 * flood));
   vec3 lit = rigShade(p, n, v, colour, rough, occ);

@@ -26,7 +26,7 @@ Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.
 - severe, marsh-0 "The broad dark channel and bare central spit ... the water is too smooth and its uniform thin white edges look drawn on": colour by depth, current streaks, sky lanes, wet band at the shores, white edge cut. The channel's plan (narrow, winding, terraced) is unchanged: open.
 - severe, marsh-0 "A dense speckled white spray wall obscures the pool, with small regular ring marks": steam cut to a low veil, stamped rings off. Blister domes are few: open.
 - severe, marsh-1 "Broad dark mirror reflections and flat red water replace choppy overlapping waves. The splash looks like isolated solid pink prongs, and the bubble has a hard dark foot": chop to the lens, mirror share by angle, crown as a sheet with fingers, dome foot softened with lip froth. Waves are still lower than the picture's: open.
-- severe, marsh-1 "A broad chalk slope consumes the near water and the left trunk stays heavily defined": bank stained and lowered in tone, small bubble clusters at the lip. The Builder's last word: still "a blurred brown slope" with no white crusted rim: open, the worst of marsh-1.
+- severe, marsh-1 "A broad chalk slope consumes the near water and the left trunk stays heavily defined": bank stained and lowered in tone, small bubble clusters at the lip. The Builder then called it "a blurred brown slope": lens opening down to 0.0045 and white salt on every knob within 1.4 m of the waterline (`rimK`), red wet between. It is paint on a height field, not a crust: open.
 - severe, marsh-2 "A bright grainy steam mass takes over the center": pool mist 0.05, no grain. The centre is still 16 levels paler than approved.
 - severe, marsh-3 "The opaque pink-red sheet and broad, pale concentric rings": dark rust brine, rings off, mirror. severe, marsh-3 left shore "Open water runs under the adult's raised muzzle": mud bank under the animals (`churn`), wet.
 - severe, marsh-4 "a continuous reddish pool with broad, flat patches of white crust" and "one bright white plume": grey-brown slurry pocket, mud between slabs, white only on high edges, plume cut. Plates have no thickness: open.
@@ -38,7 +38,7 @@ Branch `agent/marsh-ground-3`. Folders: `src/places/marsh/shared/`, root `index.
 
 ## Still wrong beside the approved pictures, worst first
 
-- marsh-1: near bank blurred and brown with no white crusted salt rim; water in front about 15 levels too pale; crown a thin sheet; dome without film colour.
+- marsh-1: the near bank's salt rim is colour on knobs, not a crust with an edge; a flat pale band of shallow water lies along it; water in front about 15 levels too pale; crown a thin sheet; dome without film colour.
 - marsh-0: channel plan and terraces; flats pinker and less white than approved; far band soft but not layered; near rock still soft.
 - marsh-2: centre pool pale and misty; marsh-3: far flats pale, distance empty of wet flats; marsh-4: plates without thickness or undercut.
 - No rain rings on the brine (a stamped ring was judged worse than none).
