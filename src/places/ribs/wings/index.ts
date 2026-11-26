@@ -24,10 +24,10 @@ export const PARTS: readonly string[] = ['kite-wings'];
 const FEEDERS = 44;
 const FLIERS = 451;
 const SPECKS = 560;
-const PASSERS = 6;
+const PASSERS = 3;
 /** The run of the hero by the establishing camera: seconds it lasts, centred on the key, and its mean speed. */
 const RUN = { seconds: 9, speed: 3.7 };
-const LOW = 14;
+const LOW = 6;
 const FLEEING = 9;
 const COLONISTS = 150;
 const SKEIN = 22;
@@ -140,7 +140,7 @@ export function create(ctx: Context): Piece {
     const walk = f.cycles * f.cycle;
     return (m + (tau < walk ? ease(tau / walk) : 1)) * f.cycles;
   };
-  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false): void => {
+  const addFeeder = (x: number, z: number, yaw: number, small: number, stationed: boolean, habit = -1, at = T0, runs = false, striding = false): void => {
     const size = small * GROW;
     const f: Feeder = {
       x0: x,
@@ -164,6 +164,8 @@ export function create(ctx: Context): Piece {
     }
     // A stationed feeder is at its station on the establishing key, in the middle of a pause.
     if (stationed) f.offset = f.period * (0.45 + 0.35 * f.seed) - at;
+    // One is caught in the middle of a step.
+    if (striding) f.offset = 0.55 * f.cycles * f.cycle - at;
     const p = gait(f, at);
     f.x0 = x - Math.sin(yaw) * f.stride * p;
     f.z0 = z - Math.cos(yaw) * f.stride * p;
@@ -180,7 +182,8 @@ export function create(ctx: Context): Piece {
   STATIONS.feeders.forEach((s, i) => {
     if (i === 0) addFeeder(s[0], s[1], Math.atan2(Math.cos(0.14), Math.sin(0.14)) + 0.25, s[3], true, 0.6, T0, true);
     else if (i < 8) addFeeder(s[0], s[1], s[2], s[3], true, HABITS[i] as number, T0);
-    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey);
+    // No two in one pose: the nearest feeds, the next is caught mid step, the last looks about with its neck up and its head the other way.
+    else addFeeder(s[0], s[1], sideOn(s[0], s[1], i === 8 ? 0.2 : i === 9 ? -0.3 : 0.35 + Math.PI), s[3], true, i === 8 ? 0.3 : i === 9 ? 0.9 : 0.6, feedKey, false, i === 9);
   });
   {
     // The second hero of the wide picture: walking tall, right of centre, 47 m out.
@@ -374,11 +377,11 @@ export function create(ctx: Context): Piece {
     let tier = 0;
     let a0 = 0;
     for (let tries = 0; tries < 60; tries++) {
-      tier = Math.floor(scatter.range(LEVELS.tide + 2, COLONY.top - 6) / COLONY.step) * COLONY.step;
+      tier = scatter.range(LEVELS.tide + 2, COLONY.top - 6);
       a0 = sitters.length < COLONISTS * 0.75 ? scatter.range(0, Math.PI * 2) : facing + scatter.normal() * 0.8;
       if (sitters.length >= COLONISTS * 0.75) break;
-      const r0 = COLONY.radiusAt(tier + COLONY.step) + 1;
-      seen.set(COLONY.x + Math.cos(a0) * r0, tier + 1.5, COLONY.z + Math.sin(a0) * r0);
+      const [r0, y0] = COLONY.perch(a0, tier, 0.5);
+      seen.set(COLONY.x + Math.cos(a0) * r0, y0 + 1.5, COLONY.z + Math.sin(a0) * r0);
       const toward = (colonyEye[0] - seen.x) * Math.cos(a0) + (colonyEye[2] - seen.z) * Math.sin(a0);
       const far = Math.hypot(colonyEye[0] - seen.x, colonyEye[2] - seen.z);
       seen.project(colonyLens);
@@ -388,15 +391,15 @@ export function create(ctx: Context): Piece {
     let along = 0;
     for (let k = 0; k < knot && sitters.length < COLONISTS; k++) {
       const size = scatter.range(0.72, 1.25) * GROW;
-      // Most sit back against the riser, where the lip of the tread below hides half of them from a lens that looks up.
-      const r = COLONY.radiusAt(tier + COLONY.step) + (scatter.next() < 0.6 ? scatter.range(0.35, 1.0) : scatter.range(0.9, COLONY.step * COLONY.slope - 0.5));
-      const a = a0 + along / r;
+      // The crag's own standing places: most sit back against the cliff behind, where the lip hides half of them from a lens that looks up.
+      const a = a0 + along / COLONY.radiusAt(tier);
+      const [r, perchY] = COLONY.perch(a, tier, scatter.next() < 0.6 ? scatter.range(0.1, 0.5) : scatter.range(0.4, 0.95));
       along += scatter.range(0.8, 1.9) * size;
       const x = COLONY.x + Math.cos(a) * r;
       const z = COLONY.z + Math.sin(a) * r;
       const out = Math.atan2(Math.cos(a), Math.sin(a));
       const stands = scatter.next() < 0.22;
-      sitters.push({ x, y: tier, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], tier - colonyEye[1], z - colonyEye[2]) });
+      sitters.push({ x, y: perchY, z, yaw: out + scatter.range(-1.1, 1.1), size, seed: scatter.next(), stands, d: Math.hypot(x - colonyEye[0], perchY - colonyEye[1], z - colonyEye[2]) });
     }
   }
   sitters.sort((a, b) => a.d - b.d);
@@ -483,28 +486,28 @@ export function create(ctx: Context): Piece {
     const low = i < LOW;
     if (i >= FLIERS) {
       // The specks: the crowd that wheels tight round the head of every blade, and thickest over the colony.
-      const colony = scatter.next() < 0.2;
+      const colony = scatter.next() < 0.07;
       const top = RIBS[scatter.int(RIBS.length)] as (typeof RIBS)[number];
       // Round the head of the blade itself: the blade's own middle line, near its top.
       const high = top.height * (1 - 0.3 * scatter.next() ** 2);
       const head = surface(top, partAtHeight(top, high), 0, 0, 0);
-      const radius = colony ? scatter.range(70, 190) : 12 + 90 * scatter.next() ** 2;
+      const radius = colony ? scatter.range(110, 260) : 12 + 90 * scatter.next() ** 2;
       fliers.push({
         cx: colony ? COLONY.x + scatter.range(-20, 20) : head.x + scatter.range(-12, 12),
         cz: colony ? COLONY.z + scatter.range(-20, 20) : head.z + scatter.range(-12, 12),
         radius,
-        y: colony ? scatter.range(COLONY.top - 20, COLONY.top + 90) : high + scatter.range(-25, 35),
+        y: colony ? scatter.range(COLONY.top - 10, COLONY.top + 120) : high + scatter.range(-25, 35),
         rate: ((scatter.next() < 0.5 ? 1 : -1) * scatter.range(11, 17)) / radius,
         phase: scatter.range(0, Math.PI * 2),
         squash: scatter.range(0.55, 1),
         size: scatter.range(0.9, 1.2) * GROW,
         seed: scatter.next(),
-        dark: colony ? 0.5 : 0.7,
+        dark: colony ? -0.7 : 0.7,
       });
       clearOfLenses(fliers[fliers.length - 1] as Flier, colony ? 110 : CLEAR);
       continue;
     }
-    const radius = low ? scatter.range(90, 170) : 50 + 190 * scatter.next() ** 2;
+    const radius = low ? scatter.range(120, 200) : 50 + 190 * scatter.next() ** 2;
     const up = low ? scatter.range(38, 80) : rib.height * scatter.range(0.3, 1.05);
     const mid = low ? { x: COLONY.x, z: COLONY.z } : surface(rib, partAtHeight(rib, Math.min(up, rib.height)), 0, 0, 0);
     const f: Flier = {
@@ -579,16 +582,16 @@ export function create(ctx: Context): Piece {
     const fx = dx / l;
     const fz = dz / l;
     // [metres ahead, metres to the right at its moment, metres over the lens, seconds from the key, metres a second to the right]
-    const cross: [number, number, number, number, number][] = [[64, -30, 22, 0, 12], [78, -14, 30, 0.2, -13], [86, -44, 26, -0.4, 14], [70, -22, 20, 1.5, -12], [82, -36, 34, -1.3, 13], [105, -50, 38, 0.6, 15]];
+    const cross: [number, number, number, number, number][] = [[46, -15, 13, 0.1, 15], [112, -52, 36, 0.3, -13], [128, -24, 46, -0.6, 14]];
     for (let i = 0; i < PASSERS; i++) {
       const c = cross[i] as [number, number, number, number, number];
-      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: 1.1 * GROW, seed: scatter.next() });
+      skein.push({ x: eye.position[0] + fx * c[0] - fz * c[1], y: eye.position[1] + c[2], z: eye.position[2] + fz * c[0] + fx * c[1], vx: -fz * c[4] + fx * 2.5, vz: fx * c[4] + fz * 2.5, t: key + c[3], size: (i === 0 ? 1.25 : 1.0) * GROW, seed: scatter.next() });
     }
   }
   const skeinFlock = new Kites(kites, SKEIN + PASSERS);
 
   // ---- The ones that run from the bore ----
-  const fleeFlock = new Kites(kites, FLEEING);
+  const fleeFlock = new Puppets(sheets, FLEEING, false);
   const flee = STATIONS.flee;
 
   // ---- One that lands by the establishing camera, on the key ----
@@ -614,12 +617,6 @@ export function create(ctx: Context): Piece {
     landers.push({ x: a[0], z: a[1], y: null, yaw: Math.atan2(-ez / el, ex / el) + 0.5, t: T0 + 0.42, size: 1.12 * GROW, seed: 0.37 });
     const b = ahead(210, -40);
     landers.push({ x: b[0], z: b[1], y: null, yaw: 2.2, t: T0 - 2.1, size: 1.05 * GROW, seed: 0.81 });
-  }
-  // Two come in to the ledges past the colony camera.
-  for (let k = 0; k < 2; k++) {
-    const s = sitters[56 + k * 9] as Sitter;
-    landers.push({ x: s.x, z: s.z, y: s.y, yaw: s.yaw + Math.PI * 0.6, t: secondsInPlace(UNIT, shotById('ribs-03').first) + 1.3 + k * 1.2, size: 1.08 * GROW, seed: 0.2 + 0.5 * k });
-    s.size = 0;
   }
   const landerAt = (l: Lander, t: number): void => {
     Object.assign(pose, stand(l.seed));
@@ -736,18 +733,18 @@ export function create(ctx: Context): Piece {
           pose.flap = -0.3 + 0.12 * Math.sin(seconds * 0.8 + s.seed * 40);
           pose.lag = 0;
           pose.roll = 0;
-          dryers.put(i, pose, 0.3, true);
+          dryers.put(i, pose, -1, true);
           continue;
         }
         // No two rows alike: half of them stand the other way round on their ledge.
         if (Math.floor(s.seed * 1000) % 2 === 1) pose.yaw += Math.PI;
-        colonySheets.put(i, pose, 0.5);
+        colonySheets.put(i, pose, 0.8 + 0.2 * s.seed);
       }
       colonySheets.commit();
       dryers.commit();
       for (let i = 0; i < fliers.length; i++) {
         flierAt(fliers[i] as Flier, seconds);
-        if (i < LOW) lowFlock.put(i, pose, 0.45);
+        if (i < LOW) lowFlock.put(i, pose, -0.6);
         else highFlock.put(i - LOW, pose, (fliers[i] as Flier).dark);
       }
       lowFlock.commit();
@@ -764,22 +761,26 @@ export function create(ctx: Context): Piece {
         const bout = smooth(0.25, 0.45, held(seconds, 3.4 + 2 * s.seed, s.seed, 0.3));
         fly(pose, 0.14 + 0.5 * bout, seconds * (10 + 3 * s.seed) + s.seed * 40);
         pose.sweep = (held(seconds, 2.3, s.seed + 0.4) - 0.5) * 0.8;
-        skeinFlock.put(i, pose, i < SKEIN ? 0.6 : 0.45);
+        skeinFlock.put(i, pose, i < SKEIN ? 0.6 : -1);
       }
       skeinFlock.commit();
       const lead = seconds - BORE;
       for (let i = 0; i < FLEEING; i++) {
         const side = (i - (FLEEING - 1) / 2) / FLEEING;
         Object.assign(pose, stand(hash(i, 3)));
-        // Low over the water before the wall, far enough from the last lens to be shapes against the white.
-        pose.size = (0.9 + 0.25 * hash(i, 5)) * GROW;
-        pose.x = flee[0] + side * 46 - 9 * lead + 3 * Math.sin(i * 2.4);
-        pose.z = flee[1] - 22 - (20 * ((i * 5) % 7)) / 7 + 17 * lead;
-        pose.y = 3.6 + (3.2 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
-        pose.yaw = Math.atan2(-9, 17);
-        pose.roll = 0.5 * Math.sin(seconds * 0.9 + i * 1.7) + 0.35 * Math.sin(i * 2.9);
+        // Low over the water before the wall, a wing's length over it, pale against the dark of the stacks and the grey of the wall.
+        // Seen from the side as they cross: sails up, legs trailing, no two of a size.
+        pose.size = (0.8 + 0.75 * hash(i, 5)) * GROW;
+        pose.x = flee[0] + side * 42 - 14 * lead + 3 * Math.sin(i * 2.4);
+        pose.z = flee[1] - 22 - (24 * ((i * 5) % 7)) / 7 + 12 * lead;
+        pose.y = 2.0 + (2.6 * ((i * 3) % 4)) / 4 + 0.5 * lead + 0.4 * Math.sin(seconds * 1.3 + i);
+        pose.yaw = Math.atan2(-14, 12);
         fly(pose, 0.7, seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9);
-        fleeFlock.put(i, pose, 0.8);
+        pose.rise = 0.95;
+        pose.bend = -0.6;
+        pose.sweep = -2.6;
+        pose.pitch = 0.1 + 0.12 * Math.sin(seconds * (14 + 2.5 * hash(i, 7)) + i * 1.9 - 0.7);
+        fleeFlock.put(i, pose, 1, true);
       }
       fleeFlock.commit();
       for (let i = 0; i < landers.length; i++) {

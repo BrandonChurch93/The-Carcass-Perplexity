@@ -16,7 +16,9 @@ const SIZE = 1.45;
 const STRANDS = 220;
 const CRABS = 16;
 /** The hung body as a plate: metres from the hook to the end of the tuft, how far the relief stands out, and its turn from square to the lens. */
-const PLATE = { high: 10.5, deep: 0.6, turn: 0.25 };
+const PLATE = { high: 9.5, deep: 0.5, turn: 0.2 };
+/** Where the body lies in its picture (1448 by 1086): from, to across it. */
+const FRAMED = { from: 0.185, to: 0.765 };
 
 // The body is drawn in the plane of the weed's face: u along the face away from the establishing camera, d down it, o out of it.
 type Point = [number, number, number];
@@ -389,16 +391,21 @@ uniform float uTime;
 varying vec3 vWorld;
 varying vec2 vUv;
 void main() {
-  vec2 uv = vec2(position.x, 1.0 - position.y);
-  float h = textureLod(tRelief, uv, 3.5).r;
-  // What hangs free of it stirs a little: the tuft at the bottom most.
-  float loose = smoothstep(0.62, 1.0, position.y);
-  vec3 w = uOrigin + uAxis * (position.x - 0.22 + loose * 0.012 * sin(uTime * 1.3 + position.y * 9.0)) + uDrop * position.y + uProud * (0.1 + h);
+  vec2 uv = vec2(mix(${FRAMED.from.toFixed(3)}, ${FRAMED.to.toFixed(3)}, position.x), 1.0 - position.y);
+  float h = textureLod(tRelief, uv, 3.0).r;
+  // What hangs free of it stirs a little: the ends of the legs and the tuft most.
+  float loose = smoothstep(0.5, 1.0, position.y);
+  float sway = loose * loose * 0.014 * sin(uTime * 1.3 + position.x * 23.0);
+#ifdef SHADE
+  // Its shade on the weed behind it: the same sheet a hand behind, fallen a little down the face.
+  vec3 w = uOrigin + uAxis * (position.x - 0.12 + sway) + uDrop * (position.y + 0.012) + uProud * 0.04;
+#else
+  vec3 w = uOrigin + uAxis * (position.x - 0.12 + sway) + uDrop * position.y + uProud * (0.12 + h);
+#endif
   vWorld = w;
   vUv = uv;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
 }`;
-
 const PLATE_FRAGMENT = /* glsl */ `
 precision highp float;
 ${RIG_GLSL}
@@ -410,21 +417,32 @@ uniform vec3 uProud;
 varying vec3 vWorld;
 varying vec2 vUv;
 void main() {
+#ifdef SHADE
+  float near = texture2D(tRelief, vUv, 4.5).r;
+  float wide = texture2D(tRelief, vUv - vec2(0.0, 0.012), 6.0).r;
+  float dark = clamp(1.3 * smoothstep(0.02, 0.3, near) + 0.6 * smoothstep(0.02, 0.25, wide), 0.0, 0.8) * (1.0 - uSolo);
+  gl_FragColor = vec4(rigOut(vec3(0.0)) * dark, dark);
+#else
   vec3 pic = texture2D(tCarcass, vUv).rgb;
   float h = texture2D(tRelief, vUv).r;
-  vec2 e = vec2(3.0 / 1024.0, 3.0 / 1536.0);
+  vec2 e = vec2(3.0 / 1448.0, 3.0 / 1086.0);
   float hx = texture2D(tRelief, vUv + vec2(e.x, 0.0), 1.5).r - texture2D(tRelief, vUv - vec2(e.x, 0.0), 1.5).r;
   float hy = texture2D(tRelief, vUv + vec2(0.0, e.y), 1.5).r - texture2D(tRelief, vUv - vec2(0.0, e.y), 1.5).r;
   vec3 v = normalize(cameraPosition - vWorld);
   vec3 face = normalize(uProud);
-  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 0.8);
+  vec3 n = normalize(face - (normalize(uAxis) * hx - normalize(uDrop) * hy) * 0.9);
   if (dot(face, v) < 0.0) n = reflect(n, face) * -1.0;
-  // Sodden: darker than the dry picture, and it shines where it is wet. The hollows between the ribs see little sky.
-  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))), pic, 0.7) * 1.3;
-  float occ = mix(0.55, 1.0, smoothstep(0.1, 0.7, h));
-  vec3 col = rigShade(vWorld, n, v, albedo, 0.28, occ);
+  // Sodden hide: a little greyer than the dry picture, and it shines where the water runs off it. The hollows between the ribs see little sky.
+  // It hangs in the rock's own shade, no brighter than the weed's highlights: grey pink, stained down its length by what runs off it, green brown toward the weed it lies in.
+  vec3 albedo = mix(vec3(dot(pic, vec3(0.3, 0.5, 0.2))) * vec3(1.0, 0.9, 0.88), pic, 0.5) * 0.92;
+  float streak = 0.5 + 0.5 * sin(vUv.x * 150.0 + 4.0 * sin(vUv.x * 31.0) + 2.0 * pic.g);
+  albedo *= mix(0.72, 1.0, smoothstep(0.25, 0.7, streak));
+  albedo = mix(albedo, albedo * vec3(0.55, 0.6, 0.38), 0.7 * smoothstep(0.6, 0.15, vUv.y));
+  float occ = mix(0.4, 0.85, smoothstep(0.1, 0.7, h));
+  vec3 col = rigShade(vWorld, n, v, albedo, 0.26, occ);
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (h < 0.045) discard;
+#endif
 }`;
 
 export function create(ctx: Context): Piece {
@@ -724,10 +742,10 @@ export function create(ctx: Context): Piece {
     fragmentShader: PLATE_FRAGMENT,
     uniforms: {
       ...ctx.rig.uniforms,
-      tCarcass: { value: ctx.assets.texture('mat/carcass.jpg', { kind: 'colour', repeat: false }) },
-      tRelief: { value: ctx.assets.texture('mat/carcass-h.png', { kind: 'data', repeat: false }) },
-      uOrigin: { value: weedPoint(rib, DROWNED.phi, DROWNED.height + 3.2, 0.3) },
-      uAxis: { value: axis.clone().multiplyScalar((PLATE.high * 2) / 3) },
+      tCarcass: { value: ctx.assets.texture('mat/carcass-hung.jpg', { kind: 'colour', repeat: false }) },
+      tRelief: { value: ctx.assets.texture('mat/carcass-hung-h.png', { kind: 'data', repeat: false }) },
+      uOrigin: { value: weedPoint(rib, DROWNED.phi, DROWNED.height + 2.5, 0.3) },
+      uAxis: { value: axis.clone().multiplyScalar((PLATE.high * (FRAMED.to - FRAMED.from) * 1448) / 1086) },
       uDrop: { value: down.clone().multiplyScalar(PLATE.high) },
       uProud: { value: proudWay.clone().multiplyScalar(PLATE.deep) },
     },
@@ -735,14 +753,30 @@ export function create(ctx: Context): Piece {
   });
   const plate = new THREE.Mesh(plateGeometry, plateMaterial);
   plate.frustumCulled = false;
+  const shadeMaterial = new THREE.ShaderMaterial({
+    vertexShader: PLATE_VERTEX,
+    fragmentShader: PLATE_FRAGMENT,
+    uniforms: plateMaterial.uniforms,
+    defines: { SHADE: 1 },
+    side: THREE.DoubleSide,
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.CustomBlending,
+    blendSrc: THREE.OneFactor,
+    blendDst: THREE.OneMinusSrcAlphaFactor,
+  });
+  const shade = new THREE.Mesh(plateGeometry, shadeMaterial);
+  shade.frustumCulled = false;
+  shade.renderOrder = 3;
 
-  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh), strands, crabMesh);
+  ctx.scene.add(ctx.parts.built('drowned', plate, shade, strands, crabMesh), shade, strands, crabMesh);
 
   return {
     dispose: () => {
       material.dispose();
       clothMaterial.dispose();
       plateMaterial.dispose();
+      shadeMaterial.dispose();
       plateGeometry.dispose();
       runMaterial.dispose();
       skinGeometry.dispose();

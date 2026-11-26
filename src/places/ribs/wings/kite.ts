@@ -83,11 +83,13 @@ void main() {
   vec3 across = vec3(vFace.z, 0.0, -vFace.x);
   vec3 n = normalize(face + vec3(0.0, 0.35, 0.0) + (across * -gx + vec3(0.0, 1.0, 0.0) * -gy) * 2.5);
   vec3 albedo = mix(pic, vec3(dot(pic, vec3(0.3333))) * vec3(1.0, 0.9, 0.8), 0.6) * mix(0.8, 1.05, vLook.y);
+  // The colony's are pale: cream hide, the picture's own light and dark kept as its folds.
+  albedo = mix(albedo, vec3(0.68, 0.61, 0.5) * (0.6 + 1.0 * dot(pic, vec3(0.3333))), clamp(-vLook.x, 0.0, 1.0));
   vec3 col = rigShade(vWorld, n, v, albedo, 0.5, mix(0.55, 1.0, smoothstep(-0.5, 0.5, n.y)));
   // The sky comes through the stretched skin of a sail; the bones and the body stay dark against it.
   float skin = step(0.5, vPart) * step(vPart, 2.5) * smoothstep(0.08, 0.3, cover);
-  col += albedo * vec3(1.1, 0.95, 0.8) * skin * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, landAt(vWorld.xz)) * 0.6 + skyIrradiance(-n) * 0.8) / PI;
-  col *= mix(1.0, 0.3, vLook.x);
+  col += mix(albedo, vec3(dot(albedo, vec3(0.3333))), 0.6) * vec3(1.0, 0.94, 0.86) * skin * (uSunColour * max(dot(-n, uSunDir), 0.0) * sunAt(vWorld, landAt(vWorld.xz)) * 0.6 + skyIrradiance(-n) * 0.8) / PI;
+  col *= mix(1.0, 0.3, clamp(vLook.x, 0.0, 1.0));
   gl_FragColor = vec4(rigOut(col), 1.0);
   if (cover < 0.03) discard;
 }`;
@@ -156,7 +158,7 @@ export class Kites {
     this.mesh.frustumCulled = false;
   }
 
-  /** dark: 0 lit as it flies, 1 a shape against bright water. legs: it stands, and the picture keeps its legs. */
+  /** dark: 0 lit as it flies, 1 a shape against bright water, under 0 the cream of the colony. legs: it stands, and the picture keeps its legs. */
   put(i: number, p: Pose, dark = 0, legs = false): void {
     this.place.setXYZW(i, p.x, p.y, p.z, p.yaw);
     this.body.setXYZW(i, p.size, p.flap, p.lag, p.roll);
