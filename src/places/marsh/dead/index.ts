@@ -84,7 +84,8 @@ float domeAt(vec2 xz, float level, out vec4 m) {
     h += c + on * (grown * (kn - 0.2) * 0.05 - torn * 0.05);
     m = vec4(bm * on, grown, torn);
   }
-  return h;
+  // (The grid's own border lies deep under the ground: no straight edge of it shows where the ground is low.)
+  return h - 0.3 * smoothstep(1.3, 1.5, r);
 }`;
 
 const DOME_VERTEX = /* glsl */ `
