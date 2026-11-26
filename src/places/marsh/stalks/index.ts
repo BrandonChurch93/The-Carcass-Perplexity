@@ -128,6 +128,7 @@ export function create(ctx: Context): Piece {
       }
     }
   }
+  const backFrom = stalks.length;
   // STAGED for the lens of the wallowers: three groups stand in the haze behind the great one, on the banks of the vein, fading out as the approved picture has them.
   {
     const back = ctx.rng('stalks-back');
@@ -142,6 +143,7 @@ export function create(ctx: Context): Piece {
       }
     }
   }
+  const staged4 = new Set<Stalk>(stalks.slice(backFrom));
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
@@ -174,7 +176,11 @@ export function create(ctx: Context): Piece {
   const sets = [stalks.filter(closeOf)];
   const fils: number[][] = [[], [], [], []];
   const perches: [number, number, number][] = [];
-  const stood = stalks.filter(near);
+  // TEMPORARY, until the lead's list does it: the open flats are bare. A stalk of the list that stands more than two metres from a water's edge is not drawn,
+  // but for those a lens stands among: the approved wide picture has a few loose clumps by the seep and by the vein, and almost none on the flats.
+  const kept = (s: Stalk): boolean =>
+    ctx.rig.land.shore(s.x, s.z) < 2 || Math.hypot(s.x - K1_AT[0], s.z - K1_AT[1]) < 9 || Math.hypot(s.x - K2_AT[0], s.z - K2_AT[1]) < 12 || Math.hypot(s.x - k3[0], s.z - k3[1]) < 13 || staged4.has(s);
+  const stood = stalks.filter((s) => near(s) && (closeOf(s) || kept(s)));
   const discs = ctx.rig.contactDiscs(stood.length);
   stood.forEach((s, i) => ctx.rig.setDisc(discs, i, s.x, s.z, (s.h > 2.6 ? 0.09 : 0.07) * s.size * 5, 0.7));
   {
@@ -202,7 +208,7 @@ export function create(ctx: Context): Piece {
     }
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
-      base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
+      base.set([s.x, kept(s) ? Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05 : -60, s.z, tall + 0.05], i * 4);
       // Slender: a stalk away from the lens of the colony is a wrist thick and three metres tall, as the approved pictures have them.
       axis.set([Math.cos(s.yaw), -Math.sin(s.yaw), s.lean * 1.5 + rng.range(0, 0.2), (s.h > 2.6 ? 0.09 : 0.07) * s.size * rng.range(0.5, 0.72)], i * 4);
       kind.set([s.kind, s.phase, low.has(s) ? 1 : 0, rng.next()], i * 4);

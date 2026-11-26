@@ -126,7 +126,7 @@ ${CUT}
     float wet = 1.0 - smoothstep(0.05, 0.45 + 0.9 * fract(vKind.w * 7.3), vUv.w * vKind.y + 0.09 * sin(vUv.x * 40.0 + vKind.w * 30.0) + 0.05 * sin(vWorld.y * 31.0 + vKind.w * 11.0));
     // The ones at the lip of the seep stand in what it throws: wet and red brown to the mouth, the salt left on them in patches.
     float thrown = 1.0 - smoothstep(4.0, 6.5, distance(vWorld.xz, vec2(${K1_AT[0].toFixed(3)}, ${K1_AT[1].toFixed(3)})));
-    wet = max(wet, thrown * (0.9 - 0.55 * smoothstep(0.5, 0.75, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 30.0 + vKind.w * 40.0))));
+    wet = max(wet, thrown * (0.55 - 0.4 * smoothstep(0.5, 0.75, luma) * smoothstep(-0.2, 0.6, sin(vWorld.y * 5.3 + vUv.x * 30.0 + vKind.w * 40.0))));
     albedo = mix(albedo, albedo * vec3(0.5, 0.2, 0.16) + vec3(0.03, 0.005, 0.004), wet);
     rough = mix(0.97, 0.5, wet);
   } else {

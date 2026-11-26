@@ -73,7 +73,7 @@ void main() {
   vec3 grainC = texture2D(tSalt, xz * 6.3 + uLumps.x * 0.7).rgb / RIME_MEAN;
   float nearBy = 1.0 - smoothstep(4.0, 12.0, length(cameraPosition - vWorld));
   n = normalize(n - vec3(grainN.r - 0.5, 0.0, grainN.g - 0.5) * 1.3 * nearBy);
-  vec3 albedo = vec3(0.345, 0.305, 0.288) * mix(mix(wide, fine, 0.5), grainC, 0.45 * nearBy) * (0.74 + 0.4 * mix(knob, grainN.b, 0.5 * nearBy));
+  vec3 albedo = vec3(0.22, 0.16, 0.135) * mix(mix(wide, fine, 0.5), grainC, 0.45 * nearBy) * (0.74 + 0.4 * mix(knob, grainN.b, 0.5 * nearBy));
   // The brine wicks up into the foot of it, and what ran out of the body it grew on still stains it.
   float above = vWorld.y - uGround;
   float stain = (1.0 - smoothstep(0.0, 0.22, above + 0.14 * (vnoise(xz * 3.0 + uLumps.x) - 0.5))) * (0.45 + 0.55 * vnoise(xz * 1.3 + uLumps.x * 2.0));
