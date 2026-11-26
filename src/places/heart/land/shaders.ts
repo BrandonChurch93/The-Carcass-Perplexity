@@ -189,7 +189,7 @@ void main() {
   // Which upright plane a face's pictures are laid on, from the smooth normal of the land and not from the triangle's own:
   // the two layings cross over a quarter turn of the face, so no triangle's edge shows as a change of grain.
   float kx = smoothstep(0.26, 0.74, n0.x * n0.x / (n0.x * n0.x + n0.z * n0.z + 1e-5));
-  if (steep > 0.003) {
+  if (steep > 0.003 && byLens < 0.999) {
     // The wall: each lava flow reads the cliff picture at its own place, so the bands run level and no two repeat.
     // The wall and the crags of the bench are massive rock broken along joints, and no stack of beds: nothing of them is read by its height.
     float shift = 0.0;
@@ -308,7 +308,8 @@ void main() {
     const float ropy = 0.0;
     const float TALUS = 8.0;
     #endif
-    if (ropy < 0.997) {
+    // Under the line view's lens none of this is kept: the heap has its own reading below.
+    if (ropy < 0.997 && byLens < 0.999) {
       vec2 p1 = vWorld.xz / TALUS;
       vec3 talus = PICK(tTalus, p1, wx.xz / TALUS, wy.xz / TALUS).rgb;
       plainNh = PICK(tTalusNh, p1, wx.xz / TALUS, wy.xz / TALUS).rgb;
@@ -429,7 +430,7 @@ void main() {
   // The camera's bench: the same rock read again at the scale of a hand.
   // Not under the wide lens, which has its own reading below.
   float close = smoothstep(32.0, 9.0, far) * (1.0 - hand);
-  if (close > 0.0) {
+  if (close * (1.0 - byLens) > 0.0) {
     // On a face the picture is read larger and counts for less, or its pits repeat up the riser.
     float tile = steep > 0.5 ? 2.3 : 1.3;
     vec3 ws = vWorld / tile;
@@ -520,44 +521,47 @@ void main() {
   // The rubble under the line view's lens, measured against the picture: near black clinker and grit, with no drawn pattern on it.
   // Its grain is read on three planes and summed, so nothing is drawn out down a slope.
   if (byLens > 0.0) {
-    // The heap is read as its stones are: the scoria's picture on three planes, at the size of a stone and again at the size of a finger,
+    // The heap is read as its stones are: the scoria's relief on three planes, at the size of a stone and again at the size of a finger,
     // so every lump carries pits and broken faces on its sides as on its top.
+    // A plane counts only where the lump looks its way: most pixels read one, a turn of the lump two, and the pits are read on the nearest plane alone.
     vec3 tw = n0 * n0;
     tw *= tw;
+    tw = max(tw / (tw.x + tw.y + tw.z) - 0.2, 0.0);
     tw /= tw.x + tw.y + tw.z;
-    vec3 tone = vec3(0.0);
     vec3 bent = vec3(0.0);
     float relief = 0.0;
-    float pits = 0.0;
     const float LUMP = 0.9;
     const float PIT = 0.21;
-    if (tw.x > 0.02) {
+    if (tw.x > 0.0) {
       vec3 r = PICK(tBoulderNh, vWorld.zy / LUMP + 0.31, wx.zy / LUMP, wy.zy / LUMP).rgb;
-      vec3 f = PICK(tBoulderNh, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
-      tone += tw.x * PICK(tBoulder, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
       relief += tw.x * r.b;
-      pits += tw.x * f.b;
-      bent += tw.x * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(0.0, 0.0, 1.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+      bent += tw.x * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5) + vec3(0.0, 0.0, 1.0) * (r.r - 0.5));
     }
-    if (tw.y > 0.02) {
+    if (tw.y > 0.0) {
       vec3 r = PICK(tBoulderNh, vWorld.xz / LUMP + 0.53, wx.xz / LUMP, wy.xz / LUMP).rgb;
-      vec3 f = PICK(tBoulderNh, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
-      tone += tw.y * PICK(tBoulder, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
       relief += tw.y * r.b;
-      pits += tw.y * f.b;
-      bent += tw.y * (vec3(0.0, 0.0, -1.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+      bent += tw.y * (vec3(0.0, 0.0, -1.0) * (r.g - 0.5) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5));
     }
-    if (tw.z > 0.02) {
+    if (tw.z > 0.0) {
       vec3 r = PICK(tBoulderNh, vWorld.xy / LUMP + 0.77, wx.xy / LUMP, wy.xy / LUMP).rgb;
-      vec3 f = PICK(tBoulderNh, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
-      tone += tw.z * PICK(tBoulder, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
       relief += tw.z * r.b;
-      pits += tw.z * f.b;
-      bent += tw.z * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5 + 0.8 * sharp * (f.g - 0.5)) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5 + 0.8 * sharp * (f.r - 0.5)));
+      bent += tw.z * (vec3(0.0, -1.0, 0.0) * (r.g - 0.5) + vec3(1.0, 0.0, 0.0) * (r.r - 0.5));
     }
+    vec3 f;
+    if (tw.y >= tw.x && tw.y >= tw.z) {
+      f = PICK(tBoulderNh, vWorld.xz / PIT + 0.19, wx.xz / PIT, wy.xz / PIT).rgb;
+      bent += 0.8 * sharp * (vec3(0.0, 0.0, -1.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+    } else if (tw.x >= tw.z) {
+      f = PICK(tBoulderNh, vWorld.zy / PIT + 0.67, wx.zy / PIT, wy.zy / PIT).rgb;
+      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(0.0, 0.0, 1.0) * (f.r - 0.5));
+    } else {
+      f = PICK(tBoulderNh, vWorld.xy / PIT + 0.41, wx.xy / PIT, wy.xy / PIT).rgb;
+      bent += 0.8 * sharp * (vec3(0.0, -1.0, 0.0) * (f.g - 0.5) + vec3(1.0, 0.0, 0.0) * (f.r - 0.5));
+    }
+    float pits = f.b;
     float grain = mix(relief, 0.5 * (relief + pits), sharp);
     // Near black clinker, measured against the picture, a little brown, black in its pits.
-    vec3 clinker = vec3(0.06, 0.052, 0.047) * (0.35 + 1.1 * smoothstep(0.1, 0.75, grain)) * (0.6 + 8.0 * dot(tone, vec3(0.3333)));
+    vec3 clinker = vec3(0.06, 0.052, 0.047) * (0.35 + 1.1 * smoothstep(0.1, 0.75, grain)) * (0.7 + 0.6 * pits);
     albedo = mix(albedo, clinker, byLens);
     n = normalize(n + bent * 2.4 * byLens);
     occ *= mix(1.0, 0.3 + 0.7 * smoothstep(0.15, 0.6, grain), byLens);

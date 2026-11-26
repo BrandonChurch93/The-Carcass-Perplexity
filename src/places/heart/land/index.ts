@@ -180,7 +180,7 @@ export function create(ctx: HeartContext): HeartPiece {
   fracture(cragAll, CRAG_JOINTS, (x, y, z, ny) => unit01((cragEdge(x, z) - 0.7) / 0.8) * unit01((0.85 - ny) / 0.3) * unit01((y - 0.6) / 0.8));
   keepOnly(cragAll, onBench);
   const cragFine = mesh(cragAll, nearMaterial);
-  cragFine.renderOrder = -5;
+  cragFine.renderOrder = -5.2;
   // The last metres before the line view's lens: rubble a hand to a forearm across, cut far finer than the bench under it.
   const AHEAD: [number, number] = [0.788, -0.616];
   const RUBBLE = { back: -7, front: 15, left: -10, right: 4, x0: -523, z0: 199, x1: -494, z1: 229 };
@@ -232,9 +232,12 @@ export function create(ctx: HeartContext): HeartPiece {
     return Math.min(s - FINE.back, FINE.front - s, t - FINE.left, FINE.right - t);
   };
   const rubble = mesh(sheet(RUBBLE.x0, RUBBLE.z0, RUBBLE.x1, RUBBLE.z1, 0.075, rubbleHeight, (x, z) => inPatch(x, z) > 0 && inFine(x, z) < 0.16, 0, 0.04, [0.2, 0.6]), nearMaterial);
-  rubble.renderOrder = -5;
+  rubble.renderOrder = -5.4;
   const rubbleFine = mesh(sheet(-516.6, 205.7, -501.7, 219.5, 0.035, rubbleHeight, (x, z) => inFine(x, z) > 0, 0, 0.03, [0.2, 0.6]), nearMaterial);
-  rubbleFine.renderOrder = -5;
+  rubbleFine.renderOrder = -5.6;
+  // Both are seen along themselves from a man's height: drawn nearest first, a lump hides what lies behind it before it is shaded.
+  nearFirst(rubble.geometry, AHEAD);
+  nearFirst(rubbleFine.geometry, AHEAD);
   const rocks = scatterRocks(ctx, shared, landHeight, feetLift);
   // What stands in front is drawn first, so that what it hides is never shaded: the loose rock, the camera's bench, the rest of the bench, the buttress, the wall.
   for (const r of rocks.bench) r.renderOrder = -6;
@@ -381,6 +384,29 @@ function keepOnly(g: THREE.BufferGeometry, keep: (x: number, z: number, y: numbe
     if (ok[a] && ok[b] && ok[c]) kept.push(a, b, c);
   }
   g.setIndex(kept);
+}
+
+/** Orders the faces of g by how far they lie along a lens's axis, nearest first: what stands in front is drawn first and what it hides is never shaded. */
+function nearFirst(g: THREE.BufferGeometry, ahead: readonly [number, number]): void {
+  const p = g.getAttribute('position') as THREE.BufferAttribute;
+  const index = g.getIndex() as THREE.BufferAttribute;
+  const count = index.count / 3;
+  const along = new Float64Array(count);
+  const order = new Uint32Array(count);
+  for (let f = 0; f < count; f++) {
+    const a = index.getX(f * 3);
+    const b = index.getX(f * 3 + 1);
+    const c = index.getX(f * 3 + 2);
+    along[f] = (p.getX(a) + p.getX(b) + p.getX(c)) * ahead[0] + (p.getZ(a) + p.getZ(b) + p.getZ(c)) * ahead[1];
+    order[f] = f;
+  }
+  order.sort((i, j) => (along[i] as number) - (along[j] as number) || i - j);
+  const sorted: number[] = [];
+  for (let f = 0; f < count; f++) {
+    const at = (order[f] as number) * 3;
+    sorted.push(index.getX(at), index.getX(at + 1), index.getX(at + 2));
+  }
+  g.setIndex(sorted);
 }
 
 function trim(g: THREE.BufferGeometry, below: number): void {
