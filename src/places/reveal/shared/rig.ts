@@ -133,6 +133,13 @@ export function createRig(): Rig {
     uMatPopcorn: { value: null },
     uMatStreaks: { value: null },
     uMatSpecks: { value: null },
+    uMatVeil: { value: null },
+    // The relief of the cloud photographs (slope in red and green, height in blue): the sky folder gives them.
+    uMatCellsNh: { value: null },
+    uMatPopcornNh: { value: null },
+    uMatSpecksNh: { value: null },
+    uMatStreaksNh: { value: null },
+    uMatVeilNh: { value: null },
     uCoverRect: { value: new THREE.Vector4(...COVER_RECT) },
     // The end of the day (see dusk() below). Every one of these is at its day value, and uDusk exactly 0, up to DUSK_FROM:
     // every shader branches on uDusk > 0.0 and leaves the arithmetic of the day untouched.

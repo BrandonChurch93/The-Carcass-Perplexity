@@ -18,6 +18,13 @@ uniform sampler2D uCloudTile;
 uniform sampler2D uCover;
 uniform sampler2D uMatPopcorn;
 uniform sampler2D uMatStreaks;
+uniform sampler2D uMatSpecks;
+uniform sampler2D uMatVeil;
+uniform sampler2D uMatCellsNh;
+uniform sampler2D uMatPopcornNh;
+uniform sampler2D uMatSpecksNh;
+uniform sampler2D uMatStreaksNh;
+uniform sampler2D uMatVeilNh;
 uniform vec4 uCoverRect;
 
 const vec2 LOW_DRIFT = vec2(${f(LOW_DRIFT[0])}, ${f(LOW_DRIFT[1])});
@@ -34,81 +41,16 @@ float westSea(vec2 xz) {
   return smoothstep(1.08, 1.6, length(fromSkull)) * (1.0 - smoothstep(limit - 130.0, limit + 130.0, xz.x));
 }
 
-// How much cloud a photograph shows at a point: its light, once the dark floor of the sea under it is taken off.
-float seen(vec3 c, float least, float full) {
-  return smoothstep(least, full, dot(c, vec3(0.3, 0.55, 0.15)));
+// One read of the relief of a cloud photograph (mat/*-nh.png: red and green the slope of its tops, blue their height), laid at
+// km a repeat and turned by m. xy: the way the tops fall, in the world's x and z. z: how high they stand, 0 to 1.
+vec3 cloudRelief(sampler2D t, vec2 w, mat2 m, float km, vec2 shift) {
+  vec3 c = texture2D(t, m * w / km + shift).rgb;
+  return vec3((c.rg * 2.0 - 1.0) * m, c.b);
 }
 
-// One layer of puffs: the sea is cut in cells of a few kilometres, and a cell holds one soft top or none. Most are tiny, some
-// middling, a few large; each is lumpy, never a disc, and of its own brightness.
-float puffs(vec2 w, float cell, float share) {
-  // (A layer whose cells are near the size of a pixel is left out: it would only glitter.)
-  float fineness = 1.0 - smoothstep(0.3, 0.7, max(fwidth(w.x), fwidth(w.y)) / cell);
-  if (fineness <= 0.0) return 0.0;
-  vec2 g = w / cell;
-  vec2 id = floor(g);
-  vec2 at = 0.5 + 0.3 * (vec2(hash12(id + 17.3), hash12(id + 41.7)) - 0.5);
-  float tail = hash12(id + 71.1);
-  float size = mix(0.17, 0.44, tail * tail);
-  vec2 d = fract(g) - at;
-  float lump = 0.5 * (vnoise(g * 3.1 + 9.0) - 0.5);
-  float dist = length(d * vec2(1.0, 1.0 + 0.5 * (hash12(id + 23.9) - 0.5))) * (1.0 + lump);
-  float soft = 1.0 - smoothstep(0.0, 0.92 * size, dist);
-  return soft * (0.5 + 0.5 * soft) * 1.25 * step(hash12(id + 3.1), share) * (0.4 + 0.6 * hash12(id + 5.5)) * fineness;
-}
-
-// The photograph of the low field at a point of its own drifting ground: from near a field of small cumulus at its real size
-// (laid at 150 km a repeat), from orbit the fine wind-drawn streaks that cover the sea (laid at 900 km a repeat). One read, two while they change over.
-float lowPicture(vec2 w) {
-  float away = smoothstep(450.0, 900.0, uViewKm);
-  // (The puffs are seen as specks until well up the rise; the streaks take the sea over above them.)
-  float specks = 1.0 - smoothstep(600.0, 1000.0, uViewKm);
-  float pic = 0.0;
-  if (specks > 0.0) {
-    // Small cumulus stand in streets along the wind, with clear sea between: thousands of separate puffs, each a few kilometres
-    // across and far smaller than a valley. Where they stand comes from the photographs (the streaks say where a street runs, the
-    // popcorn field how full it is); each puff is one soft round top, of its own size, in its own place.
-    vec2 pw = mat2(0.8, 0.6, -0.6, 0.8) * w;
-    float street = dot(texture2D(uMatStreaks, mat2(0.9, 0.44, -0.44, 0.9) * w / vec2(880.0, 520.0) + vec2(0.4, 0.1), 1.5).rgb, vec3(0.3, 0.55, 0.15));
-    float full = dot(texture2D(uMatPopcorn, pw / 260.0 + vec2(0.13, 0.4), 3.0).rgb, vec3(0.3, 0.55, 0.15));
-    // (Gaps in the streets, and here and there a cluster where the puffs have grown together into cells.)
-    float gap = smoothstep(0.3, 0.55, vnoise(pw / 23.0 + 5.0));
-    float knot = smoothstep(0.62, 0.8, vnoise(pw / 31.0 + 40.0));
-    float share = 0.008 + 0.98 * smoothstep(0.25, 0.36, street) * (0.65 + 0.35 * smoothstep(0.06, 0.26, full)) * (0.3 + 0.7 * gap);
-    float puff = max(max(puffs(pw, 2.6, share), puffs(mat2(0.6, 0.8, -0.8, 0.6) * w + 31.0, 3.8, share)), puffs(mat2(0.96, -0.28, 0.28, 0.96) * w + 77.0, 1.8, share));
-    puff = max(puff, puffs(mat2(0.28, 0.96, -0.96, 0.28) * w + 13.0, 5.4, max(knot * min(1.0, 2.0 * share), 0.9 * smoothstep(0.36, 0.5, street) * (0.3 + 0.7 * gap))) * 1.15);
-    // (Higher up only the cells are left to see: fused clusters, ten kilometres across, where the streets are fullest.)
-    puff = max(puff, puffs(mat2(0.7, -0.71, 0.71, 0.7) * w + 51.0, 9.5, smoothstep(300.0, 520.0, uViewKm) * max(knot, 0.8 * smoothstep(0.3, 0.44, street)) * (0.3 + 0.7 * gap)) * 1.3);
-    // (And in the core of a street the puffs have grown into one another: a soft lumpy mass, a few kilometres across, never a disc.)
-    float nearBy = 1.0 - smoothstep(280.0, 440.0, uViewKm);
-    if (nearBy > 0.0) {
-      float core = smoothstep(0.4, 0.56, street) * (0.25 + 0.75 * gap) * (0.5 + 0.5 * knot);
-      float lumps = 0.55 * vnoise(pw / 3.4 + 3.0) + 0.3 * vnoise(pw / 1.5 + 11.0) + 0.15 * vnoise(pw / 0.7 + 23.0);
-      puff = max(puff, nearBy * smoothstep(0.68 - 0.2 * core, 1.02 - 0.2 * core, lumps) * step(0.02, core) * (0.55 + 0.45 * lumps));
-    }
-    pic += specks * puff;
-  }
-  if (away > 0.0) {
-    // From orbit: the streaks, laid fine and finer, so the sea is covered in thin torn lines along the wind and nothing is a clump.
-    vec2 sw = mat2(0.97, -0.24, 0.24, 0.97) * w;
-    float hard = 1.0 - smoothstep(700.0, 1300.0, uViewKm);
-    float wideLay = seen(texture2D(uMatStreaks, sw / vec2(840.0, 620.0) + vec2(0.3, 0.7)).rgb, 0.3 + 0.12 * hard, 0.8 - 0.1 * hard);
-    // (The finer streaks ride another wind than the wide ones: the two slide past each other, so a bank grows here and tears there and is never carried as one stiff sheet.)
-    vec2 fw = w;
-    if (uLive > 0.0) fw += uWx * vec2(2.5, -3.5);
-    float fineLay = seen(texture2D(uMatStreaks, mat2(0.84, 0.54, -0.54, 0.84) * fw / vec2(430.0, 300.0) + vec2(0.7, 0.2)).rgb, 0.36, 0.85);
-    // (Here and there a large soft mass: a field of cells grown together, a few hundred kilometres across.)
-    // (They stand higher and are carried by another wind: they cross the streaks as the frame is held.)
-    vec2 mw = sw + uTime * vec2(8.5, -2.5);
-    if (uLive > 0.0) mw += uWx * vec2(30.0, -9.0);
-    float massWhere = texture2D(uCloudTile, mw / 2300.0 + vec2(0.33, 0.61), 2.0).b;
-    vec3 massCells = texture2D(uMatPopcorn, mw / 300.0 + 0.2, 1.5).rgb;
-    float massy = smoothstep(0.6, 0.82, massWhere) * seen(massCells, 0.1, 0.7);
-    float massShare = 0.34;
-    pic += sqrt(away) * mix(1.5, 1.0, smoothstep(700.0, 1300.0, uViewKm)) * (0.6 * wideLay + 0.75 * fineLay * (0.25 + 0.75 * wideLay)) + massShare * away * massy;
-  }
-  return pic;
-}
+// Set by lowField and highField for the sheet that draws them: the way the tops fall at the point last read.
+vec2 lowSlope = vec2(0.0);
+vec2 highSlope = vec2(0.0);
 
 // The ground of the low field: the world, read through a slow bend so the streets curve, and drifting.
 vec2 lowGround(vec2 at) {
@@ -120,46 +62,129 @@ vec2 lowGround(vec2 at) {
   return carried;
 }
 
-// The low cloud: x how thick (0 to 1), y the photograph's own light there (the build of its tops).
-// The share of the sky it takes comes from the cover and from slow noise that drifts with it: thick here, torn there, clear between.
-vec2 lowField(vec2 at) {
+// How much cloud a photograph of a cloud field holds at a point, against its own mean (1 on the mean; the dark sea of the
+// photograph is near 0, its brightest tops 2.5 to 3.5). A lay finer than a pixel falls to 1 by itself.
+float cloudIn(sampler2D t, vec2 uv, float mean) {
+  return dot(texture2D(t, uv).rgb, vec3(0.3, 0.55, 0.15)) / mean;
+}
+
+// Where the five lays of the low field were last read, and how much of the field each one made there (set by lowDepth).
+vec2 lowUvA = vec2(0.0);
+vec2 lowUvB = vec2(0.0);
+vec2 lowUvC = vec2(0.0);
+vec2 lowUvD = vec2(0.0);
+vec2 lowUvE = vec2(0.0);
+vec3 lowWeigh = vec3(0.0);
+
+const mat2 LOW_A = mat2(0.97, -0.24, 0.24, 0.97);
+const mat2 LOW_B = mat2(0.8, 0.6, -0.6, 0.8);
+const mat2 LOW_C = mat2(0.28, 0.96, -0.96, 0.28);
+const mat2 LOW_D = mat2(-0.6, 0.8, -0.8, -0.6);
+const mat2 LOW_E = mat2(0.71, -0.7, 0.7, 0.71);
+
+// The low cloud as the light meets it: how much water stands in the way (0 where the sea is clear, about 1 in the thin body of a
+// streak, 3 and more in the core of a cluster). The cloud is the photographs' own: wind streaks (1100 by 640 km a repeat) say where
+// cloud lies at all, and inside them a field of cumulus clusters (500 km), the puffs of a cluster (210 km), the lumps of a puff
+// (90 km) and its grain (30 km) each thin it or thicken it. The photographs are multiplied, never cut at a level: a streak thins
+// out to nothing through its own veil, and a cluster keeps the thin body the photograph shows round it.
+float lowDepth(vec2 at) {
   vec2 w = lowGround(at);
   // The sky stands clear over the lake of the Eye, where the rise begins.
   float amount = max(coverAt(at).g, 0.6 * westSea(at)) * smoothstep(100.0, 230.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
   // (Where it is thick and where torn is carried by winds of its own, a little off the wind of the field: the banks change as they go.)
   vec2 wSlow = w;
   vec2 wLane = w;
+  vec2 wCell = w;
+  vec2 wPuff = w;
   if (uLive > 0.0) {
     wSlow += uWx * vec2(-3.0, 4.0);
     wLane += uWx * vec2(3.0, -5.0);
+    // (And the clusters in a streak and the puffs in a cluster ride winds a little off each other: a bank is seen to work, not to slide as a card.)
+    wCell += uWx * vec2(2.2, -3.0);
+    wPuff += uWx * vec2(-1.6, 2.4);
   }
   float torn = texture2D(uCloudTile, wSlow / 1100.0 + vec2(0.7, 0.2), 3.5).b;
   float slow = 0.6 * texture2D(uCloudTile, w / 2900.0 + vec2(0.15, 0.55), 4.0).b + 0.4 * torn;
-  // From orbit the field is seen whole: an even scatter over all the sea, a little thicker here and thinner there.
-  float even = smoothstep(330.0, 760.0, uViewKm);
-  float field = amount * (mix(0.45, 0.16, even) + mix(0.55, 0.84, even) * smoothstep(mix(0.34, 0.3, even), mix(0.72, 0.6, even), slow + 0.2 * (amount - 0.6)));
-  // (And from there it lies in bands along the wind with long clear lanes of sea between, and thins toward the edge of the planet.)
-  float lane = texture2D(uCloudTile, mat2(0.97, -0.24, 0.24, 0.97) * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
-  float banked = 0.3 + 0.7 * smoothstep(0.3, 0.52, lane);
-  // (Watched for hours the even scatter gathers: the bands close up into banks and the lanes between them open to clear sea, and
-  // the banks are what the eye sees travel.)
+  float lane = texture2D(uCloudTile, LOW_A * wLane / vec2(4200.0, 1150.0) + vec2(0.52, 0.18), 2.0).b;
+  float banked = 0.25 + 0.75 * smoothstep(0.3, 0.52, lane);
   if (uLive > 0.0) banked = mix(banked, (0.05 + 1.1 * smoothstep(0.34, 0.6, lane)) * (0.1 + 1.3 * smoothstep(0.36, 0.62, torn)), 0.3 * smoothstep(0.0, 14.0, uWx));
-  field *= mix(1.0, banked * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at))), even);
-  float pic = lowPicture(w);
-  // The field takes its share of the photograph's cloud softly: thick here, thin there, and nowhere cut to an edge.
-  float thick = min(1.0, 1.25 * smoothstep(0.05, 0.85, pic)) * smoothstep(0.0, 0.5, field);
-  return vec2(thick, pic);
+  float share = amount * (0.12 + 0.88 * smoothstep(0.3, 0.66, slow + 0.2 * (amount - 0.6))) * banked * (0.45 + 0.55 * smoothstep(0.12, 0.45, limbCos(at)));
+
+  lowUvA = LOW_A * wLane / vec2(1100.0, 640.0) + vec2(0.3, 0.7);
+  lowUvB = LOW_B * wCell / 500.0 + vec2(0.13, 0.4);
+  lowUvC = LOW_C * wPuff / 210.0 + vec2(0.61, 0.27);
+  lowUvD = LOW_D * wCell / 90.0 + vec2(0.83, 0.52);
+  lowUvE = LOW_E * w / 30.0 + vec2(0.37, 0.91);
+  float streak = cloudIn(uMatStreaks, lowUvA, 0.31);
+  float cluster = cloudIn(uMatPopcorn, lowUvB, 0.34);
+  float puff = cloudIn(uMatSpecks, lowUvC, 0.2);
+  float lump = cloudIn(uMatPopcorn, lowUvD, 0.34);
+  float grain = cloudIn(uMatSpecks, lowUvE, 0.2);
+  // (A field is not one kind of cloud: here it is all fine specks along the wind, there the clusters have grown.)
+  float grown = smoothstep(0.35, 0.65, texture2D(uCloudTile, w / 1700.0 + vec2(0.44, 0.08), 3.0).b);
+  float byCluster = mix(0.45, 1.0, grown);
+  float byPuff = mix(0.9, 0.5, grown);
+  float knots = mix(1.0, cluster, byCluster) * mix(1.0, puff, byPuff);
+  float fine = mix(1.0, lump, 0.55) * mix(1.0, grain, 0.4);
+  lowWeigh = vec3(byCluster, byPuff, share);
+  // (The streak is the thin body; the clusters stand in it, and a little beside it.)
+  return pow(streak * knots * fine, 0.6) * share * 1.5 - mix(0.72, 0.48, share);
 }
 
-// The share of the sun that reaches a point of the ground under the cloud.
+// The low cloud: x how thick it is to the eye (0 to 1), y how high its tops stand there (0 to 1). The thin of it lets the sea
+// through as water lets light through (the law of Beer), so nothing has a cut edge.
+vec2 lowField(vec2 at) {
+  float depth = lowDepth(at);
+  vec3 a = texture2D(uMatStreaksNh, lowUvA).rgb;
+  vec3 b = texture2D(uMatPopcornNh, lowUvB).rgb;
+  vec3 c = texture2D(uMatSpecksNh, lowUvC).rgb;
+  vec3 d = texture2D(uMatPopcornNh, lowUvD).rgb;
+  vec3 e = texture2D(uMatSpecksNh, lowUvE).rgb;
+  lowSlope = 0.3 * ((a.rg * 2.0 - 1.0) * vec2(1.0, 1.5)) * LOW_A + 0.75 * lowWeigh.x * (b.rg * 2.0 - 1.0) * LOW_B + 0.75 * lowWeigh.y * (c.rg * 2.0 - 1.0) * LOW_C
+    + 0.6 * (d.rg * 2.0 - 1.0) * LOW_D + 0.45 * (e.rg * 2.0 - 1.0) * LOW_E;
+  float thick = 1.0 - exp(-1.3 * max(depth, 0.0));
+  return vec2(thick, clamp(depth / 3.5, 0.0, 1.0));
+}
+
+// The ice far above (HIGH_KM): thin fibrous sheets and long threads drawn out along its own wind, which blows across the wind of
+// the low field. at is a point of its own height. How thick, 0 to 1. It is the photograph of a veil of cirrus, thinned and
+// thickened by a finer lay of wind streaks, and it fades to nothing through its own fibre.
+vec2 highUvSheet = vec2(0.0);
+vec2 highUvThread = vec2(0.0);
+// The ice without the fall of its tops (what a shadow needs).
+float highDepth(vec2 at) {
+  vec2 hv = at + uTime * vec2(6.5, -3.8);
+  vec2 hs = hv;
+  if (uLive > 0.0) {
+    hv += uWx * vec2(36.0, -21.0);
+    hs += uWx * vec2(44.0, -16.0);
+  }
+  highUvSheet = mat2(0.9, 0.44, -0.44, 0.9) * hv / 1900.0 + vec2(0.2, 0.6);
+  highUvThread = mat2(0.84, 0.54, -0.54, 0.84) * hs / vec2(1000.0, 600.0) + vec2(0.7, 0.2);
+  float sheet = cloudIn(uMatVeil, highUvSheet, 0.27);
+  float thread = cloudIn(uMatStreaks, highUvThread, 0.31);
+  float where = smoothstep(0.5, 0.85, 0.6 * vnoise(hv / 1500.0 + 3.0) + 0.4 * vnoise(hv / 640.0 + 11.0));
+  float depth = sheet * mix(1.0, thread, 0.8) * where * 1.7 - 0.8;
+  return (1.0 - exp(-1.1 * max(depth, 0.0))) * smoothstep(300.0, 1100.0, length(at - vec2(${f(X(AT.lake.x))}, ${f(Z(AT.lake.y))})));
+}
+
+float highField(vec2 at) {
+  float thick = highDepth(at);
+  highSlope = 0.6 * (texture2D(uMatVeilNh, highUvSheet).rg * 2.0 - 1.0) * mat2(0.9, 0.44, -0.44, 0.9) + 0.8 * (texture2D(uMatStreaksNh, highUvThread).rg * 2.0 - 1.0) * mat2(0.84, 0.54, -0.54, 0.84);
+  return thick;
+}
+
+// The share of the sun that reaches a point of the ground under the cloud. Each height of cloud throws its own shadow, as far from
+// itself as it stands high, so the shadow of the ice lies well off the shadow of the puffs under it.
 float cloudShade(vec2 xz) {
   vec2 toSun = uSunDir.xz / max(uSunDir.y, 0.2);
   // From orbit the shadows are drawn longer than they fall, as relief is on a map, so that each height of cloud is seen to stand off the sea.
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
-  float low = lowField(xz + toSun * ${LOW_KM.toFixed(1)} * lift).x;
+  float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
+  float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.4, 0.72, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.22 * high * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;

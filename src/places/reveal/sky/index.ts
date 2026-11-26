@@ -34,8 +34,9 @@ vec3 cloudLight(vec2 xz, float facing, float thick, float high) {
   float day = dayAt(xz);
   if (uDusk > 0.0) {
     // Cloud stands over the ground: it keeps the sun a moment after the ground under it has lost it, the high cloud longest.
-    float sunH = sunHeight(xz) + uTerm.w * (0.09 + 0.1 * high);
-    float low = mix(uSunDir.y, 0.42 + 0.22 * max(sunH, 0.0), uTerm.w);
+    // (A top 2.6 km up sees over the curve of the planet by the sine of 1.6 degrees, the ice at 10.5 km by the sine of 3.3.)
+    float sunH = sunHeight(xz) + uTerm.w * (0.03 + 0.03 * high);
+    float low = mix(uSunDir.y, 0.2 + 0.62 * max(sunH, 0.0), uTerm.w);
     vec3 lit = sunLightAt(sunH, day) * low * (0.3 + 1.3 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick);
     vec3 cDusk = 0.72 * (lit + uSkyColour * 0.9 * skyLightAt(sunH, day) + moonAt(sunH) * (0.07 + 0.19 * clamp(facing, 0.0, 1.0)) * (0.5 + 0.5 * thick)) / 3.14159;
     float airDusk = 1.0 - exp(-0.008 * (1.0 - 0.6 * high) / max(mu, 0.12));
@@ -52,37 +53,34 @@ ${RIG_GLSL}
 ${NOISE_GLSL}
 ${WEATHER_GLSL}
 ${CLOUD_LIGHT_GLSL}
-uniform sampler2D uVeil;
 varying vec3 vWorld;
 void main() {
   vec2 xz = vWorld.xz;
   vec2 toSun = normalize(uSunDir.xz);
-  // What one ray meets on its way down: the veil of ice, then the low field, each at its own height.
+  // What one ray meets on its way down: the ice, then the low field, each at its own height.
   vec2 lean = (cameraPosition.xz - xz) / max(cameraPosition.y - ${LOW_KM.toFixed(1)}, 1.0);
   vec2 up = xz + lean * ${(HIGH_KM - LOW_KM).toFixed(1)};
 
-  // The low field. Each cloud is lit on its side toward the sun and dark on the other: its neighbour toward the sun shades it.
+  // The low field. Its tops are relief: a flank that falls toward the sun is lit, the flank behind it is in its own shade, and the
+  // ice above throws its shadow down on it.
   vec2 low = lowField(xz);
-  float reach = mix(1.3, 0.9 + 0.02 * uViewKm, smoothstep(330.0, 760.0, uViewKm));
-  float sunward = lowField(xz + toSun * reach).x;
-  float self = clamp(0.5 + 1.1 * (low.x - sunward), 0.0, 1.0);
-
-  // The veil: thin ice, far above, drifting the other way.
+  float flank = dot(lowSlope, toSun);
+  float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
+  float high = highField(up);
+  float highFlank = clamp(0.5 + 0.9 * dot(highSlope, toSun), 0.0, 1.0);
+  float under = highField(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
   vec2 hv = up + uTime * vec2(6.5, -3.8);
   if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
-  float ice = dot(texture2D(uVeil, mat2(0.9, 0.44, -0.44, 0.9) * hv / 800.0).rgb, vec3(0.3, 0.55, 0.15));
-  float where = vnoise(hv / 1500.0 + 3.0);
-  if (uViewKm < 900.0) where = 0.6 * where + 0.4 * vnoise(hv / 640.0 + 11.0);
-  float high = smoothstep(0.1, 0.7, ice) * smoothstep(0.38, 0.8, where) * smoothstep(500.0, 1500.0, length(up - vec2(${X(AT.lake.x).toFixed(1)}, ${Z(AT.lake.y).toFixed(1)})));
+  float ice = 0.25 + 0.5 * high;
 
-  vec3 lowColour = cloudLight(xz, 0.2 + 0.55 * low.y + 0.4 * self, low.x, 0.0) * mix(0.66 + 0.3 * low.y, 0.86 + 0.3 * low.y, smoothstep(330.0, 760.0, uViewKm)) * (1.0 + 0.5 * smoothstep(300.0, 600.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm))) * (1.0 - 0.15 * high);
-  vec3 highColour = cloudLight(up, 0.6, 0.6, 1.0);
+  vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
+  vec3 highColour = cloudLight(up, 0.35 + 0.5 * highFlank, 0.6, 1.0);
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
   lowColour *= 1.0 - 0.6 * smoothstep(0.2, 0.7, exp(-pow(dot(sunOnSea, sunOnSea) / 55000.0, 0.463)));
-  float a = low.x * 0.94;
-  float b = high * mix(0.09, 0.11, smoothstep(700.0, 1300.0, uViewKm));
+  float a = low.x * 0.96;
+  float b = high * 0.3;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
   vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
@@ -369,7 +367,7 @@ export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
   const tile = data('sky/cloud-tile.jpg', true);
   // Where the weather stands (assets-src/reveal/sky/make_cover.py), and the Builder's photographs of cloud from orbit (assets-src/reveal/mat/RECIPE.md).
-  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true]];
+  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true]];
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   for (const [uniform, file, repeat] of shared) (ctx.rig.uniforms[uniform] as THREE.IUniform).value = data(file, repeat);
 
@@ -413,7 +411,6 @@ export function create(ctx: Context): Piece {
     uWind: { value: wind },
   });
   sheet('cloud', new THREE.PlaneGeometry(90000, 90000).rotateX(-Math.PI / 2).translate(0, LOW_KM, 0), CLOUD_FRAGMENT, {
-    uVeil: { value: data('mat/veil.jpg', true) },
   });
   sheet('storm', quad({ x: AT.storm.x - 40, y: AT.storm.y }, 256, 80, 7, 0.03), STORM_FRAGMENT, { uPicture: { value: data('mat/storm.jpg', false) } });
   sheet('cyclone', quad(AT.cyclone, 1250, 1250, 6, 0), CYCLONE_FRAGMENT, { uStreaks: { value: data('mat/streaks.jpg', true) } });
