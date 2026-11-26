@@ -1,8 +1,8 @@
-# Status 106
+# Status 107
 
-2026-11-26 10:15 UTC. Phase 4, the other places and the rise.
+2026-11-26 10:38 UTC. Phase 5, the whole film.
 
-- `01-crab-final.jpg`: The Ribs, the hung carcass at native size: round 3 left, after the crab fix right (both at the final tier)
-- `02-sheet-shot-marsh-03.jpg`: The Blood Marsh in motion (shot marsh-03, the burst, twelve frames, review tier)
-- `03-sheet-shot-spine-03.jpg`: The Spine in motion (shot spine-03, twelve frames, review tier)
-- `04-compare-reveal-4.jpg`: The Reveal, the top of the rise after the cloud change: approved left, built right at the final tier, with two native crops
+- `01-establishing.jpg`: The establishing frame of every place and the titan frame, side by side (review tier)
+- `02-hook.jpg`: The first three seconds: the blades come out of the fog bank (every 16th frame)
+- `03-around-ribs-heart.jpg`: The join from the Ribs to the Heart: the bore reaches the lens, the cut falls on the hit at 41.8 s
+- `04-ending.jpg`: The ending as it stands: daylight, a faint beat, then black. This is being rebuilt

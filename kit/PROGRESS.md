@@ -24,28 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 106, 2026-11-26 10:15 UTC:
+Status 107, 2026-11-26 10:38 UTC:
 
-- `01-crab-final.jpg`: The Ribs, the hung carcass at native size: round 3 left, after the crab fix right (both at the final tier)
-- `02-sheet-shot-marsh-03.jpg`: The Blood Marsh in motion (shot marsh-03, the burst, twelve frames, review tier)
-- `03-sheet-shot-spine-03.jpg`: The Spine in motion (shot spine-03, twelve frames, review tier)
-- `04-compare-reveal-4.jpg`: The Reveal, the top of the rise after the cloud change: approved left, built right at the final tier, with two native crops
+- `01-establishing.jpg`: The establishing frame of every place and the titan frame, side by side (review tier)
+- `02-hook.jpg`: The first three seconds: the blades come out of the fog bank (every 16th frame)
+- `03-around-ribs-heart.jpg`: The join from the Ribs to the Heart: the bore reaches the lens, the cut falls on the hit at 41.8 s
+- `04-ending.jpg`: The ending as it stands: daylight, a faint beat, then black. This is being rebuilt
 
+Status 106, 2026-11-26 10:15 UTC, showed: The Ribs, the hung carcass at native size: round 3 left, after the crab fix right (both at the final tier); The Blood Marsh in motion (shot...
 Status 105, 2026-11-26 09:56 UTC, showed: The Ribs, the hung carcass at native size: round 3 left (final tier), after the crab fix right (draft tier); The Reveal, the top of the...
 Status 104, 2026-11-26 09:35 UTC, showed: The Ribs, round 3: approved left, built right at final tier (all five keys); The Blood Marsh, round 3: approved left, built right at final...
-Status 103, 2026-11-26 09:19 UTC, showed: The Reveal, round 3: approved left, built right at final tier (the lake, the skull massif, head and shoulders, the whole titan from orbit)...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T10:15:54Z
-phase 4: 14.09 h used of 17.00 h
-build: 34.41 h used of 72.00 h
+2026-11-26T10:38:51Z
+phase 5: 0.38 h used of 6.00 h
+build: 34.79 h used of 72.00 h
 extra rounds: yes
-half point: reached
-minutes since the last status: 20
+minutes since the last status: 23
 ```
 
 ## Phases
