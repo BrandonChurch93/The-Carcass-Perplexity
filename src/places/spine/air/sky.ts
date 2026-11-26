@@ -170,7 +170,7 @@ varying vec3 vDir;
 uniform highp sampler3D tNoise;
 uniform sampler2D tStormWall;
 uniform sampler2D tStorm;
-uniform vec3 uStormFrame;
+uniform vec4 uStormFrame;
 ${RIG_GLSL}
 ${SKY_GLSL}
 
@@ -185,13 +185,16 @@ void main() {
   if (plateOn < 1.0) {
     c = stratus(skyClear(d), cameraPosition, d);
     if (uStormFrame.z > 0.5) {
-      vec4 storm = texture2D(tStorm, gl_FragCoord.xy * uStormFrame.xy);
+      // The storm's pass is smaller than the frame: read over a little more than one of its own dots, so no stair shows on a thin lit edge.
+      vec2 at = gl_FragCoord.xy * uStormFrame.xy;
+      vec2 by = uStormFrame.xy * uStormFrame.w;
+      vec4 storm = 0.4 * texture2D(tStorm, at) + 0.15 * (texture2D(tStorm, at + by) + texture2D(tStorm, at - by) + texture2D(tStorm, at + vec2(by.x, -by.y)) + texture2D(tStorm, at + vec2(-by.x, by.y)));
       c = c * storm.a + storm.rgb;
     } else {
       c = skyBroad(cameraPosition, d);
     }
     // At the level the sky is what the air pass takes for the far end of the sea: no seam between the two.
-    c = mix(c, skyBroad(cameraPosition, normalize(vec3(d.x, 0.0003, d.z))), 0.85 * smoothstep(0.03, 0.0, d.y));
+    c = mix(c, skyBroad(cameraPosition, normalize(vec3(d.x, 0.0003, d.z))), 0.85 * smoothstep(0.0, -0.012, d.y));
     c *= 1.0 + uSkyStage.y;
   }
   if (plateOn > 0.0) {

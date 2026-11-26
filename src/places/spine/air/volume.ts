@@ -250,7 +250,7 @@ ${SEA_SHADE_GLSL}
   }
 
   // What is seen of the dome through the air: its cloud, softened, toward a ray lifted to the horizon.
-  vec3 toDome = normalize(vec3(rd.x, max(rd.y, 0.035), rd.z));
+  vec3 toDome = normalize(vec3(rd.x, max(rd.y, 0.075), rd.z));
   // Open sky is read sharp: the air before it is the same cloud, and a soft copy laid over it would wash its masses out.
   vec3 domeAir = skyCloud(ro, toDome, far > 50000.0 ? 1.0 : 5.0);
   // Where the strike's own sky stands, the air is that picture's: nothing is laid over the open sky, and the haze before a far spire is

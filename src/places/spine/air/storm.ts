@@ -26,10 +26,10 @@ vec3 skyClear(vec3 d) {
   float h = max(d.y, 0.0);
   float toDusk = 0.5 + 0.5 * dot(d.xz, LAST_LIGHT) * inversesqrt(max(dot(d.xz, d.xz), 1e-6));
   float lee = toDusk * toDusk;
-  vec3 low = mix(vec3(0.03, 0.038, 0.062), vec3(0.058, 0.074, 0.108), lee);
+  vec3 low = mix(vec3(0.03, 0.036, 0.06), vec3(0.047, 0.055, 0.082), lee);
   vec3 c = mix(low, vec3(0.012, 0.017, 0.034), 1.0 - exp(-h * 3.2));
-  c += vec3(0.05, 0.042, 0.033) * lee * lee * exp(-h / 0.045);
-  c += vec3(0.4, 0.125, 0.02) * pow(toDusk, 7.0) * exp(-h / 0.014);
+  c += vec3(0.036, 0.029, 0.02) * lee * lee * exp(-h / 0.018);
+  c += vec3(0.27, 0.082, 0.01) * pow(toDusk, 5.0) * exp(-h / 0.0055);
   return c;
 }
 // How much of the storm stands at q: 1 in the body of the wall and of the deck, falling to nothing at their edges. The wall is upwind of the
@@ -83,16 +83,18 @@ float stormBroad(vec3 q, float body, float lod) {
   float n = textureLod(tNoise, p / 7.3 + vec3(0.0, -0.0011 * uTime, 0.0), lod).r;
   return body + 0.95 * (n - 0.6) - 0.5;
 }
-float stormDensity(vec3 q, float body, float ds, out float broad) {
+float stormDensity(vec3 q, float body, float ds, out float broad, out float raw) {
   float d = stormBroad(q, body, clamp(log2(ds / 0.114), 0.0, 4.0));
+  raw = d;
   broad = clamp(d * 5.0, 0.0, 1.0);
   if (d <= -0.2) return 0.0;
   vec3 p = q - vec3(GALE.x, 0.0, GALE.y) * (0.046 * uTime) - vec3(0.0, 0.021 * uTime, 0.0);
-  float lodFine = log2(ds / 0.033);
-  float fine = lodFine < 3.0 ? mix(textureLod(tNoise, p / 2.1, max(lodFine, 0.0)).b, 0.45, smoothstep(1.5, 3.0, lodFine)) : 0.45;
-  // The small billows stand on the skin of the large ones and do not reach into the body.
-  d += 0.42 * (fine - 0.5) * (1.0 - smoothstep(0.12, 0.55, d));
-  return clamp(d * 5.0, 0.0, 1.0);
+  float lodFine = log2(ds / 0.048);
+  float fine = lodFine < 4.0 ? mix(textureLod(tNoise, p.zxy / 3.1, max(lodFine, 0.0)).r, 0.5, smoothstep(2.5, 4.0, lodFine)) : 0.5;
+  // The lesser billows, a few hundred metres across, stand on the skin of the great ones and do not reach into the body.
+  d += 0.62 * (fine - 0.5) * (1.0 - smoothstep(0.2, 0.8, d));
+  raw = d;
+  return clamp(d * 8.0, 0.0, 1.0);
 }
 
 // The light of a stroke inside the cloud at q: the channel is a line of light from the tip up into the cloud, and the cloud about it glows.
@@ -104,7 +106,7 @@ float strokeLight(vec3 q) {
   float k = clamp(dot(q - a, ab) / max(dot(ab, ab), 1e-6), 0.0, 1.0);
   vec3 off = q - (a + ab * k);
   float r2 = dot(off, off);
-  return (1.0 - exp(-0.5 * uStrikeTop.w)) * (0.5 + 0.5 * k) * (0.16 / (0.16 + r2) + 0.2 / (1.0 + 0.25 * r2));
+  return (1.0 - exp(-0.5 * uStrikeTop.w)) * (0.5 + 0.5 * k) * (0.16 / (0.16 + r2) + 0.12 / (1.0 + 0.6 * r2));
 }
 // The round lights of the rig (a bolt, a cloud lit from inside), in the cloud at q.
 vec3 roundLights(vec3 q) {
@@ -159,7 +161,7 @@ void main() {
   float facing = dot(d, toLight);
   // Light from the open dusk on the lee, and through the cloud a little toward it.
   float phase = 0.7 + 0.5 * max(facing, 0.0) * max(facing, 0.0);
-  vec3 keyLight = vec3(0.15, 0.128, 0.122) * phase;
+  vec3 keyLight = vec3(0.118, 0.1, 0.094) * phase;
   vec3 flash = uFlash / (1.0 + dot(uFlash, vec3(0.33)) / 0.05);
   // Each sample of a frame starts its steps a share of a step on from the last one's: the frame is marched as finely as all of them together.
   vec3 sheets = sheetsNow();
@@ -171,6 +173,10 @@ void main() {
   float last = 0.0;
   float came = 0.0;
   for (int i = 0; i < 80; i++) {
+    // The skin of a billow is lit as a face: which way it looks (nrm) and how much of the light behind it it stops (hard).
+    vec3 nrm = vec3(0.0);
+    float hard = 0.0;
+    float heads = 1.0;
     if (t > tEnd || T < 0.02) break;
     vec3 q = ro + d * t;
     float body = stormBody(q);
@@ -191,7 +197,8 @@ void main() {
     }
     float ds = max(0.055, t * 0.022);
     float broad = 0.0;
-    float dens = stormDensity(q, body, ds, broad);
+    float raw = 0.0;
+    float dens = stormDensity(q, body, ds, broad, raw);
     if (dens > 0.0 && clear && came > 0.0) {
       // The march has stepped through the skin of the cloud: the skin is found between the last two steps, and the march goes on from it.
       // Every ray then takes its steps from the cloud's own surface, not from shells about the lens, and no shell shows on the cloud.
@@ -200,13 +207,46 @@ void main() {
       for (int k = 0; k < 4; k++) {
         float mid = 0.5 * (lo + hi);
         vec3 qm = ro + d * mid;
-        if (stormDensity(qm, stormBody(qm), ds, broad) > 0.0) hi = mid;
+        if (stormDensity(qm, stormBody(qm), ds, broad, raw) > 0.0) hi = mid;
         else lo = mid;
       }
-      t = hi + ds * (0.15 + 0.7 * uPhase);
-      q = ro + d * t;
+      // On the skin itself, the same place for every sample of the frame: which way the face of the billow looks, from the cloud about it.
+      float reachN = max(0.09, ds * 1.1);
+      vec3 qs = ro + d * (hi + 0.02);
+      float r0 = 0.0;
+      float rx = 0.0;
+      float ry = 0.0;
+      float rz = 0.0;
+      float held = 0.0;
+      stormDensity(qs, stormBody(qs), ds, held, r0);
+      vec3 qx = qs + vec3(reachN, 0.0, 0.0);
+      vec3 qy = qs + vec3(0.0, reachN, 0.0);
+      vec3 qz = qs + vec3(0.0, 0.0, reachN);
+      stormDensity(qx, stormBody(qx), ds, held, rx);
+      stormDensity(qy, stormBody(qy), ds, held, ry);
+      stormDensity(qz, stormBody(qz), ds, held, rz);
+      vec3 grad = vec3(rx, ry, rz) - r0;
+      nrm = -grad * inversesqrt(max(dot(grad, grad), 1e-8));
+      // The heads on the face: round lumps one to four hundred metres across that ride with the body. They turn the face this way and that
+      // to the light, and the creases between them are dark.
+      float lodH = clamp(log2(hi / 9.0), 0.0, 3.0);
+      vec3 ph = (qs - vec3(GALE.x, 0.0, GALE.y) * (0.034 * uTime)).yzx / 1.7 + vec3(0.0, 0.0, 0.0031 * uTime);
+      float eH = 0.018 * exp2(lodH);
+      float h0 = textureLod(tNoise, ph, lodH).r;
+      vec3 gH = vec3(textureLod(tNoise, ph + vec3(eH, 0.0, 0.0), lodH).r, textureLod(tNoise, ph + vec3(0.0, eH, 0.0), lodH).r, textureLod(tNoise, ph + vec3(0.0, 0.0, eH), lodH).r) - h0;
+      // The noise is read turned (yzx): its slopes are turned back to the world's axes.
+      nrm = normalize(nrm - gH.zxy * (5.0 / exp2(lodH)));
+      float hollow = clamp(0.5 + 3.2 * (textureLod(tNoise, ph, lodH + 2.4).r - h0), 0.0, 1.0);
+      heads = mix(1.3, 0.3, hollow * hollow * (3.0 - 2.0 * hollow));
+      // A solid head stops the light; a torn edge, where the ray is soon out of the cloud again, lets it by.
+      vec3 qIn = qs + d * 0.22;
+      float deep = stormDensity(qIn, stormBody(qIn), ds, held, rx);
+      hard = 0.92 * smoothstep(0.0, 0.75, deep);
+      t = hi + 0.02;
+      q = qs;
       body = stormBody(q);
-      dens = stormDensity(q, body, ds, broad);
+      dens = stormDensity(q, body, ds, broad, raw);
+      dens = max(dens, 0.05);
     }
     clear = dens <= 0.0;
     came = ds;
@@ -218,24 +258,34 @@ void main() {
       float toward = clamp(stormBroad(ql, stormBody(ql), lod) * 5.0, 0.0, 1.0);
       // A face of cloud that looks to the light has less cloud toward it than at itself; a flat base that the light only rakes has as much.
       float facing = clamp(0.16 + 1.7 * (broad - toward), 0.0, 1.0);
+      float up = 0.5;
+      if (hard > 0.0) {
+        facing = 1.15 * smoothstep(-0.25, 1.0, dot(nrm, toLight));
+        up = 0.5 + 0.5 * nrm.y;
+      }
       float shade = toward + 1.4 * clamp(stormBroad(qm, stormBody(qm), lod + 1.0) * 5.0, 0.0, 1.0) + 0.15 * dens;
       // The sky overhead reaches what is near the top of the body, the snow and the cloud sea what is near its base.
       vec3 qu = q + vec3(0.0, 0.5, 0.0);
       float over = clamp(stormBroad(qu, stormBody(qu), lod + 1.0) * 5.0, 0.0, 1.0);
       float thin = 1.0 - dens;
+      // A billow stands out of the body and a crease lies in it: the cloud a few hundred metres about q, taken together, is thinner than q at
+      // the head of a billow and thicker in a crease. The heads are open to the sky and the snow, the creases see only cloud.
+      float about = stormBroad(q, body, lod + 1.6);
+      float crease = clamp(0.5 + 2.6 * (about - raw), 0.0, 1.0);
+      float open = mix(1.55, 0.2, crease * crease * (3.0 - 2.0 * crease)) * heads;
       // The last light does not reach far into the storm: the wall and what falls from it stand in their own dark.
       float reach = 0.22 + 0.78 * smoothstep(-5.5, 1.5, dot(q.xz, GALE));
-      vec3 lit = keyLight * reach * facing * (exp(-shade * 2.4) + 0.08 * exp(-shade * 0.5)) + vec3(0.018, 0.025, 0.045) * exp(-over * 3.0);
+      vec3 lit = keyLight * reach * facing * (0.4 + 0.6 * open) * (exp(-shade * 2.4) + 0.08 * exp(-shade * 0.5)) + vec3(0.018, 0.025, 0.045) * exp(-over * 3.0) * open * (2.0 * up);
       // The sky overhead on what is open to it, the snow and the cloud sea from below on the undersides, and more of both in the thin edges.
-      lit += vec3(0.0075, 0.0088, 0.014) * (0.7 + 0.6 * thin);
+      lit += vec3(0.0085, 0.01, 0.016) * (0.7 + 0.6 * thin) * open * (1.4 - 0.8 * up);
       // The storm lit from inside: violet, most where the cloud is thick about the light.
       vec3 inner = vec3(0.62, 0.36, 1.0) * strokeLight(q) * 1.1 + roundLights(q) * 0.5 + sheetLight(q, sheets) * 0.11;
-      lit += (inner + flash * 0.12) * (0.3 + 0.7 * dens);
+      lit += (inner + flash * 0.045) * (0.3 + 0.7 * dens) * (0.25 + 0.75 * open);
       // Air between the lens and the cloud: far cloud goes to the colour of the sky at its foot.
       float air = exp(-t * 0.022);
       lit = mix(farAir, lit, air);
       // No step takes more than a third of the light, however long it is: far cloud ends softly and never in slices.
-      float a = (1.0 - exp(-dens * min(ds * 5.5, 0.42))) ;
+      float a = max(1.0 - exp(-dens * min(ds * 8.0, 0.6)), hard);
       col += T * a * lit;
       T *= 1.0 - a;
     }
@@ -298,10 +348,10 @@ export function createStorm(ctx: Context, noise: THREE.Data3DTexture): Storm {
   const lens = new THREE.Camera();
   const uniforms: Record<string, THREE.IUniform> = {
     tStorm: { value: target.texture },
-    // x, y: one over the size of the frame; z: 1 while the storm's target is drawn.
-    uStormFrame: { value: new THREE.Vector3(1, 1, 0) },
+    // x, y: one over the size of the frame; z: 1 while the storm's target is drawn; w: two thirds of one of the target's dots, in dots of the frame.
+    uStormFrame: { value: new THREE.Vector4(1, 1, 0, 1) },
   };
-  const frame = (uniforms.uStormFrame as THREE.IUniform<THREE.Vector3>).value;
+  const frame = (uniforms.uStormFrame as THREE.IUniform<THREE.Vector4>).value;
   return {
     uniforms,
     render: (renderer, camera, on) => {
@@ -322,6 +372,7 @@ export function createStorm(ctx: Context, noise: THREE.Data3DTexture): Storm {
       const h = Math.ceil(height / stormShrink(width));
       frame.x = 1 / width;
       frame.y = 1 / height;
+      frame.w = 0.66 * stormShrink(width);
       if (target.width === w && target.height === h) return;
       target.dispose();
       target = make(w, h);
