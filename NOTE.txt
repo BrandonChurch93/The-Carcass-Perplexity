@@ -1,6 +1,7 @@
-2026-11-26 03:04 UTC
-work at 885df8b on agent/breath-ground-2
-hb4: broken plates, vapour in the pit, far picture regraded
-look-1.jpg = out/work/looks-hb4-breath-0.png
-look-2.jpg = out/work/looks-hb4-breath-2.png
-look-3.jpg = out/work/looks-hb4-breath-4.png
+2026-11-26 03:33 UTC
+work at bbcc325 on agent/breath-ground-2
+V2: winding channel, broken plates to the tide, plate turned (no wood grain), vapour low with one column, fractured slabs
+look-1.jpg = out/work/looks-v2-breath-0.png
+look-2.jpg = out/work/looks-v2-breath-1.png
+look-3.jpg = out/work/looks-v2-breath-2.png
+look-4.jpg = out/work/looks-v2-breath-4.png
