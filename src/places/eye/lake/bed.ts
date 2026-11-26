@@ -11,6 +11,7 @@ export const ABSORB: [number, number, number] = [0.12, 0.045, 0.03];
 export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, THREE.IUniform> {
   return {
     tLip: { value: lip },
+    uLipIn: { value: 0 },
     uLipFrom: { value: new THREE.Vector2(KEYS.edge.position[0], KEYS.edge.position[2]) },
     tMat: { value: mirrored(ctx.assets.texture('mat/matplate.jpg', { anisotropy: 8 })) },
     tMatH: { value: mirrored(ctx.assets.texture('mat/matplate-h.png', { kind: 'data', anisotropy: 4 })) },
@@ -29,6 +30,7 @@ export function bedUniforms(ctx: Context, lip: THREE.Texture): Record<string, TH
 export const BED_GLSL = /* glsl */ `
 uniform sampler2D tLip;
 uniform vec2 uLipFrom;
+uniform float uLipIn;
 uniform sampler2D tMat;
 uniform sampler2D tMatH;
 uniform sampler2D tLipPlate;
@@ -53,7 +55,7 @@ struct Bed {
 
 // Metres from the centre to the lip of the shaft, at the bearing of this point.
 float lipRadius(vec2 xz) {
-  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r;
+  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn;
 }
 
 // The lip where this point is: x is metres in from its line, measured square to it (less than nothing over the shaft), and yz is the way along it.
@@ -101,12 +103,16 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   // The angle is nothing in the south, where the cameras stand: its seam lies in the north, two kilometres off.
   float a2 = atan(b.x, b.y);
   vec3 sinter = texture2D(tSinter, b / 3.0).rgb;
+  // The same crust again, larger and turned, in patches: no row of it comes round twice.
+  vec2 turned = vec2(b.x * 0.74 - b.y * 0.67, b.x * 0.67 + b.y * 0.74) / 5.3 + 0.41;
+  float patchy = smoothstep(0.35, 0.65, vnoise(b / 2.9 + 11.0));
+  sinter = mix(sinter, texture2D(tSinter, turned).rgb, patchy);
   vec3 sinterFar = texture2D(tSinter, b / 17.0 + 0.37).rgb;
-  vec3 snh = texture2D(tSinterNh, b / 3.0).rgb;
+  vec3 snh = mix(texture2D(tSinterNh, b / 3.0).rgb, texture2D(tSinterNh, turned).rgb, patchy);
   vec3 pale = sinter * (sinterFar / vec3(0.501, 0.351, 0.19)) * vec3(0.84, 1.02, 1.3);
-  float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2));
+  float slabs = smoothstep(0.5, 0.68, 0.6 * vnoise(b / 7.3 + 2.0) + 0.4 * vnoise(b / 2.2)) * (1.0 - 0.85 * smoothstep(150.0, 230.0, w));
   float crust = smoothstep(9.0, 1.5, w);
-  vec3 silt = vec3(0.07, 0.05, 0.035) * (0.5 + 1.0 * snh.b);
+  vec3 silt = mix(vec3(0.07, 0.05, 0.035), vec3(0.2, 0.185, 0.165), smoothstep(150.0, 230.0, w)) * (0.5 + 1.0 * snh.b);
   vec3 bare = mix(silt, pale, max(slabs, crust));
   float beach = smoothstep(11.0, 2.5, inShore);
   if (beach > 0.0) {
@@ -124,7 +130,9 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float thin = smoothstep(4.0, 46.0, inShore) * (1.0 - 0.8 * slabs * (1.0 - crust));
   float cover = smoothstep(0.2, 0.44, field + 0.16 * smoothstep(150.0, 10.0, w) + 0.1 * (vnoise(b / 11.0 + 6.0) - 0.5)) * thin;
   // The crust of the lip is bare but for a strand here and there.
-  cover *= mix(0.12, 1.0, smoothstep(2.6, 8.0, wLip + 2.0 * (vnoise(b / 2.3 + 1.0) - 0.5)));
+  cover *= mix(0.4, 1.0, smoothstep(2.6, 8.0, wLip + 2.0 * (vnoise(b / 2.3 + 1.0) - 0.5)));
+  // The mats keep to the lip: a band of them round the deep, torn at its outer edge, and wet sand and cobbles between it and the shore.
+  cover *= 1.0 - 0.92 * smoothstep(120.0, 215.0, w + 60.0 * (blobs - 0.5));
   o.albedo = bare;
   o.tilt = (snh.xy * 2.0 - 1.0) * 0.8;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
@@ -147,10 +155,10 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
       mh = mix(mh, texture2D(tMatH, q2).r, wide);
     }
     // The plate is redder than the weed of this lake: amber, gold where it is thin.
-    mp = mix(mp, dot(mp, vec3(0.3, 0.5, 0.2)) * vec3(1.5, 1.08, 0.46), 0.75) * (0.35 + 0.65 * smoothstep(0.08, 0.5, mh));
+    mp = mix(mp, dot(mp, vec3(0.3, 0.5, 0.2)) * vec3(1.5, 0.95, 0.24), 0.5) * (0.3 + 0.7 * smoothstep(0.08, 0.5, mh));
     // Rust in one bed, gold in the next.
     float tone = 0.45 * vnoise(vec2(aw * 420.0, rw / 140.0) + 5.0) + 0.3 * vnoise(vec2(aw * 1500.0, rw / 60.0)) + 0.25 * vnoise(b / 6.0);
-    vec3 weed = mp * mix(vec3(1.1, 0.72, 0.36), vec3(1.7, 1.4, 0.7), smoothstep(0.3, 0.72, tone));
+    vec3 weed = 0.85 * mp * mix(vec3(0.9, 0.5, 0.2), vec3(1.2, 1.0, 0.4), smoothstep(0.3, 0.72, tone));
     // Its relief says what stands where: the pale slabs come out of the water, the strands lie just under it, the gaps between are deeper.
     float up = (mh - 0.6) * 0.42;
     float slab = smoothstep(0.02, 0.07, up);
@@ -159,7 +167,8 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     o.albedo = mix(bare, mix(weed, mp * vec3(0.95, 1.0, 1.08), slab), cover);
     o.depth = mix(depth, -up + 0.02, cover);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
-    float afloat = mix(smoothstep(0.2, 0.5, mh) * 0.55, 0.6 + 0.32 * smoothstep(0.15, 0.45, mh), smoothstep(25.0, 140.0, away));
+    float low = smoothstep(30.0, 6.0, cameraPosition.y);
+    float afloat = mix(smoothstep(0.2, 0.5, mh) * 0.55, mix(0.9, 0.6 + 0.32 * smoothstep(0.15, 0.45, mh), low), smoothstep(25.0, 140.0, away));
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.03, up) * 0.92, afloat), cover);
     o.occ = mix(o.occ, 0.5 + 0.5 * smoothstep(0.1, 0.5, mh), cover);
     o.glow = 0.3 * cover * (1.0 - slab) * smoothstep(0.2, 0.5, mh);

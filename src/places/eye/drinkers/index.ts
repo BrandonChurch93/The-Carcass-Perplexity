@@ -31,10 +31,11 @@ interface Sheet {
   reach: number;
 }
 
-const SHEETS: Record<'down' | 'up' | 'back' | 'calf', Sheet> = {
+const SHEETS: Record<'down' | 'up' | 'back' | 'calf' | 'quarter', Sheet> = {
   down: { file: 'mat/drinker-down', size: [1536, 1024], feet: 0.931, back: 0.105, middle: 0.36, tall: 2.4, faces: 1, pivot: [0.63, 0.3], from: 0.62, to: 0.76, reach: 2.25 },
   up: { file: 'mat/drinker-up', size: [1448, 1086], feet: 0.962, back: 0.24, middle: 0.62, tall: 2.4, faces: -1, pivot: [0.36, 0.33], from: 0.4, to: 0.28, reach: 0 },
   back: { file: 'mat/drinker-back', size: [1024, 1536], feet: 0.965, back: 0.35, middle: 0.5, tall: 2.45, faces: 0, pivot: [0.5, 0.37], from: 0.4, to: 0.3, reach: 0 },
+  quarter: { file: 'mat/drinker-quarter', size: [1024, 1536], feet: 0.975, back: 0.4, middle: 0.47, tall: 2.45, faces: 0, pivot: [0.66, 0.28], from: 0.3, to: 0.18, reach: 0 },
   calf: { file: 'mat/calf', size: [1448, 1086], feet: 0.897, back: 0.093, middle: 0.4, tall: 1.3, faces: 1, pivot: [0.66, 0.3], from: 0.64, to: 0.78, reach: 1.15 },
 };
 
@@ -175,7 +176,7 @@ interface Group {
 export function create(ctx: Context): Piece {
   const animals = herd(ctx.rng('drinkers'), ctx.events.rise - 1.7);
   const groups: Group[] = [];
-  for (const name of ['down', 'up', 'back', 'calf'] as const) {
+  for (const name of ['down', 'up', 'back', 'calf', 'quarter'] as const) {
     const sheet = SHEETS[name];
     const members = animals.map((animal, index) => ({ animal, index })).filter((m) => m.animal.sheet === name);
     if (members.length === 0) continue;

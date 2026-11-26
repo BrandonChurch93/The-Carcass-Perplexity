@@ -154,13 +154,16 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     vec3 w3 = pow(abs(gn), vec3(4.0));
     w3 /= w3.x + w3.y + w3.z;
     vec4 a = screeAt(p.xz) * w3.y;
+    // Under the feet of a low eye the same broken stone is small: cobbles and pebbles, the plate laid six times finer.
+    float fine = (1.0 - smoothstep(7.0, 22.0, length(cameraPosition - p))) * smoothstep(12.0, 4.0, cameraPosition.y);
+    if (fine > 0.0) a = mix(a, screeAt(p.xz * 6.0 + 3.7) * w3.y, fine);
     if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
     if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
     vec2 qr = vec2(p.x * 0.8 - p.z * 0.6, p.x * 0.6 + p.z * 0.8) * 0.31 + 7.3;
     vec4 b = screeAt(qr);
     // The larger copy is laid from above: on a steep face it would be pulled long, so it fades there.
     vec3 grey = a.rgb * mix(vec3(1.0), 0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5, w3.y * w3.y);
-    gravel = grey * vec3(1.9, 1.84, 1.74);
+    gravel = grey * vec3(2.1, 1.95, 1.72);
     stone = gravel;
     // The relief of the plate turns the faces of each stone.
     float e = 0.04;
