@@ -1,0 +1,6 @@
+2026-11-26 16:06 UTC
+work at cd700f7 on agent/reveal-orbit
+v1 in progress, draft tier at preview size. Before above after: the hold and the ending in steps of two seconds; the cyclone at 10200, 10440, 10680; the last two seconds. The cyclone now turns as one body and the ember swells and sinks; the camera's roll is seen in the ending. Wrong: in the hold the sea cloud changes but no single bank can be followed on a sheet, the cloud masses got chunkier than the approved scatter, and the body still moves little in the last two seconds.
+look-1.jpg = out/work/v1/show-1-sheet.png
+look-2.jpg = out/work/v1/show-2-cyclone.png
+look-3.jpg = out/work/v1/show-3-last.png
