@@ -736,7 +736,7 @@ export function create(ctx: Context): Piece {
   const plate = new THREE.Mesh(plateGeometry, plateMaterial);
   plate.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh, runs), strands, crabMesh, runs);
+  ctx.scene.add(ctx.parts.built('drowned', plate, strands, crabMesh), strands, crabMesh);
 
   return {
     dispose: () => {
