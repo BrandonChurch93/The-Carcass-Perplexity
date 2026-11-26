@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 110, 2026-11-26 11:42 UTC:
+Status 111, 2026-11-26 12:04 UTC:
 
-- `01-ending.jpg`: The ending, version 1: the day leaves the body and the Heart beats in the dark (draft tier, the builder's sheet)
-- `02-pair.jpg`: The ending, version 1: the beat at frame 11340 over the last frame, 11743 (review tier, 1080p)
-- `03-loop.jpg`: The card loop, version 1: twelve frames across its eight seconds (draft tier, the builder's sheet)
-- `04-loop-seam.jpg`: The card loop's seam: its last six frames, then its first six (draft tier)
+- `01-lines-n8.jpg`: The cut check, the Reveal: each line of the narration on its picture, a at a fifth of the line and b at seven tenths (draft tier)
+- `02-beat.jpg`: The ending, version 1: the Heart's beat at a step of ten frames, 11322 to 11432 (the builder's sheet)
+- `03-frame-10788-preview-draft.jpg`: Film frame 10788, preview, draft tier
+- `04-frame-10668-preview-draft.jpg`: Film frame 10668, preview, draft tier
 
+Status 110, 2026-11-26 11:42 UTC, showed: The ending, version 1: the day leaves the body and the Heart beats in the dark (draft tier, the builder's sheet); The ending, version 1...
 Status 109, 2026-11-26 11:19 UTC, showed: The join into the rise after the fix: the rings spread from the centre (draft tier); The cut check: the lines of the Eye on their pictures...
 Status 108, 2026-11-26 10:58 UTC, showed: The Ribs, the frame the jurors chose for the card (final tier).
-Status 107, 2026-11-26 10:38 UTC, showed: The establishing frame of every place and the titan frame, side by side (review tier); The first three seconds: the blades come out of the...
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T11:42:58Z
-phase 5: 1.45 h used of 6.00 h
-build: 35.86 h used of 72.00 h
+2026-11-26T12:04:06Z
+phase 5: 1.80 h used of 6.00 h
+build: 36.21 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 24
+minutes since the last status: 21
 ```
 
 ## Phases
