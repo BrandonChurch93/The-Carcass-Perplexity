@@ -28,10 +28,16 @@ const float BANK_TOP = 240.0;
 // The top of the cloud under the crest: far out the sea itself, billowed; against the lee of the ridge a bank some hundreds of metres under the crest,
 // so that the flank goes down into cloud; and in the saddles the storm's cloud, which comes over the crest and falls down the lee into the bank.
 const float CLOUD_UNDER = 130.0;
+// Out from the ridge the deck falls away: it is banked against the rock and lies this much deeper two kilometres off, so that the lens on
+// the crest looks down into it.
+const float CLOUD_DEEP = 330.0;
+// The rock goes into the deck's mist from this far under the crest, and is gone in it this much deeper, metres.
+const float MIST_FROM = 85.0;
+const float MIST_RISE = 150.0;
 // seaLod is how small the deck is read at a place, by its distance: 0 at 2.9 km, one more for each doubling, under 0 nearer.
 // The deck's own light: what the sky gives its heads, and what the dusk gives the faces that look at it.
 const vec3 SEA_COLD = vec3(0.115, 0.125, 0.18);
-const vec3 SEA_WARM = vec3(0.16, 0.085, 0.045);
+const vec3 SEA_WARM = vec3(0.3, 0.165, 0.09);
 // The heaps of the deck (air/heaps.ts): metres a repeat, and metres from the floor of a hollow to the crown of a head.
 const float HEAP_SPAN = 2300.0;
 const float HEAP_TALL = 180.0;
@@ -99,7 +105,7 @@ float seaTop(vec3 p, bool swell) {
   // The ranges stand where the long swell is high and leave gaps where it is low, so they are seen at different distances.
   float range = out_ * (0.3 + 1.0 * smoothstep(0.4, 0.75, seaSwell)) * (lee > 0.0 ? 1.5 : 1.0);
   seaTall = HEAP_TALL * (1.0 + (n > 0.0 ? range : 0.0));
-  float lift = HEAP_TALL * (n + 0.1 * out_ + range * max(n, 0.0)) + 70.0 * bank;
+  float lift = HEAP_TALL * (n + 0.1 * out_ + range * max(n, 0.0)) + 40.0 * bank;
   // Beside the ridge no billow stands over the crest: a head that rolled up there stood as a dark hill before the spires for a quarter
   // of a second. A head that would is pressed down, the more the higher it reaches, and keeps its shape; farther out the deck may
   // heap as it likes.
@@ -109,7 +115,7 @@ float seaTop(vec3 p, bool swell) {
     seaTall *= press;
     lift = room - 0.6 * room * press;
   }
-  float top = ridge.y - CLOUD_UNDER + lift;
+  float top = ridge.y - CLOUD_UNDER - CLOUD_DEEP * smoothstep(150.0, 2200.0, abs(lee)) + lift;
   // The tallest of the far heads stop short of the height nothing of this cloud stands over, rounded and not cut.
   float high = top - (BANK_TOP - 170.0);
   if (high > 0.0) top = BANK_TOP - 170.0 + 160.0 * (1.0 - exp(-high / 160.0));
@@ -246,15 +252,17 @@ export const SEA_MARCH_GLSL = /* glsl */ `
       vec3 h = ro + rd * far;
       seaLod = log2(max(far, 30.0) * seaPix);
       float top = seaTop(h, true);
-      float sunk = top - seaTall * seaN - h.y;
+      // And over the level the deck's mist climbs the flank: the rock goes down into it and is not cut by it.
+      // (By its depth under the crest, whatever the deck does there: the flank is built to go into cloud and not to be seen low.)
+      float sunk = max(top - seaTall * seaN - h.y, ridgeAt(h.x).y - MIST_FROM - h.y);
       if (sunk > 0.0) {
-        seaCover = smoothstep(0.0, 60.0, sunk);
+        seaCover = 1.0 - exp(-sunk * sunk / (0.55 * MIST_RISE * MIST_RISE));
         t = far - 0.5;
         found = true;
       }
     }
     if (!found && rd.y < -1e-4) {
-      t = max(t, (ridgeAt(p.x).y - CLOUD_UNDER - ro.y) / rd.y);
+      t = max(t, (ridgeAt(p.x).y - CLOUD_UNDER - CLOUD_DEEP - ro.y) / rd.y);
       found = true;
     }
     if (found && t < far) seaAt = t;
@@ -284,7 +292,7 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     }
     float n0 = seaLift(p, 1, false);
     // 0 on the floor of a hollow, 1 on the crown of a head.
-    float head = smoothstep(-0.12, 0.34, seaHead);
+    float head = smoothstep(-0.2, 0.55, seaHead);
     // The way a face of it looks, from the heights a little way off on two hands: wider with the distance, as the lens sees less of it.
     float e = 5.0 + 0.012 * t;
     vec3 facing = normalize(vec3(tall * (n0 - seaLift(p + vec3(e, 0.0, 0.0), 1, false)), e, tall * (n0 - seaLift(p + vec3(0.0, 0.0, e), 1, false))));
@@ -317,13 +325,18 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     vec3 cold = SEA_COLD * (0.03 + 2.05 * above + 1.75 * dusk * (0.12 + 0.88 * head)) * mix(vec3(0.5, 0.68, 1.3), vec3(0.97, 0.98, 1.03), head);
     // The side of a head that looks at the dusk has a warm rim.
     float rim = clamp(dot(facing, toDusk) * 2.4 + 0.1, 0.0, 1.0);
-    vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (0.4 + 3.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
+    vec3 warm = SEA_WARM * dusk * (0.1 + 0.9 * head) * (1.1 + 3.4 * rim * rim) * (1.0 - 0.7 * stormSide(rd));
     vec3 sea = cold + warm;
     // The mist the ray came through over the heads before this one.
     vec3 mistTone = (SEA_COLD * vec3(1.55, 1.65, 1.95) + 0.5 * SEA_WARM * (1.0 - stormSide(rd)));
+    // On the rock over the deck it is mist alone, torn by the grain; only deep under the level is it the deck's own cloud.
+    if (seaCover > 0.0) {
+      sea = mix(mistTone * (0.8 + 0.5 * head), sea, seaCover * seaCover);
+      seaCover = clamp(seaCover * (1.0 + 1.0 * grain * (1.0 - seaCover)), 0.0, 1.0);
+    }
     if (seaMist > 0.0) {
       float mistAt;
-      sea = mix(sea, mistTone, 0.85 * seaVeil(ro, rd, mistAt));
+      sea = mix(sea, mistTone, 0.6 * seaVeil(ro, rd, mistAt));
     }
     // The air over the deck is thick with its own vapour: row behind row the heads go paler and bluer and their hollows fill.
     // (The vapour takes the contrast of a far bank and leaves its form: the banks of the real deck are read large there, lit on top.)
