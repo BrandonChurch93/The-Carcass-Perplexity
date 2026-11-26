@@ -121,11 +121,10 @@ export function smoothGround(x: number, z: number): number {
   // The bank is a broken edge of plate, not a beach: the rock stands to the water and the bed begins a stride inside it.
   const bank = smooth(inside / lerp(2.4, 1.6, south) + 1);
   const bedLevel = SEA - 0.06 - 0.16 * smooth(inside / 4) - 0.5 * smooth((inside - 9) / 6);
+  // The shelf comes down to the tide: within a few metres of the bank its plates lie a hand or two over the water, not a wall's height.
+  const down = smooth(-inside / 9);
+  base = lerp(Math.min(base, SEA + 0.16 + 0.1 * broad), base, down);
   let h = lerp(base, bedLevel, bank);
-  // A bar of rock in the shallows, just awash: it lies under the lens of the picture of the waders feeding.
-  const dx = x + 50.4;
-  const dz = z + 22.6;
-  h += 0.62 * Math.exp(-(dx * dx * 0.5 + dz * dz) / 7) + 0.3 * Math.exp(-((x + 46.5) * (x + 46.5) + (z + 24.2) * (z + 24.2)) / 2.5);
   return h;
 }
 
@@ -247,12 +246,54 @@ export function bedded(x: number, z: number): number {
   return h1 + 0.5 * (h2 - h1) * k - 0.05 * (1 - smooth(edge / 0.07)) * (h1 < h2 + 0.03 ? 1 : 0.2);
 }
 
+/** The rocks in the shallows under the lens of the picture of the waders feeding: a dozen lumps of dark wet rock, a foot or two high, just
+ *  out of the water, where a bar of the bed breaks the surface. The lens stands over them and they are the soft dark of its lower edge. */
+const BAR: [number, number] = [-50.2, -22.4];
+export function lumps(x: number, z: number): number {
+  const dx = x - BAR[0];
+  const dz = z - BAR[1];
+  const within = Math.exp(-(dx * dx * 0.35 + dz * dz) / 5.5);
+  if (within < 0.03) return 0;
+  const ci = Math.floor(x / 0.95);
+  const cj = Math.floor(z / 0.95);
+  let top = 0;
+  for (let a = -1; a <= 1; a++) {
+    for (let b = -1; b <= 1; b++) {
+      const i = ci + a;
+      const j = cj + b;
+      if (hash2(i * 13 + 5, j * 7 + 1) < 0.22) continue;
+      const rx = (i + 0.15 + 0.7 * hash2(i * 5 + 2, j * 3 + 9)) * 0.95;
+      const rz = (j + 0.15 + 0.7 * hash2(i * 3 + 8, j * 11 + 4)) * 0.95;
+      const radius = 0.38 + 0.4 * hash2(i * 7 + 6, j * 5 + 3);
+      const tall = 0.2 + 0.32 * hash2(i * 9 + 1, j * 13 + 7);
+      const d = Math.hypot(x - rx, (z - rz) * (0.8 + 0.5 * hash2(i + 17, j + 5))) / radius + 0.25 * (noise2(x / 0.33 + 5.5, z / 0.33 + 1.5) - 0.5);
+      if (d < 1) top = Math.max(top, tall * (1 - d * d) ** 0.6);
+    }
+  }
+  return 0.42 * within + top * smooth((within - 0.05) / 0.3);
+}
+
 /** Where the dead wader lies (DEAD_WADER of shared/anchors.ts) the rock is one dry plate, level to a few centimetres for 3.2 m round, standing
  *  clear of the tide: 1 on it, 0 off it. */
 const PAD: [number, number] = [-27.3, 22.6];
-/** Its edge is a plate's: broken, never round, 3.2 to 5 m from the middle, and a riser a third of a metre through. */
-export const padAt = (x: number, z: number): number =>
-  1 - smooth((Math.hypot(x - PAD[0], (z - PAD[1]) * 1.25) - 3.6 - 2.2 * (fbm2(x / 4.5 + 9.3, z / 4.5 + 2.8, 2) - 0.36) - 0.5 * (noise2(x / 1.1 + 4.4, z / 1.1 + 7.7) - 0.5)) / 0.35);
+/** Its edge is a plate's: six broken sides, 3 to 5 m from the middle, and a riser a third of a metre through. */
+const PAD_EDGES: [number, number][] = [
+  [0.2, 3.3],
+  [1.15, 4.6],
+  [2.3, 3.0],
+  [3.25, 5.2],
+  [4.1, 3.4],
+  [5.3, 4.3],
+];
+export const padAt = (x: number, z: number): number => {
+  const dx = x - PAD[0];
+  const dz = z - PAD[1];
+  if (dx * dx + dz * dz > 81) return 0;
+  // A plate has straight broken sides and corners: it is the ground inside six lines, each pushed about a little.
+  let out = -1e9;
+  for (const [turn, far] of PAD_EDGES) out = Math.max(out, dx * Math.cos(turn) + dz * Math.sin(turn) - far);
+  return 1 - smooth((out - 0.9 * (fbm2(x / 3.1 + 9.3, z / 3.1 + 2.8, 2) - 0.5) - 0.4 * (noise2(x / 0.8 + 4.4, z / 0.8 + 7.7) - 0.5)) / 0.35);
+};
 let padHeight: number | null = null;
 const padLevel = (): number => (padHeight ??= Math.max(SEA + 0.45, smoothGround(PAD[0], PAD[1]) - 0.1));
 
@@ -268,6 +309,7 @@ export function ground(x: number, z: number): number {
   const shore = smooth((base - (SEA - 0.04)) / 0.08);
   const relief = lerp(base, lerp(base, bedded(x, z), shore) + RELIEF * (Math.max(plateAt(x, z), POOL) - 0.5), fine);
   const pad = padAt(x, z);
+  if (pad <= 0) return relief + lumps(x, z);
   return pad > 0 ? lerp(relief, padLevel() - 0.03 * sat(Math.hypot(x - PAD[0], z - PAD[1]) / 3.2) ** 2, pad) : relief;
 }
 

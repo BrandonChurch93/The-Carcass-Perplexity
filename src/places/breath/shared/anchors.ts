@@ -93,17 +93,18 @@ export interface Wader {
 
 /** The time the waders' places are given at: the key of the picture of them feeding. */
 export const FEED_AT = keySeconds('breath-1');
-/** The first nine feed in the channel in front of the camera of key breath-1 and stay between its banks; the tenth stands on the bank. */
+/** The first three feed in the channel in front of the camera of key breath-1. The next six are scattered in ones and twos: two together in
+ *  the channel, one alone farther up it, one far up it, one out on the dry shelf east of it, one on the wet flats west. The tenth stands on the bank. */
 export const NEAR_WADERS: Wader[] = [
   { x: -51.7, z: -27.4, heading: 105, speed: 0.22, size: 1.08, up: false, phase: 0 },
   { x: -47.6, z: -30.9, heading: 100, speed: 0.16, size: 1.05, up: true, phase: 1 },
   { x: -42.6, z: -33.4, heading: 112, speed: 0.1, size: 0.98, up: false, phase: 2 },
-  { x: -57, z: -46, heading: 30, speed: 0.3, size: 1, up: false, phase: 3 },
-  { x: -66, z: -54, heading: -60, speed: 0.25, size: 1.05, up: true, phase: 4 },
-  { x: -73, z: -70, heading: 150, speed: 0.3, size: 1, up: false, phase: 5 },
-  { x: -84, z: -92, heading: 70, speed: 0.28, size: 0.95, up: false, phase: 6 },
-  { x: -60, z: -78, heading: -20, speed: 0.3, size: 1, up: true, phase: 7 },
-  { x: -95, z: -60, heading: 200, speed: 0.3, size: 1, up: false, phase: 8 },
+  { x: -58, z: -45, heading: 30, speed: 0.2, size: 1, up: false, phase: 3 },
+  { x: -61.5, z: -47.8, heading: -60, speed: 0.12, size: 1.05, up: true, phase: 4 },
+  { x: -44, z: -66, heading: 150, speed: 0.06, size: 1, up: false, phase: 5 },
+  { x: -80, z: -100, heading: 70, speed: 0.2, size: 0.95, up: false, phase: 6 },
+  { x: -72, z: -74, heading: -20, speed: 0.15, size: 1, up: true, phase: 7 },
+  { x: -91, z: -53, heading: 200, speed: 0.08, size: 1, up: false, phase: 8 },
   { x: -35.4, z: -30.5, heading: -40, speed: 0, size: 1.08, up: true, phase: 9 },
 ];
 /** The far flock stands 150 to 520 m out, between these bearings from the shaft, in degrees. */
