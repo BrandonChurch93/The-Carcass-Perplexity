@@ -51,12 +51,12 @@ Owner: spine_ground_owner. Folders: `src/places/spine/` root, `shared/`, `land/`
 
 ## Cost at 3840 x 2160, seconds a sample (cost tool, draft, frame 7234, one sample)
 
-- Whole frame with the partner's parts: 10.36. The aim was 7; it is not met.
-- land: 5.75 above the empty frame (7.28 drawn alone). Not cut: 5.4 at version 2.
+- Whole frame with the partner's parts: 10.04 (10.36 on the run before; the tool varies by about 0.3). The aim was 7; it is not met.
+- land: 6.09 above the empty frame (7.62 drawn alone; 5.75 on the run before). Not cut, and no cheaper than version 2 (5.4).
   Where it goes, by taking the shader apart: about 2.5 in triangles and the depth pass (a flat colour costs this), 1.1 in the rig's light, 1.8 in the picture lookups.
-- sky: 0.53. air, cloud, cloud-sea, spindrift: one pass at half size, inside the 1.54 the tool reports as the empty frame; not measured apart.
+- sky: 0.56. air, cloud, cloud-sea, spindrift: one pass at half size, inside the 1.54 the tool reports as the empty frame; not measured apart.
 - Kept behind constants: `SPIRE_MID` in `land/meshes.ts` ([170, 440] is the finer mesh on the spires beside the first, +0.3); `ANISOTROPY` in `land/index.ts` (4, +1.75); `SLABS_ON_GROUND` in `land/shaders.ts` (true, +0.1); `DEPTH_FIRST` in `land/index.ts` (false, +0.4).
-- The partner's parts at this frame, before their last bundle: runners 0.80, kites 0.42, strikes about 0.1.
+- The partner's parts at this frame: runners 0.76, kites 0.45, the six strikes 0.85 together.
 
 ## Checks at hand-over
 
