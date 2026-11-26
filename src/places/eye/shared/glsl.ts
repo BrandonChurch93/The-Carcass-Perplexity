@@ -107,6 +107,11 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
   vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + 2.5 * over).rgb) * uPlateTone.rgb;
+  // In the water under a long lens the wall is drawn out up and down: three looks one above another, so that it runs in soft streaks.
+  if (tall) {
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u, clamp(vv + 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb)
+      + ungrade(texture2D(tPlate, vec2(u, clamp(vv - 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb));
+  }
   // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
   if (bias > 0.0) {
     // That is how a low eye sees it. An eye that stands high over the water looks down into the mirror and finds the sky overhead in it.

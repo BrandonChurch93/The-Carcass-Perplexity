@@ -118,7 +118,7 @@ void main() {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
     float quiet = 0.012 * exp(-r / 260.0) * cos(r * 0.42 - uTime * 2.1) + 0.006 * exp(-r / 420.0) * cos(r * 0.19 - uTime * 1.3 + 1.0);
     // What heaves at the centre sends out wide slow rings, heavy water, one every five seconds.
-    quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0));
+    quiet += 0.2 * exp(-r / 170.0) * smoothstep(20.0, 60.0, r) * cos(r * 0.135 - uTime * 1.15 + 2.5 * vnoise(out2 * 2.0) + 2.2 * vnoise(p.xz / 47.0 + 5.0)) * (0.35 + 1.3 * vnoise(p.xz / 29.0 + vec2(0.0, uTime * 0.02)));
     float since = uCentre.x;
     float front = 70.0 + 40.0 * max(since, 0.0);
     float thrown = since > -1.5 ? 0.05 * smoothstep(-1.5, 0.3, since) * exp(-max(since, 0.0) / 3.5) * smoothstep(front + 30.0, front - 40.0, r) * exp(-r / 220.0) * cos(r * 0.3 - uTime * 2.6) : 0.0;
@@ -183,10 +183,15 @@ void main() {
   // Seen low across water, a wave moves what it mirrors up and down and hardly at all to the side: the mirrored wall breaks into level bars.
   vec2 level = normalize(-v.xz);
   rd.xz = mix(level * length(rd.xz), rd.xz, 0.15 + 0.85 * smoothstep(0.12, 0.5, v.y));
+  // Through a long lens the wall in the water is one picture, pulled long and only shaken by the ripples: a wave moves it a little, it does not deal it out in pieces.
+  if (uPlateTone.w > 1.5) {
+    vec3 still = reflect(-v, vec3(0.0, 1.0, 0.0));
+    rd.y = max(mix(still.y, rd.y, 0.3), 0.003);
+  }
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
   vec3 refl = farRadiance(p, rd, soft) * mix(vec3(0.5, 0.6, 0.76), vec3(0.8, 0.86, 0.95), smoothstep(8.0, 40.0, cameraPosition.y) * step(uPlateTone.w, 1.5));
-  refl *= 1.0 + clamp(0.6 * dot(heave, normalize(v.xz)) / max(v.y, 0.03), -0.4, 0.4) * smoothstep(0.5, 0.12, v.y);
+  refl *= 1.0 + 0.42 * tanh(0.33 * dot(heave, normalize(v.xz)) / max(v.y, 0.03)) * smoothstep(0.5, 0.12, v.y);
   // Whatever stands in the water or at its edge, drawn once more from under it.
   if (uMirrorOn > 0.5) {
     vec4 m4 = uMirrorMatrix * vec4(p.x, 0.0, p.z, 1.0);
@@ -245,7 +250,8 @@ void main() {
     // The low sun hardly enters the deep: what little does is the same everywhere, so the shade of the rim draws no edge on it.
     vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
     vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    // The wall is seen for a few metres in from the lip and no further: beyond that the deep is its own dark.
+    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.5 * smoothstep(2.4, 0.1, inside)) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));

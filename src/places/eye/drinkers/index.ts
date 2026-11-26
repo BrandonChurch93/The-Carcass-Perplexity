@@ -128,8 +128,10 @@ void main() {
   // Wet and dark below, where it has stood in the lake; dry and dusty above.
   float above = vWorld.y - max(vFeet, 0.0);
   float wet = smoothstep(0.6, 0.15, above + 0.25 * vnoise(vWorld.xy * 3.0 + vWorld.z));
-  vec3 albedo = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), 0.25) * vec3(1.3, 1.34, 1.38), 0.95) * mix(1.0, 0.5, wet);
+  vec3 albedo = min(mix(skin, vec3(dot(skin, vec3(0.3, 0.5, 0.2))), mix(0.25, 0.62, step(0.1, uShade.w))) * vec3(1.3, 1.34, 1.38), 0.95) * mix(1.0, 0.5, wet);
   float occ = 0.5 + 0.5 * smoothstep(0.15, 0.75, soft);
+  // Far off in the shade of the evening the herd is pale: tan going to grey.
+  if (uShade.w > 0.1) albedo = mix(albedo, vec3(0.62, 0.59, 0.54), 0.6);
   vec3 c = rigShade(vec3(vWorld.x, vWorld.y + 3.2, vWorld.z), n, v, albedo, mix(0.9, 0.55, wet), occ * mix(0.7, 1.0, smoothstep(0.0, 1.2, above)));
   // The pale gravel and the water under it throw the sky back up at it.
   c += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.16 * skyOpen(vWorld) / 3.14159);

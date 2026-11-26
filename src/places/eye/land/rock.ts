@@ -164,12 +164,16 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     // The larger copy is laid from above: on a steep face it would be pulled long, so it fades there.
     vec3 grey = a.rgb * mix(vec3(1.0), 0.55 + 0.9 * b.rgb / vec3(0.33, 0.32, 0.31) * 0.5, w3.y * w3.y);
     gravel = grey * vec3(2.1, 1.95, 1.72);
+    // Between the stones the flat is sand and fine gravel in beds of its own: the blocks stand in it, they do not pave it.
+    float beds = smoothstep(0.42, 0.62, 0.6 * vnoise(p.xz / 13.0 + 4.0) + 0.4 * vnoise(p.xz / 3.7 + 9.0) + 0.25 * (0.5 - a.a)) * w3.y * w3.y;
+    vec3 sand = vec3(0.37, 0.36, 0.34) * (0.8 + 0.25 * vnoise(p.xz * 2.3) + 0.2 * vnoise(p.xz * 11.0));
+    gravel = mix(gravel, sand, 0.85 * beds);
     stone = gravel;
     // The relief of the plate turns the faces of each stone.
     float e = 0.04;
     float hx = screeAt(p.xz + vec2(e, 0.0)).a - screeAt(p.xz - vec2(e, 0.0)).a;
     float hz = screeAt(p.xz + vec2(0.0, e)).a - screeAt(p.xz - vec2(0.0, e)).a;
-    bentFlat = vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
+    bentFlat = vec3(-hx, 0.0, -hz) * 5.0 * (1.0 - 0.85 * beds) * (1.0 - smoothstep(120.0, 260.0, length(cameraPosition - p)));
     bentFace = bentFlat;
     gh = mix(a.a, b.a, 0.35);
     fh = gh;

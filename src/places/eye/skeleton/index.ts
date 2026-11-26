@@ -53,7 +53,7 @@ void main() {
   // Old bone: ivory where the air has had it, stained amber where it lies in the weed.
   vec3 picture = texture2D(tBone, vUv).rgb;
   float grey = dot(picture, vec3(0.3, 0.5, 0.2));
-  vec3 bone = mix(picture, vec3(grey) * vec3(1.06, 1.0, 0.86), 0.55) * 2.1;
+  vec3 bone = mix(picture, vec3(grey) * vec3(0.84, 0.96, 1.0), 0.92) * 1.8;
   float low = smoothstep(0.34, 0.04, vWorld.y + 0.12 * (vnoise(vWorld.xz * 5.0) - 0.5));
   vec3 albedo = mix(bone, bone * vec3(0.62, 0.36, 0.14), 0.8 * low);
   vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.92), 0.75, 0.35 + 0.65 * smoothstep(0.1, 0.55, h));

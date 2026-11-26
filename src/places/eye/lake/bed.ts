@@ -55,7 +55,9 @@ struct Bed {
 
 // Metres from the centre to the lip of the shaft, at the bearing of this point.
 float lipRadius(vec2 xz) {
-  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn;
+  // Drawn in, the deep keeps its reach toward the wide camera and gives way at the sides: an oval lying along the look.
+  float toward = dot(xz, vec2(-0.309, 0.951)) / max(length(xz), 1.0);
+  return texture2D(tLip, vec2(atan(xz.x, -xz.y) / 6.2831853, 0.5)).r - uLipIn * (1.0 - 0.95 * smoothstep(0.15, 0.97, toward));
 }
 
 // The lip where this point is: x is metres in from its line, measured square to it (less than nothing over the shaft), and yz is the way along it.
@@ -127,14 +129,14 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
   float rays = 0.5 * vnoise(vec2(aw * 70.0, rw / 260.0)) + 0.3 * vnoise(vec2(aw * 230.0 + 3.0, rw / 90.0)) + 0.2 * vnoise(vec2(aw * 800.0, rw / 31.0) + 7.0);
   float blobs = 0.6 * vnoise(b / 48.0) + 0.4 * vnoise(b / 13.0 + 3.0);
   float field = 0.72 * rays + 0.28 * blobs + 0.08 * (vnoise(b / 3.1) - 0.5);
-  float thin = smoothstep(4.0, 46.0, inShore) * (1.0 - 0.8 * slabs * (1.0 - crust));
-  float cover = smoothstep(0.2, 0.44, field + 0.16 * smoothstep(150.0, 10.0, w) + 0.1 * (vnoise(b / 11.0 + 6.0) - 0.5)) * thin;
+  float thin = smoothstep(uLipIn > 1.0 ? 1.0 : 4.0, uLipIn > 1.0 ? 14.0 : 46.0, inShore) * (1.0 - (uLipIn > 1.0 ? 0.2 : 0.8) * slabs * (1.0 - crust));
+  float cover = smoothstep(0.2, 0.44, field + (uLipIn > 1.0 ? 0.3 : 0.0) + 0.16 * smoothstep(150.0, 10.0, w) + 0.1 * (vnoise(b / 11.0 + 6.0) - 0.5)) * thin;
   // The crust of the lip is bare but for a strand here and there.
-  cover *= mix(0.4, 1.0, smoothstep(2.6, 8.0, wLip + 2.0 * (vnoise(b / 2.3 + 1.0) - 0.5)));
+  cover *= mix(0.8, 1.0, smoothstep(2.6, 8.0, wLip + 2.0 * (vnoise(b / 2.3 + 1.0) - 0.5)));
   // The mats keep to the lip: a band of them round the deep, torn at its outer edge, and wet sand and cobbles between it and the shore.
-  cover *= 1.0 - 0.92 * smoothstep(120.0, 215.0, w + 60.0 * (blobs - 0.5));
+  cover *= 1.0 - 0.92 * smoothstep(190.0, 300.0, w + 60.0 * (blobs - 0.5));
   o.albedo = bare;
-  o.tilt = (snh.xy * 2.0 - 1.0) * 0.8;
+  o.tilt = (snh.xy * 2.0 - 1.0) * 0.5;
   o.occ = 0.55 + 0.45 * smoothstep(0.1, 0.6, snh.b);
   o.glow = 0.0;
   o.depth = depth;
@@ -161,13 +163,16 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec3 weed = 0.85 * mp * mix(vec3(0.9, 0.5, 0.2), vec3(1.2, 1.0, 0.4), smoothstep(0.3, 0.72, tone));
     // Its relief says what stands where: the pale slabs come out of the water, the strands lie just under it, the gaps between are deeper.
     float up = (mh - 0.6) * 0.42;
-    float slab = smoothstep(0.02, 0.07, up);
+    float low = smoothstep(30.0, 6.0, cameraPosition.y);
+    // From high on the spur the pale crust between the strands is lost in the rust of the band: a little of it shows, no more.
+    float slab = smoothstep(0.02, 0.07, up) * mix(0.22, 1.0, low);
     // Toward the lip the amber goes to brown and then to the dark of the deep.
     weed *= mix(vec3(0.42, 0.34, 0.3), vec3(1.0), smoothstep(6.0, 70.0, w));
+    // Seen from high in the last light the band is rust and amber, brighter than any one strand of it is close to.
+    weed *= mix(vec3(1.75, 1.45, 1.05), vec3(1.0), low);
     o.albedo = mix(bare, mix(weed, mp * vec3(0.95, 1.0, 1.08), slab), cover);
     o.depth = mix(depth, -up + 0.02, cover);
     // From far off and low, the tops of the mats that lie in the surface take the mirror from the water.
-    float low = smoothstep(30.0, 6.0, cameraPosition.y);
     float afloat = mix(smoothstep(0.2, 0.5, mh) * 0.55, mix(0.9, 0.6 + 0.32 * smoothstep(0.15, 0.45, mh), low), smoothstep(25.0, 140.0, away));
     o.dry = mix(o.dry, max(smoothstep(0.0, 0.03, up) * 0.92, afloat), cover);
     o.occ = mix(o.occ, 0.5 + 0.5 * smoothstep(0.1, 0.5, mh), cover);
@@ -192,7 +197,7 @@ Bed bedAt(vec2 b, vec3 lip, float inShore, float depth, float away) {
     vec2 around = lip.yz;
     vec2 inward = vec2(-lip.z, lip.y);
     o.albedo = mix(o.albedo, mix(lp, vec3(dot(lp, vec3(0.33))), 0.35) * vec3(1.2, 1.24, 1.26), onLip);
-    o.tilt = mix(o.tilt, -(around * g.x + inward * g.y) * 6.0, onLip);
+    o.tilt = mix(o.tilt, -(around * g.x + inward * g.y) * 3.2, onLip);
     o.occ = mix(o.occ, 0.35 + 0.65 * smoothstep(0.15, 0.6, lh), onLip);
     o.glow *= 1.0 - onLip;
     // Its high rims are dry stone, its hollows hold a finger of water.
