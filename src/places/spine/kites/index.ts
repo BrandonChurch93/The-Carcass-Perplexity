@@ -57,15 +57,17 @@ vec3 centreAt(vec3 anchor, vec4 shape, vec4 more, float u) {
   float p2 = k * 1.83 * (along - c * 1.17 * uTime) + shape.z * 2.7;
   float p3 = k * 4.1 * (along - c * 1.3 * uTime) + shape.z * 5.1;
   float grow = smoothstep(0.0, 1.0, u * 1.15) * (0.35 + 0.65 * u);
-  float amp = (0.02 + 0.014 * uStageMore.x + 0.012 * step(0.01, uStageMore.y)) * len * grow;
+  float amp = (0.02 + 0.017 * uStageMore.x + 0.012 * step(0.01, uStageMore.y)) * len * grow;
+  // In the long lens a ribbon is a few hundred pixels long: its shortest wave would fall between its points and show as corners.
+  float whip = 1.0 - uStageMore.x;
   // A gust lifts or drops the whole ribbon slowly.
-  float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4;
+  float gust = sin(uTime * 0.83 + shape.z * 3.0) * 0.6 + sin(uTime * 1.37 + shape.z) * 0.4 + 0.45 * uStageMore.x * sin(uTime * 2.9 + shape.z * 1.7);
   float fan = (fract(more.y * 13.7) - 0.5) * (more.w > 0.9 ? 0.4 : 0.12);
   // The stalk is a cord with weight and ice on it: it hangs between the rock and the skin it holds.
   float held = clamp(u / more.w, 0.0, 1.0);
   float hang = 0.3 * more.w * len * held * (1.0 - held);
-  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * amp * u * u * sin(p3) + 0.03 * len * u * gust;
-  float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * amp * u * u * sin(p3 * 1.3 + 2.0);
+  float lift = fan * along * (1.0 - 0.5 * u) - hang - more.x * len * u * u + amp * (sin(p1) + 0.25 * sin(p2)) + 0.35 * whip * amp * u * u * sin(p3) + (0.03 + 0.035 * uStageMore.x) * len * u * gust;
+  float sway = 0.8 * amp * (sin(p1 * 0.77 + 1.9) + 0.4 * sin(p2 * 1.1 + 0.4)) + 0.3 * whip * amp * u * u * sin(p3 * 1.3 + 2.0);
   // The cloth is as long as it is: where it climbs a wave it does not also run on down the wind.
   float drawn = along * (1.0 - 0.06 * grow);
   return anchor + wind * drawn + side * sway + vec3(0.0, lift, 0.0);
@@ -287,14 +289,14 @@ void main() {
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.5, 0.2)) * vec3(0.92, 0.94, 1.15), 0.6);
   float glint = smoothstep(0.7, 0.95, relief + 0.25 * (vnoise(vec2(metres * 3.0, vb * 9.0 + seed)) - 0.5));
   // A wet sheen along the edge that leads, and on every fold that faces the sky.
-  vec3 shine = mirror * (0.5 * fres + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) + 0.6 * rim) * (1.0 - 0.55 * uVeil);
+  vec3 shine = mirror * (0.5 * fres + uFilm.w * max(glint, wrinkle) * (0.3 + 0.7 * fres) + 0.6 * rim * (1.0 - 0.6 * uVeil)) * (1.0 - 0.55 * uVeil);
   // When a strike is near the ribbon carries the charge along its edges for a moment, violet white.
   float mine = abs(uStruck.x - vMore.z) < 0.5 ? 1.0 : 0.25;
   // Seen close the film stays glass: violet in its body, and only its folds and its rolled edge take the white of the stroke.
   shine += uGlowTint * (uStruck.y * mine * mix(0.03 + 0.07 * fold + 0.45 * glint * glint + 0.4 * rim, 0.04 + 0.25 * fold + 0.3 * glint + 1.3 * rim, vFar));
   // How much of what is behind it the film hides: little where it is stretched, more at a fold, a vein, its rolled edge, and where it is
   // seen aslant. Far off it is a pale streak.
-  float cover = clamp(0.3 + 0.25 * fold + 0.35 * crease + 0.45 * rim + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
+  float cover = clamp(0.3 + 0.25 * fold + 0.35 * crease + 0.45 * rim * (1.0 - 0.65 * uVeil) + 0.35 * (1.0 - smoothstep(0.1, 0.55, nv)) + 0.4 * vFar, 0.0, 0.94);
   // Lilac-grey, whatever the light: glass, not flesh.
   c = mix(c, dot(c, vec3(0.3, 0.5, 0.2)) * vec3(0.95, 0.97, 1.16), mix(0.2, 0.6, vFar));
   // The shine is on the film, not in it: it shows at its full strength however thin the film.
@@ -522,6 +524,7 @@ export function create(ctx: Context): Piece {
   const stageMore = new THREE.Vector3(0, 0, 0);
   const wideShot = during('spine-01');
   const veil = { value: 0 };
+  const film = new THREE.Vector4(1.0, 0.05, 0.15, 0.9);
   const closeShot = during('spine-02');
   const struck = new THREE.Vector4(0, 0, 0, 0);
   const material = new THREE.ShaderMaterial({
@@ -536,7 +539,7 @@ export function create(ctx: Context): Piece {
       uStruck: { value: struck },
       uGlowTint: { value: new THREE.Vector3(1.0, 0.72, 2.8) },
       // How much the film gives back of the sky on it and of the dusk through it, how strong its colours, how strong its glints.
-      uFilm: { value: new THREE.Vector4(1.0, 0.05, 0.15, 0.9) },
+      uFilm: { value: film },
       uWrinkle: { value: new THREE.Vector2(0.5, 0.85) },
       // How much of the picture's own colour the film keeps, and how dark its drawn veins are.
       uTone: { value: new THREE.Vector2(0.85, 0.25) },
@@ -643,7 +646,9 @@ export function create(ctx: Context): Piece {
       else if (inClose) stage.set(0.36, 0.42, 4, 1);
       else if (inWide) stage.set(1, 2.1, 1, 1);
       else stage.set(1, 1, 1, 0);
-      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : 0);
+      stageMore.set(inStrike ? 1 : 0, inClose ? 0.16 : 0, inStrike ? 0.55 : inWide ? 0.8 : inClose ? 0.5 : 0);
+      // Seen close the film shows its oil colours.
+      film.z = inClose ? 0.42 : 0.15;
       veil.value = inStrike ? 1 : 0;
       knobStage.set(inStrike ? 0.3 : 1, inStrike ? 3 : 0);
       const flash = flashAt(seconds);
