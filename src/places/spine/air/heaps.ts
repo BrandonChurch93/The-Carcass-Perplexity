@@ -1,6 +1,6 @@
 // The heaps of the cloud sea: one square of cloud top seen from above, repeating in both directions, with its smaller copies.
 // red: the heaps (round heads at three sizes, each smaller size standing on the larger, gathered into masses with hollows between),
-// green: the small billows that roughen a head (two sizes, unrelated to red), blue: red spread wide (the body a head stands on, for
+// green: the small billows that roughen a head (three sizes, unrelated to red), blue: red spread wide (the body a head stands on, for
 // telling a head from a hollow), alpha: a smooth field unrelated to the others (for pushing them about).
 // Its smaller copies are made here and not by the renderer: a far heap is read from a small copy, so the deck goes flat toward the
 // horizon by itself and nothing in it glitters.
@@ -75,6 +75,7 @@ export function bakeHeaps(rng: Rng): THREE.DataTexture {
   const pushA = slopes(rng, 5);
   const pushB = slopes(rng, 11);
   const other = slopes(rng, 4);
+  const fineC = points(rng, 130);
   const field = new Float32Array(N * N * 4);
   for (let j = 0; j < N; j++) {
     for (let i = 0; i < N; i++) {
@@ -91,7 +92,7 @@ export function bakeHeaps(rng: Rng): THREE.DataTexture {
       const heap = 0.56 * a + 0.3 * b * (0.3 + 0.7 * a) + 0.14 * c * (0.25 + 0.75 * b);
       const o = (j * N + i) * 4;
       field[o] = heap * (0.3 + 0.7 * mass) + 0.16 * mass;
-      field[o + 1] = 0.62 * heads(fineA, 26, px * 26, py * 26) + 0.38 * heads(fineB, 60, px * 60, py * 60);
+      field[o + 1] = 0.52 * heads(fineA, 26, px * 26, py * 26) + 0.3 * heads(fineB, 60, px * 60, py * 60) + 0.18 * heads(fineC, 130, px * 130, py * 130);
       field[o + 3] = 0.5 + 0.7 * smooth(other, 4, x * 4, y * 4);
     }
   }
