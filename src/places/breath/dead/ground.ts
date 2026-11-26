@@ -1,55 +1,11 @@
-// What the dead wader has left on the rock under it: the dark stain it lies in, the line of salt where that dried, and the grit against it.
+// What has gathered against the dead wader: the grit it is half bedded in. Its stain is in the rock itself (land/rock.ts): as a sheet
+// laid a finger over the rock it won and lost its depth test against the drawn land as the lens moved, and the ground under the body
+// flipped between pale and red.
 import * as THREE from 'three';
 import type { Context } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 
 type V3 = [number, number, number];
-
-/** Metres on the ground from a point to a line of points, in the animal's own metres. */
-function toLine(x: number, z: number, line: readonly V3[]): number {
-  let best = 1e9;
-  for (let i = 1; i < line.length; i++) {
-    const a = line[i - 1] as V3;
-    const b = line[i] as V3;
-    const dx = b[0] - a[0];
-    const dz = b[2] - a[2];
-    const t = Math.min(1, Math.max(0, ((x - a[0]) * dx + (z - a[2]) * dz) / (dx * dx + dz * dz || 1)));
-    best = Math.min(best, Math.hypot(x - a[0] - dx * t, z - a[2] - dz * t));
-  }
-  return best;
-}
-
-const STAIN_VERTEX = /* glsl */ `
-attribute float aNear;
-varying vec3 vWorld;
-varying float vNear;
-void main() {
-  vWorld = position;
-  vNear = aNear;
-  gl_Position = projectionMatrix * viewMatrix * vec4(position, 1.0);
-}`;
-
-const STAIN_FRAGMENT = /* glsl */ `
-precision highp float;
-varying vec3 vWorld;
-varying float vNear;
-${NOISE_GLSL}
-${RIG_GLSL}
-void main() {
-  vec3 v = normalize(cameraPosition - vWorld);
-  float broad = fbm(vWorld.xz * 2.3);
-  float fine = vnoise(vWorld.xz * 17.0);
-  float d = vNear + 0.5 * (broad - 0.5) + 0.07 * (fine - 0.5);
-  // What ran out of it has soaked the rock dark, darkest under it; where its edge dried there is a pale broken line of salt.
-  float stain = smoothstep(0.6, 0.0, d);
-  float salt = smoothstep(0.07, 0.0, abs(d - 0.45)) * smoothstep(0.3, 0.7, fine);
-  float alpha = max(0.95 * stain * (0.7 + 0.3 * broad), 0.4 * salt);
-  if (alpha < 0.004) discard;
-  vec3 albedo = mix(vec3(0.62, 0.6, 0.56), mix(vec3(0.05, 0.03, 0.025), vec3(0.1, 0.032, 0.026), fine), smoothstep(0.0, 0.25, stain));
-  vec3 colour = rigShade(vWorld, vec3(0.0, 1.0, 0.0), v, albedo, mix(0.9, 0.5, stain), 1.0);
-  float keep = 1.0 - uSolo;
-  gl_FragColor = vec4(rigOut(colour * alpha), alpha * keep);
-}`;
 
 const GRIT_VERTEX = /* glsl */ `
 attribute float aTone;
@@ -74,108 +30,49 @@ void main() {
   vec3 n = normalize(vNormal);
   vec3 v = normalize(cameraPosition - vWorld);
   float speck = vnoise(vWorld.xz * 160.0 + vWorld.y * 90.0);
-  vec3 albedo = mix(vec3(0.24, 0.215, 0.19), vec3(0.46, 0.42, 0.37), vTone) * (0.8 + 0.4 * speck);
+  vec3 albedo = mix(vec3(0.3, 0.27, 0.235), vec3(0.6, 0.56, 0.49), vTone) * (0.8 + 0.4 * speck);
   // Salt has dried on what faces up.
   albedo = mix(albedo, vec3(0.74, 0.72, 0.68), 0.5 * smoothstep(0.5, 0.95, n.y) * smoothstep(0.35, 0.7, speck + 0.3 * vTone));
   float occ = 0.5 + 0.5 * smoothstep(-0.4, 0.5, n.y);
-  vec3 colour = rigShade(vWorld, n, v, albedo, 0.85, occ);
+  // The body's own shade on the rock is a dark disc: read through it each grain was a black bead. They are lit above it and shaded by hand.
+  vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.85, 0.7 * occ);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 
 export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (readonly V3[])[], k: number): { group: THREE.Group; dispose(): void } {
   const rng = ctx.rng('dead-wader-ground');
-  const trunk = lines[0] as readonly V3[];
-  /** How far a place is from the animal: nothing under the trunk, more under a limb than beside it. */
-  const near = (x: number, z: number): number => {
-    let d = toLine(x, z, trunk) - 0.34;
-    for (let i = 1; i < lines.length; i++) d = Math.min(d, toLine(x, z, lines[i] as readonly V3[]) * (i === 1 ? 1.5 : 2.1) + 0.14);
-    return d;
-  };
-
-  // The stain: a sheet laid on the rock, a finger above it.
-  const x0 = -3.9;
-  const x1 = 3.9;
-  const z0 = -3.0;
-  const z1 = 3.3;
-  const nx = 80;
-  const nz = 66;
-  const positions = new Float32Array((nx + 1) * (nz + 1) * 3);
-  const nears = new Float32Array((nx + 1) * (nz + 1));
-  for (let j = 0; j <= nz; j++) {
-    for (let i = 0; i <= nx; i++) {
-      const x = x0 + ((x1 - x0) * i) / nx;
-      const z = z0 + ((z1 - z0) * j) / nz;
-      const w = world([x, 0.02 / k, z]);
-      const o = j * (nx + 1) + i;
-      positions.set(w, o * 3);
-      // Nothing of it at the edge of the sheet.
-      const border = Math.min(i, nx - i, j, nz - j) / 4;
-      nears[o] = near(x, z) + Math.max(0, 1 - border) * 2;
-    }
-  }
-  const index: number[] = [];
-  for (let j = 0; j < nz; j++) {
-    for (let i = 0; i < nx; i++) {
-      const a = j * (nx + 1) + i;
-      index.push(a, a + nx + 1, a + 1, a + 1, a + nx + 1, a + nx + 2);
-    }
-  }
-  const stainGeometry = new THREE.BufferGeometry();
-  stainGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  stainGeometry.setAttribute('aNear', new THREE.BufferAttribute(nears, 1));
-  stainGeometry.setIndex(index);
-  const stainMaterial = new THREE.ShaderMaterial({
-    vertexShader: STAIN_VERTEX,
-    fragmentShader: STAIN_FRAGMENT,
-    uniforms: { ...ctx.rig.uniforms },
-    transparent: true,
-    depthWrite: false,
-    polygonOffset: true,
-    polygonOffsetFactor: -2,
-    polygonOffsetUnits: -2,
-    blending: THREE.CustomBlending,
-    blendEquation: THREE.AddEquation,
-    blendSrc: THREE.OneFactor,
-    blendDst: THREE.OneMinusSrcAlphaFactor,
-    blendSrcAlpha: THREE.OneFactor,
-    blendDstAlpha: THREE.OneMinusSrcAlphaFactor,
-  });
-  const stain = new THREE.Mesh(stainGeometry, stainMaterial);
-  stain.frustumCulled = false;
-  stain.renderOrder = 4;
-
-  // The grit: small broken stones, most of them close against the body where the wind and the tide have left them.
-  const base = new THREE.IcosahedronGeometry(1, 1);
+  // The grit: broken stones from a grain to a knuckle, heaped against the body on the side the wind and the tide come from, so that its
+  // low edge is in them and not on them. Each is a small solid with flat broken faces.
+  const base = new THREE.IcosahedronGeometry(1, 0);
   const basePositions = base.getAttribute('position');
-  const count = 300;
+  const count = 2600;
   const each = basePositions.count;
   const gritPositions = new Float32Array(count * each * 3);
   const gritNormals = new Float32Array(count * each * 3);
   const gritTones = new Float32Array(count * each);
   for (let n = 0; n < count; n++) {
-    let x = 0;
-    let z = 0;
-    for (let tries = 0; tries < 8; tries++) {
-      const line = lines[rng.int(lines.length)] as readonly V3[];
-      const at = rng.next() * (line.length - 1);
-      const i = Math.min(line.length - 2, Math.floor(at));
-      const a = line[i] as V3;
-      const b = line[i + 1] as V3;
-      const f = at - i;
-      const angle = rng.range(0, Math.PI * 2);
-      const out = 0.04 + 0.9 * rng.next() ** 2.4;
-      x = a[0] + (b[0] - a[0]) * f + Math.cos(angle) * out;
-      z = a[2] + (b[2] - a[2]) * f - Math.abs(Math.sin(angle)) * out;
-      break;
-    }
-    const size = (0.004 + 0.012 * rng.next() ** 3) * k;
+    const line = lines[rng.int(lines.length)] as readonly V3[];
+    const at = rng.next() * (line.length - 1);
+    const i = Math.min(line.length - 2, Math.floor(at));
+    const a = line[i] as V3;
+    const b = line[i + 1] as V3;
+    const f = at - i;
+    const angle = rng.range(0, Math.PI * 2);
+    const out = 0.01 + 0.6 * rng.next() ** 1.7;
+    const side = rng.next() < 0.78 ? -Math.abs(Math.sin(angle)) : 0.6 * Math.abs(Math.sin(angle));
+    const x = a[0] + (b[0] - a[0]) * f + Math.cos(angle) * out;
+    const z = a[2] + (b[2] - a[2]) * f + side * out;
+    // Most are grains; the knuckles lie where the heap is.
+    const size = (0.004 + 0.02 * rng.next() ** 3 * (0.4 + 0.6 * Math.exp(-out / 0.2))) * k;
     const sx = size * rng.range(0.7, 1.5);
-    const sy = size * rng.range(0.3, 0.7);
+    const sy = size * rng.range(0.4, 0.8);
     const sz = size * rng.range(0.7, 1.5);
     const turn = rng.range(0, Math.PI * 2);
     const c = Math.cos(turn);
     const s = Math.sin(turn);
     const centre = world([x, 0, z]);
+    // The heap: three fingers high at the body, gone a forearm out from it.
+    const heap = 0.035 * k * Math.exp(-out / 0.13) * rng.range(0.2, 1);
     const tone = rng.next();
     const lump = rng.range(0, 40);
     for (let v = 0; v < each; v++) {
@@ -184,22 +81,34 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
       const pz = basePositions.getZ(v);
       // Broken, not round: each corner stands in or out by its own amount, the same wherever two faces share it.
       const h = Math.sin(px * 12.9 + py * 78.2 + pz * 37.7 + lump) * 43758.5;
-      const bump = 0.72 + 0.5 * (h - Math.floor(h));
+      const bump = 0.62 + 0.6 * (h - Math.floor(h));
       const lx = px * sx * bump;
       const ly = py * sy * bump;
       const lz = pz * sz * bump;
       const o = (n * each + v) * 3;
       gritPositions[o] = centre[0] + lx * c + lz * s;
-      gritPositions[o + 1] = centre[1] + ly + 0.004;
+      gritPositions[o + 1] = centre[1] + ly + heap + 0.3 * sy;
       gritPositions[o + 2] = centre[2] - lx * s + lz * c;
-      const ax = px / sx;
-      const ay = py / sy;
-      const az = pz / sz;
-      const al = Math.hypot(ax, ay, az) || 1;
-      gritNormals[o] = (ax * c + az * s) / al;
-      gritNormals[o + 1] = ay / al;
-      gritNormals[o + 2] = (-ax * s + az * c) / al;
       gritTones[n * each + v] = tone;
+    }
+    // Flat faces: the normal of each triangle from its own three corners.
+    for (let t = 0; t < each; t += 3) {
+      const o = (n * each + t) * 3;
+      const ux = (gritPositions[o + 3] as number) - (gritPositions[o] as number);
+      const uy = (gritPositions[o + 4] as number) - (gritPositions[o + 1] as number);
+      const uz = (gritPositions[o + 5] as number) - (gritPositions[o + 2] as number);
+      const vx = (gritPositions[o + 6] as number) - (gritPositions[o] as number);
+      const vy = (gritPositions[o + 7] as number) - (gritPositions[o + 1] as number);
+      const vz = (gritPositions[o + 8] as number) - (gritPositions[o + 2] as number);
+      const nx = uy * vz - uz * vy;
+      const ny = uz * vx - ux * vz;
+      const nz = ux * vy - uy * vx;
+      const nl = Math.hypot(nx, ny, nz) || 1;
+      for (let q = 0; q < 3; q++) {
+        gritNormals[o + q * 3] = nx / nl;
+        gritNormals[o + q * 3 + 1] = ny / nl;
+        gritNormals[o + q * 3 + 2] = nz / nl;
+      }
     }
   }
   base.dispose();
@@ -212,12 +121,10 @@ export function makeGround(ctx: Context, world: (p: V3) => V3, lines: readonly (
   grit.frustumCulled = false;
 
   const group = new THREE.Group();
-  group.add(stain, grit);
+  group.add(grit);
   return {
     group,
     dispose: () => {
-      stainGeometry.dispose();
-      stainMaterial.dispose();
       gritGeometry.dispose();
       gritMaterial.dispose();
     },

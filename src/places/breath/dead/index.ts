@@ -51,7 +51,9 @@ void main() {
   // Dead some days, it is stiff: the trunk, the neck and the limbs lie as on a level bed and bridge the cracks of the rock; only the fan
   // of the tendrils (the picture's left end) follows the rock itself.
   float rock = texture2D(tLand, (xz - uLandRect.xy) * uLandRect.zw).r;
-  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), smoothstep(0.2, 0.3, position.x)) + lift - 0.01, xz.y);
+  // It has sunk: the low edge of the trunk and of the legs is under the grit that has gathered against it, not on top of the rock.
+  float body = smoothstep(0.2, 0.3, position.x);
+  vec3 p = vec3(xz.x, mix(rock, max(uLie.w, rock - 0.05), body) + lift - mix(0.01, 0.03, body), xz.y);
   vWorld = p;
   gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
 }`;
@@ -59,8 +61,16 @@ void main() {
 // What of the sheet is animal: the body's own cover, and the strands of the fan from the picture's relief (it stands on black).
 const CUT = /* glsl */ `
   vec4 form = texture2D(tLift, vAt);
-  float told = texture2D(tCarcassH, vAt).r;
-  if (form.g < 0.5 && told < 0.11) discard;
+  // The relief is read no coarser than its third level. Read at the level the far lens asks for, the mean of the animal and of the black
+  // it stands on passed the cut: a pale quad of the sheet lay on the rock beside the body, and went as the lens came nearer. That was the
+  // flip of the held frame, pale to red and back.
+  vec2 fine = vec2(1672.0, 941.0);
+  vec2 ax = dFdx(vAt) * fine;
+  vec2 ay = dFdy(vAt) * fine;
+  float level = min(0.5 * log2(max(dot(ax, ax), dot(ay, ay)) + 1e-6), 2.0);
+  float told = textureLod(tCarcassH, vAt, max(level, 0.0)).r;
+  // The strands of the fan are kept by the crest of their relief alone: by its foot they were rods a thumb thick.
+  if (form.g < 0.5 && told < mix(0.11, 0.33, smoothstep(0.31, 0.22, vAt.x))) discard;
 `;
 
 const FRAGMENT = /* glsl */ `
@@ -82,6 +92,10 @@ ${CUT}
   // The way the skin faces, from the slope of its height across the picture and up it.
   vec2 slope = (texture2D(tSlope, vAt).rg - 0.5) * 6.0;
   slope /= 1.0 + 0.35 * length(slope);
+  // The hide has slumped over the bones: between two ribs it sags, it is not gone. What the picture shows as a dark gap is hide in shade.
+  float hide = step(0.5, form.g);
+  float hollow = hide * smoothstep(0.3, 0.06, form.b) * smoothstep(0.3, 0.4, vAt.x);
+  slope *= 1.0 - 0.35 * hollow;
   vec3 right = vec3(-uPlace.w, 0.0, uPlace.z);
   vec3 away = vec3(uPlace.z, 0.0, uPlace.w);
   vec3 rise = vec3(0.0, 1.0, 0.0) - away * (uLie.y / uLie.x);
@@ -91,6 +105,8 @@ ${CUT}
   n.y = max(n.y, 0.05);
   n = normalize(n);
   vec3 albedo = texture2D(tCarcass, vAt).rgb;
+  vec3 skin = texture2D(tCarcass, vAt, 4.5).rgb / max(texture2D(tLift, vAt, 3.5).g, 0.5);
+  albedo = mix(albedo, max(albedo, skin * 0.62), 0.7 * hollow);
   // Parchment: the colour has gone out of it. Dark and damp where it lies on the rock, salt on what faces up.
   float grey = dot(albedo, vec3(0.3, 0.5, 0.2));
   albedo = mix(albedo, grey * vec3(1.0, 0.95, 0.87), 0.35) * 1.5;
@@ -99,7 +115,10 @@ ${CUT}
   float salt = smoothstep(0.55, 0.8, fbm(vWorld.xz * 11.0 + 3.0) + 0.25 * n.y - 0.1);
   albedo = mix(albedo, vec3(0.8, 0.78, 0.74), 0.2 * salt * step(0.5, form.g));
   // The hollows between the ribs and under the folds see little of the sky.
-  float occ = (0.5 + 0.5 * smoothstep(0.2, 0.55, form.b)) * (0.65 + 0.35 * smoothstep(0.0, 0.05, lift));
+  float occ = (0.58 + 0.42 * smoothstep(0.2, 0.55, form.b)) * (0.65 + 0.35 * smoothstep(0.0, 0.05, lift));
+  // The tendrils have bled out and dried pale: only their roots at the neck keep the red.
+  float strand = 1.0 - hide;
+  albedo = mix(albedo, vec3(0.72, 0.5, 0.45) * (0.7 + 0.6 * told), 0.42 * strand);
   // The shade it throws on the rock under it is not on it: the light is asked for above the reach of that shade.
   vec3 colour = rigShade(vWorld + vec3(0.0, 5.0, 0.0), n, v, albedo, 0.86, occ);
   // The fog over the shaft beside it is bright and it is pale: it is lit from that side as the living ones are.
