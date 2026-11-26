@@ -64,4 +64,13 @@ describe('the join of the Eye and the rise', () => {
     const [rx, ry] = tuning.lakeDeepPx as [number, number];
     expect(seen * handoff.revealHalfHeightKm).toBeLessThan(Math.min(rx, ry) * KM);
   });
+
+  it('lays one water under the gap in both places, inside the deep water of both lakes', () => {
+    const reach = handoff.lid.waterReach;
+    expect(handoff.lid.water).toHaveLength(3);
+    expect(lidGapSeen()).toBeLessThan(reach);
+    expect(reach * handoff.eyeHalfHeightMetres).toBeLessThan(EYE_DEEP);
+    const [rx, ry] = tuning.lakeDeepPx as [number, number];
+    expect(reach * handoff.revealHalfHeightKm).toBeLessThan(Math.min(rx, ry) * KM);
+  });
 });

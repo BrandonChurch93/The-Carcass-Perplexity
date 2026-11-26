@@ -87,6 +87,7 @@ const int LID_CUTS = 9;
 const vec4 LID_DECK[3] = vec4[3](vec4(${G(LID_GAP.lowest)}, 0.895, 8.0, 0.35), vec4(0.675, 0.74, 5.0, 0.41), vec4(0.52, 0.595, 3.1, 0.45));
 // The Eye begins to draw the banks when its lens is this high. No bank stands where the lens could have seen it from lower down.
 const float LID_FOOT = ${G(LID_GAP.foot)};
+const float LID_HAZE = 0.3;
 const float LID_RAGGED = ${G(LID_GAP.ragged)};
 
 // How far a place is outside the gap the lens climbs through, at a height: under 0 is open air. The gap is long, bent, off the middle, and it
@@ -217,6 +218,16 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     sum += tr * alpha * colour;
     tr *= 1.0 - alpha;
     if (tr < 0.02) break;
+  }
+  // About the cut the air under the banks is thick: through the small holes between them the eye meets haze in shade, not the ground, which
+  // is the Eye's on one side of the cut and the rise's on the other. Its edge lies outside all that the gap shows from the height of the cut.
+  float about = smoothstep(0.93, 0.99, camA) * (1.0 - smoothstep(0.03, 0.55, uLid.z));
+  if (about > 0.0 && tr > 0.02 && floorA < LID_HAZE) {
+    vec2 q = from + lean * (LID_HAZE - camA);
+    float lumps = lidBank(q * 0.6, LID_DECK[2], 0.2, 1.0, true);
+    float haze = about * smoothstep(${G(0.92)} * (1.0 - LID_HAZE), ${G(0.98)} * (1.0 - LID_HAZE), length(q));
+    sum += tr * haze * uLidShade * (0.5 + 0.3 * lumps);
+    tr *= 1.0 - haze;
   }
   // The shade of the banks lies on the water and the shore under them, thrown away from the sun and farther the higher the bank.
   float shadeIn = uLidShadow * thin * smoothstep(LID_FOOT, 0.93, camA);
