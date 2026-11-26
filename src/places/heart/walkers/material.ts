@@ -312,7 +312,7 @@ void main() {
     albedo = mix(albedo, vec3(0.125, 0.115, 0.105) * (0.55 + 0.6 * high), 0.6 * cake * mix(0.7, 0.8, limb));
     // Ash lies pale on every ridge of the trunk that looks up, and the hollows between are black.
     float crest = body * (1.0 - pole) * smoothstep(0.52, 0.72, fold + 0.25 * (high - 0.5)) * smoothstep(-0.35, 0.45, n.y) * fine;
-    albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.55 * crest);
+    albedo = mix(albedo, vec3(0.2, 0.185, 0.17) * (0.6 + 0.5 * high), 0.3 * crest);
     albedo *= 1.0 - 0.45 * body * (1.0 - pole) * fine * smoothstep(0.42, 0.22, fold);
     // Scab like the crust's own skin, in patches on the back and the rump.
     float scab = body * smoothstep(-0.1, 0.5, ng.y) * smoothstep(0.5, 0.68, vnoise(vUv * 0.55 + seed * 3.0) + 0.25 * (nhF.b - 0.5)) * (1.0 - pole);
@@ -340,7 +340,7 @@ void main() {
   // Ash lies on whatever faces the sky, in the hollows first, and dust is carried up the legs from the crust.
   float grit = vnoise(vUv * 9.0 + seed);
   float up = smoothstep(0.2, 0.8, ng.y);
-  float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 + 0.45 * body);
+  float ash = up * smoothstep(0.95, 0.35, high + 0.4 * grit - 0.6 * up) * (1.0 - tendril) * (0.55 - 0.1 * body);
   float dust = smoothstep(2.6, 0.1, vWorld.y) * (0.25 + 0.5 * grit) * (1.0 - tendril);
   albedo = mix(albedo, vec3(0.146, 0.146, 0.15) * (0.7 + 0.3 * grit), 0.55 * ash * smoothstep(0.4, 3.0, vWorld.y));
   // The dust is the crust's own: a foot is as dark as what it stands on.

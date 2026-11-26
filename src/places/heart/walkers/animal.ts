@@ -156,7 +156,7 @@ export const TUFT_UP = 0.85;
 const TUFT_LOW = 0.52;
 const TENDRIL_RINGS = 11;
 const TENDRIL_SIDES = 6;
-const RAG_RINGS = 7;
+const RAG_RINGS = 10;
 const RAG_SIDES = 4;
 const SINEW_RINGS = 7;
 const SINEW_SIDES = 5;
@@ -274,13 +274,14 @@ export class Animal {
       // Two in three hang under the keel; the rest are torn loose at the shoulders and the hips.
       const joint = n % 3 === 2;
       const along = joint ? (hash(n, seed + 22) < 0.5 ? 0.32 : 0.68) + 0.08 * (hash(n, seed + 29) - 0.5) : lerp(0.2, 0.82, hash(n, seed + 22));
-      const round = joint ? (hash(n, seed + 23) < 0.5 ? 0.2 : 0.8) + 0.06 * (hash(n, seed + 30) - 0.5) : 1 + lerp(-0.14, 0.14, hash(n, seed + 23));
+      const round = joint ? (hash(n, seed + 23) < 0.5 ? 0.2 : 0.8) + 0.06 * (hash(n, seed + 30) - 0.5) : 1 + (hash(n, seed + 37) < 0.5 ? -1 : 1) * lerp(0.09, 0.2, hash(n, seed + 23));
       const i = Math.floor(along * (BODY_RINGS - 1));
       const j = Math.floor((round % 1) * BODY_SIDES) % BODY_SIDES;
       const q = (i * BODY_SIDES + j) * 3;
       // Few and short: torn hide, 0.15 to 0.9 m, never a long string under the belly.
       const strip = hash(n, seed + 25);
-      const rag = this.rag(n, (hash(n, seed + 24) < 0.3 ? 0.45 + 0.45 * hash(n, seed + 26) : 0.15 + 0.3 * hash(n, seed + 26)) * k, (strip < 0.3 ? 0.03 + 0.06 * strip : 0.09 + 0.24 * Math.pow(strip - 0.3, 1.2)) * k);
+      // One in three is a thread, long and thin; the others are flaps as broad as they are long.
+      const rag = strip < 0.33 ? this.rag(n, (0.3 + 0.5 * hash(n, seed + 26)) * k, (0.01 + 0.012 * hash(n, seed + 24)) * k) : this.rag(n, (0.18 + 0.3 * hash(n, seed + 26)) * k, (0.14 + 0.24 * hash(n, seed + 24)) * k);
       rag.at = [(this.bodyLocal[q] as number) * 0.98, (this.bodyLocal[q + 1] as number) * 0.9, -(this.bodyLocal[q + 2] as number) * 0.9];
       this.rags.push(rag);
     }
@@ -414,11 +415,12 @@ export class Animal {
     const local = new Float32Array(RAG_RINGS * RAG_SIDES * 2);
     for (let r = 0; r < RAG_RINGS; r++) {
       const u = r / (RAG_RINGS - 1);
-      const w = broad * (r === RAG_RINGS - 1 ? 0.15 : 1 - 0.6 * u + 0.5 * (hash(n * 5 + r, seed + 26) - 0.5));
+      // Torn hide: its edge goes in and out, and it ends in a point.
+      const w = broad * (r === RAG_RINGS - 1 ? 0.06 : (1 - 0.45 * u) * (0.45 + 1.0 * hash(n * 5 + r, seed + 26)));
       for (let side = 0; side < RAG_SIDES; side++) {
         const a = (side / RAG_SIDES) * Math.PI * 2;
         local[(r * RAG_SIDES + side) * 2] = Math.cos(a) * w;
-        local[(r * RAG_SIDES + side) * 2 + 1] = Math.sin(a) * 0.022 * k * (1 - 0.6 * u);
+        local[(r * RAG_SIDES + side) * 2 + 1] = Math.sin(a) * 0.012 * k * (1 - 0.6 * u);
       }
       for (let side = 0; side <= RAG_SIDES; side++) skin.describe(tube, r, side, u * length + n, (side / RAG_SIDES) * 2 * broad, 0.22 + 0.1 * u, 0.5 + 0.3 * u, Math.max(w, 0.03), seed, 5, u);
     }
@@ -905,7 +907,7 @@ export class Animal {
     const cz = centre[1] + right[2] * sideways + fwd[2] * forwards;
     // The corner of the trunk over a pad that has just come down sinks onto it; the corner over a pad that is lifting has nothing under it.
     const pitch = b.tilt - 0.1 * lead - 0.08 * shiftFore - 0.045 * landFore + 0.04 * idle2 + 0.05 * pull;
-    const roll = 0.125 * shiftSide - 0.05 * landSide + 0.045 * idle;
+    const roll = 0.1 * shiftSide - 0.05 * landSide + 0.045 * idle;
     // The body stands on stilts: it rides as high as the leg that is most stretched lets it, and sinks when a pad goes out far.
     // A soft least of the four, so that it does not jerk when another leg becomes the one that holds it down.
     const span = (this.femur + this.tibia + this.meta) * 0.992;
@@ -925,7 +927,8 @@ export class Animal {
     }
     for (const top of tops) soft += Math.exp(-(top - least) / (0.12 * k));
     const ride = least - 0.12 * k * Math.log(soft);
-    const cy = ride - 0.3 * k * dip - 0.2 * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
+    // It rides at the height it had: it sinks from a little over it and comes back up.
+    const cy = ride + 0.09 * k - 0.3 * k * dip - 0.2 * k * lean - plan.dip * lead - 0.12 * k * (1 - Math.sin(turn + 0.9));
     this.om = om;
     this.gulp = gulp;
     this.puff = puff;
