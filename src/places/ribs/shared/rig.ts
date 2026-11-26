@@ -17,7 +17,7 @@ export const MAX_EMITTERS = 8;
 /** The fine relief of the floor, laid over the bed twice from one tiling picture: metres of a repeat and metres of relief, wide and small. */
 export const FINE = { size: 256, wide: 37, wideAmp: 0.2, small: 9.7, smallAmp: 0.07 };
 /** The one wide break in the cloud that lets the sun down on the strait: where its light falls on the ground at the establishing key, and its radius, metres. */
-export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62 };
+export const BREAK = { x: 150, z: -430, radius: 480, gain: 0.8, cover: 0.62, bounce: 2.2 };
 /**
  * The break by shot: where the low sun comes down on the ground at the shot's key and how wide, metres, and where the break stands in the
  * sky, degrees right of north. The approach and the strait are one move and keep BREAK. Inside a shot the light goes with the wind; at a cut
@@ -428,7 +428,7 @@ export function createRig(): Rig {
   const stagedBreak = (): { x: number; z: number; radius: number; yaw: number; at: number; bounce?: number; shaft?: number; sky?: number } => {
     const staged = stagedSeconds();
     const own = loopPhase() === null ? staging.find((b) => staged >= b.span.from && staged < b.span.to) : undefined;
-    return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0 };
+    return own ?? { x: BREAK.x, z: BREAK.z, radius: BREAK.radius, yaw: BREAK_YAW, at: T0, bounce: BREAK.bounce };
   };
   const breakToward = (seconds: number, drifted = seconds): void => {
     // The break drifts with the cloud: six tenths of a degree a second, to the right. In the picture it lies 0.715 radians right of the middle.
