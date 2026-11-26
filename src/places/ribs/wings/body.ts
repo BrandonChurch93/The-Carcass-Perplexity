@@ -29,7 +29,7 @@ const WIDE = [0.74, 0.94];
 
 /** A leg in the picture: hip, the joint that bends back, ankle; and its rings as [part of the bone, half its width]. */
 const LEG = { hip: [497, 362], joint: [397, 545], ankle: [380, 884] } as const;
-const THIGH: [number, number][] = [[0, 44], [0.1, 40], [0.24, 28], [0.42, 18.5], [0.68, 13.5], [0.9, 15]];
+const THIGH: [number, number][] = [[0, 44], [0.25, 42], [0.5, 31], [0.65, 21], [0.8, 14.5], [0.92, 15.5]];
 const SHANK: [number, number][] = [[0.07, 13.5], [0.25, 9.8], [0.6, 8.6], [0.9, 9.6], [1, 11]];
 const JOINT_WIDE = 18.5;
 const LEG_RINGS = THIGH.length + 1 + SHANK.length;
@@ -428,7 +428,7 @@ void main() {
 #if defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
   vec3 col = rigShade(up, n, v, albedo, 0.6, occ);
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   // Only standing water holds a mirror, and the water takes most of the light of what it shows.
   float water = smoothstep(0.0, 0.03, uPool - land.r) * smoothstep(-0.02, 0.05, vUnder);
   float glance = 1.0 - max(v.y, 0.0);
@@ -442,7 +442,7 @@ void main() {
   float sun = sunAt(vWorld, land);
   col -= albedo * uSunColour * (max(dot(n, uSunDir), 0.0) * sunAt(vWorld, before) * occ * (own - 1.0)) / 3.14159;
   // The wet flat and the pool send the sky back up at what stands over them.
-  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 0.8 + uSunColour * (uSunDir.y * 0.14)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
+  col += albedo * (skyIrradiance(vec3(0.0, 1.0, 0.0)) * 1.0 + uSunColour * (uSunDir.y * 0.2)) / 3.14159 * (0.75 - 0.25 * n.y) * vMix.y * (1.0 - 0.5 * skin);
   float far = smoothstep(30.0, 110.0, distance(cameraPosition, vWorld));
   col = mix(col, vec3(dot(col, vec3(0.3333))), 0.45 * far * skin);
   // The light that comes through a sail from the sun and the sky behind it.
@@ -450,6 +450,8 @@ void main() {
   // Against the light the sun rims it.
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * (0.25 + 0.75 * pow(max(dot(-v, uSunDir), 0.0), 2.0)) * 0.3 * sun;
+  // And the low sun wraps a little way round what it lights: the edge turned to it is warm.
+  col += albedo * uSunColour * (pow(clamp(dot(n, uSunDir) + 0.45, 0.0, 1.0), 2.0) * (0.12 + 0.5 * rim) * sun * vMix.y * (1.0 - skin)) / 3.14159;
   col *= 1.0 - 0.3 * far;
   gl_FragColor = vec4(rigOut(col), 1.0);
 #endif
