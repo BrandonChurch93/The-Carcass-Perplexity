@@ -115,7 +115,10 @@ float seaTop(vec3 p, bool swell) {
     seaTall *= press;
     lift = room - 0.6 * room * press;
   }
-  float top = ridge.y - CLOUD_UNDER - CLOUD_DEEP * smoothstep(150.0, 2000.0, abs(lee)) + lift;
+  // Kilometres out it stands up again, most where the long swell is high: the lens looks down into a trough of the deck and across it to
+  // banks at its own height. Left low to the horizon, the last of it was a level dark band under the sky with a ruled edge, like water.
+  float back = smoothstep(3500.0, 8500.0, abs(lee)) * (0.45 + 0.55 * smoothstep(0.35, 0.7, seaSwell));
+  float top = ridge.y - CLOUD_UNDER - CLOUD_DEEP * smoothstep(150.0, 2000.0, abs(lee)) * (1.0 - 0.9 * back) + lift;
   // The tallest of the far heads stop short of the height nothing of this cloud stands over, rounded and not cut.
   float high = top - (BANK_TOP - 170.0);
   if (high > 0.0) top = BANK_TOP - 170.0 + 160.0 * (1.0 - exp(-high / 160.0));
@@ -363,7 +366,8 @@ export const SEA_SHADE_GLSL = /* glsl */ `
     // The sky's foot is read only where the deck goes into it: near the lens on the dusk side it has no part.
     float toWall = stormSide(rd) * 0.6 * (1.0 - exp(-t / 5000.0));
     bool needFoot = gone > 0.003 || toWall > 0.003 || uPlate.w > 0.0;
-    vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 0.0) : vec3(0.0);
+    // (Read soft: read sharp, each mass of the sky's foot stood on the deck as an upright streak under itself, like a reflection in water.)
+    vec3 domeFar = needFoot ? skyCloud(ro, normalize(vec3(rd.x, 0.0003, rd.z)), 2.5) : vec3(0.0);
     // Behind the long lens of the strike the sea is the picture's own: the surface here only rolls it, and far out it is the picture alone.
     vec2 uvP = vec2(0.0);
     float plate = uPlate.w > 0.0 ? plateAt(az, -dip, uvP) : 0.0;
