@@ -1,0 +1,16 @@
+[
+ {
+  "place": "eye",
+  "name": "far-low",
+  "k": 2,
+  "real": "references/drafts/working/real/plate-crater-1.jpg",
+  "model": "gpt_image_2_6_sunburst",
+  "date": "2026-11-26",
+  "asked": "eye_owner_2",
+  "prompt": "The first reference image is a blurred, low-resolution photograph: one part of a wide view across a round mountain lake on a clear, windless evening, taken from two metres above the water. In the whole view a wall of pale limestone cliffs about 200 metres tall and 1.6 kilometres away runs along the far shore, lit warm gold by low sun from the left and in cool blue shade on the right, under a cloudless sky, above still dark water that mirrors it. The picture shows only the part that is there. Where it shows sky, the result is the same empty sky with nothing in it. Where it shows water, the result is the same water with the same reflections. Where it shows the cliffs, the result is the same cliffs. Make the same photograph at full resolution. Keep every cliff, ledge, cave, slope, shadow, reflection and colour exactly where it is and at the same size: add nothing new at this scale and move nothing. Add what a real camera records at this distance and the first image lacks: bedding planes and joints in the limestone, fractured blocks and overhangs, small ledges with scree, dark streaks of seepage, the grain of the rubble fans with sparse low scrub, and fine ripples on the water. The second reference image is a real photograph: it is the standard for how a camera records real rock, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge. No text, no logo, no border, no people, no animals, no birds, no buildings, no boats.",
+  "parentRows": [
+   2
+  ],
+  "parentRowsWhy": "the three windows of the bottom row showed only water, and the model drew a rocky shore across the top of each; they are set aside, and below the middle of the reflections the plate is the enlarged parent"
+ }
+]
