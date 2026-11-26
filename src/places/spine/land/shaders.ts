@@ -420,6 +420,8 @@ void main() {
   if (plates) rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(0.96, 0.98, 1.06), 0.55 * (1.0 - sheet));
   tone = mix(tone, vec3(1.0), sheet);
   vec3 albedo = min(rock * (inside ? vec3(1.0) : tone), vec3(0.9));
+  // A spire's rock is tan where the dusk lights it: a quarter of its pictures' brown is taken out, no more.
+  if (spire && !inside) albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(0.94, 0.97, 1.06), 0.25);
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
 
@@ -467,8 +469,8 @@ void main() {
     vec3 rw = abs(smoothN);
     rw /= rw.x + rw.y + rw.z;
     vec3 frostC = texture2D(tRime, vWorld.zy / 3.0).rgb * rw.x + texture2D(tRime, vWorld.xz / 3.0 + 0.4).rgb * rw.y + texture2D(tRime, vWorld.xy / 3.0 + 0.7).rgb * rw.z;
-    float crystals = smoothstep(0.16, 0.4, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
-    float cover = clamp(rime + 0.55 * (1.0 - burn), 0.0, 1.0) * crystals;
+    float crystals = smoothstep(0.11, 0.32, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
+    float cover = clamp(rime + 0.7 * (1.0 - burn), 0.0, 1.0) * crystals;
     albedo = mix(albedo, min(frostC * 1.5, vec3(0.88)) * vec3(0.95, 0.98, 1.05), 0.85 * cover);
     rime = 0.0;
   }
