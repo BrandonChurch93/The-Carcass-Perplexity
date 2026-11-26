@@ -178,6 +178,10 @@ void main() {
   vLook = aLook;
   vBlur = aMove.xy;
   gl_Position = projectionMatrix * viewMatrix * vec4(w, 1.0);
+#ifdef SHADE
+  // One that is told to lay no shade (its shade given below zero): its shade is not drawn.
+  if (aLook.w < 0.0) gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+#endif
 }`;
 
 const FRAGMENT = /* glsl */ `
@@ -238,7 +242,7 @@ void main() {
   vec4 land = landAt(vWorld.xz);
   float soft = texture2D(tCover, uv, 3.5).r;
 #if defined(SHADE)
-  float dim = 0.7 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
+  float dim = 0.62 * smoothstep(0.05, 0.6, soft) * (1.0 - uSolo);
   gl_FragColor = vec4(rigOut(vec3(0.0)) * dim, dim);
 #elif defined(MIRROR)
   vec3 up = vWorld + vec3(0.0, 2.0 * vUnder, 0.0);
@@ -262,7 +266,7 @@ void main() {
   float rim = pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0);
   col += (albedo * 0.6 + 0.04) * uSunColour * rim * pow(max(dot(-v, uSunDir), 0.0), 2.0) * 0.16 * sun;
   // One that stands in the shade of the rock over it.
-  col *= 1.0 - 0.6 * vLook.w;
+  col *= 1.0 - 0.6 * (vLook.w < 0.0 ? -vLook.w - 1.0 : vLook.w);
   col *= 1.0 - 0.3 * far;
 #ifdef SOFT
   float a = smoothstep(0.1, 0.6, cover) * (1.0 - uSolo);
