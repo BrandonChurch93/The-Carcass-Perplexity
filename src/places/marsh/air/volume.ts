@@ -28,7 +28,7 @@ export const RAIN_APART = 0.84;
 // The overcast thickens as the rain comes on: between these two seconds of the place the sky and the far air lose this share of their light.
 export const DUSK = { from: 3.2, to: 7, share: 0.6 };
 // The cast shade of what stands over the ground: ways up into the sky, reads on each, reach in metres as a share of the distance, depth.
-export const CAST = { ways: 3, taps: 4, reach: 0.22, depth: 0.62 };
+export const CAST = { ways: 3, taps: 4, reach: 0.22, depth: 0.52 };
 
 const f = (v: number): string => v.toFixed(5);
 
@@ -171,7 +171,7 @@ float closedIn(ivec2 pixel) {
     }
   }
   open *= 1.0 - CAST_DEPTH * level * shaded / float(CAST_WAYS);
-  return mix(1.0, 0.3 + 0.7 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
+  return mix(1.0, 0.42 + 0.58 * open, smoothstep(OCC_FAR, OCC_FAR * 0.4, dist));
 }
 
 // How much of the haze counts at t metres: the near air is clear and the far closes, as over a salt flat on a still wet day.
@@ -217,7 +217,7 @@ float steamAt(vec3 p, int i) {
   float lumps = textureLod(tNoise, q, 0.0).r * 0.55 + textureLod(tNoise, q * 3.1 + 0.31, 0.0).b * 0.45;
   // Torn: there is clear air between the strands, more of it the higher they are.
   // (Soft strands: a hard edge on them is cut into dots by the few steps a view takes through a column.)
-  float shape = smoothstep(0.2 + 0.24 * h, 0.9, lumps * (0.75 + 0.6 * body));
+  float shape = smoothstep(0.27 + 0.26 * h, 0.82, lumps * (0.75 + 0.6 * body));
   // How deep in the column's heart this is: low and on the axis is deep, the top and the rim are not.
   steamShade = body * (1.0 - h) * (0.45 + 0.55 * shape);
   // The rim toward the brighter side of the overcast is the lit one.
@@ -284,7 +284,7 @@ void main() {
         if (sigma <= 0.0) continue;
         float a = 1.0 - exp(-sigma * dt);
         // Steam is white where the sky reaches it, on its top and its rim, and grey in its heart, where its own body stands over it.
-        sum += trans * a * steamLit * (mix(1.07, 0.7, smoothstep(0.05, 0.75, steamShade)) + 0.1 * steamSide);
+        sum += trans * a * steamLit * (mix(1.1, 0.62, smoothstep(0.05, 0.7, steamShade)) + 0.12 * steamSide);
         trans *= 1.0 - a;
       }
     }
@@ -360,7 +360,7 @@ void main() {
         }
         if (sigma <= 0.0) continue;
         float a = 1.0 - exp(-sigma * dt);
-        sum += trans * a * steamLit * (mix(1.07, 0.7, smoothstep(0.05, 0.75, steamShade)) + 0.1 * steamSide);
+        sum += trans * a * steamLit * (mix(1.1, 0.62, smoothstep(0.05, 0.7, steamShade)) + 0.12 * steamSide);
         trans *= 1.0 - a;
         if (trans < 0.02) break;
       }
@@ -389,13 +389,14 @@ void main() {
     // its own width and its own height. The veils walk with the shaft, change as they go, and their trails come down.
     float veils = textureLod(tNoise, vec3(lean * 2.3 + own, el * 0.9 + uTime * 0.018, 0.4 + uTime * 0.03), 0.0).g;
     float torn = textureLod(tNoise, vec3(lean * 7.0 + uTime * 0.005, el * 2.6 + 0.3 + uTime * 0.05, 0.8 + uTime * 0.04), 0.0).b;
-    // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them.
+    // The trails: broad ones a degree or two across, which a small screen still shows, and fine ones inside them. They are the
+    // lesser part of the veil: where the gaps between them are narrow, the gaps are what is seen, as pale beams.
     float broad = textureLod(tNoise, vec3(lean * 5.5 + own * 3.0, el * 0.22 + uTime * 0.02, 0.7 + uTime * 0.01), 0.0).g;
     float fine = textureLod(tNoise, vec3(lean * 17.0, el * 0.5 + uTime * 0.045, 0.13), 0.0).b;
-    float streaks = smoothstep(0.4, 0.7, broad * 0.65 + fine * 0.35);
+    float streaks = smoothstep(0.5, 0.78, broad * 0.65 + fine * 0.35);
     float body = exp(-side * side * 1.1) * smoothstep(0.25, 0.75, veils * 0.7 + torn * 0.3 + 0.35 * exp(-side * side * 2.0));
     float base = smoothstep(0.5, 0.22 + 0.1 * veils, el) * smoothstep(-0.004, 0.04, el);
-    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.4 + 1.3 * streaks);
+    rain = uRain.w * (0.7 + 0.6 * own) * body * base * (0.75 + 1.1 * streaks);
   }
   float show = uShow.x;
   // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
