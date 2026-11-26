@@ -6,6 +6,7 @@ import { DEG, shoreAt, smooth } from '../layout';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL, RIG_VERTEX } from '../shared/glsl';
 import { vnoise } from '../shared/noise';
+import { KEYS } from '../cameras';
 import { AXIS, browCover, landHeight, onAxis, streamAcross, streamBed, wallAt } from './height';
 import { PATCH, browGeometry, patchGeometry, socketGeometry, stoneGeometry } from './meshes';
 import { ROCK_GLSL, rockUniforms } from './rock';
@@ -39,6 +40,8 @@ void main() {
   // The damp line at the water, and the stone that the lake has wetted darker.
   vec4 land = landAt(vWorld.xz);
   float damp = smoothstep(1.9, 0.5, vWorld.y + 0.5 * vnoise(vWorld.xz * 0.7)) * (1.0 - face);
+  // Under a low eye the wet is a thin dark band above the water and the stones beyond it are dry.
+  damp = mix(damp, smoothstep(0.2, 0.05, vWorld.y + 0.12 * vnoise(vWorld.xz * 2.1)) * (1.0 - face), smoothstep(12.0, 4.0, cameraPosition.y));
   k.albedo *= mix(1.0, 0.3, damp) * mix(1.0, 0.28, smoothstep(0.03, -0.12, vWorld.y) * (1.0 - face));
   k.rough = mix(k.rough, 0.8, damp);
   // Under the brow the wall and the scree stand in a cave: the further back from the water, the less of the sky they see.
@@ -121,15 +124,17 @@ void main() {
   w /= w.x + w.y + w.z;
   // A block is a piece of the scree: the plate of the slope on its three faces, each block from another part of it.
   vec2 at = vTint.yz * 40.0;
-  vec2 ux = vWorld.zy + at;
-  vec2 uy = vWorld.xz + at.yx;
-  vec2 uz = vWorld.xy - at;
+  // The plate is a slope of many stones: a block shows a small piece of it large, so that it is one stone with its own cracks, not a heap.
+  float grain = mix(0.3, 1.0, smoothstep(12.0, 4.0, cameraPosition.y));
+  vec2 ux = vWorld.zy * grain + at;
+  vec2 uy = vWorld.xz * grain + at.yx;
+  vec2 uz = vWorld.xy * grain - at;
   vec4 col = screeAt(ux) * w.x + screeAt(uy) * w.y + screeAt(uz) * w.z;
   float e = 0.05;
   vec2 d = vec2(screeAt(ux + vec2(e, 0.0)).a - screeAt(ux - vec2(e, 0.0)).a, screeAt(ux + vec2(0.0, e)).a - screeAt(ux - vec2(0.0, e)).a) * w.x
     + vec2(screeAt(uy + vec2(e, 0.0)).a - screeAt(uy - vec2(e, 0.0)).a, screeAt(uy + vec2(0.0, e)).a - screeAt(uy - vec2(0.0, e)).a) * w.y
     + vec2(screeAt(uz + vec2(e, 0.0)).a - screeAt(uz - vec2(e, 0.0)).a, screeAt(uz + vec2(0.0, e)).a - screeAt(uz - vec2(0.0, e)).a) * w.z;
-  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.25) * vec3(1.4, 1.36, 1.28) * (0.8 + 0.4 * vTint.x);
+  vec3 albedo = mix(col.rgb, vec3(dot(col.rgb, vec3(0.33))) , 0.6) * vec3(1.32, 1.36, 1.4) * (0.8 + 0.4 * vTint.x);
   vec3 nh = vec3(0.5, 0.5, col.a);
   vec3 t = normalize(cross(n, vec3(0.31, 0.9, 0.3)));
   vec3 b = cross(n, t);
@@ -137,9 +142,16 @@ void main() {
   // Where the stone meets the ground it is in its own shade, and wet where the ground is.
   vec4 land = landAt(vWorld.xz);
   float foot = smoothstep(0.0, 0.35, vWorld.y - max(land.r, 0.0) + 0.08);
-  float damp = smoothstep(0.3, 0.02, vWorld.y);
-  albedo *= mix(1.0, 0.55, damp);
-  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), 0.9, (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
+  // Under a low eye the stones are pebbles: the top of each is in the light whatever its height, only its foot is wet, and each has a tone of its own.
+  float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
+  // A pebble is one stone of one tone: the plate of the scree, made for blocks, would blotch it.
+  albedo = mix(albedo, vec3(0.4, 0.31, 0.22) * (0.85 + 0.3 * vnoise(vWorld.xz * 60.0 + vWorld.y * 40.0)), 0.8 * lowEye);
+  foot = max(foot, lowEye * smoothstep(-0.1, 0.6, normalize(vNormal).y));
+  float damp = smoothstep(mix(0.3, 0.07, lowEye), 0.01, vWorld.y);
+  // The last half metre of shore before the water is wet: its stones are dark.
+  damp = max(damp, 0.75 * lowEye * smoothstep(0.1, 0.03, max(land.r, 0.0)));
+  albedo *= mix(1.0, 0.55, damp) * mix(vec3(1.0), mix(vec3(0.5, 0.5, 0.52), vec3(1.5, 1.44, 1.3), vTint.y * vTint.y) * mix(vec3(1.0), vec3(1.15, 0.9, 0.68), step(0.8, vTint.z)), lowEye);
+  vec3 c = rigShade(vWorld, n, v, clamp(albedo, 0.0, 0.9), mix(0.9, 0.4, damp), (0.45 + 0.55 * smoothstep(0.05, 0.5, nh.b)) * mix(0.45, 1.0, foot));
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
@@ -164,7 +176,7 @@ ${RIG_GLSL}
 void main() {
   vec3 v = normalize(cameraPosition - vWorld);
   // It runs toward the lake: fast and white on the steps and down the face of the spur, slow in the pools between.
-  float run = smoothstep(108.0, 98.0, vFlow.x) * smoothstep(14.0, 24.0, vFlow.x);
+  float run = smoothstep(108.0, 98.0, vFlow.x) * smoothstep(26.0, 44.0, vFlow.x);
   for (int i = 0; i < 3; i++) run += smoothstep(3.0, 0.0, abs(vFlow.x - uFall[i]));
   run = min(run, 1.0);
   float speed = 0.9 + 2.6 * run;
@@ -290,6 +302,36 @@ export function create(ctx: Context): Piece {
     const a = b * DEG;
     put(Math.sin(a) * r, -Math.cos(a) * r, 0.06 + 0.42 * rng.next() ** 4);
   }
+  // The fan under the spur: blocks of every size from a man's head to a hut, thick at its sides and thinner down its middle.
+  for (let i = 0; i < 1500; i++) {
+    const along = rng.range(31, 122);
+    const across = rng.range(PATCH.across0 + 6, PATCH.across1 - 6);
+    const size = 0.45 + 4.2 * rng.next() ** 2.6;
+    if (along > 84 && Math.abs(across) < 3.2 + size) continue;
+    if (Math.abs(across - streamAcross(along)) < 1.4 + size * 0.7) continue;
+    if (vnoise(along / 16 + 31, across / 16 + 7) < 0.3 + 0.2 * smooth(40, 8, Math.abs(across)) && size < 2.4) continue;
+    const [x, z] = onAxis(along, across);
+    put(x, z, size);
+  }
+  // The shingle before the shore camera: real stones from a pebble to a small boulder, thickest near the lens and at the water, some of
+  // them standing in it. The ground between them is drawn stone by stone in the shader; these are the ones that catch the light.
+  {
+    const from = KEYS.shore.position;
+    const to = KEYS.shore.aim;
+    const reach = Math.hypot(to[0] - from[0], to[2] - from[2]);
+    const fx = (to[0] - from[0]) / reach;
+    const fz = (to[2] - from[2]) / reach;
+    for (let i = 0; i < 13000; i++) {
+      const ahead = 2 + 26 * rng.next() ** 1.5;
+      const aside = rng.range(-1, 1) * (3.5 + 0.42 * ahead);
+      const size = 0.03 + 0.2 * rng.next() ** 3.2;
+      const x = from[0] + fx * ahead - fz * aside;
+      const z = from[2] + fz * ahead + fx * aside;
+      if (landHeight(x, z) < -0.1 - 0.4 * size) continue;
+      if (vnoise(x / 1.7 + 5, z / 1.7 + 2) < 0.3 && size < 0.09) continue;
+      put(x, z, size);
+    }
+  }
 
   const boulder = { tScree: rock.tScree as THREE.IUniform, tScreeH: rock.tScreeH as THREE.IUniform };
   const stoneMaterial = new THREE.ShaderMaterial({ uniforms: { ...ctx.rig.uniforms, ...boulder }, vertexShader: STONE_VERTEX, fragmentShader: STONE_FRAGMENT });
@@ -339,7 +381,7 @@ export function create(ctx: Context): Piece {
 
   // The stream: a ribbon of water laid in the bed of the ravine.
   const STEP = 0.5;
-  const FROM = -14;
+  const FROM = 30;
   const TO = PATCH.along1 + 60;
   const ACROSS = 7;
   const count = Math.round((TO - FROM) / STEP) + 1;
@@ -347,7 +389,7 @@ export function create(ctx: Context): Piece {
   const flow = new Float32Array(count * ACROSS * 2);
   for (let i = 0; i < count; i++) {
     const along = FROM + i * STEP;
-    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 + 2.5 * smooth(18, -10, along));
+    const half = (1.0 + 0.8 * vnoise(along / 9, 3.3)) * (1 - 0.6 * smooth(40, 30, along));
     const level = streamBed(along) + 0.3 - 0.05 * smooth(10, 40, along);
     for (let j = 0; j < ACROSS; j++) {
       const side = (j / (ACROSS - 1)) * 2 - 1;

@@ -33,7 +33,74 @@ float fbm(vec2 p) {
     a *= 0.5;
   }
   return s;
-}`;
+}
+// Pebbles: every stone is an oval of its own, turned and squashed its own way, and where two overlap the higher lies on top. x is its
+// dome (0 in the grit between stones), yz the way from here to the middle of the stone, w a number the stone keeps for itself.
+vec4 pebbleAt(vec2 x) {
+  vec2 cell = floor(x);
+  vec2 f = fract(x);
+  float best = 0.0;
+  vec2 to = vec2(0.0);
+  float own = 0.0;
+  for (int j = -1; j <= 1; j++) {
+    for (int i = -1; i <= 1; i++) {
+      vec2 g = vec2(float(i), float(j));
+      float o = hash12(cell + g + 17.0);
+      vec2 r = g + 0.15 + 0.7 * hash22(cell + g) - f;
+      float turn = o * 19.0;
+      vec2 axis = vec2(cos(turn), sin(turn));
+      float squash = 1.2 + 0.9 * fract(o * 7.7);
+      vec2 q = vec2(dot(r, axis), (r.y * axis.x - r.x * axis.y) * squash);
+      float rad = 0.42 + 0.3 * fract(o * 3.3);
+      float h = (1.0 - dot(q, q) / (rad * rad)) * rad;
+      if (h > best) {
+        best = h;
+        own = o;
+        to = (axis * q.x + vec2(-axis.y, axis.x) * q.y * squash) / rad;
+      }
+    }
+  }
+  return vec4(sqrt(best / (0.42 + 0.3 * fract(own * 3.3))), to, own);
+}
+
+// The shingle of the shore at xz, stone by stone: its colour and, in a, the dome of the stone (0 in the grit). xs is the same ground counted
+// in fist-sized stones, lean the way each dome turns its face, tall the metres the stone stands above the grit. Four sizes lie on one
+// another, the large ones fewest, and a size smaller than the pixel that looks at it is left out. One shore above the water and under it.
+vec4 shingleAt(vec2 xz, vec2 xs, out vec2 lean, out float tall) {
+  float foot = length(fwidth(xs));
+  // Beds of larger and smaller stone.
+  float bed = vnoise(xz / 1.9 + 11.0);
+  float dome = 0.0;
+  float own = 0.0;
+  vec2 to = vec2(0.0);
+  tall = 0.0;
+  for (int l = 0; l < 4; l++) {
+    float count = l == 0 ? 4.1 : l == 1 ? 2.0 : l == 2 ? 1.0 : 0.43;
+    float keep = l == 0 ? 0.95 : l == 1 ? 0.75 : l == 2 ? 0.25 + 0.4 * bed : 0.05 + 0.2 * bed;
+    float seen = smoothstep(1.1, 0.35, foot * count);
+    if (seen <= 0.0) continue;
+    vec4 s = pebbleAt(xs * count + 7.3 * float(l) + (l > 1 ? 0.0 : 0.6) * vec2(vnoise(xz * 9.0), vnoise(xz * 9.0 + 3.0)));
+    if (fract(s.w * 11.3) > keep) continue;
+    float h = s.x * seen * (0.42 + 0.3 * fract(s.w * 3.3)) * 0.085 / count;
+    if (h > tall) {
+      tall = h;
+      dome = s.x * seen;
+      to = s.yz;
+      own = fract(s.w * 5.7 + 0.37 * float(l));
+    }
+  }
+  // Limestone mostly: pale grey, some buff, a dark one now and then, each with a speck or a vein of its own.
+  vec3 shade = mix(vec3(0.18, 0.15, 0.12), vec3(0.78, 0.64, 0.48), own * own);
+  shade = mix(shade, vec3(0.55, 0.4, 0.26), smoothstep(0.74, 0.8, fract(own * 13.0)));
+  shade = mix(shade, vec3(0.07, 0.07, 0.08), smoothstep(0.86, 0.9, fract(own * 29.0)));
+  shade *= 0.75 + 0.5 * vnoise(xz * 37.0 + own * 50.0);
+  // Where a stone goes down into the ones beside it there is a dark gap.
+  shade *= 0.25 + 0.75 * smoothstep(0.0, 0.5, dome);
+  vec3 grit = vec3(0.2, 0.185, 0.165) * (0.2 + 0.7 * vnoise(xz * 110.0));
+  lean = -to * (2.4 * (1.0 - dome) * step(0.01, dome) + 0.9 * dome);
+  return vec4(mix(grit, shade, step(0.001, dome)), dome);
+}
+`;
 
 export const RIG_UNIFORMS_GLSL = /* glsl */ `
 uniform float uTime;
@@ -106,11 +173,11 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
   bool tall = uPlateTone.w > 1.5 && bias > 0.0;
   float over = tall ? smoothstep(0.9, 2.8, v) : 0.0;
   float vv = tall && v > 0.95 ? 0.5 + 0.45 * abs(fract((v - 0.95) * 0.55) * 2.0 - 1.0) : v;
-  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + 2.5 * over).rgb) * uPlateTone.rgb;
-  // In the water under a long lens the wall is drawn out up and down: three looks one above another, so that it runs in soft streaks.
+  vec3 plate = ungrade(texture2D(tPlate, vec2(u, clamp(vv, 0.004, 0.996)), bias + 2.5 * over + (tall ? 2.0 : 0.0)).rgb) * uPlateTone.rgb;
+  // In the water under a long lens the wall is drawn out up and down: three looks one above another, the outer two soft, so that it runs in soft streaks.
   if (tall) {
-    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u, clamp(vv + 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb)
-      + ungrade(texture2D(tPlate, vec2(u, clamp(vv - 0.035, 0.004, 0.996)), bias + 1.0 + 2.5 * over).rgb));
+    plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005, clamp(vv + 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb)
+      + ungrade(texture2D(tPlate, vec2(u - 0.005, clamp(vv - 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb));
   }
   // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
   if (bias > 0.0) {

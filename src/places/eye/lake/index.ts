@@ -113,6 +113,8 @@ void main() {
   vec2 slope = vec2(0.0);
   // The slow rings alone, kept apart: seen low, a face of a ring that leans to the eye is dark and one that leans away is bright.
   vec2 heave = vec2(0.0);
+  // The rings of what drinks, kept apart: they are read on the whole of the water, the mirror and what lies under it.
+  vec2 lapped = vec2(0.0);
   // Rings that leave the centre, always: low and long, stronger on one side, and a train of higher ones thrown by what rises.
   if (r < 700.0) {
     float broken = 0.45 + 1.1 * vnoise(out2 * 3.0 + r / 41.0);
@@ -154,12 +156,14 @@ void main() {
     if (l.w > 0.0 && m < 11.0) {
       // Seen low and from a way off, only a long ring reads: two metres from crest to crest, and a shorter train inside it.
       float ph = m * 3.2 - (uTime + l.z) * 2.7;
-      float ph2 = m * 6.9 - (uTime + l.z * 2.3) * 4.6;
+      float ph2 = m * 10.0 - (uTime + l.z * 2.3) * 5.2;
+      // The short train is drawn only where the eye can tell one crest from the next.
+      float told = smoothstep(2.4, 0.9, fwidth(m * 10.0));
       float pack = 0.6 + 0.4 * sin(m * 0.5 - uTime * 0.7 + l.z * 5.0);
-      float env = l.w * 0.04 * exp(-m / 3.2) * smoothstep(0.03, 0.4, m) * pack;
-      vec2 ring = d / max(m, 1e-3) * (env * (cos(ph) + 0.4 * cos(ph2)));
+      float env = l.w * 0.055 * exp(-m / 3.2) * smoothstep(0.03, 0.4, m) * pack;
+      vec2 ring = d / max(m, 1e-3) * (env * (0.5 * cos(ph) + 0.9 * told * cos(ph2)));
       slope += ring;
-      heave += 1.2 * ring;
+      lapped += ring;
     }
   }
   // A breath of air: a long slow heave everywhere, wavelets nearer, and lanes where a cat's paw has roughened the mirror.
@@ -169,9 +173,9 @@ void main() {
   float mid = 1.0 - smoothstep(260.0, 900.0, away);
   if (mid > 0.0) slope += (0.0015 + 0.007 * gust) * mid * waves(p.xz / 12.0, wind * uTime * 0.03);
   float close = 1.0 - smoothstep(25.0, 110.0, away);
-  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.09);
+  if (close > 0.0) slope += (0.0016 + 0.006 * gust) * close * waves(p.xz / 2.6, wind * uTime * 0.06);
   float closer = 1.0 - smoothstep(4.0, 22.0, away);
-  if (closer > 0.0) slope += 0.0025 * closer * waves(p.xz / 0.61, wind * uTime * 0.21);
+  if (closer > 0.0) slope += 0.002 * closer * waves(p.xz / 0.61, wind * uTime * 0.12);
 
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -186,7 +190,7 @@ void main() {
   // Through a long lens the wall in the water is one picture, pulled long and only shaken by the ripples: a wave moves it a little, it does not deal it out in pieces.
   if (uPlateTone.w > 1.5) {
     vec3 still = reflect(-v, vec3(0.0, 1.0, 0.0));
-    rd.y = max(mix(still.y, rd.y, 0.3), 0.003);
+    rd.y = max(mix(still.y, rd.y, 0.12), 0.003);
   }
   rd = normalize(rd);
   float soft = 0.5 + 1.0 * smoothstep(100.0, 1400.0, away) + 1.6 * gust * mid;
@@ -251,7 +255,7 @@ void main() {
     vec3 e = skyIrradiance(vec3(0.0, 1.0, 0.0)) * open + uSunColour * 0.05;
     vec3 through = exp(-uAbsorb * down * (2.6 + 1.2 / fall));
     // The wall is seen for a few metres in from the lip and no further: beyond that the deep is its own dark.
-    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.5 * smoothstep(2.4, 0.1, inside)) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
+    vec3 deep = bed.albedo * e * (bed.occ / 3.14159) * through * (0.06 + 0.42 * smoothstep(6.0, 0.3, inside)) * vec3(0.8, 1.0, 1.05) + uDeep * skyIrradiance(vec3(0.0, 1.0, 0.0)) * open * (1.0 - through);
     // What rises: a pale shape under the dome, never the whole of it.
     float du = clamp(r / (uDome.y * 0.8), 0.0, 1.0);
     float pale = clamp((uDome.x - 1.5) / 4.0, 0.0, 1.0) * (1.0 - du * du) * (0.55 + 0.45 * vnoise(p.xz / 9.0 + 3.0));
@@ -276,6 +280,9 @@ void main() {
   float sharp = 1400.0 / (1.0 + away * away / 3600.0) + 60.0;
   float glint = pow(max(dot(n, hv), 0.0), sharp) * (sharp / 1400.0) * sunAt(vec3(p.x, 0.5, p.z));
   c += uSunColour * glint * 0.6 * (close + 0.3);
+  // A ring round a muzzle or a leg, seen low: the face that leans to the eye shows the dark under the water, the face that leans away the bright of the sky.
+  float lap = tanh(22.0 * dot(lapped, normalize(v.xz)) * 0.08 / max(v.y, 0.04));
+  c = c * (1.0 - 0.45 * max(lap, 0.0)) + skyRadiance(vec3(-v.x, 0.12, -v.z)) * (0.3 * max(-lap, 0.0));
 
   // The last second of the place: the picture the rise begins with, soft rings on deep water seen from straight above.
   if (uCentre.y > 0.0) {
@@ -458,8 +465,8 @@ void main() {
       const swell = smooth(rise - 1.9, rise - 0.1, t) * (1 - smooth(rise + 1.0, rise + 3.2, t));
       // The centre is never still: a low hump of water that breathes, and at the crest of the place it stands up.
       dome.x = 1.0 + 0.3 * Math.sin(t * 0.8) + 0.15 * Math.sin(t * 1.9 + 1) + 2.3 * swell * (1 + 0.05 * Math.sin(t * 2.3));
-      // Staged for the wide shot: the lip is drawn 185 m nearer the centre, so that the dark of the deep is an oval the frame holds whole.
-      (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 185 : 0;
+      // Staged for the wide shot: the lip is drawn 270 m nearer the centre at the sides, so that the dark of the deep is an oval the frame holds whole.
+      (material.uniforms.uLipIn as THREE.IUniform<number>).value = during('eye-01') ? 270 : 0;
       centre.x = t - rise;
       centre.y = smooth(end - 0.45, end - 0.03, t);
       laps.forEach((lap, i) => {
