@@ -1,4 +1,6 @@
-2026-11-26 05:25 UTC
-work at 9e5d415 on agent/marsh-life-3
-marsh-3 with partner brine merged; motion work starts
+2026-11-26 05:38 UTC
+work at d67ae14 on agent/marsh-life-3
+motion pass 1: marsh-3, marsh-2, marsh-0 after rings dark, fliers string, wader smaller
 look-1.jpg = out/work/cur-marsh-3.jpg
+look-2.jpg = out/work/cur-marsh-2.jpg
+look-3.jpg = out/work/cur-marsh-0.jpg
