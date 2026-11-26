@@ -12,7 +12,7 @@ import { SEA } from '../land';
 export const MAX_BODIES = 32;
 
 /** March steps of the vapour of the main shaft. The cost of the pass is close to linear in this wherever the vapour is in view. */
-export const STEPS = 18;
+export const STEPS = 16;
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
@@ -145,7 +145,7 @@ float vapourRho(vec3 p, float ground, float fine, float t) {
   // The layer low in the shaft, heaped.
   // It stands high on the west, where it wells up and spills over the low lip, and low in the middle and the east: the core stays dark.
   float west = smoothstep(4.0, -20.0, p.x);
-  float top = uBreath.x + 2.5 - 15.0 * (1.0 - west) + 7.0 * (big - 0.45) + 2.5 * (small - 0.5) + 6.0 * surge;
+  float top = uBreath.x + 2.5 - 12.0 * (1.0 - west) + 7.0 * (big - 0.45) + 2.5 * (small - 0.5) + 6.0 * surge;
   float under = top - p.y;
   float rho = (0.03 + 0.07 * smoothstep(0.0, 10.0, under)) * smoothstep(0.0, 2.0 + 3.0 * n0.g, under) * (0.55 + 0.9 * small);
   // The columns.
@@ -261,10 +261,10 @@ void main() {
         float roofed = exp(-9.0 * rho);
         float sun = sunSeen(land, p.y) * sunCloud(p.xz);
         // Down the shaft the sky closes to a disc overhead.
-        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 34.0, 0.3, 1.0);
+        float sunk = clamp(1.0 + min(p.y - 1.0, 0.0) / 26.0, 0.22, 1.0);
         // The far side of the shaft faces the low sun: the fog there takes its warmth second hand, from the lit wall over it.
         float facing = smoothstep(-25.0, 20.0, -dot(p.xz, normalize(uSunDir.xz)));
-        vec3 light = (vec3(0.265, 0.24, 0.212) * sunk * sunk * sunk + uSunColour * (0.045 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
+        vec3 light = (vec3(0.33, 0.292, 0.25) * sunk * sunk * sunk + uSunColour * (0.06 * facing * sunk * sunk)) * (0.3 + 0.7 * roofed)
           + mix(uSunColour, vec3(2.2), 0.12) * (sun * (0.3 * min(phase, 1.4) * exp(-1.1 * shade) + 0.035 * exp(-0.2 * shade)));
         float gone = exp(-tau);
         colour += through * (1.0 - gone) * VAPOUR_ALBEDO * light;
