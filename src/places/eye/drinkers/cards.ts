@@ -1,6 +1,6 @@
 // The drinkers as cards: each is one skin, taken from a picture of the whole animal (four sheets: neck down, neck up, seen from behind, a calf)
 // and stood as a card in the place, lit by the place's own light from the relief of the sheet.
-// They stand wherever the bodies of index.ts do not yet: everywhere but the four of the shore shot and the three of the mats shot while those shots run.
+// They stand wherever the bodies of index.ts do not yet: everywhere but the four of the shore shot while that shot runs.
 import * as THREE from 'three';
 import { DEG, shoreOf, smooth } from '../layout';
 import { landHeight } from '../land/height';

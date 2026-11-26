@@ -130,8 +130,6 @@ void main() {
   skin *= mix(0.3, 1.0, smoothstep(0.7, 1.45, above + 0.3 * ragged));
   float fleck = smoothstep(0.6, 0.68, vnoise(vRest.zy * 46.0 + vRest.x * 31.0)) * (1.0 - smoothstep(0.5, 1.5, above + 0.5 * ragged)) * (1.0 - smoothstep(1.2, 1.6, vRest.y));
   float horn = 1.0 - smoothstep(0.075, 0.1, vRest.y + 0.02 * ragged);
-  // Far off in the shade of the evening it is tan going to grey, as the herd of cards beside it is: the sky lights its back and leaves its belly in its own shade.
-  if (uShade.w > 0.1) skin = mix(skin, vec3(0.3, 0.22, 0.17), 0.75) * mix(0.45, 1.1, smoothstep(0.5, 0.95, above / 2.4));
   vec3 albedo = mix(skin * mix(1.0, 0.45, wet), vec3(0.11, 0.085, 0.065), 0.8 * fleck);
   albedo = mix(albedo, vec3(0.05, 0.045, 0.04), horn);
   float occ = mix(0.7, 1.0, vShade.x);
@@ -196,9 +194,9 @@ interface Drawn {
 }
 
 export function create(ctx: Context): Piece {
-  // The four of the shore shot and the three of the mats shot are bodies while their shots run; every other animal, and these in every other shot, is still a card.
+  // The four of the shore shot are bodies while that shot runs; every other animal, and these four in every other shot, is still a card.
   const all = herd(ctx.rng('drinkers-bodies'), ctx.events.rise - 1.7);
-  const cast = [0, 1, 2, 3, 6, 7, 8];
+  const cast = [0, 1, 2, 3];
   const animals = cast.map((index) => all[index] as Drinker);
   const cards = createCards(ctx);
   const mid = bodyGeometry(MID_DATA, LEVELS.mid);
@@ -244,10 +242,9 @@ export function create(ctx: Context): Piece {
 
   return {
     setTime: (t) => {
-      // The four of the shore are bodies while the shore shot runs, the three beyond the mats while the mats shot runs.
+      // The four of the shore are bodies while the shore shot runs.
       const shore = during('eye-04');
-      const mats = during('eye-02');
-      const isBody = (index: number): boolean => (shore && index < 4) || (mats && index >= 6 && index <= 8);
+      const isBody = (index: number): boolean => shore && index < 4;
       let lap = cards.setTime(t, isBody);
       const ring = (x: number, z: number, strength: number): void => {
         const slot = ctx.laps[lap];
