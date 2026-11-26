@@ -21,6 +21,8 @@ export function rockUniforms(ctx: Context): Record<string, THREE.IUniform> {
     tShorePH: { value: mirrored(ctx.assets.texture('mat/shoreplate-h.png', { kind: 'data', anisotropy: 4 })) },
     tScree: { value: mirrored(ctx.assets.texture('mat/screeplate.jpg', { anisotropy: 6 })) },
     tScreeH: { value: mirrored(ctx.assets.texture('mat/screeplate-h.png', { kind: 'data', anisotropy: 3 })) },
+    tGravel: { value: ctx.assets.texture('land/gravel.jpg', { anisotropy: 4 }) },
+    tGravelNh: { value: ctx.assets.texture('land/gravel-nh.jpg', { kind: 'data', anisotropy: 2 }) },
   };
 }
 
@@ -33,6 +35,8 @@ uniform sampler2D tShoreP;
 uniform sampler2D tShorePH;
 uniform sampler2D tScree;
 uniform sampler2D tScreeH;
+uniform sampler2D tGravel;
+uniform sampler2D tGravelNh;
 
 // The plate of the scree slope, 24 m by 13.5 m of broken grey stone seen from above, laid on the ground as it lies. Returns colour and, in a, its height.
 vec4 screeAt(vec2 xz) {
@@ -147,7 +151,55 @@ Rock rockAt(vec3 p, vec3 n, float face) {
       gh = mix(gh, hc.b, close);
     }
   }
-  if (wall < 0.5) {
+  float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
+  if (wall < 0.5 && lowEye < 0.01) {
+    // Seen from the spur, the slope is graded scree: the sheet of broken gravel at its true size, three metres a repeat, and through it
+    // the stones of the same sheet laid three times larger and turned, more of them the higher the ground. Four reads in all.
+    vec3 gn = normalize(cross(dFdx(p), dFdy(p)));
+    vec3 an = abs(gn);
+    float lie = an.y > 0.8 * max(an.x, an.z) ? 0.0 : an.x > an.z ? 1.0 : 2.0;
+    vec2 at = lie < 0.5 ? p.xz : lie < 1.5 ? p.zy + 11.0 : p.xy + 23.0;
+    float away = length(cameraPosition - p);
+    // Three sizes of the one sheet, each turned from the last: eleven metres a repeat is the rubble the spur camera sees, twenty-three
+    // the blocks that stand through it, and three the grit under the lens, read only where the lens is near enough to see it.
+    vec2 um = vec2(at.x * 0.8 - at.y * 0.6, at.x * 0.6 + at.y * 0.8) / 11.3 + 0.37;
+    vec2 uh = vec2(at.x * 0.28 + at.y * 0.96, -at.x * 0.96 + at.y * 0.28) / 23.0 + 0.61;
+    vec3 cm = texture2D(tGravel, um).rgb;
+    vec3 hm = texture2D(tGravelNh, um).rgb;
+    vec3 cb = texture2D(tGravel, uh).rgb;
+    vec3 hb = texture2D(tGravelNh, uh).rgb;
+    float close = 1.0 - smoothstep(14.0, 32.0, away);
+    vec3 cf = vec3(0.32);
+    vec3 hf = vec3(0.5);
+    if (close > 0.0) {
+      cf = texture2D(tGravel, at / 3.1).rgb;
+      hf = texture2D(tGravelNh, at / 3.1).rgb;
+    }
+    // Coarse at the spur, fine at the water, and in drifts of its own between.
+    float drift = 0.55 * vnoise(p.xz / 19.0 + 2.0) + 0.45 * vnoise(p.xz / 5.3 + 7.0);
+    float coarse = clamp(0.3 + 0.45 * smoothstep(2.0, 45.0, p.y) + 0.8 * (drift - 0.5), 0.0, 1.0);
+    // A large stone stands through the rubble where it is highest: the rubble lies round its foot.
+    float big = smoothstep(-0.05, 0.05, hb.b - 0.4 * hm.b - (0.58 - 0.5 * coarse));
+    vec3 col = mix(cm, cb * (0.55 + 0.45 * cm / vec3(0.32)) * 1.12, big);
+    col *= mix(vec3(1.0), cf / vec3(0.32), 0.6 * close);
+    float h = mix(hm.b, 0.4 + 0.6 * hb.b, big);
+    h = mix(h, h * (0.5 + hf.b), 0.5 * close);
+    vec2 lm = hm.rg - 0.5;
+    lm = vec2(0.8 * lm.x + 0.6 * lm.y, -0.6 * lm.x + 0.8 * lm.y);
+    vec2 lb = hb.rg - 0.5;
+    lb = vec2(0.28 * lb.x - 0.96 * lb.y, 0.96 * lb.x + 0.28 * lb.y);
+    vec2 l = (mix(lm * 3.2, lb * 4.2 + lm * 1.2, big) + (hf.rg - 0.5) * 2.2 * close) * (1.0 - smoothstep(160.0, 340.0, away));
+    // Grey limestone gone buff where it has lain long, each drift of its own tone.
+    float aged = 0.6 * vnoise(p.xz / 37.0 + 5.0) + 0.4 * vnoise(p.xz / 9.0);
+    gravel = col * mix(vec3(1.2, 1.15, 1.08), vec3(1.62, 1.5, 1.3), aged);
+    // Dirt and shade lie in the hollows between the stones.
+    gravel *= mix(0.42, 1.0, smoothstep(0.18, 0.5, h)) * mix(0.82, 1.0, big);
+    stone = gravel;
+    bentFlat = lie < 0.5 ? vec3(l.x, 0.0, l.y) : lie < 1.5 ? vec3(0.0, l.y, l.x) : vec3(l.x, l.y, 0.0);
+    bentFace = bentFlat;
+    gh = h;
+    fh = h;
+  } else if (wall < 0.5) {
     // The spur and the beach under it are one slope of broken grey stone: the plate of the scree, laid on the ground at its own size,
     // and again larger and turned so that the eye finds no repeat. Its relief gives every stone its faces.
     // Which way each face of the ground truly looks, from the ground itself, so that no face has the plate pulled long over it.
@@ -156,7 +208,6 @@ Rock rockAt(vec3 p, vec3 n, float face) {
     w3 /= w3.x + w3.y + w3.z;
     vec4 a = screeAt(p.xz) * w3.y;
     // Under the feet of a low eye the same broken stone is small: cobbles and pebbles, the plate laid six times finer.
-    float lowEye = smoothstep(12.0, 4.0, cameraPosition.y);
     float fine = mix(1.0 - smoothstep(280.0, 430.0, length(cameraPosition - p)), 1.0 - smoothstep(16.0, 40.0, length(cameraPosition - p)), lowEye) * w3.y * w3.y;
     if (w3.x > 0.02) a += screeAt(p.zy + 11.0) * w3.x;
     if (w3.z > 0.02) a += screeAt(p.xy + 23.0) * w3.z;
