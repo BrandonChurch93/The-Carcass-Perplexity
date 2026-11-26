@@ -253,7 +253,7 @@ void main() {
     wet = 0.6 + 0.4 * vWet;
     occ *= 0.7 + 0.3 * u;
     // The threads are dark and wet: little of the sun comes through them. The fingers are flesh, and it does.
-    thin = 0.55;
+    thin = 0.22;
   } else {
     // A leg: the thigh is the skin of the trunk; below the joint it is hard, scaled and grey with dried silt, the joints knotted and raw.
     float shank = smoothstep(0.36, 0.5, u + 0.08 * (blotch - 0.5));
@@ -321,13 +321,13 @@ void main() {
   float halo = pow(clamp(0.5 + 0.5 * dot(n, normalize(uSunDir + vec3(0.0, 0.8, 0.0))), 0.0, 1.0), 2.0) * 0.7;
   // The fog they stand in is itself the brightest thing about them: it lights them from every side, more from the side of the sun.
   vec3 flat_ = normalize(vec3(uSunDir.x, 0.0, uSunDir.z));
-  float fogLight = (0.47 + 0.7 * smoothstep(25.0, 140.0, far)) * (0.46 + 0.42 * dot(n, flat_) + 0.12 * n.y);
+  float fogLight = (0.47 + 0.7 * smoothstep(25.0, 140.0, far)) * max(0.05, 0.44 + 0.44 * dot(n, flat_) + 0.12 * n.y);
   vec3 fogColour = skyIrradiance(normalize(flat_ + vec3(0.0, 0.4, 0.0))) * vec3(1.22, 1.0, 0.8) / 3.14159;
   colour += albedo * (uSunColour * (0.2 * wrap * wrap + 5.5 * halo * halo * halo) + fogColour * (9.0 * fogLight * (1.0 + 1.2 * (1.0 - lit)))) * (occ * (0.7 + 0.3 * lit) * (1.0 - 0.6 * uDead));
   // Thin bare skin against a low sun: the light comes a little way through at the edge of every limb, warm, and the edge reads bright.
   float nv = clamp(dot(n, v), 0.0, 1.0);
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
-  float edge = pow(1.0 - nv, 1.6) + 2.6 * pow(1.0 - nv, 4.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
+  float edge = pow(1.0 - nv, 1.6) + 4.2 * pow(1.0 - nv, 3.0) * (1.0 - tendril) * smoothstep(-0.1, 0.5, n.y + 0.6 * dot(n, flat_));
   vec3 through = mix(vec3(1.0, 0.6, 0.45), vec3(0.45, 0.2, 0.15), tendril);
   colour += albedo * through * uSunColour * ((1.0 - 0.8 * uMirror) * thin * 5.0 * (0.3 + 0.7 * against * against) * edge * max(lit, 0.6) * (0.5 + 0.5 * occ) * smoothstep(-0.5, 0.3, dot(n, uSunDir)));
   if (uMirror > 0.5) {
