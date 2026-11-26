@@ -288,7 +288,7 @@ export function create(ctx: Context): Piece {
   };
   // The opening's strikes: the place, the times and the height are the opening's own (shared/opening.ts), read here and not copied.
   const struck = RIBS.find((r) => r.name === STRIKE.blade) as Rib;
-  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : 0.85), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
+  const strikes: Strike[] = STRIKE.times.map((seconds, n) => strikeOn(struck, seconds, STRIKE.height * (n === 0 ? 1 : STRIKE.lesser), STRIKE.half * 2, n + 1, [STRIKE.foot[0], STRIKE.foot[2]], [0, 1]));
   const windTo: [number, number] = [WIND.to[0] * WIND.speed, WIND.to[1] * WIND.speed];
 
   return {
