@@ -1,6 +1,6 @@
 # Blood Marsh, ground and weather: hand-over from marsh_ground_owner_2
 
-Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 190 of 240 of wave 2. The first owner's note is in the history of this file.
+Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.ts`, `land/`, `brine/`, `air/`. Written at minute 196 of 240 of wave 2. The first owner's note is in the history of this file.
 
 ## How each part is drawn
 
@@ -16,6 +16,7 @@ Branch `agent/marsh-ground-2`. Folders: `src/places/marsh/shared/`, root `index.
 - An early `return` or an `if` round the thin crust to save cost: saves nothing on the software renderer and broke G10.
 - A mirror share that rises early (0.4 at power 4): the whole brine turns milky pink. Froth rafts on open brine: a white speckle. Rain at strength 0.95: straight diagonal hatching in the sky.
 - Steam as marched columns for the low mist (even grey screen): `SHEETS = false` keeps it.
+- Matching the flats and islands of marsh-0 by number through the ground's colour: a factor of 1.6 on `colour` past 14 m whitened only the rims; a lower level on the thin crust (0.34 for 0.41) and a clearer film moved the means by one or two levels. The plate interiors are not coloured where I looked: find what colours them (the film under `flood`, or the air over them) before another number is turned.
 
 ## Round 11, each severe and major issue in my folders, and what I did
 
