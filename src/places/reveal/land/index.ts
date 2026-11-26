@@ -507,7 +507,10 @@ void main() {
   if (spineBand > 0.0) ice = spineBand * smoothstep(0.54, 0.72, height + 0.08 * (vnoise(xz / 4.0) - 0.5));
   if (ice > 0.0) ground = mix(ground, vec3(0.6, 0.7, 0.82) * (0.7 + 0.5 * vnoise(xz / 2.3 + 5.0)), 0.9 * ice);
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
-  float shade = cloudShade(real);
+  // (The cloud's shadow comes in with the height: there is no cloud over the lake where the rise begins, and it is not read there.)
+  float shadeIn = smoothstep(60.0, 110.0, uViewKm);
+  float shade = 1.0;
+  if (shadeIn > 0.0) shade = mix(1.0, cloudShade(real), shadeIn);
   // The ranges throw their shadows on the country and on the sea beside it: the baked horizon toward the sun is read against the
   // height of the sun here, so the shadows are short by day and grow as it goes down. Hollows see less of the sky than crests.
   float castKm = bake.r * bake.r * 2.0 * RELIEF_DRAWN;
