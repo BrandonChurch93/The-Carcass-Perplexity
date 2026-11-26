@@ -1,6 +1,6 @@
 # Material pictures of the Ribs
 
-The working pictures of the Ribs, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 17 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Ribs, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 30 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 How to read them: the colour picture is sRGB. For a tile, in the data picture `<name>-nh.png` red and green are the slope on x and y (0.5 is level) and blue is height, taken from the picture's own light and dark. `metres` in `materials.json` is the real width one repeat of a tile, or the whole of a plate, stands for. A face with beds or courses (`ledge`, `strata`, `cliff`, `canal`, `bark`, `hoop`) repeats well from left to right; lay its height once or break the repeat. Blend two scales of a tile and break it with the place's own large shapes so no repeat shows. These pictures carry no light: the place's rig lights them.
 
@@ -394,6 +394,260 @@ The reference image shows one subject on a black background. Make its relief map
 
 Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
 Why this one: the drowned one as the approved picture shows it, four limbs hanging with their joints and smooth pale hide: the first sheet came out stringy with one leg (asked for by `ribs_sea_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/feeder-a.jpg` and `public/assets/ribs/mat/feeder-a-h.png` and `public/assets/ribs/mat/feeder-a-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/feeder-a.png`, the generated picture, and `assets-src/ribs/mat/src/feeder-a-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One kite-wing, feeding, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. Its body is held level and both legs are straight. Its wings are folded over its back as one closed bundle, like a furled umbrella, the rust-orange edges showing as lines along the bundle. Its neck reaches down and forward, and the tuft of tendrils is spread out where it touches the ground. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a feeder in the pose of the nearest animal of the tide pool detail, pale as the picture has them, where the built ones are dark brown (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/feeder-b.jpg` and `public/assets/ribs/mat/feeder-b-h.png` and `public/assets/ribs/mat/feeder-b-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/feeder-b.png`, the generated picture, and `assets-src/ribs/mat/src/feeder-b-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One kite-wing, in mid step, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. One foot is lifted clear of the ground with the knee bent and the other leg is straight. Its wings are folded over its back as one closed bundle. Its neck is stretched out level in front of it and the tendrils at its end are flung outward in all directions, as if it were shaking water off them, with a few drops in the air. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a second feeder, mid step with the tendrils flung, so that the feeders are not copies of one pose (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/feeder-c.jpg` and `public/assets/ribs/mat/feeder-c-h.png` and `public/assets/ribs/mat/feeder-c-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/feeder-c.png`, the generated picture, and `assets-src/ribs/mat/src/feeder-c-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One kite-wing, running, an animal of an unknown world, about 2 metres tall, seen exactly from the side in an orthographic view, facing right. It is the nearest animal of the first reference image: the same pale ivory-grey skin, smooth and a little wet, never brown. It stands on two very long thin legs with knobbly joints, like a wading bird. Its body is small and lean. Its long neck ends, where a head would be, in nothing but a tuft of long pale wet tendrils. Its two wings are long thin finger bones with leathery membrane between them, pale ivory-grey with rust-orange along the edges. It runs with a long stride: one leg reaching far forward, the other pushing off behind it, the body tipped forward. Its wings are half open and raised above its back, the membrane slack between the finger bones. Its neck is stretched forward and a little down, the tendrils streaming back. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a third feeder, running with the wings half open, for the ones that leave before the bore (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/perched.jpg` and `public/assets/ribs/mat/perched-h.png` and `public/assets/ribs/mat/perched-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/perched.png`, the generated picture, and `assets-src/ribs/mat/src/perched-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-3-the-colony.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+Six kite-wings, animals of an unknown world, perched, shown apart from each other in a grid of three across and two down, each alone in its own cell with black between it and its neighbours, each about 1.5 metres tall, seen from the side or at a three-quarter angle. They are the animals that sit on the ledges of the first reference image: rock-grey and dirty ivory skin, stained, with rust-orange only along the edges of the wing membranes. Each has two long thin legs, a small lean body, two wings of long thin finger bones with leathery membrane, and a long neck that ends in nothing but a tuft of pale tendrils. Every pose is different. Top row, from the left: one sitting low on a nest of black weed with its legs folded under it; one standing upright with its wings folded; one standing and stretching one wing straight out to the side. Bottom row, from the left: one with its neck raised straight up and its wings half lifted, squabbling; one with its neck curled back over its shoulder, preening a wing; one asleep with its neck tucked under a folded wing. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: six perched kite-wings in six poses for the colony, grey and dirty as the colony picture has them, where the built sitters are one cream drawing (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/fliers.jpg` and `public/assets/ribs/mat/fliers-h.png` and `public/assets/ribs/mat/fliers-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/fliers.png`, the generated picture, and `assets-src/ribs/mat/src/fliers-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-0-establishing.jpg`, `references/drafts/working/real/ref-wader-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+Four kite-wings, animals of an unknown world, in flight, shown apart from each other in a grid of two across and two down, each alone in its own cell with black between it and its neighbours, each about 3 metres from wing tip to wing tip. They are the fliers of the first reference image: pale grey-white skin and membrane, with rust-orange along the trailing edges of the wings, a small lean body, two long thin legs, and a long neck that ends in nothing but a tuft of pale tendrils. Each wing is long thin finger bones with thin leathery membrane stretched between them. Top left: seen from the side, wings raised high at the top of a beat, legs trailing. Top right: seen from the side, wings swept down at the bottom of a beat. Bottom left: seen from below, both wings spread wide and flat, banking. Bottom right: landing, seen from the side and a little in front, wings cupped forward and the long legs reaching down. The animal has no eyes and no ears anywhere on it and no face: it is not a monster and not cute, an animal of an unknown world built for one way of feeding. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: four fliers in four poses, pale against the dark cloud as the pictures have them, where the built fliers are brown and of one pose (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/borewall-c.jpg` and `public/assets/ribs/mat/borewall-c-h.png` and `public/assets/ribs/mat/borewall-c-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/borewall-c.png`, the generated picture, and `assets-src/ribs/mat/src/borewall-c-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-4-the-bore-arrives.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One section of a tidal bore, a single breaking wall of sea water, seen square on from in front: a section 70 metres wide and 30 metres tall that runs out of the frame at the left and right edges. The lip of the wave has pitched forward along its whole length and falls as one thick white curtain of water over the upper half of the wall, ragged along its lower edge. Under the curtain the dark green-grey face of the wave shows as a band, glassy and streaked with foam, and at its foot lies a band of white churn. The light comes from behind the wave and from the right, so the thin lip of the crest glows pale green. The wall reaches from the left edge of the frame to the right edge; black is above it and below it only. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a third section of the bore, with the lip pitched forward and falling as a white curtain, so that the wall has a dark standing face and a lip (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/seastreak.jpg` and `public/assets/ribs/mat/seastreak-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/seastreak.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-4-the-bore-arrives.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+A material texture, seen straight down from above in an orthographic view: open sea under a gale, about 60 metres across. Dark slate-green water with a short steep chop, long thin white foam streaks all drawn out one way down the wind from the top of the picture to the bottom, unevenly spaced, and a few torn whitecaps with lace trailing from them. Flat, even, shadowless overcast light so that no side is brighter than another. The surface fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The first reference image is the place this material belongs to: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the open sea of the opening from above: foam streaks down the wind and whitecaps, where the built sea is a plain sheet (asked for by `ribs_sea_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/blade-b.jpg` and `public/assets/ribs/mat/blade-b-h.png` and `public/assets/ribs/mat/blade-b-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/blade-b.png`, the generated picture, and `assets-src/ribs/mat/src/blade-b-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-0-establishing.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One whole rib blade of the strait, seen square on from the side in an orthographic view: a thin arching fin of weathered bone turned to stone, 300 metres tall, with its foot at the bottom of the frame. It is slender, about 50 metres at the foot, and curves over to the left as it rises until its upper third hangs far out past its foot as a hook; the tip is broken off short, with a ragged pale break. Pale ivory and grey-cream, in thin level beds that show as fine ledges across it, pitted and flaked, with dark water stains running down it, white streaks below the ledges where animals roost, rust-orange lichen in patches on its upper side, and its lowest tenth hung with black-olive weed up to one level line. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a second blade, the thin hooked arch with a broken tip, so that the blades are not copies of one (asked for by `ribs_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/blade-c.jpg` and `public/assets/ribs/mat/blade-c-h.png` and `public/assets/ribs/mat/blade-c-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/blade-c.png`, the generated picture, and `assets-src/ribs/mat/src/blade-c-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-0-establishing.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One whole rib blade of the strait, seen square on from the side in an orthographic view: a broad fin of weathered bone turned to stone, 500 metres tall and 240 metres wide at its foot, with its foot at the bottom of the frame. It rises as a great ledged wall that narrows slowly and leans a little to the right, ending in a blunt hooked top. Pale ivory and grey-cream rock in thick level beds that stand out as ledges of unequal depth, with wide fields of rust-orange and yellow lichen on its upper half, dark water stains, white streaks below the ledges, one great block fallen out of its side leaving a square pale scar, a dark cave at its foot, and its lowest part hung with black-olive weed up to one level line. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a third blade, the broad ledged fin with lichen fields, a fallen block and a cave (asked for by `ribs_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/stack-a.jpg` and `public/assets/ribs/mat/stack-a-h.png` and `public/assets/ribs/mat/stack-a-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/stack-a.png`, the generated picture, and `assets-src/ribs/mat/src/stack-a-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-4-the-bore-arrives.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One sea stack at low tide, seen square on from the side in an orthographic view, 70 metres tall, with its foot at the bottom of the frame: a pillar of wet dark rock, broken and ledged, never smooth, narrower in its upper half and with a ragged top. Its lower two thirds are hung with ropes and curtains of olive and gold seaweed, glistening wet, that hang straight down, with wet black barnacled rock between the clumps. Above the weed the rock is dark grey with pale streaks of droppings and a little rust-orange lichen. This one is thick and leans slightly to the left, with one deep notch in its side. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: one of the two gate stacks before the bore: wet dark rock hung with olive-gold weed, where the built stacks are black pillars (asked for by `ribs_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/stack-b.jpg` and `public/assets/ribs/mat/stack-b-h.png` and `public/assets/ribs/mat/stack-b-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/stack-b.png`, the generated picture, and `assets-src/ribs/mat/src/stack-b-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-4-the-bore-arrives.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+One sea stack at low tide, seen square on from the side in an orthographic view, 70 metres tall, with its foot at the bottom of the frame: a pillar of wet dark rock, broken and ledged, never smooth, narrower in its upper half and with a ragged top. Its lower two thirds are hung with ropes and curtains of olive and gold seaweed, glistening wet, that hang straight down, with wet black barnacled rock between the clumps. Above the weed the rock is dark grey with pale streaks of droppings and a little rust-orange lichen. This one is slender and split near the top into two unequal prongs. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the second gate stack, slender and split at the top (asked for by `ribs_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/nearbar.jpg` and `public/assets/ribs/mat/nearbar-h.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/nearbar.png`, the generated picture, and `assets-src/ribs/mat/src/nearbar-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-0-establishing.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+A gravel bar on the floor of a sea strait at low tide, a piece 12 metres wide and 12 metres tall. Shingle of rounded grey, slate and pale stones from 2 to 40 centimetres, sorted in loose drifts of unlike size, with films of wet dark sand between them, scraps of black-olive weed, shell grit, and a few larger dark stones. Wet, but with no reflections of the sky and no standing pools. One piece of ground seen straight down from above in an orthographic view, as a survey photograph: it fills the whole frame edge to edge at one uniform scale and it does not repeat. Flat, even, shadowless overcast light, so that no side of anything is brighter than another. The first reference image is the place this ground belongs to: take its colours, its age and its character from there, and nothing of its composition or its perspective. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No horizon, no sky, no animals.
+```
+
+The prompt of the relief:
+
+```
+The reference image is a photograph of ground seen straight down from above. Make its height map: the same picture, pixel for pixel, as a greyscale height field for relief shading. White is the highest ground and black is the lowest. Cracks, hollows, channels and standing water are dark; the tops and raised edges of blocks, slabs, stones and lumps are light. Smooth continuous greys that keep every edge and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: the gravel bar under the lens of the establishing picture, where the built shingle is ringed loaves and stipple (asked for by `ribs_ground_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/ribs/mat/weedrock.jpg` and `public/assets/ribs/mat/weedrock-h.png` and `public/assets/ribs/mat/weedrock-a.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then for the relief the image model `gpt_image_2_6_sunburst` (OpenAI GPT Image, through Perplexity) with the colour picture as its one reference, then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/ribs/mat/src/weedrock.png`, the generated picture, and `assets-src/ribs/mat/src/weedrock-h.png`, the generated relief. Pictures passed to the model with the prompt: `references/approved/1-ribs/ribs-2-tide-pool-feeders.jpg`, `references/drafts/working/real/plate-surf-1.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs ribs`.
+
+```
+A low heap of rock on a tidal flat, 4 metres wide and 1.5 metres tall, seen from the side at ground level, lying level across the frame. Dark wet boulders piled together and draped in gold and olive seaweed, glistening wet, that hangs over them in heavy straps and ropes, with dark gaps under the boulders and a few barnacles on the bare rock. The whole subject lies inside the frame on a pure black background, with a margin of black on every side, and nothing touches the edge of the frame. Flat, even, shadowless light from the front, so that no side is brighter than another and no shadow is cast: a reference plate for texture work, not a scene. The first reference image is where the subject comes from: take its colours, its age and its character from there, and nothing of its composition. The second reference image is a real photograph: it is the standard for how a camera records the real thing, with real grain, real micro detail and no painted, stylised or generated look. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no text, no labels, no arrows, no logo, no border, no people. No ground, no horizon, no sky.
+```
+
+The prompt of the relief:
+
+```
+The reference image shows one subject on a black background. Make its relief map: the same picture, pixel for pixel, as a greyscale depth field for relief shading. The background stays pure black. On the subject, white is what stands nearest to the viewer and dark grey is what lies furthest back. Cracks, holes, hollows and folds are dark; ridges, bulges, bones and raised edges are light. Smooth continuous greys that keep every outline and every small form exactly where it is in the reference image. No shading, no shadows, no light direction, no colour, no outlines, no contour lines, no text.
+```
+
+Takes: 1 made, take 1 kept. The relief: 1 made, take 1 kept.
+Why this one: a weed-draped rock heap for the foregrounds of the feeders and the bore (asked for by `ribs_ground_owner_3`).
 Date: 2026-11-26
 
 ## `public/assets/ribs/mat/materials.json`
