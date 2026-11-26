@@ -10,9 +10,23 @@ export const MAX_MIST = 8;
 /** True: the low steam is drawn as drifting sheets, each column is marched in its own stretch of the view, and the far flats lie under a bank
  *  of mist. False: the columns only, marched together (version 2 of this folder, the cheaper one). */
 export const SHEETS: boolean = true;
+/** The ground mist: the stretches a view is cut into, where it starts and ends (metres along the view), how high it is read (metres),
+ *  how deep a bank stands (metres) and how much of a surface's light a metre of it takes at the ground. */
+export const MIST = { steps: 10, near: 5, far: 2400, top: 26, deep: 4.5, thick: 0.0075 };
+/** How far the near air is counted over the sky, metres. */
+export const HAZE_OVER_SKY = 1100;
+
+const f = (v: number): string => v.toFixed(5);
 
 export const VOLUME_FRAGMENT = /* glsl */ `
 precision highp float;
+#define MIST_STEPS ${MIST.steps}
+#define MIST_NEAR ${f(MIST.near)}
+#define MIST_FAR ${f(MIST.far)}
+#define MIST_TOP ${f(MIST.top)}
+#define MIST_DEEP ${f(MIST.deep)}
+#define MIST_THICK ${f(MIST.thick)}
+#define HAZE_OVER_SKY ${f(HAZE_OVER_SKY)}
 precision highp sampler3D;
 uniform highp sampler2D tDepth;
 uniform mat4 uInvProjection;
@@ -34,7 +48,6 @@ uniform int uMistCount;
 uniform vec4 uMist[${MAX_MIST}];
 // Where no low steam lies, whatever the patches say: x, z, radius in metres (the wallow, where the animals are to be seen whole).
 uniform vec3 uClear[2];
-uniform vec4 uBanks[3];
 varying vec2 vUv;
 ${HASH_GLSL}
 ${RIG_GLSL}
@@ -245,49 +258,65 @@ void main() {
     rain = uRain.w * body * base * (0.75 + 0.5 * streaks);
   }
   float show = uShow.x;
-  // The haze lies in layers: thicker and thinner by the bearing and by how far off it is.
-  float layers = far > 250.0 ? 0.8 + 0.4 * textureLod(tNoise, vec3(az * 0.9, log(far) * 0.8, 0.3 + uTime * 0.001), 0.0).r : 1.0;
-  // The bank of mist the far flats lie under: it starts some hundreds of strides out, thickens in steps, and stands a few degrees high, so
-  // that the land has no last line against the sky.
-  float bank = 0.0;
-#ifdef SHEETS
-  {
-    float reach = min(far, mix(9000.0, 1100.0, open));
-    float mid = max(ro.y + rd.y * 0.5 * (reach + 230.0), 0.0);
-    float steps = 0.75 + 0.5 * textureLod(tNoise, vec3(az * 1.3, log(max(reach, 1.0)) * 1.7, 0.6 + uTime * 0.002), 0.0).g;
-    // (The last of the land is taken by it: past seven hundred strides it thickens fast, so the flats have no clean last line.)
-    bank = (0.00014 * max(reach - 230.0, 0.0) + 0.0005 * max(reach - 700.0, 0.0)) * exp(-mid / (55.0 * steps)) * steps * show;
-    // Over the sky the bank is only the foot of the far picture: it hides the picture's own ground and lets its hills stand.
-    bank = mix(bank, 1.5 * exp(-max(elev, 0.0) / 0.007) * show, open);
-    // Nearer than that, banks of mist stand over the far pools, each a wall a few strides high, broken along its length and drifting, so
-    // the flats go off in steps and not in one grade. (x, z: the way they face; then how far along it; then how thick.)
-    for (int k = 0; k < 3; k++) {
-      vec4 B = uBanks[k];
-      float along = dot(rd.xz, B.xy);
-      if (abs(along) < 1e-3) continue;
-      float t = (B.z - dot(ro.xz, B.xy)) / along;
-      if (t <= 0.0 || t >= far) continue;
-      vec3 p = ro + rd * t;
-      float lateral = p.x * B.y - p.z * B.x + uTime * 0.35;
-      vec4 lay = textureLod(tNoise, vec3(lateral / 120.0 + float(k) * 0.37, 0.31 + float(k) * 0.23, 0.2 + uTime * 0.003), 0.0);
-      float top = 2.5 + 7.0 * lay.b;
-      bank += B.w * smoothstep(0.42, 0.7, lay.g) * exp(-max(p.y, 0.0) / top) * min(1.0 / abs(along), 4.0) * smoothstep(0.0, 14.0, far - t) * show;
-    }
+  // Where the view ends on the sky only the near air lies over it (the far picture has its own), but for its foot: there the air closes
+  // over the picture's own ground, so the flats run out into white and have no last line.
+  float reach = min(far, mix(60000.0, HAZE_OVER_SKY, open));
+  float foot = 2.2 * exp(-max(elev, 0.0) / 0.006) * open * show;
+
+  // The ground mist. It lies on the flats a few strides deep, thick in banks and thin between them, and the banks travel with the wind.
+  // The view is cut into stretches that lengthen with distance, and each stretch reads the banks no finer than its own length (the noise's
+  // smaller copies), so a far stretch takes the mean of what it crosses and nothing in it can flicker.
+  float ta = MIST_NEAR;
+  float tb = min(reach, MIST_FAR);
+  if (rd.y > 1e-4) tb = min(tb, (MIST_TOP - ro.y) / rd.y);
+  if (ro.y > MIST_TOP) {
+    if (rd.y < -1e-4) ta = max(ta, (MIST_TOP - ro.y) / rd.y);
+    else tb = -1.0;
   }
-#endif
-  if (rain > 0.0) {
+  float done = 0.0;
+  if (show > 0.5 && tb > ta * 1.02) {
+    float a0 = 1.0 - exp(-hazeBetween(ro, rd, 0.0, ta));
+    sum += trans * a0 * airLight;
+    trans *= 1.0 - a0;
+    float ratio = pow(tb / ta, 1.0 / float(MIST_STEPS));
+    float t0 = ta;
+    vec2 wind = vec2(-0.96, -0.27) * 1.6 * uTime;
+    for (int k = 0; k < MIST_STEPS; k++) {
+      float t1 = t0 * ratio;
+      float dt = t1 - t0;
+      vec3 p = ro + rd * (t0 + dt * jitter);
+      vec2 at = p.xz - wind;
+      float lodBig = clamp(log2(dt / 20.0), 0.0, 6.0);
+      float lodSmall = clamp(log2(dt / 6.0), 0.0, 6.0);
+      vec4 big = textureLod(tNoise, vec3(at / 640.0, 0.37 + uTime * 0.002), lodBig);
+      vec4 small = textureLod(tNoise, vec3(at / 190.0 + 0.5, 0.71 + uTime * 0.006), lodSmall);
+      float shape = smoothstep(0.4, 0.68, big.g * 0.68 + small.a * 0.32);
+      // Its top stands higher in a bank than between two.
+      float top = MIST_DEEP * (0.45 + 0.9 * shape + 0.5 * small.g);
+      float sigma = MIST_THICK * (0.12 + 2.3 * shape) * exp(-max(p.y, 0.0) / top) * smoothstep(MIST_NEAR, MIST_NEAR * 6.0, t0 + dt * jitter);
+      float tau = sigma * dt + hazeBetween(ro, rd, t0, t1);
+      float a = 1.0 - exp(-tau);
+      // A bank is white on top, where the whole sky lights it, and greyer in its depth, where its own top stands over it.
+      float lit = exp(-sigma * top * 22.0 * exp(-max(p.y, 0.0) / top));
+      sum += trans * a * airLight * mix(0.8, 1.08, lit);
+      trans *= 1.0 - a;
+      t0 = t1;
+    }
+    done = tb;
+  }
+  if (rain > 0.0 && reach > curtain) {
     float r = 1.0 - exp(-rain);
     // The air under the raining cloud is in its shade.
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, curtain) * show * layers);
+    float a = 1.0 - exp(-hazeBetween(ro, rd, done, max(curtain, done)) * show);
     sum += trans * a * airLight * (1.0 - 0.5 * r);
     trans *= 1.0 - a;
     sum += trans * r * vec3(0.24, 0.25, 0.28);
     trans *= 1.0 - r;
-    a = 1.0 - exp(-hazeBetween(ro, rd, curtain, min(far, mix(60000.0, curtain + 600.0, open))) * show * layers - bank);
+    a = 1.0 - exp(-hazeBetween(ro, rd, max(curtain, done), max(min(far, mix(60000.0, curtain + 600.0, open)), done)) * show - foot);
     sum += trans * a * airLight * (1.0 - 0.3 * r);
     trans *= 1.0 - a;
   } else {
-    float a = 1.0 - exp(-hazeBetween(ro, rd, 0.0, min(far, mix(60000.0, 700.0, open))) * show * layers - bank);
+    float a = 1.0 - exp(-hazeBetween(ro, rd, done, max(reach, done)) * show - foot);
     sum += trans * a * airLight;
     trans *= 1.0 - a;
   }

@@ -10,7 +10,7 @@ export const LAND = { minX: -256, maxX: 256, minZ: -256, maxZ: 256, width: 1024,
 export const CONTACT = { size: 1024, minRadius: 14, maxRadius: 160 };
 export const MAX_EMITTERS = 8;
 /** The air: how much of a surface's light is lost in a metre at the ground, and how fast the air thins with height (1 / metres). The air folder draws it. */
-export const AIR = { density: 0.00007, thin: 1 / 320 };
+export const AIR = { density: 0.001, thin: 1 / 110 };
 
 export type Height = (x: number, z: number) => number;
 
@@ -191,7 +191,7 @@ export function createRig(t0: number): Rig {
     uSkyGround: { value: new THREE.Vector3(0.3, 0.27, 0.265) },
     uFill: { value: new THREE.Vector3(1, 1, 1) },
     // The air pales the distance toward this, the horizon's white.
-    uAirColour: { value: new THREE.Vector3(0.51, 0.475, 0.48) },
+    uAirColour: { value: new THREE.Vector3(0.52, 0.51, 0.535) },
     uAir: { value: new THREE.Vector4(AIR.density, AIR.thin, 0, 0) },
     uMirror: { value: 0 },
     tMirror: { value: blank },

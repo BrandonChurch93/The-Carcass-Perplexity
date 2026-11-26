@@ -68,6 +68,8 @@ void main() {
   far = exp2((((43.76 * shown - 96.814) * shown + 79.933) * shown - 21.049) * shown - 3.544) * FAR_GAIN;
   // Over the far picture the sheet is heavier than at the horizon's pale band: a lens that looks level sees its grey weight.
   c *= mix(1.0, 0.72, smoothstep(0.16, 0.42, el));
+  // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
+  c *= mix(1.0, 1.55, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
