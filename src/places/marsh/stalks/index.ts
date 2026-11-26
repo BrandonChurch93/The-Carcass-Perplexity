@@ -271,9 +271,17 @@ export function create(ctx: Context): Piece {
       }
       // The ones the lens of the wallowers looks past stay exactly as its picture has them: no collar, and a head on its trunk's line.
       w.bare = staged4.has(s) || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR;
+      // The ones at the left of the wallowers' picture end inside its frame, each under an open head that weeps into it.
+      const from3 = Math.hypot(s.x - k3[0], s.z - k3[1]);
+      const framed = from3 < 10 && s.kind !== 2 && w.h > 1.8 && w.h < 3.5;
+      if (framed) w.h = (from3 < 7 ? 1.4 : 2.15) + 0.4 * ((seed * 7.7) % 1);
       wilds.push(w);
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
       if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall) * (staged4.has(s) ? 0.6 : anchored || backdrop ? 0.86 : 1));
+      if (framed) {
+        const turn = -0.2 + 0.7 * ((seed * 3.3) % 1);
+        w.cards = [[turn, 0.4, 0.5, 1.2, 0, 0, 0], [turn, 0.6, 0.55, 0.2, 0, 0.1, 0], [turn - 0.8, 0.8, 0.4, 0.2, 0, 0.3, 0.3]];
+      }
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2 && !anchored) {
         const t0 = wild.range(0.28, 0.66);
@@ -374,7 +382,7 @@ export function create(ctx: Context): Piece {
       'marsh-05': (w) => Math.hypot(w.x - k4[0], w.z - k4[1]),
     };
     const fineOf = (d: number): number => (d < 9 ? 40 : d < 18 ? 28 : d < 36 ? 13 : d < 80 ? 5 : 3);
-    const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.1 : d < 80 ? 1.9 : 3);
+    const broadOf = (d: number): number => (d < 18 ? 0.62 : d < 36 ? 1.4 : d < 80 ? 2.5 : 3.6);
     {
       const footed = wilds.filter((w) => w.foot && !w.bare);
       const foot = new Float32Array(footed.length * 4);

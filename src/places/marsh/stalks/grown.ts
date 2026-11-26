@@ -393,6 +393,8 @@ void main() {
   float own = fract(seed * 13.3);
   float plant = fract(vG.y * 41.7);
   vec3 albedo = mix(vec3(0.04, 0.003, 0.009), vec3(0.15, 0.011, 0.026), clamp(0.55 * own + 0.45 * plant + 0.25 * (s - 0.5), 0.0, 1.0));
+  // Far off a head is a few pixels of it against pale ground: there it is the red of the lit blade, not of the shade between blades.
+  albedo = mix(albedo, albedo * vec3(2.1, 1.3, 1.5), smoothstep(10.0, 34.0, distance(cameraPosition, vWorld)));
   albedo = mix(albedo, vec3(0.2, 0.06, 0.06), 0.45 * smoothstep(0.55, 1.0, s) * fract(seed * 5.1));
   albedo = mix(albedo, vec3(0.2, 0.12, 0.075), 1.0 - smoothstep(0.02, 0.14, s));
   // The rib is darker than the blade, and the blade is ruled along its length.
@@ -410,8 +412,8 @@ void main() {
   vec3 c = rigShade(vWorld, n, v, albedo * keyLight(n), rough, occ);
   // Wet, the film of brine on a blade is a mirror only where its fold turns the bright part of the sky to the lens: a thin line down its length.
   vec3 r = reflect(-v, n);
-  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 48.0) + 0.35 * pow(clamp(r.y, 0.0, 1.0), 24.0);
-  c += step(0.5, uWet) * (1.0 - spent) * (0.25 + 0.75 * own) * 0.5 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
+  float line = pow(clamp(dot(r, KEY), 0.0, 1.0), 32.0) + 0.4 * pow(clamp(r.y, 0.0, 1.0), 16.0);
+  c += step(0.5, uWet) * (1.0 - spent) * (0.3 + 0.7 * own) * 0.9 * line * skyRadiance(vec3(r.x, abs(r.y), r.z)) * occ * skyOpen(vWorld);
   // A strap is thin: the sky behind it comes through.
   c += (1.0 - 0.6 * spent) * albedo * vec3(1.2, 0.6, 0.7) * skyIrradiance(-n) / 3.14159 * 0.35 * occ * skyOpen(vWorld);
   // One that is drawn wider than it is carries less of the picture's pixel: it is mixed toward what stands behind a head, which is more head.
