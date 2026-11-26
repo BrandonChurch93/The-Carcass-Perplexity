@@ -22,7 +22,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [3.6, 0.8, 0.9, 3.2, 0.6, 0.15];
+const FLASH_OF = [5.5, 0.8, 0.9, 3.2, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
@@ -385,7 +385,7 @@ export function create(ctx: Context): Piece {
         const round = lit * (ROUND_OF[of] as number);
         // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
         // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
-        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(sky * Math.min(1, sky / 0.3), 0.3 * before));
+        b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(hard, 0.5 * e.held * e.held, 0.15 * before));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
         if (index === 4 && seconds < FIFTH_FROM) {
           b.firstGroup.visible = false;
