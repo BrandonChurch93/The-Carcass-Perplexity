@@ -61,7 +61,9 @@ vec3 windowLight(vec3 p, vec3 n) {
   vec3 dE = normalize(toExit);
   vec3 dM = normalize(toMouth);
   vec3 cold = mix(uSkyHorizon, uSkyZenith, 0.4) * 3.14159;
-  return cold * (sE * (0.22 + 0.78 * max(dot(n, dE), 0.0)) + sM * (0.22 + 0.78 * max(dot(n, dM), 0.0)));
+  // The far mouth holds the band of dusk: what it gives is warm; the near mouth gives the storm's cold.
+  vec3 dusk = mix(cold, vec3(1.5, 0.82, 0.42) * dot(cold, vec3(0.3, 0.5, 0.2)), 0.2);
+  return dusk * (sE * (0.22 + 0.78 * max(dot(n, dE), 0.0))) + cold * (sM * (0.22 + 0.78 * max(dot(n, dM), 0.0)));
 }
 // The glaze of ice on a face: the far mouth seen in it.
 vec3 windowGlaze(vec3 p, vec3 n, vec3 v, float sharp) {
@@ -391,7 +393,8 @@ void main() {
       float grain = dot(rock, vec3(0.33)) / (2.7 * dot(SPIRE_MEAN, vec3(0.33)));
       // Far off the sheet is the rock, whole. Close to it would be a picture pulled large and soft: there it gives only the broad tone
       // of its masses, and the rock's own tiles, at their true size, are the crag, in colour and in relief.
-      vec3 massed = sc * 1.5 * (0.8 + 0.2 * grain);
+      // Far off the rock of the sheet is dark and its snow is pale: the rock is let down, the snow kept.
+      vec3 massed = sc * 1.5 * (0.8 + 0.2 * grain) * mix(0.58, 1.0, smoothstep(0.07, 0.3, dot(sc, vec3(0.33))));
       vec3 crag = rock * clamp(0.45 + 0.55 * dot(sc, vec3(0.33)) / 0.16, 0.6, 1.5);
       rock = mix(rock, mix(massed, crag, near), sheet);
       nRock = normalize(mix(nRock, normalize(n0 + mix(0.35, 1.6, near) * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * mix(0.2, 0.12, near) * (sa * da + vec3(0.0, dy, 0.0)));
@@ -473,7 +476,7 @@ void main() {
     vec2 atR = rX ? vWorld.zy / 3.0 : rY ? vWorld.xz / 3.0 + 0.4 : vWorld.xy / 3.0 + 0.7;
     vec3 frostC = textureLod(tRime, atR, lodOf(tRime, rX ? gx.zy : rY ? gx.xz : gx.xy, rX ? gy.zy : rY ? gy.xz : gy.xy)).rgb;
     float crystals = smoothstep(0.15, 0.38, dot(frostC, vec3(0.33)) * (0.55 + 0.9 * pit));
-    float cover = clamp(0.45 * rime + 0.4 * (1.0 - burn), 0.0, 0.8) * crystals;
+    float cover = clamp(0.45 * rime + 0.14 * (1.0 - burn), 0.0, 0.8) * crystals;
     albedo = mix(albedo, min(frostC * 1.5, vec3(0.88)) * vec3(0.95, 0.98, 1.05), 0.85 * cover);
     rime = 0.0;
   }

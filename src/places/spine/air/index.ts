@@ -136,7 +136,7 @@ export function create(ctx: Context): Piece {
       // the flakes before the lens do not fly inside the canal; by the dead one (spine-03) the running snow is held off 10 m round it.
       const inStrike = stagedSeconds() >= STRIKE_FROM - 1e-4 && stagedSeconds() < INSIDE_FROM - 1e-4;
       const inCarcass = stagedSeconds() >= CARCASS_FROM - 1e-4 && stagedSeconds() < STRIKE_FROM - 1e-4;
-      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.45 : 1;
+      stage.y = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0.6 : inStrike ? 0.36 : 1;
       stage.z = stagedSeconds() >= INSIDE_FROM - 1e-4 ? 0 : 1;
       clear.z = inCarcass ? 3.5 : 0;
       // Staged by shot: by the dead one (spine-03) scud races low past the spires.
