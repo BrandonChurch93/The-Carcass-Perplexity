@@ -130,7 +130,7 @@ uniform sampler2D tUngrade;
 // A: metres it reaches out over the water from the far shore, the height of the sheet on the water, the height of the bank at the foot of
 // the wall, the metres before the wall over which the bank stands up. B: how thick the sheet is, how thick the bank, how far the sheet is
 // broken into tongues (0 whole, 1 torn), how much rises off the top in wisps. C: where along the far shore it lies, the metres of its
-// middle and of its half length (0 for the whole shore), and how much of that length is clear of it. uMistOn is 0 where there is none.
+// middle and of its half length (0 for the whole shore), how much of that length is clear of it, and how much of it a mirror holds. uMistOn is 0 where there is none.
 uniform highp sampler3D tMistNoise;
 uniform vec4 uMistA;
 uniform vec4 uMistB;
@@ -179,16 +179,16 @@ vec4 mistInMirror(vec3 rd, float along, float up, vec3 wall) {
   float stands = mix(0.3, 1.0, smoothstep(0.3, 0.6, 0.55 * big.a + 0.45 * mid.g + 0.25 * (1.0 - uMistB.z)));
   float top = uMistA.z * stands * (0.35 + 1.5 * mid.r) + sheetTop;
   vec4 g = texture(tMistNoise, vec3(along / 130.0, up / 50.0 - uTime * 0.01, 60.0 / 1100.0 + uTime * 0.004));
-  float h = up / (top * (0.1 + 2.6 * pow(mix(g.g, g.r, 0.4), 1.8)));
-  float bank = uMistB.y * cover * stands * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
+  float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
+  float h = up / (top * heap);
+  float bank = uMistB.y * cover * stands * smoothstep(0.2, 0.9, heap) * 0.45 * uMistA.w * pow(clamp(1.0 - h, 0.0, 1.0), 2.4);
   float sheet = uMistB.x * cover * min(sheetTop / max(rd.y, 1e-3), 0.5 * uMistA.x) * exp(-up / max(sheetTop, 0.05));
-  float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * (1.0 - uSolo);
+  float a = (1.0 - exp(-0.006 * (bank + sheet))) * uMistOn * uMistC.w * (1.0 - uSolo);
   float toSun = dot(rd, uSunDir);
   float sun = smoothstep(0.06, 0.34, (wall.r - wall.b) / max(wall.r + wall.b, 1e-3)) * smoothstep(0.04, 0.2, wall.r);
   vec3 lit = 0.36 * skyIrradiance(vec3(0.0, 1.0, 0.0)) + 0.4 * skyRadiance(normalize(vec3(rd.x, 0.05, rd.z)))
     + uSunColour * (0.16 * 0.8 * sun * (0.62 + 0.9 * pow(max(toSun, 0.0), 3.0) + 0.38 * toSun * toSun));
-  // A mirror that lies this flat gives back all of it: the gain undoes the tint the water lays on what it holds.
-  return vec4(lit * (1.22 * 2.5 / 3.14159), a);
+  return vec4(lit * (2.5 / 3.14159), a);
 }
 
 vec3 farRadiance(vec3 ro, vec3 rd, float bias) {

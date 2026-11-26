@@ -21,13 +21,13 @@ export const PARTS: readonly string[] = ['sky', 'air', 'mist'];
 // The form of the mist by the key it is seen from. a: reach over the water, sheet height, bank height, depth of the bank (metres).
 // b: thickness of the sheet, of the bank, how torn the sheet is, how much leaves the top in threads.
 // c: the middle and the half length of the stretch of far shore it lies along (metres from north round the picture's cylinder, 0 for all of
-// it), and how much of that stretch is clear.
+// it), how much of that stretch is clear, and how much of it the mirror holds.
 type Four = [number, number, number, number];
 const MIST: Record<'wide' | 'low' | 'shore' | 'centre', { a: Four; b: Four; c: Four }> = {
-  wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 0] },
-  low: { a: [600, 3.2, 50, 380], b: [1.0, 1.3, 0.7, 0.3], c: [0, 0, 0, 0] },
-  shore: { a: [520, 3.0, 30, 320], b: [0.8, 1.4, 0.8, 0.3], c: [0, 0, 0, 0] },
-  centre: { a: [1100, 0.9, 24, 260], b: [0.5, 2.8, 1.0, 0.35], c: [0, 0, 0, 0] },
+  wide: { a: [420, 2.5, 30, 320], b: [0.3, 0.38, 1.0, 0.4], c: [60, 560, 0.15, 1] },
+  low: { a: [600, 3.2, 50, 380], b: [1.0, 1.3, 0.7, 0.3], c: [0, 0, 0, 1] },
+  shore: { a: [520, 3.0, 30, 320], b: [0.8, 1.4, 0.8, 0.3], c: [0, 0, 0, 1] },
+  centre: { a: [300, 0.6, 24, 260], b: [0.1, 1.6, 1.0, 0.35], c: [0, 0, 0, 0.45] },
 };
 
 const SKY_VERTEX = /* glsl */ `
@@ -115,12 +115,12 @@ float mistAt(vec3 q, out float h) {
     // is seen of them turns over and is never the same shape carried sideways.
     vec4 g = texture(tMistNoise, vec3(q.x / 130.0, q.y / 50.0 - uTime * 0.01, q.z / 1100.0 + uTime * 0.004));
     vec4 fine = texture(tMistNoise, vec3(q.x / 37.0 + 0.4, q.y / 21.0 - uTime * 0.022, q.z / 420.0 - uTime * 0.007));
-    float heap = 0.1 + 2.6 * pow(mix(g.g, g.r, 0.4), 1.8);
+    float heap = 0.05 + 1.9 * pow(smoothstep(0.3, 0.72, mix(g.g, g.r, 0.4)), 1.5);
     h /= heap;
     float body = pow(clamp(1.0 - h - 0.45 * (fine.b - 0.3) * smoothstep(0.15, 0.9, h), 0.0, 1.0), 1.6);
     // What leaves the top: thin threads that stand up out of the bank and lean over as they go.
     float thread = smoothstep(0.55, 0.8, texture(tMistNoise, vec3(q.x / 64.0 + 0.25 * h, q.y / 170.0 - uTime * 0.007, q.z / 800.0 + uTime * 0.003)).g + 0.3 * (fine.g - 0.5));
-    d += uMistB.y * form.z * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
+    d += uMistB.y * form.z * smoothstep(0.2, 0.9, heap) * (body + uMistB.w * thread * smoothstep(3.0, 0.9, h) * smoothstep(0.3, 0.9, h));
   }
   return d;
 }
