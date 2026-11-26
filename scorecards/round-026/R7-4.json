@@ -1,0 +1,21 @@
+{
+  "round": 26,
+  "unit": "film",
+  "pack": "R7-4",
+  "family": "gpt",
+  "answered": "2026-11-26 12:55 UTC",
+  "answer": {
+    "critic": "R7",
+    "score": 9,
+    "pass": true,
+    "issues": [
+      {
+        "severity": "major",
+        "file": "set-D-05.png",
+        "where": "upper crop, faint gray cloud trails between the bright white streaks over the dark ocean",
+        "what": "Several thin trails merge into soft gray patches with gaps where the original strands connect. The brighter clouds still read clearly.",
+        "fix": "Give the low-contrast cloud texture more bits so the narrow trails stay distinct."
+      }
+    ]
+  }
+}
