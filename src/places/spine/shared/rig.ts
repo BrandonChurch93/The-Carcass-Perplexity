@@ -258,10 +258,10 @@ export function createRig(): Rig {
     tContact: { value: contactTarget.texture },
     uContactRect: { value: new THREE.Vector4(0, 0, 1, 1) },
     // The dusk above the cloud, set against the approved wide view: the open sky above the band, the first dark overhead, the cloud sea below, the storm.
-    uSkyZenith: { value: new THREE.Vector3(0.05, 0.062, 0.1) },
-    uSkyHorizon: { value: new THREE.Vector3(0.15, 0.17, 0.23) },
-    uSkyGround: { value: new THREE.Vector3(0.05, 0.056, 0.075) },
-    uSkyStorm: { value: new THREE.Vector3(0.02, 0.021, 0.03) },
+    uSkyZenith: { value: new THREE.Vector3(0.032, 0.035, 0.068) },
+    uSkyHorizon: { value: new THREE.Vector3(0.09, 0.097, 0.155) },
+    uSkyGround: { value: new THREE.Vector3(0.03, 0.033, 0.052) },
+    uSkyStorm: { value: new THREE.Vector3(0.012, 0.012, 0.022) },
     uStormDir: { value: new THREE.Vector3(-WIND[0], 0, -WIND[2]).normalize() },
     uWarmDir: { value: new THREE.Vector3(DUSK[0], 0.04, DUSK[2]).normalize() },
     uWarmColour: { value: new THREE.Vector3(1.5, 0.62, 0.2) },
@@ -369,6 +369,8 @@ export function createRig(): Rig {
       (uniforms.uTime as THREE.IUniform<number>).value = seconds;
       // Staged by shot: from the cut into the canal the lens is exposed for the dark, and the light that reaches in counts for more.
       (uniforms.uUnder as THREE.IUniform<number>).value = stagedSeconds() >= INSIDE_FROM ? 40 : 1;
+      // Staged by shot: inside the canal the light is the cold of the mouths alone; the last warm band does not reach in.
+      (uniforms.uWarmColour as THREE.IUniform<THREE.Vector3>).value.set(1.5, 0.62, 0.2).multiplyScalar(stagedSeconds() >= INSIDE_FROM ? 0.08 : 1);
     },
     beforeSample: (renderer, camera) => {
       if (!coarse) bake();

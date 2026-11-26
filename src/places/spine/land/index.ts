@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
+import { RAD, carcassAxis, carcassBody, carcassView, step } from '../shared/anchors';
 import { canalFloor, canalShell, crestStrip, flanks, hollow, reliefDepth, spireMesh } from './meshes';
 import { height } from './height';
 import { ICE_FRAGMENT, ICE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
@@ -17,6 +18,8 @@ const ANISOTROPY = 1;
 
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(height, hollow);
+  // The burned rock lies under the dead one, a little toward the lens of its shot.
+  const scorchAt = step(carcassBody, carcassView + 180, 0.6);
 
   const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
@@ -29,6 +32,10 @@ export function create(ctx: Context): Piece {
     tSnowNh: data('snow'),
     tCanal: picture('canal'),
     tCanalNh: data('canal'),
+    tScorch: { value: ctx.assets.texture('mat/scorchfield.jpg', { anisotropy: ANISOTROPY, repeat: false }) },
+    tScorchH: { value: ctx.assets.texture('mat/scorchfield-h.png', { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
+    uScorch: { value: new THREE.Vector4(scorchAt[0], scorchAt[2], 0, 0) },
+    uScorchAxes: { value: new THREE.Vector4(Math.cos(carcassAxis * RAD), Math.sin(carcassAxis * RAD), Math.cos(carcassView * RAD), Math.sin(carcassView * RAD)) },
   };
   // The feature sheet a spire is cut from, and where the spire stands on it. The ground has the first spire's: the rock over the mouth is that spire's foot.
   const sheetOf = (sp: Spire): Record<string, THREE.IUniform> => {

@@ -25,7 +25,7 @@ uniform vec4 uSkyStage;
 const float STORM_AZ = ${Math.atan2(-WIND[2], -WIND[0]).toFixed(4)};
 const float DUSK_AZ = ${Math.atan2(DUSK[2], DUSK[0]).toFixed(4)};
 // How bright the pictures stand in the scene: the lens is set for the dusk.
-const float SKY_GAIN = 0.3;
+const float SKY_GAIN = 0.2;
 
 float wrapPi(float a) {
   return a - 6.28318 * floor((a + 3.14159) / 6.28318);
@@ -92,7 +92,9 @@ vec3 skyCloud(vec3 from, vec3 d, float lod) {
   c += vec3(0.42, 0.33, 0.8) * glow * (0.03 + 1.3 * dot(c, vec3(0.33)));
   // Overhead the pictures end: the cloud closes over in its own dark.
   c = mix(c, vec3(0.022, 0.022, 0.03), smoothstep(0.85, 1.15, el));
-  return c * SKY_GAIN;
+  // The storm's light is violet; only the last band keeps its orange.
+  float warm = clamp((c.r - c.b) * 6.0, 0.0, 1.0);
+  return c * mix(vec3(0.9, 0.88, 1.06), vec3(1.25, 1.1, 0.95), warm) * SKY_GAIN;
 }`;
 
 const FRAGMENT = /* glsl */ `
