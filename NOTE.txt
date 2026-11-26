@@ -1,5 +1,7 @@
-2026-11-26 16:06 UTC
-work at c4ceb25d on agent/heart-walkers
-v1 at c4ceb25: 3028 and 3280, before above after. Hero's tuft is out of the pool at 3028 and in it at 3280, the right one's trunk comes down, the far one reaches down but stays small and half hidden behind the hero's hind leg. Legs still read much the same in both.
+2026-11-26 16:22 UTC
+work at 75d9aa48 on agent/heart-walkers
+v1 at 75d9aa48: 3028 and 3280 before above after; 3156 beside approved (byte equal to before); sheet 3100 to 3159 is smooth but nearly still, the tuft is already down; 2507 unchanged. Legs still read the same in 3028 and 3280.
 look-1.jpg = out/work/guard/v1-3028-3280.jpg
 look-2.jpg = out/work/guard/v1-3156-approved.jpg
+look-3.jpg = out/work/guard/v1-sheet.jpg
+look-4.jpg = out/work/guard/v1-2507.jpg
