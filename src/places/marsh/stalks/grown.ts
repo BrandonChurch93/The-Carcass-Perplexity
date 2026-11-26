@@ -160,7 +160,7 @@ void main() {
   float seed = vKind.w;
   vec2 uv = vUv.xy;
   // A slender stem is not a trunk: its rings are faint, and the rust is on it in stretches, with clean ivory between.
-  float plain = 1.0 - step(1.5, uLedgeF);
+  float plain = 1.0 - step(0.5, uLedgeF);
   vec3 bark = texture2D(tBark, uv, 2.5 * plain).rgb;
   vec3 nh = texture2D(tBarkNh, uv, 2.0 * plain).rgb;
   float rustK = mix(1.0, 0.45 * smoothstep(0.4, 0.75, fbm(vec2(vKind.w * 19.0, vUv.y * 0.5))), plain);
