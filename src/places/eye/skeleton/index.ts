@@ -11,7 +11,7 @@ import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
 export const PARTS: readonly string[] = ['skeleton'];
 
 /** Where it lies: on the lip, ahead and to the right of the camera of the edge shot. Its length in metres, how far its bones stand off its sheet, and how far the sheet is tipped up off the ground toward that camera, in degrees. */
-export const BONES = { ahead: 6.4, right: 21, back: 1.5, length: 3.3, stand: 0.15, tip: 24, along: 112 };
+export const BONES = { ahead: 6.4, right: 16, back: 0.7, length: 3.3, stand: 0.22, tip: 36, along: 112 };
 
 const VERTEX = /* glsl */ `
 uniform sampler2D tBoneH;

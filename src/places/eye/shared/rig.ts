@@ -286,6 +286,7 @@ export function createRig(): Rig {
     // While a picture is hung: the built land is drawn only within this many metres (z) of this point (xy are x and z); beyond it the picture is the land.
     uNear: { value: new THREE.Vector4(0, 0, 400, 0) },
     // The evening shade over the south shore: unit way it deepens (x, z), metres along it where it starts, climb of its top per metre.
+    uPlateShade: { value: new THREE.Vector2(0, 0.2) },
     uShade: { value: new THREE.Vector4(Math.sin((198 * Math.PI) / 180), -Math.cos((198 * Math.PI) / 180), 588, 0.55) },
   };
 
