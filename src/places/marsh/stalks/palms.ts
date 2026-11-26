@@ -149,8 +149,9 @@ ${CUT}
   gl_FragColor = vec4(0.0);
 }`;
 
-// One card of a head. aCard: its turn about the stalk's line, its droop, its size, which photograph (0 the fan, 1 the lock).
-// aCard2: its own seed, how ragged, how spent, its place toward the lens among the cards of its head.
+// One card of a head. aCard: its turn about the stalk's line, its droop, its size, which photograph (0 the fan, 1 the lock) and, in the
+// fraction of that, how long its straps are for their width.
+// aCard2: its own seed, how ragged, how spent, its place toward the lens among the cards of its head (plus 1 if the head turns up to the light).
 export const HEAD_VERTEX = /* glsl */ `
 ${SPINE}
 attribute vec4 aCard;
@@ -164,13 +165,17 @@ void main() {
   float D = 2.0 * aAxis.w * mix(1.0, uGrove.y, aKind.z);
   vec3 T;
   vec3 c = spine(1.0, T);
+  // A head turns up to the light whichever way its trunk leans: without this a clump that splays one way wears all its heads tipped that way.
+  float up = aCard2.w > 0.5 ? 1.0 : 0.0;
+  T = normalize(mix(T, vec3(0.0, 1.0, 0.0), 0.55 * up));
   vec3 toCam = normalize(cameraPosition - c);
   // A card stands out from the line to its own side. One that points at the lens is seen narrow, and comes round as the lens does: it never jumps.
   vec3 out0 = vec3(cos(aCard.x), 0.0, sin(aCard.x));
   out0 = normalize(out0 - T * dot(out0, T) + vec3(1e-4, 0.0, 0.0));
   vec3 er = normalize(out0 - toCam * (0.85 * dot(out0, toCam)));
   float open = plumeOpen(aKind.x, aKind.y, aKind.w);
-  float lock = aCard.w;
+  float lock = aCard.w > 0.5 ? 1.0 : 0.0;
+  float tall = mix(0.72, 1.3, fract(aCard.w) / 0.45);
   float wide = 19.0 * D * uHead * mix(1.0, 0.5 / uGrove.y, aKind.z * (uGrove.y > 1.01 ? 1.0 : 0.0)) * aCard.z;
   // The fan is the photograph of one with the end of its stalk in it, a quarter turn off upright: that end is laid along this stalk's line.
   float turn = mix(0.4712, 0.0, lock) - aCard.y - 0.35 * (1.0 - open) * (1.0 - lock);
@@ -179,10 +184,10 @@ void main() {
   vec2 q = vec2(position.x + 0.5, position.y);
   vec2 pivot = mix(vec2(0.225, 0.125), vec2(0.5, 0.115), lock);
   float reach = clamp((q.y - 0.15) / 0.8, 0.0, 1.0) * mix(clamp(q.x * 1.6, 0.0, 1.0), 1.0, lock);
-  vec3 p = c + xw * ((q.x - pivot.x) * wide * mix(0.45, 1.0, open)) + yw * ((q.y - pivot.y) * wide * 0.667);
+  vec3 p = c + xw * ((q.x - pivot.x) * wide * mix(0.45, 1.0, open)) + yw * ((q.y - pivot.y) * wide * 0.667 * tall);
   float own = aCard2.x * 40.0;
   p += WIND * (0.05 * wide * reach * stalkGust()) + er * (0.025 * wide * reach * sin(uSeconds * (2.0 + 1.2 * fract(aCard2.x * 7.7)) + own + q.x * 9.0));
-  p += toCam * aCard2.w;
+  p += toCam * (aCard2.w - up);
   vRight = er;
   vWorld = p;
   vUv = vec4(q, lock, aCard2.x);

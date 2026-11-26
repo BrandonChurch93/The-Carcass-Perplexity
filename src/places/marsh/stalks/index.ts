@@ -241,11 +241,13 @@ export function create(ctx: Context): Piece {
     const lee = [0.8, 0.6];
     // The foot of a line: the bed where it stands in the brine, the ground where it does not.
     const levelAt = (x: number, z: number): number => ctx.rig.land.height(x, z) - 0.05;
+    // Its own stream: what `wild` gives each stalk stays what it gave before the cards had a shape of their own.
+    const shapes = ctx.rng('stalks-cards');
     const dress = (w: Wild, style: number, scale: number): void => {
       // style: 0 a full mop, 1 ragged, 2 spent and hanging, 3 young and tight, 4 a bud, 5 half out.
       const turn = wild.range(0, TAU);
       const card = (k: number, n: number, droop: number, size: number, lock: number, ragged: number, spent: number): void => {
-        w.cards.push([turn + ((k + wild.range(-0.3, 0.3)) / n) * TAU, droop, size * scale, lock, wild.next(), ragged, spent, wild.range(-0.035, 0.035)]);
+        w.cards.push([turn + ((k + wild.range(-0.3, 0.3)) / n) * TAU, droop, size * scale, lock + shapes.range(0, 0.45), wild.next(), ragged, spent, wild.range(-0.035, 0.035)]);
       };
       if (style === 0) {
         const n = 4 + wild.int(3);
@@ -319,7 +321,7 @@ export function create(ctx: Context): Piece {
         w.swayM = Math.min(w.swayM, 0.012);
         w.collar = 0.5 * w.collar;
       }
-      // The ones the lens of the wallowers looks past stay exactly as its picture has them: no collar.
+      // The ones the lens of the wallowers looks past stay exactly as its picture has them: no collar, and a head on its trunk's line.
       w.bare = staged4.has(s) || Math.hypot(s.x - k3[0], s.z - k3[1]) < NEAR;
       wilds.push(w);
       // And its head keeps the size in frame: a mop of cards all round is wider than the one fan it was, so each card is smaller.
@@ -496,7 +498,8 @@ export function create(ctx: Context): Piece {
       for (const c of w.cards) {
         carded.push(w);
         c1.push(c[0], c[1], c[2], c[3]);
-        c2.push(c[4], c[5], c[6], c[7]);
+        // A whole number on the last says the head turns up to the light.
+        c2.push(c[4], c[5], c[6], c[7] + (w.bare ? 0 : 1));
       }
     }
     const headMaterial = new THREE.ShaderMaterial({
