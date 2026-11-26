@@ -134,6 +134,8 @@ export function createRig(): Rig {
     uMatStreaks: { value: null },
     uMatSpecks: { value: null },
     uMatVeil: { value: null },
+    // Where the land holds cloud (sky/banks.png, on the rectangle of the cover): the sky folder gives it.
+    uBanks: { value: null },
     // The relief of the cloud photographs (slope in red and green, height in blue): the sky folder gives them.
     uMatCellsNh: { value: null },
     uMatPopcornNh: { value: null },

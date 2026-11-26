@@ -8,6 +8,9 @@ export const COVER_RECT: [number, number, number, number] = [X(-900), Z(-820), 1
 /** Height over the sea, km: the low field of small cloud, the fronts, the veil of ice. */
 export const LOW_KM = 2.6;
 export const HIGH_KM = 10.5;
+/** The banks a range holds on the flank that faces the wind, and the fog on the floors between ranges. */
+export const BANK_KM = 5.0;
+export const FOG_KM = 0.7;
 /** Km a second: staged far faster than weather, so the held frame is seen to live. */
 export const LOW_DRIFT: [number, number] = [5.4, 1.5];
 
@@ -20,6 +23,7 @@ uniform sampler2D uMatPopcorn;
 uniform sampler2D uMatStreaks;
 uniform sampler2D uMatSpecks;
 uniform sampler2D uMatVeil;
+uniform sampler2D uBanks;
 uniform sampler2D uMatCellsNh;
 uniform sampler2D uMatPopcornNh;
 uniform sampler2D uMatSpecksNh;
@@ -174,6 +178,35 @@ float highField(vec2 at) {
   return thick;
 }
 
+// The cloud the land holds (sky/banks.png, made from the relief of the land by assets-src/reveal/sky/make_banks.py): x the bank a
+// range holds on the flank that faces the wind (BANK_KM), y the fog that lies on the floors between ranges (FOG_KM), each as the
+// light meets it (0 clear, 1 the thin of it, 3 a core). A bank stands where its range makes it and the cloud streams through it:
+// the photographs it is made of are carried by the wind, the place it shows in is not. Not every range holds a bank on one day.
+vec2 bankUvA = vec2(0.0);
+vec2 bankUvB = vec2(0.0);
+const mat2 BANK_A = mat2(0.6, 0.8, -0.8, 0.6);
+const mat2 BANK_B = mat2(0.94, 0.34, -0.34, 0.94);
+float bankDepth(vec2 bankAt) {
+  float held = texture2D(uBanks, clamp((bankAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).r;
+  vec2 w = bankAt - uTime * 1.5 * LOW_DRIFT;
+  if (uLive > 0.0) w -= uWx * vec2(27.0, 8.0);
+  bankUvA = BANK_A * w / 420.0 + vec2(0.47, 0.11);
+  bankUvB = BANK_B * w / 130.0 + vec2(0.29, 0.73);
+  float body = cloudIn(uMatPopcorn, bankUvA, 0.34);
+  float fine = cloudIn(uMatSpecks, bankUvB, 0.2);
+  float today = smoothstep(0.32, 0.6, texture2D(uCloudTile, bankAt / 2600.0 + vec2(0.21, 0.67), 3.0).b);
+  return pow(body * mix(1.0, fine, 0.6), 0.6) * held * today * 1.85 - 0.75;
+}
+float fogDepth(vec2 fogAt) {
+  float held = texture2D(uBanks, clamp((fogAt - uCoverRect.xy) * uCoverRect.zw, 0.0, 1.0)).g;
+  vec2 w = fogAt - uTime * vec2(0.9, -0.5);
+  if (uLive > 0.0) w -= uWx * vec2(3.0, -2.0);
+  // (Fog lies level: its top has the soft fibre of a veil and no lumps, and it thins up the slopes through that fibre.)
+  float veil = cloudIn(uMatVeil, mat2(0.5, 0.87, -0.87, 0.5) * w / 520.0 + vec2(0.4, 0.9), 0.27);
+  float today = smoothstep(0.34, 0.62, texture2D(uCloudTile, fogAt / 1900.0 + vec2(0.83, 0.37), 3.0).b);
+  return held * today * (0.3 + 0.9 * veil) * 1.5 - 0.5;
+}
+
 // The share of the sun that reaches a point of the ground under the cloud. Each height of cloud throws its own shadow, as far from
 // itself as it stands high, so the shadow of the ice lies well off the shadow of the puffs under it.
 float cloudShade(vec2 xz) {
@@ -182,9 +215,10 @@ float cloudShade(vec2 xz) {
   float lift = mix(1.0, 3.0, smoothstep(150.0, 700.0, uViewKm));
   float low = 1.0 - exp(-1.3 * max(lowDepth(xz + toSun * ${LOW_KM.toFixed(1)} * lift), 0.0));
   float high = highDepth(xz + toSun * ${HIGH_KM.toFixed(1)} * lift);
+  float bank = 1.0 - exp(-1.3 * max(bankDepth(xz + toSun * ${BANK_KM.toFixed(1)} * lift), 0.0));
   float standing = coverAt(xz + toSun * 6.5 * lift).b;
   // The cyclone shades the sea: a soft shadow, thrown well away from the sun.
   float fromStorm = length(xz + toSun * 110.0 - vec2(${f(X(AT.cyclone.x))}, ${f(Z(AT.cyclone.y))})) / ${f(1250 * KM)};
   float stormShade = pow(1.0 - smoothstep(0.02, 0.48, fromStorm), 1.3) * uArrive;
-  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.22 * high * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
+  return (1.0 - mix(0.55, 0.78, smoothstep(300.0, 900.0, uViewKm)) * smoothstep(0.04, 0.6, low)) * (1.0 - 0.22 * high * uArrive) * (1.0 - 0.6 * bank * uArrive) * (1.0 - 0.16 * standing * uArrive) * (1.0 - 0.13 * stormShade);
 }`;

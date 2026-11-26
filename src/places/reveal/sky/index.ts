@@ -6,7 +6,7 @@ import { AT, KM, LIMB, LIMB_FOLLOW, LIVE_FROM, RISE_FIRST, X, Z, driftAt } from 
 import { FPS } from '../../../config';
 import type { Context, Piece } from '../shared/context';
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
-import { HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
+import { BANK_KM, FOG_KM, HIGH_KM, LOW_KM, WEATHER_GLSL } from '../shared/weather';
 
 export const PARTS = ['cloud', 'cyclone', 'storm', 'vapour', 'space', 'atmosphere'] as const;
 
@@ -68,6 +68,14 @@ void main() {
   float self = clamp(0.5 + 1.25 * flank, 0.0, 1.0);
   float high = highField(up);
   float highFlank = clamp(0.5 + 0.9 * dot(highSlope, toSun), 0.0, 1.0);
+  // What the land holds: the banks on the ranges, above the low field, and the fog on the valley floors, under it.
+  vec2 bankAt = xz + lean * ${(BANK_KM - LOW_KM).toFixed(1)};
+  vec2 fogAt = xz - lean * ${(LOW_KM - FOG_KM).toFixed(1)};
+  float bankIs = max(bankDepth(bankAt), 0.0);
+  vec2 bankSlope = 0.8 * (texture2D(uMatPopcornNh, bankUvA).rg * 2.0 - 1.0) * BANK_A + 0.7 * (texture2D(uMatSpecksNh, bankUvB).rg * 2.0 - 1.0) * BANK_B;
+  float bankSelf = clamp(0.5 + 1.25 * dot(bankSlope, toSun), 0.0, 1.0);
+  float bankA = (1.0 - exp(-1.3 * bankIs)) * uArrive;
+  float fogA = 0.5 * (1.0 - exp(-1.2 * max(fogDepth(fogAt), 0.0))) * uArrive;
   float under = highField(xz + uSunDir.xz / max(uSunDir.y, 0.2) * ${(HIGH_KM - LOW_KM).toFixed(1)});
   vec2 hv = up + uTime * vec2(6.5, -3.8);
   if (uLive > 0.0) hv += uWx * vec2(36.0, -21.0);
@@ -75,6 +83,9 @@ void main() {
 
   vec3 lowColour = cloudLight(xz, 0.12 + 0.95 * self, 0.35 + 0.65 * low.x, 0.0) * (0.72 + 0.5 * low.y) * (1.0 - 0.3 * under);
   vec3 highColour = cloudLight(up, 0.35 + 0.5 * highFlank, 0.6, 1.0);
+  vec3 bankColour = cloudLight(bankAt, 0.12 + 0.95 * bankSelf, 0.35 + 0.65 * bankA, 0.25) * (0.72 + 0.5 * clamp(bankIs / 3.5, 0.0, 1.0));
+  // (Fog is seen from above as a level pale floor, a little blue, with no relief of its own.)
+  vec3 fogColour = cloudLight(fogAt, 0.5, 0.5, 0.0) * vec3(0.84, 0.9, 0.98);
   // (Against the sun's image on the sea a cloud is seen dark: its lit top is dimmer than the sheet of light under it.)
   vec2 sunOnSea = (xz - vec2(${X(5875).toFixed(1)}, ${Z(703).toFixed(1)}) - (uTime - 8.1) * vec2(-9.0, -8.0)) * vec2(1.0, 0.48);
   if (uLive > 0.0) sunOnSea -= uLive * vec2(-20.0, 0.0) * vec2(1.0, 0.48);
@@ -83,7 +94,11 @@ void main() {
   float b = high * 0.3;
   // (Held, the veil is seen: sheets of ice that cross the land against the wind of the low field.)
   if (uLive > 0.0) b *= 1.0 + 0.35 * smoothstep(0.0, 12.0, uWx);
-  vec3 colour = lowColour * a * (1.0 - b) + highColour * b + beatOnCloud(xz) * a;
+  // From the ground up: the fog, the low field, the banks, the ice.
+  vec3 colour = fogColour * fogA * (1.0 - a);
+  colour = (colour + lowColour * a + beatOnCloud(xz) * a) * (1.0 - bankA) + bankColour * bankA;
+  colour = colour * (1.0 - b) + highColour * b;
+  float heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
   if (uDusk > 0.0) {
     // (Under a low sun and by night only the body of a cloud is seen, and its edge is soft: the thin of it and the veil of ice
     // take too little light to show over the ground.)
@@ -96,11 +111,18 @@ void main() {
     float bands = smoothstep(0.6, 0.82, 0.7 * vnoise(bv / vec2(3400.0, 620.0) + 5.0) + 0.3 * vnoise(bv / vec2(1100.0, 260.0) + 9.0)) * (0.6 + 0.4 * ice);
     // (The thin ice far above is lost against the day; with the camera's eye open it is seen, soft sheets that catch the moon.)
     float bNight = min(0.8, b * (1.0 - 0.5 * gone + 1.5 * (1.0 - smoothstep(-0.52, -0.3, sunHeight(xz)))) + sunk * (0.3 * sheets + 0.24 * bands));
-    colour = lowColour * aNight * (1.0 - bNight) + highColour * bNight + exposed(beatOnCloud(xz)) * a;
+    // (What the land holds goes the way of the low field: only its body is left to the moon.)
+    float heldNight = mix(1.0, 0.5, gone) * (1.0 - 0.8 * sunk);
+    bankA *= heldNight;
+    fogA *= heldNight;
+    colour = fogColour * fogA * (1.0 - aNight);
+    colour = (colour + lowColour * aNight + exposed(beatOnCloud(xz)) * a) * (1.0 - bankA) + bankColour * bankA;
+    colour = colour * (1.0 - bNight) + highColour * bNight;
+    heldA = 1.0 - (1.0 - fogA) * (1.0 - bankA);
     a = aNight;
     b = bNight;
   }
-  float alpha = 1.0 - (1.0 - a) * (1.0 - b);
+  float alpha = 1.0 - (1.0 - a) * (1.0 - b) * (1.0 - heldA);
   gl_FragColor = vec4(colour * (1.0 - uSolo), alpha * (1.0 - uSolo)) * uArrive;
 }`;
 
@@ -367,7 +389,7 @@ export function create(ctx: Context): Piece {
   const data = (file: string, repeat: boolean): THREE.Texture => ctx.assets.texture(file, { kind: 'data', repeat });
   const tile = data('sky/cloud-tile.jpg', true);
   // Where the weather stands (assets-src/reveal/sky/make_cover.py), and the Builder's photographs of cloud from orbit (assets-src/reveal/mat/RECIPE.md).
-  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true]];
+  const shared: [string, string, boolean][] = [['uCover', 'sky/cover.png', false], ['uMatPopcorn', 'mat/popcorn.jpg', true], ['uMatStreaks', 'mat/streaks.jpg', true], ['uMatSpecks', 'mat/specks.jpg', true], ['uMatCellsNh', 'mat/cells-nh.png', true], ['uMatPopcornNh', 'mat/popcorn-nh.png', true], ['uMatSpecksNh', 'mat/specks-nh.png', true], ['uMatStreaksNh', 'mat/streaks-nh.png', true], ['uMatVeilNh', 'mat/veil-nh.png', true], ['uMatVeil', 'mat/veil.jpg', true], ['uBanks', 'sky/banks.png', false]];
   (ctx.rig.uniforms.uCloudTile as THREE.IUniform).value = tile;
   for (const [uniform, file, repeat] of shared) (ctx.rig.uniforms[uniform] as THREE.IUniform).value = data(file, repeat);
 
