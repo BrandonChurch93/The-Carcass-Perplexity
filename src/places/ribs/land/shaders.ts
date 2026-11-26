@@ -295,7 +295,7 @@ void main() {
   topC = mix(topC, vec3(0.3, 0.3, 0.285) * (0.75 + 0.3 * grain), 0.6 * splash);
   albedo = mix(albedo, topC, 0.8 * top);
   // The white runs only under a shelf deep enough to hold a roost: in drips from its lip, a stride or two down the face, none on a bare face.
-  float drip = smoothstep(0.8, 1.4, vLay.y) * exp(-vLay.x / (1.2 + 2.2 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.3, 0.62, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
+  float drip = smoothstep(0.9, 1.5, vLay.y) * smoothstep(0.3, 0.75, vLay.x) * exp(-vLay.x / (1.2 + 2.2 * vnoise(vec2(arc * 0.9, 3.5)))) * smoothstep(0.3, 0.62, vnoise(vec2(arc * 2.6, y * 0.22 + 7.0)) + 0.25 * (hgt - 0.5)) * (1.0 - top);
   albedo = mix(albedo, vec3(0.34, 0.335, 0.32) * (0.75 + 0.3 * grain), 0.8 * drip);
   float tide = uTide - 4.0 + 7.0 * (vnoise(vWorld.xz / 13.0) - 0.5) + 3.0 * (vnoise(vWorld.xz / 2.7) - 0.5) + 3.0 * (hgt - 0.5);
   float band = smoothstep(tide + 5.0, tide + 0.5, y);

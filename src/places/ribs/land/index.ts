@@ -81,7 +81,7 @@ function stackRock(s: Stack): THREE.BufferGeometry {
   });
 }
 
-function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2, lower = 0, lumps = 1): THREE.BufferGeometry {
+function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) => number, around: number, proud = 2.2, lower = 0, lumps = 1, level = 0): THREE.BufferGeometry {
   const rows = 30;
   const span = LEVELS.tide + 5;
   const profile: [number, number][] = [];
@@ -90,7 +90,9 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number, angle: number) 
   const g = lathe(x0, z0, profile, around, (run, _r, angle) => {
     const f = run / span;
     const far = radiusAt(LEVELS.tide, angle);
-    const top = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far) - lower;
+    const ragged = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far);
+    // A stack with a weed line of its own keeps the same ragged hem, an eighth as deep.
+    const top = level > 0 ? level + 0.12 * (ragged - LEVELS.tide + 2) : ragged - lower;
     const y = -5 + (top + 5) * f;
     const tuck = smooth(0.9, 1, f);
     const base = radiusAt(Math.max(0, y), angle);
@@ -292,8 +294,14 @@ export function create(ctx: Context): Piece {
   // The colony's rock: ledges above the tide line, weed below.
   const ledges = new THREE.Mesh(roundSpace(colonyRock(), COLONY.x, COLONY.z, 60, Math.atan2(COLONY.side[1], COLONY.side[0]) + Math.PI), roostRock);
   ctx.scene.add(ctx.parts.built('ledges', ledges));
-  // The crag draws its own weed line; the skirt hangs under it, so that no hem of it cuts the crag's blocks before the colony's lens.
-  add(skirts, stackWeed(COLONY.x, COLONY.z, (y, angle) => COLONY.cragAt(angle, y), 420, 1.2, 9), weed);
+  // The crag draws its own weed line; the skirt hangs under it, out of the colony's frame.
+  // It hangs clear of every ledge and block: a curtain over the widest the rock stands within a few metres of a place, not a skin on it.
+  const curtain = (y: number, angle: number): number => {
+    let r = 0;
+    for (const dy of [-3, -1.5, 0, 1.5, 3]) for (const da of [-0.03, 0, 0.03]) r = Math.max(r, COLONY.cragAt(angle + da, Math.max(0, y + dy)));
+    return r;
+  };
+  add(skirts, stackWeed(COLONY.x, COLONY.z, curtain, 420, 0.5, 9), weed);
   ctx.scene.add(ctx.parts.built('weed', skirts));
 
   // Loose rock: fallen from the blades round their feet, and smaller pieces out on the floor. None on the paths of the cameras.
