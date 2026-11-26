@@ -33,7 +33,7 @@ function stemGeometry(rings: number, sides: number): THREE.BufferGeometry {
     }
   };
   sheet(0, rings, (v) => v);
-  sheet(1, 3, (v) => v);
+  sheet(1, 4, (v) => v);
   sheet(2, 12, (v) => v);
   const g = new THREE.BufferGeometry();
   g.setAttribute('position', new THREE.Float32BufferAttribute(position, 3));
@@ -95,6 +95,24 @@ export function create(ctx: Context): Piece {
     });
     stalks.push(...forks);
   }
+  // TEMPORARY, until the lead's list has them: the colonies go on out to the haze. Small clumps of three to six stand on the dry flats beyond the last of the list,
+  // thinner on the ground the further off, each clump its own height and lean.
+  {
+    const far = ctx.rng('stalks-far');
+    for (let c = 0; c < 90; c++) {
+      const d = far.range(40, 150);
+      const p = rel(d, far.range(-0.62, 0.62) * d);
+      const h = far.range(1.9, 3.3);
+      const count = 3 + far.int(4);
+      if (ctx.rig.land.shore(p[0], p[1]) < 0.08) continue;
+      for (let n = 0; n < count; n++) {
+        const a = far.range(0, TAU);
+        const r = far.range(0.15, 1.3);
+        const roll = far.next();
+        stalks.push({ x: p[0] + Math.cos(a) * r, z: p[1] + Math.sin(a) * r, h: h * far.range(0.55, 1.15), lean: far.range(0.02, 0.22), yaw: far.range(0, TAU), kind: roll < 0.62 ? 0 : roll < 0.76 ? 3 : roll < 0.88 ? 1 : 2, size: far.range(0.8, 1.15), phase: far.range(0, TAU) });
+      }
+    }
+  }
   const k3 = rel(27.7, 3);
   const k4 = rel(24.6, 19.6);
   const k2a: [number, number] = [K2_AT[0] - K2_RIGHT[0] * 3.2, K2_AT[1] - K2_RIGHT[1] * 3.2];
@@ -133,6 +151,18 @@ export function create(ctx: Context): Piece {
     const base = new Float32Array(rest.length * 4);
     const axis = new Float32Array(rest.length * 4);
     const kind = new Float32Array(rest.length * 4);
+    // STAGED for the lens of the thin crust: the groves it looks across to stand lower and thinner than the list has them, a third the height of that frame
+    // and not half of it, as the approved picture has them.
+    const k4to = rel(27.6, 10.07);
+    const k4l = Math.hypot(k4to[0] - k4[0], k4to[1] - k4[1]);
+    for (const s of rest) {
+      const along = ((s.x - k4[0]) * (k4to[0] - k4[0]) + (s.z - k4[1]) * (k4to[1] - k4[1])) / k4l;
+      const off = Math.hypot(s.x - k4[0], s.z - k4[1]);
+      if (along > 9 && off < 45 && along > 0.75 * off && Math.hypot(s.x - k3[0], s.z - k3[1]) > 7.5) {
+        s.h *= 0.62;
+        s.size *= 0.8;
+      }
+    }
     rest.forEach((s, i) => {
       const tall = s.h * (0.45 + 0.75 * rng.next());
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
@@ -196,7 +226,7 @@ export function create(ctx: Context): Piece {
       if (close) for (let n = 0; n < 4000 && ((seed * 91.3) % 1 > 0.12 || (seed * 13.7) % 1 < 0.36 || !combed(seed)); n++) seed = rng.next();
       const tall = close ? s.h : s.h * (0.45 + 0.75 * rng.next());
       const lean = close ? s.lean : s.lean * 1.5 + rng.range(0, 0.2);
-      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 1.15 : 0.72);
+      const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * (close ? 0.85 : 0.72);
       const dx = Math.cos(s.yaw);
       const dz = -Math.sin(s.yaw);
       base.set([s.x, Math.min(0, ctx.rig.land.height(s.x, s.z)) - 0.05, s.z, tall + 0.05], i * 4);
@@ -221,7 +251,7 @@ export function create(ctx: Context): Piece {
       // A bud keeps its filaments inside its sheath and a broken one has none: neither is given any to draw.
       if (close && s.kind !== 1) perches.push([top[0], top[1], top[2]]);
       // The ones the lens of the colony looks through are a hand's length away: theirs are drawn at their true size. Further off a plume is a mop as long as an arm.
-      const length = (s.kind === 0 ? (close ? 0.43 : 0.31) : s.kind === 3 ? 0.3 : 0.25) * s.size * (close ? 1 : which === 0 ? 1.6 : 2.1);
+      const length = (s.kind === 0 ? (close ? 0.38 : 0.31) : s.kind === 3 ? 0.24 : 0.25) * s.size * (close ? 1 : which === 0 ? 1.6 : 2.1);
       // The plume: cards of the photographed lock that stand round the mouth, most through its axis and a few leaning out, so that it is a tuft from every side.
       const bud = s.kind === 1;
       const through = which === 0 ? (close ? (bud ? 5 : 3) : bud ? 3 : 3) : bud ? 0 : 2;
@@ -236,7 +266,7 @@ export function create(ctx: Context): Piece {
         fils[3].push(rng.next() < 0.5 ? -1 : 1, (close ? 1.5 : 0.8) * rng.range(0.85, 1.15), close ? rng.range(0.45, 0.7) : rng.range(0.2, 0.5), rng.next());
       }
     });
-    const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 14 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
+    const g = instanced(stemGeometry(which === 0 ? 96 : 10, which === 0 ? 18 : 7), set.length, { aBase: base, aAxis: axis, aKind: kind });
     const mesh = new THREE.Mesh(g, stemMaterial);
     mesh.frustumCulled = false;
     group.add(mesh);
@@ -283,7 +313,7 @@ export function create(ctx: Context): Piece {
       p = [perch[0] + swarm.range(-0.45, 0.45), perch[1] + swarm.range(0.1, 0.6), perch[2] + swarm.range(-0.45, 0.45)];
       home.set([p[0], p[1], p[2], swarm.range(0.16, 0.34)], i * 4);
       rate.set([swarm.range(1.2, 3.2), swarm.range(1.5, 3.6), swarm.range(1.1, 3), 0], i * 4);
-      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0.7, 1.1)], i * 4);
+      phase.set([swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(0, TAU), swarm.range(1.3, 1.9)], i * 4);
       continue;
     }
     if (i < 80 && perches.length > 0) {

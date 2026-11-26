@@ -233,8 +233,8 @@ export function create(ctx: Context): Piece {
   const rng = ctx.rng('dead');
   // TEMPORARY, until the anchors give it: where the lens of the stuck one stands. The dead it looks across are taken finer.
   const lens = rel(24.6, 19.6);
-  const fineGrid = grid(150, 150);
-  const coarseGrid = grid(70, 70);
+  const fineGrid = grid(110, 110);
+  const coarseGrid = grid(48, 48);
   const bodyGrid = grid(40, 24);
   const bodies: { mesh: THREE.Mesh; material: THREE.ShaderMaterial }[] = [];
   const kept: Beast[] = [];
@@ -278,7 +278,7 @@ export function create(ctx: Context): Piece {
     if (state === 'kept') {
       // On its belly as it sank, the back and the head out, the feelers spread on the salt where the head came down.
       const k = 0.92 * d.size;
-      const beast = new Beast(ctx, { k, young: 0, seed: 7.3 + index * 11.9, bulk: 0.94, salt: 0.3 }, { cell: near ? 0.03 : 0.05, wet: ground - 5, crust: 1, relief: 0 });
+      const beast = new Beast(ctx, { k, young: 0, seed: 7.3 + index * 11.9, bulk: 0.94, salt: 0.3 }, { cell: near ? 0.03 : 0.065, wet: ground - 5, crust: 1, relief: 0 });
       const lie = newDrive();
       // STAGED for the lens of the thin crust: its head is toward that lens and a little to its right, as the approved picture has the nearest of them.
       const to = [lens[0] - p[0], lens[1] - p[1]];
@@ -342,7 +342,7 @@ export function create(ctx: Context): Piece {
   const yaw = relYaw(-0.97, -0.03);
   // The crust has given way under it: the land's hollow is 0.2 m deep here, and the rig's land height does not include it.
   const ground = Math.min(0.1, ctx.rig.land.height(at[0], at[1])) - 0.2;
-  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.024, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 15, hang: 0.6, thick: 1.7, tile: 'mud', cover: 0.7 });
+  const stuck = new Beast(ctx, { k: 1, young: 0, seed: 23.7, bulk: 1, salt: 0.5 }, { cell: 0.03, wet: ground + 0.14, mudded: 1, relief: 0.022, tendrils: 15, hang: 0.5, thick: 1.6, long: 0.8 });
   const live = newDrive();
   const mud = mudWallow(ctx, at[0], at[1], [Math.cos(yaw), -Math.sin(yaw)], 0.5, [0.1, 0.072, 0.054], 'dead-mud', 0.6, 0.2);
   // One of the dead is not yet a heap: it lies on its side as it fell, half under, caked and salted, the upper legs stiff in the air.
@@ -383,7 +383,7 @@ export function create(ctx: Context): Piece {
     fallen.pose(lie, 0);
   }
   // Round each dead one the crust is stained dark: what ran out of it, and the mud it sank into.
-  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.05, 0.022, 0.017], 'dead-stain-' + i, 1));
+  const stains = cards.map((c, i) => mudWallow(ctx, c.x, c.z, [Math.cos(c.yaw), -Math.sin(c.yaw)], 0.14 * c.size, [0.05, 0.022, 0.017], 'dead-stain-' + i, 1, 0, false));
   const meshes = [...cards.map((c) => c.mesh), ...bodies.map((b) => b.mesh), ...kept.flatMap((k) => [k.mesh, k.feelers]), stuck.mesh, stuck.feelers, fallen.mesh, fallen.feelers, mud.mesh, ...stains.map((w) => w.mesh)];
   ctx.parts.built('dead', ...(meshes as [(typeof meshes)[number], ...typeof meshes]));
   for (const mesh of meshes) ctx.scene.add(mesh);
