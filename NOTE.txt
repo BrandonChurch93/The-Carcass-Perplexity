@@ -1,7 +1,7 @@
-2026-11-26 00:19 UTC
-work at fd480f5 on agent/reveal-place
-min 177: version 3 (fd480f5): reveal-4, 400 px, native crops, keys 1 to 3
+2026-11-26 00:39 UTC
+work at ade6009 on agent/reveal-place
+round 13 work: body ivory on dark land, rings gone by 9578, cold rock, shore varied; cost 7.91 s
 look-1.jpg = out/work/hand/v3-reveal-4.jpg
 look-2.jpg = out/work/hand/v3-reveal-4-400.jpg
-look-3.jpg = out/work/hand/v3-reveal-4-native.jpg
-look-4.jpg = out/work/hand/v3-keys-1-2-3.jpg
+look-3.jpg = out/work/hand/v3-keys-1-2-3.jpg
+look-4.jpg = out/work/hand/v3-reveal-4-native.jpg
