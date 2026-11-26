@@ -1,6 +1,6 @@
 # Material pictures of the Reveal
 
-The working pictures of the Reveal, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 5 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
+The working pictures of the Reveal, made by the Builder for every owner of the place to read: surface tiles and a sky on 2026-11-25 (the list and every prompt are in `assets-src/materials/spec.py`), and on 2026-11-26 8 more for the second owners, most of them asked for by an owner: far backplates, feature sheets, ground plates and more tiles (`assets-src/materials/spec2.py`). Each began as one generated picture: 1254 px square, 1672 x 941, 941 x 1672, or a sky of 1536 x 1024. `assets-src/materials/make-materials.mjs` makes each surface tile repeat and writes a colour picture and a data picture from it, by the method of the Heart's materials, and writes each plate as it is.
 
 The Reveal's pictures are seen straight down from orbit. Cloud pictures lie on a black sea: their brightness is the cover, after the dark floor of the sea is taken off. `cells`, `streets`, `veil`, `popcorn` and `streaks` repeat; `front`, `storm`, `cyclone` and `wisps` are plates, one whole feature each, written at their own size and not repeated. The ground pictures (`range`, `plain`, `badland`, `shelf`, `redflat`) and the water pictures (`glitter`, `lakewater`) are detail for the provinces of the continent and repeat.
 
@@ -230,6 +230,48 @@ Vapour seen straight down from orbit in an orthographic view, on a pure black ba
 
 Takes: 1 made, take 1 kept.
 Why this one: the vapour trails of the throat (asked for by `reveal_owner_2`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/cyclone-wide.jpg`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/cyclone-wide.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-4-titan-from-orbit.jpg`, `references/drafts/working/real/orb-apollo17-earth.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Cloud seen straight down from orbit in an orthographic view: the wide outer field of one great cyclone over open ocean, a square 2,500 kilometres across with the small dark eye of the storm at its centre. Eight to ten thin, soft spiral arms wind out from the eye, each arm a band of small separate beaded cumulus cells, lumpy and loose, never a smooth painted stroke and never combed into hard flakes. Black sea shows between the arms all the way in to the core. The arms run on past all four edges of the frame, so that the storm has no circular rim and no outer edge anywhere in the picture. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the cyclone of the widest key as soft beaded bands that run off the frame, where the built one is combed hard flakes with a rim (asked for by `reveal_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/specks.jpg` and `public/assets/reveal/mat/specks-nh.png`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/specks.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-4-titan-from-orbit.jpg`, `references/drafts/working/real/orb-modis-popcorn.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Cloud seen straight down from orbit in an orthographic view from very high: ragged fields of very small fair-weather cumulus over open ocean, about 1,500 kilometres across. Every cloud is no more than a tiny white dot, thousands and thousands of them, gathered in loose clusters and in beaded streets that all run roughly one way from left to right, with wide lanes of clear black sea between the fields and a few denser lumpy patches. No large cloud, no sheet, no streak longer than a few dots. The field fills the whole frame edge to edge at one uniform scale, as a seamless tileable texture. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one square image. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the tiny cumulus of the sea in the widest key, where the built cloud is hard white dashes over grey smudges (asked for by `reveal_owner_3`).
+Date: 2026-11-26
+
+## `public/assets/reveal/mat/seacloud.jpg`
+
+Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/materials/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
+From: `assets-src/reveal/mat/src/seacloud.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/7-reveal/reveal-4-titan-from-orbit.jpg`, `references/drafts/working/real/orb-modis-sgeorgia-streets.jpg`.
+Prompt or command: the prompt below, then `node assets-src/materials/make-materials.mjs reveal`.
+
+```
+Cloud seen straight down from orbit in an orthographic view: the whole deck of low cloud over an open ocean, a piece 6,000 kilometres wide and 3,400 kilometres tall. Long curving streets of small beaded cumulus and ragged fields of tiny cloud sweep across it in broad arcs. At the left side the cloud is thin, a scatter of dots with much black sea; toward the right side it thickens into dense lumpy fields, broken by clear lanes of black sea that wander through it. No cyclone, no single great storm, no smooth sheet. The sun is high overhead, so the cloud tops are evenly lit and no long shadow falls to one side. The sea beneath is pure black: no land, no coast, no sun glint. The first reference image is the world this cloud belongs to: take the colour and the softness of its cloud from there, and nothing of its composition. The second reference image is a real satellite photograph: it is the standard for how a camera in orbit records real cloud, with real soft edges, real lumpy and fibrous detail at every size and no painted or stylised look. Output one wide landscape image, sixteen units wide and nine tall. Photographic, sharp, no text, no logo, no border, no grid lines, no stars.
+```
+
+Takes: 1 made, take 1 kept.
+Why this one: the low cloud deck of the whole sea in the widest key as one picture: curving streets and ragged fields, thin at one side and dense at the other (asked for by `reveal_owner_3`).
 Date: 2026-11-26
 
 ## `public/assets/reveal/mat/materials.json`

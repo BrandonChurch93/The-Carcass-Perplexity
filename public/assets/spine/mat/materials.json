@@ -222,6 +222,77 @@
       "metres": 340,
       "width": 941,
       "height": 1672
+    },
+    {
+      "name": "strikesky",
+      "kind": "plate",
+      "metres": 0,
+      "width": 1672,
+      "height": 941
+    },
+    {
+      "name": "saddle",
+      "kind": "plate",
+      "metres": 120,
+      "width": 1671,
+      "height": 941,
+      "relief": "saddle-h.png"
+    },
+    {
+      "name": "crustfield",
+      "kind": "plate",
+      "metres": 40,
+      "width": 1688,
+      "height": 932,
+      "relief": "crustfield-h.png"
+    },
+    {
+      "name": "kiteface",
+      "kind": "plate",
+      "metres": 50,
+      "width": 1254,
+      "height": 1254,
+      "relief": "kiteface-h.png"
+    },
+    {
+      "name": "kitefilm-a",
+      "kind": "plate",
+      "metres": 30,
+      "width": 2172,
+      "height": 724,
+      "cover": "kitefilm-a-a.png",
+      "relief": "kitefilm-a-h.png"
+    },
+    {
+      "name": "kitefilm-b",
+      "kind": "plate",
+      "metres": 30,
+      "width": 2172,
+      "height": 724,
+      "cover": "kitefilm-b-a.png",
+      "relief": "kitefilm-b-h.png"
+    },
+    {
+      "name": "bolt-b",
+      "kind": "plate",
+      "metres": 340,
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "name": "bolt-c",
+      "kind": "plate",
+      "metres": 340,
+      "width": 941,
+      "height": 1672
+    },
+    {
+      "name": "lock-b",
+      "kind": "plate",
+      "metres": 0.35,
+      "width": 1086,
+      "height": 1448,
+      "cover": "lock-b-a.png"
     }
   ]
 }
