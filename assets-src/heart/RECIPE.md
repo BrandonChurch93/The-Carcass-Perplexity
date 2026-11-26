@@ -32,17 +32,17 @@ Date: 2026-11-25
 
 ## `public/assets/heart/mat/cliff.jpg` and `public/assets/heart/mat/cliff-nh.png`
 
-Made by: the image model `gpt_image_2_6_flare` (OpenAI GPT Image, through Perplexity), then `assets-src/heart/make-materials.mjs` on Node with the `sharp` of `package-lock.json`.
-From: `references/drafts/working/heart-materials/cliff.png`, the generated picture. Pictures passed to the model with the prompt: `references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg`, `references/drafts/working/real/plate-lava-1.jpg`.
-Prompt or command: the prompt below, then `node assets-src/heart/make-materials.mjs`.
+Made by: the image model behind `generate_image` (its default, through Perplexity), then `assets-src/heart/make-cliff.py` on Python 3 with numpy, scipy and Pillow.
+From: `assets-src/heart/cliff-massive.png`, the generated picture, 1536 by 1024. Picture passed to the model with the prompt: `references/approved/2-heart/heart-4-the-vessel-mouth-and-its-lava-fall.jpg`.
+Prompt or command: the prompt below, then `python3 assets-src/heart/make-cliff.py`.
 
 ```
-A material texture, seen square on in an orthographic view: the face of a caldera wall cut through many stacked basalt lava flows, a section about 60 metres tall. Horizontal strata of dark grey, brown-black and rust, some layers with short vertical columnar joints, some rubbly and crumbling, thin ledges that hold fallen rubble, pale mineral streaks and a few faint sulphur-yellow stains running down. No glowing lava. Flat, even, shadowless overcast light. The rock fills the whole frame edge to edge at one uniform scale, with the strata exactly horizontal, tileable from left to right. The first reference image is the place this material belongs to: take its colours, its age and its character from there. The second reference image is a real photograph: it is the standard for how a camera records real stone, with real grain, real micro detail and no painted or stylised look. Output one square image. Photographic, sharp from edge to edge, no depth of field blur, no vignette, no horizon, no sky, no text, no logo, no people, no animals, no objects lying on top.
+Seamless tiling texture, flat orthographic elevation view looking square-on at a massive dark basalt cliff face of a volcanic caldera wall, the rock fills the whole frame edge to edge, no sky, no ground, no horizon, no plants. Evenly lit under flat overcast light, no cast shadows from one side, no perspective. Massive rough lava rock broken by irregular joints into blocks of unlike sizes, some vertical cracks and short stretches of crude columnar jointing, rubbly broken faces, small ledges with crumbs of scree. No horizontal strata, no level layers, no bands. Colour: charcoal and dark warm grey-brown with rust-brown tints and a few small pale buff weathered patches, matte. Same rock as in the reference photograph (the wall round the cave). Photographic, sharp fine detail everywhere, uniform scale across the frame.
 ```
 
 Takes: 1 made, take 1 kept.
-Why this one: level strata with columnar bands, the look of the caldera wall and the butte, and no baked sun.
-Date: 2026-11-25
+Why this one: the picture it replaces was asked for as horizontal strata, and the jury read the wall as a stack of sedimentary layers. This one is massive rock broken by joints, with crude columns and no beds, as the wall round the cave in the approved picture. It stays 3 wide to 2 tall and the shaders lay it at that shape (150 m by 100 m on the wall).
+Date: 2026-11-26
 
 ## `public/assets/heart/mat/talus.jpg` and `public/assets/heart/mat/talus-nh.png`
 
