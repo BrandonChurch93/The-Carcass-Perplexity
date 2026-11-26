@@ -170,7 +170,7 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
   // v runs up the weed's own face in metres, so that the picture is not drawn out where the foot spreads.
   const last = new Float32Array(cols * 3);
   const run = new Float32Array(cols);
-  return sheet(rows, cols, true, 'out', (j, i, p) => {
+  const g = sheet(rows, cols, true, 'out', (j, i, p) => {
     const phi = options.phis[i] as number;
     const u = ((phi - first) / (Math.PI * 2)) * uSpan;
     const f = j / options.rows;
@@ -187,14 +187,21 @@ export function skirtShape(rib: Rib, options: SkirtOptions): THREE.BufferGeometr
     // The foot spreads over the rock and rubble the blade stands on.
     const plinth = 2.5 * smooth(5, 0, y) * (0.4 + 1.2 * noise2(foot.x / 11 + 5, foot.z / 11)) * calm;
     const tier = weedTier(foot.x, y, foot.z);
-    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + ((weedLump(foot.x, y, foot.z) + tier[0]) * calm + plinth) * (1 - tuck) * smooth(-5, 2, y);
+    const pad = skirtPad(yy) * (1 - tuck) - 3 * tuck + ((0.6 * weedLump(foot.x, y, foot.z) + 0.3 * tier[0]) * calm + plinth) * (1 - tuck) * smooth(-5, 2, y);
     p.copy(surface(rib, t, phi, a + pad, b + pad));
     if (y < 0) p.y = y;
     if (j > 0) run[i] = (run[i] as number) + Math.hypot(p.x - (last[i * 3] as number), p.y - (last[i * 3 + 1] as number), p.z - (last[i * 3 + 2] as number));
     else run[i] = -5;
     p.toArray(last, i * 3);
-    return [u, run[i] as number, 1 + (tier[1] - 1) * calm];
+    return [u, run[i] as number, 1 + 0.5 * (tier[1] - 1) * calm];
   });
+  // v is counted down from the top of the weed: the wall's sheet hangs from the weed line, whatever the height of the line there.
+  const uv = g.getAttribute('uv') as THREE.BufferAttribute;
+  for (let i = 0; i < cols; i++) {
+    const top = uv.getY((rows - 1) * cols + i);
+    for (let j = 0; j < rows; j++) uv.setY(j * cols + i, uv.getY(j * cols + i) - top);
+  }
+  return g;
 }
 
 /** A stack or a mound turned round a centre. `profile` gives the rows from the bottom up as height and radius; `shift` moves a point in or out by where it is. */

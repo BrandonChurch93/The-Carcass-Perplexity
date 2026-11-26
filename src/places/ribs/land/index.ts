@@ -58,7 +58,7 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number) => number, arou
   const profile: [number, number][] = [];
   // The radius here only tells the sheet how far round the weed goes, for the size of its picture.
   for (let j = 0; j <= rows; j++) profile.push([(j / rows) * span, radiusAt(10) + 3]);
-  return lathe(x0, z0, profile, around, (run, _r, angle) => {
+  const g = lathe(x0, z0, profile, around, (run, _r, angle) => {
     const f = run / span;
     const far = radiusAt(LEVELS.tide);
     const top = weedTop(x0 + Math.cos(angle) * far, z0 + Math.sin(angle) * far);
@@ -67,8 +67,12 @@ function stackWeed(x0: number, z0: number, radiusAt: (y: number) => number, arou
     const base = radiusAt(Math.max(0, y));
     const x = x0 + Math.cos(angle) * base;
     const z = z0 + Math.sin(angle) * base;
-    return [y, base + (2.2 + 1.5 * smooth(12, 0, y) + weedLump(x, y, z) + 0.6 * weedTier(x, y, z)[0]) * (1 - tuck) - 2.5 * tuck];
+    return [y, base + (2.2 + 1.5 * smooth(12, 0, y) + 0.6 * weedLump(x, y, z) + 0.2 * weedTier(x, y, z)[0]) * (1 - tuck) - 2.5 * tuck];
   });
+  // v is counted down from the top of the weed, as on the blades' skirts.
+  const uv = g.getAttribute('uv') as THREE.BufferAttribute;
+  for (let k = 0; k < uv.count; k++) uv.setY(k, uv.getY(k) - span);
+  return g;
 }
 
 function colonyRock(): THREE.BufferGeometry {
@@ -111,36 +115,67 @@ export function create(ctx: Context): Piece {
   // The Builder's material pictures of the place: bone-stone for the blades, coursed ledge for the colony, hanging weed, the wet flat, shore rock.
   const rockC = tex('mat/bone.jpg');
   const rockN = tex('mat/bone-nh.png', { kind: 'data' });
-  const ledgeC = tex('mat/ledge.jpg');
-  const ledgeN = tex('mat/ledge-nh.png', { kind: 'data' });
   const weedC = tex('mat/weed.jpg');
   const weedN = tex('mat/weed-nh.png', { kind: 'data' });
   const sandC = tex('mat/flat.jpg', { anisotropy: 2 });
-  const shingleC = tex('land/shingle.jpg', { anisotropy: 2 });
-  const shingleN = tex('land/shingle-nh.jpg', { kind: 'data', anisotropy: 2 });
+  const shingleC = tex('mat/shingle.jpg', { anisotropy: 4 });
+  const shingleN = tex('mat/shingle-nh.png', { kind: 'data', anisotropy: 4 });
+  const plateC = tex('mat/plate.jpg', { anisotropy: 4 });
+  const plateN = tex('land/plate-nh.png', { kind: 'data', anisotropy: 4 });
+  const wallC = tex('mat/wall.jpg', { anisotropy: 4 });
+  const wallN = tex('land/wall-nh.png', { kind: 'data', anisotropy: 4 });
+  const ledgeC = tex('mat/ledge.jpg');
+  const ledgeN = tex('mat/ledge-nh.png', { kind: 'data' });
+  const colonyC = tex('mat/colony.jpg', { anisotropy: 4 });
+  const colonyN = tex('land/colony-nh.png', { kind: 'data', anisotropy: 4 });
+  for (const t of [plateC, plateN, wallC, wallN, colonyC, colonyN]) {
+    t.wrapS = THREE.MirroredRepeatWrapping;
+    t.wrapT = THREE.MirroredRepeatWrapping;
+  }
+  // The land's own pictures made from the Builder's sheets (assets-src/ribs/land/make-sheets.py): the fin drawn out flat, slopes of the plates.
+  const finC = tex('land/fin.jpg', { repeat: false, anisotropy: 4 });
+  const finN = tex('land/fin-nh.png', { kind: 'data', repeat: false, anisotropy: 4 });
   const boulderC = tex('mat/rock.jpg');
   const boulderN = tex('mat/rock-nh.png', { kind: 'data' });
 
   const material = (vertexShader: string, fragmentShader: string, own: Record<string, THREE.IUniform>): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({ vertexShader, fragmentShader, uniforms: { ...ctx.rig.uniforms, ...own } });
 
-  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, tWeed: { value: weedC }, uPool: { value: LEVELS.pool } });
-  const stone = (grain: number): THREE.ShaderMaterial =>
-    material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: rockC }, tRockN: { value: rockN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: 0 }, uGrain: { value: new THREE.Vector2(grain, grain * 4.7) }, uRockTint: { value: new THREE.Vector3(1.75, 1.72, 1.66) } });
+  const ground = material(RIG_VERTEX, GROUND_FRAGMENT, { tPlate: { value: plateC }, tPlateN: { value: plateN }, tShingle: { value: shingleC }, tShingleN: { value: shingleN }, tSand: { value: sandC }, uPool: { value: LEVELS.pool } });
+  const stone = (grain: number, lift: number): THREE.ShaderMaterial =>
+    material(ROCK_VERTEX, ROCK_FRAGMENT, {
+      tRock: { value: rockC },
+      tRockN: { value: rockN },
+      tWide: { value: grain > 0 ? finC : rockC },
+      tWideN: { value: grain > 0 ? finN : rockN },
+      uFin: { value: grain > 0 ? 1 : 0 },
+      uLift: { value: lift },
+      tWeed: { value: weedC },
+      uTide: { value: LEVELS.tide },
+      uTier: { value: 0 },
+      uGrain: { value: new THREE.Vector2(Math.abs(grain), Math.abs(grain) * 4.7) },
+      uRockTint: { value: grain > 0 ? new THREE.Vector3(1.35, 1.33, 1.3) : new THREE.Vector3(1.75, 1.72, 1.66) },
+    });
   const stones = new Map<number, THREE.ShaderMaterial>();
-  const stoneOf = (grain: number): THREE.ShaderMaterial => {
-    let m = stones.get(grain);
+  const stoneOf = (grain: number, lift = 4): THREE.ShaderMaterial => {
+    const key = grain * 64 + lift;
+    let m = stones.get(key);
     if (!m) {
-      m = stone(grain);
-      stones.set(grain, m);
+      m = stone(grain, lift);
+      stones.set(key, m);
     }
     return m;
   };
-  const rock = stoneOf(12);
-  const roostRock = material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: ledgeC }, tRockN: { value: ledgeN }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step }, uGrain: { value: new THREE.Vector2(10, 43) }, uRockTint: { value: new THREE.Vector3(1.1, 1.1, 1.1) } });
-  const weed = material(WEED_VERTEX, WEED_FRAGMENT, { tWeed: { value: weedC }, tWeedN: { value: weedN } });
+  // A grain below zero is stone that is no blade: it has no sheet of its own.
+  const rock = stoneOf(-12);
+  const roostRock = material(ROCK_VERTEX, ROCK_FRAGMENT, { tRock: { value: colonyC }, tRockN: { value: colonyN }, tWide: { value: ledgeC }, tWideN: { value: ledgeN }, uFin: { value: 0 }, uLift: { value: 0 }, tWeed: { value: weedC }, uTide: { value: LEVELS.tide }, uTier: { value: COLONY.step }, uGrain: { value: new THREE.Vector2(27, 6.3) }, uRockTint: { value: new THREE.Vector3(1.4, 1.4, 1.4) } });
+  const hangs = (proud: number): THREE.ShaderMaterial =>
+    material(WEED_VERTEX, WEED_FRAGMENT, { tWall: { value: wallC }, tWallN: { value: wallN }, tWeed: { value: weedC }, tWeedN: { value: weedN }, uProud: { value: proud } });
+  // The near cliff's weed is cut fine enough to carry the hanks of the sheet; the others' is not.
+  const weed = hangs(0.5);
+  const weedNear = hangs(1.7);
   const boulder = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 1 } });
-  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: boulderC }, tBoulderN: { value: boulderN }, tWeed: { value: weedC }, uWeedy: { value: 0 } });
+  const pebble = material(RIG_VERTEX, BOULDER_FRAGMENT, { tBoulder: { value: shingleC }, tBoulderN: { value: shingleN }, tWeed: { value: weedC }, uWeedy: { value: 0 } });
 
   // The floor: fine where the cameras stand on it, coarse out to the edge of what the rig knows, where it lies deep under the sea.
   const xs = lines(LAND.minX, LAND.maxX, -340, 420, 6, 60);
@@ -174,9 +209,9 @@ export function create(ctx: Context): Piece {
   };
   for (const rib of RIBS as Rib[]) {
     const cut = BLADE[rib.name] ?? { around: 128, fine: 2.5, grain: 30 };
-    add(blades, bladeShape(rib, cut), stoneOf(cut.grain));
+    add(blades, bladeShape(rib, cut), stoneOf(cut.grain, Math.min(8, 0.11 * rib.b + 0.02 * rib.a)));
     const phis = rib.name === 'L1' ? turns(200, { from: -0.3, to: 1.3, count: 640 }) : turns(160);
-    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), weed);
+    add(skirts, skirtShape(rib, { phis, rows: rib.name === 'L1' ? 84 : 32, ...(rib.name === DROWNED.rib ? { calm: [DROWNED.phi, DROWNED.height] as [number, number] } : {}) }), rib.name === 'L1' ? weedNear : weed);
   }
 
   // The two stacks of the gate, and the arch rock.
@@ -286,7 +321,7 @@ export function create(ctx: Context): Piece {
   {
     const pose = resolve(shots['ribs-02'] as (typeof shots)[string], keyPart(shotById('ribs-02')), 0);
     const yaw = yawOf(pose.aim, pose.position);
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 40; i++) {
       const r = 7 + 130 * Math.pow(scatter.next(), 1.5);
       const a = yaw + scatter.range(-0.62, 0.5);
       const x = pose.position[0] + Math.sin(a) * r;
@@ -340,7 +375,7 @@ export function create(ctx: Context): Piece {
       for (const group of [blades, skirts, rocks, mirrors]) group.traverse((o) => (o as THREE.Mesh).geometry?.dispose());
       floor.geometry.dispose();
       ledges.geometry.dispose();
-      for (const m of [ground, roostRock, weed, boulder, pebble, glass, ...stones.values()]) m.dispose();
+      for (const m of [ground, roostRock, weed, weedNear, boulder, pebble, glass, ...stones.values()]) m.dispose();
     },
   };
 }
