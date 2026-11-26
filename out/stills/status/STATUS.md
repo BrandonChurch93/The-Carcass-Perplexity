@@ -1,8 +1,8 @@
-# Status 126
+# Status 127
 
-2026-11-26 18:16 UTC. Phase 5, the whole film.
+2026-11-26 18:38 UTC. Phase 5, the whole film.
 
-- `01-s126-rock.jpg`: The Spine's rock, tone pass, merged: frame 7338 above and frame 7418 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `02-s126-hung.jpg`: The hung body of the Ribs, version 3, merged: frame 2081 above and loop frame 0 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `03-s126-bore.jpg`: The Ribs' bore, version 3, merged: frame 2295 above and frame 2401 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
-- `04-s126-kite.jpg`: The tether-kites, version 2, merged: frame 7418 above and frame 7450 below, before at left and after at right (draft tier, preview size, rendered on a render machine)
+- `01-r28-r2.jpg`: The five frames the jury saw in round 3 of the film: frame 0 and the frame at two seconds above, the first frames of the Heart and of the Breath in the middle, the first frame of the Blood Marsh below (final tier, rendered in 4K on a render machine, shown smaller)
+- `02-r28-r6.jpg`: The first two seconds as the scroll-stop critic saw them: ten frames from frame 0 to frame 120, left to right, upper row first (final tier, rendered in 1080p on a render machine, shown at phone width)
+- `03-r28-r5-07.jpg`: One of the nine sheets of the critic of the whole film: the titan frame 10027 and the last frame before black, 11743, above; loop frames 0 and 120 below (final tier, rendered in 4K on a render machine, shown smaller)
+- `04-r28-r4-pack.jpg`: Four of the motion critic's 14 sheets: the twelve frames across the join from the lake into the rise (upper left), the first two seconds (upper right), the last two seconds (lower left) and the loop (lower right) (review tier, preview size, rendered on a render machine)

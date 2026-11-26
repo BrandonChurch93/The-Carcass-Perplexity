@@ -88,6 +88,168 @@
       "confidence": 70,
       "why": "the rock spires have smooth, repeating procedural texture, and the ocean and fog look like a generic CG landscape render (Vue/Terragen style), not film-level detail.",
       "answered": "18:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the artificial flat water splash and streaky mist against simple procedural rock spires",
+      "answered": "18:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "c",
+      "confidence": 79,
+      "why": "The fog crosses the spires in smooth, flat-looking streaks rather than curling around them.",
+      "answered": "18:19 UTC"
+    },
+    {
+      "image": "R2-2",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "c",
+      "confidence": 45,
+      "why": "the sea surface and the smooth horizontal fog look procedural. The spires have simple, stretched textures, so this reads as a competent but ordinary CG render, not film-grade work.",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 72,
+      "why": "The near-identical long-legged creatures look like duplicated 3D assets scattered across the lava.",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "the foreground rocks have repetitive, photogrammetry-style textures and the lava-field creatures are simple and stiff, like a competent hobbyist Unreal render rather than a polished film or cinematic frame.",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 72,
+      "why": "the flat ambient lighting and simple lava-plane shaders paired with detailed foreground rock textures typical of a standard 3D render rather than a top-budget cinematic or mobile game",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 85,
+      "why": "the distant cliffs have angular silhouettes despite the detailed rock texture pasted across them.",
+      "answered": "18:20 UTC"
+    },
+    {
+      "image": "R2-3",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 60,
+      "why": "the lava field with spindly spider-like creatures, the atmospheric haze and the detailed rock textures look like a high-end film or game cinematic, though the repetitive rock detail leaves some chance it is an ordinary 3D render (c).",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 78,
+      "why": "the nearly identical flamingo poses repeated across the shallows.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 60,
+      "why": "The scene looks like an imaginary world with strange pale long-necked creatures and very detailed but slightly composited-looking rocks, which reads as a high-quality CG render or matte painting and not a real photo.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the alien creatures and procedural water-to-terrain transitions look stiff and lightly integrated compared to a top-budget film or cinematic",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 77,
+      "why": "the same spindly creature model repeats across the shallows with little variation in pose.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-4",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 70,
+      "why": "the high-detail layered rock and atmospheric haze with fantastical creatures reads as a polished cinematic or high-end concept render, not a real photo.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "a",
+      "model": "gpt_6_2_sol",
+      "answer": "c",
+      "confidence": 87,
+      "why": "the same plant-clump geometry repeats across the terrain.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "b",
+      "model": "claude_opus_5_5",
+      "answer": "c",
+      "confidence": 70,
+      "why": "alien red-fluid landscape with repetitive instanced plants and furry creatures looks like a polished but ordinary offline 3D render (clean flat-lit surfaces, uniform scattering) rather than film-grade VFX.",
+      "answered": "18:21 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "c",
+      "model": "gemini_neon",
+      "answer": "c",
+      "confidence": 75,
+      "why": "the alien tentacled creatures and repetitive instanced plants rendered under flat, uncinematic CG lighting",
+      "answered": "18:22 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "d",
+      "model": "gpt_6_2_astra",
+      "answer": "d",
+      "confidence": 82,
+      "why": "the same distinctive plant clump repeats across the plain like a reused game asset.",
+      "answered": "18:22 UTC"
+    },
+    {
+      "image": "R2-5",
+      "juror": "e",
+      "model": "claude_sonnet_5_5",
+      "answer": "b",
+      "confidence": 45,
+      "why": "the dense, coherent alien landscape with believable atmospheric haze, distant rain and layered detail looks like concept art or film-grade CGI, though the repeated plant and rock assets leave (c) a close second.",
+      "answered": "18:22 UTC"
     }
   ]
 }

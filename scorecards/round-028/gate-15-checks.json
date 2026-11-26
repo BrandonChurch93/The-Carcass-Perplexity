@@ -1,0 +1,269 @@
+{
+  "phase": 5,
+  "at": "2026-11-26T18:19:52Z",
+  "only": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8",
+    "G9",
+    "G10",
+    "G11",
+    "G12",
+    "G13",
+    "G15",
+    "G16"
+  ],
+  "ok": true,
+  "failed": [],
+  "results": [
+    {
+      "id": "G1",
+      "title": "npm run build exits clean with no type errors",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "npm run build exited with code 0."
+      ],
+      "skipped": [],
+      "seconds": 4.5
+    },
+    {
+      "id": "G2",
+      "title": "Unit tests pass",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "npm test exited with code 0."
+      ],
+      "skipped": [],
+      "seconds": 162.8
+    },
+    {
+      "id": "G3",
+      "title": "npm run determinism passes",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "npm run determinism exited with code 0."
+      ],
+      "skipped": [],
+      "seconds": 93
+    },
+    {
+      "id": "G4",
+      "title": "Stills are the size of their format, and the film and the loop have the right frame counts",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The uhd still is 3840 x 2160, the size of its format.",
+        "The hd still is 1920 x 1080, the size of its format.",
+        "The preview still is 960 x 540, the size of its format.",
+        "The film has 11861 frames and cut/CUTLIST.json has 11861.",
+        "The loop has 480 frames and deliver.cardLoop.seconds times film.fps is 480."
+      ],
+      "skipped": [],
+      "seconds": 61.1
+    },
+    {
+      "id": "G5",
+      "title": "No interface in a frame, and every frame is read from the canvas",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "In capture mode the page holds one canvas, no other element with a box and no text.",
+        "tools/film.mjs, tools/loop.mjs, tools/render-local.mjs, tools/still.mjs and the 11 files they load hold no screenshot call, and their frames come from tools/lib/render.mjs through grab."
+      ],
+      "skipped": [],
+      "seconds": 1.8
+    },
+    {
+      "id": "G6",
+      "title": "The config passes startup validation and the judged list is in kit/PROGRESS.md",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "config/showcase.json passes startup validation.",
+        "52 judged frames computed from the config and cut/CUTLIST.json, 52 of them on the list in kit/PROGRESS.md."
+      ],
+      "skipped": [],
+      "seconds": 0.3
+    },
+    {
+      "id": "G7",
+      "title": "The lengths of the film, of every place and of the loop, and the order of the places",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The film is 197.68 s (11861 frames) and has to be between 170 s and 215 s.",
+        "The place ribs has 41.78 s, at least 16 s.",
+        "The place heart has 28.57 s, at least 16 s.",
+        "The place breath has 23.28 s, at least 16 s.",
+        "The place marsh has 23.28 s, at least 16 s.",
+        "The place spine has 21.5 s, at least 16 s.",
+        "The place eye has 20.6 s, at least 16 s.",
+        "The places come in the order of film.order: ribs, heart, breath, marsh, spine, eye, reveal.",
+        "The loop is 8 s and has to be between 6 s and 9 s."
+      ],
+      "skipped": [],
+      "seconds": 0
+    },
+    {
+      "id": "G8",
+      "title": "Third-party files, recipes and sound records are all written down",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "audio/supplied holds 1 file, 0 not named in ASSETS.md.",
+        "public/assets holds 390 files, 0 with no recipe, read against 224 headings in 20 RECIPE.md files.",
+        "audio/kept holds 60 files, 0 without a full record in audio/records.",
+        "The third-party table holds 0 rows, no fault found."
+      ],
+      "skipped": [],
+      "seconds": 0.1
+    },
+    {
+      "id": "G9",
+      "title": "File sizes, secrets, untracked folders, sound on a public repo and the approved hashes",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "3967 tracked files. 0 over 45 MB. The largest is audio/cleaned/The-Carcass-Audio-cleaned.flac at 43.49 MB.",
+        "The tracked files take 1.912 GB of the 2 GB allowed.",
+        "1097 text files scanned for secrets, 0 hits.",
+        "0 tracked under references/cache/, out/work/, deliver/film/.",
+        "52 approved files hashed against the manifest, 0 changed or missing.",
+        "The sound rule is skipped: the \"Repo is private\" line of kit/PROGRESS.md does not start with \"no\"."
+      ],
+      "skipped": [],
+      "seconds": 0.4
+    },
+    {
+      "id": "G10",
+      "title": "Only WebGL2 core and portable extensions, with a half float path",
+      "kind": "machine",
+      "phase": 0,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The page enabled 4 extensions, all marked portable in config/webgl-caps.json.",
+        "Frame 5930 with portable extensions only is pixel-identical to the same frame with all of them.",
+        "No file under src uses FloatType."
+      ],
+      "skipped": [],
+      "seconds": 44.8
+    },
+    {
+      "id": "G11",
+      "title": "The cut follows the music",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "Of 32 cuts, 19 sit on a bar line, 11 on a beat that is no bar line and 7 on a hit, each to within 3 frames.",
+        "The titan frame 10027 is at music second 167.1167, 0.2 frames from the reveal strike at 167.12 s."
+      ],
+      "skipped": [],
+      "seconds": 0
+    },
+    {
+      "id": "G12",
+      "title": "The rise is one shot",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "The rise is the one shot reveal-01, frames 9541 to 10027. The camera climbs from 74.6 to 5286 and never falls or jumps."
+      ],
+      "skipped": [],
+      "seconds": 0.2
+    },
+    {
+      "id": "G13",
+      "title": "No covered part is a stand-in",
+      "kind": "machine",
+      "phase": 3,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "G13 covers every part there is, 100 of them, because film is a unit of Phase 5, and the gate of Phase 5 named no unit.",
+        "All 100 covered parts pass."
+      ],
+      "skipped": [
+        "test 4 for eye/stream: it was never seen in the film as a stand-in, so it has no reference picture"
+      ],
+      "seconds": 668.8
+    },
+    {
+      "id": "G15",
+      "title": "Every key has a key frame inside its unit, and the rise covers its windows",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "34 keys of the config, 34 with a key frame inside the span of its own unit.",
+        "reveal-1: the view covers its window, with at most 0.1 px of the master to spare where 29.3 px is allowed.",
+        "reveal-2: the view covers its window, with at most 0.5 px of the master to spare where 107.0 px is allowed.",
+        "reveal-3: the view covers its window, with at most 1.3 px of the master to spare where 250.8 px is allowed.",
+        "reveal-4: the view covers its window, with at most 2.9 px of the master to spare where 587.3 px is allowed."
+      ],
+      "skipped": [],
+      "seconds": 0
+    },
+    {
+      "id": "G16",
+      "title": "The words of the narration in the cut list",
+      "kind": "machine",
+      "phase": 2,
+      "advisory": false,
+      "status": "pass",
+      "ok": true,
+      "lines": [
+        "32 of 32 lines of narration.clips are in the cut list word for word and in order.",
+        "Line 3 of clip n8 starts on frame 10027, on or after the titan frame 10027.",
+        "The shortest gap between two lines of one clip is 0.617 s, between lines 1 and 2 of clip n4. narration.linePauseMinSeconds is 0.6 s."
+      ],
+      "skipped": [],
+      "seconds": 0
+    }
+  ]
+}
