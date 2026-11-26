@@ -1,6 +1,6 @@
-2026-11-26 05:39 UTC
-work at b589a39 on agent/ribs-sea-3
-heartbeat 2 (05:47): animals now drawn from the wave 3 pictures in ribs-2, ribs-3, ribs-0; sea next
-look-1.jpg = out/work/hb2-ribs-2.jpg
-look-2.jpg = out/work/hb2-ribs-3.jpg
-look-3.jpg = out/work/hb2-ribs-0-feeders.jpg
+2026-11-26 06:08 UTC
+work at 567bcf6 on agent/ribs-sea-3
+version 1 (06:08): animals from pictures, pool film rippled, whitecaps; bore and drowned next
+look-1.jpg = out/work/v1-ribs-2.jpg
+look-2.jpg = out/work/v1-ribs-3.jpg
+look-3.jpg = out/work/v-open.jpg
