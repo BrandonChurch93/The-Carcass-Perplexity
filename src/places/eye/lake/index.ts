@@ -46,7 +46,7 @@ float matBeds(vec3 p) {
   vec2 dir = p.xz / max(r, 1.0);
   float rays = 0.6 * vnoise(dir * 46.0 + vec2(r, -0.7 * r) / 85.0) + 0.4 * vnoise(dir * 150.0 + vec2(-0.6 * r, r) / 34.0 + 3.0);
   float blobs = 0.6 * vnoise(p.xz / 38.0) + 0.4 * vnoise(p.xz / 9.0 + 3.0);
-  float beds = 0.3 * rays + 0.7 * blobs + 0.1 * vnoise(p.xz / 2.4);
+  float beds = 0.52 * rays + 0.48 * blobs + 0.1 * vnoise(p.xz / 2.4);
   // A bed lies over the lip where the old bones are.
   beds += 0.1 * smoothstep(30.0, 6.0, length(p.xz - vec2(${EDGE_BED[0].toFixed(1)}, ${EDGE_BED[1].toFixed(1)})));
   return smoothstep(0.38, 0.55, beds) * smoothstep(2.0, 16.0, shoreward);
@@ -99,6 +99,12 @@ Mat matsAt(vec3 p) {
   // Amber and gold, not red: the picture is tinted toward the approved one, and is darker where the hair lies deep.
   m.colour = hair * mix(vec3(0.6, 0.8, 0.45), vec3(1.05, 1.5, 0.8), smoothstep(0.25, 0.7, ha.b)) * mix(1.0, 0.7, dry);
   m.grain = (ha.xy * 2.0 - 1.0) * fine;
+  // From far off no thread shows: the bed is its mean colour, rust in one place and gold in another, and the repeat of the picture is gone.
+  float distant = smoothstep(0.03, 0.14, grain);
+  float tone = 0.6 * vnoise(p.xz / 27.0 + 5.0) + 0.4 * vnoise(p.xz / 7.0);
+  vec3 mean = vec3(0.279, 0.092, 0.014) * mix(vec3(0.7, 0.85, 0.5), vec3(1.25, 1.75, 0.95), smoothstep(0.3, 0.7, tone));
+  m.colour = mix(m.colour, mean, 0.8 * distant);
+  m.strand = mix(m.strand, 0.75, 0.8 * distant);
   return m;
 }`;
 

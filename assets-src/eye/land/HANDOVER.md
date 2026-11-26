@@ -9,7 +9,7 @@ Honest state: round 12 judged version 2 a fail (match 3, filmed 2, motion 2). Ve
 - `scree` (`land/index.ts`): instanced blocks, `mat/cliff` at 9 m, desaturated 60 per cent and tinted cool grey.
 - `stream` (`land/index.ts`): a strip down the left shoulder with white water where the bed drops. Barely reads at eye-0.
 - `lake`, `shallows` (`lake/index.ts`, `lake/water.ts`): one fragment shader over the surface: planar mirror of the land (`createMirror`), sky from the rig, rings from the centre, lap rings at muzzles and legs (22 slots), wind heave at 46 m, 9 m and 1.9 m, gust lanes. Floor under it with `mat/sinter` crust at the lip.
-- `mats` (`MATS_GLSL` in `lake/index.ts`): `mat/mat.jpg` by ground position at 3 m, 1.05 m and 14 m; hair mask from the red to green ratio; beds are noise patches; gold tint.
+- `mats` (`MATS_GLSL` in `lake/index.ts`): `mat/mat.jpg` by ground position at 3 m, 1.05 m and 14 m; hair mask from the red to green ratio; beds are noise patches with some rays; gold tint; from far off the bed goes to its mean colour so the repeat does not show.
 - `shaft` (`lake/index.ts`): wall ring under the lip with fall-off by depth, closed by a disc at 390 m down, pale forms at 38 to 80 m.
 - `riser` (`lake/index.ts`): a dome on the surface (`uDome`, 8.5 m high, radius 66 m), a dark back sphere, rise rings, small tips. Tied to the `rise` event.
 - `sky`, `air`, `mist` (`air/index.ts`): rig sky with one cloud streak; height haze; mist marched in 10 steps through a 30 m layer at the foot of the far walls.
@@ -41,7 +41,7 @@ Honest state: round 12 judged version 2 a fail (match 3, filmed 2, motion 2). Ve
 - eye-1, eye-4, eye-2: the animals read as models. Tube legs, head fused to the neck, same body everywhere.
 - eye-3: the water is a cut box with a hard blue panel; the lip is a flat shelf with a straight corner, not a broken diagonal lip; skeleton is thin tubes on top of the crust, not sunk in growth.
 - eye-4: wall flat and hazy with no cave or scree slope; dome has a seam; water still warm brown on the right; animals small and central.
-- eye-0: rim too tall, striped and regular; brow one black roof; near scree is a few pale boulders, not a grey graded slope; stream does not read; lake nearly black, not a blue oval.
+- eye-0: rim too tall, striped and regular; brow one black roof; near scree is a few warm boulders with the cliff picture's beds on them, not a grey graded slope; stream does not read; lake nearly black, not a blue oval; mats a flat orange apron with no blue gaps.
 - eye-2: right shelf of the brow too large; mist a thin line; mats better but flatter and redder than the picture, no pale slabs standing through.
 - eye-1: standing head now in frame but the group is larger and tighter than the picture; reflections still zigzag near the legs.
 - eye-05: about a second of plain dark water before the rest rings.
@@ -53,7 +53,7 @@ Nothing uses `stagedSeconds()` or `during()`. The head lift of the two animals a
 
 ## Cost, seconds a sample at 3840 x 2160, eye-0, draft tier
 
-Measured with `npm run -s cost -- --key eye-0 --format uhd --tier draft`: the whole frame 10.60 s (version 2 was 8.83 s; the aim is 7), an empty frame 1.76 s. Above the empty frame: land 2.53, lake 1.41, shallows 1.35, shaft 1.31, scree 1.12, mats 1.10, sky 0.34, stream 0.21, brow 0.17, skeleton 0.13, drinkers 0.10, riser 0.00 (not in this frame). The tool gave no line for air or mist.
+Measured with `npm run -s cost -- --key eye-0 --format uhd --tier draft`: the whole frame 10.72 s (version 2 was 8.83 s; the aim is 7), an empty frame 1.78 s. Above the empty frame: land 2.54, shallows 1.46, lake 1.23, shaft 1.20, mats 1.06, scree 0.95, sky 0.28, brow 0.15, drinkers 0.12, stream 0.09, skeleton 0.04, riser 0.00 (not in this frame). The tool gave no line for air or mist.
 No cheaper variant is kept behind a constant. The wind (12 noise reads a water pixel) and anisotropy 8 on `mat/shore` are the first things to cut.
 
 ## What I would do next, in order

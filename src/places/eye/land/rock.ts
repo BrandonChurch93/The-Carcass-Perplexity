@@ -42,9 +42,11 @@ Rock rockAt(vec3 p, vec3 n, float face) {
   float bearing = degrees(atan(p.x, -p.z));
   float wall = 1.0 - smoothstep(150.0, 165.0, abs(bearing)) * step(length(p.xz), 1100.0);
   if (wall < 0.5) {
-    vec2 side = abs(n.x) > abs(n.z) ? p.zy : p.xy;
-    ua = side / 53.0 + vec2(0.0, 0.4);
-    ub = side / 17.0 + vec2(0.37, 0.61);
+    // By the axis the rock faces most, at one scale each way, so that nothing is pulled long over a slope.
+    vec3 an = abs(n);
+    vec2 side = an.y > max(an.x, an.z) ? p.xz : an.x > an.z ? p.zy : p.xy;
+    ua = side / 23.0 + vec2(0.0, 0.4);
+    ub = side / 7.0 + vec2(0.37, 0.61);
   }
   vec2 ga = p.xz / 4.0;
   vec2 gb = p.xz / 21.0 + vec2(0.21, 0.63);
