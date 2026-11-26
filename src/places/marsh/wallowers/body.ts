@@ -93,7 +93,20 @@ varying vec3 vR0;
 varying vec3 vR1;
 varying vec3 vR2;
 varying float vRaise;
+varying vec2 vBlade;
 uniform vec4 uRaise;
+uniform vec4 uBlade;
+uniform vec2 uGirdle;
+// A bone that stands under the skin of the flank: a long plate from a up to b, wider at the top. Its height, and the slope of that height.
+vec3 plate(vec2 at, vec2 a, vec2 b, float amp) {
+  vec2 pa = at - a;
+  vec2 ba = b - a;
+  float h = clamp(dot(pa, ba) / dot(ba, ba), 0.0, 1.0);
+  vec2 dv = pa - ba * h;
+  float w = mix(0.11, 0.2, h);
+  float g = amp * exp(-dot(dv, dv) / (w * w));
+  return vec3(g, -2.0 * dv / (w * w) * g);
+}
 ${PIC_GLSL}
 // How far a bone of a leg has been lifted off the ground with its foot: the foot all the way, the leg above it less.
 float raised(float bone) {
@@ -122,10 +135,17 @@ void main() {
     vec2 uv = picAt(position, aInfo.z);
     // Not at the picture's outline, where its ground shows, and not under the trunk, where it is pulled out: there the folds stood out as a comb.
     float side = smoothstep(0.25, 0.6, abs(normal.z)) * smoothstep(0.8, 0.97, textureLod(tPicA, uv, 4.0).r) * mix(smoothstep(0.6, 0.95, position.y), smoothstep(0.45, 0.8, abs(normal.z)), aInfo.z);
-    float fine = dot(textureLod(tPic, uv, 1.0).rgb, vec3(0.3, 0.5, 0.2));
+    float fine = dot(textureLod(tPic, uv, 3.0).rgb, vec3(0.3, 0.5, 0.2));
     float wide = dot(textureLod(tPic, uv, 4.5).rgb, vec3(0.3, 0.5, 0.2));
     lift = clamp((fine - wide) / (wide + 0.03), -0.7, 0.5) * uDisp * side * (1.0 - aInfo.y);
   }
+  // The shoulder blade and the point of the hip: each rises under the hide as its leg takes the weight, and sinks as the leg is lifted.
+  float flank = smoothstep(0.25, 0.55, abs(normal.z)) * (1.0 - aInfo.z) * (1.0 - aInfo.y);
+  vec2 loads = position.z > 0.0 ? uBlade.zw : uBlade.xy;
+  vec3 fore = plate(position.xy, vec2(uGirdle.x + 0.2, 1.0), vec2(uGirdle.x - 0.14, 1.66), (0.02 + 0.085 * loads.y) * flank);
+  vec3 hind = plate(position.xy, vec2(uGirdle.y - 0.16, 1.0), vec2(uGirdle.y + 0.12, 1.6), (0.015 + 0.06 * loads.x) * flank);
+  lift += fore.x + hind.x;
+  vBlade = fore.yz + hind.yz;
   vec3 rest = position + normal * (lift + uBreath * aInfo.w);
   mat4 ma = uBones[int(aBones.x + 0.5)];
   mat4 mb = uBones[int(aBones.y + 0.5)];
@@ -177,6 +197,7 @@ uniform float uTile;
 uniform vec2 uTurned;
 uniform float uMud;
 varying float vRaise;
+varying vec2 vBlade;
 uniform float uTileGain;
 #ifdef CRUSTED
 uniform sampler2D tRime;
@@ -221,11 +242,13 @@ void main() {
   // Under the trunk the picture is pulled out into streaks: the tile takes over there.
   side *= mix(smoothstep(0.6, 0.95, vRest.y), 1.0, max(vInfo.z, uMudded));
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
-  vec3 pic = texture2D(tPic, uv, 1.7 * (1.0 - smoothstep(0.4, 0.8, uK))).rgb;
-  vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0);
-  float l0 = dot(textureLod(tPic, uv, 1.6).rgb, LUMA);
-  float lx = dot(textureLod(tPic, uv + vec2(e.x, 0.0), 1.6).rgb, LUMA);
-  float ly = dot(textureLod(tPic, uv + vec2(0.0, e.y), 1.6).rgb, LUMA);
+  // By the lens it is taken a little soft as well: its finest lines run all one way and read as a coat of hair.
+  vec3 pic = texture2D(tPic, uv, max(1.7 * (1.0 - smoothstep(0.4, 0.8, uK)), 2.4 * nearK)).rgb;
+  vec2 e = vec2(3.0 / 1774.0, 3.0 / 887.0) * (1.0 + 1.6 * nearK);
+  float foldLod = 1.6 + 1.4 * nearK;
+  float l0 = dot(textureLod(tPic, uv, foldLod).rgb, LUMA);
+  float lx = dot(textureLod(tPic, uv + vec2(e.x, 0.0), foldLod).rgb, LUMA);
+  float ly = dot(textureLod(tPic, uv + vec2(0.0, e.y), foldLod).rgb, LUMA);
   vec4 soft = vec4(textureLod(tPic, uv, 5.0).rgb, textureLod(tPicA, uv, 5.0).r);
   float y = vRest.y;
   vec3 plain = mix(vec3(0.15, 0.075, 0.055), vec3(0.19, 0.14, 0.115), smoothstep(0.45, 1.25, y));
@@ -246,7 +269,7 @@ void main() {
   float creased = uNear * (1.0 - horn) * mix(0.9, 0.5, uTile);
   albedo *= mix(1.0, mix(0.8, 1.1, ridge), creased);
   // And the picture's own creases are drawn harder than it has them.
-  albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), 0.7 * side * uNear);
+  albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), 0.6 * side * uNear * (1.0 - 0.6 * vInfo.z));
   // A warm tan with pink in it; the deep red is the mud's, lower down.
   albedo = mix(vec3(dot(albedo, LUMA)) * mix(mix(vec3(1.15, 0.95, 0.78), vec3(1.07, 0.97, 0.88), uTile), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
   // The head is the darkest of it: heavy, grey, and folded.
@@ -262,7 +285,8 @@ void main() {
   vec3 bump = w.x * vec3(0.0, sx.y, sx.x) + w.y * vec3(sy.x, 0.0, sy.y) + w.z * vec3(sz.x, sz.y, 0.0);
   vec2 slope = vec2(lx - l0, ly - l0) / (l0 + 0.04);
   // In the picture u runs from the muzzle back and v up.
-  bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * 1.5 * side;
+  bump += vec3(slope.x, -slope.y * (1.0 - top), slope.y * top * sign(vRest.z)) * 1.0 * side;
+  bump += vec3(vBlade, 0.0);
   #ifdef CRUSTED
   vec3 rq = q * RIME_SCALE;
   vec3 rx = texture2D(tRimeNh, rq.zy).rgb;
@@ -623,6 +647,8 @@ export class Beast {
         uSalt: { value: b.salt },
         uMudded: { value: look.mudded ?? 0 },
         uRaise: { value: new THREE.Vector4(0, 0, 0, 0) },
+        uBlade: { value: new THREE.Vector4(0, 0, 0, 0) },
+        uGirdle: { value: new THREE.Vector2((this.skeleton.ankle[1] as V3)[0] - 0.03, (this.skeleton.ankle[0] as V3)[0] - 0.03) },
         uTurned: { value: new THREE.Vector2(0, 0) },
         uMud: { value: -1e9 },
         uCrust: { value: look.crust ?? 0 },
@@ -753,6 +779,10 @@ export class Beast {
     (u.uBreath as THREE.IUniform<number>).value = 0.022 * d.breath;
     const lifts = d.feet as [number, number, number][];
     (u.uRaise as THREE.IUniform<THREE.Vector4>).value.set(d.acted * (lifts[0] as number[])[1]!, d.acted * (lifts[1] as number[])[1]!, d.acted * (lifts[2] as number[])[1]!, d.acted * (lifts[3] as number[])[1]!);
+    // How much of the weight each leg has: all of it while its fellow across the body is in the air, and more as the trunk leans over it.
+    const up = (l: number): number => Math.min(1, Math.max(0, (lifts[l] as number[])[1]! / (0.08 * k)));
+    const load = (l: number): number => (1 - up(l)) * Math.min(1, Math.max(0, 0.3 + 0.7 * up((l + 2) % 4) + (l < 2 ? -2 : 2) * (d.shift / k)));
+    (u.uBlade as THREE.IUniform<THREE.Vector4>).value.set(load(0), load(1), load(2), load(3));
     (u.uTurned as THREE.IUniform<THREE.Vector2>).value.set(d.acted > 0 && d.under !== 0 ? 1 : 0, d.under);
     (u.uMud as THREE.IUniform<number>).value = d.acted > 0 ? d.mud : -1e9;
     (u.uSeconds as THREE.IUniform<number>).value = seconds;
