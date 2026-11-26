@@ -3,6 +3,7 @@
 // holes are raised out of the blade in the vertex shader, and the light falls on its slopes turned into the world by the ring's own
 // frame (aAlong, aAcross): no screen derivative, so nothing hatches at a distance. The bone tile only breaks it up close.
 import { NOISE_GLSL, RIG_GLSL } from '../shared/glsl';
+import { openingText } from '../shared/opening';
 
 // The beds of a blade at a place: which course, how far up it (0 at its foot, 1 under the ledge that ends it), and how strong the ledge is there.
 const BEDDING = /* glsl */ `
@@ -256,3 +257,32 @@ void main() {
   lit += albedo * uSunColour * (0.3 * rim * rim * rim * back * back * sunAt(vWorld, landAt(vWorld.xz)) * occ);
   gl_FragColor = vec4(rigOut(lit), 1.0);
 }`;
+
+/**
+ * A blade in the approach, seen from a mile out in the cloud's shade: what breaks its face at that distance is drawn in. Slabs have come away
+ * and left paler stone, water has run down from the ledges and stained it, and each blade has its own (uOpenStone.y).
+ * It goes with the distance (nothing of it within 300 m of the lens, where the stone's own sheet is seen) and is gone before the approach ends.
+ */
+export const FIN_OPENING_FRAGMENT = openingText(FIN_FRAGMENT, [
+  ['uniform float uCap;', 'uniform float uCap;\nuniform vec2 uOpenStone;'],
+  [
+    '  float y = vWorld.y;',
+    `  float openK = uOpenStone.x * smoothstep(300.0, 850.0, length(cameraPosition - vWorld));
+  if (openK > 0.0) {
+    float sd = uOpenStone.y;
+    vec2 face = vec2(mix(vBlade.w, vBlade.z, edge), vWorld.y);
+    float slab = vnoise(face * vec2(0.012, 0.019) + sd * 3.7) * 0.62 + vnoise(face * vec2(0.04, 0.075) + sd * 9.1) * 0.38;
+    float cutAt = 0.5 + 0.09 * fract(sd * 7.31);
+    // A slab's edge is broken, never a drawn line: the finer field carries it in and out.
+    float broken = vnoise(face * vec2(0.19, 0.23) + sd) - 0.5;
+    float plate = smoothstep(cutAt - 0.05, cutAt + 0.07, slab + 0.11 * broken);
+    float run = vnoise(vec2(face.x * 0.13 + sd * 5.0, face.y * 0.0045)) * 0.7 + vnoise(vec2(face.x * 0.41, face.y * 0.012 + sd)) * 0.3;
+    float stain = smoothstep(0.5, 0.8, run + 0.2 * broken) * smoothstep(0.35, 0.6, vnoise(face * 0.006 + sd * 2.0));
+    albedo *= mix(1.0, mix(0.88, 1.2, plate), openK);
+    albedo *= mix(vec3(1.0), vec3(0.6, 0.62, 0.65), 0.5 * openK * stain * (1.0 - 0.5 * plate));
+    // The wet foot: dark far above the weed where the swell throws its water, higher on the weather side.
+    albedo *= mix(1.0, 0.5, openK * smoothstep(95.0 + 70.0 * (slab - 0.5), 20.0, vWorld.y));
+  }
+  float y = vWorld.y;`,
+  ],
+]);

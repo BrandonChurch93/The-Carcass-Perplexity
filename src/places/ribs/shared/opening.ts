@@ -35,3 +35,13 @@ export function cloudShut(seconds: number): number {
 export function openingWeight(seconds: number): number {
   return inOpening() ? 1 - smooth(0, OPENING_END, seconds) : 0;
 }
+
+/** A shader of the approach alone: the film's text with pieces of it swapped. The film's own text is not touched, and is what every later frame is drawn with. */
+export function openingText(film: string, swaps: readonly (readonly [string, string])[]): string {
+  let text = film;
+  for (const [from, to] of swaps) {
+    if (!text.includes(from)) throw new Error(`The approach's shader has no piece "${from}"`);
+    text = text.split(from).join(to);
+  }
+  return text;
+}
