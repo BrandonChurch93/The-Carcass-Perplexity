@@ -296,7 +296,7 @@ void main() {
   vec3 r2 = cross(n, px);
   float det = dot(px, r1);
   vec3 slope = (r1 * dFdx(relief) + r2 * dFdy(relief)) * (sign(det) / max(abs(det), 1e-7));
-  n = normalize(n - (1.0 - far) * 0.22 * slope / (1.0 + 0.5 * length(slope)));
+  n = normalize(n - (1.0 - far) * 0.12 * slope / (1.0 + 0.5 * length(slope)));
   float nv = clamp(dot(n, toCamera), 0.0, 1.0);
 
   // How many skins thick it is: thin where it is stretched over a belly, a body where it is gathered at the knot, at its lip, along a
@@ -322,22 +322,24 @@ void main() {
   }
   // The film's own colour: lilac grey, with the sheet's stains of rose, violet and gold about its mean.
   vec3 stain = mix(vec3(1.0), clamp(pic / SKIN_MEAN, 0.5, 1.8), uFilm.z);
-  vec3 body = vec3(0.46, 0.52, 1.0) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
-  // What it scatters: the light on its near face, and the light on its far one coming through, most where it is thin.
-  float through = exp(-0.55 * path);
-  vec3 c = body * uFilm.x * (onNear * (0.55 + 0.25 * (1.0 - through)) + onFar * (0.35 + 0.75 * through)) * cover;
+  vec3 body = vec3(0.7, 0.74, 1.0) * stain * mix(vec3(1.0), vec3(0.62, 0.56, 0.84), uVeil);
+  // What it scatters: a pale haze of the light on its two faces, a little even where it is thinnest, so that it stands pale before a
+  // dark sky and the sky is still seen through it.
+  float thin = 0.8 * uFilm.y;
+  float haze = cut * (thin + (1.0 - thin) * (1.0 - exp(-0.8 * path)));
+  vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
+  vec3 key = skyIrradiance(above) / 3.14159;
+  vec3 c = body * (uFilm.x * (0.55 * onNear + 0.75 * onFar) * haze + 0.25 * key * lip * cut);
 
   // Wet: it gives the sky back, more aslant, and the colours of a thin film slide over it as it turns.
-  float fres = 0.04 + 0.96 * pow(1.0 - nv, 5.0);
+  float fres = 0.07 + 0.93 * pow(1.0 - nv, 4.0);
   vec3 r = reflect(-toCamera, n);
   vec3 mirror = skyRadiance(normalize(r));
   float film = 0.9 * relief + 1.2 * drift + 1.5 * (1.0 - nv) + seed;
   vec3 tints = 0.5 + 0.5 * cos(6.2832 * (film + vec3(0.0, 0.3333, 0.6667)));
   vec3 pearl = mix(vec3(1.0), 0.45 + 1.1 * (vec3(0.62, 0.42, 1.0) * tints.x + vec3(1.0, 0.52, 0.74) * tints.y + vec3(1.0, 0.82, 0.55) * tints.z) / (tints.x + tints.y + tints.z), uFilm.z);
-  vec3 above = normalize(vec3(-0.45, 0.72, 0.5));
   float ndh = clamp(dot(n, normalize(above + toCamera)), 0.0, 1.0);
-  // The brightest of the sky on a wet skin: a broad soft light down every fold that turns to it.
-  vec3 key = skyIrradiance(above) / 3.14159;
+  // The brightest of the sky on a wet skin: a soft light down every fold that turns to it.
   vec3 shine = uFilm.w * pearl * mix(vec3(1.0), vec3(0.7, 0.62, 1.0), uVeil) * (mirror * fres * (1.0 + 2.0 * lip) + key * vec3(0.8, 0.72, 1.0) * (1.6 * pow(ndh, 40.0) + 0.07 * pow(ndh, 6.0)) * (1.0 - 0.5 * far)) * cut;
   float alpha = clamp(cover + fres * uFilm.w * cut * (1.0 - cover), 0.0, 1.0);
   gl_FragColor = vec4(rigOut(c + shine), alpha * (1.0 - uSolo));
@@ -470,6 +472,62 @@ void main() {
   gl_FragColor = vec4(rigOut(c), 1.0);
 }`;
 
+// The holdfast: a knot of husks where a cord goes into the rock, each a blunt body with its scales in rows, dark, and rimed where it
+// looks up or into the gale.
+const POD_VERTEX = /* glsl */ `
+${KITE_GLSL}
+// x: metres down the cord, y: the angle round it, z: how far off it, w: the husk's length.
+attribute vec4 aPod;
+// How much it points down the cord, out from it and at the ground; its seed.
+attribute vec4 aAxis;
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec3 vPod;
+void main() {
+  if (!kiteSet()) {
+    gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+    return;
+  }
+  vec3 on = kiteCentre(aPod.x);
+  vec3 tangent = normalize(kiteCentre(aPod.x + 0.2) - kiteCentre(aPod.x - 0.2));
+  vec3 beside = normalize(cross(tangent, vec3(0.0, 1.0, 0.0)));
+  vec3 over = cross(beside, tangent);
+  // It grows out of the cord: out from it, down its length and a little toward the ground.
+  vec3 spoke = beside * cos(aPod.y) + over * sin(aPod.y);
+  vec3 axis = normalize(tangent * aAxis.x + spoke * aAxis.y - vec3(0.0, aAxis.z, 0.0));
+  vec3 u = normalize(cross(axis, vec3(0.0, 1.0, 0.0) + 0.3 * axis.yzx));
+  vec3 w = cross(axis, u);
+  float y = position.y;
+  float turn = atan(position.z, position.x);
+  // Blunt at its root, widest a third of the way along, drawn out to a point; the scales stand out of it.
+  float t = 0.5 + 0.5 * y;
+  float girth = 0.36 * (1.0 - 0.5 * t) * (1.0 + 0.13 * sin(turn * 5.0 + y * 4.0 + aAxis.w * 20.0) * sin(y * 9.0 + aAxis.w * 7.0));
+  vec3 centre = on + spoke * aPod.z + axis * (0.4 * aPod.w);
+  vec3 p = centre + aPod.w * (axis * (0.5 * y) + (u * position.x + w * position.z) * girth);
+  vWorld = p;
+  vNormal = normalize(axis * (position.y * 0.5) + (u * position.x + w * position.z) * 1.6);
+  vPod = vec3(y, turn, aAxis.w);
+  gl_Position = projectionMatrix * viewMatrix * vec4(p, 1.0);
+}`;
+
+const POD_FRAGMENT = /* glsl */ `
+${RIG_GLSL}
+${NOISE_GLSL}
+varying vec3 vWorld;
+varying vec3 vNormal;
+varying vec3 vPod;
+void main() {
+  vec3 toCamera = normalize(cameraPosition - vWorld);
+  vec3 n = normalize(vNormal);
+  float seed = vPod.z * 97.0;
+  float rows = smoothstep(-0.2, 0.9, sin(vPod.x * 9.0 + 1.2 * sin(vPod.y * 5.0 + seed)));
+  float grain = vnoise(vec2(vPod.y * 4.0 + seed, vPod.x * 9.0));
+  vec3 husk = mix(vec3(0.012, 0.009, 0.009), vec3(0.06, 0.042, 0.036), grain * (0.55 + 0.45 * rows));
+  float rime = smoothstep(0.55, 0.9, 0.7 * n.y - 0.3 * dot(n, normalize(uWind.xyz)) + 0.5 * grain + 0.15 * rows);
+  vec3 c = rigShade(vWorld, n, toCamera, mix(husk, vec3(0.62, 0.66, 0.74), rime), mix(0.85, 0.95, rime), 0.6 + 0.4 * rows);
+  gl_FragColor = vec4(rigOut(c), 1.0);
+}`;
+
 export function create(ctx: Context): Piece {
   const rng = ctx.rng('kites');
   const kites: Kite[] = [];
@@ -478,7 +536,8 @@ export function create(ctx: Context): Piece {
   const axes = finAxes(spires[FIRST] as (typeof spires)[number]);
   const lensSide = (stand[0] - kiteEdge[0]) * axes.bx + (stand[2] - kiteEdge[2]) * axes.bz > 0 ? 1 : -1;
   // A holdfast sits in the rock of the spire's lee edge, on the face `across` says (in shares of the fin's thickness): the fin's section
-  // is a rounded one, so off its middle line the edge stands a little back.
+  // is a rounded one, so off its middle line the edge stands a little back. The built rock stands some metres in or out of the fin's
+  // smooth body, so the cord and its knot of husks start inside it.
   const seat = (sp: (typeof spires)[number], t: number, across: number): Vec3 => finEdge(sp, t, 0.97 * Math.cbrt(1 - Math.abs(across) ** 3), across);
   spires.forEach((sp, n) => {
     const near = n === FIRST;
@@ -489,7 +548,8 @@ export function create(ctx: Context): Piece {
         // A colony is a few kites of one holdfast: one long, the rest shorter, none alike.
         const length = (i === 0 ? rng.range(190, 260) : rng.range(70, 170)) * reach;
         const at = t + (i - (count - 1) / 2) * 0.006;
-        const anchor = seat(sp, at, near ? lensSide * rng.range(0.5, 0.57) : rng.range(-0.25, 0.25));
+        const across = near ? lensSide * rng.range(0.7, 0.78) : rng.range(-0.25, 0.25);
+        const anchor = seat(sp, at, across);
         const half = near ? (i === 0 ? rng.range(4.6, 6.4) : rng.range(2.6, 4.2)) : rng.range(10, 15) * (i === 0 ? 1 : 0.75);
         const waves = rng.range(1.25, 2.1);
         const sag = rng.range(0.05, 0.13);
@@ -501,8 +561,10 @@ export function create(ctx: Context): Piece {
       const bare = n === FIRST + 2 ? 3 : near ? 2 : 0;
       for (let i = 0; i < bare; i++) {
         const length = threads.range(60, 190) * reach;
+        const at = t + threads.range(-0.008, 0.008);
+        const across = near ? lensSide * threads.range(0.7, 0.78) : threads.range(-0.25, 0.25);
         kites.push({
-          anchor: seat(sp, t + threads.range(-0.008, 0.008), near ? lensSide * threads.range(0.5, 0.57) : threads.range(-0.25, 0.25)),
+          anchor: seat(sp, at, across),
           cord: 0.12 * length,
           blade: 0.88 * length,
           half: -1,
@@ -641,9 +703,52 @@ export function create(ctx: Context): Piece {
   const iceMesh = new THREE.Mesh(iceGeometry, new THREE.ShaderMaterial({ vertexShader: ICE_VERTEX, fragmentShader: ICE_FRAGMENT, uniforms: shared, side: THREE.DoubleSide }));
   iceMesh.frustumCulled = false;
 
-  ctx.scene.add(ctx.parts.built('tether-kites', bladeMesh, cordMesh, iceMesh));
+  // The husks: a few round each cord where it leaves the rock, strung a little way down the wind's line so that the rock, whose face
+  // is not the layout's, always has some of them standing out of it.
+  const ball = new THREE.SphereGeometry(1, 12, 9);
+  const podGeometry = new THREE.InstancedBufferGeometry();
+  podGeometry.index = ball.index;
+  podGeometry.setAttribute('position', ball.getAttribute('position'));
+  const husks = ctx.rng('kites/husks');
+  const flat = Math.hypot(WIND[0], WIND[2]);
+  const down: Vec3 = [WIND[0] / flat, 0, WIND[2] / flat];
+  const beside: Vec3 = [down[2], 0, -down[0]];
+  const pods: number[] = [];
+  const podAxes: number[] = [];
+  // They grow on the cord's root in one knot, packed, most of them where it comes out of the rock and fewer and smaller down its first
+  // metres: wherever the rock ends, the ones at its face are the ones seen.
+  const podAnchor: number[] = [];
+  const podSize: number[] = [];
+  const podSeed: number[] = [];
+  const podLead: number[] = [];
+  kites.forEach((k, nth) => {
+    const big = k.spire === 1 ? 1 : 1.7;
+    const many = k.half > 0 ? 13 : 5;
+    for (let i = 0; i < many; i++) {
+      const d = -2 + 6 * husks.next() ** 1.5;
+      const small = 1 - 0.5 * Math.min(1, Math.max(0, (d - 1.5) / 2.5));
+      pods.push(d * big, husks.range(0, 2 * Math.PI), husks.range(0.05, 0.3) * big * small, husks.range(1.2, 2.2) * big * small);
+      podAxes.push(husks.range(0.2, 1), husks.range(0.5, 1.1), husks.range(0.1, 0.9), husks.next() + nth * 0.01);
+      podAnchor.push(k.anchor[0], k.anchor[1], k.anchor[2]);
+      podSize.push(k.cord, k.blade, k.half, k.wave);
+      podSeed.push(k.phase, k.seed, k.spire, k.sag);
+      podLead.push(k.lead ? 1 : 0);
+    }
+  });
+  podGeometry.setAttribute('aAnchor', new THREE.InstancedBufferAttribute(new Float32Array(podAnchor), 3));
+  podGeometry.setAttribute('aSize', new THREE.InstancedBufferAttribute(new Float32Array(podSize), 4));
+  podGeometry.setAttribute('aSeed', new THREE.InstancedBufferAttribute(new Float32Array(podSeed), 4));
+  podGeometry.setAttribute('aLead', new THREE.InstancedBufferAttribute(new Float32Array(podLead), 1));
+  podGeometry.setAttribute('aPod', new THREE.InstancedBufferAttribute(new Float32Array(pods), 4));
+  podGeometry.setAttribute('aAxis', new THREE.InstancedBufferAttribute(new Float32Array(podAxes), 4));
+  podGeometry.instanceCount = pods.length / 4;
+  const podMesh = new THREE.Mesh(podGeometry, new THREE.ShaderMaterial({ vertexShader: POD_VERTEX, fragmentShader: POD_FRAGMENT, uniforms: shared }));
+  podMesh.frustumCulled = false;
+
+  ctx.scene.add(ctx.parts.built('tether-kites', bladeMesh, cordMesh, iceMesh, podMesh));
   ctx.scene.add(cordMesh);
   ctx.scene.add(iceMesh);
+  ctx.scene.add(podMesh);
 
   const size = new THREE.Vector2();
   let height = 0;
@@ -656,15 +761,15 @@ export function create(ctx: Context): Piece {
       // spine-01, the wide lens from far down the ridge: the first spire's kites broader, its bare threads not drawn.
       const inWide = stagedSeconds() >= wideShot.from && stagedSeconds() <= wideShot.to;
       if (inStrike) stage.set(0.17, 0.32, 0.45, 3);
-      else if (inClose) stage.set(0.4, 0.42, 2.2, 1);
-      else if (inWide) stage.set(1, 1.6, 1, 1);
+      else if (inClose) stage.set(0.46, 0.34, 2.2, 1);
+      else if (inWide) stage.set(1.25, 1.15, 1, 1);
       else stage.set(1, 1, 1, 0);
       stageMore.set(inStrike ? 1 : 0, inClose ? 0.1 : 0, inStrike ? 0.55 : inWide ? 1 : inClose ? 0.85 : 0, inStrike ? 1.5 : 1);
       fly.set(inWide && !inStrike ? 1 : 0, inClose && !inStrike ? 1 : 0);
       // Seen close the skin is thin and shows its colours; far off it is more of a body.
-      if (inStrike) film.set(0.12, 0.45, 0.5, 1.4);
-      else if (inClose) film.set(0.2, 0.34, 0.75, 1.0);
-      else film.set(0.24, 0.6, 0.4, 0.9);
+      if (inStrike) film.set(0.3, 0.4, 0.5, 1.4);
+      else if (inClose) film.set(0.2, 0.13, 0.9, 0.6);
+      else film.set(0.5, 0.5, 0.4, 1.0);
       veil.value = inStrike ? 1 : 0;
       const flash = flashAt(seconds);
       // The stroke as it burns and nothing after it: between the return strokes the kites are dark.
