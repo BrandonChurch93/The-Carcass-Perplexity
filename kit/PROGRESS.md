@@ -24,27 +24,27 @@ The Builder's memory. Read it at the start of every task and after every compact
 
 The pictures of the newest status, with their captions and the time. Files are in `out/stills/status/`.
 
-Status 84, 2026-11-26 01:50 UTC:
+Status 85, 2026-11-26 02:18 UTC:
 
-- `01-a-seam1.jpg`: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right
-- `02-a-joined-small.jpg`: 2 · The larger map of the whole body, reduced (4096 x 2305, joined from nine windows)
-- `03-look-1.jpg`: 3 · The Blood Marsh, wave 2 at minute 33: the wallower as one skin beside the approved picture (head, young ones and wet line still open)
-- `04-look-1.jpg`: 4 · The Reveal, wave 2: the last frame on the first maps beside the approved picture (lowlands too dark, bones too white, both sent back)
+- `01-reveal-4.jpg`: The Reveal from orbit, version 1 of wave 2. Approved left, the build right, crops below
+- `02-eye-1.jpg`: The Eye, the drinkers, restaged further off. Approved left, the build right
+- `03-ribs-2.jpg`: The Ribs, the kite-wings feeding. Approved left, the build right
+- `04-marsh-3.jpg`: The Blood Marsh, the wallowers. Approved left, the build right, crops below
 
+Status 84, 2026-11-26 01:50 UTC, showed: 1 · The Reveal's map of the whole body, one spot at native size: the 1672 px parent on the left, the larger copy on the right; 2 · The...
 Status 83, 2026-11-26 01:34 UTC, showed: Working pictures for the owners, first sheet: far backplates, scenery and animals on black.
 Status 82, 2026-11-26 01:11 UTC, showed: The Reveal's new ground, kept set.
-Status 81, 2026-11-26 00:51 UTC, showed: The Reveal's new ground. Top: the new satellite map with the bones traced from the approved picture drawn on it in magenta.
 
 ## Clock
 
 Copied from the last tick of `npm run clock`.
 
 ```
-2026-11-26T01:50:38Z
-phase 4: 5.67 h used of 17.00 h
-build: 25.99 h used of 72.00 h
+2026-11-26T02:18:00Z
+phase 4: 6.12 h used of 17.00 h
+build: 26.44 h used of 72.00 h
 extra rounds: yes
-minutes since the last status: 16
+minutes since the last status: 27
 ```
 
 ## Phases
