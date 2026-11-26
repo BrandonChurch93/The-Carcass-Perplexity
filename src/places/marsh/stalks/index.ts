@@ -248,15 +248,15 @@ export function create(ctx: Context): Piece {
       };
       if (style === 0) {
         const n = 4 + wild.int(3);
-        const droop = wild.range(-0.25, 0.5);
-        for (let k = 0; k < n; k++) card(k, n, droop + wild.range(-0.3, 0.45), wild.range(0.95, 1.6), 0, wild.next() < 0.3 ? wild.range(0.2, 0.5) : 0, 0);
-        if (wild.next() < 0.6) card(0.5, n, wild.range(-0.2, 0.2), wild.range(0.7, 1.05), 1, 0, 0);
+        const droop = wild.range(0.1, 0.65);
+        for (let k = 0; k < n; k++) card(k, n, droop + wild.range(-0.3, 0.4), wild.range(0.75, 1.25), 0, wild.next() < 0.3 ? wild.range(0.2, 0.5) : 0, 0);
+        if (wild.next() < 0.35) card(0.5, n, wild.range(-0.2, 0.2), wild.range(0.5, 0.75), 1, 0, 0);
       } else if (style === 1) {
         const n = 1 + wild.int(3);
-        for (let k = 0; k < n; k++) card(k, n, wild.range(-0.2, 1.1), wild.range(0.7, 1.35), 0, wild.range(0.5, 1), wild.next() < 0.4 ? wild.range(0.3, 0.8) : 0);
+        for (let k = 0; k < n; k++) card(k, n, wild.range(0, 1.1), wild.range(0.6, 1.1), 0, wild.range(0.5, 1), wild.next() < 0.4 ? wild.range(0.3, 0.8) : 0);
       } else if (style === 2) {
         const n = 2 + wild.int(2);
-        for (let k = 0; k < n; k++) card(k, n, wild.range(1.5, 2.25), wild.range(0.6, 1.15), 0, wild.range(0.2, 0.8), wild.range(0.75, 1));
+        for (let k = 0; k < n; k++) card(k, n, wild.range(1.6, 2.3), wild.range(0.4, 0.75), 0, wild.range(0.2, 0.8), wild.range(0.75, 1));
       } else if (style === 3) {
         const n = 1 + wild.int(2);
         for (let k = 0; k < n; k++) card(k, n, wild.range(-0.25, 0.25), wild.range(0.5, 0.85), 1, 0, 0);
@@ -269,6 +269,8 @@ export function create(ctx: Context): Piece {
         card(0.5, n, wild.range(-0.2, 0.2), wild.range(0.6, 0.9), 1, 0, 0);
       }
     };
+    // A short stalk carries a small head: the head is as wide as the trunk is thick, and no wider than the stalk can hold up.
+    const headFor = (tall: number): number => Math.pow(Math.min(1.1, Math.max(0.12, tall / 2.6)), 0.9);
     const headOf = (kind: number): number => {
       if (kind === 1) return 4;
       if (kind === 3) return 5;
@@ -285,9 +287,9 @@ export function create(ctx: Context): Piece {
       const lowly = low.has(s);
       // Seedling to old giant. The ones a key's lens stands by keep their height, give or take a little.
       const cls = wild.next();
-      const grow = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.14 ? wild.range(1.3, 1.75) : cls < 0.6 ? wild.range(0.85, 1.2) : cls < 0.86 ? wild.range(0.55, 0.8) : wild.range(0.28, 0.5);
+      const grow = anchored || lowly ? wild.range(0.86, 1.14) : cls < 0.15 ? wild.range(1.25, 1.65) : cls < 0.7 ? wild.range(0.85, 1.2) : cls < 0.9 ? wild.range(0.55, 0.8) : wild.range(0.3, 0.5);
       const tall = s.h * (0.45 + 0.75 * r1) * grow;
-      const girth = Math.pow(grow, 0.6) * wild.range(0.85, 1.2);
+      const girth = Math.pow(grow, 0.5) * wild.range(0.95, 1.35);
       const R = (s.h > 2.6 ? 0.09 : 0.07) * s.size * r3 * girth;
       const leaner = !anchored && wild.next() < 0.14 ? wild.range(0.2, 0.5) : 0;
       const kinked = wild.next() < 0.34;
@@ -301,7 +303,7 @@ export function create(ctx: Context): Piece {
         fork: [0, 0, 0], collar: wild.range(0.7, 1.6), cards: [], foot: true,
       };
       wilds.push(w);
-      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * Math.min(1.15, Math.pow(grow, 0.3)));
+      if (s.kind !== 2) dress(w, headOf(s.kind), (0.8 + 0.35 * wild.next()) * headFor(tall));
       // A fork: a second trunk that leaves this one part of the way up, goes out and turns up.
       if (!lowly && tall > 1.5 && wild.next() < 0.2) {
         const t0 = wild.range(0.28, 0.66);
@@ -315,9 +317,31 @@ export function create(ctx: Context): Piece {
           age: kind === 2 ? 2 : w.age, stain: 0.02, uvo: wild.range(0, 2), fork: [at[0] - w.x, at[1] - w.y, at[2] - w.z], collar: 0, cards: [], foot: false,
         };
         wilds.push(f);
-        if (kind !== 2) dress(f, headOf(kind), wild.range(0.55, 0.85));
+        if (kind !== 2) dress(f, headOf(kind), wild.range(0.7, 1) * headFor(f.h));
       }
       if (anchored) return;
+      // Dense cores: more trunks from nearly the same foot, splayed out from it.
+      if (!lowly && grow > 0.8 && wild.next() < 0.42) {
+        const n = 1 + wild.int(4);
+        for (let k = 0; k < n; k++) {
+          const a = wild.range(0, TAU);
+          const d = wild.range(0.1, 0.55);
+          const x = s.x + Math.cos(a) * d;
+          const z = s.z + Math.sin(a) * d;
+          const h = tall * wild.range(0.4, 1.1);
+          const kind = wild.next() < 0.12 ? 2 : wild.next() < 0.2 ? 3 : 0;
+          const kinks = wild.next() < 0.3;
+          const b: Wild = {
+            x, y: levelAt(x, z), z, h, dx: Math.cos(a), dz: Math.sin(a), lean: wild.range(0.04, 0.4), R: R * wild.range(0.6, 1) * Math.pow(h / tall, 0.4),
+            kind, phase: wild.range(0, TAU), low: 0, seed: wild.next(),
+            bowA: wild.range(0, TAU), bowM: wild.range(0.03, 0.2), kinkT: kinks ? wild.range(0.25, 0.8) : 2, kinkM: kinks ? wild.range(0.12, 0.45) : 0,
+            swayA: wild.range(0, TAU), swayM: wild.next() < 0.5 ? wild.range(0.02, 0.08) : wild.range(0, 0.02), kinkA: wild.range(0, TAU), rate: wild.range(0.7, 1.6) / Math.sqrt(Math.max(h, 0.6) / 2.5),
+            age: kind === 2 ? 2 : wild.range(0, 0.8), stain: wild.range(0.12, 1.1), uvo: wild.range(0, 2), quiver: 1, fork: [0, 0, 0], collar: wild.range(0.7, 1.6), cards: [], foot: true,
+          };
+          wilds.push(b);
+          if (kind !== 2) dress(b, headOf(kind), (0.8 + 0.35 * wild.next()) * headFor(h));
+        }
+      }
       // The young stand in the lee of the old.
       if (tall > 2 && wild.next() < 0.6) {
         const n = 1 + wild.int(5);
@@ -338,7 +362,7 @@ export function create(ctx: Context): Piece {
             age: wild.range(0, 0.25), stain: wild.range(0.04, 0.2), uvo: wild.range(0, 2), quiver: 1.6, fork: [0, 0, 0], collar: wild.range(0.4, 1), cards: [], foot: true,
           };
           wilds.push(y);
-          dress(y, kind === 1 ? 4 : 3, wild.range(0.7, 1.1));
+          dress(y, kind === 1 ? 4 : 3, wild.range(0.8, 1.2) * headFor(h) * 2);
         }
       }
       // And the dead lie where they fell, half in the brine.

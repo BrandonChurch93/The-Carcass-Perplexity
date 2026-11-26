@@ -232,7 +232,7 @@ ${HEAD_CUT}
   float own = fract(vUv.w * 13.3);
   albedo *= mix(vec3(0.78, 0.8, 0.86), vec3(1.2, 1.0, 0.92), own);
   float spent = vHead.y;
-  albedo = mix(albedo, vec3(0.2, 0.125, 0.085) * (0.25 + 1.1 * smoothstep(0.02, 0.6, luma)), spent);
+  albedo = mix(albedo, mix(vec3(0.12, 0.06, 0.048), vec3(0.19, 0.125, 0.09), own) * (0.25 + 1.1 * smoothstep(0.02, 0.6, luma)), spent);
   float out_ = (vUv.x - mix(0.3, 0.5, vUv.z)) * 1.4;
   vec3 n = normalize(vRight * out_ + vec3(0.0, 0.5, 0.0) + v * 0.7);
   // Dark at the heart of it, where the straps stand close.
