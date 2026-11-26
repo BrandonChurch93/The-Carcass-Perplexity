@@ -1,7 +1,7 @@
-2026-11-26 16:38 UTC
-work at 52840b6 on agent/ribs-drowned
-v1: body in depth along the key's sight lines, thrown shade, swing; wide view still to do
-look-1.jpg = out/work/sheet-drowned.jpg
-look-2.jpg = out/work/v1-wide.jpg
-look-3.jpg = out/work/v1-2081.jpg
-look-4.jpg = out/work/v1-2081-crop.jpg
+2026-11-26 17:17 UTC
+work at 1fa86b3 on agent/ribs-drowned
+v2 at 1fa86b3: hung pose from the hook, stain, weed bands, wet run; main merged in; guards 4409 10027 1759 equal
+look-1.jpg = out/work/v2-wide.jpg
+look-2.jpg = out/work/sheet-drowned.jpg
+look-3.jpg = out/work/v2-2081-crop.jpg
+look-4.jpg = out/work/v2-crops-final.jpg
