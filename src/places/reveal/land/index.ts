@@ -241,7 +241,8 @@ void main() {
   // How many pixels of the frame one texel of the map covers: past one, the map is soft and the ground photographs carry the detail.
   float enlarged = texel / max(pixelKm, 1e-5);
   // (A worn province has lost the map's relief: the ground photographs give it its own, finer and of another kind.)
-  float detail = max(smoothstep(0.9, 2.0, enlarged), worn);
+  // (And near the ground the photographs are laid wherever the camera looks: the map is soft at its own size.)
+  float detail = max(max(smoothstep(0.9, 2.0, enlarged), worn), 0.8 * (1.0 - smoothstep(200.0, 450.0, uViewKm)));
 
   // ---- the ground photographs under the map ----
   // Each is laid by world position at the size at which one of its texels is about a pixel, in octaves of its real size and cross-faded
@@ -294,7 +295,7 @@ void main() {
         tileLit = mix(1.0, mix(litA, litB, share), marched * detail * land * (0.5 + 0.5 * high));
       }
       vec2 small = mix(vec2(a1.x, a1.y) * turnA, vec2(a2.x, a2.y) * turnB, share);
-      slope += small * mix(0.62, 1.5, smoothstep(150.0, 260.0, uViewKm) * (1.0 - smoothstep(600.0, 900.0, uViewKm))) * detail * land * (0.4 + 0.6 * high);
+      slope += small * mix(mix(1.15, 0.62, smoothstep(90.0, 150.0, uViewKm)), 1.5, smoothstep(150.0, 260.0, uViewKm) * (1.0 - smoothstep(600.0, 900.0, uViewKm))) * detail * land * (0.4 + 0.6 * high);
     } else {
       // Under shallow water: bars, channels and silt.
       vec3 ofShelf = mix(texture2D(uMatShelf, pa * 0.5).rgb, texture2D(uMatShelf, pb * 0.5).rgb, share) / vec3(0.055, 0.159, 0.148);
@@ -823,10 +824,19 @@ void main() {
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
   water += uSkyColour * 0.006 * max(sparkle - 0.7, 0.0) * ruffle;
   // (Near its middle the sea is one sheet of light; out in the skirt the wind lanes and slicks of the surface show in it.)
-  vec3 glare = uSunColour * mix(vec3(0.86, 0.93, 1.0), vec3(1.0, 0.87, 0.74), smoothstep(0.03, 0.5, glint)) * mix(0.25, 0.4, smoothstep(0.25, 0.7, glint)) * glint * (0.9 + 0.2 * calm);
+  vec3 glare = uSunColour * mix(mix(vec3(0.86, 0.93, 1.0), vec3(1.0, 0.84, 0.6), smoothstep(700.0, 1300.0, uViewKm)), vec3(1.0, 0.9, 0.78), smoothstep(0.03, 0.5, glint)) * mix(0.25, 0.4, smoothstep(0.25, 0.7, glint)) * glint * (0.9 + 0.2 * calm);
   vec3 waterSky = water;
   if (uDusk > 0.0) glare *= sunTint(max(uSunDir.y, 0.0)) * uCalm.z;
-  water += glare * (0.35 + 0.65 * shade) * mix(0.4 + 0.6 * sparkle, 0.5 + 0.5 * sparkle, glint);
+  // (From orbit no wave is seen in the sun's image: it is smooth, and what breaks it is slicks of calm water, darker, and the
+  // long lanes of the wind.)
+  float surface = mix(0.4 + 0.6 * sparkle, 0.5 + 0.5 * sparkle, glint);
+  float fromOrbit = smoothstep(500.0, 1100.0, uViewKm);
+  if (fromOrbit > 0.0 && glint > 0.004 && land < 1.0) {
+    vec2 lane = mat2(0.86, 0.5, -0.5, 0.86) * (xz + uTime * vec2(2.0, 0.7)) / vec2(420.0, 70.0);
+    float slicks = mix(0.62, 1.06, smoothstep(0.3, 0.62, calm)) * (0.86 + 0.28 * vnoise(lane)) * (0.92 + 0.16 * vnoise(xz / 37.0 + 11.0));
+    surface = mix(surface, slicks, fromOrbit);
+  }
+  water += glare * (0.35 + 0.65 * shade) * surface;
   vec3 waterGlare = water;
 
   // (From orbit the sea is seen through the blue of the air over it.)
