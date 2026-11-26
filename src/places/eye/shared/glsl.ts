@@ -179,6 +179,11 @@ vec3 farRadiance(vec3 ro, vec3 rd, float bias) {
     plate = 0.4 * plate + 0.3 * uPlateTone.rgb * (ungrade(texture2D(tPlate, vec2(u + 0.005, clamp(vv + 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb)
       + ungrade(texture2D(tPlate, vec2(u - 0.005, clamp(vv - 0.035, 0.004, 0.996)), bias + 3.2 + 2.5 * over).rgb));
   }
+  // Seen from high on the rim the sky of the picture is the pale sky of the hour, more silver than blue, in the air and in the water alike.
+  if (uPlateTone.w < 1.5) {
+    float paler = smoothstep(0.0, 0.25, (plate.b - plate.r) / max(plate.b, 1e-3)) * smoothstep(8.0, 40.0, cameraPosition.y);
+    plate = mix(plate, dot(plate, vec3(0.3, 0.5, 0.2)) * vec3(1.04, 1.05, 1.1), 0.6 * paler);
+  }
   // The sky of the picture itself, in a mirror, is the low warm sky: water that is never quite still gives back less of the blue overhead.
   if (bias > 0.0) {
     // That is how a low eye sees it. An eye that stands high over the water looks down into the mirror and finds the sky overhead in it.
