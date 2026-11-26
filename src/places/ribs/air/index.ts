@@ -7,6 +7,7 @@ import { WIND, shotSpan } from '../shared/anchors';
 import type { Context, Piece, SteamSource } from '../shared/context';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { loopPhase, stagedSeconds } from '../shared/stage';
+import { openingWeight } from '../shared/opening';
 import { RIG_GLSL } from '../shared/glsl';
 
 export const PARTS = ['sky', 'air', 'cloud'] as const;
@@ -60,6 +61,8 @@ uniform vec4 uSourceC[${MAX_SOURCES}];
 uniform vec4 uBank;
 // How far the bank has thinned over the breaking swell at the first blade's foot, 0 to 1.
 uniform float uBankHole;
+// The approach: how far the march of the air is held still on the screen (1 as the film opens, nothing from the sixteenth second).
+uniform float uStillAir;
 ${RIG_GLSL}
 
 // The bank lies on the sea before the shore, across the way in: a low body with a ragged top (it hides the feet of the blades and the far
@@ -132,6 +135,9 @@ void main() {
   float span = min(reach, 3200.0);
   // The offset of the march is fixed to the pixel: it does not crawl from sample to sample.
   float jitter = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  // In the approach a shaft of sun stands in the air between the lens and the first blade: an offset that differs from pixel to pixel
+  // would lay the screen's weave over it, so there the march keeps one offset. The film's own frames keep theirs.
+  if (uStillAir > 0.0) jitter = mix(jitter, 0.5, uStillAir);
   float mu = max(dot(rd, uSunDir), 0.0);
   float mu2 = mu * mu;
   float phase = 0.45 + 0.6 * mu2 * mu2 + 0.8 * mu2 * mu2 * mu2 * mu2 * mu2 * mu2;
@@ -280,6 +286,7 @@ export function create(ctx: Context): Piece {
   // Staged for the opening shot only: a bank of sea fog lies across the way in, tears open in the first two seconds and is flown through in shreds.
   const bank = new THREE.Vector4(0, 0, 0, 0);
   const bankHole = { value: 0 };
+  const stillAir = { value: 0 };
   const openingShot = shotSpan('ribs-01');
   // Staged for the colony's shot only: the air itself stands thicker, so that the blade behind the colony's rock is a pale shape far off
   // and the roosts read against it. (It was a column of mist round that blade, which read as a flat card.)
@@ -299,6 +306,7 @@ export function create(ctx: Context): Piece {
       uShowCloud: showCloud,
       uBank: { value: bank },
       uBankHole: bankHole,
+      uStillAir: stillAir,
       uSourceCount: count,
       uSourceA: { value: sourceA },
       uSourceB: { value: sourceB },
@@ -325,6 +333,7 @@ export function create(ctx: Context): Piece {
       const holed = Math.min(1, Math.max(0, (since + 3) / 3.2));
       bank.set(up ? 0.0085 * fade : 0, torn * torn * (3 - 2 * torn), WIND.to[0] * 20 * since, WIND.to[1] * 20 * since);
       bankHole.value = holed * holed * (3 - 2 * holed);
+      stillAir.value = up ? Math.min(1, 3 * openingWeight(seconds)) : 0;
       const thick = staged >= colonyShot.from && staged <= colonyShot.to;
       // In the card loop the mist between the blades thickens once and thins again.
       const phase = loopPhase();
