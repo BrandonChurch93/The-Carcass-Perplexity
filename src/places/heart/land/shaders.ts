@@ -489,32 +489,38 @@ void main() {
     // One read a picture, of its height and tilt only, over a round footprint of the pixel's own area: a read drawn out along the view
     // costs up to four times as much, and what a round one leaves unsmoothed the samples of a frame average.
     float foot = sqrt(length(cross(wx, wy)));
+    // The bank is not one grain: smooth skin in one place, a field of rubble a few strides on, dust lying in pockets.
+    float field = vnoise(vWorld.xz / 4.7 + 6.3);
+    float rubble = smoothstep(0.52, 0.7, field);
+    float dust = smoothstep(0.6, 0.78, vnoise(vWorld.xz / 3.1 + 11.7)) * level;
     // The skin of the rock, scoria at its true size: 2 mm a texel.
     const float SKIN = 1.9;
     vec2 fs = vec2(foot / SKIN, 0.0);
     vec3 skin = PICK(tBoulderNh, TURN * vWorld.xz / SKIN + 0.37, fs, fs.yx).rgb;
     vec2 skinTip = TURN * ((skin.rg - 0.5) * vec2(1.0, -1.0));
-    // A ropy sheet close to: the ropes themselves, three to eight centimetres thick, inside the billows the far views read.
-    const float ROPE = 3.3;
-    float ropes = sheet * level;
+    // A ropy sheet close to: ropes a hand to a forearm thick, in curved families a stride or two across with smooth skin between, lost under the dust.
+    const float ROPE = 5.6;
+    float festoon = smoothstep(0.4, 0.6, vnoise(vWorld.xz / 2.6 + 3.9));
+    float ropes = sheet * level * festoon * (1.0 - rubble) * (1.0 - dust);
     vec2 fr = vec2(foot / ROPE, 0.0);
     vec3 rope = PICK(tLavaNh, vWorld.xz / ROPE + vec2(0.23, 0.61), fr, fr.yx).rgb;
     vec2 ropeTip = (rope.rg - 0.5) * vec2(1.0, -1.0);
     // Whatever else lies level is rubble at its true size: stones of a finger to a hand, bedded in grit.
-    float loose = (1.0 - sheet) * level;
+    float loose = max(1.0 - sheet, rubble) * level;
     vec2 fl = vec2(foot / 1.7, 0.0);
     vec3 bed = PICK(tTalusNh, TURN * vWorld.xz / 1.7 + vec2(0.57, 0.19), fl, fl.yx).rgb;
     vec2 looseTip = TURN * ((bed.rg - 0.5) * vec2(1.0, -1.0));
-    float skinOn = hand * level * mix(1.0, 0.6, sheet);
-    const float bare = 1.0;
+    float skinOn = hand * level * mix(1.0, 0.6, sheet) * mix(0.35, 1.25, smoothstep(0.3, 0.6, field)) * (1.0 - 0.85 * dust);
+    float bare = 1.0 - 0.8 * dust;
     albedo *= mix(1.0, 0.35 + 1.3 * skin.b, 0.7 * skinOn) * mix(1.0, 0.5 + 1.0 * rope.b, 0.6 * hand * ropes) * mix(1.0, 0.4 + 1.2 * bed.b, 0.7 * hand * loose * bare);
     vec2 flatTip = skinTip * 1.1 * skinOn + (ropeTip * 1.2 * ropes + looseTip * 1.4 * loose * bare) * hand;
     n = normalize(n + vec3(flatTip.x, 0.0, flatTip.y));
-    float fine = mix(skin.b, mix(bed.b, rope.b, sheet), 0.65);
+    float fine = mix(skin.b, mix(bed.b, mix(0.5, rope.b, festoon), sheet * (1.0 - rubble)), 0.65);
     float pits = hand * level * bare;
     occ *= mix(1.0, 0.4 + 0.6 * smoothstep(0.15, 0.6, fine), pits);
     // Ash and grit lie in the pits and the creases, a finger wide.
     albedo = mix(albedo, vec3(0.17, 0.16, 0.148), 0.25 * pits * smoothstep(0.42, 0.18, fine) * mix(1.0, 0.6, sheet));
+    albedo = mix(albedo, vec3(0.105, 0.098, 0.09) * (0.85 + 0.3 * bed.b), 0.7 * hand * dust);
     height = mix(height, 0.5 * (height + fine), pits);
   }
   #endif
