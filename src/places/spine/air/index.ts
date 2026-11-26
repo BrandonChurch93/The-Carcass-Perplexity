@@ -8,6 +8,7 @@ import type { Context, Piece } from '../shared/context';
 import { stagedSeconds } from '../shared/stage';
 import { secondsInPlace, shotById } from '../../../film/cut';
 import { CARCASS, INSIDE_FROM, STRIKE_FOV, UNIT, strikeStand, strikeTip } from '../shared/anchors';
+import { bakeHeaps } from './heaps';
 import { bakeNoise } from './noise';
 import { createSky, skyPictures } from './sky';
 import { VOLUME_FRAGMENT } from './volume';
@@ -64,6 +65,7 @@ const CARCASS_FROM = secondsInPlace(UNIT, shotById('spine-03').first);
 
 export function create(ctx: Context): Piece {
   const noise = bakeNoise(ctx.rng('air/noise'));
+  const heaps = bakeHeaps(ctx.rng('air/heaps'));
   const pictures = skyPictures(ctx);
   const skyStage = (pictures.uSkyStage as THREE.IUniform<THREE.Vector4>).value;
   const plate = (pictures.uPlate as THREE.IUniform<THREE.Vector4>).value;
@@ -104,6 +106,7 @@ export function create(ctx: Context): Piece {
       tDeck: { value: ctx.assets.texture('mat/cloudsea.jpg') },
       tFar: { value: ctx.assets.texture('mat/far.jpg', { repeat: false }) },
       tSeaNh: { value: ctx.assets.texture('mat/cloudsea-nh.png', { kind: 'data' }) },
+      tHeaps: { value: heaps },
       uSteam: { value: steam },
       uSteamMore: { value: steamMore },
       uSteamCount: { value: 0 },
@@ -169,6 +172,7 @@ export function create(ctx: Context): Piece {
       sky.dispose();
       volume.dispose();
       noise.dispose();
+      heaps.dispose();
       ridge.dispose();
     },
   };
