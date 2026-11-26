@@ -21,7 +21,7 @@ uniform vec4 uRain;
 uniform sampler2D tSky;
 uniform sampler2D tFar;
 // What the far picture's white comes to in the rig's light.
-const float FAR_GAIN = 0.8;
+const float FAR_GAIN = 1.5;
 ${RIG_GLSL}
 
 void main() {
@@ -29,7 +29,8 @@ void main() {
   vec3 c = skyRadiance(d);
   // The underside of the overcast as a level sheet far above: lumps that close up toward the horizon as real ones do.
   vec2 q = d.xz / (max(d.y, 0.0) + 0.09);
-  q += vec2(0.004, 0.0015) * uTime;
+  // (Its drift: a sheet 900 m up in a wind of 10 m/s.)
+  q += vec2(0.011, 0.004) * uTime;
   float big = textureLod(tNoise, vec3(q * 0.11, 0.21), 0.0).g;
   float mid = textureLod(tNoise, vec3(q * 0.31 + 0.4, 0.63), 0.0).a;
   float small = textureLod(tNoise, vec3(q * 0.83, 0.87), 0.0).r;
@@ -45,7 +46,7 @@ void main() {
   // The overcast's own picture, laid round the horizon with its raining cloud over the curtain: it gives the sheet its soft lumps and its
   // weight. It is turned over at each end so that it has no seam, it climbs to forty degrees, and it drifts with the wind.
   float span = 1.9;
-  vec2 uv = vec2(0.56 + (az - uRain.x - 0.003 * uTime) / span, 0.04 + el * 1.25);
+  vec2 uv = vec2(0.56 + (az - uRain.x - 0.006 * uTime) / span, 0.04 + el * 1.25);
   uv.x = 1.0 - abs(1.0 - mod(uv.x, 2.0));
   uv.y = 1.0 - abs(1.0 - mod(uv.y, 2.0));
   // (Divided by what each of its rows comes to, so that only its lumps are taken from it and not its own lightening upward.)
@@ -69,7 +70,7 @@ void main() {
   // Over the far picture the sheet is heavier than at the horizon's pale band: a lens that looks level sees its grey weight.
   c *= mix(1.0, 0.72, smoothstep(0.16, 0.42, el));
   // The sheet is brightest overhead, as an overcast is, and greys toward the far picture.
-  c *= mix(1.0, 1.55, smoothstep(0.1, 0.5, el));
+  c *= mix(1.8, 2.8, smoothstep(0.1, 0.5, el));
   c = mix(c, far, low);
   gl_FragColor = vec4(rigPlain(c), 1.0);
 }`;
