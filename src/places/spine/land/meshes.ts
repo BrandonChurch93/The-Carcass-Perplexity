@@ -2,7 +2,8 @@
 // the spires built round the fins of the layout, and the canal: its wall, the rock over its mouths, and its floor.
 import * as THREE from 'three';
 import type { Rng } from '../../../core/rng';
-import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalL, fin, finAxes, first, flare, frameAt, locate, type Spire } from '../ridge';
+import { EXIT, FIN_DEEP, FIN_ROOT, FIN_SECTION, FLOOR, MOUTH_S, S_MAX, S_MIN, canalInFin, canalL, fin, finAxes, first, flare, frameAt, locate, sheetAt, type Spire } from '../ridge';
+import { SHEETS, type SheetData } from '../shared/sheets';
 import { heightAt, landAt, slab } from './height';
 
 interface Extra {
@@ -122,16 +123,33 @@ export function flanks(): THREE.BufferGeometry {
   return finish(pos, index, top, sl);
 }
 
-/** A spire: a leaning broken blade built round the fin of the layout, and its root down the flanks into the cloud. Its tip and its lee edge stay where the layout has them, to within a few metres. */
+const reliefs: Uint8Array[] = SHEETS.map((sh) => Uint8Array.from(atob(sh.relief), (c) => c.charCodeAt(0)));
+/** The relief of a sheet at (u, v): 0 furthest back, 1 nearest. */
+function reliefAt(sheet: number, u: number, v: number): number {
+  const sh = SHEETS[sheet] as SheetData;
+  const grid = reliefs[sheet] as Uint8Array;
+  const x = Math.min(sh.cols - 1.001, Math.max(0, u * sh.cols - 0.5));
+  const y = Math.min(sh.lines - 1.001, Math.max(0, v * sh.lines - 0.5));
+  const xi = Math.floor(x);
+  const yi = Math.floor(y);
+  const fx = x - xi;
+  const fy = y - yi;
+  const at = (i: number, j: number): number => (grid[j * sh.cols + i] as number) / 255;
+  return (at(xi, yi) * (1 - fx) + at(xi + 1, yi) * fx) * (1 - fy) + (at(xi, yi + 1) * (1 - fx) + at(xi + 1, yi + 1) * fx) * fy;
+}
+
+/** How far the relief of a spire's sheet stands out of its face, metres from furthest to nearest. */
+export const reliefDepth = (sp: Spire): number => 0.1 * sp.tip;
+
+/** A spire: a leaning broken blade cut from its feature sheet (the outline and the relief are the sheet's), and its root down the flanks into the cloud. */
 // level: 2 the spire the lens comes close to, 1 one that is seen whole in a long lens, 0 one far down the ridge. The triangles are dear in a
 // software renderer whether or not they are seen large, so only the first spire has the finest mesh.
 export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeometry {
   const UP = level > 1.5 ? 190 : level > 0.5 ? SPIRE_MID[0] : 48;
-  const DOWN = level > 1.5 ? 34 : level > 0.5 ? 18 : 8;
+  const DOWN = level > 1.5 ? 90 : level > 0.5 ? 18 : 8;
   const AROUND = level > 1.5 ? 400 : level > 0.5 ? SPIRE_MID[1] : 96;
   const m = finAxes(sp);
   const seed = Math.floor(rng.next() * 900);
-  const own = rng.next();
   const pos: number[] = [];
   const top: number[] = [];
   const sl: number[] = [];
@@ -140,45 +158,54 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
   const tall = sp.tip + FIN_ROOT;
   const t0 = FIN_ROOT / tall;
   const tLow = -(FIN_DEEP - FIN_ROOT) / tall;
-  const E = 2 / FIN_SECTION;
-  // The plates of a great spire are great plates.
-  const big = Math.max(0.45, sp.tip / 300);
-  const bench = (26 + 16 * own) * big;
+  const depth = reliefDepth(sp);
+  const ends = level > 1.5 ? canalInFin(sp) : null;
   for (let r = 0; r <= DOWN + UP + 1; r++) {
     const cap = r === DOWN + UP + 1;
     const k = Math.min(r, DOWN + UP);
     const t = k < DOWN ? tLow + (t0 - tLow) * Math.pow(k / DOWN, 0.7) : t0 + (1 - t0) * ((k - DOWN) / UP);
     const p = fin(sp, t);
     const u = t * tall;
-    const h = (t - t0) / (1 - t0);
-    // The storm edge goes up in benches: a wall, a ledge where a block came away, a wall. The lee edge keeps to the layout (the kites are made fast to it).
-    const ph = u / bench + 0.7 * slab(u, 3, 90 * big, 40, seed + 17);
-    const saw = ph - Math.floor(ph);
-    const storm = -0.05 * saw * (1 - 0.6 * Math.max(0, h)) + Math.min(0.07, Math.max(-0.05, 0.2 * slab(u, -40, 30 * big, 60, seed + 11)));
-    const lee = Math.min(0.035, Math.max(-0.03, 0.2 * slab(u, 40, 30 * big, 60, seed + 11)));
-    const fade = 0.3 + 0.7 * Math.min(1, Math.max(0, 1 - h));
     for (let a = 0; a < AROUND; a++) {
-      const ang = (a / AROUND) * Math.PI * 2;
-      const c = Math.cos(ang);
-      const s = Math.sin(ang);
-      const face = s >= 0 ? 1 : -1;
-      const edge = Math.pow(Math.abs(c), 8);
-      const across = Math.sign(c) * Math.pow(Math.abs(c), E) * p.half;
-      // Its faces are slabs that lean as it leans: great plates, and the smaller blocks they have broken into.
-      const v = across + face * 700;
-      let n = big * (22 * slab(u, v, 150 * big, 46 * big, seed) + 9 * slab(u + 0.25 * v, v, 50 * big, 15 * big, seed + 3)) + 2.6 * slab(u - 0.2 * v, v, 15, 5, seed + 7);
-      n = Math.max(-0.5 * p.thick, Math.min(0.6 * p.thick, n * fade)) * (1 - 0.92 * edge);
-      // The broken top: split in two prongs, the one toward the storm the higher.
+      // Round the blade: its two broad faces are laid out evenly across their breadth, so the sheet's relief has the same mesh everywhere
+      // on them, and its two thin ends take the few that are left.
+      const f = a / AROUND;
+      let ln: number;
+      let face: number;
+      if (f < 0.46) {
+        ln = 0.98 - 1.96 * (f / 0.46);
+        face = 1;
+      } else if (f < 0.5) {
+        const g = (f - 0.46) / 0.04;
+        ln = -(0.98 + 0.02 * Math.sin(Math.PI * g));
+        face = g < 0.5 ? 1 : -1;
+      } else if (f < 0.96) {
+        ln = -0.98 + 1.96 * ((f - 0.5) / 0.46);
+        face = -1;
+      } else {
+        const g = (f - 0.96) / 0.04;
+        ln = 0.98 + 0.02 * Math.sin(Math.PI * g);
+        face = g < 0.5 ? -1 : 1;
+      }
+      const edge = Math.pow(Math.abs(ln), 12);
       const snap = cap ? 0.12 : 1;
-      const l = p.centre + across * (1 + (c < 0 ? storm : lee) * Math.min(1, Math.abs(c) * 3)) * snap;
-      const body = Math.pow(Math.abs(s), E) * p.thick;
-      const along = face * Math.max(0.3 * body, body + n) * snap;
-      const q = Math.max(0, (t - 0.86) / 0.14);
-      // The cleft is a notch a little to the lee of the middle, so that each prong keeps the breadth of the blade under it and the split
-      // reads from far off; the lee prong is the lower.
-      const cleft = Math.exp(-(((c - 0.12) / 0.24) ** 2));
-      const split = q * q * (0.125 * sp.tip * cleft + 0.055 * sp.tip * Math.min(1, Math.max(0, (c - 0.12) / 0.3))) + q * 5 * (slab(v, 0, 9, 9, seed + 5) + 0.4);
-      const y = p.y - split - (cap ? 2 : 0);
+      const l = p.centre + ln * p.half * snap;
+      const y = p.y - (cap ? 1 : 0);
+      // Its faces stand in and out as the sheet's relief has them, with the small blocks of the rock on top.
+      const [su, sv] = sheetAt(sp, l, y);
+      let n = depth * (reliefAt(sp.sheet, su, sv) - 0.55) + 0.8 * slab(u - 0.2 * l, l + face * 700, 15, 5, seed + 7);
+      n = Math.max(-0.5 * p.thick, Math.min(0.7 * p.thick + 4, n)) * (1 - 0.92 * edge);
+      const body = Math.pow(Math.max(0, 1 - Math.pow(Math.abs(ln), FIN_SECTION)), 1 / FIN_SECTION) * p.thick;
+      let along = face * Math.max(0.3 * body, body + n) * snap;
+      // About the mouth and the way out the face stands just outside the canal's end, so the canal is cut through a wall; the relief
+      // only stands out of that wall, never in.
+      if (ends) {
+        const end = face < 0 ? ends.mouth : ends.exit;
+        const near = Math.hypot(l - end[0], y - (FLOOR + 12));
+        const w = 1 - Math.min(1, Math.max(0, (near - 60) / 45));
+        const want = end[1] + face * (2 + 0.6 * Math.max(n, 0));
+        along += (want - along) * w * w * (3 - 2 * w);
+      }
       const x = sp.x + m.ax * l + m.bx * along;
       const z = sp.z + m.az * l + m.bz * along;
       pos.push(x, y, z);
@@ -200,7 +227,7 @@ export function spireMesh(sp: Spire, rng: Rng, level: number): THREE.BufferGeome
     }
   }
   // The beds of its rock run up along its lean.
-  const run = -sp.lean / sp.tip;
+  const run = (fin(sp, t0 + 0.7 * (1 - t0)).centre - fin(sp, t0).centre) / (0.7 * sp.tip);
   const len = Math.hypot(run, 1);
   return finish(pos, index, top, sl, { relief, up: [(m.ax * run) / len, 1 / len, (m.az * run) / len] });
 }

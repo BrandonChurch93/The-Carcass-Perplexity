@@ -41,6 +41,12 @@ uniform sampler2D tSnow;
 uniform sampler2D tSnowNh;
 uniform sampler2D tCanal;
 uniform sampler2D tCanalNh;
+uniform sampler2D tSheet;
+uniform sampler2D tSheetH;
+uniform vec4 uSheet;
+uniform vec4 uSheetMap;
+uniform float uSheetDepth;
+uniform float uSheetShear;
 uniform float uKind;
 ${RIG_GLSL}
 ${NOISE_GLSL}
@@ -99,7 +105,7 @@ export const LAND_DEPTH_FRAGMENT = /* glsl */ `${LAND_PRELUDE}
 void main() {
   // The mouths of the canal: the rock wall over each stands across it, and is open where the canal passes through.
   float dCanal = vSL.x - MOUTH_S;
-  if (uKind < 1.5 && dCanal > -1.0 && dCanal < EXIT + 1.0 && vWorld.y > CANAL_FLOOR - 0.2) {
+  if (uKind < 1.5 && dCanal > (uKind > 0.5 ? -14.0 : -1.0) && dCanal < EXIT + (uKind > 0.5 ? 14.0 : 1.0) && vWorld.y > CANAL_FLOOR - 0.2) {
     float r = flareAt(dCanal);
     // The opening is broken rock, not a drawn circle: its edge stands in and out with the beds.
     vec2 across = vec2(vSL.y - canalAt(dCanal), vWorld.y - (CANAL_FLOOR + 0.62 * r));
@@ -257,11 +263,35 @@ void main() {
     pit = mix(pSide, pLevel, top);
   }
   vec3 nRock = normalize(n0 + mix(across * t.x + upAlong * t.y, vec3(t.x, 0.0, t.y), top));
+  // A spire is cut from its feature sheet: the sheet lies on its two broad faces, square on, and gives them their rock, their joints and
+  // their snow, whole, at the size of the spire. The tiles stay under it as its grain, and take over on the thin ends where the sheet
+  // would be seen edge on. The rock over the mouth takes the first spire's sheet too, so the mouth stands in one face.
+  float sheet = 0.0;
+  if (!inside && (spire || porch > 0.0)) {
+    vec3 sa = vec3(uSheet.z, 0.0, uSheet.w);
+    vec2 uv = vec2((dot(vWorld.xz - uSheet.xy, uSheet.zw) + uSheetShear * vWorld.y) * uSheetMap.x + uSheetMap.y, vWorld.y * uSheetMap.z + uSheetMap.w);
+    vec3 sc = texture2D(tSheet, uv).rgb;
+    float facing = abs(dot(smoothN, vec3(-sa.z, 0.0, sa.x)));
+    sheet = smoothstep(0.035, 0.1, max(sc.r, max(sc.g, sc.b))) * smoothstep(0.12, 0.35, facing) * smoothstep(0.0, 0.06, uv.y) * (spire ? 1.0 : porch);
+    if (sheet > 0.0) {
+      vec2 px = 3.0 / vec2(textureSize(tSheetH, 0));
+      float h0 = texture2D(tSheetH, uv).r;
+      float da = (texture2D(tSheetH, uv + vec2(px.x, 0.0)).r - h0) / px.x * uSheetMap.x;
+      float dy = (texture2D(tSheetH, uv + vec2(0.0, px.y)).r - h0) / px.y * uSheetMap.z;
+      float grain = dot(rock, vec3(0.33)) / (2.7 * dot(SPIRE_MEAN, vec3(0.33)));
+      rock = mix(rock, sc * 1.5 * (0.8 + 0.2 * grain), sheet);
+      nRock = normalize(mix(nRock, normalize(n0 + 0.35 * (across * t.x + upAlong * t.y)), sheet) - sheet * uSheetDepth * 0.3 * (sa * da + vec3(0.0, dy, 0.0)));
+      pit = mix(pit, 0.25 + 0.6 * h0, 0.6 * sheet);
+    }
+  }
 
   // Colour: the picture's own, broken by the beds of the rock in broad masses.
   float bed = vnoise(vec2(dot(vWorld, vec3(0.011, 0.034, 0.017)), dot(vWorld.xz, vec2(0.004, -0.003))) * 3.0);
   float blotch = vnoise(vWorld.xz * 0.021 + vWorld.y * 0.013);
-  vec3 tone = mix(vec3(0.82, 0.76, 0.72), vec3(1.12, 1.0, 0.86), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
+  vec3 tone = mix(vec3(0.82, 0.79, 0.78), vec3(1.06, 1.0, 0.93), smoothstep(0.3, 0.7, 0.6 * bed + 0.4 * blotch));
+  // The plates of a spire are grey rock: their picture's brown is taken half out, and the sheet keeps its own colour.
+  if (plates) rock = mix(rock, vec3(dot(rock, vec3(0.3, 0.5, 0.2))) * vec3(0.96, 0.98, 1.06), 0.55 * (1.0 - sheet));
+  tone = mix(tone, vec3(1.0), sheet);
   vec3 albedo = min(rock * (inside ? vec3(1.0) : tone), vec3(0.9));
   float rough = 0.85;
   float occ = 0.45 + 0.55 * smoothstep(0.2, 0.7, pit);
@@ -284,7 +314,7 @@ void main() {
   if (spire) {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
-    snow = smoothstep(0.62, 0.76, held);
+    snow = smoothstep(0.62, 0.76, held) * (1.0 - sheet);
     // A spire stands in the drift at its foot.
     float above = vWorld.y - landAt(vWorld.xz).r;
     snow = max(snow, smoothstep(5.0, 0.5, above + 3.0 * (pit - 0.5)));
@@ -293,6 +323,7 @@ void main() {
     occ *= 0.4 + 0.6 * proud;
     albedo *= 0.75 + 0.25 * proud;
   }
+  if (!spire) snow *= 1.0 - sheet;
   snow *= 1.0 - burn;
   float rime = smoothstep(0.15, 0.7, -lee) * smoothstep(0.35, 0.75, pit + 0.3 * vnoise(vWorld.xz * 0.6 + vWorld.y * 0.4)) * (1.0 - burn);
   if (inside) {

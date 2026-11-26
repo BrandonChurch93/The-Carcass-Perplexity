@@ -1,9 +1,10 @@
 // The land of the Spine: the knife ridge and its flanks, the spires, and the canal through the first of them.
 // height.ts is its shape, meshes.ts what is built on that shape, shaders.ts its rock and snow.
 import * as THREE from 'three';
-import { FIRST, spires } from '../ridge';
+import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
+import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
-import { canalFloor, canalShell, crestStrip, flanks, hollow, spireMesh } from './meshes';
+import { canalFloor, canalShell, crestStrip, flanks, hollow, reliefDepth, spireMesh } from './meshes';
 import { height } from './height';
 import { ICE_FRAGMENT, ICE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
@@ -17,7 +18,7 @@ const ANISOTROPY = 1;
 export function create(ctx: Context): Piece {
   ctx.rig.setLand(height, hollow);
 
-  const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY }) });
+  const picture = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY, repeat: false }) });
   const data = (name: string): { value: THREE.Texture } => ({ value: ctx.assets.texture(`mat/${name}-nh.png`, { kind: 'data', anisotropy: ANISOTROPY }) });
   const pictures = {
     tSpire: picture('spire'),
@@ -29,11 +30,24 @@ export function create(ctx: Context): Piece {
     tCanal: picture('canal'),
     tCanalNh: data('canal'),
   };
-  const material = (kind: number, side: THREE.Side = THREE.FrontSide): THREE.ShaderMaterial =>
+  // The feature sheet a spire is cut from, and where the spire stands on it. The ground has the first spire's: the rock over the mouth is that spire's foot.
+  const sheetOf = (sp: Spire): Record<string, THREE.IUniform> => {
+    const name = (SHEETS[sp.sheet] as SheetData).name;
+    const axes = finAxes(sp);
+    return {
+      tSheet: { value: ctx.assets.texture(`mat/${name}.jpg`, { anisotropy: ANISOTROPY, repeat: false }) },
+      tSheetH: { value: ctx.assets.texture(`mat/${name}-h.png`, { kind: 'data', anisotropy: ANISOTROPY, repeat: false }) },
+      uSheet: { value: new THREE.Vector4(sp.x, sp.z, axes.ax, axes.az) },
+      uSheetMap: { value: new THREE.Vector4(...sheetMap(sp)) },
+      uSheetDepth: { value: reliefDepth(sp) },
+      uSheetShear: { value: sp.shear },
+    };
+  };
+  const material = (kind: number, side: THREE.Side = THREE.FrontSide, sp: Spire = first): THREE.ShaderMaterial =>
     new THREE.ShaderMaterial({
       vertexShader: LAND_VERTEX,
       fragmentShader: LAND_FRAGMENT,
-      uniforms: { ...ctx.rig.uniforms, ...pictures, uKind: { value: kind } },
+      uniforms: { ...ctx.rig.uniforms, ...pictures, ...sheetOf(sp), uKind: { value: kind } },
       side,
       toneMapped: false,
       // The depth is already there (see LAND_DEPTH_FRAGMENT): colour is shaded only where this is the nearest surface.
@@ -51,7 +65,8 @@ export function create(ctx: Context): Piece {
     });
   const depthOf = new Map<THREE.Material, THREE.ShaderMaterial>();
   const groundMaterial = material(0);
-  const spireMaterial = material(1, THREE.DoubleSide);
+  const spireDepth = depthMaterial(1, THREE.DoubleSide);
+  const spireMaterials = spires.map((sp) => material(1, THREE.DoubleSide, sp));
   const wallMaterial = material(2, THREE.DoubleSide);
   const iceMaterial = new THREE.ShaderMaterial({
     vertexShader: ICE_VERTEX,
@@ -77,12 +92,12 @@ export function create(ctx: Context): Piece {
   };
   if (DEPTH_FIRST) {
     depthOf.set(groundMaterial, depthMaterial(0));
-    depthOf.set(spireMaterial, depthMaterial(1, THREE.DoubleSide));
+    for (const m of spireMaterials) depthOf.set(m, spireDepth);
     depthOf.set(wallMaterial, depthMaterial(2, THREE.DoubleSide));
   }
   add(crestStrip(), groundMaterial);
   add(flanks(), groundMaterial);
-  spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i === FIRST ? 2 : i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterial));
+  spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i === FIRST ? 2 : i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
   add(canalShell(ctx.rng('land/canal-wall'), 0), wallMaterial);
   add(canalFloor(), iceMaterial);
   ctx.scene.add(ctx.parts.built('land', land));
@@ -91,9 +106,9 @@ export function create(ctx: Context): Piece {
     dispose: () => {
       for (const g of made) g.dispose();
       groundMaterial.dispose();
-      spireMaterial.dispose();
+      for (const m of spireMaterials) m.dispose();
       wallMaterial.dispose();
-      for (const m of depthOf.values()) m.dispose();
+      for (const m of new Set(depthOf.values())) m.dispose();
       iceMaterial.dispose();
     },
   };
