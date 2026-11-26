@@ -11,11 +11,11 @@ import { bakeGrain, bakePlates } from './tiles';
 export const PARTS = ['land', 'crust'] as const;
 
 /** The patch of thin crust that is built finely: its middle and half sizes along the establishing view's forward and right. */
-const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [number, number], cell: 0.04 };
+const PATCH = { at: [27.5, 13.2] as [number, number], half: [7.5, 7.5] as [number, number], cell: 0.03 };
 /** The foot of the rock rise the first lens looks down on, built finely for the same reason. */
 /** The bank the third lens lies on, a hand above the salt. */
-const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.02 };
-const ROCK = { at: [10.5, -8.5] as [number, number], half: [9.5, 7.5] as [number, number], cell: 0.05 };
+const BANK = { ahead: 2.6, half: [2.2, 3.4] as [number, number], cell: 0.018 };
+const ROCK = { at: [9.25, -8.5] as [number, number], half: [10.75, 8.0] as [number, number], cell: 0.05 };
 
 /** How many reads across a slanting pixel the pictures of heights and slopes get: 4 as the colours do, or 1, which is cheaper and softer far off. */
 const DATA_SHARP: number = 1;
@@ -82,15 +82,6 @@ export function create(ctx: Context): Piece {
   const stuck = rel(STUCK[0], STUCK[1]);
   // Round the stuck one the crust has given way: a hollow of wet mud two strides across, and round it the slabs it broke into, each
   // tipped its own way, most with the broken edge down in the mud and the far edge standing up out of the flat.
-  const slabRng = ctx.rng('land/wallow');
-  const slabs: { a0: number; a1: number; r0: number; r1: number; tip: number; roll: number }[] = [];
-  for (let a = slabRng.range(0, 0.5); a < TAU - 0.35;) {
-    const wide = slabRng.range(0.42, 0.95);
-    const r0 = slabRng.range(-0.05, 0.3);
-    const back = slabRng.next() < 0.25;
-    slabs.push({ a0: a, a1: Math.min(a + wide, TAU - 0.04), r0, r1: r0 + slabRng.range(0.5, 1.0), tip: back ? -slabRng.range(0.03, 0.07) : slabRng.range(0.04, 0.11), roll: slabRng.range(-0.05, 0.05) });
-    a += wide + slabRng.range(0.04, 0.12);
-  }
   /** What the wallow does to a spot of the crust: metres it is moved up, how much of it is the hollow's mud, how much a tipped slab. */
   const wallow = (x: number, z: number): [number, number, number] => {
     const dx = x - stuck[0];
@@ -99,25 +90,8 @@ export function create(ctx: Context): Piece {
     if (hole > 4.2) return [0, 0, 0];
     const rim = 2.0 + 0.5 * (fbm(x / 0.9 + 9, z / 0.9, 2) - 0.5);
     const mud = smooth(rim + 0.12, rim - 0.12, hole);
-    let up = -0.2 * smooth(rim + 0.25, rim - 0.9, hole) + 0.03 * (fbm(x / 0.35, z / 0.35 + 4, 2) - 0.5) * mud;
-    let slab = 0;
-    const a = (Math.atan2(dz, dx) + TAU) % TAU;
-    for (const s of slabs) {
-      if (a < s.a0 || a > s.a1) continue;
-      const ragged = 0.09 * (vnoise(x / 0.21 + 3, z / 0.21) - 0.5) + 0.12 * (vnoise(x / 0.6, z / 0.6 + 8) - 0.5);
-      const inner = rim + s.r0;
-      const edge = Math.min(hole - inner, rim + s.r1 - hole, (a - s.a0) * hole, (s.a1 - a) * hole) + ragged;
-      if (edge <= 0) break;
-      slab = smooth(0, 0.05, edge);
-      const pivot = inner + 0.4 * (s.r1 - s.r0);
-      const across = (a - (s.a0 + s.a1) / 2) * hole;
-      up = Math.max(up, -0.06) * (1 - slab) + slab * ((hole - pivot) * s.tip + across * s.roll - 0.005);
-      break;
-    }
-    // Between the slabs and for a hand round them the mud shows.
-    const between = hole < rim + 1.5 ? (1 - slab) * smooth(rim + 1.5, rim + 0.5, hole) : 0;
-    if (slab === 0 && between > 0) up = Math.min(up, -0.05 * between);
-    return [up, Math.max(mud * (1 - slab), between * 0.8), slab];
+    const up = -0.2 * smooth(rim + 0.25, rim - 0.9, hole) + 0.03 * (fbm(x / 0.35, z / 0.35 + 4, 2) - 0.5) * mud;
+    return [up, mud, 0];
   };
   const crustHeight = (x: number, z: number): number => {
     const base = field.height(x, z);
@@ -130,11 +104,24 @@ export function create(ctx: Context): Piece {
   const landHeight = (x: number, z: number): number =>
     field.height(x, z) - 0.3 * smooth(0.3, 0.7, Math.max(inPatch(x, z), inside(x, z, bankCentre, BANK.half, K1_DIR))) - 0.6 * smooth(0.3, 0.9, inside(x, z, rockCentre, ROCK.half));
   // How deep a point sits among its neighbours, near and wide: clefts are dark because the sky does not reach into them.
-  const hollowOf = (h: (x: number, z: number) => number, a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
+  // (The neighbours are taken along the patch's own rows, whole cells away, and every height is kept once it is worked out: a neighbour
+  // is then a vertex the patch has already asked for.)
+  const kept = (h: (x: number, z: number) => number): ((x: number, z: number) => number) => {
+    const known = new Map<number, number>();
+    return (x, z) => {
+      const key = Math.round(x * 1000) * 2097152 + Math.round(z * 1000);
+      let y = known.get(key);
+      if (y === undefined) {
+        y = h(x, z);
+        known.set(key, y);
+      }
+      return y;
+    };
+  };
+  const hollowOf = (h: (x: number, z: number) => number, u: [number, number], a: number, b: number, da: number, db: number) => (x: number, z: number): [number, number] => {
     const here = h(x, z);
-    const near = (h(x + a, z) + h(x - a, z) + h(x, z + a) + h(x, z - a)) / 4;
-    const wide = (h(x + b, z) + h(x - b, z) + h(x, z + b) + h(x, z - b)) / 4;
-    return [Math.min(1, Math.max(0, (near - here) / da)), Math.min(1, Math.max(0, (wide - here) / db))];
+    const ring = (r: number): number => (h(x + u[0] * r, z + u[1] * r) + h(x - u[0] * r, z - u[1] * r) + h(x - u[1] * r, z + u[0] * r) + h(x + u[1] * r, z - u[0] * r)) / 4;
+    return [Math.min(1, Math.max(0, (ring(a) - here) / da)), Math.min(1, Math.max(0, (ring(b) - here) / db))];
   };
 
 
@@ -149,22 +136,19 @@ export function create(ctx: Context): Piece {
       tFieldFar: { value: field.far },
       tSilt: { value: ctx.assets.texture('mat/silt.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tSiltN: { value: ctx.assets.texture('mat/silt-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tLedge: { value: ctx.assets.texture('mat/ledge.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tLedgeH: { value: ctx.assets.texture('mat/ledge-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      tFlat: { value: ctx.assets.texture('mat/flatplate.jpg', { kind: 'colour', anisotropy: 4 }) },
-      tFlatH: { value: ctx.assets.texture('mat/flatplate-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      tThin: { value: ctx.assets.texture('mat/thincrust.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tThinH: { value: ctx.assets.texture('mat/thincrust-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
-      uLedgeAt: { value: new THREE.Vector4(rockCentre[0], rockCentre[1], -F[1], F[0]) },
-      uThinAt: { value: new THREE.Vector4(centre[0], centre[1], -F[1], F[0]) },
-      tRime: { value: ctx.assets.texture('mat/rime.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
-      tRimeN: { value: ctx.assets.texture('mat/rime-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tPan: { value: ctx.assets.texture('mat/pan.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
+      tPanN: { value: ctx.assets.texture('mat/pan-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tKnob: { value: ctx.assets.texture('mat/knob.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
+      tKnobN: { value: ctx.assets.texture('mat/knob-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tSlick: { value: ctx.assets.texture('mat/slick.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
+      tSlickN: { value: ctx.assets.texture('mat/slick-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
       tGrain: { value: grain },
       tCrust: { value: ctx.assets.texture('mat/crust.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
       tCrustN: { value: ctx.assets.texture('mat/crust-nh.png', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
-      tRock: { value: ctx.assets.texture('mat/rock.jpg', { kind: 'colour', repeat: true, anisotropy: 1 }) },
-      tShore: { value: ctx.assets.texture('mat/shore.jpg', { kind: 'colour', anisotropy: 1 }) },
-      tShoreH: { value: ctx.assets.texture('mat/shore-h.png', { kind: 'data', anisotropy: DATA_SHARP }) },
+      tRock: { value: ctx.assets.texture('mat/rocktop.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRockN: { value: ctx.assets.texture('mat/rocktop-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
+      tRockS: { value: ctx.assets.texture('mat/rockside.jpg', { kind: 'colour', repeat: true, anisotropy: 4 }) },
+      tRockSN: { value: ctx.assets.texture('mat/rockside-nh.jpg', { kind: 'data', repeat: true, anisotropy: DATA_SHARP }) },
     },
     toneMapped: false,
   });
@@ -177,7 +161,8 @@ export function create(ctx: Context): Piece {
   far.frustumCulled = false;
   const land = new THREE.Group();
   land.add(ground, far);
-  const hollow = hollowOf(field.height, 0.16, 0.5, 0.07, 0.3);
+  const rockHeight = kept(field.height);
+  const hollow = hollowOf(rockHeight, F, ROCK.cell * 2, ROCK.cell * 12, 0.05, 0.34);
   // A fine patch is raised by the pictures' heights in its vertices; the raising dies out toward its rim, where the plain ground takes over.
   const raised = (c: [number, number], half: [number, number], cell: number, along: [number, number] = F): THREE.ShaderMaterial => {
     const m = new THREE.ShaderMaterial({
@@ -191,7 +176,7 @@ export function create(ctx: Context): Piece {
     return m;
   };
   const footMaterial = raised(rockCentre, ROCK.half, ROCK.cell);
-  const foot = new THREE.Mesh(patchGeometry(field.height, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
+  const foot = new THREE.Mesh(patchGeometry(rockHeight, rockCentre, F, ROCK.half[0] * 2, ROCK.half[1] * 2, ROCK.cell, hollow), footMaterial);
   const bankMaterial = raised(bankCentre, BANK.half, BANK.cell, K1_DIR);
   const bank = new THREE.Mesh(patchGeometry(field.height, bankCentre, K1_DIR, BANK.half[0] * 2, BANK.half[1] * 2, BANK.cell, () => [0, 0]), bankMaterial);
   land.add(foot, bank);
