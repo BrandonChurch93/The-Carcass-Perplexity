@@ -59,8 +59,8 @@ export function create(ctx: Context): Piece {
     return new THREE.Vector4(Math.sin(a) * r, Math.cos(a) * r, seepRng.next(), seepRng.range(0.015, 0.04));
   });
 
-  // The mirror: the scene as the level brine sees it, drawn a quarter of the frame's size before every sample.
-  const MIRROR_SHARE = 4;
+  // The mirror: the scene as the level brine sees it, drawn a sixth of the frame's size before every sample.
+  const MIRROR_SHARE = 6;
   const mirror = new THREE.WebGLRenderTarget(480, 270, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearMipmapLinearFilter, magFilter: THREE.LinearFilter, depthBuffer: true });
   mirror.texture.generateMipmaps = true;
   const under = new THREE.PerspectiveCamera();

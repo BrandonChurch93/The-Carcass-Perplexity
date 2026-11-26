@@ -43,13 +43,18 @@ ${BRINE_GLSL}
 
 // One train of wavelets: its slope at q. Short waves on a liquid do not travel together: each length has its own speed (gravity and the skin's
 // tension), so the pattern never slides as one sheet.
-vec2 train(vec2 q, vec2 dir, float len, float bend) {
+vec2 train(vec2 q, vec2 dir, float len, float bend, vec2 group) {
   float k = 6.2832 / len;
   float w = k * sqrt(9.81 / k + 0.000074 * k);
-  // Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed.
+  return dir * cos(k * dot(dir, q) - w * uTime + bend + group.y * 7.0) * smoothstep(0.38, 0.66, group.x) * 1.6;
+}
+// Wavelets go in groups: a few crests, each a few lengths long, that rise and die as the group passes at half the crests' speed. One
+// look for two trains of near lengths (rg for the one, ba for the other), read at the level a pixel of this width wants.
+vec4 groups(vec2 q, vec2 dir, float len, float px) {
+  float k = 6.2832 / len;
+  float w = k * sqrt(9.81 / k + 0.000074 * k);
   vec2 g = vec2(dot(dir, q) - 0.5 * w / k * uTime, dot(vec2(-dir.y, dir.x), q));
-  vec4 e = texture2D(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)));
-  return dir * cos(k * dot(dir, q) - w * uTime + bend + e.g * 7.0) * smoothstep(0.38, 0.66, e.r) * 1.6;
+  return textureLod(tGrain, vec2(g.x / (len * 21.0), g.y / (len * 13.0)), log2(max(px / (len * 13.0) * float(textureSize(tGrain, 0).x), 1.0)));
 }
 
 void main() {
@@ -72,7 +77,8 @@ void main() {
   vec2 bank = vec2(0.0, 1.0);
   vec2 flow = vec2(0.0);
   float nearBy = smoothstep(90.0, 50.0, dist);
-  if (nearBy > 0.0) {
+  // (The round pool has no way through and no bank but at its rim: there the bed is not asked which way it lies.)
+  if (nearBy > 0.0 && (inPool < 1.0 || s > 0.1)) {
     vec2 g = vec2(fieldAt(p.xz + vec2(0.7, 0.0)).r - fieldAt(p.xz - vec2(0.7, 0.0)).r, fieldAt(p.xz + vec2(0.0, 0.7)).r - fieldAt(p.xz - vec2(0.0, 0.7)).r);
     float gl = length(g);
     bank = gl > 1e-4 ? g / gl : bank;
@@ -105,7 +111,8 @@ void main() {
 
   // There is no wind to speak of: the brine lies near to glass, and what moves on it has a cause.
   // A slow heave of the whole surface, too low to see but in what it mirrors.
-  vec2 slope = (texture2D(tGrain, p.xz / 5.3 + vec2(0.013, 0.008) * uTime).ba - 0.5) * 0.035 + (texture2D(tGrain, p.xz / 2.3 - vec2(0.011, 0.017) * uTime).ba - 0.5) * 0.025;
+  vec4 heave = texture2D(tGrain, p.xz / 4.1 + vec2(0.013, 0.008) * uTime);
+  vec2 slope = (heave.ba - 0.5) * 0.035 + (heave.rg - 0.5) * 0.025;
   // The flow dimples the skin where it runs: low boils and seams that go down the channel with it.
   float speed = length(flow);
   slope += (carriedFine.ba - 0.5) * (0.07 + 0.25 * speed) * smoothstep(0.02, 0.12, speed) * smoothstep(0.5, 0.1, px);
@@ -124,14 +131,24 @@ void main() {
   float ruffle = 0.3 + 0.55 * smoothstep(0.3, 0.75, carried.a) + 2.2 * speed + 0.9 * paw + 0.12 * inPool + 0.8 * brineMud;
   vec4 bend = texture2D(tGrain, p.xz / 0.83 + vec2(0.01, 0.007) * uTime);
   vec2 ripples = vec2(0.0);
-  // (No train is everywhere: each comes and goes in patches of its own, or the five would weave one cloth.)
-  // (A wave is drawn only where a lens can tell its crests apart: finer than that it would be grit.)
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.17), 0.73, bend.b * 3.0 + 2.1) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.31), 0.41, bend.r * 4.0) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 0.47), 0.27, bend.g * 5.0) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 0.83), 0.173, bend.b * 5.0) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
-  ripples += train(p.xz, normalize(wdir - vec2(-wdir.y, wdir.x) * 1.3), 0.117, bend.a * 6.0) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
-  ripples += train(p.xz, normalize(wdir + vec2(-wdir.y, wdir.x) * 2.4), 0.071, bend.r * 7.0 + 1.3) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
+  vec2 wcross = vec2(-wdir.y, wdir.x);
+  // (No train is everywhere: each comes and goes in patches of its own, or the six would weave one cloth. And a wave is drawn only where
+  // a lens can tell its crests apart: finer than that it would be grit.)
+  if (px < 0.12) {
+    vec4 e = groups(p.xz, wdir, 0.55, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 0.17), 0.73, bend.b * 3.0 + 2.1, e.rg) * 0.1 * smoothstep(0.25, 0.7, carried.g) * smoothstep(0.12, 0.06, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.31), 0.41, bend.r * 4.0, e.ba) * 0.1 * fine.g * smoothstep(0.068, 0.034, px);
+  }
+  if (px < 0.045) {
+    vec4 e = groups(p.xz, normalize(wdir + wcross * 0.2), 0.22, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 0.47), 0.27, bend.g * 5.0, e.rg) * 0.11 * smoothstep(0.3, 0.7, carriedFine.r) * smoothstep(0.045, 0.022, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 0.83), 0.173, bend.b * 5.0, e.ba) * 0.1 * smoothstep(0.35, 0.75, fine.b) * smoothstep(0.029, 0.0145, px);
+  }
+  if (px < 0.02) {
+    vec4 e = groups(p.xz, normalize(wdir - wcross * 0.6), 0.09, px);
+    ripples += train(p.xz, normalize(wdir - wcross * 1.3), 0.117, bend.a * 6.0, e.rg) * 0.09 * smoothstep(0.35, 0.75, carriedFine.a) * smoothstep(0.02, 0.01, px);
+    ripples += train(p.xz, normalize(wdir + wcross * 2.4), 0.071, bend.r * 7.0 + 1.3, e.ba) * 0.07 * smoothstep(0.3, 0.7, fine.a) * smoothstep(0.012, 0.006, px);
+  }
   slope += ripples * ruffle * (0.6 + 0.8 * bend.g);
 
   // How much froth the domes and the bursts have left here.
@@ -153,9 +170,15 @@ void main() {
       float wide = 0.16 + 0.07 * ring.z;
       if (abs(r - ring.z) > 3.2 * wide + 0.25) continue;
       // No ring is a circle drawn with a compass: the front runs ahead here and lags there, and is higher where more was thrown.
-      vec4 uneven = texture2D(tGrain, vec2(atan(d.y, d.x) * 0.11 + ring.x * 0.37, ring.y * 0.21 + ring.z * 0.04));
-      float q = r - ring.z - (uneven.r - 0.5) * (0.1 + 0.22 * ring.z);
-      float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * uneven.g);
+      // (Its unevenness is a few slow turns round it, each ring's own: counted, not looked up, for a pixel asks every ring.)
+      vec2 u = d / max(r, 0.01);
+      vec4 own = fract(ring.x * vec4(1.37, 2.91, 0.83, 3.57) + ring.y * vec4(0.71, 1.93, 2.47, 0.59)) * 2.0 - 1.0;
+      float two = u.x * u.x - u.y * u.y;
+      float three = u.x * (4.0 * u.x * u.x - 3.0);
+      float lag = 0.2 * two * own.x + 0.2 * (2.0 * u.x * u.y) * own.y + 0.16 * three * own.z + 0.14 * u.y * (3.0 - 4.0 * u.y * u.y) * own.w;
+      float thrown = 0.5 + 0.3 * u.x * own.w + 0.3 * u.y * own.z + 0.2 * two * own.y - 0.2 * three * own.x;
+      float q = r - ring.z - lag * (0.1 + 0.22 * ring.z);
+      float env = exp(-q * q / (wide * wide)) * ring.w * (0.45 + 1.1 * clamp(thrown, 0.0, 1.0));
       if (env < 0.003) continue;
       // The long waves lead and the short ones follow: the crests are closer behind the front than before it.
       slope += d / max(r, 0.01) * env * sin(q * (14.0 - 22.0 * q)) * 0.3;
@@ -197,26 +220,36 @@ void main() {
   // (And scum catches on whatever stands in it.)
   want = max(max(want, strings), max(min(boil * 0.8, 0.6), collar * smoothstep(0.35, 0.6, fleck.g) * 0.8)) * seen;
   // (Bubbles a finger to a hand across: the froth's picture is laid small, and a second time larger where a clump stands, so no tile shows.)
-  vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
-  vec4 relief = texture2D(tFrothN, fuv);
-  vec4 clump = texture2D(tFrothN, fuv * 0.31 + 0.37);
-  vec3 scum = texture2D(tFroth, fuv).rgb;
-  float high = relief.b * 0.62 + clump.b * 0.38;
-  // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
-  float dense = smoothstep(0.2, 0.75, want);
-  float foam = smoothstep(0.0, 0.1, high - 1.1 + dense * 1.12) * step(1e-3, want);
-  // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
-  // between the bubbles, where the sky does not reach.
-  float pit = smoothstep(0.25, 0.75, relief.b);
-  vec4 froth = vec4((scum * 1.25 + 0.02) * (0.4 + 0.6 * pit) * mix(vec3(1.0, 0.8, 0.74), vec3(1.0), smoothstep(0.5, 0.8, high)), foam * 0.95);
+  float foam = 0.0;
+  vec4 froth = vec4(0.0);
+  vec2 frothSlope = vec2(0.0);
+  vec2 fdx = dFdx(p.xz) / 0.62;
+  vec2 fdy = dFdy(p.xz) / 0.62;
+  if (want > 1e-3) {
+    vec2 fuv = (p.xz - flow * 9.0 * (pa - 0.5) * step(want, strings * seen + 1e-4)) / 0.62;
+    vec4 relief = textureGrad(tFrothN, fuv, fdx, fdy);
+    vec4 clump = textureGrad(tFrothN, fuv * 0.31 + 0.37, fdx * 0.31, fdy * 0.31);
+    vec3 scum = textureGrad(tFroth, fuv, fdx, fdy).rgb;
+    float high = relief.b * 0.62 + clump.b * 0.38;
+    // (A clump is whole or it is not there: the froth's own gaps cut it, and only its edge thins to single bubbles.)
+    float dense = smoothstep(0.2, 0.75, want);
+    foam = smoothstep(0.0, 0.1, high - 1.1 + dense * 1.12);
+    // Its own colours, as the picture has them: cream where the bubbles are small and dry, red where the brine stands in them. Dark down
+    // between the bubbles, where the sky does not reach.
+    float pit = smoothstep(0.25, 0.75, relief.b);
+    froth = vec4((scum * 1.25 + 0.02) * (0.4 + 0.6 * pit) * mix(vec3(1.0, 0.8, 0.74), vec3(1.0), smoothstep(0.5, 0.8, high)), foam * 0.95);
+    frothSlope = (relief.rg - 0.5) * vec2(1.0, -1.0) * 2.6;
+  }
   // The bubbles stand up out of the surface: their own slopes take over from the brine's.
-  slope = mix(slope, (relief.rg - 0.5) * vec2(1.0, -1.0) * 2.6, foam);
+  slope = mix(slope, frothSlope, foam);
   vec3 n = normalize(vec3(slope.x, 1.0, slope.y));
 
   // The bed under the shallows, seen where the line of sight is bent down to it.
   float depth = clamp(max(-s * 0.5 - 0.02, 0.03 * (1.0 - smoothstep(0.12, 0.27, s))), 0.0, 0.7);
   vec2 bedAt = p.xz - v.xz / max(v.y, 0.3) * depth * 0.75 + slope * depth * 3.0;
-  vec3 bedTex = texture2D(tBed, bedAt / 2.6).rgb;
+  // (Under more than half a metre of it the bed gives back a fiftieth of its light: there it is not looked up.)
+  vec3 bedTex = vec3(0.45, 0.4, 0.36);
+  if (depth < 0.6) bedTex = textureGrad(tBed, bedAt / 2.6, fdx * (0.62 / 2.6), fdy * (0.62 / 2.6)).rgb;
   // (Wet and stained: the bed under the shallows is darker than the dry crust beside it, never paler.)
   brineBed = bedTex * vec3(0.2, 0.1, 0.085) * (0.7 + 0.6 * fleck.b);
   vec3 lit = brineShade(p, n, v, s, froth);
