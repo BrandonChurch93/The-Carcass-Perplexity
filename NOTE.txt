@@ -1,7 +1,7 @@
-2026-11-26 13:23 UTC
-work at b1b404d on agent/film-join
-Version 1. Join sheet, the cut every frame, 9563 and 9480 at review hd. Wrong: cloud top at 9563 is flat cream paper with smeared blue shade, water at 9480 reads as smoke with dots, whiteout lasts 12 frames, a still dark smudge sits in the fog
+2026-11-26 14:34 UTC
+work at 46d9dcf on agent/film-join
+version 2 at 46d9dcf: sheet 9426 to 9614, frames 9480, 9563, 9584 in 1080p review (rendered before the last merge of main)
 look-1.jpg = out/work/sheets/join.png
-look-2.jpg = out/work/sheets/cut.png
+look-2.jpg = out/work/stills/frame-9480-hd-review.png
 look-3.jpg = out/work/stills/frame-9563-hd-review.png
-look-4.jpg = out/work/stills/frame-9480-hd-review.png
+look-4.jpg = out/work/stills/frame-9584-hd-review.png
