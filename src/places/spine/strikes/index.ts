@@ -14,8 +14,8 @@ const CORE = 260;
 const CAST = 2600;
 const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** Radius of the main channel as the camera records it, metres: the lit sheath, not the centimetres of the arc. */
-const CHANNEL = 1.3;
-const SPARKS = 800;
+const CHANNEL = 0.2;
+const SPARKS = 180;
 
 const CHANNEL_VERTEX = /* glsl */ `
 attribute vec3 aPrev;
@@ -42,8 +42,8 @@ void main() {
   vec3 b = (viewMatrix * vec4(moved(aNext), 1.0)).xyz;
   vec3 side = normalize(cross(b - a, c.xyz));
   float far = -c.z;
-  // The core is never thinner than a pixel and a quarter, and the strip carries a soft sheath eight cores wide.
-  float core = max(aInfo.x, 1.6 * uPixel * far);
+  // The core is never thinner than a pixel, and the strip carries a soft sheath eight cores wide.
+  float core = max(aInfo.x, 0.8 * uPixel * far);
   float half_ = core * 8.0;
   c.xyz += side * aSide.x * half_;
   vAcross = aSide.x * 8.0;
@@ -86,17 +86,17 @@ void main() {
   gl_FragColor = vec4(uTint * (sheath * uCore * channelLit() * (1.0 - uSolo)), 1.0);
 }`;
 
-// The core: the arc itself, white, solid.
+// The core: the arc itself, a thread, violet with a white heart. Drawn solid where it burns and not at all where it does not: no pixel
+// is left out by a pattern, so it has no grain.
 const CORE_FRAGMENT = /* glsl */ `
 ${CHANNEL_GLSL}
 void main() {
   float x = vAcross;
-  if (abs(x) > 7.9) discard;
-  // White where the arc is, and a violet skirt of lit air close round it that thins fast.
   float core = exp(-x * x * 3.2);
-  float skirt = 0.016 * exp(-abs(x) * 0.33) * (1.0 - smoothstep(6.0, 7.9, abs(x)));
-  vec3 c = (uTint * (core * 0.7) + vec3(0.45, 0.24, 1.0) * skirt + vec3(core * core * 0.3)) * (uCore * channelLit());
-  gl_FragColor = vec4(glowOut(c, 0.7) * (1.0 - uSolo), 1.0);
+  float power = uCore * channelLit() * core;
+  if (power < 0.3) discard;
+  vec3 c = mix(uTint, vec3(1.0), 0.45 * core * core) * power;
+  gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
 
 const SPOT_VERTEX = /* glsl */ `
@@ -119,10 +119,10 @@ void main() {
   vec4 c = viewMatrix * vec4(p, 1.0);
   vec3 along = (viewMatrix * vec4(v, 0.0)).xyz;
   float far = -c.z;
-  float size = max(0.1 + 0.16 * aSeed.z, 1.1 * uPixel * far);
+  float size = max(0.035 + 0.05 * aSeed.z, 0.7 * uPixel * far);
   // A streak as long as the fragment flies while the shutter is open.
   vec2 dir = normalize(along.xy + vec2(1e-4));
-  float reach = max(size, length(along.xy) * 0.007);
+  float reach = max(size, length(along.xy) * 0.012);
   c.xy += dir * position.x * reach + vec2(-dir.y, dir.x) * position.y * size;
   vUv = position.xy;
   vHeat = (uAge <= 0.0 || t <= 0.0) ? 0.0 : exp(-t / (0.35 * life)) * (1.0 - smoothstep(life * 0.8, life, t)) * (0.4 + 0.6 * aSeed.w) * min(1.0, 0.3 / (reach / size) + 0.4);
@@ -141,8 +141,9 @@ void main() {
   float a = exp(-r * r * 3.0) * (1.0 - smoothstep(0.8, 1.0, r));
   // Hot rock: white at first, orange as it cools.
   vec3 c = mix(vec3(1.0, 0.32, 0.06), vec3(1.0, 0.86, 0.7), smoothstep(0.25, 0.9, vHeat));
-  if (vHeat * a < 1e-4) discard;
-  gl_FragColor = vec4(glowOut(c * (uGlow * vHeat * a), 0.7) * (1.0 - uSolo), 1.0);
+  // A fragment is there or it is not: no pattern of dots.
+  if (uGlow * vHeat * a < 0.5) discard;
+  gl_FragColor = vec4(c * (uGlow * vHeat * a) * (1.0 - uSolo), 1.0);
 }`;
 
 const HALO_VERTEX = /* glsl */ `
@@ -172,8 +173,8 @@ void main() {
   // The white-hot spot is solid, and so is the violet air close round it; the glow in the cloud is added.
   if (uSharp > 0.5) {
     float most = max(uColour.r, max(uColour.g, uColour.b));
-    c = uColour * exp(-r * r * 260.0) + vec3(0.6, 0.48, 1.0) * (min(most, 300.0) * 0.006 * exp(-r * 4.2) * (1.0 - smoothstep(0.6, 1.0, r)));
-    c = glowOut(c, 0.7);
+    c = mix(vec3(0.62, 0.5, 1.0) * most, uColour, exp(-r * r * 60.0)) * exp(-r * r * 22.0);
+    if (max(c.r, max(c.g, c.b)) < 0.6) discard;
   }
   gl_FragColor = vec4(c * (1.0 - uSolo), 1.0);
 }`;
@@ -271,8 +272,10 @@ export function create(ctx: Context): Piece {
     cloud.frustumCulled = false;
     cloud.renderOrder = 5;
     const spotGlow = new THREE.Vector3();
-    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(44, 44) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
+    const spot = new THREE.Mesh(quad, new THREE.ShaderMaterial({ vertexShader: HALO_VERTEX, fragmentShader: HALO_FRAGMENT, uniforms: { ...ctx.rig.uniforms, uDither: dither, uAt: { value: tip }, uSize: { value: new THREE.Vector2(9, 9) }, uColour: { value: spotGlow }, uSharp: { value: 1 } }, side: THREE.DoubleSide }));
     spot.frustumCulled = false;
+    // The glow of the cloud round the channel is drawn by the air folder from the rig's lights; this one stays off.
+    cloud.visible = false;
     group.add(cloud, spot);
 
     // The spray of glowing fragments.

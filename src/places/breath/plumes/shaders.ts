@@ -141,12 +141,12 @@ ${VANE_TEST}
   float within = vTint.x;
   // The colour is the picture's: wet wine-red barbs, pale and fleshy at the stem, each frond a little darker or lighter than the next.
   vec3 told = texture2D(tFrond, at).rgb;
-  vec3 albedo = told * (0.7 + 0.5 * tone);
-  albedo = mix(albedo, vec3(dot(albedo, vec3(0.3, 0.5, 0.2))) * vec3(1.2, 0.5, 0.45), 0.25);
+  // Wet, it is darker than the picture of it and deeper in the red: the pale of the stem stays, the mid tones go to wine.
+  vec3 albedo = told * sqrt(told) * vec3(1.15, 0.36, 0.42) * (0.6 + 0.5 * tone);
   // How thick the frond is here: its heart is many barbs deep, its edge is single hairs.
   float body = smoothstep(cut, 0.7, relief);
   // The heart of the bush is near black: the barbs shade each other where they are thick, at the stem and inside.
-  float occ = mix(1.0, 0.45, body) * mix(0.3, 1.0, within * within) * mix(0.55, 1.0, smoothstep(0.0, 0.5, reach));
+  float occ = mix(0.9, 0.3, body) * mix(0.15, 1.0, within * within) * mix(0.4, 1.0, smoothstep(0.0, 0.5, reach));
   // The relief of the picture turns the light a little: a lock is strands and not a blade.
   float lift = (texture2D(tFrondH, at + vec2(0.0015, 0.0)).r - relief) + (texture2D(tFrondH, at + vec2(0.0, 0.004)).r - relief);
   n = normalize(n + 1.6 * lift * normalize(vec3(uSunDir.x, 0.4, uSunDir.z)));
@@ -155,12 +155,13 @@ ${VANE_TEST}
   float against = clamp(dot(v, -uSunDir), 0.0, 1.0);
   float thin = (1.0 - 0.75 * body) * (0.15 + 0.85 * within);
   float lit = sunAt(vWorld);
-  colour += mix(vec3(1.0, 0.1, 0.06), vec3(1.0, 0.5, 0.25), (1.0 - body) * against) * uSunColour * (thin * (0.06 + 0.94 * against * against) * 0.3 * lit) * (0.3 + 2.0 * dot(told, vec3(0.33)));
+  float hair = (1.0 - body) * (1.0 - body);
+  colour += mix(vec3(0.8, 0.05, 0.03), vec3(1.0, 0.24, 0.1), hair * against) * uSunColour * (thin * (0.04 + 0.96 * against * against) * 0.24 * lit) * (0.25 + 0.75 * hair) * (0.3 + 2.0 * dot(told, vec3(0.33)));
   // Wet: here and there a barb turns the sun to the lens.
-  float glint = smoothstep(0.82, 0.97, vnoise(at * vec2(900.0, 340.0) + vVane.z)) * smoothstep(0.004, 0.0012, px);
+  float glint = smoothstep(0.93, 0.99, vnoise(at * vec2(300.0, 110.0) + vVane.z)) * smoothstep(0.003, 0.001, px) * (1.0 - body);
   colour += uSunColour * glint * (0.03 + 0.5 * pow(against, 6.0)) * lit;
   // The fog behind and round it is bright: it fills the red from every side, so the shade in the bush is wine and not black.
-  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.22 / 3.14159) * (0.35 + 0.65 * occ);
+  colour += albedo * skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.1 / 3.14159) * (0.35 + 0.65 * occ);
   gl_FragColor = vec4(rigOut(colour), 1.0);
 }`;
 

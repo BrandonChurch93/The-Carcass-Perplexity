@@ -1,26 +1,33 @@
 # The pictures of the sky
 
 Every picture in `public/assets/reveal/sky/` is made by code in this folder. Nothing is painted and nothing is copied from a picture.
+The cloud itself is photographs: the tiles and plates of `public/assets/reveal/mat/` (recipe in `assets-src/reveal/mat/RECIPE.md`).
 
 Run from the root of the repo:
 
 ```
 python3 assets-src/reveal/sky/make_sky.py
+python3 assets-src/reveal/sky/make_cover.py
 ```
 
-It needs python 3 with numpy, scipy and opencv. It takes under a minute.
+They need python 3 with numpy, scipy, opencv and Pillow. Each takes under a minute.
 
-## `public/assets/reveal/sky/cloud-tile.jpg`, `public/assets/reveal/sky/cloud-cover.jpg`, `public/assets/reveal/sky/cyclone.jpg` and `public/assets/reveal/sky/storm.jpg`
+## `public/assets/reveal/sky/cloud-tile.jpg`
 
-- `cloud-tile.jpg`, 1024 x 1024, repeats. Red is the field the low cloud is cut from, made so every value is equally common: a threshold on it is a share of the sky. Green is how much each point of that field faces the sun (0.5 is level). Blue is the streaks the high cloud, the vapour and the wind on the sea are cut from.
-- `cloud-cover.jpg`, 2048 x 1152, the whole world. Red is the share of low cloud, green the share of high cloud, blue the cloud banked against the ranges. It is thin over the body and clear over the head, where the rise begins.
-- `cyclone.jpg`, 1024 x 1024, and `storm.jpg`, 1024 x 384. Red is how thick the cloud is, green how much it faces the sun, blue how high it stands.
-  Since version 3 the place no longer reads these two: the cyclone and the storm are drawn from `public/assets/reveal/mat/cyclone.jpg` and `storm.jpg`. They are kept so this recipe still makes what it names.
+Made by `make_sky.py`. 1024 x 1024, repeats. Noise shaped in the frequency plane, so the tile has no seam. The place reads blue (slow clumps: where a
+field of cloud has grown, how the sea is ruffled, how a trail of vapour bends) and red and green (a slow bend for the tops of the storm).
+
+## `public/assets/reveal/sky/cover.png`
+
+Made by `make_cover.py`. 2048 x 1152, on the rectangle `COVER_RECT` of `src/places/reveal/shared/weather.ts` (px of the master: x -900 to 7600,
+y -820 to 3961.25). Where the weather stands:
+
+- red: the two fronts as they stand at second 0 (the plate `mat/front.jpg` at the placements `FRONTS`, the same numbers as in `weather.ts`),
+  blurred a little, so the ground can take their shade with one read.
+- green: how much of the low field of small cloud has grown at a point: full over the open sea, thin over the land, clumped, cleared round the cyclone.
+- blue: the cyclone and the storm on the spine (`mat/cyclone.jpg`, `mat/storm.jpg` where `sky/index.ts` draws their sheets), which do not drift.
 
 ### What is read as data
 
-- `src/places/reveal/continent.json`: the traced outline of the body, to thin the cloud over it.
-
-### How
-
-All of it is noise shaped in the frequency plane (so the tile repeats without a seam), with the power put where cloud has it: cells a few kilometres across, drawn into streets along the wind, gathered into clumps. On the cover a few fronts are laid by hand as bent lines thousands of kilometres long, blurred and broken by the same noise: above a share of two thirds the place draws a closed deck. The cyclone is the same noise laid in a turning frame, so its bands wind into the eye. The place draws the build of the cyclone (shield, arms, eye) itself and takes only the fibres from the picture. The storm is an anvil sheet with towers along it.
+- `public/assets/reveal/maps/map-a-h.png`: the height of the land, to thin the low cloud over it.
+- `public/assets/reveal/mat/front.jpg`, `cyclone.jpg`, `storm.jpg`: the plates, for their shade.

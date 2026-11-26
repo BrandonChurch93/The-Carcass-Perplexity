@@ -28,7 +28,7 @@ vec3 sunGlitter(vec3 r, float far) {
   float rs2 = rs * rs;
   float rs8 = rs2 * rs2 * rs2 * rs2;
   float rs64 = rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8 * rs8;
-  float broad = rs64 * 0.2 + rs8 * rs8 * 0.012;
+  float broad = rs64 * rs64 * 0.22 + rs64 * 0.16 + rs8 * rs8 * 0.02;
   float spark = rs64 * rs64 * rs64 * rs64 * 40.0 * smoothstep(160.0, 10.0, far);
   return uSunColour * (broad + spark);
 }
@@ -74,9 +74,11 @@ void main() {
     vec2 rb = texture2D(tRipple, vec2(xz.x * 0.391 + xz.y * 0.92, -xz.x * 0.92 + xz.y * 0.391) * 0.113 + drift * uTime * 0.031).rg - 0.5;
     slope = slope * (1.0 - 0.6 * close) + (ra * 0.55 + rb * 1.15) * close * (0.45 + 0.55 * deep) * (0.22 + 1.0 * gust);
   }
+  // A hand's depth of water over a plate cannot carry a wave: it lies nearly flat, and shows the sky whole.
+  slope *= 0.3 + 0.7 * smoothstep(0.03, 0.32, depth);
   // The rings round what stands in the water, as the waders folder drew them for this camera.
   vec4 rings = texture2D(tRings, gl_FragCoord.xy / uFrame);
-  slope += rings.rg * 3.2;
+  slope += rings.rg * 4.2;
   vec3 n = normalize(vec3(-slope.x, 1.0, -slope.y));
 
   float nv = clamp(dot(n, v), 0.0, 1.0);
@@ -89,7 +91,7 @@ void main() {
   vec3 mirror = 0.6 * skyRadiance(r) * skyOpen(vWorld);
   // A face tipped toward the lens shows the dim sky overhead, one tipped away the bright fog at the horizon: that is what draws every ripple and ring.
   float tip = dot(slope - g3.rg * 0.1, normalize(v.xz));
-  float drawn = 1.0 - 0.85 * tanh(3.0 * tip);
+  float drawn = 1.0 - 0.6 * tanh(2.4 * tip);
   mirror *= drawn;
   // The warm of the low sky is the fog's; the water gives it back greyer and a little green, as wet stone and shallow water do.
   mirror = mix(mirror, dot(mirror, vec3(0.3, 0.55, 0.15)) * vec3(1.05, 1.0, 0.88), 0.45 * smoothstep(0.04, 0.3, v.y)) * mix(0.72, 1.3, smoothstep(0.06, 0.3, v.y));
@@ -109,7 +111,7 @@ void main() {
   mirror += sunGlitter(r, far) * sunHere;
   // Sparks: here and there a facet smaller than a ripple turns the sun to the lens for a moment, far outside its path. Each is a point that lives a tenth of a second.
   float px = far * 2.0 / (uFrame.y * 1.6);
-  float lobe = pow(max(dot(r, uSunDir), 0.0), 9.0) * (0.3 + 0.7 * gust) * (0.4 + 2.2 * rings.b);
+  float lobe = pow(max(dot(r, uSunDir), 0.0), 5.0) * (0.3 + 0.7 * gust) * (0.4 + 2.2 * rings.b);
   float sparks = 0.0;
   float seen = smoothstep(0.012, 0.004, px);
   if (seen > 0.0 && lobe > 0.002) {
@@ -120,7 +122,7 @@ void main() {
       vec2 cellAt = xz / 0.022 + float(o) * 17.3;
       vec2 id = floor(cellAt);
       vec2 rnd = hash22(id + slot * 7.13);
-      float on = step(1.0 - 0.16 * lobe, hash12(id * 1.37 + slot * 3.1));
+      float on = step(1.0 - 0.24 * lobe, hash12(id * 1.37 + slot * 3.1));
       float dot_ = smoothstep(0.34, 0.1, length(fract(cellAt) - 0.5 - 0.3 * (rnd - 0.5)));
       sparks += on * dot_ * life;
     }
