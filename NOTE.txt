@@ -1,6 +1,5 @@
-2026-11-26 13:36 UTC
-work at 4293959 on HEAD
-v4 probes at loop 200 and 260: a file of waders walks the far flats and dips, the sky drifts, a dark gust band lies on the wet; the waders are small at 400 px and the nearest two are as pale as the key feeders
-look-1.jpg = out/work/v4-file.jpg
+2026-11-26 13:52 UTC
+work at f4c3525 on HEAD
+v4 probes, rows at loop 150, 300 and 200: the two pale waders by the left cliff have walked and one has turned; the walk is a few pixels at 400 px; the bottom row still holds the file of waders, now taken out because it stood before the arch
+look-1.jpg = out/work/v4-walk.jpg
 look-2.jpg = out/work/v4-gust.jpg
-look-3.jpg = out/work/v4-sky.jpg
