@@ -91,6 +91,14 @@ void main() {
     relief = mix(relief, texture2D(uReliefClose, clamp(uvClose, 0.0, 1.0)).rgb, inClose);
     texel = mix(texel, uTexelKm.y, inClose);
   }
+  // Between the ground and orbit the country is seen through air: the map's own hard light and dark, crest by crest, is drawn
+  // toward the light of the country round it, so a range is one soft pale body with fine lines in it and no etched thing.
+  {
+    vec3 around = texture2D(uMapWide, clamp(uvWide, 0.0, 1.0), 4.5).rgb;
+    if (inClose > 0.0) around = mix(around, texture2D(uMapClose, clamp(uvClose, 0.0, 1.0), 4.5).rgb, inClose);
+    float soften = mix(0.45, 0.4, smoothstep(110.0, 240.0, uViewKm)) * smoothstep(30.0, 60.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm)) * inWide;
+    ground *= pow(max(dot(around, vec3(0.3, 0.55, 0.15)), 0.01) / max(dot(ground, vec3(0.3, 0.55, 0.15)), 0.01), soften);
+  }
   // Blue of the relief: over 0.3 the height of the land, under 0.25 water and how shallow it is.
   float land = smoothstep(0.255, 0.3, relief.b);
   float height = clamp((relief.b - 0.3) / 0.7, 0.0, 1.0);
@@ -150,9 +158,9 @@ void main() {
   // Only near the top of the rise does the body come together: the great ranges stand pale as old bone, the country between them falls dark and cold.
   // Near the ground the country is warm tan under a soft light, its shade open.
   float near = (1.0 - smoothstep(110.0, 300.0, uViewKm)) * land;
-  ground = mix(ground, pow(ground, vec3(0.72)) * 0.47 * mix(vec3(0.74, 0.9, 1.16), vec3(1.03, 0.97, 0.88), smoothstep(0.08, 0.34, lum)), 0.85 * near);
+  ground = mix(ground, pow(ground, vec3(0.72)) * 0.47 * mix(vec3(0.8, 0.92, 1.1), vec3(1.1, 0.97, 0.8), smoothstep(0.08, 0.34, lum)), 0.85 * near);
   // The rock of this country is grey, cold in its shade: the maps' warmth is taken down.
-  ground = mix(ground, vec3(dot(ground, vec3(0.3, 0.55, 0.15))) * vec3(0.95, 1.0, 1.07), mix(0.5, mix(0.15, 0.6, smoothstep(0.2, 0.55, height)), smoothstep(110.0, 300.0, uViewKm)) * land * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
+  ground = mix(ground, vec3(dot(ground, vec3(0.3, 0.55, 0.15))) * vec3(0.95, 1.0, 1.07), mix(0.3, mix(0.15, 0.75, smoothstep(0.2, 0.55, height)), smoothstep(110.0, 300.0, uViewKm)) * land * (1.0 - smoothstep(600.0, 1300.0, uViewKm)));
   // East of the skull, round the throat, the plain is rust red.
   vec2 fromThroat = (xz - uThroat - vec2(-60.0, -30.0)) / vec2(250.0, 300.0);
   float rust = exp(-dot(fromThroat, fromThroat)) * land * (1.0 - smoothstep(0.4, 0.7, height));
@@ -160,23 +168,27 @@ void main() {
   // Between the ground and orbit the country is seen under a low sun through cold air: darker, its shade blue.
   float midway = smoothstep(90.0, 240.0, uViewKm) * (1.0 - smoothstep(700.0, 1300.0, uViewKm)) * land;
   // (The low country dark teal and green, the dry pans red brown, the pale kept for the crests and the bone.)
-  float lowMid = 1.0 - smoothstep(0.08, 0.34, broad);
+  float lowMid = (1.0 - smoothstep(0.26, 0.5, broad)) * (1.0 - smoothstep(0.38, 0.62, height));
   float dryPan = smoothstep(0.12, 0.4, (ground.r - ground.b) / max(lum, 0.02)) * smoothstep(0.0, 0.12, ground.r - ground.g) * lowMid;
   ground = mix(ground, lum * vec3(0.2, 0.52, 0.52), 0.8 * growth * midway);
   ground = mix(ground, lum * vec3(0.95, 0.4, 0.29), 0.8 * dryPan * midway);
-  ground *= mix(vec3(1.0), mix(mix(vec3(0.36, 0.5, 0.6), vec3(0.7, 0.95, 1.1), smoothstep(240.0, 640.0, uViewKm)), vec3(0.6, 0.6, 0.6), 1.0 - lowMid), midway);
+  ground *= mix(vec3(1.0), mix(mix(vec3(0.36, 0.5, 0.6), vec3(0.7, 0.95, 1.1), smoothstep(240.0, 640.0, uViewKm)), vec3(0.6, 0.59, 0.57), 1.0 - lowMid), midway);
+  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(0.25, 1.0, 1.45), 0.8 * lowMid * midway * smoothstep(200.0, 480.0, uViewKm));
+  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(2.3, 0.85, 0.5), 0.7 * dryPan * midway);
+  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(2.1, 0.8, 0.52), 0.6 * min(1.0, 1.4 * rust) * midway);
   // (The bone is seen through air: its own light and dark drawn together, so it is one pale body cut by fine lines.)
   float boneLum = dot(ground, vec3(0.3, 0.55, 0.15));
   float crestMid = smoothstep(-0.03, 0.1, height - broad);
-  ground *= mix(1.0, pow(max(boneLum, 0.01) / 0.3, -0.3) * mix(0.62, 1.0, crestMid), midway * (1.0 - lowMid));
+  ground *= mix(1.0, pow(max(boneLum, 0.01) / 0.3, -0.3) * mix(0.72, 0.95, crestMid), midway * (1.0 - lowMid));
   // (Its shade is brown, never grey: old bone, stained.)
-  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(1.14, 0.97, 0.84), 0.5 * midway * (1.0 - lowMid) * (1.0 - crestMid));
+  ground = mix(ground, dot(ground, vec3(0.3, 0.55, 0.15)) * vec3(0.96, 1.0, 1.08), 0.5 * midway * (1.0 - lowMid) * (1.0 - crestMid));
   // West and south of the skull the country is low islands and drowned ridges: dark, wet, teal and green, under the cloud of that sea.
   // The pale is the skull's alone, so it stands out of dark country as bone does out of earth.
   vec2 fromSkull = (xz - vec2(${X(1350).toFixed(1)}, ${Z(1566).toFixed(1)})) / vec2(${(330 * KM).toFixed(1)}, ${(270 * KM).toFixed(1)});
-  float offBone = smoothstep(0.95, 1.4, length(fromSkull)) * (1.0 - smoothstep(${X(1600).toFixed(1)}, ${X(1800).toFixed(1)}, xz.x)) * smoothstep(110.0, 220.0, uViewKm) * land;
+  float west = smoothstep(0.95, 1.4, length(fromSkull)) * (1.0 - smoothstep(${X(1600).toFixed(1)}, ${X(1800).toFixed(1)}, xz.x)) * smoothstep(110.0, 220.0, uViewKm);
+  float offBone = west * land;
   float bright = dot(ground, vec3(0.3, 0.55, 0.15));
-  ground = mix(ground, (0.016 + 0.1 * bright) * mix(vec3(0.07, 0.42, 0.95), ground / max(bright, 0.02), 0.12), 0.95 * offBone);
+  ground = mix(ground, (0.014 + 0.085 * bright) * mix(vec3(0.05, 0.4, 1.0), ground / max(bright, 0.02), 0.1), 0.95 * offBone);
   slope *= 1.0 - 0.7 * offBone;
   // From the height at which country is seen and no longer ground, the low country lies dark: wet, grown over, teal and slate.
   float wide = smoothstep(240.0, 640.0, uViewKm) * land;
@@ -190,16 +202,29 @@ void main() {
   slope *= mix(1.0, 0.55, lowness * wide);
   // (And even: from that height the low country is one dark body of growth, its small features gone into it.)
   ground = mix(ground, vec3(0.016, 0.046, 0.056) * (0.6 + 1.6 * lum), mix(0.12, 0.72, smoothstep(680.0, 1380.0, uViewKm)) * lowness * wide);
+  // (Between the ranges the dark of the country is teal, never grey: wet ground under cold air.)
+  float darkLum = dot(ground, vec3(0.3, 0.55, 0.15));
+  float darkCountry = (1.0 - smoothstep(0.03, 0.13, darkLum)) * smoothstep(240.0, 520.0, uViewKm) * (1.0 - smoothstep(900.0, 1380.0, uViewKm)) * land * (1.0 - min(1.0, 1.4 * rust));
+  ground = mix(ground, darkLum * vec3(0.3, 1.0, 1.3), 0.65 * darkCountry);
   float top = smoothstep(680.0, 1380.0, uViewKm) * land;
   float crest = smoothstep(0.3, 0.62, height);
+  float brineSeen = (ground.r - ground.g) / max(dot(ground, vec3(0.3, 0.55, 0.15)), 0.02);
   // (From orbit the dry plains are dark rust, never tan: the pale is the bone's alone.)
   float topLum = dot(ground, vec3(0.3, 0.55, 0.15));
-  float dryTop = smoothstep(0.1, 0.35, (ground.r - ground.b) / max(topLum, 0.02)) * (1.0 - crest) * (1.0 - smoothstep(0.22, 0.42, topLum));
-  ground = mix(ground, topLum * vec3(0.34, 0.4, 0.4), 0.7 * dryTop * top);
+  float dryTop = smoothstep(0.1, 0.35, (ground.r - ground.b) / max(topLum, 0.02)) * (1.0 - crest);
+  ground = mix(ground, min(topLum, 0.1 + 0.3 * topLum) * vec3(0.4, 0.42, 0.33), 0.85 * dryTop * top);
   ground *= mix(1.0, mix(0.8, 1.0, crest), top);
   ground = mix(ground, vec3(0.6, 0.54, 0.44), 0.25 * top * smoothstep(0.5, 0.85, height));
   // The high ground is old bone: its pale is warm, never the white of snow.
   ground *= mix(vec3(1.0), vec3(0.98, 0.84, 0.66), land * smoothstep(0.25, 0.7, height) * smoothstep(0.2, 0.5, lum));
+
+  // From orbit the warm of the land is the bone's alone: where the country is orange it is taken down to dark green brown, so the
+  // pale ranges carry the figure. (The rust of the throat stays.)
+  float warmLum = dot(ground, vec3(0.3, 0.55, 0.15));
+  float warm = smoothstep(0.2, 0.5, (ground.r - ground.b) / max(warmLum, 0.02)) * (1.0 - smoothstep(0.3, 0.5, warmLum)) * (1.0 - min(1.0, 1.4 * rust)) * top;
+  ground = mix(ground, min(warmLum, 0.03 + 0.35 * warmLum) * vec3(0.42, 0.52, 0.46), 0.85 * warm);
+  // (And seen through the air of orbit the low country is cold: blue green, its red taken down.)
+  ground *= mix(vec3(1.0), vec3(0.72, 0.92, 1.12), top * (1.0 - smoothstep(0.2, 0.5, height)) * (1.0 - min(1.0, 1.4 * rust)));
 
   // The chest round the Heart is old lava: a black crust between the ribs, which stand out of it pale.
   vec2 fromHeart = xz - uLava;
@@ -209,7 +234,7 @@ void main() {
   // and into the sea, in streaks drawn along the fall of the land.
   vec2 fromPan = xz - uSalt;
   float panAt = (1.0 - smoothstep(0.6, 1.15, length(fromPan / vec2(175.0, 140.0)) + 0.5 * (texture2D(uCloudTile, xz / 420.0, 1.0).b - 0.5))) * land;
-  float brine = smoothstep(0.2, 0.42, (ground.r - ground.g) / max(lum, 0.02));
+  float brine = smoothstep(0.26, 0.5, brineSeen);
   float saltFlat = panAt * (1.0 - brine);
   ground = mix(ground, vec3(0.8, 0.8, 0.78) * (0.8 + 0.5 * lum), 0.92 * saltFlat);
   ground = mix(ground, vec3(0.22, 0.02, 0.02), 0.9 * panAt * brine);
@@ -218,12 +243,12 @@ void main() {
   float acrossRun = dot(fromPan, vec2(-run.y, run.x)) / (60.0 + 170.0 * alongRun);
   float streaks = texture2D(uCloudTile, vec2(alongRun * 0.9, acrossRun * 0.55 + 0.3) + 0.04 * slope, 1.0).b;
   float plume = exp(-acrossRun * acrossRun * 1.6) * smoothstep(0.06, 0.16, alongRun) * (1.0 - smoothstep(0.35, 1.0, alongRun)) * smoothstep(0.3, 0.75, streaks + 0.25 * (1.0 - alongRun));
-  ground = mix(ground, vec3(0.2, 0.05, 0.03) * (0.5 + 1.6 * lum), 0.7 * plume * (1.0 - 0.6 * smoothstep(0.35, 0.6, height)));
+  ground = mix(ground, vec3(0.1, 0.034, 0.024) * (0.5 + 1.6 * lum), 0.6 * plume * (1.0 - 0.6 * smoothstep(0.35, 0.6, height)));
 
   // ---- the light ----
   // The maps hold soft light from the upper left, and the place's sun stands on that side: the relief is lit from the slope, on top of it.
   // Near the ground the relief is gentle, as low sun on old worn country; from orbit it is drawn stronger, as relief is on a map.
-  slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
+  slope *= mix(0.25, 0.4, smoothstep(300.0, 1200.0, uViewKm)) * (1.0 - 0.5 * smoothstep(110.0, 240.0, uViewKm) * (1.0 - smoothstep(450.0, 900.0, uViewKm))) * (1.0 - 0.6 * smoothstep(0.3, 0.62, height));
   vec3 n = normalize(vec3(-slope.x, 0.8, -slope.y));
   float shade = cloudShade(xz);
   float mu = limbCos(xz);
@@ -254,7 +279,7 @@ void main() {
   // ---- the water ----
   // What comes back from under the surface: the map's own shallows, bars and silt over the deep, lit by the sun and the sky.
   vec3 light = uSunColour * uSunDir.y * shade + skyIrradiance(level);
-  float pale = pow(shallow, 1.3);
+  float pale = pow(shallow, 1.3) * (1.0 - 0.6 * west);
   vec3 bed = mix(DEEP, max(ground * 0.34, vec3(0.006, 0.035, 0.04)), pale);
   // The red of the pan carried out to sea: sediment in the water, thinning as it goes.
   bed = mix(bed, vec3(0.2, 0.045, 0.016), 0.75 * plume * (1.0 - land));
@@ -288,7 +313,7 @@ void main() {
     vec2 lw = xz - uTime * vec2(0.03, 0.012);
     float l1 = dot(texture2D(uMatLakewater, mat2(0.8, 0.6, -0.6, 0.8) * lw / 20.0).rgb, vec3(0.3, 0.55, 0.15)) / 0.0138;
     float l2 = dot(texture2D(uMatLakewater, mat2(-0.28, 0.96, -0.96, -0.28) * lw / 53.0 + 0.4).rgb, vec3(0.3, 0.55, 0.15)) / 0.0138;
-    sparkle = mix(sparkle, clamp(0.55 * l1 + 0.45 * l2, 0.75, 1.35), inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm)));
+    sparkle = mix(sparkle, clamp(0.55 * l1 + 0.45 * l2, 0.4, 2.4), inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm)));
   }
   // The sky on the surface, and the sun on its waves: the glint lies where the surface of the planet leans half way to the sun.
   float calm = texture2D(uCloudTile, xz / 1900.0 + vec2(0.5, 0.2), 2.0).b;
@@ -297,11 +322,11 @@ void main() {
   float t2 = lean * lean / (rough * rough);
   float lobe = exp(-t2) / (3.14159 * rough * rough);
   float fresnel = 0.02 + 0.98 * pow(1.0 - mu * 0.9, 5.0);
-  water += uSkyColour * (0.003 + 0.045 * fresnel) * sparkle * (0.4 + 0.6 * shade);
+  water += uSkyColour * (0.003 + 0.028 * fresnel) * sparkle * (0.4 + 0.6 * shade);
   // On the lake, from near, the wind is seen on the water: lanes of ruffled surface that take the sky.
-  water += uSkyColour * 0.006 * (sparkle - 0.85) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
-  water += uSunColour * vec3(0.9, 0.95, 1.0) * lobe * 0.004 * shade * (0.55 + 0.45 * sparkle);
-  water += uSunColour * vec3(1.0, 0.97, 0.92) * 0.0085 * exp(-lean * lean / 0.003) * (0.78 + 0.22 * shade) * (0.62 + 0.38 * sparkle) * (0.85 + 0.3 * calm);
+  water += uSkyColour * 0.03 * (sparkle - 0.8) * inLakeWater * (1.0 - smoothstep(0.2, 0.6, pixelKm));
+  water += uSunColour * vec3(1.0, 0.97, 0.92) * lobe * 0.004 * shade * (0.8 + 0.2 * sparkle);
+  water += uSunColour * vec3(1.0, 0.95, 0.87) * 0.0085 * exp(-lean * lean / 0.003) * (0.78 + 0.22 * shade) * (0.62 + 0.38 * sparkle) * (0.85 + 0.3 * calm);
 
   vec3 colour = mix(water, earth, land);
 
