@@ -265,7 +265,7 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
       // The one the long lens looks at feeds through its shot, pulls its tuft out near the end of it and puts it back after.
       const hero = Math.max(pulse(seconds, 13.0, 14.2, 14.9, 16.2), working(seconds) * (1 - smooth(5, 6.2, seconds) * (1 - smooth(16.2, 17.2, seconds))));
       // As the long lens comes to it, it has its tuft out of the heat, well clear of the melt, and holds it there; it lowers it into the pool before the key looks.
-      const held = index === 1 ? pulse(seconds, 5.4, 7.9, 9.2, 10.78) : 0;
+      const held = index === 1 ? pulse(seconds, 5.4, 7.9, 9.4, 10.8) : 0;
       const up = turning ? smooth(7, 9, seconds) * (1 - smooth(20, 23, seconds)) : index === 1 ? hero : working(seconds) * (index === 0 || index === 13 ? atKey(seconds) : 1);
       return {
         down: 1 - Math.max((turning ? 0.85 : index === 1 ? 0.5 : 0.85) * up, 0.8 * held),
@@ -277,12 +277,12 @@ export function makePlan(index: number, b: Build, env: Env, t0: number): Plan {
     // Each pad in its turn is put down a step off. The one the long lens looks at re-places one fore pad while it looks, and has it down before the key.
     const fidget = turning ? 0 : index === 1 ? 4 : 4.6 + 3.6 * (((index * 3 + 1) % 14) / 13);
     const lag = index === 1 ? -2.2 : hash(index, 19) * 4 * fidget;
-    // The one the long lens looks at is seen on other feet through that shot. Its hind pad goes early and higher than its build has it, is in the
-    // air when the shot is a moment old and comes down with weight before the key: the body sinks on it a beat late. Its fore pad goes early after
+    // The one the long lens looks at is seen on other feet through that shot. Its hind pad goes early and higher than its build has it, is held
+    // up for a moment and comes down with weight just before the key: the body sinks on it a beat late. Its fore pad goes early after
     // the key, slower, a third of the leg's length up, knee folded, and the body leans farther off it. The animal is on its own time, at its own
     // weight, before the shot, at the key and from the end of the shot on, so that the key and the shots either side see it as they did.
-    const early = index === 1 ? (s: number): number => 0.42 * pulse(s, 7.15, 8.4, 8.7, 10.6) + 0.35 * pulse(s, 10.83, 12.05, 12.25, 14.9) : undefined;
-    const stepUp = index === 1 ? (s: number, j: number): number => (j === 2 ? 1.6 * pulse(s, 7.2, 8.0, 10.4, 10.8) : j === 1 ? 3.2 * pulse(s, 10.9, 11.9, 14.6, 15.2) : 0) : undefined;
+    const early = index === 1 ? (s: number): number => 0.42 * pulse(s, 7.15, 8.4, 8.7, 9.6) + 0.35 * pulse(s, 10.83, 12.05, 12.25, 14.9) : undefined;
+    const stepUp = index === 1 ? (s: number, j: number): number => (j === 2 ? 2.4 * pulse(s, 7.2, 8.0, 10.4, 10.8) : j === 1 ? 3.2 * pulse(s, 10.9, 11.9, 14.6, 15.2) : 0) : undefined;
     const weight = index === 1 ? (s: number): number => 1 + 0.3 * pulse(s, 10.83, 11.5, 14.6, 15.4) : undefined;
     const sink = index === 1 ? (s: number): number => 1 + 3 * pulse(s, 9.9, 10.2, 10.45, 10.8) : undefined;
     return { sigma, body, neck, fidget, lag, early, stepUp, weight, sink, halfStep: none, habit, dig: c.role === 'tastes' ? 0 : dig, dip: c.role === 'tastes' ? 0 : 0.3 * k, range: turning ? 1.3 * k : 1.0 * k };
