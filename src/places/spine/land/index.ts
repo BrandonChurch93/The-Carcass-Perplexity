@@ -4,8 +4,8 @@ import * as THREE from 'three';
 import { FIRST, finAxes, first, sheetMap, spires, type Spire } from '../ridge';
 import { SHEETS, type SheetData } from '../shared/sheets';
 import type { Context, Piece } from '../shared/context';
-import { RAD, carcassAxis, carcassBody, carcassView, step } from '../shared/anchors';
-import { canalFloor, canalShell, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh } from './meshes';
+import { CARCASS, RAD, WIND, carcassAxis, carcassBody, carcassView, step } from '../shared/anchors';
+import { canalFloor, canalShell, crestStrip, flanks, hollow, icicles, reliefDepth, spireMesh, stones } from './meshes';
 import { height } from './height';
 import { ICE_FRAGMENT, ICE_VERTEX, ICICLE_FRAGMENT, ICICLE_VERTEX, LAND_DEPTH_FRAGMENT, LAND_FRAGMENT, LAND_VERTEX } from './shaders';
 
@@ -134,6 +134,26 @@ export function create(ctx: Context): Piece {
   add(crestStrip(), groundMaterial);
   add(flanks(), groundMaterial);
   spires.forEach((sp, i) => add(spireMesh(sp, ctx.rng(`land/spire-${i}`), i === FIRST ? 2 : i >= FIRST - 1 && i <= FIRST + 3 ? 1 : 0), spireMaterials[i] as THREE.ShaderMaterial));
+  // The stones about the dead one, each with its tail of drift; the body lies in a bank drifted against its windward side, with a
+  // longer tail in its lee. The lens of that shot and the body itself are kept clear.
+  const lens = step(carcassBody, carcassView + 180, 3.1);
+  const gale: [number, number] = [WIND[0] / Math.hypot(WIND[0], WIND[2]), WIND[2] / Math.hypot(WIND[0], WIND[2])];
+  add(
+    stones(
+      ctx.rng('land/stones'),
+      [CARCASS[0], CARCASS[2]],
+      [
+        [carcassBody[0], carcassBody[2], 1.5],
+        [lens[0], lens[2], 2.2],
+      ],
+      gale,
+      [
+        { at: [carcassBody[0] - gale[0] * 0.3, carcassBody[2] - gale[1] * 0.3], along: [-gale[0], -gale[1]], long: 2.2, wide: 0.9, high: 0.13 },
+        { at: [carcassBody[0] + gale[0] * 0.25, carcassBody[2] + gale[1] * 0.25], along: gale, long: 4.5, wide: 0.95, high: 0.2 },
+      ],
+    ),
+    groundMaterial,
+  );
   add(canalShell(ctx.rng('land/canal-wall'), 0), wallMaterial);
   add(canalFloor(), iceMaterial);
   add(icicles(ctx.rng('land/icicles')), icicleMaterial);

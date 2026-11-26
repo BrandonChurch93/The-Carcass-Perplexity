@@ -265,8 +265,11 @@ void main() {
   float steep = smoothstep(0.985, 0.85, smoothN.y);
   float rib = uKind < 0.5 ? steep * (smoothstep(0.42, 0.7, vnoise(vec2(vSL.x / 17.0, vSL.y / 120.0 + 3.0)) + 0.25 * (vnoise(vWorld.xz * 0.21) - 0.5)) * 0.8 - 0.55 * dot(n0.xz, uWind.xz) * smoothstep(0.0, 1.0, -dot(n0.xz, uWind.xz) * 3.0)) : 0.0;
   float lie0 = mix(smoothN.y, n0.y, 0.35) - 0.07 + 0.12 * dot(n0.xz, uWind.xz) + 0.16 * (vnoise(vWorld.xz * 0.09) - 0.5) - rib;
+  // About the dead one the snow is thin: the gale has scoured the place where the bolt came down, and rock shows through it.
+  float thin = 0.0;
+  if (ground) thin = smoothstep(30.0, 9.0, length(vWorld.xz - uScorch.xy));
   bool buried = false;
-  if (ground) buried = porch <= 0.0 && lie0 - 0.42 * clamp(vTop, 0.0, 1.0) > 0.57;
+  if (ground) buried = porch <= 0.0 && thin <= 0.0 && lie0 - 0.42 * clamp(vTop, 0.0, 1.0) > 0.57;
   vec3 sheetAx = vec3(uSheet.z, 0.0, uSheet.w);
   vec2 sheetUv = vec2((dot(vWorld.xz - uSheet.xy, uSheet.zw) + uSheetShear * vWorld.y) * uSheetMap.x + uSheetMap.y, vWorld.y * uSheetMap.z + uSheetMap.w);
   vec3 sheetC = vec3(0.0);
@@ -426,6 +429,13 @@ void main() {
   // Rock that stands out of the snow keeps it only on its level tops.
   float bare = spire ? 0.0 : clamp(vTop, 0.0, 1.0);
   float snow = smoothstep(0.36, 0.56, lie - 0.42 * bare - rib);
+  if (ground) if (thin > 0.0) {
+    // The rubble picture is blocks half in snow: where it is dark there is a stone or a rib of rock, wet and dark, and the snow stops at it.
+    float stone = thin * smoothstep(0.34, 0.2, dot(rock, vec3(0.33)) / 1.5 + 0.12 * (vnoise(vWorld.xz * 0.35) - 0.5));
+    snow *= 1.0 - 0.92 * stone;
+    albedo *= mix(1.0, 0.5, stone);
+    rough = mix(rough, 0.32, stone);
+  }
   if (spire) {
     // On a spire the snow keeps to the ledges and the gullies: where the body of the rock leans back, and where a slab stands in from its neighbours.
     float held = 0.55 * smoothN.y + 0.45 * n0.y + 0.2 * smoothstep(1.0, -7.0, vRelief) + 0.14 * (pit - 0.5) + 0.1 * lee + 0.12 * (vnoise(vWorld.xz * 0.07 + vWorld.y * 0.05) - 0.5);
