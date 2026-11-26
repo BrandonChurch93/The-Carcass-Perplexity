@@ -120,7 +120,8 @@ void main() {
   if (uDisp > 0.0) {
     // The folds painted in the picture stand out of the skin where it is seen from the side: light is high, dark is the crease.
     vec2 uv = picAt(position, aInfo.z);
-    float side = smoothstep(0.25, 0.6, abs(normal.z)) * smoothstep(0.5, 0.9, textureLod(tPicA, uv, 2.0).r);
+    // Not at the picture's outline, where its ground shows, and not under the trunk, where it is pulled out: there the folds stood out as a comb.
+    float side = smoothstep(0.25, 0.6, abs(normal.z)) * smoothstep(0.8, 0.97, textureLod(tPicA, uv, 4.0).r) * mix(smoothstep(0.6, 0.95, position.y), smoothstep(0.45, 0.8, abs(normal.z)), aInfo.z);
     float fine = dot(textureLod(tPic, uv, 1.0).rgb, vec3(0.3, 0.5, 0.2));
     float wide = dot(textureLod(tPic, uv, 4.5).rgb, vec3(0.3, 0.5, 0.2));
     lift = clamp((fine - wide) / (wide + 0.03), -0.7, 0.5) * uDisp * side * (1.0 - aInfo.y);
@@ -138,6 +139,13 @@ void main() {
   vRestN = normal;
   vInfo = aInfo;
   vRaise = mix(raised(aBones.y), raised(aBones.x), aBones.z);
+  if (vRaise > 0.0) {
+    // A foot that is pulled out of the mud brings it up with it: it hangs from the sole in lobes, and from the back of the leg.
+    vec3 hq = position * 31.0;
+    float lobe = 0.5 + 0.5 * sin(hq.x + 1.7 * sin(hq.z * 1.3)) * sin(hq.z * 1.1 + 1.3 * sin(hq.x * 0.7));
+    float sole = smoothstep(0.1, -0.6, normal.y) * aInfo.z * (1.0 - aInfo.y);
+    vWorld.y -= uK * 0.12 * smoothstep(0.0, 0.1 * uK, vRaise) * sole * lobe * lobe;
+  }
   gl_Position = projectionMatrix * viewMatrix * vec4(vWorld, 1.0);
 }`;
 
@@ -202,12 +210,14 @@ void main() {
   // A leg that is lifted takes with it the wet and the mud of where it stood: they are measured from where it would be on the ground.
   float wy = vWorld.y - vRaise;
   vec2 uv = picAt(pr, vInfo.z);
-  float cover = smoothstep(0.45, 0.85, textureLod(tPicA, uv, 1.5).r);
+  float cover = smoothstep(0.8, 0.97, textureLod(tPicA, uv, 4.0).r);
   float top = max(smoothstep(0.25, 0.6, nr.y) * smoothstep(1.2, 1.6, vRest.y) * (1.0 - vInfo.z), smoothstep(0.0, 0.25, belly));
   // One that wears a photographed tile (matted hair, drying mud) wears it everywhere: the flank picture gives way to it.
-  float side = max(smoothstep(0.25, 0.55, abs(nr.z)), top) * cover * (1.0 - uTile);
+  float side = max(smoothstep(mix(0.25, 0.45, vInfo.z), mix(0.55, 0.8, vInfo.z), abs(nr.z)), top) * cover * (1.0 - uTile);
   // The head wears the tile: the picture's brow has a dark fold that reads as an eye, and it has none.
-  side *= 1.0 - 0.9 * smoothstep(0.6, 0.76, vRest.x / uPic.x) * (1.0 - vInfo.z);
+  // Far off the picture's neck folds run together into one dark patch behind the head: there the tile begins at the shoulder.
+  float nearK = smoothstep(0.4, 0.9, uNear);
+  side *= 1.0 - 0.9 * smoothstep(mix(0.4, 0.6, nearK), mix(0.56, 0.76, nearK), vRest.x / uPic.x) * (1.0 - vInfo.z);
   // Under the trunk the picture is pulled out into streaks: the tile takes over there.
   side *= mix(smoothstep(0.6, 0.95, vRest.y), 1.0, max(vInfo.z, uMudded));
   // On a young one the plate is a third the size: its pores would read as down, so it is taken softer and the folds are left.
@@ -238,9 +248,10 @@ void main() {
   // And the picture's own creases are drawn harder than it has them.
   albedo *= mix(1.0, clamp(1.0 + 1.2 * (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0), 0.45, 1.5), 0.7 * side * uNear);
   // A warm tan with pink in it; the deep red is the mud's, lower down.
-  albedo = mix(vec3(dot(albedo, LUMA)) * mix(vec3(1.07, 0.97, 0.88), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
+  albedo = mix(vec3(dot(albedo, LUMA)) * mix(mix(vec3(1.15, 0.95, 0.78), vec3(1.07, 0.97, 0.88), uTile), vec3(1.14, 0.95, 0.82), uMudded), albedo, mix(0.3, 0.5, uMudded));
   // The head is the darkest of it: heavy, grey, and folded.
-  float headed = smoothstep(0.58, 0.78, vRest.x / uPic.x) * (1.0 - vInfo.z) * (1.0 - uMudded) * (1.0 - horn);
+  // (Only by the lens: far off a dark head on a pale hump reads as a hole in it.)
+  float headed = smoothstep(0.45, 0.85, vRest.x / uPic.x) * (1.0 - vInfo.z) * (1.0 - uMudded) * (1.0 - horn) * smoothstep(0.5, 0.9, uNear);
   albedo *= 1.0 - 0.3 * headed * mix(1.0, 0.4, ridge);
 
   // The slope of the skin: from the light and dark of the picture on the flanks (a crease is dark), from the tile elsewhere, and the tile's grain over all near the lens.
@@ -269,8 +280,10 @@ void main() {
   vec3 nb = normalize(nr - (bump - nr * dot(bump, nr)) * (1.0 - 0.7 * horn));
   mat3 r = mat3(vR0, vR1, vR2);
   vec3 ng = normalize(r * nr);
-  vec3 n = normalize(r * nb);
   vec3 v = normalize(cameraPosition - vWorld);
+  // At its outline the grain is seen edge on: there it is the body's own slope that holds the light, or every edge wears a fringe of white sparks.
+  float graze = pow(1.0 - clamp(dot(ng, v), 0.0, 1.0), 2.5);
+  vec3 n = normalize(mix(normalize(r * nb), ng, 0.9 * graze));
 
   float patchy = vnoise3(q * 1.7 + uSeed);
   float grain = 0.5 + (height - 0.5) * (1.0 - side) + (l0 / (dot(soft.rgb, LUMA) / max(soft.a, 0.3) + 0.02) - 1.0) * 0.5 * side;
@@ -351,11 +364,13 @@ void main() {
   // The claws: old ivory, grooved, stained at the root.
   vec3 ivory = vec3(0.15, 0.115, 0.08) * (0.7 + 0.5 * height) * mix(vec3(1.0), tone, 0.35);
   albedo = mix(albedo, mix(ivory, albedo * 1.3, 0.5 * side), horn);
-  albedo = mix(albedo, albedo * vec3(0.72, 0.48, 0.4), damp * (1.0 - wet) * (1.0 - uMudded));
+  // The claws of the feet are never clean: they are black with the mud they stand in.
+  albedo = mix(albedo, vec3(0.03, 0.017, 0.013) * (0.6 + 0.8 * grain), 0.85 * horn * vInfo.z);
+  albedo = mix(albedo, albedo * vec3(0.6, 0.46, 0.41), damp * (1.0 - wet) * (1.0 - uMudded));
   // The stuck one's head is the wettest of it: it has been under and come up again.
   float headWet = uMudded * smoothstep(0.5, 0.82, vRest.x / uPic.x) * (1.0 - horn);
   albedo = mix(albedo, vec3(0.15, 0.09, 0.07) * (0.5 + 0.8 * grain), 0.55 * headWet);
-  vec3 soaked = mix(albedo * vec3(0.4, 0.185, 0.14) + vec3(0.006, 0.002, 0.001), albedo * 0.55, uMudded);
+  vec3 soaked = mix(albedo * mix(vec3(0.27, 0.15, 0.12), vec3(0.4, 0.185, 0.14), uTile) + vec3(0.004, 0.002, 0.001), albedo * 0.55, uMudded);
   albedo = mix(albedo, soaked, wet);
   albedo = mix(albedo, albedo * vec3(0.6, 0.36, 0.3), 0.6 * thread * damp * (1.0 - wet));
   // Thick mud on whatever stands in it.
@@ -381,22 +396,26 @@ void main() {
   float meet = (1.0 - smoothstep(0.012, 0.07 + 0.07 * lane, wy - uLine)) * smoothstep(-0.06, -0.01, wy - uLine);
   albedo = mix(albedo, albedo * vec3(0.32, 0.2, 0.18) + vec3(0.012, 0.002, 0.002), 0.85 * meet);
   rough = mix(rough, 0.22, 0.8 * meet);
+  // One that lies in the brine is dark with it for a hand above the line it stands at: ragged, and deepest where it goes under.
+  float under = uTile * (1.0 - uMudded) * (1.0 - smoothstep(0.02, 0.2 + 0.12 * lane, wy - uLine + 0.12 * (patchy - 0.5)));
+  albedo *= 1.0 - 0.72 * under;
+  rough = mix(rough, 0.35, 0.5 * under * glint);
   // The stuck one is wet and dark with the slurry it lies in to a hand above it, and that shines.
   float sunkIn = uMudded * (1.0 - smoothstep(0.0, 0.3 + 0.2 * lane, wy - uLine));
   albedo *= 1.0 - 0.55 * sunkIn;
   rough = mix(rough, 0.3, 0.6 * sunkIn);
-  rough = mix(rough, mix(0.38, 0.8, smoothstep(0.35, 0.7, clod)), deep);
-  rough = mix(rough, 0.6, horn * (1.0 - deep));
-  rough = mix(rough, 1.0, 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0));
+  rough = mix(rough, mix(mix(0.62, 0.38, uMudded), mix(0.92, 0.8, uMudded), smoothstep(0.35, 0.7, clod)), deep);
+  rough = mix(rough, mix(0.6, 0.92, vInfo.z), horn * mix(1.0 - deep, 1.0, vInfo.z));
+  rough = mix(rough, 1.0, max(0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0), graze));
   // What a fold hides from the sky, and what the body hides from it: the belly, the throat, the insides of the legs. The picture brings its own shade.
-  float occ = (0.55 + 0.45 * smoothstep(0.0, 0.85, fold)) * (0.5 + 0.5 * smoothstep(-0.95, 0.25, ng.y)) * mix(crease, 1.0, side);
+  float occ = mix(1.0, 0.55 + 0.45 * smoothstep(0.0, 0.85, fold), mix(0.45, 1.0, smoothstep(0.4, 0.9, uNear))) * (0.5 + 0.5 * smoothstep(-0.95, 0.25, ng.y)) * mix(crease, 1.0, side);
   #ifdef CRUSTED
   occ = mix(occ, (0.6 + 0.4 * smoothstep(0.15, 0.6, rimeH)) * (0.6 + 0.4 * smoothstep(-0.9, 0.2, ng.y)) * (0.55 + 0.45 * smoothstep(0.0, 0.25, vWorld.y - uFloorY)), saltOn);
   rough = mix(rough, 0.97, saltOn);
   #endif
   #ifndef CRUSTED
   // By number: the live hide before the lens of the wallowers is half as light again in the approved picture as it was drawn. Far off the haze does it.
-  albedo *= 1.0 + 0.32 * (1.0 - uMudded) * smoothstep(0.5, 0.9, uNear);
+  albedo *= 1.0 + mix(0.08, 0.32, uTile) * (1.0 - uMudded) * smoothstep(0.5, 0.9, uNear);
   // And it is wet skin, not dry hair: it holds a dull light from the sky on every fold.
   rough = mix(rough, min(rough, 0.6), 0.8 * near1 * (1.0 - 0.7 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 3.0)));
   #endif

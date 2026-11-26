@@ -20,7 +20,7 @@ const HIP = 0.84;
 const HIND_X = -1.24;
 const FORE_X = 0.76;
 /** How far a girdle goes over the foot that bears it alone, at size 1. */
-const SHIFT = 0.12;
+const SHIFT = 0.16;
 const SOFT = 60;
 
 export interface Stride {
@@ -130,8 +130,8 @@ export function carry(s: number, surge: number, k: number, bulk: number, g: Stri
     // The lower of the two, taken softly: the girdle rides on the leg that can reach least.
     low[fore] = (low[fore] as number) + Math.exp(-can * SOFT);
   }
-  out.hind = -Math.log(0.5 * (low[0] as number)) / SOFT - 0.012 - 0.02 * (sink[0] as number);
-  out.fore = -Math.log(0.5 * (low[1] as number)) / SOFT - 0.012 - 0.02 * (sink[1] as number);
+  out.hind = -Math.log(0.5 * (low[0] as number)) / SOFT - 0.012 - 0.04 * (sink[0] as number);
+  out.fore = -Math.log(0.5 * (low[1] as number)) / SOFT - 0.012 - 0.04 * (sink[1] as number);
   out.air = air;
   return out;
 }
@@ -186,7 +186,7 @@ export function stride(out: Drive, plan: Plan, b: Build, s: number, sWas: number
   out.surge = surge;
   // The side whose feet are in the air sags.
   const lean = (now.load[2] as number) + (now.load[3] as number) - (now.load[0] as number) - (now.load[1] as number);
-  out.roll = -0.016 * lean;
+  out.roll = -0.04 * lean;
   // The belly is slung: it is still coming over when the trunk has arrived.
   const midWas = then.foreZ - FORE_X * ((then.foreZ - then.hindZ) / span);
   out.sway = 0.9 * k * (midWas - mid);
