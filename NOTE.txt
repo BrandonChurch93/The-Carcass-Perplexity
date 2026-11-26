@@ -1,7 +1,7 @@
-2026-11-26 02:06 UTC
-work at 2267eb7 on agent/ribs-sea-2
-version 1: picture bore, sheet animals, relief carcass (ribs-4, ribs-2, ribs-1, ribs-3 beside approved)
-look-1.jpg = out/work/v1-ribs-4.jpg
-look-2.jpg = out/work/v1-ribs-2.jpg
-look-3.jpg = out/work/v1-ribs-1.jpg
-look-4.jpg = out/work/v1-ribs-3.jpg
+2026-11-26 02:35 UTC
+work at f202d54 on agent/ribs-sea-2
+min 87: picture-card fliers, dark colony, gate bursts, pool wet band, squarer carcass plate, on main f202d54
+look-1.jpg = out/work/s-ribs-4.jpg
+look-2.jpg = out/work/s-ribs-3.jpg
+look-3.jpg = out/work/s-ribs-1.jpg
+look-4.jpg = out/work/s-ribs-2.jpg
