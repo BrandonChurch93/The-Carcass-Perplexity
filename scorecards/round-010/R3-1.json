@@ -1,0 +1,105 @@
+{
+  "round": 10,
+  "unit": "ribs",
+  "pack": "R3-1",
+  "family": "gemini",
+  "answered": "2026-11-26 00:14 UTC",
+  "answer": {
+    "critic": "R3",
+    "score": 3,
+    "pass": false,
+    "issues": [
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the wading animals in the center and right",
+        "what": "necks meet torsos at a hard disconnected cylinder step, legs are rigid angular rods with sharp kinks, wing sails have jagged low-poly edges, and nothing on their legs is wet",
+        "fix": "sculpt continuous organic neck-to-torso and joint transitions, add fine feather or membrane detail along the wing edges, and add wet darkening and water droplets to the lower legs"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the splash around the right animal's lowered head",
+        "what": "the spray reads as disconnected flat white dots and fuzzy grey discs in mid-air while the head filaments look like rigid translucent strips cutting into the water",
+        "fix": "replace the dot particles and flat strips with a physically simulated splash of varied fine droplets, light-catching mist, and wet clinging filaments"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the cliff rock face filling the left half of the frame",
+        "what": "the close-up rock texture is heavily smeared, soft, and glossy like melted plastic with pure black crevices",
+        "fix": "replace the stretched cliff material with high-resolution multi-scale rock displacement, rough mineral micro-detail, and bounced ambient light in the crevices"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-04.png",
+        "where": "the clinging creature along the cliff face",
+        "what": "the body and limbs look like a smooth clay CG model with blotchy procedural spots, flat-card tendrils, no contact shadow on the rock, and no grit or moisture from the cliff",
+        "fix": "add fine organic surface detail, subsurface scattering, wet and gritty weathering, grounded contact shadows, and volumetric tendrils that conform to the rock surface"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-07.png",
+        "where": "the foreground boulder on the bottom left (also visible in set-A-08.png bottom-right and set-A-09.png left)",
+        "what": "the rock surface shows an obvious repeating woven-grid tiling pattern and a visible UV seam near the bottom-left ridge",
+        "fix": "replace the tiled shader with non-repeating high-resolution stone texturing and seamless tri-planar or sculpted displacement"
+      },
+      {
+        "severity": "severe",
+        "file": "set-A-01.png",
+        "where": "the two wading animals on the mid-right shore",
+        "what": "the wing-spreading animal appears ghostly and semi-transparent like an alpha-blended card, the rightmost splash is a cluster of flat white spikes, and the standing animals lack grounding shadows",
+        "fix": "render solid opaque anatomy with natural feather or membrane translucency, simulate a real water splash, and ground every animal with contact shadows and reflections"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-06.png",
+        "where": "the foreground boulders and water in the right panel",
+        "what": "the foreground boulder has a sharp faceted polygon ridge and stretched texture, and the water is a flat grey sheet with no foam, meniscus, or darkened wet edge where it meets the rock",
+        "fix": "subdivide and displace the boulder silhouette to remove facets, fix the texture stretching, and add a darkened wet band, meniscus, and subtle foam at the waterline"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-08.png",
+        "where": "the distant shoreline surf and mist in the top-left and top-right panels",
+        "what": "the breaking surf reads as a bright flat vertical-striped card topped with repetitive grey puff-blobs",
+        "fix": "replace the flat surf band and puff cards with volumetric breaking wave spray and soft light-catching sea mist"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-03.png",
+        "where": "the wet sand and pebbles across both panels",
+        "what": "the sand surface shows a repeating cross-hatched moire bump pattern and small pebbles sit with dark rings and no natural sand buildup or water edge",
+        "fix": "break up the sand micro-normal to eliminate the repeating pattern and blend pebbles into the wet sand with water meniscuses and sediment edges"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-02.png",
+        "where": "the water and dark shadow patch in the bottom-right panel",
+        "what": "the water reads as smooth grey plastic with a hard-edged flat dark patch and no depth, foam, or shoreline transition",
+        "fix": "add realistic water depth, sky-driven specular variation, softer shadow falloff, and a wet shoreline edge"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-05.png",
+        "where": "the close-up cliff crops in the top-left and bottom-right panels and the creature torso in the top-right panel",
+        "what": "at native size the rock dissolves into blurry glossy streaks with pure black hollows, and the creature torso shows a sharp intersecting polygon seam at the limb joint",
+        "fix": "increase rock surface resolution and matte roughness, lift pure black crevices with bounce light, and weld and blend the creature limb-to-torso mesh"
+      },
+      {
+        "severity": "major",
+        "file": "set-A-09.png",
+        "where": "the water surface and pebbles in both panels",
+        "what": "the water is flat grey with procedural concentric rings around the head filaments, and small pebbles float or clip into the surface with dark halos and no refraction",
+        "fix": "add water clarity, refracted submerged rock bases, natural irregular ripples, and foam where the filaments break the surface"
+      },
+      {
+        "severity": "minor",
+        "file": "set-A-02.png",
+        "where": "the hazy sky and distant rock spires in the top-right and bottom-left panels",
+        "what": "a faint fine screen-door dithering grid is visible across the uniform grey-beige fog tint",
+        "fix": "remove the dithering grid artifact and add subtle atmospheric depth and light variation through the haze"
+      }
+    ]
+  }
+}
