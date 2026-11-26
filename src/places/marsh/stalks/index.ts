@@ -156,6 +156,7 @@ export function create(ctx: Context): Piece {
   const uSeconds = { value: 0 };
   const uGrove = { value: new THREE.Vector2(1, 1) };
   const uHead = { value: 1 };
+  const uDeep = { value: 0 };
   const salt = ctx.assets.texture('wallowers/salt.jpg', { kind: 'colour', anisotropy: 4 });
   const saltNh = ctx.assets.texture('wallowers/salt-nh.png', { kind: 'data', anisotropy: 4 });
   const stemMaterial = new THREE.ShaderMaterial({
@@ -478,7 +479,7 @@ export function create(ctx: Context): Piece {
       }
     }
     const headMaterial = new THREE.ShaderMaterial({
-      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, uHead, tFan, tFanA, tLock },
+      uniforms: { ...ctx.rig.uniforms, uSeconds, uGrove, uHead, uDeep, tFan, tFanA, tLock },
       vertexShader: HEAD_VERTEX,
       fragmentShader: HEAD_FRAGMENT,
       side: THREE.DoubleSide,
@@ -502,7 +503,7 @@ export function create(ctx: Context): Piece {
         h2.push(c[4] as number, c[5] as number, c[6] as number, (c[7] as number) + 1);
       }
     }
-    const leaf = new THREE.Mesh(instanced(sheet(4, 4), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
+    const leaf = new THREE.Mesh(instanced(sheet(2, 2), hung.length, { ...lines(hung), aCard: new Float32Array(h1), aCard2: new Float32Array(h2) }), headMaterial);
     leaf.frustumCulled = false;
     wide.add(leaf, stands.group);
     wideShade = stands.shade;
@@ -661,6 +662,7 @@ export function create(ctx: Context): Piece {
       else uGrove.value.set(1, 1);
       const inWide = staged >= WIDE_SPAN[0] && staged <= WIDE_SPAN[1];
       uHead.value = inWide ? 0.6 : 1;
+      uDeep.value = inWide ? 1 : 0;
       wide.visible = inWide;
       if (wideShade) wideShade.visible = inWide;
     },
