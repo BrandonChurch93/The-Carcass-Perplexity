@@ -418,13 +418,18 @@ void main() {
   float rimed = smoothstep(0.2, 0.8, x) * smoothstep(0.35, 0.75, 0.6 * vnoise(vec2(metres * 0.9, seed)) + 0.4 * vnoise(vec2(metres * 4.5, seed + 3.0)));
   vec3 sinew = mix(vec3(0.1, 0.055, 0.045), vec3(0.035, 0.022, 0.022), fibre) * (1.0 + 0.8 * min(knots, 1.0));
   rimed *= 1.0 - vFar;
-  vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0) * (1.0 - 0.5 * vFar);
   float corded = cordHere * (1.0 - 0.75 * blade) * mix(0.3, 1.0, max(vCord, vFar));
-  c = mix(c, cord, corded);
-  alpha = max(alpha, corded);
+  // Most of a veil is neither cord nor ice, and the rig's shading is the dearest thing here: it is paid only where one of them is.
+  if (corded > 0.0) {
+    vec3 cord = rigShade(vWorld, round_, toCamera, mix(sinew, vec3(0.6, 0.64, 0.7), rimed), mix(0.28, 0.8, rimed), 1.0) * (1.0 - 0.5 * vFar);
+    c = mix(c, cord, corded);
+    alpha = max(alpha, corded);
+  }
   // The ice on it: clear, lit along one side.
-  vec3 hung = rigShade(vWorld, normalize(n + vec3(fx * 14.0, 0.3, 0.0)), toCamera, vec3(0.5, 0.56, 0.64), 0.12, 1.0) + 0.35 * skyRadiance(-toCamera);
-  c = mix(c, hung, ice * (1.0 - corded));
+  if (ice * (1.0 - corded) > 0.0) {
+    vec3 hung = rigShade(vWorld, normalize(n + vec3(fx * 14.0, 0.3, 0.0)), toCamera, vec3(0.5, 0.56, 0.64), 0.12, 1.0) + 0.35 * skyRadiance(-toCamera);
+    c = mix(c, hung, ice * (1.0 - corded));
+  }
   alpha = max(alpha, ice);
   // The film is laid over what is behind it; the cord and the ice hide it.
   if (alpha < 0.02) discard;
