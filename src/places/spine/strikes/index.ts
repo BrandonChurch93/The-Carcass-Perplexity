@@ -22,7 +22,7 @@ const TINT = new THREE.Vector3(0.62, 0.5, 1);
 /** What the flash of a first stroke gives a face that looks at the channel from close by, as irradiance: the dusk gives level snow about 0.25. */
 const FLASH = 3.2;
 /** Each strike's share of it, in order: the one the place opens on is the brightest, and no two that follow each other are alike. */
-const FLASH_OF = [5.5, 0.8, 0.9, 3.2, 0.6, 0.15];
+const FLASH_OF = [5.5, 2.6, 0.9, 3.2, 0.6, 0.15];
 /** Each strike's share of the light the cloud round its channel takes, of the narrow pulse that comes in by the canal's far mouth, and of
  * the round lights (the storm's even lift of the place, which a flash must not become): the sixth is seen from inside the hollow, where
  * the lift would fill the animals and the pulse is the picture. */
@@ -52,7 +52,7 @@ const HOLD_LAND = 0.6;
 const HOLD_CLOUD = 0.55;
 const SPARKS = 16;
 /** The least height over the struck tip from which each strike's flash is cast, metres. */
-const CAST_UP = [480, 320, 320, 110, 320, 320];
+const CAST_UP = [480, 1100, 320, 110, 320, 320];
 /** The light at the struck tip: its radius in metres and its radiance at the peak of a stroke. */
 const TIP_RADIUS = 8;
 const TIP_CAST = 300000;
@@ -383,8 +383,8 @@ export function create(ctx: Context): Piece {
         const rising = age < 0 ? Math.max(0, 1 + age / PRE_OVER) : 0;
         const lit = Math.max(sky, PRE_CLOUD * rising * rising * rising);
         const round = lit * (ROUND_OF[of] as number);
-        // The cloud about the root: full on a stroke, and it dies after the last one over some eight frames. Before the first stroke it flickers.
-        // The lit cloud is gone eight frames after its last stroke: its last third sinks faster than the sky's own glow does.
+        // The cloud about the root: full on a stroke and gone some four frames after it, so that it never stands as one fixed shape while
+        // the sky's own glow dies round it. Before the first stroke it flickers.
         b.rootGlow.copy(TINT).multiplyScalar(ROOT_GLOW * (ROOT_OF[of] as number) * Math.max(hard, 0.5 * e.held * e.held, 0.15 * before));
         b.rootDie.set(before > 0 && sky <= 0 ? 0.6 : Math.min(1, Math.max(0, 1 - sky)), stroke);
         if (index === 4 && seconds < FIFTH_FROM) {
