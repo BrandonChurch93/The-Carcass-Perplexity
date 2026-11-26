@@ -29,7 +29,7 @@ const SPINE: [number, number, number][] = [[-1.08, 0, 0.02], [-0.92, 0, 0.12], [
 const SIDES = 6;
 const SPINE_VERTS = SPINE.length * SIDES;
 /** A leg trailed: [metres ahead of the shoulders, metres up, radius]. */
-const LEG: [number, number, number][] = [[-0.9, -0.06, 0.05], [-1.7, -0.12, 0.026], [-2.75, -0.2, 0.02], [-2.95, -0.27, 0.035]];
+const LEG: [number, number, number][] = [[-0.9, -0.06, 0.07], [-1.7, -0.12, 0.042], [-2.75, -0.2, 0.034], [-2.95, -0.27, 0.05]];
 const LEG_SIDES = 4;
 const LEG_VERTS = LEG.length * LEG_SIDES;
 const VERTS = 2 * WING_VERTS + SPINE_VERTS + 2 * LEG_VERTS;

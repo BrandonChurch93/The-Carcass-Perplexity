@@ -6,10 +6,10 @@ import * as THREE from 'three';
 import { config } from '../../../config';
 import { resolve } from '../../../core/cameras';
 import { partOfFrame, secondsInPlace, shotById, shotsOf } from '../../../film/cut';
-import { approachAsScattered, approachEye, shots } from '../cameras';
+import { approachAsScattered, approachEye, openingCamera, shots } from '../cameras';
 import { BORE, COLONY, LEVELS, RIBS, STATIONS, T0, UNIT, keySeconds } from '../shared/anchors';
 import type { Context, Piece } from '../shared/context';
-import { FLOCK, inOpening } from '../shared/opening';
+import { FLOCK, OPENING_END, inOpening } from '../shared/opening';
 import { loopPhase } from '../shared/stage';
 import { partAtHeight, ribByName, surface } from '../layout';
 import { foamTexture } from '../sea/chop';
@@ -921,7 +921,8 @@ export function create(ctx: Context): Piece {
   const STREAM = 110;
   const SWIRL = 260;
   const airBodies = bodyMaterials(ctx, LEVELS.pool, 0.1, 'fliers', FLIER_FLANK);
-  const flight = new Flight(airBodies, STREAM + SWIRL);
+  const LEAD = 84;
+  const flight = new Flight(airBodies, STREAM + SWIRL + LEAD);
   const F = flying();
   const streamWay = { x: FLOCK.toward[0] - FLOCK.from[0], y: FLOCK.toward[1] - FLOCK.from[1], z: FLOCK.toward[2] - FLOCK.from[2], long: 1, hx: 0, hz: 0 };
   streamWay.long = Math.hypot(streamWay.x, streamWay.y, streamWay.z);
@@ -980,6 +981,33 @@ export function create(ctx: Context): Piece {
       dark: 0,
     });
   }
+  // Some of the stream turn out to sea, and the lens of the approach passes them: each is abeam of it once, at its own time, well off
+  // to a side and mostly over it, on a straight way from the ledge. They are what gives the blades their size.
+  const leads = Array.from({ length: LEAD }, (_, k) => {
+    const at = 0.7 + (13.6 * (k + hash(k, 91))) / LEAD;
+    const cam = openingCamera(at);
+    const fx = cam.aim[0] - cam.position[0];
+    const fz = cam.aim[2] - cam.position[2];
+    const fl = Math.hypot(fx, fz) || 1;
+    const side = (hash(k, 92) < 0.5 ? -1 : 1) * (30 + 46 * hash(k, 93) ** 2);
+    const x = cam.position[0] - (fz / fl) * side;
+    const y = Math.max(cam.position[1] - 6 + 30 * hash(k, 94), 9);
+    const z = cam.position[2] + (fx / fl) * side;
+    const dx = x - FLOCK.from[0];
+    const dy = y - FLOCK.from[1];
+    const dz = z - FLOCK.from[2];
+    const l = Math.hypot(dx, dy, dz) || 1;
+    const flat = Math.hypot(dx, dz) || 1;
+    return { at, x, y, z, dx: dx / l, dy: dy / l, dz: dz / l, px: dz / flat, pz: -dx / flat, speed: FLOCK.speed * (0.85 + 0.3 * hash(k, 95)), seed: hash(k, 96) };
+  });
+  const leadPlace = (k: number, t: number, out: Spot): void => {
+    const b = leads[k] as (typeof leads)[number];
+    const gone = b.speed * (t - b.at);
+    const aside = 5 * Math.sin(t * (0.35 + 0.3 * b.seed) + k * 2.1) + 2 * Math.sin(t * (0.9 + 0.4 * b.seed) + k);
+    out.x = b.x + b.dx * gone + b.px * aside;
+    out.y = b.y + b.dy * gone + 2.2 * Math.sin(t * (0.5 + 0.3 * b.seed) + k * 1.3);
+    out.z = b.z + b.dz * gone + b.pz * aside;
+  };
   const was: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
   const next: Spot = { x: 0, y: 0, z: 0, yaw: 0, roll: 0 };
   /** A body in the air into `F` from where it was, is and will be a twentieth of a second apart: it heads the way it goes, noses up as it climbs and banks into its turn. */
@@ -1082,6 +1110,17 @@ export function create(ctx: Context): Piece {
           flierPlace(f, seconds, spot);
           borne(f.size, f.seed, seconds, 0);
           flight.put(STREAM + i, F);
+        }
+        for (let k = 0; k < LEAD; k++) {
+          if (seconds > OPENING_END + 2) {
+            flight.hide(STREAM + SWIRL + k);
+            continue;
+          }
+          leadPlace(k, seconds - 0.05, was);
+          leadPlace(k, seconds + 0.05, next);
+          leadPlace(k, seconds, spot);
+          borne(1 + 0.3 * hash(k, 97), (leads[k] as (typeof leads)[number]).seed, seconds, 0);
+          flight.put(STREAM + SWIRL + k, F);
         }
         flight.commit();
       }
