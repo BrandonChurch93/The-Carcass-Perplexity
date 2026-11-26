@@ -3,6 +3,10 @@
 // Sides: z of the path frame is the animal's right. `near` is +1 when the lens stands on its left, -1 on its right; what is said here is for +1.
 // In the skin of body.ts a head yaw above 0 turns the head to the left, and a roll above 0 tips the back to the right.
 import { FEELERS, LEG_AT, MID, type Build, type Drive, type Plan } from './animal';
+import { runUp, spell, stride as walk, type Stride } from './gait';
+
+/** How far the great one and the young one have walked, and at what stride, as they were last asked: for the mud at their feet. */
+export const trod: { s: number; pace: Stride }[] = [0, 1].map(() => ({ s: 0, pace: { length: 1, duty: 0.8, lift: 0, phase: 0, lead: 1 } }));
 
 const clamp = (v: number): number => Math.min(1, Math.max(0, v));
 /** 0 before a, 1 after b, with no speed and no push at either end: nothing starts or stops in a frame. */
@@ -12,20 +16,6 @@ const ease = (a: number, b: number, v: number): number => {
 };
 /** Up over the first two fifths of a to b and down over the rest: a shove and the slower drawing back. */
 const pulse = (a: number, b: number, v: number): number => ease(a, a + 0.4 * (b - a), v) * (1 - ease(a + 0.4 * (b - a), b, v));
-
-/** A foot from `from` to `from + reach` between the seconds a and b: dragged up out of the mud, carried, and set down from above. Writes x and the lift. */
-function stride(out: Drive, l: number, from: number, reach: number, height: number, a: number, b: number, v: number): number {
-  const foot = out.feet[l] as [number, number, number];
-  const u = clamp((v - a) / (b - a));
-  foot[0] = from + reach * ease(0.14, 0.9, u);
-  const s = Math.sin(Math.PI * Math.pow(u, 1.3));
-  foot[1] = height * s * s;
-  // The claws trail as the pad peels out of the mud; the pad is carried level, the toes a little up, and comes down flat.
-  const peel = Math.sin(Math.PI * clamp(u / 0.5));
-  const carry = Math.sin(Math.PI * clamp((u - 0.4) / 0.6));
-  out.toe[l] = (out.toe[l] as number) + 0.24 * peel * peel - 0.2 * carry * carry;
-  return s * s;
-}
 
 function rest(out: Drive, plan: Plan, b: Build): void {
   out.ox = plan.at[0];
@@ -52,73 +42,58 @@ function rake(out: Drive, b: Build, seconds: number, base: number): void {
   for (let f = 0; f < FEELERS; f++) out.curl[f] = base + 0.2 * Math.sin(seconds * 2.3 + f * 2.4 + b.seed * 31) + 0.08 * Math.sin(seconds * 4.1 + b.seed * 3);
 }
 
-/** The great one: head up out of the mud, down into it and a shove from the shoulders to the key, then the head swung to the lens's side and one step of the near foreleg. */
+/** The great one: it comes on at a walk with its head up, stands and shoves its head down into the mud at the key, swings the head to the lens's side and walks on.
+ * Its feet, the height of its hips and shoulders and the side its weight is on come from the walk (gait.ts); what is here is the pace and the head. */
 export function great(plan: Plan, b: Build, seconds: number, t: number, near: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const up = 1 - ease(-2.15, -0.45, t);
-  const shove = ease(-1.35, 0.3, t);
-  const back = ease(1.0, 3.6, t);
-  const swing = ease(0.15, 1.95, t);
-  // The near hind foot is brought up under it first, and the near fore foot, which stands behind its shoulder at the key, follows it after the shove.
-  const hind = near > 0 ? 0 : 2;
-  const fore = near > 0 ? 1 : 3;
-  const off = near > 0 ? [-0.36, -0.29, 0.26, 0.09] : [0.26, 0.09, -0.36, -0.29];
-  for (let l = 0; l < 4; l++) (out.feet[l] as number[])[0] += off[l] as number;
-  const air = stride(out, hind, (out.feet[hind] as number[])[0] as number, 0.42, 0.19 * k, -2.72, -0.8, t) + stride(out, fore, (out.feet[fore] as number[])[0] as number, 0.52, 0.22 * k, 0.45, 2.4, t);
-  // The weight is over the far legs while a near foot is in the air, and comes back onto the foot when it has landed.
-  const lean = (v: number): number => 0.13 - 0.1 * ease(-1.2, -0.2, v) + 0.14 * ease(-0.1, 0.8, v) - 0.27 * ease(1.95, 3.1, v);
-  const w = lean(t);
-  out.shift = near * k * w;
-  out.roll = near * 0.42 * w;
-  out.sway = near * k * 0.7 * (lean(t - 0.3) - w);
-  out.surge = k * (-0.15 + 0.36 * shove - 0.1 * back);
+  const pace: Stride = { length: 0.92 * k, duty: 0.8, lift: 0.3 * k, phase: 0.025, lead: near > 0 ? 1 : -1 };
+  const cycle = 3.4;
+  // A cycle and a quarter to the stand, from one moment with all four feet down to another; then on.
+  const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.55 - 0.9 - 1.25 * cycle, -0.55, 0.9) - 1.25 * cycle + runUp(v, 0.5, 0.9));
+  const up = 1 - ease(-2.0, -0.45, t);
+  const shove = ease(-1.0, 0.25, t);
+  const back = ease(0.6, 2.4, t);
+  const swing = ease(0.15, 1.75, t);
+  // The shove is from the shoulders: the trunk goes forward over feet that stand.
+  const push = (v: number): number => k * (0.1 * ease(-1.0, 0.25, v) - 0.1 * ease(0.5, 1.5, v));
+  const w = walk(out, plan, b, far(t), far(t - 0.3), push(t), pace);
+  trod[0].s = far(t);
+  trod[0].pace = pace;
   out.breath = 1.6 * Math.sin(seconds * 1.85 + b.seed * 9);
-  out.pitch = -0.05 * up + 0.07 * shove - 0.03 * back + 0.006 * out.breath;
-  // It sinks as it shoves, and again as the foot it has set down takes the weight.
-  out.bob = k * (0.03 * up - 0.035 * shove * (1 - 0.5 * back) - 0.018 * air - 0.022 * pulse(2.25, 3.3, t) + 0.008 * out.breath);
-  out.bend = near * (0.017 + 0.07 * swing - 0.03 * (1 - ease(-2.3, -0.3, t)));
+  out.pitch += -0.03 * up + 0.03 * shove * (1 - back) + 0.006 * out.breath;
+  out.bob += k * 0.008 * out.breath;
+  out.bend += near * (0.017 + 0.07 * swing * (1 - 0.6 * ease(2.0, 3.2, t)) - 0.03 * (1 - ease(-2.3, -0.3, t)));
   const rooting = (1 - up) * (1 - 0.6 * pulse(0.15, 2.6, t));
-  out.headYaw = near * (0.24 - 0.55 * ease(-2.3, -0.3, t) + 0.8 * swing - 0.3 * ease(2.5, 4.2, t)) + 0.05 * rooting * Math.sin(seconds * 2.1 + b.seed * 11) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
-  // The head comes a little out of the mud as it swings and goes back in where it stops.
-  out.headPitch = plan.hang - 0.55 * up + 0.07 * shove * (1 - back) - 0.13 * pulse(0.1, 2.2, t) + 0.025 * rooting * Math.sin(seconds * 1.9 + b.seed * 5);
+  out.headYaw = near * (0.24 - 0.55 * ease(-2.3, -0.3, t) + 0.8 * swing - 0.3 * ease(2.2, 3.6, t)) - 2.2 * w.yaw + 0.05 * rooting * Math.sin(seconds * 2.1 + b.seed * 11) + 0.05 * up * Math.sin(seconds * 0.9 + b.seed * 4);
+  // The head hangs from the shoulders and is late: it nods as they come down on a foot. It comes a little out of the mud as it swings and goes back in where it stops.
+  out.headPitch = plan.hang - 0.5 * up + 0.07 * shove * (1 - back) - 0.13 * pulse(0.1, 2.2, t) - 0.9 * w.fore + 0.025 * rooting * Math.sin(seconds * 1.9 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove * (1 - up);
   rake(out, b, seconds, 0.95 + 0.3 * shove * (1 - back) - 0.2 * up);
   return out;
 }
 
-/** The young one: it roots hard to the key, then lifts its head, turns it to the great one (`toward`: +1 when that is to its left) and takes two short steps along the bank. */
+/** The young one: it comes along the bank a cycle and a quarter at more than twice the great one's beat, its head carried, stops and noses hard into the mud
+ * through the key, then lifts its head and turns it to the great one (`toward`: +1 when that is to its left) as that one moves off. */
 export function young(plan: Plan, b: Build, seconds: number, t: number, toward: number, out: Drive): Drive {
   const { k } = b;
   rest(out, plan, b);
-  const up = ease(0.25, 1.25, t) - ease(3.0, 4.2, t);
-  const turn = ease(0.65, 1.7, t) - ease(2.8, 4.0, t);
-  const shove = (pulse(-2.75, -1.45, t) + pulse(-1.25, 0.2, t) + pulse(3.6, 5.0, t)) * (1 - up);
-  const go = 0.5 * k;
-  const off = [0.05, -0.05, -0.06, 0.04];
-  // Fore and hind of opposite sides go nearly together, as a young animal trots off a standstill: left fore, right hind, right fore, left hind.
-  const from = [2.1, 0.9, 1.2, 1.8];
-  let air = 0;
-  let fore = 0;
-  for (let l = 0; l < 4; l++) {
-    const foot = out.feet[l] as [number, number, number];
-    const a = from[l] as number;
-    const s = stride(out, l, foot[0] + (off[l] as number), go, 0.3 * k, a, a + 0.8, t);
-    air += s;
-    if (l % 2 === 1) fore += s * (LEG_AT[l] as [number, number])[1];
-  }
-  out.surge = k * 0.14 * shove + go * ease(0.85, 2.95, t);
-  // The trunk goes over the side that stands before a fore foot is lifted.
-  const w = 0.11 * (ease(0.6, 1.1, t) - 2 * ease(1.45, 1.95, t) + ease(2.45, 2.95, t)) + 0.035 * Math.sin(seconds * 1.9 + b.seed * 13);
-  out.shift = k * w;
-  out.roll = 0.45 * w - 0.03 * fore;
-  out.sway = -0.3 * k * w;
+  const pace: Stride = { length: 0.8 * k, duty: 0.8, lift: 0.34 * k, phase: 0.275, lead: 1 };
+  const cycle = 1.45;
+  const far = (v: number): number => (pace.length / cycle) * (spell(v, -0.6 - 0.5 - 1.25 * cycle, -0.6, 0.5) - 1.25 * cycle);
+  const up = 1 - ease(-1.0, -0.25, t) + ease(1.25, 2.0, t);
+  const turn = ease(1.3, 2.3, t);
+  const dig = (v: number): number => pulse(-0.45, 0.75, v) + pulse(0.6, 1.5, v);
+  const shove = dig(t) * (1 - up);
+  const w = walk(out, plan, b, far(t), far(t - 0.16), k * 0.1 * dig(t), pace);
+  trod[1].s = far(t);
+  trod[1].pace = pace;
   out.breath = 1.4 * Math.sin(seconds * 3.1 + b.seed * 9);
-  out.pitch = 0.05 * shove - 0.03 * up + 0.006 * out.breath;
-  out.bob = k * (-0.025 * shove - 0.012 * air + 0.01 * out.breath);
-  out.bend = 0.05 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
-  out.headYaw = (1 - up) * (0.3 * Math.sin(seconds * 2.4 + b.seed * 11) + 0.1 * Math.sin(seconds * 5.1 + b.seed * 3)) + toward * 0.5 * turn + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
-  out.headPitch = plan.hang - 0.5 * up + 0.07 * shove + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
+  out.pitch += 0.04 * shove - 0.03 * up + 0.006 * out.breath;
+  out.bob += k * 0.01 * out.breath;
+  out.bend += 0.05 * turn * toward + 0.03 * (1 - up) * Math.sin(seconds * 1.5 + b.seed * 21);
+  out.headYaw = (1 - up) * (0.3 * Math.sin(seconds * 2.4 + b.seed * 11) + 0.1 * Math.sin(seconds * 5.1 + b.seed * 3)) + toward * 0.5 * turn - 2.2 * w.yaw + 0.06 * up * Math.sin(seconds * 2.2 + b.seed * 4);
+  out.headPitch = plan.hang - 0.45 * up + 0.07 * shove - 1.1 * w.fore * up + 0.035 * Math.sin(seconds * 3.2 + b.seed * 5);
   out.splay = 0.55 + 0.25 * shove;
   rake(out, b, seconds, 0.95 + 0.3 * shove - 0.15 * up);
   return out;
