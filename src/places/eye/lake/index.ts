@@ -364,13 +364,14 @@ void main() {
     float downward = uLeave.x * smoothstep(0.3, 0.8, v.y);
     // The dome has sunk and its waves go out: each a thin crest, broken along its length, all of them dying.
     float since = max(uLeave.y, 0.05);
-    float phase = 0.78 * r * (1.0 - 0.0011 * r) - 2.7 * since + 1.3 * vnoise(p.xz / 90.0 + 9.0);
+    float lanes = vnoise(p.xz / 90.0 + 9.0);
+    float phase = 0.78 * r * (1.0 - 0.0011 * r) - 2.7 * since + 1.3 * lanes;
     float front = 30.0 + 72.0 * since;
-    float broken = smoothstep(0.3, 0.62, vnoise(out2 * 2.3 + r / 130.0 + 4.0)) * (0.5 + vnoise(out2 * 7.0 + r / 37.0));
+    float broken = smoothstep(0.3, 0.62, vnoise(out2 * 2.3 + r / 130.0 + 4.0)) * (0.5 + lanes);
     float train = -0.2 * sin(phase) * exp(3.0 * (cos(phase) - 1.0)) * exp(-r / 210.0) * exp(-since / 6.5) * smoothstep(front, front - 70.0, r) * smoothstep(4.0, 26.0, r) * smoothstep(0.0, 1.2, uLeave.y) * broken;
-    // The wind lays a fine ripple on the water in patches that wander.
-    float patches = smoothstep(0.38, 0.7, vnoise(p.xz / 47.0 + vec2(uTime * 0.03, 5.0)));
-    vec2 ripple = (0.045 * waves(p.xz / 23.0, vec2(uTime * 0.021, uTime * 0.013)) + 0.03 * waves(p.xz / 8.3, vec2(-uTime * 0.04, uTime * 0.033))) * (0.25 + 0.75 * patches);
+    // The wind lays a fine ripple on the water, in patches.
+    float patches = smoothstep(0.36, 0.66, lanes);
+    vec2 ripple = 0.075 * waves(p.xz / 15.0, vec2(uTime * 0.03, uTime * 0.019)) * (0.25 + 0.75 * patches);
     vec2 leaning = heave + out2 * train + ripple;
     // The face of a wave that looks at the lit cliffs takes their light, the face that looks away takes the dark of the east.
     float toLit = -dot(leaning, vec2(0.9, -0.44));
@@ -387,14 +388,16 @@ void main() {
       float age = fract(uTime * (0.16 + 0.1 * rnd.y) + rnd.x * 17.0);
       vec2 dk = (knotAt - knot - 0.3 - 0.4 * rnd) * 34.0;
       float m = length(dk);
-      vec2 bubbleAt = p.xz / 0.9;
-      vec2 bubble = floor(bubbleAt);
-      vec2 jitter = hash22(bubble + knot);
-      float dot2 = smoothstep(0.34, 0.2, length(bubbleAt - bubble - 0.3 - 0.4 * jitter)) * floor(jitter.x + 0.4);
-      float boil = dot2 * smoothstep(1.0 + 3.0 * age, 0.4, m) * smoothstep(0.0, 0.1, age) * (1.0 - smoothstep(0.35, 0.5, age));
-      float wide = 1.5 + 11.0 * max(age - 0.35, 0.0);
-      float thin = exp(-pow((m - wide) / 0.45, 2.0)) * smoothstep(0.35, 0.42, age) * (1.0 - age) * (1.0 - age) * smoothstep(0.25, 0.6, vnoise(dk * 0.9 + rnd * 40.0));
-      c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 / 3.14159), min(0.85 * boil + 0.22 * thin, 1.0) * downward);
+      if (m < 14.0) {
+        vec2 bubbleAt = p.xz / 0.9;
+        vec2 bubble = floor(bubbleAt);
+        vec2 jitter = hash22(bubble + knot);
+        float dot2 = smoothstep(0.34, 0.2, length(bubbleAt - bubble - 0.3 - 0.4 * jitter)) * floor(jitter.x + 0.4);
+        float boil = dot2 * smoothstep(1.0 + 3.0 * age, 0.4, m) * smoothstep(0.0, 0.1, age) * (1.0 - smoothstep(0.35, 0.5, age));
+        float wide = 1.5 + 11.0 * max(age - 0.35, 0.0);
+        float thin = exp(-pow((m - wide) / 0.45, 2.0)) * smoothstep(0.35, 0.42, age) * (1.0 - age) * (1.0 - age) * smoothstep(0.25, 0.6, vnoise(dk * 0.9 + rnd * 40.0));
+        c = mix(c, skyIrradiance(vec3(0.0, 1.0, 0.0)) * (0.7 / 3.14159), min(0.85 * boil + 0.22 * thin, 1.0) * downward);
+      }
     }
   }
   gl_FragColor = vec4(rigOut(c), 1.0);

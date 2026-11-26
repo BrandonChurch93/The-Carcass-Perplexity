@@ -91,7 +91,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
   vec2 sunSide = normalize(uLidSun.xz);
   float side = clamp(0.5 + 0.9 * dot(ld.xz, sunSide), 0.0, 1.0);
   // The light that gets in from the side of the sun is not even, and it moves through the white as the lens climbs.
-  side = clamp(side + 0.5 * (vnoise(ld.xz * 1.4 + sunSide * camA * 34.0) - 0.5), 0.0, 1.0);
+  if (abs(camA - 1.0) < 0.1) side = clamp(side + 0.5 * (1.0 - abs(camA - 1.0) / 0.1) * (vnoise(ld.xz * 1.4 + sunSide * camA * 34.0) - 0.5), 0.0, 1.0);
   vec3 within = mix(uLidInside, uLidWarm, side);
   // How far the lens has come out of the top: under it the cloud is lit by what gets in, over it by the sun and the sky.
   float above = smoothstep(0.995, 1.03, camA);
@@ -127,7 +127,7 @@ vec4 lidOver(vec3 ro, vec3 rd, float far) {
     vec2 f = comb * q;
     float finest = vnoise(f * 113.0 + layer.x * 53.0 + d * 9.0);
     // Close to the lens the cloud has grain the eye can still see: it is too fine to draw once the sheet is far below.
-    float close = 1.0 - smoothstep(0.1, 0.3, near);
+    float close = 1.0 - smoothstep(0.08, 0.22, near);
     if (close > 0.0) finest = mix(finest, 0.55 * finest + 0.45 * vnoise(f * 290.0 + layer.x * 71.0 - d * 14.0), close);
     float fine = 0.5 * vnoise(f * 19.0 + layer.x * 37.0 + d * 3.0) + 0.3 * vnoise(f * 47.0 + layer.x * 91.0 - d * 5.0) + 0.2 * finest;
     float h = 0.56 * big + 0.44 * fine;
