@@ -212,12 +212,16 @@ vec3 emitterIrradiance(vec3 p, vec3 n) {
   e *= EMITTER_CAST;
   e = e / (1.0 + dot(e, vec3(0.3, 0.5, 0.2)) / (EMITTER_CEILING * (1.0 + 12.0 * lift)));
   // The stroke's own flash is not held under the ceiling: it has direction and shadow, and what it does not reach stays dark.
+  // The software renderer works through both sides of a branch for every pixel, so the stroke's light is compiled into a shader only
+  // while a strike burns (the strikes set STRIKE_BURNS on every material that reads the rig): a frame with no strike pays nothing.
+#ifdef STRIKE_BURNS
   if (uStrikeAt.w > 0.0) e += strikeIrradiance(p, n);
   // A cloud lit from inside, while no stroke burns: a low violet light with no shadow on what looks at it, wrapped as the round lights are.
   else if (uStrikeTop.w > 0.0) {
     vec3 to = normalize(0.5 * (uStrikeTip.xyz + uStrikeTop.xyz) - p);
     e += INNER_COLOUR * (uStrikeTop.w * INNER_CAST * clamp((dot(n, to) + 0.25) / 1.25, 0.0, 1.0));
   }
+#endif
   return e;
 }
 

@@ -347,6 +347,23 @@ export function create(ctx: Context): Piece {
 
   const size = new THREE.Vector2();
   let height = 0;
+  // The stroke's light on the land is compiled into the shaders that read the rig only while a strike gives light: which shader a
+  // material has is set from the time alone, each time, so a frame is drawn the same whatever was drawn before it.
+  const burns = (on: boolean): void => {
+    ctx.scene.traverse((o) => {
+      const held = (o as THREE.Mesh).material as THREE.Material | THREE.Material[] | undefined;
+      if (!held) return;
+      for (const m of Array.isArray(held) ? held : [held]) {
+        const s = m as THREE.ShaderMaterial;
+        if (!s.isShaderMaterial || !(s.fragmentShader.includes('STRIKE_BURNS') || s.vertexShader.includes('STRIKE_BURNS'))) continue;
+        const defines = (s.defines ??= {});
+        if ('STRIKE_BURNS' in defines === on) continue;
+        if (on) defines.STRIKE_BURNS = '';
+        else delete defines.STRIKE_BURNS;
+        s.needsUpdate = true;
+      }
+    });
+  };
   return {
     setTime: (seconds) => {
       for (const p of puffs) {
@@ -415,6 +432,7 @@ export function create(ctx: Context): Piece {
           cloudLight.radiance.copy(TINT).multiplyScalar(CAST * 0.35 * (round + within * INNER_GLOW + tail * 0.1 + before * (BEFORE_OF[of] as number)));
         }
       });
+      burns(flashAt.w > 0 || flashTop.w > 0);
     },
     beforeSample: (renderer, camera) => {
       renderer.getDrawingBufferSize(size);
