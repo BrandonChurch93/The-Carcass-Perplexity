@@ -18,7 +18,7 @@ import { MAX_HEAT, VOLUME_FRAGMENT, WARP_FRAGMENT } from './volume';
 export const PARTS: readonly string[] = ['sky', 'air', 'fume', 'ash'];
 
 /** The open lava under the fume, as one round light of the rig: where it is, how wide, and what part of its face is open at 1400 K. */
-const FUME_LIGHT = { at: [760, 25, -40] as const, radius: 150, open: 0.2 };
+const FUME_LIGHT = { at: [960, 20, 0] as const, radius: 200, open: 0.35 };
 
 /** A body of smoke: a leaning dome of lumps that stands on a level base. Lengths in metres, densities for a metre of path. */
 interface Body {
@@ -87,16 +87,16 @@ const BODIES: readonly Body[] = [
   { at: behind(250, 0), radius: 230, height: 13, lean: [0, 0], dense: 0.0032, repeat: 36, hard: 2.2, climb: 1.2, colour: SOOT, foot: 0, lake: [0.1, 8], floor: [0.2, 7], lights: 0.2, tops: 0.55, solid: 0.3, streak: 1.8, taper: 1.6, sparse: 0.08, shots: { 'heart-02': 1, rest: 0 } },
   // The smoke off the fan and the foot of the fall, for the long lens: strongest low, thinning upward, leaning right along the wall.
   // The first is the tall lit smoke that stands east of the fan and a little behind its toe, so that the face of the fan is clear of it: streaks that climb fast, thickest and brightest low, thinning as they rise. The two beside it are low and thin.
-  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.023, widen: 0.85, repeat: 46, hard: 2.4, climb: 8, colour: ROSE, foot: 0.05, lake: [1.25, 12], floor: [0.5, 55], lights: 1.3, tops: 0.5, solid: 0.15, streak: 2.3, taper: 1.6, sparse: 0.1, through: 0.4, shots: { 'heart-05': 1, rest: 0.08 } },
+  { at: fromFoot(42, 10), radius: 42, height: 152, lean: [0.17, 0.06], dense: 0.03, widen: 0.85, repeat: 46, hard: 2.4, climb: 8, colour: ROSE, foot: 0.05, lake: [1.25, 12], floor: [0.3, 30], lights: 0.9, tops: 0.4, solid: 0.15, streak: 2.3, taper: 1.6, sparse: 0.1, through: 0.4, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(14, -4), radius: 26, height: 62, lean: [0.5, 0.2], dense: 0.007, widen: 0.9, repeat: 38, hard: 3.2, climb: 5, colour: ROSE, foot: 0.2, lake: [0.5, 8], floor: [0.3, 30], lights: 0.9, tops: 0.7, solid: 0.12, streak: 2, taper: 1, shots: { 'heart-05': 1, rest: 0.08 } },
   { at: fromFoot(58, 44), radius: 34, height: 38, lean: [0.5, 0.34], dense: 0.005, widen: 0.3, repeat: 38, hard: 3.2, climb: 4, colour: ROSE, foot: 0.3, lake: [0.5, 8], floor: [0.16, 22], lights: 0.9, tops: 0.6, solid: 0.12, streak: 1.6, shots: { 'heart-05': 1, rest: 0.08 } },
   // The plume of the wide view: one column that stands behind the west shoulder of the buttress, its source hidden by it, and widens as it climbs out of the picture. Off in the feeding shot, whose long lens would catch only one flank of it as a grey streak.
-  { at: [530, -262], radius: 70, height: 700, lean: [0.1, 0.115], dense: 0.02, widen: 5.5, foot: 0.22, repeat: 130, hard: 3, climb: 14, colour: UMBER, floor: [0.5, 220], tops: 2.1, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
+  { at: [530, -262], radius: 70, height: 700, lean: [0.1, 0.115], dense: 0.034, widen: 5.5, foot: 0.22, repeat: 130, hard: 3, climb: 14, colour: UMBER, floor: [0.5, 220], tops: 0.85, solid: 0.3, shots: { 'heart-02': 0, 'heart-05': 0 } },
   // The smoke that rises from the seam the hero feeds at, lit by the melt in it: it lies low behind the animal in the feeding shot, under the horizon of that lens, and what is behind the animal is the dark of the far smoke.
   { at: [-397, 181], radius: 11, height: 6.5, lean: BANK_LEAN, dense: 0.035, repeat: 9, hard: 2.6, climb: 1.6, colour: SOOT, foot: 0.1, lake: [1.1, 3], floor: [1.6, 3], lights: 0.6, tops: 0.7, solid: 0.4, shots: { 'heart-02': 1, rest: 0 } },
   // The low haze east of the buttress, over the open lava there: the strongest colour of the wide view after the lava itself.
   // It is thin enough to see into and lit through its own foot: orange at its base, dark smoke above, in lumps. As one thick mass lit by one read of the floor it stood as a flat pink block.
-  { at: [1010, 5], base: -25, radius: 125, height: 330, lean: [0.08, 0.1], dense: 0.016, widen: 0.3, repeat: 130, hard: 2.4, climb: 5, colour: AMBER, foot: 0.06, lake: [2.0, 80], floor: [7.0, 110], lights: 1.3, tops: 0.2, solid: 0.3, streak: 1.9, taper: 0.9, through: 0.5 },
+  { at: [1200, 5], base: -25, radius: 185, height: 240, lean: [0.08, 0.1], dense: 0.016, widen: 0.25, repeat: 110, hard: 1.8, climb: 5, colour: AMBER, foot: 0.06, lake: [3.5, 60], floor: [13.0, 80], lights: 1.3, tops: 0.15, solid: 0.3, streak: 1.9, taper: 0.9, sparse: 0.03, through: 0.6 },
 ];
 
 /** Until the other folders push their own, the vapours and the hot air the pictures show. Used only when the lists are empty. */
@@ -183,8 +183,12 @@ export function create(ctx: HeartContext): HeartPiece {
   // The thin smoke that hangs before the butte of the feeding shot (its face is 205 m from that lens, right of its axis). It is marched with the air, to the scene's depth,
   // so that it veils the cliff by how far in it the cliff stands: its middle (x, z), its radius, its thickness for a metre (set by shot).
   const hang = new THREE.Vector4(...behind(99, 60), 75, 0);
+  // How much of the fume stands in a shot. The long lens on the mouth looks along a kilometre of it: at full strength it lay over the whole wall
+  // as one lit veil and took the dark out of the mouth. There the smoke at the foot of the fall is the bodies', and the wall above it is clear.
+  const fumeShare = { value: 1 };
   const volume = pass(VOLUME_FRAGMENT, {
     uHang: { value: hang },
+    uFumeShare: fumeShare,
     uShowFume: show.fume,
     uSkyMean: { value: skyMean },
     ...smoke.layers,
@@ -215,6 +219,7 @@ export function create(ctx: HeartContext): HeartPiece {
         (bodyF[i] as THREE.Vector4).x = (b.floor?.[0] ?? 0) * swell;
       }
       hang.w = shot === 'heart-02' ? 0.008 : 0;
+      fumeShare.value = shot === 'heart-05' ? 0.15 : 1;
       // Where the near sheet of smoke ends and the far one begins, shot by shot: the banks go with the vapours at hand wherever rock stands between them and the far plume.
       (su.uSplit as THREE.IUniform<number>).value = shot === 'heart-05' ? 450 : shot === 'heart-02' ? 110 : 60;
       // The four offsets of the march are tied to the pixel alone. Moved on with each sample they made a thin vapour flicker from frame to frame.
